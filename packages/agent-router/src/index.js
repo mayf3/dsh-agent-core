@@ -19,8 +19,6 @@
  */
 
 import z from '@deepseek-ai/schemastery'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
 import { AgentProcess, agentEnv } from './process.js'
 import { provisionAgentHome } from '../../../scripts/demo-home.mjs'
 
@@ -42,10 +40,6 @@ export const Config = z.object({
   defaultSessionId: z.string().default('main'),
   /** Per-agent process profile (the resume-aware demo-server composition). */
   agentProfile: z.string().default('agent-core-demo'),
-  /** Root under which each agent's home lives (defaults to ~/.dsh/agents). */
-  agentsRoot: z.string(),
-  /** Root under which each agent's workspace lives (defaults to ~/.dsh/workspaces). */
-  workspacesRoot: z.string(),
 })
 
 const sleep = (ms) => new Promise(resolveTimeout => setTimeout(resolveTimeout, ms))
@@ -63,9 +57,6 @@ export function apply(ctx, config) {
     log: (...args) => process.stderr.write(`[router] ${args.join(' ')}\n`),
     error: (...args) => process.stderr.write(`[router] ERROR ${args.join(' ')}\n`),
   }
-
-  const agentsRoot = cfg.agentsRoot || join(homedir(), '.dsh', 'agents')
-  const workspacesRoot = cfg.workspacesRoot || join(homedir(), '.dsh', 'workspaces')
 
   /** agentId -> AgentProcess registry (one live owner per agent). */
   const registry = new Map()
@@ -121,8 +112,12 @@ export function apply(ctx, config) {
       registry.delete(agentId)
       log.log(`process for ${agentId} exited (${existing.exit?.code ?? 'signal'}); will respawn`)
     }
-    const workspace = workspaceBootstrap.resolveWorkspace(agentId, workspacesRoot)
-    const home = workspaceBootstrap.resolveDshHome(agentId, agentsRoot)
+    // workspace-bootstrap is the single owner of the agentId -> workspace /
+    // DSH_HOME mapping (D-002 boundary). The router only decides WHEN to
+    // start the agent, not where its home lives — so it calls the service
+    // without any root override.
+    const workspace = workspaceBootstrap.resolveWorkspace(agentId)
+    const home = workspaceBootstrap.resolveDshHome(agentId)
     // Provision the agent home (settings/credentials/profile/plugin farm) and
     // the workspace directory — idempotent.
     provisionAgentHome(home, workspace)
