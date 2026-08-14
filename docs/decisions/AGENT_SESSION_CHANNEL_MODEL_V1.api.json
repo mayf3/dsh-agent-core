@@ -8,7 +8,13 @@
   "contentType": "application/json",
   "designDoc": "docs/decisions/AGENT_SESSION_CHANNEL_MODEL_V1.md",
   "conventions": {
-    "idFormat": "不透明字符串（agt_ / ses_ / ccv_ / msg_ + ULID），全局唯一、永不复用；客户端不得解析或拼接",
+    "idFormat": {
+      "general": "ID 是不透明字符串，客户端不得解析或拼接",
+      "agentId": "全局唯一、永不复用",
+      "sessionId": "在所属 Agent 内唯一；Session 全局身份由 (agentId, sessionId) 构成；\"main\" 为每个 Agent 的保留 sessionId",
+      "channelConversationId": "保持现有契约语义（全局唯一、永不复用）",
+      "messageId": "保持现有契约语义（全局唯一、永不复用）"
+    },
     "timeFormat": "ISO 8601 UTC，如 2026-08-15T05:00:00Z",
     "errorEnvelope": {
       "example": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
