@@ -1,0 +1,15 @@
+# @agent-core/bundle-memory — per-agent long-term memory patch layer over
+# dsh-base (mounted inside a per-agent profile, after bundle-demo).
+#
+# The memory plugin belongs in the per-agent composition, NOT the control
+# plane: one agent per process/workspace, so the plugin's agentId (derived
+# from the workspace dir name) and every file operation stay inside that
+# agent's own workspace. Isolation is physical — different agents never read
+# each other's MEMORY.md.
+#
+# All memory behavior is default-on but configurable per deployment through
+# the config block below (see packages/agent-memory/src/index.js).
+
+- insert:
+    - id: agent-core-memory
+      name: '@agent-core/agent-memory'

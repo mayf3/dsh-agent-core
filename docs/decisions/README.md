@@ -15,6 +15,24 @@
 
 已登记决策：
 
+## D-003: Memory V1 — per-agent file-first 长期记忆（Agent Core memory glue）
+
+- 状态: accepted（分支 feat/agent-memory-v1 已实现并真实验收，见
+  `docs/reports/memory-v1.md`）
+- 日期: 2026-08-15
+- 背景: Session trajectory ≠ Agent long-term memory；调查收敛裁决 3 定「V1 以文件
+  记忆为主」，consolidation 是唯一完全缺失层。
+- 决策: 记忆 = `<workspace>/MEMORY.md`（curated 唯一事实源）+ `<workspace>/memory/
+  YYYY-MM-DD.md`（episodic）；隔离 = 物理目录隔离（per-agent workspace），无全局
+  库；新 session 拿记忆 = `systemPrompt.context` 同步重读注入 + `memory_*` 工具；
+  consolidation 时机 = turn/end + 防抖 + 显式工具/服务；输入 = session surface 证据
+  （直接用户消息 + 助手回复，seq 水位去重，输出逐条校验）；人工查看/编辑/删除 =
+  直接编辑 MEMORY.md（file-first，人工优先）；fallback = 原始证据始终落 daily note。
+- 替代方案: SQLite+镜像双写（mneme 式）——否决（全局库破坏隔离、双写复杂）；MCP
+  记忆服务——保留为可选后端；向量/embedding——DEFER。
+- 影响: 新增 `packages/agent-memory/` + `bundle-memory/` + `profile-memory/` +
+  `scripts/memory-v1-verify.mjs`；未触碰 agent-router/agent-registry/agent-session。
+
 ## D-002: Agent / Session / Channel / Binding 模型与 API 契约（V1）
 
 - 状态: proposed
