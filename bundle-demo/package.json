@@ -2,7 +2,7 @@
   "name": "@agent-core/bundle-demo",
   "version": "0.0.0",
   "private": true,
-  "description": "Agent Core process-model demo bundle: patch layer inserting broker, owner-guard and the SDK JSON-RPC server into a dsh profile",
+  "description": "Agent Core process-model demo bundle: patch layer inserting owner-guard and the resume-aware JSON-RPC server into a dsh profile",
   "type": "module",
   "exports": {
     "./cordis.patch.yml": "./cordis.patch.yml",
