@@ -233,5 +233,12 @@ export function apply(ctx, config) {
     _transport: transport,
   }
 
+  // Publish the channel handle as a service so sibling plugins in the same
+  // composition (e.g. the agent-router / control plane) can bind the ingress
+  // callback and send replies through it. Cordis injectable as 'feishu'.
+  // NOTE: provide stores the VALUE as-is — a factory function would be
+  // returned as-is by ctx.get(); pass the handle object directly.
+  ctx.provide('feishu', handle)
+
   return handle
 }

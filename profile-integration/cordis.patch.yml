@@ -1,0 +1,6 @@
+# dsh-profile-agent-core-integration — user patch layer (empty by design).
+#
+# The control-plane composition is fully declared by the bundle layers;
+# per-deployment overrides (routing table, credentials) are passed as
+# environment variables at process start (see scripts/integration-v1-verify.mjs).
+[]

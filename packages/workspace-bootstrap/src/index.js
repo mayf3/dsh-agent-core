@@ -138,5 +138,7 @@ export function apply(ctx, config) {
     resolveWorkspace: (agentId) => resolveWorkspace(agentId, workspaceRoot),
     resolveDshHome: (agentId) => resolveAgentHome(agentId, agentsHome),
   }
-  ctx.provide('workspaceBootstrap', () => service)
+  // Provide the service VALUE directly (Cordis stores it as-is; a factory
+  // function would be returned as-is by ctx.get()).
+  ctx.provide('workspaceBootstrap', service)
 }
