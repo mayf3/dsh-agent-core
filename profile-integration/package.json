@@ -1,0 +1,16 @@
+{
+  "name": "dsh-profile-agent-core-integration",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Agent Core Integration V1 control-plane profile: dsh-base plus the @agent-core/bundle-integration layer (feishu channel + agent-router)",
+  "dependencies": {},
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@agent-core/bundle-integration"
+      ]
+    }
+  },
+  "license": "UNLICENSED"
+}
