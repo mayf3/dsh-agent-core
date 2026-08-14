@@ -75,9 +75,9 @@ node scripts/verify.mjs            # 3. 断言验收用例
 node scripts/run.mjs --dump-config #    查看合成后的配置树
 ```
 
-## 写过的插件（C）
+## V0 vertical slice 插件（C）
 
-只有两个，均为 Cordis 插件（`name` + `inject` + `Config` + `apply` 命名导出）：
+最初 V0 vertical slice 只有两个 Cordis 插件（`name` + `inject` + `Config` + `apply` 命名导出）：
 
 - `@agent-core/broker`：把旧 external-harness-v1 的 `external.calculator` 能力
   注册为 DSH 模型可见 tool `external_calculator`。语义 1:1 复刻已验收 fixture：
@@ -89,13 +89,24 @@ node scripts/run.mjs --dump-config #    查看合成后的配置树
   `tool/call`→`tool/result` 持久化证据 → `appExit(0|1)`。输入 = 配置
   `fixedInput`，可被 launcher 第一个参数覆盖。
 
-`bundle/` 与 `profile/` 是配置工件（不是插件代码）：patch 层插入上面两行，
+Release checkpoint 另外已经加入 `feishu-connector`、`workspace-bootstrap`、
+`demo-server`、`owner-guard` 等独立组件，详见上面的结构与 `docs/reports/`。
+
+`bundle/` 与 `profile/` 是配置工件（不是插件代码）：patch 层插入 V0 broker/router，
 profile 声明 `[dsh-base, @agent-core/bundle]`。未修改 deepseek-harness 与旧
-agent-core 任何文件；对 `~/.dsh` 只做三处新增 symlink。
+agent-core 任何文件；对 `~/.dsh` 只做新增 symlink。
 
-## 迁移替代结论（D/E）
+## 当前替代结论与下一步
 
-详见 [`docs/reports/bootstrap-v0.md`](docs/reports/bootstrap-v0.md)。一句话：旧 Kernel 的
-run/event-log/llm/approval/ingress 面在 DSH 里都有现成等价物
-（agent-loop + session log + llm 适配器 seam + tools 瀑布 + SDK JSON-RPC），
-下一步唯一迁移目标建议是「旧 Kernel 的 Run/Session 面 → DSH agent/session 组合」。
+详见 [`docs/reports/bootstrap-v0.md`](docs/reports/bootstrap-v0.md)、
+[`docs/reports/process-model-demo-v0.md`](docs/reports/process-model-demo-v0.md) 与
+[`docs/CAPABILITY_MATRIX.md`](docs/CAPABILITY_MATRIX.md)。当前已证明 DSH 可以承担
+Agent Core 的 agent loop / session / tool / persistence 等 Runtime 基础；旧 Kernel / Runtime
+保持冻结，不再作为下一步迁移目标。
+
+下一步是 `Integration V1`：把已经验证的组件第一次串成真实链路：
+
+```text
+Feishu → Router / Control Plane → workspace-bootstrap → owner-guard
+       → per-agent DSH process → resume-aware agent-server → reply
+```
