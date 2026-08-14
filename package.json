@@ -1,0 +1,14 @@
+{
+  "name": "dsh-agent-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core on DSH — V0 bootstrap: minimal DSH-based Agent Core skeleton",
+  "type": "module",
+  "scripts": {
+    "install:profile": "node scripts/install-profile.mjs",
+    "dump-config": "node scripts/run.mjs --dump-config",
+    "run": "node scripts/run.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "license": "UNLICENSED"
+}

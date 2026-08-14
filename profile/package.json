@@ -1,0 +1,14 @@
+{
+  "name": "dsh-profile-agent-core",
+  "private": true,
+  "description": "Agent Core V0 profile: dsh-base plus the @agent-core/bundle layer",
+  "dependencies": {},
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@agent-core/bundle"
+      ]
+    }
+  }
+}

@@ -1,0 +1,26 @@
+# @agent-core/bundle — V0 patch layer over dsh-base.
+#
+# Layer order inside the profile: dsh-base first, then this patch, then the
+# profile's own cordis.patch.yml. Only two rows are inserted (broker, router)
+# plus the deployment persona; everything else comes from dsh-base.
+
+- id: system-prompt
+  config:
+    persona: >-
+      You are agent-core-v0, the minimal DSH-based Agent Core vertical slice.
+
+      Your working directory is {{cwd}}.
+
+      To answer arithmetic questions use the external_calculator tool and no
+      other tool.
+
+- insert:
+    - id: agent-core-broker
+      name: '@agent-core/broker'
+
+    - id: agent-core-router
+      name: '@agent-core/router'
+      config:
+        fixedInput: >-
+          Use the external_calculator tool to multiply 6 and 7 (operation
+          "multiply", a=6, b=7). Report the result.
