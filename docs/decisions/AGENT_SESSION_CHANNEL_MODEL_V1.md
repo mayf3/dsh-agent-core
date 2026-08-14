@@ -4,7 +4,7 @@
 - 日期: 2026-08-15
 - 类型: 正式候选决策（产品模型 + 前后端 API 契约）
 - 机器可读契约: [`AGENT_SESSION_CHANNEL_MODEL_V1.api.json`](AGENT_SESSION_CHANNEL_MODEL_V1.api.json)（Android 可直接 mock）
-- 关联: `docs/decisions/DSH_PLUGIN_ADOPTION_V1.md`（组件集 #9 Router / per-agent supervisor）、`docs/decisions/README.md` D-001
+- 关联: `docs/decisions/README.md` D-001
 
 ## 0. 一句话总结
 
@@ -12,13 +12,15 @@ Agent 是长期实体，固定拥有自己的 workspace / DSH_HOME / credential 
 挂在 Agent 之下（`main` 为长期主会话）；飞书、微信、Android、Web 都只是 Channel / UI，
 不拥有 Agent 也不拥有 Session；「当前正在和谁聊」由 ChannelConversation 上的 **Binding**
 表达——「叫论文导师来 / 换回来」= `switchAgent(channelConversationId, agentId, sessionId?)`，
-纯绑定切换，不是角色扮演。API 与任何具体渠道无关。
+纯绑定切换，不是角色扮演。渠道只有原生标识（如飞书 chatId）时，经幂等
+`resolveChannelConversation(channel, externalId)` 一步拿到 ChannelConversation +
+Binding，随后直接 dispatch。API 与任何具体渠道无关。
 
 ## 1. 背景与原则
 
-背景：Agent Core V1 需要统一的 Channel / Agent / Session 产品模型，作为 Router
-（DSH_PLUGIN_ADOPTION_V1 #9）、渠道适配器（如 feishu-connector）与各端 UI（飞书/微信/
-Android/Web）之间的共同契约，避免每个渠道各自发明一套「会话归属」语义。
+背景：Agent Core V1 需要统一的 Channel / Agent / Session 产品模型，作为 Router /
+控制面、渠道适配器（如 feishu-connector）与各端 UI（飞书/微信/Android/Web）之间的
+共同契约，避免每个渠道各自发明一套「会话归属」语义。
 
 原则：
 
@@ -51,8 +53,7 @@ Agent/Session 生命周期。
 | `description` | string \| null | 否 | 一句话介绍，展示用；缺省 null |
 
 隐含所有权（V1 API 不暴露）：workspace / DSH_HOME / credential / memory 由 Agent 实体
-拥有，由控制面 per-agent supervisor 承载（DSH_PLUGIN_ADOPTION_V1 #9）。API 只把 Agent
-当「身份 + 展示」对象。
+拥有，由控制面 per-agent supervisor 承载。API 只把 Agent 当「身份 + 展示」对象。
 
 ### 2.2 Session（属于 Agent）
 
@@ -61,7 +62,7 @@ Agent/Session 生命周期。
 | `id` | string | 是 | 全局唯一不透明 id，如 `ses_…` |
 | `agentId` | string | 是 | 所属 Agent |
 | `title` | string | 否 | 会话标题；createSession 可指定，缺省由系统生成 |
-| `kind` | enum `main` \| `normal` | 是 | `main`：随 Agent 预置的长期主会话，每个 Agent 至多一个；`normal`：普通会话 |
+| `kind` | enum `main` \| `normal` | 是 | `main`：随 Agent 预置的长期主会话，每个 Agent 恰好一个；`normal`：普通会话 |
 | `createdAt` | string (ISO8601) | 是 | 创建时间 |
 | `lastActiveAt` | string (ISO8601) | 是 | 最近一次收发消息时间；用于排序与清理决策 |
 
@@ -104,20 +105,24 @@ Agent/Session 生命周期。
   `deleteSession` 硬删除（仅 normal）。`main` 不可归档、不可删除。
 - **定期清理**：归档超过保留期的 normal Session 由控制面定期清理。保留期是**配置**
   （建议默认 30 天），不是 API 参数。
-- **ChannelConversation / Binding**：某 ChannelConversation 首次入站消息且尚无 Binding
-  时，服务端自动以「默认 Agent + 其 main session」创建 Binding（开箱可用）；显式
-  `switchAgent` 总是覆盖。
+- **ChannelConversation / Binding 落地入口**：渠道适配器收到入站消息（只有渠道原生
+  标识，如飞书 chatId）时，调用幂等接口 `resolveChannelConversation(channel,
+  externalId)`，一步拿到 ChannelConversation + Binding（即当前 (agentId,
+  sessionId)），随后按 Binding dispatch。(channel, externalId) 唯一；已存在则返回
+  原对象，不存在则创建，并在创建时同时建立「默认 Agent + 其 main session」的初始
+  Binding（开箱可用）；显式 `switchAgent` 总是覆盖 Binding。渠道适配器不保存任何
+  Agent / Session 状态。
 - **switchAgent 语义（定案）**：只写 Binding。`sessionId` 未传时**固定进入目标 Agent
   的 `main` session**。校验：agent 存在、session 属于该 agent 且未归档。不创建、不
   移动、不复制任何 Agent/Session，不产生任何「角色扮演」状态。
 - **「换回来」不进入 V1 后端模型**：Binding 不保存切换 history / stack；「换回来」=
   客户端保存之前的 (agentId, sessionId) 后再次调用 `switchAgent`，后端无记忆。
 - **getBinding**：无绑定 → `404 BINDING_NOT_FOUND`（客户端据此决定先 switchAgent 或
-  等待自动绑定）。
+  调用 resolve 等待自动绑定）。
 
 ## 4. API 契约
 
-Base: `https://<host>/v1` · HTTPS · JSON。十个函数如下（机器可读版见
+Base: `https://<host>/v1` · HTTPS · JSON。全部端点如下（机器可读版见
 `AGENT_SESSION_CHANNEL_MODEL_V1.api.json`）：
 
 | # | 函数 | HTTP | 路径 | 请求体 / 参数 | 成功响应 |
@@ -133,9 +138,19 @@ Base: `https://<host>/v1` · HTTPS · JSON。十个函数如下（机器可读�
 | 9 | `getMessages` | GET | `/agents/{agentId}/sessions/{sessionId}/messages?limit=50&before=<msgId>` | query: `limit`, `before` | 200 `{"messages": Message[], "hasMore": boolean}` |
 | 10 | `getBinding` | GET | `/bindings/{channelConversationId}` | — | 200 `Binding` |
 | 11 | `switchAgent` | PUT | `/bindings/{channelConversationId}` | `{"agentId": string, "sessionId"?: string}` | 200 `Binding` |
+| 12 | `resolveChannelConversation` | PUT | `/channel-conversations/resolve` | `{"channel": string, "externalId": string, "title"?: string}` | 200/201 `{"channelConversation": ChannelConversation, "binding": Binding}` |
 
 说明：
 
+- **`resolveChannelConversation` 是渠道落地入口（幂等）**：(channel, externalId)
+  唯一；已存在返回原 ChannelConversation（200），不存在则创建（201）并同时建立
+  「默认 Agent + main session」的初始 Binding。
+  **飞书只有 chatId 时一步得到 (agentId, sessionId) 的方法**：调
+  `PUT /v1/channel-conversations/resolve`，body
+  `{"channel": "feishu", "externalId": "<chatId>"}`，响应中的
+  `binding.activeAgentId` / `binding.activeSessionId` 即当前正在聊的
+  (agent, session)，渠道可直接 dispatch；渠道适配器无需保存任何 Agent / Session
+  状态。
 - `clientMessageId`（可选）：移动端重试去重——同一 clientMessageId 重复提交不重复产生
   assistant 回复。
 - 消息为同步契约：`sendMessage` 返回完整的 assistant 回复 `Message`。流式
@@ -146,7 +161,7 @@ Base: `https://<host>/v1` · HTTPS · JSON。十个函数如下（机器可读�
 
 | code | HTTP | 场景 |
 |---|---|---|
-| `VALIDATION_ERROR` | 400 | 参数缺失 / 格式错误 |
+| `VALIDATION_ERROR` | 400 | 参数缺失 / 格式错误（含 resolve 缺 `channel` / `externalId`） |
 | `SESSION_NOT_IN_AGENT` | 400 | sessionId 不属于路径中的 agentId |
 | `MAIN_SESSION_PROTECTED` | 403 | 对 main session 执行 archive / delete |
 | `AGENT_NOT_FOUND` | 404 | agentId 不存在 |
@@ -185,14 +200,15 @@ Base: `https://<host>/v1` · HTTPS · JSON。十个函数如下（机器可读�
 2. 流式消息是否 V2 必做。
 3. 同一用户在多渠道（飞书 + Android）与同一 Agent 对话：各自 ChannelConversation
    独立 Binding、互不影响——确认可接受。
-4. 「默认 Agent」如何确定：配置 vs 首个创建的 Agent。
+4. 「默认 Agent」如何确定：配置 vs 首个创建的 Agent（`resolveChannelConversation`
+   首次创建时使用）。
 
 ## 8. 影响
 
-- **Router / 控制面**（DSH_PLUGIN_ADOPTION_V1 #9）：入站消息按 `Binding.activeAgentId`
-  路由到对应 per-agent 进程。
-- **渠道适配器**（如 feishu-connector）：只负责 `externalId ↔ ChannelConversation`
-  映射 + 调用本 API；不持有任何 Agent / Session 状态。
+- **Router / 控制面**：入站消息按 `Binding.activeAgentId` 路由到对应 per-agent 进程。
+- **渠道适配器**（如 feishu-connector）：只负责把渠道原生标识（如飞书 chatId）经
+  `resolveChannelConversation` 换成 ChannelConversation + Binding，再按 Binding
+  dispatch；不持有任何 Agent / Session 状态。
 - **端 UI（Android/Web）**：首屏 = `listAgents` + `getBinding`；切换 =
   `switchAgent`；新建会话 = `createSession`；聊天 = `sendMessage` / `getMessages`。
 - **本决策不实现后端**；Android 可直接用 `AGENT_SESSION_CHANNEL_MODEL_V1.api.json`

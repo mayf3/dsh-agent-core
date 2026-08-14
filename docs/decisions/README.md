@@ -27,8 +27,11 @@
   UI/传输，不拥有 Agent 与 Session；「切换 Agent」= `switchAgent(ccv, agentId,
   sessionId?)` 只改 Binding，不是角色扮演；未传 sessionId 固定进入目标 Agent 的
   main；「换回来」= 客户端再次 switchAgent，V1 后端不保存切换 history/stack。
-  十一个端点 + 错误码 + 通用约定见 `AGENT_SESSION_CHANNEL_MODEL_V1.md`；Android
-  可直接 mock 的机器可读契约见 `AGENT_SESSION_CHANNEL_MODEL_V1.api.json`。
+  渠道落地入口 = 幂等 `resolveChannelConversation(channel, externalId)`：一步返回
+  ChannelConversation + Binding（首次创建时建立默认 Agent + main 的初始 Binding），
+  飞书只有 chatId 时即可直接 dispatch。端点清单 + 错误码 + 通用约定见
+  `AGENT_SESSION_CHANNEL_MODEL_V1.md`；Android 可直接 mock 的机器可读契约见
+  `AGENT_SESSION_CHANNEL_MODEL_V1.api.json`。
 - 替代方案: 把 Session 挂在 ChannelConversation 之下（Channel 拥有 Session）——否决：
   与「Agent 是长期实体、跨渠道延续」原则冲突；把「切换」做成角色扮演/复制 Agent——
   否决：产生状态分裂。
