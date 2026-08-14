@@ -248,6 +248,7 @@ export function saveWithDedupe(entries, entry, now = new Date().toISOString()) {
       tags: normalized.tags,
       importance: normalized.importance,
       source: normalized.source,
+      updatedAt: now, // content changed → refresh the human-visible timestamp
     }, now)
     const next = entries.slice()
     next[index] = merged
@@ -261,7 +262,7 @@ export function saveWithDedupe(entries, entry, now = new Date().toISOString()) {
 export function updateEntry(entries, id, patch, now = new Date().toISOString()) {
   const index = entries.findIndex((m) => m.id === id)
   if (index === -1) return { entries, entry: undefined }
-  const updated = normalizeEntry({ ...entries[index], ...patch, id }, now)
+  const updated = normalizeEntry({ ...entries[index], ...patch, id, updatedAt: now }, now)
   const next = entries.slice()
   next[index] = updated
   return { entries: next, entry: updated }

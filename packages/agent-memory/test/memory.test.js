@@ -88,12 +88,16 @@ describe('saveWithDedupe / update / remove', () => {
     let { action, entries } = saveWithDedupe([], e1, NOW)
     assert.equal(action, 'created')
     assert.equal(entries.length, 1)
+    assert.equal(entries[0].updatedAt, NOW)
     const e2 = entry({ title: 'codeword', content: 'v2', importance: 5 })
-    ;({ action, entries } = saveWithDedupe(entries, e2, NOW))
+    ;({ action, entries } = saveWithDedupe(entries, e2, '2026-08-15T11:00:00.000Z'))
     assert.equal(action, 'merged')
     assert.equal(entries.length, 1)
     assert.equal(entries[0].content, 'v2')
     assert.equal(entries[0].importance, 5)
+    // A merge changes content, so the human-visible Updated timestamp must
+    // refresh (it must not lie about when the content last changed).
+    assert.equal(entries[0].updatedAt, '2026-08-15T11:00:00.000Z')
     // Same title under a different type is a different entry.
     ;({ action, entries } = saveWithDedupe(entries, entry({ type: 'history', title: 'codeword', content: 'note' }), NOW))
     assert.equal(action, 'created')
@@ -103,9 +107,10 @@ describe('saveWithDedupe / update / remove', () => {
   test('updateEntry patches by id; unknown id is a no-op', () => {
     const e = entry()
     const { entries } = saveWithDedupe([], e, NOW)
-    const { entry: updated } = updateEntry(entries, e.id, { content: 'new body' }, NOW)
+    const { entry: updated } = updateEntry(entries, e.id, { content: 'new body' }, '2026-08-15T12:00:00.000Z')
     assert.equal(updated.content, 'new body')
     assert.equal(updated.id, e.id)
+    assert.equal(updated.updatedAt, '2026-08-15T12:00:00.000Z') // refreshed on edit
     const noop = updateEntry(entries, 'nope', { content: 'x' }, NOW)
     assert.equal(noop.entry, undefined)
   })

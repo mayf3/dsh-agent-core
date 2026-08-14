@@ -503,11 +503,19 @@ export const apply = (ctx, config = {}) => {
     const sessionId = String(session.id)
     const sinceSeq = state.lastSeqBySession.get(sessionId) ?? 0
     const { text, lastSeq } = collectEvidence(session, { sinceSeq })
-    // Remember the watermark even when there is nothing to do, so repeated
-    // turn/end events for the same session do not re-consolidate old turns.
+    if (!text) {
+      // Nothing new: advance the watermark so repeated turn/end events for
+      // the same session do not re-consolidate old turns.
+      state.lastSeqBySession.set(sessionId, lastSeq)
+      return
+    }
+    if (state.running.has(sessionId)) {
+      // A consolidation is in flight for this session: keep the OLD
+      // watermark so the next turn/end re-collects this evidence (nothing is
+      // skipped, no silent evidence loss).
+      return
+    }
     state.lastSeqBySession.set(sessionId, lastSeq)
-    if (!text) return
-    if (state.running.has(sessionId)) return
     const timer = setTimeout(() => {
       state.timers.delete(timer)
       state.running.add(sessionId)

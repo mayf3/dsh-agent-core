@@ -22,6 +22,9 @@ workspace-bootstrap 播种天然衔接），MCP 记忆保留为可选后端。
    `<workspace>/memory/YYYY-MM-DD.md`（每日原始证据）。agentId→workspace 映射
    复用 `@agent-core/workspace-bootstrap`（D-002：该映射的唯一 owner）。不建任何
    全局库（mneme 的 `~/.dsh/memory/memory.db` 是反模式——一个库装所有 agent）。
+   **设计原则：MEMORY.md 是 bounded / curated memory** —— 只保存值得长期跨
+   Session 保留的高价值信息，不无限膨胀；详细历史留在 `memory/YYYY-MM-DD.md`。
+   具体 size budget 不在本轮冻结，等真实使用出现上下文/token 问题后再定。
 2. **隔离 = 物理隔离。** 不同 agentId → 不同 workspace → 不同 MEMORY.md；per-agent
    进程（既有架构：one agent per DSH process + per-agent home/workspace）天然把
    记忆插件限定在单个 agent 的目录内。无共享命名空间、无跨 agent 读取路径。
@@ -29,6 +32,10 @@ workspace-bootstrap 播种天然衔接），MCP 记忆保留为可选后端。
    prompt 装配时**同步重读 MEMORY.md**（`loadEntriesSync`），因此注入总是最新
    （人工编辑下一轮即生效）；另注册模型可见工具 `memory_search` 等做按需召回。
    不自动改写 session 日志，不注入历史 episodic 内容。
+   **tradeoff（V1 明确选择）**：每 prompt 重读优先简单与实时可编辑，文件很小
+   （bounded curated memory），同步读成本可忽略。若未来真实观察到 prefix cache /
+   token / latency 问题，再评估 session-start snapshot + memory_search 的替代
+   方案——这是优化项，不是当前 blocker，V1 不做 snapshot。
 4. **consolidation 时机 = turn/end + 防抖，另提供显式工具。** `session/event`
    `turn/end` 后 debounce（默认 3s）把该 session 自上次 consolidation 以来的新增
    surface 证据（直接用户消息 + 助手回复，按 seq 水位去重）交给 LLM 提炼；也可由
