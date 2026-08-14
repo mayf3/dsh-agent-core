@@ -1,0 +1,642 @@
+{
+  "api": "agent-core",
+  "title": "Agent Core V1 — Channel / Agent / Session API",
+  "version": "1.0.0",
+  "status": "proposed",
+  "date": "2026-08-15",
+  "baseUrl": "https://agent-core.example.com/v1",
+  "contentType": "application/json",
+  "designDoc": "docs/decisions/AGENT_SESSION_CHANNEL_MODEL_V1.md",
+  "conventions": {
+    "idFormat": "不透明字符串（agt_ / ses_ / ccv_ / msg_ + ULID），全局唯一、永不复用；客户端不得解析或拼接",
+    "timeFormat": "ISO 8601 UTC，如 2026-08-15T05:00:00Z",
+    "errorEnvelope": {
+      "example": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
+    },
+    "pagination": "limit 默认 50、上限 200；before 为消息 id 游标（向前翻页）；响应带 hasMore",
+    "ordering": "sessions 按 lastActiveAt 降序；messages 按 createdAt 升序",
+    "auth": "预留 Authorization 头，V1 不定义鉴权细节",
+    "channelAgnostic": "channel 字段为不透明字符串；契约不含任何飞书/微信/Android/Web 专有类型"
+  },
+  "errorCodes": [
+    { "code": "VALIDATION_ERROR", "httpStatus": 400, "meaning": "参数缺失 / 格式错误" },
+    { "code": "SESSION_NOT_IN_AGENT", "httpStatus": 400, "meaning": "sessionId 不属于路径中的 agentId" },
+    { "code": "MAIN_SESSION_PROTECTED", "httpStatus": 403, "meaning": "对 main session 执行 archive / delete" },
+    { "code": "AGENT_NOT_FOUND", "httpStatus": 404, "meaning": "agentId 不存在" },
+    { "code": "SESSION_NOT_FOUND", "httpStatus": 404, "meaning": "sessionId 不存在" },
+    { "code": "BINDING_NOT_FOUND", "httpStatus": 404, "meaning": "该 ChannelConversation 尚无 Binding" },
+    { "code": "ARCHIVED_SESSION", "httpStatus": 409, "meaning": "对已归档 session 发消息或切换" },
+    { "code": "INTERNAL_ERROR", "httpStatus": 500, "meaning": "服务端错误" }
+  ],
+  "schemas": {
+    "Agent": {
+      "type": "object",
+      "required": ["id", "name", "avatar"],
+      "properties": {
+        "id": { "type": "string", "description": "全局唯一不透明 id，如 agt_01JQ…" },
+        "name": { "type": "string", "description": "展示名" },
+        "avatar": { "type": ["string", "null"], "description": "头像 URL；无头像为 null" },
+        "description": { "type": ["string", "null"], "description": "一句话介绍；缺省 null" }
+      },
+      "example": {
+        "id": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+        "name": "论文导师",
+        "avatar": "https://cdn.example.com/avatars/thesis-mentor.png",
+        "description": "帮我改论文、做文献综述、模拟答辩"
+      }
+    },
+    "Session": {
+      "type": "object",
+      "required": ["id", "agentId", "kind", "createdAt", "lastActiveAt"],
+      "properties": {
+        "id": { "type": "string", "description": "全局唯一不透明 id，如 ses_…" },
+        "agentId": { "type": "string", "description": "所属 Agent" },
+        "title": { "type": "string", "description": "会话标题；缺省由系统生成" },
+        "kind": { "type": "string", "enum": ["main", "normal"], "description": "main：长期主会话（每个 Agent 恰好一个，不可删除/归档）；normal：普通会话" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "ISO 8601 UTC" },
+        "lastActiveAt": { "type": "string", "format": "date-time", "description": "最近一次收发消息时间；ISO 8601 UTC" }
+      },
+      "example": {
+        "id": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+        "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+        "title": "主会话",
+        "kind": "main",
+        "createdAt": "2026-08-01T02:00:00Z",
+        "lastActiveAt": "2026-08-15T05:00:00Z"
+      }
+    },
+    "ChannelConversation": {
+      "type": "object",
+      "required": ["id", "channel", "externalId", "createdAt", "lastActiveAt"],
+      "properties": {
+        "id": { "type": "string", "description": "内部全局唯一 id，如 ccv_…" },
+        "channel": { "type": "string", "description": "不透明渠道标识，API 不解释其值（如 feishu / wechat / android / web）" },
+        "externalId": { "type": "string", "description": "渠道原生会话标识（如飞书 chat_id、Android 会话 key）" },
+        "title": { "type": "string", "description": "展示标题，可选" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "ISO 8601 UTC" },
+        "lastActiveAt": { "type": "string", "format": "date-time", "description": "ISO 8601 UTC" }
+      },
+      "example": {
+        "id": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8W",
+        "channel": "feishu",
+        "externalId": "oc_abc123def456",
+        "title": "与 论文导师 的会话",
+        "createdAt": "2026-08-01T02:00:00Z",
+        "lastActiveAt": "2026-08-15T05:00:00Z"
+      }
+    },
+    "Binding": {
+      "type": "object",
+      "required": ["channelConversationId", "activeAgentId", "activeSessionId", "updatedAt"],
+      "properties": {
+        "channelConversationId": { "type": "string", "description": "主键；每个 ChannelConversation 至多一条 Binding" },
+        "activeAgentId": { "type": "string", "description": "当前正在聊的 Agent" },
+        "activeSessionId": { "type": "string", "description": "当前正在聊的 Session；必须属于 activeAgentId" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "最近一次切换时间；ISO 8601 UTC" }
+      },
+      "example": {
+        "channelConversationId": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8W",
+        "activeAgentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+        "activeSessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+        "updatedAt": "2026-08-15T05:00:00Z"
+      }
+    },
+    "Message": {
+      "type": "object",
+      "required": ["id", "agentId", "sessionId", "role", "content", "createdAt"],
+      "properties": {
+        "id": { "type": "string", "description": "全局唯一，如 msg_…" },
+        "agentId": { "type": "string", "description": "所属 Agent" },
+        "sessionId": { "type": "string", "description": "所属 Session" },
+        "role": { "type": "string", "enum": ["user", "assistant"], "description": "发送方" },
+        "content": { "type": "string", "description": "文本内容" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "ISO 8601 UTC" }
+      },
+      "example": {
+        "id": "msg_01JQZ2K9X5D8NQ7P3M6R4T1W8V",
+        "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+        "sessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+        "role": "assistant",
+        "content": "第三章的问题在于论证链条缺少过渡段……",
+        "createdAt": "2026-08-15T05:01:00Z"
+      }
+    },
+    "Error": {
+      "type": "object",
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "string", "description": "见顶层 errorCodes 表" },
+            "message": { "type": "string" }
+          }
+        }
+      },
+      "example": {
+        "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" }
+      }
+    }
+  },
+  "endpoints": [
+    {
+      "name": "listAgents",
+      "summary": "列出所有 Agent",
+      "method": "GET",
+      "path": "/v1/agents",
+      "pathParams": [],
+      "queryParams": [],
+      "requestBody": null,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "agents": [
+              {
+                "id": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+                "name": "论文导师",
+                "avatar": "https://cdn.example.com/avatars/thesis-mentor.png",
+                "description": "帮我改论文、做文献综述、模拟答辩"
+              },
+              {
+                "id": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W9A",
+                "name": "工作秘书",
+                "avatar": null,
+                "description": null
+              }
+            ]
+          },
+          "schemaRef": "{ agents: Agent[] }"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "getAgent",
+      "summary": "获取单个 Agent",
+      "method": "GET",
+      "path": "/v1/agents/{agentId}",
+      "pathParams": [{ "name": "agentId", "type": "string", "example": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y" }],
+      "queryParams": [],
+      "requestBody": null,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "id": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+            "name": "论文导师",
+            "avatar": "https://cdn.example.com/avatars/thesis-mentor.png",
+            "description": "帮我改论文、做文献综述、模拟答辩"
+          },
+          "schemaRef": "Agent"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "AGENT_NOT_FOUND",
+          "body": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
+        }
+      ]
+    },
+    {
+      "name": "listSessions",
+      "summary": "列出 Agent 的会话（lastActiveAt 降序；默认不含已归档）",
+      "method": "GET",
+      "path": "/v1/agents/{agentId}/sessions",
+      "pathParams": [{ "name": "agentId", "type": "string", "example": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y" }],
+      "queryParams": [{ "name": "includeArchived", "type": "boolean", "default": false, "example": "false" }],
+      "requestBody": null,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "sessions": [
+              {
+                "id": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8X",
+                "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+                "title": "论文修改",
+                "kind": "normal",
+                "createdAt": "2026-08-14T09:00:00Z",
+                "lastActiveAt": "2026-08-15T04:30:00Z"
+              },
+              {
+                "id": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+                "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+                "title": "主会话",
+                "kind": "main",
+                "createdAt": "2026-08-01T02:00:00Z",
+                "lastActiveAt": "2026-08-15T05:00:00Z"
+              }
+            ]
+          },
+          "schemaRef": "{ sessions: Session[] }"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "AGENT_NOT_FOUND",
+          "body": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
+        }
+      ]
+    },
+    {
+      "name": "createSession",
+      "summary": "为 Agent 新建 normal 会话",
+      "method": "POST",
+      "path": "/v1/agents/{agentId}/sessions",
+      "pathParams": [{ "name": "agentId", "type": "string", "example": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y" }],
+      "queryParams": [],
+      "requestBody": {
+        "schemaRef": "{ title?: string }",
+        "example": { "title": "答辩模拟" }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "body": {
+            "id": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8X",
+            "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+            "title": "答辩模拟",
+            "kind": "normal",
+            "createdAt": "2026-08-15T06:00:00Z",
+            "lastActiveAt": "2026-08-15T06:00:00Z"
+          },
+          "schemaRef": "Session (kind=normal)"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "AGENT_NOT_FOUND",
+          "body": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "body": { "error": { "code": "VALIDATION_ERROR", "message": "title must be a string" } }
+        }
+      ]
+    },
+    {
+      "name": "getMainSession",
+      "summary": "获取 Agent 的长期主会话（随 Agent 预置，保证存在）",
+      "method": "GET",
+      "path": "/v1/agents/{agentId}/sessions/main",
+      "pathParams": [{ "name": "agentId", "type": "string", "example": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y" }],
+      "queryParams": [],
+      "requestBody": null,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "id": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+            "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+            "title": "主会话",
+            "kind": "main",
+            "createdAt": "2026-08-01T02:00:00Z",
+            "lastActiveAt": "2026-08-15T05:00:00Z"
+          },
+          "schemaRef": "Session (kind=main)"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "AGENT_NOT_FOUND",
+          "body": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
+        }
+      ]
+    },
+    {
+      "name": "archiveSession",
+      "summary": "软归档 normal 会话（默认列表隐藏；main 禁止）",
+      "method": "POST",
+      "path": "/v1/agents/{agentId}/sessions/{sessionId}/archive",
+      "pathParams": [
+        { "name": "agentId", "type": "string", "example": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y" },
+        { "name": "sessionId", "type": "string", "example": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8X" }
+      ],
+      "queryParams": [],
+      "requestBody": null,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "id": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8X",
+            "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+            "title": "论文修改",
+            "kind": "normal",
+            "createdAt": "2026-08-14T09:00:00Z",
+            "lastActiveAt": "2026-08-15T04:30:00Z"
+          },
+          "schemaRef": "Session (已归档，默认列表不再返回)"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "SESSION_NOT_FOUND",
+          "body": { "error": { "code": "SESSION_NOT_FOUND", "message": "session not found: ses_xxx" } }
+        },
+        {
+          "status": 400,
+          "code": "SESSION_NOT_IN_AGENT",
+          "body": { "error": { "code": "SESSION_NOT_IN_AGENT", "message": "session ses_xxx does not belong to agent agt_yyy" } }
+        },
+        {
+          "status": 403,
+          "code": "MAIN_SESSION_PROTECTED",
+          "body": { "error": { "code": "MAIN_SESSION_PROTECTED", "message": "main session cannot be archived" } }
+        }
+      ]
+    },
+    {
+      "name": "deleteSession",
+      "summary": "硬删除 normal 会话（main 禁止；建议先归档再删除）",
+      "method": "DELETE",
+      "path": "/v1/agents/{agentId}/sessions/{sessionId}",
+      "pathParams": [
+        { "name": "agentId", "type": "string", "example": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y" },
+        { "name": "sessionId", "type": "string", "example": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8X" }
+      ],
+      "queryParams": [],
+      "requestBody": null,
+      "responses": [{ "status": 204, "body": null, "schemaRef": "无 body" }],
+      "errors": [
+        {
+          "status": 404,
+          "code": "SESSION_NOT_FOUND",
+          "body": { "error": { "code": "SESSION_NOT_FOUND", "message": "session not found: ses_xxx" } }
+        },
+        {
+          "status": 400,
+          "code": "SESSION_NOT_IN_AGENT",
+          "body": { "error": { "code": "SESSION_NOT_IN_AGENT", "message": "session ses_xxx does not belong to agent agt_yyy" } }
+        },
+        {
+          "status": 403,
+          "code": "MAIN_SESSION_PROTECTED",
+          "body": { "error": { "code": "MAIN_SESSION_PROTECTED", "message": "main session cannot be deleted" } }
+        }
+      ]
+    },
+    {
+      "name": "sendMessage",
+      "summary": "发送消息，同步返回 assistant 回复（clientMessageId 用于重试去重）",
+      "method": "POST",
+      "path": "/v1/agents/{agentId}/sessions/{sessionId}/messages",
+      "pathParams": [
+        { "name": "agentId", "type": "string", "example": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y" },
+        { "name": "sessionId", "type": "string", "example": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z" }
+      ],
+      "queryParams": [],
+      "requestBody": {
+        "schemaRef": "{ content: string, clientMessageId?: string }",
+        "example": {
+          "content": "帮我看看第三章的逻辑",
+          "clientMessageId": "android-msg-20260815-001"
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "body": {
+            "id": "msg_01JQZ2K9X5D8NQ7P3M6R4T1W8V",
+            "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+            "sessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+            "role": "assistant",
+            "content": "第三章的问题在于论证链条缺少过渡段……",
+            "createdAt": "2026-08-15T05:01:00Z"
+          },
+          "schemaRef": "Message (role=assistant)"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "AGENT_NOT_FOUND",
+          "body": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
+        },
+        {
+          "status": 404,
+          "code": "SESSION_NOT_FOUND",
+          "body": { "error": { "code": "SESSION_NOT_FOUND", "message": "session not found: ses_xxx" } }
+        },
+        {
+          "status": 400,
+          "code": "SESSION_NOT_IN_AGENT",
+          "body": { "error": { "code": "SESSION_NOT_IN_AGENT", "message": "session ses_xxx does not belong to agent agt_yyy" } }
+        },
+        {
+          "status": 409,
+          "code": "ARCHIVED_SESSION",
+          "body": { "error": { "code": "ARCHIVED_SESSION", "message": "session is archived: ses_xxx" } }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "body": { "error": { "code": "VALIDATION_ERROR", "message": "content must be a non-empty string" } }
+        }
+      ]
+    },
+    {
+      "name": "getMessages",
+      "summary": "拉取会话消息（升序；before = 客户端已持有最旧一条的 id，向前翻页）",
+      "method": "GET",
+      "path": "/v1/agents/{agentId}/sessions/{sessionId}/messages",
+      "pathParams": [
+        { "name": "agentId", "type": "string", "example": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y" },
+        { "name": "sessionId", "type": "string", "example": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z" }
+      ],
+      "queryParams": [
+        { "name": "limit", "type": "integer", "default": 50, "max": 200, "example": "50" },
+        { "name": "before", "type": "string", "example": "msg_01JQZ2K9X5D8NQ7P3M6R4T1W8T" }
+      ],
+      "requestBody": null,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "messages": [
+              {
+                "id": "msg_01JQZ2K9X5D8NQ7P3M6R4T1W8U",
+                "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+                "sessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+                "role": "user",
+                "content": "帮我看看第三章的逻辑",
+                "createdAt": "2026-08-15T05:00:00Z"
+              },
+              {
+                "id": "msg_01JQZ2K9X5D8NQ7P3M6R4T1W8V",
+                "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+                "sessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+                "role": "assistant",
+                "content": "第三章的问题在于论证链条缺少过渡段……",
+                "createdAt": "2026-08-15T05:01:00Z"
+              }
+            ],
+            "hasMore": false
+          },
+          "schemaRef": "{ messages: Message[], hasMore: boolean }"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "AGENT_NOT_FOUND",
+          "body": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
+        },
+        {
+          "status": 404,
+          "code": "SESSION_NOT_FOUND",
+          "body": { "error": { "code": "SESSION_NOT_FOUND", "message": "session not found: ses_xxx" } }
+        }
+      ]
+    },
+    {
+      "name": "getBinding",
+      "summary": "查询 ChannelConversation 当前绑定的 (agent, session)；无绑定返回 404",
+      "method": "GET",
+      "path": "/v1/bindings/{channelConversationId}",
+      "pathParams": [{ "name": "channelConversationId", "type": "string", "example": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8W" }],
+      "queryParams": [],
+      "requestBody": null,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "channelConversationId": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8W",
+            "activeAgentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+            "activeSessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+            "updatedAt": "2026-08-15T05:00:00Z"
+          },
+          "schemaRef": "Binding"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "BINDING_NOT_FOUND",
+          "body": { "error": { "code": "BINDING_NOT_FOUND", "message": "no binding for channel conversation: ccv_xxx" } }
+        }
+      ]
+    },
+    {
+      "name": "switchAgent",
+      "summary": "切换该 ChannelConversation 正在聊的 Agent（可选指定 session，缺省 = 该 Agent 的 main session）。「叫论文导师来 / 换回来」即此接口",
+      "method": "PUT",
+      "path": "/v1/bindings/{channelConversationId}",
+      "pathParams": [{ "name": "channelConversationId", "type": "string", "example": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8W" }],
+      "queryParams": [],
+      "requestBody": {
+        "schemaRef": "{ agentId: string, sessionId?: string }",
+        "example": {
+          "agentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W9A",
+          "sessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W9B"
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "channelConversationId": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8W",
+            "activeAgentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W9A",
+            "activeSessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W9B",
+            "updatedAt": "2026-08-15T06:30:00Z"
+          },
+          "schemaRef": "Binding"
+        }
+      ],
+      "errors": [
+        {
+          "status": 404,
+          "code": "AGENT_NOT_FOUND",
+          "body": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }
+        },
+        {
+          "status": 404,
+          "code": "SESSION_NOT_FOUND",
+          "body": { "error": { "code": "SESSION_NOT_FOUND", "message": "session not found: ses_xxx" } }
+        },
+        {
+          "status": 400,
+          "code": "SESSION_NOT_IN_AGENT",
+          "body": { "error": { "code": "SESSION_NOT_IN_AGENT", "message": "session ses_xxx does not belong to agent agt_yyy" } }
+        },
+        {
+          "status": 409,
+          "code": "ARCHIVED_SESSION",
+          "body": { "error": { "code": "ARCHIVED_SESSION", "message": "session is archived: ses_xxx" } }
+        }
+      ]
+    },
+    {
+      "name": "resolveChannelConversation",
+      "summary": "幂等落地入口：(channel, externalId) 唯一；已存在返回原 ChannelConversation（200），不存在则创建（201）并同时建立「默认 Agent + main session」的初始 Binding；返回 ChannelConversation + Binding 供渠道直接 dispatch。飞书只有 chatId 时调此接口一步得到当前 (agentId, sessionId)",
+      "method": "PUT",
+      "path": "/v1/channel-conversations/resolve",
+      "pathParams": [],
+      "queryParams": [],
+      "requestBody": {
+        "schemaRef": "{ channel: string, externalId: string, title?: string }",
+        "example": {
+          "channel": "feishu",
+          "externalId": "oc_abc123def456",
+          "title": "与 论文导师 的会话"
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "channelConversation": {
+              "id": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8W",
+              "channel": "feishu",
+              "externalId": "oc_abc123def456",
+              "title": "与 论文导师 的会话",
+              "createdAt": "2026-08-01T02:00:00Z",
+              "lastActiveAt": "2026-08-15T05:00:00Z"
+            },
+            "binding": {
+              "channelConversationId": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8W",
+              "activeAgentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+              "activeSessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+              "updatedAt": "2026-08-15T05:00:00Z"
+            }
+          },
+          "schemaRef": "{ channelConversation: ChannelConversation, binding: Binding }"
+        },
+        {
+          "status": 201,
+          "body": {
+            "channelConversation": {
+              "id": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8Q",
+              "channel": "feishu",
+              "externalId": "oc_xyz789",
+              "title": "与 论文导师 的会话",
+              "createdAt": "2026-08-15T07:00:00Z",
+              "lastActiveAt": "2026-08-15T07:00:00Z"
+            },
+            "binding": {
+              "channelConversationId": "ccv_01JQZ2K9X5D8NQ7P3M6R4T1W8Q",
+              "activeAgentId": "agt_01JQZ2K9X5D8NQ7P3M6R4T1W8Y",
+              "activeSessionId": "ses_01JQZ2K9X5D8NQ7P3M6R4T1W8Z",
+              "updatedAt": "2026-08-15T07:00:00Z"
+            }
+          },
+          "schemaRef": "{ channelConversation: ChannelConversation, binding: Binding }"
+        }
+      ],
+      "errors": [
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "body": { "error": { "code": "VALIDATION_ERROR", "message": "channel and externalId are required" } }
+        }
+      ]
+    }
+  ]
+}
