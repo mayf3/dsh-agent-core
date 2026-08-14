@@ -1,0 +1,24 @@
+{
+  "name": "@agent-core/broker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Core generic broker: capability manifests -> model-facing DSH tools (V1)",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json",
+    "./schema": "./src/schema.js",
+    "./mapping": "./src/mapping.js",
+    "./identity": "./src/identity.js",
+    "./registry": "./src/registry.js",
+    "./calculator.manifest": "./src/calculator.manifest.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": ">=0.1.0-rc"
+  }
+}

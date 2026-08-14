@@ -1,0 +1,13 @@
+{
+  "name": "@agent-core/owner-guard",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core process-model demo: single-owner guard plugin (one live process per agent home)",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED"
+}

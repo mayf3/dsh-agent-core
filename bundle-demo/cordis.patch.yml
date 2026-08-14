@@ -1,0 +1,28 @@
+# @agent-core/bundle-demo — process-model demo patch layer over dsh-base.
+#
+# Same shape as the V0 @agent-core/bundle, but the one-shot router is replaced
+# by the long-lived demo-server plugin (one DSH process per Agent, JSON-RPC
+# over stdio, persistence-aware create/resume), plus the demo-owner-guard row
+# that enforces one owner process per agent home. The demo does NOT mount the
+# broker row: its tests are plain chat turns, and the composition must stay
+# independent of concurrently-migrated capability code. Everything else comes
+# from dsh-base — the demo measures the real V0-based runtime composition.
+#
+# stdout must stay pure JSON-RPC, so no console logger may be added here.
+
+- id: system-prompt
+  config:
+    persona: >-
+      You are agent-core-demo-v0, the process-model benchmark agent.
+
+      Your working directory is {{cwd}}.
+
+      Follow the caller's exact reply instructions and reply concisely. In
+      this benchmark do not call any tools.
+
+- insert:
+    - id: demo-owner-guard
+      name: '@agent-core/owner-guard'
+
+    - id: demo-server
+      name: '@agent-core/demo-server'

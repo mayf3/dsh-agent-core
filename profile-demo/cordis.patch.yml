@@ -1,0 +1,10 @@
+# User patch layer of the agent-core-demo profile, applied after every bundle
+# layer. Only demo-relevant overrides live here.
+#
+# Session persistence stays under the agent home ($DSH_HOME/sessions), but
+# with plain JSONL instead of zstd frames so the benchmark driver can verify
+# session content deterministically after a process restart.
+- id: session-persistence-jsonl
+  config:
+    root: !!js "process.env.DSH_DEMO_SESSION_ROOT ?? dshHomePath('sessions')"
+    compression: none
