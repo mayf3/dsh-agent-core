@@ -1,0 +1,17 @@
+{
+  "name": "@agent-core/bundle-memory",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core memory bundle: patch layer inserting the per-agent long-term memory plugin (agent-memory) into a dsh profile",
+  "type": "module",
+  "exports": {
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "UNLICENSED"
+}

@@ -49,7 +49,9 @@ V1 调查收敛结论（详见 `CAPABILITY_MATRIX.md`）：为替代 OpenClaw，
 | `investigations/always-on.md` | 常驻与调度调查（ADAPT：原语底座 + daemon/恢复编排层） |
 | `decisions/README.md` | 决策记录（含模板） |
 | `decisions/AGENT_SESSION_CHANNEL_MODEL_V1.md` | 决策 D-002：Channel/Agent/Session/Binding 模型与前后端 API 契约（含 Android 可直接 mock 的 `AGENT_SESSION_CHANNEL_MODEL_V1.api.json`） |
+| `decisions/MEMORY_V1.md` | 决策 D-003：Memory V1 — per-agent file-first 长期记忆（Agent Core memory glue） |
 | `reports/bootstrap-v0.md` | V0 bootstrap 报告（原 V0-REPORT.md，内容完整保留） |
+| `reports/memory-v1.md` | Memory V1 实现报告（七问七答、组件、真实验收 PoC 证据、Integration need） |
 | `TRUST-BOUNDARY-REPORT.md` | 信任边界/身份伪造调查（identity-auth 的证据基础） |
 
 方法限制说明：本轮调查期间 web_search 后端不可用（无 `DEEPSEEK_API_KEY`），
@@ -72,3 +74,10 @@ session cwd 指向已播种目录、AGENTS.md 进入首轮上下文、MEMORY.md 
 
 明确不做（本 milestone 之外）：consolidation、控制面/daemon、jobs 持久化、控制面
 面板、Broker 侧绑定 —— 全部留待 M1 后的下一个 milestone。
+
+> 更新（2026-08-15）：**Memory V1（分支 feat/agent-memory-v1）已落地** ——
+> `packages/agent-memory/`（file-first per-agent 记忆 glue：MEMORY.md + daily
+> notes、6 工具、注入、turn/end consolidation + fallback）、`bundle-memory/` +
+> `profile-memory/`、`scripts/memory-v1-verify.mjs` 真实验收（ALPHA/BETA 双 agent
+> 隔离、跨 session、consolidation、人工编辑）。决策 D-003，报告
+> `reports/memory-v1.md`。未触碰 agent-router/agent-registry/agent-session。

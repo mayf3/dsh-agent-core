@@ -41,16 +41,16 @@ jobs/goal/slots/credentials/持久化），缺口全部集中在"薄集成层"�
 | 跨进程信任（DSH → Broker） | `credentials` seam（`.credentials.yaml` 0600）、`subprocess` spawn、per-process `dshHomePath`——拼图碎片齐，无整体 | 旧 Auth（OAuth2 client/secret + JWT + grant）形态不适配，全部判定删除 | 进程凭据注入机制 + Broker 侧 credential→principal 绑定 | **BUILD**（控制面铸凭据；Broker 侧 flat allowlist 替代旧 Auth） |
 | 动态插件攻击面处置 | `tool-cordis`/`cordis-host-runner` 是本进程内自提权 | — | 跨 agent 信任必须依赖进程边界 | **DEFER**（per-agent 进程内它是"本进程身份下自提权"，不作为跨 agent 信任机制） |
 
-### 1.2 memory（详见 `investigations/memory.md`）
+### 1.2 memory（详见 `investigations/memory.md`；已落地：决策 D-003 + `reports/memory-v1.md`，分支 feat/agent-memory-v1）
 
 | 需求能力 | DSH 原生 | 社区/既有 | 缺口 | 结论 |
 |---|---|---|---|---|
 | 事件溯源日志 + 持久化 | Session append-only 日志 + JSONL/SQLite，崩溃恢复 | — | 无（这是日志不是记忆） | **ADOPT** |
 | 会话内压缩 | `compaction`（摘要替换 surface） | — | 只做会话内，不跨会话 | **ADOPT** |
-| 跨会话召回（关键字） | `tool_session_query`（FTS5，opt-in）+ `session-reference` 引用注入 | — | 无语义召回；召回发生在原始日志而非 curated 记忆库 | **ADAPT**（启用 tool_session_query；语义召回 **DEFER**） |
-| 跨会话巩固（consolidation） | ❌ 无 | MCP Reference Memory/Memorix/Engram（官方示例）；OpenClaw dreaming/consolidation；mem0/Letta/Zep 过重 | **唯一完全缺失层**：compaction 前/会话尾把经历提炼成 curated 事实 | **BUILD**（写入文件记忆，信任边界须防记忆注入攻击） |
-| 记忆存储/检索通道 | 官方定位 = 第三方 MCP（`examples/mcp-memory`） | MCP server-memory（KG）等 | — | **ADAPT**（MCP 作可选后端） |
-| per-agent 隔离 | 会话存储按会话隔离；cwd 认证 | — | 无「每 agent 一份记忆命名空间」统一抽象 | **BUILD**（并入 workspace-bootstrap + consolidation 的命名空间键控） |
+| 跨会话召回（关键字） | `tool_session_query`（FTS5，opt-in）+ `session-reference` 引用注入 | — | 无语义召回；召回发生在原始日志而非 curated 记忆库 | **ADAPT**（`agent-memory` 注入 + `memory_search` 工具已落地；语义召回 **DEFER**） |
+| 跨会话巩固（consolidation） | ❌ 无 | MCP Reference Memory/Memorix/Engram（官方示例）；OpenClaw dreaming/consolidation；mem0/Letta/Zep 过重；mneme 0.1.6（SQLite+镜像，全局库） | 曾是**唯一完全缺失层** | **BUILD ✅**（`@agent-core/agent-memory`：turn/end + 防抖提炼写入 `<workspace>/MEMORY.md`，输出逐条校验防记忆注入，失败落 daily note 兜底） |
+| 记忆存储/检索通道 | 官方定位 = 第三方 MCP（`examples/mcp-memory`） | MCP server-memory（KG）等 | — | **ADAPT**（文件记忆为主，MCP 保留可选后端） |
+| per-agent 隔离 | 会话存储按会话隔离；cwd 认证 | — | 曾无「每 agent 一份记忆命名空间」统一抽象 | **BUILD ✅**（物理隔离：agentId→workspace→MEMORY.md，无全局库；`DSH_AGENT_ID`/cwd 键控） |
 
 ### 1.3 workspace-files（详见 `investigations/workspace-files.md`）
 
@@ -113,7 +113,7 @@ jobs/goal/slots/credentials/持久化），缺口全部集中在"薄集成层"�
 
 - 控制面（daemon/Router）常驻的 profile/bundle 形态与系统托管方式（systemd vs 进程内）
 - workspace-bootstrap 的挂点（`agent/pre-step` vs preset 组合创建）与 AGENTS.md race
-- consolidation 触发时机（compaction 前 / turn 尾 / 定时）与记忆信任边界（防记忆注入）
+- ~~consolidation 触发时机（compaction 前 / turn 尾 / 定时）与记忆信任边界（防记忆注入）~~ → 已定案（D-003）：turn/end + 防抖 + 显式工具/服务；证据先过滤 + 输出逐条校验
 - 控制面板目标用户（人工运维 vs 上层编排读运行态）决定 `agent/*` 事件是否投影为可聚合数据
 - 子 agent 是否共享父 principal 的 wire 呈现（影响内建 subagent 审计语义）
 - 进程凭据形态（opaque bearer vs mTLS）与 Broker 审计事件格式（attempted vs actual principal）
