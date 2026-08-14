@@ -1,0 +1,18 @@
+{
+  "name": "@agent-core/agent-registry",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core agent registry: long-lived Agent identity (id/name/avatar/description), default-agent semantics, atomic JSON persistence across restarts; no process/session/memory ownership",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./registry": "./src/registry.js",
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=3",
+    "@deepseek-ai/schemastery": ">=0"
+  }
+}

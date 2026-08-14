@@ -173,7 +173,10 @@ Base: `https://<host>/v1` · HTTPS · JSON。全部端点如下（机器可读�
 ## 5. 通用约定
 
 - **传输**：HTTPS + JSON；Base path `/v1`；所有 body 为 JSON 对象。
-- **id**：不透明字符串，全局唯一、永不复用；客户端不得解析或拼接。
+- **id**：不透明字符串，客户端不得解析或拼接。**Agent.id** 全局唯一、永不复用；
+  **Session.id** 在所属 Agent 内唯一（Session 全局身份 = `(agentId, sessionId)`，
+  `main` 为每个 Agent 的保留 sessionId）；ChannelConversation / Message id 保持
+  现有契约语义。
 - **时间**：ISO 8601 UTC（`2026-08-15T05:00:00Z`）。
 - **分页**：`limit` 默认 50、上限 200；`before` 为消息 id 游标；响应带 `hasMore`。
 - **排序**：sessions 按 `lastActiveAt` 降序；messages 按 `createdAt` 升序。
