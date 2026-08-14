@@ -1,0 +1,17 @@
+{
+  "name": "dsh-profile-agent-core-memory",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Agent Core memory profile: per-agent composition = dsh-base + demo-server (resume-aware JSON-RPC) + agent-memory (long-term memory glue)",
+  "dependencies": {},
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@agent-core/bundle-demo",
+        "@agent-core/bundle-memory"
+      ]
+    }
+  },
+  "license": "UNLICENSED"
+}

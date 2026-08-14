@@ -1,0 +1,22 @@
+{
+  "name": "@agent-core/agent-memory",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core memory glue: file-first per-agent long-term memory (MEMORY.md + daily notes), model tools, context injection, LLM consolidation with daily-note fallback",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./memory": "./src/memory.js",
+    "./paths": "./src/paths.js",
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "@agent-core/workspace-bootstrap": "0.0.0",
+    "@deepseek-ai/cordis": ">=3",
+    "@deepseek-ai/dsh-llm": ">=0",
+    "@deepseek-ai/dsh-tools": ">=0",
+    "@deepseek-ai/schemastery": ">=0"
+  }
+}
