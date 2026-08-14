@@ -77,12 +77,18 @@ Forum / Workflow / OKR / 其他外部业务系统
 
 ### Session（属于 Agent）
 
-- **定义**：Agent 之下的一条独立对话。`main` 为随 Agent 预置的长期主会话（不可归档/
-  删除）；`normal` 会话可新建、归档（软）、删除（硬）、定期清理（保留期=配置）。
+- **定义**：Agent 之下的一条独立对话。**Session identity = (agentId, sessionId)**
+  （实验证据，Session V1 PoC 已定案）：DSH SessionId 作用域是 per-Agent DSH_HOME，
+  非全局，因此 Agent A/main 与 Agent B/main 可同时存在。`main` 为每个 Agent 的
+  保留 SessionId（长期主会话，不可归档/删除）；`normal` 会话用其他 opaque
+  sessionId，可新建、归档（软）、删除（硬）、定期清理（保留期=配置）。
 - **人话**：员工和不同人谈不同事情的谈话记录——「和论文导师聊论文」一条，「和财务
-  对报销」另一条。
-- **所有权**：Agent 拥有；控制面 Session 管理负责生命周期；DSH session persistence
-  负责落盘（Agent Core 不重做 session engine）。
+  对报销」另一条；记录本放在员工自己的抽屉里（per-agent DSH_HOME）。
+- **所有权**：Agent 拥有；**Session Runtime 全部由 DSH 原生负责**（identity /
+  trajectory persistence / create / resume / process death recovery）。Agent Core
+  **不建 Session mapping layer、不建独立 session 包**（product sessionId = DSH
+  native sessionId）；Product API milestone 只维护产品元数据（title / kind /
+  archived / lastActiveAt）。
 
 ### ChannelConversation（渠道侧会话）
 
@@ -194,6 +200,12 @@ Forum / Workflow / OKR / 其他外部业务系统
 - **workspace-bootstrap 是 agentId → workspace/DSH_HOME 映射的唯一 owner**。
 - **DSH 是 Runtime**：loop/tools/fs/shell/skills/subagents/compaction/persistence
   全部来自 DSH，Agent Core 不重做。
+- **Agent Core product sessionId = DSH native sessionId（YES，实验已定案）**：
+  Session identity = (agentId, sessionId)（DSH SessionId 作用域 = per-Agent
+  DSH_HOME）；`main` 是每个 Agent 的保留 SessionId；**不建 Session mapping layer、
+  不建独立 session 包**；DSH 原生负责 session identity / trajectory persistence /
+  create / resume / 崩溃恢复；Agent Core 只在 Product API milestone 维护产品
+  metadata（title / kind / archived / lastActiveAt）。
 - **Forum / Workflow / OKR 在外部**，不是 Agent Core 内部模块。
 - **Broker 是统一外部能力入口**：capability manifest → DSH tool 的通用桥，
   Forum/Workflow/OKR 只提供 manifest + handler，不写专用 adapter。
@@ -201,7 +213,6 @@ Forum / Workflow / OKR / 其他外部业务系统
 
 ### OPEN — 暂不冻结（未经实验不冻结实现细节）
 
-- Agent Core sessionId 是否等于 DSH sessionId（契约层 id vs 运行时 id 的映射）。
 - Memory consolidation 的精确触发时机（compaction 前 / turn 尾 / 定时）。
 - process credential 形态：bearer / mTLS / 其他（Phase 3 决定）。
 - Proactive 最终采用哪些社区插件（schedule/cron/jobs 的选型）。

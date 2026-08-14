@@ -41,11 +41,13 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 | 项 | 状态 | 一句话价值 |
 |---|---|---|
 | Agent Registry V1 | 🔄 | 花名册：这个 Agent 是谁（有身份才谈得上长期） |
-| Agent Session V1 | 🔄 | 谈话记录：一个 Agent 多个独立会话（main + normal） |
+| Agent Session V1 | ✅ PoC 已完成（实验定案） | 谈话记录：一个 Agent 多个独立会话（main + normal）；**结论：product sessionId = DSH native sessionId，identity = (agentId, sessionId)，不建独立 session 包**（见 Component Map §2） |
 | Agent Memory V1 | 🔄 | 长期经验：跨 Session 记得住（不是第二套日志） |
 
 依赖关系：Registry 是 Session/Memory 的父实体（session/memory 挂 agent 下）；
-三者可并行开发，但**产品验证必须三合一**（见 Phase 2 闸门）。
+三者可并行开发，但**产品验证必须三合一**（见 Phase 2 闸门）。Session 线已收敛为
+「DSH 原生直通 + Product metadata 薄层（延后到 Product API milestone）」，不再消耗
+独立组件开发。
 
 ## Phase 2 — Product Integration（Registry + Session + Memory → Router → 真多 Agent）
 
@@ -112,6 +114,7 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 | always-on 调查：daemon ≡ 控制面（Router）为同一组件 | Phase 5 的 proactive runtime 与 Router 合并形态仍保持该结论 | 无冲突；实现时验证 |
 | TRUST-BOUNDARY：方案 B 为唯一成立方案 | Phase 3 按方案 B 实施 | 无冲突 |
 | D-002 契约：V1 不实现后端 | 本路线把 API 实现排在 Phase 6 | 一致 |
+| **D-002 契约 §2.2/§2.5：Session.id 为「全局唯一不透明 id（ses_ 前缀）」** | **新实验证据：product sessionId = DSH native sessionId；DSH SessionId 作用域是 per-Agent DSH_HOME（非全局），identity = (agentId, sessionId)** | **⚠️ 待 reconciliation 的已知契约冲突**：契约的「全局唯一 / ses_ 前缀」约束与「(agentId, sessionId) 直通 DSH」冲突。本 Architecture PR **不修改 D-002**（避免与并行 Registry PR 同文件冲突），仅登记；建议后续独立契约修订 PR 将 Session.id 语义改为「per-Agent 唯一 opaque id（可等于 DSH sessionId），全局唯一由 (agentId, sessionId) 复合保证」 |
 
 ## 最终判断
 
@@ -120,11 +123,13 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
    长期存在的数字员工（身份/办公桌/会话/记忆/进程身份/外部能力/成长），不重做
    Runtime、不内置外部业务系统。
 3. **FROZEN**：所有权边界、one Agent = one process 安全域、Channel ≠ Agent ≠
-   Session、workspace-bootstrap 映射唯一 owner、DSH 是 Runtime、Forum/Workflow/OKR
-   在外部、Broker 是统一入口。
-4. **OPEN**：sessionId 映射、consolidation 时机、credential 形态、proactive 选型、
-   jobs 持久化实现、daemon 托管、Artifact、Dashboard。
-5. **与现有文档冲突**：仅一处「历史结论 vs 已完成事实」（V0 报告 E 节迁移目标已
-   达成），已在表中说明，不覆盖旧决策。
+   Session、workspace-bootstrap 映射唯一 owner、DSH 是 Runtime、**product
+   sessionId = DSH native sessionId（(agentId, sessionId) 复合身份，不建映射层）**、
+   Forum/Workflow/OKR 在外部、Broker 是统一入口。
+4. **OPEN**：consolidation 时机、credential 形态、proactive 选型、jobs 持久化
+   实现、daemon 托管、Artifact、Dashboard。
+5. **与现有文档冲突**：两处——①「历史结论 vs 已完成事实」（V0 报告 E 节迁移目标
+   已达成）；②「新实验证据 vs D-002 契约」（sessionId 全局唯一/ses_ 前缀约束），
+   均已在表中说明，旧决策未被覆盖；②列为待 reconciliation，不在此 PR 修改 D-002。
 6. **下一阶段唯一优先级**：Phase 2 Product Integration——Registry + Session +
    Memory 接进 Router，实现真正多 Agent（真实双会话各自独立上下文 + switchAgent）。
