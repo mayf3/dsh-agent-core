@@ -1,0 +1,17 @@
+{
+  "name": "@agent-core/bundle",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core V0 bundle: patch layer inserting the broker and router plugins into a dsh profile",
+  "type": "module",
+  "exports": {
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "UNLICENSED"
+}

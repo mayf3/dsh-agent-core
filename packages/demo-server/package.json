@@ -1,0 +1,13 @@
+{
+  "name": "@agent-core/demo-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core process-model demo: long-lived per-agent JSON-RPC server plugin with persistence resume",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED"
+}

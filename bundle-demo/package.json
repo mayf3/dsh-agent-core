@@ -1,0 +1,17 @@
+{
+  "name": "@agent-core/bundle-demo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core process-model demo bundle: patch layer inserting owner-guard and the resume-aware JSON-RPC server into a dsh profile",
+  "type": "module",
+  "exports": {
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "UNLICENSED"
+}

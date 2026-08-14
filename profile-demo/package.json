@@ -1,0 +1,16 @@
+{
+  "name": "dsh-profile-agent-core-demo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Agent Core process-model demo profile: dsh-base plus the @agent-core/bundle-demo layer",
+  "dependencies": {},
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@agent-core/bundle-demo"
+      ]
+    }
+  },
+  "license": "UNLICENSED"
+}
