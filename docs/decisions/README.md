@@ -15,7 +15,25 @@
 
 已登记决策：
 
-- 无（V1 调查进行中，决策将在调查收敛后登记）。
+## D-002: Agent / Session / Channel / Binding 模型与 API 契约（V1）
+
+- 状态: proposed
+- 日期: 2026-08-15
+- 背景: Router、渠道适配器（feishu-connector 等）与各端 UI 需要一个渠道无关的
+  统一「会话归属」契约，避免每个渠道各自发明一套语义。
+- 决策: 最小实体集 = Agent / Session / ChannelConversation / Binding。Agent 是长期
+  实体（固定拥有 workspace / DSH_HOME / credential / memory，V1 API 不暴露）；
+  Session 属于 Agent（main 长期主会话 + normal 可新建/归档/定期清理）；Channel 只是
+  UI/传输，不拥有 Agent 与 Session；「切换 Agent」= `switchAgent(ccv, agentId,
+  sessionId?)` 只改 Binding，不是角色扮演；未传 sessionId 固定进入目标 Agent 的
+  main；「换回来」= 客户端再次 switchAgent，V1 后端不保存切换 history/stack。
+  十一个端点 + 错误码 + 通用约定见 `AGENT_SESSION_CHANNEL_MODEL_V1.md`；Android
+  可直接 mock 的机器可读契约见 `AGENT_SESSION_CHANNEL_MODEL_V1.api.json`。
+- 替代方案: 把 Session 挂在 ChannelConversation 之下（Channel 拥有 Session）——否决：
+  与「Agent 是长期实体、跨渠道延续」原则冲突；把「切换」做成角色扮演/复制 Agent——
+  否决：产生状态分裂。
+- 影响: 入站消息按 Binding.activeAgentId 路由到 per-agent 进程（Router #9）；渠道
+  适配器只做 externalId ↔ ChannelConversation 映射 + 调 API；不实现后端。
 
 ## D-001: V1 调查收敛 — 能力结论与首个实现里程碑
 
