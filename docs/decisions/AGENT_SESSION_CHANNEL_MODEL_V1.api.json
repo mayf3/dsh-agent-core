@@ -8,7 +8,7 @@
   "contentType": "application/json",
   "designDoc": "docs/decisions/AGENT_SESSION_CHANNEL_MODEL_V1.md",
   "conventions": {
-    "idFormat": "不透明字符串（agt_ / ses_ / ccv_ / msg_ + ULID），全局唯一、永不复用；客户端不得解析或拼接",
+    "idFormat": "带类型前缀的不透明字符串（如 agt_... / ses_... / ccv_... / msg_...），全局唯一、永不复用；客户端不得解析或拼接",
     "timeFormat": "ISO 8601 UTC，如 2026-08-15T05:00:00Z",
     "errorEnvelope": {
       "example": { "error": { "code": "AGENT_NOT_FOUND", "message": "agent not found: agt_xxx" } }

@@ -15,29 +15,37 @@
  * merely records that the Agent *has* them (boundary documented in
  * docs/reports/agent-registry-v1.md).
  *
- * Persistence: a single JSON document at `storeFile` (default
- * `~/.dsh/registry/agents.json`, overridable). Writes are atomic
- * (write-tmp + rename) and serialized through an internal queue, so a crash
- * mid-write can never leave a torn store, and concurrent mutations cannot
- * interleave. The document survives process restarts by construction:
+ * agentId is treated as an OPAQUE string: the registry generates it
+ * (`agt_` + random payload) and never validates, parses or interprets it.
+ * Path legality for an agentId is the workspace-bootstrap owner's job when
+ * it receives one — the registry has ZERO source dependency on
+ * workspace-bootstrap (or any other package).
+ *
+ * Persistence: a single JSON document at `storeFile` (an ABSOLUTE path —
+ * fail-loud otherwise, so a literal `~` directory can never be created by
+ * accident). Writes are atomic (write-tmp + rename) and serialized through
+ * an internal queue, so a crash mid-write can never leave a torn store, and
+ * concurrent mutations cannot interleave. Each mutation has minimal
+ * transaction semantics: snapshot -> mutate -> persist -> success; a failed
+ * persist restores the in-memory snapshot and rejects. The document
+ * survives process restarts by construction:
  *
  *   { "version": 1,
  *     "agents": { "<agentId>": { id, name, avatar, description,
  *                                 createdAt, updatedAt } },
  *     "defaultAgentId": "<agentId>" | null }
  *
- * agentId validity is REUSED from @agent-core/workspace-bootstrap
- * (`sanitizeAgentId`): generated ids are guaranteed to be valid single path
- * components so the workspace-bootstrap owner can later map them to
- * workspace / DSH_HOME segments. The registry itself never computes any
- * path — it only ever stores the id string.
+ * Store invariants are enforced fail-loud on load (the registry has no
+ * delete API, so any violation means the store was tampered with): a
+ * `defaultAgentId` that does not resolve to a registered agent, or a
+ * non-empty registry without a legal default, both raise `CORRUPT_STORE`
+ * instead of being silently "fixed".
  */
 
 import { randomUUID } from 'node:crypto'
-import { mkdir, rename, writeFile } from 'node:fs/promises'
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname } from 'node:path'
-import { sanitizeAgentId } from '../../workspace-bootstrap/src/paths.js'
+import { dirname, isAbsolute } from 'node:path'
 
 /** Store document version; bumped only on breaking format changes. */
 export const STORE_VERSION = 1
@@ -48,35 +56,24 @@ export const AGENT_NOT_FOUND = 'AGENT_NOT_FOUND'
 /** Error code thrown for invalid input (mirrors D-002 `VALIDATION_ERROR`). */
 export const VALIDATION_ERROR = 'VALIDATION_ERROR'
 
-/** Error code thrown when the store file exists but cannot be parsed. */
+/** Error code thrown when the store file exists but violates its format. */
 export const CORRUPT_STORE = 'CORRUPT_STORE'
 
-/** Prefix of every generated opaque agentId (`agt_` + 32 hex chars). */
+/** Prefix of every generated opaque agentId (`agt_` + random payload). */
 export const AGENT_ID_PREFIX = 'agt_'
 
 /** Max attempts to draw a unique agentId (collisions are astronomically rare). */
 const MAX_ID_ATTEMPTS = 5
 
 /**
- * Generate an opaque, path-safe, never-reused agentId.
- * Alphabet: `agt_` + lowercase hex — a strict subset of what
- * `sanitizeAgentId` accepts, so the id is always a valid workspace path
- * component for the workspace-bootstrap owner.
+ * Generate an opaque, never-reused agentId: `agt_` + 32 random hex chars
+ * (crypto.randomUUID payload). The registry treats the id as opaque; the
+ * workspace-bootstrap owner validates path legality itself when it receives
+ * one.
  * @returns a fresh id.
  */
 export function generateAgentId() {
   return AGENT_ID_PREFIX + randomUUID().replaceAll('-', '')
-}
-
-/** Validate a caller-supplied id via the workspace-bootstrap rules. */
-function assertValidAgentId(agentId) {
-  try {
-    sanitizeAgentId(agentId)
-  } catch (error) {
-    throw Object.assign(new TypeError(`agent-registry: invalid agentId ${JSON.stringify(agentId)}: ${error.message}`), {
-      code: VALIDATION_ERROR,
-    })
-  }
 }
 
 /** Public D-002 Agent shape: identity + display only (no internal timestamps). */
@@ -109,18 +106,25 @@ function normalizeNullable(value, field) {
  * Construction loads the store synchronously (fail-loud on a corrupt file),
  * so a mounted service is always ready. Mutations (`registerAgent`,
  * `updateAgent`, `setDefaultAgent`) are async and resolve only after the
- * change is durably persisted; reads (`listAgents`, `getAgent`,
- * `getDefaultAgent`) are synchronous.
+ * change is durably persisted (or reject and roll back); reads
+ * (`listAgents`, `getAgent`, `getDefaultAgent`) are synchronous.
  */
 export class AgentRegistry {
   /**
    * @param {object} options
-   * @param {string} options.storeFile - absolute path of the JSON store.
+   * @param {string} options.storeFile - ABSOLUTE path of the JSON store
+   *   (relative or `~`-prefixed values are rejected; no silent resolution).
    * @param {() => string} [options.now] - ISO timestamp provider (testable).
    */
   constructor({ storeFile, now = () => new Date().toISOString() }) {
     if (typeof storeFile !== 'string' || storeFile === '') {
       throw new TypeError('agent-registry: storeFile must be a non-empty string')
+    }
+    if (!isAbsolute(storeFile)) {
+      throw Object.assign(
+        new TypeError(`agent-registry: storeFile must be an absolute path (got ${JSON.stringify(storeFile)})`),
+        { code: VALIDATION_ERROR },
+      )
     }
     this.storeFile = storeFile
     this.now = now
@@ -129,7 +133,6 @@ export class AgentRegistry {
     this.defaultAgentId = null
     /** Serialization queue: every mutation runs after the previous one settles. */
     this.queue = Promise.resolve()
-    this.loaded = false
     this.load()
   }
 
@@ -166,22 +169,64 @@ export class AgentRegistry {
           updatedAt: typeof record.updatedAt === 'string' ? record.updatedAt : record.createdAt ?? this.now(),
         })
       }
-      // Defensive: a dangling default pointer is cleared, never kept.
-      this.defaultAgentId = this.agents.has(document.defaultAgentId) ? document.defaultAgentId : null
+      // Fail-loud store invariants: the registry has no delete API, so a
+      // dangling default pointer — or a non-empty registry without a legal
+      // default — means the store was tampered with. Never silently "fix" it.
+      const defaultId = document.defaultAgentId
+      if (defaultId !== null && defaultId !== undefined && !this.agents.has(defaultId)) {
+        throw Object.assign(
+          new Error(`agent-registry: corrupt store ${this.storeFile}: defaultAgentId ${JSON.stringify(defaultId)} does not resolve to a registered agent`),
+          { code: CORRUPT_STORE },
+        )
+      }
+      if (this.agents.size > 0 && (defaultId === null || defaultId === undefined)) {
+        throw Object.assign(
+          new Error(`agent-registry: corrupt store ${this.storeFile}: ${this.agents.size} agent(s) registered but no default agent`),
+          { code: CORRUPT_STORE },
+        )
+      }
+      this.defaultAgentId = defaultId === undefined || defaultId === null ? null : defaultId
     }
-    this.loaded = true
   }
 
-  /** Serialize one mutation; `fn` mutates in-memory state, then persists. */
+  /**
+   * Serialize one mutation with minimal transaction semantics:
+   *   snapshot -> mutate -> persist -> success
+   * If the mutation body or `persist` throws, the in-memory state is
+   * restored to the snapshot and the caller's promise rejects. No WAL / no
+   * database: the store file is only ever replaced atomically, so a failed
+   * persist cannot corrupt the on-disk document (a stray `.tmp` is
+   * best-effort removed by `persist` itself).
+   */
   enqueue(fn) {
     const run = this.queue.then(async () => {
-      const result = await fn()
-      await this.persist()
-      return result
+      const snapshot = this.snapshot()
+      try {
+        const result = await fn()
+        await this.persist()
+        return result
+      } catch (error) {
+        this.restore(snapshot)
+        throw error
+      }
     })
     // Keep the chain alive even when a mutation rejects.
     this.queue = run.then(() => undefined, () => undefined)
     return run
+  }
+
+  /** Copy of the mutable state (records are plain JSON objects). */
+  snapshot() {
+    return {
+      agents: new Map([...this.agents.entries()].map(([id, record]) => [id, { ...record }])),
+      defaultAgentId: this.defaultAgentId,
+    }
+  }
+
+  /** Restore the state to a snapshot (rollback path). */
+  restore(snapshot) {
+    this.agents = snapshot.agents
+    this.defaultAgentId = snapshot.defaultAgentId
   }
 
   /** Atomic persist: write tmp, then rename over the store file. */
@@ -193,8 +238,13 @@ export class AgentRegistry {
     }
     await mkdir(dirname(this.storeFile), { recursive: true })
     const tmp = `${this.storeFile}.tmp`
-    await writeFile(tmp, `${JSON.stringify(document, null, 2)}\n`, { encoding: 'utf8' })
-    await rename(tmp, this.storeFile)
+    try {
+      await writeFile(tmp, `${JSON.stringify(document, null, 2)}\n`, { encoding: 'utf8' })
+      await rename(tmp, this.storeFile)
+    } catch (error) {
+      await rm(tmp, { force: true }).catch(() => {}) // best-effort cleanup
+      throw error
+    }
   }
 
   /**
@@ -226,7 +276,7 @@ export class AgentRegistry {
    *
    * The FIRST registered Agent automatically becomes the default
    * (D-002 open question 4 — resolved as "first created"; see
-   * docs/reports/agent-registry-v1.md §3.3). A later `setDefaultAgent`
+   * docs/reports/agent-registry-v1.md §2.3). A later `setDefaultAgent`
    * overrides this.
    *
    * @param {{name:string, avatar?:string|null, description?:string|null}} input
@@ -244,7 +294,6 @@ export class AgentRegistry {
         id = undefined
       }
       if (id === undefined) throw new Error('agent-registry: could not draw a unique agentId')
-      assertValidAgentId(id)
       const now = this.now()
       const record = { id, name, avatar, description, createdAt: now, updatedAt: now }
       this.agents.set(id, record)
@@ -259,6 +308,11 @@ export class AgentRegistry {
    * this method never changes it. Fields left `undefined` keep their value;
    * pass `null` to clear `avatar` / `description`.
    *
+   * Concurrency-correct: the merge against the CURRENT record happens
+   * inside the serialized queue, so two concurrent `updateAgent` calls can
+   * never overwrite each other's fields (e.g. `{name}` + `{avatar}` both
+   * land).
+   *
    * @param {string} agentId - the agent's opaque id.
    * @param {{name?:string, avatar?:string|null, description?:string|null}} patch
    * @returns the updated public Agent record.
@@ -268,10 +322,11 @@ export class AgentRegistry {
     if (!this.agents.has(agentId)) {
       throw Object.assign(new Error(`agent-registry: agent not found: ${agentId}`), { code: AGENT_NOT_FOUND })
     }
-    const record = this.agents.get(agentId)
-    const name = patch?.name === undefined ? record.name : normalizeName(patch.name)
-    const avatar = normalizeNullable(patch?.avatar, 'avatar')
-    const description = normalizeNullable(patch?.description, 'description')
+    // Eagerly validate the provided fields (pure checks, fail-fast, no
+    // state and no dependency on the current record).
+    const wantName = patch?.name === undefined ? undefined : normalizeName(patch.name)
+    const wantAvatar = normalizeNullable(patch?.avatar, 'avatar')
+    const wantDescription = normalizeNullable(patch?.description, 'description')
     return this.enqueue(async () => {
       const current = this.agents.get(agentId)
       if (current === undefined) {
@@ -279,9 +334,9 @@ export class AgentRegistry {
       }
       const updated = {
         ...current,
-        name,
-        avatar: avatar === undefined ? current.avatar : avatar,
-        description: description === undefined ? current.description : description,
+        name: wantName ?? current.name,
+        avatar: wantAvatar === undefined ? current.avatar : wantAvatar,
+        description: wantDescription === undefined ? current.description : wantDescription,
         updatedAt: this.now(),
       }
       this.agents.set(agentId, updated)

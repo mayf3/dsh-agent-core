@@ -6,7 +6,9 @@ Agent 是长期存在的"数字员工/人"（不是目录、进程或 Session）
 只持有身份 + 展示数据（D-002 Agent schema：`id` / `name` / `avatar` /
 `description`）。Agent 的 workspace / DSH_HOME / sessions / memory 由各自组件
 拥有，本组件**不计算任何路径、不启动进程、不触碰 Session**（边界见
-`docs/reports/agent-registry-v1.md`）。
+`docs/reports/agent-registry-v1.md`）。`agentId` 是不透明字符串，Registry 只生成
+与存储，**不校验、不解释**——路径合法性由 workspace-bootstrap 收到 id 后自行负责，
+本组件对它有**零源码依赖**。
 
 ## 快速开始
 
@@ -15,7 +17,7 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { AgentRegistry } from '@agent-core/agent-registry/registry'
 
-// 核心类接收绝对路径（`~` 展开发生在 Cordis 插件壳里）
+// storeFile 必须是绝对路径（不做 `~` 展开，传相对/`~` 前缀值会 fail-loud）
 const registry = new AgentRegistry({ storeFile: join(homedir(), '.dsh', 'registry', 'agents.json') })
 
 const mentor = await registry.registerAgent({
@@ -40,7 +42,8 @@ const registry = ctx.get('agentRegistry')
 ```
 
 `apply(ctx, config)` 挂载 `ctx.agentRegistry` 服务；`Config.storeFile` 可覆盖
-默认存储位置 `~/.dsh/registry/agents.json`。`~` 前缀自动展开。
+默认存储位置 `<home>/.dsh/registry/agents.json`（**必须为绝对路径**，相对或
+`~` 前缀值在构造时 fail-loud 拒绝）。
 
 ## API
 
@@ -55,10 +58,12 @@ const registry = ctx.get('agentRegistry')
 
 ## 持久化
 
-单 JSON 文档（默认 `~/.dsh/registry/agents.json`），**原子写**（tmp + rename），
-变更串行化；进程重启后 Registry 完整保留。损坏文件 fail-loud（`CORRUPT_STORE`），
-绝不静默重置。V1 为**单写者**语义：一个控制面进程内只允许一个 Registry 实例写同一
-store 文件。
+单 JSON 文档（默认 `<home>/.dsh/registry/agents.json`），**原子写**（tmp +
+rename），变更串行化；进程重启后 Registry 完整保留。每次 mutation 具备最小事务
+语义：snapshot → mutate → persist → success；**persist 失败自动回滚内存并
+reject**，磁盘文档保持原状。损坏文件、悬空默认指针、非空 Registry 无合法默认 →
+一律 `CORRUPT_STORE` **fail-loud**，绝不静默修复。V1 为**单写者**语义：一个控制面
+进程内只允许一个 Registry 实例写同一 store 文件。
 
 ## V1 不做
 
