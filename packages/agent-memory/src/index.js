@@ -119,8 +119,10 @@ const DISTILL_PROMPT = `You are the memory distillation assistant of a long-live
 From the session evidence below, extract 2-3 facts worth remembering ACROSS sessions:
 user preferences, durable personal facts, project state, or key decisions.
 Rules:
-- Only output a JSON array, each item: {"type":"preference|project|decision|history","title":"short unique title","content":"one-sentence fact — keep dates, numbers and proper nouns EXACTLY as stated","importance":1-5}
-- A preference is something the user wants done generally; a decision is a choice made; history is a one-off event worth recalling.
+- Only output a JSON array, each item: {"type":"preference|project|decision|history","title":"short unique title","content":"one-sentence fact","importance":1-5}
+- A durable personal fact (birthday, contact details, favorite things, codewords, ...) or a general preference MUST be type=preference; a project fact is project; a choice made is decision.
+- type=history is ONLY for one-off events NOT needed in future sessions.
+- Copy dates, numbers and proper nouns EXACTLY as stated in the evidence; never invent, alter or guess values.
 - Do not invent facts that are not in the evidence. Do not output anything else.`
 
 /**

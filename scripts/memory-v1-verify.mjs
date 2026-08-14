@@ -271,16 +271,25 @@ function readMemory(agentId) {
   return existsSync(file) ? readFileSync(file, 'utf8') : ''
 }
 
-/** Poll until `needle` appears in the agent's MEMORY.md (consolidation runs async). */
+/** Poll until `needle` (string or RegExp) appears in the agent's MEMORY.md (consolidation runs async). */
 async function waitForMemory(agentId, needle, timeoutMs = 180000) {
   const started = Date.now()
+  const hit = (text) => needle instanceof RegExp ? needle.test(text) : text.includes(needle)
   for (;;) {
     const text = readMemory(agentId)
-    if (text.includes(needle)) return text
+    if (hit(text)) return text
     if (Date.now() - started > timeoutMs) return text
     await sleep(2000)
   }
 }
+
+/**
+ * The birthday value as distilled/answered by the model may use ISO or CJK
+ * date renderings ("1990-01-01" / "1990年1月1日" / "1990/1/1"); the assertions
+ * accept any equivalent rendering (the fact must still be present and exact).
+ */
+const BIRTHDAY_1990_RE = /1990[^\d]{1,4}0?1[^\d]{1,4}0?1/
+const BIRTHDAY_1991_RE = /1991[^\d]{1,4}0?2[^\d]{1,4}0?2/
 
 /**
  * Poll until SOME daily note (`memory/YYYY-MM-DD.md`) contains `needle`.
@@ -373,22 +382,23 @@ async function main() {
   record('P2 consolidation: entries carry consolidation provenance',
     afterConsolidation.includes('consolidation:session:c1'),
     `memory=${JSON.stringify(afterConsolidation.slice(0, 400))}`)
-  const withFact = await waitForMemory(AGENT_A, '1990-01-01')
-  record('P2 curated MEMORY.md contains the distilled fact', withFact.includes('1990-01-01'),
+  const withFact = await waitForMemory(AGENT_A, BIRTHDAY_1990_RE)
+  record('P2 curated MEMORY.md contains the distilled fact', BIRTHDAY_1990_RE.test(withFact),
     `memory=${JSON.stringify(withFact.slice(0, 400))}`)
   const c2 = await pa3.turn('c2', '我的生日是什么？直接回答日期。')
   record('P2 new session c2: A answers from consolidated memory',
-    /1990[-\/]?01[-\/]?01/.test(c2.reply),
+    BIRTHDAY_1990_RE.test(c2.reply),
     `reply="${c2.reply.slice(0, 160)}"`)
   await pa3.kill()
 
   // ---- Phase 3: a HUMAN edits MEMORY.md directly → fresh session sees it.
-  // (1) If the consolidated birthday value is present verbatim, a human edits
-  //     it to a different date. (2) ALWAYS: a human appends a brand-new entry
+  // (1) If the consolidated birthday value is present, a human edits it to a
+  //     different date. (2) ALWAYS: a human appends a brand-new entry
   //     ("favorite color") in the file format.
   const beforeEdit = readMemory(AGENT_A)
-  const birthdayEdited = beforeEdit.includes('1990-01-01')
-    ? beforeEdit.replace('1990-01-01', '1991-02-02')
+  const birthdayFound = BIRTHDAY_1990_RE.test(beforeEdit)
+  const birthdayEdited = birthdayFound
+    ? beforeEdit.replace(BIRTHDAY_1990_RE, '1991-02-02')
     : beforeEdit
   const humanId = `human-${Date.now()}`
   const humanEntry = [
@@ -410,8 +420,8 @@ async function main() {
     c3.reply.includes('绿色'),
     `reply="${c3.reply.slice(0, 160)}"`)
   record('P3 new session c3: A reflects the human-edited birthday (1991-02-02)',
-    !birthdayEdited.includes('1991-02-02') || /1991[-\/]?02[-\/]?02/.test(c3.reply),
-    `reply="${c3.reply.slice(0, 160)}"`)
+    !birthdayFound || BIRTHDAY_1991_RE.test(c3.reply),
+    `reply="${c3.reply.slice(0, 160)}"`) // skipped (vacuous) only when P2 did not establish a birthday value
   await pa4.kill()
 
   // ------------------------------------------------------------------ done
