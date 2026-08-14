@@ -28,11 +28,21 @@
 
 ## 2. Agent Core 自建面（薄层，必须自己做）
 
+> **Session 专项结论（2026-08-15 实验证据，Session V1 真实 PoC）**：
+> Agent Core product sessionId = DSH native sessionId，**不建立 Session mapping layer，
+> 不建立独立 `packages/agent-session/`**。DSH SessionId 的作用域是 per-Agent DSH_HOME
+> （非全局），因此 Session identity = **(agentId, sessionId)**；`main` 是每个 Agent 的
+> 保留 SessionId（Agent A/main 与 Agent B/main 可同时存在），normal 用其他 opaque
+> sessionId。DSH 原生负责 session identity / trajectory persistence / create/resume /
+> process death recovery。
+
 | 能力 | 状态 | 说明 |
 |---|---|---|
 | workspace-bootstrap（agentId → workspace/DSH_HOME） | **BUILD（已完成）** | 路径映射唯一 owner；幂等创建 + AGENTS.md 播种 |
 | agent-registry（这个 Agent 是谁） | **BUILD（并行开发中）** | 身份/展示/存在性；不拥有 process/session/memory |
-| agent-session（Agent 下的会话生命周期） | **BUILD（并行开发中）** | main 保护、normal 新建/归档/清理；底层吃 DSH session persistence |
+| **DSH Session Runtime**（session identity / trajectory persistence / create / resume / 崩溃恢复） | **ADOPT** | 全部吃 DSH 原生；sessionId 作用域 = per-Agent DSH_HOME，identity = (agentId, sessionId)，main 为每 Agent 保留 SessionId |
+| **Product Session Metadata**（title / kind(main\|normal) / archived / lastActiveAt） | **thin BUILD → DEFER 至 Product API milestone** | 只维护产品元数据，不实现 Session Runtime |
+| **Session mapping layer**（product sessionId ↔ DSH sessionId 转换） | **DO NOT BUILD** | 两者直接相等，无映射层；不建独立 `packages/agent-session/` |
 | agent-memory（跨 Session 长期经验） | **BUILD（并行开发中）** | consolidate / recall / 隔离；存储通道优先 MCP/文件；**不是第二套 session history** |
 | memory consolidation（episodic → curated） | **BUILD（memory 子项）** | 唯一完全缺失层；触发时机 OPEN |
 | agent-router / process supervisor（消息找谁 + 进程启动/恢复） | **BUILD（Integration V1 已落地）** | Binding 路由 + per-agent 进程注册表 + respawn/resume |
@@ -79,9 +89,11 @@
 - ❌ `agent-core-skill-manager`（skill 系统在 DSH）
 - ❌ `agent-core-shell`（shell 在 DSH）
 - ❌ `agent-core-session-runtime`（session engine 在 DSH）
+- ❌ `agent-core-session`（**不建独立 session 包**：identity = (agentId, sessionId)
+  直通 DSH，仅 Product metadata 薄层延后到 Product API milestone）
 - ❌ `agent-core-forum-plugin` / `agent-core-workflow-plugin`（Forum/Workflow 在外部，走 Broker）
 
-Agent Core 新增组件命名应落在：registry / session / memory / router / process-supervisor /
+Agent Core 新增组件命名应落在：registry / memory / router / process-supervisor /
 workspace-bootstrap / broker / plugin-lifecycle / proactive-runtime。
 
 ## 7. 汇总一句话
