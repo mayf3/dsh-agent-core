@@ -376,12 +376,14 @@ export function apply(ctx, config) {
     // rejection -> NEVER spawn. Do NOT insert an await before the spawn
     // section (see the audit-round-3 double-spawn invariant below).
     assertRunnable(agentId)
-    // INVARIANT (audit round 3): the check -> spawn -> registry.set section
-    // below is ENTIRELY synchronous (the first await is proc.ready()); JS
-    // single-threading therefore guarantees two concurrent ensureRunning
-    // calls can never both pass the registry check — no double spawn
-    // (empirically verified: 30 concurrent calls -> 1 pid). Do NOT insert an
-    // await between the registry check and registry.set.
+    // INVARIANT (audit round 3): the FINAL check -> spawn -> registry.set
+    // section below is ENTIRELY synchronous (the first await after it is
+    // proc.ready()); JS single-threading therefore guarantees two concurrent
+    // ensureRunning calls can never both pass that final registry check — no
+    // double spawn (empirically verified: 30 concurrent calls -> 1 pid). The
+    // workspace seed runs BEFORE the section (an await is allowed there); the
+    // re-check right after it restores the invariant, so a concurrent spawn
+    // that won the race while we were seeding is reused instead of doubled.
     const existing = registry.get(agentId)
     if (existing !== undefined && existing.exit === undefined) {
       log.log(`reuse process for ${agentId} (pid ${existing.pid})`)
@@ -390,6 +392,19 @@ export function apply(ctx, config) {
     if (existing !== undefined) {
       registry.delete(agentId)
       log.log(`process for ${agentId} exited (${existing.exit?.code ?? 'signal'}); will respawn`)
+    }
+    // AGENT_WORKSPACE_PERSONA_PROVISIONING_AUDIT_V1 (SMALL_GAP) FIX: seed the
+    // per-agent workspace (AGENTS.md + roots) on first start so the spawned
+    // DSH process finds its own instruction surface before agent-instructions
+    // renders its first baseline. Idempotent (never overwrites existing
+    // files), safe on respawn and on control-plane restart. MUST NOT sit
+    // between the final check and registry.set — that would break the
+    // double-spawn invariant above.
+    await workspaceBootstrap.ensure(agentId)
+    const raced = registry.get(agentId)
+    if (raced !== undefined && raced.exit === undefined) {
+      log.log(`reuse process for ${agentId} after seed (pid ${raced.pid})`)
+      return raced
     }
     // workspace-bootstrap is the single owner of the agentId -> workspace /
     // DSH_HOME mapping (D-002 boundary). The router only decides WHEN to
