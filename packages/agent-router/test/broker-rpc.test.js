@@ -1,0 +1,154 @@
+/**
+ * Unit tests for the Router's broker parent-RPC dispatch (trusted credential
+ * broker model): the caller identity is the ACTUAL proc.agentId; forged
+ * child-supplied identity fields are ignored (and logged); the call is
+ * forwarded to the in-process broker gateway.
+ */
+
+import assert from 'node:assert/strict'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { test } from 'node:test'
+
+import { AgentRegistry } from '../../agent-registry/src/registry.js'
+import { AgentProcess } from '../src/process.js'
+import { apply as applyRouter, BROKER_RPC_METHOD, SWITCH_RPC_METHOD } from '../src/index.js'
+
+function fakeCtx(services) {
+  const provided = new Map()
+  return {
+    get: (name) => services.get(name) ?? provided.get(name),
+    provide: (name, value) => { provided.set(name, value) },
+    effect: (fn) => { const dispose = fn(); return () => dispose?.() },
+  }
+}
+
+function stubBootstrap() {
+  return {
+    resolveWorkspace: (agentId) => join('/tmp/ws', agentId),
+    resolveDshHome: (agentId) => join('/tmp/home', agentId),
+    ensure: async () => ({ workspace: '/tmp/ws', dshHome: '/tmp/home' }),
+  }
+}
+
+/** Stub AgentProcess so ensureRunning installs the RPC hook without spawning. */
+function stubAgentProcess() {
+  AgentProcess.prototype.spawn = function spawnStub() {
+    this.pid = 4242
+    this.exit = undefined
+    this.exitPromise = new Promise(() => {})
+    return this
+  }
+  AgentProcess.prototype.ready = async () => 0
+  AgentProcess.prototype.turn = async () => ({ reply: 'stub-reply', messageId: 'stub-msg' })
+  AgentProcess.prototype.shutdown = async () => ({ code: 0, signal: null })
+}
+
+async function freshRouter(t, services = {}) {
+  const dir = await mkdtemp(join(tmpdir(), 'acr-broker-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const registry = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
+  const agentA = await registry.registerAgent({ name: 'Agent A' })
+  const agentB = await registry.registerAgent({ name: 'Agent B' })
+  const ctx = fakeCtx(new Map([
+    ['workspaceBootstrap', stubBootstrap()],
+    ['agentRegistry', {
+      listAgents: () => registry.listAgents(),
+      getAgent: (id) => registry.getAgent(id),
+      getDefaultAgent: () => registry.getDefaultAgent(),
+    }],
+    ...Object.entries(services),
+  ]))
+  const router = applyRouter(ctx, {
+    bindingsStoreFile: join(dir, 'bindings.json'),
+    defaultSessionId: 'main',
+    agentProfile: 'agent-core-demo',
+  })
+  return { router, registry, agentA, agentB }
+}
+
+test('broker RPC: executed as the ACTUAL proc.agentId via the gateway', async (t) => {
+  stubAgentProcess()
+  const gatewayCalls = []
+  const gateway = {
+    execute: async (call, ctx) => {
+      gatewayCalls.push({ call, ctx })
+      return { ok: true, result: { items: [] } }
+    },
+  }
+  const { router, agentA } = await freshRouter(t, { brokerGateway: gateway })
+  const proc = await router.ensureRunning(agentA.id)
+
+  const result = await proc.onRpcRequest(BROKER_RPC_METHOD, {
+    capabilityId: 'forum_my_notifications',
+    operation: 'list',
+    args: {},
+  })
+  // Transport envelope always ok:true; the business envelope rides inside.
+  assert.deepEqual(result, { ok: true, result: { ok: true, result: { items: [] } } })
+  assert.equal(gatewayCalls.length, 1)
+  assert.equal(gatewayCalls[0].ctx.agentId, agentA.id, 'identity = the actual proc agentId')
+  assert.deepEqual(gatewayCalls[0].call, {
+    capabilityId: 'forum_my_notifications',
+    operation: 'list',
+    args: {},
+  })
+})
+
+test('broker RPC: forged child-supplied identity is IGNORED (actual agentId wins)', async (t) => {
+  stubAgentProcess()
+  const gatewayCalls = []
+  const gateway = {
+    execute: async (call, ctx) => {
+      gatewayCalls.push({ call, ctx })
+      return { ok: true, result: 'ok' }
+    },
+  }
+  const { router, agentA } = await freshRouter(t, { brokerGateway: gateway })
+  const proc = await router.ensureRunning(agentA.id)
+
+  const result = await proc.onRpcRequest(BROKER_RPC_METHOD, {
+    capabilityId: 'forum_my_notifications',
+    operation: 'list',
+    args: {},
+    agentId: 'agt-forged-B',
+    principalId: 'forged-principal',
+    clientId: 'mc_forged',
+    scope: ['*'],
+    audience: 'svc-forum',
+    authorization: 'Bearer forged',
+  })
+  assert.equal(result.ok, true)
+  assert.equal(result.result.ok, true)
+  assert.equal(gatewayCalls[0].ctx.agentId, agentA.id, 'forged fields never reach the gateway identity')
+  assert.equal(gatewayCalls[0].call.agentId, undefined, 'forged fields are not forwarded as the call identity')
+})
+
+test('broker RPC: gateway absent -> fails closed, switch RPC unaffected', async (t) => {
+  stubAgentProcess()
+  const { router, agentA, agentB } = await freshRouter(t) // no brokerGateway service
+  const proc = await router.ensureRunning(agentA.id)
+
+  const result = await proc.onRpcRequest(BROKER_RPC_METHOD, {
+    capabilityId: 'forum_my_notifications',
+    operation: 'list',
+    args: {},
+  })
+  assert.equal(result.ok, true, 'transport envelope stays ok')
+  assert.equal(result.result.ok, false)
+  assert.match(result.result.error.detail, /broker gateway unavailable/)
+
+  // The existing switch seam still works (inside a routed turn the proc
+  // carries its binding context).
+  proc.activeBindingContext = 'feishu:chat-1'
+  const switched = await proc.onRpcRequest(SWITCH_RPC_METHOD, { targetAgentId: agentB.id })
+  assert.equal(switched.activeAgentId, agentB.id)
+})
+
+test('broker RPC: unknown method still rejected', async (t) => {
+  stubAgentProcess()
+  const { router, agentA } = await freshRouter(t)
+  const proc = await router.ensureRunning(agentA.id)
+  await assert.rejects(() => proc.onRpcRequest('agent-core/nope', {}), /unknown parent-RPC method/)
+})

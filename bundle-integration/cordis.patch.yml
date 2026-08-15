@@ -47,6 +47,21 @@
         agentProfile: !!js "process.env.ROUTER_AGENT_PROFILE ?? 'agent-core-demo'"
         bindingsStoreFile: !!js "process.env.ROUTER_BINDINGS_STORE"
 
+    # Trusted Broker boundary (gateway mode): the in-process credential
+    # boundary of the trusted control plane (deployment uid authsvc/505).
+    # Reached ONLY through the Router's parent-RPC dispatch, which decides
+    # the caller from the ACTUAL proc.agentId; the MachineClient credential
+    # is read from the 505-private store (AGENT_CORE_CREDENTIALS_FILE).
+    # Env:
+    #   AGENT_CORE_CREDENTIALS_FILE   ABSOLUTE path of the 505-private store
+    #   BROKER_AUTH_ORIGIN            auth-service origin (default 127.0.0.1:4001)
+    - id: agent-core-broker-gateway
+      name: '@agent-core/broker'
+      config:
+        mode: 'gateway'
+        credentialsFile: !!js "process.env.AGENT_CORE_CREDENTIALS_FILE"
+        authServiceOrigin: !!js "process.env.BROKER_AUTH_ORIGIN ?? 'http://127.0.0.1:4001'"
+
     # Gate 1: thin Mobile Product API over the Router (localhost only, for
     # the Android Emulator -> adb reverse -> localhost slice). Env:
     #   PRODUCT_API_ENABLED  set to '0' to mount without the HTTP server
