@@ -70,7 +70,7 @@ const AGENT_PROFILE = 'agent-core-integration-agent'
 const CONTROL_PROFILE = 'agent-core-integration'
 const AGENT_A_NAME = '知识管家'
 const AGENT_B_NAME = '架构评审'
-const API_PORT = 8787
+const API_PORT = Number.parseInt(process.env.TCB_API_PORT ?? '8787', 10)
 const API_BASE = `http://127.0.0.1:${API_PORT}`
 const AUTH_ORIGIN = 'http://127.0.0.1:4001'
 const FORUM_ORIGIN = 'http://127.0.0.1:3460'
@@ -151,6 +151,7 @@ function controlEnvPairs() {
     DSH_AGENT_SPAWN_HELPER: HELPER,
     BROKER_FIXTURE_SELF_ASSERT: '1',
     PRODUCT_API_ENABLED: '1',
+    PRODUCT_API_PORT: String(API_PORT),
     FEISHU_ENABLED: '0',
     DSH_HARNESS_ROOT: process.env.DSH_HARNESS_ROOT,
     // The model key travels in the CP env (agentEnv() then never reads the
@@ -376,7 +377,7 @@ async function main() {
 
   // Pre-flight: a stale control plane or driver would silently hijack the
   // API port / requests — fail fast instead of hanging.
-  const portHolders = sh('lsof', ['-nP', '-iTCP:8787', '-sTCP:LISTEN'])
+  const portHolders = sh('lsof', ['-nP', `-iTCP:${API_PORT}`, '-sTCP:LISTEN'])
   if ((portHolders.stdout ?? '').trim() !== '') {
     console.error(`port 8787 already held by:\n${portHolders.stdout}`)
     console.error('kill the previous run first (sudo pkill -f 505-final-v2-run)')
