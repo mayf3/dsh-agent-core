@@ -35,8 +35,13 @@
   实证）。
 - 影响: 新增 `packages/scheduler/`（零 DSH 依赖）+ 3 个 scripts + 3 篇文档；
   未触碰 agent-router/broker/feishu-connector/bundle/profile；迁移 =
-  `openclaw-job-import.mjs --write`（97.9% 无损，3 条无 agentId legacy job 需
-  人工补）。
+  `openclaw-job-import.mjs --write`（97.9% importable，3 条无 agentId legacy
+  job 需人工补）。
+- 追加（2026-08-15 第二轮审计，VERDICT: MERGE AFTER SMALL FIX）:
+  tick 单飞 + 最新态写回（FIX 1）；CLI 纯控制面、永不执行（FIX 2）；单一
+  mutation authority = 跨进程锁内重读最新再应用增量（FIX 3）；persist 失败 RAM
+  回滚（FIX 4）；import 已有 store 默认拒绝 + in-flight 只报告（FIX 5）。
+  详见 `docs/reports/scheduler-replacement-v1.md` §11。
 
 ## D-003: Memory V1 — per-agent file-first 长期记忆（Agent Core memory glue）
 

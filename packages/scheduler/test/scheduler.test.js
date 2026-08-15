@@ -382,10 +382,11 @@ test('stuck runningAtMs marker older than 2h is cleared and the job runs again',
   const s1 = new Scheduler({ store: store1, invoker: createFakeInvoker(), deliver: createRecordingDelivery() })
   await s1.start({ autoStart: false })
   const job = await s1.createJob({
-    name: 'stuck', agentId: 'a1', schedule: atJob(Date.now() + 10), payload: { message: 'x' },
+    name: 'stuck', agentId: 'a1', schedule: atJob(Date.now() + 60_000), payload: { message: 'x' },
   })
   const raw = s1.snapshotJobs()[0]
   raw.state.runningAtMs = Date.now() - (2 * 3_600_000 + 60_000) // > 2h ago
+  raw.state.nextRunAtMs = Date.now() - 60_000 // deterministically overdue at restart
   await s1.stop()
   await store1.persist([raw])
 

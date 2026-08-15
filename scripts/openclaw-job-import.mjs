@@ -5,13 +5,32 @@
  *
  *   node scripts/openclaw-job-import.mjs                  # report only
  *   node scripts/openclaw-job-import.mjs --write          # write V1 store
+ *   node scripts/openclaw-job-import.mjs --force          # allow overwriting
+ *                                                         # an existing store
  *   node scripts/openclaw-job-import.mjs --fixture        # use the redacted
  *                                                         # fixture instead of
  *                                                         # ~/.openclaw/cron/jobs.json
  *   node scripts/openclaw-job-import.mjs --store <path>   # target store
  *
- * The report shows exactly which jobs are lossless and which cannot be
- * expressed (real gaps), so the migration decision stays evidence-based.
+ * EXISTING-STORE GUARD (audit FIX 5): once the Agent Core scheduler store
+ * exists (i.e. the Control Plane may already be executing jobs), `--write`
+ * REFUSES by default — importing an old OpenClaw snapshot over a live store
+ * could resurrect already-executed one-shots or roll back state. Overwrite
+ * requires an explicit `--force` after stopping/draining the Control Plane.
+ *
+ * In-flight jobs in the source (state.runningAtMs set) are reported, never
+ * silently treated as safe: the migration sequence is
+ *
+ *   stop/drain the stock-agent OpenClaw write path (daemons, scheduler)
+ *   -> snapshot (~/.openclaw/cron/jobs.json)
+ *   -> import ONCE (this tool)
+ *   -> Agent Core takes over execution
+ *
+ * No continuous sync is built or planned.
+ *
+ * The compatibility number expresses STRUCTURAL compatibility / importability
+ * (every imported job is V1-valid and lossless in field mapping); it is not a
+ * claim of semantic equivalence for every future execution.
  */
 
 import { homedir } from 'node:os'
@@ -21,7 +40,6 @@ import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 import { importOpenClawJobs } from '../packages/scheduler/src/import-openclaw.js'
 import { JobStore } from '../packages/scheduler/src/store.js'
-import { normalizeState } from '../packages/scheduler/src/job-model.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
@@ -29,6 +47,7 @@ const fixturePath = join(root, 'packages', 'scheduler', 'fixtures', 'openclaw-jo
 
 const args = process.argv.slice(2)
 const write = args.includes('--write')
+const force = args.includes('--force')
 const useFixture = args.includes('--fixture')
 const storeIdx = args.indexOf('--store')
 const storePath = storeIdx >= 0 && args[storeIdx + 1]
@@ -58,10 +77,18 @@ const pct = report.total === 0 ? 0 : Math.round((report.imported / report.total)
 console.log(`== OpenClaw → Agent Core scheduler V1 import report ==`)
 console.log(`source : ${sourceLabel}`)
 console.log(`store  : ${storePath} (${write ? 'WRITE' : 'dry-run'})`)
-console.log(`lossless: ${report.imported}/${report.total} (${pct}%)`)
+console.log(`structurally compatible / importable: ${report.imported}/${report.total} (${pct}%)`)
 console.log(`gaps   : ${report.gaps.length}`)
 for (const gap of report.gaps) {
   console.log(`  GAP ${gap.name} (${gap.id}): ${gap.reason}`)
+}
+if (report.inFlight.count > 0) {
+  console.log(`in-flight (runningAtMs set in source — NOT treated as safe): ${report.inFlight.count}`)
+  for (const j of report.inFlight.jobs) {
+    console.log(`  RUNNING ${j.name} (${j.id}) agent=${j.agentId} — drain/decide before Agent Core takes over`)
+  }
+} else {
+  console.log('in-flight (runningAtMs set in source): 0')
 }
 if (report.warnings.length > 0) {
   const byJob = new Map()
@@ -77,11 +104,19 @@ if (report.warnings.length > 0) {
 
 if (write) {
   const store = new JobStore(storePath)
-  const stored = jobs.map((job) => ({ ...job, state: normalizeState(job.state ?? {}) }))
-  await store.persist(stored)
-  console.log(`\nwrote ${stored.length} jobs to ${storePath} (atomic replace)`)
-  console.log('next: run the Control Plane scheduler over this store; jobs resume with their')
+  if (!force && await store.exists()) {
+    process.stderr.write(
+      `\n[openclaw-job-import] REFUSED: target store ${storePath} already exists — the Control Plane `
+      + `may be executing jobs; importing an old OpenClaw snapshot could resurrect `
+      + `already-executed one-shots or roll back state (audit FIX 5).\n`
+      + `Stop/drain the Control Plane, then retry with --force for an explicit overwrite.\n`,
+    )
+    process.exit(3)
+  }
+  await store.mutate(() => jobs) // locked replace; guard above prevents live-store clobber
+  console.log(`\nwrote ${jobs.length} jobs to ${storePath} (atomic replace under store lock)`)
+  console.log('next: start the Control Plane scheduler over this store; jobs resume with their')
   console.log('      imported nextRunAtMs / lastRunAtMs (missed occurrences catch up at most once).')
 } else {
-  console.log('\n(dry-run: pass --write to persist)')
+  console.log('\n(dry-run: pass --write to persist; --force to overwrite an existing store)')
 }

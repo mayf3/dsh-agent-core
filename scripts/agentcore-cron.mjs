@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * agentcore-cron — thin Agent Core scheduler submission seam (CLI).
+ * agentcore-cron — thin Agent Core scheduler control seam (CLI).
  *
  * Drop-in replacement for the `openclaw cron` surface that the external
  * daemons and operator scripts actually call on this machine:
@@ -12,6 +12,13 @@
  *   enable    enable a job           (openclaw cron enable <id>)
  *   disable   disable a job          (openclaw cron disable <id>)
  *
+ * CONTROL-ONLY (audit FIX 2): this CLI never instantiates the scheduler
+ * engine and can never execute a job or run startup catch-up. `add`/`rm`/
+ * `enable`/`disable` go through the store's locked read-modify-write
+ * (`JobStore.mutate`), so they re-read the LATEST store under the
+ * cross-process lock and can never clobber the resident Scheduler's state
+ * (audit FIX 3).
+ *
  * `add` accepts the exact flag surface used by forum-scheduler.sh and
  * unified-dispatcher.py:
  *
@@ -21,17 +28,14 @@
  *   [--delete-after-run] [--model <model>] [--json]
  *
  * Store: default $HOME/.agent-core/scheduler/jobs.json, override with
- * AGENTCORE_SCHEDULER_STORE or --store <path>. The engine opens the same
- * file through the same atomic write protocol as the Control Plane
- * (single-writer assumption, decision D-005).
+ * AGENTCORE_SCHEDULER_STORE or --store <path>.
  */
 
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { Scheduler } from '../packages/scheduler/src/scheduler.js'
 import { JobStore } from '../packages/scheduler/src/store.js'
-import { createNoopInvoker, createRecordingDelivery } from '../packages/scheduler/src/seams.js'
-import { parseAtToMs } from '../packages/scheduler/src/schedule.js'
+import { normalizeJob, toPublicJob } from '../packages/scheduler/src/job-model.js'
+import { computeNextRunAtMs, parseAtToMs } from '../packages/scheduler/src/schedule.js'
 
 const USAGE = `usage: agentcore-cron <add|list|runs|rm|enable|disable> [flags] [--json] [--store <path>]`
 
@@ -49,18 +53,6 @@ function flagValue(args, name) {
 
 function hasFlag(args, name) {
   return args.includes(name)
-}
-
-async function openScheduler(args) {
-  const store = new JobStore(storePathFromArgs(args))
-  const scheduler = new Scheduler({
-    store,
-    invoker: createNoopInvoker(),
-    deliver: createRecordingDelivery(),
-    log: { info: () => {}, warn: () => {}, error: (m) => process.stderr.write(`[agentcore-cron] ${m}\n`) },
-  })
-  await scheduler.start({ autoStart: false })
-  return scheduler
 }
 
 function parseAtFlag(raw) {
@@ -95,45 +87,45 @@ async function cmdAdd(args) {
   const model = flagValue(args, '--model')
   if (model) payload.model = model
 
-  const scheduler = await openScheduler(args)
-  try {
-    const job = await scheduler.createJob({
-      name,
-      agentId: agent,
-      schedule,
-      payload,
-      sessionTarget: flagValue(args, '--session') ?? 'isolated',
-      delivery: hasFlag(args, '--deliver')
-        ? { mode: 'announce' }
-        : { mode: 'none', channel: 'last' }, // --no-deliver default, like the daemons
-      deleteAfterRun: hasFlag(args, '--delete-after-run') || schedule.kind === 'at',
-    })
-    if (hasFlag(args, '--json')) {
-      process.stdout.write(`${JSON.stringify(job, null, 2)}\n`)
-    } else {
-      process.stdout.write(`created job ${job.id} (${job.name}) for agent ${job.agentId}, next run ${new Date(job.nextRunAtMs).toISOString()}\n`)
-    }
-    return job.id
-  } finally {
-    await scheduler.stop()
+  const store = new JobStore(storePathFromArgs(args))
+  const job = normalizeJob({
+    name,
+    agentId: agent,
+    schedule,
+    payload,
+    sessionTarget: flagValue(args, '--session') ?? 'isolated',
+    delivery: hasFlag(args, '--deliver')
+      ? { mode: 'announce' }
+      : { mode: 'none', channel: 'last' }, // --no-deliver default, like the daemons
+    deleteAfterRun: hasFlag(args, '--delete-after-run') || schedule.kind === 'at',
+  })
+  if (job.enabled && job.state.nextRunAtMs === undefined) {
+    job.state.nextRunAtMs = computeNextRunAtMs(job.schedule, Date.now(), { jobId: job.id })
   }
+  const { value: created } = await store.mutate((jobs) => {
+    jobs.push(job)
+    return { value: job }
+  })
+  const publicJob = toPublicJob(created)
+  if (hasFlag(args, '--json')) {
+    process.stdout.write(`${JSON.stringify(publicJob, null, 2)}\n`)
+  } else {
+    process.stdout.write(`created job ${publicJob.id} (${publicJob.name}) for agent ${publicJob.agentId}, next run ${new Date(publicJob.nextRunAtMs).toISOString()}\n`)
+  }
+  return publicJob.id
 }
 
 async function cmdList(args) {
-  const scheduler = await openScheduler(args)
-  try {
-    const jobs = await scheduler.listJobs()
-    if (hasFlag(args, '--json')) {
-      process.stdout.write(`${JSON.stringify({ jobs }, null, 2)}\n`)
-    } else {
-      for (const job of jobs) {
-        process.stdout.write(`${job.id}\t${job.enabled ? 'enabled ' : 'disabled'}\t${job.agentId}\t${job.schedule.kind}\t${job.name}\n`)
-      }
+  const store = new JobStore(storePathFromArgs(args))
+  const jobs = (await store.load()).map(toPublicJob)
+  if (hasFlag(args, '--json')) {
+    process.stdout.write(`${JSON.stringify({ jobs }, null, 2)}\n`)
+  } else {
+    for (const job of jobs) {
+      process.stdout.write(`${job.id}\t${job.enabled ? 'enabled ' : 'disabled'}\t${job.agentId}\t${job.schedule.kind}\t${job.name}\n`)
     }
-    return jobs.length
-  } finally {
-    await scheduler.stop()
   }
+  return jobs.length
 }
 
 async function cmdRuns(args) {
@@ -156,25 +148,30 @@ async function cmdRuns(args) {
 async function cmdRm(args) {
   const id = args.find((a) => !a.startsWith('--'))
   if (!id) throw new Error('job id is required')
-  const scheduler = await openScheduler(args)
-  try {
-    await scheduler.deleteJob(id)
-    process.stdout.write(`deleted job ${id}\n`)
-  } finally {
-    await scheduler.stop()
-  }
+  const store = new JobStore(storePathFromArgs(args))
+  await store.mutate((jobs) => {
+    const idx = jobs.findIndex((j) => j.id === id)
+    if (idx < 0) throw new Error(`unknown job id: ${id}`)
+    jobs.splice(idx, 1)
+  })
+  process.stdout.write(`deleted job ${id}\n`)
 }
 
 async function cmdToggle(args, enabled) {
   const id = args.find((a) => !a.startsWith('--'))
   if (!id) throw new Error('job id is required')
-  const scheduler = await openScheduler(args)
-  try {
-    const job = enabled ? await scheduler.enableJob(id) : await scheduler.disableJob(id)
-    process.stdout.write(`${enabled ? 'enabled' : 'disabled'} job ${job.id} (${job.name})\n`)
-  } finally {
-    await scheduler.stop()
-  }
+  const store = new JobStore(storePathFromArgs(args))
+  const job = await store.mutate((jobs) => {
+    const target = jobs.find((j) => j.id === id)
+    if (!target) throw new Error(`unknown job id: ${id}`)
+    target.enabled = enabled
+    if (!enabled) {
+      target.state.nextRunAtMs = undefined
+      target.state.runningAtMs = undefined
+    }
+    return { value: toPublicJob(target) }
+  })
+  process.stdout.write(`${enabled ? 'enabled' : 'disabled'} job ${job.id} (${job.name})\n`)
 }
 
 const COMMANDS = {
