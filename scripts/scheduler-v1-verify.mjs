@@ -49,6 +49,7 @@ for (const gate of [
   'CLI_RESIDENT_MULTIWRITER',
   'PERSIST_FAILURE_ROLLBACK',
   'IMPORT_EXISTING_STORE_GUARD',
+  'IMPORT_GUARD_TOCTOU',
 ]) {
   const gateRun = spawnSync(process.execPath, ['--test', `--test-name-pattern=${gate}`, 'packages/scheduler/test/audit-fixes.test.js'], {
     cwd: root,
