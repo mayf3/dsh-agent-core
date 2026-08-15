@@ -121,15 +121,38 @@ export class BindingStore {
     }
   }
 
-  /** Serialize one mutation: mutate in memory, then persist atomically. */
+  /**
+   * Serialize one mutation with minimal transaction semantics (FIX 3, same
+   * pattern as agent-registry): snapshot -> mutate -> persist -> success; a
+   * failed persist restores the in-memory snapshot and rejects, so RAM can
+   * never diverge from disk ("RAM = new Binding, disk = old Binding, caller
+   * = failure" is impossible). The store file is only ever replaced
+   * atomically, so a failed persist cannot corrupt the on-disk document.
+   */
   enqueue(fn) {
     const run = this.queue.then(async () => {
-      const result = await fn()
-      await this.persist()
-      return result
+      const snapshot = this.snapshot()
+      try {
+        const result = await fn()
+        await this.persist()
+        return result
+      } catch (error) {
+        this.restore(snapshot)
+        throw error
+      }
     })
     this.queue = run.then(() => undefined, () => undefined)
     return run
+  }
+
+  /** Copy of the mutable state (rows are plain JSON objects). */
+  snapshot() {
+    return new Map([...this.bindings.entries()].map(([id, row]) => [id, { ...row }]))
+  }
+
+  /** Restore the state to a snapshot (rollback path). */
+  restore(snapshot) {
+    this.bindings = snapshot
   }
 
   /** Atomic persist: write tmp, then rename over the store file. */

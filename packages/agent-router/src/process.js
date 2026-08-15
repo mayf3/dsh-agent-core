@@ -73,6 +73,9 @@ export class AgentProcess {
     /** ChannelConversation of the in-flight turn (set by turn(); the switch
      *  tool relay uses it to target exactly this conversation's Binding). */
     this.activeBindingContext = undefined
+    /** Per-process single-flight turn queue (FIX 2): one routed turn at a
+     *  time per AgentProcess; see turn(). */
+    this.turnQueue = Promise.resolve()
     /** Router-installed hook: async (method, params) => result. */
     this.onRpcRequest = undefined
   }
@@ -190,6 +193,17 @@ export class AgentProcess {
    * One owned turn: prompt `sessionId` with `text`, wait for the receipt then
    * the whole-agent idle, return `{ reply, ms, promptMs, messageId }`.
    *
+   * PER-PROCESS SINGLE-FLIGHT (FIX 2): DSH's native queue is per Agent
+   * instance = per native Session — two sessions of the same process can run
+   * turns concurrently (empirically verified). `activeBindingContext` is a
+   * single shared field, so concurrent turns would overwrite each other's
+   * binding and the switch tool relay could target the wrong conversation.
+   * Product semantics: ONE Agent processes ONE routed turn at a time; later
+   * turns wait until the previous one truly ends (including tools /
+   * parent-RPC / turn/end). `turn()` therefore serializes every call through
+   * a per-AgentProcess promise chain — no mailbox, no turnId framework, the
+   * DSH queue is untouched.
+   *
    * @param {string} sessionId
    * @param {string} text
    * @param {object} [opts]
@@ -197,7 +211,17 @@ export class AgentProcess {
    *   turn belongs to; while the turn is in flight the switch tool relay
    *   targets exactly this Binding.
    */
-  async turn(sessionId, text, opts = {}, timeoutMs = Number.parseInt(process.env.DSH_AGENT_TURN_TIMEOUT ?? '300000', 10)) {
+  turn(sessionId, text, opts = {}, timeoutMs = Number.parseInt(process.env.DSH_AGENT_TURN_TIMEOUT ?? '300000', 10)) {
+    // Serialize: run this turn only after every previously submitted turn has
+    // fully settled. The chain survives rejections so a failed turn never
+    // wedges the queue.
+    const run = this.turnQueue.then(() => this.runTurn(sessionId, text, opts, timeoutMs))
+    this.turnQueue = run.then(() => undefined, () => undefined)
+    return run
+  }
+
+  /** The actual turn body; never called concurrently (see turn()). */
+  async runTurn(sessionId, text, opts, timeoutMs) {
     const started = Date.now()
     this.activeBindingContext = opts.bindingContext
     try {
@@ -225,6 +249,8 @@ export class AgentProcess {
           .filter(block => block.type === 'text').map(block => block.text).join(''))
       return { reply: texts.at(-1) ?? '', ms: Date.now() - started, promptMs, messageId: receipt.messageId }
     } finally {
+      // Only after the WHOLE turn truly ended (turn/end observed, idle) is the
+      // shared binding context released — the next queued turn then sets its own.
       this.activeBindingContext = undefined
     }
   }

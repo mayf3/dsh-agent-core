@@ -279,6 +279,12 @@ export function apply(ctx, config) {
 
   /** Find-or-start the agent's DSH process; never returns a dead one. */
   async function ensureRunning(agentId) {
+    // INVARIANT (audit round 3): the check -> spawn -> registry.set section
+    // below is ENTIRELY synchronous (the first await is proc.ready()); JS
+    // single-threading therefore guarantees two concurrent ensureRunning
+    // calls can never both pass the registry check — no double spawn
+    // (empirically verified: 30 concurrent calls -> 1 pid). Do NOT insert an
+    // await between the registry check and registry.set.
     const existing = registry.get(agentId)
     if (existing !== undefined && existing.exit === undefined) {
       log.log(`reuse process for ${agentId} (pid ${existing.pid})`)
@@ -295,8 +301,11 @@ export function apply(ctx, config) {
     const workspace = workspaceBootstrap.resolveWorkspace(agentId)
     const home = workspaceBootstrap.resolveDshHome(agentId)
     // Provision the agent home (settings/credentials/profile/plugin farm) and
-    // the workspace directory — idempotent.
-    provisionAgentHome(home, workspace)
+    // the workspace directory — idempotent. The provisioning is driven by
+    // cfg.agentProfile: whatever profile this router spawns must be fully
+    // installed HERE, so a fresh Agent works without any external
+    // pre-provisioning (FIX 1).
+    provisionAgentHome(home, workspace, { profile: cfg.agentProfile })
     const proc = new AgentProcess({
       agentId,
       home,

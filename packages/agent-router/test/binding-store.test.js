@@ -94,3 +94,39 @@ test('7. row validation', async (t) => {
   assert.throws(() => store.set({ activeAgentId: 'agt_a', activeSessionId: 'main' }), (error) => error.code === VALIDATION_ERROR)
   assert.throws(() => store.set(row('feishu:x', '', 'main')), (error) => error.code === VALIDATION_ERROR)
 })
+
+test('8. FIX3: persist failure rolls back RAM, keeps disk, rejects the caller', async (t) => {
+  const file = await tmpStore(t)
+  const store = new BindingStore({ storeFile: file })
+  await store.set(row('feishu:chat-x', 'agt_a', 'main'))
+  const diskBefore = await readFile(file, 'utf8')
+
+  // Inject a persist failure for the next mutation.
+  store.persist = async () => { throw new Error('disk full') }
+  await assert.rejects(() => store.set(row('feishu:chat-x', 'agt_b', 'main')), /disk full/)
+
+  // RAM unchanged (the mutation rolled back).
+  assert.equal(store.get('feishu:chat-x').activeAgentId, 'agt_a')
+  assert.equal(store.get('feishu:chat-x').activeSessionId, 'main')
+  // Disk unchanged (atomic persist never ran to completion).
+  assert.equal(await readFile(file, 'utf8'), diskBefore)
+
+  // The store recovers: the next mutation (with persist restored) works.
+  store.persist = BindingStore.prototype.persist
+  await store.set(row('feishu:chat-x', 'agt_b', 'main'))
+  assert.equal(store.get('feishu:chat-x').activeAgentId, 'agt_b')
+  assert.notEqual(await readFile(file, 'utf8'), diskBefore)
+})
+
+test('9. FIX3: a failed NEW binding rolls back too (no phantom row)', async (t) => {
+  const file = await tmpStore(t)
+  const store = new BindingStore({ storeFile: file })
+  await store.set(row('feishu:chat-x', 'agt_a', 'main'))
+  const diskBefore = await readFile(file, 'utf8')
+
+  store.persist = async () => { throw new Error('disk full') }
+  await assert.rejects(() => store.set(row('feishu:chat-new', 'agt_b', 'main')), /disk full/)
+  assert.equal(store.get('feishu:chat-new'), undefined, 'failed creation leaves no row in RAM')
+  assert.equal(store.list().length, 1)
+  assert.equal(await readFile(file, 'utf8'), diskBefore)
+})
