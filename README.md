@@ -34,13 +34,13 @@ dsh CLI --profile agent-core
 dsh-agent-core/
 ├── package.json               # 脚本入口（install:profile / dump-config / run / verify）
 ├── packages/
-│   ├── broker/                # @agent-core/broker — capability manifest → DSH tool（V1 泛化）
+│   ├── broker/                # @agent-core/broker — capability manifest → DSH tool（child relay / control-plane gateway 双模式）
 │   ├── router/                # @agent-core/router — 固定输入投递 + 结果/证据输出（一次性驱动）
 │   ├── feishu-connector/      # @agent-core/feishu-connector — 纯 channel 层（WS/IngressEvent/ReplyTarget）
 │   ├── workspace-bootstrap/   # @agent-core/workspace-bootstrap — agentId → workspace + DSH_HOME（幂等播种 AGENTS.md）
 │   ├── agent-registry/        # @agent-core/agent-registry — 长期 Agent 身份注册表（原子 JSON 持久化）
 │   ├── agent-memory/          # @agent-core/agent-memory — per-agent file-first 长期记忆（MEMORY.md + memory_* tools）
-│   ├── agent-router/          # @agent-core/agent-router — Router / Control Plane（switchAgent 域操作 + Binding 持久化 + per-agent 进程注册表）
+│   ├── agent-router/          # @agent-core/agent-router — Router / Control Plane（switchAgent 域操作 + Binding 持久化 + per-agent 进程注册表 + broker parent-RPC 分发）
 │   ├── product-api/           # @agent-core/product-api — Gate 1 thin Mobile Product API（HTTP adapter，127.0.0.1，供 adb reverse）
 │   ├── agent-switch/          # @agent-core/agent-switch — DSH 侧 agent_core_switch_agent adapter（parent-RPC 转发）
 │   ├── demo-server/           # @agent-core/demo-server — per-agent JSON-RPC server（persistence resume + parent-RPC passthrough）
@@ -49,13 +49,14 @@ dsh-agent-core/
 │   └── scheduler-router/      # @agent-core/scheduler-router — Scheduler↔Router Final Integration 桥接（真实 invokeAgent + deliver 适配器，只调已有域操作）
 ├── bundle/                    # @agent-core/bundle — dsh.bundle patch 层（persona + broker/router）
 ├── bundle-demo/               # @agent-core/bundle-demo — process-model demo patch 层
-├── bundle-integration/        # @agent-core/bundle-integration — 控制面组合（registry + workspace-bootstrap + feishu + agent-router）
+├── bundle-integration/        # @agent-core/bundle-integration — 控制面组合（registry + workspace-bootstrap + feishu + agent-router + broker gateway）
 ├── bundle-memory/             # @agent-core/bundle-memory — per-agent memory patch 层
 ├── bundle-agent-switch/       # @agent-core/bundle-agent-switch — per-agent switch adapter patch 层
+├── bundle-broker/             # @agent-core/bundle-broker — per-agent broker relay（child 无凭据，capability 工具经 parent-RPC 到控制面 gateway）
 ├── profile/                   # dsh-profile-agent-core — dsh.profile 清单（V0）
 ├── profile-demo/              # dsh-profile-agent-core-demo — process-model demo profile
 ├── profile-integration/       # dsh-profile-agent-core-integration — 控制面 profile
-├── profile-integration-agent/ # dsh-profile-agent-core-integration-agent — per-agent 组合（demo-server + memory + switch）
+├── profile-integration-agent/ # dsh-profile-agent-core-integration-agent — per-agent 组合（demo-server + memory + switch + broker relay）
 ├── scripts/
 │   ├── install-profile.mjs    # 把 profile 与 @agent-core/* 装入 Harness home（只增不改）
 │   ├── run.mjs                # 解析 DSH checkout + 注入 OPENCODE_GO_API_KEY，跑 dsh CLI
@@ -70,7 +71,8 @@ dsh-agent-core/
 │   ├── scheduler-router-final-v1-verify.mjs # Scheduler↔Router Final Integration 验收（真实进程/模型/飞书 + abort 证据）
 │   ├── agentcore-cron.mjs             # openclaw cron add/list/runs 的 Agent Core 提交面（daemon 换用）
 │   ├── openclaw-job-import.mjs        # 真实 OpenClaw jobs → V1 store 迁移工具（默认 dry-run + 锁内守卫）
-│   └── mobile-gate1-verify.mjs        # Mobile Gate 1 验收（Emulator → adb reverse → Product API → Router → real DSH）
+│   ├── mobile-gate1-verify.mjs        # Mobile Gate 1 验收（Emulator → adb reverse → Product API → Router → real DSH）
+│   └── trusted-credential-broker-v1-verify.mjs # Trusted Credential Broker 验收（real DSH → relay → 505 gateway → real auth → real downstream）
 └── docs/
     ├── README.md              # 整体定义 + 文档导航
     ├── CAPABILITY_MATRIX.md   # 能力矩阵（收敛单一事实源）

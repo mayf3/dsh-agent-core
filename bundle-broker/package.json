@@ -1,0 +1,17 @@
+{
+  "name": "@agent-core/bundle-broker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core bundle: the generic capability broker (manifest -> tool -> trusted-parent RELAY) inside a per-agent DSH process — the child holds no credential/token; every HTTP capability relays to the control-plane Broker gateway",
+  "type": "module",
+  "exports": {
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "UNLICENSED"
+}
