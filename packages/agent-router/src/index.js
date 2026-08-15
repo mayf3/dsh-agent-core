@@ -15,7 +15,9 @@
  *
  * - the Registry validates that the target Agent exists;
  * - the Router decides the target Session (explicit targetSessionId, else
- *   the Agent's `main` — V1 has no semantic/LLM session guessing);
+ *   the per-surface bookmark — the last Session this ChannelConversation
+ *   used with the target Agent — else the Agent's `main`; Mobile Gate 1
+ *   M6: "访问过该 Agent → lastActiveSession，否则 main");
  * - the Router updates and durably persists the Binding;
  * - the new Binding is returned.
  *
@@ -69,9 +71,10 @@ export const Config = z.object({
   /** Per-agent process profile (the resume-aware per-agent composition). */
   agentProfile: z.string().default('agent-core-demo'),
   /**
-   * ABSOLUTE JSON store path for the Binding table (default
-   * `<home>/.dsh/bindings/bindings.json` where home = $DSH_HOME or the OS
-   * home). Relative / `~`-prefixed values are rejected fail-loud.
+   * ABSOLUTE JSON store path for the Binding table AND the per-surface
+   * bookmark table (default `<home>/.dsh/bindings/bindings.json` where
+   * home = $DSH_HOME or the OS home). Relative / `~`-prefixed values are
+   * rejected fail-loud.
    */
   bindingsStoreFile: z.string(),
 })
@@ -83,6 +86,25 @@ export function defaultBindingsStoreFile() {
 
 /** The tool method name per-agent processes use over the parent-RPC relay. */
 export const SWITCH_RPC_METHOD = 'agent-core/switchAgent'
+
+/**
+ * The ChannelConversation id for one (channel, externalId) pair — the
+ * canonical `${channel}:${externalId}` form. Used by resolveChannelConversation
+ * and by thin adapters (e.g. the Product API's surface mapping, M13:
+ * `surfaceId -> ChannelConversation(channel='mobile', externalId=surfaceId)`)
+ * so the id format has exactly one owner.
+ * @param {string} channel - opaque channel id (feishu / mobile / …).
+ * @param {string} externalId - channel-native conversation key (Feishu
+ *   chatId, Android surfaceId, …).
+ * @returns {string} the ChannelConversation id.
+ */
+export function channelConversationId(channel, externalId) {
+  if (typeof channel !== 'string' || channel === ''
+      || typeof externalId !== 'string' || externalId === '') {
+    throw new TypeError('channelConversationId: channel and externalId (non-empty strings) are required')
+  }
+  return `${channel}:${externalId}`
+}
 
 /**
  * Normalize a bindingContext into a ChannelConversation id. Accepts the raw
@@ -207,7 +229,7 @@ export function apply(ctx, config) {
     if (typeof channel !== 'string' || channel === '' || typeof externalId !== 'string' || externalId === '') {
       throw new TypeError('resolveChannelConversation: channel and externalId (non-empty strings) are required')
     }
-    const ccId = `${channel}:${externalId}`
+    const ccId = channelConversationId(channel, externalId)
     let binding = store.get(ccId)
     if (binding === undefined) {
       const agent = resolveDefaultAgent()
@@ -232,9 +254,16 @@ export function apply(ctx, config) {
    *   DSH tool: switch_agent (via parent-RPC relay) -> Router.switchAgent
    *
    * Policy owned by the Router only: agent existence (Registry), session
-   * selection (explicit targetSessionId, else the target Agent's `main`),
-   * Binding update + durable persistence. The caller never touches the
-   * store, never resolves agents, never picks sessions.
+   * selection (explicit targetSessionId, else the per-surface bookmark —
+   * the last Session this ChannelConversation used with the target Agent —
+   * else the target Agent's `main`), Binding update + durable persistence.
+   * The caller never touches the store, never resolves agents, never picks
+   * sessions.
+   *
+   * Bookmark rule (Mobile Gate 1, M6): LEAVING records the current Session
+   * as the single-slot bookmark for (surface, leaving agent); ENTERING
+   * resumes `bookmark(surface, target) ?? main`. Bookmarks live in the
+   * Binding store OUTSIDE the Binding rows (M9) and are persisted with it.
    *
    * @param {string | {channelConversationId?: string}} bindingContext - the
    *   ChannelConversation whose Binding changes.
@@ -242,7 +271,7 @@ export function apply(ctx, config) {
    *   display name (resolved through the Registry by the Router).
    * @param {object} [opts]
    * @param {string} [opts.targetSessionId] - explicit target Session;
-   *   omitted => the target Agent's `main` session (V1 rule).
+   *   omitted => bookmark(surface, target) ?? the Agent's `main` session.
    * @returns {Promise<{channelConversationId:string, activeAgentId:string,
    *   activeSessionId:string, updatedAt:string}>} the new Binding.
    */
@@ -250,12 +279,29 @@ export function apply(ctx, config) {
     const ccId = channelConversationIdOf(bindingContext)
     // 1. Registry validates the target Agent exists.
     const agent = resolveAgentRef(targetAgentId)
-    // 2. Router decides the target Session (V1: explicit, else `main`).
-    const targetSessionId = opts?.targetSessionId ?? cfg.defaultSessionId
-    if (typeof targetSessionId !== 'string' || targetSessionId === '') {
+    // 2. Router decides the target Session. A self-switch with no explicit
+    //    session is a no-op (tap the current Agent in the switcher must not
+    //    move the conversation).
+    const current = store.get(ccId)
+    if (current !== undefined && current.activeAgentId === agent.id && opts?.targetSessionId === undefined) {
+      log.log(`switch: ${ccId.slice(0, 24)}... -> agent ${agent.id} (already bound; no-op)`)
+      return { ...current }
+    }
+    if (opts?.targetSessionId !== undefined && (typeof opts.targetSessionId !== 'string' || opts.targetSessionId === '')) {
       throw new TypeError('agent-router: targetSessionId must be a non-empty string')
     }
-    // 3. Update the current Binding (create it when the conversation has no
+    // 3. LEAVING: remember the current Session for the agent we are leaving
+    //    (single-slot bookmark, outside the Binding row).
+    if (current !== undefined && current.activeAgentId !== agent.id) {
+      await store.setLastSession(ccId, current.activeAgentId, current.activeSessionId)
+      log.log(`bookmark: ${ccId.slice(0, 24)}... x ${current.activeAgentId} -> session ${current.activeSessionId}`)
+    }
+    // 4. ENTERING: explicit targetSessionId > bookmark(surface, target) >
+    //    the deployment default (`main`).
+    const targetSessionId = opts?.targetSessionId
+      ?? store.getLastSession(ccId, agent.id)
+      ?? cfg.defaultSessionId
+    // 5. Update the current Binding (create it when the conversation has no
     //    Binding yet — switching is also a legal first contact).
     const binding = await persistBinding({
       channelConversationId: ccId,
@@ -263,7 +309,7 @@ export function apply(ctx, config) {
       activeSessionId: targetSessionId,
     })
     log.log(`switch: ${ccId.slice(0, 24)}... -> agent ${binding.activeAgentId} + session ${binding.activeSessionId}`)
-    // 4. Return the new Binding.
+    // 6. Return the new Binding.
     return binding
   }
 
@@ -347,14 +393,20 @@ export function apply(ctx, config) {
    * The Feishu Connector stays stateless: it only forwards the ingress; the
    * router resolves the binding and dispatches (D-002: the connector does not
    * persist Agent / Session state). Any future entry (Mobile/Web Product
-   * Gateway) delivers through this same path.
+   * Gateway) delivers through this same path with its own `channel` value —
+   * the Product API sends `channel: 'mobile'` ingresses, which become
+   * ChannelConversations `mobile:<surfaceId>` and never touch the Feishu
+   * reply path.
+   * @param {object} ingress - { channel?, chatId, conversationId, sender,
+   *   text }; `channel` defaults to 'feishu' for legacy callers.
    * @returns {Promise<{reply:string, agentId:string, sessionId:string,
    *   pid?:number} | {error: Error}>} the delivery result.
    */
   async function onIngress(ingress) {
-    const evSummary = `channel=${ingress.channel} chat=${ingress.chatId} sender=${ingress.sender?.openId?.slice(0, 6)} text="${(ingress.text ?? '').slice(0, 60)}"`
+    const channel = ingress.channel ?? 'feishu'
+    const evSummary = `channel=${channel} chat=${ingress.chatId} sender=${ingress.sender?.openId?.slice(0, 6)} text="${(ingress.text ?? '').slice(0, 60)}"`
     const { channelConversation, binding } = await resolveChannelConversation({
-      channel: 'feishu',
+      channel,
       externalId: ingress.conversationId,
     })
     log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
@@ -366,7 +418,9 @@ export function apply(ctx, config) {
         bindingContext: channelConversation.id,
       })
       log.log(`agent ${binding.activeAgentId} (pid ${proc.pid}) replied: ${(reply ?? '').slice(0, 80)}`)
-      if (feishu !== undefined) {
+      // Feishu reply is the FEISHU entry's transport half; non-feishu
+      // surfaces (mobile Product API) return the reply to their own caller.
+      if (feishu !== undefined && channel === 'feishu') {
         // Reply to the originating message (in-thread automatically when the
         // ingress was a topic thread).
         await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)
@@ -375,7 +429,7 @@ export function apply(ctx, config) {
       return { reply, agentId: binding.activeAgentId, sessionId: binding.activeSessionId, pid: proc.pid }
     } catch (error) {
       log.error(`delivery to ${binding.activeAgentId} failed: ${error?.message ?? error}`)
-      if (feishu !== undefined) {
+      if (feishu !== undefined && channel === 'feishu') {
         try {
           await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error.message ?? error}`)
         } catch { /* best effort */ }
@@ -408,6 +462,12 @@ export function apply(ctx, config) {
     switchAgent,
     /** D-002 getBinding: current Binding or undefined. */
     getBinding,
+    /**
+     * (channel, externalId) -> ChannelConversation id — the single owner of
+     * the id format; thin adapters (Product API surface mapping, M13) ask
+     * the service instead of re-implementing the convention.
+     */
+    channelConversationId,
     /** Test/ops surface: current registry snapshot. */
     registrySnapshot: () => [...registry.entries()].map(([agentId, proc]) => ({
       agentId,
@@ -420,6 +480,9 @@ export function apply(ctx, config) {
     })),
     /** Test/ops surface: durable Binding table snapshot. */
     bindingsSnapshot: () => store.list(),
+    /** Test/ops surface: durable bookmark table snapshot (per-surface
+     *  lastActiveSession; NOT history — single slot per (surface, agent)). */
+    lastSessionsSnapshot: () => store.lastSessionsSnapshot(),
     ensureRunning,
     route: onIngress,
   }

@@ -41,6 +41,7 @@ dsh-agent-core/
 │   ├── agent-registry/        # @agent-core/agent-registry — 长期 Agent 身份注册表（原子 JSON 持久化）
 │   ├── agent-memory/          # @agent-core/agent-memory — per-agent file-first 长期记忆（MEMORY.md + memory_* tools）
 │   ├── agent-router/          # @agent-core/agent-router — Router / Control Plane（switchAgent 域操作 + Binding 持久化 + per-agent 进程注册表）
+│   ├── product-api/           # @agent-core/product-api — Gate 1 thin Mobile Product API（HTTP adapter，127.0.0.1，供 adb reverse）
 │   ├── agent-switch/          # @agent-core/agent-switch — DSH 侧 agent_core_switch_agent adapter（parent-RPC 转发）
 │   ├── demo-server/           # @agent-core/demo-server — per-agent JSON-RPC server（persistence resume + parent-RPC passthrough）
 │   ├── owner-guard/           # @agent-core/owner-guard — 单 owner 锁（one live process per agent）
@@ -64,9 +65,12 @@ dsh-agent-core/
 │   ├── install-integration.mjs        # 安装集成控制面 profile（只增不改）
 │   ├── integration-v1-verify.mjs      # Integration V1 验收（真实飞书链路）
 │   ├── product-integration-v1-verify.mjs # Product Integration V1 验收（A/B 双 Agent、switch、重启、crash resume）
+<<<<<<< HEAD
 │   ├── scheduler-v1-verify.mjs        # Scheduler V1 验收驱动（59 测试 + 兼容扫描 + 重启证据 + 审计回归）
 │   ├── agentcore-cron.mjs             # openclaw cron add/list/runs 的 Agent Core 提交面（daemon 换用）
-│   └── openclaw-job-import.mjs        # 真实 OpenClaw jobs → V1 store 迁移工具（默认 dry-run + 锁内守卫）
+│   ├── openclaw-job-import.mjs        # 真实 OpenClaw jobs → V1 store 迁移工具（默认 dry-run + 锁内守卫）
+│   └── mobile-gate1-verify.mjs        # Mobile Gate 1 验收（Emulator → adb reverse → Product API → Router → real DSH）
+>>>>>>> 89d5466 (Mobile Gate 1 (MOBILE_LOCAL_REAL_SLICE_V1): thin Product API + per-surface bookmark over the existing Router)
 └── docs/
     ├── README.md              # 整体定义 + 文档导航
     ├── CAPABILITY_MATRIX.md   # 能力矩阵（收敛单一事实源）

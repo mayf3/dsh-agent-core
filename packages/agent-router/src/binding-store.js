@@ -25,11 +25,22 @@
  *
  *   { "version": 1,
  *     "bindings": { "<channelConversationId>": {
- *       channelConversationId, activeAgentId, activeSessionId, updatedAt } } }
+ *       channelConversationId, activeAgentId, activeSessionId, updatedAt } },
+ *     "lastSessions": { "<channelConversationId>": { "<agentId>": "<sessionId>" } } }
+ *
+ * `lastSessions` is the per-(ChannelConversation, Agent) SINGLE-SLOT bookmark
+ * table (Mobile Gate 1: "surface × agent → lastActiveSession"). It is NOT a
+ * session registry, NOT history, NOT a navigation stack — one remembered
+ * session id per (surface, agent), written when the router leaves an agent.
+ * It deliberately lives OUTSIDE the Binding rows so the Binding shape stays
+ * `{ccId, activeAgentId, activeSessionId, updatedAt}` (M9: history never
+ * enters the Binding). The field is optional in the document (absent = empty
+ * table), so store files written by older versions keep loading and vice
+ * versa — no format version bump.
  *
  * The store is a pure data module (zero Cordis / DSH imports): the router
  * plugin owns the domain rules (default agent, switch validation, session
- * selection), the store only persists rows.
+ * selection, bookmark policy), the store only persists rows.
  */
 
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
@@ -52,6 +63,12 @@ export const VALIDATION_ERROR = 'VALIDATION_ERROR'
  *
  * @typedef {{channelConversationId:string, activeAgentId:string,
  *            activeSessionId:string, updatedAt:string}} BindingRow
+ */
+
+/**
+ * One bookmark: the last Session a ChannelConversation used with an Agent.
+ * @typedef {{channelConversationId:string, agentId:string,
+ *            sessionId:string, updatedAt:string}} LastSessionRow
  */
 
 /**
@@ -82,6 +99,8 @@ export class BindingStore {
     this.now = now
     /** @type {Map<string, BindingRow>} */
     this.bindings = new Map()
+    /** @type {Map<string, Map<string, string>>} ccId -> (agentId -> sessionId) */
+    this.lastSessions = new Map()
     this.queue = Promise.resolve()
     this.load()
   }
@@ -119,6 +138,31 @@ export class BindingStore {
         updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : this.now(),
       })
     }
+    // Optional bookmark table (absent in older documents = empty).
+    if (document.lastSessions !== undefined) {
+      if (typeof document.lastSessions !== 'object' || document.lastSessions === null) {
+        throw Object.assign(new Error(`binding-store: corrupt lastSessions table in ${this.storeFile}`), {
+          code: CORRUPT_STORE,
+        })
+      }
+      for (const [ccId, perAgent] of Object.entries(document.lastSessions)) {
+        if (typeof perAgent !== 'object' || perAgent === null) {
+          throw Object.assign(new Error(`binding-store: corrupt lastSessions row at key ${JSON.stringify(ccId)}`), {
+            code: CORRUPT_STORE,
+          })
+        }
+        const bookmarks = new Map()
+        for (const [agentId, sessionId] of Object.entries(perAgent)) {
+          if (typeof sessionId !== 'string' || sessionId === '') {
+            throw Object.assign(new Error(`binding-store: corrupt lastSessions entry ${JSON.stringify(ccId)}/${JSON.stringify(agentId)}`), {
+              code: CORRUPT_STORE,
+            })
+          }
+          bookmarks.set(agentId, sessionId)
+        }
+        this.lastSessions.set(ccId, bookmarks)
+      }
+    }
   }
 
   /**
@@ -147,12 +191,16 @@ export class BindingStore {
 
   /** Copy of the mutable state (rows are plain JSON objects). */
   snapshot() {
-    return new Map([...this.bindings.entries()].map(([id, row]) => [id, { ...row }]))
+    return {
+      bindings: new Map([...this.bindings.entries()].map(([id, row]) => [id, { ...row }])),
+      lastSessions: new Map([...this.lastSessions.entries()].map(([ccId, perAgent]) => [ccId, new Map(perAgent)])),
+    }
   }
 
   /** Restore the state to a snapshot (rollback path). */
   restore(snapshot) {
-    this.bindings = snapshot
+    this.bindings = snapshot.bindings
+    this.lastSessions = snapshot.lastSessions
   }
 
   /** Atomic persist: write tmp, then rename over the store file. */
@@ -160,6 +208,11 @@ export class BindingStore {
     const document = {
       version: STORE_VERSION,
       bindings: Object.fromEntries([...this.bindings.entries()].map(([id, row]) => [id, { ...row }])),
+    }
+    if (this.lastSessions.size > 0) {
+      document.lastSessions = Object.fromEntries(
+        [...this.lastSessions.entries()].map(([ccId, perAgent]) => [ccId, Object.fromEntries(perAgent)]),
+      )
     }
     await mkdir(dirname(this.storeFile), { recursive: true })
     const tmp = `${this.storeFile}.tmp`
@@ -216,5 +269,65 @@ export class BindingStore {
       this.bindings.set(stored.channelConversationId, stored)
       return { ...stored }
     })
+  }
+
+  /**
+   * Read one bookmark: the last Session this ChannelConversation used with
+   * `agentId`, or undefined when never visited (Mobile Gate 1 rule:
+   * `bookmark(surface, agent) ?? main`).
+   * @param {string} channelConversationId
+   * @param {string} agentId
+   * @returns {string | undefined}
+   */
+  getLastSession(channelConversationId, agentId) {
+    return this.lastSessions.get(channelConversationId)?.get(agentId)
+  }
+
+  /**
+   * Write one single-slot bookmark and persist it. Replaces any previous
+   * value for the same (ccId, agentId) — a bookmark is ONE remembered
+   * session, never a stack (M9).
+   * @param {string} channelConversationId
+   * @param {string} agentId
+   * @param {string} sessionId
+   * @returns {Promise<{channelConversationId:string, agentId:string,
+   *   sessionId:string, updatedAt:string}>} the stored bookmark.
+   */
+  setLastSession(channelConversationId, agentId, sessionId) {
+    if (typeof channelConversationId !== 'string' || channelConversationId === ''
+        || typeof agentId !== 'string' || agentId === ''
+        || typeof sessionId !== 'string' || sessionId === '') {
+      throw Object.assign(new TypeError('binding-store: channelConversationId/agentId/sessionId are required'), {
+        code: VALIDATION_ERROR,
+      })
+    }
+    return this.enqueue(async () => {
+      let perAgent = this.lastSessions.get(channelConversationId)
+      if (perAgent === undefined) {
+        perAgent = new Map()
+        this.lastSessions.set(channelConversationId, perAgent)
+      }
+      perAgent.set(agentId, sessionId)
+      return {
+        channelConversationId,
+        agentId,
+        sessionId,
+        updatedAt: this.now(),
+      }
+    })
+  }
+
+  /**
+   * Every bookmark row (test/evidence surface). Flattened, insertion order.
+   * @returns {LastSessionRow[]}
+   */
+  lastSessionsSnapshot() {
+    const rows = []
+    for (const [ccId, perAgent] of this.lastSessions.entries()) {
+      for (const [agentId, sessionId] of perAgent.entries()) {
+        rows.push({ channelConversationId: ccId, agentId, sessionId })
+      }
+    }
+    return rows
   }
 }

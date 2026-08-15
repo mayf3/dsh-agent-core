@@ -10,8 +10,9 @@
  *        profile for Product Integration V1: demo-server + owner-guard +
  *        agent-memory + agent-switch)
  *   $DSH_HOME/profiles/node_modules/@agent-core/{bundle-integration,
- *     feishu-connector,agent-router,workspace-bootstrap,agent-registry,
- *     bundle-memory,bundle-agent-switch,agent-memory,agent-switch}
+ *     feishu-connector,agent-router,product-api,workspace-bootstrap,
+ *     agent-registry, bundle-memory,bundle-agent-switch,agent-memory,
+ *     agent-switch}
  *     -> symlinks into the repo's packages/ (flat fallback mechanism)
  *
  * Also verifies the dev resolution bridge exists.
@@ -58,6 +59,7 @@ const pkgDirs = {
   'bundle-integration': join(REPO, 'bundle-integration'),
   'feishu-connector': join(REPO, 'packages', 'feishu-connector'),
   'agent-router': join(REPO, 'packages', 'agent-router'),
+  'product-api': join(REPO, 'packages', 'product-api'),
   'workspace-bootstrap': join(REPO, 'packages', 'workspace-bootstrap'),
   'agent-registry': join(REPO, 'packages', 'agent-registry'),
   // per-agent composition

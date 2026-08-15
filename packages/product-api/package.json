@@ -1,0 +1,17 @@
+{
+  "name": "@agent-core/product-api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core Gate 1 thin Mobile Product API: HTTP adapter over the existing Router / Control Plane (current binding / agents / switch-agent / message), localhost only for adb reverse",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=3",
+    "@deepseek-ai/schemastery": ">=0"
+  }
+}
