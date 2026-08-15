@@ -43,7 +43,8 @@ dsh-agent-core/
 │   ├── agent-router/          # @agent-core/agent-router — Router / Control Plane（switchAgent 域操作 + Binding 持久化 + per-agent 进程注册表）
 │   ├── agent-switch/          # @agent-core/agent-switch — DSH 侧 agent_core_switch_agent adapter（parent-RPC 转发）
 │   ├── demo-server/           # @agent-core/demo-server — per-agent JSON-RPC server（persistence resume + parent-RPC passthrough）
-│   └── owner-guard/           # @agent-core/owner-guard — 单 owner 锁（one live process per agent）
+│   ├── owner-guard/           # @agent-core/owner-guard — 单 owner 锁（one live process per agent）
+│   └── scheduler/             # @agent-core/scheduler — Scheduler Replacement V1（cron/at/every 持久 job + 注入式 invocation/delivery seam）
 ├── bundle/                    # @agent-core/bundle — dsh.bundle patch 层（persona + broker/router）
 ├── bundle-demo/               # @agent-core/bundle-demo — process-model demo patch 层
 ├── bundle-integration/        # @agent-core/bundle-integration — 控制面组合（registry + workspace-bootstrap + feishu + agent-router）
@@ -62,13 +63,16 @@ dsh-agent-core/
 │   ├── demo-home.mjs          # demo home 路径解析
 │   ├── install-integration.mjs        # 安装集成控制面 profile（只增不改）
 │   ├── integration-v1-verify.mjs      # Integration V1 验收（真实飞书链路）
-│   └── product-integration-v1-verify.mjs # Product Integration V1 验收（A/B 双 Agent、switch、重启、crash resume）
+│   ├── product-integration-v1-verify.mjs # Product Integration V1 验收（A/B 双 Agent、switch、重启、crash resume）
+│   ├── scheduler-v1-verify.mjs        # Scheduler V1 验收驱动（59 测试 + 兼容扫描 + 重启证据 + 审计回归）
+│   ├── agentcore-cron.mjs             # openclaw cron add/list/runs 的 Agent Core 提交面（daemon 换用）
+│   └── openclaw-job-import.mjs        # 真实 OpenClaw jobs → V1 store 迁移工具（默认 dry-run + 锁内守卫）
 └── docs/
     ├── README.md              # 整体定义 + 文档导航
     ├── CAPABILITY_MATRIX.md   # 能力矩阵（收敛单一事实源）
-    ├── investigations/        # 五主题能力调查
-    ├── decisions/             # 决策记录（ADR 模板 + D-001…D-004）
-    ├── reports/               # bootstrap-v0/…/memory-v1/product-integration-v1
+    ├── investigations/        # 能力调查（五主题 + scheduler-replacement-audit 字段映射）
+    ├── decisions/             # 决策记录（ADR 模板 + D-001…D-005）
+    ├── reports/               # bootstrap-v0/…/memory-v1/product-integration-v1/scheduler-replacement-v1
     └── TRUST-BOUNDARY-REPORT.md  # 信任边界与身份伪造调查
 ```
 

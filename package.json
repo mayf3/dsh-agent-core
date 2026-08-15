@@ -11,7 +11,13 @@
     "verify": "node scripts/verify.mjs",
     "install:integration": "node scripts/install-integration.mjs",
     "verify:product-integration": "node scripts/product-integration-v1-verify.mjs",
-    "test": "node --test 'packages/*/test/*.test.js'"
+    "test": "node --test 'packages/*/test/*.test.js'",
+    "test:scheduler": "node --test packages/scheduler/test/*.test.js",
+    "verify:scheduler": "node scripts/scheduler-v1-verify.mjs",
+    "import:openclaw-jobs": "node scripts/openclaw-job-import.mjs"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "croner": "^10.0.1"
+  }
 }
