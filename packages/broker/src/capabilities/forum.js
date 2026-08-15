@@ -119,12 +119,19 @@ export const forumReplyManifest = withTransportErrors({
   operations: [
     {
       name: 'reply',
-      description: 'Post a message to the thread with the given threadId. content is required; kind/parentId/attachments/metadata are optional.',
+      description:
+        'Post a message to the thread with the given threadId. content is required. ' +
+        'kind is restricted to reviewer-safe values (comment|proposal|challenge|clarification|evidence) — ' +
+        'moderator-only kinds (system|decision, which require forum.moderate) are intentionally not exposed.',
       arguments: {
         properties: {
           threadId: { type: 'string', description: 'Forum thread id.' },
           content: { type: 'string', description: 'Message body text.' },
-          kind: { type: 'string', description: 'Optional message kind.' },
+          kind: {
+            type: 'string',
+            enum: ['comment', 'proposal', 'challenge', 'clarification', 'evidence'],
+            description: 'Message kind (reviewer-safe): comment|proposal|challenge|clarification|evidence.',
+          },
           parentId: { type: 'string', description: 'Optional parent message id (reply-to).' },
           attachments: { type: 'json', description: 'Optional attachments array.' },
           metadata: { type: 'json', description: 'Optional metadata object.' },
@@ -211,14 +218,14 @@ export const forumSearchThreadsManifest = withTransportErrors({
   operations: [
     {
       name: 'search',
-      description: 'Search threads. q is the search text; page and limit control paging.',
+      description: 'Search threads. q is required (svc-forum /api/search rejects an empty query with 400); page and limit control paging.',
       arguments: {
         properties: {
-          q: { type: 'string', description: 'Search text.' },
+          q: { type: 'string', description: 'Search text (required; non-empty).' },
           page: { type: 'integer', description: 'Page number, starting at 1 (default 1).' },
           limit: { type: 'integer', description: 'Page size (default 20).' },
         },
-        required: [],
+        required: ['q'],
       },
       result: { type: 'json' },
       errors: ['invalid_arguments'],

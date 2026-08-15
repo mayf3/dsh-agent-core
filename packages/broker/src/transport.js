@@ -15,8 +15,10 @@
  *   4. bind path placeholders / query / JSON body from the manifest-declared
  *      argument names;
  *   5. fetch the pinned origin+path with `Authorization: Bearer <token>`;
- *      401 → invalidate the token, re-issue once, retry (reusing the SAME
- *      Idempotency-Key so a retried write is deduplicated server-side);
+ *      401 → invalidate the token, re-issue once and retry — but ONLY for
+ *      GET and idempotency-keyed writes (reusing the SAME Idempotency-Key so
+ *      a retried write is deduplicated server-side); non-idempotent writes
+ *      fail closed on 401 to avoid double-application;
  *   6. parse JSON / text responses; map non-2xx, malformed bodies, network
  *      and timeout failures onto the capability error table.
  *
@@ -102,7 +104,9 @@ export function extractPathPlaceholders(path) {
 /**
  * Interpolate `{name}` placeholders from pathParams with EXACT-match
  * enforcement (missing / extra / empty params are binding errors) and
- * encodeURIComponent on every value (path-injection prevention).
+ * encodeURIComponent on every value (path-injection prevention). Dot segments
+ * ("." / "..") are rejected: URL normalization would otherwise rewrite the
+ * manifest-pinned path.
  * @param {string} pathTemplate - e.g. `/api/threads/{threadId}`.
  * @param {Record<string,string>} pathParams - placeholder → value.
  * @returns {string} concrete path with no placeholders left.
@@ -134,6 +138,14 @@ export function buildPath(pathTemplate, pathParams) {
     const raw = pathParams[ph]
     if (raw === undefined || raw === null || raw === '') {
       throw new TransportBindingError(`empty value for path parameter "${ph}"`)
+    }
+    // Dot segments: encodeURIComponent leaves "." and ".." untouched, and
+    // Node/WHATWG URL normalization collapses them (e.g. "/a/../b" → "/b").
+    // A model-supplied "." / ".." would therefore rewrite the manifest-pinned
+    // path — a hard violation of the pinned-path invariant. Fail closed here
+    // in the generic binding layer; no URL policy framework needed.
+    if (raw === '.' || raw === '..') {
+      throw new TransportBindingError(`path parameter "${ph}" must not be a dot segment (got "${raw}")`)
     }
     result = result.replace(`{${ph}}`, encodeURIComponent(String(raw)))
   }
@@ -410,7 +422,12 @@ export function createHttpTransport(opts = {}) {
     }
 
     // 401 → invalidate + re-issue + retry ONCE, reusing the same Idempotency-Key.
-    if (res.status === 401) {
+    // Retry policy (audit follow-up): ONLY GET requests and idempotency-keyed
+    // writes are retried. A non-idempotent write (no Idempotency-Key) is NOT
+    // retried: its first attempt may have been applied server-side, and a
+    // retry could double-apply it. All real Broker write capabilities either
+    // carry an Idempotency-Key or are one-shot by design.
+    if (res.status === 401 && (http.method === 'GET' || idempotencyKey !== undefined)) {
       invalidateAccessToken(credential, target, scope)
       try {
         accessToken = await getAccessToken(credential, target, scope)
