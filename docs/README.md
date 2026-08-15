@@ -111,3 +111,16 @@ session cwd 指向已播种目录、AGENTS.md 进入首轮上下文、MEMORY.md 
 > `investigations/openclaw-scheduler-caller-migration-v1.md`，报告
 > `reports/openclaw-scheduler-caller-migration-v1.md`。Scheduler 核心/
 > Workflow/Forum 业务逻辑/Kernel 零改动。
+
+> 更新（2026-08-15 12:52）：**生产 cutover 收口 = ROLLED_BACK（分支
+> feat/scheduler-production-cutover-closure-v1）**。真实现场核查：三个 caller 的
+> 迁移版确实已在 launchd 内生效（12:43 运行已向 `~/.agent-core/scheduler/jobs.json`
+> 写入 5 个 workflow-dispatch job），但**无任何 resident Scheduler 进程/launchd
+> 消费该 store**（agentcore-cron 为 control-only），5 个 job 到期无人执行（黑洞实证）；
+> Agent Core Router 仅能路由 demo runtime 注册的 agent，生产 agent 仍由 OpenClaw
+> gateway 管理 → 生产 resident mount 不成立（STOCK_CUTOVER_SCHEDULER_READY = NO）。
+> 已按 Path B 恢复三个 caller 到 OpenClaw（pre-migration 备份
+> `.bak-caller-migration-v1-20260815-121248`，迁移版另存
+> `.bak-caller-migration-v1-live-*` 不丢代码），清空 agentcore store 孤儿 job
+> （备份 `jobs.json.bak-closure-v1-*`），launchd 下一轮自动生效。
+> 详情：`reports/scheduler-production-cutover-closure-v1.md`。
