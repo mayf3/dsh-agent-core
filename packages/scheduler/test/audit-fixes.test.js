@@ -17,7 +17,7 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { spawnSync } from 'node:child_process'
+import { spawnSync, spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 import { Scheduler } from '../src/scheduler.js'
@@ -279,6 +279,40 @@ test('IMPORT_EXISTING_STORE_GUARD: import --write refuses an existing store with
   assert.equal(forced.status, 0, forced.stderr)
   const disk = JSON.parse(readFileSync(store.filePath, 'utf8'))
   assert.equal(disk.jobs.length, 137, '--force imported the fixture')
+})
+
+test('IMPORT_GUARD_TOCTOU + EXISTING_JOB_PRESERVED: state created during the import race is seen inside the lock and refused', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sched-toctou-'))
+  const store = new JobStore(join(dir, 'jobs.json'))
+  const importScript = join(here, '..', '..', '..', 'scripts', 'openclaw-job-import.mjs')
+
+  // The "concurrent writer" (resident engine / CLI equivalent) enqueues its
+  // mutation FIRST and lands job B only after a delay. The import process
+  // therefore starts while the store file does NOT exist yet (the TOCTOU
+  // window) and reaches the mutation lock only after B is on disk — its
+  // existence check must run INSIDE the lock against the latest store.
+  const writer = store.mutate(async (jobs) => {
+    await sleep(2000)
+    jobs.push({
+      id: 'B', name: 'B', agentId: 'b1', enabled: true,
+      schedule: { kind: 'at', at: '2026-09-01T00:00:00Z' },
+      payload: { kind: 'agentTurn', message: 'y' },
+      delivery: { mode: 'none' }, state: {},
+      createdAtMs: Date.now(), updatedAtMs: Date.now(),
+    })
+  })
+
+  const child = spawn(process.execPath, [importScript, '--write', '--fixture', '--store', store.filePath])
+  let stderr = ''
+  child.stderr.on('data', (d) => { stderr += d })
+  const exitCode = await new Promise((resolve) => child.on('exit', resolve))
+  await writer
+
+  assert.equal(exitCode, 3, `IMPORT_GUARD_TOCTOU: non-force import must refuse, got exit ${exitCode}: ${stderr}`)
+  assert.match(stderr, /REFUSED/)
+  const disk = JSON.parse(readFileSync(store.filePath, 'utf8')).jobs
+  assert.deepEqual(disk.map((j) => j.name), ['B'],
+    'EXISTING_JOB_PRESERVED: the concurrently created job survives; import never replaced the store')
 })
 
 test('IMPORT reports in-flight jobs (runningAtMs in source) instead of treating them as safe', async () => {

@@ -202,6 +202,7 @@ broker 工具面、不依赖 Feishu SDK。
 | FIX 3 单一 mutation authority | 所有写入走 `JobStore.mutate`：**同进程 FIFO 串行**（promise chain）+ 跨进程 lockfile（O_EXCL + stale-break）→ 锁内重读最新 → 应用本次增量 → 原子写；整库盲写根除；同进程 domain op 先入队先提交（completion 必见最新） | `CLI_RESIDENT_MULTIWRITER = PASS`（引擎 invoke 中 CLI add B → 完成后 B 在 RAM + disk、A 不复活；CLI disable 不被引擎 tick 覆盖） |
 | FIX 4 persist 失败回滚 | mutation 只作用于锁内新鲜副本，原子写成功后才提交 RAM | `PERSIST_FAILURE_ROLLBACK = PASS`（create/update/disable/delete 注入写失败 → API rejects、RAM 不变、disk 不变） |
 | FIX 5 import 守卫 | 目标 store 已存在 → `--write` 默认拒绝（exit 3），`--force` 显式覆盖；源中 runningAtMs job 只报告不静默迁移 | `IMPORT_EXISTING_STORE_GUARD = PASS`（拒绝 + 现有 store 字节不变 + --force 后导入）；in-flight 报告测试 |
+| FIX 5 TOCTOU（round 3，最后 blocker） | 存在性检查移入 **mutation 锁内**（`store.mutate` fn 中检查 `latest` + 锁内 `store.exists()`），删除锁外预检查；并发写入者（resident/CLI）在 import 启动后创建的 job 必然被锁内检查看到并拒绝（exit 3），不再被整库替换吞掉 | `IMPORT_GUARD_TOCTOU + EXISTING_JOB_PRESERVED = PASS`（并发 writer 先入队持锁 2s 写入 B → import 锁外观测不到、锁内观测到 → 拒绝 exit 3、B 保留、store 未被替换；红→绿验证：修复前 exit 0 + B 丢失） |
 | TIMEOUT_ABORT | invocation seam 接受并传递 `AbortSignal`，超时触发 abort | `TIMEOUT_ABORT_SIGNAL = PASS`（超时后 signal.aborted === true）；**end-to-end cancellation 无真实 Router invoker 可验证 → DEFERRED_TO_FINAL_INTEGRATION**（Scheduler → Router Final Integration 时验证，本轮不做 cancel framework） |
 | Asia/Shanghai croner | OpenClaw bundle 无额外 tz fallback 行（逐行核对），已 port 语义一致；补回归 | `ASIA_SHANGHAI_CRON_TZ = PASS`（跨日/DST 邻近日期/整点与奇数分钟表达式） |
 
@@ -214,10 +215,13 @@ CLI_EXECUTION_DISABLED = DONE
 SINGLE_WRITER_STORE = DONE   (locked read-modify-write mutation authority)
 PERSIST_ROLLBACK = DONE
 IMPORT_GUARD = DONE
+IMPORT_GUARD_TOCTOU = DONE        (round 3: existence check moved inside the mutation lock)
+CONCURRENT_CREATE_REGRESSION = PASS  (import 启动后并发创建的 B 被锁内检查拒绝并保留)
 TIMEOUT_ABORT = seam 级 AbortSignal 已预留并测试；end-to-end = DEFERRED_TO_FINAL_INTEGRATION
-TESTS = 58/58 PASS
-VERIFY = 21/21 gates PASS (含 LONG_INVOKE_OVERLAPPING_TICK / CLI_LIST_DOES_NOT_EXECUTE /
-         CLI_RESIDENT_MULTIWRITER / PERSIST_FAILURE_ROLLBACK / IMPORT_EXISTING_STORE_GUARD)
+TESTS = 59/59 PASS
+VERIFY = 22/22 gates PASS (含 LONG_INVOKE_OVERLAPPING_TICK / CLI_LIST_DOES_NOT_EXECUTE /
+         CLI_RESIDENT_MULTIWRITER / PERSIST_FAILURE_ROLLBACK / IMPORT_EXISTING_STORE_GUARD /
+         IMPORT_GUARD_TOCTOU)
 COMPATIBILITY = fixture 137/140 (97.9%) / live 129/132 (97.7%) structurally compatible / importable
 SCHEDULER_V2 = NO
 ROUTER_CHANGE = NONE
@@ -234,10 +238,10 @@ KERNEL_CHANGE = NONE
 - `packages/scheduler/**`（`@agent-core/scheduler`，零 DSH 依赖，仅 croner）：
   job-model / schedule / store（锁 + mutate 单一写权）/ scheduler 引擎（单飞 +
   最新态写回）/ seams（AbortSignal）/ import-openclaw（in-flight 报告）；
-- `packages/scheduler/test/`：**58 个测试**全绿（10 项最小验收 + 重启/去重/backoff/
-  并发/兼容扫描 + 12 项审计回归）；
+- `packages/scheduler/test/`：**59 个测试**全绿（10 项最小验收 + 重启/去重/backoff/
+  并发/兼容扫描 + 13 项审计回归）；
 - `packages/scheduler/fixtures/openclaw-jobs-enabled.json`：redacted 真实库存快照；
 - `scripts/agentcore-cron.mjs`（CLI 纯控制面提交面）、`scripts/openclaw-job-import.mjs`
-  （迁移工具 + 守卫）、`scripts/scheduler-v1-verify.mjs`（验收驱动，21/21 PASS）；
+  （迁移工具 + 锁内守卫）、`scripts/scheduler-v1-verify.mjs`（验收驱动，22/22 PASS）；
 - `docs/investigations/scheduler-replacement-audit.md`、`docs/decisions/SCHEDULER_V1.md`
   （D-005 + 追加）、本报告。

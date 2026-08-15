@@ -104,16 +104,31 @@ if (report.warnings.length > 0) {
 
 if (write) {
   const store = new JobStore(storePath)
-  if (!force && await store.exists()) {
-    process.stderr.write(
-      `\n[openclaw-job-import] REFUSED: target store ${storePath} already exists — the Control Plane `
-      + `may be executing jobs; importing an old OpenClaw snapshot could resurrect `
-      + `already-executed one-shots or roll back state (audit FIX 5).\n`
-      + `Stop/drain the Control Plane, then retry with --force for an explicit overwrite.\n`,
-    )
-    process.exit(3)
+  try {
+    // TOCTOU guard (audit round 3): the existence check runs INSIDE the
+    // mutation lock against the LATEST store — a job created by the resident
+    // engine or the CLI while this import was starting is seen here and
+    // refuses the import instead of being overwritten. No pre-lock check.
+    await store.mutate(async (latest) => {
+      if (!force && (latest.length > 0 || await store.exists())) {
+        const error = new Error('target store already exists / already has jobs')
+        error.code = 'IMPORT_REFUSED'
+        throw error
+      }
+      return jobs // whole-store replace (explicit --force overwrite semantics)
+    })
+  } catch (error) {
+    if (error?.code === 'IMPORT_REFUSED') {
+      process.stderr.write(
+        `\n[openclaw-job-import] REFUSED: target store ${storePath} already exists / already has jobs — the Control Plane `
+        + `may be executing jobs; importing an old OpenClaw snapshot could resurrect `
+        + `already-executed one-shots or roll back state (audit FIX 5 / TOCTOU guard).\n`
+        + `Stop/drain the Control Plane, then retry with --force for an explicit overwrite.\n`,
+      )
+      process.exit(3)
+    }
+    throw error
   }
-  await store.mutate(() => jobs) // locked replace; guard above prevents live-store clobber
   console.log(`\nwrote ${jobs.length} jobs to ${storePath} (atomic replace under store lock)`)
   console.log('next: start the Control Plane scheduler over this store; jobs resume with their')
   console.log('      imported nextRunAtMs / lastRunAtMs (missed occurrences catch up at most once).')
