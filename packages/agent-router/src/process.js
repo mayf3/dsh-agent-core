@@ -10,6 +10,12 @@
  * `session.status` notifications, and resolves one "turn" when the whole
  * agent goes idle again.
  *
+ * Parent-RPC relay: per-agent plugins (e.g. the DSH switch tool) can ask the
+ * Control Plane to run a Router domain operation. The demo-server emits a
+ * `rpc.request` notification on stdout; this client dispatches it to the
+ * `onRpcRequest` hook the router installs and answers over stdin with a
+ * `rpc.response` request. This client only relays — it owns no policy.
+ *
  * Zero DSH imports: only node builtins + the shared demo-home provisioner.
  */
 
@@ -45,12 +51,13 @@ export function agentEnv(home, extra = {}) {
  * text. `exit` promise settles when the OS process dies (any cause).
  */
 export class AgentProcess {
-  constructor({ agentId, home, workspace, profile = DEFAULT_PROFILE, log = console }) {
+  constructor({ agentId, home, workspace, profile = DEFAULT_PROFILE, log = console, env = {} }) {
     this.agentId = agentId
     this.home = home
     this.workspace = workspace
     this.profile = profile
     this.log = log
+    this.env = env // extra env for the child (e.g. DSH_AGENT_ID)
     this.pid = undefined
     this.exit = undefined // { code, signal } once settled
     this.stderr = ''
@@ -63,13 +70,21 @@ export class AgentProcess {
     this.exitPromise = undefined
     this.exitResolve = undefined
     this.child = undefined
+    /** ChannelConversation of the in-flight turn (set by turn(); the switch
+     *  tool relay uses it to target exactly this conversation's Binding). */
+    this.activeBindingContext = undefined
+    /** Per-process single-flight turn queue (FIX 2): one routed turn at a
+     *  time per AgentProcess; see turn(). */
+    this.turnQueue = Promise.resolve()
+    /** Router-installed hook: async (method, params) => result. */
+    this.onRpcRequest = undefined
   }
 
   /** Spawn the dsh CLI child. Does not wait for readiness. */
   spawn() {
     const child = spawn(process.execPath, [cliBin(), '--profile', this.profile], {
       cwd: this.workspace,
-      env: agentEnv(this.home),
+      env: agentEnv(this.home, this.env),
       stdio: ['pipe', 'pipe', 'pipe'],
     })
     this.child = child
@@ -118,8 +133,32 @@ export class AgentProcess {
         this.events.push(message.params)
       } else if (message.method === 'session.status') {
         this.status[message.params.sessionId] = message.params.status
+      } else if (message.method === 'rpc.request') {
+        // A per-agent plugin asks the Control Plane to run a Router domain
+        // operation; the answer goes back over stdin as rpc.response.
+        this.handleRpcRequest(message.params)
       }
     }
+  }
+
+  /**
+   * Relay one parent-RPC request to the router-installed hook and answer the
+   * child (best-effort: a dead child cannot be answered, and the pending
+   * tool call dies with it).
+   */
+  async handleRpcRequest({ requestId, method, params } = {}) {
+    if (typeof requestId !== 'string' || typeof method !== 'string') return
+    let result
+    let error
+    try {
+      if (typeof this.onRpcRequest !== 'function') {
+        throw new Error(`process ${this.agentId}: no parent-RPC handler for ${method}`)
+      }
+      result = await this.onRpcRequest(method, params)
+    } catch (cause) {
+      error = cause instanceof Error ? cause.message : String(cause)
+    }
+    await this.request('rpc.response', { requestId, ok: error === undefined, result, error }).catch(() => {})
   }
 
   request(method, params) {
@@ -153,32 +192,67 @@ export class AgentProcess {
   /**
    * One owned turn: prompt `sessionId` with `text`, wait for the receipt then
    * the whole-agent idle, return `{ reply, ms, promptMs, messageId }`.
+   *
+   * PER-PROCESS SINGLE-FLIGHT (FIX 2): DSH's native queue is per Agent
+   * instance = per native Session — two sessions of the same process can run
+   * turns concurrently (empirically verified). `activeBindingContext` is a
+   * single shared field, so concurrent turns would overwrite each other's
+   * binding and the switch tool relay could target the wrong conversation.
+   * Product semantics: ONE Agent processes ONE routed turn at a time; later
+   * turns wait until the previous one truly ends (including tools /
+   * parent-RPC / turn/end). `turn()` therefore serializes every call through
+   * a per-AgentProcess promise chain — no mailbox, no turnId framework, the
+   * DSH queue is untouched.
+   *
+   * @param {string} sessionId
+   * @param {string} text
+   * @param {object} [opts]
+   * @param {string} [opts.bindingContext] - the ChannelConversation this
+   *   turn belongs to; while the turn is in flight the switch tool relay
+   *   targets exactly this Binding.
    */
-  async turn(sessionId, text, timeoutMs = 240000) {
+  turn(sessionId, text, opts = {}, timeoutMs = Number.parseInt(process.env.DSH_AGENT_TURN_TIMEOUT ?? '300000', 10)) {
+    // Serialize: run this turn only after every previously submitted turn has
+    // fully settled. The chain survives rejections so a failed turn never
+    // wedges the queue.
+    const run = this.turnQueue.then(() => this.runTurn(sessionId, text, opts, timeoutMs))
+    this.turnQueue = run.then(() => undefined, () => undefined)
+    return run
+  }
+
+  /** The actual turn body; never called concurrently (see turn()). */
+  async runTurn(sessionId, text, opts, timeoutMs) {
     const started = Date.now()
-    const receipt = await this.request('session/prompt', {
-      sessionId,
-      contentBlocks: [{ type: 'text', text }],
-    })
-    const promptMs = Date.now() - started
-    const before = this.events.length
-    let received = false
-    let done = false
-    while (!done && Date.now() - started < timeoutMs) {
-      await new Promise(resolveTimeout => setTimeout(resolveTimeout, 100))
-      for (let i = before; i < this.events.length; i += 1) {
-        const ev = this.events[i]
-        if (ev.sessionId !== sessionId) continue
-        if (!received && JSON.stringify(ev.event).includes(receipt.messageId)) received = true
+    this.activeBindingContext = opts.bindingContext
+    try {
+      const receipt = await this.request('session/prompt', {
+        sessionId,
+        contentBlocks: [{ type: 'text', text }],
+      })
+      const promptMs = Date.now() - started
+      const before = this.events.length
+      let received = false
+      let done = false
+      while (!done && Date.now() - started < timeoutMs) {
+        await new Promise(resolveTimeout => setTimeout(resolveTimeout, 100))
+        for (let i = before; i < this.events.length; i += 1) {
+          const ev = this.events[i]
+          if (ev.sessionId !== sessionId) continue
+          if (!received && JSON.stringify(ev.event).includes(receipt.messageId)) received = true
+        }
+        if (received && this.status[sessionId] === 'idle') done = true
       }
-      if (received && this.status[sessionId] === 'idle') done = true
+      if (!done) throw new Error(`turn timeout for session ${sessionId} (agent ${this.agentId})`)
+      const texts = this.events
+        .filter(ev => ev.sessionId === sessionId && ev.event.type === 'assistant/message')
+        .map(ev => (ev.event.data?.message?.content ?? [])
+          .filter(block => block.type === 'text').map(block => block.text).join(''))
+      return { reply: texts.at(-1) ?? '', ms: Date.now() - started, promptMs, messageId: receipt.messageId }
+    } finally {
+      // Only after the WHOLE turn truly ended (turn/end observed, idle) is the
+      // shared binding context released — the next queued turn then sets its own.
+      this.activeBindingContext = undefined
     }
-    if (!done) throw new Error(`turn timeout for session ${sessionId} (agent ${this.agentId})`)
-    const texts = this.events
-      .filter(ev => ev.sessionId === sessionId && ev.event.type === 'assistant/message')
-      .map(ev => (ev.event.data?.message?.content ?? [])
-        .filter(block => block.type === 'text').map(block => block.text).join(''))
-    return { reply: texts.at(-1) ?? '', ms: Date.now() - started, promptMs, messageId: receipt.messageId }
   }
 
   /** Graceful JSON-RPC shutdown; resolves with the settled exit. */
@@ -190,8 +264,10 @@ export class AgentProcess {
     ])
     const settled = await Promise.race([
       this.exitPromise,
-      new Promise(resolveTimeout => setTimeout(resolveTimeout, timeoutMs)
-        .then(() => ({ code: null, signal: null, timeout: true }))),
+      // NOTE: setTimeout returns a Timeout, not a Promise — the historical
+      // `setTimeout(...).then(...)` form was a latent bug on modern Node
+      // (recorded as an integration need in docs/reports/agent-session-v1.md).
+      new Promise(resolveTimeout => setTimeout(() => resolveTimeout({ code: null, signal: null, timeout: true }), timeoutMs)),
     ])
     return settled
   }

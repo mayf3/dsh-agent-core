@@ -38,25 +38,37 @@ dsh-agent-core/
 │   ├── router/                # @agent-core/router — 固定输入投递 + 结果/证据输出（一次性驱动）
 │   ├── feishu-connector/      # @agent-core/feishu-connector — 纯 channel 层（WS/IngressEvent/ReplyTarget）
 │   ├── workspace-bootstrap/   # @agent-core/workspace-bootstrap — agentId → workspace + DSH_HOME（幂等播种 AGENTS.md）
-│   ├── demo-server/           # @agent-core/demo-server — per-agent JSON-RPC server（persistence resume）
+│   ├── agent-registry/        # @agent-core/agent-registry — 长期 Agent 身份注册表（原子 JSON 持久化）
+│   ├── agent-memory/          # @agent-core/agent-memory — per-agent file-first 长期记忆（MEMORY.md + memory_* tools）
+│   ├── agent-router/          # @agent-core/agent-router — Router / Control Plane（switchAgent 域操作 + Binding 持久化 + per-agent 进程注册表）
+│   ├── agent-switch/          # @agent-core/agent-switch — DSH 侧 agent_core_switch_agent adapter（parent-RPC 转发）
+│   ├── demo-server/           # @agent-core/demo-server — per-agent JSON-RPC server（persistence resume + parent-RPC passthrough）
 │   └── owner-guard/           # @agent-core/owner-guard — 单 owner 锁（one live process per agent）
 ├── bundle/                    # @agent-core/bundle — dsh.bundle patch 层（persona + broker/router）
 ├── bundle-demo/               # @agent-core/bundle-demo — process-model demo patch 层
+├── bundle-integration/        # @agent-core/bundle-integration — 控制面组合（registry + workspace-bootstrap + feishu + agent-router）
+├── bundle-memory/             # @agent-core/bundle-memory — per-agent memory patch 层
+├── bundle-agent-switch/       # @agent-core/bundle-agent-switch — per-agent switch adapter patch 层
 ├── profile/                   # dsh-profile-agent-core — dsh.profile 清单（V0）
 ├── profile-demo/              # dsh-profile-agent-core-demo — process-model demo profile
+├── profile-integration/       # dsh-profile-agent-core-integration — 控制面 profile
+├── profile-integration-agent/ # dsh-profile-agent-core-integration-agent — per-agent 组合（demo-server + memory + switch）
 ├── scripts/
 │   ├── install-profile.mjs    # 把 profile 与 @agent-core/* 装入 Harness home（只增不改）
 │   ├── run.mjs                # 解析 DSH checkout + 注入 OPENCODE_GO_API_KEY，跑 dsh CLI
 │   ├── verify.mjs             # 断言验收用例证据（multiply(6,7) = 42）
 │   ├── process-model-demo.mjs # process-model 演示/基准驱动（100 常驻 fallback 已证明）
 │   ├── install-demo-home.mjs  # 安装 demo home（只增不改）
-│   └── demo-home.mjs          # demo home 路径解析
+│   ├── demo-home.mjs          # demo home 路径解析
+│   ├── install-integration.mjs        # 安装集成控制面 profile（只增不改）
+│   ├── integration-v1-verify.mjs      # Integration V1 验收（真实飞书链路）
+│   └── product-integration-v1-verify.mjs # Product Integration V1 验收（A/B 双 Agent、switch、重启、crash resume）
 └── docs/
     ├── README.md              # 整体定义 + 文档导航
     ├── CAPABILITY_MATRIX.md   # 能力矩阵（收敛单一事实源）
     ├── investigations/        # 五主题能力调查
-    ├── decisions/             # 决策记录（ADR 模板 + D-001）
-    ├── reports/               # bootstrap-v0/feishu-connector-v0/workspace-bootstrap-v0/broker-v1/process-model-demo-v0/integration-review
+    ├── decisions/             # 决策记录（ADR 模板 + D-001…D-004）
+    ├── reports/               # bootstrap-v0/…/memory-v1/product-integration-v1
     └── TRUST-BOUNDARY-REPORT.md  # 信任边界与身份伪造调查
 ```
 

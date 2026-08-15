@@ -50,8 +50,10 @@ V1 调查收敛结论（详见 `CAPABILITY_MATRIX.md`）：为替代 OpenClaw，
 | `decisions/README.md` | 决策记录（含模板） |
 | `decisions/AGENT_SESSION_CHANNEL_MODEL_V1.md` | 决策 D-002：Channel/Agent/Session/Binding 模型与前后端 API 契约（含 Android 可直接 mock 的 `AGENT_SESSION_CHANNEL_MODEL_V1.api.json`） |
 | `decisions/MEMORY_V1.md` | 决策 D-003：Memory V1 — per-agent file-first 长期记忆（Agent Core memory glue） |
+| `decisions/BINDING_AND_SWITCH_V1.md` | 决策 D-004：Router / Binding 域操作与持久化（统一 switchAgent 原语 + Binding owner + 原子 JSON 持久化） |
 | `reports/bootstrap-v0.md` | V0 bootstrap 报告（原 V0-REPORT.md，内容完整保留） |
 | `reports/memory-v1.md` | Memory V1 实现报告（七问七答、组件、真实验收 PoC 证据、Integration need） |
+| `reports/product-integration-v1.md` | Product Integration V1 实现报告：Registry+Workspace+Session+Memory+per-Agent process 第一次真正装进统一 Router/Binding（双 Agent 真实验收证据） |
 | `TRUST-BOUNDARY-REPORT.md` | 信任边界/身份伪造调查（identity-auth 的证据基础） |
 
 方法限制说明：本轮调查期间 web_search 后端不可用（无 `DEEPSEEK_API_KEY`），

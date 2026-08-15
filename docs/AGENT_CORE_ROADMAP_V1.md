@@ -36,20 +36,20 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 | Process Model | ✅ | one Agent = one process；100 常驻 fallback 证明 |
 | Integration V1 | ✅ | 真实飞书 → Router → per-agent 进程 → resume → 回复（PR #3） |
 
-## Phase 1 — Long-lived Agent 🔄（进行中，三线并行）
+## Phase 1 — Long-lived Agent ✅（已完成，PR #5/#6/#7）
 
 | 项 | 状态 | 一句话价值 |
 |---|---|---|
-| Agent Registry V1 | 🔄 | 花名册：这个 Agent 是谁（有身份才谈得上长期） |
+| Agent Registry V1 | ✅ | 花名册：这个 Agent 是谁（有身份才谈得上长期） |
 | Agent Session V1 | ✅ PoC 已完成（实验定案） | 谈话记录：一个 Agent 多个独立会话（main + normal）；**结论：product sessionId = DSH native sessionId，identity = (agentId, sessionId)，不建独立 session 包**（见 Component Map §2） |
-| Agent Memory V1 | 🔄 | 长期经验：跨 Session 记得住（不是第二套日志） |
+| Agent Memory V1 | ✅ | 长期经验：跨 Session 记得住（不是第二套日志） |
 
 依赖关系：Registry 是 Session/Memory 的父实体（session/memory 挂 agent 下）；
 三者可并行开发，但**产品验证必须三合一**（见 Phase 2 闸门）。Session 线已收敛为
 「DSH 原生直通 + Product metadata 薄层（延后到 Product API milestone）」，不再消耗
 独立组件开发。
 
-## Phase 2 — Product Integration（Registry + Session + Memory → Router → 真多 Agent）
+## Phase 2 — Product Integration（Registry + Session + Memory → Router → 真多 Agent）✅（已完成，PR #8）
 
 - 把 Phase 1 三组件接进现有 Router：Binding 路由到 (agentId, sessionId)，不再写死
   `agent-demo + main`；
@@ -57,7 +57,21 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 - 验收闸门：真实飞书两条会话分别绑定不同 Agent，各自独立上下文、互不串话；
   同一会话 switchAgent 后进入另一 Agent 的 main。
 
-**这是下一阶段唯一优先级。** 完成后才允许进入 Phase 3+ 的横向扩展。
+交付（2026-08-15，`feat/product-integration-v1`，报告
+`docs/reports/product-integration-v1.md`）：
+
+- 统一 Router domain operation `switchAgent(bindingContext, targetAgentId,
+  {targetSessionId?})`：Registry 校验 → Router 选 Session（显式/缺省 main）→
+  更新并持久化 Binding → 返回新 Binding（决策 D-004，
+  `docs/decisions/BINDING_AND_SWITCH_V1.md`）；
+- Binding 持久化 = 原子 JSON（`<home>/.dsh/bindings/bindings.json`）：切到 Agent B →
+  控制面重启 → 仍是 Agent B（进程内重建 + 真实控制面进程启动双验证）；
+- DSH 侧 `agent_core_switch_agent` adapter（parent-RPC 转发，零策略）；
+- 验收 `scripts/product-integration-v1-verify.mjs`：A/B 双 Agent 28 项断言全 PASS
+  （注册 / workspace·home·进程·main session·memory 五隔离 / switch / 消息真实进入
+  B / A 与其它 Binding 不受修改 / 重启恢复 / kill-resume / 自然语言 switch 工具）。
+
+**下一阶段唯一优先级已兑现**；Phase 3+ 的横向扩展现在才允许开始。
 
 ## Phase 3 — Trusted Agent（进程身份 + Broker 身份）
 
