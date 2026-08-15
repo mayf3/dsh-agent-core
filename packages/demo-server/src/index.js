@@ -19,6 +19,15 @@
  * The choice is observable on stderr as `[demo-server] session <id>
  * resumed|created (N events)`, which the benchmark asserts on.
  *
+ * Parent-RPC passthrough (the only transport extension over the SDK wire):
+ * a per-agent plugin (e.g. the DSH switch tool) can call
+ * `ctx.agentRpc.request(method, params)`; this server emits a `rpc.request`
+ * notification on stdout, and the parent (the Router / Control Plane)
+ * answers with a `rpc.response` request on stdin, which resolves the
+ * plugin's promise. The server only relays — the method names and their
+ * meaning belong to the caller and the Control Plane; the per-agent process
+ * never touches Router state directly.
+ *
  * stdout stays pure JSON-RPC. All diagnostics go to stderr.
  */
 
@@ -36,7 +45,7 @@ export const inject = ['agents']
 export const Config = z.object({})
 
 /** Wire protocol method → handler. */
-const METHODS = new Set(['initialize', 'session/prompt', 'shutdown'])
+const METHODS = new Set(['initialize', 'session/prompt', 'shutdown', 'rpc.response'])
 
 /**
  * Serve the demo protocol over process stdio for the process lifetime.
@@ -45,9 +54,30 @@ const METHODS = new Set(['initialize', 'session/prompt', 'shutdown'])
 export function apply(ctx) {
   const handles = new Map() // sessionId -> AgentHandle
   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
+  const pendingRpc = new Map() // requestId -> { resolve, reject }
   const exit = () => { process.exit(0) }
   const notify = (method, params) => {
     process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', method, params })}\n`)
+  }
+
+  let rpcSeq = 0
+
+  /**
+   * Parent-RPC service: `agentRpc.request(method, params)` resolves with the
+   * Control Plane's answer `{ ok, result?, error? }`. Transport only — the
+   * server neither knows nor validates the method names.
+   */
+  const agentRpc = {
+    request(method, params) {
+      if (typeof method !== 'string' || method === '') {
+        return Promise.reject(new TypeError('agentRpc.request: method must be a non-empty string'))
+      }
+      return new Promise((resolveRequest, rejectRequest) => {
+        const requestId = `rpc-${++rpcSeq}`
+        pendingRpc.set(requestId, { resolve: resolveRequest, reject: rejectRequest })
+        notify('rpc.request', { requestId, method, params })
+      })
+    },
   }
 
   let cwd = process.cwd()
@@ -200,6 +230,15 @@ export function apply(ctx) {
         result = { serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } }
       } else if (method === 'session/prompt') {
         result = await prompt(params?.sessionId, params?.contentBlocks ?? [])
+      } else if (method === 'rpc.response') {
+        // Parent's answer to a rpc.request: resolve the pending plugin call.
+        const waiter = pendingRpc.get(params?.requestId)
+        if (waiter !== undefined) {
+          pendingRpc.delete(params.requestId)
+          if (params?.ok === true) waiter.resolve({ ok: true, result: params.result })
+          else waiter.reject(new Error(params?.error ?? 'parent RPC failed'))
+        }
+        result = {}
       } else {
         result = await shutdown()
       }
@@ -217,4 +256,8 @@ export function apply(ctx) {
     else payload.result = result
     process.stdout.write(`${JSON.stringify(payload)}\n`)
   }
+
+  // Publish the parent-RPC passthrough for sibling plugins in the same
+  // per-agent composition (e.g. @agent-core/agent-switch).
+  ctx.provide('agentRpc', agentRpc)
 }

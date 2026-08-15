@@ -1,53 +1,111 @@
 /**
- * @agent-core/agent-router — the Integration V1 Router / Control Plane.
+ * @agent-core/agent-router — the Agent Core Router / Control Plane.
  *
  * Channel model (D-002 AGENT_SESSION_CHANNEL_MODEL_V1):
  *
  *   Feishu conversation -> ChannelConversation -> Binding -> Agent + Session
  *
- * A ChannelConversation is the channel-side identity (the Feishu
- * conversationId + channel type). A Binding is the router's in-memory record
- * that ties one ChannelConversation to one (Agent, Session) pair. V1 creates
- * the first binding automatically on first contact with the default Agent and
- * the default session; it does NOT implement natural-language agent switching
- * nor a binding history.
+ * A ChannelConversation is the channel-side identity (e.g. the Feishu
+ * conversationId + channel type). A Binding ties one ChannelConversation to
+ * one (Agent, Session) pair. Product Integration V1 makes the Router the
+ * SOLE owner of Bindings and gives the system ONE domain operation to change
+ * them:
+ *
+ *   switchAgent(bindingContext, targetAgentId, { targetSessionId? })
+ *
+ * - the Registry validates that the target Agent exists;
+ * - the Router decides the target Session (explicit targetSessionId, else
+ *   the Agent's `main` — V1 has no semantic/LLM session guessing);
+ * - the Router updates and durably persists the Binding;
+ * - the new Binding is returned.
+ *
+ * Entry points are interchangeable: the Feishu connector resolves its
+ * ChannelConversation and dispatches through the very same domain
+ * operations, and a future Mobile/Web Product API will call the same
+ * `ctx.agentRouter` service. There is exactly one Router and one set of
+ * routing rules — WebSocket / Feishu are only entry protocols.
+ *
+ * Bindings are persisted (atomic JSON, no DB) so the Control Plane can
+ * restart and the conversation is still talking to the same Agent:
+ * "切到 Agent B → Control Plane 重启 → 仍然是 Agent B".
  *
  * The Agent remains the fixed owner of its workspace / DSH_HOME / process /
- * memory; the channel is only an entry point. Routing a message means: look up
- * (or auto-create) the Binding for its ChannelConversation, find-or-start the
- * bound Agent's DSH process, and deliver the message into the bound session.
+ * memory; the channel is only an entry point. Routing a message means: look
+ * up (or auto-create) the Binding for its ChannelConversation, find-or-start
+ * the bound Agent's DSH process, and deliver the message into the bound
+ * session.
+ *
+ * The DSH-side switch tool (`agent_core.switch_agent`, package
+ * @agent-core/agent-switch, mounted inside each per-agent process) is a thin
+ * ADAPTER: it forwards the request over the demo-server parent-RPC relay to
+ * this router's `switchAgent`. It owns none of the policy (persistence,
+ * agent lookup, session selection, entry branching, history).
  */
 
 import z from '@deepseek-ai/schemastery'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { AgentProcess, agentEnv } from './process.js'
+import { BindingStore } from './binding-store.js'
 import { provisionAgentHome } from '../../../scripts/demo-home.mjs'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
 
-/** Feishu channel and workspace bootstrap are optional services (read via ctx.get). */
+/** Optional services are read via ctx.get; the registry + bootstrap are required. */
 export const inject = []
 
 /** Router config. */
 export const Config = z.object({
   /**
-   * Default Agent every new ChannelConversation binds to on first contact
-   * (V1: one default agent; no switching). The agentId is the agent's stable
-   * identity: its workspace, DSH home and session context all derive from it.
+   * Default Agent for a brand-new ChannelConversation on first contact,
+   * used only when the Registry reports no default Agent (the Registry's
+   * default — first registered — is the primary answer; this config is the
+   * deployment fallback). Must be a registered Agent id (or display name).
    */
-  defaultAgentId: z.string().default('agent-demo'),
+  defaultAgentId: z.string(),
   /** Default Session inside the bound Agent (V1: 'main'). */
   defaultSessionId: z.string().default('main'),
-  /** Per-agent process profile (the resume-aware demo-server composition). */
+  /** Per-agent process profile (the resume-aware per-agent composition). */
   agentProfile: z.string().default('agent-core-demo'),
+  /**
+   * ABSOLUTE JSON store path for the Binding table (default
+   * `<home>/.dsh/bindings/bindings.json` where home = $DSH_HOME or the OS
+   * home). Relative / `~`-prefixed values are rejected fail-loud.
+   */
+  bindingsStoreFile: z.string(),
 })
 
-const sleep = (ms) => new Promise(resolveTimeout => setTimeout(resolveTimeout, ms))
+/** Default Binding store location: control-plane state under the shared home. */
+export function defaultBindingsStoreFile() {
+  return join(process.env.DSH_HOME ?? join(homedir(), '.dsh'), 'bindings', 'bindings.json')
+}
+
+/** The tool method name per-agent processes use over the parent-RPC relay. */
+export const SWITCH_RPC_METHOD = 'agent-core/switchAgent'
+
+/**
+ * Normalize a bindingContext into a ChannelConversation id. Accepts the raw
+ * ccId string or the D-002-shaped `{ channelConversationId }` object so both
+ * the connector (which knows the id) and a future Product API (which may
+ * carry the full object) call the same domain operation.
+ * @param {string | {channelConversationId?: string}} bindingContext
+ * @returns {string} the ChannelConversation id.
+ */
+export function channelConversationIdOf(bindingContext) {
+  const ccId = typeof bindingContext === 'string'
+    ? bindingContext
+    : bindingContext?.channelConversationId
+  if (typeof ccId !== 'string' || ccId === '') {
+    throw new TypeError('bindingContext must be a ChannelConversation id string or {channelConversationId}')
+  }
+  return ccId
+}
 
 /**
  * Mount the router: bind the feishu ingress callback (when the channel is
- * present) and keep the per-agent process registry alive for the plugin
- * lifetime.
+ * present), own the durable Binding table and the per-agent process
+ * registry, and publish the `ctx.agentRouter` domain service.
  * @param ctx - plugin context.
  * @param config - validated router config.
  */
@@ -58,51 +116,175 @@ export function apply(ctx, config) {
     error: (...args) => process.stderr.write(`[router] ERROR ${args.join(' ')}\n`),
   }
 
-  /** agentId -> AgentProcess registry (one live owner per agent). */
-  const registry = new Map()
-  /** ChannelConversation (conversationId) -> Binding { agentId, sessionId }. */
-  const bindings = new Map()
-
   const workspaceBootstrap = ctx.get('workspaceBootstrap')
+  const agentRegistry = ctx.get('agentRegistry')
   const feishu = ctx.get('feishu')
-
   if (workspaceBootstrap === undefined) {
     throw new Error('agent-router: workspaceBootstrap service not available')
   }
+  if (agentRegistry === undefined) {
+    throw new Error('agent-router: agentRegistry service not available (mount @agent-core/agent-registry)')
+  }
+
+  const storeFile = cfg.bindingsStoreFile ?? defaultBindingsStoreFile()
+  const store = new BindingStore({ storeFile })
+
+  /** agentId -> AgentProcess registry (one live owner per agent). */
+  const registry = new Map()
+
+  log.log(`binding store loaded: ${store.list().length} binding(s) from ${storeFile}`)
 
   /**
-   * D-002 contract endpoint #12 (equivalent minimal implementation):
-   * `PUT /v1/channel-conversations/resolve` semantics as an in-process
-   * service. Idempotent: (channel, externalId) is the ChannelConversation
-   * identity. First contact creates the ChannelConversation together with the
-   * initial Binding to the default Agent + default Session; later contacts
-   * return the existing ChannelConversation + Binding untouched.
+   * Resolve an Agent reference to a registered Agent id — the Registry is
+   * the single authority for "which Agents exist". Accepts the opaque
+   * agentId (machine clients) or the display name (natural-language
+   * surfaces like the DSH switch tool); anything else raises
+   * `AGENT_NOT_FOUND` from the Registry.
+   * @param {string} ref - agentId or display name.
+   * @returns {{id:string, name:string}} the resolved Agent.
+   */
+  function resolveAgentRef(ref) {
+    if (typeof ref !== 'string' || ref.trim() === '') {
+      throw new TypeError('agent-router: targetAgentId must be a non-empty string')
+    }
+    try {
+      return agentRegistry.getAgent(ref)
+    } catch (error) {
+      if (error?.code !== 'AGENT_NOT_FOUND') throw error
+    }
+    const wanted = ref.trim().toLowerCase()
+    const match = agentRegistry.listAgents().find(agent => agent.name.toLowerCase() === wanted)
+    if (match === undefined) {
+      throw Object.assign(new Error(`agent-router: agent not found: ${ref}`), { code: 'AGENT_NOT_FOUND' })
+    }
+    return match
+  }
+
+  /**
+   * The default Agent for first-contact bindings: the Registry's default
+   * (first registered, or explicitly set) wins; the deployment config is the
+   * fallback and is itself registry-validated.
+   */
+  function resolveDefaultAgent() {
+    const registeredDefault = agentRegistry.getDefaultAgent()
+    if (registeredDefault !== undefined) return registeredDefault
+    if (cfg.defaultAgentId !== undefined && cfg.defaultAgentId !== '') {
+      return resolveAgentRef(cfg.defaultAgentId)
+    }
+    throw new Error('agent-router: no default Agent (register an Agent or set defaultAgentId)')
+  }
+
+  /**
+   * Persist one binding row (creation or switch).
+   * @returns {Promise<object>} the stored row.
+   */
+  async function persistBinding({ channelConversationId, activeAgentId, activeSessionId }) {
+    const row = {
+      channelConversationId,
+      activeAgentId,
+      activeSessionId,
+      updatedAt: new Date().toISOString(),
+    }
+    await store.set(row)
+    return row
+  }
+
+  /**
+   * D-002 contract endpoint #12 (in-process equivalent):
+   * `PUT /v1/channel-conversations/resolve` semantics. Idempotent:
+   * (channel, externalId) is the ChannelConversation identity. First contact
+   * creates the ChannelConversation together with the initial Binding to the
+   * default Agent + default Session (persisted); later contacts return the
+   * existing ChannelConversation + Binding untouched.
    *
    * @param {object} req - { channel, externalId }.
-   * @returns {{ channelConversation: {id, channel, externalId},
-   *             binding: {activeAgentId, activeSessionId} }}
+   * @returns {Promise<{channelConversation: {id, channel, externalId},
+   *                     binding: {activeAgentId, activeSessionId}}>}
    */
-  function resolveChannelConversation(req) {
+  async function resolveChannelConversation(req) {
     const channel = req?.channel
     const externalId = req?.externalId
     if (typeof channel !== 'string' || channel === '' || typeof externalId !== 'string' || externalId === '') {
       throw new TypeError('resolveChannelConversation: channel and externalId (non-empty strings) are required')
     }
     const ccId = `${channel}:${externalId}`
-    let binding = bindings.get(ccId)
+    let binding = store.get(ccId)
     if (binding === undefined) {
-      binding = { agentId: cfg.defaultAgentId, sessionId: cfg.defaultSessionId }
-      bindings.set(ccId, binding)
-      log.log(`binding created: channelConversation ${ccId.slice(0, 24)}... -> agent ${binding.agentId} + session ${binding.sessionId}`)
+      const agent = resolveDefaultAgent()
+      binding = await persistBinding({
+        channelConversationId: ccId,
+        activeAgentId: agent.id,
+        activeSessionId: cfg.defaultSessionId,
+      })
+      log.log(`binding created: channelConversation ${ccId.slice(0, 24)}... -> agent ${binding.activeAgentId} + session ${binding.activeSessionId}`)
     }
     return {
       channelConversation: { id: ccId, channel, externalId },
-      binding: { activeAgentId: binding.agentId, activeSessionId: binding.sessionId },
+      binding: { activeAgentId: binding.activeAgentId, activeSessionId: binding.activeSessionId },
     }
+  }
+
+  /**
+   * THE unified Router domain operation — the single way to change which
+   * Agent a conversation is talking to. Both entry points end up here:
+   *
+   *   Mobile UI manual tap -> Router.switchAgent
+   *   DSH tool: switch_agent (via parent-RPC relay) -> Router.switchAgent
+   *
+   * Policy owned by the Router only: agent existence (Registry), session
+   * selection (explicit targetSessionId, else the target Agent's `main`),
+   * Binding update + durable persistence. The caller never touches the
+   * store, never resolves agents, never picks sessions.
+   *
+   * @param {string | {channelConversationId?: string}} bindingContext - the
+   *   ChannelConversation whose Binding changes.
+   * @param {string} targetAgentId - a registered Agent's opaque id OR its
+   *   display name (resolved through the Registry by the Router).
+   * @param {object} [opts]
+   * @param {string} [opts.targetSessionId] - explicit target Session;
+   *   omitted => the target Agent's `main` session (V1 rule).
+   * @returns {Promise<{channelConversationId:string, activeAgentId:string,
+   *   activeSessionId:string, updatedAt:string}>} the new Binding.
+   */
+  async function switchAgent(bindingContext, targetAgentId, opts = {}) {
+    const ccId = channelConversationIdOf(bindingContext)
+    // 1. Registry validates the target Agent exists.
+    const agent = resolveAgentRef(targetAgentId)
+    // 2. Router decides the target Session (V1: explicit, else `main`).
+    const targetSessionId = opts?.targetSessionId ?? cfg.defaultSessionId
+    if (typeof targetSessionId !== 'string' || targetSessionId === '') {
+      throw new TypeError('agent-router: targetSessionId must be a non-empty string')
+    }
+    // 3. Update the current Binding (create it when the conversation has no
+    //    Binding yet — switching is also a legal first contact).
+    const binding = await persistBinding({
+      channelConversationId: ccId,
+      activeAgentId: agent.id,
+      activeSessionId: targetSessionId,
+    })
+    log.log(`switch: ${ccId.slice(0, 24)}... -> agent ${binding.activeAgentId} + session ${binding.activeSessionId}`)
+    // 4. Return the new Binding.
+    return binding
+  }
+
+  /**
+   * D-002 `getBinding`: the current Binding of a ChannelConversation, or
+   * `undefined` when none exists yet (the D-002 404 BINDING_NOT_FOUND
+   * equivalent — callers decide whether to switch or resolve first).
+   */
+  function getBinding(bindingContext) {
+    const row = store.get(channelConversationIdOf(bindingContext))
+    return row === undefined ? undefined : { ...row }
   }
 
   /** Find-or-start the agent's DSH process; never returns a dead one. */
   async function ensureRunning(agentId) {
+    // INVARIANT (audit round 3): the check -> spawn -> registry.set section
+    // below is ENTIRELY synchronous (the first await is proc.ready()); JS
+    // single-threading therefore guarantees two concurrent ensureRunning
+    // calls can never both pass the registry check — no double spawn
+    // (empirically verified: 30 concurrent calls -> 1 pid). Do NOT insert an
+    // await between the registry check and registry.set.
     const existing = registry.get(agentId)
     if (existing !== undefined && existing.exit === undefined) {
       log.log(`reuse process for ${agentId} (pid ${existing.pid})`)
@@ -119,9 +301,36 @@ export function apply(ctx, config) {
     const workspace = workspaceBootstrap.resolveWorkspace(agentId)
     const home = workspaceBootstrap.resolveDshHome(agentId)
     // Provision the agent home (settings/credentials/profile/plugin farm) and
-    // the workspace directory — idempotent.
-    provisionAgentHome(home, workspace)
-    const proc = new AgentProcess({ agentId, home, workspace, profile: cfg.agentProfile, log })
+    // the workspace directory — idempotent. The provisioning is driven by
+    // cfg.agentProfile: whatever profile this router spawns must be fully
+    // installed HERE, so a fresh Agent works without any external
+    // pre-provisioning (FIX 1).
+    provisionAgentHome(home, workspace, { profile: cfg.agentProfile })
+    const proc = new AgentProcess({
+      agentId,
+      home,
+      workspace,
+      profile: cfg.agentProfile,
+      log,
+      // The per-agent process must know its own identity: the memory plugin
+      // and the switch tool resolve agentId from $DSH_AGENT_ID when set.
+      env: { DSH_AGENT_ID: agentId },
+    })
+    // DSH tool relay: a per-agent process asks the Control Plane to run a
+    // Router domain operation (currently only agent-core/switchAgent). The
+    // tool itself owns no policy — it forwards the request; every decision
+    // happens here in the Router.
+    proc.onRpcRequest = async (method, params) => {
+      if (method !== SWITCH_RPC_METHOD) {
+        throw new Error(`agent-router: unknown parent-RPC method ${method}`)
+      }
+      if (proc.activeBindingContext === undefined) {
+        throw new Error('agent-router: no active binding context for this process (switch tool called outside a routed turn)')
+      }
+      return switchAgent(proc.activeBindingContext, params?.targetAgentId, {
+        targetSessionId: params?.targetSessionId,
+      })
+    }
     proc.spawn()
     registry.set(agentId, proc)
     // Reap on exit; the next message re-spawns and resumes.
@@ -137,18 +346,25 @@ export function apply(ctx, config) {
    *   ChannelConversation -> Binding -> Agent + Session -> reply.
    * The Feishu Connector stays stateless: it only forwards the ingress; the
    * router resolves the binding and dispatches (D-002: the connector does not
-   * persist Agent / Session state).
+   * persist Agent / Session state). Any future entry (Mobile/Web Product
+   * Gateway) delivers through this same path.
+   * @returns {Promise<{reply:string, agentId:string, sessionId:string,
+   *   pid?:number} | {error: Error}>} the delivery result.
    */
   async function onIngress(ingress) {
-    const evSummary = `channel=${ingress.channel} chat=${ingress.chatId} sender=${ingress.sender.openId?.slice(0, 6)} text="${(ingress.text ?? '').slice(0, 60)}"`
-    const { channelConversation, binding } = resolveChannelConversation({
+    const evSummary = `channel=${ingress.channel} chat=${ingress.chatId} sender=${ingress.sender?.openId?.slice(0, 6)} text="${(ingress.text ?? '').slice(0, 60)}"`
+    const { channelConversation, binding } = await resolveChannelConversation({
       channel: 'feishu',
       externalId: ingress.conversationId,
     })
     log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
     try {
       const proc = await ensureRunning(binding.activeAgentId)
-      const { reply } = await proc.turn(binding.activeSessionId, ingress.text ?? '')
+      const { reply } = await proc.turn(binding.activeSessionId, ingress.text ?? '', {
+        // The turn belongs to this ChannelConversation: the DSH switch tool
+        // inside the agent switches exactly this Binding.
+        bindingContext: channelConversation.id,
+      })
       log.log(`agent ${binding.activeAgentId} (pid ${proc.pid}) replied: ${(reply ?? '').slice(0, 80)}`)
       if (feishu !== undefined) {
         // Reply to the originating message (in-thread automatically when the
@@ -156,6 +372,7 @@ export function apply(ctx, config) {
         await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)
         log.log(`reply sent back to ${ingress.conversationId.slice(0, 12)}...`)
       }
+      return { reply, agentId: binding.activeAgentId, sessionId: binding.activeSessionId, pid: proc.pid }
     } catch (error) {
       log.error(`delivery to ${binding.activeAgentId} failed: ${error?.message ?? error}`)
       if (feishu !== undefined) {
@@ -163,15 +380,16 @@ export function apply(ctx, config) {
           await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error.message ?? error}`)
         } catch { /* best effort */ }
       }
+      return { error }
     }
   }
 
   // Bind the channel ingress (feishu-connector only forwards addressed events).
   if (feishu !== undefined) {
     feishu.setCallback(onIngress)
-    log.log(`feishu channel bound; default binding -> agent ${cfg.defaultAgentId} + session ${cfg.defaultSessionId}`)
+    log.log(`feishu channel bound; default binding -> ${resolveDefaultAgent().id} + session ${cfg.defaultSessionId}`)
   } else {
-    log.log('feishu channel not present; router idle')
+    log.log('feishu channel not present; router idle (entry-agnostic domain surface ready)')
   }
 
   // Tear down every owned process when the router plugin stops.
@@ -184,8 +402,12 @@ export function apply(ctx, config) {
 
   const service = {
     pluginName: name,
-    /** D-002 endpoint #12: idempotent ChannelConversation resolve. */
+    /** D-002 endpoint #12: idempotent ChannelConversation resolve (async). */
     resolveChannelConversation,
+    /** THE unified switch domain operation (async, persisted). */
+    switchAgent,
+    /** D-002 getBinding: current Binding or undefined. */
+    getBinding,
     /** Test/ops surface: current registry snapshot. */
     registrySnapshot: () => [...registry.entries()].map(([agentId, proc]) => ({
       agentId,
@@ -193,15 +415,21 @@ export function apply(ctx, config) {
       alive: proc.exit === undefined,
       home: proc.home,
       workspace: proc.workspace,
+      profile: proc.profile,
+      sessions: proc.creations.map(c => ({ ...c })),
     })),
+    /** Test/ops surface: durable Binding table snapshot. */
+    bindingsSnapshot: () => store.list(),
     ensureRunning,
     route: onIngress,
   }
 
   // Publish the router as an in-process service ('agentRouter') so the Feishu
-  // Connector (or any future transport) can resolve ChannelConversations and
-  // dispatch per the D-002 contract. VALUE semantics: Cordis stores the value
-  // as-is (a factory function would be returned as-is by ctx.get()).
+  // Connector (or any future transport / Product API) can resolve
+  // ChannelConversations, switch Agents and dispatch per the D-002 contract.
+  // VALUE semantics: Cordis stores the value as-is.
   ctx.provide('agentRouter', service)
   return service
 }
+
+export { agentEnv }

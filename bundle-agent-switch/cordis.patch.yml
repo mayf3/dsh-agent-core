@@ -1,0 +1,11 @@
+# @agent-core/bundle-agent-switch — per-agent DSH switch adapter patch layer
+# over dsh-base (mounted inside a per-agent profile, after bundle-demo).
+#
+# The adapter belongs in the per-agent composition: the model of the agent
+# that is currently talking needs the switch tool. It forwards requests over
+# the demo-server parent-RPC relay to the Router's switchAgent domain
+# operation (control plane); it owns no policy of its own.
+
+- insert:
+    - id: agent-core-switch
+      name: '@agent-core/agent-switch'

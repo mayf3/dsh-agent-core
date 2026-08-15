@@ -1,0 +1,18 @@
+{
+  "name": "dsh-profile-agent-core-integration-agent",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Agent Core per-agent profile for Product Integration V1: dsh-base + demo-server (resume-aware JSON-RPC) + owner-guard + agent-memory (long-term memory) + agent-switch (agent_core.switch_agent adapter)",
+  "dependencies": {},
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@agent-core/bundle-demo",
+        "@agent-core/bundle-memory",
+        "@agent-core/bundle-agent-switch"
+      ]
+    }
+  },
+  "license": "UNLICENSED"
+}
