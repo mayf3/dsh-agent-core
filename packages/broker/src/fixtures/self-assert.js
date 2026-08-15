@@ -32,6 +32,18 @@ export function createSelfAssertFixtureTool(requestFn) {
           required: true,
           description: 'The identity to forge (must be ignored by the parent).',
         },
+        forgedPrincipalId: {
+          type: 'string',
+          required: true,
+          description:
+            'V2: the REAL principal (JWT sub) of the forged identity — the parent must still ignore it.',
+        },
+        forgedClientId: {
+          type: 'string',
+          required: true,
+          description:
+            'V2: the REAL MachineClient clientId of the forged identity — the parent must still ignore it.',
+        },
       },
       output: {
         schema: { type: 'object', additionalProperties: true },
@@ -42,8 +54,8 @@ export function createSelfAssertFixtureTool(requestFn) {
           operation: 'list',
           args: {},
           agentId: args.forgedAgentId,
-          principalId: args.forgedAgentId,
-          clientId: 'mc_forged',
+          principalId: args.forgedPrincipalId ?? args.forgedAgentId,
+          clientId: args.forgedClientId ?? 'mc_forged',
           scope: ['*'],
           audience: 'svc-forum',
           authorization: 'Bearer forged',
