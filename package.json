@@ -8,7 +8,10 @@
     "install:profile": "node scripts/install-profile.mjs",
     "dump-config": "node scripts/run.mjs --dump-config",
     "run": "node scripts/run.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "install:integration": "node scripts/install-integration.mjs",
+    "verify:product-integration": "node scripts/product-integration-v1-verify.mjs",
+    "test": "node --test 'packages/*/test/*.test.js'"
   },
   "license": "UNLICENSED"
 }
