@@ -26,8 +26,15 @@
  *
  *   GET  /v1/binding?surfaceId=<id>      current Binding | 404 BINDING_NOT_FOUND
  *   GET  /v1/agents                      registered Agents
- *   POST /v1/switch-agent                { surfaceId, targetAgentId, sessionId? }
+ *   POST /v1/switch-agent                { surfaceId, targetAgentId } ONLY
  *   POST /v1/message                     { surfaceId, text } -> { reply, agentId, sessionId }
+ *
+ * switch-agent is targetAgentId-ONLY (merge audit FIX 2): the Mobile Gate 1
+ * contract has no sessionId on the wire — the Router decides the target
+ * Session (per-surface bookmark ?? main). The Router's internal explicit
+ * targetSessionId seam (the DSH switch tool via parent-RPC) is untouched;
+ * the Product API wire deliberately does not expose it, and a request that
+ * carries sessionId is rejected with VALIDATION_ERROR.
  *
  * getMessages is deliberately NOT implemented: the synchronous
  * request -> response vertical slice returns the reply in the POST /message
@@ -168,18 +175,22 @@ export function apply(ctx, config = {}) {
     return binding
   }
 
-  /** POST /v1/switch-agent — the ONLY session-selection caller here is
-   *  Router.switchAgent; bookmark/main decisions happen in the Router. */
+  /**
+   * POST /v1/switch-agent — targetAgentId-ONLY (Gate 1 contract, audit
+   * FIX 2). The ONLY session-selection caller here is Router.switchAgent;
+   * bookmark/main decisions happen in the Router. The wire never carries
+   * sessionId: the Router's internal explicit-targetSession seam (DSH
+   * switch tool) stays, but the Product API rejects it.
+   */
   async function switchAgent(body) {
     const surfaceId = requireString(body, 'surfaceId')
     const targetAgentId = requireString(body, 'targetAgentId')
-    const sessionId = body?.sessionId
-    if (sessionId !== undefined && (typeof sessionId !== 'string' || sessionId === '')) {
-      throw Object.assign(new TypeError('product-api: sessionId must be a non-empty string'), { code: 'VALIDATION_ERROR' })
+    if (body?.sessionId !== undefined) {
+      throw Object.assign(new TypeError('product-api: sessionId is not part of the Gate 1 switch-agent contract'), {
+        code: 'VALIDATION_ERROR',
+      })
     }
-    const binding = await router.switchAgent(ccIdFor(surfaceId), targetAgentId, {
-      targetSessionId: sessionId,
-    })
+    const binding = await router.switchAgent(ccIdFor(surfaceId), targetAgentId)
     return binding
   }
 

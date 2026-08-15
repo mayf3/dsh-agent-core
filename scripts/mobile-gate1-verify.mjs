@@ -219,6 +219,17 @@ async function api(method, path, body, { retries = 10, baseDelayMs = 500 } = {})
   throw new Error(`api ${method} ${path} failed after ${retries + 1} attempts: ${lastError?.stack ?? lastError}`)
 }
 
+/** Poll GET /v1/binding until `ok(binding)` or timeout; binding or undefined. */
+async function waitForBinding(surfaceId, ok, timeoutMs = 150000) {
+  const started = Date.now()
+  for (;;) {
+    const res = await api('GET', `/v1/binding?surfaceId=${surfaceId}`)
+    if (res.status === 200 && ok(res.body)) return res.body
+    if (Date.now() - started > timeoutMs) return undefined
+    await sleep(2000)
+  }
+}
+
 // ------------------------------------------------------------ assertions
 
 const checks = []
@@ -282,6 +293,7 @@ async function main() {
     '',
     `You are ${AGENT_B_NAME} (研发总监). Your agentId is ${agentB.id}.`,
     `The other agent is ${AGENT_A_NAME} (论文导师), agentId ${agentA.id}, display name '${AGENT_A_NAME}'.`,
+    `When the user asks to switch the conversation to ${AGENT_A_NAME}'s work session, call the tool agent_core_switch_agent with targetAgentId = '${AGENT_A_NAME}' and targetSessionId = 'work'.`,
     '',
   ].join('\n'))
 
@@ -328,10 +340,25 @@ async function main() {
   record('GATE1_MESSAGE_AFTER_SWITCH_ENTERS_B', msg2.status === 200 && (msg2.body?.reply ?? '').includes('BETA-1')
     && msg2.body?.agentId === agentB.id, `reply="${(msg2.body?.reply ?? '').slice(0, 60)}" agent=${msg2.body?.agentId}`)
 
-  // 2.3 explicit session switch (the switchSession product op): A/work.
-  const sw2 = await api('POST', '/v1/switch-agent', { surfaceId: surfaceS1, targetAgentId: agentA.id, sessionId: 'work' })
-  record('GATE1_EXPLICIT_SESSION_SWITCH', sw2.status === 200 && sw2.body?.activeAgentId === agentA.id
-    && sw2.body?.activeSessionId === 'work', `agent=${sw2.body?.activeAgentId} session=${sw2.body?.activeSessionId}`)
+  // 2.3 Router internal seam (NOT the Product API wire): the DSH switch
+  //     tool carries the explicit targetSessionId (parent-RPC relay ->
+  //     Router.switchAgent). This is how the bookmark proof creates a
+  //     non-main session without exposing sessionId on the wire (audit
+  //     FIX 2: POST /v1/switch-agent stays targetAgentId-only).
+  const seamMsg = '请调用工具 agent_core_switch_agent: targetAgentId 填 "Agent A", targetSessionId 填 "work"'
+  await api('POST', '/v1/message', { surfaceId: surfaceS1, text: seamMsg })
+  let bindingAfterSeam = await waitForBinding(surfaceS1,
+    b => b.activeAgentId === agentA.id && b.activeSessionId === 'work')
+  if (bindingAfterSeam === undefined) {
+    console.log('  [phase 2] tool did not switch on the natural phrasing; retrying with an explicit instruction…')
+    await api('POST', '/v1/message', { surfaceId: surfaceS1, text: '请立即调用 agent_core_switch_agent, targetAgentId 为 "Agent A", targetSessionId 为 "work", 不要提问, 直接执行工具调用' })
+    bindingAfterSeam = await waitForBinding(surfaceS1,
+      b => b.activeAgentId === agentA.id && b.activeSessionId === 'work')
+  }
+  record('GATE1_ROUTER_SEAM_EXPLICIT_SESSION', bindingAfterSeam !== undefined,
+    bindingAfterSeam === undefined
+      ? 'DSH tool did not switch to A/work (retried once)'
+      : `seam -> ${bindingAfterSeam.activeAgentId}/${bindingAfterSeam.activeSessionId}`)
   const msg3 = await api('POST', '/v1/message', { surfaceId: surfaceS1, text: 'Reply with exactly: ALPHA-2' })
   record('GATE1_MESSAGE_IN_NON_MAIN_SESSION', msg3.status === 200 && (msg3.body?.reply ?? '').includes('ALPHA-2')
     && msg3.body?.sessionId === 'work', `reply="${(msg3.body?.reply ?? '').slice(0, 60)}" session=${msg3.body?.sessionId}`)
@@ -346,7 +373,15 @@ async function main() {
   record('GATE1_RESUMED_SESSION_ROUTES', msg4.status === 200 && (msg4.body?.reply ?? '').includes('ALPHA-3')
     && msg4.body?.sessionId === 'work', `reply="${(msg4.body?.reply ?? '').slice(0, 60)}" session=${msg4.body?.sessionId}`)
 
-  // 2.5 per-surface isolation: S2 is a brand-new surface with its own
+  // 2.5 switch-agent contract is targetAgentId-ONLY (audit FIX 2): a wire
+  //     request carrying sessionId is rejected; the binding is untouched.
+  const rejected = await api('POST', '/v1/switch-agent', { surfaceId: surfaceS1, targetAgentId: agentB.id, sessionId: 'work' })
+  record('GATE1_SWITCH_AGENT_CONTRACT_TARGET_ONLY', rejected.status === 400
+    && rejected.body?.error?.code === 'VALIDATION_ERROR'
+    && (await api('GET', `/v1/binding?surfaceId=${surfaceS1}`)).body?.activeAgentId === agentA.id,
+    `sessionId on the wire -> ${rejected.status} ${rejected.body?.error?.code}; binding untouched`)
+
+  // 2.6 per-surface isolation: S2 is a brand-new surface with its own
   //     default binding; S1's switches never touch it and vice versa.
   const binding2none = await api('GET', `/v1/binding?surfaceId=${surfaceS2}`)
   record('GATE1_FRESH_SURFACE_NO_BINDING', binding2none.status === 404
@@ -361,7 +396,7 @@ async function main() {
     && binding1after.body?.activeSessionId === 'work',
     `S1 still ${binding1after.body?.activeAgentId}/${binding1after.body?.activeSessionId} after S2 switches`)
 
-  // 2.6 GET /v1/agents
+  // 2.7 GET /v1/agents
   const agents = await api('GET', '/v1/agents')
   record('GATE1_GET_AGENTS', agents.status === 200 && agents.body?.agents?.length === 2
     && agents.body.agents.some(a => a.id === agentA.id) && agents.body.agents.some(a => a.id === agentB.id),

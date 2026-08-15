@@ -137,7 +137,7 @@ test('GET /v1/binding: 200 with the surface binding; 404 BINDING_NOT_FOUND when 
   assert.equal(missing.body.error.code, 'BINDING_NOT_FOUND')
 })
 
-test('POST /v1/switch-agent: surface scope + optional sessionId passthrough', async (t) => {
+test('POST /v1/switch-agent: surface scope, targetAgentId-ONLY (sessionId rejected)', async (t) => {
   const router = stubRouter()
   const { base } = await startServer(t, { router })
   await router.switchAgent('mobile:surface-1', 'agt_a')
@@ -148,10 +148,12 @@ test('POST /v1/switch-agent: surface scope + optional sessionId passthrough', as
   assert.equal(switched.body.activeAgentId, 'agt_b')
   assert.equal(switched.body.activeSessionId, 'main')
 
-  // Explicit sessionId is passed to the Router unchanged.
-  const explicit = await call(base, 'POST', '/v1/switch-agent', { surfaceId: 'surface-1', targetAgentId: 'agt_a', sessionId: 'work' })
-  assert.equal(explicit.status, 200)
-  assert.equal(explicit.body.activeSessionId, 'work')
+  // Gate 1 contract is targetAgentId-only (audit FIX 2): sessionId on the
+  // wire is rejected, never forwarded to the Router.
+  const withSession = await call(base, 'POST', '/v1/switch-agent', { surfaceId: 'surface-1', targetAgentId: 'agt_a', sessionId: 'work' })
+  assert.equal(withSession.status, 400)
+  assert.equal(withSession.body.error.code, 'VALIDATION_ERROR')
+  assert.equal(router.getBinding('mobile:surface-1').activeAgentId, 'agt_b', 'rejected request must not mutate the binding')
 
   // Other surfaces are untouched (per-surface scope).
   const other = await call(base, 'GET', '/v1/binding?surfaceId=surface-2')
