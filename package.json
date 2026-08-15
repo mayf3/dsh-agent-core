@@ -14,10 +14,14 @@
     "test": "node --test 'packages/*/test/*.test.js'",
     "test:scheduler": "node --test packages/scheduler/test/*.test.js",
     "verify:scheduler": "node scripts/scheduler-v1-verify.mjs",
+    "test:scheduler-router": "node --test packages/scheduler-router/test/*.test.js",
+    "verify:scheduler-router-final": "node scripts/scheduler-router-final-v1-verify.mjs",
     "import:openclaw-jobs": "node scripts/openclaw-job-import.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "@larksuiteoapi/node-sdk": "^1.73.0",
     "croner": "^10.0.1"
   }
 }
