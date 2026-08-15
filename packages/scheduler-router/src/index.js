@@ -1,0 +1,174 @@
+/**
+ * @agent-core/scheduler-router — Scheduler ↔ Router Final Integration bridge.
+ *
+ * The Scheduler Replacement V1 (packages/scheduler) owns zero agent
+ * knowledge and reaches agents/channels ONLY through its injected seams:
+ *
+ *   invokeAgent(request)  — scheduler.js -> this bridge -> existing Router
+ *   deliver({job, result, text}) — scheduler.js -> this bridge -> existing
+ *                                   Feishu outbound seam
+ *
+ * This package is the real wiring promised by docs/reports/
+ * scheduler-replacement-v1.md §5/§6 ("Product Integration 提供稳定
+ * invokeAgent 后，一行注入"): it adapts the scheduler's seam contract to the
+ * Router's EXISTING public domain surface. It changes nothing inside the
+ * Router and nothing inside the Scheduler core:
+ *
+ *   - `createRouterInvoker(router)` calls only `router.ensureRunning(agentId)`
+ *     (a published `agentRouter` service method, packages/agent-router) and
+ *     the returned AgentProcess's `turn()` (its documented business entry).
+ *     No Router source change, no scheduler special-case inside the Router.
+ *   - `createFeishuDeliver(feishu)` calls only `feishu.reply(ReplyTarget,
+ *     text)` — the single existing outbound send (packages/feishu-connector,
+ *     same seam the Router's onIngress reply path uses). It reads the opaque
+ *     `job.delivery.{channel,to}` fields and builds the ReplyTarget; it
+ *     never opens a second outbound path.
+ *
+ * AbortSignal (scheduler TIMEOUT_ABORT audit): the scheduler passes
+ * `request.signal` into the seam; this bridge OBSERVES it (records
+ * `aborted` on every settled call). The Router / AgentProcess currently has
+ * NO cancellation seam (turn() has no signal; the demo-server JSON-RPC
+ * METHODS set has no cancel), so the signal cannot cancel a real turn yet —
+ * the bridge records the observation for the TIMEOUT_ABORT_END_TO_END
+ * evidence and keeps the turn running (see docs/reports/
+ * scheduler-router-final-integration-v1.md).
+ */
+
+/** Parse an opaque scheduler delivery target `job.delivery.to` into a Feishu chat id. */
+export function chatIdFromDeliveryTo(to) {
+  if (typeof to !== 'string' || to.trim() === '') {
+    throw new TypeError('scheduler-router: job.delivery.to must be a non-empty string')
+  }
+  const trimmed = to.trim()
+  // OpenClaw announce targets are `chat:oc_...`; accept the bare chat id too.
+  if (trimmed.startsWith('chat:')) return trimmed.slice('chat:'.length)
+  if (trimmed.startsWith('oc_')) return trimmed
+  throw new TypeError(`scheduler-router: unsupported delivery target: ${to} (expected chat:<chatId>)`)
+}
+
+/**
+ * The real invocation seam: Scheduler.invokeAgent -> existing Router ->
+ * AgentProcess -> DSH native Session.
+ *
+ * Uses ONLY the Router's published domain surface:
+ *   - `router.ensureRunning(agentId)` — find-or-start the agent's DSH
+ *     process (the Control Plane's registry, provisioning and lifecycle);
+ *   - `proc.turn(sessionId, message, {}, timeoutMs)` — one owned turn into
+ *     the agent's native DSH session, waits for whole-agent idle.
+ *
+ * Never throws: every failure becomes the scheduler's `{status:'error'}`
+ * outcome envelope (the Scheduler treats non-ok as a failed run).
+ *
+ * @param {object} router - the published `agentRouter` service (or any
+ *   object exposing ensureRunning(agentId) -> AgentProcess).
+ * @param {object} [opts]
+ * @param {object} [opts.registry] - optional AgentRegistry service; when
+ *   present, `getAgent(request.agentId)` validates the target before spawn
+ *   (AGENT_NOT_FOUND -> error outcome).
+ * @returns {Function} the invokeAgent(request) seam, with `.calls` log.
+ */
+export function createRouterInvoker(router, opts = {}) {
+  if (router === undefined || typeof router.ensureRunning !== 'function') {
+    throw new TypeError('scheduler-router: router.ensureRunning(agentId) is required')
+  }
+  const registry = opts?.registry
+  const calls = []
+
+  async function invokeAgent(request) {
+    const started = Date.now()
+    const call = { agentId: request.agentId, sessionId: request.sessionId, atMs: started }
+    let aborted = false
+    if (request.signal) {
+      request.signal.addEventListener('abort', () => { aborted = true }, { once: true })
+    }
+    try {
+      if (registry !== undefined) registry.getAgent(request.agentId)
+      const proc = await router.ensureRunning(request.agentId)
+      // The Scheduler owns the run timeout (it aborts `signal`); the turn
+      // poll gets a margin so the scheduler's race always settles first.
+      const turnTimeoutMs = request.timeoutMs ? request.timeoutMs + 30_000 : 300_000
+      const { reply } = await proc.turn(request.sessionId, request.message, {}, turnTimeoutMs)
+      const outcome = {
+        status: 'ok',
+        summary: reply,
+        sessionId: request.sessionId,
+        durationMs: Date.now() - started,
+      }
+      call.outcome = outcome
+      call.aborted = aborted
+      calls.push(call)
+      return outcome
+    } catch (error) {
+      const outcome = {
+        status: 'error',
+        error: error?.message ?? String(error),
+        sessionId: request.sessionId,
+        durationMs: Date.now() - started,
+      }
+      call.outcome = outcome
+      call.aborted = aborted
+      calls.push(call)
+      return outcome
+    }
+  }
+  invokeAgent.calls = calls
+  return invokeAgent
+}
+
+/**
+ * The real delivery seam: Scheduler.deliver -> existing Feishu outbound.
+ *
+ * Maps the scheduler's OPAQUE delivery directive onto the ONE existing
+ * outbound seam: `feishu.reply(ReplyTarget, text)` (the same call the
+ * Router's onIngress reply path uses; im.message.create via a `create`
+ * ReplyTarget). `job.delivery.{channel,to}` stay opaque to the Scheduler —
+ * this adapter is the only place that reads them.
+ *
+ * Throws for anything it cannot send -> the Scheduler marks the run
+ * not-delivered (deliver throw = not-delivered, scheduler.js _runOne).
+ *
+ * @param {object} feishu - the published `feishu` channel handle exposing
+ *   `reply(replyTarget, text) -> {messageId, chatId, code, msg}`.
+ * @returns {Function} the deliver({job, result, text}) seam, with
+ *   `.deliveries` log.
+ */
+export function createFeishuDeliver(feishu) {
+  if (feishu === undefined || typeof feishu.reply !== 'function') {
+    throw new TypeError('scheduler-router: feishu.reply(replyTarget, text) is required')
+  }
+  const deliveries = []
+
+  async function deliver({ job, result, text }) {
+    const delivery = job?.delivery ?? {}
+    if (delivery.channel !== 'feishu') {
+      throw new Error(`scheduler-router: unsupported delivery channel: ${String(delivery.channel)} (only feishu)`)
+    }
+    const chatId = chatIdFromDeliveryTo(delivery.to)
+    // ReplyTarget literal per the feishu-connector contract (api.js):
+    // kind 'create' -> im.message.create with receive_id_type 'chat_id'.
+    const target = {
+      kind: 'create',
+      conversationId: `group:${chatId}`,
+      chatId,
+      channel: 'group',
+      receiveIdType: 'chat_id',
+      receiveId: chatId,
+      threadId: undefined,
+      rootMsgId: undefined,
+      replyInThread: false,
+    }
+    const sent = await feishu.reply(target, String(text ?? ''))
+    deliveries.push({
+      jobId: job.id,
+      channel: delivery.channel,
+      to: delivery.to,
+      chatId,
+      text: text ?? null,
+      resultStatus: result?.status,
+      sent,
+    })
+    return sent
+  }
+  deliver.deliveries = deliveries
+  return deliver
+}
