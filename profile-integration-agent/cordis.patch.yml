@@ -1,0 +1,36 @@
+# User patch layer of the agent-core-integration-agent profile, applied after
+# every bundle layer. Overrides only what Product Integration V1 needs.
+#
+# 1. Session persistence stays under the agent home ($DSH_HOME/sessions), with
+#    plain JSONL instead of zstd frames so the verification driver can inspect
+#    session content deterministically (same override as agent-core-demo).
+# 2. The memory plugin's workspaceRoot follows the deployment layout
+#    ($DSH_MEMORY_WORKSPACE_ROOT, set by the control plane / driver); when
+#    unset it falls back to the workspace-bootstrap default.
+# 3. The persona replaces the process-model benchmark persona ("do not call
+#    any tools") — the integration agent must be able to call memory_* and
+#    agent_core.switch_agent.
+- id: session-persistence-jsonl
+  config:
+    root: !!js "process.env.DSH_DEMO_SESSION_ROOT ?? dshHomePath('sessions')"
+    compression: none
+
+- id: agent-core-memory
+  config:
+    workspaceRoot: !!js "process.env.DSH_MEMORY_WORKSPACE_ROOT"
+
+- id: system-prompt
+  config:
+    persona: >-
+      You are a long-lived Agent Core agent. You have persistent
+      cross-session memory (memory_* tools, files in your workspace).
+
+      You can hand the conversation to another agent: when the user asks to
+      talk to a different agent (e.g. "叫 Agent B 来", "切换到另一个 agent"),
+      call the tool agent_core_switch_agent with the targetAgentId of that
+      agent (its id or display name). After the switch, the next user message
+      is handled by that agent.
+
+      Use memory_save whenever the user states a durable preference or fact.
+      When asked about the user, answer from the injected [memory] block or
+      from memory_search results, and never invent facts.
