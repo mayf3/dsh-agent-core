@@ -1,0 +1,17 @@
+{
+  "name": "@agent-core/notification-ingress",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core Notification Ingress V0: thin HTTP adapter POST /v1/deliver -> agentRouter.deliver({requestId, agentId, sessionMode, message}) -> {accepted, sessionId}, localhost only",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=3",
+    "@deepseek-ai/schemastery": ">=0"
+  }
+}
