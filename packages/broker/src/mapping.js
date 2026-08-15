@@ -131,9 +131,15 @@ export async function invoke(manifest, handlers, call, deps) {
   if (raw && typeof raw === 'object' && raw.ok === false && raw.error && typeof raw.error.code === 'string') {
     return { ok: false, error: resolveCode(manifest, raw.error.code, FALLBACK_ERRORS.invalid_arguments) }
   }
-  // Handler declared a direct error code.
+  // Handler declared a direct error code. Transport-produced codes may carry
+  // optional `status` (upstream HTTP status) and `detail` (upstream body / cause)
+  // which are passed through on the wire envelope for the model's benefit.
   if (raw && typeof raw === 'object' && typeof raw.errorCode === 'string') {
-    return { ok: false, error: resolveCode(manifest, raw.errorCode, FALLBACK_ERRORS.invalid_arguments) }
+    const code = resolveCode(manifest, raw.errorCode, FALLBACK_ERRORS.invalid_arguments)
+    const error = { code: code.code }
+    if (typeof raw.status === 'number') error.status = raw.status
+    if (typeof raw.detail === 'string') error.detail = raw.detail
+    return { ok: false, error }
   }
   return { ok: true, result: raw }
 }

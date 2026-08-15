@@ -1,5 +1,5 @@
 /**
- * @agent-core/broker — Capability manifest schema & validation (V1).
+ * @agent-core/broker — Capability manifest schema & validation (V1, Transport V1).
  *
  * A capability manifest is PLAIN DATA (JSON-serializable; no functions) that
  * describes the contract surface of one Agent Core capability: its wire id,
@@ -7,11 +7,18 @@
  * and human-facing descriptions. The generic broker engine turns such a
  * manifest (+ a separate, code-side handler map) into one model-facing DSH tool.
  *
+ * Transport V1 addition: an operation may carry an optional generic `http`
+ * binding block (target / method / path / pathParams / query / body /
+ * idempotencyKey — see transport.js). Operations with an `http` block are
+ * executed by the shared authorized-HTTP transport instead of a
+ * process-internal handler; the binding is trusted manifest data that pins
+ * the outbound request (never model input).
+ *
  * The "handler" that actually performs an operation is deliberately NOT part of
  * the manifest (a manifest must stay data); it lives next to it in code and is
  * keyed by capability id / operation name. This keeps docs/reports/broker-v1.md
  * honest: Forum / Workflow / OKR will only ever provide manifest data + a
- * handler, no new generic machinery.
+ * handler (or an `http` binding), no new generic machinery.
  */
 
 /**
@@ -33,13 +40,33 @@ export function validateManifest(input) {
 
   const manifest = {}
 
-  // ---- id (wire capability name, dotted namespace like external.calculator) ----
+  // ---- id (wire capability name) ----
+  // Grammar: `external.calculator` (dotted namespace) OR a flat broker wire id
+  // like `forum_read_thread` / `workflow_my_tasks` (the ids used by the real
+  // deployed capability registry, see docs/investigations/broker-capability-parity.md).
+  // Lowercase start; segments may contain letters, digits, underscores.
   if (typeof input.id !== 'string' || input.id.length === 0) {
     errors.push(path('id') + ' must be a non-empty string')
-  } else if (!/^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)+$/.test(input.id)) {
-    errors.push(path('id') + ` "${input.id}" must be a dotted wire id (e.g. external.calculator)`)
+  } else if (!/^[a-z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)*$/.test(input.id)) {
+    errors.push(path('id') + ` "${input.id}" must be a lowercase wire id (dotted like external.calculator, or flat like forum_read_thread)`)
   } else {
     manifest.id = input.id
+  }
+
+  // ---- requiredScopes (capability-level; drives the token request scope) ----
+  manifest.requiredScopes = []
+  if (input.requiredScopes !== undefined) {
+    if (!Array.isArray(input.requiredScopes) || input.requiredScopes.length === 0) {
+      errors.push(path('requiredScopes') + ' must be a non-empty array of scope strings (e.g. ["workflow.read"])')
+    } else {
+      for (const [i, s] of input.requiredScopes.entries()) {
+        if (typeof s !== 'string' || !/^[a-z][a-zA-Z0-9_.-]*$/.test(s)) {
+          errors.push(path(`requiredScopes[${i}]`) + ` "${s}" must be a lowercase scope (e.g. forum.write)`)
+        } else {
+          manifest.requiredScopes.push(s)
+        }
+      }
+    }
   }
 
   // ---- toolName (underscore DSH tool name); derive from id by default ----
@@ -112,6 +139,18 @@ export function validateManifest(input) {
         errors.push(argErr)
         continue
       }
+      // optional generic HTTP binding (the authorized-HTTP transport contract;
+      // see transport.js). When present, this operation is executed by the
+      // generic transport instead of a process-internal handler.
+      let http = undefined
+      if (op.http !== undefined) {
+        const httpErr = validateHttpBinding(op.http, opPath + '.http', op.arguments?.properties || {})
+        if (httpErr) {
+          errors.push(httpErr)
+          continue
+        }
+        http = op.http
+      }
       // per-operation allowed error codes (all must exist in the table)
       const opErrors = new Set()
       if (op.errors !== undefined) {
@@ -145,8 +184,16 @@ export function validateManifest(input) {
             : { type: 'object', properties: op.arguments.properties || {}, required: Array.isArray(op.arguments.required) ? op.arguments.required : [] },
         result: op.result === undefined ? { type: 'json' } : op.result,
         errors: [...opErrors],
+        http,
       })
     }
+  }
+
+  // An http-bound capability MUST declare its required scopes: the transport
+  // requests `scope=<requiredScopes>` from the token endpoint, so a missing
+  // scope list would silently issue a scope-less (useless) token.
+  if (manifest.operations.some((o) => o.http !== undefined) && manifest.requiredScopes.length === 0) {
+    errors.push(path('requiredScopes') + ' is required when any operation declares an http binding')
   }
 
   // toolName derived default: strip dots from id, e.g. external.calculator -> external_calculator
@@ -192,4 +239,99 @@ function validatePropertiesSchema(value, at) {
     }
   }
   return null
+}
+
+/** HTTP methods the generic transport is willing to execute. */
+const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE'])
+
+/**
+ * Validate one operation's optional `http` binding block:
+ *
+ *   http: {
+ *     target: 'svc-forum',                 // targetId from the targets registry (trusted config)
+ *     method: 'GET',                       // GET | POST | PUT | DELETE (pinned, model cannot change)
+ *     path: '/api/threads/{threadId}',     // path template; {name} placeholders
+ *     pathParams: ['threadId'],            // arg names bound to {placeholders} (exact match)
+ *     query: ['page', 'limit'],            // arg names forwarded as query params
+ *     body: ['content'],                   // arg names forwarded as a JSON body object (write methods)
+ *     idempotencyKey: false,               // transport generates & forwards Idempotency-Key
+ *   }
+ *
+ * Why this extension is needed: the V1 manifest described ONLY the model-facing
+ * contract surface (operations + argument schemas + error codes) and delegated
+ * execution to a process-internal handler. The authorized-HTTP transport needs
+ * trusted (model-uncontrollable) metadata that pins the outbound request —
+ * which target, which method, which path, and which argument names may flow
+ * into path/query/body. There is no existing field that can carry this, so the
+ * generic `http` block is the minimal extension (one capability never hardcodes
+ * a business system; the transport is driven by this data alone).
+ *
+ * @param {unknown} http - candidate http binding block.
+ * @param {string} at - human path for error messages.
+ * @param {object} properties - the operation's argument property schemas.
+ * @returns {string | null} an error message, or null when valid.
+ */
+function validateHttpBinding(http, at, properties) {
+  if (http === null || typeof http !== 'object' || Array.isArray(http)) {
+    return `${at} must be an object`
+  }
+  if (typeof http.target !== 'string' || http.target.length === 0) {
+    return `${at}.target must be a non-empty string (a targetId from the targets registry)`
+  }
+  if (typeof http.method !== 'string' || !HTTP_METHODS.has(http.method)) {
+    return `${at}.method must be one of ${[...HTTP_METHODS].join('|')}`
+  }
+  if (typeof http.path !== 'string' || http.path.length === 0 || !http.path.startsWith('/')) {
+    return `${at}.path must be a non-empty string starting with "/"`
+  }
+  const placeholders = extractPlaceholders(http.path)
+  if (placeholders.some((p) => !/^[a-zA-Z0-9_]+$/.test(p))) {
+    return `${at}.path contains an invalid {placeholder}`
+  }
+
+  // Binding lists: arrays of argument names, unique, all declared in the
+  // operation's argument schema (fail-closed: the transport may only forward
+  // arguments the manifest declares).
+  const bound = {}
+  for (const key of ['pathParams', 'query', 'body']) {
+    const list = http[key]
+    if (list === undefined) {
+      bound[key] = []
+      continue
+    }
+    if (!Array.isArray(list) || list.some((x) => typeof x !== 'string')) {
+      return `${at}.${key} must be an array of argument names`
+    }
+    const seen = new Set()
+    for (const name of list) {
+      if (seen.has(name)) return `${at}.${key} contains duplicate "${name}"`
+      seen.add(name)
+      if (!Object.hasOwn(properties, name)) {
+        return `${at}.${key} references undeclared argument "${name}"`
+      }
+    }
+    bound[key] = list
+  }
+
+  // Every path placeholder must be bound by pathParams (exact match; the
+  // transport rejects missing/extra params at request time too).
+  for (const ph of placeholders) {
+    if (!bound.pathParams.includes(ph)) {
+      return `${at}.path placeholder "{${ph}}" has no pathParams binding`
+    }
+  }
+
+  if (http.idempotencyKey !== undefined && typeof http.idempotencyKey !== 'boolean') {
+    return `${at}.idempotencyKey must be a boolean`
+  }
+  return null
+}
+
+/** Extract `{name}` placeholders from a path template, in order. */
+function extractPlaceholders(path) {
+  const out = []
+  const re = /\{([^}]+)\}/g
+  let m
+  while ((m = re.exec(path)) !== null) out.push(m[1])
+  return out
 }

@@ -13,10 +13,24 @@
  *   failure:   { ok: false, error: { code: invalid_arguments|unsupported_operation|divide_by_zero } }
  *   acceptance: multiply 6 × 7 -> 42
  *
- * Plugin identity: `export const name = 'broker'` is kept identical to V0 so the
- * installed profile keeps resolving the plugin; the bundle patch references the
- * package `@agent-core/broker` (unchanged in package.json). The `broker` name
- * also matches @agent-core/router's convention of a short Cordis plugin name.
+ * Transport V1 (this round): manifests may declare a generic `http` binding
+ * per operation (see transport.js). Operations with an `http` block are
+ * executed by the generic AUTHORIZED HTTP TRANSPORT instead of a
+ * process-internal handler — the same transport serves Forum / Workflow /
+ * OKR / any future Broker capability, with zero per-business-system code:
+ *
+ *   manifest → tool → generic authorized HTTP transport → Broker endpoint
+ *                       (credential seam → client_credentials token → fetch)
+ *
+ * Identity: the transport obtains the caller credential ONLY through the
+ * injected credential provider seam (credential.js). Model arguments never
+ * carry identity; caller self-reported agentId/principalId cannot override
+ * the seam credential (see transport tests).
+ *
+ * Plugin identity: `export const name = 'broker'` is kept identical to V0 so
+ * the installed profile keeps resolving the plugin; the bundle patch references
+ * the package `@agent-core/broker` (unchanged in package.json). The `broker`
+ * name also matches @agent-core/router's convention of a short Cordis plugin name.
  */
 
 import { defineTool } from '@deepseek-ai/dsh-tools'
@@ -24,7 +38,13 @@ import z from '@deepseek-ai/schemastery'
 
 import { registerCapabilities } from './registry.js'
 import { createIdentityResolver } from './identity.js'
+import { createCredentialProvider } from './credential.js'
+import { createHttpTransport, createHttpHandlers } from './transport.js'
+import { targets as defaultTargets, buildTargetMap } from './targets.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
+import { manifests as forumManifests } from './capabilities/forum.js'
+import { manifests as workflowManifests } from './capabilities/workflow.js'
+import { manifests as okrManifests } from './capabilities/okr.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'
@@ -32,20 +52,54 @@ export const name = 'broker'
 /** Core services required before the tool registry is reachable. */
 export const inject = ['tools']
 
-/** Plugin config: the list of capability manifests to register as tools. */
+/**
+ * Default capability manifests: the V0 calculator fixture + the first-batch
+ * real business capabilities (Forum ×7, Workflow ×4, OKR ×1) — the ~95%
+ * real-call surface identified by docs/investigations/broker-capability-parity.md
+ * §6.4. All HTTP capabilities fail CLOSED at execution time without a
+ * credential from the seam; registration itself never requires one.
+ */
+export const DEFAULT_MANIFESTS = [
+  calculatorManifest,
+  ...forumManifests,
+  ...workflowManifests,
+  ...okrManifests,
+]
+
+/** Default auth-service token endpoint origin (deployment-local). */
+export const DEFAULT_AUTH_SERVICE_ORIGIN = 'http://127.0.0.1:4001'
+
+/** Plugin config: manifests to register as tools + transport wiring. */
 export const Config = z.object({
-  /** Capability manifests to register. Each maps to ONE tool. */
+  /**
+   * Capability manifests to register. Each maps to ONE tool.
+   * Operations with an `http` block are served by the generic authorized
+   * HTTP transport; the rest are served by `handlersByCapability`.
+   */
   manifests: z
     .array(z.any())
     // NOTE: no .required() — schemastery's required check runs BEFORE the
     // default, so `.required().default(x)` still rejects an absent value.
-    .default([calculatorManifest]),
+    .default(DEFAULT_MANIFESTS),
+  /** Target registry (origin + audience) that pins the outbound side. */
+  targets: z.array(z.any()).default(defaultTargets),
+  /** Auth-service token endpoint origin (client_credentials grant). */
+  authServiceOrigin: z.string().default(DEFAULT_AUTH_SERVICE_ORIGIN),
+  /**
+   * Optional injected caller credential `{ clientId, clientSecret }`.
+   * The thin identity seam: tests / local dev inject here; the final Process
+   * Identity integration injects the real per-process credential (or replaces
+   * the provider) — see credential.js. Absent = the env placeholder applies;
+   * still absent = every HTTP capability fails CLOSED with
+   * `credential_unavailable`.
+   */
+  credential: z.any(),
 })
 
 /**
- * Capability id -> handler map. The calculator's handlers live next to its
- * manifest; future capabilities register their handlers here (or via a registry
- * seam) — keeping execution code separate from manifest data.
+ * Capability id -> handler map for PROCESS-INTERNAL capabilities (calculator).
+ * HTTP-bound capabilities get their handlers auto-generated by the generic
+ * transport (createHttpHandlers) — nothing business-specific lives here.
  */
 const handlersByCapability = {
   'external.calculator': calculatorHandlers,
@@ -53,16 +107,40 @@ const handlersByCapability = {
 
 /**
  * Register every configured capability manifest as a model-facing tool.
- * Identity is resolved only through the internal `resolvePrincipal` interface.
+ * Identity is resolved only through the internal `resolvePrincipal` interface
+ * and the credential seam; model arguments are never a principal source.
  * @param {import('@deepseek-ai/cordis').Context} ctx - registrant context.
  * @param {object} [config] - resolved plugin config.
  */
 export function apply(ctx, config = {}) {
-  const manifests = config.manifests ?? [calculatorManifest]
+  const manifests = config.manifests ?? DEFAULT_MANIFESTS
+  const targets = config.targets ?? defaultTargets
+  const authServiceOrigin = config.authServiceOrigin ?? DEFAULT_AUTH_SERVICE_ORIGIN
+
+  // Fail fast on broken wiring: every http-bound capability must reference a
+  // known target (origin/audience stay pinned to trusted config).
+  const targetMap = buildTargetMap(targets)
+  for (const manifest of manifests) {
+    for (const op of manifest && Array.isArray(manifest.operations) ? manifest.operations : []) {
+      if (op && op.http && !targetMap.has(op.http.target)) {
+        throw new Error(
+          `broker: capability "${manifest.id}" references unknown target "${op.http.target}" ` +
+            `(known: ${[...targetMap.keys()].join(', ')})`,
+        )
+      }
+    }
+  }
+
+  // Single transport + single credential seam for ALL http capabilities.
+  const credentialProvider = createCredentialProvider({ injected: config.credential })
+  const transport = createHttpTransport({ credentialProvider, targets, authServiceOrigin })
 
   const capabilities = manifests.map((manifest) => {
     const id = manifest && typeof manifest.id === 'string' ? manifest.id : ''
-    const handlers = handlersByCapability[id] ?? {}
+    const hasHttp = Array.isArray(manifest.operations) && manifest.operations.some((o) => o && o.http)
+    // HTTP capabilities need no bespoke handlers: the transport drives them
+    // from manifest data alone. Everything else falls back to the static map.
+    const handlers = hasHttp ? createHttpHandlers(manifest, transport) : handlersByCapability[id] ?? {}
     return {
       manifest,
       handlers,
