@@ -44,7 +44,8 @@ dsh-agent-core/
 │   ├── agent-switch/          # @agent-core/agent-switch — DSH 侧 agent_core_switch_agent adapter（parent-RPC 转发）
 │   ├── demo-server/           # @agent-core/demo-server — per-agent JSON-RPC server（persistence resume + parent-RPC passthrough）
 │   ├── owner-guard/           # @agent-core/owner-guard — 单 owner 锁（one live process per agent）
-│   └── scheduler/             # @agent-core/scheduler — Scheduler Replacement V1（cron/at/every 持久 job + 注入式 invocation/delivery seam）
+│   ├── scheduler/             # @agent-core/scheduler — Scheduler Replacement V1（cron/at/every 持久 job + 注入式 invocation/delivery seam）
+│   └── scheduler-router/      # @agent-core/scheduler-router — Scheduler↔Router Final Integration 桥接（真实 invokeAgent + deliver 适配器，只调已有域操作）
 ├── bundle/                    # @agent-core/bundle — dsh.bundle patch 层（persona + broker/router）
 ├── bundle-demo/               # @agent-core/bundle-demo — process-model demo patch 层
 ├── bundle-integration/        # @agent-core/bundle-integration — 控制面组合（registry + workspace-bootstrap + feishu + agent-router）
@@ -65,6 +66,7 @@ dsh-agent-core/
 │   ├── integration-v1-verify.mjs      # Integration V1 验收（真实飞书链路）
 │   ├── product-integration-v1-verify.mjs # Product Integration V1 验收（A/B 双 Agent、switch、重启、crash resume）
 │   ├── scheduler-v1-verify.mjs        # Scheduler V1 验收驱动（59 测试 + 兼容扫描 + 重启证据 + 审计回归）
+│   ├── scheduler-router-final-v1-verify.mjs # Scheduler↔Router Final Integration 验收（真实进程/模型/飞书 + abort 证据）
 │   ├── agentcore-cron.mjs             # openclaw cron add/list/runs 的 Agent Core 提交面（daemon 换用）
 │   └── openclaw-job-import.mjs        # 真实 OpenClaw jobs → V1 store 迁移工具（默认 dry-run + 锁内守卫）
 └── docs/
