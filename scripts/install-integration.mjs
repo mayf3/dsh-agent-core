@@ -60,6 +60,7 @@ const pkgDirs = {
   'feishu-connector': join(REPO, 'packages', 'feishu-connector'),
   'agent-router': join(REPO, 'packages', 'agent-router'),
   'product-api': join(REPO, 'packages', 'product-api'),
+  'notification-ingress': join(REPO, 'packages', 'notification-ingress'),
   'workspace-bootstrap': join(REPO, 'packages', 'workspace-bootstrap'),
   'agent-registry': join(REPO, 'packages', 'agent-registry'),
   // per-agent composition

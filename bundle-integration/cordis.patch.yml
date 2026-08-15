@@ -73,3 +73,19 @@
         enabled: !!js "process.env.PRODUCT_API_ENABLED !== '0'"
         host: !!js "process.env.PRODUCT_API_HOST ?? '127.0.0.1'"
         port: !!js "Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10)"
+
+    # Notification Ingress V0: thin POST /v1/deliver adapter over the FROZEN
+    # Router contract agentRouter.deliver(...) (localhost only, same posture
+    # as product-api). While the Router branch implementing deliver() is not
+    # merged, the mount answers /v1/deliver with 503 SERVICE_UNAVAILABLE and
+    # logs the pending dependency — it never re-implements Router logic.
+    # Env:
+    #   NOTIFICATION_INGRESS_ENABLED  set to '0' to mount without the HTTP server
+    #   NOTIFICATION_INGRESS_HOST     bind host (default 127.0.0.1 — no LAN exposure)
+    #   NOTIFICATION_INGRESS_PORT     bind port (default 8790)
+    - id: agent-core-notification-ingress
+      name: '@agent-core/notification-ingress'
+      config:
+        enabled: !!js "process.env.NOTIFICATION_INGRESS_ENABLED !== '0'"
+        host: !!js "process.env.NOTIFICATION_INGRESS_HOST ?? '127.0.0.1'"
+        port: !!js "Number.parseInt(process.env.NOTIFICATION_INGRESS_PORT ?? '8790', 10)"
