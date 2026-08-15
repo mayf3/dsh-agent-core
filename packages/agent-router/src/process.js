@@ -26,6 +26,50 @@ import { cliBin } from '../../../scripts/demo-home.mjs'
 
 const DEFAULT_PROFILE = 'agent-core-demo'
 
+/**
+ * Spawn configuration for the per-agent DSH child under the TRUSTED
+ * credential broker model: the trusted Router parent (deployment uid
+ * authsvc/505) runs every Agent child at the NORMAL Agent runtime uid/gid
+ * (default 502 — NOT a per-agent OS user).
+ *
+ * - DSH_AGENT_CHILD_UID / DSH_AGENT_CHILD_GID: target uid/gid. Absent =>
+ *   the child inherits the parent's identity (legacy behavior).
+ * - DSH_AGENT_SPAWN_HELPER (optional): ABSOLUTE path of a privileged spawn
+ *   helper (`<helper> <uid> <gid> <node> <program> <args...>` that
+ *   setuids and execs the child, stdio inherited). Required when the parent
+ *   cannot setuid directly: only root (or the same uid) can setuid, so a
+ *   505 parent needs a one-time-root-bootstrapped setuid helper. When the
+ *   helper is absent AND the requested uid differs from the parent's and
+ *   the parent is not root, the spawn FAILS LOUD — a child must never
+ *   silently run with more privilege than configured.
+ *
+ * @returns {{ argv: string[], spawnUid?: number, spawnGid?: number }}
+ */
+export function childSpawnConfig(log = console) {
+  const uidRaw = process.env.DSH_AGENT_CHILD_UID
+  if (uidRaw === undefined || uidRaw === '') return { argv: [process.execPath] }
+  const uid = Number.parseInt(uidRaw, 10)
+  // The child gid defaults to the PARENT's effective gid (the runtime user's
+  // primary group) — never to the numeric uid, which is usually not a group
+  // the process may setgid to (macOS: EPERM).
+  const gidRaw = process.env.DSH_AGENT_CHILD_GID
+  const gid = gidRaw === undefined || gidRaw === ''
+    ? (typeof process.getgid === 'function' ? process.getgid() : uid)
+    : Number.parseInt(gidRaw, 10)
+  if (!Number.isInteger(uid) || uid < 0 || !Number.isInteger(gid) || gid < 0) {
+    throw new Error(`agent-router: invalid DSH_AGENT_CHILD_UID/GID (uid=${uidRaw}, gid=${process.env.DSH_AGENT_CHILD_GID})`)
+  }
+  const helper = process.env.DSH_AGENT_SPAWN_HELPER
+  if (typeof helper === 'string' && helper !== '') {
+    log.log?.(`[router] spawn helper ${helper} -> child uid ${uid} gid ${gid}`)
+    // <helper> <uid> <gid> <program> <args...> — stdio is inherited through
+    // the helper's exec so the JSON-RPC pipes connect straight to the child.
+    return { argv: [helper, String(uid), String(gid), process.execPath] }
+  }
+  log.log?.(`[router] spawn child with uid ${uid} gid ${gid} (direct setuid; requires root or same uid)`)
+  return { argv: [process.execPath], spawnUid: uid, spawnGid: gid }
+}
+
 /** Base environment for one agent process (its own home, workspace as cwd). */
 export function agentEnv(home, extra = {}) {
   const env = {
@@ -82,10 +126,22 @@ export class AgentProcess {
 
   /** Spawn the dsh CLI child. Does not wait for readiness. */
   spawn() {
-    const child = spawn(process.execPath, [cliBin(), '--profile', this.profile], {
+    const { argv, spawnUid, spawnGid } = childSpawnConfig(this.log)
+    const program = argv[0]
+    const args = [...argv.slice(1), cliBin(), '--profile', this.profile]
+    // Direct setuid is only legal from root or the same uid; anything else
+    // (e.g. a 505 parent without the root-bootstrapped helper) must fail
+    // LOUD rather than silently run the child at the parent's identity.
+    if (spawnUid !== undefined && spawnUid !== process.getuid?.() && process.getuid?.() !== 0) {
+      throw new Error(
+        `agent-router: cannot drop child to uid ${spawnUid} from uid ${process.getuid()} without DSH_AGENT_SPAWN_HELPER`,
+      )
+    }
+    const child = spawn(program, args, {
       cwd: this.workspace,
       env: agentEnv(this.home, this.env),
       stdio: ['pipe', 'pipe', 'pipe'],
+      ...(spawnUid === undefined ? {} : { uid: spawnUid, gid: spawnGid }),
     })
     this.child = child
     this.pid = child.pid

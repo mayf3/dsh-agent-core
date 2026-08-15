@@ -88,6 +88,14 @@ export function defaultBindingsStoreFile() {
 export const SWITCH_RPC_METHOD = 'agent-core/switchAgent'
 
 /**
+ * The parent-RPC method for trusted Broker capability calls (relay ->
+ * gateway). The child sends ONLY { capabilityId, operation, args }; the
+ * caller identity is decided by the Router from the actual proc.agentId.
+ * Kept in sync with packages/broker/src/relay.js (BROKER_RPC_METHOD).
+ */
+export const BROKER_RPC_METHOD = 'agent-core/broker'
+
+/**
  * The ChannelConversation id for one (channel, externalId) pair — the
  * canonical `${channel}:${externalId}` form. Used by resolveChannelConversation
  * and by thin adapters (e.g. the Product API's surface mapping, M13:
@@ -389,10 +397,39 @@ export function apply(ctx, config) {
       env: { DSH_AGENT_ID: agentId },
     })
     // DSH tool relay: a per-agent process asks the Control Plane to run a
-    // Router domain operation (currently only agent-core/switchAgent). The
-    // tool itself owns no policy — it forwards the request; every decision
-    // happens here in the Router.
+    // Router domain operation (switch) or a trusted Broker capability call
+    // (broker). The tool itself owns no policy — it forwards the request;
+    // every decision happens here in the Router.
     proc.onRpcRequest = async (method, params) => {
+      if (method === BROKER_RPC_METHOD) {
+        // TRUSTED CREDENTIAL BROKER: the caller identity is THIS proc's
+        // actual agentId (the trusted spawning relationship) — never
+        // anything the child says. Forged self-reported fields are ignored.
+        const selfReported = ['agentId', 'principalId', 'clientId', 'scope', 'audience', 'authorization']
+          .filter((field) => params?.[field] !== undefined)
+        if (selfReported.length > 0) {
+          log.log(`[broker] agent ${agentId}: IGNORING child-supplied identity fields: ${selfReported.join(', ')}`)
+        }
+        const gateway = ctx.get('brokerGateway')
+        if (gateway === undefined || typeof gateway.execute !== 'function') {
+          return {
+            ok: true,
+            result: { ok: false, error: { code: 'invalid_arguments', detail: 'broker gateway unavailable in the control plane' } },
+          }
+        }
+        log.log(`[broker] execute as agent ${agentId} (capability ${params?.capabilityId})`)
+        // Transport envelope {ok:true, result:<invoke shape>}: the child's
+        // relay unwraps it; failures stay STRUCTURED (the parent-RPC failure
+        // channel only carries a message string, so the business envelope is
+        // always delivered inside the success envelope).
+        return {
+          ok: true,
+          result: await gateway.execute(
+            { capabilityId: params?.capabilityId, operation: params?.operation, args: params?.args },
+            { agentId }, // ACTUAL identity — decided here, never from params
+          ),
+        }
+      }
       if (method !== SWITCH_RPC_METHOD) {
         throw new Error(`agent-router: unknown parent-RPC method ${method}`)
       }
