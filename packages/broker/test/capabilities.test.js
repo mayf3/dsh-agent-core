@@ -130,6 +130,71 @@ test('schema: all 12 first-batch manifests validate', () => {
 
 // ─── Fixture 1: Forum reply (POST, path param, JSON body, forum.write) ─────
 
+test('forum_reply: kind is restricted to the reviewer-safe enum (no moderator-only kinds)', async () => {
+  const manifest = forumManifests.find((m) => m.id === 'forum_reply')
+  const REVIEWER_SAFE = ['comment', 'proposal', 'challenge', 'clarification', 'evidence']
+
+  // tool schema exposes ONLY kinds a forum.write credential can post
+  const { definition } = wire(manifest, { execute: async () => ({ errorCode: 'credential_unavailable' }) })
+  const kindSpec = definition.parameters.kind
+  assert.deepEqual(kindSpec.enum, REVIEWER_SAFE)
+  assert.ok(!kindSpec.enum.includes('system'))
+  assert.ok(!kindSpec.enum.includes('decision'))
+
+  // mapping rejects a moderator-only kind BEFORE any transport call
+  let calls = 0
+  const spy = {
+    execute: async () => {
+      calls += 1
+      return { errorCode: 'credential_unavailable' }
+    },
+  }
+  const { definition: def2 } = wire(manifest, spy)
+  const out = await def2.execute({ operation: 'reply', threadId: 't-1', content: 'hi', kind: 'system' })
+  assert.equal(out.ok, false)
+  assert.equal(out.error.code, 'invalid_arguments')
+  assert.equal(calls, 0, 'transport must not run for a moderator-only kind')
+
+  // reviewer-safe kind passes validation and reaches the transport
+  const out2 = await def2.execute({ operation: 'reply', threadId: 't-1', content: 'hi', kind: 'comment' })
+  assert.equal(out2.ok, false)
+  assert.equal(out2.error.code, 'credential_unavailable')
+  assert.equal(calls, 1)
+})
+
+test('forum_search_threads: q is required (manifest schema + tool schema + mapping)', async () => {
+  const manifest = forumManifests.find((m) => m.id === 'forum_search_threads')
+
+  // manifest schema: q in required
+  const res = validateManifest(manifest)
+  assert.equal(res.ok, true)
+  assert.deepEqual(res.manifest.operations[0].arguments.required, ['q'])
+
+  // tool schema: q.required === true
+  const { definition } = wire(manifest, { execute: async () => ({ errorCode: 'credential_unavailable' }) })
+  assert.equal(definition.parameters.q.required, true)
+
+  // mapping: missing q → invalid_arguments, transport never runs
+  let calls = 0
+  const spy = {
+    execute: async () => {
+      calls += 1
+      return { errorCode: 'credential_unavailable' }
+    },
+  }
+  const { definition: def2 } = wire(manifest, spy)
+  const out = await def2.execute({ operation: 'search', page: 1 })
+  assert.equal(out.ok, false)
+  assert.equal(out.error.code, 'invalid_arguments')
+  assert.equal(calls, 0)
+
+  // with q → passes validation and reaches the transport
+  const out2 = await def2.execute({ operation: 'search', q: 'okr', page: 1 })
+  assert.equal(out2.ok, false)
+  assert.equal(out2.error.code, 'credential_unavailable')
+  assert.equal(calls, 1)
+})
+
 test('forum_reply: manifest → tool → authorized POST → structured result', async () => {
   const tokenServer = await startTokenServer()
   const forum = await startMockServer((req, res, entry) => {
@@ -156,7 +221,7 @@ test('forum_reply: manifest → tool → authorized POST → structured result',
   assert.ok(!JSON.stringify(definition.parameters).toLowerCase().includes('principalid'))
 
   // execute through the real tool definition
-  const res = await definition.execute({ operation: 'reply', threadId: 't-1', content: 'hello', kind: 'note' })
+  const res = await definition.execute({ operation: 'reply', threadId: 't-1', content: 'hello', kind: 'proposal' })
   assert.deepEqual(res, { ok: true, result: { message: { id: 'm-1', content: 'hello', threadId: 't-1' } } })
 
   // authorization propagation: audience + scope on the wire
@@ -170,7 +235,7 @@ test('forum_reply: manifest → tool → authorized POST → structured result',
   assert.equal(bizReq.method, 'POST')
   assert.equal(bizReq.pathname, '/api/threads/t-1/messages')
   assert.equal(bizReq.headers.authorization, 'Bearer tok-real')
-  assert.deepEqual(bizReq.body, { content: 'hello', kind: 'note' })
+  assert.deepEqual(bizReq.body, { content: 'hello', kind: 'proposal' })
 
   await tokenServer.close()
   await forum.close()
