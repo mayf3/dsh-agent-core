@@ -11,6 +11,7 @@
     "verify": "node scripts/verify.mjs",
     "install:integration": "node scripts/install-integration.mjs",
     "verify:product-integration": "node scripts/product-integration-v1-verify.mjs",
+    "gate1": "node scripts/gate1.mjs",
     "test": "node --test 'packages/*/test/*.test.js'"
   },
   "license": "UNLICENSED"
