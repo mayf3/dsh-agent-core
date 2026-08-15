@@ -15,6 +15,29 @@
 
 已登记决策：
 
+## D-005: Scheduler Replacement V1 — 最小 job 模型、持久化与执行语义
+
+- 状态: accepted（分支 feat/scheduler-replacement-v1 已实现并真实验收，见
+  `docs/reports/scheduler-replacement-v1.md`）
+- 日期: 2026-08-15
+- 背景: OpenClaw Gateway 内嵌 cron scheduler 是 141 个 enabled job（90 个
+  announce 回飞书群）的唯一执行者，是关闭 OpenClaw 的最大 blocker；需要最小替代
+  执行面，不复制 OpenClaw cron 系统。
+- 决策: Job 模型 = 现网字段真子集（cron/at/every + announce/none/silent + opaque
+  sessionKey + state 机）；持久化 = 单文件原子 JSON + runs.jsonl（无分布式栈）；
+  执行语义 = OpenClaw 忠实最小复刻（at 至多一次、cron/every 循环 + backoff、
+  停机补跑每 job 至多一次、invoke 前落 runningAtMs 防重复）；调用缝 = 注入式
+  `invokeAgent` seam（fake/noop，Router 后续接线）；投递缝 = opaque
+  `deliver` seam（无 Feishu SDK，`chat:oc_*` 不解释）；daemon 提交面 =
+  `scripts/agentcore-cron.mjs`（openclaw cron add/list/runs 1:1 flag）。
+- 替代方案: 完整 cron API clone——否决（现网只用了 3 个 CLI 面）；DSH
+  `dsh-schedule`——否决（无 cron/at、无跨会话存储）；分布式队列——否决（无多机
+  实证）。
+- 影响: 新增 `packages/scheduler/`（零 DSH 依赖）+ 3 个 scripts + 3 篇文档；
+  未触碰 agent-router/broker/feishu-connector/bundle/profile；迁移 =
+  `openclaw-job-import.mjs --write`（97.9% 无损，3 条无 agentId legacy job 需
+  人工补）。
+
 ## D-003: Memory V1 — per-agent file-first 长期记忆（Agent Core memory glue）
 
 - 状态: accepted（分支 feat/agent-memory-v1 已实现并真实验收，见

@@ -1,0 +1,22 @@
+{
+  "name": "@agent-core/scheduler",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core Scheduler Replacement V1 — persistent cron/at/every jobs, Control Plane execution semantics, injectable invocation + delivery seams (no Feishu SDK, no distributed stack)",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./job-model": "./src/job-model.js",
+    "./schedule": "./src/schedule.js",
+    "./store": "./src/store.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "croner": "^10.0.1"
+  },
+  "license": "UNLICENSED"
+}

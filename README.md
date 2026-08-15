@@ -39,7 +39,8 @@ dsh-agent-core/
 │   ├── feishu-connector/      # @agent-core/feishu-connector — 纯 channel 层（WS/IngressEvent/ReplyTarget）
 │   ├── workspace-bootstrap/   # @agent-core/workspace-bootstrap — agentId → workspace + DSH_HOME（幂等播种 AGENTS.md）
 │   ├── demo-server/           # @agent-core/demo-server — per-agent JSON-RPC server（persistence resume）
-│   └── owner-guard/           # @agent-core/owner-guard — 单 owner 锁（one live process per agent）
+│   ├── owner-guard/           # @agent-core/owner-guard — 单 owner 锁（one live process per agent）
+│   └── scheduler/             # @agent-core/scheduler — Scheduler Replacement V1（cron/at/every 持久 job + 注入式 invocation/delivery seam）
 ├── bundle/                    # @agent-core/bundle — dsh.bundle patch 层（persona + broker/router）
 ├── bundle-demo/               # @agent-core/bundle-demo — process-model demo patch 层
 ├── profile/                   # dsh-profile-agent-core — dsh.profile 清单（V0）
@@ -50,13 +51,16 @@ dsh-agent-core/
 │   ├── verify.mjs             # 断言验收用例证据（multiply(6,7) = 42）
 │   ├── process-model-demo.mjs # process-model 演示/基准驱动（100 常驻 fallback 已证明）
 │   ├── install-demo-home.mjs  # 安装 demo home（只增不改）
-│   └── demo-home.mjs          # demo home 路径解析
+│   ├── demo-home.mjs          # demo home 路径解析
+│   ├── scheduler-v1-verify.mjs# Scheduler V1 验收驱动（46 测试 + 兼容扫描 + 重启证据）
+│   ├── agentcore-cron.mjs     # openclaw cron add/list/runs 的 Agent Core 提交面（daemon 换用）
+│   └── openclaw-job-import.mjs# 真实 OpenClaw jobs → V1 store 迁移工具（默认 dry-run）
 └── docs/
     ├── README.md              # 整体定义 + 文档导航
     ├── CAPABILITY_MATRIX.md   # 能力矩阵（收敛单一事实源）
-    ├── investigations/        # 五主题能力调查
-    ├── decisions/             # 决策记录（ADR 模板 + D-001）
-    ├── reports/               # bootstrap-v0/feishu-connector-v0/workspace-bootstrap-v0/broker-v1/process-model-demo-v0/integration-review
+    ├── investigations/        # 能力调查（含 scheduler-replacement-audit 字段映射）
+    ├── decisions/             # 决策记录（ADR 模板 + D-001/D-002/D-003/D-005）
+    ├── reports/               # bootstrap-v0/…/scheduler-replacement-v1
     └── TRUST-BOUNDARY-REPORT.md  # 信任边界与身份伪造调查
 ```
 
