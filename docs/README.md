@@ -97,3 +97,17 @@ session cwd 指向已播种目录、AGENTS.md 进入首轮上下文、MEMORY.md 
 > 见 `investigations/scheduler-replacement-audit.md`，决策 D-005，报告
 > `reports/scheduler-replacement-v1.md`。未触碰 agent-router（invocation seam 由
 > Product Integration 后续接线）。
+
+> 更新（2026-08-15）：**Scheduler Caller Migration V1（分支
+> feat/scheduler-caller-migration-v1）已落地** —— 三个 ACTIVE OpenClaw cron
+> writers（forum-scheduler.sh v6 / unified-dispatcher.py / check-dispatch-health.py）
+> 的 cron 写面全部迁移到 Agent Core Scheduler：`openclaw cron add/list` →
+> `agentcore-cron add/list`，jobs.json 直读/直写清理 → agentcore store
+> （`AGENTCORE_SCHEDULER_STORE`，`~/.agent-core/scheduler/jobs.json`），写面走
+> 锁内 mutation authority。`openclaw gateway call config.get` 实证为只读 fallback
+> （文件不可读才触发），Agent Core 无等价配置权威 → 不新增 Config Service。
+> FORUM_STOCK_MEMBERSHIP = NO；7/7 验证门 PASS（fixture + 记录型 openclaw stub，
+> 生产 jobs.json md5 与 stock-agent 清单零变化）。调查
+> `investigations/openclaw-scheduler-caller-migration-v1.md`，报告
+> `reports/openclaw-scheduler-caller-migration-v1.md`。Scheduler 核心/
+> Workflow/Forum 业务逻辑/Kernel 零改动。
