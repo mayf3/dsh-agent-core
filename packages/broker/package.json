@@ -12,7 +12,13 @@
     "./mapping": "./src/mapping.js",
     "./identity": "./src/identity.js",
     "./registry": "./src/registry.js",
-    "./calculator.manifest": "./src/calculator.manifest.js"
+    "./credential": "./src/credential.js",
+    "./targets": "./src/targets.js",
+    "./transport": "./src/transport.js",
+    "./calculator.manifest": "./src/calculator.manifest.js",
+    "./capabilities/forum": "./src/capabilities/forum.js",
+    "./capabilities/workflow": "./src/capabilities/workflow.js",
+    "./capabilities/okr": "./src/capabilities/okr.js"
   },
   "scripts": {
     "test": "node --test"
