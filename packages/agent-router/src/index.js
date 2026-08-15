@@ -107,6 +107,32 @@ export function channelConversationId(channel, externalId) {
 }
 
 /**
+ * The BINDING NAMESPACE of one ingress (merge audit FIX 1, frozen semantics):
+ * the Feishu connector classifies `ingress.channel` as the MESSAGE SUBTYPE
+ * ('p2p' | 'group' | 'thread') — transport detail, never a Binding
+ * namespace. Every Feishu ingress binds under 'feishu'
+ * (`feishu:<conversationId>` durable Bindings keep matching; nothing is
+ * migrated or orphaned). Only the mobile Product API entry carries its own
+ * namespace ('mobile' -> `mobile:<surfaceId>`).
+ * @param {{channel?: string}} ingress
+ * @returns {string} 'feishu' | 'mobile'
+ */
+export function ingressBindingNamespace(ingress) {
+  return ingress?.channel === 'mobile' ? 'mobile' : 'feishu'
+}
+
+/**
+ * Whether this ingress belongs to the Feishu entry (and therefore owes a
+ * Feishu reply): exactly the Feishu binding namespace. p2p/group/thread
+ * subtypes all qualify; mobile Product API ingresses never do.
+ * @param {{channel?: string}} ingress
+ * @returns {boolean}
+ */
+export function feishuReplyOwed(ingress) {
+  return ingressBindingNamespace(ingress) === 'feishu'
+}
+
+/**
  * Normalize a bindingContext into a ChannelConversation id. Accepts the raw
  * ccId string or the D-002-shaped `{ channelConversationId }` object so both
  * the connector (which knows the id) and a future Product API (which may
@@ -393,23 +419,29 @@ export function apply(ctx, config) {
    * The Feishu Connector stays stateless: it only forwards the ingress; the
    * router resolves the binding and dispatches (D-002: the connector does not
    * persist Agent / Session state). Any future entry (Mobile/Web Product
-   * Gateway) delivers through this same path with its own `channel` value —
-   * the Product API sends `channel: 'mobile'` ingresses, which become
-   * ChannelConversations `mobile:<surfaceId>` and never touch the Feishu
-   * reply path.
+   * Gateway) delivers through this same path.
+   *
+   * FROZEN NAMESPACE SEMANTICS (merge audit FIX 1): the Feishu connector
+   * classifies ingress.channel as the MESSAGE SUBTYPE ('p2p' | 'group' |
+   * 'thread') — transport detail, never a Binding namespace. The Binding
+   * namespace for every Feishu ingress is 'feishu' (`feishu:<conversationId>`
+   * durable Bindings keep matching; nothing is migrated or orphaned), and
+   * only the mobile Product API entry uses its own namespace ('mobile',
+   * `mobile:<surfaceId>`). Reply is owed exactly for the Feishu entry.
    * @param {object} ingress - { channel?, chatId, conversationId, sender,
-   *   text }; `channel` defaults to 'feishu' for legacy callers.
+   *   text }; channel absent => Feishu entry (legacy callers).
    * @returns {Promise<{reply:string, agentId:string, sessionId:string,
    *   pid?:number} | {error: Error}>} the delivery result.
    */
   async function onIngress(ingress) {
-    const channel = ingress.channel ?? 'feishu'
-    const evSummary = `channel=${channel} chat=${ingress.chatId} sender=${ingress.sender?.openId?.slice(0, 6)} text="${(ingress.text ?? '').slice(0, 60)}"`
+    const namespace = ingressBindingNamespace(ingress)
+    const evSummary = `channel=${ingress.channel ?? '(none)'} chat=${ingress.chatId} sender=${ingress.sender?.openId?.slice(0, 6)} text="${(ingress.text ?? '').slice(0, 60)}"`
     const { channelConversation, binding } = await resolveChannelConversation({
-      channel,
+      channel: namespace,
       externalId: ingress.conversationId,
     })
     log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
+    const isFeishuEntry = feishuReplyOwed(ingress)
     try {
       const proc = await ensureRunning(binding.activeAgentId)
       const { reply } = await proc.turn(binding.activeSessionId, ingress.text ?? '', {
@@ -420,7 +452,7 @@ export function apply(ctx, config) {
       log.log(`agent ${binding.activeAgentId} (pid ${proc.pid}) replied: ${(reply ?? '').slice(0, 80)}`)
       // Feishu reply is the FEISHU entry's transport half; non-feishu
       // surfaces (mobile Product API) return the reply to their own caller.
-      if (feishu !== undefined && channel === 'feishu') {
+      if (feishu !== undefined && isFeishuEntry) {
         // Reply to the originating message (in-thread automatically when the
         // ingress was a topic thread).
         await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)
@@ -429,7 +461,7 @@ export function apply(ctx, config) {
       return { reply, agentId: binding.activeAgentId, sessionId: binding.activeSessionId, pid: proc.pid }
     } catch (error) {
       log.error(`delivery to ${binding.activeAgentId} failed: ${error?.message ?? error}`)
-      if (feishu !== undefined && channel === 'feishu') {
+      if (feishu !== undefined && isFeishuEntry) {
         try {
           await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error.message ?? error}`)
         } catch { /* best effort */ }
