@@ -46,3 +46,15 @@
         defaultSessionId: !!js "process.env.ROUTER_DEFAULT_SESSION ?? 'main'"
         agentProfile: !!js "process.env.ROUTER_AGENT_PROFILE ?? 'agent-core-demo'"
         bindingsStoreFile: !!js "process.env.ROUTER_BINDINGS_STORE"
+
+    # Gate 1: thin Mobile Product API over the Router (localhost only, for
+    # the Android Emulator -> adb reverse -> localhost slice). Env:
+    #   PRODUCT_API_ENABLED  set to '0' to mount without the HTTP server
+    #   PRODUCT_API_HOST     bind host (default 127.0.0.1 — no LAN exposure)
+    #   PRODUCT_API_PORT     bind port (default 8787; adb reverse tcp:8787)
+    - id: agent-core-product-api
+      name: '@agent-core/product-api'
+      config:
+        enabled: !!js "process.env.PRODUCT_API_ENABLED !== '0'"
+        host: !!js "process.env.PRODUCT_API_HOST ?? '127.0.0.1'"
+        port: !!js "Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10)"

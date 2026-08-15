@@ -177,6 +177,100 @@ test('channelConversationIdOf accepts string and {channelConversationId}', () =>
   assert.throws(() => channelConversationIdOf(''), TypeError)
 })
 
+test('channelConversationId is the single-owner id format (surface mapping)', async (t) => {
+  const { router, registry } = await freshRouter(t)
+  await registry.registerAgent({ name: 'Agent A' })
+  assert.equal(router.channelConversationId('mobile', 'surface-1'), 'mobile:surface-1')
+  // The service surface exposes the same format resolveChannelConversation uses.
+  const { channelConversation } = await router.resolveChannelConversation({ channel: 'mobile', externalId: 'surface-1' })
+  assert.equal(channelConversation.id, router.channelConversationId('mobile', 'surface-1'))
+})
+
+test('bookmark: leaving records lastSession; entering restores it (explicit > bookmark > main)', async (t) => {
+  const { router, registry } = await freshRouter(t)
+  const a = await registry.registerAgent({ name: 'Agent A' })
+  const b = await registry.registerAgent({ name: 'Agent B' })
+  await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' }) // A/main
+
+  // A -> B (bookmark (CC, A) = main); B -> A/work (bookmark (CC, B) = main).
+  await router.switchAgent(CC, b.id)
+  await router.switchAgent(CC, a.id, { targetSessionId: 'work' })
+  assert.equal(router.getBinding(CC).activeSessionId, 'work')
+
+  // A/work -> B (bookmark (CC, A) = work); B -> A must RESTORE work, not main.
+  await router.switchAgent(CC, b.id)
+  assert.equal(router.getBinding(CC).activeAgentId, b.id)
+  const restored = await router.switchAgent(CC, a.id)
+  assert.equal(restored.activeAgentId, a.id)
+  assert.equal(restored.activeSessionId, 'work', 'bookmark(surface, A) = work must win over main')
+
+  // The bookmark table is exactly the single-slot bookmarks written on leave.
+  const bookmarks = router.lastSessionsSnapshot()
+  const ccA = bookmarks.find(r => r.channelConversationId === CC && r.agentId === a.id)
+  const ccB = bookmarks.find(r => r.channelConversationId === CC && r.agentId === b.id)
+  assert.equal(ccA?.sessionId, 'work')
+  assert.equal(ccB?.sessionId, 'main')
+  assert.equal(bookmarks.length, 2, 'one slot per (surface, agent) — no history')
+})
+
+test('bookmark: a surface that never visited an Agent falls back to main', async (t) => {
+  const { router, registry } = await freshRouter(t)
+  const a = await registry.registerAgent({ name: 'Agent A' })
+  await registry.registerAgent({ name: 'Agent B' })
+  const c = await registry.registerAgent({ name: 'Agent C' })
+  await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
+
+  await router.switchAgent(CC, c.id)
+  const binding = await router.switchAgent(CC, a.id)
+  assert.equal(binding.activeAgentId, a.id)
+  assert.equal(binding.activeSessionId, 'main', 'no bookmark for A on this surface -> main')
+})
+
+test('bookmark: self-switch without explicit session is a no-op', async (t) => {
+  const { router, registry } = await freshRouter(t)
+  const a = await registry.registerAgent({ name: 'Agent A' })
+  await registry.registerAgent({ name: 'Agent B' })
+  await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
+  await router.switchAgent(CC, a.id, { targetSessionId: 'work' })
+
+  const before = router.getBinding(CC)
+  const binding = await router.switchAgent(CC, a.id)
+  assert.equal(binding.activeSessionId, 'work', 'tapping the current agent must not move sessions')
+  assert.equal(binding.updatedAt, before.updatedAt, 'no-op must not rewrite the binding')
+})
+
+test('bookmark: per-surface isolation and restart persistence', async (t) => {
+  const { router, registry, dir } = await freshRouter(t)
+  const a = await registry.registerAgent({ name: 'Agent A' })
+  const b = await registry.registerAgent({ name: 'Agent B' })
+  await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
+  await router.resolveChannelConversation({ channel: 'mobile', externalId: 'surface-1' })
+
+  // Surface-1: A -> B -> A/work; chat-main untouched (still A/main).
+  await router.switchAgent('mobile:surface-1', b.id)
+  await router.switchAgent('mobile:surface-1', a.id, { targetSessionId: 'work' })
+  assert.equal(router.getBinding('mobile:surface-1').activeSessionId, 'work')
+  assert.equal(router.getBinding(CC).activeAgentId, a.id, 'mobile switch must not touch feishu binding')
+  assert.equal(router.getBinding(CC).activeSessionId, 'main')
+
+  // Control-plane restart over the SAME store: binding AND bookmark survive.
+  const registry2 = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
+  const ctx2 = fakeCtx(new Map([
+    ['workspaceBootstrap', stubBootstrap()],
+    ['agentRegistry', {
+      listAgents: () => registry2.listAgents(),
+      getAgent: (id) => registry2.getAgent(id),
+      getDefaultAgent: () => registry2.getDefaultAgent(),
+    }],
+  ]))
+  const router2 = applyRouter(ctx2, { bindingsStoreFile: join(dir, 'bindings.json'), defaultSessionId: 'main' })
+  assert.equal(router2.getBinding('mobile:surface-1').activeSessionId, 'work', 'binding restored after restart')
+  const restored = await router2.switchAgent('mobile:surface-1', b.id)
+  assert.equal(restored.activeAgentId, b.id)
+  const again = await router2.switchAgent('mobile:surface-1', a.id)
+  assert.equal(again.activeSessionId, 'work', 'bookmark restored after restart: (surface, A) = work')
+})
+
 test('getBinding returns undefined for an unknown conversation', async (t) => {
   const { router } = await freshRouter(t)
   assert.equal(router.getBinding('feishu:never'), undefined)
