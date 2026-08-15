@@ -1,0 +1,25 @@
+# @agent-core/bundle-broker — per-agent capability broker patch layer over
+# dsh-base (mounted inside a per-agent profile, after bundle-demo).
+#
+# Trusted credential broker model: the broker runs in CHILD (relay) mode.
+# Every HTTP capability tool (Forum / Workflow / OKR) executes as a relay:
+#   model -> broker tool { capabilityId, operation, args }
+#         -> agentRpc.request('agent-core/broker', ...) -> trusted Router
+#         -> in-process Broker gateway (credential boundary, authsvc/505)
+#         -> client_credentials -> JWT -> downstream -> business result.
+# The child process holds NO credential and NO token — nothing is read from
+# env, nothing is written to disk, no Authorization header is ever built
+# here. Process-internal capabilities (external.calculator) stay local.
+#
+# The gateway lives in the CONTROL-PLANE composition (bundle-integration),
+# not here.
+
+- insert:
+    - id: agent-core-broker
+      name: '@agent-core/broker'
+      config:
+        mode: 'child'
+        # Acceptance fixture only: register broker_self_assert_test so the
+        # TRUSTED_CREDENTIAL_BROKER acceptance can prove forged child-supplied
+        # identity is IGNORED by the parent. Never set in product configs.
+        fixtureSelfAssert: !!js "process.env.BROKER_FIXTURE_SELF_ASSERT === '1'"
