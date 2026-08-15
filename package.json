@@ -8,7 +8,13 @@
     "install:profile": "node scripts/install-profile.mjs",
     "dump-config": "node scripts/run.mjs --dump-config",
     "run": "node scripts/run.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "test:scheduler": "node --test packages/scheduler/test/*.test.js",
+    "verify:scheduler": "node scripts/scheduler-v1-verify.mjs",
+    "import:openclaw-jobs": "node scripts/openclaw-job-import.mjs"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "croner": "^10.0.1"
+  }
 }
