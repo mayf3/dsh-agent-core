@@ -16,7 +16,7 @@
 - 本轮交付 **P1 的最小通用传输**：credential seam → client_credentials token →
   钉死 origin/method/path → Bearer fetch → 结构化结果/错误，加 **12 项首批 registry
   entry**（Forum ×7 / Workflow ×4 / OKR ×1）。
-- 测试 49/49 通过（21 项既有 + 21 项 transport + 7 项真实形状 fixture e2e），
+- 测试 55/55 通过（21 项既有 + 26 项 transport + 8 项真实形状 fixture e2e；含审计修复后的 6 项新增回归），
   任务要求的 14 项 PASS 矩阵全部覆盖。
 - **不做**：Router credential injection、credential provisioning、auth-service 重构、
   per-business adapter/plugin、grouped tools、35 项补齐、Process Identity 本体。
@@ -186,8 +186,8 @@ patch 未改，Config 默认值生效）；**注册不需要凭据，执行无�
 
 ## 8. TEST EVIDENCE
 
-`cd packages/broker && npm test` → **49/49 PASS**（21 既有 + 21 `test/transport.test.js`
-+ 7 `test/capabilities.test.js`）。
+`cd packages/broker && npm test` → **55/55 PASS**（21 既有 + 26 `test/transport.test.js`
++ 8 `test/capabilities.test.js`，含 §12 审计修复的 6 项新增回归）。
 
 任务要求矩阵（全部 PASS）：
 
@@ -258,6 +258,30 @@ Bearer → `{ok:true,result}`）。
 ❌ 全 35 capability 补齐 · ❌ watch/unwatch · ❌ workflow timeline ·
 ❌ workflow 写面（transition/create/cancel/archive/domain ops——机制已备，等下一批 entry）·
 ❌ OKR write · ❌ Self-Evolution · ❌ Mobile · ❌ Kernel change。
+
+## 12. AUDIT FOLLOW-UP（两轮独立审计后的修复，PR #9 更新）
+
+VERDICT = MERGE AFTER SMALL FIX。整体架构与 Generic Broker 方向不变，无重构、无新安全体系。
+本轮只修 4 项 + 一个局部 401 策略收紧：
+
+| 项 | 修复 | 位置 | 测试 |
+|---|---|---|---|
+| **DOT_SEGMENT_FIX** | `buildPath` 在通用绑定层 fail-closed：path 参数值 `"."` / `".."` → `binding_error`（`encodeURIComponent` 不改写点号，URL normalization 会把 `..` 折叠改写 manifest 钉死的 path） | `transport.js buildPath` | unit：`.`/`..` 拒绝、`a.b`/`a%2F..` 放行；e2e：`.`/`..` → `binding_error` 且 **token/business 请求数均为 0**（不发任何 HTTP 请求） |
+| **FORUM_SEARCH_Q_FIX** | `forum_search_threads.q` 改为 required（svc-forum `/api/search` 空 q → 400） | `capabilities/forum.js` | manifest `required=['q']`、tool schema `q.required=true`、缺 q → `invalid_arguments` 且 transport 不执行 |
+| **FORUM_REPLY_KIND_FIX** | `forum_reply.kind` 收紧为 reviewer-safe 枚举 `comment|proposal|challenge|clarification|evidence`（真实部署面：OpenClaw broker adapter 与 forum-access skill 的 `ALLOWED_MESSAGE_KINDS` 同源；`system`/`decision` 需 `forum.moderate`，首批只暴露 `forum.write` 路径）——tool schema 不再让模型合法选择必然 403 的 kind | `capabilities/forum.js` | tool schema enum 精确匹配且不含 system/decision；`kind:'system'` → `invalid_arguments` 且 transport 调用数为 0；`kind:'comment'` 放行到达 transport |
+| **TOKEN_CACHE_ISOLATION_TEST** | 缓存设计未改（key = `clientId|audience|scope`），只补回归证明 | `transport.js`（无改动） | A→tok-A；B→tok-B（新签发）；A→复用 tok-A（零新 token 请求）；同 client 换 audience / 换 scope 各自新签发。另扩充走私测试：`args.authorization/target/scope` 无法改变 wire 上的 Bearer / pinned path / token 请求的 resource 与 scope |
+| **401_RETRY_CHANGE** | **DONE**（局部收紧，几行）：401 重试仅允许 **GET** 或 **idempotencyKey=true** 的写请求；无 IK 的非幂等写遇到 401 直接 fail-closed（`http_4xx` 401），避免已落盘后重试造成双写。当前三个真实 service 均为 auth middleware → business handler，无已复现双写；此收紧是纯防御，不改 401 语义 | `transport.js execute` | 新增：GET 401 → 仍刷新 token 重试一次；POST 无 IK + 401 → 业务请求恰 1 次、token 恰 1 次、结果 `http_4xx`(401)；既有 IK 写 401 重试（同 key 复用）回归不变 |
+
+**本轮明确不做**（审计提出的 hardening/cleanup 全部记录不实施）：mTLS/sidecar/TPM/keyring、
+新 credential→principal mapping 表、Auth 重构、response redaction framework、token cache
+single-flight、distributed/security policy layer、35 项补齐、三业务专用 plugin；
+以及 `Math.random`→crypto UUID、uppercase scope 校验、repeated path placeholder 泛化
+（均不因"更完美"主动做）。
+
+**修复后确认**：
+- generic transport 仍无 forum/workflow/okr 逻辑特判（grep：通用模块内仅有注释/文档引用）；
+- Credential 仍是现有 `{ clientId, clientSecret }` seam，无新增 principal mapping；
+- Broker 不新增 principal mapping；Kernel change = NONE（只动 `packages/broker/**` + 本报告）。
 
 ---
 

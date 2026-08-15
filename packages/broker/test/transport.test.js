@@ -80,7 +80,8 @@ const json = (res, status, body) => {
 /**
  * A token endpoint (auth-service contract): Basic auth + form body
  * grant_type=client_credentials&resource=<aud>&scope=<scope>.
- * Returns tokens from `tokens` in order (default: one fixed token).
+ * `tokens` may be an array (issued in order) or a function `(entry) => token`
+ * (e.g. per-client tokens keyed by the Basic auth header).
  */
 async function startTokenServer({ tokens = ['tok-1'], onRequest } = {}) {
   let issued = 0
@@ -89,7 +90,7 @@ async function startTokenServer({ tokens = ['tok-1'], onRequest } = {}) {
     if (entry.method !== 'POST' || entry.pathname !== '/oauth/token') {
       return json(res, 404, { error: 'not_found' })
     }
-    const token = tokens[Math.min(issued, tokens.length - 1)]
+    const token = typeof tokens === 'function' ? tokens(entry) : tokens[Math.min(issued, tokens.length - 1)]
     issued += 1
     json(res, 200, { access_token: token, token_type: 'Bearer', expires_in: 300 })
   })
@@ -157,6 +158,12 @@ test('binding: path placeholders interpolate with exact match + encoding', () =>
   assert.equal(buildPath('/a/{x}', { x: 'a/b?c=d' }), '/a/a%2Fb%3Fc%3Dd')
   // no placeholders, no params
   assert.equal(buildPath('/plain', {}), '/plain')
+  // dot segments are rejected: URL normalization would rewrite the pinned path
+  assert.throws(() => buildPath('/a/{x}', { x: '.' }), /dot segment/)
+  assert.throws(() => buildPath('/a/{x}', { x: '..' }), /dot segment/)
+  // dotted-but-not-dot-segment values are fine (no normalization effect)
+  assert.equal(buildPath('/a/{x}', { x: 'a.b' }), '/a/a.b')
+  assert.equal(buildPath('/a/{x}', { x: 'a/..' }), '/a/a%2F..')
   // errors
   assert.throws(() => buildPath('/a/{x}', {}), /missing path parameter "x"/)
   assert.throws(() => buildPath('/a/{x}', { x: 'v', y: 'extra' }), /undeclared path parameter "y"/)
@@ -291,7 +298,7 @@ test('credential: transport uses the seam credential (spy invoked, Basic auth on
   await bizServer.close()
 })
 
-test('credential: caller self-reported agentId / principalId / credential can NEVER override the seam credential', async () => {
+test('credential: caller self-reported agentId / principalId / credential / wire controls can NEVER override the seam', async () => {
   const tokenServer = await startTokenServer()
   const bizServer = await startMockServer((req, res) => json(res, 200, { ok: true, path: req.url }))
 
@@ -301,8 +308,9 @@ test('credential: caller self-reported agentId / principalId / credential can NE
   })
   const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
 
-  // The model smuggles identity fields in args. They are NOT in any binding
-  // list, so they must not reach the wire nor influence the credential.
+  // The model smuggles identity AND wire-control fields in args. They are NOT
+  // in any binding list, so they must not reach the wire nor influence the
+  // credential / token / target / scope.
   const res = await run(manifest, transport, {
     id: 'i-1',
     agentId: 'AGENT_MALLORY',
@@ -312,14 +320,21 @@ test('credential: caller self-reported agentId / principalId / credential can NE
     clientSecret: 'secret-mallory',
     credential: { clientId: 'client-mallory', clientSecret: 'secret-mallory' },
     idempotencyKey: 'ik-mallory',
+    authorization: 'Bearer tok-mallory',
+    target: 'http://evil.example',
+    scope: 'admin everything',
   })
 
   assert.equal(res.ok, true)
-  // Token was issued for the SEAM credential, not the smuggled one.
+  // Token was issued for the SEAM credential, with the PINNED audience/scope.
   assert.equal(tokenServer.requests[0].headers.authorization, `Basic ${Buffer.from('client-a:secret-a').toString('base64')}`)
-  // The business request carries the seam token and no smuggled header/query.
+  assert.equal(tokenServer.requests[0].body.resource, 'demo-aud')
+  assert.equal(tokenServer.requests[0].body.scope, 'demo.read')
+  // The business request carries the seam token, the pinned path, and no
+  // smuggled header/query.
   const bizReq = bizServer.requests[0]
   assert.equal(bizReq.headers.authorization, 'Bearer tok-1')
+  assert.equal(bizReq.pathname, '/v1/items/i-1')
   assert.equal(bizReq.headers['idempotency-key'], undefined)
   assert.equal(bizReq.query.agentId, undefined)
 
@@ -356,6 +371,66 @@ test('credential: token caching — one token per (client, audience, scope), ref
   await fresh.execute({ manifest, operation: 'read', args: { id: 'c' } })
   assert.equal(tokenServer.requests.length, 2)
   assert.equal(bizServer.requests[2].headers.authorization, 'Bearer tok-B')
+
+  await tokenServer.close()
+  await bizServer.close()
+})
+
+test('credential: token cache is isolated per (client, audience, scope)', async () => {
+  const basic = (id, secret) => `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`
+  const tokenServer = await startTokenServer({
+    tokens: (entry) => {
+      if (entry.headers.authorization === basic('client-a', 'secret-a')) return 'tok-A'
+      if (entry.headers.authorization === basic('client-b', 'secret-b')) return 'tok-B'
+      return 'tok-unknown'
+    },
+  })
+  const bizServer = await startMockServer((req, res) => json(res, 200, { ok: true }))
+  const targetsList = [
+    { targetId: 'demo-target', allowedOrigin: bizServer.origin, audience: 'demo-aud' },
+    { targetId: 'demo-target2', allowedOrigin: bizServer.origin, audience: 'other-aud' },
+  ]
+  let current = { clientId: 'client-a', clientSecret: 'secret-a' }
+  const provider = { getCredential: async () => current }
+  const transport = createHttpTransport({ credentialProvider: provider, targets: targetsList, authServiceOrigin: tokenServer.origin })
+
+  const manifestRead = makeManifest({ requiredScopes: ['demo.read'] })
+  const manifestOtherAudience = makeManifest({
+    http: { target: 'demo-target2', method: 'GET', path: '/v2/items' },
+  })
+  const manifestWrite = makeManifest({
+    operation: 'write',
+    requiredScopes: ['demo.write'],
+    arguments: { properties: { id: { type: 'string' } }, required: ['id'] },
+    http: { target: 'demo-target', method: 'POST', path: '/v1/items', body: ['id'] },
+  })
+
+  // credential A → tok-A cached under (client-a | demo-aud | demo.read)
+  await run(manifestRead, transport, { id: '1' })
+  assert.equal(tokenServer.requests.length, 1)
+  assert.equal(bizServer.requests[0].headers.authorization, 'Bearer tok-A')
+
+  // credential B → DIFFERENT cache key ⇒ fresh token (tok-B), never tok-A
+  current = { clientId: 'client-b', clientSecret: 'secret-b' }
+  await run(manifestRead, transport, { id: '2' })
+  assert.equal(tokenServer.requests.length, 2)
+  assert.equal(bizServer.requests[1].headers.authorization, 'Bearer tok-B')
+
+  // credential A again → cache hit, still tok-A, NO new token request
+  current = { clientId: 'client-a', clientSecret: 'secret-a' }
+  await run(manifestRead, transport, { id: '3' })
+  assert.equal(tokenServer.requests.length, 2)
+  assert.equal(bizServer.requests[2].headers.authorization, 'Bearer tok-A')
+
+  // same client, DIFFERENT audience ⇒ fresh token request (no cross-audience reuse)
+  await run(manifestOtherAudience, transport, { id: 'x' })
+  assert.equal(tokenServer.requests.length, 3)
+  assert.equal(bizServer.requests[3].headers.authorization, 'Bearer tok-A')
+
+  // same client, DIFFERENT scope ⇒ fresh token request (no cross-scope reuse)
+  await run(manifestWrite, transport, { id: '4' })
+  assert.equal(tokenServer.requests.length, 4)
+  assert.equal(bizServer.requests[4].headers.authorization, 'Bearer tok-A')
 
   await tokenServer.close()
   await bizServer.close()
@@ -465,6 +540,54 @@ test('error mapping: repeated 401 → http_4xx (retry exhausted)', async () => {
   await bizServer.close()
 })
 
+test('401 policy: GET is retried once with a fresh token', async () => {
+  const tokenServer = await startTokenServer({ tokens: ['tok-1', 'tok-2'] })
+  let bizCalls = 0
+  const bizServer = await startMockServer((req, res) => {
+    bizCalls += 1
+    if (bizCalls === 1) return json(res, 401, { error: 'unauthorized' })
+    json(res, 200, { ok: true })
+  })
+  const manifest = makeManifest() // GET
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
+
+  const res = await run(manifest, transport, { id: 'x' })
+  assert.equal(res.ok, true)
+  assert.equal(bizCalls, 2)
+  assert.equal(bizServer.requests[0].headers.authorization, 'Bearer tok-1')
+  assert.equal(bizServer.requests[1].headers.authorization, 'Bearer tok-2')
+  assert.equal(tokenServer.requests.length, 2)
+
+  await tokenServer.close()
+  await bizServer.close()
+})
+
+test('401 policy: non-idempotent write fails closed WITHOUT retry (no double-apply)', async () => {
+  const tokenServer = await startTokenServer({ tokens: ['tok-1'] })
+  let bizCalls = 0
+  const bizServer = await startMockServer((req, res) => {
+    bizCalls += 1
+    json(res, 401, { error: 'unauthorized' })
+  })
+  const manifest = makeManifest({
+    operation: 'create',
+    requiredScopes: ['demo.write'],
+    arguments: { properties: { id: { type: 'string' } }, required: ['id'] },
+    http: { target: 'demo-target', method: 'POST', path: '/v1/items', body: ['id'] },
+  })
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
+
+  const res = await run(manifest, transport, { id: 'x' })
+  assert.equal(res.ok, false)
+  assert.equal(res.error.code, 'http_4xx')
+  assert.equal(res.error.status, 401)
+  assert.equal(bizCalls, 1) // the write was attempted exactly once
+  assert.equal(tokenServer.requests.length, 1) // token issued once, never refreshed
+
+  await tokenServer.close()
+  await bizServer.close()
+})
+
 test('error mapping: malformed JSON response → malformed_response', async () => {
   const tokenServer = await startTokenServer()
   const bizServer = await startMockServer((req, res) => {
@@ -511,6 +634,26 @@ test('error mapping: network failure → transport_failure', async () => {
   assert.ok(res.error.detail.length > 0)
 
   await tokenServer.close()
+})
+
+test('binding: dot-segment path params fail closed and never reach the wire', async () => {
+  const tokenServer = await startTokenServer()
+  const bizServer = await startMockServer((req, res) => json(res, 200, { ok: true }))
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
+  const manifest = makeManifest()
+
+  for (const bad of ['.', '..']) {
+    const res = await run(manifest, transport, { id: bad })
+    assert.equal(res.ok, false)
+    assert.equal(res.error.code, 'binding_error')
+    assert.ok(res.error.detail.includes('dot segment'), `detail: ${res.error.detail}`)
+  }
+  // Fail-closed BEFORE any fetch: no token request, no business request.
+  assert.equal(tokenServer.requests.length, 0)
+  assert.equal(bizServer.requests.length, 0)
+
+  await tokenServer.close()
+  await bizServer.close()
 })
 
 test('error mapping: binding failure → binding_error (missing/extra path args, unknown target)', async () => {
