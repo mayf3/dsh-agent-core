@@ -14,7 +14,7 @@
  */
 
 import {
-  copyFileSync, existsSync, lstatSync, mkdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync,
+  copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync,
 } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -103,12 +103,48 @@ export const AGENT_PROFILE_DEFS = {
       'bundle-agent-switch': 'bundle-agent-switch',
       'agent-switch': 'packages/agent-switch',
       'workspace-bootstrap': 'packages/workspace-bootstrap',
+      'bundle-broker': 'bundle-broker',
+      'broker': 'packages/broker',
     },
   },
 }
 
 /** Default per-agent profile (backwards compatible with all existing callers). */
 export const DEFAULT_AGENT_PROFILE = 'agent-core-demo'
+
+/**
+ * Dev-harness resolution bridge: symlink every @agent-core package into the
+ * REPO's own `node_modules/@agent-core`, mirroring the existing @deepseek-ai
+ * bridge (scripts/install-integration.mjs "dev resolution bridge").
+ *
+ * WHY: the per-home plugin farm (<home>/profiles/node_modules/@agent-core)
+ * is symlinked INTO the repo, and Node's ESM resolver walks the REAL path of
+ * the importing module. A package loaded through the farm therefore resolves
+ * its transitive `@agent-core/*` imports from the REPO — which fails unless
+ * the repo itself exposes the same names. The bridge closes exactly that gap
+ * (empirically verified: without it the per-agent composition dies at boot
+ * with ERR_MODULE_NOT_FOUND for '@agent-core/workspace-bootstrap' imported by
+ * agent-memory). Idempotent, additive, only touches the gitignored
+ * node_modules dir.
+ */
+export function ensureRepoCoreBridge() {
+  const bridgeDir = join(REPO, 'node_modules', '@agent-core')
+  mkdirSync(bridgeDir, { recursive: true })
+  const candidates = []
+  for (const name of readdirSync(join(REPO, 'packages'))) {
+    if (existsSync(join(REPO, 'packages', name, 'package.json'))) {
+      candidates.push([name, join(REPO, 'packages', name)])
+    }
+  }
+  for (const name of readdirSync(REPO)) {
+    if (name.startsWith('bundle-') && existsSync(join(REPO, name, 'package.json'))) {
+      candidates.push([name, join(REPO, name)])
+    }
+  }
+  for (const [pkg, target] of candidates) {
+    ensureSymlink(target, join(bridgeDir, pkg))
+  }
+}
 
 /**
  * Provision one agent home (idempotent). Returns the resolved home path.
@@ -123,6 +159,9 @@ export function provisionAgentHome(home, workspace, options = {}) {
   if (def === undefined) {
     throw new Error(`provisionAgentHome: unknown agent profile ${JSON.stringify(profile)} (known: ${Object.keys(AGENT_PROFILE_DEFS).join(', ')})`)
   }
+  // The farm symlinks into the repo; make the repo resolvable for transitive
+  // @agent-core imports (see ensureRepoCoreBridge). Idempotent, gitignored.
+  ensureRepoCoreBridge()
   const settingsSource = process.env.DSH_SETTINGS_SOURCE ?? join(homedir(), '.dsh', 'settings.yaml')
   if (!copyOnce(settingsSource, join(home, 'settings.yaml'))) {
     mkdirSync(home, { recursive: true })
