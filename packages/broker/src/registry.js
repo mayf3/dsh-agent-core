@@ -76,7 +76,13 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
       error: {
         type: 'object',
         additionalProperties: false,
-        properties: { code: { type: 'string' } },
+        properties: {
+          code: { type: 'string' },
+          // Transport-produced errors additionally carry the upstream HTTP
+          // status and a short detail (upstream body / cause), when available.
+          status: { type: 'number' },
+          detail: { type: 'string' },
+        },
       },
     },
   }
