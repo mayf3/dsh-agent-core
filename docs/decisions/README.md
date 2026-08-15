@@ -15,6 +15,32 @@
 
 已登记决策：
 
+## D-004: Router / Binding 域操作与持久化（Product Integration V1）
+
+- 状态: accepted（分支 feat/product-integration-v1 已实现并真实验收，见
+  `docs/reports/product-integration-v1.md`；全文见
+  `docs/decisions/BINDING_AND_SWITCH_V1.md`）
+- 日期: 2026-08-15
+- 背景: Integration V1 的 Binding 是 Router 进程内 Map，重启即丢；没有统一切换
+  原语；Feishu 与未来 Mobile/Web 两条入口即将并存，路由规则必须只有一套。
+- 决策: Router / Control Plane 是 Binding 的唯一 owner；唯一切换原语
+  `Router.switchAgent(bindingContext, targetAgentId, { targetSessionId? })`——
+  1) Registry 验证 target Agent 存在，2) Router 选 Session（显式 sessionId，缺省
+  main，无 LLM 猜测），3) 更新并持久化 Binding，4) 返回新 Binding。所有入口
+  （Feishu connector / 未来 Product API / per-Agent DSH switch 工具）最终都调用
+  它；入口协议不进入核心路由规则。持久化 = 原子 JSON 单文档
+  （`<home>/.dsh/bindings/bindings.json`，tmp+rename，fail-loud），无数据库 /
+  event sourcing。DSH 工具 `agent_core.switch_agent` 是纯 adapter（经 demo-server
+  parent-RPC 转发），不拥有持久化 / 查找 / Session 选择 / 入口分支 / 导航历史。
+- 替代方案: Binding 留内存（重启丢——否决）；SQLite/Redis（本轮不需要——否决）；
+  tool 侧解析 Agent/选 Session（策略必须集中 Router——否决）；Feishu/Mobile 两套
+  Router（入口协议进核心规则——否决）。
+- 影响: agent-router 新增 BindingStore + switchAgent/getBinding + registry 校验 +
+  parent-RPC 钩子；demo-server 新增无状态 parent-RPC passthrough；新增
+  `packages/agent-switch/`、`bundle-agent-switch/`、`profile-integration-agent/`；
+  bundle-integration 新增 agent-registry 行与 router 配置 env 化；验收
+  `scripts/product-integration-v1-verify.mjs`。
+
 ## D-003: Memory V1 — per-agent file-first 长期记忆（Agent Core memory glue）
 
 - 状态: accepted（分支 feat/agent-memory-v1 已实现并真实验收，见

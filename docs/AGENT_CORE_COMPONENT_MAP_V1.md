@@ -45,7 +45,7 @@
 | **Session mapping layer**（product sessionId ↔ DSH sessionId 转换） | **DO NOT BUILD** | 两者直接相等，无映射层；不建独立 `packages/agent-session/` |
 | agent-memory（跨 Session 长期经验） | **BUILD（并行开发中）** | consolidate / recall / 隔离；存储通道优先 MCP/文件；**不是第二套 session history** |
 | memory consolidation（episodic → curated） | **BUILD（memory 子项）** | 唯一完全缺失层；触发时机 OPEN |
-| agent-router / process supervisor（消息找谁 + 进程启动/恢复） | **BUILD（Integration V1 已落地）** | Binding 路由 + per-agent 进程注册表 + respawn/resume |
+| agent-router / process supervisor（消息找谁 + 进程启动/恢复） | **BUILD（Product Integration V1 已落地，PR #8）** | Binding 路由（`switchAgent` 统一域操作，Router 是 Binding 唯一 owner）+ 原子 JSON 持久化 + per-agent 进程注册表 + respawn/resume；入口协议（Feishu/未来 WebSocket）不进入核心路由规则 |
 | process identity / credential（进程凭据） | **BUILD（Phase 3）** | 方案 B：spawn 注入进程凭据 + Broker 侧 credential→principal 绑定；形态 OPEN |
 | generic Broker bridge（capability manifest → tool） | **BUILD（broker V1 已落地）** | 统一外部能力入口；Forum/Workflow/OKR 只提供 manifest+handler |
 | plugin lifecycle（实验→证据→reviewer→promote→rollback） | **BUILD（Phase 4）** | 治理流程，不重做运行时 |
