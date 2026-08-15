@@ -165,16 +165,30 @@ export function mapOpenClawJob(raw, { nowMs = Date.now() } = {}) {
 /**
  * Import an OpenClaw jobs array (e.g. `{version, jobs}` from
  * ~/.openclaw/cron/jobs.json) into V1.
- * @returns {{ jobs: object[], report: { total, imported, gaps: [{id,name,reason}], warnings: [{id,name,detail}] } }}
+ *
+ * Structural compatibility note (audit round 2): this proves IMPORTABILITY,
+ * not semantic equivalence of every future execution — report wording uses
+ * "structurally compatible / importable".
+ *
+ * In-flight jobs (state.runningAtMs set in the source) are NOT silently
+ * treated as safe: they are reported in `report.inFlight` and must be
+ * drained/decided before migration takes over execution.
+ *
+ * @returns {{ jobs: object[], report: { total, imported, gaps: [{id,name,reason}],
+ *   warnings: [{id,name,detail}], inFlight: { count, jobs: [{id,name,agentId}] } } }}
  */
 export function importOpenClawJobs(rawJobs, { nowMs = Date.now(), enabledOnly = true } = {}) {
   const jobs = []
   const gaps = []
   const warnings = []
+  const inFlight = []
   let total = 0
   for (const raw of rawJobs) {
     if (enabledOnly && raw.enabled !== true) continue
     total += 1
+    if (typeof raw?.state?.runningAtMs === 'number') {
+      inFlight.push({ id: raw.id, name: raw.name, agentId: raw.agentId ?? '(none)' })
+    }
     const { job, gap, warnings: jobWarnings } = mapOpenClawJob(raw, { nowMs })
     for (const w of jobWarnings) warnings.push({ id: raw.id, name: raw.name, detail: w })
     if (gap) {
@@ -185,6 +199,6 @@ export function importOpenClawJobs(rawJobs, { nowMs = Date.now(), enabledOnly = 
   }
   return {
     jobs,
-    report: { total, imported: jobs.length, gaps, warnings },
+    report: { total, imported: jobs.length, gaps, warnings, inFlight: { count: inFlight.length, jobs: inFlight } },
   }
 }

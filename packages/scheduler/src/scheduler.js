@@ -3,7 +3,7 @@
  *
  * Execution semantics are a faithful, minimal port of the OpenClaw gateway
  * cron scheduler (verified against the OpenClaw 2026.3.13 bundle and the
- * live 140-job inventory; see docs/investigations/scheduler-replacement-audit.md
+ * live 141-job inventory; see docs/investigations/scheduler-replacement-audit.md
  * and docs/decisions/SCHEDULER_V1.md):
  *
  *   due       : enabled, not running, not in error backoff,
@@ -18,12 +18,27 @@
  *               30s/60s/5m/15m/60m exponential backoff
  *   restart   : catch-up fires an enabled job at most ONCE per downtime —
  *               `at` only if it never ran; `cron` only if the most recent
- *               schedule occurrence is after lastRunAtMs (no replay of
- *               older missed occurrences); `every` via its stored nextRunAtMs
+ *               schedule occurrence is after lastRunAtMs (never-ran cron
+ *               jobs start from their next occurrence); `every` via its
+ *               stored nextRunAtMs
  *   no-dup    : state.runningAtMs is persisted BEFORE invocation; on
  *               restart a job with a fresh runningAtMs is skipped (assumed
  *               in-flight); a marker older than stuckRunMs (2h) is cleared
  *   disabled  : never runs; nextRunAtMs/runningAtMs are cleared
+ *
+ * AUDIT FIXES (round 2):
+ *
+ *   FIX 1 — tick single-flight: one execution pass at a time. A tick that
+ *           arrives while a pass (including startup catch-up) is running is
+ *           skipped and coalesced into one follow-up pass. In addition, a
+ *           run outcome is applied by jobId against the LATEST job state
+ *           (re-read under the store lock), never against the pre-invocation
+ *           object — so a completed invocation can neither be lost nor
+ *           duplicated after a 2h stuck-clear.
+ *   FIX 3/4 — every mutation goes through store.mutate(): cross-process lock
+ *           -> re-read latest -> apply delta -> atomic persist; RAM is
+ *           committed only after the write succeeds (persist failure rolls
+ *           back RAM and leaves disk untouched).
  *
  * The engine never touches an agent or a channel directly: it calls the
  * injected `invoker.invokeAgent(...)` and `deliver({job, result, text})`
@@ -180,14 +195,14 @@ export class Scheduler {
     this.maxCatchupPerStart = deps.maxCatchupPerStart ?? DEFAULT_MAX_CATCHUP_PER_START
     this.log = deps.log ?? defaultLog
 
-    this.jobs = [] // working copy (fresh from store on reload)
+    this.jobs = [] // working copy — ONLY replaced by load() or a successful commit
     this._timer = null
-    this._running = false
+    this._executing = false // single-flight: one execution pass at a time
+    this._rerunPending = false // a tick was skipped while executing
     this._stopped = false
     this._started = false
     this._inflight = new Set()
     this._lastTickError = null
-    this._persistPromise = Promise.resolve()
     this._catchupPromise = null
   }
 
@@ -207,35 +222,52 @@ export class Scheduler {
     return jobs
   }
 
-  async start({ autoStart = true } = {}) {
+  /**
+   * Start the engine. `catchup: false` disables the startup repair/catch-up
+   * pass (used by control-only embedders; the CLI seam does not use the
+   * engine at all and can never execute jobs).
+   */
+  async start({ autoStart = true, catchup = true } = {}) {
     if (this._started) throw new Error('Scheduler: already started')
     this._started = true
     await this.load()
-    this._repairAndCatchup()
+    if (catchup) {
+      this._executing = true
+      this._catchupPromise = (async () => {
+        try {
+          await this._repairAndCatchup()
+        } finally {
+          this._executing = false
+          if (this._rerunPending && !this._stopped) {
+            this._rerunPending = false
+            void this.tick().catch((error) => this.log.error(`tick failed: ${error?.message ?? error}`))
+          }
+        }
+      })()
+    }
     if (autoStart) this._startTimer()
     return this
   }
 
-  /** Resolve when every in-flight invocation has settled (tests + graceful shutdown). */
+  async stop() {
+    this._stopped = true
+    this._clearTimer()
+    // Every mutation is committed synchronously under the store lock; there
+    // is no pending RAM state to flush, and a blind final persist could
+    // clobber an external writer's commit (FIX 3).
+    await this.whenIdle()
+  }
+
+  /** Resolve when every execution pass and in-flight invocation has settled. */
   async whenIdle() {
     if (this._catchupPromise) {
       const pending = this._catchupPromise
       this._catchupPromise = null
       await pending
     }
-    while (this._inflight.size > 0) {
+    while (this._inflight.size > 0 || this._executing) {
       await new Promise((resolve) => setTimeout(resolve, 10))
     }
-    await this._persistPromise
-  }
-
-  async stop() {
-    this._stopped = true
-    this._clearTimer()
-    // Wait for the startup catch-up and any in-flight invocations to settle
-    // so the persisted state is final.
-    await this.whenIdle()
-    await this.store.persist(this.jobs)
   }
 
   _startTimer() {
@@ -256,94 +288,159 @@ export class Scheduler {
     }
   }
 
-  // ── startup repair + catch-up ──────────────────────────────────────────
+  // ── single-flight execution ─────────────────────────────────────────────
+
+  /**
+   * One scheduler pass. While a pass (tick or startup catch-up) is running,
+   * concurrent ticks are skipped and coalesced into one follow-up pass —
+   * a slow invocation can never overlap a second pass that would reload
+   * `this.jobs` and lose the first pass's outcome (FIX 1).
+   */
+  async tick() {
+    if (this._stopped) return 0
+    if (this._executing) {
+      this._rerunPending = true
+      return 0
+    }
+    this._executing = true
+    try {
+      let total = 0
+      do {
+        this._rerunPending = false
+        total += await this._tickOnce()
+        if (this._stopped) break
+      } while (this._rerunPending)
+      return total
+    } finally {
+      this._executing = false
+    }
+  }
+
+  /** One non-overlapping pass: refresh snapshot, normalize, collect due, fire. */
+  async _tickOnce() {
+    const now = this.nowMs()
+    await this.load() // mtime-checked reload picks up external (CLI) changes
+    let changed = false
+    const dueIds = []
+    for (const job of this.jobs) {
+      if (normalizeJobTickState(job, now)) changed = true
+      if (isRunnableJob(job, now, { catchup: false })) dueIds.push(job.id)
+    }
+    if (changed) {
+      await this._commit((jobs) => {
+        for (const job of jobs) normalizeJobTickState(job, now)
+      })
+    }
+    if (dueIds.length === 0) return 0
+    return this._fireJobs(dueIds)
+  }
+
+  // ── startup repair + catch-up (single-flight, see tick) ─────────────────
 
   /**
    * Repair pass + bounded catch-up, exactly-once per downtime:
-   *   - repair nextRunAtMs for enabled jobs that have none (or one that is
-   *     stale and not due via catch-up — OpenClaw recomputeNextRuns);
+   *   - normalize tick state and repair missing nextRunAtMs (committed);
    *   - fire due jobs (cron missed-run rule, at never-ran rule), capped at
    *     maxCatchupPerStart; the rest stay due and fire on the first tick.
    */
-  _repairAndCatchup() {
+  async _repairAndCatchup() {
     const now = this.nowMs()
     let changed = false
-    const candidates = []
+    const candidateIds = []
     for (const job of this.jobs) {
       if (normalizeJobTickState(job, now)) changed = true
-      if (isRunnableJob(job, now, { catchup: true })) candidates.push(job)
-      else if (job.enabled && job.state.nextRunAtMs === undefined) {
+      if (isRunnableJob(job, now, { catchup: true })) {
+        candidateIds.push(job.id)
+      } else if (job.enabled && job.state.nextRunAtMs === undefined) {
         const next = computeJobNextRunAtMs(job, now)
         if (next !== undefined) { job.state.nextRunAtMs = next; changed = true }
       }
     }
     if (changed) {
-      this._persistPromise = this.store.persist(this.jobs).catch((error) => {
-        this._lastTickError = error
-        this.log.error(`persist failed: ${error?.message ?? error}`)
+      await this._commit((jobs) => {
+        for (const job of jobs) {
+          normalizeJobTickState(job, now)
+          if (job.enabled && job.state.nextRunAtMs === undefined) {
+            const next = computeJobNextRunAtMs(job, now)
+            if (next !== undefined) job.state.nextRunAtMs = next
+          }
+        }
       })
     }
+    const candidates = candidateIds
+      .map((id) => this.jobs.find((j) => j.id === id))
+      .filter(Boolean)
     candidates.sort((a, b) => (a.state.nextRunAtMs ?? 0) - (b.state.nextRunAtMs ?? 0))
     const immediate = candidates.slice(0, this.maxCatchupPerStart)
     if (immediate.length > 0) {
       this.log.info(`catch-up: ${immediate.length} of ${candidates.length} due job(s) run at startup`)
-      this._catchupPromise = this._fireJobs(immediate)
+      await this._fireJobs(immediate.map((j) => j.id))
     }
   }
 
-  // ── tick ───────────────────────────────────────────────────────────────
-
-  /** One scheduler pass: reload external changes, collect due, fire. */
-  async tick() {
-    if (this._stopped) return 0
-    await this.load() // mtime-checked reload picks up CLI-seam additions
-    const now = this.nowMs()
-    let changed = false
-    for (const job of this.jobs) {
-      if (normalizeJobTickState(job, now)) changed = true
-    }
-    const due = this.jobs.filter((job) => isRunnableJob(job, now, { catchup: false }))
-    if (due.length === 0) {
-      if (changed) await this._safePersist()
-      return 0
-    }
-    return this._fireJobs(due)
-  }
+  // ── mutation authority (FIX 3/4) ────────────────────────────────────────
 
   /**
-   * Fire due jobs: mark all runningAtMs in memory, persist the batch BEFORE
-   * any invocation (crash → restart skips them; no duplicates), then invoke
-   * with a concurrency cap and apply outcomes.
+   * Apply one mutation through the store's locked read-modify-write. RAM
+   * (`this.jobs`) is replaced with the committed array only after the atomic
+   * write succeeded — a failed persist leaves RAM and disk unchanged.
    */
-  async _fireJobs(due) {
-    const now = this.nowMs()
-    for (const job of due) {
-      job.state.runningAtMs = now
-      job.state.lastError = undefined
-    }
-    await this._safePersist()
+  async _commit(fn) {
+    const { jobs, value } = await this.store.mutate(fn)
+    this.jobs = jobs
+    return value
+  }
 
-    const results = []
+  // ── fire + run ──────────────────────────────────────────────────────────
+
+  /**
+   * Fire due jobs: mark runningAtMs against the LATEST store (re-verified
+   * under the lock, so externally disabled/removed jobs are skipped), persist
+   * the batch BEFORE any invocation (crash → restart skips them; no
+   * duplicates), then invoke with a concurrency cap.
+   */
+  async _fireJobs(dueIds) {
+    const now = this.nowMs()
+    const marked = await this._commit((jobs) => {
+      const byId = new Map(jobs.map((j) => [j.id, j]))
+      const markedJobs = []
+      for (const id of dueIds) {
+        const job = byId.get(id)
+        if (job && isRunnableJob(job, now, { catchup: false })) {
+          job.state.runningAtMs = now
+          job.state.lastError = undefined
+          markedJobs.push(job)
+        }
+      }
+      return { value: markedJobs }
+    })
+
+    let fired = 0
     let cursor = 0
-    while (cursor < due.length) {
-      const batch = due.slice(cursor, cursor + this.concurrency)
+    while (cursor < marked.length) {
+      const batch = marked.slice(cursor, cursor + this.concurrency)
       cursor += this.concurrency
       let batchResults
       try {
         batchResults = await Promise.all(batch.map((job) => this._runOne(job)))
       } catch (error) {
         // _runOne never throws by contract; this is a defensive net so one
-        // broken job can never wedge the whole tick.
+        // broken job can never wedge the whole pass.
         this.log.error(`run batch failed: ${error?.message ?? error}`)
         batchResults = batch.map((job) => ({ jobId: job.id, status: 'error', error: String(error?.message ?? error) }))
       }
-      results.push(...batchResults)
+      fired += batchResults.length
     }
-    await this._safePersist()
-    return results.length
+    return fired
   }
 
-  /** One invocation + outcome application. Never throws (failures become error outcomes). */
+  /**
+   * One invocation + outcome application. Never throws (failures become
+   * error outcomes). The outcome is applied by jobId to the LATEST job
+   * object under the store lock — never to the pre-invocation object — so a
+   * concurrent update/disable can neither lose the completion nor cause a
+   * duplicated occurrence later (FIX 1 latest-state write-back).
+   */
   async _runOne(job) {
     const startedAt = this.nowMs()
     this._inflight.add(job.id)
@@ -363,18 +460,45 @@ export class Scheduler {
         startedAt,
         endedAt: this.nowMs(),
       }
-      const shouldDelete = await this._applyJobResult(job, result)
+
+      // Delivery happens OUTSIDE the store lock (it may be slow/networked).
+      let deliveryStatus
+      if (job.delivery.mode === 'none') {
+        deliveryStatus = 'not-requested'
+      } else if (result.status === 'ok') {
+        try {
+          await this.deliver({ job, result, text: result.summary })
+          result.delivered = true
+          deliveryStatus = 'delivered'
+        } catch (error) {
+          result.delivered = false
+          deliveryStatus = 'not-delivered'
+          this.log.warn(`job ${job.id.slice(0, 8)} delivery failed: ${error?.message ?? error}`)
+        }
+      } else {
+        result.delivered = false
+        deliveryStatus = 'not-delivered'
+      }
+
+      const applied = await this._commit((jobs) => {
+        const current = jobs.find((j) => j.id === job.id)
+        if (!current) return { value: { applied: false, deleted: false } }
+        const shouldDelete = applyRunState(current, result, deliveryStatus)
+        if (shouldDelete) jobs.splice(jobs.indexOf(current), 1)
+        return { value: { applied: true, deleted: shouldDelete } }
+      })
+
+      const latest = this.jobs.find((j) => j.id === job.id)
       await this.store.appendRunEvent({
         ts: result.endedAt, jobId: job.id, action: 'finished', status: result.status,
-        error: result.error, delivered: result.delivered, deliveryStatus: job.state.lastDeliveryStatus,
+        error: result.error, delivered: result.delivered, deliveryStatus,
         sessionId: result.sessionId, runAtMs: startedAt, durationMs: result.endedAt - startedAt,
-        nextRunAtMs: job.state.nextRunAtMs,
+        nextRunAtMs: latest?.state?.nextRunAtMs,
       }).catch(() => {})
-      if (shouldDelete) {
-        this.jobs = this.jobs.filter((j) => j.id !== job.id)
+      if (applied.deleted) {
         this.log.info(`job ${job.id.slice(0, 8)} (${job.name}) done (one-shot); deleted`)
       }
-      return { jobId: job.id, ...result, deleted: shouldDelete }
+      return { jobId: job.id, ...result, deleted: applied.deleted }
     } finally {
       this._inflight.delete(job.id)
     }
@@ -384,6 +508,10 @@ export class Scheduler {
     const timeoutMs = job.payload.timeoutSeconds
       ? Math.floor(job.payload.timeoutSeconds * 1000)
       : AGENT_TURN_SAFETY_TIMEOUT_MS
+    // AbortSignal seam (audit TIMEOUT_ABORT): fired on timeout so a future
+    // real invoker can cancel; fake/noop invokers may ignore it. End-to-end
+    // cancellation is verified at Scheduler → Router Final Integration.
+    const controller = new AbortController()
     const request = {
       agentId: job.agentId,
       sessionId: job.sessionKey ? job.sessionKey : job.sessionTarget === 'main' ? 'main' : defaultSessionId(job),
@@ -392,104 +520,22 @@ export class Scheduler {
       lightContext: job.payload.lightContext,
       timeoutMs,
       deliveryTarget: job.delivery,
+      signal: controller.signal,
     }
     let timer
     try {
       return await Promise.race([
         Promise.resolve(this.invoker.invokeAgent(request)),
         new Promise((_, reject) => {
-          timer = setTimeout(() => reject(new Error(TIMEOUT_ERROR_TEXT)), timeoutMs)
+          timer = setTimeout(() => {
+            controller.abort()
+            reject(new Error(TIMEOUT_ERROR_TEXT))
+          }, timeoutMs)
         }),
       ])
     } finally {
       if (timer) clearTimeout(timer)
     }
-  }
-
-  /**
-   * Apply one run outcome to the job (OpenClaw applyJobResult). Returns true
-   * when the job should be deleted (at + deleteAfterRun + ok).
-   */
-  async _applyJobResult(job, result) {
-    const now = this.nowMs()
-    job.state.runningAtMs = undefined
-    job.state.lastRunAtMs = result.startedAt
-    job.state.lastRunStatus = result.status
-    job.state.lastStatus = result.status
-    job.state.lastDurationMs = Math.max(0, result.endedAt - result.startedAt)
-    job.state.lastError = result.status === 'error' ? (result.error ?? 'error') : undefined
-    job.updatedAtMs = result.endedAt
-
-    // Delivery: announce/silent deliver the final text; the target is opaque.
-    let deliveryStatus
-    if (job.delivery.mode === 'none') {
-      deliveryStatus = 'not-requested'
-    } else if (result.status === 'ok') {
-      try {
-        await this.deliver({ job, result, text: result.summary })
-        result.delivered = true
-        deliveryStatus = 'delivered'
-      } catch (error) {
-        result.delivered = false
-        deliveryStatus = 'not-delivered'
-        this.log.warn(`job ${job.id.slice(0, 8)} delivery failed: ${error?.message ?? error}`)
-      }
-    } else {
-      result.delivered = false
-      deliveryStatus = 'not-delivered'
-    }
-    job.state.lastDeliveryStatus = deliveryStatus
-    job.state.lastDelivered = result.delivered === true
-
-    if (result.status === 'error') {
-      job.state.consecutiveErrors = (job.state.consecutiveErrors ?? 0) + 1
-    } else {
-      job.state.consecutiveErrors = 0
-    }
-
-    const schedule = job.schedule
-    if (schedule.kind === 'at' && job.deleteAfterRun === true && result.status === 'ok') {
-      job.state.nextRunAtMs = undefined
-      return true
-    }
-    if (schedule.kind === 'at') {
-      if (result.status === 'ok') {
-        job.enabled = false
-        job.state.nextRunAtMs = undefined
-      } else {
-        const consecutive = job.state.consecutiveErrors
-        if (isTransientError(result.error) && consecutive <= DEFAULT_MAX_TRANSIENT_RETRIES) {
-          job.state.nextRunAtMs = result.endedAt + errorBackoffMs(consecutive, ONE_SHOT_RETRY_BACKOFF_MS)
-        } else {
-          job.enabled = false
-          job.state.nextRunAtMs = undefined
-          this.log.warn(`one-shot job ${job.id.slice(0, 8)} (${job.name}) disabled after ${consecutive} error(s): ${result.error}`)
-        }
-      }
-      return false
-    }
-
-    // recurring (cron / every)
-    const naturalNext = computeJobNextRunAtMs(job, result.endedAt)
-    if (result.status === 'error' && job.enabled) {
-      const backoffNext = result.endedAt + errorBackoffMs(job.state.consecutiveErrors ?? 1)
-      job.state.nextRunAtMs = naturalNext !== undefined ? Math.max(naturalNext, backoffNext) : backoffNext
-    } else if (job.enabled) {
-      if (schedule.kind === 'cron') {
-        const minNext = result.endedAt + MIN_REFIRE_GAP_MS
-        job.state.nextRunAtMs = naturalNext !== undefined ? Math.max(naturalNext, minNext) : minNext
-      } else {
-        job.state.nextRunAtMs = naturalNext
-      }
-    } else {
-      job.state.nextRunAtMs = undefined
-    }
-    return false
-  }
-
-  async _safePersist() {
-    this._persistPromise = this.store.persist(this.jobs)
-    await this._persistPromise
   }
 
   // ── domain operations (Control Plane + daemon submission seam) ─────────
@@ -501,25 +547,28 @@ export class Scheduler {
     if (job.enabled && job.state.nextRunAtMs === undefined) {
       job.state.nextRunAtMs = computeJobNextRunAtMs(job, now)
     }
-    this.jobs.push(job)
-    await this._safePersist()
+    await this._commit((jobs) => {
+      jobs.push(cloneJob(job))
+    })
     return toPublicJob(job)
   }
 
   /** Update mutable fields; schedule changes recompute nextRunAtMs. */
   async updateJob(id, patch) {
-    const job = this.jobs.find((j) => j.id === id)
-    if (!job) throw new Error(`unknown job id: ${id}`)
-    const merged = { ...job, ...patch }
     const now = this.nowMs()
-    const normalized = normalizeJob(merged, { nowMs: now, id: job.id, createdAtMs: job.createdAtMs })
-    normalized.updatedAtMs = now
-    if (patch.schedule !== undefined || patch.enabled !== undefined || job.state.nextRunAtMs === undefined) {
-      normalized.state.nextRunAtMs = normalized.enabled ? computeJobNextRunAtMs(normalized, now) : undefined
-    }
-    this.jobs[this.jobs.indexOf(job)] = normalized
-    await this._safePersist()
-    return toPublicJob(normalized)
+    const updated = await this._commit((jobs) => {
+      const idx = jobs.findIndex((j) => j.id === id)
+      if (idx < 0) throw new Error(`unknown job id: ${id}`)
+      const merged = { ...jobs[idx], ...patch }
+      const normalized = normalizeJob(merged, { nowMs: now, id: jobs[idx].id, createdAtMs: jobs[idx].createdAtMs })
+      normalized.updatedAtMs = now
+      if (patch.schedule !== undefined || patch.enabled !== undefined || normalized.state.nextRunAtMs === undefined) {
+        normalized.state.nextRunAtMs = normalized.enabled ? computeJobNextRunAtMs(normalized, now) : undefined
+      }
+      jobs[idx] = normalized
+      return { value: normalized }
+    })
+    return toPublicJob(updated)
   }
 
   async enableJob(id) {
@@ -527,21 +576,23 @@ export class Scheduler {
   }
 
   async disableJob(id) {
-    const job = this.jobs.find((j) => j.id === id)
-    if (!job) throw new Error(`unknown job id: ${id}`)
-    job.enabled = false
-    job.state.nextRunAtMs = undefined
-    job.state.runningAtMs = undefined
-    await this._safePersist()
-    return toPublicJob(job)
+    return this._commit((jobs) => {
+      const job = jobs.find((j) => j.id === id)
+      if (!job) throw new Error(`unknown job id: ${id}`)
+      job.enabled = false
+      job.state.nextRunAtMs = undefined
+      job.state.runningAtMs = undefined
+      return { value: toPublicJob(job) }
+    })
   }
 
   async deleteJob(id) {
-    const before = this.jobs.length
-    this.jobs = this.jobs.filter((j) => j.id !== id)
-    if (this.jobs.length === before) throw new Error(`unknown job id: ${id}`)
-    await this._safePersist()
-    return true
+    return this._commit((jobs) => {
+      const idx = jobs.findIndex((j) => j.id === id)
+      if (idx < 0) throw new Error(`unknown job id: ${id}`)
+      jobs.splice(idx, 1)
+      return { value: true }
+    })
   }
 
   async listJobs() {
@@ -587,8 +638,9 @@ export class Scheduler {
       },
       { nowMs: now },
     )
-    this.jobs.push(job)
-    await this._safePersist()
+    await this._commit((jobs) => {
+      jobs.push(cloneJob(job))
+    })
     return toPublicJob(job)
   }
 
@@ -596,4 +648,66 @@ export class Scheduler {
   snapshotJobs() {
     return this.jobs.map(cloneJob)
   }
+}
+
+/**
+ * Apply one run outcome to the latest job object (pure sync — called inside
+ * the store lock; delivery already happened outside it). Returns true when
+ * the job should be deleted (at + deleteAfterRun + ok). Mirrors OpenClaw
+ * applyJobResult.
+ */
+export function applyRunState(job, result, deliveryStatus) {
+  job.state.runningAtMs = undefined
+  job.state.lastRunAtMs = result.startedAt
+  job.state.lastRunStatus = result.status
+  job.state.lastStatus = result.status
+  job.state.lastDurationMs = Math.max(0, result.endedAt - result.startedAt)
+  job.state.lastError = result.status === 'error' ? (result.error ?? 'error') : undefined
+  job.updatedAtMs = result.endedAt
+  job.state.lastDeliveryStatus = deliveryStatus
+  job.state.lastDelivered = result.delivered === true
+
+  if (result.status === 'error') {
+    job.state.consecutiveErrors = (job.state.consecutiveErrors ?? 0) + 1
+  } else {
+    job.state.consecutiveErrors = 0
+  }
+
+  const schedule = job.schedule
+  if (schedule.kind === 'at' && job.deleteAfterRun === true && result.status === 'ok') {
+    job.state.nextRunAtMs = undefined
+    return true
+  }
+  if (schedule.kind === 'at') {
+    if (result.status === 'ok') {
+      job.enabled = false
+      job.state.nextRunAtMs = undefined
+    } else {
+      const consecutive = job.state.consecutiveErrors
+      if (isTransientError(result.error) && consecutive <= DEFAULT_MAX_TRANSIENT_RETRIES) {
+        job.state.nextRunAtMs = result.endedAt + errorBackoffMs(consecutive, ONE_SHOT_RETRY_BACKOFF_MS)
+      } else {
+        job.enabled = false
+        job.state.nextRunAtMs = undefined
+      }
+    }
+    return false
+  }
+
+  // recurring (cron / every)
+  const naturalNext = computeJobNextRunAtMs(job, result.endedAt)
+  if (result.status === 'error' && job.enabled) {
+    const backoffNext = result.endedAt + errorBackoffMs(job.state.consecutiveErrors ?? 1)
+    job.state.nextRunAtMs = naturalNext !== undefined ? Math.max(naturalNext, backoffNext) : backoffNext
+  } else if (job.enabled) {
+    if (schedule.kind === 'cron') {
+      const minNext = result.endedAt + MIN_REFIRE_GAP_MS
+      job.state.nextRunAtMs = naturalNext !== undefined ? Math.max(naturalNext, minNext) : minNext
+    } else {
+      job.state.nextRunAtMs = naturalNext
+    }
+  } else {
+    job.state.nextRunAtMs = undefined
+  }
+  return false
 }

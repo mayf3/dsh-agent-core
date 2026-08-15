@@ -137,7 +137,10 @@ sessionId, sessionKey, runAtMs, durationMs, nextRunAtMs, model, provider, usage}
 
 ## 3. 字段映射：OpenClaw → Agent Core V1
 
-### 3.1 映射表（enabled 141 条全量无损）
+### 3.1 映射表（enabled 141 条全量 structually compatible / importable）
+
+> 措辞说明（第二轮审计）：兼容性数字的证据是「可导入 + 字段映射无损」，不是
+> 「未来每次执行的语义等价」——报告统一使用 structurally compatible / importable。
 
 | OpenClaw 字段 | 真实使用量（enabled） | V1 需要 | V1 字段 / 处理 |
 |---|---|---|---|

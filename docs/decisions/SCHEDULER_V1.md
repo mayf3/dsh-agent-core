@@ -40,6 +40,20 @@
      `scripts/agentcore-cron.mjs`（`add/list/runs/rm/enable/disable`，覆盖
      forum-scheduler / workflow-dispatcher / cron-helper 的全部 `openclaw cron`
      调用点）。本轮不改 daemon 本体。
+  8. **第二轮审计修复（2026-08-15，追加）**：
+     - tick 单飞（single-flight）：同一时刻只允许一个执行 pass（tick 或 startup
+       catch-up）；慢 invocation 期间到达的 tick 被跳过并合并为一次后续 pass；
+       运行结果按 jobId 写回**最新** job 状态（锁内重读），杜绝 stale 完成丢失 →
+       2h 卡死清除后同 occurrence 重复执行；
+     - CLI 纯控制面（control-only）：`agentcore-cron` 不再实例化引擎，永不执行
+       job / catch-up（overdue 不会被假执行、one-shot 不会被误删）；
+     - 单一 mutation authority：所有写入（引擎 + CLI）都走 `JobStore.mutate`
+       （跨进程 lockfile → 锁内重读最新 → 应用本次增量 → 原子写），整库盲写被
+       根除，CLI add/rm/enable/disable 不可能被常驻引擎的旧快照覆盖（反之亦然）；
+     - persist 失败回滚：mutation 只作用于锁内新鲜副本，原子写成功后才提交 RAM
+       ——失败时 RAM 与 disk 均不变；
+     - import 守卫：目标 store 已存在时 `--write` 默认拒绝（--force 显式覆盖），
+       源中 runningAtMs job 只报告不静默迁移。
 - 替代方案:
   - 完整复刻 OpenClaw cron API（`cron add --cron --at --every --heartbeat …`）——
     否决：现网只用了 add/list/runs 三个面；多出的面无迁移价值。

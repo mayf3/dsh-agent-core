@@ -27,6 +27,9 @@ export const INVOKE_CONTRACT = {
     lightContext: 'boolean|undefined',
     timeoutMs: 'number|undefined — run timeout (payload.timeoutSeconds*1000)',
     deliveryTarget: 'object|undefined — job.delivery verbatim (opaque)',
+    signal: 'AbortSignal|undefined — aborted when the run times out; invokers MAY '
+      + 'observe it, but ignoring it is allowed (end-to-end cancellation is '
+      + 'verified at Scheduler → Router Final Integration, audit TIMEOUT_ABORT)',
   },
   output: {
     status: "'ok' | 'error'",

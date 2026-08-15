@@ -115,8 +115,8 @@ deliver({ job, result, text })   // 仅 announce/silent 时调用；throw = not-
 
 ## 7. RESTART EVIDENCE
 
-单元测试（`packages/scheduler/test/scheduler.test.js`，46/46 pass）+ 验收驱动
-（`scripts/scheduler-v1-verify.mjs`，14/14 门全部 PASS）：
+单元测试（`packages/scheduler/test/`，58/58 pass）+ 验收驱动
+（`scripts/scheduler-v1-verify.mjs`，21/21 门全部 PASS，含第二轮审计回归）：
 
 - 重启后 job 恢复（id/schedule/nextRunAtMs/lastRunAtMs 原样）；
 - 停机期到期的 cron → 重启**恰好补跑一次**，nextRunAtMs 重算到未来；
@@ -133,14 +133,15 @@ deliver({ job, result, text })   // 仅 announce/silent 时调用；throw = not-
 （redacted fixture 快照 + 实时文件双跑）：
 
 ```
-redacted fixture (140 enabled): 137/140 lossless (97.9%)
-live ~/.openclaw/cron/jobs.json (141 enabled): 138/141 lossless (97.9%)
+redacted fixture (140 enabled): 137/140 structurally compatible / importable (97.9%)
+live ~/.openclaw/cron/jobs.json (132 enabled at latest scan): 129/132 structurally compatible / importable (97.7%)
 GAP ×3: PPT设计师每日学习 / 周内化 / 双周应用检查 — 无 agentId
 ```
 
-- **97.9% 无损**；唯一 GAP 是 3 条**现网已 broken** 的 legacy job（runs 实证
-  sessionId=null、36 次运行全 error），迁移时人工补 agentId 即解决 —— 数据缺口，
-  不是 schema 缺口，**不扩设计**。
+- **97.9% structurally compatible / importable**（证据是「可导入 + 字段映射无损」，
+  不声明未来每次执行的语义等价）；唯一 GAP 是 3 条**现网已 broken** 的 legacy
+  job（runs 实证 sessionId=null、36 次运行全 error），迁移时人工补 agentId 即解决
+  —— 数据缺口，不是 schema 缺口，**不扩设计**。
 - 90 条 announce 的 `chat:oc_*` 目标、15 条 at、8 条 every、7 条 sessionKey、
   model/lightContext/timeout 全部原样表达；休眠字段按 §2 归一化/丢弃（行为等价）。
 
@@ -164,8 +165,8 @@ GAP ×3: PPT设计师每日学习 / 周内化 / 双周应用检查 — 无 agent
 deliver: feishuConnectorDeliver })` 实例化并常驻 —— 约 10 行接线 + 把
 `agentcore-cron` 装入 launchd（或并入 Control Plane daemon）。
 
-**数据面**：`openclaw-job-import.mjs --write` 一次迁移（137~138 条无损 + 3 条补
-agentId）；imported `state` 已含 nextRunAtMs/lastRunAtMs → 重启语义无缝。
+**数据面**：`openclaw-job-import.mjs --write` 一次迁移（137~138 条 importable +
+3 条补 agentId）；imported `state` 已含 nextRunAtMs/lastRunAtMs → 重启语义无缝。
 
 **验证面**：canary = 1 个真实 agent（audit §7.4 建议 stock-agent，6 个 enabled
 job）在 Agent Core 侧跑完整周期（cron + at 各一次 + announce 回原群 + runs 可查），
@@ -184,14 +185,59 @@ broker 工具面、不依赖 Feishu SDK。
 - ❌ Mobile / 日历 UI / 斜杠命令
 - ❌ Router / Auth / Broker / Kernel 任何修改
 
-## 11. 交付物清单
+## 11. 第二轮审计修复（VERDICT: MERGE AFTER SMALL FIX）与最终证据
+
+> 两轮独立审计复现了真实缺陷：tick 重入导致 completion 写进 stale 对象（2h 卡死
+> 清除后同 occurrence 重复执行）；CLI 经 `Scheduler.start` 触发 catch-up 假执行
+> （overdue one-shot 被 NoopInvoker 直接删掉）；CLI 与常驻引擎双 whole-file writer
+> 互相覆盖（CLI add 的 job 被引擎旧快照吞掉）；persist 失败 RAM 不回滚；import
+> 可覆盖已有 store。以下为最小修复与回归证据（`packages/scheduler/test/
+> audit-fixes.test.js` + verify 驱动）。
+
+| 修复 | 实现 | 证据 |
+|---|---|---|
+| FIX 1 tick 单飞 | 引擎级 single-flight（`_executing` + 一次合并后续 pass），tick 与 startup catch-up 互斥；慢 invocation 期间到达的 tick 跳过 | `LONG_INVOKE_OVERLAPPING_TICK = PASS`（tickMs=10ms、invoke=400ms、恰好执行 1 次、runningAtMs 清除、nextRunAtMs 推进、disk 无 stale 标记） |
+| FIX 1 最新态写回 | 完成结果在锁内按 jobId 重找最新 job 应用（不依赖 invoke 前对象） | `LATEST_STATE_OUTCOME_WRITE = PASS`（updateJob mid-run 后 completion 落在新对象，disk 同时含 update + completion） |
+| FIX 2 CLI 纯控制面 | CLI 不再实例化引擎：add/list/runs/rm/enable/disable 全部走 store 读 + `mutate`；永不进入 execution/recovery | `CLI_LIST_DOES_NOT_EXECUTE = PASS`（overdue at job 经 list 后字节级不变、runs.jsonl 不存在）；`START_CATCHUP_OPTION` 同时提供 `start({catchup:false})` |
+| FIX 3 单一 mutation authority | 所有写入走 `JobStore.mutate`：**同进程 FIFO 串行**（promise chain）+ 跨进程 lockfile（O_EXCL + stale-break）→ 锁内重读最新 → 应用本次增量 → 原子写；整库盲写根除；同进程 domain op 先入队先提交（completion 必见最新） | `CLI_RESIDENT_MULTIWRITER = PASS`（引擎 invoke 中 CLI add B → 完成后 B 在 RAM + disk、A 不复活；CLI disable 不被引擎 tick 覆盖） |
+| FIX 4 persist 失败回滚 | mutation 只作用于锁内新鲜副本，原子写成功后才提交 RAM | `PERSIST_FAILURE_ROLLBACK = PASS`（create/update/disable/delete 注入写失败 → API rejects、RAM 不变、disk 不变） |
+| FIX 5 import 守卫 | 目标 store 已存在 → `--write` 默认拒绝（exit 3），`--force` 显式覆盖；源中 runningAtMs job 只报告不静默迁移 | `IMPORT_EXISTING_STORE_GUARD = PASS`（拒绝 + 现有 store 字节不变 + --force 后导入）；in-flight 报告测试 |
+| TIMEOUT_ABORT | invocation seam 接受并传递 `AbortSignal`，超时触发 abort | `TIMEOUT_ABORT_SIGNAL = PASS`（超时后 signal.aborted === true）；**end-to-end cancellation 无真实 Router invoker 可验证 → DEFERRED_TO_FINAL_INTEGRATION**（Scheduler → Router Final Integration 时验证，本轮不做 cancel framework） |
+| Asia/Shanghai croner | OpenClaw bundle 无额外 tz fallback 行（逐行核对），已 port 语义一致；补回归 | `ASIA_SHANGHAI_CRON_TZ = PASS`（跨日/DST 邻近日期/整点与奇数分钟表达式） |
+
+**最终回答（本轮验收口径）**：
+
+```
+TICK_SINGLE_FLIGHT = DONE
+LATEST_STATE_OUTCOME_WRITE = DONE
+CLI_EXECUTION_DISABLED = DONE
+SINGLE_WRITER_STORE = DONE   (locked read-modify-write mutation authority)
+PERSIST_ROLLBACK = DONE
+IMPORT_GUARD = DONE
+TIMEOUT_ABORT = seam 级 AbortSignal 已预留并测试；end-to-end = DEFERRED_TO_FINAL_INTEGRATION
+TESTS = 58/58 PASS
+VERIFY = 21/21 gates PASS (含 LONG_INVOKE_OVERLAPPING_TICK / CLI_LIST_DOES_NOT_EXECUTE /
+         CLI_RESIDENT_MULTIWRITER / PERSIST_FAILURE_ROLLBACK / IMPORT_EXISTING_STORE_GUARD)
+COMPATIBILITY = fixture 137/140 (97.9%) / live 129/132 (97.7%) structurally compatible / importable
+SCHEDULER_V2 = NO
+ROUTER_CHANGE = NONE
+FEISHU_CHANGE = NONE
+KERNEL_CHANGE = NONE
+```
+
+**迁移序列（import 工具文档化，无持续同步器）**：停/排空 stock-agent 的 OpenClaw
+写面（daemons + scheduler）→ 快照 `~/.openclaw/cron/jobs.json` → `--write --force`
+导入一次 → Agent Core 接管执行。
+
+## 12. 交付物清单（含本轮修复）
 
 - `packages/scheduler/**`（`@agent-core/scheduler`，零 DSH 依赖，仅 croner）：
-  job-model / schedule / store / scheduler 引擎 / seams / import-openclaw；
-- `packages/scheduler/test/`：46 个测试（10 项最小验收 + 重启/去重/backoff/并发/
-  兼容扫描）全绿；
+  job-model / schedule / store（锁 + mutate 单一写权）/ scheduler 引擎（单飞 +
+  最新态写回）/ seams（AbortSignal）/ import-openclaw（in-flight 报告）；
+- `packages/scheduler/test/`：**58 个测试**全绿（10 项最小验收 + 重启/去重/backoff/
+  并发/兼容扫描 + 12 项审计回归）；
 - `packages/scheduler/fixtures/openclaw-jobs-enabled.json`：redacted 真实库存快照；
-- `scripts/agentcore-cron.mjs`（daemon 提交面）、`scripts/openclaw-job-import.mjs`
-  （迁移工具）、`scripts/scheduler-v1-verify.mjs`（验收驱动，14/14 PASS）；
+- `scripts/agentcore-cron.mjs`（CLI 纯控制面提交面）、`scripts/openclaw-job-import.mjs`
+  （迁移工具 + 守卫）、`scripts/scheduler-v1-verify.mjs`（验收驱动，21/21 PASS）；
 - `docs/investigations/scheduler-replacement-audit.md`、`docs/decisions/SCHEDULER_V1.md`
-  （D-005）、本报告。
+  （D-005 + 追加）、本报告。

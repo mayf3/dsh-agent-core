@@ -33,7 +33,7 @@ const check = (name, ok, detail = '') => {
 console.log('=== Scheduler Replacement V1 — acceptance driver ===\n')
 
 // ── 1. unit + semantic test suites ──────────────────────────────────────
-console.log('[1] unit + semantic test suite')
+console.log('[1] unit + semantic test suite (incl. round-2 audit-fix regressions)')
 const testRun = spawnSync(process.execPath, ['--test', 'packages/scheduler/test/*.test.js'], {
   cwd: root,
   encoding: 'utf8',
@@ -42,14 +42,35 @@ const testSummary = /ℹ tests (\d+).*?ℹ pass (\d+).*?ℹ fail (\d+)/s.exec(te
 const [total, passed, failed] = testSummary ? [testSummary[1], testSummary[2], testSummary[3]] : ['?', '?', '?']
 check(`node --test: ${passed}/${total} pass, ${failed} fail`, failed === '0' && total !== '?')
 
+// round-2 audit regression gates (exact test-name prefixes)
+for (const gate of [
+  'LONG_INVOKE_OVERLAPPING_TICK',
+  'CLI_LIST_DOES_NOT_EXECUTE',
+  'CLI_RESIDENT_MULTIWRITER',
+  'PERSIST_FAILURE_ROLLBACK',
+  'IMPORT_EXISTING_STORE_GUARD',
+]) {
+  const gateRun = spawnSync(process.execPath, ['--test', `--test-name-pattern=${gate}`, 'packages/scheduler/test/audit-fixes.test.js'], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+  const gateSummary = /ℹ pass (\d+).*?ℹ fail (\d+)/s.exec(gateRun.stdout)
+  const gPassed = gateSummary ? Number(gateSummary[1]) : 0
+  const gFailed = gateSummary ? Number(gateSummary[2]) : 1
+  check(`${gate} = PASS`, gFailed === 0 && gPassed >= 1)
+}
+
 // ── 2. compatibility scan (fixture + live) ──────────────────────────────
-console.log('\n[2] OpenClaw job compatibility scan')
+console.log('\n[2] OpenClaw job compatibility scan (structural compatibility / importability)')
 const { importOpenClawJobs } = await import('../packages/scheduler/src/import-openclaw.js')
 
 function scan(label, jobs) {
   const { report } = importOpenClawJobs(jobs, { nowMs: Date.now() })
   const pct = report.total === 0 ? 0 : Math.round((report.imported / report.total) * 1000) / 10
-  console.log(`  ${label}: ${report.imported}/${report.total} jobs lossless (${pct}%)`)
+  console.log(`  ${label}: ${report.imported}/${report.total} structurally compatible / importable (${pct}%)`)
+  if (report.inFlight.count > 0) {
+    console.log(`    in-flight (runningAtMs in source, reported not hidden): ${report.inFlight.count}`)
+  }
   for (const gap of report.gaps) {
     console.log(`    GAP ${gap.name}: ${gap.reason}`)
   }
@@ -58,14 +79,14 @@ function scan(label, jobs) {
 
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'))
 const fixtureReport = scan('redacted fixture (captured 2026-08-15)', fixture.jobs)
-check('fixture scan >= 95% lossless', fixtureReport.imported / fixtureReport.total >= 0.95)
+check('fixture scan >= 95% importable', fixtureReport.imported / fixtureReport.total >= 0.95)
 
 const livePath = join(homedir(), '.openclaw', 'cron', 'jobs.json')
 if (existsSync(livePath)) {
   const live = JSON.parse(readFileSync(livePath, 'utf8'))
   const enabled = (live.jobs ?? []).filter((j) => j.enabled === true)
   const liveReport = scan(`live ~/.openclaw/cron/jobs.json (${enabled.length} enabled)`, enabled)
-  check('live scan >= 95% lossless', liveReport.imported / liveReport.total >= 0.95)
+  check('live scan >= 95% importable', liveReport.imported / liveReport.total >= 0.95)
 } else {
   console.log('  (live OpenClaw inventory not present; fixture scan only)')
 }

@@ -90,7 +90,8 @@ session cwd 指向已播种目录、AGENTS.md 进入首轮上下文、MEMORY.md 
 > cron/at/every 持久 job + OpenClaw 同款执行语义 + 注入式 invocation/delivery
 > seam，无 Feishu SDK）、`scripts/agentcore-cron.mjs`（openclaw cron
 > add/list/runs 提交面）、`scripts/openclaw-job-import.mjs`（迁移工具，97.9%
-> 无损）、46 测试全绿 + `scripts/scheduler-v1-verify.mjs` 14 门全过。实证字段映射
+> importable）、58 测试全绿 + `scripts/scheduler-v1-verify.mjs` 21 门全过（含第二轮
+> 审计回归：tick 单飞 / CLI 纯控制面 / 单一写权 / persist 回滚 / import 守卫）。实证字段映射
 > 见 `investigations/scheduler-replacement-audit.md`，决策 D-005，报告
 > `reports/scheduler-replacement-v1.md`。未触碰 agent-router（invocation seam 由
 > Product Integration 后续接线）。
