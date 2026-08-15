@@ -105,19 +105,19 @@ function linkFarm(home, entries) {
   }
 }
 
-/** Provision one agent home + workspace for the integration-agent profile. */
+/**
+ * Prepare one agent's workspace directory ONLY. Everything else (DSH_HOME,
+ * settings/credentials, the per-agent profile and its plugin farm) is
+ * installed by the ROUTER's own spawn path (ensureRunning ->
+ * provisionAgentHome with cfg.agentProfile) — the verification must NOT
+ * pre-provision the profile/memory/switch on the agents' behalf (FIX 1
+ * regression guard: a fresh Agent must work without any external
+ * provisioning).
+ */
 function provisionAgent(agentId) {
   const home = join(HOMES_DIR, agentId)
   const workspace = join(AGENTS_DIR, agentId)
-  provisionAgentHome(home, workspace)
-  provisionProfile(home, AGENT_PROFILE, join(REPO, 'profile-integration-agent'))
-  linkFarm(home, {
-    'bundle-memory': join(REPO, 'bundle-memory'),
-    'agent-memory': join(REPO, 'packages', 'agent-memory'),
-    'bundle-agent-switch': join(REPO, 'bundle-agent-switch'),
-    'agent-switch': join(REPO, 'packages', 'agent-switch'),
-    'workspace-bootstrap': join(REPO, 'packages', 'workspace-bootstrap'),
-  })
+  mkdirSync(workspace, { recursive: true }) // AGENTS.md needs a cwd; the home is the router's job
   return { home, workspace }
 }
 
@@ -195,6 +195,17 @@ async function waitForMemory(agentId, needle, timeoutMs = MEMORY_WAIT_MS) {
     if (text.includes(needle)) return text
     if (Date.now() - started > timeoutMs) return text
     await sleep(2000)
+  }
+}
+
+/** Poll an AgentProcess's stderr until it contains `needle` (FIX 1 check). */
+async function waitForProcStderr(proc, needle, timeoutMs = 60000) {
+  const started = Date.now()
+  for (;;) {
+    if (proc.stderr.includes(needle)) return true
+    if (proc.exit !== undefined) return false
+    if (Date.now() - started > timeoutMs) return false
+    await sleep(500)
   }
 }
 
@@ -418,6 +429,7 @@ async function main() {
     listAgents: () => registry2.listAgents(),
     getAgent: (id) => registry2.getAgent(id),
     getDefaultAgent: () => registry2.getDefaultAgent(),
+    registerAgent: (input) => registry2.registerAgent(input),
   })
   const router2 = applyRouter(ctx2, {
     bindingsStoreFile: BINDINGS_STORE,
@@ -429,6 +441,21 @@ async function main() {
     `${CC_MAIN} still ${router2.getBinding(CC_MAIN)?.activeAgentId} after restart (was ${agentB.id})`)
   record('PHASE7_RESTART_KEEPS_OTHER', router2.getBinding(CC_OTHER)?.activeAgentId === agentA.id,
     `${CC_OTHER} still ${router2.getBinding(CC_OTHER)?.activeAgentId}`)
+
+  // ------------------------------------------------- phase 7.5 (FIX 1)
+  console.log('\n[phase 7.5] FIX1: a fresh Agent spawns with ZERO pre-provisioning')
+  const agentC = await registry2.registerAgent({ name: 'Agent C' })
+  // Deliberately NO provisionAgent(agentC.id): no profile, no memory, no
+  // farm. The Router's own spawn path (ensureRunning -> provisionAgentHome
+  // with cfg.agentProfile) must install everything the integration-agent
+  // composition needs, or the process fails with "profile does not exist".
+  const procC = await router2.ensureRunning(agentC.id)
+  const profileInstalled = existsSync(join(agentHome(agentC.id), 'profiles', AGENT_PROFILE, 'package.json'))
+  const farmComplete = existsSync(join(agentHome(agentC.id), 'profiles', 'node_modules', '@agent-core', 'agent-memory'))
+    && existsSync(join(agentHome(agentC.id), 'profiles', 'node_modules', '@agent-core', 'agent-switch'))
+  const memoryMounted = await waitForProcStderr(procC, '[agent-memory] mounted')
+  record('FIX1_ROUTER_SPAWN_SELF_SUFFICIENT', procC.exit === undefined && profileInstalled && farmComplete && memoryMounted,
+    `pid=${procC.pid} profile=${profileInstalled} farm=${farmComplete} memory-mounted=${memoryMounted} (no pre-provisioning)`)
   await ctx2.disposeAll()
 
   // ------------------------------------------------------------- phase 8

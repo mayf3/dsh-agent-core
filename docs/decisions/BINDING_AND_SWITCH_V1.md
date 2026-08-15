@@ -59,6 +59,16 @@ per-Agent DSH tool  -> parent-RPC relay          -> Router.switchAgent
   `{targetAgentId, targetSessionId?}` 到 Router.switchAgent，不拥有持久化 / 查找 /
   Session 选择 / 入口分支 / 导航历史。
 
+### 2.5 per-Agent turn single-flight（审计定案，FIX 2）
+
+DSH 原生 queue 实证为 **per native Session FIFO**（同 Session turn 不 overlap，
+tool call 全程保持 running；不同 Session 同一 process 可以并行）。Agent Core
+产品语义：**同一个 Agent 一次只处理一个 routed turn，后续排队**。落实方式 =
+AgentProcess 边界 per-process promise chain（single-flight）：turn A 完整结束
+（含 tools / parent-RPC / turn/end）后才允许 turn B。不造 mailbox / scheduler /
+turnId / AsyncLocalStorage，DSH queue 未动。此保证同时使 switch tool relay 的
+`activeBindingContext` 永不跨 turn 覆盖。
+
 ### 2.3 持久化 = 原子 JSON，无数据库
 
 - 单文档 `<home>/.dsh/bindings/bindings.json`（config `bindingsStoreFile` 可覆盖，

@@ -6,7 +6,8 @@
 > 关联决策：D-004 `docs/decisions/BINDING_AND_SWITCH_V1.md`（Router / Binding
 > 域操作与持久化）
 > 验收驱动：`scripts/product-integration-v1-verify.mjs`（真实 DSH 进程 + 真实
-> 模型 turn，28 项断言全 PASS）
+> 模型 turn，29 项断言全 PASS，含 FIX1 自足 spawn 回归检查）
+> 审计修复：PR #10 两轮审计后按最小修复落地（FIX 1–3，见 §14）
 
 ## 0. 一句话总结
 
@@ -247,13 +248,73 @@ Dashboard ❌。跨组件发现一律只记录 integration need（§11）。
 
 | 文件 | 内容 |
 |---|---|
-| `packages/agent-router/src/binding-store.js` | Binding 持久化（原子 JSON，fail-loud） |
+| `packages/agent-router/src/binding-store.js` | Binding 持久化（原子 JSON，fail-loud + 事务回滚） |
 | `packages/agent-router/src/index.js` | switchAgent / getBinding / async resolve / registry 校验 / rpc 钩子 |
-| `packages/agent-router/src/process.js` | env 注入（DSH_AGENT_ID）、turn bindingContext、parent-RPC relay、shutdown bug 修复 |
+| `packages/agent-router/src/process.js` | env 注入（DSH_AGENT_ID）、turn bindingContext、per-process single-flight turn、parent-RPC relay、shutdown bug 修复 |
 | `packages/demo-server/src/index.js` | 无状态 parent-RPC passthrough（`ctx.agentRpc`） |
 | `packages/agent-switch/` | `agent_core_switch_agent` adapter（新） |
 | `bundle-agent-switch/` + `profile-integration-agent/` | per-Agent 组合（新） |
 | `bundle-integration/cordis.patch.yml` | registry 行 + router 配置 env 化 |
-| `scripts/product-integration-v1-verify.mjs` | 28 项验收驱动（新） |
+| `scripts/demo-home.mjs` | 共享 per-Agent provisioning，表驱动 profile + farm（FIX 1） |
+| `scripts/product-integration-v1-verify.mjs` | 29 项验收驱动（新，不再 pre-provision） |
 | `docs/decisions/BINDING_AND_SWITCH_V1.md` | D-004（新） |
-| 单元测试 | binding-store 7 项 + router 域操作 10 项 + switch adapter 5 项（全部通过；仓库全部 124 项测试通过） |
+| 单元测试 | binding-store 9 项 + router 域操作 10 项 + single-flight 4 项 + switch adapter 5 项（全部通过；仓库全部 130 项测试通过） |
+
+## 14. 审计最小修复（PR #10 audit round 3，只修 3 项）
+
+DSH queue 事实（源码 + 实证，见本轮调查输出）：**per native Session FIFO；同
+Session turn 不 overlap；tool call 全程保持 running；不同 Session 同一 process
+可以并行**。据此冻结产品语义：不同 Agent → 不同 process → 可并行；**同一个
+Agent → 一次只处理一个 routed turn，后续排队**。Agent Core 只在 AgentProcess
+边界补 per-process single-flight，不造 mailbox / turnId / scheduler。
+
+### FIX 1 — per-Agent profile provisioning（merge 前真实缺口）
+
+- 修复前：Router spawn 路径（`ensureRunning → provisionAgentHome`）只装
+  `agent-core-demo` + {bundle-demo, owner-guard, demo-server}；验收依赖的
+  integration-agent profile / memory / switch 仅靠 verification driver
+  pre-provision 掩盖（真实部署 `ROUTER_AGENT_PROFILE=agent-core-integration-agent`
+  会崩 `profile does not exist`，已复现）。
+- 修复：`scripts/demo-home.mjs` 的共享 provisioner 改为**表驱动**
+  （`AGENT_PROFILE_DEFS`：profile 名 → 仓库 profile 目录 + 该组合需要的 farm
+  链接）；`ensureRunning` 按 `cfg.agentProfile` 安装。默认 `agent-core-demo`
+  不变（全部旧调用方向后兼容）。
+- 回归验证（driver phase 7.5）：全新注册 Agent C，**零 pre-provision** →
+  `router.ensureRunning` → 进程起来 + profile 落盘 + memory 插件 mount；
+  driver 对 A/B 也删除了额外 pre-provision（AGENTS.md 除外），整条验收现在
+  走的就是正常生产 spawn 路径。
+- 不改变 Workspace Bootstrap ownership（路径映射仍在 workspace-bootstrap）。
+
+### FIX 2 — AgentProcess per-process single-flight turn
+
+- 事实：`activeBindingContext` 是 AgentProcess 单个共享字段；DSH 只保证
+  per-Session 串行，跨 Session 同进程 turn 真实并行（实证），同 Session 排队
+  turn 也会提前覆盖该字段 → switch tool 可能切错 Binding。
+- 修复：`AgentProcess.turn()` 外层 per-AgentProcess promise chain
+  （single-flight）：turn A（set bindingContext A → 整个 DSH turn → tools /
+  parent-RPC → turn/end → clear A）**完整结束后**才允许 turn B。失败 turn 不
+  卡死队列（chain 吞 rejection）。无新 mailbox / scheduler / ALS / turnId，
+  DSH queue 未动。
+- 确定性测试（`test/single-flight.test.js`，fake child 无进程无模型）：同
+  Session 排队、跨 Session 排队、A 执行期间 switch tool 拿到 A 的
+  bindingContext、失败 turn 不 wedged。全部通过。
+
+### FIX 3 — BindingStore persistence failure rollback
+
+- 修复前：`mutate Map → persist → persist failure → Map 未恢复` → RAM=new /
+  disk=old / caller=failure 三态分裂。
+- 修复：直接复用 AgentRegistry 模式——`enqueue` 带
+  `snapshot → mutate → persist → catch restore(snapshot)`。
+- failure injection 测试（test 8/9）：persist 抛错 → switch 拒绝 → RAM 不变 →
+  disk 字节不变 → 恢复后下一次写正常；新建 Binding 失败也不留 phantom row。
+
+### 明确不改
+
+- `ensureRunning`：不加 in-flight spawn framework（实证 check→spawn→set 无
+  await，30 并发调用 1 pid）；只加注释固化不变式。
+- `agent_core_switch_agent`：保留现有实现与验收，不删除、不扩展；定位 =
+  Router.switchAgent 之上的正交 enhancement。
+
+最终状态：全部 unit tests 130/130 PASS；Product Integration real verification
+29 项断言全 PASS（不再依赖任何正常生产路径之外的 per-Agent pre-provision）；
+Kernel change = NONE。

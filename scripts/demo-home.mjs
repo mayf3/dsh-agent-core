@@ -71,11 +71,58 @@ const MINIMAL_SETTINGS = [
 ].join('\n')
 
 /**
+ * Per-agent profile definitions: profile name → repo profile dir + the
+ * out-of-tree plugin farm links the profile's composition needs.
+ *
+ * The Router / Control Plane spawns every Agent through `dsh --profile
+ * <agentProfile>`; this table is the SINGLE place that maps a profile name
+ * to what must be installed into the Agent's DSH_HOME so that spawn is
+ * self-sufficient (no verification-driver pre-provisioning allowed).
+ *
+ * - profile files are COPIES (the CLI rewrites cordis.yml inside the profile
+ *   dir on every boot, so sharing one symlinked dir across agents is unsafe);
+ * - farm links are SYMLINKS into the repo (additive, idempotent).
+ */
+export const AGENT_PROFILE_DEFS = {
+  'agent-core-demo': {
+    repoDir: 'profile-demo',
+    farmLinks: {
+      'bundle-demo': 'bundle-demo',
+      'owner-guard': 'packages/owner-guard',
+      'demo-server': 'packages/demo-server',
+    },
+  },
+  'agent-core-integration-agent': {
+    repoDir: 'profile-integration-agent',
+    farmLinks: {
+      'bundle-demo': 'bundle-demo',
+      'owner-guard': 'packages/owner-guard',
+      'demo-server': 'packages/demo-server',
+      'bundle-memory': 'bundle-memory',
+      'agent-memory': 'packages/agent-memory',
+      'bundle-agent-switch': 'bundle-agent-switch',
+      'agent-switch': 'packages/agent-switch',
+      'workspace-bootstrap': 'packages/workspace-bootstrap',
+    },
+  },
+}
+
+/** Default per-agent profile (backwards compatible with all existing callers). */
+export const DEFAULT_AGENT_PROFILE = 'agent-core-demo'
+
+/**
  * Provision one agent home (idempotent). Returns the resolved home path.
  * @param home - absolute home directory (the agent's DSH_HOME).
  * @param workspace - absolute working directory for the agent process.
+ * @param options - `{ profile }` — the per-agent profile to install
+ *   (default 'agent-core-demo'); unknown profile names fail loud.
  */
-export function provisionAgentHome(home, workspace) {
+export function provisionAgentHome(home, workspace, options = {}) {
+  const profile = options.profile ?? DEFAULT_AGENT_PROFILE
+  const def = AGENT_PROFILE_DEFS[profile]
+  if (def === undefined) {
+    throw new Error(`provisionAgentHome: unknown agent profile ${JSON.stringify(profile)} (known: ${Object.keys(AGENT_PROFILE_DEFS).join(', ')})`)
+  }
   const settingsSource = process.env.DSH_SETTINGS_SOURCE ?? join(homedir(), '.dsh', 'settings.yaml')
   if (!copyOnce(settingsSource, join(home, 'settings.yaml'))) {
     mkdirSync(home, { recursive: true })
@@ -83,20 +130,20 @@ export function provisionAgentHome(home, workspace) {
   }
   copyOnce(join(homedir(), '.dsh', '.credentials.yaml'), join(home, '.credentials.yaml'))
 
-  // The demo profile (copies — the CLI rewrites cordis.yml inside it).
-  const profileDir = join(home, 'profiles', 'agent-core-demo')
+  // The agent profile (copies — the CLI rewrites cordis.yml inside it).
+  const profileDir = join(home, 'profiles', profile)
   mkdirSync(profileDir, { recursive: true })
   for (const file of ['package.json', 'cordis.patch.yml']) {
     if (existsSync(join(profileDir, file))) continue
-    copyFileSync(join(REPO, 'profile-demo', file), join(profileDir, file))
+    copyFileSync(join(REPO, def.repoDir, file), join(profileDir, file))
   }
 
-  // Out-of-tree plugin resolution links.
+  // Out-of-tree plugin resolution links for this profile's composition.
   const farm = join(home, 'profiles', 'node_modules')
   const agentCoreFarm = join(farm, '@agent-core')
-  ensureSymlink(join(REPO, 'bundle-demo'), join(agentCoreFarm, 'bundle-demo'))
-  ensureSymlink(join(REPO, 'packages', 'owner-guard'), join(agentCoreFarm, 'owner-guard'))
-  ensureSymlink(join(REPO, 'packages', 'demo-server'), join(agentCoreFarm, 'demo-server'))
+  for (const [pkg, relTarget] of Object.entries(def.farmLinks)) {
+    ensureSymlink(join(REPO, relTarget), join(agentCoreFarm, pkg))
+  }
 
   mkdirSync(workspace, { recursive: true })
   return home
