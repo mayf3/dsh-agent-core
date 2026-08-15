@@ -23,7 +23,6 @@ import { spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cliBin } from '../../../scripts/demo-home.mjs'
-import { loadCredentialFor } from './credentials.js'
 
 const DEFAULT_PROFILE = 'agent-core-demo'
 
@@ -83,25 +82,9 @@ export class AgentProcess {
 
   /** Spawn the dsh CLI child. Does not wait for readiness. */
   spawn() {
-    const env = agentEnv(this.home, this.env)
-    // Process Identity Integration V1: inject THIS agent's own existing
-    // MachineClient credential into ITS process environment. The Broker
-    // credential seam inside the process (packages/broker/src/credential.js)
-    // consumes it and exchanges it at auth-service client_credentials, so
-    // every capability call carries exactly this agent's identity. The
-    // credential is resolved per agentId from the trusted control-plane
-    // store (AGENT_CORE_CREDENTIALS_FILE); an agent without an entry spawns
-    // credential-less and the broker fails closed. The store path itself is
-    // never forwarded to the child.
-    const credential = loadCredentialFor(process.env.AGENT_CORE_CREDENTIALS_FILE, this.agentId)
-    if (credential !== undefined) {
-      env.AGENT_CORE_BROKER_CLIENT_ID = credential.clientId
-      env.AGENT_CORE_BROKER_CLIENT_SECRET = credential.clientSecret
-    }
-    delete env.AGENT_CORE_CREDENTIALS_FILE
     const child = spawn(process.execPath, [cliBin(), '--profile', this.profile], {
       cwd: this.workspace,
-      env,
+      env: agentEnv(this.home, this.env),
       stdio: ['pipe', 'pipe', 'pipe'],
     })
     this.child = child
