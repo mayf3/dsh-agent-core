@@ -233,7 +233,8 @@ for entry in \
   "product-api:../../../../app/packages/product-api" \
   "broker:../../../../app/packages/broker" \
   "workspace-bootstrap:../../../../app/packages/workspace-bootstrap" \
-  "agent-definition:../../../../app/packages/agent-definition"; do
+  "agent-definition:../../../../app/packages/agent-definition" \
+  "notification-ingress:../../../../app/packages/notification-ingress"; do
   name="${entry%%:*}"; target="${entry#*:}"
   ln -sfn "$target" "home/profiles/node_modules/@agent-core/$name"
 done
