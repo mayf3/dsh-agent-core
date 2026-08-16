@@ -86,13 +86,16 @@ const INGRESS = `http://127.0.0.1:${INGRESS_PORT}`
 
 const ACCEPTANCE_MODEL = 'deepseek-v4-flash'
 const ACCEPTANCE_PROVIDER = 'oc-go'
-// The model key travels in the CP env under the name agentEnv() checks
-// (OPENCODE_GO_API_KEY); with it defined the 505 parent NEVER reads the
-// child's 0600 502-owned .credentials.yaml (reading it as 505 is EACCES —
-// the v2-proven contract, trusted-credential-505-final-v2-run.mjs). Same
-// key source and extraction as that driver.
-const ACCEPTANCE_KEY_ENV = 'OPENCODE_GO_API_KEY'
-const ACCEPTANCE_KEY_FILE = process.env.PIV1_ACCEPTANCE_KEY_FILE ?? '/Users/yanfenma/.dsh/.credentials.yaml'
+const ACCEPTANCE_PROVIDER_API = 'openai-completions'
+const ACCEPTANCE_PROVIDER_BASE_URL = 'https://opencode.ai/zen/go/v1'
+// The acceptance key travels in the CP env under BOTH names the chain
+// checks: OC_GO_API_KEY is the settings.yaml apiKeyEnv contract the child's
+// harness reads for the oc-go route (compat-proven), and OPENCODE_GO_API_KEY
+// keeps agentEnv() from reading the child's 0600 502-owned .credentials.yaml
+// (reading it as 505 is EACCES). Same key source + provider block as
+// trusted-cp-hardening-v1-verify.mjs (51/51).
+const ACCEPTANCE_KEY_ENV = 'OC_GO_API_KEY'
+const ACCEPTANCE_KEY_FILE = process.env.PIV1_ACCEPTANCE_KEY_FILE ?? '/Users/yanfenma/.claude/oc-go.txt'
 
 const REAL_CLIENT_ID = 'mc_oc_AdXrOjACKpodtqSPo3HA5fq_'
 const REAL_SECRET_FILE = '/Users/yanfenma/.openclaw/credentials/agent-knowledge-curator-agent-secret'
@@ -119,9 +122,13 @@ function asAuthsvc(cmd) { return sh(`sudo -u authsvc sh -c ${JSON.stringify(cmd)
 /** Load the acceptance-only model key into env (NEVER echoed). */
 function injectAcceptanceKey() {
   if (!existsSync(ACCEPTANCE_KEY_FILE)) throw new Error(`acceptance model key file missing: ${ACCEPTANCE_KEY_FILE}`)
-  const match = readFileSync(ACCEPTANCE_KEY_FILE, 'utf8').match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)
-  if (match === null || match[1] === '') throw new Error(`cannot read OPENCODE_GO_API_KEY from ${ACCEPTANCE_KEY_FILE}`)
-  process.env[ACCEPTANCE_KEY_ENV] = match[1]
+  const key = readFileSync(ACCEPTANCE_KEY_FILE, 'utf8').trim()
+  if (key === '') throw new Error(`acceptance model key file is empty: ${ACCEPTANCE_KEY_FILE}`)
+  // OC_GO_API_KEY: the settings apiKeyEnv contract for the oc-go route.
+  // OPENCODE_GO_API_KEY: keeps agentEnv() from reading the child's 0600
+  // credentials file (EACCES as 505) — the check only needs the name defined.
+  process.env[ACCEPTANCE_KEY_ENV] = key
+  process.env.OPENCODE_GO_API_KEY = key
 }
 
 // ── pick a free port for the acceptance product-api/ingress ──────────────────
@@ -423,6 +430,50 @@ async function main() {
   const reach = as502(`stat -f '%Sp' ${JSON.stringify(join(PROD_LAYOUT.workspacesRoot, agent.id))} ${JSON.stringify(join(PROD_LAYOUT.homesRoot, agent.id))}`)
   record('CHILD_CAN_REACH_TREES', reach.status === 0, reach.status === 0 ? 'uid 502 traverses to its workspace + home' : `uid-502 stat status=${reach.status} — check the traverse bit on /Users/authsvc and the production root`)
 
+  // ── acceptance-only child settings override (oc-go route) ─────────────────
+  // The child loads its OWN home settings.yaml (copied from the authsvc
+  // source at provision time), which routes agent-default-model to the
+  // quota-limited 'opencode-go' provider — the exact empty-reply root cause
+  // TRUSTED_CP_AGENT_DEFINITION_COMPAT_V1 fixed (1ff8dfe). Apply the same
+  // acceptance-only rewrite: rebuild llm-pi-ai + agent-default-model to the
+  // oc-go route, preserve every other block, re-own the file to 502.
+  const providersBlock = [
+    'llm-pi-ai:',
+    '  providers:',
+    `    ${ACCEPTANCE_PROVIDER}:`,
+    `      apiKeyEnv: ${ACCEPTANCE_KEY_ENV}`,
+    `      api: ${ACCEPTANCE_PROVIDER_API}`,
+    `      baseURL: ${ACCEPTANCE_PROVIDER_BASE_URL}`,
+    '      displayName: oc-go',
+    '      models:',
+    `        - id: ${ACCEPTANCE_MODEL}`,
+  ].join('\n')
+  const defaultModelBlock = [
+    'agent-default-model:',
+    `  provider: ${ACCEPTANCE_PROVIDER}`,
+    `  model: ${ACCEPTANCE_MODEL}`,
+  ].join('\n')
+  const applySettingsOverride = (settingsPath) => {
+    const original = existsSync(settingsPath) ? readFileSync(settingsPath, 'utf8') : ''
+    const blocks = (original || '').replace(/\r/g, '').split(/\n(?=\S)/).filter((s) => s.trim() !== '')
+    const out = []
+    let hasLlmpiai = false
+    let hasDefModel = false
+    for (const block of blocks) {
+      if (/^llm-pi-ai:/m.test(block)) { out.push(providersBlock); hasLlmpiai = true; continue }
+      if (/^agent-default-model:/m.test(block)) { out.push(defaultModelBlock); hasDefModel = true; continue }
+      out.push(block)
+    }
+    if (!hasLlmpiai) out.push(providersBlock)
+    if (!hasDefModel) out.push(defaultModelBlock)
+    writeFileSync(settingsPath, `${out.join('\n\n')}\n`)
+  }
+  const childSettingsPath = join(PROD_LAYOUT.homesRoot, agent.id, 'settings.yaml')
+  applySettingsOverride(childSettingsPath)
+  chownSync(childSettingsPath, USER_YANFENMA.uid, USER_YANFENMA.gid)
+  chmodSync(childSettingsPath, 0o644)
+  record('MODEL_OVERRIDE_APPLIED', true, `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} -> child home settings only (production default untouched)`)
+
   injectAcceptanceKey()
 
   // ── boot the production runtime as uid 505 from the trusted install ────────
@@ -502,8 +553,11 @@ async function main() {
     process.exit(2)
   }
   const cronAdd = (at, msg) => {
+    // --store is explicit so the job lands in the PRODUCTION store regardless
+    // of sudo's HOME env policy (run-6: the job was written somewhere else —
+    // the engine never saw it, no started/finished events at all)
     const out = spawnSync('sudo', ['-u', 'authsvc', TRUSTED_NODE, AGENTCORE_CRON,
-      'add', '--agent', agent.id, '--name', 'piv1-sched', '--at', at, '--message', msg, '--session', 'isolated', '--no-deliver', '--light-context', '--timeout-seconds', '120', '--model', `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL}`, '--json'], { encoding: 'utf8' })
+      'add', '--store', PROD_LAYOUT.jobsStore, '--agent', agent.id, '--name', 'piv1-sched', '--at', at, '--message', msg, '--session', 'isolated', '--no-deliver', '--light-context', '--timeout-seconds', '120', '--model', `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL}`, '--json'], { encoding: 'utf8' })
     if (out.status !== 0) return null
     try { return JSON.parse(out.stdout).id } catch { return null }
   }
