@@ -63,10 +63,12 @@ export function chatIdFromDeliveryTo(to) {
  *   object exposing ensureRunning(agentId) -> AgentProcess).
  * @param {object} [opts]
  * @param {object} [opts.definition] - optional Agent Definition service
- *   (`agentDefinition`); when present, `getAgent(request.agentId)` validates
- *   the target before spawn (AGENT_NOT_FOUND -> error outcome). The read is
- *   in-memory and synchronous — no config/database I/O on the invocation
- *   path.
+ *   (`agentDefinition`); when present, the target agent must be RUNNABLE
+ *   before spawn: unknown (AGENT_NOT_FOUND) AND disabled (AGENT_DISABLED)
+ *   are both rejected before `ensureRunning` is ever called (merge review
+ *   FIX 2). The reads are in-memory and synchronous — no config/database
+ *   I/O on the invocation path. The Scheduler core / job store are never
+ *   touched: a rejected job simply becomes a failed run outcome.
  * @returns {Function} the invokeAgent(request) seam, with `.calls` log.
  */
 export function createRouterInvoker(router, opts = {}) {
@@ -76,6 +78,20 @@ export function createRouterInvoker(router, opts = {}) {
   const definition = opts?.definition
   const calls = []
 
+  /**
+   * Runnable-agent check: unknown OR disabled -> structured rejection, so
+   * the Router's spawn path is never reached for a non-runnable target.
+   * @param {string} agentId
+   * @throws {Error} code `AGENT_NOT_FOUND` (unknown) or `AGENT_DISABLED`.
+   */
+  function assertRunnable(agentId) {
+    if (definition === undefined) return
+    const defined = definition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
+    if (defined.disabled === true) {
+      throw Object.assign(new Error(`scheduler-router: agent ${agentId} is disabled (not runnable)`), { code: 'AGENT_DISABLED' })
+    }
+  }
+
   async function invokeAgent(request) {
     const started = Date.now()
     const call = { agentId: request.agentId, sessionId: request.sessionId, atMs: started }
@@ -84,7 +100,7 @@ export function createRouterInvoker(router, opts = {}) {
       request.signal.addEventListener('abort', () => { aborted = true }, { once: true })
     }
     try {
-      if (definition !== undefined) definition.getAgent(request.agentId)
+      assertRunnable(request.agentId)
       const proc = await router.ensureRunning(request.agentId)
       // The Scheduler owns the run timeout (it aborts `signal`); the turn
       // poll gets a margin so the scheduler's race always settles first.

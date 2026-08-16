@@ -67,9 +67,13 @@ function stubFeishu() {
  * Stub AgentProcess so onIngress can run its full path (resolve -> binding
  * -> ensureRunning -> turn -> reply) without a real DSH child. The router
  * imports the same module instance, so prototype patching is visible to it.
+ * Returns { count } — the number of spawn() calls (DISABLED_ENFORCEMENT
+ * tests assert spawn = 0 for non-runnable agents).
  */
 function stubAgentProcess() {
+  const spawns = { count: 0 }
   AgentProcess.prototype.spawn = function spawnStub() {
+    spawns.count += 1
     this.pid = 4242
     this.exit = undefined
     this.exitPromise = new Promise(() => {}) // never settles; reaped silently
@@ -78,6 +82,7 @@ function stubAgentProcess() {
   AgentProcess.prototype.ready = async () => 0
   AgentProcess.prototype.turn = async () => ({ reply: 'stub-reply', messageId: 'stub-msg' })
   AgentProcess.prototype.shutdown = async () => ({ code: 0, signal: null })
+  return spawns
 }
 
 /** Fresh definition + router over tmp stores with a stub feishu; returns
@@ -208,4 +213,55 @@ test('MOBILE_BINDING_NAMESPACE_UNCHANGED: mobile ingress -> mobile:<surfaceId>, 
   assert.equal(router.getBinding('mobile:surf-7')?.activeAgentId, a.id)
   assert.equal(router.getBinding('feishu:surf-7'), undefined, 'mobile must not leak into feishu namespace')
   assert.equal(feishu.replies.length, 0, 'mobile ingresses never reply via Feishu')
+})
+
+test('DISABLED_ENFORCEMENT: an existing binding to a disabled Agent rejects the ingress and NEVER spawns', async (t) => {
+  stubAgentProcess()
+  const { router, definition, agentA: a, agentB: b, feishu, dir } = await freshFeishuRouter(t)
+  // A durable binding to B exists (B was enabled when the binding was made).
+  await router.resolveChannelConversation({ channel: 'feishu', externalId: 'oc_b' })
+  await router.switchAgent('feishu:oc_b', b.id)
+  assert.equal(router.getBinding('feishu:oc_b')?.activeAgentId, b.id)
+
+  // Deployment disables B in the SAME config file (the mutation seam's
+  // write); the read model is reloaded. The stable id is unchanged.
+  await writeAgentDefinition(join(dir, 'agents.json'), {
+    defaultAgentId: 'agt_a',
+    agents: [
+      { id: 'agt_a', name: 'Agent A' },
+      { id: 'agt_b', name: 'Agent B', disabled: true },
+    ],
+  })
+  definition.reload()
+  assert.equal(definition.getAgent(b.id).disabled, true)
+  assert.equal(definition.getAgent(b.id).id, b.id, 'rename/disable never changes the stable id')
+
+  // A message into B's conversation: binding HIT (history preserved), but
+  // the lifecycle entry rejects — structured AGENT_DISABLED, spawn = 0.
+  const spawns = stubAgentProcess()
+  const result = await router.route(feishuIngress('p2p', 'oc_b'))
+  assert.equal(result.error?.code, 'AGENT_DISABLED', `structured rejection (got ${result.error?.message ?? result.error})`)
+  assert.equal(spawns.count, 0, 'ensureRunning must never spawn a disabled agent')
+  assert.equal(feishu.replies.length, 1, 'Feishu got the delivery-failure reply')
+  assert.match(feishu.replies[0].text, /disabled/)
+  // The binding is NOT cleaned up — it keeps the historical relationship.
+  assert.equal(router.getBinding('feishu:oc_b')?.activeAgentId, b.id, 'existing binding preserved (history)')
+})
+
+test('DISABLED_ENFORCEMENT: an unknown agent behind an existing binding also never spawns', async (t) => {
+  stubAgentProcess()
+  const { router, definition, agentB: b, feishu, dir } = await freshFeishuRouter(t)
+  await router.resolveChannelConversation({ channel: 'feishu', externalId: 'oc_ghost' })
+  await router.switchAgent('feishu:oc_ghost', b.id)
+  // Deployment REMOVES B from the config entirely.
+  await writeAgentDefinition(join(dir, 'agents.json'), {
+    defaultAgentId: 'agt_a',
+    agents: [{ id: 'agt_a', name: 'Agent A' }],
+  })
+  definition.reload()
+  const spawns = stubAgentProcess()
+  const result = await router.route(feishuIngress('p2p', 'oc_ghost'))
+  assert.equal(result.error?.code, 'AGENT_NOT_FOUND', `unknown agent rejected (got ${result.error?.message ?? result.error})`)
+  assert.equal(spawns.count, 0, 'ensureRunning must never spawn an unknown agent')
+  assert.equal(router.getBinding('feishu:oc_ghost')?.activeAgentId, b.id, 'binding preserved')
 })
