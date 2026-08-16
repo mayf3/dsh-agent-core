@@ -130,3 +130,111 @@ test('9. FIX3: a failed NEW binding rolls back too (no phantom row)', async (t) 
   assert.equal(store.list().length, 1)
   assert.equal(await readFile(file, 'utf8'), diskBefore)
 })
+
+// ------------------------------------------------- Delivery V0 fresh table
+
+const mint = (used) => {
+  let id = 'fresh-x'
+  let n = 0
+  while (used.has(id)) id = `fresh-x-${++n}`
+  return id
+}
+
+test('10. freshSessionFor mints on first sight, returns the same row on retry', async (t) => {
+  const store = new BindingStore({ storeFile: await tmpStore(t) })
+  assert.equal(store.getFreshSession('agt_a', 'req-1'), undefined)
+
+  const first = await store.freshSessionFor('agt_a', 'req-1', mint)
+  assert.equal(first.requestId, 'req-1')
+  assert.equal(first.sessionId, 'fresh-x')
+  assert.equal(typeof first.createdAt, 'string')
+
+  const retry = await store.freshSessionFor('agt_a', 'req-1', mint)
+  assert.equal(retry.sessionId, 'fresh-x', 'retry returns the SAME session, mint is not called again')
+  assert.equal(store.freshSessionsSnapshot().length, 1)
+})
+
+test('11. freshSessionFor: different requestIds mint different sessions', async (t) => {
+  const store = new BindingStore({ storeFile: await tmpStore(t) })
+  const a = await store.freshSessionFor('agt_a', 'req-A', mint)
+  const b = await store.freshSessionFor('agt_a', 'req-B', mint)
+  assert.notEqual(a.sessionId, b.sessionId)
+  assert.equal(store.freshSessionsSnapshot().length, 2)
+})
+
+test('12. freshSessionFor: mapping is per-agent (same requestId, two agents)', async (t) => {
+  const store = new BindingStore({ storeFile: await tmpStore(t) })
+  const a = await store.freshSessionFor('agt_a', 'req-1', mint)
+  const b = await store.freshSessionFor('agt_b', 'req-1', mint)
+  // The mapping namespace is (agentId, requestId): both rows exist side by
+  // side, each agent resolves its own row for the same requestId.
+  assert.equal(store.getFreshSession('agt_a', 'req-1').sessionId, a.sessionId)
+  assert.equal(store.getFreshSession('agt_b', 'req-1').sessionId, b.sessionId)
+  assert.equal(store.freshSessionsSnapshot().length, 2)
+})
+
+test('13. freshSessionFor hands the mint the used-id set (router collision loop input)', async (t) => {
+  const store = new BindingStore({ storeFile: await tmpStore(t) })
+  const seen = []
+  await store.freshSessionFor('agt_a', 'req-0', (used) => { seen.push([...used]); return 'fresh-x' })
+  await store.freshSessionFor('agt_a', 'req-1', (used) => { seen.push([...used]); return 'fresh-y' })
+  assert.deepEqual(seen, [[], ['fresh-x']], 'second mint sees the first session id')
+  // The router's mint loop uses that set to pick a collision-free id.
+  const third = await store.freshSessionFor('agt_a', 'req-2', (used) => {
+    let id = 'fresh-y'
+    let n = 0
+    while (used.has(id)) id = `fresh-y-${++n}`
+    return id
+  })
+  assert.equal(third.sessionId, 'fresh-y-1')
+})
+
+test('14. freshSessionFor: concurrent first deliveries converge on ONE row', async (t) => {
+  const store = new BindingStore({ storeFile: await tmpStore(t) })
+  const [a, b] = await Promise.all([
+    store.freshSessionFor('agt_a', 'req-1', mint),
+    store.freshSessionFor('agt_a', 'req-1', mint),
+  ])
+  assert.equal(a.sessionId, b.sessionId, 'atomic read-or-mint inside the mutation queue')
+  assert.equal(store.freshSessionsSnapshot().length, 1)
+})
+
+test('15. freshSessions survive restart; older documents (no table) still load', async (t) => {
+  const file = await tmpStore(t)
+  const first = new BindingStore({ storeFile: file })
+  await first.freshSessionFor('agt_a', 'req-1', mint)
+  await first.set(row('feishu:chat-x', 'agt_a', 'main'))
+
+  const second = new BindingStore({ storeFile: file }) // control-plane restart
+  assert.equal(second.getFreshSession('agt_a', 'req-1').sessionId, 'fresh-x')
+  assert.equal(second.getFreshSession('agt_a', 'req-2'), undefined)
+  assert.equal(second.freshSessionsSnapshot().length, 1)
+  assert.equal(second.get('feishu:chat-x').activeAgentId, 'agt_a', 'bindings table unaffected')
+
+  // A document written BEFORE Delivery V0 (no freshSessions field) must keep
+  // loading — the field is optional.
+  const oldDoc = JSON.parse(await readFile(file, 'utf8'))
+  delete oldDoc.freshSessions
+  await writeFile(file, JSON.stringify(oldDoc))
+  const third = new BindingStore({ storeFile: file })
+  assert.equal(third.freshSessionsSnapshot().length, 0)
+  assert.equal(third.get('feishu:chat-x').activeAgentId, 'agt_a')
+})
+
+test('16. freshSessionFor validation and corrupt-table fail-loud', async (t) => {
+  const file = await tmpStore(t)
+  const store = new BindingStore({ storeFile: file })
+  await assert.rejects(async () => store.freshSessionFor('', 'req', mint), (e) => e.code === VALIDATION_ERROR)
+  await assert.rejects(async () => store.freshSessionFor('agt_a', '', mint), (e) => e.code === VALIDATION_ERROR)
+  await assert.rejects(async () => store.freshSessionFor('agt_a', 'req', undefined), (e) => e.code === VALIDATION_ERROR)
+  await assert.rejects(async () => store.freshSessionFor('agt_a', 'req', () => ''), (e) => e.code === VALIDATION_ERROR)
+  await store.freshSessionFor('agt_a', 'req-0', () => 'fresh-x') // occupies 'fresh-x'
+  await assert.rejects(async () => store.freshSessionFor('agt_a', 'req', () => 'fresh-x'), (e) => e.code === VALIDATION_ERROR)
+
+  // A corrupt freshSessions table fails loud at load (never silently reset).
+  await store.freshSessionFor('agt_a', 'req-1', mint)
+  const doc = JSON.parse(await readFile(file, 'utf8'))
+  doc.freshSessions.agt_a['req-1'].sessionId = ''
+  await writeFile(file, JSON.stringify(doc))
+  assert.throws(() => new BindingStore({ storeFile: file }), (e) => e.code === CORRUPT_STORE)
+})
