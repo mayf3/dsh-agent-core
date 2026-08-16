@@ -124,8 +124,10 @@ cd harness
     exit 2
   }
 cd "$TRUSTED_ROOT"
-# stamp for the next install's reuse check (commit + dirty-file count)
-{ git -C "$HARNESS_SRC" rev-parse HEAD 2>/dev/null; git -C "$HARNESS_SRC" status --porcelain 2>/dev/null | wc -l | tr -d ' '; } > harness/.source-stamp
+# stamp for the next install's reuse check — ONE line: commit + dirty count
+# (a multi-line stamp never equals the concatenated read-back, and reuse
+# silently never engaged)
+printf '%s%s' "$(git -C "$HARNESS_SRC" rev-parse HEAD 2>/dev/null)" "$(git -C "$HARNESS_SRC" status --porcelain 2>/dev/null | wc -l | tr -d ' ')" > harness/.source-stamp
 fi
 
 # ---- 2b. trusted Node runtime (review blocker fix) --------------------------
