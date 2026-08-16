@@ -38,7 +38,7 @@ root 驱动（sudo）
   └─ sudo -u authsvc node <trusted>/harness/apps/cli/lib/bin.js --profile agent-core-integration
        ├─ DSH_HOME = <trusted>/home            （profile agent-core-integration + farm → <trusted>/app）
        ├─ DSH_HARNESS_ROOT = <trusted>/harness （apps/cli + packages + vendor + node_modules 闭包）
-       ├─ config = <trusted>/config            （registry / bindings / credential store，authsvc 0700）
+       ├─ config = <trusted>/config            （Agent Definition agents.json / bindings / credential store，authsvc 0700）
        └─ 子进程：<trusted>/libexec helper (root:wheel 4755) → setuid(502) → exec <trusted>/harness CLI
             （降权后才执行；child profile/farm 指向 502 可读的 trusted app 或 502 自有区）
 ```
@@ -50,7 +50,7 @@ root 驱动（sudo）
 | DSH CLI + harness runtime | harness 源码拷贝 + `pnpm install --offline --frozen-lockfile --ignore-scripts --config.package-import-method=copy`（copy 模式，无指向 502 store 的硬链接） | authsvc:authsvc 0755/0644 |
 | Agent Core 控制面代码 | app/：packages/*（src+package.json）、bundle-*、profile-*、scripts（resident/demo-home/…）；node_modules/@deepseek-ai → ../../harness/node_modules/.pnpm/node_modules/@deepseek-ai（trusted 内） | authsvc:authsvc 0755/0644 |
 | 控制面 home | home/（profile 拷贝 + farm → ../app/…） | authsvc:authsvc |
-| 生产配置 | config/（registry/bindings/credential store；模型设置源 /Users/authsvc/.dsh 0600） | authsvc:authsvc 0700/0600 |
+| 生产配置 | config/（Agent Definition agents.json/bindings/credential store；模型设置源 /Users/authsvc/.dsh 0600） | authsvc:authsvc 0700/0600 |
 | spawn helper | /usr/local/libexec/dsh-agent-spawn-helper | root:wheel 4755 |
 
 关键结论：
@@ -95,7 +95,7 @@ root 驱动（sudo）
 | 写 trusted harness（apps/cli/lib/bin.js） | DENIED |
 | 写控制面 profile（home/profiles/agent-core-integration/cordis.patch.yml） | DENIED |
 | 替换 profile / bundle | DENIED |
-| 写生产 config（config/registry.json） | DENIED |
+| 写生产 config（config/agents.json） | DENIED |
 | 替换 spawn helper（rm /usr/local/libexec/dsh-agent-spawn-helper） | DENIED |
 | symlink 把 trusted path 指回 502 repo（ln -s ~/dsh-agent-core app/packages/agent-router） | DENIED |
 | 在 trusted 树内建 symlink | DENIED |
@@ -156,3 +156,30 @@ CREDENTIAL_STORE_502_DENIED —— 45/45 PASS（`.demo/hardening-run12.log`）�
 
 不修改 Auth / Broker / Router core / Agent Definition / Kernel：
 AUTH_CHANGE=NONE, BROKER_CHANGE=NONE, ROUTER_CORE_CHANGE=NONE, KERNEL_CHANGE=NONE。
+
+## 6. Agent Definition 兼容集成（TRUSTED_CP_AGENT_DEFINITION_COMPAT_V1）
+
+Hardening 原基于旧 main（writable agent-registry service）。最新 main 已由
+AGENT_DEFINITION_CONFIG_V1 取代 agent-registry：Agent 存在性权威是声明式
+`control/agents.json` / `seedDefinition` 配置（`packages/agent-definition`），
+`packages/agent-registry` 已删除。本次兼容集成把 Hardening 验收环境切到新权威：
+
+- **verify driver**（`scripts/trusted-cp-hardening-v1-verify.mjs`）：
+  - 移除 `import { AgentRegistry }`（旧 registry store 读取）；
+  - Agent A/B 现在通过正式 `adoptAgents({ configFile: agents.json })` 创建
+    （AGENT_DEFINITION_CONFIG_V1 语义，仍是 hardening acceptance fixture）；
+  - CP env 由 `AGENT_REGISTRY_STORE` 改为 `AGENT_DEFINITION_CONFIG`；
+  - 新增验收字段：`OLD_AGENT_REGISTRY_REFERENCE`（trusted 闭包内旧模型引用
+    扫描）、`HARDENING_VERIFY_USES_AGENT_DEFINITION`、`AGENT_DEFINITION_AUTHORITY`、
+    `TRUSTED_INSTALL_AGENT_DEFINITION` / `TRUSTED_INSTALL_AGENT_REGISTRY`。
+- **install**（`scripts/trusted-cp-deploy-install.sh`）：
+  - app 闭包校验 `packages/agent-definition` PRESENT、`packages/agent-registry` ABSENT；
+  - config 种子由 `registry.json` 改为声明式 `agents.json`（空文档，部署侧
+    adoptAgents 授权）；
+  - 控制面 home farm 由 `agent-registry` 链接改为 `agent-definition` 链接。
+- 安全边界零改动：TRUSTED_NODE / 505-502 / credential store / broker smoke /
+  restart 全部沿用已复审实现。Agent Definition 仍是唯一 Agent existence
+  authority；Hardening 不维护第二份 Agent 列表。
+
+KERNEL_CHANGE = NONE, AUTH_CHANGE = NONE, BROKER_CORE_CHANGE = NONE,
+ROUTER_CORE_CHANGE = NONE, AGENT_DEFINITION_PRODUCT_CHANGE = NONE。

@@ -12,9 +12,12 @@
  *            redirect a trusted path to the 502-writable repo via symlink —
  *            every attempt must be DENIED, and every trusted file must stay
  *            byte-identical afterwards.
- *   Phase 2  seed the 505-private trusted config (registry + credential
- *            store with the deployment's REAL MachineClient credential) and
- *            pre-provision the 502 child runtime.
+ *   Phase 2  seed the 505-private trusted config (declarative Agent
+ *            Definition config + credential store with the deployment's REAL
+ *            MachineClient credential — Agent A/B are acceptance fixtures
+ *            created via the formal Agent Definition authoring path,
+ *            AGENT_DEFINITION_CONFIG_V1) and pre-provision the 502 child
+ *            runtime.
  *   Phase 3  boot the REAL control plane from the TRUSTED install as uid 505
  *            (sudo -u authsvc node <trusted>/harness/apps/cli/lib/bin.js);
  *            verify: PARENT_UID=505, argv/env point into the trusted root,
@@ -37,7 +40,8 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../packages/agent-definition/src/config.js'
 
 if (typeof process.getuid === 'function' && process.getuid() !== 0) {
   console.error('must run as root (sudo node …) — the driver orchestrates; the CP runs as authsvc/505')
@@ -57,7 +61,7 @@ const AUTHSVC_SETTINGS = '/Users/authsvc/.dsh'
 const RUNTIME = resolve(join(REPO, '.demo', 'trusted-cp-hardening-v1'))
 const AGENTS_DIR = join(RUNTIME, 'agents')
 const HOMES_DIR = join(RUNTIME, 'homes')
-const REGISTRY_STORE = join(TRUSTED_CONFIG, 'registry.json')
+const AGENTS_CONFIG = join(TRUSTED_CONFIG, 'agents.json')
 const BINDINGS_STORE = join(TRUSTED_CONFIG, 'bindings.json')
 const CREDENTIALS_STORE = join(TRUSTED_CONFIG, 'agent-credentials.json')
 const API_PORT = pickFreePort(8788)
@@ -118,11 +122,11 @@ async function attackMatrix() {
   console.log('\n[phase 1] attack matrix from uid 502 (canary files)')
   // baseline: the install-seeded config must exist for the canary check; a
   // previous interrupted run may have removed it (restore the baseline).
-  for (const f of ['registry.json', 'agent-credentials.json']) {
+  for (const f of ['agents.json', 'agent-credentials.json']) {
     const p = join(TRUSTED_CONFIG, f)
     if (!existsSync(p)) {
-      writeFileSync(p, f === 'registry.json'
-        ? '{\n  "version": 1,\n  "agents": {},\n  "defaultAgentId": null\n}\n'
+      writeFileSync(p, f === 'agents.json'
+        ? '{\n  "version": 1,\n  "defaultAgentId": null,\n  "agents": []\n}\n'
         : '{\n  "version": 1,\n  "credentials": {}\n}\n')
       chownSync(p, USER_AUTHSVC.uid, USER_AUTHSVC.gid)
       chmodSync(p, 0o600)
@@ -136,7 +140,7 @@ async function attackMatrix() {
     ['TRUSTED_NODE', TRUSTED_NODE],
     ['CP_PROFILE', join(TRUSTED_HOME, 'profiles/agent-core-integration/cordis.patch.yml')],
     ['CP_BUNDLE', join(TRUSTED_APP, 'bundle-integration/cordis.patch.yml')],
-    ['CP_CONFIG', join(TRUSTED_CONFIG, 'registry.json')],
+    ['CP_CONFIG', join(TRUSTED_CONFIG, 'agents.json')],
   ]
   const before = new Map()
   for (const [, path] of targets) {
@@ -209,12 +213,21 @@ async function attackMatrix() {
 
 async function seedTrustedConfig() {
   console.log('\n[phase 2] seeding the 505-private trusted config')
-  rmSync(REGISTRY_STORE, { force: true })
+  rmSync(AGENTS_CONFIG, { force: true })
   rmSync(BINDINGS_STORE, { force: true })
   rmSync(CREDENTIALS_STORE, { force: true })
-  const registry = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  const agentA = await registry.registerAgent({ name: AGENT_A_NAME })
-  const agentB = await registry.registerAgent({ name: AGENT_B_NAME })
+  // Agent A/B are hardening acceptance fixtures created through the formal
+  // Agent Definition authoring path (AGENT_DEFINITION_CONFIG_V1): the
+  // declarative config is the SINGLE Agent existence authority — the
+  // hardened deployment never maintains a second Agent list.
+  const adopted = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [
+    { name: AGENT_A_NAME, description: 'hardening acceptance fixture A' },
+    { name: AGENT_B_NAME, description: 'hardening acceptance fixture B' },
+  ] })
+  const [agentA, agentB] = adopted.agents
+  const definition = new AgentDefinition({ configFile: AGENTS_CONFIG })
+  record('HARDENING_VERIFY_USES_AGENT_DEFINITION', true,
+    `agents authored via Agent Definition config (${definition.listAgents().length} agents)`)
   const secret = readFileSync(REAL_SECRET_FILE, 'utf8').trim()
   if (typeof secret !== 'string' || secret === '') throw new Error('cannot read the real credential secret')
   writeFileSync(CREDENTIALS_STORE, JSON.stringify({
@@ -224,11 +237,11 @@ async function seedTrustedConfig() {
       [agentB.id]: { clientId: REAL_CLIENT_ID, clientSecret: secret },
     },
   }, null, 2))
-  chownSync(REGISTRY_STORE, USER_AUTHSVC.uid, USER_AUTHSVC.gid)
+  chownSync(AGENTS_CONFIG, USER_AUTHSVC.uid, USER_AUTHSVC.gid)
   chownSync(CREDENTIALS_STORE, USER_AUTHSVC.uid, USER_AUTHSVC.gid)
-  chmodSync(REGISTRY_STORE, 0o600)
+  chmodSync(AGENTS_CONFIG, 0o600)
   chmodSync(CREDENTIALS_STORE, 0o600)
-  record('TRUSTED_CONFIG_SEEDED', true, `${REGISTRY_STORE} + ${CREDENTIALS_STORE} (authsvc 0600)`)
+  record('TRUSTED_CONFIG_SEEDED', true, `${AGENTS_CONFIG} + ${CREDENTIALS_STORE} (authsvc 0600)`)
   return { agentA, agentB }
 }
 
@@ -295,7 +308,7 @@ function controlEnv(extra = {}) {
     DSH_TELEMETRY_DISABLED: '1',
     DSH_PERMISSION_MODE: 'danger-full-access',
     DSH_SETTINGS_SOURCE: join(AUTHSVC_SETTINGS, 'settings.yaml'),
-    AGENT_REGISTRY_STORE: REGISTRY_STORE,
+    AGENT_DEFINITION_CONFIG: AGENTS_CONFIG,
     ROUTER_BINDINGS_STORE: BINDINGS_STORE,
     ROUTER_AGENT_PROFILE: AGENT_PROFILE,
     DSH_MEMORY_WORKSPACE_ROOT: AGENTS_DIR,
@@ -451,6 +464,28 @@ async function main() {
   const helperStat = sh(`stat -f '%Su:%Sg %Sp' ${JSON.stringify(HELPER)}`).stdout.trim()
   record('INSTALL_PRESENT', true, `${TRUSTED_ROOT} + helper ${helperStat}`)
 
+  // ------------------------------------------- compat checks (Agent Definition)
+  // TRUSTED_CP_AGENT_DEFINITION_COMPAT_V1: the trusted closure must ship the
+  // formal Agent Definition package (single Agent existence authority) and
+  // must NOT contain the removed agent-registry package, its store, or any
+  // old-model reference.
+  const defPkg = join(TRUSTED_APP, 'packages', 'agent-definition')
+  const regPkg = join(TRUSTED_APP, 'packages', 'agent-registry')
+  record('TRUSTED_INSTALL_AGENT_DEFINITION', existsSync(join(defPkg, 'package.json')) && existsSync(join(defPkg, 'src', 'index.js')),
+    existsSync(join(defPkg, 'package.json')) ? defPkg : `MISSING ${defPkg}`)
+  const registryAbsent = !existsSync(regPkg)
+  record('TRUSTED_INSTALL_AGENT_REGISTRY', registryAbsent, registryAbsent ? `${regPkg} absent` : `PRESENT ${regPkg}`)
+  const defConfig = existsSync(join(TRUSTED_CONFIG, 'agents.json'))
+  const oldConfig = existsSync(join(TRUSTED_CONFIG, 'registry.json'))
+  record('AGENT_DEFINITION_AUTHORITY', defConfig && !oldConfig,
+    defConfig ? 'agents.json is the single authority' : 'agents.json MISSING')
+  // sweep the trusted closure for any old registry-model reference (import
+  // path, package name, env var, store filename) in code the 505 executes
+  // (the two root-only orchestration drivers are allowlisted, exactly like
+  // the /Users/yanfenma audit — they are not executed by the control plane)
+  const oldRef = sh(`grep -rnE 'agent-registry|AgentRegistry|AGENT_REGISTRY_STORE|registry\\.json' ${JSON.stringify(TRUSTED_APP)}/packages ${JSON.stringify(TRUSTED_APP)}/bundle-integration ${JSON.stringify(TRUSTED_APP)}/profile-integration ${JSON.stringify(TRUSTED_APP)}/scripts --include='*.js' --include='*.mjs' --include='*.yml' --include='*.sh' 2>/dev/null | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' || true`).stdout.trim()
+  record('OLD_AGENT_REGISTRY_REFERENCE', oldRef === '', oldRef === '' ? 'no old registry references in the trusted closure' : oldRef)
+
   // ------------------------------------------------------------- phase 1
   const attackOk = await attackMatrix()
 
@@ -560,11 +595,17 @@ async function finish(cp, { agentA, agentB, attackOk }) {
     '',
     '## Verdict fields',
     '',
+    `TRUSTED_CP_AGENT_DEFINITION_COMPAT_V1 = ${verdict}`,
     `TRUSTED_CONTROL_PLANE_DEPLOYMENT_HARDENING_V1 = ${verdict}`,
     `TRUSTED_NODE_FIX = ${verdict}`,
     `TRUSTED_NODE_PATH = ${TRUSTED_NODE}`,
     `TRUSTED_NODE_502_WRITABLE = ${checks.find((c) => c.name === 'TRUSTED_NODE_502_WRITE_DENIED')?.ok ? 'NO' : 'YES'}`,
     `TRUSTED_NODE_REDIRECTABLE = ${checks.find((c) => c.name === 'TRUSTED_NODE_502_SYMLINK_REDIRECT_DENIED')?.ok && checks.find((c) => c.name === 'TRUSTED_NODE_REAL_FILE')?.ok ? 'NO' : 'YES'}`,
+    `OLD_AGENT_REGISTRY_REFERENCE = ${checks.find((c) => c.name === 'OLD_AGENT_REGISTRY_REFERENCE')?.ok ? 'NONE' : 'FOUND'}`,
+    `HARDENING_VERIFY_USES_AGENT_DEFINITION = ${checks.find((c) => c.name === 'HARDENING_VERIFY_USES_AGENT_DEFINITION')?.ok ? 'YES' : 'NO'}`,
+    `AGENT_DEFINITION_AUTHORITY = ${checks.find((c) => c.name === 'AGENT_DEFINITION_AUTHORITY')?.ok ? 'SINGLE' : 'NOT_SINGLE'}`,
+    `TRUSTED_INSTALL_AGENT_DEFINITION = ${checks.find((c) => c.name === 'TRUSTED_INSTALL_AGENT_DEFINITION')?.ok ? 'PRESENT' : 'ABSENT'}`,
+    `TRUSTED_INSTALL_AGENT_REGISTRY = ${checks.find((c) => c.name === 'TRUSTED_INSTALL_AGENT_REGISTRY')?.ok ? 'ABSENT' : 'PRESENT'}`,
     `CP_NODE_PATH = ${TRUSTED_NODE}`,
     `PARENT_UID = 505`,
     `CHILD_UID = 502`,
@@ -574,6 +615,7 @@ async function finish(cp, { agentA, agentB, attackOk }) {
     'AUTH_CHANGE = NONE',
     'BROKER_CHANGE = NONE',
     'ROUTER_CORE_CHANGE = NONE',
+    'AGENT_DEFINITION_PRODUCT_CHANGE = NONE',
     'KERNEL_CHANGE = NONE',
     `AUTH_PRODUCTION_BOUNDARY = ${verdict === 'PASS' ? 'CLOSED' : 'NOT_CLOSED'}`,
     `TESTS = ${checks.filter((c) => c.ok).length}/${checks.length} PASS`,
@@ -586,7 +628,8 @@ async function finish(cp, { agentA, agentB, attackOk }) {
   writeFileSync(reportPath, report)
   console.log(`\nevidence written: ${reportPath}`)
   console.log(report.split('\n').filter((l) => l.startsWith('TRUSTED_') || l.startsWith('CP_') || l.startsWith('PRE_')
-    || l.startsWith('AGENT_') || l.startsWith('PARENT_') || l.startsWith('CHILD_')
+    || l.startsWith('AGENT_') || l.startsWith('OLD_') || l.startsWith('HARDENING_')
+    || l.startsWith('PARENT_') || l.startsWith('CHILD_')
     || l.startsWith('CREDENTIAL_') || l.startsWith('REAL_') || l.startsWith('RESTART')
     || l.startsWith('AUTH_') || l.startsWith('BROKER_') || l.startsWith('ROUTER_') || l.startsWith('KERNEL_')).join('\n'))
   process.exit(verdict === 'PASS' ? 0 : 1)

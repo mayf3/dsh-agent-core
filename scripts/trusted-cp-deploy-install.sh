@@ -17,8 +17,8 @@
 #                                           owner authsvc:authsvc  0755/0644
 #     home/      the 505 control-plane DSH_HOME (profile + farm -> app/)
 #                                           owner authsvc:authsvc
-#     config/    production state: registry/bindings/jobs/credential store
-#                                           owner authsvc:authsvc  0700/0600
+#     config/    production state: Agent Definition (agents.json)/bindings/jobs/
+#                credential store   owner authsvc:authsvc  0700/0600
 #     .cache/    pnpm cache (root-owned)
 #
 # Also seeds /Users/authsvc/.dsh/{settings.yaml,.credentials.yaml} (authsvc
@@ -161,6 +161,20 @@ for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
   [ -f "$d/cordis.patch.yml" ] && cp "$d/cordis.patch.yml" "app/$name/cordis.patch.yml"
 done
 
+# Agent existence authority closure (AGENT_DEFINITION_CONFIG_V1): the formal
+# Agent Definition package MUST be in the trusted app closure, and the
+# removed agent-registry package MUST NOT be (no second Agent authority).
+if [ ! -f "app/packages/agent-definition/package.json" ] \
+   || [ ! -d "app/packages/agent-definition/src" ]; then
+  echo "ERROR: app closure missing packages/agent-definition (Agent Definition authority)" >&2
+  exit 2
+fi
+if [ -e "app/packages/agent-registry" ]; then
+  echo "ERROR: app closure still contains packages/agent-registry (old authority must be absent)" >&2
+  exit 2
+fi
+echo "  Agent Definition closure: packages/agent-definition PRESENT, packages/agent-registry ABSENT"
+
 # @deepseek-ai resolution bridge — INSIDE the trusted root only. The app
 # packages resolve @deepseek-ai/* through the harness's full scope farm
 # (node_modules/.pnpm/node_modules/@deepseek-ai), exactly like the dev
@@ -219,7 +233,7 @@ for entry in \
   "product-api:../../../../app/packages/product-api" \
   "broker:../../../../app/packages/broker" \
   "workspace-bootstrap:../../../../app/packages/workspace-bootstrap" \
-  "agent-registry:../../../../app/packages/agent-registry"; do
+  "agent-definition:../../../../app/packages/agent-definition"; do
   name="${entry%%:*}"; target="${entry#*:}"
   ln -sfn "$target" "home/profiles/node_modules/@agent-core/$name"
 done
@@ -231,7 +245,10 @@ chmod 600 home/.credentials.yaml
 # ---- 5. config (505-private state) -----------------------------------------
 echo "== seeding config/ (505-private)"
 mkdir -p config
-printf '{\n  "version": 1,\n  "agents": {},\n  "defaultAgentId": null\n}\n' > config/registry.json
+# The Agent Definition config is the SINGLE Agent existence authority
+# (AGENT_DEFINITION_CONFIG_V1): an empty declarative document until the
+# deployment authorizes agents (adoptAgents / seedDefinition).
+printf '{\n  "version": 1,\n  "defaultAgentId": null,\n  "agents": []\n}\n' > config/agents.json
 printf '{\n  "version": 1,\n  "credentials": {}\n}\n' > config/agent-credentials.json
 # bindings/jobs are created by the router/resident on first boot (missing
 # file is a legal empty store for both).
@@ -305,7 +322,7 @@ run502() { sudo -u '#502' "$@"; }
 if run502 sh -c "echo pwned > '$TRUSTED_ROOT/app/packages/agent-router/src/index.js'" 2>/dev/null; then
   echo "  FAIL: 502 wrote trusted app code"; spot_fail=1
 fi
-if run502 sh -c "echo pwned > '$TRUSTED_ROOT/config/registry.json'" 2>/dev/null; then
+if run502 sh -c "echo pwned > '$TRUSTED_ROOT/config/agents.json'" 2>/dev/null; then
   echo "  FAIL: 502 wrote trusted config"; spot_fail=1
 fi
 if run502 sh -c "ln -s /Users/yanfenma '$TRUSTED_ROOT/app/packages/agent-router'" 2>/dev/null; then
