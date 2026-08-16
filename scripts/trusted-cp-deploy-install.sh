@@ -143,7 +143,8 @@ for f in agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs \
          dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh \
          trusted-cp-hardening-v1-verify.mjs \
          production-runtime.mjs production-runtime-launchd.mjs \
-         production-runtime-v1-verify.mjs; do
+         production-runtime-v1-verify.mjs \
+         production-agent-provision.mjs; do
   [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" app/scripts/
 done
 # packages: src + package.json only (no tests)
@@ -188,7 +189,8 @@ for need in \
   "app/profile-production/package.json" \
   "app/profile-production/cordis.patch.yml" \
   "app/scripts/production-runtime.mjs" \
-  "app/scripts/production-runtime-launchd.mjs"; do
+  "app/scripts/production-runtime-launchd.mjs" \
+  "app/scripts/production-agent-provision.mjs"; do
   if [ -e "$need" ]; then :; else { echo "ERROR: production-runtime closure missing: $need" >&2; exit 2; }; fi
 done
 echo "  Production Runtime closure: packages/{production-runtime,agent-provisioning} + profile-production + scripts PRESENT"
