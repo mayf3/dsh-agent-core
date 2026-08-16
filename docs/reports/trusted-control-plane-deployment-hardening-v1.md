@@ -176,10 +176,60 @@ AGENT_DEFINITION_CONFIG_V1 取代 agent-registry：Agent 存在性权威是声�
   - app 闭包校验 `packages/agent-definition` PRESENT、`packages/agent-registry` ABSENT；
   - config 种子由 `registry.json` 改为声明式 `agents.json`（空文档，部署侧
     adoptAgents 授权）；
-  - 控制面 home farm 由 `agent-registry` 链接改为 `agent-definition` 链接。
+  - 控制面 home farm 由 `agent-registry` 链接改为 `agent-definition` 链接，
+    并为 latest main 新增的 `@agent-core/notification-ingress` 补 farm 链接。
 - 安全边界零改动：TRUSTED_NODE / 505-502 / credential store / broker smoke /
   restart 全部沿用已复审实现。Agent Definition 仍是唯一 Agent existence
   authority；Hardening 不维护第二份 Agent 列表。
+
+### 最终真实验收（latest-main integration branch, root verify）
+
+在基于最新 main 的 integration branch 上重新执行完整 Trusted CP Hardening
+verification：
+
+- 迁移期间 find/修复的最新 main 架构差异（均机械兼容，非重新设计）：
+  1. `packages/agent-registry` → `packages/agent-definition`（旧 import/store/
+     env/farm 全清），`OLD_AGENT_REGISTRY_REFERENCE = NONE`；
+  2. latest main 的 workspace-bootstrap（WORKSPACE_BOOTSTRAP_ROUTER_HOOK_V1）
+     会让 505 parent 因 child workspace 的 AGENTS.md 权限报 EACCES → verify
+     在 child-runtime provisioning 时预 seed AGENTS.md，ensure() 幂等跳过；
+  3. **acceptance-only 模型切换**：默认模型路由（pi-ai catalog 的
+     `opencode-go`）命中外部 429 QUOTA（provider 月度额度），非代码问题。
+     仅本次验收，verify driver 临时把 trusted CP home + child home 的
+     settings.yaml 指向 `oc-go` provider（openai-completions 网关
+     `https://opencode.ai/zen/go/v1`，model `deepseek-v4-flash`，已确认
+     有额度），并经 `DSH_AGENT_PROVIDER=oc-go` + 运行时注入 `OC_GO_API_KEY`
+     让 child 路由到该 provider。key 从不 commit/打印/持久化。**不修改**
+     install 脚本或 `/Users/authsvc/.dsh`；产品默认模型配置零改动
+     （`PRODUCTION_MODEL_CONFIG_CHANGE = NONE`）。
+
+最终 root verification 结论（`.demo/hardening-compat-final3.log`，
+`TESTS = 51/51 PASS`）：
+
+```
+TRUSTED_CP_AGENT_DEFINITION_COMPAT_V1 = PASS
+READY_FOR_REREVIEW = YES
+OLD_AGENT_REGISTRY_REFERENCE = NONE
+HARDENING_VERIFY_USES_AGENT_DEFINITION = YES
+AGENT_DEFINITION_AUTHORITY = SINGLE
+TRUSTED_INSTALL_AGENT_DEFINITION = PRESENT
+TRUSTED_INSTALL_AGENT_REGISTRY = ABSENT
+TRUSTED_NODE_502_WRITABLE = NO
+TRUSTED_NODE_REDIRECTABLE = NO
+PARENT_UID = 505
+CHILD_UID = 502
+CREDENTIAL_STORE_502_DENIED = PASS
+REAL_BROKER_SMOKE = PASS
+RESTART_HARDENED = PASS
+AUTH_PRODUCTION_BOUNDARY = CLOSED
+ACCEPTANCE_MODEL_OVERRIDE = oc-go/deepseek-v4-flash (acceptance-only)
+PRODUCTION_MODEL_CONFIG_CHANGE = NONE
+```
+
+`REAL_BROKER_SMOKE` 真实打通：child uid502 → real model(oc-go) →
+`forum_my_notifications` → parent @505 → Broker → real auth-service →
+real svc-forum，模型拿到真实 tool result 并返回非空最终回复
+（reply 含 `{"ok": true, ...}` 的 forum 结果）。
 
 KERNEL_CHANGE = NONE, AUTH_CHANGE = NONE, BROKER_CORE_CHANGE = NONE,
 ROUTER_CORE_CHANGE = NONE, AGENT_DEFINITION_PRODUCT_CHANGE = NONE。
