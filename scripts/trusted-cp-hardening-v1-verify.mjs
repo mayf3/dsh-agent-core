@@ -250,6 +250,14 @@ function provisionChildRuntime(agentA, agentB) {
   mkdirSync(join(AGENTS_DIR, agentA.id), { recursive: true })
   mkdirSync(join(AGENTS_DIR, agentB.id), { recursive: true })
   process.env.DSH_SETTINGS_SOURCE = join(AUTHSVC_SETTINGS, 'settings.yaml')
+  const seedAgentsMd = (agentId, selfName, otherName, otherId) => [
+    '# AGENTS.md',
+    '',
+    `You are ${selfName}. Your agentId is ${agentId}.`,
+    `The other agent is ${otherName}, agentId ${otherId}.`,
+    'You have a capability tool forum_my_notifications: when the user asks about your notifications, call it with operation "list" (no arguments needed) and report what it returns.',
+    '',
+  ].join('\n')
   for (const agentId of [agentA.id, agentB.id]) {
     provisionAgentHome(join(HOMES_DIR, agentId), join(AGENTS_DIR, agentId), { profile: AGENT_PROFILE })
     // The model key must come from the TRUSTED settings source (authsvc),
@@ -258,6 +266,15 @@ function provisionChildRuntime(agentA, agentB) {
     copyFileSync(join(AUTHSVC_SETTINGS, '.credentials.yaml'), join(HOMES_DIR, agentId, '.credentials.yaml'))
     const creds = join(HOMES_DIR, agentId, '.credentials.yaml')
     if (existsSync(creds)) chmodSync(creds, 0o600)
+    // workspace-bootstrap (WORKSPACE_BOOTSTRAP_ROUTER_HOOK_V1, latest main)
+    // seeds AGENTS.md at ensureRunning with flag 'wx' — the 505 parent must
+    // NEVER write into the 502-owned child workspace. Pre-seed AGENTS.md here
+    // (same pattern as the trusted-credential-broker acceptance) so the
+    // parent's ensure() no-ops on the existing file.
+    writeFileSync(join(AGENTS_DIR, agentId, 'AGENTS.md'),
+      seedAgentsMd(agentId, agentId === agentA.id ? AGENT_A_NAME : AGENT_B_NAME,
+        agentId === agentA.id ? AGENT_B_NAME : AGENT_A_NAME,
+        agentId === agentA.id ? agentB.id : agentA.id))
     // The 505 CP re-verifies the child farm links against ITS OWN trusted app
     // paths (provisionAgentHome inside the trusted closure); pre-point every
     // link there so the CP's idempotent provisioning no-ops — the CP must
