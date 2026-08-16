@@ -157,6 +157,13 @@ function runtimeEnv(extra = {}) {
   }
 }
 
+// The runtime prints its ready marker on STDOUT (entry.js log.log ->
+// process.stdout.write); library components log on stderr. Ready detection
+// must watch BOTH streams, plus the ingress /health endpoint as a
+// stream-independent fallback — watching stderr only caused a guaranteed
+// false boot-timeout in the first root run.
+const READY_MARKER = '[production-runtime] production runtime ready'
+
 function startRuntime() {
   return new Promise((resolvePromise) => {
     const envPairs = []
@@ -168,25 +175,50 @@ function startRuntime() {
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     let stderr = ''
+    let tail = ''
     let done = false
+    const see = (s) => { tail = (tail + s).slice(-2000) }
+    const readyBefore = (() => { try { return evidenceEvents().filter((e) => e.kind === 'ready').length } catch { return 0 } })()
     const finish = (ok, detail) => {
       if (done) return
       done = true
+      clearInterval(healthProbe)
+      clearTimeout(bootTimeout)
       if (!ok) { try { child.kill('SIGKILL') } catch { /* dead */ } }
       resolvePromise({ ok, detail, child, stderr: () => stderr })
     }
-    child.stdout.on('data', (d) => { process.stdout.write(`[runtime-out] ${d}`) })
+    child.stdout.on('data', (d) => {
+      const s = String(d)
+      see(s)
+      process.stdout.write(`[runtime-out] ${s}`)
+      if (s.includes(READY_MARKER)) finish(true, 'production runtime ready (stdout marker, from the trusted install as uid 505)')
+    })
     child.stderr.on('data', (chunk) => {
-      stderr += chunk
-      process.stderr.write(`[runtime-err] ${chunk}`)
-      if (stderr.includes('[production-runtime] production runtime ready')) {
-        finish(true, 'production runtime ready (from the trusted install as uid 505)')
-      }
+      const s = String(chunk)
+      see(s)
+      stderr += s
+      process.stderr.write(`[runtime-err] ${s}`)
+      if (s.includes(READY_MARKER)) finish(true, 'production runtime ready (stderr marker, from the trusted install as uid 505)')
     })
+    const healthProbe = setInterval(() => {
+      fetch(`${INGRESS}/health`)
+        .then((res) => { if (res.status === 200) finish(true, 'production runtime ready (ingress /health 200)') })
+        .catch(() => { /* not up yet */ })
+      // stream-independent signal, same convention as
+      // production-runtime-v1-verify.mjs waitReady(afterCount): a NEW ready
+      // event in the persistent evidence log (count must grow, so a stale
+      // event from before a restart can never satisfy a fresh boot).
+      try {
+        const readies = evidenceEvents().filter((e) => e.kind === 'ready').length
+        if (readies > readyBefore) finish(true, 'production runtime ready (runtime-evidence.jsonl ready event)')
+      } catch { /* evidence log not written yet */ }
+    }, 1000)
     child.once('exit', (code) => {
-      finish(false, `runtime exited (code ${code}); stderr tail: ${stderr.slice(-700)}`)
+      finish(false, `runtime exited (code ${code}); output tail: ${tail.slice(-700)}`)
     })
-    setTimeout(() => finish(false, `runtime boot timeout; stderr tail: ${stderr.slice(-700)}`), 120000)
+    const bootTimeout = setTimeout(() => {
+      finish(false, `runtime boot timeout; output tail: ${tail.slice(-700)}`)
+    }, 120000)
   })
 }
 
@@ -493,6 +525,16 @@ async function main() {
 async function finish(rt, extra = {}) {
   const ok = checks.every((c) => c.ok)
   const verdict = ok ? 'PASS' : 'BLOCKED'
+  // A check that never executed (early abort) is NOT_RUN — reporting it as
+  // FAIL produced misleading evidence in the first root run.
+  const v = (name) => {
+    const c = checks.find((x) => x.name === name)
+    return c === undefined ? 'NOT_RUN' : (c.ok ? 'PASS' : 'FAIL')
+  }
+  const vInverted = (name, whenOk, whenFail) => {
+    const c = checks.find((x) => x.name === name)
+    return c === undefined ? 'NOT_RUN' : (c.ok ? whenOk : whenFail)
+  }
   const report = [
     '# PRODUCTION_INTEGRATION_V1',
     '',
@@ -516,18 +558,18 @@ async function finish(rt, extra = {}) {
     `TRUSTED_NODE_PATH = ${TRUSTED_NODE}`,
     `PARENT_UID = 505`,
     `CHILD_UID = 502`,
-    `REAL_AGENT_START = ${checks.find((c) => c.name === 'REAL_DELIVERY_SMOKE')?.ok ? 'PASS' : 'FAIL'}`,
-    `AGENT_CRASH_RECOVERY = ${checks.find((c) => c.name === 'AGENT_CRASH_RECOVERY')?.ok ? 'PASS' : 'FAIL'}`,
-    `CONTROL_PLANE_RESTART_RECOVERY = ${checks.find((c) => c.name === 'CONTROL_PLANE_RESTART_RECOVERY')?.ok ? 'PASS' : 'FAIL'}`,
-    `BINDING_PERSISTENCE = ${checks.find((c) => c.name === 'BINDING_PERSISTENCE')?.ok ? 'PASS' : 'FAIL'}`,
-    `SCHEDULER_PERSISTENCE = ${checks.find((c) => c.name === 'SCHEDULER_PERSISTENCE')?.ok ? 'PASS' : 'FAIL'}`,
-    `DELIVERY_IDEMPOTENCY_PERSISTENCE = ${checks.find((c) => c.name === 'DELIVERY_IDEMPOTENCY_PERSISTENCE')?.ok ? 'PASS' : 'FAIL'}`,
-    `REAL_DELIVERY_SMOKE = ${checks.find((c) => c.name === 'REAL_DELIVERY_SMOKE')?.ok ? 'PASS' : 'FAIL'}`,
-    `REAL_SCHEDULER_SMOKE = ${checks.find((c) => c.name === 'REAL_SCHEDULER_SMOKE')?.ok ? 'PASS' : 'FAIL'}`,
-    `REAL_BROKER_SMOKE = ${checks.find((c) => c.name === 'REAL_BROKER_SMOKE')?.ok ? 'PASS' : 'FAIL'}`,
-    `CREDENTIAL_STORE_502_DENIED = ${checks.find((c) => c.name === 'CREDENTIAL_STORE_502_DENIED')?.ok ? 'PASS' : 'FAIL'}`,
-    `SECRET_VISIBLE_TO_502 = ${checks.find((c) => c.name === 'SECRET_VISIBLE_TO_502')?.ok ? 'NO' : 'YES'}`,
-    `AGENT_RUNTIME_OPENCLAW_DEPENDENCY = ${checks.find((c) => c.name === 'AGENT_RUNTIME_OPENCLAW_DEPENDENCY')?.ok ? 'NONE' : 'FOUND'}`,
+    `REAL_AGENT_START = ${v('REAL_DELIVERY_SMOKE')}`,
+    `AGENT_CRASH_RECOVERY = ${v('AGENT_CRASH_RECOVERY')}`,
+    `CONTROL_PLANE_RESTART_RECOVERY = ${v('CONTROL_PLANE_RESTART_RECOVERY')}`,
+    `BINDING_PERSISTENCE = ${v('BINDING_PERSISTENCE')}`,
+    `SCHEDULER_PERSISTENCE = ${v('SCHEDULER_PERSISTENCE')}`,
+    `DELIVERY_IDEMPOTENCY_PERSISTENCE = ${v('DELIVERY_IDEMPOTENCY_PERSISTENCE')}`,
+    `REAL_DELIVERY_SMOKE = ${v('REAL_DELIVERY_SMOKE')}`,
+    `REAL_SCHEDULER_SMOKE = ${v('REAL_SCHEDULER_SMOKE')}`,
+    `REAL_BROKER_SMOKE = ${v('REAL_BROKER_SMOKE')}`,
+    `CREDENTIAL_STORE_502_DENIED = ${v('CREDENTIAL_STORE_502_DENIED')}`,
+    `SECRET_VISIBLE_TO_502 = ${vInverted('SECRET_VISIBLE_TO_502', 'NO', 'YES')}`,
+    `AGENT_RUNTIME_OPENCLAW_DEPENDENCY = ${vInverted('AGENT_RUNTIME_OPENCLAW_DEPENDENCY', 'NONE', 'FOUND')}`,
     `SCHEDULER_EXECUTION_OPENCLAW_DEPENDENCY = NONE (scheduler invokes the real Agent Core Router)`,
     `DELIVERY_OPENCLAW_DEPENDENCY = NONE (ingress -> Router.deliver, no OpenClaw executor)`,
     `AUTH_CHANGE = NONE`,
