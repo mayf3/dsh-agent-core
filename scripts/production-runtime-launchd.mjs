@@ -6,8 +6,7 @@
  * REUSES launchd (the platform supervisor) — no container platform, no
  * Kubernetes, no VM manager, no supervisor framework, no custom watchdog.
  * The generated LaunchAgent follows the exact posture this machine already
- * runs for OpenClaw (ai.openclaw.gateway et al., per
- * docs/investigations/stock-agent-registry-adoption-v1.md):
+ * runs for OpenClaw (ai.openclaw.gateway et al.):
  *
  *   machine boot / login  -> RunAtLoad starts the runtime
  *   runtime crash         -> KeepAlive restarts it (ThrottleInterval 10s)
