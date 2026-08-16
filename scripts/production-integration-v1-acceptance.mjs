@@ -182,7 +182,7 @@ function startRuntime() {
     let stderr = ''
     let tail = ''
     let done = false
-    const see = (s) => { tail = (tail + s).slice(-2000) }
+    const see = (s) => { tail = (tail + s).slice(-2000); RUNTIME_TAIL = tail }
     const readyBefore = (() => { try { return evidenceEvents().filter((e) => e.kind === 'ready').length } catch { return 0 } })()
     const finish = (ok, detail) => {
       if (done) return
@@ -244,24 +244,49 @@ function stopRuntime(child) {
 }
 
 // ── api helpers (steady against booting acceptance ports) ────────────────────
-async function postJson(url, body) {
-  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+// runtime output tail, kept for fetch-failure diagnostics (the CP's own last
+// words are usually the actual error)
+let RUNTIME_TAIL = ''
+
+async function postJson(url, body, attemptTimeoutMs = 100_000) {
+  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(attemptTimeoutMs) })
   return { status: res.status, body: await res.json().catch(() => ({})) }
 }
-async function getJson(url) {
-  const res = await fetch(url)
+async function getJson(url, attemptTimeoutMs = 100_000) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(attemptTimeoutMs) })
   return { status: res.status, body: await res.json().catch(() => ({})) }
 }
-async function postSteady(url, body, timeoutMs = 60000) {
+async function postSteady(url, body, timeoutMs = 60000, attemptTimeoutMs = 100_000) {
   const started = Date.now()
+  let consecutive = 0
   for (;;) {
-    try { return await postJson(url, body) } catch (e) { if (Date.now() - started > timeoutMs) throw e; await sleep(600) }
+    try { return await postJson(url, body, attemptTimeoutMs) } catch (e) {
+      consecutive += 1
+      // the CP was READY when these calls started; five straight errors means
+      // it died or stopped listening — fail FAST with liveness + last words
+      // instead of burning the whole retry window blind
+      if (consecutive >= 5) {
+        const alive = findTrustedCpPid() !== undefined
+        throw new Error(`${e instanceof Error ? e.message : String(e)} [cpAlive=${alive}; runtime tail: ${RUNTIME_TAIL.slice(-400)}]`)
+      }
+      if (Date.now() - started > timeoutMs) throw e
+      await sleep(600)
+    }
   }
 }
-async function getSteady(url, timeoutMs = 60000) {
+async function getSteady(url, timeoutMs = 60000, attemptTimeoutMs = 100_000) {
   const started = Date.now()
+  let consecutive = 0
   for (;;) {
-    try { return await getJson(url) } catch (e) { if (Date.now() - started > timeoutMs) throw e; await sleep(600) }
+    try { return await getJson(url, attemptTimeoutMs) } catch (e) {
+      consecutive += 1
+      if (consecutive >= 5) {
+        const alive = findTrustedCpPid() !== undefined
+        throw new Error(`${e instanceof Error ? e.message : String(e)} [cpAlive=${alive}; runtime tail: ${RUNTIME_TAIL.slice(-400)}]`)
+      }
+      if (Date.now() - started > timeoutMs) throw e
+      await sleep(600)
+    }
   }
 }
 
@@ -392,6 +417,11 @@ async function main() {
   const agentHomeStat = sh(`stat -f '%Su:%Sg' ${JSON.stringify(join(PROD_LAYOUT.homesRoot, agent.id))} 2>/dev/null`).stdout.trim()
   const agentWsStat = sh(`stat -f '%Su:%Sg' ${JSON.stringify(join(PROD_LAYOUT.workspacesRoot, agent.id))} 2>/dev/null`).stdout.trim()
   record('PROD_AGENT_TREES_OWNED_502', agentHomeStat === 'yanfenma:staff' && agentWsStat === 'yanfenma:staff', `home ${agentHomeStat}; workspace ${agentWsStat}`)
+  // the child must be able to REACH its trees: traverse /Users/authsvc and
+  // the production root (run-4 root cause: a 0700 PROD_ROOT made the spawn
+  // cwd unreachable for uid 502 — every spawn died silently after this point)
+  const reach = as502(`stat -f '%Sp' ${JSON.stringify(join(PROD_LAYOUT.workspacesRoot, agent.id))} ${JSON.stringify(join(PROD_LAYOUT.homesRoot, agent.id))}`)
+  record('CHILD_CAN_REACH_TREES', reach.status === 0, reach.status === 0 ? 'uid 502 traverses to its workspace + home' : `uid-502 stat status=${reach.status} — check the traverse bit on /Users/authsvc and the production root`)
 
   injectAcceptanceKey()
 
@@ -515,9 +545,11 @@ async function main() {
   console.log('\n[broker] real broker smoke (child@502 -> parent@505 -> gateway -> auth-service -> svc-forum)')
   const surfaceId = `piv1-b-${Date.now()}`
   const driveCall = async (text) => {
-    const r1 = await postSteady(`${PRODUCT_API}/v1/message`, { surfaceId, text })
+    // /v1/message resolves only after the FULL model turn (turn timeout
+    // default 300s) — the per-attempt abort must exceed it
+    const r1 = await postSteady(`${PRODUCT_API}/v1/message`, { surfaceId, text }, 360000, 320000)
     if (r1.status === 200 && (r1.body?.reply ?? '').length > 0) return { ok: true, reply: r1.body?.reply ?? '' }
-    const r2 = await postSteady(`${PRODUCT_API}/v1/message`, { surfaceId, text: '请调用工具 forum_my_notifications, operation 填 "list", 然后告诉我工具的返回内容' })
+    const r2 = await postSteady(`${PRODUCT_API}/v1/message`, { surfaceId, text: '请调用工具 forum_my_notifications, operation 填 "list", 然后告诉我工具的返回内容' }, 360000, 320000)
     return { ok: r2.status === 200, reply: r2.body?.reply ?? '' }
   }
   const br = await driveCall('用 forum_my_notifications 查看我的未读通知, 把返回内容告诉我')

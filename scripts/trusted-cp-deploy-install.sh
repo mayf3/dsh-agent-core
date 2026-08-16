@@ -78,7 +78,34 @@ fi
 mkdir -p "$TRUSTED_ROOT"/{harness,app,home,config,.cache}
 cd "$TRUSTED_ROOT"
 
+# ---- 1b. reuse the heavyweight closures when their sources are UNCHANGED ----
+# The harness closure (1.5G source + offline pnpm install) and the Node
+# runtime are DEPENDENCIES of the code under test, not the code under test
+# itself. When the harness checkout is at the same commit (and clean) and the
+# Cellar node version is identical, mv them back from the backup — an instant
+# rename instead of minutes of tar+pnpm. The app closure is ALWAYS recopied
+# fresh (that is where the integration changes live).
+REUSE_HARNESS=0
+REUSE_NODE=0
+if [ -n "${BAK:-}" ]; then
+  HARNESS_STAMP="$(git -C "$HARNESS_SRC" rev-parse HEAD 2>/dev/null)$(git -C "$HARNESS_SRC" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+  if [ -n "$HARNESS_STAMP" ] && [ -f "$BAK/harness/.source-stamp" ] \
+     && [ "$(cat "$BAK/harness/.source-stamp" 2>/dev/null)" = "$HARNESS_STAMP" ]; then
+    mv "$BAK/harness" "$TRUSTED_ROOT/harness"
+    mv "$BAK/.cache" "$TRUSTED_ROOT/.cache" 2>/dev/null || true
+    REUSE_HARNESS=1
+    echo "  harness closure REUSED from $BAK (source commit unchanged — tar+pnpm skipped)"
+  fi
+  if [ -x "$BAK/node-runtime/bin/node" ] \
+     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$(node --version)" ]; then
+    mv "$BAK/node-runtime" "$TRUSTED_ROOT/node-runtime"
+    REUSE_NODE=1
+    echo "  node-runtime REUSED from $BAK (same node version $(node --version))"
+  fi
+fi
+
 # ---- 2. harness closure ----------------------------------------------------
+if [ "$REUSE_HARNESS" != "1" ]; then
 echo "== copying harness source (no node_modules/.git) -> harness/"
 tar -C "$HARNESS_SRC" -cf - \
   --exclude='node_modules' --exclude='.git' --exclude='.worktree*' \
@@ -97,6 +124,9 @@ cd harness
     exit 2
   }
 cd "$TRUSTED_ROOT"
+# stamp for the next install's reuse check (commit + dirty-file count)
+{ git -C "$HARNESS_SRC" rev-parse HEAD 2>/dev/null; git -C "$HARNESS_SRC" status --porcelain 2>/dev/null | wc -l | tr -d ' '; } > harness/.source-stamp
+fi
 
 # ---- 2b. trusted Node runtime (review blocker fix) --------------------------
 # The production Control Plane must NEVER execute /usr/local/bin/node
@@ -104,6 +134,7 @@ cd "$TRUSTED_ROOT"
 # trusted closure: real files only (cp -RL), no symlink/hardlink back to
 # /usr/local/bin, the Cellar, or /Users/yanfenma.
 echo "== copying Node runtime -> node-runtime/"
+if [ "$REUSE_NODE" != "1" ]; then
 NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
 case "$NODE_LINK_TARGET" in
   /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
@@ -113,6 +144,7 @@ NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NO
 NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
 mkdir -p node-runtime
 cp -RL "$NODE_VERSION_DIR"/. node-runtime/
+fi
 TRUSTED_NODE="$TRUSTED_ROOT/node-runtime/bin/node"
 if [ ! -x "$TRUSTED_NODE" ] || [ -L "$TRUSTED_NODE" ]; then
   echo "ERROR: trusted node missing or is a symlink: $TRUSTED_NODE" >&2
@@ -315,7 +347,13 @@ ln -s /usr/local/libexec/agent-core/config/agents.json "$PROD_ROOT/agents.json"
 # steal existing child trees back: chown the two roots only, never -R over
 # them; per-agent trees are provisioned by production-agent-provision.mjs.
 chown "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
-chmod 700 "$PROD_ROOT"
+# 711 (NOT 700): uid 502 must TRAVERSE the root to reach its own per-agent
+# workspace (spawn cwd) and home — run-4's 0700 root blocked the child at
+# spawn (cwd EACCES, swallowed spawn error, 90s silent ready() timeout, and a
+# delayed unhandled rejection killed the CP minutes later). o+x without o+r:
+# others may reach KNOWN paths but cannot LIST the root; every 505-private
+# subdir keeps its own 0700.
+chmod 711 "$PROD_ROOT"
 chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
 chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
 chown "${CHILD_UID}:${CHILD_GID}" "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
@@ -324,7 +362,12 @@ echo "  production root: $PROD_ROOT (505-private control state 0700; workspaces+
 
 # ---- 6. ownership + modes ---------------------------------------------------
 echo "== ownership: harness/app/home/node-runtime -> authsvc:authsvc (502 read-only)"
-for d in harness app home node-runtime; do
+# reused closures already carry the correct ownership+modes from the install
+# that produced them — skip the 1.5G re-walk; fresh copies get the full pass
+OWN_DIRS="app home"
+[ "$REUSE_HARNESS" != "1" ] && OWN_DIRS="harness $OWN_DIRS"
+[ "$REUSE_NODE" != "1" ] && OWN_DIRS="$OWN_DIRS node-runtime"
+for d in $OWN_DIRS; do
   chown -R -h "${AUTHSVC_UID}:${AUTHSVC_GID}" "$TRUSTED_ROOT/$d"
   chmod -R u+rwX,go+rX,go-w "$TRUSTED_ROOT/$d"
 done
