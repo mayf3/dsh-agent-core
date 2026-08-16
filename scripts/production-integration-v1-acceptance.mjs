@@ -372,6 +372,22 @@ async function main() {
   const agentsJsonLink = sh(`readlink ${JSON.stringify(PROD_LAYOUT.agentsConfig)} 2>/dev/null || true`).stdout.trim()
   record('PROD_ROOT_AGENTS_JSON_SINGLE_AUTHORITY', agentsJsonLink === AGENTS_CONFIG, agentsJsonLink || `${PROD_LAYOUT.agentsConfig} is not a symlink`)
 
+  // ── per-agent tree pre-provision (the trusted 505/502 seam) ─────────────
+  // 505 can never hand a NEW dir to 502 (chown needs root), so a ROOT actor
+  // provisions each declared agent's home+workspace via the TRUSTED app's
+  // own module (farm links resolve inside the trusted closure), then hands
+  // the trees to 502 — the pattern proven by trusted-credential-505-final-
+  // v2-run.mjs. The 505 router's idempotent provisioning then no-ops.
+  const prov = spawnSync(TRUSTED_NODE, [join(TRUSTED_APP, 'scripts', 'production-agent-provision.mjs')], {
+    encoding: 'utf8',
+    env: { ...process.env, PROD_ROOT },
+  })
+  const provLast = (prov.stdout ?? '').trim().split('\n').filter(Boolean).at(-1) ?? ''
+  record('PROD_AGENT_TREES_PREPROVISIONED', prov.status === 0, prov.status === 0 ? provLast : `${provLast} stderr=${(prov.stderr ?? '').trim().slice(-300)}`)
+  const agentHomeStat = sh(`stat -f '%Su:%Sg' ${JSON.stringify(join(PROD_LAYOUT.homesRoot, agent.id))} 2>/dev/null`).stdout.trim()
+  const agentWsStat = sh(`stat -f '%Su:%Sg' ${JSON.stringify(join(PROD_LAYOUT.workspacesRoot, agent.id))} 2>/dev/null`).stdout.trim()
+  record('PROD_AGENT_TREES_OWNED_502', agentHomeStat === 'yanfenma:staff' && agentWsStat === 'yanfenma:staff', `home ${agentHomeStat}; workspace ${agentWsStat}`)
+
   injectAcceptanceKey()
 
   // ── boot the production runtime as uid 505 from the trusted install ────────
@@ -392,22 +408,40 @@ async function main() {
 
   // ── real Agent start @502: deliver -> router -> workspace -> child(502) ────
   console.log('\n[delivery] real delivery smoke (ingress -> Router -> Agent child@502)')
+  const waitFor = async (predicate, timeoutMs, everyMs = 1000) => {
+    const started = Date.now()
+    for (;;) {
+      const value = await predicate()
+      if (value) return value
+      if (Date.now() - started > timeoutMs) return undefined
+      await sleep(everyMs)
+    }
+  }
   const requestId = `piv1-${Date.now()}`
   const deliverRes = await postSteady(`${INGRESS}/v1/deliver`, {
     requestId, agentId: agent.id, sessionMode: 'main',
     message: '回复一句：PIV1_OK',
   })
   record('REAL_DELIVERY_SMOKE', deliverRes.status === 200 && !!deliverRes.body?.accepted, `accepted=${deliverRes.body?.accepted} session=${deliverRes.body?.sessionId}`)
-  const children = childProcs()
-  const childUids = children.map((c) => procUid(c.pid))
-  record('CHILD_UID_502', childUids.length >= 1 && childUids.every((u) => u === '502'), `child uids=[${childUids.join(',')}]`)
+  // admission resolves at inbox accept; the child boot, the workspace
+  // bootstrap (AGENTS.md seeded child-side) and the first model turn all
+  // land asynchronously — poll for each.
+  const children = await waitFor(() => {
+    const cs = childProcs()
+    return cs.length >= 1 && cs.every((c) => procUid(c.pid) === '502') ? cs : undefined
+  }, 30000)
+  record('CHILD_UID_502', children !== undefined, `child uids=[${(children ?? []).map((c) => procUid(c.pid)).join(',')}]`)
   // real DSH native session + real model reply
   const workspaceDir = join(PROD_LAYOUT.workspacesRoot, agent.id)
   const homeDir = join(PROD_LAYOUT.homesRoot, agent.id)
-  record('WORKSPACE_ENSURED', existsSync(join(workspaceDir, 'AGENTS.md')), workspaceDir)
+  const workspaceReady = await waitFor(() => existsSync(join(workspaceDir, 'AGENTS.md')), 60000)
+  record('WORKSPACE_ENSURED', workspaceReady !== undefined, workspaceDir)
   // find a session.jsonl under the child home and check for a real model turn
-  const sessionFile = sh(`find ${JSON.stringify(homeDir)} -name 'session.jsonl' 2>/dev/null | head -1`).stdout.trim()
-  record('DSH_NATIVE_SESSION', sessionFile !== '', sessionFile || `${homeDir} (session not found)`)
+  const sessionFile = await waitFor(() => {
+    const found = sh(`find ${JSON.stringify(homeDir)} -name 'session.jsonl' 2>/dev/null | head -1`).stdout.trim()
+    return found !== '' ? found : undefined
+  }, 120000)
+  record('DSH_NATIVE_SESSION', sessionFile !== undefined, sessionFile || `${homeDir} (session not found)`)
 
   // admission must not wait for the full turn: the deliver response is the
   // inbox acceptance, returned promptly. Proven by REAL_DELIVERY_SMOKE's 200 accepted.
@@ -438,18 +472,23 @@ async function main() {
   const atIso = new Date(Date.now() + 10_000).toISOString()
   const jobId = cronAdd(atIso, 'PIV1 scheduler real-agent invocation')
   record('SCHEDULER_JOB_WRITE', jobId !== null, `job=${jobId} at ${atIso}`)
-  // the scheduler engine picks it up and invokes the real agent; wait for the run log entry
-  const jobRan = await (async () => {
+  // the scheduler engine picks it up and invokes the real agent; success is a
+  // FINISHED run event with status ok (a started or error-finished event must
+  // not satisfy the smoke — run events are appended even when the invocation
+  // fails)
+  const jobRun = await (async () => {
     const started = Date.now()
     for (;;) {
       const runs = existsSync(PROD_LAYOUT.runsLog) ? readFileSync(PROD_LAYOUT.runsLog, 'utf8').trim().split('\n').filter(Boolean).map((l) => { try { return JSON.parse(l) } catch { return null } }).filter(Boolean) : []
-      // job completion is recorded in the run log via the engine
-      if (jobId !== null && runs.some((r) => (r.jobId === jobId || (r.job?.id === jobId)))) return true
-      if (Date.now() - started > 120000) return false
+      const fin = jobId !== null ? runs.find((r) => r.jobId === jobId && r.action === 'finished') : undefined
+      if (fin !== undefined) return fin
+      if (Date.now() - started > 120000) return undefined
       await sleep(1000)
     }
   })()
-  record('REAL_SCHEDULER_SMOKE', !!jobRan, jobRan ? `job ${jobId} executed through the real agent` : 'job did not run in time')
+  record('REAL_SCHEDULER_SMOKE', jobRun?.status === 'ok', jobRun?.status === 'ok'
+    ? `job ${jobId} executed through the real agent (status=ok, durationMs=${jobRun.durationMs})`
+    : `job ${jobId} finished status=${jobRun?.status ?? 'never'}${jobRun?.error ? ` error=${String(jobRun.error).slice(0, 200)}` : ''}`)
 
   // ── broker / auth real chain ────────────────────────────────────────────────
   console.log('\n[broker] real broker smoke (child@502 -> parent@505 -> gateway -> auth-service -> svc-forum)')
@@ -467,7 +506,7 @@ async function main() {
   record('CREDENTIAL_STORE_502_DENIED', storeRead.status !== 0, `uid-502 read status=${storeRead.status}`)
   // secret visible to 502? inspect the child env
   let secretLeak = false
-  for (const c of children) {
+  for (const c of children ?? []) {
     const env = sh(`ps eww -p ${c.pid} -o command=`).stdout
     if (env.includes(REAL_CLIENT_ID) || env.includes('.openclaw/credentials') || /\bsecret\b/i.test(env)) secretLeak = true
   }
@@ -475,7 +514,7 @@ async function main() {
 
   // ── agent crash recovery ────────────────────────────────────────────────────
   console.log('\n[recovery] agent crash + respawn')
-  const childPid = children[0]?.pid
+  const childPid = childProcs()[0]?.pid ?? children?.[0]?.pid
   if (childPid !== undefined) {
     sh(`kill -9 ${childPid} 2>/dev/null || true`)
     await sleep(2000)
