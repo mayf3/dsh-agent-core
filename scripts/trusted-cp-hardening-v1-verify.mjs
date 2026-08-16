@@ -335,16 +335,15 @@ function injectOcGoKey() {
   process.env[ACCEPTANCE_KEY_ENV] = key
 }
 
-/** Acceptance-only override of the trusted test-home settings.yaml so the
- *  control plane routes to the oc-go provider (currently-available model).
- *  Applies ONLY to the trusted install's own home/ used by this verify run —
- *  never to /Users/authsvc/.dsh or the install script. Preserves every other
- *  existing setting. Re-owns the file to authsvc so the 505 CP can read it.
+/** Acceptance-only override of the settings.yaml files the trusted CP and each
+ *  child actually load, so they route to the oc-go provider (currently
+ *  available model). Applies ONLY to the trusted test-home and the per-agent
+ *  child homes used by this verify run — never to /Users/authsvc/.dsh or the
+ *  install script. Preserves every other existing setting. Re-owns the files
+ *  to authsvc (CP) / yanfenma (children) so they remain readable by the
+ *  process that loads them.
  */
-function applyAcceptanceModelOverride() {
-  const settingsPath = join(TRUSTED_HOME, 'settings.yaml')
-  const original = existsSync(settingsPath) ? readFileSync(settingsPath, 'utf8') : ''
-
+function applyAcceptanceModelOverride(agentA, agentB) {
   // Provider declaration (oc-go) under llm-pi-ai.providers.
   const providersBlock = [
     'llm-pi-ai:',
@@ -365,34 +364,47 @@ function applyAcceptanceModelOverride() {
     `  model: ${ACCEPTANCE_MODEL}`,
   ].join('\n')
 
-  // Split into top-level blocks (a block begins at column 0). Preserve every
-  // non-touched block verbatim; rebuild llm-pi-ai / agent-default-model.
-  const blocks = original.replace(/\r/g, '').split(/\n(?=\S)/).filter((s) => s.trim() !== '')
-  const out = []
-  let hasLlmpiai = false
-  let hasDefModel = false
-  for (const block of blocks) {
-    if (/^llm-pi-ai:/m.test(block)) {
-      out.push(providersBlock)
-      hasLlmpiai = true
-      continue
+  const apply = (settingsPath) => {
+    const original = existsSync(settingsPath) ? readFileSync(settingsPath, 'utf8') : ''
+    // Split into top-level blocks (a block begins at column 0). Preserve every
+    // non-touched block verbatim; rebuild llm-pi-ai / agent-default-model.
+    const blocks = (original || '').replace(/\r/g, '').split(/\n(?=\S)/).filter((s) => s.trim() !== '')
+    const out = []
+    let hasLlmpiai = false
+    let hasDefModel = false
+    for (const block of blocks) {
+      if (/^llm-pi-ai:/m.test(block)) {
+        out.push(providersBlock)
+        hasLlmpiai = true
+        continue
+      }
+      if (/^agent-default-model:/m.test(block)) {
+        out.push(defaultModelBlock)
+        hasDefModel = true
+        continue
+      }
+      out.push(block.trimEnd())
     }
-    if (/^agent-default-model:/m.test(block)) {
-      out.push(defaultModelBlock)
-      hasDefModel = true
-      continue
-    }
-    out.push(block.trimEnd())
+    if (!hasLlmpiai) out.push(providersBlock)
+    if (!hasDefModel) out.push(defaultModelBlock)
+    writeFileSync(settingsPath, `${out.join('\n\n')}\n`)
   }
-  if (!hasLlmpiai) out.push(providersBlock)
-  if (!hasDefModel) out.push(defaultModelBlock)
 
-  writeFileSync(settingsPath, `${out.join('\n\n')}\n`)
-  // The 505 control plane reads it as authsvc.
-  chownSync(settingsPath, USER_AUTHSVC.uid, USER_AUTHSVC.gid)
-  chmodSync(settingsPath, 0o644)
+  // The control-plane home / child homes use different owners (authsvc vs 502).
+  const paths = [
+    { path: join(TRUSTED_HOME, 'settings.yaml'), uid: USER_AUTHSVC.uid, gid: USER_AUTHSVC.gid, mode: 0o644 },
+  ]
+  for (const agentId of [agentA?.id ?? '', agentB?.id ?? '']) {
+    if (agentId === '') continue
+    paths.push({ path: join(HOMES_DIR, agentId, 'settings.yaml'), uid: USER_YANFENMA.uid, gid: USER_YANFENMA.gid, mode: 0o644 })
+  }
+  for (const { path, uid, gid, mode } of paths) {
+    apply(path)
+    chownSync(path, uid, gid)
+    chmodSync(path, mode)
+  }
   record('MODEL_OVERRIDE_APPLIED', true,
-    `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} -> trusted test home only (production default untouched)`)
+    `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} -> trusted test home + child homes only (production default untouched)`)
 }
 
 function controlEnv(extra = {}) {
@@ -420,6 +432,13 @@ function controlEnv(extra = {}) {
     DSH_AGENT_CHILD_UID: String(USER_YANFENMA.uid),
     DSH_AGENT_CHILD_GID: String(USER_YANFENMA.gid),
     DSH_AGENT_SPAWN_HELPER: HELPER,
+    // Acceptance-only model route for the child: agent-router/process.js
+    // reads DSH_AGENT_PROVIDER (~= 'opencode-go') to initialize the child
+    // model. Point it at the acceptance provider (oc-go) so the routed child
+    // uses a currently-available provider/model. Production default untouched.
+    DSH_AGENT_PROVIDER: ACCEPTANCE_PROVIDER,
+    DSH_AGENT_MODEL: ACCEPTANCE_MODEL,
+    [ACCEPTANCE_KEY_ENV]: process.env[ACCEPTANCE_KEY_ENV] ?? '',
     OPENCODE_GO_API_KEY: modelKey,
     PRODUCT_API_ENABLED: '1',
     PRODUCT_API_PORT: String(API_PORT),
@@ -604,7 +623,7 @@ async function main() {
   // point the trusted test-home at oc-go and inject its key at runtime. Never
   // touches the production default, the install script, or /Users/authsvc/.dsh.
   injectOcGoKey()
-  applyAcceptanceModelOverride()
+  applyAcceptanceModelOverride(agentA, agentB)
 
   // ------------------------------------------------------------- phase 3
   console.log('\n[phase 3] booting the REAL control plane from the TRUSTED install as uid 505')
