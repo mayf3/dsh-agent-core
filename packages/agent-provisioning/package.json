@@ -1,0 +1,11 @@
+{
+  "name": "@agent-core/agent-provisioning",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core per-agent home provisioning: DSH harness resolution and idempotent per-agent DSH_HOME preparation (settings, credentials, profile install, plugin farm links) for every profile the Router may spawn",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED"
+}

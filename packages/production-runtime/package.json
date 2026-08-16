@@ -1,0 +1,11 @@
+{
+  "name": "@agent-core/production-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core Production Runtime (PRODUCTION_RUNTIME_V1): the wiring/lifecycle-only composition that mounts the EXISTING components (Agent Definition, Workspace Bootstrap, Router, Scheduler engine, Broker gateway, Notification Ingress, Product API, Feishu channel) over one production persistent root. Zero new domain components.",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED"
+}

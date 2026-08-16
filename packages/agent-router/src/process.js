@@ -16,15 +16,14 @@
  * `onRpcRequest` hook the router installs and answers over stdin with a
  * `rpc.response` request. This client only relays — it owns no policy.
  *
- * Zero DSH imports: only node builtins + the shared demo-home provisioner.
+ * Zero DSH imports: only node builtins + the shared provisioning package
+ * (@agent-core/agent-provisioning, extracted from the old demo-home script).
  */
 
 import { spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { cliBin } from '../../../scripts/demo-home.mjs'
-
-const DEFAULT_PROFILE = 'agent-core-demo'
+import { cliBin } from '../../agent-provisioning/src/index.js'
 
 /**
  * Spawn configuration for the per-agent DSH child under the TRUSTED
@@ -95,7 +94,10 @@ export function agentEnv(home, extra = {}) {
  * text. `exit` promise settles when the OS process dies (any cause).
  */
 export class AgentProcess {
-  constructor({ agentId, home, workspace, profile = DEFAULT_PROFILE, log = console, env = {} }) {
+  constructor({ agentId, home, workspace, profile, log = console, env = {} }) {
+    if (typeof profile !== 'string' || profile === '') {
+      throw new TypeError('AgentProcess: profile is required (no default — the caller owns the composition choice)')
+    }
     this.agentId = agentId
     this.home = home
     this.workspace = workspace
