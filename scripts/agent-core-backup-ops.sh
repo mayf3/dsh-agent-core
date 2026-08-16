@@ -23,6 +23,25 @@
 # successor deploy). If the previous app commit is not reliably obtainable,
 # source_commit = unknown (do NOT guess / do NOT record the new deploy's HEAD).
 #
+# LKG authority (Fix): this helper does NOT verify or infer last-known-good. It
+# must NOT derive "known-good" from no-pin / mtime / newest / "current install".
+# FIRST_RELIABLE_PIN is set ONLY when BOTH:
+#   (a) no existing reliable pin exists, AND
+#   (b) a trusted operator explicitly asserts the predecessor is the verified
+#       LKG via AGENT_CORE_VERIFIED_PREDECESSOR_LKG=YES (the env seam propagates
+#       from the deploy invocation to this helper).
+# Without the assertion -> the predeploy backup is created normally, auto-pin = NO.
+#   LKG verification authority = external acceptance / trusted operator.
+#   FIRST_PIN_REQUIRES_PROVEN_LKG = YES · LKG_AUTHORITY = TRUSTED_OPERATOR_ASSERTION
+#   MACHINE_LKG_DETECTION = NO
+#
+# Fail-safe metadata handling (Fix): uncertainty -> KEEP. In --prune, ONLY a
+# backup whose .backup-meta status reads EXACTLY the managed-normal value
+# 'predeploy' is eligible for normal retention. rollback_used -> KEEP. status
+# missing / malformed / unreadable / unknown -> KEEP (never treated as normal).
+# Pinned truth is the UNION of the .pinned marker OR pinned=true in meta, so a
+# pinned=true meta with a missing marker is STILL KEPT (never pruned).
+#
 # Legacy backups (agent-core.bak-* WITHOUT a .backup-meta) are NEVER touched by
 # the prune here: AUTO_PRUNE_LEGACY_BEFORE_FIRST_PIN = NO, and any later legacy
 # cleanup is a separate operator task, not this prune.
@@ -35,15 +54,21 @@
 #   commands:
 #     --list                       list backups with id / pinned / status / size
 #     --write-predecessor <backup> write .backup-meta for a just-captured predeploy
-#                                  backup and auto-pin the FIRST_RELIABLE_PIN when
-#                                  no existing backup is pinned
+#                                  backup. FIRST_RELIABLE_PIN is set only when a
+#                                  prior reliable pin is absent AND the trusted
+#                                  operator asserts LKG via the env seam
+#                                  AGENT_CORE_VERIFIED_PREDECESSOR_LKG=YES.
 #     --pin <id>                   pin a backup (marker + meta, no data copy)
 #     --unpin <id>                 clear a pin
 #     --mark-rollback-used <id>    mark a backup as used for a rollback (KEEP)
 #     --prune --verified-success   post-verified-success NORMAL retention: keep
-#                                  newest 3 eligible NORMAL backups; pinned and
-#                                  rollback-used and legacy are never pruned.
+#                                  newest 3 eligible NORMAL backups (status
+#                                  exactly 'predeploy'); pinned (marker or meta),
+#                                  rollback-used, legacy, and unknown/absent-status
+#                                  backups are never pruned (uncertain -> KEEP).
 #                                  Refuses to prune without --verified-success.
+#                                  PRUNE_SUCCESS_AUTHORITY=TRUSTED_OPERATOR_ASSERTION
+#                                  MACHINE_ENFORCED_VERIFICATION=NO.
 # =============================================================================
 set -uo pipefail
 
@@ -138,7 +163,33 @@ write_meta() {
   return 0
 }
 
-is_pinned() { [ -f "$1/.pinned" ]; }
+# ---------------------------------------------------------------------------
+# pin / status truth model (fail-safe, shared by list/prune/maybe_first_pin)
+# ---------------------------------------------------------------------------
+# A backup is "reliably pinned" when EITHER the .pinned marker exists OR its
+# .backup-meta carries pinned=true. The union is fail-safe: a pinned=true meta
+# with a missing/removed marker is STILL treated as pinned (KEEP, never pruned).
+is_pinned_reliable() {
+  local bak="$1"
+  [ -f "$bak/.pinned" ] && return 0
+  [ "$(read_meta "$bak" pinned)" = "true" ] && return 0
+  return 1
+}
+
+# A backup is "managed normal" (eligible for normal retention) ONLY when its
+# .backup-meta is present AND status reads EXACTLY the managed-normal value
+# 'predeploy'. Missing/malformed/unreadable/unknown status is NOT normal —
+# uncertain -> KEEP. rollback_used is a distinct keep-state (not normal).
+is_managed_normal() {
+  local bak="$1" st
+  [ -f "$(meta_file "$bak")" ] || return 1   # legacy (no meta): skip
+  st="$(read_meta "$bak" status)"
+  if [ "$st" = "predeploy" ]; then return 0; fi
+  return 1   # rollback_used / NOT_SET(absent) / malformed / unreadable / unknown -> KEEP
+}
+
+# kept-normal (explicit keep): rollback_used reads status rollback_used (handled
+# via is_managed_normal, which treats non-'predeploy' status as keep).
 
 set_pin_marker() { touch "$1/.pinned" 2>/dev/null || { echo "WARNING: cannot create pin marker in $1" >&2; return 1; }; return 0; }
 clear_pin_marker() { rm -f "$1/.pinned"; }
@@ -162,7 +213,7 @@ harness_commit_of() {
 }
 
 # ---------------------------------------------------------------------------
-# write predeploy metadata + first reliable pin
+# write predeploy metadata + FIRST_RELIABLE_PIN (requires explicit LKG assertion)
 # ---------------------------------------------------------------------------
 write_predecessor_meta() {
   local root="$1" backup="$2"
@@ -171,6 +222,7 @@ write_predecessor_meta() {
   created_at="$(date +%Y-%m-%dT%H:%M:%S%z)"
   # source_commit = previous installed closure app commit. The previous closure
   # does NOT record its repo commit; never use the new deploy's REPO_SRC HEAD.
+  # This helper does NOT derive the commit (or the LKG) itself.
   scommit="unknown"
   hcommit="$(harness_commit_of "$backup")"
   if ! write_meta "$backup" \
@@ -183,25 +235,39 @@ write_predecessor_meta() {
     echo "WARNING: backup $backup has no writeable metadata (storage issue?)" >&2
     return 1
   fi
-  # FIRST_RELIABLE_PIN: if NO existing backup is currently pinned, pin this
-  # backup (the predeploy capture of the current verified LKG). This is the
-  # single auto-pin event; later pins are explicit operator actions.
-  maybe_first_pin "$root" "$backup"
+  # FIRST_RELIABLE_PIN: pin ONLY when there is no existing reliable pin AND a
+  # trusted operator EXPLICITLY asserts that this predecessor (the predeploy
+  # capture of the previously verified closure) is the verified LKG.
+  #   LKG verification authority = external acceptance / trusted operator.
+  #   This backup helper does NOT verify LKG itself and must NOT infer
+  #   known-good from no-pin / mtime / newest / "current install".
+  # Without the explicit assertion -> auto-pin = NO (backup created normally).
+  if [ "${AGENT_CORE_VERIFIED_PREDECESSOR_LKG:-no}" = "YES" ]; then
+    maybe_first_pin "$root" "$backup"
+  else
+    echo "NOTE: no FIRST_RELIABLE_PIN set for $backup — no explicit verified-LKG assertion"
+    echo "  (set AGENT_CORE_VERIFIED_PREDECESSOR_LKG=YES only when a trusted operator has"
+    echo "   confirmed this predecessor backup is the verified last-known-good; else it stays normal)"
+  fi
 }
 
 maybe_first_pin() {
   local root="$1" wanted="$2" bak
   local any_pinned=0
+  # historical-pin detection uses the SAME fail-safe truth model as list/prune
+  # (marker OR pinned=true-in-meta).
   for bak in "${root}".bak-*; do
     [ -d "$bak" ] || continue
-    if is_pinned "$bak"; then any_pinned=1; break; fi
+    if is_pinned_reliable "$bak"; then any_pinned=1; break; fi
   done
   if [ "$any_pinned" = "0" ]; then
     if set_pin_marker "$wanted" && write_meta "$wanted" pinned=true; then
-      echo "PIN: $wanted -> FIRST_RELIABLE_PIN (no existing historical pin set; current verified LKG now pinned, metadata/marker only, no data copy)"
+      echo "PIN: $wanted -> FIRST_RELIABLE_PIN (trusted-operator asserted LKG; no prior reliable pin; metadata/marker only, no data copy)"
     else
       echo "WARNING: failed to establish FIRST_RELIABLE_PIN on $wanted" >&2
     fi
+  else
+    echo "NOTE: a reliable pin already exists; not re-pinning $wanted (passing a deploy does not auto-pin beyond the operator's assertion)"
   fi
 }
 
@@ -211,7 +277,7 @@ maybe_first_pin() {
 pin_backup() {
   local root="$1" id="$2" bak
   bak="$(resolve_backup "$root" "$id")" || { echo "ERROR: no such backup: $id" >&2; return 1; }
-  if ! is_pinned "$bak"; then
+  if ! is_pinned_reliable "$bak"; then
     set_pin_marker "$bak" || return 1
   fi
   write_meta "$bak" pinned=true || return 1
@@ -222,7 +288,7 @@ unpin_backup() {
   local root="$1" id="$2" bak
   bak="$(resolve_backup "$root" "$id")" || { echo "ERROR: no such backup: $id" >&2; return 1; }
   clear_pin_marker "$bak"
-  write_meta "$bak" pinned=false || return 1
+  if [ "$(read_meta "$bak" pinned)" = "true" ]; then write_meta "$bak" pinned=false || return 1; fi
   echo "UNPIN: $(backup_id_from_path "$root" "$bak") -> not pinned"
 }
 
@@ -242,11 +308,9 @@ list_backups() {
   for bak in "${root}".bak-*; do
     [ -d "$bak" ] || continue
     id="$(backup_id_from_path "$root" "$bak")"
-    pin="no"; is_pinned "$bak" && pin="yes"
-    # pin flag may live in meta even if the marker is missing
-    if [ "$(read_meta "$bak" pinned)" = "true" ]; then pin="yes"; fi
-    st="$(read_meta "$bak" status)"     # predeploy | rollback_used | NOT_SET(legacy)
-    if [ "$st" = "NOT_SET" ]; then st="legacy"; fi
+    pin="no"; if is_pinned_reliable "$bak"; then pin="yes"; fi
+    st="$(read_meta "$bak" status)"     # predeploy | rollback_used | NOT_SET(legacy/unknown)
+    if [ "$st" = "NOT_SET" ]; then st="legacy/unknown"; fi
     size="$(du -sk "$bak" 2>/dev/null | awk '{print $1}')"; [ -z "$size" ] && size="-"
     printf '%-15s %-7s %-14s %9s  %s\n' "$id" "$pin" "$st" "${size}K" "$bak"
   done
@@ -267,15 +331,18 @@ do_prune() {
     return 3
   fi
 
-  local eligible="" bak id pin st
-  # collect eligible NORMAL backups: has .backup-meta, not pinned, not rollback_used
-  # (legacy backups without .backup-meta are NEVER eligible — AUTO_PRUNE_LEGACY=NO)
+  local eligible="" bak
+  # collect eligible NORMAL backups = those with .backup-meta AND status EXACTLY
+  # 'predeploy' (the managed-normal value), NOT reliably pinned.
+  # Fail-safe rule (uncertain -> KEEP):
+  #   legacy (no meta)           -> skip (AUTO_PRUNE_LEGACY=NO)
+  #   pinned (marker OR pinned=true meta) -> skip (never auto-pruned)
+  #   rollback_used              -> skip (KEEP)
+  #   status missing / malformed / unreadable / unknown -> skip (NOT treated as normal)
   for bak in "${root}".bak-*; do
     [ -d "$bak" ] || continue
-    [ -f "$(meta_file "$bak")" ] || continue     # legacy: skip
-    is_pinned "$bak" && continue                 # pinned: never auto-pruned
-    [ "$(read_meta "$bak" pinned)" = "true" ] && continue
-    [ "$(read_meta "$bak" status)" = "rollback_used" ] && continue  # used rollback: KEEP
+    is_managed_normal "$bak"   || continue   # legacy / rollback_used / unknown/absent status -> KEEP
+    is_pinned_reliable "$bak"  && continue   # pinned (either truth): never auto-pruned
     eligible="$eligible $(backup_id_from_path "$root" "$bak")"
   done
 
@@ -306,6 +373,7 @@ do_prune() {
     return 1
   fi
   echo "PRUNE: complete — NORMAL backups kept at ${NORMAL_RETENTION}; pinned + rollback-used + legacy retained."
+  echo "PRUNE: PRUNE_SUCCESS_AUTHORITY=TRUSTED_OPERATOR_ASSERTION MACHINE_ENFORCED_VERIFICATION=NO"
   return 0
 }
 
