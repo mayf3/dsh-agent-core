@@ -16,6 +16,7 @@
     "verify:scheduler": "node scripts/scheduler-v1-verify.mjs",
     "test:scheduler-router": "node --test packages/scheduler-router/test/*.test.js",
     "verify:scheduler-router-final": "node scripts/scheduler-router-final-v1-verify.mjs",
+    "verify:delivery": "node scripts/agent-router-delivery-v0-verify.mjs",
     "import:openclaw-jobs": "node scripts/openclaw-job-import.mjs"
   },
   "license": "UNLICENSED",
