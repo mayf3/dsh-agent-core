@@ -7,20 +7,16 @@
  * notification-ingress mount row), POSTs /v1/deliver over real HTTP and
  * asserts the frozen Router contract answer { accepted, sessionId }.
  *
- * It is skipped by default because main does NOT have `agentRouter.deliver`
- * yet — the Router Agent is implementing it in parallel on branch
- * feat/agent-router-delivery-v0. The ingress side must not (and does not)
- * fake or re-implement Router logic, so this seam stays pending until that
- * branch lands.
- *
- * Run it explicitly AFTER the Router branch lands:
+ * It is skipped by default because it needs the REAL Router `deliver()`
+ * (landed via the delivery-pipeline integration: feat/agent-router-delivery-v0
+ * + this branch's seam). The ingress side does not fake or re-implement
+ * Router logic, so the seam stays env-gated: run it explicitly
  *
  *   NOTIFICATION_INGRESS_INTEGRATION=1 npm test -- packages/notification-ingress
  *
- * Until then it reports `skip` in the test summary (visible seam, no silent
- * fake). If you force it on main, it FAILS LOUDLY with a 503
- * SERVICE_UNAVAILABLE assertion — the correct failure mode for a seam whose
- * dependency has not landed.
+ * On a composition WITHOUT agentRouter.deliver it FAILS LOUDLY (deliverReady
+ * false / 503) — the correct failure mode for a seam whose dependency has
+ * not landed.
  */
 
 import assert from 'node:assert/strict'
@@ -38,7 +34,7 @@ import { AgentDefinition } from '../../agent-definition/src/definition.js'
 import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 
 const SEAM_ENABLED = process.env.NOTIFICATION_INGRESS_INTEGRATION === '1'
-const SEAM_REASON = 'awaiting agentRouter.deliver (Router branch feat/agent-router-delivery-v0 not merged); rerun with NOTIFICATION_INGRESS_INTEGRATION=1 once the Router branch lands'
+const SEAM_REASON = 'real-control-plane seam: needs the REAL agentRouter.deliver (delivery-pipeline integration branch); rerun with NOTIFICATION_INGRESS_INTEGRATION=1'
 
 const CONTROL_PROFILE = 'agent-core-integration'
 const AGENT_PROFILE = 'agent-core-integration-agent'
