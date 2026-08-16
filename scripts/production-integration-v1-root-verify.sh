@@ -72,10 +72,13 @@ mkdir -p "$EVIDENCE_DIR"
 note() { echo "$@" | tee -a "$EVIDENCE" | tee -a "$LOG"; }
 note_run() { echo "$@" | tee -a "$LOG"; }
 
+RUN_START="$(date +%s)"
+
 run_phase() {
   local phase="$1"; shift
   note
   note "## Phase — $phase"
+  note "  [$(date '+%H:%M:%S') +$(( $(date +%s) - RUN_START ))s since run start]"
   note_run ">> phase: $phase"
 }
 
@@ -196,6 +199,7 @@ fi
 note
 note "# PRODUCTION_INTEGRATION_V1 — root acceptance evidence"
 note "Run: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+note "Total elapsed: $(( $(date +%s) - RUN_START ))s"
 note "Integration head: $INTEGRATION_HEAD (branch $INTEGRATION_BRANCH)"
 note_run "evidence dir: $EVIDENCE_DIR"
 note "(the acceptance launchd unit was NOT left installed — the operator "
