@@ -456,26 +456,32 @@ async function main() {
 
   // ── scheduler real chain ────────────────────────────────────────────────────
   console.log('\n[scheduler] real scheduler smoke (Scheduler -> Scheduler Router -> real Agent)')
-  // write a schedule via the production JobStore-compatible CLI seam
-  const AGENTCORE_CRON = process.env.AGENTCORE_CRON ?? '/usr/local/bin/agentcore-cron'
+  // write a schedule via the production JobStore-compatible CLI seam. The
+  // seam runs as the 505 identity against the TRUSTED copy of agentcore-cron
+  // (shipped by the install, authsvc-owned) — NEVER as root, and never via
+  // the /usr/local/bin/agentcore-cron dev-repo symlink (502-writable code
+  // must not execute as root/505 on the acceptance path).
+  const AGENTCORE_CRON = process.env.AGENTCORE_CRON ?? join(TRUSTED_APP, 'scripts', 'agentcore-cron.mjs')
   if (!existsSync(AGENTCORE_CRON)) {
-    console.error(`agentcore-cron control seam missing at ${AGENTCORE_CRON} (set AGENTCORE_CRON to override) — cannot run the real scheduler smoke`)
+    console.error(`agentcore-cron trusted copy missing at ${AGENTCORE_CRON} (set AGENTCORE_CRON to override) — cannot run the real scheduler smoke`)
     process.exit(2)
   }
   const cronAdd = (at, msg) => {
-    const env = { ...runtimeEnv(), PROD_ROOT, HOME: '/Users/authsvc' }
-    const out = spawnSync(AGENTCORE_CRON, ['add', '--agent', agent.id, '--name', 'piv1-sched', '--at', at, '--message', msg, '--session', 'isolated', '--no-deliver', '--light-context', '--timeout-seconds', '120', '--model', `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL}`, '--json'], { encoding: 'utf8', env })
+    const out = spawnSync('sudo', ['-u', 'authsvc', TRUSTED_NODE, AGENTCORE_CRON,
+      'add', '--agent', agent.id, '--name', 'piv1-sched', '--at', at, '--message', msg, '--session', 'isolated', '--no-deliver', '--light-context', '--timeout-seconds', '120', '--model', `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL}`, '--json'], { encoding: 'utf8' })
     if (out.status !== 0) return null
     try { return JSON.parse(out.stdout).id } catch { return null }
   }
-  // schedule a one-shot ~10s in the future
+  // schedule a one-shot ~10s in the future; the unique marker must surface in
+  // the REAL DSH agent session evidence — a run record alone never passes
+  const schedMark = `PIV1-SCHED-${Date.now()}`
   const atIso = new Date(Date.now() + 10_000).toISOString()
-  const jobId = cronAdd(atIso, 'PIV1 scheduler real-agent invocation')
+  const jobId = cronAdd(atIso, `scheduler real-agent invocation — reply with the marker ${schedMark}`)
   record('SCHEDULER_JOB_WRITE', jobId !== null, `job=${jobId} at ${atIso}`)
-  // the scheduler engine picks it up and invokes the real agent; success is a
-  // FINISHED run event with status ok (a started or error-finished event must
-  // not satisfy the smoke — run events are appended even when the invocation
-  // fails)
+  // the scheduler engine picks it up and invokes the real agent; success
+  // requires BOTH a finished run event with status ok AND the unique
+  // acceptance marker surfacing in the real DSH agent session evidence under
+  // the agent home (started or error-finished events never satisfy the smoke)
   const jobRun = await (async () => {
     const started = Date.now()
     for (;;) {
@@ -486,8 +492,16 @@ async function main() {
       await sleep(1000)
     }
   })()
-  record('REAL_SCHEDULER_SMOKE', jobRun?.status === 'ok', jobRun?.status === 'ok'
-    ? `job ${jobId} executed through the real agent (status=ok, durationMs=${jobRun.durationMs})`
+  const markerHit = jobRun?.status === 'ok'
+    ? await waitFor(() => {
+        const hit = sh(`grep -rl ${JSON.stringify(schedMark)} ${JSON.stringify(PROD_LAYOUT.homesRoot)} 2>/dev/null | head -1`).stdout.trim()
+        return hit !== '' ? hit : undefined
+      }, 60000)
+    : undefined
+  record('REAL_SCHEDULER_SMOKE', jobRun?.status === 'ok' && markerHit !== undefined, jobRun?.status === 'ok'
+    ? (markerHit !== undefined
+      ? `job ${jobId} status=ok, marker ${schedMark} reached the DSH session evidence (${markerHit})`
+      : `job ${jobId} status=ok but marker ${schedMark} never reached the agent session evidence`)
     : `job ${jobId} finished status=${jobRun?.status ?? 'never'}${jobRun?.error ? ` error=${String(jobRun.error).slice(0, 200)}` : ''}`)
 
   // ── broker / auth real chain ────────────────────────────────────────────────

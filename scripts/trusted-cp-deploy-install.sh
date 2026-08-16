@@ -268,9 +268,22 @@ echo "== seeding config/ (505-private)"
 mkdir -p config
 # The Agent Definition config is the SINGLE Agent existence authority
 # (AGENT_DEFINITION_CONFIG_V1): an empty declarative document until the
-# deployment authorizes agents (adoptAgents / seedDefinition).
-printf '{\n  "version": 1,\n  "defaultAgentId": null,\n  "agents": []\n}\n' > config/agents.json
-printf '{\n  "version": 1,\n  "credentials": {}\n}\n' > config/agent-credentials.json
+# deployment authorizes agents (adoptAgents / seedDefinition). A REINSTALL
+# MUST NEVER destroy the deployed definition or the credential store — the
+# stable agt_* identities and the 505 credentials survive code refreshes;
+# empty documents are seeded only on a fresh install.
+if [ -n "${BAK:-}" ] && [ -f "$BAK/config/agents.json" ]; then
+  cp "$BAK/config/agents.json" config/agents.json
+  echo "  preserved Agent Definition from $BAK (stable agt_* identities kept)"
+else
+  printf '{\n  "version": 1,\n  "defaultAgentId": null,\n  "agents": []\n}\n' > config/agents.json
+fi
+if [ -n "${BAK:-}" ] && [ -f "$BAK/config/agent-credentials.json" ]; then
+  cp "$BAK/config/agent-credentials.json" config/agent-credentials.json
+  echo "  preserved credential store from $BAK"
+else
+  printf '{\n  "version": 1,\n  "credentials": {}\n}\n' > config/agent-credentials.json
+fi
 # bindings/jobs are created by the router/resident on first boot (missing
 # file is a legal empty store for both).
 
@@ -293,15 +306,21 @@ mkdir -p "$PROD_ROOT"/{bindings,scheduler,workspaces,homes,control,logs}
 if [ -e "$PROD_ROOT/agents.json" ] || [ -L "$PROD_ROOT/agents.json" ]; then rm -f "$PROD_ROOT/agents.json"; fi
 ln -s /usr/local/libexec/agent-core/config/agents.json "$PROD_ROOT/agents.json"
 # Ownership split (PRODUCTION_INTEGRATION_V1): the 505 control plane owns the
-# durable control state (bindings/scheduler/control/logs + the root), and the
-# Agent child (uid 502) owns its per-agent workspace + DSH home under the same
-# production root — the Router spawns the child as 502, so it MUST be able to
-# write its own workspace/AGENTS.md and home. Never 505-writable for the child.
-chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
+# root + all control state (bindings/scheduler/control/logs); the Agent child
+# (uid 502) owns the per-agent workspace + DSH home trees under the same
+# production root. workspaces/ + homes/ stay TRAVERSABLE (0755) — the 505
+# router's idempotent ensure()/provisionAgentHome must stat through them
+# (the posture proven by trusted-credential-505-final-v2-run.mjs; the 505
+# PRIVATE dirs are the ones that get go-stripped). A reinstall must never
+# steal existing child trees back: chown the two roots only, never -R over
+# them; per-agent trees are provisioned by production-agent-provision.mjs.
+chown "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
 chmod 700 "$PROD_ROOT"
+chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
+chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
 chown "${CHILD_UID}:${CHILD_GID}" "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
-chmod -R u+rwX,go-rwx "$PROD_ROOT"
-echo "  production root: $PROD_ROOT (authsvc 0700; workspaces+homes child-502 writable; agents.json -> config/agents.json single authority)"
+chmod 755 "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
+echo "  production root: $PROD_ROOT (505-private control state 0700; workspaces+homes 502-owned 0755-traversable; agents.json -> config/agents.json single authority)"
 
 # ---- 6. ownership + modes ---------------------------------------------------
 echo "== ownership: harness/app/home/node-runtime -> authsvc:authsvc (502 read-only)"

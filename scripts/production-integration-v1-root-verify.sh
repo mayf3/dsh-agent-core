@@ -86,9 +86,10 @@ run_phase "0. sanity"
 [ -f "$REPO/scripts/production-runtime-launchd.mjs" ] || { echo "ERROR: launchd script missing" >&2; exit 2; }
 id authsvc >/dev/null 2>&1 || { echo "ERROR: user authsvc (uid 505) missing" >&2; exit 2; }
 id '502' >/dev/null 2>&1 || id -u yanfenma | grep -q '^502$' || true
-# the scheduler smoke drives the external agentcore-cron control seam
-AGENTCORE_CRON="${AGENTCORE_CRON:-/usr/local/bin/agentcore-cron}"
-[ -x "$AGENTCORE_CRON" ] || { echo "ERROR: agentcore-cron control seam missing at $AGENTCORE_CRON (export AGENTCORE_CRON to override)" >&2; exit 2; }
+# the scheduler smoke drives the agentcore-cron control seam through the
+# TRUSTED copy shipped by step 1 (as uid 505) — never the /usr/local/bin
+# dev-repo symlink; here we only verify the source that step 1 ships
+[ -f "$REPO/scripts/agentcore-cron.mjs" ] || { echo "ERROR: agentcore-cron source missing (shipped into the trusted install by step 1)" >&2; exit 2; }
 note "sanity OK (integration branch=$INTEGRATION_BRANCH @ $INTEGRATION_HEAD)"
 note "BASE_MAIN=${BASE_MAIN:-bfe7491}"
 note "INTEGRATION_HEAD=$INTEGRATION_HEAD"

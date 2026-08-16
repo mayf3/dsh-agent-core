@@ -34,6 +34,7 @@ import { join } from 'node:path'
 
 import { provisionAgentHome, REPO } from '../packages/agent-provisioning/src/index.js'
 import { resolveProductionLayout } from '../packages/production-runtime/src/paths.js'
+import { ensure as ensureWorkspace } from '../packages/workspace-bootstrap/src/index.js'
 
 if (typeof process.getuid === 'function' && process.getuid() !== 0) {
   console.error('must run as root (provisioning hands per-agent trees to the frozen child identity, which requires chown)')
@@ -70,6 +71,12 @@ for (const agent of agents) {
   const home = join(layout.homesRoot, agent.id)
   const workspace = join(layout.workspacesRoot, agent.id)
   provisionAgentHome(home, workspace, { profile: PROFILE })
+  // Seed the workspace through the SAME capability the Router calls pre-spawn
+  // (agent-router ensure(agentId) runs as 505 and only writes AGENTS.md when
+  // it is MISSING). Seeding it here as root means the 505-side ensure() is a
+  // pure idempotent no-op against the already-handed-to-502 tree — it never
+  // attempts a 505 write into the 502-owned workspace (EACCES).
+  await ensureWorkspace(agent.id, { workspaceRoot: layout.workspacesRoot, agentsHome: layout.homesRoot })
   // The harness credentials-local plugin requires owner-only 0600 on the
   // copied credentials file (the model key itself travels via the CP env).
   const creds = join(home, '.credentials.yaml')
