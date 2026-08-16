@@ -37,7 +37,7 @@
  *   PIV1_PRODUCT_API_PORT  (default 17987)
  *   PIV1_INGRESS_PORT      (default 17990)
  *   PIV1_SCHEDULER_TICK_MS (default 500)
- *   OC_GO_API_KEY / PIV1_ACCEPTANCE_KEY_FILE  (injected, never echoed)
+ *   OPENCODE_GO_API_KEY / PIV1_ACCEPTANCE_KEY_FILE  (injected, never echoed)
  */
 
 import { spawn, spawnSync } from 'node:child_process'
@@ -86,8 +86,13 @@ const INGRESS = `http://127.0.0.1:${INGRESS_PORT}`
 
 const ACCEPTANCE_MODEL = 'deepseek-v4-flash'
 const ACCEPTANCE_PROVIDER = 'oc-go'
-const ACCEPTANCE_KEY_ENV = 'OC_GO_API_KEY'
-const ACCEPTANCE_KEY_FILE = process.env.PIV1_ACCEPTANCE_KEY_FILE ?? '/Users/yanfenma/.claude/oc-go.txt'
+// The model key travels in the CP env under the name agentEnv() checks
+// (OPENCODE_GO_API_KEY); with it defined the 505 parent NEVER reads the
+// child's 0600 502-owned .credentials.yaml (reading it as 505 is EACCES —
+// the v2-proven contract, trusted-credential-505-final-v2-run.mjs). Same
+// key source and extraction as that driver.
+const ACCEPTANCE_KEY_ENV = 'OPENCODE_GO_API_KEY'
+const ACCEPTANCE_KEY_FILE = process.env.PIV1_ACCEPTANCE_KEY_FILE ?? '/Users/yanfenma/.dsh/.credentials.yaml'
 
 const REAL_CLIENT_ID = 'mc_oc_AdXrOjACKpodtqSPo3HA5fq_'
 const REAL_SECRET_FILE = '/Users/yanfenma/.openclaw/credentials/agent-knowledge-curator-agent-secret'
@@ -114,9 +119,9 @@ function asAuthsvc(cmd) { return sh(`sudo -u authsvc sh -c ${JSON.stringify(cmd)
 /** Load the acceptance-only model key into env (NEVER echoed). */
 function injectAcceptanceKey() {
   if (!existsSync(ACCEPTANCE_KEY_FILE)) throw new Error(`acceptance model key file missing: ${ACCEPTANCE_KEY_FILE}`)
-  const key = readFileSync(ACCEPTANCE_KEY_FILE, 'utf8').trim()
-  if (key === '') throw new Error('acceptance model key file is empty')
-  process.env[ACCEPTANCE_KEY_ENV] = key
+  const match = readFileSync(ACCEPTANCE_KEY_FILE, 'utf8').match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)
+  if (match === null || match[1] === '') throw new Error(`cannot read OPENCODE_GO_API_KEY from ${ACCEPTANCE_KEY_FILE}`)
+  process.env[ACCEPTANCE_KEY_ENV] = match[1]
 }
 
 // ── pick a free port for the acceptance product-api/ingress ──────────────────
@@ -488,7 +493,9 @@ async function main() {
       const runs = existsSync(PROD_LAYOUT.runsLog) ? readFileSync(PROD_LAYOUT.runsLog, 'utf8').trim().split('\n').filter(Boolean).map((l) => { try { return JSON.parse(l) } catch { return null } }).filter(Boolean) : []
       const fin = jobId !== null ? runs.find((r) => r.jobId === jobId && r.action === 'finished') : undefined
       if (fin !== undefined) return fin
-      if (Date.now() - started > 120000) return undefined
+      // the engine's own invocation timeout is 120s ON TOP of the at-time —
+      // a 120s poll window from job-write would false-FAIL boundary runs
+      if (Date.now() - started > 180000) return undefined
       await sleep(1000)
     }
   })()
