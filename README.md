@@ -1,41 +1,33 @@
 # dsh-agent-core
 
-Agent Core on DeepSeek Harness — V0 bootstrap。独立新仓库，不修改、不删除旧
+Agent Core on DeepSeek Harness。独立新仓库，不修改、不删除旧
 `agent-core`，不经过 OpenClaw / 旧 Agent Core Runtime / 旧 Kernel。
 
-> V1 能力调查与组件基础已完成（release checkpoint，PR #1）：整体定义、能力矩阵
-> 与下一步 milestone 见 [`docs/README.md`](docs/README.md)（收敛单一事实源：
-> `docs/CAPABILITY_MATRIX.md`）。V0 验收链路（`node scripts/verify.mjs`）保持通过。
+> V1 能力调查与组件基础已完成：整体定义、能力矩阵、组件地图、路线图与下一步
+> milestone 见 [`docs/README.md`](docs/README.md)（收敛单一事实源：
+> `docs/CAPABILITY_MATRIX.md`）。当前生产链路 = Feishu / Scheduler / Mobile Gate →
+> **Router / Control Plane（agent-router）** → per-agent 真实 DSH 进程。
 
-V0 只做一件事：用 DSH 已有能力搭一条最小可跑链路，vertical slice 是旧 Agent Core
-已验收的 `external.calculator` 能力（multiply 6 × 7 = 42）。
+最初（2026-08 V0 版本）曾用 DSH 已有能力搭了一条最小 vertical slice，验收用例是
+旧 Agent Core 的 `external.calculator`（multiply 6 × 7 = 42）。该 V0 切片（`@agent-core/router`
+一次性驱动 + `bundle/` + `profile/` + 3 个脚本）**已废弃并移入**
+[`examples/v0-vertical-slice/`](examples/v0-vertical-slice/README.md)，仅作历史示例保留：
+其一次性投递插件不是生产 `agent-router`，生产路径不引用它。
 
-## 链路（A）
+## 历史 V0 链路（已废弃，见示例）
 
-```text
-dsh CLI --profile agent-core
-  └─ dsh-base bundle（DSH 共享核心：session / agent-loop / tools / llm / …）
-  └─ @agent-core/bundle（本仓库 patch 层）
-       ├─ @agent-core/broker  注册模型可见 tool external_calculator（= external.calculator 能力）
-       └─ @agent-core/router  创建 Agent → followup(固定输入) → whenIdle() → 输出结果与证据
-```
-
-实际输出：
-
-```text
-[router] input: Use the external_calculator tool to multiply 6 and 7 ...
-[router] agent reply: The external calculator returned: 6 × 7 = 42
-[router] evidence: external_calculator -> external.calculator: multiply(6, 7) = 42 (ok: true)
-```
+最初的 V0 最小链路（`dsh --profile agent-core` → `@agent-core/broker` +
+`@agent-core/router` → `external.calculator 6×7=42`）与其实际输出、插件描述已随整个
+V0 切片移入 [`examples/v0-vertical-slice/`](examples/v0-vertical-slice/README.md)，不再维护
+在根目录。当前生产链路见 [`docs/README.md`](docs/README.md)。
 
 ## 结构（B）
 
 ```text
 dsh-agent-core/
-├── package.json               # 脚本入口（install:profile / dump-config / run / verify）
+├── package.json               # 脚本入口（verify:product-integration / scheduler / delivery …）
 ├── packages/
 │   ├── broker/                # @agent-core/broker — capability manifest → DSH tool（child relay / control-plane gateway 双模式）
-│   ├── router/                # @agent-core/router — 固定输入投递 + 结果/证据输出（一次性驱动）
 │   ├── feishu-connector/      # @agent-core/feishu-connector — 纯 channel 层（WS/IngressEvent/ReplyTarget）
 │   ├── workspace-bootstrap/   # @agent-core/workspace-bootstrap — agentId → workspace + DSH_HOME（幂等播种 AGENTS.md）
 │   ├── agent-definition/     # @agent-core/agent-definition — Agent Definition config（声明式只读 Agent 存在性权威；无运行时写者）
@@ -47,23 +39,19 @@ dsh-agent-core/
 │   ├── owner-guard/           # @agent-core/owner-guard — 单 owner 锁（one live process per agent）
 │   ├── scheduler/             # @agent-core/scheduler — Scheduler Replacement V1（cron/at/every 持久 job + 注入式 invocation/delivery seam）
 │   └── scheduler-router/      # @agent-core/scheduler-router — Scheduler↔Router Final Integration 桥接（真实 invokeAgent + deliver 适配器，只调已有域操作）
-├── bundle/                    # @agent-core/bundle — dsh.bundle patch 层（persona + broker/router）
+├── examples/
+│   └── v0-vertical-slice/     # 已废弃 V0 字节切片（@agent-core/router + bundle/ + profile/ + 3 个脚本），仅历史示例；见其 README
 ├── bundle-demo/               # @agent-core/bundle-demo — process-model demo patch 层
 ├── bundle-integration/        # @agent-core/bundle-integration — 控制面组合（agent-definition + workspace-bootstrap + feishu + agent-router + broker gateway）
 ├── bundle-memory/             # @agent-core/bundle-memory — per-agent memory patch 层
 ├── bundle-agent-switch/       # @agent-core/bundle-agent-switch — per-agent switch adapter patch 层
 ├── bundle-broker/             # @agent-core/bundle-broker — per-agent broker relay（child 无凭据，capability 工具经 parent-RPC 到控制面 gateway）
-├── profile/                   # dsh-profile-agent-core — dsh.profile 清单（V0）
 ├── profile-demo/              # dsh-profile-agent-core-demo — process-model demo profile
 ├── profile-integration/       # dsh-profile-agent-core-integration — 控制面 profile
 ├── profile-integration-agent/ # dsh-profile-agent-core-integration-agent — per-agent 组合（demo-server + memory + switch + broker relay）
 ├── scripts/
-│   ├── install-profile.mjs    # 把 profile 与 @agent-core/* 装入 Harness home（只增不改）
-│   ├── run.mjs                # 解析 DSH checkout + 注入 OPENCODE_GO_API_KEY，跑 dsh CLI
-│   ├── verify.mjs             # 断言验收用例证据（multiply(6,7) = 42）
-│   ├── process-model-demo.mjs # process-model 演示/基准驱动（100 常驻 fallback 已证明）
+│   ├── demo-home.mjs          # 共享 per-agent home 装配（provisionAgentHome + cliBin + profile 表）
 │   ├── install-demo-home.mjs  # 安装 demo home（只增不改）
-│   ├── demo-home.mjs          # demo home 路径解析
 │   ├── install-integration.mjs        # 安装集成控制面 profile（只增不改）
 │   ├── integration-v1-verify.mjs      # Integration V1 验收（真实飞书链路）
 │   ├── product-integration-v1-verify.mjs # Product Integration V1 验收（A/B 双 Agent、switch、重启、crash resume）
@@ -90,45 +78,22 @@ dsh-agent-core/
 `llm-pi-ai` / `agent-default-model`（opencode-go）。
 
 ```sh
-node scripts/install-profile.mjs   # 1. 安装 profile（symlink 进 ~/.dsh，可重复执行）
-node scripts/run.mjs               # 2. 实跑：投递固定输入
-node scripts/run.mjs "你的输入"     #    或用 launcher 参数覆盖输入（外部消息通道）
-node scripts/verify.mjs            # 3. 断言验收用例
-node scripts/run.mjs --dump-config #    查看合成后的配置树
+npm run verify:product-integration      # Product Integration V1 真实验收（A/B 双 Agent）
+npm run verify:scheduler                # Scheduler V1 验收驱动
+npm run verify:scheduler-router-final   # Scheduler↔Router Final Integration 验收
+npm run verify:delivery                 # Agent Router Delivery V0 验收（real DSH）
+npm test                                # 单元测试（packages/*/test）
 ```
 
-## V0 vertical slice 插件（C）
+> V0 vertical slice 的安装 / 运行 / 验收脚本已随示例移入
+> [`examples/v0-vertical-slice/`](examples/v0-vertical-slice/README.md)（仅历史复现用，
+> 不再挂在根 `package.json` 与 `scripts/`）。
 
-最初 V0 vertical slice 只有两个 Cordis 插件（`name` + `inject` + `Config` + `apply` 命名导出）：
+## 现状与下一步
 
-- `@agent-core/broker`：把旧 external-harness-v1 的 `external.calculator` 能力
-  注册为 DSH 模型可见 tool `external_calculator`。语义 1:1 复刻已验收 fixture：
-  add / subtract / multiply / divide，`{ok, result}` / `{ok, error:{code}}`，
-  错误码 `invalid_arguments` / `unsupported_operation` / `divide_by_zero`。
-- `@agent-core/router`：投递插件。创建 Agent（`ctx.agents.create`，复用
-  `dsh-headless` 参考驱动流程）→ `agent.followup(输入)` 送入 inbox →
-  `agent.whenIdle()` 等到 turn 关闭 → flush 会话 → 打印最终回复与
-  `tool/call`→`tool/result` 持久化证据 → `appExit(0|1)`。输入 = 配置
-  `fixedInput`，可被 launcher 第一个参数覆盖。
-
-Release checkpoint 另外已经加入 `feishu-connector`、`workspace-bootstrap`、
-`demo-server`、`owner-guard` 等独立组件，详见上面的结构与 `docs/reports/`。
-
-`bundle/` 与 `profile/` 是配置工件（不是插件代码）：patch 层插入 V0 broker/router，
-profile 声明 `[dsh-base, @agent-core/bundle]`。未修改 deepseek-harness 与旧
-agent-core 任何文件；对 `~/.dsh` 只做新增 symlink。
-
-## 当前替代结论与下一步
-
-详见 [`docs/reports/bootstrap-v0.md`](docs/reports/bootstrap-v0.md)、
-[`docs/reports/process-model-demo-v0.md`](docs/reports/process-model-demo-v0.md) 与
-[`docs/CAPABILITY_MATRIX.md`](docs/CAPABILITY_MATRIX.md)。当前已证明 DSH 可以承担
-Agent Core 的 agent loop / session / tool / persistence 等 Runtime 基础；旧 Kernel / Runtime
-保持冻结，不再作为下一步迁移目标。
-
-下一步是 `Integration V1`：把已经验证的组件第一次串成真实链路：
-
-```text
-Feishu → Router / Control Plane → workspace-bootstrap → owner-guard
-       → per-agent DSH process → resume-aware agent-server → reply
-```
+当前生产链路已是 **Integration V1+**：Feishu / Scheduler / Mobile Gate →
+**Router / Control Plane（`packages/agent-router`）** → workspace-bootstrap → owner-guard →
+per-agent 真实 DSH 进程 → 回复。详见 [`docs/reports/`](docs/reports/)、
+[`docs/AGENT_CORE_ROADMAP_V1.md`](docs/AGENT_CORE_ROADMAP_V1.md) 与
+[`docs/CAPABILITY_MATRIX.md`](docs/CAPABILITY_MATRIX.md)。旧 Kernel / Runtime 保持冻结，
+不再作为迁移目标。

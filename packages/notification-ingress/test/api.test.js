@@ -6,10 +6,9 @@
  * FROZEN dependency contract `agentRouter.deliver({ requestId, agentId,
  * sessionMode, message }) -> { accepted, sessionId }`. The real chain
  * (Router + BindingStore + real DSH processes) is deliberately NOT exercised
- * here — main does not have agentRouter.deliver yet (Router Agent branch
- * feat/agent-router-delivery-v0), and the ingress must never re-implement
- * Router logic. The real-composition path is pinned as an explicit seam in
- * test/integration.seam.test.js.
+ * here — these unit tests only pin what the thin adapter forwards, and the
+ * ingress must never re-implement Router logic. The real-composition path is
+ * pinned as an explicit seam in test/integration.seam.test.js.
  */
 
 import assert from 'node:assert/strict'

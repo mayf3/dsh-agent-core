@@ -11,12 +11,12 @@ import { spawnSync } from 'node:child_process'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const SCRIPTS = resolve(dirname(fileURLToPath(import.meta.url)))   // example scripts dir
 
 const result = spawnSync(
   process.execPath,
-  [resolve(REPO, 'scripts/run.mjs')],
-  { stdio: 'pipe', cwd: REPO, encoding: 'utf8' },
+  [resolve(SCRIPTS, 'run.mjs')],
+  { stdio: 'pipe', cwd: resolve(SCRIPTS, '..'), encoding: 'utf8' },
 )
 const output = result.stdout ?? ''
 const stderr = result.stderr ?? ''

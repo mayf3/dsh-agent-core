@@ -17,7 +17,9 @@ import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// This deprecated V0 example lives at <repo>/examples/v0-vertical-slice/.
+const EX = resolve(dirname(fileURLToPath(import.meta.url)), '..')          // the example root
+const REPO = resolve(EX, '../..')                                          // the agent-core repo root
 const HOME = process.env.DSH_HOME ?? join(homedir(), '.dsh')
 
 /** Create (or repair) one symlink. Fails loud on a real file at the target. */
@@ -38,14 +40,15 @@ function ensureSymlink(target, link) {
 const profileDir = join(HOME, 'profiles', 'agent-core')
 mkdirSync(profileDir, { recursive: true })
 for (const file of ['package.json', 'cordis.patch.yml']) {
-  ensureSymlink(join(REPO, 'profile', file), join(profileDir, file))
+  ensureSymlink(join(EX, 'profile', file), join(profileDir, file))
 }
 
 const farm = join(HOME, 'profiles', 'node_modules', '@agent-core')
-// The bundle package lives at the repo root; the plugin packages under packages/.
+// Bundle/router live inside this example; broker is shared production code
+// that stays under <repo>/packages/broker.
 const pkgDirs = {
-  bundle: join(REPO, 'bundle'),
-  router: join(REPO, 'packages', 'router'),
+  bundle: join(EX, 'bundle'),
+  router: join(EX, 'router'),
   broker: join(REPO, 'packages', 'broker'),
 }
 for (const [pkg, target] of Object.entries(pkgDirs)) {

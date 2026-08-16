@@ -18,7 +18,8 @@ import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// This deprecated V0 example lives at <repo>/examples/v0-vertical-slice/.
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')  // the agent-core repo root
 const DSH_ROOT = process.env.DSH_HARNESS_ROOT ?? resolve(REPO, '../../github/deepseek-harness')
 const CLI = join(DSH_ROOT, 'apps/cli/lib/bin.js')
 if (!existsSync(CLI)) {
