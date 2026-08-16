@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1
-status: draft
+status: accepted
 ---
 
 # Agent Repo Knowledge Governance V1
