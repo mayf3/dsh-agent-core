@@ -17,8 +17,8 @@
  * renders + installs one plist:
  *
  *   Label                ai.agent-core.runtime
- *   ProgramArguments     node <repo>/scripts/production-runtime.mjs --root <root>
- *   WorkingDirectory     <repo>
+ *   ProgramArguments     node <exec-target>/scripts-or-app/...production-runtime.mjs --root <root>
+ *   WorkingDirectory     <app-closure>
  *   EnvironmentVariables DSH_HARNESS_ROOT (resolved), PATH, HOME + every
  *                        pass-through seam env present at install time
  *                        (FEISHU_CREDS_PATH, DSH_AGENT_PROVIDER/MODEL,
@@ -28,15 +28,35 @@
  *                        here, not by changing runtime code)
  *   Standard{Out,Error}  <root>/logs/runtime{,.err}.log
  *
+ * TARGET SELECTION (PRODUCTION_INTEGRATION_V1, Task 2): the production
+ * supervision unit MUST NOT boot 505 pre-drop code from the dev repo /
+ * feature worktree or the Homebrew /usr/local/bin/node. Two modes:
+ *
+ *   mode=dev  (default)  node = process.execPath; runtime = <repo>/scripts
+ *                        (development/render-only; NOT the production unit)
+ *   mode=trusted         node = <trusted>/node-runtime/bin/node  (trusted Node)
+ *                        runtime + WorkingDirectory = <trusted>/app
+ *                        (the uid-502-writable-safe closure installed by
+ *                         trusted-cp-deploy-install.sh)
+ *
+ * Trusted mode is selected by --trusted or by PRODUCTION_RUNTIME_TRUSTED_ROOT
+ * (default /usr/local/libexec/agent-core). The launchd production unit MUST be
+ * installed in trusted mode so launchd -> trusted Node -> /usr/local/libexec/
+ * agent-core app closure -> uid 505 control plane.
+ *
  * Usage:
  *   node scripts/production-runtime-launchd.mjs --print            # render plist
- *   node scripts/production-runtime-launchd.mjs --install          # write + bootstrap
- *   node scripts/production-runtime-launchd.mjs --status           # launchctl state
- *   node scripts/production-runtime-launchd.mjs --uninstall        # bootout + remove
+ *   node scripts/production-runtime-launchd.mjs --print --trusted  # trusted-target plist
+ *   node scripts/production-runtime-launchd.mjs --install [--trusted]
+ *   node scripts/production-runtime-launchd.mjs --status
+ *   node scripts/production-runtime-launchd.mjs --uninstall
  *
  * Options:
  *   --root <dir>      production persistent root (default ~/.agent-core)
  *   --label <id>      launchd label (default ai.agent-core.runtime)
+ *   --trusted         render/install the production unit against the TRUSTED
+ *                     install closure (required for the supervised runtime)
+ *   --trusted-root    trusted install root (default /usr/local/libexec/agent-core)
  */
 
 import { execFileSync } from 'node:child_process'
@@ -47,6 +67,9 @@ import { fileURLToPath } from 'node:url'
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const RUNTIME_SCRIPT = join(REPO, 'scripts', 'production-runtime.mjs')
+
+/** Default trusted install root (matches trusted-cp-deploy-install.sh). */
+const DEFAULT_TRUSTED_ROOT = '/usr/local/libexec/agent-core'
 
 /** Env vars forwarded from the installing shell into the plist when set. */
 const PASS_THROUGH_ENV = [
@@ -83,8 +106,11 @@ function xmlEscape(value) {
   return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-/** Render the LaunchAgent plist. */
-export function renderPlist({ root, label, nodeBin, harness }) {
+/** Render the LaunchAgent plist.
+ *  @param {object} p - { root, label, nodeBin, harness, runtimeScript,
+ *    workingDir }. All default to the dev-target; main() passes the trusted
+ *    target when --trusted. */
+export function renderPlist({ root, label, nodeBin, harness, runtimeScript = RUNTIME_SCRIPT, workingDir = REPO }) {
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">',
@@ -94,11 +120,11 @@ export function renderPlist({ root, label, nodeBin, harness }) {
     '  <key>ProgramArguments</key>',
     '  <array>',
     `    <string>${xmlEscape(nodeBin)}</string>`,
-    `    <string>${xmlEscape(RUNTIME_SCRIPT)}</string>`,
+    `    <string>${xmlEscape(runtimeScript)}</string>`,
     '    <string>--root</string>',
     `    <string>${xmlEscape(root)}</string>`,
     '  </array>',
-    `  <key>WorkingDirectory</key><string>${xmlEscape(REPO)}</string>`,
+    `  <key>WorkingDirectory</key><string>${xmlEscape(workingDir)}</string>`,
     '  <key>EnvironmentVariables</key>',
     '  <dict>',
     `    <key>DSH_HARNESS_ROOT</key><string>${xmlEscape(harness)}</string>`,
@@ -128,11 +154,42 @@ function sh(cmd, args) {
   return execFileSync(cmd, args, { encoding: 'utf8' }).trim()
 }
 
+/**
+ * Resolve the launchd execution target.
+ *
+ * mode=trusted (--trusted / PRODUCTION_RUNTIME_TRUSTED_ROOT): the production
+ * supervision unit points at the TRUSTED install — trusted Node interpreter +
+ * trusted app closure (runtime script + working dir) — so launchd boots the
+ * uid-505 control plane from /usr/local/libexec/agent-core, never from the
+ * dev repo / feature worktree and never via /usr/local/bin/node.
+ *
+ * mode=dev (default): the historical dev/render-only target (repo + cwd node).
+ */
+export function executionTarget(argv) {
+  const trusted = argv.includes('--trusted') || Boolean(process.env.PRODUCTION_RUNTIME_TRUSTED_ROOT)
+  if (!trusted) {
+    return { trusted: false, nodeBin: process.execPath, runtimeScript: RUNTIME_SCRIPT, workingDir: REPO, harness: harnessRoot() }
+  }
+  const trustedRoot = resolve(argValue(argv, '--trusted-root', process.env.PRODUCTION_RUNTIME_TRUSTED_ROOT ?? DEFAULT_TRUSTED_ROOT))
+  const nodeBin = join(trustedRoot, 'node-runtime', 'bin', 'node')
+  const appDir = join(trustedRoot, 'app')
+  const runtimeScript = join(appDir, 'scripts', 'production-runtime.mjs')
+  const harness = join(trustedRoot, 'harness')
+  for (const [name, p] of [['trusted node', nodeBin], ['runtime script', runtimeScript], ['trusted harness', harness]]) {
+    if (!existsSync(p)) {
+      console.error(`--trusted target missing ${name}: ${p} — run sudo scripts/trusted-cp-deploy-install.sh first`)
+      process.exit(2)
+    }
+  }
+  return { trusted: true, nodeBin, runtimeScript, workingDir: appDir, harness }
+}
+
 function main() {
   const argv = process.argv.slice(2)
   const action = argv.find((a) => ['--print', '--install', '--uninstall', '--status'].includes(a)) ?? '--print'
   const root = resolve(argValue(argv, '--root', join(homedir(), '.agent-core')))
   const label = argValue(argv, '--label', 'ai.agent-core.runtime')
+  const target = executionTarget(argv)
   const plistPath = join(homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
   const uid = sh('id', ['-u'])
   const guiTarget = `gui/${uid}/${label}`
@@ -143,7 +200,7 @@ function main() {
   }
 
   if (action === '--print') {
-    process.stdout.write(renderPlist({ root, label, nodeBin: process.execPath, harness: harnessRoot() }))
+    process.stdout.write(renderPlist({ root, label, nodeBin: target.nodeBin, harness: target.harness, runtimeScript: target.runtimeScript, workingDir: target.workingDir }))
     return
   }
 
@@ -159,7 +216,7 @@ function main() {
   }
 
   if (action === '--install') {
-    const plist = renderPlist({ root, label, nodeBin: process.execPath, harness: harnessRoot() })
+    const plist = renderPlist({ root, label, nodeBin: target.nodeBin, harness: target.harness, runtimeScript: target.runtimeScript, workingDir: target.workingDir })
     mkdirSync(join(root, 'logs'), { recursive: true })
     mkdirSync(dirname(plistPath), { recursive: true })
     if (existsSync(plistPath)) {
@@ -172,10 +229,15 @@ function main() {
     } catch {
       sh('launchctl', ['load', '-w', plistPath])
     }
-    console.log(`installed ${label}`)
+    console.log(`installed ${label}${target.trusted ? ' (trusted target)' : ' (dev target — NOT the production unit)'}`)
     console.log(`  plist: ${plistPath}`)
     console.log(`  root:  ${root}`)
+    console.log(`  node:  ${target.nodeBin}`)
+    console.log(`  runtime: ${target.runtimeScript}`)
     console.log(`  logs:  ${join(root, 'logs')}`)
+    if (!target.trusted) {
+      console.warn('WARN: dev-target unit — use --trusted for the production supervision unit')
+    }
     try {
       const state = sh('launchctl', ['print', guiTarget])
       const pidLine = state.split('\n').find((l) => l.trim().startsWith('pid ='))
