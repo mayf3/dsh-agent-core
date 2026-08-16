@@ -5,7 +5,7 @@
  * "切换只是改绑定"; the channel, the DSH agent, the Registry and the Memory
  * never write a Binding). Integration V1 kept the Binding table in memory,
  * which silently forgot every switch on restart. This store makes the Binding
- * table recoverable with the same minimal guarantees the agent-registry uses:
+ * table recoverable with the same minimal guarantees the agent-definition config uses (declarative, deployment-side; the binding store stays the only runtime-written table):
  *
  *   - one JSON document at an ABSOLUTE path (relative or `~`-prefixed values
  *     are rejected fail-loud, so a literal `~` directory can never be created
@@ -167,7 +167,7 @@ export class BindingStore {
 
   /**
    * Serialize one mutation with minimal transaction semantics (FIX 3, same
-   * pattern as agent-registry): snapshot -> mutate -> persist -> success; a
+   * pattern the agent-definition writer uses): snapshot -> mutate -> persist -> success; a
    * failed persist restores the in-memory snapshot and rejects, so RAM can
    * never diverge from disk ("RAM = new Binding, disk = old Binding, caller
    * = failure" is impossible). The store file is only ever replaced

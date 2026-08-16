@@ -28,7 +28,7 @@
  * (and logged) by the caller.
  */
 
-import { createHttpTransport, createHttpHandlers } from './transport.js'
+import { createHttpTransport, createHttpHandlers, requestAccessToken } from './transport.js'
 import { buildTargetMap } from './targets.js'
 import { invoke } from './mapping.js'
 import { loadCredentialFor } from './credential-store.js'
@@ -38,13 +38,26 @@ import { loadCredentialFor } from './credential-store.js'
  *
  * @param {object} opts
  * @param {Array<object>} opts.manifests - capability manifests (http-bound
- *   ones are executable; others fail closed as unsupported).
+ *   ones are executable over the transport; `local` ones are executed
+ *   in-process against `localHandlers`; anything else fails closed as
+ *   unsupported).
  * @param {Array<object>} opts.targets - pinned target registry
  *   (origin + audience).
  * @param {string} opts.authServiceOrigin - token endpoint origin.
  * @param {string | undefined} opts.credentialsFile - ABSOLUTE path of the
  *   505-private credential store (AGENT_CORE_CREDENTIALS_FILE); absent =>
  *   every call fails closed.
+ * @param {Record<string, Record<string, Function>>} [opts.localHandlers] -
+ *   AGENT_DEFINITION_ACCESS_V1: handler maps for LOCAL (in-process)
+ *   capabilities, keyed by capabilityId then operation name. Each operation
+ *   is async (args, { agentId }) -> broker envelope. Injected by the
+ *   control-plane composition (the `agentDefinitionAccess` service); when
+ *   absent, local capabilities fail closed as unsupported.
+ * @param {() => Record<string, Record<string, Function>>} [opts.localHandlerResolver] -
+ *   alternative to localHandlers: resolved at EXECUTE time (when every
+ *   composition row is active) — the loader applies sibling rows
+ *   concurrently, so reading a sibling's service at APPLY time would race.
+ *   `localHandlers` wins when both are provided.
  * @param {(msg: string) => void} [opts.log] - parent log sink.
  * @returns {{ execute(call: {capabilityId:string, operation:string,
  *   args:object}, ctx: {agentId:string}): Promise<object> }}
@@ -54,13 +67,31 @@ export function createBrokerGateway({
   targets,
   authServiceOrigin,
   credentialsFile,
+  localHandlers,
+  localHandlerResolver,
   log = () => {},
 }) {
   const targetMap = buildTargetMap(targets)
   const byCapability = new Map()
   for (const manifest of manifests) {
     const hasHttp = Array.isArray(manifest.operations) && manifest.operations.some((o) => o && o.http)
-    if (hasHttp) byCapability.set(manifest.id, manifest)
+    const isLocal = manifest?.local !== undefined
+    if (hasHttp || isLocal) byCapability.set(manifest.id, manifest)
+  }
+
+  /**
+   * The local handler map for one call. `localHandlers` (static injection)
+   * wins; otherwise the resolver is consulted at EXECUTE time — by then the
+   * whole composition is active, so sibling services are available without
+   * racing the loader.
+   */
+  function handlersForCall() {
+    if (localHandlers !== undefined) return localHandlers
+    if (localHandlerResolver !== undefined) {
+      const resolved = localHandlerResolver()
+      return resolved ?? {}
+    }
+    return {}
   }
 
   /** One transport per agentId: shared token cache per identity, never
@@ -83,6 +114,14 @@ export function createBrokerGateway({
   /**
    * Execute one capability call AS the actual agentId (decided by the
    * Router from the spawning relationship — never from the call payload).
+   *
+   * Every path requires the caller's MachineClient credential from the
+   * trusted store (fail-closed identity proof). LOCAL capabilities may
+   * additionally require an Auth grant: when the manifest declares
+   * requiredScopes, a token for those scopes is requested from the
+   * auth-service (the ONLY grant authority) — a denied request fails the
+   * call closed with `access_denied` BEFORE any handler runs.
+   *
    * @param {{capabilityId:string, operation:string, args:object}} call
    * @param {{agentId:string}} ctx - the ACTUAL agent of the calling child.
    * @returns {Promise<{ok:boolean, result?:unknown,
@@ -92,6 +131,18 @@ export function createBrokerGateway({
     const manifest = byCapability.get(call?.capabilityId)
     if (manifest === undefined) {
       return { ok: false, error: { code: 'unsupported_operation', detail: `capability not served by the gateway: ${call?.capabilityId}` } }
+    }
+    const isLocal = manifest.local !== undefined
+    const operation = call?.operation
+    const localHandlersNow = handlersForCall()
+    if (isLocal && (typeof operation !== 'string' || localHandlersNow[manifest.id]?.[operation] === undefined)) {
+      return { ok: false, error: { code: 'unsupported_operation', detail: `operation not served by the gateway: ${manifest.id}.${operation}` } }
+    }
+    if (!Array.isArray(manifest.operations)) {
+      return { ok: false, error: { code: 'unsupported_operation', detail: `capability has no operations: ${manifest.id}` } }
+    }
+    if (!isLocal && !manifest.operations.some((o) => o && o.http)) {
+      return { ok: false, error: { code: 'unsupported_operation', detail: `capability not served by the gateway: ${manifest.id}` } }
     }
     let credential
     try {
@@ -106,9 +157,46 @@ export function createBrokerGateway({
       log(`[broker-gateway] agent ${agentId}: no credential bound (fails closed)`)
       return { ok: false, error: { code: 'credential_unavailable', detail: `no MachineClient credential bound to agent ${agentId}` } }
     }
+
+    // ── LOCAL (in-process) capability: optional Auth-grant check, then the
+    //    injected handler. No HTTP downstream exists. ─────────────────────
+    if (isLocal) {
+      const requiredScopes = Array.isArray(manifest.requiredScopes) ? manifest.requiredScopes : []
+      if (requiredScopes.length > 0) {
+        // The Auth grant check: obtain a token for the required scopes. The
+        // auth-service decides per credential; any failure is a DENIAL.
+        const resource = manifest.local?.resource
+        if (typeof resource !== 'string' || resource === '') {
+          return { ok: false, error: { code: 'access_denied', detail: `local capability ${manifest.id} declares requiredScopes without a local resource` } }
+        }
+        try {
+          await requestAccessToken({
+            credential,
+            authServiceOrigin,
+            resource,
+            scope: requiredScopes.join(' '),
+          })
+        } catch (error) {
+          log(`[broker-gateway] agent ${agentId}: ${manifest.id} grant denied: ${error?.message ?? error}`)
+          return {
+            ok: false,
+            error: { code: 'access_denied', detail: `grant for ${requiredScopes.join(' ')} not available to this agent` },
+          }
+        }
+      }
+      const handler = localHandlersNow[manifest.id]?.[operation]
+      try {
+        return await handler(call?.args ?? {}, { agentId })
+      } catch (error) {
+        log(`[broker-gateway] local capability ${manifest.id}.${operation} failed: ${error?.message ?? error}`)
+        return { ok: false, error: { code: 'internal_error', detail: error?.message ?? 'local capability failure' } }
+      }
+    }
+
+    // ── HTTP-bound capability: the existing generic authorized transport. ─
     const transport = transportFor(agentId)
     const handlers = createHttpHandlers(manifest, transport)
-    return invoke(manifest, handlers, { operation: call?.operation, args: call?.args ?? {} }, {
+    return invoke(manifest, handlers, { operation, args: call?.args ?? {} }, {
       // The parent decides the caller; the local identity stub is unused by
       // the HTTP pipeline (identity travels in the credential, not here).
       resolvePrincipal: () => undefined,

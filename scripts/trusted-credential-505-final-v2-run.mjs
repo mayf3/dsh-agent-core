@@ -31,7 +31,8 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../packages/agent-definition/src/config.js'
 
 process.env.DSH_HARNESS_ROOT ??= '/Users/yanfenma/workspace/github/deepseek-harness'
 
@@ -39,7 +40,7 @@ const RUNTIME = join(REPO, '.demo', 'trusted-credential-505-v2')
 const AGENTS_DIR = join(RUNTIME, 'agents') // memory root AND workspace root
 const HOMES_DIR = join(RUNTIME, 'homes')
 const CONTROL_HOME = join(RUNTIME, 'control', 'home')
-const REGISTRY_STORE = join(RUNTIME, 'control', 'registry.json')
+const AGENTS_CONFIG = join(RUNTIME, 'control', 'agents.json')
 const BINDINGS_STORE = join(RUNTIME, 'control', 'bindings.json')
 
 const AUTH_PARENT_UID = 505 // authsvc
@@ -138,7 +139,7 @@ function controlEnvPairs() {
     DSH_HOME: CONTROL_HOME,
     DSH_TELEMETRY_DISABLED: '1',
     DSH_PERMISSION_MODE: 'danger-full-access',
-    AGENT_REGISTRY_STORE: REGISTRY_STORE,
+    AGENT_DEFINITION_CONFIG: AGENTS_CONFIG,
     ROUTER_BINDINGS_STORE: BINDINGS_STORE,
     ROUTER_AGENT_PROFILE: AGENT_PROFILE,
     DSH_MEMORY_WORKSPACE_ROOT: AGENTS_DIR,
@@ -417,11 +418,14 @@ async function main() {
     throw new Error('credential source problem (empty or identical secrets)')
   }
 
-  // Registry + fixtures A/B (real registry, real workspaces).
-  const registry = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  const agentA = await registry.registerAgent({ name: AGENT_A_NAME, description: '论文导师' })
-  const agentB = await registry.registerAgent({ name: AGENT_B_NAME, description: '架构评审员' })
-  record('V2_REGISTRY_AB', registry.listAgents().length === 2, `${agentA.id} / ${agentB.id}`)
+  // Agent Definition config + fixtures A/B (real config, real workspaces).
+  const adopted = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [
+    { name: AGENT_A_NAME, description: '论文导师' },
+    { name: AGENT_B_NAME, description: '架构评审员' },
+  ] })
+  const [agentA, agentB] = adopted.agents
+  const definition = new AgentDefinition({ configFile: AGENTS_CONFIG })
+  record('V2_DEFINED_AB', definition.listAgents().length === 2, `${agentA.id} / ${agentB.id}`)
 
   const seedAgentsMd = (agentId, selfName, otherId, otherName) => [
     '# AGENTS.md', '',
@@ -460,7 +464,7 @@ async function main() {
     'product-api': join(REPO, 'packages', 'product-api'),
     'broker': join(REPO, 'packages', 'broker'),
     'workspace-bootstrap': join(REPO, 'packages', 'workspace-bootstrap'),
-    'agent-registry': join(REPO, 'packages', 'agent-registry'),
+    'agent-definition': join(REPO, 'packages', 'agent-definition'),
   })
 
   // The trusted credential store: INSIDE the 505-private zone, authsvc-owned.

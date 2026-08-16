@@ -44,7 +44,8 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../packages/agent-definition/src/config.js'
 import { apply as applyBootstrap } from '../packages/workspace-bootstrap/src/index.js'
 import { apply as applyRouter, channelConversationIdOf } from '../packages/agent-router/src/index.js'
 
@@ -52,7 +53,7 @@ const RUNTIME = resolve(process.env.DSH_PRODUCT_INTEGRATION_RUNTIME ?? join(REPO
 const AGENTS_DIR = join(RUNTIME, 'agents') // workspace root (memory root)
 const HOMES_DIR = join(RUNTIME, 'homes')   // agents home root (DSH_HOME per agent)
 const CONTROL_HOME = join(RUNTIME, 'control', 'home')
-const REGISTRY_STORE = join(RUNTIME, 'control', 'registry.json')
+const AGENTS_CONFIG = join(RUNTIME, 'control', 'agents.json')
 const BINDINGS_STORE = join(RUNTIME, 'control', 'bindings.json')
 const KEEP = process.env.DSH_PRODUCT_INTEGRATION_KEEP === '1'
 const PROVIDER = process.env.DSH_AGENT_PROVIDER ?? 'opencode-go'
@@ -130,7 +131,7 @@ function provisionControlHome() {
     'feishu-connector': join(REPO, 'packages', 'feishu-connector'),
     'agent-router': join(REPO, 'packages', 'agent-router'),
     'workspace-bootstrap': join(REPO, 'packages', 'workspace-bootstrap'),
-    'agent-registry': join(REPO, 'packages', 'agent-registry'),
+    'agent-definition': join(REPO, 'packages', 'agent-definition'),
   })
 }
 
@@ -141,7 +142,7 @@ function baseEnv(extra = {}) {
     DSH_HOME: CONTROL_HOME,
     DSH_TELEMETRY_DISABLED: '1',
     DSH_PERMISSION_MODE: 'danger-full-access',
-    AGENT_REGISTRY_STORE: REGISTRY_STORE,
+    AGENT_DEFINITION_CONFIG: AGENTS_CONFIG,
     ROUTER_BINDINGS_STORE: BINDINGS_STORE,
     ROUTER_AGENT_PROFILE: AGENT_PROFILE,
     DSH_MEMORY_WORKSPACE_ROOT: AGENTS_DIR,
@@ -267,28 +268,30 @@ async function main() {
 
   const ctx = fakeCtx()
   applyBootstrap(ctx, { workspaceRoot: AGENTS_DIR, agentsHome: HOMES_DIR })
-  const registrySvc = (() => {
-    const core = new AgentRegistry({ storeFile: REGISTRY_STORE })
+  // Agent Definition config (the frozen existence authority): A + B with
+  // opaque agt_ ids minted ONCE and persisted into the config; A is the
+  // configured default. The router / workspace-bootstrap derive every agent
+  // path from exactly that id — the homes below must be provisioned under
+  // the DEFINED ids, not a chosen name (the acceptance itself proves
+  // id-driven provisioning).
+  const adopted = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [
+    { name: AGENT_A_NAME, description: '论文导师' },
+    { name: AGENT_B_NAME, description: '研发总监' },
+  ] })
+  const [agentA, agentB] = adopted.agents
+  const definitionSvc = (() => {
+    const core = new AgentDefinition({ configFile: AGENTS_CONFIG })
     return {
       listAgents: () => core.listAgents(),
       getAgent: (id) => core.getAgent(id),
       getDefaultAgent: () => core.getDefaultAgent(),
-      registerAgent: (input) => core.registerAgent(input),
-      updateAgent: (agentId, patch) => core.updateAgent(agentId, patch),
-      setDefaultAgent: (agentId) => core.setDefaultAgent(agentId),
+      resolveAgentRef: (ref) => core.resolveAgentRef(ref),
     }
   })()
-  ctx.provide('agentRegistry', registrySvc)
-
-  // Register FIRST: the Registry owns the opaque agentIds, and the router /
-  // workspace-bootstrap derive every agent path from exactly that id — the
-  // homes below must be provisioned under the GENERATED ids, not a chosen
-  // name (the acceptance itself proves id-driven provisioning).
-  const agentA = await registrySvc.registerAgent({ name: AGENT_A_NAME, description: '论文导师' })
-  const agentB = await registrySvc.registerAgent({ name: AGENT_B_NAME, description: '研发总监' })
-  record('REGISTRY_PROVIDES_AB', registrySvc.listAgents().length === 2 && registrySvc.getAgent(agentA.id).name === AGENT_A_NAME && registrySvc.getAgent(agentB.id).name === AGENT_B_NAME,
+  ctx.provide('agentDefinition', definitionSvc)
+  record('DEFINED_AB', definitionSvc.listAgents().length === 2 && definitionSvc.getAgent(agentA.id).name === AGENT_A_NAME && definitionSvc.getAgent(agentB.id).name === AGENT_B_NAME,
     `${agentA.id} / ${agentB.id}`)
-  record('REGISTRY_DEFAULT_IS_A', registrySvc.getDefaultAgent()?.id === agentA.id, 'first registered becomes default')
+  record('DEFINED_DEFAULT_IS_A', definitionSvc.getDefaultAgent()?.id === agentA.id, 'configured default is A')
 
   provisionAgent(agentA.id)
   provisionAgent(agentB.id)
@@ -424,12 +427,12 @@ async function main() {
   await ctx.disposeAll() // shutdown every owned agent process
   const ctx2 = fakeCtx()
   applyBootstrap(ctx2, { workspaceRoot: AGENTS_DIR, agentsHome: HOMES_DIR })
-  const registry2 = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  ctx2.provide('agentRegistry', {
-    listAgents: () => registry2.listAgents(),
-    getAgent: (id) => registry2.getAgent(id),
-    getDefaultAgent: () => registry2.getDefaultAgent(),
-    registerAgent: (input) => registry2.registerAgent(input),
+  const definition2 = new AgentDefinition({ configFile: AGENTS_CONFIG })
+  ctx2.provide('agentDefinition', {
+    listAgents: () => definition2.listAgents(),
+    getAgent: (id) => definition2.getAgent(id),
+    getDefaultAgent: () => definition2.getDefaultAgent(),
+    resolveAgentRef: (ref) => definition2.resolveAgentRef(ref),
   })
   const router2 = applyRouter(ctx2, {
     bindingsStoreFile: BINDINGS_STORE,
@@ -444,7 +447,12 @@ async function main() {
 
   // ------------------------------------------------- phase 7.5 (FIX 1)
   console.log('\n[phase 7.5] FIX1: a fresh Agent spawns with ZERO pre-provisioning')
-  const agentC = await registry2.registerAgent({ name: 'Agent C' })
+  // FIX1 now adds a NEW agent to the Agent Definition config through the
+  // deployment-side adoption mechanism (mint-once + persist; the runtime
+  // read service stays read-only). The Router's spawn hot path never queries
+  // the config, so router2 can spawn the fresh agent directly.
+  const adoptedC = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [{ name: 'Agent C' }] })
+  const agentC = adoptedC.agents.find((a) => a.name === 'Agent C')
   // Deliberately NO provisionAgent(agentC.id): no profile, no memory, no
   // farm. The Router's own spawn path (ensureRunning -> provisionAgentHome
   // with cfg.agentProfile) must install everything the integration-agent
@@ -487,7 +495,7 @@ async function main() {
     `- A main trajectory: ${mainTrajectory(agentA.id).length} bytes`,
     `- B main trajectory: ${mainTrajectory(agentB.id).length} bytes`,
     `- Binding store: ${BINDINGS_STORE} (${JSON.stringify(router2.bindingsSnapshot(), null, 2)})`,
-    `- Registry store: ${REGISTRY_STORE}`,
+    `- Agent Definition config: ${AGENTS_CONFIG}`,
     '',
   ].join('\n')
   const reportPath = join(RUNTIME, '..', 'evidence.md')

@@ -11,7 +11,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { AgentRegistry } from '../../agent-registry/src/registry.js'
+import { AgentDefinition } from '../../agent-definition/src/definition.js'
+import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { AgentProcess } from '../src/process.js'
 import { apply as applyRouter, BROKER_RPC_METHOD, SWITCH_RPC_METHOD } from '../src/index.js'
 
@@ -48,15 +49,24 @@ function stubAgentProcess() {
 async function freshRouter(t, services = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-broker-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
-  const registry = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
-  const agentA = await registry.registerAgent({ name: 'Agent A' })
-  const agentB = await registry.registerAgent({ name: 'Agent B' })
+  const configFile = join(dir, 'agents.json')
+  await writeAgentDefinition(configFile, {
+    defaultAgentId: 'agt_a',
+    agents: [
+      { id: 'agt_a', name: 'Agent A' },
+      { id: 'agt_b', name: 'Agent B' },
+    ],
+  })
+  const definition = new AgentDefinition({ configFile })
+  const agentA = definition.getAgent('agt_a')
+  const agentB = definition.getAgent('agt_b')
   const ctx = fakeCtx(new Map([
     ['workspaceBootstrap', stubBootstrap()],
-    ['agentRegistry', {
-      listAgents: () => registry.listAgents(),
-      getAgent: (id) => registry.getAgent(id),
-      getDefaultAgent: () => registry.getDefaultAgent(),
+    ['agentDefinition', {
+      listAgents: () => definition.listAgents(),
+      getAgent: (id) => definition.getAgent(id),
+      getDefaultAgent: () => definition.getDefaultAgent(),
+      resolveAgentRef: (ref) => definition.resolveAgentRef(ref),
     }],
     ...Object.entries(services),
   ]))
@@ -65,7 +75,7 @@ async function freshRouter(t, services = {}) {
     defaultSessionId: 'main',
     agentProfile: 'agent-core-demo',
   })
-  return { router, registry, agentA, agentB }
+  return { router, definition, agentA, agentB }
 }
 
 test('broker RPC: executed as the ACTUAL proc.agentId via the gateway', async (t) => {

@@ -1,7 +1,7 @@
 /**
  * Unit tests for @agent-core/product-api — the Gate 1 thin HTTP adapter.
  *
- * The server is mounted on a fake cordis ctx with STUB router/registry
+ * The server is mounted on a fake cordis ctx with STUB router/definition
  * services (the real chain — Router + BindingStore + real DSH processes —
  * is covered by scripts/mobile-gate1-verify.mjs). These tests pin the
  * adapter contract: the four endpoints, the error envelope, and the
@@ -71,17 +71,17 @@ function stubRouter() {
   }
 }
 
-function stubRegistry(agents) {
+function stubDefinition(agents) {
   return {
     listAgents: () => agents.map(a => ({ ...a })),
   }
 }
 
 /** Start the product-api server on an ephemeral port; returns {base, dispose}. */
-async function startServer(t, { router, registry, config = {} } = {}) {
+async function startServer(t, { router, definition, config = {} } = {}) {
   const ctx = fakeCtx(new Map([
     ['agentRouter', router ?? stubRouter()],
-    ['agentRegistry', registry ?? stubRegistry([{ id: 'agt_a', name: 'Agent A' }])],
+    ['agentDefinition', definition ?? stubDefinition([{ id: 'agt_a', name: 'Agent A', description: null }])],
   ]))
   const api = applyProductApi(ctx, { port: 0, ...config })
   // port 0: wait for the actual address.
@@ -109,9 +109,9 @@ async function call(base, method, path, body) {
   return { status: res.status, body: text === '' ? null : JSON.parse(text) }
 }
 
-test('GET /v1/agents lists registry agents in the contract shape', async (t) => {
+test('GET /v1/agents lists defined agents in the contract shape', async (t) => {
   const { base } = await startServer(t, {
-    registry: stubRegistry([
+    definition: stubDefinition([
       { id: 'agt_a', name: 'Agent A', avatar: null, description: '论文导师' },
       { id: 'agt_b', name: 'Agent B', avatar: null, description: null },
     ]),

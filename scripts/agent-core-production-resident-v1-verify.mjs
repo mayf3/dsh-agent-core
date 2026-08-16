@@ -6,9 +6,9 @@
  * entrypoint (scripts/agent-core-resident.mjs) and auto-consumes scheduler
  * jobs written EXTERNALLY via `agentcore-cron add` — no manual run/tick.
  *
- *   Phase 0  provision a fresh runtime + control plane store: AgentRegistry
- *            store with ONE real registered agent (the resident LOADS this
- *            store; it never registers agents).
+ *   Phase 0  provision a fresh runtime + control plane store: Agent
+ *            Definition config with ONE real defined agent (the resident
+ *            LOADS this config; it never writes it).
  *   Phase 1  RESIDENT + AUTO EXECUTION: spawn the resident process, then
  *            `agentcore-cron add` a short `at` job (delivery none). Assert
  *            the scheduler loop alone fires it through the real Router ->
@@ -34,7 +34,8 @@ import { join, resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn, execFileSync } from 'node:child_process'
 import { REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../packages/agent-definition/src/config.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const RUNTIME = resolve(process.env.DSH_ACPR_RUNTIME ?? join(REPO, '.demo', 'agent-core-production-resident-v1', 'runtime'))
@@ -43,7 +44,7 @@ const KEEP = process.env.DSH_ACPR_KEEP === '1'
 const AGENTS_DIR = join(RUNTIME, 'agents')
 const HOMES_DIR = join(RUNTIME, 'homes')
 const CONTROL_DIR = join(RUNTIME, 'control')
-const REGISTRY_STORE = join(CONTROL_DIR, 'registry.json')
+const AGENTS_CONFIG = join(CONTROL_DIR, 'agents.json')
 const JOBS_STORE = join(CONTROL_DIR, 'jobs.json')
 const RUNS_LOG = join(CONTROL_DIR, 'runs.jsonl')
 const EVIDENCE_LOG = join(CONTROL_DIR, 'resident-evidence.jsonl')
@@ -151,16 +152,20 @@ async function main() {
   }
   mkdirSync(CONTROL_DIR, { recursive: true })
 
-  // Real registry store with ONE registered agent (resident loads it).
-  const registry = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  const fixture = await registry.registerAgent({
-    name: FIXTURE_NAME,
-    description: 'agent-core production resident fixture (registered via AgentRegistry; no Broker/Auth)',
-  })
+  // Real Agent Definition config with ONE defined agent (the resident LOADS
+  // the config; it never writes it). The opaque agt_ id is minted ONCE by the
+  // adoption mechanism and persisted into the config — not at runtime.
+  const adopted = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [
+    { name: FIXTURE_NAME, description: 'agent-core production resident fixture (defined in the Agent Definition config; no Broker/Auth)' },
+  ] })
+  const fixture = adopted.agents[0]
+  // Load the read model AFTER adoption (the definition is loaded once at
+  // construction and must see the fixture).
+  const definition = new AgentDefinition({ configFile: AGENTS_CONFIG })
   const fixtureHome = join(HOMES_DIR, fixture.id)
   const fixtureWorkspace = join(AGENTS_DIR, fixture.id)
   mkdirSync(fixtureWorkspace, { recursive: true })
-  console.log(`[phase 0] registered ${fixture.id} (${FIXTURE_NAME}); workspace ${fixtureWorkspace}`)
+  console.log(`[phase 0] defined ${fixture.id} (${FIXTURE_NAME}); config ${AGENTS_CONFIG}; workspace ${fixtureWorkspace}`)
 
   // ------------------------------------------------------------- phase 1
   console.log('\n[phase 1] RESIDENT + AUTO EXECUTION')
@@ -187,9 +192,9 @@ async function main() {
     fin ? `finished status=${fin.status} after ${fin.durationMs ?? '?'}ms (no manual run/tick)` : 'no finished event — engine never fired the job')
 
   const inv = evidenceEvents().find((e) => e.kind === 'invocation' && e.sessionId === fin?.sessionId)
-  record('REAL_REGISTRY_AGENT', startedEv?.agentId === fixture.id && inv?.agentId === fixture.id
-    && registry.getAgent(fixture.id)?.id === fixture.id,
-    `run agentId=${startedEv?.agentId ?? '(missing)'} == registered ${fixture.id}`)
+  record('REAL_DEFINED_AGENT', startedEv?.agentId === fixture.id && inv?.agentId === fixture.id
+    && definition.getAgent(fixture.id)?.id === fixture.id,
+    `run agentId=${startedEv?.agentId ?? '(missing)'} == defined ${fixture.id}`)
 
   record('REAL_ROUTER', typeof inv?.routerProcessPid === 'number' && inv.routerProcessPid > 0 && inv.routerProcessAlive === true,
     inv ? `router spawned DSH process pid=${inv.routerProcessPid} alive=${inv.routerProcessAlive}` : 'no invocation evidence')
@@ -245,7 +250,7 @@ async function main() {
   const gates = {
     AGENT_CORE_PRODUCTION_RESIDENT_V1: failures === 0 ? 'PASS' : 'BLOCKED',
     RESIDENT_PROCESS: checks.find((c) => c.name === 'RESIDENT_PROCESS')?.ok ? 'PASS' : 'FAIL',
-    REAL_REGISTRY_AGENT: checks.find((c) => c.name === 'REAL_REGISTRY_AGENT')?.ok ? 'PASS' : 'FAIL',
+    REAL_DEFINED_AGENT: checks.find((c) => c.name === 'REAL_DEFINED_AGENT')?.ok ? 'PASS' : 'FAIL',
     RESIDENT_AUTO_EXECUTION: checks.find((c) => c.name === 'RESIDENT_AUTO_EXECUTION')?.ok ? 'PASS' : 'FAIL',
     REAL_ROUTER: checks.find((c) => c.name === 'REAL_ROUTER')?.ok ? 'PASS' : 'FAIL',
     REAL_DSH_TURN: checks.find((c) => c.name === 'REAL_DSH_TURN')?.ok ? 'PASS' : 'FAIL',

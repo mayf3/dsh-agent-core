@@ -1,7 +1,8 @@
 # @agent-core/bundle-integration — control-plane patch layer over dsh-base.
 #
-# This composition hosts the Router / Control Plane: the Agent Registry
-# (long-lived Agent identity), the workspace bootstrap, the Feishu channel
+# This composition hosts the Router / Control Plane: the Agent Definition
+# config (declarative, read-only Agent existence — AGENT_DEFINITION_CONFIG_V1),
+# the workspace bootstrap, the Feishu channel
 # (@agent-core/feishu-connector) and the agent router
 # (@agent-core/agent-router). It does NOT host agent sessions — each Agent's
 # session lives in its own per-agent DSH process (default profile
@@ -16,22 +17,26 @@
 # chatId table, no per-entry routing, no binding history in V1.
 #
 # Deployment overrides (env at process start):
-#   AGENT_REGISTRY_STORE   registry store path (default ~/.dsh/registry/agents.json)
-#   ROUTER_BINDINGS_STORE  binding store path   (default <home>/.dsh/bindings/bindings.json)
-#   ROUTER_DEFAULT_AGENT   fallback default agent id when the registry has none
-#   ROUTER_DEFAULT_SESSION default session for new bindings (default 'main')
-#   ROUTER_AGENT_PROFILE   per-agent process profile (default agent-core-demo)
-#   FEISHU_CREDS_PATH      feishu credentials {appId, appSecret} JSON file
-#   FEISHU_ENABLED         set to '0' to run the control plane without the channel
+#   AGENT_DEFINITION_CONFIG  Agent Definition config path (default ~/.dsh/agents.json)
+#   ROUTER_BINDINGS_STORE    binding store path   (default <home>/.dsh/bindings/bindings.json)
+#   ROUTER_DEFAULT_AGENT     fallback default agent id when the config has none
+#   ROUTER_DEFAULT_SESSION   default session for new bindings (default 'main')
+#   ROUTER_AGENT_PROFILE     per-agent process profile (default agent-core-demo)
+#   FEISHU_CREDS_PATH        feishu credentials {appId, appSecret} JSON file
+#   FEISHU_ENABLED           set to '0' to run the control plane without the channel
 
 - insert:
     - id: agent-core-workspace-bootstrap
       name: '@agent-core/workspace-bootstrap'
 
-    - id: agent-core-registry
-      name: '@agent-core/agent-registry'
+    # AGENT_DEFINITION_CONFIG_V1: the single Agent existence authority — a
+    # frozen, declarative JSON config (identity + display only). READ-ONLY at
+    # runtime: nothing in the control plane registers/updates Agents; the
+    # config is authored deployment-side (adoptAgents / migration script).
+    - id: agent-core-agent-definition
+      name: '@agent-core/agent-definition'
       config:
-        storeFile: !!js "process.env.AGENT_REGISTRY_STORE"
+        configFile: !!js "process.env.AGENT_DEFINITION_CONFIG"
 
     - id: agent-core-feishu
       name: '@agent-core/feishu-connector'

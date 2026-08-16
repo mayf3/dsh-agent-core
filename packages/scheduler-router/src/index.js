@@ -62,16 +62,18 @@ export function chatIdFromDeliveryTo(to) {
  * @param {object} router - the published `agentRouter` service (or any
  *   object exposing ensureRunning(agentId) -> AgentProcess).
  * @param {object} [opts]
- * @param {object} [opts.registry] - optional AgentRegistry service; when
- *   present, `getAgent(request.agentId)` validates the target before spawn
- *   (AGENT_NOT_FOUND -> error outcome).
+ * @param {object} [opts.definition] - optional Agent Definition service
+ *   (`agentDefinition`); when present, `getAgent(request.agentId)` validates
+ *   the target before spawn (AGENT_NOT_FOUND -> error outcome). The read is
+ *   in-memory and synchronous — no config/database I/O on the invocation
+ *   path.
  * @returns {Function} the invokeAgent(request) seam, with `.calls` log.
  */
 export function createRouterInvoker(router, opts = {}) {
   if (router === undefined || typeof router.ensureRunning !== 'function') {
     throw new TypeError('scheduler-router: router.ensureRunning(agentId) is required')
   }
-  const registry = opts?.registry
+  const definition = opts?.definition
   const calls = []
 
   async function invokeAgent(request) {
@@ -82,7 +84,7 @@ export function createRouterInvoker(router, opts = {}) {
       request.signal.addEventListener('abort', () => { aborted = true }, { once: true })
     }
     try {
-      if (registry !== undefined) registry.getAgent(request.agentId)
+      if (definition !== undefined) definition.getAgent(request.agentId)
       const proc = await router.ensureRunning(request.agentId)
       // The Scheduler owns the run timeout (it aborts `signal`); the turn
       // poll gets a margin so the scheduler's race always settles first.

@@ -1,0 +1,20 @@
+{
+  "name": "@agent-core/agent-definition",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Core Agent Definition: declarative, read-only config of Agent existence / stable agt_* id / name / display / default; no persona, workspace, credential or runtime fields; deployment-side adoption + one-time registry migration",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./definition": "./src/definition.js",
+    "./config": "./src/config.js",
+    "./package.json": "./package.json",
+    "./access": "./src/access.js"
+  },
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=3",
+    "@deepseek-ai/schemastery": ">=0"
+  }
+}

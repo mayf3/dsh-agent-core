@@ -20,7 +20,7 @@
  * The parent-RPC method name is a wire contract shared with the Router
  * (`SWITCH_RPC_METHOD` in @agent-core/agent-router). The literal is kept in
  * both packages on purpose — no cross-package source dependency for one
- * constant (same stance as agent-registry vs workspace-bootstrap).
+ * constant (same stance as agent-definition vs workspace-bootstrap).
  */
 
 import z from '@deepseek-ai/schemastery'

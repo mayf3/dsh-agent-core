@@ -13,7 +13,7 @@
  *
  *   switchAgent(bindingContext, targetAgentId, { targetSessionId? })
  *
- * - the Registry validates that the target Agent exists;
+ * - the Agent Definition config validates that the target Agent exists;
  * - the Router decides the target Session (explicit targetSessionId, else
  *   the per-surface bookmark — the last Session this ChannelConversation
  *   used with the target Agent — else the Agent's `main`; Mobile Gate 1
@@ -54,15 +54,19 @@ import { provisionAgentHome } from '../../../scripts/demo-home.mjs'
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
 
-/** Optional services are read via ctx.get; the registry + bootstrap are required. */
-export const inject = []
+/** Hard service dependencies (framework-blessed ordering): Cordis waits
+ *  until workspace-bootstrap and the Agent Definition are fully active
+ *  before applying the router — the loader applies sibling rows
+ *  concurrently, so a plain ctx.get at apply time would race. The Feishu
+ *  channel stays OPTIONAL (ctx.get; no inject). */
+export const inject = ['workspaceBootstrap', 'agentDefinition']
 
 /** Router config. */
 export const Config = z.object({
   /**
    * Default Agent for a brand-new ChannelConversation on first contact,
-   * used only when the Registry reports no default Agent (the Registry's
-   * default — first registered — is the primary answer; this config is the
+   * used only when the Agent Definition config reports no default Agent (the config's
+   * default — the config defaultAgentId — is the primary answer; this config is the
    * deployment fallback). Must be a registered Agent id (or display name).
    */
   defaultAgentId: z.string(),
@@ -173,13 +177,13 @@ export function apply(ctx, config) {
   }
 
   const workspaceBootstrap = ctx.get('workspaceBootstrap')
-  const agentRegistry = ctx.get('agentRegistry')
+  const agentDefinition = ctx.get('agentDefinition')
   const feishu = ctx.get('feishu')
   if (workspaceBootstrap === undefined) {
     throw new Error('agent-router: workspaceBootstrap service not available')
   }
-  if (agentRegistry === undefined) {
-    throw new Error('agent-router: agentRegistry service not available (mount @agent-core/agent-registry)')
+  if (agentDefinition === undefined) {
+    throw new Error('agent-router: agentDefinition service not available (mount @agent-core/agent-definition)')
   }
 
   const storeFile = cfg.bindingsStoreFile ?? defaultBindingsStoreFile()
@@ -191,11 +195,11 @@ export function apply(ctx, config) {
   log.log(`binding store loaded: ${store.list().length} binding(s) from ${storeFile}`)
 
   /**
-   * Resolve an Agent reference to a registered Agent id — the Registry is
-   * the single authority for "which Agents exist". Accepts the opaque
-   * agentId (machine clients) or the display name (natural-language
+   * Resolve an Agent reference to a defined Agent id — the Agent Definition
+   * config is the single authority for "which Agents exist". Accepts the
+   * opaque agentId (machine clients) or the display name (natural-language
    * surfaces like the DSH switch tool); anything else raises
-   * `AGENT_NOT_FOUND` from the Registry.
+   * `AGENT_NOT_FOUND` from the definition service.
    * @param {string} ref - agentId or display name.
    * @returns {{id:string, name:string}} the resolved Agent.
    */
@@ -203,31 +207,21 @@ export function apply(ctx, config) {
     if (typeof ref !== 'string' || ref.trim() === '') {
       throw new TypeError('agent-router: targetAgentId must be a non-empty string')
     }
-    try {
-      return agentRegistry.getAgent(ref)
-    } catch (error) {
-      if (error?.code !== 'AGENT_NOT_FOUND') throw error
-    }
-    const wanted = ref.trim().toLowerCase()
-    const match = agentRegistry.listAgents().find(agent => agent.name.toLowerCase() === wanted)
-    if (match === undefined) {
-      throw Object.assign(new Error(`agent-router: agent not found: ${ref}`), { code: 'AGENT_NOT_FOUND' })
-    }
-    return match
+    return agentDefinition.resolveAgentRef(ref)
   }
 
   /**
-   * The default Agent for first-contact bindings: the Registry's default
-   * (first registered, or explicitly set) wins; the deployment config is the
-   * fallback and is itself registry-validated.
+   * The default Agent for first-contact bindings: the Agent Definition
+   * config's default wins; the deployment config is the fallback and is
+   * itself definition-validated.
    */
   function resolveDefaultAgent() {
-    const registeredDefault = agentRegistry.getDefaultAgent()
-    if (registeredDefault !== undefined) return registeredDefault
+    const configuredDefault = agentDefinition.getDefaultAgent()
+    if (configuredDefault !== undefined) return configuredDefault
     if (cfg.defaultAgentId !== undefined && cfg.defaultAgentId !== '') {
       return resolveAgentRef(cfg.defaultAgentId)
     }
-    throw new Error('agent-router: no default Agent (register an Agent or set defaultAgentId)')
+    throw new Error('agent-router: no default Agent (define an Agent in the Agent Definition config or set defaultAgentId)')
   }
 
   /**
@@ -287,7 +281,7 @@ export function apply(ctx, config) {
    *   Mobile UI manual tap -> Router.switchAgent
    *   DSH tool: switch_agent (via parent-RPC relay) -> Router.switchAgent
    *
-   * Policy owned by the Router only: agent existence (Registry), session
+   * Policy owned by the Router only: agent existence (Agent Definition), session
    * selection (explicit targetSessionId, else the per-surface bookmark —
    * the last Session this ChannelConversation used with the target Agent —
    * else the target Agent's `main`), Binding update + durable persistence.
@@ -302,7 +296,7 @@ export function apply(ctx, config) {
    * @param {string | {channelConversationId?: string}} bindingContext - the
    *   ChannelConversation whose Binding changes.
    * @param {string} targetAgentId - a registered Agent's opaque id OR its
-   *   display name (resolved through the Registry by the Router).
+   *   display name (resolved through the Agent Definition by the Router).
    * @param {object} [opts]
    * @param {string} [opts.targetSessionId] - explicit target Session;
    *   omitted => bookmark(surface, target) ?? the Agent's `main` session.
@@ -311,7 +305,7 @@ export function apply(ctx, config) {
    */
   async function switchAgent(bindingContext, targetAgentId, opts = {}) {
     const ccId = channelConversationIdOf(bindingContext)
-    // 1. Registry validates the target Agent exists.
+    // 1. The Agent Definition config validates the target Agent exists.
     const agent = resolveAgentRef(targetAgentId)
     // 2. Router decides the target Session. A self-switch with no explicit
     //    session is a no-op (tap the current Agent in the switcher must not

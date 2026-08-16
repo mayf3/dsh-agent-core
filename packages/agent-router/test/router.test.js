@@ -1,13 +1,15 @@
 /**
  * Unit tests for @agent-core/agent-router — the Product Integration V1
- * domain surface: Binding persistence, Registry integration, and the single
- * switchAgent domain operation.
+ * domain surface: Binding persistence, Agent Definition integration, and
+ * the single switchAgent domain operation.
  *
  * No real DSH processes are spawned here: the router is mounted on a fake
- * cordis ctx with a REAL AgentRegistry and REAL BindingStore over tmp files,
- * and a stub workspaceBootstrap (only needed by ensureRunning, which these
- * tests never call). The acceptance driver (scripts/
- * product-integration-v1-verify.mjs) covers the real-process chain.
+ * cordis ctx with a REAL AgentDefinition (over a tmp config file — the
+ * declarative Agent existence authority, AGENT_DEFINITION_CONFIG_V1) and a
+ * REAL BindingStore over tmp files, plus a stub workspaceBootstrap (only
+ * needed by ensureRunning, which these tests never call). The acceptance
+ * driver (scripts/product-integration-v1-verify.mjs) covers the
+ * real-process chain.
  */
 
 import assert from 'node:assert/strict'
@@ -16,7 +18,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { AgentRegistry } from '../../agent-registry/src/registry.js'
+import { AgentDefinition } from '../../agent-definition/src/definition.js'
+import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { apply as applyRouter, channelConversationIdOf } from '../src/index.js'
 
 /** Fake cordis ctx: get/provide/effect only (what the router uses). */
@@ -38,136 +41,143 @@ function stubBootstrap() {
   }
 }
 
-/** Build a fresh registry + router over tmp stores; returns {router, registry}. */
-async function freshRouter(t, { config = {} } = {}) {
+/**
+ * Seed a tmp Agent Definition config with [id, name] pairs (first entry is
+ * the default) and load the read model over it.
+ */
+async function seedDefinition(dir, agents) {
+  const configFile = join(dir, 'agents.json')
+  await writeAgentDefinition(configFile, {
+    defaultAgentId: agents[0]?.[0] ?? null,
+    agents: agents.map(([id, name]) => ({ id, name })),
+  })
+  return new AgentDefinition({ configFile })
+}
+
+/** The cordis service surface of the agent-definition plugin. */
+function definitionService(definition) {
+  return {
+    listAgents: () => definition.listAgents(),
+    getAgent: (id) => definition.getAgent(id),
+    getDefaultAgent: () => definition.getDefaultAgent(),
+    resolveAgentRef: (ref) => definition.resolveAgentRef(ref),
+  }
+}
+
+/**
+ * Build a fresh definition + router over tmp stores; returns
+ * {router, definition, dir}. `agents` is an array of [id, name] pairs
+ * written into the Agent Definition config (identity-only fixture).
+ */
+async function freshRouter(t, { config = {}, agents = [] } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-router-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
-  const registry = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
+  const definition = await seedDefinition(dir, agents)
   const ctx = fakeCtx(new Map([
     ['workspaceBootstrap', stubBootstrap()],
-    ['agentRegistry', { // the cordis service surface of the registry plugin
-      listAgents: () => registry.listAgents(),
-      getAgent: (id) => registry.getAgent(id),
-      getDefaultAgent: () => registry.getDefaultAgent(),
-      registerAgent: (input) => registry.registerAgent(input),
-      updateAgent: (agentId, patch) => registry.updateAgent(agentId, patch),
-      setDefaultAgent: (agentId) => registry.setDefaultAgent(agentId),
-    }],
+    ['agentDefinition', definitionService(definition)],
   ]))
   const router = applyRouter(ctx, {
     bindingsStoreFile: join(dir, 'bindings.json'),
     defaultSessionId: 'main',
     ...config,
   })
-  return { router, registry, dir }
+  return { router, definition, dir }
 }
 
 const CC = 'feishu:chat-main'
 const CC_OTHER = 'feishu:chat-other'
+// Fixed opaque ids in the config fixture (ids are authoritative in the
+// declarative config; the Router never mints or rewrites them).
+const A = { id: 'agt_a', name: 'Agent A' }
+const B = { id: 'agt_b', name: 'Agent B' }
+const AB = [[A.id, A.name], [B.id, B.name]]
 
-test('first contact binds the conversation to the Registry default Agent', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  await registry.registerAgent({ name: 'Agent B' })
+test('first contact binds the conversation to the Agent Definition default', async (t) => {
+  const { router } = await freshRouter(t, { agents: AB })
 
   const { channelConversation, binding } = await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
   assert.equal(channelConversation.id, CC)
-  assert.equal(binding.activeAgentId, a.id, 'default = first registered Agent')
+  assert.equal(binding.activeAgentId, A.id, 'default = the config defaultAgentId')
   assert.equal(binding.activeSessionId, 'main')
   // Idempotent: second resolve returns the same binding untouched.
   const again = await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
-  assert.equal(again.binding.activeAgentId, a.id)
+  assert.equal(again.binding.activeAgentId, A.id)
 })
 
 test('switchAgent: A -> B by opaque id, persisted, returns the new Binding', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  const b = await registry.registerAgent({ name: 'Agent B' })
+  const { router } = await freshRouter(t, { agents: AB })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
-  assert.equal(router.getBinding(CC).activeAgentId, a.id)
+  assert.equal(router.getBinding(CC).activeAgentId, A.id)
 
-  const binding = await router.switchAgent(CC, b.id)
-  assert.equal(binding.activeAgentId, b.id)
+  const binding = await router.switchAgent(CC, B.id)
+  assert.equal(binding.activeAgentId, B.id)
   assert.equal(binding.activeSessionId, 'main', 'no explicit session -> target main')
-  assert.equal(router.getBinding(CC).activeAgentId, b.id)
+  assert.equal(router.getBinding(CC).activeAgentId, B.id)
 })
 
 test('switchAgent accepts the display name (Router owns agent lookup policy)', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  await registry.registerAgent({ name: 'Agent A' })
-  const b = await registry.registerAgent({ name: 'Agent B' })
+  const { router } = await freshRouter(t, { agents: AB })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
 
   const binding = await router.switchAgent(CC, 'Agent B')
-  assert.equal(binding.activeAgentId, b.id)
+  assert.equal(binding.activeAgentId, B.id)
 })
 
 test('switchAgent rejects an unknown Agent and leaves the Binding untouched', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
+  const { router } = await freshRouter(t, { agents: [[A.id, A.name]] })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
 
   await assert.rejects(() => router.switchAgent(CC, 'agt_does-not-exist'), (error) => error.code === 'AGENT_NOT_FOUND')
   await assert.rejects(() => router.switchAgent(CC, 'Nobody'), (error) => error.code === 'AGENT_NOT_FOUND')
-  assert.equal(router.getBinding(CC).activeAgentId, a.id, 'failed switch must not mutate the binding')
+  assert.equal(router.getBinding(CC).activeAgentId, A.id, 'failed switch must not mutate the binding')
 })
 
 test('switchAgent honors an explicit targetSessionId (V1: else main)', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  await registry.registerAgent({ name: 'Agent A' })
-  const b = await registry.registerAgent({ name: 'Agent B' })
+  const { router } = await freshRouter(t, { agents: AB })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
 
-  const binding = await router.switchAgent({ channelConversationId: CC }, b.id, { targetSessionId: 'normal-1' })
+  const binding = await router.switchAgent({ channelConversationId: CC }, B.id, { targetSessionId: 'normal-1' })
   assert.equal(binding.activeSessionId, 'normal-1')
 })
 
 test('switchAgent creates the Binding when the conversation has none yet', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  const b = await registry.registerAgent({ name: 'Agent B' })
+  const { router } = await freshRouter(t, { agents: AB })
   assert.equal(router.getBinding(CC), undefined)
 
-  const binding = await router.switchAgent(CC, b.id)
-  assert.equal(binding.activeAgentId, b.id)
-  assert.notEqual(binding.activeAgentId, a.id)
+  const binding = await router.switchAgent(CC, B.id)
+  assert.equal(binding.activeAgentId, B.id)
+  assert.notEqual(binding.activeAgentId, A.id)
 })
 
 test('switching one conversation leaves other Bindings untouched', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  const b = await registry.registerAgent({ name: 'Agent B' })
+  const { router } = await freshRouter(t, { agents: AB })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-other' })
 
-  await router.switchAgent(CC, b.id)
-  assert.equal(router.getBinding(CC).activeAgentId, b.id)
-  assert.equal(router.getBinding(CC_OTHER).activeAgentId, a.id, 'other binding unchanged by switch')
+  await router.switchAgent(CC, B.id)
+  assert.equal(router.getBinding(CC).activeAgentId, B.id)
+  assert.equal(router.getBinding(CC_OTHER).activeAgentId, A.id, 'other binding unchanged by switch')
 })
 
 test('restart: a fresh router over the same stores restores the switched Binding', async (t) => {
-  const { router, registry, dir } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  const b = await registry.registerAgent({ name: 'Agent B' })
+  const { router, dir } = await freshRouter(t, { agents: AB })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-other' })
-  await router.switchAgent(CC, b.id)
+  await router.switchAgent(CC, B.id)
 
-  // Control-plane restart: fresh registry + fresh router over the SAME files.
-  const registry2 = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
+  // Control-plane restart: fresh definition + fresh router over the SAME files.
+  const definition2 = new AgentDefinition({ configFile: join(dir, 'agents.json') })
   const ctx2 = fakeCtx(new Map([
     ['workspaceBootstrap', stubBootstrap()],
-    ['agentRegistry', {
-      listAgents: () => registry2.listAgents(),
-      getAgent: (id) => registry2.getAgent(id),
-      getDefaultAgent: () => registry2.getDefaultAgent(),
-    }],
+    ['agentDefinition', definitionService(definition2)],
   ]))
   const router2 = applyRouter(ctx2, { bindingsStoreFile: join(dir, 'bindings.json'), defaultSessionId: 'main' })
-  assert.equal(router2.getBinding(CC).activeAgentId, b.id, 'still Agent B after restart')
-  assert.equal(router2.getBinding(CC_OTHER).activeAgentId, a.id, 'other binding also restored')
-  // And the registry still resolves both agents.
-  assert.equal(registry2.listAgents().length, 2)
+  assert.equal(router2.getBinding(CC).activeAgentId, B.id, 'still Agent B after restart')
+  assert.equal(router2.getBinding(CC_OTHER).activeAgentId, A.id, 'other binding also restored')
+  // And the definition still resolves both agents (stable ids preserved).
+  assert.equal(definition2.listAgents().length, 2)
+  assert.equal(definition2.getAgent(A.id).name, 'Agent A')
 })
 
 test('channelConversationIdOf accepts string and {channelConversationId}', () => {
@@ -178,8 +188,7 @@ test('channelConversationIdOf accepts string and {channelConversationId}', () =>
 })
 
 test('channelConversationId is the single-owner id format (surface mapping)', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  await registry.registerAgent({ name: 'Agent A' })
+  const { router } = await freshRouter(t, { agents: [[A.id, A.name]] })
   assert.equal(router.channelConversationId('mobile', 'surface-1'), 'mobile:surface-1')
   // The service surface exposes the same format resolveChannelConversation uses.
   const { channelConversation } = await router.resolveChannelConversation({ channel: 'mobile', externalId: 'surface-1' })
@@ -187,87 +196,74 @@ test('channelConversationId is the single-owner id format (surface mapping)', as
 })
 
 test('bookmark: leaving records lastSession; entering restores it (explicit > bookmark > main)', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  const b = await registry.registerAgent({ name: 'Agent B' })
+  const { router } = await freshRouter(t, { agents: AB })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' }) // A/main
 
   // A -> B (bookmark (CC, A) = main); B -> A/work (bookmark (CC, B) = main).
-  await router.switchAgent(CC, b.id)
-  await router.switchAgent(CC, a.id, { targetSessionId: 'work' })
+  await router.switchAgent(CC, B.id)
+  await router.switchAgent(CC, A.id, { targetSessionId: 'work' })
   assert.equal(router.getBinding(CC).activeSessionId, 'work')
 
   // A/work -> B (bookmark (CC, A) = work); B -> A must RESTORE work, not main.
-  await router.switchAgent(CC, b.id)
-  assert.equal(router.getBinding(CC).activeAgentId, b.id)
-  const restored = await router.switchAgent(CC, a.id)
-  assert.equal(restored.activeAgentId, a.id)
+  await router.switchAgent(CC, B.id)
+  assert.equal(router.getBinding(CC).activeAgentId, B.id)
+  const restored = await router.switchAgent(CC, A.id)
+  assert.equal(restored.activeAgentId, A.id)
   assert.equal(restored.activeSessionId, 'work', 'bookmark(surface, A) = work must win over main')
 
   // The bookmark table is exactly the single-slot bookmarks written on leave.
   const bookmarks = router.lastSessionsSnapshot()
-  const ccA = bookmarks.find(r => r.channelConversationId === CC && r.agentId === a.id)
-  const ccB = bookmarks.find(r => r.channelConversationId === CC && r.agentId === b.id)
+  const ccA = bookmarks.find(r => r.channelConversationId === CC && r.agentId === A.id)
+  const ccB = bookmarks.find(r => r.channelConversationId === CC && r.agentId === B.id)
   assert.equal(ccA?.sessionId, 'work')
   assert.equal(ccB?.sessionId, 'main')
   assert.equal(bookmarks.length, 2, 'one slot per (surface, agent) — no history')
 })
 
 test('bookmark: a surface that never visited an Agent falls back to main', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  await registry.registerAgent({ name: 'Agent B' })
-  const c = await registry.registerAgent({ name: 'Agent C' })
+  const { router } = await freshRouter(t, { agents: [...AB, ['agt_c', 'Agent C']] })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
 
-  await router.switchAgent(CC, c.id)
-  const binding = await router.switchAgent(CC, a.id)
-  assert.equal(binding.activeAgentId, a.id)
+  await router.switchAgent(CC, 'agt_c')
+  const binding = await router.switchAgent(CC, A.id)
+  assert.equal(binding.activeAgentId, A.id)
   assert.equal(binding.activeSessionId, 'main', 'no bookmark for A on this surface -> main')
 })
 
 test('bookmark: self-switch without explicit session is a no-op', async (t) => {
-  const { router, registry } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  await registry.registerAgent({ name: 'Agent B' })
+  const { router } = await freshRouter(t, { agents: AB })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
-  await router.switchAgent(CC, a.id, { targetSessionId: 'work' })
+  await router.switchAgent(CC, A.id, { targetSessionId: 'work' })
 
   const before = router.getBinding(CC)
-  const binding = await router.switchAgent(CC, a.id)
+  const binding = await router.switchAgent(CC, A.id)
   assert.equal(binding.activeSessionId, 'work', 'tapping the current agent must not move sessions')
   assert.equal(binding.updatedAt, before.updatedAt, 'no-op must not rewrite the binding')
 })
 
 test('bookmark: per-surface isolation and restart persistence', async (t) => {
-  const { router, registry, dir } = await freshRouter(t)
-  const a = await registry.registerAgent({ name: 'Agent A' })
-  const b = await registry.registerAgent({ name: 'Agent B' })
+  const { router, dir } = await freshRouter(t, { agents: AB })
   await router.resolveChannelConversation({ channel: 'feishu', externalId: 'chat-main' })
   await router.resolveChannelConversation({ channel: 'mobile', externalId: 'surface-1' })
 
   // Surface-1: A -> B -> A/work; chat-main untouched (still A/main).
-  await router.switchAgent('mobile:surface-1', b.id)
-  await router.switchAgent('mobile:surface-1', a.id, { targetSessionId: 'work' })
+  await router.switchAgent('mobile:surface-1', B.id)
+  await router.switchAgent('mobile:surface-1', A.id, { targetSessionId: 'work' })
   assert.equal(router.getBinding('mobile:surface-1').activeSessionId, 'work')
-  assert.equal(router.getBinding(CC).activeAgentId, a.id, 'mobile switch must not touch feishu binding')
+  assert.equal(router.getBinding(CC).activeAgentId, A.id, 'mobile switch must not touch feishu binding')
   assert.equal(router.getBinding(CC).activeSessionId, 'main')
 
   // Control-plane restart over the SAME store: binding AND bookmark survive.
-  const registry2 = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
+  const definition2 = new AgentDefinition({ configFile: join(dir, 'agents.json') })
   const ctx2 = fakeCtx(new Map([
     ['workspaceBootstrap', stubBootstrap()],
-    ['agentRegistry', {
-      listAgents: () => registry2.listAgents(),
-      getAgent: (id) => registry2.getAgent(id),
-      getDefaultAgent: () => registry2.getDefaultAgent(),
-    }],
+    ['agentDefinition', definitionService(definition2)],
   ]))
   const router2 = applyRouter(ctx2, { bindingsStoreFile: join(dir, 'bindings.json'), defaultSessionId: 'main' })
   assert.equal(router2.getBinding('mobile:surface-1').activeSessionId, 'work', 'binding restored after restart')
-  const restored = await router2.switchAgent('mobile:surface-1', b.id)
-  assert.equal(restored.activeAgentId, b.id)
-  const again = await router2.switchAgent('mobile:surface-1', a.id)
+  const restored = await router2.switchAgent('mobile:surface-1', B.id)
+  assert.equal(restored.activeAgentId, B.id)
+  const again = await router2.switchAgent('mobile:surface-1', A.id)
   assert.equal(again.activeSessionId, 'work', 'bookmark restored after restart: (surface, A) = work')
 })
 
