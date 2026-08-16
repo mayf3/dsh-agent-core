@@ -218,7 +218,7 @@ deployment service / DB / dashboard。
 AGENT_CORE_BACKUP_RETENTION_V1_SPEC = PASS
 
 BASE_MAIN = da7ac27b766c4fd993aa548532350b4686644b68
-SPEC_HEAD = docs/agent-core-backup-retention-v1-spec @ 57540c5
+SPEC_HEAD = docs/agent-core-backup-retention-v1-spec @ 354fc30
 
 PROBLEM  = deployment rollback backup lifecycle is undefined (无界 retention, ~1.5-1.7GiB/份,
            blind mv 捕捉到 partial install 破坏 rollback, 无 known-good/pin marker)
