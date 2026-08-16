@@ -141,7 +141,9 @@ cp "$REPO_SRC/package.json" app/package.json
 mkdir -p app/scripts
 for f in agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs \
          dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh \
-         trusted-cp-hardening-v1-verify.mjs; do
+         trusted-cp-hardening-v1-verify.mjs \
+         production-runtime.mjs production-runtime-launchd.mjs \
+         production-runtime-v1-verify.mjs; do
   [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" app/scripts/
 done
 # packages: src + package.json only (no tests)
@@ -174,6 +176,22 @@ if [ -e "app/packages/agent-registry" ]; then
   exit 2
 fi
 echo "  Agent Definition closure: packages/agent-definition PRESENT, packages/agent-registry ABSENT"
+
+# PRODUCTION_INTEGRATION_V1 (Task 3): the Production Runtime closure MUST be
+# in the trusted app closure — the supervised composition (launchd -> trusted
+# Node -> app/scripts/production-runtime.mjs) imports the wiring-only
+# production-runtime package and spawns agents with the production profile.
+for need in \
+  "app/packages/production-runtime/package.json" \
+  "app/packages/production-runtime/src/entry.js" \
+  "app/packages/agent-provisioning/package.json" \
+  "app/profile-production/package.json" \
+  "app/profile-production/cordis.patch.yml" \
+  "app/scripts/production-runtime.mjs" \
+  "app/scripts/production-runtime-launchd.mjs"; do
+  if [ -e "$need" ]; then :; else { echo "ERROR: production-runtime closure missing: $need" >&2; exit 2; }; fi
+done
+echo "  Production Runtime closure: packages/{production-runtime,agent-provisioning} + profile-production + scripts PRESENT"
 
 # @deepseek-ai resolution bridge — INSIDE the trusted root only. The app
 # packages resolve @deepseek-ai/* through the harness's full scope farm
@@ -253,6 +271,35 @@ printf '{\n  "version": 1,\n  "defaultAgentId": null,\n  "agents": []\n}\n' > co
 printf '{\n  "version": 1,\n  "credentials": {}\n}\n' > config/agent-credentials.json
 # bindings/jobs are created by the router/resident on first boot (missing
 # file is a legal empty store for both).
+
+# ---- 5b. 505 production root (PRODUCTION_INTEGRATION_V1, Task 3) -----------
+# The supervised Production Runtime (packages/production-runtime) persists
+# under $HOME/.agent-core. Under uid 505 (authsvc) that is
+# /Users/authsvc/.agent-core. Provision it with the production layout so the
+# launchd --trusted unit (which passes --root explicitly) boots onto a fully
+# provisioned root. The Agent Definition authority stays a SYMLINK to the
+# trusted config/agents.json — the single Agent existence document (never a
+# second copy that could drift). Credential store likewise symlinks to the
+# trusted config/agent-credentials.json (Broker gateway via
+# AGENT_CORE_CREDENTIALS_FILE = that trusted 505-private file).
+echo "== provisioning 505 production root -> /Users/authsvc/.agent-core"
+PROD_ROOT=/Users/authsvc/.agent-core
+mkdir -p "$PROD_ROOT"/{bindings,scheduler,workspaces,homes,control,logs}
+# Agent Definition + credential store: single-file authority via symlink to
+# the trusted 505-private config (the runtime reads through the link; only the
+# trusted config file is written/authoritative).
+if [ -e "$PROD_ROOT/agents.json" ] || [ -L "$PROD_ROOT/agents.json" ]; then rm -f "$PROD_ROOT/agents.json"; fi
+ln -s /usr/local/libexec/agent-core/config/agents.json "$PROD_ROOT/agents.json"
+# Ownership split (PRODUCTION_INTEGRATION_V1): the 505 control plane owns the
+# durable control state (bindings/scheduler/control/logs + the root), and the
+# Agent child (uid 502) owns its per-agent workspace + DSH home under the same
+# production root — the Router spawns the child as 502, so it MUST be able to
+# write its own workspace/AGENTS.md and home. Never 505-writable for the child.
+chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
+chmod 700 "$PROD_ROOT"
+chown "${CHILD_UID}:${CHILD_GID}" "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
+chmod -R u+rwX,go-rwx "$PROD_ROOT"
+echo "  production root: $PROD_ROOT (authsvc 0700; workspaces+homes child-502 writable; agents.json -> config/agents.json single authority)"
 
 # ---- 6. ownership + modes ---------------------------------------------------
 echo "== ownership: harness/app/home/node-runtime -> authsvc:authsvc (502 read-only)"
