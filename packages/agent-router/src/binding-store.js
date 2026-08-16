@@ -26,7 +26,9 @@
  *   { "version": 1,
  *     "bindings": { "<channelConversationId>": {
  *       channelConversationId, activeAgentId, activeSessionId, updatedAt } },
- *     "lastSessions": { "<channelConversationId>": { "<agentId>": "<sessionId>" } } }
+ *     "lastSessions": { "<channelConversationId>": { "<agentId>": "<sessionId>" } },
+ *     "freshSessions": { "<agentId>": { "<requestId>": {
+ *       agentId, requestId, sessionId, createdAt } } } }
  *
  * `lastSessions` is the per-(ChannelConversation, Agent) SINGLE-SLOT bookmark
  * table (Mobile Gate 1: "surface × agent → lastActiveSession"). It is NOT a
@@ -37,6 +39,22 @@
  * enters the Binding). The field is optional in the document (absent = empty
  * table), so store files written by older versions keep loading and vice
  * versa — no format version bump.
+ *
+ * `freshSessions` is the Agent Router Delivery V0 durable mapping
+ * requestId -> sessionId for `sessionMode: 'fresh'` deliveries (Agent Core
+ * Delivery V0: "相同 requestId 重试必须仍然指向同一个 Session，不能创建第
+ * 二个；不同 requestId 必须得到不同的新 Session"). The ROUTER is the sole
+ * owner: callers never address a session — they only present (agentId,
+ * requestId), and the router mints/remembers the session id. Like
+ * `lastSessions` it lives OUTSIDE the Binding rows (deliveries are not
+ * channel conversations), is optional in the document (absent = empty
+ * table) and needs no format version bump.
+ *
+ * One row per (agentId, requestId): the first `fresh` delivery of a
+ * requestId mints its session id (atomically, inside the mutation queue —
+ * two concurrent first deliveries of the same requestId converge on ONE
+ * row); every retry of the same requestId returns the SAME session id; a
+ * different requestId mints a different id.
  *
  * The store is a pure data module (zero Cordis / DSH imports): the router
  * plugin owns the domain rules (default agent, switch validation, session
@@ -72,6 +90,15 @@ export const VALIDATION_ERROR = 'VALIDATION_ERROR'
  */
 
 /**
+ * One Delivery V0 fresh mapping: which native session a (agentId, requestId)
+ * pair owns. The session id is minted by the router inside the store's
+ * mutation queue (so the read-or-mint decision is atomic); the caller never
+ * sees or chooses it.
+ * @typedef {{agentId:string, requestId:string, sessionId:string,
+ *            createdAt:string}} FreshSessionRow
+ */
+
+/**
  * The durable Binding table.
  *
  * Construction loads the store synchronously (fail-loud on a corrupt file),
@@ -101,6 +128,8 @@ export class BindingStore {
     this.bindings = new Map()
     /** @type {Map<string, Map<string, string>>} ccId -> (agentId -> sessionId) */
     this.lastSessions = new Map()
+    /** @type {Map<string, Map<string, FreshSessionRow>>} agentId -> (requestId -> row) */
+    this.freshSessions = new Map()
     this.queue = Promise.resolve()
     this.load()
   }
@@ -163,6 +192,39 @@ export class BindingStore {
         this.lastSessions.set(ccId, bookmarks)
       }
     }
+    // Optional Delivery V0 fresh mapping table (absent in older documents =
+    // empty).
+    if (document.freshSessions !== undefined) {
+      if (typeof document.freshSessions !== 'object' || document.freshSessions === null) {
+        throw Object.assign(new Error(`binding-store: corrupt freshSessions table in ${this.storeFile}`), {
+          code: CORRUPT_STORE,
+        })
+      }
+      for (const [agentId, perRequest] of Object.entries(document.freshSessions)) {
+        if (typeof perRequest !== 'object' || perRequest === null) {
+          throw Object.assign(new Error(`binding-store: corrupt freshSessions row at key ${JSON.stringify(agentId)}`), {
+            code: CORRUPT_STORE,
+          })
+        }
+        const mappings = new Map()
+        for (const [requestId, row] of Object.entries(perRequest)) {
+          if (typeof row?.agentId !== 'string' || row.agentId === ''
+              || typeof row.requestId !== 'string' || row.requestId === ''
+              || typeof row.sessionId !== 'string' || row.sessionId === '') {
+            throw Object.assign(new Error(`binding-store: corrupt freshSessions entry ${JSON.stringify(agentId)}/${JSON.stringify(requestId)}`), {
+              code: CORRUPT_STORE,
+            })
+          }
+          mappings.set(row.requestId, {
+            agentId: row.agentId,
+            requestId: row.requestId,
+            sessionId: row.sessionId,
+            createdAt: typeof row.createdAt === 'string' ? row.createdAt : this.now(),
+          })
+        }
+        this.freshSessions.set(agentId, mappings)
+      }
+    }
   }
 
   /**
@@ -194,6 +256,9 @@ export class BindingStore {
     return {
       bindings: new Map([...this.bindings.entries()].map(([id, row]) => [id, { ...row }])),
       lastSessions: new Map([...this.lastSessions.entries()].map(([ccId, perAgent]) => [ccId, new Map(perAgent)])),
+      freshSessions: new Map([...this.freshSessions.entries()].map(
+        ([agentId, perRequest]) => [agentId, new Map([...perRequest.entries()].map(([rid, row]) => [rid, { ...row }]))],
+      )),
     }
   }
 
@@ -201,6 +266,7 @@ export class BindingStore {
   restore(snapshot) {
     this.bindings = snapshot.bindings
     this.lastSessions = snapshot.lastSessions
+    this.freshSessions = snapshot.freshSessions
   }
 
   /** Atomic persist: write tmp, then rename over the store file. */
@@ -212,6 +278,11 @@ export class BindingStore {
     if (this.lastSessions.size > 0) {
       document.lastSessions = Object.fromEntries(
         [...this.lastSessions.entries()].map(([ccId, perAgent]) => [ccId, Object.fromEntries(perAgent)]),
+      )
+    }
+    if (this.freshSessions.size > 0) {
+      document.freshSessions = Object.fromEntries(
+        [...this.freshSessions.entries()].map(([agentId, perRequest]) => [agentId, Object.fromEntries(perRequest)]),
       )
     }
     await mkdir(dirname(this.storeFile), { recursive: true })
@@ -326,6 +397,82 @@ export class BindingStore {
     for (const [ccId, perAgent] of this.lastSessions.entries()) {
       for (const [agentId, sessionId] of perAgent.entries()) {
         rows.push({ channelConversationId: ccId, agentId, sessionId })
+      }
+    }
+    return rows
+  }
+
+  /**
+   * Read one Delivery V0 fresh mapping: the native session owned by
+   * (agentId, requestId), or undefined when this requestId was never
+   * delivered fresh.
+   * @param {string} agentId
+   * @param {string} requestId
+   * @returns {FreshSessionRow | undefined}
+   */
+  getFreshSession(agentId, requestId) {
+    const row = this.freshSessions.get(agentId)?.get(requestId)
+    return row === undefined ? undefined : { ...row }
+  }
+
+  /**
+   * Read-or-mint the Delivery V0 fresh mapping for (agentId, requestId),
+   * atomically inside the mutation queue: two concurrent first deliveries of
+   * the same requestId can never mint two different session ids — the second
+   * caller observes the row the first one persisted. Persists only when a
+   * row is minted.
+   *
+   * @param {string} agentId - the delivering Agent (mapping namespace).
+   * @param {string} requestId - the caller's opaque delivery id.
+   * @param {(used: Set<string>) => string} mint - called ONLY on first sight
+   *   of the requestId, inside the critical section; receives the set of
+   *   session ids already in use by this agent and must return a non-empty
+   *   id outside that set (the router derives `fresh-<hash>` from the
+   *   requestId; the check guards against any collision).
+   * @returns {Promise<FreshSessionRow>} the (existing or minted) row.
+   */
+  freshSessionFor(agentId, requestId, mint) {
+    if (typeof agentId !== 'string' || agentId === ''
+        || typeof requestId !== 'string' || requestId === '') {
+      throw Object.assign(new TypeError('binding-store: freshSessionFor agentId and requestId (non-empty strings) are required'), {
+        code: VALIDATION_ERROR,
+      })
+    }
+    if (typeof mint !== 'function') {
+      throw Object.assign(new TypeError('binding-store: freshSessionFor mint(usedIds) is required'), {
+        code: VALIDATION_ERROR,
+      })
+    }
+    return this.enqueue(async () => {
+      let perRequest = this.freshSessions.get(agentId)
+      if (perRequest === undefined) {
+        perRequest = new Map()
+        this.freshSessions.set(agentId, perRequest)
+      }
+      const existing = perRequest.get(requestId)
+      if (existing !== undefined) return { ...existing }
+      const used = new Set([...perRequest.values()].map(row => row.sessionId))
+      const sessionId = mint(used)
+      if (typeof sessionId !== 'string' || sessionId === '' || used.has(sessionId)) {
+        throw Object.assign(new TypeError('binding-store: mint returned an invalid or duplicate sessionId'), {
+          code: VALIDATION_ERROR,
+        })
+      }
+      const row = { agentId, requestId, sessionId, createdAt: this.now() }
+      perRequest.set(requestId, row)
+      return { ...row }
+    })
+  }
+
+  /**
+   * Every Delivery V0 fresh mapping row (test/evidence surface). Flattened,
+   * insertion order. @returns {FreshSessionRow[]}
+   */
+  freshSessionsSnapshot() {
+    const rows = []
+    for (const [agentId, perRequest] of this.freshSessions.entries()) {
+      for (const row of perRequest.values()) {
+        rows.push({ ...row })
       }
     }
     return rows
