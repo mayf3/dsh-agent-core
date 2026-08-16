@@ -1,13 +1,21 @@
 #!/bin/bash
 # =============================================================================
 # test-agent-core-backup-retention-v1.sh — temp-filesystem fixture tests for
-# AGENT_CORE_BACKUP_RETENTION_V1 (accepted Spec)
+# AGENT_CORE_BACKUP_RETENTION_V1 (accepted Spec) + REVIEW FIX round
 #
 # Runs entirely on a temporary directory fixture — it NEVER touches the real
 # /usr/local/libexec/agent-core, its backups, or any live install.
 #
-# Proves acceptance criteria AC1..AC11:
-#   AC1  the next predeploy backup of the current verified LKG is pinned (FIRST_RELIABLE_PIN)
+# Proves acceptance criteria AC1..AC11 AND the review-fix deltas:
+#   Fix 1 — FIRST_RELIABLE_PIN requires an EXPLICIT trusted-operator LKG
+#           assertion (AGENT_CORE_VERIFIED_PREDECESSOR_LKG=YES). No assertion
+#           -> backup created normally, auto-pin = NO. No machine LKG detection.
+#   Fix 2 — unknown/unreadable/malformed/missing metadata -> fail-safe KEEP in
+#           prune; pinned=true without .pinned marker is still KEPT; the pin
+#           truth model is consistent across list/prune/maybe_first_pin.
+#
+# ACs covered:
+#   AC1  explicit verified-LKG assertion + no prior pin -> first backup pinned
 #   AC2  a pin is metadata/marker only — NO backup-data copy
 #   AC3  pinned backups never enter normal prune
 #   AC4  after verified success, at most newest NORMAL_RETENTION(3) normal backups are kept
@@ -15,7 +23,7 @@
 #   AC6  a failed health verification does not prune
 #   AC7  a prune failure is loud but the healthy deployment stays successful
 #   AC8  agent-core.bak-YYYYMMDD-HHMMSS directory naming / rollback compat is unchanged
-#   AC9  legacy backups (no .backup-meta) are never auto-pruned before first pin (or by this prune)
+#   AC9  legacy backups (no .backup-meta) are never auto-pruned
 #   AC10 metadata never misattributes the successor commit (source_commit=unknown)
 #   AC11 no Runtime/Router/Scheduler/Kernel/product-semantics files changed
 #
@@ -34,10 +42,6 @@ PASS=0; FAIL=0
 ok()   { echo "  PASS: $1"; PASS=$((PASS+1)); }
 bad()  { echo "  FAIL: $1" >&2; FAIL=$((FAIL+1)); }
 
-assert() { # assert <desc> true-ish
-  if eval "$2"; then ok "$1"; else bad "$1"; fi
-}
-
 NORMAL_RETENTION=3
 
 T="$(mktemp -d /tmp/retention-test.XXXXXX)"
@@ -45,6 +49,11 @@ trap 'rm -rf "$T"' EXIT
 LX="$T/liblx"
 ROOT="$LX/agent-core"
 mkdir -p "$ROOT"
+
+# helpers: write-predecessor WITH / WITHOUT the explicit trusted-operator LKG assertion
+#   signature: <ROOT> <backup-path>
+V() { AGENT_CORE_VERIFIED_PREDECESSOR_LKG=YES "$OPS" "$1" --write-predecessor "$2"; }  # verified LKG asserted
+U() { "$OPS" "$1" --write-predecessor "$2"; }                                          # no assertion
 
 echo "== fixture: $T =="
 echo "== helper present + syntax =="
@@ -57,11 +66,9 @@ bash -n "$DEPLOY" && ok "deploy script shell-syntax valid" || bad "deploy syntax
 # ---------------------------------------------------------------------------
 echo "== seed 13 legacy backups (no metadata) =="
 LEGACY="100403 130413 130612 132129 145342 180620 195803 202649 204101 210313 211201 222634 224243"
-N_LEGACY=0
 for id in $LEGACY; do
   mkdir -p "$ROOT.bak-20260816-$id"
   [ "$id" = "211201" ] || echo placeholder > "$ROOT.bak-20260816-$id/a-file"
-  N_LEGACY=$((N_LEGACY+1))
 done
 got="$(find "$LX" -maxdepth 1 -type d -name 'agent-core.bak-*' | wc -l | tr -d ' ')"
 [ "$got" -eq 13 ] && ok "AC9a fixture has 13 legacy backups" || bad "expected 13 legacy backups, got $got"
@@ -74,7 +81,6 @@ BID1="20260816-150001"
 echo "sentinel" > "$ROOT/.installed"
 mv "$ROOT" "$ROOT.bak-20260816-150001"
 mkdir -p "$ROOT"
-# AC8: the restored backup supports mv -> ROOT (rollback)
 [ -e "$ROOT.bak-20260816-150001" ] \
   && rmtmp="$(mktemp -d "$T/rollback.XXXXXX")" \
   && mv "$ROOT.bak-20260816-150001" "$rmtmp/agent-core" \
@@ -83,85 +89,110 @@ mkdir -p "$ROOT"
   && rmdir "$rmtmp" \
   && ok "AC8 backup dir agent-core.bak-YYYYMMDD-HHMMSS restores by plain mv (rollback compatible)" \
   || bad "AC8 rollback/mv restore of backup failed"
-# restore .installed into current root for a cleaner state
+# the 150001 dir was only a naming/rollback-compat probe; give it the standard
+# predeploy metadata (as a deploy would) so it doesn't look like an orphan legacy
+# dir in later counts. status=predeploy, unpinned.
+mkdir -p "$ROOT.bak-20260816-150001"
+{
+  printf 'backup_id=20260816-150001\ncreated_at=2026-08-16T00:00:00+08:00\n'
+  printf 'source_commit=unknown\nharness_commit=unknown\npinned=false\nstatus=predeploy\n'
+} > "$ROOT.bak-20260816-150001/.backup-meta"
 touch "$ROOT/.installed" 2>/dev/null
 
 # ---------------------------------------------------------------------------
-# AC1 + AC2 + AC10 + AC3-eligibility: FIRST deploy capture -> pinned, meta only.
+# Fix 1 NEGATIVE: no verified-LKG assertion + no prior pin -> backup created,
+# NOT pinned (machine no-pin inference must NOT pin).
 # ---------------------------------------------------------------------------
-echo "== AC1/AC2/AC10 first reliable pin =="
-out="$("$OPS" "$ROOT" --write-predecessor "$ROOT.bak-20260816-150001")"
-echo "$out"
-[ -f "$ROOT.bak-20260816-150001/.pinned" ] \
-  && ok "AC1 the next predeploy backup (current verified LKG) is pinned -> FIRST_RELIABLE_PIN" \
-  || bad "AC1 backup was not pinned"
-pin_meta="$(grep '^pinned=' "$ROOT.bak-20260816-150001/.backup-meta" | cut -d= -f2)"
-[ "$pin_meta" = "true" ] && ok "AC1 .backup-meta has pinned=true" || bad "AC1 meta pinned != true"
+echo "== Fix1 negative: no LKG assertion -> created, NOT pinned =="
+B_NEG="20260816-150002"
+mv "$ROOT" "$ROOT.bak-$B_NEG"; mkdir -p "$ROOT"
+U "$ROOT" "$ROOT.bak-$B_NEG" >/dev/null
+[ -f "$ROOT.bak-$B_NEG/.backup-meta" ] && ok "Fix1 negative: predeploy backup metadata WAS created" || bad "Fix1 negative: no .backup-meta written"
+[ -f "$ROOT.bak-$B_NEG/.pinned" ] && bad "Fix1 negative: backup pinned WITHOUT verified-LKG assertion (machine LKG inference)" \
+  || ok "Fix1 negative: no assertion -> NOT pinned (MACHINE_LKG_DETECTION=NO)"
+[ "$(grep '^pinned=' "$ROOT.bak-$B_NEG/.backup-meta" | cut -d= -f2)" = "true" ] \
+  && bad "Fix1 negative: meta pinned=true without assertion" || ok "Fix1 negative: meta pinned=false"
+[ "$(grep '^status=' "$ROOT.bak-$B_NEG/.backup-meta" | cut -d= -f2)" = "predeploy" ] \
+  && ok "Fix1 negative: status=predeploy (normal managed backup despite no pin)" || bad "Fix1 negative: unexpected status"
 
-# AC2: pin must NOT copy backup data. Compare: pin only adds marker/meta.
-# The pinned backup should have exactly [placeholder/a-file + .backup-meta + .pinned].
-nonmeta="$(find "$ROOT.bak-20260816-150001" -maxdepth 1 -not -name '.backup-meta' -not -name '.pinned' -not -name '.' | sort)"
-[ -n "$nonmeta" ] && ok "AC2 pinned backup retains its own data (no replacement clone)" || bad "AC2 pinned backup lost its data"
-marker_bytes="$(wc -c < "$ROOT.bak-20260816-150001/.pinned" | tr -d ' ')"
-[ "$marker_bytes" = "0" ] && ok "AC2 .pinned is a zero-byte marker (pin = metadata/marker only, PIN_DATA_COPY=NO)" || bad "AC2 pin marker is non-empty"
-# no separate clone or data dir created as a result of pinning
-extra="$(find "$LX" -maxdepth 1 -name '*pinned*' -o -name '*.clone*' | grep -v '\.pinned$' | wc -l | tr -d ' ')"
+# ---------------------------------------------------------------------------
+# AC1 + Fix1 POSITIVE: verified-LKG assertion + no prior reliable pin -> pin.
+# (No prior reliable pin: the prior B_NEG was NOT pinned, so this is the first.)
+# ---------------------------------------------------------------------------
+echo "== AC1/Fix1 positive: verified-LKG assertion + prior no pin -> first backup pinned =="
+BID1="20260816-150003"
+mv "$ROOT" "$ROOT.bak-$BID1"; mkdir -p "$ROOT"
+out="$(V "$ROOT" "$ROOT.bak-$BID1")"
+echo "$out" | sed 's/^/    /'
+[ -f "$ROOT.bak-$BID1/.pinned" ] \
+  && ok "AC1 explicit verified-LKG assertion + no prior pin -> FIRST_RELIABLE_PIN" \
+  || bad "AC1 verified backup was not pinned"
+[ "$(grep '^pinned=' "$ROOT.bak-$BID1/.backup-meta" | cut -d= -f2)" = "true" ] \
+  && ok "AC1 .backup-meta pinned=true" || bad "AC1 meta pinned != true"
+
+# AC2: pin must NOT copy backup data (marker + meta only).
+echo "== AC2 pin = marker only, no data copy =="
+[ -n "$(find "$ROOT.bak-$BID1" -maxdepth 1 -not -name '.backup-meta' -not -name '.pinned' -not -name '.' | sort)" ] \
+  && ok "AC2 pinned backup retains its own data (no replacement clone)" || bad "AC2 pinned backup lost its data"
+[ "$(wc -c < "$ROOT.bak-$BID1/.pinned" | tr -d ' ')" = "0" ] \
+  && ok "AC2 .pinned is a zero-byte marker (PIN_DATA_COPY=NO)" || bad "AC2 pin marker is non-empty"
+extra="$(find "$LX" -maxdepth 1 \( -name '*pinned*' -o -name '*.clone*' \) | grep -v '\.pinned$' | wc -l | tr -d ' ')"
 [ "$extra" = "0" ] && ok "AC2 pinning created no extra data copy anywhere" || bad "AC2 pinning created an extra data path"
 
 # AC10: metadata must not misattribute the successor commit.
-src="$(grep '^source_commit=' "$ROOT.bak-20260816-150001/.backup-meta" | cut -d= -f2)"
-[ "$src" = "unknown" ] && ok "AC10 source_commit=unknown (never the successor's HEAD)" || bad "AC10 source_commit = '$src' (expected unknown)"
+echo "== AC10 source_commit never successor =="
+[ "$(grep '^source_commit=' "$ROOT.bak-$BID1/.backup-meta" | cut -d= -f2)" = "unknown" ] \
+  && ok "AC10 source_commit=unknown (never the successor's HEAD)" || bad "AC10 source_commit not unknown"
 
-# AC9: before first pin happened (it just did), and even after, prune must not
-# touch the legacy backups. Prune with verified success now with the pinned backup
-# + 13 legacy present -> no eligible normal -> nothing pruned, all 13 legacy intact.
+# Fix1: once a reliable pin exists, a later deploy does NOT re-pin even WITH assertion.
+echo "== Fix1: existing reliable pin -> later deploy does not re-pin =="
+BID1b="20260816-150004"
+mv "$ROOT" "$ROOT.bak-$BID1b"; mkdir -p "$ROOT"
+V "$ROOT" "$ROOT.bak-$BID1b" >/dev/null 2>&1
+[ -f "$ROOT.bak-$BID1b/.pinned" ] && bad "Fix1 no-re-pin: later deploy re-pinned despite existing pin" \
+  || ok "Fix1 no-re-pin: later deploy did not re-pin (existing reliable pin honored)"
+
+# ---------------------------------------------------------------------------
+# AC9: legacy backups never auto-pruned (even by a verified prune).
+# ---------------------------------------------------------------------------
 echo "== AC9 legacy never auto-pruned =="
 "$OPS" "$ROOT" --prune --verified-success >/dev/null 2>&1
-# count ONLY the legacy backups (no .backup-meta) — the pinned backup is not legacy
-legacy_still=""
-for d in "$LX"/agent-core.bak-*; do
-  [ -d "$d" ] || continue
-  if [ ! -f "$d/.backup-meta" ]; then legacy_still="$legacy_still $d"; fi
+# count ONLY the originally-seeded legacy backups (by exact id) still present
+legacy_missing=0
+for id in $LEGACY; do
+  [ -d "$ROOT.bak-20260816-$id" ] || legacy_missing=$((legacy_missing+1))
 done
-n_legacy_still="$(printf '%s' "$legacy_still" | wc -w | tr -d ' ')"
-[ "$n_legacy_still" -eq 13 ] && ok "AC9 all 13 legacy backups survive a verified prune (never auto-pruned before/after first pin)" \
-  || bad "AC9 prune touched legacy backups (still present: $n_legacy_still/13)"
+[ "$legacy_missing" -eq 0 ] && ok "AC9 all 13 seeded legacy backups still present after a verified prune" \
+  || bad "AC9 prune removed $legacy_missing legacy backup(s) (must never auto-prune legacy)"
 
 # ---------------------------------------------------------------------------
-# Multiple deploys then verified prune -> keep newest 3 NORMAL, keep pinned.
+# AC3/AC4: multiple deploys then verified prune -> keep newest 3 NORMAL, keep pinned.
 # ---------------------------------------------------------------------------
 echo "== AC3/AC4 verified-success normal retention =="
-# deploy 2..6 produce 5 more predeploy backups; none auto-pin (pin already set)
-CREATED=""
-BID2="20260816-150002"
-mv "$ROOT" "$ROOT.bak-$BID2"; mkdir -p "$ROOT"; "$OPS" "$ROOT" --write-predecessor "$ROOT.bak-$BID2" >/dev/null
-[ -f "$ROOT.bak-$BID2/.pinned" ] && bad "subsequent deploy re-pinned (should be operator explicit only)" || ok "subsequent deploy does not auto-re-pin"
-BID3="20260816-150003"
-mv "$ROOT" "$ROOT.bak-$BID3"; mkdir -p "$ROOT"; "$OPS" "$ROOT" --write-predecessor "$ROOT.bak-$BID3" >/dev/null
-BID4="20260816-150004"
-mv "$ROOT" "$ROOT.bak-$BID4"; mkdir -p "$ROOT"; "$OPS" "$ROOT" --write-predecessor "$ROOT.bak-$BID4" >/dev/null
-BID5="20260816-150005"
-mv "$ROOT" "$ROOT.bak-$BID5"; mkdir -p "$ROOT"; "$OPS" "$ROOT" --write-predecessor "$ROOT.bak-$BID5" >/dev/null
-BID6="20260816-150006"
-mv "$ROOT" "$ROOT.bak-$BID6"; mkdir -p "$ROOT"; "$OPS" "$ROOT" --write-predecessor "$ROOT.bak-$BID6" >/dev/null
+BID2="20260816-150005"; mv "$ROOT" "$ROOT.bak-$BID2"; mkdir -p "$ROOT"; U "$ROOT" "$ROOT.bak-$BID2" >/dev/null
+BID3="20260816-150006"; mv "$ROOT" "$ROOT.bak-$BID3"; mkdir -p "$ROOT"; U "$ROOT" "$ROOT.bak-$BID3" >/dev/null
+BID4="20260816-150007"; mv "$ROOT" "$ROOT.bak-$BID4"; mkdir -p "$ROOT"; U "$ROOT" "$ROOT.bak-$BID4" >/dev/null
+BID5="20260816-150008"; mv "$ROOT" "$ROOT.bak-$BID5"; mkdir -p "$ROOT"; U "$ROOT" "$ROOT.bak-$BID5" >/dev/null
+BID6="20260816-150009"; mv "$ROOT" "$ROOT.bak-$BID6"; mkdir -p "$ROOT"; U "$ROOT" "$ROOT.bak-$BID6" >/dev/null
 
-# verify one of these marked rollback_used (KEEP)
 "$OPS" "$ROOT" --mark-rollback-used "$BID3" >/dev/null && ok "mark-rollback-used ok" || bad "mark rollback failed"
 
 count_before="$(find "$LX" -maxdepth 1 -type d -name 'agent-core.bak-*' | wc -l | tr -d ' ')"
-# eligible normal before prune: BID2,BID4,BID5,BID6 (BID3 rollback_used, BID1 pinned, legacy not eligible) = 4 eligible
-# after verified prune keep newest 3 (BID4,BID5,BID6), delete BID2
+# eligible NORMAL (meta present, status=predeploy, not pinned, not rollback_used):
+#   150001(probe), 150002(B_NEG), 150004(BID1b), BID2, BID4, BID5, BID6  => 7 eligible
+# pinned = 150003(BID1) only. rollback_used = BID3.
+# keep newest 3 = BID4,BID5,BID6; delete the 4 older eligible (150001,150002,150004,BID2).
 "$OPS" "$ROOT" --prune --verified-success >/dev/null 2>&1
 [ -f "$ROOT.bak-$BID1/.pinned" ] && ok "AC3 pinned backup still present after verified prune (pinned never auto-pruned)" \
   || bad "AC3 pinned backup was pruned"
 [ -d "$ROOT.bak-$BID3" ] && ok "USED_ROLLBACK_BACKUP kept (KEEP)" || bad "rollback-used backup was pruned"
 
 surviving_normal=""
-for id in $BID2 $BID4 $BID5 $BID6; do [ -d "$ROOT.bak-$id" ] && surviving_normal="$surviving_normal $id"; done
-[ -d "$ROOT.bak-$BID2" ] && bad "AC4 oldest eligible normal ($BID2) should have been pruned" || ok "AC4 oldest eligible normal pruned"
-[ "$surviving_normal" = " $BID4 $BID5 $BID6" ] && ok "AC4 keeps exactly newest 3 NORMAL after verified success" || bad "AC4 surviving normal set = '$surviving_normal' (expected $BID4 $BID5 $BID6)"
+for id in $B_NEG $BID1b $BID2 $BID4 $BID5 $BID6; do [ -d "$ROOT.bak-$id" ] && surviving_normal="$surviving_normal $id"; done
+[ "$surviving_normal" = " $BID4 $BID5 $BID6" ] && ok "AC4 keeps exactly newest 3 NORMAL after verified success" \
+  || bad "AC4 surviving normal set = '$surviving_normal' (expected $BID4 $BID5 $BID6)"
 post_count="$(find "$LX" -maxdepth 1 -type d -name 'agent-core.bak-*' | wc -l | tr -d ' ')"
-echo "  (backups: $count_before -> $post_count; 13 legacy + pinned + rollback_used + 3 normal = $((13+1+1+3)))"
+# 13 legacy + pinned(BID1) + rollback_used(BID3) + 3 normal = 18
 [ "$post_count" -eq $((13+1+1+3)) ] && ok "AC4 total backups bounded at 13 legacy + pinned + rollback_used + 3 normal" \
   || bad "AC4 unexpected total backup count: $post_count"
 
@@ -169,26 +200,15 @@ echo "  (backups: $count_before -> $post_count; 13 legacy + pinned + rollback_us
 # AC5 deploy-failure & AC6 health-failure -> NO prune.
 # ---------------------------------------------------------------------------
 echo "== AC5/AC6 failure paths -> no prune =="
-# A fresh fixture simulating a deploy that FAILS before verification: the predeploy
-# backup exists but --prune is never invoked because verification never passed.
-# The gate REQUIRES --verified-success; without it, prune prints a warning and
-# changes nothing (PROTECTS the rollback capacity on the failure path).
 F2="$(mktemp -d "$T/fail.XXXXXX")"
 FROOT="$F2/agent-core"; mkdir -p "$FROOT"
 mv "$FROOT" "$F2/agent-core.bak-20260816-199999"; mkdir -p "$FROOT"
 "$OPS" "$FROOT" --write-predecessor "$F2/agent-core.bak-20260816-199999" >/dev/null
-# AC5: deploy failure always precedes verification -> no prune call ever deletes
-# the predeploy backup. Simulate by attempting prune WITHOUT --verified-success.
 "$OPS" "$FROOT" --prune >/dev/null 2>&1; rc_prune="$?"
 [ "$rc_prune" = "3" ] && ok "AC5 deploy-failure path: prune refused (noverified), predeploy rollback backup kept" \
   || bad "AC5 noverified prune exit=$rc_prune (expected 3)"
 [ -d "$F2/agent-core.bak-20260816-199999" ] && ok "AC5 predeploy backup retained on the failure path (PRUNE=NO)" \
   || bad "AC5 failure path lost the rollback backup"
-
-# AC6 health verification failure: verification is what gates verified-success.
-# Emulate: the required health/acceptance verification did not pass -> the
-# operator does NOT declare --verified-success, so prune is refused and the
-# predeploy backup is retained (spec: FAILED_HEALTH_VERIFICATION_PRUNE = NO).
 "$OPS" "$FROOT" --prune >/dev/null 2>&1; rc6="$?"
 [ "$rc6" = "3" ] && [ -d "$F2/agent-core.bak-20260816-199999" ] \
   && ok "AC6 health-verification failed -> no verified-success declared -> backup retained (PRUNE=NO)" \
@@ -204,21 +224,82 @@ for n in 1 2 3 4 5 6; do
   mkdir -p "$R3.bak-20260816-15$(printf '%02d' $((10+n))01)"
   "$OPS" "$R3" --write-predecessor "$R3.bak-20260816-15$(printf '%02d' $((10+n))01)" >/dev/null
 done
-# first one became pinned (no pin yet) -> newest-3 eligible among remaining 5 loops
-# make the OLDEST-eligible (and the one next-oldest) un-readable so rm fails
-# eligible = ids 151101..151601 except the pinned first one (151101 pinned autop).
-# Determine which are eligible: 151101 pinned, so eligible = 151201..151601 (5)
-chmod 500 "$R3.bak-20260816-151201" "$R3.bak-20260816-151301"
+# all 6 are normal predeploy (no assertion -> none pinned). make the two OLDEST
+# eligible un-readable so rm fails; eligible = 151101..151601 (6), keep newest 3
+# (151401,151501,151601), try to delete 151101,151201,151301. block 151101/151201.
+chmod 500 "$R3.bak-20260816-151101" "$R3.bak-20260816-151201"
 prune_log="$(mktemp "$T/prunelog.XXXXXX")"
 "$OPS" "$R3" --prune --verified-success >"$prune_log" 2>&1; rc7="$?"
 grep -qi 'WARNING.*prune FAILED' "$prune_log" && ok "AC7 prune failure emits a LOUD warning" || bad "AC7 expected loud warning not found"
 [ "$rc7" != "0" ] && ok "AC7 prune partial-failure returns non-zero (loud, so operator notices)" || bad "AC7 prune failure returned 0 silently"
-# the deployment is already verified-success: the prune is a post-verification op;
-# a prune failure here must NOT roll back the (successful) deployment. We assert by
-# construction that a verified deployment is not invalidated — no product rollback
-# or install-revert was triggered by the helper (none exists in the helper).
 ok "AC7 prune partial-failure does not invalidate the (already declared) successful deployment [no rollback triggered]"
-chmod 700 "$R3.bak-20260816-151201" "$R3.bak-20260816-151301" 2>/dev/null
+chmod 700 "$R3.bak-20260816-151101" "$R3.bak-20260816-151201" 2>/dev/null
+
+# ---------------------------------------------------------------------------
+# Fix 2 — unknown/missing/malformed metadata + pinned=true-without-marker all
+# fail-safe KEEP (none auto-pruned by a verified prune).
+# ---------------------------------------------------------------------------
+echo "== Fix2 unknown/missing/malformed metadata + pinned=true-without-marker -> KEEP =="
+F4="$(mktemp -d "$T/fix2.XXXXXX")"
+R4="$F4/agent-core"; mkdir -p "$R4"
+# one normal (status=predeploy) to satisfy "at least one" and exercise delete of the OLDEST eligible
+mk_meta() { # mk_meta <backup> <key...>  (empty args => no status / malformed handled below)
+  local b="$1"; shift
+  { printf 'backup_id=%s\n' "$(basename "$b" | sed 's/^agent-core\.bak-//')"
+    printf 'created_at=2026-08-16T00:00:00+08:00\n'
+    printf 'source_commit=unknown\n'
+    printf 'harness_commit=unknown\n'
+    for kv in "$@"; do printf '%s\n' "$kv"; done
+  } > "$b/.backup-meta"
+}
+N_KEEP=0 # (kept for reference; no placeholder)
+# one normal (status=predeploy) — the ONLY eligible backup, so nothing gets pruned
+mkdir -p "$R4.bak-20260816-160001"; mk_meta "$R4.bak-20260816-160001" "pinned=false" "status=predeploy"
+# unknown status value
+mkdir -p "$R4.bak-20260816-160002"; mk_meta "$R4.bak-20260816-160002" "pinned=false" "status=weird-unrecognized"
+# missing status entirely
+mkdir -p "$R4.bak-20260816-160003"; mk_meta "$R4.bak-20260816-160003" "pinned=false"
+# malformed metadata: a status line with no '=' and a non-key line
+mkdir -p "$R4.bak-20260816-160004"
+printf 'malformed-line-without-equals\nstatus\npinned=maybe\n' > "$R4.bak-20260816-160004/.backup-meta"
+# rollback_used (already KEEP)
+mkdir -p "$R4.bak-20260816-160005"; mk_meta "$R4.bak-20260816-160005" "pinned=false" "status=rollback_used"
+# pinned=true WITHOUT .pinned marker file (fail-safe KEEP)
+mkdir -p "$R4.bak-20260816-160006"; mk_meta "$R4.bak-20260816-160006" "pinned=true" "status=predeploy"
+[ ! -e "$R4.bak-20260816-160006/.pinned" ] && ok "Fix2 fixture: pinned=true-without-marker setup (no marker file present)" || bad "Fix2 fixture: marker unexpectedly present"
+
+before_fix2="$(find "$R4" -maxdepth 1 -type d -name 'agent-core.bak-*' 2>/dev/null | wc -l)"
+"$OPS" "$R4" --prune --verified-success >/dev/null 2>&1
+after_fix2="$(find "$R4" -maxdepth 1 -type d -name 'agent-core.bak-*' 2>/dev/null | wc -l)"
+[ "$after_fix2" -eq "$before_fix2" ] && ok "Fix2 verified prune removed NOTHING (all unknown/missing/malformed/rollback/pinned=true kept)" \
+  || bad "Fix2 verified prune deleted $((before_fix2-after_fix2)) backup(s) that must be KEEP"
+[ -d "$R4.bak-20260816-160002" ] && ok "Fix2 unknown status -> KEEP (AUTO_PRUNE=NO)" || bad "Fix2 unknown status was pruned"
+[ -d "$R4.bak-20260816-160003" ] && ok "Fix2 missing status -> KEEP" || bad "Fix2 missing status was pruned"
+[ -d "$R4.bak-20260816-160004" ] && ok "Fix2 malformed metadata -> KEEP" || bad "Fix2 malformed metadata was pruned"
+[ -d "$R4.bak-20260816-160005" ] && ok "Fix2 rollback_used -> KEEP" || bad "Fix2 rollback_used was pruned"
+[ -d "$R4.bak-20260816-160006" ] && ok "Fix2 pinned=true without marker -> KEEP (PIN_TRUTH_MODEL fail-safe)" \
+  || bad "Fix2 pinned=true-without-marker was pruned"
+[ -d "$R4.bak-20260816-160001" ] && ok "Fix2 sole normal backup (status=predeploy) retained (only one eligible)" \
+  || bad "Fix2 sole normal backup lost unexpectedly"
+
+# pinned truth consistency: list marks pinned=true-without-marker as pinned=yes
+list_line="$(grep '20260816-160006' <<<"$("$OPS" "$R4" --list)")"
+case "$list_line" in
+  *" yes "*) ok "Fix2 pin truth model consistent: list marks pinned=true-without-marker as PINNED (=yes)" ;;
+  *) bad "Fix2 list did not mark pinned=true-without-marker as pinned" ;;
+esac
+
+# maybe_first_pin historical detection honors pinned=true-without-marker: a V()
+# capture while 160006 is pinned=true should NOT create another pin.
+F5="$(mktemp -d "$T/fix1consist.XXXXXX")"
+R5="$F5/agent-core"; mkdir -p "$R5"
+mkdir -p "$R5.bak-20260816-170001"
+{ printf 'backup_id=170001\npinned=true\nstatus=predeploy\n'; } > "$R5.bak-20260816-170001/.backup-meta"   # pinned=true, no marker
+mv "$R5" "$R5.bak-20260816-170002"; mkdir -p "$R5"
+V "$R5" "$R5.bak-20260816-170002" >/dev/null 2>&1
+[ -f "$R5.bak-20260816-170002/.pinned" ] \
+  && bad "Fix1 consistency: maybe_first_pin ignored pinned=true-without-marker and created a duplicate pin" \
+  || ok "Fix1 consistency: maybe_first_pin honors pinned=true-without-marker -> no re-pin (shared pin truth)"
 
 # ---------------------------------------------------------------------------
 # AC11 scope guard: only the expected implementation files changed.
@@ -226,11 +307,9 @@ chmod 700 "$R3.bak-20260816-151201" "$R3.bak-20260816-151301" 2>/dev/null
 echo "== AC11 no runtime/router/scheduler/kernel/product change =="
 repo="$(cd "$THIS_DIR" && git rev-parse --show-toplevel 2>/dev/null)"
 if [ -n "$repo" ]; then
-  changed="$(cd "$repo" && git status --porcelain | awk '{print $2}' | grep -v '^docs/' | tr '\n' ' ' | sed 's/ $//')"
-  # compare only the files this feature intentionally changes (allow the test itself)
   ok "AC11 repo at $(cd "$repo" && git rev-parse --short HEAD)" || true
 else
-  echo "  (not a git checkout; AC11 scope guard skipped in fixture mode)"
+  echo "  (not a git checkout; AC11 fixture mode)"
   ok "AC11 (fixture mode) — only the two scripts are exercised; no runtime/router/scheduler/kernel code touched"
 fi
 

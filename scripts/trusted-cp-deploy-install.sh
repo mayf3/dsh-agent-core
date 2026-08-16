@@ -79,14 +79,20 @@ if [ -e "$TRUSTED_ROOT" ]; then
   echo "== backing up previous install -> $BAK"
   mv "$TRUSTED_ROOT" "$BAK"
   # AGENT_CORE_BACKUP_RETENTION_V1: write metadata for the backed-up PREVIOUS
-  # installed closure (created_at / source_commit / pinned / status) and pin the
-  # FIRST_RELIABLE_PIN when no historical backup is pinned. Metadata must never
-  # attribute the successor (new) deployment's commit to this backup, so
-  # source_commit stays "unknown" (the previous closure does not record its app
-  # commit). Pin = metadata/marker only — NO data copy. This is the predeploy
+  # installed closure (created_at / source_commit / pinned / status). Metadata
+  # must never attribute the successor (new) deployment's commit to this backup,
+  # so source_commit stays "unknown" (the previous closure does not record its
+  # app commit). Pin = metadata/marker only — NO data copy. This is the predeploy
   # capture; nothing is pruned here (prune only happens post-verified-success via
-  # the operator helper, and never touches legacy backups). NOTE: this is a
-  # non-fatal best-effort — a metadata failure must not block the install.
+  # the operator helper, and never touches legacy backups).
+  #   FIRST_RELIABLE_PIN is set ONLY when the trusted operator EXPLICITLY asserts
+  #   the predecessor is the verified LKG via the env seam
+  #   AGENT_CORE_VERIFIED_PREDECESSOR_LKG=YES (propagates to the helper subprocess).
+  #   Without it, the backup is created normally and is NOT auto-pinned — this
+  #   helper never infers known-good from no-pin/mtime/newest/current-install
+  #   (LKG_AUTHORITY = TRUSTED_OPERATOR_ASSERTION, MACHINE_LKG_DETECTION = NO).
+  #   NOTE: this is a non-fatal best-effort — a metadata failure must not block
+  #   the install.
   if [ -x "$BACKUP_OPS" ]; then
     "$BACKUP_OPS" "$(dirname "$TRUSTED_ROOT")" --write-predecessor "$BAK" \
       || echo "  WARNING: backup metadata/first-pin failed for $BAK (install continues; investigate)" >&2
