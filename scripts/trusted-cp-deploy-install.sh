@@ -98,6 +98,42 @@ cd harness
   }
 cd "$TRUSTED_ROOT"
 
+# ---- 2b. trusted Node runtime (review blocker fix) --------------------------
+# The production Control Plane must NEVER execute /usr/local/bin/node
+# (Homebrew, uid-502-writable). Materialize the ACTUAL Node runtime into the
+# trusted closure: real files only (cp -RL), no symlink/hardlink back to
+# /usr/local/bin, the Cellar, or /Users/yanfenma.
+echo "== copying Node runtime -> node-runtime/"
+NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
+case "$NODE_LINK_TARGET" in
+  /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
+  *)  NODE_CELLAR_BIN="$(dirname /usr/local/bin/node)/$NODE_LINK_TARGET" ;;
+esac
+NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NODE_CELLAR_BIN")"
+NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
+mkdir -p node-runtime
+cp -RL "$NODE_VERSION_DIR"/. node-runtime/
+TRUSTED_NODE="$TRUSTED_ROOT/node-runtime/bin/node"
+if [ ! -x "$TRUSTED_NODE" ] || [ -L "$TRUSTED_NODE" ]; then
+  echo "ERROR: trusted node missing or is a symlink: $TRUSTED_NODE" >&2
+  exit 2
+fi
+if ! "$TRUSTED_NODE" --version >/dev/null 2>&1; then
+  echo "ERROR: trusted node does not run: $TRUSTED_NODE" >&2
+  exit 2
+fi
+CELLAR_INODE="$(stat -f %i "$NODE_CELLAR_BIN")"
+TRUSTED_INODE="$(stat -f %i "$TRUSTED_NODE")"
+if [ "$CELLAR_INODE" = "$TRUSTED_INODE" ]; then
+  echo "ERROR: trusted node shares an inode with the Cellar binary (hardlink!)" >&2
+  exit 2
+fi
+if [ "$(find node-runtime -type l | wc -l | tr -d ' ')" != "0" ]; then
+  echo "ERROR: node-runtime still contains symlinks (must be fully materialized)" >&2
+  exit 2
+fi
+echo "  trusted node: $TRUSTED_NODE ($("$TRUSTED_NODE" --version), source $NODE_VERSION_DIR)"
+
 # ---- 3. app closure (Agent Core runtime surface) ---------------------------
 echo "== copying Agent Core closure -> app/"
 mkdir -p app/packages app/node_modules
@@ -201,8 +237,8 @@ printf '{\n  "version": 1,\n  "credentials": {}\n}\n' > config/agent-credentials
 # file is a legal empty store for both).
 
 # ---- 6. ownership + modes ---------------------------------------------------
-echo "== ownership: harness/app/home -> authsvc:authsvc (502 read-only)"
-for d in harness app home; do
+echo "== ownership: harness/app/home/node-runtime -> authsvc:authsvc (502 read-only)"
+for d in harness app home node-runtime; do
   chown -R -h "${AUTHSVC_UID}:${AUTHSVC_GID}" "$TRUSTED_ROOT/$d"
   chmod -R u+rwX,go+rX,go-w "$TRUSTED_ROOT/$d"
 done
@@ -281,6 +317,7 @@ fi
 echo
 echo "== install complete =="
 echo "  TRUSTED_INSTALL_PATH = $TRUSTED_ROOT"
+echo "  TRUSTED_NODE         = $TRUSTED_ROOT/node-runtime/bin/node"
 echo "  harness closure: $(du -sh "$TRUSTED_ROOT/harness" | cut -f1)"
 echo "  app closure:     $(du -sh "$TRUSTED_ROOT/app" | cut -f1)"
 echo "  control home:    $TRUSTED_ROOT/home"

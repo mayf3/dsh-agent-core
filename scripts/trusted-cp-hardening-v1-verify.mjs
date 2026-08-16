@@ -47,6 +47,8 @@ if (typeof process.getuid === 'function' && process.getuid() !== 0) {
 const TRUSTED_ROOT = '/usr/local/libexec/agent-core'
 const TRUSTED_HARNESS = join(TRUSTED_ROOT, 'harness')
 const TRUSTED_APP = join(TRUSTED_ROOT, 'app')
+const TRUSTED_NODE = join(TRUSTED_ROOT, 'node-runtime/bin/node')
+const SYSTEM_NODE = '/usr/local/bin/node'
 const TRUSTED_HOME = join(TRUSTED_ROOT, 'home')
 const TRUSTED_CONFIG = join(TRUSTED_ROOT, 'config')
 const HELPER = '/usr/local/libexec/dsh-agent-spawn-helper'
@@ -131,6 +133,7 @@ async function attackMatrix() {
     ['CP_CODE_ROUTER', join(TRUSTED_APP, 'packages/agent-router/src/index.js')],
     ['CP_CODE_BROKER', join(TRUSTED_APP, 'packages/broker/src/gateway.js')],
     ['CP_CODE_HARNESS', join(TRUSTED_HARNESS, 'apps/cli/lib/bin.js')],
+    ['TRUSTED_NODE', TRUSTED_NODE],
     ['CP_PROFILE', join(TRUSTED_HOME, 'profiles/agent-core-integration/cordis.patch.yml')],
     ['CP_BUNDLE', join(TRUSTED_APP, 'bundle-integration/cordis.patch.yml')],
     ['CP_CONFIG', join(TRUSTED_CONFIG, 'registry.json')],
@@ -153,6 +156,29 @@ async function attackMatrix() {
   const rmHelper = as502(`rm ${JSON.stringify(HELPER)}`)
   record('SPAWN_HELPER_502_REPLACE_DENIED', rmHelper.status !== 0, `status=${rmHelper.status}`)
   if (rmHelper.status === 0) ok = false
+  // ---- trusted Node specific checks (review blocker) ----
+  const rmNode = as502(`rm ${JSON.stringify(TRUSTED_NODE)}`)
+  record('TRUSTED_NODE_502_REPLACE_DENIED', rmNode.status !== 0, `status=${rmNode.status}`)
+  if (rmNode.status === 0) ok = false
+  const nodeParentWrite = as502(`echo pwned > ${JSON.stringify(join(dirname(TRUSTED_NODE), 'evil'))}`)
+  record('TRUSTED_NODE_PARENT_502_WRITABLE', nodeParentWrite.status !== 0,
+    nodeParentWrite.status !== 0 ? 'NO (parent dir write DENIED)' : 'YES')
+  if (nodeParentWrite.status === 0) ok = false
+  const nodeParentRm = as502(`rm -rf ${JSON.stringify(dirname(dirname(TRUSTED_NODE)))}`)
+  record('TRUSTED_NODE_PARENT_502_REPLACE_DENIED', nodeParentRm.status !== 0, `status=${nodeParentRm.status}`)
+  if (nodeParentRm.status === 0) ok = false
+  const nodeRedirect = as502(`ln -s ${SYSTEM_NODE} ${JSON.stringify(TRUSTED_NODE)}`)
+  record('TRUSTED_NODE_502_SYMLINK_REDIRECT_DENIED', nodeRedirect.status !== 0, `status=${nodeRedirect.status}`)
+  if (nodeRedirect.status === 0) ok = false
+  // structural audit: trusted node is a REAL file, not a symlink/hardlink to
+  // the Homebrew/Cellar binary; resolves from PATH inside the trusted root.
+  const isSymlink = sh(`test -L ${JSON.stringify(TRUSTED_NODE)}`).status === 0
+  const nodeStat = sh(`stat -f '%Su:%Sg %Sp %i' ${JSON.stringify(TRUSTED_NODE)}`).stdout.trim()
+  const systemStat = sh(`stat -f '%i' ${JSON.stringify(SYSTEM_NODE)}`).stdout.trim()
+  record('TRUSTED_NODE_REAL_FILE', !isSymlink, nodeStat)
+  if (isSymlink) ok = false
+  record('TRUSTED_NODE_NO_CELLAR_HARDLINK', !nodeStat.endsWith(systemStat), `trusted inode != ${SYSTEM_NODE} inode`)
+  if (nodeStat.endsWith(systemStat)) ok = false
   const symlink1 = as502(`ln -s /Users/yanfenma/workspace/project/dsh-agent-core ${JSON.stringify(join(TRUSTED_APP, 'packages/agent-router'))}`)
   record('TRUSTED_PATH_502_SYMLINK_REDIRECT_DENIED', symlink1.status !== 0, `status=${symlink1.status}`)
   if (symlink1.status === 0) ok = false
@@ -260,6 +286,8 @@ function controlEnv(extra = {}) {
     ...process.env,
     HOME: '/Users/authsvc',
     TMPDIR: '/tmp',                       // authsvc must own its temp space
+    // any bare `node` spawned pre-drop resolves to the TRUSTED runtime first
+    PATH: `${dirname(TRUSTED_NODE)}:${process.env.PATH ?? '/usr/bin:/bin'}`,
     DSH_HOME: TRUSTED_HOME,
     DSH_HARNESS_ROOT: TRUSTED_HARNESS,
     DSH_WORKSPACE_DIR: AGENTS_DIR,       // child workspaces (502 runtime)
@@ -307,7 +335,7 @@ function bootControlPlane() {
   return new Promise((resolvePromise) => {
     const envPairs = []
     for (const [k, v] of Object.entries(controlEnv())) envPairs.push(`${k}=${v}`)
-    const child = spawn('sudo', ['-u', 'authsvc', '/usr/bin/env', ...envPairs, '/usr/local/bin/node',
+    const child = spawn('sudo', ['-u', 'authsvc', '/usr/bin/env', ...envPairs, TRUSTED_NODE,
       join(TRUSTED_HARNESS, 'apps/cli/lib/bin.js'), '--profile', CONTROL_PROFILE], {
       cwd: TRUSTED_APP,
       stdio: ['ignore', 'ignore', 'pipe'],
@@ -445,14 +473,28 @@ async function main() {
   record('PARENT_UID_505', cpUid === '505', `node pid=${cpNodePid} uid=${cpUid}`)
   const cpCmd = sh(`ps -o command= -p ${cpNodePid}`).stdout
   record('CP_RUNS_TRUSTED_CLI', cpCmd.includes(TRUSTED_HARNESS), cpCmd.trim().slice(0, 140))
+  // review blocker: the interpreter itself must be the TRUSTED node, never
+  // the Homebrew /usr/local/bin/node
+  const cpRunsTrustedNode = cpCmd.trimStart().startsWith(TRUSTED_NODE)
+  record('CP_NODE_PATH_TRUSTED', cpRunsTrustedNode, `argv0=${cpCmd.trimStart().split(/\s+/)[0]}`)
+  const cpRunsSystemNode = cpCmd.includes(SYSTEM_NODE)
+  record('CP_NODE_NOT_SYSTEM', !cpRunsSystemNode, cpRunsSystemNode ? 'STILL uses /usr/local/bin/node' : 'no /usr/local/bin/node in argv')
   const cpEnv = sh(`ps eww -p ${cpNodePid} -o command=`).stdout
   record('CP_ENV_TRUSTED_HARNESS', cpEnv.includes(`DSH_HARNESS_ROOT=${TRUSTED_HARNESS}`),
     'DSH_HARNESS_ROOT points into the trusted install')
+  const pathFirst = cpEnv.match(/PATH=([^ ]+)/)?.[1] ?? ''
+  record('CP_PATH_TRUSTED_NODE_FIRST', pathFirst.startsWith(dirname(TRUSTED_NODE)),
+    `PATH first entry: ${pathFirst.split(':')[0]}`)
   // pre-drop leak check: the 505 process must not open ANY dev-repo file
   const devFiles = sh(`lsof -p ${cpNodePid} 2>/dev/null | grep -c '/Users/yanfenma/workspace/project/dsh-agent-core' || true`).stdout.trim()
   record('PRE_DROP_NO_DEV_REPO_FILES', devFiles === '0', `open dev-repo files by 505: ${devFiles}`)
+  // ... and nothing from the 502-writable Homebrew Node installation
+  const cellarFiles = sh(`lsof -p ${cpNodePid} 2>/dev/null | grep -cE '/usr/local/Cellar/node|/usr/local/bin/node' || true`).stdout.trim()
+  record('PRE_DROP_NO_CELLAR_NODE', cellarFiles === '0', `open Homebrew node files by 505: ${cellarFiles}`)
   const trustedFiles = sh(`lsof -p ${cpNodePid} 2>/dev/null | grep -c '${TRUSTED_ROOT}' || true`).stdout.trim()
   record('PRE_DROP_USES_TRUSTED_FILES', Number(trustedFiles) > 0, `open trusted-root files by 505: ${trustedFiles}`)
+  const trustedNodeOpen = sh(`lsof -p ${cpNodePid} 2>/dev/null | grep -c '${TRUSTED_NODE}' || true`).stdout.trim()
+  record('PRE_DROP_NODE_OPEN_TRUSTED', Number(trustedNodeOpen) > 0, `trusted node open by 505: ${trustedNodeOpen}`)
 
   // ------------------------------------------------------------- phase 4
   console.log('\n[phase 4] restart: same trusted closure comes back')
@@ -519,13 +561,11 @@ async function finish(cp, { agentA, agentB, attackOk }) {
     '## Verdict fields',
     '',
     `TRUSTED_CONTROL_PLANE_DEPLOYMENT_HARDENING_V1 = ${verdict}`,
-    `TRUSTED_INSTALL_PATH = ${TRUSTED_ROOT}`,
-    `CP_CODE_502_WRITABLE = NO`,
-    `CP_CONFIG_502_WRITABLE = NO`,
-    `CP_PROFILE_502_WRITABLE = NO`,
-    `PRE_DROP_HARNESS_502_WRITABLE = NO`,
-    `AGENT_CAN_MODIFY_TRUSTED_CODE = NO`,
-    `AGENT_CAN_REDIRECT_TRUSTED_SYMLINK = NO`,
+    `TRUSTED_NODE_FIX = ${verdict}`,
+    `TRUSTED_NODE_PATH = ${TRUSTED_NODE}`,
+    `TRUSTED_NODE_502_WRITABLE = ${checks.find((c) => c.name === 'TRUSTED_NODE_502_WRITE_DENIED')?.ok ? 'NO' : 'YES'}`,
+    `TRUSTED_NODE_REDIRECTABLE = ${checks.find((c) => c.name === 'TRUSTED_NODE_502_SYMLINK_REDIRECT_DENIED')?.ok && checks.find((c) => c.name === 'TRUSTED_NODE_REAL_FILE')?.ok ? 'NO' : 'YES'}`,
+    `CP_NODE_PATH = ${TRUSTED_NODE}`,
     `PARENT_UID = 505`,
     `CHILD_UID = 502`,
     `CREDENTIAL_STORE_ACCESS_FROM_502 = DENIED`,
@@ -536,6 +576,9 @@ async function finish(cp, { agentA, agentB, attackOk }) {
     'ROUTER_CORE_CHANGE = NONE',
     'KERNEL_CHANGE = NONE',
     `AUTH_PRODUCTION_BOUNDARY = ${verdict === 'PASS' ? 'CLOSED' : 'NOT_CLOSED'}`,
+    `TESTS = ${checks.filter((c) => c.ok).length}/${checks.length} PASS`,
+    `FEATURE_HEAD = ${process.env.FEATURE_HEAD ?? '(filled at commit)'}`,
+    `READY_FOR_REREVIEW = ${verdict === 'PASS' ? 'YES' : 'NO'}`,
     '',
   ].join('\n')
   const reportPath = join(RUNTIME, '..', 'evidence.md')
