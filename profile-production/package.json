@@ -1,0 +1,19 @@
+{
+  "name": "dsh-profile-agent-core-production",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Agent Core per-agent PRODUCTION profile (PRODUCTION_RUNTIME_V1): dsh-base + demo-server (the resume-aware JSON-RPC process protocol server the Router speaks) + owner-guard (one owner process per agent home) + agent-memory (long-term memory) + agent-switch (agent_core.switch_agent adapter) + broker (capability tools relay to the trusted control-plane Broker gateway; the child holds no credential/token)",
+  "dependencies": {},
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@agent-core/bundle-demo",
+        "@agent-core/bundle-memory",
+        "@agent-core/bundle-agent-switch",
+        "@agent-core/bundle-broker"
+      ]
+    }
+  },
+  "license": "UNLICENSED"
+}

@@ -128,6 +128,7 @@ async function freshRig(t, { config = {}, agents = [[AGT_ID, 'Delivery Agent']] 
   const router = applyRouter(ctx, {
     bindingsStoreFile: join(dir, 'bindings.json'),
     defaultSessionId: 'main',
+    agentProfile: 'agent-core-demo',
     processFactory: (opts) => {
       const proc = new FakeProc(opts)
       spawned.push(proc)
@@ -256,6 +257,7 @@ test('D6 restart: fresh mapping survives a fresh router over the same store; mai
   const router2 = applyRouter(ctx2, {
     bindingsStoreFile: join(dir, 'bindings.json'),
     defaultSessionId: 'main',
+    agentProfile: 'agent-core-demo',
     processFactory: (opts) => { const p = new FakeProc(opts); spawned2.push(p); return p },
   })
   const retry = await router2.deliver({ requestId: 'req-X', agentId: agent.id, sessionMode: 'fresh', message: 'x again' })
@@ -350,6 +352,7 @@ test('D10 disabled enforcement (AGENT_DEFINITION_DISABLED_ENFORCEMENT_FIX): a di
   const router2 = applyRouter(ctx2, {
     bindingsStoreFile: join(dir, 'bindings2.json'),
     defaultSessionId: 'main',
+    agentProfile: 'agent-core-demo',
     processFactory: (opts) => { const p = new FakeProc(opts); spawned2.push(p); return p },
   })
 

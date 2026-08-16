@@ -50,7 +50,7 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { AgentProcess, agentEnv } from './process.js'
 import { BindingStore } from './binding-store.js'
-import { provisionAgentHome } from '../../../scripts/demo-home.mjs'
+import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -73,8 +73,15 @@ export const Config = z.object({
   defaultAgentId: z.string(),
   /** Default Session inside the bound Agent (V1: 'main'). */
   defaultSessionId: z.string().default('main'),
-  /** Per-agent process profile (the resume-aware per-agent composition). */
-  agentProfile: z.string().default('agent-core-demo'),
+  /**
+   * Per-agent process profile (the resume-aware per-agent composition).
+   * REQUIRED at spawn time (no library default — the deployment owns the
+   * composition choice; PRODUCTION_RUNTIME_V1 removed the historical
+   * 'agent-core-demo' fallback so the production path can never silently
+   * boot a demo composition). Must be a known
+   * @agent-core/agent-provisioning AGENT_PROFILE_DEFS entry.
+   */
+  agentProfile: z.string(),
   /**
    * ABSOLUTE JSON store path for the Binding table AND the per-surface
    * bookmark table AND the Delivery V0 fresh-mapping table (default
