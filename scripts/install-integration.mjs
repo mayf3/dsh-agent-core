@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Install the Integration V1 control-plane profile into the Harness home
- * (additive only, mirrors scripts/install-profile.mjs):
+ * (additive only; mirrors the V0 profile installer, now preserved under
+ * examples/v0-vertical-slice/scripts/install-profile.mjs):
  *
  *   $DSH_HOME/profiles/agent-core-integration/{package.json,cordis.patch.yml}
  *     -> symlinks into the repo's profile-integration/

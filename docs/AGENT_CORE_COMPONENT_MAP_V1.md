@@ -93,13 +93,15 @@
   直通 DSH，仅 Product metadata 薄层延后到 Product API milestone）
 - ❌ `agent-core-forum-plugin` / `agent-core-workflow-plugin`（Forum/Workflow 在外部，走 Broker）
 
-Agent Core 新增组件命名应落在：registry / memory / router / process-supervisor /
-workspace-bootstrap / broker / plugin-lifecycle / proactive-runtime。
+Agent Core 新增组件命名应落在：agent-definition / memory / agent-router /
+process-supervisor / workspace-bootstrap / broker / plugin-lifecycle / proactive-runtime。
+（注：早期 `registry` 命名已由声明式 `agent-definition` 取代——AGENT_DEFINITION_CONFIG_V1；
+V0 一次性驱动 `@agent-core/router` 已废弃并移入 `examples/v0-vertical-slice/`。）
 
 ## 7. 汇总一句话
 
 > 吃 DSH：loop / tools / fs / shell / subagents / skills / compaction / persistence /
-> schedule / goal / inbox / 动态插件运行时。自己薄建：registry / session 管理 / memory /
-> workspace-bootstrap / router+process supervisor / broker bridge / plugin lifecycle /
-> proactive runtime。不做：cron、向量记忆、dashboard、artifact、HA、多渠道 adapter、
-> Product API 实现（均排期在后）。
+> schedule / goal / inbox / 动态插件运行时。自己薄建：agent-definition / session 管理 /
+> memory / workspace-bootstrap / agent-router+process supervisor / broker bridge /
+> plugin lifecycle / proactive runtime。不做：cron、向量记忆、dashboard、artifact、HA、
+> 多渠道 adapter、Product API 实现（均排期在后）。

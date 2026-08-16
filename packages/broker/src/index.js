@@ -37,7 +37,8 @@
  * Plugin identity: `export const name = 'broker'` is kept identical to V0 so
  * the installed profile keeps resolving the plugin; the bundle patch references
  * the package `@agent-core/broker` (unchanged in package.json). The `broker`
- * name also matches @agent-core/router's convention of a short Cordis plugin name.
+ * name follows Cordis' convention of a short plugin name (e.g. `router`,
+ * `agent-memory`).
  */
 
 import { defineTool } from '@deepseek-ai/dsh-tools'

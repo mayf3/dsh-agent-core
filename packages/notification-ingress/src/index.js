@@ -9,12 +9,12 @@
  *       -> { accepted, sessionId }
  *
  * The server is a THIN ADAPTER over the FROZEN Router contract
- * `agentRouter.deliver` (being implemented in parallel by the Router Agent on
- * branch feat/agent-router-delivery-v0). It owns NONE of: routing policy,
- * session/process lifecycle, session mapping, queue / scheduler / retry /
- * dead-letter, notification center, Workflow or Forum specifics. It does not
- * know Workflow, and it does not know Forum — it only turns one HTTP request
- * into one deliver() call and one HTTP response.
+ * `agentRouter.deliver` (landed with AGENT_ROUTER_DELIVERY_V0 on
+ * feat/agent-router-delivery-v0, merged into main). It owns NONE of: routing
+ * policy, session/process lifecycle, session mapping, queue / scheduler /
+ * retry / dead-letter, notification center, Workflow or Forum specifics. It
+ * does not know Workflow, and it does not know Forum — it only turns one HTTP
+ * request into one deliver() call and one HTTP response.
  *
  * V0 explicitly does NOT do (frozen non-goals):
  *   - notification queue / scheduler retry / polling / dead-letter queue
@@ -23,14 +23,12 @@
  *   - session mapping / any old-session resume policy (sessionMode is passed
  *     through verbatim; interpreting it is the Router's job)
  *
- * Main is currently WITHOUT agentRouter.deliver (the Router branch is not
- * merged). Until it lands this adapter mounts normally, logs the pending
- * dependency, and answers POST /v1/deliver with 503 SERVICE_UNAVAILABLE
- * (validation still runs, so contract-shape errors return 400 even now).
- * When the Router branch lands, the SAME code path starts delivering — no
- * change required on this side. This mirrors the product-api thin-ingress
- * posture (127.0.0.1 only, no auth/TLS in V0, error envelope
- * { error: { code, message } }).
+ * Main HAS agentRouter.deliver (AGENT_ROUTER_DELIVERY_V0 is merged), so the
+ * live code path delivers. The runtime guard below (`typeof router.deliver`)
+ * is kept for forward-compat so the adapter degrades to 503 instead of
+ * crashing or re-implementing routing if the Router ever mounts without
+ * deliver(). This mirrors the product-api thin-ingress posture (127.0.0.1
+ * only, no auth/TLS in V0, error envelope { error: { code, message } }).
  */
 
 import { createServer } from 'node:http'
@@ -153,12 +151,13 @@ export function apply(ctx, config = {}) {
   }
 
   // FROZEN DEPENDENCY CHECK: deliver() comes from the Router branch
-  // (feat/agent-router-delivery-v0). While main lacks it, the endpoint is
-  // mounted but answers 503 — the ingress NEVER re-implements routing,
+  // (feat/agent-router-delivery-v0), which is merged into main. The runtime
+  // guard is retained for forward-compat: if the Router ever mounts without
+  // deliver(), the ingress degrades to 503 and NEVER re-implements routing,
   // session or process logic of its own.
   const deliverReady = typeof router.deliver === 'function'
   if (!deliverReady) {
-    log.log('agentRouter.deliver NOT available yet (Router branch feat/agent-router-delivery-v0 not merged); POST /v1/deliver will answer 503 SERVICE_UNAVAILABLE')
+    log.log('agentRouter.deliver NOT available; POST /v1/deliver will answer 503 SERVICE_UNAVAILABLE')
   }
 
   /**
@@ -168,7 +167,7 @@ export function apply(ctx, config = {}) {
   async function deliver(body) {
     const payload = validateDeliverBody(body)
     if (!deliverReady) {
-      throw Object.assign(new Error('agentRouter.deliver is not available yet (Router branch feat/agent-router-delivery-v0 not merged); the ingress cannot dispatch'), {
+      throw Object.assign(new Error('agentRouter.deliver is not available; the ingress cannot dispatch'), {
         code: 'SERVICE_UNAVAILABLE',
       })
     }
