@@ -4,13 +4,15 @@
  *   deliver({ requestId, agentId, sessionMode: 'main'|'fresh', message })
  *     -> { accepted: true, sessionId }
  *
- * These tests drive the REAL router (BindingStore over tmp files, real
- * Registry, real ensureRunning admission path incl. provisionAgentHome) with
- * a FAKE per-agent process injected through the `processFactory` seam — no
- * real DSH child, no model. The fake's `deliver` resolves on "receipt" only,
- * so the router-level "accepted does not wait for a turn" property is
- * structurally proven here; the deterministic AgentProcess-level proof lives
- * in process-delivery.test.js, and the real-process end-to-end proof in
+ * These tests drive the REAL router (BindingStore over tmp files, a REAL
+ * Agent Definition over a tmp config file — the declarative Agent existence
+ * authority, AGENT_DEFINITION_CONFIG_V1 — real ensureRunning admission path
+ * incl. provisionAgentHome) with a FAKE per-agent process injected through
+ * the `processFactory` seam — no real DSH child, no model. The fake's
+ * `deliver` resolves on "receipt" only, so the router-level "accepted does
+ * not wait for a turn" property is structurally proven here; the
+ * deterministic AgentProcess-level proof lives in
+ * process-delivery.test.js, and the real-process end-to-end proof in
  * scripts/agent-router-delivery-v0-verify.mjs.
  */
 
@@ -20,7 +22,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { AgentRegistry } from '../../agent-registry/src/registry.js'
+import { AgentDefinition } from '../../agent-definition/src/definition.js'
+import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { apply as applyRouter } from '../src/index.js'
 
 /** Fake cordis ctx: get/provide/effect only (what the router uses). */
@@ -81,21 +84,45 @@ class FakeProc {
   }
 }
 
-/** Build a registry + router over tmp stores; returns the whole rig. */
-async function freshRig(t, { config = {} } = {}) {
+/** The seeded agent id every rig defaults to (authored in the definition). */
+const AGT_ID = 'agt_delivery-v0-1'
+
+/**
+ * Seed a tmp Agent Definition config with [id, name] pairs (first entry is
+ * the default) and load the read model over it (same fixture pattern as
+ * router.test.js on AGENT_DEFINITION_CONFIG_V1).
+ */
+async function seedDefinition(dir, agents) {
+  const configFile = join(dir, 'agents.json')
+  await writeAgentDefinition(configFile, {
+    defaultAgentId: agents[0]?.[0] ?? null,
+    agents: agents.map(([id, name]) => ({ id, name })),
+  })
+  return new AgentDefinition({ configFile })
+}
+
+/** The cordis service surface of the agent-definition plugin. */
+function definitionService(definition) {
+  return {
+    listAgents: () => definition.listAgents(),
+    getAgent: (id) => definition.getAgent(id),
+    getDefaultAgent: () => definition.getDefaultAgent(),
+    resolveAgentRef: (ref) => definition.resolveAgentRef(ref),
+  }
+}
+
+/**
+ * Build a definition + router over tmp stores; returns the whole rig.
+ * `agents` is an array of [id, name] pairs written into the Agent
+ * Definition config (identity-only fixture); default: one agent AGT_ID.
+ */
+async function freshRig(t, { config = {}, agents = [[AGT_ID, 'Delivery Agent']] } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-delivery-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
-  const registry = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
+  const definition = await seedDefinition(dir, agents)
   const ctx = fakeCtx(new Map([
     ['workspaceBootstrap', stubBootstrap()],
-    ['agentRegistry', {
-      listAgents: () => registry.listAgents(),
-      getAgent: (id) => registry.getAgent(id),
-      getDefaultAgent: () => registry.getDefaultAgent(),
-      registerAgent: (input) => registry.registerAgent(input),
-      updateAgent: (agentId, patch) => registry.updateAgent(agentId, patch),
-      setDefaultAgent: (agentId) => registry.setDefaultAgent(agentId),
-    }],
+    ['agentDefinition', definitionService(definition)],
   ]))
   const spawned = [] // every process the factory created
   const router = applyRouter(ctx, {
@@ -108,17 +135,17 @@ async function freshRig(t, { config = {} } = {}) {
     },
     ...config,
   })
-  return { router, registry, spawned, dir }
+  return { router, definition, spawned, dir }
 }
 
-/** Register one agent; returns its registry record. */
-async function registerOne(registry, name = 'Delivery Agent') {
-  return registry.registerAgent({ name })
+/** The test's seeded agent record (authored id AGT_ID). */
+function seededAgent(definition, id = AGT_ID) {
+  return definition.getAgent(id)
 }
 
 test('D1 main first deliver: accepted, sessionId fixed main, one process, one prompt', async (t) => {
-  const { router, registry, spawned } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition, spawned } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   const result = await router.deliver({ requestId: 'job-1', agentId: agent.id, sessionMode: 'main', message: 'hello main' })
   assert.deepEqual(result, { accepted: true, sessionId: 'main' })
@@ -133,8 +160,8 @@ test('D1 main first deliver: accepted, sessionId fixed main, one process, one pr
 })
 
 test('D2 main again: same fixed session, process reused, no second mapping', async (t) => {
-  const { router, registry, spawned } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition, spawned } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   const first = await router.deliver({ requestId: 'job-1', agentId: agent.id, sessionMode: 'main', message: 'a' })
   const second = await router.deliver({ requestId: 'job-2', agentId: agent.id, sessionMode: 'main', message: 'b' })
@@ -145,8 +172,8 @@ test('D2 main again: same fixed session, process reused, no second mapping', asy
 })
 
 test('D3 fresh: different requestIds -> different new sessions', async (t) => {
-  const { router, registry } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   const r1 = await router.deliver({ requestId: 'req-A', agentId: agent.id, sessionMode: 'fresh', message: 'm1' })
   const r2 = await router.deliver({ requestId: 'req-B', agentId: agent.id, sessionMode: 'fresh', message: 'm2' })
@@ -162,8 +189,8 @@ test('D3 fresh: different requestIds -> different new sessions', async (t) => {
 })
 
 test('D4 fresh: same requestId retry -> same session, never a second one', async (t) => {
-  const { router, registry } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   const first = await router.deliver({ requestId: 'req-X', agentId: agent.id, sessionMode: 'fresh', message: 'first' })
   const retry = await router.deliver({ requestId: 'req-X', agentId: agent.id, sessionMode: 'fresh', message: 'retry' })
@@ -175,8 +202,8 @@ test('D4 fresh: same requestId retry -> same session, never a second one', async
 })
 
 test('D4b fresh: concurrent first deliveries of the same requestId converge on ONE session', async (t) => {
-  const { router, registry } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   const [a, b] = await Promise.all([
     router.deliver({ requestId: 'req-X', agentId: agent.id, sessionMode: 'fresh', message: 'a' }),
@@ -187,8 +214,8 @@ test('D4b fresh: concurrent first deliveries of the same requestId converge on O
 })
 
 test('D5 caller cannot specify or resume an arbitrary non-main session', async (t) => {
-  const { router, registry } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   // 1. The frozen interface has no sessionId field: a stray one is rejected.
   await assert.rejects(
@@ -212,21 +239,18 @@ test('D5 caller cannot specify or resume an arbitrary non-main session', async (
 })
 
 test('D6 restart: fresh mapping survives a fresh router over the same store; main stays main', async (t) => {
-  const { router, registry, dir } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition, dir } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   const viaX = await router.deliver({ requestId: 'req-X', agentId: agent.id, sessionMode: 'fresh', message: 'x' })
   await router.deliver({ requestId: 'req-M', agentId: agent.id, sessionMode: 'main', message: 'm' })
 
-  // Control-plane restart: fresh registry + fresh router over the SAME files.
-  const registry2 = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
+  // Control-plane restart: fresh definition (same config file) + fresh
+  // router over the SAME stores.
+  const definition2 = new AgentDefinition({ configFile: join(dir, 'agents.json') })
   const ctx2 = fakeCtx(new Map([
     ['workspaceBootstrap', stubBootstrap()],
-    ['agentRegistry', {
-      listAgents: () => registry2.listAgents(),
-      getAgent: (id) => registry2.getAgent(id),
-      getDefaultAgent: () => registry2.getDefaultAgent(),
-    }],
+    ['agentDefinition', definitionService(definition2)],
   ]))
   const spawned2 = []
   const router2 = applyRouter(ctx2, {
@@ -242,8 +266,8 @@ test('D6 restart: fresh mapping survives a fresh router over the same store; mai
 })
 
 test('D6b agent process restart: dead process respawns, session target unchanged', async (t) => {
-  const { router, registry, spawned } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition, spawned } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   await router.deliver({ requestId: 'j1', agentId: agent.id, sessionMode: 'main', message: 'a' })
   const fresh = await router.deliver({ requestId: 'req-X', agentId: agent.id, sessionMode: 'fresh', message: 'x' })
@@ -261,8 +285,8 @@ test('D6b agent process restart: dead process respawns, session target unchanged
 })
 
 test('D7 accepted resolves immediately: no turn completion required at the router level', async (t) => {
-  const { router, registry, spawned } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition, spawned } = await freshRig(t)
+  const agent = seededAgent(definition)
 
   // The fake process NEVER goes idle and NEVER emits assistant events — if
   // deliver waited for a turn it could never resolve. It must resolve on the
@@ -276,8 +300,8 @@ test('D7 accepted resolves immediately: no turn completion required at the route
 })
 
 test('D8 validation: sessionMode / agentId / requestId / message contracts', async (t) => {
-  const { router, registry } = await freshRig(t)
-  const agent = await registerOne(registry)
+  const { router, definition } = await freshRig(t)
+  const agent = seededAgent(definition)
   const base = { requestId: 'req-X', agentId: agent.id, sessionMode: 'main', message: 'x' }
 
   await assert.rejects(() => router.deliver({ ...base, sessionMode: 'workflow' }), TypeError)
@@ -295,12 +319,60 @@ test('D8 validation: sessionMode / agentId / requestId / message contracts', asy
 })
 
 test('D9 fresh mappings are namespaced per agent', async (t) => {
-  const { router, registry } = await freshRig(t)
-  const agentA = await registerOne(registry, 'Agent A')
-  const agentB = await registry.registerAgent({ name: 'Agent B' })
+  const { router, definition } = await freshRig(t, { agents: [['agt_a', 'Agent A'], ['agt_b', 'Agent B']] })
+  const agentA = seededAgent(definition, 'agt_a')
+  const agentB = seededAgent(definition, 'agt_b')
 
   const a = await router.deliver({ requestId: 'same-req', agentId: agentA.id, sessionMode: 'fresh', message: 'a' })
   const b = await router.deliver({ requestId: 'same-req', agentId: agentB.id, sessionMode: 'fresh', message: 'b' })
   assert.notEqual(a.sessionId, b.sessionId, 'same requestId on different agents = different sessions')
   assert.equal(router.freshSessionsSnapshot().length, 2)
+})
+
+test('D10 disabled enforcement (AGENT_DEFINITION_DISABLED_ENFORCEMENT_FIX): a disabled agent is rejected BEFORE ensureRunning — never spawned, main and fresh alike', async (t) => {
+  const { dir } = await freshRig(t)
+  // Re-seed the definition config with the agent DISABLED (an ops edit;
+  // the definition is loaded once at construction — the router only reads
+  // the service surface, so a fresh AgentDefinition mirrors the edit).
+  await writeAgentDefinition(join(dir, 'agents.json'), {
+    defaultAgentId: 'agt_default-v0',
+    agents: [
+      { id: 'agt_default-v0', name: 'Default Agent' },
+      { id: AGT_ID, name: 'Delivery Agent', disabled: true },
+    ],
+  })
+  const disabled = new AgentDefinition({ configFile: join(dir, 'agents.json') })
+  const ctx2 = fakeCtx(new Map([
+    ['workspaceBootstrap', stubBootstrap()],
+    ['agentDefinition', definitionService(disabled)],
+  ]))
+  const spawned2 = []
+  const router2 = applyRouter(ctx2, {
+    bindingsStoreFile: join(dir, 'bindings2.json'),
+    defaultSessionId: 'main',
+    processFactory: (opts) => { const p = new FakeProc(opts); spawned2.push(p); return p },
+  })
+
+  // 1. deliver() with a disabled agent: the definition rejects it at
+  //    resolveAgentRef (disabled agents are not routable) — BEFORE any
+  //    lifecycle work; nothing is spawned, nothing delivered.
+  await assert.rejects(
+    () => router2.deliver({ requestId: 'job-disabled', agentId: AGT_ID, sessionMode: 'main', message: 'x' }),
+    (e) => e.code === 'AGENT_NOT_FOUND',
+  )
+  await assert.rejects(
+    () => router2.deliver({ requestId: 'req-X', agentId: AGT_ID, sessionMode: 'fresh', message: 'x' }),
+    (e) => e.code === 'AGENT_NOT_FOUND',
+  )
+  // 2. The lifecycle entry itself (ensureRunning — reached by internal /
+  //    binding paths that carry the agentId directly, e.g. a persisted
+  //    binding to a now-disabled agent) rejects with the structured
+  //    AGENT_DISABLED code and NEVER spawns.
+  await assert.rejects(
+    () => router2.ensureRunning(AGT_ID),
+    (e) => e.code === 'AGENT_DISABLED',
+  )
+  assert.equal(spawned2.length, 0, 'disabled agent is NEVER spawned')
+  assert.equal(router2.deliveriesSnapshot().length, 0, 'nothing was delivered')
+  assert.deepEqual(router2.freshSessionsSnapshot(), [], 'no fresh mapping is minted for a disabled agent')
 })
