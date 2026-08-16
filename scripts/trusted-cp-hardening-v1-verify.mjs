@@ -91,6 +91,20 @@ function cleanupTrustedControlPlanes() {
 const AUTH_ORIGIN = 'http://127.0.0.1:4001'
 const FORUM_ORIGIN = 'http://127.0.0.1:3460'
 
+// --- TRUSTED_CP_AGENT_DEFINITION_COMPAT_V1: acceptance-only model override ---
+// The model provider used by the default (pi-ai catalog) "opencode-go" route
+// hit a 429 QUOTA boundary (external provider monthly-usage limit — not a
+// code issue). For THIS acceptance run only, we point the trusted control
+// plane's test-home at a different, currently-available provider/model and
+// inject its API key at runtime. This does NOT touch the production model
+// default, the install script, or /Users/authsvc/.dsh.
+const ACCEPTANCE_MODEL = 'deepseek-v4-flash'
+const ACCEPTANCE_PROVIDER = 'oc-go'
+const ACCEPTANCE_PROVIDER_API = 'openai-completions'
+const ACCEPTANCE_PROVIDER_BASE_URL = 'https://opencode.ai/zen/go/v1'
+const ACCEPTANCE_KEY_ENV = 'OC_GO_API_KEY'
+const ACCEPTANCE_KEY_FILE = '/Users/yanfenma/.claude/oc-go.txt'
+
 const AGENT_PROFILE = 'agent-core-integration-agent'
 const CONTROL_PROFILE = 'agent-core-integration'
 const AGENT_A_NAME = '知识管家'
@@ -309,6 +323,78 @@ function provisionChildRuntime(agentA, agentB) {
 
 // ---------------------------------------------------------------- cp boot
 
+/** Load the acceptance-only API key into the process env (never printed, never
+ *  committed, never written into the persisted report). Consumed by the CP /
+ *  child via pi-ai's `apiKeyEnv` reference for the oc-go route. */
+function injectOcGoKey() {
+  if (!existsSync(ACCEPTANCE_KEY_FILE)) {
+    throw new Error(`acceptance model key file missing: ${ACCEPTANCE_KEY_FILE}`)
+  }
+  const key = readFileSync(ACCEPTANCE_KEY_FILE, 'utf8').trim()
+  if (key === '') throw new Error('acceptance model key file is empty')
+  process.env[ACCEPTANCE_KEY_ENV] = key
+}
+
+/** Acceptance-only override of the trusted test-home settings.yaml so the
+ *  control plane routes to the oc-go provider (currently-available model).
+ *  Applies ONLY to the trusted install's own home/ used by this verify run —
+ *  never to /Users/authsvc/.dsh or the install script. Preserves every other
+ *  existing setting. Re-owns the file to authsvc so the 505 CP can read it.
+ */
+function applyAcceptanceModelOverride() {
+  const settingsPath = join(TRUSTED_HOME, 'settings.yaml')
+  const original = existsSync(settingsPath) ? readFileSync(settingsPath, 'utf8') : ''
+
+  // Provider declaration (oc-go) under llm-pi-ai.providers.
+  const providersBlock = [
+    'llm-pi-ai:',
+    '  providers:',
+    `    ${ACCEPTANCE_PROVIDER}:`,
+    `      apiKeyEnv: ${ACCEPTANCE_KEY_ENV}`,
+    `      api: ${ACCEPTANCE_PROVIDER_API}`,
+    `      baseURL: ${ACCEPTANCE_PROVIDER_BASE_URL}`,
+    '      displayName: oc-go',
+    '      models:',
+    `        - id: ${ACCEPTANCE_MODEL}`,
+  ].join('\n')
+
+  // Default route -> acceptance provider/model.
+  const defaultModelBlock = [
+    'agent-default-model:',
+    `  provider: ${ACCEPTANCE_PROVIDER}`,
+    `  model: ${ACCEPTANCE_MODEL}`,
+  ].join('\n')
+
+  // Split into top-level blocks (a block begins at column 0). Preserve every
+  // non-touched block verbatim; rebuild llm-pi-ai / agent-default-model.
+  const blocks = original.replace(/\r/g, '').split(/\n(?=\S)/).filter((s) => s.trim() !== '')
+  const out = []
+  let hasLlmpiai = false
+  let hasDefModel = false
+  for (const block of blocks) {
+    if (/^llm-pi-ai:/m.test(block)) {
+      out.push(providersBlock)
+      hasLlmpiai = true
+      continue
+    }
+    if (/^agent-default-model:/m.test(block)) {
+      out.push(defaultModelBlock)
+      hasDefModel = true
+      continue
+    }
+    out.push(block.trimEnd())
+  }
+  if (!hasLlmpiai) out.push(providersBlock)
+  if (!hasDefModel) out.push(defaultModelBlock)
+
+  writeFileSync(settingsPath, `${out.join('\n\n')}\n`)
+  // The 505 control plane reads it as authsvc.
+  chownSync(settingsPath, USER_AUTHSVC.uid, USER_AUTHSVC.gid)
+  chmodSync(settingsPath, 0o644)
+  record('MODEL_OVERRIDE_APPLIED', true,
+    `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} -> trusted test home only (production default untouched)`)
+}
+
 function controlEnv(extra = {}) {
   const modelKey = readFileSync(join(AUTHSVC_SETTINGS, '.credentials.yaml'), 'utf8')
     .match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)?.[1] ?? ''
@@ -514,6 +600,11 @@ async function main() {
   cleanupTrustedControlPlanes()
   const { agentA, agentB } = await seedTrustedConfig()
   provisionChildRuntime(agentA, agentB)
+  // Acceptance-only model override (external 429 QUOTA on the default route):
+  // point the trusted test-home at oc-go and inject its key at runtime. Never
+  // touches the production default, the install script, or /Users/authsvc/.dsh.
+  injectOcGoKey()
+  applyAcceptanceModelOverride()
 
   // ------------------------------------------------------------- phase 3
   console.log('\n[phase 3] booting the REAL control plane from the TRUSTED install as uid 505')
@@ -638,6 +729,8 @@ async function finish(cp, { agentA, agentB, attackOk }) {
     'ROUTER_CORE_CHANGE = NONE',
     'AGENT_DEFINITION_PRODUCT_CHANGE = NONE',
     'KERNEL_CHANGE = NONE',
+    `ACCEPTANCE_MODEL_OVERRIDE = ${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} (acceptance-only; key injected at runtime, never committed)`,
+    `PRODUCTION_MODEL_CONFIG_CHANGE = NONE`,
     `AUTH_PRODUCTION_BOUNDARY = ${verdict === 'PASS' ? 'CLOSED' : 'NOT_CLOSED'}`,
     `TESTS = ${checks.filter((c) => c.ok).length}/${checks.length} PASS`,
     `FEATURE_HEAD = ${process.env.FEATURE_HEAD ?? '(filled at commit)'}`,
