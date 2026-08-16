@@ -53,13 +53,14 @@ import {
 import { dirname, join, resolve } from 'node:path'
 import { homedir } from 'node:os'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../packages/agent-definition/src/config.js'
 
 const RUNTIME = resolve(process.env.DSH_TCB_RUNTIME ?? join(REPO, '.demo', 'trusted-credential-broker-v1', 'runtime'))
 const AGENTS_DIR = join(RUNTIME, 'agents')
 const HOMES_DIR = join(RUNTIME, 'homes')
 const CONTROL_HOME = join(RUNTIME, 'control', 'home')
-const REGISTRY_STORE = join(RUNTIME, 'control', 'registry.json')
+const AGENTS_CONFIG = join(RUNTIME, 'control', 'agents.json')
 const BINDINGS_STORE = join(RUNTIME, 'control', 'bindings.json')
 const CREDENTIALS_STORE = join(RUNTIME, 'control', 'agent-credentials.json')
 const KEEP = process.env.DSH_TCB_KEEP === '1'
@@ -130,7 +131,7 @@ function provisionControlHome() {
     'product-api': join(REPO, 'packages', 'product-api'),
     'broker': join(REPO, 'packages', 'broker'),
     'workspace-bootstrap': join(REPO, 'packages', 'workspace-bootstrap'),
-    'agent-registry': join(REPO, 'packages', 'agent-registry'),
+    'agent-definition': join(REPO, 'packages', 'agent-definition'),
   })
 }
 
@@ -140,7 +141,7 @@ function baseEnv(extra = {}) {
     DSH_HOME: CONTROL_HOME,
     DSH_TELEMETRY_DISABLED: '1',
     DSH_PERMISSION_MODE: 'danger-full-access',
-    AGENT_REGISTRY_STORE: REGISTRY_STORE,
+    AGENT_DEFINITION_CONFIG: AGENTS_CONFIG,
     ROUTER_BINDINGS_STORE: BINDINGS_STORE,
     ROUTER_AGENT_PROFILE: AGENT_PROFILE,
     DSH_MEMORY_WORKSPACE_ROOT: AGENTS_DIR,
@@ -282,10 +283,13 @@ async function main() {
     throw new Error(`credential source mismatch (expected clientId ${REAL_CLIENT_ID}); aborting`)
   }
 
-  const registry = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  const agentA = await registry.registerAgent({ name: AGENT_A_NAME, description: '论文导师' })
-  const agentB = await registry.registerAgent({ name: AGENT_B_NAME, description: '研发总监' })
-  record('TCB_REGISTRY_AB', registry.listAgents().length === 2, `${agentA.id} / ${agentB.id}`)
+  const adopted = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [
+    { name: AGENT_A_NAME, description: '论文导师' },
+    { name: AGENT_B_NAME, description: '研发总监' },
+  ] })
+  const [agentA, agentB] = adopted.agents
+  const definition = new AgentDefinition({ configFile: AGENTS_CONFIG })
+  record('TCB_DEFINED_AB', definition.listAgents().length === 2, `${agentA.id} / ${agentB.id}`)
 
   mkdirSync(agentWorkspace(agentA.id), { recursive: true })
   mkdirSync(agentWorkspace(agentB.id), { recursive: true })

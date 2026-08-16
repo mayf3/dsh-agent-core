@@ -14,11 +14,11 @@
  *   runs.jsonl), delivery via the existing Feishu outbound seam.
  *
  * Composition is EXACTLY the bundle-integration row order (workspace-bootstrap
- * → agentRegistry → feishu connector → agent-router), then the two
+ * → agentDefinition → feishu connector → agent-router), then the two
  * scheduler-router seams + the Scheduler engine. ZERO new components, ZERO
  * changes to Scheduler core / Router core / Auth / Broker / Kernel.
  *
- * The resident LOADS the registry store (never registers agents) and starts
+ * The resident LOADS the Agent Definition config (never writes it) and starts
  * the scheduler loop. External `agentcore-cron add` writes land in the same
  * store under the cross-process lock; the engine's mtime-checked tick picks
  * them up. Startup catch-up replays at-jobs that came due while the process
@@ -44,7 +44,7 @@ import { homedir } from 'node:os'
 import { join, resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
 import { apply as applyBootstrap } from '../packages/workspace-bootstrap/src/index.js'
 import { apply as applyRouter } from '../packages/agent-router/src/index.js'
 import { apply as applyFeishu } from '../packages/feishu-connector/src/index.js'
@@ -84,7 +84,7 @@ const CATCHUP = argValue(argv, '--catchup', '1') !== '0'
 const AGENTS_DIR = join(RUNTIME, 'agents')           // workspace root
 const HOMES_DIR = join(RUNTIME, 'homes')             // per-agent DSH_HOME root
 const CONTROL_DIR = join(RUNTIME, 'control')
-const REGISTRY_STORE = join(CONTROL_DIR, 'registry.json')
+const AGENTS_CONFIG = join(CONTROL_DIR, 'agents.json')
 const BINDINGS_STORE = join(CONTROL_DIR, 'bindings.json')
 const JOBS_STORE = join(CONTROL_DIR, 'jobs.json')
 const RUNS_LOG = join(CONTROL_DIR, 'runs.jsonl')
@@ -151,29 +151,29 @@ async function main() {
   log.info(`runtime=${RUNTIME} tickMs=${TICK_MS} concurrency=${CONCURRENCY} catchup=${CATCHUP}`)
   log.info(`harness=${process.env.DSH_HARNESS_ROOT} profile=${AGENT_PROFILE}`)
 
-  // ── load Registry (REQUIRED; the resident never registers agents) ────────
-  if (!existsSync(REGISTRY_STORE)) {
-    log.error(`registry store missing: ${REGISTRY_STORE} (provision the runtime first)`)
+  // ── load Agent Definition config (REQUIRED; the resident never writes it) ─
+  if (!existsSync(AGENTS_CONFIG)) {
+    log.error(`agent definition config missing: ${AGENTS_CONFIG} (provision the runtime first)`)
     process.exit(2)
   }
   mkdirSync(CONTROL_DIR, { recursive: true })
   const ctx = fakeCtx()
   applyBootstrap(ctx, { workspaceRoot: AGENTS_DIR, agentsHome: HOMES_DIR })
 
-  const registryCore = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  const registrySvc = {
-    listAgents: () => registryCore.listAgents(),
-    getAgent: (id) => registryCore.getAgent(id),
-    getDefaultAgent: () => registryCore.getDefaultAgent(),
-    registerAgent: (input) => registryCore.registerAgent(input),
+  const definitionCore = new AgentDefinition({ configFile: AGENTS_CONFIG })
+  const definitionSvc = {
+    listAgents: () => definitionCore.listAgents(),
+    getAgent: (id) => definitionCore.getAgent(id),
+    getDefaultAgent: () => definitionCore.getDefaultAgent(),
+    resolveAgentRef: (ref) => definitionCore.resolveAgentRef(ref),
   }
-  ctx.provide('agentRegistry', registrySvc)
-  const defaultAgent = registrySvc.getDefaultAgent()
+  ctx.provide('agentDefinition', definitionSvc)
+  const defaultAgent = definitionSvc.getDefaultAgent()
   if (defaultAgent === undefined) {
-    log.error(`registry ${REGISTRY_STORE} has no default agent (nothing to route to)`)
+    log.error(`agent definition ${AGENTS_CONFIG} has no default agent (nothing to route to)`)
     process.exit(2)
   }
-  log.info(`registry loaded: ${registrySvc.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
+  log.info(`agent definition loaded: ${definitionSvc.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
 
   // ── control plane (bundle-integration order) ─────────────────────────────
   const feishuService = mountFeishu(ctx)
@@ -185,7 +185,7 @@ async function main() {
   })
 
   // ── the REAL wiring promised by Scheduler V1 §5/§6 — one line each ───────
-  const rawInvoker = createRouterInvoker(router, { registry: registrySvc })
+  const rawInvoker = createRouterInvoker(router, { definition: definitionSvc })
   const deliver = createFeishuDeliver(feishuService)
 
   // Observe invocations for the external acceptance driver (thin evidence,

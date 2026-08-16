@@ -53,6 +53,7 @@ import { manifest as calculatorManifest, handlers as calculatorHandlers } from '
 import { manifests as forumManifests } from './capabilities/forum.js'
 import { manifests as workflowManifests } from './capabilities/workflow.js'
 import { manifests as okrManifests } from './capabilities/okr.js'
+import { agentDefinitionManifests } from './capabilities/agent-definition.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'
@@ -62,16 +63,20 @@ export const inject = ['tools']
 
 /**
  * Default capability manifests: the V0 calculator fixture + the first-batch
- * real business capabilities (Forum ×7, Workflow ×4, OKR ×1) — the ~95%
- * real-call surface identified by docs/investigations/broker-capability-parity.md
- * §6.4. All HTTP capabilities fail CLOSED at execution time without a
- * credential from the seam; registration itself never requires one.
+ * real business capabilities (Forum ×7, Workflow ×4, OKR ×1) + the Agent
+ * Definition capabilities (read ×2, write ×4 — AGENT_DEFINITION_ACCESS_V1:
+ * LOCAL capabilities whose tools every agent carries; read is open to every
+ * credentialed agent, write is gated by the Auth grant for
+ * `agent.definition.write`). All HTTP capabilities fail CLOSED at execution
+ * time without a credential from the seam; registration itself never
+ * requires one.
  */
 export const DEFAULT_MANIFESTS = [
   calculatorManifest,
   ...forumManifests,
   ...workflowManifests,
   ...okrManifests,
+  ...agentDefinitionManifests,
 ]
 
 /** Default auth-service token endpoint origin (deployment-local). */
@@ -161,17 +166,26 @@ export function apply(ctx, config = {}) {
 
   // ------------------------------------------------------------- gateway
   if (mode === 'gateway') {
+    // AGENT_DEFINITION_ACCESS_V1: the control plane injects the LOCAL
+    // (in-process) capability handlers for the Agent Definition config
+    // (provided by the `agentDefinitionAccess` service, mounted by the
+    // agent-definition row). Resolved at EXECUTE time (the loader applies
+    // sibling rows concurrently, so reading the sibling service at APPLY
+    // time would race); when absent, local capabilities fail closed as
+    // unsupported — the gateway stays fully functional.
     const gateway = createBrokerGateway({
       manifests,
       targets,
       authServiceOrigin,
       credentialsFile: config.credentialsFile,
+      localHandlerResolver: () => ctx.get('agentDefinitionAccess')?.handlers ?? {},
       log: (msg) => process.stderr.write(`${msg}\n`),
     })
     ctx.provide('brokerGateway', gateway)
     const httpCount = manifests.filter((m) =>
       Array.isArray(m?.operations) && m.operations.some((o) => o && o.http)).length
-    process.stderr.write(`[broker] gateway mode: ${httpCount} http capabilities ready\n`)
+    const localCount = manifests.filter((m) => m?.local !== undefined).length
+    process.stderr.write(`[broker] gateway mode: ${httpCount} http capabilities ready, ${localCount} local capabilities ready\n`)
     return { mode, gateway }
   }
 
@@ -193,9 +207,12 @@ export function apply(ctx, config = {}) {
   const capabilities = manifests.map((manifest) => {
     const id = manifest && typeof manifest.id === 'string' ? manifest.id : ''
     const hasHttp = Array.isArray(manifest.operations) && manifest.operations.some((o) => o && o.http)
-    // HTTP capabilities RELAY to the trusted parent; process-internal
+    // LOCAL capabilities (agent.definition.*) also RELAY to the trusted
+    // parent in child mode — they execute in-process in the gateway.
+    const relays = hasHttp || manifest?.local !== undefined
+    // HTTP/local capabilities RELAY to the trusted parent; process-internal
     // capabilities (calculator) stay local — they need no credential.
-    const handlers = hasHttp ? createRelayHandlers(manifest, requestFn) : handlersByCapability[id] ?? {}
+    const handlers = relays ? createRelayHandlers(manifest, requestFn) : handlersByCapability[id] ?? {}
     return {
       manifest,
       handlers,

@@ -3,16 +3,16 @@
  * STOCK_AGENT_REGISTRY_ADOPTION_V1 — real acceptance driver.
  *
  * ADOPTION, not cutover: proves that the EXISTING generic Agent Core
- * mechanism (AgentRegistry -> scripts/agent-core-resident.mjs -> Router
+ * mechanism (Agent Definition config -> scripts/agent-core-resident.mjs -> Router
  * ensureRunning -> per-agent DSH process -> native session -> real model)
  * can formally recognize the REAL production stock-agent and run ONE safe
  * canary turn, WITHOUT touching OpenClaw production in any way.
  *
  * Chain under test (all existing mainline components, zero core changes):
  *
- *   Agent Core Registry (store provisioned with the REAL stock-agent
- *   identity record, generated opaque agt_ id)
- *   -> resident loads the registry (it never registers)
+ *   Agent Definition config (provisioned with the REAL stock-agent
+ *   identity record, opaque agt_ id minted once by the adoption mechanism)
+ *   -> resident loads the Agent Definition config (it never writes it)
  *   -> external agentcore-cron `add` writes one canary job
  *   -> Scheduler tick -> createRouterInvoker -> Router.ensureRunning
  *   -> workspace-bootstrap mapping -> REAL OpenClaw stock workspace (adoption
@@ -48,7 +48,8 @@ import { fileURLToPath } from 'node:url'
 import { spawn, execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition, AGENT_ID_PREFIX } from '../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../packages/agent-definition/src/config.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const RUNTIME = resolve(process.env.DSH_SAV_RUNTIME ?? join(REPO, '.demo', 'stock-agent-registry-adoption-v1', 'runtime'))
@@ -57,7 +58,7 @@ const KEEP = process.env.DSH_SAV_KEEP === '1'
 const AGENTS_DIR = join(RUNTIME, 'agents')
 const HOMES_DIR = join(RUNTIME, 'homes')
 const CONTROL_DIR = join(RUNTIME, 'control')
-const REGISTRY_STORE = join(CONTROL_DIR, 'registry.json')
+const AGENTS_CONFIG = join(CONTROL_DIR, 'agents.json')
 const JOBS_STORE = join(CONTROL_DIR, 'jobs.json')
 const RUNS_LOG = join(CONTROL_DIR, 'runs.jsonl')
 const EVIDENCE_LOG = join(CONTROL_DIR, 'resident-evidence.jsonl')
@@ -241,17 +242,22 @@ async function main() {
   mkdirSync(HOMES_DIR, { recursive: true })
   mkdirSync(AGENTS_DIR, { recursive: true })
 
-  // The REAL production agent enters the Agent Core Registry through the
-  // standard generic API. The registry generates the opaque agt_ id; the
-  // record holds identity/display data ONLY (no chatId, no roles, no
-  // policies, no credentials). The first registered agent becomes default,
-  // so the resident routes to it.
-  const registry = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  const adopted = await registry.registerAgent({
-    name: OPENCLAW_AGENT_NAME,
-    description: `Production stock analyst agent, adopted from OpenClaw production (openclaw id: ${OPENCLAW_AGENT_ID}). Identity/display only.`,
-  })
-  const agtId = adopted.id
+  // AGENT_DEFINITION_CONFIG_V1 (Task 4): the REAL production agent enters
+  // the Agent Core through the minimal stock-adoption equivalent mechanism —
+  // adoptAgents mints ONE opaque agt_* id and persists it into the Agent
+  // Definition config (or REUSES the existing stable id when the runtime is
+  // kept, KEEP=1). The record holds identity/display data ONLY (no chatId,
+  // no roles, no policies, no credentials, no workspace path). The adopted
+  // agent becomes the configured default, so the resident routes to it.
+  const adopted = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [
+    {
+      name: OPENCLAW_AGENT_NAME,
+      description: `Production stock analyst agent, adopted from OpenClaw production (openclaw id: ${OPENCLAW_AGENT_ID}). Identity/display only.`,
+    },
+  ] })
+  const agtId = adopted.agents[0].id
+  record('STABLE_AGT_ID_MINTED_ONCE', adopted.created.length === 1 && agtId.startsWith(AGENT_ID_PREFIX),
+    `adoption minted ${agtId} (reused=${adopted.reused.join(',') || 'none'})`)
   const agentHome = join(HOMES_DIR, agtId)
   const agentWorkspace = join(AGENTS_DIR, agtId)
   mkdirSync(agentHome, { recursive: true })
@@ -279,8 +285,9 @@ async function main() {
     adoptedAt: new Date().toISOString(),
   }, null, 2) + '\n')
   console.log(`[phase 1] adopted ${agtId} (${OPENCLAW_AGENT_NAME}); home=${agentHome}`)
-  record('STOCK_AGENT_IN_REGISTRY', registry.getAgent(agtId)?.name === OPENCLAW_AGENT_NAME,
-    `registry has ${agtId} named "${OPENCLAW_AGENT_NAME}" (default=${registry.getDefaultAgent()?.id})`)
+  const definition = new AgentDefinition({ configFile: AGENTS_CONFIG })
+  record('STOCK_AGENT_IN_DEFINITION', definition.getAgent(agtId)?.name === OPENCLAW_AGENT_NAME,
+    `config has ${agtId} named "${OPENCLAW_AGENT_NAME}" (default=${definition.getDefaultAgent()?.id})`)
 
   // ------------------------------------------------------------- phase 2
   console.log('\n[phase 2] RESIDENT loads the production Registry (existing mainline script, unmodified)')
@@ -288,8 +295,8 @@ async function main() {
   const ready = await waitReady(60_000)
   record('RESIDENT_PROCESS', ready !== undefined && resident.exitCode === null,
     ready ? `ready pid=${ready.pid} defaultAgent=${ready.defaultAgentId}` : 'no ready evidence')
-  record('RESIDENT_LOADED_PRODUCTION_REGISTRY', ready?.defaultAgentId === agtId,
-    `resident default agent ${ready?.defaultAgentId} == adopted ${agtId} (registry store: ${REGISTRY_STORE})`)
+  record('RESIDENT_LOADED_PRODUCTION_DEFINITION', ready?.defaultAgentId === agtId,
+    `resident default agent ${ready?.defaultAgentId} == adopted ${agtId} (definition config: ${AGENTS_CONFIG})`)
 
   const feishuMount = residentLines.join('').includes('feishu connector mounted with live credentials')
   record('FEISHU_CHANNEL_MOUNTED', feishuMount,
@@ -386,7 +393,8 @@ async function main() {
   const gates = {
     STOCK_AGENT_REGISTRY_ADOPTION_V1: failures === 0 ? 'PASS' : 'BLOCKED',
     STOCK_AGENT_ID: `${OPENCLAW_AGENT_ID} (${OPENCLAW_AGENT_NAME}) -> Agent Core ${agtId}`,
-    STOCK_AGENT_IN_REGISTRY: checks.find((c) => c.name === 'STOCK_AGENT_IN_REGISTRY')?.ok ? 'YES' : 'NO',
+    STOCK_AGENT_IN_DEFINITION: checks.find((c) => c.name === 'STOCK_AGENT_IN_DEFINITION')?.ok ? 'YES' : 'NO',
+    STABLE_AGT_ID_PRESERVED: checks.find((c) => c.name === 'STABLE_AGT_ID_MINTED_ONCE')?.ok ? 'YES' : 'NO',
     STOCK_AGENT_WORKSPACE: OPENCLAW_WORKSPACE,
     STOCK_AGENT_WORKSPACE_MATCH: checks.find((c) => c.name === 'STOCK_AGENT_WORKSPACE_MATCH')?.ok ? 'YES' : 'NO',
     STOCK_AGENT_REAL_PROCESS: checks.find((c) => c.name === 'REAL_DSH_CHILD')?.ok ? 'YES' : 'NO',

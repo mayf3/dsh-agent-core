@@ -39,7 +39,7 @@
 | 能力 | 状态 | 说明 |
 |---|---|---|
 | workspace-bootstrap（agentId → workspace/DSH_HOME） | **BUILD（已完成）** | 路径映射唯一 owner；幂等创建 + AGENTS.md 播种 |
-| agent-registry（这个 Agent 是谁） | **BUILD（并行开发中）** | 身份/展示/存在性；不拥有 process/session/memory |
+| agent-definition（这个 Agent 是谁） | **BUILD（AGENT_DEFINITION_CONFIG_V1 + ACCESS_V1 已完成）** | 声明式 Agent Definition config：存在性/stable id/name/display/default/disabled；运行时无写者；thin mutation seam（agent.definition.read 全员可读 / agent.definition.write 需 Auth grant，经 generic Broker capability，无 HR 硬编码）；不拥有 process/session/memory/workspace/credential |
 | **DSH Session Runtime**（session identity / trajectory persistence / create / resume / 崩溃恢复） | **ADOPT** | 全部吃 DSH 原生；sessionId 作用域 = per-Agent DSH_HOME，identity = (agentId, sessionId)，main 为每 Agent 保留 SessionId |
 | **Product Session Metadata**（title / kind(main\|normal) / archived / lastActiveAt） | **thin BUILD → DEFER 至 Product API milestone** | 只维护产品元数据，不实现 Session Runtime |
 | **Session mapping layer**（product sessionId ↔ DSH sessionId 转换） | **DO NOT BUILD** | 两者直接相等，无映射层；不建独立 `packages/agent-session/` |

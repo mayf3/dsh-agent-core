@@ -7,7 +7,7 @@
  * `agent-core-integration` composition (dsh CLI), per-agent turns run in
  * REAL per-agent DSH processes with the REAL model route.
  *
- *   Phase 0  runtime + registry: Agent A / Agent B registered (A first ->
+ *   Phase 0  runtime + Agent Definition config: Agent A / Agent B defined
  *            default), workspaces + AGENTS.md seeded (no home provisioning —
  *            the Router's own spawn path installs everything, FIX 1)
  *   Phase 1  boot the REAL control plane (profile agent-core-integration)
@@ -45,13 +45,14 @@ import {
 import { randomUUID } from 'node:crypto'
 import { dirname, join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../packages/agent-definition/src/config.js'
 
 const RUNTIME = resolve(process.env.DSH_MOBILE_GATE1_RUNTIME ?? join(REPO, '.demo', 'mobile-gate1', 'runtime'))
 const AGENTS_DIR = join(RUNTIME, 'agents')          // workspace root (memory root)
 const HOMES_DIR = join(RUNTIME, 'homes')            // per-agent DSH_HOME root
 const CONTROL_HOME = join(RUNTIME, 'control', 'home')
-const REGISTRY_STORE = join(RUNTIME, 'control', 'registry.json')
+const AGENTS_CONFIG = join(RUNTIME, 'control', 'agents.json')
 const BINDINGS_STORE = join(RUNTIME, 'control', 'bindings.json')
 const KEEP = process.env.DSH_MOBILE_GATE1_KEEP === '1'
 const WITH_EMULATOR = process.env.DSH_MOBILE_GATE1_EMULATOR !== '0'
@@ -120,7 +121,7 @@ function provisionControlHome() {
     'agent-router': join(REPO, 'packages', 'agent-router'),
     'product-api': join(REPO, 'packages', 'product-api'),
     'workspace-bootstrap': join(REPO, 'packages', 'workspace-bootstrap'),
-    'agent-registry': join(REPO, 'packages', 'agent-registry'),
+    'agent-definition': join(REPO, 'packages', 'agent-definition'),
   })
 }
 
@@ -130,7 +131,7 @@ function baseEnv(extra = {}) {
     DSH_HOME: CONTROL_HOME,
     DSH_TELEMETRY_DISABLED: '1',
     DSH_PERMISSION_MODE: 'danger-full-access',
-    AGENT_REGISTRY_STORE: REGISTRY_STORE,
+    AGENT_DEFINITION_CONFIG: AGENTS_CONFIG,
     ROUTER_BINDINGS_STORE: BINDINGS_STORE,
     ROUTER_AGENT_PROFILE: AGENT_PROFILE,
     DSH_MEMORY_WORKSPACE_ROOT: AGENTS_DIR,
@@ -271,11 +272,17 @@ async function main() {
   mkdirSync(CONTROL_HOME, { recursive: true })
   provisionControlHome()
 
-  const registry = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  const agentA = await registry.registerAgent({ name: AGENT_A_NAME, description: '论文导师' })
-  const agentB = await registry.registerAgent({ name: AGENT_B_NAME, description: '研发总监' })
-  record('GATE1_REGISTRY_AB', registry.listAgents().length === 2, `${agentA.id} / ${agentB.id}`)
-  record('GATE1_DEFAULT_IS_A', registry.getDefaultAgent()?.id === agentA.id, 'first registered becomes default')
+  // Agent Definition config (the frozen existence authority): Agent A +
+  // Agent B with opaque agt_ ids minted ONCE and persisted into the config;
+  // A is the configured default.
+  const adopted = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [
+    { name: AGENT_A_NAME, description: '论文导师' },
+    { name: AGENT_B_NAME, description: '研发总监' },
+  ] })
+  const [agentA, agentB] = adopted.agents
+  const definition = new AgentDefinition({ configFile: AGENTS_CONFIG })
+  record('GATE1_DEFINED_AB', definition.listAgents().length === 2, `${agentA.id} / ${agentB.id}`)
+  record('GATE1_DEFAULT_IS_A', definition.getDefaultAgent()?.id === agentA.id, 'configured default is A')
 
   provisionAgent(agentA.id)
   provisionAgent(agentB.id)
@@ -592,7 +599,7 @@ async function finish(cp, { surfaceS1, surfaceS2, surfaceS3, agentA, agentB, har
     '## Key artifacts',
     '',
     `- Binding store: ${BINDINGS_STORE}`,
-    `- Registry store: ${REGISTRY_STORE}`,
+    `- Agent Definition config: ${AGENTS_CONFIG}`,
     `- Control home: ${CONTROL_HOME}`,
     `- A workspace: ${join(AGENTS_DIR, agentA?.id ?? '')}`,
     `- B workspace: ${join(AGENTS_DIR, agentB?.id ?? '')}`,

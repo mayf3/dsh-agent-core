@@ -7,7 +7,7 @@
  *     -> Router / Control Plane -> Binding -> per-agent DSH process -> reply
  *
  * The server is a THIN ADAPTER over existing Control Plane capabilities
- * (`ctx.agentRouter` domain operations + `ctx.agentRegistry` reads). It owns
+ * (`ctx.agentRouter` domain operations + `ctx.agentDefinition` reads). It owns
  * NONE of: routing policy, process lifecycle, session selection policy
  * (switch-agent merely calls Router.switchAgent — bookmark / main decisions
  * belong to the Router), workspace / DSH_HOME / credential / memory
@@ -55,12 +55,12 @@ import z from '@deepseek-ai/schemastery'
 export const name = 'product-api'
 
 /**
- * The Router and the Registry are HARD dependencies: Cordis enters waiting
- * and re-applies this plugin once both are provided (the loader applies
- * sibling include entries concurrently, so reading them via ctx.get at
- * apply time would race — inject is the framework-blessed ordering).
+ * The Router and the Agent Definition are HARD dependencies: Cordis enters
+ * waiting and re-applies this plugin once both are provided (the loader
+ * applies sibling include entries concurrently, so reading them via ctx.get
+ * at apply time would race — inject is the framework-blessed ordering).
  */
-export const inject = ['agentRouter', 'agentRegistry']
+export const inject = ['agentRouter', 'agentDefinition']
 
 /** Product API config. */
 export const Config = z.object({
@@ -89,7 +89,7 @@ function errorBody(code, message) {
   return { error: { code, message } }
 }
 
-/** Map a Router/Registry error to the contract's HTTP status. */
+/** Map a Router/Agent-Definition error to the contract's HTTP status. */
 function httpStatusFor(error) {
   if (error?.code === 'AGENT_NOT_FOUND') return 404
   if (error?.code === 'BINDING_NOT_FOUND') return 404
@@ -131,7 +131,7 @@ function requireString(body, field) {
 
 /**
  * Mount the Product API HTTP server and publish `ctx.productApi`.
- * @param ctx - plugin context (must carry agentRouter + agentRegistry).
+ * @param ctx - plugin context (must carry agentRouter + agentDefinition).
  * @param config - validated config.
  */
 export function apply(ctx, config = {}) {
@@ -149,12 +149,12 @@ export function apply(ctx, config = {}) {
   }
 
   const router = ctx.get('agentRouter')
-  const registry = ctx.get('agentRegistry')
+  const definition = ctx.get('agentDefinition')
   if (router === undefined) {
     throw new Error('product-api: agentRouter service not available (mount @agent-core/agent-router first)')
   }
-  if (registry === undefined) {
-    throw new Error('product-api: agentRegistry service not available (mount @agent-core/agent-registry first)')
+  if (definition === undefined) {
+    throw new Error('product-api: agentDefinition service not available (mount @agent-core/agent-definition first)')
   }
 
   /**
@@ -229,7 +229,9 @@ export function apply(ctx, config = {}) {
         return
       }
       if (req.method === 'GET' && url.pathname === '/v1/agents') {
-        const agents = registry.listAgents().map(a => ({
+        // The wire contract keeps `avatar: null` as a CONSTANT (the old
+        // registry's avatar field was dropped — no caller ever read it).
+        const agents = definition.listAgents().map(a => ({
           id: a.id,
           name: a.name,
           avatar: null,

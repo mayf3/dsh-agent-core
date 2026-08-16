@@ -55,7 +55,8 @@ import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { REPO, provisionAgentHome } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../packages/agent-definition/src/config.js'
 import { apply as applyBootstrap } from '../packages/workspace-bootstrap/src/index.js'
 import { apply as applyRouter } from '../packages/agent-router/src/index.js'
 import { apply as applyFeishu } from '../packages/feishu-connector/src/index.js'
@@ -84,7 +85,7 @@ const RUNTIME = resolve(process.env.DSH_SRF_RUNTIME ?? join(REPO, '.demo', 'sche
 const AGENTS_DIR = join(RUNTIME, 'agents')      // workspace root
 const HOMES_DIR = join(RUNTIME, 'homes')        // per-agent DSH_HOME root
 const CONTROL_HOME = join(RUNTIME, 'control', 'home')
-const REGISTRY_STORE = join(RUNTIME, 'control', 'registry.json')
+const AGENTS_CONFIG = join(RUNTIME, 'control', 'agents.json')
 const BINDINGS_STORE = join(RUNTIME, 'control', 'bindings.json')
 const JOBS_STORE = join(RUNTIME, 'control', 'jobs.json')
 const RUNS_LOG = join(RUNTIME, 'control', 'runs.jsonl')
@@ -192,18 +193,23 @@ async function main() {
   mkdirSync(CONTROL_HOME, { recursive: true })
 
   // Control plane (in-process, exactly the bundle-integration composition:
-  // bootstrap -> registry -> feishu -> router; no Broker row anywhere).
+  // bootstrap -> agent-definition -> feishu -> router; no Broker row anywhere).
   const ctx = fakeCtx()
   applyBootstrap(ctx, { workspaceRoot: AGENTS_DIR, agentsHome: HOMES_DIR })
-  const registryCore = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  const registrySvc = {
-    listAgents: () => registryCore.listAgents(),
-    getAgent: (id) => registryCore.getAgent(id),
-    getDefaultAgent: () => registryCore.getDefaultAgent(),
-    registerAgent: (input) => registryCore.registerAgent(input),
+  // Adopt FIRST (writes the config), THEN load the read model — the
+  // definition is loaded once at construction and must see the fixture.
+  const adopted = await adoptAgents({ configFile: AGENTS_CONFIG, agents: [
+    { name: FIXTURE_NAME, description: 'scheduler-router final integration fixture (no Broker/Auth)' },
+  ] })
+  const fixture = adopted.agents[0]
+  const definitionCore = new AgentDefinition({ configFile: AGENTS_CONFIG })
+  const definitionSvc = {
+    listAgents: () => definitionCore.listAgents(),
+    getAgent: (id) => definitionCore.getAgent(id),
+    getDefaultAgent: () => definitionCore.getDefaultAgent(),
+    resolveAgentRef: (ref) => definitionCore.resolveAgentRef(ref),
   }
-  ctx.provide('agentRegistry', registrySvc)
-  const fixture = await registrySvc.registerAgent({ name: FIXTURE_NAME, description: 'scheduler-router final integration fixture (no Broker/Auth)' })
+  ctx.provide('agentDefinition', definitionSvc)
 
   // Fixture agent home/workspace (the ROUTER provisions the DSH home itself
   // on first spawn; only the workspace dir is prepared here).
@@ -232,7 +238,7 @@ async function main() {
   })
 
   // The REAL wiring promised by Scheduler V1 §5/§6 — one line each:
-  const invoker = createRouterInvoker(router, { registry: registrySvc })
+  const invoker = createRouterInvoker(router, { definition: definitionSvc })
   const deliver = createFeishuDeliver(feishuService)
 
   const store = new JobStore(JOBS_STORE, { runLogPath: RUNS_LOG })

@@ -26,7 +26,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { AgentRegistry } from '../../agent-registry/src/registry.js'
+import { AgentDefinition } from '../../agent-definition/src/definition.js'
+import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { AgentProcess } from '../src/process.js'
 import { apply as applyRouter, ingressBindingNamespace, feishuReplyOwed } from '../src/index.js'
 
@@ -79,23 +80,32 @@ function stubAgentProcess() {
   AgentProcess.prototype.shutdown = async () => ({ code: 0, signal: null })
 }
 
-/** Fresh registry + router over tmp stores with a stub feishu; returns handles.
- *  Agents are registered BEFORE the router mounts (with a feishu channel the
- *  router resolves the default Agent at apply time). */
+/** Fresh definition + router over tmp stores with a stub feishu; returns
+ *  handles. Agents are seeded in the config BEFORE the router mounts (with a
+ *  feishu channel the router resolves the default Agent at apply time). */
 async function freshFeishuRouter(t) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-feishu-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
-  const registry = new AgentRegistry({ storeFile: join(dir, 'registry.json') })
-  const agentA = await registry.registerAgent({ name: 'Agent A' })
-  const agentB = await registry.registerAgent({ name: 'Agent B' })
+  const configFile = join(dir, 'agents.json')
+  await writeAgentDefinition(configFile, {
+    defaultAgentId: 'agt_a',
+    agents: [
+      { id: 'agt_a', name: 'Agent A' },
+      { id: 'agt_b', name: 'Agent B' },
+    ],
+  })
+  const definition = new AgentDefinition({ configFile })
+  const agentA = definition.getAgent('agt_a')
+  const agentB = definition.getAgent('agt_b')
   const feishu = stubFeishu()
   const ctx = fakeCtx(new Map([
     ['workspaceBootstrap', stubBootstrap()],
     ['feishu', feishu],
-    ['agentRegistry', {
-      listAgents: () => registry.listAgents(),
-      getAgent: (id) => registry.getAgent(id),
-      getDefaultAgent: () => registry.getDefaultAgent(),
+    ['agentDefinition', {
+      listAgents: () => definition.listAgents(),
+      getAgent: (id) => definition.getAgent(id),
+      getDefaultAgent: () => definition.getDefaultAgent(),
+      resolveAgentRef: (ref) => definition.resolveAgentRef(ref),
     }],
   ]))
   const router = applyRouter(ctx, {
@@ -103,7 +113,7 @@ async function freshFeishuRouter(t) {
     defaultSessionId: 'main',
     agentProfile: 'agent-core-demo',
   })
-  return { router, registry, agentA, agentB, feishu, dir }
+  return { router, definition, agentA, agentB, feishu, dir }
 }
 
 function feishuIngress(channel, conversationId, text = 'hello') {

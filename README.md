@@ -38,7 +38,7 @@ dsh-agent-core/
 │   ├── router/                # @agent-core/router — 固定输入投递 + 结果/证据输出（一次性驱动）
 │   ├── feishu-connector/      # @agent-core/feishu-connector — 纯 channel 层（WS/IngressEvent/ReplyTarget）
 │   ├── workspace-bootstrap/   # @agent-core/workspace-bootstrap — agentId → workspace + DSH_HOME（幂等播种 AGENTS.md）
-│   ├── agent-registry/        # @agent-core/agent-registry — 长期 Agent 身份注册表（原子 JSON 持久化）
+│   ├── agent-definition/     # @agent-core/agent-definition — Agent Definition config（声明式只读 Agent 存在性权威；无运行时写者）
 │   ├── agent-memory/          # @agent-core/agent-memory — per-agent file-first 长期记忆（MEMORY.md + memory_* tools）
 │   ├── agent-router/          # @agent-core/agent-router — Router / Control Plane（switchAgent 域操作 + Binding 持久化 + per-agent 进程注册表 + broker parent-RPC 分发）
 │   ├── product-api/           # @agent-core/product-api — Gate 1 thin Mobile Product API（HTTP adapter，127.0.0.1，供 adb reverse）
@@ -49,7 +49,7 @@ dsh-agent-core/
 │   └── scheduler-router/      # @agent-core/scheduler-router — Scheduler↔Router Final Integration 桥接（真实 invokeAgent + deliver 适配器，只调已有域操作）
 ├── bundle/                    # @agent-core/bundle — dsh.bundle patch 层（persona + broker/router）
 ├── bundle-demo/               # @agent-core/bundle-demo — process-model demo patch 层
-├── bundle-integration/        # @agent-core/bundle-integration — 控制面组合（registry + workspace-bootstrap + feishu + agent-router + broker gateway）
+├── bundle-integration/        # @agent-core/bundle-integration — 控制面组合（agent-definition + workspace-bootstrap + feishu + agent-router + broker gateway）
 ├── bundle-memory/             # @agent-core/bundle-memory — per-agent memory patch 层
 ├── bundle-agent-switch/       # @agent-core/bundle-agent-switch — per-agent switch adapter patch 层
 ├── bundle-broker/             # @agent-core/bundle-broker — per-agent broker relay（child 无凭据，capability 工具经 parent-RPC 到控制面 gateway）

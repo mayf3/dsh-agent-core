@@ -57,6 +57,73 @@ export const MAX_TOKEN_RETRIES = 1
 const TOKEN_CACHE_SAFETY_MS = 5000
 
 /**
+ * Issue ONE access token via the auth-service `client_credentials` grant —
+ * the SAME primitive the HTTP transport uses, exported for thin reuse by
+ * LOCAL (in-process) capabilities whose authorization is the Auth grant
+ * (AGENT_DEFINITION_ACCESS_V1: agent.definition.write checks the scope
+ * `agent.definition.write` here — the auth-service is the ONLY grant
+ * authority; a failed/denied token request means the caller's grant does
+ * not cover the requested scope and the call fails closed).
+ *
+ * @param {object} opts
+ * @param {{clientId:string, clientSecret:string}} opts.credential - the
+ *   caller's MachineClient credential (from the trusted store).
+ * @param {string} opts.authServiceOrigin - token endpoint origin.
+ * @param {string} opts.resource - nominal resource the token is minted for.
+ * @param {string} opts.scope - space-separated scope list requested.
+ * @param {typeof fetch} [opts.fetchImpl]
+ * @param {number} [opts.timeoutMs]
+ * @returns {Promise<{accessToken:string, expiresIn:number}>}
+ * @throws {Error} when the token endpoint is unreachable, denies the
+ *   request, or returns a malformed body — every failure is a DENIAL.
+ */
+export async function requestAccessToken({
+  credential,
+  authServiceOrigin,
+  resource,
+  scope,
+  fetchImpl = fetch,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+}) {
+  const basic = Buffer.from(`${credential.clientId}:${credential.clientSecret}`).toString('base64')
+  const body = new URLSearchParams({
+    grant_type: 'client_credentials',
+    resource,
+    scope,
+  })
+  let res
+  try {
+    res = await fetchImpl(`${authServiceOrigin}${TOKEN_ENDPOINT_PATH}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${basic}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: body.toString(),
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+  } catch (err) {
+    throw new Error(`token endpoint unreachable: ${err.message}`)
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => '(no body)')
+    throw new Error(`token endpoint returned ${res.status}: ${text}`)
+  }
+  let data
+  try {
+    data = await res.json()
+  } catch {
+    throw new Error('token endpoint returned a malformed JSON body')
+  }
+  if (typeof data.access_token !== 'string' || data.access_token.length === 0) {
+    throw new Error('token response missing access_token')
+  }
+  const expiresIn = typeof data.expires_in === 'number' ? data.expires_in : parseInt(data.expires_in, 10) || 300
+  return { accessToken: data.access_token, expiresIn }
+}
+
+/**
  * Canonical transport error codes. Every HTTP capability manifest declares
  * these in its error table (via `withTransportErrors`), so the mapping layer's
  * fail-closed code resolution surfaces them as-is.
@@ -262,42 +329,15 @@ export function createHttpTransport(opts = {}) {
   }
 
   async function issueAccessToken(credential, target, scope) {
-    const basic = Buffer.from(`${credential.clientId}:${credential.clientSecret}`).toString('base64')
-    const body = new URLSearchParams({
-      grant_type: 'client_credentials',
+    const issued = await requestAccessToken({
+      credential,
+      authServiceOrigin,
       resource: target.audience,
       scope,
+      fetchImpl,
+      timeoutMs,
     })
-    let res
-    try {
-      res = await fetchImpl(`${authServiceOrigin}${TOKEN_ENDPOINT_PATH}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${basic}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json',
-        },
-        body: body.toString(),
-        signal: AbortSignal.timeout(timeoutMs),
-      })
-    } catch (err) {
-      throw new Error(`token endpoint unreachable: ${err.message}`)
-    }
-    if (!res.ok) {
-      const text = await res.text().catch(() => '(no body)')
-      throw new Error(`token endpoint returned ${res.status}: ${text}`)
-    }
-    let data
-    try {
-      data = await res.json()
-    } catch {
-      throw new Error('token endpoint returned a malformed JSON body')
-    }
-    if (typeof data.access_token !== 'string' || data.access_token.length === 0) {
-      throw new Error('token response missing access_token')
-    }
-    const expiresIn = typeof data.expires_in === 'number' ? data.expires_in : parseInt(data.expires_in, 10) || 300
-    return { accessToken: data.access_token, expiresIn }
+    return issued
   }
 
   // ── Request binding (generic; driven by manifest data) ──────────────────

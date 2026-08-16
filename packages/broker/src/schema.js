@@ -107,6 +107,27 @@ export function validateManifest(input) {
     }
   }
 
+  // ---- local (in-process capability marker; no http binding) ----
+  // AGENT_DEFINITION_ACCESS_V1: a capability with `local: true` (or
+  // `local: { resource }`) is executed IN-PROCESS by the parent (gateway
+  // mode) against an injected handler; in child mode its tools RELAY to the
+  // parent like http-bound ones. `resource` is the nominal token resource
+  // used for the optional grant check (see requiredScopes).
+  let local = undefined
+  if (input.local !== undefined) {
+    if (input.local === true) {
+      local = { resource: undefined }
+    } else if (typeof input.local === 'object' && input.local !== null && !Array.isArray(input.local)) {
+      if (typeof input.local.resource !== 'string' || input.local.resource.length === 0) {
+        errors.push(path('local') + '.resource must be a non-empty string when local is an object')
+      } else {
+        local = { resource: input.local.resource }
+      }
+    } else {
+      errors.push(path('local') + ' must be true or { resource: string }')
+    }
+  }
+
   // ---- operations ----
   manifest.operations = []
   if (!Array.isArray(input.operations) || input.operations.length === 0) {
@@ -141,9 +162,14 @@ export function validateManifest(input) {
       }
       // optional generic HTTP binding (the authorized-HTTP transport contract;
       // see transport.js). When present, this operation is executed by the
-      // generic transport instead of a process-internal handler.
+      // generic transport instead of a process-internal handler. A LOCAL
+      // capability never mixes with http bindings.
       let http = undefined
       if (op.http !== undefined) {
+        if (local !== undefined) {
+          errors.push(opPath + '.http must not be combined with a local capability')
+          continue
+        }
         const httpErr = validateHttpBinding(op.http, opPath + '.http', op.arguments?.properties || {})
         if (httpErr) {
           errors.push(httpErr)
@@ -187,6 +213,16 @@ export function validateManifest(input) {
         http,
       })
     }
+  }
+
+  // ---- local (in-process) capability invariants ----
+  if (local !== undefined) {
+    // The write-side grant check needs scopes; read-only local capabilities
+    // may omit them (open to every credentialed agent).
+    if (manifest.operations.some((o) => o.http !== undefined)) {
+      errors.push(path('local') + ' capability must not declare http bindings')
+    }
+    manifest.local = local
   }
 
   // An http-bound capability MUST declare its required scopes: the transport

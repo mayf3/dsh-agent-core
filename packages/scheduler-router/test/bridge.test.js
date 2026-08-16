@@ -71,15 +71,15 @@ test('invoker: turn failure becomes an error outcome, never a throw', async () =
   assert.equal(outcome.sessionId, 's')
 })
 
-test('invoker: registry validation rejects an unknown agent as error outcome', async () => {
+test('invoker: definition validation rejects an unknown agent as error outcome', async () => {
   const proc = fakeProc()
   const router = fakeRouter({ proc })
-  const registry = {
+  const definition = {
     getAgent: () => {
-      throw Object.assign(new Error('agent-registry: agent not found: nope'), { code: 'AGENT_NOT_FOUND' })
+      throw Object.assign(new Error('agent-definition: agent not found: nope'), { code: 'AGENT_NOT_FOUND' })
     },
   }
-  const invokeAgent = createRouterInvoker(router, { registry })
+  const invokeAgent = createRouterInvoker(router, { definition })
   const outcome = await invokeAgent({ agentId: 'nope', sessionId: 's', message: 'hi' })
   assert.equal(outcome.status, 'error')
   assert.match(outcome.error, /not found/)

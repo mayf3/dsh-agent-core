@@ -11,7 +11,7 @@
  *        agent-memory + agent-switch)
  *   $DSH_HOME/profiles/node_modules/@agent-core/{bundle-integration,
  *     feishu-connector,agent-router,product-api,workspace-bootstrap,
- *     agent-registry, bundle-memory,bundle-agent-switch,agent-memory,
+ *     agent-definition, bundle-memory,bundle-agent-switch,agent-memory,
  *     agent-switch}
  *     -> symlinks into the repo's packages/ (flat fallback mechanism)
  *
@@ -61,7 +61,7 @@ const pkgDirs = {
   'agent-router': join(REPO, 'packages', 'agent-router'),
   'product-api': join(REPO, 'packages', 'product-api'),
   'workspace-bootstrap': join(REPO, 'packages', 'workspace-bootstrap'),
-  'agent-registry': join(REPO, 'packages', 'agent-registry'),
+  'agent-definition': join(REPO, 'packages', 'agent-definition'),
   // per-agent composition
   'bundle-memory': join(REPO, 'bundle-memory'),
   'bundle-agent-switch': join(REPO, 'bundle-agent-switch'),
