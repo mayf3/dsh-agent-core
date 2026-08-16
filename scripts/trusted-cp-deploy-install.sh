@@ -154,17 +154,25 @@ if ! "$TRUSTED_NODE" --version >/dev/null 2>&1; then
   echo "ERROR: trusted node does not run: $TRUSTED_NODE" >&2
   exit 2
 fi
-CELLAR_INODE="$(stat -f %i "$NODE_CELLAR_BIN")"
-TRUSTED_INODE="$(stat -f %i "$TRUSTED_NODE")"
-if [ "$CELLAR_INODE" = "$TRUSTED_INODE" ]; then
-  echo "ERROR: trusted node shares an inode with the Cellar binary (hardlink!)" >&2
-  exit 2
+if [ "$REUSE_NODE" != "1" ]; then
+  # hardlink guard only applies to a FRESH copy (a reused closure was fully
+  # materialized + verified by the install that produced it)
+  CELLAR_INODE="$(stat -f %i "$NODE_CELLAR_BIN")"
+  TRUSTED_INODE="$(stat -f %i "$TRUSTED_NODE")"
+  if [ "$CELLAR_INODE" = "$TRUSTED_INODE" ]; then
+    echo "ERROR: trusted node shares an inode with the Cellar binary (hardlink!)" >&2
+    exit 2
+  fi
 fi
 if [ "$(find node-runtime -type l | wc -l | tr -d ' ')" != "0" ]; then
   echo "ERROR: node-runtime still contains symlinks (must be fully materialized)" >&2
   exit 2
 fi
-echo "  trusted node: $TRUSTED_NODE ($("$TRUSTED_NODE" --version), source $NODE_VERSION_DIR)"
+if [ "$REUSE_NODE" = "1" ]; then
+  echo "  trusted node: $TRUSTED_NODE ($("$TRUSTED_NODE" --version), reused from previous install)"
+else
+  echo "  trusted node: $TRUSTED_NODE ($("$TRUSTED_NODE" --version), source $NODE_VERSION_DIR)"
+fi
 
 # ---- 3. app closure (Agent Core runtime surface) ---------------------------
 echo "== copying Agent Core closure -> app/"
