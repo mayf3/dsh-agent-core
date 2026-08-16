@@ -109,3 +109,50 @@ root 驱动（sudo）
 real auth-service → real svc-forum → ok`；PARENT_UID=505、CHILD_UID=502、
 CREDENTIAL_STORE_ACCESS_FROM_502=DENIED；restart 后 gateway 再起 + 再次真实调用。
 
+
+## 5. Review 修复 — Trusted Node（MERGE_REVIEW blocker）
+
+Review 唯一 blocker：505 pre-drop 的 Node interpreter 曾是 `/usr/local/bin/node`
+（Homebrew，uid 502 可修改 → 502 换 node → restart CP → 以 505 执行 → 边界绕过）。
+
+### Fix 1 — Trusted Node（install 脚本）
+
+- 把实际使用的 Node runtime（`/usr/local/Cellar/node/<ver>` 整个版本目录）以
+  **cp -RL 真实拷贝**进 trusted closure：`<root>/node-runtime/`（80M，零 symlink）；
+- `TRUSTED_NODE = /usr/local/libexec/agent-core/node-runtime/bin/node`
+  （authsvc:authsvc 0755/0644，502 只读）；
+- 安装时硬校验：真实文件（非 symlink）、可运行（--version）、**与 Cellar binary
+  inode 不同**（非 hardlink）、node-runtime 内零 symlink。
+
+### Fix 2 — 启动链统一（driver/部署）
+
+- CP 启动：`sudo -u authsvc /usr/bin/env … <TRUSTED_NODE> <trusted-cli> --profile …`
+  （不再出现 /usr/local/bin/node）；
+- CP env：`PATH = <node-runtime>/bin:` 置首 —— 任何 505 pre-drop 的裸 `node`
+  解析都落在 trusted runtime；
+- child：helper argv 的 interpreter 来自 CP 的 `process.execPath` = trusted node
+  （setuid(502) 后执行同一 trusted runtime，读取路径 502 只读）。
+
+### Fix 3 — 攻击验收（新增，全部 PASS）
+
+| 检查 | 结果 |
+|---|---|
+| TRUSTED_NODE_502_WRITABLE（502 写 trusted node） | NO (DENIED) |
+| TRUSTED_NODE_502_REPLACE_DENIED（502 rm node） | DENIED |
+| TRUSTED_NODE_PARENT_502_WRITABLE（502 写 node-runtime/bin） | NO (DENIED) |
+| TRUSTED_NODE_PARENT_502_REPLACE_DENIED（502 rm node-runtime） | DENIED |
+| TRUSTED_NODE_502_SYMLINK_REDIRECT_DENIED（ln -s /usr/local/bin/node 替换） | DENIED |
+| TRUSTED_NODE_REAL_FILE（非 symlink，authsvc 0755） | PASS |
+| TRUSTED_NODE_NO_CELLAR_HARDLINK（inode 独立） | PASS |
+| restart 后 CP_NODE_PATH = trusted path、PARENT_UID=505 | PASS |
+| 505 lsof：0 个 /usr/local/Cellar/node、/usr/local/bin/node 文件 | PASS |
+| 505 lsof：trusted node 打开（1） | PASS |
+
+### Fix 4 — 重跑 smoke（全部 PASS）
+
+REAL_BROKER_SMOKE（child 502 → Router → Broker → real auth → real svc-forum）、
+RESTART_HARDENED、CHILD_UID=502、CHILD_NO_CREDENTIAL、
+CREDENTIAL_STORE_502_DENIED —— 45/45 PASS（`.demo/hardening-run12.log`）。
+
+不修改 Auth / Broker / Router core / Agent Definition / Kernel：
+AUTH_CHANGE=NONE, BROKER_CHANGE=NONE, ROUTER_CORE_CHANGE=NONE, KERNEL_CHANGE=NONE。
