@@ -182,6 +182,7 @@ export class AgentProcess {
         const waiter = this.pending.get(message.id)
         if (waiter !== undefined) {
           this.pending.delete(message.id)
+          if (waiter.timer !== undefined) clearTimeout(waiter.timer)
           if (message.error !== undefined) waiter.reject(new Error(`${message.error.code ?? -1}: ${message.error.message}`))
           else waiter.resolve(message.result)
         }
@@ -217,10 +218,26 @@ export class AgentProcess {
     await this.request('rpc.response', { requestId, ok: error === undefined, result, error }).catch(() => {})
   }
 
-  request(method, params) {
+  /**
+   * JSON-RPC request to the demo-server child. An optional `timeoutMs`
+   * rejects (and removes) the pending entry when the receipt does not
+   * arrive — used by the delivery seam so a dead child can never hang a
+   * caller forever.
+   * @param {string} method
+   * @param {object|undefined} params
+   * @param {number} [timeoutMs]
+   */
+  request(method, params, timeoutMs) {
     return new Promise((resolveRequest, rejectRequest) => {
       const id = ++this.seq
-      this.pending.set(id, { resolve: resolveRequest, reject: rejectRequest })
+      const entry = { resolve: resolveRequest, reject: rejectRequest }
+      this.pending.set(id, entry)
+      if (timeoutMs !== undefined) {
+        entry.timer = setTimeout(() => {
+          this.pending.delete(id)
+          rejectRequest(new Error(`request ${method} timed out after ${timeoutMs}ms (agent ${this.agentId})`))
+        }, timeoutMs)
+      }
       this.child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`)
     })
   }
@@ -309,6 +326,48 @@ export class AgentProcess {
       // shared binding context released — the next queued turn then sets its own.
       this.activeBindingContext = undefined
     }
+  }
+
+  /**
+   * ADMISSION SEAM (Agent Router Delivery V0): accept one message into a
+   * session's inbox WITHOUT waiting for the model turn.
+   *
+   * Resolves on the demo-server receipt — the JSON-RPC response to
+   * `session/prompt`, which the server writes ONLY after
+   * `handle.agent.followup(message)` returned. `followup` is DSH's
+   * synchronous inbox insertion (`send(..., 'next-turn', true)` ->
+   * `inbox.splice()` + `wakeDriver()`, core/agent-loop/src/agent.ts) and
+   * returns void — so the receipt means exactly "the DSH session accepted
+   * the message into its native queue", never "the turn finished". The
+   * model turn continues asynchronously; the caller may poll the session
+   * trajectory or the agent status later.
+   *
+   * Deliberately NOT serialized through the turn single-flight queue: a
+   * delivery must not wait for any turn/job to complete (the DSH native
+   * queue per session orders messages anyway). It also never touches
+   * `activeBindingContext` — a delivery has no ChannelConversation.
+   *
+   * @param {string} sessionId - the native session to accept into (the
+   *   Router decides it: 'main' or a fresh-mapped id).
+   * @param {string} text - the message text.
+   * @param {number} [timeoutMs] - receipt wait cap (default
+   *   $DSH_AGENT_DELIVER_TIMEOUT or 30s); a dead child then rejects instead
+   *   of hanging the caller. Only the RECEIPT is bounded — the turn itself
+   *   keeps running regardless.
+   * @returns {Promise<{accepted:true, sessionId:string, messageId:string,
+   *   ms:number}>}
+   */
+  deliver(sessionId, text, timeoutMs = Number.parseInt(process.env.DSH_AGENT_DELIVER_TIMEOUT ?? '30000', 10)) {
+    const started = Date.now()
+    return this.request('session/prompt', {
+      sessionId,
+      contentBlocks: [{ type: 'text', text }],
+    }, timeoutMs).then((receipt) => ({
+      accepted: true,
+      sessionId,
+      messageId: receipt.messageId,
+      ms: Date.now() - started,
+    }))
   }
 
   /** Graceful JSON-RPC shutdown; resolves with the settled exit. */

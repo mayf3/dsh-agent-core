@@ -45,6 +45,7 @@
  */
 
 import z from '@deepseek-ai/schemastery'
+import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { AgentProcess, agentEnv } from './process.js'
@@ -72,11 +73,17 @@ export const Config = z.object({
   agentProfile: z.string().default('agent-core-demo'),
   /**
    * ABSOLUTE JSON store path for the Binding table AND the per-surface
-   * bookmark table (default `<home>/.dsh/bindings/bindings.json` where
-   * home = $DSH_HOME or the OS home). Relative / `~`-prefixed values are
-   * rejected fail-loud.
+   * bookmark table AND the Delivery V0 fresh-mapping table (default
+   * `<home>/.dsh/bindings/bindings.json` where home = $DSH_HOME or the OS
+   * home). Relative / `~`-prefixed values are rejected fail-loud.
    */
   bindingsStoreFile: z.string(),
+  // Runtime-only option (not in the schema — Config is documentation here):
+  // `processFactory(opts) => proc` — per-agent process factory (test/ops
+  // seam, defaults to AgentProcess). The proc must expose `spawn()`,
+  // `ready()`, `deliver()`, `shutdown()` and the `pid`/`exit`/`exitPromise`
+  // fields ensureRunning relies on. Unit tests inject a fake so the
+  // admission path can be driven without real DSH children.
 })
 
 /** Default Binding store location: control-plane state under the shared home. */
@@ -184,11 +191,17 @@ export function apply(ctx, config) {
 
   const storeFile = cfg.bindingsStoreFile ?? defaultBindingsStoreFile()
   const store = new BindingStore({ storeFile })
+  /** Per-agent process factory: default AgentProcess, injectable in tests. */
+  const processFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
 
   /** agentId -> AgentProcess registry (one live owner per agent). */
   const registry = new Map()
 
+  /** Delivery V0 acceptance log (evidence surface; in-memory only). */
+  const deliveries = []
+
   log.log(`binding store loaded: ${store.list().length} binding(s) from ${storeFile}`)
+  log.log(`delivery v0 fresh mapping table loaded: ${store.freshSessionsSnapshot().length} mapping(s)`)
 
   /**
    * Resolve an Agent reference to a registered Agent id — the Registry is
@@ -386,7 +399,7 @@ export function apply(ctx, config) {
     // installed HERE, so a fresh Agent works without any external
     // pre-provisioning (FIX 1).
     provisionAgentHome(home, workspace, { profile: cfg.agentProfile })
-    const proc = new AgentProcess({
+    const proc = processFactory({
       agentId,
       home,
       workspace,
@@ -507,6 +520,97 @@ export function apply(ctx, config) {
     }
   }
 
+  /**
+   * AGENT ROUTER DELIVERY V0 — the frozen admission interface:
+   *
+   *   deliver({ requestId, agentId, sessionMode: 'main'|'fresh', message })
+   *     -> { accepted: true, sessionId }
+   *
+   * `accepted: true` means ONLY "the message entered the correct DSH
+   * Session's inbox" — it NEVER waits for the agent turn / model round to
+   * finish (the turn continues asynchronously). The admission seam is:
+   *
+   *   ensureRunning(agentId)           find-or-start the agent's DSH process
+   *   -> session resolution            'main' fixed; fresh mapped by requestId
+   *   -> proc.deliver(sessionId, text) session/prompt receipt = inbox accept
+   *   -> { accepted, sessionId }       return immediately
+   *
+   * Session selection is the ROUTER's policy and takes NO caller input:
+   *
+   * - `main`: sessionId is ALWAYS the fixed `main` (exists -> the per-agent
+   *   demo-server resumes the persisted session; absent -> creates). This is
+   *   the only Session V0 allows to continue across jobs.
+   * - `fresh`: the FIRST delivery of a requestId mints a brand-new native
+   *   session id (`fresh-<sha256(agentId\0requestId)>`); every retry of the
+   *   SAME requestId returns the SAME mapping (durably persisted, survives
+   *   control-plane restarts); a DIFFERENT requestId mints a DIFFERENT
+   *   session. The caller never addresses a session — the frozen interface
+   *   has no sessionId field, and a stray one is rejected fail-loud, so no
+   *   caller can specify or resume an arbitrary historical non-main session.
+   *
+   * The Router does NOT understand Workflow / Forum / Team / Mailbox /
+   * notification retry queues / scheduler coupling: this is a pure
+   * (agentId, session) admission entry.
+   *
+   * @param {object} req - { requestId, agentId, sessionMode, message }.
+   * @returns {Promise<{accepted:true, sessionId:string}>}
+   */
+  async function deliver(req) {
+    const requestId = req?.requestId
+    const sessionMode = req?.sessionMode
+    const message = req?.message
+    if (typeof requestId !== 'string' || requestId === '') {
+      throw new TypeError('agent-router: deliver requestId must be a non-empty string')
+    }
+    if (sessionMode !== 'main' && sessionMode !== 'fresh') {
+      throw new TypeError(`agent-router: deliver sessionMode must be 'main' or 'fresh' (got ${JSON.stringify(sessionMode)})`)
+    }
+    if (typeof message !== 'string') {
+      throw new TypeError('agent-router: deliver message must be a string')
+    }
+    if (req?.sessionId !== undefined) {
+      // DELIVERY V0 boundary: the frozen interface has no sessionId. Reject
+      // fail-loud (the same policy product-api applies to switchAgent) so no
+      // caller can name or resume an arbitrary historical non-main session.
+      throw new TypeError('agent-router: deliver has no sessionId field — the Router owns session selection (main | fresh-by-requestId)')
+    }
+    const agentRef = req?.agentId
+    if (typeof agentRef !== 'string' || agentRef.trim() === '') {
+      throw new TypeError('agent-router: deliver agentId must be a non-empty string')
+    }
+    const agent = resolveAgentRef(agentRef)
+    // Session resolution: 'main' is the fixed V0 cross-job session; 'fresh'
+    // maps (agentId, requestId) -> a minted native session id, durably. The
+    // mint runs INSIDE the store's mutation queue (read-or-mint is atomic:
+    // two concurrent first deliveries of the same requestId converge on one
+    // session; the collision loop only guards the astronomically unlikely
+    // hash clash between two different requestIds).
+    const sessionId = sessionMode === 'main'
+      ? 'main'
+      : (await store.freshSessionFor(agent.id, requestId, (used) => {
+          const digest = createHash('sha256').update(`${agent.id}\u0000${requestId}`).digest('hex')
+          const base = `fresh-${digest.slice(0, 32)}`
+          let id = base
+          let n = 0
+          while (used.has(id)) id = `${base}-${++n}`
+          return id
+        })).sessionId
+    const started = Date.now()
+    const proc = await ensureRunning(agent.id)
+    const receipt = await proc.deliver(sessionId, message)
+    deliveries.push({
+      requestId,
+      agentId: agent.id,
+      sessionMode,
+      sessionId,
+      messageId: receipt.messageId,
+      acceptedAt: new Date().toISOString(),
+      ms: Date.now() - started,
+    })
+    log.log(`deliver accepted: agent ${agent.id} session ${sessionId} requestId ${requestId.slice(0, 24)}... (${receipt.messageId}) in ${Date.now() - started}ms`)
+    return { accepted: true, sessionId }
+  }
+
   // Bind the channel ingress (feishu-connector only forwards addressed events).
   if (feishu !== undefined) {
     feishu.setCallback(onIngress)
@@ -552,6 +656,16 @@ export function apply(ctx, config) {
     /** Test/ops surface: durable bookmark table snapshot (per-surface
      *  lastActiveSession; NOT history — single slot per (surface, agent)). */
     lastSessionsSnapshot: () => store.lastSessionsSnapshot(),
+    /**
+     * Agent Router Delivery V0: accept one message into the correct DSH
+     * Session's inbox and return immediately — `accepted: true` never waits
+     * for the model turn (see deliver's doc for the full contract).
+     */
+    deliver,
+    /** Test/ops surface: durable Delivery V0 fresh-mapping table snapshot. */
+    freshSessionsSnapshot: () => store.freshSessionsSnapshot(),
+    /** Test/ops surface: in-memory Delivery V0 acceptance log. */
+    deliveriesSnapshot: () => deliveries.map(d => ({ ...d })),
     ensureRunning,
     route: onIngress,
   }

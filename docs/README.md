@@ -57,6 +57,7 @@ V1 调查收敛结论（详见 `CAPABILITY_MATRIX.md`）：为替代 OpenClaw，
 | `reports/memory-v1.md` | Memory V1 实现报告（七问七答、组件、真实验收 PoC 证据、Integration need） |
 | `reports/product-integration-v1.md` | Product Integration V1 实现报告：Registry+Workspace+Session+Memory+per-Agent process 第一次真正装进统一 Router/Binding（双 Agent 真实验收证据） |
 | `reports/scheduler-replacement-v1.md` | **Scheduler Replacement V1 报告**：真实 job 形态、最小模型、持久化、执行语义、双 seam、重启证据、兼容结果、Integration need |
+| `reports/agent-router-delivery-v0.md` | **Agent Router Delivery V0 报告**：冻结接口 `deliver({requestId, agentId, sessionMode, message}) → {accepted, sessionId}`、admission seam（ensureRunning → session 决议 → inbox receipt 即返回）、fresh 映射持久化、7 项需求真实验收证据 |
 | `TRUST-BOUNDARY-REPORT.md` | 信任边界/身份伪造调查（identity-auth 的证据基础） |
 
 方法限制说明：本轮调查期间 web_search 后端不可用（无 `DEEPSEEK_API_KEY`），
