@@ -46,6 +46,11 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# AGENT_CORE_BACKUP_RETENTION_V1: deployment backup metadata + pin + post-verified
+# retention ops live in the tiny filesystem helper (same dir as this script). It is
+# pure shell/filesystem — no package/DB/service/daemon; it neither deletes legacy
+# backups nor modifies Runtime/Router/Scheduler/Kernel/product semantics.
+BACKUP_OPS="$SCRIPT_DIR/agent-core-backup-ops.sh"
 REPO_SRC="${1:-$(dirname "$SCRIPT_DIR")}"
 HARNESS_SRC="${2:-/Users/yanfenma/workspace/github/deepseek-harness}"
 # The main repo holds the dev node_modules (third-party deps); a worktree
@@ -73,6 +78,21 @@ if [ -e "$TRUSTED_ROOT" ]; then
   BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
   echo "== backing up previous install -> $BAK"
   mv "$TRUSTED_ROOT" "$BAK"
+  # AGENT_CORE_BACKUP_RETENTION_V1: write metadata for the backed-up PREVIOUS
+  # installed closure (created_at / source_commit / pinned / status) and pin the
+  # FIRST_RELIABLE_PIN when no historical backup is pinned. Metadata must never
+  # attribute the successor (new) deployment's commit to this backup, so
+  # source_commit stays "unknown" (the previous closure does not record its app
+  # commit). Pin = metadata/marker only — NO data copy. This is the predeploy
+  # capture; nothing is pruned here (prune only happens post-verified-success via
+  # the operator helper, and never touches legacy backups). NOTE: this is a
+  # non-fatal best-effort — a metadata failure must not block the install.
+  if [ -x "$BACKUP_OPS" ]; then
+    "$BACKUP_OPS" "$(dirname "$TRUSTED_ROOT")" --write-predecessor "$BAK" \
+      || echo "  WARNING: backup metadata/first-pin failed for $BAK (install continues; investigate)" >&2
+  else
+    echo "  WARNING: backup-ops helper missing ($BACKUP_OPS); deployment backup will carry no retention metadata" >&2
+  fi
 fi
 
 mkdir -p "$TRUSTED_ROOT"/{harness,app,home,config,.cache}
@@ -183,6 +203,7 @@ cp "$REPO_SRC/package.json" app/package.json
 mkdir -p app/scripts
 for f in agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs \
          dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh \
+         agent-core-backup-ops.sh \
          trusted-cp-hardening-v1-verify.mjs \
          production-runtime.mjs production-runtime-launchd.mjs \
          production-runtime-v1-verify.mjs \
