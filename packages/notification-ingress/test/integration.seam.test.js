@@ -30,18 +30,20 @@ import {
   copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readlinkSync, rmSync, symlinkSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { cliBin, provisionAgentHome, REPO } from '../../../scripts/demo-home.mjs'
-import { AgentRegistry } from '../../agent-registry/src/registry.js'
+import { AgentDefinition } from '../../agent-definition/src/definition.js'
+import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 
 const SEAM_ENABLED = process.env.NOTIFICATION_INGRESS_INTEGRATION === '1'
 const SEAM_REASON = 'awaiting agentRouter.deliver (Router branch feat/agent-router-delivery-v0 not merged); rerun with NOTIFICATION_INGRESS_INTEGRATION=1 once the Router branch lands'
 
 const CONTROL_PROFILE = 'agent-core-integration'
 const AGENT_PROFILE = 'agent-core-integration-agent'
-const AGENT_ID = 'agent-demo'
+// Authored Agent Definition id (opaque agt_* per AGENT_DEFINITION_CONFIG_V1).
+const AGENT_ID = 'agt_demo'
 const INGRESS_PORT = Number.parseInt(process.env.NOTIFICATION_INGRESS_PORT ?? '18790', 10)
 const INGRESS_BASE = `http://127.0.0.1:${INGRESS_PORT}`
 
@@ -73,31 +75,37 @@ function provisionControlHome(home) {
   copyOnce(join(REPO, 'profile-integration', 'package.json'), join(profileDir, 'package.json'))
   copyOnce(join(REPO, 'profile-integration', 'cordis.patch.yml'), join(profileDir, 'cordis.patch.yml'))
   const farm = join(home, 'profiles', 'node_modules', '@agent-core')
-  for (const [pkg, rel] of {
+  for (const [pkg, rel] of Object.entries({
     'bundle-integration': 'bundle-integration',
     'feishu-connector': 'packages/feishu-connector',
     'agent-router': 'packages/agent-router',
     'product-api': 'packages/product-api',
     'notification-ingress': 'packages/notification-ingress',
     'workspace-bootstrap': 'packages/workspace-bootstrap',
-    'agent-registry': 'packages/agent-registry',
-  }) {
+    'agent-definition': 'packages/agent-definition',
+    'broker': 'packages/broker',
+  })) {
     ensureSymlink(join(REPO, rel), join(farm, pkg))
   }
 }
 
 test('REAL control plane: POST /v1/deliver -> agentRouter.deliver -> {accepted, sessionId}', { skip: SEAM_ENABLED ? false : SEAM_REASON }, async (t) => {
-  // Scratch runtime: control home + registry store + agent home/workspace.
+  // Scratch runtime: control home + Agent Definition config + agent home/workspace.
   const runtime = mkdtempSync(join(tmpdir(), 'notification-ingress-seam-'))
   t.after(() => { try { rmSync(runtime, { recursive: true, force: true }) } catch { /* best effort */ } })
   const controlHome = join(runtime, 'control', 'home')
-  const registryStore = join(runtime, 'control', 'registry.json')
+  const definitionFile = join(runtime, 'control', 'agents.json')
   const bindingsStore = join(runtime, 'control', 'bindings.json')
   const workspaceRoot = join(runtime, 'agents')
 
-  // Phase 0: ONE registered agent, provisioned home (real per-agent profile).
-  const registry = new AgentRegistry({ storeFile: registryStore })
-  await registry.registerAgent({ name: 'Agent Demo', description: 'notification ingress seam agent' })
+  // Phase 0: ONE defined agent (AGENT_DEFINITION_CONFIG_V1 — the declarative
+  // existence authority the real control plane reads), provisioned home
+  // (real per-agent profile).
+  await writeAgentDefinition(definitionFile, {
+    defaultAgentId: AGENT_ID,
+    agents: [{ id: AGENT_ID, name: 'Agent Demo', description: 'notification ingress seam agent' }],
+  })
+  void new AgentDefinition({ configFile: definitionFile }) // load-check the fixture
   provisionAgentHome(join(runtime, 'homes', AGENT_ID), join(workspaceRoot, AGENT_ID), { profile: AGENT_PROFILE })
   provisionControlHome(controlHome)
 
@@ -108,7 +116,7 @@ test('REAL control plane: POST /v1/deliver -> agentRouter.deliver -> {accepted, 
     DSH_TELEMETRY_DISABLED: '1',
     DSH_PERMISSION_MODE: 'danger-full-access',
     FEISHU_ENABLED: '0',
-    AGENT_REGISTRY_STORE: registryStore,
+    AGENT_DEFINITION_CONFIG: definitionFile,
     ROUTER_BINDINGS_STORE: bindingsStore,
     ROUTER_DEFAULT_AGENT: AGENT_ID,
     ROUTER_AGENT_PROFILE: AGENT_PROFILE,

@@ -51,14 +51,19 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
-import { AgentRegistry } from '../packages/agent-registry/src/registry.js'
+import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { writeAgentDefinition } from '../packages/agent-definition/src/config.js'
 import { apply as applyBootstrap } from '../packages/workspace-bootstrap/src/index.js'
 import { apply as applyRouter } from '../packages/agent-router/src/index.js'
 
 const RUNTIME = resolve(process.env.DSH_DELIVERY_V0_RUNTIME ?? join(REPO, '.demo', 'agent-router-delivery-v0', 'runtime'))
 const AGENTS_DIR = join(RUNTIME, 'agents') // workspace root
 const HOMES_DIR = join(RUNTIME, 'homes')   // agents home root (per-agent DSH_HOME)
-const REGISTRY_STORE = join(RUNTIME, 'control', 'registry.json')
+// Agent Definition config (AGENT_DEFINITION_CONFIG_V1): the declarative
+// Agent existence authority the router reads — authored here, immutable at
+// runtime, shared across the phase-8 control-plane restart.
+const DEFINITION_FILE = join(RUNTIME, 'control', 'agents.json')
+const AGENT_ID = 'agt_delivery-v0-acceptance'
 const BINDINGS_STORE = join(RUNTIME, 'control', 'bindings.json')
 const KEEP = process.env.DSH_DELIVERY_V0_KEEP === '1'
 const AGENT_PROFILE = 'agent-core-integration-agent'
@@ -210,16 +215,21 @@ async function main() {
 
   const ctx = fakeCtx()
   applyBootstrap(ctx, { workspaceRoot: AGENTS_DIR, agentsHome: HOMES_DIR })
-  const registry = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  ctx.provide('agentRegistry', {
-    listAgents: () => registry.listAgents(),
-    getAgent: (id) => registry.getAgent(id),
-    getDefaultAgent: () => registry.getDefaultAgent(),
-    registerAgent: (input) => registry.registerAgent(input),
-    updateAgent: (agentId, patch) => registry.updateAgent(agentId, patch),
-    setDefaultAgent: (agentId) => registry.setDefaultAgent(agentId),
+  // Author the declarative Agent Definition (AGENT_DEFINITION_CONFIG_V1):
+  // one enabled agent with a stable authored id. The config is the ONLY
+  // Agent existence authority; the router reads it through the service.
+  await writeAgentDefinition(DEFINITION_FILE, {
+    defaultAgentId: AGENT_ID,
+    agents: [{ id: AGENT_ID, name: AGENT_NAME, description: 'Agent Router Delivery V0 acceptance' }],
   })
-  const agent = await registry.registerAgent({ name: AGENT_NAME, description: 'Agent Router Delivery V0 acceptance' })
+  const definition = new AgentDefinition({ configFile: DEFINITION_FILE })
+  ctx.provide('agentDefinition', {
+    listAgents: () => definition.listAgents(),
+    getAgent: (id) => definition.getAgent(id),
+    getDefaultAgent: () => definition.getDefaultAgent(),
+    resolveAgentRef: (ref) => definition.resolveAgentRef(ref),
+  })
+  const agent = definition.getAgent(AGENT_ID)
   record('SETUP_AGENT_REGISTERED', agent.id.startsWith('agt_'), agent.id)
   provisionAgent(agent.id)
   // Per-agent workspace persona: prove the spawned process reads ITS OWN
@@ -361,12 +371,14 @@ async function main() {
   await ctx.disposeAll() // shutdown every owned agent process
   const ctx2 = fakeCtx()
   applyBootstrap(ctx2, { workspaceRoot: AGENTS_DIR, agentsHome: HOMES_DIR })
-  const registry2 = new AgentRegistry({ storeFile: REGISTRY_STORE })
-  ctx2.provide('agentRegistry', {
-    listAgents: () => registry2.listAgents(),
-    getAgent: (id) => registry2.getAgent(id),
-    getDefaultAgent: () => registry2.getDefaultAgent(),
-    registerAgent: (input) => registry2.registerAgent(input),
+  // Control-plane restart: the SAME declarative config (immutable) — the
+  // definition is re-loaded from disk like a fresh control plane would.
+  const definition2 = new AgentDefinition({ configFile: DEFINITION_FILE })
+  ctx2.provide('agentDefinition', {
+    listAgents: () => definition2.listAgents(),
+    getAgent: (id) => definition2.getAgent(id),
+    getDefaultAgent: () => definition2.getDefaultAgent(),
+    resolveAgentRef: (ref) => definition2.resolveAgentRef(ref),
   })
   const router2 = applyRouter(ctx2, {
     bindingsStoreFile: BINDINGS_STORE,
@@ -404,7 +416,7 @@ async function main() {
     `- Agent workspace: ${agentWorkspace(agent.id)}`,
     `- Agent home: ${agentHome(agent.id)}`,
     `- Binding + fresh-mapping store: ${BINDINGS_STORE}`,
-    `- Registry store: ${REGISTRY_STORE}`,
+    `- Agent Definition config: ${DEFINITION_FILE}`,
     `- Main trajectory bytes: ${sessionTrajectory(agent.id, 'main').length}`,
     `- Fresh X trajectory bytes: ${sessionTrajectory(agent.id, fx.sessionId).length}`,
     '',
