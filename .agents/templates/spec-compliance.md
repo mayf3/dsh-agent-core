@@ -2,7 +2,7 @@
 
 > 用途：实现完成后，作为「实现是否在 scope 内」评审的固有字段。
 > 模板来自 `docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md` §9（status: accepted）。
-> 与 `docs/specs/SPEC_GOVERNANCE_AND_MERGE_GATE_V1.md` §11 的 merge condition 对齐。
+> 其中 §9 冻结了 merge condition（`SPEC_GATE = PASS` + `SPEC_COMPLIANCE = PASS` + `TESTS = PASS`）。
 
 ```text
 SPEC_COMPLIANCE
