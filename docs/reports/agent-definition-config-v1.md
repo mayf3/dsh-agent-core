@@ -139,6 +139,24 @@ seam（**不恢复重型 Registry service**）：
 - **resident boot smoke：PASS**（配置缺失 exit 2、加载 default、ready、
   SIGTERM 优雅退出）。
 
+## 9.5 DISABLED_ENFORCEMENT（merge review FIX）
+
+merge review 唯一 blocker（其余全部 PASS）已修复，最小改动、不重新设计：
+
+- **Fix 1（agent-router）**：`ensureRunning(agentId)` 生命周期入口统一 enforcement
+  ——`agentDefinition.getAgent(agentId)` → unknown（`AGENT_NOT_FOUND`）/
+  disabled（`AGENT_DISABLED`）→ 结构化拒绝 → **NEVER spawn**（连已存在的
+  binding 命中也不重新拉起）。不清 binding（历史关系保留）、Definition
+  Manager 不拥有 Binding。检查是构造时一次性载入的内存读，热路径无 I/O。
+- **Fix 2（scheduler-router）**：`createRouterInvoker` 用"可运行 Agent"语义——
+  unknown 与 disabled 都在调用 `ensureRunning()` 前拒绝（同一结构化代码）；
+  Scheduler core / job store / job ownership 零改动，被拒 job 只是 failed run
+  outcome。
+- 新增测试：disabled + existing binding → ingress rejected → spawn = 0；
+  unknown + existing binding → rejected → spawn = 0；disabled + scheduler
+  invocation → rejected → ensureRunning = 0；active Agent 行为不变（既有全套
+  用例 + 真实链）；rename 保持稳定 id（既有用例 + 新用例内断言）。
+
 ## 10. 结论（最终报告）
 
 ```
@@ -155,7 +173,7 @@ PRODUCT_API_PASS             = PASS      (6/6 unit + /v1/agents on the real comp
 SCHEDULER_ROUTER_PASS        = PASS      (9/9 unit + 16/16 real chain)
 RESIDENT_PASS                = PASS      (boot + ready + graceful stop; stock adoption resident 22/22)
 STOCK_ADOPTION_PASS          = PASS      (22/22 real, stable agt_* preserved, OpenClaw untouched)
-TESTS                        = 276/276 unit PASS
+TESTS                        = 279/279 unit PASS
 
 AGENT_DEFINITION_ACCESS_V1   = PASS      (22/22 real acceptance)
 DEFINITION_READ_FOR_ALL_AGENTS = YES

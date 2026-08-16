@@ -148,3 +148,17 @@ test('deliver: feishu.reply failure propagates -> not-delivered', async () => {
   const job = { id: 'j3', delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_x' } }
   await assert.rejects(() => deliver({ job, result: { status: 'ok' }, text: 'x' }), /chat not found/)
 })
+
+test('invoker: a DISABLED agent is rejected BEFORE ensureRunning (runnable-agent semantics)', async () => {
+  const proc = fakeProc()
+  const router = fakeRouter({ proc })
+  const definition = {
+    getAgent: () => ({ id: 'agent-x', name: 'X', description: null, disabled: true }),
+  }
+  const invokeAgent = createRouterInvoker(router, { definition })
+  const outcome = await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi' })
+  assert.equal(outcome.status, 'error')
+  assert.match(outcome.error, /disabled/)
+  assert.equal(router.ensured.length, 0, 'ensureRunning must not be called for a disabled agent')
+  assert.equal(invokeAgent.calls[0].outcome.status, 'error')
+})

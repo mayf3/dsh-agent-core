@@ -351,8 +351,31 @@ export function apply(ctx, config) {
     return row === undefined ? undefined : { ...row }
   }
 
+  /**
+   * DISABLED_ENFORCEMENT (merge review FIX 1): the Agent Definition config
+   * is the ONLY authority for which agents may RUN. Unknown or disabled
+   * agents get a structured rejection at the LIFECYCLE ENTRY — NEVER
+   * spawned, not even when an existing Binding still points at them.
+   * Existing bindings are left untouched (the Binding table keeps the
+   * history); this only prevents the disabled agent from being (re)started.
+   * The read is a synchronous in-memory lookup (the definition is loaded
+   * once at construction) — no config/database I/O on the message hot path.
+   * @param {string} agentId
+   * @throws {Error} code `AGENT_NOT_FOUND` (unknown) or `AGENT_DISABLED`.
+   */
+  function assertRunnable(agentId) {
+    const defined = agentDefinition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
+    if (defined.disabled === true) {
+      throw Object.assign(new Error(`agent-router: agent ${agentId} is disabled (not runnable)`), { code: 'AGENT_DISABLED' })
+    }
+  }
+
   /** Find-or-start the agent's DSH process; never returns a dead one. */
   async function ensureRunning(agentId) {
+    // Unified runnability enforcement FIRST: unknown / disabled -> structured
+    // rejection -> NEVER spawn. Do NOT insert an await before the spawn
+    // section (see the audit-round-3 double-spawn invariant below).
+    assertRunnable(agentId)
     // INVARIANT (audit round 3): the check -> spawn -> registry.set section
     // below is ENTIRELY synchronous (the first await is proc.ready()); JS
     // single-threading therefore guarantees two concurrent ensureRunning
