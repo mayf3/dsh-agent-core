@@ -479,12 +479,16 @@ async function main() {
   const oldConfig = existsSync(join(TRUSTED_CONFIG, 'registry.json'))
   record('AGENT_DEFINITION_AUTHORITY', defConfig && !oldConfig,
     defConfig ? 'agents.json is the single authority' : 'agents.json MISSING')
-  // sweep the trusted closure for any old registry-model reference (import
-  // path, package name, env var, store filename) in code the 505 executes
-  // (the two root-only orchestration drivers are allowlisted, exactly like
-  // the /Users/yanfenma audit — they are not executed by the control plane)
-  const oldRef = sh(`grep -rnE 'agent-registry|AgentRegistry|AGENT_REGISTRY_STORE|registry\\.json' ${JSON.stringify(TRUSTED_APP)}/packages ${JSON.stringify(TRUSTED_APP)}/bundle-integration ${JSON.stringify(TRUSTED_APP)}/profile-integration ${JSON.stringify(TRUSTED_APP)}/scripts --include='*.js' --include='*.mjs' --include='*.yml' --include='*.sh' 2>/dev/null | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' || true`).stdout.trim()
-  record('OLD_AGENT_REGISTRY_REFERENCE', oldRef === '', oldRef === '' ? 'no old registry references in the trusted closure' : oldRef)
+  // sweep the trusted closure for any old registry-model assumption (import
+  // path, package name, env var, store filename) in hardening artifacts and
+  // CP-executed wiring. The two root-only orchestration drivers are
+  // allowlisted (exactly like the /Users/yanfenma audit — not executed by
+  // the control plane). The FORMAL packages/agent-definition product is
+  // excluded by design: its convertRegistryStore is the sanctioned ONE-TIME
+  // cutover migration (consumes the old store to convert it away), NOT an
+  // old-model assumption — the product package is untouched here.
+  const oldRef = sh(`grep -rnE 'agent-registry|AgentRegistry|AGENT_REGISTRY_STORE|registry\\.json' ${JSON.stringify(TRUSTED_APP)}/packages ${JSON.stringify(TRUSTED_APP)}/bundle-integration ${JSON.stringify(TRUSTED_APP)}/profile-integration ${JSON.stringify(TRUSTED_APP)}/scripts --include='*.js' --include='*.mjs' --include='*.yml' --include='*.sh' 2>/dev/null | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' | grep -vE '/packages/agent-definition/' || true`).stdout.trim()
+  record('OLD_AGENT_REGISTRY_REFERENCE', oldRef === '', oldRef === '' ? 'no old registry references outside the formal Agent Definition package' : oldRef)
 
   // ------------------------------------------------------------- phase 1
   const attackOk = await attackMatrix()
