@@ -31,11 +31,24 @@
  * restart and the conversation is still talking to the same Agent:
  * "切到 Agent B → Control Plane 重启 → 仍然是 Agent B".
  *
- * The Agent remains the fixed owner of its workspace / DSH_HOME / process /
+ * AGENT_CORE_BINDING_WORKSPACE_V1 (accepted): a Binding row additionally
+ * carries `workspace` — the stable effective workspaceId chosen by the
+ * PRODUCT ENTRY (Feishu conversation policy, App switch policy) and persisted
+ * mechanically by the Router. Workspace *values* are never derived here: this
+ * router only executes the triple Binding{agentId, workspaceId, sessionId}.
+ * null (legacy / unset) falls back to the Default Workspace Rule
+ * resolveWorkspace(agentId); an explicit workspaceId resolves through
+ * workspace-bootstrap (sanitize → <workspaceRoot>/<id>) and is passed
+ * per-session as the DSH session cwd (SESSION_WRITE_CONTRACT R1/R2/R3; a
+ * cross-workspace mismatch is a structured rejection, never a silent cwd
+ * switch). No product branch (if Feishu / if App) exists in this file.
+ *
+ * The Agent remains the fixed owner of its DSH_HOME / process /
  * memory; the channel is only an entry point. Routing a message means: look
- * up (or auto-create) the Binding for its ChannelConversation, find-or-start
- * the bound Agent's DSH process, and deliver the message into the bound
- * session.
+ * up (or auto-create) the Binding for its ChannelConversation, resolve its
+ * effective workspace, find-or-start the bound Agent's DSH process (one
+ * process per Agent — the workspace varies per SESSION cwd, not per process),
+ * and deliver the message into the bound session.
  *
  * The DSH-side switch tool (`agent_core.switch_agent`, package
  * @agent-core/agent-switch, mounted inside each per-agent process) is a thin
@@ -245,14 +258,60 @@ export function apply(ctx, config) {
   }
 
   /**
-   * Persist one binding row (creation or switch).
+   * Normalize an incoming Binding workspace value (from a product entry or
+   * switchAgent opts) into the persisted form: a VALIDATED stable
+   * workspaceId string, or null (= Default Workspace Rule). `undefined` means
+   * "not provided" and is normalized by the CALLER (switchAgent preserves the
+   * current value; first contact stores null). Structured rejection on any
+   * invalid id — never truncated, never reshaped.
+   * @param {string|null} workspace
+   * @returns {string|null} the validated workspaceId (or null).
+   */
+  function bindingWorkspaceOf(workspace) {
+    if (workspace === null || workspace === undefined) return null
+    if (typeof workspace !== 'string') {
+      throw Object.assign(new TypeError('agent-router: workspace must be a workspaceId string or null'), {
+        code: 'WORKSPACE_ID_INVALID',
+      })
+    }
+    return workspaceBootstrap.validateWorkspaceId(workspace)
+  }
+
+  /**
+   * AGENT_CORE_BINDING_WORKSPACE_V1 Default Workspace Rule + §WorkspaceResolution:
+   * resolve one Binding's effective workspace path — mechanical, no product
+   * branches. `binding.workspace != null` -> resolveWorkspacePath(workspaceId)
+   * (sanitize -> <workspaceRoot>/<id>); null -> the Agent default
+   * resolveWorkspace(agentId). Only the PATH is derived here; which id a
+   * binding holds was decided by the product entry.
+   * @param {{activeAgentId:string, workspace?:string|null}} binding
+   * @returns {{workspaceId:string|null, workspacePath:string}}
+   */
+  function resolveEffectiveWorkspace(binding) {
+    if (binding.workspace !== null && binding.workspace !== undefined) {
+      return {
+        workspaceId: binding.workspace,
+        workspacePath: workspaceBootstrap.resolveWorkspacePath(binding.workspace),
+      }
+    }
+    return {
+      workspaceId: null,
+      workspacePath: workspaceBootstrap.resolveWorkspace(binding.activeAgentId),
+    }
+  }
+
+  /**
+   * Persist one binding row (creation or switch). `workspace` is the stable
+   * effective workspaceId or null (Default Workspace Rule) — always
+   * normalized here so a row can never enter the store half-specified.
    * @returns {Promise<object>} the stored row.
    */
-  async function persistBinding({ channelConversationId, activeAgentId, activeSessionId }) {
+  async function persistBinding({ channelConversationId, activeAgentId, activeSessionId, workspace = null }) {
     const row = {
       channelConversationId,
       activeAgentId,
       activeSessionId,
+      workspace,
       updatedAt: new Date().toISOString(),
     }
     await store.set(row)
@@ -267,9 +326,22 @@ export function apply(ctx, config) {
    * default Agent + default Session (persisted); later contacts return the
    * existing ChannelConversation + Binding untouched.
    *
-   * @param {object} req - { channel, externalId }.
+   * AGENT_CORE_BINDING_WORKSPACE_V1: `req.workspace` and `req.sessionId` are
+   * the PRODUCT ENTRY's already-decided initial binding triple values (e.g.
+   * the Feishu connector's conversation→workspace + conversation-scoped
+   * main-session policy — group A binds session main-A in workspace
+   * feishu-oc_A, so two groups of the same Agent never collapse onto one
+   * native session across two workspaces). The Router only VALIDATES and
+   * persists them mechanically — it never derives either value. Either
+   * omitted => null workspace (Default Workspace Rule) and the deployment
+   * default session (backward compatible, AC8). An existing Binding is
+   * returned untouched (stability); the values are read only at first
+   * contact.
+   *
+   * @param {object} req - { channel, externalId, workspace?, sessionId? }.
    * @returns {Promise<{channelConversation: {id, channel, externalId},
-   *                     binding: {activeAgentId, activeSessionId}}>}
+   *                     binding: {activeAgentId, activeSessionId,
+   *                               workspace}}>}
    */
   async function resolveChannelConversation(req) {
     const channel = req?.channel
@@ -277,20 +349,29 @@ export function apply(ctx, config) {
     if (typeof channel !== 'string' || channel === '' || typeof externalId !== 'string' || externalId === '') {
       throw new TypeError('resolveChannelConversation: channel and externalId (non-empty strings) are required')
     }
+    if (req?.sessionId !== undefined && (typeof req.sessionId !== 'string' || req.sessionId === '')) {
+      throw new TypeError('resolveChannelConversation: sessionId must be a non-empty string')
+    }
     const ccId = channelConversationId(channel, externalId)
     let binding = store.get(ccId)
     if (binding === undefined) {
       const agent = resolveDefaultAgent()
+      const workspace = bindingWorkspaceOf(req?.workspace)
       binding = await persistBinding({
         channelConversationId: ccId,
         activeAgentId: agent.id,
-        activeSessionId: cfg.defaultSessionId,
+        activeSessionId: req?.sessionId ?? cfg.defaultSessionId,
+        workspace,
       })
-      log.log(`binding created: channelConversation ${ccId.slice(0, 24)}... -> agent ${binding.activeAgentId} + session ${binding.activeSessionId}`)
+      log.log(`binding created: channelConversation ${ccId.slice(0, 24)}... -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} + workspace ${binding.workspace ?? '(agent default)'}`)
     }
     return {
       channelConversation: { id: ccId, channel, externalId },
-      binding: { activeAgentId: binding.activeAgentId, activeSessionId: binding.activeSessionId },
+      binding: {
+        activeAgentId: binding.activeAgentId,
+        activeSessionId: binding.activeSessionId,
+        workspace: binding.workspace,
+      },
     }
   }
 
@@ -320,43 +401,66 @@ export function apply(ctx, config) {
    * @param {object} [opts]
    * @param {string} [opts.targetSessionId] - explicit target Session;
    *   omitted => bookmark(surface, target) ?? the Agent's `main` session.
+   * @param {string|null} [opts.workspace] - AGENT_CORE_BINDING_WORKSPACE_V1:
+   *   the target triple's workspaceId. A string is validated as a safe
+   *   workspaceId (invalid => WORKSPACE_ID_INVALID structured reject, the
+   *   Binding untouched). Omitted => the current Binding's workspace is
+   *   PRESERVED (a Feishu group keeps its conversation workspace across
+   *   in-group agent switches); `null` => explicit reset to the Default
+   *   Workspace Rule (target Agent default). Workspace VALUES are decided by
+   *   the product entry — this operation only validates and persists.
    * @returns {Promise<{channelConversationId:string, activeAgentId:string,
-   *   activeSessionId:string, updatedAt:string}>} the new Binding.
+   *   activeSessionId:string, workspace:string|null,
+   *   updatedAt:string}>} the new Binding.
    */
   async function switchAgent(bindingContext, targetAgentId, opts = {}) {
     const ccId = channelConversationIdOf(bindingContext)
     // 1. The Agent Definition config validates the target Agent exists.
     const agent = resolveAgentRef(targetAgentId)
-    // 2. Router decides the target Session. A self-switch with no explicit
-    //    session is a no-op (tap the current Agent in the switcher must not
-    //    move the conversation).
+    // 2. Router decides the target Session. A bare self-switch is a no-op
+    //    (tapping the current Agent in the switcher must not move the
+    //    conversation) — but an explicit targetSessionId or workspace makes
+    //    it a real Binding update (a workspace change selects a different
+    //    effective workspace for the same Agent).
     const current = store.get(ccId)
-    if (current !== undefined && current.activeAgentId === agent.id && opts?.targetSessionId === undefined) {
+    if (current !== undefined && current.activeAgentId === agent.id
+        && opts?.targetSessionId === undefined && opts?.workspace === undefined) {
       log.log(`switch: ${ccId.slice(0, 24)}... -> agent ${agent.id} (already bound; no-op)`)
       return { ...current }
     }
     if (opts?.targetSessionId !== undefined && (typeof opts.targetSessionId !== 'string' || opts.targetSessionId === '')) {
       throw new TypeError('agent-router: targetSessionId must be a non-empty string')
     }
+    // 2b. Target triple's workspace: validate BEFORE any state changes so a
+    //     rejected switch can never leave a half-written Binding (D-004
+    //     atomicity preserved). undefined = preserve the current value.
+    const workspace = opts?.workspace !== undefined
+      ? bindingWorkspaceOf(opts.workspace)
+      : (current?.workspace ?? null)
     // 3. LEAVING: remember the current Session for the agent we are leaving
     //    (single-slot bookmark, outside the Binding row).
     if (current !== undefined && current.activeAgentId !== agent.id) {
       await store.setLastSession(ccId, current.activeAgentId, current.activeSessionId)
       log.log(`bookmark: ${ccId.slice(0, 24)}... x ${current.activeAgentId} -> session ${current.activeSessionId}`)
     }
-    // 4. ENTERING: explicit targetSessionId > bookmark(surface, target) >
-    //    the deployment default (`main`).
+    // 4. ENTERING: explicit targetSessionId > (same-Agent switch: keep the
+    //    current session — only the workspace moves, so a workspace change on
+    //    a frozen session surfaces the R3 mismatch instead of silently
+    //    hopping sessions) > bookmark(surface, target) > the deployment
+    //    default (`main`).
     const targetSessionId = opts?.targetSessionId
-      ?? store.getLastSession(ccId, agent.id)
-      ?? cfg.defaultSessionId
+      ?? (current !== undefined && current.activeAgentId === agent.id
+        ? current.activeSessionId
+        : (store.getLastSession(ccId, agent.id) ?? cfg.defaultSessionId))
     // 5. Update the current Binding (create it when the conversation has no
     //    Binding yet — switching is also a legal first contact).
     const binding = await persistBinding({
       channelConversationId: ccId,
       activeAgentId: agent.id,
       activeSessionId: targetSessionId,
+      workspace,
     })
-    log.log(`switch: ${ccId.slice(0, 24)}... -> agent ${binding.activeAgentId} + session ${binding.activeSessionId}`)
+    log.log(`switch: ${ccId.slice(0, 24)}... -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} + workspace ${binding.workspace ?? '(agent default)'}`)
     // 6. Return the new Binding.
     return binding
   }
@@ -490,6 +594,7 @@ export function apply(ctx, config) {
       }
       return switchAgent(proc.activeBindingContext, params?.targetAgentId, {
         targetSessionId: params?.targetSessionId,
+        workspace: params?.workspace,
       })
     }
     proc.spawn()
@@ -528,15 +633,32 @@ export function apply(ctx, config) {
     const { channelConversation, binding } = await resolveChannelConversation({
       channel: namespace,
       externalId: ingress.conversationId,
+      // The product entry's already-decided initial binding triple values
+      // (opaque data here — the Router never derives workspace or session
+      // values from channel identities).
+      workspace: ingress.workspace,
+      sessionId: ingress.session,
     })
     log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
     const isFeishuEntry = feishuReplyOwed(ingress)
     try {
+      // AGENT_CORE_BINDING_WORKSPACE_V1: resolve the Binding's effective
+      // workspace and hand it to the turn as the SESSION cwd (R1 create /
+      // R2 resume-compare / R3 mismatch reject — all enforced in the
+      // demo-server session seam). A valid-but-missing workspace directory is
+      // the normal bootstrap path (idempotent ensure, never a rejection).
+      const { workspaceId, workspacePath } = resolveEffectiveWorkspace(binding)
+      if (workspaceId !== null) {
+        await workspaceBootstrap.ensureWorkspace(workspaceId)
+      }
       const proc = await ensureRunning(binding.activeAgentId)
       const { reply } = await proc.turn(binding.activeSessionId, ingress.text ?? '', {
         // The turn belongs to this ChannelConversation: the DSH switch tool
         // inside the agent switches exactly this Binding.
         bindingContext: channelConversation.id,
+        // The session's effective workspace cwd (per-session, NOT the
+        // process-level cwd — one Agent stays one process across workspaces).
+        cwd: workspacePath,
       })
       log.log(`agent ${binding.activeAgentId} (pid ${proc.pid}) replied: ${(reply ?? '').slice(0, 80)}`)
       // Feishu reply is the FEISHU entry's transport half; non-feishu
@@ -636,7 +758,12 @@ export function apply(ctx, config) {
         })).sessionId
     const started = Date.now()
     const proc = await ensureRunning(agent.id)
-    const receipt = await proc.deliver(sessionId, message)
+    // AGENT_CORE_BINDING_WORKSPACE_V1: Delivery V0 has no ChannelConversation
+    // and therefore no Binding — the Default Workspace Rule applies
+    // mechanically (agent default workspace), passed as the per-session cwd
+    // exactly like the turn path (R1/R2/R3 enforced in the demo-server seam).
+    const workspacePath = workspaceBootstrap.resolveWorkspace(agent.id)
+    const receipt = await proc.deliver(sessionId, message, { cwd: workspacePath })
     deliveries.push({
       requestId,
       agentId: agent.id,

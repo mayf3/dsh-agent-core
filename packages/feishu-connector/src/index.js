@@ -18,9 +18,14 @@
 import { EventDispatcher, Client as LarkClient, WSClient, AppType, Domain, LoggerLevel } from '@larksuiteoapi/node-sdk'
 import { readFileSync } from 'node:fs'
 import z from '@deepseek-ai/schemastery'
-import { normalizeIngressEvent, LruDedup, dedupEvent, replyTargetFor, classifyIngress } from './core.js'
+import { normalizeIngressEvent, LruDedup, dedupEvent, replyTargetFor, classifyIngress, conversationWorkspaceId } from './core.js'
 import { createFeishuTransport } from './transport.js'
 import { reply as sendReply } from './api.js'
+
+// Re-export the pure ingress helpers for thin adapters and tests
+// (AGENT_CORE_BINDING_WORKSPACE_V1: the Feishu entry's workspace policy is
+// product code that lives HERE, never in the Router).
+export { normalizeIngressEvent, replyTargetFor, classifyIngress, conversationWorkspaceId }
 
 /** Stable plugin name referenced by bundle patches / manifests. */
 export const name = 'feishu'

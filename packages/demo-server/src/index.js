@@ -32,11 +32,15 @@
  */
 
 import z from '@deepseek-ai/schemastery'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
+
+import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'demo-server'
+
+// AGENT_CORE_BINDING_WORKSPACE_V1 §Errors: re-exported so callers/tests can
+// import the structured rejection code from the package root.
+export { SESSION_WORKSPACE_MISMATCH }
 
 /** The agent factory is the only hard dependency; everything else is optional. */
 export const inject = ['agents']
@@ -52,8 +56,6 @@ const METHODS = new Set(['initialize', 'session/prompt', 'shutdown', 'rpc.respon
  * @param ctx - plugin context carrying the agent factory and optional services.
  */
 export function apply(ctx) {
-  const handles = new Map() // sessionId -> AgentHandle
-  const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
   const pendingRpc = new Map() // requestId -> { resolve, reject }
   const exit = () => { process.exit(0) }
   const notify = (method, params) => {
@@ -85,6 +87,20 @@ export function apply(ctx) {
   let model = 'deepseek-v4-flash'
   let maxTokens
 
+  // The per-session resolution seam (AGENT_CORE_BINDING_WORKSPACE_V1
+  // SESSION_WRITE_CONTRACT R1/R2/R3): create freezes the resolved effective
+  // workspace into meta:{cwd}; resume restores the persisted header and
+  // verifies it against the resolved workspace; a mismatch is a structured
+  // SESSION_WORKSPACE_MISMATCH rejection. Getters observe the
+  // initialize-time values at call time.
+  const seam = createSessionSeam(ctx, {
+    get cwd() { return cwd },
+    get provider() { return provider },
+    get model() { return model },
+    get maxTokens() { return maxTokens },
+  })
+  const { handles, pendingCreations, prompt } = seam
+
   // Mirror the SDK server's event fan-out: every durable fact streams as
   // session.event, every whole-agent lifecycle transition as session.status.
   const offEvent = ctx.on('session/event', (session, event) => {
@@ -93,78 +109,6 @@ export function apply(ctx) {
   const offStatus = ctx.on('agent/status', ({ agent, status }) => {
     notify('session.status', { sessionId: String(agent.session.id), status })
   })
-
-  /** Resume an existing persisted session, or create a fresh one. */
-  async function getOrCreateSession(sessionId) {
-    const existing = handles.get(sessionId)
-    if (existing !== undefined) return existing
-    const inFlight = pendingCreations.get(sessionId)
-    if (inFlight !== undefined) return inFlight
-    const creation = (async () => {
-      await ctx.get('loader')?.await()
-      // The include settles when every entry reached a terminal state, but a
-      // service injected late (settings document publish, sibling rows) can
-      // still be absent at settle time. Poll for the services this session
-      // needs before touching the agent factory.
-      const deadline = Date.now() + 30000
-      while (ctx.get('agentLoop') === undefined || ctx.get('sessionPersistence') === undefined) {
-        if (Date.now() > deadline) {
-          throw new Error(
-            `demo-server: agent factory or persistence never became available `
-            + `(agentLoop=${ctx.get('agentLoop') !== undefined}, `
-            + `sessionPersistence=${ctx.get('sessionPersistence') !== undefined})`,
-          )
-        }
-        await new Promise(resolve => setTimeout(resolve, 100))
-      }
-      const agents = ctx.get('agents')
-      const sessions = ctx.get('sessions')
-      const persistence = ctx.get('sessionPersistence')
-      if (agents === undefined || persistence === undefined) {
-        throw new Error('demo-server: agents/persistence unavailable at prompt time')
-      }
-      const id = SessionId(sessionId)
-      const agentOptions = {
-        provider,
-        model,
-        ...maxTokens === undefined ? {} : { maxTokens },
-      }
-      let resumed = false
-      let eventCount = 0
-      let handle
-      const headers = await persistence.list()
-      const header = headers.find(item => item.id === id)
-      if (header !== undefined) {
-        // The artifact exists: load it. The load itself is what takes time
-        // (this is the cold-resume cost the benchmark measures).
-        handle = await agents.resume({ resumeSessionId: id, agentOptions })
-        resumed = true
-        eventCount = handle.agent.session.seq
-      }
-      if (!resumed) {
-        handle = await agents.create({ sessionId: id, meta: { cwd }, agentOptions })
-      }
-      handles.set(sessionId, handle)
-      process.stderr.write(
-        `[demo-server] session ${sessionId} ${resumed ? 'resumed' : 'created'} (${eventCount} events)\n`,
-      )
-      return handle
-    })()
-    pendingCreations.set(sessionId, creation)
-    void creation.then(
-      () => { pendingCreations.delete(sessionId) },
-      () => { pendingCreations.delete(sessionId) },
-    )
-    return creation
-  }
-
-  /** Queue one user prompt on a session, creating or resuming it first. */
-  async function prompt(sessionId, contentBlocks) {
-    const handle = await getOrCreateSession(sessionId)
-    const message = createUserMessage({ content: contentBlocks, source: { kind: 'user' } })
-    handle.agent.followup(message)
-    return { messageId: message.id }
-  }
 
   /** Dispose every owned agent and flush sessions, then exit 0. */
   async function shutdown() {
@@ -229,7 +173,10 @@ export function apply(ctx) {
         maxTokens = params?.maxTokens
         result = { serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } }
       } else if (method === 'session/prompt') {
-        result = await prompt(params?.sessionId, params?.contentBlocks ?? [])
+        // params.cwd = the Router-resolved effective workspace for THIS
+        // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the
+        // initialize-time process cwd (legacy/scheduler callers).
+        result = await prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd)
       } else if (method === 'rpc.response') {
         // Parent's answer to a rpc.request: resolve the pending plugin call.
         const waiter = pendingRpc.get(params?.requestId)
@@ -245,7 +192,12 @@ export function apply(ctx) {
       respond(id, result, undefined)
     } catch (error) {
       process.stderr.write(`[demo-server] ${method} failed: ${error instanceof Error ? error.message : String(error)}\n`)
-      respond(id, undefined, { code: -32603, message: error instanceof Error ? error.message : String(error) })
+      // STRUCTURED rejections (e.g. SESSION_WORKSPACE_MISMATCH) keep their
+      // string code on the wire so the Router can surface them verbatim.
+      respond(id, undefined, {
+        code: typeof error?.code === 'string' ? error.code : -32603,
+        message: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 

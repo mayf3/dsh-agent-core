@@ -185,8 +185,15 @@ export class AgentProcess {
         if (waiter !== undefined) {
           this.pending.delete(message.id)
           if (waiter.timer !== undefined) clearTimeout(waiter.timer)
-          if (message.error !== undefined) waiter.reject(new Error(`${message.error.code ?? -1}: ${message.error.message}`))
-          else waiter.resolve(message.result)
+          if (message.error !== undefined) {
+            // STRUCTURED errors survive the wire: the demo-server rejects
+            // cross-workspace session reuse with a string error code
+            // (SESSION_WORKSPACE_MISMATCH, AGENT_CORE_BINDING_WORKSPACE_V1 R3);
+            // copying it onto the Error lets the Router surface it verbatim.
+            const error = new Error(`${message.error.code ?? -1}: ${message.error.message}`)
+            if (typeof message.error.code === 'string') error.code = message.error.code
+            waiter.reject(error)
+          } else waiter.resolve(message.result)
         }
       } else if (message.method === 'session.event') {
         this.events.push(message.params)
@@ -285,6 +292,12 @@ export class AgentProcess {
    * @param {string} [opts.bindingContext] - the ChannelConversation this
    *   turn belongs to; while the turn is in flight the switch tool relay
    *   targets exactly this Binding.
+   * @param {string} [opts.cwd] - AGENT_CORE_BINDING_WORKSPACE_V1: the
+   *   session's effective workspace path. Passed through to the demo-server,
+   *   which uses it ONLY at session creation (R1: agents.create meta.cwd) and
+   *   compares it against the persisted header on resume (R2/R3: mismatch =>
+   *   structured SESSION_WORKSPACE_MISMATCH rejection). Omitted (e.g.
+   *   scheduler-router turns) => the process-level initialize cwd.
    */
   turn(sessionId, text, opts = {}, timeoutMs = Number.parseInt(process.env.DSH_AGENT_TURN_TIMEOUT ?? '300000', 10)) {
     // Serialize: run this turn only after every previously submitted turn has
@@ -303,6 +316,7 @@ export class AgentProcess {
       const receipt = await this.request('session/prompt', {
         sessionId,
         contentBlocks: [{ type: 'text', text }],
+        ...(opts.cwd === undefined ? {} : { cwd: opts.cwd }),
       })
       const promptMs = Date.now() - started
       const before = this.events.length
@@ -352,6 +366,10 @@ export class AgentProcess {
    * @param {string} sessionId - the native session to accept into (the
    *   Router decides it: 'main' or a fresh-mapped id).
    * @param {string} text - the message text.
+   * @param {object} [opts] - AGENT_CORE_BINDING_WORKSPACE_V1: `{ cwd }` —
+   *   the session's effective workspace path (R1 create / R2 resume-compare /
+   *   R3 mismatch reject in the demo-server seam). Omitted => the
+   *   process-level initialize cwd.
    * @param {number} [timeoutMs] - receipt wait cap (default
    *   $DSH_AGENT_DELIVER_TIMEOUT or 30s); a dead child then rejects instead
    *   of hanging the caller. Only the RECEIPT is bounded — the turn itself
@@ -359,11 +377,12 @@ export class AgentProcess {
    * @returns {Promise<{accepted:true, sessionId:string, messageId:string,
    *   ms:number}>}
    */
-  deliver(sessionId, text, timeoutMs = Number.parseInt(process.env.DSH_AGENT_DELIVER_TIMEOUT ?? '30000', 10)) {
+  deliver(sessionId, text, opts = {}, timeoutMs = Number.parseInt(process.env.DSH_AGENT_DELIVER_TIMEOUT ?? '30000', 10)) {
     const started = Date.now()
     return this.request('session/prompt', {
       sessionId,
       contentBlocks: [{ type: 'text', text }],
+      ...(opts.cwd === undefined ? {} : { cwd: opts.cwd }),
     }, timeoutMs).then((receipt) => ({
       accepted: true,
       sessionId,

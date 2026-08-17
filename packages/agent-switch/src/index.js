@@ -115,6 +115,9 @@ export const apply = (ctx, config) => {
               channelConversationId: { type: 'string', required: true },
               activeAgentId: { type: 'string', required: true },
               activeSessionId: { type: 'string', required: true },
+              // AGENT_CORE_BINDING_WORKSPACE_V1: the Binding's stable
+              // effective workspaceId (null = target Agent default).
+              workspace: { oneOf: [{ type: 'string' }, { type: 'null' }] },
               updatedAt: { type: 'string', required: true },
             },
           },

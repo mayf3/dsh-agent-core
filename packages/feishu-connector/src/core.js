@@ -366,10 +366,65 @@ export function normalizeIngressEvent(raw, opts = {}) {
     attachments,
     raw: event,
     timestamp: createdAtOf(message, now),
+    // AGENT_CORE_BINDING_WORKSPACE_V1 §Product Policy 具体化
+    // (FEISHU_CONVERSATION_TO_WORKSPACE): the PRODUCT ENTRY decides this
+    // conversation's initial binding triple values — the stable effective
+    // workspaceId AND the conversation-scoped initial session (main-A / main-B
+    // per conversation, so two groups of the SAME Agent never collapse onto
+    // one native session across two workspaces). The Router receives them as
+    // opaque data and never derives them.
+    workspace: conversationWorkspaceId(conv.conversationId),
+    session: conversationMainSessionId(conv.conversationId),
     // Deterministic dedup key: prefer the Feishu event_id, fall back to the
     // message_id (stable across redeliveries of the same message).
     dedupKey: providerEventId || `message:${messageId}`,
   }
+}
+
+/**
+ * AGENT_CORE_BINDING_WORKSPACE_V1 §ProductPolicy — the FEISHU entry's
+ * workspace policy (product policy, NOT Router policy): map one Feishu
+ * conversation identity onto one stable, deterministic workspaceId
+ * (`feishu-<normalized conversation id>`; the exact serialization is this
+ * function's own — the Spec deliberately does not freeze the literal). The
+ * result is always a workspace-bootstrap-safe single component: characters
+ * outside [A-Za-z0-9_-] (the topic/sender scope separators `:` in
+ * thread/sender-scoped conversation ids) normalize to `-`.
+ *
+ * Two different conversations therefore resolve to two different workspaces
+ * even when the same Agent serves both (AC1); one conversation keeps ONE
+ * workspace forever, so its main/cron/task sessions all share the same cwd
+ * (AC2/AC7).
+ *
+ * @param {string} conversationId - the uniform conversation id.
+ * @returns {string} the stable workspaceId for this conversation.
+ */
+export function conversationWorkspaceId(conversationId) {
+  if (typeof conversationId !== 'string' || conversationId.trim() === '') {
+    throw new TypeError('conversationWorkspaceId: conversationId must be a non-empty string')
+  }
+  const normalized = conversationId.trim().replace(/[^A-Za-z0-9_-]/g, '-')
+  return `feishu-${normalized}`
+}
+
+/**
+ * The same policy's SESSION half (product policy, NOT Router policy): the
+ * conversation-scoped initial session id (`main-<normalized conversation
+ * id>`, the Spec's schematic `main-A` / `main-B`). One conversation keeps one
+ * long-lived main trajectory inside its own workspace; a DIFFERENT
+ * conversation of the same Agent gets a different native session, so its
+ * different workspace can never collide with the frozen cwd of the first
+ * conversation's session (SESSION_WRITE_CONTRACT R1/R3).
+ *
+ * @param {string} conversationId - the uniform conversation id.
+ * @returns {string} the stable initial session id for this conversation.
+ */
+export function conversationMainSessionId(conversationId) {
+  if (typeof conversationId !== 'string' || conversationId.trim() === '') {
+    throw new TypeError('conversationMainSessionId: conversationId must be a non-empty string')
+  }
+  const normalized = conversationId.trim().replace(/[^A-Za-z0-9_-]/g, '-')
+  return `main-${normalized}`
 }
 
 function normalizeMessageSubtype(messageType) {
