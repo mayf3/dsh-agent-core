@@ -25,10 +25,15 @@
   FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1「conversation workspace」）；需要一份
   standalone Current Decision 收敛长期产品模型，不再叠 amendment。
 - 决策: 一个 Feishu conversation → 一个长期 Agent → 一个 Workspace → 一个 canonical
-  main；Agent 拥有独立 agentId（≠ conversationId）；Agent 出生 = 自动创建（first
-  seen conversation trigger）+ 完整 security domain provisioning；Workspace =
-  Agent 长期状态（bootstrap 只 seed AGENTS.md，其余 Agent 自管）；Session = 只隔离
-  trajectory（main / cron-run-* / agent-task-* / background-* 同 Agent 同 Workspace 同
+  main；Agent 拥有独立 agentId（≠ conversationId）；Agent 出生 = 自动创建，trigger =
+  FIRST_ELIGIBLE_HUMAN_MESSAGE（transport ingress eligibility 前置：p2p 首条真人消息 /
+  首次 @bot / no-mention 群首条 eligible 真人消息 → create；requireMention=true 未 @ →
+  drop 不创建）；出生 provisioning 非阻塞 —— AGENT_BIRTH_BLOCKS_ON_CREDENTIAL = NO
+  （AGENT_CHAT_READY = agentId + Workspace + AGENTS.md + canonical main/runtime；
+  principal/credential/baseline grants 失败不阻塞聊天，受影响 Broker capability
+  fail-closed + 后续 retry，MAIN_RESET != CAPABILITY_REPAIR）；Workspace = Agent 长期
+  状态（bootstrap 只 seed AGENTS.md，其余 Agent 自管）；Session = 只隔离 trajectory
+  （main / cron-run-* / agent-task-* / background-* 同 Agent 同 Workspace 同
   security domain）；main = 可 reset 的 logical slot（reset 只影响 main，不动
   Workspace/Binding）；cron = 每次执行 fresh session；Agent-to-Agent = 每 task 一个
   session（不建永久 pair session）；non-main 不 merge 回 main，跨 Session continuity
@@ -38,11 +43,17 @@
   = Agent（principal/credential/grants 属 Agent）。
 - 替代方案: 继续在旧 Spec 上叠 amendment——否决（Current Truth 更难找）；per-conversation
   workspace 作为长期产品模型——否决（机制能力 ≠ 产品模型，ONE_AGENT_ONE_WORKSPACE 冻结）。
-- 影响: 文档 disposition：D-002 PARTIALLY_SUPERSEDE / D-004 PRESERVE /
-  D-003 PRESERVE / AGENT_CORE_BINDING_WORKSPACE_V1 PARTIALLY_SUPERSEDE（机制保留，
-  产品模型条款被取代）/ FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1 @ 6071dfd
-  DO_NOT_ACCEPT（→ REPLACE_WITH_SMALLER_SPEC）。PRODUCT_CODE_CHANGE = NONE /
-  RUNTIME_CHANGE = NONE / MIGRATION = NONE / KERNEL_CHANGE = NONE。
+- 影响: 文档 disposition：D-002 PARTIALLY_SUPERSEDE / D-004 PARTIALLY_SUPERSEDE
+  （机制保留：Binding owner / 持久化 / single-flight / switch≠角色扮演 / 薄 adapter；
+  产品语义被取代：Feishu 通用 switch / 全可 switch / first-contact→default Agent /
+  targetSessionId 人类入口状态）/ D-003 PARTIALLY_SUPERSEDE（产品 invariant 保留：
+  Memory 属 Agent Workspace / file-first / MEMORY.md / per-Agent 隔离；consolidation
+  时机等具体策略 = RETAIN_AS_IMPLEMENTED_STRATEGY，非产品 authority）/
+  AGENT_CORE_BINDING_WORKSPACE_V1 PARTIALLY_SUPERSEDE（机制保留，产品模型条款被取代）/
+  FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1 @ 6071dfd DO_NOT_ACCEPT（→ REPLACE_WITH_SMALLER_SPEC）。
+  OWNER_RULING_SYNC = PASS（R2 FIX_REQUIRED 四项已修：creation trigger / birth
+  readiness / D-004 / MEMORY_V1）。PRODUCT_CODE_CHANGE = NONE / RUNTIME_CHANGE = NONE /
+  MIGRATION = NONE / KERNEL_CHANGE = NONE。
 
 ## D-004: Router / Binding 域操作与持久化（Product Integration V1）
 
