@@ -8,7 +8,8 @@
 - 范围: 只改文档（PRODUCT_CODE_CHANGE = NONE / RUNTIME_CHANGE = NONE / MIGRATION = NONE /
   KERNEL_CHANGE = NONE）
 - 关联: D-002 `AGENT_SESSION_CHANNEL_MODEL_V1.md`（PARTIALLY_SUPERSEDE）· D-004
-  `BINDING_AND_SWITCH_V1.md`（PRESERVE）· D-003 `MEMORY_V1.md`（PRESERVE）·
+  `BINDING_AND_SWITCH_V1.md`（PARTIALLY_SUPERSEDE）· D-003 `MEMORY_V1.md`
+  （PARTIALLY_SUPERSEDE）·
   `docs/specs/AGENT_CORE_BINDING_WORKSPACE_V1.md`（PARTIALLY_SUPERSEDE，产品模型条款被本文档
   取代）· `FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1 @ 6071dfd`（DO_NOT_ACCEPT / REPLACE_WITH_SMALLER_SPEC）
 
@@ -18,7 +19,7 @@
 
 ```text
 Feishu Conversation
-→ first-seen creates one Agent
+→ first eligible human message creates one Agent
 → fixed association
 
 
@@ -114,24 +115,56 @@ AUTO_DELETE_AGENT = NO
 
 ---
 
-## 3. Agent 自动出生
+## 3. Agent 自动出生（trigger = FIRST_ELIGIBLE_HUMAN_MESSAGE）
 
-Agent Core 第一次看到一个此前不存在的 Feishu conversation identity 时：
+Agent Core **看到 Feishu event 不等于创建 Agent**。创建条件冻结为：
+
+```text
+AGENT_CREATION_TRIGGER = FIRST_ELIGIBLE_HUMAN_MESSAGE
+
+只有 transport 已判断「这条真人消息是在和 bot 说话」，
+才进入：
+  conversation lookup
+  → Agent absent
+  → create Agent
+```
+
+即：
+
+```text
+TRANSPORT_INGRESS_ELIGIBILITY
+precedes
+AGENT_CREATION
+```
+
+eligibility 判定示例（transport 层职责，不属于 Agent Core 模型特例）：
+
+```text
+p2p 第一条真人消息
+  → eligible → create Agent
+
+group 默认 requireMention=true：
+  普通未 @ 消息 → NOT eligible → drop，NO Agent creation
+  第一次 @ bot  → eligible → create Agent
+
+explicitly configured no-mention group：
+  第一条符合 ingress policy 的真人消息 → eligible → create Agent
+```
+
+Agent 出生流程（触发后；provisioning 步为**非阻塞启动**，见 §20）：
 
 ```text
 FEISHU_FIRST_CONTACT_AUTO_CREATES_AGENT = YES
 
-first seen Feishu conversation
+first eligible human message
 → create Agent
 → create Workspace
 → seed AGENTS.md
-→ provision principal
-→ provision credential
-→ assign standard baseline grants
+→ begin external capability provisioning（非阻塞，见 §20）
 → establish canonical main
 → fixed-bind conversation to Agent
 
-第一条消息应该能够直接进入新 Agent 的 main。
+第一条消息应该能够直接进入新 Agent 的 main（AGENT_CHAT_READY，见 §20）。
 ```
 
 Agent Core 不负责创建飞书群/私聊。新 Feishu conversation 可以来自：
@@ -140,11 +173,15 @@ Agent Core 不负责创建飞书群/私聊。新 Feishu conversation 可以来�
 - Agent 调 Feishu API 创建
 - 其他外部系统创建
 
-Agent Core 不关心来源，它只响应 `FIRST_SEEN_FEISHU_CONVERSATION`：
+Agent Core 不关心来源，它只响应 `FIRST_ELIGIBLE_HUMAN_MESSAGE`：
 
 ```text
 CREATE_AGENT_CORE_PRIMITIVE = NOT_REQUIRED          # 不需要显式 create-agent 产品入口
 FEISHU_CONVERSATION_CREATION = OUTSIDE_AGENT_CORE
+
+与 §2 的关系：p2p / group 的 mention / eligibility 规则属于 transport 的 ingress
+判定，不是 Agent Core 模型中的 p2p/group 特例 —— Agent Core 对已 eligible 的
+p2p / group 仍然一视同仁（P2P_SPECIAL_CASE = NONE / GROUP_SPECIAL_CASE = NONE，§2）。
 ```
 
 ---
@@ -449,18 +486,73 @@ main / cron / agent-task 默认都使用同一个 Agent security identity。
 
 ---
 
-## 20. Agent birth security
+## 20. Agent birth — 安全 / 能力 readiness（不阻塞聊天）
+
+撤销「Agent 必须等 principal / credential / grant 全部成功才可聊天」的模型：
 
 ```text
-AGENT_BIRTH → COMPLETE_SECURITY_DOMAIN
+AGENT_BIRTH_BLOCKS_ON_CREDENTIAL = NO
 
-Agent 出生时立即：
-  ensure principal
-  ensure credential
-  assign standard baseline grant profile
+AGENT_CHAT_READY =
+  stable agentId
+  + Workspace
+  + AGENTS.md
+  + canonical main/runtime ready
+
+达到以上条件后，第一条 Feishu 消息即可正常进入 Agent
+（触发流程见 §3）。
+
+EXTERNAL_CAPABILITY_READINESS =
+  principal
+  + credential
+  + baseline grants
+```
+
+external capability provisioning 独立进行（出生时启动、不阻塞聊天）：
+
+```text
+ensure principal
+→ ensure credential
+→ ensure standard baseline grants
+
+如果失败：
+  Agent 仍可聊天（DOES_NOT_BLOCK_CHAT）
+  Agent 仍可操作 Workspace / 本地能力
+  受影响 Broker capability = unavailable / fail closed
+  → 稍后 retry / reconcile
+
+CAPABILITY_PROVISIONING_RETRY = YES
+
+不把这种状态定义成「半个 Agent」。
+更准确：
+  Agent exists and works
+  but some external capabilities are temporarily unavailable
+```
+
+能力修复与 main reset 无关：
+
+```text
+MAIN_RESET != CAPABILITY_REPAIR
+
+credential 后来修好后，当前 main 应直接能使用该能力；
+不要求等待 daily session reset（§9）。
+```
 
 baseline grants 存在，但 V2 不列任何具体 forum.* / workflow.* / broker.* scope。
 具体 baseline profile 留给 Auth / Provisioning Spec。
+
+provisioning 的所有权边界（冻结）：
+
+```text
+Router
+  = routing / process lifecycle
+  NOT:
+    Agent provisioning manager
+    Auth manager
+    Credential manager
+
+后续 Implementation 可以建立 trusted userspace provisioning seam / coordinator，
+但 KERNEL_CHANGE = NONE；本轮不设计具体 API / daemon / state machine（§25）。
 ```
 
 ---
@@ -557,34 +649,54 @@ SUPERSEDE（以本文档为准）：
 ### 24.2 D-004 `docs/decisions/BINDING_AND_SWITCH_V1.md`
 
 ```text
-BINDING_AND_SWITCH_V1_DISPOSITION = PRESERVE
+BINDING_AND_SWITCH_V1_DISPOSITION = PARTIALLY_SUPERSEDE
 
-机制层全部保留：
+PRESERVE（机制层，保持有效）：
   - Binding owner = Router / Control Plane（唯一 owner）
-  - switchAgent 唯一原语（Registry 校验 / Router 选 Session / 更新持久化 Binding）
-  - 原子 JSON 单文档持久化（tmp+rename、fail-loud）
+  - persistence mechanism（原子 JSON 单文档持久化，tmp+rename、fail-loud）
   - per-Agent turn single-flight
-  - DSH switch tool = 纯 adapter（agent_core.switch_agent）
+  - switch 不是角色扮演（只写 Binding，不创建/移动/复制任何 Agent/Session）
+  - 薄 switch adapter（agent_core.switch_agent 纯转发）
 
-本文档在其上新增的只是产品入口层的 scope 规则（§16/§17），不改变任何机制。
+SUPERSEDE（产品语义，以本文档为准）：
+  - Feishu 参与通用 switchAgent
+    （本文档 §15/§17：Feishu = FIXED；Feishu main 的 switch 请求 NOT_ALLOWED）
+  - every ChannelConversation is switchable
+    （只有 switchable Product Surface（如 Mobile）可切换；§17
+      SWITCHABLE_PRODUCT_SURFACE_SCOPED）
+  - first-contact → default Agent
+    （本文档 §3：first eligible human message → 自动创建新 Agent，
+      不是绑定 config default Agent）
+  - targetSessionId 作为 Human Surface 产品状态
+    （本文档 §8/§14：Human 入口只有 activeAgent，Session = canonical main
+      logical slot；targetSessionId 不再是产品状态）
 ```
 
 ### 24.3 D-003 `docs/decisions/MEMORY_V1.md`
 
 ```text
-MEMORY_V1_DISPOSITION = PRESERVE
+MEMORY_V1_DISPOSITION = PARTIALLY_SUPERSEDE
 
-内容保留：
-  - file-first 记忆：MEMORY.md（curated）+ memory/YYYY-MM-DD.md（episodic）
-  - 隔离 = 物理目录隔离（per-agent workspace），无全局库
-  - consolidation 时机 = turn/end + 防抖 + 显式工具/服务
-  - file-first 人工查看/编辑/删除（人工优先）
+PRESERVE（产品 invariant，保持为 Current Truth）：
+  - Memory belongs to Agent Workspace
+  - file-first
+  - MEMORY.md 作为长期记忆文件（curated，唯一事实源）
+  - per-Agent 物理隔离（无全局库）
 
-V2 语境对齐：
-  - MEMORY.md 属于 Agent Workspace（ONE_AGENT_ONE_WORKSPACE 下天然 agent-scoped，
-    所有 Session 共享同一份，见 §5/§13）
-  - MEMORY.md creation = LAZY（§5）
-  - 所有 Session 都能读写（§13）
+RETAIN_AS_IMPLEMENTED_STRATEGY_BUT_NOT_PRODUCT_AUTHORITY
+  （保留为已实现的策略，不承担产品 authority）：
+  - memory/YYYY-MM-DD.md（episodic 层）
+  - turn/end consolidation
+  - debounce
+  - automatic prompt injection
+  - memory_search / tool strategy
+  - evidence window / LLM extraction details
+
+V2 内部一致性（本文档立场）：
+  - consolidation 时机 / 什么值得写 / 谁负责总结 = Agent/plugin strategy（§13），
+    不是 Agent identity model 的一部分；
+  - 上述「已实现策略」条目仅表示它们已按 MEMORY_V1 落地、V2 不否定其存在；
+    它们不构成 V2 长期产品模型的 authority。
 ```
 
 ### 24.4 `docs/specs/AGENT_CORE_BINDING_WORKSPACE_V1.md`（accepted Spec）
@@ -669,10 +781,12 @@ FEISHU_MEMORY_SPEC_DISPOSITION = DO_NOT_ACCEPT / DO_NOT_MERGE
 | D-002 AGENT_SESSION_CHANNEL_    | Agent 长期实体 / Session 属 Agent / Channel 只是 UI /   | 任意 ChannelConversation 均可 switch 到任意 Agent        | —                                   | —（决策记录，  | 不需             |
 |   MODEL_V1 (proposed)           | Binding 实体 / switchAgent 只改绑定 / resolve 幂等入口 / | （V2 §15/§17 产品分层）/ activeSessionId 作为人类入口    |                                     |  不再叠 amend）|                  |
 |                                 | API channel-agnostic                                    | 状态（V2 §8/§14）/「Agent 固定拥有唯一 workspace」条款   |                                     |               |                  |
-| D-004 BINDING_AND_SWITCH_V1     | Router 唯一 owner / 原子 JSON 持久化 / switchAgent 唯一  | —                                                        | —                                   | —             | 不需             |
-|   (accepted)                    | 原语 / per-Agent single-flight                          |                                                          |                                     |               |                  |
-| D-003 MEMORY_V1 (accepted)      | file-first MEMORY.md / episodic daily note / 物理隔离 / | —（ONE_AGENT_ONE_WORKSPACE 下天然 agent-scoped，         | —                                   | —             | 不需             |
-|                                 | consolidation 时机 / 人工编辑优先                        |  V2 §5/§13 对齐）                                        |                                     |               |                  |
+| D-004 BINDING_AND_SWITCH_V1     | Binding owner=Router / 持久化机制 / per-Agent            | Feishu 参与通用 switch / every ChannelConversation       | —                                   | —             | 不需             |
+|   (accepted)                    | single-flight / switch≠角色扮演 / 薄 adapter             | switchable / first-contact→default Agent / targetSessionId |                                     |               |                  |
+|                                 |                                                          | 作为 Human Surface 产品状态（V2 §3/§8/§14/§15/§17）      |                                     |               |                  |
+| D-003 MEMORY_V1 (accepted)      | 产品 invariant：Memory 属 Agent Workspace / file-first / | 具体策略条目（memory/ 每日 note、turn/end consolidation、 | 已实现策略 = 保留但非产品 authority  | —             | 不需             |
+|                                 | MEMORY.md / per-Agent 物理隔离                           | debounce、自动注入、memory_search、evidence window）     | （§24.3：策略归 Agent/plugin，        |               |                  |
+|                                 |                                                          | = RETAIN_AS_IMPLEMENTED_STRATEGY（§24.3）                |  非 Agent identity model）            |               |                  |
 | AGENT_CORE_BINDING_WORKSPACE_V1 | SESSION_WRITE_CONTRACT R1-R3 / cwd immutable /         | FEISHU_WORKSPACE_POLICY per-conversation workspace（     | Binding.workspace（代码已落地）→     | —             | 需要：            |
 |   (accepted spec)               | workspaceId validation / Router 零产品分支 /            |   V2 §2/§5 替代）/「Binding 决定 effective workspace」   |  transitional field（§22）；         |               |  Binding.workspace |
 |                                 | one-agent-one-process / App 切 Agent → target default   |   作为产品 authority（V2 §5/§21 替代）                   |  feishu conversationWorkspaceId →    |               |  未来处置；注释对齐 |
@@ -698,12 +812,12 @@ OPEN_SOURCE_DOCS_CONVERGENCE_V1（accepted）   = PRESERVE（主题与 V2 无关
 | 组件 / 文件 | 现状断言 / 行为（source-verified） | V2 判定 |
 |---|---|---|
 | `feishu-connector/src/core.js:372-402` | 每个 conversation 一个稳定 workspaceId（`conversationWorkspaceId`）+ conversation-scoped 初始 session（`conversationMainSessionId` = main-<conv>）；注释「two groups of the SAME Agent never collapse onto same workspace」 | **TRANSITIONAL 机制**（对话→独立 workspace 的 canary 载体，§21）；该注释断言的是旧产品模型 → 后续 Impl Spec 对齐注释；本轮**不动代码**（DO_NOT_BREAK_CANARY，§22） |
-| `agent-router/src/index.js:81-86,254-257` | `resolveChannelConversation` first contact 绑定 **config defaultAgentId**（旧模型：默认 Agent + 其 main） | **机制 = 旧产品模型**；V2 产品模型 = first-seen → 自动创建新 Agent（§3）→ 属未来 Impl Spec，本轮不实现 |
+| `agent-router/src/index.js:81-86,254-257` | `resolveChannelConversation` first contact 绑定 **config defaultAgentId**（旧模型：默认 Agent + 其 main） | **机制 = 旧产品模型**；V2 产品模型 = first eligible human message → 自动创建新 Agent（§3，transport eligibility 前置）→ 属未来 Impl Spec，本轮不实现 |
 | `agent-router/src/binding-store.js` / `index.js`（Binding.workspace / resolveEffectiveWorkspace / switchAgent 三元组） | Binding.workspace 决定 effective workspace；null → agent default；Router 只机械执行 | **TRANSITIONAL_COMPATIBILITY_FIELD**（§22）；机制保留，无产品 authority |
 | `workspace-bootstrap`（`seedFiles = ['AGENTS.md']`、ensure/ensureWorkspace 幂等） | 只 seed AGENTS.md；不 seed MEMORY.md / files/ | **KEEP** ＝ 与 V2 `WORKSPACE_BOOTSTRAP = AGENTS_MD_ONLY` 一致（§5） |
-| `agent-provisioning`（provisionAgentHome） | per-agent home 预置（profile / settings / credentials copy），幂等 | **KEEP**（V2 §20 birth provisioning 的机制地基；principal/credential/grant 的 birth 级 ensure 属未来 Auth/Provisioning Spec） |
-| `agent-memory`（paths.js:17-19 注释、MEMORY.md lazy 创建 + memory/ 每日 note） | workspace 内 MEMORY.md，mount 时按 agentId 解析；注释引用 D-002「Agent 固定拥有 workspace / credential / memory」 | **KEEP** 机制（ONE_AGENT_ONE_WORKSPACE 下与 V2 §5/§13 一致：所有 Session 共享同一 Agent Workspace 记忆）；注释引用旧模型 → 后续对齐 |
-| `broker`（credential-store / credential / identity / gateway） | credential 按 agentId 绑定；principal = credential→agent 绑定（Auth 侧唯一权威）；fail-closed | **KEEP** ＝ 与 V2 §19/§20 一致（SECURITY_DOMAIN = AGENT；credential 属 Agent）；birth 时 provisioning 属未来 |
+| `agent-provisioning`（provisionAgentHome） | per-agent home 预置（profile / settings / credentials copy），幂等 | **KEEP**（V2 §20 非阻塞 provisioning 的机制地基；principal/credential/grant 的 birth 级 ensure = AGENT_BIRTH_BLOCKS_ON_CREDENTIAL = NO，机制落地属未来 Auth/Provisioning Spec） |
+| `agent-memory`（paths.js:17-19 注释、MEMORY.md lazy 创建 + memory/ 每日 note） | workspace 内 MEMORY.md，mount 时按 agentId 解析；注释引用 D-002「Agent 固定拥有 workspace / credential / memory」 | **KEEP** 产品 invariant（Memory 属 Agent Workspace，§24.3 PRESERVE；ONE_AGENT_ONE_WORKSPACE 下所有 Session 共享同一份，§5/§13）；memory/ 每日 note、turn/end consolidation、debounce、自动注入、memory_search = RETAIN_AS_IMPLEMENTED_STRATEGY（非产品 authority，§24.3）；注释引用旧模型 → 后续对齐 |
+| `broker`（credential-store / credential / identity / gateway） | credential 按 agentId 绑定；principal = credential→agent 绑定（Auth 侧唯一权威）；fail-closed | **KEEP** ＝ 与 V2 §19/§20 一致（SECURITY_DOMAIN = AGENT；credential 属 Agent）；provisioning 失败 = fail-closed（受影响 capability unavailable）+ 后续 retry（CAPABILITY_PROVISIONING_RETRY = YES），不阻塞聊天 |
 | `scheduler-router`（createRouterInvoker → proc.turn(sessionId, message, {})） | cron 不传 workspace/cwd → 落 process 级 agent default workspace | **KEEP** 机制；V2 §10 PER_EXECUTION fresh Session + 同 Agent Workspace/Security 的 scoping 属未来 Impl Spec |
 | `agent-switch`（tool relay 三元组） | 转发 {targetAgentId, targetSessionId?, workspace?}，纯 adapter | **KEEP** 机制；V2 §17 surface scoping（Feishu main / cron / agent-task NOT_ALLOWED）属未来产品 policy |
 
@@ -742,13 +856,15 @@ docs/investigations/test-agent-feishu-product-semantics-v1.md（PASS）
 
 ```text
 AGENT_WORKSPACE_SESSION_MODEL_V2 = PASS
+OWNER_RULING_SYNC = PASS（R2 FIX_REQUIRED 四项已修并全文档同步）
 
 LONG_TERM_MODEL =
   ONE_FEISHU_CONVERSATION_ONE_AGENT = YES（P2P/GROUP 无区别；FEISHU_BINDING = FIXED；
     AGENT_REBIND / AGENT_RETIREMENT = OUT_OF_SCOPE；AUTO_DELETE_AGENT = NO）
   ONE_AGENT_ONE_WORKSPACE = YES
-  AGENT_CREATION_TRIGGER = FIRST_SEEN_FEISHU_CONVERSATION（auto-create；
-    CREATE_AGENT_CORE_PRIMITIVE = NOT_REQUIRED；
+  AGENT_CREATION_TRIGGER = FIRST_ELIGIBLE_HUMAN_MESSAGE（transport eligibility 前置；
+    p2p 首条真人消息 / 首次 @bot / no-mention 群首条 eligible 真人消息 → create；
+    requireMention=true 未 @ → drop 不创建；CREATE_AGENT_CORE_PRIMITIVE = NOT_REQUIRED；
     FEISHU_CONVERSATION_CREATION = OUTSIDE_AGENT_CORE）
   WORKSPACE_BOOTSTRAP = AGENTS_MD_ONLY（MEMORY.md / other files = LAZY；
     PRECREATE_FILES_DIRECTORY = NO）
@@ -772,8 +888,13 @@ LONG_TERM_MODEL =
   SECURITY_DOMAIN = AGENT（principal / credential / grants 属 Agent，不属
     Session/conversation/Mobile Surface/Binding；HUMAN_PRODUCT_SURFACE_BINDING =
     activeAgent only）
-  AGENT_BIRTH_PROVISIONING = COMPLETE_SECURITY_DOMAIN（ensure principal +
-    credential + baseline grant profile；具体 scope 留给 Auth/Provisioning Spec）
+  AGENT_BIRTH_BLOCKS_ON_CREDENTIAL = NO（AGENT_CHAT_READY = stable agentId +
+    Workspace + AGENTS.md + canonical main/runtime；EXTERNAL_CAPABILITY_READINESS =
+    principal + credential + baseline grants；provisioning failure →
+    DOES_NOT_BLOCK_CHAT / 受影响 Broker capability fail-closed /
+    CAPABILITY_PROVISIONING_RETRY = YES；MAIN_RESET != CAPABILITY_REPAIR（credential
+    修好后当前 main 直接用，不等 daily reset）；Router ≠ provisioning/auth/credential
+    manager；具体 baseline scope 留给 Auth/Provisioning Spec）
   MECHANISM_CAPABILITY_VS_PRODUCT_MODEL = DISTINCT（冻结 !=）
   CANARY_CLASSIFICATION = TRANSITIONAL_COMPATIBILITY_EVIDENCE
   BINDING_WORKSPACE_DISPOSITION = TRANSITIONAL_COMPATIBILITY_FIELD
@@ -781,8 +902,14 @@ LONG_TERM_MODEL =
       DO_NOT_BREAK_CANARY）
 
   D002_DISPOSITION             = PARTIALLY_SUPERSEDE
-  BINDING_AND_SWITCH_V1_DISPOSITION = PRESERVE
-  MEMORY_V1_DISPOSITION        = PRESERVE
+  BINDING_AND_SWITCH_V1_DISPOSITION = PARTIALLY_SUPERSEDE（机制保留：Binding owner /
+      持久化 / single-flight / switch≠角色扮演 / 薄 adapter；产品语义被取代：Feishu
+      通用 switch / 全可 switch / first-contact→default Agent / targetSessionId 人类
+      入口状态）
+  MEMORY_V1_DISPOSITION        = PARTIALLY_SUPERSEDE（产品 invariant 保留：Memory 属
+      Agent Workspace / file-first / MEMORY.md / per-Agent 物理隔离；memory/ 每日
+      note、turn/end consolidation、debounce、自动注入、memory_search、evidence
+      window = RETAIN_AS_IMPLEMENTED_STRATEGY，非产品 authority，策略归 Agent/plugin）
   BINDING_WORKSPACE_V1_DISPOSITION = PARTIALLY_SUPERSEDE（机制保留；
       产品模型条款被本文档取代）
   FEISHU_MEMORY_SPEC_DISPOSITION  = DO_NOT_ACCEPT / DO_NOT_MERGE
@@ -805,4 +932,12 @@ PRODUCT_CODE_CHANGE = NONE
 RUNTIME_CHANGE      = NONE
 MIGRATION           = NONE
 KERNEL_CHANGE       = NONE
+
+OWNER_RULING_SYNC（R2 FIX_REQUIRED 复核结项）：
+  AGENT_CREATION_TRIGGER           = FIRST_ELIGIBLE_HUMAN_MESSAGE
+  AGENT_BIRTH_BLOCKS_ON_CREDENTIAL = NO
+  D004_DISPOSITION                 = PARTIALLY_SUPERSEDE
+  MEMORY_V1_DISPOSITION            = PARTIALLY_SUPERSEDE
+  INTERNAL_CONTRADICTIONS          = NONE
+  OWNER_DECISIONS_STILL_REQUIRED   = NONE
 ```
