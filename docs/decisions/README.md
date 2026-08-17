@@ -57,8 +57,8 @@
 
 ## D-004: Router / Binding 域操作与持久化（Product Integration V1）
 
-- 状态: accepted（分支 feat/product-integration-v1 已实现并真实验收，见
-  `docs/reports/product-integration-v1.md`；全文见
+- 状态: accepted（已实现并真实验收，见
+  `docs/history/reports/product-integration-v1.md`；全文见
   `docs/decisions/BINDING_AND_SWITCH_V1.md`）
 - 日期: 2026-08-15
 - 背景: Integration V1 的 Binding 是 Router 进程内 Map，重启即丢；没有统一切换
@@ -83,8 +83,8 @@
 
 ## D-005: Scheduler Replacement V1 — 最小 job 模型、持久化与执行语义
 
-- 状态: accepted（分支 feat/scheduler-replacement-v1 已实现并真实验收，见
-  `docs/reports/scheduler-replacement-v1.md`）
+- 状态: accepted（已实现并真实验收，见
+  `docs/history/reports/scheduler-replacement-v1.md`；FIX 1–5 详见该报告 §11）
 - 日期: 2026-08-15
 - 背景: OpenClaw Gateway 内嵌 cron scheduler 是 141 个 enabled job（90 个
   announce 回飞书群）的唯一执行者，是关闭 OpenClaw 的最大 blocker；需要最小替代
@@ -103,16 +103,11 @@
   未触碰 agent-router/broker/feishu-connector/bundle/profile；迁移 =
   `openclaw-job-import.mjs --write`（97.9% importable，3 条无 agentId legacy
   job 需人工补）。
-- 追加（2026-08-15 第二轮审计，VERDICT: MERGE AFTER SMALL FIX）:
-  tick 单飞 + 最新态写回（FIX 1）；CLI 纯控制面、永不执行（FIX 2）；单一
-  mutation authority = 跨进程锁内重读最新再应用增量（FIX 3）；persist 失败 RAM
-  回滚（FIX 4）；import 已有 store 默认拒绝 + in-flight 只报告（FIX 5）。
-  详见 `docs/reports/scheduler-replacement-v1.md` §11。
 
 ## D-003: Memory V1 — per-agent file-first 长期记忆（Agent Core memory glue）
 
-- 状态: accepted（分支 feat/agent-memory-v1 已实现并真实验收，见
-  `docs/reports/memory-v1.md`）
+- 状态: accepted（已实现并真实验收，见
+  `docs/history/reports/memory-v1.md`）
 - 日期: 2026-08-15
 - 背景: Session trajectory ≠ Agent long-term memory；调查收敛裁决 3 定「V1 以文件
   记忆为主」，consolidation 是唯一完全缺失层。
@@ -155,8 +150,9 @@
 - 状态: proposed
 - 日期: 2026-08-14
 - 背景: 五主题并行调查（identity-auth/memory/workspace-files/dashboard/always-on）
-  完成，需要收敛冲突结论并确定下一步唯一 milestone（详见 `docs/CAPABILITY_MATRIX.md`
-  与 `docs/README.md`）。
+  完成，需要收敛冲突结论并确定下一步唯一 milestone（调查收敛快照见
+  `docs/history/snapshots/CAPABILITY_MATRIX.md`；调查证据见
+  `docs/investigations/`）。
 - 决策:
   1. 六项 BUILD 为「必须自己做」最小清单：workspace-bootstrap、跨会话 consolidation、
      控制面（= 常驻 daemon）、jobs 持久化 + cron、控制面面板、Broker 侧
@@ -171,3 +167,14 @@
   再动编排」的 V0 既定节奏。
 - 影响: M1 只新增一个 Cordis 插件与验收断言；不实现任何其余调查结论，不修改
   DSH/Auth/Broker/旧 Agent Core。
+
+## Reconciliation
+
+- **D-002 reconciliation（登记，不改写 D-002 正文）**：契约
+  `AGENT_SESSION_CHANNEL_MODEL_V1.api.json` 中 Session.id 描述为「全局唯一不透明
+  id（`ses_` 前缀）」，与后续实现证据「product sessionId = (agentId, sessionId)
+  直通 DSH native sessionId，无映射层」（Session V1 实验结论）存在偏差。
+  已由 accepted Spec `docs/specs/AGENT_CORE_BINDING_WORKSPACE_V1.md` 将 D-002 的
+  SUPERSEDE 范围收窄至 unique-workspace 条款；当前事实以 merged 代码语义为准
+  （见 `docs/concepts/sessions-and-bindings.md`）。ADR 正文的修订须走独立
+  superseding ADR，不在文档收敛范围内。

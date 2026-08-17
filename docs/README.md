@@ -1,127 +1,36 @@
-# Agent Core on DSH — Docs
+# docs/ — 文档索引（index only）
 
-> 状态：V1 能力调查已完成并收敛（2026-08-14）。五主题并行调查结论见
-> `investigations/`，收敛后的单一事实源是 `CAPABILITY_MATRIX.md`（含冲突裁决），
-> 下一步只实施一个 milestone（见文末）。
+> status: current · 本页**只做导航与 source-of-truth map**，不重复任何产品事实
+> （事实在各主题页内，事实改变时直接改写对应页面）。项目入口是
+> [根 README](../README.md)。
 
-## Agent Core on DSH 整体定义
+## 当前文档树（Current Truth）
 
-**Agent Core on DSH 是 DeepSeek Harness（DSH）之上的一层薄组合，而不是一个独立引擎。**
-
-目标：基于 DSH 替代 OpenClaw 与旧 Agent Core 定位的 Agent 基础设施。原则是
-「复用不重写」：所有底层原语（agent/session 事件溯源、tools 瀑布、fs、skill、
-AGENTS.md、schedule、jobs、goal、Slots、credentials、JSONL/SQLite 持久化）全部来自
-DSH；本项目只补 DSH 没有的**薄集成层**。
-
-V0（已完成）：以 `external.calculator 6×7=42` 跑通最小链路
-（`@agent-core/broker` + `@agent-core/router`），证明 agent-loop/session/持久化
-等价于旧 Kernel 的 Run/Session 面（见 `reports/bootstrap-v0.md`）。
-
-V1 调查收敛结论（详见 `CAPABILITY_MATRIX.md`）：为替代 OpenClaw，必须自己做的最小
-清单是 6 个 BUILD 项 ——
-
-1. **workspace-bootstrap 插件**：per-agent 长期目录创建/播种（AGENTS/SOUL/USER/
-   IDENTITY/MEMORY + git init），DSH `workspace` 只是注册表，此层完全缺失；
-2. **跨会话 consolidation 插件**：episodic 日志 → curated 长期记忆（DSH 只有会话内
-   compaction，记忆存储/检索走 MCP 通道 ADAPT 即可）；
-3. **控制面（Router）= 常驻 daemon**：per-agent 进程 spawn + 进程凭据注入 +
-   冷启动批量恢复（identity-auth 方案 B 与 always-on daemon 是同一组件）；
-4. **jobs 持久化 + cron/日历语义**（当前 jobs 纯内存、schedule 无 cron）；
-5. **控制面面板**：agent 运行态 / 全局 jobs / usage / errors / memory 浏览
-   （数据面全现成，官方 UI 只缺这些聚合面板）；
-6. **Broker 侧 credential→principal 绑定 + flat ACL**（Broker 侧协作，不在本仓库实现）。
-
-其余一律 ADOPT/ADAPT 复用 DSH 原生件；语义召回、OpenClaw widget 网格、通用附件、
-动态插件跨 agent 信任等明确 DEFER。四项冲突结论已在 `CAPABILITY_MATRIX.md` §2 裁决
-（多 agent 常驻 = per-agent 进程为硬约束；控制面 ≡ daemon；文件记忆为主、MCP 可选；
-全局 jobs 面板依赖 jobs 持久化）。
-
-## 文档地图
-
-| 路径 | 内容 |
+| 主题 | Authority 页 |
 |---|---|
-| `README.md`（本文件） | Agent Core on DSH 整体定义、文档导航、下一步 milestone |
-| `CAPABILITY_MATRIX.md` | 能力矩阵：需求 × DSH 原生/社区插件/缺口 × 结论（ADOPT/ADAPT/BUILD/DEFER）+ 冲突裁决 |
-| `investigations/identity-auth.md` | 身份与认证调查（BUILD：per-agent 进程 + process credential） |
-| `investigations/memory.md` | 记忆调查（ADAPT：MCP 通道；consolidation BUILD） |
-| `investigations/workspace-files.md` | 工作区与文件调查（BUILD：workspace-bootstrap） |
-| `investigations/dashboard.md` | 仪表盘调查（BUILD：Slots 控制面面板） |
-| `investigations/always-on.md` | 常驻与调度调查（ADAPT：原语底座 + daemon/恢复编排层） |
-| `investigations/scheduler-replacement-audit.md` | **Scheduler V1 实证调查**：真实 OpenClaw job 全字段统计 + gateway bundle 语义核对 + 字段映射表（OpenClaw → V1） |
-| `decisions/README.md` | 决策记录（含模板） |
-| `decisions/AGENT_SESSION_CHANNEL_MODEL_V1.md` | 决策 D-002：Channel/Agent/Session/Binding 模型与前后端 API 契约（含 Android 可直接 mock 的 `AGENT_SESSION_CHANNEL_MODEL_V1.api.json`） |
-| `decisions/MEMORY_V1.md` | 决策 D-003：Memory V1 — per-agent file-first 长期记忆（Agent Core memory glue） |
-| `decisions/BINDING_AND_SWITCH_V1.md` | 决策 D-004：Router / Binding 域操作与持久化（统一 switchAgent 原语 + Binding owner + 原子 JSON 持久化） |
-| `decisions/SCHEDULER_V1.md` | 决策 D-005：Scheduler Replacement V1 — 最小 job 模型、持久化与执行语义 |
-| `reports/bootstrap-v0.md` | V0 bootstrap 报告（原 V0-REPORT.md，内容完整保留） |
-| `reports/memory-v1.md` | Memory V1 实现报告（七问七答、组件、真实验收 PoC 证据、Integration need） |
-| `reports/product-integration-v1.md` | Product Integration V1 实现报告：Registry+Workspace+Session+Memory+per-Agent process 第一次真正装进统一 Router/Binding（双 Agent 真实验收证据） |
-| `reports/scheduler-replacement-v1.md` | **Scheduler Replacement V1 报告**：真实 job 形态、最小模型、持久化、执行语义、双 seam、重启证据、兼容结果、Integration need |
-| `reports/agent-router-delivery-v0.md` | **Agent Router Delivery V0 报告**：冻结接口 `deliver({requestId, agentId, sessionMode, message}) → {accepted, sessionId}`、admission seam（ensureRunning → session 决议 → inbox receipt 即返回）、fresh 映射持久化、7 项需求真实验收证据 |
-| `TRUST-BOUNDARY-REPORT.md` | 信任边界/身份伪造调查（identity-auth 的证据基础） |
+| 上手 / 安装 | [getting-started/quick-start](getting-started/quick-start.md)（现状页：Quick Start 缺失中）· [installation](getting-started/installation.md) |
+| Agent / Session / Workspace | [concepts/agents](concepts/agents.md) · [sessions-and-bindings](concepts/sessions-and-bindings.md) · [workspace-and-memory](concepts/workspace-and-memory.md) |
+| 架构 | [architecture/overview](architecture/overview.md) · [runtime-boundary](architecture/runtime-boundary.md) · [control-plane](architecture/control-plane.md) |
+| 指南 | [guides/deployment](guides/deployment.md) · [adding-an-agent](guides/adding-an-agent.md) · [scheduler](guides/scheduler.md) · [integrations](guides/integrations.md) · [plugins](guides/plugins.md) |
+| 安全 | [security/security-model](security/security-model.md) · [trusted-control-plane](security/trusted-control-plane.md) · [credentials](security/credentials.md) |
+| 参考 | [reference/configuration](reference/configuration.md) · [cli](reference/cli.md) · [filesystem-layout](reference/filesystem-layout.md) |
+| 贡献 | [contributing/development](contributing/development.md) · [testing](contributing/testing.md) · [architecture-rules](contributing/architecture-rules.md) |
 
-方法限制说明：本轮调查期间 web_search 后端不可用（无 `DEEPSEEK_API_KEY`），
-社区插件检索以本地 DDGS（smart-search）与 DSH checkout 实证代替，各调查文件 §3
-均已注明来源与置信度。
+每个主题只有一个 authority；current 页**直接改写**，禁止底部追加「更新（日期）」。
 
-## 下一步 implementation milestone（唯一）
+## 知识权威（Knowledge Authorities，活跃）
 
-**M1：per-agent workspace-bootstrap** —— 写一个 Cordis 插件：agent 创建时按
-agentId 创建长期工作目录（`workspace-<agentId>`）、播种 AGENTS.md/SOUL.md/USER.md/
-IDENTITY.md（+可选 MEMORY.md）、`git init`、把目录写入 session cwd，并保证播种的
-AGENTS.md 在 `agent-instructions` 首次 baseline 渲染前被加载。
+| 目录 | 角色 |
+|---|---|
+| [specs/](specs/) | **Change / Implementation Authority** —— 这次允许改变什么（唯一 merge/implementation authority） |
+| [investigations/](investigations/) | **Evidence Authority** —— 我们查到了什么（12 件，原地保留） |
+| [decisions/](decisions/README.md) | **Long-lived Invariant** —— repo 长期坚持什么（D-001…D-005 + D-002 reconciliation） |
 
-理由：它是全部 BUILD 项中唯一自包含、纯 DSH 侧、不触碰 Auth/Broker 的根依赖
-（记忆文件要有家、per-agent 隔离要有目录、常驻恢复要有锚点、面板要浏览文件）；
-同时解决调查留下的头号挂点开放问题（bootstrap hook 与 AGENTS.md race）。
+治理协议（改动前必读）：[AGENTS.md](../AGENTS.md) →
+[.agents/README.md](../.agents/README.md)。
 
-验收：沿用 V0 验收用例（external.calculator 6×7=42）不变 + 新断言「新 agent 的
-session cwd 指向已播种目录、AGENTS.md 进入首轮上下文、MEMORY.md 模型可读写」。
+## 研发历史（发生过什么）
 
-明确不做（本 milestone 之外）：consolidation、控制面/daemon、jobs 持久化、控制面
-面板、Broker 侧绑定 —— 全部留待 M1 后的下一个 milestone。
-
-> 更新（2026-08-15）：**Memory V1（分支 feat/agent-memory-v1）已落地** ——
-> `packages/agent-memory/`（file-first per-agent 记忆 glue：MEMORY.md + daily
-> notes、6 工具、注入、turn/end consolidation + fallback）、`bundle-memory/` +
-> `profile-memory/`、`scripts/memory-v1-verify.mjs` 真实验收（ALPHA/BETA 双 agent
-> 隔离、跨 session、consolidation、人工编辑）。决策 D-003，报告
-> `reports/memory-v1.md`。未触碰 agent-router/agent-registry/agent-session。
-
-> 更新（2026-08-15）：**Scheduler Replacement V1（分支
-> feat/scheduler-replacement-v1）已落地** —— `packages/scheduler/`（零 DSH 依赖：
-> cron/at/every 持久 job + OpenClaw 同款执行语义 + 注入式 invocation/delivery
-> seam，无 Feishu SDK）、`scripts/agentcore-cron.mjs`（openclaw cron
-> add/list/runs 提交面）、`scripts/openclaw-job-import.mjs`（迁移工具，97.9%
-> importable）、58 测试全绿 + `scripts/scheduler-v1-verify.mjs` 21 门全过（含第二轮
-> 审计回归：tick 单飞 / CLI 纯控制面 / 单一写权 / persist 回滚 / import 守卫）。实证字段映射
-> 见 `investigations/scheduler-replacement-audit.md`，决策 D-005，报告
-> `reports/scheduler-replacement-v1.md`。未触碰 agent-router（invocation seam 由
-> Product Integration 后续接线）。
-
-> 更新（2026-08-15）：**Scheduler Caller Migration V1（分支
-> feat/scheduler-caller-migration-v1）已落地** —— 三个 ACTIVE OpenClaw cron
-> writers（forum-scheduler.sh v6 / unified-dispatcher.py / check-dispatch-health.py）
-> 的 cron 写面全部迁移到 Agent Core Scheduler：`openclaw cron add/list` →
-> `agentcore-cron add/list`，jobs.json 直读/直写清理 → agentcore store
-> （`AGENTCORE_SCHEDULER_STORE`，`~/.agent-core/scheduler/jobs.json`），写面走
-> 锁内 mutation authority。`openclaw gateway call config.get` 实证为只读 fallback
-> （文件不可读才触发），Agent Core 无等价配置权威 → 不新增 Config Service。
-> FORUM_STOCK_MEMBERSHIP = NO；7/7 验证门 PASS（fixture + 记录型 openclaw stub，
-> 生产 jobs.json md5 与 stock-agent 清单零变化）。调查
-> `investigations/openclaw-scheduler-caller-migration-v1.md`，报告
-> `reports/openclaw-scheduler-caller-migration-v1.md`。Scheduler 核心/
-> Workflow/Forum 业务逻辑/Kernel 零改动。
-
-> 更新（2026-08-15 12:52）：**生产 cutover 收口 = ROLLED_BACK（分支
-> feat/scheduler-production-cutover-closure-v1）**。真实现场核查：三个 caller 的
-> 迁移版确实已在 launchd 内生效（12:43 运行已向 `~/.agent-core/scheduler/jobs.json`
-> 写入 5 个 workflow-dispatch job），但**无任何 resident Scheduler 进程/launchd
-> 消费该 store**（agentcore-cron 为 control-only），5 个 job 到期无人执行（黑洞实证）；
-> Agent Core Router 仅能路由 demo runtime 注册的 agent，生产 agent 仍由 OpenClaw
-> gateway 管理 → 生产 resident mount 不成立（STOCK_CUTOVER_SCHEDULER_READY = NO）。
-> 已按 Path B 恢复三个 caller 到 OpenClaw（pre-migration 备份
-> `.bak-caller-migration-v1-20260815-121248`，迁移版另存
-> `.bak-caller-migration-v1-live-*` 不丢代码），清空 agentcore store 孤儿 job
-> （备份 `jobs.json.bak-closure-v1-*`），launchd 下一轮自动生效。
-> 详情：`reports/scheduler-production-cutover-closure-v1.md`。
+[history/](history/README.md) — 27 份实现/验收报告 + 5 份旧 current 快照，全部带
+机器可识别 historical marker（status / as_of / superseded_by / public disposition）。
+**历史文档不代表当前架构。**
