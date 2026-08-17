@@ -1,8 +1,8 @@
 # SPEC_COMPLIANCE
 
 > 用途：实现完成后，作为「实现是否在 scope 内」评审的固有字段。
-> 模板来自 `docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md` §9（status: accepted）。
-> 其中 §9 冻结了 merge condition（`SPEC_GATE = PASS` + `SPEC_COMPLIANCE = PASS` + `TESTS = PASS`）。
+> 模板来自 `docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md` §18（status: accepted）。
+> 其中 §18 冻结了 merge condition（`SPEC_GATE = PASS` + `SPEC_COMPLIANCE = PASS` + `TESTS = PASS`）。
 
 ```text
 SPEC_COMPLIANCE
