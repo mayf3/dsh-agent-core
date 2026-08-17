@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_BINDING_WORKSPACE_V1
-status: proposed
+status: accepted
 amendment: AGENT_CORE_BINDING_WORKSPACE_V1_SPEC_PRODUCT_MODEL_AMEND
 ---
 
@@ -383,7 +383,7 @@ SESSION_WRITE_CONTRACT
         -> STRUCTURED_REJECT（error code 见 §Errors）
            . 不改动持久化 session 的 cwd（仍 = A）
            . Binding 不写入该不兼容 activeSessionId（不变更 activeSessionId 指向该不兼容 S）
-           . 绝不隐式 min 另一个 session、绝不静默切 cwd
+           . 绝不隐式创建另一个 Session、绝不静默切 cwd
 ```
 - 产品入口通过**已有 Session seam** select / create a compatible session
   （D-002 `switchAgent(…, { targetSessionId })` / `activeSessionId`），但最终 Binding
@@ -575,7 +575,7 @@ BINDING_NOT_FOUND / AGENT_NOT_FOUND / SESSION_NOT_FOUND / SESSION_NOT_IN_AGENT
   session）——SESSION_WRITE_CONTRACT R1。
 - Router turn()/deliver() 按 binding 解析 effective workspace 并按 session 传入；
   cross-workspace mismatch => 结构化 reject（R2/R3）。
-- 验收断言（见 Acceptance Criteria AC1–AC8）。
+- 验收断言（见 Acceptance Criteria AC1–AC11）。
 
 **不修改** agent-definition config 结构（不加 defaultWorkspaceId）；workspace 选值留在
 产品 policy -> Binding，Router 不读 App/群逻辑。
@@ -816,6 +816,6 @@ OUT_OF_SCOPE =
 
 KERNEL_CHANGE = NONE
 
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 READY_FOR_INDEPENDENT_RE_REVIEW = YES
 ```
