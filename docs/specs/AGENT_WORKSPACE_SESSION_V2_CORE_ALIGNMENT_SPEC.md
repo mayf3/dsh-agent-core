@@ -20,6 +20,25 @@ status: proposed
 > 若实现阶段需要，Spec 授权新增/修改 `docs/runbooks/` 下的 canary runbook（见 §11）。
 > **PRODUCT_CODE_CHANGE = NONE / STATE_CHANGE = NONE / MERGE = NONE / KERNEL_CHANGE = NONE**
 > （本轮）。
+>
+> **AMENDMENT（2026-08-17，闭合独立 Review 的 REQUIRED_FIXES）**：
+> BASE_REVIEWED_HEAD = `ed514ff`（VERDICT = FIX_REQUIRED）。本修订只闭合 Reviewer 的
+> 3 个 REQUIRED_FIXES，其余内容不动；仍是 SPEC ONLY（不 implementation / 不 production
+> state change / 不 merge），status 维持 `proposed` 待 focused re-review：
+>
+> 1. **Fix 1（§4.5）**：unknown Feishu conversation 必须 **fail closed** —— 冻结
+>    `FEISHU_V2_INGRESS_MODE = PREBOUND_ONLY`（现有 pre-bound conversation 放行；
+>    unknown/unbound conversation 结构化拒绝，绝不创建 default Agent Binding）。
+> 2. **Fix 2（§7.2）**：mixed MEMORY 的处置是一次真实的 production state change ——
+>    `STOCK_GROUP_STATE_CHANGE = ONE_TIME_PRODUCTION_STATE_CHANGE`（仅
+>    `agt_stock_agent/MEMORY.md` 整文件 archive；冻结最小步骤与 rollback）。
+> 3. **Fix 3（§5.2–§5.5）**：system-prompt injection **不再断言**能拿 session —— 删除
+>    不可实现的「injection 必须直接从 session.header.cwd 获取 workspace」；冻结
+>    KERNEL_CHANGE = NONE 下的最小 Memory resolver（session-aware 调用点用
+>    `session.header.cwd`；同步 system-prompt injection 用 `Agent.primaryWorkspace`），
+>    并冻结 `V2_NORMAL_PATH_REQUIRES_PRIMARY_WORKSPACE = YES`（旧非 primary
+>    `Binding.workspace` = TRANSITIONAL_COMPATIBILITY_STATE，不得进入 V2 normal
+>    production path）。
 
 ---
 
@@ -75,7 +94,11 @@ Frozen boundaries =
   Router 保持机械 override 支持，不加 normal/compatibility 分支。
 Implementation scope（本轮只出 Spec，accepted 后）=
   feishu-connector normal ingress 停止注入 conversation workspace；
-  agent-memory 从 session.header.cwd 解析；tests；canary/runbook if needed。
+  feishu-connector pre-forward PREBOUND_ONLY gate + production-runtime compose 接线
+  （§4.5，仅用现有 agentRouter.getBinding / channelConversationId）；
+  agent-memory 按 resolveMemoryWorkspace 分路解析（§5.2：session-aware 调用点 =
+  session.header.cwd；同步 system-prompt injection = Agent.primaryWorkspace）；
+  tests；canary/runbook if needed。
 Out-of-scope = daily reset / Agent birth / p2p final model / Mobile switch_agent /
   auth provisioning redesign / 任何 route/kernel/definition schema 扩大。
 New evidence = 见 §3 Evidence（source-verified 代码点位 + IMPLEMENTATION_IMPACT_AUDIT = PASS）。
@@ -197,6 +220,68 @@ ROUTER_FEISHU_SPECIAL_CASE                = NONE
   决定（保持 transitional，见 §8 p2p / §22 精神）——本轮只让 normal 路径不再调用它们来
   选择 workspace。
 
+### 4.5 V2 过渡期 ingress 冻结：unknown conversation 必须 fail closed（AMENDMENT Fix 1）
+
+**问题（source-verified，origin/main）**：unknown Feishu conversation 今天的行为是
+Router `resolveChannelConversation()` 发现 `store.get(ccId) === undefined` 后调
+`resolveDefaultAgent()`（agent-definition `defaultAgentId` → `agt_stock_agent`）并**自动
+创建 default Binding**（`packages/agent-router/src/index.js`：resolveChannelConversation /
+resolveDefaultAgent）。当前这个行为被 conversation workspace/session 注入**掩盖**；一旦
+按 §4.2 删除注入，unknown conversation A / B / C 会全部隐式落到
+`agt_stock_agent / primary Workspace / main` —— 直接违反 D-006
+（`docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md`，不重新讨论）。
+
+**冻结（V2 过渡期）**：
+
+```text
+FEISHU_V2_INGRESS_MODE = PREBOUND_ONLY
+
+existing known/pre-bound conversation（binding store 已有该
+  feishu:<conversationId> 的 Binding row）
+  → proceed（正常 V2 路径）
+
+unknown/unbound conversation（binding store 无该 row）
+  → FAIL CLOSED
+  → structured rejection（日志 + 固定的「未绑定」回执）
+  → MUST NOT create Binding to default Agent
+  → MUST NOT enter default Agent / default Agent main
+
+AUTOMATIC_AGENT_BIRTH = OUT_OF_SCOPE
+  （fail closed 与 automatic birth 相反；unknown conversation 的显式绑定/
+  provisioning 属更晚的产品决策，本 Spec 不发明任何 provisioning 系统）
+```
+
+**最小实现 seam（source-verified，不新增 generic Router API）**：
+
+```text
+UNKNOWN_CONVERSATION_IMPLEMENTATION_SEAM =
+  feishu-connector 产品入口层的 pre-forward gate
+  + 控制面 composition 层（packages/production-runtime/src/compose.js）接线，
+    仅使用 Router service 已暴露的 generic 只读 API：
+      agentRouter.channelConversationId('feishu', conversationId)   # id 格式唯一 owner
+      agentRouter.getBinding(<ccId>)                                # 返回 Binding row 或 undefined
+```
+
+- **判定 API 已存在，Router 零改动**：`agentRouter` service 已暴露 D-002 读 API
+  `getBinding`（返回当前 Binding 或 `undefined`，即 404 BINDING_NOT_FOUND 的等价物）与
+  `channelConversationId`（`packages/agent-router/src/index.js` service surface）。因此
+  **无需**为「connector 判断已有 Binding」新增任何 Router seam。
+- **gate 落点**：feishu-connector 在 `classifyIngress` 判定 forward 之后、调用
+  `cfg.onEvent(ingress)`（即 Router `onIngress`）**之前**增加一个可编程注入的 pre-forward
+  predicate（注入风格与 `onEvent` 相同；connector 保持 pure channel，`inject = []`，
+  不直接依赖 Router）。predicate 返回 unbound → **不调用 onEvent**（因此
+  `resolveChannelConversation` 对该 conversation 根本不会执行 → default Binding 不会被
+  创建），并由 connector 自己的 reply 路径回固定「未绑定」结构化回执。
+- **接线点**：production-runtime `compose.js` 同时持有 `feishu` handle 与 `router`
+  service（该层已有 wrap router service 方法的先例），把 predicate 接到
+  `router.getBinding(router.channelConversationId('feishu', …))` 上。
+- **TOCTOU 安全方向**：gate 与 resolve 读同一份 in-process durable binding store
+  （同步读）；Binding 只会被创建不会被删除（store 无 delete API），gate 误差方向只会
+  「少放行」，绝不会「多放行」——fail-closed 方向成立。
+- **Router 保持 generic**：`resolveChannelConversation` 的 first-contact default-Agent
+  创建机制原样保留（mobile / scheduler 等其它入口仍可用）；`ROUTER_PRODUCT_SPECIAL_CASE
+  = NONE`，不允许任何 `Router if Feishu …` 分支。
+
 ---
 
 ## 6. Memory（冻结最小改动）
@@ -216,27 +301,49 @@ readDailyNotes / prompt-injection / daily-note fallback）都复用这个进程�
 `memoryFile`。`packages/agent-memory/src/memory.js` 的所有函数都以
 `workspace` / `memoryFile` 为参数（纯函数），**不**自行读 session。
 
-### 5.2 需要的冻结改动：从 Session.header.cwd 解析
+### 5.2 需要的冻结改动：KERNEL_CHANGE = NONE 下的最小 Memory resolver（AMENDMENT Fix 3）
+
+> **AMENDMENT 修正**：原 §5.2 把「system prompt [memory] injection」列入
+> session.header.cwd 覆盖面，等于断言 injection 必须直接从 session.header.cwd 获取
+> workspace。该断言**不可实现**（见 §5.4 source-verified 事实），予以删除，替换为本节
+> 的 resolver 冻结。
 
 ```text
-MEMORY_RUNTIME_SEAM = CURRENT Session.header.cwd
-  each memory operation 解析当前 Session.header.cwd
-  → <cwd>/MEMORY.md（= primary Workspace / MEMORY.md）
+MEMORY_WORKSPACE_RESOLUTION = resolveMemoryWorkspace(operationContext)
 
-至少覆盖：
-  load
-  save/write
-  search
-  system prompt [memory] injection
-  consolidation
-  daily notes
+resolveMemoryWorkspace(operationContext):
+  if current Session is available
+    → session.header.cwd
+  else
+    → Agent.primaryWorkspace
+      = resolveWorkspace(agentId)
+
+SESSION_AWARE_MEMORY_PATHS（当前 Session 可达的调用点）=
+  tools（memory_save / memory_search / memory_list / memory_update / memory_delete）
+  save/write · search · consolidation（turn/end 与显式 memory_consolidate）· daily notes
+  → workspace = session.header.cwd
+
+SYSTEM_PROMPT_MEMORY_PATH（同步 system-prompt [memory] injection）=
+  → workspace = Agent.primaryWorkspace = resolveWorkspace(agentId)
 ```
 
+- V2 长期 invariant 是 `ONE_AGENT_ONE_WORKSPACE`，因此 V2 normal path 下
+  `normal Session.header.cwd == Agent.primaryWorkspace` —— **两条取法必须得到同一个
+  Workspace**（canary 显式验收 `MEMORY_WORKSPACE_EQUALITY`，见 §11）。
+- 这**不是**两套 Memory ownership：
+
+```text
+MEMORY_OWNERSHIP = WORKSPACE_LOCAL（不变，唯一）
+```
+
+  只是**不同调用点拿到 Workspace authority 的方式不同**：session-aware 调用点有当前
+  Session，就以其冻结的 `header.cwd` 为准；同步 system-prompt 注入点没有当前 Session，
+  就以 `Agent.primaryWorkspace`（`resolveWorkspace(agentId)`）为准。
 - 同 Workspace 的 `main` / `cron` / `agent-task` / `background` session 因
   `header.cwd` 相同 → 自然共享同一份 MEMORY.md（V2 §7/§13 的
   SAME Agent / SAME Workspace 跨 Session 共享）。
 - Memory **不认识** Feishu / conversationId / group/p2p / Binding / Router ——
-  它只看 `session.header.cwd` 落点。
+  它只看 resolver 给出的 workspace 落点。
 - 现有 path helpers（`resolveMemoryFile(workspace)` / `resolveMemoryDir(workspace)` /
   `resolveDailyNoteFile(workspace)`）已经是 `workspace → MEMORY.md` 形态，**保持不动**
   （无意义重构禁止）。
@@ -244,15 +351,62 @@ MEMORY_RUNTIME_SEAM = CURRENT Session.header.cwd
 ### 5.3 Memory CALL_SITES（实现方要改的最小面）
 
 memory 当前把 workspace 当**进程级常量**在 apply 时捕获一次；V2 改为**每个操作**按
-session.header.cwd 解析。具体接线（实现裁决，以 source-verified 现状为据）：
+§5.2 的 `resolveMemoryWorkspace` 解析。具体接线（实现裁决，以 source-verified 现状为据）：
 
 ```text
-- agent-memory apply 不再仅靠 agentId 解析 workspace；
-- service 方法与 prompt-injection text 项在需要 memory 文件时，从操作触发的
-  当前 session.header.cwd 派生 memoryFile；
-- consolidation（turn/end）发生后，从触发它的 session.header.cwd 取 workspace；
+- agent-memory apply 保留 agentId / primaryWorkspace（= resolveWorkspace(agentId)）
+  作为 session 不可达时的 resolver 落点；
+- tools 的 execute(args, exec)：workspace = exec.agent.session.header.cwd
+  （session-aware）；
+- service 方法（load/update/remove/search/list/consolidate/readDailyNotes）在
+  session-aware 调用点从当前 session.header.cwd 派生 memoryFile；
+- consolidation（turn/end）从触发它的 session.header.cwd 取 workspace；
+- 同步 systemPrompt.context('memory') 的 text() 项用 Agent.primaryWorkspace
+  （进程级，见 §5.4）；
 - 保持 memory.js 纯函数不动。
 ```
+
+### 5.4 为什么 system-prompt injection 拿不到 session（source-verified）
+
+`packages/agent-memory/src/index.js` 的 automatic injection 走
+`systemPrompt.context({ name:'memory', …, text: () => renderContextText(loadEntriesSync(memoryFile), …) })`
+—— text provider 是**同步、无参数**的纯函数，组装它的上下文是 agent 级（scope=agent）
+的 prompt assembly，**没有当前 Session**。session-aware 的调用点在别处：tools 的
+`exec.agent.session`、turn/end 事件的 session 回调参数，且 session 的 cwd 形态就是
+`session.header.cwd`（`packages/demo-server/src/session-seam.js`：`assertSessionCwd` 读
+`handle?.agent?.session?.header?.cwd`；R1 创建时冻结、R2 resume 校验、R3 mismatch 拒绝）。
+
+结论：在 KERNEL_CHANGE = NONE 的约束下（不重设计 prompt assembly / 不给 text provider
+引入 Session 参数），**同步 system-prompt injection 只能取 `Agent.primaryWorkspace`**；
+这正好与 V2 invariant（normal `session.header.cwd == Agent.primaryWorkspace`）一致。
+
+### 5.5 Compatibility safety：非 primary Binding.workspace 不得进入 V2 normal path
+
+Review 指出的真实风险：旧 p2p 状态（`agt_stock_agent` + `Binding.workspace =
+feishu-oc_…`）若仍可进入生产，会出现 tools/consolidation 走 p2p cwd、而 prompt
+injection 走 Agent primary Workspace 的**不一致**。冻结：
+
+```text
+V2_NORMAL_PATH_REQUIRES_PRIMARY_WORKSPACE = YES
+
+V2 正常生产入口必须满足：
+  effective workspace == resolveWorkspace(activeAgentId)
+```
+
+- 旧磁盘状态 `Binding.workspace != null && Binding.workspace != Agent.primaryWorkspace`
+  分类为：
+
+```text
+NON_PRIMARY_WORKSPACE_COMPATIBILITY_STATE = TRANSITIONAL_COMPATIBILITY_STATE
+  保留在磁盘 / 留作证据；
+  MUST NOT 进入本轮启用的 V2 normal production path。
+```
+
+- **不删除** `Binding.workspace` 字段（Router 机械 override 机制保留，§4.3）；
+  **不删除**旧 p2p workspace/session；**不决定** p2p 最终 Agent（§7.3）。
+- 实现侧的最小含义：V2 启用的 Feishu normal 入口不再产生任何非 primary 的
+  `Binding.workspace`（§4.2），既有非 primary row 不被本路径使用/重写；处置（preserve /
+  disable / archive）仍按 §7.3 的安全显式可回滚原则，不阻塞 group cutover。
 
 ---
 
@@ -289,24 +443,65 @@ feishu:oc_92332c45c1cac2ef89857abfee8ed762   （「大侠 - 小虾米」真实�
 该 shape 已经是 V2 normal shape（conversation → Agent → primary workspace via
 resolveWorkspace(agentId)）。**不要迁它。**
 
-### 7.2 被污染的 MEMORY.md（一次性 archive）
+### 7.2 被污染的 MEMORY.md（一次性 production state change + archive）
+
+> **AMENDMENT 修正（Fix 2）**：archive mixed MEMORY.md 是一次**真实的 production
+> state change**，不是「无 state change」。原 Final Output 的
+> `STOCK_GROUP_STATE_CHANGE = NONE` 予以纠正。
 
 ```text
 ~/.agent-core/workspaces/agt_stock_agent/MEMORY.md
   已被旧 multi-workspace Canary 污染
   （含 CANARY-R2-BOOT-OK / consolidation:session:agent:agt\\\\_stock\\\\_agent:cron:... 等
     canary-test 痕迹；agent-memory 之前进程级按 agentId 解析写进来）
+  （只读核实 @2026-08-17：文件存在，135 行，sha256 =
+   8c4380a5a7fce0b2a993cf300f734584aa8755776bcf87988a75c6888994ab34）
 ```
 
 冻结一次性处理：
 
 ```text
+STOCK_GROUP_STATE_CHANGE = ONE_TIME_PRODUCTION_STATE_CHANGE
+WORKSPACE_MIGRATION      = NONE
+BINDING_MIGRATION        = NONE
+
+只处理一个对象：~/.agent-core/workspaces/agt_stock_agent/MEMORY.md
 MIXED_MEMORY_DISPOSITION = ARCHIVE_WHOLE_FILE_ONLY
   old mixed MEMORY.md
     → backup/archive 整文件（不动内容，不 provenance split）
     → no provenance split
     → no copy into another Workspace
     → active primary Workspace 以 clean/lazy MEMORY.md 开始
+```
+
+冻结最小步骤（实现轮执行，顺序不可换）：
+
+```text
+MIXED_MEMORY_PROCEDURE =
+  1. stop/quiesce writes
+     （停/quiesce 会写该 MEMORY.md 的路径：agt_stock_agent 的 DSH process /
+       consolidation；确保没有 in-flight write）
+  2. checksum + backup/archive whole MEMORY.md
+     （对源文件计算 checksum 后整文件拷贝到 archive 位置，保留原始内容字节不变）
+  3. verify archive matches source
+     （对 archive 副本重算 checksum，与步骤 2 的源 checksum 相等才允许继续）
+  4. remove/rename active MEMORY.md out of active path
+     （把 active 路径上的 MEMORY.md 移出 active 位置，不与 archive 混放）
+  5. active Memory starts clean/lazy
+     （不预创建填充内容的 MEMORY.md；由正常使用 lazy 产生）
+  6. keep AGENTS.md and all ordinary Workspace files untouched
+```
+
+冻结 rollback（写死，不可临场发挥）：
+
+```text
+MIXED_MEMORY_ROLLBACK =
+  quiesce（同上，停 writes）
+  → remove newly-created active MEMORY.md if any
+  → restore archived original MEMORY.md atomically
+    （tmp + rename 覆盖回 active 路径）
+  → checksum verify（恢复后 active 文件 checksum == archive/original checksum）
+  → resume（恢复 writes / process）
 ```
 
 - **普通** Workspace 文件与 AGENTS.md（`~/.agent-core/workspaces/agt_stock_agent/AGENTS.md`
@@ -406,6 +601,45 @@ I. one Agent = one DSH process
 J. OpenClaw fallback = NO
 ```
 
+AMENDMENT 补清（REAL_PRODUCT_AGENT_CANARY_V2 显式增加，与 A–J 并列验收）：
+
+```text
+REAL_MODEL_TURN                     = PASS   （真实模型 turn，非 stub）
+REAL_FEISHU_DELIVERY                = PASS   （真实 Feishu 投递回执）
+UNKNOWN_CONVERSATION_FAIL_CLOSED    = PASS   （§4.5：unknown/unbound conversation
+                                             被结构化拒绝；binding store 无新增
+                                             default Binding row；未进入
+                                             agt_stock_agent/main）
+EFFECTIVE_WORKSPACE_IS_PRIMARY      = PASS   （active V2 route 的 effective
+                                             workspace == resolveWorkspace(
+                                             activeAgentId)；无任何 non-primary
+                                             Binding.workspace override 被使用）
+MEMORY_INJECTION_WORKSPACE          = Agent.primaryWorkspace
+                                            （同步 system-prompt [memory] 注入的
+                                              解析落点，§5.4）
+MEMORY_TOOL_WORKSPACE               = session.header.cwd
+                                            （tools/save/search/consolidation/
+                                              daily notes 的解析落点，§5.2）
+MEMORY_WORKSPACE_EQUALITY           = PASS   （上述两条路径在 V2 normal path 得到
+                                             同一个 Workspace / 同一份 MEMORY.md）
+```
+
+同时必须证明（不变量回归）：
+
+```text
+no active V2 route uses non-primary Binding.workspace override
+resolveWorkspace(agentId) = primary Workspace
+Router remains generic（无 Feishu special-case）
+Binding.workspace field stays（不删）
+native main stays（无 mapping layer / 无 daily reset）
+no Workspace Registry
+no mapping layer
+no daily reset
+no automatic Agent birth
+no p2p split
+KERNEL_CHANGE = NONE
+```
+
 本轮**明确不验**：
 
 ```text
@@ -429,10 +663,15 @@ Auth provisioning redesign
 ```text
 FILES_TO_CHANGE =
   packages/feishu-connector/src/core.js        # normal ingress 停止注入 conversation workspace
-  packages/feishu-connector/src/index.js       # 相应去导管/注释对齐
-  packages/agent-memory/src/index.js           # memory 从 session.header.cwd 解析
+  packages/feishu-connector/src/index.js       # pre-forward PREBOUND_ONLY gate（§4.5）
+                                              # + 去导管/注释对齐
+  packages/production-runtime/src/compose.js   # gate 接线到现有 agentRouter.getBinding /
+                                              # channelConversationId（§4.5，Router 零改动）
+  packages/agent-memory/src/index.js           # resolveMemoryWorkspace 分路解析（§5.2/§5.3）
   tests（feishu-connector / agent-memory / agent-router 受影响断言）
   docs/runbooks/*（canary v2 runbook，如需要）
+  + 实现轮一次性执行 §7.2 MIXED_MEMORY_PROCEDURE（production state change，
+    冻结步骤 + 冻结 rollback）
 ```
 
 Router / workspace-bootstrap / demo-server / binding-store 仅在 §13 巡检证明需要时才允许
@@ -456,7 +695,75 @@ ROUTER_CHANGE_REQUIRED =
 ## Final Output
 
 ```text
-AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC = PASS
+AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC_AMENDMENT = PASS
+
+BASE_REVIEWED_HEAD = ed514ff
+HEAD = 本 amendment commit（hash 见 commit message / git log）
+
+FEISHU_V2_INGRESS_MODE = PREBOUND_ONLY
+UNKNOWN_CONVERSATION_POLICY =
+  existing known/pre-bound conversation → proceed；
+  unknown/unbound conversation → FAIL CLOSED（structured rejection；
+  MUST NOT create Binding to default Agent；MUST NOT enter default Agent/main；
+  AUTOMATIC_AGENT_BIRTH = OUT_OF_SCOPE）
+UNKNOWN_CONVERSATION_IMPLEMENTATION_SEAM =
+  feishu-connector 产品入口层 pre-forward gate（classify 后、onEvent 前，
+  可编程注入 predicate，connector 保持 pure channel）
+  + production-runtime compose.js 接线，仅用 Router service 现有 generic 只读 API：
+  agentRouter.getBinding(agentRouter.channelConversationId('feishu', <conversationId>))
+  → Router 零改动、零 Feishu special-case
+
+V2_NORMAL_PATH_REQUIRES_PRIMARY_WORKSPACE = YES
+  （V2 正常生产入口必须满足 effective workspace == resolveWorkspace(activeAgentId)）
+NON_PRIMARY_WORKSPACE_COMPATIBILITY_STATE = TRANSITIONAL_COMPATIBILITY_STATE
+  （旧 Binding.workspace != primary 的 row 保留在磁盘/留作证据，
+    不得进入本轮启用的 V2 normal production path；不删除 Binding.workspace 字段；
+    不删除旧 p2p workspace/session；不决定 p2p 最终 Agent）
+
+MEMORY_WORKSPACE_RESOLUTION = resolveMemoryWorkspace(operationContext)
+  （current Session available → session.header.cwd；
+    else → Agent.primaryWorkspace = resolveWorkspace(agentId)；
+    MEMORY_OWNERSHIP = WORKSPACE_LOCAL 不变，唯一 ownership）
+SESSION_AWARE_MEMORY_PATHS = tools / save / search / consolidation / daily notes
+  → session.header.cwd
+SYSTEM_PROMPT_MEMORY_PATH = Agent.primaryWorkspace
+  （同步 systemPrompt.context text provider 无当前 Session，source-verified；
+    不再断言 injection 直接从 session.header.cwd 获取 workspace）
+KERNEL_CHANGE = NONE
+
+STOCK_GROUP_STATE_CHANGE = ONE_TIME_PRODUCTION_STATE_CHANGE
+  （WORKSPACE_MIGRATION = NONE / BINDING_MIGRATION = NONE；group shape 已是 V2，
+    不迁移；唯一 state change = agt_stock_agent/MEMORY.md 整文件处置）
+MIXED_MEMORY_BACKUP = CHECKSUM_PLUS_WHOLE_FILE_ARCHIVE
+  （stop/quiesce writes → checksum + 整文件 backup/archive → verify archive ==
+    source → remove/rename active MEMORY.md out of active path → active Memory
+    clean/lazy 开始；AGENTS.md 与全部普通 Workspace 文件 untouched；no provenance
+    split）
+MIXED_MEMORY_VERIFICATION = CHECKSUM_ARCHIVE_EQUALS_SOURCE（移出 active 路径前）;
+  ROLLBACK 后 CHECKSUM_RESTORED_EQUALS_ORIGINAL
+MIXED_MEMORY_ROLLBACK = FROZEN
+  （quiesce → remove newly-created active MEMORY.md if any → restore archived
+    original atomically（tmp+rename） → checksum verify → resume）
+
+ROUTER_PRODUCT_SPECIAL_CASE = NONE
+
+REAL_PRODUCT_AGENT_CANARY_V2_COVERAGE =
+  A 真人 ingress / B →agt_stock_agent / C effective Workspace=
+  resolveWorkspace(agt_stock_agent) / D main.header.cwd==primary Workspace /
+  E Memory==primary Workspace/MEMORY.md / F resume main / G restart 后 resume /
+  H fresh non-main 同 cwd 独立 trajectory / I one-Agent-one-process /
+  J OpenClaw fallback=NO
+  + AMENDMENT 补清：REAL_MODEL_TURN=PASS / REAL_FEISHU_DELIVERY=PASS /
+  UNKNOWN_CONVERSATION_FAIL_CLOSED=PASS / EFFECTIVE_WORKSPACE_IS_PRIMARY=PASS /
+  MEMORY_INJECTION_WORKSPACE=Agent.primaryWorkspace /
+  MEMORY_TOOL_WORKSPACE=session.header.cwd / MEMORY_WORKSPACE_EQUALITY=PASS
+  + 不变量回归：no non-primary Binding.workspace override on active V2 route /
+  resolveWorkspace(agentId)=primary Workspace / Router remains generic /
+  Binding.workspace field stays / native main stays / no Workspace Registry /
+  no mapping layer / no daily reset / no automatic Agent birth / no p2p split /
+  KERNEL_CHANGE=NONE
+  （不验 daily reset / auto birth / p2p final model / Mobile switch_agent /
+    auth redesign）
 
 PRIMARY_WORKSPACE_CHANGE        = NONE
   （resolveWorkspace(agentId) 已可直接作为 Agent.primaryWorkspace；
@@ -472,21 +779,10 @@ FEISHU_WORKSPACE_SELECTION_CHANGE = MINIMAL
 ROUTER_CHANGE_REQUIRED  = NO（默认；仅证明 generic mechanism 有 bug 才允许改）
 BINDING_WORKSPACE_FIELD = KEEP（不删；作为 transitional compatibility mechanism 保留）
 
-MEMORY_RUNTIME_SEAM     = CURRENT Session.header.cwd
-MEMORY_CALL_SITES       = load / save(write) / search / system-prompt [memory] injection /
-                          consolidation / daily notes（≥ 这些覆盖）
-                          （memory.js 纯函数不动；现有 workspace→MEMORY.md path helpers 保持）
-
 MAIN_CHANGE_REQUIRED    = NONE（current native sessionId = main 已可落地 canonical main；
                           NEW_MAIN_MAPPING_LAYER = NO / SESSION_SEAM_REDESIGN = NO；
                           本轮不实现 daily reset）
 
-STOCK_GROUP_STATE_CHANGE = NONE（feishu:oc_92332c45… → agt_stock_agent → main →
-                          workspace=null 已是 V2 normal shape，不迁）
-MIXED_MEMORY_DISPOSITION = ARCHIVE_WHOLE_FILE_ONLY
-  （~/.agent-core/workspaces/agt_stock_agent/MEMORY.md 整文件 backup/archive；
-    no provenance split；no copy into another Workspace；primary Workspace 以 clean/lazy
-    MEMORY.md 开始；普通 Workspace 文件与 AGENTS.md KEEP）
 P2P_TRANSITIONAL_STATE   = OUT_OF_SCOPE
   （preserve/disable/archive 安全显式可回滚，不删历史证据；不得阻塞 group cutover）
 
@@ -494,27 +790,18 @@ LARGE_REFACTOR_REQUIRED  = NO
 NEW_REGISTRY_REQUIRED    = NO
 KERNEL_CHANGE            = NONE
 
-PRODUCT_CODE_CHANGE      = NONE（本轮仅出 Spec）
-STATE_CHANGE             = NONE（本轮仅出 Spec）
+PRODUCT_CODE_CHANGE      = NONE（本轮仅出 Spec amendment）
+STATE_CHANGE             = NONE（本轮不执行 §7.2；实现轮才执行一次性
+                          ONE_TIME_PRODUCTION_STATE_CHANGE）
 MERGE                    = NONE
-KERNEL_CHANGE            = NONE
 
 FILES_TO_CHANGE =
   packages/feishu-connector/src/core.js · packages/feishu-connector/src/index.js ·
-  packages/agent-memory/src/index.js · tests · canary/runbook if needed
-ACCEPTANCE_TESTS =
-  REAL_PRODUCT_AGENT_CANARY_V2（A 真人 ingress / B →agt_stock_agent /
-  C effective Workspace=resolveWorkspace(agt_stock_agent) / D main.header.cwd==primary
-  Workspace / E Memory==primary Workspace/MEMORY.md / F resume main / G restart 后 resume /
-  H fresh non-main 同 cwd 独立 trajectory / I one-Agent-one-process / J OpenClaw fallback=NO；
-  不验 daily reset / auto birth / p2p final model / Mobile switch_agent / auth redesign）
+  packages/production-runtime/src/compose.js · packages/agent-memory/src/index.js ·
+  tests · canary/runbook if needed · §7.2 MIXED_MEMORY_PROCEDURE（实现轮一次性执行）
 
 REAL_PRODUCT_AGENT_CANARY_V2 = REQUIRED（实现完成后必跑）
 
-LARGE_REFACTOR_REQUIRED = NO
-NEW_REGISTRY_REQUIRED   = NO
-KERNEL_CHANGE           = NONE
-
 SPEC_STATUS             = proposed
-READY_FOR_INDEPENDENT_REVIEW = YES
+READY_FOR_FOCUSED_RE_REVIEW = YES
 ```
