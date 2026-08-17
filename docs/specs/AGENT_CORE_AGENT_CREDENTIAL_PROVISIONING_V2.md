@@ -6,7 +6,8 @@ replaces: AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1（proposal @ 9a408e0，从
 
 # Agent Core Agent Credential Provisioning V2 — 最小 provisioning contract（replacement）
 
-> 性质：**Spec（SPEC ONLY — 本轮只冻结收敛，不实现）** · 日期：2026-08-18 ·
+> 性质：**Spec（SPEC ONLY — 本轮只冻结收敛，不实现）** · 初版：2026-08-18 ·
+> Amendment 1（FINAL_SCOPE_FIX）：2026-08-18，base reviewed HEAD `457f29f` ·
 > Base：`origin/main @ 67404bc` · 仓库：`mayf3/dsh-agent-core` ·
 > 角色：Credential Provisioning Simplification Spec Agent
 >
@@ -18,9 +19,29 @@ replaces: AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1（proposal @ 9a408e0，从
 > §「拒绝理由必须保存」）。本 Spec **standalone**：未来 Implementation Agent 只需要
 > 本文档 + §15 evidence 引用，**不需要旧 Spec 的 patch-stack archaeology**。
 >
-> 本轮只新增本文件。不实现、不修改 Auth / Broker / Router / Runtime 代码，不创建
+> 本轮（Amendment 1）只原地修改本文件。不实现、不修改 Auth / Broker / Router /
+> Runtime 代码，不创建
 > credential，不改 agents.json / credential store，不启动 runtime，不 merge。
 > **KERNEL_CHANGE = NONE**。
+
+---
+
+## Amendment 1 摘要（FINAL_SCOPE_FIX，2026-08-18，基于 reviewed HEAD 457f29f）
+
+Review 裁决 `CREDENTIAL_PROVISIONING_SIMPLIFICATION = FIX_REQUIRED`：整体简化方向
+正确，rotation / revocation / generalized recovery 的删除**接受**。本轮只修 3 项，
+原地 Amendment（同一文件，不建平行 Spec），不重新讨论已冻结方向：
+
+1. **FIX 1（birth 触发入 V2）**：birth 自动触发 provisioning 从 FOLLOW_UP 改为
+   V2 必须授权的极薄 seam——`BIRTH_PROVISIONING_TRIGGER = REQUIRED`、
+   `CHAT_WAITS_FOR_PROVISIONING = NO`（D-006：provisioning 出生时启动、非阻塞）。
+   无 daemon；失败修复 = explicit complete rerun。
+2. **FIX 2（baseline grants 去 conditional PASS）**：`ensureBaselineGrants(agentId)`
+   退出 V2 可实施闭环（formal MachineAccessGrant mutation seam = MISSING）——
+   `BASELINE_GRANT_IMPLEMENTATION_STATUS = EXTERNAL_PREREQUISITE_MISSING`，
+   移交后续单独最小 Spec（Auth 侧变更）；删除 L3 conditional positive 验收。
+3. **FIX 3（store 保留语义）**：无关 entry 的「逐字节不变」改为
+   「语义内容不变」（no entry lost / no entry mutated；不要求 JSON 文本字节保留）。
 
 ---
 
@@ -71,6 +92,7 @@ AGENT_BIRTH_BLOCKS_ON_CREDENTIAL = NO
 AGENT_CHAT_READY = stable agentId + Workspace + AGENTS.md + canonical main/runtime
 EXTERNAL_CAPABILITY_READINESS = principal + credential + baseline grants
 
+external capability provisioning 出生时启动（best-effort，见 §5 调用时机 / §10）
 provisioning failure → DOES_NOT_BLOCK_CHAT
 受影响 Broker capability → fail-closed unavailable
 later provisioning succeeds → 当前 Agent/main 立即获得能力（无重启、无 main reset）
@@ -93,8 +115,10 @@ BROKER = reader / authorized transport（gateway 按 ACTUAL proc.agentId 读取�
 CHILD_RAW_SECRET_ACCESS = NO（V2 验收实证 CHILD_SECRET_ENV/FS=ABSENT、读 store=DENIED）
 ROUTER_PROVISIONING_OWNER = NO
 PROVISIONING_OWNER = deployment-side trusted tooling（与
-  scripts/production-agent-provision.mjs root seam 同类；显式调用，operator/部署触发；
-  非 daemon、非 runtime、非 Router、非 scheduler）
+  scripts/production-agent-provision.mjs root seam 同类）。两种触发（§5 调用时机）：
+  (1) Agent 出生时经极薄 birth → trusted provisioning seam best-effort 触发
+      （REQUIRED；owner ≠ Router）；(2) operator / 部署显式完整重跑
+      （backfill / 修复）。非 daemon、非 runtime、非 Router、非 scheduler
 ```
 
 Provisioner 自身 bootstrap（诚实记录，非新建设计）：调用 Auth ensure seams 需要持有
@@ -139,11 +163,12 @@ POST /api/v1/clients     body = { external_ref: clientExternalRef(agentId),
   对既有手工行的 claim 工具，不在 ensure 流内）。
 - `display_name` 仅 cosmetic，不参与匹配。
 
-## 5. 最小 flow：`ensureAgentCredential(agentId)` + `ensureBaselineGrants(agentId)`
+## 5. 最小 flow：`ensureAgentCredential(agentId)`（V2 可实施闭环）
 
-两个冻结的语义函数（CLI / 脚本入口形态 = 实现自由度，§12）。幂等、确定性、
+冻结的语义函数（CLI / 脚本入口形态 = 实现自由度，§12）。幂等、确定性、
 每次运行重读 trusted store；状态只由 Auth seam **响应**判定（created 标志 /
-status 字段），不自选预检查顺序。
+status 字段），不自选预检查顺序。**V2 可实施闭环到 verify credential 为止**
+（baseline grants 见 §8，不在本 flow 内）。
 
 ```text
 ensureAgentCredential(agentId):
@@ -166,7 +191,7 @@ P2  ensure client（POST /api/v1/clients）
          → store entry 缺失
              → FAIL_LOUD { code:'store_entry_missing_after_ensure' }
                （conflicting state：Auth 身份存在但本地 secret 不可恢复——
-                 raw secret 仅 created=true 时返回一次。V1 不自动恢复；
+                 raw secret 仅 created=true 时返回一次。V2 不自动恢复；
                  修复路径 = FOLLOW_UP rotation Spec / operator out-of-band，
                  见 §9 / §11）
          → store.clientId ≠ 响应 client_id
@@ -180,15 +205,16 @@ P2  ensure client（POST /api/v1/clients）
          200 + access_token     → credential 有效 ⇒ credential READY（幂等 NO-OP：
                                   不 rotate、不重写 store、不缓存 token）
          400 invalid_scope      → credential 有效、仅缺该 scope 的 grant ⇒ credential
-                                  READY（grant 缺口归 P3 / §8，不触发任何 credential
-                                  动作）
+                                  READY（grant 缺口按 §8 记录为 external
+                                  prerequisite，不触发任何 credential 动作）
          401 invalid_client     → credential 无效 → FAIL_LOUD { code:'credential_invalid' }
-                                  （V1 不自动 rotate；修复路径 = FOLLOW_UP rotation Spec）
+                                  （V2 不自动 rotate；修复路径 = FOLLOW_UP rotation Spec）
          网络不可达 / 5xx / malformed → FAIL_LOUD { code:'verification_inconclusive' }
                                   （不得当作 valid 记 NO-OP，也不得当作 invalid 触发动作）
 
-ensureBaselineGrants(agentId)（§8；在 credential READY 之后执行）
-→ 输出 per-step readiness 报告（credential / grants 各自状态）
+ensureBaselineGrants —— 不在本 flow 内（Amendment 1：退出 V2 可实施闭环，§8）
+→ 输出 credential readiness 报告；baseline grants 缺口如实标注
+  external prerequisite missing（记录，不是实现步骤）
 ```
 
 所有 FAIL_LOUD = 结构化错误 + 非零退出 + 零 store 变更（P2a 写入路径除外）+ 零平行
@@ -197,6 +223,26 @@ external_ref + validate-preserve store 写），无部分状态恢复机器、�
 
 生效语义（对齐 D-006）：store 写入后，Broker **下一次调用**即解析到 credential
 （gateway 每次调用重读 store）——当前 Agent/main 立即获得能力，无重启、无 main reset。
+
+调用时机（Amendment 1 冻结——FIX 1）：
+
+```text
+BIRTH_PROVISIONING_TRIGGER = REQUIRED
+  first eligible human message
+  → create Agent
+  → establish chat-ready Agent
+  → best-effort invoke trusted provisioning seam
+    （极薄 birth → trusted provisioning seam；owner ≠ Router；
+     本轮不设计具体 coordinator / API / queue）
+
+CHAT_WAITS_FOR_PROVISIONING = NO
+  provisioning 失败 → chat continues；
+  受影响 Broker capability remains fail-closed unavailable
+
+AUTO_RETRY_DAEMON = NO
+  失败后的修复 = explicit complete rerun（operator / 部署显式调用；重跑天然收敛）
+  MANUAL/DEPLOY_RETRY = YES
+```
 
 ## 6. Trusted credential store 写契约（冻结）
 
@@ -209,7 +255,9 @@ S2 写前读现有 store 文档
 S3 按 loadCredentialsStore 同等语义完整校验（version===1、credentials 为 object、
    每个 entry 可 normalize）→ malformed / 任一 entry 损坏 → FAIL_LOUD、
    MUST NOT overwrite、MUST NOT「顺手修复」
-S4 所有无关 entry 原样保留（逐字节不变）
+S4 所有无关 entry 语义内容保留（no entry lost / no entry mutated；不要求保留
+   JSON whitespace / 序列化字节 / object formatting——不得因此引入
+   text-preserving JSON machinery）
 S5 只变更目标 agentId 的 entry；顶层 shape 恒为 { version:1, credentials:{...} }
 S6 同目录 private temp file（mode 0600 先于任何 secret 内容写入）→ fsync →
    rename 原子替换 →（SHOULD）fsync 目录；owner = trusted CP（uid505）
@@ -241,28 +289,38 @@ rotate` 把 newSecret 打到 stdout；本仓库验收脚本曾把 secret 拼进 
 （同 uid 经 ps 全量可读 env/argv）：credential 永不经 env/argv 交付；store 及交付
 文件 505-owned 0600；Router/工具可执行代码面不得 502 可写。
 
-## 8. Baseline grants — 最薄 contract
+## 8. Baseline grants — 保留要求、外部前置缺失、另行 Spec（Amendment 1 重写）
 
-D-006 冻结「new Agent eventually receives standard baseline grant profile」，
-**具体 profile 内容（forum.* / workflow.* / …）不属于本 Spec**。本 Spec 只冻结：
+D-006 冻结「new Agent eventually receives standard baseline grant profile」——该
+产品要求保留（本 Spec 不削减 D-006）：
 
 ```text
-ensureBaselineGrants(agentId)
-  前提   : ensureAgentCredential 已 READY（需要 clientId）
-  语义   : 幂等确保该 client 拥有 standard baseline grant profile
-  实现面 : 外部 auth seam（named external prerequisite）
-           —— auth 现状：幂等建 client 固定 allowedResources/allowedScopes=[]，
-           业务 grant 载体 MachineAccessGrant 目前无正式 HTTP/CLI mutation seam
-           （仅一次性脚本直连 DB）
-  缺失时 : FAIL_LOUD { code:'external_prerequisite_missing', step:'baseline_grants' }
-           —— 仅此步失败：credential 步骤成果保留（不回滚）、chat 不受影响、
-           受影响 capability 维持授权失败（≠ credential_unavailable）、重跑收敛
-  禁止   : 本 repo 顺手建设 grant platform / auto-grant / Policy Engine
-  AUTH_CHANGE_REQUIRED = EXTERNAL_ONLY（外部依赖声明，不授权本 repo 改 auth-service）
+D006_BASELINE_GRANT_REQUIREMENT = PRESERVED
 ```
 
-credential existence ≠ business grant（两层必须可区分）：verification mint 的
-`400 invalid_scope` 即「credential 有效 + grant 缺失」的最小可区分证据（§5 P2c）。
+但 evidence 已确认 **formal MachineAccessGrant mutation seam = MISSING**（auth
+现状：幂等建 client 固定 allowedResources/allowedScopes=[]；业务 grant 载体
+MachineAccessGrant 仅一次性脚本直连 DB 可变，无正式 HTTP/CLI 管理面）。因此不把一个
+当前不存在的 `ensureBaselineGrants(agentId)` 假装成本 Spec 已可实现的责任——
+baseline grants **不属于本 Spec（Credential V2）的实施范围与 acceptance blocker**：
+
+```text
+BASELINE_GRANT_IMPLEMENTATION_STATUS = EXTERNAL_PREREQUISITE_MISSING
+BASELINE_GRANT_PROVISIONING_SPEC_REQUIRED = YES
+  （后续单独最小 Spec：建立 ensure standard baseline grant profile 的
+    正式幂等 Auth seam；不在本 Spec 中建设）
+AUTH_SIDE_CHANGE_REQUIRED = YES（外部 auth-service 侧变更；
+  AUTH_CHANGE_REQUIRED = EXTERNAL_ONLY —— 外部依赖声明，不授权本 repo 改 auth）
+```
+
+- 本 Spec 的可实施闭环 = §5 的 verify credential 为止；实现与验收均**不含**
+  grants 步骤，不允许通过 mock / manual bearer / fake grant 宣称完成。
+- Credential V2 PASS 只证明 **credential identity provisioning works**；不声称
+  `ALL_BASELINE_CAPABILITIES_READY`。
+- credential existence ≠ business grant 的两层可区分性仍然冻结（两层必须可区分；
+  零 grant 新 client 的 verification mint `400 invalid_scope` = 「credential 有效 +
+  grant 缺失」的最小可区分证据，§5 P2c）。
+- 禁止在本 Spec 内顺手建设 grant platform / auto-grant / Policy Engine。
 
 ## 9. 减法审计（旧 proposal → 本 Spec）
 
@@ -288,8 +346,8 @@ credential existence ≠ business grant（两层必须可区分）：verificatio
 | Part F 三层 failure 语义 + Broker error-classification（YES_MINIMAL） | 层归属 = 保留；Broker 运行时错误码改造 = FOLLOW_UP_DEBT（当前 blocker 修复零 Broker 改动） | 层归属压缩进 §1/§8；Broker 改动退出（§11） |
 | Part G store 写契约 | REAL_SECURITY_REQUIREMENT | 保留（§6） |
 | Part H secret handoff | REAL_SECURITY_REQUIREMENT | 保留（§7） |
-| Part I rotation | FOLLOW_UP_DEBT | **退出 V1**（§11） |
-| Part J revocation | FOLLOW_UP_DEBT | **退出 V1**（§11；其「store-entry 移除先行、本地立即 fail-closed」顺序留作 FOLLOW_UP Spec 的出发点） |
+| Part I rotation | FOLLOW_UP_DEBT | **退出 V2**（不在本 replacement Spec；§11） |
+| Part J revocation | FOLLOW_UP_DEBT | **退出 V2**（§11；其「store-entry 移除先行、本地立即 fail-closed」顺序留作 FOLLOW_UP Spec 的出发点） |
 | L1-7（same-client 恢复验收） | 依赖 rotation | 退出（对应 AC 改为 FAIL_LOUD 断言，AC6） |
 
 **关键问题回答**：删除 rotation / revocation / generalized recovery framework 后，
@@ -307,9 +365,12 @@ credential existence ≠ business grant（两层必须可区分）：verificatio
 CHAT_BLOCKED_BY_CREDENTIAL_FAILURE = NO（provisioning 任何一步失败都不阻塞聊天）
 BROKER_FAIL_CLOSED = YES（credential 缺失 ⇒ gateway credential_unavailable，
   token mint 不发生；不伪造、不降级、不 fallback）
-RETRY_SUPPORTED = YES（完整重跑收敛；无 daemon、无 interval 约定——重试触发方式
-  = operator / 部署显式调用；birth 时自动触发 / 自动重试 coordinator = FOLLOW_UP，
-  且 owner 永远不是 Router）
+BIRTH_PROVISIONING_TRIGGER = REQUIRED（出生时 best-effort 触发，§5 调用时机；
+  极薄 birth → trusted provisioning seam，owner ≠ Router —— D-006 产品前提，
+  不是 FOLLOW_UP）
+CHAT_WAITS_FOR_PROVISIONING = NO
+RETRY_SUPPORTED = YES（失败修复 = explicit complete rerun：operator / 部署显式
+  调用，完整重跑天然收敛；AUTO_RETRY_DAEMON = NO，无 reconcile loop）
 MAIN_RESET_REQUIRED_FOR_REPAIR = NO（store 生效 = 下一次调用；与 main reset 无关）
 ```
 
@@ -321,7 +382,8 @@ ROTATION                = FOLLOW_UP（前置：auth 侧 HTTPS rotation seam—�
 REVOCATION              = FOLLOW_UP
 GENERALIZED_RECOVERY    = FOLLOW_UP（E/G 状态自动恢复、reconciliation）
 RECONCILIATION_PLATFORM = NO
-PROVISIONING_DAEMON     = NO
+PROVISIONING_DAEMON     = NO（含 auto-retry / reconcile loop；birth 触发是一次性
+                          best-effort invoke，不是 daemon）
 IAM_PLATFORM            = NO
 POLICY_ENGINE           = NO
 ROUTER_CREDENTIAL_MANAGER = NO
@@ -338,13 +400,18 @@ KERNEL_CHANGE           = NONE
 
 在本文档 `status: accepted` 之后：
 
-1. **Deployment-side provisioning tooling**：实现 §5 两个函数（P0–P2 + §6 store
-   契约 + §7 handoff + §8 grants contract），经 §4 冻结的幂等 seam 与调用体。
-   首要用例 = 既有 `agt_*` canary Agent 的 backfill。
-2. **验收驱动**：§13 AC 的可复现断言脚本。
-3. 实现自由度（**不上抛 Owner**，由 Implementation Agent 决定并在 PR 说明）：
+1. **Deployment-side provisioning tooling**：实现 §5 `ensureAgentCredential(agentId)`
+   （P0–P2 + §6 store 契约 + §7 handoff；**不含 baseline grants**，§8），经 §4
+   冻结的幂等 seam 与调用体。首要用例 = 既有 `agt_*` canary Agent 的 backfill。
+2. **极薄 birth → trusted provisioning seam**（Amendment 1 新增授权——FIX 1）：
+   Agent 出生路径 best-effort 调用 provisioning tooling（fire-and-forget、非阻塞、
+   失败结构化记录、chat 绝不等待；owner ≠ Router）。本轮不设计 coordinator /
+   API / queue / daemon 形态——具体机制为实现自由度，但 Router 不得成为 owner。
+3. **验收驱动**：§13 AC 的可复现断言脚本。
+4. 实现自由度（**不上抛 Owner**，由 Implementation Agent 决定并在 PR 说明）：
    CLI/API/脚本入口形态、报告输出格式、temp 文件命名、§6 S7 串行化具体机制
-   （lock 文件或 operator 串行）、verification mint 所选 scope 组合。
+   （lock 文件或 operator 串行）、verification mint 所选 scope 组合、birth 触发
+   seam 的具体机制（owner ≠ Router 前提下）。
 
 ## 13. Acceptance Criteria
 
@@ -356,7 +423,8 @@ KERNEL_CHANGE           = NONE
 - AC2 幂等：重复 ensure ≥3 次 → SAME principal id、SAME clientId；Auth 侧无
   agentcore external_ref 之外的重复行；无 orphan。
 - AC3 store 契约：0600、505-owned；预置 unrelated entry 后 ensure 另一 agent，
-  unrelated entry 逐字节不变；预置 malformed store → FAIL_LOUD 且文件不变。
+  unrelated entry 语义内容不变（no entry lost / no entry mutated；不要求 JSON
+  文本字节保留）；预置 malformed store → FAIL_LOUD 且文件不变。
 - AC4 child 隔离：`CHILD_SECRET_ENV=ABSENT / CHILD_SECRET_FS=ABSENT /
   A_READ_CREDENTIAL_STORE=DENIED`（V2 验收同口径）。
 - AC5 P0 负例：不存在的 agentId → STRUCTURED_REJECT；Auth 与 store 零新建行。
@@ -366,26 +434,32 @@ KERNEL_CHANGE           = NONE
 - AC7 生效语义：ensure 前 Broker 调用 = credential_unavailable（chat 正常）；
   ensure 后同一 Agent 下一次调用即成功解析（无重启、无 main reset）。
 
-**L2 — grant 分离：**
+- AC8 birth 触发非阻塞（Amendment 1——FIX 1）：新 Agent 出生（first eligible
+  human message）→ best-effort 触发 trusted provisioning seam；
+  `CHAT_WAITS_FOR_PROVISIONING = NO`（provisioning 失败 / 未完成时 chat 正常
+  进行、受影响 capability 维持 fail-closed unavailable）；无 daemon。
 
-- AC8 credential READY 但 baseline grant 未就绪 → 授权失败语义
-  （invalid_scope 等）≠ credential_unavailable；grants step 缺外部 seam →
-  `external_prerequisite_missing` FAIL_LOUD，credential 成果保留，重跑收敛。
+**L2 — grant 分离（诚实边界；Amendment 1 起不构成 conditional PASS）：**
 
-**L3 — 正向（条件验收）：**
+- AC9 credential READY 但 baseline grant 未就绪（V2 provisioning 后的零 grant
+  client 即自然状态）→ 授权失败语义（invalid_scope 等）≠ credential_unavailable。
+  **本 Spec 验收到此为止**：不设 grants conditional positive AC；不以 mock /
+  manual bearer / fake grant 宣称完成；Credential V2 PASS 只证明 credential
+  identity provisioning works，不声称 `ALL_BASELINE_CAPABILITIES_READY`（§8）。
 
-- AC9 **only if** baseline grants 经 named external prerequisite 已就绪 → Broker →
-  token → `forum_list_threads` 返回业务结果。不接受 fake credential / mock-only
-  Broker / manual bearer / OpenClaw fallback。
+不接受（全局）：fake credential / mock-only Broker / manual bearer /
+OpenClaw fallback / fake grant。
 
 ## 14. Risks
 
 - secret 落 child 可读位置 → §7 唯一路径 + 禁止清单 + AC4。
 - provision 覆盖他 Agent entry → §6 validate-preserve-atomic + AC3。
 - 冲突状态被静默「修复」出平行身份 → §5 FAIL_LOUD 冻结 + AC6。
-- grant 缺失被折叠为 credential 故障 → §8 分离 + AC8。
-- 把 FOLLOW_UP 偷渡回 V1（rotation/revocation/daemon）→ §11 明令禁止；
-  重开需 NEW_EVIDENCE。
+- grant 缺失被折叠为 credential 故障、或被 mock/fake 成就绪 → §8 分离与诚实
+  边界 + AC9。
+- birth 触发演化为阻塞 chat 或 daemon → §5 调用时机 / §10 / §11 冻结 + AC8。
+- 把 FOLLOW_UP 偷渡回 V2（rotation / revocation / daemon / grant platform）→
+  §11 明令禁止；重开需 NEW_EVIDENCE。
 
 ## 15. Related Evidence
 
@@ -426,78 +500,84 @@ KERNEL_CHANGE = NONE
 ## Final Output
 
 ```text
-AGENT_CORE_CREDENTIAL_PROVISIONING_SIMPLIFICATION = PASS
+AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V2 —— Amendment 1（FINAL_SCOPE_FIX）
 
-CURRENT_REAL_BLOCKER =
-  formal Agent（agt_*）存在，但 Auth principal / machine client / trusted
-  credential entry / baseline grants 缺失 ⇒ Broker capability fail-closed
-  （credential_unavailable @ gateway credential resolution，token mint 未到达）
+CREDENTIAL_PROVISIONING_V2_FINAL_SCOPE_FIX = PASS
 
-MINIMUM_REQUIRED_FLOW =
-  ensureAgentCredential(agentId)：
-    P0 Agent Definition 校验（not found → STRUCTURED_REJECT，零副作用）
-    → P1 ensurePrincipal（POST /api/v1/principals，幂等）
-    → P2 ensureClient（POST /api/v1/clients，幂等；secret HTTPS-body→内存）
-       → store write（validate-preserve-atomic，0600/505）
-       → verification mint（200/400=READY，401/冲突=FAIL_LOUD）
-  → ensureBaselineGrants(agentId)（最薄 contract；外部 seam；缺失=FAIL_LOUD per-step）
-  → per-step readiness 报告；重跑即收敛
+BIRTH_PROVISIONING_TRIGGER = REQUIRED
+  （first eligible human message → create Agent → establish chat-ready Agent →
+    best-effort invoke trusted provisioning seam；极薄 seam，owner ≠ Router，
+    本轮不设计 coordinator/API/queue；D-006 产品前提，不是 FOLLOW_UP）
+CHAT_WAITS_FOR_PROVISIONING = NO
+AUTO_RETRY_DAEMON = NO · MANUAL/DEPLOY_RETRY = YES（explicit complete rerun，
+  重跑天然收敛）
 
-EXISTING_SPEC_DISPOSITION = REPLACE_WITH_SMALLER_SPEC
-  （旧 proposal @ 9a408e0 从未 merge；整体保留为 history/evidence pointer，
-   DO_NOT_ACCEPT / DO_NOT_MERGE；本 Spec standalone，零 patch-stack archaeology）
+CREDENTIAL_IMPLEMENTATION_SCOPE =
+  Agent exists → ensure principal → ensure machine client → persist trusted
+  credential → verify credential（V2 可实施闭环到此为止）
+BASELINE_GRANT_IMPLEMENTATION_STATUS = EXTERNAL_PREREQUISITE_MISSING
+  （formal MachineAccessGrant mutation seam = MISSING，evidence 已确认）
+BASELINE_GRANT_PROVISIONING_SPEC_REQUIRED = YES
+AUTH_SIDE_CHANGE_REQUIRED = YES
+  （后续单独最小 Spec 建立 ensure standard baseline grant profile 的正式幂等
+    Auth seam；不在 Credential V2 中建设；D006_BASELINE_GRANT_REQUIREMENT =
+    PRESERVED——要求保留，实现移交）
 
-KEEP =
-  authority 模型（Auth=principal/client/grant 权威；store=deployment/505；
-    Broker=reader；child 无 raw secret；Router 无涉）
-  四族身份映射 + deterministic external_ref（agentcore:v1:principal|client:<agentId>）
-  幂等 ensure 调用体（principal_type=service；不传 expected_*）
-  trusted store 写契约（validate-preserve-atomic + 0600/505 + 单写者）
-  secret handoff 唯一路径 + 禁止清单
-  credential ≠ grant（两层可区分；invalid_scope=最小证据）
-  verification mint 解释表（防假 PASS/假 FAIL）
-  FAIL_LOUD on corrupt/conflicting state（无平行身份、不覆写 store）
-  非阻塞语义（chat 不阻塞 / Broker fail-closed / 重跑收敛 / 无 main reset 耦合）
+CONDITIONAL_PASS_REMAINING = NONE
+  （L3 conditional positive 已删除；Credential V2 PASS 只证明 credential
+    identity provisioning works，不声称 ALL_BASELINE_CAPABILITIES_READY；
+    不允许 mock/manual bearer/fake grant 宣称完成）
 
-REMOVE_FROM_V1 =
-  rotation（旧 Part I）
-  revocation（旧 Part J）
-  状态 E/G 自动恢复（missing-store / secret-invalid 的 rotation 修复路径）
-  状态 F recovery runbook 细节（检测保留，恢复降级 FAIL_LOUD）
-  旧 Part D.6 Agent 删除/disable 集成
-  旧 Part A 全量 source trace（保留三行锚点 + Investigation 引用）
-  Broker 运行时 error-classification 改造（BROKER_CHANGE：YES_MINIMAL → NONE）
-  L1-7 same-client 恢复验收（改为 AC6 FAIL_LOUD 断言）
+STORE_UNRELATED_ENTRY_INVARIANT = SEMANTIC_CONTENT_UNCHANGED
+  （no entry lost / no entry mutated / malformed store fail-loud / atomic
+    replace / correct permissions；不要求 JSON whitespace/序列化字节保留，
+    不引入 text-preserving JSON machinery）
 
-FOLLOW_UP_DEBT =
-  rotation Spec（外部前置：auth HTTPS rotation seam；CLI stdout 方式禁用）
-  revocation Spec（store-entry 移除先行、本地立即 fail-closed 的顺序值得继承）
-  E/G 状态自动恢复 / generalized recovery / reconciliation
-  baseline grant mutation seam（外部 auth 侧）
-  birth 时自动触发 provisioning 的 trusted coordinator seam（owner ≠ Router）
-  Broker 运行时 credential/授权/transport 三层错误码可区分性
+ROTATION_IN_V2 = NO
+REVOCATION_IN_V2 = NO
+GENERALIZED_RECOVERY_IN_V2 = NO
+PROVISIONING_DAEMON = NO
+ROUTER_PROVISIONING_OWNER = NO
+KERNEL_CHANGE = NONE
 
+OWNER_DECISIONS_STILL_REQUIRED = NONE
+  （birth seam 具体机制、CLI 形态、temp/lock 实现等均为 §12 实现自由度）
+
+—— 经 Amendment 1 更新后的 standing verdicts ——
+
+CREDENTIAL_PROVISIONING_SIMPLIFICATION = FIX_APPLIED
+  （原 FIX_REQUIRED 三项已修：birth 触发入 V2 / grants 去 conditional PASS /
+    store 无关 entry 改语义不变；rotation/revocation/generalized recovery
+    删除维持接受）
+
+CURRENT_REAL_BLOCKER = formal Agent 存在但 principal / machine client /
+  trusted credential entry 缺失 ⇒ Broker capability fail-closed（§1，不变）
+MINIMUM_REQUIRED_FLOW = ensureAgentCredential(agentId)：P0 Definition 校验 →
+  P1 ensurePrincipal → P2 ensureClient + store write + verification mint；
+  birth best-effort 触发 + 显式重跑收敛；baseline grants 移交后续 Spec
+EXISTING_SPEC_DISPOSITION = REPLACE_WITH_SMALLER_SPEC（不变；旧 proposal @
+  9a408e0 保留为 history/evidence，DO_NOT_MERGE）
+KEEP = authority 模型 / 四族身份 + deterministic external_ref / 幂等 ensure
+  调用体 / store 写契约（语义保留版）/ secret handoff / credential≠grant /
+  verification mint 解释表 / FAIL_LOUD / 非阻塞语义
+REMOVE_FROM_V2 = rotation / revocation / generalized recovery / Broker 运行时
+  error-classification 改造（§9，不变）+ ensureBaselineGrants 退出 V2 实施闭环
+  （Amendment 1，移入后续 grants Spec）
+FOLLOW_UP_DEBT = rotation Spec / revocation Spec / generalized recovery /
+  baseline grant provisioning Spec（正式幂等 Auth seam；AUTH_SIDE_CHANGE）/
+  Broker 运行时三层错误码可区分性
 REJECTED_PLATFORMS = RECONCILIATION_PLATFORM / PROVISIONING_DAEMON / IAM_PLATFORM /
-  POLICY_ENGINE / ROUTER_CREDENTIAL_MANAGER —— 全部 NO（无当前 production evidence
-  证明其中任何一项是 blocker）
-
-关键问题（删除 rotation/revocation/generalized recovery 后 blocker 是否仍安全解决）
-  = YES（blocker=身份缺失主路径；幂等重试即收敛；被删恢复路径本依赖缺失的外部
-    seam 不可实现；冲突状态降级 FAIL_LOUD 不降级安全属性）
+  POLICY_ENGINE / ROUTER_CREDENTIAL_MANAGER —— 全部 NO（无当前 production
+  evidence 证明其中任何一项是 blocker）
 
 CHAT_BLOCKED_BY_CREDENTIAL_FAILURE = NO
 BROKER_FAIL_CLOSED = YES
 RETRY_SUPPORTED = YES
 MAIN_RESET_REQUIRED_FOR_REPAIR = NO
 
-ROUTER_PROVISIONING_OWNER = NO
-KERNEL_CHANGE = NONE
-
 NEW_SPEC_PATH = docs/specs/AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V2.md
-  （本 Spec；status: proposed；BASE = origin/main @ 67404bc）
-
-OWNER_DECISIONS_STILL_REQUIRED = NONE
-  （CLI/API 形态、重试方式、temp/lock 实现等均为 §12 实现自由度，不上抛）
+  （本文件原地 Amendment 1；status: proposed；BASE = origin/main @ 67404bc；
+    reviewed base HEAD 457f29f）
 
 SPEC_ONLY = YES（IMPLEMENTATION = NONE / PRODUCT_CODE_CHANGE = NONE /
   KERNEL_CHANGE = NONE；commit + push，不 merge）
