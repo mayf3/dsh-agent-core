@@ -4,7 +4,7 @@
 Repository 的知识权威是 `docs/`（见下）；`.agents/` 只是告诉 Coding Agent 怎么用它们。
 
 > 约束来源：`docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md`（status: **accepted**）中的
-> `.agents/` 设计（§12 / §13）——该 Spec 冻结了 Spec 作为 merge / implementation authority 的语义。
+> `.agents/` 设计（§21 / §22）——该 Spec 冻结了 Spec 作为 merge / implementation authority 的语义。
 
 ---
 
