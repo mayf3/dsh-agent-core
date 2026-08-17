@@ -1,9 +1,15 @@
+---
+spec_id: OPEN_SOURCE_DOCS_CONVERGENCE_V1
+status: accepted
+---
+
 # OPEN_SOURCE_DOCS_CONVERGENCE_V1
 
-> 状态：SPEC — 有 **AMENDMENT** (SPEC_AMENDMENT) · 原始 Spec 日期：2026-08-16 ·
-> Amendment 日期：2026-08-17
+> 状态：accepted（SPEC_AMENDMENT 修订 + Independent Re-review PASS 后收尾）·
+> 原始 Spec 日期：2026-08-16 · Amendment 日期：2026-08-17 · Accepted 日期：2026-08-17
 >
-> **OPEN_SOURCE_DOCS_CONVERGENCE_V1_SPEC_AMENDMENT = NEEDS_AMENDMENT 处置后已修订**
+> **OPEN_SOURCE_DOCS_CONVERGENCE_V1_SPEC_AMENDMENT = NEEDS_AMENDMENT 处置后已修订 →
+> Independent Re-review PASS（REQUIRED_FIXES = NONE）→ SPEC_STATUS = accepted**
 > 本文件已按 Amendment 1–6 刷新（见 §16 Amendment Register），大方向（KEEP）仍成立；
 > 所有 current-state inventory 已改为 **origin/main at implementation start** 为权威，
 > 不再硬编码旧 branch/commit 状态。
@@ -616,8 +622,12 @@ public-safety disposition 总表，让任何浏览者/Agent 一眼知道哪些 h
 ## 8.4 docs/reports（27 件 → docs/history/reports，KEEP 全部）
 
 > Amendment 2：当前 main 的 reports 已含 `production-runtime-v1`、`trusted-control-plane-
-> deployment-hardening-v1`、`delivery-pipeline-integration-v0`、`repo-hygiene-convergence-v1`、
-> `agent-core-backup-retention*` 等新报告；旧 Spec 表格未列全，按当前 inventory 逐件登记 `MOVE_TO_HISTORY`。
+> deployment-hardening-v1`、`delivery-pipeline-integration-v0`、`repo-hygiene-convergence-v1`
+> 等新报告；旧 Spec 表格未列全，按当前 inventory 逐件登记 `MOVE_TO_HISTORY`。
+> 事实更正（acceptance finalize）：`agent-core-backup-retention*` **不在** `docs/reports/`
+> 的 27 件 report 中——它落位于 accepted Spec（`docs/specs/AGENT_CORE_BACKUP_RETENTION_V1.md`）
+> 与 investigation（`docs/investigations/agent-core-backup-retention-v1-proposal.md`），
+> 不是 reports 新报告，也不因此新增迁移动作。
 
 | 当前路径 | STATUS_CLASS | PUBLIC_CLASS（典型） | ACTION | TARGET_PATH |
 |---|---|---|---|---|
@@ -946,7 +956,8 @@ HISTORY_MODEL =
 
 STALE_FACTS_REMOVED =
     bfe7491 基线 → b7a1109；investigations 9→12；docs/specs 从「缺失」→ 2 accepted specs；
-    reports 27 件含 production/trusted-cp/delivery/backup-retention 新报告；
+    reports 27 件含 production/trusted-cp/delivery 新报告；backup-retention 属 accepted
+    spec / investigation 产物（非 docs/reports/ 新报告）；
     examples/ 从「缺失」→ v0-vertical-slice 存在；根级 V0 scripts 已移除；
     ACCEPTED_BUT_UNMERGED 的硬编码 branch 列表 → 实施启动时实时核查；
     Quick Start 的 node scripts/install-profile.mjs 等失效命令 → PUBLIC_QUICK_START = CURRENTLY_MISSING。
@@ -978,7 +989,7 @@ PRODUCT_CODE_CHANGE = NONE
 RUNTIME_CHANGE = NONE
 KERNEL_CHANGE = NONE
 
-SPEC_STATUS = AMENDED (NEEDS_AMENDMENT → RESOLVED, direction KEEP, not yet implemented)
+SPEC_STATUS = accepted
 READY_FOR_INDEPENDENT_RE_REVIEW = YES
 ```
 
