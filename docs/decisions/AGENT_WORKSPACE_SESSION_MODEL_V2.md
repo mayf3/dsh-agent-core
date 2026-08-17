@@ -654,6 +654,90 @@ FEISHU_MEMORY_SPEC_DISPOSITION = DO_NOT_ACCEPT / DO_NOT_MERGE
 
 ---
 
+## 26. Authority Reconciliation — 代码 / README / 相关 Spec 现状
+
+> 本轮除新增本文档外，系统核对与新模型相关的既有 Authority（decisions / specs /
+> investigations / reports / 代码注释）。目标不是整理所有文档，而是回答：哪些旧判断
+> 继续有效、哪些已被 V2 替代、哪些实现仍存在但只属于 transitional compatibility、
+> 哪些 proposed Spec 应停止推进、哪些内容需要后续更小的 Implementation Spec。
+
+### 26.1 五份主 Authority 的核对结论（转写表）
+
+```text
+| Authority                       | 继续有效 (KEEP)                                        | 被 V2 替代 (REPLACED_BY_V2)                              | 仍存在但 transitional              | proposed 停止 | 需更小 Impl Spec |
+|---------------------------------|--------------------------------------------------------|----------------------------------------------------------|-------------------------------------|---------------|------------------|
+| D-002 AGENT_SESSION_CHANNEL_    | Agent 长期实体 / Session 属 Agent / Channel 只是 UI /   | 任意 ChannelConversation 均可 switch 到任意 Agent        | —                                   | —（决策记录，  | 不需             |
+|   MODEL_V1 (proposed)           | Binding 实体 / switchAgent 只改绑定 / resolve 幂等入口 / | （V2 §15/§17 产品分层）/ activeSessionId 作为人类入口    |                                     |  不再叠 amend）|                  |
+|                                 | API channel-agnostic                                    | 状态（V2 §8/§14）/「Agent 固定拥有唯一 workspace」条款   |                                     |               |                  |
+| D-004 BINDING_AND_SWITCH_V1     | Router 唯一 owner / 原子 JSON 持久化 / switchAgent 唯一  | —                                                        | —                                   | —             | 不需             |
+|   (accepted)                    | 原语 / per-Agent single-flight                          |                                                          |                                     |               |                  |
+| D-003 MEMORY_V1 (accepted)      | file-first MEMORY.md / episodic daily note / 物理隔离 / | —（ONE_AGENT_ONE_WORKSPACE 下天然 agent-scoped，         | —                                   | —             | 不需             |
+|                                 | consolidation 时机 / 人工编辑优先                        |  V2 §5/§13 对齐）                                        |                                     |               |                  |
+| AGENT_CORE_BINDING_WORKSPACE_V1 | SESSION_WRITE_CONTRACT R1-R3 / cwd immutable /         | FEISHU_WORKSPACE_POLICY per-conversation workspace（     | Binding.workspace（代码已落地）→     | —             | 需要：            |
+|   (accepted spec)               | workspaceId validation / Router 零产品分支 /            |   V2 §2/§5 替代）/「Binding 决定 effective workspace」   |  transitional field（§22）；         |               |  Binding.workspace |
+|                                 | one-agent-one-process / App 切 Agent → target default   |   作为产品 authority（V2 §5/§21 替代）                   |  feishu conversationWorkspaceId →    |               |  未来处置；注释对齐 |
+|                                 |   workspace（与 V2 §15/§16 一致）                        |                                                          |  transitional mechanism（§26.3）     |               |                  |
+| FEISHU_WORKSPACE_MEMORY_        | HISTORICAL_MIXED_MEMORY_MIGRATION = NONE /             | 「same Agent → per-conversation Workspace」建模前提       | —                                   | STOP_PROPOSAL  | 需要：把两个保留  |
+|   ALIGNMENT_V1 @ 6071dfd        | OLD_MIXED_MEMORY = ARCHIVE_ONLY                        | （与 V2 ONE_AGENT_ONE_WORKSPACE 冲突）                    |                                     | (DO_NOT_ACCEPT |  判断吸收进更小   |
+|   (proposed，分支上，未上 main) |                                                         |                                                          |                                     |  / DO_NOT_     |  spec（§23）      |
+|                                 |                                                         |                                                          |                                     |  MERGE)        |                  |
+| AGENT_REPO_KNOWLEDGE_GOVERNANCE | Decision = long-lived invariant authority（§4C D-003）/ | —（V2 恰好按其 Decision contract 撰写；                 | —                                   | —             | 不需             |
+|   V1 (accepted spec)            | status metadata supersession / ownership rule           |   §4C 示例 invariant 的 native-session 映射问题 V2 未决， |                                     |               |                  |
+|                                 |                                                         |   留给 Implementation Spec，不冲突）                      |                                     |               |                  |
+```
+
+### 26.2 未受影响的其它 main-bound Spec
+
+```text
+AGENT_CORE_BACKUP_RETENTION_V1（accepted）    = PRESERVE（主题与 V2 无关）
+OPEN_SOURCE_DOCS_CONVERGENCE_V1（accepted）   = PRESERVE（主题与 V2 无关）
+```
+
+### 26.3 代码 / 注释现状核对（当前 origin/main 实现）
+
+| 组件 / 文件 | 现状断言 / 行为（source-verified） | V2 判定 |
+|---|---|---|
+| `feishu-connector/src/core.js:372-402` | 每个 conversation 一个稳定 workspaceId（`conversationWorkspaceId`）+ conversation-scoped 初始 session（`conversationMainSessionId` = main-<conv>）；注释「two groups of the SAME Agent never collapse onto same workspace」 | **TRANSITIONAL 机制**（对话→独立 workspace 的 canary 载体，§21）；该注释断言的是旧产品模型 → 后续 Impl Spec 对齐注释；本轮**不动代码**（DO_NOT_BREAK_CANARY，§22） |
+| `agent-router/src/index.js:81-86,254-257` | `resolveChannelConversation` first contact 绑定 **config defaultAgentId**（旧模型：默认 Agent + 其 main） | **机制 = 旧产品模型**；V2 产品模型 = first-seen → 自动创建新 Agent（§3）→ 属未来 Impl Spec，本轮不实现 |
+| `agent-router/src/binding-store.js` / `index.js`（Binding.workspace / resolveEffectiveWorkspace / switchAgent 三元组） | Binding.workspace 决定 effective workspace；null → agent default；Router 只机械执行 | **TRANSITIONAL_COMPATIBILITY_FIELD**（§22）；机制保留，无产品 authority |
+| `workspace-bootstrap`（`seedFiles = ['AGENTS.md']`、ensure/ensureWorkspace 幂等） | 只 seed AGENTS.md；不 seed MEMORY.md / files/ | **KEEP** ＝ 与 V2 `WORKSPACE_BOOTSTRAP = AGENTS_MD_ONLY` 一致（§5） |
+| `agent-provisioning`（provisionAgentHome） | per-agent home 预置（profile / settings / credentials copy），幂等 | **KEEP**（V2 §20 birth provisioning 的机制地基；principal/credential/grant 的 birth 级 ensure 属未来 Auth/Provisioning Spec） |
+| `agent-memory`（paths.js:17-19 注释、MEMORY.md lazy 创建 + memory/ 每日 note） | workspace 内 MEMORY.md，mount 时按 agentId 解析；注释引用 D-002「Agent 固定拥有 workspace / credential / memory」 | **KEEP** 机制（ONE_AGENT_ONE_WORKSPACE 下与 V2 §5/§13 一致：所有 Session 共享同一 Agent Workspace 记忆）；注释引用旧模型 → 后续对齐 |
+| `broker`（credential-store / credential / identity / gateway） | credential 按 agentId 绑定；principal = credential→agent 绑定（Auth 侧唯一权威）；fail-closed | **KEEP** ＝ 与 V2 §19/§20 一致（SECURITY_DOMAIN = AGENT；credential 属 Agent）；birth 时 provisioning 属未来 |
+| `scheduler-router`（createRouterInvoker → proc.turn(sessionId, message, {})） | cron 不传 workspace/cwd → 落 process 级 agent default workspace | **KEEP** 机制；V2 §10 PER_EXECUTION fresh Session + 同 Agent Workspace/Security 的 scoping 属未来 Impl Spec |
+| `agent-switch`（tool relay 三元组） | 转发 {targetAgentId, targetSessionId?, workspace?}，纯 adapter | **KEEP** 机制；V2 §17 surface scoping（Feishu main / cron / agent-task NOT_ALLOWED）属未来产品 policy |
+
+### 26.4 proposed Spec 停止推进清单
+
+```text
+STOP_PROPOSAL（DO_NOT_ACCEPT / DO_NOT_MERGE，不再推进）：
+  FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1 @ 6071dfd（proposed；分支上，未上 main；
+    §23/§24.5；处置方向 = REPLACE_WITH_SMALLER_SPEC）
+
+不再继续推进 amendment 的决策记录：
+  D-002 AGENT_SESSION_CHANNEL_MODEL_V1（proposed；V2 §24.1 PARTIALLY_SUPERSEDE，
+    不叠 amendment）
+```
+
+### 26.5 历史 Report 语句（非 authority，不修改）
+
+```text
+docs/reports/integration-v1.md:145（「Agent 固定拥有 workspace/DSH_HOME/process/memory」）
+docs/reports/agent-session-v1.md:227（「Agent 必须始终以唯一 workspace 为 cwd」）
+  → 历史验收记录（report 不是 authority，见 AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1 §10）；
+    其中的产品模型断言已被 V2 取代；档案保留原样。
+```
+
+### 26.6 Investigation 重分类
+
+```text
+docs/investigations/test-agent-feishu-product-semantics-v1.md（PASS）
+  = TRANSITIONAL_COMPATIBILITY_EVIDENCE（机制能力实证；不授予产品 authority，§21）；
+  保持 evidence 原样，不修改。
+```
+
+---
+
 ## Final Output
 
 ```text
@@ -704,6 +788,14 @@ LONG_TERM_MODEL =
   FEISHU_MEMORY_SPEC_DISPOSITION  = DO_NOT_ACCEPT / DO_NOT_MERGE
       → REPLACE_WITH_SMALLER_SPEC（保留 HISTORICAL_MIXED_MEMORY_MIGRATION = NONE +
         OLD_MIXED_MEMORY = ARCHIVE_ONLY 两个产品判断）
+  AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1_DISPOSITION = PRESERVE
+  OTHER_MAIN_BOUND_SPECS_DISPOSITION = PRESERVE（BACKUP_RETENTION_V1 /
+      DOCS_CONVERGENCE_V1，主题无关）
+  CODE_SURFACE_RECONCILIATION = DONE（§26.3；无代码改动；断言旧产品模型且须后续对齐的
+      注释点位已登记：feishu-connector conversationWorkspaceId 注释 /
+      agent-router first-contact default-agent binding / agent-memory D-002 引用）
+  PROPOSED_SPEC_STOPLIST = FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1 @ 6071dfd
+      （STOP_PROPOSAL / DO_NOT_ACCEPT / DO_NOT_MERGE；处置 = REPLACE_WITH_SMALLER_SPEC）
 
   OWNER_DECISIONS_STILL_REQUIRED = NONE
     （V2 已把长期产品模型收敛完整；§25 的推迟项均为 Implementation/Operational 级，
