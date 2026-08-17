@@ -8,7 +8,10 @@ replaces: AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1（proposal @ 9a408e0，从
 
 > 性质：**Spec（SPEC ONLY — 本轮只冻结收敛，不实现）** · 初版：2026-08-18 ·
 > Amendment 1（FINAL_SCOPE_FIX）：2026-08-18，base reviewed HEAD `457f29f` ·
-> Base：`origin/main @ 67404bc` · 仓库：`mayf3/dsh-agent-core` ·
+> Amendment 2（CURRENT_MAIN_RECONCILIATION）：2026-08-18，base reviewed HEAD
+> `479c883`（rebase 前），branch rebase 至 `origin/main @ 8067545`（含 Core
+> Alignment acceptance `ca30981`；初版 base 67404bc） ·
+> 仓库：`mayf3/dsh-agent-core` ·
 > 角色：Credential Provisioning Simplification Spec Agent
 >
 > **REPLACES**（`EXISTING_SPEC_DISPOSITION = REPLACE_WITH_SMALLER_SPEC`）：
@@ -42,6 +45,49 @@ Review 裁决 `CREDENTIAL_PROVISIONING_SIMPLIFICATION = FIX_REQUIRED`：整体�
    移交后续单独最小 Spec（Auth 侧变更）；删除 L3 conditional positive 验收。
 3. **FIX 3（store 保留语义）**：无关 entry 的「逐字节不变」改为
    「语义内容不变」（no entry lost / no entry mutated；不要求 JSON 文本字节保留）。
+
+---
+
+## Amendment 2 摘要（CURRENT_MAIN_RECONCILIATION，2026-08-18，基于 reviewed HEAD 479c883）
+
+新 evidence：origin/main 已前移 `67404bc → ca30981 → 8067545`，其中
+`docs/specs/AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC.md` 已 **accepted**
+（@ ca30981，accepted_reviewed_head 60d248e），当前冻结：
+
+```text
+FEISHU_V2_INGRESS_MODE   = PREBOUND_ONLY（unknown conversation fail-closed）
+AUTOMATIC_AGENT_BIRTH    = OUT_OF_SCOPE（automatic Agent birth caller 尚不存在）
+AUTH_PROVISIONING_REDESIGN = OUT_OF_SCOPE
+```
+
+这不改变 D-006 长期产品模型，但改变 Credential V2 的**当前实施顺序**。本轮只修
+一项（取代 Amendment 1 FIX 1 的 birth 触发实施定位）：
+
+1. **birth 产品要求保留、birth 触发实施退出**：
+   `BIRTH_PROVISIONING_PRODUCT_REQUIREMENT = PRESERVED`，但
+   `BIRTH_TRIGGER_IMPLEMENTATION = OUT_OF_SCOPE_FOR_CREDENTIAL_V2`——当前
+   accepted Core Alignment 阶段 unknown conversation 仍为 PREBOUND_ONLY，
+   automatic Agent birth caller 尚不存在。Credential V2 只提供未来 caller 可用的
+   trusted provisioning capability（`ensureAgentCredential(agentId)`）并冻结
+   **integration contract**（§5 调用时机）：这不是本轮 birth integration
+   implementation authority。
+2. 相应删除 §12 对「极薄 birth → trusted provisioning seam」的 implementation
+   授权；删除真实 birth AC8（避免本 Spec PASS 依赖尚不存在的 automatic birth），
+   替换为 credential seam 自身的失败语义验收。
+3. Follow-up 登记：`AUTOMATIC_AGENT_BIRTH_SPEC_REQUIRED = YES`（未来 Spec 负责
+   FIRST_ELIGIBLE_HUMAN_MESSAGE → create Agent → chat ready → best-effort
+   credential provisioning，并负责 supersede/extend Core Alignment 的
+   PREBOUND_ONLY）。
+4. Baseline grants / rotation / revocation / generalized recovery 上一轮裁决
+   **全部保持不动**。
+
+**Scope conflict 检查（对 accepted Core Alignment）= NONE**：Core Alignment 改动面
+= feishu-connector ingress / agent-memory workspace 解析 / production-runtime
+compose 接线；Credential V2 改动面 = 新增 deployment-side tooling + 外部 auth
+seam 调用，代码面不相交。Core Alignment 的 `AUTH_PROVISIONING_REDESIGN =
+OUT_OF_SCOPE` 是该 Spec 自身的 scope 声明（不禁止本 Spec 做不重设计 Auth 的
+credential provisioning）；本 Spec 不创建 Agent / Binding / 不改 ingress——与
+PREBOUND_ONLY fail-closed 语义无冲突。
 
 ---
 
@@ -92,7 +138,8 @@ AGENT_BIRTH_BLOCKS_ON_CREDENTIAL = NO
 AGENT_CHAT_READY = stable agentId + Workspace + AGENTS.md + canonical main/runtime
 EXTERNAL_CAPABILITY_READINESS = principal + credential + baseline grants
 
-external capability provisioning 出生时启动（best-effort，见 §5 调用时机 / §10）
+external capability provisioning 产品要求 = 出生时启动（D-006；当前实施顺序见
+  §5 调用时机——birth trigger implementation 不属本 Spec）
 provisioning failure → DOES_NOT_BLOCK_CHAT
 受影响 Broker capability → fail-closed unavailable
 later provisioning succeeds → 当前 Agent/main 立即获得能力（无重启、无 main reset）
@@ -115,10 +162,12 @@ BROKER = reader / authorized transport（gateway 按 ACTUAL proc.agentId 读取�
 CHILD_RAW_SECRET_ACCESS = NO（V2 验收实证 CHILD_SECRET_ENV/FS=ABSENT、读 store=DENIED）
 ROUTER_PROVISIONING_OWNER = NO
 PROVISIONING_OWNER = deployment-side trusted tooling（与
-  scripts/production-agent-provision.mjs root seam 同类）。两种触发（§5 调用时机）：
-  (1) Agent 出生时经极薄 birth → trusted provisioning seam best-effort 触发
-      （REQUIRED；owner ≠ Router）；(2) operator / 部署显式完整重跑
-      （backfill / 修复）。非 daemon、非 runtime、非 Router、非 scheduler
+  scripts/production-agent-provision.mjs root seam 同类）。调用方式（Amendment 2）：
+  (1) operator / 部署显式完整重跑（backfill / 修复——当前唯一真实 caller）；
+  (2) 未来 Agent birth path 按 BIRTH_INTEGRATION_CONTRACT（§5 调用时机）
+      best-effort 调用——integration contract，**不是**本 Spec 的 implementation
+      授权（BIRTH_TRIGGER_IMPLEMENTATION = OUT_OF_SCOPE_FOR_CREDENTIAL_V2）。
+  非 daemon、非 runtime、非 Router、非 scheduler
 ```
 
 Provisioner 自身 bootstrap（诚实记录，非新建设计）：调用 Auth ensure seams 需要持有
@@ -224,24 +273,31 @@ external_ref + validate-preserve store 写），无部分状态恢复机器、�
 生效语义（对齐 D-006）：store 写入后，Broker **下一次调用**即解析到 credential
 （gateway 每次调用重读 store）——当前 Agent/main 立即获得能力，无重启、无 main reset。
 
-调用时机（Amendment 1 冻结——FIX 1）：
+调用时机（Amendment 2 对齐 accepted Core Alignment @ ca30981）：
 
 ```text
-BIRTH_PROVISIONING_TRIGGER = REQUIRED
-  first eligible human message
-  → create Agent
-  → establish chat-ready Agent
-  → best-effort invoke trusted provisioning seam
-    （极薄 birth → trusted provisioning seam；owner ≠ Router；
-     本轮不设计具体 coordinator / API / queue）
+BIRTH_PROVISIONING_PRODUCT_REQUIREMENT = PRESERVED
+  （D-006 长期产品要求不变：external capability provisioning 出生时启动、
+    非阻塞聊天）
 
-CHAT_WAITS_FOR_PROVISIONING = NO
-  provisioning 失败 → chat continues；
-  受影响 Broker capability remains fail-closed unavailable
+BIRTH_TRIGGER_IMPLEMENTATION = OUT_OF_SCOPE_FOR_CREDENTIAL_V2
+  —— Credential V2 不负责实现：
+       first eligible human message → create Agent → trigger provisioning
+     因为当前 accepted Core Alignment 阶段 unknown conversation 仍为
+     PREBOUND_ONLY（fail-closed）、AUTOMATIC_AGENT_BIRTH = OUT_OF_SCOPE ——
+     automatic Agent birth caller 尚不存在。
+  —— Credential V2 只负责提供未来 caller 可以使用的 trusted provisioning
+     capability：ensureAgentCredential(agentId)
 
-AUTO_RETRY_DAEMON = NO
-  失败后的修复 = explicit complete rerun（operator / 部署显式调用；重跑天然收敛）
-  MANUAL/DEPLOY_RETRY = YES
+BIRTH_INTEGRATION_CONTRACT（integration contract，
+  不是本轮 birth integration implementation authority）：
+  future Agent birth path MAY/MUST best-effort invoke ensureAgentCredential(agentId)
+  CALLER_MUST_NOT_WAIT_FOR_PROVISIONING = YES
+  PROVISIONING_FAILURE_MUST_NOT_BLOCK_CHAT = YES
+  （owner ≠ Router；由 AUTOMATIC_AGENT_BIRTH Spec 落地，见 §11 / §12 登记）
+
+AUTO_RETRY_DAEMON = NO · MANUAL/DEPLOY_RETRY = YES
+  （explicit complete rerun，重跑天然收敛——当前唯一真实触发方式）
 ```
 
 ## 6. Trusted credential store 写契约（冻结）
@@ -365,10 +421,12 @@ AUTH_SIDE_CHANGE_REQUIRED = YES（外部 auth-service 侧变更；
 CHAT_BLOCKED_BY_CREDENTIAL_FAILURE = NO（provisioning 任何一步失败都不阻塞聊天）
 BROKER_FAIL_CLOSED = YES（credential 缺失 ⇒ gateway credential_unavailable，
   token mint 不发生；不伪造、不降级、不 fallback）
-BIRTH_PROVISIONING_TRIGGER = REQUIRED（出生时 best-effort 触发，§5 调用时机；
-  极薄 birth → trusted provisioning seam，owner ≠ Router —— D-006 产品前提，
-  不是 FOLLOW_UP）
-CHAT_WAITS_FOR_PROVISIONING = NO
+BIRTH_PROVISIONING_PRODUCT_REQUIREMENT = PRESERVED（D-006 产品要求不变）
+BIRTH_TRIGGER_IMPLEMENTATION = OUT_OF_SCOPE_FOR_CREDENTIAL_V2
+  （accepted Core Alignment @ ca30981：FEISHU_V2_INGRESS_MODE = PREBOUND_ONLY、
+  AUTOMATIC_AGENT_BIRTH = OUT_OF_SCOPE —— automatic birth caller 尚不存在；
+  BIRTH_INTEGRATION_CONTRACT 见 §5，落地归 AUTOMATIC_AGENT_BIRTH Spec）
+CHAT_WAITS_FOR_PROVISIONING = NO（= CALLER_MUST_NOT_WAIT_FOR_PROVISIONING）
 RETRY_SUPPORTED = YES（失败修复 = explicit complete rerun：operator / 部署显式
   调用，完整重跑天然收敛；AUTO_RETRY_DAEMON = NO，无 reconcile loop）
 MAIN_RESET_REQUIRED_FOR_REPAIR = NO（store 生效 = 下一次调用；与 main reset 无关）
@@ -381,6 +439,12 @@ ROTATION                = FOLLOW_UP（前置：auth 侧 HTTPS rotation seam—�
                           machine-admin CLI stdout 方式与 §7 冲突，不得借用）
 REVOCATION              = FOLLOW_UP
 GENERALIZED_RECOVERY    = FOLLOW_UP（E/G 状态自动恢复、reconciliation）
+AUTOMATIC_AGENT_BIRTH（birth trigger implementation）= FOLLOW_UP
+  （AUTOMATIC_AGENT_BIRTH_SPEC_REQUIRED = YES——未来 Spec 负责
+    FIRST_ELIGIBLE_HUMAN_MESSAGE → create Agent → chat ready → best-effort
+    credential provisioning，按 BIRTH_INTEGRATION_CONTRACT（§5）调用本 Spec 的
+    capability，并负责 supersede/extend Core Alignment 的
+    FEISHU_V2_INGRESS_MODE = PREBOUND_ONLY；不属本 Spec scope）
 RECONCILIATION_PLATFORM = NO
 PROVISIONING_DAEMON     = NO（含 auto-retry / reconcile loop；birth 触发是一次性
                           best-effort invoke，不是 daemon）
@@ -403,15 +467,12 @@ KERNEL_CHANGE           = NONE
 1. **Deployment-side provisioning tooling**：实现 §5 `ensureAgentCredential(agentId)`
    （P0–P2 + §6 store 契约 + §7 handoff；**不含 baseline grants**，§8），经 §4
    冻结的幂等 seam 与调用体。首要用例 = 既有 `agt_*` canary Agent 的 backfill。
-2. **极薄 birth → trusted provisioning seam**（Amendment 1 新增授权——FIX 1）：
-   Agent 出生路径 best-effort 调用 provisioning tooling（fire-and-forget、非阻塞、
-   失败结构化记录、chat 绝不等待；owner ≠ Router）。本轮不设计 coordinator /
-   API / queue / daemon 形态——具体机制为实现自由度，但 Router 不得成为 owner。
-3. **验收驱动**：§13 AC 的可复现断言脚本。
-4. 实现自由度（**不上抛 Owner**，由 Implementation Agent 决定并在 PR 说明）：
+   （Amendment 2：**不含任何 birth-path 改动**——automatic birth caller 尚不存在；
+   BIRTH_INTEGRATION_CONTRACT（§5）只是契约，不是本轮 implementation 授权。）
+2. **验收驱动**：§13 AC 的可复现断言脚本。
+3. 实现自由度（**不上抛 Owner**，由 Implementation Agent 决定并在 PR 说明）：
    CLI/API/脚本入口形态、报告输出格式、temp 文件命名、§6 S7 串行化具体机制
-   （lock 文件或 operator 串行）、verification mint 所选 scope 组合、birth 触发
-   seam 的具体机制（owner ≠ Router 前提下）。
+   （lock 文件或 operator 串行）、verification mint 所选 scope 组合。
 
 ## 13. Acceptance Criteria
 
@@ -434,10 +495,10 @@ KERNEL_CHANGE           = NONE
 - AC7 生效语义：ensure 前 Broker 调用 = credential_unavailable（chat 正常）；
   ensure 后同一 Agent 下一次调用即成功解析（无重启、无 main reset）。
 
-- AC8 birth 触发非阻塞（Amendment 1——FIX 1）：新 Agent 出生（first eligible
-  human message）→ best-effort 触发 trusted provisioning seam；
-  `CHAT_WAITS_FOR_PROVISIONING = NO`（provisioning 失败 / 未完成时 chat 正常
-  进行、受影响 capability 维持 fail-closed unavailable）；无 daemon。
+- AC8 provisioning 失败语义（credential seam 自身；Amendment 2 替换原 birth AC，
+  避免本 Spec PASS 依赖尚不存在的 automatic birth）：任一 FAIL_LOUD 状态 →
+  返回结构化失败（错误码 + agentId/clientId，无 secret）；失败与修复均**不依赖**
+  Session / main reset / runtime restart（显式断言无此类耦合；生效语义 = AC7）。
 
 **L2 — grant 分离（诚实边界；Amendment 1 起不构成 conditional PASS）：**
 
@@ -457,7 +518,9 @@ OpenClaw fallback / fake grant。
 - 冲突状态被静默「修复」出平行身份 → §5 FAIL_LOUD 冻结 + AC6。
 - grant 缺失被折叠为 credential 故障、或被 mock/fake 成就绪 → §8 分离与诚实
   边界 + AC9。
-- birth 触发演化为阻塞 chat 或 daemon → §5 调用时机 / §10 / §11 冻结 + AC8。
+- 未来 birth 集成违反非阻塞契约（caller 等待 / 失败阻塞 chat / owner=Router）→
+  BIRTH_INTEGRATION_CONTRACT（§5）由 AUTOMATIC_AGENT_BIRTH Spec 负责落地与验收；
+  本 Spec 侧只验收 seam 自身失败语义（AC8）。
 - 把 FOLLOW_UP 偷渡回 V2（rotation / revocation / daemon / grant platform）→
   §11 明令禁止；重开需 NEW_EVIDENCE。
 
@@ -465,6 +528,11 @@ OpenClaw fallback / fake grant。
 
 - Current Authority：`docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md`（D-006，
   accepted；§20 非阻塞 provisioning / Router 边界 / baseline profile 留给本 Spec）。
+- 当前实施顺序 Authority（Amendment 2 对齐依据）：
+  `docs/specs/AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC.md`（accepted @
+  ca30981；`FEISHU_V2_INGRESS_MODE = PREBOUND_ONLY` / `AUTOMATIC_AGENT_BIRTH =
+  OUT_OF_SCOPE` / `AUTH_PROVISIONING_REDESIGN = OUT_OF_SCOPE`——scope conflict
+  检查 = NONE，见 Amendment 2 摘要）。
 - Governing investigation（PASS）：
   `docs/investigations/test-agent-feishu-product-semantics-v1.md` §2
   （failure layer / OpenClaw 身份 gap / AUTH_TOKEN_MINT_ATTEMPTED = NO）。
@@ -500,75 +568,86 @@ KERNEL_CHANGE = NONE
 ## Final Output
 
 ```text
-AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V2 —— Amendment 1（FINAL_SCOPE_FIX）
+AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V2 —— Amendment 2
+（CREDENTIAL_V2_CURRENT_MAIN_RECONCILIATION）
 
-CREDENTIAL_PROVISIONING_V2_FINAL_SCOPE_FIX = PASS
+CREDENTIAL_V2_CURRENT_MAIN_RECONCILIATION = PASS
 
-BIRTH_PROVISIONING_TRIGGER = REQUIRED
-  （first eligible human message → create Agent → establish chat-ready Agent →
-    best-effort invoke trusted provisioning seam；极薄 seam，owner ≠ Router，
-    本轮不设计 coordinator/API/queue；D-006 产品前提，不是 FOLLOW_UP）
-CHAT_WAITS_FOR_PROVISIONING = NO
-AUTO_RETRY_DAEMON = NO · MANUAL/DEPLOY_RETRY = YES（explicit complete rerun，
-  重跑天然收敛）
+BASE_MAIN = 8067545（branch rebase 至最新 origin/main；含 Core Alignment
+  acceptance ca30981；初版 base 67404bc —— D-006 长期产品模型不变，
+  当前实施顺序改变）
 
-CREDENTIAL_IMPLEMENTATION_SCOPE =
-  Agent exists → ensure principal → ensure machine client → persist trusted
-  credential → verify credential（V2 可实施闭环到此为止）
-BASELINE_GRANT_IMPLEMENTATION_STATUS = EXTERNAL_PREREQUISITE_MISSING
-  （formal MachineAccessGrant mutation seam = MISSING，evidence 已确认）
-BASELINE_GRANT_PROVISIONING_SPEC_REQUIRED = YES
-AUTH_SIDE_CHANGE_REQUIRED = YES
-  （后续单独最小 Spec 建立 ensure standard baseline grant profile 的正式幂等
-    Auth seam；不在 Credential V2 中建设；D006_BASELINE_GRANT_REQUIREMENT =
-    PRESERVED——要求保留，实现移交）
+CREDENTIAL_V2_IMPLEMENTATION_SCOPE =
+  deployment-side trusted provisioning capability only：
+  ensureAgentCredential(agentId) = P0 Agent Definition 校验 → P1 ensurePrincipal
+  → P2 ensureClient + trusted store write + verification mint
+  （+ 显式重跑收敛；不含 birth-path 改动 / 不含 baseline grants）
 
-CONDITIONAL_PASS_REMAINING = NONE
-  （L3 conditional positive 已删除；Credential V2 PASS 只证明 credential
-    identity provisioning works，不声称 ALL_BASELINE_CAPABILITIES_READY；
-    不允许 mock/manual bearer/fake grant 宣称完成）
+BIRTH_PRODUCT_REQUIREMENT = PRESERVED（D-006 长期要求不变）
+BIRTH_TRIGGER_IMPLEMENTATION = OUT_OF_SCOPE_FOR_CREDENTIAL_V2
+  （accepted Core Alignment：FEISHU_V2_INGRESS_MODE = PREBOUND_ONLY、
+    AUTOMATIC_AGENT_BIRTH = OUT_OF_SCOPE —— automatic birth caller 尚不存在）
+BIRTH_INTEGRATION_CONTRACT =
+  future Agent birth path MAY/MUST best-effort invoke ensureAgentCredential(agentId)
+  CALLER_MUST_NOT_WAIT_FOR_PROVISIONING = YES
+  PROVISIONING_FAILURE_MUST_NOT_BLOCK_CHAT = YES
+  （integration contract，不是本轮 birth integration implementation authority；
+    §12 的 birth seam implementation 授权已删除；AC8 改为 credential seam
+    自身失败语义验收——不依赖 Session / main reset / runtime restart）
 
-STORE_UNRELATED_ENTRY_INVARIANT = SEMANTIC_CONTENT_UNCHANGED
-  （no entry lost / no entry mutated / malformed store fail-loud / atomic
-    replace / correct permissions；不要求 JSON whitespace/序列化字节保留，
-    不引入 text-preserving JSON machinery）
+AUTOMATIC_AGENT_BIRTH_SPEC_REQUIRED = YES
+  （未来 Spec：FIRST_ELIGIBLE_HUMAN_MESSAGE → create Agent → chat ready →
+    best-effort credential provisioning；并负责 supersede/extend Core Alignment
+    的 FEISHU_V2_INGRESS_MODE = PREBOUND_ONLY）
 
+CORE_ALIGNMENT_CONFLICT = NONE
+  （代码面不相交：Core Alignment = feishu-connector ingress / agent-memory
+    workspace 解析 / production-runtime compose；Credential V2 = 新增
+    deployment tooling + 外部 auth seam。AUTH_PROVISIONING_REDESIGN =
+    OUT_OF_SCOPE 是 Core Alignment 自身 scope 声明，非对本 Spec 的禁止；
+    本 Spec 不创建 Agent/Binding/不改 ingress，与 PREBOUND_ONLY 无冲突）
+CONDITIONAL_PASS_REMAINING = NONE（上轮裁决保持：L3 conditional positive 已删除；
+  V2 PASS 只证明 credential identity provisioning works）
+STORE_UNRELATED_ENTRY_INVARIANT = SEMANTIC_CONTENT_UNCHANGED（上轮 FIX 3 保持：
+  no entry lost / no entry mutated / malformed fail-loud / atomic replace /
+  correct permissions；不要求 JSON 字节保留）
+
+BASELINE_GRANTS_IN_V2 = NO（EXTERNAL_PREREQUISITE_MISSING；
+  BASELINE_GRANT_PROVISIONING_SPEC_REQUIRED = YES / AUTH_SIDE_CHANGE_REQUIRED =
+  YES，另行最小 Spec）
 ROTATION_IN_V2 = NO
 REVOCATION_IN_V2 = NO
 GENERALIZED_RECOVERY_IN_V2 = NO
-PROVISIONING_DAEMON = NO
+PROVISIONING_DAEMON = NO · AUTO_RETRY_DAEMON = NO · MANUAL/DEPLOY_RETRY = YES
 ROUTER_PROVISIONING_OWNER = NO
+
 KERNEL_CHANGE = NONE
-
 OWNER_DECISIONS_STILL_REQUIRED = NONE
-  （birth seam 具体机制、CLI 形态、temp/lock 实现等均为 §12 实现自由度）
 
-—— 经 Amendment 1 更新后的 standing verdicts ——
+—— 经 Amendment 1 + 2 更新后的 standing verdicts ——
 
-CREDENTIAL_PROVISIONING_SIMPLIFICATION = FIX_APPLIED
-  （原 FIX_REQUIRED 三项已修：birth 触发入 V2 / grants 去 conditional PASS /
-    store 无关 entry 改语义不变；rotation/revocation/generalized recovery
-    删除维持接受）
+CREDENTIAL_PROVISIONING_SIMPLIFICATION = FIX_APPLIED（rotation/revocation/
+  generalized recovery 删除维持接受；Amendment 1 三项 FIX 中 birth 项经
+  Amendment 2 调整为 integration contract 定位）
 
 CURRENT_REAL_BLOCKER = formal Agent 存在但 principal / machine client /
   trusted credential entry 缺失 ⇒ Broker capability fail-closed（§1，不变）
-MINIMUM_REQUIRED_FLOW = ensureAgentCredential(agentId)：P0 Definition 校验 →
-  P1 ensurePrincipal → P2 ensureClient + store write + verification mint；
-  birth best-effort 触发 + 显式重跑收敛；baseline grants 移交后续 Spec
+MINIMUM_REQUIRED_FLOW = ensureAgentCredential(agentId)：P0 → P1 → P2 + store
+  write + verification mint；显式重跑收敛；birth 调用按 integration contract
+  移交 AUTOMATIC_AGENT_BIRTH Spec；baseline grants 移交 grants Spec
 EXISTING_SPEC_DISPOSITION = REPLACE_WITH_SMALLER_SPEC（不变；旧 proposal @
   9a408e0 保留为 history/evidence，DO_NOT_MERGE）
 KEEP = authority 模型 / 四族身份 + deterministic external_ref / 幂等 ensure
   调用体 / store 写契约（语义保留版）/ secret handoff / credential≠grant /
   verification mint 解释表 / FAIL_LOUD / 非阻塞语义
 REMOVE_FROM_V2 = rotation / revocation / generalized recovery / Broker 运行时
-  error-classification 改造（§9，不变）+ ensureBaselineGrants 退出 V2 实施闭环
-  （Amendment 1，移入后续 grants Spec）
-FOLLOW_UP_DEBT = rotation Spec / revocation Spec / generalized recovery /
-  baseline grant provisioning Spec（正式幂等 Auth seam；AUTH_SIDE_CHANGE）/
+  error-classification 改造 / ensureBaselineGrants 实施闭环 / birth trigger
+  implementation（Amendment 2）
+FOLLOW_UP_DEBT = AUTOMATIC_AGENT_BIRTH Spec / baseline grant provisioning Spec
+  （AUTH_SIDE_CHANGE）/ rotation Spec / revocation Spec / generalized recovery /
   Broker 运行时三层错误码可区分性
 REJECTED_PLATFORMS = RECONCILIATION_PLATFORM / PROVISIONING_DAEMON / IAM_PLATFORM /
-  POLICY_ENGINE / ROUTER_CREDENTIAL_MANAGER —— 全部 NO（无当前 production
-  evidence 证明其中任何一项是 blocker）
+  POLICY_ENGINE / ROUTER_CREDENTIAL_MANAGER —— 全部 NO
 
 CHAT_BLOCKED_BY_CREDENTIAL_FAILURE = NO
 BROKER_FAIL_CLOSED = YES
@@ -576,8 +655,7 @@ RETRY_SUPPORTED = YES
 MAIN_RESET_REQUIRED_FOR_REPAIR = NO
 
 NEW_SPEC_PATH = docs/specs/AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V2.md
-  （本文件原地 Amendment 1；status: proposed；BASE = origin/main @ 67404bc；
-    reviewed base HEAD 457f29f）
+  （本文件原地 Amendment 2；status: proposed；base = origin/main @ 8067545）
 
 SPEC_ONLY = YES（IMPLEMENTATION = NONE / PRODUCT_CODE_CHANGE = NONE /
   KERNEL_CHANGE = NONE；commit + push，不 merge）
