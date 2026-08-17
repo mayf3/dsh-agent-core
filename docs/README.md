@@ -24,7 +24,7 @@
 |---|---|
 | [specs/](specs/) | **Change / Implementation Authority** —— 这次允许改变什么（唯一 merge/implementation authority） |
 | [investigations/](investigations/) | **Evidence Authority** —— 我们查到了什么（12 件，原地保留） |
-| [decisions/](decisions/README.md) | **Long-lived Invariant** —— repo 长期坚持什么（D-001…D-005 + D-002 reconciliation） |
+| [decisions/](decisions/README.md) | **Long-lived Invariant / Current Decision** —— repo 长期坚持什么（ADR 索引见 decisions/README.md，不在此写死范围；Current Authority = D-006 Agent/Workspace/Session V2 产品模型） |
 
 治理协议（改动前必读）：[AGENTS.md](../AGENTS.md) →
 [.agents/README.md](../.agents/README.md)。
