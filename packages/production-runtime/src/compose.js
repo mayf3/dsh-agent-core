@@ -47,6 +47,7 @@ import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
+import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
 
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
 export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
@@ -146,6 +147,21 @@ export async function composeProductionRuntime(options = {}) {
     agentProfile,
     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),
   })
+
+  // V2 PREBOUND_ONLY Feishu ingress gate (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
+  // §4.5/§5.5): composition-layer product wiring over the Router's GENERIC
+  // read APIs only (getBinding + channelConversationId — zero Router change,
+  // zero Feishu special-case in the Router). Unknown/unbound conversations
+  // fail closed BEFORE the Router's first-contact path (no default Binding);
+  // non-primary Binding.workspace compatibility rows stay on disk but are
+  // blocked from the V2 normal path.
+  const wired = feishu !== undefined
+    ? wireV2IngressGate(feishu, router, ctx.get('workspaceBootstrap'), log)
+    : false
+  if (feishu !== undefined) {
+    if (!wired) throw new Error('production-runtime: feishu connector handle does not expose setIngressGate (V2 ingress gate cannot be wired — fail loud, never run un-gated)')
+    log.log(`feishu ingress gate wired (${V2_INGRESS_MODE}: pre-bound primary-workspace conversations only)`)
+  }
 
   // Trusted CP seam: gateway mode always mounted; the credential store path
   // and auth origin arrive via env from the supervision unit. Without a

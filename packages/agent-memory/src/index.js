@@ -21,9 +21,14 @@
  *      path fails or yields nothing, the raw evidence still lands in the
  *      daily note (reliable fallback — nothing is lost).
  *
- * Isolation is physical: this plugin lives inside one per-agent DSH process
- * (one agent per workspace), so all file operations stay inside that agent's
- * workspace; a different agentId resolves to a different directory.
+ * Isolation is physical: MEMORY.md lives inside ONE workspace and every
+ * operation resolves that workspace per-call (V2,
+ * AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC §5.2): session-aware call
+ * sites (tools / save / search / consolidation / daily notes) use the current
+ * Session's frozen header.cwd; the session-less synchronous system-prompt
+ * injection uses Agent.primaryWorkspace (= resolveWorkspace(agentId)). In the
+ * V2 normal path both resolve to the same workspace, so all sessions of the
+ * agent share one MEMORY.md (MEMORY_OWNERSHIP = WORKSPACE_LOCAL, unchanged).
  *
  * stdout is reserved for the JSON-RPC protocol of the demo-server; all
  * diagnostics go through ctx.logger (stderr), never console.log.
@@ -147,6 +152,36 @@ export const apply = (ctx, config = {}) => {
   }
   const workspace = resolveAgentWorkspace(agentId, cfg.workspaceRoot)
   const memoryFile = resolveMemoryFile(workspace)
+
+  /**
+   * V2 memory workspace resolver (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
+   * §5.2/§5.3, accepted; KERNEL_CHANGE = NONE): MEMORY_OWNERSHIP =
+   * WORKSPACE_LOCAL is unchanged and unique — only HOW each call site obtains
+   * the workspace authority differs:
+   *
+   *   session-aware call sites (tools / save / search / consolidation /
+   *     daily notes)  -> the current Session's frozen header.cwd
+   *   session-less call sites (the synchronous system-prompt [memory]
+   *     injection, §5.4) -> Agent.primaryWorkspace = resolveWorkspace(agentId)
+   *
+   * In the V2 normal path session.header.cwd == resolveWorkspace(agentId), so
+   * both resolve to the same MEMORY.md (MEMORY_WORKSPACE_EQUALITY). A session
+   * whose header carries no usable cwd falls back to the primary workspace
+   * (fail toward the agent's own workspace, never an error).
+   * @param {object} [session] - session handle (`session.header.cwd`).
+   * @returns {string} the absolute workspace root for this operation.
+   */
+  function resolveMemoryWorkspace(session) {
+    const cwd = session?.header?.cwd
+    if (typeof cwd === 'string' && cwd.trim() !== '') return cwd
+    return workspace
+  }
+
+  /** The MEMORY.md path for one operation context (see resolveMemoryWorkspace). */
+  function memoryFileFor(session) {
+    return resolveMemoryFile(resolveMemoryWorkspace(session))
+  }
+
   // The per-agent demo composition has no console logger; diagnostics go to
   // ctx.logger when present, otherwise to stderr (stdout is reserved for the
   // JSON-RPC protocol of the demo-server).
@@ -170,12 +205,18 @@ export const apply = (ctx, config = {}) => {
     running: new Set(),          // in-flight consolidations
   }
 
-  /** Read the current entries (fresh from disk — human edits always win). */
-  async function load() {
-    return loadEntries(memoryFile)
+  /**
+   * Read the current entries (fresh from disk — human edits always win).
+   * Session-aware (§5.2): `{ session }` resolves the workspace from
+   * session.header.cwd; without a session this reads the agent primary
+   * workspace's MEMORY.md.
+   */
+  async function load(opts = {}) {
+    return loadEntries(memoryFileFor(opts.session))
   }
 
-  /** Render the injection text for this agent (fresh read). */
+  /** Render the injection text for this agent (fresh read; primary workspace
+   *  — the session-less resolver fallback, §5.2/§5.4). */
   async function renderForContext() {
     const entries = await load()
     return renderContextText(entries, {
@@ -184,31 +225,33 @@ export const apply = (ctx, config = {}) => {
     })
   }
 
-  /** update(...) glue: save/merge an entry, persist atomically. */
-  async function update(entry) {
-    const entries = await load()
+  /** update(...) glue: save/merge an entry, persist atomically (session-aware). */
+  async function update(entry, opts = {}) {
+    const file = memoryFileFor(opts.session)
+    const entries = await loadEntries(file)
     const outcome = saveWithDedupe(entries, entry)
-    await writeEntries(memoryFile, outcome.entries)
+    await writeEntries(file, outcome.entries)
     log.info(`memory ${outcome.action}: ${outcome.entry.title}`)
     return { action: outcome.action, memory: outcome.entry }
   }
 
-  /** remove(id) glue: delete an entry, persist atomically. */
-  async function remove(id) {
-    const entries = await load()
+  /** remove(id) glue: delete an entry, persist atomically (session-aware). */
+  async function remove(id, opts = {}) {
+    const file = memoryFileFor(opts.session)
+    const entries = await loadEntries(file)
     const outcome = removeEntry(entries, id)
-    if (outcome.removed) await writeEntries(memoryFile, outcome.entries)
+    if (outcome.removed) await writeEntries(file, outcome.entries)
     return outcome.removed
   }
 
-  /** search(query) glue. */
-  async function search(query) {
-    return searchEntries(await load(), query)
+  /** search(query) glue (session-aware). */
+  async function search(query, opts = {}) {
+    return searchEntries(await loadEntries(memoryFileFor(opts.session)), query)
   }
 
-  /** list() glue. */
-  async function list() {
-    return load()
+  /** list() glue (session-aware). */
+  async function list(opts = {}) {
+    return loadEntries(memoryFileFor(opts.session))
   }
 
   /** Resolve the LLM route for distillation. */
@@ -260,12 +303,15 @@ export const apply = (ctx, config = {}) => {
    * (raw transcript of the session turn); falls back to the daily note when
    * distillation is unavailable or fails. Distilled entries are stamped with
    * consolidation provenance (unless the distill output already carries one).
+   * Session-aware (§5.2): the workspace (MEMORY.md + daily note) resolves
+   * from the triggering session's header.cwd.
    */
   async function consolidateNow(sessionEvidence, { session } = {}) {
     const provenance = session ? `consolidation:session:${session.id}` : 'consolidation'
+    const ws = resolveMemoryWorkspace(session)
     const result = await consolidate({
-      workspace,
-      memoryFile,
+      workspace: ws,
+      memoryFile: resolveMemoryFile(ws),
       evidence: sessionEvidence,
       distill: async (text) => {
         const distillFn = makeDistill(session)
@@ -313,7 +359,7 @@ export const apply = (ctx, config = {}) => {
         },
         render: (_args, value) => TEXT_OUTPUT(`memory ${value.action}: ${value.id}`),
       },
-      async execute(args) {
+      async execute(args, exec) {
         const { action, memory } = await update({
           type: args.type,
           title: args.title,
@@ -321,7 +367,7 @@ export const apply = (ctx, config = {}) => {
           tags: args.tags ?? [],
           importance: args.importance ?? 3,
           source: args.source ?? 'tool',
-        })
+        }, { session: exec?.agent?.session })
         return { action, id: memory.id }
       },
     }),
@@ -344,9 +390,9 @@ export const apply = (ctx, config = {}) => {
         },
         render: (_args, value) => TEXT_OUTPUT(`Found ${value.items.length} memory entr${value.items.length === 1 ? 'y' : 'ies'}.`),
       },
-      async execute(args) {
+      async execute(args, exec) {
         const limit = args.limit ?? 10
-        return { items: toApiList((await search(args.query)).slice(0, limit)) }
+        return { items: toApiList((await search(args.query, { session: exec?.agent?.session })).slice(0, limit)) }
       },
     }),
 
@@ -368,8 +414,8 @@ export const apply = (ctx, config = {}) => {
         },
         render: (_args, value) => TEXT_OUTPUT(`${value.items.length} memory entries (of ${value.total}).`),
       },
-      async execute(args) {
-        const all = await list()
+      async execute(args, exec) {
+        const all = await list({ session: exec?.agent?.session })
         const filtered = args.type ? all.filter((m) => m.type === args.type) : all
         const sorted = [...filtered].sort((a, b) => b.importance - a.importance || (a.updatedAt < b.updatedAt ? 1 : -1))
         return { items: toApiList(sorted.slice(0, args.limit ?? 50)), total: filtered.length }
@@ -405,8 +451,10 @@ export const apply = (ctx, config = {}) => {
         },
         render: (_args, value) => TEXT_OUTPUT(`Updated memory ${value.memory.id}: ${value.memory.title}`),
       },
-      async execute(args) {
-        const entries = await load()
+      async execute(args, exec) {
+        const session = exec?.agent?.session
+        const file = memoryFileFor(session)
+        const entries = await loadEntries(file)
         const outcome = updateEntry(entries, args.id, {
           title: args.title,
           content: args.content,
@@ -415,7 +463,7 @@ export const apply = (ctx, config = {}) => {
           importance: args.importance,
         })
         if (outcome.entry === undefined) throw new Error('memory not found')
-        await writeEntries(memoryFile, outcome.entries)
+        await writeEntries(file, outcome.entries)
         return { memory: { id: outcome.entry.id, title: outcome.entry.title, content: outcome.entry.content } }
       },
     }),
@@ -434,8 +482,8 @@ export const apply = (ctx, config = {}) => {
         },
         render: (_args, value) => TEXT_OUTPUT(value.deleted ? 'Memory deleted.' : 'Memory not found.'),
       },
-      async execute(args) {
-        const deleted = await remove(args.id)
+      async execute(args, exec) {
+        const deleted = await remove(args.id, { session: exec?.agent?.session })
         return { deleted }
       },
     }),
@@ -545,6 +593,9 @@ export const apply = (ctx, config = {}) => {
     agentId,
     workspace,
     memoryFile,
+    /** V2 resolver surface: how this mount resolves one operation's memory
+     *  workspace (§5.2: session-aware -> session.header.cwd; else primary). */
+    resolveMemoryWorkspace,
     load,
     renderForContext,
     update,
@@ -552,7 +603,9 @@ export const apply = (ctx, config = {}) => {
     search,
     list,
     consolidate: consolidateNow,
-    readDailyNotes: (opts) => readDailyNotes(workspace, opts),
+    /** Session-aware daily notes: `{ session }` resolves the workspace from
+     *  session.header.cwd (§5.2); without a session, the primary workspace. */
+    readDailyNotes: (opts = {}) => readDailyNotes(resolveMemoryWorkspace(opts.session), opts),
   }
 
   ctx.provide('agentMemory', service)
@@ -560,6 +613,12 @@ export const apply = (ctx, config = {}) => {
   // Injection: fresh sessions receive the curated memory. systemPrompt.context
   // evaluates text providers SYNCHRONOUSLY, so a fresh file read happens per
   // assembly — human edits are visible on the very next turn, no restart.
+  // V2 (spec §5.2/§5.4): this is the SESSION-LESS call site — the text
+  // provider is a synchronous no-argument function assembled at agent scope
+  // with no current Session, so it MUST resolve Agent.primaryWorkspace
+  // (= resolveWorkspace(agentId), the process-level memoryFile captured above)
+  // and never a session cwd. In the V2 normal path session.header.cwd ==
+  // primary, so both paths read the same MEMORY.md.
   if (cfg.autoInject) {
     ctx.inject(['systemPrompt'], (promptCtx) => {
       const dispose = promptCtx.systemPrompt.context({
