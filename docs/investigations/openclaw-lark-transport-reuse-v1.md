@@ -123,7 +123,7 @@ Base — 当前 main HEAD `578de73`：packages/feishu-connector + agent-router +
 - `package.json` → `"name": "@larksuite/openclaw-lark", "version": "2026.3.12"`；
   依赖 `@larksuiteoapi/node-sdk:^1.59.0`、zod、typebox、image-size。
 - `~/.openclaw/openclaw.json` → `channels.feishu.enabled=true, connectionMode:"websocket",
-  streaming:true`；生产 app `cli_a9d7abdf05385cd3`（与 canary 报告一致的 production app）。
+  streaming:true`；生产 app `cli_<redacted>`（与 canary 报告一致的 production app）。
 - 该 directory 本体是一个 git checkout（remote `mayf3/agent-kanban`，HEAD `245795ce`），
   含大量自定义 doc/task 脚本 —— 即**本地定制的工作副本**（base 是官方 `src/` 传输实现）
   = 官方 `@larksuite/openclaw-lark@2026.3.12` + 本地定制。
