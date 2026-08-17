@@ -1,12 +1,15 @@
 ---
 spec_id: AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
-status: proposed
+status: accepted
 ---
 
 # AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC — 最小实现 Spec（只出 Spec，不实现）
 
 > 性质：**Spec（SPEC ONLY — 本轮只收敛冻结并出 Implementation Spec，不 implementation /
 > 不 migration / 不 merge）** · 日期：2026-08-17
+> 状态：**accepted**（accepted_reviewed_head = `60d248e`；focused_re_review = PASS，
+> REQUIRED_FIXES = NONE，VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC；acceptance
+> finalize 2026-08-18，mechanical only，SEMANTIC_CHANGE = NONE）
 > 仓库：`mayf3/dsh-agent-core`
 > 角色：V2 Core Alignment Implementation Spec Agent
 >
@@ -802,6 +805,20 @@ FILES_TO_CHANGE =
 
 REAL_PRODUCT_AGENT_CANARY_V2 = REQUIRED（实现完成后必跑）
 
-SPEC_STATUS             = proposed
-READY_FOR_FOCUSED_RE_REVIEW = YES
+SPEC_STATUS             = accepted
+ACCEPTANCE              =
+  accepted_reviewed_head = 60d248e
+  focused_re_review      = PASS（REQUIRED_FIXES = NONE；
+                           VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC）
+  acceptance_finalize    = 2026-08-18，mechanical only
+  SEMANTIC_CHANGE        = NONE（产品语义 / implementation scope / AC /
+                           migration/state-change 规则均未修改；
+                           PREBOUND_ONLY / Memory resolver / p2p /
+                           Binding.workspace / daily reset / Router 未重新设计）
+  non-blocking implementation notes（Reviewer，仅实现时注意事项，不改 Spec 语义）=
+    V2 active route 必须满足 effective workspace == Agent.primaryWorkspace；
+    旧 non-primary pre-bound p2p row 不得进入 V2 normal path
+    （即 §5.5 已冻结的 V2_NORMAL_PATH_REQUIRES_PRIMARY_WORKSPACE = YES 与
+      TRANSITIONAL_COMPATIBILITY_STATE，无新增语义）
+READY_FOR_MECHANICAL_DELTA_REVIEW = YES
 ```
