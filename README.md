@@ -26,8 +26,9 @@ DSH 是优秀的**单 Agent Runtime**（agent loop、tools、session 持久化�
 - **真实消息链路**：飞书（WebSocket 长连接）→ 控制面路由 → per-agent DSH 进程 →
   回复；HTTP 入口（notification-ingress :8790 / mobile product-api :8787，均
   localhost）。
-- **会话归属**：ChannelConversation ↔ Binding ↔ Agent/Session 模型，`switchAgent`
-  单一原语切换（原子持久化）。
+- **会话归属（V2 模型，D-006）**：conversation ↔ Agent 固定关联（**Feishu =
+  FIXED**）；**Mobile = SWITCHABLE**（switch_agent 仅限可切换 Surface，原子
+  持久化）；one Agent → one primary Workspace → canonical main。
 - **定时**：持久化 cron/at/every scheduler（`agentcore-cron` CLI，OpenClaw 迁移工具）。
 - **长期记忆**：per-agent file-first 记忆（MEMORY.md + daily notes + consolidation）。
 - **安全底座**：per-agent 进程隔离 + trusted 控制面子进程 uid 降权 + Broker

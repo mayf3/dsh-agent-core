@@ -14,7 +14,9 @@
 4. **workspace-bootstrap 是 agentId→路径的唯一 owner**；Router 不重复路径规则。
 5. **Forum / Workflow / OKR 等外部系统只经 Broker bridge 访问**，不内置化。
 6. **Channel 只是入口**：不拥有 Agent / Session / Binding 状态。
-7. **switchAgent 只改 Binding**；无角色扮演、无历史复制、无切换栈。
+7. **switch_agent 有 Surface scope**（D-006）：只改可切换 Surface（Mobile）的
+   activeAgent；Feishu 固定、cron / agent-task 不可切；无角色扮演、无历史复制、
+   无切换栈。
 8. **initiator ≠ authorization**：principal 只能来自 spawn 时注入的进程身份，
    模型可控输入永远不能决定身份（见 [security-model](../security/security-model.md)）。
 9. **不重新长成大 Control Plane / 大 Kernel**：控制面只做组织（谁在哪、何时启动）。

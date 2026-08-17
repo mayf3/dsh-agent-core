@@ -11,7 +11,9 @@
 | Mobile Product API | HTTP，localhost:8787（`packages/product-api`，Gate 1） | 供 adb reverse 的移动面：current binding / agents / switch-agent / message |
 
 所有入口最终汇到 Router 的同一套域面（resolveChannelConversation /
-switchAgent / turn / deliver），入口协议不进入核心路由规则。
+switchAgent / turn / deliver），入口协议不进入核心路由规则（switch 的产品语义
+按 D-006 限定 Surface scope：仅可切换 Surface（Mobile）允许，Feishu 固定——见
+[concepts/sessions-and-bindings](../concepts/sessions-and-bindings.md)）。
 
 ## 出站 / 外部系统
 

@@ -15,9 +15,11 @@
 
 ## 关键机制
 
-- **唯一切换原语**：`Router.switchAgent(bindingContext, targetAgentId,
-  { targetSessionId? })` — 校验 Agent → 选 Session（显式 sessionId，缺省 main，
-  无 LLM 猜测）→ 原子持久化 Binding → 返回新 Binding。所有入口最终都调它。
+- **唯一切换原语（机制层）**：`Router.switchAgent(bindingContext, targetAgentId,
+  { targetSessionId? })` — 校验 Agent → 原子持久化 Binding → 返回新 Binding。
+  机制保留（D-004），但产品语义按 D-006 限定 **Surface scope**：switch 只在可切换
+  Surface（Mobile）允许，Feishu 固定、cron / agent-task 不可切；
+  `targetSessionId` 不再是人类入口产品状态（人类入口永远进 canonical main）。
 - **Parent-RPC relay**：per-agent 进程内插件（如 `agent_core.switch_agent` 工具）
   可请求控制面执行域操作——demo-server 在 stdout 发 `rpc.request` 通知，
   `AgentProcess` 转发给 Router 钩子并以 `rpc.response` 应答。client 只转发，不拥有策略。
