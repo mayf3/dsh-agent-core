@@ -14,6 +14,12 @@ status: draft
 >
 > **不修改 Feishu transport。** 本轮是 SPEC ONLY：只新增本 Spec 文件，不修改任何
 > Investigation、不修改任何代码、不部署、不 merge 到 `main`。
+>
+> **2026-08-17 Amendment（review FIX_REQUIRED round）**：Independent Review verdict =
+> `FIX_REQUIRED`。本轮 **SPEC TEXT AMENDMENT ONLY**（不 implementation、不 merge、
+> 不重新设计）：FIX 1 冻结 production-runtime compose 边界（消除「不变 ↔ 透传」字面
+> 冲突）、FIX 2 新增 AC9/AC10、顺手完成 3 项 non-blocking 纯文字澄清。
+> Amendment 记录见 §13.1。
 
 ---
 
@@ -123,7 +129,12 @@ EVENT_SUBSCRIPTION_REQUIREMENT =
 DIRECT_OPENCLAW_DEPENDENCY  = NO
 OPENCLAW_RUNTIME_DEPENDENCY = NONE
 ROUTER_CHANGE               = NONE     （onIngress / feishu.reply(replyTarget,text) seam 签名不变）
-RUNTIME_CHANGE              = NONE
+RUNTIME_SEMANTIC_CHANGE     = NONE     （production-runtime 行为 / ownership / policy 语义不变）
+PRODUCTION_RUNTIME_CHANGE   = ADDITIVE_OPTIONAL_KEY_PASSTHROUGH_ONLY
+                                       （compose 可把 Part A/B/C 可选配置键机械透传给既有
+                                        feishu-connector；不改挂载协议、不新增 Runtime
+                                        ownership、不新增产品 policy、不新增 Router seam；
+                                        详见 §9）
 KERNEL_CHANGE               = NONE
 BINDING_STORE_CHANGE        = NONE     （D-002 Binding shape 不变；policy 不进 Binding row）
 SCHEDULER_CHANGE            = NONE
@@ -154,6 +165,10 @@ Phase 1 在 `feishu-connector` 内部就地增强既有 seam，不新增服务�
 反例（必须避免）：bot 加进任何群 → 自动吃掉所有消息。默认 requireMention=true，
 只有显式声明过的 group 才可能放行 no-mention。
 ```
+
+术语澄清（冻结）：全文（含所有 AC）的「bound group」一律指 **feishu-connector Config
+中的 per-group 显式条目**（§4.2 groups map，即 BOUND_GROUP），**不是** Router
+Binding Store row（D-002 的 Binding）。Phase 1 不引入任何 connector→Binding 查询。
 
 > 「explicit Binding」的 Phase-1 语义 = feishu-connector config 中的**显式 per-group
 > 声明**（BOUND_GROUP），因为 Router Binding row 是 first-contact 自动创建的
@@ -196,6 +211,11 @@ thread 规则不变
 ```
 
 - 判定发生在 dedup **之后**，与现状顺序一致（dedup → classify → forward）。
+- policy seam 澄清：requireMention 解析（§4.2 优先级）是 connector **内部纯函数**
+  （REIMPLEMENT 的 `resolveRequireMention(config, chatId)`），由 `classifyIngress`
+  在 group 分支调用；`classifyIngress` 自身 signature 与 reason 结构不变（仅新增
+  reason 值 `group_no_mention_allowed`）。policy 唯一来源是 connector Config，
+  无任何外部查询 seam。
 - 不改变 `onEvent` / `feishu.reply` 签名；Router 无需知道 policy。
 
 ### 4.4 平台核实（冻结）
@@ -235,6 +255,9 @@ DUPLICATE_EVENT = dedup 发生在 typing BEGIN 之前 → 重复事件永不重�
 
 - **UX state 全部住在 `feishu-connector` 内部**（一个 connector-owned
   `TypingState` map：messageId → {reactionId, addedAt, timer}），**不进 Router**。
+- 断连清理机制澄清：Phase 1 **不引入 reconnect 框架或框架级断线事件**；disconnect
+  cleanup 的实际保证 = **stop 路径清理 + typingMaxMs watchdog 兜底**——任何漏网的
+  active typing state 由 watchdog 超时强制回收，不依赖任何新增框架能力。
 - `reply()` 无新参数（seam 不变）：connector 依赖 fallback key
   `replyTarget.replyMsgId` 反查 typingState。
 - scheduler announce（`scheduler-router.createFeishuDeliver`）走同一 `reply()`：
@@ -362,8 +385,19 @@ feishu-connector Config（index.js z.object）新增可选字段，全部向后�
   typingMaxMs?: number          （默认 ≥10min，Part B watchdog）
   outboundMode?: 'post' | 'text'（默认 'post'，Part C）
 
-Router / Binding store / production-runtime compose 不变：
-  compose 仅多传可选键透传；不改挂载协议（仍 { enabled, credentialsPath } 起步）。
+Router / Binding store：不变。
+
+production-runtime compose（冻结，消除「completely unchanged ↔ 可透传」字面冲突）：
+  PRODUCTION_RUNTIME_CHANGE = ADDITIVE_OPTIONAL_KEY_PASSTHROUGH_ONLY
+  - 允许：把上述可选键（requireMention / groups / outboundMode / ackEmoji /
+    typingEmoji / typingMaxMs）**机械透传**给既有 feishu-connector
+    （如从部署配置/环境变量读出后并入 connector config）；
+  - 不改挂载协议：connector 构造方式不变，起步形状仍 `{ enabled, credentialsPath }`，
+    新键全部可选、缺省视同未设置；
+  - 不新增 Runtime ownership：policy 唯一 authority 仍是 feishu-connector Config，
+    Runtime 只是搬运工，不解释、不默认设置任何 policy 键；
+  - 不新增产品 policy、不新增 Router seam（与 §3 一致）；
+  - 所有可选键缺省时，compose 行为与现状完全一致。
 ```
 
 ---
@@ -385,7 +419,13 @@ AC6  markdown 答案 → Feishu 内可见可读格式化（标题/列表/代码�
 AC7  OpenClaw runtime dependency = NONE（全引用面 0 个 openclaw/plugin-sdk import、
      无 LarkClient.runtime 注入）。
 AC8  Router / Runtime / Kernel semantics 不变（seam 签名、Binding store、onIngress
-     行为 diff 为空或仅日志）。
+     行为不变；production-runtime compose 仅允许 §9 冻结的 additive optional key
+     passthrough，且可选键全缺省时行为与现状完全一致）。
+AC9  TEXT_FALLBACK：显式配置 outboundMode='text' → 出站行为与现状 text reply 完全
+     兼容（msg_type:"text"、无 post 信封、无预处理链副作用；默认值仍 'post'）。
+AC10 REACTION_FAILURE_ISOLATION：typing / ack reaction API 失败（含 'Typing' emoji
+     在租户不可用、权限不足、网络错误）→ best-effort 静默记录，绝不阻塞主链路：
+     Agent reply 照常发送、Router turn 照常完成（AC3/AC4 验证不受影响）。
 ```
 
 ---
@@ -397,7 +437,9 @@ interactive cards / streaming cards / images-media migration / file upload UX ex
 thread redesign / full dedupe redesign / retry framework / rate-limit framework /
 OpenClaw plugin SDK / OpenClaw Gateway / OpenClaw Session / OpenClaw dispatcher /
 Broker / Auth / Binding workspace（per-binding workspace 属 TEST_AGENT... investigation
-的独立决策栈，不在本 Spec）/ Router / Runtime / Kernel 改动 /
+的独立决策栈，不在本 Spec）/ Router 改动 / Runtime 语义与 ownership 改动 /
+Kernel 改动（production-runtime compose 仅限 §9 冻结的 additive optional key
+passthrough，非 passthrough 的 Runtime 改动仍为 non-goal）/
 表格 → Feishu bullets 转换（Phase 2 候选）/ 长消息 chunking（Phase 2+）/
 strict「Router Binding 必须预先存在」gate（需 seam 变更，Phase 2+ 候选）。
 ```
@@ -458,9 +500,17 @@ LARK_ADAPTER_BOUNDARY = Phase 1 不新建 adapter；增强全部在 feishu-conne
   router 调用签名不变。
 
 ROUTER_CHANGE = NONE
-RUNTIME_CHANGE = NONE
+RUNTIME_SEMANTIC_CHANGE = NONE
+PRODUCTION_RUNTIME_CHANGE = ADDITIVE_OPTIONAL_KEY_PASSTHROUGH_ONLY
+  （compose 可把可选键机械透传给既有 feishu-connector；不改挂载协议、不新增
+   Runtime ownership、不新增产品 policy、不新增 Router seam；可选键全缺省时
+   行为与现状一致）
 KERNEL_CHANGE = NONE
 BINDING_STORE_CHANGE = NONE
+
+TEXT_FALLBACK_AC = AC9（outboundMode='text' 与现状 text reply 完全兼容）
+REACTION_FAILURE_ISOLATION_AC = AC10（reaction/typing API 失败 best-effort，
+  Agent reply 照常发送、Router turn 照常完成）
 
 IMPLEMENTATION_SCOPE = packages/feishu-connector 内：Config 扩展、classifyIngress policy、
   typing/reaction 生命周期（connector-owned state）、api.js post(md) 格式化、
@@ -469,7 +519,41 @@ OUT_OF_SCOPE = §11 Explicit Non-Goals 全列表（card/streaming/media/thread/d
   retry/rate-limit/OpenClaw 全家/Router/Runtime/Kernel/Binding workspace 等）
 
 SPEC_STATUS = DRAFT（冻结 proposal；待独立 spec review 通过后 accepted 才具实现许可）
-READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+READY_FOR_INDEPENDENT_SPEC_REVIEW = REVIEWED（round 1 verdict = FIX_REQUIRED →
+  本轮 amendment 已修全部 REQUIRED_FIX，见 §13.1；待 re-review）
+```
+
+### 13.1 Amendment Record（review FIX round，2026-08-17）
+
+```text
+AGENT_CORE_LARK_TRANSPORT_PHASE1_V1_SPEC_AMENDMENT = PASS
+
+BASE_REVIEWED_HEAD = 0418053
+AMENDMENT_KIND = SPEC_TEXT_AMENDMENT_ONLY（不 implementation、不 merge、不重新设计）
+
+FIX1 = production-runtime compose 边界冻结：
+       RUNTIME_SEMANTIC_CHANGE = NONE +
+       PRODUCTION_RUNTIME_CHANGE = ADDITIVE_OPTIONAL_KEY_PASSTHROUGH_ONLY（§3/§9/§13）；
+       删除/改写所有与可选键透传相矛盾的「compose 不变」「行为 diff 为空」绝对表述
+       （§9 重写、AC8 改写、§11 non-goal 表述细化）。
+FIX2 = 新增两个显式 AC（不扩大 Phase 1 scope）：
+       AC9  TEXT_FALLBACK（outboundMode='text' 与现状 text reply 完全兼容）
+       AC10 REACTION_FAILURE_ISOLATION（reaction/typing API 失败 best-effort，
+            Agent reply 仍正常发送）
+
+NON_BLOCKING_CLARIFICATIONS（纯文字澄清，不新增实现物）：
+  - disconnect cleanup 实际保证 = stop 路径清理 + typingMaxMs watchdog 兜底；
+    不引入 reconnect 框架（§5.1）
+  - 「bound group」一律指 connector Config per-group 条目，不是 Router
+    Binding Store row（§4.1）
+  - classifyIngress policy seam：requireMention 解析为 connector 内部纯函数，
+    classifyIngress signature/reason 结构不变（§4.3）
+
+SCOPE_CHANGE = NONE
+KERNEL_CHANGE = NONE
+ROUTER_CHANGE = NONE
+SPEC_STATUS = draft
+READY_FOR_INDEPENDENT_RE_REVIEW = YES
 ```
 
 ---
