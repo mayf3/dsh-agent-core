@@ -15,6 +15,35 @@
 
 已登记决策：
 
+## D-006: Agent / Workspace / Session / main 长期产品模型 Current Decision（V2）
+
+- 状态: accepted（standalone Current Decision，本文档为 Current Authority；全文见
+  `docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md`）
+- 日期: 2026-08-17
+- 背景: 旧 authority 之间出现需人工 merge 才能理解的产品模型分叉（D-002「Agent 固定
+  拥有唯一 workspace」→ BINDING_WORKSPACE_V1「Binding 决定 effective workspace」→
+  FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1「conversation workspace」）；需要一份
+  standalone Current Decision 收敛长期产品模型，不再叠 amendment。
+- 决策: 一个 Feishu conversation → 一个长期 Agent → 一个 Workspace → 一个 canonical
+  main；Agent 拥有独立 agentId（≠ conversationId）；Agent 出生 = 自动创建（first
+  seen conversation trigger）+ 完整 security domain provisioning；Workspace =
+  Agent 长期状态（bootstrap 只 seed AGENTS.md，其余 Agent 自管）；Session = 只隔离
+  trajectory（main / cron-run-* / agent-task-* / background-* 同 Agent 同 Workspace 同
+  security domain）；main = 可 reset 的 logical slot（reset 只影响 main，不动
+  Workspace/Binding）；cron = 每次执行 fresh session；Agent-to-Agent = 每 task 一个
+  session（不建永久 pair session）；non-main 不 merge 回 main，跨 Session continuity
+  靠 Workspace + MEMORY.md + 显式 task result；Feishu = FIXED（不切 Agent），Mobile =
+  SWITCHABLE（activeAgent only，不创建 Agent）；switch_agent 只限 switchable Product
+  Surface（Mobile main ALLOWED，Feishu/cron/agent-task NOT_ALLOWED）；security domain
+  = Agent（principal/credential/grants 属 Agent）。
+- 替代方案: 继续在旧 Spec 上叠 amendment——否决（Current Truth 更难找）；per-conversation
+  workspace 作为长期产品模型——否决（机制能力 ≠ 产品模型，ONE_AGENT_ONE_WORKSPACE 冻结）。
+- 影响: 文档 disposition：D-002 PARTIALLY_SUPERSEDE / D-004 PRESERVE /
+  D-003 PRESERVE / AGENT_CORE_BINDING_WORKSPACE_V1 PARTIALLY_SUPERSEDE（机制保留，
+  产品模型条款被取代）/ FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1 @ 6071dfd
+  DO_NOT_ACCEPT（→ REPLACE_WITH_SMALLER_SPEC）。PRODUCT_CODE_CHANGE = NONE /
+  RUNTIME_CHANGE = NONE / MIGRATION = NONE / KERNEL_CHANGE = NONE。
+
 ## D-004: Router / Binding 域操作与持久化（Product Integration V1）
 
 - 状态: accepted（分支 feat/product-integration-v1 已实现并真实验收，见
