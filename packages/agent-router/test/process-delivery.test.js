@@ -68,7 +68,7 @@ test('DLV1 deliver resolves on the receipt alone — no event, no idle, no turn/
   const f = fakeAgentProcess()
   const { proc, resolveNext, prompts } = f
 
-  const pending = proc.deliver('main', 'hello inbox', 10000)
+  const pending = proc.deliver('main', 'hello inbox', {}, 10000)
   assert.equal(prompts().length, 1, 'one session/prompt written')
   assert.equal(prompts()[0].params.sessionId, 'main')
   assert.deepEqual(prompts()[0].params.contentBlocks, [{ type: 'text', text: 'hello inbox' }])
@@ -99,7 +99,7 @@ test('DLV2 deliver during an in-flight turn resolves immediately and leaves the 
   // Now deliver while the turn is in flight: the receipt must come back
   // immediately — the delivery is NOT queued behind the turn.
   const started = Date.now()
-  const delivery = proc.deliver('main', 'fast-delivery', 10000)
+  const delivery = proc.deliver('main', 'fast-delivery', {}, 10000)
   assert.equal(prompts().length, 2, 'the delivery prompt is written at once, not queued')
   resolveNext('session/prompt', { messageId: 'm-deliv' })
   const result = await delivery
@@ -119,7 +119,7 @@ test('DLV3 a dead child (no receipt) rejects via the timeout and cleans up', asy
   const { proc, prompts } = f
 
   const started = Date.now()
-  const pending = proc.deliver('main', 'into-the-void', 300)
+  const pending = proc.deliver('main', 'into-the-void', {}, 300)
   assert.equal(prompts().length, 1)
   await assert.rejects(() => pending, /timed out after 300ms/)
   assert.ok(Date.now() - started >= 250, 'rejected by the receipt timeout, not by any turn state')
@@ -130,7 +130,7 @@ test('DLV4 a late receipt after the timeout cannot resolve the timed-out call', 
   const f = fakeAgentProcess()
   const { proc, prompts, sleep } = f
 
-  const pending = proc.deliver('main', 'late-receipt', 200)
+  const pending = proc.deliver('main', 'late-receipt', {}, 200)
   const write = prompts()[0]
   await assert.rejects(() => pending, /timed out/)
   assert.equal(proc.pending.size, 0, 'the timed-out entry is gone')

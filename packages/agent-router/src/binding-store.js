@@ -25,10 +25,18 @@
  *
  *   { "version": 1,
  *     "bindings": { "<channelConversationId>": {
- *       channelConversationId, activeAgentId, activeSessionId, updatedAt } },
+ *       channelConversationId, activeAgentId, activeSessionId, workspace,
+ *       updatedAt } },
  *     "lastSessions": { "<channelConversationId>": { "<agentId>": "<sessionId>" } },
  *     "freshSessions": { "<agentId>": { "<requestId>": {
  *       agentId, requestId, sessionId, createdAt } } } }
+ *
+ * `bindings[].workspace` (AGENT_CORE_BINDING_WORKSPACE_V1) is the Binding's
+ * stable effective workspaceId (a string) or null (= the Default Workspace
+ * Rule: resolveWorkspace(agentId)). It is NOT a path — deployment shape is
+ * derived at resolution time. The field is optional in the document: rows
+ * written by older versions load with workspace === null and keep behaving
+ * exactly as before — no forced migration.
  *
  * `lastSessions` is the per-(ChannelConversation, Agent) SINGLE-SLOT bookmark
  * table (Mobile Gate 1: "surface × agent → lastActiveSession"). It is NOT a
@@ -77,10 +85,13 @@ export const VALIDATION_ERROR = 'VALIDATION_ERROR'
 /**
  * One Binding row: which (Agent, Session) the ChannelConversation is
  * currently talking to. Mirrors the D-002 Binding shape (updatedAt included;
- * the store never invents or validates the agent — the router does).
+ * the store never invents or validates the agent — the router does) plus the
+ * AGENT_CORE_BINDING_WORKSPACE_V1 `workspace` field: the stable effective
+ * workspaceId, or null for the Default Workspace Rule (agent default).
  *
  * @typedef {{channelConversationId:string, activeAgentId:string,
- *            activeSessionId:string, updatedAt:string}} BindingRow
+ *            activeSessionId:string, workspace:string|null,
+ *            updatedAt:string}} BindingRow
  */
 
 /**
@@ -153,6 +164,7 @@ export class BindingStore {
     }
     for (const [key, row] of Object.entries(document.bindings)) {
       // Rebuild from the row itself; the map key is derived, never trusted.
+      // `workspace` is optional (legacy rows = null = agent default).
       if (typeof row?.channelConversationId !== 'string'
           || typeof row.activeAgentId !== 'string'
           || typeof row.activeSessionId !== 'string') {
@@ -160,10 +172,16 @@ export class BindingStore {
           code: CORRUPT_STORE,
         })
       }
+      if (row.workspace !== undefined && row.workspace !== null && typeof row.workspace !== 'string') {
+        throw Object.assign(new Error(`binding-store: corrupt binding row workspace at key ${JSON.stringify(key)}`), {
+          code: CORRUPT_STORE,
+        })
+      }
       this.bindings.set(row.channelConversationId, {
         channelConversationId: row.channelConversationId,
         activeAgentId: row.activeAgentId,
         activeSessionId: row.activeSessionId,
+        workspace: typeof row.workspace === 'string' ? row.workspace : null,
         updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : this.now(),
       })
     }
@@ -318,7 +336,10 @@ export class BindingStore {
 
   /**
    * Upsert one Binding row and persist it (resolves only after the write
-   * lands on disk).
+   * lands on disk). `workspace` is optional (omitted/null = the Default
+   * Workspace Rule); a string value must be non-empty — format validation
+   * (safe path component) belongs to the domain caller via
+   * workspace-bootstrap's validateWorkspaceId.
    * @param {BindingRow} row - the full row to store.
    * @returns {Promise<BindingRow>} the stored row.
    */
@@ -330,11 +351,18 @@ export class BindingStore {
         code: VALIDATION_ERROR,
       })
     }
+    if (row.workspace !== undefined && row.workspace !== null
+        && (typeof row.workspace !== 'string' || row.workspace === '')) {
+      throw Object.assign(new TypeError('binding-store: workspace must be a non-empty string or null'), {
+        code: VALIDATION_ERROR,
+      })
+    }
     return this.enqueue(async () => {
       const stored = {
         channelConversationId: row.channelConversationId,
         activeAgentId: row.activeAgentId,
         activeSessionId: row.activeSessionId,
+        workspace: row.workspace ?? null,
         updatedAt: row.updatedAt ?? this.now(),
       }
       this.bindings.set(stored.channelConversationId, stored)

@@ -36,6 +36,53 @@ import {
   sanitizeAgentId,
 } from './paths.js'
 
+/**
+ * AGENT_CORE_BINDING_WORKSPACE_V1: structured rejection code for an invalid
+ * workspaceId (a Binding's stable effective workspace identifier). The Router
+ * surfaces this code verbatim — it never truncates or reshapes the input.
+ */
+export const WORKSPACE_ID_INVALID = 'WORKSPACE_ID_INVALID'
+
+/**
+ * AGENT_CORE_BINDING_WORKSPACE_V1 §WorkspaceResolution: the frozen ultra-thin
+ * workspaceId -> path derivation (`resolveWorkspacePath(workspaceId) =
+ * <workspaceRoot>/<sanitizeWorkspaceId(workspaceId)>`). It is the SAME
+ * sanitize-backed derivation resolveWorkspace has always performed (resolve
+ * accepts any id, not just agent ids) — named here as the Spec seam; no
+ * parallel mapping system exists or is introduced.
+ *
+ * @param {string} workspaceId - the Binding workspace identifier (sanitized
+ *   internally; invalid ids throw).
+ * @param {string} [configuredWorkspaceRoot] - optional root override.
+ * @param {object} [env] - environment mapping ($DSH_WORKSPACE_DIR).
+ * @returns {string} the absolute workspace path.
+ */
+export function resolveWorkspacePath(workspaceId, configuredWorkspaceRoot, env = process.env) {
+  return resolveWorkspace(workspaceId, configuredWorkspaceRoot, env)
+}
+
+/**
+ * AGENT_CORE_BINDING_WORKSPACE_V1 §WorkspaceIdValidation: validate a
+ * workspaceId as a single safe path component, REUSING sanitizeAgentId (the
+ * isomorphic safe-id helper) — no separate safety system for workspace ids.
+ * Rejects (never reshapes) anything that is not a non-empty trimmed string of
+ * [A-Za-z0-9_-] within MAX_AGENT_ID_LENGTH; rethrows as a structured
+ * WORKSPACE_ID_INVALID error so callers can distinguish validation from IO.
+ *
+ * @param {string} workspaceId - the Binding workspace identifier to validate.
+ * @returns {string} the validated (already-normalized) workspaceId.
+ */
+export function validateWorkspaceId(workspaceId) {
+  try {
+    return sanitizeAgentId(workspaceId)
+  } catch (cause) {
+    throw Object.assign(
+      new Error(`workspace-bootstrap: invalid workspaceId (${cause instanceof Error ? cause.message : String(cause)})`),
+      { code: WORKSPACE_ID_INVALID },
+    )
+  }
+}
+
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'workspace-bootstrap'
 
@@ -85,18 +132,8 @@ export const AGENTS_TEMPLATE = [
  * @param options.seedFiles - relative workspace files to seed when missing.
  * @returns `{ workspace, dshHome }` — the resolved absolute roots.
  */
-export async function ensure(agentId, options = {}) {
-  const workspaceRoot = options.workspaceRoot
-  const agentsHome = options.agentsHome
-  const seedFiles = options.seedFiles ?? ['AGENTS.md']
-  const workspace = resolveWorkspace(agentId, workspaceRoot)
-  const dshHome = resolveAgentHome(agentId, agentsHome)
-
-  // Create both roots up front so a genuine IO failure surfaces even when the
-  // seed list is empty.
-  await mkdir(workspace, { recursive: true })
-  await mkdir(dshHome, { recursive: true })
-
+/** Seed the configured relative files inside `workspace` (never overwrite). */
+async function seedWorkspaceFiles(workspace, seedFiles) {
   for (const relative of seedFiles) {
     // `relative` is a trustworthy config value, but guard against accidental
     // traversal anyway so a misconfigured seed list can never write outside
@@ -113,8 +150,44 @@ export async function ensure(agentId, options = {}) {
       if (error?.code !== 'EEXIST') throw error // already seeded → idempotent skip
     }
   }
+}
+
+export async function ensure(agentId, options = {}) {
+  const workspaceRoot = options.workspaceRoot
+  const agentsHome = options.agentsHome
+  const seedFiles = options.seedFiles ?? ['AGENTS.md']
+  const workspace = resolveWorkspace(agentId, workspaceRoot)
+  const dshHome = resolveAgentHome(agentId, agentsHome)
+
+  // Create both roots up front so a genuine IO failure surfaces even when the
+  // seed list is empty.
+  await mkdir(workspace, { recursive: true })
+  await mkdir(dshHome, { recursive: true })
+  await seedWorkspaceFiles(workspace, seedFiles)
 
   return { workspace, dshHome }
+}
+
+/**
+ * AGENT_CORE_BINDING_WORKSPACE_V1 §WorkspaceResolution / "Workspace 不存在怎么办":
+ * idempotent bootstrap of ONE binding workspace (mkdir + seed) keyed by
+ * workspaceId — a valid id whose directory is missing is the NORMAL
+ * initialization path, never an invalid-workspace rejection. Unlike
+ * {@link ensure} this touches only the WORKSPACE root: the DSH home stays
+ * keyed by agentId (one Agent = one process = one home; workspaces are
+ * per-binding cwd surfaces, not runtime homes).
+ *
+ * @param {string} workspaceId - the Binding workspace identifier (validated
+ *   internally by the same sanitize rules).
+ * @param {object} [options] - optional overrides (same meaning as ensure's).
+ * @returns `{ workspace }` — the resolved absolute workspace root.
+ */
+export async function ensureWorkspace(workspaceId, options = {}) {
+  validateWorkspaceId(workspaceId)
+  const workspace = resolveWorkspace(workspaceId, options.workspaceRoot)
+  await mkdir(workspace, { recursive: true })
+  await seedWorkspaceFiles(workspace, options.seedFiles ?? ['AGENTS.md'])
+  return { workspace }
 }
 
 /**
@@ -137,6 +210,15 @@ export function apply(ctx, config) {
     sanitizeAgentId,
     resolveWorkspace: (agentId) => resolveWorkspace(agentId, workspaceRoot),
     resolveDshHome: (agentId) => resolveAgentHome(agentId, agentsHome),
+    // AGENT_CORE_BINDING_WORKSPACE_V1 seams (ultra-thin: the same
+    // sanitize-backed derivation, named for the frozen resolution model —
+    // <workspaceRoot>/<sanitizeWorkspaceId(workspaceId)>):
+    validateWorkspaceId,
+    resolveWorkspacePath: (workspaceId) => resolveWorkspacePath(workspaceId, workspaceRoot),
+    ensureWorkspace: (workspaceId, options = {}) => ensureWorkspace(workspaceId, {
+      seedFiles: options.seedFiles ?? seedFiles,
+      workspaceRoot: options.workspaceRoot ?? workspaceRoot,
+    }),
   }
   // Provide the service VALUE directly (Cordis stores it as-is; a factory
   // function would be returned as-is by ctx.get()).

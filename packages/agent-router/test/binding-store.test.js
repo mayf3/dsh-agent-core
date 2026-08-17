@@ -238,3 +238,62 @@ test('16. freshSessionFor validation and corrupt-table fail-loud', async (t) => 
   await writeFile(file, JSON.stringify(doc))
   assert.throws(() => new BindingStore({ storeFile: file }), (e) => e.code === CORRUPT_STORE)
 })
+
+// ---------------------------------------------------------------------------
+// AGENT_CORE_BINDING_WORKSPACE_V1 — Binding.workspace (stable workspaceId)
+// ---------------------------------------------------------------------------
+
+test('15. workspace round-trip: string stored verbatim, null preserved', async (t) => {
+  const store = new BindingStore({ storeFile: await tmpStore(t) })
+  await store.set({ channelConversationId: 'feishu:oc_A', activeAgentId: 'agt_a', activeSessionId: 'main', workspace: 'feishu-oc_A' })
+  await store.set({ channelConversationId: 'feishu:oc_N', activeAgentId: 'agt_a', activeSessionId: 'main', workspace: null })
+  assert.equal(store.get('feishu:oc_A').workspace, 'feishu-oc_A')
+  assert.equal(store.get('feishu:oc_N').workspace, null)
+  const row = store.list().find(r => r.channelConversationId === 'feishu:oc_N')
+  assert.equal(row.workspace, null)
+})
+
+test('16. legacy rows WITHOUT workspace load as null (no forced migration, AC8)', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'bs-ws-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const storeFile = join(dir, 'bindings.json')
+  await writeFile(storeFile, JSON.stringify({
+    version: 1,
+    bindings: {
+      'feishu:oc_legacy': {
+        channelConversationId: 'feishu:oc_legacy',
+        activeAgentId: 'agt_a',
+        activeSessionId: 'main',
+        updatedAt: '2026-08-01T00:00:00.000Z',
+      },
+    },
+  }), 'utf8')
+  const store = new BindingStore({ storeFile })
+  assert.equal(store.get('feishu:oc_legacy').workspace, null, 'absent field -> null (Default Workspace Rule)')
+})
+
+test('17. restart keeps workspace; a workspace-typed-garbage row fails loud', async (t) => {
+  const storeFile = await tmpStore(t)
+  const store = new BindingStore({ storeFile })
+  await store.set({ channelConversationId: 'feishu:oc_A', activeAgentId: 'agt_a', activeSessionId: 'main', workspace: 'feishu-oc_A' })
+  const reopened = new BindingStore({ storeFile })
+  assert.equal(reopened.get('feishu:oc_A').workspace, 'feishu-oc_A')
+
+  const dir2 = await mkdtemp(join(tmpdir(), 'bs-ws2-'))
+  t.after(() => rm(dir2, { recursive: true, force: true }))
+  await writeFile(join(dir2, 'bad.json'), JSON.stringify({
+    version: 1,
+    bindings: { x: { channelConversationId: 'x', activeAgentId: 'a', activeSessionId: 'm', workspace: 42 } },
+  }), 'utf8')
+  assert.throws(() => new BindingStore({ storeFile: join(dir2, 'bad.json') }), (e) => e.code === CORRUPT_STORE)
+})
+
+test('18. set rejects a non-string non-null workspace (empty string included)', async (t) => {
+  const store = new BindingStore({ storeFile: await tmpStore(t) })
+  for (const bad of ['', 42, {}, true]) {
+    assert.throws(
+      () => store.set({ channelConversationId: 'c', activeAgentId: 'a', activeSessionId: 'm', workspace: bad }),
+      (e) => e.code === VALIDATION_ERROR,
+    )
+  }
+})
