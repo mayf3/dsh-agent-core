@@ -366,15 +366,15 @@ export function normalizeIngressEvent(raw, opts = {}) {
     attachments,
     raw: event,
     timestamp: createdAtOf(message, now),
-    // AGENT_CORE_BINDING_WORKSPACE_V1 §Product Policy 具体化
-    // (FEISHU_CONVERSATION_TO_WORKSPACE): the PRODUCT ENTRY decides this
-    // conversation's initial binding triple values — the stable effective
-    // workspaceId AND the conversation-scoped initial session (main-A / main-B
-    // per conversation, so two groups of the SAME Agent never collapse onto
-    // one native session across two workspaces). The Router receives them as
-    // opaque data and never derives them.
-    workspace: conversationWorkspaceId(conv.conversationId),
-    session: conversationMainSessionId(conv.conversationId),
+    // AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC §5 (accepted): the V2
+    // normal Feishu path MUST NOT inject or select a conversation workspace /
+    // session. No `workspace` / `session` fields are attached: the Router's
+    // first-contact rule then stores Binding.workspace = null (Default
+    // Workspace Rule -> resolveWorkspace(agentId) = Agent primary workspace)
+    // and the deployment default session ('main' = canonical main). The
+    // conversationWorkspaceId / conversationMainSessionId helpers below stay
+    // exported as TRANSITIONAL compatibility carriers (old p2p state keeps
+    // matching); the normal path simply never calls them.
     // Deterministic dedup key: prefer the Feishu event_id, fall back to the
     // message_id (stable across redeliveries of the same message).
     dedupKey: providerEventId || `message:${messageId}`,
@@ -382,19 +382,18 @@ export function normalizeIngressEvent(raw, opts = {}) {
 }
 
 /**
- * AGENT_CORE_BINDING_WORKSPACE_V1 §ProductPolicy — the FEISHU entry's
- * workspace policy (product policy, NOT Router policy): map one Feishu
- * conversation identity onto one stable, deterministic workspaceId
- * (`feishu-<normalized conversation id>`; the exact serialization is this
- * function's own — the Spec deliberately does not freeze the literal). The
- * result is always a workspace-bootstrap-safe single component: characters
- * outside [A-Za-z0-9_-] (the topic/sender scope separators `:` in
- * thread/sender-scoped conversation ids) normalize to `-`.
+ * TRANSITIONAL compatibility helper (AGENT_WORKSPACE_SESSION_MODEL_V2 §22/§26.3:
+ * the old "same Agent -> per-conversation workspace" product model's carrier).
+ * The V2 normal Feishu path no longer calls it (normalizeIngressEvent attaches
+ * no workspace); it stays exported so historical compatibility state and
+ * existing Router-level mechanism tests keep resolving the same deterministic
+ * ids. Its eventual removal is a separate future Spec decision.
  *
- * Two different conversations therefore resolve to two different workspaces
- * even when the same Agent serves both (AC1); one conversation keeps ONE
- * workspace forever, so its main/cron/task sessions all share the same cwd
- * (AC2/AC7).
+ * Maps one Feishu conversation identity onto one stable, deterministic
+ * workspaceId (`feishu-<normalized conversation id>`), always a
+ * workspace-bootstrap-safe single component: characters outside [A-Za-z0-9_-]
+ * (the topic/sender scope separators `:` in thread/sender-scoped conversation
+ * ids) normalize to `-`.
  *
  * @param {string} conversationId - the uniform conversation id.
  * @returns {string} the stable workspaceId for this conversation.
@@ -408,13 +407,11 @@ export function conversationWorkspaceId(conversationId) {
 }
 
 /**
- * The same policy's SESSION half (product policy, NOT Router policy): the
- * conversation-scoped initial session id (`main-<normalized conversation
- * id>`, the Spec's schematic `main-A` / `main-B`). One conversation keeps one
- * long-lived main trajectory inside its own workspace; a DIFFERENT
- * conversation of the same Agent gets a different native session, so its
- * different workspace can never collide with the frozen cwd of the first
- * conversation's session (SESSION_WRITE_CONTRACT R1/R3).
+ * TRANSITIONAL compatibility helper — the session half of the same old
+ * per-conversation policy (see conversationWorkspaceId above). The V2 normal
+ * path no longer calls it; canonical main is the deployment default session
+ * ('main'), not `main-<conversationId>`. Kept exported for the transitional
+ * state and Router-level mechanism tests only.
  *
  * @param {string} conversationId - the uniform conversation id.
  * @returns {string} the stable initial session id for this conversation.
@@ -682,4 +679,90 @@ export function classifyIngress(ev) {
   // thread: forward only when addressed (mentioned or the thread already engages us)
   if (ev.addressed) return { forward: true, reason: 'thread_addressed' }
   return { forward: false, reason: 'thread_not_addressed' }
+}
+
+// ---------------------------------------------------------------------------
+// Ingress gate (V2 PREBOUND_ONLY)
+// ---------------------------------------------------------------------------
+
+/**
+ * The FIXED receipt the connector itself sends when the pre-forward ingress
+ * gate rejects an event (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC §4.5:
+ * structured rejection — one deterministic text, never per-reason variants).
+ * @type {string}
+ */
+export const INGRESS_GATE_REJECTED_REPLY =
+  '[agent-core] 该会话未完成绑定（not bound）：消息未送达任何 Agent，也未创建任何绑定。请联系管理员完成会话与 Agent 的预绑定。'
+
+/**
+ * Build the post-normalization ingress pipeline:
+ * dedup → classify → pre-forward GATE → onEvent.
+ *
+ * The gate is a programmatically injected async predicate
+ * (`config.ingressGate(ingress, { classify }) -> { allowed: boolean,
+ * reason?: string }`), read from the LIVE config object on every event so a
+ * later `setIngressGate()` (like `setCallback()`) takes effect immediately.
+ * When the predicate rejects (`allowed !== true`-style: exactly
+ * `allowed === false`) or THROWS, the event is dropped FAIL-CLOSED: `onEvent`
+ * (the Router's onIngress) is never called — so the Router's first-contact
+ * path never runs and no default Binding can be created — and the connector
+ * itself replies with the fixed {@link INGRESS_GATE_REJECTED_REPLY} receipt
+ * through the injected `reply(ingress)` sender (best effort).
+ *
+ * Pure channel-layer logic: no DSH/Router dependency, fully unit-testable.
+ *
+ * @param {object} p
+ * @param {object} p.dedup - dedup store (check/record; see LruDedup).
+ * @param {object} p.config - the LIVE plugin config object; `config.onEvent`
+ *   and `config.ingressGate` are read per event.
+ * @param {Function} [p.reply] - async sender for the fixed rejection receipt,
+ *   invoked as `reply(ingress)`.
+ * @param {Function} [p.log] - `(level, ...args)` logger.
+ * @returns {Function} `async handleIngress(ingress)` — consume one normalized
+ *   IngressEvent.
+ */
+export function createIngressPipeline({ dedup, config, reply, log = () => {} }) {
+  return async function handleIngress(ingress) {
+    // dedup first
+    const verdict = dedupEvent(ingress, dedup)
+    if (verdict === 'duplicate') {
+      dedup.dropped += 1
+      log('debug', `[feishu] duplicate dropped (${ingress.dedupKey})`)
+      return
+    }
+    // classify
+    const cls = classifyIngress(ingress)
+    if (!cls.forward) {
+      log('debug', `[feishu] not addressed, skipped (${cls.reason})`)
+      return
+    }
+    // V2 pre-forward gate: after classify decided forward, BEFORE onEvent.
+    if (typeof config.ingressGate === 'function') {
+      let gateVerdict
+      try {
+        gateVerdict = await config.ingressGate(ingress, { classify: cls })
+      } catch (error) {
+        log('warn', `[feishu] ingress gate error (fail closed): ${error?.message ?? error}`)
+        gateVerdict = { allowed: false, reason: 'gate_error' }
+      }
+      if (gateVerdict?.allowed === false) {
+        log('warn', `[feishu] ingress rejected by gate (${gateVerdict.reason ?? 'unspecified'}) — not forwarded`)
+        if (typeof reply === 'function') {
+          try {
+            await reply(ingress)
+          } catch (error) {
+            log('warn', `[feishu] rejection receipt failed: ${error?.message ?? error}`)
+          }
+        }
+        return
+      }
+    }
+    if (typeof config.onEvent === 'function') {
+      try {
+        await config.onEvent(ingress, { classify: cls })
+      } catch (error) {
+        log('error', `[feishu] onEvent callback error: ${error?.message ?? error}`)
+      }
+    }
+  }
 }

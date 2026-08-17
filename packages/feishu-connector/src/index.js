@@ -12,19 +12,31 @@
  * decide where to deliver them.
  *
  * It stays decoupled from DSH core services: `inject` is empty and no
- * unregistered service is read.
+ * unregistered service is read. The one composition-level seam beyond
+ * `onEvent` is the injectable PRE-BOUND ingress gate (`setIngressGate` /
+ * config `ingressGate`): a predicate the mounting layer (e.g.
+ * production-runtime) supplies from OUTSIDE; a rejected event never reaches
+ * `onEvent` and gets the connector's own fixed rejection receipt.
  */
 
 import { EventDispatcher, Client as LarkClient, WSClient, AppType, Domain, LoggerLevel } from '@larksuiteoapi/node-sdk'
 import { readFileSync } from 'node:fs'
 import z from '@deepseek-ai/schemastery'
-import { normalizeIngressEvent, LruDedup, dedupEvent, replyTargetFor, classifyIngress, conversationWorkspaceId } from './core.js'
+import {
+  createIngressPipeline,
+  INGRESS_GATE_REJECTED_REPLY,
+  LruDedup,
+  normalizeIngressEvent,
+  replyTargetFor,
+  classifyIngress,
+  conversationWorkspaceId,
+} from './core.js'
 import { createFeishuTransport } from './transport.js'
 import { reply as sendReply } from './api.js'
 
 // Re-export the pure ingress helpers for thin adapters and tests
-// (AGENT_CORE_BINDING_WORKSPACE_V1: the Feishu entry's workspace policy is
-// product code that lives HERE, never in the Router).
+// (conversationWorkspaceId stays exported as a TRANSITIONAL compatibility
+// carrier — the V2 normal path no longer injects it into ingress events).
 export { normalizeIngressEvent, replyTargetFor, classifyIngress, conversationWorkspaceId }
 
 /** Stable plugin name referenced by bundle patches / manifests. */
@@ -46,6 +58,13 @@ const DEFAULTS = {
   enabled: true,
   dedupSize: 10000,
   onEvent: null,
+  // V2 PREBOUND_ONLY pre-forward gate predicate (programmatically injected by
+  // the composition layer, e.g. production-runtime wiring it to
+  // agentRouter.getBinding — the connector stays a pure channel and never
+  // depends on the Router). Rejected events FAIL CLOSED: onEvent is never
+  // called and the connector itself replies with the fixed
+  // INGRESS_GATE_REJECTED_REPLY receipt.
+  ingressGate: null,
   onStatus: null,
   log: null,
 }
@@ -149,6 +168,21 @@ export function apply(ctx, config) {
       log('warn', `[feishu] could not resolve bot identity: ${error?.message ?? error}`)
     })
 
+  // The post-normalization ingress pipeline (dedup → classify → gate →
+  // onEvent). The rejection receipt goes through the connector's OWN reply
+  // path (never the Router), with the fixed INGRESS_GATE_REJECTED_REPLY text.
+  const handleIngress = createIngressPipeline({
+    dedup,
+    config: cfg,
+    reply: (ingress) => sendReply(
+      client,
+      replyTargetFor(ingress).replyTo(ingress.messageId),
+      INGRESS_GATE_REJECTED_REPLY,
+      { log },
+    ),
+    log,
+  })
+
   const transport = createFeishuTransport({
     ws,
     eventDispatcher: dispatcher,
@@ -164,26 +198,7 @@ export function apply(ctx, config) {
         log('warn', `[feishu] drop non-message event: ${error?.message ?? error}`)
         return
       }
-      // dedup first
-      const verdict = dedupEvent(ingress, dedup)
-      if (verdict === 'duplicate') {
-        dedup.dropped += 1
-        log('debug', `[feishu] duplicate dropped (${ingress.dedupKey})`)
-        return
-      }
-      // classify
-      const cls = classifyIngress(ingress)
-      if (!cls.forward) {
-        log('debug', `[feishu] not addressed, skipped (${cls.reason})`)
-        return
-      }
-      if (typeof cfg.onEvent === 'function') {
-        try {
-          await cfg.onEvent(ingress, { classify: cls })
-        } catch (error) {
-          log('error', `[feishu] onEvent callback error: ${error?.message ?? error}`)
-        }
-      }
+      await handleIngress(ingress)
     },
     log,
   })
@@ -233,6 +248,11 @@ export function apply(ctx, config) {
     /** Swap the ingress callback (e.g. after the router mounts). */
     setCallback(fn) {
       cfg.onEvent = typeof fn === 'function' ? fn : cfg.onEvent
+    },
+    /** Swap the V2 pre-forward ingress gate predicate (e.g. the composition
+     *  layer wiring PREBOUND_ONLY via the Router's generic read APIs). */
+    setIngressGate(fn) {
+      cfg.ingressGate = typeof fn === 'function' ? fn : cfg.ingressGate
     },
     // keep a reference so callers can inspect the transport
     _transport: transport,
