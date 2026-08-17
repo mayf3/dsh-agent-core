@@ -8,7 +8,7 @@
  *   deliver({job, result, text}) — scheduler.js -> this bridge -> existing
  *                                   Feishu outbound seam
  *
- * This package is the real wiring promised by docs/reports/
+ * This package is the real wiring promised by docs/history/reports/
  * scheduler-replacement-v1.md §5/§6 ("Product Integration 提供稳定
  * invokeAgent 后，一行注入"): it adapts the scheduler's seam contract to the
  * Router's EXISTING public domain surface. It changes nothing inside the
@@ -30,7 +30,7 @@
  * NO cancellation seam (turn() has no signal; the demo-server JSON-RPC
  * METHODS set has no cancel), so the signal cannot cancel a real turn yet —
  * the bridge records the observation for the TIMEOUT_ABORT_END_TO_END
- * evidence and keeps the turn running (see docs/reports/
+ * evidence and keeps the turn running (see docs/history/reports/
  * scheduler-router-final-integration-v1.md).
  */
 

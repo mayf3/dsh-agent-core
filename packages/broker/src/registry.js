@@ -7,7 +7,7 @@
  * registry is the injected `register(definition)` callback and the injected
  * `define`, so the whole path is unit-testable with a minimal stub.
  *
- * Naming decision (see docs/reports/broker-v1.md for full rationale):
+ * Naming decision (see docs/history/reports/broker-v1.md for full rationale):
  * ONE capability -> ONE tool (multi-operation dispatch) rather than one tool
  * per operation. This preserves V0's accepted model-visible shape exactly —
  * the model still calls `external_calculator` with { operation, a, b } — while

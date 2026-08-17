@@ -16,7 +16,7 @@
  *
  * The "handler" that actually performs an operation is deliberately NOT part of
  * the manifest (a manifest must stay data); it lives next to it in code and is
- * keyed by capability id / operation name. This keeps docs/reports/broker-v1.md
+ * keyed by capability id / operation name. This keeps docs/history/reports/broker-v1.md
  * honest: Forum / Workflow / OKR will only ever provide manifest data + a
  * handler (or an `http` binding), no new generic machinery.
  */
@@ -43,7 +43,7 @@ export function validateManifest(input) {
   // ---- id (wire capability name) ----
   // Grammar: `external.calculator` (dotted namespace) OR a flat broker wire id
   // like `forum_read_thread` / `workflow_my_tasks` (the ids used by the real
-  // deployed capability registry, see docs/investigations/broker-capability-parity.md).
+  // deployed capability registry).
   // Lowercase start; segments may contain letters, digits, underscores.
   if (typeof input.id !== 'string' || input.id.length === 0) {
     errors.push(path('id') + ' must be a non-empty string')

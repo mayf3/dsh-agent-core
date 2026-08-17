@@ -6,7 +6,7 @@
  * deterministic: the same `agentId` always yields the same path, so a later
  * call to `ensure()` re-derives the identical workspace/home root.
  *
- * Two roots are kept apart on purpose (see docs/workspace-bootstrap-v0.md,
+ * Two roots are kept apart on purpose (see docs/history/reports/workspace-bootstrap-v0.md,
  * "映射与路径设计"):
  *
  *   - WORKSPACE  — the agent's long-lived working directory (its cwd). Default

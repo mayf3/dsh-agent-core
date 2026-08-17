@@ -1,8 +1,8 @@
 /**
  * @agent-core/broker — Generic authorized HTTP transport (V1, P1).
  *
- * Closes the shared gap identified by docs/investigations/broker-capability-parity.md
- * §3 (P1): the DSH broker previously could only execute process-internal
+ * Closes the shared parity gap
+ * (P1): the DSH broker previously could only execute process-internal
  * handlers; this module adds the authorized-HTTP pipeline used by EVERY HTTP
  * capability (Forum / Workflow / OKR / future):
  *

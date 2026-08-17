@@ -402,7 +402,7 @@ export class AgentProcess {
       this.exitPromise,
       // NOTE: setTimeout returns a Timeout, not a Promise — the historical
       // `setTimeout(...).then(...)` form was a latent bug on modern Node
-      // (recorded as an integration need in docs/reports/agent-session-v1.md).
+      // (recorded as an integration need in docs/history/reports/agent-session-v1.md).
       new Promise(resolveTimeout => setTimeout(() => resolveTimeout({ code: null, signal: null, timeout: true }), timeoutMs)),
     ])
     return settled

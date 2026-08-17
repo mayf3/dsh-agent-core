@@ -4,7 +4,7 @@
  * Trusted configuration data that pins the outbound side of every HTTP
  * capability: which origin a capability may reach and which audience its
  * access token must be minted for. Values mirror the deployed OpenClaw broker
- * targets (evidence: docs/investigations/broker-capability-parity.md §1.2 and
+ * targets (evidence: the deployed registry and
  * ~/.openclaw/openclaw.json):
  *
  *   svc-workflow → http://127.0.0.1:8989, audience `svc-workflow`
