@@ -106,7 +106,7 @@ function newProcess() {
  * `setTimeout(...).then(...)`, which is invalid on modern Node (a Timeout is
  * not a Promise) — a pre-existing bug in packages/agent-router/src/process.js
  * that this round must not modify (strict boundary). It is recorded as an
- * Integration need in docs/reports/agent-session-v1.md instead.
+ * Integration need in docs/history/reports/agent-session-v1.md instead.
  */
 async function gracefulShutdown(proc, timeoutMs = 30000) {
   if (proc.exit !== undefined) return proc.exit

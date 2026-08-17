@@ -8,7 +8,7 @@
  *   → mock Broker endpoint (token endpoint + business endpoint) → structured result
  *
  * Fixtures (real shapes, real paths/scopes — evidence:
- * docs/investigations/broker-capability-parity.md §1.2 + service source):
+ * deployed service source):
  *   - forum_reply           POST /api/threads/{threadId}/messages  forum.write (svc-forum)
  *   - workflow_instance_detail GET /internal/v1/workflow-instances/{workflowInstanceId} workflow.read (svc-workflow)
  *   - workflow_my_tasks     GET /internal/v1/worklists/assigned-to-me workflow.read (svc-workflow)

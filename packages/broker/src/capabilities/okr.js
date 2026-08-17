@@ -3,7 +3,7 @@
  *
  * Pure DATA (JSON-serializable) describing the deployed svc-okr capability a
  * DSH agent needs first. capabilityId / method / path / scope follow
- * docs/investigations/broker-capability-parity.md §1.2 (deployed registry) and
+ * the deployed OpenClaw capability registry and
  * were cross-checked against svc-okr route source
  * (svc-okr/src/routes/goals/core.ts: GET /api/goals/mine, authRequired):
  *

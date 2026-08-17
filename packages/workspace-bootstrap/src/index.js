@@ -15,7 +15,7 @@
  *   2. Idempotent directory creation + seeding: running `ensure` twice is a
  *      no-op on the second pass; existing files are never overwritten.
  *   3. Seeding only files that have an explicit rationale (AGENTS.md); the
- *      file map and the vetoed files are argued in docs/workspace-bootstrap-v0.md.
+ *      file map and the vetoed files are argued in docs/history/reports/workspace-bootstrap-v0.md.
  *
  * Config (all optional):
  *   - `workspaceRoot`: override the per-agent workspace root directory

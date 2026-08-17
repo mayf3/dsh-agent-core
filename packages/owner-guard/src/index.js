@@ -12,7 +12,7 @@
  * stale, removes it, and takes over — that is exactly the cold-resume path
  * after an evicted/dead owner.
  *
- * Known demo-grade caveats (documented in docs/process-model-demo-v0.md):
+ * Known demo-grade caveats (documented in docs/history/reports/process-model-demo-v0.md):
  * - PID-liveness is the staleness test, so a recycled PID belonging to an
  *   unrelated live process would block takeover until it dies (production
  *   would use flock(2) or a supervisor registry).

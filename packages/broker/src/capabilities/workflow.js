@@ -3,7 +3,7 @@
  *
  * Pure DATA (JSON-serializable) describing the deployed svc-workflow read
  * capabilities a DSH agent needs first. capabilityId / method / path / scope
- * follow docs/investigations/broker-capability-parity.md §1.2 (deployed
+ * follow the deployed OpenClaw capability
  * registry) and were cross-checked against svc-workflow route & scope-guard
  * source (svc-workflow/src/http/mod.rs + handlers/*.rs):
  *
