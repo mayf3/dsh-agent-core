@@ -1,6 +1,7 @@
 ---
 spec_id: FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1
 status: proposed
+amendment: FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1_SPEC_AMENDMENT
 amends: AGENT_CORE_BINDING_WORKSPACE_V1 (accepted) — product-policy literal + memory ownership
 superseded_by: none
 ---
@@ -28,6 +29,140 @@ superseded_by: none
 >
 > 不新增 runtime 实体、不建设 Workspace Registry、不建设第二层 global memory、
 > 不改 DSH kernel、不改 Router 的产品分支。
+
+---
+
+## AMENDMENT — Migration Data Safety Closure（REQUIRED_FIX 1–3 + Migration Gate）
+
+> 日期：2026-08-17 · BASE_REVIEWED_HEAD = `4558b50` · Independent Review:
+> **VERDICT = FIX_REQUIRED**（仅 §Migration Data Safety 的 REQUIRED_FIX；
+> 主模型全部 PASS，见下）。
+>
+> 本 AMENDMENT **只闭合 Migration Data Safety 的 REQUIRED_FIX**，不重新讨论：
+> `MEMORY_OWNERSHIP = WORKSPACE_LOCAL`、`TARGET_MEMORY_KEY = session.header.cwd`、
+> `FEISHU_WORKSPACE_ID = conversationId`、`LEGACY_GENERIC_FALLBACK = KEEP`、
+> Router boundary、AC1–AC10 主模型 —— 这些已 Review **PASS**。
+>
+> 被本 AMENDMENT 收敛的原文范围：§ExistingOpenClawWorkspaceData 的
+> `MIGRATION_MEMORY_CLEANUP` 段（原为“由 runbook 显式移入 archive”的模糊表述）与
+> §LegacyBindingMigration 的 verification/rollback 段 —— 本 AMENDMENT 冻结唯一规则，
+> 消除 Implementation 的自行判断空间。
+
+### Fix 1 — Provenance 分类规则（冻死）
+
+```text
+PROVENANCE_KEEP_RULE =
+  对迁移到 target conversation workspace 的每一条 memory entry：
+
+  KEEP
+    iff provenance 能证明该 entry 所属 Session 的 effective workspace
+    == target conversation workspace
+
+  ARCHIVE / EXCLUDE
+    otherwise（所有无法证明的条目一律不得进入 target MEMORY.md）
+
+  判断依据 = entry 的 Source/Metadata 中可核验的 session/provenance 信息
+  （如 consolidation:session:<...>、写入时冻结的 header.cwd 路径等）；
+  不允许 Implementation Agent 依据内容语义自行判断“哪些应该复制”。
+
+UNKNOWN_PROVENANCE_POLICY =
+  unknown / malformed / provenance 不足
+    -> MUST NOT 猜测归属
+    -> ARCHIVE / MANUAL_REVIEW
+       （进入 migration quarantine/archive，绝不允许写入 target MEMORY.md）
+
+  默认 fail-safe：不能证明属于目标 workspace，就不能写进目标 MEMORY.md。
+
+CRON_ENTRY_POLICY =
+  cron / agent-default session entry：
+  如果其 effective workspace != target conversation workspace
+    -> 不得进入 target conversation MEMORY.md
+  （例如迁移前 cron session 落在 agt_stock_agent（agent default）而 target 是
+   oc_92332c45…，则这些 cron entry 不得进入 oc_92332c45…/MEMORY.md）
+```
+
+```text
+分层落地（迁移目标行形态，三类 known provenance）：
+  group main session entry :
+    仅当其 effective workspace 被证明 == 目标 group workspace 时才 KEEP；
+    否则 ARCHIVE（见 Fix 2 去向规则）。
+  p2p session entry          : 一律不得进入 group MEMORY.md（目标为 group 时
+    其 effective workspace != target => ARCHIVE/EXCLUDE）。
+  cron / agent-default entry : effective workspace != target => 不得进入 target
+    conversation MEMORY.md（ARCHIVE/EXCLUDE；去向见 Fix 2）。
+```
+
+### Fix 2 — Archive 去向（冻死）
+
+```text
+FOREIGN_ENTRY_ARCHIVE_DESTINATION =
+  禁止模糊 “move to some memory/archive”。
+
+  对 foreign entry 明确二选一：
+  1) provenance 能确定属于某个已知 conversation workspace
+       -> archive 到【该 conversation workspace 的 migration archive】
+          （<该 workspace>/memory/migration-archive/ 或同等显式集合）
+          或放入该 workspace 的待恢复集合（pending-restore），
+          绝不进入任何可注入的 MEMORY.md；
+  2) 无法安全确定目标 workspace（unknown / malformed）
+       -> 放入 dedicated migration quarantine/archive
+          （<migration-root>/quarantine/，独立于所有 conversation workspace）
+          -> 不注入任何 conversation MEMORY.md
+          -> MANUAL_REVIEW 兜底
+
+  禁止：为了“保留数据”把 foreign entry 放进当前 group workspace 的
+  可注入 MEMORY.md。
+```
+
+### Fix 3 — 源侧 mixed MEMORY.md 立场（冻死）
+
+```text
+SOURCE_MIXED_MEMORY_DISPOSITION =
+  迁移后 agt_stock_agent/MEMORY.md（legacy 混合文件：group main entries +
+  p2p entries + cron/agent-default entries）不得继续作为任何 conversation 的
+  active memory source。
+
+  该原文件应：backup/archive（一次性封存，保留只读），
+  而【不是】继续被 group / p2p Session 注入。
+
+  agent-default workspace 的后续 cron/background Session：
+    只能消费属于 agent-default workspace 自己的、新的 workspace-local
+    MEMORY.md（<agent-default-workspace>/MEMORY.md，按 WORKSPACE_LOCAL 规则
+    由这些 session 自己的 header.cwd 解析），
+    不能继续消费历史混合文件。
+
+  即：迁移 = source 封存 + target 收拢 KEEP 条目的全新 workspace-local
+  MEMORY.md；不存在“group 继续读旧混合文件”的状态。
+```
+
+### Migration Gate（顺手冻清 Reviewer non-blocking 建议）
+
+```text
+MIGRATION_PREFLIGHT =
+  - source missing
+      -> FAIL LOUD before write（迁移脚本立即失败，不写任何目标）
+  - destination non-empty（存在任何内容/已被 ensure 播种）
+      -> ABORT before write（不覆盖、不合并、不静默继续）
+  - 不因此新增 migration framework（保持脚本 + runbook 形态）
+
+BINDING_AUTHORITY_SWITCH_GATE =
+  bindings.json 的 authority switch（binding.workspace / activeSessionId 改为
+  迁移目标值）-> ONLY AFTER 全部 migration verification gates PASS
+  （§ExistingOpenClawWorkspaceDataPolicy 的 V1–V5 全过之后才能改；
+   任何 gate 失败 => 不切换 authority，保持旧 binding 不变，走 rollback）。
+```
+
+### 边界重申（本 AMENDMENT 不改变）
+
+```text
+AUTO_MIGRATION = NO（迁移必须显式 runbook，绝不自动触发）
+SELECTED_FEISHU_BINDINGS_ONLY = YES（只迁移显式白名单 binding）
+WORKSPACE_REGISTRY = NOT_INTRODUCED
+GLOBAL_MEMORY_LAYER = NOT_BUILT（V1 无第二层）
+ROUTER_REWRITE = NO
+SCHEDULER_REDESIGN = NO
+KERNEL_CHANGE = NONE
+```
 
 ---
 
@@ -480,17 +615,33 @@ EXISTING_WORKSPACE_DATA_MIGRATION = DEFINED（本轮只冻结，不执行）
                       在 new workspace 内创建新的 conversation session（轨迹断档，
                       memory/files 不丢）——二选一由 runbook 显式记录，不得静默。
 
-  MIGRATION_MEMORY_CLEANUP = REQUIRED（一次性，runbook 专用）
-    - 被迁移的 MEMORY.md 中，Source provenance 指向“其他 conversation 的 session”
-      （如私聊 consolidation:session:main\-oc\_9dd74b9ed… 落在群侧副本）的条目，
-      由 runbook 显式移入 archive（<workspace>/memory/archive/ 或独立文件），
-      确保迁移后群侧注入的 [memory] 不再含私聊内容（AC2 对已污染数据的落地）。
+  MIGRATION_MEMORY_CLEANUP = REQUIRED（一次性，runbook 专用；规则 = AMENDMENT Fix 1/2/3）
+    - 对 source MEMORY.md 的每一条 entry，按 AMENDMENT §PROVENANCE_KEEP_RULE 分类：
+        KEEP iff provenance 能证明所属 session 的 effective workspace == target
+        conversation workspace；否则 ARCHIVE/EXCLUDE；
+        unknown/malformed -> MUST NOT 猜测 -> quarantine + MANUAL_REVIEW。
+    - 去向按 AMENDMENT §FOREIGN_ENTRY_ARCHIVE_DESTINATION（能确定 conversation
+      workspace -> 该 workspace 的 migration archive / pending-restore；
+      无法确定 -> dedicated quarantine，不注入任何 conversation MEMORY.md）。
+    - p2p entry 不得进入 group MEMORY.md；cron/agent-default entry 在
+      effective workspace != target 时不得进入 target conversation MEMORY.md。
+    - 迁移后 target MEMORY.md 只含被证明属于 target workspace 的 KEEP 条目；
+      source 混合文件按 AMENDMENT §SOURCE_MIXED_MEMORY_DISPOSITION 封存为
+      backup/archive，不再作为任何 conversation 的注入源。
     - 这是数据卫生，不是新的 memory engine；runtime 不做任何跨 conversation 清理。
+    - 对应 AC2 对已污染数据的落地（迁移后群侧 [memory] 无私聊内容）。
 
-  VERIFICATION（迁移后必须全过）：
+  MIGRATION_PREFLIGHT（Amend Fix：写前 gate，全部 fail-fast）：
+    - source missing        -> FAIL LOUD before write（迁移脚本立即失败，不写任何目标）
+    - destination non-empty -> ABORT before write（不覆盖、不合并、不静默继续）
+    - 不新增 migration framework（保持脚本 + runbook 形态）
+
+  VERIFICATION（迁移后必须全过；bindings.json authority switch 只在 V1–V5 全过之后）：
     - V1 dest 文件/目录数量 == source（差异 = 0；允许 seed-only 文件的已知新增）
     - V2 抽样或全量 checksum/字节级一致（AGENTS.md / MEMORY.md / 关键文件）
     - V3 bindings.json 修改前备份 + 修改后 JSON 合法 + 行内容 == 冻结的迁移目标
+      （该修改 = BINDING_AUTHORITY_SWITCH_GATE 的唯一执行点：仅当 V1–V5 全 PASS
+        才允许改 authority；任何 gate 失败 => 不切换、保持旧 binding、走 rollback）
     - V4 smoke：群发一条消息 → 回复成功（agent 进程正常、session 在 new workspace 创建）
     - V5 隔离断言：群 session 注入块不含私聊 marker；私聊 session 注入块为私聊自己的
       MEMORY.md（对应 AC1/AC2）
@@ -518,8 +669,10 @@ FEISHU_LEGACY_BINDING_MIGRATION = ONE_TIME_EXPLICIT（只迁移明确选中的 F
   - 未来被“选中的 Feishu production bindings”（如生产股票群 oc_0480991b… 的正式 cutover）
     必须显式进入同一迁移清单后才可执行；默认 generic 行为永远不迁移。
   - 每次迁移 = runbook 化：source / destination / copy(rsync -a, no-clobber) /
-    session artifact 策略 / memory cleanup / verification(V1-V5) / rollback ——
-    全部按 §ExistingOpenClawWorkspaceDataPolicy 执行。
+    session artifact 策略 / memory cleanup（AMENDMENT Fix 1/2/3 规则）/
+    MIGRATION_PREFLIGHT（source missing FAIL LOUD / dest non-empty ABORT）/
+    verification(V1-V5) / BINDING_AUTHORITY_SWITCH_GATE（V1–V5 全过才改 bindings.json）/
+    rollback —— 全部按 §ExistingOpenClawWorkspaceDataPolicy（含 AMENDMENT）执行。
   - 迁移结果（冻结目标行形态，与 product policy 一致）：
       1) feishu:oc_92332c45… → workspace 'oc_92332c45c1cac2ef89857abfee8ed762'
                              + activeSessionId 'main-oc_92332c45c1cac2ef89857abfee8ed762'
@@ -772,8 +925,11 @@ FEISHU_LEGACY_BINDING_MIGRATION = ONE_TIME_EXPLICIT（只迁移显式白名单 F
 
 EXISTING_WORKSPACE_DATA_MIGRATION = DEFINED / NOT_EXECUTED（COPY 优先，禁止空目录：
   source/destination 显式、rsync -a no-clobber、session artifact 二选一显式记录、
-  MIGRATION_MEMORY_CLEANUP 一次性归档 foreign-source 条目、
-  verification V1-V5、rollback（先备份 bindings.json + workspace + artifact））
+  memory entry 按 AMENDMENT PROVENANCE_KEEP_RULE 分类归档（KEEP iff provenance 证明
+  effective workspace == target；unknown -> quarantine + MANUAL_REVIEW）、
+  MIGRATION_PREFLIGHT（source missing FAIL LOUD / dest non-empty ABORT）、
+  verification V1-V5、BINDING_AUTHORITY_SWITCH_GATE（V1–V5 全过才改 bindings.json）、
+  rollback（先备份 bindings.json + workspace + artifact））
 
 ROUTER_PRODUCT_SPECIAL_CASE = NONE
 AGENT_MEMORY_PRODUCT_SPECIAL_CASE = NONE
@@ -797,4 +953,66 @@ KERNEL_CHANGE = NONE
 
 SPEC_STATUS = proposed
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+```
+
+## Amendment Final Output（AMENDMENT — Migration Data Safety Closure）
+
+```text
+FEISHU_WORKSPACE_MEMORY_ALIGNMENT_V1_SPEC_AMENDMENT = PASS
+（REQUIRED_FIX 1–3 + Migration Gate 全部冻结为唯一规则，无 NEEDS_MORE_EVIDENCE）
+
+BASE_REVIEWED_HEAD = 4558b50
+HEAD = <this amendment commit>
+
+PROVENANCE_KEEP_RULE =
+  KEEP iff provenance 能证明该 entry 所属 Session 的 effective workspace
+  == target conversation workspace；否则 ARCHIVE/EXCLUDE。
+  不允许 Implementation 自行判断“哪些应该复制”；
+  判断依据 = 可核验的 session/provenance 信息（Source/metadata/header.cwd），
+  不是内容语义。
+
+UNKNOWN_PROVENANCE_POLICY =
+  unknown / malformed / provenance 不足 -> MUST NOT 猜测归属
+  -> ARCHIVE / MANUAL_REVIEW（quarantine），绝不写入 target MEMORY.md。
+  默认 fail-safe：不能证明属于目标 workspace，就不能写进目标 MEMORY.md。
+
+CRON_ENTRY_POLICY =
+  cron / agent-default session entry：其 effective workspace != target
+  conversation workspace 时，不得进入 target conversation MEMORY.md（ARCHIVE/EXCLUDE）。
+
+FOREIGN_ENTRY_ARCHIVE_DESTINATION =
+  能确定属于某已知 conversation workspace -> archive 到该 workspace 的
+  migration archive / pending-restore 集合；无法安全确定 -> dedicated
+  migration quarantine/archive（独立于所有 conversation workspace），
+  不注入任何 conversation MEMORY.md + MANUAL_REVIEW。
+  禁止为“保留数据”把 foreign entry 放进当前 group workspace 的可注入 MEMORY.md。
+
+SOURCE_MIXED_MEMORY_DISPOSITION =
+  迁移后旧 agt_stock_agent/MEMORY.md 不再作为任何 conversation 的 active
+  memory source：backup/archive 封存（只读）；group / p2p Session 不再注入它。
+  agent-default workspace 后续 cron/background Session 只消费属于
+  agent-default workspace 自己的新 workspace-local MEMORY.md
+  （按 WORKSPACE_LOCAL 由自身 header.cwd 解析），不消费历史混合文件。
+
+MIGRATION_PREFLIGHT =
+  source missing -> FAIL LOUD before write（不写任何目标）；
+  destination non-empty -> ABORT before write（不覆盖/不合并/不静默继续）；
+  不新增 migration framework（脚本 + runbook 形态）。
+
+BINDING_AUTHORITY_SWITCH_GATE =
+  bindings.json authority switch（workspace/activeSessionId 改迁移目标值）
+  -> ONLY AFTER 全部 migration verification gates（V1–V5）PASS；
+  任何 gate 失败 => 不切换 authority、保持旧 binding、走 rollback。
+
+ARCHITECTURE_CHANGE = NONE_FROM_REVIEWED_DIRECTION
+（AMENDMENT 只加规则，不引入新实体/registry/框架/映射平台；
+ 主模型方向与 reviewed HEAD 4558b50 完全一致，无架构变化）
+KERNEL_CHANGE = NONE
+
+边界保持：AUTO_MIGRATION = NO · selected Feishu bindings only ·
+Workspace Registry NOT_INTRODUCED · global memory layer NOT_BUILT ·
+Router rewrite NO · Scheduler redesign NO
+
+SPEC_STATUS = proposed
+READY_FOR_FOCUSED_RE_REVIEW = YES
 ```
