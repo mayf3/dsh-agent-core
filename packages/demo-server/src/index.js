@@ -93,11 +93,14 @@ export function apply(ctx) {
   // verifies it against the resolved workspace; a mismatch is a structured
   // SESSION_WORKSPACE_MISMATCH rejection. Getters observe the
   // initialize-time values at call time.
-  const seam = createSessionSeam(ctx, {
-    get cwd() { return cwd },
-    get provider() { return provider },
-    get model() { return model },
-    get maxTokens() { return maxTokens },
+  const seam = createSessionSeam({
+    ctx,
+    settings: {
+      get cwd() { return cwd },
+      get provider() { return provider },
+      get model() { return model },
+      get maxTokens() { return maxTokens },
+    },
   })
   const { handles, pendingCreations, prompt } = seam
 
