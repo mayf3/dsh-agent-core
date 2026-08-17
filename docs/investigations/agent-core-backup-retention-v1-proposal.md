@@ -48,11 +48,11 @@ The deploy script that produced the current install and all today's backups is:
 - Live installed copy: `/usr/local/libexec/agent-core/app/scripts/trusted-cp-deploy-install.sh`
   - MD5 `d84c79d62f1c9fbf74ceef4f2f50e00b`
   - **identical** to the repo worktree variant
-    `/Users/yanfenma/workspace/project/dsh-agent-core/.worktree/production-integration-v1/scripts/trusted-cp-deploy-install.sh`
+    `<home>/workspace/project/dsh-agent-core/.worktree/production-integration-v1/scripts/trusted-cp-deploy-install.sh`
 - Deploy source branch/worktree: `feat/production-integration-v1`
   (worktree `.worktree/production-integration-v1`, HEAD moved during the day; final
   observed `da7ac27`, last commit 22:50).
-- Harness source: `/Users/yanfenma/workspace/github/deepseek-harness` (HEAD moves
+- Harness source: `<home>/workspace/github/deepseek-harness` (HEAD moves
   between runs; observed at `a8872508` clean, and earlier `e02d85b19e` during the day).
 
 There is a second, older deploy variety in
@@ -73,7 +73,7 @@ The supervision unit that boots the deployment is the launchd plist
 ProgramArguments:
   /usr/local/libexec/agent-core/node-runtime/bin/node
   /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs
-  --root /Users/authsvc/.agent-core
+  --root <home>/.agent-core
 WorkingDirectory: /usr/local/libexec/agent-core/app
 RunAtLoad=true, KeepAlive=true, ThrottleInterval=10
 ```
@@ -118,8 +118,8 @@ timestamped from `date +%Y%m%d-%H%M%S`). This is the only ordering signal.
 
 **BACKUP_CONTENT** = the **entire** previous installed tree: `harness/`
 (≈1.5 GiB incl. offline pnpm `node_modules`), `app/`, `home/`, `config/`
-(505-private), and, when present, `node-runtime/` and `.cache/`. Owner/mode for
-`harness/app/home` is typically `authsvc:authsvc`; `config/` is `authsvc:authsvc
+(<uid>-private), and, when present, `node-runtime/` and `.cache/`. Owner/mode for
+`harness/app/home` is typically `<svc-user>:<svc-user>`; `config/` is `<svc-user>:<svc-user>
 0700`; `.cache` is `root:wheel 0700`.
 
 **BACKUP_OWNER_MODE** = inherited directly from the captured install (no
@@ -229,8 +229,8 @@ operator already uses.
 | 12 | `22:2639` `…-222634` | 1.5G (1,620,580K) | 08-16 22:26 | present | no | **yes** | 10 | Production-Integration era |
 | 13 | `22:4248` `…-224243` | 1.5G (1,620,584K) | 08-16 22:42 | present | no | **yes** | 10 | Production-Integration era |
 
-*`config/` is 0700 authsvc — content not read (no secrets touched). `present`
-means the dir exists and is 505-private. Only `100403` was pre-`mv` at 08-15.
+*`config/` is 0700 <svc-user> — content not read (no secrets touched). `present`
+means the dir exists and is <uid>-private. Only `100403` was pre-`mv` at 08-15.
 
 ### 6.2 Era classification & rollback fidelity
 

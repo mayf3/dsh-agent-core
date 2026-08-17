@@ -10,24 +10,24 @@
 |---|---|
 | OpenClaw agent id | `stock-agent` |
 | OpenClaw 显示名 | `股票分析师` |
-| Business workspace | `/Users/yanfenma/.openclaw/groups/workspace-oc_0480991b97f1e27c96514ac66b4f122c`（候选路径**确认属实**） |
-| 生产承载 | `openclaw-gateway`（LaunchAgent `ai.openclaw.gateway`，端口 18789，PID 31652，运行中）+ `com.openclaw.agent-node-502` + 监控（auto-repair / control-api 18790） |
+| Business workspace | `<home>/.openclaw/groups/workspace-oc_<redacted>`（候选路径**确认属实**） |
+| 生产承载 | `openclaw-gateway`（LaunchAgent `ai.openclaw.gateway`，端口 <port>，PID 31652，运行中）+ `com.openclaw.<redacted><uid>` + 监控（auto-repair / control-api 18790） |
 | Model | primary `zai/glm-5.2`，fallback `opencode-go/deepseek-v4-flash` / `deepseek/deepseek-v4-flash`（`openclaw.json agents.list` + per-agent `models.json`） |
 | Skills | OpenClaw skills 位于 `~/.openclaw/skills/`（agent-lifecycle、agent-principal-lookup、workflow-system 等）；DSH user skill root `~/.agents/skills/` 独立存在 |
 | Runtime/session | `~/.openclaw/agents/stock-agent/sessions/`（199 项，含 sessions.json） |
-| Feishu binding | `feishu group oc_0480991b97f1e27c96514ac66b4f122c`（`openclaw.json bindings`） |
+| Feishu binding | `feishu group oc_<redacted>`（`openclaw.json bindings`） |
 | Scheduler jobs | `~/.openclaw/cron/jobs.json` 中 stock-agent 共 **7 个 job**（见 §5） |
 | Credentials | **本任务不读取、不复制、不修改**（WAIT_ROOT；`openclaw.json` 内 apiKey/appSecret/gateway token、`agents/stock-agent/agent/auth-profiles.json` 均未读取值） |
 
 ## 1. 生产拓扑（现场核实）
 
 ```
-ai.openclaw.gateway (LaunchAgent, openclaw gateway --port 18789, HOME=/Users/yanfenma)
+ai.openclaw.gateway (LaunchAgent, openclaw gateway --port <port>, HOME=<home>)
   └─ 读 ~/.openclaw/openclaw.json（87 个 agent，含 stock-agent）
   └─ 读 ~/.openclaw/cron/jobs.json（OpenClaw cron 引擎在 gateway 进程内）
-com.openclaw.agent-node-502 (LaunchAgent, openclaw node run --port 18789)
-com.openclaw.auto-repair + com.openclaw.control-api (LaunchAgents, monitors)
-com.openclaw.forum-scheduler / com.openclaw.workflow-dispatcher / com.openclaw.host-exec-runner (LaunchDaemons)
+com.openclaw.<redacted><uid> (LaunchAgent, openclaw node run --port <port>)
+com.openclaw.<redacted> + com.openclaw.<redacted> (LaunchAgents, monitors)
+com.openclaw.<redacted> / com.openclaw.<redacted> / com.openclaw.<redacted> (LaunchDaemons)
 ```
 
 - gateway 进程持续处理真实 `node.invoke` 流量（日志 2026-08-15 14:36–14:37 仍有响应）。
@@ -41,7 +41,7 @@ com.openclaw.forum-scheduler / com.openclaw.workflow-dispatcher / com.openclaw.h
 ```json
 { "id": "stock-agent",
   "name": "股票分析师",
-  "workspace": "/Users/yanfenma/.openclaw/groups/workspace-oc_0480991b97f1e27c96514ac66b4f122c",
+  "workspace": "<home>/.openclaw/groups/workspace-oc_<redacted>",
   "model": { "primary": "zai/glm-5.2",
              "fallbacks": ["opencode-go/deepseek-v4-flash", "deepseek/deepseek-v4-flash"] },
   "tools": { "alsoAllow": ["okr_read","workflow_assistance","workflow_execute",
@@ -57,7 +57,7 @@ com.openclaw.forum-scheduler / com.openclaw.workflow-dispatcher / com.openclaw.h
 
 ## 3. business workspace（可复用，只读）
 
-`/Users/yanfenma/.openclaw/groups/workspace-oc_0480991b97f1e27c96514ac66b4f122c` 现场核实内容：
+`<home>/.openclaw/groups/workspace-oc_<redacted>` 现场核实内容：
 
 - 身份面：`AGENTS.md`（6.2KB，8-15 03:34 更新）、`SOUL.md`、`IDENTITY.md`、`USER.md`、`GUIDE.md`
 - 业务面：`STOCK_SELECTION_STRATEGY.md`、`TRACKING.md`（66KB）、`WATCHLIST.md`、`TODO.md`、
@@ -98,7 +98,7 @@ com.openclaw.forum-scheduler / com.openclaw.workflow-dispatcher / com.openclaw.h
 
 ## 6. Feishu binding（现状只读，不改）
 
-`openclaw.json bindings`：`stock-agent → feishu group oc_0480991b97f1e27c96514ac66b4f122c`
+`openclaw.json bindings`：`stock-agent → feishu group oc_<redacted>`
 （与 workspace 后缀相同，OpenClaw 约定）。binding 属 OpenClaw 配置面，本任务不读值入 Registry、
 不修改、不迁移。canary job 使用 `--no-deliver`，且验证脚本不调用任何 Feishu 发送。
 

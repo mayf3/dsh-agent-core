@@ -19,7 +19,7 @@ BASE_MAIN = d45d4e5a94a7009dfcb2f96421d41382fc0143cf
 FORUM_CREDENTIAL_FAILURE_LAYER = BROKER_GATEWAY_CREDENTIAL_RESOLUTION
 AUTH_PRINCIPAL_EXISTS = NO_VIA_AGENT_CORE_ID (a principal exists for OpenClaw stock-agent, but NOT for the Agent Core runtime's agt_* Test Agent id)
 CLIENT_CREDENTIAL_EXISTS = NO_VIA_AGENT_CORE_TRUSTED_STORE (OpenClaw MachineClients exist; nothing is bound to the Agent Core Test Agent id in AGENT_CORE_CREDENTIALS_FILE)
-ROUTER_CREDENTIAL_INJECTION = GATEWAY_MODE_NO_PER_AGENT_ENTRY (broker runs in gateway mode in the 505 parent; loadCredentialFor(credentialsFile, agentId) returns undefined for the Test Agent)
+ROUTER_CREDENTIAL_INJECTION = GATEWAY_MODE_NO_PER_AGENT_ENTRY (broker runs in gateway mode in the <uid> parent; loadCredentialFor(credentialsFile, agentId) returns undefined for the Test Agent)
 FORUM_GRANTS = (forum.read / forum.write declared in manifests; no Agent Core Test Agent grant provisioned/bound)
 
 # Workspace product semantics
@@ -75,26 +75,26 @@ KERNEL_CHANGE = NONE
 
 ## 1. Test Agent identification / real production runtime
 
-The real chain was already PASS on the basic path (`FEISHU_TEST_BOT_REAL_SLICE_V1`, 2026-08-15; group `oc_92332c45c1cac2ef89857abfee8ed762`「大侠 - 小虾米」).
+The real chain was already PASS on the basic path (`FEISHU_TEST_BOT_REAL_SLICE_V1`, 2026-08-15; group `oc_<redacted>`「大侠 - 小虾米」).
 
 The live Production Runtime is running today under the deployment:
 
 ```
-root         76424  sudo -n -u authsvc env HOME=/Users/authsvc DSH_HARNESS_ROOT=/usr/local/libexec/agent-core/harness \
-                     FEISHU_CREDS_PATH=/Users/authsvc/.dsh/feishu-creds.json \
-                     DSH_AGENT_CHILD_UID=502 DSH_AGENT_CHILD_GID=20 DSH_AGENT_SPAWN_HELPER=/usr/local/libexec/dsh-agent-spawn-helper \
+root         76424  sudo -n -u <svc-user> env HOME=<home> DSH_HARNESS_ROOT=/usr/local/libexec/agent-core/harness \
+                     FEISHU_CREDS_PATH=<home>/.dsh/feishu-creds.json \
+                     DSH_AGENT_CHILD_UID=<uid> DSH_AGENT_CHILD_GID=20 DSH_AGENT_SPAWN_HELPER=/usr/local/libexec/dsh-agent-spawn-helper \
                      DSH_AGENT_PROVIDER=oc-go DSH_AGENT_MODEL=deepseek-v4-flash \
                      PRODUCT_API_PORT=17987 NOTIFICATION_INGRESS_PORT=17990 \
                      BROKER_AUTH_ORIGIN=http://127.0.0.1:4001 \
                      AGENT_CORE_CREDENTIALS_FILE=/usr/local/libexec/agent-core/config/agent-credentials.json \
-                     ... production-runtime.mjs --root /Users/authsvc/.agent-core
+                     ... production-runtime.mjs --root <home>/.agent-core
 ```
 
-Production persistent layout (production-runtime `src/paths.js`): root `/Users/authsvc/.agent-core`; per-agent **`workspaces/<agentId>/`** and **`homes/<agentId>/`**; `agents.json`, `bindings/bindings.json`, `scheduler/…`, `control/…`.
+Production persistent layout (production-runtime `src/paths.js`): root `<home>/.agent-core`; per-agent **`workspaces/<agentId>/`** and **`homes/<agentId>/`**; `agents.json`, `bindings/bindings.json`, `scheduler/…`, `control/…`.
 
 Live per-agent trees observed (today, most recent last): `agt_27df…`, `agt_305c…`, `agt_b7d8…`, `agt_edc3…`, `agt_fb78…`. Memory confirms the exercised test-agent surface is the **acceptance / PIV1** and **forum_my_notifications** protocols (PIV1_OK/RECOVER + "check unread notifications via forum_my_notifications") — i.e. Forum was exercised against a real `/v1` runtime and returned `credential_unavailable`.
 
-> Certainty note: the production `agents.json`, `bindings.json`, the trusted `agent-credentials.json` and `logs/` / `control/runtime-evidence.jsonl` are authsvc-private (`0700` / `drwx--x--x`), so their *exact live row content* is not observable by this session. All mechanism-level and configuration-level conclusions below are source-derived and high-confidence; only the exact per-row values at live-time are marked as inferred.
+> Certainty note: the production `agents.json`, `bindings.json`, the trusted `agent-credentials.json` and `logs/` / `control/runtime-evidence.jsonl` are <svc-user>-private (`0700` / `drwx--x--x`), so their *exact live row content* is not observable by this session. All mechanism-level and configuration-level conclusions below are source-derived and high-confidence; only the exact per-row values at live-time are marked as inferred.
 
 ---
 
@@ -131,7 +131,7 @@ All the following are **different** layers and the evidence cleanly separates th
 | Question | Answer |
 |---|---|
 | credential 不存在 (agent no credential at all) | **For the Agent Core Test Agent id: YES** — nothing is bound to its `agt_*` id in the trusted store today. A credential DOES exist under OpenClaw ids (below), but under a different identity key. |
-| credential 没 provision (never written to store) | **Unproven-to-bound** — `agent-credentials.json` (authsvc-private) may exist, but no Agent Core agent is shown bound; readiness report F5 G2 classed this as the expected untested surface. |
+| credential 没 provision (never written to store) | **Unproven-to-bound** — `agent-credentials.json` (<svc-user>-private) may exist, but no Agent Core agent is shown bound; readiness report F5 G2 classed this as the expected untested surface. |
 | Router 没注入 (Router didn't pass credential) | **Not the failure layer** — production runs the router in gateway mode; the Router correctly forwards `{agentId}` from the trusted proc relationship. No `injected`-style seam is in play. |
 | Broker 没读取 (Broker didn't read store) | **It reads** — `loadCredentialFor` runs on every call; it returns `undefined` for the Test Agent id. |
 | auth-service 拒绝 (token mint denied) | **Not reached** — mint (`requestAccessToken` / `/oauth/token`) would only run after a credential was found; here the credential is undefined so the transport fails closed *before* any token request. |
@@ -140,19 +140,19 @@ All the following are **different** layers and the evidence cleanly separates th
 ### 2.3 Answers to the A-block
 
 ```
-TEST_AGENT_ID = agt_* Test Agent of the live production runtime (exact live row authsvc-private; mechanism source-verified)
+TEST_AGENT_ID = agt_* Test Agent of the live production runtime (exact live row <svc-user>-private; mechanism source-verified)
 
 AUTH_PRINCIPAL_EXISTS = YES-FOR-OPENCLAW / NO-FOR-AGENT-CORE-ID
   - auth-service principal b09f1417-d26c-4f77-a3ac-8dc4fb4a18f9 (agent_id=stock-agent, active)
     exists for the OpenClaw stock-agent identity. The Agent Core runtime's agt_* Test Agent
     id is not the same principal key.
 CLIENT_CREDENTIAL_EXISTS = YES-FOR-OPENCLAW / NO-FOR-AGENT-CORE-TRUSTED-STORE
-  - machine client mc_oc_o6JuJjGAoIcv-cWBoBYd6Gw8 {forum.read, forum.write} and
+  - machine client mc_oc_<redacted>-cWBoBYd6Gw8 {forum.read, forum.write} and
     mc_wf_1jQPKhkR6MuIKP4xfvm5gA {workflow.*} exist (auth-service + OpenClaw credentialRefs).
     Nothing is bound to the Agent Core Test Agent id in AGENT_CORE_CREDENTIALS_FILE.
 
 PROCESS_RECEIVED_CREDENTIAL_REFERENCE = N/A (gateway mode) — the Agent child never holds the
-  secret; the 505 parent holds the store path only.
+  secret; the <uid> parent holds the store path only.
 BROKER_CREDENTIAL_RESOLUTION = loadCredentialFor(credentialsFile, agentId) -> undefined
   (no entry for the agt_* Test Agent id; store re-read every call)
 
@@ -167,7 +167,7 @@ CREDENTIAL_UNAVAILABLE_EXACT_SOURCE =
   broker gateway (broker/src/gateway.js:156-159) — loadCredentialFor(credentialsFile, agentId)
   returned undefined for the calling Agent Core Test Agent.
   Concretely: NO MachineClient credential is bound to the Agent Core Test Agent id in the
-  trusted 505 credential store (AGENT_CORE_CREDENTIALS_FILE). It is a
+  trusted <uid> credential store (AGENT_CORE_CREDENTIALS_FILE). It is a
   "credential not provisioned for THIS Agent Core identity" failure — NOT a Router injection
   drop, NOT an auth-service denial, NOT a scope/grant insufficiency.
 ```
@@ -278,8 +278,8 @@ Recovered from the migration archive (`~/.hermes/migration/openclaw/20260415T090
 
 - **bindings.json**: `[ { agentId, match: {channel:'feishu', peer:{kind:'group', id:'oc_...'}} }, … ]` — route **each Feishu group** to a named agent.
 - **agents-list.json**: each agent carries an explicit **`workspace`** field:
-  - `stock-agent` → `/Users/yanfenma/.openclaw/groups/workspace-oc_0480991b97f1e27c96514ac66b4f122c`
-  - `research-agent` → `.../workspace-oc_099bde440b2e9a09fcacbca420568439`
+  - `stock-agent` → `<home>/.openclaw/groups/workspace-oc_<redacted>`
+  - `research-agent` → `.../workspace-oc_<redacted>`
   - … one `workspace-oc_<chatId>` per (agent × group).
 - The on-disk dirs confirm it: 90 × `~/.openclaw/groups/workspace-oc_*`, each a fully-stuffed cwd (AGENTS.md, MEMORY.md, SOUL.md, USER.md, …).
 - Identity reuse across chats is visible: e.g. `lobster-agent` (group `oc_832c…`) vs `lobster-guide-agent` (group `oc_d05a…`); `feishu-expert-agent` (group `oc_9855…`) vs `feishu-expert-2-agent` (group `oc_c6f7…`) — same role string, **two distinct working directories**.
@@ -299,7 +299,7 @@ OPENCLAW_REFERENCE_BEHAVIOR =
 
 ## 5. Real Private / Group trace for the same Test Agent
 
-Mechanism (source-verified; exact live chatIds for this deployment's Test Agent are authsvc-private, so chatId shown is the known canary group — private p2p chatId is opaque/pair-specific):
+Mechanism (source-verified; exact live chatIds for this deployment's Test Agent are <svc-user>-private, so chatId shown is the known canary group — private p2p chatId is opaque/pair-specific):
 
 ```
 PRIVATE (p2p)
@@ -312,9 +312,9 @@ PRIVATE (p2p)
   DSH native session = 'main' (same native session id as group, same process)
   replyTarget = feishu.reply(replyTargetFor(ingress).replyTo(messageId))
 
-GROUP (大侠 - 小虾米, oc_92332c45c1cac2ef89857abfee8ed762)
-  ingress: channel='group', chatType='group', conversationId=oc_92332c45c1cac2ef89857abfee8ed762
-  bindingKey = feishu:oc_92332c45c1cac2ef89857abfee8ed762
+GROUP (大侠 - 小虾米, oc_<redacted>)
+  ingress: channel='group', chatType='group', conversationId=oc_<redacted>
+  bindingKey = feishu:oc_<redacted>
   agentId    = Test Agent agt_*
   sessionId  = 'main'
   workspace  = ~/.agent-core/workspaces/<agentId>  (agent-scoped — SAME as private)
@@ -325,7 +325,7 @@ GROUP (大侠 - 小虾米, oc_92332c45c1cac2ef89857abfee8ed762)
 Cross-checks:
 
 - `ingressBindingNamespace` returns `'feishu'` for both p2p and group (subtype `p2p/group/thread` is a message-subtype, never a Binding namespace — merge audit FIX 1, frozen semantics). So **private and group map to DIFFERENT binding keys** (`feishu:<p2pChatId>` vs `feishu:oc_9233…`) but both resolve to the **same (agent, session=main)** and hence the **same workspace**.
-- The readiness report confirms the group key form is `feishu:oc_92332c45c1cac2ef89857abfee8ed762` (not the older `group:` prefix of FEISHU_TEST_BOT_REAL_SLICE_V1).
+- The readiness report confirms the group key form is `feishu:oc_<redacted>` (not the older `group:` prefix of FEISHU_TEST_BOT_REAL_SLICE_V1).
 
 ```
 SAME_AGENT   = YES

@@ -15,15 +15,15 @@
 | `openclaw cron list/add` 调用点 | 全部确认并逐一迁移（见 §2~§4 前后对照） |
 | `openclaw gateway call config.get` | **只读 fallback**（文件不可读时才触发）；Agent Core 无等价配置权威来源；不新增 Config Service（详见 §5） |
 | stock-agent 是否 forum-scheduler 目标 | **NO**（不在 domains.yaml `forum:broker` 声明集合，见 §6） |
-| 执行身份 | 两个 launchd daemon 均以 `authsvc`(UID 505) + `HOME=/Users/yanfenma` 运行（launchctl print 实证） |
+| 执行身份 | 两个 launchd daemon 均以 `<svc-user>`(UID <uid>) + `HOME=<home>` 运行（launchctl print 实证） |
 | cron 写面落点（迁移后） | `~/.agent-core/scheduler/jobs.json`（AGENTCORE_SCHEDULER_STORE 可覆盖） |
 
 ## 1. 三个 callers 的定位与调用点清单
 
 | 脚本 | 路径 | 调用点（迁移前） | 性质 |
 |---|---|---|---|
-| forum-scheduler.sh v6 | `~/.openclaw/cron/scripts/forum-scheduler.sh` | L142 `openclaw cron list --json`（pending 去重缓存）；L251 `openclaw cron add --at …`（论坛通知触发）；Step 0a 直读+直写 `~/.openclaw/cron/jobs.json`（死 job 清理） | 每小时，launchd `com.openclaw.forum-scheduler`（authsvc） |
-| unified-dispatcher.py | `~/.openclaw/groups/workspace-oc_648db8f3…/skills/cron-domain-scheduler/scripts/unified-dispatcher.py` | `trigger_agent()` / `trigger_agent_immediate()` 两处 `openclaw cron add`（workflow-dispatch 一次性 job）；`get_cron_jobs()` 直读 `~/.openclaw/cron/jobs.json`（30 分钟查重）；`load_gateway_config()` fallback `openclaw gateway call config.get --json` | 每 30 分钟，launchd `com.openclaw.workflow-dispatcher`（authsvc） |
+| forum-scheduler.sh v6 | `~/.openclaw/cron/scripts/forum-scheduler.sh` | L142 `openclaw cron list --json`（pending 去重缓存）；L251 `openclaw cron add --at …`（论坛通知触发）；Step 0a 直读+直写 `~/.openclaw/cron/jobs.json`（死 job 清理） | 每小时，launchd `com.openclaw.<redacted>`（<svc-user>） |
+| unified-dispatcher.py | `~/.openclaw/groups/workspace-oc_<redacted>…/skills/cron-domain-scheduler/scripts/unified-dispatcher.py` | `trigger_agent()` / `trigger_agent_immediate()` 两处 `openclaw cron add`（workflow-dispatch 一次性 job）；`get_cron_jobs()` 直读 `~/.openclaw/cron/jobs.json`（30 分钟查重）；`load_gateway_config()` fallback `openclaw gateway call config.get --json` | 每 30 分钟，launchd `com.openclaw.<redacted>`（<svc-user>） |
 | check-dispatch-health.py | 同目录 | `trigger_agent()` 一处 `openclaw cron add`（--fix stale 补触发）；`get_cron_jobs()` 直读 `~/.openclaw/cron/jobs.json`；Step 4 直写 `~/.openclaw/cron/jobs.json`（disabled workflow-dispatch 清理，含 .bak 备份） | 每 30 分钟（--fix 模式） |
 
 `learning-expert-daily-scorecard` 只做 `openclaw cron list` 只读（OPENCLAW_ACTIVE_CALLER_AUDIT_V1 已证），
@@ -85,7 +85,7 @@ AGENTCORE_CRON="${AGENTCORE_CRON:-agentcore-cron}"
 **真实用途（读实现确认）**：`load_gateway_config()` 的读取顺序是
 
 1. `OPENCLAW_CONFIG_PATH` 环境变量指向的文件；
-2. `~/.openclaw/openclaw.json`（默认路径，**生产可用**：该文件属主 authsvc，
+2. `~/.openclaw/openclaw.json`（默认路径，**生产可用**：该文件属主 <svc-user>，
    daemon 身份可直接读）；
 3. 两者都不可读时 → 兜底 `openclaw gateway call config.get --json` RPC
    （只读；只解析治理事实：agents.list[].tools.alsoAllow + broker
@@ -111,7 +111,7 @@ cutover 期间仍运行（`auto-repair-daemon.sh` / `gateway-control-api.js` 属
 按 forum-scheduler.sh 的真实发现逻辑（domains.yaml 声明 `credential_delivery.forum
 = broker` ∩ openclaw.json broker `agentClients`）实跑：
 
-- domains.yaml（oc_ddee1a74b…/cron-domain-scheduler/references/domains.yaml）
+- domains.yaml（oc_<redacted>…/cron-domain-scheduler/references/domains.yaml）
   声明 `forum:broker`：26 个 agent；
 - broker agentClients：87 个；
 - 扫描 scope = 26 个 agent；**stock-agent 既不在 declared 集合、也不在 scope**。
@@ -124,18 +124,18 @@ FORUM_STOCK_MEMBERSHIP = NO
 cutover 无直接联动面；stock-agent 的 6 个生产 job 全部是 OpenClaw jobs.json 内的
 cron job，由 OpenClaw gateway 继续执行，与本任务验证互不干扰。）
 
-## 7. 权限面（daemon = authsvc, UID 505）
+## 7. 权限面（daemon = <svc-user>, UID <uid>）
 
 实证（launchctl print system/…）：
-`com.openclaw.forum-scheduler` / `com.openclaw.workflow-dispatcher` 均
-`username = authsvc`、`HOME => /Users/yanfenma`、PATH 含 `/usr/local/bin`。
+`com.openclaw.<redacted>` / `com.openclaw.<redacted>` 均
+`username = <svc-user>`、`HOME => <home>`、PATH 含 `/usr/local/bin`。
 
 | 面 | 迁移后要求 | 现状 | 处置 |
 |---|---|---|---|
 | `agentcore-cron` 可执行 | daemon 需在 PATH 解析 | `/usr/local/bin/agentcore-cron` → 符号链接到 repo `scripts/agentcore-cron.mjs`（755，世界可读；node 在 /usr/local/bin） | ✅ 已安装 |
-| agentcore store 目录 | authsvc 需读写 | `~/.agent-core` 原为 700/yanfenma，`~/.agent-core/scheduler` 不存在 | ✅ 已建 `~/.agent-core/scheduler`（700），`~/.agent-core` 加 authsvc `list,search,readattr,readextattr` ACL；scheduler 目录加 authsvc 全量 + `file_inherit,directory_inherit` ACL（镜像 `~/.openclaw/cron` 既有授权模式） |
-| 脚本可读 | authsvc 读脚本 | 两个 .py 644 世界可读；forum-scheduler.sh 700 + 文件级 ACL（authsvc read/write/append…） | ✅ 编辑后已恢复文件级 ACL（编辑的原子替换会新建 inode 丢失 ACL，已用 `chmod +a` 原样恢复） |
-| dispatcher scripts 目录 | authsvc search/list | dir 700 + `group:oc-canary allow list,search`；authsvc ∈ oc-canary 组 | ✅ 无需变更 |
+| agentcore store 目录 | <svc-user> 需读写 | `~/.agent-core` 原为 700/yanfenma，`~/.agent-core/scheduler` 不存在 | ✅ 已建 `~/.agent-core/scheduler`（700），`~/.agent-core` 加 <svc-user> `list,search,readattr,readextattr` ACL；scheduler 目录加 <svc-user> 全量 + `file_inherit,directory_inherit` ACL（镜像 `~/.openclaw/cron` 既有授权模式） |
+| 脚本可读 | <svc-user> 读脚本 | 两个 .py 644 世界可读；forum-scheduler.sh 700 + 文件级 ACL（<svc-user> read/write/append…） | ✅ 编辑后已恢复文件级 ACL（编辑的原子替换会新建 inode 丢失 ACL，已用 `chmod +a` 原样恢复） |
+| dispatcher scripts 目录 | <svc-user> search/list | dir 700 + `group:oc-canary allow list,search`；<svc-user> ∈ oc-canary 组 | ✅ 无需变更 |
 
 ## 8. 验证设计（fixture / 安全测试目标）
 
