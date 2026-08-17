@@ -6,7 +6,9 @@ status: proposed
 # Agent Core Agent Credential Provisioning V1
 
 > 性质：**Spec（SPEC ONLY — 本轮只收敛冻结，不实现）** · 初版：2026-08-17 ·
-> Amendment 1（review FIX round）：2026-08-17，base reviewed HEAD `104555f`
+> Amendment 1（review FIX round）：2026-08-17，base reviewed HEAD `104555f` ·
+> Amendment 2（independent re-review FIX_REQUIRED round，3 factual gaps）：2026-08-18，
+> base reviewed HEAD `9a408e0`
 > 仓库：`mayf3/dsh-agent-core`
 > 角色：Credential Provisioning Spec Agent
 >
@@ -63,6 +65,47 @@ KERNEL_CHANGE = NONE
 
 本轮 amendment 不允许（也未）借机提出：IAM platform、Policy Engine、sidecar、
 mTLS、TPM、per-Agent OS user、OpenClaw fallback、Router credential manager。
+
+---
+
+## Amendment 2 摘要（2026-08-18，基于 reviewed HEAD 9a408e0，FIX_REQUIRED）
+
+Independent re-review（VERDICT = FIX_REQUIRED，ARCHITECTURE_DIRECTION = KEEP）发现
+3 个 factual gaps，本轮**只修这三个**，不动其余冻结：
+
+1. **Fix 1 — 真实 token issuance 路径**（Part A.4 S5 重写 + Part D.5 重写）：
+   补清 `AUTH_CONTRACT_MODE` 的真实分派（v1 → v1/direct.ts；v0 / v1_shadow →
+   legacy `issueToken` / token-issuance.ts；deployed = **v0**）。冻结 legacy 路径
+   `principalType != agent → 401 invalid_client` 且该检查发生在 secret 验证
+   **之前**；**删除** Amendment 1 的无条件推理「401 invalid_client ⇒ secret
+   invalid」。补齐 v1 结果解释（含 `400 invalid_target`、
+   `503 temporarily_unavailable`）；Implementation Agent 不得自行猜测错误含义。
+2. **Fix 2 — principal profile 与业务 token contract 自洽**（Part C.4 修订）：
+   源码核实 audience registry：svc-forum / svc-workflow / adc-v2 仅接受 `agent`，
+   svc-okr 接受 `user|agent`，svc-auth 仅接受 `service`。Amendment 1 冻结的
+   `principal_type='service'` 与业务 audience **不兼容**（legacy 路径直接 401；
+   v1 路径 `audience_profile_not_accepted`）。本轮二选一，**选 A**：
+   `principal_type='agent'`，并冻结 `agent_id` / `owner_user_id` 的来源与语义
+   （既有产品模型：`agent_id` = agent 身份键；`owner_user_id` = deployment
+   bootstrap 输入，引用既有真实 admin 属主用户——生产先例为全部 openclaw agent
+   principal 共用的 designated admin owner；**禁止为过 token 检查新建 user**）。
+   方案 B（保持 service + registry 前置）记入 Alternatives considered 否决。
+3. **Fix 3 — Acceptance 可达性**（Part E.4 扩充 + Acceptance Criteria 重写）：
+   诚实列出**三项**外部前置：(a) 业务 grant/resource 供给（mode-aware 表述）；
+   (b) HTTPS rotation seam 缺失；**(c) 新增**——S1/S2 管理面要求 RS256 svc-auth
+   token，而 deployed v0 的 `/oauth/token` 对 svc-auth 签 HS256 ⇒ 在 contract
+   mode v1 生效（或等价 mint 路径）之前，ensure 的 Auth 侧步骤**不可经 HTTP 执行**。
+   L1/L2/L3 全部改为显式 executability 标注；**删除**「L1 必须现在全绿」；
+   外部前置未就绪时实现必须 fail-loud `external_prerequisite_missing`。
+
+以下冻结**保持不变**：deterministic external_ref（C.4 前缀格式）、幂等
+principal/client ensure（S1/S2，禁 legacy create / 禁 expected_* claim）、
+no duplicate identities（状态机 FORBIDDEN 项）、trusted-store 写契约 G1–G8、
+single-writer、secret 仅 HTTPS body → memory → 0600 store、no argv/env/stdout/log
+secret、same-client rotation 语义、revocation fail-closed 顺序、credential ≠
+grant、ROUTER_CHANGE = NONE、RUNTIME_CHANGE = NONE、KERNEL_CHANGE = NONE。
+（Amendment 2 变更的只有：C.4 的 principal profile 参数、D.5 解释表、E.4 外部
+依赖清单、Acceptance 分层可达性。）
 
 ---
 
@@ -215,16 +258,76 @@ rotateClientSecret                (src/lib/oauth/service.ts:295-345)
   —— 不存在 rotation HTTP seam
 ```
 
-**S5 — token endpoint 校验顺序（决定 verification mint 的解释表）**
+**S5 — AUTH_CONTRACT_MODE 分派与两条 issuance 路径（Amendment 2 重写，Fix 1）**
+
+Amendment 1 的 S5 只描述了单一校验顺序，并据此推出「401 invalid_client ⇒ secret
+invalid」——该推理在 legacy 路径下**不成立**。真实模型（全部源码核实）：
 
 ```text
-POST /oauth/token（client_credentials）  (src/lib/oauth/token-issuance.ts:60-155)
-  1) client 查找/状态 → 401 invalid_client
-  2) secret 验证     → 401 invalid_client
-  3) scope 验证      → 400 invalid_scope
-⇒ 401 invalid_client = secret 无效；400 invalid_scope = secret 已通过认证、
-  仅缺该 scope 的 grant。零 grant 的新 client 也能据此区分
-  「credential 有效」与「credential 失效」（Part D verification mint / Part E）。
+AUTH_CONTRACT_MODE 分派（src/routes/oauth.ts:134-137；src/config/env.ts:13-22）：
+  'v1'        → doIssueV1DirectToken   （src/lib/oauth/v1/direct.ts）
+  'v0'        → issueToken             （src/lib/oauth/token-issuance.ts，legacy）
+  'v1_shadow' → issueToken（返回值来自 legacy）
+                + evaluateV1DirectShadow（仅影子比对，不影响响应）
+Deployed mode = 'v0'：launchd plist 与 .env 均未设置 AUTH_CONTRACT_MODE（默认 v0，
+env.ts:13）；runtime contract 亦标注 auth_token_contract_v1_production_effective=false
+（generated/minimal-auth-v1/runtime-contract.json lifecycle）。
+```
+
+**Legacy 路径（v0 / v1_shadow；token-issuance.ts:44-156）冻结顺序：**
+
+```text
+L1  client 不存在                         → 401 invalid_client
+L2  client.status = revoked               → 401 invalid_client
+L3  principal.status = disabled           → 401 invalid_client
+L4  principalType !== 'agent' 或无 agentId → 401 invalid_client
+    ★ 该检查发生在 secret 验证之前（token-issuance.ts:91-106）
+L5  secret 验证失败                       → 401 invalid_client
+L6  resource ∉ client.allowedResources    → 400 invalid_grant（audit error:
+    invalid_resource）
+L7  scope ⊄ client.allowedScopes          → 400 invalid_scope
+```
+
+**Legacy 冻结推论（替代 Amendment 1 的错误推理）：**
+
+```text
+LEGACY_401_SEMANTICS：
+  401 invalid_client ∈ {client 不存在, revoked, principal disabled,
+                        principal profile ≠ agent, secret invalid} —— 同码多因，
+  无 ensure 上下文时不得单凭 401 归因 secret。
+  任何 400（invalid_grant / invalid_scope）⇒ secret 已在 L5 通过验证 ⇒
+  credential 层有效（400 只能来自 L6/L7，均晚于 secret 验证）。
+Legacy 的 grant 校验面是 client.allowedResources / allowedScopes（非
+MachineAccessGrant）——idempotent 新建 client 二者皆空（S2）。
+```
+
+**V1 路径（AUTH_CONTRACT_MODE='v1'；v1/direct.ts:81-126 + v1/errors.ts）冻结顺序与
+错误分类（status 由 STATUS_BY_CODE 决定，禁止实现自行猜测）：**
+
+```text
+V1 顺序：
+  1) audience 未注册或未开 machine access → 400 invalid_target
+     (audience_not_machine_enabled)
+  2) client 不存在 / client 或 principal inactive → 401 invalid_client
+  3) profile 畸形（agent 缺 agentId/ownerUserId；service 带 agentId）
+     → 401 invalid_client (agent_profile_invalid / service_profile_invalid)
+  4) secret 验证失败 → 401 invalid_client (credential_invalid)
+  5) audience 不接受该 principalType → 400 invalid_target
+     (audience_profile_not_accepted) ★ 晚于 secret ⇒ 出现即证明 secret 有效
+  6) 无 MachineAccessGrant → 400 invalid_scope (machine_grant_missing)
+  7) audience registry 不匹配 → 503 temporarily_unavailable
+     (audience_registry_mismatch:*)
+  8) grant 状态畸形（version<1 / scopes 空 / 重复 / 未注册）→ 503
+     temporarily_unavailable (machine_grant_state_invalid)
+  9) 请求 scope ⊄ grant.scopes → 400 invalid_scope (requested_scope_not_granted)
+
+V1_ERROR_CLASSIFICATION（HTTP status 冻结表，v1/errors.ts STATUS_BY_CODE）：
+  invalid_client=401 · invalid_grant=400 · invalid_request=400 ·
+  invalid_scope=400 · invalid_target=400 · unsupported_grant_type=400 ·
+  unsupported_token_type=400 · temporarily_unavailable=503 · server_error=500
+V1 冻结推论：任何 400 / 503 ⇒ secret 已通过验证（步骤 5-9 均晚于步骤 4）；
+  401 同 legacy 为多因（见 V1 步骤 2-4），仅当 ensure 上下文排除 2/3 后才可
+  归因 secret。
 ```
 
 **S6 — external_ref namespace 惯例**
@@ -233,6 +336,36 @@ POST /oauth/token（client_credentials）  (src/lib/oauth/token-issuance.ts:60-1
 见 auth-service `docs/audits/AGENT_IDENTITY_DEPLOYMENT_RECONCILIATION_V1_REPORT.md:61`）。
 Part C.4 冻结的 `agentcore:v1:*` 前缀与该惯例同构（system:version:kind:key），
 并多出 version 段为未来演化留位。
+
+**S7 — machine audience registry 的 principal profile 契约（Amendment 2，Fix 2 证据）**
+
+```text
+来源：generated/minimal-auth-v1/runtime-contract.json（contract bundle 1.2.0，
+frozen；经 getV1AudienceDefinitions() 加载，contract.ts:164）：
+  svc-workflow | accepted: agent           | scopes: workflow.read/execute/admin
+  svc-okr      | accepted: user | agent    | scopes: okr.read/write
+  adc-v2       | accepted: agent           | scopes: adc.read/execute
+  svc-auth     | accepted: service         | scopes: auth.identity.provision
+  svc-forum    | accepted: agent           | scopes: forum.read/write/moderate/admin
+（全部 machine_access_enabled=true）
+⇒ 业务 audience（svc-forum / svc-workflow / adc-v2；svc-okr 半数）只接受
+  'agent' profile；'service' profile 仅 svc-auth（管理面）接受。
+```
+
+**S8 — S1/S2 HTTP seam 的可调用性前置（Amendment 2，Fix 3(c) 证据）**
+
+```text
+S1/S2（/api/v1/principals、/api/v1/clients）由 v1ManagementAuth 保护：
+RS256 + kid（workflow keyring）+ aud=svc-auth + scope auth.identity.provision
+（src/middleware/v1-management-auth.ts；v1/signer.ts:252-292 强制 alg=RS256）。
+Deployed v0 的 /oauth/token 对非 workflow audience 一律签 HS256
+（token-issuance.ts:158-196）⇒ svc-auth 只能拿到 HS256 token ⇒ 被
+verifyV1DirectMachineToken 拒绝（'V1 token requires alg=RS256 and kid.'）。
+⇒ 在 AUTH_CONTRACT_MODE='v1' 生效（或等价 RS256 svc-auth mint 路径出现）之前，
+机器 provisioner 无法经 HTTP 调用 S1/S2（auth-service 自身 conformance 测试是
+进程内直调 service 层，不构成 HTTP 面可用的证据）。
+⇒ 这不是本 Spec 可在 repo 内解决的项：列为外部前置 (c)（Part E.4）。
+```
 
 ---
 
@@ -276,6 +409,10 @@ Broker gateway（505）     → loadCredentialFor(agentId) → client_credential
 credential。该 credential 属于**deployment bootstrap 输入**（与 supervision env 同类，
 operator 一次性配置），不是本 Spec 建设的对象；它按 Part H 同等约束保管（trusted
 505 zone、0600、永不经 env/argv 交付给任何 child）。Agent Core 运行时不需要也不持有它。
+Amendment 2 补记（S7/S8）：svc-auth audience 仅接受 `service` profile（provisioner
+自身的 principal 即为 service 型，与被 provision 的 agent principal 不同族）；且其
+RS256 mint 依赖 contract mode v1 生效——即该 bootstrap credential 的可用性同样受
+外部前置 (c) 约束。
 
 ---
 
@@ -326,12 +463,14 @@ clientExternalRef(agentId)    = "agentcore:v1:client:" + agentId
 2. **recoverable from agentId**：前缀剥离即得 agentId；反之亦然。
 3. 与既有生产 namespace 惯例同构（`openclaw:agent:<name>` → `agentcore:v1:<kind>:<agentId>`，
    见 A.4 S6）；`v1` 段为未来 external_ref 格式演化留位（如出现 `v2`，须新 Spec）。
-4. **ensure 调用体冻结**（Part D 状态机的唯一入参面）：
+4. **ensure 调用体冻结**（Part D 状态机的唯一入参面；Amendment 2 修订 profile）：
 
 ```text
 POST /api/v1/principals body = {
   external_ref: principalExternalRef(agentId),
-  principal_type: "service",            // 冻结为 service，见下
+  principal_type: "agent",              // Amendment 2 冻结，依据见下
+  agent_id: agentId,                    // = Agent Core 的 agt_*（见下）
+  owner_user_id: <deployment bootstrap 输入的 admin 属主用户 UUID>（见下）
   display_name: <Agent Definition display name 或 agentId>   // 仅 cosmetic，不参与匹配/digest
 }
 POST /api/v1/clients body = {
@@ -340,10 +479,33 @@ POST /api/v1/clients body = {
 }
 ```
 
-   - `principal_type` 冻结为 `"service"`：`"agent"` 类型要求 `agent_id` + `owner_user_id`
-     （human-owner 概念，Agent Core 不拥有），且会把 `agt_*` 写入 auth 的 legacy
-     `agent_id` 列（与 S3 legacy machine-admin 路径共享的 namespace）。`"service"` 使
-     requestDigest 恒为 `(service, null, null)`，ensure 永不触发 digest 409。
+   - **`principal_type` 冻结为 `"agent"`（Amendment 2 Fix 2，替代 Amendment 1 的
+     `"service"`）**。依据：S7 registry——业务 audience（svc-forum / svc-workflow /
+     adc-v2）只接受 `agent`；legacy 路径 L4 对非 agent profile 直接 401（S5）。
+     `service` profile 在两条路径下都**无法铸造业务 token**，会使 canary 的
+     forum 目标整体依赖 auth registry 变更（更大的 IAM 面改动，违背最小选择）。
+     方案 B（保持 service + registry 前置）记入 Alternatives considered 否决。
+   - **`agent_id` 的来源与语义（冻结）**：取值 = Agent Core Agent Definition 的
+     `agt_*` 本身。auth 侧 `machine_principals.agent_id` 列（`@unique`，
+     prisma schema:108）语义为「该 machine principal 代表的 agent 身份键」——
+     既有用法存 openclaw 业务名（`stock-agent` 等，onboard 脚本先例），
+     `agt_` 前缀天然构成独立 namespace，无碰撞。它同时满足 legacy L4 的
+     「agent 类型必须非空 agentId」与 v1 步骤 3 的 profile 校验。
+   - **`owner_user_id` 的来源与语义（冻结）**：auth 侧 `owner_user_id`（users 表
+     FK，`onDelete: Restrict`，schema:109,118）语义为「对该 agent principal 负责
+     的**人类属主**（accountability owner）」——不是 token 检查的道具。取值 =
+     **deployment bootstrap 输入**：必须引用 users 表中**既有、active 的 admin
+     用户**；生产先例 = 既有全部 openclaw agent principal 共用的 designated
+     admin owner（auth-service `scripts/onboard-openclaw-agents-batch-1.ts:53-56`，
+     注释 "Admin owner user for all agent principals (CTO admin account)"）。
+     **禁止为了过 token 检查新建 user**（tests 里 create-test-owner 的模式是
+     测试专用，不是生产语义）。ensure 启动时校验该用户存在且可用，否则
+     fail-loud 视为 bootstrap 配置错误。
+   - **digest 稳定性**：requestDigest = `("agent", agentId, owner_user_id)`，
+     三个输入全部来自上述冻结（bootstrap owner 是 per-deployment 固定值）⇒
+     repeated ensure 永不 digest 409。owner 属 per-agent **一次性固定**输入：
+     事后变更 owner 会触发 digest 409，属 operator 显式处置（不在 ensure 内
+     自动改写）。
    - 正常 ensure **不传** `expected_principal_id` / `expected_client_id`（S1/S2 的
      claim 路径是 operator 对既有手工行的恢复工具，不在冻结 ensure 流内）。
    - **`agt_*` / `mc_*` / principal UUID 字符串不相等是正常的**（Part C）；deterministic
@@ -381,7 +543,8 @@ STEP 2  POST /api/v1/clients（S2，body 见 C.4）
      → 按 Part G 契约写 store entry：credentials[agentId] = { clientId, clientSecret }
      → verification mint（Part D.5）→ 成功即完成。
   D. created=false 且 status='active' 且 store entry 存在且 store.clientId === 响应 client_id
-     且 verification mint 证明 secret 有效（200，或 400 invalid_scope —— 见 D.5 解释表）
+     且 verification mint 证明 secret 有效（200，或任一「secret 已验证」类 400 ——
+     见 D.5 mode-aware 解释表）
      → NO-OP（幂等成功）：不 rotate、不重写 store、不缓存 token。
   E. created=false 且 status='active' 且 store entry 缺失
      —— 关键恢复路径。raw secret 在 Auth 侧不可读回（仅存 secretHash；
@@ -405,27 +568,68 @@ STEP 2  POST /api/v1/clients（S2，body 见 C.4）
         b) Auth 侧 out-of-band 处置后（revoked 不可逆则只能 a）重跑 ensure。
      → 不静默创建平行身份。
   G. store entry 存在且与 ensure 所得 client 一致，但 verification mint 返回
-     401 invalid_client（secret 失效）
+     401 invalid_client（在 ensure 上下文排除其余 401 成因后归因 secret 失效，
+     见 D.5 —— 401 本身是多因码，不得无条件读作 secret invalid）
      → rotate SAME client（同 E 的 rotation seam）→ 新 secret 进内存 →
        atomic rewrite store（Part G）→ 再次 verification mint。
      → FORBIDDEN：创建第二个 client。
 ```
 
-### D.5 Verification mint（冻结解释表）
+### D.5 Verification mint（Amendment 2 重写 — mode-aware 冻结解释表）
 
 ensure 的 validity 检查 = 一次 `POST /oauth/token`（grant_type=client_credentials，
 resource/scope 取自已部署 capability manifests 的任一 HTTP 组合；secret 从 trusted
-store 读入进程内存构造 Basic header，Part H）。**依据 S5 的校验顺序**冻结解释：
+store 读入进程内存构造 Basic header，Part H）。解释表**按 deployed
+AUTH_CONTRACT_MODE 分派**（S5），**Implementation Agent 不得自行猜测错误含义**：
+
+**Legacy 模式（v0 / v1_shadow；deployed 现状）：**
 
 ```text
-HTTP 200 + access_token      → credential 有效（且覆盖所请求 scope）
-HTTP 400 invalid_scope       → credential 有效（client 已通过 secret 认证，仅缺该
-                               scope 的 grant）——credential 层 PASS；grant 缺口按
-                               Part E 记录，不触发 rotate
-HTTP 401 invalid_client      → credential 无效 → 状态 G
+HTTP 200 + access_token      → credential 有效（且 resource/scope 均在
+                               client.allowedResources/allowedScopes 内）
+HTTP 400 invalid_grant       → secret 已通过 L5 验证 ⇒ credential 层有效；
+  （resource 不在 allowed    grant/resource 缺失（L6，audit error invalid_resource）
+   Resources）                 ——credential 层 PASS；grant 缺口按 Part E 记录
+HTTP 400 invalid_scope       → 同上（L7；secret 已验证，scope 缺失）
+HTTP 401 invalid_client      → 多因码（L1-L5：client 不存在/revoked/principal
+                               disabled/profile ≠ agent/secret 错）。**仅在 ensure
+                               上下文内**——ensure 前序步骤已确认 client+principal
+                               active 且 profile 按 C.4 冻结为 agent+agt_*（排除
+                               L1-L4）——才可归因 secret 失效 → 状态 G。
+                               无该上下文（如 Broker runtime 观察）不得如此归因。
 网络不可达 / 5xx / malformed  → INCONCLUSIVE：结构化报错退出；不得当作 invalid
                                触发 rotate，也不得当作 valid 记 NO-OP
 ```
+
+**V1 模式（AUTH_CONTRACT_MODE='v1'）：**
+
+```text
+HTTP 200 + access_token      → credential 有效
+HTTP 400 invalid_target      → 分两种：(i) audience 未注册/未开 machine（步骤 1，
+                               在 secret 验证之前——若请求的是已部署 manifest 的
+                               合法 audience 则不会发生，发生即工具配置错误）；
+                               (ii) audience_profile_not_accepted（步骤 5，在
+                               secret 验证之后 ⇒ secret 有效；对 C.4 冻结的
+                               agent profile + 业务 audience 不应发生，发生即
+                               profile/audience 配置漂移，fail-loud 报告）
+HTTP 400 invalid_scope       → secret 已验证（步骤 4 之后）；machine_grant_missing
+                               或 requested_scope_not_granted —— credential 层
+                               PASS；grant 缺口按 Part E 记录
+HTTP 503 temporarily_        → secret 已验证（步骤 4 之后）；auth 侧
+     unavailable               audience_registry_mismatch / machine_grant_state_
+                               invalid —— credential 层对 secret 不下结论（服务端
+                               状态问题），按 INCONCLUSIVE-ish 处理：不 rotate、
+                               不记 NO-OP，结构化报告
+HTTP 401 invalid_client      → 多因码（client/principal inactive、profile 畸形、
+                               secret 错）。ensure 上下文排除前两类后归因 secret
+                               失效 → 状态 G
+网络不可达 / 其他 5xx         → INCONCLUSIVE（同上）
+```
+
+**共同冻结**：401 永远不得在**无 ensure 上下文**时解读为「secret invalid」
+（Amendment 1 的无条件推理已删除，见 S5 LEGACY_401_SEMANTICS）；「secret 有效」
+的最小充分证据在两种模式下都是**任一晚于 secret 验证的 400**（legacy：
+invalid_grant/invalid_scope；v1：invalid_scope 与步骤 5 的 invalid_target）或 200。
 
 ### D.6 Agent 删除 / disable（既有 seam，引用不变）
 
@@ -456,14 +660,19 @@ SERVICE_GRANT          = auth-service 侧该 client 被授予的 scope
    auth-service 取 token，失败返回 `access_denied`（`gateway.js:163-186`）。HTTP
    capability 的同类分离由 Part F 冻结。
 
-### E.4 Grant mutation surface 诚实记录（Amendment 1，源码核实）
+### E.4 Grant mutation surface 诚实记录（Amendment 1 引入，Amendment 2 修订为 mode-aware）
 
 - V1 幂等 client 创建（S2）固定 `allowedResources=[] / allowedScopes=[]`——
   **新建 client 不自动拥有 `forum.read` / `forum.write` / … 任何 grant**。
-- 业务权限的真实载体是 `MachineAccessGrant`（`(machineClientId, audienceId)` 主键 +
-  `scopes[]`，auth-service `prisma/schema.prisma:272-284`）。
-- **现状：不存在对 existing client 的正式 grant mutation HTTP/CLI seam**——仅若干
-  一次性脚本直连 DB 操作（如 auth-service
+- 业务权限的载体**随 AUTH_CONTRACT_MODE 分派**（S5）：
+  - **legacy（v0 / v1_shadow，deployed 现状）**：mint 校验
+    `client.allowedResources` / `client.allowedScopes`（token-issuance.ts:122-156）。
+    idempotent 新建 client 二者皆空；`machine-admin client create` 仅在**创建时**
+    设置（S3），**无任何对 existing client 的 resources/scopes 更新面**。
+  - **v1**：载体为 `MachineAccessGrant`（`(machineClientId, audienceId)` 主键 +
+    `scopes[]`，`prisma/schema.prisma:272-284`；direct.ts 步骤 6-9 校验）。
+- **现状（两种模式同判）**：不存在对 existing client 的正式 grant mutation
+  HTTP/CLI seam——仅若干一次性脚本直连 DB 操作（如 auth-service
   `scripts/provision-domain-owner-machine-clients.ts:445-469`）。即：
 
 ```text
@@ -476,14 +685,23 @@ formal existing-client grant mutation seam = 当前缺失 / 不完整
 ```text
 AGENT_CORE_AUTH_CODE_CHANGE = NONE
 EXTERNAL_AUTH_DEPENDENCY =
-  (a) existing-client grant mutation seam currently missing/incomplete
-      （Forum 正向验收 L3 的前置）
+  (a) 业务 grant/resource 供给前置（mode-aware）：deployed v0 下 = 对 existing
+      client 填充 allowedResources/allowedScopes 的正式 seam 缺失；v1 下 =
+      MachineAccessGrant 的正式 mutation seam 缺失。（L3 Forum 正向验收的前置）
   (b) machine-client secret 的 HTTPS rotation seam currently missing
       （rotation 仅 machine-admin CLI 且 newSecret 走 stdout——与 Part H 冲突；
        状态 E / G 恢复路径与 Part I 依赖该 seam）
+  (c) S1/S2 HTTP seam 的可调用性前置（Amendment 2 新增，S8）：v1ManagementAuth
+      要求 RS256 svc-auth token，deployed v0 只能对 svc-auth 签 HS256 ⇒ 在
+      AUTH_CONTRACT_MODE='v1' 生效（或等价 RS256 svc-auth mint 路径）之前，
+      ensure 的 Auth 侧步骤不可经 HTTP 执行（raw secret 只存在于 S2 的
+      HTTPS response body，直连 DB 无法获得 ⇒ 无 HTTP 替代路径）
 AUTH_CHANGE_REQUIRED = EXTERNAL_ONLY
   —— 以上是外部依赖声明，不代表本 Spec 自动授权去改 auth-service；
      Agent Core 仓库/spec 不携带任何 auth-service 代码修改。
+在 (a)/(b)/(c) 任一未就绪时，依赖它的实现路径必须 fail-loud
+`external_prerequisite_missing`（结构化错误，指明 (a)/(b)/(c)），不得降级、
+不得绕行（禁 legacy create / CLI stdout / 直连 DB）。
 ```
 
 ---
@@ -517,6 +735,14 @@ service_denied     downstream service（svc-forum 等）        http_4xx 403/401
 实现要求（预期 collateral，见 Scope）：容器化 gateway/transport 的 error-classification
 时，`credential_missing` 与授权拒绝（`scope_denied`）必须落在互不相同的错误码，
 不得用一个泛化 `transport_failure` 同时掩盖两类语义。
+
+> Amendment 2 模式注记（S5/D.5）：`credential_invalid` 行的「/oauth/token 401
+> invalid_client」是**多因码**（legacy 下含 profile/状态类成因，且 profile 检查先于
+> secret 验证）；`scope_denied` 行在 deployed legacy 模式的对应 wire 码含
+> **400 invalid_grant（resource 缺失）**与 400 invalid_scope（grant 面为
+> client.allowedResources/allowedScopes），v1 模式为 400 invalid_scope/
+> invalid_target（grant 面为 MachineAccessGrant）。运行时（非 ensure 上下文）对
+> 401 的一律归类为 `credential_invalid` family 而不下钻归因 secret。
 
 ---
 
@@ -692,7 +918,7 @@ Policy Engine / Kernel
 1. **Provisioning tooling（deployment-side）**：实现 Part D 冻结状态机的
    `ensureAgentCredential(agentId)`（A–G + D.5 verification mint），经 S1/S2 幂等
    seam，按 Part G 契约写 store，按 Part H 交付 secret；含 backfill 模式（canary
-   第一优先场景）与幂等断言。外部 prerequisite（E.4 (a)/(b)）未就绪时，依赖它的
+   第一优先场景）与幂等断言。外部 prerequisite（E.4 (a)/(b)/(c)）未就绪时，依赖它的
    分支必须 fail-loud 报 `external_prerequisite_missing` 类结构化错误，不得降级。
 2. **最小 Broker error-classification**（Part F，`BROKER_CHANGE_REQUIRED = YES_MINIMAL`）：
    只允许把失败分为三层——credential unavailable / invalid client；authorization
@@ -751,46 +977,80 @@ KERNEL_CHANGE  = NONE
   （E.4(b)）。
 - **（Amendment 1）store 写入用「重建整个文件」以外的任何部分写 / 跨目录 temp**：
   否决——Part G 冻结 validate-preserve-atomic 契约。
+- **（Amendment 2，Fix 2）方案 B：保持 `principal_type='service'` + 等 audience
+  registry 支持 service**：否决——源码核实（S7）业务 audience（svc-forum/
+  svc-workflow/adc-v2）现契约只接受 `agent`，svc-okr 接受 user|agent；legacy 路径
+  对非 agent profile 直接 401（S5 L4）。选 B 意味着 `BUSINESS_AUDIENCE_ACCEPTS_
+  SERVICE_PRINCIPAL` 成为 named external prerequisite，且在其完成前 business token
+  mint = NOT IMPLEMENTABLE——把 canary 主目标整体押在 auth registry 变更上，属
+  更大的 IAM 面改动；方案 A（agent profile + 既有 designated admin owner）以零
+  auth 侧变更满足现契约，为基于现有产品模型的最小选择。
+- **（Amendment 2，Fix 2）为过 token 检查新建一个 human owner 用户**：否决——
+  `owner_user_id` 语义是 accountability owner，不是校验道具；既有模型已有 designated
+  admin owner 先例（openclaw 全部 agent principal 共用），新建用户属伪造语义。
 
-## Acceptance Criteria（Amendment 1 重写 — 分层）
+## Acceptance Criteria（Amendment 2 重写 — 分层 + 可达性标注）
 
-后续 Implementation（在 accepted Spec 之下）按层验收；**L1 不依赖任何 grant 工作，
-必须全绿**：
+后续 Implementation（在 accepted Spec 之下）按层验收。**Amendment 2 删除
+Amendment 1 的「L1 不依赖任何外部工作、必须全绿」表述**——外部前置
+（E.4 (a) grant 供给 / (b) rotation seam / (c) S1/S2 可调用性）尚未存在，
+每项验收显式标注当前可达性；外部前置未就绪时对应路径必须 fail-loud
+`external_prerequisite_missing`（该 fail-loud 行为本身**是**可验收项）。
+
+**可达性图例**：
+`NOW` = 纯 in-repo，实现后即可执行；`NEEDS(c)` = 需 contract mode v1 生效（或
+等价 RS256 svc-auth mint 路径）；`NEEDS(c)+(b)` = 另需 rotation seam；
+`NEEDS(c)+(a)` = 另需业务 grant/resource 供给。
 
 **L1 — Credential V1 自身验收：**
 
-1. `formal Agent exists → ensure`：Auth principal 存在（deterministic external_ref，
-   Part C.4）+ machine client 存在 + trusted store entry 存在（keyed by agentId）。
-2. `repeated ensure`（≥3 次，含并发/交错执行）：**SAME** principal id、**SAME**
-   clientId；Auth 侧不存在同 agentCore external_ref 之外的重复 client/principal。
-3. `trusted store`：0600、505-owned；**预置 unrelated canary entry 后 ensure 另一
-   agent，unrelated entry 逐字节不变**（Part G 红线）。
-4. `child` → cannot read raw secret：`CHILD_SECRET_ENV=ABSENT /
-   CHILD_SECRET_FS=ABSENT / A_READ_CREDENTIAL_STORE=DENIED`（V2 同口径）。
-5. `Broker` → `loadCredentialFor(agentId)` 成功。
-6. `/oauth/token → actually attempted`（`AUTH_TOKEN_MINT_ATTEMPTED = YES`——由
-   Broker 真实调用或 L1 verification mint 证明；区别于 Part A 的 NO）。
-7. **Missing-store recovery（状态 E）**：手工删除目标 store entry、保留 Auth client
-   → ensure → **recover SAME client**（clientId 不变）→ rotate secret → store 恢复
-   → verification mint 通过 → **no duplicate client**。
-8. **状态 A 负例**：不存在的 agentId → STRUCTURED_REJECT；Auth 侧与 store 均无新建行
-   （无 orphan Auth identity）。
-9. **store 保护负例**：预置 malformed store → ensure FAIL LOUD 且文件内容不变
-   （MUST NOT overwrite）。
+1. `NEEDS(c)` `formal Agent exists → ensure`：Auth principal 存在（deterministic
+   external_ref，Part C.4）+ machine client 存在 + trusted store entry 存在
+   （keyed by agentId）。
+2. `NEEDS(c)` `repeated ensure`（≥3 次，含并发/交错执行）：**SAME** principal id、
+   **SAME** clientId；Auth 侧不存在同 agentCore external_ref 之外的重复
+   client/principal。
+3. `NOW`（store 契约单元级）/ `NEEDS(c)`（端到端）`trusted store`：0600、
+   505-owned；G1–G8 契约可对合成 store 单元验证；端到端为**预置 unrelated
+   canary entry 后 ensure 另一 agent，unrelated entry 逐字节不变**（Part G 红线）。
+4. `NOW`（部署后静态复测）/ `NEEDS(c)`（完整链路）`child` → cannot read raw
+   secret：`CHILD_SECRET_ENV=ABSENT / CHILD_SECRET_FS=ABSENT /
+   A_READ_CREDENTIAL_STORE=DENIED`（V2 同口径）。
+5. `NEEDS(c)` `Broker` → `loadCredentialFor(agentId)` 成功。
+6. `NEEDS(c)` `/oauth/token → actually attempted`（`AUTH_TOKEN_MINT_ATTEMPTED =
+   YES`——由 Broker 真实调用或 L1 verification mint 证明；区别于 Part A 的 NO）。
+7. `NEEDS(c)+(b)` **Missing-store recovery（状态 E）**：手工删除目标 store
+   entry、保留 Auth client → ensure → **recover SAME client**（clientId 不变）→
+   rotate secret → store 恢复 → verification mint 通过 → **no duplicate client**。
+   在 (b) 就绪前：该路径必须 fail-loud `external_prerequisite_missing(b)` 且
+   Auth/store 无任何变更（此降级行为 `NOW` 可验收）。
+8. `NOW` **状态 A 负例**：不存在的 agentId → STRUCTURED_REJECT；Auth 侧与 store
+   均无新建行（无 orphan Auth identity）——纯工具侧行为，不触 Auth。
+9. `NOW` **store 保护负例**：预置 malformed store → ensure FAIL LOUD 且文件内容
+   不变（MUST NOT overwrite）——纯工具侧行为。
+10. `NOW` **外部前置降级负例**：(a)/(b)/(c) 任一未就绪时，依赖路径 fail-loud
+    `external_prerequisite_missing` 且不产生部分副作用（无 Auth 调用、无 store
+    写入；状态 A/G 类纯本地分支除外）。
 
 **L2 — Grant negative（credential ≠ grant）：**
 
-10. credential exists + requested grant absent → **authorization failure**
-    （invalid_scope / scope_denied / access_denied 语义），**≠** `credential_unavailable`。
-    （零 grant 新 client 的 verification mint 400 invalid_scope 即为最小证据，D.5。）
+11. `NEEDS(c)` credential exists + requested grant absent → **authorization
+    failure**（mode-aware：legacy = 400 invalid_grant/invalid_scope；v1 = 400
+    invalid_scope/invalid_target——D.5），**≠** `credential_unavailable`。
+    （零 grant 新 client 的 verification mint 400 即为最小证据。）
+    Broker wire 层的三层错误码区分（Part F）本身 `NOW` 可实现并单元测试
+    （构造 transport 响应），端到端信号需 (c)。
 
 **L3 — Forum positive（条件验收）：**
 
-11. **only if** required grant already exists through a **named external prerequisite**
-    （Part E.4(a)，外部 grant 配置记录在案）→ Broker → token →
-    `forum_list_threads` 到达 svc-forum 并返回业务结果。
+12. `NEEDS(c)+(a)` **only if** required grant already exists through a **named
+    external prerequisite**（E.4(a)，mode-aware grant 面配置记录在案）→
+    Broker → token → `forum_list_threads` 到达 svc-forum 并返回业务结果。
+    在 (a) 就绪前：不得以任何替代手段（见下）伪造绿。
 
-**不接受**：fake credential、mock-only Broker、manual bearer、OpenClaw fallback。
+**不接受**（任何层、任何前置状态下）：fake credential、mock-only Broker、
+manual bearer、OpenClaw fallback、legacy machine-admin create 兜底、CLI stdout
+取 secret、直连 auth DB。
 
 ## Risks
 
@@ -812,6 +1072,15 @@ KERNEL_CHANGE  = NONE
 - **外部 prerequisite 缺失被静默绕过**（rotation/grant seam 未就绪时借道 CLI stdout
   或 legacy create）→ Scope-1 要求 fail-loud `external_prerequisite_missing`；
   Alternatives 重申否决。
+- **（Amendment 2）401 多因被误读为 secret invalid**（legacy 下 profile 检查先于
+  secret 验证）→ S5 LEGACY_401_SEMANTICS + D.5 mode-aware 表冻结；仅在 ensure
+  上下文排除其他成因后才可归因 secret；实现不得自行猜测错误含义。
+- **（Amendment 2）owner bootstrap 输入配错**（不存在的 user / 非 admin / inactive
+  → FK 失败或语义漂移；事后换 owner → digest 409）→ C.4 冻结 owner 为 per-agent
+  一次性固定输入 + 启动校验 fail-loud；owner 变更列为 operator 显式处置。
+- **（Amendment 2）在 contract mode v0 下硬跑 ensure**（S1/S2 不可达）→ E.4(c) +
+  Acceptance item 10 冻结 fail-loud 降级为可验收行为；禁止直连 DB / in-process
+  直调 auth service 层（raw secret 只存在于 HTTPS response body，直连亦不可得）。
 
 ## Related Evidence
 
@@ -837,93 +1106,103 @@ KERNEL_CHANGE  = NONE
 
 ---
 
-## Final Output
+## Final Output（Amendment 2）
 
 ```text
-AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_SPEC_AMENDMENT = PASS
+AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_SPEC_AMENDMENT_2 = PASS
 
-BASE_REVIEWED_HEAD = 104555f
-HEAD = docs/agent-core-credential-provisioning-v1-spec（同一 Spec 分支原地 Amendment，不 merge）
+BASE_REVIEWED_HEAD = 9a408e0
+HEAD = docs/agent-core-credential-provisioning-v1-spec（同一 Spec 分支原地 Amendment 2，不 merge）
 
-ARCHITECTURE_DIRECTION = KEEP（Part B authority 模型 / Part C 四族身份 / trusted 505
-    gateway 全部维持；本轮零架构重设计）
+TOKEN_CONTRACT_MODE_MODEL =
+    AUTH_CONTRACT_MODE 分派（routes/oauth.ts:134-137）：'v1' → v1/direct.ts
+    （doIssueV1DirectToken）；'v0' → legacy issueToken（token-issuance.ts）；
+    'v1_shadow' → 返回值仍来自 legacy + 仅影子比对。Deployed mode = v0
+    （plist/.env 均未设置 → 默认 v0；runtime contract 标注 v1 production_effective=false）。
+    Legacy grant 面 = client.allowedResources/allowedScopes；v1 grant 面 =
+    MachineAccessGrant（per-audience）。
+LEGACY_401_SEMANTICS =
+    401 invalid_client 为多因码 ∈ {client 不存在, revoked, principal disabled,
+    principalType≠agent/无 agentId（★检查先于 secret 验证，token-issuance.ts:91-106）,
+    secret invalid}；Amendment 1 的无条件推理「401 ⇒ secret invalid」已删除——仅
+    在 ensure 上下文（前序已排除其他成因）可归因 secret；任何 400
+    （invalid_grant/invalid_scope）⇒ secret 已通过验证 ⇒ credential 层有效。
+V1_ERROR_CLASSIFICATION =
+    STATUS_BY_CODE 冻结（v1/errors.ts）：invalid_client=401（inactive/profile 畸形/
+    credential_invalid）、invalid_grant=400、invalid_request=400、invalid_scope=400
+    （machine_grant_missing / requested_scope_not_granted）、invalid_target=400
+    （audience_not_machine_enabled / audience_profile_not_accepted）、
+    unsupported_grant_type/token_type=400、temporarily_unavailable=503
+    （audience_registry_mismatch / machine_grant_state_invalid）、server_error=500。
+    v1 顺序下任何 400/503 均晚于 secret 验证 ⇒ secret 有效；401 多因同 legacy。
+    Implementation Agent 不得自行猜测错误含义（D.5 mode-aware 表为唯一依据）。
 
-PRINCIPAL_ENSURE_SEAM = POST /api/v1/principals → createOrGetPrincipal
-    （external_ref DB-UNIQUE 幂等，201/200 + created 标志；principal_type='service'
-     冻结；opaque external_ref；RS256 svc-auth + auth.identity.provision）
-CLIENT_ENSURE_SEAM = POST /api/v1/clients → createOrGetClient
-    （external_ref 幂等；principal 须 active；secret 仅 created=true 时随 HTTPS
-     response body 返回一次；新 client allowedResources/allowedScopes=[]；
-     正常 ensure 禁用 legacy machine-admin client create 与 expected_* claim）
-DETERMINISTIC_EXTERNAL_REF =
-    principalExternalRef(agentId) = "agentcore:v1:principal:<agentId>"
-    clientExternalRef(agentId)    = "agentcore:v1:client:<agentId>"
-    （deterministic / stable / unique / recoverable from agentId；与生产
-     openclaw:agent:<name> colon-namespace 惯例同构；实现不得自定 mapping）
+PRINCIPAL_PROFILE =
+    principal_type='agent'（Amendment 2 方案 A，替代 Amendment 1 的 'service'）；
+    agent_id = Agent Core 的 agt_*（machine_principals.agent_id @unique 列，
+    语义 = 该 principal 代表的 agent 身份键；agt_ 前缀独立 namespace）；
+    owner_user_id = deployment bootstrap 输入，必须为 users 表既有 active admin
+    用户（语义 = 人类 accountability owner；生产先例 = openclaw 全部 agent
+    principal 共用的 designated admin owner，onboard-openclaw-agents-batch-1.ts:53-56）；
+    禁止为过 token 检查新建 user；digest = (agent, agt_*, owner) 输入全冻结 ⇒
+    repeated ensure 稳定；owner 变更 = operator 显式处置。
+PRINCIPAL_PROFILE_TOKEN_COMPATIBILITY =
+    agent profile 被全部业务 machine audience 接受：svc-forum / svc-workflow /
+    adc-v2 = agent-only，svc-okr = user|agent（v1 registry，generated/minimal-auth-v1/
+    runtime-contract.json）；legacy L4 检查（agent+agentId）亦通过。svc-auth（管理面）
+    仅接受 service——provisioner 自身 principal 为 service 型（与被 provision 的
+    agent principal 不同族，Part B bootstrap 注记）。
 
-ENSURE_STATE_MACHINE = A Agent Definition 缺失 → STRUCTURED_REJECT（无 orphan Auth
-    identity）→ B/C createOrGetPrincipal → createOrGetClient → capture secret(HTTPS
-    body→内存) → store write → verification mint → D 幂等 NO-OP → E store entry
-    missing：recover SAME client（rotate，FORBIDDEN 第二 client/principal）→
-    F Auth client missing/revoked/split-brain：fail-loud + 冻结 operator recovery
-    （不静默建平行身份）→ G secret invalid：rotate SAME client → atomic rewrite →
-    verify；verification mint 解释表：200=valid / 400 invalid_scope=credential 有效
-    但 grant 缺失 / 401 invalid_client=invalid / 5xx=INCONCLUSIVE
-MISSING_STORE_RECOVERY = 状态 E：raw secret Auth 侧不可读回（仅 secretHash）⇒
-    rotate SAME client secret → memory capture → atomic store restore →
-    verification mint；no duplicate client
+BUSINESS_AUDIENCE_PROFILE_PREREQUISITE =
+    NONE_FOR_PROFILE（方案 A 下 principal profile 与业务 token contract 自洽，
+    无 auth 侧 profile/registry 前置）。方案 B（service + registry 支持）已否决并
+    记录于 Alternatives considered。业务 token 仍受 grant 前置（下）约束——
+    profile 前置与 grant 前置是两件事。
 
-STORE_WRITE_CONTRACT = read existing → validate complete V1（malformed ⇒ FAIL LOUD，
-    MUST NOT overwrite）→ preserve every unrelated entry → change only target
-    agentId → same-dir private temp（mode 0600 先于任何 secret 内容；owner=trusted
-    CP/uid505）→ fsync → atomic rename →（SHOULD）fsync dir
-STORE_CONCURRENCY_MODEL = deployment-side 单写者 / 串行化（trusted-dir 0600 lock 或
-    operator 串行）；无 distributed lock；Agent Core 运行时保持只读
+ROTATION_EXTERNAL_PREREQUISITE =
+    NAMED_EXTERNAL：(b) machine-client secret 的 HTTPS rotation seam 缺失
+    （现仅 machine-admin CLI 且 newSecret 走 stdout，与 Part H 冲突）；状态 E/G
+    恢复与 Part I 依赖之；就绪前 fail-loud external_prerequisite_missing(b)。
+GRANT_EXTERNAL_PREREQUISITE =
+    NAMED_EXTERNAL：(a) existing-client grant 供给 seam 缺失（mode-aware：deployed
+    v0 = allowedResources/allowedScopes 无更新面；v1 = MachineAccessGrant 无正式
+    mutation seam，仅一次性脚本直连 DB）；L3 Forum 正向验收依赖之。
+    另有 (c) S1/S2 可调用性前置：v1ManagementAuth 要求 RS256 svc-auth token，
+    deployed v0 只能签 HS256 ⇒ contract mode v1 生效前 ensure 的 Auth 侧步骤
+    不可经 HTTP 执行（raw secret 仅存在于 S2 HTTPS response body，无 HTTP 替代路径）。
 
-SECRET_HANDOFF_PATH = auth HTTPS response body → trusted provisioning process memory
-    → store writer → uid505-owned 0600 store（唯一持久终点）；verification mint 从
-    store 读入内存、in-process 构造 Basic header
-SECRET_ARGV_EXPOSURE = FORBIDDEN
-SECRET_LOG_EXPOSURE = FORBIDDEN（含 stdout/stderr/audit/错误 detail；日志仅 agentId
-    与 clientId）
+L1_EXECUTABILITY =
+    SPLIT，不允许声称「现在全绿」：L1-core（ensure 成功/幂等同身份/store 0600+
+    505+unrelated 保留/child 隔离/loadCredentialFor/mint attempted）= NEEDS(c)；
+    L1-recovery（状态 E same-client 恢复）= NEEDS(c)+(b)，(b) 就绪前必须 fail-loud
+    external_prerequisite_missing(b)（该降级行为 NOW 可验收）；纯工具侧负例
+    （状态 A 无 orphan、malformed store 不覆写、前置缺失降级不产副作用）= NOW。
+L2_EXECUTABILITY =
+    端到端 = NEEDS(c)（credential 必须真实存在；零 grant 即可观察 authorization
+    failure ≠ credential_unavailable，无需 grant seam (a)）；Broker wire 三层
+    错误码区分（Part F）= NOW 可实现并单元测试。
+L3_EXECUTABILITY =
+    NEEDS(c)+(a)（条件验收：named external grant prerequisite 记录在案后才可
+    执行；就绪前不得以 fake credential / mock-only Broker / manual bearer /
+    OpenClaw fallback / legacy create / CLI stdout / 直连 DB 任何替代手段伪造绿）。
 
-ROTATION_SEMANTICS = rotate SAME client → capture in memory → atomic RMW store →
-    mint verify；Auth 侧旧 secret 立即失效（无 dual-secret grace）；接受 rotate→store
-    更新间的短 failure window（credential_invalid 语义，下一调用恢复）；V1 不建
-    zero-downtime / dual-secret / orchestration；可 operator-serialized
-REVOCATION_SEMANTICS = 先移除 store entry（本地立即 credential_unavailable，无重启）
-    → 再 revoke Auth client；revoke 失败本地仍 fail-closed、不回滚 store entry；
-    不建 revocation orchestration framework
-
-CREDENTIAL_VS_GRANT_SEPARATION = 维持并强化：credential existence ≠ service grant；
-    无 grant ⇒ authorization failure ≠ credential_unavailable；verification mint
-    400 invalid_scope 为 credential 有效 + grant 缺失的可区分证据
-GRANT_MUTATION_SURFACE = 无正式 seam——V1 幂等建 client 不带 grant
-    （allowedResources/allowedScopes=[]）；MachineAccessGrant（(client,audience) PK +
-    scopes[]）仅一次性脚本直连 DB 可变，无 HTTP/CLI 管理面
-EXTERNAL_AUTH_DEPENDENCY = (a) existing-client grant mutation seam currently
-    missing/incomplete；(b) machine-client secret HTTPS rotation seam currently
-    missing（仅 machine-admin CLI 且 newSecret 走 stdout，与 Part H 冲突）
-AUTH_CHANGE_REQUIRED = EXTERNAL_ONLY（外部依赖声明；不授权本 repo/spec 修改
-    auth-service；Agent Core 侧不携带 auth-service 代码变更）
-
-BROKER_CHANGE_SCOPE = YES_MINIMAL：仅三层失败可区分（credential unavailable /
-    invalid client ‖ authorization invalid_scope / invalid_resource ‖ downstream
-    transport/service failure）；禁止 Broker 创建 credential / auto-grant / IAM
-    orchestration / Policy Engine
-
-ACCEPTANCE_COVERAGE = L1 credential 自身（ensure 成功 / repeated ensure 同一身份 /
-    store 0600+505+unrelated 保留 / child 隔离三连 ABSENT+DENIED / mint attempted /
-    状态 E same-client 恢复 / 状态 A 负例无 orphan / malformed store 不覆写）+
-    L2 grant negative（authorization failure ≠ credential_unavailable）+
-    L3 forum positive（条件：named external grant prerequisite 就绪 → token →
-    forum_list_threads）；不接受 fake credential / mock-only Broker / manual
-    bearer / OpenClaw fallback
-
+ARCHITECTURE_DIRECTION = KEEP
 ROUTER_CHANGE = NONE
 RUNTIME_CHANGE = NONE
 KERNEL_CHANGE = NONE
 
+UNCHANGED_FROZEN_ITEMS（Amendment 1 冻结、本轮显式保持不变）=
+    deterministic external_ref（agentcore:v1:principal|client:<agentId>）·
+    幂等 principal/client ensure（S1/S2；禁 legacy create、禁 expected_* claim）·
+    no duplicate identities（状态机 FORBIDDEN 第二 client/principal）·
+    trusted-store 写契约 G1–G8（validate-preserve-atomic、0600-before-secret、
+    same-dir temp、uid505）· deployment-side single-writer / 无 distributed lock ·
+    secret 仅 HTTPS body → process memory → 0600 store（无 argv/env/stdout/log）·
+    same-client rotation 语义（无 dual-secret、短 failure window 接受）·
+    revocation fail-closed 顺序（store 先删、revoke 失败不回滚）·
+    credential ≠ grant · BROKER_CHANGE = YES_MINIMAL（仅三层错误区分）
+
 SPEC_STATUS = proposed（本轮 SPEC AMENDMENT ONLY，未实施、未 merge）
-READY_FOR_INDEPENDENT_RE_REVIEW = YES
+READY_FOR_FOCUSED_RE_REVIEW = YES（重点复核：S5/S7/S8 源码事实、C.4 profile 冻结
+    与 owner 语义、D.5 mode-aware 表、E.4 (a)(b)(c)、Acceptance 可达性标注）
 ```
