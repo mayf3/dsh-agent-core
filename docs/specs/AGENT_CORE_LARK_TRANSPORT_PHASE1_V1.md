@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_LARK_TRANSPORT_PHASE1_V1
-status: draft
+status: accepted
 ---
 
 # Agent Core Lark Transport Phase 1 V1
@@ -518,9 +518,12 @@ IMPLEMENTATION_SCOPE = packages/feishu-connector 内：Config 扩展、classifyI
 OUT_OF_SCOPE = §11 Explicit Non-Goals 全列表（card/streaming/media/thread/dedupe 重设计/
   retry/rate-limit/OpenClaw 全家/Router/Runtime/Kernel/Binding workspace 等）
 
-SPEC_STATUS = DRAFT（冻结 proposal；待独立 spec review 通过后 accepted 才具实现许可）
-READY_FOR_INDEPENDENT_SPEC_REVIEW = REVIEWED（round 1 verdict = FIX_REQUIRED →
-  本轮 amendment 已修全部 REQUIRED_FIX，见 §13.1；待 re-review）
+SPEC_STATUS = ACCEPTED（2026-08-17 独立 re-review PASS：reviewed HEAD ca9bd7c，
+  AGENT_CORE_LARK_TRANSPORT_PHASE1_V1_SPEC_RE_REVIEW = PASS、REQUIRED_FIXES = NONE、
+  VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC → acceptance finalize；accepted 即具备
+  实现许可）
+READY_FOR_INDEPENDENT_SPEC_REVIEW = COMPLETE（round 1 FIX_REQUIRED → amendment
+  ca9bd7c → 2026-08-17 re-review PASS，VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC）
 ```
 
 ### 13.1 Amendment Record（review FIX round，2026-08-17）
@@ -552,8 +555,9 @@ NON_BLOCKING_CLARIFICATIONS（纯文字澄清，不新增实现物）：
 SCOPE_CHANGE = NONE
 KERNEL_CHANGE = NONE
 ROUTER_CHANGE = NONE
-SPEC_STATUS = draft
-READY_FOR_INDEPENDENT_RE_REVIEW = YES
+SPEC_STATUS = accepted（acceptance finalize 后镜像同步；amendment 轮产出时为 draft）
+READY_FOR_INDEPENDENT_RE_REVIEW = DONE（2026-08-17 re-review PASS：reviewed HEAD
+  ca9bd7c，REQUIRED_FIXES = NONE，VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC）
 ```
 
 ---
