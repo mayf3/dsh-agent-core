@@ -17,6 +17,13 @@ status: proposed
 > 现场约束：primary worktree（`/Users/yanfenma/workspace/project/dsh-agent-core`）本轮被另一
 > Implementation Agent 占用（branch = `feat/agent-core-binding-workspace-v1`，worktree DIRTY）。
 > 本 Spec 在独立 linked worktree（基于 `origin/main`）中撰写，未触碰 primary 任何状态。
+>
+> **2026-08-17 Amendment（review FIX_REQUIRED round）**：Independent Review verdict =
+> `FIX_REQUIRED`（BASE_REVIEWED_HEAD = `0492053`）。本轮 **SPEC TEXT AMENDMENT ONLY**
+> （不 implementation、不 merge、不重新设计）：FIX 1 补 workflow wiring acceptance
+> （AC10–AC13），FIX 2 冻结 git environment override hygiene（`GIT_DIR` /
+> `GIT_COMMON_DIR` / `GIT_WORK_TREE` 任一显式设置 → MUST NOT 判定，ENV_ERROR / exit 2），
+> 顺手补全 dirty-primary 禁令（+switch/checkout）。Amendment 记录见 §12.1。
 
 ---
 
@@ -189,6 +196,11 @@ PRIMARY_DETECTION =
 - 允许用 `git worktree list --porcelain` 做**诊断 / 交叉验证**，但**不建设第二套 authority**——
   guard 的判定逻辑只依赖 §4 主判据，porcelain 输出至多进 diagnostic message。
 
+**前置条件（environment hygiene，2026-08-17 FIX 2 冻结）**：主判据只在干净 git 环境下成立。
+若检测到 `GIT_DIR` / `GIT_COMMON_DIR` / `GIT_WORK_TREE` 任一已显式设置（显式 override 可使
+git-dir / common-dir 输出与真实 worktree 布局脱钩），**MUST NOT 判断 primary/linked**——
+guard 按 ENV_ERROR 处理（§5.1：exit 2），**不 unset、不修复环境**。
+
 ---
 
 ## 5. Guard Implementation Authority（minimal，V1 全部实现授权）
@@ -210,7 +222,7 @@ GUARD_SCRIPT = scripts/assert-development-worktree.mjs
 
 只负责三件事：
 
-1. detect primary / linked（§4 主判据）；
+1. detect primary / linked（§4 主判据，含 environment override 前置检查）；
 2. implementation mode 且当前在 primary → non-zero exit；
 3. useful error message。
 
@@ -221,9 +233,14 @@ mode:
   V1 唯一 mode = implementation（default；无需子命令即可直接当 implementation 检查用）
 
 判定与退出码:
-  cwd 不在任何 git repository（git rev-parse 失败） → exit 2  ENV_ERROR（"not inside a git repository"）
-  PRIMARY  + mode=implementation                     → exit 1  GUARD_FAIL
-  LINKED   + mode=implementation                     → exit 0  PASS
+  GIT_DIR / GIT_COMMON_DIR / GIT_WORK_TREE 任一显式设置
+                                       → exit 2  ENV_ERROR（ENV_OVERRIDE；MUST NOT 判定 primary/linked）
+  cwd 不在任何 git repository（git rev-parse 失败）
+                                       → exit 2  ENV_ERROR（"not inside a git repository"）
+  git rev-parse 无法产出可解析的 --git-dir / --git-common-dir 绝对路径
+                                       → exit 2  ENV_ERROR（metadata 无法解析；不猜测、不判定）
+  PRIMARY  + mode=implementation       → exit 1  GUARD_FAIL
+  LINKED   + mode=implementation       → exit 0  PASS
 
 GUARD_FAIL message 必须包含:
   当前判定（PRIMARY）+ 一句 remediation，
@@ -243,6 +260,8 @@ permission service
 
 **只读保证**：guard 只调用 `git rev-parse`（`--git-dir` / `--git-common-dir`，均带
 `--path-format=absolute`）；`git worktree list --porcelain` 至多用于 diagnostic 输出。
+guard 只**读取**环境变量做 override 检测——**不 unset、不修改、不修复任何环境变量**
+（ENV_ERROR 时把违规变量名原样报告给调用者，由人 / 调用方自行处理）。
 guard 不执行任何写操作（见 AC9）。
 
 ### 5.2 PREFLIGHT_INTEGRATION
@@ -343,7 +362,7 @@ primary ff origin/main
 
 ```text
 CURRENT_DIRTY_PRIMARY_HANDLING =
-  Guard Implementation 不得 stash / reset / clean / copy / move
+  Guard Implementation 不得 switch / checkout / stash / reset / clean / copy / move
   其它 Agent 的当前未提交工作。
 ```
 
@@ -370,6 +389,18 @@ AC9  guard 不修改 git state / branch / index / working tree
      （纯只读；实现轮以 strace 级别审查受限不现实，至少冻结：脚本只调用 §5.1 列出的
       git rev-parse（与可选 porcelain 诊断），且测试断言运行前后
       git status --porcelain 与 HEAD 不变）
+AC10 development-preflight 模板 wiring（2026-08-17 FIX 1）：
+     .agents/templates/development-preflight.md 含 Worktree = PRIMARY / LINKED 字段，
+     且模板约束写明 Worktree = PRIMARY + implementation → preflight FAIL（先建 linked worktree）
+AC11 Standing Order wiring（2026-08-17 FIX 1）：
+     .agents/README.md Standing Order 明确要求 implementation 前调用
+     scripts/assert-development-worktree.mjs；primary FAIL → 不得开工
+AC12 bootstrap wiring（2026-08-17 FIX 1）：
+     AGENTS.md 明确指向 worktree guard policy（primary main-only /
+     implementation linked-worktree-only + guard 调用），不复制政策正文
+AC13 ENV_ERROR 路径（2026-08-17 FIX 1+2）：
+     非 Git repo、metadata 无法解析、或 GIT_DIR / GIT_COMMON_DIR / GIT_WORK_TREE
+     任一显式设置 → exit 2，MUST NOT 判定 primary/linked（不猜测、不 unset、不修复环境）
 ```
 
 ---
@@ -432,7 +463,10 @@ MERGE_OWNER_MODEL =
 GUARD_SCRIPT =
   scripts/assert-development-worktree.mjs：detect primary/linked +
   implementation in primary → non-zero exit + useful error message；
-  exit 0 = PASS，1 = GUARD_FAIL，2 = ENV_ERROR；只读，只调 git rev-parse（+可选 porcelain 诊断）。
+  GIT_DIR / GIT_COMMON_DIR / GIT_WORK_TREE 任一显式设置 → MUST NOT 判定 primary/linked，
+  ENV_ERROR；exit 0 = PASS，1 = GUARD_FAIL，2 = ENV_ERROR（含 non-repo /
+  metadata 无法解析 / env override 三类）；
+  只读，只调 git rev-parse（+可选 porcelain 诊断）；不 unset、不修复环境。
 PREFLIGHT_INTEGRATION =
   development-preflight 模板新增 Worktree = PRIMARY/LINKED 字段（additive）；
   .agents/README.md Standing Order 增加运行 guard 一步；AGENTS.md 加一行指引。
@@ -443,7 +477,8 @@ FILESYSTEM_HEAD_IMMUTABLE = DEFER（chflags uchg .git/index = REJECT）
 CURRENT_DIRTY_PRIMARY_HANDLING =
   本 Spec 及 guard 实现均不处理；由 binding implementation agent 先
   commit → push → clean，之后 Owner/Merge 把 primary 恢复 main 并 ff；
-  guard 实现不得 stash/reset/clean/copy/move 其它 Agent 的未提交工作。
+  guard 实现不得 switch/checkout/stash/reset/clean/copy/move
+  其它 Agent 的未提交工作。
 
 IMPLEMENTATION_SCOPE =
   最多 4 文件：scripts/assert-development-worktree.mjs（新）、
@@ -462,12 +497,49 @@ AC6 = Reviewer 用 git show/diff → 不要求 checkout primary
 AC7 = git worktree lock 不被作为 switch guard
 AC8 = primary stable state → branch == main（§9 迁移完成后验收）
 AC9 = guard 不修改 git state / branch / index / working tree
+AC10 = development-preflight.md 模板含 Worktree = PRIMARY/LINKED 字段 +
+       primary implementation FAIL 约束
+AC11 = .agents/README.md Standing Order 必须调用 guard
+AC12 = AGENTS.md bootstrap 明确指向 worktree guard policy
+AC13 = 非 Git repo / metadata 无法解析 / GIT_DIR·GIT_COMMON_DIR·GIT_WORK_TREE
+       任一显式设置 → ENV_ERROR（exit 2），MUST NOT 判定 primary/linked
 
 ARCHITECTURE_CHANGE = NONE
 KERNEL_CHANGE = NONE
 
 SPEC_STATUS = proposed
-READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+READY_FOR_INDEPENDENT_SPEC_REVIEW = REVIEWED（round 1 verdict = FIX_REQUIRED →
+  本轮 amendment 已闭合全部 REQUIRED_FIX，见 §12.1；待 focused re-review）
+```
+
+### 12.1 Amendment Record（review FIX round，2026-08-17）
+
+```text
+PRIMARY_WORKTREE_GUARD_V1_SPEC_AMENDMENT = PASS
+
+BASE_REVIEWED_HEAD = 0492053
+AMENDMENT_KIND = SPEC_TEXT_AMENDMENT_ONLY（不 implementation、不 merge、不重新设计）
+
+FIX1 = workflow wiring acceptance 补全（新增 AC10–AC13）：
+       AC10 development-preflight.md 模板 Worktree = PRIMARY/LINKED 字段
+           + primary implementation FAIL 约束
+       AC11 .agents/README.md Standing Order 必须调用 guard
+       AC12 AGENTS.md bootstrap 明确指向 worktree guard policy
+       AC13 非 Git repo / metadata 无法解析 → ENV_ERROR / exit 2
+
+FIX2 = git environment override hygiene 冻结：
+       GIT_DIR / GIT_COMMON_DIR / GIT_WORK_TREE 任一显式设置
+       → MUST NOT 判断 primary/linked → ENV_ERROR → exit 2；
+       不 unset、不修复环境（§4 前置条件 + §5.1 行为表 + AC13）。
+
+SIDECAR_FIX（顺手，dirty-primary 禁令补全）：
+  CURRENT_DIRTY_PRIMARY_HANDLING 增加 不得 switch / checkout
+  （§9 / §12：switch/checkout/stash/reset/clean/copy/move）
+
+SCOPE_CHANGE = NONE
+KERNEL_CHANGE = NONE
+SPEC_STATUS = proposed
+READY_FOR_FOCUSED_RE_REVIEW = YES
 ```
 
 ---
