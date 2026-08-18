@@ -636,6 +636,39 @@ test('error mapping: network failure → transport_failure', async () => {
   await tokenServer.close()
 })
 
+test('token endpoint failures retain distinct credential, authorization, and downstream families', async () => {
+  const cases = [
+    { status: 401, wire: 'invalid_client', expected: 'credential_invalid' },
+    { status: 400, wire: 'invalid_scope', expected: 'authorization_denied' },
+    { status: 400, wire: 'invalid_grant', expected: 'authorization_denied' },
+    { status: 400, wire: 'invalid_resource', expected: 'authorization_denied' },
+    { status: 403, wire: 'insufficient_scope', expected: 'authorization_denied' },
+    { status: 503, wire: 'temporarily_unavailable', expected: 'transport_failure' },
+  ]
+  for (const item of cases) {
+    const tokenServer = await startMockServer((_req, res) => json(res, item.status, { error: item.wire }))
+    const transport = await makeTransport({ tokenOrigin: tokenServer.origin })
+    const result = await run(makeManifest(), transport, { id: 'classified' })
+    assert.equal(result.ok, false)
+    assert.equal(result.error.code, item.expected)
+    assert.equal(result.error.status, item.status)
+    await tokenServer.close()
+  }
+})
+
+test('token endpoint rejection detail is redacted and cannot echo arbitrary response fields', async () => {
+  const marker = 'do-not-echo-sensitive-auth-body'
+  const tokenServer = await startMockServer((_req, res) => json(res, 401, {
+    error: 'invalid_client',
+    diagnostic: marker,
+  }))
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin })
+  const result = await run(makeManifest(), transport, { id: 'redacted' })
+  assert.equal(result.error.code, 'credential_invalid')
+  assert.equal(result.error.detail.includes(marker), false)
+  await tokenServer.close()
+})
+
 test('binding: dot-segment path params fail closed and never reach the wire', async () => {
   const tokenServer = await startTokenServer()
   const bizServer = await startMockServer((req, res) => json(res, 200, { ok: true }))
