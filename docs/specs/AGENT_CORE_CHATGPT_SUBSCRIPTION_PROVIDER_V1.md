@@ -1,7 +1,9 @@
 ---
 spec_id: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
-status: proposed
+status: accepted
 amendment: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_SPEC_AMENDMENT
+accepted_reviewed_head: 42cd524
+focused_re_review: PASS
 ---
 
 # Agent Core ChatGPT Subscription Provider V1 — 单 Agent Luna 接入（AMEND）
@@ -9,6 +11,10 @@ amendment: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_SPEC_AMENDMENT
 > 性质：**Spec（SPEC ONLY — 本轮只冻结授权边界，不实现）** · 日期：2026-08-18 ·
 > AMEND：2026-08-19 · 仓库：`mayf3/dsh-agent-core`
 > 角色：ChatGPT Subscription Provider Spec Agent
+>
+> SPEC_STATUS = accepted（mechanical acceptance finalize 2026-08-19 ·
+> accepted_reviewed_head = 42cd524 · focused_re_review = PASS ·
+> REQUIRED_FIXES = NONE · VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC）
 >
 > 本轮为 **SPEC_AMENDMENT（FIX round）**：Independent Review on `da8c0de`
 > `VERDICT = FIX_REQUIRED`，本文只闭合 Reviewer 的 REQUIRED_FIXES 1–6，
@@ -382,7 +388,7 @@ CONTROLLED_LIVE_ACCEPTANCE =
 KERNEL_CHANGE = NONE
 SESSION_MODEL_CHANGE = NONE
 
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 READY_FOR_FOCUSED_RE_REVIEW =
 ```
 
@@ -399,4 +405,15 @@ READY_FOR_FOCUSED_RE_REVIEW =
   删 Ollama 表述）；⑤ 补全 Failure semantics（7 类 + quota 归因 + 防 no-op 硬验收）；
   ⑥ 冻结普通自动化测试范围。本 AMEND 已全部闭合；已通过项（目标 Agent、版本、
   credential ownership 等）未重开。
-- **Round 2**：（预留 focused re-review。）
+- **Round 2（42cd524）**：focused re-review = **PASS**。
+  `REVIEWED_HEAD = 42cd524` · `REVIEW_RESULT = PASS` · `REQUIRED_FIXES = NONE` ·
+  `VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC`。Round 1 的 6 项 FIX 确认闭合。
+  Reviewer 3 条 **non-blocking note** 仅保留为 implementation notes（非 normative，
+  不扩大、不修改本 Spec 契约）：
+  1. 实际 plugin 安装路径使用 `<DSH_HOME>/profiles/node_modules`；
+  2. override 引用未注册 agentId → implementation startup fail-loud；
+  3. 非目标 Agent 保持现有全局 env / hardcoded fallback 行为。
+- **Acceptance finalize（2026-08-19）**：text-only 状态翻转
+  `proposed → accepted`（frontmatter + 文头镜像 + §12 镜像 + 本 provenance）。
+  SEMANTIC_CHANGE = NONE；冻结语义原样（见文头清单）。
+- **Round 3**：（预留 implementation / merge 轮。）
