@@ -22,7 +22,7 @@ existing product:
 
 ```text
 git clone
--> npm install
+-> npm ci
 -> npm run bootstrap
 -> configure one external model provider + Feishu App
 -> npm run create-agent
@@ -136,7 +136,7 @@ The test failure is distribution evidence, not a source-only inference:
 | Local package resolution uses symlink farms | `packages/agent-provisioning/src/index.js:168-199,221-244` | mutates root and per-home `node_modules` with source symlinks | `npm install` alone does not produce the runnable closure | npm workspaces for root resolution; mechanical, idempotent per-home profile assembly only where DSH requires it |
 | Operator HOME is configuration authority | `packages/agent-provisioning/src/index.js:224-229` | copies `~/.dsh/settings.yaml` and `.credentials.yaml` when present; otherwise writes an opencode-go default | other teams do not own the original provider or subscription | explicit config inputs/templates; no hidden HOME fallback in bootstrap |
 | Provider/model silently default to one developer route | `packages/agent-router/src/process.js:81-88,254-269` | defaults to `opencode-go/deepseek-v4-flash`; reads one named key from per-agent credentials | repository cannot promise that subscription | provider/model required by validation; provider token is external prerequisite |
-| Runtime cannot create its required definition | `packages/production-runtime/src/compose.js:153-160` | fails if `agents.json` is absent or lacks a default | first user must hand-author the config | deployment-side `create-agent` adapter reuses `createAgentInConfig` |
+| Runtime cannot create its required definition | `packages/production-runtime/src/compose.js:153-160` | fails if `agents.json` is absent or lacks a default | first user must hand-author the config | deployment-side `create-agent` adapter reuses `adoptAgents` |
 | No prebinding command | `packages/agent-router/src/index.js:416-465` | Router has the correct generic first-contact Binding seam, but no operator CLI | PREBOUND_ONLY rejects the first message until manual JSON/code work | deployment adapter composes Router and calls `switchAgent`; never writes store directly |
 | Feishu helper depends on legacy config | `scripts/setup-feishu-creds.mjs:15-32` | derives credentials from an OpenClaw-shaped file | clean user has neither OpenClaw nor `.openduck` | direct template/input validation; legacy import becomes optional and non-canonical |
 | Canonical entry is undocumented in package scripts | `scripts/production-runtime.mjs:1-15`; `packages/production-runtime/src/entry.js:15-23` | source entry exists; no `start:production` command | user must know internal script and env contract | one foreground npm command |
@@ -155,153 +155,346 @@ BROKEN_FRESH_CLONE_STEPS = npm test; runtime boot; Agent spawn; first Feishu
   message
 ```
 
-## 3. DSH dependency model
+## 3. Frozen install and package dependency model
 
-### 3.1 Evaluated options
+### 3.1 One install authority
 
-| Option | Decision | Reason |
-|---|---|---|
-| A. Published npm packages | **SELECT** | npm registry contains `@deepseek-ai/dsh@0.1.0-rc.7` plus matching `dsh-tools`, `dsh-llm`, and `dsh-session` tarballs |
-| B. Agent Core npm workspaces | **SELECT for this repo's private packages** | makes `@agent-core/*` resolution deterministic without manual root symlinks |
-| C. git submodule | REJECT | duplicates source lifecycle and still requires build/install orchestration |
-| D. required `DSH_HARNESS_ROOT` checkout | REJECT for distribution; KEEP as explicit dev override | preserves developer testing without making it an end-user prerequisite |
-| E. DSH official install seam | **SELECT** | published `@deepseek-ai/dsh` owns the CLI `bin.dsh`; upstream has pack/verify/publish gates |
+The distribution uses npm workspaces and the published DSH release. There is
+no remaining implementation-time choice:
 
-### 3.2 Frozen dependency contract
+```json
+{
+  "workspaces": ["packages/*", "bundle-*", "profile-*"]
+}
+```
 
-Implementation must pin one mutually compatible DSH release family and commit a
-root lockfile. At implementation start the candidate family is `0.1.0-rc.7`;
-the exact version must be re-verified against registry metadata and a real
-profile boot before acceptance.
+`examples/**` and every historical V0 package are deliberately outside the
+workspace set. The repository-root `package-lock.json` is the sole dependency
+resolution authority and must be lockfile version 3. The canonical and only
+accepted install command is `npm ci`. `npm install`, pnpm, yarn, a sibling DSH
+checkout, and post-install symlink farms are not distribution install paths.
 
-The runtime resolves the CLI in this order only:
+`packages/feishu-connector/package-lock.json` must be deleted in the eventual
+implementation. No workspace may contain a nested lockfile. No manifest value
+in the following tables may use `^`, `~`, `>=`, `*`, `workspace:*`, a git URL,
+or a file/path reference. Registry tags such as `latest` and `next` are also
+forbidden as runtime resolution rules.
 
-1. explicit `DSH_HARNESS_ROOT` development override, validated as a built
-   Harness checkout;
-2. installed `@deepseek-ai/dsh` package/bin in the repository dependency
-   closure;
-3. fail loud with both supported remedies.
+### 3.2 Exact workspace set and direct dependency matrix
 
-It must never scan personal directory conventions.
+The exact workspace set is the following 25 rows: all 15 `packages/*`, all five
+`bundle-*`, and all five `profile-*` manifests shown below—no more and no less.
+Every listed item is an exact production `dependencies` entry owned by the
+package that imports or names it. `—` means none. Dev-only dependencies are
+`—` for every V1 workspace; canonical manifests also have no
+`peerDependencies`. This prevents root-hoist and accidental-transitive
+resolution from satisfying a direct import. Names in the two scoped columns
+are suffixes of the column scope: for example `dsh` means
+`@deepseek-ai/dsh`, and `agent-router` means `@agent-core/agent-router`.
+
+Root (not itself a workspace):
+
+| Package | Direct `@agent-core/*` | Direct `@deepseek-ai/*` | Other direct runtime | Dev-only |
+|---|---|---|---|---|
+| `dsh-agent-core` | — | `dsh: 0.1.0-rc.7` | — | — |
+
+`packages/*` workspaces:
+
+| Package | Direct `@agent-core/*` | Direct `@deepseek-ai/*` | Other direct runtime | Dev-only |
+|---|---|---|---|---|
+| `@agent-core/agent-definition` | — | `schemastery: 3.18.1` | — | — |
+| `@agent-core/agent-memory` | `workspace-bootstrap: 0.0.0` | `dsh-tools: 0.1.0-rc.7`; `schemastery: 3.18.1` | — | — |
+| `@agent-core/agent-provisioning` | — | — | — | — |
+| `@agent-core/agent-router` | `agent-provisioning: 0.0.0` | `schemastery: 3.18.1` | — | — |
+| `@agent-core/agent-switch` | — | `dsh-tools: 0.1.0-rc.7`; `schemastery: 3.18.1` | — | — |
+| `@agent-core/broker` | — | `cordis: 4.0.1`; `dsh-tools: 0.1.0-rc.7`; `schemastery: 3.18.1` | — | — |
+| `@agent-core/demo-server` | — | `dsh-llm: 0.1.0-rc.7`; `dsh-session: 0.1.0-rc.7`; `schemastery: 3.18.1` | — | — |
+| `@agent-core/feishu-connector` | — | `schemastery: 3.18.1` | `@larksuiteoapi/node-sdk: 1.73.0` | — |
+| `@agent-core/notification-ingress` | — | `schemastery: 3.18.1` | — | — |
+| `@agent-core/owner-guard` | — | — | — | — |
+| `@agent-core/product-api` | — | `schemastery: 3.18.1` | — | — |
+| `@agent-core/production-runtime` | `agent-definition: 0.0.0`; `agent-provisioning: 0.0.0`; `agent-router: 0.0.0`; `broker: 0.1.0`; `feishu-connector: 0.0.0`; `notification-ingress: 0.0.0`; `product-api: 0.0.0`; `scheduler: 0.0.0`; `scheduler-router: 0.0.0`; `workspace-bootstrap: 0.0.0` | — | — | — |
+| `@agent-core/scheduler` | — | — | `croner: 10.0.1` | — |
+| `@agent-core/scheduler-router` | — | — | — | — |
+| `@agent-core/workspace-bootstrap` | — | `schemastery: 3.18.1` | — | — |
+
+`bundle-*` workspaces:
+
+| Package | Direct `@agent-core/*` | Direct `@deepseek-ai/*` | Other direct runtime | Dev-only |
+|---|---|---|---|---|
+| `@agent-core/bundle-agent-switch` | `agent-switch: 0.0.0` | — | — | — |
+| `@agent-core/bundle-broker` | `broker: 0.1.0` | — | — | — |
+| `@agent-core/bundle-demo` | `owner-guard: 0.0.0`; `demo-server: 0.0.0` | — | — | — |
+| `@agent-core/bundle-integration` | `workspace-bootstrap: 0.0.0`; `agent-definition: 0.0.0`; `feishu-connector: 0.0.0`; `agent-router: 0.0.0`; `broker: 0.1.0`; `product-api: 0.0.0`; `notification-ingress: 0.0.0` | — | — | — |
+| `@agent-core/bundle-memory` | `agent-memory: 0.0.0` | — | — | — |
+
+`profile-*` workspaces (the dependencies exactly match each
+`dsh.profile.bundles` list):
+
+| Package | Direct `@agent-core/*` | Direct `@deepseek-ai/*` | Other direct runtime | Dev-only |
+|---|---|---|---|---|
+| `dsh-profile-agent-core-demo` | `bundle-demo: 0.0.0` | `dsh-base: 0.1.0-rc.7` | — | — |
+| `dsh-profile-agent-core-integration-agent` | `bundle-demo: 0.0.0`; `bundle-memory: 0.0.0`; `bundle-agent-switch: 0.0.0`; `bundle-broker: 0.0.0` | `dsh-base: 0.1.0-rc.7` | — | — |
+| `dsh-profile-agent-core-integration` | `bundle-integration: 0.0.0` | `dsh-base: 0.1.0-rc.7` | — | — |
+| `dsh-profile-agent-core-memory` | `bundle-demo: 0.0.0`; `bundle-memory: 0.0.0` | `dsh-base: 0.1.0-rc.7` | — | — |
+| `dsh-profile-agent-core-production` | `bundle-demo: 0.0.0`; `bundle-memory: 0.0.0`; `bundle-agent-switch: 0.0.0`; `bundle-broker: 0.0.0` | `dsh-base: 0.1.0-rc.7` | — | — |
+
+The DSH CLI resolves from the root-installed `@deepseek-ai/dsh` package/bin.
+`DSH_HARNESS_ROOT` remains an explicit, validated developer-only override and
+is absent from Quick Start and acceptance. Runtime code may not scan personal
+directory conventions. Cross-workspace source imports may remain mechanically
+unchanged in V1, but each imported workspace must still appear in the importing
+package's manifest above.
 
 ```text
-DSH_DEPENDENCY_MODEL = OFFICIAL_NPM_RELEASE + AGENT_CORE_NPM_WORKSPACES
-DSH_DEPENDENCY_SELF_CONTAINED = YES (after npm install)
-DSH_HARNESS_ROOT_REQUIRED = NO
+DSH_RELEASE_FAMILY = 0.1.0-rc.7 EXACT
+DSH_DEPENDENCY_MODEL = OFFICIAL_NPM_RELEASE + NPM_WORKSPACES
+CANONICAL_CLEAN_INSTALL = npm ci
+ROOT_PACKAGE_LOCK = SOLE_INSTALL_AUTHORITY
+NESTED_LOCKFILE_ALLOWED = NO
 MANUAL_SYMLINK_REQUIRED_AFTER_V1 = NO
-DSH_SOURCE_COPY = NO
 ```
 
-## 4. Configuration and secrets
+## 4. Frozen public model and configuration contract
 
-### 4.1 Canonical deployment inputs
+### 4.1 Pre-Spec real-model proof
 
-Implementation will add repository-style examples (exact paths may be adjusted
-without changing semantics):
+Before this revision was authored, a clean temporary npm project installed
+`@deepseek-ai/dsh`, `dsh-llm`, `dsh-session`, and `dsh-tools`, each at exact
+`0.1.0-rc.7`. The official `dsh --profile headless` CLI then made a real public
+network request with this route:
 
 ```text
-config/examples/runtime.env.example
-config/examples/dsh-settings.example.yaml
-config/examples/provider-credentials.example.yaml
-config/examples/feishu-creds.example.json
-config/examples/agents.example.json
-config/examples/bindings.example.json        # shape documentation only
-config/examples/primary-workspaces.example.json
+provider = huggingface
+model = zai-org/GLM-4.7-Flash
+credential reference = HF_TOKEN
+endpoint authority = the installed pi-ai Hugging Face catalog
+expected assistant text = AGENT_CORE_RC7_HF_NATIVE_PASS
+exit code = 0
 ```
 
-`bindings.example.json` must not invite direct writes: the Quick Start uses
-`bind-feishu`, which delegates to Router ownership. `primary-workspaces` stays
-optional and preserves the existing import contract.
+The durable DSH session recorded `request/context` with the same provider/model,
+an `assistant/message` whose model source and response model were Hugging Face /
+GLM-4.7-Flash, the exact expected text, and `turn/end.kind = completed`. This is
+the sole model route authorized for the V1 public Quick Start. Failed probes of
+private/region-blocked routes are not fallbacks.
 
-Every example must use placeholders, relative explanatory paths, and no real
-secret or `/Users/yanfenma`. Secret files must be outside git, recommended mode
-`0600`, and never overwritten by bootstrap.
+### 4.2 Public provider prerequisite and exact files
 
-### 4.2 Provider/model contract
+The operator needs a normal Hugging Face account, remaining Inference Providers
+credits (the provider documents a free tier), and a fine-grained access token
+with the exact permission **Make calls to Inference Providers**. No DeepSeek
+private account, opencode-go subscription, Agent Core auth-service, or private
+gateway is required for basic chat.
 
-- A provider subscription/token is an `EXTERNAL_PREREQUISITE`.
-- Bootstrap requires an explicit provider, model, settings file, and credential
-  source; it validates existence and shape without printing secret values.
-- `DSH_AGENT_PROVIDER` / `DSH_AGENT_MODEL` remain the existing runtime selection
-  seam.
-- Quick Start selects one publicly obtainable DSH-supported provider only after
-  an implementation-time real-model proof. It may not use the operator's
-  private opencode-go subscription.
-- `AUTOMATIC_MODEL_FALLBACK = NOT_SUPPORTED`.
+Provider prerequisite authority: [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers/index).
 
-### 4.3 Feishu contract
+Tracked examples and live files are exactly:
 
-- User supplies their own self-built Feishu App `appId`/`appSecret` in a `0600`
-  JSON/TOML credential file accepted by the existing connector.
-- App must enable bot/message capabilities, subscribe to
-  `im.message.receive_v1`, grant the required message receive/send permissions,
-  and be present in the target conversation.
-- Runtime uses the existing official SDK WebSocket long connection.
-- Connection success is established by explicit connector/runtime status logs;
-  bootstrap validates config but does not contact or mutate a tenant by
-  default.
-- Conversation id is the inbound `chat_id` (`oc_*`) surfaced by an event or
-  operator inspection; no production app/secret is bundled.
-- `bind-feishu` creates `feishu:<conversationId> -> agent + canonical main +
-  workspace null` through Router's generic Binding seam.
-- An unbound conversation remains fail-closed and receives the existing fixed
-  rejection path.
+| Purpose | Tracked placeholder | Live canonical path |
+|---|---|---|
+| DSH settings | `config/examples/dsh-settings.yaml` | `<root>/config/dsh/settings.yaml` |
+| provider credential | `config/examples/dsh-credentials.yaml` | `<root>/config/dsh/.credentials.yaml` |
+| Feishu credential | `config/examples/feishu-credentials.json` | `<root>/config/feishu/credentials.json` |
+| runtime env documentation | `config/examples/runtime.env` | operator shell/service environment; no live `.env` required |
 
-## 5. Command contracts
+`<root>` is the absolute `--root` passed to every distribution command. The
+two credential files and every per-Agent credential copy are mode `0600`; their
+parent directories are mode `0700`. Tracked examples contain placeholders only.
 
-Exact flag spelling may be refined in review, but the following behaviors are
-frozen.
+The settings file schema is frozen to:
 
-### 5.1 `npm run bootstrap`
+```yaml
+llm-pi-ai:
+  providers:
+    huggingface:
+      apiKeyEnv: HF_TOKEN
 
-Checks, in dry-run-first order:
+agent-default-model:
+  provider: huggingface
+  model: zai-org/GLM-4.7-Flash
+```
 
-1. supported Node/npm version;
-2. installed dependency/lockfile consistency;
-3. installed DSH CLI and required direct DSH packages;
-4. writable, non-demo production root;
-5. explicit provider/model settings and credentials;
-6. Feishu credentials (required unless an explicit `--without-feishu` validation
-   mode is selected; Quick Start requires them);
-7. Agent Definition and Binding paths;
-8. configured ports are valid and available without starting a daemon.
+The credentials file is a YAML mapping with no wrapper/version field:
 
-Mutation mode creates only missing directories and operator-selected config
-copies. It never deletes files, resets a Workspace, rewrites a credential,
-changes system configuration, installs supervision, or starts a background
-daemon.
+```yaml
+HF_TOKEN: "<fine-grained-token-with-inference-providers-permission>"
+```
+
+The exact Feishu JSON schema is:
+
+```json
+{
+  "appId": "<self-built-app-id>",
+  "appSecret": "<self-built-app-secret>"
+}
+```
+
+Bootstrap rejects missing/empty/additional keys and never prints values.
+
+### 4.3 Source precedence, assembly, and drift
+
+DSH credential precedence is frozen to the rc.7 credential seam:
 
 ```text
-BOOTSTRAP_IDEMPOTENT = YES
-BOOTSTRAP_DRY_RUN = REQUIRED
-BOOTSTRAP_FAIL_LOUD = REQUIRED
-BOOTSTRAP_SECRET_OUTPUT = FORBIDDEN
+inherited process environment
+> $DSH_HOME/.credentials.yaml
+> invocation-cwd/.env
+> $DSH_HOME/.env
 ```
 
-### 5.2 `npm run create-agent -- --name <name>`
+The canonical Quick Start instructs the operator to unset
+`HF_TOKEN` in the launching environment and does not create either
+`.env`; therefore the effective source is the canonical credential file. If an
+inherited value exists it wins by upstream contract, and bootstrap/status must
+report only `source=env`, never the value. Missing or invalid credentials fail
+loud; there is no provider or model fallback.
 
-This is a deployment/bootstrap adapter, not a runtime auto-creation policy. It:
+Runtime selection is exact and redundant by design:
 
-1. calls the existing `createAgentInConfig` writer against the production
-   `agents.json` authority;
-2. returns the minted opaque `agt_*` id and preserves/defaults per existing
-   Agent Definition semantics;
-3. calls the existing workspace-bootstrap ensure seam to create the primary
-   Workspace and seed `AGENTS.md` without overwrite;
-4. provisions the selected production DSH home/profile through the existing
-   idempotent provisioner;
-5. is safe to rerun only with an explicit idempotency rule (recommended:
-   `--name` reuse through existing `adoptAgents`, or fail loud on ambiguity).
+```text
+DSH_AGENT_PROVIDER=huggingface
+DSH_AGENT_MODEL=zai-org/GLM-4.7-Flash
+```
 
-It does not add Agent fields, credentials, Workspace registries, runtime Agent
-creation, or Feishu behavior.
+Those runtime values are authoritative and must exactly match
+`agent-default-model` in the settings source. Any mismatch fails bootstrap and
+spawn; no CLI override silently wins.
 
-### 5.3 `npm run bind-feishu -- --agent <ref> --conversation <oc_id>`
+Required/derived input contract:
 
-The adapter composes or invokes the existing generic Router service and calls
-its `switchAgent` first-contact seam. It does not write Binding JSON directly.
-It validates the target Agent exists/enabled, persists canonical `main`, and
-uses `workspace = null` so the Agent primary Workspace remains authoritative.
+| Input | Rule |
+|---|---|
+| CLI `--root` | required on every Quick Start command; sole location selector |
+| `PRODUCTION_RUNTIME_ROOT` | start adapter derives it from `--root`; a pre-existing different value is an error, not a lower-priority fallback |
+| `DSH_AGENT_PROVIDER` | required exact value `huggingface`; no provider CLI flag |
+| `DSH_AGENT_MODEL` | required exact value `zai-org/GLM-4.7-Flash`; no model CLI flag |
+| `DSH_SETTINGS_SOURCE` | bootstrap/start derive `<root>/config/dsh/settings.yaml`; operator override is not supported in V1 |
+| `DSH_CREDENTIALS_SOURCE` | bootstrap/provision derive `<root>/config/dsh/.credentials.yaml`; operator override is not supported in V1 |
+| `FEISHU_CREDS_PATH` | start derives `<root>/config/feishu/credentials.json`; operator override is not supported in V1 |
+| `HF_TOKEN` | canonical launching environment leaves it unset so the `0600` file wins; if inherited, upstream precedence applies and source-only status is mandatory |
+
+The public CLI accepts no token, App Secret, provider, model, settings path, or
+credential path. Consequently precedence is singular: `--root` selects the
+canonical files; provider/model env must equal their settings values; and only
+the rc.7 credential layers decide the value behind `HF_TOKEN`.
+
+For Agent `agt_*`, `create-agent` assembles:
+
+```text
+<root>/workspaces/<agt_id>/AGENTS.md
+<root>/homes/<agt_id>/settings.yaml
+<root>/homes/<agt_id>/.credentials.yaml
+<root>/homes/<agt_id>/profiles/agent-core-production/{package.json,cordis.patch.yml}
+<root>/homes/<agt_id>/profiles/node_modules/@agent-core/*
+```
+
+The settings and credential files are copied from the live canonical paths on
+first provisioning. A second run verifies byte identity and modes; it never
+overwrites. Existing-but-different content is `CONFIG_DRIFT` and fails loud.
+Profile/workspace ensure remains idempotent and never overwrites `AGENTS.md`.
+
+Acceptance proves this assembly by spawning the production Agent with
+`DSH_HOME=<root>/homes/<agt_id>` and its primary workspace, then requires the
+child initialize request, DSH session `request/context`, model-authored reply,
+and `turn/end.kind=completed` all to name/match the frozen provider/model. A
+standalone root-home probe is supporting evidence, not acceptance.
+
+```text
+AGENT_CORE_AUTH_SERVICE_REQUIRED_FOR_BASIC_CHAT = NO
+MODEL_PROVIDER_CREDENTIAL_REQUIRED = YES
+AUTOMATIC_MODEL_FALLBACK = NOT_SUPPORTED
+PRIVATE_OPENCODE_GO_REQUIRED = NO
+```
+
+## 5. Frozen command and owner-seam contracts
+
+### 5.1 `bootstrap`
+
+Canonical invocation:
+
+```text
+npm run bootstrap -- --root <absolute-root> --dry-run
+npm run bootstrap -- --root <absolute-root>
+```
+
+Before mutation it validates Node `^22.19.0 || >=24.0.0`, current npm,
+`npm ci`/lock consistency, installed DSH CLI, a non-demo writable root, the
+three canonical live config files and modes, exact provider/model agreement,
+Feishu schema, Agent Definition/Binding target paths, and local ports. Mutation
+creates missing production directories only; the operator authors live config
+from tracked placeholders before bootstrap. It never installs a placeholder as
+a live secret, overwrites credentials/config, deletes state, starts a daemon,
+mutates a Feishu tenant, or installs supervision. First and second successful runs must
+produce the same durable content.
+
+### 5.2 `create-agent`: `adoptAgents` is canonical
+
+Canonical invocation:
+
+```text
+npm run create-agent -- --root <absolute-root> --name <display-name>
+```
+
+The adapter must call existing
+`adoptAgents({ configFile: <root>/agents.json, agents: [{ name }] })`; it may
+not call `createAgentInConfig`. Name matching is the existing case-insensitive
+`name.toLowerCase()` rule. An existing name reuses exactly the same opaque ID
+and existing display fields. The existing `defaultAgentId` is preserved; when
+none exists, the first Agent in config order becomes default.
+
+After both `created` and `reused` outcomes, the adapter always resolves the
+returned Agent ID, calls the existing `workspaceBootstrap.ensure(agentId)` for
+the primary workspace, and calls existing `provisionAgentHome` with profile
+`agent-core-production`. Thus the second invocation is not an early return: it
+re-validates/ensures workspace, home, config copies, and profile while retaining
+the same Agent ID. Ambiguous/corrupt config fails loud.
+
+```text
+CREATE_AGENT_OWNER_SEAM = adoptAgents
+CREATE_AGENT_NAME_REUSE = CASE_INSENSITIVE
+SAME_NAME_SECOND_RUN = RETURN_SAME_AGENT_ID
+EXISTING_DEFAULT_AGENT = PRESERVE
+FIRST_AGENT_WHEN_NO_DEFAULT = BECOMES_DEFAULT
+```
+
+### 5.3 `bind-feishu`: offline minimal composition only
+
+Canonical invocation:
+
+```text
+npm run bind-feishu -- --root <absolute-root> --agent <agt_id-or-name> --conversation <oc_id>
+```
+
+The adapter creates the existing minimal plugin context and mounts, in order,
+only existing `workspaceBootstrap`, `agentDefinition`, and `agentRouter` over
+the production layout. Feishu is deliberately absent, so Router does not open a
+WebSocket or dispatch a message. It must not compose the full Production
+Runtime (no Scheduler, HTTP port, Broker/Auth, or live connector).
+
+The only legal algorithm is:
+
+1. resolve the enabled target through `agentDefinition.resolveAgentRef`;
+2. compute `ccId = router.channelConversationId('feishu', conversation)`;
+3. read `existing = router.getBinding(ccId)`;
+4. if absent, call exactly
+   `router.switchAgent(ccId, target.id, { targetSessionId: 'main', workspace: null })`;
+5. if the existing triple is exactly target ID / `main` / `null`, return it as
+   a no-op without calling `switchAgent`;
+6. otherwise fail loud with `BINDING_CONFLICT`, report both non-secret triples,
+   and leave the existing Binding untouched.
+
+There is no `--force`. The adapter may not import `BindingStore`, read/write
+Binding JSON, create another mutation helper/service, add a Feishu branch to
+Router, or start a process. It disposes its minimal context before exit.
+
+```text
+NO_EXISTING_BINDING = CREATE
+SAME_AGENT_MAIN_NULL_BINDING = NO_OP
+CONFLICTING_EXISTING_BINDING = FAIL_LOUD
+IMPLICIT_REBIND = FORBIDDEN
+FORCE_REBIND = NOT_SUPPORTED_IN_V1
+```
 
 ### 5.4 Canonical runtime lifecycle
 
@@ -314,28 +507,92 @@ GRACEFUL_STOP = SIGINT or SIGTERM
 LAUNCHD_REQUIRED = NO
 LAUNCHD_EXAMPLE = KEEP_AS_OPTIONAL_ADAPTER
 SYSTEMD_REQUIRED = NO
-SYSTEMD_EXAMPLE = OPTIONAL; NOT_REQUIRED_FOR_V1_ACCEPTANCE
+SYSTEMD_EXAMPLE = NO; OUT_OF_SCOPE_FOR_V1
 ```
 
 Foreground start is the product contract on macOS and Linux. Supervision may
 only wrap that command.
 
-## 6. Quick Start information architecture
+## 6. Frozen Feishu first-use closure and Quick Start
 
-The first-user path is exactly nine steps:
+### 6.1 Exact Feishu tenant prerequisites
 
-1. clone;
-2. install/bootstrap;
-3. configure provider;
-4. configure Feishu;
-5. create Agent;
-6. bind conversation;
-7. start foreground runtime;
-8. send first Feishu message;
-9. verify real reply and fail-closed behavior for an unbound conversation.
+The operator performs these console steps for exactly this minimal text-chat
+surface:
+
+1. Sign in to Feishu Open Platform, choose **Create enterprise self-built
+   application**, set an operator-chosen name/icon/description, and create it.
+2. On **Credentials & Basic Info**, copy App ID and App Secret into the exact
+   §4.2 JSON file, then set the file to mode `0600`; never paste either value
+   into the repository, settings YAML, command line, or logs.
+3. Under **Add Features**, add/enable the **Bot** capability.
+4. Under **Permissions & Scopes**, add the application scopes
+   `im:message.p2p_msg:readonly`, `im:message.group_at_msg:readonly`, and
+   `im:message:send_as_bot`. These three identifiers are exhaustive for V1
+   text chat.
+5. Under **Events & Callbacks -> Event Configuration**, choose **Receive events
+   through persistent connection**, save it, and subscribe to the event
+   `im.message.receive_v1`.
+6. Under **Version Management & Release**, create a version, submit/publish it,
+   complete tenant-admin approval when required, and verify the app is enabled
+   and its availability range includes the test user.
+7. For a group test, add the published bot to the target group and address it
+   with `@bot`. A direct-message test needs no group. Non-`@` group traffic is
+   outside V1 and `im:message.group_msg` is neither requested nor required.
+
+The runtime uses the existing official SDK WebSocket client. No public callback
+URL, webhook, discovery endpoint, or discovery service is introduced.
+
+Feishu authority: [receive-message event and scopes](https://open.feishu.cn/document/server-docs/im-v1/message/events/receive),
+[persistent-connection event configuration](https://open.feishu.cn/document/ukTMukTMukTM/uYDNxYjL2QTM24iN0EjN/event-subscription-configure-/request-url-configuration-case),
+and [send-message bot prerequisite](https://open.feishu.cn/document/server-docs/im-v1/message/create).
+
+### 6.2 Exact first-use sequence under `PREBOUND_ONLY`
+
+The public Quick Start is the following complete sequence:
+
+1. Clone the repository at the documented release and run `npm ci`.
+2. Create the Hugging Face account/token prerequisite, copy the exact settings
+   and credential schemas to the canonical live paths, and `chmod 600` secrets.
+3. Create/publish/enable the Feishu app using §6.1 and write its canonical JSON.
+4. Run bootstrap dry-run, bootstrap, and bootstrap again.
+5. Run `create-agent` twice with the same name and record the identical `agt_*`.
+6. Start the foreground runtime with no Binding for the chosen conversation;
+   require `GET /health` to return HTTP 200 with
+   `{"ok":true,"service":"agent-core-notification-ingress","deliverReady":true}`
+   and require the exact log line `feishu-transport: connected`.
+7. In Feishu send a direct message, or add the bot to a group and send an
+   `@bot` text message.
+8. The existing PREBOUND_ONLY gate derives the ID through
+   `router.channelConversationId('feishu', chat_id)`, rejects before model
+   dispatch/Binding creation, and emits one structured log record containing
+   the **full**, untruncated `channelConversationId` (`feishu:oc_*`):
+
+   ```json
+   {"event":"feishu_binding_required","reason":"unbound","channelConversationId":"feishu:oc_<full-id>","bindingCreated":false,"modelDispatched":false}
+   ```
+
+   The connector sends exactly the existing fixed rejection receipt:
+   `[agent-core] 该会话未完成绑定（not bound）：消息未送达任何 Agent，也未创建任何绑定。请联系管理员完成会话与 Agent 的预绑定。`
+   Message content, app secret, token, and sender credential are not logged.
+9. Stop the foreground runtime completely before mutation.
+10. Pass the logged external `oc_*` portion to `bind-feishu`; the offline
+    adapter creates exactly target Agent / `main` / `null`.
+11. Run `bind-feishu` a second time and prove exact no-op behavior.
+12. Restart the same foreground runtime/root and require the same HTTP health
+    response plus exact `feishu-transport: connected` log again.
+13. Send a second addressed text message in the same Feishu conversation.
+14. Prove the persisted Binding is still the selected target Agent / native DSH
+    Session `main` / `workspace: null`, whose effective path is that Agent's
+    primary workspace; prove the child uses that workspace and its own home.
+15. Prove a model-authored response is sent back to that conversation and an
+    unrelated unbound conversation still fails closed without a Binding.
+
+The discovery log is an observability change in the composition/gate only. It
+does not mutate Router/Binding/Feishu semantics and is not an API.
 
 Architecture, decisions, reports, launchd/trusted-control-plane hardening, and
-historical V0 paths move behind `Learn more`; none is a Quick Start prerequisite.
+historical V0 paths stay behind `Learn more`; none is a Quick Start prerequisite.
 
 ## 7. Portability and secret audit
 
@@ -371,15 +628,21 @@ REAL_SECRET_FOUND_LATER = BLOCK + ROTATE/INCIDENT PROCESS OUTSIDE THIS SPEC
 
 Allowed changes after this Spec becomes accepted:
 
-- root `package.json`, workspaces, engine declaration, lockfile;
+- root and workspace `package.json` files exactly covered by §3, root workspaces,
+  engine declaration, root lockfile, and removal of the nested Feishu lockfile;
 - installation/bootstrap glue under `scripts/`;
-- safe config examples;
-- thin deployment adapters over existing Agent Definition, Workspace Bootstrap,
-  Agent Provisioning, and Router seams;
+- the four exact safe config examples in §4.2;
+- thin deployment adapters implementing only §5 over existing Agent Definition,
+  Workspace Bootstrap, Agent Provisioning, and Router seams;
 - DSH CLI resolution in agent-provisioning/process wiring;
+- explicit DSH settings/credential source assembly and provider/model mismatch
+  validation in provisioning/process wiring;
+- the structured full ChannelConversation discovery log in the existing V2
+  ingress composition/gate;
 - focused tests for the distribution contracts;
 - root README and one canonical Quick Start/config/deployment guide;
-- optional supervision examples that wrap the foreground command.
+- the existing launchd example only, as an optional wrapper over the foreground
+  command; a systemd example is out of V1 scope.
 
 Forbidden without a new/amended Spec:
 
@@ -389,6 +652,8 @@ Forbidden without a new/amended Spec:
 - Workspace/Session registries or databases;
 - Kernel/DSH source changes or forks;
 - automatic model fallback;
+- a discovery API/service, direct BindingStore/JSON access, `--force`, or a
+  second Agent/Binding mutation owner;
 - Dashboard, SaaS, Kubernetes, Auth provisioning closure, fleet migration, or
   OpenClaw compatibility.
 
@@ -402,31 +667,59 @@ Required gates:
 
 ```text
 fresh clone / exact remote SHA checkout
-npm install or npm ci
+empty HOME
+empty production root
+nested package-lock files absent
+manifest/workspace/dependency matrix exactly equals §3 (no ranges)
+every non-node direct import resolves from its declaring workspace manifest
+root package-lock is consistent with every workspace manifest
+npm ci
 npm test
 node --check for every changed JS/MJS file
 lint/typecheck when repository scripts exist
 
 bootstrap dry-run
 bootstrap first run
-bootstrap second run (no destructive delta)
+bootstrap second run (byte-identical durable state; no destructive delta)
+unsupported Node -> fail loud
+lockfile/manifest drift -> npm ci fails
 missing DSH package -> fail loud
+DSH_HARNESS_ROOT absent -> installed CLI selected
 invalid provider config -> fail loud
 missing provider credential -> fail loud
+provider/model settings-env mismatch -> fail loud
+inherited credential source -> source=env reported without value
 missing/invalid Feishu credential -> fail loud
 fresh production root
-first Agent creation + second-run idempotency
-first Feishu Binding through Router owner seam
+first Agent creation through adoptAgents
+case-varied same-name second run -> same ID + default preserved
+second create-agent run still ensures workspace/home/profile
+first Feishu Binding through offline Router owner composition
+exact second bind -> no-op
+conflicting bind -> BINDING_CONFLICT + zero mutation
+bind adapter opens no port/WebSocket/process and imports no BindingStore
 unknown Feishu conversation -> PREBOUND_ONLY fail closed
+unknown conversation -> full structured feishu:oc_* binding_required log
+unknown conversation -> no Binding and no model dispatch
 foreground runtime boot + health + SIGTERM shutdown
-real DSH profile boot
-real DSH model spawn and reply
+per-Agent production DSH profile boot from <root>/homes/<agt_id>
+per-Agent config copies/modes/byte identity + CONFIG_DRIFT rejection
+real DSH initialize/request context = huggingface/zai-org/GLM-4.7-Flash
+real DSH model-authored reply + completed turn
+AGENT_CORE_AUTH_SERVICE_REQUIRED_FOR_BASIC_CHAT = NO
+missing provider credential still fails (no fallback)
 ```
 
-Best-effort external gate:
+The real Feishu gate is required for deployment readiness and follows §6.2:
 
 ```text
-test Feishu message -> Agent -> real model -> Feishu reply
+published/enabled self-built app + exact three scopes
+official SDK persistent WebSocket connected
+first addressed message -> discover full ccId + fail closed
+stop runtime -> offline bind -> restart
+second message -> persisted target/main/null -> primary workspace
+second message -> real model -> Feishu reply
+separate unbound conversation remains fail closed
 ```
 
 If a test Feishu tenant/credential is not authorized for the isolated run, the
@@ -449,32 +742,34 @@ OTHER_TEAM_SOURCE_READY = YES only after all non-external gates pass
 OTHER_TEAM_DEPLOYMENT_READY = YES only after real model + real Feishu pass
 ```
 
-## 10. Review questions
+## 10. Revision V2 blocker closure map
 
-Independent review must resolve these before changing status to accepted:
+The prior independent review's decisions are no longer open questions:
 
-1. Confirm the exact DSH release family and whether direct packages should be
-   pinned individually in addition to `@deepseek-ai/dsh`.
-2. Confirm npm workspaces versus a narrower local-package link manifest; no
-   manual symlink is acceptable either way.
-3. Confirm `create-agent` idempotency by name uses existing `adoptAgents` rather
-   than inventing another identity rule.
-4. Confirm the deployment adapter may compose Router solely to call
-   `switchAgent`, or require a narrower existing-owner helper extracted without
-   changing Binding semantics.
-5. Select the Quick Start provider using a real credential available to the
-   independent acceptance environment; do not freeze opencode-go by default.
-6. Decide whether a systemd example is useful in V1; foreground Linux support is
-   mandatory regardless.
+| Original blocker | Frozen resolution in this revision |
+|---|---|
+| workspace/install closure and non-exact DSH family | §3.1 sole root lock + canonical `npm ci`; §3.2 exhaustive exact manifest matrix and DSH `0.1.0-rc.7` pins |
+| nested Feishu lockfile / multiple install authorities | §3.1 requires its deletion and forbids every nested lockfile |
+| create-agent could mint duplicate name IDs or skip second-run ensure | §5.2 mandates `adoptAgents`, case-insensitive reuse, stable ID/default rules, and ensure/provision after both outcomes |
+| bind-feishu owner seam and idempotency were undecided | §5.3 freezes the three-component offline composition, `channelConversationId`, `getBinding`, conditional exact `switchAgent`, no-op/conflict/no-force rules, and forbids BindingStore/JSON/new helper/full runtime |
+| no public provider/model/credential proof | §4.1 records the real formal rc.7 model proof; §4.2 freezes Hugging Face account/token and exact route/files/schema |
+| credential precedence and per-Agent home assembly were incomplete | §4.3 freezes rc.7 precedence, env/settings agreement, copy/no-overwrite/drift behavior, exact home tree, and per-Agent proof |
+| auth-service/basic-chat and fallback posture were ambiguous | §4.3 freezes auth-service `NO`, external provider credential `YES`, and automatic fallback `NO` |
+| Feishu console scopes and first-use discovery were incomplete | §6.1 freezes the exact three scope identifiers, persistent connection, publish/enable/availability/bot steps; §6.2 freezes discover-stop-bind-restart proof with a full structured ccId and no discovery service |
+| acceptance permitted `npm install` and omitted negative/idempotency gates | §9 makes `npm ci` the only install and enumerates manifest, bootstrap, create, bind, credential, per-Agent model, PREBOUND_ONLY, lifecycle, and real Feishu gates |
 
 ## 11. Gate result
 
 ```text
 GOVERNING_SPEC = AGENT_CORE_DISTRIBUTION_BOOTSTRAP_V1
 SPEC_STATUS = proposed
+TECHNICAL_FEASIBILITY_WITH_CURRENT_DSH = YES
+DSH_DISTRIBUTION_DIRECTION = OPTION_A_EXACT_NPM_RC7 + AGENT_CORE_NPM_WORKSPACES
+SPEC_HANDOFF_READY = YES
 REQUIRED_CHANGE_CLASSIFICATION = NON_TRIVIAL_PRODUCT_OR_ARCHITECTURE_CHANGE
 IMPLEMENTATION_AUTHORIZED = NO
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 KERNEL_CHANGE = NONE
 ROUTER_PRODUCT_SPECIAL_CASE = NONE
+SPEC_REVISION_V2_FROZEN_CHOICES_COMPLETE = YES
 ```
