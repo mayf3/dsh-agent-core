@@ -180,7 +180,12 @@ export function createBrokerGateway({
           log(`[broker-gateway] agent ${agentId}: ${manifest.id} grant denied: ${error?.message ?? error}`)
           return {
             ok: false,
-            error: { code: 'access_denied', detail: `grant for ${requiredScopes.join(' ')} not available to this agent` },
+            error: {
+              code: error?.errorCode === 'credential_invalid' ? 'credential_invalid'
+                : error?.errorCode === 'transport_failure' ? 'transport_failure'
+                  : 'access_denied',
+              detail: `grant for ${requiredScopes.join(' ')} not available to this agent`,
+            },
           }
         }
       }

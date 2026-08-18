@@ -53,8 +53,44 @@ export const DEFAULT_TIMEOUT_MS = 15000
 /** Maximum 401 retries (one fresh token). */
 export const MAX_TOKEN_RETRIES = 1
 
+/** Stable Broker classifications for failures returned by the token endpoint. */
+export const TOKEN_FAILURE_CODES = Object.freeze({
+  credential: 'credential_invalid',
+  authorization: 'authorization_denied',
+  downstream: 'transport_failure',
+})
+
+/**
+ * A redacted token-endpoint failure. Response bodies can contain sensitive
+ * diagnostics and are deliberately never retained in the Error object.
+ */
+export class TokenEndpointError extends Error {
+  constructor(message, { status, oauthError, errorCode = TOKEN_FAILURE_CODES.downstream } = {}) {
+    super(message)
+    this.name = 'TokenEndpointError'
+    this.status = status
+    this.oauthError = oauthError
+    this.errorCode = errorCode
+  }
+}
+
+/** Map OAuth wire errors onto the minimal stable Broker responsibility layers. */
+export function classifyTokenEndpointFailure(status, oauthError) {
+  if (status === 401 && oauthError === 'invalid_client') return TOKEN_FAILURE_CODES.credential
+  if (status === 403 && oauthError === 'insufficient_scope') return TOKEN_FAILURE_CODES.authorization
+  if (
+    status === 400
+    && ['invalid_scope', 'invalid_grant', 'invalid_resource'].includes(oauthError)
+  ) return TOKEN_FAILURE_CODES.authorization
+  return TOKEN_FAILURE_CODES.downstream
+}
+
 /** Refresh tokens this many ms before nominal expiry. */
 const TOKEN_CACHE_SAFETY_MS = 5000
+const KNOWN_OAUTH_ERRORS = new Set([
+  'invalid_client', 'invalid_scope', 'invalid_grant', 'invalid_resource',
+  'invalid_target', 'insufficient_scope', 'temporarily_unavailable',
+])
 
 /**
  * Issue ONE access token via the auth-service `client_credentials` grant —
@@ -104,20 +140,33 @@ export async function requestAccessToken({
       signal: AbortSignal.timeout(timeoutMs),
     })
   } catch (err) {
-    throw new Error(`token endpoint unreachable: ${err.message}`)
+    throw new TokenEndpointError('token endpoint unreachable')
   }
   if (!res.ok) {
-    const text = await res.text().catch(() => '(no body)')
-    throw new Error(`token endpoint returned ${res.status}: ${text}`)
+    let oauthError
+    try {
+      const body = await res.json()
+      oauthError = typeof body?.error === 'string' && KNOWN_OAUTH_ERRORS.has(body.error)
+        ? body.error
+        : undefined
+    } catch {
+      // Deliberately discard malformed/non-JSON bodies: never echo an Auth
+      // response into logs or caller-visible details.
+    }
+    const errorCode = classifyTokenEndpointFailure(res.status, oauthError)
+    throw new TokenEndpointError(
+      `token endpoint rejected the request (status ${res.status}${oauthError ? `, error ${oauthError}` : ''})`,
+      { status: res.status, oauthError, errorCode },
+    )
   }
   let data
   try {
     data = await res.json()
   } catch {
-    throw new Error('token endpoint returned a malformed JSON body')
+    throw new TokenEndpointError('token endpoint returned a malformed JSON body')
   }
   if (typeof data.access_token !== 'string' || data.access_token.length === 0) {
-    throw new Error('token response missing access_token')
+    throw new TokenEndpointError('token response missing access_token')
   }
   const expiresIn = typeof data.expires_in === 'number' ? data.expires_in : parseInt(data.expires_in, 10) || 300
   return { accessToken: data.access_token, expiresIn }
@@ -130,6 +179,8 @@ export async function requestAccessToken({
  */
 export const TRANSPORT_ERRORS = [
   { code: 'credential_unavailable', description: 'No caller credential was available from the identity seam; the request was not authorized (fail-closed).' },
+  { code: 'credential_invalid', description: 'The token endpoint rejected the configured client credential.' },
+  { code: 'authorization_denied', description: 'The credential was accepted but the requested resource or scope was not authorized.' },
   { code: 'binding_error', description: 'The capability HTTP binding could not be satisfied (path/query/body mismatch).' },
   { code: 'http_4xx', description: 'The target service rejected the request (HTTP 4xx).' },
   { code: 'http_5xx', description: 'The target service failed (HTTP 5xx).' },
@@ -430,7 +481,7 @@ export function createHttpTransport(opts = {}) {
     try {
       accessToken = await getAccessToken(credential, target, scope)
     } catch (err) {
-      return { errorCode: 'transport_failure', detail: `token acquisition failed: ${err.message}` }
+      return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: `token acquisition failed: ${err.message}` }
     }
 
     // Transport-controlled headers (Authorization / Content-Type / Accept) are
@@ -472,7 +523,7 @@ export function createHttpTransport(opts = {}) {
       try {
         accessToken = await getAccessToken(credential, target, scope)
       } catch (err) {
-        return { errorCode: 'transport_failure', detail: `token refresh failed: ${err.message}` }
+        return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: `token refresh failed: ${err.message}` }
       }
       try {
         res = await fetchImpl(`${target.allowedOrigin}${url}`, buildInit(accessToken))

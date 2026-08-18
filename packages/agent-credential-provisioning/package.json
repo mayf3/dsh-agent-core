@@ -1,0 +1,17 @@
+{
+  "name": "@agent-core/agent-credential-provisioning",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Deployment-side deterministic Agent credential provisioning foundation",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./auth-client": "./src/auth-client.js",
+    "./store-writer": "./src/store-writer.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "UNLICENSED"
+}

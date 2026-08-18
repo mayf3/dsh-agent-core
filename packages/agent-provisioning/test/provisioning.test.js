@@ -89,8 +89,10 @@ test('provisionAgentHome installs profile copies + farm links idempotently', (t)
 
 test('harness resolution is worktree-aware and cliBin fails loud without a checkout', () => {
   // In this checkout the harness sibling exists; REPO is either the main
-  // checkout or the worktree root, and resolveHarnessRoot must find the CLI.
-  assert.ok(REPO.endsWith('dsh-agent-core') || REPO.includes('.worktree'), `repo root sanity: ${REPO}`)
+  // checkout or any linked worktree root (including an absolute /tmp path),
+  // and resolveHarnessRoot must find the CLI. Verify repository identity,
+  // not a local convention for naming worktree directories.
+  assert.equal(JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')).name, 'dsh-agent-core')
   assert.ok(resolveHarnessRoot().length > 0)
   assert.ok(existsSync(cliBin()), 'cliBin resolves to the real dsh CLI entry')
   assert.deepEqual(readHarnessIdentity(), HARNESS_IDENTITY, 'resolved DSH stays at the frozen version + commit')
