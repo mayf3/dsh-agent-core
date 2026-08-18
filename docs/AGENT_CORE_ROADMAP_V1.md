@@ -1,8 +1,27 @@
 # Agent Core Roadmap V1
 
-> 状态：冻结草案（docs-only）· 日期：2026-08-15
+> 状态：冻结草案（docs-only）· 日期：2026-08-15  
+> Authority amendment：2026-08-18  
 > 按产品价值与依赖关系排序，不是机械照抄。配套：`AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md`
 > （分层与边界）、`AGENT_CORE_COMPONENT_MAP_V1.md`（ADOPT/ADAPT/BUILD/DEFER）。
+>
+> **安全域声明修订：**本路线原先把“one Agent = one process 安全域”作为当前
+> peer-Agent 对抗隔离事实。该 claim 已被
+> [`AGENT_CORE_HARDENING_PROGRAM_V1`](specs/AGENT_CORE_HARDENING_PROGRAM_V1.md)
+> amendment：
+>
+> ```text
+> PEER_AGENT_SECURITY_DOMAIN_CLAIM = SUPERSEDED
+> REPLACED_BY = AGENT_CORE_HARDENING_PROGRAM_V1
+>
+> one Agent = one process
+> = runtime / lifecycle / DSH_HOME / Session-owner boundary
+> != current adversarial peer-Agent isolation boundary
+> ```
+>
+> 当前 shared-host Agents 属于 cooperative trust domain。Phase 3 的 process
+> credential / Broker identity 继续用于保护 Control Plane、服务凭据与外部访问身份，
+> 但不再被描述为共享 UID Agents 之间已经成立的强隔离保证。
 
 ---
 
@@ -33,8 +52,12 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 | DSH bootstrap | ✅ | V0 vertical slice（external.calculator 6×7=42） |
 | Feishu Connector | ✅ | 真实 p2p/group/thread 入站 + 出站回复验收 |
 | Workspace Bootstrap | ✅ | agentId → workspace/DSH_HOME 唯一 owner |
-| Process Model | ✅ | one Agent = one process；100 常驻 fallback 证明 |
+| Process Model | ✅ | one Agent = one process（runtime / lifecycle / DSH_HOME / Session-owner boundary）；100 常驻 fallback 证明 |
 | Integration V1 | ✅ | 真实飞书 → Router → per-agent 进程 → resume → 回复（PR #3） |
+
+> Phase 0 的 Process Model 完成证明的是独立运行时 owner 与恢复链路，不是当前
+> shared-host peer-Agent adversarial isolation。后者已 defer 到未来独立
+> `PER_AGENT_SECURITY_DOMAIN_V1`。
 
 ## Phase 1 — Long-lived Agent ✅（已完成，PR #5/#6/#7）
 
@@ -75,13 +98,17 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 
 ## Phase 3 — Trusted Agent（进程身份 + Broker 身份）
 
-- process credential：控制面 spawn 时注入 per-agent 进程凭据（TRUST-BOUNDARY 方案 B；
-  形态 OPEN：bearer/mTLS/其他）；
+- process credential：控制面 spawn 时为每个 Agent 建立独立的外部访问身份
+  （形态 OPEN：bearer/mTLS/其他）；
 - Broker 侧 credential → principal 绑定 + flat capability ACL；
 - `resolvePrincipal` 从占位升级为真实绑定；
-- 跑 TRUST-BOUNDARY §6 最小攻击测试（参数走私 / prompt 注入 / 插件伪造）；
-- 价值：Agent 才能安全访问外部系统（论坛发帖、跑工作流），这是「数字员工上岗」
-  的前提。
+- 跑 TRUST-BOUNDARY §6 的参数走私 / prompt 注入 / self-reported identity 测试；
+- 价值：Agent 能以不可自报、可审计的真实身份访问外部系统（论坛发帖、跑工作流），
+  同时 Control Plane / Broker credential 不交给模型或请求体。
+
+**修订后的边界：**Phase 3 保护的是 Control Plane 与外部系统身份链，不等于当前
+shared-host peer Agents 已经互相隔离。若未来要求 A 无法读写 B 的主机资源，需要新的
+`PER_AGENT_SECURITY_DOMAIN_V1`，不由本 Phase 静默承担。
 
 ## Phase 4 — Growing Agent（动态插件生命周期）
 
@@ -113,11 +140,12 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 ## 依赖与理由
 
 - Phase 1 → 2：三组件单独成立，但只有接进 Router 才构成「多 Agent 产品」；
-- Phase 2 → 3：多 Agent 上线后，跨进程访问外部系统才成为日常需求（安全边界优先于
-  功能扩展）；
+- Phase 2 → 3：多 Agent 上线后，跨进程访问外部系统才成为日常需求；先保护
+  Control Plane / Broker / service identity，再扩大真实外部副作用；
 - Phase 3 → 4/5：凭据与 Broker 身份是「长期 Agent 干真活」的安全前提；
 - Phase 4/5 可并行（技能成长 vs 主动工作互不阻塞），但都不早于 Phase 3 的进程身份；
-- Phase 6/7 依赖 Phase 2 的产物形态（API 的 agent/session 语义来自 Registry/Session）。
+- Phase 6/7 依赖 Phase 2 的产物形态（API 的 agent/session 语义来自 Registry/Session）；
+- adversarial peer-Agent isolation 当前不在上述主线依赖中；触发条件出现后单独排期。
 
 ## 冲突与处理（与既有文档）
 
@@ -126,7 +154,7 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 | V0 报告 E 节：「下一步唯一迁移目标是旧 Kernel Run/Session 面 → DSH agent/session 组合」 | 该目标已在 Integration V1 达成（agent/session 组合 = per-agent 进程 + DSH session + resume） | 历史结论 → 已完成事实，不再排期 |
 | CAPABILITY_MATRIX：六项 BUILD（含 broker 侧绑定、consolidation、daemon） | 分散在各 Phase（3/1/5）而非一次性 | 无冲突：矩阵是「必须做什么」，路线是「先做什么」 |
 | always-on 调查：daemon ≡ 控制面（Router）为同一组件 | Phase 5 的 proactive runtime 与 Router 合并形态仍保持该结论 | 无冲突；实现时验证 |
-| TRUST-BOUNDARY：方案 B 为唯一成立方案 | Phase 3 按方案 B 实施 | 无冲突 |
+| TRUST-BOUNDARY：若要求 A 无法攻击 B，方案 B / 额外 per-Agent security domain 才成立 | 当前 V1 采用 cooperative shared-host trust domain；Phase 3 只实现可信外部身份链，peer-Agent adversarial isolation defer | **旧“当前已无冲突并兑现 peer 安全域”解释已 superseded**；evidence 保留，current authority = `AGENT_CORE_HARDENING_PROGRAM_V1` |
 | D-002 契约：V1 不实现后端 | 本路线把 API 实现排在 Phase 6 | 一致 |
 | **D-002 契约 §2.2/§2.5：Session.id 为「全局唯一不透明 id（ses_ 前缀）」** | **新实验证据：product sessionId = DSH native sessionId；DSH SessionId 作用域是 per-Agent DSH_HOME（非全局），identity = (agentId, sessionId)** | **⚠️ 待 reconciliation 的已知契约冲突**：契约的「全局唯一 / ses_ 前缀」约束与「(agentId, sessionId) 直通 DSH」冲突。本 Architecture PR **不修改 D-002**（避免与并行 Registry PR 同文件冲突），仅登记；建议后续独立契约修订 PR 将 Session.id 语义改为「per-Agent 唯一 opaque id（可等于 DSH sessionId），全局唯一由 (agentId, sessionId) 复合保证」 |
 
@@ -136,14 +164,18 @@ Registry ✅ → Session ✅ → Memory ✅ → Self-Evolution ⏳ → Proactive
 2. **最终 Agent Core 一句话**：基于 DSH 的薄组织层，把通用 Agent 运行时组织成
    长期存在的数字员工（身份/办公桌/会话/记忆/进程身份/外部能力/成长），不重做
    Runtime、不内置外部业务系统。
-3. **FROZEN**：所有权边界、one Agent = one process 安全域、Channel ≠ Agent ≠
-   Session、workspace-bootstrap 映射唯一 owner、DSH 是 Runtime、**product
-   sessionId = DSH native sessionId（(agentId, sessionId) 复合身份，不建映射层）**、
+3. **FROZEN**：所有权边界、one Agent = one process 的 runtime/lifecycle/DSH_HOME/
+   Session-owner 边界、当前 shared-host Agents = cooperative trust domain、
+   Channel ≠ Agent ≠ Session、workspace-bootstrap 映射唯一 owner、DSH 是 Runtime、
+   **product sessionId = DSH native sessionId（(agentId, sessionId) 复合身份，不建映射层）**、
    Forum/Workflow/OKR 在外部、Broker 是统一入口。
-4. **OPEN**：consolidation 时机、credential 形态、proactive 选型、jobs 持久化
-   实现、daemon 托管、Artifact、Dashboard。
-5. **与现有文档冲突**：两处——①「历史结论 vs 已完成事实」（V0 报告 E 节迁移目标
-   已达成）；②「新实验证据 vs D-002 契约」（sessionId 全局唯一/ses_ 前缀约束），
-   均已在表中说明，旧决策未被覆盖；②列为待 reconciliation，不在此 PR 修改 D-002。
-6. **下一阶段唯一优先级**：Phase 2 Product Integration——Registry + Session +
-   Memory 接进 Router，实现真正多 Agent（真实双会话各自独立上下文 + switchAgent）。
+4. **SUPERSEDED**：`one Agent = one process` 当前已经提供 peer-Agent adversarial
+   isolation。替代 authority：`docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md`。
+5. **OPEN**：consolidation 时机、credential 形态、proactive 选型、jobs 持久化
+   实现、daemon 托管、Artifact、Dashboard，以及未来 adversarial isolation 机制。
+6. **与现有文档冲突**：三处——①「历史结论 vs 已完成事实」（V0 报告 E 节迁移目标
+   已达成）；②「新实验证据 vs D-002 契约」（sessionId 全局唯一/ses_ 前缀约束）；
+   ③旧 peer-Agent security-domain claim 已由 Hardening Program amendment。
+7. **下一阶段唯一优先级（历史原文）**：Phase 2 Product Integration——Registry +
+   Session + Memory 接进 Router，实现真正多 Agent（真实双会话各自独立上下文 + switchAgent）。
+   该项现已完成；当前后续工作按最新 accepted Spec / Program 决定。
