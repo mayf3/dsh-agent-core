@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1
-status: proposed
+status: accepted
 supersedes: AGENT_CORE_LARK_TRANSPORT_PHASE1_V1
 date: 2026-08-19
 type: implementation-spec (spec-only; no implementation this round)
@@ -31,7 +31,15 @@ references:
 > **本轮零改动**：只新增本 Spec 文件。`PRODUCT_CODE_CHANGE = NONE`、
 > `DEPENDENCY_CHANGE = NONE`、`DEPLOYMENT = NONE`、`MERGE = NONE`。
 > 不修改任何代码、不修改任何既有 Spec / Decision / Investigation、不安装依赖、不部署、不 merge。
-> status = `proposed`：**在独立 review 通过并 acceptance finalize 之前，本 Spec 不授予任何实现许可。**
+>
+> **状态（2026-08-19 acceptance finalize）：accepted** —— 独立 review PASS：reviewed HEAD
+> `0ea5a39`，`AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1_SPEC_REVIEW` = PASS、
+> BLOCKERS = NONE、SEMANTIC_REVIEW_COMPLETE = YES。finalize 轮为 metadata-only
+> （`SEMANTIC_CHANGE_AFTER_REVIEW = NONE`）：正文、Contract、AC、scope、阶段划分
+> 与 reviewed 字节内容零变化。accepted 即具备实现许可——**首轮 implementation
+> permission 仅覆盖 PHASE A FOUNDATION CUTOVER（§5.1）**；PHASE B UX ACTIVATION
+> 仍未授权（§5.2）。本 Spec 进入 implementation base branch（main）之前，
+> 不得开工实现。
 
 ---
 
@@ -751,9 +759,35 @@ OUT_OF_SCOPE 维持）
 ## 18. Status（Final Output）
 
 ```text
-SPEC_STATUS = PROPOSED
-  （待独立 Spec review；accepted 前本 Spec 授予零实现许可。
-   accepted 后，首轮 implementation permission 仅覆盖 PHASE A FOUNDATION CUTOVER。）
+SPEC_STATUS = ACCEPTED
+  （2026-08-19 acceptance finalize；metadata-only，
+   SEMANTIC_CHANGE_AFTER_REVIEW = NONE。accepted 后首轮 implementation
+   permission 仅覆盖 PHASE A FOUNDATION CUTOVER。）
+
+INDEPENDENT_SPEC_REVIEW = PASS
+  REVIEW_BASE_COMMIT = 6afa83c51ebaabf35703e88978556f3862edd41e
+    （origin/main @ review；= REVIEWED_SPEC_COMMIT 的直接父提交，
+     REBASE_REQUIRED = NO —— reviewed 字节内容即最终内容）
+  REVIEWED_SPEC_COMMIT = 0ea5a39ceed5b335e627012ea5b5ea21daca4787
+  REVIEWER_IDENTITY = AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1_SPEC_REVIEW
+    （独立 review 运行标识，按仓库既有 REVIEW record 格式——同
+     AGENT_CORE_LARK_TRANSPORT_PHASE1_V1_SPEC_RE_REVIEW /
+     AGENT_PRIMARY_WORKSPACE_IMPORT_V1_SPEC_REVIEW 先例；review 事实
+     （REVIEW_VERDICT = PASS / BLOCKERS = NONE / SEMANTIC_REVIEW_COMPLETE = YES）
+     由 owner instruction 于 2026-08-19 交付，锚定 reviewed commit 0ea5a39）
+  REVIEW_VERDICT = PASS
+  BLOCKERS = NONE
+  SEMANTIC_REVIEW_COMPLETE = YES
+  SEMANTIC_CHANGE_AFTER_REVIEW = NONE
+    （review 的五项 non-blocking notes 不折入本 Spec——只进入 PR
+     implementation-watchlist / 后续 Implementation Preflight。）
+
+SUPERSESSION_EXECUTED = YES
+  （本 finalize 轮对旧 Spec 仅做 machine-readable metadata 翻转：
+   docs/specs/AGENT_CORE_LARK_TRANSPORT_PHASE1_V1.md frontmatter
+   status: accepted → superseded + replaced_by:
+   AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1；旧 Spec 正文未动，
+   保留为历史 authority，见 §1.2。）
 
 SUPERSEDES = AGENT_CORE_LARK_TRANSPORT_PHASE1_V1
   （machine-readable：本文件 frontmatter supersedes 字段；
@@ -793,6 +827,16 @@ DEPENDENCY_CHANGE = NONE
 DEPLOYMENT = NONE
 MERGE = NONE
 （本轮唯一产物 = 本 Spec 文件；未修改任何既有 Spec/Decision/Investigation/代码/配置）
+
+本轮（acceptance-finalize round，2026-08-19）：
+PRODUCT_CODE_CHANGE = NONE
+DEPENDENCY_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE = NONE
+（改动仅限：本 Spec 的 status/acceptance/review metadata + 旧 Spec frontmatter
+ status → superseded + replaced_by；正文、Contract、AC、scope、阶段划分
+ 相对 reviewed commit 0ea5a39 零变化——SEMANTIC_CHANGE_AFTER_REVIEW = NONE。
+ FINAL_ACCEPTED_HEAD 见本轮 commit / PR 描述。）
 ```
 
 ---
