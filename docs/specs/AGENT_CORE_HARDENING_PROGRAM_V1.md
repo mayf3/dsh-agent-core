@@ -1,26 +1,39 @@
 ---
 spec_id: AGENT_CORE_HARDENING_PROGRAM_V1
 status: draft
+date: 2026-08-19
+type: program-spec
+implementation_authority: none
 ---
 
 # Agent Core Hardening Program V1
 
-> 性质：**Program Spec（本轮只冻结问题、边界、authority 关系与实施顺序，不修改产品代码）**  
-> 日期：2026-08-18  
+> 性质：**Program Spec（只冻结问题、Owner 决策、authority 关系与实施顺序）**  
 > 仓库：`mayf3/dsh-agent-core`  
-> 基线：`main@93f9acf67cb9b4862fc9b8ffaf593630086285ba`  
-> 触发背景：对当前 Production Runtime / Router / Notification Ingress / Scheduler 的全面审计，以及项目 Owner 对当前信任模型和产品意图的重新确认。
->
-> 本 Spec **不授权任何 Implementation PR**。后续每一项修复必须拥有独立、已 accepted、已存在于 implementation base branch 的 child Spec，之后才允许改代码。
->
-> 本 docs-only PR 的允许变更严格限定为：新增本 Program Spec，并对
-> `docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md`、`docs/AGENT_CORE_ROADMAP_V1.md`
-> 做最小 authority amendment / backlink，消除旧 FROZEN 声明与本 Program 的冲突。
-> 除这三份文档外，不允许修改其他 artifact、产品代码或生产状态。
+> 原始基线：`main@93f9acf67cb9b4862fc9b8ffaf593630086285ba`  
+> 工作分支：`agent/security-reliability-hardening-plan-v1`（Draft PR #11）  
+> 本轮允许：Spec / Decision / authority 文本。  
+> 本轮禁止：产品实现、生产 job 创建、missed-run 补跑、Scheduler store 修改、部署与 merge。
+
+本 Program **不授权任何 Implementation PR**。任何实现必须拥有独立、已 accepted、且已存在于 implementation base branch 的 implementation Spec。
+
+PR #11 当前允许的文档范围：
+
+```text
+docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md
+docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md
+docs/AGENT_CORE_ROADMAP_V1.md
+docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md
+docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md
+```
+
+除上述文档外，本轮不得修改代码、配置、production state 或 Scheduler store。
 
 ---
 
-## Authority / Supersession（接受后生效）
+## 0. Program Authority
+
+### 0.1 Peer-Agent trust-model convergence
 
 本 Program 被 accepted 并 merge 后，正式承担以下 authority：
 
@@ -35,12 +48,9 @@ AMENDS = [
 SUPERSEDED_CLAIM = one Agent = one process currently provides adversarial peer-Agent isolation
 REPLACED_BY = AGENT_CORE_HARDENING_PROGRAM_V1
 PRECEDENCE_ON_CONFLICT = AGENT_CORE_HARDENING_PROGRAM_V1
-
-DOCS_CONVERGENCE_COMPLETED_IN_THIS_PR = YES
-CHILD_IMPLEMENTATION_REQUIRES_CONVERGED_BASE = YES
 ```
 
-精确裁决：
+当前唯一解释：
 
 ```text
 one Agent = one DSH process
@@ -51,46 +61,86 @@ same-host Agents under the shared runtime identity
 = cooperative shared-host trust domain
 ```
 
-该 amendment **不否定** `docs/TRUST-BOUNDARY-REPORT.md` 的调查证据。报告继续回答：
-“如果未来要求 Agent A 无法攻击 Agent B，需要什么隔离”。但其 adversarial isolation
-目标不再是当前 V1 的已兑现保证或 implementation blocker。
+`docs/TRUST-BOUNDARY-REPORT.md` 的调查证据继续有效：如果未来要求 Agent A 无法攻击 Agent B，需要额外 per-Agent security domain；但该目标不是当前 V1 已兑现保证或 blocker。
 
-在本 Program merge 前，不得以本 draft 覆盖 main 上任何 accepted artifact；在本 Program
-accepted + merge 后，旧 Architecture / Roadmap 中仍残留的冲突性句子必须按其本 PR
-backlink 解释，不得恢复为 current authority。
+### 0.2 Scheduler authority correction
+
+本 Program 早期 draft 曾写：
+
+```text
+SCHEDULER_TIMEOUT_OUTCOME_V1 MUST AMEND D-005
+```
+
+该 draft 语句在接受前由 Owner 新 ruling 撤销。D-005 已是 accepted Decision，既有 normative meaning 不允许在同一 stable ID 下被重新解释。
+
+当前冻结：
+
+```text
+D005_DISPOSITION = SUPERSEDE
+REPLACEMENT_DECISION = D-007 / SCHEDULER_OCCURRENCE_OUTCOME_V2
+REPLACE_AFFECTED_TIMEOUT_AND_RETRY_SEMANTICS = YES
+COMPLETE_STANDALONE_REPLACEMENT_REQUIRED = YES
+```
+
+D-007 必须完整重述：
+
+- 哪些 D-005 语义保留；
+- 哪些 timeout / retry / occurrence / session / migration 语义被替换；
+- 新的完整 Current Truth。
+
+未来 Agent 不得自行拼接 D-005 与 amendment 才得到当前 Scheduler 语义。
+
+在 D-007 被独立 review 并 accepted 前：
+
+```text
+D005_CURRENT_AUTHORITY = YES
+D007_STATUS = proposed
+IMPLEMENTATION_AUTHORITY_FROM_D007 = NONE
+```
+
+D-007 接受时必须在同一次 docs-only authority transition 中完成：
+
+```text
+D-007: proposed -> accepted
+D-005: accepted -> superseded-by-D-007
+D-005.replaced_by = D-007
+D-007.supersedes = D-005
+Decision index / backlinks 同步
+```
+
+不得让 proposed D-007 提前夺取 accepted D-005 的 authority，也不得在 D-007 accepted 后继续把 D-005 当作需要人工 merge 的并行 current decision。
 
 ---
 
-## 0. North Star
+## 1. North Star
 
-Agent Core 当前不缺新的业务组件，缺的是让已经存在的入口、进程与调度器在异常情况下仍然可解释、可恢复、不会被匿名调用、不会把“超时”误报成“确定失败”。
-
-本轮目标不是建立完整零信任平台，也不是立刻隔离所有 Agent，而是冻结一套适合当前开发阶段的真实模型：
+Agent Core 当前不缺新的业务组件，缺的是让已经存在的入口、进程与调度器在异常情况下仍然：
 
 ```text
-Agent 之间：合作式共享主机信任域，优先自由开发与迭代
-Control Plane 与 Agent 之间：仍是必须保护的边界
-Forum / Workflow 与 Notification Ingress 之间：必须有明确服务身份
-进程 / 调度异常：必须有有界等待与诚实结果语义
+可解释
+可恢复
+不会被匿名调用
+不会无限挂住
+不会把“超时”误报成“确定失败”
+不会对同一业务 occurrence 产生重复外部副作用
 ```
 
-期望的开发顺序：
+开发顺序：
 
 ```text
-先冻结 Program Spec
-→ 同一 docs-only PR 完成冲突 authority convergence
-→ 每个问题单独写 child Spec
-→ 解决与旧 Spec / Decision / Report 的具体冲突
-→ child Spec accepted 并进入 base branch
-→ 再做最小实现
-→ 以故障注入而不是 happy-path 数量验收
+Program / Current Decision
+→ child implementation Spec
+→ independent Spec review
+→ accepted Spec 进入 implementation base
+→ 最小实现
+→ fault-injection compliance review
 ```
 
 ---
 
-## 1. Owner 决策（本 Program 冻结）
+## 2. Owner 决策
 
-### 1.1 当前 Agent 信任模型
+### 2.1 当前 Agent trust model
 
 ```text
 AGENT_TRUST_MODEL = COOPERATIVE_SHARED_HOST_TRUST_DOMAIN
@@ -101,14 +151,7 @@ AGENT_CROSS_WORKSPACE_ACCESS_CURRENTLY_ALLOWED = YES
 
 当前阶段允许 Agent 互相访问同一主机上的工作区和运行资源，以提高开发自由度与迭代速度。暂不把“Agent A 主动攻击 Agent B”作为 V1 blocker。
 
-因此长期声明统一为：
-
-- `one Agent = one DSH process` 当前表示**运行时、生命周期、DSH_HOME 与 Session owner 的边界**；
-- 它当前**不是 Agent 与 Agent 之间的对抗性安全边界**；
-- 同一 UID / 同一主机下的 Agent 属于同一合作式信任域；
-- 未来若出现不互信 Agent、外部租户、HR/财务等高敏 Agent，再单独建立 adversarial isolation Spec。
-
-该取舍不表示 Control Plane secrets 可以暴露给 Agent。以下仍必须成立：
+但以下边界继续成立：
 
 ```text
 AGENT_CAN_READ_CONTROL_PLANE_CREDENTIAL_STORE = NO
@@ -116,7 +159,9 @@ AGENT_CAN_READ_NOTIFICATION_CALLER_CREDENTIALS = NO
 AGENT_CAN_SELF_ASSERT_SERVICE_IDENTITY = NO
 ```
 
-### 1.2 Agent 调用另一个 Agent 工作是产品能力
+即：Agent 之间当前合作互信，不等于 Control Plane、Broker credential 或 service credential 可以交给 Agent。
+
+### 2.2 Agent-to-Agent work 是产品能力
 
 ```text
 AGENT_TO_AGENT_WORK_REQUIRED = YES
@@ -124,15 +169,15 @@ ANONYMOUS_AGENT_TO_AGENT_CALL = NO
 NOTIFICATION_INGRESS_IS_AGENT_DELEGATION_API = NO
 ```
 
-“Agent A 让 Agent B 工作”必须保留，但需要区分三种语义：
+必须区分：
 
-1. `switchAgent`：当前聊天窗口切换服务 Agent，是 conversation handoff，不是后台任务委派；
-2. Notification Ingress：Forum / Workflow 等可信业务服务把一个已经成立的业务事件送达 Agent，是 service-to-agent admission；
-3. Agent task delegation：Agent A 发起任务给 Agent B。V1 首选通过 Workflow / Forum 留痕后，由对应服务通知 B；未来需要低延迟直连时，再单独设计带真实 caller identity 的 `delegateTask` capability。
+1. `switchAgent`：当前 Product Surface 切换服务 Agent；
+2. Notification Ingress：可信业务服务把已成立的业务事件送达 Agent；
+3. task delegation：Agent A 让 Agent B 工作。V1 首选通过 Workflow / Forum 留下业务事实，再由服务通知 B。
 
-当前禁止 Agent 直接持有 Notification Ingress 的服务凭据，也禁止把 Notification Ingress 当作通用 `agentId -> deliver` 后门。
+未来若需要低延迟直接 delegation，另行设计带真实 caller identity 的 capability；不得把 Notification Ingress 偷偷扩成匿名 `deliver(agentId)`。
 
-### 1.3 Notification Ingress 的唯一允许调用者
+### 2.3 Notification Ingress caller identity
 
 ```text
 NOTIFICATION_INGRESS_ALLOWED_CALLERS = [svc-forum, svc-workflow]
@@ -141,205 +186,113 @@ AGENT_CALLER_ON_NOTIFICATION_INGRESS = REJECT
 CALLER_ID_FROM_REQUEST_BODY = UNTRUSTED
 ```
 
-Forum / Workflow 是当前 V1 唯一允许的服务身份。未来新增服务必须通过新的 accepted Spec 或本 Spec 的 accepted amendment，不能仅靠增加一个字符串或环境变量静默放行。
+最小身份链：
 
-### 1.4 可靠性优先项
+```text
+svc-forum / svc-workflow
+→ 各自独立 service credential
+→ Ingress 验证 credential
+→ credential 映射 caller principal
+→ allowlist
+→ Router internal deliver primitive
+```
 
-以下两项为当前明确要求修复的问题：
+固定程序名、固定 executable 路径和 localhost 都不是 authentication。Forum 与 Workflow 必须使用不同 credential，可独立轮换和吊销；raw credential 不得进入日志、响应、Agent workspace 或 Agent child 环境。
+
+### 2.4 可靠性 hardening 必须拆分
 
 ```text
 AGENT_PROCESS_PENDING_RPC_CAN_HANG_FOREVER = MUST_FIX
-SCHEDULER_TIMEOUT_WITHOUT_CANCELLATION = MUST_FIX
+NOTIFICATION_INGRESS_ANONYMOUS_AND_NON_IDEMPOTENT = MUST_FIX
+SCHEDULER_TIMEOUT_WITHOUT_TERMINATION_PROOF = MUST_FIX
 ```
 
-但二者不得在同一个无 governing Spec 的大改中混做。
+三者不得在一个 implementation PR 中混做。
 
 ---
 
-## 2. Current Facts 与问题边界
+## 3. Current Facts
 
-### 2.1 Notification Ingress 当前是匿名通用入口
+### 3.1 Notification Ingress
 
-当前 `packages/notification-ingress` 暴露：
+当前 HTTP adapter 暴露：
 
 ```text
 POST /v1/deliver
 { requestId, agentId, sessionMode, message }
 ```
 
-它只依赖 loopback bind，没有 caller identity、caller allowlist 或 service credential。HTTP body 可以直接指定任何已定义 `agentId`。
+当前只依赖 loopback bind，没有 caller identity、caller allowlist 或 service credential。Router `agentRouter.deliver()` 可以继续作为内部 admission primitive；修复 owner 是 ingress/auth 边界，Router 不获得 Forum / Workflow 产品特例。
 
-Router 的 `agentRouter.deliver()` 本身是一个合理的**内部 admission primitive**；问题在于 HTTP adapter 把它直接变成了匿名公共本机能力。修复应优先落在 ingress/auth 边界，不应把 Forum / Workflow 业务语义塞进 Router。
+### 3.2 AgentProcess
 
-### 2.2 AgentProcess 的请求生命周期不闭合
+当前 pending waiter 可能在 child `error/exit`、pipe 断开、initialize 无回复或 prompt receipt 无回复后永久不结束，继而 wedged `ensureRunning` 或整个 per-Agent turn queue。
 
-当前 `AgentProcess.request()` 的 pending waiter 只在收到 JSON-RPC response 或可选 timer 到期时结束；child `error/exit` 没有统一 reject 所有 pending。`ready()` 和 routed `turn()` 的 prompt receipt 也存在未统一 deadline 的路径。
+### 3.3 Scheduler
 
-这会导致：
-
-```text
-child 已死 / pipe 已断
-→ pending request 不结束
-→ ensureRunning / turnQueue 永久等待
-→ 该 Agent 后续消息全部被堵住
-```
-
-### 2.3 Scheduler timeout 不是 cancellation
-
-当前 Scheduler 通过 `Promise.race()` 返回 timeout，并触发 `AbortSignal`；但 Router / AgentProcess 没有真正取消正在运行的 turn。于是“Scheduler 已记录失败”与“真实 Agent 仍继续执行”可以同时成立。
-
-因此：
+当前 Scheduler 使用 `Promise.race()` 停止等待并发送 `AbortSignal`，但 Router / AgentProcess 没有真实 cancel + proven termination seam。因此：
 
 ```text
+AbortSignal sent != Agent turn proven terminated
 TIMEOUT != PROVEN_FAILURE
-TIMEOUT_WITHOUT_TERMINATION = OUTCOME_UNKNOWN
 ```
 
-在真实执行是否终止尚未确认时，自动重试可能造成重复外部副作用。
+当前实现还把 timeout 折叠为普通 error，并可能进入 retry/backoff；当前默认 isolated Session 是稳定 per-job：
 
-### 2.4 requestId 当前不是完整幂等键
+```text
+agent:<agentId>:cron:<jobId>
+```
 
-Delivery V0 的 `requestId` 当前主要用于 `fresh` Session 的稳定映射；相同 requestId 再次调用仍可能再次把 message 放入 inbox。
+这与 D-006 的“每次 scheduled execution 使用 fresh non-main Session”冲突。
 
-Notification 入口在接入 Forum / Workflow 前必须冻结：
+### 3.4 Scheduled-work migration evidence
 
-- caller identity；
-- requestId namespace；
-- 重复请求的返回；
-- pending / outcome unknown 时是否允许重投；
-- 相同 key 但 payload 不同的冲突语义。
+输入 evidence：
+
+```text
+OPENCLAW_TO_AGENT_CORE_SCHEDULED_WORK_MIGRATION_AUDIT_V1 = PASS
+
+OpenClaw jobs total = 280
+enabled = 140
+disabled = 140
+Agent Core production jobs = 0
+
+SAFE_READ_ONLY = 0
+IDEMPOTENT_WRITE = 0
+NON_IDEMPOTENT_SIDE_EFFECT = 113
+RECORDING_OR_REMINDER = 4
+DAEMON_OR_LONG_RUNNING = 3
+OBSOLETE_OR_DUPLICATE = 13
+BLOCKED = 7
+
+pre-existing timeout/error = 63 / 140
+missed runs since cutover = 94
+READY_TO_RESTORE_BEFORE_HARDENING = 0
+```
+
+这批 evidence 说明 timeout / retry / occurrence identity 不是理论优化：当前 enabled fleet 绝大多数会产生非幂等外部副作用，而没有任何 SAFE_READ_ONLY / IDEMPOTENT_WRITE 候选可在 hardening 前安全恢复。
 
 ---
 
-## 3. Notification Ingress V1 目标模型
+## 4. Child Specs
 
-### 3.1 身份必须来自凭据，不来自“固定程序名”
-
-仅仅约定“只有某两个固定程序会调用”不构成安全边界。HTTP 服务看不到对方是哪个可执行文件；同机任意进程都可以复刻同一个请求。
-
-V1 最小可信模型：
+### 4.1 Agent Process Lifecycle Hardening V1
 
 ```text
-Forum process / Workflow process
-  → 携带各自独立 service credential
-  → Notification Ingress 验证 credential
-  → credential 映射到固定 caller principal
-  → caller principal 通过 allowlist
-  → 再调用 Router internal deliver primitive
+SPEC_ID = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
 ```
 
-建议 caller principals：
+最小范围：
 
-```text
-svc-forum
-svc-workflow
-```
-
-禁止 request body 自报 `callerId` 后直接相信。即使 wire 为了日志携带 caller hint，最终 caller identity 也只能由 credential lookup 得出。
-
-### 3.2 Credential 最小存储模型
-
-child Spec 至少必须满足：
-
-- Forum 与 Workflow 使用不同 credential，可独立轮换和吊销；
-- credential 来源是 505-private / Control-Plane-private 文件或等价受保护存储；
-- raw credential 不写日志、不进入响应、不放进 Agent workspace；
-- raw credential 不通过 AgentProcess 的继承环境进入 Agent child；
-- 缺失、损坏、权限过宽时 fail closed；
-- `Authorization` 缺失或无效返回 401；身份有效但无该 operation 权限返回 403。
-
-允许 child Spec 在 bearer token 与 HMAC request signing 之间选择最小方案。loopback-only V1 可使用独立高熵 bearer token，但必须保存 token hash 或采取等价的不回显设计，并做 constant-time compare。
-
-### 3.3 Caller 权限
-
-V1 固定：
-
-| Caller | 允许能力 | 不允许能力 |
-|---|---|---|
-| `svc-forum` | 将 Forum 事件送达一个已定义且 runnable 的 Agent | 冒充 Workflow、修改 Agent Definition、获得 Broker credential |
-| `svc-workflow` | 将 Workflow 任务/状态事件送达一个已定义且 runnable 的 Agent | 冒充 Forum、直接操作 Binding、获得 Broker credential |
-| Agent process | 无 Notification Ingress caller credential | 直接调用 service-to-agent ingress |
-| 其他本机进程 | 无 | 匿名 deliver |
-
-V1 信任 Forum / Workflow 根据它们自己的业务授权选择目标 Agent；Notification Ingress 仍必须验证目标 Agent 存在且 runnable。若未来需要限制“某服务只能通知某些 Agent”，另增静态 target allowlist，不在本 Program 中预造通用 Policy Engine。
-
-### 3.4 Notification 与 Agent delegation 的关系
-
-推荐的 V1 Agent-to-Agent 工作流：
-
-```text
-Agent A
-  → 通过 Broker 在 Workflow 创建/分配任务给 Agent B
-  → Workflow 形成持久业务事实
-  → svc-workflow 使用自己的 service credential 通知 Agent B
-  → Agent B 开始工作
-```
-
-Forum mention / proposal 同理：
-
-```text
-Agent A 写 Forum
-  → Forum 形成事件与审计记录
-  → svc-forum 通知目标 Agent
-```
-
-这样既保留 Agent 协作能力，也避免把匿名 `deliver(agentId)` 变成跨 Agent 后门。
-
-### 3.5 Admission 幂等原则
-
-child Spec 必须冻结以下最小原则：
-
-```text
-IDEMPOTENCY_KEY = (authenticatedCallerId, requestId)
-SAME_KEY_SAME_PAYLOAD = RETURN_PREVIOUS_OR_CURRENT_STATUS_WITHOUT_BLIND_REENQUEUE
-SAME_KEY_DIFFERENT_PAYLOAD = CONFLICT
-PENDING_OR_UNKNOWN = DO_NOT_BLINDLY_ENQUEUE_AGAIN
-```
-
-由于 durable ledger 与 DSH inbox 不是同一个事务，V1 不得虚假宣称严格 exactly-once。可接受的诚实语义是：
-
-- 已确认 accepted：重复请求返回同一 receipt，不重复入队；
-- 已 durable reserve 但最终 admission 未知：返回 `outcome_unknown` / equivalent，不自动重投；
-- payload hash 不同：409 conflict；
-- 后续是否提供人工 reconcile 或安全重试，由 child Spec 明确。
-
----
-
-## 4. Child Spec A — Agent Process Lifecycle Hardening V1
-
-建议 Spec ID：
-
-```text
-AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-```
-
-该 Spec 解决审计问题 4，最小必须冻结：
-
-1. `AgentProcess` 显式状态：至少 `new/spawning/initializing/ready/exited`；
-2. Registry 不得向并发调用者返回尚未 ready 的裸 process；并发启动共享一个 startup promise；
-3. child `error/exit` 时立即 reject 并清理全部 pending RPC timer/waiter；
-4. `initialize`、`session/prompt receipt`、`rpc.response` 都必须有有界 deadline；
-5. ready 失败必须从 Registry 清理，并确保失败 child 被终止或已退出；
-6. stdin 不可写 / stream error 必须让对应请求失败；
-7. turn 的 event watermark 必须在 prompt 发出前建立，避免 response/event 同 chunk 竞态；
-8. 一个失败或退出不得永久 wedged `turnQueue`；
-9. shutdown 超时后的最终行为必须明确，不能只返回“timeout object”却留下未知活进程；
-10. events / stderr / creation evidence 至少有明确容量策略，不能无限增长。
-
-强制故障验收：
-
-```text
-CHILD_EXIT_BEFORE_INITIALIZE_REPLY
-CHILD_EXIT_AFTER_PROMPT_WRITE_BEFORE_RECEIPT
-STDIN_WRITE_FAILURE
-INITIALIZE_NEVER_REPLIES
-PROMPT_RECEIPT_NEVER_REPLIES
-RESPONSE_AND_EVENTS_IN_SAME_STDOUT_CHUNK
-CONCURRENT_ENSURE_RUNNING_DURING_INITIALIZE
-READY_FAILURE_THEN_NEXT_MESSAGE_RESPAWNS
-```
-
-边界：
+- process state；
+- shared startup promise；
+- child exit/error 后 pending RPC cleanup；
+- initialize / prompt receipt / parent-RPC deadline；
+- stdin/stream failure；
+- event watermark；
+- turnQueue 不永久 wedged；
+- shutdown 最终状态；
+- evidence buffer 有界。
 
 ```text
 DSH_KERNEL_CHANGE = NONE
@@ -347,333 +300,188 @@ SESSION_MODEL_CHANGE = NONE
 ROUTER_PRODUCT_POLICY_CHANGE = NONE
 ```
 
----
-
-## 5. Child Spec B — Notification Ingress Service Auth and Admission Idempotency V1
-
-建议 Spec ID：
+### 4.2 Notification Ingress Service Auth and Admission Idempotency V1
 
 ```text
-NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1
+SPEC_ID = NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1
 ```
 
-该 Spec 解决匿名入口和 Forum / Workflow 正式接入前的契约，必须覆盖：
+最小范围：
 
-- credential document / rotation / permission validation；
-- authenticated caller resolution；
-- 固定 allowlist `svc-forum` / `svc-workflow`；
-- 401 / 403 / 409 / outcome-unknown error envelope；
-- caller credential 绝不进入 Agent child；
+- per-service credential；
+- caller resolution + allowlist；
+- 401 / 403 / 409 / outcome-unknown；
 - `(callerId, requestId)` durable idempotency；
-- same-key/different-payload conflict；
-- crash point matrix：reserve 前、reserve 后、inbox receipt 前、receipt 后、result persist 前；
-- Agent process 直接请求必须失败的真实测试；
-- Router 继续保持 Workflow / Forum 语义无知。
+- same-key / different-payload conflict；
+- crash-point matrix；
+- Agent 直接请求失败；
+- Router 继续保持业务无知。
 
-在该 child Spec implementation 合并前：
+在其 implementation accepted 前：
 
 ```text
 FORUM_NOTIFICATION_CUTOVER = BLOCKED
 WORKFLOW_NOTIFICATION_CUTOVER = BLOCKED
 ```
 
----
-
-## 6. Child Spec C — Scheduler Timeout Outcome V1
-
-建议 Spec ID：
+### 4.3 Scheduler Timeout Outcome V1
 
 ```text
-SCHEDULER_TIMEOUT_OUTCOME_V1
+SPEC_ID = SCHEDULER_TIMEOUT_OUTCOME_V1
+SPEC_FILE = docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md
+STATUS = proposed
+REPLACEMENT_DECISION = D-007 / SCHEDULER_OCCURRENCE_OUTCOME_V2
 ```
 
-该 Spec 解决审计问题 5，并依赖 Child Spec A 的进程生命周期保证。
+Owner 已明确要求在 PR #11 中先完成该 child Spec 与 proposed replacement Decision 文本。该范围变化仍是 docs-only，不授权实现。
 
-必须冻结：
+该 child Spec 必须冻结：
 
-1. timeout 在未证明执行终止时记录为 `outcome_unknown` 或语义等价状态，而不是普通 `error`；
-2. one-shot 非幂等任务在 outcome unknown 后不得自动重试；
-3. recurring job 必须明确当前 occurrence 与下一自然 occurrence 的关系，不能把同一次未知执行当作确定失败重复跑；
-4. AbortSignal 是否只表示观察、能取消排队项、能取消 active turn，必须诚实标注；
-5. late settlement 必须记录 evidence，不能静默覆盖先前的 timeout 状态；
-6. 如果实现选择 kill AgentProcess 作为终止手段，必须证明不会错误杀死另一个 surface 已在执行的 turn；否则不得采用；
-7. Scheduler concurrency slot、AgentProcess turnQueue 和 timeout clock 的起点必须明确；
-8. 不允许“测试只看到 signal.aborted=true”就宣称 end-to-end cancellation PASS。
-
-最小故障验收：
-
-```text
-TIMEOUT_BEFORE_QUEUED_TURN_STARTS
-TIMEOUT_DURING_ACTIVE_TURN
-LATE_SUCCESS_AFTER_TIMEOUT
-LATE_EXTERNAL_SIDE_EFFECT_AFTER_TIMEOUT
-ONE_SHOT_UNKNOWN_NOT_RETRIED
-RECURRING_UNKNOWN_NO_SAME_OCCURRENCE_DUPLICATE
-PROCESS_EXIT_DURING_SCHEDULER_TURN
-```
-
-### 6.1 与 D-005 的强制 authority 关系
-
-该 child Spec **必须 amendment，而不是在 amendment / supersession 之间留给实施者选择**：
-
-```text
-SCHEDULER_TIMEOUT_OUTCOME_V1 MUST AMEND docs/decisions/SCHEDULER_V1.md (D-005)
-D005_ORDINARY_ERROR_RETRY_BACKOFF_APPLIES_TO_OUTCOME_UNKNOWN = NO
-```
-
-原因：D-005 的 cron / at / every、store、catch-up、ordinary error/backoff 仍然有效；
-缺失的只是“调用方停止等待、但真实执行未证明终止”这一独立 outcome。它不是普通 error，
-不得继承 D-005 的普通错误自动 retry/backoff。
-
-`SCHEDULER_TIMEOUT_OUTCOME_V1` 的 docs-only acceptance PR 必须同步 amendment D-005，
-加入 backlink 和精确优先级；在该 amendment 已进入 implementation base branch 前，
-Scheduler timeout implementation 不得开始。
+- timeout without proven termination = `outcome_unknown`；
+- `outcome_unknown` 对同一 occurrence 禁止自动 retry / re-admission；
+- stable `occurrenceId` / `runId` / request idempotency key；
+- durable occurrence execution states；
+- same occurrence MUST NOT enter Router twice；
+- `AbortSignal sent` 与 `turn terminated` 分离；
+- D-006 fresh non-main Session per scheduled execution；
+- OpenClaw migration no-catch-up 与 restore gates；
+- D-005 由完整 D-007 supersede，不做同-ID normative amendment。
 
 ---
 
-## 7. P1 Follow-ups（不阻塞前三项，但必须留档）
+## 5. Implementation Dependency and Merge Gates
 
-### 7.1 Production Runtime readiness
-
-后续独立 Spec：
+设计文本可以并行起草，但 implementation 依赖保持：
 
 ```text
-PRODUCTION_RUNTIME_READINESS_V1
+1. AGENT_PROCESS_LIFECYCLE_HARDENING_V1 accepted + implementation PASS
+2. NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1 accepted + implementation PASS
+3. SCHEDULER_TIMEOUT_OUTCOME_V1 accepted + D-007 accepted + implementation
 ```
 
-处理 async effect、Feishu connect、HTTP listen、disabled handle、graceful stop 与“ready 必须意味着所有 enabled component 已 ready”。
+Scheduler implementation 至少依赖 AgentProcess 提供可信生命周期 / 终止 evidence；在 `cancel + proven termination` 尚不存在时，timeout 的唯一安全 terminal observation 是 `outcome_unknown`。
 
-### 7.2 Trusted spawn helper restriction
+通用规则：
 
-后续独立 Spec：
+- proposed Spec / Decision 不授权代码；
+- implementation base 必须包含 accepted governing Spec 与 accepted Current Decision；
+- D-007 accepted 时 D-005 必须原子标记 `superseded-by-D-007`；
+- 一个 implementation PR 不得顺手实现下一 child；
+- acceptance 以 fault injection 与 contract-by-contract compliance 为准；
+- 默认 `KERNEL_CHANGE = NONE`。
+
+---
+
+## 6. P1 Follow-ups
+
+### 6.1 Production Runtime Readiness V1
+
+处理 async effect、Feishu connect、HTTP listen、disabled handle、graceful stop，以及：
 
 ```text
-TRUSTED_SPAWN_HELPER_RESTRICTION_V1
+RUNTIME_READY = every enabled component proven ready
 ```
 
-当前 helper 的作用是：Control Plane 以 uid 505 运行，但 Agent 需要以 uid 502 运行；普通 505 进程不能自行切换成 502，所以通过一个 root-owned setuid 小程序暂时获得切换用户所需的权限，然后立刻降到 502 并启动 Agent。
+### 6.2 Trusted Spawn Helper Restriction V1
 
-`4755` 的人话含义：
-
-```text
-root 拥有这个程序
-所有本地用户都能执行它
-执行时它会暂时以 root 权限运行
-```
-
-当前 helper 虽然只允许最终变成 502，但没有限制“谁可以调用”和“只能启动哪个程序”。因此任意本地用户理论上都可以借它变成 uid 502。它不会让人变成 root，但会让调用者冒充当前所有 Agent 共用的运行用户。
-
-后续最小收口方向：
+当前 setuid helper 允许调用者临时获得“切到 uid 502 并启动程序”的 root 权限。后续最小收口：
 
 - real uid 必须为 authsvc/505；
-- 目标 uid/gid 不再由参数自由提供；
-- program / trusted Node / DSH entry 必须固定或严格验证；
-- 文件权限从 world-executable 收紧到仅可信 group 可执行；
+- target uid/gid 固定；
+- trusted Node / DSH entry 固定或严格验证；
+- 仅可信 group 可执行；
 - 清理危险环境变量；
-- 保持 Kernel change = NONE。
+- Kernel 不变。
 
-### 7.3 Adversarial Agent isolation
+### 6.3 Per-Agent Security Domain V1
 
-未来触发条件：
-
-- 引入互不信任租户；
-- 一个 Agent 拥有其他 Agent 不应间接获得的高敏权限；
-- Agent 可运行外部不可信代码；
-- 发生真实 peer-agent 越权事件。
-
-届时再创建：
-
-```text
-PER_AGENT_SECURITY_DOMAIN_V1
-```
-
-可能评估 per-Agent UID / container / VM / sandbox，但当前明确 defer，不能反向阻塞开发。
+仅在出现不互信租户、高敏差异权限、外部不可信代码或真实 peer-Agent 越权事件后启动。当前不反向阻塞开发。
 
 ---
 
-## 8. 与现有 Artifact 的冲突裁决
+## 7. Artifact Disposition
 
-### 8.1 `docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md`
+### Product Architecture / Roadmap
 
-其中“one Agent = one DSH process（进程 = 安全域）”若被理解为 Agent 对 Agent 的对抗隔离，与当前 Owner 决策冲突。
+旧 peer-Agent adversarial security-domain claim 已在本 PR 做最小 amendment / backlink。其余 ownership、thin-layer 与 DSH-native 方向保留。
 
-本 Program accepted 后，当前 V1 解释为：
-
-```text
-PROCESS = runtime/lifecycle/DSH_HOME/session-owner boundary
-SHARED_HOST_UID = cooperative trust domain
-PROCESS != adversarial peer-agent security boundary (current V1)
-```
-
-本 docs-only PR 已对 Product Architecture 做最小 amendment：修改冲突句、在 FROZEN 区
-标记原 peer-Agent security-domain claim 为 superseded，并加入
-`REPLACED_BY = AGENT_CORE_HARDENING_PROGRAM_V1` backlink。无需重写其余架构内容。
-
-### 8.2 `docs/AGENT_CORE_ROADMAP_V1.md`
-
-Roadmap 中“one Agent = one process 安全域”以及“TRUST-BOUNDARY 方案 B 与当前方向无冲突”
-的旧表述，若被理解为当前已经防御 peer-Agent，同样与 Owner 决策冲突。
-
-本 docs-only PR 已做最小 amendment：
-
-```text
-PEER_AGENT_SECURITY_DOMAIN_CLAIM = SUPERSEDED
-REPLACED_BY = AGENT_CORE_HARDENING_PROGRAM_V1
-```
-
-Phase 3 的 process credential / Broker 身份工作继续保留，用于保护 Control Plane、
-服务凭据与外部访问身份；它不再被描述为当前 shared-UID Agents 之间的强隔离保证。
-
-### 8.3 `docs/TRUST-BOUNDARY-REPORT.md`
-
-该报告关于“如果要求 A 无法攻击 B，需要 per-agent security domain”的调查证据仍然有效；但其推荐目标不再是当前 V1 的已兑现保证。
-
-裁决：
+### TRUST-BOUNDARY-REPORT
 
 ```text
 EVIDENCE_VALID = YES
-CURRENT_OPERATIONAL_REQUIREMENT = DEFERRED
+CURRENT_ADVERSARIAL_ISOLATION_REQUIREMENT = DEFERRED
 ```
 
-### 8.4 `docs/reports/agent-router-delivery-v0.md`
+### Agent Router Delivery V0
 
-Delivery V0 的内部 admission 语义继续保留：Router 不理解 Forum / Workflow。
+内部 admission primitive 保留；service authentication / idempotency 由 ingress boundary 拥有。
 
-本 Program 只要求：
+### D-005 Scheduler Replacement V1
 
 ```text
-HTTP_SERVICE_AUTH_OWNER = notification-ingress / trusted ingress boundary
-ROUTER_BUSINESS_SPECIAL_CASE = NONE
+CURRENT_UNTIL_D007_ACCEPTED = YES
+FINAL_DISPOSITION = SUPERSEDED_BY_D007
+DIRECT_NORMATIVE_REWRITE_UNDER_D005 = FORBIDDEN
 ```
 
-### 8.5 `docs/decisions/SCHEDULER_V1.md`
+### D-006 Agent / Workspace / Session model
 
-D-005 的 cron/at/every、store、catch-up 与 ordinary error/backoff 决策继续有效；
-但“timeout 之后如何证明原执行已停止”未被冻结。
-
-唯一规则：
+继续是 scheduled Session 产品语义 authority：
 
 ```text
-SCHEDULER_TIMEOUT_OUTCOME_V1 MUST AMEND D-005
-D-005 ordinary error retry/backoff DOES NOT APPLY to outcome_unknown
+each scheduled execution
+→ fresh non-main Session
+→ same Agent primary Workspace
 ```
 
-不采用 supersede 整份 D-005，也不允许 child Spec 实施者在 amendment / supersession
-之间自由选择。
+D-007 必须完整吸收该约束。
 
 ---
 
-## 9. 实施顺序与 Merge Gate
-
-严格顺序：
-
-```text
-0. 本 Program docs-only PR 完成 Architecture / Roadmap authority convergence
-1. AGENT_CORE_HARDENING_PROGRAM_V1 review → accepted → merged
-2. AGENT_PROCESS_LIFECYCLE_HARDENING_V1: draft → review → accepted → implementation
-3. NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1: draft → review → accepted → implementation
-4. SCHEDULER_TIMEOUT_OUTCOME_V1: draft + D-005 amendment → review → accepted → implementation
-5. PRODUCTION_RUNTIME_READINESS_V1（P1）
-6. TRUSTED_SPAWN_HELPER_RESTRICTION_V1（P1）
-```
-
-规则：
-
-- Program PR 在 accepted 前必须同时包含本文件与两份最小 authority amendment；
-- 每个 child Spec 独立 PR；
-- child Spec PR 不改产品代码；
-- implementation PR 的 base 必须已经包含对应 accepted child Spec；
-- Scheduler timeout implementation 的 base 还必须包含 D-005 amendment；
-- implementation 不得顺手实现下一 child Spec；
-- 一个 child implementation 未通过故障验收，不开始依赖它的下一项；
-- 所有修复默认 `KERNEL_CHANGE = NONE`。
-
----
-
-## 10. Non-Goals / Frozen Boundaries
+## 8. Non-Goals
 
 本 Program 不做：
 
 - per-Agent OS UID / container / VM 隔离；
 - 通用 IAM / Policy Engine；
-- Agent-to-Agent 敌对模型；
 - Forum / Workflow 业务逻辑进入 Router；
-- 新 Session mapping layer；
+- 新 Session Mapping DB；
 - 重写 DSH agent loop；
-- 在本 Spec PR 中修改任何产品代码；
-- 一次 PR 同时修 Notification、AgentProcess、Scheduler；
-- 以“localhost”“固定程序名”“只有我会调用”代替 caller authentication；
-- 重写 Product Architecture / Roadmap 的非冲突内容。
+- production job 创建或启用；
+- missed-run catch-up；
+- OpenClaw job import implementation；
+- Scheduler store 修改；
+- Forum / Workflow credential provisioning；
+- `channel:last` delivery；
+- `payload.model` passthrough / model fallback；
+- OpenClaw daemon deployment；
+- merge。
 
 ---
 
-## 11. Alternatives Considered
+## 9. Program Acceptance Criteria
 
-### A. 只把调用程序路径写死
+本 Program 可 accepted 的条件：
 
-**拒绝。** HTTP 服务无法证明请求由哪个 executable 发出；同机 Agent 或其他进程可以复刻请求。可以把固定程序作为部署约定，但不能作为唯一认证。
-
-### B. 一个共享 Notification token
-
-**拒绝作为最终 V1。** 无法区分 Forum 与 Workflow，不能单独吊销，审计归因也不清晰。至少需要 per-service credential。
-
-### C. 直接禁止 Agent 调用另一个 Agent
-
-**拒绝。** Agent 协作是产品能力。正确做法是区分 conversation handoff、service notification 与 task delegation，而不是删除协作。
-
-### D. 现在立刻做 per-Agent 强隔离
-
-**暂缓。** 当前 Owner 明确选择合作式共享信任域以换取开发自由度。保留未来触发条件，不把它当作当前 blocker。
-
-### E. Scheduler timeout 后照常 retry
-
-**拒绝。** 没有 end-to-end cancellation 时，timeout 只说明调用方停止等待，不证明真实执行终止。
-
-### F. 一次大 PR 全部修完
-
-**拒绝。** 三个问题分别属于 ingress trust、process lifecycle、scheduler outcome；混做会使 Spec authority、回归范围和失败定位全部失真。
-
-### G. 只在新 Program 声明优先级，不修改旧 Architecture / Roadmap
-
-**拒绝。** 只读旧 FROZEN 文档的后续 Agent 仍会得到错误结论，不满足 repository knowledge
-“existing owner must be amended / superseded”的规则。本 PR 因此直接加入最小 backlink，
-而不是把 convergence 推给未来不确定的工作。
+1. cooperative shared-host trust model 与 Control Plane credential boundary 清楚；
+2. Agent-to-Agent work、switchAgent、Notification、task delegation 正确拆分；
+3. Notification 只允许 authenticated `svc-forum` / `svc-workflow`；
+4. AgentProcess / Notification / Scheduler 三个 child scope 不混写；
+5. timeout 不等于 proven failure；
+6. D-005 disposition 已改为完整 supersession，不再要求同 stable ID amendment；
+7. proposed D-007 完整重述 preserved / replaced D-005 semantics；
+8. D-006 fresh scheduled Session 约束进入 Scheduler child；
+9. OpenClaw migration no-catch-up 与 restore gate 已冻结；
+10. 所有变更仍为 Spec / Decision text only，无代码、production state、store 或 Kernel 变化。
 
 ---
 
-## 12. Acceptance Criteria（本 Program Spec）
-
-本 Spec 可 accepted 的条件：
-
-1. 明确冻结合作式 shared-host Agent trust model；
-2. 明确撤销“当前进程边界已经防 peer-agent 攻击”的过度声明；
-3. 明确 Agent-to-Agent work 必须保留；
-4. 明确 Notification Ingress 只允许 `svc-forum` / `svc-workflow`；
-5. 明确“固定程序”不是认证，必须使用 service credential；
-6. 明确 Agent 不持有 service credential；
-7. 明确 requestId 需要 caller namespace 与 outcome-unknown 语义；
-8. 明确 AgentProcess、Notification、Scheduler 三个 child Spec 的独立范围；
-9. 明确 Scheduler timeout 不等于 proven failure；
-10. 明确 `SCHEDULER_TIMEOUT_OUTCOME_V1 MUST AMEND D-005`，且 ordinary error retry/backoff 不适用于 outcome_unknown；
-11. 明确实施顺序和 Spec-before-code merge gate；
-12. Product Architecture 与 Roadmap 已在同一 PR 完成最小 authority amendment / backlink；
-13. 本 PR 只包含本 Program 与上述两份文档 amendment，无产品代码、无生产状态变化、无 Kernel change。
-
----
-
-## 13. Final Output
+## 10. Final Output
 
 ```text
 SPEC_ID = AGENT_CORE_HARDENING_PROGRAM_V1
 SPEC_STATUS = draft
 IMPLEMENTATION_AUTHORITY = NONE
-CHILD_SPEC_REQUIRED = YES
-
-AUTHORITY = AMENDS_PRODUCT_ARCHITECTURE_AND_ROADMAP_PEER_AGENT_SECURITY_DOMAIN_CLAIM
-SUPERSEDED_CLAIM = PROCESS_PROVIDES_CURRENT_PEER_AGENT_ADVERSARIAL_ISOLATION
-REPLACED_BY = AGENT_CORE_HARDENING_PROGRAM_V1
-PRECEDENCE_ON_CONFLICT = AGENT_CORE_HARDENING_PROGRAM_V1
-DOCS_CONVERGENCE_COMPLETED_IN_THIS_PR = YES
 
 AGENT_TRUST_MODEL = COOPERATIVE_SHARED_HOST_TRUST_DOMAIN
 MALICIOUS_PEER_AGENT_DEFENSE = DEFERRED
@@ -683,13 +491,19 @@ NOTIFICATION_INGRESS_ALLOWED_CALLERS = svc-forum, svc-workflow
 ANONYMOUS_NOTIFICATION_INGRESS = REJECT
 DIRECT_AGENT_USE_OF_NOTIFICATION_CREDENTIAL = REJECT
 
-FIRST_CHILD_SPEC = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-SECOND_CHILD_SPEC = NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1
+FIRST_IMPLEMENTATION_DEPENDENCY = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
+SECOND_IMPLEMENTATION_DEPENDENCY = NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1
 THIRD_CHILD_SPEC = SCHEDULER_TIMEOUT_OUTCOME_V1
-THIRD_CHILD_AUTHORITY_ACTION = MUST_AMEND_D005
-D005_ERROR_RETRY_APPLIES_TO_OUTCOME_UNKNOWN = NO
+THIRD_CHILD_STATUS = proposed
+
+D005_DISPOSITION = SUPERSEDE
+D005_REPLACEMENT = D-007 / SCHEDULER_OCCURRENCE_OUTCOME_V2
+D005_DIRECT_NORMATIVE_AMENDMENT = FORBIDDEN
+D005_CURRENT_UNTIL_D007_ACCEPTED = YES
 
 KERNEL_CHANGE = NONE
 PRODUCT_CODE_CHANGE_THIS_PR = NONE
 PRODUCTION_STATE_CHANGE_THIS_PR = NONE
+SCHEDULER_STORE_CHANGE_THIS_PR = NONE
+MERGE = NO
 ```
