@@ -550,7 +550,13 @@ export function apply(ctx, config) {
       log,
       // The per-agent process must know its own identity: the memory plugin
       // and the switch tool resolve agentId from $DSH_AGENT_ID when set.
-      env: { DSH_AGENT_ID: agentId },
+      // DSH_PRIMARY_WORKSPACE (AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §4) is the
+      // SAME mechanical pass-through: the control plane's already-resolved
+      // primary workspace (resolveWorkspace output above — the single path
+      // authority). The Router only hands the value to the child process's
+      // session-less memory resolution; it never re-derives the path and
+      // never branches on it.
+      env: { DSH_AGENT_ID: agentId, DSH_PRIMARY_WORKSPACE: workspace },
     })
     // DSH tool relay: a per-agent process asks the Control Plane to run a
     // Router domain operation (switch) or a trusted Broker capability call

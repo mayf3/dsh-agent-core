@@ -84,14 +84,27 @@ const STOCK = { id: 'agt_stock_agent', name: 'Stock Agent' }
  * Real definition + real workspace-bootstrap + real router over tmp stores,
  * plus a stub feishu handle carrying the REAL V2 gate (wired exactly like
  * compose.js wires it) and the REAL connector ingress pipeline.
+ *
+ * `primaryWorkspaces` (AGENT_PRIMARY_WORKSPACE_IMPORT_V1) optionally mounts
+ * workspace-bootstrap with an import map; `importedDir` creates the imported
+ * directory for it.
  */
-async function freshRig(t, { bindings = {} } = {}) {
+async function freshRig(t, { bindings = {}, primaryWorkspaces = {} } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-v2gate-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const workspacesRoot = join(dir, 'workspaces')
   const homesRoot = join(dir, 'homes')
   await mkdir(workspacesRoot, { recursive: true })
   await mkdir(homesRoot, { recursive: true })
+
+  // AGENT_PRIMARY_WORKSPACE_IMPORT_V1: import targets must be EXISTING real
+  // directories (config-load validation) — create them under the rig tree.
+  const importedDirs = new Map()
+  for (const [agentId, path] of Object.entries(primaryWorkspaces)) {
+    if (importedDirs.has(path)) continue
+    await mkdir(path, { recursive: true })
+    importedDirs.set(path, agentId)
+  }
 
   const configFile = join(dir, 'agents.json')
   await writeAgentDefinition(configFile, {
@@ -101,7 +114,7 @@ async function freshRig(t, { bindings = {} } = {}) {
   const definition = new AgentDefinition({ configFile })
 
   const bctx = fakeCtx(new Map())
-  applyBootstrap(bctx, { workspaceRoot: workspacesRoot, agentsHome: homesRoot })
+  applyBootstrap(bctx, { workspaceRoot: workspacesRoot, agentsHome: homesRoot, primaryWorkspaces })
   const workspaceBootstrap = bctx.get('workspaceBootstrap')
 
   // Optional pre-seeded durable binding rows (the real on-disk shapes).
@@ -321,4 +334,67 @@ test('wireV2IngressGate: wires onto a feishu handle; returns false without one',
 test('makeV2PreboundIngressGate: fail-loud on missing generic Router read seams', () => {
   assert.throws(() => makeV2PreboundIngressGate({ router: {}, workspaceBootstrap: { resolveWorkspace: () => '', resolveWorkspacePath: () => '' } }), /getBinding/)
   assert.throws(() => makeV2PreboundIngressGate({ router: { getBinding: () => undefined, channelConversationId: () => 'x' }, workspaceBootstrap: {} }), /resolveWorkspace/)
+})
+
+// ---------------------------------------------------------------------------
+// AGENT_PRIMARY_WORKSPACE_IMPORT_V1 — an imported primary must NOT open a
+// Binding.workspace bypass around the V2 gate (task F / Spec §3 / AC6):
+//
+//   resolveWorkspacePath(workspaceId) stays the generic
+//   <workspaceRoot>/<workspaceId> derivation (never consults the import
+//   map), while resolveWorkspace(agentId) now returns the imported
+//   directory — so a binding whose workspace STRING equals the agentId no
+//   longer "resolves to the primary" and is blocked as
+//   non_primary_workspace, exactly like any other non-primary workspace.
+// ---------------------------------------------------------------------------
+
+test('IMPORTED primary: Binding.workspace == agentId no longer resolves to the primary → blocked (non_primary_workspace)', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'acr-v2gate-imp-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const imported = join(dir, 'workspace-oc_0480imported')
+  await mkdir(imported, { recursive: true })
+
+  const rig = await freshRig(t, {
+    primaryWorkspaces: { [STOCK.id]: imported },
+    bindings: {
+      'feishu:oc_equal': {
+        channelConversationId: 'feishu:oc_equal',
+        activeAgentId: STOCK.id,
+        activeSessionId: 'main',
+        // Pre-import this string RESOLVED to the primary path (the
+        // "effective == primary" allowance). With the import active it must
+        // NOT — the V2 gate stays fail-closed against the override.
+        workspace: STOCK.id,
+        updatedAt: '2026-08-17T00:00:00.000Z',
+      },
+    },
+  })
+
+  assert.equal(rig.workspaceBootstrap.resolveWorkspace(STOCK.id), imported,
+    'the primary authority resolves the imported directory')
+  assert.equal(rig.workspaceBootstrap.resolveWorkspacePath(STOCK.id), join(rig.workspacesRoot, STOCK.id),
+    'Binding.workspace derivation stays generic (unpolluted by the override)')
+
+  const gate = makeV2PreboundIngressGate({ router: rig.router, workspaceBootstrap: rig.workspaceBootstrap })
+  const verdict = await gate({ conversationId: 'oc_equal' })
+  assert.equal(verdict.allowed, false, 'no override-based bypass of the primary-workspace gate')
+  assert.equal(verdict.reason, 'non_primary_workspace')
+})
+
+test('IMPORTED primary: workspace-null binding stays allowed and the turn runs in the imported directory', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'acr-v2gate-imp2-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const imported = join(dir, 'workspace-oc_0480imported')
+  await mkdir(imported, { recursive: true })
+
+  const rig = await freshRig(t, {
+    primaryWorkspaces: { [STOCK.id]: imported },
+    bindings: { 'feishu:oc_92332c45c1cac2ef89857abfee8ed762': GROUP_BINDING() },
+  })
+  await rig.handleIngress(rig.groupEvent('oc_92332c45c1cac2ef89857abfee8ed762', 'post-import turn'))
+
+  assert.equal(rig.forwarded.length, 1, 'pre-bound primary shape still allowed')
+  assert.equal(rig.spawned.length, 1)
+  assert.equal(rig.spawned[0].turns[0].cwd, imported,
+    'session cwd == Agent.primaryWorkspace == imported directory')
 })

@@ -72,20 +72,53 @@ export function expandTilde(value) {
 }
 
 /**
- * Resolve the per-agent workspace root for `agentId`.
+ * Look up an agent's explicit primary-workspace override (an imported
+ * existing directory). AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §3: the record is a
+ * single-valued `agentId → absolute path` mapping validated at config load
+ * (see index.js `validatePrimaryWorkspaces`); absent entry → `undefined`
+ * (default agent — everything as today). This is the ONLY place the override
+ * is consulted: `resolveWorkspacePath` (Binding.workspace derivation) never
+ * sees it, so a binding whose `workspace` happens to equal an agentId still
+ * resolves the generic `<workspaceRoot>/<workspaceId>` path.
  *
- * Precedence, highest first: a configured `workspaceRoot`, then
- * `$DSH_WORKSPACE_DIR`, then `~/.dsh/workspaces/<agentId>`. Every submitted
- * configuration is expanded (`~` → home) and normalized to an absolute path.
- * The final `<agentId>` segment is that agent's stable workspace identity.
+ * @param agentId - the agent identifier (sanitized internally).
+ * @param primaryWorkspaces - optional validated record `agentId → absolute
+ *   directory`; `undefined`/`null` = no imports configured.
+ * @returns the imported absolute workspace path, or `undefined`.
+ */
+export function lookupPrimaryWorkspace(agentId, primaryWorkspaces) {
+  if (primaryWorkspaces === undefined || primaryWorkspaces === null) return undefined
+  const explicit = primaryWorkspaces[sanitizeAgentId(agentId)]
+  return typeof explicit === 'string' && explicit !== '' ? resolve(explicit) : undefined
+}
+
+/**
+ * Resolve the per-agent workspace root for `agentId` — the Agent PRIMARY
+ * WORKSPACE authority (AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §3).
+ *
+ * Precedence, highest first:
+ *   1. an explicit `primaryWorkspaces[agentId]` entry (imported existing
+ *      absolute directory — validated at config load; the entry wins over any
+ *      root/env derivation);
+ *   2. a configured `workspaceRoot`, then `$DSH_WORKSPACE_DIR`, then
+ *      `~/.dsh/workspaces/<agentId>`.
+ * With no `primaryWorkspaces` argument (or no entry) the derivation is
+ * byte-for-byte the pre-Spec behavior. The override parameter must be passed
+ * EXPLICITLY — `resolveWorkspacePath` deliberately delegates with only three
+ * arguments so the generic workspaceId derivation can never be polluted by a
+ * per-agent primary override.
  *
  * @param agentId - the agent identifier to map.
  * @param configuredWorkspaceRoot - optional explicit root override each agent path resolves under.
  * @param env - environment mapping (used to read `DSH_WORKSPACE_DIR`).
+ * @param primaryWorkspaces - optional validated record `agentId → imported
+ *   absolute directory` (see {@link lookupPrimaryWorkspace}).
  * @returns the absolute per-agent workspace root.
  */
-export function resolveWorkspace(agentId, configuredWorkspaceRoot, env = process.env) {
+export function resolveWorkspace(agentId, configuredWorkspaceRoot, env = process.env, primaryWorkspaces) {
   const safe = sanitizeAgentId(agentId)
+  const explicit = lookupPrimaryWorkspace(safe, primaryWorkspaces)
+  if (explicit !== undefined) return explicit
   const fromEnv = env[DSH_WORKSPACE_DIR_ENV]
   const base = configuredWorkspaceRoot ?? (fromEnv !== undefined && fromEnv.trim() !== '' ? fromEnv : DEFAULT_WORKSPACE_ROOT)
   return resolve(expandTilde(base), safe)
