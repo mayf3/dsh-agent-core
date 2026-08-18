@@ -11,7 +11,9 @@ status: proposed
 > base reviewed HEAD `9a408e0` ·
 > Amendment 3（Owner Ruling 修订）：2026-08-18，base HEAD `e6aa7ad`，
 > ruling = `AGENT_PRINCIPAL_HUMAN_OWNER_RULING_V1` ·
-> Amendment 4（Runtime Fact 修正）：2026-08-18，base reviewed HEAD `b33bb5f`
+> Amendment 4（Runtime Fact 修正）：2026-08-18，base reviewed HEAD `b33bb5f` ·
+> Amendment 5（Final Cleanup，focused review 3 fixes）：2026-08-19，
+> base reviewed HEAD `0e9dc65`
 > 仓库：`mayf3/dsh-agent-core`
 > 角色：Credential Provisioning Spec Agent
 >
@@ -109,8 +111,9 @@ Independent re-review（VERDICT = FIX_REQUIRED，ARCHITECTURE_DIRECTION = KEEP�
    L1/L2/L3 全部改为显式 executability 标注；**删除**「L1 必须现在全绿」；
    外部前置未就绪时实现必须 fail-loud `external_prerequisite_missing`。
    > **Amendment 4 取代注记**：本条的 (c)「等 contract mode v1 生效」论证随
-   > deployed=v1 的运行证据而失效——mode blocker 不存在；(c) 已重定义为
-   > `BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISIONED`（E.4）。
+   > deployed=v1 的运行证据而失效——mode blocker 不存在；(c) 已重定义
+   > （Amendment 5 现名 `BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_
+   > ESTABLISHED`，见 E.4）。
 
 以下冻结**保持不变**：deterministic external_ref（C.4 前缀格式）、幂等
 principal/client ensure（S1/S2，禁 legacy create / 禁 expected_* claim）、
@@ -199,13 +202,17 @@ DEPLOYED_AUTH_CONTRACT_MODE = v1（非 v0、非 v1_shadow）
 ```
 
 **Fix B — 外部前置 (c) 重定义**（mode blocker 已不存在）：(c) 由「等 v1 mode 生效」
-改为 `BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISIONED`（详见 E.4）：provisioner
-自身的 service principal + machine client + secret + svc-auth MachineAccessGrant
-（scope `auth.identity.provision`）尚未经 operator out-of-band 建立。运行证据：
+改为 bootstrap provisioner credential 前置（Amendment 4 定名
+`BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISIONED`，**Amendment 5 更名并收窄为
+`BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_ESTABLISHED`**，详见 E.4）：
+provisioner 自身的 service principal + machine client + secret + svc-auth
+MachineAccessGrant（scope `auth.identity.provision`）的可用性尚未经 operator
+out-of-band 建立并验证。运行证据：
 audit 中 `resource=svc-auth` mint = 0；近期 audit 流无 principal/client 创建事件
-（仅有的 4 条创建类事件是 2026-07-23 的孤立测试突发，非经生产 HTTP 管理面）⇒
-**尚无证据表明 S1/S2 曾通过生产 HTTP 管理面执行**——这是 bootstrap credential
-尚未供给的证据，不是 mode=v0 的证据。
+   （仅有的 4 条创建类事件是 2026-07-23 的孤立测试突发，非经生产 HTTP 管理面）⇒
+   **尚无证据表明 S1/S2 曾通过生产 HTTP 管理面执行**——这是 bootstrap
+   credential 可用性尚未确立（readiness not established）的证据，不是 mode=v0
+   的证据（Amendment 5 收窄：亦不据此声称相关 DB 对象物理不存在）。
 
 **Fix C — executability 按 deployed v1 重算**：L1-core 各链 = NEEDS(c)（(d) 不阻塞
 S1 ownerless 创建，只阻塞 v1 token mint/profile validation）；v1 下 secret
@@ -220,6 +227,33 @@ FAKE_ADMIN_OWNER_FORBIDDEN = YES、全部第五节冻结项（见 Final Output
 UNCHANGED_FROZEN_ITEMS）。svc-forum 已有 RS256/JWKS 验证面，**不是**隐藏前置。
 本轮不新增 IAM platform / Policy Engine / auto-grant / sidecar / mTLS /
 per-Agent OS user / Router credential manager / Auth 实现方案选择。
+
+---
+
+## Amendment 5 摘要（2026-08-19，Final Cleanup，base reviewed HEAD 0e9dc65）
+
+Focused review 的 3 个 required fixes；不改设计方向、Owner Ruling、状态机、
+401 规则，不实现、不 merge：
+
+1. **分支历史清理（repo 侧，不在本文件内）**：Spec 分支曾混入两份针对本 Spec
+   的 write-capable one-shot workflow helper（apply/run-agent-credential-
+   spec-amendment-4.yml，commit eb1b440 / 59d9a4f）——以 b33bb5f 为 base
+   cherry-pick 0e9dc65 的 Spec 单文件 delta 重建 clean history；最终
+   `git diff --name-only b33bb5f..HEAD` 精确等于本文件，
+   `WORKFLOW_FILES_IN_FINAL_DELTA = 0`。
+2. **Part F 措辞修正**：最后一条「deployed legacy 模式」stale 断言改为
+   「hypothetical legacy compatibility 模式（非当前部署）」；当前 deployed v1
+   的 `scope_denied` 对应 wire 码为 400 invalid_scope，部分非 grant 类配置漂移
+   可能表现为 invalid_target。错误分层、责任边界与 Broker collateral 不变。
+3. **(c) 事实强度收窄（更名）**：`BOOTSTRAP_PROVISIONER_CREDENTIAL_
+   NOT_PROVISIONED` → `BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_
+   ESTABLISHED`。现有运行证据只证明「生产 HTTP 使用痕迹不存在 + 完整
+   bootstrap bundle 的可用性尚未验证」，**不声称**仅凭 audit 即可证明所有
+   out-of-band 对象物理不存在；operator 明确供给并完成可用性验证之前，
+   Implementation 必须视 (c) 为未就绪并 fail-loud
+   `external_prerequisite_missing(c)`。其余 (c) 约束全部维持（service
+   profile、不受 (d) 影响、(a)/(c) 独立、禁绕行清单、无 mode blocker）。
+   Executability 不变。
 
 ---
 
@@ -489,16 +523,21 @@ RS256 + kid（workflow keyring）+ aud=svc-auth + scope auth.identity.provision
 Amendment 2 曾论证「deployed v0 只能对 svc-auth 签 HS256 ⇒ S1/S2 不可调用，
 等 v1 生效」——该 mode blocker 随 deployed=v1 的运行证据（S5）而不存在：
 deployed v1 的 /oauth/token 完全可以为 svc-auth audience 铸 RS256 V1 token。
-当前真实缺口（Amendment 4 冻结为外部前置 (c)）：
-  BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISIONED——调用方所需的
-  service principal + machine client + secret + 对 svc-auth 的
-  MachineAccessGrant（scope auth.identity.provision）尚未建立（详见 E.4(c)）。
+当前真实缺口（Amendment 4 定位、Amendment 5 收窄事实强度后冻结为外部前置 (c)）：
+  BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_ESTABLISHED——调用方所需的
+  active service principal + active machine client + usable secret + 对
+  svc-auth 的 MachineAccessGrant（scope auth.identity.provision）+ trusted
+  deployment/operator 侧交付输入这一**完整 bootstrap bundle 的可用性尚未验证**
+  （详见 E.4(c)）。
 运行证据（OBSERVED_AT = 2026-08-18，audit）：
   - resource=svc-auth mint = 0（无任何 svc-auth 管理面 token 被铸出）
   - 近期 audit 流无 principal.created / principal.resolved / client.created
     （仅有的 4 条创建类事件为 2026-07-23 的孤立测试突发，非经生产 HTTP 管理面）
   ⇒ 尚无证据表明 S1/S2 曾通过生产 HTTP 管理面执行。
-  这是「bootstrap credential 尚未供给」的证据，不是 mode=v0 的证据。
+  证据强度（Amendment 5 冻结）：以上只证明「生产 HTTP 使用痕迹不存在 + 完整
+  bootstrap bundle 可用性尚未验证」；**不声称**仅凭 audit 即可证明 service
+  principal / machine client / MachineAccessGrant 等 out-of-band 对象在物理上
+  全部不存在。operator 明确供给并完成可用性验证之前，(c) 一律视为未就绪。
 auth-service 自身 conformance 测试是进程内直调 service 层，不构成生产 HTTP 面
 已被使用的证据。
 ⇒ (c) 属 operator out-of-band bootstrap，不是本 Spec 可在 repo 内解决的项（E.4）。
@@ -550,8 +589,9 @@ Amendment 2 补记（S7/S8）：svc-auth audience 仅接受 `service` profile（
 自身的 principal 即为 service 型，与被 provision 的 agent principal 不同族）。
 Amendment 4 修正：deployed mode 已为 v1（S5），RS256 svc-auth mint 的 mode 前提
 已满足——provisioner credential 的当前真实缺口是其本身尚未经 operator
-out-of-band 建立（外部前置 (c) = BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISIONED，
-E.4/S8）。Amendment 3 补记维持：provisioner 的 service profile 不含 owner
+out-of-band 建立并验证（外部前置 (c) =
+BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_ESTABLISHED，E.4/S8）。Amendment 3
+补记维持：provisioner 的 service profile 不含 owner
 语义，**不受 (d) 影响**。
 
 ---
@@ -865,17 +905,22 @@ EXTERNAL_AUTH_DEPENDENCY =
   (b) machine-client secret 的 HTTPS rotation seam currently missing
       （rotation 仅 machine-admin CLI 且 newSecret 走 stdout——与 Part H 冲突；
        状态 E / G 恢复路径与 Part I 依赖该 seam）
-  (c) BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISIONED（Amendment 4 重定义；
-      原「等 contract mode v1 生效」论证随 deployed=v1 失效——mode blocker
-      不存在）。组成：provisioner 使用**独立 service principal** + 对应
-      machine client + client secret + 对 svc-auth audience 的
-      MachineAccessGrant（scope = auth.identity.provision）。约束：该
-      credential 只属于 trusted deployment/operator zone；Agent Core child
-      与普通 Agent 永远不持有它；provisioner profile 为 service，不受
-      ownerless-agent 前置 (d) 影响；当前无正式 MachineAccessGrant mutation
-      seam ⇒ 初始 bootstrap 须 operator out-of-band 建立；不得通过直连 DB、
-      CLI stdout、child env、argv 或 Agent workspace 绕过。运行证据见 S8
-      （svc-auth mint = 0；S1/S2 无生产 HTTP 面执行证据）。
+  (c) BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_ESTABLISHED（Amendment 4
+      重定义、Amendment 5 更名并收窄事实强度；原「等 contract mode v1 生效」
+      论证随 deployed=v1 失效——mode blocker 不存在）。冻结含义：现有运行证据
+      （S8）证明**生产 HTTP 管理面使用痕迹不存在**，且**尚未验证以下完整
+      bootstrap bundle 当前可用**：active service principal（provisioner 专属、
+      独立）+ active machine client + usable client secret + svc-auth audience
+      的 MachineAccessGrant（scope = auth.identity.provision）+ trusted
+      deployment/operator-side 交付输入。本 Spec **不声称**仅凭 audit 就能证明
+      这些 out-of-band 对象在物理上全部不存在；但在 operator 明确供给并完成
+      可用性验证之前，Implementation 必须把 (c) 视为**未就绪**并 fail-loud
+      `external_prerequisite_missing(c)`。约束：该 credential 只属于 trusted
+      deployment/operator zone；Agent Core child 与普通 Agent 永远不持有它；
+      provisioner profile 为 service，不受 ownerless-agent 前置 (d) 影响；
+      当前无正式 MachineAccessGrant mutation seam ⇒ 初始 bootstrap 须
+      operator out-of-band 建立；不得通过直连 DB、CLI stdout、child env、
+      argv 或 Agent workspace 绕过。
   (d) AUTH_AGENT_WITHOUT_HUMAN_OWNER_SUPPORT（Amendment 3，依据
       AGENT_PRINCIPAL_HUMAN_OWNER_RULING_V1）：Ruling target model =
       principal_type 'agent' + agent_id agt_* + owner_user_id NULL/ABSENT。
@@ -933,13 +978,15 @@ service_denied     downstream service（svc-forum 等）        http_4xx 403/401
 时，`credential_missing` 与授权拒绝（`scope_denied`）必须落在互不相同的错误码，
 不得用一个泛化 `transport_failure` 同时掩盖两类语义。
 
-> Amendment 2 模式注记（S5/D.5）：`credential_invalid` 行的「/oauth/token 401
-> invalid_client」是**多因码**（legacy 下含 profile/状态类成因，且 profile 检查先于
-> secret 验证）；`scope_denied` 行在 deployed legacy 模式的对应 wire 码含
-> **400 invalid_grant（resource 缺失）**与 400 invalid_scope（grant 面为
-> client.allowedResources/allowedScopes），v1 模式为 400 invalid_scope/
-> invalid_target（grant 面为 MachineAccessGrant）。运行时（非 ensure 上下文）对
-> 401 的一律归类为 `credential_invalid` family 而不下钻归因 secret。
+> Amendment 2 模式注记（S5/D.5；Amendment 5 修订措辞）：`credential_invalid` 行的
+> 「/oauth/token 401 invalid_client」是**多因码**（legacy 下含 profile/状态类成因，
+> 且 profile 检查先于 secret 验证）；`scope_denied` 行在 **hypothetical legacy
+> compatibility 模式（非当前部署）**下的对应 wire 码含 400 invalid_grant
+> （resource 缺失）/ 400 invalid_scope（grant 面为 client.allowedResources/
+> allowedScopes）；**当前 deployed v1 模式为 400 invalid_scope**（grant 面为
+> MachineAccessGrant），部分非 grant 类配置漂移可能表现为 invalid_target。
+> 运行时（非 ensure 上下文）对 401 的一律归类为 `credential_invalid` family 而
+> 不下钻归因 secret。
 
 ---
 
@@ -1202,8 +1249,10 @@ Amendment 1 的「L1 不依赖任何外部工作、必须全绿」表述**——
 
 **可达性图例（Amendment 4 更新）**：
 `NOW` = 纯 in-repo，实现后即可执行；`NEEDS(c)` = 需 bootstrap provisioner
-credential 就绪（E.4(c) = BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISIONED，
-operator out-of-band 建立；deployed v1 下 RS256 svc-auth mint 无 mode 障碍）；
+credential 就绪（E.4(c) =
+BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_ESTABLISHED——operator
+out-of-band 供给并完成可用性验证后才算就绪；deployed v1 下 RS256 svc-auth
+mint 无 mode 障碍）；
 `+(b)` = 另需 HTTPS rotation seam；`+(a)` = 另需业务 grant 供给 seam；
 `+(d)` = 另需 Auth 支持无 human owner 的 Agent/machine identity。
 **路径注记（Amendment 4）**：当前部署 = v1（CURRENT_DEPLOYED_ISSUANCE_PATH =
@@ -1310,9 +1359,10 @@ manual bearer、OpenClaw fallback、legacy machine-admin create 兜底、CLI std
   反向回退绑定 admin/fake owner → C.4 冻结 OWNER_USER_ID = NULL/ABSENT +
   FAKE_ADMIN_OWNER_FORBIDDEN = YES；D.5/状态 G/E.4/验收 item 10 冻结该 401 归类
   为 (d) 证据；Ruling 禁止以 owner 绕过。
-- **（Amendment 2 提出、Amendment 4 修正）在 bootstrap credential 缺失时硬跑
-  ensure**（(c) 未就绪；Amendment 4 后 deployed v1 下 S1/S2 的 RS256 svc-auth
-  mint 已无 mode 障碍，缺口仅是 provisioner credential 未建立）→ E.4(c) +
+- **（Amendment 2 提出、Amendment 4 修正、Amendment 5 收窄）在 bootstrap
+  credential 就绪性未确立时硬跑 ensure**（(c) 未就绪；deployed v1 下 S1/S2 的
+  RS256 svc-auth mint 已无 mode 障碍，缺口是完整 bootstrap bundle 的可用性
+  未经 operator 供给+验证）→ E.4(c) +
   Acceptance item 10 冻结 fail-loud 降级为可验收行为；禁止直连 DB / in-process
   直调 auth service 层（raw secret 只存在于 HTTPS response body，直连亦不可得）/
   CLI stdout / child env/argv / Agent workspace 绕过。
@@ -1341,13 +1391,15 @@ manual bearer、OpenClaw fallback、legacy machine-admin create 兜底、CLI std
 
 ---
 
-## Final Output（Amendment 4 — Runtime Fact 修正）
+## Final Output（Amendment 5 — Final Cleanup）
 
 ```text
-AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_RUNTIME_FACT_AMENDMENT = PASS
+AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_FINAL_CLEANUP_AMENDMENT = PASS
 
-BASE_REVIEWED_HEAD = b33bb5f
-HEAD = docs/agent-core-credential-provisioning-v1-spec（同一 Spec 分支原地 Amendment 4，不 merge）
+BASE_REVIEWED_HEAD = 0e9dc65（clean history 以 b33bb5f 为 base cherry-pick
+    0e9dc65 的 Spec 单文件 delta 重建；eb1b440/59d9a4f 的 workflow 文件
+    不在最终树中，WORKFLOW_FILES_IN_FINAL_DELTA = 0）
+HEAD = docs/agent-core-credential-provisioning-v1-spec（同一 Spec 分支，不 merge）
 
 DEPLOYED_AUTH_CONTRACT_MODE = v1（运行证据 OBSERVED_AT 2026-08-18：stdout banner
     "auth contract: v1"；audit v1.direct.issued > 34k / v1.shadow = 0 / legacy
@@ -1358,15 +1410,20 @@ CURRENT_DEPLOYED_ISSUANCE_PATH = v1/direct
 LEGACY_V0_OR_V1_SHADOW_PATH = hypothetical / compatibility analysis only
 LEGACY_PATH_IS_CURRENT_DEPLOYMENT = NO
 
-PREREQUISITE_C_FINAL_DEFINITION = BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISIONED：
-    provisioner 独立 service principal + machine client + client secret + svc-auth
-    audience 的 MachineAccessGrant（scope = auth.identity.provision）；仅属
-    trusted deployment/operator zone；Agent Core child 与普通 Agent 永不持有；
-    service profile 不受 (d) 影响；无正式 grant mutation seam ⇒ 初始 bootstrap
-    为 operator out-of-band；禁止直连 DB / CLI stdout / child env / argv /
-    Agent workspace 绕过。运行证据：resource=svc-auth mint = 0；近期无
-    principal/client 创建事件（仅 2026-07-23 孤立测试突发 4 条）⇒ S1/S2 无生产
-    HTTP 管理面执行证据——这是 bootstrap 未供给的证据，不是 mode=v0 的证据。
+PREREQUISITE_C_FINAL_DEFINITION =
+    BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_ESTABLISHED：现有运行证据
+    证明生产 HTTP 管理面使用痕迹不存在（resource=svc-auth mint = 0；近期无
+    principal/client 创建事件，仅 2026-07-23 孤立测试突发 4 条 ⇒ S1/S2 无生产
+    HTTP 管理面执行证据——这是可用性未确立的证据，不是 mode=v0 的证据），
+    且尚未验证完整 bootstrap bundle 当前可用：active service principal +
+    active machine client + usable secret + svc-auth MachineAccessGrant
+    （scope auth.identity.provision）+ trusted deployment/operator 侧交付输入。
+    本 Spec 不声称仅凭 audit 就能证明所有 out-of-band 对象物理不存在；operator
+    明确供给并完成可用性验证之前，Implementation 视 (c) 为未就绪并 fail-loud
+    external_prerequisite_missing(c)。仅属 trusted deployment/operator zone；
+    Agent Core child 与普通 Agent 永不持有；service profile 不受 (d) 影响；
+    无正式 grant mutation seam ⇒ 初始 bootstrap 为 operator out-of-band；
+    禁止直连 DB / CLI stdout / child env / argv / Agent workspace 绕过。
     (a) vs (c)：(a) = 被 provision 的 Agent client 的业务 grant（svc-forum/
     svc-workflow 等）；(c) = provisioner 自身的管理面 credential（svc-auth +
     auth.identity.provision）。主体/audience/scope/生命周期不同，独立计数。
@@ -1374,11 +1431,12 @@ PREREQUISITE_C_FINAL_DEFINITION = BOOTSTRAP_PROVISIONER_CREDENTIAL_NOT_PROVISION
 L1_CORE_EXECUTABILITY =
     principal/client ensure chain = NEEDS(c)（(d) 不阻塞 S1 ownerless 创建）；
     trusted-store write / loadCredentialFor chain = NEEDS(c)；token mint
-    attempt = NEEDS(c)；当前部署 v1 下 secret validity proof = NEEDS(c)+(d)；
-    纯工具负例与 fail-loud 行为 = NOW。
-L1_RECOVERY_EXECUTABILITY = NEEDS(c)+(b)+(d)（Amendment 4 修正，原 (c)+(b)：
-    post-rotate verification mint 在 deployed v1 下仍先被 (d) 的
-    agent_profile_invalid 挡住；就绪前 fail-loud，降级行为 NOW 可验收）
+    attempt = NEEDS(c)；纯工具负例与 fail-loud 行为 = NOW。
+L1_SECRET_VALIDITY_PROOF = NEEDS(c)+(d)（当前部署 v1 下 (d) 未就绪时
+    verification mint 确定性止步于 401 agent_profile_invalid = (d) 证据）
+L1_RECOVERY_EXECUTABILITY = NEEDS(c)+(b)+(d)（post-rotate verification mint
+    在 deployed v1 下仍先被 (d) 的 agent_profile_invalid 挡住；就绪前
+    fail-loud，降级行为 NOW 可验收）
 L2_EXECUTABILITY = NEEDS(c)+(d)（deployed v1 下须先过 ownerless profile
     validation 才能到达 MachineAccessGrant 缺失的 authorization failure 层；
     Broker wire 三层错误码区分本身 NOW 可实现并单元测试）
@@ -1393,6 +1451,7 @@ L3_EXECUTABILITY = NEEDS(c)+(a)+(d)（deployed v1 下 Forum positive 同时要�
     状态 G、不新建平行 principal/client、不绑定 designated admin 或 fake owner；
     wire 上无法区分 agent_profile_invalid 与 credential_invalid，继续采用规则式
     归因而非响应内省。
+    PROFILE_401_PRECEDES_SECRET_VERIFICATION = YES
     PROFILE_401_DOES_NOT_TRIGGER_ROTATION = YES
     FAKE_ADMIN_OWNER_FORBIDDEN = YES
 
@@ -1413,7 +1472,7 @@ UNCHANGED_FROZEN_ITEMS（本轮零改动）=
     Router/Runtime/Kernel = NONE
 
 SPEC_STATUS = proposed（本轮 SPEC AMENDMENT ONLY，未实施、未 merge）
-READY_FOR_FINAL_FOCUSED_RE_REVIEW = YES（重点复核：deployed=v1 事实锚点与
-    supersession 注记、(c) 重定义与 (a)/(c) 区分、L1-recovery 增 (d)、
-    legacy 降级为 hypothetical、全文 stale-fact audit 结果）
+READY_FOR_FINAL_ACCEPTANCE_REVIEW = YES（重点复核：clean history 核验
+    （b33bb5f..HEAD 仅 Spec 单文件）、(c) 更名与证据强度收窄的一致性、
+    Part F stale 断言清零、全 frozen 项零改动）
 ```
