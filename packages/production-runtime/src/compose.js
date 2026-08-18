@@ -34,7 +34,8 @@
  * NOT re-implemented here.
  */
 
-import { appendFileSync, existsSync, mkdirSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyDefinition } from '../../agent-definition/src/index.js'
 import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
@@ -116,7 +117,38 @@ export async function composeProductionRuntime(options = {}) {
   const ctx = createPluginContext()
 
   // ── row order: bundle-integration composition ────────────────────────────
-  applyBootstrap(ctx, { workspaceRoot: layout.workspacesRoot, agentsHome: layout.homesRoot })
+  // AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §4: optional deployment-authored import
+  // map <productionRoot>/primary-workspaces.json (agentId → absolute existing
+  // directory). Absent file = no imports = behavior identical to today. The
+  // runtime only READS and hands the record to workspace-bootstrap (the
+  // single path authority, which fail-loud validates every entry at mount —
+  // no second validator, and this file is never written here).
+  const primaryWorkspacesPath = join(layout.root, 'primary-workspaces.json')
+  let primaryWorkspaces = {}
+  if (existsSync(primaryWorkspacesPath)) {
+    let parsed
+    try {
+      parsed = JSON.parse(readFileSync(primaryWorkspacesPath, 'utf8'))
+    } catch (cause) {
+      throw Object.assign(
+        new Error(`production-runtime: cannot parse ${primaryWorkspacesPath} (${cause instanceof Error ? cause.message : String(cause)})`),
+        { code: 'PRIMARY_WORKSPACE_INVALID' },
+      )
+    }
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw Object.assign(
+        new Error(`production-runtime: ${primaryWorkspacesPath} must be a JSON object mapping agentId → absolute directory`),
+        { code: 'PRIMARY_WORKSPACE_INVALID' },
+      )
+    }
+    primaryWorkspaces = parsed
+  }
+
+  applyBootstrap(ctx, { workspaceRoot: layout.workspacesRoot, agentsHome: layout.homesRoot, primaryWorkspaces })
+  const importedAgents = Object.keys(primaryWorkspaces)
+  if (importedAgents.length > 0) {
+    log.log(`primary workspace imports loaded from ${primaryWorkspacesPath}: ${importedAgents.map((id) => `${id} -> ${primaryWorkspaces[id]}`).join(', ')}`)
+  }
 
   if (!existsSync(layout.agentsConfig)) {
     throw Object.assign(new Error(`production-runtime: agent definition config missing: ${layout.agentsConfig} (provision the runtime first — the runtime never writes it)`), { code: 'CONFIG_MISSING' })

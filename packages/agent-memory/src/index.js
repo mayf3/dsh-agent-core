@@ -36,7 +36,7 @@
 
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import { basename } from 'node:path'
+import { basename, isAbsolute, resolve } from 'node:path'
 import { mkdir } from 'node:fs/promises'
 
 import {
@@ -150,7 +150,29 @@ export const apply = (ctx, config = {}) => {
   if (agentId === undefined) {
     throw new Error('agent-memory: cannot determine agentId (set config.agentId, DSH_AGENT_ID, or run with cwd inside the agent workspace)')
   }
-  const workspace = resolveAgentWorkspace(agentId, cfg.workspaceRoot)
+  let workspace
+  // Agent.primaryWorkspace (mount-time). AGENT_PRIMARY_WORKSPACE_IMPORT_V1
+  // §4: the primary workspace resolves with the EXISTING spawn env channel —
+  // $DSH_PRIMARY_WORKSPACE (the control plane's final resolveWorkspace(agentId)
+  // output, passed mechanically by the Router; for an imported agent this IS
+  // the imported directory) takes precedence over the legacy
+  // <workspaceRoot>/<agentId> derivation (resolveAgentWorkspace). The
+  // cwd-basename agentId fallback keeps its old semantics but is naturally
+  // short-circuited in production (DSH_AGENT_ID + DSH_PRIMARY_WORKSPACE are
+  // always set). Session-aware writes still resolve session.header.cwd (V2
+  // §5.2 unchanged): in the normal path both equal Agent.primaryWorkspace.
+  const primaryEnv = process.env.DSH_PRIMARY_WORKSPACE
+  if (typeof primaryEnv === 'string' && primaryEnv.trim() !== '') {
+    if (!isAbsolute(primaryEnv)) {
+      throw Object.assign(
+        new Error(`agent-memory: $DSH_PRIMARY_WORKSPACE must be absolute (got ${JSON.stringify(primaryEnv)})`),
+        { code: 'PRIMARY_WORKSPACE_INVALID' },
+      )
+    }
+    workspace = resolve(primaryEnv)
+  } else {
+    workspace = resolveAgentWorkspace(agentId, cfg.workspaceRoot)
+  }
   const memoryFile = resolveMemoryFile(workspace)
 
   /**

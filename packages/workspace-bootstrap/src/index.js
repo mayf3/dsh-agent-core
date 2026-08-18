@@ -24,17 +24,98 @@
  *     (defaults to `~/.dsh/agents`).
  *   - `seedFiles`: which relative files (inside the workspace root) to seed
  *     when missing. Default `['AGENTS.md']`.
+ *   - `primaryWorkspaces`: `agentId → absolute existing directory` import
+ *     map (AGENT_PRIMARY_WORKSPACE_IMPORT_V1). Default `{}` = no imports.
  */
 
+import { lstatSync, statSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { isAbsolute, join, resolve } from 'node:path'
 import z from '@deepseek-ai/schemastery'
 
 import {
+  expandTilde,
+  lookupPrimaryWorkspace,
   resolveDshHome as resolveAgentHome,
   resolveWorkspace,
   sanitizeAgentId,
 } from './paths.js'
+
+/**
+ * AGENT_PRIMARY_WORKSPACE_IMPORT_V1: structured rejection code for an invalid
+ * primary-workspace import entry. Config load fails LOUD on the first invalid
+ * entry — never degrades to the default derivation and never silently
+ * ignores an entry.
+ */
+export const PRIMARY_WORKSPACE_INVALID = 'PRIMARY_WORKSPACE_INVALID'
+
+/**
+ * AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §5 (fail-loud import validation; no
+ * sandbox): validate every `primaryWorkspaces` entry at config load. Each key
+ * must be a legal agentId (the same `sanitizeAgentId` isomorphic rules); each
+ * value a non-empty string that expands (`~` → home) to an ABSOLUTE path
+ * pointing at an EXISTING real directory that is NOT a symlink. The returned
+ * record maps the validated agentId to the normalized absolute path (the
+ * exact directory `resolveWorkspace` then yields — AC2 "exact directory").
+ *
+ * Explicitly NOT checked here (§5: over-design or another owner): writable /
+ * ownership / permission (ensure/spawn real IO failures are already
+ * fail-loud), path traversal (operator-authored config, keys sanitized,
+ * values never concatenated with untrusted input), realpath/alias
+ * normalization and any `.openclaw` path policy.
+ *
+ * @param {object} [primaryWorkspaces] - raw config record `agentId → path`.
+ * @returns {Record<string, string>} the validated, normalized record
+ *   (`{}` when the input is absent — no imports, behavior unchanged).
+ * @throws {Error} code {@link PRIMARY_WORKSPACE_INVALID} on the first invalid
+ *   entry (message names the offending agentId and rule).
+ */
+export function validatePrimaryWorkspaces(primaryWorkspaces) {
+  if (primaryWorkspaces === undefined || primaryWorkspaces === null) return {}
+  if (typeof primaryWorkspaces !== 'object' || Array.isArray(primaryWorkspaces)) {
+    throw primaryWorkspaceInvalid('config must be an object mapping agentId → absolute directory')
+  }
+  const invalid = (agentId, rule) => primaryWorkspaceInvalid(`entry ${JSON.stringify(agentId)}: ${rule}`)
+  const validated = {}
+  for (const [agentId, value] of Object.entries(primaryWorkspaces)) {
+    try {
+      sanitizeAgentId(agentId)
+    } catch (cause) {
+      throw invalid(agentId, `agentId key is not a legal id (${cause instanceof Error ? cause.message : String(cause)})`)
+    }
+    if (typeof value !== 'string' || value.trim() === '') {
+      throw invalid(agentId, 'value must be a non-empty string (absolute directory)')
+    }
+    const expanded = expandTilde(value)
+    if (!isAbsolute(expanded)) {
+      throw invalid(agentId, 'value must be absolute after ~ expansion (import adopts an exact existing directory)')
+    }
+    const path = resolve(expanded)
+    let lstat, stat
+    try {
+      lstat = lstatSync(path)
+      stat = statSync(path)
+    } catch (cause) {
+      throw invalid(agentId, `value must be an existing directory (${cause instanceof Error ? cause.code ?? cause.message : String(cause)})`)
+    }
+    if (lstat.isSymbolicLink()) {
+      throw invalid(agentId, 'value must not be a symlink (single-writer semantics; no alias farms)')
+    }
+    if (!stat.isDirectory()) {
+      throw invalid(agentId, 'value must be a directory (not a file)')
+    }
+    validated[agentId] = path
+  }
+  return validated
+}
+
+/** Structured PRIMARY_WORKSPACE_INVALID error (§5 fail-loud, never degrade). */
+function primaryWorkspaceInvalid(message) {
+  return Object.assign(
+    new Error(`workspace-bootstrap: invalid primaryWorkspaces config — ${message}`),
+    { code: PRIMARY_WORKSPACE_INVALID },
+  )
+}
 
 /**
  * AGENT_CORE_BINDING_WORKSPACE_V1: structured rejection code for an invalid
@@ -97,6 +178,13 @@ export const Config = z.object({
   agentsHome: z.string(),
   /** Relative workspace files to seed when missing (default `['AGENTS.md']`). */
   seedFiles: z.array(z.string()).default(['AGENTS.md']),
+  /**
+   * AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §4: optional `agentId → absolute
+   * existing directory` record (imported primary workspaces). Default `{}` =
+   * no imports = behavior identical to today. Entries are fail-loud validated
+   * at mount (see {@link validatePrimaryWorkspaces}).
+   */
+  primaryWorkspaces: z.dict(z.string()).default({}),
 })
 
 /** Template for the seeded AGENTS.md. Plain text on purpose (see report). */
@@ -156,14 +244,28 @@ export async function ensure(agentId, options = {}) {
   const workspaceRoot = options.workspaceRoot
   const agentsHome = options.agentsHome
   const seedFiles = options.seedFiles ?? ['AGENTS.md']
-  const workspace = resolveWorkspace(agentId, workspaceRoot)
+  const primaryWorkspaces = options.primaryWorkspaces
+  // AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §3/§6: an explicit primaryWorkspaces
+  // entry means the workspace is an EXISTING directory adopted in place —
+  // the workspace side of ensure() is ZERO-WRITE (no mkdir, no seeding, not
+  // even a missing AGENTS.md is written; §6 SEED_IMPORTED_WORKSPACE = NO).
+  // The DSH home is Agent Core control-plane state, independent of any
+  // imported workspace, and is provisioned exactly as before (§6 dshHome 侧
+  // 照旧 — Reviewer note: home provisioning relies on no workspace-mkdir
+  // side effect; it mkdirs its own root below).
+  const imported = lookupPrimaryWorkspace(agentId, primaryWorkspaces) !== undefined
+  const workspace = resolveWorkspace(agentId, workspaceRoot, process.env, primaryWorkspaces)
   const dshHome = resolveAgentHome(agentId, agentsHome)
 
-  // Create both roots up front so a genuine IO failure surfaces even when the
-  // seed list is empty.
-  await mkdir(workspace, { recursive: true })
+  if (!imported) {
+    // Default agent: create the workspace up front so a genuine IO failure
+    // surfaces even when the seed list is empty.
+    await mkdir(workspace, { recursive: true })
+  }
   await mkdir(dshHome, { recursive: true })
-  await seedWorkspaceFiles(workspace, seedFiles)
+  if (!imported) {
+    await seedWorkspaceFiles(workspace, seedFiles)
+  }
 
   return { workspace, dshHome }
 }
@@ -176,6 +278,12 @@ export async function ensure(agentId, options = {}) {
  * {@link ensure} this touches only the WORKSPACE root: the DSH home stays
  * keyed by agentId (one Agent = one process = one home; workspaces are
  * per-binding cwd surfaces, not runtime homes).
+ *
+ * AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §3 (Reviewer note: delegation
+ * decoupling): this seam NEVER consults `primaryWorkspaces` — a Binding
+ * workspace is the generic `<workspaceRoot>/<workspaceId>` derivation, not
+ * the Agent primary-workspace authority, so a per-agent import override can
+ * never leak into (or be bypassed via) Binding.workspace resolution.
  *
  * @param {string} workspaceId - the Binding workspace identifier (validated
  *   internally by the same sanitize rules).
@@ -201,15 +309,22 @@ export function apply(ctx, config) {
   const seedFiles = config?.seedFiles ?? ['AGENTS.md']
   const workspaceRoot = config?.workspaceRoot
   const agentsHome = config?.agentsHome
+  // AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §4/§5: import entries validate FAIL-LOUD
+  // at mount (config load) — the plugin never starts with a silently ignored
+  // or degraded import entry.
+  const primaryWorkspaces = validatePrimaryWorkspaces(config?.primaryWorkspaces)
   const service = {
     ensure: (agentId, options = {}) => ensure(agentId, {
       seedFiles: options.seedFiles ?? seedFiles,
       workspaceRoot: options.workspaceRoot ?? workspaceRoot,
       agentsHome: options.agentsHome ?? agentsHome,
+      primaryWorkspaces: options.primaryWorkspaces ?? primaryWorkspaces,
     }),
     sanitizeAgentId,
-    resolveWorkspace: (agentId) => resolveWorkspace(agentId, workspaceRoot),
+    resolveWorkspace: (agentId) => resolveWorkspace(agentId, workspaceRoot, process.env, primaryWorkspaces),
     resolveDshHome: (agentId) => resolveAgentHome(agentId, agentsHome),
+    /** Validated import map snapshot (agentId → imported absolute path). */
+    primaryWorkspaces,
     // AGENT_CORE_BINDING_WORKSPACE_V1 seams (ultra-thin: the same
     // sanitize-backed derivation, named for the frozen resolution model —
     // <workspaceRoot>/<sanitizeWorkspaceId(workspaceId)>):
