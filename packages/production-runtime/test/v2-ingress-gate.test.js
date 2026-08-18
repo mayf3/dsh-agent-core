@@ -4,7 +4,7 @@
  *
  * The gate is exercised END-TO-END over a REAL agent-router (real
  * BindingStore + real workspace-bootstrap over tmp roots + a fake per-agent
- * process factory) and the REAL feishu-connector ingress pipeline — only the
+ * process factory) and the REAL feishu-connector bridge handler — only the
  * network/DSH edges are stubbed. This is the wiring the production-runtime
  * compose installs; the Router itself is never modified and never
  * Feishu-aware.
@@ -36,8 +36,8 @@ import { AgentDefinition } from '../../agent-definition/src/definition.js'
 import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyRouter } from '../../agent-router/src/index.js'
-import { createIngressPipeline, INGRESS_GATE_REJECTED_REPLY, LruDedup } from '../../feishu-connector/src/core.js'
-import { conversationWorkspaceId } from '../../feishu-connector/src/core.js'
+import { createBridgeHandler } from '../../feishu-connector/src/bridge.js'
+import { conversationWorkspaceId, INGRESS_GATE_REJECTED_REPLY } from '../../feishu-connector/src/core.js'
 import { makeV2PreboundIngressGate, wireV2IngressGate, V2_INGRESS_MODE } from '../src/v2-ingress-gate.js'
 
 /** Fake cordis ctx: get/provide/effect only (what the router uses). */
@@ -142,7 +142,9 @@ async function freshRig(t, { bindings = {}, primaryWorkspaces = {} } = {}) {
     processFactory: (opts) => { const p = new FakeProc(opts); spawned.push(p); return p },
   })
 
-  // Stub feishu channel handle + the REAL pipeline, wired like compose.js.
+  // Stub feishu channel handle + the REAL SDK-to-Agent-Core bridge, wired
+  // like compose.js. The official SDK owns normalization/policy/dedup before
+  // this handler; these tests exercise the preserved PREBOUND_ONLY segment.
   const receipts = []
   const feishu = {
     gate: null,
@@ -152,33 +154,35 @@ async function freshRig(t, { bindings = {}, primaryWorkspaces = {} } = {}) {
   assert.equal(wireV2IngressGate(feishu, router, workspaceBootstrap), true)
   const forwarded = []
   const cfg = { onEvent: async (ev) => { forwarded.push(ev); await router.route(ev) }, ingressGate: feishu.gate }
-  const handleIngress = createIngressPipeline({
-    dedup: new LruDedup({ maxSize: 100 }),
+  const handleIngress = createBridgeHandler({
+    resolveBotIdentity: () => ({ openId: 'ou_bot', name: 'test-bot' }),
     config: cfg,
     reply: (ingress) => feishu.reply({ conversationId: ingress.conversationId }, INGRESS_GATE_REJECTED_REPLY),
     log: () => {},
   })
 
-  /** A V2-normal Feishu group ingress (NO workspace / NO session fields). */
+  /** A normalized SDK group message (the bridge emits NO workspace/session). */
   let msgSeq = 0
   const groupEvent = (conversationId, text = 'hello') => {
     const seq = ++msgSeq
     return {
-      eventId: `evt_${conversationId}_${seq}`,
-      type: 'message',
-      channel: 'group',
-      chatType: 'group',
-      conversationId,
-      chatId: conversationId,
       messageId: `om_${conversationId}_${seq}`,
-      sender: { openId: 'ou_sender', senderType: 'user', isBotSelf: false, selfSent: false, senderId: 'ou_sender' },
-      text,
+      chatType: 'group',
+      chatId: conversationId,
+      senderId: 'ou_sender',
+      senderType: 'user',
+      senderName: 'test-user',
+      content: text,
+      rawContentType: 'text',
+      resources: [],
       mentions: [],
-      mentioned: true,
-      addressed: true,
-      attachments: [],
-      timestamp: Date.now(),
-      dedupKey: `message:om_${conversationId}_${seq}`,
+      mentionAll: false,
+      mentionedBot: true,
+      createTime: Date.now(),
+      raw: {
+        event_id: `evt_${conversationId}_${seq}`,
+        sender: { sender_id: { open_id: 'ou_sender' } },
+      },
     }
   }
 

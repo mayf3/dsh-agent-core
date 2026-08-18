@@ -193,6 +193,15 @@ export async function composeProductionRuntime(options = {}) {
   if (feishu !== undefined) {
     if (!wired) throw new Error('production-runtime: feishu connector handle does not expose setIngressGate (V2 ingress gate cannot be wired — fail loud, never run un-gated)')
     log.log(`feishu ingress gate wired (${V2_INGRESS_MODE}: pre-bound primary-workspace conversations only)`)
+    // FIRST_HANDSHAKE_AWAIT (AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1 §9):
+    // the channel is only declared live after the SDK first handshake
+    // completes AND the bot identity is resolved. ready() rejects on either
+    // failure → startup fail-loud (the runtime never runs as a
+    // "silently-retrying half-open channel"). The await sits AFTER the gate
+    // wiring so no message can be admitted before the PREBOUND_ONLY gate is
+    // installed (the connector additionally fail-closes on its own).
+    await feishu.ready()
+    log.log('feishu channel live (first handshake + bot identity resolved)')
   }
 
   // Trusted CP seam: gateway mode always mounted; the credential store path

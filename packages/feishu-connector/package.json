@@ -2,14 +2,13 @@
   "name": "@agent-core/feishu-connector",
   "version": "0.0.0",
   "private": true,
-  "description": "Agent Core V0 Feishu/Lark channel connector: WebSocket long-connection channel layer that normalizes inbound Feishu events into IngressEvent and replies through a unified ReplyTarget",
+  "description": "Agent Core Feishu/Lark channel connector: official @larksuite/channel SDK foundation with a thin Agent Core adapter (IngressEvent mapping + PREBOUND_ONLY gate wiring + ReplyTarget seam)",
   "type": "module",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
     "./core": "./src/core.js",
-    "./transport": "./src/transport.js",
-    "./api": "./src/api.js",
+    "./bridge": "./src/bridge.js",
     "./standalone": "./standalone.mjs",
     "./package.json": "./package.json"
   },
@@ -17,7 +16,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@larksuiteoapi/node-sdk": "^1.73.0"
+    "@larksuite/channel": "0.5.0"
   },
   "peerDependencies": {
     "@deepseek-ai/schemastery": ">=0"
