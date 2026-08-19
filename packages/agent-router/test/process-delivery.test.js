@@ -49,15 +49,16 @@ function fakeAgentProcess() {
     assert.ok(waiter !== undefined, `expected pending request #${match.id}`)
     waiter.resolve(result)
   }
-  /** Inject an assistant/message event (matching a receipt messageId). */
+  /** Inject the real DSH activity interval for one completed prompt. */
   const injectAssistant = (sessionId, messageId, text) => {
-    proc.events.push({
-      sessionId,
-      event: {
-        type: 'assistant/message',
-        data: { message: { id: messageId, content: [{ type: 'text', text }] } },
-      },
-    })
+    const events = [
+      { type: 'agent/inbox/spliced', data: { inserted: [{ id: messageId }] } },
+      { type: 'turn/start', data: { turn: 1 } },
+      { type: 'user/message', data: { id: messageId } },
+      { type: 'assistant/message', data: { message: { id: `a-${messageId}`, content: [{ type: 'text', text }] } } },
+      { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } },
+    ]
+    for (const event of events) proc.events.push({ sessionId, event })
   }
   const prompts = () => writes.filter(w => w.method === 'session/prompt')
   const sleep = (ms) => new Promise(r => setTimeout(r, ms))

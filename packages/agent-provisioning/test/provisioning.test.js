@@ -20,6 +20,7 @@ import { test } from 'node:test'
 import {
   AGENT_PROFILE_DEFS,
   REPO,
+  assertOAuthCredentialBoundary,
   cliBin,
   provisionAgentHome,
   provisionExactProfilePlugin,
@@ -167,12 +168,14 @@ test('plugin missing, plugin mismatch, DSH mismatch and credential boundaries fa
   )
 
   fakeInstall({ profilesRoot: join(home, 'profiles'), plugin: 'dsh-codex', version: '0.2.3' })
-  assert.throws(
+  assert.doesNotThrow(
     () => provisionAgentHome(home, workspace, {
       profile: 'agent-core-production', subscription: SUBSCRIPTION, harnessIdentity: HARNESS_IDENTITY,
     }),
-    (error) => error.code === 'credential_missing',
+    'missing OAuth state is deferred until the real provider turn boundary',
   )
+  assert.throws(() => assertOAuthCredentialBoundary(home, SUBSCRIPTION.credentialFile),
+    (error) => error.code === 'credential_missing')
   writeFileSync(join(home, SUBSCRIPTION.credentialFile), '{}', { mode: 0o644 })
   assert.throws(
     () => provisionAgentHome(home, workspace, {
