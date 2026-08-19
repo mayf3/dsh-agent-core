@@ -39,7 +39,7 @@ references:
 ```text
 SPEC_STATUS = proposed
 SUPERSEDES = AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1
-READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+READY_FOR_INDEPENDENT_SPEC_REVIEW = NO (first review FIX_REQUIRED; owner decisions pending)
 IMPLEMENTATION_AUTHORIZED = NO
 
 PHASE_A_FOUNDATION_CUTOVER = PRESERVE_WITH_V2_CONTRACT_CORRECTIONS
@@ -138,6 +138,7 @@ REVIEWED_SDK_BASELINE = 0.5.0 @ d41b81c
 SDK_BATCH_DELAY_MS = 0
 SDK_CHAT_QUEUE = DISABLED
 SDK_STALE_DROP = DISABLED
+SDK_RESPOND_TO_MENTION_ALL = true
 CUSTOM_LRU_DEDUP = REMOVE
 DEDUP_AUTHORITY = @larksuite/channel
 EVENT_SURFACE = MESSAGE_ONLY
@@ -197,6 +198,7 @@ existing INGRESS_GATE_REJECTED_REPLY path
 ```text
 PURE_MENTION_ALL_V0_BEHAVIOR = PRESERVE
 SDK_REQUIRE_MENTION = false
+SDK_RESPOND_TO_MENTION_ALL = true
 ```
 
 V2 以 SDK normalization 的 `mentionedBot` / `mentionAll` 输出为输入，在 SDK dedup/lock **之后**、
@@ -214,8 +216,10 @@ AGENT_CORE_MENTION_ELIGIBILITY =
 
 ```text
 SDK stale(disabled)
-  -> SDK dedup + ProcessingLock
-  -> SDK PolicyGate(requireMention=false)
+  -> SDK SeenCache duplicate check
+  -> SDK PolicyGate(requireMention=false, respondToMentionAll=true)
+  -> SDK LoopGuard(default disabled)
+  -> SDK ProcessingLock acquire
   -> Agent Core self-echo / identity residual guards
   -> AGENT_CORE_MENTION_ELIGIBILITY
   -> PREBOUND_ONLY
@@ -416,7 +420,7 @@ AC-CREATE-THREAD-TEST-APP-PENDING
 ```text
 AC-SDK-FROZEN-CONFIG
   batch=0 / chatQueue disabled / stale disabled / requireMention=false /
-  includeRawEvent=true / one SDK dedup authority 全部被测试锁定。
+  respondToMentionAll=true / includeRawEvent=true / one SDK dedup authority 全部被测试锁定。
 
 AC-NO-AUTHORITY-DRIFT
   Router/AgentProcess/Binding/v2-ingress-gate/workspace/Kernel 文件 diff = 0；无第二 queue、
@@ -517,7 +521,36 @@ VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC | FIX_REQUIRED
 
 ---
 
-## 14. Related
+## 14. Review History
+
+```text
+REVIEWER_IDENTITY = AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2_SPEC_REVIEW
+REVIEW_BASE_COMMIT = eaebb28df4e5a67ecbcfe6f3990fe276ff11acd1
+REVIEWED_SPEC_COMMIT = 963fef3af6c722fe49266f122373d4d31248ca83
+REVIEW_VERDICT = FIX_REQUIRED
+SEMANTIC_REVIEW_COMPLETE = YES
+
+BLOCKERS =
+  1. exact SDK 0.5.0 swallows queue-disabled onMessage throw into logger;
+     the frozen real channel.on('error') requirement has no authorized public implementation path
+  2. exact SDK ProcessingLock TTL = 300000ms without renewal/config surface;
+     Router default full-turn timeout = 300000ms and may be configured longer
+  3. proposed text omitted SDK_RESPOND_TO_MENTION_ALL=true and misstated SDK pipeline order
+
+BLOCKER_3_DISPOSITION = FIXED_IN_SPEC_AMENDMENT
+BLOCKER_1_DISPOSITION = OWNER_DECISION_REQUIRED
+BLOCKER_2_DISPOSITION = OWNER_DECISION_REQUIRED
+READY_FOR_FOCUSED_RE_REVIEW = NO (until Owner rulings close blockers 1-2)
+```
+
+本 amendment 不自行选择 blocker 1/2 的路线。允许 reviewer 提出的候选均会改变 Owner 已冻结合同
+之一：升级/修改 exact SDK、授权 connector-owned error surface、放松 SDK error-event 要求、收紧
+最大 Agent turn window、授权不同 lock mechanism。选择必须由 Owner 明确作出；在此之前 Spec 保持
+`proposed`，不得 acceptance-finalize。
+
+---
+
+## 15. Related
 
 - `docs/specs/AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1.md`
 - `docs/investigations/AGENT_CORE_OFFICIAL_LARK_CHANNEL_INTEGRATION_V1.md`
