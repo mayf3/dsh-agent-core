@@ -192,6 +192,9 @@ export async function composeProductionRuntime(options = {}) {
           dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
           dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
           credentialFile: CHATGPT_SUBSCRIPTION_V1.credentialFile,
+          ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
+            packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
+          }),
         }),
       }),
     })

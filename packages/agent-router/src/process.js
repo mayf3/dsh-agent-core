@@ -92,21 +92,53 @@ export function agentEnv(home, extra = {}, omit = []) {
 /** Redact common OAuth/API token shapes before an error reaches logs/callers. */
 export function redactSensitiveText(value) {
   return String(value ?? '')
-    .replace(/("(?:access_token|refresh_token|id_token|token)"\s*:\s*")[^"]*(")/giu, '$1[REDACTED]$2')
+    .replace(/(["'](?:access_token|refresh_token|id_token|token|authorization|openai_api_key|client_secret)["']\s*:\s*["'])[^"']*(["'])/giu, '$1[REDACTED]$2')
+    .replace(/\b(Authorization\s*:\s*)(?:Bearer\s+)?[^\s,;]+/giu, '$1[REDACTED]')
     .replace(/\b(Bearer\s+)[^\s,;]+/giu, '$1[REDACTED]')
     .replace(/\b(sk-[A-Za-z0-9_-]{8,})\b/gu, '[REDACTED]')
-    .replace(/((?:access|refresh|id)[_-]?token\s*[=:]\s*)[^\s,;]+/giu, '$1[REDACTED]')
+    .replace(/((?:access|refresh|id)[_-]?token|OPENAI_API_KEY|client_secret)\s*[=:]\s*[^\s,;}]+/giu, '$1=[REDACTED]')
 }
 
 /** Provider/account failures stay truthful and never trigger route fallback. */
-export function classifyProviderFailure(code, message) {
+export function classifyProviderError({ code, message } = {}) {
   const text = `${code ?? ''} ${message ?? ''}`.toLowerCase()
   if (/insufficient[_ -]?quota|account[_ -]?quota|quota (?:exhausted|exceeded)|usage limit/u.test(text)) return 'account_quota_exhausted'
   if (/oauth.*(?:expired|revoked)|(?:expired|revoked).*oauth|invalid[_ -]?grant/u.test(text)) return 'oauth_expired_or_revoked'
-  if (/credential[_ -]?missing|auth(?:entication)? file.*(?:missing|not found)/u.test(text)) return 'credential_missing'
+  if (/credential[_ -]?missing|auth(?:entication)? file.*(?:missing|not found)|provider is not configured/u.test(text)) return 'credential_missing'
   if (/model[_ -]?(?:unavailable|not[_ -]?found)|unknown model|unsupported model/u.test(text)) return 'model_unavailable'
   if (/provider[_ -]?unavailable|service unavailable|econnrefused|enotfound|network.*unavailable/u.test(text)) return 'provider_unavailable'
-  return typeof code === 'string' && code !== '' ? code : undefined
+  if (code === 'SESSION_WORKSPACE_MISMATCH') return code
+  return 'provider_runtime_rejection'
+}
+
+/**
+ * The only provider-error boundary used for both JSON-RPC responses and the
+ * asynchronous DSH turn/end reason. It deliberately reads only code/message:
+ * arbitrary provider payloads, causes and OAuth objects never cross the
+ * Router boundary.
+ */
+export function sanitizeProviderError(providerError, { agentId, provider, model } = {}) {
+  const safeCode = redactSensitiveText(providerError?.code ?? 'provider_error')
+  const safeMessage = redactSensitiveText(providerError?.message ?? 'provider request failed')
+  const classification = classifyProviderError({ code: safeCode, message: safeMessage })
+  const layer = classification === 'account_quota_exhausted' || classification === 'oauth_expired_or_revoked'
+    ? 'provider/account'
+    : classification === 'model_unavailable'
+      ? 'provider/model'
+      : classification === 'credential_missing'
+        ? 'agent/credential'
+        : classification === 'SESSION_WORKSPACE_MISMATCH'
+          ? 'session'
+        : 'provider'
+  return Object.assign(new Error(`${safeCode}: ${safeMessage}`), {
+    name: 'ProviderError',
+    code: classification,
+    class: classification,
+    layer,
+    agentId,
+    provider,
+    model,
+  })
 }
 
 const FAIL_LOUD_PROVIDER_ERRORS = new Set([
@@ -227,13 +259,11 @@ export class AgentProcess {
             // cross-workspace session reuse with a string error code
             // (SESSION_WORKSPACE_MISMATCH, AGENT_CORE_BINDING_WORKSPACE_V1 R3);
             // copying it onto the Error lets the Router surface it verbatim.
-            const safeMessage = redactSensitiveText(message.error.message)
-            const classification = classifyProviderFailure(message.error.code, safeMessage)
-            const error = new Error(`${message.error.code ?? -1}: ${safeMessage}`)
-            if (classification !== undefined) error.code = classification
-            error.provider = this.provider
-            error.model = this.model
-            waiter.reject(error)
+            waiter.reject(sanitizeProviderError(message.error, {
+              agentId: this.agentId,
+              provider: this.provider,
+              model: this.model,
+            }))
           } else waiter.resolve(message.result)
         }
       } else if (message.method === 'session.event') {
@@ -297,12 +327,24 @@ export class AgentProcess {
     const started = Date.now()
     for (;;) {
       try {
-        await this.request('initialize', {
+        const initialized = await this.request('initialize', {
           cwd: this.workspace,
           provider: this.provider,
           model: this.model,
           maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),
         })
+        if (Array.isArray(initialized?.registeredProviders)
+          && !initialized.registeredProviders.includes(this.provider)) {
+          if (Date.now() - started > timeoutMs) {
+            throw sanitizeProviderError({
+              code: 'provider_unavailable',
+              message: `provider ${this.provider} did not register before initialize timeout`,
+            }, { agentId: this.agentId, provider: this.provider, model: this.model })
+          }
+          await new Promise(resolveTimeout => setTimeout(resolveTimeout, 300))
+          continue
+        }
+        this.initializeEvidence = initialized
         this.log.log?.(`[router] agent ${this.agentId} ready pid=${this.pid} (${Date.now() - started}ms)`)
         return Date.now() - started
       } catch (error) {
@@ -355,26 +397,62 @@ export class AgentProcess {
     const started = Date.now()
     this.activeBindingContext = opts.bindingContext
     try {
+      // Watermark BEFORE prompt: the receipt event may arrive before the
+      // JSON-RPC response. No historical event can own this turn.
+      const eventWatermark = this.events.length
       const receipt = await this.request('session/prompt', {
         sessionId,
         contentBlocks: [{ type: 'text', text }],
         ...(opts.cwd === undefined ? {} : { cwd: opts.cwd }),
       })
       const promptMs = Date.now() - started
-      const before = this.events.length
-      let received = false
+      let cursor = eventWatermark
+      let receiptSeen = false
+      let currentTurn
+      let messageSeen = false
+      let terminal
+      let terminalIndex
       let done = false
       while (!done && Date.now() - started < timeoutMs) {
         await new Promise(resolveTimeout => setTimeout(resolveTimeout, 100))
-        for (let i = before; i < this.events.length; i += 1) {
-          const ev = this.events[i]
+        for (; cursor < this.events.length; cursor += 1) {
+          const ev = this.events[cursor]
           if (ev.sessionId !== sessionId) continue
-          if (!received && JSON.stringify(ev.event).includes(receipt.messageId)) received = true
+          const event = ev.event
+          if (!receiptSeen) {
+            const inserted = event?.type === 'agent/inbox/spliced' ? event.data?.inserted : undefined
+            receiptSeen = Array.isArray(inserted) && inserted.some((message) => message?.id === receipt.messageId)
+            continue
+          }
+          if (event?.type === 'turn/start') {
+            currentTurn = event.data?.turn
+            messageSeen = false
+            continue
+          }
+          if (event?.type === 'user/message'
+            && (event.data?.id === receipt.messageId || event.data?.message?.id === receipt.messageId)
+            && currentTurn !== undefined) {
+            messageSeen = true
+            continue
+          }
+          if (event?.type === 'turn/end'
+            && messageSeen
+            && event.data?.turn === currentTurn) {
+            terminal = event
+            terminalIndex = cursor
+            if (terminal.data?.reason?.kind === 'error') {
+              throw sanitizeProviderError(terminal.data.reason.error, {
+                agentId: this.agentId,
+                provider: this.provider,
+                model: this.model,
+              })
+            }
+          }
         }
-        if (received && this.status[sessionId] === 'idle') done = true
+        if (terminal !== undefined && this.status[sessionId] === 'idle') done = true
       }
       if (!done) throw new Error(`turn timeout for session ${sessionId} (agent ${this.agentId})`)
-      const texts = this.events
+      const texts = this.events.slice(eventWatermark, terminalIndex + 1)
         .filter(ev => ev.sessionId === sessionId && ev.event.type === 'assistant/message')
         .map(ev => (ev.event.data?.message?.content ?? [])
           .filter(block => block.type === 'text').map(block => block.text).join(''))

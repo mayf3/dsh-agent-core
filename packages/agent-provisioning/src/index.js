@@ -35,7 +35,7 @@ import {
 } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { homedir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /** Repo root (three levels up from src/: packages/agent-provisioning/src). */
@@ -102,10 +102,14 @@ function atomicWriteJson(file, value) {
   renameSync(temp, file)
 }
 
-function defaultPluginInstaller({ profilesRoot, plugin, version }) {
+function defaultPluginInstaller({ profilesRoot, plugin, version, packageArtifact }) {
+  if (packageArtifact !== undefined && (!isAbsolute(packageArtifact) || !existsSync(packageArtifact))) {
+    throw provisioningError('plugin_missing', `local package artifact must be an existing absolute path: ${packageArtifact}`)
+  }
   const result = spawnSync('npm', [
     'install', '--prefix', profilesRoot, '--no-save', '--no-package-lock', '--ignore-scripts',
-    `${plugin}@${version}`,
+    ...(packageArtifact === undefined ? [] : ['--offline', '--legacy-peer-deps']),
+    packageArtifact ?? `${plugin}@${version}`,
   ], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -153,7 +157,7 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
     }
   } else {
     const installer = options.pluginInstaller ?? defaultPluginInstaller
-    installer({ profilesRoot, plugin, version })
+    installer({ profilesRoot, plugin, version, packageArtifact: options.packageArtifact })
   }
   if (!existsSync(installedPackage)) {
     throw provisioningError('plugin_missing', `${plugin}@${version} is not resolvable from ${profilesRoot}/node_modules`)
@@ -166,6 +170,25 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
   }
   if (installedVersion !== version) {
     throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${installedVersion ?? '(missing)'}`)
+  }
+
+  // External bundles declare DSH packages as peers. A local tarball install
+  // intentionally uses --legacy-peer-deps so npm cannot consult the registry;
+  // close those peers against the already-pinned Harness checkout instead.
+  // This also prevents npm from choosing a different published DSH version.
+  const packageJson = JSON.parse(readFileSync(installedPackage, 'utf8'))
+  const peerNames = Object.keys(packageJson.peerDependencies ?? {})
+  const harnessRoot = options.harnessRoot ?? resolveHarnessRoot()
+  for (const peer of peerNames) {
+    const candidates = [
+      join(harnessRoot, 'node_modules', '.pnpm', 'node_modules', ...peer.split('/')),
+      join(harnessRoot, 'apps', 'cli', 'node_modules', ...peer.split('/')),
+    ]
+    const source = candidates.find((candidate) => existsSync(candidate))
+    if (source === undefined) {
+      throw provisioningError('plugin_missing', `cannot close peer ${peer} for ${plugin}@${version} from pinned DSH ${harnessRoot}`)
+    }
+    ensureSymlink(source, join(profilesRoot, 'node_modules', ...peer.split('/')))
   }
 
   const profilePackageFile = join(profilesRoot, profile, 'package.json')
@@ -182,12 +205,13 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
 }
 
 /** Validate the Agent-owned OAuth store without ever reading its contents. */
-export function assertOAuthCredentialBoundary(home, credentialFile) {
+export function assertOAuthCredentialBoundary(home, credentialFile, options = {}) {
   const file = join(home, credentialFile)
   let stat
   try {
     stat = lstatSync(file)
   } catch (cause) {
+    if (cause?.code === 'ENOENT' && options.allowMissing === true) return undefined
     if (cause?.code === 'ENOENT') throw provisioningError('credential_missing', `credential_missing: ${file}`)
     throw provisioningError('credential_missing', `credential_missing: cannot stat ${file}`, cause)
   }
@@ -206,7 +230,8 @@ function ensureSymlink(target, link) {
   mkdirSync(dirname(link), { recursive: true })
   try {
     const stat = lstatSync(link)
-    if (stat.isSymbolicLink() && resolve(readlinkSync(link)) === resolve(target)) return
+    const linked = stat.isSymbolicLink() ? readlinkSync(link) : undefined
+    if (linked !== undefined && resolve(dirname(link), linked) === resolve(target)) return
     rmSync(link, { recursive: true, force: true })
   } catch (error) {
     if (error?.code !== 'ENOENT') throw error
@@ -348,6 +373,10 @@ export function provisionAgentHome(home, workspace, options = {}) {
   if (def === undefined) {
     throw new Error(`provisionAgentHome: unknown agent profile ${JSON.stringify(profile)} (known: ${Object.keys(AGENT_PROFILE_DEFS).join(', ')})`)
   }
+  // A freshly provisioned Agent-owned home starts private. Existing homes are
+  // never chmodded here: an operator-owned 0755 home remains a fail-loud
+  // activation prerequisite rather than being mutated implicitly.
+  mkdirSync(home, { recursive: true, mode: 0o700 })
   // Farm links point into the repo; the repo must expose @agent-core names
   // for transitive imports (see ensureRepoCoreBridge). Idempotent, gitignored.
   ensureRepoCoreBridge()
@@ -366,6 +395,24 @@ export function provisionAgentHome(home, workspace, options = {}) {
     copyFileSync(join(REPO, def.repoDir, file), join(profileDir, file))
   }
 
+  // Install the external package BEFORE creating the local farm links: npm
+  // prunes extraneous entries under node_modules, so reversing this order
+  // would delete the production profile's @agent-core bundles on first use.
+  if (options.subscription !== undefined) {
+    const subscription = options.subscription
+    provisionExactProfilePlugin(home, profile, {
+      plugin: subscription.plugin,
+      version: subscription.pluginVersion,
+      dshVersion: subscription.dshVersion,
+      dshCommit: subscription.dshCommit,
+    }, {
+      pluginInstaller: options.pluginInstaller,
+      packageArtifact: subscription.packageArtifact,
+      harnessIdentity: options.harnessIdentity,
+      harnessRoot: options.harnessRoot,
+    })
+  }
+
   // Out-of-tree plugin resolution links for this profile's composition.
   const farm = join(home, 'profiles', 'node_modules')
   const agentCoreFarm = join(farm, '@agent-core')
@@ -379,17 +426,10 @@ export function provisionAgentHome(home, workspace, options = {}) {
   // requested exact install/check inside this home; it never selects agents.
   if (options.subscription !== undefined) {
     const subscription = options.subscription
-    provisionExactProfilePlugin(home, profile, {
-      plugin: subscription.plugin,
-      version: subscription.pluginVersion,
-      dshVersion: subscription.dshVersion,
-      dshCommit: subscription.dshCommit,
-    }, {
-      pluginInstaller: options.pluginInstaller,
-      harnessIdentity: options.harnessIdentity,
-      harnessRoot: options.harnessRoot,
-    })
-    assertOAuthCredentialBoundary(home, subscription.credentialFile)
+    // Missing OAuth state is a runtime/provider boundary: the plugin must
+    // load and the configured provider must register before the turn fails.
+    // If a store exists, its ownership boundary is still validated here.
+    assertOAuthCredentialBoundary(home, subscription.credentialFile, { allowMissing: true })
   }
 
   mkdirSync(workspace, { recursive: true })

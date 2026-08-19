@@ -174,7 +174,13 @@ export function apply(ctx) {
         provider = params?.provider ?? provider
         model = params?.model ?? model
         maxTokens = params?.maxTokens
-        result = { serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } }
+        const registeredProviders = ctx.get('llm')?.listProviders().map((entry) => entry.id) ?? []
+        result = {
+          serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
+          route: { provider, model },
+          registeredProviders,
+          pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
+        }
       } else if (method === 'session/prompt') {
         // params.cwd = the Router-resolved effective workspace for THIS
         // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the
