@@ -377,10 +377,29 @@ The following durations are **V1 policy constants**, not existing DSH defaults:
 - stable `MODEL_UNAVAILABLE`: open for 10 minutes.
 - exhausted `RATE_LIMIT`, `SERVER`, `TIMEOUT`, or `TRANSPORT`: open for 60 seconds.
 - While open, an eligible ordinary Agent turn goes directly to the secondary without
-  waiting for the primary. Because there is no primary call in that turn, it must record:
-  `primaryAttempted=false`, `routeState=primary_cooldown_active`, the historical
-  `breakerOriginClass`, `stableFailureClassForCurrentAttempt=NONE`,
-  `selectedRoute=opencode-go/deepseek-v4-flash`, and `fallbackCount=1`.
+  waiting for the primary. Because there is no primary call in that turn, the complete
+  mandatory `llm/fallback` evidence is:
+
+  ```text
+  requestedProvider = zai
+  requestedModel = glm-5.2
+
+  primaryAttempted = false
+  attemptedProvider = NONE
+  attemptedModel = NONE
+
+  routeState = primary_cooldown_active
+  stableFailureClass = NONE
+
+  breakerOriginStableFailureClass = <exact historical stable class from §5.1>
+
+  selectedProvider = opencode-go
+  selectedModel = deepseek-v4-flash
+  fallbackCount = 1
+  ```
+
+  Selecting the secondary in this state means the primary was skipped because an existing
+  breaker was open. It does not mean the current turn attempted and failed the primary.
 - After expiry, exactly one single-flight half-open probe is allowed; concurrent turns use
   the secondary until that probe succeeds or reopens the breaker.
 - Successful primary completion closes the breaker.
@@ -390,19 +409,23 @@ COOLDOWN_POLICY =
   process-local exact-route circuit breaker with V1 policy constants;
   account_quota_exhausted 30m;
   model_unavailable 10m;
-  exhausted_transient_failure 60s;
+  rate_limited/provider_unavailable/bounded_transient_network_failure 60s;
   single-flight half-open probe;
   persistent cooldown = NO in V1
 
 PRIMARY_COOLDOWN_ROUTE_STATE = primary_cooldown_active
-BREAKER_ORIGIN_CLASS =
-  account_quota_exhausted / model_unavailable / exhausted_transient_failure
-CURRENT_ATTEMPT_FAILURE_CLASS = NONE when primaryAttempted=false
+BREAKER_ORIGIN_STABLE_FAILURE_CLASS =
+  account_quota_exhausted / rate_limited / provider_unavailable /
+  bounded_transient_network_failure / model_unavailable
+CURRENT_ATTEMPT_STABLE_FAILURE_CLASS = NONE when primaryAttempted=false
 ```
 
-`breakerOriginClass` is historical breaker provenance, not a failure attributed to the
-current attempt. A cooldown bypass must never fabricate a new `QUOTA`,
-`MODEL_UNAVAILABLE`, or transient failure for a turn in which the primary was not called.
+`breakerOriginStableFailureClass` is the exact normalized class that opened the breaker.
+It must be copied verbatim from §5.1 and preserves the one-to-one provenance from the
+original normalized failure to its cooldown. It must not be replaced by a coarse category
+such as `exhausted_transient_failure`. A cooldown bypass must never fabricate a current-turn
+`QUOTA`, `RATE_LIMIT`, `SERVER`, `TIMEOUT`, `TRANSPORT`, or `MODEL_UNAVAILABLE`, and must
+never claim that `zai/glm-5.2` was attempted when the primary was not called.
 
 Persistent cross-process cooldown would introduce shared fleet/account coordination and a
 new durable authority adjacent to the explicitly excluded quota scheduler/account pool.
@@ -451,14 +474,16 @@ fallbackCount
 cooldownState
 primaryAttempted
 routeState
-breakerOriginClass
-stableFailureClassForCurrentAttempt
-selectedRoute
+breakerOriginStableFailureClass
 ```
 
-For a normal primary call, `stableFailureClassForCurrentAttempt` is the one-to-one class
-from §5.1. For a cooldown bypass it is exactly `NONE`; `breakerOriginClass` explains why
-the process-local route breaker was already open.
+For a normal primary call, `attemptedProvider`, `attemptedModel`, and `stableFailureClass`
+describe that actual call and its one-to-one class from §5.1. For a cooldown bypass they
+are exactly `NONE`, `NONE`, and `NONE`; `breakerOriginStableFailureClass` separately explains
+why the process-local route breaker was already open. Session evidence, logs, and acceptance
+reports must preserve this distinction and must not synthesize an attempted primary route
+or current-turn primary failure. `stableFailureClass` exclusively describes an actual
+provider attempt in the current turn and must never carry historical breaker provenance.
 
 Each attempt is also evidenced by the existing `request/header` and `request/context`
 route records. The successful `assistant/message.source.provider/model` is the final proof
@@ -505,16 +530,17 @@ the §4 prerequisite is merged. Its acceptance must include:
     prove no multiplicative retry between `llm-retry` and fallback.
 14. Every raw code in §5.1 has exactly one class and disposition; unmapped codes fail loud
     without a secondary call.
-15. A cooldown bypass proves `primaryAttempted=false`, current-attempt class `NONE`, the
-    breaker origin, selected secondary route, and fallback count without fabricating a
-    current primary failure.
+15. A cooldown bypass proves `primaryAttempted=false`, `attemptedProvider=NONE`,
+    `attemptedModel=NONE`, `stableFailureClass=NONE`, the exact §5.1
+    `breakerOriginStableFailureClass`, selected secondary route, and fallback count without
+    fabricating a current primary attempt or failure.
 
 ## 11. Final output contract
 
 ```text
-DSH_PROVIDER_FALLBACK_CHAIN_V1_SPEC_AMENDMENT = PASS
+DSH_PROVIDER_FALLBACK_CHAIN_V1_SPEC_AMENDMENT_2 = PASS
 
-BASE_REVIEWED_HEAD = b64ad7f
+BASE_REVIEWED_HEAD = b1e1b013
 
 SCOPE = Agents without explicit per-Agent override
 
@@ -551,19 +577,26 @@ MAX_PROVIDER_SWITCHES = 1
 
 FAILURE_NORMALIZATION = one raw code → exactly one stable class → exactly one disposition; unmapped fail-loud and never fallback
 
-COOLDOWN_POLICY = process-local exact-route breaker using V1 policy constants; account quota 30m; model unavailable 10m; exhausted transient 60s; persistent NO
+COOLDOWN_POLICY = process-local exact-route breaker using V1 policy constants; account_quota_exhausted 30m; model_unavailable 10m; rate_limited/provider_unavailable/bounded_transient_network_failure 60s; persistent NO
+COOLDOWN_BYPASS_EVENT_SCHEMA = requestedProvider=zai; requestedModel=glm-5.2; primaryAttempted=false; attemptedProvider=NONE; attemptedModel=NONE; routeState=primary_cooldown_active; stableFailureClass=NONE; breakerOriginStableFailureClass=<exact §5.1 class>; selectedProvider=opencode-go; selectedModel=deepseek-v4-flash; fallbackCount=1
+PRIMARY_ATTEMPTED = false
+ATTEMPTED_PROVIDER = NONE
+ATTEMPTED_MODEL = NONE
+CURRENT_ATTEMPT_STABLE_FAILURE_CLASS = NONE
+BREAKER_ORIGIN_STABLE_FAILURE_CLASS = exact §5.1 class
+HISTORICAL_FAILURE_PROVENANCE_ONE_TO_ONE = YES
 PRIMARY_COOLDOWN_ROUTE_STATE = primary_cooldown_active
-BREAKER_ORIGIN_CLASS = account_quota_exhausted / model_unavailable / exhausted_transient_failure
-CURRENT_ATTEMPT_FAILURE_CLASS = NONE when primaryAttempted=false
 
 CURRENT_TURN_SIDE_EFFECT_POLICY = any current-turn materialized output, tool event, file mutation, or possible external side effect forbids subsequent fallback/replay
 
-OBSERVABILITY = durable requested/attempted/failed/selected/final route evidence plus primaryAttempted/routeState/breakerOriginClass/current-attempt class; no secrets/raw provider error body
+OBSERVABILITY = cooldown bypass records no attempted route and no current failure, plus exact historical breaker stable class and selected secondary route; no secrets/raw provider error body
 
 LUNA_ROUTE_CHANGED = NO
 ROUTER_DYNAMIC_MODEL_ROUTER = NO
 SCHEDULER_CHANGE = NONE
 KERNEL_CHANGE = NONE
+
+PREVIOUS_REQUIRED_FIXES_REGRESSION = NONE
 
 FALLBACK_IMPLEMENTATION_READY = NO
 
