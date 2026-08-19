@@ -88,17 +88,21 @@ test('unregistered agent, missing fields and every non-frozen tuple field fail l
 class FakeProc {
   constructor(options) {
     Object.assign(this, options)
-    this.pid = 7100 + Math.floor(Math.random() * 100)
+    this.pid = FakeProc.nextPid++
     this.exit = undefined
     this.exitPromise = new Promise(() => {})
     this.creations = []
   }
   spawn() { return this }
   async ready() { return 1 }
-  async shutdown() {}
+  async shutdown() {
+    this.exit = { code: 0, signal: null }
+    return this.exit
+  }
   async turn() { return { reply: 'ok', ms: 1, promptMs: 1, messageId: 'm' } }
   async deliver() { return { accepted: true, sessionId: 'main', messageId: 'm' } }
 }
+FakeProc.nextPid = 7100
 
 async function runtimeFixture(t, withOverride) {
   const root = mkdtempSync(join(tmpdir(), 'model-runtime-'))
@@ -149,14 +153,44 @@ test('production composition passes one immutable resolved route to target and g
   assert.equal(provisioned[1].options.subscription, undefined)
 })
 
-test('restart persistence and mechanical rollback resolve from the startup file only', async (t) => {
-  const first = await runtimeFixture(t, true)
-  assert.equal(first.spawned.length, 0, 'config load itself does not start or activate the target Agent')
-  await first.runtime.stop()
+test('same production runtime reloads config only when target process is replaced', async (t) => {
+  const { runtime, spawned, layout } = await runtimeFixture(t, true)
+  const runtimeIdentity = runtime
+  const targetBefore = await runtime.router.ensureRunning(TARGET)
+  const otherBefore = await runtime.router.ensureRunning(OTHER)
+  assert.deepEqual(
+    { provider: targetBefore.provider, model: targetBefore.model },
+    { provider: 'openai-codex', model: 'gpt-5.6-luna' },
+  )
+  assert.deepEqual({ provider: otherBefore.provider, model: otherBefore.model }, GLOBAL)
 
-  const loadedAgain = loadAgentModelOverrides(first.layout.agentModelOverrides, [TARGET, OTHER])
-  assert.equal(loadedAgain.resolve(TARGET, GLOBAL).model, 'gpt-5.6-luna')
-  unlinkSync(first.layout.agentModelOverrides)
-  const rolledBack = loadAgentModelOverrides(first.layout.agentModelOverrides, [TARGET, OTHER])
-  assert.deepEqual(rolledBack.resolve(TARGET, GLOBAL), GLOBAL)
+  unlinkSync(layout.agentModelOverrides)
+  await targetBefore.shutdown()
+  const targetAfter = await runtime.router.ensureRunning(TARGET)
+
+  assert.equal(runtime, runtimeIdentity)
+  assert.notEqual(targetAfter.pid, targetBefore.pid)
+  assert.deepEqual({ provider: targetAfter.provider, model: targetAfter.model }, GLOBAL)
+  assert.equal((await runtime.router.ensureRunning(OTHER)).pid, otherBefore.pid)
+  assert.deepEqual({ provider: otherBefore.provider, model: otherBefore.model }, GLOBAL)
+  assert.equal(spawned.length, 3, 'only the target process was replaced')
+})
+
+test('malformed config fails target respawn loud without disturbing a running non-target', async (t) => {
+  const { runtime, spawned, layout } = await runtimeFixture(t, true)
+  const target = await runtime.router.ensureRunning(TARGET)
+  const other = await runtime.router.ensureRunning(OTHER)
+  const otherPid = other.pid
+
+  write(layout.agentModelOverrides, '{malformed')
+  await target.shutdown()
+  await assert.rejects(
+    runtime.router.ensureRunning(TARGET),
+    (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID',
+  )
+
+  assert.equal(spawned.length, 2, 'invalid config is rejected before target spawn')
+  assert.equal((await runtime.router.ensureRunning(OTHER)).pid, otherPid)
+  assert.equal(other.exit, undefined)
+  assert.deepEqual({ provider: other.provider, model: other.model }, GLOBAL)
 })

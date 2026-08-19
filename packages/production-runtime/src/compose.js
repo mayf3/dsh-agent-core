@@ -165,20 +165,24 @@ export async function composeProductionRuntime(options = {}) {
   }
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
 
-  // Accepted AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1: deployment-owned,
-  // startup-only static config. The production composition parses and
-  // validates it against the already-loaded Agent Definition; the Router
-  // receives only a synchronous resolved process config and never reads the
-  // file or learns product/channel selection rules.
+  // Accepted AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1: deployment-owned
+  // static config. The production composition validates it against the
+  // already-loaded Agent Definition. It then reloads at each NEW per-Agent
+  // process boundary so target-only rollback needs neither a runtime restart
+  // nor a file watcher. The Router receives only a synchronous resolved
+  // process config and never reads the file or learns provider/model rules.
   const globalRoute = Object.freeze(opts.globalRoute ?? {
     provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
     model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
   })
-  const modelOverrides = loadAgentModelOverrides(
-    layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json'),
-    definition.listAgents().map((agent) => agent.id),
-  )
+  const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
+  const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
+  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
   const resolveProcessConfig = (agentId) => {
+    // Router calls this only after it has established that no live process
+    // can be reused and immediately before provisioning/spawn. Reloading here
+    // is process-start configuration, never per-turn dynamic routing.
+    const modelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
     const route = modelOverrides.resolve(agentId, globalRoute)
     const override = modelOverrides.overrides[agentId]
     return Object.freeze({
@@ -199,9 +203,9 @@ export async function composeProductionRuntime(options = {}) {
       }),
     })
   }
-  if (Object.keys(modelOverrides.overrides).length > 0) {
+  if (Object.keys(initialModelOverrides.overrides).length > 0) {
     const target = CHATGPT_SUBSCRIPTION_V1.targetAgentId
-    const route = resolveProcessConfig(target)
+    const route = initialModelOverrides.resolve(target, globalRoute)
     log.log(`agent model override loaded for ${target}: provider=${route.provider} model=${route.model}`)
   }
 
