@@ -120,6 +120,9 @@ export async function ensureAgentCredential({
   const agent = definition?.agents.find((candidate) => candidate.id === agentId)
   if (agent === undefined) fail('agent_not_found', 'agent_not_found', { agentId })
 
+  const store = await readCredentialStoreDocument(credentialsFile)
+  const stored = store.credentials[agentId]
+
   requirePrerequisite(prerequisites, 'c')
   if (auth === null || typeof auth !== 'object') fail('auth_configuration_error', 'Auth provisioning client is required')
   const verificationContext = {
@@ -144,9 +147,6 @@ export async function ensureAgentCredential({
   const clientId = entityId(client, 'client')
   const clientCreated = created(client)
   assertActive(client, 'auth_client_missing_or_revoked', { agentId, clientId })
-
-  const store = await readCredentialStoreDocument(credentialsFile)
-  const stored = store.credentials[agentId]
 
   if (clientCreated) {
     if (stored !== undefined) {
