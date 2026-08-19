@@ -169,21 +169,43 @@ test('real production seam: local exact package, create/resume restart, and roll
   assert.deepEqual(secondOther.initializeEvidence?.route, GLOBAL)
   assert.ok(secondOther.initializeEvidence?.registeredProviders?.includes('oc-go'))
   assert.equal(existsSync(join(otherHome, 'profiles', 'node_modules', 'dsh-codex')), false)
-  await secondTarget.shutdown(5_000)
-  await secondOther.shutdown(5_000)
-  await second.stop()
 
-  // Mechanical rollback through the same production composition and real
-  // AgentProcess initialization. No model request is made on the global route.
+  // Mechanical target-only rollback in the SAME production runtime: the
+  // non-target process remains alive while only the target is replaced.
+  const runtimeIdentity = second
+  const targetPidBefore = secondTarget.pid
+  const otherPidBefore = secondOther.pid
   unlinkSync(layout.agentModelOverrides)
-  const rolledBack = await compose(layout)
-  runtimes.push(rolledBack)
-  const rolledTarget = await rolledBack.router.ensureRunning(TARGET)
-  const rolledOther = await rolledBack.router.ensureRunning(OTHER)
-  processes.push(rolledTarget, rolledOther)
+  await secondTarget.shutdown(5_000)
+  const rolledTarget = await second.router.ensureRunning(TARGET)
+  processes.push(rolledTarget)
+  const rolledOther = await second.router.ensureRunning(OTHER)
+  assert.equal(second, runtimeIdentity)
+  assert.notEqual(rolledTarget.pid, targetPidBefore)
+  assert.equal(rolledOther.pid, otherPidBefore)
   assert.deepEqual(rolledTarget.initializeEvidence?.route, GLOBAL)
   assert.deepEqual(rolledOther.initializeEvidence?.route, GLOBAL)
   assert.ok(rolledTarget.initializeEvidence?.registeredProviders?.includes('oc-go'))
   assert.ok(rolledOther.initializeEvidence?.registeredProviders?.includes('oc-go'))
+
+  // Both native session paths after rollback carry the new process route:
+  // persisted main resumes; a new session is created. The test provider is
+  // deliberately unreachable, so both turns fail rather than call a model.
+  for (const [sessionId, mode] of [['main', 'resumed'], ['rollback-fresh', 'created']]) {
+    await assert.rejects(rolledTarget.turn(sessionId, `rollback ${mode}`, {}, 30_000))
+    assert.equal(rolledTarget.creations.at(-1)?.mode, mode)
+    assert.deepEqual(rolledTarget.initializeEvidence?.route, GLOBAL)
+  }
+
+  // A malformed deployment file blocks only a later target respawn. The
+  // already-running non-target process remains the exact same process/route.
+  writeFileSync(layout.agentModelOverrides, '{malformed', 'utf8')
+  await rolledTarget.shutdown(5_000)
+  await assert.rejects(
+    second.router.ensureRunning(TARGET),
+    (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID',
+  )
+  assert.equal((await second.router.ensureRunning(OTHER)).pid, otherPidBefore)
+  assert.deepEqual(rolledOther.initializeEvidence?.route, GLOBAL)
   assert.deepEqual(readFileSync(sharedProfile), sharedBefore)
 })
