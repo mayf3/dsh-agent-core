@@ -70,7 +70,7 @@ export function childSpawnConfig(log = console) {
 }
 
 /** Base environment for one agent process (its own home, workspace as cwd). */
-export function agentEnv(home, extra = {}) {
+export function agentEnv(home, extra = {}, omit = []) {
   const env = {
     ...process.env,
     DSH_HOME: home,
@@ -85,8 +85,37 @@ export function agentEnv(home, extra = {}) {
       if (match !== null) env.OPENCODE_GO_API_KEY = match[1]
     }
   }
+  for (const name of omit) delete env[name]
   return env
 }
+
+/** Redact common OAuth/API token shapes before an error reaches logs/callers. */
+export function redactSensitiveText(value) {
+  return String(value ?? '')
+    .replace(/("(?:access_token|refresh_token|id_token|token)"\s*:\s*")[^"]*(")/giu, '$1[REDACTED]$2')
+    .replace(/\b(Bearer\s+)[^\s,;]+/giu, '$1[REDACTED]')
+    .replace(/\b(sk-[A-Za-z0-9_-]{8,})\b/gu, '[REDACTED]')
+    .replace(/((?:access|refresh|id)[_-]?token\s*[=:]\s*)[^\s,;]+/giu, '$1[REDACTED]')
+}
+
+/** Provider/account failures stay truthful and never trigger route fallback. */
+export function classifyProviderFailure(code, message) {
+  const text = `${code ?? ''} ${message ?? ''}`.toLowerCase()
+  if (/insufficient[_ -]?quota|account[_ -]?quota|quota (?:exhausted|exceeded)|usage limit/u.test(text)) return 'account_quota_exhausted'
+  if (/oauth.*(?:expired|revoked)|(?:expired|revoked).*oauth|invalid[_ -]?grant/u.test(text)) return 'oauth_expired_or_revoked'
+  if (/credential[_ -]?missing|auth(?:entication)? file.*(?:missing|not found)/u.test(text)) return 'credential_missing'
+  if (/model[_ -]?(?:unavailable|not[_ -]?found)|unknown model|unsupported model/u.test(text)) return 'model_unavailable'
+  if (/provider[_ -]?unavailable|service unavailable|econnrefused|enotfound|network.*unavailable/u.test(text)) return 'provider_unavailable'
+  return typeof code === 'string' && code !== '' ? code : undefined
+}
+
+const FAIL_LOUD_PROVIDER_ERRORS = new Set([
+  'credential_missing',
+  'oauth_expired_or_revoked',
+  'provider_unavailable',
+  'account_quota_exhausted',
+  'model_unavailable',
+])
 
 /**
  * One owned DSH agent process. `turn()` is the only business entry: prompt a
@@ -94,7 +123,7 @@ export function agentEnv(home, extra = {}) {
  * text. `exit` promise settles when the OS process dies (any cause).
  */
 export class AgentProcess {
-  constructor({ agentId, home, workspace, profile, log = console, env = {} }) {
+  constructor({ agentId, home, workspace, profile, provider, model, omitEnv = [], log = console, env = {} }) {
     if (typeof profile !== 'string' || profile === '') {
       throw new TypeError('AgentProcess: profile is required (no default — the caller owns the composition choice)')
     }
@@ -102,6 +131,13 @@ export class AgentProcess {
     this.home = home
     this.workspace = workspace
     this.profile = profile
+    // Immutable for this process lifetime. Production composition resolves a
+    // per-Agent override before construction; every create/resume in this
+    // process therefore inherits the same initialize route. Non-production
+    // callers retain the historical global-env/default behavior.
+    this.provider = provider ?? process.env.DSH_AGENT_PROVIDER ?? 'opencode-go'
+    this.model = model ?? process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash'
+    this.omitEnv = [...omitEnv]
     this.log = log
     this.env = env // extra env for the child (e.g. DSH_AGENT_ID)
     this.pid = undefined
@@ -141,7 +177,7 @@ export class AgentProcess {
     }
     const child = spawn(program, args, {
       cwd: this.workspace,
-      env: agentEnv(this.home, this.env),
+      env: agentEnv(this.home, this.env, this.omitEnv),
       stdio: ['pipe', 'pipe', 'pipe'],
       ...(spawnUid === undefined ? {} : { uid: spawnUid, gid: spawnGid }),
     })
@@ -158,8 +194,9 @@ export class AgentProcess {
       this.exitResolve?.({ code, signal })
     })
     child.stderr.on('data', (chunk) => {
-      this.stderr += chunk
-      for (const line of String(chunk).split('\n')) {
+      const safeChunk = redactSensitiveText(chunk)
+      this.stderr += safeChunk
+      for (const line of safeChunk.split('\n')) {
         const match = line.match(/\[demo-server\] session (\S+) (created|resumed) \((\d+) events\)/)
         if (match !== null) {
           this.creations.push({ sessionId: match[1], mode: match[2], events: Number(match[3]) })
@@ -190,8 +227,12 @@ export class AgentProcess {
             // cross-workspace session reuse with a string error code
             // (SESSION_WORKSPACE_MISMATCH, AGENT_CORE_BINDING_WORKSPACE_V1 R3);
             // copying it onto the Error lets the Router surface it verbatim.
-            const error = new Error(`${message.error.code ?? -1}: ${message.error.message}`)
-            if (typeof message.error.code === 'string') error.code = message.error.code
+            const safeMessage = redactSensitiveText(message.error.message)
+            const classification = classifyProviderFailure(message.error.code, safeMessage)
+            const error = new Error(`${message.error.code ?? -1}: ${safeMessage}`)
+            if (classification !== undefined) error.code = classification
+            error.provider = this.provider
+            error.model = this.model
             waiter.reject(error)
           } else waiter.resolve(message.result)
         }
@@ -258,13 +299,14 @@ export class AgentProcess {
       try {
         await this.request('initialize', {
           cwd: this.workspace,
-          provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
-          model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
+          provider: this.provider,
+          model: this.model,
           maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),
         })
         this.log.log?.(`[router] agent ${this.agentId} ready pid=${this.pid} (${Date.now() - started}ms)`)
         return Date.now() - started
-      } catch {
+      } catch (error) {
+        if (FAIL_LOUD_PROVIDER_ERRORS.has(error?.code)) throw error
         if (Date.now() - started > timeoutMs) throw new Error(`initialize timeout for agent ${this.agentId}`)
         await new Promise(resolveTimeout => setTimeout(resolveTimeout, 300))
       }

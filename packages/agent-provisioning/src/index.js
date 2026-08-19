@@ -30,8 +30,10 @@
  */
 
 import {
-  copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync,
+  copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync,
+  renameSync, rmSync, symlinkSync, writeFileSync,
 } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -70,6 +72,133 @@ export function cliBin() {
     throw new Error(`dsh CLI not found at ${cli}; set DSH_HARNESS_ROOT to the deepseek-harness checkout`)
   }
   return cli
+}
+
+function provisioningError(code, message, cause) {
+  return Object.assign(new Error(`agent-provisioning: ${message}`, { cause }), { code })
+}
+
+/** Resolve the exact DSH version + source commit used by the spawned CLI. */
+export function readHarnessIdentity(harnessRoot = resolveHarnessRoot()) {
+  let version
+  try {
+    version = JSON.parse(readFileSync(join(harnessRoot, 'package.json'), 'utf8')).version
+  } catch (cause) {
+    throw provisioningError('dsh_version_mismatch', `cannot verify DSH version under ${harnessRoot}`, cause)
+  }
+  const result = spawnSync('git', ['-C', harnessRoot, 'rev-parse', 'HEAD'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  if (result.status !== 0) {
+    throw provisioningError('dsh_commit_mismatch', `cannot verify DSH commit under ${harnessRoot}`)
+  }
+  return { version, commit: result.stdout.trim() }
+}
+
+function atomicWriteJson(file, value) {
+  const temp = `${file}.tmp-${process.pid}`
+  writeFileSync(temp, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o644 })
+  renameSync(temp, file)
+}
+
+function defaultPluginInstaller({ profilesRoot, plugin, version }) {
+  const result = spawnSync('npm', [
+    'install', '--prefix', profilesRoot, '--no-save', '--no-package-lock', '--ignore-scripts',
+    `${plugin}@${version}`,
+  ], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  if (result.status !== 0) {
+    throw provisioningError('plugin_missing', `failed to install exact ${plugin}@${version}`)
+  }
+}
+
+/**
+ * Install/verify one exact external bundle in this Agent's own profile farm.
+ * The shared repo profile is never touched. Tests inject `pluginInstaller`
+ * so ordinary automation has no npm-registry dependency.
+ */
+export function provisionExactProfilePlugin(home, profile, requirement, options = {}) {
+  const { plugin, version, dshVersion, dshCommit } = requirement ?? {}
+  for (const [field, value] of Object.entries({ plugin, version, dshVersion, dshCommit })) {
+    if (typeof value !== 'string' || value === '') {
+      throw provisioningError('plugin_provisioning_invalid', `${field} must be a non-empty exact value`)
+    }
+  }
+  if (/^[~^*]|[xX]$|\s\|\||\s-\s/u.test(version)) {
+    throw provisioningError('plugin_version_mismatch', `plugin version must be exact (got ${version})`)
+  }
+
+  const identity = options.harnessIdentity ?? readHarnessIdentity(options.harnessRoot)
+  if (identity.version !== dshVersion) {
+    throw provisioningError('dsh_version_mismatch', `expected DSH ${dshVersion}, resolved ${identity.version ?? '(missing)'}`)
+  }
+  if (identity.commit !== dshCommit) {
+    throw provisioningError('dsh_commit_mismatch', `expected DSH commit ${dshCommit}, resolved ${identity.commit ?? '(missing)'}`)
+  }
+
+  const profilesRoot = join(home, 'profiles')
+  const installedPackage = join(profilesRoot, 'node_modules', plugin, 'package.json')
+  if (existsSync(installedPackage)) {
+    let installedVersion
+    try {
+      installedVersion = JSON.parse(readFileSync(installedPackage, 'utf8')).version
+    } catch (cause) {
+      throw provisioningError('plugin_version_mismatch', `cannot verify installed ${plugin}`, cause)
+    }
+    if (installedVersion !== version) {
+      throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${installedVersion ?? '(missing)'}`)
+    }
+  } else {
+    const installer = options.pluginInstaller ?? defaultPluginInstaller
+    installer({ profilesRoot, plugin, version })
+  }
+  if (!existsSync(installedPackage)) {
+    throw provisioningError('plugin_missing', `${plugin}@${version} is not resolvable from ${profilesRoot}/node_modules`)
+  }
+  let installedVersion
+  try {
+    installedVersion = JSON.parse(readFileSync(installedPackage, 'utf8')).version
+  } catch (cause) {
+    throw provisioningError('plugin_version_mismatch', `cannot verify installed ${plugin}`, cause)
+  }
+  if (installedVersion !== version) {
+    throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${installedVersion ?? '(missing)'}`)
+  }
+
+  const profilePackageFile = join(profilesRoot, profile, 'package.json')
+  const profilePackage = JSON.parse(readFileSync(profilePackageFile, 'utf8'))
+  const bundles = profilePackage?.dsh?.profile?.bundles
+  if (!Array.isArray(bundles)) {
+    throw provisioningError('plugin_provisioning_invalid', `${profilePackageFile} has no dsh.profile.bundles array`)
+  }
+  if (!bundles.includes(plugin)) {
+    bundles.push(plugin)
+    atomicWriteJson(profilePackageFile, profilePackage)
+  }
+  return { plugin, version, installedPackage, profilePackageFile }
+}
+
+/** Validate the Agent-owned OAuth store without ever reading its contents. */
+export function assertOAuthCredentialBoundary(home, credentialFile) {
+  const file = join(home, credentialFile)
+  let stat
+  try {
+    stat = lstatSync(file)
+  } catch (cause) {
+    if (cause?.code === 'ENOENT') throw provisioningError('credential_missing', `credential_missing: ${file}`)
+    throw provisioningError('credential_missing', `credential_missing: cannot stat ${file}`, cause)
+  }
+  if (!stat.isFile()) throw provisioningError('credential_permission_invalid', `credential store must be a regular file: ${file}`)
+  if ((stat.mode & 0o777) !== 0o600) {
+    throw provisioningError('credential_permission_invalid', `credential store permissions must be 0600: ${file}`)
+  }
+  if ((lstatSync(home).mode & 0o777) !== 0o700) {
+    throw provisioningError('credential_permission_invalid', `credential directory permissions must be 0700: ${home}`)
+  }
+  return file
 }
 
 /** Create (or repair) one symlink; fails loud on a real file at the target. */
@@ -205,8 +334,9 @@ export function ensureRepoCoreBridge() {
  * production spawn must never silently fall back to a default composition.
  * @param {string} home - absolute home directory (the agent's DSH_HOME).
  * @param {string} workspace - absolute working directory for the agent process.
- * @param {object} options - `{ profile }` — the per-agent profile to install;
- *   unknown profile names fail loud.
+ * @param {object} options - `{ profile, subscription? }` — the per-agent
+ *   profile to install plus an optional deployment-resolved target-only
+ *   external plugin/credential requirement; unknown profiles fail loud.
  * @returns {string} the resolved home path.
  */
 export function provisionAgentHome(home, workspace, options = {}) {
@@ -241,6 +371,25 @@ export function provisionAgentHome(home, workspace, options = {}) {
   const agentCoreFarm = join(farm, '@agent-core')
   for (const [pkg, relTarget] of Object.entries(def.farmLinks)) {
     ensureSymlink(join(REPO, relTarget), join(agentCoreFarm, pkg))
+  }
+
+  // Accepted ChatGPT Subscription Provider V1: the composition decides
+  // whether THIS agent has an opt-in and hands the immutable requirement
+  // through the Router. This generic provisioning layer only performs the
+  // requested exact install/check inside this home; it never selects agents.
+  if (options.subscription !== undefined) {
+    const subscription = options.subscription
+    provisionExactProfilePlugin(home, profile, {
+      plugin: subscription.plugin,
+      version: subscription.pluginVersion,
+      dshVersion: subscription.dshVersion,
+      dshCommit: subscription.dshCommit,
+    }, {
+      pluginInstaller: options.pluginInstaller,
+      harnessIdentity: options.harnessIdentity,
+      harnessRoot: options.harnessRoot,
+    })
+    assertOAuthCredentialBoundary(home, subscription.credentialFile)
   }
 
   mkdirSync(workspace, { recursive: true })

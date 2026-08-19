@@ -108,6 +108,11 @@ export const Config = z.object({
   // `ready()`, `deliver()`, `shutdown()` and the `pid`/`exit`/`exitPromise`
   // fields ensureRunning relies on. Unit tests inject a fake so the
   // admission path can be driven without real DSH children.
+  // `resolveProcessConfig(agentId) => {provider, model, subscription?}` is a
+  // synchronous composition-owned resolver. The Router does not parse model
+  // config or select routes; it mechanically hands the already-resolved
+  // process values to provisioning + AgentProcess.
+  // `provisionHome` is a test seam (defaults to provisionAgentHome).
 })
 
 /** Default Binding store location: control-plane state under the shared home. */
@@ -217,6 +222,10 @@ export function apply(ctx, config) {
   const store = new BindingStore({ storeFile })
   /** Per-agent process factory: default AgentProcess, injectable in tests. */
   const processFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
+  const resolveProcessConfig = typeof cfg.resolveProcessConfig === 'function'
+    ? cfg.resolveProcessConfig
+    : () => ({})
+  const provisionHome = typeof cfg.provisionHome === 'function' ? cfg.provisionHome : provisionAgentHome
 
   /** agentId -> AgentProcess registry (one live owner per agent). */
   const registry = new Map()
@@ -536,17 +545,24 @@ export function apply(ctx, config) {
     // without any root override.
     const workspace = workspaceBootstrap.resolveWorkspace(agentId)
     const home = workspaceBootstrap.resolveDshHome(agentId)
+    const processConfig = resolveProcessConfig(agentId) ?? {}
     // Provision the agent home (settings/credentials/profile/plugin farm) and
     // the workspace directory — idempotent. The provisioning is driven by
     // cfg.agentProfile: whatever profile this router spawns must be fully
     // installed HERE, so a fresh Agent works without any external
     // pre-provisioning (FIX 1).
-    provisionAgentHome(home, workspace, { profile: cfg.agentProfile })
+    provisionHome(home, workspace, {
+      profile: cfg.agentProfile,
+      ...(processConfig.subscription === undefined ? {} : { subscription: processConfig.subscription }),
+    })
     const proc = processFactory({
       agentId,
       home,
       workspace,
       profile: cfg.agentProfile,
+      provider: processConfig.provider,
+      model: processConfig.model,
+      omitEnv: processConfig.omitEnv,
       log,
       // The per-agent process must know its own identity: the memory plugin
       // and the switch tool resolve agentId from $DSH_AGENT_ID when set.
