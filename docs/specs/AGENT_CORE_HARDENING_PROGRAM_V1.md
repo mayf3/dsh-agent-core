@@ -8,11 +8,11 @@ implementation_authority: none
 
 # Agent Core Hardening Program V1
 
-> 性质：**Program Spec（只冻结问题、Owner 决策、authority 关系与实施顺序）**  
-> 仓库：`mayf3/dsh-agent-core`  
-> 原始基线：`main@93f9acf67cb9b4862fc9b8ffaf593630086285ba`  
-> 工作分支：`agent/security-reliability-hardening-plan-v1`（Draft PR #11）  
-> 本轮允许：Spec / Decision / authority 文本。  
+> 性质：**Program Spec（只冻结问题、Owner 决策、authority 关系与实施顺序）**
+> 仓库：`mayf3/dsh-agent-core`
+> 原始基线：`main@93f9acf67cb9b4862fc9b8ffaf593630086285ba`
+> 工作分支：`agent/security-reliability-hardening-plan-v1`（Draft PR #11）
+> 本轮允许：Spec / Decision / authority / evidence 文本。
 > 本轮禁止：产品实现、生产 job 创建、missed-run 补跑、Scheduler store 修改、部署与 merge。
 
 本 Program **不授权任何 Implementation PR**。任何实现必须拥有独立、已 accepted、且已存在于 implementation base branch 的 implementation Spec。
@@ -25,6 +25,7 @@ docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md
 docs/AGENT_CORE_ROADMAP_V1.md
 docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md
 docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md
+docs/investigations/AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1.md
 ```
 
 除上述文档外，本轮不得修改代码、配置、production state 或 Scheduler store。
@@ -199,15 +200,33 @@ svc-forum / svc-workflow
 
 固定程序名、固定 executable 路径和 localhost 都不是 authentication。Forum 与 Workflow 必须使用不同 credential，可独立轮换和吊销；raw credential 不得进入日志、响应、Agent workspace 或 Agent child 环境。
 
-### 2.4 可靠性 hardening 必须拆分
+### 2.4 Product API classification
+
+Product API 是人类 Product Surface / authorized client 使用的 Control Plane surface，不是 Notification Ingress，也不是 Agent-to-Agent delegation API。
+
+```text
+PRODUCT_API_CLASSIFICATION = AUTHENTICATED_PRODUCT_SURFACE_CONTROL_PLANE
+CURRENT_PRODUCT_API_STATE = TRANSITIONAL_UNAUTHENTICATED_LOOPBACK
+PRODUCT_API_TARGET_STATE = AUTHENTICATED_PRODUCT_SURFACE_CONTROL_PLANE
+
+AGENT_CHILD_DIRECT_ACCESS = FORBIDDEN
+EXPOSURE_BEYOND_LOOPBACK_BEFORE_AUTH = FORBIDDEN
+LOCALHOST = NOT_AUTHENTICATION
+FIXED_PROGRAM_PATH = NOT_AUTHENTICATION
+```
+
+PR #11 不冻结具体认证协议。bearer、surface session credential 或等价机制由独立 `PRODUCT_API_AUTHENTICATION_V1` child Spec 决定；但可信 caller identity、Agent child 直接访问拒绝、以及未认证前不得扩大到 loopback 之外，已经是本 Program 的上位边界。
+
+### 2.5 可靠性 hardening 必须拆分
 
 ```text
 AGENT_PROCESS_PENDING_RPC_CAN_HANG_FOREVER = MUST_FIX
 NOTIFICATION_INGRESS_ANONYMOUS_AND_NON_IDEMPOTENT = MUST_FIX
+PRODUCT_API_UNAUTHENTICATED_CALLER = MUST_FIX
 SCHEDULER_TIMEOUT_WITHOUT_TERMINATION_PROOF = MUST_FIX
 ```
 
-三者不得在一个 implementation PR 中混做。
+AgentProcess、Notification、Product API 与 Scheduler 的实现不得在一个 implementation PR 中混做。
 
 ---
 
@@ -224,11 +243,70 @@ POST /v1/deliver
 
 当前只依赖 loopback bind，没有 caller identity、caller allowlist 或 service credential。Router `agentRouter.deliver()` 可以继续作为内部 admission primitive；修复 owner 是 ingress/auth 边界，Router 不获得 Forum / Workflow 产品特例。
 
-### 3.2 AgentProcess
+### 3.2 Product API
+
+当前 production compose 默认启用 Product API：
+
+```text
+DEFAULT_ENABLE_CONDITION = PRODUCT_API_ENABLED != "0"
+BIND = 127.0.0.1:8787
+
+GET  /health
+GET  /v1/agents
+GET  /v1/binding
+POST /v1/switch-agent
+POST /v1/message
+
+CURRENT_CALLER_IDENTITY = NONE
+CURRENT_CREDENTIAL_OR_ALLOWLIST = NONE
+```
+
+因此当前事实不是“已认证 Control Plane”，而是：
+
+```text
+CURRENT_PRODUCT_API_STATE = TRANSITIONAL_UNAUTHENTICATED_LOOPBACK
+```
+
+Loopback 只减少网络暴露面，不证明 caller identity。同机 Agent child 或其他进程不得因此被视为 authorized Product Surface caller。
+
+### 3.3 AgentProcess lifecycle
 
 当前 pending waiter 可能在 child `error/exit`、pipe 断开、initialize 无回复或 prompt receipt 无回复后永久不结束，继而 wedged `ensureRunning` 或整个 per-Agent turn queue。
 
-### 3.3 Scheduler
+### 3.4 Interactive turn timeout evidence
+
+本 Program 纳入字节级原样 evidence authority：
+
+```text
+INVESTIGATION = docs/investigations/AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1.md
+SOURCE_COMMIT = c9894262c3ae9497145439e8d2d2de0518254335
+
+agent = agt_shopping-list-agent
+session = main
+effective turn deadline = 300000ms
+real turn durations = 5m46s / 5m32s
+```
+
+两次真实交互 turn 都出现：
+
+```text
+Router 在 300s 向用户报告 turn timeout
+→ child 未取消、未 kill
+→ 原 turn 后续 reason: completed
+→ 最终 assistant reply 已产生但未投递
+```
+
+其中第一次 turn 在用户可见 timeout 前已经完成淘宝加购与购物清单写入等外部副作用。由此确认：
+
+```text
+TIMEOUT_WITHOUT_PROVEN_TERMINATION != ORDINARY_FAILED
+TIMEOUT_WITHOUT_PROVEN_TERMINATION = outcome_unknown
+TIMEOUT_DOES_NOT_PROVE_NO_SIDE_EFFECT = YES
+```
+
+当前 Router timeout throw 会结束等待并释放 turnQueue admission，而原 child turn 仍可继续执行；因此下一 turn 可能在未知旧执行尚未 terminal 时进入同一 AgentProcess。该缺口必须由 AgentProcess child Spec 收口。
+
+### 3.5 Scheduler
 
 当前 Scheduler 使用 `Promise.race()` 停止等待并发送 `AbortSignal`，但 Router / AgentProcess 没有真实 cancel + proven termination seam。因此：
 
@@ -245,7 +323,7 @@ agent:<agentId>:cron:<jobId>
 
 这与 D-006 的“每次 scheduled execution 使用 fresh non-main Session”冲突。
 
-### 3.4 Scheduled-work migration evidence
+### 3.6 Scheduled-work migration evidence
 
 输入 evidence：
 
@@ -282,7 +360,7 @@ READY_TO_RESTORE_BEFORE_HARDENING = 0
 SPEC_ID = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
 ```
 
-最小范围：
+既有最小范围：
 
 - process state；
 - shared startup promise；
@@ -293,6 +371,86 @@ SPEC_ID = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
 - turnQueue 不永久 wedged；
 - shutdown 最终状态；
 - evidence buffer 有界。
+
+新 Investigation 形成以下 mandatory child-Spec inputs；本 Program 不代替完整 child Spec authoring。
+
+#### 4.1.1 Deadline configuration model
+
+必须分别冻结：
+
+```text
+initializeTimeoutMs
+promptReceiptTimeoutMs
+turnTimeoutMs
+shutdownGraceMs
+```
+
+```text
+CONFIG_OWNER = AgentProcess / production deployment configuration
+CONFIG_SHAPE = global defaults + optional static per-Agent override
+NOT_OWNED_BY = Feishu, Binding, Session, Scheduler
+```
+
+四个字段生命周期和 deadline 起点不同，不得被压成一个含糊的通用 timeout 值。具体配置载体与兼容迁移由 child Spec 决定。
+
+#### 4.1.2 Interactive timeout outcome
+
+```text
+timeout without proven termination
+→ outcome_unknown
+
+INTERACTIVE_TURN_TIMEOUT_IS_ORDINARY_FAILED = NO
+TIMEOUT_AUTOMATIC_REPLAY = FORBIDDEN
+TIMEOUT_PROVES_NO_SIDE_EFFECT = NO
+```
+
+人工 `main` turn timeout 不得自动重发同一用户消息，不得声称任务没有产生外部副作用，也不得用普通 failure retry 语义处理。
+
+#### 4.1.3 AgentProcess fence
+
+当前：
+
+```text
+Router throw timeout
+→ caller wait ends / turnQueue admission can advance
+→ original child turn may still continue
+```
+
+后续 child Spec 必须冻结：
+
+```text
+outcome_unknown unresolved
+AND no proven termination
+→ SAME_AGENTPROCESS_NEW_TURN_ADMISSION = FORBIDDEN
+```
+
+只有可信 terminal event 或 proven termination 收口后，才允许同一 AgentProcess 接受新 turn。
+
+#### 4.1.4 Late terminal reconciliation
+
+Timeout 后仍必须监听并持久保留 exact turn 的最终 evidence：
+
+```text
+late_completed
+late_failed
+or semantically equivalent reconciliation state
+```
+
+最终 assistant output 不得无声丢失。是否自动向用户投递迟到 reply 属于产品语义，必须由 child Spec 明确决定：
+
+```text
+LATE_REPLY_DELIVERY = DEFER_TO_AGENTPROCESS_CHILD_SPEC
+```
+
+Implementation 不得自行选择。
+
+#### 4.1.5 No replay
+
+```text
+TIMEOUT_AUTOMATIC_REPLAY = FORBIDDEN
+```
+
+尤其当 tool call 或外部副作用已经发生或无法排除时，不得自动 replay 原用户消息。
 
 ```text
 DSH_KERNEL_CHANGE = NONE
@@ -361,6 +519,8 @@ Owner 已明确要求在 PR #11 中先完成该 child Spec 与 proposed replacem
 
 Scheduler implementation 至少依赖 AgentProcess 提供可信生命周期 / 终止 evidence；在 `cancel + proven termination` 尚不存在时，timeout 的唯一安全 terminal observation 是 `outcome_unknown`。
 
+`PRODUCT_API_AUTHENTICATION_V1` 是独立 Product Surface hardening follow-up，不改变上述已经通过复审的 1→2→3 dependency chain；但在它 accepted + implemented 前，Product API 不得暴露到 loopback 之外，也不得把 Agent child 视为 authorized caller。
+
 通用规则：
 
 - proposed Spec / Decision 不授权代码；
@@ -374,7 +534,27 @@ Scheduler implementation 至少依赖 AgentProcess 提供可信生命周期 / �
 
 ## 6. P1 Follow-ups
 
-### 6.1 Production Runtime Readiness V1
+### 6.1 Product API Authentication V1
+
+```text
+SPEC_ID = PRODUCT_API_AUTHENTICATION_V1
+CLASSIFICATION = AUTHENTICATED_PRODUCT_SURFACE_CONTROL_PLANE
+DISTINCT_FROM_NOTIFICATION_INGRESS = YES
+```
+
+该 child Spec 至少必须冻结：
+
+- Product Surface caller identity；
+- credential / surface-session credential / 等价认证机制；
+- caller allowlist 与 401 / 403；
+- Agent child 直接访问必须失败；
+- raw credential 不进入 Agent child、workspace、日志或响应；
+- 未认证前不得扩大到 loopback 之外；
+- rollback 与 credential rotation。
+
+PR #11 不选择 bearer、surface session credential 或其他具体协议。
+
+### 6.2 Production Runtime Readiness V1
 
 处理 async effect、Feishu connect、HTTP listen、disabled handle、graceful stop，以及：
 
@@ -382,7 +562,7 @@ Scheduler implementation 至少依赖 AgentProcess 提供可信生命周期 / �
 RUNTIME_READY = every enabled component proven ready
 ```
 
-### 6.2 Trusted Spawn Helper Restriction V1
+### 6.3 Trusted Spawn Helper Restriction V1
 
 当前 setuid helper 允许调用者临时获得“切到 uid 502 并启动程序”的 root 权限。后续最小收口：
 
@@ -393,7 +573,7 @@ RUNTIME_READY = every enabled component proven ready
 - 清理危险环境变量；
 - Kernel 不变。
 
-### 6.3 Per-Agent Security Domain V1
+### 6.4 Per-Agent Security Domain V1
 
 仅在出现不互信租户、高敏差异权限、外部不可信代码或真实 peer-Agent 越权事件后启动。当前不反向阻塞开发。
 
@@ -405,6 +585,8 @@ RUNTIME_READY = every enabled component proven ready
 
 旧 peer-Agent adversarial security-domain claim 已在本 PR 做最小 amendment / backlink。其余 ownership、thin-layer 与 DSH-native 方向保留。
 
+本 amendment 新增的 Product API disposition 与 interactive timeout evidence 只补充 Hardening Program 的 surface/lifecycle scope，不改变 Product Architecture / Roadmap 已冻结的 ownership 或阶段语义；无需在本轮重复改写两份文档。
+
 ### TRUST-BOUNDARY-REPORT
 
 ```text
@@ -415,6 +597,26 @@ CURRENT_ADVERSARIAL_ISOLATION_REQUIREMENT = DEFERRED
 ### Agent Router Delivery V0
 
 内部 admission primitive 保留；service authentication / idempotency 由 ingress boundary 拥有。
+
+### Product API
+
+```text
+CURRENT_PRODUCT_API_STATE = TRANSITIONAL_UNAUTHENTICATED_LOOPBACK
+PRODUCT_API_TARGET_STATE = AUTHENTICATED_PRODUCT_SURFACE_CONTROL_PLANE
+PRODUCT_API_AUTH_FOLLOWUP = PRODUCT_API_AUTHENTICATION_V1
+```
+
+Product API 与 Notification Ingress 是不同 surface，必须分别拥有可信 caller identity，不共享或偷换 caller model。
+
+### Interactive turn timeout Investigation
+
+```text
+EVIDENCE_VALID = YES
+AGENTPROCESS_CHILD_SCOPE_INPUT = MANDATORY
+SCHEDULER_CHILD_SPEC_CHANGE_REQUIRED = NO
+```
+
+该 Investigation 是 evidence authority，不授予实现权限；Scheduler Spec 与 D-007 语义不因人工 main turn evidence 而改变。
 
 ### D-005 Scheduler Replacement V1
 
@@ -442,6 +644,10 @@ D-007 必须完整吸收该约束。
 
 本 Program 不做：
 
+- AgentProcess implementation；
+- Product API authentication implementation；
+- Product API 具体认证协议选择；
+- late reply 自动投递策略选择；
 - per-Agent OS UID / container / VM 隔离；
 - 通用 IAM / Policy Engine；
 - Forum / Workflow 业务逻辑进入 Router；
@@ -466,13 +672,17 @@ D-007 必须完整吸收该约束。
 1. cooperative shared-host trust model 与 Control Plane credential boundary 清楚；
 2. Agent-to-Agent work、switchAgent、Notification、task delegation 正确拆分；
 3. Notification 只允许 authenticated `svc-forum` / `svc-workflow`；
-4. AgentProcess / Notification / Scheduler 三个 child scope 不混写；
-5. timeout 不等于 proven failure；
-6. D-005 disposition 已改为完整 supersession，不再要求同 stable ID amendment；
-7. proposed D-007 完整重述 preserved / replaced D-005 semantics；
-8. D-006 fresh scheduled Session 约束进入 Scheduler child；
-9. OpenClaw migration no-catch-up 与 restore gate 已冻结；
-10. 所有变更仍为 Spec / Decision text only，无代码、production state、store 或 Kernel 变化。
+4. Product API 当前状态、authenticated control-plane target、Agent-child denial 与 loopback exposure gate 明确；
+5. AgentProcess / Notification / Scheduler 三个既有 child scope 不混写，Product API 作为独立 follow-up；
+6. interactive main-turn timeout evidence 已进入 AgentProcess child mandatory inputs；
+7. interactive timeout 未证明终止时为 `outcome_unknown`，禁止新 turn admission、自动 replay 与无副作用断言；
+8. late terminal reconciliation 必须保留，late reply delivery 决策明确留给 AgentProcess child；
+9. timeout 不等于 proven failure；
+10. D-005 disposition 已改为完整 supersession，不再要求同 stable ID amendment；
+11. proposed D-007 完整重述 preserved / replaced D-005 semantics；
+12. D-006 fresh scheduled Session 约束进入 Scheduler child；
+13. OpenClaw migration no-catch-up 与 restore gate 已冻结；
+14. 所有变更仍为 Spec / Decision / evidence text only，无代码、production state、store 或 Kernel 变化。
 
 ---
 
@@ -491,6 +701,21 @@ NOTIFICATION_INGRESS_ALLOWED_CALLERS = svc-forum, svc-workflow
 ANONYMOUS_NOTIFICATION_INGRESS = REJECT
 DIRECT_AGENT_USE_OF_NOTIFICATION_CREDENTIAL = REJECT
 
+PRODUCT_API_CURRENT_STATE = TRANSITIONAL_UNAUTHENTICATED_LOOPBACK
+PRODUCT_API_CLASSIFICATION = AUTHENTICATED_PRODUCT_SURFACE_CONTROL_PLANE
+PRODUCT_API_TARGET_STATE = AUTHENTICATED_PRODUCT_SURFACE_CONTROL_PLANE
+PRODUCT_API_AUTH_FOLLOWUP = PRODUCT_API_AUTHENTICATION_V1
+AGENT_CHILD_DIRECT_PRODUCT_API_ACCESS = FORBIDDEN
+EXPOSURE_BEYOND_LOOPBACK_BEFORE_AUTH = FORBIDDEN
+
+INTERACTIVE_TIMEOUT_EVIDENCE = AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1@c9894262c3ae9497145439e8d2d2de0518254335
+AGENTPROCESS_TIMEOUT_FIELDS = initializeTimeoutMs,promptReceiptTimeoutMs,turnTimeoutMs,shutdownGraceMs
+TURN_DEADLINE_OUTCOME = outcome_unknown
+NEW_TURN_AFTER_OUTCOME_UNKNOWN = FORBIDDEN_UNTIL_LATE_TERMINAL_OR_PROVEN_TERMINATION
+LATE_TERMINAL_RECONCILIATION = REQUIRED
+LATE_REPLY_DELIVERY = DEFER_TO_AGENTPROCESS_CHILD_SPEC
+AUTOMATIC_REPLAY = FORBIDDEN
+
 FIRST_IMPLEMENTATION_DEPENDENCY = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
 SECOND_IMPLEMENTATION_DEPENDENCY = NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1
 THIRD_CHILD_SPEC = SCHEDULER_TIMEOUT_OUTCOME_V1
@@ -501,8 +726,12 @@ D005_REPLACEMENT = D-007 / SCHEDULER_OCCURRENCE_OUTCOME_V2
 D005_DIRECT_NORMATIVE_AMENDMENT = FORBIDDEN
 D005_CURRENT_UNTIL_D007_ACCEPTED = YES
 
+SCHEDULER_SPEC_CHANGED = NO
+D007_SEMANTICS_CHANGED = NO
+
 KERNEL_CHANGE = NONE
 PRODUCT_CODE_CHANGE_THIS_PR = NONE
+IMPLEMENTATION_STARTED = NO
 PRODUCTION_STATE_CHANGE_THIS_PR = NONE
 SCHEDULER_STORE_CHANGE_THIS_PR = NONE
 MERGE = NO
