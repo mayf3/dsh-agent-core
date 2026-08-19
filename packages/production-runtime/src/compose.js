@@ -48,6 +48,7 @@ import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
+import { CHATGPT_SUBSCRIPTION_V1, loadAgentModelOverrides } from './model-overrides.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
 
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
@@ -77,6 +78,10 @@ export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
  *   seam; a missing credentials file fails closed per call, never at boot).
  * @param {Function} [options.processFactory] - per-agent process factory
  *   (test seam, forwarded to the Router; defaults to the real AgentProcess).
+ * @param {Function} [options.provisionHome] - test seam for Router-owned home
+ *   provisioning; production always uses provisionAgentHome.
+ * @param {{provider:string,model:string}} [options.globalRoute] - test seam;
+ *   production defaults to the existing DSH_AGENT_PROVIDER/MODEL route.
  * @param {object} [options.log] - logger (default stderr lines).
  * @returns {Promise<object>} the runtime handle: `{ ctx, layout, definition,
  *   router, feishu, broker, productApi, notificationIngress, store,
@@ -160,6 +165,43 @@ export async function composeProductionRuntime(options = {}) {
   }
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
 
+  // Accepted AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1: deployment-owned,
+  // startup-only static config. The production composition parses and
+  // validates it against the already-loaded Agent Definition; the Router
+  // receives only a synchronous resolved process config and never reads the
+  // file or learns product/channel selection rules.
+  const globalRoute = Object.freeze(opts.globalRoute ?? {
+    provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
+    model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
+  })
+  const modelOverrides = loadAgentModelOverrides(
+    layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json'),
+    definition.listAgents().map((agent) => agent.id),
+  )
+  const resolveProcessConfig = (agentId) => {
+    const route = modelOverrides.resolve(agentId, globalRoute)
+    const override = modelOverrides.overrides[agentId]
+    return Object.freeze({
+      provider: route.provider,
+      model: route.model,
+      ...(override === undefined ? {} : {
+        omitEnv: Object.freeze(['OPENAI_API_KEY']),
+        subscription: Object.freeze({
+          plugin: override.plugin,
+          pluginVersion: override.pluginVersion,
+          dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
+          dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
+          credentialFile: CHATGPT_SUBSCRIPTION_V1.credentialFile,
+        }),
+      }),
+    })
+  }
+  if (Object.keys(modelOverrides.overrides).length > 0) {
+    const target = CHATGPT_SUBSCRIPTION_V1.targetAgentId
+    const route = resolveProcessConfig(target)
+    log.log(`agent model override loaded for ${target}: provider=${route.provider} model=${route.model}`)
+  }
+
   // Feishu channel: mounted ONLY with real credentials. Absent => honest
   // offline (no fake recording seam in production); delivery-requesting
   // jobs fail loud as not-delivered.
@@ -178,6 +220,8 @@ export async function composeProductionRuntime(options = {}) {
     defaultSessionId: 'main',
     agentProfile,
     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),
+    ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),
+    resolveProcessConfig,
   })
 
   // V2 PREBOUND_ONLY Feishu ingress gate (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
@@ -296,6 +340,7 @@ export async function composeProductionRuntime(options = {}) {
     ctx,
     layout,
     agentProfile,
+    globalRoute,
     definition,
     router,
     feishu,

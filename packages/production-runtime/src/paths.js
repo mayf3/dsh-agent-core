@@ -15,6 +15,8 @@
  *     agents.json                       # Agent Definition config (existence
  *                                       #   authority; the runtime LOADS it,
  *                                       #   never writes it)
+ *     agent-model-overrides.json         # optional startup-only per-Agent
+ *                                       #   process model override
  *     bindings/bindings.json            # Router BindingStore — Bindings +
  *                                       #   per-surface bookmarks + Delivery
  *                                       #   V0 fresh-requestId mappings
@@ -47,7 +49,7 @@ export function defaultProductionRoot() {
  * Resolve the production persistent layout from one root.
  * @param {string} [rootInput] - absolute root; defaults to $PRODUCTION_RUNTIME_ROOT
  *   then ~/.agent-core. Relative inputs are resolved against cwd.
- * @returns {{root:string, agentsConfig:string, bindingsStore:string,
+ * @returns {{root:string, agentsConfig:string, agentModelOverrides:string, bindingsStore:string,
  *   jobsStore:string, runsLog:string, workspacesRoot:string, homesRoot:string,
  *   controlDir:string, evidenceLog:string, logsDir:string}}
  * @throws {TypeError} when the resolved root contains a `.demo` path segment
@@ -65,6 +67,7 @@ export function resolveProductionLayout(rootInput) {
   return {
     root,
     agentsConfig: join(root, 'agents.json'),
+    agentModelOverrides: join(root, 'agent-model-overrides.json'),
     bindingsStore: join(root, 'bindings', 'bindings.json'),
     jobsStore: join(root, 'scheduler', 'jobs.json'),
     runsLog: join(root, 'scheduler', 'runs.jsonl'),

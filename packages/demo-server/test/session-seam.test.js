@@ -44,14 +44,14 @@ function fakeCtx({ persisted = new Map() } = {}) {
     dispose: async function () { this.disposed = true },
   })
   const agents = {
-    create: async ({ sessionId, meta }) => {
-      calls.create.push({ sessionId, meta })
+    create: async ({ sessionId, meta, agentOptions }) => {
+      calls.create.push({ sessionId, meta, agentOptions })
       const handle = makeHandle(String(sessionId), meta?.cwd)
       persisted.set(String(sessionId), meta?.cwd)
       return handle
     },
-    resume: async ({ resumeSessionId }) => {
-      calls.resume.push({ resumeSessionId })
+    resume: async ({ resumeSessionId, agentOptions }) => {
+      calls.resume.push({ resumeSessionId, agentOptions })
       const id = String(resumeSessionId)
       return makeHandle(id, persisted.get(id))
     },
@@ -70,13 +70,13 @@ function fakeCtx({ persisted = new Map() } = {}) {
 }
 
 /** A seam over the fake ctx with initialize-time process cwd = WS_A. */
-function makeSeam(fake) {
+function makeSeam(fake, route = { provider: 'opencode-go', model: 'deepseek-v4-flash' }) {
   return createSessionSeam({
     ctx: fake,
     settings: {
       get cwd() { return WS_A },
-      get provider() { return 'opencode-go' },
-      get model() { return 'deepseek-v4-flash' },
+      get provider() { return route.provider },
+      get model() { return route.model },
       get maxTokens() { return undefined },
     },
   })
@@ -189,7 +189,7 @@ test('restart semantics (AC5 seam level): resume restores the persisted cwd and 
   await seam2.prompt('main-B', [{ type: 'text', text: 'b2' }], WS_B)
   assert.equal(fake2.calls.resume.length, 2)
   for (const call of fake2.calls.resume) {
-    assert.deepEqual(Object.keys(call), ['resumeSessionId'], 'resume carries NO meta:{cwd}')
+    assert.equal('meta' in call, false, 'resume carries NO meta:{cwd}')
   }
   assert.equal(persisted.get('main-A'), WS_A, 'cwd from the persisted header, never re-guessed')
   assert.equal(persisted.get('main-B'), WS_B)
@@ -201,4 +201,17 @@ test('restart semantics (AC5 seam level): resume restores the persisted cwd and 
     (error) => error.code === SESSION_WORKSPACE_MISMATCH,
   )
   assert.equal(persisted.get('main-A'), WS_A)
+})
+
+test('resolved Luna route is identical for session create and restart resume', async () => {
+  const route = { provider: 'openai-codex', model: 'gpt-5.6-luna' }
+  const persisted = new Map()
+  const first = fakeCtx({ persisted })
+  await makeSeam(first, route).prompt('main', [{ type: 'text', text: 'create' }], WS_A)
+  assert.deepEqual(first.calls.create[0].agentOptions, route)
+
+  const restarted = fakeCtx({ persisted })
+  await makeSeam(restarted, route).prompt('main', [{ type: 'text', text: 'resume' }], WS_A)
+  assert.deepEqual(restarted.calls.resume[0].agentOptions, route)
+  assert.deepEqual(restarted.calls.create, [], 'resume never creates a replacement with another route')
 })

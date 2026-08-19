@@ -35,6 +35,7 @@ test('layout derives every durable path under one root', () => {
   const layout = resolveProductionLayout('/opt/agent-core-root')
   assert.equal(layout.root, '/opt/agent-core-root')
   assert.equal(layout.agentsConfig, join(layout.root, 'agents.json'))
+  assert.equal(layout.agentModelOverrides, join(layout.root, 'agent-model-overrides.json'))
   assert.equal(layout.bindingsStore, join(layout.root, 'bindings', 'bindings.json'))
   assert.equal(layout.jobsStore, join(layout.root, 'scheduler', 'jobs.json'))
   assert.equal(layout.runsLog, join(layout.root, 'scheduler', 'runs.jsonl'))
