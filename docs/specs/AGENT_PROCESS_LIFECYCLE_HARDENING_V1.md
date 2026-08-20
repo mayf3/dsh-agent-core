@@ -1,8 +1,14 @@
 ---
 spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-status: proposed
+status: accepted
 date: 2026-08-20
+accepted_date: 2026-08-20
 type: implementation-spec (spec only; no implementation this round)
+accepted_reviewed_head: 8475318f12068a28fe937779c91735817b6db9ca
+independent_focused_re_review: PASS
+required_fixes: NONE
+required_fixes_closed: 9/9
+acceptance_finalize_semantic_change: none
 repository: mayf3/dsh-agent-core
 base_main: d83a2ff0e9644611707d7481ef88b4d7d49fb68e
 scope:
@@ -20,7 +26,7 @@ implementation_authority: none
 
 # AGENT_PROCESS_LIFECYCLE_HARDENING_V1 — 进程生命周期、deadline 与未知结果收口
 
-> 状态：**proposed**。
+> 状态：**accepted**（2026-08-20 acceptance finalize；reviewed semantic HEAD `8475318f12068a28fe937779c91735817b6db9ca`）。
 > 本轮：**SPEC ONLY**。
 > 不 implementation；不修改 production；不修改当前 `DSH_AGENT_TURN_TIMEOUT=900000` 运维缓解；不修改 Scheduler；不 merge。
 
@@ -31,13 +37,13 @@ implementation_authority: none
 ```text
 AGENT_PROCESS_LIFECYCLE_HARDENING_V1_SPEC = PASS
 NEEDS_OWNER_DECISION = NO
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 READY_FOR_FOCUSED_RE_REVIEW = YES
 IMPLEMENTATION_ALLOWED = NO
 ```
 
-`PASS` 只表示本 proposed Spec 已能完整表达 Owner 输入；不代表 independent review PASS、accepted、implementation PASS 或 merge authority。
+`PASS` 表示 authoring 输入完整；本次 acceptance provenance 见 §0.2。它不代表 implementation PASS 或 merge authority。
 
 ### 0.1 Focused Amendment Record
 
@@ -50,6 +56,22 @@ AMENDMENT_SCOPE = SPEC_ONLY
 ```
 
 本 amendment 原位闭合：Registry/reap 原子线性化、fatal teardown、Parent-RPC response budget、handle 端到端、Router store query authority、late settle-once、reconciliation 全面有界、shutdown ownership/order、future acceptance crosswalk。此前已通过的四 deadline、五态、watermark-before-send、no replay、legacy 900000ms compatibility 与 Scheduler boundary 均保持。
+
+### 0.2 Acceptance Record
+
+```text
+ACCEPTANCE_FINALIZE = AGENT_PROCESS_LIFECYCLE_HARDENING_V1_SPEC_ACCEPTANCE_FINALIZE
+ACCEPTED_DATE = 2026-08-20
+ACCEPTANCE_REVIEWED_SEMANTIC_HEAD = 8475318f12068a28fe937779c91735817b6db9ca
+INDEPENDENT_FOCUSED_RE_REVIEW = PASS
+REQUIRED_FIXES_CLOSED = 9/9
+REQUIRED_FIXES = NONE
+SPEC_STATUS = accepted
+SEMANTIC_CHANGE = NONE
+READY_FOR_MECHANICAL_DELTA_REVIEW = YES
+```
+
+本 finalize 只更新 status mirror 与 acceptance provenance；§1–§17 reviewed semantics 保持逐字不变。
 
 ---
 
@@ -1094,6 +1116,7 @@ Review recommendation 不自动等于 acceptance；status flip 由 authorized Ow
 ```text
 AGENT_PROCESS_LIFECYCLE_HARDENING_V1_SPEC = PASS
 PROCESS_SPEC_AMENDMENT = PASS
+PROCESS_SPEC_ACCEPTANCE_FINALIZE = PASS
 
 BASE_MAIN = d83a2ff0e9644611707d7481ef88b4d7d49fb68e
 BASE_REVIEWED_HEAD = 670ddb769dcaa03bb0bd6cc22cb2796b9f59b3da
@@ -1117,7 +1140,12 @@ BOUNDED_BUFFERS = per_record + per_Agent + Router_global count_and_byte_caps; un
 
 SCHEDULER_TERMINATION_SEAM = active_turn_snapshot + stable_reconciliationHandle + occurrence/run/requestId_restore_index + outcome_evidence_distinct_from_termination_evidence + cancel_requested_distinct_from_termination_proven
 
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
+ACCEPTANCE_REVIEWED_SEMANTIC_HEAD = 8475318f12068a28fe937779c91735817b6db9ca
+INDEPENDENT_FOCUSED_RE_REVIEW = PASS
+REQUIRED_FIXES = NONE
+SEMANTIC_CHANGE = NONE
+READY_FOR_MECHANICAL_DELTA_REVIEW = YES
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 READY_FOR_FOCUSED_RE_REVIEW = YES
 
