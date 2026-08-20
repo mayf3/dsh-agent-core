@@ -1,6 +1,7 @@
 ---
 spec_id: AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1
-status: accepted
+status: superseded
+replaced_by: AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2
 supersedes: AGENT_CORE_LARK_TRANSPORT_PHASE1_V1
 date: 2026-08-19
 type: implementation-spec (spec-only; no implementation this round)
