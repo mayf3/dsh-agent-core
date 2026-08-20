@@ -1,8 +1,27 @@
 # Agent Core Product Architecture V1
 
-> 状态：冻结草案（docs-only）· 日期：2026-08-15
-> 基线：`69273a9`（Integration V1 已合并）；契约：`AGENT_SESSION_CHANNEL_MODEL_V1`（D-002）
+> 状态：冻结草案（docs-only）· 日期：2026-08-15  
+> Authority amendment：2026-08-18  
+> 基线：`69273a9`（Integration V1 已合并）；契约：`AGENT_SESSION_CHANNEL_MODEL_V1`（D-002）  
 > 本文件回答：**最终 Agent Core 到底是什么、每一层归谁负责、哪些边界永不跨越**。
+>
+> **安全域声明修订：**本文件原先把“one Agent = one DSH process”直接冻结为
+> peer-Agent 对抗性安全域。该 claim 已被
+> [`AGENT_CORE_HARDENING_PROGRAM_V1`](specs/AGENT_CORE_HARDENING_PROGRAM_V1.md)
+> amendment：
+>
+> ```text
+> PEER_AGENT_SECURITY_DOMAIN_CLAIM = SUPERSEDED
+> REPLACED_BY = AGENT_CORE_HARDENING_PROGRAM_V1
+>
+> one Agent = one DSH process
+> = runtime / lifecycle / DSH_HOME / Session-owner boundary
+> != current adversarial peer-Agent isolation boundary
+> ```
+>
+> 当前同主机、共享运行身份的 Agents 属于 cooperative shared-host trust domain；
+> Control Plane、Broker credential 与 service credential 仍必须对 Agent 保密。
+> 本文件其余 ownership / thin-layer / DSH-native 边界不受该 amendment 影响。
 
 ---
 
@@ -50,7 +69,9 @@ Agent Core Control Plane
   ├─ Plugin Lifecycle    = 新技能（实验 → 验证 → 保留 → 回滚）
   └─ Proactive Runtime   = 没人催也会继续工作（schedule/goal/inbox 之上的薄层）
             ↓
-one Agent = one DSH process（进程 = 安全域，见 TRUST-BOUNDARY 方案 B）
+one Agent = one DSH process
+  （运行时 / 生命周期 / DSH_HOME / Session-owner 边界；
+    当前不是 shared-host peer-Agent 对抗性隔离边界）
             ↓
 DSH（Runtime）
   loop / tools / fs / shell / skills / agent-instructions
@@ -128,13 +149,18 @@ Forum / Workflow / OKR / 其他外部业务系统
 
 ### Process（进程身份与生命周期）
 
-- **定义**：一个 Agent = 一个 DSH 进程（per-agent DSH_HOME），进程是安全域
-  （TRUST-BOUNDARY 方案 B 的唯一成立结论）。进程可惰性启动、复用、崩溃后自动
-  respawn + resume。
+- **定义**：一个 Agent = 一个 DSH 进程（per-agent DSH_HOME）。进程是该 Agent 的
+  **运行时、生命周期、DSH_HOME 与 Session-owner 边界**：可惰性启动、复用，
+  崩溃后自动 respawn + resume。
+- **当前信任语义**：共享主机 / 共享运行身份下的 peer Agents 属于 cooperative trust
+  domain；当前进程划分不承诺 adversarial peer-Agent isolation。若未来需要 A 无法攻击
+  B，必须由独立 `PER_AGENT_SECURITY_DOMAIN_V1` 冻结 per-Agent UID / container / VM /
+  sandbox 等额外隔离。
 - **人话**：员工上班的工位——一个员工一个工位，工位塌了（进程死了）重新搭一个，
-  抽屉里的东西（持久化）原样搬回来。
+  抽屉里的东西（持久化）原样搬回来；但当前同一办公室里的合作员工不按敌对租户隔离。
 - **所有权**：Router / Process Supervisor 管「何时启动/恢复/回收」；进程凭据由
-  控制面注入（Phase 3）。
+  控制面注入（Phase 3），用于保护 Control Plane / Broker 身份，不等同于 peer-Agent
+  文件与主机隔离。
 
 ### Plugin / Capability
 
@@ -142,8 +168,9 @@ Forum / Workflow / OKR / 其他外部业务系统
   生命周期治理（实验 → 测试/证据 → reviewer → promote → disable/rollback），不
   发明新的运行时。
 - **人话**：学会并保留新技能——先练手，确认靠谱后正式上岗，出问题随时停用。
-- **所有权**：Agent 进程内执行（本进程身份下自提权，跨 agent 信任靠进程边界）；
-  Plugin Lifecycle 组件负责治理流程。
+- **所有权**：Agent 进程内执行；当前 peer Agents 属于 cooperative trust domain。
+  Control Plane / Broker 仍只相信进程外建立的 caller relationship 与 credential，
+  进程内 initiator 只用于归因；Plugin Lifecycle 组件负责治理流程。
 
 ---
 
@@ -161,7 +188,7 @@ Forum / Workflow / OKR / 其他外部业务系统
 | Plugin Lifecycle | 新技能治理流程 | 不重做工具/插件运行时 |
 | Proactive Runtime | schedule/goal/inbox 之上的薄封装与常驻 | 不重做调度原语 |
 | DSH | Agent 真正怎么思考：loop/tools/fs/shell/skills/subagents/compaction/persistence | — |
-| Broker Bridge | 以进程身份安全访问 Forum/Workflow/OKR 等 | 不把外部系统变成内部特例 |
+| Broker Bridge | 以进程外建立的真实 Agent 身份安全访问 Forum/Workflow/OKR 等 | 不相信请求体自报身份；不把外部系统变成内部特例 |
 | Forum / Workflow / OKR | 外部业务系统 | 不由 Agent Core 重做 |
 
 ---
@@ -195,8 +222,10 @@ Forum / Workflow / OKR / 其他外部业务系统
 
 - **所有权边界**：Agent 拥有 workspace / DSH_HOME / credential / memory；Session
   属于 Agent；Channel ≠ Agent ≠ Session；Binding 只表达当前归属。
-- **one Agent = one DSH process 是安全域**（TRUST-BOUNDARY 方案 B）：跨 agent 信任
-  靠进程边界，进程内 initiator 只作归因。
+- **one Agent = one DSH process 是 runtime owner boundary**：每个 Agent 独占其
+  DSH process / DSH_HOME / native Session owner；Control Plane 从真实 proc
+  relationship 决定 Broker caller identity。原“当前进程即 peer-Agent 对抗性安全域”
+  claim 已 superseded；当前 shared-host Agents 是 cooperative trust domain。
 - **workspace-bootstrap 是 agentId → workspace/DSH_HOME 映射的唯一 owner**。
 - **DSH 是 Runtime**：loop/tools/fs/shell/skills/subagents/compaction/persistence
   全部来自 DSH，Agent Core 不重做。
@@ -221,6 +250,8 @@ Forum / Workflow / OKR / 其他外部业务系统
 - Artifact 最终实现（如何展示产物/日志）。
 - Dashboard UI 方案（数据面现成，UI 形态未定）。
 - 归档保留期默认值、流式消息是否 V2 必做（契约自身开放问题）。
+- adversarial peer-Agent isolation 的具体机制（per-Agent UID / container / VM /
+  sandbox），仅在 `PER_AGENT_SECURITY_DOMAIN_V1` 触发后冻结。
 
 **原则：冻结 ownership，不提前冻结未经实验的实现细节。**
 
@@ -230,6 +261,9 @@ Forum / Workflow / OKR / 其他外部业务系统
 
 - 本文件是 `AGENT_SESSION_CHANNEL_MODEL_V1`（D-002）的**产品架构侧**展开：契约定
   义实体与 API，本文件定义分层、职责与边界。
-- 依赖 `CAPABILITY_MATRIX.md`（能力结论）、`TRUST-BOUNDARY-REPORT.md`（方案 B 与
-  删除清单）、`investigations/*`（五主题证据）、`reports/*`（已验收事实）。
-- 冲突处理见 `docs/AGENT_CORE_ROADMAP_V1.md` §8（如有）。
+- 依赖 `CAPABILITY_MATRIX.md`（能力结论）、`TRUST-BOUNDARY-REPORT.md`（若要求
+  adversarial peer-Agent isolation 时的调查证据与方案 B）、`investigations/*`
+  （五主题证据）、`reports/*`（已验收事实）。
+- peer-Agent security-domain claim 的 current authority 是
+  `docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md`；冲突时以该 Program 为准。
+- 其他冲突处理见 `docs/AGENT_CORE_ROADMAP_V1.md` §8（如有）。
