@@ -13,7 +13,13 @@ status: accepted
 > ruling = `AGENT_PRINCIPAL_HUMAN_OWNER_RULING_V1` ·
 > Amendment 4（Runtime Fact 修正）：2026-08-18，base reviewed HEAD `b33bb5f` ·
 > Amendment 5（Final Cleanup，focused review 3 fixes）：2026-08-19，
-> base reviewed HEAD `0e9dc65`
+> base reviewed HEAD `0e9dc65` ·
+> Amendment 6（Clean Bootstrap Phase 分段冻结）：2026-08-20，
+> base = accepted Spec（acceptance-finalize 文本 @ `5cfb610`，origin/main）·
+> Amendment 6 acceptance finalize：2026-08-20——independent review
+> `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_AMENDMENT_6_SPEC_REVIEW`
+> = PASS（reviewed HEAD `5d12851`，REQUIRED_FIXES = NONE，
+> READY_FOR_ACCEPTANCE_FINALIZE = YES），Amendment 6 = accepted
 > 仓库：`mayf3/dsh-agent-core`
 > 角色：Credential Provisioning Spec Agent
 >
@@ -254,6 +260,57 @@ Focused review 的 3 个 required fixes；不改设计方向、Owner Ruling、�
    `external_prerequisite_missing(c)`。其余 (c) 约束全部维持（service
    profile、不受 (d) 影响、(a)/(c) 独立、禁绕行清单、无 mode blocker）。
    Executability 不变。
+
+---
+
+## Amendment 6 摘要（2026-08-20，Clean Bootstrap Phase 分段冻结，base accepted Spec @ 5cfb610）
+
+**新证据（NEW_EVIDENCE，owner 交付的 preflight）**：
+
+```text
+AGENT_FORUM_WORKFLOW_CREDENTIAL_RECOVERY_PREFLIGHT
+OBSERVED_AT = 2026-08-20T06:47+0800
+production Agent count = 88
+88/88：
+  credential store 未配置
+  store entry 不存在
+  agentcore:v1:principal:<agt_*> 不存在
+  agentcore:v1:client:<agt_*> 不存在
+BLOCKER_CLASSIFICATION = CLEAN_BOOTSTRAP_CANDIDATE
+STATE_F_ENDPOINT_REQUIRED = NO_FOR_CURRENT_88_AGENTS
+当前 PR #17 的 State F 实现仍受 READ_ONLY_AUTH_CLIENT_RESOLUTION_SEAM_MISSING
+```
+
+结论：当前生产存量 88 个 Agent **全部**是 clean-bootstrap candidate——不存在任何
+已存在的 store entry / `agentcore:v1` principal / client 需要 reconciliation。
+因此 State D/E/F/G 的 reconciliation 与 State F endpoint 对**当前 88 Agents 均
+不需要**；同时 PR #17 的 State F 实现仍被
+`READ_ONLY_AUTH_CLIENT_RESOLUTION_SEAM_MISSING`（Auth 侧缺少 read-only client
+resolution seam）阻塞。
+
+本轮在**不改变最终 A–G 目标模型**的前提下，冻结分阶段实施：
+
+```text
+PHASE_A = CLEAN_BOOTSTRAP_ONLY
+PHASE_B = EXISTING_CREDENTIAL_RECONCILIATION
+```
+
+- **Phase A（本轮之后唯一实现许可）**：见 D.7.1 冻结的固定顺序——目标 store
+  entry **absent** 才（在 (c) 就绪后）走 S1/S2 clean bootstrap；目标 entry
+  **exists** 一律 fail-loud `existing_credential_resolution_required`
+  （结构化错误，Auth/S1/S2/claim/rotation/store-write 计数全零，D.7.2）。
+- **Phase B（无实现许可）**：维持 A–G 目标模型对已有 credential 的
+  reconciliation（State D / E / F / G，含状态 E 恢复）；要求 Auth read-only
+  resolution seam 就绪，并在 S1/S2 之前、任何 store write 之前 fresh resolve
+  `stored.clientId`（D.7.3）。State F endpoint 尚未实现——**不阻塞 Phase A
+  merge，也不阻塞当前 clean bootstrap canary**。
+- Phase A 的 existing-entry fail-loud 是**分段交付边界**，**不是最终产品状态**
+  （任何实现/文档不得把它描述成终态）。
+
+Executability 按 Phase 重算（D.7.4）；PR #17 的授权范围冻结（D.7.5）；不变项
+清单逐条维持（D.7.6）。本轮 SPEC ONLY——不实现、不 merge、不改 PR #17 代码；
+本 Amendment 经独立 review、accepted 并进入 PR #17 的 implementation base
+之前，PR #17 不得以本 Amendment 为依据修改（D.7.5）。
 
 ---
 
@@ -711,6 +768,13 @@ tooling（与 `production-agent-provision.mjs` root seam 同类），幂等、�
 **固定顺序**执行；状态由幂等 seam 的**响应**判定（created 标志 / status 字段），
 不做任何自选的预检查顺序。
 
+> **Amendment 6 注记**：以下 STEP 0–2 / 状态 A–G 是**最终目标模型**（target
+> semantics，含 Phase B）。实施交付按 **D.7** 冻结的分段顺序执行：Agent
+> Definition 读取（状态 A）→ store 文档完整读取与校验 → 目标 entry 判定；
+> entry **absent** 才进入（(c) 就绪后的）S1/S2 clean bootstrap（Phase A）；
+> entry **exists** 的 D/E/F/G 分类与处置全部属于 Phase B。D.7 的顺序与行为
+> 约束对本 Spec 的任何实现轮均有效，优先于本节的 STEP 排列表述。
+
 ```text
 ensureAgentCredential(agentId):
 
@@ -846,6 +910,128 @@ hypothetical compatibility analysis，非当前部署，不构成绕行依据—
 从 Agent Definition config 移除（先 `disable`）是既有 seam；store entry 移除与
 Auth revoke 按 Part J 的 fail-closed 顺序执行。是否保留 Auth principal/client 由
 运营商决定（独立于 Agent Core）。
+
+### D.7 分阶段实施冻结（Amendment 6 — Clean Bootstrap Phase）
+
+Phase A / Phase B 的唯一权威定义。**A–G 目标模型（上文）不变**——本节只冻结
+实施交付的顺序、边界、可达性与授权。
+
+**D.7.1 Phase A clean bootstrap 固定顺序（冻结）**
+
+```text
+PHASE_A_CLEAN_BOOTSTRAP_ORDER =
+  1. read Agent Definition
+  2. State A agent_not_found
+  3. read and fully validate credential-store document
+  4. inspect target agent store entry
+  5. only when target entry is absent:
+       check prerequisite (c)
+       call S1
+       call S2
+       write returned secret
+       verification mint
+  6. when target entry exists:
+       do not call S1
+       do not call S2
+       do not rotate
+       do not claim
+       do not write store
+       fail-loud as existing-credential reconciliation unavailable
+```
+
+顺序不变量（冻结）：
+
+```text
+STORE_READ_AND_FULL_VALIDATION = BEFORE_ANY_AUTH_IDENTITY_MUTATION
+CLEAN_BOOTSTRAP_REQUIRES_STORE_ENTRY = ABSENT
+S1_S2_WHEN_STORE_ENTRY_ABSENT = ALLOWED_AFTER(c)
+S1_S2_WHEN_STORE_ENTRY_EXISTS = FORBIDDEN
+AUTH_WRITES_BEFORE_STORE_CLASSIFICATION = 0
+```
+
+- store 文档读取与**完整**校验（Part G 同语义：version===1、entry 可 normalize；
+  malformed → `CREDENTIALS_STORE_ERROR` 同族 fail-loud，文件不变）发生在**任何
+  Auth 身份变更之前**；store 分类完成之前 Auth 写调用的合法数量 = **0**。
+- (c) 检查在步骤 5 内部先于 S1/S2；(c) 未就绪 ⇒
+  `external_prerequisite_missing(c)`，Auth 调用 = 0（验收 PA1）。
+
+**D.7.2 已有 store entry 的 Phase A 行为（冻结）**
+
+当目标 Agent 已有 store entry 时：
+
+```text
+RESULT = existing_credential_resolution_required
+         （或同一稳定结构化错误族——错误结构必须稳定、可测，不得随实现轮漂移）
+AUTH_CALLS = 0      S1_CALLS = 0      S2_CALLS = 0
+CLAIM_CALLS = 0     ROTATION_CALLS = 0
+STORE_WRITES = 0
+```
+
+Phase A **不得尝试判断**以下任何分类（全部属于 Phase B）：
+
+```text
+client missing · revoked · mismatched · secret invalid ·
+State D / State E / State F / State G
+```
+
+**D.7.3 Phase B（目标模型维持，无实现许可）**
+
+```text
+PHASE_B_EXISTING_CREDENTIAL_RECONCILIATION =
+  requires Auth read-only resolution seam
+  requires fresh resolve of stored.clientId
+  before S1/S2
+  before any store write
+```
+
+Phase B 继续覆盖（目标语义 = Part D 状态机原文，不变）：
+
+- State D — existing matching credential
+- State E — store missing / Auth client exists（恢复路径维持 Part I 语义）
+- State F — split-brain
+- State G — secret recovery
+
+State F endpoint 尚未实现（`READ_ONLY_AUTH_CLIENT_RESOLUTION_SEAM_MISSING`）：
+**不阻塞 Phase A merge，也不阻塞当前 clean bootstrap canary**。
+不得把 Phase A 的 fail-loud 描述成最终产品状态——它只是分段交付边界。
+
+**D.7.4 Executability 重算（冻结）**
+
+```text
+PHASE_A_UNIT_ACCEPTANCE = IMPLEMENTABLE_NOW_IN_REPO
+PHASE_A_REAL_CLEAN_BOOTSTRAP = NEEDS(c)+(d)
+PHASE_A_FORUM_POSITIVE = NEEDS(c)+(d)+(a)
+PHASE_A_WORKFLOW_POSITIVE = NEEDS(c)+(d)+(a)
+PHASE_B_EXISTING_STORE_RECONCILIATION = BLOCKED_BY_AUTH_READ_ONLY_RESOLUTION
+L1_RECOVERY_STATE_E = NEEDS(c)+(b)+(d)（(b) rotation seam 仍缺失；维持既有结论）
+FULL_L1_L2_L3_COMPLETE = NO（不得声称完整 L1/L2/L3 已全部完成）
+```
+
+（`NEEDS(x)` 语义同 Acceptance Criteria 图例：外部前置 E.4 (a)/(b)/(c)/(d) 未就绪
+时对应路径必须 fail-loud `external_prerequisite_missing`。）
+
+**D.7.5 PR #17 授权绑定（冻结）**
+
+```text
+PR_17_CURRENT_ALLOWED_SCOPE = PHASE_A_CLEAN_BOOTSTRAP_FOUNDATION
+PR_17_MUST_NOT_CLAIM = FULL_A_TO_G_IMPLEMENTATION
+PR_17_EXISTING_STORE_PATH = FAIL_LOUD_ZERO_AUTH_CALLS
+PR_17_STATE_F_IMPLEMENTATION = DEFER_TO_PHASE_B
+```
+
+本 Amendment 通过独立 review、accepted 并进入 PR #17 的 implementation base
+后，PR #17 才能按该 Phase A 范围修改并重新审查；在此之前 PR #17 不得以本
+Amendment 为依据改动。
+
+**D.7.6 本轮不变项（全部维持，零改动）**
+
+deterministic external_ref（C.4）· `principal_type = agent` · `agent_id = agt_*` ·
+`owner_user_id` absent / no fake owner（Owner Ruling）· trusted store G1–G8 ·
+secret handoff（Part H）· no duplicate identities · credential ≠ grant（Part E）·
+Profile 401 no rotation（D.5 / 401_ATTRIBUTION_RULES）· Broker collateral =
+`YES_MINIMAL` · `ROUTER_CHANGE = NONE` / `RUNTIME_CHANGE = NONE` /
+`KERNEL_CHANGE = NONE` · prerequisites (a)/(b)/(c)/(d) 的现有含义（E.4）。
+**不得增加 OpenClaw credential fallback。**
 
 ---
 
@@ -1174,6 +1360,11 @@ Policy Engine / Kernel
 4. **Acceptance driver 的扩展面**：为未来 canary 提供可复现的验收路径（Acceptance
    Criteria 分层）。
 
+> **Amendment 6 注记（实施分段）**：以上授权的分段交付按 **D.7** 冻结执行——
+> 当前唯一实现许可 = **Phase A clean bootstrap foundation**（D.7.1/D.7.2 +
+> D.7.5 的 PR #17 绑定）；A–G 全状态机对已有 credential 的 reconciliation
+> （State D/E/F/G）属 Phase B（D.7.3，无实现许可）。最终目标模型不变。
+
 **本 Spec 本轮不实施以上任何一项**——它只冻结范围，供后续 Implementation（在
 `status: accepted` 之后）执行。
 
@@ -1261,6 +1452,8 @@ profile validation 即被挡）。legacy 分支仅为 hypothetical compatibility
 analysis（LEGACY_PATH_IS_CURRENT_DEPLOYMENT = NO），**不作为 Acceptance 路径**，
 亦不得作为对 (d) 的绕行。(d) 不阻塞 S1 ownerless principal 创建与 store 链——
 只阻塞 v1 token mint / profile validation 之后的环节。
+**（Amendment 6）** 上述各层的 Phase 维度可达性以 **D.7.4** 为准（Phase A /
+Phase B 分段交付）；Phase A 专项测试 PA1–PA5 见 L1 之后。
 
 **L1 — Credential V1 自身验收：**
 
@@ -1301,6 +1494,26 @@ analysis（LEGACY_PATH_IS_CURRENT_DEPLOYMENT = NO），**不作为 Acceptance �
     调用、无 store 写入；状态 A/G 类纯本地分支除外）；v1 路径 (d) 未就绪时
     观察到的 401 agent_profile_invalid 必须归类为 (d) 证据（不 rotate、
     不建平行身份、不绑 owner）。
+
+**Phase A 分段验收（Amendment 6 新增 — 5 项明确测试；D.7.1/D.7.2 冻结。
+编号独立于 L1 1–10，可达性图例同上）：**
+
+- **PA1** `NOW` **no store entry + (c)=false**：目标 store entry 不存在且 (c)
+  未就绪 → `external_prerequisite_missing(c)`；`AUTH_CALLS = 0`。
+- **PA2** `NEEDS(c)` **no store entry + (c)=true**：S1/S2 正常调用；
+  deterministic identity（C.4 external_ref；repeated ensure SAME principal /
+  SAME client，无重复身份）；secret 按契约写 store。verification mint 结果按
+  D.5 解释表归类（当前部署 v1 且 (d) 未就绪时 401 agent_profile_invalid =
+  (d) 证据，不得据此 rotate）；含 verification mint 成功的**完整** clean
+  bootstrap 通过按 D.7.4 = `PHASE_A_REAL_CLEAN_BOOTSTRAP = NEEDS(c)+(d)`。
+- **PA3** `NOW` **store entry exists**：`existing_credential_resolution_required`
+  （或 D.7.2 冻结的同一稳定错误族）；`S1 = 0 / S2 = 0 / rotate = 0 /
+  claim = 0 / store write = 0`；不尝试 client missing / revoked / mismatched /
+  secret invalid / State D–G 分类（D.7.2）。
+- **PA4** `NOW` **malformed store**：`CREDENTIALS_STORE_ERROR`（同族）；
+  `AUTH_CALLS = 0`；store 文件内容不变（G.3，MUST NOT overwrite）。
+- **PA5** `NOW` **Agent missing**：`agent_not_found`（状态 A）优先于一切
+  store/Auth 步骤（D.7.1 步骤 1–2）；`AUTH_CALLS = 0`。
 
 **L2 — Grant negative（credential ≠ grant）：**
 
@@ -1388,6 +1601,11 @@ manual bearer、OpenClaw fallback、legacy machine-admin create 兜底、CLI std
   不 disposition**）。
 - 治理：`docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md`（Spec 生命周期：
   proposed → accepted；本 Spec 当前 `status: accepted`）。
+- Phase 分段证据（Amendment 6）：`AGENT_FORUM_WORKFLOW_CREDENTIAL_RECOVERY_
+  PREFLIGHT`（OBSERVED_AT 2026-08-20T06:47+0800，owner 交付 preflight；
+  production Agent count = 88，88/88 = clean-bootstrap candidate，
+  `STATE_F_ENDPOINT_REQUIRED = NO_FOR_CURRENT_88_AGENTS`）——全文记录于
+  Amendment 6 摘要。
 
 ---
 
@@ -1412,26 +1630,84 @@ ACCEPTANCE_FINALIZE_SEMANTIC_CHANGE = NONE
 
 ---
 
-## Final Output（Amendment 5 — Final Cleanup）
+## Acceptance Record（2026-08-20 Amendment 6 acceptance finalize）
 
 ```text
-AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_FINAL_CLEANUP_AMENDMENT = PASS
+ACCEPTANCE_REVIEW   = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_AMENDMENT_6_SPEC_REVIEW
+REVIEWED_BASE       = fe2c6393915b1dc61c4c3d25b2996d2f258ba484
+REVIEWED_SPEC_HEAD  = 5d1285195f8c2e3eb88ea606be09671b074f68d4
+REVIEW_VERDICT      = PASS
+REQUIRED_FIXES      = NONE
+READY_FOR_ACCEPTANCE_FINALIZE = YES
+IMPLEMENTATION_AUTHORIZED = NO
+    （acceptance finalize 本身不授予实现许可；实现许可 = Phase A
+      PHASE_A_CLEAN_BOOTSTRAP_FOUNDATION，且仅当本 accepted Amendment 合入
+      PR #17 的 implementation base 后经 D.7.5 生效）
+ACCEPTED_AT         = 2026-08-20（Amendment 6 生效；D.7.5 剩余条件 =
+      merge 进入 PR #17 implementation base）
 
-BASE_REVIEWED_HEAD = 0e9dc65（clean history 以 b33bb5f 为 base cherry-pick
-    0e9dc65 的 Spec 单文件 delta 重建；eb1b440/59d9a4f 的 workflow 文件
-    不在最终树中，WORKFLOW_FILES_IN_FINAL_DELTA = 0）
-HEAD = docs/agent-core-credential-provisioning-v1-spec（同一 Spec 分支，不 merge）
+ACCEPTANCE_FINALIZE_SEMANTIC_CHANGE = NONE
+    （本 round 仅 Amendment 6 状态镜像与 acceptance provenance——文头状态行、
+      本 Acceptance Record、Final Output 的生效条件与 SPEC_STATUS 镜像；
+      reviewed head 5d12851 的全部冻结语义——D.7.1–D.7.6、PA1–PA5、
+      Final Output 冻结值——零改动。frontmatter status 保持 accepted：
+      本 Spec 为已接受 Spec 的原地 Amendment，authoring 轮未翻回 proposed，
+      翻转对象是 Amendment 6 的生效状态，不是整份 Spec 的生命周期状态）
+```
 
-DEPLOYED_AUTH_CONTRACT_MODE = v1（运行证据 OBSERVED_AT 2026-08-18：stdout banner
-    "auth contract: v1"；audit v1.direct.issued > 34k / v1.shadow = 0 / legacy
-    token.issued = 0；JWKS Cache-Control max-age=300（v0 为 3600）；plist 未设置
-    仅证明 plist 未设置；generated runtime-contract 的 production_effective=false
-    为 bundle freeze 陈旧快照，不作 authority）
-CURRENT_DEPLOYED_ISSUANCE_PATH = v1/direct
-LEGACY_V0_OR_V1_SHADOW_PATH = hypothetical / compatibility analysis only
-LEGACY_PATH_IS_CURRENT_DEPLOYMENT = NO
+---
 
-PREREQUISITE_C_FINAL_DEFINITION =
+## Final Output（Amendment 6 — Clean Bootstrap Phase 分段冻结）
+
+```text
+AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_CLEAN_BOOTSTRAP_PHASE_AMENDMENT = PASS
+
+BASE = accepted Spec（acceptance-finalize 文本 @ 5cfb610，origin/main；
+    Amendment 1–5 结论全部保留于各摘要与 git history；Amendment 6 为 in-place
+    amendment，不创建平行 Spec）
+本 Amendment 生效条件 = 独立 review PASS、accepted 并进入 PR #17 的
+    implementation base（D.7.5）——独立 review 已 PASS（2026-08-20，
+    AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_AMENDMENT_6_SPEC_REVIEW，
+    reviewed HEAD 5d12851，REQUIRED_FIXES = NONE）、Amendment 6 已 accepted
+    （2026-08-20 acceptance finalize，见 Acceptance Record）；在 merge 进入
+    PR #17 implementation base 之前，PR #17 仍不得按 Phase A 范围修改
+
+NEW_EVIDENCE_RECORDED =
+    AGENT_FORUM_WORKFLOW_CREDENTIAL_RECOVERY_PREFLIGHT（OBSERVED_AT =
+    2026-08-20T06:47+0800）：production Agent count = 88；88/88 credential
+    store 未配置 / store entry 不存在 / agentcore:v1:principal:<agt_*> 不存在 /
+    agentcore:v1:client:<agt_*> 不存在 ⇒ BLOCKER_CLASSIFICATION =
+    CLEAN_BOOTSTRAP_CANDIDATE；STATE_F_ENDPOINT_REQUIRED =
+    NO_FOR_CURRENT_88_AGENTS；PR #17 的 State F 实现仍受
+    READ_ONLY_AUTH_CLIENT_RESOLUTION_SEAM_MISSING。
+
+PHASE_A = CLEAN_BOOTSTRAP_ONLY（唯一实现许可；顺序 D.7.1、existing-entry
+    行为 D.7.2）
+PHASE_B = EXISTING_CREDENTIAL_RECONCILIATION（无实现许可；最终 A–G 目标模型
+    不变，D.7.3）
+CLEAN_BOOTSTRAP_ORDER = D.7.1 六步固定顺序（Agent Definition 读取 / 状态 A →
+    store 文档完整读取+校验 → 目标 entry 判定 → entry absent：(c)→S1→S2→写
+    secret→verification mint；entry exists：fail-loud）
+S1_S2_WHEN_STORE_ENTRY_ABSENT = ALLOWED_AFTER(c)
+S1_S2_WHEN_STORE_ENTRY_EXISTS = FORBIDDEN
+EXISTING_STORE_PHASE_A_RESULT = existing_credential_resolution_required
+    （AUTH/S1/S2/CLAIM/ROTATION/STORE_WRITES 计数全零；不尝试 client missing /
+    revoked / mismatched / secret invalid / State D–G 分类）
+
+PHASE_A_UNIT_ACCEPTANCE = IMPLEMENTABLE_NOW_IN_REPO
+PHASE_A_REAL_CLEAN_BOOTSTRAP = NEEDS(c)+(d)
+PHASE_A_FORUM_POSITIVE = NEEDS(c)+(d)+(a)
+PHASE_A_WORKFLOW_POSITIVE = NEEDS(c)+(d)+(a)
+PHASE_B_EXISTING_STORE_RECONCILIATION = BLOCKED_BY_AUTH_READ_ONLY_RESOLUTION
+L1_RECOVERY_STATE_E = NEEDS(c)+(b)+(d)（(b) rotation seam 仍缺失；维持不变）
+FULL_L1_L2_L3_COMPLETE = NO（不得声称完整 L1/L2/L3 已全部完成）
+
+PR_17_CURRENT_ALLOWED_SCOPE = PHASE_A_CLEAN_BOOTSTRAP_FOUNDATION
+PR_17_MUST_NOT_CLAIM = FULL_A_TO_G_IMPLEMENTATION
+PR_17_EXISTING_STORE_PATH = FAIL_LOUD_ZERO_AUTH_CALLS
+PR_17_STATE_F_IMPLEMENTATION = DEFER_TO_PHASE_B
+
+PREREQUISITE_C_FINAL_DEFINITION（Amendment 4/5 冻结，不变）=
     BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_ESTABLISHED：现有运行证据
     证明生产 HTTP 管理面使用痕迹不存在（resource=svc-auth mint = 0；近期无
     principal/client 创建事件，仅 2026-07-23 孤立测试突发 4 条 ⇒ S1/S2 无生产
@@ -1449,22 +1725,27 @@ PREREQUISITE_C_FINAL_DEFINITION =
     svc-workflow 等）；(c) = provisioner 自身的管理面 credential（svc-auth +
     auth.identity.provision）。主体/audience/scope/生命周期不同，独立计数。
 
-L1_CORE_EXECUTABILITY =
+L1_CORE_EXECUTABILITY（层维度，不变）=
     principal/client ensure chain = NEEDS(c)（(d) 不阻塞 S1 ownerless 创建）；
     trusted-store write / loadCredentialFor chain = NEEDS(c)；token mint
     attempt = NEEDS(c)；纯工具负例与 fail-loud 行为 = NOW。
 L1_SECRET_VALIDITY_PROOF = NEEDS(c)+(d)（当前部署 v1 下 (d) 未就绪时
     verification mint 确定性止步于 401 agent_profile_invalid = (d) 证据）
-L1_RECOVERY_EXECUTABILITY = NEEDS(c)+(b)+(d)（post-rotate verification mint
-    在 deployed v1 下仍先被 (d) 的 agent_profile_invalid 挡住；就绪前
-    fail-loud，降级行为 NOW 可验收）
+L1_RECOVERY_EXECUTABILITY = NEEDS(c)+(b)+(d)（= L1_RECOVERY_STATE_E，见
+    D.7.4；(b) rotation seam 仍缺失；就绪前 fail-loud，降级行为 NOW 可验收）
 L2_EXECUTABILITY = NEEDS(c)+(d)（deployed v1 下须先过 ownerless profile
     validation 才能到达 MachineAccessGrant 缺失的 authorization failure 层；
     Broker wire 三层错误码区分本身 NOW 可实现并单元测试）
-L3_EXECUTABILITY = NEEDS(c)+(a)+(d)（deployed v1 下 Forum positive 同时要求
-    bootstrap provisioner credential + forum 业务 grant + ownerless Agent 通过
-    v1 profile validation；legacy 分支仅为 hypothetical compatibility analysis，
-    不作 Acceptance 路径；svc-forum 已有 RS256/JWKS 验证面，非 prerequisite）
+L3_EXECUTABILITY = NEEDS(c)+(a)+(d)（= PHASE_A_FORUM_POSITIVE /
+    PHASE_A_WORKFLOW_POSITIVE 的层维度表述；legacy 分支仅为 hypothetical
+    compatibility analysis，不作 Acceptance 路径；svc-forum 已有 RS256/JWKS
+    验证面，非 prerequisite）
+PHASE 维度可达性 = D.7.4（Phase A / Phase B 分段；层维度结论如上不变）
+
+DEPLOYED_AUTH_CONTRACT_MODE = v1（Amendment 4，不变）
+CURRENT_DEPLOYED_ISSUANCE_PATH = v1/direct
+LEGACY_V0_OR_V1_SHADOW_PATH = hypothetical / compatibility analysis only
+LEGACY_PATH_IS_CURRENT_DEPLOYMENT = NO
 
 401_ATTRIBUTION_RULES（不变，重申）=
     v1 assertPrincipalProfile 先于 secret verification；(d) 未就绪时 ownerless
@@ -1483,18 +1764,19 @@ KERNEL_CHANGE = NONE
 
 UNCHANGED_FROZEN_ITEMS（本轮零改动）=
     Owner Ruling（principal_type=agent + agent_id=agt_* + owner_user_id=
-    NULL/ABSENT）· prerequisite (a)/(b)/(d) 定义 · deterministic external_ref
-    （agentcore:v1:principal|client:<agentId>）· S1/S2 幂等 ensure（禁 legacy
-    machine-admin create fallback、禁 expected_* claim）· no duplicate
-    identities · 状态机 A–G · trusted-store G1–G8 · single writer · secret
-    HTTPS response body → process memory → 0600 store（no argv/env/stdout/
-    stderr/log/child/workspace）· same-client rotation · revocation
-    fail-closed · credential != grant · Broker collateral = YES_MINIMAL ·
-    Router/Runtime/Kernel = NONE
+    NULL/ABSENT）· prerequisite (a)/(b)/(c)/(d) 定义 · deterministic
+    external_ref（agentcore:v1:principal|client:<agentId>）· S1/S2 幂等 ensure
+    （禁 legacy machine-admin create fallback、禁 expected_* claim）· no
+    duplicate identities · 状态机 A–G（最终目标模型，Phase B 交付）·
+    trusted-store G1–G8 · single writer · secret HTTPS response body →
+    process memory → 0600 store（no argv/env/stdout/stderr/log/child/workspace）
+    · same-client rotation · revocation fail-closed · credential != grant ·
+    Broker collateral = YES_MINIMAL · Router/Runtime/Kernel = NONE ·
+    不增加 OpenClaw credential fallback
 
-SPEC_STATUS = accepted（2026-08-19 acceptance finalize；未实施、未 merge）
-READY_TO_IMPLEMENT = YES_AFTER_SPEC_MERGED_TO_MAIN
-    （仅当本 accepted Spec 真正合入 implementation base branch 后方可开始
-      Implementation；不授权在本 acceptance 分支写任何代码；本 acceptance
-      finalize 轮零 Implementation。Acceptance Record 见上节）
+SPEC_STATUS = accepted（2026-08-19 初版 acceptance finalize；2026-08-20
+    Amendment 6 acceptance finalize——independent review PASS @ reviewed HEAD
+    5d12851，REQUIRED_FIXES = NONE，Amendment 6 分段交付冻结生效；待 merge
+    进入 PR #17 implementation base）
+本轮 = SPEC ONLY：IMPLEMENTATION_PERFORMED = NO · MERGE_PERFORMED = NO
 ```

@@ -15,6 +15,37 @@
 
 已登记决策：
 
+## D-007: Scheduler Occurrence / Outcome / Session / Migration Current Decision（V2）
+
+- 状态: accepted（standalone Current Decision；Current Scheduler Authority；全文见
+  `docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md`）
+- 日期: 2026-08-19（2026-08-20 accepted；supersedes D-005）
+- 背景: D-005 的 job-level execution model（timeout=ordinary error、runningAtMs
+  去重、stable per-job Session、legacy catch-up）与真实 fleet evidence 冲突：140 个
+  enabled job 绝大多数产生非幂等外部副作用（NON_IDEMPOTENT_SIDE_EFFECT=113）、63/140
+  已有 timeout/error，而 Router/AgentProcess 无 cancel + proven termination——重复
+  admission 会产生重叠外部副作用；D-005 已 accepted，normative meaning 变化必须完整
+  supersession，不得同 stable ID amendment。
+- 决策: execution identity 从 job-level 移到 occurrence-level——每逻辑 occurrence 持久
+  occurrenceId / runId / idempotencyKey，durable reserve before Router，同 occurrence
+  at-most-once admission；timeout without proven termination = outcome_unknown（非
+  ordinary failed；same-job execution fence 直到 trusted late settlement / operator
+  reconcile；无自动 retry / re-admission；late settlement 只解析状态不重放）；ordinary
+  failed retry = 新 occurrence；durable states = admitted / running / succeeded /
+  failed / outcome_unknown；exact jobs.json 原子持久化、runs.jsonl 10MB evidence、
+  cross-process mutation protocol、CLI control-only 全部 PRESERVE；scheduled Session
+  = 每 occurrence fresh non-main + same Agent primary Workspace（D-006）；OpenClaw
+  migration = definition-only import + strip legacy execution state + NO_CATCH_UP
+  （94 missed 不补跑）；restore gate = READY_TO_RESTORE_BEFORE_HARDENING 0。
+- 替代方案: amendment D-005——否决（normative meaning 实质变化）；timeout=failed、
+  same-occurrence retry、stale marker 清除重跑、unknown 放行下一自然 occurrence、
+  stable per-job Session、Session Mapping DB、补跑 94 次 missed——全部否决（见
+  `docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md` §10 与 D-007 §1）。
+- 影响: D-005 标记 superseded-by-D-007（保留为历史 authority，不删除、不改写历史
+  正文）；governing spec = accepted SCHEDULER_TIMEOUT_OUTCOME_V1；Scheduler
+  implementation 仍需独立 implementation round；本轮 acceptance = docs only（无代码、
+  无 production jobs、无 Scheduler store 修改、无 Kernel change、无 merge）。
+
 ## D-006: Agent / Workspace / Session / main 长期产品模型 Current Decision（V2）
 
 - 状态: accepted（standalone Current Decision，本文档为 Current Authority；全文见
@@ -83,7 +114,10 @@
 
 ## D-005: Scheduler Replacement V1 — 最小 job 模型、持久化与执行语义
 
-- 状态: accepted（分支 feat/scheduler-replacement-v1 已实现并真实验收，见
+- 状态: superseded-by-D-007（Scheduler authority 已由 D-007
+  SCHEDULER_OCCURRENCE_OUTCOME_V2 接管，见
+  `docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md`；此前 accepted，分支
+  feat/scheduler-replacement-v1 已实现并真实验收，见
   `docs/reports/scheduler-replacement-v1.md`）
 - 日期: 2026-08-15
 - 背景: OpenClaw Gateway 内嵌 cron scheduler 是 141 个 enabled job（90 个
