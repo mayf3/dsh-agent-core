@@ -1,5 +1,8 @@
+import { Buffer } from 'node:buffer'
+import { timingSafeEqual } from 'node:crypto'
+
 import { readDefinition } from '../../agent-definition/src/config.js'
-import { normalizeCredential } from '../../broker/src/credential-store.js'
+import { CREDENTIALS_STORE_ERROR, normalizeCredential } from '../../broker/src/credential-store.js'
 
 import {
   readCredentialStoreDocument,
@@ -44,6 +47,25 @@ function created(value) {
 
 function assertActive(value, code, fields) {
   if (value?.status !== 'active') fail(code, code, fields)
+}
+
+function secretsEqual(left, right) {
+  if (typeof left !== 'string' || typeof right !== 'string') return false
+  const leftBytes = Buffer.from(left, 'utf8')
+  const rightBytes = Buffer.from(right, 'utf8')
+  return leftBytes.length === rightBytes.length && timingSafeEqual(leftBytes, rightBytes)
+}
+
+function assertPersistedCredentialMatches(persisted, createdCredential, agentId) {
+  if (normalizeCredential(persisted) === undefined
+    || persisted.clientId !== createdCredential.clientId
+    || !secretsEqual(persisted.clientSecret, createdCredential.clientSecret)) {
+    fail(CREDENTIALS_STORE_ERROR, 'credential provisioning: post-write consistency mismatch', {
+      reason: 'post_write_consistency_mismatch',
+      agentId,
+      clientId: createdCredential.clientId,
+    })
+  }
 }
 
 /** Mode-aware interpretation of one verification mint result. */
@@ -111,7 +133,10 @@ export async function ensureAgentCredential({
   // before observing/mutating Auth, so only one clean bootstrap can run.
   return withCredentialStoreLock(credentialsFile, storeWriteOptions, async (lock) => {
     // D.7.1 step 3: full trusted store read + validation BEFORE Auth mutation.
-    const store = await readCredentialStoreDocument(credentialsFile, storeWriteOptions)
+    const store = await readCredentialStoreDocument(credentialsFile, {
+      ...storeWriteOptions,
+      expectedDirectoryIdentity: lock.directoryIdentity,
+    })
     const stored = store.credentials[agentId]
 
     // D.7.1 steps 4/6: existing entry is Phase B territory — zero Auth/write.
@@ -178,7 +203,13 @@ export async function ensureAgentCredential({
     const credential = normalizeCredential({ clientId, clientSecret: client?.client_secret ?? client?.clientSecret })
     if (credential === undefined) fail('auth_client_secret_missing', 'New Auth client response has no usable secret', { agentId, clientId })
     await writeCredentialForAgent(credentialsFile, agentId, credential, { ...storeWriteOptions, lock })
-    const result = await auth.verifyCredential({ credential, ...verificationContext })
+    const persistedDocument = await readCredentialStoreDocument(credentialsFile, {
+      ...storeWriteOptions,
+      expectedDirectoryIdentity: lock.directoryIdentity,
+    })
+    const persistedCredential = persistedDocument.credentials[agentId]
+    assertPersistedCredentialMatches(persistedCredential, credential, agentId)
+    const result = await auth.verifyCredential({ credential: persistedCredential, ...verificationContext })
     const classification = classifyVerificationResult(result, verificationContext)
     if (classification.kind === 'credential_valid') {
       return { outcome: 'provisioned', agentId, principalId, clientId, verification: classification }
