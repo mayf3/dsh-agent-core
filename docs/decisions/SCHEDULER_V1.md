@@ -1,6 +1,7 @@
 # D-005: Scheduler Replacement V1 — 最小 job 模型、持久化与执行语义
 
-- 状态: accepted（本 PR 交付范围）
+- 状态: superseded（2026-08-20）
+- superseded_by: D-007 / SCHEDULER_OCCURRENCE_OUTCOME_V2（`docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md`；standalone complete replacement，本文保留为历史 authority，历史正文不改写）
 - 日期: 2026-08-15
 - 背景: OpenClaw Gateway 内嵌 cron scheduler 是 141 个 enabled job 的唯一执行者
   （其中 90 个要 announce 回飞书群）。关闭 OpenClaw 前必须有一个最小替代执行面。
