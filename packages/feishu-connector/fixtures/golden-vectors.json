@@ -1,0 +1,328 @@
+{
+  "$comment": [
+    "Golden vectors GV1-GV6 — AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1 §7.1 (frozen).",
+    "Each `input` is a raw im.message.receive_v1 wire event in the shape the Lark",
+    "node-sdk EventDispatcher hands to handlers (v2 events are flattened by",
+    "RequestHandle.parse: header fields hoisted to top level, event body's",
+    "sender/message kept nested) — exactly what @larksuite/channel's builtin",
+    "message handler (and therefore its normalize()) receives in production.",
+    "Chain under test, per vector: raw wire event -> pinned @larksuite/channel",
+    "normalize() -> thin adapter normalizedToIngressEvent() -> conversationId,",
+    "then router.channelConversationId('feishu', conversationId) -> ccId.",
+    "Expected values are byte-frozen; any drift fails the suite."
+  ],
+  "botIdentity": {
+    "openId": "ou_bot_self",
+    "name": "my-bot"
+  },
+  "vectors": [
+    {
+      "id": "GV1",
+      "describe": "p2p baseline: conversationId = chatId",
+      "input": {
+        "schema": "2.0",
+        "event_id": "evt_gv1_p2p",
+        "event_type": "im.message.receive_v1",
+        "create_time": "1712000000000",
+        "token": "x",
+        "app_id": "cli_test",
+        "tenant_key": "tenant_x",
+        "sender": {
+          "sender_id": {
+            "open_id": "ou_sender_gv1",
+            "union_id": "on_sender_gv1",
+            "user_id": "u_sender_gv1"
+          },
+          "sender_type": "user",
+          "tenant_key": "tenant_x"
+        },
+        "message": {
+          "message_id": "om_gv1_msg_001",
+          "create_time": "1712000000000",
+          "chat_id": "oc_4d2f81a9e7",
+          "chat_type": "p2p",
+          "message_type": "text",
+          "content": "{\"text\":\"hello from p2p\"}",
+          "mentions": []
+        }
+      },
+      "expected": {
+        "conversationId": "oc_4d2f81a9e7",
+        "ccId": "feishu:oc_4d2f81a9e7",
+        "channel": "p2p",
+        "chatType": "p2p",
+        "threadId": null,
+        "rootMsgId": null,
+        "replyInThread": false,
+        "chatId": "oc_4d2f81a9e7"
+      }
+    },
+    {
+      "id": "GV2",
+      "describe": "group baseline: conversationId = chatId",
+      "input": {
+        "schema": "2.0",
+        "event_id": "evt_gv2_group",
+        "event_type": "im.message.receive_v1",
+        "create_time": "1712000001000",
+        "token": "x",
+        "app_id": "cli_test",
+        "tenant_key": "tenant_x",
+        "sender": {
+          "sender_id": {
+            "open_id": "ou_sender_gv2"
+          },
+          "sender_type": "user"
+        },
+        "message": {
+          "message_id": "om_gv2_msg_001",
+          "create_time": "1712000001000",
+          "chat_id": "oc_9b7c3e5f12",
+          "chat_type": "group",
+          "message_type": "text",
+          "content": "{\"text\":\"@_user_1 group hello\"}",
+          "mentions": [
+            {
+              "key": "@_user_1",
+              "id": {
+                "open_id": "ou_bot_self"
+              },
+              "name": "my-bot"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "conversationId": "oc_9b7c3e5f12",
+        "ccId": "feishu:oc_9b7c3e5f12",
+        "channel": "group",
+        "chatType": "group",
+        "threadId": null,
+        "rootMsgId": null,
+        "replyInThread": false,
+        "chatId": "oc_9b7c3e5f12"
+      }
+    },
+    {
+      "id": "GV3",
+      "describe": "topic thread: conversationId = chatId:topic:trim(threadId) — leading/trailing whitespace proves the trim",
+      "input": {
+        "schema": "2.0",
+        "event_id": "evt_gv3_thread",
+        "event_type": "im.message.receive_v1",
+        "create_time": "1712000002000",
+        "token": "x",
+        "app_id": "cli_test",
+        "tenant_key": "tenant_x",
+        "sender": {
+          "sender_id": {
+            "open_id": "ou_sender_gv3"
+          },
+          "sender_type": "user"
+        },
+        "message": {
+          "message_id": "om_gv3_msg_001",
+          "root_id": "om_gv3_root",
+          "parent_id": "om_gv3_root",
+          "create_time": "1712000002000",
+          "chat_id": "oc_9b7c3e5f12",
+          "thread_id": " omt_2a8d40c1 ",
+          "chat_type": "group",
+          "message_type": "text",
+          "content": "{\"text\":\"replying inside the topic thread\"}",
+          "mentions": [
+            {
+              "key": "@_user_1",
+              "id": {
+                "open_id": "ou_bot_self"
+              },
+              "name": "my-bot"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "conversationId": "oc_9b7c3e5f12:topic:omt_2a8d40c1",
+        "ccId": "feishu:oc_9b7c3e5f12:topic:omt_2a8d40c1",
+        "channel": "thread",
+        "chatType": "group",
+        "threadId": "omt_2a8d40c1",
+        "rootMsgId": "om_gv3_root",
+        "replyInThread": true,
+        "chatId": "oc_9b7c3e5f12"
+      }
+    },
+    {
+      "id": "GV4",
+      "describe": "inline reply with root_id but NO thread_id: stays a group conversation, root_id carried as event field only",
+      "input": {
+        "schema": "2.0",
+        "event_id": "evt_gv4_rootonly",
+        "event_type": "im.message.receive_v1",
+        "create_time": "1712000003000",
+        "token": "x",
+        "app_id": "cli_test",
+        "tenant_key": "tenant_x",
+        "sender": {
+          "sender_id": {
+            "open_id": "ou_sender_gv4"
+          },
+          "sender_type": "user"
+        },
+        "message": {
+          "message_id": "om_gv4_msg_001",
+          "root_id": "om_5e1c9b",
+          "parent_id": "om_5e1c9b",
+          "create_time": "1712000003000",
+          "chat_id": "oc_9b7c3e5f12",
+          "chat_type": "group",
+          "message_type": "text",
+          "content": "{\"text\":\"inline reply under a root\"}",
+          "mentions": [
+            {
+              "key": "@_user_1",
+              "id": {
+                "open_id": "ou_bot_self"
+              },
+              "name": "my-bot"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "conversationId": "oc_9b7c3e5f12",
+        "ccId": "feishu:oc_9b7c3e5f12",
+        "channel": "group",
+        "chatType": "group",
+        "threadId": null,
+        "rootMsgId": "om_5e1c9b",
+        "replyInThread": false,
+        "chatId": "oc_9b7c3e5f12"
+      }
+    },
+    {
+      "id": "GV5a",
+      "describe": "missing chat_id (empty): conversationId falls back to 'unknown'",
+      "input": {
+        "schema": "2.0",
+        "event_id": "evt_gv5a_empty_chat",
+        "event_type": "im.message.receive_v1",
+        "create_time": "1712000004000",
+        "token": "x",
+        "app_id": "cli_test",
+        "tenant_key": "tenant_x",
+        "sender": {
+          "sender_id": {
+            "open_id": "ou_sender_gv5a"
+          },
+          "sender_type": "user"
+        },
+        "message": {
+          "message_id": "om_gv5a_msg_001",
+          "create_time": "1712000004000",
+          "chat_id": "",
+          "chat_type": "p2p",
+          "message_type": "text",
+          "content": "{\"text\":\"event without a chat id\"}",
+          "mentions": []
+        }
+      },
+      "expected": {
+        "conversationId": "unknown",
+        "ccId": "feishu:unknown",
+        "channel": "p2p",
+        "chatType": "p2p",
+        "threadId": null,
+        "rootMsgId": null,
+        "replyInThread": false,
+        "chatId": null
+      }
+    },
+    {
+      "id": "GV5b",
+      "describe": "empty thread_id is treated as absent: same as the plain group baseline (GV2)",
+      "input": {
+        "schema": "2.0",
+        "event_id": "evt_gv5b_empty_thread",
+        "event_type": "im.message.receive_v1",
+        "create_time": "1712000005000",
+        "token": "x",
+        "app_id": "cli_test",
+        "tenant_key": "tenant_x",
+        "sender": {
+          "sender_id": {
+            "open_id": "ou_sender_gv5b"
+          },
+          "sender_type": "user"
+        },
+        "message": {
+          "message_id": "om_gv5b_msg_001",
+          "create_time": "1712000005000",
+          "chat_id": "oc_9b7c3e5f12",
+          "thread_id": "",
+          "chat_type": "group",
+          "message_type": "text",
+          "content": "{\"text\":\"group message with an empty thread id\"}",
+          "mentions": [
+            {
+              "key": "@_user_1",
+              "id": {
+                "open_id": "ou_bot_self"
+              },
+              "name": "my-bot"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "conversationId": "oc_9b7c3e5f12",
+        "ccId": "feishu:oc_9b7c3e5f12",
+        "channel": "group",
+        "chatType": "group",
+        "threadId": null,
+        "rootMsgId": null,
+        "replyInThread": false,
+        "chatId": "oc_9b7c3e5f12"
+      }
+    },
+    {
+      "id": "GV6",
+      "describe": "p2p carrying a thread_id stays p2p: threadId is carried as an event field but never joins the conversationId",
+      "input": {
+        "schema": "2.0",
+        "event_id": "evt_gv6_p2p_thread",
+        "event_type": "im.message.receive_v1",
+        "create_time": "1712000006000",
+        "token": "x",
+        "app_id": "cli_test",
+        "tenant_key": "tenant_x",
+        "sender": {
+          "sender_id": {
+            "open_id": "ou_sender_gv6"
+          },
+          "sender_type": "user"
+        },
+        "message": {
+          "message_id": "om_gv6_msg_001",
+          "create_time": "1712000006000",
+          "chat_id": "oc_4d2f81a9e7",
+          "thread_id": "omt_2a8d40c1",
+          "chat_type": "p2p",
+          "message_type": "text",
+          "content": "{\"text\":\"p2p message that somehow carries a thread id\"}",
+          "mentions": []
+        }
+      },
+      "expected": {
+        "conversationId": "oc_4d2f81a9e7",
+        "ccId": "feishu:oc_4d2f81a9e7",
+        "channel": "p2p",
+        "chatType": "p2p",
+        "threadId": "omt_2a8d40c1",
+        "rootMsgId": null,
+        "replyInThread": false,
+        "chatId": "oc_4d2f81a9e7"
+      }
+    }
+  ]
+}

@@ -1,48 +1,46 @@
 /**
- * @agent-core/feishu-connector/src/index.js — Cordis plugin shell.
+ * @agent-core/feishu-connector/src/index.js — Cordis plugin shell on the
+ * official @larksuite/channel foundation (Phase A Foundation cutover).
  *
- * Wires the pure core / transport / api layers into a Cordis plugin with the
- * repo's standard contract: named exports `name` / `inject` / `Config` / `apply`.
+ * Wires the pure core / bridge layers into a Cordis plugin with the repo's
+ * standard contract: named exports `name` / `inject` / `Config` / `apply`.
  *
- * V0 scope is PURE CHANNEL: it establishes the Feishu WebSocket long connection,
- * normalizes inbound events through src/core.js, dedups them, and exposes an
- * outbound `reply()` method. It deliberately does NOT talk to DSH agents /
- * sessions / router — events are surfaced through a simple `onEvent` callback
- * (config) and the returned `handle` object, so whoever mounts this plugin can
- * decide where to deliver them.
+ * ONE production connection, owned by @larksuite/channel: WebSocket
+ * lifecycle + first-handshake readiness + bot identity + event normalization
+ * + dedup (SeenCache/renewable ProcessingLock) + PolicyGate
+ * (requireMention=false, with residual V0 mention eligibility in bridge) +
+ * outbound protocol primitives, all under the frozen Foundation options in
+ * core.js (batch delayMs=0, chat queue disabled, stale-drop disabled).
+ * The legacy V0 transport.js WSClient path is DELETED — no dual WebSocket,
+ * no legacy/official feature flag.
  *
- * It stays decoupled from DSH core services: `inject` is empty and no
- * unregistered service is read. The one composition-level seam beyond
- * `onEvent` is the injectable PRE-BOUND ingress gate (`setIngressGate` /
- * config `ingressGate`): a predicate the mounting layer (e.g.
- * production-runtime) supplies from OUTSIDE; a rejected event never reaches
- * `onEvent` and gets the connector's own fixed rejection receipt.
+ * Scope stays PURE CHANNEL: the bridge maps SDK NormalizedMessages onto the
+ * existing IngressEvent shape, enforces the injected PREBOUND_ONLY gate
+ * (fail-closed) and surfaces events through the `onEvent` callback; the
+ * outbound seam `reply(replyTarget, text)` keeps the V0 ReplyTarget contract.
+ * No DSH agent/session/workspace concept lives here (`inject` is empty).
  */
 
-import { EventDispatcher, Client as LarkClient, WSClient, AppType, Domain, LoggerLevel } from '@larksuiteoapi/node-sdk'
+import { createLarkChannel } from '@larksuite/channel'
 import { readFileSync } from 'node:fs'
 import z from '@deepseek-ai/schemastery'
 import {
-  createIngressPipeline,
-  INGRESS_GATE_REJECTED_REPLY,
-  LruDedup,
-  normalizeIngressEvent,
+  FOUNDATION_LARK_CHANNEL_OPTIONS,
   replyTargetFor,
-  classifyIngress,
+  replyTargetToSdkSend,
   conversationWorkspaceId,
 } from './core.js'
-import { createFeishuTransport } from './transport.js'
-import { reply as sendReply } from './api.js'
+import { normalizedToIngressEvent, createBridgeHandler, createReceiptReply } from './bridge.js'
 
-// Re-export the pure ingress helpers for thin adapters and tests
+// Re-export the pure adapter helpers for thin adapters and tests
 // (conversationWorkspaceId stays exported as a TRANSITIONAL compatibility
-// carrier — the V2 normal path no longer injects it into ingress events).
-export { normalizeIngressEvent, replyTargetFor, classifyIngress, conversationWorkspaceId }
+// carrier — the V2 normal path never injects it into ingress events).
+export { normalizedToIngressEvent, replyTargetFor, conversationWorkspaceId }
 
 /** Stable plugin name referenced by bundle patches / manifests. */
 export const name = 'feishu'
 
-/** No hard DSH service dependency: V0 is a pure channel layer. */
+/** No hard DSH service dependency: the connector is a pure channel layer. */
 export const inject = []
 
 /**
@@ -56,14 +54,14 @@ const DEFAULTS = {
   appSecret: '',
   credentialsPath: '',
   enabled: true,
-  dedupSize: 10000,
   onEvent: null,
   // V2 PREBOUND_ONLY pre-forward gate predicate (programmatically injected by
   // the composition layer, e.g. production-runtime wiring it to
   // agentRouter.getBinding — the connector stays a pure channel and never
   // depends on the Router). Rejected events FAIL CLOSED: onEvent is never
   // called and the connector itself replies with the fixed
-  // INGRESS_GATE_REJECTED_REPLY receipt.
+  // INGRESS_GATE_REJECTED_REPLY receipt. An ABSENT gate is fail-closed too:
+  // messages are dropped until setIngressGate installs the predicate.
   ingressGate: null,
   onStatus: null,
   log: null,
@@ -71,10 +69,8 @@ const DEFAULTS = {
 
 /**
  * Cordis config schema (schemastery). Only data fields are validated;
- * unknown keys (e.g. onEvent/onStatus/log) pass through untouched, so the
- * manual default merge in apply() keeps working. A plain-object Config would
- * crash the Cordis loader (`config.validate` is undefined), so a real schema
- * is required for mounting inside a DSH profile.
+ * unknown keys (onEvent/onStatus/log) pass through untouched, so the manual
+ * default merge in apply() keeps working.
  */
 export const Config = z.object({
   appId: z.string(),
@@ -83,8 +79,6 @@ export const Config = z.object({
   // overrides appId/appSecret inline values. Secrets are never logged.
   credentialsPath: z.string(),
   enabled: z.boolean().default(true),
-  // Max distinct dedup keys retained in memory.
-  dedupSize: z.number().default(10000),
 })
 
 function loadCredentials(config) {
@@ -110,128 +104,129 @@ function loadCredentials(config) {
 }
 
 /**
- * Mount the plugin.
- * @param {object} ctx - Cordis context (not used for DSH-only services in V0).
- * @param {object} config - validated plugin config.
- * @returns {object} handle exposing reply() + status() / setCallback().
+ * Bridge the SDK's structured logger onto the plugin's `(level, ...args)`
+ * log surface (default: console). Keeps the SDK's protocol-layer noise on
+ * the same observable surface as the connector's own lines.
  */
-export function apply(ctx, config) {
-  const cfg = { ...DEFAULTS, ...(config ?? {}) }
-  const log = cfg.log ?? ((level, ...args) => {
-    const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
-    fn(...args)
-  })
-
-  if (!cfg.enabled) {
-    log('warn', '[feishu] disabled by config; plugin mounted but not connected')
-    return { started: false, reply: async () => { throw new Error('feishu disabled') }, status: () => 'disabled' }
-  }
-
-  const creds = loadCredentials(cfg)
-  if (!creds.appId || !creds.appSecret) {
-    throw new Error('[feishu] appId/appSecret (or credentialsPath) required when enabled')
-  }
-
-  const client = new LarkClient({
-    appId: creds.appId,
-    appSecret: creds.appSecret,
-    appType: AppType.SelfBuild,
-    domain: Domain.Feishu,
-  })
-  const ws = new WSClient({
-    appId: creds.appId,
-    appSecret: creds.appSecret,
-    domain: Domain.Feishu,
-    loggerLevel: LoggerLevel.info,
-  })
-  const dispatcher = new EventDispatcher({})
-  const dedup = new LruDedup({ maxSize: cfg.dedupSize })
-
-  // Resolve the bot's own open_id once (needed for correct @bot detection in
-  // groups/threads). Falls back to null — mentions then classify as 'user'.
-  let botOpenId = null
-  fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ app_id: creds.appId, app_secret: creds.appSecret }),
-  })
-    .then((r) => r.json())
-    .then(async (tokenRes) => {
-      if (tokenRes.code !== 0) throw new Error(`tenant token: ${tokenRes.msg}`)
-      const info = await fetch('https://open.feishu.cn/open-apis/bot/v3/info', {
-        headers: { Authorization: `Bearer ${tokenRes.tenant_access_token}` },
-      }).then((r) => r.json())
-      botOpenId = info?.bot?.open_id ?? null
-      log('debug', `[feishu] bot identity resolved: ${botOpenId?.slice(0, 8)}...`)
-    })
-    .catch((error) => {
-      log('warn', `[feishu] could not resolve bot identity: ${error?.message ?? error}`)
-    })
-
-  // The post-normalization ingress pipeline (dedup → classify → gate →
-  // onEvent). The rejection receipt goes through the connector's OWN reply
-  // path (never the Router), with the fixed INGRESS_GATE_REJECTED_REPLY text.
-  const handleIngress = createIngressPipeline({
-    dedup,
-    config: cfg,
-    reply: (ingress) => sendReply(
-      client,
-      replyTargetFor(ingress).replyTo(ingress.messageId),
-      INGRESS_GATE_REJECTED_REPLY,
-      { log },
-    ),
-    log,
-  })
-
-  const transport = createFeishuTransport({
-    ws,
-    eventDispatcher: dispatcher,
-    config: { appId: creds.appId },
-    onStatus: (s) => {
-      if (typeof cfg.onStatus === 'function') cfg.onStatus(s)
-    },
-    onEvent: async (raw) => {
-      let ingress
-      try {
-        ingress = normalizeIngressEvent(raw, { botOpenId })
-      } catch (error) {
-        log('warn', `[feishu] drop non-message event: ${error?.message ?? error}`)
-        return
-      }
-      await handleIngress(ingress)
-    },
-    log,
-  })
-
-  // Register the message receive handler on the dispatcher. NOTE: the SDK's
-  // EventDispatcher.register() takes an OBJECT map { eventType: handler },
-  // not (key, handler) — the two-arg form silently registers garbage keys
-  // (Object.keys on a string) and the real event never matches.
-  dispatcher.register({
-    'im.message.receive_v1': async (data) => {
-      await transport.ingest(data)
-    },
-  })
-
-  // Start the long connection. ctx.effect guarantees the connection is torn
-  // down if the plugin is stopped / updated. NOTE: ctx.effect() returns a
-  // disposer function, not a Promise — errors are handled inside the effect.
-  ctx.effect(async () => {
+function sdkLoggerAdapter(log) {
+  const forward = (level) => (...args) => {
     try {
-      await transport.start()
-    } catch (error) {
-      log('error', `[feishu] connection start failed: ${error?.message ?? error}`)
-      throw error
+      log(level, '[lark-channel]', ...args.map((a) => (typeof a === 'string' ? a : safeInspect(a))))
+    } catch { /* never let logging break the channel */ }
+  }
+  return {
+    debug: forward('debug'),
+    info: forward('info'),
+    warn: forward('warn'),
+    error: forward('error'),
+  }
+}
+
+function safeInspect(value) {
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+/**
+ * Build the connector handle over a CONNECTABLE (not yet connected) SDK
+ * channel: service surface, bridge wiring, status/reconnect bookkeeping and
+ * the ready() promise. Extracted from apply() so it is unit-testable with a
+ * stub channel (no network).
+ *
+ * @param {object} p
+ * @param {object} p.channel - a @larksuite/channel instance (unconnected).
+ * @param {object} p.cfg - the LIVE plugin config (DEFAULTS-merged).
+ * @param {Function} p.log - `(level, ...args)` logger.
+ * @param {() => Promise<void>} p.connect - starts the SDK connect()
+ *   (identity + first handshake); the returned promise is ready().
+ * @returns {object} the feishu handle (the `ctx.provide('feishu')` value).
+ */
+export function buildFeishuHandle({ channel, cfg, log, connect }) {
+  const state = {
+    connectionStatus: 'connecting',
+    reconnectCount: 0,
+    started: true,
+  }
+
+  function emitStatus(status) {
+    state.connectionStatus = status
+    if (typeof cfg.onStatus === 'function') {
+      try {
+        cfg.onStatus({ status, reconnectCount: state.reconnectCount })
+      } catch (e) {
+        log('error', `[feishu] onStatus handler threw: ${e?.message ?? e}`)
+      }
     }
-    return () => transport.stop()
+  }
+
+  // EVENT_SURFACE = MESSAGE_ONLY (spec §9): the sole Feishu event handler is
+  // `message`. reconnecting/reconnected/error are channel lifecycle
+  // callbacks, not event surfaces — cardAction / reaction / comment /
+  // meeting handlers are NOT registered and no onRawEvent catch-all exists.
+  const onSdkMessage = createBridgeHandler({
+    resolveBotIdentity: () => channel.getBotIdentity(),
+    config: cfg,
+    reply: createReceiptReply(channel, log),
+    log,
   })
+  channel.on({
+    message: onSdkMessage,
+    error: (err) => log('error', `[feishu] channel error: ${err?.code ?? ''} ${err?.message ?? err}`),
+    reconnecting: () => {
+      state.reconnectCount += 1
+      emitStatus('reconnecting')
+      log('warn', `[feishu] connection lost; SDK reconnecting (count=${state.reconnectCount})`)
+    },
+    reconnected: () => {
+      emitStatus('connected')
+      log('info', '[feishu] SDK reconnected')
+    },
+  })
+
+  // Start the connect (bot identity resolution + first WS handshake). The
+  // promise IS the readiness surface: compose() awaits ready() before
+  // declaring the channel live; a rejection (identity/handshake failure) is
+  // startup fail-loud.
+  const readyPromise = connect()
+  readyPromise.then(
+    () => {
+      emitStatus('connected')
+      const identity = channel.botIdentity
+      log('info', `[feishu] channel live: first handshake done, bot identity resolved (${identity?.openId?.slice(0, 8) ?? '?'}...)`)
+    },
+    () => { /* failure path is consumed by ready() awaiters; logged there */ },
+  )
 
   const handle = {
     pluginName: name,
     started: true,
+    /**
+     * Readiness: resolves after the SDK first handshake completes AND the
+     * bot identity is resolved; rejects (fail-loud) when either fails.
+     * production-runtime awaits this before declaring the channel live.
+     */
+    ready() {
+      return readyPromise
+    },
     /** Outbound: reply into a conversation/thread using a ReplyTarget. */
     async reply(replyTarget, text, opts = {}) {
-      return sendReply(client, replyTarget, text, { log, ...opts })
+      const plan = replyTargetToSdkSend(replyTarget, text)
+      const result = await channel.send(plan.to, plan.input, plan.opts)
+      if (!result?.messageId) {
+        // EMPTY_MESSAGE_ID_REJECTION (spec §10): a send that "succeeded"
+        // without a message id is a failure — reject, never fake success.
+        throw new Error(`feishu-connector: send returned no message_id (${plan.method})`)
+      }
+      log('info', `[feishu] reply sent via ${plan.method} (${result.messageId}${result.chunkIds ? `, ${result.chunkIds.length} chunks` : ''})`)
+      return {
+        messageId: result.messageId,
+        chatId: replyTarget?.chatId ?? '',
+        method: plan.method,
+        ...(result.chunkIds ? { chunkIds: result.chunkIds } : {}),
+      }
     },
     /** Build a ReplyTarget from a normalized IngressEvent. */
     replyTargetFor(ev) {
@@ -239,11 +234,14 @@ export function apply(ctx, config) {
     },
     /** Current connection status. */
     status() {
-      return transport.state.connectionStatus
+      const sdk = channel.getConnectionStatus?.()
+      const mapped = mapConnectionState(sdk?.state)
+      return mapped ?? state.connectionStatus
     },
-    /** Reconnect counter. */
+    /** Reconnect counter (accumulated from the SDK reconnecting events —
+     *  the SDK surface exposes no equivalent counter). */
     reconnectCount() {
-      return transport.state.reconnectCount
+      return state.reconnectCount
     },
     /** Swap the ingress callback (e.g. after the router mounts). */
     setCallback(fn) {
@@ -254,15 +252,80 @@ export function apply(ctx, config) {
     setIngressGate(fn) {
       cfg.ingressGate = typeof fn === 'function' ? fn : cfg.ingressGate
     },
-    // keep a reference so callers can inspect the transport
-    _transport: transport,
+    // keep a reference so callers can inspect the channel
+    _channel: channel,
   }
+
+  return handle
+}
+
+function mapConnectionState(sdkState) {
+  if (typeof sdkState !== 'string') return undefined
+  const s = sdkState.toLowerCase()
+  if (s.includes('reconnect')) return 'reconnecting'
+  if (s.includes('dis')) return 'disconnected'
+  if (s.includes('connected')) return 'connected'
+  if (s.includes('connect')) return 'connecting'
+  return undefined
+}
+
+/**
+ * Mount the plugin.
+ * @param {object} ctx - Cordis context (createPluginContext shape).
+ * @param {object} config - validated plugin config.
+ * @returns {object} handle exposing reply() / ready() / status() /
+ *   setCallback() / setIngressGate().
+ */
+export function apply(ctx, config) {
+  const cfg = { ...DEFAULTS, ...(config ?? {}) }
+  const log = cfg.log ?? ((level, ...args) => {
+    const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
+    fn(...args)
+  })
+
+  if (!cfg.enabled) {
+    log('warn', '[feishu] disabled by config; plugin mounted but not connected')
+    return {
+      started: false,
+      reply: async () => { throw new Error('feishu disabled') },
+      status: () => 'disabled',
+      ready: async () => 'disabled',
+    }
+  }
+
+  const creds = loadCredentials(cfg)
+  if (!creds.appId || !creds.appSecret) {
+    throw new Error('[feishu] appId/appSecret (or credentialsPath) required when enabled')
+  }
+
+  const channel = createLarkChannel({
+    appId: creds.appId,
+    appSecret: creds.appSecret,
+    ...FOUNDATION_LARK_CHANNEL_OPTIONS,
+    logger: sdkLoggerAdapter(log),
+  })
+
+  const handle = buildFeishuHandle({
+    channel,
+    cfg,
+    log,
+    connect: () => channel.connect(),
+  })
+
+  // SDK_SHUTDOWN_CLEANUP (spec §9): the ctx disposer tears the SDK
+  // connection down. NOTE: context.effect consumes a SYNCHRONOUS disposer
+  // (an async return value would never be registered — the V0 shell's
+  // `ctx.effect(async ...)` disposer was silently dropped); the async
+  // lifecycle itself is carried by ready(), not by this hook.
+  ctx.effect(() => () => {
+    channel.disconnect().catch((error) => {
+      log('warn', `[feishu] disconnect cleanup failed: ${error?.message ?? error}`)
+    })
+  })
 
   // Publish the channel handle as a service so sibling plugins in the same
   // composition (e.g. the agent-router / control plane) can bind the ingress
   // callback and send replies through it. Cordis injectable as 'feishu'.
-  // NOTE: provide stores the VALUE as-is — a factory function would be
-  // returned as-is by ctx.get(); pass the handle object directly.
   ctx.provide('feishu', handle)
 
   return handle
