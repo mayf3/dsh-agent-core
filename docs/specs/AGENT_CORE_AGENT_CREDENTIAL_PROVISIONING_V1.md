@@ -15,7 +15,11 @@ status: accepted
 > Amendment 5（Final Cleanup，focused review 3 fixes）：2026-08-19，
 > base reviewed HEAD `0e9dc65` ·
 > Amendment 6（Clean Bootstrap Phase 分段冻结）：2026-08-20，
-> base = accepted Spec（acceptance-finalize 文本 @ `5cfb610`，origin/main）
+> base = accepted Spec（acceptance-finalize 文本 @ `5cfb610`，origin/main）·
+> Amendment 6 acceptance finalize：2026-08-20——independent review
+> `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_AMENDMENT_6_SPEC_REVIEW`
+> = PASS（reviewed HEAD `5d12851`，REQUIRED_FIXES = NONE，
+> READY_FOR_ACCEPTANCE_FINALIZE = YES），Amendment 6 = accepted
 > 仓库：`mayf3/dsh-agent-core`
 > 角色：Credential Provisioning Spec Agent
 >
@@ -1626,6 +1630,33 @@ ACCEPTANCE_FINALIZE_SEMANTIC_CHANGE = NONE
 
 ---
 
+## Acceptance Record（2026-08-20 Amendment 6 acceptance finalize）
+
+```text
+ACCEPTANCE_REVIEW   = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_AMENDMENT_6_SPEC_REVIEW
+REVIEWED_BASE       = fe2c6393915b1dc61c4c3d25b2996d2f258ba484
+REVIEWED_SPEC_HEAD  = 5d1285195f8c2e3eb88ea606be09671b074f68d4
+REVIEW_VERDICT      = PASS
+REQUIRED_FIXES      = NONE
+READY_FOR_ACCEPTANCE_FINALIZE = YES
+IMPLEMENTATION_AUTHORIZED = NO
+    （acceptance finalize 本身不授予实现许可；实现许可 = Phase A
+      PHASE_A_CLEAN_BOOTSTRAP_FOUNDATION，且仅当本 accepted Amendment 合入
+      PR #17 的 implementation base 后经 D.7.5 生效）
+ACCEPTED_AT         = 2026-08-20（Amendment 6 生效；D.7.5 剩余条件 =
+      merge 进入 PR #17 implementation base）
+
+ACCEPTANCE_FINALIZE_SEMANTIC_CHANGE = NONE
+    （本 round 仅 Amendment 6 状态镜像与 acceptance provenance——文头状态行、
+      本 Acceptance Record、Final Output 的生效条件与 SPEC_STATUS 镜像；
+      reviewed head 5d12851 的全部冻结语义——D.7.1–D.7.6、PA1–PA5、
+      Final Output 冻结值——零改动。frontmatter status 保持 accepted：
+      本 Spec 为已接受 Spec 的原地 Amendment，authoring 轮未翻回 proposed，
+      翻转对象是 Amendment 6 的生效状态，不是整份 Spec 的生命周期状态）
+```
+
+---
+
 ## Final Output（Amendment 6 — Clean Bootstrap Phase 分段冻结）
 
 ```text
@@ -1635,7 +1666,11 @@ BASE = accepted Spec（acceptance-finalize 文本 @ 5cfb610，origin/main；
     Amendment 1–5 结论全部保留于各摘要与 git history；Amendment 6 为 in-place
     amendment，不创建平行 Spec）
 本 Amendment 生效条件 = 独立 review PASS、accepted 并进入 PR #17 的
-    implementation base（D.7.5）；在此之前 PR #17 不得按 Phase A 范围修改
+    implementation base（D.7.5）——独立 review 已 PASS（2026-08-20，
+    AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_AMENDMENT_6_SPEC_REVIEW，
+    reviewed HEAD 5d12851，REQUIRED_FIXES = NONE）、Amendment 6 已 accepted
+    （2026-08-20 acceptance finalize，见 Acceptance Record）；在 merge 进入
+    PR #17 implementation base 之前，PR #17 仍不得按 Phase A 范围修改
 
 NEW_EVIDENCE_RECORDED =
     AGENT_FORUM_WORKFLOW_CREDENTIAL_RECOVERY_PREFLIGHT（OBSERVED_AT =
@@ -1739,7 +1774,9 @@ UNCHANGED_FROZEN_ITEMS（本轮零改动）=
     Broker collateral = YES_MINIMAL · Router/Runtime/Kernel = NONE ·
     不增加 OpenClaw credential fallback
 
-SPEC_STATUS = accepted（2026-08-19 acceptance finalize；Amendment 6 = 分段
-    交付冻结，待独立 review 后进入 PR #17 implementation base）
+SPEC_STATUS = accepted（2026-08-19 初版 acceptance finalize；2026-08-20
+    Amendment 6 acceptance finalize——independent review PASS @ reviewed HEAD
+    5d12851，REQUIRED_FIXES = NONE，Amendment 6 分段交付冻结生效；待 merge
+    进入 PR #17 implementation base）
 本轮 = SPEC ONLY：IMPLEMENTATION_PERFORMED = NO · MERGE_PERFORMED = NO
 ```
