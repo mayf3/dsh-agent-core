@@ -39,11 +39,13 @@ function storeWriteCounter() {
 }
 
 function authCallCounts(auth) {
-  return Object.fromEntries(['principal', 'client', 'verify', 'rotate'].map((operation) => [
+  return Object.fromEntries(['principal', 'client', 'claim', 'verify', 'rotate'].map((operation) => [
     operation,
     auth.state.calls.filter((call) => call.operation === operation).length,
   ]))
 }
+
+const NO_CALLS = { principal: 0, client: 0, claim: 0, verify: 0, rotate: 0 }
 
 function fakeAuthority({ verification = { status: 200 }, clientStatus = 'active' } = {}) {
   const state = {
@@ -70,6 +72,11 @@ function fakeAuthority({ verification = { status: 200 }, clientStatus = 'active'
       }
       return { ...state.client, created: wasMissing, ...(wasMissing ? { client_secret: state.secret } : {}) }
     },
+    // The claim seam exists only so tests can prove Phase A never calls it.
+    async claimCredential(body) {
+      state.calls.push({ operation: 'claim', body })
+      throw new Error('claim is not a Phase A operation')
+    },
     async verifyCredential({ credential }) {
       state.calls.push({ operation: 'verify', clientId: credential.clientId })
       return typeof verification === 'function' ? verification(state) : verification
@@ -83,7 +90,7 @@ function fakeAuthority({ verification = { status: 200 }, clientStatus = 'active'
   }
 }
 
-test('state A rejects an unknown Agent before Auth or store writes', async (t) => {
+test('state A rejects an unknown Agent before Auth or store writes (PA5: agent_not_found precedence)', async (t) => {
   const paths = await files(t)
   const auth = fakeAuthority()
   await assert.rejects(
@@ -97,21 +104,24 @@ test('state A rejects an unknown Agent before Auth or store writes', async (t) =
   await assert.rejects(readFile(paths.credentialsFile), { code: 'ENOENT' })
 })
 
-test('prerequisite (c) fails before S1/S2 and before any store write', async (t) => {
+test('PA1: absent store entry + (c)=false fails before S1/S2 and before any store write', async (t) => {
   const paths = await files(t)
   const auth = fakeAuthority()
+  const writes = storeWriteCounter()
   await assert.rejects(
     ensureAgentCredential({
       agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
       credentialsFile: paths.credentialsFile, auth, prerequisites: { c: false },
+      storeWriteOptions: writes.options,
     }),
     { code: 'external_prerequisite_missing', prerequisite: 'c' },
   )
-  assert.equal(auth.state.calls.length, 0)
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
+  assert.equal(writes.count, 0)
   await assert.rejects(readFile(paths.credentialsFile), { code: 'ENOENT' })
 })
 
-test('malformed store fails before prerequisite (c)=false or any Auth/store mutation', async (t) => {
+test('PA4: malformed store fails before (c)=false or any Auth/store mutation, file byte-identical', async (t) => {
   const paths = await files(t, { storeBytes: '{ malformed-store' })
   const before = await readFile(paths.credentialsFile)
   const auth = fakeAuthority()
@@ -124,12 +134,12 @@ test('malformed store fails before prerequisite (c)=false or any Auth/store muta
     }),
     { code: 'CREDENTIALS_STORE_ERROR' },
   )
-  assert.deepEqual(authCallCounts(auth), { principal: 0, client: 0, verify: 0, rotate: 0 })
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
   assert.equal(writes.count, 0)
   assert.deepEqual(await readFile(paths.credentialsFile), before)
 })
 
-test('malformed store fails before prerequisite (c)=true or any Auth/store mutation', async (t) => {
+test('PA4: malformed store fails before (c)=true or any Auth/store mutation, file byte-identical', async (t) => {
   const paths = await files(t, { storeBytes: '{ malformed-store' })
   const before = await readFile(paths.credentialsFile)
   const auth = fakeAuthority()
@@ -142,12 +152,12 @@ test('malformed store fails before prerequisite (c)=true or any Auth/store mutat
     }),
     { code: 'CREDENTIALS_STORE_ERROR' },
   )
-  assert.deepEqual(authCallCounts(auth), { principal: 0, client: 0, verify: 0, rotate: 0 })
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
   assert.equal(writes.count, 0)
   assert.deepEqual(await readFile(paths.credentialsFile), before)
 })
 
-test('an unrelated malformed store entry fails full-document validation before Auth', async (t) => {
+test('PA4: an unrelated malformed store entry fails full-document validation before Auth', async (t) => {
   const paths = await files(t, { store: {
     version: 1,
     credentials: { agt_unrelated: { clientId: 'mc_unrelated' } },
@@ -163,12 +173,12 @@ test('an unrelated malformed store entry fails full-document validation before A
     }),
     { code: 'CREDENTIALS_STORE_ERROR' },
   )
-  assert.deepEqual(authCallCounts(auth), { principal: 0, client: 0, verify: 0, rotate: 0 })
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
   assert.equal(writes.count, 0)
   assert.deepEqual(await readFile(paths.credentialsFile), before)
 })
 
-test('an unknown store version fails full-document validation before Auth', async (t) => {
+test('PA4: an unknown store version fails full-document validation before Auth', async (t) => {
   const paths = await files(t, { store: { version: 2, credentials: {} } })
   const before = await readFile(paths.credentialsFile)
   const auth = fakeAuthority()
@@ -181,12 +191,12 @@ test('an unknown store version fails full-document validation before Auth', asyn
     }),
     { code: 'CREDENTIALS_STORE_ERROR' },
   )
-  assert.deepEqual(authCallCounts(auth), { principal: 0, client: 0, verify: 0, rotate: 0 })
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
   assert.equal(writes.count, 0)
   assert.deepEqual(await readFile(paths.credentialsFile), before)
 })
 
-test('state A still masks malformed store and prerequisite (c)=false', async (t) => {
+test('PA5: agent_not_found still wins over a malformed store and (c)=false', async (t) => {
   const paths = await files(t, { storeBytes: '{ malformed-store' })
   const before = await readFile(paths.credentialsFile)
   const auth = fakeAuthority()
@@ -199,12 +209,12 @@ test('state A still masks malformed store and prerequisite (c)=false', async (t)
     }),
     { code: 'agent_not_found' },
   )
-  assert.deepEqual(authCallCounts(auth), { principal: 0, client: 0, verify: 0, rotate: 0 })
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
   assert.equal(writes.count, 0)
   assert.deepEqual(await readFile(paths.credentialsFile), before)
 })
 
-test('normal no-store provisioning still performs one S1, S2, verification, and store write', async (t) => {
+test('PA2: absent store entry + (c)=true runs exactly S1, S2, one store write, and one verification mint', async (t) => {
   const paths = await files(t)
   const auth = fakeAuthority()
   const writes = storeWriteCounter()
@@ -214,8 +224,27 @@ test('normal no-store provisioning still performs one S1, S2, verification, and 
     storeWriteOptions: writes.options,
   })
   assert.equal(result.outcome, 'provisioned')
-  assert.deepEqual(authCallCounts(auth), { principal: 1, client: 1, verify: 1, rotate: 0 })
+  assert.equal(result.clientId, 'mc_fixed')
+  assert.deepEqual(authCallCounts(auth), { principal: 1, client: 1, claim: 0, verify: 1, rotate: 0 })
   assert.equal(writes.count, 1)
+
+  // Deterministic external refs (C.4): stable, namespace-separated, no owner.
+  assert.deepEqual(auth.state.calls[0].body, {
+    external_ref: principalExternalRef(AGENT_ID),
+    principal_type: 'agent',
+    agent_id: AGENT_ID,
+    display_name: 'Credential Foundation',
+  })
+  assert.equal(Object.hasOwn(auth.state.calls[0].body, 'owner_user_id'), false)
+  assert.deepEqual(auth.state.calls[1].body, {
+    external_ref: clientExternalRef(AGENT_ID),
+    principal_id: 'principal-fixed',
+  })
+
+  const persisted = JSON.parse(await readFile(paths.credentialsFile, 'utf8'))
+  assert.equal(persisted.version, 1)
+  assert.equal(persisted.credentials[AGENT_ID].clientId, 'mc_fixed')
+  assert.equal(persisted.credentials[AGENT_ID].clientSecret, auth.state.secret)
 })
 
 test('external refs are deterministic, stable, and namespace-separated', () => {
@@ -230,78 +259,91 @@ test('external refs are deterministic, stable, and namespace-separated', () => {
   }
 })
 
-test('three repeated ensures reuse one principal/client and do not rewrite the store', async (t) => {
+test('PA3: existing store entry fails loud with zero Auth, claim, rotation, and store writes', async (t) => {
+  const paths = await files(t, { store: {
+    version: 1, credentials: { [AGENT_ID]: { clientId: 'mc_stored', clientSecret: opaque() } },
+  } })
+  const before = await readFile(paths.credentialsFile, 'utf8')
+  const auth = fakeAuthority()
+  const writes = storeWriteCounter()
+  await assert.rejects(
+    ensureAgentCredential({
+      agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
+      credentialsFile: paths.credentialsFile, auth,
+      prerequisites: { c: true, b: true, d: true },
+      storeWriteOptions: writes.options,
+    }),
+    (error) => error.code === 'existing_credential_resolution_required'
+      && error.reason === 'store_entry_present'
+      && error.clientId === 'mc_stored',
+  )
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
+  assert.equal(writes.count, 0)
+  assert.equal(await readFile(paths.credentialsFile, 'utf8'), before)
+})
+
+test('PA3 ordering: entry classification precedes the (c) gate — (c)=false does not change the result', async (t) => {
+  const paths = await files(t, { store: {
+    version: 1, credentials: { [AGENT_ID]: { clientId: 'mc_stored', clientSecret: opaque() } },
+  } })
+  const auth = fakeAuthority()
+  await assert.rejects(
+    ensureAgentCredential({
+      agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
+      credentialsFile: paths.credentialsFile, auth, prerequisites: { c: false },
+    }),
+    { code: 'existing_credential_resolution_required' },
+  )
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
+})
+
+test('repeated clean bootstrap: the second request sees the store entry, calls no Auth, creates no duplicate identity', async (t) => {
   const paths = await files(t)
-  const auth = fakeAuthority({ verification: { status: 400, oauthError: 'invalid_scope' } })
+  const auth = fakeAuthority()
   const first = await ensureAgentCredential({
     agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
     credentialsFile: paths.credentialsFile, auth, prerequisites: { c: true },
   })
-  const firstBytes = await readFile(paths.credentialsFile, 'utf8')
-  const second = await ensureAgentCredential({
-    agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
-    credentialsFile: paths.credentialsFile, auth, prerequisites: { c: true },
-  })
-  const third = await ensureAgentCredential({
-    agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
-    credentialsFile: paths.credentialsFile, auth, prerequisites: { c: true },
-  })
   assert.equal(first.outcome, 'provisioned')
-  assert.equal(second.outcome, 'noop')
-  assert.equal(third.outcome, 'noop')
-  assert.equal(await readFile(paths.credentialsFile, 'utf8'), firstBytes)
-  assert.equal(auth.state.rotations, 0)
-  assert.deepEqual(auth.state.calls[0].body, {
-    external_ref: principalExternalRef(AGENT_ID),
-    principal_type: 'agent',
-    agent_id: AGENT_ID,
-    display_name: 'Credential Foundation',
-  })
-  assert.equal(Object.hasOwn(auth.state.calls[0].body, 'owner_user_id'), false)
-  assert.equal(new Set(auth.state.calls.filter((call) => call.operation === 'principal').map(() => 'principal-fixed')).size, 1)
-  assert.equal(new Set(auth.state.calls.filter((call) => call.operation === 'client').map(() => 'mc_fixed')).size, 1)
-})
-
-test('state E missing-store recovery fails loud without (b)', async (t) => {
-  const paths = await files(t)
-  const auth = fakeAuthority()
-  auth.state.principal = { id: 'principal-fixed', status: 'active' }
-  auth.state.client = { id: 'mc_fixed', status: 'active' }
+  const firstBytes = await readFile(paths.credentialsFile, 'utf8')
   await assert.rejects(
     ensureAgentCredential({
       agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
-      credentialsFile: paths.credentialsFile, auth, prerequisites: { c: true, b: false },
+      credentialsFile: paths.credentialsFile, auth, prerequisites: { c: true },
     }),
-    { code: 'external_prerequisite_missing', prerequisite: 'b' },
+    { code: 'existing_credential_resolution_required', reason: 'store_entry_present' },
   )
+  assert.deepEqual(authCallCounts(auth), { principal: 1, client: 1, claim: 0, verify: 1, rotate: 0 })
+  assert.equal(await readFile(paths.credentialsFile, 'utf8'), firstBytes)
   assert.equal(auth.state.rotations, 0)
-  await assert.rejects(readFile(paths.credentialsFile), { code: 'ENOENT' })
 })
 
-test('state E recovery, once (b) is supplied, rotates only the same client', async (t) => {
+test('blocked Phase B path: Auth client already exists without a store entry — fail loud, no rotation, no second client, no write', async (t) => {
   const paths = await files(t)
   const auth = fakeAuthority()
   auth.state.principal = { id: 'principal-fixed', status: 'active' }
   auth.state.client = { id: 'mc_fixed', status: 'active' }
-  const result = await ensureAgentCredential({
-    agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
-    credentialsFile: paths.credentialsFile, auth,
-    prerequisites: { c: true, b: true, d: true },
-  })
-  assert.equal(result.outcome, 'rotated_same_client')
-  assert.equal(result.clientId, 'mc_fixed')
-  assert.equal(auth.state.rotations, 1)
-  assert.equal(auth.state.calls.filter((call) => call.operation === 'client').length, 1)
+  const writes = storeWriteCounter()
+  await assert.rejects(
+    ensureAgentCredential({
+      agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
+      credentialsFile: paths.credentialsFile, auth,
+      prerequisites: { c: true, b: true, d: true },
+      storeWriteOptions: writes.options,
+    }),
+    (error) => error.code === 'existing_credential_resolution_required'
+      && error.reason === 'auth_client_present_without_store_entry'
+      && error.clientId === 'mc_fixed',
+  )
+  assert.deepEqual(authCallCounts(auth), { principal: 1, client: 1, claim: 0, verify: 0, rotate: 0 })
+  assert.equal(auth.state.rotations, 0)
+  assert.equal(writes.count, 0)
+  await assert.rejects(readFile(paths.credentialsFile), { code: 'ENOENT' })
 })
 
-test('v1 ownerless 401 is prerequisite (d) evidence and never rotates', async (t) => {
-  const secret = opaque()
-  const paths = await files(t, { store: {
-    version: 1, credentials: { [AGENT_ID]: { clientId: 'mc_fixed', clientSecret: secret } },
-  } })
+test('ownerless-v1 401 on the fresh mint is prerequisite (d) evidence and never rotates or deletes the new identity', async (t) => {
+  const paths = await files(t)
   const auth = fakeAuthority({ verification: { status: 401, oauthError: 'invalid_client' } })
-  auth.state.principal = { id: 'principal-fixed', status: 'active' }
-  auth.state.client = { id: 'mc_fixed', status: 'active' }
   await assert.rejects(
     ensureAgentCredential({
       agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
@@ -312,67 +354,26 @@ test('v1 ownerless 401 is prerequisite (d) evidence and never rotates', async (t
       && error.prerequisite === 'd'
       && error.profile401DoesNotTriggerRotation === true,
   )
+  assert.deepEqual(authCallCounts(auth), { principal: 1, client: 1, claim: 0, verify: 1, rotate: 0 })
   assert.equal(auth.state.rotations, 0)
+  // The freshly created identity is kept (no deletion, no second client).
+  const persisted = JSON.parse(await readFile(paths.credentialsFile, 'utf8'))
+  assert.equal(persisted.credentials[AGENT_ID].clientId, 'mc_fixed')
 })
 
-test('state G rotates the same client only after (d) and (b) are established', async (t) => {
-  const paths = await files(t, { store: {
-    version: 1, credentials: { [AGENT_ID]: { clientId: 'mc_fixed', clientSecret: opaque() } },
-  } })
-  const auth = fakeAuthority({
-    verification: (state) => state.rotations === 0
-      ? { status: 401, oauthError: 'invalid_client' }
-      : { status: 200 },
-  })
-  auth.state.principal = { id: 'principal-fixed', status: 'active' }
-  auth.state.client = { id: 'mc_fixed', status: 'active' }
-  const result = await ensureAgentCredential({
-    agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
-    credentialsFile: paths.credentialsFile, auth,
-    prerequisites: { c: true, b: true, d: true },
-  })
-  assert.equal(result.outcome, 'rotated_same_client')
-  assert.equal(result.clientId, 'mc_fixed')
-  assert.equal(auth.state.rotations, 1)
-})
-
-test('temporarily_unavailable is inconclusive: no rotation and no no-op', async (t) => {
-  const paths = await files(t, { store: {
-    version: 1, credentials: { [AGENT_ID]: { clientId: 'mc_fixed', clientSecret: opaque() } },
-  } })
-  const before = await readFile(paths.credentialsFile, 'utf8')
+test('temporarily_unavailable mint is inconclusive: no rotation, store keeps the new credential', async (t) => {
+  const paths = await files(t)
   const auth = fakeAuthority({ verification: { status: 503, oauthError: 'temporarily_unavailable' } })
-  auth.state.principal = { id: 'principal-fixed', status: 'active' }
-  auth.state.client = { id: 'mc_fixed', status: 'active' }
   await assert.rejects(
     ensureAgentCredential({
       agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
-      credentialsFile: paths.credentialsFile, auth,
-      prerequisites: { c: true, b: true, d: true },
+      credentialsFile: paths.credentialsFile, auth, prerequisites: { c: true, b: true },
     }),
     { code: 'credential_verification_inconclusive' },
   )
   assert.equal(auth.state.rotations, 0)
-  assert.equal(await readFile(paths.credentialsFile, 'utf8'), before)
-})
-
-test('split-brain mismatch and revoked client fail loud without parallel repair', async (t) => {
-  for (const scenario of ['mismatch', 'revoked']) {
-    const paths = await files(t, { store: {
-      version: 1, credentials: { [AGENT_ID]: { clientId: 'mc_stored', clientSecret: opaque() } },
-    } })
-    const auth = fakeAuthority({ clientStatus: scenario === 'revoked' ? 'revoked' : 'active' })
-    auth.state.principal = { id: 'principal-fixed', status: 'active' }
-    auth.state.client = { id: scenario === 'mismatch' ? 'mc_auth' : 'mc_stored', status: scenario === 'revoked' ? 'revoked' : 'active' }
-    await assert.rejects(
-      ensureAgentCredential({
-        agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
-        credentialsFile: paths.credentialsFile, auth, prerequisites: { c: true, b: true },
-      }),
-      { code: 'auth_client_missing_or_revoked' },
-    )
-    assert.equal(auth.state.rotations, 0)
-  }
+  const persisted = JSON.parse(await readFile(paths.credentialsFile, 'utf8'))
+  assert.equal(persisted.credentials[AGENT_ID].clientId, 'mc_fixed')
 })
 
 test('verification classification covers current v1 and compatibility modes', () => {
