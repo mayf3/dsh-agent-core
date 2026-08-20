@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
-status: proposed
+status: accepted
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
@@ -21,7 +21,7 @@ owners:
 
 # AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 
-> 状态：**proposed，等待独立治理采用复审**。  
+> 状态：**accepted；独立治理采用复审通过并由 mayf3 授权完成 acceptance**。
 > 本轮仅初始化 repository development governance。  
 > 不修改产品行为、Runtime、Router、Scheduler、Broker、Auth、部署或生产状态。  
 > 本 Spec 不授权任何产品 implementation。
@@ -424,15 +424,15 @@ OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE_AFTER_ATOMIC_ACCEPTANCE
 PARTIAL_SUPERSESSION = NONE
-READY_TO_MARK_ACCEPTED = NO
-READY_FOR_INDEPENDENT_ADOPTION_REVIEW = YES
+READY_TO_MARK_ACCEPTED = YES
+READY_FOR_INDEPENDENT_ADOPTION_REVIEW = COMPLETED
 
 SPEC_ID = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 IMPLEMENTATION_AUTHORITY = none
 SOURCE_COMMIT = 46f78c3f00d768d99a4c8c2da975b124bce042f9
 DISTRIBUTION_VERSION = 0.1.0-draft.1
-ADOPTION_STATUS = proposed
+ADOPTION_STATUS = accepted
 PRODUCT_CODE_CHANGE = NONE
 RUNTIME_CHANGE = NONE
 DEPLOYMENT_CHANGE = NONE

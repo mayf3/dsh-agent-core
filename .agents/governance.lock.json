@@ -7,11 +7,11 @@
   "distribution_manifest_sha256": "58b5b28bb801538fe62be0ac98a7bc539ff34ec24fa368c48996dd40d8653ba0",
   "adoption": {
     "mode": "vendored",
-    "status": "proposed",
+    "status": "accepted",
     "prepared_by": "ChatGPT (authorized by mayf3)",
     "prepared_at": "2026-08-19T14:35:16Z",
-    "accepted_by": null,
-    "accepted_at": null
+    "accepted_by": "mayf3",
+    "accepted_at": "2026-08-20T13:44:05Z"
   },
   "files": [
     {
