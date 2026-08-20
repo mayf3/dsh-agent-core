@@ -35,7 +35,7 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
 |---|---|---|---|---|
-| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | proposed | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
-| `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` | accepted current until adoption acceptance | legacy governance | repository knowledge model | — |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | accepted / current governance | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
+| `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` | superseded | legacy governance | repository knowledge model | — |
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
