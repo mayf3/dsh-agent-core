@@ -1,7 +1,8 @@
 ---
 spec_id: SCHEDULER_TIMEOUT_OUTCOME_V1
-status: proposed
+status: accepted
 date: 2026-08-19
+accepted_date: 2026-08-20
 type: implementation-spec (spec / decision text only; no implementation this round)
 scope:
   - Scheduler occurrence identity and admission idempotency
@@ -11,15 +12,20 @@ scope:
 references:
   - OPENCLAW_TO_AGENT_CORE_SCHEDULED_WORK_MIGRATION_AUDIT_V1 (PASS)
   - docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md
-  - docs/decisions/SCHEDULER_V1.md (D-005; accepted Current Authority until replacement acceptance)
+  - docs/decisions/SCHEDULER_V1.md (D-005; superseded by D-007 at this acceptance)
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md (D-006; accepted Current Authority)
-  - docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md (D-007; proposed replacement Decision)
+  - docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md (D-007; accepted replacement Decision / Current Scheduler Authority)
 implementation_authority: none
+accepted_reviewed_head: 3776b1929a05d0e8c81a6cacde576b39a5151017
+focused_re_review: AGENT_CORE_HARDENING_PROGRAM_V1_PR11_AMENDMENT_FOCUSED_RE_REVIEW
+focused_re_review_result: PASS
+required_fixes: NONE
+review_verdict: READY_TO_ACCEPT_AND_MERGE_PR11_SPEC_SET
 ---
 
 # SCHEDULER_TIMEOUT_OUTCOME_V1 — occurrence、timeout、termination 与迁移语义
 
-> 状态：**proposed，等待独立 Spec Review**。  
+> 状态：**accepted**（2026-08-20 acceptance finalize）。  
 > 所在 PR：Draft PR #11。  
 > 本轮只提交 Spec / Decision 文本。  
 > 不 implementation、不创建 production jobs、不补跑 missed runs、不修改 Scheduler store、不部署、不 merge。
@@ -87,11 +93,12 @@ V1 优先保证“不重复产生未知副作用”。在 crash boundary 上允�
 ## 2. Authority
 
 ```text
-Program                    = AGENT_CORE_HARDENING_PROGRAM_V1（draft, same PR）
-Current Scheduler Decision = D-005（accepted；D-007 accepted 前仍为 Current Authority）
+Program                    = AGENT_CORE_HARDENING_PROGRAM_V1（accepted, same PR）
+Current Scheduler Decision = D-007 SCHEDULER_OCCURRENCE_OUTCOME_V2（accepted）
+Superseded Scheduler Decision = D-005（superseded-by-D-007）
 Session Product Decision   = D-006（accepted）
-Child Spec                 = SCHEDULER_TIMEOUT_OUTCOME_V1（proposed）
-Replacement Decision       = D-007 SCHEDULER_OCCURRENCE_OUTCOME_V2（proposed）
+Child Spec                 = SCHEDULER_TIMEOUT_OUTCOME_V1（accepted）
+Replacement Decision       = D-007 SCHEDULER_OCCURRENCE_OUTCOME_V2（accepted）
 Implementation authority   = NONE
 Kernel change              = NONE
 ```
@@ -760,8 +767,13 @@ DAEMON_JOBS = OUT_OF_SCHEDULER
 READY_TO_RESTORE_BEFORE_HARDENING = 0
 
 KERNEL_CHANGE = NONE
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+
+ACCEPTED_REVIEWED_HEAD = 3776b1929a05d0e8c81a6cacde576b39a5151017
+FOCUSED_RE_REVIEW = AGENT_CORE_HARDENING_PROGRAM_V1_PR11_AMENDMENT_FOCUSED_RE_REVIEW = PASS
+REQUIRED_FIXES = NONE
+VERDICT = READY_TO_ACCEPT_AND_MERGE_PR11_SPEC_SET
 
 PRODUCT_CODE_CHANGE_THIS_ROUND = NONE
 PRODUCTION_JOB_CHANGE_THIS_ROUND = NONE
