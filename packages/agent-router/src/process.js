@@ -25,6 +25,18 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cliBin } from '../../agent-provisioning/src/index.js'
 
+export const RECOGNIZED_PROXY_ENV_KEYS = Object.freeze([
+  'HTTP_PROXY',
+  'HTTPS_PROXY',
+  'NO_PROXY',
+  'http_proxy',
+  'https_proxy',
+  'no_proxy',
+  'ALL_PROXY',
+  'all_proxy',
+  'NODE_USE_ENV_PROXY',
+])
+
 /**
  * Spawn configuration for the per-agent DSH child under the TRUSTED
  * credential broker model: the trusted Router parent (deployment uid
@@ -70,7 +82,7 @@ export function childSpawnConfig(log = console) {
 }
 
 /** Base environment for one agent process (its own home, workspace as cwd). */
-export function agentEnv(home, extra = {}, omit = []) {
+export function agentEnv(home, extra = {}, omit = [], providerEnv = {}) {
   const env = {
     ...process.env,
     DSH_HOME: home,
@@ -78,6 +90,12 @@ export function agentEnv(home, extra = {}, omit = []) {
     DSH_PERMISSION_MODE: 'danger-full-access',
     ...extra,
   }
+  // Defense in depth at every spawn: inherited, lowercase-precedence and
+  // caller-extra proxy variables are all removed before the validated target
+  // providerEnv is injected. A non-target receives an empty providerEnv and
+  // therefore has no recognized proxy variable at all.
+  for (const name of RECOGNIZED_PROXY_ENV_KEYS) delete env[name]
+  Object.assign(env, providerEnv)
   if (env.OPENCODE_GO_API_KEY === undefined) {
     const credentialFile = join(home, '.credentials.yaml')
     if (existsSync(credentialFile)) {
@@ -155,7 +173,7 @@ const FAIL_LOUD_PROVIDER_ERRORS = new Set([
  * text. `exit` promise settles when the OS process dies (any cause).
  */
 export class AgentProcess {
-  constructor({ agentId, home, workspace, profile, provider, model, omitEnv = [], log = console, env = {} }) {
+  constructor({ agentId, home, workspace, profile, provider, model, providerEnv = {}, omitEnv = [], log = console, env = {} }) {
     if (typeof profile !== 'string' || profile === '') {
       throw new TypeError('AgentProcess: profile is required (no default — the caller owns the composition choice)')
     }
@@ -169,6 +187,7 @@ export class AgentProcess {
     // callers retain the historical global-env/default behavior.
     this.provider = provider ?? process.env.DSH_AGENT_PROVIDER ?? 'opencode-go'
     this.model = model ?? process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash'
+    this.providerEnv = Object.freeze({ ...providerEnv })
     this.omitEnv = [...omitEnv]
     this.log = log
     this.env = env // extra env for the child (e.g. DSH_AGENT_ID)
@@ -209,7 +228,7 @@ export class AgentProcess {
     }
     const child = spawn(program, args, {
       cwd: this.workspace,
-      env: agentEnv(this.home, this.env, this.omitEnv),
+      env: agentEnv(this.home, this.env, this.omitEnv, this.providerEnv),
       stdio: ['pipe', 'pipe', 'pipe'],
       ...(spawnUid === undefined ? {} : { uid: spawnUid, gid: spawnGid }),
     })
