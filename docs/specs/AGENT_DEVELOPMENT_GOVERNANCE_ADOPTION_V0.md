@@ -22,8 +22,8 @@ owners:
 # AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 
 > 状态：**accepted；独立治理采用复审通过并由 mayf3 授权完成 acceptance**。
-> 本轮仅初始化 repository development governance。  
-> 不修改产品行为、Runtime、Router、Scheduler、Broker、Auth、部署或生产状态。  
+> 本轮仅初始化 repository development governance。
+> 不修改产品行为、Runtime、Router、Scheduler、Broker、Auth、部署或生产状态。
 > 本 Spec 不授权任何产品 implementation。
 
 ## 1. Goal
