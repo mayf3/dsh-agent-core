@@ -175,3 +175,16 @@ export const botEchoEvent = {
 
 // The bot's own open_id, used to resolve isBotSelf / mentions-of-bot.
 export const BOT_OPEN_ID = 'ou_bot_self'
+
+/**
+ * Flatten a v2 wire ENVELOPE ({schema, header, event}) into the shape the
+ * Lark node-sdk EventDispatcher actually hands to event handlers
+ * (RequestHandle.parse: {...rest, ...header, ...event} — header fields
+ * hoisted to top level, sender/message kept nested). This is the input the
+ * @larksuite/channel builtin message handler — and therefore normalize() —
+ * receives in production. Test-support helper only.
+ */
+export function flattenV2Event(envelope) {
+  const { header, event, ...rest } = envelope ?? {}
+  return { ...rest, ...(header ?? {}), ...(event ?? {}) }
+}
