@@ -1,13 +1,14 @@
 # D-007: Scheduler Occurrence / Outcome / Session / Migration Current Decision V2
 
-- 状态: proposed
+- 状态: accepted（2026-08-20）
 - 日期: 2026-08-19
 - 类型: standalone replacement Decision（不是 D-005 amendment）
-- 提议取代: D-005 `SCHEDULER_V1.md`
-- Governing Spec: `docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md`（proposed）
+- supersedes: D-005 / SCHEDULER_V1（`docs/decisions/SCHEDULER_V1.md`；acceptance 时正式激活，D-005 已同步标记 superseded）
+- Governing Spec: `docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md`（accepted）
 - Product dependency: D-006 `AGENT_WORKSPACE_SESSION_MODEL_V2.md`（accepted）
 - Evidence: `OPENCLAW_TO_AGENT_CORE_SCHEDULED_WORK_MIGRATION_AUDIT_V1 = PASS`
 - 本轮范围: Decision / Spec text only；无 implementation、production jobs、missed-run replay、Scheduler store mutation、deployment 或 merge。
+- Acceptance provenance: accepted_reviewed_head = 3776b1929a05d0e8c81a6cacde576b39a5151017；AGENT_CORE_HARDENING_PROGRAM_V1_PR11_AMENDMENT_FOCUSED_RE_REVIEW = PASS（REQUIRED_FIXES = NONE；VERDICT = READY_TO_ACCEPT_AND_MERGE_PR11_SPEC_SET）；accepted 2026-08-20。
 
 > **Authority rule:** D-005 在本 Decision accepted 前继续是 Current Authority。本文件为 proposed，不提前覆盖 D-005。接受时必须原子完成 `D-007 -> accepted`、`D-005 -> superseded-by-D-007`、双向 backlink 与 Decision index 更新。
 >
@@ -1090,15 +1091,16 @@ D-007 可 accepted 的条件：
 
 ---
 
-## 21. Final Decision Output（proposed）
+## 21. Final Decision Output（accepted）
 
 ```text
 DECISION_ID = D-007
-DECISION_STATUS = proposed
+DECISION_STATUS = accepted
 D007_IS_COMPLETE_STANDALONE_CURRENT_DECISION = YES
 PARTIAL_MANUAL_MERGE_WITH_D005_REQUIRED = NO
-SUPERSEDES_ON_ACCEPTANCE = D-005
+SUPERSEDES = D-005（activated at acceptance 2026-08-20）
 CURRENT_AUTHORITY_BEFORE_ACCEPTANCE = D-005
+CURRENT_AUTHORITY_AFTER_ACCEPTANCE = D-007
 
 JOB_MODEL = EXPLICIT_TRUE_SUBSET_IN_SECTION_3
 LEGACY_FIELD_DISPOSITION = EXPLICIT_NORMALIZE_DROP_OR_BLOCK
@@ -1140,4 +1142,9 @@ PRODUCT_CODE_CHANGE_THIS_ROUND = NONE
 PRODUCTION_STATE_CHANGE_THIS_ROUND = NONE
 SCHEDULER_STORE_CHANGE_THIS_ROUND = NONE
 MERGE = NO
+
+ACCEPTED_REVIEWED_HEAD = 3776b1929a05d0e8c81a6cacde576b39a5151017
+FOCUSED_RE_REVIEW = AGENT_CORE_HARDENING_PROGRAM_V1_PR11_AMENDMENT_FOCUSED_RE_REVIEW = PASS
+REQUIRED_FIXES = NONE
+VERDICT = READY_TO_ACCEPT_AND_MERGE_PR11_SPEC_SET
 ```
