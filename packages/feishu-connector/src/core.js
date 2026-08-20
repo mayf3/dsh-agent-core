@@ -1,31 +1,109 @@
 /**
  * @agent-core/feishu-connector/src/core.js
  *
- * Pure channel-layer logic for the Feishu connector V0. This module carries
- * ZERO DSH / Cordis dependency and NO network I/O: everything it does is
- * deterministic data transformation over the raw Feishu event envelope
- * (`im.message.receive_v1`) plus the dedup bookkeeping and ReplyTarget
- * construction. That makes it trivially unit-testable in isolation.
+ * Pure channel-layer semantics for the Feishu connector on the official
+ * @larksuite/channel foundation (AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2
+ * Phase A — Foundation cutover).
  *
- * It owns four responsibilities from the V0 contract:
- *   1. ingress normalization  → a JSON-serializable `IngressEvent`
- *   2. sender / mention / attachment metadata extraction
- *   3. chat / thread identifier unification (p2p vs group vs thread)
- *   4. dedup (in-process LRU, swappable backend via interface)
+ * The SDK now owns the protocol layer: WebSocket lifecycle, first-handshake
+ * readiness + bot identity, 21-type event normalization, dedup
+ * (SeenCache + ProcessingLock) and the outbound protocol primitives. This
+ * module keeps ONLY the Agent Core semantics that must survive the cutover
+ * byte-identically, plus the two thin pure mappings at the adapter seam:
  *
- * It does NOT own: DSH session delivery, auth/principal, process lifecycle.
+ *   1. conversation identity derivation (buildConversationId /
+ *      resolveConversation) — the Binding-continuity lifeline. The
+ *      derivation logic is KEPT from V0 unchanged; only the INPUT source
+ *      changed (SDK NormalizedMessage fields instead of raw wire fields).
+ *   2. the ReplyTarget family + its mapping onto SDK send options
+ *      (replyTargetToSdkSend) — the outbound seam `feishu.reply(replyTarget,
+ *      text)` keeps its V0 contract while the transport under it is the SDK.
+ *
+ * Frozen Foundation SDK configuration lives here too
+ * (FOUNDATION_LARK_CHANNEL_OPTIONS) so the connector shell, the standalone
+ * driver and the tests all share ONE definition of the frozen values.
+ *
+ * Removed from V0 (SDK owns them now; the old implementations survive only
+ * as the test-only differential oracle, see test/legacy-v0-oracle.js):
+ * normalizeIngressEvent, LruDedup/dedupEvent, classifyIngress,
+ * createIngressPipeline.
+ *
+ * This module carries ZERO DSH / Cordis dependency and NO network I/O.
  */
 
 // ---------------------------------------------------------------------------
-// Identifier helpers
+// Foundation frozen SDK configuration (spec §6.5 — SEMANTIC CONTRACT)
+// ---------------------------------------------------------------------------
+
+/**
+ * The frozen reviewed @larksuite/channel runtime configuration for the Foundation
+ * cutover. Every value here exists to keep Agent Core's product behavior
+ * identical to the pre-cutover connector; NONE of the SDK defaults that
+ * would silently change behavior are left implicit:
+ *
+ *   safety.batch.text.delayMs = 0        no cross-message merging (the SDK
+ *                                        default 600ms batches by chatId,
+ *                                        which would merge two different
+ *                                        conversationIds that share a chatId).
+ *   safety.chatQueue.enabled = false     no per-chat serialization (V0 had
+ *                                        none; the single serialization
+ *                                        authority stays the AgentProcess
+ *                                        per-agent single-flight). Disabling
+ *                                        the queue also bypasses batching
+ *                                        entirely (safety/index.ts dispatches
+ *                                        straight to the handler).
+ *   safety.staleMessageWindowMs =
+ *     Number.POSITIVE_INFINITY           stale-drop disabled (SDK default
+ *                                        30min would silently drop
+ *                                        redeliveries after downtime; V0 had
+ *                                        no stale behavior).
+ *   policy.requireMention = false        preserve V0 @all-only eligibility;
+ *                                        the thin adapter performs residual
+ *                                        p2p/@bot/@all eligibility after the
+ *                                        SDK lease is acquired.
+ *   policy.respondToMentionAll = true    V0 treats an @all mention as a
+ *                                        mention; the SDK default (false)
+ *                                        would additionally DROP @all+@bot
+ *                                        group messages V0 processed
+ *                                        (mention_all_blocked). This pin only
+ *                                        removes that extra drop — it enables
+ *                                        nothing and lets no more through
+ *                                        than V0 did.
+ *   includeRawEvent = true               attach the raw (dispatcher-flattened)
+ *                                        wire event on each NormalizedMessage
+ *                                        so the thin adapter can read
+ *                                        event_id + the full sender_id triple
+ *                                        without re-normalizing anything.
+ *   processingLock ttl/renew =           renewable lease covers the full
+ *     300000ms / 60000ms                 Router/AgentProcess turn.
+ *
+ * @type {object} LarkChannelOptions fragment (frozen; do not extend without
+ *   a governing Spec change).
+ */
+export const FOUNDATION_LARK_CHANNEL_OPTIONS = Object.freeze({
+  safety: Object.freeze({
+    batch: Object.freeze({ text: Object.freeze({ delayMs: 0 }) }),
+    chatQueue: Object.freeze({ enabled: false }),
+    staleMessageWindowMs: Number.POSITIVE_INFINITY,
+    processingLock: Object.freeze({ ttlMs: 300000, renewIntervalMs: 60000 }),
+  }),
+  policy: Object.freeze({
+    requireMention: false,
+    respondToMentionAll: true,
+  }),
+  includeRawEvent: true,
+})
+
+// ---------------------------------------------------------------------------
+// Identifier helpers (V0 semantics, byte-identical — Binding continuity)
 // ---------------------------------------------------------------------------
 
 /**
  * Feishu conversation scopes. `group` is a whole chat; `group_topic` narrows
  * a group chat to a topic thread; `group_sender` is a group narrowed to one
- * sender (used for per-sender DMs inside a group). V0 only materializes
- * p2p / group / thread, but the encoding is consistent with the legacy
- * agent-core + OpenClaw feishu conversation-id convention.
+ * sender (used for per-sender DMs inside a group). Only p2p / group /
+ * group_topic materialize on the normal path, but the encoding stays
+ * consistent with the legacy agent-core + OpenClaw feishu convention.
  *
  * @typedef {'p2p'|'group'|'group_topic'|'group_sender'|'group_topic_sender'} ConversationScope
  */
@@ -68,9 +146,22 @@ export function buildConversationId(p) {
 }
 
 /**
- * Resolve the conversation shape for one inbound Feishu message event.
+ * Resolve the conversation shape for one inbound message, from the fields the
+ * SDK NormalizedMessage already carries (chatId / chatType / threadId /
+ * rootId). Same derivation semantics as V0's resolveConversation — only the
+ * input source changed from raw wire fields to the SDK-normalized fields
+ * (spec §6.2: KEEP, byte-identical).
  *
- * @param {object} event - the raw `im.message.receive_v1` payload (see normalizeIngressEvent).
+ * Feishu distinguishes a "topic thread" (`thread_id`, omt_*) from an inline
+ * reply (`root_id` / `parent_id`). A message that carries a thread_id AND is
+ * a group message lives in a topic thread; otherwise it belongs to the group
+ * or p2p conversation. A p2p chat carrying a thread_id stays p2p.
+ *
+ * @param {object} p
+ * @param {string} p.chatId - SDK NormalizedMessage.chatId.
+ * @param {'p2p'|'group'} p.chatType - SDK NormalizedMessage.chatType.
+ * @param {string} [p.threadId] - SDK NormalizedMessage.threadId (omt_*).
+ * @param {string} [p.rootId] - SDK NormalizedMessage.rootId (root message id).
  * @returns {{
  *   channel: 'p2p'|'group'|'thread',
  *   chatType: 'p2p'|'group',
@@ -80,320 +171,43 @@ export function buildConversationId(p) {
  *   rootMsgId?: string,
  * }}
  */
-export function resolveConversation(event) {
-  const message = event?.message ?? {}
-  const chatId = (message.chat_id ?? '').trim()
-  const chatType = message.chat_type === 'p2p' ? 'p2p' : 'group'
-  const threadId = (message.thread_id ?? '').trim() || undefined
-  const rootMsgId = (message.root_id ?? '').trim() || undefined
+export function resolveConversation({ chatId, chatType, threadId, rootId }) {
+  const trimmedChatId = (chatId ?? '').trim()
+  const typedChatType = chatType === 'p2p' ? 'p2p' : 'group'
+  const trimmedThreadId = (threadId ?? '').trim() || undefined
+  const trimmedRootMsgId = (rootId ?? '').trim() || undefined
 
-  // Feishu distinguishes a "topic thread" (`thread_id`, omt_*) from an inline
-  // reply (`root_id` / `parent_id`). A message that carries a thread_id lives
-  // in a topic thread; otherwise it belongs to the group or p2p conversation.
-  const isThread = chatType === 'group' && threadId !== undefined
+  const isThread = typedChatType === 'group' && trimmedThreadId !== undefined
 
-  const scope = isThread ? 'group_topic' : chatType
+  const scope = isThread ? 'group_topic' : typedChatType
   return {
-    channel: isThread ? 'thread' : chatType,
-    chatType,
-    conversationId: buildConversationId({ chatId, scope, threadId }),
-    chatId,
-    threadId,
-    rootMsgId,
+    channel: isThread ? 'thread' : typedChatType,
+    chatType: typedChatType,
+    conversationId: buildConversationId({
+      chatId: trimmedChatId,
+      scope,
+      threadId: trimmedThreadId,
+    }),
+    chatId: trimmedChatId,
+    threadId: trimmedThreadId,
+    rootMsgId: trimmedRootMsgId,
   }
 }
 
 // ---------------------------------------------------------------------------
-// Content parsing
+// TRANSITIONAL compatibility carriers (V2 — kept, never on the normal path)
 // ---------------------------------------------------------------------------
-
-/**
- * Parse the Feishu `message.content` string, which is JSON for every message
- * type except `text` (which is a plain string). Returns a plain object.
- */
-export function parseContent(message) {
-  const messageType = message?.message_type ?? 'text'
-  const raw = message?.content
-  if (raw == null) return {}
-  if (messageType === 'text') return { text: String(raw) }
-  if (typeof raw === 'object') return raw
-  try {
-    return JSON.parse(String(raw))
-  } catch {
-    return { text: String(raw) }
-  }
-}
-
-/**
- * Extract an array of unified attachment descriptors from a parsed message.
- * Only metadata is captured; downloading content is out of scope for V0.
- *
- * @param {object} message - raw Feishu message (message_type + content).
- * @returns {Array<{type:string, fileKey:string, name?:string, sizeBytes?:number,
- *   duration?:number, coverImageKey?:string, downloadHint:object}>}
- */
-export function parseAttachments(message) {
-  const messageType = message?.message_type ?? 'text'
-  const content = parseContent(message)
-  const attachments = []
-
-  if (messageType === 'image') {
-    if (content.image_key) {
-      attachments.push({
-        type: 'image',
-        fileKey: content.image_key,
-        downloadHint: { kind: 'image', endpoint: 'im/v1/images', key: content.image_key },
-      })
-    }
-  } else if (messageType === 'file') {
-    if (content.file_key) {
-      const size = asPositiveInt(content.file_size)
-      attachments.push({
-        type: 'file',
-        fileKey: content.file_key,
-        name: content.file_name || undefined,
-        sizeBytes: size,
-        downloadHint: { kind: 'file', endpoint: 'im/v1/files', key: content.file_key },
-      })
-    }
-  } else if (messageType === 'audio') {
-    if (content.file_key) {
-      attachments.push({
-        type: 'audio',
-        fileKey: content.file_key,
-        duration: asPositiveInt(content.duration),
-        downloadHint: { kind: 'file', endpoint: 'im/v1/files', key: content.file_key },
-      })
-    }
-  } else if (messageType === 'video') {
-    if (content.file_key) {
-      attachments.push({
-        type: 'video',
-        fileKey: content.file_key,
-        name: content.file_name || undefined,
-        duration: asPositiveInt(content.duration),
-        coverImageKey: content.image_key || undefined,
-        downloadHint: { kind: 'file', endpoint: 'im/v1/files', key: content.file_key },
-      })
-    }
-  } else if (messageType === 'sticker') {
-    if (content.file_key || content.image_key) {
-      attachments.push({
-        type: 'sticker',
-        fileKey: content.file_key || content.image_key,
-        downloadHint: {
-          kind: content.file_key ? 'file' : 'image',
-          endpoint: content.file_key ? 'im/v1/files' : 'im/v1/images',
-          key: content.file_key || content.image_key,
-        },
-      })
-    }
-  } else if (messageType === 'post' && Array.isArray(content.content)) {
-    // Rich text: flatten any embedded media links into descriptor placeholders.
-    for (const line of content.content) {
-      for (const block of Array.isArray(line) ? line : []) {
-        const tag = block?.tag
-        if (tag === 'img' && block.image_key) {
-          attachments.push({
-            type: 'image',
-            fileKey: block.image_key,
-            name: block.alt || undefined,
-            downloadHint: { kind: 'image', endpoint: 'im/v1/images', key: block.image_key },
-          })
-        } else if ((tag === 'a' || tag === 'url') && block.href?.startsWith('file/')) {
-          attachments.push({
-            type: 'file',
-            fileKey: block.href.replace(/^file\//, ''),
-            name: block.text || undefined,
-            downloadHint: { kind: 'file', endpoint: 'im/v1/files', key: block.href.replace(/^file\//, '') },
-          })
-        }
-      }
-    }
-  }
-
-  return attachments
-}
-
-function asPositiveInt(value) {
-  const n = Number(value)
-  return Number.isInteger(n) && n > 0 ? n : undefined
-}
-
-// ---------------------------------------------------------------------------
-// Sender / mention metadata
-// ---------------------------------------------------------------------------
-
-/**
- * Extract sender metadata from a Feishu message event.
- *
- * @param {object} event - raw event.
- * @param {string} [botOpenId] - the receiving bot's open_id; when supplied the
- *   `isBotSelf` flag is resolved and mentions of the bot are marked.
- * @returns {{
- *   openId: string, unionId?: string, userId?: string, name?: string,
- *   senderType: string, isBotSelf: boolean, mentioned: boolean,
- *   senderId: string,
- * }}
- */
-export function parseSender(event, botOpenId) {
-  const sender = event?.sender ?? {}
-  const senderId = sender?.sender_id ?? {}
-  const openId = senderId.open_id ?? ''
-  const unionId = senderId.union_id ?? ''
-  const userId = senderId.user_id ?? ''
-  const senderType = sender.sender_type ?? 'user'
-  // Feishu carries `tenant_key` for bot senders; body/name lookups are out of
-  // scope for V0 so the name is sourced from the raw sender if present.
-  const name = typeof sender.name === 'string' ? sender.name : undefined
-
-  const isBotSelf = Boolean(botOpenId && openId && openId === botOpenId)
-  // If the sender itself is the bot, we don't process its own echo as a user turn.
-  const selfSent = senderType === 'bot' || senderType === 'app'
-
-  return {
-    openId,
-    unionId: unionId || undefined,
-    userId: userId || undefined,
-    name,
-    senderType,
-    isBotSelf,
-    selfSent,
-    senderId: openId || unionId || userId || '',
-  }
-}
-
-/**
- * Normalize the `message.mentions` array into a uniform mention list.
- *
- * @returns {Array<{key:string, openId:string, unionId?:string, userId?:string,
- *   name:string, type:'all'|'user'|'bot'}>}
- */
-export function parseMentions(message, botOpenId) {
-  const mentions = Array.isArray(message?.mentions) ? message.mentions : []
-  const out = []
-  for (const m of mentions) {
-    const id = m?.id ?? {}
-    const openId = (id.open_id ?? m?.open_id ?? '').trim()
-    const name = typeof m.name === 'string' ? m.name : ''
-    if (!openId && m.key?.toLowerCase().startsWith('@_all')) {
-      out.push({ key: m.key, openId: '', name, type: 'all' })
-      continue
-    }
-    if (!openId) continue
-    out.push({
-      key: m.key,
-      openId,
-      unionId: id.union_id || undefined,
-      userId: id.user_id || undefined,
-      name,
-      type: botOpenId && openId === botOpenId ? 'bot' : 'user',
-    })
-  }
-  return out
-}
-
-// ---------------------------------------------------------------------------
-// Ingress normalization
-// ---------------------------------------------------------------------------
-
-/**
- * Normalize a raw Feishu `im.message.receive_v1` envelope into a uniform,
- * JSON-serializable `IngressEvent`.
- *
- * The SDK's WS event dispatcher calls the registered handler with `data` that
- * already points at the event body primed with `sender` / `message`, but the
- * `header.event_id` is on the envelope. We defensively read both shapes:
- *   { header, event }, { event }, or plain { sender, message }.
- *
- * @param {object} raw - the event data passed to the dispatcher handler.
- * @param {object} [opts] - { botOpenId, now }
- * @returns {object} IngressEvent (see JSDoc on the function below for shape).
- * @throws {Error} when the event is not a recognizable Feishu message event.
- */
-export function normalizeIngressEvent(raw, opts = {}) {
-  const header = raw?.header ?? raw?.event?.header ?? {}
-  const event = raw?.event ?? raw
-  const message = event?.message ?? {}
-  const botOpenId = opts.botOpenId
-
-  const messageId = (message.message_id ?? '').trim() || ''
-  const chatType = message.chat_type
-
-  if (chatType !== 'p2p' && chatType !== 'group') {
-    throw new Error(`invalid_or_missing_chat_type: got ${String(chatType)}`)
-  }
-  if (!messageId) {
-    throw new Error('invalid_or_missing_message_id')
-  }
-
-  const providerEventId = (header.event_id ?? '').trim()
-  const sender = parseSender(event, botOpenId)
-  const mentions = parseMentions(message, botOpenId)
-  const conv = resolveConversation(event)
-  const content = parseContent(message)
-  const text = messageTypeText(message, content)
-  const attachments = parseAttachments(message)
-
-  // A bot is "mentioned" if the message carries an @all or any mention of the bot.
-  const mentioned =
-    mentions.some(m => m.type === 'all') ||
-    (botOpenId ? mentions.some(m => m.type === 'bot') : false)
-  // For p2p, an inbound human message counts as addressed to the bot by default.
-  const addressed = chatType === 'p2p' ? true : mentioned
-
-  const now = opts.now ?? Date.now()
-
-  return {
-    // Pure ingress event shape (V0 contract).
-    eventId: providerEventId,
-    type: 'message',
-    subType: normalizeMessageSubtype(message.message_type),
-    channel: conv.channel, // 'p2p' | 'group' | 'thread'
-    chatType: conv.chatType,
-    conversationId: conv.conversationId,
-    chatId: conv.chatId,
-    threadId: conv.threadId,
-    rootMsgId: conv.rootMsgId,
-    parentMsgId: (message.parent_id ?? '').trim() || undefined,
-    messageId,
-    messageType: message.message_type ?? 'text',
-    sender,
-    text,
-    mentions,
-    mentioned,
-    addressed,
-    attachments,
-    raw: event,
-    timestamp: createdAtOf(message, now),
-    // AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC §5 (accepted): the V2
-    // normal Feishu path MUST NOT inject or select a conversation workspace /
-    // session. No `workspace` / `session` fields are attached: the Router's
-    // first-contact rule then stores Binding.workspace = null (Default
-    // Workspace Rule -> resolveWorkspace(agentId) = Agent primary workspace)
-    // and the deployment default session ('main' = canonical main). The
-    // conversationWorkspaceId / conversationMainSessionId helpers below stay
-    // exported as TRANSITIONAL compatibility carriers (old p2p state keeps
-    // matching); the normal path simply never calls them.
-    // Deterministic dedup key: prefer the Feishu event_id, fall back to the
-    // message_id (stable across redeliveries of the same message).
-    dedupKey: providerEventId || `message:${messageId}`,
-  }
-}
 
 /**
  * TRANSITIONAL compatibility helper (AGENT_WORKSPACE_SESSION_MODEL_V2 §22/§26.3:
  * the old "same Agent -> per-conversation workspace" product model's carrier).
- * The V2 normal Feishu path no longer calls it (normalizeIngressEvent attaches
- * no workspace); it stays exported so historical compatibility state and
- * existing Router-level mechanism tests keep resolving the same deterministic
- * ids. Its eventual removal is a separate future Spec decision.
+ * The V2 normal Feishu path never calls it (the bridge attaches no workspace);
+ * it stays exported so historical compatibility state and existing
+ * Router-level mechanism tests keep resolving the same deterministic ids. Its
+ * eventual removal is a separate future Spec decision.
  *
  * Maps one Feishu conversation identity onto one stable, deterministic
- * workspaceId (`feishu-<normalized conversation id>`), always a
- * workspace-bootstrap-safe single component: characters outside [A-Za-z0-9_-]
- * (the topic/sender scope separators `:` in thread/sender-scoped conversation
- * ids) normalize to `-`.
+ * workspaceId (`feishu-<normalized conversation id>`).
  *
  * @param {string} conversationId - the uniform conversation id.
  * @returns {string} the stable workspaceId for this conversation.
@@ -408,10 +222,8 @@ export function conversationWorkspaceId(conversationId) {
 
 /**
  * TRANSITIONAL compatibility helper — the session half of the same old
- * per-conversation policy (see conversationWorkspaceId above). The V2 normal
- * path no longer calls it; canonical main is the deployment default session
- * ('main'), not `main-<conversationId>`. Kept exported for the transitional
- * state and Router-level mechanism tests only.
+ * per-conversation policy (see conversationWorkspaceId above). Kept exported
+ * for the transitional state and Router-level mechanism tests only.
  *
  * @param {string} conversationId - the uniform conversation id.
  * @returns {string} the stable initial session id for this conversation.
@@ -424,81 +236,30 @@ export function conversationMainSessionId(conversationId) {
   return `main-${normalized}`
 }
 
-function normalizeMessageSubtype(messageType) {
-  switch (messageType) {
-    case 'text':
-    case 'post':
-      return 'text'
-    case 'image':
-    case 'file':
-    case 'audio':
-    case 'video':
-    case 'sticker':
-      return messageType
-    default:
-      return 'other'
-  }
-}
+// ---------------------------------------------------------------------------
+// Ingress gate receipt (V2 §4.5 — byte-frozen)
+// ---------------------------------------------------------------------------
 
-function messageTypeText(message, content) {
-  const messageType = message?.message_type ?? 'text'
-  if (messageType === 'text') {
-    // Feishu text message content is normally a plain string; some SDK/legacy
-    // variants carry it JSON-wrapped as {"text": "..."}. Handle both.
-    const candidate = content.text ?? content ?? ''
-    if (typeof candidate === 'string' && candidate.trim().startsWith('{')) {
-      try {
-        const parsed = JSON.parse(candidate)
-        if (typeof parsed?.text === 'string') return parsed.text
-      } catch { /* fall through */ }
-    }
-    return String(candidate)
-  }
-  if (messageType === 'post') {
-    // Flatten rich text into readable plain text.
-    const pieces = []
-    for (const line of Array.isArray(content.content) ? content.content : []) {
-      const cells = []
-      for (const block of Array.isArray(line) ? line : []) {
-        if (block?.tag === 'text') cells.push(block.text ?? '')
-        else if (block?.tag === 'a') cells.push(block.text ?? block.href ?? '')
-        else if (block?.text) cells.push(block.text)
-      }
-      pieces.push(cells.join(' '))
-    }
-    return pieces.join('\n').trim()
-  }
-  // Non-text types: keep the attachment placeholder as text.
-  if (messageType === 'image') return '[image]'
-  if (messageType === 'file') return `[file${content.file_name ? ' ' + content.file_name : ''}]`
-  if (messageType === 'audio') return '[audio]'
-  if (messageType === 'video') return '[video]'
-  if (messageType === 'sticker') return '[sticker]'
-  return content.text ?? ''
-}
-
-function createdAtOf(message, fallback) {
-  const raw = message?.create_time ?? message?.createTime
-  if (raw == null) return fallback
-  const n = Number(raw)
-  if (Number.isFinite(n)) {
-    // Feishu create_time is millisecond epoch; string values are also ms.
-    return n > 1e12 ? n : n * 1000
-  }
-  return fallback
-}
+/**
+ * The FIXED receipt the connector itself sends when the pre-forward ingress
+ * gate rejects an event (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC §4.5:
+ * structured rejection — one deterministic text, never per-reason variants).
+ * @type {string}
+ */
+export const INGRESS_GATE_REJECTED_REPLY =
+  '[agent-core] 该会话未完成绑定（not bound）：消息未送达任何 Agent，也未创建任何绑定。请联系管理员完成会话与 Agent 的预绑定。'
 
 // ---------------------------------------------------------------------------
-// ReplyTarget
+// ReplyTarget (V0 family, unchanged) + SDK send mapping
 // ---------------------------------------------------------------------------
 
 /**
  * Build a uniform outbound ReplyTarget for an ingress event or explicit parts.
  *
  * A ReplyTarget answers "where and how should a reply go?":
- *   - replyTo(message): reply inline under a message (uses the im reply endpoint).
- *   - asThread(): reply inside a topic thread (sets root_id / thread context).
- *   - directChat(): fire a top-level message into a chat (im/message create).
+ *   - replyTo(message): reply inline under a message (im.message.reply).
+ *   - asThread(): reply inside a topic thread (thread context).
+ *   - directChat(): fire a top-level message into a chat (im.message.create).
  *
  * @param {object} p
  * @param {string} p.conversationId - canonical conversation id.
@@ -551,7 +312,7 @@ export function buildReplyTarget(p) {
 
 /**
  * Convenience: build a ReplyTarget straight from a normalized IngressEvent.
- * @param {object} ev - IngressEvent from normalizeIngressEvent.
+ * @param {object} ev - IngressEvent from the bridge mapping.
  * @returns {object} ReplyTarget with replyTo/... helpers.
  */
 export function replyTargetFor(ev) {
@@ -565,204 +326,69 @@ export function replyTargetFor(ev) {
   })
 }
 
-// ---------------------------------------------------------------------------
-// Dedup
-// ---------------------------------------------------------------------------
-
 /**
- * In-process LRU dedup store with an explicit interface (`check` / `record` /
- * `size` / `reset`) so a different backend (persistent JSONL, redis, ...) can
- * be swapped in without touching callers.
- */
-export class LruDedup {
-  /**
-   * @param {object} [opts]
-   * @param {number} [opts.maxSize=10000] - max distinct dedup keys kept in memory.
-   * @param {number} [opts.ttlMs=0] - 0 => keys never expire by time.
-   */
-  constructor(opts = {}) {
-    this.maxSize = opts.maxSize ?? 10000
-    this.ttlMs = opts.ttlMs ?? 0
-    this._seen = new Map() // key -> timestamp (ms)
-    this.dropped = 0
-    this.accepted = 0
-  }
-
-  /**
-   * Return true if `key` was already recorded (duplicate). Does not mutate.
-   */
-  check(key) {
-    if (!key) return false
-    const t = this._seen.get(key)
-    if (t === undefined) return false
-    if (this.ttlMs > 0 && Date.now() - t >= this.ttlMs) {
-      this._seen.delete(key)
-      return false
-    }
-    return true
-  }
-
-  /**
-   * Return true if `key` was accepted (new). Records it and evicts LRU head
-   * once the store is over capacity.
-   */
-  record(key) {
-    if (!key) return true
-    if (this.check(key)) return false
-    if (this._seen.has(key)) {
-      // refresh recency
-      const t = this._seen.get(key)
-      this._seen.delete(key)
-      this._seen.set(key, t)
-      return false
-    }
-    this._seen.set(key, Date.now())
-    this.accepted++
-    if (this._seen.size > this.maxSize) {
-      const oldest = this._seen.keys().next().value
-      if (oldest !== undefined) this._seen.delete(oldest)
-    }
-    return true
-  }
-
-  get size() {
-    return this._seen.size
-  }
-
-  reset() {
-    this._seen.clear()
-    this.dropped = 0
-    this.accepted = 0
-  }
-}
-
-/**
- * Dedup an event: if its dedupKey was already seen, it is dropped and counted.
- * Pure function — the `store` may be any object exposing check/record.
+ * Map a ReplyTarget + text onto the @larksuite/channel send plan
+ * (`channel.send(to, { text }, opts)`). Pure data in, pure plan out — the
+ * shell invokes the SDK with whatever this returns.
  *
- * @param {object} ev - normalized IngressEvent.
- * @param {object} store - dedup store (check/record).
- * @returns {'accepted'|'duplicate'}
- */
-export function dedupEvent(ev, store) {
-  const key = ev?.dedupKey
-  if (!key) return 'accepted' // missing key: never block
-  if (store.check(key)) return 'duplicate'
-  store.record(key)
-  return 'accepted'
-}
-
-// ---------------------------------------------------------------------------
-// Event classification
-// ---------------------------------------------------------------------------
-
-/**
- * Classify which events the channel should forward downstream. V0 forwards
- * human-sent text-ish messages that are addressed to the bot. Everything else
- * (bot self-echo, or unattended mentions in a group when not mentioned) is
- * classified but not forwarded (caller decides).
+ * kind mapping (spec §10 REPLY_SEAM — behavior-compatible):
+ *   'reply'         → SDK send with replyTo = replyMsgId and
+ *                     replyInThread when the target is a topic thread
+ *                     (im.message.reply with reply_in_thread).
+ *   'create_thread' → SDK send anchored at the thread root: replyTo =
+ *                     rootMsgId + replyInThread = true — the Feishu-native
+ *                     "open/join the topic thread under that root" path
+ *                     (the SDK send surface has no literal create+root_id
+ *                     form; this is its equivalent thread-anchored
+ *                     primitive, and the reply can never escape to the
+ *                     group main conversation). Without a rootMsgId it
+ *                     degrades to a plain create, exactly like V0.
+ *   'create'        → SDK send into receiveId (receive_id_type derived by
+ *                     the SDK from the id prefix — oc_→chat_id, ou_→open_id,
+ *                     on_→union_id — the same values V0 passed explicitly).
  *
- * @param {object} ev - normalized IngressEvent.
- * @returns {{forward:boolean, reason:string}}
+ * @param {object} replyTarget - a ReplyTarget object.
+ * @param {string} text - message text.
+ * @returns {{to:string, input:{text:string}, opts:{replyTo?:string, replyInThread?:boolean}, method:string}}
+ * @throws {Error} on an unknown ReplyTarget kind (V0 parity).
  */
-export function classifyIngress(ev) {
-  if (ev.sender.selfSent || ev.sender.isBotSelf) {
-    return { forward: false, reason: 'self_echo' }
-  }
-  if (ev.channel === 'p2p') {
-    return { forward: true, reason: 'p2p' }
-  }
-  if (ev.channel === 'group') {
-    if (ev.mentioned) return { forward: true, reason: 'group_mentioned' }
-    return { forward: false, reason: 'group_not_mentioned' }
-  }
-  // thread: forward only when addressed (mentioned or the thread already engages us)
-  if (ev.addressed) return { forward: true, reason: 'thread_addressed' }
-  return { forward: false, reason: 'thread_not_addressed' }
-}
+export function replyTargetToSdkSend(replyTarget, text) {
+  const kind = replyTarget?.kind
+  const body = String(text ?? '')
 
-// ---------------------------------------------------------------------------
-// Ingress gate (V2 PREBOUND_ONLY)
-// ---------------------------------------------------------------------------
-
-/**
- * The FIXED receipt the connector itself sends when the pre-forward ingress
- * gate rejects an event (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC §4.5:
- * structured rejection — one deterministic text, never per-reason variants).
- * @type {string}
- */
-export const INGRESS_GATE_REJECTED_REPLY =
-  '[agent-core] 该会话未完成绑定（not bound）：消息未送达任何 Agent，也未创建任何绑定。请联系管理员完成会话与 Agent 的预绑定。'
-
-/**
- * Build the post-normalization ingress pipeline:
- * dedup → classify → pre-forward GATE → onEvent.
- *
- * The gate is a programmatically injected async predicate
- * (`config.ingressGate(ingress, { classify }) -> { allowed: boolean,
- * reason?: string }`), read from the LIVE config object on every event so a
- * later `setIngressGate()` (like `setCallback()`) takes effect immediately.
- * When the predicate rejects (`allowed !== true`-style: exactly
- * `allowed === false`) or THROWS, the event is dropped FAIL-CLOSED: `onEvent`
- * (the Router's onIngress) is never called — so the Router's first-contact
- * path never runs and no default Binding can be created — and the connector
- * itself replies with the fixed {@link INGRESS_GATE_REJECTED_REPLY} receipt
- * through the injected `reply(ingress)` sender (best effort).
- *
- * Pure channel-layer logic: no DSH/Router dependency, fully unit-testable.
- *
- * @param {object} p
- * @param {object} p.dedup - dedup store (check/record; see LruDedup).
- * @param {object} p.config - the LIVE plugin config object; `config.onEvent`
- *   and `config.ingressGate` are read per event.
- * @param {Function} [p.reply] - async sender for the fixed rejection receipt,
- *   invoked as `reply(ingress)`.
- * @param {Function} [p.log] - `(level, ...args)` logger.
- * @returns {Function} `async handleIngress(ingress)` — consume one normalized
- *   IngressEvent.
- */
-export function createIngressPipeline({ dedup, config, reply, log = () => {} }) {
-  return async function handleIngress(ingress) {
-    // dedup first
-    const verdict = dedupEvent(ingress, dedup)
-    if (verdict === 'duplicate') {
-      dedup.dropped += 1
-      log('debug', `[feishu] duplicate dropped (${ingress.dedupKey})`)
-      return
+  if (kind === 'reply') {
+    return {
+      to: replyTarget.receiveId ?? replyTarget.chatId,
+      input: { text: body },
+      opts: {
+        ...(replyTarget.replyMsgId ? { replyTo: replyTarget.replyMsgId } : {}),
+        replyInThread: replyTarget.replyInThread === true,
+      },
+      method: 'reply',
     }
-    // classify
-    const cls = classifyIngress(ingress)
-    if (!cls.forward) {
-      log('debug', `[feishu] not addressed, skipped (${cls.reason})`)
-      return
-    }
-    // V2 pre-forward gate: after classify decided forward, BEFORE onEvent.
-    if (typeof config.ingressGate === 'function') {
-      let gateVerdict
-      try {
-        gateVerdict = await config.ingressGate(ingress, { classify: cls })
-      } catch (error) {
-        log('warn', `[feishu] ingress gate error (fail closed): ${error?.message ?? error}`)
-        gateVerdict = { allowed: false, reason: 'gate_error' }
-      }
-      if (gateVerdict?.allowed === false) {
-        log('warn', `[feishu] ingress rejected by gate (${gateVerdict.reason ?? 'unspecified'}) — not forwarded`)
-        if (typeof reply === 'function') {
-          try {
-            await reply(ingress)
-          } catch (error) {
-            log('warn', `[feishu] rejection receipt failed: ${error?.message ?? error}`)
-          }
-        }
-        return
+  }
+
+  if (kind === 'create_thread') {
+    const to = replyTarget.receiveId ?? replyTarget.chatId
+    if (replyTarget.rootMsgId) {
+      return {
+        to,
+        input: { text: body },
+        opts: { replyTo: replyTarget.rootMsgId, replyInThread: true },
+        method: 'create_thread',
       }
     }
-    if (typeof config.onEvent === 'function') {
-      try {
-        await config.onEvent(ingress, { classify: cls })
-      } catch (error) {
-        log('error', `[feishu] onEvent callback error: ${error?.message ?? error}`)
-      }
+    return { to, input: { text: body }, opts: {}, method: 'create_thread' }
+  }
+
+  if (kind === 'create') {
+    return {
+      to: replyTarget.receiveId ?? replyTarget.chatId,
+      input: { text: body },
+      opts: {},
+      method: 'create',
     }
   }
+
+  throw new Error(`feishu-connector: unknown ReplyTarget kind "${kind}"`)
 }

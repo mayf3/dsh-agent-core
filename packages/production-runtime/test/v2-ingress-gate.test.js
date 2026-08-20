@@ -36,7 +36,8 @@ import { AgentDefinition } from '../../agent-definition/src/definition.js'
 import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyRouter } from '../../agent-router/src/index.js'
-import { createIngressPipeline, INGRESS_GATE_REJECTED_REPLY, LruDedup } from '../../feishu-connector/src/core.js'
+import { INGRESS_GATE_REJECTED_REPLY } from '../../feishu-connector/src/core.js'
+import { createBridgeHandler } from '../../feishu-connector/src/bridge.js'
 import { conversationWorkspaceId } from '../../feishu-connector/src/core.js'
 import { makeV2PreboundIngressGate, wireV2IngressGate, V2_INGRESS_MODE } from '../src/v2-ingress-gate.js'
 
@@ -142,7 +143,8 @@ async function freshRig(t, { bindings = {}, primaryWorkspaces = {} } = {}) {
     processFactory: (opts) => { const p = new FakeProc(opts); spawned.push(p); return p },
   })
 
-  // Stub feishu channel handle + the REAL pipeline, wired like compose.js.
+  // Stub Feishu handle + the REAL V2 bridge, wired like compose.js. SDK
+  // normalization/dedup/lock has already run when this handler is invoked.
   const receipts = []
   const feishu = {
     gate: null,
@@ -152,8 +154,8 @@ async function freshRig(t, { bindings = {}, primaryWorkspaces = {} } = {}) {
   assert.equal(wireV2IngressGate(feishu, router, workspaceBootstrap), true)
   const forwarded = []
   const cfg = { onEvent: async (ev) => { forwarded.push(ev); await router.route(ev) }, ingressGate: feishu.gate }
-  const handleIngress = createIngressPipeline({
-    dedup: new LruDedup({ maxSize: 100 }),
+  const handleIngress = createBridgeHandler({
+    resolveBotIdentity: () => ({ openId: 'ou_bot_self', name: 'my-bot' }),
     config: cfg,
     reply: (ingress) => feishu.reply({ conversationId: ingress.conversationId }, INGRESS_GATE_REJECTED_REPLY),
     log: () => {},
@@ -161,24 +163,35 @@ async function freshRig(t, { bindings = {}, primaryWorkspaces = {} } = {}) {
 
   /** A V2-normal Feishu group ingress (NO workspace / NO session fields). */
   let msgSeq = 0
-  const groupEvent = (conversationId, text = 'hello') => {
+  const groupEvent = (conversationId, text = 'hello', { mentioned = true, threadId } = {}) => {
     const seq = ++msgSeq
     return {
-      eventId: `evt_${conversationId}_${seq}`,
-      type: 'message',
-      channel: 'group',
-      chatType: 'group',
-      conversationId,
-      chatId: conversationId,
       messageId: `om_${conversationId}_${seq}`,
-      sender: { openId: 'ou_sender', senderType: 'user', isBotSelf: false, selfSent: false, senderId: 'ou_sender' },
-      text,
-      mentions: [],
-      mentioned: true,
-      addressed: true,
-      attachments: [],
-      timestamp: Date.now(),
-      dedupKey: `message:om_${conversationId}_${seq}`,
+      chatType: 'group',
+      chatId: conversationId,
+      ...(threadId === undefined ? {} : { threadId }),
+      senderId: 'ou_sender',
+      senderType: 'user',
+      content: text,
+      rawContentType: 'text',
+      resources: [],
+      mentions: mentioned ? [{ key: '@_bot', openId: 'ou_bot_self', name: 'my-bot', isBot: true }] : [],
+      mentionedBot: mentioned,
+      mentionAll: false,
+      createTime: Date.now(),
+      raw: {
+        event_id: `evt_${conversationId}_${seq}`,
+        sender: { sender_id: { open_id: 'ou_sender' }, sender_type: 'user' },
+        message: {
+          message_id: `om_${conversationId}_${seq}`,
+          chat_id: conversationId,
+          chat_type: 'group',
+          message_type: 'text',
+          content: JSON.stringify({ text }),
+          ...(threadId === undefined ? {} : { thread_id: threadId }),
+          mentions: mentioned ? [{ key: '@_bot', id: { open_id: 'ou_bot_self' }, name: 'my-bot' }] : [],
+        },
+      },
     }
   }
 
@@ -229,6 +242,16 @@ test('UNKNOWN conversation -> FAIL CLOSED: no forward, no default Binding row, f
   assert.equal(rig.receipts[0].target.conversationId, 'oc_brand_new')
 })
 
+test('ordinary no-mention group/topic -> silent drop before gate/Router and zero Binding delta', async (t) => {
+  const rig = await freshRig(t)
+  await rig.handleIngress(rig.groupEvent('oc_no_mention_group', 'ordinary', { mentioned: false }))
+  await rig.handleIngress(rig.groupEvent('oc_no_mention_topic', 'ordinary topic', { mentioned: false, threadId: 'omt_no_mention' }))
+  assert.equal(rig.forwarded.length, 0)
+  assert.equal(rig.spawned.length, 0)
+  assert.equal(rig.receipts.length, 0)
+  assert.equal(rig.router.bindingsSnapshot().length, 0, 'neither path creates a default Binding')
+})
+
 test('UNKNOWN conversation (direct gate call): unbound verdict, store untouched', async (t) => {
   const rig = await freshRig(t)
   const gate = makeV2PreboundIngressGate({
@@ -275,7 +298,7 @@ test('PRE-BOUND primary conversation: second message RESUMES the same main (regr
   assert.equal(rig.router.bindingsSnapshot().length, 1, 'no new Binding row')
 })
 
-test('PRE-BOUND NON-PRIMARY compatibility row -> BLOCKED from the V2 normal path, state preserved', async (t) => {
+test('AC11 rollback without state migration: PRE-BOUND NON-PRIMARY compatibility row stays byte-preserved and blocked', async (t) => {
   const rig = await freshRig(t, { bindings: { 'feishu:oc_9dd74b9ed02ce216951260a381eb502d': { ...P2P_COMPAT_BINDING } } })
   const before = await readFile(join(rig.dir, 'bindings.json'), 'utf8')
 
