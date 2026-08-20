@@ -1,185 +1,168 @@
+/**
+ * Core semantics tests (Foundation cutover): conversation identity
+ * derivation (Binding-continuity lifeline), the ReplyTarget family and its
+ * SDK send mapping, the transitional compatibility carriers, and the frozen
+ * Foundation SDK configuration.
+ */
+
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+
 import {
-  normalizeIngressEvent,
+  FOUNDATION_LARK_CHANNEL_OPTIONS,
   buildConversationId,
+  resolveConversation,
   buildReplyTarget,
   replyTargetFor,
-  LruDedup,
-  dedupEvent,
-  classifyIngress,
-  parseAttachments,
-  parseSender,
-  parseMentions,
+  replyTargetToSdkSend,
+  conversationWorkspaceId,
+  conversationMainSessionId,
 } from '../src/core.js'
-import {
-  p2pTextEvent,
-  groupMentionedEvent,
-  groupUnmentionedEvent,
-  threadReplyEvent,
-  imageEvent,
-  fileEvent,
-  botEchoEvent,
-  BOT_OPEN_ID,
-} from '../fixtures/fixtures.js'
 
-// --- 1. inbound p2p → normalized IngressEvent ---
-test('p2p message normalizes to IngressEvent (channel=p2p)', () => {
-  const ev = normalizeIngressEvent(p2pTextEvent, { botOpenId: BOT_OPEN_ID })
-  assert.equal(ev.channel, 'p2p')
-  assert.equal(ev.chatType, 'p2p')
-  assert.equal(ev.eventId, 'evt_p2p_001')
-  assert.equal(ev.messageId, 'om_p2p_msg_001')
-  assert.equal(ev.conversationId, 'oc_p2p_001')
-  assert.equal(ev.chatId, 'oc_p2p_001')
-  assert.equal(ev.text, 'hello bot, please multiply 6 by 7')
-  assert.equal(ev.sender.openId, 'ou_sender_p2p')
-  assert.equal(ev.sender.unionId, 'on_sender_p2p')
-  assert.equal(ev.sender.userId, 'u_sender_p2p')
-  assert.equal(ev.sender.isBotSelf, false)
-  assert.equal(ev.dedupKey, 'evt_p2p_001')
-  // p2p is addressed to the bot by default
-  const cls = classifyIngress(ev)
-  assert.equal(cls.forward, true)
-  assert.equal(cls.reason, 'p2p')
-  // pure data: JSON-serializable
-  assert.doesNotThrow(() => JSON.stringify(ev))
-})
+// ---------------------------------------------------------------------------
+// conversation identity derivation (V0 semantics, byte-identical)
+// ---------------------------------------------------------------------------
 
-// --- 1b. inbound group (bot mentioned) ---
-test('group message with bot mention normalizes to IngressEvent (channel=group)', () => {
-  const ev = normalizeIngressEvent(groupMentionedEvent, { botOpenId: BOT_OPEN_ID })
-  assert.equal(ev.channel, 'group')
-  assert.equal(ev.chatType, 'group')
-  assert.equal(ev.chatId, 'oc_group_001')
-  assert.equal(ev.conversationId, 'oc_group_001')
-  assert.equal(ev.mentioned, true)
-  assert.equal(ev.sender.isBotSelf, false)
-  // mentions include the bot itself with type 'bot'
-  const botMention = ev.mentions.find((m) => m.type === 'bot')
-  assert.ok(botMention)
-  assert.equal(botMention.openId, 'ou_bot_self')
-  const cls = classifyIngress(ev)
-  assert.equal(cls.forward, true)
-  assert.equal(cls.reason, 'group_mentioned')
-})
-
-// --- 4. p2p conversation identifier ---
-test('p2p conversation identifier is the plain chat id', () => {
+test('buildConversationId: p2p / group = chatId', () => {
   assert.equal(buildConversationId({ chatId: 'oc_p2p_001', scope: 'p2p' }), 'oc_p2p_001')
+  assert.equal(buildConversationId({ chatId: 'oc_group_001', scope: 'group' }), 'oc_group_001')
 })
 
-// --- 3. group chat identifier (chat_type=group) ---
-test('group chat identifier keeps chat_id and classifies as group', () => {
-  const ev = normalizeIngressEvent(groupUnmentionedEvent, { botOpenId: BOT_OPEN_ID })
-  assert.equal(ev.chatType, 'group')
-  assert.equal(ev.conversationId, 'oc_group_001')
-  // not mentioned → not forwarded
-  const cls = classifyIngress(ev)
-  assert.equal(cls.forward, false)
-  assert.equal(cls.reason, 'group_not_mentioned')
-})
-
-// --- 5. thread identifiers ---
-test('thread message preserves thread_id / root message and maps to thread channel', () => {
-  const ev = normalizeIngressEvent(threadReplyEvent, { botOpenId: BOT_OPEN_ID })
-  assert.equal(ev.channel, 'thread')
-  assert.equal(ev.chatId, 'oc_group_002')
-  assert.equal(ev.threadId, 'omt_thread_001')
-  assert.equal(ev.rootMsgId, 'om_thread_root')
-  assert.equal(ev.parentMsgId, 'om_thread_root')
-  // canonical conversation id for the thread
-  assert.equal(ev.conversationId, buildConversationId({ chatId: 'oc_group_002', scope: 'group_topic', threadId: 'omt_thread_001' }))
-  assert.equal(ev.conversationId, 'oc_group_002:topic:omt_thread_001')
-  const cls = classifyIngress(ev)
-  assert.equal(cls.forward, true) // mentioned in thread
-})
-
-// ReplyTarget for a thread
-test('ReplyTarget from a thread ingress replies inside the thread', () => {
-  const ev = normalizeIngressEvent(threadReplyEvent, { botOpenId: BOT_OPEN_ID })
-  const target = replyTargetFor(ev)
-  const reply = target.replyTo(ev.messageId)
-  assert.equal(reply.kind, 'reply')
-  assert.equal(reply.replyMsgId, 'om_thread_msg_001')
-  assert.equal(reply.replyInThread, true) // in a topic thread → reply_in_thread
-  assert.equal(reply.threadId, 'omt_thread_001')
-})
-
-// --- 6. duplicate event dedup ---
-test('same event_id is deduplicated a second time', () => {
-  const store = new LruDedup({ maxSize: 100 })
-  const ev1 = normalizeIngressEvent(p2pTextEvent)
-  const ev2 = normalizeIngressEvent(p2pTextEvent)
-  assert.equal(dedupEvent(ev1, store), 'accepted')
-  assert.equal(store.size, 1)
-  assert.equal(dedupEvent(ev2, store), 'duplicate')
-  assert.equal(dedupEvent(ev1, store), 'duplicate')
-})
-
-test('LruDedup evicts oldest beyond maxSize', () => {
-  const store = new LruDedup({ maxSize: 3 })
-  for (const k of ['a', 'b', 'c', 'd']) store.record(k)
-  assert.equal(store.size, 3)
-  assert.equal(store.check('a'), false) // evicted
-  assert.equal(store.check('b'), true)
-})
-
-// --- attachments ---
-test('image attachment parses to a unified descriptor', () => {
-  const ev = normalizeIngressEvent(imageEvent)
-  assert.equal(ev.attachments.length, 1)
-  const a = ev.attachments[0]
-  assert.equal(a.type, 'image')
-  assert.equal(a.fileKey, 'img_v2_abcd')
-  assert.equal(a.downloadHint.endpoint, 'im/v1/images')
-  assert.equal(ev.text, '[image]')
-})
-
-test('file attachment parses name + size + download hint', () => {
-  const ev = normalizeIngressEvent(fileEvent)
-  assert.equal(ev.attachments.length, 1)
-  const a = ev.attachments[0]
-  assert.equal(a.type, 'file')
-  assert.equal(a.fileKey, 'file_v2_efgh')
-  assert.equal(a.name, 'report.pdf')
-  assert.equal(a.sizeBytes, 2048)
-  assert.equal(ev.text, '[file report.pdf]')
-})
-
-// sender metadata
-test('sender metadata includes ids, self-sent flag, is-bot flag', () => {
-  const sender = parseSender(botEchoEvent.event, BOT_OPEN_ID)
-  assert.equal(sender.openId, 'ou_bot_self')
-  assert.equal(sender.senderType, 'app')
-  assert.equal(sender.isBotSelf, true)
-  assert.equal(sender.selfSent, true)
-})
-
-// parseMentions
-test('parseMentions distinguishes all / user / bot', () => {
-  const mentions = parseMentions(
-    { mentions: [
-      { key: '@_user_1', id: { open_id: 'ou_bot_self' }, name: 'my-bot' },
-      { key: '@_user_2', id: { open_id: 'ou_other' }, name: 'alice' },
-      { key: '@_all', name: '所有人' },
-    ] },
-    BOT_OPEN_ID,
+test('buildConversationId: topic thread = chatId:topic:trim(threadId)', () => {
+  assert.equal(
+    buildConversationId({ chatId: 'oc_g', scope: 'group_topic', threadId: ' omt_t1 ' }),
+    'oc_g:topic:omt_t1',
   )
-  const types = mentions.map((m) => m.type).sort()
-  assert.deepEqual(types, ['all', 'bot', 'user'])
+  // missing threadId degrades to the group conversation
+  assert.equal(buildConversationId({ chatId: 'oc_g', scope: 'group_topic' }), 'oc_g')
 })
 
-// classification edge
-test('bot self-echo is classified but not forwarded', () => {
-  const ev = normalizeIngressEvent(botEchoEvent, { botOpenId: BOT_OPEN_ID })
-  const cls = classifyIngress(ev)
-  assert.equal(cls.forward, false)
-  assert.equal(cls.reason, 'self_echo')
+test('buildConversationId: empty chatId falls back to "unknown"', () => {
+  assert.equal(buildConversationId({ chatId: '  ', scope: 'p2p' }), 'unknown')
 })
 
-// invalid event throws
-test('invalid / non-message event throws', () => {
-  assert.throws(() => normalizeIngressEvent({ header: { event_id: 'x' }, event: { message: { chat_type: 'unknown' } } }), /chat_type/)
-  assert.throws(() => normalizeIngressEvent({ event: { message: { chat_type: 'p2p' } } }), /message_id/)
+test('resolveConversation: thread requires group chatType (p2p+thread stays p2p)', () => {
+  const thread = resolveConversation({ chatId: 'oc_g', chatType: 'group', threadId: 'omt_t1' })
+  assert.equal(thread.channel, 'thread')
+  assert.equal(thread.conversationId, 'oc_g:topic:omt_t1')
+
+  const p2pWithThread = resolveConversation({ chatId: 'oc_p', chatType: 'p2p', threadId: 'omt_t1' })
+  assert.equal(p2pWithThread.channel, 'p2p')
+  assert.equal(p2pWithThread.conversationId, 'oc_p')
+  assert.equal(p2pWithThread.threadId, 'omt_t1', 'threadId still carried as an event field')
+})
+
+test('resolveConversation: root_id without thread_id is NOT a topic thread', () => {
+  const inline = resolveConversation({ chatId: 'oc_g', chatType: 'group', rootId: 'om_root' })
+  assert.equal(inline.channel, 'group')
+  assert.equal(inline.conversationId, 'oc_g')
+  assert.equal(inline.rootMsgId, 'om_root', 'root carried as an event field only')
+})
+
+test('resolveConversation: whitespace-only thread_id counts as absent', () => {
+  const ev = resolveConversation({ chatId: 'oc_g', chatType: 'group', threadId: '   ' })
+  assert.equal(ev.channel, 'group')
+  assert.equal(ev.conversationId, 'oc_g')
+  assert.equal(ev.threadId, undefined)
+})
+
+// ---------------------------------------------------------------------------
+// ReplyTarget family (V0, unchanged) + SDK send mapping
+// ---------------------------------------------------------------------------
+
+test('ReplyTarget from a thread ingress replies inside the thread', () => {
+  const target = buildReplyTarget({ conversationId: 'oc_g:topic:omt_t1', chatId: 'oc_g', channel: 'thread', messageId: 'om_1', threadId: 'omt_t1', rootMsgId: 'om_root' })
+  const reply = target.replyTo('om_2')
+  assert.equal(reply.kind, 'reply')
+  assert.equal(reply.replyMsgId, 'om_2')
+  assert.equal(reply.replyInThread, true)
+  assert.equal(reply.threadId, 'omt_t1')
+})
+
+test('replyTargetFor works off a mapped IngressEvent shape', () => {
+  const target = replyTargetFor({ conversationId: 'oc_p', chatId: 'oc_p', channel: 'p2p', messageId: 'om_1' })
+  const reply = target.replyTo()
+  assert.equal(reply.kind, 'reply')
+  assert.equal(reply.replyMsgId, 'om_1')
+  assert.equal(reply.replyInThread, false)
+})
+
+test('replyTargetToSdkSend: reply kind maps to replyTo + replyInThread', () => {
+  const plan = replyTargetToSdkSend(
+    { kind: 'reply', chatId: 'oc_g', receiveId: 'oc_g', replyMsgId: 'om_9', replyInThread: true },
+    'hi',
+  )
+  assert.equal(plan.method, 'reply')
+  assert.equal(plan.to, 'oc_g')
+  assert.deepEqual(plan.input, { text: 'hi' })
+  assert.equal(plan.opts.replyTo, 'om_9')
+  assert.equal(plan.opts.replyInThread, true)
+})
+
+test('replyTargetToSdkSend: p2p reply carries replyInThread=false', () => {
+  const plan = replyTargetToSdkSend(
+    { kind: 'reply', chatId: 'oc_p', receiveId: 'oc_p', replyMsgId: 'om_1', replyInThread: false },
+    'answer',
+  )
+  assert.equal(plan.opts.replyTo, 'om_1')
+  assert.equal(plan.opts.replyInThread, false)
+})
+
+test('replyTargetToSdkSend: create_thread anchors at rootMsgId with replyInThread', () => {
+  const plan = replyTargetToSdkSend(
+    { kind: 'create_thread', chatId: 'oc_g', receiveId: 'oc_g', rootMsgId: 'om_root' },
+    'thread reply',
+  )
+  assert.equal(plan.method, 'create_thread')
+  assert.equal(plan.opts.replyTo, 'om_root')
+  assert.equal(plan.opts.replyInThread, true)
+})
+
+test('replyTargetToSdkSend: create_thread without root degrades to a plain create (V0 parity)', () => {
+  const plan = replyTargetToSdkSend(
+    { kind: 'create_thread', chatId: 'oc_g', receiveId: 'oc_g', rootMsgId: undefined },
+    'x',
+  )
+  assert.equal(plan.method, 'create_thread')
+  assert.deepEqual(plan.opts, {})
+})
+
+test('replyTargetToSdkSend: create maps receiveId through (SDK derives receive_id_type by prefix)', () => {
+  const oc = replyTargetToSdkSend({ kind: 'create', chatId: 'oc_g', receiveId: 'oc_g', receiveIdType: 'chat_id' }, 'x')
+  assert.equal(oc.to, 'oc_g')
+  assert.deepEqual(oc.opts, {})
+  const ou = replyTargetToSdkSend({ kind: 'create', chatId: 'oc_g', receiveId: 'ou_u', receiveIdType: 'open_id' }, 'x')
+  assert.equal(ou.to, 'ou_u')
+})
+
+test('replyTargetToSdkSend: unknown kind throws (V0 parity)', () => {
+  assert.throws(() => replyTargetToSdkSend({ kind: 'nope' }, 'x'), /ReplyTarget kind/)
+})
+
+// ---------------------------------------------------------------------------
+// transitional compatibility carriers
+// ---------------------------------------------------------------------------
+
+test('conversation policy helpers stay exported and deterministic (transitional compat)', () => {
+  assert.equal(conversationWorkspaceId('oc_X'), 'feishu-oc_X')
+  assert.equal(conversationMainSessionId('oc_X'), 'main-oc_X')
+  assert.equal(conversationWorkspaceId('oc_X'), conversationWorkspaceId('oc_X'))
+  assert.equal(conversationWorkspaceId('oc_g:topic:omt_t1'), 'feishu-oc_g-topic-omt_t1')
+})
+
+// ---------------------------------------------------------------------------
+// frozen Foundation SDK configuration (spec §6.5)
+// ---------------------------------------------------------------------------
+
+test('FOUNDATION options freeze the V2 Foundation semantics', () => {
+  assert.equal(FOUNDATION_LARK_CHANNEL_OPTIONS.safety.batch.text.delayMs, 0, 'SDK_BATCH_DELAY_MS=0')
+  assert.equal(FOUNDATION_LARK_CHANNEL_OPTIONS.safety.chatQueue.enabled, false, 'SDK_CHAT_QUEUE=DISABLED')
+  assert.equal(FOUNDATION_LARK_CHANNEL_OPTIONS.safety.staleMessageWindowMs, Number.POSITIVE_INFINITY, 'SDK_STALE_DROP=DISABLED (window=Infinity)')
+  assert.deepEqual(FOUNDATION_LARK_CHANNEL_OPTIONS.safety.processingLock, { ttlMs: 300000, renewIntervalMs: 60000 })
+  assert.equal(FOUNDATION_LARK_CHANNEL_OPTIONS.policy.requireMention, false, 'SDK_REQUIRE_MENTION=false')
+  assert.equal(FOUNDATION_LARK_CHANNEL_OPTIONS.policy.respondToMentionAll, true, 'V0 @all-mention parity pin')
+  assert.equal(FOUNDATION_LARK_CHANNEL_OPTIONS.includeRawEvent, true)
+  // no queue/batch knobs smuggled open, no dedup config (authority = SDK)
+  assert.equal(FOUNDATION_LARK_CHANNEL_OPTIONS.safety.dedup, undefined)
+  assert.equal(FOUNDATION_LARK_CHANNEL_OPTIONS.safety.chatQueue.mergeWhileBusy, undefined)
 })
