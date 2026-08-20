@@ -74,32 +74,13 @@ export function classifyVerificationResult(result, {
   return { kind: 'inconclusive', reason: 'unexpected_verification_response' }
 }
 
-async function rotateAndPersist({ auth, prerequisites, credentialsFile, agentId, clientId, verification, storeWriteOptions }) {
-  requirePrerequisite(prerequisites, 'b')
-  if (typeof auth.rotateClientSecret !== 'function') requirePrerequisite({}, 'b')
-  const rotated = await auth.rotateClientSecret({ clientId })
-  const returnedClientId = entityId(rotated, 'client')
-  const credential = normalizeCredential({ clientId: returnedClientId, clientSecret: rotated?.client_secret ?? rotated?.clientSecret })
-  if (returnedClientId !== clientId || credential === undefined) {
-    fail('auth_rotation_malformed_response', 'Auth same-client rotation response is invalid', { agentId, clientId })
-  }
-  await writeCredentialForAgent(credentialsFile, agentId, credential, storeWriteOptions)
-  const result = await auth.verifyCredential({ credential, ...verification })
-  const classification = classifyVerificationResult(result, verification)
-  if (classification.kind !== 'credential_valid') {
-    fail('credential_verification_inconclusive', 'Rotated credential could not be conclusively verified', {
-      agentId,
-      clientId,
-      verification: classification,
-    })
-  }
-  return { outcome: 'rotated_same_client', agentId, clientId, verification: classification }
-}
-
 /**
- * Frozen A-G deployment-side state machine. Auth and store writes are injected
- * seams; no production endpoint is contacted unless the caller explicitly
- * establishes prerequisite (c).
+ * Phase A clean bootstrap only (Spec D.7.1/D.7.2). Auth and store writes are
+ * injected seams; no production endpoint is contacted unless the caller
+ * explicitly establishes prerequisite (c). Existing credentials (store entry
+ * present, or an Auth client already holding the deterministic external_ref)
+ * fail loud as existing_credential_resolution_required — their reconciliation
+ * is Phase B and is deliberately not implemented here.
  */
 export async function ensureAgentCredential({
   agentId,
@@ -116,13 +97,26 @@ export async function ensureAgentCredential({
     prerequisiteDReady: false,
   },
 }) {
+  // D.7.1 steps 1-2: Agent Definition read; State A precedes every store/Auth step.
   const definition = readDefinition(agentDefinitionFile)
   const agent = definition?.agents.find((candidate) => candidate.id === agentId)
   if (agent === undefined) fail('agent_not_found', 'agent_not_found', { agentId })
 
+  // D.7.1 step 3: full store read + validation BEFORE any Auth identity mutation.
   const store = await readCredentialStoreDocument(credentialsFile)
   const stored = store.credentials[agentId]
 
+  // D.7.1 steps 4/6: target entry classification; an existing entry is Phase B
+  // reconciliation territory — zero Auth, S1, S2, claim, rotation, store writes.
+  if (stored !== undefined) {
+    fail('existing_credential_resolution_required', 'existing_credential_resolution_required', {
+      agentId,
+      reason: 'store_entry_present',
+      clientId: stored.clientId,
+    })
+  }
+
+  // D.7.1 step 5: entry absent — (c) gate, then S1, S2, secret write, mint.
   requirePrerequisite(prerequisites, 'c')
   if (auth === null || typeof auth !== 'object') fail('auth_configuration_error', 'Auth provisioning client is required')
   const verificationContext = {
@@ -148,53 +142,29 @@ export async function ensureAgentCredential({
   const clientCreated = created(client)
   assertActive(client, 'auth_client_missing_or_revoked', { agentId, clientId })
 
-  if (clientCreated) {
-    if (stored !== undefined) {
-      fail('auth_client_missing_or_revoked', 'Existing store entry conflicts with newly-created Auth client', {
-        agentId,
-        clientId: stored.clientId,
-      })
-    }
-    const credential = normalizeCredential({ clientId, clientSecret: client?.client_secret ?? client?.clientSecret })
-    if (credential === undefined) fail('auth_client_secret_missing', 'New Auth client response has no usable secret', { agentId, clientId })
-    await writeCredentialForAgent(credentialsFile, agentId, credential, storeWriteOptions)
-    const result = await auth.verifyCredential({ credential, ...verificationContext })
-    const classification = classifyVerificationResult(result, verificationContext)
-    if (classification.kind === 'credential_valid') {
-      return { outcome: 'provisioned', agentId, principalId, clientId, verification: classification }
-    }
-    if (classification.kind === 'external_prerequisite') {
-      fail('external_prerequisite_missing', 'external_prerequisite_missing(d)', {
-        prerequisite: 'd',
-        agentId,
-        clientId,
-        profile401DoesNotTriggerRotation: true,
-      })
-    }
-    fail(
-      classification.kind === 'configuration_drift' ? 'auth_configuration_drift' : 'credential_verification_inconclusive',
-      'New credential could not be conclusively verified',
-      { agentId, clientId, verification: classification },
-    )
-  }
-
-  if (stored === undefined) {
-    return rotateAndPersist({ auth, prerequisites, credentialsFile, agentId, clientId, verification: verificationContext, storeWriteOptions })
-  }
-  if (stored.clientId !== clientId) {
-    fail('auth_client_missing_or_revoked', 'Stored client does not match deterministic Auth client', {
+  if (!clientCreated) {
+    // The deterministic Auth client already exists while the store has no
+    // entry (State E/F shape). Reconciliation — including rotation, claim,
+    // or a read-only client resolve — is Phase B (D.7.3): fail loud, keep
+    // the existing identity, create no second client, write nothing.
+    fail('existing_credential_resolution_required', 'existing_credential_resolution_required', {
       agentId,
-      clientId: stored.clientId,
+      reason: 'auth_client_present_without_store_entry',
+      clientId,
     })
   }
 
-  const credential = normalizeCredential(stored)
+  const credential = normalizeCredential({ clientId, clientSecret: client?.client_secret ?? client?.clientSecret })
+  if (credential === undefined) fail('auth_client_secret_missing', 'New Auth client response has no usable secret', { agentId, clientId })
+  await writeCredentialForAgent(credentialsFile, agentId, credential, storeWriteOptions)
   const result = await auth.verifyCredential({ credential, ...verificationContext })
   const classification = classifyVerificationResult(result, verificationContext)
   if (classification.kind === 'credential_valid') {
-    return { outcome: 'noop', agentId, principalId, clientId, verification: classification }
+    return { outcome: 'provisioned', agentId, principalId, clientId, verification: classification }
   }
   if (classification.kind === 'external_prerequisite') {
+    // Ownerless-v1 401: prerequisite (d) evidence. Never rotate, never delete
+    // the freshly created identity, never bind a fake owner.
     fail('external_prerequisite_missing', 'external_prerequisite_missing(d)', {
       prerequisite: 'd',
       agentId,
@@ -202,12 +172,9 @@ export async function ensureAgentCredential({
       profile401DoesNotTriggerRotation: true,
     })
   }
-  if (classification.kind === 'credential_invalid') {
-    return rotateAndPersist({ auth, prerequisites, credentialsFile, agentId, clientId, verification: verificationContext, storeWriteOptions })
-  }
   fail(
     classification.kind === 'configuration_drift' ? 'auth_configuration_drift' : 'credential_verification_inconclusive',
-    'Existing credential could not be conclusively verified',
+    'New credential could not be conclusively verified',
     { agentId, clientId, verification: classification },
   )
 }
