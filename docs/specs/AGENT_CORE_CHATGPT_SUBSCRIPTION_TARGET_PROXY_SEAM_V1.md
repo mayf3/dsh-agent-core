@@ -11,6 +11,8 @@ status: proposed
 > 含 `8781771` runtime review gaps 与 `fe2c639` target-respawn reload）
 >
 > SPEC_STATUS = **proposed**（本轮 = INVESTIGATION + SPEC ONLY）
+> · Round 2 amendment base = reviewed HEAD `2aa72bd`（review verdict =
+> `FIX_REQUIRED`）。
 >
 > 本轮不做：implementation、production 变更、重新 OAuth、写 Luna override、
 > 发送飞书消息、merge。实现权限在本 Spec 被 accept 之前不存在。
@@ -195,8 +197,8 @@ PROVIDER_ENV_ALLOWLIST = {
 - `providerEnv` 一旦出现，**四个键必须全部在场**（部分子集 → fail-loud）：
   - `NODE_USE_ENV_PROXY` 值必须恰为 `"1"`（缺失或他值 → Node 静默忽略 proxy
     env = 静默 no-op，机械禁止）；
-  - `HTTP_PROXY` / `HTTPS_PROXY` 至少其一必须指向真实代理（本 North Star
-    两者皆为 `http://127.0.0.1:7890`）；全空集无意义且遮蔽 no-op；
+  - `HTTP_PROXY` **与** `HTTPS_PROXY` 均必须是合法、非空的代理 URL（本
+    North Star 两者皆为 `http://127.0.0.1:7890`）；不得以“至少其一”满足；
   - `NO_PROXY` 必须非空（默认 `localhost,127.0.0.1,::1`；目标 child 仍有
     localhost HTTP 依赖，不得经代理回环）。
 
@@ -210,24 +212,67 @@ PROVIDER_ENV_ALLOWLIST = {
 - host 非空；端口（若出现）合法；不得携带 query / fragment；
 - 不包含 token / 凭证形态（由上三条机械覆盖；URL 本身即唯一载荷）。
 
-`NO_PROXY` 值必须：非空字符串、逗号分隔、每段 trim 后非空。
+`NO_PROXY` 冻结为机械、无歧义的 host-list grammar：
+
+```text
+NO_PROXY = entry *( "," entry )
+entry    = "*" | hostname-or-domain [ ":" port ] | IPv4 [ ":" port ]
+         | IPv6 | "[" IPv6 "]" [ ":" port ] | "localhost" [ ":" port ]
+```
+
+- 整体必须是非空 string，以逗号分隔；entry 不允许为空；
+- **任何位置**均不允许 whitespace、control char、newline、quote（`'` / `"`）、
+  backtick、`$` 或 shell expansion syntax；不做 trim、不做插值、不做 shell
+  解析。`*` 只允许作为整个 entry；`[` / `]` 只允许构成 bracketed IPv6；
+- 每个 entry 只允许 hostname/domain、IPv4、IPv6、`[IPv6]`、`localhost`、`*`，
+  以及可选 `:port`；裸 IPv6 按 IPv6 本身解析，带端口的 IPv6 必须使用
+  `[IPv6]:port` 以消除歧义；hostname/domain 必须是点分隔 ASCII label（每个
+  label 仅 ASCII alphanumeric，允许内部 `-`，不得以 `-` 起止）；IPv4 每个
+  octet 必须在 0..255；IPv6 必须是合法 IPv6 literal；port 必须是 1..65535
+  的十进制整数；
+- 任一 entry 不符合上述 grammar → fail-loud；不得跳过坏 entry、不得部分采用。
 
 类型约束：`providerEnv` 必须是 JSON object（string/array/null/number →
 fail-loud）；所有值必须是非空 string。
+
+所有 providerEnv 校验错误（含 URL、`NO_PROXY`、类型、键集与值域）只允许报告：
+
+```text
+key name + invalid class
+```
+
+禁止回显完整 proxy URL、`NO_PROXY` 原始值、userinfo、token 或任何原始
+providerEnv value；日志、异常消息与 evidence 均受此约束。
 
 ---
 
 ## 4. 注入机制与安全边界（冻结）
 
+双重防护冻结如下；不得依赖“当前机器碰巧没有 proxy env”：
+
 ```text
-TARGET_PROCESS_ENV = 目标 AgentProcess spawn env 恰含四个已验证键值
-                     （在 {...process.env} 与固定 extras 之后合并，
-                       同名继承值被 providerEnv 覆盖——部署单一权威）
-NON_TARGET_PROCESS_ENV = 与今日字节级一致（继承语义不变，不增不删）
-GLOBAL_RUNTIME_PROXY = absent（production-runtime 自身 process.env 永不获得
-                       proxy 键；对照 DSH_HARNESS_ROOT 的 runtime-global 写法
-                       ：107-111，providerEnv 明确禁止该模式）
+INHERITED_PROXY_KEYS = {
+  HTTP_PROXY, HTTPS_PROXY, NO_PROXY,
+  http_proxy, https_proxy, no_proxy,
+  ALL_PROXY, all_proxy,
+  NODE_USE_ENV_PROXY
+}
+
+RUNTIME_STARTUP_GATE = production-runtime 启动时，若自身 process.env 含上述
+                       任一键（不论值是否为空），立即 fail-loud，错误归入
+                       AGENT_MODEL_OVERRIDE_INVALID
+
+CHILD_ENV_BASE = 每次创建 AgentProcess 前，从继承 env strip 上述全部键
+TARGET_PROCESS_ENV = CHILD_ENV_BASE + providerEnv 冻结的四个大写键
+NON_TARGET_PROCESS_ENV = CHILD_ENV_BASE；上述全部 proxy 键 absent
+GLOBAL_RUNTIME_PROXY = absent；runtime 自身永不注入 providerEnv
 ```
+
+runtime startup gate 的错误同样只报告 offending key name + invalid class，禁止
+回显值。child strip 是独立防线：即使继承 env 在 startup 后被改变，每次创建
+AgentProcess 仍必须先删除完整 `INHERITED_PROXY_KEYS`，再决定是否注入目标
+`providerEnv`。由此机械消除 lowercase 覆盖 uppercase、lowercase `no_proxy`
+静默绕过、继承 `ALL_PROXY` 干扰与继承 `NODE_USE_ENV_PROXY` 广播。
 
 - **只作用于该 override 所属 Agent 的新 AgentProcess**：`providerEnv` 随
   `resolveProcessConfig` 解析、经 Router `processFactory` opts 传入
@@ -240,10 +285,14 @@ GLOBAL_RUNTIME_PROXY = absent（production-runtime 自身 process.env 永不获�
 - **不写日志、不进 argv**：spawn argv 不变（env 注入非 CLI 参数）；
   compose 既有 startup 日志行（`agent model override loaded for …
   provider=… model=…`）**不得**扩展 providerEnv 值；evidence log
-  （writeEvidence）不得包含 providerEnv；以 §7 测试机械看护；
-- **Node 版本前置**：providerEnv 生效要求 runtime（= child）Node major
-  ≥ 24；注入点必须校验 `process.versions.node`，不满足 → fail-loud（归入
-  `AGENT_MODEL_OVERRIDE_INVALID` 家族），绝不静默直连；
+  （writeEvidence）不得包含 providerEnv；以 §6 测试机械看护；
+- **Node 版本前置**：V1 冻结
+  `NODE_RUNTIME_VERSION = 25.6.1 exact`。production-runtime startup 必须校验
+  `process.version === "v25.6.1"`；不相等 → fail-loud，归入
+  `AGENT_MODEL_OVERRIDE_INVALID`，且不创建任何 AgentProcess。禁止使用
+  `major >= 24` 等过宽门槛。原因：v24.x 无法从官方版本史证明 WebSocket env
+  proxy 完整覆盖；production v25.6.1 已真实捕获 fetch + WebSocket CONNECT。
+  跨 Node 版本兼容列为后续工作，不扩大 V1；
 - 失败语义总则：未注册 Agent、未知键、非法 URL、URL 含凭证、错误类型、
   缺键、`NODE_USE_ENV_PROXY ≠ "1"` → **startup/spawn fail-loud**；不得静默
   忽略、不得回落全局代理、不得部分注入。
@@ -271,7 +320,7 @@ new AgentProcess spawn（ensureRunning 判定无 live process 可复用）
 ROLLBACK_PROXY_ONLY =
   1) 从 override 条目移除 providerEnv 键（或将其置为合法全键集缺席形态）
   2) restart only agt_cto-agent（停止目标进程 → respawn）
-  3) 验证：目标 child env 无四个 proxy 键；route 仍 = openai-codex/gpt-5.6-luna
+  3) 验证：目标 child env 无任何 INHERITED_PROXY_KEYS；route 仍 = openai-codex/gpt-5.6-luna
      （注意：proxy 移除后 chatgpt.com 直连不可达会以 provider_unavailable
       fail-loud 呈现——这是如实失败，不是回退）
 
@@ -286,24 +335,34 @@ ROLLBACK_FULL（沿用已 accept Spec §7，不重开）=
 
 ---
 
-## 6. 自动化测试范围（冻结；实现轮必须覆盖，普通 CI 不做真实出网）
+## 6. 自动化测试范围（冻结；实现轮必须覆盖，普通 CI 不做真实外网）
 
-1. target child 收到**恰为** allowlist 的四个 proxy env（键集与值精确相等）；
-2. non-target child env 无任何 proxy 键，且与无本 Spec 时的构造结果一致；
-3. production-runtime 自身 `process.env` 在 compose + providerEnv 生效后仍
-   proxy-free（无四个键）；
-4. malformed proxy config（坏 URL / 错 scheme / 带 userinfo/query/fragment）
-   → fail-loud；
-5. 未知 env 键（含小写形式）→ fail-loud；
-6. proxy URL 含 username/password/token → fail-loud；
-7. providerEnv 类型错误（string/array/null/数字）或值非非空 string → fail-loud；
-8. 缺四键之一或 `NODE_USE_ENV_PROXY ≠ "1"` → fail-loud；
-9. duplicate JSON key（providerEnv 内）→ fail-loud（既有 recursive 扫描覆盖）；
-10. target-only restart 后 respawn 进程读到新增/移除的 providerEnv（reload
-    boundary）；同轮 non-target PID 与 route 保持不变；
-11. 移除 override → 目标回落 oc-go / deepseek-v4-flash（rollback，
-    沿用既有测试语义）；
-12. 无任何日志行包含 proxy URL / providerEnv 值（含 evidence log）。
+1. inherited uppercase variants 逐键触发 runtime startup fail-loud；
+2. inherited lowercase variants 逐键触发 runtime startup fail-loud；
+3. inherited `ALL_PROXY` / `all_proxy` 逐键触发 runtime startup fail-loud；
+4. inherited `NODE_USE_ENV_PROXY` 触发 runtime startup fail-loud；
+5. 每次 child 构造先 strip 完整 `INHERITED_PROXY_KEYS`，target 再只注入
+   providerEnv 四个大写键，non-target 全部 proxy 键 absent；
+6. lowercase precedence regression：继承 lowercase 不得覆盖 target uppercase；
+7. lowercase `no_proxy` bypass regression：不得让 target 绕过代理；
+8. Node exact-version gate：`process.version !== "v25.6.1"` 一律 startup
+   fail-loud，`v25.6.1` 才通过；
+9. `HTTP_PROXY` 与 `HTTPS_PROXY` 分别执行合法、非空 URL 校验；坏 URL、错
+   scheme、userinfo、query、fragment、缺失或空值 → fail-loud；
+10. `NO_PROXY` grammar 正反例覆盖（hostname/domain、IPv4、IPv6、`[IPv6]`、
+    optional port、localhost、`*`；以及 whitespace/control/newline/quotes/
+    backticks/`$`/shell expansion syntax/空 entry/非法 entry 拒绝）；
+11. 未知键、错误类型、`NODE_USE_ENV_PROXY ≠ "1"`、duplicate JSON key →
+    fail-loud；
+12. error/log/evidence 只含 key name + invalid class，不包含完整 proxy URL、
+    `NO_PROXY` 原值、userinfo、token 或 providerEnv value；
+13. target-only restart 后 respawn 读到新增/移除的 providerEnv；同轮
+    non-target PID 与 route 保持不变；
+14. rollback 移除 override → 目标回落 oc-go / deepseek-v4-flash；
+15. HTTP proxy observer 独立捕获 target fetch 的 CONNECT/代理侧证据；
+16. WebSocket CONNECT observer 独立捕获 target WebSocket CONNECT，不以 WS
+    失败后 SSE fallback 的整体 roundtrip 代替；
+17. auxiliary fetch observer 独立捕获 dsh-codex usage 或 compact 路径经代理。
 
 ---
 
@@ -311,12 +370,16 @@ ROLLBACK_FULL（沿用已 accept Spec §7，不重开）=
 
 | # | 验收项 |
 |---|---|
-| 1 | target 经 127.0.0.1:7890 可达 chatgpt.com（subscription 路径真实 roundtrip） |
-| 2 | non-target Agent child env proxy 键 absent（进程级证据） |
-| 3 | CTO 手机飞书 Luna reply 成功（真实消息） |
-| 4 | cold restart 后 reply 成功（providerEnv 持久生效，不重新 OAuth） |
-| 5 | rollback（proxy-only 或 full）按 §5.2 执行成功 |
-| 6 | final Luna re-enable 成功 |
+| A | **HTTP fetch**：proxy observer 独立捕获 target fetch 的 CONNECT/代理侧证据 |
+| B | **WebSocket**：proxy observer 独立捕获 target WebSocket CONNECT；不能只依赖 WS 失败后 SSE fallback 的整体 roundtrip |
+| C | **dsh-codex auxiliary fetch**：至少 usage 或 compact 路径有独立代理侧证据 |
+| D | non-target Agent child 的完整 `INHERITED_PROXY_KEYS` 全部 absent（进程级证据） |
+| E | CTO 手机飞书 Luna reply 成功（真实消息） |
+| F | cold restart 后 reply 成功（providerEnv 持久生效，不重新 OAuth） |
+| G | rollback（proxy-only 或 full）按 §5.2 执行成功 |
+| H | final Luna re-enable 成功 |
+
+单一 `curl` 或单一模型 roundtrip 均不得代替 A / B / C 三项独立证据。
 
 ---
 
@@ -359,32 +422,38 @@ OWNER_DECISION_REQUIRED。
 
 ---
 
-## 10. Final Output（本轮 SPEC_PROPOSAL 填写；acceptance 轮补全）
+## 10. Final Output（本轮 SPEC_AMENDMENT 填写；acceptance 轮补全）
 
 ```text
-AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1_SPEC = PASS
+AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1_SPEC_AMENDMENT = PASS
 
-BASE_MAIN = fe2c6393915b1dc61c4c3d25b2996d2f258ba484
+BASE_REVIEWED_HEAD = 2aa72bd
 HEAD =
 
-TARGET_AGENT = agt_cto-agent
-CONFIG_SEAM = <productionRoot>/agent-model-overrides.json → overrides["agt_cto-agent"].providerEnv（可选键，version 1 schema 内）
-PROVIDER_ENV_ALLOWLIST = HTTP_PROXY | HTTPS_PROXY | NO_PROXY | NODE_USE_ENV_PROXY（全键必在场；NODE_USE_ENV_PROXY="1"）
+RUNTIME_GLOBAL_PROXY_GATE = 任一 inherited proxy variant → startup fail-loud / AGENT_MODEL_OVERRIDE_INVALID
+CHILD_PROXY_ENV_STRIP = 每次创建 AgentProcess 前 strip 全部 uppercase/lowercase/ALL_PROXY/NODE_USE_ENV_PROXY 变体
 
-TARGET_PROCESS_ENV = spawn 时机械注入恰四个键（覆盖同名继承值）
-NON_TARGET_PROCESS_ENV = 与今日字节级一致（proxy 键 absent）
-GLOBAL_RUNTIME_PROXY = absent（runtime 自身 env 永不获得 proxy 键）
+TARGET_PROXY_ENV = strip 后只注入 providerEnv 四个大写键
+NON_TARGET_PROXY_ENV = 全部 proxy 变量 absent
 
-RELOAD_BOUNDARY = 新 AgentProcess spawn → resolveProcessConfig 同步 reload/validate（fe2c639 既有机制，不热切）
-ROLLBACK = 移除 providerEnv/override → restart only agt_cto-agent → Luna-无代理 或 oc-go/deepseek-v4-flash；其他 Agent 不重启
+NO_PROXY_GRAMMAR = 冻结 host-list grammar；任一 invalid entry → fail-loud
+SECRET_ERROR_REDACTION = 只报告 key name + invalid class；不回显 URL/NO_PROXY/userinfo/token/value
 
-ROUTER_CODE_CHANGE_REQUIRED = YES_MINIMAL
+NODE_RUNTIME_VERSION = 25.6.1
+NODE_VERSION_GATE = process.version === "v25.6.1" exact，否则 startup fail-loud
+
+HTTP_PROXY_ACCEPTANCE = 独立 CONNECT/代理侧证据 REQUIRED
+WEBSOCKET_PROXY_ACCEPTANCE = 独立 WebSocket CONNECT 证据 REQUIRED
+AUXILIARY_FETCH_ACCEPTANCE = dsh-codex usage 或 compact 独立代理侧证据 REQUIRED
+
+PREVIOUSLY_PASSED_ITEMS_REGRESSION = NONE
+
 ROUTER_ROUTING_SEMANTIC_CHANGE = NONE
 SESSION_MODEL_CHANGE = NONE
 KERNEL_CHANGE = NONE
 
 SPEC_STATUS = proposed
-READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+READY_FOR_FOCUSED_RE_REVIEW = YES
 ```
 
 ---
@@ -396,4 +465,10 @@ READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
   成立（FACTS_UNCHANGED = YES）；Node v25.6.1 env-proxy 机制经本机干净环境
   实证（fetch + WebSocket）。无 implementation、无 production 变更、无
   OAuth、无 Luna override 写入、无飞书消息、无 merge。
-- （预留：independent review → accept/fix 轮 → implementation 轮。）
+- **Round 2 amendment（reviewed HEAD `2aa72bd`，verdict = `FIX_REQUIRED`）**：
+  仅收敛四项 REQUIRED_FIXES：继承代理变量的 runtime startup gate + child
+  sanitization 双重防护、机械 `NO_PROXY` grammar + secret-safe errors、Node
+  `v25.6.1` exact gate、HTTP / WebSocket / auxiliary fetch 三路独立验收证据。
+  Round 1 已通过内容不重开；无 implementation、无 production 变更、无 OAuth、
+  无 Luna override 写入、无飞书消息、无 merge。
+- （预留：focused re-review → accept/fix 轮 → implementation 轮。）
