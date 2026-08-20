@@ -5,8 +5,16 @@ import {
   AgentProcess,
   agentEnv,
   classifyProviderError,
+  RECOGNIZED_PROXY_ENV_KEYS,
   redactSensitiveText,
 } from '../src/process.js'
+
+const TARGET_PROVIDER_ENV = Object.freeze({
+  HTTP_PROXY: 'http://target-proxy.invalid:7890',
+  HTTPS_PROXY: 'http://target-proxy.invalid:7890',
+  NO_PROXY: 'localhost,127.0.0.1,::1',
+  NODE_USE_ENV_PROXY: '1',
+})
 
 function fakeProcess() {
   const writes = []
@@ -66,6 +74,52 @@ test('target process environment explicitly omits OPENAI_API_KEY', () => {
     if (previous === undefined) delete process.env.OPENAI_API_KEY
     else process.env.OPENAI_API_KEY = previous
   }
+})
+
+test('every child strips all proxy variants; only target providerEnv is injected exactly', () => {
+  const before = Object.fromEntries(RECOGNIZED_PROXY_ENV_KEYS.map((key) => [key, process.env[key]]))
+  try {
+    for (const key of RECOGNIZED_PROXY_ENV_KEYS) process.env[key] = `inherited-${key}`
+    const target = agentEnv(
+      '/tmp/no-real-home',
+      { http_proxy: 'lowercase-precedence-bypass', no_proxy: '*' },
+      [],
+      TARGET_PROVIDER_ENV,
+    )
+    for (const key of RECOGNIZED_PROXY_ENV_KEYS) {
+      if (Object.hasOwn(TARGET_PROVIDER_ENV, key)) assert.equal(target[key], TARGET_PROVIDER_ENV[key], key)
+      else assert.equal(target[key], undefined, key)
+    }
+    assert.deepEqual(
+      Object.fromEntries(Object.keys(TARGET_PROVIDER_ENV).map((key) => [key, target[key]])),
+      TARGET_PROVIDER_ENV,
+    )
+
+    const nonTarget = agentEnv(
+      '/tmp/no-real-home',
+      { HTTPS_PROXY: 'extra-bypass', no_proxy: 'localhost' },
+    )
+    for (const key of RECOGNIZED_PROXY_ENV_KEYS) assert.equal(nonTarget[key], undefined, key)
+  } finally {
+    for (const [key, value] of Object.entries(before)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test('providerEnv is immutable per AgentProcess lifetime', () => {
+  const source = { ...TARGET_PROVIDER_ENV }
+  const proc = new AgentProcess({
+    agentId: 'agt_cto-agent',
+    home: '/tmp/provider-route-home',
+    workspace: '/tmp/provider-route-workspace',
+    profile: 'agent-core-production',
+    providerEnv: source,
+  })
+  source.HTTP_PROXY = 'http://mutated.invalid'
+  assert.deepEqual(proc.providerEnv, TARGET_PROVIDER_ENV)
+  assert.equal(Object.isFrozen(proc.providerEnv), true)
 })
 
 test('provider/account errors are classified without secret echo and never rewrite the route', async () => {

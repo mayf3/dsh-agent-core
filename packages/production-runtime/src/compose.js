@@ -39,7 +39,7 @@ import { join } from 'node:path'
 import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyDefinition } from '../../agent-definition/src/index.js'
 import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
-import { apply as applyRouter } from '../../agent-router/src/index.js'
+import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
 import { apply as applyNotificationIngress } from '../../notification-ingress/src/index.js'
@@ -53,6 +53,23 @@ import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
 
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
 export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
+export const TARGET_PROXY_NODE_VERSION = 'v25.6.1'
+
+function invalidProxyRuntime(key, invalidClass) {
+  return Object.assign(
+    new Error(`production-runtime: invalid agent model overrides: ${key}: ${invalidClass}`),
+    { code: 'AGENT_MODEL_OVERRIDE_INVALID' },
+  )
+}
+
+export function assertTargetProxyRuntime({ env = process.env, version = process.version } = {}) {
+  for (const key of RECOGNIZED_PROXY_ENV_KEYS) {
+    if (Object.hasOwn(env, key)) throw invalidProxyRuntime(key, 'runtime_proxy_env_present')
+  }
+  if (version !== TARGET_PROXY_NODE_VERSION) {
+    throw invalidProxyRuntime('NODE_RUNTIME_VERSION', 'runtime_version_mismatch')
+  }
+}
 
 /**
  * Compose the Production Runtime.
@@ -88,6 +105,10 @@ export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
  *   scheduler, start(), stop() }`.
  */
 export async function composeProductionRuntime(options = {}) {
+  // AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1: the runtime itself
+  // must remain proxy-free and the proven Node env-proxy behavior is pinned
+  // exactly. This gate runs before composition mutates env or mounts anything.
+  assertTargetProxyRuntime()
   const opts = options ?? {}
   const log = opts.log ?? {
     log: (...a) => process.stdout.write(`[production-runtime] ${a.join(' ')}\n`),
@@ -190,6 +211,7 @@ export async function composeProductionRuntime(options = {}) {
       model: route.model,
       ...(override === undefined ? {} : {
         omitEnv: Object.freeze(['OPENAI_API_KEY']),
+        ...(override.providerEnv === undefined ? {} : { providerEnv: override.providerEnv }),
         subscription: Object.freeze({
           plugin: override.plugin,
           pluginVersion: override.pluginVersion,

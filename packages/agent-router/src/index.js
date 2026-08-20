@@ -61,7 +61,7 @@ import z from '@deepseek-ai/schemastery'
 import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { AgentProcess, agentEnv } from './process.js'
+import { AgentProcess, agentEnv, RECOGNIZED_PROXY_ENV_KEYS } from './process.js'
 import { BindingStore } from './binding-store.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
 
@@ -562,6 +562,7 @@ export function apply(ctx, config) {
       profile: cfg.agentProfile,
       provider: processConfig.provider,
       model: processConfig.model,
+      providerEnv: processConfig.providerEnv,
       omitEnv: processConfig.omitEnv,
       log,
       // The per-agent process must know its own identity: the memory plugin
@@ -866,4 +867,4 @@ export function apply(ctx, config) {
   return service
 }
 
-export { agentEnv }
+export { agentEnv, RECOGNIZED_PROXY_ENV_KEYS }
