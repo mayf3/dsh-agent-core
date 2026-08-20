@@ -31,6 +31,10 @@ async function parseJsonResponse(response, operation) {
   }
 }
 
+function validBearerToken(value) {
+  return typeof value === 'string' && value.length > 0 && !/[\s\u0000-\u001f\u007f]/u.test(value)
+}
+
 /** Auth S1/S2 client. Bootstrap authorization is supplied only through memory. */
 export function createAuthProvisioningClient({
   authServiceOrigin,
@@ -43,11 +47,7 @@ export function createAuthProvisioningClient({
     throw safeError('AUTH_CONFIGURATION_ERROR', 'credential provisioning: getManagementAccessToken is required')
   }
 
-  async function postManagement(path, body, operation) {
-    const accessToken = await getManagementAccessToken()
-    if (typeof accessToken !== 'string' || accessToken === '') {
-      throw safeError('EXTERNAL_PREREQUISITE_MISSING', 'external_prerequisite_missing(c)', { prerequisite: 'c' })
-    }
+  async function postManagement(accessToken, path, body, operation) {
     let response
     try {
       response = await fetchImpl(`${origin}${path}`, {
@@ -60,7 +60,7 @@ export function createAuthProvisioningClient({
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(timeoutMs),
       })
-    } catch (error) {
+    } catch {
       throw safeError('AUTH_TRANSPORT_FAILURE', `credential provisioning: ${operation} transport failure`)
     }
     if (!response.ok) {
@@ -73,8 +73,25 @@ export function createAuthProvisioningClient({
   }
 
   return {
-    ensurePrincipal: (body) => postManagement('/api/v1/principals', body, 'principal ensure'),
-    ensureClient: (body) => postManagement('/api/v1/clients', body, 'client ensure'),
+    /**
+     * Acquire prerequisite-(c) authorization exactly once for one provisioning
+     * operation. The token stays closure-private and is reused by S1 and S2.
+     */
+    async beginManagementOperation() {
+      let accessToken
+      try {
+        accessToken = await getManagementAccessToken()
+      } catch {
+        throw safeError('EXTERNAL_PREREQUISITE_MISSING', 'external_prerequisite_missing(c)', { prerequisite: 'c' })
+      }
+      if (!validBearerToken(accessToken)) {
+        throw safeError('EXTERNAL_PREREQUISITE_MISSING', 'external_prerequisite_missing(c)', { prerequisite: 'c' })
+      }
+      return Object.freeze({
+        ensurePrincipal: (body) => postManagement(accessToken, '/api/v1/principals', body, 'principal ensure'),
+        ensureClient: (body) => postManagement(accessToken, '/api/v1/clients', body, 'client ensure'),
+      })
+    },
 
     async verifyCredential({ credential, resource, scope }) {
       const basic = Buffer.from(`${credential.clientId}:${credential.clientSecret}`).toString('base64')
@@ -90,7 +107,7 @@ export function createAuthProvisioningClient({
           body: new URLSearchParams({ grant_type: 'client_credentials', resource, scope }).toString(),
           signal: AbortSignal.timeout(timeoutMs),
         })
-      } catch (error) {
+      } catch {
         throw safeError('AUTH_TRANSPORT_FAILURE', 'credential provisioning: verification mint transport failure')
       }
       const body = await parseJsonResponse(response, 'verification mint')

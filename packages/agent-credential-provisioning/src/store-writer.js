@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { constants } from 'node:fs'
-import { lstat, mkdir, open, readFile, rename, rm } from 'node:fs/promises'
+import { lstat, mkdir, open, rename, rm } from 'node:fs/promises'
 import { dirname, isAbsolute } from 'node:path'
 
 import {
@@ -10,12 +10,15 @@ import {
 } from '../../broker/src/credential-store.js'
 
 const LOCK_RETRY_MS = 10
-const LOCK_RETRIES = 200
+// One Phase A operation can legitimately span token preflight plus three
+// bounded HTTPS calls. Waiters must outlive that window and then reclassify.
+const LOCK_RETRIES = 18000
+const PRIVATE_DIRECTORY_MODE = 0o700
+const PRIVATE_FILE_MODE = 0o600
+const activeLocks = new WeakSet()
 
 function storeError(message) {
-  return Object.assign(new Error(message), {
-    code: CREDENTIALS_STORE_ERROR,
-  })
+  return Object.assign(new Error(message), { code: CREDENTIALS_STORE_ERROR })
 }
 
 function validateStorePath(storeFile) {
@@ -24,28 +27,184 @@ function validateStorePath(storeFile) {
   }
 }
 
-/** Read and fully validate the V1 document while preserving entry objects. */
-export async function readCredentialStoreDocument(storeFile) {
-  validateStorePath(storeFile)
-  try {
-    const directoryStat = await lstat(dirname(storeFile))
-    if (!directoryStat.isDirectory() || (directoryStat.mode & 0o077) !== 0) {
-      throw storeError(`credential provisioning: credential store directory must be private (0700): ${dirname(storeFile)}`)
-    }
-  } catch (error) {
-    if (error?.code !== 'ENOENT') throw error
+function trustedOwner({ ownerUid, ownerGid } = {}) {
+  const processUid = process.getuid?.()
+  const processGid = process.getgid?.()
+  const uid = ownerUid ?? processUid
+  const gid = ownerGid ?? processGid
+  if (!Number.isInteger(uid) || uid < 0 || !Number.isInteger(gid) || gid < 0) {
+    throw storeError('credential provisioning: trusted ownerUid and ownerGid must be non-negative integers')
   }
-  let raw
+  if ((ownerUid === undefined) !== (ownerGid === undefined)) {
+    throw storeError('credential provisioning: ownerUid and ownerGid must be supplied together')
+  }
+  // Part G permits a root process only when it changes ownership to the trusted
+  // Control Plane account. A root-owned credential store is never trusted.
+  if (uid === 0) {
+    throw storeError('credential provisioning: trusted Control Plane owner must not be root')
+  }
+  if (processUid !== 0 && (uid !== processUid || gid !== processGid)) {
+    throw storeError('credential provisioning: non-root writer cannot nominate a different trusted owner')
+  }
+  return { uid, gid }
+}
+
+function assertMetadata(stat, { kind, path, mode, owner }) {
+  const typeOk = kind === 'directory' ? stat.isDirectory() : stat.isFile()
+  if (!typeOk || stat.isSymbolicLink() || (kind === 'file' && stat.nlink !== 1)) {
+    throw storeError(`credential provisioning: ${kind} must be a non-symlink single-link ${kind}: ${path}`)
+  }
+  if ((stat.mode & 0o777) !== mode) {
+    throw storeError(`credential provisioning: ${kind} has unsafe mode: ${path}`)
+  }
+  if (stat.uid !== owner.uid || stat.gid !== owner.gid) {
+    throw storeError(`credential provisioning: ${kind} has untrusted owner: ${path}`)
+  }
+}
+
+async function assertTrustedDirectory(directory, owner, { create = false } = {}) {
+  if (create) await mkdir(directory, { recursive: true, mode: PRIVATE_DIRECTORY_MODE })
+  let pathStat
   try {
-    raw = await readFile(storeFile, 'utf8')
+    pathStat = await lstat(directory)
+  } catch {
+    throw storeError(`credential provisioning: credential store directory is unavailable: ${directory}`)
+  }
+  assertMetadata(pathStat, {
+    kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
+  })
+  let handle
+  try {
+    handle = await open(directory, constants.O_RDONLY | (constants.O_DIRECTORY ?? 0) | (constants.O_NOFOLLOW ?? 0))
+    const openedStat = await handle.stat()
+    assertMetadata(openedStat, {
+      kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
+    })
+    if (openedStat.dev !== pathStat.dev || openedStat.ino !== pathStat.ino) {
+      throw storeError(`credential provisioning: credential store directory changed during validation: ${directory}`)
+    }
+    return { dev: openedStat.dev, ino: openedStat.ino }
   } catch (error) {
-    if (error?.code === 'ENOENT') return { version: CREDENTIALS_STORE_VERSION, credentials: {} }
+    if (error?.code === CREDENTIALS_STORE_ERROR) throw error
+    throw storeError(`credential provisioning: credential store directory is unsafe: ${directory}`)
+  } finally {
+    await handle?.close().catch(() => {})
+  }
+}
+
+function scanString(raw, start) {
+  if (raw[start] !== '"') throw storeError('credential provisioning: internal JSON scan failed')
+  let index = start + 1
+  for (; index < raw.length; index += 1) {
+    if (raw[index] === '\\') {
+      index += 1
+      if (raw[index] === 'u') index += 4
+    } else if (raw[index] === '"') {
+      return index + 1
+    }
+  }
+  throw storeError('credential provisioning: internal JSON scan failed')
+}
+
+function skipWhitespace(raw, start) {
+  let index = start
+  while (/\s/u.test(raw[index] ?? '')) index += 1
+  return index
+}
+
+function scanValue(raw, start) {
+  const index = skipWhitespace(raw, start)
+  if (raw[index] === '"') return scanString(raw, index)
+  if (raw[index] === '{' || raw[index] === '[') {
+    const close = raw[index] === '{' ? '}' : ']'
+    let cursor = index + 1
+    while (cursor < raw.length) {
+      if (raw[cursor] === '"') cursor = scanString(raw, cursor)
+      else if (raw[cursor] === '{' || raw[cursor] === '[') cursor = scanValue(raw, cursor)
+      else if (raw[cursor] === close) return cursor + 1
+      else cursor += 1
+    }
+    throw storeError('credential provisioning: internal JSON scan failed')
+  }
+  let cursor = index
+  while (cursor < raw.length && !/[\s,}\]]/u.test(raw[cursor])) cursor += 1
+  return cursor
+}
+
+function locateCredentialsObject(raw) {
+  let cursor = skipWhitespace(raw, 0)
+  if (raw[cursor] !== '{') throw storeError('credential provisioning: internal JSON scan failed')
+  cursor += 1
+  let match
+  while (true) {
+    cursor = skipWhitespace(raw, cursor)
+    if (raw[cursor] === '}') break
+    const keyStart = cursor
+    const keyEnd = scanString(raw, keyStart)
+    const key = JSON.parse(raw.slice(keyStart, keyEnd))
+    cursor = skipWhitespace(raw, keyEnd)
+    if (raw[cursor] !== ':') throw storeError('credential provisioning: internal JSON scan failed')
+    const valueStart = skipWhitespace(raw, cursor + 1)
+    const valueEnd = scanValue(raw, valueStart)
+    if (key === 'credentials') match = { valueStart, valueEnd }
+    cursor = skipWhitespace(raw, valueEnd)
+    if (raw[cursor] === ',') cursor += 1
+    else if (raw[cursor] !== '}') throw storeError('credential provisioning: internal JSON scan failed')
+  }
+  if (match === undefined || raw[match.valueStart] !== '{' || raw[match.valueEnd - 1] !== '}') {
+    throw storeError('credential provisioning: internal JSON scan failed')
+  }
+  return { start: match.valueStart, end: match.valueEnd }
+}
+
+async function readTrustedStore(storeFile, owner) {
+  validateStorePath(storeFile)
+  const directory = dirname(storeFile)
+  await assertTrustedDirectory(directory, owner)
+
+  let pathStat
+  try {
+    pathStat = await lstat(storeFile)
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return {
+        version: CREDENTIALS_STORE_VERSION,
+        credentials: {},
+        raw: undefined,
+        fileIdentity: undefined,
+        credentialsSpan: undefined,
+      }
+    }
     throw storeError(`credential provisioning: credentials store is unreadable: ${storeFile}`)
   }
+  assertMetadata(pathStat, {
+    kind: 'file', path: storeFile, mode: PRIVATE_FILE_MODE, owner,
+  })
+
+  let handle
+  let raw
+  let openedStat
+  try {
+    handle = await open(storeFile, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
+    openedStat = await handle.stat()
+    assertMetadata(openedStat, {
+      kind: 'file', path: storeFile, mode: PRIVATE_FILE_MODE, owner,
+    })
+    if (openedStat.dev !== pathStat.dev || openedStat.ino !== pathStat.ino) {
+      throw storeError(`credential provisioning: credentials store changed during validation: ${storeFile}`)
+    }
+    raw = await handle.readFile('utf8')
+  } catch (error) {
+    if (error?.code === CREDENTIALS_STORE_ERROR) throw error
+    throw storeError(`credential provisioning: credentials store is unsafe or unreadable: ${storeFile}`)
+  } finally {
+    await handle?.close().catch(() => {})
+  }
+
   let document
   try {
     document = JSON.parse(raw)
-  } catch (error) {
+  } catch {
     throw storeError(`credential provisioning: credentials store is malformed: ${storeFile}`)
   }
   if (
@@ -53,31 +212,49 @@ export async function readCredentialStoreDocument(storeFile) {
     || typeof document.credentials !== 'object'
     || document.credentials === null
     || Array.isArray(document.credentials)
-  ) {
-    throw storeError(`credential provisioning: unsupported credentials store format: ${storeFile}`)
-  }
+  ) throw storeError(`credential provisioning: unsupported credentials store format: ${storeFile}`)
   for (const [agentId, entry] of Object.entries(document.credentials)) {
     if (normalizeCredential(entry) === undefined) {
       throw storeError(`credential provisioning: malformed credential entry for agent ${JSON.stringify(agentId)}`)
     }
   }
-  return { version: CREDENTIALS_STORE_VERSION, credentials: document.credentials }
-}
-
-async function assertTrustedDirectory(directory) {
-  await mkdir(directory, { recursive: true, mode: 0o700 })
-  const stat = await lstat(directory)
-  if (!stat.isDirectory() || (stat.mode & 0o077) !== 0) {
-    throw storeError(`credential provisioning: credential store directory must be private (0700): ${directory}`)
+  return {
+    version: CREDENTIALS_STORE_VERSION,
+    credentials: document.credentials,
+    raw,
+    fileIdentity: { dev: openedStat.dev, ino: openedStat.ino },
+    credentialsSpan: locateCredentialsObject(raw),
   }
 }
 
-async function acquireLock(lockFile) {
+/** Read and fully validate V1 contents plus trusted metadata before secret parsing. */
+export async function readCredentialStoreDocument(storeFile, options) {
+  const owner = trustedOwner(options)
+  return readTrustedStore(storeFile, owner)
+}
+
+async function acquireLock(lockFile, owner) {
   for (let attempt = 0; attempt <= LOCK_RETRIES; attempt += 1) {
+    let handle
     try {
-      return await open(lockFile, constants.O_CREAT | constants.O_EXCL | constants.O_RDWR, 0o600)
+      handle = await open(
+        lockFile,
+        constants.O_CREAT | constants.O_EXCL | constants.O_RDWR | (constants.O_NOFOLLOW ?? 0),
+        PRIVATE_FILE_MODE,
+      )
+      if (process.getuid?.() === 0) await handle.chown(owner.uid, owner.gid)
+      const stat = await handle.stat()
+      assertMetadata(stat, { kind: 'file', path: lockFile, mode: PRIVATE_FILE_MODE, owner })
+      return handle
     } catch (error) {
-      if (error?.code !== 'EEXIST') throw storeError(`credential provisioning: cannot create store lock: ${lockFile}`)
+      if (handle !== undefined) {
+        await handle.close().catch(() => {})
+        await rm(lockFile, { force: true }).catch(() => {})
+      }
+      if (error?.code !== 'EEXIST') {
+        if (error?.code === CREDENTIALS_STORE_ERROR) throw error
+        throw storeError(`credential provisioning: cannot create store lock: ${lockFile}`)
+      }
       if (attempt === LOCK_RETRIES) {
         throw Object.assign(new Error(`credential provisioning: credentials store writer is busy: ${lockFile}`), {
           code: 'CREDENTIALS_STORE_LOCKED',
@@ -101,63 +278,107 @@ async function fsyncDirectory(directory) {
   }
 }
 
-/**
- * Serialize one trusted-store mutation under a private same-directory lock.
- * `beforeRename` is a test-only crash seam and receives no credential data.
- */
-async function mutateCredentialStore(storeFile, mutate, { beforeRename, ownerUid, ownerGid } = {}) {
+/** Serialize the complete Phase A operation, not merely its final write. */
+export async function withCredentialStoreLock(storeFile, options = {}, operation) {
   validateStorePath(storeFile)
+  const owner = trustedOwner(options)
   const directory = dirname(storeFile)
-  await assertTrustedDirectory(directory)
+  const directoryIdentity = await assertTrustedDirectory(directory, owner, { create: true })
   const lockFile = `${storeFile}.lock`
-  const lockHandle = await acquireLock(lockFile)
-  const tempFile = `${storeFile}.tmp-${process.pid}-${randomUUID()}`
-  let tempHandle
+  const lockHandle = await acquireLock(lockFile, owner)
+  const lock = Object.freeze({ storeFile, owner, directoryIdentity })
+  activeLocks.add(lock)
   try {
-    const current = await readCredentialStoreDocument(storeFile)
-    const nextCredentials = { ...current.credentials }
-    mutate(nextCredentials)
-    const serialized = `${JSON.stringify({ version: CREDENTIALS_STORE_VERSION, credentials: nextCredentials }, null, 2)}\n`
-    tempHandle = await open(tempFile, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY, 0o600)
-    if (process.getuid?.() === 0 && ownerUid === undefined) {
-      throw storeError('credential provisioning: root writer requires explicit trusted ownerUid/ownerGid')
-    }
-    if (ownerUid !== undefined || ownerGid !== undefined) {
-      if (!Number.isInteger(ownerUid) || !Number.isInteger(ownerGid)) {
-        throw storeError('credential provisioning: ownerUid and ownerGid must be supplied together as integers')
-      }
-      await tempHandle.chown(ownerUid, ownerGid)
-    }
-    await tempHandle.writeFile(serialized, 'utf8')
-    await tempHandle.sync()
-    await tempHandle.close()
-    tempHandle = undefined
-    await beforeRename?.()
-    await rename(tempFile, storeFile)
-    await fsyncDirectory(directory)
-  } catch (error) {
-    if (error?.code === CREDENTIALS_STORE_ERROR || error?.code === 'CREDENTIALS_STORE_LOCKED') throw error
-    throw storeError(`credential provisioning: atomic credentials store update failed: ${storeFile}`)
+    return await operation(lock)
   } finally {
-    await tempHandle?.close().catch(() => {})
-    await rm(tempFile, { force: true }).catch(() => {})
+    activeLocks.delete(lock)
     await lockHandle.close().catch(() => {})
     await rm(lockFile, { force: true }).catch(() => {})
   }
 }
 
-export async function writeCredentialForAgent(storeFile, agentId, credential, options) {
+function serializeWithAddedCredential(current, agentId, credential) {
+  const entry = `${JSON.stringify(agentId)}:${JSON.stringify({
+    clientId: credential.clientId,
+    clientSecret: credential.clientSecret,
+  })}`
+  if (current.raw === undefined) {
+    return `${JSON.stringify({
+      version: CREDENTIALS_STORE_VERSION,
+      credentials: { [agentId]: { clientId: credential.clientId, clientSecret: credential.clientSecret } },
+    }, null, 2)}\n`
+  }
+  const { start, end } = current.credentialsSpan
+  const body = current.raw.slice(start + 1, end - 1)
+  const separator = body.trim() === '' ? '' : ','
+  return `${current.raw.slice(0, end - 1)}${separator}${entry}${current.raw.slice(end - 1)}`
+}
+
+async function assertTargetUnchanged(storeFile, expectedIdentity) {
+  let current
+  try {
+    current = await lstat(storeFile)
+  } catch (error) {
+    if (error?.code === 'ENOENT' && expectedIdentity === undefined) return
+    throw storeError(`credential provisioning: credentials store changed before commit: ${storeFile}`)
+  }
+  if (
+    expectedIdentity === undefined
+    || !current.isFile()
+    || current.isSymbolicLink()
+    || current.dev !== expectedIdentity.dev
+    || current.ino !== expectedIdentity.ino
+  ) throw storeError(`credential provisioning: credentials store changed before commit: ${storeFile}`)
+}
+
+/** Add exactly one absent target entry while preserving every pre-existing byte. */
+export async function writeCredentialForAgent(storeFile, agentId, credential, options = {}) {
   if (typeof agentId !== 'string' || agentId === '' || normalizeCredential(credential) === undefined) {
     throw storeError('credential provisioning: target agent and credential must be valid')
   }
-  await mutateCredentialStore(storeFile, (credentials) => {
-    credentials[agentId] = { clientId: credential.clientId, clientSecret: credential.clientSecret }
-  }, options)
-}
-
-export async function removeCredentialForAgent(storeFile, agentId, options) {
-  if (typeof agentId !== 'string' || agentId === '') throw storeError('credential provisioning: target agent must be valid')
-  await mutateCredentialStore(storeFile, (credentials) => {
-    delete credentials[agentId]
-  }, options)
+  const execute = async (lock) => {
+    if (!activeLocks.has(lock) || lock?.storeFile !== storeFile) {
+      throw storeError('credential provisioning: invalid store lock context')
+    }
+    const { owner, directoryIdentity } = lock
+    const current = await readTrustedStore(storeFile, owner)
+    if (current.credentials[agentId] !== undefined) {
+      throw storeError(`credential provisioning: target credential entry already exists for ${agentId}`)
+    }
+    const serialized = serializeWithAddedCredential(current, agentId, credential)
+    const directory = dirname(storeFile)
+    const tempFile = `${storeFile}.tmp-${process.pid}-${randomUUID()}`
+    let tempHandle
+    try {
+      tempHandle = await open(
+        tempFile,
+        constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | (constants.O_NOFOLLOW ?? 0),
+        PRIVATE_FILE_MODE,
+      )
+      if (process.getuid?.() === 0) await tempHandle.chown(owner.uid, owner.gid)
+      const tempStat = await tempHandle.stat()
+      assertMetadata(tempStat, { kind: 'file', path: tempFile, mode: PRIVATE_FILE_MODE, owner })
+      // Metadata is final before the first secret byte is persisted.
+      await tempHandle.writeFile(serialized, 'utf8')
+      await tempHandle.sync()
+      await tempHandle.close()
+      tempHandle = undefined
+      await options.beforeRename?.()
+      const directoryNow = await assertTrustedDirectory(directory, owner)
+      if (directoryNow.dev !== directoryIdentity.dev || directoryNow.ino !== directoryIdentity.ino) {
+        throw storeError(`credential provisioning: credential store directory changed before commit: ${directory}`)
+      }
+      await assertTargetUnchanged(storeFile, current.fileIdentity)
+      await rename(tempFile, storeFile)
+      await fsyncDirectory(directory)
+    } catch (error) {
+      if (error?.code === CREDENTIALS_STORE_ERROR || error?.code === 'CREDENTIALS_STORE_LOCKED') throw error
+      throw storeError(`credential provisioning: atomic credentials store update failed: ${storeFile}`)
+    } finally {
+      await tempHandle?.close().catch(() => {})
+      await rm(tempFile, { force: true }).catch(() => {})
+    }
+  }
+  if (options.lock !== undefined) return execute(options.lock)
+  return withCredentialStoreLock(storeFile, options, execute)
 }

@@ -1,17 +1,19 @@
 import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
-import { chmod, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
+import {
+  chmod, mkdir, mkdtemp, readFile, stat, symlink, unlink, writeFile,
+} from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 
 import {
   readCredentialStoreDocument,
-  removeCredentialForAgent,
   writeCredentialForAgent,
 } from '../src/store-writer.js'
 
 const opaque = () => randomBytes(32).toString('base64url')
+const ownerOptions = () => ({ ownerUid: process.getuid(), ownerGid: process.getgid() })
 
 async function fixture(t, document) {
   const directory = await mkdtemp(join(tmpdir(), 'agent-credential-store-'))
@@ -21,25 +23,53 @@ async function fixture(t, document) {
   return { directory, file }
 }
 
-test('writer creates a 0600 V1 store and preserves unrelated entries verbatim', async (t) => {
-  const otherSecret = opaque()
-  const targetSecret = opaque()
-  const { file } = await fixture(t, {
-    version: 1,
-    credentials: {
-      agt_other: { clientId: 'mc_other', clientSecret: otherSecret, retained: 'opaque-extension' },
-      agt_target: { clientId: 'mc_old', clientSecret: opaque() },
-    },
-  })
+function assertContainsExactBytes(haystack, needles) {
+  for (const needle of needles) {
+    assert.notEqual(haystack.indexOf(Buffer.from(needle)), -1, `missing byte-identical slice: ${needle}`)
+  }
+}
 
+test('writer creates a trusted-owner 0600 V1 store before persisting secret bytes', async (t) => {
+  const targetSecret = opaque()
+  const { file } = await fixture(t, undefined)
   await writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: targetSecret })
   const document = JSON.parse(await readFile(file, 'utf8'))
-  assert.deepEqual(document.credentials.agt_other, {
-    clientId: 'mc_other', clientSecret: otherSecret, retained: 'opaque-extension',
-  })
-  assert.equal(document.credentials.agt_target.clientId, 'mc_target')
-  assert.equal(document.credentials.agt_target.clientSecret.length, targetSecret.length)
-  assert.equal((await stat(file)).mode & 0o777, 0o600)
+  const metadata = await stat(file)
+  assert.equal(document.credentials.agt_target.clientSecret, targetSecret)
+  assert.equal(metadata.mode & 0o777, 0o600)
+  assert.equal(metadata.uid, process.getuid())
+  assert.equal(metadata.gid, process.getgid())
+})
+
+test('hostile formatting preserves every unrelated entry byte while adding target', async (t) => {
+  const unrelatedSlices = [
+    '"agt_first" : { "clientSecret" : "esc\\u0061ped\\/slash\\nline", "clientId" : "mc_first", "z" : 1e+02 }',
+    '"agt_middle"\t:\t{"zeta":"Ω","clientId":"mc_middle","clientSecret":"middle-secret"}',
+    '"agt_last" : {\n      "clientId" : "mc_last",\n      "extension" : {"b":2,"a":1},\n      "clientSecret" : "last-secret"\n    }',
+  ]
+  const raw = Buffer.from(`{\r\n\t"credentials" : {\n    ${unrelatedSlices[0]},\n    ${unrelatedSlices[1]},\n    ${unrelatedSlices[2]}\n  },\r\n  "version" : 1\r\n}\r\n`)
+  const { file } = await fixture(t, undefined)
+  await writeFile(file, raw, { mode: 0o600 })
+  await writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() })
+  const after = await readFile(file)
+  assertContainsExactBytes(after, unrelatedSlices)
+  const parsed = JSON.parse(after.toString('utf8'))
+  assert.equal(parsed.credentials.agt_target.clientId, 'mc_target')
+  assert.equal(parsed.credentials.agt_first.clientSecret, 'escaped/slash\nline')
+  await readCredentialStoreDocument(file)
+})
+
+test('empty and non-empty credentials objects remain valid after byte-splice insertion', async (t) => {
+  for (const raw of [
+    '{"version":1,"credentials":{}}\n',
+    '{ "version" : 1, "credentials" : {  \n\t } }\n',
+    '{"credentials":{"agt_other":{"clientId":"mc_other","clientSecret":"s"}   },"version":1}\n',
+  ]) {
+    const { file } = await fixture(t, undefined)
+    await writeFile(file, raw, { mode: 0o600 })
+    await writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() })
+    assert.equal(JSON.parse(await readFile(file, 'utf8')).credentials.agt_target.clientId, 'mc_target')
+  }
 })
 
 test('malformed, unknown-version, and bad-entry stores are never overwritten', async (t) => {
@@ -59,20 +89,104 @@ test('malformed, unknown-version, and bad-entry stores are never overwritten', a
   }
 })
 
+test('existing world-readable store is rejected before parsing or overwrite', async (t) => {
+  const { file } = await fixture(t, { version: 1, credentials: {} })
+  const before = await readFile(file)
+  await chmod(file, 0o644)
+  await assert.rejects(readCredentialStoreDocument(file), { code: 'CREDENTIALS_STORE_ERROR' })
+  await assert.rejects(
+    writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.deepEqual(await readFile(file), before)
+})
+
+test('symlink existing store is rejected without following it', async (t) => {
+  const { directory, file } = await fixture(t, undefined)
+  const outside = join(directory, 'outside.json')
+  const outsideBytes = Buffer.from('{"version":1,"credentials":{}}\n')
+  await writeFile(outside, outsideBytes, { mode: 0o600 })
+  await symlink(outside, file)
+  await assert.rejects(readCredentialStoreDocument(file), { code: 'CREDENTIALS_STORE_ERROR' })
+  await assert.rejects(
+    writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.deepEqual(await readFile(outside), outsideBytes)
+})
+
+test('non-regular existing store is rejected', async (t) => {
+  const { file } = await fixture(t, undefined)
+  await mkdir(file, { mode: 0o700 })
+  await assert.rejects(readCredentialStoreDocument(file), { code: 'CREDENTIALS_STORE_ERROR' })
+})
+
+test('wrong, root, negative, and non-integer trusted owner inputs are rejected', async (t) => {
+  const { file } = await fixture(t, { version: 1, credentials: {} })
+  const uid = process.getuid()
+  const gid = process.getgid()
+  const invalid = [
+    { ownerUid: uid + 1, ownerGid: gid },
+    { ownerUid: 0, ownerGid: 0 },
+    { ownerUid: -1, ownerGid: gid },
+    { ownerUid: uid, ownerGid: -1 },
+    { ownerUid: 1.5, ownerGid: gid },
+    { ownerUid: uid, ownerGid: 'not-an-integer' },
+  ]
+  for (const options of invalid) {
+    await assert.rejects(readCredentialStoreDocument(file, options), { code: 'CREDENTIALS_STORE_ERROR' })
+  }
+  await assert.doesNotReject(readCredentialStoreDocument(file, ownerOptions()))
+})
+
 test('interruption before atomic rename leaves the original intact', async (t) => {
-  const originalSecret = opaque()
   const { file } = await fixture(t, {
     version: 1,
-    credentials: { agt_target: { clientId: 'mc_original', clientSecret: originalSecret } },
+    credentials: { agt_other: { clientId: 'mc_original', clientSecret: opaque() } },
   })
-  const original = await readFile(file, 'utf8')
+  const original = await readFile(file)
   await assert.rejects(
     writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_new', clientSecret: opaque() }, {
       beforeRename: async () => { throw new Error('simulated interruption') },
     }),
     { code: 'CREDENTIALS_STORE_ERROR' },
   )
-  assert.equal(await readFile(file, 'utf8'), original)
+  assert.deepEqual(await readFile(file), original)
+})
+
+test('TOCTOU symlink replacement before rename is rejected', async (t) => {
+  const { directory, file } = await fixture(t, {
+    version: 1,
+    credentials: { agt_other: { clientId: 'mc_original', clientSecret: opaque() } },
+  })
+  const outside = join(directory, 'outside.json')
+  const outsideBytes = Buffer.from('{"sentinel":"unchanged"}\n')
+  await writeFile(outside, outsideBytes, { mode: 0o600 })
+  await assert.rejects(
+    writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_new', clientSecret: opaque() }, {
+      beforeRename: async () => {
+        await unlink(file)
+        await symlink(outside, file)
+      },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.deepEqual(await readFile(outside), outsideBytes)
+})
+
+test('caller-forged lock context cannot bypass serialization', async (t) => {
+  const { directory, file } = await fixture(t, undefined)
+  await assert.rejects(
+    writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() }, {
+      lock: {
+        storeFile: file,
+        owner: { uid: process.getuid(), gid: process.getgid() },
+        directoryIdentity: { dev: 0, ino: 0 },
+      },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.deepEqual(await import('node:fs/promises').then(({ readdir }) => readdir(directory)), [])
 })
 
 test('private lock serializes concurrent target-only updates', async (t) => {
@@ -87,20 +201,6 @@ test('private lock serializes concurrent target-only updates', async (t) => {
   for (const { agentId, credential } of entries) {
     assert.equal(document.credentials[agentId].clientId, credential.clientId)
   }
-})
-
-test('removal mutates only the target and remains fail-closed', async (t) => {
-  const { file } = await fixture(t, {
-    version: 1,
-    credentials: {
-      agt_remove: { clientId: 'mc_remove', clientSecret: opaque() },
-      agt_keep: { clientId: 'mc_keep', clientSecret: opaque() },
-    },
-  })
-  await removeCredentialForAgent(file, 'agt_remove')
-  const document = await readCredentialStoreDocument(file)
-  assert.equal(document.credentials.agt_remove, undefined)
-  assert.equal(document.credentials.agt_keep.clientId, 'mc_keep')
 })
 
 test('writer refuses a group/world-accessible credential directory', async (t) => {
