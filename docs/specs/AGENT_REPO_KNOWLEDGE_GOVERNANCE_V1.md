@@ -1,9 +1,12 @@
 ---
 spec_id: AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1
-status: accepted
+status: superseded
+superseded_by: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 ---
 
 # Agent Repo Knowledge Governance V1
+
+> 生命周期：**superseded**；由 `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` 完整取代。历史 normative meaning 保持不变。
 
 > 性质：**Spec（本轮只设计，不实施）** · 日期：2026-08-16
 > 仓库：`mayf3/dsh-agent-core`
