@@ -1,19 +1,31 @@
 ---
 spec_id: AGENT_CORE_LARK_UX_PHASE1_V2
 status: proposed
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: contracts
+scope:
+  - mayf3/dsh-agent-core
+  - packages/feishu-connector
+  - packages/agent-router/src/index.js
+governed_by:
+  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
+  - AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2
+external_authorities: []
+supersedes: []
+superseded_by: null
+owners:
+  - mayf3
 date: 2026-08-20
 type: ux-activation-spec (spec-only; no implementation in authoring round)
-scope: >-
-  docs-only — authorize the FIRST round of Feishu UX activation on top of the accepted
-  @larksuite/channel foundation, covering only (1) markdown/rich-text outbound rendering
-  for agent turn replies and (2) group/topic auto-mention of the triggering human sender
-  on outbound replies. Everything else in the deferred Phase B backlog stays unauthorized.
 builds_upon: AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2 (accepted; foundation authority)
 references:
   - >-
+    docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0.md (accepted on main;
+    forward-only Spec format and authority protocol)
+  - >-
     docs/specs/AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2.md (accepted; Phase A foundation
-    authority; at authoring time present in PR #23 HEAD cce18f3aa8c0836d3255c0514de86bda4dbd961b,
-    becomes main authority when PR #23 merges)
+    authority; accepted content present on main at e1ae7fdc5e7dabcba17819c02935395a5f19e9b0)
   - >-
     docs/specs/AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1.md (superseded; §1.3/§5.2 froze
     THIS spec id as the sole Phase B governing spec placeholder; §10 outbound contracts)
@@ -28,18 +40,21 @@ references:
 
 > 性质：**UX activation Spec（SPEC ONLY — 本轮只撰写本 Spec，不 implementation / 不部署 / 不 merge）**  
 > 日期：2026-08-20 · 仓库：`mayf3/dsh-agent-core` · 分支：`docs/lark-ux-phase1-v2-spec`  
-> BASE_MAIN = `f8ec58dad8f51ff1107326723981bb174254f74d`（origin/main，fetch 复核）  
-> IMPLEMENTATION_CANDIDATE = PR #23（OPEN，`feat/lark-channel-sdk-integration-v2-phase-a`）
-> HEAD = `cce18f3aa8c0836d3255c0514de86bda4dbd961b`（Phase A 实现 + governing V2 Spec）  
+> AUTHORING_BASE_MAIN = `f8ec58dad8f51ff1107326723981bb174254f74d`（历史 authoring 坐标）
+> GOVERNANCE_RECONCILIATION_MAIN = `34d7c73456f2b177b8ad042e67359bc86fae8861`
+> GOVERNANCE_AUTHORITY_MERGE = `2f8bdad2cfa22d91e1eed9597d053eeb031e63ea`
+> PHASE_A_SOURCE_EVIDENCE_HEAD = `cce18f3aa8c0836d3255c0514de86bda4dbd961b`
+>（历史 source evidence only；不是 implementation precondition authority）
 > SDK_SOURCE_AUTHORITY = `bd24f6742513769c80b5401b96ad464d74dd2027`（outbound 原语合同引用基准）  
 > SDK_RUNTIME_INSTALL_AUTHORITY = `ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f`（不变，V2 §11）  
 >
-> **实现前置（冻结）**：Phase A（PR #23）必须先进入 implementation base branch（main）。
-> 本 Spec 可以先 author / review / accept，但在该前置满足前 **不构成任何实现许可**。
+> **实现前置（冻结）**：同一个 implementation base 必须是 `main` 的 descendant，并同时包含
+> (1) 本 UX Spec 的 accepted exact content 与 (2) 已 merge 到 main 的 Phase A foundation。
+> PR number / branch / historical candidate Head 均不是硬前置或 authority。
 >
 > 本轮 authoring：`PRODUCT_CODE_CHANGE = NONE`、`DEPENDENCY_CHANGE = NONE`、
 > `DEPLOYMENT = NONE`、`PRODUCTION_STATE_CHANGE = NONE`、`MERGE = NONE`、
-> `PR23_CHANGE = NONE`。仅新增本文件。
+> `FOUNDATION_CHANGE = NONE`。仅修改本 Spec。
 >
 > **Owner amendment（2026-08-20）**：`D-U1 = APPROVED`。本 amendment 仅把 Owner
 > 对 §5.3 最小 Router seam 的批准写回本 proposed Spec；不 acceptance-finalize、不实现。
@@ -60,6 +75,11 @@ references:
 > `TARGET_REVOKED_FALLBACK_RETRY_POLICY`。Owner 裁决
 > `RETRY_SEMANTICS_DISPOSITION = ACCEPT_SDK_BOUNDED_TRANSPORT_RETRY`；本 amendment
 > 只把 logical fallback 与 SDK transport attempt 分层，不改变 UX scope，不实现。
+>
+> **Governance/base/test reconciliation（2026-08-21）**：删除 historical PR-number hard precondition；
+> 增加独立 `AC/T-SDK-ATTEMPTS-EXHAUSTED`；按 accepted
+> `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` 补齐 frontmatter、authority 与 future-base
+> reconciliation。本轮仍为 proposed / Draft，不 acceptance-finalize、不实现。
 
 ---
 
@@ -69,8 +89,10 @@ references:
 SPEC_STATUS = proposed
 BUILDS_UPON = AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2 (accepted)
 IMPLEMENTATION_AUTHORIZED = NO
-IMPLEMENTATION_PRECONDITION_1 = this spec accepted (independent review PASS + acceptance finalize)
-IMPLEMENTATION_PRECONDITION_2 = PR #23 (Phase A) merged into implementation base branch (main)
+IMPLEMENTATION_PRECONDITION_1 = UX_SPEC_ACCEPTED_EXACT_CONTENT_PRESENT_ON_MAIN
+IMPLEMENTATION_PRECONDITION_2 = PHASE_A_FOUNDATION_MERGED_ON_MAIN
+IMPLEMENTATION_BASE = MAIN_DESCENDANT_SATISFYING_BOTH_PRECONDITIONS
+PR_NUMBER_HARD_PRECONDITION = NONE
 
 MARKDOWN_SCOPE_FROZEN = YES
 OUTBOUND_MENTION_SCOPE_FROZEN = YES
@@ -115,9 +137,42 @@ MERGE = NONE
 
 ---
 
+## 0.1 Authority and Dependencies（governance reconciliation）
+
+```text
+SPEC_GOVERNANCE_MODE = AUTHOR
+SPEC_KIND = implementation
+AUTHORITY_LEVEL = governing_spec
+GOVERNANCE_FORMAT_AUTHORITY = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
+GOVERNANCE_AUTHORITY_STATUS = accepted_on_main
+GOVERNANCE_AUTHORITY_MERGE = 2f8bdad2cfa22d91e1eed9597d053eeb031e63ea
+PRIMARY_PARENT_AUTHORITY = AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2
+LOCAL_PRODUCT_PARENT_AUTHORITY = AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2
+LOCAL_PRODUCT_PARENT_STATUS = accepted_on_main
+IMPLEMENTATION_AUTHORITY = contracts
+CURRENT_SPEC_STATUS = proposed
+CURRENT_IMPLEMENTATION_AUTHORIZED = NO
+EXTERNAL_GOVERNING_AUTHORITIES = NONE
+AUTHORITY_CONFLICT = NONE
+OPEN_OWNER_DECISIONS = NONE
+NORMATIVE_TBD = NONE
+PARTIAL_SUPERSESSION = NONE
+AUTHORING_READY_FOR_REVIEW = YES
+```
+
+`implementation_authority: contracts` 只表示：本 Spec 经独立 review、Owner acceptance，且
+accepted exact content 已进入 authority branch `main` 后，其 Contracts 才可能授权边界内
+implementation。当前 `status: proposed` 与 Draft PR 不授予任何实现权限。
+
+`@larksuite/channel` 的 pinned source/runtime revisions 是 dependency/source-evidence 坐标，
+不是可替本仓库执行 acceptance 的 external governing authority。历史 candidate Head 同样只作
+source evidence；长期实现前置只由 §8 的 main-base reconciliation 判定。
+
+---
+
 ## 1. Problem and Positioning
 
-### 1.1 现状（source-verified @ PR #23 HEAD `cce18f3`）
+### 1.1 历史现状观察（source-verified @ evidence Head `cce18f3`）
 
 1. **出站是纯文本**：`feishu.reply(replyTarget, text)` → `replyTargetToSdkSend` 产出
    `{ input: { text } }` → SDK `sendText`（`msg_type:"text"`）。Agent 的 markdown 输出
@@ -224,7 +279,7 @@ OUTBOUND_DEFAULT_RENDERING = SDK_MARKDOWN
 ```
 
 **唯一翻转为 markdown 的调用点**：Router `onIngress` 成功路径的 agent turn 回复
-（PR #23 `packages/agent-router/src/index.js:691`，
+（historical Phase A evidence Head `cce18f3` 的 `packages/agent-router/src/index.js:691`，
 `feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)` —— 经 §5
 最小 seam 加 UX opts）。该调用点的出站由 `channel.send(to, { markdown }, opts)` 承载。
 
@@ -261,7 +316,7 @@ SECOND_OUTBOUND_TRANSPORT = NO   # reply seam 仍是唯一出站路径
 
 ### 3.4 固定 plain text 的消息（不翻转，字节不变）
 
-| 消息 | 现路径（PR #23） | 本 Spec 后 |
+| 消息 | 历史 Phase A evidence 路径（`cce18f3`） | 本 Spec 后 |
 |---|---|---|
 | unbound receipt（`INGRESS_GATE_REJECTED_REPLY`） | bridge `createReceiptReply` 直调 `channel.send`（`bridge.js:445-459`），不经过 `handle.reply` | **plain text 不变** |
 | Router deterministic failure receipt（`[agent-core] delivery failed: …`） | `index.js:699`，同一 reply seam | **plain text 不变**（不传 UX opts，见 §5） |
@@ -400,7 +455,8 @@ MENTION_IDENTITY_AUTHORITY = INGRESS_EVENT_SENDER_OPEN_ID
 ```
 
 Mention 身份**必须**来自产出该回复的 turn 所对应的 `IngressEvent.sender.openId`
-（PR #23 `bridge.js:99-111`：SDK 归一化 `sender.openId` / `sender.name` /
+（historical Phase A evidence Head `cce18f3` 的 `bridge.js:99-111`：SDK 归一化
+`sender.openId` / `sender.name` /
 `sender.senderType`；V2 §5 full-parity 合同保证该字段存在且与 V0 逐字段一致）。
 
 **禁止的来源**（全部 NO）：
@@ -447,7 +503,7 @@ MENTION_PRIMITIVE = SDK SendOptions.mentions
 
 ## 5. Reply Seam、Router 最小变更与 Owner Ruling
 
-### 5.1 现有 seam 事实（PR #23 HEAD source-verified）
+### 5.1 现有 seam 事实（historical evidence Head `cce18f3` source-verified）
 
 生产 `feishu.reply` 调用点全表（`grep '\.reply(' packages --exclude tests`）：
 
@@ -591,6 +647,13 @@ AC-TARGET-REVOKED-SAME-CHAT-FALLBACK
   4. permission_denied：fail loud，不删除 replyTo、不改为同 chat 顶层发送。
   5. format_error：只进行一次 markdown -> text logical format fallback；transport retry
      仍由 SDK bounded policy 管理。
+
+AC-SDK-ATTEMPTS-EXHAUSTED
+  独立 mandatory dedicated test-app case，不能由 target-revoked happy fallback 或单元 mock
+  代替。对 reviewed SDK runtime 的 retryable error（rate_limited 与 ambiguous unknown）强制
+  transport attempts 达到 maxAttempts=3：第三次 attempt 后仍失败，必须 fail loud；
+  connector-owned retry count = 0；connector-owned automatic replay count = 0。
+  ambiguous unknown 的终态必须记录为 OUTCOME_UNKNOWN，且不得升级为 visible exactly-once claim。
 ```
 
 ### 7.2 出站自动 @
@@ -666,6 +729,10 @@ T-TARGET-REVOKED
   d) permission_denied：fail loud，不转顶层；
   e) format_error：一次 logical markdown -> text fallback，transport retry 归 SDK policy；
   target_revoked 时允许 thread/reply anchor 不保留，但每 attempt 必须同 chat
+T-SDK-ATTEMPTS-EXHAUSTED（独立 mandatory case）
+  分别构造 rate_limited 与 ambiguous unknown，真实 SDK transport attempt count = 3；
+  attempts exhausted 后错误 fail loud；connector retry count = 0；automatic replay count = 0；
+  ambiguous unknown 终态 = OUTCOME_UNKNOWN，VISIBLE_EXACTLY_ONCE_DELIVERY = NOT_CLAIMED
 T-MT-GROUP     群回复含真正可点击 @；被 @ 用户收到飞书原生提醒（以该用户客户端为准）
 T-MT-TOPIC     正常 anchor 可用时，topic 内 @ 与回复不逃逸到主群；后续 ingress threadId 派生正确
 T-MT-P2P       p2p 无 @
@@ -680,12 +747,34 @@ T-MT-IDENTITY  改名/匿名测试账号：@ 仍正确（openId 权威），模�
 ## 8. Ordering with Phase A（冻结）
 
 ```text
-PHASE_A_MERGE_PRECONDITION = PR #23 merged into main（implementation base branch）
-SPEC_REVIEW_PARALLEL = ALLOWED       # 本 Spec 的 review/accept 可先于 Phase A merge
-IMPLEMENTATION_START = REQUIRES (accepted) AND (PHASE_A_MERGE_PRECONDITION)
-BASE_RECONCILIATION_REQUIRED = YES   # 实现时对届时 main 重新对账（V2 §8.1 同款纪律）：
-  # :691/:699 调用点行号可能漂移 —— 重新验证"单调用点一行 diff"声明；
-  # 若 agent-router reply seam 结构性变化 -> 回独立 re-review，不得带病实现。
+AUTHORITY_BRANCH = main
+UX_SPEC_MAIN_PRECONDITION = ACCEPTED_EXACT_CONTENT_PRESENT_ON_MAIN
+PHASE_A_FOUNDATION_MAIN_PRECONDITION = MERGED_AND_PRESENT_ON_MAIN
+IMPLEMENTATION_PRECONDITIONS =
+  UX_SPEC_MAIN_PRECONDITION
+  AND PHASE_A_FOUNDATION_MAIN_PRECONDITION
+PR_NUMBER_HARD_PRECONDITION = NONE
+HISTORICAL_CANDIDATE_BRANCH_HARD_PRECONDITION = NONE
+SPEC_REVIEW_PARALLEL = ALLOWED
+IMPLEMENTATION_START = REQUIRES MAIN_DESCENDANT_SATISFYING_BOTH_PRECONDITIONS
+
+BASE_RECONCILIATION_REQUIRED = YES
+CURRENT_RECONCILIATION_SNAPSHOT = origin/main@34d7c73456f2b177b8ad042e67359bc86fae8861
+GOVERNANCE_ADOPTION_ACCEPTED_ON_MAIN = YES@2f8bdad2cfa22d91e1eed9597d053eeb031e63ea
+FOUNDATION_V2_SPEC_ACCEPTED_ON_MAIN = YES@e1ae7fdc5e7dabcba17819c02935395a5f19e9b0
+HISTORICAL_PHASE_A_EVIDENCE_HEAD = cce18f3aa8c0836d3255c0514de86bda4dbd961b
+HISTORICAL_PHASE_A_EVIDENCE_HEAD_IS_CURRENT_MAIN_ANCESTOR = NO
+PHASE_A_FOUNDATION_MAIN_PRECONDITION_SATISFIED = REQUIRES_FRESH_IMPLEMENTATION_PREFLIGHT
+
+FUTURE_IMPLEMENTATION_BASE_RECONCILIATION =
+  1. git fetch origin; pin exact implementation-base main SHA
+  2. verify this UX Spec status=accepted and exact accepted content is present in that main SHA
+  3. verify Phase A foundation implementation and accepted V2 dependency/source revision contract
+     are present in that same main SHA; a PR number or historical candidate ancestry is insufficient
+  4. re-inventory success/failure/scheduler/unbound reply call sites and ReplyTarget/opts seam
+  5. revalidate D-U1 single successful-reply call-site minimal diff against the pinned base
+  6. any missing precondition, semantic drift, or structural seam change -> STOP + independent re-review
+
 ROLLBACK = RESTORE_PREVIOUS_VERIFIED_COMMIT   # 无迁移、无新状态、无 dual flag
 CUTOVER_GATES = UNIT + INTEGRATION + TEST_APP(§7.4 全表) + PRODUCTION_CANARY
 ```
@@ -731,17 +820,20 @@ SDK 依赖坐标变更（双 revision 合同不变；升级需独立 compatibili
 | 名称注入伪造 mention | ReplyTarget context 与 SDK mention entry 只携带 openId；不携带 name，不做名称解析 |
 | Router 单调用点 diff 被扩大成 authority 漂移 | AC-ROUTER-DIFF-MINIMAL + `D-U1 = APPROVED` 的窄边界 + review diff 检查 |
 | SDK bounded transport retry 被误禁或被 connector 扩大 | SDK `maxAttempts=3` 只处理 rate_limited/unknown；耗尽后 fail loud，connector retry/replay = NONE |
+| attempts exhausted 仅被嵌在其它 case、未独立验证 | AC-SDK-ATTEMPTS-EXHAUSTED + T-SDK-ATTEMPTS-EXHAUSTED mandatory dedicated test-app case |
 | resolveMentionsInText 被顺手打开 | AC-SINGLE-RENDER-AUTHORITY + AC-MENTION-USES-OPEN-ID-NOT-NAME |
-| Phase A 未 merge 即开工实现 | §8 双前置；Implementation Preflight 必须验证 |
+| 任一 main precondition 未满足即开工实现 | §8 同一 pinned main base 双前置 + future-base reconciliation；PR identity 不计数 |
 
 ---
 
 ## 11. Independent Review and Acceptance Protocol
 
-独立 reviewer 必须读取：本 proposed commit；V1（superseded）与 V2（accepted）Spec；
-PR #23 HEAD `cce18f3` 的 Router/connector/scheduler 源（尤其 :691/:699/bridge/core/scheduler
-五个位置）；SDK source `bd24f67` 的 sender/compose-mentions/to-post/splitter/errors/types
-六文件；V2 §7 create_thread test-app gate 先例。
+独立 reviewer 必须读取：本 proposed commit；accepted
+`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0`；V1（superseded）与 V2（accepted）Spec；
+`origin/main` pinned reconciliation snapshot；historical Phase A evidence Head `cce18f3` 的
+Router/connector/scheduler 源（仅作 source evidence，尤其 :691/:699/bridge/core/scheduler
+五个位置）；SDK source `bd24f67` 的 sender/compose-mentions/to-post/splitter/errors/types/retry；
+V2 §7 create_thread test-app gate 先例。
 
 ```text
 review 输出至少包含：
@@ -768,7 +860,8 @@ finalize，须 focused independent re-review；D-U1 继续保持 APPROVED。当�
 ## 12. Related
 
 - `docs/specs/AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2.md`（accepted foundation）
+- `docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0.md`（accepted development-governance authority）
 - `docs/specs/AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1.md`（superseded；§1.3/§5.2 命名与承接义务来源）
 - `docs/investigations/AGENT_CORE_OFFICIAL_LARK_CHANNEL_INTEGRATION_V1.md`（SDK 原语证据）
-- PR #23 `feat/lark-channel-sdk-integration-v2-phase-a` @ `cce18f3`（Phase A 实现候选 + V2 Spec）
+- Historical Phase A source-evidence Head `cce18f3`（不是 hard precondition authority）
 - SDK source `bd24f6742513769c80b5401b96ad464d74dd2027` / runtime `ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f`
