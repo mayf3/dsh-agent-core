@@ -43,8 +43,15 @@ references:
 >
 > **Owner amendment（2026-08-20）**：`D-U1 = APPROVED`。本 amendment 仅把 Owner
 > 对 §5.3 最小 Router seam 的批准写回本 proposed Spec；不 acceptance-finalize、不实现。
-> PR #24 当前为 OPEN 且非 Draft；为保持 `status: proposed` 的评审语义，建议转回 Draft，
-> 但本轮不修改 PR Draft 状态。
+> `PR_DRAFT_AT_FOCUSED_REVIEW = YES`；proposed Spec 在独立 review 与 acceptance-finalize
+> 完成前必须保持 Draft，不得以 Ready for review 表达可直接合并。
+>
+> **Focused review amendment（2026-08-20）**：
+> `REVIEWER_IDENTITY = CODEX_PR24_LARK_UX_PHASE1_V2_SPEC_AUDIT_2026_08_20`，
+> `REVIEWED_HEAD = 82871b6aa8c0734834bac5286f40e6eec14ddb9c`，
+> `REVIEW_VERDICT = FIX_REQUIRED`，唯一 blocker = `TARGET_REVOKED_CONTRACT`。
+> Owner 裁决 `TARGET_REVOKED_DISPOSITION = ACCEPT_SDK_NATIVE_TOP_LEVEL_FALLBACK`；
+> 本 amendment 仅修正文档合同并补强 dedicated test-app AC，不 acceptance-finalize、不实现。
 
 ---
 
@@ -65,6 +72,14 @@ D_U1 = APPROVED
 OWNER_DECISION_REQUIRED = NONE
 ROUTER_AUTHORITY_CHANGE = NONE
 ROUTER_PRODUCT_ROUTING_CHANGE = NONE
+TARGET_REVOKED_DISPOSITION = ACCEPT_SDK_NATIVE_TOP_LEVEL_FALLBACK
+TARGET_REVOKED_FALLBACK = SDK_NATIVE
+THREAD_OR_REPLY_ANCHOR_PRESERVATION = NOT_GUARANTEED_WHEN_TARGET_REVOKED
+SAME_CHAT_PRESERVATION = REQUIRED
+PERMISSION_DENIED = FAIL_LOUD
+FORMAT_ERROR = EXACTLY_ONCE_PLAIN_TEXT_FALLBACK
+RAW_CLIENT = FORBIDDEN
+DIRECT_NODE_SDK_FALLBACK = FORBIDDEN
 
 PRODUCT_CODE_CHANGE = NONE
 DEPENDENCY_CHANGE = NONE
@@ -118,14 +133,19 @@ MARKDOWN_RENDERING_AUTHORITY = @larksuite/channel builtin (single 'md' element;
   Feishu native renderer)                          # §3.2
 CUSTOM_MARKDOWN_CONVERTER = NO                     # §3.2 (config.markdownConverter 不设置)
 DIRECT_NODE_SDK_RESTORE = NO
-RAW_CLIENT = NO
+RAW_CLIENT = FORBIDDEN
 STREAMING_CARD = NO
 SECOND_OUTBOUND_TRANSPORT = NO
 RECEIPT_RENDERING = PLAIN_TEXT_UNCHANGED           # §3.4
 SCHEDULER_DELIVERY_RENDERING = TEXT_UNCHANGED      # §3.4
 MARKDOWN_FORMAT_ERROR_FALLBACK = RETRY_ONCE_AS_PLAIN_TEXT   # §3.5
-TARGET_REVOKED_FAIL_LOUD = YES                     # §3.5
+FORMAT_ERROR = EXACTLY_ONCE_PLAIN_TEXT_FALLBACK
+TARGET_REVOKED_DISPOSITION = ACCEPT_SDK_NATIVE_TOP_LEVEL_FALLBACK   # §3.5
+TARGET_REVOKED_FALLBACK = SDK_NATIVE               # §3.5
+THREAD_OR_REPLY_ANCHOR_PRESERVATION = NOT_GUARANTEED_WHEN_TARGET_REVOKED
+SAME_CHAT_PRESERVATION = REQUIRED
 PERMISSION_ERROR_FAIL_LOUD = YES                   # §3.5
+PERMISSION_DENIED = FAIL_LOUD
 LONG_TEXT_CHUNKING = SDK_NATIVE_FIDELITY           # §3.6
 
 # ── 二、出站自动 @ ────────────────────────────────────────
@@ -193,7 +213,8 @@ SECOND_RENDER_AUTHORITY = NO          # Agent Core 不写 markdown->post 转换�
 
 ```text
 DIRECT_NODE_SDK_RESTORE = NO     # 不恢复直连 node-sdk client
-RAW_CLIENT = NO                  # 继承 V2 §7
+RAW_CLIENT = FORBIDDEN           # 继承 V2 §7
+DIRECT_NODE_SDK_FALLBACK = FORBIDDEN
 STREAMING_CARD = NO              # 不引入 streaming/card 表面（channel.stream 禁用）
 SECOND_OUTBOUND_TRANSPORT = NO   # reply seam 仍是唯一出站路径
 ```
@@ -217,6 +238,7 @@ SDK reviewed source `src/outbound/sender.ts:317-335`（`sendOneWithFallback`）+
 
 ```text
 MARKDOWN_FORMAT_ERROR_FALLBACK = RETRY_ONCE_AS_PLAIN_TEXT
+FORMAT_ERROR = EXACTLY_ONCE_PLAIN_TEXT_FALLBACK
   # 触发类：feishu code 230002/230001、HTTP 400（errors.ts inferCode -> 'format_error'）
   # 机制：SDK builtin —— post 被拒后 postToPlainText 转纯文本、同 chunk 恰好重试一次
   # 边界：Agent Core 不得叠加第二层"整条重发"——已送达 chunk 之上再重发即产生重复消息，
@@ -225,26 +247,41 @@ MARKDOWN_FORMAT_ERROR_FALLBACK = RETRY_ONCE_AS_PLAIN_TEXT
   # 降级保真：postToPlainText 保留 'md' 元素 text 原文（markdown 源字符可接受）；
   #        at-tag 前缀（若有）原文保留于 text 消息中，飞书 text 消息原生渲染 <at> 为真实 mention。
 
-TARGET_REVOKED_FAIL_LOUD = YES
+TARGET_REVOKED_DISPOSITION = ACCEPT_SDK_NATIVE_TOP_LEVEL_FALLBACK
+TARGET_REVOKED_FALLBACK = SDK_NATIVE
+  # 触发：带 replyTo 的原 reply target 已撤回、删除或不可回复，SDK 分类为 target_revoked。
+  # 次数：SDK 恰好重试一次；去掉 replyTo，在同一 chat 顶层发送。
+  # payload：保持同一 Agent 答案、原 markdown/text rendering、已生成 outbound mentions。
+  # 地址：SAME_CHAT_PRESERVATION = REQUIRED；不得跨 chat / conversation。
+  # anchor：THREAD_OR_REPLY_ANCHOR_PRESERVATION = NOT_GUARANTEED_WHEN_TARGET_REVOKED，
+  #         因原 anchor 已不可用；这是唯一允许的定位降级。
+  # 防重：不得产生重复消息；connector 不得再增加一层 target-revoked fallback。
+  # 终态：SDK fallback 自身失败 -> fail loud，错误可观察且不得再次重试。
+
+TARGET_REVOKED_CONNECTOR_FALLBACK = FORBIDDEN
+RAW_CLIENT = FORBIDDEN
+DIRECT_NODE_SDK_FALLBACK = FORBIDDEN
+
+PERMISSION_DENIED = FAIL_LOUD
 PERMISSION_ERROR_FAIL_LOUD = YES
   # feishu 99991400/99991401、HTTP 401/403（permission_denied）、send_timeout、unknown、
   # 退避耗尽的 rate_limited：SDK 抛错 -> feishu.reply() reject（上抛）——
   # 继承 V1 §10 API_ERROR_FAIL_LOUD 与 Router catch 回执路径，语义不变。
   # 本 Spec 不为这些错误类增加任何 text 降级/掩蔽。
 
-FALLBACK_ERROR_CLASS_GATE = FORMAT_ERROR_ONLY
-  # connector 自有任何 UX 层 fallback 只允许以 format_error 为触发条件；
-  # target_revoked / permission_denied 永不触发 text fallback。
+CONNECTOR_TEXT_FALLBACK_ERROR_CLASS_GATE = FORMAT_ERROR_ONLY
+  # connector 自有任何 UX 层 text fallback 只允许以 format_error 为触发条件；
+  # target_revoked 使用上述 SDK-native same-payload fallback，permission_denied 不 fallback。
 ```
 
-**透明记录（继承行为，非本 Spec 新增，也非本 Spec 可移除）**：SDK
+**Owner 接受的 SDK-native 产品合同**：SDK
 `sendOneWithFallback` 对「带 `replyTo` 且 reply target 已消失（230020/230017/404）」的
-子情形**内置静默降级**——去掉 `replyTo` 以顶层 create 重发（`sender.ts:322-324`）。该
-行为自 Phase A 起即随 `channel.send` 生效（Phase A 文本路径同样经过
-`sendOneWithFallback`），是 V1 §10 `DEGRADATION_MATRIX = NOT_RELIED` 所述 SDK 矩阵的
-既存事实。本 Spec **不新增、不移除、不依赖**该子情形；禁用它需要 rawClient（未授权）
-或 SDK revision 变更（需独立 compatibility review）。列为 implementation-watch
-（§10），不构成 blocker。
+子情形内置降级——恰好一次去掉 `replyTo`，以同一 chat 的顶层 create 重发
+（`sender.ts:322-324`）。该行为自 Phase A 起即随 `channel.send` 生效；V1 §10 的
+`DEGRADATION_MATRIX = NOT_RELIED` 仅描述 Foundation text-only 阶段。本 UX Spec 现明确
+**依赖并接受**该 SDK-native 行为，不允许 connector 复制或包裹第二层 fallback。
+若 SDK revision 不再满足上述次数、same-chat、payload/mentions 保持或 fail-loud 终态，
+implementation 必须停止并回独立 review；不得以 rawClient 或 direct node-sdk 补洞。
 
 ### 3.6 长文与分块
 
@@ -258,8 +295,9 @@ IN_LIMIT_SINGLE_MESSAGE = REQUIRED # 限内消息永不拆分（单条送达）
 OVER_LIMIT_COMPLETE_DELIVERY = REQUIRED   # 超限内容完整送达，不截断丢尾
 CODE_FENCE_SAFE_SPLIT = REQUIRED   # 分块若落在 fenced code block 内：当前 chunk 闭合围栏、
                                    # 下 chunk 以同 language tag 重开（splitter.ts:19-31）
-CHUNK_ORDER_STABLE = REQUIRED      # 顺序 = 文本顺序；anchored 续块链在上一 chunk 的
-                                   # message id（replyTargetForChunk），保持 reply/thread 线
+CHUNK_ORDER_STABLE = REQUIRED      # 顺序 = 文本顺序；正常路径的 anchored 续块链在上一 chunk
+                                   # message id（replyTargetForChunk），保持 reply/thread 线；
+                                   # target_revoked 时 anchor 例外仅按 §3.5 same-chat fallback
 NO_CONTENT_LOSS = REQUIRED         # 链接与代码不得因分块丢失
 MENTION_FIRST_CHUNK_ONLY = SDK_NATIVE  # mentions 只注入第一块（sender.ts:90：
                                    # i === 0 ? opts.mentions : undefined）
@@ -281,7 +319,9 @@ P2P_AUTO_MENTION = NO
 ```
 
 - group：agent turn 回复的第一块开头携带真实 `<at>`（可点击、原生提醒）。
-- topic/thread：同上，且 mention 与回复一起留在 thread 内（不逃逸主群，§7 T-MT-TOPIC）。
+- topic/thread：正常 anchor 可用时同上，且 mention 与回复一起留在 thread 内
+  （不逃逸主群，§7 T-MT-TOPIC）；target_revoked 时原 anchor 已不可用，按 §3.5 只保证
+  same chat 顶层 fallback，不保证 thread/reply anchor。
 - p2p：**结构性排除**——connector 侧 `target.channel === 'p2p'` 永不注入 mention，
   即使调用方误传 opts 也不可能 @（防御性结构保证，非仅靠调用纪律）。
 - `@all` 触发的 turn 同样适用：触发者 = `IngressEvent.sender`（发消息的人），
@@ -462,13 +502,23 @@ AC-MARKDOWN-TABLE
 
 AC-MARKDOWN-LONG-CHUNKING
   >3500 字符回复：限内单条；超限完整送达；分块顺序稳定；代码块不在错误位置切断
-  （围栏闭合/重开、language tag 保留）；anchored 续块链在同一 reply/thread 线内。
+  （围栏闭合/重开、language tag 保留）；正常路径 anchored 续块链在同一 reply/thread 线内；
+  target_revoked 时只要求 §3.5 same-chat fallback，不保证原 thread/reply anchor。
 
 AC-MARKDOWN-TEXT-FALLBACK
   format_error（230002/230001/400）触发恰好一次纯文本重试（SDK builtin 或零 chunk
   送达时的 connector 单次 { text } 重试）；不产生重复消息（同一回复送达的消息数
-  ≤ chunk 数）；target_revoked / permission_denied 永不触发 text fallback（fail loud，
-  reply() reject -> Router catch 回执路径不变）。
+  ≤ chunk 数）；permission_denied 永不触发 fallback（fail loud，reply() reject -> Router
+  catch 回执路径不变）。target_revoked 不触发 text fallback，单独遵循下一项 SDK-native
+  same-payload 合同。
+
+AC-TARGET-REVOKED-SAME-CHAT-FALLBACK
+  dedicated test app 撤回/删除原 reply target 后触发真实 SDK send 管线：SDK 仅重试一次，
+  删除 replyTo，在同一 chat 顶层发送同一 Agent 答案；保持原 markdown/text rendering 与
+  已生成 outbound mentions。Agent 答案只出现一次，不进入任何其它 conversation，且无
+  SDK + connector 双重重发。group/topic 成功回答的自动 mention 仍为真实可点击 mention，
+  被 mention 用户仍收到飞书原生提醒。原 thread/reply anchor 不保证；same chat 必须保持。
+  SDK fallback 自身失败时错误可观察、fail loud，且不再重试。
 ```
 
 ### 7.2 出站自动 @
@@ -479,8 +529,9 @@ AC-GROUP-AUTO-MENTION-SENDER
   被 @ 用户收到飞书原生提醒；@ 不落在 code fence 内。
 
 AC-TOPIC-AUTO-MENTION-SENDER
-  topic/thread 内回复自动 @ 触发者；mention 与回复均留在 thread 内，
-  不逃逸到主群（T-MT-TOPIC）。
+  正常 anchor 可用时，topic/thread 内回复自动 @ 触发者；mention 与回复均留在 thread 内，
+  不逃逸到主群（T-MT-TOPIC）。target_revoked 时适用
+  AC-TARGET-REVOKED-SAME-CHAT-FALLBACK 的 same-chat / anchor-exception 合同。
 
 AC-P2P-NO-MENTION
   p2p 回复无任何 <at> 注入（结构性排除，opts 误传也不 @）。
@@ -534,8 +585,13 @@ T-MD-LINK      链接可点击
 T-MD-TABLE     简单表格真实渲染（AC-MARKDOWN-TABLE 的唯一 gate；失败即停）
 T-MD-LONG      >3500 混排长文（含代码块/链接/表格）完整送达、顺序稳定、围栏不切断
 T-MD-FALLBACK  构造 format_error 场景：恰好一次 text 重试、无重复消息
+T-TARGET-REVOKED
+  撤回/删除原消息后：Agent 答案只出现一次且位于同一 chat，不进入其它 conversation；
+  无 SDK + connector 双重重发；markdown/text rendering 与 outbound mentions 保持；
+  group/topic 自动 mention 仍可点击且被 @ 用户收到原生提醒；fallback 失败错误可观察、
+  fail loud 且不再重试；允许 thread/reply anchor 不保留
 T-MT-GROUP     群回复含真正可点击 @；被 @ 用户收到飞书原生提醒（以该用户客户端为准）
-T-MT-TOPIC     topic 内 @ 与回复不逃逸到主群；后续 ingress threadId 派生正确
+T-MT-TOPIC     正常 anchor 可用时，topic 内 @ 与回复不逃逸到主群；后续 ingress threadId 派生正确
 T-MT-P2P       p2p 无 @
 T-MT-RECEIPT   unbound receipt 与 failure receipt 均无 @、plain text
 T-MT-IDENTITY  改名/匿名测试账号：@ 仍正确（openId 权威），模型文本 @名字 保持纯文本
@@ -591,12 +647,13 @@ SDK 依赖坐标变更（双 revision 合同不变；升级需独立 compatibili
 | 风险 | gate |
 |---|---|
 | 飞书 md 元素不渲染 GFM 表格 | T-MD-TABLE 强制实测；失败停 + OWNER_DECISION；禁 custom converter |
-| mention 逃逸 topic 到主群 | T-MT-TOPIC + anchored 续块链测试；create_thread 语义继承 V2 §7 |
+| 正常 anchor 可用时 mention 逃逸 topic 到主群 | T-MT-TOPIC + anchored 续块链测试；create_thread 语义继承 V2 §7 |
 | format_error fallback 产生重复消息 | 恰好一次语义 + "零 chunk 送达才允许整条重试"边界 + T-MD-FALLBACK |
+| target-revoked fallback 跨 chat、丢 rendering/mention 或双重重发 | AC-TARGET-REVOKED-SAME-CHAT-FALLBACK + T-TARGET-REVOKED；SDK-native only，connector fallback 禁止 |
 | 失败回执被误 @ | AC-FAILURE-RECEIPT-NO-MENTION；opts 不传即不 @ 的默认关闭语义 |
 | 名称注入伪造 mention | ReplyTarget context 与 SDK mention entry 只携带 openId；不携带 name，不做名称解析 |
 | Router 单调用点 diff 被扩大成 authority 漂移 | AC-ROUTER-DIFF-MINIMAL + `D-U1 = APPROVED` 的窄边界 + review diff 检查 |
-| SDK 内置 reply-target-gone 顶层重发被误当本 Spec 新增 | §3.5 透明记录（Phase A 既存）；不新增不依赖不移除 |
+| SDK native reply-target-gone 顶层重发失败后被继续重试 | §3.5 fail-loud 终态 + T-TARGET-REVOKED；fallback 失败不得再重试 |
 | resolveMentionsInText 被顺手打开 | AC-SINGLE-RENDER-AUTHORITY + AC-MENTION-USES-OPEN-ID-NOT-NAME |
 | Phase A 未 merge 即开工实现 | §8 双前置；Implementation Preflight 必须验证 |
 
@@ -617,14 +674,15 @@ REVIEWED_SPEC_COMMIT
 REVIEW_VERDICT = PASS | FIX_REQUIRED
 BLOCKERS
 OWNER_DECISION_DISPOSITION = D-U1 APPROVED（显式核对）
+TARGET_REVOKED_DISPOSITION = ACCEPT_SDK_NATIVE_TOP_LEVEL_FALLBACK（显式核对）
 SEMANTIC_REVIEW_COMPLETE = YES | NO
 VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC | FIX_REQUIRED
 ```
 
 仅 `PASS + BLOCKERS=NONE + SEMANTIC_REVIEW_COMPLETE=YES` 允许 acceptance-finalize
 （`status: proposed -> accepted` + 记录 reviewed head/reviewer/verdict + D-U1 裁决归档）；
-本 amendment 写入 D-U1 后不得直接 finalize，须 focused independent re-review。
-当前仍为 proposed，实现不得启动。
+本 focused amendment 写入 target-revoked Owner ruling 后不得直接 finalize，须 focused
+independent re-review；D-U1 继续保持 APPROVED。当前仍为 proposed，实现不得启动。
 
 ---
 
