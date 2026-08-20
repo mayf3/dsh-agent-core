@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
-status: proposed
+status: accepted
 ---
 
 # Agent Core ChatGPT Subscription Target Proxy Seam V1 — 单 Agent 代理注入 seam
@@ -10,7 +10,7 @@ status: proposed
 > （= AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1 实现后的最新主线，
 > 含 `8781771` runtime review gaps 与 `fe2c639` target-respawn reload）
 >
-> SPEC_STATUS = **proposed**（本轮 = INVESTIGATION + SPEC ONLY）
+> SPEC_STATUS = **accepted**（本轮 = INVESTIGATION + SPEC ONLY）
 > · Round 2 amendment base = reviewed HEAD `2aa72bd`（review verdict =
 > `FIX_REQUIRED`）。
 >
@@ -452,7 +452,7 @@ ROUTER_ROUTING_SEMANTIC_CHANGE = NONE
 SESSION_MODEL_CHANGE = NONE
 KERNEL_CHANGE = NONE
 
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 READY_FOR_FOCUSED_RE_REVIEW = YES
 ```
 
@@ -471,4 +471,8 @@ READY_FOR_FOCUSED_RE_REVIEW = YES
   `v25.6.1` exact gate、HTTP / WebSocket / auxiliary fetch 三路独立验收证据。
   Round 1 已通过内容不重开；无 implementation、无 production 变更、无 OAuth、
   无 Luna override 写入、无飞书消息、无 merge。
-- （预留：focused re-review → accept/fix 轮 → implementation 轮。）
+- **Acceptance finalize（mechanical delta only）**：
+  - `accepted_reviewed_head = c42acbf`
+  - `focused_re_review = PASS`
+  - `REQUIRED_FIXES = NONE`
+  - `VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC`
