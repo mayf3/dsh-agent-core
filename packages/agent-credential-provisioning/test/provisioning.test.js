@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
-import { chmod, mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises'
+import { constants } from 'node:fs'
+import * as fileSystem from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readFile, rename, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -59,6 +61,8 @@ function fakeAuthority({ verification = { status: 200 }, clientStatus = 'active'
     principal: undefined,
     client: undefined,
     secret: undefined,
+    clientResponse: undefined,
+    verifiedCredential: undefined,
     rotations: 0,
   }
   return {
@@ -83,7 +87,8 @@ function fakeAuthority({ verification = { status: 200 }, clientStatus = 'active'
         state.secret = opaque()
         state.client = { id: 'mc_fixed', status: clientStatus }
       }
-      return { ...state.client, created: wasMissing, ...(wasMissing ? { client_secret: state.secret } : {}) }
+      state.clientResponse = { ...state.client, created: wasMissing, ...(wasMissing ? { client_secret: state.secret } : {}) }
+      return state.clientResponse
     },
     // The claim seam exists only so tests can prove Phase A never calls it.
     async claimCredential(body) {
@@ -91,6 +96,7 @@ function fakeAuthority({ verification = { status: 200 }, clientStatus = 'active'
       throw new Error('claim is not a Phase A operation')
     },
     async verifyCredential({ credential }) {
+      state.verifiedCredential = credential
       state.calls.push({ operation: 'verify', clientId: credential.clientId })
       return typeof verification === 'function' ? verification(state) : verification
     },
@@ -322,6 +328,173 @@ test('PA2: absent store entry + (c)=true runs exactly S1, S2, one store write, a
   assert.equal(persisted.version, 1)
   assert.equal(persisted.credentials[AGENT_ID].clientId, 'mc_fixed')
   assert.equal(persisted.credentials[AGENT_ID].clientSecret, auth.state.secret)
+  assert.notStrictEqual(auth.state.verifiedCredential, auth.state.clientResponse)
+  assert.deepEqual(auth.state.verifiedCredential, persisted.credentials[AGENT_ID])
+})
+
+test('persisted reread object is the verification mint source', async (t) => {
+  const paths = await files(t)
+  const auth = fakeAuthority()
+  const result = await ensureAgentCredential({
+    agentId: AGENT_ID,
+    agentDefinitionFile: paths.definitionFile,
+    credentialsFile: paths.credentialsFile,
+    auth,
+    prerequisites: { c: true },
+    storeWriteOptions: {
+      afterRename: async (...args) => {
+        assert.equal(args.length, 0)
+        const persisted = JSON.parse(await readFile(paths.credentialsFile, 'utf8'))
+        persisted.credentials[AGENT_ID].persistedSourceMarker = 'trusted-store-reread'
+        await writeFile(paths.credentialsFile, `${JSON.stringify(persisted)}\n`, { mode: 0o600 })
+      },
+    },
+  })
+  assert.equal(result.outcome, 'provisioned')
+  assert.deepEqual(auth.state.verifiedCredential, {
+    clientId: 'mc_fixed',
+    clientSecret: auth.state.secret,
+    persistedSourceMarker: 'trusted-store-reread',
+  })
+  assert.equal(Object.hasOwn(auth.state.clientResponse, 'persistedSourceMarker'), false)
+})
+
+test('store replacement, deletion, changed client, and changed secret all block verification mint', async (t) => {
+  const cases = [
+    {
+      name: 'replacement credential',
+      replacement: () => ({ clientId: 'mc_replacement', clientSecret: opaque() }),
+    },
+    {
+      name: 'changed clientId',
+      replacement: (auth) => ({ clientId: 'mc_changed', clientSecret: auth.state.secret }),
+    },
+    {
+      name: 'same clientId different secret',
+      replacement: () => ({ clientId: 'mc_fixed', clientSecret: opaque() }),
+    },
+    { name: 'deleted entry', replacement: () => undefined },
+  ]
+  for (const testCase of cases) {
+    const paths = await files(t)
+    const auth = fakeAuthority()
+    await assert.rejects(
+      ensureAgentCredential({
+        agentId: AGENT_ID,
+        agentDefinitionFile: paths.definitionFile,
+        credentialsFile: paths.credentialsFile,
+        auth,
+        prerequisites: { c: true },
+        storeWriteOptions: {
+          afterRename: async (...args) => {
+            assert.equal(args.length, 0)
+            const replacement = testCase.replacement(auth)
+            await writeFile(paths.credentialsFile, `${JSON.stringify({
+              version: 1,
+              credentials: replacement === undefined ? {} : { [AGENT_ID]: replacement },
+            })}\n`, { mode: 0o600 })
+          },
+        },
+      }),
+      (error) => error.code === 'CREDENTIALS_STORE_ERROR'
+        && error.reason === 'post_write_consistency_mismatch',
+      testCase.name,
+    )
+    assert.deepEqual(authCallCounts(auth), {
+      principal: 1, client: 1, claim: 0, verify: 0, rotate: 0,
+    }, testCase.name)
+    assert.equal(auth.state.verifiedCredential, undefined, testCase.name)
+  }
+})
+
+test('wrong trusted directory owner fails before prerequisite (c) and Auth', async (t) => {
+  const paths = await files(t)
+  const auth = fakeAuthority()
+  await assert.rejects(
+    ensureAgentCredential({
+      agentId: AGENT_ID,
+      agentDefinitionFile: paths.definitionFile,
+      credentialsFile: paths.credentialsFile,
+      auth,
+      prerequisites: { c: false },
+      storeWriteOptions: {
+        ownerUid: process.getuid() + 1,
+        ownerGid: process.getgid(),
+        identity: { getuid: () => 0, getgid: () => 0 },
+      },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.deepEqual(authCallCounts(auth), NO_CALLS)
+  assert.equal(auth.state.calls.length, 0)
+})
+
+test('same-metadata parent swap before lock acceptance causes zero Auth calls', async (t) => {
+  const paths = await files(t)
+  const movedDirectory = `${paths.directory}-moved-before-lock`
+  t.after(async () => { await fileSystem.rm(movedDirectory, { recursive: true, force: true }) })
+  const auth = fakeAuthority()
+  let swapped = false
+  const raceFileSystem = {
+    ...fileSystem,
+    async open(path, flags, mode) {
+      if (!swapped && path.endsWith('.lock') && (flags & constants.O_CREAT) !== 0) {
+        await rename(paths.directory, movedDirectory)
+        await mkdir(paths.directory, { mode: 0o700 })
+        swapped = true
+      }
+      return fileSystem.open(path, flags, mode)
+    },
+  }
+  await assert.rejects(
+    ensureAgentCredential({
+      agentId: AGENT_ID,
+      agentDefinitionFile: paths.definitionFile,
+      credentialsFile: paths.credentialsFile,
+      auth,
+      prerequisites: { c: true },
+      storeWriteOptions: { fileSystem: raceFileSystem },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.equal(swapped, true)
+  assert.equal(auth.state.calls.length, 0)
+})
+
+test('special-bit directory mode is rejected before Auth', async (t) => {
+  const paths = await files(t)
+  await chmod(paths.directory, 0o1700)
+  const auth = fakeAuthority()
+  await assert.rejects(
+    ensureAgentCredential({
+      agentId: AGENT_ID,
+      agentDefinitionFile: paths.definitionFile,
+      credentialsFile: paths.credentialsFile,
+      auth,
+      prerequisites: { c: true },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.equal(auth.state.calls.length, 0)
+})
+
+test('directory symlink metadata failure occurs before Auth', async (t) => {
+  const paths = await files(t)
+  const directoryLink = `${paths.directory}-link`
+  await symlink(paths.directory, directoryLink)
+  t.after(async () => { await import('node:fs/promises').then(({ rm }) => rm(directoryLink, { force: true })) })
+  const auth = fakeAuthority()
+  await assert.rejects(
+    ensureAgentCredential({
+      agentId: AGENT_ID,
+      agentDefinitionFile: paths.definitionFile,
+      credentialsFile: join(directoryLink, 'credentials.json'),
+      auth,
+      prerequisites: { c: true },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.equal(auth.state.calls.length, 0)
 })
 
 test('external refs are deterministic, stable, and namespace-separated', () => {

@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
+import { constants } from 'node:fs'
+import * as fileSystem from 'node:fs/promises'
 import {
-  chmod, mkdir, mkdtemp, readFile, stat, symlink, unlink, writeFile,
+  chmod, mkdir, mkdtemp, readFile, readdir, rename, stat, symlink, unlink, writeFile,
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 
 import {
+  preflightTrustedCredentialDirectory,
   readCredentialStoreDocument,
   writeCredentialForAgent,
 } from '../src/store-writer.js'
@@ -28,6 +31,64 @@ function assertContainsExactBytes(haystack, needles) {
     assert.notEqual(haystack.indexOf(Buffer.from(needle)), -1, `missing byte-identical slice: ${needle}`)
   }
 }
+
+test('ROOT_DIRECTORY_HANDOFF: root creates, chowns, chmods, and post-stats trusted directory', async () => {
+  const operations = []
+  let state = 'missing'
+  const expectedUid = 505
+  const expectedGid = 505
+  const directoryStat = () => ({
+    dev: 10,
+    ino: 20,
+    mode: state === 'trusted' ? 0o40700 : 0o40755,
+    uid: state === 'trusted' ? expectedUid : 0,
+    gid: state === 'trusted' ? expectedGid : 0,
+    isDirectory: () => true,
+    isFile: () => false,
+    isSymbolicLink: () => false,
+  })
+  const fileSystem = {
+    async lstat(path) {
+      operations.push(`lstat:${path}`)
+      if (state === 'missing') throw Object.assign(new Error('missing'), { code: 'ENOENT' })
+      return directoryStat()
+    },
+    async mkdir(path, options) {
+      operations.push(`mkdir:${options.mode.toString(8)}`)
+      state = 'created'
+    },
+    async chown(path, uid, gid) {
+      operations.push(`chown:${uid}:${gid}`)
+    },
+    async chmod(path, mode) {
+      operations.push(`chmod:${mode.toString(8)}`)
+      state = 'trusted'
+    },
+    async open(path) {
+      operations.push(`open:${path}`)
+      return {
+        stat: async () => directoryStat(),
+        close: async () => {},
+      }
+    },
+  }
+  const result = await preflightTrustedCredentialDirectory('/trusted/credentials.json', {
+    ownerUid: expectedUid,
+    ownerGid: expectedGid,
+    identity: { getuid: () => 0, getgid: () => 0 },
+    fileSystem,
+  })
+  assert.deepEqual(result.owner, { uid: expectedUid, gid: expectedGid, writerUid: 0 })
+  assert.deepEqual(operations, [
+    'lstat:/trusted',
+    'mkdir:700',
+    'lstat:/trusted',
+    'chown:505:505',
+    'chmod:700',
+    'lstat:/trusted',
+    'open:/trusted',
+  ])
+})
 
 test('writer creates a trusted-owner 0600 V1 store before persisting secret bytes', async (t) => {
   const targetSecret = opaque()
@@ -99,6 +160,12 @@ test('existing world-readable store is rejected before parsing or overwrite', as
     { code: 'CREDENTIALS_STORE_ERROR' },
   )
   assert.deepEqual(await readFile(file), before)
+})
+
+test('special-bit store mode is rejected instead of treated as exact 0600', async (t) => {
+  const { file } = await fixture(t, { version: 1, credentials: {} })
+  await chmod(file, 0o4600)
+  await assert.rejects(readCredentialStoreDocument(file), { code: 'CREDENTIALS_STORE_ERROR' })
 })
 
 test('symlink existing store is rejected without following it', async (t) => {
@@ -187,6 +254,43 @@ test('caller-forged lock context cannot bypass serialization', async (t) => {
     { code: 'CREDENTIALS_STORE_ERROR' },
   )
   assert.deepEqual(await import('node:fs/promises').then(({ readdir }) => readdir(directory)), [])
+})
+
+test('parent swap before temp open writes zero secret bytes and preserves replacement sentinels', async (t) => {
+  const { directory, file } = await fixture(t, undefined)
+  const movedDirectory = `${directory}-moved-before-temp`
+  t.after(async () => { await fileSystem.rm(movedDirectory, { recursive: true, force: true }) })
+  const replacementStoreSentinel = '{"replacement":"store"}\n'
+  const replacementLockSentinel = 'replacement lock\n'
+  let swapped = false
+  const raceFileSystem = {
+    ...fileSystem,
+    async open(path, flags, mode) {
+      if (!swapped && path.includes('.tmp-') && (flags & constants.O_WRONLY) !== 0) {
+        await rename(directory, movedDirectory)
+        await mkdir(directory, { mode: 0o700 })
+        await writeFile(file, replacementStoreSentinel, { mode: 0o600 })
+        await writeFile(`${file}.lock`, replacementLockSentinel, { mode: 0o600 })
+        swapped = true
+      }
+      return fileSystem.open(path, flags, mode)
+    },
+  }
+  const secret = opaque()
+  await assert.rejects(
+    writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: secret }, {
+      fileSystem: raceFileSystem,
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  assert.equal(swapped, true)
+  assert.equal(await readFile(file, 'utf8'), replacementStoreSentinel)
+  assert.equal(await readFile(`${file}.lock`, 'utf8'), replacementLockSentinel)
+  const replacementTemp = (await readdir(directory)).find((name) => name.includes('.tmp-'))
+  assert.ok(replacementTemp)
+  const tempBytes = await readFile(join(directory, replacementTemp))
+  assert.equal(tempBytes.length, 0)
+  assert.equal(tempBytes.includes(Buffer.from(secret)), false)
 })
 
 test('private lock serializes concurrent target-only updates', async (t) => {

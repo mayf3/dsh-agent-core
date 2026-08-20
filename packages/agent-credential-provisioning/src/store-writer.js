@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { constants } from 'node:fs'
-import { lstat, mkdir, open, rename, rm } from 'node:fs/promises'
+import { chmod, chown, lstat, mkdir, open, rename, rm } from 'node:fs/promises'
 import { dirname, isAbsolute } from 'node:path'
 
 import {
@@ -16,6 +16,7 @@ const LOCK_RETRIES = 18000
 const PRIVATE_DIRECTORY_MODE = 0o700
 const PRIVATE_FILE_MODE = 0o600
 const activeLocks = new WeakSet()
+const defaultFileSystem = Object.freeze({ chmod, chown, lstat, mkdir, open, rename, rm })
 
 function storeError(message) {
   return Object.assign(new Error(message), { code: CREDENTIALS_STORE_ERROR })
@@ -27,9 +28,9 @@ function validateStorePath(storeFile) {
   }
 }
 
-function trustedOwner({ ownerUid, ownerGid } = {}) {
-  const processUid = process.getuid?.()
-  const processGid = process.getgid?.()
+function trustedOwner({ ownerUid, ownerGid, identity = process } = {}) {
+  const processUid = identity.getuid?.()
+  const processGid = identity.getgid?.()
   const uid = ownerUid ?? processUid
   const gid = ownerGid ?? processGid
   if (!Number.isInteger(uid) || uid < 0 || !Number.isInteger(gid) || gid < 0) {
@@ -46,7 +47,7 @@ function trustedOwner({ ownerUid, ownerGid } = {}) {
   if (processUid !== 0 && (uid !== processUid || gid !== processGid)) {
     throw storeError('credential provisioning: non-root writer cannot nominate a different trusted owner')
   }
-  return { uid, gid }
+  return { uid, gid, writerUid: processUid }
 }
 
 function assertMetadata(stat, { kind, path, mode, owner }) {
@@ -54,7 +55,7 @@ function assertMetadata(stat, { kind, path, mode, owner }) {
   if (!typeOk || stat.isSymbolicLink() || (kind === 'file' && stat.nlink !== 1)) {
     throw storeError(`credential provisioning: ${kind} must be a non-symlink single-link ${kind}: ${path}`)
   }
-  if ((stat.mode & 0o777) !== mode) {
+  if ((stat.mode & 0o7777) !== mode) {
     throw storeError(`credential provisioning: ${kind} has unsafe mode: ${path}`)
   }
   if (stat.uid !== owner.uid || stat.gid !== owner.gid) {
@@ -62,20 +63,73 @@ function assertMetadata(stat, { kind, path, mode, owner }) {
   }
 }
 
-async function assertTrustedDirectory(directory, owner, { create = false } = {}) {
-  if (create) await mkdir(directory, { recursive: true, mode: PRIVATE_DIRECTORY_MODE })
-  let pathStat
+function sameObject(left, right) {
+  return left.dev === right.dev && left.ino === right.ino
+}
+
+function assertSameObject(actual, expected, kind, path) {
+  if (!sameObject(actual, expected)) {
+    throw storeError(`credential provisioning: ${kind} changed during trusted operation: ${path}`)
+  }
+}
+
+async function removeOwnedPath(file, expectedObject, directory, expectedDirectory, fileSystem) {
+  if (expectedObject === undefined) return
   try {
-    pathStat = await lstat(directory)
+    const directoryStat = await fileSystem.lstat(directory)
+    if (!sameObject(directoryStat, expectedDirectory)) return
+    const pathStat = await fileSystem.lstat(file)
+    if (!sameObject(pathStat, expectedObject)) return
+    await fileSystem.rm(file, { force: true })
   } catch {
-    throw storeError(`credential provisioning: credential store directory is unavailable: ${directory}`)
+    // Cleanup must never unlink an unowned replacement path.
+  }
+}
+
+async function assertTrustedDirectory(directory, owner, {
+  create = false,
+  fileSystem = defaultFileSystem,
+} = {}) {
+  let pathStat
+  let createdByWriter = false
+  try {
+    pathStat = await fileSystem.lstat(directory)
+  } catch (error) {
+    if (error?.code !== 'ENOENT' || !create) {
+      throw storeError(`credential provisioning: credential store directory is unavailable: ${directory}`)
+    }
+    try {
+      await fileSystem.mkdir(directory, { mode: PRIVATE_DIRECTORY_MODE })
+      createdByWriter = true
+    } catch (mkdirError) {
+      if (mkdirError?.code !== 'EEXIST') {
+        throw storeError(`credential provisioning: cannot create credential store directory: ${directory}`)
+      }
+    }
+    try {
+      pathStat = await fileSystem.lstat(directory)
+    } catch {
+      throw storeError(`credential provisioning: credential store directory is unavailable: ${directory}`)
+    }
+    if (createdByWriter) {
+      try {
+        if (owner.writerUid === 0) await fileSystem.chown(directory, owner.uid, owner.gid)
+        await fileSystem.chmod(directory, PRIVATE_DIRECTORY_MODE)
+        pathStat = await fileSystem.lstat(directory)
+      } catch {
+        throw storeError(`credential provisioning: cannot hand off credential store directory: ${directory}`)
+      }
+    }
   }
   assertMetadata(pathStat, {
     kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
   })
   let handle
   try {
-    handle = await open(directory, constants.O_RDONLY | (constants.O_DIRECTORY ?? 0) | (constants.O_NOFOLLOW ?? 0))
+    handle = await fileSystem.open(
+      directory,
+      constants.O_RDONLY | (constants.O_DIRECTORY ?? 0) | (constants.O_NOFOLLOW ?? 0),
+    )
     const openedStat = await handle.stat()
     assertMetadata(openedStat, {
       kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
@@ -90,6 +144,17 @@ async function assertTrustedDirectory(directory, owner, { create = false } = {})
   } finally {
     await handle?.close().catch(() => {})
   }
+}
+
+/** Establish and verify the trusted direct parent before any Auth mutation. */
+export async function preflightTrustedCredentialDirectory(storeFile, options = {}) {
+  validateStorePath(storeFile)
+  const owner = trustedOwner(options)
+  const directoryIdentity = await assertTrustedDirectory(dirname(storeFile), owner, {
+    create: true,
+    fileSystem: options.fileSystem ?? defaultFileSystem,
+  })
+  return { owner, directoryIdentity }
 }
 
 function scanString(raw, start) {
@@ -157,10 +222,13 @@ function locateCredentialsObject(raw) {
   return { start: match.valueStart, end: match.valueEnd }
 }
 
-async function readTrustedStore(storeFile, owner) {
+async function readTrustedStore(storeFile, owner, { expectedDirectoryIdentity } = {}) {
   validateStorePath(storeFile)
   const directory = dirname(storeFile)
-  await assertTrustedDirectory(directory, owner)
+  const directoryIdentity = await assertTrustedDirectory(directory, owner)
+  if (expectedDirectoryIdentity !== undefined) {
+    assertSameObject(directoryIdentity, expectedDirectoryIdentity, 'credential store directory', directory)
+  }
 
   let pathStat
   try {
@@ -228,28 +296,39 @@ async function readTrustedStore(storeFile, owner) {
 }
 
 /** Read and fully validate V1 contents plus trusted metadata before secret parsing. */
-export async function readCredentialStoreDocument(storeFile, options) {
+export async function readCredentialStoreDocument(storeFile, options = {}) {
   const owner = trustedOwner(options)
-  return readTrustedStore(storeFile, owner)
+  return readTrustedStore(storeFile, owner, {
+    expectedDirectoryIdentity: options.expectedDirectoryIdentity,
+  })
 }
 
-async function acquireLock(lockFile, owner) {
+async function acquireLock(lockFile, directory, expectedDirectory, owner, fileSystem) {
   for (let attempt = 0; attempt <= LOCK_RETRIES; attempt += 1) {
     let handle
     try {
-      handle = await open(
+      handle = await fileSystem.open(
         lockFile,
         constants.O_CREAT | constants.O_EXCL | constants.O_RDWR | (constants.O_NOFOLLOW ?? 0),
         PRIVATE_FILE_MODE,
       )
-      if (process.getuid?.() === 0) await handle.chown(owner.uid, owner.gid)
+      if (owner.writerUid === 0) await handle.chown(owner.uid, owner.gid)
       const stat = await handle.stat()
       assertMetadata(stat, { kind: 'file', path: lockFile, mode: PRIVATE_FILE_MODE, owner })
-      return handle
+      const pathStat = await fileSystem.lstat(lockFile)
+      assertMetadata(pathStat, { kind: 'file', path: lockFile, mode: PRIVATE_FILE_MODE, owner })
+      assertSameObject(pathStat, stat, 'credential store lock', lockFile)
+      const directoryStat = await fileSystem.lstat(directory)
+      assertMetadata(directoryStat, {
+        kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
+      })
+      assertSameObject(directoryStat, expectedDirectory, 'credential store directory', directory)
+      return { handle, object: { dev: stat.dev, ino: stat.ino } }
     } catch (error) {
       if (handle !== undefined) {
+        const lockObject = await handle.stat().catch(() => undefined)
         await handle.close().catch(() => {})
-        await rm(lockFile, { force: true }).catch(() => {})
+        await removeOwnedPath(lockFile, lockObject, directory, expectedDirectory, fileSystem)
       }
       if (error?.code !== 'EEXIST') {
         if (error?.code === CREDENTIALS_STORE_ERROR) throw error
@@ -266,10 +345,10 @@ async function acquireLock(lockFile, owner) {
   throw new Error('unreachable')
 }
 
-async function fsyncDirectory(directory) {
+async function fsyncDirectory(directory, fileSystem = defaultFileSystem) {
   let handle
   try {
-    handle = await open(directory, constants.O_RDONLY)
+    handle = await fileSystem.open(directory, constants.O_RDONLY)
     await handle.sync()
   } catch (error) {
     if (!['EINVAL', 'ENOTSUP', 'EISDIR'].includes(error?.code)) throw error
@@ -281,19 +360,19 @@ async function fsyncDirectory(directory) {
 /** Serialize the complete Phase A operation, not merely its final write. */
 export async function withCredentialStoreLock(storeFile, options = {}, operation) {
   validateStorePath(storeFile)
-  const owner = trustedOwner(options)
   const directory = dirname(storeFile)
-  const directoryIdentity = await assertTrustedDirectory(directory, owner, { create: true })
+  const fileSystem = options.fileSystem ?? defaultFileSystem
+  const { owner, directoryIdentity } = await preflightTrustedCredentialDirectory(storeFile, options)
   const lockFile = `${storeFile}.lock`
-  const lockHandle = await acquireLock(lockFile, owner)
+  const acquiredLock = await acquireLock(lockFile, directory, directoryIdentity, owner, fileSystem)
   const lock = Object.freeze({ storeFile, owner, directoryIdentity })
   activeLocks.add(lock)
   try {
     return await operation(lock)
   } finally {
     activeLocks.delete(lock)
-    await lockHandle.close().catch(() => {})
-    await rm(lockFile, { force: true }).catch(() => {})
+    await acquiredLock.handle.close().catch(() => {})
+    await removeOwnedPath(lockFile, acquiredLock.object, directory, directoryIdentity, fileSystem)
   }
 }
 
@@ -314,10 +393,10 @@ function serializeWithAddedCredential(current, agentId, credential) {
   return `${current.raw.slice(0, end - 1)}${separator}${entry}${current.raw.slice(end - 1)}`
 }
 
-async function assertTargetUnchanged(storeFile, expectedIdentity) {
+async function assertTargetUnchanged(storeFile, expectedIdentity, fileSystem = defaultFileSystem) {
   let current
   try {
-    current = await lstat(storeFile)
+    current = await fileSystem.lstat(storeFile)
   } catch (error) {
     if (error?.code === 'ENOENT' && expectedIdentity === undefined) return
     throw storeError(`credential provisioning: credentials store changed before commit: ${storeFile}`)
@@ -341,42 +420,65 @@ export async function writeCredentialForAgent(storeFile, agentId, credential, op
       throw storeError('credential provisioning: invalid store lock context')
     }
     const { owner, directoryIdentity } = lock
-    const current = await readTrustedStore(storeFile, owner)
+    const current = await readTrustedStore(storeFile, owner, {
+      expectedDirectoryIdentity: directoryIdentity,
+    })
     if (current.credentials[agentId] !== undefined) {
       throw storeError(`credential provisioning: target credential entry already exists for ${agentId}`)
     }
     const serialized = serializeWithAddedCredential(current, agentId, credential)
     const directory = dirname(storeFile)
+    const fileSystem = options.fileSystem ?? defaultFileSystem
     const tempFile = `${storeFile}.tmp-${process.pid}-${randomUUID()}`
     let tempHandle
+    let tempIdentity
     try {
-      tempHandle = await open(
+      tempHandle = await fileSystem.open(
         tempFile,
         constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | (constants.O_NOFOLLOW ?? 0),
         PRIVATE_FILE_MODE,
       )
-      if (process.getuid?.() === 0) await tempHandle.chown(owner.uid, owner.gid)
+      if (owner.writerUid === 0) await tempHandle.chown(owner.uid, owner.gid)
       const tempStat = await tempHandle.stat()
       assertMetadata(tempStat, { kind: 'file', path: tempFile, mode: PRIVATE_FILE_MODE, owner })
-      // Metadata is final before the first secret byte is persisted.
+      tempIdentity = { dev: tempStat.dev, ino: tempStat.ino }
+      const tempPathStat = await fileSystem.lstat(tempFile)
+      assertMetadata(tempPathStat, { kind: 'file', path: tempFile, mode: PRIVATE_FILE_MODE, owner })
+      assertSameObject(tempPathStat, tempIdentity, 'credential store temp file', tempFile)
+      const directoryAfterTemp = await fileSystem.lstat(directory)
+      assertMetadata(directoryAfterTemp, {
+        kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
+      })
+      assertSameObject(directoryAfterTemp, directoryIdentity, 'credential store directory', directory)
+      // Metadata and parent identity are final before the first secret byte is persisted.
       await tempHandle.writeFile(serialized, 'utf8')
       await tempHandle.sync()
       await tempHandle.close()
       tempHandle = undefined
       await options.beforeRename?.()
-      const directoryNow = await assertTrustedDirectory(directory, owner)
+      const directoryNow = await assertTrustedDirectory(directory, owner, { fileSystem })
       if (directoryNow.dev !== directoryIdentity.dev || directoryNow.ino !== directoryIdentity.ino) {
         throw storeError(`credential provisioning: credential store directory changed before commit: ${directory}`)
       }
-      await assertTargetUnchanged(storeFile, current.fileIdentity)
-      await rename(tempFile, storeFile)
-      await fsyncDirectory(directory)
+      await assertTargetUnchanged(storeFile, current.fileIdentity, fileSystem)
+      await fileSystem.rename(tempFile, storeFile)
+      const finalStat = await fileSystem.lstat(storeFile)
+      assertMetadata(finalStat, { kind: 'file', path: storeFile, mode: PRIVATE_FILE_MODE, owner })
+      if (finalStat.dev !== tempIdentity.dev || finalStat.ino !== tempIdentity.ino) {
+        throw storeError(`credential provisioning: final credential store changed after commit: ${storeFile}`)
+      }
+      await fsyncDirectory(directory, fileSystem)
+      await options.afterRename?.()
     } catch (error) {
       if (error?.code === CREDENTIALS_STORE_ERROR || error?.code === 'CREDENTIALS_STORE_LOCKED') throw error
       throw storeError(`credential provisioning: atomic credentials store update failed: ${storeFile}`)
     } finally {
+      if (tempHandle !== undefined && tempIdentity === undefined) {
+        const stat = await tempHandle.stat().catch(() => undefined)
+        if (stat !== undefined) tempIdentity = { dev: stat.dev, ino: stat.ino }
+      }
       await tempHandle?.close().catch(() => {})
-      await rm(tempFile, { force: true }).catch(() => {})
+      await removeOwnedPath(tempFile, tempIdentity, directory, directoryIdentity, fileSystem)
     }
   }
   if (options.lock !== undefined) return execute(options.lock)
