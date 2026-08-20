@@ -40,6 +40,11 @@ references:
 > 本轮 authoring：`PRODUCT_CODE_CHANGE = NONE`、`DEPENDENCY_CHANGE = NONE`、
 > `DEPLOYMENT = NONE`、`PRODUCTION_STATE_CHANGE = NONE`、`MERGE = NONE`、
 > `PR23_CHANGE = NONE`。仅新增本文件。
+>
+> **Owner amendment（2026-08-20）**：`D-U1 = APPROVED`。本 amendment 仅把 Owner
+> 对 §5.3 最小 Router seam 的批准写回本 proposed Spec；不 acceptance-finalize、不实现。
+> PR #24 当前为 OPEN 且非 Draft；为保持 `status: proposed` 的评审语义，建议转回 Draft，
+> 但本轮不修改 PR Draft 状态。
 
 ---
 
@@ -54,8 +59,12 @@ IMPLEMENTATION_PRECONDITION_2 = PR #23 (Phase A) merged into implementation base
 
 MARKDOWN_SCOPE_FROZEN = YES
 OUTBOUND_MENTION_SCOPE_FROZEN = YES
-ROUTER_CHANGE_REQUIRED = YES (minimal — single call-site opts; §5.3)
-OWNER_DECISION_REQUIRED = YES (D-U1 Router seam approval; §5.3)
+ROUTER_CHANGE_REQUIRED = YES_MINIMAL
+MINIMAL_ROUTER_SEAM = single successful-reply call-site UX opts (§5.3)
+D_U1 = APPROVED
+OWNER_DECISION_REQUIRED = NONE
+ROUTER_AUTHORITY_CHANGE = NONE
+ROUTER_PRODUCT_ROUTING_CHANGE = NONE
 
 PRODUCT_CODE_CHANGE = NONE
 DEPENDENCY_CHANGE = NONE
@@ -130,7 +139,12 @@ MENTION_PRIMITIVE = SDK SendOptions.mentions (openId-carrying entries only)     
 MENTION_EXCLUSIONS = §4.4 全表（receipts / notifications / proactive / 无可信 openId）
 
 # ── 三、边界 ──────────────────────────────────────────────
-ROUTER_CHANGE_REQUIRED = YES (minimal, §5.3)        # 例外于 packages/agent-router/** NO CHANGE
+ROUTER_CHANGE_REQUIRED = YES_MINIMAL
+MINIMAL_ROUTER_SEAM = single successful-reply call-site UX opts (§5.3)
+ROUTER_AUTHORITY_CHANGE = NONE
+ROUTER_PRODUCT_ROUTING_CHANGE = NONE
+D_U1 = APPROVED
+OWNER_DECISION_REQUIRED = NONE
 AGENT_PROCESS_CHANGE = NONE
 BINDING_STORE_CHANGE = NONE
 PREBOUND_ONLY_CHANGE = NONE
@@ -297,16 +311,16 @@ SDK_RESOLVE_MENTIONS_IN_TEXT = OFF  # SendOptions.resolveMentionsInText（roster
 
 **openId 有效性**：注入前经 SDK `isValidOpenId`（`compose-mentions.ts:5-8`，
 `ou_|on_` 前缀校验）；缺失/非法 → **不 @**（无伪造、无名称替代、无静默改名）。
-显示名 `triggerSenderName` = **可选纯外观**，只来自同一 IngressEvent
-（`sender.name`，或该 event `mentions[]` 中 openId 匹配项的 name）；缺失则省略——
-飞书按 `user_id` 渲染真实显示名。名字经 SDK `escapeAtName`（`compose-mentions.ts:17-20`，
-剥离 `<>"`）防注入——SDK 原生行为，不得绕过。
+ReplyTarget mention context **只机械携带 openId**；不携带 sender name，也不携带任何其它
+mention identity。Connector 只以该 openId 构造 SDK mention entry；显示名不是身份输入，
+不得由 Router、模型文本、roster 查询或名称猜测补入。
 
 ### 4.3 实现原语（SDK native，唯一）
 
 ```text
 MENTION_PRIMITIVE = SDK SendOptions.mentions
-  # 只传已携带 openId 的条目（resolve-mentions.ts 语义：openId 条目原样直通）
+  # 只传由 ReplyTarget context 携带 openId 的条目（resolve-mentions.ts 语义：
+  # openId 条目原样直通）；不传 name 或任意其它 mention target
   # markdown 路径：markdownToPost 把 <at user_id="ou_…">name</at> 前缀注入第一块
   #   md 元素开头（to-post.ts:14-15,21-22）
   # text 路径（fallback）：composeMentionsTextPrefix 构造 <at> 前缀（sender.ts:110-112）
@@ -325,7 +339,7 @@ MENTION_PRIMITIVE = SDK SendOptions.mentions
 
 ---
 
-## 5. Reply Seam、Router 最小变更与 Owner Decision
+## 5. Reply Seam、Router 最小变更与 Owner Ruling
 
 ### 5.1 现有 seam 事实（PR #23 HEAD source-verified）
 
@@ -346,14 +360,15 @@ seam 既有形态：`handle.reply(replyTarget, text, opts = {})`（`feishu-conne
 
 1. **ReplyTarget 可选 metadata（connector-owned，零 Router 参与）**：
    `replyTargetFor(ev)` 产出的每个 target（`replyTo`/`asThread`/`directChat`）新增可选字段
-   `triggerSenderOpenId`（来自 `ev.sender?.openId`）与 `triggerSenderName`（可选，
-   同 event 来源，§4.2）。显式部件构造（`buildReplyTarget` 直接调用，scheduler 路径）
+   `triggerSenderOpenId`，只从 `ev.sender?.openId` 机械投影。ReplyTarget 不携带 sender name
+   或任意 mention target。显式部件构造（`buildReplyTarget` 直接调用，scheduler 路径）
    **不携带**该 metadata —— proactive 不 @ 的机械保证。
 2. **`handle.reply` 第三参成为 UX 激活面**：opts 只携带**意图标志**，永不携带身份值：
    ```text
-   ux: { rendering: 'markdown', autoMentionTriggeringSender: true }
+   ux: { rendering: 'markdown', autoMentionTriggerSender: true }
    ```
-   （字段命名 implementation 可调；冻结的是语义：显式意图、布尔/枚举、无 identity。）
+   冻结语义：Router 只传 `rendering` intent 与 `autoMentionTriggerSender` intent；不得传
+   sender openId、sender name 或任意 mention identity / targets。
 3. **Mention 触发 = 合取**：opts 请求 AND `triggerSenderOpenId` 有效（`isValidOpenId`）
    AND `target.channel ∈ {group, thread}`。三者缺一不可；p2p 结构性排除。
 4. **未传 opts 的调用方**：与 Phase A 行为字节级一致（text、无 mention）。
@@ -373,22 +388,29 @@ seam 既有形态：`handle.reply(replyTarget, text, opts = {})`（`feishu-conne
   默认关闭 mention -> group/topic 自动 @ 永不生效 -> 违反 §4.1 冻结裁决（REJECTED）
 => 零 Router diff 不存在同时满足两条冻结裁决的机械设计。
 
-ROUTER_CHANGE_REQUIRED = YES (minimal)
+ROUTER_CHANGE_REQUIRED = YES_MINIMAL
 MINIMAL_ROUTER_SEAM =
   packages/agent-router/src/index.js:691（成功回复调用点）唯一一行：追加第三参
   ux opts；:699 与其余一切 agent-router 文件 0 行 diff。
   Router 只表达意图（"这是 agent turn 回复"），不解析、不传递、不决定身份；
   mention 全部判定与构造住在 connector —— 不扩大 Router authority。
+ROUTER_AUTHORITY_CHANGE = NONE
+ROUTER_PRODUCT_ROUTING_CHANGE = NONE
 ```
 
-**OWNER_DECISION_REQUIRED（D-U1）**：本 Spec 对 V2 §8 与本轮 owner 边界
-`packages/agent-router/** = NO CHANGE` 申请**唯一例外**——上述单调用点一行 diff。
-Owner 可选：(a) 批准最小 seam（推荐，本 Spec §3/§4 全部合同按此撰写）；
-(b) 拒绝 -> 零 diff 下 reply seam 无法区分调用方，任何默认开启都会同时泄漏到
-失败回执与 scheduler 投递（违反 §3.4），故本 Spec **两项激活整体**
-`BLOCKED_BY_OWNER_DECISION`（不是只停 mention；§3/§4 全部 AC 转 NOT-AUTHORIZED
-而非 FAIL）；(c) 指定其它 seam 或修改 §3.4 裁决（须另评）。
-Implementation Agent 不得自行选择——未获 (a) 前不得改动 `packages/agent-router/**`。
+**Owner ruling D-U1（APPROVED，2026-08-20）**：Owner 已批准本 Spec 对 V2 §8 与原
+`packages/agent-router/** = NO CHANGE` 边界的**唯一例外**——未来实现只可修改
+`packages/agent-router/src/index.js` 的 Agent 成功回复单一调用点，追加上述最小 UX opts。
+Router failure receipt 调用点以及其余 Router 文件必须 byte-preserved；unbound receipt、
+scheduler / proactive notification 的既有调用点同样保持原样。它们全部继续 plain text、
+no auto-mention。
+
+```text
+D_U1 = APPROVED
+OWNER_DECISION_REQUIRED = NONE
+```
+
+本批准只消除 D-U1 未决项，不 acceptance-finalize 本 Spec，也不授予本轮产品代码修改权限。
 
 ---
 
@@ -399,7 +421,7 @@ Implementation Agent 不得自行选择——未获 (a) 前不得改动 `package
   packages/feishu-connector/**          # reply UX opts 处理、markdown send 映射、
                                         # ReplyTarget metadata、mentions 组装、fallback 守卫
   packages/feishu-connector/test/**     # 直接相关测试
-  packages/agent-router/src/index.js    # 仅 §5.3 D-U1 批准后的单调用点一行（否则 0 行）
+  packages/agent-router/src/index.js    # 仅 §5.3 D-U1 批准的成功回复单调用点最小 opts
 
 默认 0 行 / NO CHANGE：
   packages/agent-router/** 其余一切（含 src/process.js）
@@ -492,7 +514,7 @@ AC-SINGLE-RENDER-AUTHORITY
   无第二 outbound transport；rawClient / direct node-sdk 0 引用。
 
 AC-ROUTER-DIFF-MINIMAL
-  packages/agent-router/** diff = §5.3 批准的单调用点一行（D-U1 批准后）；
+  packages/agent-router/** diff = §5.3 批准的成功回复单调用点最小 UX opts；
   其余 agent-router / AgentProcess / Binding / gate / Kernel 文件 diff = 0。
 
 AC-NO-NEW-PERSISTENT-STATE
@@ -572,8 +594,8 @@ SDK 依赖坐标变更（双 revision 合同不变；升级需独立 compatibili
 | mention 逃逸 topic 到主群 | T-MT-TOPIC + anchored 续块链测试；create_thread 语义继承 V2 §7 |
 | format_error fallback 产生重复消息 | 恰好一次语义 + "零 chunk 送达才允许整条重试"边界 + T-MD-FALLBACK |
 | 失败回执被误 @ | AC-FAILURE-RECEIPT-NO-MENTION；opts 不传即不 @ 的默认关闭语义 |
-| 名称注入伪造 mention | 只用 openId；name 可选且经 escapeAtName（SDK 原生） |
-| Router 单行 diff 被扩大成 authority 漂移 | AC-ROUTER-DIFF-MINIMAL + D-U1 未批准前 0 行 + review diff 检查 |
+| 名称注入伪造 mention | ReplyTarget context 与 SDK mention entry 只携带 openId；不携带 name，不做名称解析 |
+| Router 单调用点 diff 被扩大成 authority 漂移 | AC-ROUTER-DIFF-MINIMAL + `D-U1 = APPROVED` 的窄边界 + review diff 检查 |
 | SDK 内置 reply-target-gone 顶层重发被误当本 Spec 新增 | §3.5 透明记录（Phase A 既存）；不新增不依赖不移除 |
 | resolveMentionsInText 被顺手打开 | AC-SINGLE-RENDER-AUTHORITY + AC-MENTION-USES-OPEN-ID-NOT-NAME |
 | Phase A 未 merge 即开工实现 | §8 双前置；Implementation Preflight 必须验证 |
@@ -594,15 +616,15 @@ REVIEW_BASE_COMMIT
 REVIEWED_SPEC_COMMIT
 REVIEW_VERDICT = PASS | FIX_REQUIRED
 BLOCKERS
-OWNER_DECISION_DISPOSITION (D-U1 三选一的显式 owner 裁决记录)
+OWNER_DECISION_DISPOSITION = D-U1 APPROVED（显式核对）
 SEMANTIC_REVIEW_COMPLETE = YES | NO
 VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC | FIX_REQUIRED
 ```
 
 仅 `PASS + BLOCKERS=NONE + SEMANTIC_REVIEW_COMPLETE=YES` 允许 acceptance-finalize
 （`status: proposed -> accepted` + 记录 reviewed head/reviewer/verdict + D-U1 裁决归档）；
-语义改动后不得直接 finalize，须 amendment + focused re-review。D-U1 允许在 finalize 时
-一并裁决；未裁决时本 Spec 默认按 §5.3(a) 撰写的合同保持 proposed 语义，实现不得启动。
+本 amendment 写入 D-U1 后不得直接 finalize，须 focused independent re-review。
+当前仍为 proposed，实现不得启动。
 
 ---
 
