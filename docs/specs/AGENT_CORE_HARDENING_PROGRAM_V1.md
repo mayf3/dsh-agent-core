@@ -372,6 +372,38 @@ SPEC_ID = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
 - shutdown 最终状态；
 - evidence buffer 有界。
 
+显式保留（retention fence）：下列既有 AgentProcess 语义在本 amendment 与后续 child Spec 中必须原样成立，不得因新增 timeout / outcome 模型而弱化、合并或丢失。
+
+```text
+REGISTRY_EXPOSES_READY_PROCESS_ONLY = YES
+```
+
+registry / `ensureRunning` 只在 `proc.ready()` 成立后才向业务 caller 暴露 AgentProcess；shared startup promise 保证并发 `ensureRunning` 复用同一次 spawn+ready；child exit 后 registry reap。not-ready 或已退出的进程不得被业务 turn 复用。
+
+```text
+TURN_WATERMARK_BEFORE_PROMPT_SEND = YES
+```
+
+turn 的事件 watermark 必须在 prompt 发送前建立：本 turn 的 reply 归因只允许落在 watermark 之后、且以本 turn receipt messageId 关联的事件上；前一 turn 的迟到事件不得混入，本 turn 事件也不得因 watermark 建立过晚而被跳过。
+
+```text
+CHILD_EXIT_REJECTS_PENDING_RPC = YES
+```
+
+child `exit` / `error` 必须使该进程全部 pending RPC waiter 立即 reject——包括未自带 timeout 的 request（§2.5 `AGENT_PROCESS_PENDING_RPC_CAN_HANG_FOREVER = MUST_FIX` 的目标态）；不得遗留无界挂起的 pending entry。
+
+```text
+SHUTDOWN_KILL_THEN_AWAIT_REAL_EXIT = YES
+```
+
+shutdown 超过 `shutdownGraceMs` 后必须升级 kill 并 await 真实 child exit（`exitPromise` settled）才算 shutdown 终态；不得以 `{timeout:true}` 类假终态收口，不得遗留残留进程（Investigation T15 现状缺口，目标语义在本 child scope 冻结）。
+
+```text
+BOUNDED_EVENTS_AND_STDERR_BUFFERS = YES
+```
+
+`events` / `stderr` 等 evidence buffer 必须有界；超界截断 / 丢弃策略由 child Spec 冻结，evidence 不得无界增长。
+
 新 Investigation 形成以下 mandatory child-Spec inputs；本 Program 不代替完整 child Spec authoring。
 
 #### 4.1.1 Deadline configuration model
@@ -710,6 +742,7 @@ EXPOSURE_BEYOND_LOOPBACK_BEFORE_AUTH = FORBIDDEN
 
 INTERACTIVE_TIMEOUT_EVIDENCE = AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1@c9894262c3ae9497145439e8d2d2de0518254335
 AGENTPROCESS_TIMEOUT_FIELDS = initializeTimeoutMs,promptReceiptTimeoutMs,turnTimeoutMs,shutdownGraceMs
+AGENTPROCESS_RETAINED_SEMANTICS = REGISTRY_EXPOSES_READY_PROCESS_ONLY,TURN_WATERMARK_BEFORE_PROMPT_SEND,CHILD_EXIT_REJECTS_PENDING_RPC,SHUTDOWN_KILL_THEN_AWAIT_REAL_EXIT,BOUNDED_EVENTS_AND_STDERR_BUFFERS
 TURN_DEADLINE_OUTCOME = outcome_unknown
 NEW_TURN_AFTER_OUTCOME_UNKNOWN = FORBIDDEN_UNTIL_LATE_TERMINAL_OR_PROVEN_TERMINATION
 LATE_TERMINAL_RECONCILIATION = REQUIRED
