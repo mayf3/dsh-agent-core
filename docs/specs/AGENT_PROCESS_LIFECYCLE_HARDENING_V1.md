@@ -116,7 +116,7 @@ V1 优先保证：不永久挂起、不错误复用、不自动重放、不把�
 Program authority = AGENT_CORE_HARDENING_PROGRAM_V1 (accepted)
 Session/product authority = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted)
 Evidence authority = AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1 (PASS)
-Child Spec = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (proposed)
+Child Spec = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (accepted)
 Implementation authority = NONE
 ```
 
