@@ -1,16 +1,29 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { createServer } from 'node:http'
+import { createHash } from 'node:crypto'
 import { once } from 'node:events'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createServer } from 'node:http'
+import { tmpdir } from 'node:os'
+import { isAbsolute, join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { test } from 'node:test'
 
+import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
 import { RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/process.js'
+import { CHATGPT_SUBSCRIPTION_V1 } from '../src/model-overrides.js'
 
-async function observeConnect({ script, authority }) {
+const DSH_CODEX_PACKAGE_SHA256 = '8c3d4e3418c8e267a7b61dc4ad4cd982eaf1c1ec93a4e580961e0292579c23dc'
+
+function sha256(value) {
+  return createHash('sha256').update(value).digest('hex')
+}
+
+async function observeConnect({ script, authority, extraEnv = {} }) {
   const observed = []
   const proxy = createServer()
   proxy.on('connect', (request, socket) => {
-    observed.push(request.url)
+    observed.push({ method: request.method, url: request.url })
     socket.end('HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n')
   })
   proxy.listen(0, '127.0.0.1')
@@ -27,13 +40,15 @@ async function observeConnect({ script, authority }) {
     HTTPS_PROXY: proxyUrl,
     NO_PROXY: 'localhost,127.0.0.1,::1',
     NODE_USE_ENV_PROXY: '1',
-  })
+  }, extraEnv)
 
   const child = spawn(process.execPath, ['--input-type=module', '--eval', script], {
     env,
     stdio: ['ignore', 'pipe', 'pipe'],
   })
+  let stdout = ''
   let stderr = ''
+  child.stdout.on('data', (chunk) => { stdout += String(chunk) })
   child.stderr.on('data', (chunk) => { stderr += String(chunk) })
   const timer = setTimeout(() => child.kill('SIGKILL'), 10_000)
   const [code, signal] = await once(child, 'exit')
@@ -42,7 +57,11 @@ async function observeConnect({ script, authority }) {
   await once(proxy, 'close')
   assert.equal(signal, null, stderr)
   assert.equal(code, 0, stderr)
-  assert.ok(observed.includes(authority), `expected CONNECT ${authority}; observed ${observed.join(', ')}`)
+  assert.ok(
+    observed.some((request) => request.method === 'CONNECT' && request.url === authority),
+    `expected CONNECT ${authority}; observed ${observed.map((request) => `${request.method} ${request.url}`).join(', ')}`,
+  )
+  return { observed, stdout }
 }
 
 test('HTTP fetch proxy observer captures its own CONNECT evidence', async () => {
@@ -67,14 +86,82 @@ test('WebSocket proxy observer captures WebSocket CONNECT independently of SSE f
   })
 })
 
-test('dsh-codex usage auxiliary fetch has separate proxy CONNECT evidence', async () => {
-  // dsh-codex@0.2.3's usage path is a bare global fetch. Exercise that exact
-  // auxiliary endpoint shape in its own child/observer so neither the model
-  // fetch nor WebSocket evidence can satisfy this assertion accidentally.
-  await observeConnect({
+test('real dsh-codex usage service has separate proxy CONNECT evidence', { timeout: 60_000 }, async (t) => {
+  const artifact = process.env.DSH_CODEX_PACKAGE_TARBALL
+  if (artifact === undefined || artifact === '') {
+    t.skip('DSH_CODEX_PACKAGE_TARBALL is required for deterministic real-package acceptance')
+    return
+  }
+  assert.equal(isAbsolute(artifact), true, 'DSH_CODEX_PACKAGE_TARBALL must be absolute')
+  assert.equal(existsSync(artifact), true, `local package artifact missing: ${artifact}`)
+  assert.equal(sha256(readFileSync(artifact)), DSH_CODEX_PACKAGE_SHA256)
+
+  const root = mkdtempSync(join(tmpdir(), 'dsh-codex-auxiliary-proxy-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const dshHome = join(root, 'dsh-home')
+  const operatorHome = join(root, 'operator-home')
+  const settingsSource = join(operatorHome, '.dsh', 'settings.yaml')
+  mkdirSync(join(operatorHome, '.dsh'), { recursive: true, mode: 0o700 })
+  writeFileSync(settingsSource, 'llm-pi-ai:\n  providers: {}\n', 'utf8')
+
+  const envBefore = {
+    HOME: process.env.HOME,
+    DSH_SETTINGS_SOURCE: process.env.DSH_SETTINGS_SOURCE,
+  }
+  process.env.HOME = operatorHome
+  process.env.DSH_SETTINGS_SOURCE = settingsSource
+  try {
+    provisionAgentHome(dshHome, join(root, 'workspace'), {
+      profile: 'agent-core-production',
+      subscription: { ...CHATGPT_SUBSCRIPTION_V1, packageArtifact: artifact },
+      harnessIdentity: {
+        version: CHATGPT_SUBSCRIPTION_V1.dshVersion,
+        commit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
+      },
+    })
+  } finally {
+    for (const [name, value] of Object.entries(envBefore)) {
+      if (value === undefined) delete process.env[name]
+      else process.env[name] = value
+    }
+  }
+
+  const installedPackage = join(dshHome, 'profiles', 'node_modules', 'dsh-codex', 'package.json')
+  const installed = JSON.parse(readFileSync(installedPackage, 'utf8'))
+  assert.equal(installed.name, 'dsh-codex')
+  assert.equal(installed.version, CHATGPT_SUBSCRIPTION_V1.pluginVersion)
+
+  const fixtureCredential = {
+    version: 1,
+    credential: {
+      type: 'oauth',
+      access: 'fixture-access-token-not-real',
+      refresh: 'fixture-refresh-token-not-real',
+      expires: Date.now() + 86_400_000,
+      accountId: 'fixture-account-not-real',
+    },
+  }
+  writeFileSync(
+    join(dshHome, CHATGPT_SUBSCRIPTION_V1.credentialFile),
+    `${JSON.stringify(fixtureCredential)}\n`,
+    { mode: 0o600 },
+  )
+
+  const pluginEntry = pathToFileURL(join(dshHome, 'profiles', 'node_modules', 'dsh-codex', 'lib', 'index.js')).href
+  const { stdout } = await observeConnect({
     authority: 'chatgpt.com:443',
+    extraEnv: { DSH_HOME: dshHome },
     script: `
-      await fetch('https://chatgpt.com/backend-api/wham/usage').catch(() => undefined)
+      const { OpenAICodexService } = await import(${JSON.stringify(pluginEntry)})
+      const service = new OpenAICodexService({
+        modifyReadImage: true,
+        shareImagegenWithOtherModels: true,
+        useWebSocketContextReuse: false,
+        useNativeCompaction: false,
+      })
+      process.stdout.write('REAL_DSH_CODEX_USAGE_SERVICE_INVOKED\\n')
+      await service.usage().catch(() => undefined)
     `,
   })
+  assert.match(stdout, /REAL_DSH_CODEX_USAGE_SERVICE_INVOKED/u)
 })
