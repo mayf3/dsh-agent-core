@@ -2,7 +2,9 @@
 spec_id: DSH_PROVIDER_FALLBACK_CHAIN_V1
 status: proposed
 created: 2026-08-19
-scope: agents_without_explicit_per_agent_override
+amended: 2026-08-20
+amendment: DSH_PROVIDER_FALLBACK_CHAIN_V1_OWNER_POLICY_AMENDMENT
+scope: bounded_fallback_enabled_agents_without_explicit_per_agent_override
 ---
 
 # DSH Provider Fallback Chain V1
@@ -14,21 +16,28 @@ scope: agents_without_explicit_per_agent_override
 
 ## 0. Frozen outcome
 
-For an Agent with **no explicit per-Agent model override**, the proposed default route is:
+For an Agent enrolled by the deployment-authored fallback-enabled Agent allowlist, the
+proposed default route is:
 
 ```text
 PRIMARY_PROVIDER = zai
-PRIMARY_MODEL = glm-5.2
+PRIMARY_MODEL = glm-5.3
 
-SECONDARY_PROVIDER = opencode-go
-SECONDARY_MODEL = deepseek-v4-flash
+SECONDARY_PROVIDER = openai-codex
+SECONDARY_MODEL = gpt-5.6-luna
+
+TERTIARY_PROVIDER = opencode-go
+TERTIARY_MODEL = deepseek-v4-flash
 ```
 
-The secondary model is not guessed. The exact production-loaded Harness dependency tree
-(`@deepseek-ai/dsh-llm-pi-ai@0.1.0-rc.5` using
-`@earendil-works/pi-ai@0.82.1`) catalogs
-`opencode-go/deepseek-v4-flash` as a supported OpenAI-completions route. The same catalog
-contains `zai/glm-5.2`.
+This owner-policy amendment intentionally changes the previous two-route proposal
+`zai/glm-5.2 -> opencode-go/deepseek-v4-flash`. The exact production-loaded pi-ai 0.82.1
+catalog contains `zai/glm-5.2`, not `zai/glm-5.3`; therefore the newly frozen primary is a
+target policy, not current catalog or execution-readiness evidence. Exact GLM-5.3 adapter,
+catalog/config, credential, and real model execution must be proved before implementation
+readiness may become YES. The existing catalog continues to contain
+`opencode-go/deepseek-v4-flash`; current account readiness is separately NO due to the
+observed 429 described in §2.
 
 Route precedence is frozen:
 
@@ -37,8 +46,9 @@ explicit per-Agent route
 > global/default fallback chain
 ```
 
-`agt_cto-agent` remains governed by accepted
-`AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1`:
+An explicit per-Agent route still wins. `agt_cto-agent` remains governed by accepted
+`AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` unless deployment later removes that explicit
+override and separately enrolls it in this chain:
 
 ```text
 agt_cto-agent
@@ -46,26 +56,45 @@ agt_cto-agent
 → no automatic fallback
 ```
 
-This Spec does not attach Luna to this chain. A future
-`Luna → GLM → opencode-go` route requires an explicit amendment and independent review.
+This amendment attaches Luna as the secondary for fallback-enabled Agents. It does not
+silently change any existing explicit Luna route or production configuration.
+
+Owner risk acceptance is frozen exactly as follows:
+
+```text
+SHARED_ZAI_KEY_ALLOWED = YES
+SHARED_LUNA_ACCOUNT_ALLOWED = YES
+COOPERATIVE_SHARED_HOST_TRUST_DOMAIN = ACCEPTED
+```
+
+These statements accept account sharing within the cooperative shared-host trust domain;
+they do not authorize credential duplication, production activation, or implementation.
 
 ## 1. Authority and scope
 
 ### 1.1 In scope
 
-- Agents without an explicit per-Agent model override.
-- One ordered primary/secondary chain.
+- Agents without an explicit per-Agent model override that are explicitly enrolled in a
+  bounded, deployment-authored fallback-enabled Agent allowlist.
+- One ordered primary/secondary/tertiary chain.
 - Provider-call failure handling before any assistant message is materialized and before
   any tool or external side effect is executed.
-- Stable failure classification, bounded same-provider retry, one provider switch,
+- Stable failure classification, bounded same-provider retry, at most two provider switches,
   process-local cooldown, and durable non-secret observability.
+- One operator-owned shared ZAI key authority and one operator-owned shared Luna OAuth
+  credential authority, supplied only to enrolled Agent processes within the accepted
+  cooperative shared-host trust domain.
 
 ### 1.2 Non-goals
 
-- Luna fallback or any change to `agt_cto-agent`.
-- Account pool, load balancing, quota scheduler, provider purchasing, or credential sharing.
-- Dynamic Router model routing.
-- Agent Core Kernel, Binding, Session model, Feishu, or Scheduler change.
+- Automatic enrollment of `agt_cto-agent` or any change to its current explicit override.
+- Account pool, load balancing, quota scheduler, or provider purchasing.
+- Per-Agent copies of the Luna refresh token, blind copying of auth files, or a new
+  credential service.
+- Dynamic Router model routing or provider-switch decisions in Agent Core Router.
+- Agent Core Kernel, Binding, Session model, Feishu, or Scheduler change. The separately
+  reviewed fleet proxy allowlist may extend the existing spawn-env plumbing only; it gains
+  no route-selection authority.
 - PR #11 hardening.
 - Existing provider-route implementation modification.
 - Production provider/configuration change, real cutover, deploy, or merge.
@@ -82,6 +111,14 @@ PRODUCTION_DSH = 0.1.0-rc.5@a12bb03c6861969985f066bfbf0cb7e5dd5ac567
 PI_AI_CATALOG = 0.82.1
 ```
 
+The current amendment was authored after a fresh fetch with:
+
+```text
+AMENDMENT_REMOTE_BRANCH_HEAD = origin/docs/dsh-provider-fallback-chain-v1@abb87e670d9b2708d510d3b1ed6878ed58e7b9b0
+AMENDMENT_REPOSITORY_HEAD_OBSERVED = origin/main@ec18774b85869ac6512b496bbeb116377e889291
+TARGET_PROXY_SPEC = AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1 (accepted)
+```
+
 The launchd runtime currently injects `oc-go/deepseek-v4-flash`. Per-home DSH settings
 declare `opencode-go`, the `oc-go` compatibility route, and their supported models, but do
 not declare a `zai` provider profile. The launchd environment also does not provide
@@ -89,31 +126,112 @@ not declare a `zai` provider profile. The launchd environment also does not prov
 An ambient `ZAI_API_KEY` in the investigator's interactive shell is not a production
 credential seam and is not readiness evidence.
 
-Therefore:
+The old GLM-5.2 readiness fields below are historical evidence only and are superseded for
+the amended primary by the GLM-5.3 gate:
 
 ```text
-GLM_PROVIDER_CONFIG_PRESENT = NO
-GLM_CREDENTIAL_READY = NO
-GLM_MODEL_AVAILABLE = YES
-GLM_DIRECT_ROUTE_CAN_BE_ENABLED_NOW = NO
+GLM53_CATALOG_OR_ADAPTER_PROOF = NOT_PROVEN
+GLM53_PROVIDER_CONFIG_PROOF = NOT_PROVEN
+GLM53_REAL_MODEL_EXECUTION = PENDING
+GLM53_READINESS = PENDING_REAL_MODEL_EXECUTION_VALIDATION
 ```
 
-`GLM_MODEL_AVAILABLE = YES` means exact catalog support only. It does not imply that a
-production route is registered or authenticated. A later controlled direct-route
-activation may be separately proposed after the `zai` profile and Agent-owned credential
-are provisioned and validated; this Spec Agent performs no such activation.
+Owner permits a shared ZAI key. The future implementation must still consume it from one
+operator-owned, owner-only authority and expose it only to fallback-enabled Agent
+processes; it must never enter Workspace files, argv, prompts, events, or logs. This Spec
+does not read, copy, validate, or activate that key.
 
 The `opencode-go` credential is present, but configuration presence is not account
-readiness. A 2026-08-19 isolated one-token diagnostic request to the exact secondary route
+readiness. A 2026-08-19 isolated one-token diagnostic request to the exact route
 returned HTTP 429 `GoUsageLimitError` with a monthly usage-limit message. No production
 configuration or process was changed.
 
 ```text
-SECONDARY_ACCOUNT_READY_NOW = NO
+OPENCODE_READINESS = NO_CURRENT_429
 ```
 
-Until a fresh controlled probe succeeds, fallback availability must not be advertised as
-ready.
+Until a fresh controlled `opencode-go/deepseek-v4-flash` probe succeeds, tertiary
+availability must not be advertised as ready.
+
+### 2.1 Luna shared credential source verification
+
+The installed `dsh-codex@0.2.3` source was read without opening the credential document:
+
+- `openAICodexAuthPath()` defaults strictly to
+  `<DSH_HOME>/.openai-codex-auth.json`.
+- `OpenAICodexCredentialStore.modify()` takes a sibling-file cross-process writer lock,
+  re-reads the current credential under that lock, and writes the replacement through an
+  owner-only atomic rename (`mode=0600`, created parent `dirMode=0700`).
+- pi-ai OAuth resolution performs an optimistic expiry check, then a second expiry check
+  inside `CredentialStore.modify()`; only the lock holder refreshes, and the rotated
+  credential is persisted before release. Concurrent processes then observe the refreshed
+  document rather than independently rotating the same refresh token.
+- The store constructor accepts an explicit filename internally, but
+  `OpenAICodexService` always constructs the default store and the public plugin `Config`
+  exposes no shared auth path.
+
+Therefore owner permission to share one Luna account does **not** permit copying the auth
+document into many homes. The minimum safe model is:
+
+```text
+SHARED_LUNA_CREDENTIAL_MODEL =
+  one operator-owned shared credential authority
+  -> one canonical auth document outside every Agent Workspace
+  -> parent directory 0700; auth document and writer lock 0600
+  -> dsh-codex cross-process writer lock + double-checked refresh + atomic rewrite
+  -> only fallback-enabled Agent processes receive the configured authority path
+  -> no credential or token in Workspace / argv / prompt / event / logs
+```
+
+The smallest missing seam is an optional, deployment-authored `dsh-codex` config field for
+an absolute shared auth path (conceptually `credentialPath`) that is passed to
+`OpenAICodexCredentialStore`. It must default to the existing per-`DSH_HOME` path when
+absent; reject relative paths, symlinks, paths inside an Agent Workspace, wrong ownership,
+directory mode broader than 0700, or file/lock mode broader than 0600; never log the path's
+contents or any token. The same canonical path must be resolved by every enrolled process
+so the existing file lock actually coordinates them. This is a minimal plugin/config seam,
+not a credential service, broker, copy operation, or per-home refresh-token fan-out.
+An orphaned writer lock must time out fail-loud and require explicit operator recovery; a
+contender must never delete a lock merely because it appears old.
+
+```text
+LUNA_SHARED_READINESS = NO_SHARED_AUTH_PATH_CONFIG_SEAM_NOT_READY
+```
+
+### 2.2 Fleet Luna proxy model
+
+Accepted `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1` scopes its `providerEnv`
+schema to exactly `agt_cto-agent`; it does not authorize fleet Luna fallback. This
+amendment selects the smallest follow-up model:
+
+```text
+LUNA_PROXY_MODEL =
+  bounded fallback-enabled Agent allowlist proxy env at AgentProcess spawn;
+  reuse the accepted providerEnv validation, inherited-proxy stripping, target-only
+  respawn/reload, no-log/no-argv rules;
+  extend authority from the single target only through a separately reviewed accepted
+  Spec/implementation;
+  production-runtime global proxy forbidden
+```
+
+Every non-enrolled Agent process must remain proxy-free and byte-identical in route/env.
+Because this model is process-scoped rather than provider-call-scoped, its review must
+explicitly accept that the enrolled process's ZAI and opencode calls inherit the same proxy
+environment; otherwise the alternative is a provider-scoped Luna dispatcher seam and a
+new owner decision. No production-runtime global proxy is permitted under either model.
+
+The amendment readiness conjunction is:
+
+```text
+FALLBACK_IMPLEMENTATION_READY = YES only if all are closed independently:
+  turn/end failure propagation reviewed and merged = YES (currently closed)
+  GLM-5.3 exact adapter/catalog/config and real execution = PASS (currently pending)
+  shared Luna credentialPath seam and multiprocess tests = PASS (currently NO)
+  bounded fleet proxy allowlist Spec/review/implementation = PASS (currently NO)
+  opencode-go real readiness probe = PASS (currently 429 / NO)
+  this fallback Spec independently reviewed and accepted = YES (currently proposed / NO)
+otherwise FALLBACK_IMPLEMENTATION_READY = NO
+```
 
 ## 3. Current DSH capability and missing capability
 
@@ -190,15 +308,19 @@ TURN_END_FAILURE_PROPAGATION_PREREQUISITE =
   AND merged to main = YES
 
 CURRENT_PREREQUISITE_STATUS =
-  independent implementation review = NOT_PASS
-  merged to main = NO
+  implementation present on origin/main = YES
+  correlated turn/end.reason.error = YES
+  sanitized structured fail-loud / no empty-reply success = YES
+  merged to main = YES
 FALLBACK_IMPLEMENTATION_READY = NO
 ```
 
-Both gates are mandatory. Source presence, an open review, a draft change, or a candidate
-commit is not proof of the capability and must not be treated as the prerequisite. Only
-after an implementation independently passes review and is merged to `main` may
-`FALLBACK_IMPLEMENTATION_READY` be reconsidered as `YES`.
+Both gates remain mandatory. Source presence, an open review, a draft change, or a candidate
+commit is not proof of the capability. This amendment source-verifies the merged
+`origin/main` path: the Router correlates receipt -> `turn/start` -> matching
+`user/message` -> same-turn `turn/end`; an error reason is sanitized and thrown before the
+empty-reply return path. This prerequisite is therefore closed, but it does not close the
+independent GLM-5.3, shared Luna, fleet proxy, fallback-plugin, or opencode readiness gates.
 
 If a primary provider failure can still be reported as a successful empty reply, fallback
 implementation and rollout are prohibited regardless of configuration or provider account
@@ -308,36 +430,42 @@ transitions, Feishu delivery, or file modifications.
 
 ## 7. Attempt, retry, and cooldown state machine
 
-At most two provider routes may be attempted in V1, in the frozen order. The fallback
-count is therefore at most one. `@deepseek-ai/dsh-llm-retry` retains sole ownership of
+At most three provider routes may be attempted in V1, in the frozen order. The fallback
+count is therefore at most two. `@deepseek-ai/dsh-llm-retry` retains sole ownership of
 same-provider retry. The fallback layer runs only after `llm-retry` delegates a terminally
 exhausted eligible error. For `QUOTA` and stable `MODEL_UNAVAILABLE`, the configured retry
 budget is zero and is therefore terminal on the first failure. The fallback layer must
 never retry the same provider itself.
 
 ```text
-requested route = zai/glm-5.2
+requested route = zai/glm-5.3
 
 primary attempt
   → QUOTA or stable MODEL_UNAVAILABLE
       → no primary retry
       → open cooldown
-      → one secondary attempt
+      → secondary Luna attempt
 
   → RATE_LIMIT/SERVER/TIMEOUT/TRANSPORT
       → reuse provider-owned normal retry policy
          (max 2 retries; 500ms exponential start; 10s cap; 0.1 jitter;
           bounded Retry-After only)
       → if exhausted, open cooldown
-      → one secondary attempt
+      → secondary Luna attempt
 
   → forbidden/unclassified error
       → no switch; fail loud
 
 secondary failure
-  → never restart the chain
   → apply only secondary's own bounded same-provider retry where eligible
-  → fail loud with the secondary's truthful terminal class
+  → after terminal exhaustion, re-run the whole-turn safety gate
+  → only for an allowlisted stable class, switch once to tertiary opencode-go
+  → forbidden/unclassified/auth/credential failure: no tertiary; fail loud
+
+tertiary failure
+  → apply only tertiary's own bounded same-provider retry where eligible
+  → never restart the chain and never switch provider again
+  → fail loud with the tertiary's truthful terminal class
 ```
 
 The mandatory waterfall is:
@@ -346,11 +474,14 @@ The mandatory waterfall is:
 2. Existing same-provider bounded retry by `llm-retry`; resolved `maxRetries` must be `<= 2`.
 3. Same-provider retry terminal exhaustion.
 4. Only for one allowlisted stable class, zero current-turn materialized output, and zero
-   current-turn tool/external side effect: switch provider once.
+   current-turn tool/external side effect: switch from primary to secondary once.
 5. Secondary provider execution, with its own independently bounded same-provider retry.
-6. No second provider switch and no chain restart.
+6. After secondary terminal exhaustion, run the same allowlist and entire-turn safety gate
+   again; if it passes, switch from secondary to tertiary once.
+7. Tertiary provider execution, with its own independently bounded same-provider retry.
+8. No third provider switch and no chain restart.
 
-Startup must resolve every configured retry policy used by either route. A resolved
+Startup must resolve every configured retry policy used by all three routes. A resolved
 `maxRetries > 2`, an unbounded policy, or `mode: always` is invalid and must reject startup.
 The retry and fallback layers must not each retry the same failure; retry multiplication is
 forbidden.
@@ -360,29 +491,30 @@ RETRY_POLICY =
   QUOTA/MODEL_UNAVAILABLE: 0 same-provider retries;
   RATE_LIMIT/SERVER/TIMEOUT/TRANSPORT: existing provider-owned normal policy,
   maximum 2 retries with bounded backoff;
-  maximum provider switches per turn = 1;
+  maximum provider switches per turn = 2;
   always/unbounded retry mode forbidden
 
 SAME_PROVIDER_RETRY_OWNER = @deepseek-ai/dsh-llm-retry
 MAX_TRANSIENT_RETRIES = 2
-MAX_PROVIDER_SWITCHES = 1
+MAX_PROVIDER_SWITCHES = 2
 ```
 
 ### 7.1 Process-local circuit breaker
 
-The V1 plugin owns a process-local circuit breaker keyed by exact provider/model route.
+The V1 plugin owns a process-local circuit breaker keyed by exact provider/model route for
+each nonterminal route (`zai/glm-5.3` and `openai-codex/gpt-5.6-luna`).
 The following durations are **V1 policy constants**, not existing DSH defaults:
 
 - `QUOTA`: open for 30 minutes.
 - stable `MODEL_UNAVAILABLE`: open for 10 minutes.
 - exhausted `RATE_LIMIT`, `SERVER`, `TIMEOUT`, or `TRANSPORT`: open for 60 seconds.
-- While open, an eligible ordinary Agent turn goes directly to the secondary without
-  waiting for the primary. Because there is no primary call in that turn, the complete
-  mandatory `llm/fallback` evidence is:
+- While the primary breaker is open, an eligible enrolled Agent turn goes directly to the
+  secondary without waiting for primary. Because there is no primary call in that turn,
+  the complete mandatory `llm/fallback` evidence is:
 
   ```text
   requestedProvider = zai
-  requestedModel = glm-5.2
+  requestedModel = glm-5.3
 
   primaryAttempted = false
   attemptedProvider = NONE
@@ -393,16 +525,23 @@ The following durations are **V1 policy constants**, not existing DSH defaults:
 
   breakerOriginStableFailureClass = <exact historical stable class from §5.1>
 
-  selectedProvider = opencode-go
-  selectedModel = deepseek-v4-flash
+  selectedProvider = openai-codex
+  selectedModel = gpt-5.6-luna
   fallbackCount = 1
   ```
 
   Selecting the secondary in this state means the primary was skipped because an existing
   breaker was open. It does not mean the current turn attempted and failed the primary.
-- After expiry, exactly one single-flight half-open probe is allowed; concurrent turns use
-  the secondary until that probe succeeds or reopens the breaker.
-- Successful primary completion closes the breaker.
+- If the secondary breaker is already open when the chain reaches Luna, Luna is likewise
+  skipped without a fabricated current Luna attempt. A second `llm/fallback` event records
+  `primaryAttempted` unchanged, `attemptedProvider=NONE`, `attemptedModel=NONE`,
+  `routeState=secondary_cooldown_active`, `stableFailureClass=NONE`, exact historical
+  `breakerOriginStableFailureClass`, selected
+  `opencode-go/deepseek-v4-flash`, and `fallbackCount=2`.
+- After expiry, exactly one single-flight half-open probe per exact route is allowed;
+  concurrent turns use that route's next downstream route until the probe succeeds or
+  reopens the breaker.
+- Successful completion on a nonterminal route closes that exact route's breaker.
 
 ```text
 COOLDOWN_POLICY =
@@ -414,33 +553,38 @@ COOLDOWN_POLICY =
   persistent cooldown = NO in V1
 
 PRIMARY_COOLDOWN_ROUTE_STATE = primary_cooldown_active
+SECONDARY_COOLDOWN_ROUTE_STATE = secondary_cooldown_active
 BREAKER_ORIGIN_STABLE_FAILURE_CLASS =
   account_quota_exhausted / rate_limited / provider_unavailable /
   bounded_transient_network_failure / model_unavailable
 CURRENT_ATTEMPT_STABLE_FAILURE_CLASS = NONE when primaryAttempted=false
 ```
 
-`breakerOriginStableFailureClass` is the exact normalized class that opened the breaker.
+`breakerOriginStableFailureClass` is the exact normalized class that opened the relevant
+route breaker.
 It must be copied verbatim from §5.1 and preserves the one-to-one provenance from the
 original normalized failure to its cooldown. It must not be replaced by a coarse category
 such as `exhausted_transient_failure`. A cooldown bypass must never fabricate a current-turn
 `QUOTA`, `RATE_LIMIT`, `SERVER`, `TIMEOUT`, `TRANSPORT`, or `MODEL_UNAVAILABLE`, and must
-never claim that `zai/glm-5.2` was attempted when the primary was not called.
+never claim that `zai/glm-5.3` or `openai-codex/gpt-5.6-luna` was attempted when that route
+was not called.
 
 Persistent cross-process cooldown would introduce shared fleet/account coordination and a
 new durable authority adjacent to the explicitly excluded quota scheduler/account pool.
 It is deferred. V1 limits repeated waiting per Agent process; a process restart may perform
 one new primary probe and must remain observable.
 
-## 8. Configuration and Luna exclusion
+## 8. Configuration, credential authority, and proxy boundary
 
 The fallback plugin configuration must be deployment-authored and fail loud. Conceptually:
 
 ```yaml
-scope: agents-without-explicit-override
+scope: deployment-authored-fallback-enabled-agent-allowlist
 routes:
   - provider: zai
-    model: glm-5.2
+    model: glm-5.3
+  - provider: openai-codex
+    model: gpt-5.6-luna
   - provider: opencode-go
     model: deepseek-v4-flash
 ```
@@ -454,10 +598,26 @@ Invalid chain length, duplicate route, missing provider/model, unregistered prov
 unsupported configured model, or missing credential fails loud. It must never silently
 remove a route or run the remaining route as if the chain were healthy.
 
+Enrollment is an explicit deployment decision. An empty/missing allowlist means the chain
+is disabled; unknown/duplicate Agent IDs or an Agent with an explicit route appearing in
+the allowlist fail startup. Fleet size must never be inferred from discovered homes.
+
+Credential and proxy configuration must satisfy §2.1-§2.2 before startup:
+
+- shared ZAI key and shared Luna auth stay in operator-owned authorities outside every
+  Workspace; no secret value in config, argv, prompt, events, or logs;
+- every Luna-enabled process resolves the same canonical auth path through the minimal
+  `dsh-codex` config seam; copying into per-Agent homes is forbidden;
+- proxy env is injected only into explicitly enrolled AgentProcess children through the
+  separately accepted bounded-allowlist extension; production-runtime global proxy and
+  launchd-global proxy are forbidden;
+- absent/unreadable/wrong-mode authorities, an unimplemented shared-path seam, or an
+  unaccepted fleet proxy extension reject enablement fail-loud.
+
 ## 9. Observability and evidence
 
-Fallback must append a non-surface durable `llm/fallback` event before the secondary call.
-Its schema must contain at least:
+Fallback must append one non-surface durable `llm/fallback` event before each downstream
+provider selection (secondary or tertiary). Its schema must contain at least:
 
 ```text
 chainId
@@ -477,12 +637,13 @@ routeState
 breakerOriginStableFailureClass
 ```
 
-For a normal primary call, `attemptedProvider`, `attemptedModel`, and `stableFailureClass`
-describe that actual call and its one-to-one class from §5.1. For a cooldown bypass they
+For a normal primary or secondary call, `attemptedProvider`, `attemptedModel`, and
+`stableFailureClass` describe that actual call and its one-to-one class from §5.1. For a
+cooldown bypass they
 are exactly `NONE`, `NONE`, and `NONE`; `breakerOriginStableFailureClass` separately explains
 why the process-local route breaker was already open. Session evidence, logs, and acceptance
-reports must preserve this distinction and must not synthesize an attempted primary route
-or current-turn primary failure. `stableFailureClass` exclusively describes an actual
+reports must preserve this distinction and must not synthesize an attempted primary or
+secondary route or current-turn failure. `stableFailureClass` exclusively describes an actual
 provider attempt in the current turn and must never carry historical breaker provenance.
 
 Each attempt is also evidenced by the existing `request/header` and `request/context`
@@ -498,7 +659,8 @@ schemas are verified non-secret.
 ```text
 OBSERVABILITY =
   durable requested route + every attempted provider/model + stable failure class
-  + selected fallback provider/model + fallback count + cooldown state;
+  + every selected downstream provider/model + monotonic fallback count (1 then at most 2)
+  + cooldown state;
   final provider/model proven by request context and assistant message provenance;
   secrets and raw provider error bodies forbidden
 ```
@@ -509,76 +671,99 @@ An implementation may begin only after this Spec is independently reviewed, acce
 the §4 prerequisite is merged. Its acceptance must include:
 
 1. Exact DSH source/version and exact provider catalogs pinned.
-2. No override Agent is intercepted; `agt_cto-agent` Luna route has zero fallback events.
-3. Primary success produces no secondary call.
+2. No explicit-override or non-enrolled Agent is intercepted; the existing `agt_cto-agent`
+   explicit Luna route has zero fallback events unless a later deployment separately
+   removes that override and enrolls it.
+3. Primary success produces no secondary or tertiary call.
 4. Each allowed stable class follows §5/§7 exactly.
-5. Every forbidden class fails loud with zero secondary calls.
+5. Every forbidden class fails loud with zero additional downstream calls.
 6. Partial streamed chunks followed by failure remain non-surface; any current-turn
    materialized assistant output forbids fallback and replay.
 7. Any current-turn emitted/materialized/executed tool call, file mutation, Forum write,
    Workflow transition, Feishu delivery, parent RPC, or possible external side effect
    makes fallback/replay impossible and yields fail-loud/outcome-unknown.
-8. At most one provider switch per turn and no chain restart after secondary failure.
+8. At most two provider switches per turn, exact order
+   `zai/glm-5.3 -> openai-codex/gpt-5.6-luna -> opencode-go/deepseek-v4-flash`, and no
+   chain restart after tertiary failure.
 9. Cooldown/half-open behavior is deterministic under concurrent turns and resets on
    process restart as documented.
 10. Durable events prove requested, attempted, failed, selected, and final routes without
     secrets.
-11. Real controlled primary and secondary account probes pass before production rollout;
-    configuration presence alone fails the gate.
-12. Router, Binding, Session model, Feishu, Scheduler, and Kernel diffs are empty.
+11. Real controlled primary, secondary, and tertiary account/model probes pass before
+    production rollout; configuration presence alone fails the gate.
+12. The fallback-switch implementation has no Router, Binding, Session model, Feishu,
+    Scheduler, or Kernel diff. The independently governed fleet proxy prerequisite may
+    contain only its accepted minimal spawn-env plumbing diff and no routing semantics.
 13. Startup rejects `mode: always`, unbounded retry, and resolved `maxRetries > 2`; tests
     prove no multiplicative retry between `llm-retry` and fallback.
 14. Every raw code in §5.1 has exactly one class and disposition; unmapped codes fail loud
     without a secondary call.
-15. A cooldown bypass proves `primaryAttempted=false`, `attemptedProvider=NONE`,
+15. A primary cooldown bypass proves `primaryAttempted=false`, `attemptedProvider=NONE`,
     `attemptedModel=NONE`, `stableFailureClass=NONE`, the exact §5.1
     `breakerOriginStableFailureClass`, selected secondary route, and fallback count without
     fabricating a current primary attempt or failure.
+16. A secondary cooldown bypass uses the same no-fabrication rule, selects the tertiary,
+    and records `fallbackCount=2` without claiming a current Luna attempt.
+17. Multi-process Luna tests point multiple processes to one temporary canonical auth
+    document and prove one refresh under contention, lock timeout fail-loud, atomic complete
+    readers, rotated refresh persistence, and 0600/0700 enforcement; tests never use or copy
+    a real OAuth credential.
+18. Fleet proxy tests prove only bounded allowlisted AgentProcess children receive the
+    accepted four-key proxy env, non-enrolled children remain proxy-free, and runtime-global
+    proxy is absent; real proxy acceptance remains a separately authorized gate.
+19. GLM-5.3 exact adapter/catalog/config plus real model execution succeeds; Luna shared
+    auth-path seam and bounded allowlist proxy extension are independently accepted and
+    implemented; opencode-go no longer returns the current 429.
 
 ## 11. Final output contract
 
 ```text
-DSH_PROVIDER_FALLBACK_CHAIN_V1_SPEC_AMENDMENT_2 = PASS
+FALLBACK_POLICY_AMENDMENT = PASS
 
-BASE_REVIEWED_HEAD = b1e1b013
+BASE_REMOTE_HEAD = abb87e670d9b2708d510d3b1ed6878ed58e7b9b0
+SCOPE = bounded deployment-authored fallback-enabled Agent allowlist; explicit overrides excluded
 
-SCOPE = Agents without explicit per-Agent override
+PRIMARY_ROUTE = zai / glm-5.3
+SECONDARY_ROUTE = openai-codex / gpt-5.6-luna
+TERTIARY_ROUTE = opencode-go / deepseek-v4-flash
 
-PRIMARY_PROVIDER = zai
-PRIMARY_MODEL = glm-5.2
-SECONDARY_PROVIDER = opencode-go
-SECONDARY_MODEL = deepseek-v4-flash
+SHARED_ZAI_KEY_ALLOWED = YES
+SHARED_LUNA_ACCOUNT_ALLOWED = YES
+COOPERATIVE_SHARED_HOST_TRUST_DOMAIN = ACCEPTED
 
-GLM_PROVIDER_CONFIG_PRESENT = NO
-GLM_CREDENTIAL_READY = NO
-GLM_MODEL_AVAILABLE = YES
-GLM_DIRECT_ROUTE_CAN_BE_ENABLED_NOW = NO
-SECONDARY_ACCOUNT_READY_NOW = NO
+SHARED_LUNA_CREDENTIAL_MODEL = one operator-owned canonical shared auth document; dsh-codex configurable absolute credentialPath seam; cross-process lock + double-checked refresh + 0600 atomic rewrite under 0700 directory; enrolled processes only; no per-home copies; no Workspace/argv/prompt/event/log secrets; no credential service
+LUNA_PROXY_MODEL = bounded fallback-enabled Agent allowlist providerEnv at AgentProcess spawn, extending the accepted target-only seam only after separate accepted review/implementation; non-enrolled processes proxy-free; production-runtime/launchd global proxy forbidden
+
+FALLBACK_WATERFALL = zai/glm-5.3 -> openai-codex/gpt-5.6-luna -> opencode-go/deepseek-v4-flash -> fail-loud
+WHOLE_TURN_SIDE_EFFECT_GATE = any current-turn materialized/external output, emitted/materialized/executed tool call, file mutation, external side effect, or uncertain external outcome forbids fallback and replay; fail loud/outcome_unknown
 
 CURRENT_DSH_FALLBACK_SUPPORT = SAME_PROVIDER_BOUNDED_RETRY_ONLY
 INTEGRATION_LAYER = DSH provider runtime / Agent-loop model-call recovery plugin
 MODEL_CALL_RETRY_SEAM = agent/request-error + agent/request
-PROVIDER_SELECTION_AUTHORITY = explicit per-Agent route first; otherwise DSH fallback policy
-ROUTER_CHANGE_REQUIRED = NO
+PROVIDER_SELECTION_AUTHORITY = explicit per-Agent route first; otherwise explicit fallback-enabled allowlist + DSH fallback policy
+FALLBACK_ROUTER_CHANGE_REQUIRED = NO
+LUNA_PROXY_ROUTER_CODE_CHANGE_REQUIRED = YES_MINIMAL_FUTURE_ACCEPTED_SPEC
+ROUTER_ROUTING_SEMANTIC_CHANGE = NONE
 
 TURN_END_FAILURE_PROPAGATION_PREREQUISITE = real correlated sanitized turn/end.reason.error → stable class → structured fail-loud → no empty-reply success; independent implementation review PASS and merged main YES required
-CURRENT_PREREQUISITE_STATUS = independent implementation review NOT_PASS; merged to main NO
+CURRENT_PREREQUISITE_STATUS = implementation present and merged on origin/main YES
 
 FALLBACK_ALLOWED_ERRORS = account_quota_exhausted; exhausted rate_limited/provider_unavailable/bounded_transient_network_failure; stable model_unavailable
 FALLBACK_FORBIDDEN_ERRORS = credential/auth/config/request/context/empty-response/abort/unclassified/Agent/tool/business errors
 PARTIAL_OUTPUT_POLICY = external/materialized partial output forbids fallback; uncertain terminal outcome is outcome_unknown
 TOOL_SIDE_EFFECT_POLICY = any emitted/executed tool or possible external side effect forbids replay and fallback
 
-RETRY_POLICY = bounded provider-owned retry; max 2 transient retries; max 1 provider switch; no always mode
-RETRY_FALLBACK_ORDER = primary attempt → llm-retry bounded same-provider retry → terminal exhaustion → allowlist and entire-turn safety gate → one secondary switch → secondary execution → stop
+RETRY_POLICY = bounded provider-owned retry first; max 2 transient retries per route; max 2 provider switches; no always mode
+RETRY_FALLBACK_ORDER = each route → llm-retry bounded same-provider retry → terminal exhaustion → allowlist and entire-turn safety gate → next route; after tertiary fail-loud
 SAME_PROVIDER_RETRY_OWNER = @deepseek-ai/dsh-llm-retry
 MAX_TRANSIENT_RETRIES = 2
-MAX_PROVIDER_SWITCHES = 1
+MAX_PROVIDER_SWITCHES = 2
 
 FAILURE_NORMALIZATION = one raw code → exactly one stable class → exactly one disposition; unmapped fail-loud and never fallback
 
 COOLDOWN_POLICY = process-local exact-route breaker using V1 policy constants; account_quota_exhausted 30m; model_unavailable 10m; rate_limited/provider_unavailable/bounded_transient_network_failure 60s; persistent NO
-COOLDOWN_BYPASS_EVENT_SCHEMA = requestedProvider=zai; requestedModel=glm-5.2; primaryAttempted=false; attemptedProvider=NONE; attemptedModel=NONE; routeState=primary_cooldown_active; stableFailureClass=NONE; breakerOriginStableFailureClass=<exact §5.1 class>; selectedProvider=opencode-go; selectedModel=deepseek-v4-flash; fallbackCount=1
+PRIMARY_COOLDOWN_BYPASS_EVENT_SCHEMA = requestedProvider=zai; requestedModel=glm-5.3; primaryAttempted=false; attemptedProvider=NONE; attemptedModel=NONE; routeState=primary_cooldown_active; stableFailureClass=NONE; breakerOriginStableFailureClass=<exact §5.1 class>; selectedProvider=openai-codex; selectedModel=gpt-5.6-luna; fallbackCount=1
+SECONDARY_COOLDOWN_BYPASS_EVENT_SCHEMA = attemptedProvider=NONE; attemptedModel=NONE; routeState=secondary_cooldown_active; stableFailureClass=NONE; breakerOriginStableFailureClass=<exact §5.1 class>; selectedProvider=opencode-go; selectedModel=deepseek-v4-flash; fallbackCount=2
 PRIMARY_ATTEMPTED = false
 ATTEMPTED_PROVIDER = NONE
 ATTEMPTED_MODEL = NONE
@@ -586,12 +771,16 @@ CURRENT_ATTEMPT_STABLE_FAILURE_CLASS = NONE
 BREAKER_ORIGIN_STABLE_FAILURE_CLASS = exact §5.1 class
 HISTORICAL_FAILURE_PROVENANCE_ONE_TO_ONE = YES
 PRIMARY_COOLDOWN_ROUTE_STATE = primary_cooldown_active
+SECONDARY_COOLDOWN_ROUTE_STATE = secondary_cooldown_active
 
 CURRENT_TURN_SIDE_EFFECT_POLICY = any current-turn materialized output, tool event, file mutation, or possible external side effect forbids subsequent fallback/replay
 
-OBSERVABILITY = cooldown bypass records no attempted route and no current failure, plus exact historical breaker stable class and selected secondary route; no secrets/raw provider error body
+OBSERVABILITY = every switch records actual attempted route or NONE on cooldown bypass, exact current/historical class separation, selected downstream route, monotonic fallbackCount <= 2, and final route; no secrets/raw provider error body
 
-LUNA_ROUTE_CHANGED = NO
+GLM53_READINESS = PENDING_REAL_MODEL_EXECUTION_VALIDATION
+LUNA_SHARED_READINESS = NO_SHARED_AUTH_PATH_CONFIG_SEAM_AND_FLEET_PROXY_EXTENSION_NOT_READY
+OPENCODE_READINESS = NO_CURRENT_429
+
 ROUTER_DYNAMIC_MODEL_ROUTER = NO
 SCHEDULER_CHANGE = NONE
 KERNEL_CHANGE = NONE
@@ -601,5 +790,5 @@ PREVIOUS_REQUIRED_FIXES_REGRESSION = NONE
 FALLBACK_IMPLEMENTATION_READY = NO
 
 SPEC_STATUS = proposed
-READY_FOR_FOCUSED_RE_REVIEW = YES
+READY_FOR_INDEPENDENT_REVIEW = YES
 ```
