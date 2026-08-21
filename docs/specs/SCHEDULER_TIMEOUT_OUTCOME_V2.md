@@ -181,14 +181,15 @@ IMPLEMENTATION_ALLOWED_BEFORE_DEPENDENCIES_PASS = NO
 
 Scheduler 实现 PR 开工前，以下条件**全部**成立（缺一不可）：
 
-1. `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` 的 implementation-authorizing replacement Spec（`implementation_authority: contracts`）已 accepted、已 merge 进 main；
-2. 该 AgentProcess implementation 已完成且 review PASS（conformance/fault evidence 齐备）；
-3. `NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1` implementation Spec 已 accepted、已 merge 进 main；
-4. 该 Notification Ingress implementation 已完成且 review PASS；
-5. 实现 base 包含 D-006、D-007 与本 Spec（accepted）；
-6. contract-by-contract fault-test plan（§10 Acceptance + §10.1 fault matrix）完整且作为实现 PR 的验证计划。
+1. Scheduler V2（本 Spec）已 accepted、已 merge 进 main；
+2. AgentProcess implementation-authorizing V2 Spec（`AGENT_PROCESS_LIFECYCLE_HARDENING_V1` 的 implementation-authority replacement，`implementation_authority: contracts`）已 accepted、已 merge 进 main；
+3. 该 AgentProcess implementation 已完成且 review PASS（conformance/fault evidence 齐备）；
+4. `NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1` implementation Spec 已 accepted、已 merge 进 main；
+5. 该 Notification Ingress implementation 已完成且 review PASS；
+6. implementation base 包含 D-006、D-007；
+7. contract-by-contract fault-test plan（§10 Acceptance + §10.1 fault matrix）完整且作为实现 PR 的验证计划。
 
-依据：Program V1 §5 的 1→2→3 实现依赖链（Scheduler 实现至少依赖 AgentProcess 提供可信生命周期 / 终止 evidence；在 cancel + proven termination 尚不存在时，timeout 的唯一安全 terminal observation 是 `outcome_unknown`）。当前事实：main@54ac27f 上 `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` 为 accepted 但 `implementation_authority: none`（OBS-009），`NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1` spec 尚不存在——因此依赖门当前**未**满足。
+依据：Program V1 §5 的 1→2→3 实现依赖链（Scheduler 实现至少依赖 AgentProcess 提供可信生命周期 / 终止 evidence；在 cancel + proven termination 尚不存在时，timeout 的唯一安全 terminal observation 是 `outcome_unknown`）。当前事实：本 Spec 自身仍为 proposed（precondition 1 未满足）；main@54ac27f 上 `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` 为 accepted 但 `implementation_authority: none`（OBS-SCH-009，precondition 2 未满足），`NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1` spec 尚不存在（precondition 4 未满足）——因此依赖门当前**未**满足。
 
 一个 implementation PR 不得顺手实现下一个 child（Program §5）；本 Spec 的实现 PR 范围仅限 Scheduler occurrence authority store 与 timeout/outcome Contracts。
 
@@ -273,7 +274,7 @@ Scheduler 实现 PR 开工前，以下条件**全部**成立（缺一不可）�
 
 - Subject: `docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md` frontmatter
 - Source revision: `54ac27f`
-- Result: `status: accepted`、`implementation_authority: none`；即 §3.3 precondition 1 的「implementation-authorizing replacement」尚未存在。
+- Result: `status: accepted`、`implementation_authority: none`；即 §3.3 precondition 2 的「AgentProcess implementation-authorizing V2」尚未存在。
 - Provenance: `docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md:1-25`
 
 ### OBS-SCH-010 — V1 accepted 且 V2 不存在
@@ -818,7 +819,7 @@ IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = contracts
 IMPLEMENTATION_ALLOWED_BEFORE_DEPENDENCIES_PASS = NO
 ```
 
-- Scheduler 实现 PR 必须声明 §3.3 的六项 precondition 全部满足，且其 base 包含 accepted 的 D-006、D-007 与本 Spec。
+- Scheduler 实现 PR 必须声明 §3.3 的七项 precondition 全部满足，且其 base 包含 D-006、D-007 与 accepted 的本 Spec（precondition 1/6）。
 - 一个 implementation PR 不得实现其他 child（AgentProcess / Notification Ingress / Product API）。
 - 本轮（proposed authoring）：无实现、无 store mutation、无 production 变化。
 
@@ -1083,7 +1084,7 @@ Natural next 与 retry occurrence 都是新 identity（不复用旧 key）。Nat
 ### ACC-036 — Preconditions gate
 
 - Contracts: C-036
-- Method: 实现 PR 元数据核验（§3.3 六项 + base 包含 D-006/D-007/V2 accepted）+ PR 范围审查（无跨 child 实现）
+- Method: 实现 PR 元数据核验（§3.3 七项：含本 Spec accepted+merged、AgentProcess implementation-authorizing V2 accepted+merged+PASS、Notification Ingress spec accepted+merged+PASS、base 包含 D-006/D-007）+ PR 范围审查（无跨 child 实现）
 - Failure: 依赖未过门即开工，或 PR 混入其他 child 实现
 
 ### ACC-037 — Restore gate (implementation round)
@@ -1236,12 +1237,13 @@ READY_TO_RESTORE_BEFORE_HARDENING = 0
 IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = contracts
 IMPLEMENTATION_ALLOWED_BEFORE_DEPENDENCIES_PASS = NO
 IMPLEMENTATION_PRECONDITIONS =
-  1_AGENTPROCESS_IMPL_AUTHORITY_REPLACEMENT_ACCEPTED_AND_MERGED
-  2_AGENTPROCESS_IMPLEMENTATION_PASS
-  3_NOTIFICATION_INGRESS_IMPL_SPEC_ACCEPTED_AND_MERGED
-  4_NOTIFICATION_INGRESS_IMPLEMENTATION_PASS
-  5_BASE_CONTAINS_D006_D007_SCHEDULER_V2
-  6_CONTRACT_BY_CONTRACT_FAULT_TEST_PLAN_COMPLETE
+  1_SCHEDULER_V2_ACCEPTED_AND_MERGED
+  2_AGENTPROCESS_IMPL_AUTHORITY_V2_ACCEPTED_AND_MERGED
+  3_AGENTPROCESS_IMPLEMENTATION_PASS
+  4_NOTIFICATION_INGRESS_IMPL_SPEC_ACCEPTED_AND_MERGED
+  5_NOTIFICATION_INGRESS_IMPLEMENTATION_PASS
+  6_BASE_CONTAINS_D006_D007
+  7_CONTRACT_BY_CONTRACT_FAULT_TEST_PLAN_COMPLETE
 
 KERNEL_CHANGE = NONE
 PRODUCT_CODE_CHANGE_THIS_ROUND = NONE
