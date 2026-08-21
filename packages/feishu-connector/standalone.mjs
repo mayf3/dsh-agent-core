@@ -61,6 +61,10 @@ export function createStandaloneLogging({ creds, rawLog = defaultConsoleLog } = 
   }
 }
 
+export function logStandaloneOutboundResult(log, result) {
+  log('info', '[standalone] outbound result', result)
+}
+
 async function main() {
   const args = process.argv.slice(2)
   function argValue(flag, fallback = '') {
@@ -73,7 +77,10 @@ async function main() {
   const creds = loadFeishuCredentials()
   const { log, sdkLogger } = createStandaloneLogging({ creds })
 
-  log('info', `[standalone] credential file: ok (appId=${creds.appId}) mode=${creds.connectionMode}`)
+  log('info', '[standalone] credential file loaded', {
+    appId: creds.appId,
+    connectionMode: creds.connectionMode,
+  })
   log('info', '[standalone] foundation: @larksuite/channel (batch delayMs=0, chatQueue disabled, stale-drop disabled, requireMention=false, residual mention eligibility in bridge)')
   log('info', '[standalone] WARNING: if another process (OpenClaw / production resident) holds this account, this connection may kick it off.')
 
@@ -98,13 +105,13 @@ async function main() {
       replyInThread: false,
     }
     const plan = replyTargetToSdkSend(target, sendText)
-    log('info', `[standalone] sending to open_id=${sendUser.slice(0, 6)}... text="${sendText}"`)
+    log('info', '[standalone] sending outbound test message')
     try {
       const result = await channel.send(plan.to, plan.input, plan.opts)
-      log('info', `[standalone] outbound result: ${JSON.stringify(result)}`)
+      logStandaloneOutboundResult(log, result)
       process.exit(0)
     } catch (error) {
-      log('error', `[standalone] outbound failed: ${error?.code ?? ''} ${error?.message ?? error}`)
+      log('error', '[standalone] outbound failed', error)
       process.exit(2)
     }
   }
@@ -115,7 +122,12 @@ async function main() {
     // the same residual mention eligibility and bridge Promise path.
     ingressGate: async () => ({ allowed: true, reason: 'standalone_observation' }),
     onEvent: async (ev) => {
-      log('info', `[standalone] ingress channel=${ev.channel} chat=${ev.chatId} conversation=${ev.conversationId} sender=${ev.sender.openId?.slice(0, 6)} text="${(ev.text || '').slice(0, 60)}"`)
+      log('info', '[standalone] ingress observed', {
+        channel: ev.channel,
+        chatId: ev.chatId,
+        conversationId: ev.conversationId,
+        messageId: ev.messageId,
+      })
     },
   }
   channel.on({
@@ -124,7 +136,7 @@ async function main() {
       config: standaloneConfig,
       log,
     }),
-    error: (err) => log('error', `[standalone] channel error: ${err?.code ?? ''} ${err?.message ?? err}`),
+    error: (err) => log('error', '[standalone] channel error', err),
     reconnecting: () => log('warn', '[standalone] reconnecting...'),
     reconnected: () => log('info', '[standalone] reconnected'),
   })
@@ -132,10 +144,10 @@ async function main() {
   try {
     // Readiness first: bot identity + first WS handshake, fail-loud.
     await channel.connect()
-    const identity = channel.getBotIdentity()
-    log('info', `[standalone] connected; bot identity ${identity.openId.slice(0, 8)}... (${identity.name})`)
+    channel.getBotIdentity()
+    log('info', '[standalone] connected; bot identity resolved')
   } catch (error) {
-    log('error', `[standalone] connect failed (identity/handshake): ${error?.code ?? ''} ${error?.message ?? error}`)
+    log('error', '[standalone] connect failed (identity/handshake)', error)
     process.exit(2)
   }
 
