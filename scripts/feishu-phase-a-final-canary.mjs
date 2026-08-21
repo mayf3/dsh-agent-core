@@ -81,7 +81,7 @@ if (typeof GROUP !== 'string' || GROUP === '' || typeof P2P_CHAT !== 'string' ||
 }
 const AGENT_ID = 'agt_final-canary'
 const NO_MENTION_WINDOW_MS = Number(process.env.FEISHU_FINAL_CANARY_NO_MENTION_MS ?? 20_000)
-const DUPLICATE_HOLD_MS = Number(process.env.FEISHU_FINAL_CANARY_DUPLICATE_HOLD_MS ?? 20_000)
+const DUPLICATE_HOLD_MS = 20_000
 const creds = JSON.parse(readFileSync(TEST_APP_CREDS, 'utf8'))
 
 const hashText = (value) => createHash('sha256').update(value).digest('hex')
@@ -802,7 +802,8 @@ runtime.feishu.setCallback(async (ingress) => {
         const routerDeltaDuringReplay = duplicateAfterReplay.router - duplicateCounts.router
         const agentTurnDeltaDuringReplay = duplicateAfterReplay.agentTurns - duplicateCounts.agentTurns
         const duplicateTurnActive = duplicateAfterReplay.active
-        record('PENDING_TURN_EXACT_REPLAY', leaseHeld
+        record('PENDING_TURN_EXACT_REPLAY', DUPLICATE_HOLD_MS === 20_000
+          && leaseHeld
           && rawHashEqual
           && seenBeforeSettle === false
           && routerDeltaDuringReplay === 0
