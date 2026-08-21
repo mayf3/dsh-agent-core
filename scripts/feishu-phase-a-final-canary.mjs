@@ -390,6 +390,16 @@ const metrics = {
   replies: 0,
   sdkErrors: 0,
 }
+const scenarioCounters = new Map()
+const scenarioByMessageId = new Map()
+const countersForScenario = (scenario) => {
+  let counters = scenarioCounters.get(scenario)
+  if (counters === undefined) {
+    counters = { router: 0, agentTurns: 0, active: 0, outbound: 0, replies: 0 }
+    scenarioCounters.set(scenario, counters)
+  }
+  return counters
+}
 const processes = []
 class ObservedAgentProcess extends AgentProcess {
   constructor(options) {
@@ -427,6 +437,9 @@ class ObservedAgentProcess extends AgentProcess {
     metrics.agentTurnActive += 1
     const turnIndex = metrics.agentTurns
     const scenario = classify(text)
+    const scenarioCounter = countersForScenario(scenario)
+    scenarioCounter.agentTurns += 1
+    scenarioCounter.active += 1
     record('AGENT_TURN_STARTED', true, {
       index: turnIndex,
       scenario,
@@ -456,6 +469,7 @@ class ObservedAgentProcess extends AgentProcess {
       throw error
     } finally {
       metrics.agentTurnActive -= 1
+      scenarioCounter.active -= 1
     }
   }
 }
@@ -496,6 +510,12 @@ const noMentionBaselines = new Map()
 const rawSend = channel.send.bind(channel)
 channel.send = async (to, input, opts) => {
   metrics.outbound += 1
+  const replyScenario = scenarioByMessageId.get(opts?.replyTo)
+  if (replyScenario !== undefined) {
+    const counters = countersForScenario(replyScenario)
+    counters.outbound += 1
+    counters.replies += 1
+  }
   const result = await rawSend(to, input, opts)
   record('SDK_OUTBOUND_SENT', typeof result?.messageId === 'string' && result.messageId !== '', {
     index: metrics.outbound,
@@ -564,7 +584,10 @@ channel.onRawEvent('im.message.receive_v1', (payload) => {
       }
       const dropLogDelta = noMentionDropLogCount - baseline.dropLogs
       const zeroDeltas = Object.values(deltas).every((value) => value === 0)
-      record('NO_MENTION_DROP_WINDOW', zeroDeltas && dropLogDelta === 1 && sameBinding(baseline.binding, afterBinding), {
+      const rawMentionAbsencePreserved = baseline.rawMentionCount === null || baseline.rawMentionCount === 0
+      record('NO_MENTION_DROP_WINDOW', zeroDeltas
+        && sameBinding(baseline.binding, afterBinding)
+        && rawMentionAbsencePreserved, {
         messageIdHash: stableId(messageId),
         observationWindowMs: Date.now() - baseline.startedAt,
         configuredWindowMs: NO_MENTION_WINDOW_MS,
@@ -588,6 +611,8 @@ channel.onRawEvent('im.message.receive_v1', (payload) => {
         sdkHandlerCounterSource: 'SDK raw-event observer; current event included before baseline',
         dropLogDelta,
         rawMentionCount: baseline.rawMentionCount,
+        rawMentionAbsencePreserved,
+        dropLogIsDiagnosticOnly: true,
         bindingBefore: baseline.binding,
         bindingAfter: afterBinding,
         bindingHashUnchanged: baseline.binding.hash === afterBinding.hash,
@@ -665,6 +690,10 @@ function classify(text) {
 runtime.feishu.setCallback(async (ingress) => {
   metrics.router += 1
   const scenario = classify(ingress.text)
+  const scenarioCounter = countersForScenario(scenario)
+  const beforeScenarioCounter = { ...scenarioCounter }
+  scenarioCounter.router += 1
+  scenarioByMessageId.set(ingress.messageId, scenario)
   const before = { metrics: { ...metrics }, binding: bindingSnapshot() }
   const bindingKey = `feishu:${ingress.conversationId}`
   const binding = runtime.router.getBinding(bindingKey)
@@ -751,7 +780,7 @@ runtime.feishu.setCallback(async (ingress) => {
         const leaseHeld = lockEntry !== undefined
           && channel.safety.lock.currentEntry(lockEntry.lease) !== undefined
         const seenBeforeSettle = await channel.safety.seenCache.has(messageId)
-        const counts = { ...metrics }
+        const duplicateCounts = { ...countersForScenario('FA32 DUPLICATE LONG') }
         localReplayActive = true
         try {
           await channel.dispatcher.invoke(exactRaw, { needCheck: false })
@@ -760,21 +789,24 @@ runtime.feishu.setCallback(async (ingress) => {
         }
         await new Promise((resolveImmediate) => setImmediate(resolveImmediate))
         const rawHashEqual = hashText(JSON.stringify(exactRaw)) === platformMeta?.rawSha256
-        const routerDeltaDuringReplay = metrics.router - counts.router
-        const agentTurnDeltaDuringReplay = metrics.agentTurns - counts.agentTurns
+        const duplicateAfterReplay = countersForScenario('FA32 DUPLICATE LONG')
+        const routerDeltaDuringReplay = duplicateAfterReplay.router - duplicateCounts.router
+        const agentTurnDeltaDuringReplay = duplicateAfterReplay.agentTurns - duplicateCounts.agentTurns
+        const duplicateTurnActive = duplicateAfterReplay.active
         record('PENDING_TURN_EXACT_REPLAY', leaseHeld
           && rawHashEqual
           && seenBeforeSettle === false
           && routerDeltaDuringReplay === 0
           && agentTurnDeltaDuringReplay === 0
-          && metrics.agentTurnActive === 1, {
+          && duplicateTurnActive === 1, {
           messageIdHash: stableId(messageId),
           rawHashEqual,
           processingLeaseStillHeld: leaseHeld,
           seenBeforeSettle,
           routerDeltaDuringReplay,
           agentTurnDeltaDuringReplay,
-          agentTurnActive: metrics.agentTurnActive,
+          duplicateTurnActive,
+          totalAgentTurnsActive: metrics.agentTurnActive,
         })
         resolveReplay()
       }, 3_000)
@@ -785,11 +817,12 @@ runtime.feishu.setCallback(async (ingress) => {
   if (duplicateReplay) await duplicateReplay
   await new Promise((resolveWait) => setTimeout(resolveWait, 1_000))
   const after = { metrics: { ...metrics }, binding: bindingSnapshot() }
+  const afterScenarioCounter = { ...countersForScenario(scenario) }
   const scenarioDeltas = {
-    router: after.metrics.router - before.metrics.router + 1,
-    agentTurn: after.metrics.agentTurns - before.metrics.agentTurns,
-    reply: after.metrics.replies - before.metrics.replies,
-    outbound: after.metrics.outbound - before.metrics.outbound,
+    router: afterScenarioCounter.router - beforeScenarioCounter.router,
+    agentTurn: afterScenarioCounter.agentTurns - beforeScenarioCounter.agentTurns,
+    reply: afterScenarioCounter.replies - beforeScenarioCounter.replies,
+    outbound: afterScenarioCounter.outbound - beforeScenarioCounter.outbound,
   }
   const outcomeErrorClass = outcome?.error === undefined ? null : errorClass(outcome.error)
   const primaryIntegrity = placementMatches
