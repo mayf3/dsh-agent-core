@@ -4,6 +4,12 @@ status: accepted
 amendment: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_SPEC_AMENDMENT
 accepted_reviewed_head: 42cd524
 focused_re_review: PASS
+amendment_2: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_DSH_RC8_VERSION_ALIGNMENT
+amendment_2_status: accepted
+amendment_2_accepted_reviewed_head: 72fa87d
+amendment_2_review: PASS
+amendment_2_required_fixes: NONE
+amendment_2_verdict: READY_TO_ACCEPT_RC8_AMENDMENT
 ---
 
 # Agent Core ChatGPT Subscription Provider V1 — 单 Agent Luna 接入（AMEND）
@@ -15,6 +21,14 @@ focused_re_review: PASS
 > SPEC_STATUS = accepted（mechanical acceptance finalize 2026-08-19 ·
 > accepted_reviewed_head = 42cd524 · focused_re_review = PASS ·
 > REQUIRED_FIXES = NONE · VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC）
+>
+> **Amendment 2（2026-08-21，DSH rc.8 version alignment）= accepted
+> （mechanical acceptance finalize 2026-08-21 ·
+> accepted_reviewed_head = 72fa87d · review = PASS ·
+> REQUIRED_FIXES = NONE · VERDICT = READY_TO_ACCEPT_RC8_AMENDMENT）。**
+> 基础正文（含 `DSH_VERSION = 0.1.0-rc.5`
+> pin）保持历史原样；自本 finalize 起，以文末「Amendment 2」节的
+> 冻结 tuple 取代基础正文的 DSH version/commit，其余语义一律不变。
 >
 > 本轮为 **SPEC_AMENDMENT（FIX round）**：Independent Review on `da8c0de`
 > `VERDICT = FIX_REQUIRED`，本文只闭合 Reviewer 的 REQUIRED_FIXES 1–6，
@@ -394,6 +408,125 @@ READY_FOR_FOCUSED_RE_REVIEW =
 
 ---
 
+## Amendment 2（2026-08-21）— DSH rc.8 Version Alignment（accepted）
+
+> 出处：`LUNA_DSH_RC8_VERSION_ALIGNMENT_V1`（COMPATIBILITY INVESTIGATION +
+> SPEC AMENDMENT ONLY）。AMENDMENT_STATUS = **accepted**（acceptance
+> finalize 2026-08-21：accepted_reviewed_head = `72fa87d` ·
+> `LUNA_DSH_RC8_VERSION_ALIGNMENT_V1_SPEC_REVIEW = PASS` ·
+> REQUIRED_FIXES = NONE · VERDICT = READY_TO_ACCEPT_RC8_AMENDMENT；
+> 兼容性证据 22/22 PASS：作者复跑两轮 + 独立 Reviewer 第三轮）。
+>
+> **Owner Direction（2026-08-21）**：优先对齐当前正式 production DSH
+> （`0.1.0-rc.8`）；不为 Luna 长期维护一套单独的 rc.5 Harness；只有
+> source-verified 证明当前可用插件与 rc.8 不兼容才 BLOCKED；不得擅自部署双
+> Harness。
+
+### A2.1 唯一冻结 tuple（supersede 基础正文的 DSH pin；其余字段不变）
+
+```text
+DSH_VERSION   = 0.1.0-rc.8
+DSH_COMMIT    = 514ab7b0029141b88c807704764d0d3e1eea1da4
+PLUGIN        = dsh-codex@0.2.3   （不变，无升级需求）
+```
+
+- 生效条件：本 Amendment 经 independent review PASS 并 acceptance finalize。
+- 生效后，`packages/production-runtime/src/model-overrides.js` 的
+  `CHATGPT_SUBSCRIPTION_V1.dshVersion/dshCommit` 常量更新为上述值 —— 该代码
+  变更属于**后续独立 implementation 轮**（本 Amendment 轮 SPEC ONLY，不改
+  产品代码）。在实现落地前，production Luna 激活保持 08-21 观测到的
+  `dsh_version_mismatch` fail-loud（如实失败，非回退）。
+- 其余全部冻结项**原样不变**：`provider = openai-codex`、
+  `model = gpt-5.6-luna`、credential ownership /
+  `<DSH_HOME>/.openai-codex-auth.json`（0600/0700）、`SHARES_CODEX_AUTH_FILE =
+  NO`、`ENABLED_AGENTS = exactly 1`、no `OPENAI_API_KEY`、no API credits、
+  exact plugin pin（`0.2.4` → reject 不变）、provisioning fail-loud 家族
+  （§5/§6，仅 pin 值随本节更新）、rollback（§7）一字不改、
+  `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1` 不受本 Amendment
+  影响（不修改 target proxy Spec）。
+
+### A2.2 兼容性证据（2026-08-21，隔离真实测试，可复现）
+
+驱动：`scripts/luna-dsh-rc8-compat-driver.mjs`（本轮随分支提交）。
+方法：真实 rc.8 production harness checkout（只读）+ 临时 DSH_HOME/workspace/
+operator HOME + 真实 `dsh-codex@0.2.3` npm artifact（`npm pack`，sha256 与
+实现轮冻结 artifact 逐字节一致，且 lib 与生产已安装副本 6/6 文件
+byte-identical）+ fixture OAuth credential（假 JWT，claim 形状按
+`https://api.openai.com/auth.chatgpt_account_id`）+ 本地 HTTP 代理 observer
+（记录 CONNECT，拒绝隧道；全程零真实外网）。两轮执行均
+`RESULT=PASS CHECKS=22 FAILED=0`：
+
+| 验收项 | 结果 |
+|---|---|
+| provisionExactProfilePlugin 以候选 pin（rc.8 + 514ab7b…）在真实 harness 上通过；peers 全部从 rc.8 树闭合（含 `@earendil-works/pi-ai@0.82.1`） | PASS |
+| plugin module resolves / target profile loads（`dsh.profile.bundles` 追加 dsh-codex） | PASS |
+| `openai-codex` provider 注册（`registeredProviders` 含之；`pluginServices.openAICodex = true`） | PASS |
+| initialize 成功，route = `openai-codex / gpt-5.6-luna` | PASS |
+| 无 credential 时 turn 到达明确 credential boundary（`credential_missing` / `agent/credential`，session `created`） | PASS |
+| fixture credential 下 turn 越过 credential 检查、以期望 header 形状发起 chatgpt.com 请求（observer 捕获 `CONNECT chatgpt.com:443` ×N，fetch+WS transport），失败干净归类 provider 侧（非 credential_missing） | PASS |
+| 完整退出（exit code 0） | PASS |
+| 冷重启后 plugin 仍加载、provider 仍注册、session `main` **resumed**、credential 复用、observer 再次捕获 CONNECT | PASS |
+
+必须确认的不存在项，逐一以负向确认：
+
+```text
+API_SHAPE_MISMATCH            = NONE（pi-ai@0.82.1 与 rc.5 轮同版；真实后端
+                                 401 透传干净——见 A2.3）
+PROFILE_BUNDLE_INCOMPAT       = NONE（profile loads + bundles 追加成功）
+PROVIDER_REGISTRATION_MISMATCH= NONE（registerAdapter 服务面在 rc.8 成立）
+SESSION_CREATE_RESUME_INCOMPAT= NONE（created + 冷重启 resumed 实测）
+CREDENTIAL_STORE_SCHEMA_INCOMPAT = NONE（version/1 + credential 五字段解析、
+                                 0600 边界校验按 dsh-codex@0.2.3 原语义）
+```
+
+另（调查过程中的额外实测，非验收依赖）：曾以无权限重定向的 fixture token
+意外到达真实 chatgpt.com 后端，后端返回可解析的 401
+（"Could not parse your authentication token"）并被干净透传 —— 佐证 wire
+shape 兼容。最终验收运行已全部收敛到本地 observer（零真实网络、零真实
+token）。
+
+### A2.3 已知运维事实（随本 Amendment 记录，不改语义）
+
+1. **Harness 漂移敏感**：pin 校验的是 `DSH_HARNESS_ROOT` checkout 的
+   `git rev-parse HEAD`；该 checkout 是活跃开发树（本轮快照时 ahead 13、含
+   未跟踪文件）。后续任何 harness 提交都会让 Luna 再次
+   `dsh_version_mismatch` fail-loud —— 这是设计内行为；长期解法（为订阅路径
+   提供钉死构建）超出本 Amendment，未获授权不建设。
+2. **`~/.codex/auth.json` 归因规则（验收方法论）**：该文件由用户自己的
+   Codex 客户端独立刷新（2026-08-21 07:05:21 实测发生），与本系统无关
+   （Agent Core / dsh-codex 不读取、不写入该文件；订阅 credential 独立存放
+   于 `<DSH_HOME>/.openai-codex-auth.json`）。后续验收判定「本轮是否修改了
+   该文件」必须使用 **activation window start hash/mtime → window end
+   hash/mtime** 对比，不得以数小时前的历史基线归因。
+
+### A2.4 Amendment 2 Final Output
+
+```text
+AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_DSH_RC8_VERSION_ALIGNMENT = PASS
+
+BASE_SPEC_STATUS       = accepted（历史正文不动）
+AMENDMENT_2_STATUS     = accepted
+ACCEPTED_REVIEWED_HEAD = 72fa87d
+REVIEW                  = PASS
+REQUIRED_FIXES           = NONE
+VERDICT                  = READY_TO_ACCEPT_RC8_AMENDMENT
+SEMANTIC_CHANGE          = NONE
+
+DSH_VERSION   = 0.1.0-rc.8
+DSH_COMMIT    = 514ab7b0029141b88c807704764d0d3e1eea1da4
+PLUGIN        = dsh-codex@0.2.3（unchanged）
+
+DSH_CODEX_0_2_3_COMPATIBLE = YES（22/22 PASS：作者复跑两轮 + 独立 Reviewer 第三轮）
+PROVISIONING_FAIL_LOUD     = UNCHANGED（仅 pin 值更新）
+RESTART_ACCEPTANCE         = PASS（冷重启 resume 实测）
+ROLLBACK                   = UNCHANGED（§7 原样）
+
+PRODUCTION_CHANGE = NONE · OAUTH_PERFORMED = NO · CREDENTIAL_CHANGED = NO
+KERNEL_CHANGE = NONE · PRODUCT_CODE_CHANGE = NONE · MERGE = NO
+```
+
+---
+
 ## ReviewDisposition
 
 - **Round 1（da8c0de）**：Independent Review `VERDICT = FIX_REQUIRED`。
@@ -417,3 +550,14 @@ READY_FOR_FOCUSED_RE_REVIEW =
   `proposed → accepted`（frontmatter + 文头镜像 + §12 镜像 + 本 provenance）。
   SEMANTIC_CHANGE = NONE；冻结语义原样（见文头清单）。
 - **Round 3**：（预留 implementation / merge 轮。）
+- **Round 4（2026-08-21，Amendment 2 proposed）**：DSH rc.8 version
+  alignment —— 基础 pin（0.1.0-rc.5@a12bb03c…）被生产 harness 漂移
+  （0.1.0-rc.8）打破；按 Owner Direction 对齐 rc.8 + dsh-codex@0.2.3 不变，
+  依据隔离真实兼容测试（22/22 PASS，见 Amendment 2 节）。AMENDMENT_2_STATUS
+  = **proposed — waiting independent review**；未 acceptance finalize，
+  未实现，未改 production。
+- **Round 5（2026-08-21，Amendment 2 acceptance finalize）**：Independent
+  Review on `72fa87d` = **PASS**；`REQUIRED_FIXES = NONE`；`VERDICT =
+  READY_TO_ACCEPT_RC8_AMENDMENT`。本轮仅机械翻转 Amendment 2 状态并镜像
+  acceptance provenance；`SEMANTIC_CHANGE = NONE`，未 implementation，未改
+  production，未 OAuth，未修改 credential，未 merge。
