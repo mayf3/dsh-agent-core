@@ -31,6 +31,7 @@ import {
   conversationWorkspaceId,
 } from './core.js'
 import { normalizedToIngressEvent, createBridgeHandler, createReceiptReply } from './bridge.js'
+import { createRedactingLogger, sdkLoggerAdapter } from './log-redaction.js'
 
 // Re-export the pure adapter helpers for thin adapters and tests
 // (conversationWorkspaceId stays exported as a TRANSITIONAL compatibility
@@ -101,33 +102,6 @@ function loadCredentials(config) {
     }
   }
   return { appId: config.appId, appSecret: config.appSecret }
-}
-
-/**
- * Bridge the SDK's structured logger onto the plugin's `(level, ...args)`
- * log surface (default: console). Keeps the SDK's protocol-layer noise on
- * the same observable surface as the connector's own lines.
- */
-function sdkLoggerAdapter(log) {
-  const forward = (level) => (...args) => {
-    try {
-      log(level, '[lark-channel]', ...args.map((a) => (typeof a === 'string' ? a : safeInspect(a))))
-    } catch { /* never let logging break the channel */ }
-  }
-  return {
-    debug: forward('debug'),
-    info: forward('info'),
-    warn: forward('warn'),
-    error: forward('error'),
-  }
-}
-
-function safeInspect(value) {
-  try {
-    return JSON.stringify(value)
-  } catch {
-    return String(value)
-  }
 }
 
 /**
@@ -276,12 +250,13 @@ function mapConnectionState(sdkState) {
  * @returns {object} handle exposing reply() / ready() / status() /
  *   setCallback() / setIngressGate().
  */
-export function apply(ctx, config) {
+export function apply(ctx, config, { createChannel = createLarkChannel } = {}) {
   const cfg = { ...DEFAULTS, ...(config ?? {}) }
-  const log = cfg.log ?? ((level, ...args) => {
+  const rawLog = cfg.log ?? ((level, ...args) => {
     const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
     fn(...args)
   })
+  let log = createRedactingLogger(rawLog)
 
   if (!cfg.enabled) {
     log('warn', '[feishu] disabled by config; plugin mounted but not connected')
@@ -297,12 +272,13 @@ export function apply(ctx, config) {
   if (!creds.appId || !creds.appSecret) {
     throw new Error('[feishu] appId/appSecret (or credentialsPath) required when enabled')
   }
+  log = createRedactingLogger(rawLog, { secrets: [creds.appSecret] })
 
-  const channel = createLarkChannel({
+  const channel = createChannel({
     appId: creds.appId,
     appSecret: creds.appSecret,
     ...FOUNDATION_LARK_CHANNEL_OPTIONS,
-    logger: sdkLoggerAdapter(log),
+    logger: sdkLoggerAdapter(rawLog, { secrets: [creds.appSecret] }),
   })
 
   const handle = buildFeishuHandle({
