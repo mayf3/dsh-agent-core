@@ -43,6 +43,17 @@ const VALID = {
   },
 }
 
+test('ChatGPT subscription tuple pins DSH rc.8 and keeps the accepted route and plugin', () => {
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.targetAgentId, 'agt_cto-agent')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.provider, 'openai-codex')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.model, 'gpt-5.6-luna')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.plugin, 'dsh-codex')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.pluginVersion, '0.2.3')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.dshVersion, '0.1.0-rc.8')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.dshCommit, '514ab7b0029141b88c807704764d0d3e1eea1da4')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.credentialFile, '.openai-codex-auth.json')
+})
+
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'model-overrides-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
@@ -310,8 +321,8 @@ test('production composition passes one immutable resolved route to target and g
   assert.deepEqual(provisioned[0].options.subscription, {
     plugin: 'dsh-codex',
     pluginVersion: '0.2.3',
-    dshVersion: '0.1.0-rc.5',
-    dshCommit: 'a12bb03c6861969985f066bfbf0cb7e5dd5ac567',
+    dshVersion: '0.1.0-rc.8',
+    dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
     credentialFile: '.openai-codex-auth.json',
   })
   assert.equal(provisioned[1].options.subscription, undefined)
