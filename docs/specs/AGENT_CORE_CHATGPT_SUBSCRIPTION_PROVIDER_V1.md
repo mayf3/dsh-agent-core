@@ -488,12 +488,10 @@ token）。
 ### A2.3 已知运维事实（随本 Amendment 记录，不改语义）
 
 1. **Harness 漂移敏感**：pin 校验的是 `DSH_HARNESS_ROOT` checkout 的
-   `git rev-parse HEAD`；当前活跃开发 Harness 已在审计窗口后继续前进。
-   后续 implementation/deployment 必须将 production `DSH_HARNESS_ROOT` 指向
-   immutable checkout @ `514ab7b0029141b88c807704764d0d3e1eea1da4`，不得继续
-   指向会自动前进的开发 worktree，否则版本门会再次
-   `dsh_version_mismatch` fail-loud。本轮仅记录该 implementation note，不执行
-   production 切换，不改变 Amendment 语义。
+   `git rev-parse HEAD`；该 checkout 是活跃开发树（本轮快照时 ahead 13、含
+   未跟踪文件）。后续任何 harness 提交都会让 Luna 再次
+   `dsh_version_mismatch` fail-loud —— 这是设计内行为；长期解法（为订阅路径
+   提供钉死构建）超出本 Amendment，未获授权不建设。
 2. **`~/.codex/auth.json` 归因规则（验收方法论）**：该文件由用户自己的
    Codex 客户端独立刷新（2026-08-21 07:05:21 实测发生），与本系统无关
    （Agent Core / dsh-codex 不读取、不写入该文件；订阅 credential 独立存放
