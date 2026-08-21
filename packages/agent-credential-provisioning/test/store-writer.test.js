@@ -241,6 +241,35 @@ test('TOCTOU symlink replacement before rename is rejected', async (t) => {
   assert.deepEqual(await readFile(outside), outsideBytes)
 })
 
+test('TEMP_PATH_SWAP_REJECTED: swapped temp pathname is rejected before rename', async (t) => {
+  const { directory, file } = await fixture(t, {
+    version: 1,
+    credentials: { agt_other: { clientId: 'mc_original', clientSecret: opaque() } },
+  })
+  const original = await readFile(file)
+  const attackerFile = join(directory, 'attacker.json')
+  const attackerBytes = Buffer.from('{"attacker":"must-not-persist"}\n')
+  await writeFile(attackerFile, attackerBytes, { mode: 0o600 })
+  let swappedTemp
+
+  await assert.rejects(
+    writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_new', clientSecret: opaque() }, {
+      beforeRename: async () => {
+        swappedTemp = join(directory, (await readdir(directory)).find((name) => name.includes('.tmp-')))
+        await unlink(swappedTemp)
+        await symlink(attackerFile, swappedTemp)
+      },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+
+  assert.deepEqual(await readFile(file), original)
+  assert.equal((await fileSystem.lstat(file)).isSymbolicLink(), false)
+  assert.deepEqual(await readFile(attackerFile), attackerBytes)
+  assert.equal((await readFile(file)).includes(attackerBytes), false)
+  assert.equal((await fileSystem.lstat(swappedTemp)).isSymbolicLink(), true)
+})
+
 test('caller-forged lock context cannot bypass serialization', async (t) => {
   const { directory, file } = await fixture(t, undefined)
   await assert.rejects(
