@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import { constants } from 'node:fs'
 import * as fileSystem from 'node:fs/promises'
-import { chmod, lstat, mkdir, mkdtemp, readFile, rename, symlink, writeFile } from 'node:fs/promises'
+import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, rename, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -198,6 +198,43 @@ test('PA4: malformed store fails before (c)=true or any Auth/store mutation, fil
   assert.deepEqual(authCallCounts(auth), NO_CALLS)
   assert.equal(writes.count, 0)
   assert.deepEqual(await readFile(paths.credentialsFile), before)
+})
+
+test('INVALID_UTF8_REJECTED: invalid store bytes fail before Auth, temp creation, or writes', async (t) => {
+  const invalidCases = [
+    { name: 'standalone 0xff', bytes: Buffer.from([0xff]) },
+    { name: 'truncated multibyte sequence', bytes: Buffer.from([0xe2, 0x82]) },
+    { name: 'invalid continuation byte', bytes: Buffer.from([0xc2, 0x20]) },
+    { name: 'overlong structural sequence', bytes: Buffer.from([0xf0, 0x80, 0x80, 0x80]) },
+  ]
+  const prefix = Buffer.from('{"version":1,"credentials":{},"invalid":"')
+  const suffix = Buffer.from('"}\n')
+  const replacementCharacter = Buffer.from('\ufffd')
+
+  for (const testCase of invalidCases) {
+    const original = Buffer.concat([prefix, testCase.bytes, suffix])
+    const paths = await files(t, { storeBytes: original })
+    const auth = fakeAuthority()
+    const writes = storeWriteCounter()
+    await assert.rejects(
+      ensureAgentCredential({
+        agentId: AGENT_ID,
+        agentDefinitionFile: paths.definitionFile,
+        credentialsFile: paths.credentialsFile,
+        auth,
+        prerequisites: { c: true },
+        storeWriteOptions: writes.options,
+      }),
+      { code: 'CREDENTIALS_STORE_ERROR' },
+      testCase.name,
+    )
+    assert.equal(auth.state.calls.length, 0, testCase.name)
+    assert.equal(writes.count, 0, testCase.name)
+    assert.equal((await readdir(paths.directory)).some((name) => name.includes('.tmp-')), false, testCase.name)
+    const after = await readFile(paths.credentialsFile)
+    assert.deepEqual(after, original, testCase.name)
+    assert.equal(after.includes(replacementCharacter), false, testCase.name)
+  }
 })
 
 test('unsafe existing-store metadata and symlinks fail before management authorization or Auth POST', async (t) => {
