@@ -377,7 +377,7 @@ export function createBridgeHandler({ resolveBotIdentity, config, reply, log = (
         now: Date.now(),
       })
     } catch (error) {
-      log('warn', `[feishu] drop non-message event: ${error?.message ?? error}`)
+      log('warn', '[feishu] drop non-message event', error)
       return
     }
 
@@ -385,7 +385,7 @@ export function createBridgeHandler({ resolveBotIdentity, config, reply, log = (
     // does not own): the bot's own outgoing messages echo back through the
     // connection and must never become user turns.
     if (ingress.sender.selfSent || ingress.sender.isBotSelf) {
-      log('debug', `[feishu] self-echo dropped (${ingress.messageId})`)
+      log('debug', '[feishu] self-echo dropped', { messageId: ingress.messageId })
       return
     }
 
@@ -397,7 +397,10 @@ export function createBridgeHandler({ resolveBotIdentity, config, reply, log = (
     if (ingress.chatType === 'group') {
       const identity = safeBotIdentity(resolveBotIdentity)
       if (!identity?.openId) {
-        log('error', `[feishu] bot identity unresolved before group ingress (${ingress.conversationId}) — fail-closed drop ${ingress.messageId}`)
+        log('error', '[feishu] bot identity unresolved before group ingress — fail-closed drop', {
+          conversationId: ingress.conversationId,
+          messageId: ingress.messageId,
+        })
         return
       }
     }
@@ -407,7 +410,7 @@ export function createBridgeHandler({ resolveBotIdentity, config, reply, log = (
     // product eligibility after the SDK lease is acquired: p2p, @bot and
     // @all proceed; an ordinary group/topic no-mention is a silent drop.
     if (ingress.chatType !== 'p2p' && ingress.mentioned !== true) {
-      log('debug', `[feishu] ordinary no-mention message dropped (${ingress.messageId})`)
+      log('debug', '[feishu] ordinary no-mention message dropped', { messageId: ingress.messageId })
       return
     }
 
@@ -424,20 +427,27 @@ export function createBridgeHandler({ resolveBotIdentity, config, reply, log = (
     try {
       gateVerdict = await config.ingressGate(ingress, { classify: { forward: true, reason: 'sdk_policy_admitted' } })
     } catch (error) {
-      log('warn', `[feishu] ingress gate error (fail closed): ${error?.message ?? error}`)
+      log('warn', '[feishu] ingress gate error (fail closed)', error)
       gateVerdict = { allowed: false, reason: 'gate_error' }
     }
-    const gateAllowed = gateVerdict !== null
-      && typeof gateVerdict === 'object'
-      && !Array.isArray(gateVerdict)
-      && gateVerdict.allowed === true
+    let gateAllowed = false
+    if (gateVerdict !== null && typeof gateVerdict === 'object' && !Array.isArray(gateVerdict)) {
+      try {
+        const descriptor = Object.getOwnPropertyDescriptor(gateVerdict, 'allowed')
+        gateAllowed = descriptor !== undefined
+          && Object.hasOwn(descriptor, 'value')
+          && descriptor.value === true
+      } catch {
+        // Proxy/descriptor traps are malformed verdicts and fail closed.
+      }
+    }
     if (!gateAllowed) {
-      log('warn', `[feishu] ingress rejected by gate (${gateVerdict?.reason ?? 'invalid_or_unspecified'}) — not forwarded`)
+      log('warn', '[feishu] ingress rejected by gate — not forwarded')
       if (typeof reply === 'function') {
         try {
           await reply(ingress)
         } catch (error) {
-          log('warn', `[feishu] rejection receipt failed: ${error?.message ?? error}`)
+          log('warn', '[feishu] rejection receipt failed', error)
         }
       }
       return
@@ -461,7 +471,18 @@ export function createBridgeHandler({ resolveBotIdentity, config, reply, log = (
 
 function asError(value) {
   if (value instanceof Error) return value
-  return new Error(typeof value?.message === 'string' ? value.message : String(value))
+  if (typeof value === 'string') return new Error(value)
+  if (value !== null && typeof value === 'object') {
+    try {
+      const descriptor = Object.getOwnPropertyDescriptor(value, 'message')
+      if (descriptor && Object.hasOwn(descriptor, 'value') && typeof descriptor.value === 'string') {
+        return new Error(descriptor.value)
+      }
+    } catch {
+      // Proxy/descriptor traps are untrusted; keep the generic failure below.
+    }
+  }
+  return new Error('non-Error handler failure')
 }
 
 /** Resolve the bot identity without letting a not-yet-resolved throw escape. */
@@ -491,7 +512,7 @@ export function createReceiptReply(channel, log = () => {}) {
     if (!result?.messageId) {
       throw new Error('feishu-connector: rejection receipt returned no message_id')
     }
-    log('info', `[feishu] rejection receipt sent (${result.messageId})`)
+    log('info', '[feishu] rejection receipt sent')
     return result
   }
 }

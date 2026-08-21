@@ -2,51 +2,84 @@ const REDACTED = '[REDACTED]'
 const UNAVAILABLE = '[UNAVAILABLE]'
 const CIRCULAR = '[CIRCULAR]'
 
-const SENSITIVE_KEYS = new Set([
-  'appsecret',
-  'clientsecret',
+const SENSITIVE_KEY_FAMILIES = Object.freeze([
   'secret',
-  'authorization',
-  'bearer',
-  'tenantaccesstoken',
-  'accesstoken',
-  'refreshtoken',
-  'cookie',
-  'setcookie',
-  'password',
-  'apikey',
   'token',
+  'authorization',
+  'auth',
+  'bearer',
+  'cookie',
+  'password',
+  'passwd',
+  'apikey',
+  'credential',
 ])
 
 function normalizedKey(key) {
-  return String(key).toLowerCase().replace(/[^a-z0-9]/g, '')
+  return typeof key === 'string' ? key.toLowerCase().replace(/[^a-z0-9]/g, '') : ''
 }
 
 function isSensitiveKey(key) {
-  return SENSITIVE_KEYS.has(normalizedKey(key))
+  const normalized = normalizedKey(key)
+  return normalized !== '' && SENSITIVE_KEY_FAMILIES.some((family) => normalized.includes(family))
 }
 
-function safeGet(value, key) {
-  try {
-    return value?.[key]
-  } catch {
-    return UNAVAILABLE
+/**
+ * Read data properties without invoking getters. Prototype traversal is needed
+ * for Error.name, but accessor descriptors remain unavailable rather than
+ * being executed. Proxy descriptor/prototype traps are contained fail-closed.
+ */
+function safeDataValue(value, key) {
+  if ((typeof value !== 'object' || value === null) && typeof value !== 'function') return UNAVAILABLE
+  let current = value
+  for (let depth = 0; current !== null && depth < 8; depth += 1) {
+    let descriptor
+    try {
+      descriptor = Object.getOwnPropertyDescriptor(current, key)
+    } catch {
+      return UNAVAILABLE
+    }
+    if (descriptor !== undefined) {
+      return Object.hasOwn(descriptor, 'value') ? descriptor.value : UNAVAILABLE
+    }
+    try {
+      current = Object.getPrototypeOf(current)
+    } catch {
+      return UNAVAILABLE
+    }
   }
+  return undefined
+}
+
+function normalizedSecrets(secrets) {
+  return Array.isArray(secrets)
+    ? secrets.filter((secret) => typeof secret === 'string' && secret.length > 0)
+    : []
+}
+
+function redactSensitiveAssignments(input) {
+  const familyPattern = SENSITIVE_KEY_FAMILIES
+    .map((family) => family.split('').join('[^a-z0-9]*'))
+    .join('|')
+  // Once a sensitive assignment starts, fail closed through end-of-string.
+  // Delimiters, newlines and trailing text cannot be trusted when quotes are malformed.
+  const assignment = new RegExp(
+    `((?:${familyPattern})[^:=\\r\\n]*?\\s*[:=]\\s*)[\\s\\S]*`,
+    'gi',
+  )
+  return input.replace(assignment, `$1${REDACTED}`)
 }
 
 function redactString(input, secrets) {
-  let output = String(input)
+  if (typeof input !== 'string') return UNAVAILABLE
+  let output = input
 
   for (const secret of secrets) {
     if (secret !== '') output = output.split(secret).join(REDACTED)
   }
 
   output = output.replace(/\bBearer\s+[^\s,;"']+/gi, `Bearer ${REDACTED}`)
-  output = output.replace(
-    /(["']?(?:app[_-]?secret|client[_-]?secret|secret|authorization|tenant[_-]?access[_-]?token|access[_-]?token|refresh[_-]?token|cookie|set[_-]?cookie|password|api[_-]?key|token)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^&\s,;}]+)/gi,
-    `$1${REDACTED}`,
-  )
-  return output
+  return redactSensitiveAssignments(output)
 }
 
 function safeUrlPath(value, secrets) {
@@ -54,91 +87,115 @@ function safeUrlPath(value, secrets) {
   const redacted = redactString(value, secrets)
   try {
     const parsed = new URL(redacted, 'https://redaction.invalid')
-    return parsed.pathname
+    return redactString(parsed.pathname, secrets)
   } catch {
-    return redacted.split(/[?#]/, 1)[0]
+    return redactString(redacted.split(/[?#]/, 1)[0], secrets)
   }
 }
 
-function safeError(error, secrets) {
-  const config = safeGet(error, 'config')
-  const response = safeGet(error, 'response')
-  const request = {}
-  const method = config && typeof config === 'object' ? safeGet(config, 'method') : undefined
-  const url = config && typeof config === 'object' ? safeGet(config, 'url') : undefined
-  const phase = safeGet(error, 'phase') ?? safeGet(error, 'requestPhase')
+function safeStringField(value, secrets, fallback) {
+  return typeof value === 'string' ? redactString(value, secrets) : fallback
+}
 
-  if (typeof method === 'string') request.method = redactString(method.toUpperCase(), secrets)
+function safeError(error, secrets) {
+  const config = safeDataValue(error, 'config')
+  const response = safeDataValue(error, 'response')
+  const request = Object.create(null)
+  const method = config && typeof config === 'object' ? safeDataValue(config, 'method') : undefined
+  const url = config && typeof config === 'object' ? safeDataValue(config, 'url') : undefined
+  const phaseValue = safeDataValue(error, 'phase')
+  const requestPhaseValue = safeDataValue(error, 'requestPhase')
+  const phase = phaseValue === undefined || phaseValue === UNAVAILABLE ? requestPhaseValue : phaseValue
+
+  if (typeof method === 'string') request.method = redactString(method, secrets).toUpperCase()
   const pathname = safeUrlPath(url, secrets)
   if (pathname) request.endpoint = pathname
   if (typeof phase === 'string') request.phase = redactString(phase, secrets)
 
-  const status = safeGet(error, 'status') ?? (
-    response && typeof response === 'object' ? safeGet(response, 'status') : undefined
-  )
-  const result = {
-    name: redactString(safeGet(error, 'name') ?? 'Error', secrets),
-    message: redactString(safeGet(error, 'message') ?? '', secrets),
-  }
-  const code = safeGet(error, 'code')
-  if (typeof code === 'string' || typeof code === 'number') result.code = redactString(code, secrets)
-  if (typeof status === 'string' || typeof status === 'number') result.status = status
+  const directStatus = safeDataValue(error, 'status')
+  const responseStatus = response && typeof response === 'object'
+    ? safeDataValue(response, 'status')
+    : undefined
+  const status = directStatus === undefined || directStatus === UNAVAILABLE ? responseStatus : directStatus
+
+  const result = Object.create(null)
+  result.name = safeStringField(safeDataValue(error, 'name'), secrets, 'Error')
+  result.message = safeStringField(safeDataValue(error, 'message'), secrets, '')
+
+  const code = safeDataValue(error, 'code')
+  if (typeof code === 'string') result.code = redactString(code, secrets)
+  else if (typeof code === 'number') result.code = code
+
+  if (typeof status === 'string') result.status = redactString(status, secrets)
+  else if (typeof status === 'number') result.status = status
+
   if (Object.keys(request).length > 0) result.request = request
   return result
+}
+
+function isErrorLike(value) {
+  try {
+    if (value instanceof Error) return true
+  } catch {
+    return false
+  }
+  const name = safeDataValue(value, 'name')
+  return typeof name === 'string' && normalizedKey(name) === 'axioserror'
+}
+
+function safeOwnKeys(value) {
+  try {
+    return Object.keys(value).slice(0, 100)
+  } catch {
+    return null
+  }
 }
 
 function sanitize(value, secrets, seen, depth) {
   if (typeof value === 'string') return redactString(value, secrets)
   if (value === null || value === undefined || typeof value === 'boolean' || typeof value === 'number') return value
-  if (typeof value === 'bigint') return String(value)
-  if (typeof value === 'symbol') return String(value)
-  if (typeof value === 'function') return `[Function${value.name ? ` ${value.name}` : ''}]`
+  if (typeof value === 'bigint') return '[BigInt]'
+  if (typeof value === 'symbol') return '[Symbol]'
+  if (typeof value === 'function') return '[Function]'
   if (depth > 8) return '[MAX_DEPTH]'
 
-  if (value instanceof Error || normalizedKey(safeGet(value, 'name')) === 'axioserror') {
-    return safeError(value, secrets)
-  }
+  if (isErrorLike(value)) return safeError(value, secrets)
   if (seen.has(value)) return CIRCULAR
   seen.add(value)
 
   if (Array.isArray(value)) {
     const result = []
-    const length = Math.min(value.length, 100)
+    const rawLength = safeDataValue(value, 'length')
+    const length = typeof rawLength === 'number' && Number.isSafeInteger(rawLength)
+      ? Math.min(Math.max(rawLength, 0), 100)
+      : 0
     for (let index = 0; index < length; index += 1) {
-      try {
-        result.push(sanitize(value[index], secrets, seen, depth + 1))
-      } catch {
-        result.push(UNAVAILABLE)
-      }
+      const item = safeDataValue(value, String(index))
+      result.push(item === UNAVAILABLE ? UNAVAILABLE : sanitize(item, secrets, seen, depth + 1))
     }
-    if (value.length > length) result.push(`[${value.length - length} MORE ITEMS]`)
+    if (typeof rawLength === 'number' && rawLength > length) result.push(`[${rawLength - length} MORE ITEMS]`)
     return result
   }
 
-  let keys
-  try {
-    keys = Object.keys(value).slice(0, 100)
-  } catch {
-    return UNAVAILABLE
-  }
-  const result = {}
+  const keys = safeOwnKeys(value)
+  if (keys === null) return UNAVAILABLE
+  const result = Object.create(null)
   for (const key of keys) {
+    const safeKey = redactString(key, secrets)
     if (isSensitiveKey(key)) {
-      result[key] = REDACTED
+      result[safeKey] = REDACTED
       continue
     }
-    const item = safeGet(value, key)
-    result[key] = item === UNAVAILABLE ? UNAVAILABLE : sanitize(item, secrets, seen, depth + 1)
+    const item = safeDataValue(value, key)
+    result[safeKey] = item === UNAVAILABLE ? UNAVAILABLE : sanitize(item, secrets, seen, depth + 1)
   }
   return result
 }
 
 export function sanitizeLogValue(value, { secrets = [] } = {}) {
-  const normalizedSecrets = secrets
-    .filter((secret) => typeof secret === 'string' && secret.length > 0)
-    .map(String)
+  const safeSecrets = normalizedSecrets(secrets)
   try {
-    return sanitize(value, normalizedSecrets, new WeakSet(), 0)
+    return sanitize(value, safeSecrets, new WeakSet(), 0)
   } catch {
     return UNAVAILABLE
   }
@@ -156,7 +213,11 @@ export function safeInspect(value, options) {
 export function createRedactingLogger(log, options) {
   return (level, ...args) => {
     try {
-      log(level, ...args.map((arg) => safeInspect(arg, options)))
+      const safeLevel = typeof level === 'string'
+        ? redactString(level, normalizedSecrets(options?.secrets))
+        : 'info'
+      const safeArgs = args.map((arg) => safeInspect(arg, options))
+      log(safeLevel, ...safeArgs)
     } catch {
       // Logging is diagnostic only and must never affect connector lifecycle.
     }
