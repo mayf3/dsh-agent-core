@@ -131,7 +131,7 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
       try {
         cfg.onStatus({ status, reconnectCount: state.reconnectCount })
       } catch (e) {
-        log('error', `[feishu] onStatus handler threw: ${e?.message ?? e}`)
+        log('error', '[feishu] onStatus handler threw', e)
       }
     }
   }
@@ -148,11 +148,11 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
   })
   channel.on({
     message: onSdkMessage,
-    error: (err) => log('error', `[feishu] channel error: ${err?.code ?? ''} ${err?.message ?? err}`),
+    error: (err) => log('error', '[feishu] channel error', err),
     reconnecting: () => {
       state.reconnectCount += 1
       emitStatus('reconnecting')
-      log('warn', `[feishu] connection lost; SDK reconnecting (count=${state.reconnectCount})`)
+      log('warn', '[feishu] connection lost; SDK reconnecting', { reconnectCount: state.reconnectCount })
     },
     reconnected: () => {
       emitStatus('connected')
@@ -168,8 +168,7 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
   readyPromise.then(
     () => {
       emitStatus('connected')
-      const identity = channel.botIdentity
-      log('info', `[feishu] channel live: first handshake done, bot identity resolved (${identity?.openId?.slice(0, 8) ?? '?'}...)`)
+      log('info', '[feishu] channel live: first handshake done, bot identity resolved')
     },
     () => { /* failure path is consumed by ready() awaiters; logged there */ },
   )
@@ -194,7 +193,7 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
         // without a message id is a failure — reject, never fake success.
         throw new Error(`feishu-connector: send returned no message_id (${plan.method})`)
       }
-      log('info', `[feishu] reply sent via ${plan.method} (${result.messageId}${result.chunkIds ? `, ${result.chunkIds.length} chunks` : ''})`)
+      log('info', '[feishu] reply sent')
       return {
         messageId: result.messageId,
         chatId: replyTarget?.chatId ?? '',
@@ -295,7 +294,7 @@ export function apply(ctx, config, { createChannel = createLarkChannel } = {}) {
   // lifecycle itself is carried by ready(), not by this hook.
   ctx.effect(() => () => {
     channel.disconnect().catch((error) => {
-      log('warn', `[feishu] disconnect cleanup failed: ${error?.message ?? error}`)
+      log('warn', '[feishu] disconnect cleanup failed', error)
     })
   })
 
