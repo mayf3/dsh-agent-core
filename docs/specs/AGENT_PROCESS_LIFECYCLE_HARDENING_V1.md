@@ -21,7 +21,7 @@ references:
   - docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md
   - docs/investigations/AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1.md
-implementation_authority: none
+implementation_authority: contracts
 ---
 
 # AGENT_PROCESS_LIFECYCLE_HARDENING_V1 — 进程生命周期、deadline 与未知结果收口
@@ -40,7 +40,7 @@ NEEDS_OWNER_DECISION = NO
 SPEC_STATUS = accepted
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 READY_FOR_FOCUSED_RE_REVIEW = YES
-IMPLEMENTATION_ALLOWED = NO
+IMPLEMENTATION_ALLOWED = YES_UNDER_ACCEPTED_CONTRACTS
 ```
 
 `PASS` 表示 authoring 输入完整；本次 acceptance provenance 见 §0.2。它不代表 implementation PASS 或 merge authority。
@@ -72,6 +72,33 @@ READY_FOR_MECHANICAL_DELTA_REVIEW = YES
 ```
 
 本 finalize 只更新 status mirror 与 acceptance provenance；§1–§17 reviewed semantics 保持逐字不变。
+
+### 0.3 Implementation Authority Amendment (Proposed)
+
+```text
+AMENDMENT = AGENT_PROCESS_LIFECYCLE_HARDENING_V1_IMPLEMENTATION_AUTHORITY_AMENDMENT
+AMENDMENT_BASE_MAIN = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
+AMENDMENT_STATUS = proposed
+INDEPENDENT_REVIEW = waiting
+SPEC_STATUS = accepted
+IMPLEMENTATION_AUTHORITY = contracts
+IMPLEMENTATION_ALLOWED = YES_UNDER_ACCEPTED_CONTRACTS
+CONTRACT_SEMANTIC_CHANGE = NONE
+IMPLEMENTATION_SCOPE_CHANGE = NONE
+```
+
+本 amendment 的唯一含义是：允许实现当前 accepted Spec 已冻结的 contracts。它不修改
+§1–§17 的任何 contract，不改变状态机、timeout 模型、reconciliation 模型或 Scheduler seam，
+不增加新的功能范围，也不重新打开已关闭的 9 项 Required Fix。
+
+Implementation authority 严格绑定以下条件：
+
+1. governing content 仅为本 Spec 当前 accepted content；
+2. implementation 必须通过 independent implementation review 后才可 merge；
+3. implementation merge 前不得进行 production activation。
+
+本 amendment 自身仍为 `proposed / waiting independent review`；在其完成独立评审、被接受并合入前，
+不授权开始 implementation。本轮保持 docs-only，`IMPLEMENTATION_STARTED = NO`。
 
 ---
 
@@ -117,7 +144,7 @@ Program authority = AGENT_CORE_HARDENING_PROGRAM_V1 (accepted)
 Session/product authority = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted)
 Evidence authority = AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1 (PASS)
 Child Spec = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (accepted)
-Implementation authority = NONE
+Implementation authority = contracts
 ```
 
 Owner 边界：
@@ -1117,9 +1144,11 @@ Review recommendation 不自动等于 acceptance；status flip 由 authorized Ow
 AGENT_PROCESS_LIFECYCLE_HARDENING_V1_SPEC = PASS
 PROCESS_SPEC_AMENDMENT = PASS
 PROCESS_SPEC_ACCEPTANCE_FINALIZE = PASS
+PROCESS_IMPLEMENTATION_AUTHORITY_AMENDMENT = PASS
 
 BASE_MAIN = d83a2ff0e9644611707d7481ef88b4d7d49fb68e
 BASE_REVIEWED_HEAD = 670ddb769dcaa03bb0bd6cc22cb2796b9f59b3da
+IMPLEMENTATION_AUTHORITY_AMENDMENT_BASE_MAIN = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
 REQUIRED_FIXES_CLOSED = 9/9
 PREVIOUSLY_PASSED_ITEMS_REGRESSION = NONE
 
@@ -1141,6 +1170,12 @@ BOUNDED_BUFFERS = per_record + per_Agent + Router_global count_and_byte_caps; un
 SCHEDULER_TERMINATION_SEAM = active_turn_snapshot + stable_reconciliationHandle + occurrence/run/requestId_restore_index + outcome_evidence_distinct_from_termination_evidence + cancel_requested_distinct_from_termination_proven
 
 SPEC_STATUS = accepted
+AMENDMENT_STATUS = proposed
+AMENDMENT_REVIEW = waiting independent review
+IMPLEMENTATION_AUTHORITY = contracts
+IMPLEMENTATION_ALLOWED = YES_UNDER_ACCEPTED_CONTRACTS
+CONTRACT_SEMANTIC_CHANGE = NONE
+IMPLEMENTATION_SCOPE_CHANGE = NONE
 ACCEPTANCE_REVIEWED_SEMANTIC_HEAD = 8475318f12068a28fe937779c91735817b6db9ca
 INDEPENDENT_FOCUSED_RE_REVIEW = PASS
 REQUIRED_FIXES = NONE
@@ -1148,6 +1183,7 @@ SEMANTIC_CHANGE = NONE
 READY_FOR_MECHANICAL_DELTA_REVIEW = YES
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 READY_FOR_FOCUSED_RE_REVIEW = YES
+READY_FOR_INDEPENDENT_REVIEW = YES
 
 IMPLEMENTATION_STARTED = NO
 PRODUCTION_CHANGE = NONE
