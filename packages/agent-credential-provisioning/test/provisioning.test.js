@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import { constants } from 'node:fs'
 import * as fileSystem from 'node:fs/promises'
-import { chmod, mkdir, mkdtemp, readFile, rename, symlink, writeFile } from 'node:fs/promises'
+import { chmod, lstat, mkdir, mkdtemp, readFile, rename, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -359,25 +359,24 @@ test('persisted reread object is the verification mint source', async (t) => {
   assert.equal(Object.hasOwn(auth.state.clientResponse, 'persistedSourceMarker'), false)
 })
 
-test('store replacement, deletion, changed client, and changed secret all block verification mint', async (t) => {
+test('real inode replacement with changed clientId or secret blocks verification mint', async (t) => {
   const cases = [
     {
-      name: 'replacement credential',
+      name: 'different clientId replacement',
       replacement: () => ({ clientId: 'mc_replacement', clientSecret: opaque() }),
     },
     {
-      name: 'changed clientId',
-      replacement: (auth) => ({ clientId: 'mc_changed', clientSecret: auth.state.secret }),
-    },
-    {
-      name: 'same clientId different secret',
+      name: 'same clientId different secret replacement',
       replacement: () => ({ clientId: 'mc_fixed', clientSecret: opaque() }),
     },
-    { name: 'deleted entry', replacement: () => undefined },
   ]
-  for (const testCase of cases) {
+  for (const [index, testCase] of cases.entries()) {
     const paths = await files(t)
     const auth = fakeAuthority()
+    const writes = storeWriteCounter()
+    let replacementBytes
+    let replacementIdentity
+    let rejectedError
     await assert.rejects(
       ensureAgentCredential({
         agentId: AGENT_ID,
@@ -386,24 +385,52 @@ test('store replacement, deletion, changed client, and changed secret all block 
         auth,
         prerequisites: { c: true },
         storeWriteOptions: {
+          ...writes.options,
           afterRename: async (...args) => {
             assert.equal(args.length, 0)
-            const replacement = testCase.replacement(auth)
-            await writeFile(paths.credentialsFile, `${JSON.stringify({
+            const originalIdentity = await lstat(paths.credentialsFile)
+            const replacement = testCase.replacement()
+            replacementBytes = Buffer.from(`${JSON.stringify({
               version: 1,
-              credentials: replacement === undefined ? {} : { [AGENT_ID]: replacement },
-            })}\n`, { mode: 0o600 })
+              credentials: { [AGENT_ID]: replacement },
+            })}\n`)
+            const replacementFile = join(paths.directory, `replacement-${index}.json`)
+            await writeFile(replacementFile, replacementBytes, { mode: 0o600 })
+            const tempIdentity = await lstat(replacementFile)
+            assert.equal(tempIdentity.mode & 0o7777, 0o600)
+            assert.equal(tempIdentity.uid, process.getuid())
+            assert.equal(tempIdentity.gid, process.getgid())
+            await rename(replacementFile, paths.credentialsFile)
+            replacementIdentity = await lstat(paths.credentialsFile)
+            assert.notEqual(replacementIdentity.ino, originalIdentity.ino)
+            assert.equal(replacementIdentity.dev, tempIdentity.dev)
+            assert.equal(replacementIdentity.ino, tempIdentity.ino)
           },
         },
       }),
-      (error) => error.code === 'CREDENTIALS_STORE_ERROR'
-        && error.reason === 'post_write_consistency_mismatch',
+      (error) => {
+        rejectedError = error
+        return error.code === 'CREDENTIALS_STORE_ERROR'
+          && error.reason === 'post_write_consistency_mismatch'
+      },
       testCase.name,
     )
     assert.deepEqual(authCallCounts(auth), {
       principal: 1, client: 1, claim: 0, verify: 0, rotate: 0,
     }, testCase.name)
     assert.equal(auth.state.verifiedCredential, undefined, testCase.name)
+    assert.equal(writes.count, 1, testCase.name)
+    assert.deepEqual(await readFile(paths.credentialsFile), replacementBytes, testCase.name)
+    const finalIdentity = await lstat(paths.credentialsFile)
+    assert.equal(finalIdentity.dev, replacementIdentity.dev, testCase.name)
+    assert.equal(finalIdentity.ino, replacementIdentity.ino, testCase.name)
+    assert.equal(replacementBytes.includes(Buffer.from(auth.state.secret)), false, testCase.name)
+    const safeError = JSON.stringify({
+      code: rejectedError.code,
+      reason: rejectedError.reason,
+      message: rejectedError.message,
+    })
+    assert.equal(safeError.includes(auth.state.secret), false, testCase.name)
   }
 })
 
