@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "repository": "mayf3/dsh-agent-core",
-  "recorded_at": "2026-08-21T15:35:10Z",
+  "recorded_at": "2026-08-21T21:32:25Z",
   "receipt_type": "auth_service_stage_w_operator_approval",
   "auth_repository": "mayf3/auth-service",
   "status": "APPROVED",
   "operator_id": "mayf3-production-operator",
-  "approval_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5371967493",
-  "reviewed_source_git_commit": "450a0ecb286cbe5da6e790d3c572fa71218ca9c0",
+  "approval_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5375636458",
+  "reviewed_source_git_commit": "73a04f8a9c9999cf9183017cddd4766b35683c60",
   "authorized_stage": "STAGE_W",
   "authorized_client_ids": [
     "mc_LDcrvuGB18vsjy_SEWfc_C61",

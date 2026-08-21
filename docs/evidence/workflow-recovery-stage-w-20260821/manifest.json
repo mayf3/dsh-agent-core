@@ -48,27 +48,27 @@
   "migration_review": {
     "repository": "mayf3/auth-service",
     "verdict": "PASS",
-    "reviewed_source_git_commit": "450a0ecb286cbe5da6e790d3c572fa71218ca9c0",
-    "review_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5371967206",
+    "reviewed_source_git_commit": "73a04f8a9c9999cf9183017cddd4766b35683c60",
+    "review_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5375636325",
     "receipt": {
       "path": "docs/evidence/workflow-recovery-stage-w-20260821/migration-review.json",
-      "sha256": "27b75265108fe035b39be988e11a525a6687e1f2ec7bfe6a56ca809fb58c2ae2"
+      "sha256": "207b1037f0d2b7e0ececfd108e46d8796c4afdc868c3fd20d4d5604fa85a961a"
     }
   },
   "approval": {
     "status": "APPROVED",
     "operator_id": "mayf3-production-operator",
-    "approval_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5371967493",
+    "approval_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5375636458",
     "receipt": {
       "path": "docs/evidence/workflow-recovery-stage-w-20260821/operator-approval.json",
-      "sha256": "efa8554b7d1dc0780587420e983cec58ff41cba4d38d49b04eb1abba5c1ef357"
+      "sha256": "ea5c2afba0ac4c23e841bc67dfa8d4892dd57437e588f735c42521e1531a888e"
     }
   },
   "audit_metadata": {
     "migration_id": "agentcore-canary-stage-w-workflow-recovery-v1",
-    "source_git_commit": "450a0ecb286cbe5da6e790d3c572fa71218ca9c0",
+    "source_git_commit": "73a04f8a9c9999cf9183017cddd4766b35683c60",
     "operator_id": "mayf3-production-operator",
-    "approval_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5371967493",
+    "approval_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5375636458",
     "reason": "Restore workflow.read only for agt_stock_agent and agt_cto-agent; no Forum and no other Agents."
   }
 }
