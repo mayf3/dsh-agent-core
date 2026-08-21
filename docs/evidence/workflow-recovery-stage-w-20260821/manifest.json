@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "phase_a": {
+    "merged": true,
+    "merge_commit": "79cc8e861cbb16755370b0e9f30ef3fb47c56fa6",
+    "receipt": {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/phase-a.json",
+      "sha256": "2c51589d79dce1f613606d23511f8ad266c4bd6ec384ec408790fb8d058cd55e"
+    }
+  },
+  "identities": [
+    {
+      "client_external_ref": "agentcore:v1:client:agt_stock_agent",
+      "principal_external_ref": "agentcore:v1:principal:agt_stock_agent",
+      "client_id": "mc_OcPOL4l-8mUeiFJ0NoDxXHeG",
+      "principal_id": "a484b423-131a-4b05-b79b-0a193e06090e",
+      "client_active": true,
+      "principal_active": true,
+      "principal_type": "agent",
+      "agent_id": "agt_stock_agent",
+      "receipt": {
+        "path": "docs/evidence/workflow-recovery-stage-w-20260821/identity-stock.json",
+        "sha256": "625ce2844c0014b59161f3675921fdbbe27022ff79b3b14dfb410d834d2ae4c7"
+      }
+    },
+    {
+      "client_external_ref": "agentcore:v1:client:agt_cto-agent",
+      "principal_external_ref": "agentcore:v1:principal:agt_cto-agent",
+      "client_id": "mc_LDcrvuGB18vsjy_SEWfc_C61",
+      "principal_id": "4e5a4578-0645-4133-bd35-b80e453dfee9",
+      "client_active": true,
+      "principal_active": true,
+      "principal_type": "agent",
+      "agent_id": "agt_cto-agent",
+      "receipt": {
+        "path": "docs/evidence/workflow-recovery-stage-w-20260821/identity-cto.json",
+        "sha256": "038d0db9f9735d3e7aee71987f44330c8605a975651301e34e14eecd32e2d6f1"
+      }
+    }
+  ],
+  "readiness": {
+    "status": "READY",
+    "receipt": {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/readiness.json",
+      "sha256": "5058f58fb5e1a927a1ca1480b17968f4b8f4910dc674522ead4d9918ad42a56e"
+    }
+  },
+  "migration_review": {
+    "repository": "mayf3/auth-service",
+    "verdict": "PASS",
+    "reviewed_source_git_commit": "450a0ecb286cbe5da6e790d3c572fa71218ca9c0",
+    "review_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5371967206",
+    "receipt": {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/migration-review.json",
+      "sha256": "27b75265108fe035b39be988e11a525a6687e1f2ec7bfe6a56ca809fb58c2ae2"
+    }
+  },
+  "approval": {
+    "status": "APPROVED",
+    "operator_id": "mayf3-production-operator",
+    "approval_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5371967493",
+    "receipt": {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/operator-approval.json",
+      "sha256": "efa8554b7d1dc0780587420e983cec58ff41cba4d38d49b04eb1abba5c1ef357"
+    }
+  },
+  "audit_metadata": {
+    "migration_id": "agentcore-canary-stage-w-workflow-recovery-v1",
+    "source_git_commit": "450a0ecb286cbe5da6e790d3c572fa71218ca9c0",
+    "operator_id": "mayf3-production-operator",
+    "approval_ref": "https://github.com/mayf3/auth-service/pull/10#issuecomment-5371967493",
+    "reason": "Restore workflow.read only for agt_stock_agent and agt_cto-agent; no Forum and no other Agents."
+  }
+}

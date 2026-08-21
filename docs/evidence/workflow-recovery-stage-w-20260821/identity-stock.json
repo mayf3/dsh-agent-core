@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "repository": "mayf3/dsh-agent-core",
+  "recorded_at": "2026-08-21T15:35:10Z",
+  "receipt_type": "auth_service_machine_identity",
+  "agent_id": "agt_stock_agent",
+  "client_external_ref": "agentcore:v1:client:agt_stock_agent",
+  "principal_external_ref": "agentcore:v1:principal:agt_stock_agent",
+  "client_id": "mc_OcPOL4l-8mUeiFJ0NoDxXHeG",
+  "principal_id": "a484b423-131a-4b05-b79b-0a193e06090e",
+  "client_active": true,
+  "principal_active": true,
+  "principal_type": "agent",
+  "created": true
+}

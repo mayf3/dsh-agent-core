@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "repository": "mayf3/dsh-agent-core",
+  "recorded_at": "2026-08-21T15:35:10Z",
+  "receipt_type": "agentcore_clean_bootstrap_phase_a",
+  "status": "MERGED",
+  "merge_commit": "79cc8e861cbb16755370b0e9f30ef3fb47c56fa6"
+}
