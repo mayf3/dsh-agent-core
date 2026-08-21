@@ -1,13 +1,13 @@
 # Lark Channel SDK Integration V2 — Merge-candidate Canary Evidence
 
-> 状态：completed · 日期：2026-08-21  
-> 仓库：`mayf3/dsh-agent-core`  
-> final implementation base：`ed07cc09614075ce1b1a3d56e53aa7a4462b6f9c`  
-> final implementation commit：`cd517b654e224bf771c47c19cf6dd98da0da5dd9`  
-> live-tested pre-reconcile commit：`3c09a9fe5f70823c148153f10983d6533729768b`  
-> governing Spec：`AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2`（file revision commit `e1ae7fdc5e7dabcba17819c02935395a5f19e9b0`）  
-> child amendment：`AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2_INGRESS_CONTENT_COMPATIBILITY_AMENDMENT`（file revision commit `b581acafd6ac8ee2f95daaaa5ab294a8850c960f`）  
-> 环境：dedicated non-production Feishu test App `cli_a907e201cf78dbb4`，群「大侠 - 小虾米」，真人发送入站消息  
+> 状态：completed · 日期：2026-08-21
+> 仓库：`mayf3/dsh-agent-core`
+> final implementation base：`ed07cc09614075ce1b1a3d56e53aa7a4462b6f9c`
+> final implementation commit：`cd517b654e224bf771c47c19cf6dd98da0da5dd9`
+> live-tested pre-reconcile commit：`3c09a9fe5f70823c148153f10983d6533729768b`
+> governing Spec：`AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2`（file revision commit `e1ae7fdc5e7dabcba17819c02935395a5f19e9b0`）
+> child amendment：`AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2_INGRESS_CONTENT_COMPATIBILITY_AMENDMENT`（file revision commit `b581acafd6ac8ee2f95daaaa5ab294a8850c960f`）
+> 环境：dedicated non-production Feishu test App `cli_a907e201cf78dbb4`，群「大侠 - 小虾米」，真人发送入站消息
 > 最终模型路由：`openai-codex / gpt-5.6-luna`（PRIMARY `zai / glm-5.3` 明确配额耗尽后按任务规则切换）
 
 ---
