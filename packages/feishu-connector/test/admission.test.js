@@ -94,6 +94,42 @@ test('AC-GATE-MALFORMED-FAIL-CLOSED: only a non-null object with literal allowed
   assert.equal(allowed.forwarded.length, 1, 'literal true is the unique pass value')
 })
 
+test('GATE: diagnostic verdict getters are never invoked and cannot suppress rejection receipt', async () => {
+  let reasonGetterCalls = 0
+  const verdict = { allowed: false }
+  Object.defineProperty(verdict, 'reason', {
+    enumerable: true,
+    get() {
+      reasonGetterCalls += 1
+      throw new Error('diagnostic getter must not run')
+    },
+  })
+  const r = rig({ ingressGate: async () => verdict })
+  await r.handle(await toSdkMessage(p2pTextEvent))
+
+  assert.equal(reasonGetterCalls, 0)
+  assert.equal(r.forwarded.length, 0)
+  assert.equal(r.receipts.length, 1)
+})
+
+test('GATE: accessor-based allowed verdict fails closed without invoking getter', async () => {
+  let allowedGetterCalls = 0
+  const verdict = {}
+  Object.defineProperty(verdict, 'allowed', {
+    enumerable: true,
+    get() {
+      allowedGetterCalls += 1
+      return true
+    },
+  })
+  const r = rig({ ingressGate: async () => verdict })
+  await r.handle(await toSdkMessage(p2pTextEvent))
+
+  assert.equal(allowedGetterCalls, 0)
+  assert.equal(r.forwarded.length, 0)
+  assert.equal(r.receipts.length, 1)
+})
+
 test('GATE: a throwing gate FAILS CLOSED too (gate_error)', async () => {
   const r = rig({ ingressGate: async () => { throw new Error('binding store exploded') } })
   await r.handle(await toSdkMessage(p2pTextEvent))
