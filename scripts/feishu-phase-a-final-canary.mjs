@@ -36,10 +36,11 @@ const STATE = process.env.FEISHU_FINAL_CANARY_STATE
 if (typeof STATE !== 'string' || STATE === '') throw new Error('FEISHU_FINAL_CANARY_STATE is required')
 const RUN_MATRIX = Object.freeze({
   primary: Object.freeze({ provider: 'zai', model: 'glm-5.3', plugin: null, pluginVersion: null }),
+  'matrix-primary': Object.freeze({ provider: 'zai', model: 'glm-5.3', plugin: null, pluginVersion: null }),
   fallback: Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna', plugin: 'dsh-codex', pluginVersion: '0.2.3' }),
 })
 const expectedRoute = RUN_MATRIX[RUN_KIND]
-if (expectedRoute === undefined) throw new Error('RUN_KIND must be primary or fallback')
+if (expectedRoute === undefined) throw new Error('RUN_KIND must be primary, matrix-primary, or fallback')
 if (PROVIDER !== expectedRoute.provider || MODEL !== expectedRoute.model) {
   throw new Error('provider/model does not match the frozen run-kind route')
 }
@@ -1023,7 +1024,7 @@ function evaluateFinalGate() {
   requireRow('runtime-ready', 'RUNTIME_READY')
   requireRow('resolved-provider-route', 'AGENT_PROCESS_CONSTRUCTED')
   if (RUN_KIND === 'primary') {
-    requireRow('primary-allowed-failure', 'SCENARIO_SETTLED', 'FA32 PRIMARY')
+    requireRow('primary-provider-outcome', 'SCENARIO_SETTLED', 'FA32 PRIMARY')
   } else {
     requireRow('create-thread-ready', 'CREATE_THREAD_READY')
     for (const scenario of fallbackScenarios) requireRow(`scenario:${scenario}`, 'SCENARIO_SETTLED', scenario)
@@ -1107,11 +1108,11 @@ const stop = async (signal, requestedSuccess = false) => {
   rmSync(layout.homesRoot, { recursive: true, force: true })
   if (RUN_KIND === 'primary') rmSync(join(STATE, 'bindings'), { recursive: true, force: true })
   const sessionStateScrubbed = !existsSync(layout.homesRoot)
-  const rawBindingsRetainedForRollback = RUN_KIND === 'fallback' && existsSync(layout.bindingsStore)
+  const rawBindingsRetainedForRollback = RUN_KIND !== 'primary' && existsSync(layout.bindingsStore)
   record('EPHEMERAL_SESSION_STATE_SCRUBBED', sessionStateScrubbed, {
     homesRootRemoved: sessionStateScrubbed,
     credentialCopyPersisted: false,
-    codexAuthWasSymlinkOnly: RUN_KIND === 'fallback',
+    codexAuthWasSymlinkOnly: PROVIDER === 'openai-codex',
     rawBindingsRetainedForRollback,
     retentionPurpose: rawBindingsRetainedForRollback ? 'ephemeral live rollback handoff only' : null,
   })
