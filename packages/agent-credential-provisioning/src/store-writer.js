@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto'
-import { constants } from 'node:fs'
-import { chmod, chown, lstat, mkdir, open, rename, rm } from 'node:fs/promises'
+import { constants, fstatSync, lstatSync, renameSync } from 'node:fs'
+import { chmod, chown, lstat, mkdir, open, rm } from 'node:fs/promises'
 import { dirname, isAbsolute } from 'node:path'
+import { TextDecoder } from 'node:util'
 
 import {
   CREDENTIALS_STORE_ERROR,
@@ -16,10 +17,18 @@ const LOCK_RETRIES = 18000
 const PRIVATE_DIRECTORY_MODE = 0o700
 const PRIVATE_FILE_MODE = 0o600
 const activeLocks = new WeakSet()
-const defaultFileSystem = Object.freeze({ chmod, chown, lstat, mkdir, open, rename, rm })
+const defaultFileSystem = Object.freeze({ chmod, chown, lstat, mkdir, open, rm })
 
 function storeError(message) {
   return Object.assign(new Error(message), { code: CREDENTIALS_STORE_ERROR })
+}
+
+function decodeTrustedStoreUtf8(bytes, storeFile) {
+  try {
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes)
+  } catch {
+    throw storeError(`credential provisioning: credentials store contains invalid UTF-8: ${storeFile}`)
+  }
 }
 
 function validateStorePath(storeFile) {
@@ -261,7 +270,8 @@ async function readTrustedStore(storeFile, owner, { expectedDirectoryIdentity } 
     if (openedStat.dev !== pathStat.dev || openedStat.ino !== pathStat.ino) {
       throw storeError(`credential provisioning: credentials store changed during validation: ${storeFile}`)
     }
-    raw = await handle.readFile('utf8')
+    const rawBytes = await handle.readFile()
+    raw = decodeTrustedStoreUtf8(rawBytes, storeFile)
   } catch (error) {
     if (error?.code === CREDENTIALS_STORE_ERROR) throw error
     throw storeError(`credential provisioning: credentials store is unsafe or unreadable: ${storeFile}`)
@@ -393,21 +403,30 @@ function serializeWithAddedCredential(current, agentId, credential) {
   return `${current.raw.slice(0, end - 1)}${separator}${entry}${current.raw.slice(end - 1)}`
 }
 
-async function assertTargetUnchanged(storeFile, expectedIdentity, fileSystem = defaultFileSystem) {
+function assertTargetUnchangedSync(storeFile, expectedIdentity, owner) {
   let current
   try {
-    current = await fileSystem.lstat(storeFile)
+    current = lstatSync(storeFile)
   } catch (error) {
     if (error?.code === 'ENOENT' && expectedIdentity === undefined) return
     throw storeError(`credential provisioning: credentials store changed before commit: ${storeFile}`)
   }
-  if (
-    expectedIdentity === undefined
-    || !current.isFile()
-    || current.isSymbolicLink()
-    || current.dev !== expectedIdentity.dev
-    || current.ino !== expectedIdentity.ino
-  ) throw storeError(`credential provisioning: credentials store changed before commit: ${storeFile}`)
+  if (expectedIdentity === undefined) {
+    throw storeError(`credential provisioning: credentials store changed before commit: ${storeFile}`)
+  }
+  assertMetadata(current, {
+    kind: 'file', path: storeFile, mode: PRIVATE_FILE_MODE, owner,
+  })
+  assertSameObject(current, expectedIdentity, 'credentials store', storeFile)
+}
+
+function assertExactTempStat(stat, tempFile, owner, expectedSize) {
+  assertMetadata(stat, {
+    kind: 'file', path: tempFile, mode: PRIVATE_FILE_MODE, owner,
+  })
+  if (stat.size !== expectedSize) {
+    throw storeError(`credential provisioning: credential store temp file has unexpected size: ${tempFile}`)
+  }
 }
 
 /** Add exactly one absent target entry while preserving every pre-existing byte. */
@@ -453,21 +472,32 @@ export async function writeCredentialForAgent(storeFile, agentId, credential, op
       // Metadata and parent identity are final before the first secret byte is persisted.
       await tempHandle.writeFile(serialized, 'utf8')
       await tempHandle.sync()
+      await options.beforeRename?.()
+
+      // No await, callback, or user code may run from the fd/path identity recheck
+      // through rename and the final path identity check.
+      const expectedSize = Buffer.byteLength(serialized, 'utf8')
+      const tempFdStat = fstatSync(tempHandle.fd)
+      assertExactTempStat(tempFdStat, tempFile, owner, expectedSize)
+      const tempPathStatNow = lstatSync(tempFile)
+      assertExactTempStat(tempPathStatNow, tempFile, owner, expectedSize)
+      assertSameObject(tempPathStatNow, tempFdStat, 'credential store temp file', tempFile)
+      const directoryNow = lstatSync(directory)
+      assertMetadata(directoryNow, {
+        kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
+      })
+      assertSameObject(directoryNow, directoryIdentity, 'credential store directory', directory)
+      assertTargetUnchangedSync(storeFile, current.fileIdentity, owner)
+      renameSync(tempFile, storeFile)
+      const finalStat = lstatSync(storeFile)
+      assertExactTempStat(finalStat, storeFile, owner, expectedSize)
+      const finalFdStat = fstatSync(tempHandle.fd)
+      assertExactTempStat(finalFdStat, storeFile, owner, expectedSize)
+      assertSameObject(finalStat, finalFdStat, 'final credential store', storeFile)
+
+      await fsyncDirectory(directory, fileSystem)
       await tempHandle.close()
       tempHandle = undefined
-      await options.beforeRename?.()
-      const directoryNow = await assertTrustedDirectory(directory, owner, { fileSystem })
-      if (directoryNow.dev !== directoryIdentity.dev || directoryNow.ino !== directoryIdentity.ino) {
-        throw storeError(`credential provisioning: credential store directory changed before commit: ${directory}`)
-      }
-      await assertTargetUnchanged(storeFile, current.fileIdentity, fileSystem)
-      await fileSystem.rename(tempFile, storeFile)
-      const finalStat = await fileSystem.lstat(storeFile)
-      assertMetadata(finalStat, { kind: 'file', path: storeFile, mode: PRIVATE_FILE_MODE, owner })
-      if (finalStat.dev !== tempIdentity.dev || finalStat.ino !== tempIdentity.ino) {
-        throw storeError(`credential provisioning: final credential store changed after commit: ${storeFile}`)
-      }
-      await fsyncDirectory(directory, fileSystem)
       await options.afterRename?.()
     } catch (error) {
       if (error?.code === CREDENTIALS_STORE_ERROR || error?.code === 'CREDENTIALS_STORE_LOCKED') throw error
