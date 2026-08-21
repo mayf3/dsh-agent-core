@@ -81,6 +81,7 @@ if (typeof GROUP !== 'string' || GROUP === '' || typeof P2P_CHAT !== 'string' ||
 }
 const AGENT_ID = 'agt_final-canary'
 const NO_MENTION_WINDOW_MS = Number(process.env.FEISHU_FINAL_CANARY_NO_MENTION_MS ?? 20_000)
+const DUPLICATE_HOLD_MS = Number(process.env.FEISHU_FINAL_CANARY_DUPLICATE_HOLD_MS ?? 20_000)
 const creds = JSON.parse(readFileSync(TEST_APP_CREDS, 'utf8'))
 
 const hashText = (value) => createHash('sha256').update(value).digest('hex')
@@ -321,7 +322,7 @@ permission:
 writeFileSync(join(agentWorkspace, 'AGENTS.md'), `# Isolated Phase A final canary
 
 Reply concisely and preserve the FA32 marker.
-For FA32 DUPLICATE LONG, run exactly \`sleep 20\`, then reply exactly FA32 DUPLICATE LONG COMPLETE.
+For FA32 DUPLICATE LONG, reply exactly FA32 DUPLICATE LONG COMPLETE.
 For all other FA32 prompts, reply with the marker followed by COMPLETE.
 Do not access production services, production credentials, or other workspaces.
 `, { mode: 0o600 })
@@ -449,6 +450,9 @@ class ObservedAgentProcess extends AgentProcess {
       model: this.model,
     })
     try {
+      if (scenario === 'FA32 DUPLICATE LONG') {
+        await new Promise((resolveHold) => setTimeout(resolveHold, DUPLICATE_HOLD_MS))
+      }
       const result = await super.turn(sessionId, text, context)
       record('AGENT_TURN_FINISHED', true, {
         index: turnIndex,
@@ -511,12 +515,10 @@ const rawSend = channel.send.bind(channel)
 channel.send = async (to, input, opts) => {
   metrics.outbound += 1
   const replyScenario = scenarioByMessageId.get(opts?.replyTo)
-  if (replyScenario !== undefined) {
-    const counters = countersForScenario(replyScenario)
-    counters.outbound += 1
-    counters.replies += 1
-  }
+  const replyCounters = replyScenario === undefined ? null : countersForScenario(replyScenario)
+  if (replyCounters !== null) replyCounters.outbound += 1
   const result = await rawSend(to, input, opts)
+  if (replyCounters !== null) replyCounters.replies += 1
   record('SDK_OUTBOUND_SENT', typeof result?.messageId === 'string' && result.messageId !== '', {
     index: metrics.outbound,
     messageIdHash: stableId(result?.messageId),
@@ -705,11 +707,15 @@ runtime.feishu.setCallback(async (ingress) => {
     'FA32 GROUP': 'group',
     'FA32 P2P': 'p2p',
     'FA32 ATALL': 'group',
-    'FA32 TOPIC': 'thread',
+    'FA32 TOPIC': 'group',
     'FA32 DUPLICATE LONG': 'group',
-    'FA32 THREAD FOLLOWUP': 'thread',
+    'FA32 THREAD FOLLOWUP': 'group',
   }[scenario]
-  const placementMatches = expectedChatType === undefined || ingress.chatType === expectedChatType
+  const createdThreadRequired = scenario === 'FA32 TOPIC' || scenario === 'FA32 THREAD FOLLOWUP'
+  const createdThreadMatches = !createdThreadRequired
+    || (createdThread !== null && ingress.threadId === createdThread.threadId)
+  const placementMatches = (expectedChatType === undefined || ingress.chatType === expectedChatType)
+    && createdThreadMatches
   const botMentionRequired = [
     'FA32 PRIMARY',
     'FA32 GROUP',
@@ -730,6 +736,9 @@ runtime.feishu.setCallback(async (ingress) => {
     conversationIdHash: stableId(ingress.conversationId),
     chatType: ingress.chatType,
     expectedChatType: expectedChatType ?? null,
+    createdThreadRequired,
+    createdThreadMatches,
+    ingressThreadIdHash: stableId(ingress.threadId),
     placementMatches,
     mentionPlacementMatches,
     senderSelfSent: ingress.sender?.selfSent === true,
@@ -802,6 +811,7 @@ runtime.feishu.setCallback(async (ingress) => {
           messageIdHash: stableId(messageId),
           rawHashEqual,
           processingLeaseStillHeld: leaseHeld,
+          deterministicTurnHoldMs: DUPLICATE_HOLD_MS,
           seenBeforeSettle,
           routerDeltaDuringReplay,
           agentTurnDeltaDuringReplay,
