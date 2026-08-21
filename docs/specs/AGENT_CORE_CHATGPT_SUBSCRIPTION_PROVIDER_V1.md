@@ -5,7 +5,11 @@ amendment: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_SPEC_AMENDMENT
 accepted_reviewed_head: 42cd524
 focused_re_review: PASS
 amendment_2: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_DSH_RC8_VERSION_ALIGNMENT
-amendment_2_status: proposed
+amendment_2_status: accepted
+amendment_2_accepted_reviewed_head: 72fa87d
+amendment_2_review: PASS
+amendment_2_required_fixes: NONE
+amendment_2_verdict: READY_TO_ACCEPT_RC8_AMENDMENT
 ---
 
 # Agent Core ChatGPT Subscription Provider V1 — 单 Agent Luna 接入（AMEND）
@@ -18,9 +22,12 @@ amendment_2_status: proposed
 > accepted_reviewed_head = 42cd524 · focused_re_review = PASS ·
 > REQUIRED_FIXES = NONE · VERDICT = READY_TO_ACCEPT_AND_MERGE_SPEC）
 >
-> **Amendment 2（2026-08-21，DSH rc.8 version alignment）= proposed —
-> waiting independent review。** 基础正文（含 `DSH_VERSION = 0.1.0-rc.5`
-> pin）保持历史原样；Amendment 2 被 accept 后，以文末「Amendment 2」节的
+> **Amendment 2（2026-08-21，DSH rc.8 version alignment）= accepted
+> （mechanical acceptance finalize 2026-08-21 ·
+> accepted_reviewed_head = 72fa87d · review = PASS ·
+> REQUIRED_FIXES = NONE · VERDICT = READY_TO_ACCEPT_RC8_AMENDMENT）。**
+> 基础正文（含 `DSH_VERSION = 0.1.0-rc.5`
+> pin）保持历史原样；自本 finalize 起，以文末「Amendment 2」节的
 > 冻结 tuple 取代基础正文的 DSH version/commit，其余语义一律不变。
 >
 > 本轮为 **SPEC_AMENDMENT（FIX round）**：Independent Review on `da8c0de`
@@ -401,11 +408,14 @@ READY_FOR_FOCUSED_RE_REVIEW =
 
 ---
 
-## Amendment 2（2026-08-21）— DSH rc.8 Version Alignment（proposed）
+## Amendment 2（2026-08-21）— DSH rc.8 Version Alignment（accepted）
 
 > 出处：`LUNA_DSH_RC8_VERSION_ALIGNMENT_V1`（COMPATIBILITY INVESTIGATION +
-> SPEC AMENDMENT ONLY）。AMENDMENT_STATUS = **proposed — waiting independent
-> review**；本节不 self-finalize。
+> SPEC AMENDMENT ONLY）。AMENDMENT_STATUS = **accepted**（acceptance
+> finalize 2026-08-21：accepted_reviewed_head = `72fa87d` ·
+> `LUNA_DSH_RC8_VERSION_ALIGNMENT_V1_SPEC_REVIEW = PASS` ·
+> REQUIRED_FIXES = NONE · VERDICT = READY_TO_ACCEPT_RC8_AMENDMENT；
+> 兼容性证据 22/22 PASS：作者复跑两轮 + 独立 Reviewer 第三轮）。
 >
 > **Owner Direction（2026-08-21）**：优先对齐当前正式 production DSH
 > （`0.1.0-rc.8`）；不为 Luna 长期维护一套单独的 rc.5 Harness；只有
@@ -478,10 +488,12 @@ token）。
 ### A2.3 已知运维事实（随本 Amendment 记录，不改语义）
 
 1. **Harness 漂移敏感**：pin 校验的是 `DSH_HARNESS_ROOT` checkout 的
-   `git rev-parse HEAD`；该 checkout 是活跃开发树（本轮快照时 ahead 13、含
-   未跟踪文件）。后续任何 harness 提交都会让 Luna 再次
-   `dsh_version_mismatch` fail-loud —— 这是设计内行为；长期解法（为订阅路径
-   提供钉死构建）超出本 Amendment，未获授权不建设。
+   `git rev-parse HEAD`；当前活跃开发 Harness 已在审计窗口后继续前进。
+   后续 implementation/deployment 必须将 production `DSH_HARNESS_ROOT` 指向
+   immutable checkout @ `514ab7b0029141b88c807704764d0d3e1eea1da4`，不得继续
+   指向会自动前进的开发 worktree，否则版本门会再次
+   `dsh_version_mismatch` fail-loud。本轮仅记录该 implementation note，不执行
+   production 切换，不改变 Amendment 语义。
 2. **`~/.codex/auth.json` 归因规则（验收方法论）**：该文件由用户自己的
    Codex 客户端独立刷新（2026-08-21 07:05:21 实测发生），与本系统无关
    （Agent Core / dsh-codex 不读取、不写入该文件；订阅 credential 独立存放
@@ -495,13 +507,18 @@ token）。
 AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_DSH_RC8_VERSION_ALIGNMENT = PASS
 
 BASE_SPEC_STATUS       = accepted（历史正文不动）
-AMENDMENT_2_STATUS     = proposed — waiting independent review
+AMENDMENT_2_STATUS     = accepted
+ACCEPTED_REVIEWED_HEAD = 72fa87d
+REVIEW                  = PASS
+REQUIRED_FIXES           = NONE
+VERDICT                  = READY_TO_ACCEPT_RC8_AMENDMENT
+SEMANTIC_CHANGE          = NONE
 
 DSH_VERSION   = 0.1.0-rc.8
 DSH_COMMIT    = 514ab7b0029141b88c807704764d0d3e1eea1da4
 PLUGIN        = dsh-codex@0.2.3（unchanged）
 
-DSH_CODEX_0_2_3_COMPATIBLE = YES（隔离真实测试 22/22 PASS，两轮复现）
+DSH_CODEX_0_2_3_COMPATIBLE = YES（22/22 PASS：作者复跑两轮 + 独立 Reviewer 第三轮）
 PROVISIONING_FAIL_LOUD     = UNCHANGED（仅 pin 值更新）
 RESTART_ACCEPTANCE         = PASS（冷重启 resume 实测）
 ROLLBACK                   = UNCHANGED（§7 原样）
@@ -541,3 +558,8 @@ KERNEL_CHANGE = NONE · PRODUCT_CODE_CHANGE = NONE · MERGE = NO
   依据隔离真实兼容测试（22/22 PASS，见 Amendment 2 节）。AMENDMENT_2_STATUS
   = **proposed — waiting independent review**；未 acceptance finalize，
   未实现，未改 production。
+- **Round 5（2026-08-21，Amendment 2 acceptance finalize）**：Independent
+  Review on `72fa87d` = **PASS**；`REQUIRED_FIXES = NONE`；`VERDICT =
+  READY_TO_ACCEPT_RC8_AMENDMENT`。本轮仅机械翻转 Amendment 2 状态并镜像
+  acceptance provenance；`SEMANTIC_CHANGE = NONE`，未 implementation，未改
+  production，未 OAuth，未修改 credential，未 merge。
