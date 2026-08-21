@@ -1,6 +1,7 @@
 ---
 spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-status: accepted
+status: superseded
+superseded_by: AGENT_PROCESS_LIFECYCLE_HARDENING_V2
 date: 2026-08-20
 accepted_date: 2026-08-20
 type: implementation-spec (spec only; no implementation this round)
@@ -26,7 +27,8 @@ implementation_authority: none
 
 # AGENT_PROCESS_LIFECYCLE_HARDENING_V1 — 进程生命周期、deadline 与未知结果收口
 
-> 状态：**accepted**（2026-08-20 acceptance finalize；reviewed semantic HEAD `8475318f12068a28fe937779c91735817b6db9ca`）。
+> 生命周期：**superseded**；由 `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` 完整取代（2026-08-21 whole-authority acceptance finalize）。历史 normative meaning 保持不变。
+> 历史 acceptance：**accepted**（2026-08-20 acceptance finalize；reviewed semantic HEAD `8475318f12068a28fe937779c91735817b6db9ca`）。
 > 本轮：**SPEC ONLY**。
 > 不 implementation；不修改 production；不修改当前 `DSH_AGENT_TURN_TIMEOUT=900000` 运维缓解；不修改 Scheduler；不 merge。
 

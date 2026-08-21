@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -14,7 +14,8 @@ governed_by:
   - AGENT_CORE_HARDENING_PROGRAM_V1
   - AGENT_WORKSPACE_SESSION_MODEL_V2
 external_authorities: []
-supersedes: []
+supersedes:
+  - AGENT_PROCESS_LIFECYCLE_HARDENING_V1
 superseded_by: null
 owners:
   - mayf3
@@ -22,6 +23,14 @@ date: 2026-08-21
 repository: mayf3/dsh-agent-core
 authoring_base_main: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
 replaced_authority_revision: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
+accepted_date: 2026-08-21
+accepted_reviewed_base: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
+accepted_reviewed_head: 08c041c3ad11bab6b1632b24103b40b2d698dfdf
+replacement_review: PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW
+replacement_review_result: PASS
+required_fixes: NONE
+review_verdict: READY_TO_ACCEPT_REPLACEMENT
+acceptance_finalize_semantic_change: none
 references:
   - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md
   - docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md
@@ -31,9 +40,9 @@ references:
 
 # AGENT_PROCESS_LIFECYCLE_HARDENING_V2 — 进程生命周期、deadline 与未知结果收口
 
-> 状态：**proposed**（完整 whole-authority replacement；等待独立语义评审与 authorized acceptance）。
-> 本轮：**SPEC ONLY / REPLACEMENT AUTHORING ONLY**。
-> 不 implementation；不修改 production；不修改当前 `DSH_AGENT_TURN_TIMEOUT=900000` 运维缓解；不修改 Scheduler；不 accepted；不 merge。
+> 状态：**accepted**（2026-08-21 whole-authority acceptance finalize；reviewed replacement HEAD `08c041c3ad11bab6b1632b24103b40b2d698dfdf`；supersedes `AGENT_PROCESS_LIFECYCLE_HARDENING_V1`）。
+> 本轮：**SPEC ONLY / ATOMIC WHOLE-AUTHORITY ACCEPTANCE FINALIZE**。
+> 不 implementation；不修改 production；不修改当前 `DSH_AGENT_TURN_TIMEOUT=900000` 运维缓解；不修改 Scheduler；不 merge；accepted 仅在本 PR 分支，合入 `main` 前不构成 active authority。
 
 ---
 
@@ -43,7 +52,7 @@ references:
 SPEC_GOVERNANCE_MODE = AUTHOR
 PREFLIGHT_MODE = SUPERSEDE
 AGENT_PROCESS_LIFECYCLE_HARDENING_V2_SPEC = PASS
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = contracts
 ACTIVE_IMPLEMENTATION_AUTHORITY_NOW = none
 IMPLEMENTATION_ALLOWED = NO
@@ -51,11 +60,12 @@ NEEDS_OWNER_DECISION = NO
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
-READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+READY_FOR_INDEPENDENT_SPEC_REVIEW = COMPLETED
 ```
 
-`PASS` 只表示 replacement authoring 输入完整。`status: proposed` 不构成 active authority，
-不授权 implementation，也不使旧 authority 失效。
+`PASS` 表示 replacement authoring 输入完整；whole-authority acceptance provenance 见 §0.4。
+`status: accepted` 现仅存在于本 PR 分支；合入 `main` 前不构成 active authority、不授权
+implementation，也不使 `main` 上的旧 authority 失效。
 
 ### 0.1 Complete replacement declaration
 
@@ -106,6 +116,33 @@ AGENT_PROCESS_LIFECYCLE_HARDENING_V1.superseded_by: AGENT_PROCESS_LIFECYCLE_HARD
 
 若任一 backlink/lifecycle 更新缺失，则 transition 不得完成。V2 accepted 且该原子 change
 进入 `main` 前，V1 仍是 active authority，active implementation authority 仍为 `none`。
+
+**2026-08-21 执行记录：以上 plan 已由 docs-only whole-authority acceptance-finalize
+transaction 在同一 commit 中原子执行完成；acceptance provenance 见 §0.4。**
+
+### 0.4 Acceptance Record
+
+```text
+ACCEPTANCE_FINALIZE = AGENT_PROCESS_LIFECYCLE_HARDENING_V2_WHOLE_AUTHORITY_ACCEPTANCE_FINALIZE
+ACCEPTED_DATE = 2026-08-21
+REVIEWED_BASE_COMMIT = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
+REVIEWED_SPEC_COMMIT = 08c041c3ad11bab6b1632b24103b40b2d698dfdf
+PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW = PASS
+REQUIRED_FIXES = NONE
+READY_TO_ACCEPT_REPLACEMENT = YES
+SEMANTIC_DELTA_FROM_REVIEWED_SPEC_COMMIT = NONE
+SPEC_STATUS = accepted
+SUPERSEDES = [AGENT_PROCESS_LIFECYCLE_HARDENING_V1]
+SUPERSEDED_AUTHORITY = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (status = superseded; superseded_by = AGENT_PROCESS_LIFECYCLE_HARDENING_V2)
+ATOMIC_WHOLE_AUTHORITY_SUPERSESSION = SINGLE_DOCS_ONLY_TRANSACTION
+FINAL_ACCEPTED_HEAD = recorded in the PR #28 acceptance record; never self-referenced in this file
+ACTIVE_AUTHORITY_ON_MAIN_UNTIL_MERGE = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
+IMPLEMENTATION_ALLOWED_BEFORE_MAIN_MERGE = NO
+```
+
+本 finalize 只机械执行 §0.3 预定的原子 transition 与 acceptance provenance；§1–§15 reviewed
+semantics（C-001..C-022 Contracts、§10.2 的 39 条 acceptance items、§10.3 的 48 个 fault
+cases、11 个 stable clause anchors、production / Scheduler / security boundaries）保持逐字不变。
 
 ---
 
@@ -171,8 +208,8 @@ Non-goals / forbidden changes（与 V1 完全相同）：
 Program authority = AGENT_CORE_HARDENING_PROGRAM_V1 (accepted)
 Session/product authority = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted)
 Evidence authority = AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1 (PASS)
-Active child authority = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (accepted; implementation_authority=none)
-Proposed replacement = AGENT_PROCESS_LIFECYCLE_HARDENING_V2 (proposed; implementation_authority=contracts; supersedes=[])
+Authority on main until merge = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (accepted; implementation_authority=none; superseded in-branch by this V2 since 2026-08-21)
+Replacement (accepted in-branch 2026-08-21) = AGENT_PROCESS_LIFECYCLE_HARDENING_V2 (accepted; implementation_authority=contracts; supersedes=[AGENT_PROCESS_LIFECYCLE_HARDENING_V1])
 Active implementation authority now = NONE
 Implementation authority after V2 legal acceptance = contracts
 ```
@@ -1610,18 +1647,25 @@ BOUNDED_BUFFERS = per_record + per_Agent + Router_global count_and_byte_caps; un
 
 SCHEDULER_TERMINATION_SEAM = active_turn_snapshot + stable_reconciliationHandle + occurrence/run/requestId_restore_index + outcome_evidence_distinct_from_termination_evidence + cancel_requested_distinct_from_termination_proven
 
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 INTENDED_SUPERSEDES_ON_ACCEPTANCE = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-CURRENT_SUPERSEDES = []
+CURRENT_SUPERSEDES = [AGENT_PROCESS_LIFECYCLE_HARDENING_V1]
 ATOMIC_WHOLE_AUTHORITY_SUPERSESSION_PLAN_PREPARED = YES
-OLD_AUTHORITY_STILL_ACTIVE = YES
+ATOMIC_WHOLE_AUTHORITY_SUPERSESSION_EXECUTED = YES (2026-08-21)
+OLD_AUTHORITY_STILL_ACTIVE = YES (on main, until this transaction merges)
 ACTIVE_IMPLEMENTATION_AUTHORITY_NOW = none
 IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = contracts
 IMPLEMENTATION_ALLOWED = NO
 CONTRACT_SEMANTIC_CHANGE = NONE
 IMPLEMENTATION_SCOPE_CHANGE = NONE
 ACCEPTANCE_CRITERIA_CHANGE = NONE
-READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+READY_FOR_INDEPENDENT_SPEC_REVIEW = COMPLETED
+WHOLE_AUTHORITY_ACCEPTANCE_FINALIZE = PASS (2026-08-21)
+REVIEWED_BASE_COMMIT = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
+REVIEWED_SPEC_COMMIT = 08c041c3ad11bab6b1632b24103b40b2d698dfdf
+PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW = PASS
+REQUIRED_FIXES = NONE
+SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = NONE
 
 IMPLEMENTATION_STARTED = NO
 PRODUCTION_CHANGE = NONE
