@@ -552,6 +552,31 @@ The Feishu Agent successful-reply path MUST call the SDK with Markdown intent. H
 quotes, inline/fenced code, links, simple tables and mixed Chinese/English MUST remain eligible for native
 rendering. This Contract MUST NOT apply to excluded receipt/proactive paths.
 
+### CTR-MARKDOWN-HEADING-001 — All six Markdown heading levels remain distinct
+
+The SDK-native Markdown path MUST preserve and render every heading level from `# Heading 1` through
+`###### Heading 6`. H1, H2, H3, H4, H5 and H6 MUST each remain recognizable as their corresponding
+heading level; the connector MUST NOT flatten them into one level or plain body text.
+
+### CTR-MARKDOWN-NESTED-LIST-001 — One nested list level is mandatory
+
+`NESTED_LIST_DEPTH_REQUIRED = 1`. The SDK-native Markdown path MUST preserve one nested level for both
+unordered and ordered lists. Parent/child hierarchy, item order and item text MUST NOT be flattened,
+reordered or lost.
+
+### CTR-MARKDOWN-CODE-LANGUAGE-001 — Fenced-code language tags are preserved
+
+Fenced code with an explicit language tag, including a `python` fence, MUST preserve the opening and
+closing fences, the language tag and all code content. SDK-native long-message splitting MUST close and
+reopen a split fence without dropping or changing its language tag.
+
+### CTR-MARKDOWN-LINK-001 — Markdown link URLs are byte-stable
+
+`LINK_URL_PRESERVATION = BYTE_STABLE`. The Markdown link display text and exact input URL MUST be
+preserved through Agent Core and the SDK send input. Query parameters, fragments and percent encoding
+MUST NOT be lost, rewritten, decoded/re-encoded a second time, or replaced by another redirect URL.
+Feishu client-side click handling is outside this byte-stability obligation.
+
 ### CTR-MARKDOWN-002 — SDK is the single rendering authority
 
 Agent Core MUST leave `config.markdownConverter` unset and MUST NOT add a custom converter, raw client,
@@ -566,11 +591,36 @@ language-tag and link preservation. Mentions MUST follow native first-chunk-only
 continuations remain anchored; revoked targets use
 `CTR-TARGET-REVOKED-001`.
 
+### CTR-MARKDOWN-LONG-TABLE-001 — Long-message fidelity includes a simple table
+
+The greater-than-3500-character Markdown path MUST include and preserve at least one simple table together
+with a language-tagged fenced-code block, a byte-stable link and the first-chunk automatic mention.
+Across all chunks, table content, code, link, mention placement and source order MUST remain complete with
+no content loss.
+
 ### CTR-AUTO-MENTION-001 — Group/topic success mentions triggering sender
 
 When intent requests mention, target is group/thread, and valid triggering sender openId exists, connector
-MUST create one native mention of that sender. It MUST be clickable and produce native notification when
-the platform supports it.
+MUST create one native mention of that sender. The mention MUST be clickable and the mentioned user MUST
+receive the Feishu-native notification in both group and topic test-app cases. Failure of native
+notification is a stop condition requiring Owner disposition; it MUST NOT degrade to plain `@name` text.
+
+### CTR-AUTO-MENTION-CODE-FENCE-001 — Automatic mention stays outside code fences
+
+The generated mention token MUST be placed outside every fenced-code block, MUST NOT alter code content,
+and MUST remain outside code after long-message splitting. Automatic mention remains first-chunk-only.
+
+### CTR-AUTO-MENTION-NOTIFICATION-001 — Native notification is mandatory
+
+For a valid `IngressEvent.sender.openId`, group and topic automatic mentions MUST be real clickable Feishu
+mentions and MUST notify the mentioned user through the native client. If a trusted openId is missing or
+invalid, the connector MUST create no mention and MUST NOT fabricate a name-based replacement.
+
+### CTR-TOPIC-CONTINUITY-001 — Subsequent topic ingress preserves conversation identity
+
+After the bot replies inside a topic, a user's next message in that same topic MUST normalize to the
+correct `threadId`; its `conversationId` MUST remain `chatId:topic:threadId`, MUST resolve the same
+prebound Binding, and MUST NOT degrade to the containing group conversation.
 
 ### CTR-AUTO-MENTION-002 — P2P and missing identity never fabricate mention
 
@@ -677,6 +727,45 @@ previous verified deployment commit; no dual flag/data migration is authorized.
 - Expected result: native rendering; no custom/raw/direct transport.
 - Failure condition: required raw Markdown or second renderer/transport.
 
+### ACC-MARKDOWN-HEADINGS-H1-H6 — Six-level heading fidelity
+
+- Contracts: `CTR-MARKDOWN-001`, `CTR-MARKDOWN-HEADING-001`, `CTR-TEST-APP-001`
+- Method: send one document containing `#` through `######` headings with distinct labels.
+- Environment: dedicated test app and real Feishu client.
+- Required evidence: exact input, message ID and capture showing all six labeled levels.
+- Expected result: H1–H6 each render as the corresponding distinct heading level.
+- Failure condition: any level is missing, flattened, reordered or rendered as ordinary body text.
+
+### ACC-MARKDOWN-NESTED-LIST-001 — One-level ordered and unordered nesting
+
+- Contracts: `CTR-MARKDOWN-001`, `CTR-MARKDOWN-NESTED-LIST-001`, `CTR-TEST-APP-001`
+- Method: send unordered and ordered lists, each with one nested child level and unique item text.
+- Environment: dedicated test app and real Feishu client.
+- Required evidence: exact input, message ID and capture showing parent/child hierarchy and order.
+- Expected result: `NESTED_LIST_DEPTH_REQUIRED = 1`; both list kinds preserve hierarchy, order and text.
+- Failure condition: flattening, reordering, missing child/item text or loss of ordered-list numbering.
+
+### ACC-MARKDOWN-CODE-LANGUAGE-001 — Language-tagged fenced code
+
+- Contracts: `CTR-MARKDOWN-CODE-LANGUAGE-001`, `CTR-MARKDOWN-003`, `CTR-TEST-APP-001`
+- Method: send a normal `python` fenced block containing `print("hello")`, then repeat with the fence
+  crossing the SDK long-message split boundary.
+- Environment: dedicated test app with observable input/chunks.
+- Required evidence: exact input, chunk payloads/order, message IDs and client captures.
+- Expected result: fences, `python` tag and code bytes remain present; split fences close/reopen safely.
+- Failure condition: untagged fence, changed/lost code, lost language tag or unsafe chunk boundary.
+
+### ACC-MARKDOWN-LINK-BYTE-STABLE — Link text and URL preservation
+
+- Contracts: `CTR-MARKDOWN-LINK-001`, `CTR-MARKDOWN-003`, `CTR-TEST-APP-001`
+- Method: send a link whose URL contains query parameters, fragment and percent encoding in both normal
+  and long-message inputs.
+- Environment: send-plan integration evidence plus dedicated test app.
+- Required evidence: exact source URL, SDK input/chunks, message ID, clickable-link capture and destination observation.
+- Expected result: display text is preserved; Agent Core/SDK input URL is byte-identical, including query,
+  fragment and percent encoding; no replacement redirect URL is introduced.
+- Failure condition: any input rewrite, parameter/fragment loss, double encoding or redirect substitution.
+
 ### ACC-MARKDOWN-TABLE — Native simple-table gate
 
 - Contracts: `CTR-MARKDOWN-001`, `CTR-MARKDOWN-002`, `CTR-TEST-APP-001`
@@ -695,6 +784,19 @@ previous verified deployment commit; no dual flag/data migration is authorized.
 - Expected result: one in-limit message; complete ordered safe chunks; mention first chunk only.
 - Failure condition: truncation, reorder, broken fence/link, duplicate mention or wrong conversation.
 
+### ACC-MARKDOWN-LONG-WITH-TABLE-001 — Long mixed-content closure
+
+- Contracts: `CTR-MARKDOWN-003`, `CTR-MARKDOWN-LONG-TABLE-001`, `CTR-MARKDOWN-CODE-LANGUAGE-001`,
+  `CTR-MARKDOWN-LINK-001`, `CTR-AUTO-MENTION-CODE-FENCE-001`, `CTR-TEST-APP-001`
+- Method: send a greater-than-3500-character group reply containing one simple table, a language-tagged
+  code fence, a query/fragment/percent-encoded link and automatic triggering-sender mention.
+- Environment: dedicated test app with SDK chunk observation and real Feishu clients.
+- Required evidence: exact source, ordered chunk/message IDs, reconstructed content, mention position,
+  table/code/link captures and recipient observation.
+- Expected result: table remains complete; fence/tag/link survive; mention is outside code and only first
+  chunk; chunk order matches source; no content is lost.
+- Failure condition: table omitted/broken, content loss/reorder, code/link mutation or misplaced/duplicate mention.
+
 ### ACC-GROUP-AUTO-MENTION — Group triggering-sender mention
 
 - Contracts: `CTR-AUTO-MENTION-001`, `CTR-AUTO-MENTION-003`, `CTR-ROUTER-INTENT-001`, `CTR-ROUTER-INTENT-002`
@@ -704,6 +806,28 @@ previous verified deployment commit; no dual flag/data migration is authorized.
 - Expected result: first chunk mentions only triggering sender with native notification.
 - Failure condition: missing/wrong/non-clickable/name-derived/extra mention.
 
+### ACC-MENTION-OUTSIDE-CODE-FENCE-001 — Mention placement is code-safe
+
+- Contracts: `CTR-AUTO-MENTION-CODE-FENCE-001`, `CTR-MARKDOWN-003`, `CTR-TEST-APP-001`
+- Method: send normal and long group/topic replies whose content begins with and spans fenced code.
+- Environment: dedicated test app with outbound chunk inspection.
+- Required evidence: exact source, chunk payloads, mention position and rendered code capture.
+- Expected result: real mention is outside all fences, first chunk only; code bytes are unchanged.
+- Failure condition: mention inside code, code mutation, mention after first chunk or duplicate mention.
+
+### ACC-NATIVE-MENTION-NOTIFICATION-001 — Group/topic native notification
+
+- Contracts: `CTR-AUTO-MENTION-001`, `CTR-AUTO-MENTION-NOTIFICATION-001`,
+  `CTR-AUTO-MENTION-002`, `CTR-AUTO-MENTION-003`, `CTR-TEST-APP-001`
+- Method: execute separate group and topic turns from a real human account; repeat with missing/invalid openId.
+- Environment: dedicated test app with the mentioned user's real Feishu client.
+- Required evidence: ingress openId, group/topic message IDs, clickable mention captures, recipient native
+  notification evidence and missing-ID outbound payload.
+- Expected result: both valid-ID cases notify the correct user with a clickable mention; missing/invalid ID
+  emits no mention and no plain-name substitute.
+- Failure condition: either native notification absent, mention non-clickable/wrong, or identity fabricated;
+  failure requires stop and `OWNER_DECISION_REQUIRED` rather than text degradation.
+
 ### ACC-TOPIC-AUTO-MENTION — Topic triggering-sender mention
 
 - Contracts: `CTR-AUTO-MENTION-001`, `CTR-AUTO-MENTION-003`, `CTR-ROUTER-INTENT-001`, `CTR-TARGET-REVOKED-001`
@@ -712,6 +836,18 @@ previous verified deployment commit; no dual flag/data migration is authorized.
 - Required evidence: thread/root/chat/message IDs, mention and notification capture.
 - Expected result: normal reply/mention stays topic; revoked fallback stays same chat with anchor exception.
 - Failure condition: normal escape, wrong mention or cross-chat fallback.
+
+### ACC-TOPIC-INGRESS-CONTINUITY-001 — Subsequent topic message keeps Binding identity
+
+- Contracts: `CTR-TOPIC-CONTINUITY-001`, `CTR-TEST-APP-001`
+- Method: bot replies in a topic; the user sends a subsequent message in that topic; observe normalization
+  and Binding resolution.
+- Environment: dedicated test app with a prebound topic conversation.
+- Required evidence: chatId, expected/actual threadId and conversationId, ingress record, Binding key/row
+  lookup, Router target and client captures.
+- Expected result: bot reply stays topic; subsequent ingress has correct threadId and
+  `conversationId = chatId:topic:threadId`, resolves the same prebound Binding and does not become group.
+- Failure condition: missing/wrong threadId, group conversationId, different Binding or main-chat escape.
 
 ### ACC-P2P-NO-MENTION — P2P structural exclusion
 
@@ -819,11 +955,19 @@ previous verified deployment commit; no dual flag/data migration is authorized.
 | Contract | Acceptance coverage | Covered |
 |---|---|---|
 | `CTR-MARKDOWN-001` | `ACC-MARKDOWN-001`, `ACC-MARKDOWN-TABLE` | YES |
+| `CTR-MARKDOWN-HEADING-001` | `ACC-MARKDOWN-HEADINGS-H1-H6` | YES |
+| `CTR-MARKDOWN-NESTED-LIST-001` | `ACC-MARKDOWN-NESTED-LIST-001` | YES |
+| `CTR-MARKDOWN-CODE-LANGUAGE-001` | `ACC-MARKDOWN-CODE-LANGUAGE-001`, `ACC-MARKDOWN-LONG-WITH-TABLE-001` | YES |
+| `CTR-MARKDOWN-LINK-001` | `ACC-MARKDOWN-LINK-BYTE-STABLE`, `ACC-MARKDOWN-LONG-WITH-TABLE-001` | YES |
 | `CTR-MARKDOWN-002` | `ACC-MARKDOWN-001`, `ACC-MARKDOWN-TABLE` | YES |
 | `CTR-MARKDOWN-003` | `ACC-MARKDOWN-LONG-001` | YES |
+| `CTR-MARKDOWN-LONG-TABLE-001` | `ACC-MARKDOWN-LONG-WITH-TABLE-001` | YES |
 | `CTR-AUTO-MENTION-001` | `ACC-GROUP-AUTO-MENTION`, `ACC-TOPIC-AUTO-MENTION` | YES |
+| `CTR-AUTO-MENTION-CODE-FENCE-001` | `ACC-MENTION-OUTSIDE-CODE-FENCE-001`, `ACC-MARKDOWN-LONG-WITH-TABLE-001` | YES |
+| `CTR-AUTO-MENTION-NOTIFICATION-001` | `ACC-NATIVE-MENTION-NOTIFICATION-001` | YES |
 | `CTR-AUTO-MENTION-002` | `ACC-P2P-NO-MENTION`, `ACC-IDENTITY-OPENID` | YES |
 | `CTR-AUTO-MENTION-003` | group/topic/identity Acceptances | YES |
+| `CTR-TOPIC-CONTINUITY-001` | `ACC-TOPIC-INGRESS-CONTINUITY-001` | YES |
 | `CTR-ROUTER-INTENT-001` | group and Router Acceptances | YES |
 | `CTR-ROUTER-INTENT-002` | group/identity/Router Acceptances | YES |
 | `CTR-ROUTER-INTENT-003` | failure and Router Acceptances | YES |
@@ -870,10 +1014,18 @@ These are mandatory definitions, not executed Observations or conformance Eviden
 | Case | Acceptance | Required live result |
 |---|---|---|
 | `TEST-LUX-MD-SURFACE` | `ACC-MARKDOWN-001` | heading/list/quote/emphasis/code/link native |
+| `TEST-LUX-MD-HEADINGS-H1-H6` | `ACC-MARKDOWN-HEADINGS-H1-H6` | H1, H2, H3, H4, H5 and H6 all render distinctly |
+| `TEST-LUX-MD-NESTED-LISTS` | `ACC-MARKDOWN-NESTED-LIST-001` | ordered/unordered depth 1 hierarchy, order and text preserved |
+| `TEST-LUX-MD-CODE-LANGUAGE` | `ACC-MARKDOWN-CODE-LANGUAGE-001` | `python` fence/tag/code preserved normally and across split |
+| `TEST-LUX-MD-LINK-BYTE-STABLE` | `ACC-MARKDOWN-LINK-BYTE-STABLE` | display text and exact query/fragment/percent-encoded URL preserved |
 | `TEST-LUX-MD-TABLE` | `ACC-MARKDOWN-TABLE` | GFM table renders as table; otherwise stop |
 | `TEST-LUX-MD-LONG` | `ACC-MARKDOWN-LONG-001` | complete ordered safe chunks; mention first only |
+| `TEST-LUX-MD-LONG-WITH-TABLE` | `ACC-MARKDOWN-LONG-WITH-TABLE-001` | >3500 input includes intact table/code/link/mention in source order with no loss |
 | `TEST-LUX-GROUP-MENTION` | `ACC-GROUP-AUTO-MENTION` | clickable sender mention plus notification |
 | `TEST-LUX-TOPIC-MENTION` | `ACC-TOPIC-AUTO-MENTION` | normal reply/mention stays topic |
+| `TEST-LUX-MENTION-OUTSIDE-CODE` | `ACC-MENTION-OUTSIDE-CODE-FENCE-001` | mention remains outside code, first chunk only, code unchanged |
+| `TEST-LUX-NATIVE-NOTIFICATION` | `ACC-NATIVE-MENTION-NOTIFICATION-001` | group and topic recipients receive native notification; missing ID creates none |
+| `TEST-LUX-TOPIC-CONTINUITY` | `ACC-TOPIC-INGRESS-CONTINUITY-001` | subsequent ingress keeps threadId, topic conversationId and same Binding |
 | `TEST-LUX-P2P-NO-MENTION` | `ACC-P2P-NO-MENTION` | no mention even with intent |
 | `TEST-LUX-IDENTITY` | `ACC-IDENTITY-OPENID` | renamed user works by openId; invalid ID no mention |
 | `TEST-LUX-RECEIPTS` | receipt Acceptances | plain text, no mention |
@@ -884,6 +1036,24 @@ These are mandatory definitions, not executed Observations or conformance Eviden
 
 All MUST pass before production canary. Ambiguous unknown remains `OUTCOME_UNKNOWN` and MUST NOT become
 a visible-exactly-once claim.
+
+### Semantic closure matrix
+
+| Audit omission | CTR | ACC | Test gate |
+|---|---|---|---|
+| H1–H6 headings | `CTR-MARKDOWN-HEADING-001` | `ACC-MARKDOWN-HEADINGS-H1-H6` | `TEST-LUX-MD-HEADINGS-H1-H6` |
+| one-level nested lists | `CTR-MARKDOWN-NESTED-LIST-001` | `ACC-MARKDOWN-NESTED-LIST-001` | `TEST-LUX-MD-NESTED-LISTS` |
+| language-tagged fence | `CTR-MARKDOWN-CODE-LANGUAGE-001` | `ACC-MARKDOWN-CODE-LANGUAGE-001` | `TEST-LUX-MD-CODE-LANGUAGE` |
+| byte-stable link URL | `CTR-MARKDOWN-LINK-001` | `ACC-MARKDOWN-LINK-BYTE-STABLE` | `TEST-LUX-MD-LINK-BYTE-STABLE` |
+| mention outside fence | `CTR-AUTO-MENTION-CODE-FENCE-001` | `ACC-MENTION-OUTSIDE-CODE-FENCE-001` | `TEST-LUX-MENTION-OUTSIDE-CODE` |
+| mandatory native notification | `CTR-AUTO-MENTION-NOTIFICATION-001` | `ACC-NATIVE-MENTION-NOTIFICATION-001` | `TEST-LUX-NATIVE-NOTIFICATION` |
+| long text with table | `CTR-MARKDOWN-LONG-TABLE-001` | `ACC-MARKDOWN-LONG-WITH-TABLE-001` | `TEST-LUX-MD-LONG-WITH-TABLE` |
+| subsequent topic threadId | `CTR-TOPIC-CONTINUITY-001` | `ACC-TOPIC-INGRESS-CONTINUITY-001` | `TEST-LUX-TOPIC-CONTINUITY` |
+
+```text
+SEMANTIC_CLOSURE_MATRIX = 8/8
+PRODUCT_SEMANTIC_CHANGE = NONE
+```
 
 ## 14. Risks / Rollback
 
@@ -917,38 +1087,40 @@ Old labels map to stable V0 primitives without changing meaning. Old IDs are his
 | `§0.1 Authority and Dependencies` | `STATE-LUX-002`, `CLM-LUX-001`, `CLM-LUX-007`, `DEC-LUX-007` |
 | `§1 Problem and Positioning` | `OBS-LUX-003`, `OBS-LUX-006`, `DEC-LUX-001` |
 | `§2 Frozen Owner Rulings` | `DEC-LUX-001`, `DEC-LUX-002`, `DEC-LUX-003`, `DEC-LUX-004`, `DEC-LUX-005`, `DEC-LUX-006`, `DEC-LUX-007`, `DEC-LUX-008` |
-| `Contract U1 / §3` | `CTR-MARKDOWN-001`, `CTR-MARKDOWN-002`, `CTR-MARKDOWN-003`, `CTR-TARGET-REVOKED-001`, `CTR-TARGET-REVOKED-002`, `CTR-TRANSPORT-RETRY-001`, `CTR-TRANSPORT-RETRY-002`, `CTR-PERMISSION-ERROR-001`, `CTR-FORMAT-FALLBACK-001` |
-| `Contract U2 / §4` | `CTR-AUTO-MENTION-001`, `CTR-AUTO-MENTION-002`, `CTR-AUTO-MENTION-003`, `CTR-RECEIPT-001` |
+| `Contract U1 / §3` | `CTR-MARKDOWN-001`, `CTR-MARKDOWN-HEADING-001`, `CTR-MARKDOWN-NESTED-LIST-001`, `CTR-MARKDOWN-CODE-LANGUAGE-001`, `CTR-MARKDOWN-LINK-001`, `CTR-MARKDOWN-002`, `CTR-MARKDOWN-003`, `CTR-MARKDOWN-LONG-TABLE-001`, `CTR-TARGET-REVOKED-001`, `CTR-TARGET-REVOKED-002`, `CTR-TRANSPORT-RETRY-001`, `CTR-TRANSPORT-RETRY-002`, `CTR-PERMISSION-ERROR-001`, `CTR-FORMAT-FALLBACK-001` |
+| `Contract U2 / §4` | `CTR-AUTO-MENTION-001`, `CTR-AUTO-MENTION-CODE-FENCE-001`, `CTR-AUTO-MENTION-NOTIFICATION-001`, `CTR-TOPIC-CONTINUITY-001`, `CTR-AUTO-MENTION-002`, `CTR-AUTO-MENTION-003`, `CTR-RECEIPT-001` |
 | `§5 Reply Seam / D-U1` | `DEC-LUX-004`, `CTR-ROUTER-INTENT-001`, `CTR-ROUTER-INTENT-002`, `CTR-ROUTER-INTENT-003` |
 | `§6 Implementation Scope` | `CTR-BOUNDARY-001`, `CTR-ROLLBACK-001` |
-| `AC-MARKDOWN-HEADING` | `ACC-MARKDOWN-001` |
-| `AC-MARKDOWN-LIST` | `ACC-MARKDOWN-001` |
-| `AC-MARKDOWN-CODE-FENCE` | `ACC-MARKDOWN-001` |
-| `AC-MARKDOWN-LINK` | `ACC-MARKDOWN-001` |
+| `AC-MARKDOWN-HEADING` | `CTR-MARKDOWN-HEADING-001`, `ACC-MARKDOWN-HEADINGS-H1-H6` |
+| `AC-MARKDOWN-LIST` | `CTR-MARKDOWN-NESTED-LIST-001`, `ACC-MARKDOWN-NESTED-LIST-001` |
+| `AC-MARKDOWN-CODE-FENCE` | `CTR-MARKDOWN-CODE-LANGUAGE-001`, `ACC-MARKDOWN-CODE-LANGUAGE-001` |
+| `AC-MARKDOWN-LINK` | `CTR-MARKDOWN-LINK-001`, `ACC-MARKDOWN-LINK-BYTE-STABLE` |
 | `AC-MARKDOWN-TABLE` | `ACC-MARKDOWN-TABLE` |
-| `AC-MARKDOWN-LONG-CHUNKING` | `ACC-MARKDOWN-LONG-001` |
+| `AC-MARKDOWN-LONG-CHUNKING` | `CTR-MARKDOWN-003`, `CTR-MARKDOWN-LONG-TABLE-001`, `ACC-MARKDOWN-LONG-001`, `ACC-MARKDOWN-LONG-WITH-TABLE-001` |
 | `AC-MARKDOWN-TEXT-FALLBACK` | `ACC-FORMAT-FALLBACK-001` |
 | `AC-TARGET-REVOKED-SAME-CHAT-FALLBACK` | `ACC-TARGET-REVOKED-SAME-CHAT` |
 | `AC-SDK-ATTEMPTS-EXHAUSTED` | `ACC-SDK-ATTEMPTS-EXHAUSTED` |
-| `AC-GROUP-AUTO-MENTION-SENDER` | `ACC-GROUP-AUTO-MENTION` |
-| `AC-TOPIC-AUTO-MENTION-SENDER` | `ACC-TOPIC-AUTO-MENTION` |
+| `AC-GROUP-AUTO-MENTION-SENDER` | `CTR-AUTO-MENTION-CODE-FENCE-001`, `CTR-AUTO-MENTION-NOTIFICATION-001`, `ACC-GROUP-AUTO-MENTION`, `ACC-MENTION-OUTSIDE-CODE-FENCE-001`, `ACC-NATIVE-MENTION-NOTIFICATION-001` |
+| `AC-TOPIC-AUTO-MENTION-SENDER` | `CTR-AUTO-MENTION-NOTIFICATION-001`, `CTR-TOPIC-CONTINUITY-001`, `ACC-TOPIC-AUTO-MENTION`, `ACC-NATIVE-MENTION-NOTIFICATION-001`, `ACC-TOPIC-INGRESS-CONTINUITY-001` |
 | `AC-P2P-NO-MENTION` | `ACC-P2P-NO-MENTION` |
 | `AC-UNBOUND-RECEIPT-NO-MENTION` | `ACC-UNBOUND-PROACTIVE-NO-MENTION` |
 | `AC-FAILURE-RECEIPT-NO-MENTION` | `ACC-FAILURE-RECEIPT-NO-MENTION` |
 | `AC-MISSING-SENDER-ID-NO-FABRICATED-MENTION` | `ACC-IDENTITY-OPENID` |
 | `AC-MENTION-USES-OPEN-ID-NOT-NAME` | `ACC-IDENTITY-OPENID` |
-| `AC-EXISTING-CALLERS-UNCHANGED` | failure and unbound/proactive Acceptances |
-| `AC-SINGLE-RENDER-AUTHORITY` | Markdown and table Acceptances |
+| `AC-EXISTING-CALLERS-UNCHANGED` | `CTR-ROUTER-INTENT-003`, `CTR-RECEIPT-001`, `ACC-FAILURE-RECEIPT-NO-MENTION`, `ACC-UNBOUND-PROACTIVE-NO-MENTION` |
+| `AC-SINGLE-RENDER-AUTHORITY` | `CTR-MARKDOWN-002`, `ACC-MARKDOWN-001`, `ACC-MARKDOWN-TABLE` |
 | `AC-ROUTER-DIFF-MINIMAL` | `ACC-ROUTER-INTENT-001` |
 | `AC-NO-NEW-PERSISTENT-STATE` | `ACC-BOUNDARY-001` |
-| `T-MD-HEADING`, `T-MD-CODE`, `T-MD-LINK` | `ACC-MARKDOWN-001` |
+| `T-MD-HEADING` | `CTR-MARKDOWN-HEADING-001`, `ACC-MARKDOWN-HEADINGS-H1-H6` |
+| `T-MD-CODE` | `CTR-MARKDOWN-CODE-LANGUAGE-001`, `ACC-MARKDOWN-CODE-LANGUAGE-001` |
+| `T-MD-LINK` | `CTR-MARKDOWN-LINK-001`, `ACC-MARKDOWN-LINK-BYTE-STABLE` |
 | `T-MD-TABLE` | `ACC-MARKDOWN-TABLE` |
-| `T-MD-LONG` | `ACC-MARKDOWN-LONG-001` |
+| `T-MD-LONG` | `CTR-MARKDOWN-LONG-TABLE-001`, `ACC-MARKDOWN-LONG-001`, `ACC-MARKDOWN-LONG-WITH-TABLE-001` |
 | `T-MD-FALLBACK` | `ACC-FORMAT-FALLBACK-001` |
 | `T-TARGET-REVOKED` | `ACC-TARGET-REVOKED-SAME-CHAT` |
 | `T-SDK-ATTEMPTS-EXHAUSTED` | `ACC-SDK-ATTEMPTS-EXHAUSTED` |
-| `T-MT-GROUP` | `ACC-GROUP-AUTO-MENTION` |
-| `T-MT-TOPIC` | `ACC-TOPIC-AUTO-MENTION` |
+| `T-MT-GROUP` | `CTR-AUTO-MENTION-CODE-FENCE-001`, `CTR-AUTO-MENTION-NOTIFICATION-001`, `ACC-GROUP-AUTO-MENTION`, `ACC-MENTION-OUTSIDE-CODE-FENCE-001`, `ACC-NATIVE-MENTION-NOTIFICATION-001` |
+| `T-MT-TOPIC` | `CTR-TOPIC-CONTINUITY-001`, `CTR-AUTO-MENTION-NOTIFICATION-001`, `ACC-TOPIC-AUTO-MENTION`, `ACC-TOPIC-INGRESS-CONTINUITY-001`, `ACC-NATIVE-MENTION-NOTIFICATION-001` |
 | `T-MT-P2P` | `ACC-P2P-NO-MENTION` |
 | `T-MT-RECEIPT` | `ACC-FAILURE-RECEIPT-NO-MENTION`, `ACC-UNBOUND-PROACTIVE-NO-MENTION` |
 | `T-MT-IDENTITY` | `ACC-IDENTITY-OPENID` |
@@ -971,6 +1143,24 @@ PARTIAL_SUPERSESSION = NONE
 `CLM-LUX-009` is not an open normative choice: `DEC-LUX-005` rejects it. PR #23 and PR #27 remain
 evidence only. If future main conflicts with any Contract or authority, implementation MUST stop.
 
+### Review history — SPEC_FORMAT_V0 final review closure
+
+```text
+REVIEWED_HEAD = 07cd5b1999dcb6a6fc500de5c3ec6302840764aa
+REVIEWER_IDENTITY = CODEX_PR24_SPEC_FORMAT_V0_FINAL_REVIEW_2026_08_21
+REVIEW_VERDICT = FIX_REQUIRED
+BLOCKERS =
+  PRODUCT_SEMANTIC_MIGRATION_NARROWED
+  MIGRATION_MAP_TARGETS_NOT_STABLE
+DISPOSITION =
+  SEMANTIC_ITEMS_RESTORED_8_OF_8
+  MIGRATION_MAP_INVALID_TARGETS_REPLACED_WITH_EXISTING_STABLE_IDS_2_OF_2
+PRODUCT_SEMANTIC_CHANGE = NONE
+```
+
+This history records the incoming review; it does not change the Spec to accepted and does not itself
+constitute a focused re-review verdict for the amended Head.
+
 ## 17. Final Output / Lifecycle
 
 ```text
@@ -979,6 +1169,9 @@ SPEC_FORMAT = SPEC_FORMAT_V0
 SPEC_STATUS = proposed
 PR = #24
 PR_DRAFT = YES
+SEMANTIC_ITEMS_RESTORED = 8/8
+MIGRATION_MAP_NATURAL_LANGUAGE_TARGETS = 0
+SEMANTIC_CLOSURE_MATRIX = 8/8
 D_U1 = APPROVED
 ROUTER_CHANGE_REQUIRED = YES_MINIMAL
 ROUTER_AUTHORITY_CHANGE = NONE
@@ -990,6 +1183,7 @@ IMPLEMENTATION_PROGRESS = NOT_STARTED
 VERIFICATION_COVERAGE = NOT_RUN
 CONFORMANCE_RESULT = UNKNOWN
 IMPLEMENTATION_AUTHORIZED_NOW = NO
+IMPLEMENTATION_AUTHORIZED = NO
 ACCEPTANCE_FINALIZED = NO
 PRODUCT_CODE_CHANGE = NONE
 DEPENDENCY_CHANGE = NONE
