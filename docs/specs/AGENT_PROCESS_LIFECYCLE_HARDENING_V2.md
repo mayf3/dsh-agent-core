@@ -288,21 +288,77 @@ DSH_KERNEL_CHANGE = NONE
 ### OBS-PROC-005 — Deterministic preservation and format validation
 
 - Subject: carried C-001–C-022 bodies, detailed Acceptance Criteria, and V2 governance structure
-- Source revision: V1 at `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`;
-  exact normalized V2 semantic surfaces identified by the hashes below
+- Source revisions: V1 at `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`;
+  V2 semantic commit `52558b23c5278c77a2a64482bd41f9d26f2fad19`, Spec blob
+  `edb7ffe75c685687923589dbe684ee528da19354`, plus the normalized surface hashes below
 - Environment: fresh independent Git worktree based on target `main`
 - Observed at: `2026-08-21T01:21:17Z`
 - Method: extract each C-001–C-022 body, normalize only Spec-identity wording and repaired
   stable-anchor references, compare with V1, concatenate in Contract-ID order, and SHA-256;
-  separately compare §10.2–§10.3 detailed acceptance with V1 §16/§16.1 and SHA-256;
-  then run JSON Schema, stable-ID/section-order, reverse-coverage, and changed-path checks
+  separately compare §10.2–§10.3 detailed acceptance with V1 §16/§16.1 and SHA-256
 - Result: C-001–C-022 preserved 22/22 with normalized surface SHA-256
   `3e28f596f48e6e0f768f1bc46ebbce6b90ade98ec893b82899e9dc31f7d0d4c7`;
   detailed acceptance preserved with normalized SHA-256
-  `07a8de03a382dadd45e1b1587327c929cd56bd3a81fa1522425be30daa07a59e`;
-  frontmatter schema, required section order, primitive IDs, and exact reverse coverage pass.
-- Provenance: this Observation's exact hashes and the reproducible validation command/output
-  persisted in the Draft PR.
+  `07a8de03a382dadd45e1b1587327c929cd56bd3a81fa1522425be30daa07a59e`.
+- Reproduction command:
+
+```bash
+python3 - <<'PY'
+import hashlib, re, subprocess
+OLD = '79cc8e861cbb16755370b0e9f30ef3fb47c56fa6'
+NEW = '52558b23c5278c77a2a64482bd41f9d26f2fad19'
+PATH = 'docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V2.md'
+def show(rev, path):
+    return subprocess.check_output(['git', 'show', f'{rev}:{path}'], text=True)
+def blocks(text):
+    lines = text.splitlines(keepends=True); out = {}
+    for i, line in enumerate(lines):
+        match = re.match(r'^(#+) C-(\d{3}) —', line)
+        if not match: continue
+        level = len(match.group(1)); body = []
+        for item in lines[i + 1:]:
+            heading = re.match(r'^(#+) ', item)
+            if heading and len(heading.group(1)) <= level: break
+            body.append(item)
+        out[match.group(2)] = ''.join(body)
+    return out
+old = show(OLD, 'docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md')
+new = show(NEW, PATH)
+a, b = blocks(old), blocks(new)
+reverse = [
+ ('本 Spec 可信类型仅为：', 'V1 可信类型仅为：'),
+ ('本 Spec 不承诺 disk persistence', 'V1 不承诺 disk persistence'),
+ ('本 Spec retention 保证', 'V1 retention 保证'),
+ ('本 Spec 固定 safety ceilings', 'V1 固定 safety ceilings'),
+ ('`C-001` 允许的', '§6 C-001 允许的'),
+ ('`C-009` fatal teardown', '§7 C-009 fatal teardown'),
+ ('graceful-then-kill per `C-020` / `C-022`', 'graceful-then-kill per §12'),
+ ('Queued-but-not-sent turns 必须有界（见 `CLAUSE-PROC-BOUNDED`）。',
+  'Queued-but-not-sent turns 必须有界（见 §11）。'),
+ ('在 `CLAUSE-PROC-RECONCILIATION` / `CLAUSE-PROC-BOUNDED` retention window 内可审计',
+  '在 §10/§11 retention window 内可审计'),
+ ('已按 `CLAUSE-PROC-BOUNDED` eviction', '已按 §11 eviction'),
+ ('直到 `CLAUSE-PROC-BOUNDED` 允许的', '直到 §11 允许的'),
+]
+for key in b:
+    for current, historical in reverse:
+        b[key] = b[key].replace(current, historical)
+    assert a[key] == b[key], key
+contract_surface = ''.join(key + a[key] for key in sorted(a))
+print(hashlib.sha256(contract_surface.encode()).hexdigest())
+a2 = old.split('本轮不实现。未来 implementation 至少证明：', 1)[1].split(
+    '### 16.2 Amendment closure crosswalk', 1)[0]
+b2 = new.split('本轮不实现。未来 implementation 至少证明：', 1)[1].split(
+    '### 10.4 Historical V1 amendment closure crosswalk', 1)[0]
+b2 = b2.replace('### 10.3 Fault-injection crosswalk and evidence schema',
+                '### 16.1 Fault-injection crosswalk and evidence schema').replace('§10.3', '§16.1')
+assert a2 == b2
+print(hashlib.sha256(a2.encode()).hexdigest())
+PY
+```
+
+- Provenance: exact Git commits/blob above, this embedded command, and its output in
+  [Draft PR #28](https://github.com/mayf3/dsh-agent-core/pull/28).
 
 ---
 
@@ -386,9 +442,11 @@ OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
 - Source observations: `OBS-PROC-005`
 - Target: `CLM-PROC-002`
 - Relation: SUPPORTS
-- Bound coordinates: V1 at `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6` and exact normalized V2 semantic-surface hashes in `OBS-PROC-005`
-- Strength/sufficiency: deterministic 22/22 Contract-body preservation, unchanged detailed
-  Acceptance Criteria/fault table, and exact reverse coverage
+- Bound coordinates: V1 at `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`; V2 semantic commit
+  `52558b23c5278c77a2a64482bd41f9d26f2fad19`, Spec blob
+  `edb7ffe75c685687923589dbe684ee528da19354`, and normalized surface hashes in `OBS-PROC-005`
+- Strength/sufficiency: deterministic 22/22 Contract-body preservation and unchanged detailed
+  Acceptance Criteria/fault table
 - Limitations: identity-only wording and stable-reference repairs are normalized; deterministic comparison does not replace semantic review
 - Provenance: exact hashes and reproducible validation recorded in `OBS-PROC-005` and the Draft PR
 
