@@ -5,15 +5,18 @@ import {
   chmodSync,
   cpSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
+  readlinkSync,
   rmSync,
   statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { homedir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
@@ -24,6 +27,7 @@ const TEST_APP_CREDS = process.env.FEISHU_FINAL_CANARY_CREDS
 const HARNESS = process.env.DSH_HARNESS_ROOT
   ?? '/private/tmp/dsh-harness-rc5-pr27-audit'
 const CODEX_PLUGIN_SOURCE = '/private/tmp/dsh-gpt56-subscription-experiment/plugin-home/profiles/headless/node_modules/dsh-codex'
+const FROZEN_CODEX_PLUGIN_TREE_SHA256 = '442d0039ac373b890fa6e0b25d4a50649c2c8157a2f5fcf34a814538de5cd67d'
 const CODEX_AUTH_SOURCE = join(homedir(), '.dsh', '.openai-codex-auth.json')
 const PROVIDER = process.env.FEISHU_FINAL_CANARY_PROVIDER ?? 'zai'
 const MODEL = process.env.FEISHU_FINAL_CANARY_MODEL ?? 'glm-5.3'
@@ -94,6 +98,23 @@ if (typeof productionAppId !== 'string' || productionAppId === '' || productionA
   throw new Error('dedicated test App is not independently isolated from production App identity')
 }
 const fileSha256 = (path) => hashText(readFileSync(path))
+const directoryTreeSha256 = (root) => {
+  const rows = []
+  const walk = (directory) => {
+    for (const name of readdirSync(directory).sort()) {
+      const path = join(directory, name)
+      const stat = lstatSync(path)
+      const relativePath = relative(root, path).split('\\').join('/')
+      if (stat.isDirectory()) walk(path)
+      else if (stat.isSymbolicLink()) rows.push(['L', relativePath, readlinkSync(path)])
+      else if (stat.isFile()) rows.push(['F', relativePath, fileSha256(path)])
+    }
+  }
+  walk(root)
+  const digest = createHash('sha256')
+  for (const row of rows) digest.update(`${row.join('\0')}\0`)
+  return { algorithm: 'sorted-path-type-content-sha256-v1', entries: rows.length, digest: digest.digest('hex') }
+}
 const dataValue = (value, key) => {
   if (value === null || (typeof value !== 'object' && typeof value !== 'function')) return undefined
   try {
@@ -266,9 +287,19 @@ const agentHome = join(layout.homesRoot, AGENT_ID)
 const agentWorkspace = join(layout.workspacesRoot, AGENT_ID)
 mkdirSync(agentHome, { recursive: true, mode: 0o700 })
 mkdirSync(agentWorkspace, { recursive: true, mode: 0o700 })
+const codexSourceTree = RUN_KIND === 'fallback' ? directoryTreeSha256(CODEX_PLUGIN_SOURCE) : null
+if (codexSourceTree !== null && codexSourceTree.digest !== FROZEN_CODEX_PLUGIN_TREE_SHA256) {
+  throw new Error('fallback provider executable tree differs from frozen digest')
+}
+let codexCopiedTree = null
 if (PROVIDER === 'openai-codex') {
+  const copiedPluginPath = join(agentHome, 'profiles', 'node_modules', 'dsh-codex')
   mkdirSync(join(agentHome, 'profiles', 'node_modules'), { recursive: true, mode: 0o700 })
-  cpSync(CODEX_PLUGIN_SOURCE, join(agentHome, 'profiles', 'node_modules', 'dsh-codex'), { recursive: true })
+  cpSync(CODEX_PLUGIN_SOURCE, copiedPluginPath, { recursive: true })
+  codexCopiedTree = directoryTreeSha256(copiedPluginPath)
+  if (codexCopiedTree.digest !== FROZEN_CODEX_PLUGIN_TREE_SHA256) {
+    throw new Error('copied fallback provider executable tree differs from frozen digest')
+  }
   symlinkSync(CODEX_AUTH_SOURCE, join(agentHome, '.openai-codex-auth.json'))
 }
 writeFileSync(join(agentHome, '.credentials.yaml'), '# isolated canary credentials are injected in memory only\n', { mode: 0o600 })
@@ -325,10 +356,26 @@ const providerArtifact = RUN_KIND === 'fallback'
       plugin: expectedRoute.plugin,
       pluginVersion: JSON.parse(readFileSync(join(CODEX_PLUGIN_SOURCE, 'package.json'), 'utf8')).version,
       pluginPackageHash: fileSha256(join(CODEX_PLUGIN_SOURCE, 'package.json')),
+      executableTreeAlgorithm: codexSourceTree.algorithm,
+      executableTreeEntries: codexSourceTree.entries,
+      executableTreeDigest: codexSourceTree.digest,
+      copiedExecutableTreeDigest: codexCopiedTree.digest,
+      frozenExecutableTreeDigest: FROZEN_CODEX_PLUGIN_TREE_SHA256,
     }
-  : { plugin: null, pluginVersion: null, pluginPackageHash: null }
-if (providerArtifact.pluginVersion !== expectedRoute.pluginVersion) {
-  throw new Error('fallback provider plugin version does not match frozen route')
+  : {
+      plugin: null,
+      pluginVersion: null,
+      pluginPackageHash: null,
+      executableTreeAlgorithm: null,
+      executableTreeEntries: 0,
+      executableTreeDigest: null,
+      copiedExecutableTreeDigest: null,
+      frozenExecutableTreeDigest: null,
+    }
+if (providerArtifact.pluginVersion !== expectedRoute.pluginVersion
+    || providerArtifact.executableTreeDigest !== providerArtifact.frozenExecutableTreeDigest
+    || providerArtifact.copiedExecutableTreeDigest !== providerArtifact.frozenExecutableTreeDigest) {
+  throw new Error('fallback provider artifact does not match frozen route provenance')
 }
 
 const metrics = {
@@ -357,6 +404,11 @@ class ObservedAgentProcess extends AgentProcess {
       plugin: providerArtifact.plugin,
       pluginVersion: providerArtifact.pluginVersion,
       pluginPackageHash: providerArtifact.pluginPackageHash,
+      executableTreeAlgorithm: providerArtifact.executableTreeAlgorithm,
+      executableTreeEntries: providerArtifact.executableTreeEntries,
+      executableTreeDigest: providerArtifact.executableTreeDigest,
+      copiedExecutableTreeDigest: providerArtifact.copiedExecutableTreeDigest,
+      frozenExecutableTreeDigest: providerArtifact.frozenExecutableTreeDigest,
       agentIdHash: stableId(this.agentId),
     })
     if (!routeMatches) throw new Error('resolved AgentProcess route differs from frozen run-kind route')
@@ -995,8 +1047,8 @@ function evaluateFinalGate() {
   const oneWebSocketOk = sdkConnectCallsObserved === 1 && sdkWebSocketConstructionsObserved === 1
   const sdkErrorRows = rows.filter((row) => row.name === 'SDK_PUBLIC_ERROR')
   const primaryScenario = latestRow('SCENARIO_SETTLED', 'FA32 PRIMARY')
-  const sdkErrorsOk = RUN_KIND === 'primary'
-    ? sdkErrorRows.length === 1 && sdkErrorRows[0].errorClass === primaryScenario?.outcomeErrorClass
+  const sdkErrorsOk = RUN_KIND === 'primary' && primaryScenario?.outcomeError === true
+    ? sdkErrorRows.length === 1 && sdkErrorRows[0].errorClass === primaryScenario.outcomeErrorClass
     : sdkErrorRows.length === 0
   const pass = complete
     && checks.every((check) => check.ok)
