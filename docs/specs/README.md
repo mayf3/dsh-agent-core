@@ -38,4 +38,11 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | accepted / current governance | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
 | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` | superseded | legacy governance | repository knowledge model | — |
 
+## AgentProcess lifecycle authority
+
+| Spec ID | Status in this branch | Implementation authority | Disposition |
+|---|---|---|---|
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` | accepted / current | `none` | Remains current until an atomic V2 acceptance transaction |
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` | proposed replacement candidate | `contracts` (inactive while proposed) | Whole-authority `SUPERSEDE` candidate; does not authorize implementation now |
+
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
