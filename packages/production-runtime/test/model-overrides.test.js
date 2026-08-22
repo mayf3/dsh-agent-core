@@ -262,6 +262,7 @@ class FakeProc {
   async ready() { return 1 }
   async shutdown() {
     this.exit = { code: 0, signal: null }
+    this.exitPromise = Promise.resolve(this.exit)
     return this.exit
   }
   async turn() { return { reply: 'ok', ms: 1, promptMs: 1, messageId: 'm' } }

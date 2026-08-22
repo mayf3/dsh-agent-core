@@ -117,7 +117,7 @@ export function createIngressDelivery({
       if (feishu !== undefined && isFeishuEntry) {
         // Reply to the originating message (in-thread automatically when the
         // ingress was a topic thread).
-        await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)
+        await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply, { ux: { rendering: 'markdown', autoMentionTriggerSender: true } })
         log.log(`reply sent back to ${ingress.conversationId.slice(0, 12)}...`)
       }
       return {
