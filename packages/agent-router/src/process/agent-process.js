@@ -283,11 +283,23 @@ export class AgentProcess {
 
 // One prototype, one state machine: the sibling modules compose their method
 // groups onto this single class (structure refactor — no behavior change).
-Object.assign(AgentProcess.prototype,
+// Plain-object method shorthand carries enumerable: true while the
+// pre-refactor class prototype kept enumerable: false, so each descriptor is
+// normalized before installation (B-1); value/get/set/writable/configurable
+// pass through unchanged and `constructor` is never installed.
+const composedMethodDescriptors = {}
+for (const group of [
   stateMachineMethods,
   evidenceBufferMethods,
   rpcChannelMethods,
   eventCorrelationMethods,
   turnExecutionMethods,
   spawnMethods,
-  shutdownMethods)
+  shutdownMethods,
+]) {
+  for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
+    if (key === 'constructor') continue
+    composedMethodDescriptors[key] = { ...descriptor, enumerable: false }
+  }
+}
+Object.defineProperties(AgentProcess.prototype, composedMethodDescriptors)

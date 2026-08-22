@@ -322,4 +322,15 @@ export class TurnReconciliationStore {
 
 // Settlement machines (state-machine.js) + non-consuming queries (query.js)
 // compose onto the single store class — one prototype, one state machine.
-Object.assign(TurnReconciliationStore.prototype, settlementMethods, queryMethods)
+// Descriptors are normalized to enumerable: false before installation (B-1)
+// to preserve the pre-refactor class prototype shape; value/get/set/
+// writable/configurable pass through unchanged and `constructor` is never
+// installed.
+const composedMethodDescriptors = {}
+for (const group of [settlementMethods, queryMethods]) {
+  for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
+    if (key === 'constructor') continue
+    composedMethodDescriptors[key] = { ...descriptor, enumerable: false }
+  }
+}
+Object.defineProperties(TurnReconciliationStore.prototype, composedMethodDescriptors)
