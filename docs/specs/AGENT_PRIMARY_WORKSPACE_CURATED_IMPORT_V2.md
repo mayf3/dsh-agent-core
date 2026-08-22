@@ -327,13 +327,30 @@ copy, and must never be registered, mounted, symlinked, or adopted as active pri
 One Agent still has exactly one primary Workspace; Memory remains Workspace-local; session
 cwd freeze/resume mismatch remains fail-loud.
 
-### CTR-WS-003 — Old home MUST NOT COPY
+### CTR-WS-003 — Old home MUST NOT COPY; trusted profile/settings regeneration is required
 
 No file, directory, metadata, settings, profile, session state, cache, runtime state, or
 opaque byte from any old/legacy Agent home may be copied. Trusted homes are regenerated
 only by the formal Trusted Runtime provisioner. Workspace source and old home are distinct
 trust domains; an implementation must prove the source is the approved Workspace source,
 not infer that any home subtree is eligible.
+
+```text
+TRUSTED_PROFILE_REGENERATION  = REQUIRED
+TRUSTED_SETTINGS_REGENERATION = REQUIRED
+TRUSTED_PROFILE_SOURCE        = TRUSTED_DEPLOYMENT_SOURCE_ONLY
+TRUSTED_SETTINGS_SOURCE       = TRUSTED_DEPLOYMENT_SOURCE_ONLY
+LEGACY_PROFILE_COPY           = FORBIDDEN
+LEGACY_SETTINGS_COPY          = FORBIDDEN
+OLD_USER_RUNTIME_INHERITANCE  = FORBIDDEN
+```
+
+The profile and settings for every target must be generated from the Trusted deployment
+source through the formal provisioner/regeneration path. They must not be copied from a
+legacy home, inherited from the old USER Runtime, reconstructed from legacy values, or
+reported ready merely because target paths exist. Readiness must inspect the generated
+results and verify their expected trusted source identity, content projection, ownership,
+and mode under the formal Trusted deployment contract.
 
 ### CTR-WS-004 — Curated Workspace allowlist only
 
@@ -376,12 +393,31 @@ trusted-directory temporary files, restrictive modes, bounded writes, fsync, ide
 recheck, and atomic no-clobber publication. Existing byte-equivalent safe content may be
 `SKIP`; non-equivalent destination content is `CONFLICT` and remains unchanged.
 
-### CTR-WS-008 — Build in Public first canary
+### CTR-WS-008 — Build in Public first canary and final trusted readiness
 
 `agt_build-in-public-agent` is the only first mutation subject. Before any of the other 85
-may be prepared or defined, the accepted child must provide PASS evidence for its exact
-ID preservation, trusted home regeneration, curated Workspace import, safety exclusions,
-trusted Workspace readiness, and spawn preflight. Any failure stops fleet progression.
+may be prepared or defined, the accepted child must inspect the generated trusted results
+and provide PASS evidence for its exact ID preservation, trusted home regeneration from
+the Trusted deployment source through the formal provisioner, trusted profile regeneration,
+trusted settings regeneration, curated Workspace import, safety exclusions, trusted
+Workspace readiness, and spawn preflight. Canary evidence must explicitly prove:
+
+```text
+TRUSTED_HOME_READY     = YES
+TRUSTED_PROFILE_READY  = YES
+TRUSTED_SETTINGS_READY = YES
+```
+
+Path existence alone is not readiness. `TRUSTED_PROFILE_READY` and
+`TRUSTED_SETTINGS_READY` require inspection of generated outputs against the expected
+Trusted deployment source identity, content projection, ownership, and mode; legacy-home
+copy or old USER Runtime inheritance makes the result not ready. Any canary failure stops
+fleet progression.
+
+Final readiness for every one of the exact 86 targets requires all three fields above to
+be `YES`, plus its required curated Workspace and spawn readiness. No Agent may be counted
+ready, restorable, or complete while any required trusted home/profile/settings result is
+missing, uninspected, legacy-derived, source-mismatched, or otherwise nonconforming.
 
 ### CTR-WS-009 — Dry-run, transaction, retry, and unknown outcome
 
@@ -432,13 +468,20 @@ home content.
 - Expected: exact 86 pass planning; every other shape fails before mutation; no general API.
 - Failure: count-only mutable expansion, regenerated IDs, or arbitrary subject accepted.
 
-### ACC-WS-003 — Trusted authority and old-home isolation
+### ACC-WS-003 — Trusted authority, regeneration, and old-home isolation
 
 - Contracts: `CTR-WS-002`, `CTR-WS-003`
-- Method: path/source identity tests plus adversarial old-home fixtures.
+- Method: path/source identity tests plus adversarial old-home fixtures; run the formal
+  provisioner/regeneration path from the Trusted deployment source, then inspect generated
+  profile/settings content projections, trusted source identities, ownership, and modes.
 - Expected: target is formal Trusted Runtime Workspace; old home is never traversed/copied;
-  no external primary path or link registration exists.
-- Failure: any old-home byte/metadata crosses or legacy path becomes active primary.
+  no external primary path or link registration exists; both
+  `TRUSTED_PROFILE_REGENERATION=REQUIRED` and
+  `TRUSTED_SETTINGS_REGENERATION=REQUIRED` are fulfilled; generated profile and settings
+  pass actual readiness inspection and contain no legacy-home or old USER Runtime inheritance.
+- Failure: any old-home byte/metadata crosses, legacy path becomes active primary, profile
+  or settings are copied/inherited/reconstructed from legacy state, generation bypasses the
+  formal path or Trusted deployment source, or readiness relies only on path existence.
 
 ### ACC-WS-004 — Curated selection and secret rejection
 
@@ -460,12 +503,17 @@ home content.
 - Failure: following a link, copying special/unsafe content, blind recursion, merge, or
   overwrite.
 
-### ACC-WS-006 — Canary ordering
+### ACC-WS-006 — Canary ordering and readiness evidence
 
 - Contracts: `CTR-WS-008`
-- Method: fault injection at each Build in Public readiness stage and mutation-order trace.
-- Expected: no remaining Agent mutation before all canary gates PASS; failure stops fleet.
-- Failure: any of remaining 85 mutates first/in parallel or after failed canary.
+- Method: fault injection at each Build in Public readiness stage and mutation-order trace;
+  independently inspect its provisioner-generated trusted home, profile, and settings.
+- Expected: Build in Public evidence records `TRUSTED_HOME_READY=YES`,
+  `TRUSTED_PROFILE_READY=YES`, and `TRUSTED_SETTINGS_READY=YES` from actual generated-result
+  checks; no remaining Agent mutation occurs before all canary gates PASS; final readiness
+  applies the same three required checks to every one of the exact 86 targets.
+- Failure: any field is missing/not YES, any result is legacy-derived or uninspected, or any
+  of the remaining 85 mutates first/in parallel or after failed canary.
 
 ### ACC-WS-007 — Dry-run and recovery
 
