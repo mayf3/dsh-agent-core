@@ -117,8 +117,15 @@ function normalizeDisabled(disabled) {
   return disabled
 }
 
-/** Validate an agent id: opaque `agt_`-prefixed string. */
-function normalizeAgentId(id) {
+/**
+ * Validate an agent id: opaque `agt_`-prefixed string. Exported as the
+ * single id-grammar authority for trusted-parent callers (e.g. the broker
+ * credential metadata seam) that must reject an id BEFORE using it — the
+ * grammar itself is unchanged and has no other editor.
+ * @param {unknown} id
+ * @returns {string} the validated id.
+ */
+export function normalizeAgentId(id) {
   if (typeof id !== 'string' || !AGENT_ID_RE.test(id)) {
     throw Object.assign(
       new TypeError(`agent-definition: agent id must be an opaque ${AGENT_ID_PREFIX}* string (got ${JSON.stringify(id)})`),
