@@ -254,12 +254,32 @@ export const INGRESS_GATE_REJECTED_REPLY =
 // ---------------------------------------------------------------------------
 
 /**
+ * AGENT_CORE_LARK_UX_PHASE1_V2 (CTR-AUTO-MENTION-002/003): the sole mention
+ * identity authority is IngressEvent.sender.openId, valid only in Feishu
+ * open_id / union_id form. Missing/invalid => no mention context, never a
+ * name fallback or fabricated identity.
+ */
+const TRIGGER_SENDER_OPEN_ID_RE = /^(?:ou_|on_)[A-Za-z0-9_-]+$/
+
+/** @param {string} value @returns {boolean} */
+export function isValidTriggerSenderOpenId(value) {
+  return typeof value === 'string' && TRIGGER_SENDER_OPEN_ID_RE.test(value)
+}
+
+/**
  * Build a uniform outbound ReplyTarget for an ingress event or explicit parts.
  *
  * A ReplyTarget answers "where and how should a reply go?":
  *   - replyTo(message): reply inline under a message (im.message.reply).
  *   - asThread(): reply inside a topic thread (thread context).
  *   - directChat(): fire a top-level message into a chat (im.message.create).
+ *
+ * `triggerSenderOpenId` (UX Phase1 V2) is the mechanically derived, already
+ * VALIDATED triggering-sender openId carried from IngressEvent.sender.openId
+ * by replyTargetFor. It is mention CONTEXT only: nothing consumes it unless
+ * the Router's success call asks for autoMentionTriggerSender — every excluded
+ * caller (receipts, scheduler literal targets) sends without UX opts and is
+ * byte-compatible. Explicit-parts callers (scheduler) never pass it.
  *
  * @param {object} p
  * @param {string} p.conversationId - canonical conversation id.
@@ -268,42 +288,46 @@ export const INGRESS_GATE_REJECTED_REPLY =
  * @param {string} [p.messageId] - source message id to reply under.
  * @param {string} [p.threadId] - Feishu topic thread id.
  * @param {string} [p.rootMsgId] - root message id of a thread.
+ * @param {string} [p.triggerSenderOpenId] - validated triggering-sender openId.
  * @returns {object} ReplyTarget
  */
 export function buildReplyTarget(p) {
-  const replyTo = (messageId) => ({
-    kind: 'reply',
+  // Defense-in-depth: the field can never carry an invalid identity value,
+  // even if a future caller skips replyTargetFor's validation.
+  const triggerSenderOpenId = isValidTriggerSenderOpenId(p.triggerSenderOpenId)
+    ? p.triggerSenderOpenId
+    : undefined
+  const base = {
     conversationId: p.conversationId,
     chatId: p.chatId,
     channel: p.channel,
+    threadId: p.threadId,
+    rootMsgId: p.rootMsgId,
+    triggerSenderOpenId,
+  }
+  const replyTo = (messageId) => ({
+    kind: 'reply',
+    ...base,
     receiveIdType: 'chat_id',
     receiveId: p.chatId,
     replyMsgId: messageId ?? p.messageId ?? undefined,
-    threadId: p.threadId,
-    rootMsgId: p.rootMsgId,
     // inline reply within a topic thread: reply_in_thread true when we are in a thread
     replyInThread: p.channel === 'thread',
   })
   const asThread = () => ({
     kind: 'create_thread',
-    conversationId: p.conversationId,
-    chatId: p.chatId,
+    ...base,
     channel: 'thread',
     receiveIdType: 'chat_id',
     receiveId: p.chatId,
-    threadId: p.threadId,
-    rootMsgId: p.rootMsgId,
     replyInThread: true,
   })
   const directChat = (receiveId, receiveIdType = 'chat_id') => ({
     kind: 'create',
-    conversationId: p.conversationId,
-    chatId: p.chatId,
+    ...base,
     channel: 'group' === p.channel ? 'group' : p.channel,
     receiveIdType,
     receiveId: receiveId ?? p.chatId,
-    threadId: p.threadId,
-    rootMsgId: p.rootMsgId,
     replyInThread: false,
   })
 
@@ -312,6 +336,9 @@ export function buildReplyTarget(p) {
 
 /**
  * Convenience: build a ReplyTarget straight from a normalized IngressEvent.
+ * The triggering-sender mention context (UX Phase1 V2) is derived HERE and
+ * ONLY here, mechanically from IngressEvent.sender.openId — never from
+ * sender.name, roster lookups, model text or Router-provided values.
  * @param {object} ev - IngressEvent from the bridge mapping.
  * @returns {object} ReplyTarget with replyTo/... helpers.
  */
@@ -323,13 +350,26 @@ export function replyTargetFor(ev) {
     messageId: ev.messageId,
     threadId: ev.threadId,
     rootMsgId: ev.rootMsgId,
+    triggerSenderOpenId: ev?.sender?.openId,
   })
 }
 
 /**
  * Map a ReplyTarget + text onto the @larksuite/channel send plan
- * (`channel.send(to, { text }, opts)`). Pure data in, pure plan out — the
+ * (`channel.send(to, input, opts)`). Pure data in, pure plan out — the
  * shell invokes the SDK with whatever this returns.
+ *
+ * UX opts (AGENT_CORE_LARK_UX_PHASE1_V2, third `feishu.reply` argument as
+ * `{ ux }`; intent flags only, never identity values):
+ *   ux.rendering === 'markdown'  → `{ markdown }` input (SDK-native md/post
+ *     pipeline: markdownToPost + 3500 code-fence-aware splitting + first-
+ *     chunk-only mention composition). Default / anything else → the V0
+ *     `{ text }` input, byte-identical to the pre-UX plan.
+ *   ux.autoMentionTriggerSender === true AND target.channel is group/thread
+ *     AND a valid triggerSenderOpenId exists → `opts.mentions = [{ openId }]`
+ *     (an openId-carrying SDK SendOptions.mentions entry; no name — the SDK
+ *     renders the real user from the id). p2p and every caller without the
+ *     intent stay mention-free. resolveMentionsInText stays unset (off).
  *
  * kind mapping (spec §10 REPLY_SEAM — behavior-compatible):
  *   'reply'         → SDK send with replyTo = replyMsgId and
@@ -349,20 +389,31 @@ export function replyTargetFor(ev) {
  *
  * @param {object} replyTarget - a ReplyTarget object.
  * @param {string} text - message text.
- * @returns {{to:string, input:{text:string}, opts:{replyTo?:string, replyInThread?:boolean}, method:string}}
+ * @param {object} [ux] - UX intent flags (`{ rendering?, autoMentionTriggerSender? }`).
+ * @returns {{to:string, input:{text:string}|{markdown:string}, opts:{replyTo?:string, replyInThread?:boolean, mentions?:{openId:string}[]}, method:string}}
  * @throws {Error} on an unknown ReplyTarget kind (V0 parity).
  */
-export function replyTargetToSdkSend(replyTarget, text) {
+export function replyTargetToSdkSend(replyTarget, text, ux) {
   const kind = replyTarget?.kind
   const body = String(text ?? '')
+  const rendering = ux?.rendering === 'markdown' ? 'markdown' : 'text'
+  const input = rendering === 'markdown' ? { markdown: body } : { text: body }
+  // CTR-AUTO-MENTION-001/002: mention activates only on explicit intent, only
+  // for group/thread targets, only with a valid triggering-sender openId.
+  const mention = ux?.autoMentionTriggerSender === true
+    && (replyTarget?.channel === 'group' || replyTarget?.channel === 'thread')
+    && isValidTriggerSenderOpenId(replyTarget?.triggerSenderOpenId)
+    ? { mentions: [{ openId: replyTarget.triggerSenderOpenId }] }
+    : {}
 
   if (kind === 'reply') {
     return {
       to: replyTarget.receiveId ?? replyTarget.chatId,
-      input: { text: body },
+      input,
       opts: {
         ...(replyTarget.replyMsgId ? { replyTo: replyTarget.replyMsgId } : {}),
         replyInThread: replyTarget.replyInThread === true,
+        ...mention,
       },
       method: 'reply',
     }
@@ -373,19 +424,19 @@ export function replyTargetToSdkSend(replyTarget, text) {
     if (replyTarget.rootMsgId) {
       return {
         to,
-        input: { text: body },
-        opts: { replyTo: replyTarget.rootMsgId, replyInThread: true },
+        input,
+        opts: { replyTo: replyTarget.rootMsgId, replyInThread: true, ...mention },
         method: 'create_thread',
       }
     }
-    return { to, input: { text: body }, opts: {}, method: 'create_thread' }
+    return { to, input, opts: { ...mention }, method: 'create_thread' }
   }
 
   if (kind === 'create') {
     return {
       to: replyTarget.receiveId ?? replyTarget.chatId,
-      input: { text: body },
-      opts: {},
+      input,
+      opts: { ...mention },
       method: 'create',
     }
   }

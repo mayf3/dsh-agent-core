@@ -108,6 +108,8 @@ test('AC-CURRENT-MAIN-FULL-TURN-PROMISE: real AgentProcess + Router stay inside 
       proc.spawn = function spawnOffline() {
         this.pid = 4242
         this.exitPromise = new Promise(() => {})
+        this.transition('INITIALIZING')
+        this.transition('READY')
         return this
       }
       proc.ready = async () => 0
