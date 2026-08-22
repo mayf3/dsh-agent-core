@@ -61,7 +61,7 @@ import z from '@deepseek-ai/schemastery'
 import { createHash, randomUUID } from 'node:crypto'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { AgentProcess, agentEnv, AGENT_CHILD_TMPDIR, RECOGNIZED_PROXY_ENV_KEYS } from './process.js'
+import { AgentProcess, agentEnv, AGENT_CHILD_TMPDIR, RECOGNIZED_PROXY_ENV_KEYS, redactSensitiveText } from './process.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
 import { TurnReconciliationStore } from './reconciliation-store.js'
 import { BindingStore } from './binding-store.js'
@@ -259,6 +259,29 @@ export function apply(ctx, config) {
    */
   const deadlineConfig = resolveDeadlineConfig(process.env, { productionRoot: cfg.productionRoot })
 
+  // F-2 (V2 §5.2: 未知 Agent 必须 fail-loud): the override file may only
+  // name REGISTERED agents. This is the configuration/apply boundary where
+  // the full AgentDefinition set is available — the deadline-config parser
+  // stays pure (no AgentDefinition dependency); the Router owns the
+  // cross-check, BEFORE any process can spawn. The error is structured and
+  // carries only agent ids + the overrides file path (no secrets).
+  {
+    const overrideAgentIds = Object.keys(deadlineConfig.overrides ?? {})
+    if (overrideAgentIds.length > 0) {
+      const registeredAgentIds = new Set(agentDefinition.listAgents().map(agent => agent.id))
+      const unknownAgentIds = overrideAgentIds.filter(id => !registeredAgentIds.has(id))
+      if (unknownAgentIds.length > 0) {
+        throw Object.assign(
+          new Error(
+            `agent-router: ${deadlineConfig.overridesFile} overrides unknown agent(s): ${unknownAgentIds.join(', ')} `
+            + `— not registered in the Agent Definition (registered: ${[...registeredAgentIds].join(', ') || '(none)'})`,
+          ),
+          { code: 'AGENT_PROCESS_OVERRIDE_AGENT_UNKNOWN', overridesFile: deadlineConfig.overridesFile, unknownAgentIds },
+        )
+      }
+    }
+  }
+
   /**
    * The Router reconciliation store — the SINGLE query authority for late
    * turn reconciliation (C-018). One store per control-plane runtime epoch.
@@ -292,6 +315,7 @@ export function apply(ctx, config) {
       rejectResult,
       processRef: null,
       ownershipToken: null,
+      startupSettled: false,
     }
     lifecycleSlots.set(agentId, entry)
     return entry
@@ -358,6 +382,50 @@ export function apply(ctx, config) {
     lifecycleSlots.delete(agentId)
     slot.resolveReap()
     return true
+  }
+
+  /**
+   * C-008 no-child startup failure discipline (review F-1): any synchronous
+   * pre-spawn preparation failure (resolveWorkspace / resolveDshHome /
+   * resolveProcessConfig / provisionHome / processFactory) must atomically
+   * (a) record redacted bounded evidence, (b) reject the shared startup
+   * resultPromise EXACTLY ONCE so every current and future waiter settles
+   * in bounded time, and (c) clean the exact STARTUP slot to EMPTY through
+   * full identity CAS (slot object + state + no processRef/ownershipToken)
+   * so the next ensureRunning may retry — never the delete-then-REAP shape,
+   * never a shutdown write, never a kill, and a stale first-generation
+   * cleanup can never touch a newer generation's slot.
+   */
+  function settleStartupEntry(entry, error) {
+    if (entry.startupSettled) return false
+    entry.startupSettled = true
+    entry.rejectResult(error)
+    return true
+  }
+
+  function failStartupSlotNoChild(agentId, entry, cause) {
+    // (a) bounded, redacted evidence first.
+    const evidence = redactSensitiveText(String(cause?.message ?? cause)).slice(0, 2048)
+    auditStaleSlot(`pre-spawn startup failure (no child) for agent ${agentId} generation ${entry.generation}: ${evidence}`)
+    const error = cause instanceof Error ? cause : new Error(String(cause))
+    error.agentId = agentId
+    error.processGeneration = entry.generation
+    error.startupFailureStage = entry.startupFailureStage ?? 'pre-spawn'
+    // (c) identity CAS: only THIS exact STARTUP entry with no processRef and
+    // no ownership token may reach EMPTY; anything else (a newer generation,
+    // REAP, READY) is untouchable — the stale path is audit-only.
+    if (lifecycleSlots.get(agentId) === entry
+        && entry.state === 'STARTUP'
+        && entry.processRef === null
+        && entry.ownershipToken === null) {
+      lifecycleSlots.delete(agentId)
+      entry.state = 'EMPTY'
+    } else {
+      auditStaleSlot(`pre-spawn cleanup ignored for agent ${agentId} generation ${entry.generation}: slot identity mismatch (stale callback)`)
+    }
+    // (b) exactly-once bounded reject of the shared startup promise.
+    settleStartupEntry(entry, error)
+    return error
   }
 
   /**
@@ -720,22 +788,38 @@ export function apply(ctx, config) {
 
   /** Spawn + initialize one generation for an installed STARTUP slot. */
   async function startProcessForSlot(agentId, entry) {
-    // workspace-bootstrap is the single owner of the agentId -> workspace /
-    // DSH_HOME mapping (D-002 boundary). The router only decides WHEN to
-    // start the agent, not where its home lives — so it calls the service
-    // without any root override.
-    const workspace = workspaceBootstrap.resolveWorkspace(agentId)
-    const home = workspaceBootstrap.resolveDshHome(agentId)
-    const processConfig = resolveProcessConfig(agentId) ?? {}
-    // Provision the agent home (settings/credentials/profile/plugin farm) and
-    // the workspace directory — idempotent. The provisioning is driven by
-    // cfg.agentProfile: whatever profile this router spawns must be fully
-    // installed HERE, so a fresh Agent works without any external
-    // pre-provisioning (FIX 1).
-    provisionHome(home, workspace, {
-      profile: cfg.agentProfile,
-      ...(processConfig.subscription === undefined ? {} : { subscription: processConfig.subscription }),
-    })
+    // F-1 (C-008 no-child discipline): every synchronous pre-spawn
+    // preparation step is failure-converged — a throw settles the shared
+    // startup promise exactly once and cleans the exact STARTUP slot to
+    // EMPTY via identity CAS (no REAP, no shutdown write, no kill; the next
+    // ensureRunning retries; stale first-generation cleanups are audit-only).
+    let workspace
+    let home
+    let processConfig
+    try {
+      entry.startupFailureStage = 'resolveWorkspace'
+      // workspace-bootstrap is the single owner of the agentId -> workspace /
+      // DSH_HOME mapping (D-002 boundary). The router only decides WHEN to
+      // start the agent, not where its home lives — so it calls the service
+      // without any root override.
+      workspace = workspaceBootstrap.resolveWorkspace(agentId)
+      entry.startupFailureStage = 'resolveDshHome'
+      home = workspaceBootstrap.resolveDshHome(agentId)
+      entry.startupFailureStage = 'resolveProcessConfig'
+      processConfig = resolveProcessConfig(agentId) ?? {}
+      // Provision the agent home (settings/credentials/profile/plugin farm)
+      // and the workspace directory — idempotent. The provisioning is driven
+      // by cfg.agentProfile: whatever profile this router spawns must be
+      // fully installed HERE, so a fresh Agent works without any external
+      // pre-provisioning (FIX 1).
+      entry.startupFailureStage = 'provisionHome'
+      provisionHome(home, workspace, {
+        profile: cfg.agentProfile,
+        ...(processConfig.subscription === undefined ? {} : { subscription: processConfig.subscription }),
+      })
+    } catch (cause) {
+      throw failStartupSlotNoChild(agentId, entry, cause)
+    }
     const registryIntegration = {
       casReap: (proc, cause) => casReapSlot(agentId, proc, cause),
       casStartupEmpty: (proc) => casStartupEmptySlot(agentId, proc),
@@ -747,33 +831,39 @@ export function apply(ctx, config) {
           && slot.ownershipToken === (proc.ownershipToken ?? null)
       },
     }
-    const proc = processFactory({
-      agentId,
-      home,
-      workspace,
-      profile: cfg.agentProfile,
-      provider: processConfig.provider,
-      model: processConfig.model,
-      providerEnv: processConfig.providerEnv,
-      omitEnv: processConfig.omitEnv,
-      log,
-      // The per-agent process must know its own identity: the memory plugin
-      // and the switch tool resolve agentId from $DSH_AGENT_ID when set.
-      // DSH_PRIMARY_WORKSPACE (AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §4) is the
-      // SAME mechanical pass-through: the control plane's already-resolved
-      // primary workspace (resolveWorkspace output above — the single path
-      // authority). The Router only hands the value to the child process's
-      // session-less memory resolution; it never re-derives the path and
-      // never branches on it.
-      env: { DSH_AGENT_ID: agentId, DSH_PRIMARY_WORKSPACE: workspace },
-      // V2 lifecycle wiring: monotonic generation, the static per-Agent
-      // resolved deadline config (immutable for this process), the shared
-      // Router reconciliation store and the identity-CAS slot integration.
-      processGeneration: entry.generation,
-      deadlines: deadlineConfig.perAgent(agentId),
-      reconciliationStore,
-      registryIntegration,
-    })
+    let proc
+    try {
+      entry.startupFailureStage = 'processFactory'
+      proc = processFactory({
+        agentId,
+        home,
+        workspace,
+        profile: cfg.agentProfile,
+        provider: processConfig.provider,
+        model: processConfig.model,
+        providerEnv: processConfig.providerEnv,
+        omitEnv: processConfig.omitEnv,
+        log,
+        // The per-agent process must know its own identity: the memory plugin
+        // and the switch tool resolve agentId from $DSH_AGENT_ID when set.
+        // DSH_PRIMARY_WORKSPACE (AGENT_PRIMARY_WORKSPACE_IMPORT_V1 §4) is the
+        // SAME mechanical pass-through: the control plane's already-resolved
+        // primary workspace (resolveWorkspace output above — the single path
+        // authority). The Router only hands the value to the child process's
+        // session-less memory resolution; it never re-derives the path and
+        // never branches on it.
+        env: { DSH_AGENT_ID: agentId, DSH_PRIMARY_WORKSPACE: workspace },
+        // V2 lifecycle wiring: monotonic generation, the static per-Agent
+        // resolved deadline config (immutable for this process), the shared
+        // Router reconciliation store and the identity-CAS slot integration.
+        processGeneration: entry.generation,
+        deadlines: deadlineConfig.perAgent(agentId),
+        reconciliationStore,
+        registryIntegration,
+      })
+    } catch (cause) {
+      throw failStartupSlotNoChild(agentId, entry, cause)
+    }
     entry.processRef = proc
     // DSH tool relay: a per-agent process asks the Control Plane to run a
     // Router domain operation (switch) or a trusted Broker capability call
@@ -821,13 +911,24 @@ export function apply(ctx, config) {
       })
     }
     try {
+      entry.startupFailureStage = 'spawn'
       proc.spawn()
     } catch (error) {
       // No-child spawn failure: the process already ran its explicit
       // no-child DRAINING/EXITED bookkeeping (spawn_failed_without_child +
-      // casStartupEmpty). Settle the shared startup callers NOW (bounded —
-      // never waiting for an OS reap that cannot exist).
-      entry.rejectResult(error)
+      // casStartupEmpty). Settle the shared startup callers exactly once NOW
+      // (bounded — never waiting for an OS reap that cannot exist) and run
+      // the idempotent router-side identity-CAS backstop for duck-typed
+      // process objects that did not perform their own cleanup.
+      error.agentId = agentId
+      error.processGeneration = entry.generation
+      error.startupFailureStage = 'spawn'
+      // Bounded redacted evidence for the no-child spawn failure too.
+      auditStaleSlot(`pre-spawn startup failure (no child) for agent ${agentId} generation ${entry.generation} [spawn]: ${redactSensitiveText(String(error?.message ?? error)).slice(0, 2048)}`)
+      settleStartupEntry(entry, error)
+      if (proc.ownership === null || proc.ownership === undefined) {
+        casStartupEmptySlot(agentId, proc)
+      }
       throw error
     }
     // Legacy/duck-typed reap fallback (idempotent with the integration CAS).
@@ -837,7 +938,7 @@ export function apply(ctx, config) {
     } catch (error) {
       // C-008: startup caller settlement is bounded at failure observation;
       // the generation reap fence + teardown continue process-owned.
-      entry.rejectResult(error)
+      settleStartupEntry(entry, error)
       throw error
     }
     // Startup success is an identity CAS: only the exact STARTUP entry may
@@ -845,12 +946,13 @@ export function apply(ctx, config) {
     if (lifecycleSlots.get(agentId) !== entry) {
       auditStaleSlot(`startup CAS failed for agent ${agentId}: slot moved before READY — fatal teardown of the unexposed process`)
       const casError = Object.assign(new Error(`agent-router: startup slot CAS failed for ${agentId}; process not exposed`), { code: 'AGENT_PROCESS_SLOT_CAS_FAILED' })
-      entry.rejectResult(casError)
+      settleStartupEntry(entry, casError)
       if (typeof proc.fatal === 'function') void proc.fatal('registry_cas_failed')
       throw casError
     }
     entry.state = 'READY'
     entry.ownershipToken = proc.ownershipToken ?? null
+    entry.startupSettled = true
     entry.resolveResult(proc)
     return proc
   }
@@ -1141,6 +1243,7 @@ export function apply(ctx, config) {
         generation: slot.generation,
         entryId: slot.entryId,
         ...(slot.cause === undefined ? {} : { cause: slot.cause }),
+        ...(slot.state === 'STARTUP' ? { startupSettled: slot.startupSettled === true } : {}),
       }
     },
   }
