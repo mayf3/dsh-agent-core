@@ -1,8 +1,9 @@
 ---
 spec_id: SCHEDULER_TIMEOUT_OUTCOME_V1
-status: accepted
+status: superseded
 date: 2026-08-19
 accepted_date: 2026-08-20
+superseded_date: 2026-08-22
 type: implementation-spec (spec / decision text only; no implementation this round)
 scope:
   - Scheduler occurrence identity and admission idempotency
@@ -16,6 +17,8 @@ references:
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md (D-006; accepted Current Authority)
   - docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md (D-007; accepted replacement Decision / Current Scheduler Authority)
 implementation_authority: none
+supersedes: []
+superseded_by: SCHEDULER_TIMEOUT_OUTCOME_V2
 accepted_reviewed_head: 3776b1929a05d0e8c81a6cacde576b39a5151017
 focused_re_review: AGENT_CORE_HARDENING_PROGRAM_V1_PR11_AMENDMENT_FOCUSED_RE_REVIEW
 focused_re_review_result: PASS
@@ -25,7 +28,8 @@ review_verdict: READY_TO_ACCEPT_AND_MERGE_PR11_SPEC_SET
 
 # SCHEDULER_TIMEOUT_OUTCOME_V1 — occurrence、timeout、termination 与迁移语义
 
-> 状态：**accepted**（2026-08-20 acceptance finalize）。  
+> 状态：**superseded**（2026-08-22；superseded_by `SCHEDULER_TIMEOUT_OUTCOME_V2`——whole-authority replacement acceptance transaction 原子完成，双向 backlink 齐备；原 accepted 2026-08-20）。
+> 本文件保留为历史 authority：历史正文不改写、不删除；其 normative semantics 已由 V2 逐条保留（V2 `SEMANTIC_DELTA_VS_V1 = NONE`）。
 > 所在 PR：Draft PR #11。  
 > 本轮只提交 Spec / Decision 文本。  
 > 不 implementation、不创建 production jobs、不补跑 missed runs、不修改 Scheduler store、不部署、不 merge。
@@ -767,7 +771,11 @@ DAEMON_JOBS = OUT_OF_SCHEDULER
 READY_TO_RESTORE_BEFORE_HARDENING = 0
 
 KERNEL_CHANGE = NONE
-SPEC_STATUS = accepted
+SPEC_STATUS = superseded
+SUPERSEDED_BY = SCHEDULER_TIMEOUT_OUTCOME_V2
+  （2026-08-22 whole-authority supersession；V2 accepted_by = mayf3；
+   V2 SEMANTIC_DELTA_VS_V1 = NONE，本文件 C-001..C-020 逐条保留于 V2；
+   本文件保留为历史 authority，历史正文不改写）
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 
 ACCEPTED_REVIEWED_HEAD = 3776b1929a05d0e8c81a6cacde576b39a5151017
