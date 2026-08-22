@@ -1,232 +1,283 @@
 ---
 spec_id: AGENT_TRUSTED_FLEET_CUTOVER_V1
 status: proposed
-type: child-implementation-spec
-parent_authorities:
-  - AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
-  - AGENT_PRIMARY_WORKSPACE_IMPORT_V1
-  - AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
-owner_ruling: RESTORE_LEGACY_AGENT_FLEET_YES
+type: blocked-child-implementation-spec
+review_status: FIX_REQUIRED
+authority_preconditions:
+  - accepted whole-authority supersession of AGENT_PRIMARY_WORKSPACE_IMPORT_V1
+  - accepted external Auth authority for every required Auth or grant mutation
+owner_intent_provenance: direct Owner instruction, session 2026-08-22, RESTORE_LEGACY_AGENT_FLEET=YES
 ---
 
 # Agent Trusted Fleet Cutover V1
 
-> **PROPOSED — no implementation or production authority yet.**
+> **PROPOSED / BLOCKED — no implementation or production authority.**
 >
-> This Spec freezes one one-time restoration of the 86 `OLD_ONLY` historical Agent
-> Definitions from the disabled USER runtime into the sole trusted `authsvc` runtime.
-> Until this Spec is accepted, implementation, data mutation, runtime reload/restart,
-> credential reconciliation, and production cutover are forbidden.
+> This proposed child freezes the requested one-time restoration intent for 86 historical
+> Agents. It cannot be accepted or implemented until the authority preconditions in §2
+> are satisfied. This PR performs no implementation, data mutation, credential action,
+> runtime reload/restart, or binding restoration.
 
-## 1. Authority gap and narrow disposition
+## 1. Goal and hard boundary
 
-Existing accepted authority does not cover the requested operation as a whole:
-
-- `AGENT_PRIMARY_WORKSPACE_IMPORT_V1` authorizes in-place adoption and explicitly
-  forbids fleet workspace copying. This cutover instead requires a curated,
-  secret-excluding import into trusted workspaces.
-- `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1` authorizes the formal credential
-  provisioning model, but not this 86-Agent production reconciliation.
-- No accepted implementation Spec currently authorizes preserve-ID reconciliation of
-  these legacy definitions plus trusted home/workspace bootstrap and production cutover.
-
-If accepted, this child Spec grants only the narrow exception required here:
-curated import of approved non-sensitive files for the exact 86-Agent target set. It
-neither changes the long-lived primary-workspace model nor creates a general migration
-API.
+Restore the exact `OLD_ONLY` Agent IDs from the disabled USER runtime into the sole
+trusted `authsvc` runtime using a dry-run-first, fail-loud, safely resumable one-time
+operator. Do not create a general migration API.
 
 ```text
-GENERAL_MIGRATION_API                = FORBIDDEN
-ONE_TIME_OPERATOR                   = REQUIRED
-PRESERVE_AGENT_ID                   = REQUIRED
-DRY_RUN_FIRST                       = REQUIRED
-FAIL_LOUD                           = REQUIRED
-RERUN_AFTER_SUCCESS                 = NOOP
-BINDING_RESTORE                     = OUT_OF_SCOPE
+PRESERVE_AGENT_ID          = REQUIRED
+GENERAL_MIGRATION_API      = FORBIDDEN
+LEGACY_HOME_COPY           = FORBIDDEN
+LEGACY_CREDENTIAL_COPY     = FORBIDDEN
+BLANKET_GRANTS             = FORBIDDEN
+BINDING_RESTORE            = OUT_OF_SCOPE
+OLD_USER_RUNTIME_ENABLE    = FORBIDDEN
+RERUN_AFTER_SUCCESS        = NOOP
 ```
 
-## 2. Frozen production inputs and expected reconciliation
+## 2. Authority graph and blockers
+
+Exact repository authorities at proposal base `e0c73a6cce9f13c23085b8a51aaf9581888449ae`:
+
+| Authority | Exact revision | Relationship |
+|---|---|---|
+| `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1` (accepted) | file last changed at `d83a2ff0e9644611707d7481ef88b4d7d49fb68e` | REUSE only; inherit prerequisites (a)–(d), secret handoff, atomic store, and fail-loud rules |
+| `AGENT_PRIMARY_WORKSPACE_IMPORT_V1` (accepted) | file last changed at `d8237502dfebe6a8a290b4e363abf2e672d42362` | CONFLICT: it requires adopt-in-place/zero-copy and forbids fleet copying |
+| `AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC` (accepted) | file last changed at `ca30981d5b414f167e04c4fee2f85ba33543c6d1` | REUSE invariants only |
+| `AGENT_WORKSPACE_SESSION_MODEL_V2` (accepted Decision) | file last changed at `67404bc7014a6770bb29e041e1736e5d34d8cff3` | REUSE one-Agent/one-primary-workspace invariant |
+| this document | exact PR head | NEW proposed child; grants no authority while proposed |
+
+The requested curated copy into trusted workspaces directly conflicts with the accepted
+workspace authority. A child cannot partially override it. Before this child can become
+accepted, a separately reviewed and accepted **whole-authority superseding Spec** must
+replace `AGENT_PRIMARY_WORKSPACE_IMPORT_V1` and explicitly authorize this exact curated
+fleet import. This document does not perform that supersession.
+
+Auth principal/client/grant authority is external to this repository. This proposal
+pins no external accepted artifact because none was supplied or established in the
+Authority Gate. Therefore:
+
+```text
+AUTH_MUTATION_BY_THIS_OPERATOR  = FORBIDDEN
+GRANT_MUTATION_BY_THIS_OPERATOR = FORBIDDEN
+```
+
+Before either becomes executable, the implementation base must pin an accepted external
+repository, stable authority ID, exact revision, mutation seam, and relationship. Until
+then, only read-only readiness classification is allowed. Missing prerequisite (a), (b),
+(c), or (d) from the accepted credential Spec returns
+`EXTERNAL_PREREQUISITE_MISSING_<A|B|C|D>`; no DB access, legacy create, CLI-secret stdout,
+fake/designated owner, fallback, or partial Auth mutation is allowed.
+
+## 3. Qualified input observation, not authority
+
+The following is Owner-supplied planning evidence, not independently verified production
+truth:
+
+```text
+subject       = legacy/trusted Agent Definition reconciliation
+source        = direct Owner instruction in this task
+observed_at   = 2026-08-22
+method        = Owner-reported comparison
+provenance    = RESTORE_LEGACY_AGENT_FLEET=YES request
+old_count     = 88
+trusted_count = 5
+matching      = 2
+old_only      = 86
+trusted_only  = 3
+conflicting   = 0
+```
+
+Frozen input locations:
 
 ```text
 OLD_DEFINITION_SOURCE = /Users/yanfenma/.agent-core/agents.json
 OLD_WORKSPACE_MAPPING = /Users/yanfenma/.agent-core/primary-workspaces.json
-
 TRUSTED_DEFINITION_SOURCE = /Users/authsvc/.agent-core/agents.json
 TRUSTED_INSTALLED_DEFINITION_SOURCE = /usr/local/libexec/agent-core/config/agents.json
-TRUSTED_SOURCE_RELATION = trusted source MUST resolve to the installed source above
-
-OLD_AGENT_DEFINITION_COUNT     = 88
-TRUSTED_AGENT_DEFINITION_COUNT = 5
-MATCHING                       = 2
-OLD_ONLY                       = 86
-TRUSTED_ONLY                   = 3
-CONFLICTING_DEFINITIONS        = 0
-TARGET_RESTORE_COUNT           = 86
-EXPECTED_FINAL_DEFINITION_COUNT = 91
 ```
 
-The operator MUST recompute these values from the live inputs. Any count drift,
-conflicting definition, missing source, invalid definition, duplicate ID, or unexpected
-runtime state aborts before mutation. The 86 target IDs are the recomputed `OLD_ONLY`
-set; no hand-maintained second target registry is allowed.
+Dry-run MUST independently recompute all counts and safe file identities. It requires
+`88/5/2/86/3/0`, final count `91`, and that the trusted source resolves to the installed
+source. Drift aborts before mutation with a structured reason. Definition input digests
+may be reported because Agent Definitions contain no credentials; workspace candidate
+content digests MUST NOT be reported.
 
-The dry-run plan MUST emit one non-secret row per target:
+## 4. Exact Definition plan
+
+Use `writeAgentDefinition()` with caller-supplied IDs; never call
+`createAgentInConfig()`. The plan is:
+
+- add only recomputed `OLD_ONLY=86`, preserving every exact `agent_id`;
+- preserve the matching 2 and trusted-only 3 by canonical JSON value equality;
+- preserve `defaultAgentId` and every unrelated top-level field by canonical JSON value
+  equality;
+- reject duplicate IDs, schema errors, unknown top-level fields, source drift, or any
+  non-equivalent existing target as `DEFINITION_CONFLICT`.
+
+Canonical equality means recursively sorted object keys, array order preserved, and
+JSON scalar type/value preserved; formatting and object-key serialization order are not
+part of equality. Safe before/after SHA-256 digests of canonical Definition projections
+prove unchanged values.
+
+Each target dry-run row contains only:
 
 ```text
 agent_id
-definition_validation
-workspace_source
-restoration_status
+definition_validation = PASS | CONFLICT:<reason_code>
+workspace_source = SAFE_OPAQUE_SOURCE_ID | MISSING | DUPLICATE
+restoration_status = PLANNED | NOOP | BLOCKED:<stage>:<reason_code>
 ```
 
-It MUST also prove that the matching 2 and trusted-only 3 rows remain byte-for-byte
-unchanged in the proposed trusted Definition document.
+## 5. Trusted home
 
-## 3. Definition reconciliation
-
-The apply step MUST preserve every exact legacy `agent_id`. It MUST use the formal
-caller-supplied-ID writer `writeAgentDefinition()` to atomically validate and write the
-complete merged Definition document. `createAgentInConfig()` and any other ID-minting
-path are forbidden.
-
-Only the 86 `OLD_ONLY` definitions may be added. The matching 2, trusted-only 3,
-default Agent selection, and all unrelated trusted fields MUST remain unchanged.
-
-A rerun after success MUST detect that all targets are already equivalent and report
-NOOP without rewriting the file. A rerun with drift MUST fail loud; it MUST NOT silently
-replace a trusted definition.
-
-## 4. Trusted home regeneration
-
-Legacy home directories are evidence inputs only and MUST NOT be copied as directories.
-Trusted homes MUST be regenerated under the trusted production layout by the existing
-formal chain:
+Never open legacy home files for migration. Rebuild trusted homes only through the
+existing formal chain:
 
 ```text
-production-agent-provision
-  -> provisionAgentHome
-  -> workspace-bootstrap
+production-agent-provision -> provisionAgentHome -> workspace-bootstrap
 ```
 
-The provisioner must use trusted deployment sources for settings/profile and preserve
-its existing ownership/mode rules. It MUST NOT copy from a legacy home any credential,
-token, API key, session secret, settings file, profile, or other opaque state.
+Trusted deployment settings/profile sources and existing ownership/mode contracts apply.
+No legacy settings, profile, credentials, token, key, session state, or opaque file is
+copied. `HOME_READY` requires the formal provisioner to report equivalent/noop state and
+read-only checks for expected directories, settings, profile, ownership, and modes.
 
-For every target, home readiness requires the formally provisioned home, settings,
-profile, and `AGENTS.md`-consuming runtime shape expected by spawn preflight.
+## 6. Frozen curated workspace policy
 
-## 5. Curated workspace import policy
-
-Blind directory copy is forbidden. Import is per file, allowlist-led, non-following for
-symlinks, deterministic, and idempotent.
-
-Allowed candidates are limited to Agent-owned, non-sensitive content required for
-normal operation:
-
-- `AGENTS.md` and explicit persona-definition documents;
-- explicitly approved business documents and materials;
-- file-first memory documents and memory directories;
-- other non-executable, non-sensitive Agent-owned workspace content admitted by the
-  reviewed policy manifest.
-
-The importer MUST deny by path/type and content scan at least:
-
-- credentials, tokens, API keys, cookies, session secrets, private keys, auth caches;
-- `.env*`, environment/runtime configuration, credential stores, secret-bearing logs;
-- sockets, devices, FIFOs, symlinks, hard-link aliases, and files escaping source root;
-- generated runtime state and legacy control-plane metadata;
-- any candidate whose sensitivity cannot be determined safely.
-
-Existing non-equivalent destination content MUST NOT be overwritten or merged. The
-per-Agent outcome is:
+This section is dormant until the whole workspace authority is validly superseded.
+Blind copy is forbidden. The dry-run creates one canonical JSON manifest per Agent at a
+trusted operator evidence path fixed by the future runbook. The manifest schema is:
 
 ```text
-WORKSPACE_IMPORT = PASS      # all required approved content present after import
-WORKSPACE_IMPORT = SKIP      # no import needed; destination already equivalent
-WORKSPACE_IMPORT = CONFLICT  # unsafe/ambiguous input or non-equivalent destination
+{
+  version: 1,
+  agent_id: string,
+  source_identity: SAFE_OPAQUE_SOURCE_ID,
+  entries: [{ opaque_entry_id, relative_path, byte_size, media_type, required }],
+  excluded_counts_by_reason: object,
+  policy_version: "AGENT_TRUSTED_FLEET_CUTOVER_V1_WORKSPACE_POLICY_1"
+}
 ```
 
-Any `CONFLICT` blocks that Agent from `RESTORABLE_FOR_BINDING`, is reported without
-secret content, and prevents final fleet success. Reports may include paths and reason
-codes, never secret values or matching content.
+The reviewed plan digest covers canonical manifest metadata but never candidate bytes.
+The operator may apply only the exact reviewed manifest digest.
 
-### 5.1 First explicit acceptance object: Build in Public
+Admissible roots are exactly root files `AGENTS.md`, `SOUL.md`, `IDENTITY.md`, `USER.md`,
+`MEMORY.md`, plus regular files below `memory/`, `docs/`, `materials/`, and `files/`.
+Admissible extensions are `.md`, `.txt`, `.csv`, `.json`, `.yaml`, `.yml`, `.pdf`,
+`.png`, `.jpg`, `.jpeg`, and `.webp`. `AGENTS.md` is required; all other entries are
+optional. A file is inadmissible if it is executable, over 32 MiB, makes total admitted
+bytes exceed 1 GiB per Agent, has a denied path component, has an unknown type, or fails
+content safety scanning.
+
+Denied path components are case-insensitive matches for `.env*`, `credential*`,
+`secret*`, `token*`, `cookie*`, `auth*`, `session*`, `private*key*`, runtime control
+metadata, VCS metadata, caches, logs, sockets, devices, FIFOs, symlinks, and hard links
+(`st_nlink != 1`). Missing or duplicate workspace mappings are respectively
+`WORKSPACE_MAPPING_MISSING` and `WORKSPACE_MAPPING_DUPLICATE`.
+
+Source traversal and reads MUST be fd-relative and non-following. The operator performs
+`lstat`/open-with-no-follow/`fstat` identity checks, rejects identity changes, reads only
+bounded regular-file bytes, and scans in trusted-process memory without subprocesses.
+Known denied paths are rejected by metadata and NEVER opened. Content scanning may only
+classify an otherwise admissible candidate as rejected; bytes, excerpts, matches,
+hashes, secret-bearing path components, and filenames MUST NOT enter temp files, argv,
+env, stdout, stderr, logs, reports, or evidence.
+
+A rejected entry is reported only by `opaque_entry_id` and reason code. Destination
+creation uses a trusted-directory mode-0600 temporary file containing only content that
+passed scanning, fsync, identity recheck, atomic no-clobber rename, and final formal
+ownership/mode setting. Cleanup removes incomplete temp files by opaque run ID.
+
+Equivalence is exact byte equality after both bounded files pass the same safety checks;
+the report records only `EQUIVALENT`, never a content digest. Existing non-equivalent
+destination content is `WORKSPACE_DESTINATION_CONFLICT` and is never overwritten or
+merged.
+
+Per Agent:
+
+```text
+WORKSPACE_IMPORT = PASS      # required entries safely imported; no conflict
+WORKSPACE_IMPORT = SKIP      # all selected entries already equivalent
+WORKSPACE_IMPORT = CONFLICT  # required item absent/unsafe, destination differs, or race/drift
+```
+
+## 7. Build in Public first and staged recovery
+
+First acceptance object:
 
 ```text
 agent_id = agt_build-in-public-agent
 legacy_workspace = /Users/yanfenma/.openclaw/groups/workspace-oc_95bd40ab17712fe0f3a7cf7eb6f4e24a
 ```
 
-Build in Public MUST be the first target evaluated in dry-run and the first target
-processed and verified in apply mode. Fleet apply cannot continue unless it reaches:
+Execution stages, after all authority blockers are cleared:
+
+1. `PLAN`: read-only validation of all 86; any fleet conflict aborts with zero mutation.
+2. `CANARY_PREPARE`: provision/import/readiness-check only Build in Public; checkpoint
+   created artifacts using opaque IDs.
+3. `CANARY_DEFINE`: atomic Definition write adding only Build in Public; reload and spawn
+   preflight it. Failure preserves explicit partial state and permits deterministic
+   forward recovery; it never rolls back by deleting pre-existing trusted state.
+4. `FLEET_PREPARE`: provision/import the remaining 85; Definitions unchanged.
+5. `FLEET_DEFINE`: atomic complete-document write from the canary state to all 91 rows.
+6. `RELOAD_VERIFY`: formal `agentDefinitionAccess` reload, or controlled restart only on
+   structured `RELOAD_UNSUPPORTED`; verify all targets read-only.
+
+Every stage revalidates plan digest and source identities. Checkpoints contain no
+candidate content or secrets. A pre-Definition failure removes only incomplete artifacts
+created by that run. A post-Definition failure is forward-recovery-only: keep the exact
+known Definition state, leave bindings absent, report `PARTIAL_MUTATION`, and resume from
+the last validated checkpoint. Unknown state aborts `RECOVERY_STATE_UNKNOWN` without
+further mutation.
+
+Canary must reach all four before `FLEET_PREPARE`:
 
 ```text
 BUILD_IN_PUBLIC_DEFINITION_READY = YES
-BUILD_IN_PUBLIC_HOME_READY       = YES
-BUILD_IN_PUBLIC_WORKSPACE_READY  = YES
-BUILD_IN_PUBLIC_SPAWN_PREFLIGHT  = YES
+BUILD_IN_PUBLIC_HOME_READY = YES
+BUILD_IN_PUBLIC_WORKSPACE_READY = YES
+BUILD_IN_PUBLIC_SPAWN_PREFLIGHT = YES
 ```
 
-## 6. Credential and grant reconciliation
+## 8. Credential/readiness classification
 
-No legacy credential value may be read for transfer, copied, printed, logged, compared,
-or written to the trusted store.
+For each Agent, exact dependency evidence is limited to formal deployed profile/tool
+configuration and accepted service capability declarations pinned by the future runbook.
+No inference from legacy credential presence is allowed.
 
-For each target, the operator MUST determine from current formal authority and actual
-runtime dependencies:
-
-- whether a machine principal/client is required;
-- whether the Auth identity already exists;
-- whether a trusted credential-store entry is required;
-- whether a Workflow and/or Forum grant is currently required.
-
-Reconciliation MUST use the accepted Auth and trusted credential provisioning seams,
-including their deterministic identity mapping, idempotency, split-brain failure, atomic
-store, and secret-handoff rules. Existing sufficient trusted identity/credential state is
-NOOP. Grants are least-privilege and dependency-driven; fleet-wide blanket Workflow or
-Forum grants are forbidden.
+Output:
 
 ```text
-CREDENTIALS_COPIED_FROM_LEGACY = 0
-BLANKET_WORKFLOW_GRANT          = FORBIDDEN
-BLANKET_FORUM_GRANT             = FORBIDDEN
+principal_required = YES | NO | UNKNOWN
+identity_readiness = READY | NOT_REQUIRED | EXTERNAL_PREREQUISITE_MISSING_<A|C|D> | UNKNOWN
+trusted_credential_required = YES | NO | UNKNOWN
+trusted_credential_readiness = READY | NOT_REQUIRED | EXTERNAL_PREREQUISITE_MISSING_<B|C|D> | UNKNOWN
+workflow_grant_required = YES | NO | UNKNOWN
+workflow_grant_readiness = READY | NOT_REQUIRED | EXTERNAL_PREREQUISITE_MISSING_A | UNKNOWN
+forum_grant_required = YES | NO | UNKNOWN
+forum_grant_readiness = READY | NOT_REQUIRED | EXTERNAL_PREREQUISITE_MISSING_A | UNKNOWN
 ```
 
-## 7. One-time operator and execution modes
+`UNKNOWN` blocks that Agent. This operator performs no Auth/grant mutation until exact
+external accepted authority is pinned. It never grants Workflow/Forum fleet-wide.
+`CREDENTIALS_COPIED_FROM_LEGACY` is always `0`.
 
-The implementation MUST be a repository-owned one-time operator/runbook, not a runtime
-service or public API. It has exactly two modes:
+## 9. Runtime and verification
 
-1. `--dry-run`: read-only; validates authority inputs, computes the exact plan, scans
-   workspace candidates, evaluates credential/grant requirements without mutation, and
-   emits the complete redacted report.
-2. `--apply --plan-digest <digest>`: refuses stale plans; revalidates all inputs, runs
-   Build in Public first, then processes the remaining targets deterministically.
-
-All state writes MUST use existing formal atomic writers/provisioners. The operator MUST
-record non-secret per-stage status sufficient for safe rerun. Unknown partial state,
-source drift, target drift, or policy ambiguity fails loud. Successful rerun reports NOOP.
-
-## 8. Reload and runtime invariant
-
-Definitions, homes, workspaces, and required credential state MUST all complete before
-reload. Reload uses formal `agentDefinitionAccess` reload; a controlled restart of the
-sole trusted runtime is permitted only if reload cannot satisfy the formal contract.
-
-Post-cutover invariants:
+After all required state is ready:
 
 ```text
 ACTIVE_PRODUCTION_RUNTIME_COUNT = 1
-ACTIVE_RUNTIME_USER             = authsvc
-OLD_RUNTIME_RUNNING             = NO
+ACTIVE_RUNTIME_USER = authsvc
+OLD_RUNTIME_RUNNING = NO
 ```
 
-The disabled USER runtime MUST remain disabled. The operator MUST never start it, use it
-as a writer, or enable dual runtime operation.
+Any other pre-apply runtime state is `RUNTIME_INVARIANT_FAILED` and blocks mutation. The
+operator never starts the old runtime or permits dual writers.
 
-## 9. Read-only verification and binding boundary
-
-After reload, verify every target independently:
+Read-only verification per target:
 
 ```text
 DEFINITION_PRESENT
@@ -235,87 +286,71 @@ HOME_READY
 WORKSPACE_READY
 PROFILE_READY
 SPAWN_PREFLIGHT
-CREDENTIAL_READINESS   # only where actual dependencies require it
+CREDENTIAL_READINESS  # only when dependency evidence says required
 ```
 
-`RESTORABLE_FOR_BINDING = YES` only when all required checks for that Agent pass.
-`RESTORABLE_FOR_BINDING_COUNT` is the count of such Agents and is the handoff to the
-separate task `绑定 执行`.
+Only all-required-pass yields `RESTORABLE_FOR_BINDING=YES`. No binding is restored.
+`feishu:oc_92332...` and `feishu:oc_9dd74...` remain frozen conflicts for `绑定 执行`.
 
-This task MUST NOT restore or mutate any Feishu binding. These known conflicts remain
-frozen and untouched:
+## 10. Fixed report contract
+
+The report is canonical JSON plus the requested text summary. It contains:
 
 ```text
-feishu:oc_92332...
-feishu:oc_9dd74...
+result = SUCCESS | ABORTED_NO_MUTATION | PARTIAL_MUTATION | NOOP
+failed_stage = NONE | PLAN | CANARY_PREPARE | CANARY_DEFINE | FLEET_PREPARE | FLEET_DEFINE | RELOAD_VERIFY
+plan_digest = sha256 of redacted canonical plan
+safe_input_identities = definition digests + opaque workspace identities
+per_agent_report_ref = trusted redacted evidence coordinate
+reason_counts = map<reason_code, nonnegative integer>
+workspace_counts = {pass, skip, conflict}
+unchanged_proofs = {matching_2, trusted_only_3, default_agent_id, unrelated_top_level}
+definition_conflicts = nonnegative integer
+credential_readiness_counts = typed counts from §8
+runtime = {active_count, active_user, old_runtime_running}
+reload_outcome = NOT_RUN | RELOADED | CONTROLLED_RESTART | FAILED
+rerun_outcome = NOT_RUN | NOOP | DRIFT_BLOCKED
+production_change_id = NONE | opaque approved run ID
+secret_disclosure_found = NO | SUSPECTED
 ```
 
-## 10. Acceptance and final report
+`secret_disclosure_found=SUSPECTED` records only an opaque incident ID and stops all
+further output/mutation; it never records content or secret-bearing paths.
 
-Acceptance requires dry-run review, Build in Public success, all required per-Agent
-checks, redacted evidence, exactly one `authsvc` production runtime, and the old runtime
-stopped. Expected target values do not waive live verification.
-
-The final report schema is fixed:
+Requested summary fields are emitted with integer/YES/NO/enum types:
 
 ```text
 TASK_NAME = 注册 执行
-
-AUTHORITY_SUFFICIENT
-OLD_ONLY_AGENT_COUNT
-TARGET_RESTORE_COUNT
-
-DEFINITIONS_ADDED
-AGENT_IDS_PRESERVED
-
-HOMES_REGENERATED
-WORKSPACES_IMPORTED
-WORKSPACE_CONFLICTS
-
-CREDENTIALS_COPIED_FROM_LEGACY
-CREDENTIALS_RECONCILED_TRUSTED
-
-BUILD_IN_PUBLIC_DEFINITION_READY
-BUILD_IN_PUBLIC_HOME_READY
-BUILD_IN_PUBLIC_WORKSPACE_READY
-BUILD_IN_PUBLIC_SPAWN_PREFLIGHT
-
-RESTORABLE_FOR_BINDING_COUNT
-
-ACTIVE_PRODUCTION_RUNTIME_COUNT
-OLD_RUNTIME_RUNNING
-
-SECRET_DISCLOSURE_FOUND
-PRODUCTION_CHANGE
+AUTHORITY_SUFFICIENT = YES | NO
+OLD_ONLY_AGENT_COUNT = integer
+TARGET_RESTORE_COUNT = integer
+DEFINITIONS_ADDED = integer
+AGENT_IDS_PRESERVED = YES | NO | NOT_RUN
+HOMES_REGENERATED = integer
+WORKSPACES_IMPORTED = integer
+WORKSPACE_CONFLICTS = integer
+CREDENTIALS_COPIED_FROM_LEGACY = 0
+CREDENTIALS_RECONCILED_TRUSTED = integer
+BUILD_IN_PUBLIC_DEFINITION_READY = YES | NO | NOT_RUN
+BUILD_IN_PUBLIC_HOME_READY = YES | NO | NOT_RUN
+BUILD_IN_PUBLIC_WORKSPACE_READY = YES | NO | NOT_RUN
+BUILD_IN_PUBLIC_SPAWN_PREFLIGHT = YES | NO | NOT_RUN
+RESTORABLE_FOR_BINDING_COUNT = integer
+ACTIVE_PRODUCTION_RUNTIME_COUNT = integer | UNKNOWN
+OLD_RUNTIME_RUNNING = YES | NO | UNKNOWN
+SECRET_DISCLOSURE_FOUND = NO | SUSPECTED
+PRODUCTION_CHANGE = YES | NO | PARTIAL
 ```
 
-Expected successful cutover values include:
+Success requires `86/86`, preserved IDs, zero workspace conflicts, Build in Public all
+YES, `RESTORABLE_FOR_BINDING_COUNT=86`, exactly one `authsvc` runtime, old runtime NO,
+secret disclosure NO, and a second dry-run reporting NOOP. Aborted-before-mutation uses
+zero mutation counters, `NOT_RUN`, and `PRODUCTION_CHANGE=NO`. Partial state uses actual
+completed counters, `PARTIAL_MUTATION`, and `PRODUCTION_CHANGE=PARTIAL`.
 
-```text
-TARGET_RESTORE_COUNT                    = 86
-DEFINITIONS_ADDED                       = 86
-AGENT_IDS_PRESERVED                     = YES
-HOMES_REGENERATED                       = 86
-WORKSPACE_CONFLICTS                     = 0
-CREDENTIALS_COPIED_FROM_LEGACY          = 0
-BUILD_IN_PUBLIC_DEFINITION_READY        = YES
-BUILD_IN_PUBLIC_HOME_READY              = YES
-BUILD_IN_PUBLIC_WORKSPACE_READY         = YES
-BUILD_IN_PUBLIC_SPAWN_PREFLIGHT         = YES
-RESTORABLE_FOR_BINDING_COUNT            = 86
-ACTIVE_PRODUCTION_RUNTIME_COUNT         = 1
-OLD_RUNTIME_RUNNING                     = NO
-SECRET_DISCLOSURE_FOUND                 = NO
-```
+## 11. Stop condition
 
-## 11. Explicit non-goals
-
-- no general or long-lived migration API;
-- no legacy home copy;
-- no whole-workspace copy or secret cleanup by disclosure;
-- no minted replacement Agent IDs;
-- no mutation of the matching 2 or trusted-only 3 definitions;
-- no blanket credentials or grants;
-- no Feishu binding restoration or conflict resolution;
-- no dual-runtime period;
-- no implementation or production action while this Spec remains `proposed`.
+This Spec remains `proposed`, `review_status=FIX_REQUIRED`, and blocked. Required next
+authority work is outside this task: valid whole-authority workspace supersession and
+accepted/pinned external Auth mutation authority. Until both exist, `注册 执行` stops at
+this Draft PR with `AUTHORITY_SUFFICIENT=NO` and `PRODUCTION_CHANGE=NO`.
