@@ -1,7 +1,8 @@
 ---
 spec_id: NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1
-status: proposed
+status: accepted
 date: 2026-08-22
+accepted_date: 2026-08-22
 type: implementation-spec (spec only; no implementation this round)
 repository: mayf3/dsh-agent-core
 base_main: 54ac27ff8a39fe6035b497dc3ae43958479df3db
@@ -20,11 +21,18 @@ implementation_authority: contracts
 supersedes: []
 superseded_by: null
 replaces_on_acceptance: informational
+accepted_reviewed_base: 54ac27ff8a39fe6035b497dc3ae43958479df3db
+accepted_reviewed_head: bbd4d450df58fe734ad4b14db825d0e476600d3f
+acceptance_review: "NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1_SPEC_REVIEW（通知 审计）"
+acceptance_review_result: PASS
+required_fixes: NONE
+accepted_by: NEW_LOCAL_EXECUTION_AGENT_D
+accepted_at: 2026-08-22
 ---
 
 # NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1 — Notification Ingress 服务认证与持久幂等
 
-> 状态：**proposed**（首次新建 child Spec；本轮 SPEC ONLY）。
+> 状态：**accepted**（2026-08-22 acceptance finalize；首次新建 child Spec，authoring 轮 SPEC ONLY）。
 > Parent authority：`AGENT_CORE_HARDENING_PROGRAM_V1`（accepted）§2.3 / §3.1 / §4.2 / §5。
 > 本轮：**只写 Spec**。不修改产品代码；不创建 idempotency store；不创建真实 service credential；
 > 不修改 auth-service production；不修改 production config；不 accepted；不 merge。
@@ -36,7 +44,7 @@ replaces_on_acceptance: informational
 
 ```text
 SPEC_ID = NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 IMPLEMENTATION_AUTHORITY = contracts（仅在合法 acceptance + §8 依赖门全部满足后激活）
 NEW_SPEC_REQUIRED = YES（main@54ac27f 无任何 notification ingress implementation spec）
 REPLACEMENT_REQUIRED = NO（首次新建；无被替换对象）
@@ -817,3 +825,26 @@ MERGE_PERFORMED = NO
 `status: proposed → accepted` + acceptance provenance（reviewed head、review 名称、
 REQUIRED_FIXES）；语义正文不动。implementation 权限仍受 §8 依赖门约束
 （accepted ≠ implementation allowed，直至 AgentProcess implementation PASS）。
+
+---
+
+## 16. Acceptance Record（2026-08-22 acceptance finalize）
+
+```text
+ACCEPTANCE_REVIEW = NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1_SPEC_REVIEW（通知 审计）
+REVIEWED_BASE_COMMIT = 54ac27ff8a39fe6035b497dc3ae43958479df3db
+REVIEWED_SPEC_COMMIT = bbd4d450df58fe734ad4b14db825d0e476600d3f
+REVIEW_RESULT = PASS
+REQUIRED_FIXES = NONE
+ACCEPTED_BY = NEW_LOCAL_EXECUTION_AGENT_D（owner-instructed mechanical acceptance finalize）
+ACCEPTED_AT = 2026-08-22
+CONTRACT_COUNT = 39（C-AUTH-001..014 = 14；C-IDM-001..016 = 16；C-BND-001..005 = 5；C-WIRE-001..004 = 4）
+ACCEPTANCE_COUNT = 27（AC-AUTH 12；AC-IDM 9；AC-BND 3；AC-CMP 2；AC-WIRE 1）
+ACCEPTANCE_FINALIZE_SEMANTIC_CHANGE = NONE（按 §15 预冻结协议：仅 status flip +
+  acceptance provenance，§1–§15 语义正文一字不动）
+IMPLEMENTATION_AUTHORITY = contracts（未激活：accepted ≠ implementation allowed——
+  需本 Spec 合入 main 且 §8 依赖门满足（AgentProcess implementation PASS）后，
+  Notification implementation 才获准；Scheduler implementation 仍等待 Notification PASS）
+PR_STATE = OPEN（Draft PR #37）；MERGE_PERFORMED = NO
+PRODUCT_CODE_CHANGE = NONE；PRODUCTION_CHANGE = NONE；CREDENTIAL_CREATED = NO
+```
