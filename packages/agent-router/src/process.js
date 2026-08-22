@@ -81,6 +81,22 @@ export function childSpawnConfig(log = console) {
   return { argv: [process.execPath], spawnUid: uid, spawnGid: gid }
 }
 
+/**
+ * Fixed TMPDIR every Agent child receives, regardless of what the Router
+ * parent's environment carries. Production evidence: the launchd Runtime
+ * (uid authsvc/505) gets a per-user TMPDIR (/var/folders/.../T, mode 0700,
+ * owner authsvc); the Agent child runs at uid 502 via the spawn helper and
+ * cannot even traverse that directory, so @deepseek-ai/dsh-spill-local's
+ * mkdtempSync(join(tmpdir(), 'dsh-spill-')) fails EACCES => plugin tree
+ * load failure => provider never registers => deliver hangs. The system
+ * sticky temp root is the one directory every local uid may create in;
+ * mkdtemp still yields a randomly-named 0700 child-uid-owned subdirectory,
+ * so the child's temp content stays private. /private/tmp is the canonical
+ * macOS spelling of the sticky root (what /tmp symlinks to), avoiding the
+ * symlink hop; non-darwin hosts get their equivalent fixed root.
+ */
+export const AGENT_CHILD_TMPDIR = process.platform === 'darwin' ? '/private/tmp' : '/tmp'
+
 /** Base environment for one agent process (its own home, workspace as cwd). */
 export function agentEnv(home, extra = {}, omit = [], providerEnv = {}) {
   const env = {
@@ -104,6 +120,13 @@ export function agentEnv(home, extra = {}, omit = [], providerEnv = {}) {
     }
   }
   for (const name of omit) delete env[name]
+  // Written LAST, after extra/providerEnv/omit: the child's TMPDIR is a
+  // fixed runtime property of the uid-502 Agent identity, not configuration.
+  // The parent's private 0700 TMPDIR must never cross the uid boundary, and
+  // no per-Agent config, model override, caller env param or omit list may
+  // override or drop it. The Router parent's own process.env is untouched —
+  // this only shapes the child's env object.
+  env.TMPDIR = AGENT_CHILD_TMPDIR
   return env
 }
 
