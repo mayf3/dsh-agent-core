@@ -1,9 +1,17 @@
 ---
 spec_id: AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1
-status: proposed
+status: accepted
+accepted_date: 2026-08-22
+accepted_by: mayf3
+accepted_reviewed_base: 1c3401a8194a7b6b2ad38031559cbf6c35795f48
+accepted_reviewed_spec_commit: fd69a41adae755fd4c266b85b831aecd612cc948
+final_audit: 凭读 审计
+final_audit_result: PASS
+required_fixes: NONE
+semantic_delta_after_review: NONE
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 scope:
   - authsvc trusted-parent read-only credential metadata resolution
   - per-Agent trusted-store entry presence and clientId projection
@@ -22,15 +30,14 @@ owners:
 
 # AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1 — Redacted read-only resolution seam
 
-> **PROPOSED / SPEC ONLY / CURRENT IMPLEMENTATION AUTHORITY = NONE.**
+> **ACCEPTED / IMPLEMENTATION AUTHORITY = CONTRACTS / PRODUCTION CHANGE = NONE.**
 >
-> Authoring base: `mayf3/dsh-agent-core@1c3401a8194a7b6b2ad38031559cbf6c35795f48`
-> (`origin/main`, observed 2026-08-22). This child Spec closes only the authority gap for a
-> redacted local trusted-store projection. It does not authorize implementation, Phase B
-> credential reconciliation, an Auth client-resolution endpoint, production execution,
-> acceptance, or merge. A future exact revision may declare
-> `implementation_authority: contracts` only after independent review and authorized
-> acceptance; this proposed revision does not.
+> `凭读 审计` independently reviewed exact head `fd69a41adae755fd4c266b85b831aecd612cc948`
+> and returned PASS with no required fixes. Authorized acceptance changes lifecycle metadata
+> only; Goal, scope, Decisions, Contracts, Acceptance, security, and production state remain
+> byte-semantically unchanged.
+
+Reviewed authoring state (historical):
 
 ```text
 TASK_NAME = 凭读 执行
@@ -41,6 +48,24 @@ SPEC_ID = AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1
 STATUS = proposed
 IMPLEMENTATION_AUTHORITY = none
 PARTIAL_SUPERSESSION = NONE
+IMPLEMENTATION_PERFORMED = NO
+PRODUCTION_CHANGE = NONE
+```
+
+Acceptance binding:
+
+```text
+REVIEWED_BASE_COMMIT = 1c3401a8194a7b6b2ad38031559cbf6c35795f48
+REVIEWED_SPEC_COMMIT = fd69a41adae755fd4c266b85b831aecd612cc948
+REVIEWER = 凭读 审计
+SPEC_REVIEW = ACCEPT
+REQUIRED_FIXES = NONE
+READY_FOR_ACCEPTANCE_FINALIZE = YES
+ACCEPTANCE_ACTOR = mayf3
+ACCEPTED_AT = 2026-08-22
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_ONLY
+IMPLEMENTATION_AUTHORITY_ON_ACCEPTANCE = contracts
 IMPLEMENTATION_PERFORMED = NO
 PRODUCTION_CHANGE = NONE
 ```
@@ -113,7 +138,7 @@ Repository governance = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0 (accepted)
 Credential authority   = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1 (accepted)
 Trust boundary         = AGENT_CORE_HARDENING_PROGRAM_V1 (accepted)
 Agent ownership model  = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted)
-This child             = AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1 (proposed)
+This child             = AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1 (accepted)
 External Auth change   = NONE
 ```
 
@@ -135,7 +160,7 @@ fleet registry.
 - `STATE-CMR-002` — The accepted credential Spec permits only Phase A clean bootstrap and
   explicitly leaves Phase B without implementation permission while recording a missing
   read-only resolution seam. Basis: `OBS-CMR-002`, `EVD-CMR-002`.
-- `STATE-CMR-003` — This proposed docs-only change does not modify code, credential-store
+- `STATE-CMR-003` — This accepted docs-only change does not modify code, credential-store
   data, permissions, runtime configuration, or production state. Basis: Git changed-file
   boundary and this Spec lifecycle.
 
@@ -416,36 +441,24 @@ invoke this one-Agent seam.
   it.
 - `ALT-CMR-002` — **Expose metadata resolution to child Agents: rejected.** Inventory is a
   trusted deployment concern; child access would weaken the accepted store boundary.
-- `ALT-CMR-003` — **Enumerate the credential store as the fleet roster: rejected.** Agent
-  Definition remains roster authority; store keys are credential state, not fleet
-  membership.
-- `ALT-CMR-004` — **Treat malformed/unreadable store as ABSENT: rejected.** This would hide
-  broken trusted state and produce false fleet inventory.
-- `ALT-CMR-005` — **Query Auth or mint a token to enrich presence: rejected.** This is Phase
-  B validity/reconciliation authority and is not granted here.
-- `ALT-CMR-006` — **Repair, rotate, provision, or restore binding during read: rejected.**
-  The seam is strictly read-only and side-effect free.
+- `ALT-CMR-003` — **Enumerate the credential store as the fleet roster: rejected.** Agent Definition remains roster authority; store keys are credential state, not fleet membership.
+- `ALT-CMR-004` — **Treat malformed/unreadable store as ABSENT: rejected.** This would hide broken trusted state and produce false fleet inventory.
+- `ALT-CMR-005` — **Query Auth or mint a token to enrich presence: rejected.** This is Phase B validity/reconciliation authority and is not granted here.
+- `ALT-CMR-006` — **Repair, rotate, provision, or restore binding during read: rejected.** The seam is strictly read-only and side-effect free.
 
-All parent-rejected alternatives remain rejected: child-held credentials, credentials in
-`agents.json`, Router self-provisioning/credential management, OpenClaw fallback, identity
-string unification, legacy CLI secret capture, and non-atomic store mutation.
+All parent-rejected alternatives remain rejected: child-held credentials, credentials in `agents.json`, Router self-provisioning/credential management, OpenClaw fallback, identity string unification, legacy CLI secret capture, and non-atomic store mutation.
 
 ## 12. Migration, compatibility, and rollback
 
 - Existing `loadCredentialFor()` behavior for Broker execution remains unchanged.
 - No store schema or version change is authorized.
-- No migration, backfill, production invocation, or fleet report is authorized by this
-  proposed Spec.
-- This proposed revision has `implementation_authority: none`; it cannot authorize future
-  implementation merely by being merged unchanged.
-- A future exact revision MAY declare `implementation_authority: contracts` only after its
-  semantic delta is independently reviewed and an authorized actor accepts that exact
-  revision on `main`.
-- Any later additive implementation would remain unused until a trusted caller explicitly
-  adopts it under that future accepted authority.
-- Rollback of any later implementation would be code removal/reversion of the additive
-  resolver and tests; store rollback would be unnecessary because the Contract permits no
-  store mutation.
+- No migration, backfill, production invocation, or fleet report is authorized by this Spec.
+- Acceptance activates `implementation_authority: contracts` for only the bounded Contracts
+  in this Spec; it does not itself implement, deploy, or invoke the resolver.
+- Any later additive implementation remains unused until a trusted caller adopts it under
+  a separate implementation change reviewed against this accepted revision.
+- Rollback of later implementation is code reversion; store rollback is unnecessary because
+  the Contract permits no store mutation.
 
 ## 13. Open questions
 
@@ -456,43 +469,31 @@ UNRESOLVED_AUTHORITY_CONFLICT = NONE
 PARTIAL_SUPERSESSION = NONE
 ```
 
-This exact proposed revision grants no implementation authority and MUST NOT be accepted
-or merged as part of this revision round. Independent semantic review must verify both
-blocker fixes: current `IMPLEMENTATION_AUTHORITY = none`, and authoritative Agent Definition
-id rejection before store access. A later acceptance candidate may separately propose
-`implementation_authority: contracts`; that future exact revision requires independent
-review and authorized acceptance before any implementation.
+The reviewed authoring head is accepted through the lifecycle-only binding above. Current
+`IMPLEMENTATION_AUTHORITY = contracts`; product implementation still requires a separate
+implementation PR and exact Contract-by-Contract conformance review.
 
-## Authoring result
+## Acceptance result
 
 ```text
-SPEC_GOVERNANCE_MODE = AUTHOR
 SPEC_ID = AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1
 SPEC_KIND = implementation
-STATUS = proposed
-AUTHORITY_LEVEL = governing_spec
-IMPLEMENTATION_AUTHORITY = none
+STATUS = accepted
+IMPLEMENTATION_AUTHORITY = contracts
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
-EXTERNAL_AUTHORITIES = NONE
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 6
 CONTRACTS_WITH_ACCEPTANCE = 6
-AUTHORING_READY_FOR_REVIEW = YES
-READY_FOR_INDEPENDENT_REVIEW = YES
-
-AUTHORITY_SUFFICIENT = NO
-REDACTED_RESOLUTION_IMPLEMENTED = NO
-PRESENCE_SUPPORTED = NO (spec only)
-CLIENT_ID_SUPPORTED = NO (spec only)
-CLIENT_SECRET_EXPOSED = NO
-CREDENTIAL_STORE_CHANGED = NO
-IMPLEMENTATION_AUTHORITY_CURRENT = none
+REVIEWED_SPEC_COMMIT = fd69a41adae755fd4c266b85b831aecd612cc948
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
 AUTHORITATIVE_AGENT_ID_GRAMMAR_REUSED = YES
 INVALID_ID_PRE_STORE_REJECTION = YES
 TRAVERSAL_PRE_STORE_REJECTION = YES
 STORE_ACCESS_COUNT_FOR_INVALID_INPUT = 0
+CLIENT_SECRET_EXPOSED = NO
+CREDENTIAL_STORE_CHANGED = NO
 IMPLEMENTATION_PERFORMED = NO
 PRODUCTION_CHANGE = NONE
 ```
