@@ -1,0 +1,235 @@
+{
+  "report_id": "LARK_UX_PHASE1_V2_CANARY_V2",
+  "date": "2026-08-22",
+  "run_id": "pr46-ux-v2-final-20260822T072629Z",
+  "candidate_sha": "e45ffa1a9dbeaf976512932b52a689a100d4be20",
+  "candidate_tree": "2bba5059a8b1d0210723ae1310c51b2a5b176a1a",
+  "pr": 46,
+  "branch": "feat/lark-ux-phase1-v2-final",
+  "remote_head_stable": true,
+  "remote_main_observed": "e0c73a6cce9f13c23085b8a51aaf9581888449ae",
+  "governing": {
+    "parent_spec": "AGENT_CORE_LARK_UX_PHASE1_V2",
+    "parent_status": "accepted",
+    "parent_blob": "91513d140bfeb2747326a465bdc01d72c899c864",
+    "heading_amendment": "AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT",
+    "amendment_status": "accepted",
+    "amendment_implementation_authority": "contracts",
+    "amendment_blob": "9785c8a55f0028ca345e458f2a49f6de2b4939b3",
+    "blob_equality_with_main": true
+  },
+  "dedicated_test_app": {
+    "created": true,
+    "onboarding": "official @larksuite/channel registerApp QR flow",
+    "identity_sha256": "3952e3cdc4319f2832bba140b78b20ad16071df860ca2d4206d1670b1ed6416c",
+    "non_production": true,
+    "different_from_production": true,
+    "different_from_standalone_pilot": true,
+    "credential_file_mode": "0600",
+    "binding_store_mode": "0600",
+    "transport": "websocket",
+    "production_app_unchanged": true,
+    "pilot_app_unchanged": true,
+    "secret_disclosure": "NONE"
+  },
+  "provider": {
+    "primary": "zai/glm-5.3",
+    "primary_result": "account_quota_exhausted",
+    "fallback_trigger_allowed": true,
+    "same_turn_fallback": false,
+    "clean_restart": true,
+    "effective": "openai-codex/gpt-5.6-luna",
+    "effective_provider_registered": true,
+    "effective_turn_completed": true,
+    "effective_reply_sha256": "f0075be645fb71bf13abaec06c61aa6500d3bad0d6804eed2c7768e7c7f5971a",
+    "started_at": "2026-08-22T08:04:56.277Z",
+    "finished_at": "2026-08-22T08:04:59.774Z"
+  },
+  "safe_coordinates": {
+    "hash_notes": "Only one-way pseudonyms are retained; no raw platform identifier is persisted.",
+    "group_conversation_hash": "dedd692aff7ff02e3bb8f357",
+    "p2p_conversation_hash": "bd9ee13101601503adc1ca44",
+    "topic_chat_hash": "06b753cd769ce477f0025b0b",
+    "topic_conversation_hash": "6653707c7b37b0c8cd769f5b",
+    "topic_thread_hash": "c78c39eb1add50bc94840ded"
+  },
+  "binding": {
+    "isolated_store": true,
+    "p2p_prebound": true,
+    "group_prebound": true,
+    "topic_prebound_before_success_ingress": true,
+    "active_agent_pseudonym": "agt_pr46_ux_canary",
+    "active_session": "main",
+    "group_binding_equal_before_after": true,
+    "topic_first_and_followup_same_conversation": true,
+    "topic_first_and_followup_same_binding": true,
+    "topic_conversation_formula_equal": true
+  },
+  "sdk": {
+    "package": "@larksuite/channel",
+    "version": "0.5.0",
+    "runtime_revision": "ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f",
+    "markdown_converter_set": false,
+    "card_renderer_enabled": false,
+    "second_renderer_enabled": false,
+    "chunk_limit": 3500
+  },
+  "scenarios": [
+    {
+      "id": 1,
+      "name": "heading_native_normalization",
+      "timestamp": "2026-08-22T07:55:32Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client", "labels": 6, "ordered": true, "native_heading_treatment": true, "distinct_visual_levels_required": false }
+    },
+    {
+      "id": 2,
+      "name": "nested_ordered_unordered_list",
+      "timestamp": "2026-08-22T07:32:54Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client", "unordered_depth_1": true, "ordered_depth_1": true, "order_preserved": true }
+    },
+    {
+      "id": 3,
+      "name": "python_fenced_code_language_tag",
+      "timestamp": "2026-08-22T08:07:41.115Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client", "language_tag": "python", "fence_bytes_present": true }
+    },
+    {
+      "id": 4,
+      "name": "markdown_link_byte_stability",
+      "timestamp": "2026-08-22T07:55:32Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client_dom", "clickable": true, "href_byte_equal": true, "query_preserved": true, "fragment_preserved": true, "percent_encoding_preserved": true, "input_url_sha256": "dce30ecc745e7af6e26d821145abd8aa446ae3481b595e2a6a28fd4715a7943c" }
+    },
+    {
+      "id": 5,
+      "name": "simple_table_native_rendering",
+      "timestamp": "2026-08-22T07:32:54Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client", "native_table_grid_visible": true, "header_cells": 2, "body_rows": 2 }
+    },
+    {
+      "id": 6,
+      "name": "over_3500_comprehensive_long_content",
+      "timestamp": "2026-08-22T08:07:41.115Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client_plus_product_connector", "input_chars": 13343, "chunks": 4, "all_280_markers_present": true, "chunk_order_complete": true, "python_fence_closed_reopened": true, "python_language_tag_per_chunk": [1, 1, 1, 1], "table_visible": true, "link_clickable": true, "mention_count_per_chunk": [1, 0, 0, 0], "mention_outside_fence": true, "end_marker_present": true, "content_sha256": "9f197d600965e7074d56390799d26640a357c8acf7dfbbf72c0f89d46a2ddd0f" }
+    },
+    {
+      "id": 7,
+      "name": "group_auto_mention",
+      "timestamp": "2026-08-22T07:29:21.905Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client", "trigger_sender_open_id_authority": true, "native_clickable_mention": true, "recipient_native_notification_observed": true, "message_hash": "95dd3eb86fd98addd0ff8682" }
+    },
+    {
+      "id": 8,
+      "name": "topic_auto_mention",
+      "timestamp": "2026-08-22T07:52:22.540Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client", "native_clickable_mention": true, "recipient_native_notification_observed": true, "stayed_in_topic": true, "message_hash": "0782bd66e9e0c921600cef2e" }
+    },
+    {
+      "id": 9,
+      "name": "topic_followup_continuity",
+      "timestamp": "2026-08-22T07:54:26.048Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client_plus_binding_store", "thread_equal": true, "conversation_formula_equal": true, "same_prebound_binding": true, "same_conversation": true, "message_hash": "8be003646d1d9ca74bc3829f" }
+    },
+    {
+      "id": 10,
+      "name": "p2p_no_auto_mention",
+      "timestamp": "2026-08-22T07:35:22Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client", "chat_type": "p2p", "mention_count": 0, "message_hash": "5ed15a4c539893bbe50a014b" }
+    },
+    {
+      "id": 11,
+      "name": "missing_invalid_open_id",
+      "timestamp": "2026-08-22T07:26:33.315Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client_plus_contract_test", "mention_count": 0, "name_fallback": false, "fabricated_identity": false, "missing_and_invalid_cases": true }
+    },
+    {
+      "id": 12,
+      "name": "router_failure_receipt",
+      "timestamp": "2026-08-22T07:26:33.315Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client_plus_router_seam", "rendering": "plain_text", "mention_count": 0, "router_failure_call_arity": 2 }
+    },
+    {
+      "id": 13,
+      "name": "unbound_proactive",
+      "timestamp": "2026-08-22T07:48:14.753Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_feishu_client", "unbound_receipt_visible": true, "unbound_mention_count": 0, "proactive_plain_text_visible": true, "proactive_mention_count": 0, "binding_created_by_unbound_path": false }
+    },
+    {
+      "id": 14,
+      "name": "target_revoked",
+      "timestamp": "2026-08-22T08:10:17Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_pinned_sdk_fault_injection", "logical_same_chat_top_level_fallbacks": 1, "content_preserved": true, "rendering_preserved": true, "mention_preserved": true, "connector_retry": 0 }
+    },
+    {
+      "id": 15,
+      "name": "permission_denied",
+      "timestamp": "2026-08-22T08:10:17Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_pinned_sdk_fault_injection", "fail_loud": true, "degradation": false, "reply_target_removed": false, "format_fallback": false }
+    },
+    {
+      "id": 16,
+      "name": "format_error",
+      "timestamp": "2026-08-22T08:10:17Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_pinned_sdk_fault_injection", "logical_markdown_to_text_fallbacks": 1, "same_answer": true, "connector_retry": 0 }
+    },
+    {
+      "id": 17,
+      "name": "rate_limited_attempts_exhausted",
+      "timestamp": "2026-08-22T08:10:17Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_pinned_sdk_fault_injection", "sdk_attempts": 3, "connector_retry": 0, "automatic_replay": 0, "fail_loud": true }
+    },
+    {
+      "id": 18,
+      "name": "ambiguous_unknown",
+      "timestamp": "2026-08-22T08:10:17Z",
+      "result": "PASS",
+      "evidence": { "plane": "real_pinned_sdk_fault_injection", "outcome": "OUTCOME_UNKNOWN", "visible_exactly_once_claimed": false, "connector_retry": 0, "connector_replay": 0 }
+    }
+  ],
+  "validation": {
+    "node": "v25.6.1",
+    "frozen_harness_commit": "a12bb03c6861969985f066bfbf0cb7e5dd5ac567",
+    "ux_connector": { "tests": 26, "pass": 26, "fail": 0 },
+    "feishu_connector_full": { "tests": 162, "pass": 162, "fail": 0, "skipped": 0 },
+    "agent_router_full": { "tests": 111, "pass": 111, "fail": 0, "skipped": 0 },
+    "production_runtime_full": { "tests": 44, "pass": 42, "fail": 0, "skipped": 2 },
+    "real_binding_read_only_replay": { "tests": 1, "pass": 1, "fail": 0 },
+    "serialized_full_repository": { "tests": 653, "pass": 650, "fail": 0, "skipped": 3 },
+    "governance_verifier": "PASS",
+    "authority_blob_equality": "MATCH",
+    "git_diff_check": "PASS",
+    "gitleaks": "CLEAN",
+    "credential_literal_scan": "PASS_ZERO_HITS",
+    "forbidden_surface_diff": "NONE_REPORTS_ONLY"
+  },
+  "result": {
+    "mandatory_scenarios_required": 18,
+    "mandatory_scenarios_passed": 18,
+    "dedicated_test_app_canary": "PASS",
+    "owner_decision_required": "NONE",
+    "product_code_change_after_pr46_head": "NONE",
+    "accepted_spec_change": "NONE",
+    "phase_a_foundation_regression": "NONE",
+    "dependency_change": "NONE",
+    "deployment": "NONE",
+    "production_state_change": "NONE",
+    "merge": "NONE",
+    "ready_for_ux_audit": true
+  }
+}
