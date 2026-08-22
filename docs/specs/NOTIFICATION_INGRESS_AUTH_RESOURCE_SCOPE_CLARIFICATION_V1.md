@@ -1,6 +1,6 @@
 ---
 spec_id: NOTIFICATION_INGRESS_AUTH_RESOURCE_SCOPE_CLARIFICATION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -364,4 +364,15 @@ PRODUCTION_CHANGE = NONE
 CREDENTIAL_CREATED = NO
 GRANT_APPLIED = NO
 MERGE_PERFORMED = NO
+```
+
+## 15. Acceptance provenance
+
+```text
+ACCEPTED_BY = mayf3
+REVIEWED_SPEC_COMMIT = 0f34dafdc015eae969a08bd8cb84bec0d706742e
+REVIEW_VERDICT = PASS
+MECHANICAL_EXECUTOR = DeepSeek Harness Agent (gpt-5.6-sol)
+NORMATIVE_BODY_CHANGE = NONE
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
 ```
