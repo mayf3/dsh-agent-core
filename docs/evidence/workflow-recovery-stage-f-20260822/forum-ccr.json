@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "repository": "mayf3/dsh-agent-core",
+  "recorded_at": "2026-08-22T09:05:00Z",
+  "receipt_type": "svc_forum_audience_ccr_acceptance",
+  "status": "MERGED",
+  "spec_id": "AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1",
+  "merge_commit": "953d7475ccdfb3d7afb02352a9ec5db7b5c2b34b",
+  "auth_repository": "mayf3/auth-service"
+}

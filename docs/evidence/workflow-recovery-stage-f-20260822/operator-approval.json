@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "repository": "mayf3/dsh-agent-core",
+  "recorded_at": "2026-08-22T09:05:00Z",
+  "receipt_type": "auth_service_stage_f_operator_approval",
+  "auth_repository": "mayf3/auth-service",
+  "status": "APPROVED",
+  "operator_id": "mayf3-production-operator",
+  "approval_ref": "https://github.com/mayf3/auth-service/pull/14#issuecomment-5376957087",
+  "reviewed_source_git_commit": "3b2ae71c38905c720399a74e038e49f725ceb178",
+  "authorized_stage": "STAGE_F",
+  "authorized_client_ids": [
+    "mc_LDcrvuGB18vsjy_SEWfc_C61",
+    "mc_OcPOL4l-8mUeiFJ0NoDxXHeG"
+  ],
+  "audience": "svc-forum",
+  "scopes": [
+    "forum.read",
+    "forum.write"
+  ]
+}

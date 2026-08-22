@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "repository": "mayf3/dsh-agent-core",
+  "recorded_at": "2026-08-22T09:05:00Z",
+  "receipt_type": "auth_service_stage_f_migration_review",
+  "auth_repository": "mayf3/auth-service",
+  "verdict": "PASS",
+  "reviewed_source_git_commit": "3b2ae71c38905c720399a74e038e49f725ceb178",
+  "review_ref": "https://github.com/mayf3/auth-service/pull/14#issuecomment-5376956387",
+  "reviewer_id": "mayf3"
+}

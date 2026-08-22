@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "repository": "mayf3/dsh-agent-core",
+  "recorded_at": "2026-08-22T09:05:00Z",
+  "receipt_type": "svc_forum_consumer_migration_review",
+  "status": "PASS",
+  "consumer_repository": "mayf3/agent-forum",
+  "consumer_commit": "1cccdd54554c0bde13572273401f19f294334e46"
+}
