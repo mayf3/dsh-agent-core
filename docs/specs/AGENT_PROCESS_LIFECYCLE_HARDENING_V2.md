@@ -26,10 +26,10 @@ replaced_authority_revision: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
 accepted_date: 2026-08-21
 accepted_reviewed_base: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
 accepted_reviewed_head: 08c041c3ad11bab6b1632b24103b40b2d698dfdf
-replacement_review: PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW
-replacement_review_result: PASS
-required_fixes: NONE
-review_verdict: READY_TO_ACCEPT_REPLACEMENT
+historical_pr28_replacement_review_claim: PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW
+historical_pr28_replacement_review_claim_result: PASS
+historical_pr28_required_fixes_claim: NONE
+historical_pr28_review_verdict_claim: READY_TO_ACCEPT_REPLACEMENT
 acceptance_finalize_semantic_change: none
 references:
   - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md
@@ -239,7 +239,7 @@ V2_AUTHORITY_OVER_AGENT_CHILD_TMPDIR = NONE
 COMPATIBILITY_NOTES_CREATE_NEW_V2_CONTRACT = NO
 ```
 
-This State/compatibility note records adjacent behavior already present on current `main`; it creates no new V2 Contract, Decision, or Acceptance item. A later AgentProcess implementation must not accidentally regress the provider/proxy seam, `AGENT_CHILD_TMPDIR`, the final-write ordering in `agentEnv()`, or the invariant that the Router parent `process.env` is not mutated. Those compatibility facts remain outside V2 normative authority.
+This State/compatibility note records adjacent behavior already present on current `main`; it creates no new V2 Contract, Decision, Acceptance item, implementation gate, or compliance obligation. The observed compatibility surface consists of the provider/proxy seam, `AGENT_CHILD_TMPDIR`, the final-write ordering in `agentEnv()`, and non-mutation of the Router parent `process.env`. Those descriptive facts remain outside V2 normative authority.
 
 ---
 
@@ -1796,11 +1796,7 @@ V1_CURRENT_STATUS = superseded
 ATOMIC_WHOLE_AUTHORITY_SUPERSESSION_PLAN_PREPARED = YES
 ATOMIC_WHOLE_AUTHORITY_SUPERSESSION_EXECUTED = YES (2026-08-21)
 AUTHORITY_MERGE = 12375d6282ede5015088a7d7f5495d6f46ca7738
-CURRENT_MAIN_COMPATIBILITY_HEAD = b312ef88532d2750e6df95a8ef2e4a83284b9562
-PRESERVE_PROVIDER_ENV_PROXY_SEAM = YES
-PRESERVE_AGENT_CHILD_TMPDIR_SEAM = YES
-V2_AUTHORITY_OVER_PROVIDER_PROXY = NONE
-V2_AUTHORITY_OVER_AGENT_CHILD_TMPDIR = NONE
+CURRENT_MAIN_COMPATIBILITY_NOTE = NON_NORMATIVE_STATE_CONTEXT_IN_SECTION_3_1
 IMPLEMENTATION_STATE = NOT_STARTED
 PRODUCTION_ROLLOUT_STATE = NOT_STARTED
 AUTHORITY_CONFORMANCE_AUDIT = FIX_REQUIRED_UNTIL_THIS_CONVERGENCE_IS_INDEPENDENTLY_REVIEWED_AND_MERGED
