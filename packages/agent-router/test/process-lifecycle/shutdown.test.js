@@ -35,6 +35,24 @@ test('GRACEFUL_SHUTDOWN_SUCCESS: one graceful write, kill=0, exact settlement or
   assert.equal(fx.pendingSize(), 0)
 })
 
+test('B14 graceful ACK waits the remaining grace and shutdown awaits real exitPromise', async () => {
+  const fx = makeFx({ deadlines: { shutdownGraceMs: 180 } })
+  await fx.readyNow()
+  let settled = false
+  const shutdown = fx.proc.shutdown().then(value => { settled = true; return value })
+  await fx.tick()
+  fx.respondTo('shutdown', { ok: true })
+  await fx.sleep(80)
+  assert.equal(fx.counts().killSignals, 0, 'ACK does not trigger immediate SIGKILL')
+  assert.equal(settled, false)
+  await fx.sleep(140)
+  assert.equal(fx.counts().killSignals, 1, 'kill only after the absolute grace')
+  assert.equal(settled, false, 'kill request is not real exit')
+  fx.childExit(null, 'SIGKILL')
+  await shutdown
+  assert.equal(settled, true)
+})
+
 test('SHUTDOWN_GRACE_EXPIRES_THEN_KILL: grace expiry escalates to exactly one SIGKILL + real exit await', async () => {
   const fx = makeFx({ deadlines: { turnTimeoutMs: 400, shutdownGraceMs: 150 } })
   await fx.readyNow()
@@ -80,10 +98,14 @@ test('SHUTDOWN_OWNERSHIP_MISMATCH: token mismatch -> no graceful write, no kill,
     assert.equal(error.code, 'AGENT_PROCESS_OWNERSHIP_MISMATCH')
   })
   assert.ok(observed !== null)
+  const turnError = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  assert.equal(fx.store.getTurnReconciliation(turnError.reconciliationHandle).snapshot.initialOutcome, 'outcome_unknown')
+  assert.equal(fx.pendingSize(), 0, 'pending-first cleanup completes before mismatch rejection')
   assert.equal(fx.counts().gracefulShutdownWriteAttempts, 0, 'no graceful write on mismatch')
   assert.equal(fx.counts().killSignals, 0, 'kill count = 0 — never a guessed kill')
   assert.ok(fx.proc.boundedAudit.some(entry => entry.kind === 'ownership_mismatch'))
-  assert.equal(fx.proc.state, 'READY', 'REAP fence retained (process untouched)')
+  assert.equal(fx.proc.state, 'DRAINING', 'REAP fence retained while the mismatched child awaits legitimate exit evidence')
+  assert.equal(fx.fence(), turnError.reconciliationHandle)
 })
 
 test('CONCURRENT_SHUTDOWN: 20 callers share one promise; one graceful write; one kill', async () => {

@@ -307,7 +307,10 @@ export async function composeProductionRuntime(options = {}) {
       sessionId: request.sessionId,
       status: outcome.status,
       summary: outcome.status === 'ok' ? (outcome.summary ?? null) : null,
-      error: outcome.status === 'error' ? (outcome.error ?? null) : null,
+      error: outcome.status === 'ok' ? null : (outcome.error ?? null),
+      reconciliationHandle: outcome.reconciliationHandle ?? null,
+      deadlineAtWallMs: outcome.deadlineAtWallMs ?? null,
+      evidence: outcome.evidence ?? null,
       durationMs: Date.now() - started,
       routerProcessPid: proc?.pid ?? null,
       routerProcessAlive: proc?.alive ?? null,
@@ -319,19 +322,38 @@ export async function composeProductionRuntime(options = {}) {
   // accepted deliver (wrap, never re-implement — the Router still owns it).
   const deliverRouterOwned = router.deliver
   router.deliver = async (req) => {
-    const result = await deliverRouterOwned.call(router, req)
-    const proc = router.registrySnapshot().find((p) => p.agentId === req?.agentId)
-    writeEvidence({
-      kind: 'deliver',
-      pid: process.pid,
-      requestId: req?.requestId,
-      agentId: req?.agentId,
-      sessionMode: req?.sessionMode,
-      sessionId: result?.sessionId,
-      routerProcessPid: proc?.pid ?? null,
-      routerProcessAlive: proc?.alive ?? null,
-    })
-    return result
+    try {
+      const result = await deliverRouterOwned.call(router, req)
+      const proc = router.registrySnapshot().find((p) => p.agentId === req?.agentId)
+      writeEvidence({
+        kind: 'deliver',
+        pid: process.pid,
+        requestId: req?.requestId,
+        agentId: req?.agentId,
+        sessionMode: req?.sessionMode,
+        sessionId: result?.sessionId,
+        status: result?.status ?? null,
+        reconciliationHandle: result?.reconciliationHandle ?? null,
+        evidence: result?.evidence ?? null,
+        routerProcessPid: proc?.pid ?? null,
+        routerProcessAlive: proc?.alive ?? null,
+      })
+      return result
+    } catch (error) {
+      writeEvidence({
+        kind: 'deliver',
+        pid: process.pid,
+        requestId: req?.requestId,
+        agentId: req?.agentId,
+        sessionMode: req?.sessionMode,
+        status: error?.status ?? 'error',
+        reconciliationHandle: error?.reconciliationHandle ?? null,
+        deadlineAtWallMs: error?.deadlineAtWallMs ?? null,
+        evidence: error?.evidence ?? null,
+        error: error?.message ?? String(error),
+      })
+      throw error
+    }
   }
 
   const deliver = feishu !== undefined

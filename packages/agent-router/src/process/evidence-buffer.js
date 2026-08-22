@@ -29,12 +29,28 @@ export const PROCESS_EVIDENCE_CAPS = Object.freeze({
   MAX_PROMPT_BYTES: 1048576,
   /** Bounded late-receipt correlation tombstones (C-012). */
   MAX_LATE_PROMPT_TOMBSTONES: 256,
+  MAX_PROCESS_AUDIT_ENTRIES: 64,
+  MAX_PROCESS_AUDIT_BYTES: 65536,
 })
 
 export const evidenceBufferMethods = {
   auditBounded(entry) {
-    this.boundedAudit.push({ ...entry, observedAtWallMs: Date.now() })
-    if (this.boundedAudit.length > 64) this.boundedAudit.shift()
+    const bounded = { kind: entry.kind, detail: String(entry.detail ?? ''), observedAtWallMs: Date.now() }
+    let bytes = Buffer.byteLength(JSON.stringify(bounded), 'utf8')
+    while (bytes > PROCESS_EVIDENCE_CAPS.MAX_PROCESS_AUDIT_BYTES && bounded.detail.length > 0) {
+      bounded.detail = bounded.detail.slice(0, Math.floor(bounded.detail.length / 2))
+      bytes = Buffer.byteLength(JSON.stringify(bounded), 'utf8')
+    }
+    this.boundedAudit.push(bounded)
+    this.boundedAuditBytes += bytes
+    while (this.boundedAudit.length > PROCESS_EVIDENCE_CAPS.MAX_PROCESS_AUDIT_ENTRIES
+        || this.boundedAuditBytes > PROCESS_EVIDENCE_CAPS.MAX_PROCESS_AUDIT_BYTES) {
+      const dropped = this.boundedAudit.shift()
+      const droppedBytes = Buffer.byteLength(JSON.stringify(dropped), 'utf8')
+      this.boundedAuditBytes -= droppedBytes
+      this.boundedAuditDroppedCount += 1
+      this.boundedAuditDroppedBytes += droppedBytes
+    }
   },
 
   onStderr(chunk) {
@@ -43,8 +59,10 @@ export const evidenceBufferMethods = {
     if (Buffer.byteLength(appended, 'utf8') > PROCESS_EVIDENCE_CAPS.MAX_STDERR_BYTES) {
       // Keep the newest tail; account every dropped byte.
       const buffer = Buffer.from(appended, 'utf8')
-      const keep = buffer.subarray(buffer.length - PROCESS_EVIDENCE_CAPS.MAX_STDERR_BYTES)
-      this.stderrDroppedBytes += buffer.length - keep.length
+      let start = buffer.length - PROCESS_EVIDENCE_CAPS.MAX_STDERR_BYTES
+      while (start < buffer.length && (buffer[start] & 0xc0) === 0x80) start += 1
+      const keep = buffer.subarray(start)
+      this.stderrDroppedBytes += start
       this.stderr = keep.toString('utf8')
     } else {
       this.stderr = appended
@@ -60,8 +78,9 @@ export const evidenceBufferMethods = {
         }
         this.creations.push(record)
         if (this.creations.length > PROCESS_EVIDENCE_CAPS.MAX_CREATION_RECORDS) {
-          this.creations.shift()
+          const dropped = this.creations.shift()
           this.creationsDroppedCount += 1
+          this.creationsDroppedBytes += Buffer.byteLength(JSON.stringify(dropped), 'utf8')
         }
         this.log.log?.(`[router] agent ${this.agentId}: session ${match[1]} ${match[2]} (${match[3]} events)`)
       }
@@ -71,7 +90,9 @@ export const evidenceBufferMethods = {
   onSessionEvent(params) {
     if (params === null || typeof params !== 'object') return
     this.eventSeq += 1
+    this.observationSeq += 1
     const seq = this.eventSeq
+    const observationSeq = this.observationSeq
     let stored = params
     let bytes = Buffer.byteLength(JSON.stringify(params ?? null), 'utf8')
     if (bytes > PROCESS_EVIDENCE_CAPS.MAX_EVENT_RECORD_BYTES) {
@@ -85,7 +106,7 @@ export const evidenceBufferMethods = {
       }
       bytes = Buffer.byteLength(JSON.stringify(stored), 'utf8')
     }
-    this.eventLog.set(seq, { params: stored, bytes })
+    this.eventLog.set(seq, { params: stored, bytes, observationSeq })
     this.eventLogBytes += bytes
     while (this.eventLog.size > PROCESS_EVIDENCE_CAPS.MAX_EVENT_RECORDS
         || this.eventLogBytes > PROCESS_EVIDENCE_CAPS.MAX_EVENT_BUFFER_BYTES) {
@@ -104,17 +125,18 @@ export const evidenceBufferMethods = {
       if (seq <= execution.watermarkSeq || seq <= execution.lastFedSeq) continue
       if (params.sessionId !== execution.sessionId) continue
       if (execution.receiptMessageId === null) continue
-      this.feedExecution(execution, params.event, seq)
+      this.feedExecution(execution, params.event, seq, observationSeq)
     }
   },
 
   onSessionStatus(params) {
     if (params === null || typeof params !== 'object') return
+    this.observationSeq += 1
     this.status[params.sessionId] = params.status
     for (const execution of [...this.executions.values()]) {
-      if (execution.sessionId === params.sessionId && execution.terminalEvent !== null) {
-        this.trySettleExecution(execution)
-      }
+      if (execution.sessionId !== params.sessionId) continue
+      if (params.status === 'idle') execution.idleObservationSeq = this.observationSeq
+      if (execution.terminalEvent !== null) this.trySettleExecution(execution)
     }
   },
 }

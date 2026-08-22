@@ -139,7 +139,13 @@ export const spawnMethods = {
     this.rejectAllPending('AGENT_PROCESS_EXITED', { code, signal })
     // 3. freeze input; snapshot parser evidence already received pre-exit
     this.inputFrozen = true
-    for (const execution of [...this.executions.values()]) {
+    const exitExecutions = [...this.executions.values()]
+    // B09: parser intake is now frozen. Replay every bounded fact received
+    // before the freeze so Promise-continuation timing cannot lose an exact
+    // receipt/terminal outcome to child_real_exit precedence.
+    for (const execution of exitExecutions) this.replayExecutionFromWatermark(execution)
+    for (const execution of exitExecutions) {
+      if (execution.settled) continue
       // 4. active execution without outcome proof: outcome_unknown visible FIRST
       if (!execution.settled && !execution.unknownMarked) {
         this.markExecutionUnknown(execution, 'child_exit_without_parsed_outcome')

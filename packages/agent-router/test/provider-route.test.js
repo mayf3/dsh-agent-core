@@ -57,6 +57,11 @@ test('resolved provider/model are immutable initialize inputs for the process th
     const create = proc.deliver('fresh-session', 'create', {}, 1000)
     answer(writes[1], { messageId: 'create-id' })
     await create
+    wireEvent(proc, 'fresh-session', { type: 'turn/start', data: { turn: 1 } })
+    wireEvent(proc, 'fresh-session', { type: 'user/message', data: { id: 'create-id' } })
+    wireEvent(proc, 'fresh-session', { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } })
+    proc.onStdout(`${JSON.stringify({ method: 'session.status', params: { sessionId: 'fresh-session', status: 'idle' } })}\n`)
+    await new Promise(resolve => setImmediate(resolve))
     const resume = proc.deliver('main', 'resume', {}, 1000)
     answer(writes[2], { messageId: 'resume-id' })
     await resume
@@ -130,11 +135,13 @@ test('providerEnv is immutable per AgentProcess lifetime', () => {
 })
 
 test('provider/account errors are classified without secret echo and never rewrite the route', async () => {
-  const { proc, writes } = fakeProcess()
-  const pending = proc.request('session/prompt', { sessionId: 'main' })
+  const { proc, writes, readyNow } = fakeProcess()
+  await readyNow()
+  const pending = proc.turn('main', 'provider-error', {})
+  await new Promise(resolve => setImmediate(resolve))
   proc.onStdout(`${JSON.stringify({
     jsonrpc: '2.0',
-    id: writes[0].id,
+    id: writes[1].id,
     error: {
       code: 'provider_error',
       message: 'insufficient_quota access_token=secret-token-value',
@@ -253,7 +260,8 @@ test('async and sync provider errors share full token redaction and never retain
     await readyNow()
     let pending
     if (mode === 'sync') {
-      pending = proc.request('session/prompt', { sessionId: 'main' })
+      pending = proc.turn('main', 'redact-sync', {}, 2000)
+      await new Promise((resolve) => setTimeout(resolve, 0))
       proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', id: writes[1].id, error: providerError })}\n`)
     } else {
       pending = proc.turn('main', 'redact', {}, 2000)

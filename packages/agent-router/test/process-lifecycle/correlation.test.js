@@ -84,6 +84,42 @@ test('PRIOR_TURN_LATE_EVENT_AFTER_NEXT_CALL: duplicate A events during B are exc
   assert.equal(fx.store.getTurnReconciliation(handleA).snapshot.outcome, 'completed', 'A unchanged')
 })
 
+test('B08 replay observes an intervening later turn/start before considering future idle', async () => {
+  const fx = makeFx({ deadlines: { turnTimeoutMs: 300 } })
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'replay-order', {})
+  await fx.tick()
+  fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
+  fx.emitEvent('main', { type: 'user/message', data: { id: 'm-replay-order' } })
+  fx.emitEvent('main', { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } })
+  fx.emitEvent('main', { type: 'turn/start', data: { turn: 2 } })
+  fx.emitStatus('main', 'idle')
+  fx.respondTo('session/prompt', { messageId: 'm-replay-order' })
+  await fx.tick()
+  const handle = fx.store.records.keys().next().value
+  assert.equal(fx.store.getTurnReconciliation(handle).state, 'pending', 'later turn/start invalidates terminal->idle proof')
+  const observed = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  assert.equal(observed.reconciliationHandle, handle)
+})
+
+test('B08: stale idle before exact terminal cannot close the current turn', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'ordered-idle', {})
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-ordered' })
+  await fx.tick()
+  fx.emitStatus('main', 'idle') // stale: precedes terminal evidence
+  fx.emitEvent('main', { type: 'turn/start', data: { turn: 4 } })
+  fx.emitEvent('main', { type: 'user/message', data: { id: 'm-ordered' } })
+  fx.emitEvent('main', { type: 'turn/end', data: { turn: 4, reason: { kind: 'completed' } } })
+  await fx.tick()
+  const handle = fx.store.records.keys().next().value
+  assert.equal(fx.store.getTurnReconciliation(handle).state, 'pending')
+  fx.emitStatus('main', 'idle')
+  assert.equal((await turn).status, 'completed')
+})
+
 // ---------------------------------------------------------------------------
 // Closed result envelopes (C-010)
 // ---------------------------------------------------------------------------
@@ -126,6 +162,17 @@ test('ENVELOPE_FAILED: structured provider failure with a stable handle', async 
   const record = fx.store.getTurnReconciliation(observed.reconciliationHandle)
   assert.equal(record.state, 'settled')
   assert.equal(record.snapshot.outcome, 'failed')
+})
+
+test('B05 raw session/prompt RPC cannot bypass admission/queue/watermark/fence', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+  const writes = prompts(fx).length
+  await rejectsWith(fx.proc.request('session/prompt', { sessionId: 'main', contentBlocks: [] }), (error) => {
+    assert.equal(error.status, 'not_admitted')
+    assert.equal(error.code, 'AGENT_PROCESS_RAW_PROMPT_FORBIDDEN')
+  })
+  assert.equal(prompts(fx).length, writes)
 })
 
 test('ENVELOPE_NOT_ADMITTED: validation fails before reservation, handle=null', async () => {

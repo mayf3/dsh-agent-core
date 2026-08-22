@@ -27,10 +27,12 @@ const AGT_ID = 'agt_registry-fx'
 
 function fakeCtx(services) {
   const provided = new Map()
+  const disposers = []
   return {
     get: (name) => services.get(name) ?? provided.get(name),
     provide: (name, value) => { provided.set(name, value) },
-    effect: (fn) => { const dispose = fn(); return () => dispose?.() },
+    effect: (fn) => { const dispose = fn(); disposers.push(dispose); return () => dispose?.() },
+    disposers,
   }
 }
 
@@ -58,7 +60,7 @@ class FakeChildAgentProcess extends AgentProcess {
   }
 }
 
-async function freshRig(t, { processFactory } = {}) {
+async function freshRig(t, { processFactory, workspaceBootstrap = stubBootstrap() } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-registry-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const configFile = join(dir, 'agents.json')
@@ -73,15 +75,16 @@ async function freshRig(t, { processFactory } = {}) {
     spawned.push(proc)
     return proc
   })
-  const router = applyRouter(fakeCtx(new Map([
-    ['workspaceBootstrap', stubBootstrap()],
+  const ctx = fakeCtx(new Map([
+    ['workspaceBootstrap', workspaceBootstrap],
     ['agentDefinition', {
       listAgents: () => definition.listAgents(),
       getAgent: (id) => definition.getAgent(id),
       getDefaultAgent: () => definition.getDefaultAgent(),
       resolveAgentRef: (ref) => definition.resolveAgentRef(ref),
     }],
-  ])), {
+  ]))
+  const router = applyRouter(ctx, {
     bindingsStoreFile: join(dir, 'bindings.json'),
     defaultSessionId: 'main',
     agentProfile: 'agent-core-production',
@@ -89,7 +92,7 @@ async function freshRig(t, { processFactory } = {}) {
     processFactory: factory,
     provisionHome: () => {},
   })
-  return { router, spawned, dir }
+  return { router, spawned, dir, ctx }
 }
 
 const tick = () => new Promise((resolve) => setImmediate(resolve))
@@ -101,6 +104,53 @@ async function answerInitialize(proc, { providers } = {}) {
   assert.ok(write !== undefined, 'initialize request written')
   child.stdout.handler(`${JSON.stringify({ id: write.id, result: { registeredProviders: providers ?? [proc.provider] } })}\n`)
 }
+
+test('B01: STARTUP CAS precedes async bootstrap and all callers share the exact resultPromise', async (t) => {
+  let releaseEnsure
+  let ensureCalls = 0
+  const bootstrap = {
+    ...stubBootstrap(),
+    ensure: () => {
+      ensureCalls += 1
+      return new Promise(resolve => { releaseEnsure = resolve })
+    },
+  }
+  const { router, spawned } = await freshRig(t, { workspaceBootstrap: bootstrap })
+  const calls = Array.from({ length: 30 }, () => router.ensureRunning(AGT_ID))
+  assert.ok(calls.every(call => call === calls[0]), 'the exact STARTUP resultPromise is shared')
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'STARTUP', 'CAS is visible before bootstrap awaits')
+  assert.equal(ensureCalls, 1)
+  assert.equal(spawned.length, 0)
+  releaseEnsure({})
+  await tick()
+  assert.equal(spawned.length, 1)
+  await answerInitialize(spawned[0])
+  const results = await Promise.all(calls)
+  assert.ok(results.every(proc => proc === results[0]))
+})
+
+test('B01 frozen bootstrap rejection settles shared STARTUP and returns slot to EMPTY', async (t) => {
+  const frozen = Object.freeze(Object.assign(new Error('frozen bootstrap'), { code: 'FROZEN_BOOTSTRAP' }))
+  const bootstrap = { ...stubBootstrap(), ensure: async () => { throw frozen } }
+  const { router, spawned } = await freshRig(t, { workspaceBootstrap: bootstrap })
+  const first = router.ensureRunning(AGT_ID)
+  const second = router.ensureRunning(AGT_ID)
+  assert.equal(first, second)
+  await assert.rejects(first, error => error.code === 'FROZEN_BOOTSTRAP' && error.agentId === AGT_ID)
+  assert.deepEqual(router.lifecycleSlotSnapshot(AGT_ID), { state: 'EMPTY' })
+  assert.equal(spawned.length, 0)
+})
+
+test('B01 post-processRef setup failure with no child converges STARTUP to EMPTY', async (t) => {
+  const processFactory = (opts) => ({
+    processGeneration: opts.processGeneration,
+    ownership: null,
+    set onRpcRequest(_handler) { throw new Error('rpc setter failed') },
+  })
+  const { router } = await freshRig(t, { processFactory })
+  await assert.rejects(router.ensureRunning(AGT_ID), /rpc setter failed/u)
+  assert.deepEqual(router.lifecycleSlotSnapshot(AGT_ID), { state: 'EMPTY' })
+})
 
 test('CONCURRENT_ENSURE_RUNNING: 30 calls -> one spawn, one pid, shared READY reference', async (t) => {
   const { router, spawned } = await freshRig(t)
@@ -115,6 +165,42 @@ test('CONCURRENT_ENSURE_RUNNING: 30 calls -> one spawn, one pid, shared READY re
   assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'READY')
   assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 1)
   assert.equal(spawned[0].counters.spawnAttempts, 1, 'S=1')
+})
+
+test('B14 disposer fences and cancels a no-child STARTUP before spawn', async (t) => {
+  let releaseEnsure
+  const bootstrap = { ...stubBootstrap(), ensure: () => new Promise(resolve => { releaseEnsure = resolve }) }
+  const { router, spawned, ctx } = await freshRig(t, { workspaceBootstrap: bootstrap })
+  const startup = router.ensureRunning(AGT_ID)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'STARTUP')
+  await ctx.disposers[0]()
+  await assert.rejects(startup, error => error.code === 'AGENT_PROCESS_DRAINING')
+  releaseEnsure({})
+  await tick()
+  assert.equal(spawned.length, 0)
+  assert.deepEqual(router.lifecycleSlotSnapshot(AGT_ID), { state: 'EMPTY' })
+  await assert.rejects(router.ensureRunning(AGT_ID), error => error.code === 'AGENT_PROCESS_DRAINING')
+})
+
+test('B14 runtime disposer awaits child exit and retains REAP until then', async (t) => {
+  const { router, spawned, ctx } = await freshRig(t)
+  const ready = router.ensureRunning(AGT_ID)
+  await tick()
+  await answerInitialize(spawned[0])
+  await ready
+  let disposed = false
+  const disposal = ctx.disposers[0]().then(() => { disposed = true })
+  await tick()
+  const shutdownWrite = spawned[0].fakeChild.writes.find(write => write.method === 'shutdown')
+  assert.ok(shutdownWrite)
+  spawned[0].fakeChild.stdout.handler(`${JSON.stringify({ id: shutdownWrite.id, result: { ok: true } })}\n`)
+  await tick()
+  assert.equal(disposed, false)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'REAP')
+  spawned[0].fakeChild.handlers.exit(0, null)
+  await disposal
+  assert.equal(disposed, true)
+  assert.deepEqual(router.lifecycleSlotSnapshot(AGT_ID), { state: 'EMPTY' })
 })
 
 test('SPAWN_ERROR_BEFORE_CHILD_HANDLE: sync spawn throw -> bounded reject + slot EMPTY, no fence', async (t) => {

@@ -17,7 +17,10 @@ import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 
 export const rpcChannelMethods = {
   onStdout(chunk) {
-    if (this.state === 'EXITED') return
+    if (this.state === 'EXITED' || this.inputFrozen) {
+      this.auditBounded({ kind: 'parser_input_after_freeze', detail: 'stdout frame ignored after parser freeze' })
+      return
+    }
     this.buf += chunk
     if (Buffer.byteLength(this.buf, 'utf8') > PROCESS_EVIDENCE_CAPS.MAX_STDOUT_PARTIAL_BYTES
         || Buffer.byteLength(this.buf, 'utf8') > PROCESS_EVIDENCE_CAPS.MAX_RPC_FRAME_BYTES) {
@@ -75,6 +78,18 @@ export const rpcChannelMethods = {
       }
       return
     }
+    // B09 / C-017: bind parser-received prompt evidence synchronously, before
+    // resolving the waiter Promise. A child exit in the continuation gap must
+    // replay this receipt and exact pre-receipt events before exit settlement.
+    if (waiter.method === 'session/prompt' && waiter.execution !== null && message.error === undefined) {
+      const messageId = message.result?.messageId
+      if (messageId !== undefined) {
+        waiter.execution.receiptMessageId = messageId
+        waiter.execution.promptReceipt = 'accepted'
+        this.store.markPromptReceipt(waiter.execution.handle, { messageId })
+        this.replayExecutionFromWatermark(waiter.execution)
+      }
+    }
     this.settlePendingEntry(waiter, 'resolve-or-reject', message)
   },
 
@@ -86,13 +101,12 @@ export const rpcChannelMethods = {
   async handleRpcRequest({ requestId, method, params } = {}) {
     if (typeof requestId !== 'string' || typeof method !== 'string') return
     const receivedAtMono = monotonicNowMs()
-    const activeExecution = [...this.executions.values()].find(execution => execution.mode === 'turn')
-    const totalDeadlineMono = (activeExecution !== undefined && activeExecution.turnDeadlineMono > receivedAtMono)
-      ? activeExecution.turnDeadlineMono
-      : receivedAtMono + this.deadlines.turnTimeoutMs
-    const totalBudgetMs = totalDeadlineMono - receivedAtMono
+    // B03: an attributable execution contributes its original absolute
+    // deadline even when already expired; expiry may never mint a fresh one.
+    const activeExecution = [...this.executions.values()].find(execution => !execution.settled && execution.phase !== 'queued')
+    const totalDeadlineMono = activeExecution?.turnDeadlineMono ?? (receivedAtMono + this.deadlines.turnTimeoutMs)
+    const totalBudgetMs = Math.max(0, totalDeadlineMono - receivedAtMono)
     if (totalBudgetMs <= 0) {
-      // Deadline already past at receipt: no handler, no write (C-005).
       this.auditBounded({ kind: 'parent_rpc_budget_exhausted', detail: method })
       return
     }
@@ -101,41 +115,44 @@ export const rpcChannelMethods = {
     const deadlineAtWallMs = Date.now() + totalBudgetMs
     let result
     let error
-    let timedOut = false
-    if (handlerDeadlineMono <= receivedAtMono) {
-      // Reserve alone exceeds the budget: do not start the handler.
-      timedOut = true
-    } else {
+    let handlerStarted = false
+    let timedOut = handlerDeadlineMono <= receivedAtMono
+    if (!timedOut) {
+      handlerStarted = true
       const controller = new AbortController()
-      const abortTimer = setTimeout(() => {
-        controller.abort()
-        timedOut = true
-      }, handlerDeadlineMono - receivedAtMono)
-      abortTimer.unref?.()
-      try {
+      let abortTimer
+      const timeout = new Promise((resolveTimeout) => {
+        abortTimer = setTimeout(() => {
+          controller.abort()
+          resolveTimeout({ kind: 'timeout' })
+        }, Math.max(0, handlerDeadlineMono - monotonicNowMs()))
+        abortTimer.unref?.()
+      })
+      const handler = Promise.resolve().then(() => {
         if (typeof this.onRpcRequest !== 'function') {
           throw new Error(`process ${this.agentId}: no parent-RPC handler for ${method}`)
         }
-        result = await this.onRpcRequest(method, params, { handlerDeadlineMono, totalDeadlineMono, deadlineAtWallMs, signal: controller.signal })
-      } catch (cause) {
-        error = cause
-      }
+        return this.onRpcRequest(method, params, { handlerDeadlineMono, totalDeadlineMono, deadlineAtWallMs, signal: controller.signal })
+      }).then(
+        value => ({ kind: 'result', value }),
+        cause => ({ kind: 'error', cause }),
+      )
+      const winner = await Promise.race([handler, timeout])
       clearTimeout(abortTimer)
+      if (winner.kind === 'timeout') timedOut = true
+      else if (winner.kind === 'error') error = winner.cause
+      else result = winner.value
     }
     if (timedOut) {
-      // The handler missed its deadline: the wire answer is the timeout
-      // response regardless of any late hook settlement — and whether the
-      // hook's side effect happened stays unknown.
-      if (error === undefined) {
-        error = new Error(`parent-RPC ${method} exceeded its handler deadline (agent ${this.agentId})`)
-      }
+      error = new Error(`parent-RPC ${method} exceeded its handler deadline (agent ${this.agentId})`)
       result = undefined
-      this.auditBounded({ kind: 'parent_rpc_timeout', detail: `${method} sideEffectOutcome=unknown` })
+      this.auditBounded({ kind: 'parent_rpc_timeout', detail: `${method} sideEffectOutcome=${handlerStarted ? 'unknown' : 'proven_not_started'}` })
     }
-    // ONE best-effort wire response within the original total deadline. The
-    // write OUTCOME is decided by the write callback (C-005: pipe
-    // unavailable/backpressure => failed|unknown), never by a response
-    // receipt the child may not owe.
+    // Budget expiry after handler settlement forbids every wire attempt.
+    if (monotonicNowMs() >= totalDeadlineMono) {
+      this.auditBounded({ kind: 'parent_rpc_budget_exhausted', detail: `${method} before response write` })
+      return
+    }
     this.counters.rpcResponseWriteAttempts += 1
     let writeOutcome = 'unknown'
     try {
@@ -149,9 +166,7 @@ export const rpcChannelMethods = {
         onWriteCompleted: (writeError) => { writeOutcome = writeError === null || writeError === undefined ? 'sent' : 'failed' },
       })
       if (writeOutcome === 'unknown') writeOutcome = 'sent'
-    } catch {
-      // Deadline before receipt: the write outcome stands as last recorded.
-    }
+    } catch { /* one best-effort response attempt only */ }
     this.auditBounded({ kind: 'parent_rpc_response', detail: `${method} responseWrite=${writeOutcome}` })
   },
 
@@ -170,13 +185,39 @@ export const rpcChannelMethods = {
     const deadlineMono = opts.deadlineMono
       ?? (timeoutMs !== undefined ? monotonicNowMs() + timeoutMs : undefined)
       ?? (monotonicNowMs() + this.deadlines.turnTimeoutMs) // generic lifecycle-budget derivation — never infinite
-    if (this.pending.size >= PROCESS_EVIDENCE_CAPS.MAX_PENDING_RPC) {
-      return Promise.reject(envelopeCarrier('not_admitted', opts.execution?.handle ?? null, 'AGENT_PROCESS_PENDING_CAP',
-        `agent ${this.agentId}: pending RPC cap ${PROCESS_EVIDENCE_CAPS.MAX_PENDING_RPC} reached — request ${method} rejected before write`))
+    if (method === 'session/prompt' && (opts.execution === null || opts.execution === undefined)) {
+      return Promise.reject(envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_RAW_PROMPT_FORBIDDEN',
+        `agent ${this.agentId}: raw session/prompt RPC must use the unified admission queue`))
     }
     if (this.inputFrozen) {
       return Promise.reject(envelopeCarrier('not_admitted', opts.execution?.handle ?? null, 'AGENT_PROCESS_INPUT_FROZEN',
         `agent ${this.agentId}: input frozen — request ${method} rejected before write`, { proven: 'zero_byte' }))
+    }
+    const stdin = this.child?.stdin
+    const knownUnwritable = stdin === undefined || stdin === null || stdin.writable === false
+      || stdin.destroyed === true || stdin.writableEnded === true || stdin.writableFinished === true || stdin.closed === true
+    if (knownUnwritable) {
+      const execution = opts.execution ?? null
+      const carrier = envelopeCarrier(method === 'session/prompt' ? 'not_admitted' : 'failed', execution?.handle ?? null,
+        'AGENT_PROCESS_STDIN_NOT_WRITABLE', `agent ${this.agentId}: stdin is known non-writable — request ${method} rejected before write`,
+        { proven: 'zero_byte', source: 'stdin_not_writable' })
+      if (method === 'session/prompt' && execution !== null && !execution.settled) {
+        this.store.settleDirect(execution.handle, {
+          outcome: 'not_admitted', outcomeEvidence: 'proven_zero_byte_rejection', errorClass: carrier.code,
+        })
+        execution.settled = true
+        this.finishExecution(execution)
+      }
+      queueMicrotask(() => this.onStdinBroken(new Error('stdin known non-writable')))
+      return Promise.reject(carrier)
+    }
+    if (deadlineMono <= monotonicNowMs()) {
+      return Promise.reject(envelopeCarrier(method === 'session/prompt' ? 'not_admitted' : 'failed', opts.execution?.handle ?? null,
+        'AGENT_PROCESS_RPC_DEADLINE', `request ${method} deadline expired before write (agent ${this.agentId})`, { proven: 'zero_byte', method }))
+    }
+    if (this.pending.size >= PROCESS_EVIDENCE_CAPS.MAX_PENDING_RPC) {
+      return Promise.reject(envelopeCarrier('not_admitted', opts.execution?.handle ?? null, 'AGENT_PROCESS_PENDING_CAP',
+        `agent ${this.agentId}: pending RPC cap ${PROCESS_EVIDENCE_CAPS.MAX_PENDING_RPC} reached — request ${method} rejected before write`))
     }
     return new Promise((resolveRequest, rejectRequest) => {
       const id = ++this.seq

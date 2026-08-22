@@ -107,6 +107,109 @@ test('CALLER_CORRELATION_RESTORE: exact triple restores the same handle without 
   assert.deepEqual(store.resolveCallerCorrelation({ occurrenceId: 'x', runId: 'y', requestId: 'z' }), { state: 'never_existed' })
 })
 
+test('B10 mint correlation conflict leaves authority/sequence/capacity unchanged', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'identity' })
+  const triple = { occurrenceId: 'occ', runId: 'turn', requestId: 'caller' }
+  const original = minted(store, { correlation: triple, sessionId: 'session-x' })
+  store.markAdmitted(original, { eventWatermarkSeq: 7, promptRequestId: 'prompt-8', deadlineAtWallMs: 9 })
+  store.markPromptReceipt(original, { messageId: 'message-9' })
+  const before = store.occupancy()
+  assert.throws(() => minted(store, { correlation: triple }), error => error.code === 'RECONCILIATION_CORRELATION_CONFLICT')
+  assert.deepEqual(store.occupancy(), before)
+  const next = minted(store)
+  assert.match(next, /:s2$/, 'conflicting mint consumed no turn sequence')
+  const snapshot = store.getTurnReconciliation(original).snapshot
+  assert.equal(snapshot.runtimeEpoch, 'identity')
+  assert.equal(snapshot.turnExecutionId, original)
+  assert.equal(snapshot.agentId, 'agt_a')
+  assert.equal(snapshot.processGeneration, 1)
+  assert.deepEqual(snapshot.callerCorrelation, triple)
+  assert.equal(snapshot.sessionId, 'session-x')
+  assert.equal(snapshot.eventWatermarkSeq, 7)
+  assert.equal(snapshot.promptRequestId, 'prompt-8')
+  assert.equal(snapshot.messageId, 'message-9')
+})
+
+test('B11 pending output never reports terminal available/no_output', () => {
+  const store = new TurnReconciliationStore()
+  const handle = minted(store)
+  assert.deepEqual(store.readFinalAssistantOutput(handle), { state: 'pending' })
+  store.updateFinalOutput(handle, { text: 'provisional', truncated: false, originalBytes: 11 })
+  assert.deepEqual(store.readFinalAssistantOutput(handle), { state: 'pending' })
+  store.settleDirect(handle, { outcome: 'completed', outcomeEvidence: 'exact_turn_end_success', terminationEvidence: 'exact_terminal_then_idle' })
+  assert.equal(store.readFinalAssistantOutput(handle).state, 'available')
+})
+
+test('B10 failed oversized mint at full capacity evicts nothing', () => {
+  const store = new TurnReconciliationStore()
+  const handles = []
+  for (let index = 0; index < RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT; index += 1) {
+    const handle = minted(store)
+    store.settleDirect(handle, { outcome: 'completed' })
+    handles.push(handle)
+  }
+  const before = store.occupancy()
+  const huge = 'x'.repeat(RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES + 1)
+  assert.throws(() => minted(store, { sessionId: huge }), error => error.code === 'RECONCILIATION_CAPACITY_EXHAUSTED')
+  assert.deepEqual(store.occupancy(), before)
+  assert.equal(store.getTurnReconciliation(handles[0]).state, 'settled')
+})
+
+test('B12 per-record hard cap fails before committing oversized identity', () => {
+  const store = new TurnReconciliationStore()
+  const huge = 'x'.repeat(RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES + 1)
+  assert.throws(() => minted(store, { sessionId: huge }), error => error.code === 'RECONCILIATION_CAPACITY_EXHAUSTED')
+  assert.equal(store.occupancy().records, 0)
+  assert.equal(store.occupancy().globalBytes, 0)
+})
+
+test('B12 complete-record accounting rejects oversized mutable metadata without exceeding caps', () => {
+  const store = new TurnReconciliationStore()
+  const handle = minted(store)
+  const before = store.occupancy()
+  const huge = 'x'.repeat(RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES + 1)
+  assert.throws(() => store.settleDirect(handle, { outcome: 'failed', errorClass: huge }), error => error.code === 'RECONCILIATION_CAPACITY_EXHAUSTED')
+  assert.deepEqual(store.occupancy(), before)
+  assert.equal(store.getTurnReconciliation(handle).state, 'pending')
+})
+
+test('B12 aggregate byte pressure preserves mandatory unknown headroom and truncates optional output', () => {
+  const store = new TurnReconciliationStore()
+  const text = 'x'.repeat(1048576)
+  const handles = Array.from({ length: 33 }, () => minted(store))
+  for (const handle of handles) {
+    store.updateFinalOutput(handle, { text, truncated: false, originalBytes: 1048576 })
+  }
+  assert.ok(handles.every(handle => store.records.get(handle).finalAssistantOutput?.text.length > 0),
+    'known nonempty output always retains a nonempty tail')
+  assert.ok(handles.some(handle => store.records.get(handle).finalAssistantOutput.truncated === true))
+  const target = handles.at(-1)
+  store.markOutcomeUnknown(target, { source: 'turn_deadline_exceeded', deadlineAtWallMs: 42 })
+  const snapshot = store.getTurnReconciliation(target)
+  assert.equal(snapshot.state, 'pending')
+  assert.equal(store.records.get(target).initialOutcome, 'outcome_unknown')
+  assert.ok(store.agentBytes.get('agt_a') <= RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT)
+})
+
+test('B12 cap-sized quote output is measured by retained UTF-8 bytes, not JSON escaping', () => {
+  const store = new TurnReconciliationStore()
+  const handle = minted(store)
+  const text = '"'.repeat(1048576)
+  store.updateFinalOutput(handle, { text, truncated: false, originalBytes: 1048576 })
+  store.settleDirect(handle, { outcome: 'completed', outcomeEvidence: 'exact_turn_end_success' })
+  const output = store.readFinalAssistantOutput(handle)
+  assert.equal(output.state, 'available')
+  assert.equal(Buffer.byteLength(output.text, 'utf8'), 1048576)
+  assert.ok(store.occupancy().globalBytes <= RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL)
+})
+
+test('B10 handle classification rejects aliases and unsafe integers', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'canonical' })
+  minted(store)
+  assert.deepEqual(store.getTurnReconciliation('turn:canonical:a1:g01:s01'), { state: 'never_existed' })
+  assert.deepEqual(store.getTurnReconciliation('turn:canonical:a1:g9007199254740992:s1'), { state: 'never_existed' })
+})
+
 test('caller correlation: same triple + same handle idempotent; different handle fails loud', () => {
   const store = new TurnReconciliationStore()
   const triple = { occurrenceId: 'o', runId: 'r', requestId: 'q' }
@@ -131,6 +234,20 @@ test('settle-once: first winning settlement wins; duplicate + conflicting eviden
   assert.deepEqual(snapshot.audit.map(entry => entry.kind), ['duplicate_ignored', 'conflict_ignored'])
 })
 
+test('B12 reconciliation audit obeys exact count and byte hard caps', () => {
+  const store = new TurnReconciliationStore()
+  const handle = minted(store)
+  store.markOutcomeUnknown(handle, { source: 'turn_deadline_exceeded' })
+  store.settleLate(handle, { lateOutcome: 'late_completed', terminationEvidence: 'exact_terminal_then_idle' })
+  for (let index = 0; index < 100; index += 1) {
+    store.settleLate(handle, { lateOutcome: 'terminated_without_outcome', terminationEvidence: 'child_real_exit' })
+  }
+  const audit = store.getTurnReconciliation(handle).snapshot.audit
+  assert.equal(audit.length, RECONCILIATION_CAPS.MAX_RECONCILIATION_AUDIT_ENTRIES_PER_RECORD)
+  assert.ok(Buffer.byteLength(JSON.stringify(audit), 'utf8') <= RECONCILIATION_CAPS.MAX_RECONCILIATION_AUDIT_BYTES_PER_RECORD)
+  assert.ok(store.getTurnReconciliation(handle).snapshot.auditDroppedCount > 0)
+})
+
 test('settleDirect rejects records that already entered the late machine and vice versa', () => {
   const store = new TurnReconciliationStore()
   const handle = minted(store)
@@ -151,6 +268,9 @@ test('onTurnReconciled emits exactly once per winning settlement', () => {
   store.settleLate(handle, { lateOutcome: 'late_failed', outcomeEvidence: 'exact_turn_end_failure', terminationEvidence: 'exact_terminal_then_idle' })
   assert.equal(events.length, 1)
   assert.equal(events[0].lateOutcome, 'late_failed')
+  for (const field of ['runtimeEpoch', 'agentId', 'processGeneration', 'turnExecutionId', 'callerCorrelation', 'sessionId', 'eventWatermarkSeq', 'promptRequestId', 'messageId']) {
+    assert.ok(Object.hasOwn(events[0], field), `reconciliation event carries C-019 identity field ${field}`)
+  }
 })
 
 test('UNRESOLVED_RECONCILIATION_CAP_PRESSURE: unresolved records are not evictable; the next mint fails pre-reservation', () => {
@@ -189,6 +309,23 @@ test('ROUTER_GLOBAL_RECONCILIATION_CAP: global record cap rejects a mint on anot
   assert.equal(store.occupancy().records, RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL)
   assert.throws(() => store.assertMintCapacity('agt_fresh'), /record capacity exhausted/)
   assert.equal(store.occupancy().records, RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL, 'nothing was evicted to make room')
+})
+
+test('B12 issuance metadata fails loud before forgetting sparse legal generations', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'generations' })
+  const unresolved = minted(store, { processGeneration: 1 })
+  const oldHandles = []
+  for (let generation = 2; generation <= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT; generation += 1) {
+    const handle = minted(store, { processGeneration: generation })
+    store.settleDirect(handle, { outcome: 'completed' })
+    oldHandles.push(handle)
+  }
+  const nextGeneration = RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT + 1
+  const before = store.occupancy()
+  assert.throws(() => minted(store, { processGeneration: nextGeneration }), error => error.code === 'RECONCILIATION_CAPACITY_EXHAUSTED')
+  assert.deepEqual(store.occupancy(), before)
+  assert.equal(store.getTurnReconciliation(unresolved).state, 'pending')
+  assert.ok(oldHandles.every(handle => store.getTurnReconciliation(handle).state === 'settled'))
 })
 
 test('resolved eviction frees capacity: settled records are evictable, unresolved are not', () => {

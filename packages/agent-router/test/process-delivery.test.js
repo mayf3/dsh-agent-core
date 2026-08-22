@@ -54,14 +54,15 @@ test('DLV1 deliver resolves on the receipt alone — no event, no idle, no turn/
   assert.equal(result.sessionId, 'main')
   assert.equal(result.messageId, 'm-42')
   assert.ok(Number.isFinite(result.ms))
-  assert.equal(result.status, 'completed')
+  assert.equal(Object.hasOwn(result, 'status'), false, 'receipt makes no terminal turn-outcome claim')
+  assert.equal(fx.store.getTurnReconciliation(result.reconciliationHandle).state, 'pending')
   assert.equal(typeof result.reconciliationHandle, 'string', 'receipt-only delivery still carries the handle')
   assert.equal(fx.proc.eventSeq, 0, 'resolved before ANY assistant event')
   assert.equal(fx.proc.status['main'], undefined, 'resolved while the session never went idle')
   assert.equal(fx.proc.activeBindingContext, undefined, 'deliver has no binding context')
 })
 
-test('DLV2 deliver during an in-flight turn resolves immediately and leaves the turn alone', async () => {
+test('DLV2 deliver shares the production queue and cannot bypass an in-flight turn', async () => {
   const fx = makeFx()
   await fx.readyNow()
 
@@ -71,21 +72,19 @@ test('DLV2 deliver during an in-flight turn resolves immediately and leaves the 
   fx.respondTo('session/prompt', { messageId: 'm-turn' })
   await fx.tick()
 
-  // Now deliver while the turn is in flight: the receipt must come back
-  // immediately — the delivery is NOT queued behind the turn.
-  const started = Date.now()
-  const delivery = fx.proc.deliver('main', 'fast-delivery', {}, 10000)
-  assert.equal(prompts(fx).length, 2, 'the delivery prompt is written at once, not queued')
-  fx.respondTo('session/prompt', { messageId: 'm-deliv' })
-  const result = await delivery
-  assert.ok(Date.now() - started < 5000, 'delivery resolved on the receipt, no turn wait')
-  assert.equal(result.sessionId, 'main')
-  assert.equal(fx.proc.activeBindingContext, 'binding-a', 'delivery must not disturb the turn\'s binding context')
+  const delivery = fx.proc.deliver('main', 'queued-delivery', {}, 10000)
+  assert.equal(prompts(fx).length, 1, 'delivery write delta is zero while turn owns the queue')
+  assert.equal(fx.proc.activeBindingContext, 'binding-a')
 
-  // The turn itself still completes normally afterwards.
   fx.completeTurn('main', 'm-turn', 'TURN-REPLY')
   const turnResult = await turn
   assert.equal(turnResult.reply, 'TURN-REPLY')
+  await fx.tick()
+  assert.equal(prompts(fx).length, 2, 'delivery writes only after exact terminal->idle')
+  fx.respondTo('session/prompt', { messageId: 'm-deliv' })
+  const result = await delivery
+  assert.equal(result.sessionId, 'main')
+  assert.equal(Object.hasOwn(result, 'status'), false)
 })
 
 test('DLV3 a dead child (no receipt) rejects via the receipt deadline as outcome_unknown and cleans up', async () => {
