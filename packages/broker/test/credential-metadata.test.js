@@ -1,32 +1,30 @@
 /**
- * AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1 — unit acceptance for the
- * redacted read-only resolution seam `resolveCredentialMetadata()`
- * (packages/broker/src/credential-store.js, trusted-parent boundary).
+ * AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1 — core unit acceptance for
+ * the redacted read-only resolution seam `resolveCredentialMetadata(agentId)`
+ * (packages/broker/src/credential-store.js, trusted-parent boundary):
+ * ACC-CMR-001 PRESENT, ACC-CMR-002 ABSENT, ACC-CMR-003 fail-loud store
+ * errors + canary non-disclosure, ACC-CMR-004 store immutability.
  *
- * STORE_ACCESS_COUNT instrumentation note: `mock.module` is
- * experimental-flag-gated and unavailable under the repo's plain
- * `node --test`, so STORE_ACCESS_COUNT = 0 is proven behaviorally — strictly
- * stronger than a seam-level counter: every invalid-id case runs against
- * store paths where ANY access attempt (existsSync / readFileSync) observably
- * produces a `CREDENTIALS_STORE_ERROR` (missing file / EACCES under a
- * mode-0000 directory). If any store access preceded id validation, the
- * thrown code would be CREDENTIALS_STORE_ERROR; asserting the Agent
- * Definition authority's VALIDATION_ERROR instead proves no store access
- * happened, on the real filesystem rather than through a mocked seam.
+ * The exported seam takes ONLY agentId; the store path comes exclusively
+ * from the trusted-parent configuration authority
+ * (process.env.AGENT_CORE_CREDENTIALS_FILE). Tests inject fixtures through
+ * THAT authority only (test-only construction; no seam parameter exists).
+ *
+ * "Store access counter" note: STORE_ACCESS_COUNT = 0 is proven behaviorally
+ * (see credential-metadata-seam.test.js): store paths are placed where ANY
+ * access attempt observably produces a CREDENTIALS_STORE_ERROR, so asserting
+ * the authority's VALIDATION_ERROR proves no access happened first.
  */
 
 import { after, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
 import { CREDENTIALS_STORE_ERROR, resolveCredentialMetadata } from '../src/credential-store.js'
-import { normalizeAgentId } from '../../agent-definition/src/definition.js'
 
-const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
-const FIXTURE_DIR = mkdtempSync(join(tmpdir(), 'cmr-credential-metadata-'))
+const FIXTURE_DIR = mkdtempSync(join(tmpdir(), 'cmr-core-'))
 after(() => rmSync(FIXTURE_DIR, { recursive: true, force: true }))
 
 /** Unique canaries embedded in store fixtures; must never surface anywhere. */
@@ -55,17 +53,31 @@ function validDoc() {
   }
 }
 
+/**
+ * Test-only construction: run the PRODUCTION exported seam with the trusted
+ * configuration authority (AGENT_CORE_CREDENTIALS_FILE) pointing at the
+ * fixture path for the duration of one call, restoring the prior process
+ * environment afterwards.
+ */
+function resolveViaConfig(storeFile, agentId) {
+  const saved = process.env.AGENT_CORE_CREDENTIALS_FILE
+  if (storeFile === undefined) delete process.env.AGENT_CORE_CREDENTIALS_FILE
+  else process.env.AGENT_CORE_CREDENTIALS_FILE = storeFile
+  try {
+    return resolveCredentialMetadata(agentId)
+  } finally {
+    if (saved === undefined) delete process.env.AGENT_CORE_CREDENTIALS_FILE
+    else process.env.AGENT_CORE_CREDENTIALS_FILE = saved
+  }
+}
+
 /** Snapshot the immutability-contract state (bytes + uid/gid/mode) of a file. */
 function snapshot(file) {
   const stat = statSync(file)
   return { bytes: readFileSync(file), uid: stat.uid, gid: stat.gid, mode: stat.mode }
 }
 
-/**
- * Capture ALL observable console output around fn (stdout/stderr writes and
- * console.* — forwarded to the originals so nothing is swallowed), then
- * return { value, error, output }.
- */
+/** Capture ALL observable console output around fn (forwarded, not swallowed). */
 function observed(fn) {
   const chunks = []
   const originals = {
@@ -77,17 +89,17 @@ function observed(fn) {
     error: console.error,
     debug: console.debug,
   }
-  const forward = (channel) => (chunk, ...rest) => {
-    chunks.push(String(chunk))
-    return channel(chunk, ...rest)
-  }
   const recordArgs = (...args) => {
     chunks.push(args.map((a) => (typeof a === 'string' ? a : safeStringify(a))).join(' '))
   }
-  const stdoutWrite = forward(originals.out)
-  const stderrWrite = forward(originals.err)
-  process.stdout.write = stdoutWrite
-  process.stderr.write = stderrWrite
+  process.stdout.write = (chunk, ...rest) => {
+    chunks.push(String(chunk))
+    return originals.out(chunk, ...rest)
+  }
+  process.stderr.write = (chunk, ...rest) => {
+    chunks.push(String(chunk))
+    return originals.err(chunk, ...rest)
+  }
   console.log = console.info = console.warn = console.error = console.debug = recordArgs
   try {
     const value = fn()
@@ -138,7 +150,7 @@ function assertNoCanary({ value, error, output }) {
 test('PRESENT: closed result {entry, clientId} from a valid entry, canary excluded', () => {
   const storeFile = writeStore(validDoc())
   const before = snapshot(storeFile)
-  const { value, error, output } = observed(() => resolveCredentialMetadata(storeFile, AGENT_ID))
+  const { value, error, output } = observed(() => resolveViaConfig(storeFile, AGENT_ID))
   assert.ifError(error)
   assert.deepEqual(value, { entry: 'PRESENT', clientId: CLIENT_ID })
   assert.deepEqual(Object.keys(value).sort(), ['clientId', 'entry'])
@@ -153,7 +165,7 @@ test('PRESENT: canonical generated id shape (agt_ + 32 hex) resolves', () => {
     credentials: { [generatedShape]: { clientId: CLIENT_ID, clientSecret: SECRET_CANARY } },
   })
   const before = snapshot(storeFile)
-  const { value, error, output } = observed(() => resolveCredentialMetadata(storeFile, generatedShape))
+  const { value, error, output } = observed(() => resolveViaConfig(storeFile, generatedShape))
   assert.ifError(error)
   assert.deepEqual(value, { entry: 'PRESENT', clientId: CLIENT_ID })
   assertNoCanary({ value, error, output })
@@ -173,7 +185,7 @@ test('PRESENT: extra canary-bearing fields on a store entry never surface (close
     },
   })
   const before = snapshot(storeFile)
-  const { value, error, output } = observed(() => resolveCredentialMetadata(storeFile, AGENT_ID))
+  const { value, error, output } = observed(() => resolveViaConfig(storeFile, AGENT_ID))
   assert.ifError(error)
   // Existing V1 entry semantics accept the entry; the projection returns
   // ONLY the non-secret clientId — none of the canary values.
@@ -186,8 +198,8 @@ test('PRESENT: extra canary-bearing fields on a store entry never surface (close
 // ACC-CMR-002 — ABSENT is explicit (unconfigured store AND absent exact key)
 // ---------------------------------------------------------------------------
 
-test('ABSENT: unconfigured store (undefined) returns exactly {entry:ABSENT}', () => {
-  const { value, error, output } = observed(() => resolveCredentialMetadata(undefined, AGENT_ID))
+test('ABSENT: unconfigured store (env unset) returns exactly {entry:ABSENT}', () => {
+  const { value, error, output } = observed(() => resolveViaConfig(undefined, AGENT_ID))
   assert.ifError(error)
   assert.deepEqual(value, { entry: 'ABSENT' })
   assert.equal('clientId' in value, false)
@@ -195,8 +207,8 @@ test('ABSENT: unconfigured store (undefined) returns exactly {entry:ABSENT}', ()
   assertNoCanary({ value, error, output })
 })
 
-test('ABSENT: unconfigured store (empty string) returns exactly {entry:ABSENT}', () => {
-  const { value, error } = observed(() => resolveCredentialMetadata('', AGENT_ID))
+test('ABSENT: unconfigured store (empty string config) returns exactly {entry:ABSENT}', () => {
+  const { value, error } = observed(() => resolveViaConfig('', AGENT_ID))
   assert.ifError(error)
   assert.deepEqual(value, { entry: 'ABSENT' })
   assert.equal('clientId' in value, false)
@@ -208,100 +220,12 @@ test('ABSENT: valid configured store without the exact key returns exactly {entr
     credentials: { [OTHER_AGENT_ID]: { clientId: 'other-client', clientSecret: SECRET_CANARY } },
   })
   const before = snapshot(storeFile)
-  const { value, error, output } = observed(() => resolveCredentialMetadata(storeFile, AGENT_ID))
+  const { value, error, output } = observed(() => resolveViaConfig(storeFile, AGENT_ID))
   assert.ifError(error)
   assert.deepEqual(value, { entry: 'ABSENT' })
   assert.equal('clientId' in value, false)
   assertNoCanary({ value, error, output })
   assert.deepEqual(snapshot(storeFile), before)
-})
-
-// ---------------------------------------------------------------------------
-// ACC-CMR-006 — invalid and traversal-shaped ids fail loud BEFORE store access
-// ---------------------------------------------------------------------------
-
-const INVALID_IDS = [
-  undefined,
-  null,
-  42,
-  true,
-  {},
-  [],
-  '',
-  'agent1', // no agt_ prefix
-  'AGT_uppercase', // wrong prefix case
-  'agt_', // empty payload
-  ' agt_leading', // leading whitespace
-  'agt_trailing ', // trailing whitespace
-  'agt_a b', // inner whitespace
-  'agt_a\tb', // tab
-  'agt_a/b', // slash-bearing id
-  '/etc/passwd', // bare path
-  '../traversal', // traversal
-  'agt_../x', // traversal behind a valid-looking prefix
-  '..\\..\\windows', // backslash traversal
-  'agt_a\\b', // backslash-bearing id
-  'agt_a.b', // dot payload
-  'agt_a\0b', // NUL byte
-]
-
-function describeInvalid(id) {
-  if (typeof id === 'string') return JSON.stringify(id.length > 24 ? `${id.slice(0, 24)}…` : id)
-  return `${safeStringify(id)} (${typeof id})`
-}
-
-for (const invalidId of INVALID_IDS) {
-  test(`invalid id ${describeInvalid(invalidId)}: fails loud pre-store (any access on a blocked dir would yield a store error)`, () => {
-    const blockedDir = join(FIXTURE_DIR, `blocked-${fixtureCounter++}`)
-    mkdirSync(blockedDir, { mode: 0o700 })
-    const storeFile = join(blockedDir, 'store.json')
-    writeFileSync(storeFile, JSON.stringify(validDoc()), { mode: 0o600 })
-    const bytesBefore = readFileSync(storeFile)
-    chmodSync(blockedDir, 0o000)
-    try {
-      // The store path CANNOT be accessed (parent dir mode 0000): a
-      // store-first implementation would throw CREDENTIALS_STORE_ERROR
-      // (EACCES -> "not found"). The seam must throw the authority's
-      // VALIDATION_ERROR instead => STORE_ACCESS_COUNT = 0.
-      assert.throws(() => resolveCredentialMetadata(storeFile, invalidId), (error) => {
-        assert.equal(error.code, 'VALIDATION_ERROR')
-        assert.notEqual(error.code, CREDENTIALS_STORE_ERROR)
-        return true
-      })
-    } finally {
-      chmodSync(blockedDir, 0o700)
-    }
-    assert.deepEqual(readFileSync(storeFile), bytesBefore)
-    rmSync(blockedDir, { recursive: true, force: true })
-  })
-
-  test(`invalid id ${describeInvalid(invalidId)}: fails loud pre-store (missing configured store)`, () => {
-    const missing = join(FIXTURE_DIR, `missing-${fixtureCounter++}.json`)
-    assert.throws(() => resolveCredentialMetadata(missing, invalidId), (error) => {
-      assert.equal(error.code, 'VALIDATION_ERROR')
-      assert.notEqual(error.code, CREDENTIALS_STORE_ERROR)
-      return true
-    })
-  })
-}
-
-test('invalid ids fail loud even with NO store configured (id validation is unconditional)', () => {
-  for (const invalidId of ['', 'not-agt', '../x', 7, null]) {
-    assert.throws(() => resolveCredentialMetadata(undefined, invalidId), (error) => {
-      assert.equal(error.code, 'VALIDATION_ERROR')
-      return true
-    })
-  }
-})
-
-test('the seam inherits the Agent Definition validator verbatim (same grammar, same error family)', () => {
-  for (const id of ['agt_ok', AGENT_ID, 'agt_0f1e23a4b5c6d7e8f9a0b1c2d3e4f5a6']) {
-    assert.equal(normalizeAgentId(id), id)
-  }
-  for (const id of ['agt_a/b', 'agt_a\\b', 'agt_..', 'nope', '', undefined]) {
-    assert.throws(() => normalizeAgentId(id), { code: 'VALIDATION_ERROR' })
-    assert.throws(() => resolveCredentialMetadata(undefined, id), { code: 'VALIDATION_ERROR' })
-  }
 })
 
 // ---------------------------------------------------------------------------
@@ -316,7 +240,7 @@ test('malformed JSON store: CREDENTIALS_STORE_ERROR, canary-free, store unchange
     { mode: 0o600 },
   )
   const before = snapshot(storeFile)
-  const { value, error, output } = observed(() => resolveCredentialMetadata(storeFile, AGENT_ID))
+  const { value, error, output } = observed(() => resolveViaConfig(storeFile, AGENT_ID))
   assert.ok(error instanceof Error)
   assert.equal(error.code, CREDENTIALS_STORE_ERROR)
   assert.equal(value, undefined)
@@ -330,7 +254,7 @@ test('unsupported store version: CREDENTIALS_STORE_ERROR, never ABSENT', () => {
     credentials: { [AGENT_ID]: { clientId: CLIENT_ID, clientSecret: SECRET_CANARY } },
   })
   const before = snapshot(storeFile)
-  const { value, error, output } = observed(() => resolveCredentialMetadata(storeFile, AGENT_ID))
+  const { value, error, output } = observed(() => resolveViaConfig(storeFile, AGENT_ID))
   assert.ok(error instanceof Error)
   assert.equal(error.code, CREDENTIALS_STORE_ERROR)
   assert.equal(value, undefined)
@@ -347,7 +271,7 @@ test('malformed entry (missing clientSecret / missing clientId): CREDENTIALS_STO
     },
   })
   const before = snapshot(storeFile)
-  const { value, error, output } = observed(() => resolveCredentialMetadata(storeFile, AGENT_ID))
+  const { value, error, output } = observed(() => resolveViaConfig(storeFile, AGENT_ID))
   assert.ok(error instanceof Error)
   assert.equal(error.code, CREDENTIALS_STORE_ERROR)
   assert.equal(value, undefined)
@@ -361,7 +285,7 @@ test('permission failure (mode 0000 store): CREDENTIALS_STORE_ERROR, not ABSENT,
   chmodSync(storeFile, 0o000)
   try {
     const statDuring = statSync(storeFile)
-    const { value, error, output } = observed(() => resolveCredentialMetadata(storeFile, AGENT_ID))
+    const { value, error, output } = observed(() => resolveViaConfig(storeFile, AGENT_ID))
     assert.ok(error instanceof Error)
     assert.equal(error.code, CREDENTIALS_STORE_ERROR)
     assert.equal(value, undefined)
@@ -380,7 +304,7 @@ test('permission failure (mode 0000 store): CREDENTIALS_STORE_ERROR, not ABSENT,
 test('store path is a directory: CREDENTIALS_STORE_ERROR (read-failure family)', () => {
   const dir = join(FIXTURE_DIR, `asdir-${fixtureCounter++}`)
   mkdirSync(dir)
-  assert.throws(() => resolveCredentialMetadata(dir, AGENT_ID), (error) => {
+  assert.throws(() => resolveViaConfig(dir, AGENT_ID), (error) => {
     assert.equal(error.code, CREDENTIALS_STORE_ERROR)
     return true
   })
@@ -388,7 +312,14 @@ test('store path is a directory: CREDENTIALS_STORE_ERROR (read-failure family)',
 
 test('missing configured store file: CREDENTIALS_STORE_ERROR, never ABSENT', () => {
   const missing = join(FIXTURE_DIR, `not-there-${fixtureCounter++}.json`)
-  assert.throws(() => resolveCredentialMetadata(missing, AGENT_ID), (error) => {
+  assert.throws(() => resolveViaConfig(missing, AGENT_ID), (error) => {
+    assert.equal(error.code, CREDENTIALS_STORE_ERROR)
+    return true
+  })
+})
+
+test('relative path in trusted configuration fails loud (absolute-path rule)', () => {
+  assert.throws(() => resolveViaConfig('relative/store.json', AGENT_ID), (error) => {
     assert.equal(error.code, CREDENTIALS_STORE_ERROR)
     return true
   })
@@ -404,47 +335,20 @@ test('immutability matrix: PRESENT, ABSENT, and failure paths leave fixtures byt
   const malformedFile = writeStore({ version: 1, credentials: { [AGENT_ID]: { clientId: '' } } })
   const versionFile = writeStore({ version: 2, credentials: { [AGENT_ID]: { clientId: CLIENT_ID, clientSecret: SECRET_CANARY } } })
 
-  const before = { present: snapshot(presentFile), absent: snapshot(absentFile), malformed: snapshot(malformedFile), version: snapshot(versionFile) }
+  const before = {
+    present: snapshot(presentFile),
+    absent: snapshot(absentFile),
+    malformed: snapshot(malformedFile),
+    version: snapshot(versionFile),
+  }
 
-  observed(() => resolveCredentialMetadata(presentFile, AGENT_ID))
+  observed(() => resolveViaConfig(presentFile, AGENT_ID))
   assert.deepEqual(snapshot(presentFile), before.present)
-  observed(() => resolveCredentialMetadata(absentFile, AGENT_ID))
+  observed(() => resolveViaConfig(absentFile, AGENT_ID))
   assert.deepEqual(snapshot(absentFile), before.absent)
-  assert.throws(() => resolveCredentialMetadata(malformedFile, AGENT_ID))
+  assert.throws(() => resolveViaConfig(malformedFile, AGENT_ID))
   assert.deepEqual(snapshot(malformedFile), before.malformed)
-  assert.throws(() => resolveCredentialMetadata(versionFile, AGENT_ID))
+  assert.throws(() => resolveViaConfig(versionFile, AGENT_ID))
   assert.deepEqual(snapshot(versionFile), before.version)
   // uid/gid/mode equality is asserted inside every deepEqual(snapshot) above.
-})
-
-// ---------------------------------------------------------------------------
-// ACC-CMR-001 / ACC-CMR-005 (structural) — the inventory path never calls
-// loadCredentialFor(); the seam is wired to NO caller (no tool / RPC /
-// router / child registration — caller adoption is a separate reviewed change)
-// ---------------------------------------------------------------------------
-
-test('structural: the metadata seam reuses the document loader, never loadCredentialFor()', () => {
-  const source = readFileSync(join(REPO, 'packages', 'broker', 'src', 'credential-store.js'), 'utf8')
-  const seamStart = source.indexOf('export function resolveCredentialMetadata')
-  assert.ok(seamStart >= 0)
-  const seamBody = source.slice(seamStart)
-  assert.ok(!seamBody.includes('loadCredentialFor('), 'inventory path must not call loadCredentialFor()')
-  assert.ok(seamBody.includes('loadCredentialsStore('), 'full V1 document validation must be reused')
-})
-
-test('structural: the seam is referenced nowhere else (no exposure wiring)', () => {
-  const references = []
-  const seamFile = join(REPO, 'packages', 'broker', 'src', 'credential-store.js')
-  const walk = (dir) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const path = join(dir, entry.name)
-      if (entry.isDirectory()) walk(path)
-      else if (/\.(js|mjs|ts)$/.test(entry.name) && path !== seamFile) {
-        if (readFileSync(path, 'utf8').includes('resolveCredentialMetadata')) references.push(path)
-      }
-    }
-  }
-  walk(join(REPO, 'packages'))
-  const expected = [join(REPO, 'packages', 'broker', 'test', 'credential-metadata.test.js')]
-  assert.deepEqual(references.sort(), expected.sort())
 })
