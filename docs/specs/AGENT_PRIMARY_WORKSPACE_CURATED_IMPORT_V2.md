@@ -1,7 +1,15 @@
 ---
 spec_id: AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2
-status: proposed
+status: accepted
 date: 2026-08-22
+accepted_date: 2026-08-22
+accepted_by: mayf3
+accepted_reviewed_base: e0c73a6cce9f13c23085b8a51aaf9581888449ae
+accepted_reviewed_spec_commit: ae77eccf242d3b7401bb8110d4496897cc807ca7
+final_audit: 空间 审计
+final_audit_result: PASS
+required_fixes: NONE
+semantic_delta_after_review: NONE
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
@@ -14,30 +22,32 @@ governed_by:
   - AGENT_WORKSPACE_SESSION_MODEL_V2
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
-supersedes: []
+supersedes:
+  - AGENT_PRIMARY_WORKSPACE_IMPORT_V1
 superseded_by: null
 owners:
   - mayf3
 references:
-  - docs/specs/AGENT_PRIMARY_WORKSPACE_IMPORT_V1.md (accepted Current Authority while this Spec is proposed)
+  - docs/specs/AGENT_PRIMARY_WORKSPACE_IMPORT_V1.md (superseded by this Spec in the atomic acceptance transaction)
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md (accepted)
   - PR #47 AGENT_TRUSTED_FLEET_CUTOVER_V1 at b0feb030f315cf8565974b8ce0c9064b679d3b15 (proposed child planning input; not authority)
 ---
 
 # AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2 — Trusted Fleet 一次性 curated Workspace import（whole-authority replacement）
 
-> **PROPOSED / DOCS-ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY.**
+> **ACCEPTED / DOCS-ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY.**
 >
 > 本 Spec 是 `AGENT_PRIMARY_WORKSPACE_IMPORT_V1` 的完整、自包含、whole-authority
-> replacement 候选。它在 proposed 阶段不覆盖 V1。只有独立审计通过、authorized
-> maintainer 执行 §3.2 的原子 acceptance transaction、且 accepted 版本进入 `main`
-> 后，V2 才成为 Current Authority。
+> replacement。独立 focused review 在 exact head
+> `ae77eccf242d3b7401bb8110d4496897cc807ca7` 给出 PASS（REQUIRED_FIXES=NONE）；
+> authorized maintainer 随后以 lifecycle-only / semantic delta NONE 执行 §3.2 的原子
+> acceptance transaction。V2 在该 accepted snapshot 进入 `main` 后成为 Current Authority。
 >
-> 本轮只新增本 Spec：不修改 V1、不实现、不读取或写入 production data、不 copy
-> Workspace、不 provision home、不 reload/restart Runtime、不修改 Agent Definition、
-> 不 accepted、不 merge。
+> Acceptance-finalize 只修改 authority/lifecycle metadata、backlinks 与 index；不实现、
+> 不读取或写入 production data、不 copy Workspace、不 provision home、不 reload/restart
+> Runtime、不修改 Agent Definition、不恢复 binding。
 
-## 0. Authoring result
+## 0. Historical authoring result and acceptance record
 
 ```text
 TASK_NAME = 空间 执行
@@ -51,6 +61,21 @@ PARTIAL_SUPERSESSION = NONE
 IMPLEMENTATION_ALLOWED = NO
 PRODUCTION_APPLY_ALLOWED = NO
 READY_FOR_INDEPENDENT_REVIEW = YES
+```
+
+以上 code block 是 reviewed authoring head 的历史记录。Acceptance binding：
+
+```text
+REVIEWED_BASE_COMMIT = e0c73a6cce9f13c23085b8a51aaf9581888449ae
+REVIEWED_SPEC_COMMIT = ae77eccf242d3b7401bb8110d4496897cc807ca7
+REVIEWER = 空间 审计
+SPEC_REVIEW = ACCEPT
+REQUIRED_FIXES = NONE
+ACCEPTANCE_ACTOR = mayf3
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_ONLY
+IMPLEMENTATION_PERFORMED = NO
+PRODUCTION_CHANGE = NONE
 ```
 
 ## 1. Goal
@@ -119,8 +144,8 @@ Workspace 或通用文件搬运提供先例或 API authority。
 ```text
 Repository governance = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0 (accepted)
 Workspace product model = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted)
-Current import authority = AGENT_PRIMARY_WORKSPACE_IMPORT_V1 (accepted)
-Replacement candidate = AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2 (this Spec, proposed)
+Current import authority = AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2 (this Spec, accepted)
+Superseded import authority = AGENT_PRIMARY_WORKSPACE_IMPORT_V1 (superseded; backlink to V2)
 Downstream child = AGENT_TRUSTED_FLEET_CUTOVER_V1 (PR #47, proposed/FIX_REQUIRED)
 ```
 
@@ -130,8 +155,8 @@ PR #47 是 planning input，不是本 Spec 的上级 authority。它不能自行
 
 ### 3.2 Atomic whole-authority acceptance transaction
 
-独立“空间 审计”给出 `SPEC_REVIEW=ACCEPT` 后，authorized maintainer 必须在同一份
-**docs-only** acceptance change 中原子完成：
+独立“空间 审计”已对 exact reviewed head 给出 `SPEC_REVIEW=ACCEPT`；authorized
+maintainer 在同一份 **docs-only** acceptance change 中原子完成：
 
 ```text
 AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2.status: proposed -> accepted
@@ -144,8 +169,9 @@ mutual whole-Spec backlinks = present
 docs/specs/README.md = synchronized
 ```
 
-不得出现两个并行 accepted Workspace import authorities。本 authoring PR 不执行该
-transaction，也不修改 V1 的任何字节。
+不得出现两个并行 accepted Workspace import authorities。本 acceptance-finalize commit
+原子执行以上全部 lifecycle edges；除这些 metadata/backlink/index 变化外，reviewed
+normative meaning 不变（`SEMANTIC_DELTA_AFTER_REVIEW=NONE`）。
 
 ### 3.3 Downstream implementation gate
 
@@ -436,10 +462,11 @@ arguments, or persistent general migration registry.
 
 ### CTR-WS-011 — Authority and production gates
 
-This proposed Spec authorizes no implementation or production action. Even after its
-acceptance, import requires an accepted implementation-authorizing child, independent
-review, exact 86-ID pin, all external authorities, and explicit production run approval.
-This authoring PR must change only this Spec file and must stop at Draft PR.
+This accepted Spec authorizes no implementation or production action. Import requires an
+accepted implementation-authorizing child, independent review, exact 86-ID pin, all
+external authorities, and explicit production run approval. This acceptance-finalize may
+change only V2/V1 lifecycle metadata and backlinks plus the Spec index; it must not change
+reviewed normative meaning or any implementation/production surface.
 
 ### CTR-WS-012 — Audit minimization
 
@@ -454,11 +481,11 @@ home content.
 ### ACC-WS-001 — Whole-authority lifecycle
 
 - Contracts: `CTR-WS-011`
-- Method: inspect proposed authoring head and future acceptance transaction.
-- Expected: authoring changes only this proposed file; acceptance atomically links V2↔V1
-  and leaves only V2 accepted/current.
-- Failure: V1 edited in authoring PR, parallel accepted authorities, missing backlink, or
-  any product/production change.
+- Method: inspect reviewed authoring head and the lifecycle-only acceptance transaction.
+- Expected: acceptance atomically links V2↔V1, leaves only V2 accepted/current, and records
+  `SEMANTIC_DELTA_AFTER_REVIEW=NONE`.
+- Failure: normative meaning differs from the reviewed head, parallel accepted authorities,
+  missing backlink, or any implementation/product/production change.
 
 ### ACC-WS-002 — Exact fleet and identity
 
@@ -561,8 +588,10 @@ special case, and Kernel change remain closed; no new evidence reopens them.
 
 ### 12.1 Authority migration
 
-Before acceptance, V1 remains active and no curated copy is authorized. Acceptance uses
-§3.2 only. If review fails, abandon or revise this proposed file; V1 remains untouched.
+Before this acceptance transaction, V1 remained active and no curated copy was authorized.
+The focused review passed and §3.2 was executed atomically. V2 is accepted/current once this
+snapshot enters `main`; V1 is superseded with the reciprocal backlink. This lifecycle
+transition itself still authorizes no curated copy implementation or production action.
 
 ### 12.2 Runtime compatibility
 
@@ -587,15 +616,16 @@ IMPLEMENTATION_TBD = child Spec only; cannot weaken this authority
 EXTERNAL_AUTH_BLOCKER = remains owned by PR #47 / external authority work
 ```
 
-## 14. Stop condition
+## 14. Acceptance-finalize boundary
 
 ```text
 DOCS_ONLY = YES
-FILES_CHANGED = docs/specs/AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2.md only
+LIFECYCLE_FILES = V2 + V1 + docs/specs/README.md only
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
 IMPLEMENTATION = NONE
+WORKSPACE_MIGRATION = NONE
 PRODUCTION_APPLY = NONE
-V1_MUTATION = NONE
-ACCEPTANCE = NONE
-MERGE = NONE
-NEXT_ACTOR = independent “空间 审计”
+AGENT_DEFINITION_CHANGE = NONE
+BINDING_RESTORE = NONE
+NEXT_GATE = downstream PR #47 must separately resolve its Auth blocker and become accepted
 ```
