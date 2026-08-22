@@ -1,129 +1,135 @@
-# LARK_UX_PHASE1_V2 — implementation validation & canary status
+# LARK_UX_PHASE1_V2 — final dedicated-App Canary
 
 ```text
-REPORT_ID = LARK_UX_PHASE1_V2_CANARY_V1
+REPORT_ID = LARK_UX_PHASE1_V2_CANARY_V2
 DATE = 2026-08-22
-ROUND = 体验执行（final implementation）
-GOVERNING = AGENT_CORE_LARK_UX_PHASE1_V2 (accepted) +
-            AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT (accepted, contracts)
-BASE_MAIN = b8b6fb586b38b10cd88db964be78544385bb4a0f
-BRANCH = feat/lark-ux-phase1-v2-final
-DEDICATED_TEST_APP_CANARY = BLOCKED_PENDING_DEDICATED_TEST_APP_CREDENTIALS
+RUN_ID = pr46-ux-v2-final-20260822T072629Z
+PR = #46
+PR46_HEAD = e45ffa1a9dbeaf976512932b52a689a100d4be20
+CANDIDATE_TREE = 2bba5059a8b1d0210723ae1310c51b2a5b176a1a
+REMOTE_HEAD_STABLE = YES
+DEDICATED_TEST_APP_CANARY = PASS
+MANDATORY_SCENARIOS = 18 / 18 PASS
+PRODUCT_CODE_CHANGE_AFTER_PR46_HEAD = NONE
 ```
 
-## 1. Implementation validation (executed, this candidate)
+## 1. Isolated runtime and identity
 
-| Suite | Node | Result |
-|---|---|---|
-| dedicated UX tests — connector (`test/ux-phase1-v2.test.js`) | v26.7.0 | 26/26 PASS |
-| dedicated UX tests — Router seam (`test/feishu-ux-seam.test.js`) | v26.7.0 | 4/4 PASS |
-| feishu-connector full | v26.7.0 | 162/162 PASS, 0 skip |
-| agent-router full | v26.7.0 | 111/111 PASS, 0 skip |
-| production-runtime full | v25.6.1 (frozen) | 42 PASS / 0 fail / 2 skip |
-| serialized full repository (`node --test 'packages/*/test/*.test.js'`) | v25.6.1 (frozen) | 653 tests / 649 PASS / 1 FAIL / 3 skip |
-| real Binding read-only replay (`real-binding-replay.test.js`) | v26.7.0 | 1/1 PASS |
-| governance verifier | — | PASS (vendored bytes match lock; adoption accepted) |
-| accepted spec blob equality (parent / amendment vs main) | — | MATCH / MATCH (`91513d140bfeb2747326a465bdc01d72c899c864` / `9785c8a55f0028ca345e458f2a49f6de2b4939b3`) |
-| syntax (`node --check`) + JSON | — | PASS |
-| `git diff --check` | — | PASS |
-| gitleaks (changed files) | — | CLEAN |
-| credential literal scan | — | 0 hits |
-| forbidden-surface diff | — | NONE (only feishu-connector/**, agent-router/src/index.js success call, related tests) |
+- A new dedicated non-production App was created through the official reviewed
+  `@larksuite/channel` `registerApp` QR onboarding flow.
+- Test App identity SHA-256:
+  `3952e3cdc4319f2832bba140b78b20ad16071df860ca2d4206d1670b1ed6416c`.
+- The App identity differs from both the production App and the standalone pilot.
+  Neither existing App was modified.
+- Credential file and isolated Binding store were both mode `0600`. No credential,
+  token, Authorization value, real person name, private message body, or raw platform
+  identifier is persisted here.
+- Transport was WebSocket. Cards, a custom converter, and a second renderer remained
+  disabled. The runtime stayed on `@larksuite/channel@0.5.0`, immutable runtime
+  revision `ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f`.
+- Independent P2P, group, and topic conversations were prebound to the isolated test
+  Agent/session. One-way safe coordinates only:
+  - group conversation: `dedd692aff7ff02e3bb8f357`
+  - P2P conversation: `bd9ee13101601503adc1ca44`
+  - topic chat/conversation/thread: `06b753cd769ce477f0025b0b` /
+    `6653707c7b37b0c8cd769f5b` / `c78c39eb1add50bc94840ded`
 
-### The single full-repo failure is pre-existing environment drift
+## 2. Provider outcome
 
-`packages/agent-provisioning/test/provisioning.test.js:90` asserts
-`readHarnessIdentity()` equals a hardcoded fixture `{ version: 0.1.0-rc.5, commit: a12bb03… }`.
-The repo's own production pin moved to `0.1.0-rc.8 / 514ab7b…` in commit `e865fb8`
-("align Luna runtime pin with DSH rc.8") without updating this fixture, and the local
-harness checkout is at `0.1.0-rc.8 / f77b5a2…`. Proven pre-existing: the test fails
-IDENTICALLY on this branch with all UX changes stashed, and in the main repo checkout;
-this branch touches no agent-provisioning file. Fixing the fixture is outside this
-round's allowed paths (would require an out-of-scope docs/test change per §二).
-
-Environment repairs performed for this round (no repo changes): restored the canonical
-dev-resolution bridge (`node_modules/@deepseek-ai -> harness pnpm store`, per
-`scripts/install-integration.mjs`) which had gone missing and broke `child-env` T3/T4
-real child boots; ran the production-runtime and full-repo suites under the frozen
-Node `v25.6.1` (`/usr/local/bin/node`) with proxy env vars removed, per
-`docs/runbooks/feishu-production-cutover-v1.md`.
-
-## 2. UX contract implementation summary (unit/integration-verified)
-
-- Router seam: exactly ONE success-call change adding
-  `{ ux: { rendering: 'markdown', autoMentionTriggerSender: true } }`; failure receipt
-  call byte-preserved (2 args); ux object verified to carry intent flags only (no
-  identity/protocol values); `packages/agent-router/src/index.js` is the only Router
-  source file changed; `process.js` untouched.
-- Mention identity: `replyTargetFor` derives `triggerSenderOpenId` from
-  `IngressEvent.sender.openId` only (`^(?:ou_|on_)[A-Za-z0-9_-]+$`); missing/invalid →
-  no mention, no name fallback, no body mutation; mention entry is openId-carrying only
-  (no name); activation = intent AND group/thread AND valid openId; p2p structurally
-  excluded; `resolveMentionsInText` stays off; scheduler literal targets carry no
-  context.
-- Markdown: `ux.rendering=markdown` maps to `channel.send(to, { markdown }, opts)`;
-  `config.markdownConverter` unset; chunk limit 3500 (SDK native); heading native
-  normalization per the amendment (labels/order/treatment preserved; distinctness not
-  required; verified `#`→`####`, `##..######`→`#####` payload); bold/italic/quote/
-  inline-code/nested-lists/python-fence/link-byte-stability/table/CJK verified into
-  the md payload; >3500 comprehensive case (table+python fence+query/fragment/percent
-  link+mention+CJK) chunk-ordered, fence close/reopen with language tag, mention
-  first-chunk-only outside fences.
-- SDK error contracts (real pinned SDK OutboundSender, stubbed transport):
-  target_revoked → exactly one logical same-chat top-level fallback with
-  content/rendering/mentions preserved; rate_limited exhausted → exactly 3 SDK
-  attempts, fail-loud, connector retry 0; ambiguous unknown → rejects
-  (OUTCOME_UNKNOWN semantics), connector replay 0; permission_denied → fail-loud, no
-  replyTo removal / top-level / format fallback; format_error → exactly one logical
-  post→text fallback preserving the same answer. Connector adds zero
-  retry/fallback/replay in every path.
-- Excluded callers: unbound receipt / Router failure receipt / no-ux callers verified
-  plain text with no mention (V0 byte-compatible plans).
-
-## 3. Dedicated test-app canary — BLOCKED
-
-The 18 mandatory real-client gates (§十二) were NOT executed. Reason:
-
-- The dedicated non-production Agent Core test App used by the Phase A final canary
-  (appId sha256 `57350f752227fdb435306a277dcfcb7fbc110877ef33d6a4d346cb47c552a592`,
-  credential file `/private/tmp/pr27-test-app-canary-20260821/feishu-test-app-creds.json`,
-  plus its `FEISHU_FINAL_CANARY_GROUP` / `FEISHU_FINAL_CANARY_P2P` chat coordinates)
-  no longer exists on this machine — the /private/tmp directory was reclaimed.
-- The ONLY credential file still on disk (`~/.dsh/feishu-creds.json`) is the
-  PRODUCTION App (`cli_a9d7…`, held by the OpenClaw gateway) — explicitly forbidden
-  by this round (不得使用 production App), as is the standalone pilot App
-  (`cli_aa0e3dda8778dd11`).
-
-To complete the canary the Owner must re-provide (input only the Owner holds):
-
-1. the dedicated test-App credentials (appId/appSecret) — verified against the
-   sha256 pin above or a successor dedicated app pinned by a new evidence record;
-2. the dedicated GROUP and P2P chat ids for that App (plus a topic-capable group);
-3. a human sender account performing the real ingress turns, and the mentioned
-   user's real Feishu client for the native-notification observation gates (7/8/18).
-
-Frozen-execution prerequisites already verified present on this machine:
-frozen Harness checkout `a12bb03…` at `/private/tmp/dsh-harness-rc5-pr27-audit` (clean),
-codex fallback plugin tree + auth (for the openai-codex/gpt-5.6-luna route),
-`~/.openclaw/openclaw.json` production-identity source for isolation comparison,
-frozen Node v25.6.1.
-
-No secret, token, Authorization value, real personal name, or private message
-content appears in this report. Platform IDs are either hashed or already-public
-non-production identifiers from prior accepted evidence records.
-
-## 4. Round ledger
+The primary route `zai/glm-5.3` registered, then the provenance turn terminated with
+explicit `account_quota_exhausted`. The scenario was stopped. There was no same-turn
+fallback. A clean isolated process/home was started and the scenario rerun from its
+start on the authorized fallback `openai-codex/gpt-5.6-luna`.
 
 ```text
-PRODUCT_CODE_CHANGE = YES (3 product files: agent-router/src/index.js [1 call site],
-                             feishu-connector/src/core.js, feishu-connector/src/index.js)
-TEST_CHANGE = YES (2 new dedicated UX test files, 30 tests)
-DEPENDENCY_CHANGE = NONE (package.json / lockfiles untouched; SDK pin ab028f9 unchanged)
-SDK_CHANGE = NONE
-PHASE_A_FOUNDATION_REGRESSION = NONE (Phase A suites fully green)
-ACCEPTED_SPEC_CHANGE = NONE (parent + amendment blobs match main)
+PRIMARY_RESULT = account_quota_exhausted
+FALLBACK_TRIGGER_ALLOWED = YES
+SAME_TURN_SILENT_FALLBACK = NO
+CLEAN_RESTART = YES
+EFFECTIVE_PROVIDER_MODEL = openai-codex/gpt-5.6-luna
+EFFECTIVE_PROVIDER_REGISTERED = YES
+EFFECTIVE_TURN_COMPLETED = YES
+TURN_FINISHED_AT = 2026-08-22T08:04:59.774Z
+SAFE_REPLY_SHA256 = f0075be645fb71bf13abaec06c61aa6500d3bad0d6804eed2c7768e7c7f5971a
+```
+
+## 3. Mandatory Canary matrix
+
+Success-path observations used the real Feishu web client and the exact candidate
+connector. Error-class rows use the real pinned SDK `OutboundSender` with a controlled
+raw transport, as required to induce otherwise unsafe/non-deterministic platform
+errors; the connector adds no retry, fallback, or replay.
+
+| # | Scenario | Timestamp (UTC) | Result | Safe evidence |
+|---:|---|---|---|---|
+| 1 | Heading native normalization | 07:55:32 | PASS | Six labels visible, ordered, and natively treated; distinct levels not required. |
+| 2 | Nested ordered/unordered list | 07:32:54 | PASS | Both list kinds and depth-1 children visibly retained in order. |
+| 3 | Python fenced code + language | 08:07:41 | PASS | Native code blocks showed `python`; code bytes and all safe markers present. |
+| 4 | Clickable byte-stable link | 07:55:32 | PASS | Native anchor clickable; DOM `href` exactly equalled input for query, fragment, and percent encoding. Input URL SHA-256 `dce30ecc…a7943c`. |
+| 5 | Simple native table | 07:32:54 | PASS | Real client displayed a two-column header and two-row table grid. |
+| 6 | >3500 comprehensive long content | 08:07:41 | PASS | 13,343 chars, 4 chunks, 280/280 markers complete and ordered; table/link present; fence closed/reopened with `python` in each chunk; mention counts `[1,0,0,0]`, outside fence; end marker present. Content SHA-256 `9f197d60…ddd0f`. |
+| 7 | Group auto-mention | 07:29:21 | PASS | Trigger sender identity came only from ingress openId; native clickable mention and recipient native notification observed. Message pseudonym `95dd3e…f8682`. |
+| 8 | Topic auto-mention | 07:52:22 | PASS | Native clickable mention and notification observed inside the topic; reply did not escape to main group. Message pseudonym `0782bd…cef2e`. |
+| 9 | Topic follow-up continuity | 07:54:26 | PASS | `conversationId = chatId:topic:threadId`; same safe conversation/thread and byte-equal prebound Binding on first and follow-up ingress. |
+| 10 | P2P no auto-mention | 07:35:22 | PASS | Real P2P response rendered Markdown with zero mention nodes. |
+| 11 | Missing/invalid openId | 07:26:33 | PASS | Real invalid-id output had no mention/name fallback; missing and invalid contract cases produced no fabricated identity. |
+| 12 | Router failure receipt | 07:26:33 | PASS | Real client receipt was plain text with zero mentions; Router failure call remained exactly two arguments. |
+| 13 | Unbound/proactive | 07:48:14 | PASS | Real unbound receipt and proactive notice were plain text with zero mentions; unbound path created no Binding. |
+| 14 | `target_revoked` | 08:10:17 | PASS | Exactly one logical same-chat top-level fallback; content/rendering/mention preserved; connector retry 0. |
+| 15 | `permission_denied` | 08:10:17 | PASS | Fail loud; no reply-target removal, top-level degradation, or format fallback. |
+| 16 | `format_error` | 08:10:17 | PASS | Exactly one logical Markdown→text fallback with the same answer; connector retry 0. |
+| 17 | Exhausted `rate_limited` | 08:10:17 | PASS | SDK attempts 3; connector retry 0; automatic replay 0; fail loud. |
+| 18 | Ambiguous unknown | 08:10:17 | PASS | `OUTCOME_UNKNOWN`; no visible exactly-once claim; connector retry/replay 0. |
+
+Native table, clickable mention, and native notification gates passed, so no Owner
+Decision stop was triggered.
+
+## 4. Binding and delivery equality
+
+```text
+P2P_PREBOUND = YES
+GROUP_PREBOUND = YES
+TOPIC_PREBOUND_BEFORE_SUCCESS_INGRESS = YES
+GROUP_BINDING_EQUAL_BEFORE_AFTER = YES
+TOPIC_CONVERSATION_FORMULA_EQUAL = YES
+TOPIC_FIRST_FOLLOWUP_CONVERSATION_EQUAL = YES
+TOPIC_FIRST_FOLLOWUP_BINDING_EQUAL = YES
+TOPIC_REPLY_STAYED_IN_THREAD = YES
+```
+
+## 5. Verification
+
+All commands below used Node `v25.6.1`; production/full-repository child boots were
+bound to the clean frozen Harness at commit
+`a12bb03c6861969985f066bfbf0cb7e5dd5ac567`.
+
+| Suite | Result |
+|---|---|
+| dedicated UX connector + SDK fault contracts | 26/26 PASS |
+| Feishu connector full | 162/162 PASS |
+| Agent Router full, including four UX seam tests | 111/111 PASS |
+| production runtime full | 42 PASS / 0 fail / 2 skip |
+| real Binding read-only replay | 1/1 PASS |
+| serialized full repository | 653 tests / 650 PASS / 0 fail / 3 skip |
+| governance integrity verifier (`--require-accepted`) | PASS |
+| accepted parent/amendment blob equality with main | MATCH / MATCH |
+
+Post-report checks (`git diff --check`, gitleaks, credential scan, forbidden-surface
+check) are recorded in the JSON report and final PR commit gate.
+
+## 6. Authority and non-actions
+
+```text
+PARENT_SPEC_BLOB = 91513d140bfeb2747326a465bdc01d72c899c864
+HEADING_AMENDMENT_BLOB = 9785c8a55f0028ca345e458f2a49f6de2b4939b3
+ACCEPTED_SPEC_CHANGE = NONE
+PHASE_A_FOUNDATION_REGRESSION = NONE
+PRODUCT_CODE_CHANGE_AFTER_PR46_HEAD = NONE
+DEPENDENCY_CHANGE = NONE
 DEPLOYMENT = NONE
-PRODUCTION_STATE_CHANGE = NONE (production App never touched)
+PRODUCTION_STATE_CHANGE = NONE
 MERGE = NONE
 SECRET_DISCLOSURE = NONE
+OWNER_DECISION_REQUIRED = NONE
+READY_FOR_体验审计 = YES
 ```
