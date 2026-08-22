@@ -30,6 +30,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute } from 'node:path'
 
+import { normalizeAgentId } from '../../agent-definition/src/definition.js'
+
 /** Store document version; bumped only on breaking format changes. */
 export const CREDENTIALS_STORE_VERSION = 1
 
@@ -110,4 +112,49 @@ export function loadCredentialFor(storeFile, agentId) {
   if (storeFile === undefined || storeFile === '') return undefined
   const store = loadCredentialsStore(storeFile)
   return store[agentId]
+}
+
+/**
+ * Resolve REDACTED credential METADATA for ONE agent id — the fleet-inventory
+ * seam (AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1). Answers only whether
+ * the canonical trusted store has an entry for the EXACT agent id and, when
+ * present, that entry's non-secret clientId. This is the ONLY sanctioned way
+ * for trusted inventory to ask presence: it must NOT call loadCredentialFor()
+ * and receive clientSecret merely to discard it.
+ *
+ * Trusted-parent ONLY — the same authsvc/uid505 credential boundary as
+ * loadCredentialFor: never reachable by a child Agent, model tool, child
+ * RPC, or UI; the store path is trusted parent configuration
+ * (AGENT_CORE_CREDENTIALS_FILE), never a caller-supplied request field.
+ *
+ * Semantics:
+ *   - the agent id is validated FIRST by the Agent Definition authority's
+ *     own validator (single id-grammar authority; no local fallback): every
+ *     invalid, empty, or path/traversal-shaped id fails LOUD before ANY
+ *     store path operation or read (STORE_ACCESS_COUNT = 0);
+ *   - an unconfigured store or an absent exact key -> { entry: 'ABSENT' }
+ *     (clientId omitted, never null/empty);
+ *   - a valid entry -> { entry: 'PRESENT', clientId } — a freshly built
+ *     closed object: the secret-bearing normalized entry never leaves this
+ *     boundary, and no other key can appear in the result;
+ *   - a configured store that is missing, unreadable, malformed,
+ *     unsupported-version, or carries any malformed entry throws the stable
+ *     CREDENTIALS_STORE_ERROR family — broken trusted state never
+ *     masquerades as ABSENT;
+ *   - strictly read-only: no write, chmod, chown, rename, or repair; emits
+ *     no log, metric, report, stdout, or stderr of its own.
+ *
+ * PRESENCE is local-store metadata only: it says nothing about Auth client
+ * existence/validity, principal binding, grants, or token mintability.
+ * @param {string | undefined} storeFile - AGENT_CORE_CREDENTIALS_FILE value
+ *   (trusted parent configuration).
+ * @param {string} agentId - the exact Agent Definition id being inventoried.
+ * @returns {{entry:'PRESENT', clientId:string} | {entry:'ABSENT'}}
+ */
+export function resolveCredentialMetadata(storeFile, agentId) {
+  normalizeAgentId(agentId)
+  if (storeFile === undefined || storeFile === '') return { entry: 'ABSENT' }
+  const credential = loadCredentialsStore(storeFile)[agentId]
+  if (credential === undefined) return { entry: 'ABSENT' }
+  return { entry: 'PRESENT', clientId: credential.clientId }
 }
