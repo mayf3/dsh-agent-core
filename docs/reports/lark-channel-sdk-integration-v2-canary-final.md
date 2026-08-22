@@ -14,6 +14,49 @@ The final candidate uses one official SDK WebSocket, SDK normalization/dedup/Pro
 
 The companion JSON report is the machine-readable authority for exact counters and digests.
 
+## Current-main fast-forward delivery reconciliation
+
+A later delivery-only round fetched `origin/main` and mechanically replayed the exact reviewed PR #40 delta onto current main without changing product semantics:
+
+- Historical reviewed Head: `71b12b65a65fb263fed0bfe196ec2fea3ed72f73` (`REVIEWED_PASS / REFERENCE_ONLY`)
+- Current main base: `b312ef88532d2750e6df95a8ef2e4a83284b9562`
+- Historical Head/current-main merge-base: `342111c485a48c4932b1b6f1cb59ef5307af6279`
+- Replayed Head before this reconciliation-only report update: `96ff5ec39b64d8e64d1df5546309d55f75827459`
+- Historical changed paths compared: 37; blob mismatches after replay: 0
+- `BASE_MAIN_IS_ANCESTOR_OF_NEW_HEAD = YES`; `behind_by = 0`
+- `LIVE_TESTED_CODE_TREE_MATCH = PASS`
+- Full live Canary rerun: not required; inherited result remains unchanged PASS
+
+Byte-identical governed implementation coordinates:
+
+- Feishu connector tree: `c43e2859af3d6afb136cb162ed6fea5ad042d8e3`
+- Production runtime `compose.js`: `627776f2427c5418f0f9b5d2522d548ce2f10d22`
+- Connector package manifest: `199af352ebc80e0de08d7349fc03816a96797168`
+- Connector lockfile: `c015e2949719cc8ad2dfb2cbfe41cc52a316e06c`
+- SDK runtime revision: `ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f`
+- Canary driver: `6ff8f30730e638379858160996760d3b480834a0`
+
+Current-main drift did not overlap any PR #40 changed file. The current-main Agent Router tree `c1ea28de9720c665020d7a3f73495717f61cc5b3`, AgentProcess blob `ec5e0d092fbc9d1030fa24c295c7e288ee8df1ef`, and model-overrides blob `4c777c7c6a41943add7dc0716e442f8864042adf` remain byte-identical to current main. This preserves the Agent child `TMPDIR` inheritance fix and Luna rc.8 override.
+
+The accepted UX Spec remains `accepted` at blob `91513d140bfeb2747326a465bdc01d72c899c864`; accepted Spec change is `NONE`. The superseding Draft PR persistently binds the final delivery Head after this report commit.
+
+### Delivery minimal recheck
+
+All required checks were rerun on the current-main replay:
+
+- Log-redaction adversarial: 16/16 pass
+- Feishu connector full suite: 133/133 pass
+- Production runtime full suite: 42 pass, 0 fail, 2 skip (44 total)
+- Agent Router full suite, including current-main child `TMPDIR` tests: 107/107 pass
+- Real Binding read-only replay: 1/1 pass
+- Frozen rc.5 serialized full repository: 620 pass, 0 fail, 3 skip (623 total)
+- Governance, authority hashes, accepted UX blob, and `git diff --check`: PASS
+- Gitleaks: 0 findings
+- Exact local credential literals: 13 candidates scanned, 0 tracked-file matches
+- Forbidden-surface diff: `NONE`
+
+`FULL_REPO_FAIL = 0`.
+
 ## Frozen Harness
 
 Verification and live execution used only:
