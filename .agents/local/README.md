@@ -64,6 +64,19 @@ SEMANTIC_REVIEW_RECORD = persistent PR conversation or docs/reports/
 EMERGENCY / INCIDENT_REFERENCE = persistent issue, PR, or report
 ```
 
+## Code structure rules
+
+Binding repository-local rule: [`.agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md`](CODE_STRUCTURE_GUARDRAILS_V1.md)
+(frozen file/directory/depth limits, legacy policy, exception registry, anti-evasion
+rules). Entry point for the rule:
+
+```text
+RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md
+EXCEPTION_REGISTRY = .agents/structure-registry.json
+VERIFIER = node scripts/verify-code-structure.mjs --base <ref> --head <ref> [--json]
+NPM = npm run verify:structure
+```
+
 Raw logs may remain outside Git, but every load-bearing Observation or Evidence relation must retain enough provenance to retrieve and interpret the source.
 
 ## Legacy transition
@@ -103,6 +116,7 @@ SEMANTIC_SPEC_VERIFIER = NOT_IMPLEMENTED
 BASE_BRANCH_GATE = NOT_IMPLEMENTED
 REQUIRED_BRANCH_PROTECTION = NOT_ENABLED
 AUTOMATIC_SPEC_ACCEPTANCE = NO
+CODE_STRUCTURE_VERIFIER = AVAILABLE (scripts/verify-code-structure.mjs; run via npm run verify:structure)
 ```
 
 Run the vendored integrity verifier:
