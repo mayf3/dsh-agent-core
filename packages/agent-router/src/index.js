@@ -61,7 +61,7 @@ import z from '@deepseek-ai/schemastery'
 import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { AgentProcess, agentEnv, RECOGNIZED_PROXY_ENV_KEYS } from './process.js'
+import { AgentProcess, agentEnv, AGENT_CHILD_TMPDIR, RECOGNIZED_PROXY_ENV_KEYS } from './process.js'
 import { BindingStore } from './binding-store.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
 
@@ -867,4 +867,4 @@ export function apply(ctx, config) {
   return service
 }
 
-export { agentEnv, RECOGNIZED_PROXY_ENV_KEYS }
+export { agentEnv, AGENT_CHILD_TMPDIR, RECOGNIZED_PROXY_ENV_KEYS }
