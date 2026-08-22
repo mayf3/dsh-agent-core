@@ -26,10 +26,10 @@ replaced_authority_revision: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
 accepted_date: 2026-08-21
 accepted_reviewed_base: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
 accepted_reviewed_head: 08c041c3ad11bab6b1632b24103b40b2d698dfdf
-replacement_review: PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW
-replacement_review_result: PASS
-required_fixes: NONE
-review_verdict: READY_TO_ACCEPT_REPLACEMENT
+historical_pr28_replacement_review_claim: PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW
+historical_pr28_replacement_review_claim_result: PASS
+historical_pr28_required_fixes_claim: NONE
+historical_pr28_review_verdict_claim: READY_TO_ACCEPT_REPLACEMENT
 acceptance_finalize_semantic_change: none
 references:
   - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md
@@ -40,9 +40,9 @@ references:
 
 # AGENT_PROCESS_LIFECYCLE_HARDENING_V2 — 进程生命周期、deadline 与未知结果收口
 
-> 状态：**accepted**（2026-08-21 whole-authority acceptance finalize；reviewed replacement HEAD `08c041c3ad11bab6b1632b24103b40b2d698dfdf`；supersedes `AGENT_PROCESS_LIFECYCLE_HARDENING_V1`）。
-> 本轮：**SPEC ONLY / ATOMIC WHOLE-AUTHORITY ACCEPTANCE FINALIZE**。
-> 不 implementation；不修改 production；不修改当前 `DSH_AGENT_TURN_TIMEOUT=900000` 运维缓解；不修改 Scheduler；不 merge；accepted 仅在本 PR 分支，合入 `main` 前不构成 active authority。
+> 状态：**accepted / current on `main`**（2026-08-21 whole-authority acceptance finalize；reviewed replacement HEAD `08c041c3ad11bab6b1632b24103b40b2d698dfdf`；supersedes `AGENT_PROCESS_LIFECYCLE_HARDENING_V1`）。
+> 当前实现状态：**NOT_STARTED**。Accepted/current authority 不等于 implementation complete、production fixed、production deployed 或 implementation PR automatically mergeable。
+> 本收口：**DOCS ONLY**；不 implementation；不修改 production；不修改当前 `DSH_AGENT_TURN_TIMEOUT=900000` 运维缓解；不修改 Scheduler；不 merge。
 
 ---
 
@@ -50,22 +50,24 @@ references:
 
 ```text
 SPEC_GOVERNANCE_MODE = AUTHOR
-PREFLIGHT_MODE = SUPERSEDE
+PREFLIGHT_MODE = AMEND
 AGENT_PROCESS_LIFECYCLE_HARDENING_V2_SPEC = PASS
 SPEC_STATUS = accepted
-IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = contracts
-ACTIVE_IMPLEMENTATION_AUTHORITY_NOW = none
-IMPLEMENTATION_ALLOWED = NO
+ACTIVE_AUTHORITY_ON_MAIN = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+IMPLEMENTATION_AUTHORITY = contracts
+SUPERSEDES = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
+V1_CURRENT_STATUS = superseded
+IMPLEMENTATION_STATE = NOT_STARTED
+PRODUCTION_ROLLOUT_STATE = NOT_STARTED
+AUTHORITY_CONFORMANCE_AUDIT = FIX_REQUIRED_UNTIL_THIS_CONVERGENCE_IS_INDEPENDENTLY_REVIEWED_AND_MERGED
+IMPLEMENTATION_ALLOWED_TO_START = NO
 NEEDS_OWNER_DECISION = NO
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
-READY_FOR_INDEPENDENT_SPEC_REVIEW = COMPLETED
 ```
 
-`PASS` 表示 replacement authoring 输入完整；whole-authority acceptance provenance 见 §0.4。
-`status: accepted` 现仅存在于本 PR 分支；合入 `main` 前不构成 active authority、不授权
-implementation，也不使 `main` 上的旧 authority 失效。
+`PASS` 只表示历史 replacement authoring 输入完整；whole-authority acceptance provenance 见 §0.4。当前独立审计结论仍为 `FIX_REQUIRED`，本 docs-only 收口在独立 review 并合入前不授权 implementation 启动。
 
 ### 0.1 Complete replacement declaration
 
@@ -101,11 +103,9 @@ REPLACED_SPEC_SEMANTIC_CHANGE_AT_FINALIZE = NONE
 以上 provenance 仅证明 V1 被完整携带语义的历史来源；它不是 V2 的 review 或 acceptance
 provenance。V2 未填写 `accepted_by`、`accepted_at` 或任何等价的 acceptance claim。
 
-### 0.3 Atomic whole-authority supersession plan
+### 0.3 Atomic whole-authority supersession plan — HISTORICAL_ACCEPTANCE_PLAN
 
-本 authoring PR 只准备未来原子 transition 的完整计划：V2 frontmatter 的 `supersedes` 保持空列表；V1 保持
-`status: accepted`，且本轮不修改。只有 V2 完成独立评审后，authorized maintainer 才可在
-一个后续 docs-only acceptance-finalize change 中原子执行：
+以下是 2026-08-21 acceptance-finalize 之前的历史计划：当时的 authoring PR 只准备未来原子 transition；V2 frontmatter 的 `supersedes` 保持空列表，V1 保持 `status: accepted`。计划要求 authorized maintainer 在后续 docs-only acceptance-finalize change 中原子执行：
 
 ```text
 AGENT_PROCESS_LIFECYCLE_HARDENING_V2.status: proposed -> accepted
@@ -114,30 +114,29 @@ AGENT_PROCESS_LIFECYCLE_HARDENING_V1.status: accepted -> superseded
 AGENT_PROCESS_LIFECYCLE_HARDENING_V1.superseded_by: AGENT_PROCESS_LIFECYCLE_HARDENING_V2
 ```
 
-若任一 backlink/lifecycle 更新缺失，则 transition 不得完成。V2 accepted 且该原子 change
-进入 `main` 前，V1 仍是 active authority，active implementation authority 仍为 `none`。
+该历史计划规定任一 backlink/lifecycle 更新缺失都不得完成 transition；当时的 authority 状态绑定于 authoring base `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`。
 
-**2026-08-21 执行记录：以上 plan 已由 docs-only whole-authority acceptance-finalize
-transaction 在同一 commit 中原子执行完成；acceptance provenance 见 §0.4。**
+**2026-08-21 执行记录：以上 plan 已由 docs-only whole-authority acceptance-finalize transaction 在同一 commit 中原子执行完成，并由 PR #28 merge `12375d6282ede5015088a7d7f5495d6f46ca7738` 进入 `main`；acceptance provenance 见 §0.4。**
 
-### 0.4 Acceptance Record
+### 0.4 Acceptance Record — HISTORICAL_PRE_MERGE_RECORD
 
 ```text
 ACCEPTANCE_FINALIZE = AGENT_PROCESS_LIFECYCLE_HARDENING_V2_WHOLE_AUTHORITY_ACCEPTANCE_FINALIZE
 ACCEPTED_DATE = 2026-08-21
 REVIEWED_BASE_COMMIT = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
 REVIEWED_SPEC_COMMIT = 08c041c3ad11bab6b1632b24103b40b2d698dfdf
-PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW = PASS
-REQUIRED_FIXES = NONE
-READY_TO_ACCEPT_REPLACEMENT = YES
+HISTORICAL_PR28_REVIEW_CLAIM = PASS
+PERSISTENT_INDEPENDENT_REVIEW_PROVENANCE_AT_MERGE = INCOMPLETE
+POST_MERGE_INDEPENDENT_AUTHORITY_AUDIT = FIX_REQUIRED
+ACCEPTANCE_FINAL_HEAD_RECHECK = INVALID
 SEMANTIC_DELTA_FROM_REVIEWED_SPEC_COMMIT = NONE
 SPEC_STATUS = accepted
 SUPERSEDES = [AGENT_PROCESS_LIFECYCLE_HARDENING_V1]
 SUPERSEDED_AUTHORITY = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (status = superseded; superseded_by = AGENT_PROCESS_LIFECYCLE_HARDENING_V2)
 ATOMIC_WHOLE_AUTHORITY_SUPERSESSION = SINGLE_DOCS_ONLY_TRANSACTION
-FINAL_ACCEPTED_HEAD = recorded in the PR #28 acceptance record; never self-referenced in this file
-ACTIVE_AUTHORITY_ON_MAIN_UNTIL_MERGE = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-IMPLEMENTATION_ALLOWED_BEFORE_MAIN_MERGE = NO
+FINAL_ACCEPTED_HEAD = 5c1d03b8543674ffe2af42c6d0529cf4e0552bff
+AUTHORITY_MERGE = 12375d6282ede5015088a7d7f5495d6f46ca7738
+HISTORICAL_IMPLEMENTATION_ALLOWED_BEFORE_ACTIVATION = NO
 ```
 
 本 finalize 只机械执行 §0.3 预定的原子 transition 与 acceptance provenance；§1–§15 reviewed
@@ -208,10 +207,11 @@ Non-goals / forbidden changes（与 V1 完全相同）：
 Program authority = AGENT_CORE_HARDENING_PROGRAM_V1 (accepted)
 Session/product authority = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted)
 Evidence authority = AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1 (PASS)
-Authority on main until merge = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (accepted; implementation_authority=none; superseded in-branch by this V2 since 2026-08-21)
-Replacement (accepted in-branch 2026-08-21) = AGENT_PROCESS_LIFECYCLE_HARDENING_V2 (accepted; implementation_authority=contracts; supersedes=[AGENT_PROCESS_LIFECYCLE_HARDENING_V1])
-Active implementation authority now = NONE
-Implementation authority after V2 legal acceptance = contracts
+Current AgentProcess authority on main = AGENT_PROCESS_LIFECYCLE_HARDENING_V2 (accepted; implementation_authority=contracts)
+Historical replaced authority = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (superseded; implementation_authority=none)
+Implementation state = NOT_STARTED
+Production rollout state = NOT_STARTED
+Implementation start gate = NO pending independent convergence review and merge
 ```
 
 Owner 边界：
@@ -227,35 +227,58 @@ DSH_KERNEL_CHANGE = NONE
 
 本 Spec 只定义 Scheduler 将来可消费的 termination seam；不实现或修改 Scheduler。
 
+### 3.1 Non-normative current-main compatibility context
+
+```text
+CURRENT_MAIN_COMPATIBILITY_HEAD = b312ef88532d2750e6df95a8ef2e4a83284b9562
+PRESERVE_PROVIDER_ENV_PROXY_SEAM = YES
+PRESERVE_AGENT_CHILD_TMPDIR_SEAM = YES
+AGENT_CHILD_TMPDIR_SOURCE = AGENT_CHILD_TMPDIR_OVERRIDE_V1 / PR #39
+V2_AUTHORITY_OVER_PROVIDER_PROXY = NONE
+V2_AUTHORITY_OVER_AGENT_CHILD_TMPDIR = NONE
+COMPATIBILITY_NOTES_CREATE_NEW_V2_CONTRACT = NO
+```
+
+This State/compatibility note records adjacent behavior already present on current `main`; it creates no new V2 Contract, Decision, Acceptance item, implementation gate, or compliance obligation. The observed compatibility surface consists of the provider/proxy seam, `AGENT_CHILD_TMPDIR`, the final-write ordering in `agentEnv()`, and non-mutation of the Router parent `process.env`. Those descriptive facts remain outside V2 normative authority.
+
 ---
 
 ## 4. Current State
 
-### STATE-PROC-001 — Repository authority state
+### STATE-PROC-001 — Repository authority state — HISTORICAL_PRE_MERGE_RECORD
 
 - Subject: AgentProcess lifecycle governing authority in `mayf3/dsh-agent-core`
 - As of commit: `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`
 - Environment: Git repository authority branch `main`
 - Observed at: `2026-08-21T01:21:17Z`
-- Projection: `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` is accepted and active with
-  `implementation_authority: none`.
+- Historical projection: at that exact pre-merge coordinate, `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` was accepted with `implementation_authority: none`.
 - Basis: `OBS-PROC-001`, `EVD-PROC-001`.
 
 ### STATE-PROC-002 — Carried AgentProcess gap model
 
 - Subject: the descriptive AgentProcess gaps that the replacement Contracts govern
 - As of authority revision: `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`
-- Environment: accepted V1 authority record; no new runtime observation is claimed by V2
+- Environment: historical accepted V1 authority record; no new runtime observation is claimed by V2
 - Observed at: `2026-08-21T01:21:17Z`
 - Projection: the nine accepted gap observations and the incident-derived
   `TIMEOUT_WITHOUT_TERMINATION_PROOF = outcome_unknown` interpretation remain the factual basis carried into V2.
 - Basis: `OBS-PROC-003`, `EVD-PROC-004`.
 
+### STATE-PROC-003 — Current AgentProcess authority state
+
+- Subject: AgentProcess lifecycle governing authority
+- As of commit: `b312ef88532d2750e6df95a8ef2e4a83284b9562`
+- Environment: `mayf3/dsh-agent-core` authority branch `main` plus this docs-only convergence amendment
+- Observed at: `2026-08-22T02:58:39Z`
+- Projection: `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` is accepted/current; `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` is superseded; `implementation_authority = contracts`; implementation and production rollout are not started.
+- Compatibility context: preserve the existing provider/proxy seam and PR #39 `AGENT_CHILD_TMPDIR` behavior without granting V2 authority over either.
+- Basis: main V2/V1 frontmatter, mutual backlinks, authority merge `12375d6282ede5015088a7d7f5495d6f46ca7738`, current main `b312ef88532d2750e6df95a8ef2e4a83284b9562`, and the AgentProcess index synchronized by this amendment.
+
 ---
 
 ## 5. Observations
 
-### OBS-PROC-001 — V1 remains the active authority
+### OBS-PROC-001 — V1 authority at the historical authoring base — HISTORICAL_PRE_MERGE_RECORD
 
 - Subject: `docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md`
 - Source revision: `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`
@@ -322,7 +345,7 @@ DSH_KERNEL_CHANGE = NONE
   `contracts` under the accepted V1 `spec_id` and described that change as an amendment.
 - Provenance: immutable Git commit `9dba2e437191c974a31665b4cc4dff0c5978b0ab`.
 
-### OBS-PROC-005 — Deterministic preservation and format validation
+### OBS-PROC-005 — Historical deterministic preservation and current reproduction
 
 - Subject: carried C-001–C-022 bodies, detailed Acceptance Criteria, and V2 governance structure
 - Source revisions: V1 at `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`;
@@ -333,75 +356,193 @@ DSH_KERNEL_CHANGE = NONE
 - Method: extract each C-001–C-022 body, normalize only Spec-identity wording and repaired
   stable-anchor references, compare with V1, concatenate in Contract-ID order, and SHA-256;
   separately compare §10.2–§10.3 detailed acceptance with V1 §16/§16.1 and SHA-256
-- Result: C-001–C-022 preserved 22/22 with normalized surface SHA-256
+- Historical result: C-001–C-022 preserved 22/22 with normalized surface SHA-256
   `3e28f596f48e6e0f768f1bc46ebbce6b90ade98ec893b82899e9dc31f7d0d4c7`;
-  detailed acceptance preserved with normalized SHA-256
+  detailed acceptance plus fault surface preserved with historical normalized SHA-256
   `07a8de03a382dadd45e1b1587327c929cd56bd3a81fa1522425be30daa07a59e`.
+- Convergence reproduction: on base `b312ef88532d2750e6df95a8ef2e4a83284b9562`, the command below separately verifies Contracts, Acceptance criteria, and the fault matrix from the current V1/V2 files. Its exact hashes and stdout are persisted in `docs/reports/agent-process-lifecycle-hardening-v2-main-authority-audit.md`.
 - Reproduction command:
 
 ```bash
 python3 - <<'PY'
-import hashlib, re, subprocess
-OLD = '79cc8e861cbb16755370b0e9f30ef3fb47c56fa6'
-NEW = '52558b23c5278c77a2a64482bd41f9d26f2fad19'
-PATH = 'docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V2.md'
-def show(rev, path):
-    return subprocess.check_output(['git', 'show', f'{rev}:{path}'], text=True)
-def blocks(text):
-    lines = text.splitlines(keepends=True); out = {}
-    for i, line in enumerate(lines):
-        match = re.match(r'^(#+) C-(\d{3}) —', line)
-        if not match: continue
-        level = len(match.group(1)); body = []
-        for item in lines[i + 1:]:
-            heading = re.match(r'^(#+) ', item)
-            if heading and len(heading.group(1)) <= level: break
-            body.append(item)
-        out[match.group(2)] = ''.join(body)
-    return out
-old = show(OLD, 'docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md')
-new = show(NEW, PATH)
-a, b = blocks(old), blocks(new)
+import hashlib
+import re
+from pathlib import Path
+
+VERSION = 'agent-process-authority-crosswalk-v2-heading-parser-1'
+V1_PATH = Path('docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md')
+V2_PATH = Path('docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V2.md')
+
+
+def parse_markdown(text):
+    """Return line-anchored ATX headings outside fenced code blocks."""
+    lines = text.splitlines(keepends=True)
+    headings = []
+    fence = None
+    for index, line in enumerate(lines):
+        if fence is not None:
+            character, minimum_length = fence
+            closing = re.match(
+                rf'^ {{0,3}}({re.escape(character)}{{{minimum_length},}})[ \t]*(?:\n)?$',
+                line)
+            if closing:
+                fence = None
+            continue
+        opening = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
+        if opening:
+            marker = opening.group(1)
+            fence = (marker[0], len(marker))
+            continue
+        match = re.match(r'^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*(?:\n)?$', line)
+        if match:
+            headings.append((len(match.group(1)), match.group(2), index))
+    if fence is not None:
+        raise AssertionError('unclosed fenced code block')
+    return lines, headings
+
+
+def unique_heading(text, title):
+    lines, headings = parse_markdown(text)
+    matches = [(level, index) for level, value, index in headings if value == title]
+    if len(matches) != 1:
+        raise AssertionError(f'heading {title!r}: expected 1, found {len(matches)}')
+    level, start = matches[0]
+    end = len(lines)
+    for other_level, _, other_start in headings:
+        if other_start > start and other_level <= level:
+            end = other_start
+            break
+    return lines, headings, level, start, end
+
+
+def section(text, title):
+    lines, _, _, start, end = unique_heading(text, title)
+    return ''.join(lines[start + 1:end])
+
+
+def before_child(text, parent_title, child_title):
+    lines, _, parent_level, parent_start, parent_end = unique_heading(text, parent_title)
+    _, _, child_level, child_start, _ = unique_heading(text, child_title)
+    if child_level <= parent_level or not (parent_start < child_start < parent_end):
+        raise AssertionError(f'{child_title!r} is not a child of {parent_title!r}')
+    return ''.join(lines[parent_start + 1:child_start])
+
+
+def contract_blocks(text):
+    lines, headings = parse_markdown(text)
+    result = {}
+    for level, title, start in headings:
+        match = re.match(r'^C-(\d{3}) —', title)
+        if not match:
+            continue
+        key = match.group(1)
+        if key in result:
+            raise AssertionError(f'duplicate Contract C-{key}')
+        end = len(lines)
+        for other_level, _, other_start in headings:
+            if other_start > start and other_level <= level:
+                end = other_start
+                break
+        result[key] = ''.join(lines[start + 1:end])
+    return result
+
+
+def digest(value):
+    return hashlib.sha256(value.encode()).hexdigest()
+
+
+v1 = V1_PATH.read_text()
+v2 = V2_PATH.read_text()
+v1_contracts = contract_blocks(v1)
+v2_contracts = contract_blocks(v2)
+expected_contracts = [f'{number:03d}' for number in range(1, 23)]
+assert sorted(v1_contracts) == expected_contracts
+assert sorted(v2_contracts) == expected_contracts
+
 reverse = [
- ('本 Spec 可信类型仅为：', 'V1 可信类型仅为：'),
- ('本 Spec 不承诺 disk persistence', 'V1 不承诺 disk persistence'),
- ('本 Spec retention 保证', 'V1 retention 保证'),
- ('本 Spec 固定 safety ceilings', 'V1 固定 safety ceilings'),
- ('`C-001` 允许的', '§6 C-001 允许的'),
- ('`C-009` fatal teardown', '§7 C-009 fatal teardown'),
- ('graceful-then-kill per `C-020` / `C-022`', 'graceful-then-kill per §12'),
- ('Queued-but-not-sent turns 必须有界（见 `CLAUSE-PROC-BOUNDED`）。',
-  'Queued-but-not-sent turns 必须有界（见 §11）。'),
- ('在 `CLAUSE-PROC-RECONCILIATION` / `CLAUSE-PROC-BOUNDED` retention window 内可审计',
-  '在 §10/§11 retention window 内可审计'),
- ('已按 `CLAUSE-PROC-BOUNDED` eviction', '已按 §11 eviction'),
- ('直到 `CLAUSE-PROC-BOUNDED` 允许的', '直到 §11 允许的'),
+    ('本 Spec 可信类型仅为：', 'V1 可信类型仅为：'),
+    ('本 Spec 不承诺 disk persistence', 'V1 不承诺 disk persistence'),
+    ('本 Spec retention 保证', 'V1 retention 保证'),
+    ('本 Spec 固定 safety ceilings', 'V1 固定 safety ceilings'),
+    ('`C-001` 允许的', '§6 C-001 允许的'),
+    ('`C-009` fatal teardown', '§7 C-009 fatal teardown'),
+    ('graceful-then-kill per `C-020` / `C-022`', 'graceful-then-kill per §12'),
+    ('Queued-but-not-sent turns 必须有界（见 `CLAUSE-PROC-BOUNDED`）。',
+     'Queued-but-not-sent turns 必须有界（见 §11）。'),
+    ('在 `CLAUSE-PROC-RECONCILIATION` / `CLAUSE-PROC-BOUNDED` retention window 内可审计',
+     '在 §10/§11 retention window 内可审计'),
+    ('已按 `CLAUSE-PROC-BOUNDED` eviction', '已按 §11 eviction'),
+    ('直到 `CLAUSE-PROC-BOUNDED` 允许的', '直到 §11 允许的'),
 ]
-for key in b:
+for key in expected_contracts:
+    normalized = v2_contracts[key]
     for current, historical in reverse:
-        b[key] = b[key].replace(current, historical)
-    assert a[key] == b[key], key
-contract_surface = ''.join(key + a[key] for key in sorted(a))
-print(hashlib.sha256(contract_surface.encode()).hexdigest())
-a2 = old.split('本轮不实现。未来 implementation 至少证明：', 1)[1].split(
-    '### 16.2 Amendment closure crosswalk', 1)[0]
-b2 = new.split('本轮不实现。未来 implementation 至少证明：', 1)[1].split(
-    '### 10.4 Historical V1 amendment closure crosswalk', 1)[0]
-b2 = b2.replace('### 10.3 Fault-injection crosswalk and evidence schema',
-                '### 16.1 Fault-injection crosswalk and evidence schema').replace('§10.3', '§16.1')
-assert a2 == b2
-print(hashlib.sha256(a2.encode()).hexdigest())
+        normalized = normalized.replace(current, historical)
+    assert v1_contracts[key] == normalized, f'Contract C-{key} differs'
+
+v1_acceptance = before_child(
+    v1, '16. Future Implementation Acceptance',
+    '16.1 Fault-injection crosswalk and evidence schema')
+v2_acceptance = section(v2, '10.2 Carried future implementation acceptance criteria')
+v2_acceptance = v2_acceptance.replace('§10.3', '§16.1')
+assert v1_acceptance == v2_acceptance, 'acceptance criteria differ'
+
+v1_faults = section(v1, '16.1 Fault-injection crosswalk and evidence schema')
+v2_faults = section(v2, '10.3 Fault-injection crosswalk and evidence schema')
+assert v1_faults == v2_faults, 'fault matrix differs'
+
+acceptance_count = len(re.findall(r'^\d+\. ', v1_acceptance, re.MULTILINE))
+fault_count = len(re.findall(r'^\| `[A-Z0-9_]+` \|', v1_faults, re.MULTILINE))
+_, v2_headings = parse_markdown(v2)
+expected_anchors = {
+    'CLAUSE-PROC-LIFECYCLE',
+    'CLAUSE-PROC-DEADLINE-CONFIG',
+    'CLAUSE-PROC-RPC',
+    'CLAUSE-PROC-REGISTRY',
+    'CLAUSE-PROC-ADMISSION',
+    'CLAUSE-PROC-OUTCOME',
+    'CLAUSE-PROC-RECONCILIATION',
+    'CLAUSE-PROC-BOUNDED',
+    'CLAUSE-PROC-SHUTDOWN',
+    'CLAUSE-PROC-SCHEDULER-SEAM',
+    'CLAUSE-PROC-FAILURE-TAXONOMY',
+}
+actual_anchors = [
+    title.split(' —', 1)[0]
+    for _, title, _ in v2_headings
+    if title.startswith('CLAUSE-PROC-')
+]
+assert len(actual_anchors) == len(set(actual_anchors)), 'duplicate stable clause anchor'
+assert set(actual_anchors) == expected_anchors, 'missing or unexpected stable clause anchor'
+assert acceptance_count == 39
+assert fault_count == 48
+assert len(actual_anchors) == 11
+
+contract_surface = ''.join(key + v1_contracts[key] for key in expected_contracts)
+print(f'REPRODUCTION_COMMAND_VERSION = {VERSION}')
+print(f'CONTRACTS_HASH = {digest(contract_surface)}')
+print(f'ACCEPTANCE_HASH = {digest(v1_acceptance)}')
+print(f'FAULT_MATRIX_HASH = {digest(v1_faults)}')
+print('CONTRACT_CROSSWALK = PASS')
+print('CONTRACTS_CHECKED = 22/22')
+print('ACCEPTANCE_CROSSWALK = PASS')
+print('ACCEPTANCE_ITEMS_CHECKED = 39/39')
+print('FAULT_MATRIX = PASS')
+print('FAULT_CASES_CHECKED = 48/48')
+print('STABLE_CLAUSE_ANCHORS = PASS')
+print('STABLE_CLAUSE_ANCHORS_CHECKED = 11/11')
+print('PRODUCT_SEMANTIC_DELTA = NONE')
 PY
 ```
 
-- Provenance: exact Git commits/blob above, this embedded command, and its output in
-  [Draft PR #28](https://github.com/mayf3/dsh-agent-core/pull/28).
+- Historical provenance: exact Git commits/blob above and the output recorded in [PR #28](https://github.com/mayf3/dsh-agent-core/pull/28).
+- Convergence provenance: this embedded command and its exact output in `docs/reports/agent-process-lifecycle-hardening-v2-main-authority-audit.md`.
 
 ---
 
 ## 6. Claims and assumptions
 
-### CLM-PROC-001 — V2 cannot authorize implementation while proposed
+### CLM-PROC-001 — V2 cannot authorize implementation while proposed — HISTORICAL_PRE_MERGE_RECORD
 
 - Support state: SUPPORTED
 - Supported by evidence: `EVD-PROC-002`
@@ -430,7 +571,7 @@ OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
 
 ## 7. Evidence relations
 
-### EVD-PROC-001 — V1 metadata supports the active-authority State
+### EVD-PROC-001 — V1 metadata supports the historical active-authority State — HISTORICAL_PRE_MERGE_RECORD
 
 - Source observations: `OBS-PROC-001`
 - Target: `STATE-PROC-001`
@@ -441,7 +582,7 @@ OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
 - Limitations: says nothing about future acceptance actions
 - Provenance: V1 file at the stated commit
 
-### EVD-PROC-002 — Governance lifecycle supports no implementation authority while proposed
+### EVD-PROC-002 — Governance lifecycle supports no implementation authority while proposed — HISTORICAL_PRE_MERGE_RECORD
 
 - Source observations: `OBS-PROC-002`
 - Target: `CLM-PROC-001`
@@ -503,6 +644,8 @@ OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
 
 ## 8. Decisions
 
+The acceptance-oriented future tense in `DEC-PROC-001` through `DEC-PROC-003` is a `HISTORICAL_ACCEPTANCE_PLAN` bound to the authoring coordinate. The planned authority transaction is recorded as executed in §0.4; this label does not alter the accepted Decision meaning.
+
 ### DEC-PROC-001 — Use a complete standalone V2 replacement
 
 - Decision owner: repository owner `mayf3`
@@ -522,7 +665,7 @@ OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
 - Reason: those semantics already completed independent V1 review and are outside this task.
 - Remaining owner input: none.
 
-### DEC-PROC-003 — Keep V1 active until an atomic acceptance-finalize transaction
+### DEC-PROC-003 — Keep V1 active until an atomic acceptance-finalize transaction — HISTORICAL_ACCEPTANCE_PLAN
 
 - Decision owner: repository owner `mayf3`
 - Decision: while V2 is proposed, its `supersedes` list remains empty and V1 remains accepted.
@@ -530,7 +673,8 @@ OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
   and add V1's backlink.
 - Rejected alternative: install either graph edge early or claim V1 is already inactive.
 - Reason: current governance requires atomic whole-authority supersession.
-- Remaining owner input: authorized acceptance action after independent review.
+- Remaining owner input at authoring coordinate: authorized acceptance action after independent review.
+- Historical execution status: the transaction was executed and entered `main` through authority merge `12375d6282ede5015088a7d7f5495d6f46ca7738`; V2 is current and V1 is superseded.
 
 ### DEC-PROC-004 — Keep implementation and product boundaries unchanged
 
@@ -1546,10 +1690,9 @@ REPLACED_V1_PREVIOUSLY_PASSED_ITEMS_REGRESSION = NONE
 
 ## 12. Migration, compatibility, and rollback
 
-### 12.1 Authoring transition
+### 12.1 Authority transition status
 
-No implementation or runtime migration occurs in this docs-only proposal. V1 remains active until the
-atomic acceptance-finalize transaction in §0.3. If V2 is not accepted, no authority transition occurs.
+No implementation or runtime migration occurs in this docs-only convergence. The historical acceptance-finalize plan in §0.3 was executed and merged by authority merge `12375d6282ede5015088a7d7f5495d6f46ca7738`: V2 is accepted/current and V1 is superseded. This authority transition does not claim implementation completion or production rollout.
 
 ### 12.2 Compatibility preserved from V1
 
@@ -1562,9 +1705,7 @@ V2 carries unchanged the existing compatibility obligations in `CLAUSE-PROC-DEAD
 
 ### 12.3 Rollback
 
-Implementation rollback behavior: Not applicable to this docs-only authority transition because V1
-defined no implementation rollback Contract and this replacement introduces none. Non-acceptance of V2
-leaves V1 unchanged. This section imposes no requirement on future implementation rollback.
+Implementation rollback behavior: Not applicable to this docs-only authority transition because V1 defined no implementation rollback Contract and this replacement introduces none. The historical non-acceptance path would have left V1 unchanged; it is not the current lifecycle state. This section imposes no requirement on future implementation rollback.
 
 ---
 
@@ -1648,23 +1789,28 @@ BOUNDED_BUFFERS = per_record + per_Agent + Router_global count_and_byte_caps; un
 SCHEDULER_TERMINATION_SEAM = active_turn_snapshot + stable_reconciliationHandle + occurrence/run/requestId_restore_index + outcome_evidence_distinct_from_termination_evidence + cancel_requested_distinct_from_termination_proven
 
 SPEC_STATUS = accepted
-INTENDED_SUPERSEDES_ON_ACCEPTANCE = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
+ACTIVE_AUTHORITY_ON_MAIN = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+IMPLEMENTATION_AUTHORITY = contracts
 CURRENT_SUPERSEDES = [AGENT_PROCESS_LIFECYCLE_HARDENING_V1]
+V1_CURRENT_STATUS = superseded
 ATOMIC_WHOLE_AUTHORITY_SUPERSESSION_PLAN_PREPARED = YES
 ATOMIC_WHOLE_AUTHORITY_SUPERSESSION_EXECUTED = YES (2026-08-21)
-OLD_AUTHORITY_STILL_ACTIVE = YES (on main, until this transaction merges)
-ACTIVE_IMPLEMENTATION_AUTHORITY_NOW = none
-IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = contracts
-IMPLEMENTATION_ALLOWED = NO
+AUTHORITY_MERGE = 12375d6282ede5015088a7d7f5495d6f46ca7738
+CURRENT_MAIN_COMPATIBILITY_NOTE = NON_NORMATIVE_STATE_CONTEXT_IN_SECTION_3_1
+IMPLEMENTATION_STATE = NOT_STARTED
+PRODUCTION_ROLLOUT_STATE = NOT_STARTED
+AUTHORITY_CONFORMANCE_AUDIT = FIX_REQUIRED_UNTIL_THIS_CONVERGENCE_IS_INDEPENDENTLY_REVIEWED_AND_MERGED
+IMPLEMENTATION_ALLOWED_TO_START = NO
 CONTRACT_SEMANTIC_CHANGE = NONE
 IMPLEMENTATION_SCOPE_CHANGE = NONE
 ACCEPTANCE_CRITERIA_CHANGE = NONE
-READY_FOR_INDEPENDENT_SPEC_REVIEW = COMPLETED
-WHOLE_AUTHORITY_ACCEPTANCE_FINALIZE = PASS (2026-08-21)
+HISTORICAL_WHOLE_AUTHORITY_ACCEPTANCE_FINALIZE_CLAIM = PASS (2026-08-21)
 REVIEWED_BASE_COMMIT = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
 REVIEWED_SPEC_COMMIT = 08c041c3ad11bab6b1632b24103b40b2d698dfdf
-PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW = PASS
-REQUIRED_FIXES = NONE
+HISTORICAL_PR28_REVIEW_CLAIM = PASS
+PERSISTENT_INDEPENDENT_REVIEW_PROVENANCE_AT_MERGE = INCOMPLETE
+POST_MERGE_INDEPENDENT_AUTHORITY_AUDIT = FIX_REQUIRED
+ACCEPTANCE_FINAL_HEAD_RECHECK = INVALID
 SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = NONE
 
 IMPLEMENTATION_STARTED = NO
@@ -1672,5 +1818,5 @@ PRODUCTION_CHANGE = NONE
 DSH_AGENT_TURN_TIMEOUT_900000_CHANGE = NONE
 SCHEDULER_CHANGE = NONE
 KERNEL_CHANGE = NONE
-MERGE = NO
+CONVERGENCE_MERGE = NO
 ```
