@@ -95,7 +95,7 @@ export const shutdownMethods = {
    * cleanup (C-020). Concurrent callers share one promise (C-021); grace
    * expiry escalates to one exact SIGKILL and still awaits real exit (C-022).
    */
-  async shutdown(timeoutMs) {
+  shutdown(timeoutMs) {
     if (this.exit !== undefined) return this.exit
     if (this.shutdownPromise !== undefined) return this.shutdownPromise
     const graceMs = timeoutMs ?? this.deadlines.shutdownGraceMs
