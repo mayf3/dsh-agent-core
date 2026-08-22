@@ -1,0 +1,190 @@
+{
+  "schema": "AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2_CANARY_FINAL_V1",
+  "result": "PASS_WITH_DISCLOSED_NON_BLOCKING_ATTEMPTS",
+  "scope": "Phase A only",
+  "candidate": {
+    "live_tested_commit": "4ad9a60288e1fd6873f64591eadc14df9f48a9ed",
+    "live_tested_tree": "543e7625a07a8256fa99774e2dfad3b67a668c2d",
+    "feishu_connector_tree": "c43e2859af3d6afb136cb162ed6fea5ad042d8e3",
+    "accepted_ux_spec_blob": "91513d140bfeb2747326a465bdc01d72c899c864",
+    "base_commit": "342111c485a48c4932b1b6f1cb59ef5307af6279",
+    "base_tree": "e1687ee87ba3293e29480d9596cc889ac3c44e5e"
+  },
+  "frozen_harness": {
+    "commit": "a12bb03c6861969985f066bfbf0cb7e5dd5ac567",
+    "tree": "1e2b319fd1312d3263c3d9f84231d290e6dddd99",
+    "version": "0.1.0-rc.5",
+    "tracked_clean": true
+  },
+  "provider_policy": {
+    "primary": "zai/glm-5.3",
+    "primary_result": "PASS",
+    "fallback_status": "NOT_PERMITTED_PRIMARY_SUCCEEDED",
+    "fallback_invoked": false,
+    "frozen_fallback_package": "dsh-codex@0.2.3",
+    "fallback_package_sorted_tree_entries": 43,
+    "fallback_package_tree_sha256": "442d0039ac373b890fa6e0b25d4a50649c2c8157a2f5fcf34a814538de5cd67d"
+  },
+  "primary_canary": {
+    "result": "PASS",
+    "provider": "zai",
+    "model": "glm-5.3",
+    "candidate_commit": "9d9118d9d479035d6f7dc4d2e73e6caa647cddce",
+    "feishu_connector_tree": "c43e2859af3d6afb136cb162ed6fea5ad042d8e3",
+    "evidence_sha256": "4aaf3ab5f679dce16e701ea6be42d6ae38429e644020bfaae3fc9789a3f04474",
+    "agent_turns": 1,
+    "replies": 2,
+    "sdk_errors": 0,
+    "sdk_channel_services": 1,
+    "sdk_connect_calls": 1,
+    "sdk_websocket_constructions": 1,
+    "secret_disclosure_matches": 0,
+    "non_string_console_values": 0
+  },
+  "full_matrix_canary": {
+    "result": "PASS",
+    "provider": "zai",
+    "model": "glm-5.3",
+    "candidate_commit": "4ad9a60288e1fd6873f64591eadc14df9f48a9ed",
+    "evidence_sha256": "759b5cf46d91dabe70a835b1cd8cca02e80422190dd3f61930f057cf24572924",
+    "successful_stop_binding_sha256": "f77f8a049ce74d80c724b461bc48114c2a22f2389ea2b52b6d786344bd127ae6",
+    "scenarios": {
+      "group_bot_mention": true,
+      "p2p": true,
+      "at_all_raw_semantics": true,
+      "ordinary_no_mention_silent_drop": true,
+      "topic": true,
+      "thread_followup": true,
+      "pending_exact_duplicate_replay": true
+    },
+    "no_mention_zero_deltas": 6,
+    "no_mention_observation_window_ms": 20012,
+    "duplicate_hold_ms": 20000,
+    "duplicate_exact_raw_hash_equal": true,
+    "duplicate_processing_lease_held": true,
+    "duplicate_replay_router_delta": 0,
+    "duplicate_replay_agent_turn_delta": 0,
+    "topic_same_chat": true,
+    "topic_same_root": true,
+    "topic_same_thread": true,
+    "topic_reply_parent_targets_ingress": true,
+    "sdk_errors": 0,
+    "secret_disclosure_matches": 0,
+    "non_string_console_values": 0
+  },
+  "rollback": {
+    "result": "PASS",
+    "base_commit": "342111c485a48c4932b1b6f1cb59ef5307af6279",
+    "base_tree": "e1687ee87ba3293e29480d9596cc889ac3c44e5e",
+    "base_detached": true,
+    "legacy_connector_tree": "c1005c03bd418666d2d11edf21c9c5ab69f424d1",
+    "driver_sha256": "2ccb9a863f8d703c04b522b0047a942da8f0024aa29ba17c1d3b947dde42adf5",
+    "handoff_evidence_sha256": "e5106e77a8b29ed412b5fe80dbc208e8b0609c93f57d14a570c166dc9c8c44cd",
+    "handoff_binding_sha256": "b62d5a89185ff75337be0a750ee2779c051778ef3f1174c28e5cfe3f8c0de25b",
+    "evidence_sha256": "8c6c430eadfee4ff14b7d02144e55f85601d34f12342a83adf93c882d7834980",
+    "binding_bytes_unchanged_on_load": true,
+    "binding_count": 3,
+    "exact_binding_key_set": true,
+    "group": true,
+    "p2p": true,
+    "topic": true,
+    "topic_same_chat": true,
+    "topic_same_root": true,
+    "topic_same_thread": true,
+    "topic_parent_targets_ingress": true,
+    "runtime_stopped": true,
+    "raw_state_scrubbed": true,
+    "frozen_harness_package_scope_linked": true,
+    "secret_matches": 0,
+    "non_string_writes": 0,
+    "post_gate_process_observation": "isolated legacy-base process retained an idle handle after the passing final gate and complete raw-state scrub; executor terminated that already-stopped process"
+  },
+  "verification": {
+    "command": "node --test --test-concurrency=1 'packages/*/test/*.test.js'",
+    "harness_root": "/private/tmp/dsh-harness-rc5-pr27-audit",
+    "tests": 615,
+    "passed": 612,
+    "failed": 0,
+    "skipped": 3,
+    "cancelled": 0,
+    "duration_ms": 145109.688958,
+    "governance_lock_match": true,
+    "governance_adoption_accepted": true,
+    "accepted_ux_spec_byte_identical": true,
+    "forbidden_product_surfaces_changed": false
+  },
+  "compliance": {
+    "mode": "COMPLIANCE",
+    "repository": "mayf3/dsh-agent-core",
+    "implementation_base_commit": "342111c485a48c4932b1b6f1cb59ef5307af6279",
+    "implementation_commit": "4ad9a60288e1fd6873f64591eadc14df9f48a9ed",
+    "primary_governing_spec": "AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2",
+    "governing_spec_blob": "3dd886854d7f6884e2495022b3e7ce3a4ccde531",
+    "contract_c_amendment_blob": "a734a481bbcdf4852d49505a2e91f57bf27490dc",
+    "governing_specs_present_in_base": true,
+    "environment": "dedicated non-production Feishu App + frozen Harness 0.1.0-rc.5 + serialized full-repository test run",
+    "evaluated_at": "2026-08-22T01:46:25Z",
+    "implementation_state": "COMPLETE",
+    "verification_state": "SUFFICIENT",
+    "conformance": "VERIFIED",
+    "contracts_total": 5,
+    "contracts_verified": 5,
+    "contracts_drifted": 0,
+    "contracts_unknown": 0,
+    "contracts_not_applicable": 0,
+    "implementation_ready_to_merge": true,
+    "observations": [
+      {"id":"OBS-001","subject":"frozen full-repository verification","result":"612 passed, 0 failed, 3 skipped of 615"},
+      {"id":"OBS-002","subject":"exact-candidate full primary-route matrix","result":"PASS"},
+      {"id":"OBS-003","subject":"exact latest-main rollback","result":"PASS with raw-state scrub"},
+      {"id":"OBS-004","subject":"governance/spec/scope integrity","result":"PASS"},
+      {"id":"OBS-005","subject":"independent adversarial sanitizer review","result":"5000 randomized cases, zero leaks"}
+    ],
+    "contracts": [
+      {"id":"Contract A — Gate Fail Closed","result":"VERIFIED","evidence_id":"EVD-A","relation":"SATISFIES","observations":["OBS-001","OBS-002"],"sufficiency":"malformed/throw/no-gate cases and live PREBOUND_ONLY path executed"},
+      {"id":"Contract B — Preserve V0 @all Eligibility","result":"VERIFIED","evidence_id":"EVD-B","relation":"SATISFIES","observations":["OBS-001","OBS-002"],"sufficiency":"p2p, bot mention, @all, and no-mention zero-delta paths executed"},
+      {"id":"Contract C — Full Identity/Metadata/Attachment Preservation with Semantic Text Compatibility","result":"VERIFIED","evidence_id":"EVD-C","relation":"SATISFIES","observations":["OBS-001","OBS-002"],"sufficiency":"full differential, complex post, file-link attachment, and no raw text renormalization tests executed"},
+      {"id":"Contract D — SDK Async Dispatch and Full-Turn Promise","result":"VERIFIED","evidence_id":"EVD-D","relation":"SATISFIES","observations":["OBS-001","OBS-002"],"sufficiency":"real SDK public error path, current-main turn promise, renewable lock, exact replay, and post-settle gates executed"},
+      {"id":"Contract E — create_thread Product Semantics","result":"VERIFIED","evidence_id":"EVD-E","relation":"SATISFIES","observations":["OBS-002","OBS-003"],"sufficiency":"live create-thread, follow-up Binding continuity, and server-side target equality executed on candidate and rollback"}
+    ]
+  },
+  "privacy": {
+    "app_secret_present": false,
+    "token_present": false,
+    "authorization_value_present": false,
+    "human_name_present": false,
+    "message_body_present": false,
+    "unnecessary_raw_id_present": false,
+    "raw_canary_states_scrubbed": true,
+    "temporary_test_credentials_scrubbed": true
+  },
+  "disclosed_attempts": [
+    {
+      "kind": "primary_timeout_before_provider_result",
+      "treated_as_final_evidence": false,
+      "fallback_authorized": false
+    },
+    {
+      "kind": "matrix_driver_evidence_corrections",
+      "treated_as_final_evidence": false,
+      "final_corrected_matrix_passed": true
+    },
+    {
+      "kind": "rollback_legacy_readiness_api_mismatch",
+      "treated_as_final_evidence": false,
+      "fail_safe_raw_state_scrubbed": true
+    },
+    {
+      "kind": "rollback_frozen_harness_dependency_bridge_missing",
+      "treated_as_final_evidence": false,
+      "fail_safe_raw_state_scrubbed": true,
+      "final_bridge_fail_closed": true
+    },
+    {
+      "kind": "rollback_primary_rate_limit",
+      "treated_as_final_evidence": false,
+      "fallback_authorized": false,
+      "same_primary_route_retries_passed": true
+    }
+  ]
+}
