@@ -26,7 +26,7 @@ accepted_reviewed_head: bbd4d450df58fe734ad4b14db825d0e476600d3f
 acceptance_review: "NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1_SPEC_REVIEW（通知 审计）"
 acceptance_review_result: PASS
 required_fixes: NONE
-accepted_by: NEW_LOCAL_EXECUTION_AGENT_D
+accepted_by: mayf3
 accepted_at: 2026-08-22
 ---
 
@@ -836,7 +836,7 @@ REVIEWED_BASE_COMMIT = 54ac27ff8a39fe6035b497dc3ae43958479df3db
 REVIEWED_SPEC_COMMIT = bbd4d450df58fe734ad4b14db825d0e476600d3f
 REVIEW_RESULT = PASS
 REQUIRED_FIXES = NONE
-ACCEPTED_BY = NEW_LOCAL_EXECUTION_AGENT_D（owner-instructed mechanical acceptance finalize）
+ACCEPTED_BY = mayf3（owner-instructed mechanical acceptance finalize）
 ACCEPTED_AT = 2026-08-22
 CONTRACT_COUNT = 39（C-AUTH-001..014 = 14；C-IDM-001..016 = 16；C-BND-001..005 = 5；C-WIRE-001..004 = 4）
 ACCEPTANCE_COUNT = 27（AC-AUTH 12；AC-IDM 9；AC-BND 3；AC-CMP 2；AC-WIRE 1）
