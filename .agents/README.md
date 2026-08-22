@@ -1,7 +1,7 @@
 # Development Grammar V0
 
 ```text
-GRAMMAR_VERSION = 0.1.0-draft.1
+GRAMMAR_VERSION = 0.2.0-draft.1
 STATUS = accepted
 ENFORCEMENT_LEVEL = manual_policy
 ```
@@ -312,6 +312,17 @@ old authority: status = superseded; superseded_by = new
 ```
 
 Per-Contract supersession requires a future explicit machine-readable authority graph and is not inferred from prose.
+
+A narrow retirement seam exists for an accepted historical governing Spec whose grandfathered ID predates the
+strict `_V<number>` format. The strict successor may reference that exact legacy whole-authority ID only while the
+same atomic transaction marks the historical artifact `superseded` and backlinks it to the strict successor.
+Legacy IDs cannot be created or reactivated, cannot appear in `governed_by`, and cannot be successors. The active
+legacy-authority set may only shrink.
+
+```text
+LEGACY_RETIREMENT_IS_NOT_PARTIAL_SUPERSESSION = YES
+NEW_LEGACY_SPEC_CREATION = FORBIDDEN
+```
 
 ---
 
