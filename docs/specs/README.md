@@ -40,6 +40,17 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
 
+## Agent primary Workspace import authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2` | accepted / current | none | exact 86-Agent Trusted Fleet curated-import authority; no implementation by itself |
+| `AGENT_PRIMARY_WORKSPACE_IMPORT_V1` | superseded | historical legacy field | historical adopt-in-place / zero-copy authority replaced whole by V2 |
+
+The V2 acceptance transaction is lifecycle-only relative to reviewed head
+`ae77eccf242d3b7401bb8110d4496897cc807ca7`; it performs no Workspace migration or
+production change. PR #47's separate Auth blocker remains open.
+
 ## AgentProcess lifecycle authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |

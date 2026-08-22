@@ -1,6 +1,10 @@
 ---
-status: accepted
+spec_id: AGENT_PRIMARY_WORKSPACE_IMPORT_V1
+status: superseded
 date: 2026-08-18
+superseded_date: 2026-08-22
+supersedes: []
+superseded_by: AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2
 type: implementation-spec (spec-only; no implementation this round)
 scope: docs-only — freeze the Agent.primaryWorkspace import model; RUNTIME_CHANGE = NONE (this round)
 references:
@@ -13,8 +17,10 @@ references:
 
 # AGENT_PRIMARY_WORKSPACE_IMPORT_V1 — 已存在目录 import 为 Agent primary Workspace（只出 Spec，不实现）
 
-> 状态：**accepted**（本文档只冻结模型与授权；实现、真实 Workspace 迁移、OpenClaw
-> 停启、secret cleanup、merge 均不在本轮。）
+> 状态：**superseded**（2026-08-22；whole-authority replacement =
+> `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2`；本文件保留为历史 authority，其原有
+> normative meaning 不改写。该 lifecycle transition 不实现 Workspace migration，
+> 不执行 production apply。）
 >
 > **AMENDMENT-1**（2026-08-18，basis = Owner Ruling `LEGACY_WORKSPACE_AUTHORITY_RULING_V1`）：
 > 折入 workspace authority 裁定——OpenClaw 原目录 = AUTHORITATIVE_LONG_LIVED_WORKSPACE，
