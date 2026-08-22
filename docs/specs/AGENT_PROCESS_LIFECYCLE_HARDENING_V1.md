@@ -1,7 +1,23 @@
 ---
 spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V1
 status: superseded
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: none
+scope:
+  - AgentProcess lifecycle and readiness
+  - RPC deadlines and child-exit cleanup
+  - interactive turn timeout and late reconciliation
+  - graceful shutdown and bounded process evidence
+  - termination evidence seam consumed by Scheduler
+governed_by:
+  - AGENT_CORE_HARDENING_PROGRAM_V1
+  - AGENT_WORKSPACE_SESSION_MODEL_V2
+external_authorities: []
+supersedes: []
 superseded_by: AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+owners:
+  - mayf3
 date: 2026-08-20
 accepted_date: 2026-08-20
 type: implementation-spec (spec only; no implementation this round)
@@ -12,17 +28,10 @@ required_fixes_closed: 9/9
 acceptance_finalize_semantic_change: none
 repository: mayf3/dsh-agent-core
 base_main: d83a2ff0e9644611707d7481ef88b4d7d49fb68e
-scope:
-  - AgentProcess lifecycle and readiness
-  - RPC deadlines and child-exit cleanup
-  - interactive turn timeout and late reconciliation
-  - graceful shutdown and bounded process evidence
-  - termination evidence seam consumed by Scheduler
 references:
   - docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md
   - docs/investigations/AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1.md
-implementation_authority: none
 ---
 
 # AGENT_PROCESS_LIFECYCLE_HARDENING_V1 — 进程生命周期、deadline 与未知结果收口
@@ -39,10 +48,12 @@ implementation_authority: none
 ```text
 AGENT_PROCESS_LIFECYCLE_HARDENING_V1_SPEC = PASS
 NEEDS_OWNER_DECISION = NO
-SPEC_STATUS = accepted
+HISTORICAL_ACCEPTED_STATUS = accepted
+CURRENT_SPEC_STATUS = superseded
+SUPERSEDED_BY = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 READY_FOR_FOCUSED_RE_REVIEW = YES
-IMPLEMENTATION_ALLOWED = NO
+HISTORICAL_IMPLEMENTATION_ALLOWED = NO
 ```
 
 `PASS` 表示 authoring 输入完整；本次 acceptance provenance 见 §0.2。它不代表 implementation PASS 或 merge authority。
@@ -68,7 +79,8 @@ ACCEPTANCE_REVIEWED_SEMANTIC_HEAD = 8475318f12068a28fe937779c91735817b6db9ca
 INDEPENDENT_FOCUSED_RE_REVIEW = PASS
 REQUIRED_FIXES_CLOSED = 9/9
 REQUIRED_FIXES = NONE
-SPEC_STATUS = accepted
+HISTORICAL_ACCEPTED_STATUS = accepted
+CURRENT_SPEC_STATUS = superseded
 SEMANTIC_CHANGE = NONE
 READY_FOR_MECHANICAL_DELTA_REVIEW = YES
 ```
@@ -118,7 +130,8 @@ V1 优先保证：不永久挂起、不错误复用、不自动重放、不把�
 Program authority = AGENT_CORE_HARDENING_PROGRAM_V1 (accepted)
 Session/product authority = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted)
 Evidence authority = AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1 (PASS)
-Child Spec = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (accepted)
+Historical child Spec at acceptance = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (accepted)
+Current lifecycle = superseded by AGENT_PROCESS_LIFECYCLE_HARDENING_V2
 Implementation authority = NONE
 ```
 
@@ -1142,7 +1155,9 @@ BOUNDED_BUFFERS = per_record + per_Agent + Router_global count_and_byte_caps; un
 
 SCHEDULER_TERMINATION_SEAM = active_turn_snapshot + stable_reconciliationHandle + occurrence/run/requestId_restore_index + outcome_evidence_distinct_from_termination_evidence + cancel_requested_distinct_from_termination_proven
 
-SPEC_STATUS = accepted
+HISTORICAL_ACCEPTED_STATUS = accepted
+CURRENT_SPEC_STATUS = superseded
+SUPERSEDED_BY = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
 ACCEPTANCE_REVIEWED_SEMANTIC_HEAD = 8475318f12068a28fe937779c91735817b6db9ca
 INDEPENDENT_FOCUSED_RE_REVIEW = PASS
 REQUIRED_FIXES = NONE
@@ -1156,5 +1171,5 @@ PRODUCTION_CHANGE = NONE
 DSH_AGENT_TURN_TIMEOUT_900000_CHANGE = NONE
 SCHEDULER_CHANGE = NONE
 KERNEL_CHANGE = NONE
-MERGE = NO
+HISTORICAL_ACCEPTANCE_ROUND_MERGE = NO
 ```

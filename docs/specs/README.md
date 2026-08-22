@@ -39,3 +39,12 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` | superseded | legacy governance | repository knowledge model | — |
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
+
+## AgentProcess lifecycle authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` | accepted / current | contracts | current AgentProcess lifecycle authority |
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` | superseded | none | historical replaced authority |
+
+`accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
