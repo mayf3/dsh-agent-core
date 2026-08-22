@@ -103,6 +103,7 @@ export class AgentProcess {
 
     // --- bounded evidence surfaces ---------------------------------------
     this.eventSeq = 0
+    this.observationSeq = 0 // shared ordering for session events + statuses
     this.eventLog = new Map() // seq -> { params, bytes } (insertion-ordered ring, O(1) eviction)
     this.eventLogBytes = 0
     this.eventsDroppedCount = 0
@@ -128,7 +129,8 @@ export class AgentProcess {
     this.queuedPromptBytes = 0
     /** live tracked executions: handle -> TurnExecution */
     this.executions = new Map()
-    this.activeUnknownFence = null // { handle, sessionId } while unresolved unknown
+    this.activeUnknownFences = new Map() // handle -> { handle, sessionId }
+    this.activeUnknownFence = null // compatibility projection of the oldest unresolved fence
     /** Router-installed hook: async (method, params, deadlineCtx) => result. */
     this.onRpcRequest = undefined
 
@@ -141,7 +143,10 @@ export class AgentProcess {
       killSignals: 0,
       replayAdmissions: 0, // structurally 0: no replay path exists
     }
-    this.boundedAudit = [] // last 64 invariant/ownership/stale-callback notes
+    this.boundedAudit = [] // bounded invariant/ownership/stale-callback notes
+    this.boundedAuditBytes = 0
+    this.boundedAuditDroppedCount = 0
+    this.boundedAuditDroppedBytes = 0
   }
 
   /** Historical observability view of the bounded event ring. */
@@ -186,7 +191,7 @@ export class AgentProcess {
               message: `provider ${this.provider} did not register before initialize timeout`,
             }, { agentId: this.agentId, provider: this.provider, model: this.model })
           }
-          await sleep(300)
+          await sleep(Math.min(300, Math.max(0, initDeadlineMono - monotonicNowMs())))
           continue
         }
         this.initializeEvidence = initialized
@@ -211,7 +216,7 @@ export class AgentProcess {
           void this.fatal('initialize_timeout')
           throw Object.assign(new Error(`initialize timeout for agent ${this.agentId}`), { code: 'AGENT_PROCESS_INITIALIZE_TIMEOUT' })
         }
-        await sleep(300)
+        await sleep(Math.min(300, Math.max(0, initDeadlineMono - monotonicNowMs())))
       }
     }
   }

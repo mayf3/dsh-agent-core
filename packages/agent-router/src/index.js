@@ -252,9 +252,7 @@ export function apply(ctx, config) {
   }
 
   // Tear down every owned process when the router plugin stops.
-  ctx.effect(() => () => {
-    registry.dispose()
-  })
+  ctx.effect(() => () => registry.dispose())
 
   const service = {
     pluginName: name,

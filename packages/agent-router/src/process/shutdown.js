@@ -13,6 +13,11 @@
 import { envelopeCarrier, monotonicNowMs } from './state-machine.js'
 import { redactSensitiveText } from './provider-errors.js'
 
+const wait = (ms) => new Promise(resolve => {
+  const timer = setTimeout(resolve, ms)
+  timer.unref?.()
+})
+
 export const shutdownMethods = {
   /**
    * C-009 fatal teardown primitive: CAS exact slot -> REAP FIRST, DRAINING,
@@ -58,7 +63,9 @@ export const shutdownMethods = {
     const ownership = this.ownership
     if (this.child !== ownership.childObject
         || this.child?.pid !== ownership.pid
-        || this.ownershipToken !== ownership.token) {
+        || this.ownershipToken !== ownership.token
+        || (this.registryIntegration !== null && typeof this.registryIntegration.verifyReapOwnership === 'function'
+          && !this.registryIntegration.verifyReapOwnership(this))) {
       this.auditBounded({ kind: 'ownership_mismatch', detail: `refusing ${signal} (cause ${cause ?? 'n/a'}): child identity does not match the spawn-time ownership binding` })
       this.log.error?.(`[router] agent ${this.agentId}: ownership mismatch — refusing to ${signal} a non-owned child`)
       return false
@@ -108,30 +115,39 @@ export const shutdownMethods = {
       }
       return this.exit ?? { code: null, signal: null }
     }
-    // Explicit operator/runtime shutdown: graceful-then-kill (C-020/C-022).
+    // Explicit operator/runtime shutdown: install REAP, then pending-first
+    // handoff regardless of whether later ownership validation succeeds.
     this.registryIntegration?.casReap?.(this, 'shutdown')
-    // C-020 ownership gate: when a lifecycle REAP fence exists for this
-    // process, its ownership binding (generation + processRef + ownership
-    // token) must match BEFORE any graceful write or signal. A mismatch is
-    // fail-loud audit + fence retention — never a guessed kill or write.
-    if (this.registryIntegration !== null && typeof this.registryIntegration.verifyReapOwnership === 'function'
-        && !this.registryIntegration.verifyReapOwnership(this) && this.state !== 'EXITED') {
-      this.auditBounded({ kind: 'ownership_mismatch', detail: 'shutdown refused: lifecycle REAP ownership does not match this process' })
-      this.log.error?.(`[router] agent ${this.agentId}: shutdown refused — REAP ownership mismatch (kill/write counts stay 0)`)
-      throw Object.assign(new Error(`agent-router: shutdown of ${this.agentId} refused — lifecycle REAP ownership mismatch`), { code: 'AGENT_PROCESS_OWNERSHIP_MISMATCH' })
-    }
     if (this.state !== 'DRAINING') this.transition('DRAINING')
     this.rejectQueuedTurns('AGENT_PROCESS_DRAINING', 'shutdown')
-    // Graceful attempt: ONE shutdown RPC bounded by the grace deadline.
-    this.counters.gracefulShutdownWriteAttempts += 1
-    await this.request('shutdown', undefined, undefined, {
-      deadlineMono: monotonicNowMs() + graceMs,
-    }).catch(() => {})
-    if (this.exit === undefined) {
-      // Grace expiry is ESCALATION, not completion: one exact SIGKILL, then
-      // await real exit — never a fake {timeout:true} terminal.
-      this.killOwnedChild('SIGKILL', { cause: 'shutdown_grace_expired' })
+    this.rejectAllPending('AGENT_PROCESS_UNAVAILABLE', { cause: 'shutdown' })
+    for (const execution of [...this.executions.values()]) {
+      if (!execution.settled && !execution.unknownMarked) {
+        this.markExecutionUnknown(execution, 'shutdown')
+        execution.terminalReject?.(envelopeCarrier('outcome_unknown', execution.handle, 'AGENT_PROCESS_UNAVAILABLE',
+          `agent ${this.agentId} shutdown began without exact outcome proof`, { source: 'shutdown', evidence: execution.evidenceSnapshot() }))
+        execution.terminalReject = undefined
+      }
     }
+    const ownsLocalChild = this.verifyOwnership()
+    const ownsReap = this.registryIntegration === null
+      || typeof this.registryIntegration.verifyReapOwnership !== 'function'
+      || this.registryIntegration.verifyReapOwnership(this)
+    if ((!ownsLocalChild || !ownsReap) && this.state !== 'EXITED') {
+      this.auditBounded({ kind: 'ownership_mismatch', detail: 'shutdown refused after pending-first handoff: child/pid/token/REAP identity mismatch' })
+      this.log.error?.(`[router] agent ${this.agentId}: shutdown refused — ownership mismatch (kill/write counts stay 0)`)
+      throw Object.assign(new Error(`agent-router: shutdown of ${this.agentId} refused — ownership mismatch`), { code: 'AGENT_PROCESS_OWNERSHIP_MISMATCH' })
+    }
+    const graceDeadlineMono = monotonicNowMs() + graceMs
+    this.counters.gracefulShutdownWriteAttempts += 1
+    await this.request('shutdown', undefined, undefined, { deadlineMono: graceDeadlineMono }).catch(() => {})
+    // B14 / C-022: a graceful ACK is only receipt of the command. Wait the
+    // remaining absolute grace for real exit before escalating.
+    if (this.exit === undefined) {
+      const remaining = Math.max(0, graceDeadlineMono - monotonicNowMs())
+      await Promise.race([this.exitPromise, wait(remaining)])
+    }
+    if (this.exit === undefined) this.killOwnedChild('SIGKILL', { cause: 'shutdown_grace_expired' })
     await this.exitPromise
     return this.exit
   },

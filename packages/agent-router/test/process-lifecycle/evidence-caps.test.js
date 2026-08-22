@@ -52,6 +52,17 @@ test('STDERR_AND_CREATIONS_OVERFLOW: caps + exact counters', async () => {
   assert.ok(fx.proc.creationsDroppedCount > 0, 'creationsDroppedCount accounted')
 })
 
+test('B12 process audit count/bytes are hard-capped with drop accounting', () => {
+  const fx = makeFx()
+  for (let index = 0; index < 100; index += 1) {
+    fx.proc.auditBounded({ kind: 'boundary', detail: `${index}:${'x'.repeat(4096)}` })
+  }
+  assert.ok(fx.proc.boundedAudit.length <= 64)
+  assert.ok(fx.proc.boundedAuditBytes <= 65536)
+  assert.ok(fx.proc.boundedAuditDroppedCount > 0)
+  assert.ok(fx.proc.boundedAuditDroppedBytes > 0)
+})
+
 test('UTF8_OUTPUT_INCREMENTAL_TAIL: multibyte output over cap keeps a valid UTF-8 tail', async () => {
   const fx = makeFx()
   await fx.readyNow()

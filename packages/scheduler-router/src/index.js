@@ -105,23 +105,29 @@ export function createRouterInvoker(router, opts = {}) {
       // The Scheduler owns the run timeout (it aborts `signal`); the turn
       // poll gets a margin so the scheduler's race always settles first.
       const turnTimeoutMs = request.timeoutMs ? request.timeoutMs + 30_000 : 300_000
-      const { reply } = await proc.turn(request.sessionId, request.message, {}, turnTimeoutMs)
+      const turnResult = await proc.turn(request.sessionId, request.message, {}, turnTimeoutMs)
       const outcome = {
         status: 'ok',
-        summary: reply,
+        summary: turnResult?.reply,
         sessionId: request.sessionId,
         durationMs: Date.now() - started,
+        reconciliationHandle: turnResult?.reconciliationHandle,
+        evidence: turnResult?.evidence,
       }
       call.outcome = outcome
       call.aborted = aborted
       calls.push(call)
       return outcome
     } catch (error) {
+      const unknown = error?.status === 'outcome_unknown' || error?.envelope === 'outcome_unknown'
       const outcome = {
-        status: 'error',
+        status: unknown ? 'outcome_unknown' : 'error',
         error: error?.message ?? String(error),
         sessionId: request.sessionId,
         durationMs: Date.now() - started,
+        ...(error?.reconciliationHandle === undefined ? {} : { reconciliationHandle: error.reconciliationHandle }),
+        ...(error?.deadlineAtWallMs === undefined ? {} : { deadlineAtWallMs: error.deadlineAtWallMs }),
+        ...(error?.evidence === undefined ? {} : { evidence: error.evidence }),
       }
       call.outcome = outcome
       call.aborted = aborted

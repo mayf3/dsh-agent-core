@@ -30,10 +30,12 @@ export const settlementMethods = {
       return
     }
     if (record.initialOutcome === 'outcome_unknown') return
-    record.initialOutcome = 'outcome_unknown'
-    record.initialSource = source ?? null
-    record.deadlineAtWallMs = deadlineAtWallMs ?? record.deadlineAtWallMs
-    this.retally(record)
+    this.mutateRecord(record, (candidate) => {
+      candidate.initialOutcome = 'outcome_unknown'
+      candidate.initialSource = source ?? null
+      candidate.deadlineAtWallMs = deadlineAtWallMs ?? candidate.deadlineAtWallMs
+      candidate.reservedMandatoryBytes = Math.min(candidate.reservedMandatoryBytes ?? 0, 2048)
+    })
   },
 
   /**
@@ -59,12 +61,15 @@ export const settlementMethods = {
     if (record.initialOutcome === 'outcome_unknown') {
       throw new Error(`settleDirect: handle ${handle} already entered outcome_unknown — use settleLate (late machine)`)
     }
-    record.state = 'settled'
-    record.outcome = outcome
-    record.outcomeEvidence = outcomeEvidence
-    record.terminationEvidence = terminationEvidence
-    record.errorClass = errorClass
-    record.settledAtWallMs = Date.now()
+    this.mutateRecord(record, (candidate) => {
+      candidate.state = 'settled'
+      candidate.reservedMandatoryBytes = 64
+      candidate.outcome = outcome
+      candidate.outcomeEvidence = outcomeEvidence
+      candidate.terminationEvidence = terminationEvidence
+      candidate.errorClass = errorClass
+      candidate.settledAtWallMs = Date.now()
+    })
     this.refreshGenerationUnresolved(record)
     for (const listener of this.listeners) {
       try { listener({ handle, ...this.settledSnapshot(record) }) } catch { /* listener isolation */ }
@@ -104,14 +109,21 @@ export const settlementMethods = {
       // the late machine. Late settlement requires the unknown source first.
       throw new Error(`settleLate: handle ${handle} has no outcome_unknown source (initialOutcome=${JSON.stringify(record.initialOutcome)})`)
     }
-    record.state = 'settled'
-    record.lateOutcome = lateOutcome
-    record.outcomeEvidence = outcomeEvidence
-    record.terminationEvidence = terminationEvidence
-    record.settledAtWallMs = Date.now()
-    if (finalAssistantOutput !== undefined) {
-      this.updateFinalOutput(handle, finalAssistantOutput)
-    }
+    this.mutateRecord(record, (candidate) => {
+      candidate.state = 'settled'
+      candidate.reservedMandatoryBytes = 64
+      candidate.lateOutcome = lateOutcome
+      candidate.outcomeEvidence = outcomeEvidence
+      candidate.terminationEvidence = terminationEvidence
+      candidate.settledAtWallMs = Date.now()
+      if (finalAssistantOutput !== undefined) {
+        candidate.finalAssistantOutput = {
+          text: String(finalAssistantOutput.text ?? ''),
+          truncated: finalAssistantOutput.truncated === true,
+          originalBytes: finalAssistantOutput.originalBytes ?? Buffer.byteLength(String(finalAssistantOutput.text ?? ''), 'utf8'),
+        }
+      }
+    })
     this.refreshGenerationUnresolved(record)
     for (const listener of this.listeners) {
       try { listener({ handle, ...this.settledSnapshot(record) }) } catch { /* listener isolation */ }

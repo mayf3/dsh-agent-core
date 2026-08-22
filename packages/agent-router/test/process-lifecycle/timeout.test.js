@@ -12,6 +12,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import { TurnExecution } from '../../src/process/turn-execution.js'
 import { makeFx, firstHandle, prompts, rejectsWith, slotSeq } from './helpers.js'
 
 // ---------------------------------------------------------------------------
@@ -79,6 +80,30 @@ test('DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE: a second deliver while unknown is not
 // ---------------------------------------------------------------------------
 // Turn deadline / outcome model (C-014..C-016) — fence admission
 // ---------------------------------------------------------------------------
+
+test('B06: settling one of multiple unresolved unknowns does not release the others', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+  const executions = ['a', 'b'].map((sessionId) => {
+    const handle = fx.store.mintTurnExecution({ agentId: fx.proc.agentId, processGeneration: 1, sessionId })
+    fx.store.markAdmitted(handle, { eventWatermarkSeq: fx.proc.eventSeq, deadlineAtWallMs: Date.now() + 1000 })
+    const execution = new TurnExecution({
+      handle, sessionId, mode: 'deliver', watermarkSeq: fx.proc.eventSeq,
+      startMono: 0, deadlines: fx.proc.deadlines, bindingContext: undefined,
+    })
+    fx.proc.executions.set(handle, execution)
+    fx.proc.markExecutionUnknown(execution, 'fault_injection')
+    return execution
+  })
+  assert.equal(fx.proc.activeUnknownFences.size, 2)
+  fx.proc.releaseFence(executions[0].handle)
+  assert.equal(fx.proc.activeUnknownFences.size, 1)
+  const writes = prompts(fx).length
+  await rejectsWith(fx.proc.turn('main', 'blocked'), error => assert.equal(error.code, 'AGENT_PROCESS_TURN_FENCED'))
+  assert.equal(prompts(fx).length, writes)
+  fx.proc.releaseFence(executions[1].handle)
+  assert.equal(fx.fence(), false)
+})
 
 test('UNKNOWN_REJECTS_QUEUED_TURNS: B/C write delta 0; A late_completed', async () => {
   const fx = makeFx({ deadlines: { turnTimeoutMs: 120 } })

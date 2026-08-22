@@ -18,16 +18,22 @@ export const eventCorrelationMethods = {
   /** Replay the bounded ring from the watermark through the matcher (C-011). */
   replayExecutionFromWatermark(execution) {
     if (execution.receiptMessageId === null || execution.settled) return
-    for (let seq = execution.watermarkSeq + 1; seq <= this.eventSeq; seq += 1) {
-      if (seq <= execution.lastFedSeq) continue
-      const entry = this.eventLog.get(seq)
-      if (entry === undefined) continue // evicted ring head — bounded history
-      if (entry.params?.sessionId !== execution.sessionId) continue
-      this.feedExecution(execution, entry.params.event, seq)
+    execution.replaying = true
+    try {
+      for (let seq = execution.watermarkSeq + 1; seq <= this.eventSeq; seq += 1) {
+        if (seq <= execution.lastFedSeq) continue
+        const entry = this.eventLog.get(seq)
+        if (entry === undefined) continue // evicted ring head — bounded history
+        if (entry.params?.sessionId !== execution.sessionId) continue
+        this.feedExecution(execution, entry.params.event, seq, entry.observationSeq)
+      }
+    } finally {
+      execution.replaying = false
     }
+    this.trySettleExecution(execution)
   },
 
-  feedExecution(execution, event, seq) {
+  feedExecution(execution, event, seq, observationSeq = this.observationSeq) {
     if (execution.settled || seq <= execution.lastFedSeq) return
     const type = event?.type
     try {
@@ -49,10 +55,9 @@ export const eventCorrelationMethods = {
       }
       if (type === 'turn/start') {
         if (execution.terminalEvent !== null) {
-          // A later turn of the same session started after our terminal — the
-          // session necessarily passed through idle in between.
+          // B08 / C-015: a later turn/start invalidates terminal->idle proof;
+          // it is never itself a substitute for a subsequently observed idle.
           execution.laterTurnStartSeen = true
-          this.trySettleExecution(execution)
         } else {
           execution.currentTurnNumber = event.data?.turn
         }
@@ -74,7 +79,8 @@ export const eventCorrelationMethods = {
           && execution.receiptMessageSeen) {
         execution.terminalEvent = event
         execution.terminalReason = event.data?.reason ?? { kind: 'unknown' }
-        this.trySettleExecution(execution)
+        execution.terminalObservationSeq = observationSeq
+        if (!execution.replaying) this.trySettleExecution(execution)
       }
     } finally {
       execution.lastFedSeq = seq
@@ -88,12 +94,11 @@ export const eventCorrelationMethods = {
    */
   trySettleExecution(execution) {
     if (execution.settled || execution.terminalEvent === null) return
-    const idle = this.status[execution.sessionId] === 'idle' || execution.laterTurnStartSeen
-    if (!idle) return
-    execution.settled = true
-    execution.terminationEvidence = 'exact_terminal_then_idle'
-    execution.phase = 'terminal'
-    if (execution.deadlineTimer !== undefined) clearTimeout(execution.deadlineTimer)
+    const idleAfterTerminal = execution.idleObservationSeq !== null
+      && execution.terminalObservationSeq !== null
+      && execution.idleObservationSeq > execution.terminalObservationSeq
+      && !execution.laterTurnStartSeen
+    if (!idleAfterTerminal) return
     const failed = execution.terminalReason?.kind === 'error'
     if (execution.unknownMarked) {
       this.store.settleLate(execution.handle, {
@@ -102,6 +107,9 @@ export const eventCorrelationMethods = {
         terminationEvidence: 'exact_terminal_then_idle',
         finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
       })
+      execution.settled = true
+      execution.terminationEvidence = 'exact_terminal_then_idle'
+      execution.phase = 'terminal'
       this.releaseFence(execution.handle)
       this.finishExecution(execution)
       return
@@ -122,6 +130,9 @@ export const eventCorrelationMethods = {
         terminationEvidence: 'exact_terminal_then_idle',
         errorClass: error.code,
       })
+      execution.settled = true
+      execution.terminationEvidence = 'exact_terminal_then_idle'
+      execution.phase = 'terminal'
       execution.terminalReject?.(error)
     } else {
       this.store.settleDirect(execution.handle, {
@@ -129,6 +140,9 @@ export const eventCorrelationMethods = {
         outcomeEvidence: 'exact_turn_end_success',
         terminationEvidence: 'exact_terminal_then_idle',
       })
+      execution.settled = true
+      execution.terminationEvidence = 'exact_terminal_then_idle'
+      execution.phase = 'terminal'
       execution.terminalResolve?.({
         reply: execution.finalAssistantText(),
         messageId: execution.receiptMessageId,
@@ -145,29 +159,36 @@ export const eventCorrelationMethods = {
       clearTimeout(execution.deadlineTimer)
       execution.deadlineTimer = undefined
     }
+    execution.releaseQueueOwnership?.()
     this.executions.delete(execution.handle)
   },
 
   markExecutionUnknown(execution, source) {
     if (execution.settled || execution.unknownMarked) return
+    this.store.markOutcomeUnknown(execution.handle, { source, deadlineAtWallMs: Date.now() })
     execution.unknownMarked = true
     execution.unknownSource = source
     execution.phase = 'outcome_unknown'
-    this.store.markOutcomeUnknown(execution.handle, { source, deadlineAtWallMs: Date.now() })
     this.installUnknownFence(execution)
+    execution.releaseQueueOwnership?.()
   },
 
   installUnknownFence(execution) {
-    if (this.activeUnknownFence === null) {
-      this.activeUnknownFence = { handle: execution.handle, sessionId: execution.sessionId }
-      // C-013: reject every queued-not-sent turn structurally; they never
+    if (this.activeUnknownFences.has(execution.handle)) return
+    const wasEmpty = this.activeUnknownFences.size === 0
+    const fence = { handle: execution.handle, sessionId: execution.sessionId }
+    this.activeUnknownFences.set(execution.handle, fence)
+    if (wasEmpty) {
+      this.activeUnknownFence = fence
+      // C-013: reject every queued-not-sent prompt structurally; they never
       // auto-send after fence release (re-admission is an explicit caller act).
       this.rejectQueuedTurns('AGENT_PROCESS_TURN_FENCED', 'outcome_unknown fence', execution.handle)
     }
   },
 
-  /** C-016: only termination evidence of the SAME active unknown handle releases. */
+  /** C-016: settlement removes only that handle; every other unknown remains fenced. */
   releaseFence(handle) {
-    if (this.activeUnknownFence?.handle === handle) this.activeUnknownFence = null
+    this.activeUnknownFences.delete(handle)
+    this.activeUnknownFence = this.activeUnknownFences.values().next().value ?? null
   },
 }

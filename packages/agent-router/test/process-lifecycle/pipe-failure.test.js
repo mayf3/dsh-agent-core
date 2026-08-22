@@ -18,6 +18,22 @@ import { makeFx, firstHandle, prompts, rejectsWith, slotSeq } from './helpers.js
 // stdin faults (C-004 / C-009)
 // ---------------------------------------------------------------------------
 
+test('B04: known non-writable stdin rejects before any write attempt', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+  fx.child.stdin.writable = false
+  const writesBefore = fx.writes.length
+  const turn = fx.proc.turn('main', 'known-closed', {})
+  const observed = await rejectsWith(turn, (error) => {
+    assert.equal(error.status, 'not_admitted')
+    assert.equal(error.proven, 'zero_byte')
+    assert.equal(error.code, 'AGENT_PROCESS_STDIN_NOT_WRITABLE')
+  })
+  assert.equal(fx.writes.length, writesBefore, 'underlying stdin.write was never called')
+  assert.equal(fx.pendingSize(), 0)
+  assert.equal(fx.store.getTurnReconciliation(observed.reconciliationHandle).snapshot.outcome, 'not_admitted')
+})
+
 test('STDIN_SYNC_THROW_ZERO_BYTE: proven zero-byte -> not_admitted; broken stream still tears down', async () => {
   const fx = makeFx()
   await fx.readyNow()

@@ -57,7 +57,7 @@ test('INITIALIZE_PROVIDER_NEVER_READY: retries never reset the one initialize de
     clearInterval(pollAnswer)
   }
   const elapsed = Date.now() - started
-  assert.ok(elapsed < 2 * 700, `elapsed ${elapsed}ms bounded by ONE total initialize deadline (no reset)`)
+  assert.ok(elapsed >= 650 && elapsed < 850, `B02 sleep is clamped to the absolute 700ms deadline (elapsed ${elapsed}ms)`)
   assert.ok(fx.writes.filter(w => w.method === 'initialize').length >= 2, 'retries happened')
   fx.childExit(1, null)
   await fx.proc.exitPromise

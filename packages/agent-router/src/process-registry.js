@@ -24,6 +24,7 @@ import { randomUUID } from 'node:crypto'
 
 import { redactSensitiveText } from './process/index.js'
 import { createParentRpcHandler } from './parent-rpc-relay.js'
+import { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'
 
 /**
  * Create the per-Agent process registry bound to one router mount.
@@ -55,6 +56,7 @@ export function createProcessRegistry({
   const agentGenerations = new Map()
   /** Bounded stale-callback audit (old generation late error/exit). */
   const staleSlotAudits = []
+  let disposing = false
 
   function auditStaleSlot(detail) {
     staleSlotAudits.push({ detail, observedAtWallMs: Date.now() })
@@ -175,10 +177,9 @@ export function createProcessRegistry({
     // (a) bounded, redacted evidence first.
     const evidence = redactSensitiveText(String(cause?.message ?? cause)).slice(0, 2048)
     auditStaleSlot(`pre-spawn startup failure (no child) for agent ${agentId} generation ${entry.generation}: ${evidence}`)
-    const error = cause instanceof Error ? cause : new Error(String(cause))
-    error.agentId = agentId
-    error.processGeneration = entry.generation
-    error.startupFailureStage = entry.startupFailureStage ?? 'pre-spawn'
+    const error = startupFailure(cause, {
+      agentId, generation: entry.generation, stage: entry.startupFailureStage ?? 'pre-spawn',
+    })
     // (c) identity CAS: only THIS exact STARTUP entry with no processRef and
     // no ownership token may reach EMPTY; anything else (a newer generation,
     // REAP, READY) is untouchable — the stale path is audit-only.
@@ -255,49 +256,53 @@ export function createProcessRegistry({
    * EMPTY wins exactly one CAS(EMPTY -> STARTUP) before any async work.
    * Only READY processes are ever returned (registry exposes READY only).
    */
-  async function ensureRunning(agentId) {
-    // Unified runnability enforcement FIRST: unknown / disabled -> structured
-    // rejection -> NEVER spawn.
-    assertRunnable(agentId)
+  function ensureRunning(agentId) {
+    if (disposing) return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))
+    // B01 / C-007: the EMPTY -> STARTUP linearization point is synchronous
+    // and precedes every asynchronous bootstrap step, including workspace
+    // seeding. Returning the entry's exact resultPromise (rather than an
+    // async wrapper) makes the whole bootstrap a true single flight.
+    try {
+      assertRunnable(agentId)
+    } catch (error) {
+      return Promise.reject(error)
+    }
     const initial = lifecycleSlots.get(agentId)
     if (initial?.state === 'READY') {
       if (initial.processRef?.exit === undefined) {
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
-        return initial.processRef
+        return Promise.resolve(initial.processRef)
       }
-      // Real exit already observed synchronously: same-task cleanup — the
-      // process can never be reused, and no new generation may be blocked.
       lifecycleSlots.delete(agentId)
       log.log(`process for ${agentId} exited (${initial.processRef.exit?.code ?? 'signal'}); will respawn`)
     } else if (initial?.state === 'STARTUP') {
       return initial.resultPromise
-    }
-    if (initial?.state === 'REAP') {
-      throw Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' })
-    }
-    // AGENT_WORKSPACE_PERSONA_PROVISIONING_AUDIT_V1 (SMALL_GAP) FIX: seed the
-    // per-agent workspace (AGENTS.md + roots) on first start so the spawned
-    // DSH process finds its own instruction surface before agent-instructions
-    // renders its first baseline. Idempotent (never overwrites existing
-    // files), safe on respawn and on control-plane restart. The CAS below
-    // re-checks the slot after the await, so a concurrent startup that won
-    // the race while seeding is shared instead of doubled.
-    await workspaceBootstrap.ensure(agentId)
-    const raced = lifecycleSlots.get(agentId)
-    if (raced?.state === 'READY') {
-      if (raced.processRef?.exit === undefined) {
-        log.log(`reuse process for ${agentId} after seed (pid ${raced.processRef?.pid})`)
-        return raced.processRef
-      }
-      lifecycleSlots.delete(agentId)
-    } else if (raced?.state === 'STARTUP') {
-      return raced.resultPromise
-    }
-    if (raced?.state === 'REAP') {
-      throw Object.assign(new Error(`agent-router: agent ${agentId} generation ${raced.generation} is reaping (${raced.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' })
+    } else if (initial?.state === 'REAP') {
+      return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
     }
     const entry = installStartupSlot(agentId)
-    return startProcessForSlot(agentId, entry)
+    void bootstrapStartup(agentId, entry)
+    return entry.resultPromise
+  }
+
+  async function bootstrapStartup(agentId, entry) {
+    try {
+      entry.startupFailureStage = 'workspaceBootstrap.ensure'
+      await workspaceBootstrap.ensure(agentId)
+      if (disposing) throw Object.assign(new Error('agent-router: registry disposed during startup'), { code: 'AGENT_PROCESS_DRAINING' })
+      await startProcessForSlot(agentId, entry)
+    } catch (cause) {
+      if (entry.startupSettled) return
+      if (entry.processRef === null) {
+        failStartupSlotNoChild(agentId, entry, cause)
+        return
+      }
+      convergeStartedStartup({
+        agentId, entry, cause, empty: casStartupEmptySlot, reap: casReapSlot,
+        settle: settleStartupEntry,
+        teardownFailure: fatalCause => auditStaleSlot(`startup fatal convergence failed for ${agentId}: ${redactSensitiveText(String(fatalCause?.message ?? fatalCause)).slice(0, 1024)}`),
+      })
+    }
   }
 
   /** Spawn + initialize one generation for an installed STARTUP slot. */
@@ -470,15 +475,14 @@ export function createProcessRegistry({
     return staleSlotAudits.map(entry => ({ ...entry }))
   }
 
-  /** Plugin teardown: shutdown every owned process, then clear the slots. */
-  function dispose() {
-    for (const slot of lifecycleSlots.values()) {
-      const proc = slot.processRef
-      if (proc !== null && proc !== undefined && typeof proc.shutdown === 'function') {
-        void proc.shutdown()
-      }
-    }
-    lifecycleSlots.clear()
+  /** Plugin teardown: await every owned process's real-exit shutdown. */
+  async function dispose() {
+    disposing = true
+    await disposeProcessSlots(lifecycleSlots, (agentId, slot) => {
+      failStartupSlotNoChild(agentId, slot,
+        Object.assign(new Error('registry disposed during startup'), { code: 'AGENT_PROCESS_DRAINING' }))
+    })
+    // Exact child-exit callbacks own REAP -> EMPTY; disposal never clears a live fence.
   }
 
   return {

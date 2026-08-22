@@ -85,6 +85,29 @@ test('TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL: pending-first order; terminated_
   assert.deepEqual(slotSeq(fx), ['casReap:g1', 'casEmpty:g1'])
 })
 
+test('B09 parser receipt/terminal evidence beats exit before the receipt Promise continuation', async () => {
+  const fx = makeFx({ deadlines: { turnTimeoutMs: 1000 } })
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'same-stack-exit', {})
+  await fx.tick()
+  const prompt = fx.writes.find(write => write.method === 'session/prompt')
+  const frames = [
+    { id: prompt.id, result: { messageId: 'm-gap' } },
+    { method: 'session.event', params: { sessionId: 'main', event: { type: 'turn/start', data: { turn: 9 } } } },
+    { method: 'session.event', params: { sessionId: 'main', event: { type: 'user/message', data: { id: 'm-gap' } } } },
+    { method: 'session.event', params: { sessionId: 'main', event: { type: 'assistant/message', data: { message: { content: [{ type: 'text', text: 'GAP-WINNER' }] } } } } },
+    { method: 'session.event', params: { sessionId: 'main', event: { type: 'turn/end', data: { turn: 9, reason: { kind: 'completed' } } } } },
+  ].map(frame => `${JSON.stringify(frame)}\n`).join('')
+  fx.child.stdout.handler(frames)
+  fx.childExit(0, null) // before await(promptWrite) continuation runs
+  const observed = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  await fx.proc.exitPromise
+  const snapshot = fx.store.getTurnReconciliation(observed.reconciliationHandle).snapshot
+  assert.equal(snapshot.lateOutcome, 'late_completed')
+  assert.equal(snapshot.terminationEvidence, 'child_real_exit')
+  assert.equal(fx.store.readFinalAssistantOutput(observed.reconciliationHandle).text, 'GAP-WINNER')
+})
+
 test('PARSED_OUTCOME_PRECEDES_CHILD_EXIT: exact turn/end received pre-exit wins over child_real_exit', async () => {
   const fx = makeFx({ deadlines: { turnTimeoutMs: 120 } })
   await fx.readyNow()

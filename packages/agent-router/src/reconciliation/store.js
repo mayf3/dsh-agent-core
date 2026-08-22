@@ -34,9 +34,14 @@
 
 import { randomUUID } from 'node:crypto'
 
-import { RECONCILIATION_CAPS, ReconciliationCapacityError, recordByteSize } from './capacity.js'
+import {
+  RECONCILIATION_CAPS, REQUIRED_RECORD_EVIDENCE_HEADROOM_BYTES,
+  ReconciliationCapacityError, recordByteSize,
+} from './capacity.js'
 import { settlementMethods } from './state-machine.js'
 import { queryMethods } from './query.js'
+
+const MANDATORY_TRANSITION_HEADROOM_BYTES = 4096
 
 export class TurnReconciliationStore {
   /**
@@ -71,30 +76,40 @@ export class TurnReconciliationStore {
   mintTurnExecution({ agentId, processGeneration, sessionId, callerCorrelation = null }) {
     if (typeof agentId !== 'string' || agentId === '') throw new TypeError('mintTurnExecution: agentId required')
     if (!Number.isSafeInteger(processGeneration) || processGeneration <= 0) throw new TypeError('mintTurnExecution: processGeneration must be a positive integer')
-    let issuance = this.issuance.get(agentId)
-    if (issuance === undefined) {
-      this.discriminatorSeq += 1
-      issuance = {
-        discriminator: this.discriminatorSeq,
-        maxIssuedTurnSeq: 0,
-        evictedThroughTurnSeq: 0,
-        evictedSparseSeqs: new Set(),
-        evictedThroughGeneration: 0,
-        evictedGenerations: new Map(), // generation -> maxSeq (bounded, rule 11)
-        generations: new Map(),
+    const correlationKey = callerCorrelation === null ? null : this.callerCorrelationKey(callerCorrelation)
+    if (correlationKey !== null) {
+      const existing = this.correlationIndex.get(correlationKey)
+      if (existing !== undefined) {
+        throw Object.assign(new Error(`reconciliation: caller correlation already bound to ${existing}; refusing a second authority mint`), { code: 'RECONCILIATION_CORRELATION_CONFLICT' })
       }
-      this.issuance.set(agentId, issuance)
+      if (this.correlationIndex.size >= RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL) {
+        throw new ReconciliationCapacityError('reconciliation: caller correlation index capacity exhausted')
+      }
+    }
+    const existingIssuance = this.issuance.get(agentId)
+    const issuance = existingIssuance ?? {
+      discriminator: this.discriminatorSeq + 1,
+      maxIssuedTurnSeq: 0,
+      evictedThroughTurnSeq: 0,
+      evictedSparseSeqs: new Set(),
+      evictedThroughGeneration: 0,
+      evictedGenerations: new Map(),
+      generations: new Map(),
     }
     if (!Number.isSafeInteger(issuance.maxIssuedTurnSeq + 1)) {
       throw new ReconciliationCapacityError(`reconciliation: turn sequence exhausted for agent ${agentId}`)
     }
+    const authorityBefore = this.snapshotAuthority()
+    try {
+    if (!issuance.generations.has(processGeneration)
+        && issuance.generations.size + issuance.evictedGenerations.size >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+      this.evictSettledGenerationForCapacity(agentId, issuance)
+      if (issuance.generations.size + issuance.evictedGenerations.size >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+        throw new ReconciliationCapacityError(`reconciliation: issuance generation capacity exhausted for agent ${agentId}`)
+      }
+    }
     const turnSeq = issuance.maxIssuedTurnSeq + 1
-
-    // Capacity: admission must fail BEFORE reservation when eviction of
-    // resolved records cannot free enough space (rule 8). Unresolved records
-    // are never evictable.
     this.assertMintCapacity(agentId)
-
     const handle = `turn:${this.runtimeEpoch}:a${issuance.discriminator}:g${processGeneration}:s${turnSeq}`
     const record = {
       handle,
@@ -123,17 +138,23 @@ export class TurnReconciliationStore {
       cancelRequestedAtWallMs: null,
       finalAssistantOutput: null,
       audit: [],
+      reservedMandatoryBytes: MANDATORY_TRANSITION_HEADROOM_BYTES,
       bytes: 0,
     }
     record.bytes = recordByteSize(record)
-    if (record.bytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES) {
-      throw new ReconciliationCapacityError(`reconciliation: reserved record for ${agentId} exceeds per-record byte cap`)
+    if (record.bytes + REQUIRED_RECORD_EVIDENCE_HEADROOM_BYTES > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES) {
+      throw new ReconciliationCapacityError(`reconciliation: reserved record for ${agentId} leaves insufficient terminal output/audit headroom`)
     }
+    this.evictResolvedForByteCapacity(agentId, record.bytes)
     if ((this.agentBytes.get(agentId) ?? 0) + record.bytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT
         || this.globalBytes + record.bytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
       throw new ReconciliationCapacityError(
         `reconciliation: byte capacity exhausted for agent ${agentId} (agent ${this.agentBytes.get(agentId) ?? 0}B, global ${this.globalBytes}B) — unresolved records are not evictable`,
       )
+    }
+    if (existingIssuance === undefined) {
+      this.discriminatorSeq = issuance.discriminator
+      this.issuance.set(agentId, issuance)
     }
     issuance.maxIssuedTurnSeq = turnSeq
     const generationEntry = issuance.generations.get(processGeneration)
@@ -148,10 +169,81 @@ export class TurnReconciliationStore {
     this.globalBytes += record.bytes
     this.agentCounts.set(agentId, (this.agentCounts.get(agentId) ?? 0) + 1)
     this.agentBytes.set(agentId, (this.agentBytes.get(agentId) ?? 0) + record.bytes)
-    if (record.callerCorrelation !== null) {
-      this.bindCallerCorrelation(record.callerCorrelation, handle)
-    }
+    if (correlationKey !== null) this.correlationIndex.set(correlationKey, handle)
     return handle
+    } catch (error) {
+      this.restoreAuthority(authorityBefore)
+      throw error
+    }
+  }
+
+  snapshotAuthority() {
+    const issuance = new Map([...this.issuance].map(([agentId, entry]) => [agentId, {
+      ...entry,
+      evictedSparseSeqs: new Set(entry.evictedSparseSeqs),
+      evictedGenerations: new Map(entry.evictedGenerations),
+      generations: new Map([...entry.generations].map(([generation, value]) => [generation, { ...value }])),
+    }]))
+    return {
+      records: new Map(this.records), issuance, correlationIndex: new Map(this.correlationIndex),
+      globalBytes: this.globalBytes, agentCounts: new Map(this.agentCounts), agentBytes: new Map(this.agentBytes),
+      discriminatorSeq: this.discriminatorSeq,
+    }
+  }
+
+  restoreAuthority(snapshot) {
+    this.records = snapshot.records
+    this.issuance = snapshot.issuance
+    this.correlationIndex = snapshot.correlationIndex
+    this.globalBytes = snapshot.globalBytes
+    this.agentCounts = snapshot.agentCounts
+    this.agentBytes = snapshot.agentBytes
+    this.discriminatorSeq = snapshot.discriminatorSeq
+  }
+
+  callerCorrelationKey({ occurrenceId, runId, requestId }) {
+    return `${occurrenceId ?? ''}\u0000${runId ?? ''}\u0000${requestId ?? ''}`
+  }
+
+  assertCorrelationCapacity() {
+    if (this.correlationIndex.size >= RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL) {
+      throw new ReconciliationCapacityError('reconciliation: caller correlation index capacity exhausted')
+    }
+  }
+
+  evictSettledGenerationForCapacity(agentId, issuance) {
+    const candidate = [...issuance.generations.entries()]
+      .filter(([generation, entry]) => entry.unresolvedCount === 0
+        && generation === issuance.evictedThroughGeneration + 1)
+      .sort((a, b) => a[0] - b[0])[0]
+    if (candidate === undefined) return
+    const generation = candidate[0]
+    for (const record of [...this.records.values()]) {
+      if (record.agentId === agentId && record.processGeneration === generation && record.state === 'settled') {
+        this.evictRecord(record)
+      }
+    }
+  }
+
+  canEvictRecord(record) {
+    const issuance = this.issuance.get(record.agentId)
+    const generationEntry = issuance?.generations.get(record.processGeneration)
+    if (issuance === undefined || generationEntry === undefined || generationEntry.liveRecords > 1) return true
+    return record.processGeneration === issuance.evictedThroughGeneration + 1
+      || issuance.evictedGenerations.has(record.processGeneration)
+      || issuance.evictedGenerations.size < RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
+  }
+
+  evictResolvedForByteCapacity(agentId, additionalBytes, excludeHandle = null) {
+    const candidates = [...this.records.values()].filter(record => record.state === 'settled'
+      && record.handle !== excludeHandle && this.canEvictRecord(record))
+    for (const record of candidates) {
+      const agentPressure = (this.agentBytes.get(agentId) ?? 0) + additionalBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT
+      const globalPressure = this.globalBytes + additionalBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL
+      if (!agentPressure && !globalPressure) break
+      if (!globalPressure && record.agentId !== agentId) continue
+      this.evictRecord(record)
+    }
   }
 
   /**
@@ -187,7 +279,7 @@ export class TurnReconciliationStore {
     // Per-Agent pressure evicts THAT agent's oldest resolved records; global
     // pressure evicts globally-oldest resolved records.
     const candidates = [...this.records.values()]
-      .filter(r => r.state === 'settled')
+      .filter(r => r.state === 'settled' && this.canEvictRecord(r))
       .sort((a, b) => {
         const aPinned = a.agentId === agentId
         const bPinned = b.agentId === agentId
@@ -202,6 +294,9 @@ export class TurnReconciliationStore {
   }
 
   evictRecord(record) {
+    if (!this.canEvictRecord(record)) {
+      throw new ReconciliationCapacityError(`reconciliation: evicting ${record.handle} would exceed issuance metadata cap`)
+    }
     this.records.delete(record.handle)
     this.globalBytes -= record.bytes
     this.agentCounts.set(record.agentId, (this.agentCounts.get(record.agentId) ?? 1) - 1)
@@ -232,11 +327,6 @@ export class TurnReconciliationStore {
             issuance.evictedThroughGeneration = generation
           } else {
             issuance.evictedGenerations.set(generation, generationEntry.maxSeq)
-            if (issuance.evictedGenerations.size > 256) {
-              const oldest = issuance.evictedGenerations.keys().next().value
-              issuance.evictedGenerations.delete(oldest)
-              this.evictedGenerationRangesDropped = (this.evictedGenerationRangesDropped ?? 0) + 1
-            }
           }
         }
       }
@@ -254,31 +344,31 @@ export class TurnReconciliationStore {
   /** Pre-write authoritative visibility (C-010: record exists before prompt bytes). */
   markAdmitted(handle, { eventWatermarkSeq, promptRequestId, deadlineAtWallMs }) {
     const record = this.requireRecord(handle)
-    record.admitted = true
-    record.eventWatermarkSeq = eventWatermarkSeq ?? null
-    record.promptRequestId = promptRequestId ?? null
-    record.deadlineAtWallMs = deadlineAtWallMs ?? null
-    this.retally(record)
+    this.mutateRecord(record, (candidate) => {
+      candidate.admitted = true
+      candidate.eventWatermarkSeq = eventWatermarkSeq ?? null
+      candidate.promptRequestId = promptRequestId ?? null
+      candidate.deadlineAtWallMs = deadlineAtWallMs ?? null
+    })
   }
 
   markPromptWriteAttempted(handle) {
     const record = this.requireRecord(handle)
-    record.promptWriteAttempted = true
-    this.retally(record)
+    this.mutateRecord(record, candidate => { candidate.promptWriteAttempted = true })
   }
 
   markPromptReceipt(handle, { messageId }) {
     const record = this.requireRecord(handle)
-    record.messageId = messageId ?? null
-    this.retally(record)
+    this.mutateRecord(record, candidate => { candidate.messageId = messageId ?? null })
   }
 
   markCancelRequested(handle) {
     const record = this.requireRecord(handle)
     if (record.cancelRequested) return
-    record.cancelRequested = true
-    record.cancelRequestedAtWallMs = Date.now()
-    this.retally(record)
+    this.mutateRecord(record, (candidate) => {
+      candidate.cancelRequested = true
+      candidate.cancelRequestedAtWallMs = Date.now()
+    })
   }
 
   /**
@@ -288,12 +378,82 @@ export class TurnReconciliationStore {
    */
   updateFinalOutput(handle, output) {
     const record = this.requireRecord(handle)
-    record.finalAssistantOutput = output === null || output === undefined ? null : {
-      text: String(output.text ?? ''),
-      truncated: output.truncated === true,
-      originalBytes: output.originalBytes ?? Buffer.byteLength(String(output.text ?? ''), 'utf8'),
+    this.mutateRecord(record, (candidate) => {
+      candidate.finalAssistantOutput = output === null || output === undefined ? null : {
+        text: String(output.text ?? ''),
+        truncated: output.truncated === true,
+        originalBytes: output.originalBytes ?? Buffer.byteLength(String(output.text ?? ''), 'utf8'),
+      }
+      if (candidate.finalAssistantOutput?.text !== '') {
+        candidate.reservedMandatoryBytes = Math.min(candidate.reservedMandatoryBytes ?? 0, 2048)
+      }
+    })
+  }
+
+  /** Trim optional evidence before an authoritative mutation can exceed byte caps. */
+  clampOptionalEvidence(candidate, record) {
+    const agentBytes = this.agentBytes.get(record.agentId) ?? 0
+    let reclaimableAgentBytes = 0
+    let reclaimableGlobalBytes = 0
+    for (const other of this.records.values()) {
+      if (other.handle === record.handle || other.state !== 'settled' || !this.canEvictRecord(other)) continue
+      reclaimableGlobalBytes += other.bytes
+      if (other.agentId === record.agentId) reclaimableAgentBytes += other.bytes
     }
-    this.retally(record)
+    const maxBytes = Math.min(
+      RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES,
+      record.bytes + RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT - agentBytes + reclaimableAgentBytes,
+      record.bytes + RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL - this.globalBytes + reclaimableGlobalBytes,
+    )
+    while (recordByteSize(candidate) > maxBytes && candidate.audit.length > 0) {
+      const dropped = candidate.audit.shift()
+      candidate.auditDroppedCount = (candidate.auditDroppedCount ?? 0) + 1
+      candidate.auditDroppedBytes = (candidate.auditDroppedBytes ?? 0)
+        + Buffer.byteLength(JSON.stringify(dropped), 'utf8')
+    }
+    if (recordByteSize(candidate) <= maxBytes) return
+    if (candidate.finalAssistantOutput !== null) {
+      const output = candidate.finalAssistantOutput
+      const source = Buffer.from(String(output.text ?? ''), 'utf8')
+      let start = Math.min(source.length, Math.max(0, recordByteSize(candidate) - maxBytes))
+      while (start < source.length && (source[start] & 0xc0) === 0x80) start += 1
+      if (source.length > 0 && start >= source.length) {
+        start = source.length - 1
+        while (start > 0 && (source[start] & 0xc0) === 0x80) start -= 1
+      }
+      candidate.finalAssistantOutput = {
+        text: source.subarray(start).toString('utf8'), truncated: true,
+        originalBytes: Math.max(output.originalBytes ?? source.length, source.length),
+      }
+    }
+    const excess = Math.max(0, recordByteSize(candidate) - maxBytes)
+    candidate.reservedMandatoryBytes = Math.max(0, (candidate.reservedMandatoryBytes ?? 0) - excess)
+  }
+
+  mutateRecord(record, mutate) {
+    const candidate = {
+      ...record,
+      callerCorrelation: record.callerCorrelation === null ? null : { ...record.callerCorrelation },
+      finalAssistantOutput: record.finalAssistantOutput === null ? null : { ...record.finalAssistantOutput },
+      audit: record.audit.map(entry => ({ ...entry })),
+    }
+    mutate(candidate)
+    this.clampOptionalEvidence(candidate, record)
+    const bytes = recordByteSize(candidate)
+    if (bytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES) {
+      throw new ReconciliationCapacityError(`reconciliation: record ${record.handle} exceeds per-record byte cap`)
+    }
+    const delta = bytes - record.bytes
+    if (delta > 0) this.evictResolvedForByteCapacity(record.agentId, delta, record.handle)
+    if ((this.agentBytes.get(record.agentId) ?? 0) + delta > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT
+        || this.globalBytes + delta > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
+      throw new ReconciliationCapacityError(`reconciliation: mutation byte capacity exhausted for ${record.handle}`)
+    }
+    const before = record.bytes
+    Object.assign(record, candidate, { bytes })
+    this.globalBytes += bytes - before
+    this.agentBytes.set(record.agentId, (this.agentBytes.get(record.agentId) ?? before) + bytes - before)
+    return record
   }
 
   appendAudit(record, entry) {
@@ -302,14 +462,14 @@ export class TurnReconciliationStore {
       evidenceType: entry.evidenceType ?? null,
       observedAtWallMs: Date.now(),
     }
-    record.audit.push(bounded)
-    // Bounded audit list: count + bytes caps; oldest entries drop first with
-    // a counter (never silently unbounded).
-    while (record.audit.length > RECONCILIATION_CAPS.MAX_RECONCILIATION_AUDIT_ENTRIES_PER_RECORD) {
-      record.audit.shift()
-      record.auditDroppedCount = (record.auditDroppedCount ?? 0) + 1
-    }
-    this.retally(record)
+    this.mutateRecord(record, (candidate) => {
+      candidate.audit.push(bounded)
+      while (candidate.audit.length > RECONCILIATION_CAPS.MAX_RECONCILIATION_AUDIT_ENTRIES_PER_RECORD
+          || Buffer.byteLength(JSON.stringify(candidate.audit), 'utf8') > RECONCILIATION_CAPS.MAX_RECONCILIATION_AUDIT_BYTES_PER_RECORD) {
+        candidate.audit.shift()
+        candidate.auditDroppedCount = (candidate.auditDroppedCount ?? 0) + 1
+      }
+    })
   }
 
   retally(record) {

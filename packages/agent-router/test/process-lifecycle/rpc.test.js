@@ -59,15 +59,16 @@ test('PARENT_RPC_RESPONSE_WRITE_RESERVE: handler deadline aborts; ONE timeout re
   const fx = makeFx({ deadlines: { turnTimeoutMs: 1200 } })
   await fx.readyNow()
   let hookContext = null
+  let aborted = false
   fx.proc.onRpcRequest = (method, params, deadlineCtx) => {
     hookContext = { method, ...deadlineCtx }
-    return new Promise((resolve) => {
-      deadlineCtx.signal.addEventListener('abort', () => resolve('late-side-effect'))
-    })
+    deadlineCtx.signal.addEventListener('abort', () => { aborted = true })
+    return new Promise(() => {}) // deliberately ignores AbortSignal forever
   }
   const relay = fx.proc.handleRpcRequest({ requestId: 'r-1', method: 'agent-core/switchAgent', params: {} })
   await fx.sleep(1400)
   await relay
+  assert.equal(aborted, true, 'uncooperative handler receives cooperative abort')
   assert.equal(fx.counts().rpcResponseWriteAttempts, 1, 'exactly one wire response attempt')
   const responses = fx.writes.filter(w => w.method === 'rpc.response')
   assert.equal(responses.length, 1)
@@ -78,6 +79,21 @@ test('PARENT_RPC_RESPONSE_WRITE_RESERVE: handler deadline aborts; ONE timeout re
   assert.ok(fx.proc.boundedAudit.some(e => e.kind === 'parent_rpc_response' && e.detail.includes('responseWrite=sent')))
   assert.ok(fx.proc.boundedAudit.some(e => e.kind === 'parent_rpc_timeout' && e.detail.includes('sideEffectOutcome=unknown')),
     'unprovable side effect recorded as unknown')
+})
+
+test('B03: expired inherited turn budget invokes no handler and writes no response', async () => {
+  const fx = makeFx({ deadlines: { turnTimeoutMs: 100 } })
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'expire-parent-budget', {})
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-expired-parent' })
+  await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  let handlerCalls = 0
+  fx.proc.onRpcRequest = async () => { handlerCalls += 1 }
+  await fx.proc.handleRpcRequest({ requestId: 'expired', method: 'agent-core/broker', params: {} })
+  assert.equal(handlerCalls, 0)
+  assert.equal(fx.writes.filter(write => write.method === 'rpc.response').length, 0)
+  assert.equal(fx.counts().rpcResponseWriteAttempts, 0)
 })
 
 test('PARENT_RPC_WRITE_EXCEEDS_TOTAL_DEADLINE: one attempt, no post-deadline write, responseWrite=unknown', async () => {
@@ -102,6 +118,19 @@ test('PARENT_RPC_WRITE_EXCEEDS_TOTAL_DEADLINE: one attempt, no post-deadline wri
 // ---------------------------------------------------------------------------
 // Supplementary acceptance items (§10.2): pending cap
 // ---------------------------------------------------------------------------
+
+test('B04 known broken stdin takes precedence over pending/deadline guards and drains existing RPCs', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+  const pending = Array.from({ length: 1024 }, (_, index) => fx.proc.request('x/fill', { index }).catch(error => error))
+  fx.child.stdin.writable = false
+  await rejectsWith(fx.proc.request('x/closed', {}, undefined, { deadlineMono: 0 }), (error) => {
+    assert.equal(error.code, 'AGENT_PROCESS_STDIN_NOT_WRITABLE')
+  })
+  await fx.tick()
+  assert.equal(fx.pendingSize(), 0)
+  assert.ok((await Promise.all(pending)).every(error => error.code === 'AGENT_PROCESS_UNAVAILABLE'))
+})
 
 test('pending RPC cap: the 1025th concurrent RPC is rejected before write (no pending eviction)', async () => {
   const fx = makeFx()

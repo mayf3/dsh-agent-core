@@ -103,7 +103,10 @@ export function createIngressDelivery({
           {
             code: 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN',
             status: 'outcome_unknown',
+            envelope: 'outcome_unknown',
             reconciliationHandle: turnResult.reconciliationHandle,
+            deadlineAtWallMs: turnResult.deadlineAtWallMs,
+            evidence: turnResult.evidence,
           },
         )
       }
@@ -117,7 +120,15 @@ export function createIngressDelivery({
         await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)
         log.log(`reply sent back to ${ingress.conversationId.slice(0, 12)}...`)
       }
-      return { reply, agentId: binding.activeAgentId, sessionId: binding.activeSessionId, pid: proc.pid }
+      return {
+        reply,
+        agentId: binding.activeAgentId,
+        sessionId: binding.activeSessionId,
+        pid: proc.pid,
+        ...(turnResult?.status === undefined ? {} : { status: turnResult.status }),
+        ...(turnResult?.reconciliationHandle === undefined ? {} : { reconciliationHandle: turnResult.reconciliationHandle }),
+        ...(turnResult?.evidence === undefined ? {} : { evidence: turnResult.evidence }),
+      }
     } catch (error) {
       log.error(`delivery to ${binding.activeAgentId} failed: ${error?.message ?? error}`)
       if (feishu !== undefined && isFeishuEntry) {
@@ -229,7 +240,13 @@ export function createIngressDelivery({
       ms: Date.now() - started,
     })
     log.log(`deliver accepted: agent ${agent.id} session ${sessionId} requestId ${requestId.slice(0, 24)}... (${receipt.messageId}) in ${Date.now() - started}ms`)
-    return { accepted: true, sessionId }
+    return {
+      accepted: true,
+      sessionId,
+      ...(receipt.status === undefined ? {} : { status: receipt.status }),
+      ...(receipt.reconciliationHandle === undefined ? {} : { reconciliationHandle: receipt.reconciliationHandle }),
+      ...(receipt.evidence === undefined ? {} : { evidence: receipt.evidence }),
+    }
   }
 
   /** Test/ops: in-memory Delivery V0 acceptance log snapshot. */

@@ -16,6 +16,15 @@ export const queryMethods = {
   settledSnapshot(record) {
     return {
       handle: record.handle,
+      turnExecutionId: record.handle,
+      runtimeEpoch: record.runtimeEpoch,
+      agentId: record.agentId,
+      processGeneration: record.processGeneration,
+      callerCorrelation: record.callerCorrelation === null ? null : { ...record.callerCorrelation },
+      sessionId: record.sessionId,
+      eventWatermarkSeq: record.eventWatermarkSeq,
+      promptRequestId: record.promptRequestId,
+      messageId: record.messageId,
       state: record.state,
       initialOutcome: record.initialOutcome,
       initialSource: record.initialSource,
@@ -41,9 +50,13 @@ export const queryMethods = {
     if (match === null) return { state: 'never_existed' }
     const [, epoch, discriminator, generationRaw, seqRaw] = match
     if (epoch !== this.runtimeEpoch) return { state: 'restart_lost' }
-    const discriminatorNumber = Number.parseInt(discriminator, 10)
-    const generation = Number.parseInt(generationRaw, 10)
-    const seq = Number.parseInt(seqRaw, 10)
+    const discriminatorNumber = Number(discriminator)
+    const generation = Number(generationRaw)
+    const seq = Number(seqRaw)
+    if (![discriminatorNumber, generation, seq].every(value => Number.isSafeInteger(value) && value > 0)
+        || String(discriminatorNumber) !== discriminator || String(generation) !== generationRaw || String(seq) !== seqRaw) {
+      return { state: 'never_existed' }
+    }
     let issuance = null
     let agentId = null
     for (const [candidateId, candidate] of this.issuance) {
@@ -87,7 +100,8 @@ export const queryMethods = {
     const classified = this.classifyHandle(handle)
     if (classified.record === undefined) return { state: classified.state }
     const record = classified.record
-    const terminalState = record.state === 'settled' ? (record.lateOutcome ?? record.outcome) : (record.initialOutcome ?? 'pending')
+    if (record.state !== 'settled') return { state: 'pending' }
+    const terminalState = record.lateOutcome ?? record.outcome
     if (record.finalAssistantOutput === null || record.finalAssistantOutput === undefined) {
       return { state: 'no_output', terminalState }
     }
@@ -106,7 +120,7 @@ export const queryMethods = {
    * idempotent; same triple + different handle fails loud.
    */
   bindCallerCorrelation({ occurrenceId, runId, requestId }, handle) {
-    const key = `${occurrenceId ?? ''}\u0000${runId ?? ''}\u0000${requestId ?? ''}`
+    const key = this.callerCorrelationKey({ occurrenceId, runId, requestId })
     const existing = this.correlationIndex.get(key)
     if (existing !== undefined) {
       if (existing !== handle) {
@@ -114,6 +128,7 @@ export const queryMethods = {
       }
       return handle
     }
+    this.assertCorrelationCapacity()
     this.correlationIndex.set(key, handle)
     return handle
   },
@@ -123,7 +138,7 @@ export const queryMethods = {
    * handle, or the absence semantics of the underlying record.
    */
   resolveCallerCorrelation({ occurrenceId, runId, requestId }) {
-    const key = `${occurrenceId ?? ''}\u0000${runId ?? ''}\u0000${requestId ?? ''}`
+    const key = this.callerCorrelationKey({ occurrenceId, runId, requestId })
     const handle = this.correlationIndex.get(key)
     if (handle === undefined) return { state: 'never_existed' }
     const classified = this.classifyHandle(handle)

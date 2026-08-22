@@ -40,6 +40,8 @@ export class TurnExecution {
     this.currentTurnNumber = undefined
     this.terminalEvent = null
     this.terminalReason = null
+    this.terminalObservationSeq = null
+    this.idleObservationSeq = null
     this.laterTurnStartSeen = false
     this.assistantSegments = []
     this.assistantOriginalBytes = 0
@@ -60,6 +62,16 @@ export class TurnExecution {
     // Receipt-only (deliver) executions have no terminal waiter; a provider
     // failure settlement must never surface as an unhandled rejection.
     this.terminalPromise.catch(() => {})
+    this.queueReleasePromise = new Promise((resolveQueueRelease) => {
+      this.resolveQueueRelease = resolveQueueRelease
+    })
+    this.queueReleased = false
+  }
+
+  releaseQueueOwnership() {
+    if (this.queueReleased) return
+    this.queueReleased = true
+    this.resolveQueueRelease()
   }
 
   /** The exact receipt correlation is proven once the bound messageId was
@@ -83,7 +95,7 @@ export class TurnExecution {
     if (kept > PROCESS_EVIDENCE_CAPS.MAX_FINAL_ASSISTANT_OUTPUT_BYTES && this.assistantSegments.length === 1) {
       const buffer = Buffer.from(this.assistantSegments[0].text, 'utf8')
       let start = buffer.length - PROCESS_EVIDENCE_CAPS.MAX_FINAL_ASSISTANT_OUTPUT_BYTES
-      while (start > 0 && (buffer[start] & 0xc0) === 0x80) start -= 1 // never split a code point
+      while (start < buffer.length && (buffer[start] & 0xc0) === 0x80) start += 1 // never split or exceed the byte cap
       this.assistantSegments[0] = { text: buffer.subarray(start).toString('utf8'), bytes: buffer.length - start }
       this.assistantTruncated = true
     }
@@ -126,19 +138,18 @@ export const turnExecutionMethods = {
         reject(preError)
         return
       }
-      if (mode === 'turn') {
-        if (this.turnQueueEntries.length >= PROCESS_EVIDENCE_CAPS.MAX_QUEUED_TURNS_PER_PROCESS
-            || this.queuedPromptBytes + promptBytes > PROCESS_EVIDENCE_CAPS.MAX_QUEUED_PROMPT_BYTES_PER_PROCESS) {
-          reject(envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_QUEUE_CAP',
-            `agent ${this.agentId}: queued turn caps exceeded (${this.turnQueueEntries.length} entries / ${this.queuedPromptBytes}B)`))
-          return
-        }
-        this.turnQueueEntries.push({ mode, sessionId, text, opts, callerBoundMs, promptBytes, resolve, reject })
-        this.queuedPromptBytes += promptBytes
-        this.drainTurnQueue()
-      } else {
-        void this.runPromptExecution({ mode, sessionId, text, opts, callerBoundMs, promptBytes, resolve, reject })
+      // B05 / C-013: every prompt-producing path shares this one bounded
+      // admission queue. Receipt-only delivery may resolve its caller early,
+      // but it retains queue ownership until terminal or outcome_unknown.
+      if (this.turnQueueEntries.length >= PROCESS_EVIDENCE_CAPS.MAX_QUEUED_TURNS_PER_PROCESS
+          || this.queuedPromptBytes + promptBytes > PROCESS_EVIDENCE_CAPS.MAX_QUEUED_PROMPT_BYTES_PER_PROCESS) {
+        reject(envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_QUEUE_CAP',
+          `agent ${this.agentId}: queued prompt caps exceeded (${this.turnQueueEntries.length} entries / ${this.queuedPromptBytes}B)`))
+        return
       }
+      this.turnQueueEntries.push({ mode, sessionId, text, opts, callerBoundMs, promptBytes, resolve, reject })
+      this.queuedPromptBytes += promptBytes
+      this.drainTurnQueue()
     })
   },
 
@@ -154,8 +165,8 @@ export const turnExecutionMethods = {
       return envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_PROMPT_TOO_LARGE',
         `prompt of ${promptBytes} bytes exceeds MAX_PROMPT_BYTES ${PROCESS_EVIDENCE_CAPS.MAX_PROMPT_BYTES} — rejected before queueing (input is never cached)`)
     }
-    if (this.activeUnknownFence !== null) {
-      return fencedRejection(this.activeUnknownFence.handle)
+    if (this.activeUnknownFences.size > 0) {
+      return fencedRejection(this.activeUnknownFence?.handle ?? this.activeUnknownFences.keys().next().value)
     }
     if (this.state !== 'READY') {
       return envelopeCarrier('not_admitted', null, this.state === 'DRAINING' || this.state === 'EXITED' ? 'AGENT_PROCESS_DRAINING' : 'AGENT_PROCESS_NOT_READY',
@@ -166,14 +177,17 @@ export const turnExecutionMethods = {
 
   drainTurnQueue() {
     if (this.turnInFlight || this.turnQueueEntries.length === 0) return
-    if (this.activeUnknownFence !== null || this.state !== 'READY') {
+    if (this.activeUnknownFences.size > 0 || this.state !== 'READY') {
       this.rejectQueuedTurns('AGENT_PROCESS_TURN_FENCED', `admission blocked (state=${this.state})`, this.activeUnknownFence?.handle)
       return
     }
     const entry = this.turnQueueEntries.shift()
     this.queuedPromptBytes -= entry.promptBytes
     this.turnInFlight = true
-    void this.runPromptExecution(entry).finally(() => {
+    void this.runPromptExecution(entry).catch((cause) => {
+      entry.reject(cause)
+      this.auditBounded({ kind: 'prompt_execution_internal_failure', detail: String(cause?.message ?? cause) })
+    }).finally(() => {
       this.turnInFlight = false
       this.drainTurnQueue()
     })
@@ -218,10 +232,24 @@ export const turnExecutionMethods = {
       deadlines: this.deadlines,
       bindingContext: opts?.bindingContext,
     })
-    this.store.markAdmitted(handle, {
-      eventWatermarkSeq: execution.watermarkSeq,
-      deadlineAtWallMs: Date.now() + this.deadlines.turnTimeoutMs,
-    })
+    execution.promptRequestId = `req-${this.processGeneration}-${this.seq + 1}`
+    try {
+      this.store.markAdmitted(handle, {
+        eventWatermarkSeq: execution.watermarkSeq,
+        promptRequestId: execution.promptRequestId,
+        deadlineAtWallMs: Date.now() + this.deadlines.turnTimeoutMs,
+      })
+    } catch (cause) {
+      try {
+        this.store.settleDirect(handle, {
+          outcome: 'not_admitted', outcomeEvidence: 'pre_write_capacity_rejection',
+          errorClass: cause?.code ?? 'RECONCILIATION_CAPACITY_EXHAUSTED',
+        })
+      } catch { /* the original capacity failure remains authoritative */ }
+      reject(envelopeCarrier('not_admitted', handle, cause?.code ?? 'RECONCILIATION_CAPACITY_EXHAUSTED',
+        `agent ${this.agentId}: prompt admission capacity failed before write`, { evidence: { source: 'admission_capacity' } }))
+      return
+    }
     this.executions.set(handle, execution)
     if (mode === 'turn') this.activeBindingContext = opts?.bindingContext
     const startedWall = Date.now()
@@ -230,7 +258,7 @@ export const turnExecutionMethods = {
       execution.phase = 'receipt_pending'
       const receipt = await this.promptWrite(execution, sessionId, text, opts)
       execution.promptMs = Date.now() - startedWall
-      execution.phase = 'running'
+      if (!execution.settled) execution.phase = 'running'
       if (mode === 'deliver') {
         // Receipt-only: the caller returns now; the execution keeps its
         // terminal/unknown fence tracking in the background (C-010).
@@ -239,11 +267,11 @@ export const turnExecutionMethods = {
           sessionId,
           messageId: execution.receiptMessageId,
           ms: Date.now() - startedWall,
-          status: 'completed',
           reconciliationHandle: handle,
           evidence: execution.evidenceSnapshot(),
         })
-        this.installBackgroundTurnWatch(execution)
+        if (!execution.settled) this.installBackgroundTurnWatch(execution)
+        await execution.queueReleasePromise
         return
       }
       const terminal = await this.awaitTerminal(execution, callerBoundMs)
@@ -265,8 +293,7 @@ export const turnExecutionMethods = {
 
   async promptWrite(execution, sessionId, text, opts) {
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
-    const requestId = `req-${this.processGeneration}-${this.seq + 1}`
-    execution.promptRequestId = requestId
+    const requestId = execution.promptRequestId
     const receipt = await this.request('session/prompt', {
       sessionId,
       contentBlocks: [{ type: 'text', text }],
