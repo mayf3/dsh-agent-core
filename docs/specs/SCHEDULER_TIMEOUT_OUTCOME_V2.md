@@ -420,7 +420,7 @@ Scheduler 实现 PR 开工前，以下条件**全部**成立（缺一不可）�
 ### DEC-SCH-003 — occurrence authority store 采用 D-007 §10.2 选项 1：扩展同一版本化 Scheduler state document
 
 - Decision owner: repository owner（D-007 §10.2 把该二选一显式指派给 implementation Spec）
-- Decision: 单一 state document、单一 mutation authority：`jobs.json` 升级为 `{ version: 2, jobs: [...], occurrences: [...] }`，同一 cross-process lock、同一 re-read-latest + fsync + atomic rename 协议；admission 判定（due + fence + uniqueness）与 occurrence reserve 在**同一次** lock 内提交，天然满足 D-007 §10.2 的「occurrence state and Job definition cannot be torn into an unsafe admission view」。
+- Decision: 单一 state document、单一 mutation authority：`jobs.json` 升级为 `{ version: 2, jobs: [...], occurrences: [...], fences: {...} }`，同一 cross-process lock、同一 re-read-latest + fsync + atomic rename 协议；admission 判定（due + fence + uniqueness）与 occurrence reserve 在**同一次** lock 内提交，天然满足 D-007 §10.2 的「occurrence state and Job definition cannot be torn into an unsafe admission view」。
 - Rejected alternative: 选项 2（独立 versioned occurrence document/store）——需要第二把锁与跨文件一致性顺序，admission 视图可能在两锁之间被撕裂，复杂度无对应收益。
 - Reason: `CLM-SCH-004`；单机最小持久化前提不变。
 - Owner input required: NO（D-007 §10.2 已授权 implementation Spec 自行二选一并通过 review）。
@@ -617,8 +617,10 @@ Occurrence authority 与 Job definition 共存于**同一** versioned Scheduler 
 
 ```text
 file: <store>/jobs.json（路径不变；默认 ~/.agent-core/scheduler/jobs.json）
-document: { "version": 2, "jobs": [...], "occurrences": [...] }
+document: { "version": 2, "jobs": [...], "occurrences": [...], "fences": {...} }
 ```
+
+`jobs` / `occurrences` / `fences` 是 canonical document 的三个 collection；所有 normative 表述中的 store schema 镜像必须与此一致（`fences` 即 C-028 的持久化 projection）。
 
 约束：
 
@@ -663,7 +665,7 @@ OccurrenceRecord {
 ```
 
 - `history` 由实现按状态转换追加；`outcome_unknown → succeeded|failed` 的 late settlement 必须在 `history` 与 `lateSettlement` 同时留痕。
-- state document 另含 `fences` projection：`{ [jobId]: { occurrenceId, runId, activatedAtMs, reason } }`（C-028）。
+- document 的第三个 collection 是 `fences` projection：`{ [jobId]: { occurrenceId, runId, activatedAtMs, reason } }`（canonical schema 的一员；语义见 C-028）。
 - schema 校验 fail loud：未知/损坏 record 不得静默丢弃或当作无 occurrence（区别于 `load()` 对单条 corrupt **job** 的现有 warn-drop——occurrence record 损坏属于 authority 损坏，必须 fail loud）。
 
 ### C-023 — Deterministic identity derivation（NEW；D-007 §5.1/§5.3/§5.4 实施冻结）
@@ -676,7 +678,25 @@ runId            = 'run:' + occurrenceId
 idempotencyKey   = occurrenceId（Router admission request 的 requestId = idempotencyKey）
 ```
 
-- `hex16` = sha256 hex 前 16 字符；分隔使用不可歧义编码（长度前缀或 JSON canonical 串）。具体字符串拼接格式是 implementation detail，但**同一 logical slot 跨 tick/restart/store reload 必须确定性得到同一 id**，且 store 必须拒绝插入重复 `occurrenceId` 或重复 `(jobId, scheduleRevision, kind, slot坐标)` 的 natural record。
+- `hex16` = sha256 hex 前 16 字符；分隔使用不可歧义编码（长度前缀或 JSON canonical 串）。具体字符串拼接格式是 implementation detail，但**同一 logical slot 跨 tick/restart/store reload 必须确定性得到同一 id**，且 store 必须执行 collision policy：
+
+```text
+same occurrenceId + same logical coordinates
+  → idempotent dedupe（返回既有 record；不报错、不写第二条、不触发 admission）
+
+same occurrenceId + different logical coordinates
+  → STRUCTURED_COLLISION_ERROR / FAIL_LOUD（不得静默覆盖或改名重写）
+
+logical coordinates = (jobId, scheduleRevision, effectiveSlot)
+  effectiveSlot:
+    natural / catchup → nominalScheduledAt（两者联合占用同一 nominal 空间：
+                        同一 (jobId, scheduleRevision, nominal) 至多一条 record，
+                        不论 kind）
+    retry             → retryOfOccurrenceId（每个前驱 occurrence 至多一条 retry
+                        record，即同一前驱不得被 retry 两次）
+```
+
+- 联合唯一性覆盖 natural / retry / catchup 三种 kind。retry 链 A→B→C 每一步只引用**直接前驱**（`B.retryOf = A`、`C.retryOf = B`）；`retryOfOccurrenceId` 必须指向已存在且 terminal-`failed` 的 record，否则拒绝；链解析无歧义。
 - 禁止：仅 RAM sequence、restart 后按当前时间 re-mint、以 `runningAtMs` 充当 identity、同一 occurrence 第二个 occurrenceId/runId。
 - `scheduleRevision`：任何改变未来 occurrence 语义（schedule/payload/target/retry）的 Job update 递增 revision；已存在 occurrence 继续绑定创建时的 revision 与 payloadHash（D-007 §5.2）。
 
@@ -751,7 +771,8 @@ reconcileOccurrence(occurrenceId, runId, { resolvedTo: 'succeeded' | 'failed',
 
 - 仅接受 state=`outcome_unknown` 且无 lateSettlement 的 record；写入 `lateSettlement { basis: 'operator-reconcile' }` + history + 解除 fence（若该 Job 无其他未解析 unknown）。
 - 不删除 timeout/unknown history；不 re-admit；不生成 retry occurrence（是否创建新 occurrence 由显式 retry policy 另行决定）。
-- CLI/control 面暴露为显式 operator 命令；必须留 audit evidence（operator 标识、时间、note）。
+- CLI/control 面暴露为显式 operator 命令。
+- **Operator identity 来源（冻结）**：operator identity 必须来自**可信控制上下文**（trusted control context）——本地 CLI 至少绑定 effective OS user / trusted operator context；未来任何远程 control plane 必须来自 authenticated principal。**请求 body 不得自报 operator identity**（body 内的身份字段 untrusted，必须忽略/拒绝）。audit record 必须记录身份来源（identity provenance：OS user / authenticated principal + 采集方式）、时间与 note。
 
 ### C-030 — Legacy Job.state demoted to derived projection（NEW；D-007 §3.1 实施冻结）
 
@@ -781,16 +802,32 @@ LEGACY_EXECUTION_STATE_AUTHORITY = NONE（native store 亦适用）
 
 ### C-033 — Native store upgrade v1 → v2 and rollback（NEW；D-007 §10/§13.1 实施冻结）
 
-- 首次以 v2 语义打开 store 时，在 mutation lock 内做一次性升级：读取 `version:1`（或 bare array）文档 → 写出 `{version:2, jobs, occurrences: [], fences: {}}`；升级前在同一目录保留一次性备份 `jobs.json.v1.bak`（已存在则不覆盖）。
+- 首次以 v2 语义打开 store 时，在 mutation lock 内做一次性升级：读取 `version:1`（或 bare array）文档 → 写出 `{version:2, jobs, occurrences: [], fences: {}}`；升级前在同一目录写入 **generation-specific** 备份（如 `jobs.json.v1.<upgrade-timestamp>.bak`，仅属于本次升级；不复用、不覆盖任何既有备份）。
 - 升级必须产出 upgrade report：列出每个 job 的 legacy execution state 处置（strip 明细），特别是带有 `runningAtMs` / in-flight 标记的 job——**不**为其 fabrication occurrence record（无 occurrence identity 可言），strip + report，且相关 Job 不得因升级自动 enable/restore；没有 termination evidence 时不猜测成功或失败。
 - 升级后 restart recovery（D-007 §13.1）：已有 occurrence record terminal → 不重放；admitted/running 无 termination proof → `outcome_unknown` + fence；停机期完全无 record 的 slot → 每 Job 每 downtime 至多一个新 catch-up occurrence（`catchUpOfNominalAt` = 最近一个 eligible missed slot），不得对应已有 record、不得绕过 fence。
 - 不支持的 version / 损坏文档 → fail loud。
-- 回滚：stop scheduler → 恢复 `jobs.json.v1.bak` 为 `jobs.json` → 以旧代码重启；v2 期间产生的 occurrence evidence 以 `runs.jsonl` 与（如需要）人工 export 为准。回滚是 operator 显式动作，不是自动行为。
+- **V2 → V1 代码回滚守卫（最安全规则冻结）**：仅当以下条件**全部**成立时才允许回滚（恢复对应 generation 备份 + 以 v1 代码重启）：
+
+```text
+  occurrences 为空
+  AND fences 为空
+  AND 不存在 unresolved outcome_unknown
+  AND 升级后没有任何 V2-era Job mutation（create/update/enable/disable/delete/import）
+
+任一不成立：
+  ROLLBACK_TO_V1 = REFUSE_FAIL_LOUD
+  RECOVERY_ROUTE = FORWARD_FIX_OR_EXPLICIT_RECONCILIATION
+```
+
+- 回滚执行前必须先归档**完整 V2 authority document**（如 `jobs.json.v2.<timestamp>.archive.json`）；archive 只是证据（evidence），不替代 authority，不得作为后续 restore 来源。
+- unresolved unknown / fence 未处理时**不得启动旧（v1）Scheduler**：旧引擎的 `runningAtMs` no-dup + 2h stuck-clear 语义会与仍在运行/未解析的执行重叠，违反 C-003/C-008。
+- rollback 后再次 upgrade：必须从**当时**的 current truth 重新升级，不得恢复到最初（陈旧）的 v1 快照；已消费的 generation 备份标记 consumed，新一次升级生成新备份。
+- 回滚是 operator 显式动作，不是自动行为；v2 期间的 occurrence evidence 以 `runs.jsonl` 与 V2 archive 为准。
 
 ### C-034 — Import guard and definition-only import mechanics（NEW；D-007 §15.1/§15.2/§15.3 实施冻结）
 
 - import tool 默认 dry-run；写入时若 target store exists OR contains jobs/occurrences 且未显式 `--force` → REFUSE。守卫必须在 mutation lock 内读取 latest target state（无 TOCTOU）。
-- `--force` 仅表示 operator 授权 whole-store replacement；使用前必须 stop/drain Control Plane，且仍受 no-catch-up、state-strip、disabled、restore gate 约束；`--force` ≠ auto-enable authority。
+- **`--force` 禁止 whole-store replacement 删除 occurrence authority（冻结）**：target 存在任何 occurrence record、任何 fence、或任何 `outcome_unknown` 时，默认路径 REFUSE；显式 `--force` 只授权 **definitions-only replacement**——更新 `jobs`，同时**原样保留**（verbatim，不重写、不删除、不重建）`occurrences` / `fences` / occurrence `history`。stop/drain Control Plane 是操作前提，**不等于** authority preservation。无法证明可安全合并（例如 definition 替换会改变仍有 occurrence 绑定的 `scheduleRevision` / `payloadHash` 语义）→ fail loud。`--force` 仍受 no-catch-up、state-strip、disabled、restore gate 约束，≠ auto-enable authority。（相对 D-007 §15.2 「whole-store replacement」措辞，本 Contract 是对 force 范围的**收窄**，用于保护 D-007 §10/§11 已冻结的 occurrence authority commitments；§15.2 的 default-REFUSE guard 语义本身原样保留。）
 - import strip 清单（逐 job report）：`lastRun / lastStatus / runningAt / consecutiveErrors / lastError / retry state / past-due nextRunAt`（execution state）；`sessionTarget / sessionKey`（legacy session fields，含 `main` 或显式稳定 session 意图的 Job 保持 disabled/blocked 直到 migration review 确认新语义）；`wakeMode`、top-level dead `everyMs`、`state.status` 等 dormant fields drop with report；`payload.kind != agentTurn` → BLOCKED / NOT IMPORTED；legacy timeout 字段按 D-007 §3.3 规范化；unknown schedule kind / invalid cron / empty message / missing id/name/agentId / unknown delivery mode → fail loud / gap report。
 - source 出现 `runningAt` / in-flight：report 列出 + strip，不迁为 running/admitted truth，不 auto-enable，不猜 outcome。
 - 每job 输出 disposition：target Agent、daemon/scheduled、stale、disabled、restore eligibility；不得静默猜测。
@@ -1006,8 +1043,8 @@ Natural next 与 retry occurrence 都是新 identity（不复用旧 key）。Nat
 ### ACC-023 — Identity derivation determinism
 
 - Contracts: C-023
-- Method: 同 slot 跨 restart/tick 重算；重复插入拒绝；retry 链（A→B→C）id 唯一
-- Failure: 派生不稳定或重复 id 被接受
+- Method: 同 slot 跨 restart/tick 重算；same occurrenceId + same logical coordinates → idempotent dedupe（仍只有一条 record、无错误）；same occurrenceId + different logical coordinates → STRUCTURED_COLLISION_ERROR fail loud；natural/catchup 同 nominal slot 联合唯一；retry 链（A→B→C）逐直接前驱唯一、前驱必须 terminal-failed
+- Failure: 派生不稳定；重复 id/坐标被当作新 record 写入；collision 被静默覆盖；retry 引用非直接前驱或未 failed 的 record
 
 ### ACC-024 — payloadHash conflict
 
@@ -1043,8 +1080,8 @@ Natural next 与 retry occurrence 都是新 identity（不复用旧 key）。Nat
 ### ACC-029 — Operator reconcile
 
 - Contracts: C-029
-- Method: `OPERATOR_RECONCILE_RESOLVES_FENCE`：reconcile unknown occurrence → resolvedTo + evidence + fence 解除 + history 留痕；对非 unknown record 的 reconcile 请求被拒绝
-- Expected: 不 re-admit、不删 history、不自动生成 retry；audit evidence 完整
+- Method: `OPERATOR_RECONCILE_RESOLVES_FENCE`：reconcile unknown occurrence → resolvedTo + evidence + fence 解除 + history 留痕；对非 unknown record 的 reconcile 请求被拒绝；body 自报 operator identity 的请求被忽略/拒绝，audit 记录可信来源（effective OS user / authenticated principal + provenance）
+- Expected: 不 re-admit、不删 history、不自动生成 retry；audit evidence 含身份来源完整
 - Failure: reconcile 被用于重放执行或清除审计痕迹
 
 ### ACC-030 — Legacy state demotion
@@ -1066,13 +1103,13 @@ Natural next 与 retry occurrence 都是新 identity（不复用旧 key）。Nat
 ### ACC-033 — Store upgrade v1→v2 + rollback
 
 - Contracts: C-033
-- Method: `STORE_UPGRADE_V1_TO_V2`：构造 v1 store（含 runningAtMs in-flight job）→ 升级 → 断言 `{version:2,...}`、`.v1.bak` 存在、in-flight strip + report、无 fabricated occurrence；恢复备份回滚可用；restart recovery 按 D-007 §13.1（catch-up 每 Job 每 downtime ≤1）
+- Method: `STORE_UPGRADE_V1_TO_V2`：构造 v1 store（含 runningAtMs in-flight job）→ 升级 → 断言 `{version:2, jobs, occurrences, fences}`、generation-specific v1 备份存在、in-flight strip + report、无 fabricated occurrence；guarded rollback：四条件全满足才允许（任一不满足 → REFUSE_FAIL_LOUD + forward-fix/reconcile 路由）、回滚前强制归档 V2 document、unresolved unknown 时旧 Scheduler 拒绝启动、rollback→re-upgrade 不恢复陈旧快照；restart recovery 按 D-007 §13.1（catch-up 每 Job 每 downtime ≤1）
 - Failure: 升级伪造 occurrence / 遗漏备份 / in-flight 被当作 authority
 
 ### ACC-034 — Import guard
 
 - Contracts: C-034
-- Method: existing-store（无 --force）→ REFUSE；--force 前 stop/drain 纪录；strip/report 完整性
+- Method: existing-store（无 --force）→ REFUSE；target 含 occurrence/fence/unknown 时即使 `--force` 也只允许 definitions-only 替换且 `occurrences`/`fences`/`history` 原样保留（任何删除/重写即失败）；stop/drain 不足以豁免；无法证明安全合并 → fail loud；strip/report 完整性
 - Failure: 守卫 TOCTOU 或 force 绕过 no-catch-up/state-strip
 
 ### ACC-035 — Evidence append
@@ -1176,9 +1213,9 @@ restart 后不可复现；确定性派生从机制上保证 at-most-once（DEC-S
 
 - **本轮**：docs-only。无 store 变化、无 production 变化、无代码变化。V1 在本 Spec acceptance 前保持 active authority。
 - **Authority 迁移**：按 §3.2 原子 supersession transaction；backlinks 同一 commit 内完成；Decision index / D-006 / D-007 零改动。
-- **Store 迁移（实现轮）**：按 C-033（v1→v2 in-lock 升级 + `.v1.bak` + report + fail loud + operator 回滚步骤）。production store 当前 0 jobs（STATE-SCH-001），升级影响面在实现轮以 dedicated test store 验证。
+- **Store 迁移（实现轮）**：按 C-033（v1→v2 in-lock 升级 + generation-specific 备份 + report + fail loud + guarded rollback）。production store 当前 0 jobs（STATE-SCH-001），升级影响面在实现轮以 dedicated test store 验证。
 - **兼容**：Job definition 字段语义与 exact 持久化协议不变（jobs key、tmp+fsync+rename、fail-loud）；`toPublicJob`/CLI 输出向后兼容地扩展（新增 occurrence 维度，不删除既有字段）；`agentcore-cron` 六个子命令保留。
-- **Rollback（实现轮）**：store 层恢复 `.v1.bak` + 旧代码；authority 层若实现发现 Contract 缺口，按 `SPEC_GOVERNANCE_V0` §10 停止 → 报告 → 独立 docs-only 变更 → 重启实现。
+- **Rollback（实现轮）**：store 层按 C-033 guarded rollback——仅 `occurrences`/`fences` 均空、无 unresolved `outcome_unknown`、且无任何 V2-era Job mutation 时允许；否则 `ROLLBACK_TO_V1 = REFUSE_FAIL_LOUD`、recovery = forward fix 或 explicit reconciliation。回滚前强制归档完整 V2 authority document（archive 仅证据）；备份 generation-specific、不得复用陈旧快照；unresolved unknown/fence 未处理不得启动旧 Scheduler。authority 层若实现发现 Contract 缺口，按 `SPEC_GOVERNANCE_V0` §10 停止 → 报告 → 独立 docs-only 变更 → 重启实现。
 - **Restore gate**：C-019/C-037 冻结；restore 决策是 gate 全过后的独立 owner 行为。
 
 ---
@@ -1220,12 +1257,17 @@ SAME_OCCURRENCE_ADMISSION = MUST_NOT_ENTER_ROUTER_TWICE
 CANCEL_REQUESTED_VS_TERMINATED = DISTINCT
 SCHEDULED_SESSION_MODEL = FRESH_NON_MAIN_PER_EXECUTION_SAME_AGENT_PRIMARY_WORKSPACE
 
-OCCURRENCE_AUTHORITY_STORE = SINGLE_VERSIONED_STATE_DOCUMENT_V2_JOBS_PLUS_OCCURRENCES
+OCCURRENCE_AUTHORITY_STORE = SINGLE_VERSIONED_STATE_DOCUMENT_V2_JOBS_OCCURRENCES_FENCES
 OCCURRENCE_STORE_COMMIT = SAME_MUTATION_PROTOCOL_TEMP_FSYNC_ATOMIC_RENAME
 RUN_EVIDENCE = APPEND_ONLY_BOUNDED_RUNS_JSONL_DEFAULT_10MB_NOT_AUTHORITY
 LEGACY_EXECUTION_STATE_AUTHORITY = NONE
 LEGACY_JOB_STATE_ROLE = DERIVED_REBUILDABLE_PROJECTION_ONLY
 FENCE_PERSISTENCE = DERIVED_PROJECTION_ATOMIC_WITH_TRANSITIONS
+OCCURRENCE_ID_COLLISION = SAME_COORDS_IDEMPOTENT_DEDUPE_DIFFERENT_COORDS_STRUCTURED_COLLISION_ERROR_FAIL_LOUD
+ROLLBACK_TO_V1 = GUARDED_EMPTY_UNRESOLVED_UNMUTATED_ONLY_ELSE_REFUSE_FAIL_LOUD
+ROLLBACK_RECOVERY_ROUTE = FORWARD_FIX_OR_EXPLICIT_RECONCILIATION
+FORCE_IMPORT_SCOPE = DEFINITIONS_ONLY_OCCURRENCE_AUTHORITY_PRESERVED_VERBATIM
+OPERATOR_IDENTITY_SOURCE = TRUSTED_CONTROL_CONTEXT_ONLY_NEVER_REQUEST_BODY
 
 MIGRATION_CATCH_UP_POLICY = NO_CATCH_UP
 MISSING_AGENT_ID_JOBS = BLOCKED
