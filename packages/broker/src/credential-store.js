@@ -29,6 +29,7 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute } from 'node:path'
+import { env } from 'node:process'
 
 import { normalizeAgentId } from '../../agent-definition/src/definition.js'
 
@@ -115,6 +116,23 @@ export function loadCredentialFor(storeFile, agentId) {
 }
 
 /**
+ * Internal core of the metadata seam (NON-EXPORTED). The storeFile argument
+ * exists ONLY so the trusted-parent configuration plumbing below can pass
+ * the process-configured store path into the shared logic; keeping this
+ * un-exported is what makes a caller-supplied store path structurally
+ * unrepresentable on every production surface. Tests reach the same logic
+ * exclusively through the exported seam's configuration authority
+ * (AGENT_CORE_CREDENTIALS_FILE), never via this function.
+ */
+function resolveCredentialMetadataWith(storeFile, agentId) {
+  normalizeAgentId(agentId)
+  if (storeFile === undefined || storeFile === '') return { entry: 'ABSENT' }
+  const credential = loadCredentialsStore(storeFile)[agentId]
+  if (credential === undefined) return { entry: 'ABSENT' }
+  return { entry: 'PRESENT', clientId: credential.clientId }
+}
+
+/**
  * Resolve REDACTED credential METADATA for ONE agent id — the fleet-inventory
  * seam (AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1). Answers only whether
  * the canonical trusted store has an entry for the EXACT agent id and, when
@@ -122,10 +140,16 @@ export function loadCredentialFor(storeFile, agentId) {
  * for trusted inventory to ask presence: it must NOT call loadCredentialFor()
  * and receive clientSecret merely to discard it.
  *
+ * The exported seam takes EXACTLY ONE business input: the agentId. The
+ * credential store path comes solely from the trusted-parent process
+ * configuration authority (AGENT_CORE_CREDENTIALS_FILE of the authsvc/uid505
+ * control-plane process) — a child Agent, model tool, child RPC, UI, or any
+ * other caller CANNOT supply or select a store path: there is no such
+ * parameter, and the path is re-read from the environment on every call.
+ *
  * Trusted-parent ONLY — the same authsvc/uid505 credential boundary as
  * loadCredentialFor: never reachable by a child Agent, model tool, child
- * RPC, or UI; the store path is trusted parent configuration
- * (AGENT_CORE_CREDENTIALS_FILE), never a caller-supplied request field.
+ * RPC, or UI.
  *
  * Semantics:
  *   - the agent id is validated FIRST by the Agent Definition authority's
@@ -146,15 +170,9 @@ export function loadCredentialFor(storeFile, agentId) {
  *
  * PRESENCE is local-store metadata only: it says nothing about Auth client
  * existence/validity, principal binding, grants, or token mintability.
- * @param {string | undefined} storeFile - AGENT_CORE_CREDENTIALS_FILE value
- *   (trusted parent configuration).
  * @param {string} agentId - the exact Agent Definition id being inventoried.
  * @returns {{entry:'PRESENT', clientId:string} | {entry:'ABSENT'}}
  */
-export function resolveCredentialMetadata(storeFile, agentId) {
-  normalizeAgentId(agentId)
-  if (storeFile === undefined || storeFile === '') return { entry: 'ABSENT' }
-  const credential = loadCredentialsStore(storeFile)[agentId]
-  if (credential === undefined) return { entry: 'ABSENT' }
-  return { entry: 'PRESENT', clientId: credential.clientId }
+export function resolveCredentialMetadata(agentId) {
+  return resolveCredentialMetadataWith(env.AGENT_CORE_CREDENTIALS_FILE, agentId)
 }
