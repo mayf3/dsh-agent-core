@@ -108,17 +108,42 @@ test('SHUTDOWN_OWNERSHIP_MISMATCH: token mismatch -> no graceful write, no kill,
   assert.equal(fx.fence(), turnError.reconciliationHandle)
 })
 
-test('CONCURRENT_SHUTDOWN: 20 callers share one promise; one graceful write; one kill', async () => {
-  const fx = makeFx({ deadlines: { shutdownGraceMs: 120 } })
+test('CONCURRENT_SHUTDOWN: exact shared Promise identity; one write/kill/exit wait; EMPTY after real exit', async () => {
+  let slot = 'READY'
+  const fx = makeFx({
+    deadlines: { shutdownGraceMs: 120 },
+    integration: {
+      casReap: () => { slot = 'REAP' },
+      casEmpty: () => { slot = 'EMPTY' },
+      verifyReapOwnership: () => slot === 'REAP',
+    },
+  })
   await fx.readyNow()
-  const callers = []
-  for (let index = 0; index < 20; index += 1) callers.push(fx.proc.shutdown())
+  let exitWaitCount = 0
+  const performShutdown = fx.proc.performShutdown.bind(fx.proc)
+  fx.proc.performShutdown = (...args) => {
+    exitWaitCount += 1
+    return performShutdown(...args)
+  }
+  const p1 = fx.proc.shutdown()
+  const p2 = fx.proc.shutdown()
+  const p3 = fx.proc.shutdown()
+  assert.strictEqual(p1, p2, 'SHUTDOWN_PROMISE_IDENTITY p1 === p2')
+  assert.strictEqual(p2, p3, 'SHUTDOWN_PROMISE_IDENTITY p2 === p3')
+  const callers = [p1, p2, p3]
+  for (let index = 3; index < 20; index += 1) callers.push(fx.proc.shutdown())
+  assert.ok(callers.every(candidate => candidate === p1), 'all concurrent callers receive the canonical Promise object')
   await fx.tick()
-  assert.equal(fx.counts().gracefulShutdownWriteAttempts, 1, 'gracefulShutdownWriteAttempts=1')
+  assert.equal(exitWaitCount, 1, 'EXIT_WAIT_COUNT=1: one canonical shutdown lifecycle execution')
+  assert.equal(fx.counts().gracefulShutdownWriteAttempts, 1, 'SHUTDOWN_WRITE_COUNT=1')
+  assert.equal(slot, 'REAP', 'FINAL_SLOT is not EMPTY before real exit')
   await fx.sleep(260)
-  assert.equal(fx.counts().killSignals, 1, 'one exact SIGKILL')
+  assert.equal(fx.counts().killSignals, 1, 'KILL_COUNT=1')
+  assert.equal(slot, 'REAP', 'SIGKILL request is not real exit')
   fx.childExit(null, 'SIGKILL')
   const results = await Promise.all(callers)
   for (const result of results) assert.deepEqual(result, { code: null, signal: 'SIGKILL' })
   assert.equal(fx.proc.state, 'EXITED')
+  assert.equal(slot, 'EMPTY', 'FINAL_SLOT=EMPTY only after real exit')
+  assert.deepEqual(slotSeq(fx), ['casReap:g1', 'casEmpty:g1'])
 })
