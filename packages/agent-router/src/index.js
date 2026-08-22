@@ -58,10 +58,12 @@
  */
 
 import z from '@deepseek-ai/schemastery'
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { AgentProcess, agentEnv, AGENT_CHILD_TMPDIR, RECOGNIZED_PROXY_ENV_KEYS } from './process.js'
+import { resolveDeadlineConfig } from './deadline-config.js'
+import { TurnReconciliationStore } from './reconciliation-store.js'
 import { BindingStore } from './binding-store.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
 
@@ -227,8 +229,169 @@ export function apply(ctx, config) {
     : () => ({})
   const provisionHome = typeof cfg.provisionHome === 'function' ? cfg.provisionHome : provisionAgentHome
 
-  /** agentId -> AgentProcess registry (one live owner per agent). */
-  const registry = new Map()
+  /** agentId -> AgentProcess registry (one live owner per agent).
+   *
+   * AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-006..C-009: the registry is the
+   * read-only READY view of ONE linearizable lifecycle slot per Agent:
+   *
+   *   EMPTY (absent) | STARTUP { generation, entryId, resultPromise,
+   *                             processRef } | READY { ..., ownershipToken }
+   *   | REAP { generation, entryId, processRef, ownershipToken,
+   *            reapPromise, cause }
+   *
+   * Every mutation is an identity compare-and-swap on the exact slot object
+   * (single JS thread); STARTUP/READY -> REAP is an ATOMIC replace (never
+   * delete-then-set: no pre-real-exit EMPTY window could admit a new
+   * generation), and REAP -> EMPTY compares generation + entryId +
+   * processRef + ownershipToken. */
+  const lifecycleSlots = new Map()
+  /** agentId -> last issued processGeneration (monotonic per Agent). */
+  const agentGenerations = new Map()
+  /** Bounded stale-callback audit (old generation late error/exit). */
+  const staleSlotAudits = []
+
+  /**
+   * The four-field deadline configuration (CLAUSE-PROC-DEADLINE-CONFIG),
+   * resolved ONCE at this process-start configuration boundary: global
+   * deployment env (with the frozen legacy DSH_AGENT_TURN_TIMEOUT /
+   * DSH_AGENT_DELIVER_TIMEOUT mappings) plus the optional static per-Agent
+   * override file. Running processes keep their resolved config immutable.
+   */
+  const deadlineConfig = resolveDeadlineConfig(process.env, { productionRoot: cfg.productionRoot })
+
+  /**
+   * The Router reconciliation store — the SINGLE query authority for late
+   * turn reconciliation (C-018). One store per control-plane runtime epoch.
+   */
+  const reconciliationStore = new TurnReconciliationStore()
+
+  function auditStaleSlot(detail) {
+    staleSlotAudits.push({ detail, observedAtWallMs: Date.now() })
+    if (staleSlotAudits.length > 64) staleSlotAudits.shift()
+  }
+
+  /** CAS(EMPTY -> STARTUP) — synchronous, before any further async work. */
+  function installStartupSlot(agentId) {
+    const generation = (agentGenerations.get(agentId) ?? 0) + 1
+    agentGenerations.set(agentId, generation)
+    let resolveResult
+    let rejectResult
+    const resultPromise = new Promise((resolvePromise, rejectPromise) => {
+      resolveResult = resolvePromise
+      rejectResult = rejectPromise
+    })
+    // Single-caller failures reject this promise with no other awaiter —
+    // mark it handled up front (shared awaiters still observe rejections).
+    resultPromise.catch(() => {})
+    const entry = {
+      state: 'STARTUP',
+      generation,
+      entryId: randomUUID(),
+      resultPromise,
+      resolveResult,
+      rejectResult,
+      processRef: null,
+      ownershipToken: null,
+    }
+    lifecycleSlots.set(agentId, entry)
+    return entry
+  }
+
+  /**
+   * C-008: atomically replace the exact STARTUP|READY entry of THIS process
+   * with a same-generation REAP fence (fresh entryId). Returns the fence
+   * entry, or null for a stale/foreign callback (bounded audit only — a late
+   * old-generation callback may never mutate the slot).
+   */
+  function casReapSlot(agentId, proc, cause) {
+    const slot = lifecycleSlots.get(agentId)
+    if (slot === undefined || slot.processRef !== proc
+        || (slot.state !== 'STARTUP' && slot.state !== 'READY')) {
+      auditStaleSlot(`casReap ignored for agent ${agentId}: slot ${slot?.state ?? 'EMPTY'} does not identity-match the callback's process`)
+      return null
+    }
+    let resolveReap
+    const reapPromise = new Promise((resolveReapPromise) => { resolveReap = resolveReapPromise })
+    const reapEntry = {
+      state: 'REAP',
+      generation: slot.generation,
+      entryId: randomUUID(),
+      processRef: slot.processRef,
+      ownershipToken: proc.ownershipToken ?? null,
+      reapPromise,
+      resolveReap,
+      cause,
+    }
+    lifecycleSlots.set(agentId, reapEntry) // atomic replace — never EMPTY before real exit
+    return reapEntry
+  }
+
+  /**
+   * The ONLY path allowed to reach EMPTY without a REAP fence: a proven
+   * no-child spawn failure (processRef exists but proc.ownership === null —
+   * no OS process was ever created; C-008/C-009).
+   */
+  function casStartupEmptySlot(agentId, proc) {
+    const slot = lifecycleSlots.get(agentId)
+    if (slot === undefined || slot.state !== 'STARTUP' || slot.processRef !== proc) {
+      auditStaleSlot(`casStartupEmpty ignored for agent ${agentId}: slot ${slot?.state ?? 'EMPTY'} does not identity-match the no-child process`)
+      return false
+    }
+    if (proc.ownership !== null && proc.ownership !== undefined) {
+      auditStaleSlot(`casStartupEmpty refused for agent ${agentId}: a child object exists — the REAP fence path is mandatory`)
+      return false
+    }
+    lifecycleSlots.delete(agentId)
+    return true
+  }
+
+  /** CAS(exact REAP -> EMPTY): generation + entryId + processRef + ownership. */
+  function casEmptySlot(agentId, proc) {
+    const slot = lifecycleSlots.get(agentId)
+    if (slot === undefined || slot.state !== 'REAP'
+        || slot.processRef !== proc
+        || slot.generation !== proc.processGeneration
+        || slot.ownershipToken !== (proc.ownershipToken ?? null)) {
+      auditStaleSlot(`casEmpty ignored for agent ${agentId}: slot ${slot?.state ?? 'EMPTY'} identity mismatch (late old-generation cleanup)`)
+      return false
+    }
+    lifecycleSlots.delete(agentId)
+    slot.resolveReap()
+    return true
+  }
+
+  /**
+   * Legacy/duck-typed reap fallback: fires only on real exit observation
+   * (exitPromise settles after the AgentProcess settlement order; injected
+   * test fakes control their own exitResolve). Idempotent with the
+   * integration-driven CAS cleanup of the real class.
+   */
+  function reapOnExitPromise(agentId, proc) {
+    void proc.exitPromise?.then(() => {
+      const slot = lifecycleSlots.get(agentId)
+      if (slot === undefined || slot.processRef !== proc) return
+      if (slot.state === 'REAP') {
+        lifecycleSlots.delete(agentId)
+        slot.resolveReap?.()
+        return
+      }
+      // Observed real exit of a STARTUP/READY entry: same-task
+      // DRAINING -> EXITED cleanup is legal (C-009) — the child is gone.
+      lifecycleSlots.delete(agentId)
+    }).catch(() => {})
+  }
+
+  /** Find the slot-owned process that is live-tracking one handle. */
+  function findOwningProcess(turnExecutionId) {
+    for (const slot of lifecycleSlots.values()) {
+      const proc = slot.processRef
+      if (proc !== null && proc !== undefined
+          && typeof proc.executions === 'object' && proc.executions?.has(turnExecutionId)) {
+        return proc
+      }
+    }
+    return null
+  }
 
   /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
@@ -503,42 +666,60 @@ export function apply(ctx, config) {
     }
   }
 
-  /** Find-or-start the agent's DSH process; never returns a dead one. */
+  /**
+   * Find-or-start the agent's DSH process — the C-006..C-009 lifecycle slot
+   * read: READY returns the process, STARTUP shares one generation-bound
+   * startup resultPromise, REAP rejects AGENT_PROCESS_REAPING immediately,
+   * EMPTY wins exactly one CAS(EMPTY -> STARTUP) before any async work.
+   * Only READY processes are ever returned (registry exposes READY only).
+   */
   async function ensureRunning(agentId) {
     // Unified runnability enforcement FIRST: unknown / disabled -> structured
-    // rejection -> NEVER spawn. Do NOT insert an await before the spawn
-    // section (see the audit-round-3 double-spawn invariant below).
+    // rejection -> NEVER spawn.
     assertRunnable(agentId)
-    // INVARIANT (audit round 3): the FINAL check -> spawn -> registry.set
-    // section below is ENTIRELY synchronous (the first await after it is
-    // proc.ready()); JS single-threading therefore guarantees two concurrent
-    // ensureRunning calls can never both pass that final registry check — no
-    // double spawn (empirically verified: 30 concurrent calls -> 1 pid). The
-    // workspace seed runs BEFORE the section (an await is allowed there); the
-    // re-check right after it restores the invariant, so a concurrent spawn
-    // that won the race while we were seeding is reused instead of doubled.
-    const existing = registry.get(agentId)
-    if (existing !== undefined && existing.exit === undefined) {
-      log.log(`reuse process for ${agentId} (pid ${existing.pid})`)
-      return existing
+    const initial = lifecycleSlots.get(agentId)
+    if (initial?.state === 'READY') {
+      if (initial.processRef?.exit === undefined) {
+        log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
+        return initial.processRef
+      }
+      // Real exit already observed synchronously: same-task cleanup — the
+      // process can never be reused, and no new generation may be blocked.
+      lifecycleSlots.delete(agentId)
+      log.log(`process for ${agentId} exited (${initial.processRef.exit?.code ?? 'signal'}); will respawn`)
+    } else if (initial?.state === 'STARTUP') {
+      return initial.resultPromise
     }
-    if (existing !== undefined) {
-      registry.delete(agentId)
-      log.log(`process for ${agentId} exited (${existing.exit?.code ?? 'signal'}); will respawn`)
+    if (initial?.state === 'REAP') {
+      throw Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' })
     }
     // AGENT_WORKSPACE_PERSONA_PROVISIONING_AUDIT_V1 (SMALL_GAP) FIX: seed the
     // per-agent workspace (AGENTS.md + roots) on first start so the spawned
     // DSH process finds its own instruction surface before agent-instructions
     // renders its first baseline. Idempotent (never overwrites existing
-    // files), safe on respawn and on control-plane restart. MUST NOT sit
-    // between the final check and registry.set — that would break the
-    // double-spawn invariant above.
+    // files), safe on respawn and on control-plane restart. The CAS below
+    // re-checks the slot after the await, so a concurrent startup that won
+    // the race while seeding is shared instead of doubled.
     await workspaceBootstrap.ensure(agentId)
-    const raced = registry.get(agentId)
-    if (raced !== undefined && raced.exit === undefined) {
-      log.log(`reuse process for ${agentId} after seed (pid ${raced.pid})`)
-      return raced
+    const raced = lifecycleSlots.get(agentId)
+    if (raced?.state === 'READY') {
+      if (raced.processRef?.exit === undefined) {
+        log.log(`reuse process for ${agentId} after seed (pid ${raced.processRef?.pid})`)
+        return raced.processRef
+      }
+      lifecycleSlots.delete(agentId)
+    } else if (raced?.state === 'STARTUP') {
+      return raced.resultPromise
     }
+    if (raced?.state === 'REAP') {
+      throw Object.assign(new Error(`agent-router: agent ${agentId} generation ${raced.generation} is reaping (${raced.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' })
+    }
+    const entry = installStartupSlot(agentId)
+    return startProcessForSlot(agentId, entry)
+  }
+
+  /** Spawn + initialize one generation for an installed STARTUP slot. */
+  async function startProcessForSlot(agentId, entry) {
     // workspace-bootstrap is the single owner of the agentId -> workspace /
     // DSH_HOME mapping (D-002 boundary). The router only decides WHEN to
     // start the agent, not where its home lives — so it calls the service
@@ -555,6 +736,17 @@ export function apply(ctx, config) {
       profile: cfg.agentProfile,
       ...(processConfig.subscription === undefined ? {} : { subscription: processConfig.subscription }),
     })
+    const registryIntegration = {
+      casReap: (proc, cause) => casReapSlot(agentId, proc, cause),
+      casStartupEmpty: (proc) => casStartupEmptySlot(agentId, proc),
+      casEmpty: (proc) => casEmptySlot(agentId, proc),
+      verifyReapOwnership: (proc) => {
+        const slot = lifecycleSlots.get(agentId)
+        return slot?.state === 'REAP'
+          && slot.processRef === proc
+          && slot.ownershipToken === (proc.ownershipToken ?? null)
+      },
+    }
     const proc = processFactory({
       agentId,
       home,
@@ -574,7 +766,15 @@ export function apply(ctx, config) {
       // session-less memory resolution; it never re-derives the path and
       // never branches on it.
       env: { DSH_AGENT_ID: agentId, DSH_PRIMARY_WORKSPACE: workspace },
+      // V2 lifecycle wiring: monotonic generation, the static per-Agent
+      // resolved deadline config (immutable for this process), the shared
+      // Router reconciliation store and the identity-CAS slot integration.
+      processGeneration: entry.generation,
+      deadlines: deadlineConfig.perAgent(agentId),
+      reconciliationStore,
+      registryIntegration,
     })
+    entry.processRef = proc
     // DSH tool relay: a per-agent process asks the Control Plane to run a
     // Router domain operation (switch) or a trusted Broker capability call
     // (broker). The tool itself owns no policy — it forwards the request;
@@ -620,13 +820,38 @@ export function apply(ctx, config) {
         workspace: params?.workspace,
       })
     }
-    proc.spawn()
-    registry.set(agentId, proc)
-    // Reap on exit; the next message re-spawns and resumes.
-    void proc.exitPromise.then(() => {
-      if (registry.get(agentId) === proc) registry.delete(agentId)
-    })
-    await proc.ready()
+    try {
+      proc.spawn()
+    } catch (error) {
+      // No-child spawn failure: the process already ran its explicit
+      // no-child DRAINING/EXITED bookkeeping (spawn_failed_without_child +
+      // casStartupEmpty). Settle the shared startup callers NOW (bounded —
+      // never waiting for an OS reap that cannot exist).
+      entry.rejectResult(error)
+      throw error
+    }
+    // Legacy/duck-typed reap fallback (idempotent with the integration CAS).
+    reapOnExitPromise(agentId, proc)
+    try {
+      await proc.ready()
+    } catch (error) {
+      // C-008: startup caller settlement is bounded at failure observation;
+      // the generation reap fence + teardown continue process-owned.
+      entry.rejectResult(error)
+      throw error
+    }
+    // Startup success is an identity CAS: only the exact STARTUP entry may
+    // become READY; a CAS failure means the process must never be exposed.
+    if (lifecycleSlots.get(agentId) !== entry) {
+      auditStaleSlot(`startup CAS failed for agent ${agentId}: slot moved before READY — fatal teardown of the unexposed process`)
+      const casError = Object.assign(new Error(`agent-router: startup slot CAS failed for ${agentId}; process not exposed`), { code: 'AGENT_PROCESS_SLOT_CAS_FAILED' })
+      entry.rejectResult(casError)
+      if (typeof proc.fatal === 'function') void proc.fatal('registry_cas_failed')
+      throw casError
+    }
+    entry.state = 'READY'
+    entry.ownershipToken = proc.ownershipToken ?? null
+    entry.resolveResult(proc)
     return proc
   }
 
@@ -674,8 +899,10 @@ export function apply(ctx, config) {
       if (workspaceId !== null) {
         await workspaceBootstrap.ensureWorkspace(workspaceId)
       }
+      // CLAUSE-PROC-BOUNDED rule 8: capacity precheck before spawn/write.
+      reconciliationStore.assertMintCapacity(binding.activeAgentId)
       const proc = await ensureRunning(binding.activeAgentId)
-      const { reply } = await proc.turn(binding.activeSessionId, ingress.text ?? '', {
+      const turnResult = await proc.turn(binding.activeSessionId, ingress.text ?? '', {
         // The turn belongs to this ChannelConversation: the DSH switch tool
         // inside the agent switches exactly this Binding.
         bindingContext: channelConversation.id,
@@ -683,6 +910,22 @@ export function apply(ctx, config) {
         // process-level cwd — one Agent stays one process across workspaces).
         cwd: workspacePath,
       })
+      // C-010 closed envelope. `outcome_unknown` is NOT an ordinary failure:
+      // the turn may still be running — surface a structured timeout error
+      // through the existing failure reply path (Router-owned product
+      // policy; no auto replay, no fabricated completion). Legacy
+      // process-factory fakes returning a bare {reply} keep working.
+      if (turnResult?.status === 'outcome_unknown') {
+        throw Object.assign(
+          new Error(`turn outcome unknown (agent ${binding.activeAgentId}, deadline ${turnResult.deadlineAtWallMs ?? 'n/a'}); reconciliation handle ${turnResult.reconciliationHandle}`),
+          {
+            code: 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN',
+            status: 'outcome_unknown',
+            reconciliationHandle: turnResult.reconciliationHandle,
+          },
+        )
+      }
+      const reply = turnResult?.reply ?? ''
       log.log(`agent ${binding.activeAgentId} (pid ${proc.pid}) replied: ${(reply ?? '').slice(0, 80)}`)
       // Feishu reply is the FEISHU entry's transport half; non-feishu
       // surfaces (mobile Product API) return the reply to their own caller.
@@ -763,6 +1006,10 @@ export function apply(ctx, config) {
       throw new TypeError('agent-router: deliver agentId must be a non-empty string')
     }
     const agent = resolveAgentRef(agentRef)
+    // CLAUSE-PROC-BOUNDED rule 8: reconciliation capacity is checked BEFORE
+    // spawn/write — an exhausted store must never cost a spawn or a prompt
+    // byte (§10.3 ROUTER_GLOBAL_RECONCILIATION_CAP: S/W = 0/0).
+    reconciliationStore.assertMintCapacity(agent.id)
     // Session resolution: 'main' is the fixed V0 cross-job session; 'fresh'
     // maps (agentId, requestId) -> a minted native session id, durably. The
     // mint runs INSIDE the store's mutation queue (read-or-mint is atomic:
@@ -786,7 +1033,10 @@ export function apply(ctx, config) {
     // mechanically (agent default workspace), passed as the per-session cwd
     // exactly like the turn path (R1/R2/R3 enforced in the demo-server seam).
     const workspacePath = workspaceBootstrap.resolveWorkspace(agent.id)
-    const receipt = await proc.deliver(sessionId, message, { cwd: workspacePath })
+    // callerCorrelation: the Delivery V0 requestId becomes the exact
+    // secondary index (occurrenceId/runId absent) so callers can restore the
+    // reconciliationHandle after losing their in-memory reference (C-010).
+    const receipt = await proc.deliver(sessionId, message, { cwd: workspacePath, callerCorrelation: { requestId } })
     deliveries.push({
       requestId,
       agentId: agent.id,
@@ -810,10 +1060,13 @@ export function apply(ctx, config) {
 
   // Tear down every owned process when the router plugin stops.
   ctx.effect(() => () => {
-    for (const proc of registry.values()) {
-      void proc.shutdown()
+    for (const slot of lifecycleSlots.values()) {
+      const proc = slot.processRef
+      if (proc !== null && proc !== undefined && typeof proc.shutdown === 'function') {
+        void proc.shutdown()
+      }
     }
-    registry.clear()
+    lifecycleSlots.clear()
   })
 
   const service = {
@@ -830,16 +1083,19 @@ export function apply(ctx, config) {
      * the service instead of re-implementing the convention.
      */
     channelConversationId,
-    /** Test/ops surface: current registry snapshot. */
-    registrySnapshot: () => [...registry.entries()].map(([agentId, proc]) => ({
-      agentId,
-      pid: proc.pid,
-      alive: proc.exit === undefined,
-      home: proc.home,
-      workspace: proc.workspace,
-      profile: proc.profile,
-      sessions: proc.creations.map(c => ({ ...c })),
-    })),
+    /** Test/ops surface: current registry snapshot — the READY-only
+     *  projection of the lifecycle slots (C-006). */
+    registrySnapshot: () => [...lifecycleSlots.entries()]
+      .filter(([, slot]) => slot.state === 'READY' && slot.processRef !== null)
+      .map(([agentId, slot]) => ({
+        agentId,
+        pid: slot.processRef.pid,
+        alive: slot.processRef.exit === undefined,
+        home: slot.processRef.home,
+        workspace: slot.processRef.workspace,
+        profile: slot.processRef.profile,
+        sessions: (slot.processRef.creations ?? []).map(c => ({ ...c })),
+      })),
     /** Test/ops surface: durable Binding table snapshot. */
     bindingsSnapshot: () => store.list(),
     /** Test/ops surface: durable bookmark table snapshot (per-surface
@@ -857,6 +1113,36 @@ export function apply(ctx, config) {
     deliveriesSnapshot: () => deliveries.map(d => ({ ...d })),
     ensureRunning,
     route: onIngress,
+    /**
+     * AGENT_PROCESS_LIFECYCLE_HARDENING_V2 Scheduler termination seam
+     * (§13): read-only, non-consuming queries + at-most-once reconciliation
+     * notifications. NO Scheduler policy lives here — occurrence identity,
+     * retry and same-job fences remain Scheduler authority.
+     */
+    getTurnReconciliation: (handle) => reconciliationStore.getTurnReconciliation(handle),
+    readFinalAssistantOutput: (handle) => reconciliationStore.readFinalAssistantOutput(handle),
+    resolveCallerCorrelation: (triple) => reconciliationStore.resolveCallerCorrelation(triple),
+    onTurnReconciled: (listener) => reconciliationStore.onTurnReconciled(listener),
+    turnExecutionSnapshot: (turnExecutionId) => {
+      const owner = findOwningProcess(turnExecutionId)
+      if (owner !== null && typeof owner.turnExecutionSnapshot === 'function') {
+        return owner.turnExecutionSnapshot(turnExecutionId)
+      }
+      return reconciliationStore.getTurnReconciliation(turnExecutionId)
+    },
+    /** Test/ops surface: bounded lifecycle-slot stale-callback audit. */
+    staleSlotAuditsSnapshot: () => staleSlotAudits.map(entry => ({ ...entry })),
+    /** Test/ops surface: one Agent's lifecycle slot view (EMPTY|STARTUP|READY|REAP). */
+    lifecycleSlotSnapshot: (agentId) => {
+      const slot = lifecycleSlots.get(agentId)
+      if (slot === undefined) return { state: 'EMPTY' }
+      return {
+        state: slot.state,
+        generation: slot.generation,
+        entryId: slot.entryId,
+        ...(slot.cause === undefined ? {} : { cause: slot.cause }),
+      }
+    },
   }
 
   // Publish the router as an in-process service ('agentRouter') so the Feishu
