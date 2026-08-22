@@ -3,7 +3,7 @@ spec_id: AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1
 status: proposed
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: contracts
+implementation_authority: none
 scope:
   - authsvc trusted-parent read-only credential metadata resolution
   - per-Agent trusted-store entry presence and clientId projection
@@ -22,12 +22,15 @@ owners:
 
 # AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1 — Redacted read-only resolution seam
 
-> **PROPOSED / SPEC ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY UNTIL ACCEPTED ON `main`.**
+> **PROPOSED / SPEC ONLY / CURRENT IMPLEMENTATION AUTHORITY = NONE.**
 >
 > Authoring base: `mayf3/dsh-agent-core@1c3401a8194a7b6b2ad38031559cbf6c35795f48`
 > (`origin/main`, observed 2026-08-22). This child Spec closes only the authority gap for a
-> redacted local trusted-store projection. It does not authorize Phase B credential
-> reconciliation, an Auth client-resolution endpoint, or any production execution.
+> redacted local trusted-store projection. It does not authorize implementation, Phase B
+> credential reconciliation, an Auth client-resolution endpoint, production execution,
+> acceptance, or merge. A future exact revision may declare
+> `implementation_authority: contracts` only after independent review and authorized
+> acceptance; this proposed revision does not.
 
 ```text
 TASK_NAME = 凭读 执行
@@ -36,7 +39,7 @@ PREFLIGHT_MODE = NEW
 AUTHORITY_SUFFICIENT_BEFORE_THIS_SPEC = NO
 SPEC_ID = AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1
 STATUS = proposed
-IMPLEMENTATION_AUTHORITY = contracts (active only after accepted on main)
+IMPLEMENTATION_AUTHORITY = none
 PARTIAL_SUPERSESSION = NONE
 IMPLEMENTATION_PERFORMED = NO
 PRODUCTION_CHANGE = NONE
@@ -67,7 +70,14 @@ trusted fleet-inventory caller does not call `loadCredentialFor()` and receive
 - tests proving redaction, no secret-bearing output, and byte-for-byte store immutability.
 
 The trusted seam receives only `agent_id`; the store path is a trusted construction or
-process configuration dependency, never a child-supplied request field.
+process configuration dependency, never a child-supplied request field. Before any store
+access, the seam MUST call or equivalently reuse the authoritative Agent Definition id
+validator from `packages/agent-definition/src/definition.js`: input is a string matching
+`^agt_[A-Za-z0-9_-]+$` (non-empty payload; slash, backslash, dot, whitespace, NUL, and path
+syntax are rejected). The seam MUST inherit the validator's actual validation/length
+contract rather than define a second, looser grammar. At the authoring base, generated ids
+are `agt_` plus 32 hex characters; the authoritative compatibility validator itself adds no
+separate maximum-length rule.
 
 ### 2.2 Out of scope / forbidden
 
@@ -167,6 +177,14 @@ fleet registry.
 - Environment: authority branch `main`
 - Observed at: 2026-08-22T09:15:11Z
 
+### OBS-CMR-004 — Agent Definition owns the Agent id grammar
+
+- Coordinates: `mayf3/dsh-agent-core@1c3401a`, source repository, observed 2026-08-22
+- Source/method: inspect `packages/agent-definition/src/definition.js:78-92,120-128,140-158`
+- Result: ids are strings matching `^agt_[A-Za-z0-9_-]+$`; `+` requires a non-empty
+  payload and excludes path syntax. Generation emits `agt_` plus 32 hex characters; the
+  validator has no separate maximum length at this base.
+
 ## 6. Claims and assumptions
 
 ### CLM-CMR-001 — A closed metadata projection avoids unnecessary secret exposure
@@ -247,6 +265,16 @@ Open authority-changing assumptions: **NONE**.
 - Rejected alternative: query Auth, infer validity, or reconcile identities.
 - Reason: preserve authority separation and avoid silently expanding into Phase B.
 
+### DEC-CMR-004 — Agent Definition remains Agent id validation authority
+
+- Decision owner: repository owner `mayf3`
+- Decision: metadata resolution calls or equivalently reuses the formal Agent Definition
+  validator before any credential-store access. It does not define a local fallback or
+  looser grammar.
+- Rejected alternative: accept any non-empty string because the store is a JSON object.
+- Reason: path-like and traversal-shaped input must fail before it can influence or probe
+  credential-store access, and Agent identity grammar must retain one authority.
+
 ## 9. Contracts
 
 ### CTR-CMR-001 — Trusted-parent-only caller boundary
@@ -277,12 +305,19 @@ not null or empty, for `ABSENT`.
 
 ### CTR-CMR-003 — Canonical validation and fail-loud semantics
 
-The resolver MUST re-read the configured store on every call and apply the existing full
-V1 document and entry validation semantics before returning metadata. An unconfigured
-store yields `ABSENT`; an absent exact key yields `ABSENT`. A configured store that is
-missing, unreadable, malformed, unsupported-version, or contains any malformed entry MUST
-throw the stable `CREDENTIALS_STORE_ERROR` family and MUST NOT return partial inventory or
-`ABSENT`. Invalid/empty `agent_id` MUST fail before store access.
+The resolver MUST first call or equivalently reuse Agent Definition's authoritative id
+validator. The accepted input is a string matching `^agt_[A-Za-z0-9_-]+$`, with every
+actual length and validation constraint inherited from that authority; no local permissive
+fallback is allowed. Empty, invalid, slash/backslash-bearing, or traversal-shaped input
+MUST fail loud before any credential-store path operation or read, with
+`STORE_ACCESS_COUNT = 0`.
+
+Only after successful id validation, the resolver MUST re-read the configured store and
+apply the existing full V1 document and entry validation semantics before returning
+metadata. An unconfigured store yields `ABSENT`; an absent exact key yields `ABSENT`. A
+configured store that is missing, unreadable, malformed, unsupported-version, or contains
+any malformed entry MUST throw the stable `CREDENTIALS_STORE_ERROR` family and MUST NOT
+return partial inventory or `ABSENT`.
 
 ### CTR-CMR-004 — No secret-bearing observability
 
@@ -361,6 +396,19 @@ invoke this one-Agent seam.
 - Failure condition: any child-readable capability/store access, Auth call, store write,
   provisioning, rotation, revocation, binding restoration, or token mint.
 
+### ACC-CMR-006 — Invalid and traversal-shaped ids fail before store access
+
+- Contracts: `CTR-CMR-003`, `CTR-CMR-005`, `CTR-CMR-006`
+- Method: instrument every credential-store path/read seam with an access counter, then
+  invoke metadata resolution with: invalid id, empty id, `/path`, `../traversal`,
+  `agt_../x`, a slash-bearing id, and a backslash-bearing path-like id. Include type-invalid
+  values and any current Agent Definition length-boundary cases.
+- Expected result: every case fails loud through the authoritative Agent Definition
+  validation semantics before any store operation;
+  `FAIL_LOUD_BEFORE_STORE_ACCESS = YES` and `STORE_ACCESS_COUNT = 0` for each case.
+- Failure condition: any input reaches path construction/probing, file existence checks,
+  open/read/stat, store parsing, or returns `ABSENT`/`PRESENT`.
+
 ## 11. Alternatives and disposition
 
 - `ALT-CMR-001` — **Use `loadCredentialFor()` then delete `clientSecret`: rejected.** The
@@ -388,10 +436,16 @@ string unification, legacy CLI secret capture, and non-atomic store mutation.
 - No store schema or version change is authorized.
 - No migration, backfill, production invocation, or fleet report is authorized by this
   proposed Spec.
-- Future implementation is additive and unused until a trusted caller explicitly adopts
-  it under accepted authority.
-- Rollback is code removal/reversion of the additive resolver and tests; store rollback is
-  unnecessary because the Contract permits no store mutation.
+- This proposed revision has `implementation_authority: none`; it cannot authorize future
+  implementation merely by being merged unchanged.
+- A future exact revision MAY declare `implementation_authority: contracts` only after its
+  semantic delta is independently reviewed and an authorized actor accepts that exact
+  revision on `main`.
+- Any later additive implementation would remain unused until a trusted caller explicitly
+  adopts it under that future accepted authority.
+- Rollback of any later implementation would be code removal/reversion of the additive
+  resolver and tests; store rollback would be unnecessary because the Contract permits no
+  store mutation.
 
 ## 13. Open questions
 
@@ -402,10 +456,12 @@ UNRESOLVED_AUTHORITY_CONFLICT = NONE
 PARTIAL_SUPERSESSION = NONE
 ```
 
-Acceptance of this exact Spec on `main` is required before implementation. Independent
-semantic review must verify that the child authorizes only the local redacted projection
-and does not accidentally authorize the broader Auth read-only endpoint or Phase B
-reconciliation.
+This exact proposed revision grants no implementation authority and MUST NOT be accepted
+or merged as part of this revision round. Independent semantic review must verify both
+blocker fixes: current `IMPLEMENTATION_AUTHORITY = none`, and authoritative Agent Definition
+id rejection before store access. A later acceptance candidate may separately propose
+`implementation_authority: contracts`; that future exact revision requires independent
+review and authorized acceptance before any implementation.
 
 ## Authoring result
 
@@ -415,7 +471,7 @@ SPEC_ID = AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1
 SPEC_KIND = implementation
 STATUS = proposed
 AUTHORITY_LEVEL = governing_spec
-IMPLEMENTATION_AUTHORITY = contracts
+IMPLEMENTATION_AUTHORITY = none
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
 EXTERNAL_AUTHORITIES = NONE
 OPEN_OWNER_DECISIONS = NONE
@@ -424,6 +480,7 @@ PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 6
 CONTRACTS_WITH_ACCEPTANCE = 6
 AUTHORING_READY_FOR_REVIEW = YES
+READY_FOR_INDEPENDENT_REVIEW = YES
 
 AUTHORITY_SUFFICIENT = NO
 REDACTED_RESOLUTION_IMPLEMENTED = NO
@@ -431,5 +488,11 @@ PRESENCE_SUPPORTED = NO (spec only)
 CLIENT_ID_SUPPORTED = NO (spec only)
 CLIENT_SECRET_EXPOSED = NO
 CREDENTIAL_STORE_CHANGED = NO
+IMPLEMENTATION_AUTHORITY_CURRENT = none
+AUTHORITATIVE_AGENT_ID_GRAMMAR_REUSED = YES
+INVALID_ID_PRE_STORE_REJECTION = YES
+TRAVERSAL_PRE_STORE_REJECTION = YES
+STORE_ACCESS_COUNT_FOR_INVALID_INPUT = 0
+IMPLEMENTATION_PERFORMED = NO
 PRODUCTION_CHANGE = NONE
 ```
