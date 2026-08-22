@@ -16,8 +16,8 @@ export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
   model: 'gpt-5.6-luna',
   plugin: 'dsh-codex',
   pluginVersion: '0.2.3',
-  dshVersion: '0.1.0-rc.5',
-  dshCommit: 'a12bb03c6861969985f066bfbf0cb7e5dd5ac567',
+  dshVersion: '0.1.0-rc.8',
+  dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
   credentialFile: '.openai-codex-auth.json',
 })
 
