@@ -1,7 +1,7 @@
 # Spec Governance Protocol V0
 
 ```text
-PROTOCOL_VERSION = 0.1.0-draft.1
+PROTOCOL_VERSION = 0.2.0-draft.1
 STATUS = accepted
 ENFORCEMENT_LEVEL = manual_policy
 ```
@@ -399,6 +399,50 @@ OLD.status = superseded
 OLD.superseded_by = NEW
 ```
 
+#### 9.2.1 Legacy identifier retirement
+
+```text
+OWNER_RULING = AUTHORIZE_LEGACY_AUTHORITY_RETIREMENT_MIGRATION
+LEGACY_RETIREMENT_IS_NOT_PARTIAL_SUPERSESSION = YES
+LEGACY_PATH_CAN_ONLY_SHRINK_ACTIVE_LEGACY_SET = YES
+```
+
+A repository MAY use the same whole-authority transition to retire a pre-adoption or otherwise grandfathered
+historical governing Spec whose existing `spec_id` does not match the current strict terminal `_V<number>` form.
+The schema-recognized legacy reference class is deliberately limited to a versioned stem plus historical uppercase
+suffix, `^[A-Z][A-Z0-9_]*_V[0-9]+_[A-Z][A-Z0-9_]*$`, excluding any ID that also matches the strict terminal
+`_V<number>` form. This is a narrow migration seam, not a second active-ID format:
+
+1. `OLD_LEGACY_ID` MUST already exist in the transition base as an accepted governing authority.
+2. The transaction MUST NOT create, rename, or reactivate a legacy-ID authority.
+3. `NEW.spec_id` and `OLD.superseded_by` MUST use the strict
+   `^[A-Z][A-Z0-9_]*_V[0-9]+$` form.
+4. `NEW` MUST completely replace the old authority; paragraph-, section-, Decision-, and Contract-fragment
+   replacement remains forbidden.
+5. The docs-only transaction MUST atomically set:
+
+```text
+NEW.status = accepted
+NEW.supersedes includes OLD_LEGACY_ID
+OLD.status = superseded
+OLD.superseded_by = NEW_STRICT_ID
+```
+
+6. Every legacy ID referenced by `NEW.supersedes` MUST resolve to the exact accepted authority in the transition
+   base, and no targeted legacy authority may remain active after the transaction.
+7. A legacy identifier MAY appear only as the `spec_id` of the superseded historical artifact and as the matching
+   retirement reference in `NEW.supersedes`.
+8. `governed_by`, `external_authorities.authority_id`, and `superseded_by` MUST NOT use a legacy identifier; this
+   seam cannot create a new dependency chain or a legacy successor.
+9. Schema permission for a superseded historical `spec_id` or a legacy `supersedes` reference does not establish
+   that the authority existed, was accepted, or was wholly replaced. The transition validator and semantic review
+   MUST establish those facts.
+10. The active legacy-authority set after the transaction MUST be a strict subset of, or equal to, the active
+    legacy-authority set in the base; this path can only retire legacy authority.
+
+New proposed or accepted Specs continue to require strict `_V<number>` IDs. In particular, a new `_AMENDMENT` ID
+is forbidden even when an older repository contains grandfathered artifacts with that suffix.
+
 If a new authority cannot fully replace the old authority, the work requires either:
 
 - a new non-conflicting authority that refines the same parent; or
@@ -549,6 +593,7 @@ V0 names enforcement honestly:
 MANUAL_POLICY = implemented by instructions and review practice
 DISTRIBUTION_INTEGRITY = implemented by deterministic tooling
 SPEC_SYNTAX_GATE = schema published, full verifier not implemented
+SPEC_TRANSITION_GATE = cross-record existence and atomic backlink validator implemented
 BASE_BRANCH_MERGE_GATE = not implemented by this distribution
 SEMANTIC_REVIEW = human/Agent judgment, not CI
 ```
