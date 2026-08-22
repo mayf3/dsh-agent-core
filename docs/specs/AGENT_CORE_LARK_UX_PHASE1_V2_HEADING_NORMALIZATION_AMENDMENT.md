@@ -54,7 +54,8 @@ REVIEWED_SDK_RUNTIME = ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f
 H1_H6_DISTINCT_RENDERING = NOT_REQUIRED
 HEADING_TEXT_PRESERVATION = REQUIRED
 HEADING_ORDER_PRESERVATION = REQUIRED
-HEADING_RENDERING_TREATMENT = REQUIRED
+NATIVE_HEADING_TREATMENT = REQUIRED
+ALL_HEADINGS_PLAIN_BODY_TEXT = FORBIDDEN
 CUSTOM_MARKDOWN_CONVERTER = FORBIDDEN
 CONNECTOR_HEADING_PREPROCESSOR = FORBIDDEN
 NEW_SDK_REVISION = NO
@@ -70,7 +71,7 @@ REPLACEMENT_ITEMS =
   TEST-LUX-MD-HEADINGS-NATIVE
 
 OTHER_UX_CONTRACT_CHANGE = NONE
-PRODUCT_SEMANTIC_DELTA = HEADING_LEVEL_DISTINCTNESS_ONLY
+PRODUCT_SEMANTIC_DELTA = HEADING_VISUAL_DISTINCTNESS_ONLY
 
 AMENDMENT_STATUS = proposed
 OWNER_RULING_RECORDED = YES
@@ -86,7 +87,7 @@ READY_FOR_INDEPENDENT_REVIEW = YES
 记录 Owner 裁决：accept parent `AGENT_CORE_LARK_UX_PHASE1_V2` 无法在 reviewed SDK runtime 上满足的
 六级标题一一视觉区分要求，将其替换为与 SDK 原生 heading normalization 兼容、且不放松信息保真的
 heading contract；其余 parent Contract、Acceptance、gate、边界与禁令逐项保持不变。本 amendment
-解除的是 heading-level distinctness 这一条 blocking divergence，不授权任何实现。
+解除的是 heading 视觉区分（visual distinctness）这一条 blocking divergence，不授权任何实现。
 
 ## 2. Scope and non-goals
 
@@ -317,8 +318,9 @@ SDK reviewed source `bd24f6742513769c80b5401b96ad464d74dd2027` 与 runtime
 - Decision: `OWNER_RULING = ACCEPT_SDK_NATIVE_HEADING_NORMALIZATION`。
   heading 合同不再要求六个输入级别产生六种不同视觉样式（`H1_H6_DISTINCT_RENDERING = NOT_REQUIRED`）；
   必须保留的是标题文字（`HEADING_TEXT_PRESERVATION = REQUIRED`）、顺序
-  （`HEADING_ORDER_PRESERVATION = REQUIRED`）与原生 heading 渲染处理
-  （`HEADING_RENDERING_TREATMENT = REQUIRED`，不得全部退化为无格式正文）。
+  （`HEADING_ORDER_PRESERVATION = REQUIRED`）与 SDK 原生 heading 渲染处理
+  （`NATIVE_HEADING_TREATMENT = REQUIRED`、`ALL_HEADINGS_PLAIN_BODY_TEXT = FORBIDDEN`，
+  即不得全部退化为普通无格式正文）。
 - Rejected alternatives: `ALT-LUXHN-001`, `ALT-LUXHN-002`, `ALT-LUXHN-004`
 - Reason: reviewed runtime 的归一化是确定性原生行为，恢复六级区分只能引入第二渲染 authority
   （`CUSTOM_MARKDOWN_CONVERTER = FORBIDDEN`、`CONNECTOR_HEADING_PREPROCESSOR = FORBIDDEN`）或更换
@@ -342,7 +344,7 @@ SDK reviewed source `bd24f6742513769c80b5401b96ad464d74dd2027` 与 runtime
 
 - Decision owner: `mayf3`
 - Decision: parent 除被取代三 ID 外的全部 Contract、Acceptance、gate、Decision、边界与禁令逐项
-  UNCHANGED（清单见 §14）；`PRODUCT_SEMANTIC_DELTA = HEADING_LEVEL_DISTINCTNESS_ONLY`，其余
+  UNCHANGED（清单见 §14）；`PRODUCT_SEMANTIC_DELTA = HEADING_VISUAL_DISTINCTNESS_ONLY`，其余
   `SEMANTIC_CHANGE = NONE`。
 - Rejected alternatives: `ALT-LUXHN-004`
 - Reason: 裁决只解除 heading-level distinctness 这一条 divergence。
@@ -358,8 +360,8 @@ SDK reviewed source `bd24f6742513769c80b5401b96ad464d74dd2027` 与 runtime
 
 1. 六个标题标签的文本（label 文字）全部保留在 SDK 发送载荷中，不得丢失、截断或改写；
 2. 标题相对顺序全部保留，不得重排；
-3. SDK 发送载荷对每个标题仍使用 Markdown heading treatment（heading 标记行），MUST NOT 全部
-   退化为普通无格式正文；
+3. SDK 发送载荷对每个标题仍使用 SDK-native heading treatment（heading 标记行）；
+   `ALL_HEADINGS_PLAIN_BODY_TEXT = FORBIDDEN` —— 不得全部退化为普通无格式正文；
 4. 六个输入级别产生六种不同视觉样式 NOT REQUIRED —— SDK reviewed runtime 的原生 style
    optimization（含 `# → ####`、`##`–`###### → #####` 归一化）是合规渲染；
 5. 不得丢字、合并标题或重排标题；
@@ -392,22 +394,27 @@ Phase A/B 边界或 implementation 前置条件，MUST NOT 授予任何实现权
 
 - Contracts: `CTR-MARKDOWN-HEADING-NATIVE-001`, parent `CTR-MARKDOWN-002`,
   parent `CTR-TEST-APP-001`, `CTR-LUXHN-BOUNDARY-001`
-- Method: 发送一份包含 H1–H6 唯一标签文本的文档（每个级别带可核对的唯一 label），在 dedicated
-  test-app 真实客户端检视渲染结果，并核对 SDK 发送载荷。
+- Method: 发送一份输入含 `#` 至 `######` 六个唯一标签文本的文档（每个级别带可核对的唯一
+  label），在 dedicated test-app 真实客户端检视渲染结果，并核对 SDK 发送载荷。
 - Environment: dedicated non-production test app（沿用 parent §13 的 dedicated test-app 门槛；
   禁止 production App 与 standalone pilot App）。
-- Required evidence: 精确输入、message ID、发送载荷（post md 元素 text）、客户端 capture。
+- Required evidence: 精确输入、message ID、发送载荷（post md 元素 text）、客户端 capture、
+  connector/SDK 配置与 dependency pin 快照。
 - Expected result:
-  - 六个标签文本全部出现（text preservation）；
-  - 顺序与输入一致（order preservation）；
-  - 每个标题以可识别的原生标题样式渲染（heading treatment；SDK 归一化后的 `####`/`#####`
-    属于合规样式）；
-  - 无标题内容丢失；不以"六级各自 distinct"作为通过条件。
+  1. 输入包含 `#` 至 `######` 六个唯一标签；
+  2. 六个标签文字全部存在（text preservation）；
+  3. 顺序与输入一致（order preservation）；
+  4. SDK payload 中仍有原生 heading treatment（SDK 归一化后的 `####`/`#####` 属于合规样式）；
+  5. 无内容丢失、合并或重排；
+  6. 不以六种视觉级别 distinct 作为通过条件；
+  7. 无 custom converter（`config.markdownConverter` 保持 unset）；
+  8. SDK pin 未改变（runtime 仍为 `ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f`）。
 - Failure condition（取代旧 `any heading level flattened`）:
   - `heading text missing`（任一标题 label 文本缺失/被改写）；
   - `heading order changed`（标题相对顺序变化）；
   - `all heading treatment lost`（全部退化为无格式正文）;
-  - `second renderer introduced`（启用 custom converter / connector heading preprocessor /
+  - `heading content merged`（任意两个标题被合并为一个）；
+  - `second rendering authority introduced`（启用 custom converter / connector heading preprocessor /
     更改 SDK pin 来恢复视觉区分）。
 
 ### Contract coverage
@@ -462,7 +469,7 @@ Phase A/B 边界或 implementation 前置条件，MUST NOT 授予任何实现权
 
 ```text
 PARTIAL_SUPERSESSION = CONTRACT_FRAGMENT_TRIO_ONLY（whole-Spec supersedes 保持空）
-PRODUCT_SEMANTIC_DELTA = HEADING_LEVEL_DISTINCTNESS_ONLY
+PRODUCT_SEMANTIC_DELTA = HEADING_VISUAL_DISTINCTNESS_ONLY
 OTHER_SEMANTIC_CHANGE = NONE
 COMPATIBILITY = 依据 parent 旧 trio 曾判定 FAIL 的实现不得再因此 FAIL；
                 依据旧 trio 曾判定 PASS 的 heading 断言需按新 ID 复核
@@ -489,7 +496,8 @@ test-app gate 已经 PASS。
 ```text
 UNCHANGED =
   Markdown success-reply activation                (CTR-MARKDOWN-001)
-  Markdown surface 除 H1–H6 distinctness 外全部     (CTR-MARKDOWN-001/002/003)
+  bold / italic / quote / inline code              (CTR-MARKDOWN-001)
+  Markdown surface 除 H1–H6 视觉区分外全部          (CTR-MARKDOWN-001/002/003)
   nested ordered/unordered list                    (CTR-MARKDOWN-NESTED-LIST-001)
   language-tagged fenced code                      (CTR-MARKDOWN-CODE-LANGUAGE-001)
   link URL byte stability                          (CTR-MARKDOWN-LINK-001)
@@ -511,7 +519,7 @@ UNCHANGED =
   no second transport                              (CTR-MARKDOWN-002)
   no dependency change                             (parent §12 dependency freeze)
 
-PRODUCT_SEMANTIC_DELTA = HEADING_LEVEL_DISTINCTNESS_ONLY
+PRODUCT_SEMANTIC_DELTA = HEADING_VISUAL_DISTINCTNESS_ONLY
 ALL_OTHER_SEMANTIC_CHANGE = NONE
 ```
 
@@ -562,13 +570,14 @@ OWNER_RULING = ACCEPT_SDK_NATIVE_HEADING_NORMALIZATION
 H1_H6_DISTINCT_RENDERING = NOT_REQUIRED
 HEADING_TEXT_PRESERVATION = REQUIRED
 HEADING_ORDER_PRESERVATION = REQUIRED
-HEADING_RENDERING_TREATMENT = REQUIRED
+NATIVE_HEADING_TREATMENT = REQUIRED
+ALL_HEADINGS_PLAIN_BODY_TEXT = FORBIDDEN
 CUSTOM_MARKDOWN_CONVERTER = FORBIDDEN
 CONNECTOR_HEADING_PREPROCESSOR = FORBIDDEN
 NEW_SDK_REVISION = NO
 DEPENDENCY_CHANGE = NONE
 OTHER_UX_CONTRACT_CHANGE = NONE
-PRODUCT_SEMANTIC_DELTA = HEADING_LEVEL_DISTINCTNESS_ONLY
+PRODUCT_SEMANTIC_DELTA = HEADING_VISUAL_DISTINCTNESS_ONLY
 IMPLEMENTATION_PERMISSION = NO
 REAL_TEST_APP_GATE_CLAIMED_PASS = NONE
 PRODUCT_CODE_CHANGE = NONE
