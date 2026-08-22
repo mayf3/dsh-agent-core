@@ -1,7 +1,14 @@
 ---
 spec_id: SCHEDULER_TIMEOUT_OUTCOME_V2
-status: proposed
+status: accepted
 date: 2026-08-22
+accepted_date: 2026-08-22
+accepted_by: mayf3
+accepted_reviewed_base: 54ac27ff8a39fe6035b497dc3ae43958479df3db
+accepted_reviewed_spec_commit: d90a4f622c9daa8330d047023c45499c9f5a5cf9
+final_audit: 定版 审计
+final_audit_result: PASS
+required_fixes: NONE
 type: implementation-spec (whole-authority replacement of SCHEDULER_TIMEOUT_OUTCOME_V1; spec only — no implementation this round)
 spec_kind: implementation
 authority_level: governing_spec
@@ -20,12 +27,12 @@ governed_by:
   - AGENT_WORKSPACE_SESSION_MODEL_V2 (D-006)
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
-supersedes: []
+supersedes: [SCHEDULER_TIMEOUT_OUTCOME_V1]
 superseded_by: null
 owners:
   - mayf3
 references:
-  - docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md（accepted；被本 Spec 整体替换的对象）
+  - docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md（superseded by 本 Spec at 2026-08-22 acceptance；被本 Spec 整体替换的对象，历史正文不改写）
   - docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md（D-007；accepted Current Scheduler Authority）
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md（D-006；accepted）
   - docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md（Program）
@@ -36,9 +43,12 @@ references:
 
 # SCHEDULER_TIMEOUT_OUTCOME_V2 — occurrence authority store、timeout、termination 与迁移语义（whole-authority replacement）
 
-> 状态：**proposed**。本轮只提交 Spec 文本。
+> 状态：**accepted**（2026-08-22 acceptance finalize；accepted_by = mayf3）。
+> 本轮（authoring round）只提交 Spec 文本。
 > 不 implementation、不创建 production jobs、不补跑 missed runs、不修改 Scheduler store、不部署、不 accepted、不 merge。
 > 在本 Spec 合法 acceptance-finalize 之前，**current active authority 仍是 `SCHEDULER_TIMEOUT_OUTCOME_V1`（accepted）+ D-007（accepted）**；本文件不提前覆盖任何现有 authority。
+> 2026-08-22 acceptance transaction（§3.2 协议）已在本 PR 单一 docs-only commit 中原子执行：本 Spec `proposed -> accepted`、`supersedes = [SCHEDULER_TIMEOUT_OUTCOME_V1]`；V1 `accepted -> superseded`、`superseded_by = 本 Spec`，双向 backlink 齐备。
+> accepted 之后、合入 main 之前：本文件是 accepted candidate（candidate final state），**不是 active repository authority**；active authority 仍是 V1 + D-007；`IMPLEMENTATION_ALLOWED_NOW = NO`（§3.3 依赖门未过——precondition 1 要求 accepted **且已 merge 进 main**）。
 
 ---
 
@@ -145,8 +155,9 @@ Program                    = AGENT_CORE_HARDENING_PROGRAM_V1（accepted）
 Current Scheduler Decision = D-007 SCHEDULER_OCCURRENCE_OUTCOME_V2（accepted）
 Session Product Decision   = D-006 AGENT_WORKSPACE_SESSION_MODEL_V2（accepted）
 Superseded Scheduler Decision = D-005（superseded-by-D-007）
-Current Scheduler Spec     = SCHEDULER_TIMEOUT_OUTCOME_V1（accepted / active）
-Replacement (this file)    = SCHEDULER_TIMEOUT_OUTCOME_V2（proposed）
+Current Scheduler Spec     = SCHEDULER_TIMEOUT_OUTCOME_V1（superseded-by-V2 at 2026-08-22 acceptance；
+                             历史正文不改写，保留为历史 authority）
+Replacement (this file)    = SCHEDULER_TIMEOUT_OUTCOME_V2（accepted 2026-08-22；accepted candidate 直至合入 main）
 Implementation authority   = contracts（仅在本 Spec accepted 进入 main 后生效；
                              且依赖门 §3.3 全部通过前不得开始实现）
 Kernel change              = NONE
@@ -1237,11 +1248,11 @@ PARTIAL_SUPERSESSION = NONE
 
 ```text
 SPEC_ID = SCHEDULER_TIMEOUT_OUTCOME_V2
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 SPEC_KIND = implementation
 IMPLEMENTATION_AUTHORITY = contracts（accepted 且进入 main 后生效）
 REPLACES_ON_ACCEPTANCE = SCHEDULER_TIMEOUT_OUTCOME_V1
-SUPERSEDES = []（acceptance transaction 时原子置为 [SCHEDULER_TIMEOUT_OUTCOME_V1]）
+SUPERSEDES = [SCHEDULER_TIMEOUT_OUTCOME_V1]（activated at acceptance 2026-08-22）
 
 SEMANTIC_DELTA_VS_V1 = NONE
 C001_TO_C020_DISPOSITION = PRESERVED_VERBATIM_MEANING
@@ -1293,9 +1304,24 @@ PRODUCTION_JOB_CHANGE_THIS_ROUND = NONE
 SCHEDULER_STORE_CHANGE_THIS_ROUND = NONE
 MISSED_RUN_REPLAY_THIS_ROUND = NONE
 DEPLOYMENT_THIS_ROUND = NONE
-MERGE = NO（Draft PR only；不 accepted）
+MERGE = NO（Draft PR only；accepted candidate，未合入 main）
 
 CURRENT_ACTIVE_AUTHORITY_UNTIL_ACCEPTANCE = SCHEDULER_TIMEOUT_OUTCOME_V1 + D-007
+CURRENT_ACTIVE_AUTHORITY_UNTIL_MERGE = SCHEDULER_TIMEOUT_OUTCOME_V1 + D-007
+  （V2 accepted-on-branch；合入 main 前不是 active repository authority）
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
-NEXT_TASK = 超时 审计
+NEXT_TASK = 采纳 审计
+
+ACCEPTED_BY = mayf3（repository owner / acceptance authority）
+ACCEPTED_DATE = 2026-08-22
+ACCEPTED_REVIEWED_BASE = 54ac27ff8a39fe6035b497dc3ae43958479df3db
+ACCEPTED_REVIEWED_SPEC_COMMIT = d90a4f622c9daa8330d047023c45499c9f5a5cf9
+FINAL_AUDIT = 定版 审计 = PASS
+REQUIRED_FIXES = NONE
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+  （acceptance commit 仅 lifecycle status 镜像 + acceptance provenance；
+   C-001..C-037 / 37 Acceptance / 23 fault matrix / D-006 / D-007 / store schema /
+   rollback / import / collision / operator identity / 七项 preconditions 逐字节不动）
+IMPLEMENTATION_ALLOWED_NOW = NO
+  （accepted-on-branch 未合入 main；§3.3 依赖门七项 preconditions 未全部满足）
 ```
