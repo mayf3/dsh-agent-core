@@ -1,0 +1,113 @@
+{
+  "report_id": "LARK_UX_PHASE1_V2_CANARY_V1",
+  "date": "2026-08-22",
+  "candidate_sha": "b8b6fb586b38b10cd88db964be78544385bb4a0f",
+  "base_main": "b8b6fb586b38b10cd88db964be78544385bb4a0f",
+  "branch": "feat/lark-ux-phase1-v2-final",
+  "governing": {
+    "parent_spec": "AGENT_CORE_LARK_UX_PHASE1_V2",
+    "parent_status": "accepted",
+    "parent_blob": "91513d140bfeb2747326a465bdc01d72c899c864",
+    "heading_amendment": "AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT",
+    "amendment_status": "accepted",
+    "amendment_implementation_authority": "contracts",
+    "amendment_blob": "9785c8a55f0028ca345e458f2a49f6de2b4939b3"
+  },
+  "sdk": {
+    "runtime": "ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f",
+    "source": "bd24f6742513769c80b5401b96ad464d74dd2027",
+    "pin_unchanged": true,
+    "markdown_converter_set": false,
+    "chunk_limit": 3500
+  },
+  "implementation": {
+    "router_success_call_change": "EXACTLY_ONE",
+    "router_failure_call_change": "NONE",
+    "router_identity_value": "NONE",
+    "router_authority_change": "NONE",
+    "mention_identity_authority": "INGRESS_EVENT_SENDER_OPEN_ID",
+    "mention_open_id_regex": "^(?:ou_|on_)[A-Za-z0-9_-]+$",
+    "p2p_auto_mention": "NO",
+    "excluded_callers_plain_text_no_mention": true,
+    "connector_retry_fallback_replay": "NONE"
+  },
+  "validation": {
+    "ux_connector_tests": {
+      "tests": 26,
+      "pass": 26,
+      "fail": 0
+    },
+    "ux_router_seam_tests": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0
+    },
+    "feishu_connector_full": {
+      "tests": 162,
+      "pass": 162,
+      "fail": 0,
+      "skipped": 0
+    },
+    "agent_router_full": {
+      "tests": 111,
+      "pass": 111,
+      "fail": 0,
+      "skipped": 0
+    },
+    "production_runtime_full_frozen_node": {
+      "tests": 44,
+      "pass": 42,
+      "fail": 0,
+      "skipped": 2
+    },
+    "serialized_full_repository_frozen_node": {
+      "tests": 653,
+      "pass": 649,
+      "fail": 1,
+      "skipped": 3,
+      "failure_classification": "PRE_EXISTING_ENVIRONMENT_DRIFT",
+      "failure_detail": "agent-provisioning provisioning.test.js:90 stale harness-identity fixture (rc.5/a12bb03) vs repo pin rc.8/514ab7b (moved in e865fb8); fails identically at base with changes stashed; no agent-provisioning file touched by this branch"
+    },
+    "real_binding_read_only_replay": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0
+    },
+    "governance_verifier": "PASS",
+    "accepted_spec_blob_equality": "MATCH",
+    "syntax_json": "PASS",
+    "git_diff_check": "PASS",
+    "gitleaks": "CLEAN",
+    "credential_literal_scan_hits": 0,
+    "forbidden_surface_diff": "NONE"
+  },
+  "dedicated_test_app_canary": {
+    "status": "BLOCKED_PENDING_DEDICATED_TEST_APP_CREDENTIALS",
+    "gates_executed": 0,
+    "gates_required": 18,
+    "provider_primary": "zai/glm-5.3",
+    "provider_fallback": "openai-codex/gpt-5.6-luna",
+    "blocked_reason": "dedicated non-production test-App credential file and chat coordinates were reclaimed with /private/tmp cleanup; the only on-disk credentials belong to the PRODUCTION app (forbidden); standalone pilot app forbidden",
+    "prerequisites_verified_present": [
+      "frozen harness a12bb03c6861969985f066bfbf0cb7e5dd5ac567 at /private/tmp/dsh-harness-rc5-pr27-audit",
+      "codex fallback plugin tree + auth",
+      "openclaw production-identity source for isolation comparison",
+      "frozen Node v25.6.1"
+    ],
+    "owner_inputs_required": [
+      "dedicated test-App appId/appSecret (sha256 pin 57350f752227fdb435306a277dcfcb7fbc110877ef33d6a4d346cb47c552a592 or successor)",
+      "dedicated GROUP + P2P chat ids (topic-capable group)",
+      "human sender participation + mentioned user client for notification observation"
+    ],
+    "real_client_gate_claimed_pass": "NONE"
+  },
+  "non_actions": {
+    "product_code_change": "YES",
+    "dependency_change": "NONE",
+    "sdk_change": "NONE",
+    "deployment": "NONE",
+    "production_state_change": "NONE",
+    "merge": "NONE",
+    "secret_disclosure": "NONE"
+  }
+}

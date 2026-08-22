@@ -688,8 +688,13 @@ export function apply(ctx, config) {
       // surfaces (mobile Product API) return the reply to their own caller.
       if (feishu !== undefined && isFeishuEntry) {
         // Reply to the originating message (in-thread automatically when the
-        // ingress was a topic thread).
-        await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)
+        // ingress was a topic thread). UX intent only (D-U1 /
+        // AGENT_CORE_LARK_UX_PHASE1_V2 CTR-ROUTER-INTENT-001): the Router
+        // never passes identity values — the connector derives the mention
+        // target mechanically from IngressEvent.sender.openId.
+        await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply, {
+          ux: { rendering: 'markdown', autoMentionTriggerSender: true },
+        })
         log.log(`reply sent back to ${ingress.conversationId.slice(0, 12)}...`)
       }
       return { reply, agentId: binding.activeAgentId, sessionId: binding.activeSessionId, pid: proc.pid }

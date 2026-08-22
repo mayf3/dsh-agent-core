@@ -184,9 +184,17 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
     ready() {
       return readyPromise
     },
-    /** Outbound: reply into a conversation/thread using a ReplyTarget. */
+    /**
+     * Outbound: reply into a conversation/thread using a ReplyTarget.
+     * `opts.ux` (UX Phase1 V2) carries Router INTENT flags only —
+     * `{ rendering: 'markdown', autoMentionTriggerSender: true }` — which
+     * replyTargetToSdkSend maps onto the SDK-native markdown send plan and
+     * the SDK SendOptions.mentions primitive. Callers that omit it (receipts,
+     * scheduler/proactive) get the byte-identical V0 plain-text plan. The
+     * SDK owns chunking/fallback/retry; this seam adds none.
+     */
     async reply(replyTarget, text, opts = {}) {
-      const plan = replyTargetToSdkSend(replyTarget, text)
+      const plan = replyTargetToSdkSend(replyTarget, text, opts?.ux)
       const result = await channel.send(plan.to, plan.input, plan.opts)
       if (!result?.messageId) {
         // EMPTY_MESSAGE_ID_REJECTION (spec §10): a send that "succeeded"
