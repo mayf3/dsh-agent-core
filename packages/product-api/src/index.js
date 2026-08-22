@@ -85,8 +85,15 @@ function json(res, status, body) {
 }
 
 /** Error envelope per the frozen contract. */
-function errorBody(code, message) {
-  return { error: { code, message } }
+function errorBody(code, message, source) {
+  const body = { error: { code, message } }
+  if (source?.status === 'outcome_unknown' || source?.envelope === 'outcome_unknown') {
+    body.status = 'outcome_unknown'
+    body.reconciliationHandle = source.reconciliationHandle
+    body.deadlineAtWallMs = source.deadlineAtWallMs
+    body.evidence = source.evidence
+  }
+  return body
 }
 
 /** Map a Router/Agent-Definition error to the contract's HTTP status. */
@@ -214,6 +221,9 @@ export function apply(ctx, config = {}) {
       agentId: result.agentId,
       sessionId: result.sessionId,
       pid: result.pid,
+      status: result.status,
+      reconciliationHandle: result.reconciliationHandle,
+      evidence: result.evidence,
     }
   }
 
@@ -257,10 +267,11 @@ export function apply(ctx, config = {}) {
       json(res, 405, errorBody('METHOD_NOT_ALLOWED', `method not allowed: ${req.method}`))
     } catch (error) {
       log.error(`${req.method} ${url.pathname} failed: ${error?.message ?? error}`)
-      json(res, httpStatusFor(error), errorBody(error?.code === 'BINDING_NOT_FOUND' ? 'BINDING_NOT_FOUND'
+      json(res, httpStatusFor(error), errorBody(error?.status === 'outcome_unknown' ? 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN'
+        : error?.code === 'BINDING_NOT_FOUND' ? 'BINDING_NOT_FOUND'
         : error?.code === 'AGENT_NOT_FOUND' ? 'AGENT_NOT_FOUND'
         : error?.code === 'VALIDATION_ERROR' ? 'VALIDATION_ERROR'
-        : 'INTERNAL_ERROR', error?.message ?? String(error)))
+        : 'INTERNAL_ERROR', error?.message ?? String(error), error))
     }
   })
 

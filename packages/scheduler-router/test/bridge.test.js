@@ -7,7 +7,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createRouterInvoker, createFeishuDeliver, chatIdFromDeliveryTo } from '../src/index.js'
 
-function fakeProc({ reply = 'ok-reply', turnError = null, turns = 0 } = {}) {
+function fakeProc({ reply = 'ok-reply', turnResult = null, turnError = null, turns = 0 } = {}) {
   return {
     agentId: 'agent-x',
     pid: 4242,
@@ -15,7 +15,7 @@ function fakeProc({ reply = 'ok-reply', turnError = null, turns = 0 } = {}) {
     turn: async (sessionId, text, opts, timeoutMs) => {
       turns += 1
       if (turnError) throw turnError
-      return { reply, ms: 10, promptMs: 5, messageId: `m-${turns}` }
+      return turnResult ?? { reply, ms: 10, promptMs: 5, messageId: `m-${turns}` }
     },
   }
 }
@@ -44,7 +44,7 @@ function fakeFeishu({ replyError = null, replies = [] } = {}) {
 }
 
 test('invoker: happy path maps turn reply into the scheduler outcome envelope', async () => {
-  const proc = fakeProc()
+  const proc = fakeProc({ turnResult: { reply: 'ok-reply', reconciliationHandle: 'turn:h', evidence: { promptReceipt: 'accepted' } } })
   const router = fakeRouter({ proc })
   const invokeAgent = createRouterInvoker(router)
   const outcome = await invokeAgent({
@@ -56,6 +56,8 @@ test('invoker: happy path maps turn reply into the scheduler outcome envelope', 
   assert.equal(outcome.status, 'ok')
   assert.equal(outcome.summary, 'ok-reply')
   assert.equal(outcome.sessionId, 'agent:agent-x:cron:j1')
+  assert.equal(outcome.reconciliationHandle, 'turn:h')
+  assert.deepEqual(outcome.evidence, { promptReceipt: 'accepted' })
   assert.equal(typeof outcome.durationMs, 'number')
   assert.equal(invokeAgent.calls.length, 1)
   assert.equal(invokeAgent.calls[0].aborted, false)
@@ -69,6 +71,19 @@ test('invoker: turn failure becomes an error outcome, never a throw', async () =
   assert.equal(outcome.status, 'error')
   assert.match(outcome.error, /turn timeout/)
   assert.equal(outcome.sessionId, 's')
+})
+
+test('B15 invoker preserves outcome_unknown handle/deadline/evidence', async () => {
+  const carrier = Object.assign(new Error('unknown turn'), {
+    status: 'outcome_unknown', envelope: 'outcome_unknown', reconciliationHandle: 'turn:unknown',
+    deadlineAtWallMs: 1234, evidence: { source: 'turn_deadline_exceeded' },
+  })
+  const invokeAgent = createRouterInvoker(fakeRouter({ proc: fakeProc({ turnError: carrier }) }))
+  const outcome = await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi' })
+  assert.equal(outcome.status, 'outcome_unknown')
+  assert.equal(outcome.reconciliationHandle, 'turn:unknown')
+  assert.equal(outcome.deadlineAtWallMs, 1234)
+  assert.deepEqual(outcome.evidence, { source: 'turn_deadline_exceeded' })
 })
 
 test('invoker: definition validation rejects an unknown agent as error outcome', async () => {
