@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "repository": "mayf3/dsh-agent-core",
+  "recorded_at": "2026-08-22T09:05:00Z",
+  "receipt_type": "auth_service_machine_identity",
+  "agent_id": "agt_cto-agent",
+  "client_external_ref": "agentcore:v1:client:agt_cto-agent",
+  "principal_external_ref": "agentcore:v1:principal:agt_cto-agent",
+  "client_id": "mc_LDcrvuGB18vsjy_SEWfc_C61",
+  "principal_id": "4e5a4578-0645-4133-bd35-b80e453dfee9",
+  "client_active": true,
+  "principal_active": true,
+  "principal_type": "agent",
+  "created": true
+}

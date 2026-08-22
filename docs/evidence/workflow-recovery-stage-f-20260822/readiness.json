@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "repository": "mayf3/dsh-agent-core",
+  "recorded_at": "2026-08-22T09:05:00Z",
+  "receipt_type": "agentcore_auth_canary_readiness",
+  "status": "READY",
+  "client_ids": [
+    "mc_LDcrvuGB18vsjy_SEWfc_C61",
+    "mc_OcPOL4l-8mUeiFJ0NoDxXHeG"
+  ]
+}
