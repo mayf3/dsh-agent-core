@@ -1,6 +1,15 @@
 ---
 spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1
-status: proposed
+status: accepted
+accepted_date: 2026-08-23
+accepted_by: mayf3
+accepted_reviewed_base: 344975d1d6aa2ab560d2f213d4460d34c9f6ae60
+accepted_reviewed_spec_commit: 06feadf95f196a4c9581d453c256362b5d9e5914
+accepted_reviewed_spec_blob: 5b6ccef2add9ae602bc8168a3e324b4babdb11c3
+primary_review: 总监 审计
+primary_review_result: PASS
+required_fixes: NONE
+semantic_delta_after_review: NONE
 date: 2026-08-23
 spec_kind: implementation
 authority_level: governing_spec
@@ -29,7 +38,7 @@ references:
 
 # AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1 — agt_cto-agent 原历史 OpenClaw Workspace 原地直接复用（单 Agent companion authority）
 
-> **PROPOSED / DOCS-ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY.**
+> **ACCEPTED / DOCS-ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY.**
 >
 > 本 Spec 是 **subject-bounded 的单 Agent companion authority**：唯一 subject 是
 > `agt_cto-agent`（技术研发总监；OpenClaw agent id = `cto-agent`；V3 与 fleet cutover
@@ -49,6 +58,17 @@ references:
 > Workspace 文件 / Auth 对象、不 accept、不 merge。`status: proposed`、
 > `implementation_authority: none`、`production_apply_authority: none` 是初始冻结状态，
 > 不得由 authoring agent 自行翻转。
+>
+> **Acceptance-finalize（2026-08-23，「采纳 执行」round）**：独立「总监 审计」已在
+> exact reviewed head `06feadf95f196a4c9581d453c256362b5d9e5914`（spec blob
+> `5b6ccef2add9ae602bc8168a3e324b4babdb11c3`，reviewed base
+> `344975d1d6aa2ab560d2f213d4460d34c9f6ae60` = PR #59 base = 当时 main，无漂移）给出
+> PASS（REQUIRED_FIXES = NONE；BLOCKER_COUNT = 0）。authorized maintainer 据此以
+> lifecycle-only / semantic delta NONE 的 acceptance-finalize 将本 Spec 变为 accepted
+> candidate。Accepted 后 `implementation_authority = none`、
+> `production_apply_authority = none` 保持不变：`IMPLEMENTATION_ALLOWED_NOW = NO`、
+> `PRODUCTION_APPLY_ALLOWED_NOW = NO`；任何 implementation / production apply 仍需
+> PR 合入 main 与各自独立的 execution / production approval round。
 
 ## 0. Authoring record
 
@@ -65,6 +85,26 @@ PRODUCTION_APPLY_ALLOWED_NOW = NO
 READY_FOR_INDEPENDENT_REVIEW = YES
 NEXT_TASK = 总监 审计
 ```
+
+Acceptance binding（2026-08-23 acceptance-finalize 冻结）：
+
+```text
+REVIEWED_BASE_COMMIT = 344975d1d6aa2ab560d2f213d4460d34c9f6ae60
+REVIEWED_SPEC_COMMIT = 06feadf95f196a4c9581d453c256362b5d9e5914
+REVIEWED_SPEC_BLOB = 5b6ccef2add9ae602bc8168a3e324b4babdb11c3
+REVIEW_NAME = 总监 审计
+REVIEW_RESULT = PASS
+REQUIRED_FIXES = NONE
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+ACCEPTED_BY = mayf3
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_ONLY
+IMPLEMENTATION_PERFORMED = NO
+PRODUCTION_CHANGE = NONE
+```
+
+上文 §0 Authoring record 块内的 `STATUS = proposed` 是 authoring round 的历史冻结记录，
+保持原样；acceptance 后的当前状态以 frontmatter `status: accepted` 与本文件
+Acceptance-finalize record 为准。
 
 ## 1. DEVELOPMENT_PREFLIGHT（改动第一行前已输出；此处存档）
 
@@ -994,4 +1034,27 @@ SPEC_STATUS = proposed（implementation_authority = none；production_apply_auth
 READY_FOR_INDEPENDENT_REVIEW = YES
 VALIDATION = git diff --check / verify_governance.py / npm run verify:structure
 NEXT_TASK = 总监 审计
+```
+
+## 17. Acceptance-finalize record
+
+```text
+STATUS_AFTER_ACCEPTANCE = accepted
+ACCEPTED_BY = mayf3
+REVIEWED_BASE_COMMIT = 344975d1d6aa2ab560d2f213d4460d34c9f6ae60
+REVIEWED_SPEC_COMMIT = 06feadf95f196a4c9581d453c256362b5d9e5914
+REVIEWED_SPEC_BLOB = 5b6ccef2add9ae602bc8168a3e324b4babdb11c3
+REVIEW_NAME = 总监 审计
+REVIEW_RESULT = PASS
+REQUIRED_FIXES = NONE
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_ONLY
+CHANGED_FILES = docs/specs/AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1.md only
+IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = none
+PRODUCTION_APPLY_AUTHORITY_AFTER_ACCEPTANCE = none
+IMPLEMENTATION_AUTHORIZED_NOW = NO
+PRODUCTION_APPLY_AUTHORIZED_NOW = NO
+STILL_REQUIRED_BEFORE_IMPLEMENTATION = PR #59 merged into main + separate execution round with its own task authorization
+STILL_REQUIRED_BEFORE_PRODUCTION = separate production approval round (control-plane transaction CTR-CW-007 executed by an authorized execution round only)
+NEXT_TASK = 采纳 审计
 ```
