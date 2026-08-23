@@ -1,6 +1,16 @@
 ---
 spec_id: TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2
-status: proposed
+status: accepted
+accepted_date: 2026-08-24
+accepted_by: mayf3
+accepted_reviewed_spec_commit: f7bddeea507b70e9a02ff882877a5abf5c974c5c
+accepted_reviewed_spec_blob: b57f0dd3d66d4e2f755bd314d6269f025c7e64df
+accepted_synced_main: 73ec666fb860d7257b2f48c3dc76bc967bb578cd
+primary_review: 发布 审计 round 2
+primary_review_result: PASS
+primary_review_blocker_count: 0
+required_fixes: NONE
+semantic_delta_after_review: NONE
 date: 2026-08-23
 spec_kind: implementation
 authority_level: governing_spec
@@ -31,7 +41,17 @@ references:
 
 # TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2 — Trusted CP 跨架构依赖闭包部署收口（staging + 十二门 + 原子换树）
 
-> 状态：**proposed**（authoring round；SPEC ONLY — 本轮不实现、不修改任何脚本、不修改 Harness、不触 production、不 deploy、不 restart）。
+> 状态：**accepted**（2026-08-24 acceptance-finalize；此前 authoring/修订轮为 proposed。
+> lifecycle-only：仅 status 与 acceptance provenance 变更，规范正文零变更。acceptance 只构成
+> merge authority，不构成实现或生产应用许可——`implementation_authority = none`、
+> `production_apply_authority = none` 保持不变；production swap 在 G8 外部权威前置满足前保持关闭）。
+> 采纳轮 2026-08-24（acceptance-finalize；lifecycle-only）：门禁 发布 审计 round 2 = PASS、
+> BLOCKER_COUNT = 0；accepted_by = mayf3；reviewed spec commit =
+> `f7bddeea507b70e9a02ff882877a5abf5c974c5c`（blob `b57f0dd3d66d4e2f755bd314d6269f025c7e64df`）；
+> semantic_delta_after_review = NONE（G1–G12、AUTHORITY_FORM = LEGAL_CHILD_AUTHORITY、G8
+> EXTERNAL_AUTHORITY_PRECONDITION 全部不变）；preceded by current main
+> `73ec666fb860d7257b2f48c3dc76bc967bb578cd` 普通 merge（SPEC_BLOB_CHANGED_BY_SYNC = NO）。
+> （以下 authoring/修订轮段落为历史记录，保持原文。）
 > 修订轮 2026-08-24（AMEND-while-proposed，发布审计 blocker B-1 收口）：按
 > `OWNER_DECISION_G8 = DEFER_DEPLOY_LOCK_TO_SEPARATE_BACKUP_RETENTION_AUTHORITY`，
 > G8 deploy lock 改为 **EXTERNAL_AUTHORITY_PRECONDITION**——本 Spec 不授权实现 deploy
@@ -51,7 +71,7 @@ references:
 SPEC_GOVERNANCE_MODE = AUTHOR
 SPEC_ID = TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2
 SPEC_KIND = implementation
-STATUS = proposed
+STATUS = accepted (2026-08-24 acceptance-finalize; lifecycle-only; was proposed at review head f7bddee)
 AUTHORITY_LEVEL = governing_spec
 IMPLEMENTATION_AUTHORITY = none
 PRODUCTION_APPLY_AUTHORITY = none
@@ -79,6 +99,14 @@ PRODUCT_CODE_CHANGE = NONE
 SCRIPT_CHANGE = NONE
 HARNESS_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
+
+ACCEPTANCE_BINDING (2026-08-24 acceptance-finalize):
+ACCEPTED_BY = mayf3
+GATE = 发布 审计 round 2 = PASS (BLOCKER_COUNT = 0)
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+IMPLEMENTATION_AUTHORITY = none (unchanged by acceptance)
+PRODUCTION_APPLY_AUTHORITY = none (unchanged by acceptance)
+G8_DEPLOY_LOCK_AUTHORITY = EXTERNAL_AUTHORITY_PRECONDITION (unchanged)
 ```
 
 ---
@@ -808,7 +836,7 @@ TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2_SPEC_G8_DEFERRAL_REVISION = PASS
 
 BASE_MAIN = 0a6e060913e12693142fb0759f35f239b2ef429a (origin/main, 2026-08-23 fetch)
 SPEC_HEAD = docs/trusted-cp-deploy-arch-closure-v2-spec @ <SPEC_COMMIT>
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted (proposed -> accepted 2026-08-24; lifecycle-only)
 IMPLEMENTATION_AUTHORITY = none
 PRODUCTION_APPLY_AUTHORITY = none
 
@@ -878,4 +906,30 @@ DEPLOY = NONE · RESTART = NONE · INSTALL = NONE · MERGE = NONE
 新增文件 = docs/specs/TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2.md +
   docs/investigations/trusted-cp-cross-arch-dependency-closure-v1.md（evidence
   companion，逐字入库，sha256 64250bb08c70ba783d03f1362e62c2b03117412ea3c61d224a918fffed869cc0）
+
+采纳轮 2026-08-24（acceptance-finalize；lifecycle-only；on top of sync-merge of current main）：
+TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2_ACCEPTANCE_FINALIZE = PASS
+SPEC_STATUS = accepted (proposed -> accepted)
+ACCEPTED_BY = mayf3
+GATE = 发布 审计 round 2 = PASS · BLOCKER_COUNT = 0
+REVIEWED_SPEC_COMMIT = f7bddeea507b70e9a02ff882877a5abf5c974c5c (actual PR #61 head)
+REVIEWED_SPEC_BLOB = b57f0dd3d66d4e2f755bd314d6269f025c7e64df
+TASK_EXPECTED_HEAD = d9050abfcd7366dd7801b32969c5b17c4a4124b1 (stale task value — verified
+  strict ancestor of actual reviewed head f7bddee; head advance = G8 deferral revision
+  closing round-1 blocker B-1, reviewed by round 2; no reset, no force-push)
+SYNC_MERGE = ordinary merge of current main 73ec666fb860d7257b2f48c3dc76bc967bb578cd
+  (SPEC_BLOB_CHANGED_BY_SYNC = NO; no rebase, no squash, no force-push, no conflicts)
+SEMANTIC_DELTA_AFTER_REVIEW = NONE — reviewed semantics byte-preserved: G1–G12 全部不变
+  （G8 = DEPLOY_LOCK_EXTERNAL_AUTHORITY_PRECONDITION 不变，
+  DEPLOY_LOCK_IMPLEMENTATION_AUTHORIZED_BY_THIS_SPEC = NO 不变）；
+  AUTHORITY_FORM = LEGAL_CHILD_AUTHORITY 不变；implementation_authority = none、
+  production_apply_authority = none 不变——acceptance 仅构成 merge authority，不授权任何
+  实现 / production apply / deploy / restart；发布执行实现轮须另行任务依本 Spec 开工，
+  production swap 仍被 G8 外部权威前置（CTR-DEP-008）关闭
+HARNESS_OR_VENDOR_SOURCE_CHANGE = NONE
+本轮 = docs-only lifecycle：PRODUCT_CODE_CHANGE = NONE · SCRIPT_CHANGE = NONE ·
+  HARNESS_CHANGE = NONE · PRODUCTION_CHANGE = NONE · DEPLOY = NONE · RESTART = NONE ·
+  INSTALL = NONE · MERGE = NONE（PR #61 stays open）
+MECHANICAL_EXECUTOR = ZCode agent（mechanical lifecycle execution only；accepted_by = mayf3 only）
+NEXT_TASK = 采纳 审计
 ```
