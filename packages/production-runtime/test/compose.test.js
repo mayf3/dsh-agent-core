@@ -22,7 +22,7 @@
  */
 
 import assert from 'node:assert/strict'
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -31,8 +31,27 @@ import { test } from 'node:test'
 import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { composeProductionRuntime, PRODUCTION_AGENT_PROFILE } from '../src/compose.js'
 import { resolveProductionLayout } from '../src/paths.js'
+import { NOTIFICATION_RESOURCE } from '../../notification-ingress/src/auth.js'
 
 const AGT_ID = 'agt_production-runtime-test'
+const FORUM = { clientId: 'client-forum-abc', clientSecret: 'forum-secret-111' }
+const WORKFLOW = { clientId: 'client-workflow-xyz', clientSecret: 'workflow-secret-222' }
+const basic = (clientId, clientSecret) => 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+
+/** Operator auth config for the production layout (0600 in a 0700 dir). */
+function writeNotificationAuthConfig(layout) {
+  mkdirSync(layout.notificationDir, { recursive: true })
+  chmodSync(layout.notificationDir, 0o700)
+  writeFileSync(layout.notificationAuthConfig, `${JSON.stringify({
+    authServiceOrigin: 'https://auth.example.com',
+    audience: NOTIFICATION_RESOURCE,
+    allowlist: { 'svc-forum': FORUM.clientId, 'svc-workflow': WORKFLOW.clientId },
+  }, null, 2)}\n`)
+  chmodSync(layout.notificationAuthConfig, 0o600)
+}
+
+/** Stub auth-service token endpoint (test seam through compose). */
+const okTokenFetch = () => async () => ({ ok: true, status: 200, json: async () => ({ access_token: 'tok' }) })
 
 let pidSeq = 4000
 
@@ -127,13 +146,14 @@ test('composition provides the full existing service graph over the production l
   assert.equal(doc.agents[0].id, AGT_ID)
 })
 
-test('notification ingress delivers over the frozen contract into the (fake) agent inbox', async (t) => {
+test('notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox', async (t) => {
   const { layout } = await seedRuntime(t)
+  writeNotificationAuthConfig(layout)
   const spawned = []
   const runtime = await composeProductionRuntime({
     layout,
     productApi: { enabled: false, port: 0 },
-    notificationIngress: { enabled: true, host: '127.0.0.1', port: 0 },
+    notificationIngress: { enabled: true, host: '127.0.0.1', port: 0, fetchImpl: okTokenFetch() },
     processFactory: (opts) => { const p = new FakeProc(opts); spawned.push(p); return p },
     log: silentLog,
   })
@@ -144,26 +164,42 @@ test('notification ingress delivers over the frozen contract into the (fake) age
 
   const health = await fetch(`http://127.0.0.1:${port}/health`)
   assert.equal(health.status, 200)
-  assert.equal((await health.json()).deliverReady, true)
+  const healthBody = await health.json()
+  assert.equal(healthBody.deliverReady, true)
+  assert.equal(healthBody.authConfigured, true, 'the layout auth config is wired through compose')
+  assert.equal(healthBody.storeReady, true)
+
+  // Anonymous delivery is rejected before any state.
+  const anon = await fetch(`http://127.0.0.1:${port}/v1/deliver`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ requestId: 'anon-1', agentId: AGT_ID, sessionMode: 'main', message: 'x' }),
+  })
+  assert.equal(anon.status, 401)
 
   const bad = await fetch(`http://127.0.0.1:${port}/v1/deliver`, {
-    method: 'POST', headers: { 'content-type': 'application/json' },
+    method: 'POST', headers: { 'content-type': 'application/json', authorization: basic(FORUM.clientId, FORUM.clientSecret) },
     body: JSON.stringify({ requestId: 'r1', agentId: AGT_ID, sessionMode: 'bogus', message: 'x' }),
   })
   assert.equal(bad.status, 400)
 
   const ok = await fetch(`http://127.0.0.1:${port}/v1/deliver`, {
-    method: 'POST', headers: { 'content-type': 'application/json' },
+    method: 'POST', headers: { 'content-type': 'application/json', authorization: basic(FORUM.clientId, FORUM.clientSecret) },
     body: JSON.stringify({ requestId: 'req-1', agentId: AGT_ID, sessionMode: 'main', message: 'hello production' }),
   })
   assert.equal(ok.status, 200)
   const accepted = await ok.json()
   assert.equal(accepted.accepted, true)
   assert.equal(accepted.sessionId, 'main')
+  assert.equal(accepted.outcome, 'delivered')
   assert.equal(accepted.reconciliationHandle, 'turn:deliver-1')
   assert.deepEqual(accepted.evidence, { promptReceipt: 'accepted' })
   assert.equal(spawned.length, 1, 'one agent process started')
   assert.deepEqual(spawned[0].deliveries.at(-1), { sessionId: 'main', text: 'hello production' })
+
+  // The durable idempotency authority lands under the production layout.
+  assert.ok(existsSync(layout.notificationIdempotencyStore), 'idempotency store under <root>/notification-ingress/')
+  const store = JSON.parse(readFileSync(layout.notificationIdempotencyStore, 'utf8'))
+  assert.equal(store.records[FORUM.clientId]['req-1'].state, 'delivered')
 
   // Admission evidence line for the accepted deliver.
   const evidence = readFileSync(layout.evidenceLog, 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -291,4 +327,62 @@ test('runtime state carries no demo artifacts anywhere', async (t) => {
   const store = JSON.parse(readFileSync(layout.bindingsStore, 'utf8'))
   const serialized = JSON.stringify(store)
   assert.ok(!serialized.includes('.demo'), 'no .demo reference in persisted state')
+})
+
+// ── notification-ingress V1 wiring (C-BND-003 / AC-BND-03) ─────────────────
+
+test('C-WIRE paths: the production layout owns the notification-ingress persistent surface', async (t) => {
+  const { layout } = await seedRuntime(t)
+  assert.equal(layout.notificationDir, join(layout.root, 'notification-ingress'))
+  assert.equal(layout.notificationAuthConfig, join(layout.root, 'notification-ingress', 'auth.json'))
+  assert.equal(layout.notificationIdempotencyStore, join(layout.root, 'notification-ingress', 'idempotency.json'))
+  assert.equal(layout.notificationEvidence, join(layout.root, 'notification-ingress', 'evidence.jsonl'))
+})
+
+test('C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env', async (t) => {
+  const envBefore = { ...process.env }
+  const { layout } = await seedRuntime(t)
+  const runtime = await composeProductionRuntime({
+    layout,
+    productApi: { enabled: false, port: 0 },
+    notificationIngress: { enabled: true, host: '127.0.0.1', port: 0 },
+    processFactory: (opts) => new FakeProc(opts),
+    log: silentLog,
+  })
+  t.after(() => runtime.stop())
+  await runtime.start()
+
+  // The store/evidence paths handed to the ingress are the layout's.
+  assert.equal(runtime.notificationIngress.store.storeFile, layout.notificationIdempotencyStore)
+
+  // No new NOTIFICATION_INGRESS_* env appeared; the allowed pointer/switch
+  // keys carry PATHS only — no credential material anywhere (C-BND-001).
+  const envAfter = { ...process.env }
+  for (const key of Object.keys(envAfter)) {
+    if (!key.startsWith('NOTIFICATION_INGRESS_')) continue
+    assert.ok(['NOTIFICATION_INGRESS_ENABLED', 'NOTIFICATION_INGRESS_HOST', 'NOTIFICATION_INGRESS_PORT', 'NOTIFICATION_INGRESS_AUTH_CONFIG'].includes(key), `unexpected ingress env ${key}`)
+    assert.ok(envAfter[key].length < 4096 && !envAfter[key].includes('secret'), `ingress env ${key} must be a path/switch, not credential material`)
+  }
+  for (const key of Object.keys(envBefore)) delete envAfter[key]
+  assert.equal(Object.keys(envAfter).filter((k) => k.startsWith('NOTIFICATION_INGRESS_')).length, 0, 'compose sets no ingress env at all')
+
+  // Source-level: compose forwards only the documented wiring keys.
+  const composeSource = readFileSync(new URL('../src/compose.js', import.meta.url), 'utf8')
+  const ingressBlock = composeSource.slice(composeSource.indexOf('applyNotificationIngress(ctx'))
+  const forwarded = ingressBlock.slice(0, ingressBlock.indexOf('})'))
+  for (const key of ['enabled', 'host', 'port', 'authConfigFile', 'storeFile', 'evidenceFile', 'fetchImpl']) {
+    assert.ok(forwarded.includes(key), `compose forwards ${key}`)
+  }
+  assert.ok(!forwarded.includes('clientSecret'), 'compose never forwards credential material')
+
+  // Without an auth config the composition still mounts, fail-closed per call.
+  const { port } = runtime.notificationIngress.address()
+  const health = await (await fetch(`http://127.0.0.1:${port}/health`)).json()
+  assert.equal(health.authConfigured, false)
+  const closed = await fetch(`http://127.0.0.1:${port}/v1/deliver`, {
+    method: 'POST', headers: { 'content-type': 'application/json', authorization: basic(FORUM.clientId, FORUM.clientSecret) },
+    body: JSON.stringify({ requestId: 'closed-1', agentId: AGT_ID, sessionMode: 'main', message: 'x' }),
+  })
+  assert.equal(closed.status, 503)
+  assert.equal((await closed.json()).error.code, 'AUTH_NOT_CONFIGURED')
 })
