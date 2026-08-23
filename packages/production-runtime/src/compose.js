@@ -120,6 +120,25 @@ function dropUndefined(obj) {
 }
 
 /**
+ * STRICT boolean env parsing for the processing-reaction switch
+ * (FEISHU_PROCESSING_REACTION_ENABLED): unset/empty => false (connector
+ * default OFF); EXACTLY 'true'/'false' => that boolean; anything else fails
+ * composition LOUD with FEISHU_PROCESSING_REACTION_INVALID. Always a definite
+ * boolean — production target is an explicit DEPLOY-time opt-in (not this
+ * round). @throws {Error} FEISHU_PROCESSING_REACTION_INVALID.
+ */
+export function resolveProcessingReactionConfig(env = process.env) {
+  const raw = env.FEISHU_PROCESSING_REACTION_ENABLED
+  if (raw === undefined || raw === '') return false
+  if (raw === 'true') return true
+  if (raw === 'false') return false
+  throw Object.assign(
+    new Error(`production-runtime: FEISHU_PROCESSING_REACTION_ENABLED must be exactly 'true' or 'false' (got ${JSON.stringify(raw)})`),
+    { code: 'FEISHU_PROCESSING_REACTION_INVALID' },
+  )
+}
+
+/**
  * Compose the Production Runtime.
  *
  * @param {object} options
@@ -160,6 +179,8 @@ export async function composeProductionRuntime(options = {}) {
   // Feishu UX switches: strict-parsed BEFORE any mount so an invalid value
   // fails composition loud even when the channel itself is unconfigured.
   const feishuUxSwitches = resolveFeishuUxSwitches()
+  // Processing-reaction switch: same fail-loud contract (unset/empty=false).
+  const processingReactionEnabled = resolveProcessingReactionConfig()
   const opts = options ?? {}
   const log = opts.log ?? {
     log: (...a) => process.stdout.write(`[production-runtime] ${a.join(' ')}\n`),
@@ -294,8 +315,11 @@ export async function composeProductionRuntime(options = {}) {
       // requireMentionInGroup / autoMentionTriggerSender: only the env-parsed
       // keys are forwarded (absent = connector defaults true/true).
       ...feishuUxSwitches,
+      // Processing reaction: definite boolean (unset/empty already resolved
+      // to false above — the connector default stays OFF).
+      processingReactionEnabled,
     })
-    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true})`)
+    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true} processingReactionEnabled=${processingReactionEnabled})`)
   } else {
     log.warn(`feishu credentials not configured (FEISHU_CREDS_PATH=${feishuCredsPath ?? '(unset)'}); channel OFF — delivery-requesting jobs will be marked not-delivered`)
   }
