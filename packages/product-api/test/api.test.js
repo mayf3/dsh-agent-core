@@ -66,6 +66,9 @@ function stubRouter() {
         agentId: binding?.activeAgentId ?? 'agt_stub',
         sessionId: binding?.activeSessionId ?? 'main',
         pid: 42,
+        status: 'completed',
+        reconciliationHandle: 'turn:product-complete',
+        evidence: { terminationEvidence: 'exact_terminal_then_idle' },
       }
     },
   }
@@ -170,6 +173,27 @@ test('POST /v1/message: routes through the Router, returns the reply + binding f
   assert.equal(body.reply, 'echo:hello')
   assert.equal(body.agentId, 'agt_b')
   assert.equal(body.sessionId, 'main')
+  assert.equal(body.status, 'completed')
+  assert.equal(body.reconciliationHandle, 'turn:product-complete')
+  assert.deepEqual(body.evidence, { terminationEvidence: 'exact_terminal_then_idle' })
+})
+
+test('B15 product API preserves typed outcome_unknown reconciliation data', async (t) => {
+  const router = stubRouter()
+  router.route = async () => ({
+    error: Object.assign(new Error('mobile turn unknown'), {
+      status: 'outcome_unknown', envelope: 'outcome_unknown', reconciliationHandle: 'turn:product-unknown',
+      deadlineAtWallMs: 789, evidence: { source: 'turn_deadline_exceeded' },
+    }),
+  })
+  const { base } = await startServer(t, { router })
+  const result = await call(base, 'POST', '/v1/message', { surfaceId: 'surface-1', text: 'hello' })
+  assert.equal(result.status, 500)
+  assert.equal(result.body.status, 'outcome_unknown')
+  assert.equal(result.body.error.code, 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN')
+  assert.equal(result.body.reconciliationHandle, 'turn:product-unknown')
+  assert.equal(result.body.deadlineAtWallMs, 789)
+  assert.deepEqual(result.body.evidence, { source: 'turn_deadline_exceeded' })
 })
 
 test('validation and error envelope (400/404/500 shapes)', async (t) => {

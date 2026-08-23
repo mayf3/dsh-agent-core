@@ -53,7 +53,10 @@ class FakeProc {
     this.turns.push({ sessionId, text, cwd: opts.cwd })
     return { reply: `TURNED:${text}`, ms: 1, promptMs: 1, messageId: `m${this.turns.length}` }
   }
-  async shutdown() {}
+  async shutdown() {
+    this.exit = { code: 0, signal: null }
+    this.exitResolve?.(this.exit)
+  }
   kill() {
     this.exit = { code: 9, signal: 'SIGKILL' }
     this.exitResolve?.({ code: 9, signal: 'SIGKILL' })

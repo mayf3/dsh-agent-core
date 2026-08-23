@@ -7,7 +7,7 @@
   "scripts": {
     "install:integration": "node scripts/install-integration.mjs",
     "verify:product-integration": "node scripts/product-integration-v1-verify.mjs",
-    "test": "node --test 'packages/*/test/*.test.js'",
+    "test": "node --test 'packages/*/test/*.test.js' 'packages/*/test/*/*.test.js'",
     "test:scheduler": "node --test packages/scheduler/test/*.test.js",
     "verify:scheduler": "node scripts/scheduler-v1-verify.mjs",
     "test:scheduler-router": "node --test packages/scheduler-router/test/*.test.js",

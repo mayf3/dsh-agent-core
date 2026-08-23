@@ -182,6 +182,23 @@ test('Router errors map to the contract envelope: AGENT_NOT_FOUND -> 404, unknow
   assert.equal(boom.body.error.code, 'INTERNAL_ERROR')
 })
 
+test('B15 outcome_unknown HTTP envelope preserves handle, deadline and evidence', async (t) => {
+  const router = stubRouter(async () => {
+    throw Object.assign(new Error('delivery outcome unknown'), {
+      status: 'outcome_unknown', envelope: 'outcome_unknown', reconciliationHandle: 'turn:notif',
+      deadlineAtWallMs: 456, evidence: { source: 'prompt_receipt_timeout' },
+    })
+  })
+  const { base } = await startServer(t, { router })
+  const result = await call(base, 'POST', '/v1/deliver', VALID)
+  assert.equal(result.status, 500)
+  assert.equal(result.body.status, 'outcome_unknown')
+  assert.equal(result.body.error.code, 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN')
+  assert.equal(result.body.reconciliationHandle, 'turn:notif')
+  assert.equal(result.body.deadlineAtWallMs, 456)
+  assert.deepEqual(result.body.evidence, { source: 'prompt_receipt_timeout' })
+})
+
 test('main TODAY (no agentRouter.deliver): mounted but /v1/deliver answers 503 SERVICE_UNAVAILABLE', async (t) => {
   // The router on main has route/switchAgent etc. but NO deliver() — this is
   // the exact state the branch is born into.
