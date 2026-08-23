@@ -17,12 +17,13 @@ scope:
   - 静态 per-Agent route 配置语义（startup-loaded / fail-loud / controlled restart）
   - Luna fallback 前置条件诚实记录（不含 credential 复制授权）
 governed_by:
-  - AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1
+  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
 owners:
   - repository-maintainers
 references:
   - docs/specs/AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1.md（accepted；本 Spec 的 whole-authority replacement 对象）
+  - docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0.md（accepted；当前 repository development-governance authority；本 Spec governed_by 指向——其 vendored protocol §9.2 即本 Spec 引用的 whole-authority SUPERSEDE 规则；其 supersede 对象 AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1 已为历史 authority）
   - docs/specs/AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1.md（accepted；related authority——Luna leg 的 providerEnv seam，本 Spec 不 supersede）
   - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V2.md（accepted；spawn/admission/turn 状态与 outcome_unknown 语义 authority）
   - docs/investigations/LUNA_DSH_RC8_VERSION_ALIGNMENT_V1.md（accepted-on-main investigation；rc.8 + dsh-codex@0.2.3 session create/resume 证据）
@@ -115,7 +116,7 @@ GATE_ANSWER   = YES
 
 | Authority | 关系 |
 |---|---|
-| `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1`（accepted） | Luna leg 的 providerEnv（四键 allowlist、target-only spawn 注入、fail-loud）seam authority。本 Spec 不修改、不 supersede 它；本 Spec 的 fallback leg 结构性依赖它（chatgpt.com 仅经 `127.0.0.1:7890` 可达，见其触发背景）。acceptance transaction 时其「扩展 PROVIDER_V1 冻结 seam」的基准指向需 owner 显式 repoint（见 §13 Open questions / DEC-008）。 |
+| `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1`（accepted） | Luna leg 的 providerEnv（四键 allowlist、target-only spawn 注入、fail-loud）seam authority。本 Spec 不修改、不 supersede 它；本 Spec 的 fallback leg 结构性依赖它（chatgpt.com 仅经 `127.0.0.1:7890` 可达，见其触发背景）。Owner decision Q-1 已裁决（2026-08-23）：`KEEP_TARGET_PROXY_SEAM_AS_SEPARATE_AUTHORITY`——它保持**独立 accepted authority**（不 absorb、不 supersede、status 不变）；acceptance transaction 仅对其「扩展 PROVIDER_V1 冻结 seam」的基准/依赖 metadata 引用 repoint 到本 Spec；其 providerEnv 四键契约与 normative body **不变**（见 §3.3 / DEC-008 / Q-1 RESOLVED）。 |
 | `AGENT_PROCESS_LIFECYCLE_HARDENING_V2`（accepted） | spawn/admission/turn 语义 authority：`spawn_failed_without_child`、initialize 失败、`not_admitted` envelope、prompt receipt watermark、`outcome_unknown` 均以其冻结语义为准。本 Spec 引用不重定义。 |
 | `AGENT_CORE_HARDENING_PROGRAM_V1`（accepted） | hardening program 框架（本 Spec 不在其排程序列内，无冲突）。 |
 | `DSH_PROVIDER_FALLBACK_CHAIN_V1`（**proposed，未 merge，非 authority**） | fleet 级 3-route chain 提案；其正文明确「agt_cto-agent remains governed by accepted AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1 … no automatic fallback」并排除本 Agent。本 Spec accept 后该句引用将悬空——该提案若继续推进须自行修订引用，属其自身 amendment 责任，不构成本 Spec 的阻塞项。 |
@@ -130,6 +131,14 @@ ACCEPTANCE_TRANSACTION（一次性 docs-only）：
   OLD.superseded_by = AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1
   （OLD 历史正文不删改，仅 lifecycle metadata + backlink；
     含 OLD 的 Amendment 1/2 历史一并归档为 historical authority）
+
+  PROXY_SEAM_V1 基准 repoint（owner decision Q-1 已裁决；metadata-only）：
+    AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1 保持独立 accepted
+    authority（不 absorb、不 supersede、status 不变）；
+    仅将其「扩展 PROVIDER_V1 冻结 seam」的基准/依赖 metadata 引用从
+    AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1 改指
+    AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1；
+    其 providerEnv 四键契约与 normative body 一字不变。
 ```
 
 ## 4. Current State（只读核实，2026-08-23）
@@ -144,7 +153,8 @@ ACCEPTANCE_TRANSACTION（一次性 docs-only）：
   Basis: `OBS-003`、`OBS-008`。
 - `STATE-003` — 本 Spec 的 PRIMARY（zai/glm-5.3）是**目标政策**，不是当前
   全局 env 现值；zai/glm-5.3 已在本 Agent 的旧 root（yanfenma）生产会话中
-  真实执行过（2026-08-21，14 个 request/header），但在新 authsvc runtime 下
+  真实执行过（精确跨度 2026-08-20 21:58 → 2026-08-21 07:13，14 个
+  request/header），但在新 authsvc runtime 下
   尚未执行。Basis: `OBS-006`、`OBS-008`。
 - `STATE-004` — Luna 直连路由未就绪：新 authsvc Home 无正式 OAuth Credential、
   dsh-codex provisioning 尚未完成。Basis: `OBS-004`。
@@ -182,7 +192,8 @@ ACCEPTANCE_TRANSACTION（一次性 docs-only）：
   `oc-go/deepseek-v4-flash ×141`、`openai-codex/gpt-5.6-luna ×21`、
   `zai/glm-5.3 ×14`——该 session 先后跨三个 provider 被 resume 并真实产出回复
   （Luna 21 turn 来自旧 Spec §8 controlled live acceptance；zai 14 turn 来自
-  2026-08-21 GLM 恢复轮 GLM-RESTORED-OK）。补充：accepted investigation
+  精确跨度 2026-08-20 21:58 → 2026-08-21 07:13 的 GLM 恢复轮
+  GLM-RESTORED-OK）。补充：accepted investigation
   `LUNA_DSH_RC8_VERSION_ALIGNMENT_V1` 在真实 rc.8 harness + 临时 Home +
   fixture credential 下证明 dsh-codex@0.2.3 的 session create/resume 机制
   （cold restart → resume session main）。**边界声明：以上只证明 session
@@ -248,8 +259,17 @@ ACCEPTANCE_TRANSACTION（一次性 docs-only）：
   authoring 不复制旧 OAuth secret；fallback 激活被 CTR-008 gate 阻塞直至
   前置条件由独立轮次关闭。
 - `DEC-008` — PROXY_SEAM_V1 维持独立 accepted authority；本 Spec 的 fallback
-  leg 复用其 providerEnv 契约（不重定义、不 supersede）；acceptance
-  transaction 时的基准 repoint 属 owner 显式决定（Open question Q-1）。
+  leg 复用其 providerEnv 契约（不重定义、不 supersede）。Owner decision Q-1
+  已于 2026-08-23 裁决关闭：`OWNER_DECISION_Q1 =
+  KEEP_TARGET_PROXY_SEAM_AS_SEPARATE_AUTHORITY`；
+  `TARGET_PROXY_SEAM_DISPOSITION = METADATA_ONLY_REPOINT_TO
+  AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1`；`ABSORB_PROXY_SEAM = NO`
+  ——acceptance transaction 仅做基准/依赖 metadata repoint，其 providerEnv
+  四键契约与 normative body 不变（§3.3；Q-1 RESOLVED）。
+- `DEC-009` — 显式 carry forward 被替换 Spec Amendment 2（A2.1 唯一冻结
+  tuple）的 DSH Harness pin：`deepseek-harness 0.1.0-rc.8 @
+  514ab7b0029141b88c807704764d0d3e1eea1da4`。在新 authority 另行 supersede
+  之前保持有效；实现轮**不得静默升级 Harness**（CTR-011 / MIG-002）。
 
 ## 9. Contracts
 
@@ -329,6 +349,18 @@ ACCEPTANCE_TRANSACTION（一次性 docs-only）：
   （OBS-006 / CLM-002）：`SESSION_CROSS_PROVIDER_RESUME = YES`；但该事实
   **只**证明 session resume 连续性，**不**得在任何 evidence/acceptance 记录
   中被表述为 Luna credential 就绪或 Luna 直连可用（OBS-004 为反证）。
+- `CTR-011`（Harness pin carry-forward）— 显式承接被替换 Spec Amendment 2
+  （A2.1 唯一冻结 tuple）的 DSH Harness pin，在新 authority 另行 supersede
+  前保持有效：
+  ```text
+  HARNESS_VERSION = 0.1.0-rc.8                          （deepseek-harness）
+  HARNESS_COMMIT  = 514ab7b0029141b88c807704764d0d3e1eea1da4
+  PLUGIN          = dsh-codex@0.2.3                     （与 CTR-002 一致）
+  ```
+  实现轮**不得静默升级 Harness**：resolved harness ≠ 上述 tuple 时保持既有
+  `dsh_version_mismatch` fail-loud 语义（如实失败，非回退，且**不属于**
+  CTR-003 的 fallback 触发类）；变更该 pin 须由本 Spec 自身的后续 amendment
+  显式 supersede 并经独立评审（DEC-009）。
 
 ## 10. Acceptance（未来实现轮验收框架；本轮不执行）
 
@@ -345,6 +377,7 @@ ACCEPTANCE_TRANSACTION（一次性 docs-only）：
 | ACC-009 | 隔离回归：非目标 Agent resolved route/env 字节不变 | CTR-009 |
 | ACC-010 | evidence/log 全量扫描：无 token / credential 值 / raw provider error body | CTR-005/008 |
 | ACC-011 | `~/.codex/auth.json` hash/mtime 不变；目标进程 env 无 `OPENAI_API_KEY` | CTR-008 |
+| ACC-012 | Harness pin 不变量：resolved harness = `0.1.0-rc.8 @ 514ab7b…`（或已由本 Spec 后续 amendment 显式 supersede 并留痕）；实现轮无静默 Harness 升级 | CTR-011 |
 
 （真实 OAuth、真实 Luna 网络回退、真实手机飞书端到端 fallback 演练属
 controlled live acceptance，须在本 Spec accepted 且 CTR-008 前置条件关闭后
@@ -381,7 +414,9 @@ controlled live acceptance，须在本 Spec accepted 且 CTR-008 前置条件关
 - `MIG-001` — 替换事务 = §3.3 原子 docs-only transaction；实现轮开始前本
   Spec 必须 accepted 且进入 implementation base（governance §10）。
 - `MIG-002` — Carry-over（自旧 Spec 权威域吸收，语义不变）：dsh-codex exact
-  version pin 与 fail-loud 家族（CTR-002）；credential ownership / OAuth
+  version pin 与 fail-loud 家族（CTR-002）；Amendment 2 的 DSH Harness pin
+  `0.1.0-rc.8 @ 514ab7b…`（CTR-011，另行 supersede 前有效、实现轮不得静默
+  升级）；credential ownership / OAuth
   operator-interactive / 0600-0700 / 不共享 `~/.codex/auth.json`（CTR-008）；
   其他 Agent 零变化（CTR-009）；no silent success with wrong provider
   （CTR-005 的一般化）。旧 Spec 的 oc-go rollback 目标陈述随 supersede 失效，
@@ -393,30 +428,52 @@ controlled live acceptance，须在本 Spec accepted 且 CTR-008 前置条件关
 
 ## 13. Open questions
 
-- `Q-1` — acceptance transaction 时 `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1`
-  的「扩展 PROVIDER_V1 seam」基准如何 repoint 到本 Spec（metadata-only
-  amendment vs. 由本 Spec absorption）：OWNER_DECISION_REQUIRED（不阻塞本
-  Spec 的 proposed 评审；须在 acceptance 前裁决）。
+- `Q-1`（**RESOLVED**，2026-08-23 owner 裁决，acceptance 前已关闭）—
+  acceptance transaction 时
+  `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1` 的「扩展
+  PROVIDER_V1 seam」基准如何 repoint 到本 Spec：裁决为
+  `OWNER_DECISION_Q1 = KEEP_TARGET_PROXY_SEAM_AS_SEPARATE_AUTHORITY`；
+  `TARGET_PROXY_SEAM_DISPOSITION = METADATA_ONLY_REPOINT_TO
+  AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1`；`ABSORB_PROXY_SEAM = NO`。
+  执行形态冻结于 §3.3（仅基准/依赖 metadata repoint；其 providerEnv 四键
+  契约与 normative body 不变）。无遗留 open 项。
 - `Q-2` — zai/glm-5.3 在新 authsvc runtime 的受控实测（CLM-004）与 zai
   credential 注入状态核实：implementation 轮前置。
 - `Q-3` — Luna 就绪轮（provisioning + operator 交互 OAuth 到新 Home）的独立
   授权与执行时序：另行 dispatch。
 
-## 14. Final Output（authoring 轮填写）
+## 14. Final Output（authoring 轮填写；2026-08-23 revision 轮更新为下述终态）
 
 ```text
-TASK_NAME = 回退 执行
-TASK_STATUS = AUTHORING_COMPLETE（proposed； awaiting independent review）
+TASK_NAME = 回退 修订
+TASK_STATUS = REVISION_COMPLETE（proposed；READY_FOR_FOCUSED_REVIEW）
 
 SPEC_ID = AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1
-SPEC_COMMIT = <本轮 commit sha，push 后回填于 PR>
+SPEC_COMMIT = <revision 轮 commit sha，push 后回填于 PR>
 GATE_ANSWER = YES（AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1 仅覆盖 agt_cto-agent）
 REPLACES = AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1（whole authority；事务见 §3.3）
+GOVERNED_BY = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0（repoint 自已 superseded
+  的 AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1）
+
+OWNER_DECISION_Q1_CLOSED = YES
+  OWNER_DECISION_Q1 = KEEP_TARGET_PROXY_SEAM_AS_SEPARATE_AUTHORITY
+  TARGET_PROXY_SEAM_DISPOSITION = METADATA_ONLY_REPOINT_TO
+    AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1
+  ABSORB_PROXY_SEAM = NO
+PROXY_SEAM_REPOINT_MODE = METADATA_ONLY（基准/依赖 metadata repoint；
+  providerEnv 四键契约与 normative body 不变——§3.2/§3.3/DEC-008/Q-1 RESOLVED）
+
+HARNESS_PIN_CARRIED_FORWARD = YES
+  HARNESS = deepseek-harness 0.1.0-rc.8 @
+    514ab7b0029141b88c807704764d0d3e1eea1da4（旧 Provider V1 Amendment 2
+    A2.1 tuple 原文承接；另行 supersede 前保持有效；实现轮不得静默升级
+    ——DEC-009/CTR-011/MIG-002/ACC-012）
 
 PRIMARY_ROUTE = zai / glm-5.3
 FALLBACK_ROUTE = openai-codex / gpt-5.6-luna（dsh-codex@0.2.3）
 MAX_FALLBACK_ROUTE_ATTEMPTS = 1
 SILENT_FALLBACK = FORBIDDEN
+NORMATIVE_PRIMARY_FALLBACK_CHANGE = NONE（revision 轮零核心语义变更）
 
 SAFE_FALLBACK_BOUNDARY = only when prompt admission is proven false
   （spawn_failed_without_child / initialize provider-unavailable /
@@ -431,7 +488,8 @@ LOUD_EVIDENCE_FIELDS = PRIMARY_ROUTE · PRIMARY_FAILURE_CLASS ·
 
 LUNA_DIRECT_ROUTE_READY = NO（新 authsvc Home 无正式 OAuth Credential；
   dsh-codex provisioning 未完成；不复制旧 OAuth secret）
-SESSION_CROSS_PROVIDER_RESUME = YES（真实生产证据；≠ Luna credential ready）
+SESSION_CROSS_PROVIDER_RESUME = YES（真实生产证据；≠ Luna credential ready；
+  zai 14 turn 精确跨度 2026-08-20 21:58 → 2026-08-21 07:13）
 
 STATIC_CONFIG = startup-loaded · malformed fail-loud · change requires
   controlled restart · no dynamic quota router · no account pool /
