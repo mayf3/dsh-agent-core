@@ -62,3 +62,19 @@ Workspace migration or production change, and `production_apply_authority` stays
 | `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` | superseded | none | historical replaced authority |
 
 `accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
+
+## agt_cto-agent model-route authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` | accepted / current | none | agt_cto-agent model-route authority: PRIMARY `zai/glm-5.3` + single bounded Luna fallback (`openai-codex/gpt-5.6-luna` via `dsh-codex@0.2.3`; MAX_FALLBACK_ROUTE_ATTEMPTS = 1; SILENT_FALLBACK = FORBIDDEN; SAFE_FALLBACK = prompt admission proven false only; LUNA_DIRECT_ROUTE_READY = NO; harness `0.1.0-rc.8 @ 514ab7b` pin carried forward) |
+| `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` | superseded | none | historical single-route Luna authority (incl. Amendment 1/2), replaced whole by `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` on 2026-08-24 |
+| `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1` | accepted / current | — | separate accepted seam authority (providerEnv four-key allowlist); baseline/dependency metadata repointed to `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` on 2026-08-24, normative body byte-unchanged |
+
+The acceptance transaction is lifecycle-only relative to reviewed head
+`1af5f1be134a52ec2dd0fa953ca0f07f050bcdd3` (回退 审计 round 1 = PASS; 回退 聚焦复审 =
+PASS; BLOCKER_COUNT = 0; sync-merge `fd58e4b` byte-neutral to the spec blob). It
+performs no implementation, credential, production, or deployment change;
+`implementation_authority` stays `none` until the PR reaches main and the
+implementation round's own gates (Q-2 controlled zai verification; CTR-008 Luna
+readiness) pass in separate rounds.
