@@ -23,6 +23,10 @@
  *                             invalid values fail startup loud
  *   FEISHU_AUTO_MENTION_TRIGGER_SENDER 'true'|'false' only (default true);
  *                             invalid values fail startup loud
+ *   FEISHU_PROCESSING_REACTION_ENABLED 'true'|'false' only (unset/empty =
+ *                             false, the connector default); any other value
+ *                             fails startup loud
+ *                             (FEISHU_PROCESSING_REACTION_INVALID)
  *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL   model route for spawned agents
  *   AGENT_CORE_CREDENTIALS_FILE / BROKER_AUTH_ORIGIN   Trusted CP seam
  *
