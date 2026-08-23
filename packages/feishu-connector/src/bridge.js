@@ -409,7 +409,12 @@ export function createBridgeHandler({ resolveBotIdentity, config, reply, log = (
     // it does not erase V0 @all-only messages. Agent Core owns the residual
     // product eligibility after the SDK lease is acquired: p2p, @bot and
     // @all proceed; an ordinary group/topic no-mention is a silent drop.
-    if (ingress.chatType !== 'p2p' && ingress.mentioned !== true) {
+    // REQUIRE_MENTION_IN_GROUP config gates exactly this drop (default true =
+    // frozen behavior); an explicit false admits bound ordinary group/topic
+    // messages into the PREBOUND_ONLY gate below — never past it.
+    if (config.requireMentionInGroup !== false
+      && ingress.chatType !== 'p2p'
+      && ingress.mentioned !== true) {
       log('debug', '[feishu] ordinary no-mention message dropped', { messageId: ingress.messageId })
       return
     }

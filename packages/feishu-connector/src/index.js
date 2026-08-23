@@ -55,6 +55,13 @@ const DEFAULTS = {
   appSecret: '',
   credentialsPath: '',
   enabled: true,
+  // REQUIRE_MENTION_IN_GROUP / AUTO_MENTION_TRIGGER_SENDER switches: the
+  // inbound group/topic mention requirement and the success-reply
+  // triggering-sender mention are INDEPENDENT config fields. Both default
+  // true — the byte-identical pre-switch behavior (AGENT_CORE_LARK_UX_PHASE1_V2
+  // semantics). An explicit false disables exactly one activation.
+  requireMentionInGroup: true,
+  autoMentionTriggerSender: true,
   onEvent: null,
   // V2 PREBOUND_ONLY pre-forward gate predicate (programmatically injected by
   // the composition layer, e.g. production-runtime wiring it to
@@ -80,6 +87,13 @@ export const Config = z.object({
   // overrides appId/appSecret inline values. Secrets are never logged.
   credentialsPath: z.string(),
   enabled: z.boolean().default(true),
+  // Drop ordinary (no-mention) group/topic messages at the bridge admission
+  // segment. Default true = the frozen V0/UX behavior.
+  requireMentionInGroup: z.boolean().default(true),
+  // Final switch over the Router success call's autoMentionTriggerSender
+  // intent: false composes NO opts.mentions (markdown / anchoring / body
+  // untouched). Default true = the frozen UX Phase1 behavior.
+  autoMentionTriggerSender: z.boolean().default(true),
 })
 
 function loadCredentials(config) {
@@ -194,7 +208,15 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
      * SDK owns chunking/fallback/retry; this seam adds none.
      */
     async reply(replyTarget, text, opts = {}) {
-      const plan = replyTargetToSdkSend(replyTarget, text, opts?.ux)
+      // AUTO_MENTION_TRIGGER_SENDER config = the FINAL switch over the Router
+      // success call's intent: an explicit `false` composes no opts.mentions —
+      // and ONLY that. Markdown rendering, reply/thread anchoring and the
+      // body stay byte-identical; every caller without the intent is
+      // unaffected either way.
+      const ux = cfg.autoMentionTriggerSender === false && opts?.ux?.autoMentionTriggerSender === true
+        ? { ...opts.ux, autoMentionTriggerSender: false }
+        : opts?.ux
+      const plan = replyTargetToSdkSend(replyTarget, text, ux)
       const result = await channel.send(plan.to, plan.input, plan.opts)
       if (!result?.messageId) {
         // EMPTY_MESSAGE_ID_REJECTION (spec §10): a send that "succeeded"
