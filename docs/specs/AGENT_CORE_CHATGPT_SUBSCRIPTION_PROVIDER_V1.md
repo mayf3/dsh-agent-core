@@ -1,6 +1,9 @@
 ---
 spec_id: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
-status: accepted
+status: superseded
+superseded_by: AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1
+superseded_date: 2026-08-24
+supersede_transaction: AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1 §3.3（whole-authority replacement；本 Spec 含 Amendment 1/2 的历史正文不删改，一并归档为 historical authority）
 amendment: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_SPEC_AMENDMENT
 accepted_reviewed_head: 42cd524
 focused_re_review: PASS
@@ -14,6 +17,13 @@ amendment_2_verdict: READY_TO_ACCEPT_RC8_AMENDMENT
 
 # Agent Core ChatGPT Subscription Provider V1 — 单 Agent Luna 接入（AMEND）
 
+> 生命周期：**superseded**（2026-08-24）；由 `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1`
+> 以 whole-authority 方式完整取代（governance §9.2；方向性反转裁决见该 Spec
+> DEC-001 / ALT-001）。历史 normative meaning 保持不变：含 Amendment 2 的 DSH
+> rc.8 pin（`0.1.0-rc.8 @ 514ab7b`，已由取代 Spec CTR-011 显式 carry-forward）
+> 在内的全部历史裁决归档为 historical authority；当前 agt_cto-agent
+> model-route 权威 = `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1`（accepted）。
+>
 > 性质：**Spec（SPEC ONLY — 本轮只冻结授权边界，不实现）** · 日期：2026-08-18 ·
 > AMEND：2026-08-19 · 仓库：`mayf3/dsh-agent-core`
 > 角色：ChatGPT Subscription Provider Spec Agent

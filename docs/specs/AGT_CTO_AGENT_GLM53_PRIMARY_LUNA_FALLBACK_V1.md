@@ -1,6 +1,18 @@
 ---
 spec_id: AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1
-status: proposed
+status: accepted
+accepted_date: 2026-08-24
+accepted_by: mayf3
+accepted_reviewed_head: 1af5f1be134a52ec2dd0fa953ca0f07f050bcdd3
+accepted_reviewed_spec_blob: b3ca691a136f211677837f5a273638a62bb68655
+sync_merge_before_acceptance: fd58e4b9beb35cc99c2a2c0d7bf6b3087361d069 (ordinary merge of main 73ec666; spec blob byte-identical across merge)
+primary_review: 回退 审计 round 1
+primary_review_result: PASS
+focused_re_review: 回退 聚焦复审
+focused_re_review_result: PASS
+blocker_count: 0
+required_fixes: NONE
+semantic_delta_after_review: NONE
 date: 2026-08-23
 type: implementation-spec (SPEC ONLY — 本轮只冻结授权边界；不实现、不配置、不部署)
 spec_kind: implementation
@@ -8,7 +20,7 @@ authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
 replaces_on_acceptance: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
-supersedes: []
+supersedes: [AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1]
 superseded_by: null
 scope:
   - agt_cto-agent 的 PRIMARY/FALLBACK model-route 政策（whole-authority replacement of AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1）
@@ -31,15 +43,34 @@ references:
 
 # AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1 — CTO Agent GLM-5.3 主路由 + Luna 单一安全回退
 
-> SPEC_STATUS = **proposed**。本文件是 **docs-only whole-authority replacement
-> proposal**：在未来原子 acceptance transaction 中整体取代
-> `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1`（accepted）。在该 transaction
-> 完成前，旧 Spec 仍是唯一现行 model-routing authority；本 Spec 不授予任何
-> implementation / configuration / deployment 权限。
+> SPEC_STATUS = **accepted**（acceptance-finalize 2026-08-24 ·
+> accepted_reviewed_head = 1af5f1be134a52ec2dd0fa953ca0f07f050bcdd3 ·
+> spec blob b3ca691a136f211677837f5a273638a62bb68655 · 回退 审计 round 1 = PASS ·
+> 回退 聚焦复审 = PASS · BLOCKER_COUNT = 0 · REQUIRED_FIXES = NONE ·
+> SEMANTIC_DELTA_AFTER_REVIEW = NONE）。本文件是 **docs-only whole-authority
+> replacement**：2026-08-24 原子 acceptance transaction（§3.3 冻结形态）已整体取代
+> `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1`（现为 superseded）。本 Spec 仍不授予
+> 任何 implementation / configuration / deployment 权限（见下）。
 >
 > 本轮（authoring round）不实现、不配置、不部署：不改任何 packages/ 代码，
 > 不写 agent-model-overrides.json，不执行 OAuth，不复制任何 credential，
 > 不发送 Feishu 消息，不重启任何进程，不 merge。
+>
+> **Acceptance-finalize（2026-08-24，「采纳 执行」round）**：独立两轮审计
+> （回退 审计 round 1、回退 聚焦复审）均在 exact reviewed head
+> `1af5f1be134a52ec2dd0fa953ca0f07f050bcdd3` 给出 PASS（BLOCKER_COUNT = 0；
+> REQUIRED_FIXES = NONE）。acceptance 前的同步 merge（`fd58e4b`，ordinary merge
+> of main `73ec666`）对本文件零字节影响（blob 跨 merge 不变，
+> SEMANTIC_DELTA_AFTER_REVIEW = NONE）。authorized maintainer（mayf3）据此以
+> lifecycle-only 方式执行 §3.3 冻结的原子 whole-authority transaction：本 Spec
+> accepted + supersedes 旧 Provider V1；旧 Spec superseded + backlink（历史正文
+> 含 Amendment 1/2 不删改）；`AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1`
+> 保持独立 accepted，仅 metadata dependency repoint 到本 Spec（providerEnv 四键
+> 契约与 normative body 一字不变）。Accepted 后 `implementation_authority = none`、
+> `production_apply_authority = none` 保持不变：implementation 仍需本 PR 合入
+> main（governance §10 implementation base）且 Q-2（zai 受控实测）关闭；Luna
+> 激活仍被 CTR-008 前置条件阻塞（Q-3 独立就绪轮）；本轮不实现、不配置
+> credential、不部署。
 
 ---
 
@@ -507,3 +538,48 @@ MERGE = NONE
 
 NEXT_TASK = 回退 审计
 ```
+
+## 15. Acceptance-finalize record（2026-08-24「采纳 执行」round 冻结）
+
+```text
+REVIEWED_HEAD_COMMIT = 1af5f1be134a52ec2dd0fa953ca0f07f050bcdd3
+REVIEWED_SPEC_BLOB   = b3ca691a136f211677837f5a273638a62bb68655
+REVIEW_ROUND_1       = 回退 审计 round 1 · PASS
+REVIEW_ROUND_2       = 回退 聚焦复审 · PASS
+BLOCKER_COUNT        = 0
+REQUIRED_FIXES       = NONE
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+  （同步 merge fd58e4b = ordinary merge of main 73ec666，
+    对本文件零字节影响；blob 跨 merge 不变）
+ACCEPTED_BY          = mayf3
+ACCEPTANCE_DATE      = 2026-08-24
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_ONLY（status + provenance + §3.3 事务执行
+  记录；normative rulings 全部 byte-preserved）
+
+SUPERSEDE_TRANSACTION（§3.3 冻结形态，本 commit 原子执行）：
+  NEW.status        = accepted
+  NEW.supersedes    = [ AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1 ]
+  OLD.status        = superseded
+  OLD.superseded_by = AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1
+                      （OLD 历史正文含 Amendment 1/2 不删改，仅 lifecycle
+                        metadata + backlink，归档为 historical authority）
+  PROXY_SEAM_V1     = 保持独立 accepted（不 absorb、不 supersede、status 不变）；
+                      metadata-only dependency repoint：基准/依赖引用 from
+                      AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1 → 本 Spec；
+                      providerEnv 四键契约与 normative body 一字不变
+                      （DEC-008 / Q-1 RESOLVED 2026-08-23）
+  README_INDEX      = docs/specs/README.md 按仓库先例新增 model-route authority 表
+
+IMPLEMENTATION_PERFORMED = NO
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE_PERFORMED = NO（PR #60 保持 OPEN）
+NEXT_TASK = 采纳 审计继续
+```
+
+上文 §14 Final Output 块内 `SPEC_STATUS = proposed`、
+`TASK_STATUS = REVISION_COMPLETE`、`NEXT_TASK = 回退 审计` 等是
+authoring / revision 轮的历史冻结记录，保持原样；acceptance 后的当前状态以
+frontmatter `status: accepted` 与本节 record 为准。
