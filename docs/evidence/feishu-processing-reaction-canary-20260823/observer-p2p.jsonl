@@ -1,0 +1,13 @@
+{"name":"NO_KEEPALIVE_TIMER_ROWS","ok":true}
+{"name":"HEARTBEAT_PRESENT_RUNTIME_ALIVE","ok":true,"heartbeats":23}
+{"name":"canary-20260823-2253-p2p:ONE_TURN_PER_INGRESS","ok":true,"inboundMsgHash":"5fb25fc9e5a7fd32","turnsStarted":1,"turnsFinished":1}
+{"name":"canary-20260823-2253-p2p:CREATE_CALLS_EXACTLY_ONE","ok":true,"msgHash":"5fb25fc9e5a7fd32","creates":1}
+{"name":"canary-20260823-2253-p2p:DELETE_CALLS_EXACTLY_ONE","ok":true,"msgHash":"5fb25fc9e5a7fd32","deletes":1}
+{"name":"canary-20260823-2253-p2p:REPLY_SENT","ok":true,"replyHash":"974bcb916c1962f4"}
+{"name":"canary-20260823-2253-p2p:REPLY_IS_MARKDOWN_INPUT","ok":true}
+{"name":"canary-20260823-2253-p2p:REPLY_NO_AUTO_MENTION","ok":true,"mentionsCount":0}
+{"name":"canary-20260823-2253-p2p:TURN_SETTLED","ok":true,"failurePath":false}
+{"name":"canary-20260823-2253-p2p:EVIDENCE_MATCHES_ID","ok":true,"msgHash":"5fb25fc9e5a7fd32"}
+{"name":"canary-20260823-2253-p2p:TYPING_GONE_AFTER_SETTLE","ok":true,"liveCount":0}
+{"name":"canary-20260823-2253-p2p:INBOUND_MSG_FETCHED","ok":true,"msgType":"text","threadIdPresent":false}
+OBSERVER_RESULT ALL_PASS (12/12)

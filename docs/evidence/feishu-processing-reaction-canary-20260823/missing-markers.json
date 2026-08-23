@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "generatedAt": "2026-08-23T15:33:01.429585+00:00",
+  "claim": "Owner reportedly sent 4 markers (p2p/group/topic/fail, prefix canary-20260823-2253-*)",
+  "observed": "Only the P2P marker reached the runtime (2026-08-23T13:58:21.782Z).",
+  "detection": "The Phase A runtime records INBOUND_MESSAGE on EVERY raw im.message.receive_v1 websocket event BEFORE any admission/gate decision; therefore absence of rows proves the events were never delivered to the app websocket, not that they were gated.",
+  "waiting": "Observer polled the evidence JSONL continuously until 2026-08-23T15:38Z (23:38 local), 45+ minutes past the nominal 22:53 marker time; group/topic/fail markers never appeared.",
+  "p2pMarkerMessageIdHash": "5fb25fc9e5a7fd32",
+  "liveP2pChatScan": "P2P chat history (im.message.list, p2p scope) shows exactly one marker message (canary-20260823-2253-p...) plus its bot reply; no other markers exist there.",
+  "groupHistoryScan": "im.message.list on the two group chats returns 230027 (app lacks im:message.group_msg scope) - cannot independently scan group history; relies on websocket evidence above.",
+  "verdict": "LIVE_GROUP_NO_MENTION_REACTION / LIVE_TOPIC_NO_MENTION_REACTION / LIVE_ERROR_CLEANUP = NOT_OBSERVED (operational gap: human inputs missing), NOT a product failure signal."
+}

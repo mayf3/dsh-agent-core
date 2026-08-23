@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "generatedAt": "2026-08-23T15:33:01.429248+00:00",
+  "source": "runtime-evidence.jsonl (Phase A sanitized JSONL snapshot)",
+  "inboundMessages": 1,
+  "agentTurnsStarted": 1,
+  "agentTurnsFinished": 1,
+  "maxReactionCreateCallsPerTurn": 1,
+  "maxReactionDeleteCallsPerTurn": 1,
+  "periodicReaddCalls": 0,
+  "keepaliveTimerCount": 0,
+  "proofs": {
+    "perMessageReactionCalls": {
+      "5fb25fc9e5a7fd32:create": 1,
+      "5fb25fc9e5a7fd32:delete": 1
+    },
+    "everyReactionCallAdjacentToInbound": true,
+    "heartbeatReactionCountersOnlyMoveWithInbound": "reactionCreate/Delete went 0/0 -> 1/1 exactly once, at the heartbeat after the single inbound",
+    "noReactionCallBetweenSettleAndNow": "no REACTION_API_CALL rows after 2026-08-23T13:58:31.145Z (single-turn observation window)"
+  },
+  "caveat": "Stats proven on ONE live human turn (P2P). Group/topic/fail turns never arrived (see missing-markers.json)."
+}

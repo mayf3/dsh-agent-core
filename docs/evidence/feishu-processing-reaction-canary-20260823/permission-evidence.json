@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "appHash": "a54a3d622dfa2bf9",
+  "emoji": "Typing",
+  "rows": [
+    {
+      "name": "PROBE_MESSAGE_SENT",
+      "ok": true,
+      "at": "2026-08-23T13:52:03.078Z",
+      "msgHash": "011eb89a7f944d60"
+    },
+    {
+      "name": "REACTION_CREATE",
+      "ok": true,
+      "at": "2026-08-23T13:52:03.415Z",
+      "emoji": "Typing",
+      "reactionIdHash": "6703c9e7ce7fa745"
+    },
+    {
+      "name": "REACTION_LIST_AFTER_CREATE",
+      "ok": true,
+      "at": "2026-08-23T13:52:03.768Z",
+      "presentCount": 1
+    },
+    {
+      "name": "REACTION_DELETE",
+      "ok": true,
+      "at": "2026-08-23T13:52:04.109Z"
+    },
+    {
+      "name": "REACTION_LIST_AFTER_DELETE",
+      "ok": true,
+      "at": "2026-08-23T13:52:04.422Z",
+      "afterCount": 0
+    }
+  ]
+}
