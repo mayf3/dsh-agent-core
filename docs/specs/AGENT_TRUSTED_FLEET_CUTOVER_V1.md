@@ -1,6 +1,18 @@
 ---
 spec_id: AGENT_TRUSTED_FLEET_CUTOVER_V1
-status: proposed
+status: accepted
+accepted_date: 2026-08-23
+accepted_by: mayf3
+accepted_reviewed_base: 0fced5bbcc4287eb20ef5f54979ccd8ef31716e8
+accepted_reviewed_spec_commit: eb2189c088d12613a1ba0b55ec59037c62110d07
+accepted_reviewed_spec_blob: 2078a11c2467aeb0bdb5b9e2abe6f8ac033da089
+primary_review: 接管 审计
+primary_review_result: PASS
+current_base_review: 漂移 审计
+current_base_review_result: PASS
+previous_reviewed_base: 6ec83fa7ef0565959f26c7112de423bf5aa65680
+required_fixes: NONE
+semantic_delta_after_review: NONE
 type: bounded-fleet-cutover-spec
 review_status: READY_FOR_INDEPENDENT_REVIEW
 implementation_authority: none
@@ -19,7 +31,7 @@ superseded_authorities_not_reopened:
 
 # Agent Trusted Fleet Cutover V1
 
-> **PROPOSED / DOCS-ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY.**
+> **ACCEPTED / DOCS-ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY.**
 >
 > 本修订（「接管 执行」round，基于 previous head `30ae0f5d9f5f87c0fefda933c04e4e549af0f0f7`，
 > 并已把 current main `6ec83fa7ef0565959f26c7112de423bf5aa65680` 以普通 merge commit 合入）
@@ -30,6 +42,19 @@ superseded_authorities_not_reopened:
 > Principal/Client/Credential/Receipt/Workflow Grant/Forum Grant，不改 `agents.json`，
 > 不写 `primary-workspaces.json`，不改 Binding，不 reload/restart Runtime，
 > 不启用 Scheduler jobs。
+>
+> **Acceptance-finalize（2026-08-23，「同步采纳 执行」round）**：独立「接管 审计」已在
+> exact reviewed head `eb2189c088d12613a1ba0b55ec59037c62110d07`（spec blob
+> `2078a11c2467aeb0bdb5b9e2abe6f8ac033da089`，previous reviewed base
+> `6ec83fa7ef0565959f26c7112de423bf5aa65680`）给出 PASS（REQUIRED_FIXES=NONE）；main
+> 前进至 `0fced5bbcc4287eb20ef5f54979ccd8ef31716e8` 后由独立「漂移 审计」确认该漂移
+> 不影响 reviewed 语义。authorized maintainer 先以普通 merge commit 将 current main
+> 合入本分支（reviewed Spec blob 未改变），再以 lifecycle-only / semantic delta NONE 的
+> acceptance-finalize 将本 Spec 变为 accepted candidate。Accepted 后
+> `implementation_authority = none`、`production_apply_authority = none` 保持不变：
+> `IMPLEMENTATION_AUTHORIZED_NOW = NO`、`PRODUCTION_APPLY_AUTHORIZED_NOW = NO`；
+> 生产接管仍需 PR 合入 main、immutable mapping/runbook、独立 runbook 审计、显式
+> production approval 与 Build in Public first canary。
 
 ## 0. Lifecycle and owner ordering
 
@@ -55,6 +80,26 @@ WORKSPACE_PHASE_BLOCKED_BY_AUTH = NO
 IMPLEMENTATION_AUTHORIZED_NOW = NO
 PRODUCTION_CHANGE = NONE
 NEXT_TASK = 接管 审计
+```
+
+Acceptance binding（2026-08-23 acceptance-finalize 冻结）：
+
+```text
+REVIEWED_SPEC_COMMIT = eb2189c088d12613a1ba0b55ec59037c62110d07
+REVIEWED_SPEC_BLOB = 2078a11c2467aeb0bdb5b9e2abe6f8ac033da089
+PREVIOUS_REVIEWED_BASE = 6ec83fa7ef0565959f26c7112de423bf5aa65680
+CURRENT_REVIEWED_BASE = 0fced5bbcc4287eb20ef5f54979ccd8ef31716e8
+PRIMARY_REVIEW = 接管 审计
+PRIMARY_REVIEW_RESULT = PASS
+CURRENT_BASE_REVIEW = 漂移 审计
+CURRENT_BASE_REVIEW_RESULT = PASS
+REQUIRED_FIXES = NONE
+ACCEPTED_BY = mayf3
+SYNC_MERGE = current main 0fced5bbcc4287eb20ef5f54979ccd8ef31716e8 merged by ordinary merge commit (parent1 = eb2189c088d12613a1ba0b55ec59037c62110d07); reviewed spec blob unchanged
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_ONLY
+IMPLEMENTATION_PERFORMED = NO
+PRODUCTION_CHANGE = NONE
 ```
 
 本文件描述的 “MUST / SHALL / authorized scope” 仅冻结未来 acceptance 与独立 execution
@@ -650,4 +695,28 @@ RUNTIME_RELOAD = NO
 WORKSPACE_FILE_CHANGE = NONE
 SCHEDULER_CHANGE = NONE
 NEXT_TASK = 接管 审计
+```
+
+## 16. Acceptance-finalize record
+
+```text
+STATUS_AFTER_ACCEPTANCE = accepted
+ACCEPTED_BY = mayf3
+REVIEWED_SPEC_COMMIT = eb2189c088d12613a1ba0b55ec59037c62110d07
+REVIEWED_SPEC_BLOB = 2078a11c2467aeb0bdb5b9e2abe6f8ac033da089
+PREVIOUS_REVIEWED_BASE = 6ec83fa7ef0565959f26c7112de423bf5aa65680
+CURRENT_REVIEWED_BASE = 0fced5bbcc4287eb20ef5f54979ccd8ef31716e8
+PRIMARY_REVIEW = 接管 审计 = PASS
+CURRENT_BASE_REVIEW = 漂移 审计 = PASS
+REQUIRED_FIXES = NONE
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_ONLY
+SYNC_MERGE = YES (ordinary merge commit of current main; SPEC_BLOB_CHANGED_BY_SYNC = NO)
+CHANGED_FILES = docs/specs/AGENT_TRUSTED_FLEET_CUTOVER_V1.md only
+IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = none
+PRODUCTION_APPLY_AUTHORITY_AFTER_ACCEPTANCE = none
+IMPLEMENTATION_AUTHORIZED_NOW = NO
+PRODUCTION_APPLY_AUTHORIZED_NOW = NO
+STILL_REQUIRED_BEFORE_PRODUCTION = PR merged into main + immutable mapping/runbook + independent runbook audit + explicit production approval + Build in Public first canary
+NEXT_TASK = 采纳 审计
 ```
