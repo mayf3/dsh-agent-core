@@ -30,7 +30,14 @@ function fakeProcess() {
   })
   proc.child = { stdin: { write: (line) => writes.push(JSON.parse(line)) } }
   const answer = (write, result) => proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', id: write.id, result })}\n`)
-  return { proc, writes, answer }
+  /** Drive the lifecycle to READY over the fake child (fast deadlines). */
+  const readyNow = async () => {
+    const pending = proc.ready(2000)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    answer(writes[0], { registeredProviders: [proc.provider] })
+    return pending
+  }
+  return { proc, writes, answer, readyNow }
 }
 
 test('resolved provider/model are immutable initialize inputs for the process that owns create and resume', async () => {
@@ -50,6 +57,11 @@ test('resolved provider/model are immutable initialize inputs for the process th
     const create = proc.deliver('fresh-session', 'create', {}, 1000)
     answer(writes[1], { messageId: 'create-id' })
     await create
+    wireEvent(proc, 'fresh-session', { type: 'turn/start', data: { turn: 1 } })
+    wireEvent(proc, 'fresh-session', { type: 'user/message', data: { id: 'create-id' } })
+    wireEvent(proc, 'fresh-session', { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } })
+    proc.onStdout(`${JSON.stringify({ method: 'session.status', params: { sessionId: 'fresh-session', status: 'idle' } })}\n`)
+    await new Promise(resolve => setImmediate(resolve))
     const resume = proc.deliver('main', 'resume', {}, 1000)
     answer(writes[2], { messageId: 'resume-id' })
     await resume
@@ -123,11 +135,13 @@ test('providerEnv is immutable per AgentProcess lifetime', () => {
 })
 
 test('provider/account errors are classified without secret echo and never rewrite the route', async () => {
-  const { proc, writes } = fakeProcess()
-  const pending = proc.request('session/prompt', { sessionId: 'main' })
+  const { proc, writes, readyNow } = fakeProcess()
+  await readyNow()
+  const pending = proc.turn('main', 'provider-error', {})
+  await new Promise(resolve => setImmediate(resolve))
   proc.onStdout(`${JSON.stringify({
     jsonrpc: '2.0',
-    id: writes[0].id,
+    id: writes[1].id,
     error: {
       code: 'provider_error',
       message: 'insufficient_quota access_token=secret-token-value',
@@ -170,10 +184,11 @@ function injectFailedTurn(proc, sessionId, messageId, providerError, turn = 1) {
 }
 
 test('real turn/end quota error rejects the turn with provider/account attribution and no empty success', async () => {
-  const { proc, writes, answer } = fakeProcess()
+  const { proc, writes, answer, readyNow } = fakeProcess()
+  await readyNow()
   const pending = proc.turn('main', 'quota test', {}, 2000)
   await new Promise((resolve) => setTimeout(resolve, 0))
-  answer(writes[0], { messageId: 'quota-message' })
+  answer(writes[1], { messageId: 'quota-message' })
   injectFailedTurn(proc, 'main', 'quota-message', { code: 'QUOTA', message: 'insufficient_quota' })
   proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', method: 'session.status', params: { sessionId: 'main', status: 'idle' } })}\n`)
   await assert.rejects(pending, (error) => {
@@ -182,6 +197,8 @@ test('real turn/end quota error rejects the turn with provider/account attributi
     assert.equal(error.layer, 'provider/account')
     assert.equal(error.provider, 'openai-codex')
     assert.equal(error.model, 'gpt-5.6-luna')
+    assert.equal(error.status, 'failed')
+    assert.equal(typeof error.reconciliationHandle, 'string')
     return true
   })
   assert.equal(proc.provider, 'openai-codex')
@@ -197,21 +214,26 @@ test('all frozen runtime classes traverse the real session.event turn/end shape'
     [{ code: 'AUTH_REJECTED', message: 'credential rejected by provider' }, 'provider_runtime_rejection'],
   ]
   for (const [providerError, expected] of cases) {
-    const { proc, writes, answer } = fakeProcess()
+    const { proc, writes, answer, readyNow } = fakeProcess()
+    await readyNow()
     const pending = proc.turn('main', expected, {}, 2000)
     await new Promise((resolve) => setTimeout(resolve, 0))
-    answer(writes[0], { messageId: `message-${expected}` })
+    answer(writes[1], { messageId: `message-${expected}` })
     injectFailedTurn(proc, 'main', `message-${expected}`, providerError)
+    // V2 C-015: `failed` requires exact_terminal_then_idle — the idle
+    // status completes the termination evidence.
+    proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', method: 'session.status', params: { sessionId: 'main', status: 'idle' } })}\n`)
     await assert.rejects(pending, (error) => error.class === expected)
   }
 })
 
 test('turn correlation ignores history, another session and another message', async () => {
-  const { proc, writes, answer } = fakeProcess()
+  const { proc, writes, answer, readyNow } = fakeProcess()
+  await readyNow()
   injectFailedTurn(proc, 'main', 'owned-message', { code: 'QUOTA', message: 'historical quota' }, 1)
   const pending = proc.turn('main', 'owned', {}, 2000)
   await new Promise((resolve) => setTimeout(resolve, 0))
-  answer(writes[0], { messageId: 'owned-message' })
+  answer(writes[1], { messageId: 'owned-message' })
   injectFailedTurn(proc, 'other', 'owned-message', { code: 'QUOTA', message: 'other session quota' }, 2)
   injectFailedTurn(proc, 'main', 'other-message', { code: 'QUOTA', message: 'other message quota' }, 3)
   wireEvent(proc, 'main', { type: 'agent/inbox/spliced', data: { inserted: [{ id: 'owned-message' }] } })
@@ -220,7 +242,10 @@ test('turn correlation ignores history, another session and another message', as
   wireEvent(proc, 'main', { type: 'assistant/message', data: { message: { id: 'answer', content: [{ type: 'text', text: 'owned answer' }] } } })
   wireEvent(proc, 'main', { type: 'turn/end', data: { turn: 4, reason: { kind: 'completed' } } })
   proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', method: 'session.status', params: { sessionId: 'main', status: 'idle' } })}\n`)
-  assert.equal((await pending).reply, 'owned answer')
+  const envelope = await pending
+  assert.equal(envelope.reply, 'owned answer')
+  assert.equal(envelope.status, 'completed')
+  assert.equal(typeof envelope.reconciliationHandle, 'string')
 })
 
 test('async and sync provider errors share full token redaction and never retain raw payloads', async () => {
@@ -231,16 +256,19 @@ test('async and sync provider errors share full token redaction and never retain
     payload: { raw: 'nested-secret' },
   }
   for (const mode of ['sync', 'async']) {
-    const { proc, writes, answer } = fakeProcess()
+    const { proc, writes, answer, readyNow } = fakeProcess()
+    await readyNow()
     let pending
     if (mode === 'sync') {
-      pending = proc.request('session/prompt', { sessionId: 'main' })
-      proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', id: writes[0].id, error: providerError })}\n`)
+      pending = proc.turn('main', 'redact-sync', {}, 2000)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', id: writes[1].id, error: providerError })}\n`)
     } else {
       pending = proc.turn('main', 'redact', {}, 2000)
       await new Promise((resolve) => setTimeout(resolve, 0))
-      answer(writes[0], { messageId: 'redact-message' })
+      answer(writes[1], { messageId: 'redact-message' })
       injectFailedTurn(proc, 'main', 'redact-message', providerError)
+      proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', method: 'session.status', params: { sessionId: 'main', status: 'idle' } })}\n`)
     }
     await assert.rejects(pending, (error) => {
       const exposed = JSON.stringify({ message: error.message, ...error })

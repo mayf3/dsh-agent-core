@@ -60,15 +60,27 @@ class FakeProc {
 
   async deliver(sessionId, text) {
     this.deliveries.push({ sessionId, text })
-    return { accepted: true, sessionId, messageId: `msg-${this.deliveries.length}` }
+    return {
+      accepted: true, sessionId, messageId: `msg-${this.deliveries.length}`,
+      reconciliationHandle: `turn:deliver-${this.deliveries.length}`, evidence: { promptReceipt: 'accepted' },
+    }
   }
 
   async turn(sessionId, text) {
     this.turns.push({ sessionId, text })
-    return { reply: `TURNED:${text}`, ms: 1, promptMs: 1, messageId: `m${this.turns.length}` }
+    return {
+      reply: `TURNED:${text}`, ms: 1, promptMs: 1, messageId: `m${this.turns.length}`,
+      reconciliationHandle: `turn:scheduled-${this.turns.length}`, evidence: { terminationEvidence: 'exact_terminal_then_idle' },
+    }
   }
 
-  async shutdown() {}
+  async shutdown() {
+    if (this.exit === undefined) {
+      this.exit = { code: 0, signal: null }
+      this.exitResolve?.(this.exit)
+    }
+    return this.exit
+  }
 
   kill() {
     this.exit = { code: 9, signal: 'SIGKILL' }
@@ -148,12 +160,15 @@ test('notification ingress delivers over the frozen contract into the (fake) age
   const accepted = await ok.json()
   assert.equal(accepted.accepted, true)
   assert.equal(accepted.sessionId, 'main')
+  assert.equal(accepted.reconciliationHandle, 'turn:deliver-1')
+  assert.deepEqual(accepted.evidence, { promptReceipt: 'accepted' })
   assert.equal(spawned.length, 1, 'one agent process started')
   assert.deepEqual(spawned[0].deliveries.at(-1), { sessionId: 'main', text: 'hello production' })
 
   // Admission evidence line for the accepted deliver.
   const evidence = readFileSync(layout.evidenceLog, 'utf8').trim().split('\n').map((l) => JSON.parse(l))
-  assert.ok(evidence.some((e) => e.kind === 'deliver' && e.requestId === 'req-1' && e.sessionId === 'main'))
+  assert.ok(evidence.some((e) => e.kind === 'deliver' && e.requestId === 'req-1' && e.sessionId === 'main'
+    && e.reconciliationHandle === 'turn:deliver-1' && e.evidence?.promptReceipt === 'accepted'))
 })
 
 test('scheduler engine consumes a job from the production store through the router seam', async (t) => {
@@ -194,6 +209,51 @@ test('scheduler engine consumes a job from the production store through the rout
   }
   assert.ok(spawned[0]?.turns.some((turn) => turn.text === 'scheduled hello'), 'job executed through the router invoker into a turn')
   assert.ok(existsSync(layout.runsLog), 'run log persisted under the production root')
+  const evidence = readFileSync(layout.evidenceLog, 'utf8').trim().split('\n').map(line => JSON.parse(line))
+  assert.ok(evidence.some(row => row.kind === 'invocation' && row.reconciliationHandle === 'turn:scheduled-1'
+    && row.evidence?.terminationEvidence === 'exact_terminal_then_idle'))
+})
+
+test('B15 production evidence preserves scheduled outcome_unknown reconciliation data', async (t) => {
+  const { layout } = await seedRuntime(t)
+  const runtime = await composeProductionRuntime({
+    layout,
+    productApi: { enabled: false, port: 0 },
+    notificationIngress: { enabled: false, port: 0 },
+    processFactory: (opts) => {
+      const proc = new FakeProc(opts)
+      proc.turn = async () => {
+        throw Object.assign(new Error('scheduled outcome unknown'), {
+          status: 'outcome_unknown', envelope: 'outcome_unknown', reconciliationHandle: 'turn:runtime-unknown',
+          deadlineAtWallMs: 4242, evidence: { source: 'turn_deadline_exceeded' },
+        })
+      }
+      return proc
+    },
+    log: silentLog,
+    tickMs: 25,
+  })
+  t.after(() => runtime.stop())
+  const { normalizeJob } = await import('../../scheduler/src/job-model.js')
+  const job = normalizeJob({
+    name: 'unknown-evidence-job', agentId: AGT_ID,
+    schedule: { kind: 'at', at: new Date(Date.now() + 50).toISOString() },
+    payload: { message: 'unknown' }, sessionTarget: 'main', delivery: { mode: 'none' },
+  })
+  job.state.nextRunAtMs = Date.now() + 50
+  await runtime.store.mutate((jobs) => { jobs.push(job); return { value: job } })
+  await runtime.start()
+  const deadline = Date.now() + 5000
+  let row
+  while (Date.now() < deadline) {
+    const evidence = readFileSync(layout.evidenceLog, 'utf8').trim().split('\n').map(line => JSON.parse(line))
+    row = evidence.find(item => item.kind === 'invocation' && item.reconciliationHandle === 'turn:runtime-unknown')
+    if (row !== undefined) break
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+  assert.equal(row?.status, 'outcome_unknown')
+  assert.equal(row?.deadlineAtWallMs, 4242)
+  assert.deepEqual(row?.evidence, { source: 'turn_deadline_exceeded' })
 })
 
 test('graceful stop closes the HTTP surfaces and writes stopped-able state', async (t) => {
