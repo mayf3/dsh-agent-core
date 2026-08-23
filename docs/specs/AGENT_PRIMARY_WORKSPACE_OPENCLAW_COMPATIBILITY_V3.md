@@ -1,7 +1,15 @@
 ---
 spec_id: AGENT_PRIMARY_WORKSPACE_OPENCLAW_COMPATIBILITY_V3
-status: proposed
+status: accepted
 date: 2026-08-23
+accepted_date: 2026-08-23
+accepted_by: mayf3
+accepted_reviewed_base: 622cb7b6bae7b0b5a9a8713bb5a843ad6a7dc5f1
+accepted_reviewed_spec_commit: 401962beccdebb94e0f1ddc062b3d3f7efb49b0a
+final_audit: 复用 审计
+final_audit_result: PASS
+required_fixes: NONE
+semantic_delta_after_review: NONE
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -16,12 +24,13 @@ governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
   - AGENT_WORKSPACE_SESSION_MODEL_V2
 external_authorities: []
-supersedes: []
+supersedes:
+  - AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2
 superseded_by: null
 owners:
   - mayf3
 references:
-  - docs/specs/AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2.md (current accepted authority; replaced whole by this Spec only in the future atomic acceptance transaction; its accepted blob is carried by V2 acceptance-finalize commit 261a80e66e52bf60d43980e9d22fe37dc793e5be and is byte-identical to current main)
+  - docs/specs/AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2.md (superseded by this Spec in the atomic acceptance transaction; its accepted blob is carried by V2 acceptance-finalize commit 261a80e66e52bf60d43980e9d22fe37dc793e5be and is byte-identical to current main)
   - docs/specs/AGENT_PRIMARY_WORKSPACE_IMPORT_V1.md (superseded historical adopt-in-place authority; historical record only; its superseded_by backlink to V2 is not rewritten)
   - PR #47 AGENT_TRUSTED_FLEET_CUTOVER_V1 at 30ae0f5d9f5f87c0fefda933c04e4e549af0f0f7 (proposed child planning input; not authority)
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md (accepted; product model, path-agnostic)
@@ -30,14 +39,22 @@ references:
 
 # AGENT_PRIMARY_WORKSPACE_OPENCLAW_COMPATIBILITY_V3 — Historical OpenClaw Workspace 原地直接复用（whole-authority replacement）
 
-> **PROPOSED / DOCS-ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY YET.**
+> **ACCEPTED / DOCS-ONLY / IMPLEMENTATION BY BOUNDED CONTRACTS ONLY / NO PRODUCTION APPLY AUTHORITY.**
 >
-> 本 Spec 是 `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2`（current accepted Workspace
-> cutover/import authority）的完整、自包含、whole-authority replacement。Owner 已于
+> 本 Spec 是 `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2`（Workspace cutover/import
+> authority，已在本次原子 acceptance transaction 中被本 Spec 整体取代）的完整、自包含、
+> whole-authority replacement。Owner 已于
 > 2026-08-23 作出最终决定（§1）：Agent Core 接管历史 OpenClaw Agent 的运行职责，但
 > exact 86 Agent 继续直接使用原 OpenClaw Workspace 路径——不复制、不导入、不建立替代
 > Workspace。该决定与 V2 的核心语义（Trusted Runtime 新建 primary Workspace、historical
 > path 仅作 source、curated manifest 复制）直接冲突，因此不得 AMEND V2，必须整体替换。
+>
+> 独立「复用 审计」已对 exact reviewed head
+> `401962beccdebb94e0f1ddc062b3d3f7efb49b0a`（reviewed base
+> `622cb7b6bae7b0b5a9a8713bb5a843ad6a7dc5f1`）给出 PASS（REQUIRED_FIXES=NONE）；
+> authorized maintainer 随后以 lifecycle-only / semantic delta NONE 执行 §4.2 的原子
+> acceptance transaction。V3 在该 accepted snapshot 进入 `main` 后成为 Current
+> Workspace Authority；V2 superseded 并 backlink；V1 保持 superseded。
 >
 > Revision 1（2026-08-23，"复用 执行" amendment round，基线 head
 > `0a0ce92729107726787cf84f467b77e00fae1185`）：关闭两轮"复用 审计"发现的全部问题——
@@ -59,7 +76,7 @@ references:
 > 不读写任何 production Workspace、不修改 Agent Definition / Binding / production、
 > 不修改 V2 / V1 lifecycle、不修改 PR #47、不 accept、不 merge。
 
-## 0. Historical authoring result
+## 0. Historical authoring result and acceptance record
 
 ```text
 TASK_NAME = 复用 执行
@@ -79,8 +96,21 @@ NEXT_TASK = 复用 审计
 
 本 code block 是 reviewed authoring head 的历史记录。Authoring round 1 head =
 `0a0ce92729107726787cf84f467b77e00fae1185`；本 Revision 1 在其之上以单个 docs-only
-fix commit 关闭两轮审计发现。Acceptance binding 在未来 acceptance transaction 中
-另行冻结（§4.2）。
+fix commit 关闭两轮审计发现。Acceptance binding 已在 acceptance transaction（§4.2）
+中冻结：
+
+```text
+REVIEWED_BASE_COMMIT = 622cb7b6bae7b0b5a9a8713bb5a843ad6a7dc5f1
+REVIEWED_SPEC_COMMIT = 401962beccdebb94e0f1ddc062b3d3f7efb49b0a
+REVIEW_NAME = 复用 审计
+REVIEW_RESULT = PASS
+REQUIRED_FIXES = NONE
+ACCEPTED_BY = mayf3
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_ONLY
+IMPLEMENTATION_PERFORMED = NO
+PRODUCTION_CHANGE = NONE
+```
 
 ## 1. Owner ruling (frozen, verbatim)
 
@@ -223,7 +253,8 @@ conversation Workspace、one-Agent/multiple-Workspace 提供先例或 API author
 ```text
 Repository governance      = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0 (accepted)
 Workspace product model    = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted decision; path-agnostic)
-Current workspace authority= AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2 (accepted; to be replaced whole by this Spec)
+Current workspace authority= AGENT_PRIMARY_WORKSPACE_OPENCLAW_COMPATIBILITY_V3 (this Spec, accepted)
+Superseded workspace authority= AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2 (superseded by this Spec; backlink to V3)
 Superseded historical      = AGENT_PRIMARY_WORKSPACE_IMPORT_V1 (stays superseded; backlink to V2 unchanged)
 Proposed child             = AGENT_TRUSTED_FLEET_CUTOVER_V1 (PR #47 at 30ae0f5; planning input, not authority)
 Scheduler authority line   = SCHEDULER_OCCURRENCE_OUTCOME_V2 (accepted decision; §9 boundary only)
@@ -234,9 +265,10 @@ Exact path authority       = primary-workspaces.json (deployment-owned productio
 Memory、Session cwd 语义，不固定 Workspace 的物理路径位置，因此 V3 无需替换该 decision；
 V3 下 one Agent 仍恰好有一个 primary Workspace（即其 historical path）。
 
-### 4.2 Atomic whole-authority acceptance transaction（future）
+### 4.2 Atomic whole-authority acceptance transaction
 
-本 Spec accepted 时，authorized maintainer 必须在同一份 docs-only change 中原子完成：
+独立「复用 审计」已对 exact reviewed head 给出 PASS；authorized maintainer 已在同一份
+docs-only acceptance change 中原子完成：
 
 ```text
 AGENT_PRIMARY_WORKSPACE_OPENCLAW_COMPATIBILITY_V3.status: proposed -> accepted
@@ -612,11 +644,11 @@ production apply。该 revision 是独立 downstream task，本轮不执行。
 
 ### CTR-OW-012 — Authority and production gates
 
-本 Spec 在 proposed 阶段不授权任何 implementation 或 production 动作。Accepted 后
+本 Spec accepted 前不授权任何 implementation 或 production 动作。Accepted 后
 `implementation_authority: contracts` 激活，但 production apply 仍需 §4.3 全部条件 +
-独立 production run approval。本 authoring/amendment round：只修改本 Spec 文件；不修改
-V2 / V1 lifecycle；不修改 PR #47；不修改产品代码；不读写 production Workspace；
-不 accept、不 merge。
+独立 production run approval。本 acceptance-finalize round：只修改 V3/V2 lifecycle
+metadata、backlinks 与 Spec index；不修改 V1 lifecycle；不修改 PR #47；不修改产品
+代码；不读写 production Workspace；不 merge。
 
 ## 6. Current State
 
@@ -895,10 +927,11 @@ workspace paths 已由 PR #47 pinned roster + 本 Spec CTR-OW-001 的 immutable 
 ### ACC-OW-001 — Whole-authority lifecycle
 
 - Contracts: `CTR-OW-012`
-- Method: inspect reviewed authoring head 与未来 atomic acceptance transaction。
+- Method: inspect reviewed authoring head 与本次 atomic acceptance transaction。
 - Expected: V3 proposed 阶段零 authority；acceptance 原子链接 V3↔V2、只留 V3
-  accepted/current、记录 `SEMANTIC_DELTA_AFTER_REVIEW = NONE`；本轮 changed files 只有
-  本 Spec 一个文件。
+  accepted/current、记录 `SEMANTIC_DELTA_AFTER_REVIEW = NONE`；authoring/amendment
+  round changed files 只有本 Spec 一个文件，acceptance-finalize changed files 只有
+  V3 + V2 + docs/specs/README.md 三个文件。
 - Failure: parallel accepted authorities、缺失 backlink、任何 implementation/product/
   production/workspace-file 变更。
 
@@ -1114,4 +1147,30 @@ ACCEPT_OR_MERGE = NO
 PUBLISH = single fast-forward push to spec/agent-primary-workspace-openclaw-compat-v3 (PR #55); no force-push, no rebase, no second PR
 VALIDATION = git diff --check / verify_governance.py / npm run verify:structure
 NEXT_TASK = 复用 审计
+```
+
+## 16. Acceptance-finalize boundary
+
+```text
+DOCS_ONLY = YES
+LIFECYCLE_FILES = V3 + V2 + docs/specs/README.md only
+V3_STATUS_CHANGE = proposed -> accepted
+V2_STATUS_CHANGE = accepted -> superseded (superseded_by = V3; supersedes/backlink history preserved)
+V1_LIFECYCLE_CHANGE = NONE (stays superseded; backlink to V2 not rewritten)
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+CONTRACT_COUNT = 12
+ACCEPTANCE_COUNT = 10
+DECISION_COUNT = 9
+IMPLEMENTATION = NONE
+WORKSPACE_FILE_CHANGE = NONE
+AGENTS_JSON_CHANGE = NONE
+PRIMARY_WORKSPACES_CHANGE = NONE
+BINDING_CHANGE = NONE
+RUNTIME_RELOAD = NO
+PRODUCTION_APPLY = NONE
+IMPLEMENTATION_AUTHORITY_AFTER_ACCEPTANCE = contracts
+PRODUCTION_APPLY_AUTHORITY = none
+PRODUCTION_APPLY_ALLOWED_NOW = NO
+NEXT_GATE = PR #47 revision per CTR-OW-011 + independent implementation/runbook + production approval
+NEXT_TASK = 采纳 审计
 ```

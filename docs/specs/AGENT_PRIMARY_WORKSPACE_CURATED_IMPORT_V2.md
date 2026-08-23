@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2
-status: accepted
+status: superseded
 date: 2026-08-22
 accepted_date: 2026-08-22
 accepted_by: mayf3
@@ -10,6 +10,7 @@ final_audit: 空间 审计
 final_audit_result: PASS
 required_fixes: NONE
 semantic_delta_after_review: NONE
+superseded_date: 2026-08-23
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
@@ -24,7 +25,7 @@ governed_by:
 external_authorities: []
 supersedes:
   - AGENT_PRIMARY_WORKSPACE_IMPORT_V1
-superseded_by: null
+superseded_by: AGENT_PRIMARY_WORKSPACE_OPENCLAW_COMPATIBILITY_V3
 owners:
   - mayf3
 references:
@@ -35,13 +36,19 @@ references:
 
 # AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2 — Trusted Fleet 一次性 curated Workspace import（whole-authority replacement）
 
-> **ACCEPTED / DOCS-ONLY / NO IMPLEMENTATION OR PRODUCTION AUTHORITY.**
+> **SUPERSEDED / DOCS-ONLY / HISTORICAL AUTHORITY.**
 >
 > 本 Spec 是 `AGENT_PRIMARY_WORKSPACE_IMPORT_V1` 的完整、自包含、whole-authority
 > replacement。独立 focused review 在 exact head
 > `ae77eccf242d3b7401bb8110d4496897cc807ca7` 给出 PASS（REQUIRED_FIXES=NONE）；
 > authorized maintainer 随后以 lifecycle-only / semantic delta NONE 执行 §3.2 的原子
 > acceptance transaction。V2 在该 accepted snapshot 进入 `main` 后成为 Current Authority。
+>
+> 2026-08-23 supersession：`AGENT_PRIMARY_WORKSPACE_OPENCLAW_COMPATIBILITY_V3` 在其
+> 原子 acceptance transaction 中 whole-authority 取代本 Spec（V3 accepted / current；
+> V2 superseded，`superseded_by` backlink = V3）。本文件保留为历史 authority，其原有
+> normative meaning 不改写；该 lifecycle transition 不实现 Workspace migration、不执行
+> production apply。
 >
 > Acceptance-finalize 只修改 authority/lifecycle metadata、backlinks 与 index；不实现、
 > 不读取或写入 production data、不 copy Workspace、不 provision home、不 reload/restart
