@@ -47,16 +47,20 @@ authority 的最大允许范围；在本文件仍为 `proposed` 且 `implementat
 
 ## 1. Pinned authority graph
 
-开工前已在 `origin/main@6df9df8cae64c0768b29a4267258af67535daae8`
-重新核对以下 revisions 均为 main ancestors：
+开工前已在 `origin/main@622cb7b6bae7b0b5a9a8713bb5a843ad6a7dc5f1`
+逐项核对每个 revision 的 main ancestry 与角色，按 exact 类别分类（不存在、也不得再使用
+任何 blanket “全部均为 main ancestors” 的陈述）：
 
-| Authority / implementation | Exact revision | Status and relationship |
+| Authority / implementation | Exact revision | Per-revision classification |
 |---|---|---|
-| `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2` | acceptance-finalize/main revision `261a80e66e52bf60d43980e9d22fe37dc793e5be`; independently reviewed semantic revision `ae77eccf242d3b7401bb8110d4496897cc807ca7` | accepted/current whole-authority Workspace replacement; REUSE; its own `implementation_authority=none` is preserved |
-| `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1` Amendment 6 | current accepted revision / file last change `d83a2ff0e9644611707d7481ef88b4d7d49fb68e`; reviewed semantic revision `5d1285195f8c2e3eb88ea606be09671b074f68d4` | accepted Phase-A clean-bootstrap authority; REUSE only |
-| Phase-A implementation, PR #17 | final merged implementation head `83d10b8ad8d10595d18c190190ff99f9cfcd5185`; merge commit `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6` | present on main; exact clean-bootstrap implementation baseline |
-| Phase-A trusted-store hardening | `d8cb1b0d2536c424653bd514486490ea16208c56` | present on main; current post-merge UTF-8/atomic replacement hardening applied to the Phase-A store writer |
-| this Spec | Draft PR #47 exact head after this revision | proposed child; grants no current implementation or production authority |
+| `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2` | acceptance-finalize revision `261a80e66e52bf60d43980e9d22fe37dc793e5be` | ACCEPTED_REVISION_ON_MAIN；MAIN_ANCESTOR = YES — accepted/current whole-authority Workspace replacement；REUSE；its own `implementation_authority=none` is preserved |
+| `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2` (same authority) | independently reviewed semantic revision `ae77eccf242d3b7401bb8110d4496897cc807ca7` | REVIEWED_SEMANTIC_PROVENANCE_ONLY；MAIN_ANCESTOR = YES — review provenance for the semantic rulings later acceptance-finalized by `261a80e`; not itself the accepted revision |
+| `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1` Amendment 6 | current accepted revision / file last change `d83a2ff0e9644611707d7481ef88b4d7d49fb68e` | ACCEPTED_REVISION_ON_MAIN；MAIN_ANCESTOR = YES — accepted Phase-A clean-bootstrap authority；REUSE only |
+| `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1` (same authority) | reviewed semantic head `5d1285195f8c2e3eb88ea606be09671b074f68d4` | REVIEWED_SEMANTIC_PROVENANCE_ONLY；MAIN_ANCESTOR = NO；IMPLEMENTATION_AUTHORITY_SOURCE = NO — independent review provenance only；MUST NOT be cited as an accepted revision, main ancestor, or implementation-authority source |
+| Phase-A implementation, PR #17 | final merged implementation head `83d10b8ad8d10595d18c190190ff99f9cfcd5185` | MERGED_IMPLEMENTATION_HEAD；MAIN_ANCESTOR = YES — exact clean-bootstrap implementation baseline |
+| Phase-A implementation, PR #17 (merge) | merge commit `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6` | MERGE_COMMIT_ON_MAIN；MAIN_ANCESTOR = YES |
+| Phase-A trusted-store hardening | `d8cb1b0d2536c424653bd514486490ea16208c56` | MERGED_POST_IMPLEMENTATION_HARDENING_ON_MAIN；MAIN_ANCESTOR = YES — current post-merge UTF-8/atomic replacement hardening applied to the Phase-A store writer |
+| this Spec | Draft PR #47 exact head after this revision | proposed child；grants no current implementation or production authority |
 
 Authority consequences:
 
@@ -224,8 +228,19 @@ OLD_USER_RUNTIME_ENABLE = FORBIDDEN
 GENERAL_MIGRATION_API = FORBIDDEN
 BLIND_WORKSPACE_COPY = FORBIDDEN
 CONFLICTING_BINDING_OVERWRITE = FORBIDDEN
+AUTO_BIND = FORBIDDEN
+ACTIVE_PRODUCTION_RUNTIME_COUNT = 1
+ACTIVE_PRODUCTION_RUNTIME_USER = authsvc
+SOLE_TRUSTED_RUNTIME_AUTHORITY = authsvc
+OLD_USER_RUNTIME_RUNNING = NO
+DUAL_RUNTIME_WRITERS = FORBIDDEN
 RERUN_AFTER_SUCCESS = NOOP
 ```
+
+The sole active production Runtime authority is `authsvc`. No USER (non-`authsvc`) Runtime may be
+running, and no second Runtime writer may exist on Binding or Trusted state. Phase 1 contracts
+enforce the §5.4.1 Binding restore preflight: any unsatisfied item yields `BINDING_WRITES = 0`
+and `RESULT = FAIL_LOUD`.
 
 No secret, token, credential, auth/session state, runtime state, legacy profile, or legacy settings
 may be copied into Trusted state. Every side effect must be exact-roster bounded, plan-digest bound,
@@ -316,9 +331,38 @@ Effective workspace = resolve the Agent's Trusted primary Workspace by the accep
 
 No historical/external Workspace path may be written into a Binding. Existing equivalent target
 Binding is `NOOP`; a non-equivalent occupied target is `BINDING_CONFLICT` and remains unchanged.
-The two already-known conflicting bindings (`feishu:oc_92332...` and `feishu:oc_9dd74...`) stay
-frozen for separate Binding authority: no auto-overwrite, delete, reassign, merge, or fallback.
-They are not allowed to widen or weaken the exact Phase 1 plan.
+The two already-known conflicting bindings stay frozen verbatim for separate Binding authority:
+
+```text
+CONFLICTING_BINDING_KEYS =
+  feishu:oc_92332c45c1cac2ef89857abfee8ed762
+  feishu:oc_9dd74b9ed02ce216951260a381eb502d
+CONFLICTING_BINDING_COUNT = 2
+CONFLICTING_BINDING_OVERWRITE = FORBIDDEN
+CONFLICTING_BINDING_AUTO_REPAIR = FORBIDDEN
+CONFLICTING_BINDINGS_CHANGED = 0
+```
+
+No auto-overwrite, delete, reassign, merge, or fallback. These two exact keys MUST NOT enter the
+exact `OLD_ONLY` restoration set of this section — they are excluded from Binding restore, not
+members of the exact Phase 1 plan — and they are not allowed to widen or weaken that plan.
+
+### 5.4.1 Binding restore Runtime preflight
+
+Before any Binding restore the executing plan MUST verify and hold all of:
+
+- exactly one production Runtime is active (`ACTIVE_PRODUCTION_RUNTIME_COUNT = 1`);
+- that Runtime's user is `authsvc` (`ACTIVE_PRODUCTION_RUNTIME_USER = authsvc`);
+- the old USER Runtime is stopped (`OLD_USER_RUNTIME_RUNNING = NO`);
+- auto-bind is not enabled (`AUTO_BIND = FORBIDDEN`);
+- every Binding row comes only from the exact reviewed migration plan.
+
+If any item is unsatisfied:
+
+```text
+BINDING_WRITES = 0
+RESULT = FAIL_LOUD
+```
 
 First canary Binding is pinned exactly:
 
@@ -473,23 +517,39 @@ Independent `注册 审计` must verify at least:
 1. frontmatter remains `status: proposed` and `implementation_authority: none`;
 2. exact §3 roster count is 86, unique, digest-matches, and includes the canary;
 3. both supplied inventory digests match and all 86 rows are Class A;
-4. accepted Workspace authority, accepted Phase-A authority, merged implementation head/merge, and
-   current hardening revision are exact main ancestors;
+4. authority ancestry is classified per exact revision with no blanket all-ancestors statement:
+   `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1` accepted revision `d83a2ff0…` is
+   ACCEPTED_REVISION_ON_MAIN (MAIN_ANCESTOR = YES) while its reviewed semantic head `5d12851…` is
+   REVIEWED_SEMANTIC_PROVENANCE_ONLY (MAIN_ANCESTOR = NO, IMPLEMENTATION_AUTHORITY_SOURCE = NO);
+   `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2` accepted revision `261a80e…` is
+   ACCEPTED_REVISION_ON_MAIN and its reviewed semantic revision `ae77ecc…` is
+   REVIEWED_SEMANTIC_PROVENANCE_ONLY (both MAIN_ANCESTOR = YES); Phase-A `83d10b8…` is
+   MERGED_IMPLEMENTATION_HEAD, `79cc8e8…` is MERGE_COMMIT_ON_MAIN, and `d8cb1b0…` is merged
+   post-implementation hardening on main;
 5. no obsolete blanket authority-insufficiency, credential Phase-B, or parent-route blocker remains normative;
 6. Phase 1 includes account/credential/Definition/home/profile/settings/Workspace/spawn/Binding/
    real-Feishu reply and exact rerun NOOP;
 7. persona import is narrowed to the five listed root files and retains V2 safety Contracts;
-8. Binding workspace is null/primary-rule and the two known conflicts remain frozen;
+8. Binding workspace is null/primary-rule; the two known conflicts are frozen as exactly the full
+   untruncated keys `feishu:oc_92332c45c1cac2ef89857abfee8ed762` and
+   `feishu:oc_9dd74b9ed02ce216951260a381eb502d` with `CONFLICTING_BINDING_COUNT = 2`,
+   overwrite and auto-repair `FORBIDDEN`, `CONFLICTING_BINDINGS_CHANGED = 0`, and both keys
+   excluded from the exact `OLD_ONLY` restoration set;
 9. Grant unknown is Phase-2-only and cannot block Phase 1;
 10. allowed Phase 2 scopes are exact and every forbidden scope/mechanism is explicit;
-11. the diff is docs-only and contains no implementation, acceptance, merge, or production apply.
+11. the diff is docs-only and contains no implementation, acceptance, merge, or production apply;
+12. `AUTO_BIND = FORBIDDEN`, `ACTIVE_PRODUCTION_RUNTIME_COUNT = 1` with
+    `ACTIVE_PRODUCTION_RUNTIME_USER = authsvc`, `SOLE_TRUSTED_RUNTIME_AUTHORITY = authsvc`,
+    `OLD_USER_RUNTIME_RUNNING = NO`, and `DUAL_RUNTIME_WRITERS = FORBIDDEN` are frozen in Global
+    boundaries and Phase 1 contracts, and any unsatisfied §5.4.1 preflight item yields
+    `BINDING_WRITES = 0` and `RESULT = FAIL_LOUD`.
 
 Failure of any item returns `FIX_REQUIRED`; it does not authorize an apply.
 
 ## 9. Fixed review handoff
 
 ```text
-OLD_HEAD = b0feb030f315cf8565974b8ce0c9064b679d3b15
+OLD_HEAD = 41b63f1ff16623f9960fcb3232488bd75fa232d7
 NEW_HEAD = <commit created by this docs-only revision>
 
 EXACT_86_FROZEN = YES
@@ -501,6 +561,11 @@ PHASE_A_AUTHORITY_PRESENT = YES
 CLEAN_BOOTSTRAP_COUNT = 86
 PHASE_B_REQUIRED_COUNT = 0
 PARENT_CLIENT_ROUTE_BLOCKED_COUNT = 0
+
+FULL_CONFLICT_BINDING_KEYS = YES
+AUTO_BIND_FORBIDDEN = YES
+SOLE_AUTHSVC_RUNTIME_REQUIRED = YES
+ANCESTRY_PER_REVISION_CLASSIFIED = YES
 
 PHASE_1_BASIC_RESTORE_FROZEN = YES
 PHASE_2_GRANT_RESTORE_FROZEN = YES
