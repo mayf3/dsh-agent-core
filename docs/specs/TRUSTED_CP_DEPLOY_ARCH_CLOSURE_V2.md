@@ -31,7 +31,7 @@ references:
 
 # TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2 — Trusted CP 跨架构依赖闭包部署收口（staging + 十二门 + 原子换树）
 
-> 状态：**proposed**（authoring round；SPEC ONLY — 本轮不实现、不修改任何脚本、不触 production、不 deploy、不 restart）。
+> 状态：**proposed**（authoring round；SPEC ONLY — 本轮不实现、不修改任何脚本、不修改 Harness、不触 production、不 deploy、不 restart）。
 > 本 Spec 授权的是**未来**对 trusted CP 部署流程的修复；`implementation_authority = none`、
 > `production_apply_authority = none`，接受前不构成任何实现或生产应用许可。
 > 作者化基座：`origin/main` = `0a6e060913e12693142fb0759f35f239b2ef429a`（2026-08-23 fetch 复核）。
@@ -65,8 +65,11 @@ CONTRACT_COUNT = 18
 CONTRACTS_WITH_ACCEPTANCE = 18
 AUTHORING_READY_FOR_REVIEW = YES
 
+AUTHORITY_FORM = LEGAL_CHILD_AUTHORITY (non-conflicting supplement; NOT whole-authority replacement; §3.0)
+
 PRODUCT_CODE_CHANGE = NONE
 SCRIPT_CHANGE = NONE
+HARNESS_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 ```
 
@@ -123,10 +126,28 @@ KERNEL_CHANGE = NONE
   prune 时机、failure semantics）；超出加法扩展的部分须走该 Spec 自身的 amendment；
 - universal / 跨机构建闭包（ALT-002/003 已否）；
 - 新部署 service / DB / dashboard / rollback framework 重写；
-- G7 turn 触碰生产 binding / Feishu 投递（只允许 acceptance-only model override seam）；
-- 本轮（authoring round）对上述任何文件的修改。
+- G7 turn 触碰生产 binding / Feishu 投递（只允许 acceptance-only model override seam），
+  且该回合 MUST NOT 调用任何 tool（no-tool turn，见 CTR-DEP-007）；
+- 修改 harness / vendor 源（策略 A 的构造性优点即零 vendor 改动；实现 MUST NOT 引入
+  `pnpm-workspace.yaml` / `supportedArchitectures` 类源注入——那是被否决的 ALT-001
+  路线）；
+- 本轮（authoring round）对上述任何文件（含 Harness）的修改。
 
 ## 3. Authority and dependencies
+
+### 3.0 Authority 形式选择（whole-authority replacement vs 合法 child authority）
+
+按治理要求在两种合法形式中**显式选择其一**：
+
+- **whole-authority replacement**：不选。V2 若要整体替换 hardening V1 report，就必须
+ 完整重述其全部安全语义（TRUSTED_NODE、505/502、审计矩阵……），任何遗漏都等于
+  无声删除既有权威义务——这正是 partial supersession 的风险面；且 V2 的目标是
+  **加门与换流程**，不是重定义信任边界。
+- **合法 child authority（non-conflicting supplement）**：**选定**。V2 是部署流程域内
+  的新（NEW）、非冲突 authority：不删除、不收窄、不反转任何既有 authority 的
+  normative meaning；与既有 authority 的全部差异为穷举加法（§9 Contracts），并以
+  CTR-DEP-017/018 两条 preservation contract 把既有语义钉为对 V2 实现的硬约束。
+  `supersedes = []`、无 backlink 改写、PARTIAL_SUPERSESSION = NONE。
 
 ### 3.1 当前部署 authority 的识别（本轮前置义务）
 
@@ -175,6 +196,9 @@ scope 的**新**（NEW）authority。
 
 - 该 Spec 的 failure semantics（失败不 prune、rollback-used 保持 KEEP）被 V2 的
   自动回滚（CTR-DEP-012/010）**沿用而非改写**：回滚后 prune 禁忌不变。
+- **backup 元数据强化为加法**：该 Spec 允许 `source_commit = unknown` 兜底并禁止
+  successor 归属；V2 通过 G11 stamps 使 unknown 对 V2 造出的 backup **结构性不可达**
+  （CTR-DEP-011），同时保持其禁止归属错配的语义不变——属加法强化，非改写。
 
 ### 3.4 治理依赖
 
@@ -350,7 +374,9 @@ scope 的**新**（NEW）authority。
   - Decision owner：repository owner（任务冻结）
   - Decision：见 §9 CTR-DEP-001..013；ALL_GATES_PASS_BEFORE_PRODUCTION_SWAP、
     install success ≠ deployment success、HEALTH_IS_NOT_CHILD_AVAILABILITY 为
-    invariant。
+    invariant；G7 为 **no-tool** turn（门自身零工具副作用）；deploy lock 为
+    **全部署期独占**（install 至终态）；解释器身份链（node+corepack+pnpm）路径与
+    版本一并钉住。
 - `DEC-004` — **SUPERSEDES = NONE / PARTIAL_SUPERSESSION = NONE。**
   - Decision owner：repository owner（任务冻结：不得 partial supersede）
   - Decision：对 hardening V1 report 为 supplement（§3.2，差异穷举于 Contracts）；
@@ -360,8 +386,10 @@ scope 的**新**（NEW）authority。
 - `DEC-005` — **backup 完整性与失败语义。**
   - Decision owner：repository owner（任务冻结）
   - Decision：backup 不得被 reuse move 掏空（reuse 一律 copy）；verified LKG 不得被
-    prune；child 级门失败自动回滚 + 回滚后复验 G6/G7；失败绝不 prune、绝不宣告
-    成功。
+    prune；门失败**或 swap/launchd/live 复验失败**均自动回滚 + 回滚后复验 G6/G7；
+    失败绝不 prune、绝不宣告成功；backup `source_commit` 自 V2 起不再 unknown
+    （从前任闭包自身 stamp/manifest 归属；遗留无 stamp 前任一次性显式落档
+    `source_commit_absent_legacy`）。
 - `DEC-006` — **本轮无实现许可。** status = proposed、
   implementation_authority = none、production_apply_authority = none；接受（独立
   review + acceptance binding）之前不得改任何脚本、不得触 production。
@@ -378,7 +406,7 @@ scope 的**新**（NEW）authority。
 | G4 plugin entry load | CTR-DEP-004 | G4 |
 | G5 staging child boot | CTR-DEP-005 | G5 |
 | G6 RPC initialize | CTR-DEP-006 | G6 |
-| G7 one low-risk turn | CTR-DEP-007 | G7 |
+| G7 one low-risk **no-tool** turn | CTR-DEP-007 | G7 |
 | G8 deploy lock | CTR-DEP-008 | G8 |
 | G9 clean-source / dirty ack | CTR-DEP-009 | G9 |
 | G10 immutable rollback artifact | CTR-DEP-010 | G10 |
@@ -440,19 +468,23 @@ runtime 模式）以 `ensureRunning(agent)` 拉起真实 child；MUST 断言进�
 seam @ `packages/agent-router/src/process/agent-process.js`）。**这是生产实际失败的
 那一环**，MUST 在换入 live 之前为绿；失败 MUST 以非零码退出。
 
-### CTR-DEP-007 — G7：one low-risk turn
+### CTR-DEP-007 — G7：one low-risk no-tool turn
 
 对 staging child 发起单个固定短 prompt 的 `session/prompt`，MUST 断言完整 ok-status
-回合（child → model → reply）。MUST 使用既有 acceptance-only model override seam
-（`trusted-cp-hardening-v1-verify.mjs` 的验收模型切换）；MUST NOT 触碰生产
-binding / Feishu 投递。
+回合（child → model → reply），且该回合 MUST NOT 调用任何 tool（zero tool
+invocations 断言——门本身即最低风险，不产生任何工具副作用）。MUST 使用既有
+acceptance-only model override seam（`trusted-cp-hardening-v1-verify.mjs` 的验收模型
+切换）；MUST NOT 触碰生产 binding / Feishu 投递。
 
-### CTR-DEP-008 — G8：deploy lock
+### CTR-DEP-008 — G8：deploy lock（production 部署独占）
 
-部署 MUST 持有 `/usr/local/libexec/.agent-core-deploy.lock`（root 属主；mkdir 原子
-语义或 flock），记录 pid/时间；重复部署 MUST 以非零码退出；MUST 提供 stale 判定与
-显式 override flag（使用时 MUST 落档）。（Authority：§3.3 NEW_EVIDENCE 激活
-AGENT_CORE_BACKUP_RETENTION_V1 冻结的 deferred concurrent-deploy guard。）
+production 部署 MUST 独占持有 `/usr/local/libexec/.agent-core-deploy.lock`（root
+属主；mkdir 原子语义或 flock），记录 pid/时间。**独占范围 = 整个部署期**：lock 在
+任何 install 步骤前获取，覆盖 gates、原子换树、launchd 切换、live 复验，直到部署
+终态（deploy-status 落档或回滚完成）才释放；持有期间任何并发部署 MUST 以非零码
+退出。MUST 提供 stale 判定与显式 override flag（使用时 MUST 落档）。
+（Authority：§3.3 NEW_EVIDENCE 激活 AGENT_CORE_BACKUP_RETENTION_V1 冻结的
+deferred concurrent-deploy guard。）
 
 ### CTR-DEP-009 — G9：clean-source / dirty ack
 
@@ -469,11 +501,15 @@ mv**（或 mv 后在 backup 内留等效完整 copy 门面）——backup MUST �
 保持完整可回滚。verified-LKG pin 沿用
 `AGENT_CORE_VERIFIED_PREDECESSOR_LKG = YES` seam，prune MUST NOT 删除已验证 LKG。
 
-### CTR-DEP-011 — G11：source stamp / closure stamp
+### CTR-DEP-011 — G11：source stamp / closure stamp（source_commit 不再 unknown）
 
-安装器 MUST 把 `REPO_APP_COMMIT` 写入 `app/.source-stamp`（新增）与 backup 元数据
-（修复 backup `source_commit` 恒 unknown 的缺口；归属前任闭包，MUST NOT 把新部署
-HEAD 归属为旧 backup 的 commit）。安装完成时 MUST 断言
+安装器 MUST 把 `REPO_APP_COMMIT` 写入 `app/.source-stamp`（新增）与 backup 元数据。
+backup 元数据的 `source_commit` 自本 Spec 实现起 **MUST NOT 再为 unknown**：MUST 从
+**前任闭包自身**的 `app/.source-stamp` / closure manifest 读取归属（保持
+backup-retention V1 禁止把新部署 HEAD 归属为旧 backup commit 的语义）。唯一允许的
+非 commit 值：首次 V2 部署面对无 stamp 遗留前任时的一次性显式落档标记
+`source_commit_absent_legacy`（loud、可审计、MUST NOT 在任何后续部署复现——G11
+保证此后每个闭包都带 stamp）。安装完成时 MUST 断言
 `harness/.source-stamp` 已写——stamp 缺失导致的静默 reuse 失效（当前 live 树状态）
 MUST 转为 loud failure，MUST NOT 静默全量重装。
 
@@ -482,9 +518,14 @@ MUST 转为 loud failure，MUST NOT 静默全量重装。
 install 退出码 0 仅代表「闭包建成 + 静态审计过」，MUST NOT 被当作部署成功。
 `DEPLOY_SUCCESS` 定义为：G1–G7 全绿 → 原子换树 → launchd 切换 → 对 **live** 树复跑
 G6/G7 绿 → 状态落档（TRUSTED_ROOT/config 下 deploy-status JSON：各门状态/时间/
-commit）。任何 child 级门失败：MUST NOT prune、MUST NOT 宣告成功、MUST 触发 G10
-回滚路径（`--mark-rollback-used` + 恢复 + 回滚后复验 G6/G7）。脚本尾部「Next:
-verify」提示 MUST 升级为机器门；跳过 MUST 经显式 `--no-verify` 落档。
+commit）。**自动回滚触发面**（任一即触发，MUST NOT prune、MUST NOT 宣告成功、MUST
+执行 G10 回滚路径——`--mark-rollback-used` + 恢复 + 回滚后复验 G6/G7）：
+1. 任何 child 级门失败（G4–G7）；
+2. **原子换树（swap）失败**；
+3. launchd 切换失败；
+4. 对 live 树复跑的 G6/G7 失败。
+脚本尾部「Next: verify」提示 MUST 升级为机器门；跳过 MUST 经显式 `--no-verify`
+落档。
 
 ### CTR-DEP-013 — health 不替代 child availability
 
@@ -499,13 +540,22 @@ node-runtime MUST 在 harness pnpm install 步骤**之前**物化进 staging roo
 重排；二者本无依赖），且 pnpm 的解释器 MUST 就是该物化 runtime（与 CTR-DEP-001
 共同构成 install arch ≡ runtime arch 的构造性保证）。
 
-### CTR-DEP-015 — pnpm 身份钉住并验证
+### CTR-DEP-015 — 解释器身份链钉住并验证（node + corepack + pnpm）
 
-部署 MUST 固定并验证 pnpm 身份链：断言 `/usr/local/bin/pnpm` shim 解析路径符合
-预期（corepack shim，非独立二进制）；断言 `pnpm --version` 输出 == harness
-`packageManager` pin（11.7.0）；部署前 `corepack prepare` 预热 + 断言 corepack
-cache 在位（未命中 MUST fail-loud，不静默走网络）。已知残留风险（记录、本轮不
-授权修复）：corepack+pnpm 发行件位于 uid-502 可写路径（见 OQ-1）。
+部署 MUST 固定并验证整条解释器身份链的**路径与版本**：
+
+- **node**：源路径钉住为 `/usr/local/bin/node`（readlink → Cellar 真实目录，按
+  hardening V1 语义 `cp -RL` 物化，非 symlink、非 hardlink）；物化后 MUST 记录
+  `NODE_VERSION`（install 日志 + closure manifest），且 G1 arch 断言、pnpm 解释执行、
+  G3 加载断言所用的 MUST 是**同一**物化二进制；版本读取失败或与源 runtime 不一致
+  MUST fail-loud；
+- **corepack/pnpm**：断言 `/usr/local/bin/pnpm` shim 解析路径符合预期（corepack
+  shim，非独立二进制）；断言 `pnpm --version` 输出 == harness `packageManager` pin
+  （11.7.0）；部署前 `corepack prepare` 预热 + 断言 corepack cache 在位（未命中
+  MUST fail-loud，不静默走网络）。
+
+已知残留风险（记录、本轮不授权修复）：corepack+pnpm 发行件位于 uid-502 可写路径
+（见 OQ-1）。
 
 ### CTR-DEP-016 — live 树不执行 pnpm
 
@@ -565,13 +615,16 @@ backups 首个 reliable pin 建立前不自动 prune。其 AC-1..AC-11 在 V2 �
   - Contracts：CTR-DEP-006 · Method：对 staging child 完整 ready()；
     `initializeTimeoutMs` 内断言 registeredProviders 含配置 provider
   - Expected：绿；Failure：超时 / provider 缺失仍过门
-- `ACC-DEP-007` — one low-risk turn
+- `ACC-DEP-007` — one low-risk no-tool turn
   - Contracts：CTR-DEP-007 · Method：固定短 prompt 经 acceptance-only model
-    override seam
-  - Expected：完整 ok-status 回合；零生产 binding / Feishu 触碰（审计为空）
-- `ACC-DEP-008` — deploy lock
-  - Contracts：CTR-DEP-008 · Method：模拟锁被持（第二实例并发）
-  - Expected：第二实例非零退出；stale 路径可判定；override 使用留痕
+    override seam；回合事件流断言 zero tool invocations
+  - Expected：完整 ok-status 回合 + 零 tool 调用；零生产 binding / Feishu 触碰
+    （审计为空）
+- `ACC-DEP-008` — deploy lock（独占）
+  - Contracts：CTR-DEP-008 · Method：模拟锁被持（第二实例并发）；核对 lock 覆盖
+    install→gates→swap→live 复验全程、终态后才释放
+  - Expected：第二实例非零退出；独占范围与释放时机正确；stale 路径可判定；
+    override 使用留痕
 - `ACC-DEP-009` — clean-source / dirty ack
   - Contracts：CTR-DEP-009 · Method：dirty fixture 无 ack → 拒；带 ack → 过且落档
 - `ACC-DEP-010` — backup 不可变 + reuse 不掏空 + LKG 不被 prune
@@ -579,23 +632,29 @@ backups 首个 reliable pin 建立前不自动 prune。其 AC-1..AC-11 在 V2 �
     核对 manifest 边车 + 0444/uchg；prune 模拟下 verified-LKG 存活
   - Expected：reuse 后 backup 完整；不可变标记在位；LKG 存活
   - Failure：reuse 后 backup 缺件 / LKG 被 prune / meta 可被后续部署改写
-- `ACC-DEP-011` — stamps loud
+- `ACC-DEP-011` — stamps loud + source_commit 非 unknown
   - Contracts：CTR-DEP-011 · Method：正常安装后核对 `app/.source-stamp` 与
-    `harness/.source-stamp`；构造 stamp 缺失负例
-  - Expected：stamp 在位且归属正确（前任 commit，非新 HEAD）；缺失负例 loud 失败
-- `ACC-DEP-012` — install ≠ deploy + 自动回滚
-  - Contracts：CTR-DEP-012 · Method：scratch root 注入 child 级门失败（如 G6 失败）
-  - Expected：无成功宣告、无 prune、回滚执行、回滚后 G6/G7 复验绿、deploy-status
-    JSON 记录逐门结果；「Next: verify」跳过必须 `--no-verify` 留痕
+    `harness/.source-stamp`；构造 stamp 缺失负例；核对 backup 元数据
+    `source_commit` 取自前任自身 stamp/manifest
+  - Expected：stamp 在位且归属正确（前任 commit，非新 HEAD）；缺失负例 loud 失败；
+    routine `source_commit = unknown` 被拒绝；唯一合法非 commit 值为一次性
+    `source_commit_absent_legacy`（且不复现）
+- `ACC-DEP-012` — install ≠ deploy + 自动回滚（含 swap 失败）
+  - Contracts：CTR-DEP-012 · Method：scratch root 分别注入 child 级门失败（如 G6
+    失败）与 swap 阶段失败（mv/launchd/live 复验负例）
+  - Expected：任一触发面均无成功宣告、无 prune、回滚执行、回滚后 G6/G7 复验绿、
+    deploy-status JSON 记录逐门结果；「Next: verify」跳过必须 `--no-verify` 留痕
 - `ACC-DEP-013` — health ≠ child availability（负例）
   - Contracts：CTR-DEP-013 · Method：health 端点 up 而 child 未初始化的 fixture
   - Expected：部署 MUST NOT 可宣告成功；成功判据必须索要 child-ready 证据 + turn
 - `ACC-DEP-014` — node-runtime 先行物化
   - Contracts：CTR-DEP-014 · Method：检查安装步骤顺序与 pnpm 解释器路径
   - Expected：node-runtime 在 pnpm 步骤前存在于 staging root；pnpm 由该 node 执行
-- `ACC-DEP-015` — pnpm 身份断言
-  - Contracts：CTR-DEP-015 · Method：版本不匹配 / corepack cache 缺失负例
-  - Expected：均 fail-loud；正例记录 INSTALL_NODE_ARCH / PNPM_VERSION
+- `ACC-DEP-015` — 解释器身份链断言
+  - Contracts：CTR-DEP-015 · Method：node 版本/源路径不一致、pnpm 版本不匹配、
+    corepack cache 缺失负例
+  - Expected：均 fail-loud；正例记录 INSTALL_NODE_ARCH / NODE_VERSION /
+    PNPM_VERSION，且 G1/G3/解释执行使用同一物化 node 二进制
 - `ACC-DEP-016` — live 树零 pnpm
   - Contracts：CTR-DEP-016 · Method：审计部署脚本与日志——pnpm 目标路径仅 staging
   - Expected：无任何以 live root 为目标的 pnpm 调用；换树为原子 mv
@@ -631,9 +690,10 @@ backups 首个 reliable pin 建立前不自动 prune。其 AC-1..AC-11 在 V2 �
 
 - **首次 V2 部署**：当前 live 树 stamp 缺失（STATE-001）→ reuse 必然失败 → 全量
   重装属预期行为，但 MUST 由 CTR-DEP-011 转为 loud（记录 reuse_failed 而非静默）。
-- **第一代 backup 的 manifest 缺席**：现任前任闭包安装时无 G2；其 backup 按
-  CTR-DEP-010 显式落档 manifest_absent；manifest 边车自首个 V2 安装的闭包开始
-  存在并随后续 backup 链积累。
+- **第一代 backup 的 manifest/stamp 缺席**：现任前任闭包安装时无 G2/G11；其 backup
+  按 CTR-DEP-010 显式落档 manifest_absent，`source_commit` 按 CTR-DEP-011 一次性
+  落档 `source_commit_absent_legacy`；manifest 边车与真实 stamp 自首个 V2 安装的
+  闭包开始存在并随后续 backup 链积累。
 - **兼容性**：backup 目录命名与 rollback 机制不变（backup-retention V1）；launchd
   模型不变（KeepAlive 语义不动，换树消除崩溃窗口而非改 launchd）；hardening V1
   验收驱动继续可用（ACC-DEP-017）。
@@ -688,9 +748,11 @@ GATES_FROZEN = G1..G12 (CTR-DEP-001..012) + 6 invariant/preservation contracts
   (CTR-DEP-013..018)
 SUPPLEMENTARY_RULINGS_FROZEN =
   HEALTH_IS_NOT_CHILD_AVAILABILITY / NODE_RUNTIME_BEFORE_INSTALL /
-  PNPM_IDENTITY_PINNED_AND_VERIFIED / BACKUP_NOT_HOLLOWED_BY_REUSE_MOVE /
-  VERIFIED_LKG_NEVER_PRUNED / ALL_GATES_PASS_BEFORE_PRODUCTION_SWAP /
-  AUTO_ROLLBACK_ON_GATE_FAILURE / NO_PNPM_IN_LIVE_TREE
+  INTERPRETER_IDENTITY_PINNED_NODE_COREPACK_PNPM (路径+版本) /
+  BACKUP_NOT_HOLLOWED_BY_REUSE_MOVE / VERIFIED_LKG_NEVER_PRUNED /
+  ALL_GATES_PASS_BEFORE_PRODUCTION_SWAP / EXCLUSIVE_DEPLOY_LOCK (全部署期) /
+  AUTO_ROLLBACK_ON_GATE_OR_SWAP_FAILURE / SOURCE_COMMIT_NEVER_UNKNOWN /
+  NO_PNPM_IN_LIVE_TREE / G7_NO_TOOL_TURN
 
 EXPECTED_FUTURE_IMPLEMENTATION_FILES =
   scripts/trusted-cp-deploy-install.sh (modify) · scripts/trusted-cp-deploy-gates.mjs
@@ -704,6 +766,7 @@ NEXT_LIFECYCLE_STEP = independent REVIEW（SPEC_REVIEW = ACCEPT | REVISE）→ a
 本轮 authoring：
 PRODUCT_CODE_CHANGE = NONE
 SCRIPT_CHANGE = NONE
+HARNESS_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 DEPLOY = NONE · RESTART = NONE · INSTALL = NONE · MERGE = NONE
 新增文件 = docs/specs/TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2.md +
