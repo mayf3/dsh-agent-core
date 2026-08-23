@@ -15,7 +15,8 @@
  *   broker                (gateway mode — the Trusted CP seam; credentials
  *                          file optional, calls fail closed without one)
  *   product-api           (thin mobile surface over the Router)
- *   notification-ingress  (thin POST /v1/deliver over agentRouter.deliver)
+ *   notification-ingress  (service-authenticated POST /v1/deliver with the
+ *                          durable idempotency authority over agentRouter.deliver)
  *   scheduler             (JobStore on the production store + engine loop)
  *     └─ scheduler-router seams (createRouterInvoker / createFeishuDeliver —
  *        the existing bridge, never re-implemented here)
@@ -349,10 +350,21 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   const ingressCfg = opts.notificationIngress ?? {}
+  // C-BND-003 (NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1): the
+  // composition hands the ingress ONLY its auth-config path + store/evidence
+  // layout paths — verifier/config wiring, no credential material ever flows
+  // through compose (the auth config contains no clientSecret by contract).
   const notificationIngress = applyNotificationIngress(ctx, {
     enabled: ingressCfg.enabled ?? process.env.NOTIFICATION_INGRESS_ENABLED !== '0',
     host: ingressCfg.host ?? process.env.NOTIFICATION_INGRESS_HOST ?? '127.0.0.1',
     port: ingressCfg.port ?? Number.parseInt(process.env.NOTIFICATION_INGRESS_PORT ?? '8790', 10),
+    authConfigFile: ingressCfg.authConfigFile
+      ?? process.env.NOTIFICATION_INGRESS_AUTH_CONFIG
+      ?? layout.notificationAuthConfig,
+    storeFile: ingressCfg.storeFile ?? layout.notificationIdempotencyStore,
+    evidenceFile: ingressCfg.evidenceFile ?? layout.notificationEvidence,
+    // Test seam only (stub token endpoint); production never sets it.
+    ...(ingressCfg.fetchImpl === undefined ? {} : { fetchImpl: ingressCfg.fetchImpl }),
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
