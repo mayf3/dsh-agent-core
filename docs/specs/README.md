@@ -40,16 +40,19 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
 
-## Agent primary Workspace import authority
+## Agent primary Workspace authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2` | accepted / current | none | exact 86-Agent Trusted Fleet curated-import authority; no implementation by itself |
+| `AGENT_PRIMARY_WORKSPACE_OPENCLAW_COMPATIBILITY_V3` | accepted / current | contracts | exact 86-Agent historical OpenClaw Workspace in-place reuse authority; implementation only via bounded Contracts + PR #47 frozen plan + independent production approval |
+| `AGENT_PRIMARY_WORKSPACE_CURATED_IMPORT_V2` | superseded | none | historical curated-import authority replaced whole by V3 |
 | `AGENT_PRIMARY_WORKSPACE_IMPORT_V1` | superseded | historical legacy field | historical adopt-in-place / zero-copy authority replaced whole by V2 |
 
-The V2 acceptance transaction is lifecycle-only relative to reviewed head
-`ae77eccf242d3b7401bb8110d4496897cc807ca7`; it performs no Workspace migration or
-production change. PR #47's separate Auth blocker remains open.
+The V3 acceptance transaction is lifecycle-only relative to reviewed head
+`401962beccdebb94e0f1ddc062b3d3f7efb49b0a` (reviewed base
+`622cb7b6bae7b0b5a9a8713bb5a843ad6a7dc5f1`; 复用 审计 = PASS); it performs no
+Workspace migration or production change, and `production_apply_authority` stays
+`none`. PR #47's separate revision and Auth blocker work remains downstream.
 
 ## AgentProcess lifecycle authority
 
