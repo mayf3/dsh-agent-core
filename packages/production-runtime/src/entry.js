@@ -19,6 +19,10 @@
  * Env (all optional; see compose.js for the full list):
  *   PRODUCTION_RUNTIME_ROOT   persistent root (default ~/.agent-core)
  *   FEISHU_CREDS_PATH         feishu credentials (channel OFF without it)
+ *   FEISHU_REQUIRE_MENTION_IN_GROUP    'true'|'false' only (default true);
+ *                             invalid values fail startup loud
+ *   FEISHU_AUTO_MENTION_TRIGGER_SENDER 'true'|'false' only (default true);
+ *                             invalid values fail startup loud
  *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL   model route for spawned agents
  *   AGENT_CORE_CREDENTIALS_FILE / BROKER_AUTH_ORIGIN   Trusted CP seam
  *

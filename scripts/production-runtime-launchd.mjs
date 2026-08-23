@@ -20,7 +20,9 @@
  *   WorkingDirectory     <app-closure>
  *   EnvironmentVariables DSH_HARNESS_ROOT (resolved), PATH, HOME + every
  *                        pass-through seam env present at install time
- *                        (FEISHU_CREDS_PATH, DSH_AGENT_PROVIDER/MODEL,
+ *                        (FEISHU_CREDS_PATH, FEISHU_REQUIRE_MENTION_IN_GROUP,
+ *                        FEISHU_AUTO_MENTION_TRIGGER_SENDER,
+ *                        DSH_AGENT_PROVIDER/MODEL,
  *                        AGENT_CORE_CREDENTIALS_FILE, BROKER_AUTH_ORIGIN,
  *                        DSH_AGENT_CHILD_UID/GID, DSH_AGENT_SPAWN_HELPER —
  *                        the TRUSTED_CP seam: hardening lands by setting env
@@ -73,6 +75,8 @@ const DEFAULT_TRUSTED_ROOT = '/usr/local/libexec/agent-core'
 /** Env vars forwarded from the installing shell into the plist when set. */
 const PASS_THROUGH_ENV = [
   'FEISHU_CREDS_PATH',
+  'FEISHU_REQUIRE_MENTION_IN_GROUP',
+  'FEISHU_AUTO_MENTION_TRIGGER_SENDER',
   'DSH_AGENT_PROVIDER',
   'DSH_AGENT_MODEL',
   'AGENT_CORE_CREDENTIALS_FILE',

@@ -72,6 +72,54 @@ export function assertTargetProxyRuntime({ env = process.env, version = process.
 }
 
 /**
+ * STRICT boolean env parsing for the Feishu UX switches: ONLY the exact
+ * strings 'true' / 'false' are accepted. Any other value (case variants,
+ * '1'/'0', 'yes', whitespace, ...) fails composition LOUD — a typo'd
+ * supervision-unit env must never silently revert admission/mention policy.
+ * Unset or empty means "not configured" (undefined): the connector's own
+ * defaults (true/true) apply.
+ *
+ * @param {object} env - env map (process.env).
+ * @param {string} key - the env var name.
+ * @returns {boolean|undefined} true / false, or undefined when unset/empty.
+ * @throws {Error} code FEISHU_UX_SWITCH_INVALID on any non-boolean value.
+ */
+export function parseStrictBooleanEnv(env, key) {
+  const raw = env[key]
+  if (raw === undefined || raw === '') return undefined
+  if (raw === 'true') return true
+  if (raw === 'false') return false
+  throw Object.assign(
+    new Error(`production-runtime: ${key} must be exactly 'true' or 'false' (got ${JSON.stringify(raw)})`),
+    { code: 'FEISHU_UX_SWITCH_INVALID' },
+  )
+}
+
+/**
+ * Resolve both Feishu UX switches from env (FEISHU_REQUIRE_MENTION_IN_GROUP /
+ * FEISHU_AUTO_MENTION_TRIGGER_SENDER). Parsed BEFORE any mount so an invalid
+ * value fails composition regardless of whether the channel is configured.
+ *
+ * @param {object} [env] - env map (default process.env).
+ * @returns {{requireMentionInGroup?:boolean, autoMentionTriggerSender?:boolean}}
+ *   only the configured keys (absent = connector defaults).
+ */
+export function resolveFeishuUxSwitches(env = process.env) {
+  return dropUndefined({
+    requireMentionInGroup: parseStrictBooleanEnv(env, 'FEISHU_REQUIRE_MENTION_IN_GROUP'),
+    autoMentionTriggerSender: parseStrictBooleanEnv(env, 'FEISHU_AUTO_MENTION_TRIGGER_SENDER'),
+  })
+}
+
+function dropUndefined(obj) {
+  const out = {}
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) out[k] = v
+  }
+  return out
+}
+
+/**
  * Compose the Production Runtime.
  *
  * @param {object} options
@@ -109,6 +157,9 @@ export async function composeProductionRuntime(options = {}) {
   // must remain proxy-free and the proven Node env-proxy behavior is pinned
   // exactly. This gate runs before composition mutates env or mounts anything.
   assertTargetProxyRuntime()
+  // Feishu UX switches: strict-parsed BEFORE any mount so an invalid value
+  // fails composition loud even when the channel itself is unconfigured.
+  const feishuUxSwitches = resolveFeishuUxSwitches()
   const opts = options ?? {}
   const log = opts.log ?? {
     log: (...a) => process.stdout.write(`[production-runtime] ${a.join(' ')}\n`),
@@ -237,8 +288,14 @@ export async function composeProductionRuntime(options = {}) {
   let feishu = undefined
   const feishuCredsPath = opts.feishuCredsPath ?? process.env.FEISHU_CREDS_PATH
   if (typeof feishuCredsPath === 'string' && feishuCredsPath !== '' && existsSync(feishuCredsPath)) {
-    feishu = applyFeishu(ctx, { enabled: true, credentialsPath: feishuCredsPath })
-    log.log(`feishu connector mounted with live credentials (${feishuCredsPath})`)
+    feishu = applyFeishu(ctx, {
+      enabled: true,
+      credentialsPath: feishuCredsPath,
+      // requireMentionInGroup / autoMentionTriggerSender: only the env-parsed
+      // keys are forwarded (absent = connector defaults true/true).
+      ...feishuUxSwitches,
+    })
+    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true})`)
   } else {
     log.warn(`feishu credentials not configured (FEISHU_CREDS_PATH=${feishuCredsPath ?? '(unset)'}); channel OFF — delivery-requesting jobs will be marked not-delivered`)
   }
