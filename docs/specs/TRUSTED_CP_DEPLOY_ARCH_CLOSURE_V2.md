@@ -9,7 +9,7 @@ production_apply_authority: none
 scope:
   - trusted control-plane deployment process architecture pinning — pnpm is executed only by the materialized trusted x64 Node interpreter ("$TRUSTED_NODE" /usr/local/bin/pnpm install ...), with node-runtime materialized into the staging root before the harness install step
   - staging-root install with atomic swap into the live trusted root; pnpm never executes against the live tree
-  - deploy gates G1-G12 (target platform/arch fail-loud, closure manifest, all-native-addon Mach-O verification, plugin-entry load, staging child boot, RPC initialize, one low-risk turn, deploy lock, clean-source/dirty-ack, immutable rollback artifact, source/closure stamps, install-success-is-not-deploy-success)
+  - deploy gates G1-G12 (target platform/arch fail-loud, closure manifest, all-native-addon Mach-O verification, plugin-entry load, staging child boot, RPC initialize, one low-risk turn, deploy lock as EXTERNAL_AUTHORITY_PRECONDITION — implementation NOT authorized by this spec, see CTR-DEP-008, clean-source/dirty-ack, immutable rollback artifact, source/closure stamps, install-success-is-not-deploy-success)
   - supplementary deploy invariants (health is not child availability; node-runtime before install; pinned and verified pnpm/corepack identity; backups not hollowed by reuse move; verified LKG never pruned; all gates pass before production swap; automatic rollback on gate failure)
   - backup integrity extensions that remain strictly additive to AGENT_CORE_BACKUP_RETENTION_V1 frozen semantics
 governed_by:
@@ -32,6 +32,11 @@ references:
 # TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2 — Trusted CP 跨架构依赖闭包部署收口（staging + 十二门 + 原子换树）
 
 > 状态：**proposed**（authoring round；SPEC ONLY — 本轮不实现、不修改任何脚本、不修改 Harness、不触 production、不 deploy、不 restart）。
+> 修订轮 2026-08-24（AMEND-while-proposed，发布审计 blocker B-1 收口）：按
+> `OWNER_DECISION_G8 = DEFER_DEPLOY_LOCK_TO_SEPARATE_BACKUP_RETENTION_AUTHORITY`，
+> G8 deploy lock 改为 **EXTERNAL_AUTHORITY_PRECONDITION**——本 Spec 不授权实现 deploy
+> lock（`DEPLOY_LOCK_IMPLEMENTATION_AUTHORIZED_BY_THIS_SPEC = NO`）；激活出口为
+> `AGENT_CORE_BACKUP_RETENTION_V1` 自身的单独 amendment / supersede（§3.3、CTR-DEP-008）。
 > 本 Spec 授权的是**未来**对 trusted CP 部署流程的修复；`implementation_authority = none`、
 > `production_apply_authority = none`，接受前不构成任何实现或生产应用许可。
 > 作者化基座：`origin/main` = `0a6e060913e12693142fb0759f35f239b2ef429a`（2026-08-23 fetch 复核）。
@@ -60,6 +65,9 @@ NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE
 
 GATE_COUNT = 12 (G1-G12, frozen; §9 CTR-DEP-001..012)
+OWNER_DECISION_G8 = DEFER_DEPLOY_LOCK_TO_SEPARATE_BACKUP_RETENTION_AUTHORITY (applied 2026-08-24)
+DEPLOY_LOCK_REQUIREMENT = EXTERNAL_AUTHORITY_PRECONDITION
+DEPLOY_LOCK_IMPLEMENTATION_AUTHORIZED_BY_THIS_SPEC = NO
 SUPPLEMENTARY_INVARIANT_COUNT = 6 (CTR-DEP-013..016 + CTR-DEP-017/018 preservation contracts)
 CONTRACT_COUNT = 18
 CONTRACTS_WITH_ACCEPTANCE = 18
@@ -96,9 +104,10 @@ Scheduler / Auth / Broker / Kernel 产品语义。
 
 ### In scope（未来实现允许触碰的面）
 
-- `scripts/trusted-cp-deploy-install.sh`：deploy lock、TARGET 断言、node-runtime 物化
-  提前、x64-pnpm 显式调用、closure manifest、stamp 断言、staging root + 原子换树、
-  门挂接、deploy-status 落档；
+- `scripts/trusted-cp-deploy-install.sh`：TARGET 断言、node-runtime 物化提前、
+  x64-pnpm 显式调用、closure manifest、stamp 断言、staging root + 原子换树、
+  门挂接、deploy-status 落档（**不含 deploy lock**——G8 实现授权不在本 Spec，
+  见 CTR-DEP-008；换树/production swap 路径在 G8 前置满足前保持关闭）；
 - 新增 `scripts/trusted-cp-deploy-gates.mjs`（或等价单一 gate driver）：G2–G7 门驱动，
   staging / live 复验两用；
 - `scripts/agent-core-backup-ops.sh`：**加法**扩展——manifest 边车、不可变标记、
@@ -124,6 +133,11 @@ KERNEL_CHANGE = NONE
   身份断言，不授权搬迁——见 OQ-1）；
 - 修改 `AGENT_CORE_BACKUP_RETENTION_V1` 任何冻结语义（retention 计数、pin 模型、
   prune 时机、failure semantics）；超出加法扩展的部分须走该 Spec 自身的 amendment；
+- deploy lock 实现（G8）：经 `OWNER_DECISION_G8 =
+  DEFER_DEPLOY_LOCK_TO_SEPARATE_BACKUP_RETENTION_AUTHORITY` 延后——实现授权须待
+  `AGENT_CORE_BACKUP_RETENTION_V1` 经其自身 `NEED_AMENDED/NEW_SPEC = YES` 出口的
+  **单独 amendment / supersede** 合法变更后取得。本 Spec 仅把 deploy lock 冻结为
+  生产前置条件（CTR-DEP-008），不实现任何 flock / lock file / lock service；
 - universal / 跨机构建闭包（ALT-002/003 已否）；
 - 新部署 service / DB / dashboard / rollback framework 重写；
 - G7 turn 触碰生产 binding / Feishu 投递（只允许 acceptance-only model override seam），
@@ -171,7 +185,8 @@ scope 的**新**（NEW）authority。
   supersession）**不设置任何 supersession**：`supersedes = []`。
 - V2 与该 report 的全部流程差异**穷举**于 §9 各 Contract（enumerated deltas）：
   install 目标改为 staging root、node-runtime 物化提前、pnpm 显式解释器调用、
-  G1–G12 门、deploy lock、stamps、backup 不可强化、原子换树、deploy-status 落档。
+  G1–G12 门（其中 G8 仅作为 EXTERNAL_AUTHORITY_PRECONDITION 记录，本 Spec 不实现，
+  见 §3.3/CTR-DEP-008）、stamps、backup 不可强化、原子换树、deploy-status 落档。
   **未穷举之处一律沿用 hardening V1 既有语义**。
 - 该 report 位于 `docs/reports/`，不是 `docs/specs/` 生命周期 Spec，无 supersession
   metadata 可写；本节即为书面 authority 关系记录。
@@ -184,15 +199,43 @@ scope 的**新**（NEW）authority。
   V2 实现后仍须通过。无任何义务被删除、收窄或反转 → 不构成 supersession。
 - **G8 deploy lock 与该 Spec 的 `CONCURRENT_DEPLOY_GUARD = NO`**：该 Spec 明文冻结
   「本 Spec 不允许顺手实现 flock / lock service；若得到新证据证明并发已发生或会由
-  现有自动化触发：`NEED_AMENDED/NEW_SPEC = YES`」。V2 即按该出口提供的路径以**新
-  Spec**授权 deploy lock，并记录 NEW_EVIDENCE：
+  现有自动化触发：`NEED_AMENDED/NEW_SPEC = YES`，停止扩大 scope」。该出口要求的是
+  对 **`AGENT_CORE_BACKUP_RETENTION_V1` 自身**的 amendment / supersede（NEED_AMENDED
+  或 NEW_SPEC），**不是**授权 sibling Spec（本 V2）自行宣告激活并实现 lock。
+  发布审计 blocker B-1 判定前稿「V2 即按该出口以新 Spec 授权 deploy lock」越权；
+  `OWNER_DECISION_G8 = DEFER_DEPLOY_LOCK_TO_SEPARATE_BACKUP_RETENTION_AUTHORITY`
+  （2026-08-24）据此裁决：
 
   ```text
-  NEW_EVIDENCE =
+  DEPLOY_LOCK_REQUIREMENT = EXTERNAL_AUTHORITY_PRECONDITION
+  DEPLOY_LOCK_IMPLEMENTATION_AUTHORIZED_BY_THIS_SPEC = NO
+  ```
+
+  调查所得证据**保留记录**，但其地位是未来 `AGENT_CORE_BACKUP_RETENTION_V1`
+  amendment / supersede 的**证据输入**，在本 Spec 内**不构成激活、不授予实现权限**：
+
+  ```text
+  NEW_EVIDENCE (evidence-input only; NOT an activation by this Spec) =
     调查 §5-G8：现状无任何 deploy lock，两个并发 install 会交错 mv/BAK/reuse；
     staging + 原子换树重设计使交错后果从「脏树」升级为「换树竞态」；
     2026-08-22 20:35-20:40 故障窗口证明部署后果可全灭 child。
   ```
+
+  在 `AGENT_CORE_BACKUP_RETENTION_V1` 的 authority 经合法 amendment / supersede
+  变更之前：
+
+  1. 本 Spec 的实现 MUST NOT 实现 deploy lock（零 flock / lock file / lock service
+     代码落地）；
+  2. G8 MUST NOT 被宣告 PASS（无 lock 即无 G8 通过证据；deploy-status 须如实记录
+     `G8 = BLOCKED_BY_EXTERNAL_AUTHORITY`）；
+  3. production deploy（staging→live 换树、launchd 切换、live 复验）MUST NOT
+     执行——`ALL_GATES_PASS_BEFORE_PRODUCTION_SWAP` 在 G8 缺席时构造性不可满足；
+  4. 其余门（G1–G7、G9–G12）**可以**实现并在 staging root 上验证（含其全部
+     单测 / scratch-root 验收面），但整条 production swap 路径 MUST 保持关闭。
+
+  外部 authority 合法变更后，lock 的具体语义（建议形状：独占范围 = 全部署期
+  install 至终态、stale 判定、显式 override 留痕）由该 amendment / supersede 冻结；
+  本 Spec 届时以自身 amendment 对齐，在此之前不得提前实现。
 
 - 该 Spec 的 failure semantics（失败不 prune、rollback-used 保持 KEEP）被 V2 的
   自动回滚（CTR-DEP-012/010）**沿用而非改写**：回滚后 prune 禁忌不变。
@@ -375,14 +418,17 @@ scope 的**新**（NEW）authority。
   - Decision：见 §9 CTR-DEP-001..013；ALL_GATES_PASS_BEFORE_PRODUCTION_SWAP、
     install success ≠ deployment success、HEALTH_IS_NOT_CHILD_AVAILABILITY 为
     invariant；G7 为 **no-tool** turn（门自身零工具副作用）；deploy lock 为
-    **全部署期独占**（install 至终态）；解释器身份链（node+corepack+pnpm）路径与
-    版本一并钉住。
+    **EXTERNAL_AUTHORITY_PRECONDITION**（G8：实现授权经 OWNER_DECISION_G8 延后至
+    `AGENT_CORE_BACKUP_RETENTION_V1` 自身的 amendment / supersede；「全部署期独占
+    install 至终态」仅作为对该外部 authority 的建议形状记录，本 Spec 不实现）；
+    解释器身份链（node+corepack+pnpm）路径与版本一并钉住。
 - `DEC-004` — **SUPERSEDES = NONE / PARTIAL_SUPERSESSION = NONE。**
   - Decision owner：repository owner（任务冻结：不得 partial supersede）
   - Decision：对 hardening V1 report 为 supplement（§3.2，差异穷举于 Contracts）；
-    对 AGENT_CORE_BACKUP_RETENTION_V1 为 additive extension（§3.3，含 G8 的
-    NEW_EVIDENCE 记录）。本 Spec `supersedes = []`，不写任何既有 authority 的
-    superseded backlink。
+    对 AGENT_CORE_BACKUP_RETENTION_V1 为 additive extension（§3.3）；G8 deploy lock
+    经 OWNER_DECISION_G8 延后至该 Spec 自身的 amendment / supersede——§3.3 的
+    NEW_EVIDENCE 仅为该未来变更的证据记录，**不激活、不授权**。本 Spec
+    `supersedes = []`，不写任何既有 authority 的 superseded backlink。
 - `DEC-005` — **backup 完整性与失败语义。**
   - Decision owner：repository owner（任务冻结）
   - Decision：backup 不得被 reuse move 掏空（reuse 一律 copy）；verified LKG 不得被
@@ -407,7 +453,7 @@ scope 的**新**（NEW）authority。
 | G5 staging child boot | CTR-DEP-005 | G5 |
 | G6 RPC initialize | CTR-DEP-006 | G6 |
 | G7 one low-risk **no-tool** turn | CTR-DEP-007 | G7 |
-| G8 deploy lock | CTR-DEP-008 | G8 |
+| G8 deploy lock（EXTERNAL_AUTHORITY_PRECONDITION；本 Spec 不授权实现） | CTR-DEP-008 | G8 |
 | G9 clean-source / dirty ack | CTR-DEP-009 | G9 |
 | G10 immutable rollback artifact | CTR-DEP-010 | G10 |
 | G11 source stamp / closure stamp | CTR-DEP-011 | G9（stamp 部分） |
@@ -476,15 +522,40 @@ invocations 断言——门本身即最低风险，不产生任何工具副作�
 acceptance-only model override seam（`trusted-cp-hardening-v1-verify.mjs` 的验收模型
 切换）；MUST NOT 触碰生产 binding / Feishu 投递。
 
-### CTR-DEP-008 — G8：deploy lock（production 部署独占）
+### CTR-DEP-008 — G8：deploy lock（EXTERNAL_AUTHORITY_PRECONDITION — 本 Spec 不授权实现）
 
-production 部署 MUST 独占持有 `/usr/local/libexec/.agent-core-deploy.lock`（root
-属主；mkdir 原子语义或 flock），记录 pid/时间。**独占范围 = 整个部署期**：lock 在
-任何 install 步骤前获取，覆盖 gates、原子换树、launchd 切换、live 复验，直到部署
-终态（deploy-status 落档或回滚完成）才释放；持有期间任何并发部署 MUST 以非零码
-退出。MUST 提供 stale 判定与显式 override flag（使用时 MUST 落档）。
-（Authority：§3.3 NEW_EVIDENCE 激活 AGENT_CORE_BACKUP_RETENTION_V1 冻结的
-deferred concurrent-deploy guard。）
+```text
+DEPLOY_LOCK_REQUIREMENT = EXTERNAL_AUTHORITY_PRECONDITION
+DEPLOY_LOCK_IMPLEMENTATION_AUTHORIZED_BY_THIS_SPEC = NO
+```
+
+production 部署前 MUST 满足 deploy lock 前置条件，但该前置条件的实现授权**不在本
+Spec**：按 `OWNER_DECISION_G8 = DEFER_DEPLOY_LOCK_TO_SEPARATE_BACKUP_RETENTION_AUTHORITY`
+（2026-08-24；发布审计 blocker B-1 收口），lock 的激活出口是
+`AGENT_CORE_BACKUP_RETENTION_V1` 冻结的 `CONCURRENT_DEPLOY_GUARD = NO` →
+`NEED_AMENDED/NEW_SPEC = YES` 条款——该条款要求对 **AGENT_CORE_BACKUP_RETENTION_V1
+自身**的单独 amendment / supersede，方能合法变更其 authority。本 Spec 为 sibling
+Spec，不代行该变更；§3.3 的 NEW_EVIDENCE 仅为该未来变更的证据输入，不构成激活。
+
+在 AGENT_CORE_BACKUP_RETENTION_V1 的 authority 经合法 amendment / supersede 变更
+之前，本 Spec 的实现 MUST 满足：
+
+1. **不实现 lock**：MUST NOT 落地任何 flock / lock file / lock service / 并发部署
+   拒绝代码（调查 §5-G8 记录的并发面在过渡期以 operator-serialized 假设兜底，与
+   backup-retention V1 现状一致）；
+2. **不宣告 G8 PASS**：G8 无实现即无通过证据；deploy-status MUST 如实记录
+   `G8 = BLOCKED_BY_EXTERNAL_AUTHORITY`（MUST NOT 记为 PASS，也 MUST NOT 记为本
+   Spec 实现的 FAIL）；
+3. **不执行 production deploy**：staging→live 换树、launchd 切换、live 复验均
+   MUST NOT 执行——`ALL_GATES_PASS_BEFORE_PRODUCTION_SWAP` 在 G8 缺席时构造性不可
+   满足，production swap 路径 MUST 保持关闭；
+4. **其余门不受阻**：G1–G7、G9–G12 的实现与 staging root / 单测 / scratch-root
+   验证照常进行（含 CTR/ACC-DEP-001..007、009..018 全部语义），仅止步于
+   production swap。
+
+外部 authority 合法变更后：lock 具体语义（建议形状：独占范围 = 全部署期 install
+至终态、stale 判定、显式 override 留痕）由该 amendment / supersede 冻结；本 Spec
+届时以自身 amendment 对齐并把 G8 从 BLOCKED_BY_EXTERNAL_AUTHORITY 解除。
 
 ### CTR-DEP-009 — G9：clean-source / dirty ack
 
@@ -518,7 +589,11 @@ MUST 转为 loud failure，MUST NOT 静默全量重装。
 install 退出码 0 仅代表「闭包建成 + 静态审计过」，MUST NOT 被当作部署成功。
 `DEPLOY_SUCCESS` 定义为：G1–G7 全绿 → 原子换树 → launchd 切换 → 对 **live** 树复跑
 G6/G7 绿 → 状态落档（TRUSTED_ROOT/config 下 deploy-status JSON：各门状态/时间/
-commit）。**自动回滚触发面**（任一即触发，MUST NOT prune、MUST NOT 宣告成功、MUST
+commit）。**G8 前置守卫**：在 CTR-DEP-008 的 external authority precondition 满足
+（G8 解除 `BLOCKED_BY_EXTERNAL_AUTHORITY`）之前，上述定义中「原子换树」及其后
+所有步骤 MUST NOT 执行——staging 全绿（G1–G7、G9–G12）MUST 止步于 staging，
+MUST NOT 触发 production swap，deploy-status MUST 记录 G8 阻断状态。
+**自动回滚触发面**（任一即触发，MUST NOT prune、MUST NOT 宣告成功、MUST
 执行 G10 回滚路径——`--mark-rollback-used` + 恢复 + 回滚后复验 G6/G7）：
 1. 任何 child 级门失败（G4–G7）；
 2. **原子换树（swap）失败**；
@@ -620,11 +695,16 @@ backups 首个 reliable pin 建立前不自动 prune。其 AC-1..AC-11 在 V2 �
     override seam；回合事件流断言 zero tool invocations
   - Expected：完整 ok-status 回合 + 零 tool 调用；零生产 binding / Feishu 触碰
     （审计为空）
-- `ACC-DEP-008` — deploy lock（独占）
-  - Contracts：CTR-DEP-008 · Method：模拟锁被持（第二实例并发）；核对 lock 覆盖
-    install→gates→swap→live 复验全程、终态后才释放
-  - Expected：第二实例非零退出；独占范围与释放时机正确；stale 路径可判定；
-    override 使用留痕
+- `ACC-DEP-008` — deploy lock external-authority precondition（G8 deferred）
+  - Contracts：CTR-DEP-008 · Method：审计实现产物与部署脚本——(a) 确认零 deploy
+    lock 代码落地（无 flock / lock file / lock service / 并发拒绝逻辑）；(b) 核对
+    deploy-status 对 G8 如实记录 `BLOCKED_BY_EXTERNAL_AUTHORITY`；(c) 构造 staging
+    全绿场景（G1–G7、G9–G12 全过）后沿部署路径推进至换树步骤
+  - Expected：(a) 无 lock 实现；(b) G8 未被宣告 PASS（也未误记为 FAIL）；(c)
+    staging 全绿下 production swap 路径仍被 fail-loud 拒绝（非零退出、留档 G8
+    阻断），live 树未被触碰
+  - Failure condition：任何 lock 代码落地 / G8 被宣告 PASS / staging 全绿即放行
+    production swap / live 树被触碰
 - `ACC-DEP-009` — clean-source / dirty ack
   - Contracts：CTR-DEP-009 · Method：dirty fixture 无 ack → 拒；带 ack → 过且落档
 - `ACC-DEP-010` — backup 不可变 + reuse 不掏空 + LKG 不被 prune
@@ -722,6 +802,9 @@ backups 首个 reliable pin 建立前不自动 prune。其 AC-1..AC-11 在 V2 �
 
 ```text
 TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2_SPEC_AUTHORING = PASS
+TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2_SPEC_G8_DEFERRAL_REVISION = PASS
+  （修订基线 = PR #61 HEAD d9050abfcd7366dd7801b32969c5b17c4a4124b1；docs-only；
+  blocker B-1 = G8 authority 越权激活声明，已按 OWNER_DECISION_G8 收口）
 
 BASE_MAIN = 0a6e060913e12693142fb0759f35f239b2ef429a (origin/main, 2026-08-23 fetch)
 SPEC_HEAD = docs/trusted-cp-deploy-arch-closure-v2-spec @ <SPEC_COMMIT>
@@ -735,8 +818,10 @@ AUTHORITY_RELATION =
     Contracts，未穷举处沿用 V1；supersedes = []。
   AGENT_CORE_BACKUP_RETENTION_V1 (accepted spec):
     ADDITIVELY_EXTENDED_NOT_SUPERSEDED — retention/pin/prune/failure 冻结语义原样
-    有效（CTR-DEP-018）；G8 deploy lock 经该 Spec 自身 NEW_EVIDENCE 出口激活
-    （NEW_EVIDENCE 已落档 §3.3）。
+    有效（CTR-DEP-018）；G8 deploy lock 经 OWNER_DECISION_G8 =
+    DEFER_DEPLOY_LOCK_TO_SEPARATE_BACKUP_RETENTION_AUTHORITY 延后：本 Spec 不授权
+    实现（DEPLOY_LOCK_IMPLEMENTATION_AUTHORIZED_BY_THIS_SPEC = NO），§3.3 的
+    NEW_EVIDENCE 仅为未来该 Spec 自身 amendment/supersede 的证据输入，不激活。
   docs/investigations/trusted-cp-cross-arch-dependency-closure-v1.md:
     evidence authority（不授予实现权限；本 Spec 为其 §6 EXPECTED_FILES 的 governing
     spec 交付）。
@@ -750,7 +835,9 @@ SUPPLEMENTARY_RULINGS_FROZEN =
   HEALTH_IS_NOT_CHILD_AVAILABILITY / NODE_RUNTIME_BEFORE_INSTALL /
   INTERPRETER_IDENTITY_PINNED_NODE_COREPACK_PNPM (路径+版本) /
   BACKUP_NOT_HOLLOWED_BY_REUSE_MOVE / VERIFIED_LKG_NEVER_PRUNED /
-  ALL_GATES_PASS_BEFORE_PRODUCTION_SWAP / EXCLUSIVE_DEPLOY_LOCK (全部署期) /
+  ALL_GATES_PASS_BEFORE_PRODUCTION_SWAP / DEPLOY_LOCK_EXTERNAL_AUTHORITY_PRECONDITION
+  (G8 deferred per OWNER_DECISION_G8：不实现 lock / 不宣告 G8 PASS / 不 production
+  deploy；其余门可实现可 staging 验证但不得 production swap) /
   AUTO_ROLLBACK_ON_GATE_OR_SWAP_FAILURE / SOURCE_COMMIT_NEVER_UNKNOWN /
   NO_PNPM_IN_LIVE_TREE / G7_NO_TOOL_TURN
 
@@ -762,6 +849,25 @@ EXPECTED_TESTS = 非 root 单测（fixture 模式）+ root scratch-TRUSTED_ROOT 
 
 NEXT_LIFECYCLE_STEP = independent REVIEW（SPEC_REVIEW = ACCEPT | REVISE）→ acceptance
   binding by mayf3 → 仅当 accepted 后，NEXT_TASK（发布 执行 的实现轮）方可开工。
+
+修订轮 2026-08-24（G8 deferral / 发布审计 blocker B-1 收口）：
+G8_AUTHORITY_BLOCKER_CLOSED = YES
+DEPLOY_LOCK_DEFERRED = YES
+CORE_ARCH_CLOSURE_SEMANTIC_DELTA = NONE
+  （G1–G7、G9–G12 十一门与全部 invariant/preservation contract 语义零变更；
+  仅 G8 相关条款改为 external authority precondition）
+READY_FOR_FOCUSED_REVIEW = YES
+NEXT_TASK = 发布 审计
+本轮 revision：
+PRODUCT_CODE_CHANGE = NONE
+SCRIPT_CHANGE = NONE
+HARNESS_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOY = NONE · RESTART = NONE · INSTALL = NONE · MERGE = NONE · ACCEPT = NONE
+修订文件 = 仅 docs/specs/TRUSTED_CP_DEPLOY_ARCH_CLOSURE_V2.md（同一文件同一
+  branch/PR，AMEND-while-proposed）；docs/investigations/
+  trusted-cp-cross-arch-dependency-closure-v1.md 逐字不动（sha256
+  64250bb08c70ba783d03f1362e62c2b03117412ea3c61d224a918fffed869cc0）
 
 本轮 authoring：
 PRODUCT_CODE_CHANGE = NONE
