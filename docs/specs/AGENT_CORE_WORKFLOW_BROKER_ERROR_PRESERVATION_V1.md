@@ -95,6 +95,9 @@ error: { code, status?, detail?, requestId? }
 
 ## 2. Exact implementation file closure
 
+**AUTHORIZED_IMPLEMENTATION_CHANGED_FILES = 9**（授权实现 PR 的唯一
+product/test closure）：
+
 ```
 packages/broker/src/transport.js
 packages/broker/src/mapping.js
@@ -105,11 +108,36 @@ packages/broker/src/capabilities/workflow.js
 packages/broker/test/transport.test.js
 packages/broker/test/capabilities.test.js
 packages/broker/test/relay.test.js
-docs/reports/broker-error-preservation-v1.md   （evidence report）
 ```
 
-`CHANGED_FILE_COUNT = 9`（产品+测试；报告另计）。超出此 closure 的改动不在
-本 Spec 授权范围内。
+- **EXTRA_IMPLEMENTATION_FILE_COUNT = 0**；超出此 closure 的改动不在本 Spec
+  授权范围内。
+- EVIDENCE_ARTIFACT = `docs/reports/broker-error-preservation-v1.md`
+- EVIDENCE_ARTIFACT_ALREADY_IN_AUTHORITY_PR = YES（随本 Spec PR #68 入库）
+- EVIDENCE_ARTIFACT_REQUIRED_AS_IMPLEMENTATION_PR_CHANGE = NO（未来实现 PR
+  **不含** evidence report；实现 closure 严格 = 上述 9 文件）
+
+## 2a. 外部证据 revision 钉定（证据，非授权）
+
+```
+SVC_WORKFLOW_EVIDENCE_REPOSITORY = mayf3/svc-workflow
+SVC_WORKFLOW_EVIDENCE_REVISION  = 6f1f546787bd5fb1644ec91327d3e7374dc28165
+```
+
+该 revision 精确绑定（line-verified 2026-08-25，文件:行号清单见 evidence
+report §5.1）：error envelope（`src/http/error.rs:20-119`）、
+WorkflowQueryError 读侧映射（`error.rs:503-532`）、auth 层
+`unauthenticated`/`forbidden`（`auth/principal.rs:55-63`、
+`error.rs:72-78`）、x-request-id 中间件（`http/mod.rs:31-32`）、
+worklist limit/cursor 契约（`handlers/worklists.rs:27-108`、
+`http/dto.rs:88-92`，其中 **limit 1..20 是 Broker 侧任务冻结契约**，非该
+revision 的服务端反序列化边界）、`principal_not_found` 行为（缺失
+projection → 404 + 该码）。
+
+- **EXTERNAL_EVIDENCE_IS_AUTHORITY = NO**：svc-workflow 源码只构成证据；
+  本 Spec 的实现授权来自自身 accepted and merged on main，别无来源。
+- **EXTERNAL_REPOSITORY_OWNERSHIP_PRESERVED = YES**：本 Spec 及其实现均对
+  svc-workflow 零改动；该仓库归其 owner 所有。
 
 ## 3. 测试验收（WIP 分支已达成）
 

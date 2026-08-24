@@ -146,33 +146,89 @@ request_id = <服务端 uuid>, detail = "principal not found"
 
 ---
 
-## 4. 改动清单
+## 4. 改动清单（closure 拆分）
+
+**AUTHORIZED_IMPLEMENTATION_CHANGED_FILES = 9**（未来授权实现 PR 的唯一
+product/test closure，与
+`AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1` §2 一致）：
 
 ```
 packages/broker/src/transport.js        （改）错误体解析/脱敏/request-id 提取/非2xx重构 + malformed_response 带request-id
 packages/broker/src/mapping.js          （改）validateArgumentsDetailed(bounds+validationError)、requestId 透传、status-aware fallback、违规 detail
 packages/broker/src/schema.js           （改）叶子 minimum/maximum/validationError 校验 + validationError 必须引用已声明码
-packages/broker/src/capabilities/workflow.js （改）读侧错误码表 + limit 1..20 契约
-packages/broker/src/relay.js            （改）requestId 透传
 packages/broker/src/registry.js         （改）output schema + 失败渲染诊断
-packages/broker/test/{transport,capabilities,relay}.test.js （改）新增 15 项 / 改写 1 项
-docs/reports/broker-error-preservation-v1.md （新）本报告
+packages/broker/src/relay.js            （改）requestId 透传
+packages/broker/src/capabilities/workflow.js （改）读侧错误码表 + limit 1..20 契约
+packages/broker/test/transport.test.js       （改）新增/改写
+packages/broker/test/capabilities.test.js    （改）ACs A–F
+packages/broker/test/relay.test.js           （改）request-id 透传
 ```
+
+**EXTRA_IMPLEMENTATION_FILE_COUNT = 0**。
+
+- EVIDENCE_ARTIFACT = `docs/reports/broker-error-preservation-v1.md`（本报告）
+- EVIDENCE_ARTIFACT_ALREADY_IN_AUTHORITY_PR = YES（随 Spec Draft PR #68 入库）
+- EVIDENCE_ARTIFACT_REQUIRED_AS_IMPLEMENTATION_PR_CHANGE = NO（未来实现 PR
+  **不含**本文件；证据归 authority PR，实现 closure 严格 = 上述 9 个文件）
 
 svc-workflow / auth-service / 数据库 / 部署：**零改动**。
 
 ---
 
-## 5. 治理记录（DEVELOPMENT_PREFLIGHT 摘要）
+## 5. 治理记录（DEVELOPMENT_PREFLIGHT 摘要 + Authority Gate 结论）
 
-- 相关 artifact：`docs/reports/broker-transport-v1.md`（transport V1 权威，
-  本轮修订其错误映射行为：`http_4xx + raw detail` → 保留服务码/status/脱敏
-  detail/request-id）；`docs/reports/trusted-credential-broker-integration-v1.md`
-  （relay/gateway 信封契约，加法扩展 `requestId`）。
-- `docs/specs/` 中无直接 govern broker 错误映射的 accepted Spec；本轮变更权威
-  为 operator 任务指令（冻结 AC）。**GAP 如实记录**：建议 owner 后续决定是否
-  将「下游错误保留 + 分页 fail-fast」固化为 Decision/Spec。
+- 相关 artifact（**均为 descriptive report，非 implementation authority**）：
+  `docs/reports/broker-transport-v1.md`（transport V1 的历史行为记录——本报告
+  描述其错误映射行为被修订：`http_4xx + raw detail` → 保留服务码/status/脱敏
+  detail/request-id；该 report 本身不授予也不曾授予实现权限）；
+  `docs/reports/trusted-credential-broker-integration-v1.md`（relay/gateway
+  信封的历史行为记录——加法扩展 `requestId`）。
+- **冻结**：
+  - REPORTS_ARE_DESCRIPTIVE = YES
+  - REPORT_PASS_IS_IMPLEMENTATION_AUTHORITY = NO
+- `docs/specs/` 中无直接 govern broker 错误映射的 accepted Spec（Authority
+  Gate 逐项核查：transport / capability-manifest / relay-envelope / renderer
+  四项 accepted authority 均为无）。
+- OWNER_TASK_IS_AUTHORING_INPUT_ONLY = YES（operator 任务指令只是本报告的
+  撰写输入与验收清单来源）
+- OWNER_TASK_IS_IMPLEMENTATION_AUTHORITY = NO
+- **唯一未来实现 authority**：`AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1`
+  **accepted and merged on main**。在此之前，preserved WIP implementation
+  （`impl/broker-error-preservation-v1-wip` @ ef2bcac）merge forbidden。
 - 未 reopen 任何 rejected 方案。
+
+### 5.1 外部证据 revision 钉定
+
+```
+SVC_WORKFLOW_EVIDENCE_REPOSITORY = mayf3/svc-workflow
+SVC_WORKFLOW_EVIDENCE_REVISION  = 6f1f546787bd5fb1644ec91327d3e7374dc28165
+（本地 checkout mayf3/svc-workflow @ 6f1f546，2026-08-22 提交，
+ 2026-08-25 line-verified；工作树无相关改动）
+```
+
+该 revision 精确绑定以下证据：
+
+- error envelope `{"error":{"code","message","details"?}}`：
+  `src/http/error.rs:20-119`（`ApiError` / `ErrorEnvelope` / `from_query_rejection`）
+- WorkflowQueryError 读侧映射（`principal_not_found` / `principal_disabled` /
+  `workflow_instance_not_found_or_not_visible` / `restricted_history_not_visible` /
+  `global_coordinator_required` / `invalid_pagination` /
+  `internal_consistency_error` / `service_unavailable`）：
+  `src/http/error.rs:503-532`
+- auth 层 401 `unauthenticated`：`src/auth/principal.rs:55-63`；
+  403 `forbidden`（require_scope）：`src/http/error.rs:72-78`
+- x-request-id 中间件（tower-http UUID 生成 + 传播）：
+  `src/http/mod.rs:31-32`
+- worklist limit（`Option<u32>`，Broker 侧 1..20 为任务冻结契约，
+  非服务端反序列化边界）与 cursor 解析（422 `invalid_cursor`）：
+  `src/http/handlers/worklists.rs:27-108`、`src/http/dto.rs:88-92`
+- `principal_not_found` 行为（缺失 projection → 404 + 该码）：
+  `src/http/error.rs:124/175/272/506` 及上述 WorkflowQueryError 映射
+
+- EXTERNAL_EVIDENCE_IS_AUTHORITY = NO（svc-workflow 源码是**证据**，
+  不是本仓实现授权；本仓唯一实现 authority 见 §5）
+- EXTERNAL_REPOSITORY_OWNERSHIP_PRESERVED = YES（本轮对 svc-workflow
+  零改动、零 commit、零 push；其仓库与 revision 归其 owner 所有）
 
 ## 6. 遗留 / 建议
 
