@@ -43,13 +43,16 @@ import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
-import { apply as applyNotificationIngress } from '../../notification-ingress/src/index.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
 import { CHATGPT_SUBSCRIPTION_V1, loadAgentModelOverrides } from './model-overrides.js'
+import {
+  mountNotificationIngressRuntime,
+  wireNotificationIngressDeliveryEvidence,
+} from './notification-ingress-runtime.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
 
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
@@ -373,22 +376,10 @@ export async function composeProductionRuntime(options = {}) {
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
   })
 
-  const ingressCfg = opts.notificationIngress ?? {}
-  // C-BND-003 (NOTIFICATION_INGRESS_SERVICE_AUTH_AND_IDEMPOTENCY_V1): the
-  // composition hands the ingress ONLY its auth-config path + store/evidence
-  // layout paths — verifier/config wiring, no credential material ever flows
-  // through compose (the auth config contains no clientSecret by contract).
-  const notificationIngress = applyNotificationIngress(ctx, {
-    enabled: ingressCfg.enabled ?? process.env.NOTIFICATION_INGRESS_ENABLED !== '0',
-    host: ingressCfg.host ?? process.env.NOTIFICATION_INGRESS_HOST ?? '127.0.0.1',
-    port: ingressCfg.port ?? Number.parseInt(process.env.NOTIFICATION_INGRESS_PORT ?? '8790', 10),
-    authConfigFile: ingressCfg.authConfigFile
-      ?? process.env.NOTIFICATION_INGRESS_AUTH_CONFIG
-      ?? layout.notificationAuthConfig,
-    storeFile: ingressCfg.storeFile ?? layout.notificationIdempotencyStore,
-    evidenceFile: ingressCfg.evidenceFile ?? layout.notificationEvidence,
-    // Test seam only (stub token endpoint); production never sets it.
-    ...(ingressCfg.fetchImpl === undefined ? {} : { fetchImpl: ingressCfg.fetchImpl }),
+  const notificationIngress = mountNotificationIngressRuntime({
+    ctx,
+    config: opts.notificationIngress,
+    layout,
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
@@ -417,43 +408,8 @@ export async function composeProductionRuntime(options = {}) {
     return outcome
   }
 
-  // Observability for the Delivery V0 admission seam: one evidence line per
-  // accepted deliver (wrap, never re-implement — the Router still owns it).
-  const deliverRouterOwned = router.deliver
-  router.deliver = async (req) => {
-    try {
-      const result = await deliverRouterOwned.call(router, req)
-      const proc = router.registrySnapshot().find((p) => p.agentId === req?.agentId)
-      writeEvidence({
-        kind: 'deliver',
-        pid: process.pid,
-        requestId: req?.requestId,
-        agentId: req?.agentId,
-        sessionMode: req?.sessionMode,
-        sessionId: result?.sessionId,
-        status: result?.status ?? null,
-        reconciliationHandle: result?.reconciliationHandle ?? null,
-        evidence: result?.evidence ?? null,
-        routerProcessPid: proc?.pid ?? null,
-        routerProcessAlive: proc?.alive ?? null,
-      })
-      return result
-    } catch (error) {
-      writeEvidence({
-        kind: 'deliver',
-        pid: process.pid,
-        requestId: req?.requestId,
-        agentId: req?.agentId,
-        sessionMode: req?.sessionMode,
-        status: error?.status ?? 'error',
-        reconciliationHandle: error?.reconciliationHandle ?? null,
-        deadlineAtWallMs: error?.deadlineAtWallMs ?? null,
-        evidence: error?.evidence ?? null,
-        error: error?.message ?? String(error),
-      })
-      throw error
-    }
-  }
+  // Admission observability remains a wrap around Router-owned delivery.
+  wireNotificationIngressDeliveryEvidence(router, writeEvidence)
 
   const deliver = feishu !== undefined
     ? createFeishuDeliver(feishu)

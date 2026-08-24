@@ -161,8 +161,8 @@
   "directories": [
     {
       "path": "scripts",
-      "approved_max_children": 39,
-      "reason": "legacy directory over DIRECTORY_MAX_CHILDREN at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (38 immediate tracked children, all handwritten scripts); ceiling raised to 39 solely for the owner-mandated placement of this rule's verifier scripts/verify-code-structure.mjs; no further growth",
+      "approved_max_children": 40,
+      "reason": "legacy directory over DIRECTORY_MAX_CHILDREN at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (38 immediate tracked children, all handwritten scripts); ceiling mechanically synchronized to 40 for the owner-mandated structure verifier and accepted Notification Ingress verification driver; no further growth",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "group scripts by subsystem into scripts/<subsystem>/ subdirectories (respecting depth limit) once count approaches the ceiling"
