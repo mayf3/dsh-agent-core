@@ -20,6 +20,17 @@
  *     bindings/bindings.json            # Router BindingStore — Bindings +
  *                                       #   per-surface bookmarks + Delivery
  *                                       #   V0 fresh-requestId mappings
+ *     notification-ingress/auth.json    # operator-owned 0600 ingress auth
+ *                                       #   config (allowlist + origin; NO
+ *                                       #   clientSecret ever lives here)
+ *     notification-ingress/idempotency.json
+ *                                       # durable delivery idempotency
+ *                                       #   authority (NOTIFICATION_INGRESS_
+ *                                       #   SERVICE_AUTH_AND_IDEMPOTENCY_V1)
+ *     notification-ingress/evidence.jsonl
+ *                                       # append-only audit evidence (NOT an
+ *                                       #   authority; 10 MiB rotation, 2
+ *                                       #   generations)
  *     scheduler/jobs.json               # Scheduler JobStore (agentcore-cron
  *                                       #   default path — DO NOT MOVE)
  *     scheduler/runs.jsonl              # run log (started/finished events)
@@ -51,7 +62,9 @@ export function defaultProductionRoot() {
  *   then ~/.agent-core. Relative inputs are resolved against cwd.
  * @returns {{root:string, agentsConfig:string, agentModelOverrides:string, bindingsStore:string,
  *   jobsStore:string, runsLog:string, workspacesRoot:string, homesRoot:string,
- *   controlDir:string, evidenceLog:string, logsDir:string}}
+ *   controlDir:string, evidenceLog:string, logsDir:string,
+ *   notificationDir:string, notificationAuthConfig:string,
+ *   notificationIdempotencyStore:string, notificationEvidence:string}}
  * @throws {TypeError} when the resolved root contains a `.demo` path segment
  *   (production state must never live in — or depend on — demo state).
  */
@@ -69,6 +82,10 @@ export function resolveProductionLayout(rootInput) {
     agentsConfig: join(root, 'agents.json'),
     agentModelOverrides: join(root, 'agent-model-overrides.json'),
     bindingsStore: join(root, 'bindings', 'bindings.json'),
+    notificationDir: join(root, 'notification-ingress'),
+    notificationAuthConfig: join(root, 'notification-ingress', 'auth.json'),
+    notificationIdempotencyStore: join(root, 'notification-ingress', 'idempotency.json'),
+    notificationEvidence: join(root, 'notification-ingress', 'evidence.jsonl'),
     jobsStore: join(root, 'scheduler', 'jobs.json'),
     runsLog: join(root, 'scheduler', 'runs.jsonl'),
     workspacesRoot: join(root, 'workspaces'),
