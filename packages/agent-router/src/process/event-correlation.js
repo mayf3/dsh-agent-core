@@ -14,6 +14,33 @@
 
 import { sanitizeProviderError } from './provider-errors.js'
 
+/**
+ * Bounded, secret-free classifications of one unresolved-unknown execution
+ * (diagnostic only — never a settlement input). Distinguishes exactly why a
+ * fenced execution is still pending instead of leaving one unified pending.
+ */
+export const UNKNOWN_FENCE_DIAGNOSTICS = Object.freeze([
+  'RECEIPT_CORRELATION_MISSING',
+  'TERMINAL_OBSERVED_IDLE_MISSING',
+  'TERMINAL_OBSERVED_CURRENT_IDLE',
+  'LATER_TURN_STARTED',
+  'CHILD_EXITED',
+  'EVENT_STREAM_LOST',
+])
+
+/** Pure classifier over boolean facts (unit-testable; no process state). */
+export function classifyUnknownFence({
+  exitSeen, streamLost, receiptCorrelated, terminalObserved, laterTurnStarted,
+  currentIdle, idleAfterTurnStart,
+}) {
+  if (exitSeen) return 'CHILD_EXITED'
+  if (streamLost) return 'EVENT_STREAM_LOST'
+  if (!receiptCorrelated) return 'RECEIPT_CORRELATION_MISSING'
+  if (terminalObserved && laterTurnStarted) return 'LATER_TURN_STARTED'
+  if (terminalObserved && currentIdle && idleAfterTurnStart) return 'TERMINAL_OBSERVED_CURRENT_IDLE'
+  return 'TERMINAL_OBSERVED_IDLE_MISSING'
+}
+
 export const eventCorrelationMethods = {
   /** Replay the bounded ring from the watermark through the matcher (C-011). */
   replayExecutionFromWatermark(execution) {
@@ -60,6 +87,7 @@ export const eventCorrelationMethods = {
           execution.laterTurnStartSeen = true
         } else {
           execution.currentTurnNumber = event.data?.turn
+          execution.turnStartObservationSeq = observationSeq
         }
         return
       }
@@ -94,11 +122,24 @@ export const eventCorrelationMethods = {
    */
   trySettleExecution(execution) {
     if (execution.settled || execution.terminalEvent === null) return
-    const idleAfterTerminal = execution.idleObservationSeq !== null
+    if (execution.laterTurnStartSeen) return
+    // C-015 exact_terminal_then_idle admits two idle legs:
+    // (a) an idle observation ordered after the terminal observation, or
+    // (b) the CURRENT session lifecycle state is idle AND that idle
+    //     observation postdates this execution's matched turn/start. The DSH
+    //     stream may flush the post-terminal session.status line before the
+    //     correlated turn/end event; requiring (a) alone then self-locks the
+    //     fence — the fenced process admits no new prompt, so no later
+    //     status transition can ever be observed. A pre-turn stale idle
+    //     never satisfies (b), preserving the B08 frozen semantics.
+    const idleObservedAfterTerminal = execution.idleObservationSeq !== null
       && execution.terminalObservationSeq !== null
       && execution.idleObservationSeq > execution.terminalObservationSeq
-      && !execution.laterTurnStartSeen
-    if (!idleAfterTerminal) return
+    const currentIdlePastTurnStart = this.status[execution.sessionId] === 'idle'
+      && execution.idleObservationSeq !== null
+      && execution.turnStartObservationSeq !== null
+      && execution.idleObservationSeq > execution.turnStartObservationSeq
+    if (!idleObservedAfterTerminal && !currentIdlePastTurnStart) return
     const failed = execution.terminalReason?.kind === 'error'
     if (execution.unknownMarked) {
       this.store.settleLate(execution.handle, {
@@ -190,5 +231,28 @@ export const eventCorrelationMethods = {
   releaseFence(handle) {
     this.activeUnknownFences.delete(handle)
     this.activeUnknownFence = this.activeUnknownFences.values().next().value ?? null
+  },
+
+  /**
+   * Bounded, secret-free diagnostic of one unresolved execution (booleans +
+   * one classification enum only — never a settlement input). `execution`
+   * may be undefined for a pending record without a live matcher (defensive:
+   * the stream facts then dominate).
+   */
+  unknownFenceDiagnostic(execution, sessionIdFallback) {
+    const facts = {
+      exitSeen: this.exit !== undefined,
+      streamLost: this.inputFrozen || this.state === 'DRAINING' || this.state === 'EXITED'
+        || execution === undefined || execution === null,
+      receiptCorrelated: execution?.receiptMessageSeen === true,
+      terminalObserved: execution?.terminalEvent != null,
+      laterTurnStarted: execution?.laterTurnStartSeen === true,
+      currentIdle: this.status[execution?.sessionId ?? sessionIdFallback] === 'idle',
+      idleAfterTurnStart: execution !== undefined && execution !== null
+        && execution.idleObservationSeq !== null
+        && execution.turnStartObservationSeq !== null
+        && execution.idleObservationSeq > execution.turnStartObservationSeq,
+    }
+    return { classification: classifyUnknownFence(facts), ...facts }
   },
 }
