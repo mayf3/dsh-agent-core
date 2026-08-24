@@ -272,7 +272,11 @@ test('AC-CMP-01 F-20 C-AUTH-002 C-IDM-004: every Router call has a verified call
 // ── AC-CMP-02 (source level) — Router package untouched by the ingress ─────
 
 test('AC-CMP-02 source-level: the ingress imports NOTHING from agent-router (zero semantic change)', async () => {
-  for (const file of ['../src/index.js', '../src/auth.js', '../src/idempotency.js']) {
+  for (const file of [
+    '../src/index.js', '../src/auth.js', '../src/deliver-handler.js',
+    '../src/idempotency.js', '../src/idempotency-persistence.js',
+    '../src/idempotency-record.js', '../src/wire-response.js',
+  ]) {
     const source = readFileSync(new URL(file, import.meta.url), 'utf8')
     assert.ok(!/^import[^\n]*agent-router/m.test(source), `${file} must not import agent-router`)
   }
