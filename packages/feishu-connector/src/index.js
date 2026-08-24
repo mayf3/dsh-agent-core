@@ -31,6 +31,10 @@ import {
   conversationWorkspaceId,
 } from './core.js'
 import { normalizedToIngressEvent, createBridgeHandler, createReceiptReply } from './bridge.js'
+import {
+  createProcessingReactionLifecycle,
+  bridgeConfigWithProcessingReaction,
+} from './processing-reaction.js'
 import { createRedactingLogger, sdkLoggerAdapter } from './log-redaction.js'
 
 // Re-export the pure adapter helpers for thin adapters and tests
@@ -62,6 +66,12 @@ const DEFAULTS = {
   // semantics). An explicit false disables exactly one activation.
   requireMentionInGroup: true,
   autoMentionTriggerSender: true,
+  // PROCESSING_REACTION switch (OWNER_RULING = ENABLE_FEISHU_PROCESSING_
+  // REACTION): default false — one `Typing` reaction on the ORIGINAL inbound
+  // message while the admitted Agent turn runs, removed in the turn's
+  // finally. Strict env parsing lives in production-runtime
+  // (FEISHU_PROCESSING_REACTION_ENABLED; invalid values fail loud).
+  processingReactionEnabled: false,
   onEvent: null,
   // V2 PREBOUND_ONLY pre-forward gate predicate (programmatically injected by
   // the composition layer, e.g. production-runtime wiring it to
@@ -94,6 +104,11 @@ export const Config = z.object({
   // intent: false composes NO opts.mentions (markdown / anchoring / body
   // untouched). Default true = the frozen UX Phase1 behavior.
   autoMentionTriggerSender: z.boolean().default(true),
+  // One-shot `Typing` processing reaction on the original inbound message
+  // around the full admitted Agent turn (see src/processing-reaction.js).
+  // Default false = off. The emoji type is NOT configurable (a typo'd
+  // emoji_type would fail silently inside Feishu).
+  processingReactionEnabled: z.boolean().default(false),
 })
 
 function loadCredentials(config) {
@@ -150,13 +165,21 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
     }
   }
 
+  // PROCESSING_REACTION lifecycle (default OFF): wraps the Router's onEvent
+  // at the connector callback seam — strictly AFTER bridge admission — so
+  // only admitted messages can gain the one-shot `Typing` reaction. The
+  // facade keeps every bridge-read config key LIVE over cfg (bridge.js stays
+  // byte-identical; the reaction lifecycle lives entirely in
+  // src/processing-reaction.js).
+  const processingReaction = createProcessingReactionLifecycle({ channel, log })
+
   // EVENT_SURFACE = MESSAGE_ONLY (spec §9): the sole Feishu event handler is
   // `message`. reconnecting/reconnected/error are channel lifecycle
   // callbacks, not event surfaces — cardAction / reaction / comment /
   // meeting handlers are NOT registered and no onRawEvent catch-all exists.
   const onSdkMessage = createBridgeHandler({
     resolveBotIdentity: () => channel.getBotIdentity(),
-    config: cfg,
+    config: bridgeConfigWithProcessingReaction(cfg, processingReaction),
     reply: createReceiptReply(channel, log),
     log,
   })
@@ -250,6 +273,15 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
     setCallback(fn) {
       cfg.onEvent = typeof fn === 'function' ? fn : cfg.onEvent
     },
+    /**
+     * PROCESSING_REACTION graceful dispose: ONE best-effort delete pass over
+     * the reactions still active in memory (no keepalive, no retry loop).
+     * Called by the shell's disposer before channel.disconnect(). Abrupt
+     * process death is a KNOWN_LIMITATION (ghost reaction possible).
+     */
+    async disposeProcessingReactions() {
+      await processingReaction.dispose()
+    },
     /** Swap the V2 pre-forward ingress gate predicate (e.g. the composition
      *  layer wiring PREBOUND_ONLY via the Router's generic read APIs). */
     setIngressGate(fn) {
@@ -321,8 +353,11 @@ export function apply(ctx, config, { createChannel = createLarkChannel } = {}) {
   // connection down. NOTE: context.effect consumes a SYNCHRONOUS disposer
   // (an async return value would never be registered — the V0 shell's
   // `ctx.effect(async ...)` disposer was silently dropped); the async
-  // lifecycle itself is carried by ready(), not by this hook.
+  // lifecycle itself is carried by ready(), not by this hook. The processing
+  // reactions' best-effort cleanup is kicked off first (same microtask
+  // race; both are logged, neither blocks the other).
   ctx.effect(() => () => {
+    handle.disposeProcessingReactions().catch(() => { /* best effort; already logged */ })
     channel.disconnect().catch((error) => {
       log('warn', '[feishu] disconnect cleanup failed', error)
     })
