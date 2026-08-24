@@ -20,4 +20,5 @@ export { RECOGNIZED_PROXY_ENV_KEYS, childSpawnConfig, AGENT_CHILD_TMPDIR, agentE
 export { redactSensitiveText, classifyProviderError, sanitizeProviderError } from './provider-errors.js'
 export { PROCESS_STATES, monotonicNowMs } from './state-machine.js'
 export { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
+export { UNKNOWN_FENCE_DIAGNOSTICS, classifyUnknownFence } from './event-correlation.js'
 export { AgentProcess } from './agent-process.js'
