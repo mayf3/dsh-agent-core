@@ -87,6 +87,9 @@ export function createRelayHandlers(manifest, requestFn) {
         errorCode: typeof error.code === 'string' ? error.code : 'invalid_arguments',
         ...(typeof error.status === 'number' ? { status: error.status } : {}),
         ...(typeof error.detail === 'string' ? { detail: error.detail } : {}),
+        // Downstream x-request-id travels the relay unchanged (null/absent
+        // when the parent had none — never fabricated here either).
+        ...(typeof error.requestId === 'string' && error.requestId.length > 0 ? { requestId: error.requestId } : {}),
       }
     }
   }

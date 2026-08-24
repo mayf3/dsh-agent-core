@@ -79,9 +79,12 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
         properties: {
           code: { type: 'string' },
           // Transport-produced errors additionally carry the upstream HTTP
-          // status and a short detail (upstream body / cause), when available.
+          // status, a short SANITIZED detail (upstream message / cause) and
+          // the downstream `x-request-id` for error correlation, when
+          // available.
           status: { type: 'number' },
           detail: { type: 'string' },
+          requestId: { type: 'string' },
         },
       },
     },
@@ -94,6 +97,17 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
       // (`external.calculator: multiply(6, 7) = 42 (ok: true)`) byte-identical.
       .map(([, v]) => (typeof v === 'string' ? v : JSON.stringify(v)))
       .join(', ')
+
+  // Downstream error rendering: the model-visible failure line carries the
+  // precise diagnostics (upstream HTTP status + downstream x-request-id),
+  // never a bare flattened `http_4xx`.
+  const renderError = (error) => {
+    const parts = []
+    if (typeof error?.status === 'number') parts.push(`status=${error.status}`)
+    if (typeof error?.requestId === 'string' && error.requestId.length > 0) parts.push(`request_id=${error.requestId}`)
+    const suffix = parts.length > 0 ? ` (${parts.join(', ')})` : ''
+    return `${error?.code ?? 'unknown_error'}${suffix}`
+  }
 
   return {
     capabilityId: wireId,
@@ -108,7 +122,7 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
         render: (args, value) =>
           value && value.ok === true
             ? [{ type: 'text', text: `${wireId}: ${args.operation}(${renderArgs(args)}) = ${JSON.stringify(value.result)} (ok: true)` }]
-            : [{ type: 'text', text: `${wireId}: ${args.operation}(${renderArgs(args)}) failed: ${value?.error?.code}` }],
+            : [{ type: 'text', text: `${wireId}: ${args.operation}(${renderArgs(args)}) failed: ${renderError(value?.error)}` }],
       },
       async execute(args) {
         // Single identity source: resolvePrincipal, never from args.
