@@ -366,14 +366,17 @@ test('C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths —
   for (const key of Object.keys(envBefore)) delete envAfter[key]
   assert.equal(Object.keys(envAfter).filter((k) => k.startsWith('NOTIFICATION_INGRESS_')).length, 0, 'compose sets no ingress env at all')
 
-  // Source-level: compose forwards only the documented wiring keys.
+  // Source-level: the focused runtime helper forwards only documented wiring
+  // keys, while compose retains a high-level mount call.
   const composeSource = readFileSync(new URL('../src/compose.js', import.meta.url), 'utf8')
-  const ingressBlock = composeSource.slice(composeSource.indexOf('applyNotificationIngress(ctx'))
+  assert.ok(composeSource.includes('mountNotificationIngressRuntime({'))
+  const helperSource = readFileSync(new URL('../src/notification-ingress-runtime.js', import.meta.url), 'utf8')
+  const ingressBlock = helperSource.slice(helperSource.indexOf('applyNotificationIngress(ctx'))
   const forwarded = ingressBlock.slice(0, ingressBlock.indexOf('})'))
   for (const key of ['enabled', 'host', 'port', 'authConfigFile', 'storeFile', 'evidenceFile', 'fetchImpl']) {
-    assert.ok(forwarded.includes(key), `compose forwards ${key}`)
+    assert.ok(forwarded.includes(key), `runtime helper forwards ${key}`)
   }
-  assert.ok(!forwarded.includes('clientSecret'), 'compose never forwards credential material')
+  assert.ok(!forwarded.includes('clientSecret'), 'runtime helper never forwards credential material')
 
   // Without an auth config the composition still mounts, fail-closed per call.
   const { port } = runtime.notificationIngress.address()
