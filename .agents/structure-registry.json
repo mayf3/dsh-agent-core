@@ -8,7 +8,7 @@
     {
       "path": "packages/agent-credential-provisioning/src/store-writer.js",
       "approved_max_lines": 516,
-      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (516 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (516 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
@@ -16,7 +16,7 @@
     {
       "path": "packages/agent-credential-provisioning/test/provisioning.test.js",
       "approved_max_lines": 797,
-      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (797 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (797 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "split into per-behavior test files (describe/it blocks grouped by contract) before next major edit"
@@ -24,7 +24,7 @@
     {
       "path": "packages/agent-definition/test/definition.test.js",
       "approved_max_lines": 516,
-      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (516 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (516 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "split into per-behavior test files (describe/it blocks grouped by contract) before next major edit"
@@ -32,7 +32,7 @@
     {
       "path": "packages/agent-memory/src/index.js",
       "approved_max_lines": 683,
-      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (683 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (683 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
@@ -40,7 +40,7 @@
     {
       "path": "packages/agent-router/src/binding-store.js",
       "approved_max_lines": 508,
-      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (508 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (508 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
@@ -48,7 +48,7 @@
     {
       "path": "packages/agent-router/test/workspace-binding.test.js",
       "approved_max_lines": 553,
-      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (553 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (553 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "split into per-behavior test files (describe/it blocks grouped by contract) before next major edit"
@@ -56,7 +56,7 @@
     {
       "path": "packages/broker/src/transport.js",
       "approved_max_lines": 580,
-      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (580 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (580 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
@@ -64,7 +64,7 @@
     {
       "path": "packages/broker/test/transport.test.js",
       "approved_max_lines": 733,
-      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (733 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (733 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "split into per-behavior test files (describe/it blocks grouped by contract) before next major edit"
@@ -72,7 +72,7 @@
     {
       "path": "packages/feishu-connector/src/bridge.js",
       "approved_max_lines": 518,
-      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (518 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (518 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
@@ -80,7 +80,7 @@
     {
       "path": "packages/scheduler/src/scheduler.js",
       "approved_max_lines": 713,
-      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (713 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (713 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
@@ -88,7 +88,7 @@
     {
       "path": "packages/scheduler/test/scheduler.test.js",
       "approved_max_lines": 660,
-      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (660 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (660 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "split into per-behavior test files (describe/it blocks grouped by contract) before next major edit"
@@ -96,7 +96,7 @@
     {
       "path": "scripts/feishu-phase-a-final-canary.mjs",
       "approved_max_lines": 1188,
-      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (1188 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (1188 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
@@ -104,7 +104,7 @@
     {
       "path": "scripts/mobile-gate1-verify.mjs",
       "approved_max_lines": 626,
-      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (626 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (626 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
@@ -112,7 +112,7 @@
     {
       "path": "scripts/process-model-demo.mjs",
       "approved_max_lines": 663,
-      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (663 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (663 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
@@ -120,7 +120,7 @@
     {
       "path": "scripts/product-integration-v1-verify.mjs",
       "approved_max_lines": 551,
-      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (551 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (551 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
@@ -128,7 +128,7 @@
     {
       "path": "scripts/production-integration-v1-acceptance.mjs",
       "approved_max_lines": 742,
-      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (742 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (742 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
@@ -136,7 +136,7 @@
     {
       "path": "scripts/trusted-cp-hardening-v1-verify.mjs",
       "approved_max_lines": 775,
-      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (775 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (775 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
@@ -144,7 +144,7 @@
     {
       "path": "scripts/trusted-credential-505-final-v2-run.mjs",
       "approved_max_lines": 685,
-      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (685 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (685 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
@@ -152,7 +152,7 @@
     {
       "path": "scripts/trusted-credential-broker-v1-verify.mjs",
       "approved_max_lines": 537,
-      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (537 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 §6; ceiling = baseline lines; must not grow; major change requires split",
+      "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (537 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
