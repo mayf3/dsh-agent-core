@@ -7,7 +7,9 @@ spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
-replaces_on_acceptance: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
+replaces_on_acceptance:
+  - AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
+  - AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
 supersedes: []
 superseded_by: null
 scope:
@@ -36,8 +38,10 @@ references:
 
 > SPEC_STATUS = **proposed**（authoring round 2026-08-25；READY_FOR_INDEPENDENT_REVIEW）。
 > 本文件是 **docs-only whole-authority replacement Spec**：按 vendored
-> SPEC_GOVERNANCE_V0.md §9.2，acceptance 时直接取代 main 上当前 active
-> model-route authority `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1`。
+> SPEC_GOVERNANCE_V0.md §9.2，acceptance 时原子 whole-supersede main 上当前
+> active model-route authority `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` 与
+> current v1 providerEnv seam authority
+> `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1`。
 > PR #60 / `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` 从未进入 main，
 > 不是 active authority，定性为 `ABANDONED_UNMERGED_CANDIDATE`；本 Spec **不
 > supersede PR #60**。PR #60 必须关闭且永不 merge，见 §3.3/§3.4/§12。
@@ -137,9 +141,13 @@ deployment 配置拥有，代码不内嵌任何路由顺序」。这是 accepted
   且 `NODE_USE_ENV_PROXY` 必须精确等于 `"1"`；缺键、额外键、非 string 或其他
   `NODE_USE_ENV_PROXY` 值均 malformed → startup fail-loud。**raw credential /
   token / secret 绝不进入配置文件**（CTR-010）。
-- 静态配置语义（直接延续 main active authority 的 fail-loud 边界）：startup 一次性加载；malformed
-  （schema 非法 / 字段缺失 / 引用未解析 / 重复 route / 超出 hard bound）→
-  startup fail-loud，不得静默忽略或回退默认值；config change requires
+- 静态配置语义（直接延续 main active authorities 的 fail-loud 边界）：startup
+  一次性加载；在普通 JSON parse 前必须对 v2 **全文件递归 duplicate JSON key**
+  扫描（至少覆盖顶层、`routeCatalog`、每个 route entry / `providerEnv`、
+  `overrides`、每个 Agent/model object）；任一重复键 = malformed → startup
+  fail-loud。其余 malformed（schema 非法 / 字段缺失 / 引用未解析 / 重复
+  route / 超出 hard bound）同样 startup fail-loud，不得静默忽略或回退默认值；
+  config change requires
   controlled restart（无热 reload、无文件 watcher）。
 - version 必须 = 2；version ≠ 2（含 version 1 旧文件）→ fail-loud，由
   deployment 显式迁移（docs/runbook 层动作），产品代码不做自动转换、不做
@@ -210,18 +218,24 @@ readiness 与 plugin 事实，属部署/就绪事实，不是本 Spec 的发明�
 
 ```text
 MAIN_ACTIVE_MODEL_ROUTE_AUTHORITY = AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
-REPLACES_ON_ACCEPTANCE            = AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
-AUTHORITY_CHANGE_FORM             = whole-authority SUPERSEDE
+CURRENT_PROVIDER_ENV_SEAM_AUTHORITY =
+  AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
+REPLACES_ON_ACCEPTANCE = [
+  AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1,
+  AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
+]
+AUTHORITY_CHANGE_FORM = atomic whole-authority SUPERSEDE of both main authorities
 
 PR60_DISPOSITION = ABANDONED_UNMERGED_CANDIDATE
 PR60_ACTIVE_AUTHORITY = NO
 PR70_SUPERSEDES_PR60 = NO
 ```
 
-main 上的 active authority 恰好覆盖 `agt_cto-agent` 的 model-route override
-政策；v1 loader 也把合法 override 限制为该 Agent（OBS-002/OBS-006）。因此本 Spec
-acceptance 时直接 whole-authority replacement main active authority，不做 partial
-supersession，也不把未进入 main 的 PR #60 放入 authority lineage。
+main 上的 PROVIDER_V1 恰好覆盖 `agt_cto-agent` model-route override 政策，
+PROXY_SEAM_V1 覆盖同一文件 v1 `providerEnv` seam；v1 loader 也把合法 override
+限制为该 Agent（OBS-002/OBS-006）。v2 同时改变 route schema 与 providerEnv 字段
+位置，因此本 Spec acceptance 时原子 whole-supersede 两份 main authorities，不做
+partial supersession，也不把未进入 main 的 PR #60 放入 authority lineage。
 
 ### 3.2 Related authorities（如实登记）
 
@@ -479,8 +493,9 @@ backlink 或对其他 main authority 的 lifecycle 改写借 PR #70 带入 main�
   deployment-owned `agent-model-overrides.json` **version 2**（§2.1 schema）：
   routeCatalog（routeRef → provider/model/plugin/pluginVersion/
   credentialReadiness/providerEnv?）+ overrides.`<agentId>`.model.primary
-  （routeRef）+ .fallbacks（ordered routeRef array）。校验规则：exact schema；
-  引用必须解析；同 routeRef 重复或不同 routeRef 解析为相同
+  （routeRef）+ .fallbacks（ordered routeRef array）。校验规则：普通 parse 前
+  全文件递归 duplicate-key 扫描，任一层重复 JSON key 均 fail-loud；exact
+  schema；引用必须解析；同 routeRef 重复或不同 routeRef 解析为相同
   `CANONICAL_ROUTE_IDENTITY` 均 fail-loud；链长 ≤ MAX_CONFIGURED_ROUTES；
   version ≠ 2 fail-loud；激活范围 = 恰好 `{agt_cto-agent}`。malformed 家族
   一律 startup fail-loud；config change requires controlled restart。
@@ -573,7 +588,8 @@ backlink 或对其他 main authority 的 lifecycle 改写借 PR #70 带入 main�
   catalog 的 `credentialReadiness` 仅携带 reference。`providerEnv` **不是
   reference**，整个字段 optional；若存在，必须精确包含 `HTTP_PROXY`、
   `HTTPS_PROXY`、`NO_PROXY`、`NODE_USE_ENV_PROXY`，所有值为 string，且
-  `NODE_USE_ENV_PROXY = "1"`；禁止额外键。任何缺键、额外键、类型错误或值错误
+  `NODE_USE_ENV_PROXY = "1"`；禁止额外键；`providerEnv` 内任一 duplicate JSON
+  key 必须在 parse 前 fail-loud。任何缺键、额外键、重复键、类型错误或值错误
   均 malformed fail-loud。承接被 whole-supersede seam 的更强值域：四值均为
   **非空** string；`HTTP_PROXY` / `HTTPS_PROXY` 均须为可解析的 `http:` 或
   `https:` URL，host 非空、端口合法，不得含 username/password/userinfo、query、
@@ -633,7 +649,7 @@ backlink 或对其他 main authority 的 lifecycle 改写借 PR #70 带入 main�
 
 | # | 项 | 覆盖 |
 |---|---|---|
-| ACC-001 | v2 schema 校验族：malformed（schema/缺字段/未解析引用/重复 routeRef/canonical alias tuple 重复/providerEnv 缺键、额外键、非 string、NODE_USE_ENV_PROXY≠"1"/超 bound/version≠2/非授权 agentId）逐一 ⇒ startup fail-loud；合法配置 ⇒ startup 加载成功 | CTR-001/003/010 |
+| ACC-001 | v2 schema 校验族：全文件各层 recursive duplicate JSON key（顶层/routeCatalog/route entry/providerEnv/overrides/agent/model）逐一 ⇒ parse 前 fail-loud；其余 malformed（schema/缺字段/未解析引用/重复 routeRef/canonical alias tuple 重复/providerEnv 缺键、额外键、非 string、NODE_USE_ENV_PROXY≠"1"/超 bound/version≠2/非授权 agentId）逐一 ⇒ startup fail-loud；合法配置 ⇒ startup 加载成功 | CTR-001/003/010 |
 | ACC-002 | primary-first：primary 成功 ⇒ 零 fallback 活动（journal TOTAL_ROUTE_ATTEMPTS=1；零 Luna 网络活动） | CTR-002 |
 | ACC-003 | 有序遍历：注入 route[0] 白名单失败 ⇒ 恰一次推进 route[1]；注入 route[1] 白名单失败 ⇒ 恰一次推进 route[2]（多跳链）；无跳跃；不同 routeRef 同 canonical tuple 在 startup 拒绝；运行时每 canonical route 每 turn 最多一次 | CTR-003/004 |
 | ACC-004 | 四类白名单在**首跳与中间跳**各自注入 ⇒ 各自恰一次推进，journal 字段齐全 | CTR-004 |
@@ -737,9 +753,11 @@ TASK_STATUS = REVISION_COMPLETE（proposed；READY_FOR_INDEPENDENT_REVIEW）
 
 SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
 REVISION_BASE = 4c2336c68181284e99f87f127aa176a8fa8b0d16（PR #70 expected head）
-REPLACES_ON_ACCEPTANCE = AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
-ALSO_WHOLE_SUPERSEDES_ON_ACCEPTANCE =
+REPLACES_ON_ACCEPTANCE = [
+  AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1,
   AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
+]
+MAIN_ACTIVE_MODEL_ROUTE_AUTHORITY_REPLACED_DIRECTLY = YES
 PROXY_SEAM_V1_SAFETY_CONTRACTS = FULLY_ABSORBED_BY_CTR_010_AND_CTR_014
 PR60_DISPOSITION = ABANDONED_UNMERGED_CANDIDATE
 PR60_ACTIVE_AUTHORITY = NO
