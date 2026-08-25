@@ -10,10 +10,12 @@
     "./job-model": "./src/job-model.js",
     "./schedule": "./src/schedule.js",
     "./store": "./src/store.js",
+    "./occurrence": "./src/occurrence-model.js",
+    "./reconcile": "./src/reconcile.js",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "croner": "^10.0.1"
