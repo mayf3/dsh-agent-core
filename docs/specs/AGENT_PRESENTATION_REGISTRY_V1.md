@@ -36,6 +36,9 @@ references:
 
 ```text
 TASK_NAME = 形象 执行
+AMENDMENT_ID = AGENT_PRESENTATION_REGISTRY_V1_AFTER_INDEPENDENT_REVIEW_V2
+PREVIOUS_REVIEW_COMMENT = 5411478885
+PREVIOUS_REVIEWED_HEAD = 007a257b2f07ef54e0874ffe482550c9cc6b8c13
 SPEC_GOVERNANCE_MODE = AUTHOR
 PREFLIGHT_MODE = NEW
 STATUS = proposed
@@ -130,7 +133,8 @@ NEXT_ACTION                   = independent review of this exact docs-only revis
 | avatar, emoji, color, tagline, discovery and voice-profile reference | new Product Presentation authority | owned here |
 | Mobile rendering and interaction | `mayf3/agent-core-mobile` future Spec (`MOBILE_AGENT_ROLE_SURFACE_V1`) | external consumer; not authorized here |
 | current Agent and Session for a product surface | Router-owned Binding | referenced, not redefined |
-| switch mechanics and persisted bookmark | existing Router / Binding authorities | preserved |
+| switch mechanics and Binding success | existing Router / Binding authorities | preserved |
+| Mobile “换回来” navigation | `mayf3/agent-core-mobile` authority | unresolved here; requires Mobile PREFLIGHT and owner decision |
 | model switch tool | existing `agent-switch` adapter | preserved, no change |
 | future TTS/STT and voice semantics | future independent Voice authority | not owned here |
 
@@ -344,17 +348,34 @@ state and do not prove future Contract conformance.
 - Reason: preserve the frozen identity/roster boundary and permit presentation to
   evolve without changing Agent existence, routing, or persona.
 
-### DEC-APR-002 — Optional absence degrades; configured corruption fails loud
+### DEC-APR-002 — Optional absence degrades; configured corruption is contained
 
 - Decision owner: repository owner `mayf3`.
 - Decision: no configured registry path means a valid empty Registry and backward-
   compatible null/default presentation. Once a registry path is configured, missing,
-  unreadable, malformed, schema-invalid, duplicate-id, or unsafe-asset content fails
-  that reader and prevents the dependent Product API from starting. It MUST NOT reset,
-  partially load, or silently treat a broken configured artifact as empty.
-- Rejected alternative: silently ignore malformed configured data.
-- Reason: preserve old deployments without a registry while preventing operator errors
-  from becoming an ambiguous partial product view.
+  unreadable, malformed, unsupported-version, schema-invalid, duplicate-id, alias-
+  collision, or unsafe-asset content marks the whole Registry invalid. Only
+  `GET /v1/agents` fails closed with deterministic `503`
+  `PRESENTATION_REGISTRY_INVALID`; the Product API remains mounted and shared runtime
+  composition remains available. The reader MUST NOT reset, partially publish, or
+  silently treat a broken configured artifact as empty.
+- Rejected alternatives: silently ignore malformed configured data; or throw during
+  shared composition mounting and take unrelated runtime surfaces down.
+- Reason: preserve old deployments without a registry, prevent ambiguous partial views,
+  and contain presentation failure to its sole dependent HTTP surface.
+
+```text
+REGISTRY_PATH_UNCONFIGURED       = VALID_EMPTY_REGISTRY
+CONFIGURED_REGISTRY_INVALID      = FAIL_CLOSED
+PRESENTATION_DEPENDENT_SURFACE   = GET /v1/agents
+PRESENTATION_FAILURE_HTTP_STATUS = 503
+PRESENTATION_FAILURE_ERROR_CODE  = PRESENTATION_REGISTRY_INVALID
+SILENT_EMPTY_FALLBACK            = FORBIDDEN
+PARTIAL_PRESENTATION_PUBLICATION = FORBIDDEN
+SHARED_RUNTIME_COMPOSITION_FAILURE = FORBIDDEN
+OTHER_PRODUCT_API_ROUTES         = UNAFFECTED
+UNRELATED_RUNTIME_COMPONENTS     = UNAFFECTED
+```
 
 ### DEC-APR-003 — Product Agent view is a Definition-left join
 
@@ -386,9 +407,23 @@ state and do not prove future Contract conformance.
 - Decision owner: repository owner `mayf3`.
 - Decision: presentation does not redefine switching. Binding change is authoritative;
   model reply text is not proof; the switched Agent handles the next user message;
-  same-turn handoff is outside V1; Router bookmarks remain Router-owned.
-- Rejected alternative: modify `agent-switch` or infer switch success from model prose.
-- Reason: presentation is orthogonal to routing and Session ownership.
+  same-turn handoff is outside V1. This Spec neither selects `previousAgentId +
+  switchAgent` nor preserves `previous + switchSession` as the future Mobile
+  back-navigation design.
+- Rejected alternative: modify `agent-switch`, infer switch success from model prose,
+  or silently decide a cross-repository Mobile navigation contract here.
+- Reason: presentation is orthogonal to routing and Session ownership; the pinned
+  Mobile authority currently uses Mobile previous state plus `switchSession`, while
+  the pinned HTTP implementation reports `NOT_IMPLEMENTED`. Resolving that conflict
+  belongs to Mobile repository PREFLIGHT and owner review.
+
+```text
+PLUGIN_CHANGE_REQUIRED       = NO
+SWITCH_SUCCESS_AUTHORITY     = Binding change
+MODEL_TEXT_SWITCH_CLAIM      = NOT_AUTHORITATIVE
+SAME_TURN_HANDOFF            = OUT_OF_SCOPE_FOR_V1
+MOBILE_BACK_NAVIGATION_AUTHORITY_HANDLING = UNRESOLVED
+```
 
 ## 9. Contracts
 
@@ -433,14 +468,16 @@ searchAliases: string[]
 sortOrder: integer
 ```
 
-Defaults MUST normalize to `featured=false`, `mobileVisible=true`,
-`searchAliases=[]`, and `sortOrder=0`. Optional strings, when present, MUST be
-non-empty after trimming; aliases MUST be non-empty strings and duplicate aliases
-within an entry MUST be rejected. Unknown fields MUST fail loud. The fields `name`,
-`persona`, `workspace`, `credential`, `grant`, `provider`, `model`, `session`,
-`runtime`, `process`, and `memory` are forbidden. The artifact MUST remain a
-read-only deployment artifact and MUST have no runtime mutation, upload, or edit API.
-`voiceProfileId` MUST remain opaque and MUST NOT trigger TTS/STT or provider behavior.
+Defaults MUST normalize to `avatarUrl=null`, `emoji=null`, `colorToken=null`,
+`tagline=null`, `voiceProfileId=null`, `featured=false`, `category=null`,
+`mobileVisible=true`, `searchAliases=[]`, and `sortOrder=0`. Optional strings, when
+present, MUST be non-empty after trimming. Alias validity, normalization, global
+collision, and matching are exclusively defined by `CTR-SEARCH-ALIAS-001`. Unknown
+fields MUST fail loud. The fields `name`, `persona`, `workspace`, `credential`,
+`grant`, `provider`, `model`, `session`, `runtime`, `process`, and `memory` are
+forbidden. The artifact MUST remain a read-only deployment artifact and MUST have no
+runtime mutation, upload, or edit API. `voiceProfileId` MUST remain opaque and MUST
+NOT trigger TTS/STT or provider behavior.
 
 ### CTR-PRESENTATION-LOAD-001 — Load lifecycle and failure semantics
 
@@ -448,9 +485,26 @@ If no registry path is configured, the reader MUST expose a valid empty Registry
 a path is configured, it MUST be an operator-controlled absolute path and the reader
 MUST load and validate the whole artifact before publishing any view. A configured
 file that is missing, unreadable, malformed JSON, unsupported version, schema-invalid,
-duplicate-id, or contains an unsafe avatar URL MUST fail loud and prevent the
-dependent Product API from starting. It MUST NOT publish a partial view, reset the
-artifact, mutate the file, or silently degrade a configured failure to empty.
+duplicate-id, alias-colliding, or contains an unsafe avatar URL MUST mark the entire
+Registry invalid with stable code `PRESENTATION_REGISTRY_INVALID`. It MUST NOT publish
+a partial view, reset or mutate the artifact, or silently degrade a configured failure
+to empty. Fail-closed HTTP behavior and runtime isolation are governed by
+`CTR-PRESENTATION-CONTAINMENT-001`.
+
+### CTR-PRESENTATION-CONTAINMENT-001 — Presentation failure is isolated to Agent listing
+
+The sole presentation-dependent failure surface MUST be `GET /v1/agents`. When a
+configured Registry is invalid, that route MUST deterministically return HTTP `503`
+with error code `PRESENTATION_REGISTRY_INVALID` and MUST return no partial Agent list.
+The Product API HTTP surface MUST remain mounted. `GET /v1/binding`,
+`POST /v1/switch-agent`, and `POST /v1/message` MUST remain available according to
+their existing contracts. Router, AgentProcess, Feishu connector, Notification
+Ingress, Scheduler, Broker, every non-Mobile entry, and every unrelated runtime
+component MUST remain mounted and unaffected. The shared `composeProductionRuntime()`
+MUST NOT fail or become non-starting because Presentation loading or validation failed.
+Errors and logs MUST be sanitized: they MAY carry the stable code and bounded reason
+class, but MUST NOT include Registry file contents, a full local path, Presentation
+payload fields, or secrets.
 
 ### CTR-PRESENTATION-MERGE-001 — Definition-left merged view
 
@@ -462,10 +516,14 @@ AgentDefinition LEFT JOIN Presentation ON AgentDefinition.id = Presentation.agen
 
 Agent Definition MUST remain authoritative for existence, `id`, `name`,
 `description`, default, and disabled. A missing Presentation MUST NOT affect routing
-and MUST normalize to `avatar=null`, `featured=false`, `category=null`,
-`mobileVisible=true`, `colorToken=null`, `voiceProfileId=null`, `searchAliases=[]`, and
-`sortOrder=0`. Presentation MUST NOT create an Agent, replace `description`, or copy,
-override, or supply `name`.
+and MUST normalize to `avatar=null`, `emoji=null`, `colorToken=null`, `tagline=null`,
+`voiceProfileId=null`, `featured=false`, `category=null`, `mobileVisible=true`,
+`searchAliases=[]`, and `sortOrder=0`. Presentation MUST NOT create an Agent or copy,
+override, or supply `name` or `description`. `tagline` MUST remain an independent
+nullable presentation field and MUST NOT replace, overwrite, or rewrite Agent
+Definition `description`. `emoji` MUST remain a nullable presentation fallback hint;
+when absent, Mobile MAY continue using its own local fallback. `voiceProfileId` MUST
+remain opaque metadata.
 
 ### CTR-DUPLICATE-AGENT-001 — Duplicate presentation ids fail loud
 
@@ -494,7 +552,8 @@ regardless of Presentation fields. Presentation MUST NOT re-enable or route it.
 An enabled Agent with normalized `mobileVisible=false` MUST NOT appear in the Mobile
 Product API list, primary cast, category browse results, or search results.
 `mobileVisible` MUST NOT change Agent existence, disabled state, Router resolution,
-Binding, Session, process lifecycle, or non-Mobile product policy.
+Binding, Session, process lifecycle, authorization, or non-Mobile product policy.
+`MOBILE_VISIBLE_IS_AUTHORIZATION = NO`.
 
 ### CTR-DEFAULT-AGENT-001 — Default comes only from Agent Definition
 
@@ -534,15 +593,65 @@ The Product API MUST return deterministic order:
 The same comparator MUST be used by primary-cast, category, and search projections
 after filtering. Registry input order MUST NOT decide Product order.
 
+### CTR-SEARCH-ALIAS-001 — Global alias validity and deterministic discovery
+
+```text
+ALIAS_NORMALIZATION = NFKC -> Unicode-whitespace trim -> internal Unicode-whitespace collapse -> ECMAScript lowercase
+```
+
+For collision and search keys, implementations MUST apply this exact normalization in
+order: Unicode NFKC; trim leading/trailing Unicode whitespace; collapse each internal
+run of Unicode whitespace to one ASCII space; then ECMAScript deterministic
+lowercase. The Registry MUST retain each alias's trim-only display value, while all
+collision and search decisions use the normalized key.
+
+A normalized-empty alias, duplicate normalized alias within one entry, or duplicate
+normalized alias across different Agents MUST invalidate the whole configured
+Registry. An alias normalized key MUST NOT equal any Agent Definition canonical
+`name` normalized by the same algorithm. An alias MUST NOT equal any Agent Definition
+`agentId` under ASCII case-insensitive exact comparison. These checks cover the full
+Agent Definition roster and the full configured Registry and MUST be independent of
+Registry input order.
+
+Discovery query normalization MUST use the same algorithm. An empty normalized query
+MUST NOT execute alias search. An Agent enters search results when its `agentId` is an
+ASCII case-insensitive exact match, or its canonical `name` or any alias is a
+normalized-substring match. Returned identity MUST always be Agent Definition
+`agentId`; multiple matches MUST use `CTR-SORT-001`. Aliases are Product discovery
+metadata only: they MUST NOT enter Router `resolveAgentRef`, change switching or
+routing, grant permission, or create an authorization meaning.
+
 ### CTR-ASSET-URL-001 — Avatar URL trust boundary
 
-`avatarUrl`, when present, MUST parse as an absolute HTTPS URL whose exact origin is
-in a trusted deployment-configured allowlist. Userinfo, fragments, non-default
-credentials, unapproved ports, IP-literal hosts, and every non-HTTPS scheme including
-`file`, `content`, `data`, and `javascript` MUST be rejected. Redirect handling, if an
-implementation fetches or proxies assets, MUST revalidate every hop against the same
-allowlist. Product API `avatar` MUST be the validated URL string or `null`; it MUST
-never expose an unvalidated value.
+```text
+BACKEND_AVATAR_FETCH                  = FORBIDDEN
+BACKEND_AVATAR_PROXY                  = FORBIDDEN
+BACKEND_NETWORK_IO_FOR_PRESENTATION_ASSETS = ZERO
+AVATAR_ORIGIN_ALLOWLIST_OWNER         = deployment configuration
+AVATAR_ORIGIN_ALLOWLIST_DEFAULT       = empty
+```
+
+The backend MUST perform zero network I/O for presentation assets. It MUST NOT issue
+`HEAD` or `GET`, follow redirects, resolve DNS, download, cache, fetch, or proxy an
+avatar, or access any internal or metadata endpoint. Its only allowed work is to use a
+standard URL parser, validate an absolute HTTPS URL against a deployment-owned exact-
+origin allowlist, and project the already validated URL string.
+
+The deployment configuration is the sole allowlist owner and its default MUST be
+empty. No Agent or Mobile request may supply or extend it. Each allowlist entry MUST
+be one normalized exact HTTPS origin; wildcards, path prefixes, userinfo, fragments,
+and IP-literal hosts are forbidden. `avatarUrl` itself MUST reject userinfo, fragments,
+unapproved ports or origins, IP-literal hosts, and every non-HTTPS scheme including
+`file`, `content`, `data`, and `javascript`. No `avatarUrl` with an empty allowlist is
+a valid configuration; any present `avatarUrl` with an empty allowlist invalidates the
+configured Registry. Product API `avatar` MUST be the validated URL string or `null`
+and MUST never expose an unvalidated value.
+
+Mobile or a future asset consumer owns actual image download. Its own accepted
+authority MUST freeze redirect handling; if redirects are allowed, the final URL
+origin must remain approved. Consumer network failure MUST fall back to presentation
+`emoji`/`colorToken` or the consumer's local fallback. These consumer obligations are
+an external dependency record only and do not authorize Mobile implementation here.
 
 ### CTR-PRODUCT-API-001 — Backward-compatible Product Agent representation
 
@@ -553,21 +662,26 @@ id: string
 name: string
 description: string|null
 avatar: string|null
-isDefault: boolean
+emoji: string|null
+colorToken: string|null
+tagline: string|null
+voiceProfileId: string|null
 featured: boolean
 category: string|null
 mobileVisible: boolean
-colorToken: string|null
-voiceProfileId: string|null
 searchAliases: string[]
 sortOrder: integer
+isDefault: boolean
 ```
 
 `id`, `name`, and `description` MUST come from Agent Definition. `avatar` MUST remain
-`string|null` and equal validated `avatarUrl` or `null`. New fields MUST use the
-normalized Presentation values. `voiceProfileId` MUST be passed through as opaque
-metadata only. The endpoint MUST derive fleet size at runtime and MUST NOT assume a
-fixed production count.
+`string|null` and equal validated `avatarUrl` or `null`. `emoji`, `colorToken`,
+`tagline`, `voiceProfileId`, `featured`, `category`, `mobileVisible`, `searchAliases`,
+and `sortOrder` MUST use normalized Presentation values and exact missing defaults
+from `CTR-PRESENTATION-MERGE-001`; `isDefault` MUST come from Agent Definition.
+`tagline` MUST remain independent from and MUST NOT replace `description`.
+`voiceProfileId` MUST be passed through as opaque metadata only. The endpoint MUST
+derive fleet size at runtime and MUST NOT assume a fixed production count.
 
 ### CTR-NO-AUTHORITY-LEAK-001 — Product view leaks no internal authority
 
@@ -581,11 +695,13 @@ Definition, `agents.json`, Workspace, Binding, Session, Router, or the switch ad
 
 When no Registry is configured, `GET /v1/agents` MUST preserve the existing `id`,
 `name`, `description`, and `avatar:null` meanings while adding only ignorable JSON
-fields. A client that reads only those four fields MUST continue to work. This Spec
-MUST NOT change the `POST /v1/switch-agent` target-Agent-only wire, Router bookmark,
-Binding success authority, `agent_core_switch_agent`, next-message effect, or Session
-semantics. Same-turn handoff remains unsupported, and model text MUST NOT be treated
-as switch proof.
+fields with the exact merge defaults, including `emoji:null` and `tagline:null`. A
+client that reads only the four old fields and ignores all new fields MUST continue to
+work for both present and absent emoji/tagline fixtures. This Spec MUST NOT change the
+`POST /v1/switch-agent` target-Agent-only wire, Binding success authority,
+`agent_core_switch_agent`, next-message effect, or Session semantics. Same-turn
+handoff remains unsupported, and model text MUST NOT be treated as switch proof.
+Mobile back-navigation remains unresolved by this Backend Spec.
 
 ## 10. Acceptance
 
@@ -596,7 +712,8 @@ executed or `PASS` by this proposed docs-only change.
 
 - Contracts: `CTR-PRESENTATION-SCHEMA-001`.
 - Method: future table-driven parser tests covering every allowed field, default,
-  type error, unknown field, forbidden field, alias duplicate, and opaque voice value.
+  type error, unknown field, forbidden field, optional-string validity, and opaque
+  voice value; alias-specific cases belong to `ACC-SEARCH-ALIAS-001`.
 - Required evidence: executed command, implementation commit, fixtures, and result log.
 - Expected result: valid documents normalize exactly; every invalid case fails loud;
   no file is mutated.
@@ -606,33 +723,53 @@ executed or `PASS` by this proposed docs-only change.
 ### ACC-PRESENTATION-LOAD-001 — Verify optional absence and configured failure behavior
 
 - Contracts: `CTR-PRESENTATION-LOAD-001`.
-- Method: future startup/integration matrix for unconfigured, valid, missing,
-  unreadable, malformed, unsupported-version, schema-invalid, unsafe-asset, and
-  partially valid configured artifacts.
-- Required evidence: startup result, Product API availability, stable error code, and
-  artifact byte comparison.
-- Expected result: unconfigured starts with empty Registry; valid configured starts;
-  every configured failure blocks the dependent API with no partial view or write.
-- Failure condition: silent empty fallback or partial publication after configured
-  failure.
+- Method: future load-state matrix for unconfigured, valid, missing, unreadable,
+  malformed, unsupported-version, schema-invalid, duplicate-id, alias-colliding,
+  unsafe-asset, and partially valid configured artifacts.
+- Required evidence: normalized reader state, stable error code, artifact byte
+  comparison, and zero partial records.
+- Expected result: unconfigured produces an empty valid Registry; valid configured
+  produces a complete view; every configured failure produces the single invalid state
+  with no partial view or write.
+- Failure condition: silent empty fallback, partial publication, or file mutation after
+  configured failure.
+
+### ACC-PRESENTATION-CONTAINMENT-001 — Verify shared-runtime failure containment
+
+- Contracts: `CTR-PRESENTATION-CONTAINMENT-001`.
+- Method: future production-composition integration test with an invalid configured
+  Registry, all Product API routes, and mount probes for Feishu, Notification Ingress,
+  Router, AgentProcess, Scheduler, Broker, and unrelated entries.
+- Required evidence: `GET /v1/agents` response, other route responses, component mount
+  results, sanitized logs, and assertion that no Agent array was returned.
+- Expected result: Agent listing deterministically returns `503`
+  `PRESENTATION_REGISTRY_INVALID`; all other named routes/components remain available;
+  shared composition starts; no partial list or sensitive path/content is emitted.
+- Failure condition: shared non-start, unrelated component/route failure, partial Agent
+  output, nondeterministic status/code, full path, or Registry content in errors/logs.
 
 ### ACC-PRESENTATION-MERGE-001 — Verify Definition-left join and fallbacks
 
 - Contracts: `CTR-PRESENTATION-MERGE-001`.
-- Method: future unit/integration matrix for matched and missing Presentation entries.
-- Required evidence: exact Definition/Registry fixtures and merged response.
+- Method: future unit/integration matrix for matched and missing Presentation entries,
+  including present/absent `emoji` and `tagline`.
+- Required evidence: exact Definition/Registry fixtures and complete merged response.
 - Expected result: Definition controls membership/name/description/default/disabled;
-  missing presentation produces exact defaults without affecting route calls.
-- Failure condition: presentation-created Agent, name override, or routing failure due
-  only to missing presentation.
+  missing presentation produces every exact default; tagline stays independent from
+  description; emoji is nullable fallback metadata; route calls are unaffected.
+- Failure condition: presentation-created Agent, name/description override, tagline
+  substitution, wrong emoji/tagline default, or routing failure due only to missing
+  presentation.
 
 ### ACC-DUPLICATE-AGENT-001 — Reject duplicate ids atomically
 
 - Contracts: `CTR-DUPLICATE-AGENT-001`.
 - Method: future configured-startup test with duplicate exact `agentId` entries.
-- Required evidence: fixture, stable error, API non-start, and zero partial records.
-- Expected result: entire artifact fails loud.
-- Failure condition: first/last wins, merge, warning-only, or partial API publication.
+- Required evidence: fixture, invalid Registry state, deterministic Agent-list `503`,
+  mounted Product API, and zero partial records.
+- Expected result: entire artifact fails loud within the contained Agent-list surface.
+- Failure condition: first/last wins, merge, warning-only, partial API publication, or
+  Product API/shared-runtime non-start.
 
 ### ACC-UNKNOWN-AGENT-001 — Ignore unknown entries with redacted warning
 
@@ -692,25 +829,49 @@ executed or `PASS` by this proposed docs-only change.
 - Expected result: every permutation yields the exact Contract comparator order.
 - Failure condition: Registry input order or unstable runtime iteration affects output.
 
-### ACC-ASSET-URL-001 — Enforce trusted HTTPS origins
+### ACC-SEARCH-ALIAS-001 — Verify global collisions and deterministic matching
+
+- Contracts: `CTR-SEARCH-ALIAS-001`.
+- Method: future parser/search matrix for NFKC-equivalent forms, Unicode whitespace
+  trim/collapse, case variants, normalized-empty aliases, within-entry duplicates,
+  cross-Agent duplicates, canonical-name conflicts, ASCII-case-insensitive agentId
+  conflicts, empty queries, exact id, normalized substring, and multi-result ordering.
+- Required evidence: Definition/Registry/query fixtures, normalized keys, ordered
+  results across Registry permutations, and Router `resolveAgentRef` regression output.
+- Expected result: every forbidden collision invalidates the whole configured Registry;
+  valid query results are deterministic and identified by agentId; Router resolution is
+  byte-semantically unchanged and never sees aliases.
+- Failure condition: input-order dependence, collision acceptance, alias routing,
+  non-deterministic matches, or empty-query alias search.
+
+### ACC-ASSET-URL-001 — Enforce trusted HTTPS origins and zero backend network I/O
 
 - Contracts: `CTR-ASSET-URL-001`.
-- Method: future parser/security matrix covering allowlisted HTTPS, unapproved origin,
-  scheme variants, userinfo, fragment, port, IP literal, and redirect hops if fetched.
-- Required evidence: allowlist fixture and per-case validation/fetch result.
-- Expected result: only exact approved HTTPS origins survive and API emits only
-  validated URL or null.
-- Failure condition: any forbidden form or redirect escape is accepted/exposed.
+- Method: future parser/security matrix covering empty allowlist without avatar, empty
+  allowlist with avatar, exact approved HTTPS origin, unapproved origin, scheme
+  variants, userinfo, fragment, port, wildcard/path allowlist entries, and IP literal;
+  instrument backend DNS/HTTP/asset proxy seams for zero calls.
+- Required evidence: deployment-owned allowlist fixtures, per-case validation result,
+  Product API projection, and zero-call network/proxy trace; consumer redirect policy is
+  recorded as an external future-authority dependency.
+- Expected result: no-avatar plus empty allowlist is valid; avatar plus empty allowlist
+  is invalid; only exact approved HTTPS origin is projected; backend fetch/proxy/DNS/
+  redirect calls are zero.
+- Failure condition: forbidden URL/allowlist accepted, request-supplied allowlist,
+  backend network call or proxy, or backend-owned redirect handling.
 
 ### ACC-PRODUCT-API-001 — Verify exact Product Agent fields
 
 - Contracts: `CTR-PRODUCT-API-001`.
-- Method: future HTTP contract test against a mixed Definition/Registry fixture.
+- Method: future HTTP contract test against mixed Definition/Registry fixtures with
+  present and absent `emoji`/`tagline` plus every other optional field.
 - Required evidence: request, full JSON response, source fixtures, and runtime-read
   Agent count.
-- Expected result: exact required fields/types/sources and validated nullable avatar.
-- Failure condition: missing/incompatible field, wrong authority, voice execution, or
-  fixed fleet count.
+- Expected result: all fourteen required fields have exact types, sources, and defaults;
+  avatar is validated nullable data; tagline does not alter description; voice remains
+  opaque.
+- Failure condition: missing/incompatible field, wrong authority/default, tagline
+  substitution, voice execution, or fixed fleet count.
 
 ### ACC-NO-AUTHORITY-LEAK-001 — Scan and probe authority boundaries
 
@@ -726,14 +887,17 @@ executed or `PASS` by this proposed docs-only change.
 ### ACC-BACKWARD-COMPAT-001 — Prove legacy projection and switch invariants
 
 - Contracts: `CTR-BACKWARD-COMPAT-001`.
-- Method: future old-client decoder test against unconfigured Registry plus existing
-  switch/Binding regression suite.
-- Required evidence: old decoder result, API response, switch request capture, Binding
+- Method: future old-client decoder test against unconfigured and configured Registry
+  fixtures with emoji/tagline present and absent, plus existing switch/Binding
+  regression suite.
+- Required evidence: old decoder result, API responses, switch request capture, Binding
   transition, and adapter regression result.
-- Expected result: old fields retain meaning; added fields are ignorable; switch remains
-  target-Agent-only and success is evidenced by Binding change for the next message.
+- Expected result: old fields retain meaning; old clients ignore every new field in all
+  emoji/tagline cases; switch remains target-Agent-only and success is evidenced by
+  Binding change for the next message.
 - Failure condition: old client break, changed switch wire/adapter/Session semantics,
-  same-turn handoff claim, or model prose accepted as switch proof.
+  same-turn handoff claim, model prose accepted as switch proof, or this Backend Spec
+  selecting a Mobile back-navigation design.
 
 ### 10.1 Bidirectional coverage matrix
 
@@ -741,6 +905,7 @@ executed or `PASS` by this proposed docs-only change.
 |---|---|
 | `CTR-PRESENTATION-SCHEMA-001` | `ACC-PRESENTATION-SCHEMA-001` |
 | `CTR-PRESENTATION-LOAD-001` | `ACC-PRESENTATION-LOAD-001` |
+| `CTR-PRESENTATION-CONTAINMENT-001` | `ACC-PRESENTATION-CONTAINMENT-001` |
 | `CTR-PRESENTATION-MERGE-001` | `ACC-PRESENTATION-MERGE-001` |
 | `CTR-DUPLICATE-AGENT-001` | `ACC-DUPLICATE-AGENT-001` |
 | `CTR-UNKNOWN-AGENT-001` | `ACC-UNKNOWN-AGENT-001` |
@@ -749,6 +914,7 @@ executed or `PASS` by this proposed docs-only change.
 | `CTR-DEFAULT-AGENT-001` | `ACC-DEFAULT-AGENT-001` |
 | `CTR-FEATURED-001` | `ACC-FEATURED-001` |
 | `CTR-SORT-001` | `ACC-SORT-001` |
+| `CTR-SEARCH-ALIAS-001` | `ACC-SEARCH-ALIAS-001` |
 | `CTR-ASSET-URL-001` | `ACC-ASSET-URL-001` |
 | `CTR-PRODUCT-API-001` | `ACC-PRODUCT-API-001` |
 | `CTR-NO-AUTHORITY-LEAK-001` | `ACC-NO-AUTHORITY-LEAK-001` |
@@ -803,8 +969,9 @@ permitted.
 
 - old clients continue to read `id`, `name`, `description`, and `avatar`;
 - `avatar` retains `string|null`;
-- new JSON fields are additive and ignorable;
-- missing Presentation retains route behavior and uses display defaults;
+- new JSON fields, including nullable `emoji` and `tagline`, are additive and ignorable;
+- `tagline` never substitutes for Agent Definition `description`;
+- missing Presentation retains route behavior and uses every frozen display default;
 - runtime fleet count remains observed data, never a frozen numeric Contract.
 
 ### 12.3 Rollback
@@ -818,15 +985,31 @@ revert if rejected; it has no runtime rollback.
 ## 13. Open questions
 
 ```text
-OPEN_OWNER_DECISIONS          = NONE
-NORMATIVE_TBD                 = NONE
-UNRESOLVED_AUTHORITY_CONFLICT = NONE
-PARTIAL_SUPERSESSION          = NONE
+OPEN_OWNER_DECISIONS_WITHIN_THIS_SPEC       = NONE
+NORMATIVE_TBD_WITHIN_THIS_SPEC              = NONE
+UNRESOLVED_LOCAL_AUTHORITY_CONFLICT         = NONE
+PARTIAL_SUPERSESSION                        = NONE
+MOBILE_BACK_NAVIGATION_AUTHORITY_HANDLING   = UNRESOLVED
+MOBILE_BACK_NAVIGATION_DECISION             = OWNER_AND_MOBILE_AUTHORITY_REQUIRED
 ```
 
-Non-normative follow-up: after this Spec is independently reviewed and accepted, a
-separate implementation task may implement only its Contracts. A separate Mobile
-Spec (`MOBILE_AGENT_ROLE_SURFACE_V1`, in `mayf3/agent-core-mobile`) may then define
-rendering, category/search UI, Binding-driven animation, persisted previous-Agent
-navigation, and the future Voice-authority handoff without changing the current
-canary in its docs-only round.
+The unresolved Mobile item does not change this Backend Spec's presentation meaning.
+Its pinned external authority/fact coordinates are:
+
+```text
+CURRENT_EXTERNAL_AUTHORITY = MOBILE_PRODUCT_INTEGRATION_V1
+EXTERNAL_REVISION = bc1f5bcfdaa25544c0d82aa1d61a40a4b3592b34
+CURRENT_EXTERNAL_AUTHORITY_FACT = Mobile previous state + switchSession
+CURRENT_IMPLEMENTATION_FACT = HTTP switchSession is NOT_IMPLEMENTED
+```
+
+After this Spec is independently reviewed and accepted, a separate Backend
+implementation task may implement only its Contracts. A separate docs-only Mobile
+Spec task for `MOBILE_AGENT_ROLE_SURFACE_V1` MUST first run PREFLIGHT in
+`mayf3/agent-core-mobile` and classify back-navigation as exactly one of `REUSE`,
+`AMEND`, or `SUPERSEDE`. Only that repository's authority review and owner acceptance
+may decide to implement `switchSession`, choose `previousAgentId + switchAgent`, or
+select another design. `previousAgentId + switchAgent` is a candidate, not a Contract
+or Decision here. The Mobile task may also specify rendering, category/search UI,
+Binding-driven animation, and future Voice-authority handoff, while keeping the current
+canary unchanged in its docs-only round.

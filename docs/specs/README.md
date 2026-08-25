@@ -67,6 +67,6 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_PRESENTATION_REGISTRY_V1` | proposed (docs-only PR, unreviewed) | contracts | future deployment-owned read-only Agent Presentation Registry (`agent-presentations.json`) + `AgentDefinition LEFT JOIN Presentation` Product Agent view authority; identity/name/default/disabled stay with Agent Definition, persona stays with Workspace, switching stays with Router/Binding |
+| `AGENT_PRESENTATION_REGISTRY_V1` | proposed (docs-only Draft PR; amended after independent request-changes review) | contracts | future deployment-owned read-only Agent Presentation Registry (`agent-presentations.json`) + `AgentDefinition LEFT JOIN Presentation` Product Agent view authority; invalid presentation is contained to deterministic `GET /v1/agents` 503; identity/name/default/disabled stay with Agent Definition, persona stays with Workspace, switching stays with Router/Binding |
 
-This proposal authorizes nothing until accepted into main; Mobile rendering, TTS/STT, persona, `agents.json` roster, deployment, and canary changes remain out of scope.
+This proposal authorizes nothing until accepted into main; Mobile rendering and unresolved Mobile back-navigation, TTS/STT, persona, `agents.json` roster, deployment, and canary changes remain out of scope.
