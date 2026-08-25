@@ -31,8 +31,7 @@ references:
   - docs/specs/AGENT_PRIMARY_WORKSPACE_OPENCLAW_COMPATIBILITY_V3.md (accepted fleet Workspace authority @f02691c; its exact-86 bound and agt_cto-agent exclusion are NOT modified by this Spec)
   - docs/specs/AGENT_TRUSTED_FLEET_CUTOVER_V1.md (accepted fleet cutover plan; merged into main at 344975d; agt_cto-agent explicitly outside the roster and preserved)
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md (accepted; path-agnostic product model)
-  - docs/specs/AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1.md (accepted/current model-route authority)
-  - docs/specs/AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1.md (superseded historical authority)
+  - docs/specs/AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1.md (accepted; freezes the same conversation key / workspace path / session target facts, for model routing only)
   - docs/investigations/cto-workspace-mapping-plan-v1.md (frozen read-only investigation + immutable plan; every load-bearing value is embedded in this Spec)
   - docs/investigations/build-in-public-mapping-canary-plan-v1.md (single-Agent projection form reference)
 ---
@@ -377,8 +376,8 @@ Fleet cutover plan          = AGENT_TRUSTED_FLEET_CUTOVER_V1
                                agt_cto-agent 明确 roster 外且保留 —— 不因本 Spec 修改)
 Subject workspace authority = AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1
                               (本 Spec，proposed —— 生效前无任何 authority)
-Model routing（相邻线）     = AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1
-                              (accepted/current；只授 model-routing，不授 workspace 接管)
+Model routing（相邻线）     = AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1 (accepted；
+                              只授 model-routing，不授 workspace 接管)
 Scheduler authority line    = SCHEDULER_OCCURRENCE_OUTCOME_V2 (accepted decision；边界引用)
 Exact path authority        = primary-workspaces.json (deployment-owned；§2.4/§3)
 ```

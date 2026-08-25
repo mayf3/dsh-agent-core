@@ -67,20 +67,10 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` | proposed | none | whole-authority replacement (authoring round 2026-08-25, branch `docs/agt-cto-ordered-route-chain-v1`) of the PR #60 accepted candidate: ordered configurable route chain — `agent-model-overrides.json` version 2 (`routeCatalog` + `overrides.<agentId>.model.primary` + `.fallbacks[]` ordered; `fallbacks=[]` = strict); ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN; per-hop gate = proven-no-admission closed four-class allowlist; STOP_CHAIN closed forbidden set (outcome_unknown family); ONE_LOGICAL_TURN; turn-start immutable snapshot + turn-local fallback; loud per-attempt journal; initial target config = `zai/glm-5.3` primary + `openai-codex/gpt-5.6-luna` (`dsh-codex@0.2.3`) sole fallback; MAX_CONFIGURED_ROUTES = explicit hard bound ≠ 2 (Owner decision Q-1, proposed 4); harness `0.1.0-rc.8 @ 514ab7b` pin carried forward |
-| `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` | accepted (PR #60 branch only — never in main; MUST NOT merge) | none | superseded-pending replacement authority: accepted 2026-08-24 on the unmerged PR #60 branch (not active authority per SPEC_GOVERNANCE_V0 §8.2); its single-fallback normative meaning (MAX_FALLBACK_ROUTE_ATTEMPTS = 1) conflicts with Owner ruling 2026-08-25 and is superseded-before-main by `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` per that spec §3.3/§3.4; body byte-unchanged pending the atomic acceptance transaction |
-| `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` | superseded | none | historical single-route Luna authority (incl. Amendment 1/2), replaced whole by `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` on 2026-08-24 |
-| `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1` | accepted / current | — | separate accepted seam authority (providerEnv four-key allowlist); baseline/dependency metadata repointed to `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` on 2026-08-24, normative body byte-unchanged; will repoint (metadata-only) to `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` at that spec's acceptance transaction |
+| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` | proposed (PR #70) | none | proposed whole-authority replacement of the current main model-route authority and current v1 providerEnv seam authority: ordered chain authority lives only in `agent-model-overrides.json` version 2; Scheduler jobs inherit only; canonical route aliases fail-loud; `providerEnv` is an optional four-key closed object with the old seam safety contracts fully absorbed |
+| `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` | accepted / current | contracts | main 上当前 active model-route authority；PR #70 acceptance 时直接替换 |
+| `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1` | accepted / current | contracts | current v1 providerEnv seam authority；本 revision 保持 current-main bytes，PR #70 acceptance 时由新 Spec whole-supersede |
 
-The candidate acceptance transaction is lifecycle-only relative to reviewed head
-`1af5f1be134a52ec2dd0fa953ca0f07f050bcdd3` (回退 审计 round 1 = PASS; 回退 聚焦复审 =
-PASS; BLOCKER_COUNT = 0; sync-merge `fd58e4b` byte-neutral to the spec blob). It
-performs no implementation, credential, production, or deployment change;
-`implementation_authority` stays `none` until the PR reaches main and the
-implementation round's own gates (Q-2 controlled zai verification; CTR-008 Luna
-readiness) pass in separate rounds.
-
-Owner ruling 2026-08-25 supersedes the single-fallback direction before PR #60
-reaches main: PR #60 MUST NOT merge (its lineage advances only through the
-`AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` replacement PR, where the candidate is
-already superseded at merge time — it never becomes main's current authority).
+PR #60 / `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` 从未进入 main，定性为
+`ABANDONED_UNMERGED_CANDIDATE`，不是 active authority；PR #70 不 supersede 它。
+PR #60 必须关闭且永不 merge。
