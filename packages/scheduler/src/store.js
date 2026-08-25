@@ -1,11 +1,12 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import {
   logicalCoordinates,
   rebuildFences,
   validateOccurrenceRecord,
 } from './occurrence-model.js'
+import { OwnerLock } from './lock.js'
 import { storeMigrationMethods } from './store-migration.js'
 
 export const STORE_VERSION = 2
@@ -43,6 +44,13 @@ export class JobStore {
     this._writeChain = Promise.resolve()
     this._mutexChain = Promise.resolve()
     this._tmpSeq = 0
+    const evidenceSink = (event) => this.appendRunEvent(event).catch(() => {})
+    this._mutationLock = new OwnerLock(this.lockPath, {
+      timeoutMs: this.lockTimeoutMs, clock: this.clock, onEvidence: evidenceSink,
+    })
+    this._engineLock = new OwnerLock(this.engineLockPath, {
+      timeoutMs: this.lockTimeoutMs, clock: this.clock, onEvidence: evidenceSink,
+    })
   }
 
   get dir() {
@@ -74,119 +82,38 @@ export class JobStore {
     }
   }
 
-  _lockOwnerAlive(pid) {
-    if (!Number.isSafeInteger(pid) || pid <= 0) return null
-    try {
-      process.kill(pid, 0)
-      return true
-    } catch (error) {
-      if (error.code === 'ESRCH') return false
-      if (error.code === 'EPERM') return true
-      return null
-    }
+  /**
+   * Mutation + engine-lease locks (src/lock.js): owner-carrying artifacts
+   * created ATOMICALLY with their identity — no reachable identity-less
+   * state; dead owners reaped only on mechanical pid proof; bounded
+   * lock_recovery / lock_unverifiable evidence through runs.jsonl.
+   */
+  _withLock(fn) {
+    return this._mutationLock.runExclusive(fn)
   }
 
-  async _removeLockIfUnchanged(lockPath, observedRaw) {
-    let current
-    try {
-      current = await fs.readFile(lockPath, 'utf8')
-    } catch (error) {
-      if (error.code === 'ENOENT') return true
-      failLoud(`read lock ${lockPath}`, error)
-    }
-    if (current !== observedRaw) return false
-    await fs.rm(lockPath, { force: true })
-    return true
-  }
-
-  async _reapDeadLock(lockPath, observedRaw) {
-    const reaperPath = `${lockPath}.reap`
-    let reaper
-    try {
-      reaper = await fs.open(reaperPath, 'wx')
-      await reaper.writeFile(`${process.pid}\n`, 'utf8')
-    } catch (error) {
-      await reaper?.close().catch(() => {})
-      if (error.code === 'EEXIST') return false
-      failLoud(`acquire dead-lock reaper ${reaperPath}`, error)
-    }
-    try {
-      return await this._removeLockIfUnchanged(lockPath, observedRaw)
-    } finally {
-      await reaper.close().catch(() => {})
-      await fs.rm(reaperPath, { force: true }).catch(() => {})
-    }
-  }
-
-  async _acquireFileLock(lockPath) {
-    await this._ensureDir()
-    const startedAt = Date.now()
-    const owner = { pid: process.pid, token: randomUUID(), createdAtMs: Date.now() }
-    const serialized = `${JSON.stringify(owner)}\n`
-    for (;;) {
-      try {
-        const handle = await fs.open(lockPath, 'wx')
-        try {
-          await handle.writeFile(serialized, 'utf8')
-          await handle.sync()
-        } finally {
-          await handle.close()
-        }
-        return owner.token
-      } catch (error) {
-        if (error.code !== 'EEXIST') failLoud(`acquire lock ${lockPath}`, error)
-        let observedRaw
-        try {
-          observedRaw = await fs.readFile(lockPath, 'utf8')
-        } catch (readError) {
-          if (readError.code === 'ENOENT') continue
-          failLoud(`read lock ${lockPath}`, readError)
-        }
-        let observed
-        try { observed = JSON.parse(observedRaw) } catch { observed = null }
-        if (this._lockOwnerAlive(observed?.pid) === false) {
-          const reaped = await this._reapDeadLock(lockPath, observedRaw)
-          if (reaped) continue
-        }
-        if (Date.now() - startedAt > this.lockTimeoutMs) {
-          failLoud(`lock timeout on ${lockPath}`, new Error('held by a live or unverifiable owner'))
-        }
-        await sleep(25 + Math.floor(Math.random() * 50))
-      }
-    }
-  }
-
-  async _releaseFileLock(lockPath, token) {
-    let raw
-    try {
-      raw = await fs.readFile(lockPath, 'utf8')
-    } catch (error) {
-      if (error.code === 'ENOENT') return
-      failLoud(`read lock for release ${lockPath}`, error)
-    }
-    let owner
-    try { owner = JSON.parse(raw) } catch { owner = null }
-    if (owner?.token !== token || owner?.pid !== process.pid) return
-    await this._removeLockIfUnchanged(lockPath, raw)
-  }
-
-  async _withLock(fn) {
-    const token = await this._acquireFileLock(this.lockPath)
-    try {
-      return await fn()
-    } finally {
-      await this._releaseFileLock(this.lockPath, token)
-    }
-  }
-
+  /**
+   * Engine lease: the single-live-engine authority over this store. Acquire
+   * = atomic creation of an owner-carrying artifact (pid + token); a dead
+   * prior engine is reaped ONLY on mechanical pid-death proof, after which
+   * the acquiring engine still runs the full store recovery (unresolved
+   * sweep) before any admission. `verify` lets the running engine detect a
+   * lost/superseded lease and halt admission (no second live engine).
+   * @returns {{token: string, release: Function, verify: Function}}
+   */
   async acquireEngineLease() {
-    const token = await this._acquireFileLock(this.engineLockPath)
+    const token = await this._engineLock.acquire()
     let released = false
-    return async () => {
+    const release = async () => {
       if (released) return
       released = true
-      await this._releaseFileLock(this.engineLockPath, token)
+      await this._engineLock.release(token)
     }
+    const verify = async () => {
+      if (released) return false
+      return this._engineLock.isHeldBy(token)
+    }
+    return { token, release, verify }
   }
 
   async mutateDoc(fn) {

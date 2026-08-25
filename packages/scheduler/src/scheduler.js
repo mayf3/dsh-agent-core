@@ -62,7 +62,7 @@ export class Scheduler {
     this._rerunPending = false
     this._stopped = false
     this._started = false
-    this._releaseEngineLease = null
+    this._engineLease = null
     this._inflight = new Set()
   }
 
@@ -80,12 +80,17 @@ export class Scheduler {
     return this.doc
   }
 
-  /** First open upgrades v1 under lock, then recovery completes before return. */
+  /**
+   * Lease -> upgrade -> recovery completes before ANY admission (runnable
+   * state is published only after the store is recovered). A dead prior
+   * engine's lease is reaped exclusively on mechanical pid-death proof
+   * inside acquireEngineLease (never a time threshold).
+   */
   async start({ autoStart = true, catchup = true } = {}) {
     if (this._started) throw new Error('Scheduler: already started')
     this._started = true
     try {
-      this._releaseEngineLease = await this.store.acquireEngineLease()
+      this._engineLease = await this.store.acquireEngineLease()
       await this.store.ensureUpgraded()
       await this.load()
       this._executing = true
@@ -99,8 +104,8 @@ export class Scheduler {
       if (autoStart) this._startTimer()
       return this
     } catch (error) {
-      await this._releaseEngineLease?.().catch(() => {})
-      this._releaseEngineLease = null
+      await this._engineLease?.release().catch(() => {})
+      this._engineLease = null
       this._started = false
       throw error
     }
@@ -110,8 +115,24 @@ export class Scheduler {
     this._stopped = true
     this._clearTimer()
     await this.whenIdle()
-    await this._releaseEngineLease?.()
-    this._releaseEngineLease = null
+    await this._engineLease?.release()
+    this._engineLease = null
+  }
+
+  /**
+   * Single-live-engine guard: admission passes require the engine lease to
+   * still be verifiably ours. A lost/superseded lease (foreign removal,
+   * superseding engine) halts admission fail-loud — two live engines can
+   * never both admit against one store.
+   */
+  async _assertEngineLeaseHeld() {
+    if (this._stopped || !this._engineLease) return false
+    if (!(await this._engineLease.verify())) {
+      this._stopped = true
+      this.log.error('engine lease lost or superseded — admission halted (single-live-engine guard)')
+      return false
+    }
+    return true
   }
 
   async whenIdle() {
@@ -153,6 +174,7 @@ export class Scheduler {
   }
 
   async _tickOnce() {
+    if (!(await this._assertEngineLeaseHeld())) return 0
     const now = this.nowMs()
     await this.load()
     const candidates = []
@@ -211,6 +233,7 @@ export class Scheduler {
 
   /** Native restart policy: at most the most recent eligible missed slot. */
   async _startupCatchup() {
+    if (!(await this._assertEngineLeaseHeld())) return 0
     const now = this.nowMs()
     let count = 0
     for (const job of this.doc.jobs) {
