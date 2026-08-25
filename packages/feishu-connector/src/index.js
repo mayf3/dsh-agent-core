@@ -267,9 +267,9 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
         const card = replyCardSendPlan(replyTarget, text)
         if (card.plan !== undefined) {
           plan = card.plan
-          log('info', '[feishu] reply rendered as static card', { jsonBytes: card.jsonBytes })
+          log('info', '[feishu] reply rendered as static card', { wireBytes: card.wireBytes })
         } else {
-          log('warn', `[feishu] CARD_NOT_ATTEMPTED (${card.notAttempted}${card.jsonBytes !== undefined ? ` ${card.jsonBytes}B` : ''}) — deterministic markdown fallback`)
+          log('warn', `[feishu] CARD_NOT_ATTEMPTED (${card.notAttempted}${card.wireBytes !== undefined ? ` ${card.wireBytes}B` : ''}) — deterministic markdown fallback`)
           plan = replyTargetToSdkSend(replyTarget, text, ux)
         }
       } else {

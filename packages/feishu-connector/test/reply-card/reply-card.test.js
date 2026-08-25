@@ -37,8 +37,8 @@ import { createProcessingReactionLifecycle } from '../../src/processing-reaction
 import {
   composeReplyCard,
   replyCardSendPlan,
-  REPLY_CARD_MAX_JSON_BYTES,
-  CARD_NOT_ATTEMPTED_CONTENT_OUT_OF_ENVELOPE,
+  REPLY_CARD_MAX_REQUEST_BYTES,
+  CARD_NOT_ATTEMPTED_REQUEST_BODY_OUT_OF_ENVELOPE,
   CARD_NOT_ATTEMPTED_EMPTY_REPLY,
 } from '../../src/reply-card.js'
 
@@ -238,6 +238,23 @@ test('5. card topic: replyInThread=true keeps the answer INSIDE the topic', asyn
 // 6 — no auto-mention in card mode
 // ---------------------------------------------------------------------------
 
+test('5b. target-revoked: pinned SDK keeps its one reply→same-chat create fallback with identical card content', async () => {
+  const base = stubbedChannel()
+  const realReply = base.channel.rawClient.im.v1.message.reply.bind(base.channel.rawClient.im.v1.message)
+  base.channel.rawClient.im.v1.message.reply = async (opts) => {
+    await realReply(opts)
+    throw Object.assign(new Error('reply target gone'), { response: { status: 404 } })
+  }
+  const { handle, sends } = mountedHandle({ renderMode: 'card', autoMention: false, channel: base.channel })
+  await handle.reply(groupTarget(), 'fallback 内容', ROUTER_UX)
+  assert.equal(sends.length, 1, 'connector still invokes channel.send exactly once')
+  assert.equal(base.calls.reply.length, 1)
+  assert.equal(base.calls.create.length, 1, 'SDK performs its existing logical fallback')
+  assert.equal(base.calls.create[0].data.receive_id, 'oc_g')
+  assert.equal(base.calls.create[0].data.msg_type, 'interactive')
+  assert.equal(base.calls.create[0].data.content, base.calls.reply[0].data.content)
+})
+
 test('6. no-auto-mention: a card plan NEVER carries a mentions entry (CARD_AUTO_MENTION = NONE)', async () => {
   const base = stubbedChannel()
   const { handle, sends } = mountedHandle({ renderMode: 'card', autoMention: false, channel: base.channel })
@@ -262,9 +279,10 @@ test('7. card body: the model reply markdown is carried BYTE-UNMODIFIED in the m
 })
 
 test('8. card body: H1/H2 headings, ordered/unordered lists, bold/italic, quote, inline code, fenced python code and a clickable link all survive in ONE markdown element', () => {
-  const { card, attempted, jsonBytes } = composeReplyCard(RICH_BODY)
+  const { card, attempted } = composeReplyCard(RICH_BODY)
+  const plan = replyCardSendPlan(groupTarget(), RICH_BODY)
   assert.equal(attempted, true)
-  assert.ok(jsonBytes <= REPLY_CARD_MAX_JSON_BYTES)
+  assert.ok(plan.wireBytes <= REPLY_CARD_MAX_REQUEST_BYTES)
   const content = card.body.elements[0].content
   for (const fragment of ['# 总结', '## 要点', '- 第一项', '1. 步骤一', '**加粗**', '*斜体*', '> 引用', '`inline_code`', '```python', '[链接](https://example.com/docs?a=1&b=2)']) {
     assert.ok(content.includes(fragment), `card markdown element must carry ${fragment} verbatim`)
@@ -284,26 +302,33 @@ test('9. card table: a GFM pipe table stays VERBATIM in the 2.0 markdown element
 // 10 — deterministic PRE-send envelope check (long content → existing markdown)
 // ---------------------------------------------------------------------------
 
-test('10. long content: oversize card JSON is NEVER attempted — deterministic pre-send fallback to the existing markdown pipeline', async () => {
+test('10. long content: oversize request body is NEVER attempted — deterministic pre-send fallback to the existing markdown pipeline', async () => {
   const base = stubbedChannel()
   const { handle, sends, logs } = mountedHandle({ renderMode: 'card', autoMention: false, channel: base.channel })
-  const oversize = '长'.repeat(11000) // 3 bytes/char ⇒ card JSON ≫ 30000 bytes
+  const oversize = '长'.repeat(11000)
   await handle.reply(groupTarget(), oversize, ROUTER_UX)
   assert.equal(sends.length, 1)
   assert.ok('markdown' in sends[0].input, 'falls back to { markdown } BEFORE any card API call')
   assert.equal(base.calls.reply[0].data.msg_type, 'post', 'the existing SDK markdown pipeline delivers (chunked as needed)')
-  assert.ok(base.calls.reply.length >= 1)
-  assert.ok(logs.some((l) => l.text.includes(CARD_NOT_ATTEMPTED_CONTENT_OUT_OF_ENVELOPE)), 'CARD_NOT_ATTEMPTED reason recorded')
+  assert.equal(base.calls.reply.filter((call) => call.data.msg_type === 'interactive').length, 0)
+  assert.equal(base.calls.create.filter((call) => call.data.msg_type === 'interactive').length, 0)
+  assert.ok(logs.some((l) => l.text.includes(CARD_NOT_ATTEMPTED_REQUEST_BODY_OUT_OF_ENVELOPE)), 'CARD_NOT_ATTEMPTED reason recorded')
 })
 
-test('10b. envelope boundary: exactly-at-limit is attempted, one byte over is not (pure, deterministic)', () => {
-  const wrapperOverhead = composeReplyCard('x').jsonBytes - Buffer.byteLength('x', 'utf8')
-  const atLimit = 'x'.repeat(REPLY_CARD_MAX_JSON_BYTES - wrapperOverhead)
-  assert.equal(composeReplyCard(atLimit).attempted, true)
-  const decision = composeReplyCard(`${atLimit}x`)
-  assert.equal(decision.attempted, false)
-  assert.equal(decision.reason, CARD_NOT_ATTEMPTED_CONTENT_OUT_OF_ENVELOPE)
-  assert.ok(decision.jsonBytes > REPLY_CARD_MAX_JSON_BYTES)
+test('10b. audit reproduction: 14900 double quotes pass raw-card 30000B but fail the final request envelope before card API', async () => {
+  const body = '"'.repeat(14900)
+  const decision = replyCardSendPlan(groupTarget(), body)
+  assert.ok(decision.rawCardJsonBytes < 30000)
+  assert.ok(decision.wireBytes > 30000)
+  assert.equal(decision.notAttempted, CARD_NOT_ATTEMPTED_REQUEST_BODY_OUT_OF_ENVELOPE)
+
+  const base = stubbedChannel()
+  const { handle, sends } = mountedHandle({ renderMode: 'card', autoMention: false, channel: base.channel })
+  await handle.reply(groupTarget(), body, ROUTER_UX)
+  assert.equal(sends.length, 1)
+  assert.ok('markdown' in sends[0].input, 'pre-send fallback uses the existing markdown pipeline')
+  assert.equal(base.calls.reply.filter((call) => call.data.msg_type === 'interactive').length, 0)
+  assert.equal(base.calls.create.filter((call) => call.data.msg_type === 'interactive').length, 0)
 })
 
 // ---------------------------------------------------------------------------
@@ -315,7 +340,7 @@ test('11. card API fail: exactly ONE API call, the error propagates, and NO seco
   const realReply = base.channel.rawClient.im.v1.message.reply.bind(base.channel.rawClient.im.v1.message)
   base.channel.rawClient.im.v1.message.reply = async (opts) => {
     await realReply(opts) // record the call, then fail loud like the real API
-    throw Object.assign(new Error('card send rejected'), { response: { status: 400, data: { code: 230026 } } })
+    throw Object.assign(new Error('card send rejected'), { response: { status: 400, data: { code: 230025 } } })
   }
   const { handle, sends } = mountedHandle({ renderMode: 'card', autoMention: false, channel: base.channel })
   await assert.rejects(() => handle.reply(groupTarget(), RICH_BODY, ROUTER_UX), /card send rejected/)
