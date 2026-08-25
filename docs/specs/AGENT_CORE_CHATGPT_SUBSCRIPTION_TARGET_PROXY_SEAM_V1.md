@@ -1,12 +1,6 @@
 ---
 spec_id: AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
 status: accepted
-seam_baseline_repoint:
-  from: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
-  to: AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1
-  date: 2026-08-24
-  basis: AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1 §3.3 / DEC-008 / OWNER_DECISION_Q1 (RESOLVED 2026-08-23)
-  mode: METADATA_ONLY（providerEnv 四键契约与 normative body 一字不变）
 ---
 
 # Agent Core ChatGPT Subscription Target Proxy Seam V1 — 单 Agent 代理注入 seam
@@ -36,17 +30,6 @@ seam_baseline_repoint:
 > 违反 `ENABLED_AGENTS = exactly 1 / OTHER_AGENTS_CHANGED = NO`，已安全回滚
 > （global proxy absent / Luna override removed / route = oc-go·deepseek-v4-flash /
 > credential 与 plugin 保留）。
->
-> 依赖 repoint（2026-08-24，metadata-only）：本 Spec「扩展 PROVIDER_V1 冻结
-> seam」的基准/依赖 authority 由 `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1`
-> （同日起 superseded）改指 `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1`
-> （accepted）。依据：`AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` §3.3 /
-> DEC-008 / OWNER_DECISION_Q1 = KEEP_TARGET_PROXY_SEAM_AS_SEPARATE_AUTHORITY
-> （RESOLVED 2026-08-23）。本 Spec 保持**独立 accepted authority**（不 absorb、
-> 不 supersede、status 不变）；providerEnv 四键契约与全部 normative body 一字
-> 不变。上文对 `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` 的两处引用
-> （基准主线、seam 扩展关系）是 2026-08-20 authoring 时的历史记录，保持原样；
-> 当前 seam 基准以本 repoint 记录为准。
 
 ---
 
