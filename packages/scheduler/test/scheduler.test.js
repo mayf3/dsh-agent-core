@@ -3,658 +3,480 @@ import assert from 'node:assert/strict'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Scheduler, computeJobNextRunAtMs } from '../src/scheduler.js'
+import { Scheduler } from '../src/scheduler.js'
 import { JobStore } from '../src/store.js'
-import { createFakeInvoker, createRecordingDelivery, defaultSessionId } from '../src/seams.js'
+import { createFakeInvoker, createRecordingDelivery } from '../src/seams.js'
+import { applyTransition } from '../src/occurrence-model.js'
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-function makeEnv({ outcome = null, delayMs = 0, tickMs = 50, deliver = createRecordingDelivery() } = {}) {
-  const dir = mkdtempSync(join(tmpdir(), 'sched-test-'))
-  const store = new JobStore(join(dir, 'jobs.json'))
-  const invoker = createFakeInvoker({ outcome, delayMs })
-  const scheduler = new Scheduler({ store, invoker, deliver, tickMs })
-  return { dir, store, invoker, deliver, scheduler }
+const sleep = (ms = 10) => new Promise((resolve) => setTimeout(resolve, ms))
+const deferred = () => {
+  let resolve
+  let reject
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no })
+  return { promise, resolve, reject }
 }
 
-const atJob = (ms) => ({ kind: 'at', at: new Date(ms).toISOString() })
-const cronEveryMinute = { kind: 'cron', expr: '* * * * *' }
-
-test('acceptance #1: create recurring (cron) job with a computed next run', async () => {
-  const { scheduler } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'daily',
-    agentId: 'a1',
-    schedule: { kind: 'cron', expr: '0 9 * * *', tz: 'Asia/Shanghai' },
-    payload: { message: 'do the daily thing' },
-  })
-  assert.ok(job.id)
-  assert.ok(job.nextRunAtMs > Date.now())
-  assert.equal(job.schedule.kind, 'cron')
-  await scheduler.stop()
-})
-
-test('acceptance #2: create one-shot (at) job', async () => {
-  const { scheduler } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'oneshot',
-    agentId: 'a1',
-    schedule: atJob(Date.now() + 60_000),
-    payload: { message: 'ping' },
-  })
-  assert.equal(job.schedule.kind, 'at')
-  assert.ok(job.nextRunAtMs > Date.now())
-  await scheduler.stop()
-})
-
-test('acceptance #3: disable stops execution; enable resumes it', async () => {
-  const { scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'flaky',
-    agentId: 'a1',
-    schedule: atJob(Date.now() + 30),
-    payload: { message: 'run me' },
-  })
-  await scheduler.disableJob(job.id)
-  await sleep(150)
-  await scheduler.tick()
-  assert.equal(invoker.calls.length, 0, 'disabled job must not run')
-  const disabled = await scheduler.getJob(job.id)
-  assert.equal(disabled.enabled, false)
-  assert.equal(disabled.nextRunAtMs, undefined)
-
-  await scheduler.enableJob(job.id)
-  assert.equal((await scheduler.getJob(job.id)).enabled, true)
-  // the at time already passed -> enable recomputes: at past => nextRunAtMs undefined,
-  // so we switch to a fresh at job to observe the fire
-  const job2 = await scheduler.createJob({
-    name: 'flaky2',
-    agentId: 'a1',
-    schedule: atJob(Date.now() + 30),
-    payload: { message: 'run me too' },
-  })
-  await sleep(150)
-  await scheduler.tick()
-  assert.equal(invoker.calls.length, 1, 'enabled job fires when due')
-  assert.equal(invoker.calls[0].agentId, 'a1')
-  await scheduler.stop()
-})
-
-test('acceptance #4: due job invokes the fake agent invoker with the right request', async () => {
-  const { scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'invoke-me',
-    agentId: 'stock-agent',
-    schedule: atJob(Date.now() + 30),
-    payload: { message: 'tick-tock', model: 'opencode-go/deepseek-v4-flash', lightContext: true, timeoutSeconds: 600 },
-  })
-  await sleep(150)
-  await scheduler.tick()
-  assert.equal(invoker.calls.length, 1)
-  const call = invoker.calls[0]
-  assert.equal(call.agentId, 'stock-agent')
-  assert.equal(call.message, 'tick-tock')
-  assert.equal(call.model, 'opencode-go/deepseek-v4-flash')
-  assert.equal(call.lightContext, true)
-  assert.equal(call.timeoutMs, 600_000)
-  assert.equal(call.sessionId, defaultSessionId({ id: job.id, agentId: 'stock-agent', sessionKey: undefined }))
-  await scheduler.stop()
-})
-
-test('acceptance #5: restart restores jobs and resumes scheduling', async () => {
-  const { dir, scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const cron = await scheduler.createJob({
-    name: 'persist-me', agentId: 'a1', schedule: cronEveryMinute, payload: { message: 'x' },
-  })
-  const at = await scheduler.createJob({
-    name: 'persist-at', agentId: 'a2', schedule: atJob(Date.now() + 120_000), payload: { message: 'y' },
-  })
-  await scheduler.stop()
-
-  // "restart": a brand-new engine over the same store
-  const store2 = new JobStore(join(dir, 'jobs.json'))
-  const invoker2 = createFakeInvoker()
-  const scheduler2 = new Scheduler({ store: store2, invoker: invoker2, deliver: createRecordingDelivery(), tickMs: 50 })
-  await scheduler2.start({ autoStart: false })
-  const jobs = await scheduler2.listJobs()
-  assert.equal(jobs.length, 2)
-  const restoredCron = jobs.find((j) => j.id === cron.id)
-  const restoredAt = jobs.find((j) => j.id === at.id)
-  assert.equal(restoredCron.enabled, true)
-  assert.ok(restoredCron.nextRunAtMs > Date.now())
-  assert.equal(restoredAt.schedule.at, at.schedule.at)
-  assert.equal(restoredAt.nextRunAtMs, at.nextRunAtMs)
-  assert.equal(invoker2.calls.length, 0, 'no immediate re-fire after restart when not due')
-  await scheduler2.stop()
-})
-
-test('acceptance #6: disabled job never runs, including after restart', async () => {
-  const { dir, scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'off', agentId: 'a1', schedule: atJob(Date.now() + 30), payload: { message: 'x' },
-  })
-  await scheduler.disableJob(job.id)
-  await scheduler.stop()
-
-  const store2 = new JobStore(join(dir, 'jobs.json'))
-  const invoker2 = createFakeInvoker()
-  const scheduler2 = new Scheduler({ store: store2, invoker: invoker2, deliver: createRecordingDelivery() })
-  await scheduler2.start({ autoStart: false })
-  await scheduler2.tick()
-  assert.equal(invoker2.calls.length, 0)
-  assert.equal((await scheduler2.getJob(job.id)).enabled, false)
-  await scheduler2.stop()
-})
-
-test('acceptance #7: one-shot job does not repeat (success -> deleted)', async () => {
-  const { dir, scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'once', agentId: 'a1', schedule: atJob(Date.now() + 30), payload: { message: 'x' },
-  })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal(invoker.calls.length, 1)
-  assert.equal(await scheduler.getJob(job.id), undefined, 'deleteAfterRun removes the job')
-
-  // restart: nothing to re-run
-  const store2 = new JobStore(join(dir, 'jobs.json'))
-  const invoker2 = createFakeInvoker()
-  const scheduler2 = new Scheduler({ store: store2, invoker: invoker2, deliver: createRecordingDelivery() })
-  await scheduler2.start({ autoStart: false })
-  await scheduler2.tick()
-  assert.equal(invoker2.calls.length, 0, 'one-shot must not re-fire after restart')
-  await scheduler2.stop()
-})
-
-test('acceptance #7b: one-shot without deleteAfterRun is disabled, not deleted, and never re-runs', async () => {
-  const { scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'keep', agentId: 'a1', deleteAfterRun: false,
-    schedule: atJob(Date.now() + 30), payload: { message: 'x' },
-  })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal(invoker.calls.length, 1)
-  const after = await scheduler.getJob(job.id)
-  assert.ok(after, 'job record kept')
-  assert.equal(after.enabled, false, 'disabled after one-shot success')
-  assert.equal(after.nextRunAtMs, undefined)
-  await sleep(120)
-  await scheduler.tick()
-  assert.equal(invoker.calls.length, 1, 'never re-runs')
-  await scheduler.stop()
-})
-
-test('acceptance #8: recurring job computes the next run after each fire', async () => {
-  const { scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'recur', agentId: 'a1', schedule: cronEveryMinute, payload: { message: 'x' },
-  })
-  // simulate the occurrence passing: force nextRunAtMs into the past, then tick
-  const raw = scheduler.snapshotJobs()[0]
-  raw.state.nextRunAtMs = Date.now() - 10
-  raw.state.lastRunAtMs = Date.now() - 60_000
-  await scheduler.store.persist([raw])
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal(invoker.calls.length, 1)
-  const after = await scheduler.getJob(job.id)
-  assert.ok(after.nextRunAtMs > Date.now(), `next run in the future: ${after.nextRunAtMs}`)
-  assert.equal(after.lastStatus, 'ok')
-  assert.equal(after.consecutiveErrors, 0)
-  await scheduler.stop()
-})
-
-test('acceptance #9: jobs for different agents are isolated (separate invocations)', async () => {
-  const { scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  await scheduler.createJob({ name: 'j1', agentId: 'agent-a', schedule: atJob(Date.now() + 30), payload: { message: 'm1' } })
-  await scheduler.createJob({ name: 'j2', agentId: 'agent-b', schedule: atJob(Date.now() + 30), payload: { message: 'm2' } })
-  await scheduler.createJob({ name: 'j3', agentId: 'agent-c', schedule: atJob(Date.now() + 30), payload: { message: 'm3' } })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.deepEqual(
-    invoker.calls.map((c) => [c.agentId, c.message]).sort(),
-    [['agent-a', 'm1'], ['agent-b', 'm2'], ['agent-c', 'm3']],
-  )
-  await scheduler.stop()
-})
-
-test('acceptance #10: announce target is passed verbatim to the delivery seam', async () => {
-  const { scheduler, invoker, deliver } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'announcer', agentId: 'stock-agent',
-    schedule: atJob(Date.now() + 30),
-    payload: { message: 'produce a report' },
-    delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_0480991b97f1e27c96514ac66b4f122c' },
-    deleteAfterRun: false, // keep the record so lastDeliveryStatus is observable
-  })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal(invoker.calls.length, 1)
-  assert.deepEqual(invoker.calls[0].deliveryTarget, { mode: 'announce', channel: 'feishu', to: 'chat:oc_0480991b97f1e27c96514ac66b4f122c' })
-  assert.equal(deliver.deliveries.length, 1)
-  const d = deliver.deliveries[0]
-  assert.equal(d.jobId, job.id)
-  assert.equal(d.mode, 'announce')
-  assert.equal(d.channel, 'feishu')
-  assert.equal(d.to, 'chat:oc_0480991b97f1e27c96514ac66b4f122c')
-  assert.equal(d.text, 'ok')
-  assert.equal((await scheduler.getJob(job.id)).lastDeliveryStatus, 'delivered')
-  await scheduler.stop()
-})
-
-test('restart near due: cron job missed while down fires exactly once on restart', async () => {
-  const { dir } = makeEnv()
-  const store1 = new JobStore(join(dir, 'jobs.json'))
-  const s1 = new Scheduler({ store: store1, invoker: createFakeInvoker(), deliver: createRecordingDelivery() })
-  await s1.start({ autoStart: false })
-  // daily 09:00 Asia/Shanghai job; last ran yesterday
-  const now = Date.now()
-  const yesterday = now - 86_400_000
-  const job = await s1.createJob({
-    name: 'daily', agentId: 'a1',
-    schedule: { kind: 'cron', expr: '0 9 * * *', tz: 'Asia/Shanghai' },
-    payload: { message: 'x' },
-  })
-  const raw = s1.snapshotJobs()[0]
-  raw.state.lastRunAtMs = yesterday
-  raw.state.lastStatus = 'ok'
-  raw.state.lastRunStatus = 'ok'
-  raw.state.nextRunAtMs = now - 3_600_000 // today's 09:00 passed while "down"
-  await s1.stop() // stop FIRST (stop() persists the in-memory view)
-  await store1.persist([raw]) // then overwrite with the "downtime" state
-
-  const store2 = new JobStore(join(dir, 'jobs.json'))
-  const invoker2 = createFakeInvoker()
-  const s2 = new Scheduler({ store: store2, invoker: invoker2, deliver: createRecordingDelivery() })
-  await s2.start({ autoStart: false })
-  await s2.whenIdle()
-  assert.equal(invoker2.calls.length, 1, 'missed cron occurrence caught up exactly once')
-  const after = await s2.getJob(job.id)
-  assert.ok(after.nextRunAtMs > Date.now(), 'next run recomputed into the future')
-  await s2.stop()
-})
-
-test('restart near due: at job due while down fires once; already-run at job never re-fires', async () => {
-  const { dir } = makeEnv()
-  const store1 = new JobStore(join(dir, 'jobs.json'))
-  const s1 = new Scheduler({ store: store1, invoker: createFakeInvoker(), deliver: createRecordingDelivery() })
-  await s1.start({ autoStart: false })
-  const due = await s1.createJob({
-    name: 'due-while-down', agentId: 'a1',
-    schedule: atJob(Date.now() + 60_000), payload: { message: 'x' },
-  })
-  const done = await s1.createJob({
-    name: 'already-done', agentId: 'a1',
-    schedule: atJob(Date.now() + 60_000), payload: { message: 'x' },
-  })
-  const raw = s1.snapshotJobs()
-  const doneRaw = raw.find((j) => j.id === done.id)
-  doneRaw.state.lastStatus = 'ok'
-  doneRaw.state.lastRunStatus = 'ok'
-  doneRaw.state.lastRunAtMs = Date.now() - 60_000
-  doneRaw.state.nextRunAtMs = Date.now() - 60_000
-  // simulate "became due while the Control Plane was down" for the other job
-  const dueRaw = raw.find((j) => j.id === due.id)
-  dueRaw.state.nextRunAtMs = Date.now() - 60_000
-  await s1.stop()
-  await store1.persist([dueRaw, doneRaw])
-
-  const store2 = new JobStore(join(dir, 'jobs.json'))
-  const invoker2 = createFakeInvoker()
-  const s2 = new Scheduler({ store: store2, invoker: invoker2, deliver: createRecordingDelivery() })
-  await s2.start({ autoStart: false })
-  await s2.whenIdle()
-  assert.equal(invoker2.calls.length, 1, 'only the never-ran at job fires')
-  assert.equal(invoker2.calls[0].message, 'x')
-  assert.equal(await s2.getJob(due.id), undefined, 'due one-shot deleted after run')
-  assert.ok(await s2.getJob(done.id), 'already-done one-shot record kept')
-  await s2.stop()
-})
-
-test('restart near due: never-ran cron job does NOT catch up a passed first occurrence', async () => {
-  // OpenClaw: the missed-run rule requires lastRunAtMs to be a number; a
-  // freshly created cron job starts from its next occurrence instead.
-  const { dir } = makeEnv()
-  const store1 = new JobStore(join(dir, 'jobs.json'))
-  const s1 = new Scheduler({ store: store1, invoker: createFakeInvoker(), deliver: createRecordingDelivery() })
-  await s1.start({ autoStart: false })
-  const job = await s1.createJob({
-    name: 'fresh', agentId: 'a1',
-    schedule: { kind: 'cron', expr: '0 9 * * *', tz: 'Asia/Shanghai' },
-    payload: { message: 'x' },
-  })
-  await s1.stop()
-
-  const store2 = new JobStore(join(dir, 'jobs.json'))
-  const invoker2 = createFakeInvoker()
-  const s2 = new Scheduler({ store: store2, invoker: invoker2, deliver: createRecordingDelivery() })
-  await s2.start({ autoStart: false })
-  await s2.tick()
-  await s2.whenIdle()
-  assert.equal(invoker2.calls.length, 0, 'never-ran cron job does not catch up')
-  assert.ok((await s2.getJob(job.id)).nextRunAtMs > Date.now())
-  await s2.stop()
-})
-
-test('no-duplicate on crash: fresh runningAtMs marker is skipped at restart', async () => {
-  const { dir } = makeEnv()
-  const store1 = new JobStore(join(dir, 'jobs.json'))
-  const s1 = new Scheduler({ store: store1, invoker: createFakeInvoker(), deliver: createRecordingDelivery() })
-  await s1.start({ autoStart: false })
-  const job = await s1.createJob({
-    name: 'mid-run', agentId: 'a1', schedule: atJob(Date.now() + 10), payload: { message: 'x' },
-  })
-  // simulate crash right after runningAtMs was persisted, before invocation finished
-  const raw = s1.snapshotJobs()[0]
-  raw.state.runningAtMs = Date.now() - 5_000
-  await s1.stop()
-  await store1.persist([raw])
-
-  const store2 = new JobStore(join(dir, 'jobs.json'))
-  const invoker2 = createFakeInvoker()
-  const s2 = new Scheduler({ store: store2, invoker: invoker2, deliver: createRecordingDelivery() })
-  await s2.start({ autoStart: false })
-  await s2.tick()
-  await s2.whenIdle()
-  assert.equal(invoker2.calls.length, 0, 'fresh runningAtMs = assumed in-flight; no duplicate fire')
-  await s2.stop()
-})
-
-test('stuck runningAtMs marker older than 2h is cleared and the job runs again', async () => {
-  const { dir } = makeEnv()
-  const store1 = new JobStore(join(dir, 'jobs.json'))
-  const s1 = new Scheduler({ store: store1, invoker: createFakeInvoker(), deliver: createRecordingDelivery() })
-  await s1.start({ autoStart: false })
-  const job = await s1.createJob({
-    name: 'stuck', agentId: 'a1', schedule: atJob(Date.now() + 60_000), payload: { message: 'x' },
-  })
-  const raw = s1.snapshotJobs()[0]
-  raw.state.runningAtMs = Date.now() - (2 * 3_600_000 + 60_000) // > 2h ago
-  raw.state.nextRunAtMs = Date.now() - 60_000 // deterministically overdue at restart
-  await s1.stop()
-  await store1.persist([raw])
-
-  const store2 = new JobStore(join(dir, 'jobs.json'))
-  const invoker2 = createFakeInvoker()
-  const s2 = new Scheduler({ store: store2, invoker: invoker2, deliver: createRecordingDelivery() })
-  await s2.start({ autoStart: false })
-  await s2.whenIdle()
-  assert.equal(invoker2.calls.length, 1, 'stuck marker cleared; job fires')
-  await s2.stop()
-})
-
-test('recurring error: consecutiveErrors increments and next run is backoff-pushed', async () => {
-  const { scheduler, invoker } = makeEnv({ outcome: { status: 'error', error: 'boom' } })
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'err', agentId: 'a1', schedule: cronEveryMinute, payload: { message: 'x' },
-  })
-  const raw = scheduler.snapshotJobs()[0]
-  raw.state.nextRunAtMs = Date.now() - 10
-  raw.state.lastRunAtMs = Date.now() - 60_000
-  await scheduler.store.persist([raw])
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  const after = await scheduler.getJob(job.id)
-  assert.equal(after.lastStatus, 'error')
-  assert.equal(after.consecutiveErrors, 1)
-  assert.ok(after.nextRunAtMs > Date.now() + 20_000, `backoff pushed next run: ${after.nextRunAtMs}`)
-  await scheduler.stop()
-})
-
-test('recurring ok resets consecutiveErrors', async () => {
-  const { scheduler } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'ok', agentId: 'a1', schedule: cronEveryMinute, payload: { message: 'x' },
-  })
-  const raw = scheduler.snapshotJobs()[0]
-  raw.state.nextRunAtMs = Date.now() - 10
-  raw.state.lastRunAtMs = Date.now() - 60_000
-  raw.state.consecutiveErrors = 5
-  await scheduler.store.persist([raw])
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal((await scheduler.getJob(job.id)).consecutiveErrors, 0)
-  await scheduler.stop()
-})
-
-test('one-shot transient error retries with backoff, then succeeds (max 3 retries)', async () => {
-  let attempts = 0
-  const { scheduler, invoker } = makeEnv({
-    outcome: () => {
-      attempts += 1
-      if (attempts < 3) return { status: 'error', error: '429 rate limit exceeded' }
-      return { status: 'ok', summary: 'finally' }
-    },
-  })
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'retry', agentId: 'a1', schedule: atJob(Date.now() + 30), payload: { message: 'x' },
-  })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal(attempts, 1, 'first attempt errors')
-  let after = await scheduler.getJob(job.id)
-  assert.equal(after.enabled, true, 'still enabled: transient retry pending')
-  assert.ok(after.nextRunAtMs > Date.now())
-
-  // fast-forward: force nextRunAtMs into the past and retry
-  for (let i = 0; i < 4; i += 1) {
-    const raw = scheduler.snapshotJobs()[0]
-    if (!raw) break
-    raw.state.nextRunAtMs = Date.now() - 10
-    await scheduler.store.persist([raw])
-    await scheduler.tick()
-    await scheduler.whenIdle()
-    const cur = await scheduler.getJob(job.id)
-    if (!cur) break // deleted after final success
+function invoker(handler, assertRunnable = () => true) {
+  const calls = []
+  const invokeAgent = async (request) => {
+    calls.push(request)
+    return handler(request, calls.length)
   }
-  assert.equal(attempts, 3)
-  assert.equal(await scheduler.getJob(job.id), undefined, 'one-shot deleted after success')
-  await scheduler.stop()
-})
+  invokeAgent.calls = calls
+  invokeAgent.assertRunnable = assertRunnable
+  return invokeAgent
+}
 
-test('one-shot permanent error disables the job (no further runs)', async () => {
-  const { scheduler, invoker } = makeEnv({ outcome: { status: 'error', error: 'invalid arguments' } })
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'dead', agentId: 'a1', schedule: atJob(Date.now() + 30), payload: { message: 'x' },
+function env({ now = 1_000, invoke, deliver, concurrency = 5, immediateDeadline = false } = {}) {
+  const dir = mkdtempSync(join(tmpdir(), 'scheduler-v2-'))
+  const clock = { value: now }
+  const store = new JobStore(join(dir, 'jobs.json'), { clock: () => clock.value })
+  const actualInvoker = invoke ?? createFakeInvoker()
+  const scheduler = new Scheduler({
+    store,
+    invoker: actualInvoker,
+    deliver: deliver ?? createRecordingDelivery(),
+    concurrency,
+    nowMs: () => clock.value,
+    ...(immediateDeadline
+      ? {
+          deadlineSetTimeout: (fn) => { queueMicrotask(fn); return 1 },
+          deadlineClearTimeout: () => {},
+        }
+      : {}),
   })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  const after = await scheduler.getJob(job.id)
-  assert.ok(after, 'record kept (deleteAfterRun only deletes on ok)')
-  assert.equal(after.enabled, false, 'permanent error disables one-shot')
-  await scheduler.tick()
-  assert.equal(invoker.calls.length, 1, 'never runs again')
-  await scheduler.stop()
-})
+  return { dir, clock, store, invoker: actualInvoker, scheduler }
+}
 
-test('every schedule fires at its interval and computes the next anchored run', async () => {
-  const { scheduler, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'every', agentId: 'a1',
-    schedule: { kind: 'every', everyMs: 86_400_000, anchorMs: Date.now() },
-    payload: { message: 'x' },
+async function addAt(scheduler, atMs, extra = {}) {
+  return scheduler.createJob({
+    name: extra.name ?? 'one-shot',
+    agentId: 'agent-a',
+    schedule: { kind: 'at', at: new Date(atMs).toISOString() },
+    payload: { kind: 'agentTurn', message: 'work', ...(extra.payload ?? {}) },
+    delivery: extra.delivery ?? { mode: 'none' },
+    deleteAfterRun: extra.deleteAfterRun ?? false,
+    ...(extra.retry ? { retry: extra.retry } : {}),
   })
-  const raw = scheduler.snapshotJobs()[0]
-  raw.state.nextRunAtMs = Date.now() - 10
-  raw.state.lastRunAtMs = Date.now() - 86_400_000
-  await scheduler.store.persist([raw])
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal(invoker.calls.length, 1)
-  const after = await scheduler.getJob(job.id)
-  assert.ok(after.nextRunAtMs > Date.now())
-  await scheduler.stop()
-})
+}
 
-test('invocation timeout marks the run as errored with the OpenClaw message', async () => {
-  const { scheduler } = makeEnv({
-    outcome: () => new Promise(() => {}), // never resolves
+async function runDue(ctx, dueAt) {
+  ctx.clock.value = dueAt
+  await ctx.scheduler.tick()
+  await ctx.scheduler.whenIdle()
+  await ctx.scheduler.load()
+}
+
+for (const [fault, started] of [
+  ['TIMEOUT_BEFORE_TURN_START', false],
+  ['TIMEOUT_DURING_ACTIVE_TURN', true],
+]) {
+  test(`ACC-001 ACC-010 ACC-012 ${fault}: timeout without termination proof is outcome_unknown`, async () => {
+    const late = deferred()
+    let aborted = false
+    const invoke = invoker((request) => {
+      request.signal.addEventListener('abort', () => { aborted = true }, { once: true })
+      if (started) request.onStart()
+      return late.promise
+    })
+    const ctx = env({ invoke, immediateDeadline: true })
+    await ctx.scheduler.start({ autoStart: false, catchup: false })
+    const job = await addAt(ctx.scheduler, 2_000)
+    await runDue(ctx, 2_000)
+    const [record] = ctx.scheduler.listOccurrences(job.id)
+    assert.equal(record.state, 'outcome_unknown')
+    assert.equal(record.executionOutcome, undefined)
+    assert.equal(ctx.scheduler.isFenced(job.id), true)
+    assert.equal(aborted, true, 'ABORT_SENT_WITHOUT_TERMINATION')
+    assert.equal(invoke.calls.length, 1)
+    late.resolve({ status: 'outcome_unknown' })
+    await sleep()
+    await ctx.scheduler.load()
+    assert.equal(ctx.scheduler.listOccurrences(job.id)[0].state, 'outcome_unknown')
   })
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'slow', agentId: 'a1', schedule: atJob(Date.now() + 30),
-    payload: { message: 'x', timeoutSeconds: 1 },
+}
+
+test('ACC-002/003 OUTCOME_UNKNOWN_NO_RETRY + UNKNOWN_FENCES_LATER_SAME_JOB_OCCURRENCE', async () => {
+  const invoke = invoker(async (request) => {
+    request.onStart()
+    return new Promise(() => {})
   })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  const after = await scheduler.getJob(job.id)
-  assert.equal(after.enabled, false, 'timeout = permanent error for one-shot')
-  assert.equal(after.lastError, 'cron: job execution timed out')
-  assert.equal(after.lastStatus, 'error')
-  await scheduler.stop()
-})
-
-test('run log records started + finished events with the outcome', async () => {
-  const { scheduler, store } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  await scheduler.createJob({ name: 'log', agentId: 'a1', schedule: atJob(Date.now() + 30), payload: { message: 'x' } })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  const events = await store.readRunEvents()
-  assert.equal(events.length, 2)
-  assert.deepEqual(events.map((e) => e.action).sort(), ['finished', 'started'])
-  const finished = events.find((e) => e.action === 'finished')
-  assert.equal(finished.status, 'ok')
-  assert.equal(finished.deliveryStatus, 'not-requested')
-  await scheduler.stop()
-})
-
-test('silent delivery mode still reaches the delivery seam with the opaque target', async () => {
-  const { scheduler, deliver } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  await scheduler.createJob({
-    name: 'silent', agentId: 'a1', schedule: atJob(Date.now() + 30),
-    payload: { message: 'x' },
-    delivery: { mode: 'silent', channel: 'feishu', to: 'chat:oc_abc' },
+  const ctx = env({ invoke, immediateDeadline: true })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await ctx.scheduler.createJob({
+    name: 'recurring', agentId: 'agent-a', enabled: true,
+    schedule: { kind: 'every', everyMs: 100, anchorMs: 1_000 },
+    payload: { kind: 'agentTurn', message: 'x' }, retry: { auto: true },
   })
-  await sleep(150)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal(deliver.deliveries.length, 1)
-  assert.equal(deliver.deliveries[0].mode, 'silent')
-  assert.equal(deliver.deliveries[0].to, 'chat:oc_abc')
-  await scheduler.stop()
+  await runDue(ctx, 1_100)
+  ctx.clock.value = 2_000
+  await ctx.scheduler.tick()
+  await ctx.scheduler.load()
+  assert.equal(invoke.calls.length, 1)
+  assert.equal(ctx.scheduler.listOccurrences(job.id).length, 1)
+  assert.equal(ctx.scheduler.isFenced(job.id), true)
 })
 
-test('concurrency cap bounds parallel invocations', async () => {
-  const active = []
-  let peak = 0
-  const dir = mkdtempSync(join(tmpdir(), 'sched-test-'))
-  const store = new JobStore(join(dir, 'jobs.json'))
-  const invoker = {
-    async invokeAgent(request) {
-      active.push(request.agentId)
-      peak = Math.max(peak, active.length)
-      await sleep(80)
-      active.splice(active.indexOf(request.agentId), 1)
-      return { status: 'ok', summary: 'ok', sessionId: request.sessionId }
-    },
-  }
-  const s = new Scheduler({ store, invoker, deliver: createRecordingDelivery(), concurrency: 2, tickMs: 50 })
-  await s.start({ autoStart: false })
-  for (let i = 0; i < 5; i += 1) {
-    await s.createJob({ name: `c${i}`, agentId: `a${i}`, schedule: atJob(Date.now() + 30), payload: { message: 'x' } })
-  }
-  await sleep(150)
-  await s.tick()
-  await s.whenIdle()
-  assert.ok(peak <= 2, `peak concurrency ${peak} <= 2`)
-  assert.equal(active.length, 0)
-  await s.stop()
-})
-
-test('external jobs written by the CLI seam are picked up on the next tick', async () => {
-  const { scheduler, store, invoker } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  // simulate scripts/agentcore-cron.mjs writing a job file externally
-  const external = {
-    id: 'ext-1',
-    name: 'external',
-    agentId: 'a1',
-    enabled: true,
-    schedule: { kind: 'at', at: new Date(Date.now() + 40).toISOString() },
-    sessionTarget: 'isolated',
-    payload: { kind: 'agentTurn', message: 'from daemon' },
-    delivery: { mode: 'none', channel: 'last' },
-    createdAtMs: Date.now(),
-    updatedAtMs: Date.now(),
-    state: { nextRunAtMs: Date.now() + 40 },
-  }
-  await store.persist([external])
-  await sleep(100)
-  await scheduler.tick()
-  await scheduler.whenIdle()
-  assert.equal(invoker.calls.length, 1)
-  assert.equal(invoker.calls[0].message, 'from daemon')
-  await scheduler.stop()
-})
-
-test('submitOneShot: relative at + deliver:false maps to the daemon flag surface', async () => {
-  const { scheduler, invoker, deliver } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.submitOneShot({
-    agentId: 'qa-reviewer',
-    name: '论坛通知触发 - qa-reviewer',
-    at: '15m',
-    message: '你有未读通知',
-    lightContext: true,
-    deliver: false,
-    sessionTarget: 'isolated',
-    timeoutSeconds: 600,
-    deleteAfterRun: true,
-    model: 'opencode-go/deepseek-v4-flash',
+test('ACC-003/029 OPERATOR_RECONCILE_RESOLVES_FENCE + FENCE_RELEASE_NO_BACKLOG_REPLAY', async () => {
+  const late = deferred()
+  const invoke = invoker((request, count) => {
+    request.onStart()
+    return count === 1 ? late.promise : Promise.resolve({ status: 'ok', summary: 'next' })
   })
-  assert.equal(job.schedule.kind, 'at')
-  assert.ok(job.nextRunAtMs > Date.now() + 14 * 60_000 && job.nextRunAtMs <= Date.now() + 15 * 60_000)
-  assert.equal(job.delivery.mode, 'none')
-  assert.equal(job.delivery.channel, 'last')
-  assert.equal(job.payload.model, 'opencode-go/deepseek-v4-flash')
-  assert.equal(job.payload.lightContext, true)
-  assert.equal(job.payload.timeoutSeconds, 600)
-  assert.equal(job.deleteAfterRun, true)
-  await scheduler.stop()
+  const ctx = env({ invoke, immediateDeadline: true })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await ctx.scheduler.createJob({
+    name: 'fenced', agentId: 'agent-a', schedule: { kind: 'every', everyMs: 100, anchorMs: 1_000 },
+    payload: { kind: 'agentTurn', message: 'x' },
+  })
+  await runDue(ctx, 1_100)
+  const unknown = ctx.scheduler.listOccurrences(job.id)[0]
+  ctx.clock.value = 2_000
+  await ctx.scheduler.reconcileOccurrence(unknown.occurrenceId, unknown.runId, {
+    resolvedTo: 'failed', evidenceNote: 'operator verified exact turn termination',
+  })
+  await ctx.scheduler.tick()
+  assert.equal(invoke.calls.length, 1, 'no backlog replay at reconciliation time')
+  ctx.clock.value = 4_100
+  await runDue(ctx, 4_100)
+  assert.equal(invoke.calls.length, 2, 'only a future natural slot resumes')
+  const rows = ctx.scheduler.listOccurrences(job.id)
+  assert.equal(rows[0].history.some((entry) => entry.to === 'outcome_unknown'), true)
+  assert.equal(rows[0].lateSettlement.basis, 'operator-reconcile')
+  late.resolve({ status: 'outcome_unknown' })
 })
 
-test('updateJob can reschedule and toggle without losing identity', async () => {
-  const { scheduler } = makeEnv()
-  await scheduler.start({ autoStart: false })
-  const job = await scheduler.createJob({
-    name: 'u', agentId: 'a1', schedule: atJob(Date.now() + 60_000), payload: { message: 'x' },
+test('ACC-004 delivery failure never rewrites proven execution success', async () => {
+  const deliver = async () => { throw new Error('channel unavailable') }
+  const ctx = env({ deliver })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await addAt(ctx.scheduler, 2_000, { delivery: { mode: 'announce', channel: 'feishu', to: 'chat:x' } })
+  await runDue(ctx, 2_000)
+  const [record] = ctx.scheduler.listOccurrences(job.id)
+  assert.equal(record.state, 'succeeded')
+  assert.equal(record.deliveryStatus, 'not-delivered')
+})
+
+test('ACC-004 pre-start rejection is failed; post-start unproven carrier is unknown', async () => {
+  const pre = env({ invoke: invoker(async () => ({ status: 'error', error: 'AGENT_DISABLED', started: false })) })
+  await pre.scheduler.start({ autoStart: false, catchup: false })
+  const first = await addAt(pre.scheduler, 2_000)
+  await runDue(pre, 2_000)
+  assert.equal(pre.scheduler.listOccurrences(first.id)[0].state, 'failed')
+
+  const post = env({ invoke: invoker(async (request) => {
+    request.onStart()
+    return { status: 'error', error: 'pipe failed without proof', started: true }
+  }) })
+  await post.scheduler.start({ autoStart: false, catchup: false })
+  const second = await addAt(post.scheduler, 2_000)
+  await runDue(post, 2_000)
+  assert.equal(post.scheduler.listOccurrences(second.id)[0].state, 'outcome_unknown')
+})
+
+test('ACC-011 immediate unknown reconciliation evidence is observable and keyed', async () => {
+  const invoke = invoker(async (request) => {
+    request.onStart()
+    return {
+      status: 'outcome_unknown', error: 'AgentProcess deadline', started: true,
+      reconciliationHandle: 'turn:exact-1', deadlineAtWallMs: 9_999,
+      evidence: { source: 'turn_deadline_exceeded', promptReceipt: 'accepted' },
+    }
   })
-  const updated = await scheduler.updateJob(job.id, {
-    name: 'u2',
-    schedule: { kind: 'cron', expr: '30 2 * * *' },
-    payload: { message: 'y', timeoutSeconds: 120 },
+  const ctx = env({ invoke })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await addAt(ctx.scheduler, 2_000)
+  await runDue(ctx, 2_000)
+  const [record] = ctx.scheduler.listOccurrences(job.id)
+  const events = await ctx.store.readRunEvents()
+  const evidence = events.find((event) => event.action === 'router_admission' && event.phase === 'outcome_unknown')
+  assert.equal(record.state, 'outcome_unknown')
+  assert.equal(evidence.occurrenceId, record.occurrenceId)
+  assert.equal(evidence.runId, record.runId)
+  assert.equal(evidence.reconciliationHandle, 'turn:exact-1')
+  assert.equal(evidence.evidence.source, 'turn_deadline_exceeded')
+})
+
+test('ACC-005/008/026 CONCURRENT_DUE_TICKS_SAME_OCCURRENCE admits once', async () => {
+  const gate = deferred()
+  const invoke = invoker(async (request) => { request.onStart(); return gate.promise })
+  const ctx = env({ invoke })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await addAt(ctx.scheduler, 2_000)
+  ctx.clock.value = 2_000
+  await Promise.all([ctx.scheduler.tick(), ctx.scheduler.tick(), ctx.scheduler.tick()])
+  for (let attempt = 0; invoke.calls.length === 0 && attempt < 100; attempt += 1) await sleep(10)
+  assert.equal(invoke.calls.length, 1)
+  gate.resolve({ status: 'ok', summary: 'done' })
+  await ctx.scheduler.whenIdle()
+  ctx.clock.value = 3_000
+  await ctx.scheduler.tick()
+  assert.equal(ctx.scheduler.listOccurrences(job.id).length, 1)
+  assert.equal(invoke.calls.length, 1)
+})
+
+for (const [fault, persistedState] of [
+  ['RESTART_AFTER_ADMITTED_BEFORE_ROUTER', 'admitted'],
+  ['RESTART_AFTER_ROUTER_BEFORE_RECEIPT / PROCESS_EXIT_WITHOUT_TURN_ATTRIBUTION', 'running'],
+]) {
+  test(`ACC-007 ${fault}`, async () => {
+    const ctx = env()
+    await ctx.scheduler.start({ autoStart: false, catchup: false })
+    const job = await addAt(ctx.scheduler, 2_000)
+    ctx.clock.value = 2_000
+    await ctx.scheduler.load()
+    const candidate = { kind: 'natural', job: ctx.scheduler.snapshotJobs()[0], nominalScheduledAt: 2_000 }
+    const reserved = await ctx.scheduler._reserve(candidate)
+    if (persistedState === 'running') {
+      await ctx.store.mutateDoc((doc) => {
+        applyTransition(doc.occurrences[0], {
+          to: 'running', at: 2_000, reason: 'Router dispatched before process exit',
+          startedAt: 2_000, nativeSessionId: reserved.record.nativeSessionId,
+        })
+      })
+    }
+    await ctx.scheduler.stop() // simulate the prior engine process exiting and releasing its lease
+    const restartInvoker = createFakeInvoker()
+    const restarted = new Scheduler({ store: ctx.store, invoker: restartInvoker, nowMs: () => ctx.clock.value })
+    await restarted.start({ autoStart: false, catchup: persistedState !== 'running' })
+    const [record] = restarted.listOccurrences(job.id)
+    assert.equal(record.state, 'outcome_unknown')
+    assert.equal(restarted.isFenced(job.id), true)
+    await restarted.tick()
+    assert.equal(restartInvoker.calls.length, 0)
   })
-  assert.equal(updated.id, job.id)
-  assert.equal(updated.name, 'u2')
-  assert.equal(updated.schedule.kind, 'cron')
-  assert.equal(updated.payload.message, 'y')
-  assert.ok(updated.nextRunAtMs > Date.now())
-  await scheduler.stop()
+}
+
+test('ACC-007 live engine lease prevents recovery from sweeping a peer turn', async () => {
+  const ctx = env()
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const peerStore = new JobStore(ctx.store.filePath, { clock: () => ctx.clock.value, lockTimeoutMs: 100 })
+  const peer = new Scheduler({ store: peerStore, invoker: createFakeInvoker(), nowMs: () => ctx.clock.value })
+  await assert.rejects(() => peer.start({ autoStart: false, catchup: false }), /engine\.lock.*live or unverifiable owner/)
+  await ctx.scheduler.stop()
+  await peer.start({ autoStart: false, catchup: false })
+  await peer.stop()
+})
+
+test('ACC-008/024 IDEMPOTENT_KEY_SAME_PAYLOAD_NO_SECOND_ENQUEUE and PAYLOAD_HASH_CONFLICT', async () => {
+  const ctx = env()
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  await addAt(ctx.scheduler, 2_000)
+  ctx.clock.value = 2_000
+  await ctx.scheduler.load()
+  const candidate = { kind: 'natural', job: ctx.scheduler.snapshotJobs()[0], nominalScheduledAt: 2_000 }
+  const first = await ctx.scheduler._reserve(candidate)
+  const same = await ctx.scheduler._reserve(candidate)
+  assert.equal(first.record.occurrenceId, same.record.occurrenceId)
+  assert.equal(same.deduped, true)
+  await ctx.store.mutateDoc((doc) => { doc.jobs[0].payload.message = 'different' })
+  await ctx.scheduler.load()
+  candidate.job = ctx.scheduler.snapshotJobs()[0]
+  await assert.rejects(() => ctx.scheduler._reserve(candidate), (error) => error.code === 'OCCURRENCE_PAYLOAD_CONFLICT')
+})
+
+test('ACC-026 stale pre-scan candidate cannot cross disable-to-enable activation boundary', async () => {
+  const ctx = env()
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  await ctx.scheduler.createJob({
+    name: 'reactivate', agentId: 'agent-a', schedule: { kind: 'every', everyMs: 100, anchorMs: 1_000 },
+    payload: { kind: 'agentTurn', message: 'x' },
+  })
+  const stale = { kind: 'natural', job: ctx.scheduler.snapshotJobs()[0], nominalScheduledAt: 1_100 }
+  await ctx.scheduler.disableJob(stale.job.id)
+  ctx.clock.value = 2_000
+  await ctx.scheduler.enableJob(stale.job.id)
+  const reserved = await ctx.scheduler._reserve(stale)
+  assert.equal(reserved, null)
+  assert.equal(ctx.scheduler.listOccurrences(stale.job.id).length, 0)
+})
+
+test('ACC-009 ORDINARY_FAILED_RETRY_NEW_OCCURRENCE', async () => {
+  const invoke = invoker(async (request, count) => {
+    if (count === 1) return { status: 'error', error: 'pre-start rejection', started: false }
+    request.onStart()
+    return { status: 'ok', summary: 'retried' }
+  })
+  const ctx = env({ invoke })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await addAt(ctx.scheduler, 2_000, { retry: { auto: true } })
+  await runDue(ctx, 2_000)
+  ctx.clock.value = 32_000
+  await runDue(ctx, 32_000)
+  const rows = ctx.scheduler.listOccurrences(job.id)
+  assert.equal(rows.length, 2)
+  assert.equal(rows[1].kind, 'retry')
+  assert.equal(rows[1].retryOfOccurrenceId, rows[0].occurrenceId)
+  assert.notEqual(rows[1].occurrenceId, rows[0].occurrenceId)
+  assert.notEqual(rows[1].runId, rows[0].runId)
+})
+
+for (const [fault, lateOutcome, expected] of [
+  ['LATE_SUCCESS_AFTER_TIMEOUT', { status: 'ok', summary: 'late' }, 'succeeded'],
+  ['LATE_FAILURE_AFTER_TIMEOUT', { status: 'error', error: 'terminal', started: true, evidence: { terminationEvidence: 'exact_terminal_then_idle' } }, 'failed'],
+  ['LATE_EXTERNAL_SIDE_EFFECT_AFTER_TIMEOUT', { status: 'ok', summary: 'late', evidence: { externalEffectReceipt: 'ext-42' } }, 'succeeded'],
+]) {
+  test(`ACC-011 ${fault}: trusted exact-turn settlement resolves without re-admission`, async () => {
+    const late = deferred()
+    const invoke = invoker((request) => { request.onStart(); return late.promise })
+    const ctx = env({ invoke, immediateDeadline: true })
+    await ctx.scheduler.start({ autoStart: false, catchup: false })
+    const job = await addAt(ctx.scheduler, 2_000)
+    await runDue(ctx, 2_000)
+    assert.equal(ctx.scheduler.listOccurrences(job.id)[0].state, 'outcome_unknown')
+    late.resolve(lateOutcome)
+    let record
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      await sleep(10)
+      await ctx.scheduler.load()
+      record = ctx.scheduler.listOccurrences(job.id)[0]
+      if (record.state === expected) break
+    }
+    assert.equal(record.state, expected)
+    assert.equal(record.lateSettlement.basis, 'trusted-late-evidence')
+    if (fault === 'LATE_EXTERNAL_SIDE_EFFECT_AFTER_TIMEOUT') {
+      assert.match(record.lateSettlement.evidenceRef, /ext-42/)
+      let persisted = false
+      for (let attempt = 0; !persisted && attempt < 100; attempt += 1) {
+        await sleep(10)
+        persisted = (await ctx.store.readRunEvents())
+          .some((event) => event.evidence?.externalEffectReceipt === 'ext-42')
+      }
+      assert.equal(persisted, true)
+    }
+    assert.equal(invoke.calls.length, 1)
+  })
+}
+
+test('ACC-012 pre-admission queue time is excluded from persisted deadline', async () => {
+  const first = deferred()
+  const invoke = invoker(async (request, count) => {
+    request.onStart()
+    return count === 1 ? first.promise : { status: 'ok', summary: 'second' }
+  })
+  const ctx = env({ invoke, concurrency: 1 })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const a = await addAt(ctx.scheduler, 2_000, { name: 'a' })
+  const b = await addAt(ctx.scheduler, 2_000, { name: 'b' })
+  ctx.clock.value = 2_000
+  await ctx.scheduler.tick()
+  assert.equal(ctx.scheduler.listOccurrences(b.id).length, 0)
+  ctx.clock.value = 50_000
+  first.resolve({ status: 'ok', summary: 'first' })
+  await ctx.scheduler.whenIdle()
+  await ctx.scheduler.tick()
+  await ctx.scheduler.whenIdle()
+  const second = ctx.scheduler.listOccurrences(b.id)[0]
+  assert.equal(second.admittedAt, 50_000)
+  assert.ok(second.executionDeadlineAtMs > 50_000)
+  assert.equal(ctx.scheduler.listOccurrences(a.id)[0].state, 'succeeded')
+})
+
+test('ACC-012/025 mutation-lock wait is excluded from admittedAt/deadline', async () => {
+  const ctx = env()
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  await addAt(ctx.scheduler, 2_000, { payload: { timeoutSeconds: 12 } })
+  ctx.clock.value = 2_000
+  await ctx.scheduler.load()
+  const candidate = { kind: 'natural', job: ctx.scheduler.snapshotJobs()[0], nominalScheduledAt: 2_000 }
+  const hold = deferred()
+  const entered = deferred()
+  const blocker = ctx.store.mutateDoc(async () => { entered.resolve(); await hold.promise })
+  await entered.promise
+  const pendingReserve = ctx.scheduler._reserve(candidate)
+  ctx.clock.value = 5_000
+  hold.resolve()
+  await blocker
+  const reserved = await pendingReserve
+  assert.equal(reserved.record.admittedAt, 5_000)
+  assert.equal(reserved.record.executionDeadlineAtMs, 17_000)
+})
+
+test('ACC-013/031 FRESH_SESSION_PER_OCCURRENCE uses distinct non-main sessions', async () => {
+  const invoke = createFakeInvoker()
+  const ctx = env({ invoke })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await ctx.scheduler.createJob({
+    name: 'sessions', agentId: 'agent-a', schedule: { kind: 'every', everyMs: 100, anchorMs: 1_000 },
+    payload: { kind: 'agentTurn', message: 'x' },
+  })
+  await runDue(ctx, 1_100)
+  ctx.clock.value = 3_200
+  await runDue(ctx, 3_200)
+  assert.equal(invoke.calls.length, 2)
+  assert.notEqual(invoke.calls[0].sessionId, invoke.calls[1].sessionId)
+  assert.notEqual(invoke.calls[0].sessionId, 'main')
+  assert.equal(invoke.calls[0].agentId, invoke.calls[1].agentId)
+  assert.equal(ctx.scheduler.listOccurrences(job.id).length, 2)
+})
+
+test('ACC-025 execution deadline is durable from admittedAt', async () => {
+  const ctx = env()
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  await addAt(ctx.scheduler, 2_000, { payload: { timeoutSeconds: 12 } })
+  await runDue(ctx, 2_000)
+  const record = (await ctx.store.loadDoc({ force: true })).occurrences[0]
+  assert.equal(record.executionDeadlineAtMs, record.admittedAt + 12_000)
+})
+
+test('ACC-026/027 CONCURRENT_CLI_DISABLE_DURING_ADMITTED_OCCURRENCE preserves disable and outcome', async () => {
+  const gate = deferred()
+  const invoke = invoker(async (request) => { request.onStart(); return gate.promise })
+  const ctx = env({ invoke })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await addAt(ctx.scheduler, 2_000)
+  ctx.clock.value = 2_000
+  await ctx.scheduler.tick()
+  await ctx.scheduler.disableJob(job.id)
+  gate.resolve({ status: 'ok', summary: 'done' })
+  await ctx.scheduler.whenIdle()
+  await ctx.scheduler.load()
+  assert.equal((await ctx.scheduler.getJob(job.id)).enabled, false)
+  assert.equal(ctx.scheduler.listOccurrences(job.id)[0].state, 'succeeded')
+})
+
+test('ACC-027 deleted Job is not resurrected by occurrence writeback', async () => {
+  const gate = deferred()
+  const invoke = invoker(async (request) => { request.onStart(); return gate.promise })
+  const ctx = env({ invoke })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await addAt(ctx.scheduler, 2_000)
+  ctx.clock.value = 2_000
+  await ctx.scheduler.tick()
+  await ctx.scheduler.deleteJob(job.id)
+  gate.resolve({ status: 'ok', summary: 'done' })
+  await ctx.scheduler.whenIdle()
+  await ctx.scheduler.load()
+  assert.equal(await ctx.scheduler.getJob(job.id), undefined)
+  assert.equal(ctx.scheduler.listOccurrences(job.id)[0].state, 'succeeded')
+})
+
+test('ACC-030 stale legacy summaries do not affect admission', async () => {
+  const ctx = env()
+  await ctx.store.mutateDoc((doc) => {
+    doc.jobs.push({
+      id: 'legacy', name: 'legacy', agentId: 'agent-a', enabled: true,
+      scheduleRevision: 1, revisionActivatedAtMs: 1_000, createdAtMs: 1_000, updatedAtMs: 1_000,
+      schedule: { kind: 'at', at: new Date(2_000).toISOString() },
+      payload: { kind: 'agentTurn', message: 'x' }, delivery: { mode: 'none' },
+      deleteAfterRun: false, state: { runningAtMs: 1, nextRunAtMs: 999_999 },
+    })
+  })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  await runDue(ctx, 2_000)
+  assert.equal(ctx.invoker.calls.length, 1)
+})
+
+test('ACC-032 runnable eligibility is checked before reserve and Router', async () => {
+  const invoke = invoker(async () => ({ status: 'ok' }), () => {
+    throw Object.assign(new Error('disabled'), { code: 'AGENT_DISABLED' })
+  })
+  const ctx = env({ invoke })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await addAt(ctx.scheduler, 2_000)
+  ctx.clock.value = 2_000
+  await assert.rejects(() => ctx.scheduler.tick(), (error) => error.code === 'AGENT_DISABLED')
+  assert.equal(invoke.calls.length, 0)
+  assert.equal((await ctx.store.loadDoc({ force: true })).occurrences.length, 0)
+  assert.equal((await ctx.scheduler.getJob(job.id)).enabled, true)
 })

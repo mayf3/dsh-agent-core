@@ -208,6 +208,7 @@ async function main() {
     })
     return outcome
   }
+  invoker.assertRunnable = rawInvoker.assertRunnable
 
   const store = new JobStore(JOBS_STORE, { runLogPath: RUNS_LOG })
   const scheduler = new Scheduler({
