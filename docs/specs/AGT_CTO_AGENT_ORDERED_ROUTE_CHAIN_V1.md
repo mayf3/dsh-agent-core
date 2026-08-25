@@ -1,6 +1,10 @@
 ---
 spec_id: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
-status: proposed
+status: accepted
+accepted_reviewed_head: ee13cb224660416c9044203610b93cb8f13873bb
+acceptance_audit: PASS
+acceptance_audit_blocker_count: 0
+owner_decision_max_configured_routes: 4
 date: 2026-08-25
 type: implementation-spec (SPEC ONLY — 本轮只冻结授权边界与配置 schema；不实现、不配置、不部署)
 spec_kind: implementation
@@ -10,7 +14,9 @@ production_apply_authority: none
 replaces_on_acceptance:
   - AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
   - AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
-supersedes: []
+supersedes:
+  - AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
+  - AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
 superseded_by: null
 scope:
   - agt_cto-agent 的 model-route 政策：ordered configurable route chain（直接 whole-authority replacement main 上当前 active model-route authority）
@@ -36,7 +42,10 @@ references:
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 — CTO Agent 有序可配置路由链（ordered configurable route chain）
 
-> SPEC_STATUS = **proposed**（authoring round 2026-08-25；READY_FOR_INDEPENDENT_REVIEW）。
+> SPEC_STATUS = **accepted**（mechanical acceptance finalize 2026-08-25 ·
+> accepted_reviewed_head = ee13cb224660416c9044203610b93cb8f13873bb ·
+> 链路 审计 = PASS · BLOCKER_COUNT = 0 · OWNER_DECISION Q-1：
+> MAX_CONFIGURED_ROUTES = 4 批准冻结）。
 > 本文件是 **docs-only whole-authority replacement Spec**：按 vendored
 > SPEC_GOVERNANCE_V0.md §9.2，acceptance 时原子 whole-supersede main 上当前
 > active model-route authority `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` 与
@@ -52,6 +61,19 @@ references:
 > `implementation_authority = none`、`production_apply_authority = none`。
 > 实现须由独立 implementation-authorizing authority 在本 Spec accepted 且进入
 > implementation base 后另行授予（governance §10）。
+>
+> **Acceptance finalize（2026-08-25，链路 采纳执行）**：mayf3 对 exact final
+> head `ee13cb224660416c9044203610b93cb8f13873bb`（链路 审计 = PASS，
+> 0 blockers）执行 §3.3 冻结的原子 acceptance transaction：本文件
+> `status: accepted`、`supersedes` 写入两份 main authorities；两份 old
+> authority 文件翻为 `superseded` + `superseded_by` backlink；README 索引同步
+> （NEW → accepted/current，两份 old → superseded/historical）。历史正文
+> （含「acceptance 时…」条件句、§13 Q-1 待决句与 §14 revision-round
+> Final Output）保持逐字不变，作为历史记录；Q-1 由本 finalize 以
+> OWNER_DECISION 冻结为 MAX_CONFIGURED_ROUTES = 4（后续变更走本 Spec 自身
+> amendment）。`implementation_authority = none`、
+> `production_apply_authority = none` 保持不变；PR #60 零 lifecycle mutation
+> （保持 CLOSED / UNMERGED）。事务明细见 §15。
 
 ---
 
@@ -812,4 +834,50 @@ MERGE = NO
 PR_UPDATE = ORDINARY_FAST_FORWARD_ONLY
 
 NEXT_TASK = 链路 审计
+```
+
+---
+
+## 15. Final Output — Acceptance finalize（2026-08-25；链路 采纳执行轮填写）
+
+```text
+TASK_NAME = 链路 采纳执行
+TASK_STATUS = ACCEPTANCE_TRANSACTION_COMPLETE（§3.3 已原子执行）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
+accepted_reviewed_head = ee13cb224660416c9044203610b93cb8f13873bb
+ACCEPTANCE_AUDIT = PASS
+ACCEPTANCE_AUDIT_BLOCKER_COUNT = 0
+
+OWNER_DECISION_Q1 = MAX_CONFIGURED_ROUTES = 4（acceptance 时批准冻结；
+  后续变更走本 Spec 自身 amendment，DEC-008 / Q-1）
+
+TRANSACTION（= §3.3 冻结形态，一次性 docs-only，原子单 commit）：
+  NEW.status = accepted
+  NEW.supersedes = [AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1,
+                    AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1]
+  PROVIDER_V1.status = superseded；superseded_by = 本 Spec
+  PROXY_SEAM_V1.status = superseded；superseded_by = 本 Spec
+  PR60_LIFECYCLE_MUTATION = NONE
+  README_INDEX = NEW -> accepted/current；两份 main old authorities ->
+    superseded/historical
+
+CURRENT_MAIN_AT_TRANSACTION = b2965583892a7c6acd2c1c00ed3bda280da7c435
+  （fresh fetch 2026-08-25；merge-tree current-base = CLEAN，exit 0，
+  事务前核验）
+PR60_STATE = CLOSED / UNMERGED（保持；ABANDONED_UNMERGED_CANDIDATE；
+  PR70_SUPERSEDES_PR60 = NO）
+
+implementation_authority = none（保持；实现须由独立
+  implementation-authorizing authority 另行授予）
+production_apply_authority = none（保持）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE = NO（PR #70 保持 OPEN；是否 merge 不在本轮授权内，MIG-002）
+PR_UPDATE = ORDINARY_FAST_FORWARD_ONLY（普通提交追加于 ee13cb2 之上，分支 ref 快进更新）
+
+NEXT_TASK = 链路 采纳审计
 ```
