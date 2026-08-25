@@ -62,3 +62,11 @@ Workspace migration or production change, and `production_apply_authority` stays
 | `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` | superseded | none | historical replaced authority |
 
 `accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
+
+## Agent Presentation authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_PRESENTATION_REGISTRY_V1` | proposed (docs-only PR, unreviewed) | contracts | future deployment-owned read-only Agent Presentation Registry (`agent-presentations.json`) + `AgentDefinition LEFT JOIN Presentation` Product Agent view authority; identity/name/default/disabled stay with Agent Definition, persona stays with Workspace, switching stays with Router/Binding |
+
+This proposal authorizes nothing until accepted into main; Mobile rendering, TTS/STT, persona, `agents.json` roster, deployment, and canary changes remain out of scope.
