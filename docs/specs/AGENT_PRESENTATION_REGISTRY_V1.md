@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_PRESENTATION_REGISTRY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
