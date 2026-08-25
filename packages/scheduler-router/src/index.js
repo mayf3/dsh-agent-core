@@ -34,6 +34,16 @@
  * scheduler-router-final-integration-v1.md).
  */
 
+// Process-lifetime defense in depth. Cross-process durability remains the
+// Scheduler occurrence ledger + AgentProcess caller-correlation authority.
+const PROCESS_ADMISSIONS = new Map()
+const TERMINATION_EVIDENCE = new Set([
+  'exact_terminal_then_idle',
+  'exact_queued_removal',
+  'child_real_exit',
+  'cancellation_ack',
+])
+
 /** Parse an opaque scheduler delivery target `job.delivery.to` into a Feishu chat id. */
 export function chatIdFromDeliveryTo(to) {
   if (typeof to !== 'string' || to.trim() === '') {
@@ -56,8 +66,22 @@ export function chatIdFromDeliveryTo(to) {
  *   - `proc.turn(sessionId, message, {}, timeoutMs)` — one owned turn into
  *     the agent's native DSH session, waits for whole-agent idle.
  *
- * Never throws: every failure becomes the scheduler's `{status:'error'}`
- * outcome envelope (the Scheduler treats non-ok as a failed run).
+ * V2 (SCHEDULER_TIMEOUT_OUTCOME_V2):
+ *   - `request.sessionId` is the fresh non-main native Session minted PER
+ *     OCCURRENCE by the scheduler (C-031 / D-006 §10) — this bridge never
+ *     derives or reuses a stable per-job session.
+ *   - `request.requestId` (the occurrence idempotencyKey) is recorded on
+ *     every call and carried in evidence (C-008/C-023).
+ *   - `request.onStart` is invoked exactly when the turn is dispatched —
+ *     the scheduler's admitted->running start evidence (C-027).
+ *   - error outcomes carry `started` so the scheduler can distinguish a
+ *     proven PRE-START rejection (turn never dispatched) from a terminal
+ *     failure of a started run (C-004).
+ *
+ * Never throws: every failure becomes the scheduler's outcome envelope.
+ * Structured `outcome_unknown` carriers (status/envelope) pass through with
+ * their reconciliationHandle — an unproven execution is NEVER collapsed into
+ * ordinary error (C-001).
  *
  * @param {object} router - the published `agentRouter` service (or any
  *   object exposing ensureRunning(agentId) -> AgentProcess).
@@ -66,9 +90,7 @@ export function chatIdFromDeliveryTo(to) {
  *   (`agentDefinition`); when present, the target agent must be RUNNABLE
  *   before spawn: unknown (AGENT_NOT_FOUND) AND disabled (AGENT_DISABLED)
  *   are both rejected before `ensureRunning` is ever called (merge review
- *   FIX 2). The reads are in-memory and synchronous — no config/database
- *   I/O on the invocation path. The Scheduler core / job store are never
- *   touched: a rejected job simply becomes a failed run outcome.
+ *   FIX 2). These rejections are PRE-START (the turn never began).
  * @returns {Function} the invokeAgent(request) seam, with `.calls` log.
  */
 export function createRouterInvoker(router, opts = {}) {
@@ -77,6 +99,7 @@ export function createRouterInvoker(router, opts = {}) {
   }
   const definition = opts?.definition
   const calls = []
+  const admissions = opts?.admissions ?? PROCESS_ADMISSIONS
 
   /**
    * Runnable-agent check: unknown OR disabled -> structured rejection, so
@@ -92,25 +115,35 @@ export function createRouterInvoker(router, opts = {}) {
     }
   }
 
-  async function invokeAgent(request) {
+  async function executeAgent(request) {
     const started = Date.now()
-    const call = { agentId: request.agentId, sessionId: request.sessionId, atMs: started }
+    const call = { agentId: request.agentId, sessionId: request.sessionId, requestId: request.requestId, atMs: started }
     let aborted = false
+    let turnDispatched = false
     if (request.signal) {
       request.signal.addEventListener('abort', () => { aborted = true }, { once: true })
     }
     try {
       assertRunnable(request.agentId)
       const proc = await router.ensureRunning(request.agentId)
-      // The Scheduler owns the run timeout (it aborts `signal`); the turn
+      // The Scheduler owns the run deadline (it aborts `signal`); the turn
       // poll gets a margin so the scheduler's race always settles first.
       const turnTimeoutMs = request.timeoutMs ? request.timeoutMs + 30_000 : 300_000
-      const turnResult = await proc.turn(request.sessionId, request.message, {}, turnTimeoutMs)
+      turnDispatched = true
+      if (typeof request.onStart === 'function') request.onStart()
+      const turnResult = await proc.turn(request.sessionId, request.message, {
+        callerCorrelation: {
+          occurrenceId: request.occurrenceId,
+          runId: request.runId,
+          requestId: request.requestId,
+        },
+      }, turnTimeoutMs)
       const outcome = {
         status: 'ok',
         summary: turnResult?.reply,
         sessionId: request.sessionId,
         durationMs: Date.now() - started,
+        started: true,
         reconciliationHandle: turnResult?.reconciliationHandle,
         evidence: turnResult?.evidence,
       }
@@ -119,15 +152,23 @@ export function createRouterInvoker(router, opts = {}) {
       calls.push(call)
       return outcome
     } catch (error) {
-      const unknown = error?.status === 'outcome_unknown' || error?.envelope === 'outcome_unknown'
+      const explicitlyUnknown = error?.status === 'outcome_unknown' || error?.envelope === 'outcome_unknown'
+      const terminationEvidence = error?.terminationEvidence ?? error?.evidence?.terminationEvidence
+      const provenTerminal = error?.status === 'failed' && TERMINATION_EVIDENCE.has(terminationEvidence)
+      // Any post-dispatch failure without exact-turn termination proof is
+      // outcome_unknown, even when represented as a generic thrown Error.
+      const unknown = explicitlyUnknown || (turnDispatched && !provenTerminal)
       const outcome = {
         status: unknown ? 'outcome_unknown' : 'error',
         error: error?.message ?? String(error),
         sessionId: request.sessionId,
         durationMs: Date.now() - started,
+        started: turnDispatched, // false = proven pre-start rejection (C-004)
         ...(error?.reconciliationHandle === undefined ? {} : { reconciliationHandle: error.reconciliationHandle }),
         ...(error?.deadlineAtWallMs === undefined ? {} : { deadlineAtWallMs: error.deadlineAtWallMs }),
-        ...(error?.evidence === undefined ? {} : { evidence: error.evidence }),
+        ...(error?.evidence !== undefined
+          ? { evidence: error.evidence }
+          : provenTerminal ? { evidence: { terminationEvidence } } : {}),
       }
       call.outcome = outcome
       call.aborted = aborted
@@ -135,7 +176,30 @@ export function createRouterInvoker(router, opts = {}) {
       return outcome
     }
   }
+
+  function invokeAgent(request) {
+    const requestId = request?.requestId
+    if (typeof requestId !== 'string' || requestId === '') return executeAgent(request)
+    const fingerprint = request.payloadHash ?? JSON.stringify([
+      request.agentId, request.sessionId, request.message, request.model ?? null, request.lightContext ?? null,
+    ])
+    const existing = admissions.get(requestId)
+    if (existing) {
+      if (existing.fingerprint !== fingerprint) {
+        return Promise.resolve({
+          status: 'error', started: false, code: 'OCCURRENCE_PAYLOAD_CONFLICT',
+          error: `requestId ${requestId} is already bound to a different payload`,
+          sessionId: request.sessionId,
+        })
+      }
+      return existing.promise
+    }
+    const promise = executeAgent(request)
+    admissions.set(requestId, { fingerprint, promise })
+    return promise
+  }
   invokeAgent.calls = calls
+  invokeAgent.assertRunnable = assertRunnable
   return invokeAgent
 }
 

@@ -407,6 +407,9 @@ export async function composeProductionRuntime(options = {}) {
     })
     return outcome
   }
+  // Preserve Scheduler V2's synchronous runnable-Agent admission gate through
+  // the observability wrapper; no job/store/deploy behavior is changed here.
+  invoker.assertRunnable = rawInvoker.assertRunnable
 
   // Admission observability remains a wrap around Router-owned delivery.
   wireNotificationIngressDeliveryEvidence(router, writeEvidence)

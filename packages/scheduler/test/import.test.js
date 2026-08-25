@@ -1,145 +1,150 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
-import { importOpenClawJobs } from '../src/import-openclaw.js'
-import { normalizeJob, toPublicJob } from '../src/job-model.js'
+import { mkdtempSync, readFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { importOpenClawJobs, mapOpenClawJob, writeImportToStore } from '../src/import-openclaw.js'
+import { JobStore } from '../src/store.js'
+import { applyTransition, buildOccurrenceRecord, rebuildFences } from '../src/occurrence-model.js'
+import { enableJobOp, updateJobOp } from '../src/control.js'
 
-const here = dirname(fileURLToPath(import.meta.url))
-const fixturePath = join(here, '..', 'fixtures', 'openclaw-jobs-enabled.json')
-const FIXTURE = JSON.parse(readFileSync(fixturePath, 'utf8'))
+const fixture = JSON.parse(readFileSync(new URL('../fixtures/openclaw-jobs-enabled.json', import.meta.url), 'utf8')).jobs
+const nowMs = Date.parse('2026-08-25T00:00:00.000Z')
+const tempStore = () => new JobStore(join(mkdtempSync(join(tmpdir(), 'scheduler-import-v2-')), 'jobs.json'))
 
-test('fixture: 140 enabled real OpenClaw jobs captured', () => {
-  assert.equal(FIXTURE.jobs.length, 140)
-})
-
-test('compatibility scan: 137/140 lossless, gaps are exactly the 3 no-agentId legacy jobs', () => {
-  const { jobs, report } = importOpenClawJobs(FIXTURE.jobs, { nowMs: Date.now() })
-  assert.equal(report.total, 140)
-  assert.equal(report.imported, 137)
-  assert.equal(report.gaps.length, 3)
-  for (const gap of report.gaps) {
-    assert.match(gap.reason, /no agentId/)
+function raw(over = {}) {
+  return {
+    id: 'job-a', name: 'job a', agentId: 'agent-a', enabled: true,
+    schedule: { kind: 'cron', expr: '0 9 * * *' },
+    payload: { kind: 'agentTurn', message: 'work' }, delivery: { mode: 'none' },
+    state: { nextRunAtMs: 1, lastStatus: 'error' }, ...over,
   }
-  assert.deepEqual(report.gaps.map((g) => g.name).sort(), [
-    'PPT设计师双周应用检查',
-    'PPT设计师周内化',
-    'PPT设计师每日学习',
-  ])
-  // every imported job is V1-valid by construction
-  assert.equal(jobs.length, 137)
-  for (const job of jobs) {
-    assert.equal(job.agentId !== undefined, true)
-    assert.ok(['cron', 'at', 'every'].includes(job.schedule.kind))
-  }
+}
+
+test('ACC-014 MIGRATION_NO_CATCH_UP strips execution state and disables definitions', () => {
+  const { jobs, report } = importOpenClawJobs([raw({ state: { nextRunAtMs: 1, lastRunAtMs: 2, runningAtMs: 3 } })], { nowMs })
+  assert.equal(jobs.length, 1)
+  assert.equal(jobs[0].enabled, false)
+  assert.deepEqual(jobs[0].state, {})
+  assert.equal(jobs[0].revisionActivatedAtMs, nowMs)
+  assert.deepEqual(report.inFlight.jobs.map((job) => job.id), ['job-a'])
+  assert.equal(report.dispositions[0].restoreEligible, false)
 })
 
-test('compatibility scan: schedule kind + delivery mode distribution preserved', () => {
-  const { jobs, report } = importOpenClawJobs(FIXTURE.jobs, { nowMs: Date.now() })
-  const kinds = {}
-  const modes = {}
-  for (const job of jobs) {
-    kinds[job.schedule.kind] = (kinds[job.schedule.kind] ?? 0) + 1
-    modes[job.delivery.mode] = (modes[job.delivery.mode] ?? 0) + 1
-  }
-  // 117 cron in fixture; 3 gaps are cron jobs without agentId
-  assert.equal(kinds.cron, 114)
-  assert.equal(kinds.at, 15)
-  assert.equal(kinds.every, 8)
-  assert.equal(modes.announce, 90)
-  assert.equal(modes.none, 45) // 48 in fixture minus the 3 no-agentId gaps (all mode:none)
-  assert.equal(modes.silent, 2)
-  // every imported job keeps its original id (identity preservation)
-  const ids = new Set(jobs.map((j) => j.id))
-  assert.equal(ids.size, 137)
+test('ACC-015 exactly three missing-agent definitions are blocked without guessing', () => {
+  const result = importOpenClawJobs(['a', 'b', 'c'].map((id) => raw({ id, agentId: undefined })), { nowMs })
+  assert.equal(result.jobs.length, 0)
+  assert.equal(result.report.gaps.length, 3)
+  assert.ok(result.report.gaps.every((gap) => /no agentId/.test(gap.reason)))
 })
 
-test('compatibility scan: announce target chat ids survive verbatim', () => {
-  const { jobs } = importOpenClawJobs(FIXTURE.jobs, { nowMs: Date.now() })
-  const announce = jobs.filter((j) => j.delivery.mode === 'announce')
-  assert.equal(announce.length, 90)
-  const targets = new Set(announce.map((j) => j.delivery.to))
-  // the real chat ids must appear unchanged
-  assert.ok(targets.has('chat:oc_0480991b97f1e27c96514ac66b4f122c'))
-  assert.ok(targets.has('chat:oc_2b5cfb7fca287c81cba3397ca9e07ce5'))
-  // 1 announce job has no explicit target (channel last, bestEffort) — opaque passthrough
-  const noTo = announce.filter((j) => !j.delivery.to)
-  assert.equal(noTo.length, 1)
-  assert.equal(noTo[0].name, '每日羊毛扫描')
-  assert.equal(noTo[0].delivery.bestEffort, true)
+test('ACC-015 fixture evidence contains exactly three missing-agent definitions', () => {
+  const result = importOpenClawJobs(fixture, { nowMs })
+  assert.equal(result.report.gaps.filter((gap) => /no agentId/.test(gap.reason)).length, 3)
+  assert.ok(result.jobs.every((job) => job.enabled === false))
 })
 
-test('import: recurring every jobs keep anchorMs; timeout fields normalize', () => {
-  const { jobs } = importOpenClawJobs(FIXTURE.jobs, { nowMs: Date.now() })
-  const every = jobs.find((j) => j.schedule.kind === 'every')
-  assert.ok(every.schedule.everyMs >= 1)
-  const withTimeout = jobs.find((j) => j.payload.timeoutSeconds !== undefined)
-  assert.ok(withTimeout.payload.timeoutSeconds > 0)
-  // no dormant top-level timeout fields survive
-  for (const job of jobs) {
-    assert.equal(job.timeoutSec, undefined)
-    assert.equal(job.timeoutMs, undefined)
-    assert.equal(job.runTimeoutMs, undefined)
-  }
+test('ACC-016 stale one-shot is DO_NOT_IMPORT and never converted to now', () => {
+  const result = importOpenClawJobs([raw({ schedule: { kind: 'at', at: '2020-01-01T00:00:00.000Z' } })], { nowMs })
+  assert.equal(result.jobs.length, 0)
+  assert.match(result.report.gaps[0].reason, /DO_NOT_IMPORT/)
 })
 
-test('import: one-shot daemon jobs keep model + lightContext + deleteAfterRun', () => {
-  const { jobs } = importOpenClawJobs(FIXTURE.jobs, { nowMs: Date.now() })
-  const atJobs = jobs.filter((j) => j.schedule.kind === 'at')
-  assert.equal(atJobs.length, 15)
-  for (const job of atJobs) {
-    assert.equal(job.deleteAfterRun, true, 'daemon one-shot jobs delete after run')
-  }
-  const withModel = atJobs.filter((j) => j.payload.model)
-  assert.equal(withModel.length, 15, 'all one-shot jobs pin the flash model')
-  assert.equal(atJobs.filter((j) => j.payload.lightContext).length, 10)
+test('ACC-017 disabled jobs stay disabled and enabled source is restore-gated disabled', () => {
+  const result = importOpenClawJobs([raw({ id: 'disabled', enabled: false }), raw({ id: 'enabled', enabled: true })], { nowMs })
+  assert.deepEqual(result.jobs.map((job) => job.enabled), [false, false])
 })
 
-test('import: sessionKey jobs are carried as opaque session override', () => {
-  const { jobs } = importOpenClawJobs(FIXTURE.jobs, { nowMs: Date.now() })
-  const withKey = jobs.filter((j) => j.sessionKey)
-  assert.equal(withKey.length, 7)
-  for (const job of withKey) {
-    // opaque session key: feishu-group sessions and parent cron sessions both
-    // occur; prefix may differ from agentId (dispatcher-created jobs run in
-    // the dispatcher's session) — V1 passes it through verbatim
-    assert.ok(job.sessionKey.length > 8)
-    assert.ok(job.sessionKey.includes(':'))
-  }
+test('ACC-018 three daemon/long-running definitions remain out of Scheduler', () => {
+  const result = importOpenClawJobs(['d1', 'd2', 'd3'].map((id) => raw({
+    id, payload: { kind: 'systemEvent', message: 'daemon loop' },
+  })), { nowMs })
+  assert.equal(result.jobs.length, 0)
+  assert.equal(result.report.gaps.length, 3)
+  assert.ok(result.report.gaps.every((gap) => /not executable by V2/.test(gap.reason)))
 })
 
-test('normalizeJob: preserves input id; rejects unknown delivery modes', () => {
-  const job = normalizeJob({
-    id: 'keep-me', name: 'x', agentId: 'a1',
-    schedule: { kind: 'at', at: '2026-09-01T00:00:00Z' },
-    payload: { message: 'x' },
+test('ACC-019/037 restore count is zero: write rejects enabled imported definitions', async () => {
+  const store = tempStore()
+  const enabled = mapOpenClawJob(raw(), { nowMs }).job
+  enabled.enabled = true
+  await assert.rejects(() => writeImportToStore(store, [enabled]), (error) => error.code === 'IMPORT_RESTORE_GATE_CLOSED')
+  assert.equal(await store.exists(), false)
+})
+
+test('ACC-019/037 durable restore marker blocks enable and update bypasses', async () => {
+  const store = tempStore()
+  const job = mapOpenClawJob(raw(), { nowMs }).job
+  await writeImportToStore(store, [job])
+  assert.equal((await store.loadDoc({ force: true })).jobs[0].migrationRestoreBlocked, true)
+  await assert.rejects(() => enableJobOp(store, job.id, { nowMs: nowMs + 1 }), (error) => error.code === 'RESTORE_GATE_CLOSED')
+  await assert.rejects(
+    () => updateJobOp(store, job.id, { enabled: true, migrationRestoreBlocked: undefined }, { nowMs: nowMs + 1 }),
+    (error) => error.code === 'RESTORE_GATE_CLOSED',
+  )
+})
+
+test('ACC-031 legacy sessionTarget/sessionKey are stripped', () => {
+  const mapped = mapOpenClawJob(raw({ sessionTarget: 'main', sessionKey: 'agent:a:cron:job-a' }), { nowMs })
+  assert.equal(mapped.job.sessionTarget, undefined)
+  assert.equal(mapped.job.sessionKey, undefined)
+  assert.equal(mapped.job.enabled, false)
+  assert.match(mapped.warnings.join('\n'), /fresh non-main session/)
+})
+
+test('ACC-034 existing empty target refuses no-force inside lock', async () => {
+  const store = tempStore()
+  await store.persist([])
+  const job = mapOpenClawJob(raw(), { nowMs }).job
+  await assert.rejects(() => writeImportToStore(store, [job]), (error) => error.code === 'IMPORT_REFUSED')
+})
+
+test('ACC-034 force import preserves occurrence/fence/history authority verbatim', async () => {
+  const store = tempStore()
+  const job = mapOpenClawJob(raw(), { nowMs }).job
+  const record = buildOccurrenceRecord({ job, kind: 'natural', nominalScheduledAt: nowMs + 1_000, admittedAt: nowMs + 1_000, timeoutMs: 60_000 })
+  applyTransition(record, { to: 'outcome_unknown', at: nowMs + 2_000, reason: 'unproven' })
+  await store.mutateDoc((doc) => {
+    doc.jobs = [structuredClone(job)]
+    doc.occurrences = [record]
+    doc.fences = rebuildFences(doc.occurrences)
   })
-  assert.equal(job.id, 'keep-me')
-  assert.throws(() => normalizeJob({
-    id: 'y', name: 'x', agentId: 'a1',
-    schedule: { kind: 'at', at: '2026-09-01T00:00:00Z' },
-    payload: { message: 'x' },
-    delivery: { mode: 'telegram' },
-  }), /delivery.mode/)
-  assert.throws(() => normalizeJob({
-    id: 'y', name: 'x', agentId: 'a1',
-    schedule: { kind: 'cron', expr: '0 9 * *' }, // 4 fields
-    payload: { message: 'x' },
-  }), /5 fields/)
+  const before = await store.loadDoc({ force: true })
+  await writeImportToStore(store, [job], { force: true, nowMs })
+  const after = await store.loadDoc({ force: true })
+  assert.deepEqual(after.occurrences, before.occurrences)
+  assert.deepEqual(after.fences, before.fences)
 })
 
-test('toPublicJob: exposes execution state but not raw state internals', () => {
-  const job = normalizeJob({
-    id: 'p', name: 'x', agentId: 'a1',
-    schedule: { kind: 'at', at: '2026-09-01T00:00:00Z' },
-    payload: { message: 'x' },
+test('ACC-034 PAYLOAD_HASH_CONFLICT force import fails unsafe merge', async () => {
+  const store = tempStore()
+  const job = mapOpenClawJob(raw(), { nowMs }).job
+  const record = buildOccurrenceRecord({ job, kind: 'natural', nominalScheduledAt: nowMs + 1_000, admittedAt: nowMs + 1_000, timeoutMs: 60_000 })
+  await store.mutateDoc((doc) => { doc.jobs = [job]; doc.occurrences = [record] })
+  const changed = structuredClone(job)
+  changed.payload.message = 'changed payload with same revision'
+  await assert.rejects(() => writeImportToStore(store, [changed], { force: true, nowMs }), (error) => error.code === 'IMPORT_UNSAFE_MERGE')
+})
+
+test('ACC-034 force import rejects schedule/retry rebinding at the same revision', async () => {
+  const store = tempStore()
+  const job = mapOpenClawJob(raw(), { nowMs }).job
+  const record = buildOccurrenceRecord({ job, kind: 'natural', nominalScheduledAt: nowMs + 1_000, admittedAt: nowMs + 1_000, timeoutMs: 60_000 })
+  await store.mutateDoc((doc) => { doc.jobs = [job]; doc.occurrences = [record] })
+  const changed = structuredClone(job)
+  changed.schedule = { kind: 'cron', expr: '30 10 * * *' }
+  await assert.rejects(() => writeImportToStore(store, [changed], { force: true, nowMs }), (error) => error.code === 'IMPORT_UNSAFE_MERGE')
+})
+
+test('ACC-034 in-lock TOCTOU guard sees a competing writer', async () => {
+  const store = tempStore()
+  const job = mapOpenClawJob(raw(), { nowMs }).job
+  const first = store.mutateDoc(async (doc) => {
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    doc.jobs.push({ ...job, id: 'competing' })
   })
-  job.state = { nextRunAtMs: 123, lastRunAtMs: 100, lastStatus: 'ok', lastError: 'boom', consecutiveErrors: 2 }
-  const pub = toPublicJob(job)
-  assert.equal(pub.nextRunAtMs, 123)
-  assert.equal(pub.lastStatus, 'ok')
-  assert.equal(pub.lastError, 'boom')
-  assert.equal(pub.consecutiveErrors, 2)
-  assert.equal(pub.state, undefined)
+  const second = writeImportToStore(store, [job])
+  await first
+  await assert.rejects(() => second, (error) => error.code === 'IMPORT_REFUSED')
+  assert.equal((await store.loadDoc({ force: true })).jobs[0].id, 'competing')
 })

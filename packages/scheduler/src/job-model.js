@@ -1,31 +1,42 @@
 /**
- * @agent-core/scheduler — the minimum job model.
+ * @agent-core/scheduler — the V2 job model (D-007 §3 true subset).
  *
- * V1 schema is deliberately a 1:1 subset of the real OpenClaw job shape (see
- * docs/investigations/scheduler-replacement-audit.md field mapping). Only
- * fields with real usage in the live 140-job inventory are modeled; dormant
- * OpenClaw fields (wakeMode, top-level timeoutSec/timeoutMs/runTimeoutMs,
- * payload.kind systemEvent) are normalized on import, not carried forward.
+ * Session selection fields are GONE from the schema (C-031 / D-007 §3.2:
+ * NEW_JOB_SESSION_SELECTION_FIELDS = NONE): legacy `sessionTarget` /
+ * `sessionKey` inputs are tolerated as migration input and stripped — every
+ * scheduled execution gets a fresh non-main native Session per occurrence.
  *
- * Job shape (V1):
+ * `scheduleRevision` (D-007 §5.2): bumped by updateJob whenever a change
+ * alters future occurrence semantics (schedule/payload/agentId/retry);
+ * existing occurrences stay bound to the revision that created them.
+ *
+ * `retry` is the ONLY explicit auto-retry authorization (D-007 §7.5 /
+ * C-009): absent or {auto:false} means AUTO_RETRY_DEFAULT = NO — ordinary
+ * proven failures never replay automatically; a retry is always a NEW
+ * occurrence.
+ *
+ * `state` is a DERIVED projection only (C-030): authority for execution
+ * outcomes lives in the occurrence ledger; admission/ownership/termination
+ * decisions never read these fields.
+ *
+ * Job shape (V2):
  *
  *   {
  *     id: string,                      // stable id (uuid)
  *     name: string,
- *     agentId: string,                 // REQUIRED (3 legacy jobs lack it and are
- *                                      //   broken in OpenClaw today — see audit)
+ *     agentId: string,                 // REQUIRED
  *     enabled: boolean,
+ *     scheduleRevision: number,        // definition revision (occurrences bind it)
  *     schedule: { kind:'cron', expr, tz?, staggerMs? }
  *             | { kind:'at', at }      // ISO instant
  *             | { kind:'every', everyMs, anchorMs? },
- *     sessionTarget: 'isolated'|'main',// default 'isolated' (135/140 real)
- *     sessionKey?: string,             // opaque; overrides sessionTarget when set
+ *     retry?: { auto: boolean },       // explicit auto-retry authorization (default NO)
  *     payload: {
- *       kind: 'agentTurn',             // only kind V1 executes
+ *       kind: 'agentTurn',             // only kind V2 executes
  *       message: string,
  *       timeoutSeconds?: number,       // canonical run timeout
  *       lightContext?: boolean,        // opaque pass-through to the invocation
- *       model?: string,                // opaque pass-through (model override)
+ *       model?: string,                // opaque pass-through (not proven by D-007)
  *     },
  *     delivery: {                      // opaque delivery directive — the
  *       mode: 'announce'|'none'|'silent', // scheduler never interprets channel/to
@@ -36,11 +47,7 @@
  *     deleteAfterRun?: boolean,        // default true for at jobs
  *     createdAtMs: number,
  *     updatedAtMs: number,
- *     state: {                         // execution state (persisted)
- *       nextRunAtMs?, lastRunAtMs?, lastRunStatus?, lastStatus?,
- *       lastDurationMs?, lastDeliveryStatus?, consecutiveErrors?,
- *       lastError?, runningAtMs?, lastDelivered?,
- *     },
+ *     state: { ... derived projection only (C-030) ... },
  *   }
  */
 
@@ -48,7 +55,6 @@ import { randomUUID } from 'node:crypto'
 import { normalizeSchedule } from './schedule.js'
 
 export const DELIVERY_MODES = new Set(['announce', 'none', 'silent'])
-export const SESSION_TARGETS = new Set(['isolated', 'main'])
 export const RUN_STATUSES = new Set(['ok', 'error', 'skipped'])
 
 export function normalizeOptionalText(value, label) {
@@ -58,7 +64,7 @@ export function normalizeOptionalText(value, label) {
   return trimmed === '' ? undefined : trimmed
 }
 
-/** Strict V1 job validation. Throws TypeError with a stable message on any violation. */
+/** Strict V2 job validation. Throws TypeError with a stable message on any violation. */
 export function normalizeJob(input, { nowMs = Date.now(), id, createdAtMs = nowMs } = {}) {
   if (!input || typeof input !== 'object') throw new TypeError('job required')
 
@@ -90,18 +96,20 @@ export function normalizeJob(input, { nowMs = Date.now(), id, createdAtMs = nowM
   const mode = String(delivery.mode ?? 'none').trim().toLowerCase()
   if (!DELIVERY_MODES.has(mode)) throw new TypeError(`job.delivery.mode must be announce|none|silent, got: ${mode}`)
 
-  const sessionTarget = String(input.sessionTarget ?? 'isolated').trim().toLowerCase()
-  if (!SESSION_TARGETS.has(sessionTarget)) {
-    throw new TypeError(`job.sessionTarget must be isolated|main, got: ${sessionTarget}`)
+  if (input.enabled !== undefined && typeof input.enabled !== 'boolean') {
+    throw new TypeError('job.enabled must be a boolean')
   }
-
+  if (input.scheduleRevision !== undefined
+    && (!Number.isSafeInteger(input.scheduleRevision) || input.scheduleRevision < 1)) {
+    throw new TypeError('job.scheduleRevision must be a positive integer')
+  }
   const job = {
     id: jobId,
     name,
     agentId,
-    enabled: input.enabled !== false,
+    enabled: input.enabled ?? true,
+    scheduleRevision: input.scheduleRevision ?? 1,
     schedule,
-    sessionTarget,
     payload: {
       kind: 'agentTurn',
       message,
@@ -109,12 +117,32 @@ export function normalizeJob(input, { nowMs = Date.now(), id, createdAtMs = nowM
     delivery: { mode },
     createdAtMs: Number.isFinite(input.createdAtMs) ? Math.floor(input.createdAtMs) : createdAtMs,
     updatedAtMs: Number.isFinite(input.updatedAtMs) ? Math.floor(input.updatedAtMs) : createdAtMs,
+    // Activation boundary of the current scheduleRevision's nominal-slot
+    // space (D-007 §13.1: a (re)activated schedule starts from its first
+    // FUTURE slot). Creation sets it to createdAtMs; updateJob bumps it on
+    // semantic revision changes.
+    revisionActivatedAtMs: Number.isFinite(input.revisionActivatedAtMs) ? Math.floor(input.revisionActivatedAtMs) : undefined,
     state: {},
   }
+  if (job.revisionActivatedAtMs === undefined) job.revisionActivatedAtMs = job.createdAtMs
 
   if (typeof input.description === 'string' && input.description.trim()) job.description = input.description.trim()
-  if (typeof input.sessionKey === 'string' && input.sessionKey.trim()) job.sessionKey = input.sessionKey.trim()
-  if (typeof payload.timeoutSeconds === 'number' && Number.isFinite(payload.timeoutSeconds) && payload.timeoutSeconds > 0) {
+  if (input.migrationRestoreBlocked !== undefined && input.migrationRestoreBlocked !== true) {
+    throw new TypeError('job.migrationRestoreBlocked may only be true while the restore gate is closed')
+  }
+  if (input.migrationRestoreBlocked === true) job.migrationRestoreBlocked = true
+  // Explicit auto-retry authorization (C-009 / D-007 §7.5 AUTO_RETRY_DEFAULT = NO).
+  if (input.retry !== undefined) {
+    if (!input.retry || typeof input.retry !== 'object' || typeof input.retry.auto !== 'boolean') {
+      throw new TypeError('job.retry must be {auto:boolean}')
+    }
+    job.retry = { auto: input.retry.auto }
+  }
+  if (payload.timeoutSeconds !== undefined) {
+    if (typeof payload.timeoutSeconds !== 'number' || !Number.isFinite(payload.timeoutSeconds)
+      || payload.timeoutSeconds < 1) {
+      throw new TypeError('job.payload.timeoutSeconds must be a positive number')
+    }
     job.payload.timeoutSeconds = Math.floor(payload.timeoutSeconds)
   }
   if (typeof payload.lightContext === 'boolean') job.payload.lightContext = payload.lightContext
@@ -129,13 +157,19 @@ export function normalizeJob(input, { nowMs = Date.now(), id, createdAtMs = nowM
   if (input.state && typeof input.state === 'object') {
     job.state = normalizeState(input.state)
   }
+  // Legacy session selection fields (sessionTarget/sessionKey) are migration
+  // INPUT only — stripped here, never persisted, never read by admission
+  // (C-031 / D-007 §3.2).
   return job
 }
 
-/** State field whitelist + numeric validation (drops unknown/dormant state keys). */
+/**
+ * State field whitelist (derived projection only — C-030). Kept for stored-doc
+ * compatibility; admission/ownership/termination decisions never read these.
+ */
 export function normalizeState(state) {
   const out = {}
-  const numKeys = ['nextRunAtMs', 'lastRunAtMs', 'lastDurationMs', 'consecutiveErrors', 'runningAtMs']
+  const numKeys = ['nextRunAtMs', 'lastRunAtMs', 'lastDurationMs', 'consecutiveErrors']
   for (const k of numKeys) {
     const v = state[k]
     if (typeof v === 'number' && Number.isFinite(v)) out[k] = Math.floor(v)
@@ -152,7 +186,7 @@ export function normalizeState(state) {
   return out
 }
 
-/** Public view of a job (runtime state excluded from the wire view). */
+/** Public view of a job (derived state exposed as a convenience projection). */
 export function toPublicJob(job) {
   const { state, ...rest } = job
   return {

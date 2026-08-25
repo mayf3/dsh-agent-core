@@ -63,14 +63,72 @@ test('invoker: happy path maps turn reply into the scheduler outcome envelope', 
   assert.equal(invokeAgent.calls[0].aborted, false)
 })
 
-test('invoker: turn failure becomes an error outcome, never a throw', async () => {
+test('invoker: post-dispatch failure without termination proof is outcome_unknown', async () => {
   const proc = fakeProc({ turnError: new Error('turn timeout for session s (agent agent-x)') })
   const router = fakeRouter({ proc })
   const invokeAgent = createRouterInvoker(router)
   const outcome = await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi' })
-  assert.equal(outcome.status, 'error')
+  assert.equal(outcome.status, 'outcome_unknown')
   assert.match(outcome.error, /turn timeout/)
   assert.equal(outcome.sessionId, 's')
+})
+
+test('invoker: exact terminal failure proof remains ordinary error', async () => {
+  const terminal = Object.assign(new Error('exact turn failed'), {
+    status: 'failed', evidence: { terminationEvidence: 'exact_terminal_then_idle' },
+  })
+  const invokeAgent = createRouterInvoker(fakeRouter({ proc: fakeProc({ turnError: terminal }) }))
+  const outcome = await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi' })
+  assert.equal(outcome.status, 'error')
+  assert.equal(outcome.started, true)
+})
+
+test('invoker: unrecognized termination evidence cannot downgrade unknown to failed', async () => {
+  const carrier = Object.assign(new Error('ambiguous failure'), {
+    status: 'failed', evidence: { terminationEvidence: 'best_effort_guess' },
+  })
+  const invokeAgent = createRouterInvoker(fakeRouter({ proc: fakeProc({ turnError: carrier }) }))
+  const outcome = await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi' })
+  assert.equal(outcome.status, 'outcome_unknown')
+})
+
+test('invoker: occurrence/run/request correlation reaches AgentProcess', async () => {
+  let seen
+  const proc = {
+    turn: async (sessionId, text, opts) => {
+      seen = opts.callerCorrelation
+      return { reply: 'ok' }
+    },
+  }
+  const invokeAgent = createRouterInvoker(fakeRouter({ proc }))
+  await invokeAgent({
+    agentId: 'agent-x', sessionId: 'fresh', message: 'hi',
+    occurrenceId: 'occ:1', runId: 'run:1', requestId: 'request:1',
+  })
+  assert.deepEqual(seen, { occurrenceId: 'occ:1', runId: 'run:1', requestId: 'request:1' })
+})
+
+test('C-008 same requestId/payload enqueues once; different payload conflicts pre-start', async () => {
+  let turns = 0
+  const proc = {
+    turn: async () => { turns += 1; return { reply: 'once' } },
+  }
+  const invokeAgent = createRouterInvoker(fakeRouter({ proc }))
+  const request = {
+    agentId: 'agent-x', sessionId: 'fresh', message: 'hi', requestId: 'occ:one',
+    payloadHash: 'sha256:same',
+  }
+  const [first, second] = await Promise.all([invokeAgent(request), invokeAgent({ ...request })])
+  assert.equal(first.status, 'ok')
+  assert.equal(second.status, 'ok')
+  assert.equal(turns, 1)
+  const recreatedInvoker = createRouterInvoker(fakeRouter({ proc }))
+  assert.equal((await recreatedInvoker({ ...request })).status, 'ok')
+  assert.equal(turns, 1, 'recreating the bridge in the same process does not enqueue again')
+  const conflict = await invokeAgent({ ...request, payloadHash: 'sha256:different' })
+  assert.equal(conflict.code, 'OCCURRENCE_PAYLOAD_CONFLICT')
+  assert.equal(conflict.started, false)
+  assert.equal(turns, 1)
 })
 
 test('B15 invoker preserves outcome_unknown handle/deadline/evidence', async () => {

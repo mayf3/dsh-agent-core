@@ -1,77 +1,56 @@
-/**
- * @agent-core/scheduler — persistent store with a single mutation authority.
- *
- * V1 persistence stays deliberately simple:
- *
- *   - `jobs.json`  — `{ version: 1, jobs: [...] }`, atomic replace (write tmp,
- *     fsync, rename), fail-loud.
- *   - `runs.jsonl` — append-only run event log, bounded by maxRunLogBytes
- *     (default 10 MB). Evidence for restart behavior, not a Workflow.
- *
- * MUTATION PROTOCOL (decision D-005 addendum, audit FIX 3/4):
- *
- *   Every mutation — from the resident Scheduler AND from the
- *   agentcore-cron CLI seam — must go through `mutate(fn)`:
- *
- *     cross-process lock (lockfile, O_EXCL, stale-break)
- *       -> re-read the LATEST store from disk
- *       -> apply only this mutation to the fresh array
- *       -> atomic persist
- *       -> release lock
- *
- *   Consequences:
- *     - a CLI `add/rm/enable/disable` can never be clobbered by the resident
- *       engine's stale whole-store snapshot, and vice versa (FIX 3);
- *     - a failed persist leaves BOTH the on-disk store and the caller's RAM
- *       untouched — the mutated array is a throwaway copy, committed only
- *       after the atomic write succeeds (FIX 4).
- *
- * No Redis / Kafka / DB / leader election: one machine, one lockfile.
- */
-
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { createHash, randomUUID } from 'node:crypto'
+import {
+  logicalCoordinates,
+  rebuildFences,
+  validateOccurrenceRecord,
+} from './occurrence-model.js'
+import { storeMigrationMethods } from './store-migration.js'
 
-export const STORE_VERSION = 1
+export const STORE_VERSION = 2
+export const UPGRADEABLE_VERSIONS = new Set([1])
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const clone = (value) => structuredClone(value)
+const digestJSON = (value) => createHash('sha256').update(JSON.stringify(value), 'utf8').digest('hex')
 
 function failLoud(context, error) {
-  const err = new Error(`scheduler store: ${context}: ${error?.message ?? error}`)
-  err.cause = error
-  throw err
+  const wrapped = new Error(`scheduler store: ${context}: ${error?.message ?? error}`)
+  wrapped.cause = error
+  throw wrapped
 }
 
+function emptyDoc() {
+  return { version: STORE_VERSION, jobs: [], occurrences: [], fences: {} }
+}
+
+/** Single-document Scheduler V2 authority store. */
 export class JobStore {
-  /**
-   * @param {string} filePath - jobs.json path (default ~/.agent-core/scheduler/jobs.json).
-   * @param {object} [opts]
-   * @param {string} [opts.runLogPath] - runs.jsonl path.
-   * @param {number} [opts.maxRunLogBytes] - truncation bound for the run log.
-   * @param {number} [opts.lockTimeoutMs] - max wait for the mutation lock (15s).
-   * @param {number} [opts.lockStaleMs] - break a lock older than this (30s).
-   */
   constructor(filePath, opts = {}) {
     this.filePath = filePath
     this.runLogPath = opts.runLogPath ?? path.join(path.dirname(filePath), 'runs.jsonl')
     this.maxRunLogBytes = opts.maxRunLogBytes ?? 10 * 1024 * 1024
     this.lockTimeoutMs = opts.lockTimeoutMs ?? 15_000
     this.lockStaleMs = opts.lockStaleMs ?? 30_000
+    this.clock = opts.clock ?? (() => Date.now())
     this.lockPath = `${filePath}.lock`
-    this._cache = null
+    this.engineLockPath = `${filePath}.engine.lock`
+    this.upgradeMetaPath = `${filePath}.upgrade-v2.json`
+    this.beforeCommit = opts.beforeCommit ?? null
+    this._cacheDoc = null
     this._mtimeMs = -1
     this._writeChain = Promise.resolve()
-    this._mutexChain = Promise.resolve() // in-process FIFO for mutate() calls
+    this._mutexChain = Promise.resolve()
     this._tmpSeq = 0
-    /**
-     * Test seam: when set, called right before the atomic rename inside
-     * `mutate`; throwing here simulates a persist failure (FIX 4 tests).
-     */
-    this.beforeCommit = opts.beforeCommit ?? null
   }
 
   get dir() {
     return path.dirname(this.filePath)
+  }
+
+  _emptyDoc() {
+    return emptyDoc()
   }
 
   async _ensureDir() {
@@ -79,97 +58,194 @@ export class JobStore {
     await fs.mkdir(path.dirname(this.runLogPath), { recursive: true })
   }
 
-  // ── cross-process mutation lock ─────────────────────────────────────────
+  async _syncDir(dir) {
+    let handle
+    try {
+      handle = await fs.open(dir, 'r')
+      await handle.sync()
+    } catch (error) {
+      // Some platforms/filesystems reject directory fsync. Only tolerate the
+      // documented unsupported-operation classes; persistence errors fail loud.
+      if (!['EINVAL', 'ENOTSUP', 'EISDIR', 'EBADF'].includes(error.code)) {
+        failLoud(`fsync directory ${dir}`, error)
+      }
+    } finally {
+      await handle?.close().catch(() => {})
+    }
+  }
 
-  /**
-   * Exclusive lock (single machine): create `<jobs.json>.lock` with O_EXCL.
-   * Held only for the duration of one mutate() — commits are short, so
-   * holders never block each other for long. A lock older than lockStaleMs
-   * (e.g. crashed holder) is broken and retried.
-   */
-  async _withLock(fn) {
+  _lockOwnerAlive(pid) {
+    if (!Number.isSafeInteger(pid) || pid <= 0) return null
+    try {
+      process.kill(pid, 0)
+      return true
+    } catch (error) {
+      if (error.code === 'ESRCH') return false
+      if (error.code === 'EPERM') return true
+      return null
+    }
+  }
+
+  async _removeLockIfUnchanged(lockPath, observedRaw) {
+    let current
+    try {
+      current = await fs.readFile(lockPath, 'utf8')
+    } catch (error) {
+      if (error.code === 'ENOENT') return true
+      failLoud(`read lock ${lockPath}`, error)
+    }
+    if (current !== observedRaw) return false
+    await fs.rm(lockPath, { force: true })
+    return true
+  }
+
+  async _reapDeadLock(lockPath, observedRaw) {
+    const reaperPath = `${lockPath}.reap`
+    let reaper
+    try {
+      reaper = await fs.open(reaperPath, 'wx')
+      await reaper.writeFile(`${process.pid}\n`, 'utf8')
+    } catch (error) {
+      await reaper?.close().catch(() => {})
+      if (error.code === 'EEXIST') return false
+      failLoud(`acquire dead-lock reaper ${reaperPath}`, error)
+    }
+    try {
+      return await this._removeLockIfUnchanged(lockPath, observedRaw)
+    } finally {
+      await reaper.close().catch(() => {})
+      await fs.rm(reaperPath, { force: true }).catch(() => {})
+    }
+  }
+
+  async _acquireFileLock(lockPath) {
     await this._ensureDir()
-    const start = Date.now()
+    const startedAt = Date.now()
+    const owner = { pid: process.pid, token: randomUUID(), createdAtMs: Date.now() }
+    const serialized = `${JSON.stringify(owner)}\n`
     for (;;) {
-      let fh = null
       try {
-        fh = await fs.open(this.lockPath, 'wx')
-        await fh.writeFile(`${JSON.stringify({ pid: process.pid, ts: Date.now() })}\n`, 'utf8')
-      } catch (error) {
-        if (error.code !== 'EEXIST') failLoud(`acquire lock ${this.lockPath}`, error)
-        // held by another writer: break stale locks, else wait and retry
-        let stat = null
+        const handle = await fs.open(lockPath, 'wx')
         try {
-          stat = await fs.stat(this.lockPath)
-        } catch {
-          continue // holder just released; retry immediately
+          await handle.writeFile(serialized, 'utf8')
+          await handle.sync()
+        } finally {
+          await handle.close()
         }
-        if (Date.now() - stat.mtimeMs > this.lockStaleMs) {
-          await fs.rm(this.lockPath, { force: true }).catch(() => {})
-          continue
+        return owner.token
+      } catch (error) {
+        if (error.code !== 'EEXIST') failLoud(`acquire lock ${lockPath}`, error)
+        let observedRaw
+        try {
+          observedRaw = await fs.readFile(lockPath, 'utf8')
+        } catch (readError) {
+          if (readError.code === 'ENOENT') continue
+          failLoud(`read lock ${lockPath}`, readError)
         }
-        if (Date.now() - start > this.lockTimeoutMs) {
-          failLoud(`lock timeout on ${this.lockPath}`, new Error('held by another writer'))
+        let observed
+        try { observed = JSON.parse(observedRaw) } catch { observed = null }
+        if (this._lockOwnerAlive(observed?.pid) === false) {
+          const reaped = await this._reapDeadLock(lockPath, observedRaw)
+          if (reaped) continue
+        }
+        if (Date.now() - startedAt > this.lockTimeoutMs) {
+          failLoud(`lock timeout on ${lockPath}`, new Error('held by a live or unverifiable owner'))
         }
         await sleep(25 + Math.floor(Math.random() * 50))
-        continue
-      }
-      try {
-        return await fn()
-      } finally {
-        await fh.close().catch(() => {})
-        await fs.rm(this.lockPath, { force: true }).catch(() => {})
       }
     }
   }
 
-  // ── mutation authority ──────────────────────────────────────────────────
+  async _releaseFileLock(lockPath, token) {
+    let raw
+    try {
+      raw = await fs.readFile(lockPath, 'utf8')
+    } catch (error) {
+      if (error.code === 'ENOENT') return
+      failLoud(`read lock for release ${lockPath}`, error)
+    }
+    let owner
+    try { owner = JSON.parse(raw) } catch { owner = null }
+    if (owner?.token !== token || owner?.pid !== process.pid) return
+    await this._removeLockIfUnchanged(lockPath, raw)
+  }
 
-  /**
-   * THE only mutation path. Contract:
-   *
-   *   fn(latestJobs) -> undefined | newArray | { jobs?, value? }
-   *
-   * `latestJobs` is a fresh deep copy read from disk under the lock; fn
-   * mutates it in place (or returns a replacement array). After fn returns,
-   * the array is persisted atomically; on success the store cache is updated
-   * and `{ jobs, value }` is returned. Any throw (fn or the write) leaves
-   * disk AND every caller's RAM untouched.
-   *
-   * SAME-PROCESS calls are serialized in FIFO call order (a promise chain)
-   * before the cross-process file lock — the engine's own commits (e.g. a
-   * completion) therefore always observe an earlier-enqueued domain op
-   * (e.g. updateJob) instead of overtaking it. The file lock then only
-   * arbitrates against OTHER processes, where any serialization order is
-   * correct because every mutate re-reads the latest store first.
-   */
-  async mutate(fn) {
-    const run = this._mutexChain.then(() => this._mutateLocked(fn))
+  async _withLock(fn) {
+    const token = await this._acquireFileLock(this.lockPath)
+    try {
+      return await fn()
+    } finally {
+      await this._releaseFileLock(this.lockPath, token)
+    }
+  }
+
+  async acquireEngineLease() {
+    const token = await this._acquireFileLock(this.engineLockPath)
+    let released = false
+    return async () => {
+      if (released) return
+      released = true
+      await this._releaseFileLock(this.engineLockPath, token)
+    }
+  }
+
+  async mutateDoc(fn) {
+    const run = this._mutexChain.then(() => this._mutateDocLocked(fn))
     this._mutexChain = run.catch(() => {})
     return run
   }
 
-  async _mutateLocked(fn) {
+  async _mutateDocLocked(fn) {
     return this._withLock(async () => {
-      const latest = await this._loadFresh()
-      let result = await fn(latest)
-      let jobs = latest
+      const loaded = await this._loadDocForMutation()
+      const doc = loaded.doc
+      const beforeJobsDigest = digestJSON(doc.jobs)
+      const result = await fn(doc, {
+        existed: loaded.existed,
+        sourceStatus: loaded.sourceStatus,
+        upgrade: loaded.upgrade ?? null,
+      })
       let value
-      if (Array.isArray(result)) {
-        jobs = result
-      } else if (result !== undefined && result !== null && typeof result === 'object') {
-        if (Array.isArray(result.jobs)) jobs = result.jobs
+      if (result && typeof result === 'object') {
+        if (Array.isArray(result.jobs)) doc.jobs = result.jobs
+        if (Array.isArray(result.occurrences)) doc.occurrences = result.occurrences
+        if (result.fences && typeof result.fences === 'object' && !Array.isArray(result.fences)) {
+          doc.fences = result.fences
+        }
         value = result.value
       }
-      if (typeof this.beforeCommit === 'function') this.beforeCommit() // test seam
-      await this._writeAtomic(jobs)
-      this._cache = jobs
-      this._mtimeMs = Date.now()
-      return { jobs, value }
+      this._validateDocument(doc)
+      const jobsChanged = digestJSON(doc.jobs) !== beforeJobsDigest
+      if (jobsChanged) await this._markV2JobMutation()
+      if (typeof this.beforeCommit === 'function') await this.beforeCommit()
+      await this._writeAtomicDoc(doc)
+      this._cacheDoc = clone(doc)
+      this._mtimeMs = (await fs.stat(this.filePath)).mtimeMs
+      let upgrade = loaded.upgrade ?? null
+      if (upgrade) {
+        const evidenceStatus = await this.appendRunEvent({
+          ts: this.clock(), action: 'store_upgrade', from: 1, to: STORE_VERSION,
+          backupFile: upgrade.backupFile, report: upgrade.report,
+        })
+        upgrade = { ...upgrade, evidenceStatus }
+      }
+      return { doc: clone(doc), value, upgrade }
     })
   }
 
-  /** True when the store file exists (import guard / CLI checks). */
+  async mutate(fn) {
+    const { doc, value } = await this.mutateDoc(async (latest) => {
+      const result = await fn(latest.jobs)
+      if (Array.isArray(result)) latest.jobs = result
+      else if (result && typeof result === 'object') {
+        if (Array.isArray(result.jobs)) latest.jobs = result.jobs
+        return { value: result.value }
+      }
+      return undefined
+    })
+    return { jobs: doc.jobs, value }
+  }
+
   async exists() {
     try {
       await fs.stat(this.filePath)
@@ -180,153 +256,245 @@ export class JobStore {
     }
   }
 
-  // ── low-level IO (internal; `mutate` is the mutation authority) ─────────
-
-  async _loadFresh() {
+  async _readDocRaw({ repairFences = false } = {}) {
     let raw
     try {
       raw = await fs.readFile(this.filePath, 'utf8')
     } catch (error) {
-      if (error.code === 'ENOENT') return []
+      if (error.code === 'ENOENT') return { status: 'empty' }
       failLoud(`read ${this.filePath}`, error)
     }
     let data
     try {
       data = JSON.parse(raw)
     } catch (error) {
-      failLoud(`parse ${this.filePath}`, error)
+      failLoud(`parse ${this.filePath} (corrupt document — not treating as empty store)`, error)
     }
-    const jobs = Array.isArray(data) ? data : Array.isArray(data?.jobs) ? data.jobs : []
-    return JSON.parse(JSON.stringify(jobs))
+    if (Array.isArray(data)) return { status: 'v1', raw: data, jobs: data }
+    if (!data || typeof data !== 'object') {
+      failLoud('validate document', new Error('document is neither an array nor an object'))
+    }
+    if (data.version === STORE_VERSION) {
+      const validated = repairFences && Array.isArray(data.occurrences)
+        ? { ...data, fences: rebuildFences(data.occurrences) }
+        : data
+      this._validateDocument(validated)
+      return { status: 'v2', raw: data, doc: data }
+    }
+    if (UPGRADEABLE_VERSIONS.has(data.version)) {
+      if (!Array.isArray(data.jobs)) {
+        failLoud('validate v1 document', new Error('version 1 jobs must be an array'))
+      }
+      return { status: 'v1', raw: data, jobs: data.jobs }
+    }
+    failLoud('validate document', new Error(`unsupported store version ${JSON.stringify(data.version)}`))
   }
 
-  /** Atomic write of the whole store; serialized in-process. Never partially visible. */
-  async _writeAtomic(jobs) {
-    this._tmpSeq += 1
-    const seq = this._tmpSeq
+  _validateDocument(doc) {
+    if (doc.version !== STORE_VERSION || !Array.isArray(doc.jobs)
+      || !Array.isArray(doc.occurrences) || !doc.fences
+      || typeof doc.fences !== 'object' || Array.isArray(doc.fences)) {
+      failLoud('validate document', new Error('version 2 document missing/malformed jobs/occurrences/fences collection(s)'))
+    }
+    const ids = new Map()
+    const coordinateKeys = new Map()
+    for (const record of doc.occurrences) {
+      try {
+        validateOccurrenceRecord(record)
+      } catch (error) {
+        failLoud('occurrence authority corrupted (fail loud, not an empty store)', error)
+      }
+      if (ids.has(record.occurrenceId)) {
+        failLoud('occurrence authority corrupted', new Error(`duplicate occurrenceId ${record.occurrenceId}`))
+      }
+      ids.set(record.occurrenceId, record)
+      const coords = logicalCoordinates(record)
+      const slot = coords.kind === 'catchup' ? 'natural' : coords.kind
+      const key = JSON.stringify({ ...coords, kind: slot })
+      if (coordinateKeys.has(key)) {
+        failLoud('occurrence authority corrupted', new Error(`duplicate logical occurrence coordinates ${key}`))
+      }
+      coordinateKeys.set(key, record.occurrenceId)
+    }
+    for (const record of doc.occurrences) {
+      if (record.kind !== 'retry') continue
+      const predecessor = ids.get(record.retryOfOccurrenceId)
+      if (!predecessor || predecessor.state !== 'failed'
+        || predecessor.jobId !== record.jobId
+        || predecessor.scheduleRevision !== record.scheduleRevision) {
+        failLoud('occurrence authority corrupted', new Error(`invalid retry predecessor for ${record.occurrenceId}`))
+      }
+    }
+    for (const [jobId, fence] of Object.entries(doc.fences)) {
+      if (!fence || typeof fence !== 'object' || typeof fence.occurrenceId !== 'string'
+        || typeof fence.runId !== 'string' || typeof fence.activatedAtMs !== 'number') {
+        failLoud('fence projection corrupted', new Error(`malformed fence for ${jobId}`))
+      }
+    }
+    const expectedFences = rebuildFences(doc.occurrences)
+    const actualKeys = Object.keys(doc.fences).sort()
+    const expectedKeys = Object.keys(expectedFences).sort()
+    const exact = JSON.stringify(actualKeys) === JSON.stringify(expectedKeys)
+      && actualKeys.every((jobId) => {
+        const actual = doc.fences[jobId]
+        const expected = expectedFences[jobId]
+        return Object.keys(actual).length === 4
+          && actual.occurrenceId === expected.occurrenceId && actual.runId === expected.runId
+          && actual.activatedAtMs === expected.activatedAtMs && actual.reason === expected.reason
+      })
+    if (!exact) failLoud('fence projection corrupted', new Error('fences do not exactly match unresolved outcome_unknown authority'))
+  }
+
+  async _writeDocFile(doc) {
+    await this._writeRawAtomic(`${JSON.stringify(doc, null, 2)}\n`)
+  }
+
+  async _writeRawAtomic(payload) {
+    const seq = ++this._tmpSeq
     const run = this._writeChain.then(async () => {
       await this._ensureDir()
-      const tmp = `${this.filePath}.tmp-${process.pid}-${seq}-${Date.now()}`
-      const payload = `${JSON.stringify({ version: STORE_VERSION, jobs }, null, 2)}\n`
+      const tmp = `${this.filePath}.tmp-${process.pid}-${seq}-${this.clock()}`
       try {
-        const fh = await fs.open(tmp, 'w')
+        const handle = await fs.open(tmp, 'wx')
         try {
-          await fh.writeFile(payload, 'utf8')
-          await fh.sync()
+          await handle.writeFile(payload, 'utf8')
+          await handle.sync()
         } finally {
-          await fh.close()
+          await handle.close()
         }
         await fs.rename(tmp, this.filePath)
+        await this._syncDir(path.dirname(this.filePath))
       } catch (error) {
         await fs.rm(tmp, { force: true }).catch(() => {})
         failLoud(`atomic write ${tmp} -> ${this.filePath}`, error)
       }
     })
-    // keep the chain alive even when a write fails (the caller still sees
-    // the rejection through `run`)
     this._writeChain = run.catch(() => {})
     return run
   }
 
-  /**
-   * Low-level atomic write of a full snapshot. DO NOT use for concurrent
-   * mutation with a resident engine — use `mutate()` so the latest store is
-   * re-read under the lock. Kept for tests, the import tool and repairs.
-   */
-  async persist(jobs) {
-    await this._writeAtomic(jobs)
-    this._cache = jobs
-    this._mtimeMs = Date.now()
+  async _writeAtomicDoc(doc) {
+    await this._writeDocFile(doc)
   }
 
-  /**
-   * Load jobs. `force` re-reads the file even when the mtime is unchanged.
-   * Returns a fresh array of plain job objects (never the internal cache).
-   */
-  async load({ force = false } = {}) {
-    let stat = null
+  /** Compatibility write surface, now routed through the one mutation authority. */
+  async persist(jobs) {
+    await this.mutateDoc((doc) => { doc.jobs = jobs })
+  }
+
+  async loadDoc({ force = false } = {}) {
+    let stat
     try {
       stat = await fs.stat(this.filePath)
     } catch (error) {
-      if (error.code === 'ENOENT') return []
+      if (error.code === 'ENOENT') return emptyDoc()
       failLoud(`stat ${this.filePath}`, error)
     }
-    if (!force && this._cache !== null && stat.mtimeMs === this._mtimeMs) {
-      return JSON.parse(JSON.stringify(this._cache))
+    if (!force && this._cacheDoc && stat.mtimeMs === this._mtimeMs) return clone(this._cacheDoc)
+    const classified = await this._readDocRaw()
+    if (classified.status === 'v1') {
+      await this.ensureUpgraded()
+      return this.loadDoc({ force: true })
     }
-    const jobs = await this._loadFresh()
-    this._cache = jobs
+    const doc = classified.status === 'v2' ? classified.doc : emptyDoc()
+    this._cacheDoc = clone(doc)
     this._mtimeMs = stat.mtimeMs
-    return JSON.parse(JSON.stringify(jobs))
+    return clone(doc)
   }
 
-  // ── run log (append-only evidence) ──────────────────────────────────────
+  async load({ force = false } = {}) {
+    return (await this.loadDoc({ force })).jobs
+  }
 
-  /** Append one run event line (durability: fsync before resolving). */
-  async appendRunEvent(event) {
-    await this._ensureDir()
-    const line = `${JSON.stringify(event)}\n`
-    try {
-      const fh = await fs.open(this.runLogPath, 'a')
-      try {
-        await fh.writeFile(line, 'utf8')
-        await fh.sync()
-      } finally {
-        await fh.close()
+  async rebuildProjections({ buildJobSummary } = {}) {
+    const run = this._mutexChain.then(() => this._withLock(async () => {
+      const classified = await this._readDocRaw({ repairFences: true })
+      if (classified.status !== 'v2') {
+        failLoud('rebuild projections', new Error('store must be upgraded to v2 first'))
       }
+      const doc = clone(classified.doc)
+      const before = JSON.stringify({ fences: doc.fences, states: doc.jobs.map((job) => job.state ?? {}) })
+      doc.fences = rebuildFences(doc.occurrences)
+      if (typeof buildJobSummary === 'function') {
+        for (const job of doc.jobs) job.state = buildJobSummary(job, doc.occurrences)
+      }
+      this._validateDocument(doc)
+      await this._writeAtomicDoc(doc)
+      this._cacheDoc = clone(doc)
+      this._mtimeMs = (await fs.stat(this.filePath)).mtimeMs
+      const after = JSON.stringify({ fences: doc.fences, states: doc.jobs.map((job) => job.state ?? {}) })
+      return { changed: before !== after, fences: clone(doc.fences) }
+    }))
+    this._mutexChain = run.catch(() => {})
+    return run
+  }
+
+  async rebuildFences() {
+    return (await this.rebuildProjections()).fences
+  }
+
+  async appendRunEvent(event) {
+    try {
+      await this._ensureDir()
+      const handle = await fs.open(this.runLogPath, 'a')
+      try {
+        await handle.writeFile(`${JSON.stringify(event)}\n`, 'utf8')
+        await handle.sync()
+      } finally {
+        await handle.close()
+      }
+      await this._truncateRunLog()
+      return { ok: true }
     } catch (error) {
-      // The run log must never take the scheduler down; job state is the
-      // source of truth, the log is evidence only.
-      return
+      return { ok: false, error: `${error?.code ?? ''}: ${error?.message ?? error}` }
     }
-    await this._truncateRunLog()
   }
 
   async _truncateRunLog() {
     try {
       const stat = await fs.stat(this.runLogPath)
       if (stat.size <= this.maxRunLogBytes) return
-      const fh = await fs.open(this.runLogPath, 'r')
+      const handle = await fs.open(this.runLogPath, 'r')
       let tail
       try {
-        const { buffer, bytesRead } = await fh.read(Buffer.alloc(this.maxRunLogBytes), 0, this.maxRunLogBytes, Math.max(0, stat.size - this.maxRunLogBytes))
-        tail = buffer.subarray(0, bytesRead)
+        const result = await handle.read(
+          Buffer.alloc(this.maxRunLogBytes),
+          0,
+          this.maxRunLogBytes,
+          Math.max(0, stat.size - this.maxRunLogBytes),
+        )
+        tail = result.buffer.subarray(0, result.bytesRead)
       } finally {
-        await fh.close()
+        await handle.close()
       }
-      const firstNewline = tail.indexOf('\n')
-      const keep = firstNewline >= 0 ? tail.subarray(firstNewline + 1) : tail
-      const tmp = `${this.runLogPath}.tmp-${process.pid}-${Date.now()}`
-      const out = await fs.open(tmp, 'w')
+      const newline = tail.indexOf('\n')
+      const keep = newline >= 0 ? tail.subarray(newline + 1) : tail
+      const tmp = `${this.runLogPath}.tmp-${process.pid}-${++this._tmpSeq}`
+      const output = await fs.open(tmp, 'wx')
       try {
-        await out.writeFile(keep)
-        await out.sync()
+        await output.writeFile(keep)
+        await output.sync()
       } finally {
-        await out.close()
+        await output.close()
       }
       await fs.rename(tmp, this.runLogPath)
+      await this._syncDir(path.dirname(this.runLogPath))
     } catch {
-      // best effort; never throw from the log path
+      // Evidence rotation is best effort and never authority.
     }
   }
 
-  /** Read the newest `limit` run events (newest first). */
   async readRunEvents({ limit = 100 } = {}) {
     try {
-      const raw = await fs.readFile(this.runLogPath, 'utf8')
-      const lines = raw.split('\n').filter(Boolean)
-      const events = []
-      for (const line of lines.slice(-limit)) {
-        try {
-          events.push(JSON.parse(line))
-        } catch {
-          // skip corrupt line
-        }
-      }
-      return events
+      const lines = (await fs.readFile(this.runLogPath, 'utf8')).split('\n').filter(Boolean)
+      return lines.slice(-limit).flatMap((line) => {
+        try { return [JSON.parse(line)] } catch { return [] }
+      })
     } catch (error) {
       if (error.code === 'ENOENT') return []
       failLoud(`read ${this.runLogPath}`, error)
     }
   }
 }
+
+Object.assign(JobStore.prototype, storeMigrationMethods)
