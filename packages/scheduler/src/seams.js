@@ -1,17 +1,20 @@
 /**
- * @agent-core/scheduler — injectable invocation + delivery seams.
+ * @agent-core/scheduler — injectable invocation + delivery seams (V2).
  *
  * The scheduler owns ZERO agent knowledge:
  *
- *   - `invokeAgent({agentId, sessionId, message, model?, lightContext?,
- *     timeoutMs?, deliveryTarget?})` is the ONLY way a job reaches an agent.
- *     The Product Integration / Router agent (packages/agent-router,
- *     separate PR) will provide the real implementation later; V1 ships a
- *     FakeInvoker for tests and a NoopInvoker for integration stubs.
- *   - `deliver({job, result})` is the ONLY way a job result reaches a channel.
- *     `job.delivery.to` / `job.delivery.channel` are OPAQUE strings — the
- *     scheduler never branches on "feishu". The Feishu Connector will provide
- *     the real adapter later; V1 ships a recording delivery seam.
+ *   - `invokeAgent({agentId, sessionId, requestId, message, model?,
+ *     lightContext?, timeoutMs?, deliveryTarget?, signal?, onStart?})` is the
+ *     ONLY way an occurrence reaches an agent. `sessionId` is the fresh
+ *     non-main native Session minted per occurrence (C-031); `requestId` is
+ *     the occurrence idempotencyKey reused across every admission transport
+ *     retry (C-008/C-023); `onStart` is the turn-start evidence callback the
+ *     scheduler uses for the admitted->running transition (C-027).
+ *   - `deliver({job, result})` is the ONLY way a job result reaches a
+ *     channel. `job.delivery.to` / `job.delivery.channel` are OPAQUE strings
+ *     — the scheduler never branches on "feishu". Delivery outcome is a
+ *     SEPARATE field from execution outcome and never rewrites it (D-007
+ *     §11.4).
  *
  * Both seams are plain async functions injected into the Scheduler; nothing
  * in this package imports a channel SDK or the Router.
@@ -21,34 +24,35 @@
 export const INVOKE_CONTRACT = {
   input: {
     agentId: 'string (required)',
-    sessionId: 'string|undefined — explicit session; undefined = engine default',
+    sessionId: 'string — fresh non-main native Session minted per occurrence (C-031)',
+    requestId: 'string — occurrence idempotencyKey; reuse across ALL transport retries (C-008)',
     message: 'string (required)',
-    model: 'string|undefined — opaque model override (payload.model)',
+    model: 'string|undefined — opaque model override (payload.model; not proven by D-007)',
     lightContext: 'boolean|undefined',
-    timeoutMs: 'number|undefined — run timeout (payload.timeoutSeconds*1000)',
+    timeoutMs: 'number|undefined — remaining time to the persisted execution deadline (C-025)',
     deliveryTarget: 'object|undefined — job.delivery verbatim (opaque)',
-    signal: 'AbortSignal|undefined — aborted when the run times out; invokers MAY '
-      + 'observe it, but ignoring it is allowed (end-to-end cancellation is '
-      + 'verified at Scheduler → Router Final Integration, audit TIMEOUT_ABORT)',
+    signal: 'AbortSignal|undefined — aborted when the deadline passes; observing it is '
+      + 'NOT a termination proof (C-010) — the original turn may still be running',
+    onStart: 'Function|undefined — call EXACTLY when the exact turn is dispatched; '
+      + 'drives the admitted->running transition (C-027)',
   },
   output: {
-    status: "'ok' | 'error'",
+    status: "'ok' | 'error' | 'outcome_unknown'",
     summary: 'string|undefined — final agent text (announce payload)',
     error: 'string|undefined',
     sessionId: 'string|undefined',
     durationMs: 'number|undefined',
+    started: 'boolean|undefined — true when the turn was actually dispatched '
+      + '(distinguishes pre-start rejections from terminal failures; C-004)',
+    reconciliationHandle: 'string|undefined — outcome_unknown carriers',
+    evidence: 'object|undefined',
   },
-}
-
-/** Default session id for a job (mirrors OpenClaw's `agent:<id>:cron:<jobId>` convention). */
-export function defaultSessionId(job) {
-  if (job.sessionKey) return job.sessionKey
-  return `agent:${job.agentId}:cron:${job.id}`
 }
 
 /**
  * Deterministic fake invoker for tests: records every call and returns a
- * scripted outcome (default: {status:'ok', summary:'done'}).
+ * scripted outcome (default: {status:'ok', summary:'done'}). Invokes the
+ * request's onStart callback synchronously (turn-start evidence).
  */
 export function createFakeInvoker({ outcome = null, delayMs = 0, onCall = null } = {}) {
   const calls = []
@@ -56,11 +60,15 @@ export function createFakeInvoker({ outcome = null, delayMs = 0, onCall = null }
     const call = { ...request, atMs: Date.now() }
     calls.push(call)
     if (onCall) onCall(call)
+    try {
+      if (typeof request.onStart === 'function') request.onStart()
+    } catch { /* start evidence is best-effort for fakes */ }
     if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs))
     if (outcome && typeof outcome === 'function') return outcome(call)
     return outcome ?? { status: 'ok', summary: 'ok', sessionId: request.sessionId, durationMs: 1 }
   }
   invokeAgent.calls = calls
+  invokeAgent.assertRunnable = () => true
   return invokeAgent
 }
 
@@ -69,9 +77,13 @@ export function createNoopInvoker() {
   const calls = []
   async function invokeAgent(request) {
     calls.push(request)
+    try {
+      if (typeof request.onStart === 'function') request.onStart()
+    } catch { /* ignore */ }
     return { status: 'ok', summary: '', sessionId: request.sessionId, durationMs: 0 }
   }
   invokeAgent.calls = calls
+  invokeAgent.assertRunnable = () => true
   return invokeAgent
 }
 
@@ -82,7 +94,7 @@ export const DELIVER_CONTRACT = {
     result: 'the invocation outcome envelope',
     text: 'string — the text to deliver (result.summary)',
   },
-  output: 'void; throw to mark not-delivered',
+  output: 'void; throw to mark not-delivered (never rewrites the execution outcome)',
 }
 
 /**

@@ -78,22 +78,6 @@
       "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
     },
     {
-      "path": "packages/scheduler/src/scheduler.js",
-      "approved_max_lines": 713,
-      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (713 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
-      "approved_by": "mayf3",
-      "expires_at": "2027-08-22",
-      "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
-    },
-    {
-      "path": "packages/scheduler/test/scheduler.test.js",
-      "approved_max_lines": 660,
-      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (660 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
-      "approved_by": "mayf3",
-      "expires_at": "2027-08-22",
-      "split_followup": "split into per-behavior test files (describe/it blocks grouped by contract) before next major edit"
-    },
-    {
       "path": "scripts/feishu-phase-a-final-canary.mjs",
       "approved_max_lines": 1188,
       "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (1188 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
@@ -166,6 +150,14 @@
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "group scripts by subsystem into scripts/<subsystem>/ subdirectories (respecting depth limit) once count approaches the ceiling"
+    },
+    {
+      "path": "packages/feishu-connector/test",
+      "approved_max_children": 21,
+      "reason": "legacy directory at the DIRECTORY_MAX_CHILDREN cap at BASE_MAIN 76b5676ba96d0b971341edefadd7c8b02428076f (20 immediate tracked children); ceiling raised to 21 solely for the owner-mandated STATIC_FINAL_CARD_V1 test placement (test/reply-card/ subdirectory, OWNER_RULING = ENABLE_STATIC_FEISHU_REPLY_CARD 2026-08-24); no further growth",
+      "approved_by": "mayf3",
+      "expires_at": "2027-08-22",
+      "split_followup": "group connector tests by topic into test/<topic>/ subdirectories (respecting depth limit) once count approaches the ceiling"
     }
   ]
 }

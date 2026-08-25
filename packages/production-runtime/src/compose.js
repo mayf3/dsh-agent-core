@@ -54,6 +54,10 @@ import {
   wireNotificationIngressDeliveryEvidence,
 } from './notification-ingress-runtime.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
+import { resolveFeishuUxSwitches, resolveProcessingReactionConfig, resolveReplyRenderMode } from './feishu-env.js'
+
+// Re-exported for the existing test/compat imports (parseStrictBooleanEnv etc.).
+export { parseStrictBooleanEnv, resolveFeishuUxSwitches, resolveProcessingReactionConfig, resolveReplyRenderMode } from './feishu-env.js'
 
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
 export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
@@ -73,73 +77,6 @@ export function assertTargetProxyRuntime({ env = process.env, version = process.
   if (version !== TARGET_PROXY_NODE_VERSION) {
     throw invalidProxyRuntime('NODE_RUNTIME_VERSION', 'runtime_version_mismatch')
   }
-}
-
-/**
- * STRICT boolean env parsing for the Feishu UX switches: ONLY the exact
- * strings 'true' / 'false' are accepted. Any other value (case variants,
- * '1'/'0', 'yes', whitespace, ...) fails composition LOUD — a typo'd
- * supervision-unit env must never silently revert admission/mention policy.
- * Unset or empty means "not configured" (undefined): the connector's own
- * defaults (true/true) apply.
- *
- * @param {object} env - env map (process.env).
- * @param {string} key - the env var name.
- * @returns {boolean|undefined} true / false, or undefined when unset/empty.
- * @throws {Error} code FEISHU_UX_SWITCH_INVALID on any non-boolean value.
- */
-export function parseStrictBooleanEnv(env, key) {
-  const raw = env[key]
-  if (raw === undefined || raw === '') return undefined
-  if (raw === 'true') return true
-  if (raw === 'false') return false
-  throw Object.assign(
-    new Error(`production-runtime: ${key} must be exactly 'true' or 'false' (got ${JSON.stringify(raw)})`),
-    { code: 'FEISHU_UX_SWITCH_INVALID' },
-  )
-}
-
-/**
- * Resolve both Feishu UX switches from env (FEISHU_REQUIRE_MENTION_IN_GROUP /
- * FEISHU_AUTO_MENTION_TRIGGER_SENDER). Parsed BEFORE any mount so an invalid
- * value fails composition regardless of whether the channel is configured.
- *
- * @param {object} [env] - env map (default process.env).
- * @returns {{requireMentionInGroup?:boolean, autoMentionTriggerSender?:boolean}}
- *   only the configured keys (absent = connector defaults).
- */
-export function resolveFeishuUxSwitches(env = process.env) {
-  return dropUndefined({
-    requireMentionInGroup: parseStrictBooleanEnv(env, 'FEISHU_REQUIRE_MENTION_IN_GROUP'),
-    autoMentionTriggerSender: parseStrictBooleanEnv(env, 'FEISHU_AUTO_MENTION_TRIGGER_SENDER'),
-  })
-}
-
-function dropUndefined(obj) {
-  const out = {}
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) out[k] = v
-  }
-  return out
-}
-
-/**
- * STRICT boolean env parsing for the processing-reaction switch
- * (FEISHU_PROCESSING_REACTION_ENABLED): unset/empty => false (connector
- * default OFF); EXACTLY 'true'/'false' => that boolean; anything else fails
- * composition LOUD with FEISHU_PROCESSING_REACTION_INVALID. Always a definite
- * boolean — production target is an explicit DEPLOY-time opt-in (not this
- * round). @throws {Error} FEISHU_PROCESSING_REACTION_INVALID.
- */
-export function resolveProcessingReactionConfig(env = process.env) {
-  const raw = env.FEISHU_PROCESSING_REACTION_ENABLED
-  if (raw === undefined || raw === '') return false
-  if (raw === 'true') return true
-  if (raw === 'false') return false
-  throw Object.assign(
-    new Error(`production-runtime: FEISHU_PROCESSING_REACTION_ENABLED must be exactly 'true' or 'false' (got ${JSON.stringify(raw)})`),
-    { code: 'FEISHU_PROCESSING_REACTION_INVALID' },
-  )
 }
 
 /**
@@ -185,6 +122,8 @@ export async function composeProductionRuntime(options = {}) {
   const feishuUxSwitches = resolveFeishuUxSwitches()
   // Processing-reaction switch: same fail-loud contract (unset/empty=false).
   const processingReactionEnabled = resolveProcessingReactionConfig()
+  // Reply render mode: same fail-loud contract (unset/empty='markdown').
+  const replyRenderMode = resolveReplyRenderMode()
   const opts = options ?? {}
   const log = opts.log ?? {
     log: (...a) => process.stdout.write(`[production-runtime] ${a.join(' ')}\n`),
@@ -322,8 +261,11 @@ export async function composeProductionRuntime(options = {}) {
       // Processing reaction: definite boolean (unset/empty already resolved
       // to false above — the connector default stays OFF).
       processingReactionEnabled,
+      // Reply render mode: definite 'markdown' | 'card' (unset/empty already
+      // resolved to 'markdown' above — the byte-identical default).
+      replyRenderMode,
     })
-    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true} processingReactionEnabled=${processingReactionEnabled})`)
+    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true} processingReactionEnabled=${processingReactionEnabled} replyRenderMode=${replyRenderMode})`)
   } else {
     log.warn(`feishu credentials not configured (FEISHU_CREDS_PATH=${feishuCredsPath ?? '(unset)'}); channel OFF — delivery-requesting jobs will be marked not-delivered`)
   }
@@ -407,6 +349,9 @@ export async function composeProductionRuntime(options = {}) {
     })
     return outcome
   }
+  // Preserve Scheduler V2's synchronous runnable-Agent admission gate through
+  // the observability wrapper; no job/store/deploy behavior is changed here.
+  invoker.assertRunnable = rawInvoker.assertRunnable
 
   // Admission observability remains a wrap around Router-owned delivery.
   wireNotificationIngressDeliveryEvidence(router, writeEvidence)
