@@ -7,7 +7,7 @@ import {
   classifyProviderError,
   RECOGNIZED_PROXY_ENV_KEYS,
   redactSensitiveText,
-} from '../src/process.js'
+} from '../../src/process.js'
 
 const TARGET_PROVIDER_ENV = Object.freeze({
   HTTP_PROXY: 'http://target-proxy.invalid:7890',

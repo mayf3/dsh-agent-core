@@ -14,10 +14,11 @@
  * Router's EXISTING public domain surface. It changes nothing inside the
  * Router and nothing inside the Scheduler core:
  *
- *   - `createRouterInvoker(router)` calls only `router.ensureRunning(agentId)`
- *     (a published `agentRouter` service method, packages/agent-router) and
- *     the returned AgentProcess's `turn()` (its documented business entry).
- *     No Router source change, no scheduler special-case inside the Router.
+ *   - `createRouterInvoker(router)` calls only
+ *     `router.runTurnWithRouteChain(agentId, args)` (the Router's published
+ *     unified route-attempt chain surface — the same single executor behind
+ *     onIngress and Delivery V0). No Router source change, no scheduler
+ *     special-case inside the Router, no chain logic in this bridge.
  *   - `createFeishuDeliver(feishu)` calls only `feishu.reply(ReplyTarget,
  *     text)` — the single existing outbound send (packages/feishu-connector,
  *     same seam the Router's onIngress reply path uses). It reads the opaque
@@ -57,25 +58,34 @@ export function chatIdFromDeliveryTo(to) {
 }
 
 /**
- * The real invocation seam: Scheduler.invokeAgent -> existing Router ->
- * AgentProcess -> DSH native Session.
+ * The real invocation seam: Scheduler.invokeAgent -> Router published chain
+ * surface -> AgentProcess -> DSH native Session.
  *
  * Uses ONLY the Router's published domain surface:
- *   - `router.ensureRunning(agentId)` — find-or-start the agent's DSH
- *     process (the Control Plane's registry, provisioning and lifecycle);
- *   - `proc.turn(sessionId, message, {}, timeoutMs)` — one owned turn into
- *     the agent's native DSH session, waits for whole-agent idle.
+ *   - `router.runTurnWithRouteChain(agentId, {sessionId, message, opts,
+ *     deadlineMs, strictReason})` — the unified ordered route-attempt seam
+ *     (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-002) shared by all
+ *     three process-admission entries. The chain executor owns hop/STOP
+ *     policy, the per-attempt journal and the single deadline budget; this
+ *     bridge never imports executor internals and runs NO chain logic of its
+ *     own.
+ *   - `opts.onDispatch` fires exactly once when the first route attempt's
+ *     turn is dispatched — the scheduler's admitted->running start evidence
+ *     (C-027; envelope started semantics: any dispatched attempt => true).
+ *   - an explicit `request.model` selects STRICT_CHAIN_MODE (DEC-IMPL-005:
+ *     exactly one attempt, zero fallbacks). The model string itself stays
+ *     opaque — no model→route resolution exists at this layer.
  *
- * V2 (SCHEDULER_TIMEOUT_OUTCOME_V2):
+ * V2 (SCHEDULER_TIMEOUT_OUTCOME_V2) — unchanged semantics, one occurrence =
+ * one logical turn = ONE chain execution producing exactly one outcome
+ * envelope (multiple route attempts are internal to the occurrence; hop !=
+ * transport retry, the requestId admission fingerprint never changes):
  *   - `request.sessionId` is the fresh non-main native Session minted PER
- *     OCCURRENCE by the scheduler (C-031 / D-006 §10) — this bridge never
- *     derives or reuses a stable per-job session.
+ *     OCCURRENCE by the scheduler (C-031 / D-006 §10).
  *   - `request.requestId` (the occurrence idempotencyKey) is recorded on
  *     every call and carried in evidence (C-008/C-023).
- *   - `request.onStart` is invoked exactly when the turn is dispatched —
- *     the scheduler's admitted->running start evidence (C-027).
  *   - error outcomes carry `started` so the scheduler can distinguish a
- *     proven PRE-START rejection (turn never dispatched) from a terminal
+ *     proven PRE-START rejection (no attempt ever dispatched) from a terminal
  *     failure of a started run (C-004).
  *
  * Never throws: every failure becomes the scheduler's outcome envelope.
@@ -83,19 +93,19 @@ export function chatIdFromDeliveryTo(to) {
  * their reconciliationHandle — an unproven execution is NEVER collapsed into
  * ordinary error (C-001).
  *
- * @param {object} router - the published `agentRouter` service (or any
- *   object exposing ensureRunning(agentId) -> AgentProcess).
+ * @param {object} router - the published `agentRouter` service (or any object
+ *   exposing runTurnWithRouteChain(agentId, args) -> turn result).
  * @param {object} [opts]
  * @param {object} [opts.definition] - optional Agent Definition service
  *   (`agentDefinition`); when present, the target agent must be RUNNABLE
  *   before spawn: unknown (AGENT_NOT_FOUND) AND disabled (AGENT_DISABLED)
- *   are both rejected before `ensureRunning` is ever called (merge review
+ *   are both rejected before the chain seam is ever called (merge review
  *   FIX 2). These rejections are PRE-START (the turn never began).
  * @returns {Function} the invokeAgent(request) seam, with `.calls` log.
  */
 export function createRouterInvoker(router, opts = {}) {
-  if (router === undefined || typeof router.ensureRunning !== 'function') {
-    throw new TypeError('scheduler-router: router.ensureRunning(agentId) is required')
+  if (router === undefined || typeof router.runTurnWithRouteChain !== 'function') {
+    throw new TypeError('scheduler-router: router.runTurnWithRouteChain(agentId, args) is required')
   }
   const definition = opts?.definition
   const calls = []
@@ -125,19 +135,30 @@ export function createRouterInvoker(router, opts = {}) {
     }
     try {
       assertRunnable(request.agentId)
-      const proc = await router.ensureRunning(request.agentId)
-      // The Scheduler owns the run deadline (it aborts `signal`); the turn
-      // poll gets a margin so the scheduler's race always settles first.
+      // The Scheduler owns the run deadline (it aborts `signal`); the chain
+      // gets the same single budget (margin so the scheduler's race settles
+      // first). Hops consume this budget — no per-hop refresh exists.
       const turnTimeoutMs = request.timeoutMs ? request.timeoutMs + 30_000 : 300_000
-      turnDispatched = true
-      if (typeof request.onStart === 'function') request.onStart()
-      const turnResult = await proc.turn(request.sessionId, request.message, {
-        callerCorrelation: {
-          occurrenceId: request.occurrenceId,
-          runId: request.runId,
-          requestId: request.requestId,
+      const turnResult = await router.runTurnWithRouteChain(request.agentId, {
+        sessionId: request.sessionId,
+        message: request.message,
+        deadlineMs: turnTimeoutMs,
+        // Explicit model => STRICT_CHAIN_MODE (DEC-IMPL-005): exactly one
+        // route attempt, zero fallbacks. The model string stays opaque here.
+        ...(request.model === undefined ? {} : { strictReason: 'explicit_model_strict' }),
+        opts: {
+          callerCorrelation: {
+            occurrenceId: request.occurrenceId,
+            runId: request.runId,
+            requestId: request.requestId,
+          },
+          // Exactly once, when the FIRST route attempt's turn dispatches.
+          onDispatch: () => {
+            turnDispatched = true
+            if (typeof request.onStart === 'function') request.onStart()
+          },
         },
-      }, turnTimeoutMs)
+      })
       const outcome = {
         status: 'ok',
         summary: turnResult?.reply,

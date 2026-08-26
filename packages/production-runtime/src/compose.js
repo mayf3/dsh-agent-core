@@ -48,7 +48,7 @@ import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
-import { CHATGPT_SUBSCRIPTION_V1, loadAgentModelOverrides } from './model-overrides.js'
+import { loadAgentModelOverrides } from './model-overrides.js'
 import {
   mountNotificationIngressRuntime,
   wireNotificationIngressDeliveryEvidence,
@@ -201,12 +201,13 @@ export async function composeProductionRuntime(options = {}) {
   }
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
 
-  // Accepted AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1: deployment-owned
-  // static config. The production composition validates it against the
-  // already-loaded Agent Definition. It then reloads at each NEW per-Agent
-  // process boundary so target-only rollback needs neither a runtime restart
-  // nor a file watcher. The Router receives only a synchronous resolved
-  // process config and never reads the file or learns provider/model rules.
+  // AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 (accepted) + IMPL_V1: deployment-
+  // owned static route chain config (agent-model-overrides.json version 2).
+  // The composition validates it against the already-loaded Agent Definition
+  // and re-reads it ONLY at each new process boundary (turn-start chain
+  // snapshot) so target-only rollback needs neither a runtime restart nor a
+  // file watcher. The Router receives the immutable snapshot resolver and
+  // never reads the file or learns provider/model rules.
   const globalRoute = Object.freeze(opts.globalRoute ?? {
     provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
     model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
@@ -214,36 +215,18 @@ export async function composeProductionRuntime(options = {}) {
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
   const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+    .resolveChain(agentId, globalRoute)
   const resolveProcessConfig = (agentId) => {
-    // Router calls this only after it has established that no live process
-    // can be reused and immediately before provisioning/spawn. Reloading here
-    // is process-start configuration, never per-turn dynamic routing.
-    const modelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
-    const route = modelOverrides.resolve(agentId, globalRoute)
-    const override = modelOverrides.overrides[agentId]
-    return Object.freeze({
-      provider: route.provider,
-      model: route.model,
-      ...(override === undefined ? {} : {
-        omitEnv: Object.freeze(['OPENAI_API_KEY']),
-        ...(override.providerEnv === undefined ? {} : { providerEnv: override.providerEnv }),
-        subscription: Object.freeze({
-          plugin: override.plugin,
-          pluginVersion: override.pluginVersion,
-          dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
-          dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
-          credentialFile: CHATGPT_SUBSCRIPTION_V1.credentialFile,
-          ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
-            packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
-          }),
-        }),
-      }),
-    })
+    // Default route = the chain's primary (route[0]); the unified chain
+    // executor drives ordered fallbacks through resolveRouteChain. This is
+    // process-start configuration, never per-turn dynamic routing.
+    const snapshot = resolveRouteChain(agentId)
+    return snapshot.routes[0].processConfig
   }
-  if (Object.keys(initialModelOverrides.overrides).length > 0) {
-    const target = CHATGPT_SUBSCRIPTION_V1.targetAgentId
-    const route = initialModelOverrides.resolve(target, globalRoute)
-    log.log(`agent model override loaded for ${target}: provider=${route.provider} model=${route.model}`)
+  for (const [agentId, override] of Object.entries(initialModelOverrides.overrides)) {
+    const chain = [override.primary, ...override.fallbacks]
+    log.log(`agent model route chain loaded for ${agentId}: ${chain.join(' -> ')} (length ${chain.length})`)
   }
 
   // Feishu channel: mounted ONLY with real credentials. Absent => honest
@@ -278,6 +261,7 @@ export async function composeProductionRuntime(options = {}) {
     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),
     ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),
     resolveProcessConfig,
+    resolveRouteChain,
   })
 
   // V2 PREBOUND_ONLY Feishu ingress gate (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
