@@ -22,6 +22,8 @@ governed_by:
 external_authorities: []
 supersedes: []
 superseded_by: null
+amendment_1: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1_AMENDMENT_1_BUILTIN_ROUTE_KIND
+amendment_1_status: proposed（awaiting independent review；Draft PR，未 merge）
 scope:
   - 授予 AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1（accepted）所冻结政策的**最小**实现授权
     （父 Spec DEC-012 / CTR-013 委托的「独立 implementation-authorizing authority」）
@@ -53,6 +55,12 @@ references:
 ---
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 — ordered route chain 的最小实现授权（implementation-authorizing child authority）
+
+> **Amendment 1（2026-08-26，Builtin Route Kind 对齐；proposed）**：文末
+> 「Amendment 1」节把本 Spec 的实现授权绑定到父 Spec Amendment 1（routeKind）
+> 修订后的 schema 与 canonical identity 上；实现范围、seam 形态、Q-4 冻结、
+> envelope/journal/deadline ruling 全部原样不变。该 Amendment accepted 前，
+> 基础正文仍是现行实现权威。基础正文（§1–§15）保持历史原样，不作改写。
 
 > SPEC_STATUS = **accepted**（lifecycle-only acceptance finalize 2026-08-26 ·
 > accepted_reviewed_head = `a3f787e673276942371bd0b5d8bb5b94d1302595` ·
@@ -655,4 +663,97 @@ DEPLOYMENT = NONE
 MERGE = NO
 
 NEXT_TASK = 链路 授权采纳审计
+```
+
+---
+
+## Amendment 1（2026-08-26）— Builtin Route Kind 对齐（binding to parent Amendment 1）
+
+> AMENDMENT_STATUS = **proposed**（authoring 2026-08-26，任务「链路 内建路由
+> 修订」；awaiting independent review；Draft PR，不 merge、不改产品代码、
+> 不配置 Credential、不部署）。形式与父 Spec Amendment 1 同一轮同一事务：
+> in-place appended amendment，基础正文 §1–§15 逐字保留。**生效条件**：
+> 父 Spec `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` Amendment 1 与本 Amendment
+> 均经 independent review PASS 并由 mayf3 acceptance finalize；任一未生效
+> 时，本 Spec 基础正文继续按基础父 Spec schema 授权实现。
+
+### AI1.1 授权绑定切换（supersede 的唯一语义）
+
+本 Spec 全部对父 Spec schema 的引用（F-1/F-2 的「version 2 loader /
+routeCatalog + primary + fallbacks[]」、CTR-IMPL-001 的「实现父 Spec
+§2.1/§2.2 全部校验，逐条执行 CTR-001/CTR-003/CTR-010」）自本 Amendment
+生效起，**指向父 Spec Amendment 1（A1.2/A1.3）修订后的 schema 与
+canonical identity**。本 Amendment 不扩大实现范围、不新增政策语义、不改
+seam 形态——只把既有授权对准修订后的父契约（这正是本 Spec §3 已冻结的
+「政策语义冲突时以父 Spec 为准」的机械执行）。
+
+### AI1.2 实现绑定决策（Amendment 级新增，编号接续 DEC-IMPL-008）
+
+- `DEC-IMPL-009` — **loader 校验对齐**：v2 loader 的 route entry 校验按
+  父 Amendment A1.2 执行——`routeKind` closed enum 必填；builtin route
+  出现 `plugin`/`pluginVersion` 键（任何值，含 null/空）⇒ startup
+  fail-loud；subscription route 缺二者之一或非 exact pin ⇒ fail-loud；
+  dsh-codex pin 校验（`0.2.3` exact）只作用于 `routeKind = subscription`
+  且 `plugin = dsh-codex` 的 route。
+- `DEC-IMPL-010` — **canonical identity 对齐**：`catalogCanonicalIdentity`
+  改为父 Amendment A1.3 七字段形态（`routeKind` 参与；builtin 的
+  plugin/pluginVersion 规范化为显式 `ABSENT`）。DEC-IMPL-004 复用 gate
+  的「resolved route 身份」即此 canonical identity——builtin process 与
+  subscription process 即便 provider/model 相同也永不互相复用；跨
+  routeKind 的 hop（如 builtin glm53 → subscription luna）按既有
+  新-generation spawn 机制承载，无新机制。
+- `DEC-IMPL-011` — **subscription block 构造条件化**：
+  `makeChainRoute`（current main `model-overrides.js`）只为
+  `routeKind = subscription` 的 route 构造 `processConfig.subscription`
+  block（plugin/pluginVersion/dsh pin/credentialFile）；builtin route 的
+  processConfig 不携带 subscription block（spawn 侧
+  `process-registry.js:333` 的条件展开语义不变），无 plugin 解析 /
+  provisioning / pin 校验路径。harness pin（rc.8 @ 514ab7b…）保持
+  Agent 进程级不变量，与 routeKind 无关。
+- `DEC-IMPL-012` — **journal 无新增字段**：ROUTE 字段仍记 routeRef 形态；
+  routeKind 属 catalog 校验与 canonical identity 内部字段，不进入
+  CTR-IMPL-006 的九个冻结字段集（redaction 边界不变）。
+
+### AI1.3 排序与现状（DOCS ONLY）
+
+current main（`c52bd1c`）已合并的实现按基础 schema 校验（plugin 必填，
+`model-overrides.js:313-325`）；本 Amendment 生效后需要一轮后续
+implementation round 在本 authority（含本 Amendment）授权内完成
+AI1.2 四项对齐 + 父 Amendment A1.6 的 ACC-016..ACC-019 增补验收。生产
+root 无 override 文件，链代码 inert，无任何立即行为变化。
+`production_apply_authority = none` 保持（配置写入 / 激活仍由父 Spec
+Q-3 Luna 就绪轮 + 部署轮 gate）。
+
+### AI1.4 Final Output（Amendment 1 authoring 轮填写）
+
+```text
+TASK_NAME = 链路 内建路由修订
+TASK_STATUS = AUTHORING_COMPLETE（proposed；READY_FOR_INDEPENDENT_REVIEW）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1
+AMENDMENT_ID = AMENDMENT_1_BUILTIN_ROUTE_KIND
+AMENDMENT_STATUS = proposed（awaiting independent review；Draft PR 不 merge）
+AMENDMENT_FORM = IN_PLACE_APPENDED_AMENDMENT（基础正文 §1–§15 逐字保留）
+EFFECTIVE_GATE = 父 Spec Amendment 1 与本 Amendment 均 accepted 后生效
+
+SUPERSEDED_SEMANTICS = 仅「实现授权绑定的父 schema 版本」（AI1.1）；
+  F-1..F-10 范围、CTR-IMPL-001..010、DEC-IMPL-001..008 全部原样保持
+
+NEW_IMPL_BINDINGS =
+  DEC-IMPL-009 loader routeKind 校验对齐（builtin plugin 键 = FORBIDDEN）
+  DEC-IMPL-010 canonical identity 七字段（routeKind + plugin-or-ABSENT）；
+                复用 gate 身份 = canonical identity；跨 routeKind 不复用
+  DEC-IMPL-011 subscription block 仅 subscription route 构造；harness pin
+                保持进程级不变量
+  DEC-IMPL-012 journal 字段集零新增
+
+IMPLEMENTATION_DELTA_ROUND = 后续 implementation round（本 authority 内；
+  本轮零代码改动）
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE = NO（Draft PR）
+
+NEXT_TASK = 链路 内建路由审计
 ```
