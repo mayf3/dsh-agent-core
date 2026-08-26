@@ -23,7 +23,13 @@ external_authorities: []
 supersedes: []
 superseded_by: null
 amendment_1: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1_AMENDMENT_1_BUILTIN_ROUTE_KIND
-amendment_1_status: proposed（awaiting independent review；Draft PR，未 merge）
+amendment_1_status: accepted
+amendment_1_accepted_by: mayf3
+amendment_1_accepted_date: 2026-08-27
+amendment_1_reviewed_head: 8b76909c33dfc39693c6f8e760eb1a29c80d0727
+amendment_1_review_verdict: PASS
+amendment_1_blocker_count: 0
+amendment_1_normative_body_change: NONE
 scope:
   - 授予 AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1（accepted）所冻结政策的**最小**实现授权
     （父 Spec DEC-012 / CTR-013 委托的「独立 implementation-authorizing authority」）
@@ -56,11 +62,17 @@ references:
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 — ordered route chain 的最小实现授权（implementation-authorizing child authority）
 
-> **Amendment 1（2026-08-26，Builtin Route Kind 对齐；proposed）**：文末
+> **Amendment 1（2026-08-26，Builtin Route Kind 对齐；accepted）**：文末
 > 「Amendment 1」节把本 Spec 的实现授权绑定到父 Spec Amendment 1（routeKind）
 > 修订后的 schema 与 canonical identity 上；实现范围、seam 形态、Q-4 冻结、
 > envelope/journal/deadline ruling 全部原样不变。该 Amendment accepted 前，
 > 基础正文仍是现行实现权威。基础正文（§1–§15）保持历史原样，不作改写。
+> Acceptance finalize 2026-08-27（链路 内建路由采纳执行）：accepted_by =
+> mayf3 · reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727 ·
+> 链路 内建路由审计 = PASS · READY_FOR_ACCEPTANCE = YES · BLOCKER_COUNT = 0 ·
+> NORMATIVE_BODY_CHANGE = NONE（lifecycle-only；与父 Spec
+> `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` Amendment 1 同一事务，EFFECTIVE_GATE
+> 的「均 accepted」条件在本事务内同时满足）。
 
 > SPEC_STATUS = **accepted**（lifecycle-only acceptance finalize 2026-08-26 ·
 > accepted_reviewed_head = `a3f787e673276942371bd0b5d8bb5b94d1302595` ·
@@ -667,10 +679,14 @@ NEXT_TASK = 链路 授权采纳审计
 
 ---
 
-## Amendment 1（2026-08-26）— Builtin Route Kind 对齐（binding to parent Amendment 1）
+## Amendment 1（2026-08-26）— Builtin Route Kind 对齐（binding to parent Amendment 1；accepted）
 
-> AMENDMENT_STATUS = **proposed**（authoring 2026-08-26，任务「链路 内建路由
-> 修订」；awaiting independent review；Draft PR，不 merge、不改产品代码、
+> AMENDMENT_STATUS = **accepted**（authoring 2026-08-26，任务「链路 内建路由
+> 修订」；acceptance finalize 2026-08-27，任务「链路 内建路由采纳执行」：
+> accepted_by = mayf3 · reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727 ·
+> review_verdict = PASS · blocker_count = 0 · READY_FOR_ACCEPTANCE = YES ·
+> normative_body_change = NONE（lifecycle-only 状态翻转与 provenance 记录；
+> AI1.1–AI1.4 normative 内容逐字保留）；Draft PR，不 merge、不改产品代码、
 > 不配置 Credential、不部署）。形式与父 Spec Amendment 1 同一轮同一事务：
 > in-place appended amendment，基础正文 §1–§15 逐字保留。**生效条件**：
 > 父 Spec `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` Amendment 1 与本 Amendment
@@ -756,4 +772,54 @@ DEPLOYMENT = NONE
 MERGE = NO（Draft PR）
 
 NEXT_TASK = 链路 内建路由审计
+```
+
+### AI1.5 Final Output — Amendment 1 Acceptance finalize（2026-08-27；链路 内建路由采纳执行轮填写）
+
+```text
+TASK_NAME = 链路 内建路由采纳执行
+TASK_STATUS = ACCEPTANCE_TRANSACTION_COMPLETE（lifecycle-only）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1
+AMENDMENT_ID = AMENDMENT_1_BUILTIN_ROUTE_KIND
+amendment_status = proposed -> accepted
+accepted_by = mayf3
+reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727
+review_verdict = PASS
+blocker_count = 0
+READY_FOR_ACCEPTANCE = YES（链路 内建路由审计轮结论）
+normative_body_change = NONE
+
+TRANSACTION（lifecycle-only，单 docs-only commit；Amendment 节 normative
+内容零改动——AI1.1–AI1.4 与基础正文 §1–§15 逐字保留，含 proposed 阶段
+条件句与 authoring 轮 Final Output）：
+  status mirrors = frontmatter amendment_1_* + 文头镜像 + Amendment 节
+  标题与 AMENDMENT_STATUS + 本节 provenance；与父 Spec
+  AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 Amendment 1 同一事务，
+  EFFECTIVE_GATE「父 Amendment 1 与本 Amendment 均 accepted」在本事务内
+  同时满足（active authority 语义仍按 vendored SPEC_GOVERNANCE_V0 §2.1，
+  merge into main 起）
+
+PRESERVED（逐字保持，本轮零改动）：
+  DEC-IMPL-009 loader routeKind 校验对齐（builtin plugin 键 = FORBIDDEN）
+  DEC-IMPL-010 canonical identity 七字段；跨 routeKind 不复用
+  DEC-IMPL-011 subscription block 仅 subscription route 构造
+  DEC-IMPL-012 journal 字段集零新增
+  F-1..F-10 实现范围；CTR-IMPL-001..010；DEC-IMPL-001..008
+  implementation_authority = contracts（保持）
+  production_apply_authority = none（保持）
+
+IMPLEMENTATION_DELTA_ROUND = 后续 implementation round（本 authority 含
+  本 Amendment 授权内；本轮零代码改动）
+
+PR_LIFECYCLE = PR #77 保持 OPEN（Draft；MERGE = NO；merge 决策不在本轮
+  授权内）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE = NO
+
+NEXT_TASK = 链路 内建路由采纳审计
 ```

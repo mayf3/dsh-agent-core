@@ -93,7 +93,10 @@ PR #60 / `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` 从未进入 main，定�
 `ABANDONED_UNMERGED_CANDIDATE`，不是 active authority；PR #70 不 supersede 它。
 PR #60 必须关闭且永不 merge。
 
-Amendment 1（2026-08-26，Builtin Route Kind；proposed，Draft PR 未 merge）对
+Amendment 1（2026-08-26，Builtin Route Kind；accepted — acceptance finalize
+2026-08-27，链路 内建路由采纳执行，accepted_by = mayf3 · reviewed_head =
+8b76909c33dfc39693c6f8e760eb1a29c80d0727 · 链路 内建路由审计 = PASS ·
+blocker 0 · NORMATIVE_BODY_CHANGE = NONE；PR #77 Draft 未 merge）对
 两份 route-chain authority 各追加一个 in-place Amendment 节：引入
 `routeKind = builtin | subscription`（builtin route 的 plugin/pluginVersion =
 ABSENT/FORBIDDEN；subscription route 必填 + exact pin），把
