@@ -1,5 +1,5 @@
 /**
- * @agent-core/agent-router/test/process-registry-route-gate.test.js — the
+ * @agent-core/agent-router/test/route-chain/process-registry-route-gate.test.js — the
  * DEC-IMPL-004 route-aware reuse gate (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_
  * IMPL_V1): REUSE_ONLY_IF_ROUTE_IDENTITY_MATCHES against the REAL registry
  * slot machinery (identity CAS, generations, REAP fences).
@@ -14,9 +14,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { writeAgentDefinition } from '../../agent-definition/src/config.js'
-import { canonicalRouteIdentity } from '../src/route-chain.js'
-import { apply as applyRouter } from '../src/index.js'
+import { writeAgentDefinition } from '../../../agent-definition/src/config.js'
+import { canonicalRouteIdentity } from '../../src/route-chain.js'
+import { apply as applyRouter } from '../../src/index.js'
 
 const AGT_ID = 'agt_gate-fx'
 
