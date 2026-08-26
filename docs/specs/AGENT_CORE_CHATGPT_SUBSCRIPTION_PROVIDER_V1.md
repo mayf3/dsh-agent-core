@@ -1,6 +1,7 @@
 ---
 spec_id: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
-status: accepted
+status: superseded
+superseded_by: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
 amendment: AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1_SPEC_AMENDMENT
 accepted_reviewed_head: 42cd524
 focused_re_review: PASS
@@ -13,6 +14,13 @@ amendment_2_verdict: READY_TO_ACCEPT_RC8_AMENDMENT
 ---
 
 # Agent Core ChatGPT Subscription Provider V1 — 单 Agent Luna 接入（AMEND）
+
+> 生命周期：**superseded**；由 `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` 完整取代
+> （mechanical acceptance finalize 2026-08-25 ·
+> accepted_reviewed_head = ee13cb224660416c9044203610b93cb8f13873bb ·
+> 链路 审计 = PASS · BLOCKER_COUNT = 0）。历史 normative meaning（含
+> Amendment 1 / Amendment 2）保持不变，正文不作改写；Amendment 2 A2.1
+> DSH harness pin 由取代 Spec carry-forward（CTR-011）。
 
 > 性质：**Spec（SPEC ONLY — 本轮只冻结授权边界，不实现）** · 日期：2026-08-18 ·
 > AMEND：2026-08-19 · 仓库：`mayf3/dsh-agent-core`

@@ -74,6 +74,7 @@ import { resolveDeadlineConfig } from './deadline-config.js'
 import { TurnReconciliationStore } from './reconciliation/index.js'
 import { BindingStore } from './binding-store.js'
 import { createProcessRegistry } from './process-registry.js'
+import { createRouteChainExecutor } from './route-chain.js'
 import { createBindingResolution } from './binding-resolution.js'
 import { createIngressDelivery } from './ingress-delivery.js'
 import { channelConversationId } from './channel-conversation.js'
@@ -142,6 +143,13 @@ export {
   feishuReplyOwed,
   channelConversationIdOf,
 } from './channel-conversation.js'
+export {
+  createRouteChainExecutor,
+  canonicalRouteIdentity,
+  classifyAttemptFailure,
+  ROUTE_HOP_FAILURE_CLASSES,
+  ROUTE_STOP_REASONS,
+} from './route-chain.js'
 
 /**
  * Mount the router: bind the feishu ingress callback (when the channel is
@@ -228,13 +236,28 @@ export function apply(ctx, config) {
     switchAgent: bindingResolution.switchAgent,
     getBrokerGateway: () => ctx.get('brokerGateway'),
   })
+  /**
+   * The unified ordered route-attempt chain executor
+   * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-002): the ONE seam
+   * behind onIngress, Delivery V0 and the scheduler invokeAgent bridge. The
+   * immutable chain snapshot comes from the composition-owned
+   * `resolveRouteChain(agentId)` (agent-model-overrides.json version 2;
+   * absent => length-1 legacy passthrough with the router's existing default
+   * route resolution — byte-equivalent behavior).
+   */
+  const routeChain = createRouteChainExecutor({
+    log,
+    ensureRunningForRoute: registry.ensureRunningForRoute,
+    resolveRouteChain: typeof cfg.resolveRouteChain === 'function' ? cfg.resolveRouteChain : undefined,
+    resolveTurnDeadlineMs: (agentId) => deadlineConfig.perAgent(agentId).turnTimeoutMs,
+  })
   const ingressDelivery = createIngressDelivery({
     log,
     feishu,
     workspaceBootstrap,
     store,
     reconciliationStore,
-    ensureRunning: registry.ensureRunning,
+    routeChain,
     resolveAgentRef: bindingResolution.resolveAgentRef,
     resolveChannelConversation: bindingResolution.resolveChannelConversation,
     resolveEffectiveWorkspace: bindingResolution.resolveEffectiveWorkspace,
@@ -287,7 +310,20 @@ export function apply(ctx, config) {
     /** Test/ops surface: in-memory Delivery V0 acceptance log. */
     deliveriesSnapshot: () => ingressDelivery.deliveriesSnapshot(),
     ensureRunning: registry.ensureRunning,
+    /** Route-aware registry gate (DEC-IMPL-004) behind the chain executor —
+     *  published for test/ops surface parity with ensureRunning. */
+    ensureRunningForRoute: registry.ensureRunningForRoute,
     route: ingressDelivery.onIngress,
+    /**
+     * Unified route-attempt chain seam (CTR-IMPL-002): the published surface
+     * the scheduler-router bridge (and any future sync-turn caller) uses —
+     * same executor as onIngress; external bridge code never imports the
+     * executor module itself.
+     */
+    runTurnWithRouteChain: routeChain.runTurnWithRouteChain,
+    /** Test/ops surface: bounded route-chain journal ring (per-attempt
+     *  evidence + turn final block; redacted structural fields only). */
+    routeChainJournalSnapshot: routeChain.journalSnapshot,
     /**
      * AGENT_PROCESS_LIFECYCLE_HARDENING_V2 Scheduler termination seam
      * (§13): read-only, non-consuming queries + at-most-once reconciliation

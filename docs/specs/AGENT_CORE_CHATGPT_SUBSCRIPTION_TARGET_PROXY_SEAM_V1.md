@@ -1,9 +1,17 @@
 ---
 spec_id: AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
-status: accepted
+status: superseded
+superseded_by: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
 ---
 
 # Agent Core ChatGPT Subscription Target Proxy Seam V1 — 单 Agent 代理注入 seam
+
+> 生命周期：**superseded**；由 `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` 完整取代
+> （mechanical acceptance finalize 2026-08-25 ·
+> accepted_reviewed_head = ee13cb224660416c9044203610b93cb8f13873bb ·
+> 链路 审计 = PASS · BLOCKER_COUNT = 0）。历史 normative meaning 保持不变，
+> 正文不作改写；其 providerEnv 安全契约由取代 Spec CTR-010 / CTR-014
+> 完整吸收。
 
 > 性质：**Spec（SPEC ONLY — 本轮只冻结授权边界，不实现）** · 日期：2026-08-20 ·
 > 仓库：`mayf3/dsh-agent-core` · 基准：`origin/main @ fe2c639`

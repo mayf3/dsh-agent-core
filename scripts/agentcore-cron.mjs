@@ -1,31 +1,27 @@
 #!/usr/bin/env node
 /**
- * agentcore-cron — thin Agent Core scheduler control seam (CLI).
+ * agentcore-cron — thin Agent Core scheduler control seam (CLI, V2).
  *
- * Drop-in replacement for the `openclaw cron` surface that the external
- * daemons and operator scripts actually call on this machine:
+ * Control surface (D-007 §12.2 PRESERVE + C-032):
  *
- *   add       create a job           (openclaw cron add)
- *   list      list jobs              (openclaw cron list)
- *   runs      read the run log       (openclaw cron runs --id <id> --limit N)
- *   rm        delete a job           (openclaw cron rm <id>)
- *   enable    enable a job           (openclaw cron enable <id>)
- *   disable   disable a job          (openclaw cron disable <id>)
+ *   add        create a job           (openclaw cron add)
+ *   list       list jobs + fence state (openclaw cron list)
+ *   runs       occurrence/run evidence (openclaw cron runs --id <id> --limit N)
+ *   rm         delete a job           (openclaw cron rm <id>)
+ *   enable     enable a job           (openclaw cron enable <id>)
+ *   disable    disable a job          (openclaw cron disable <id>)
+ *   reconcile  resolve an unresolved outcome_unknown occurrence (C-029)
  *
- * CONTROL-ONLY (audit FIX 2): this CLI never instantiates the scheduler
- * engine and can never execute a job or run startup catch-up. `add`/`rm`/
- * `enable`/`disable` go through the store's locked read-modify-write
- * (`JobStore.mutate`), so they re-read the LATEST store under the
- * cross-process lock and can never clobber the resident Scheduler's state
- * (audit FIX 3).
+ * CONTROL-ONLY: this CLI never instantiates the scheduler engine and can
+ * never execute a job or run startup catch-up. Every write goes through the
+ * store's locked read-modify-write (single mutation authority), re-reading
+ * the LATEST document under the cross-process lock.
  *
- * `add` accepts the exact flag surface used by forum-scheduler.sh and
- * unified-dispatcher.py:
- *
- *   --agent <id> --name <name> --at <15m|ISO> --message <text>
- *   [--cron '<expr>'] [--tz <tz>] [--every-ms <n>] [--light-context]
- *   [--no-deliver | --deliver] [--session isolated|main] [--timeout-seconds n]
- *   [--delete-after-run] [--model <model>] [--json]
+ * `runs` shows the OCCURRENCE dimension (occurrenceId / runId / state incl.
+ * outcome_unknown / kind / nominal / admitted / started / ended /
+ * deliveryStatus / lateSettlement / fence) — not just job-level status.
+ * `reconcile` is the explicit operator command: identity comes from the
+ * trusted control context (effective OS user), never from request input.
  *
  * Store: default $HOME/.agent-core/scheduler/jobs.json, override with
  * AGENTCORE_SCHEDULER_STORE or --store <path>.
@@ -36,8 +32,11 @@ import { join } from 'node:path'
 import { JobStore } from '../packages/scheduler/src/store.js'
 import { normalizeJob, toPublicJob } from '../packages/scheduler/src/job-model.js'
 import { computeNextRunAtMs, parseAtToMs } from '../packages/scheduler/src/schedule.js'
+import { deriveJobStateSummary } from '../packages/scheduler/src/eligibility.js'
+import { disableJobOp, enableJobOp, reconcileOccurrence } from '../packages/scheduler/src/control.js'
 
-const USAGE = `usage: agentcore-cron <add|list|runs|rm|enable|disable> [flags] [--json] [--store <path>]`
+const USAGE = `usage: agentcore-cron <add|list|runs|rm|enable|disable|reconcile> [flags] [--json] [--store <path>]
+  reconcile <occurrenceId> --run-id <runId> --to succeeded|failed --note <evidence>`
 
 function storePathFromArgs(args) {
   const idx = args.indexOf('--store')
@@ -87,21 +86,24 @@ async function cmdAdd(args) {
   const model = flagValue(args, '--model')
   if (model) payload.model = model
 
+  // --session is accepted for caller compatibility and IGNORED: V2 executes
+  // every occurrence in a fresh non-main session (D-006 §10 / C-031).
+  if (hasFlag(args, '--session') || flagValue(args, '--session')) {
+    process.stderr.write('[agentcore-cron] note: --session is ignored — scheduled execution always uses a fresh non-main session per occurrence (D-006/C-031)\n')
+  }
+
   const store = new JobStore(storePathFromArgs(args))
   const job = normalizeJob({
     name,
     agentId: agent,
     schedule,
     payload,
-    sessionTarget: flagValue(args, '--session') ?? 'isolated',
+    ...(hasFlag(args, '--auto-retry') ? { retry: { auto: true } } : {}),
     delivery: hasFlag(args, '--deliver')
       ? { mode: 'announce' }
       : { mode: 'none', channel: 'last' }, // --no-deliver default, like the daemons
     deleteAfterRun: hasFlag(args, '--delete-after-run') || schedule.kind === 'at',
   })
-  if (job.enabled && job.state.nextRunAtMs === undefined) {
-    job.state.nextRunAtMs = computeNextRunAtMs(job.schedule, Date.now(), { jobId: job.id })
-  }
   const { value: created } = await store.mutate((jobs) => {
     jobs.push(job)
     return { value: job }
@@ -110,38 +112,57 @@ async function cmdAdd(args) {
   if (hasFlag(args, '--json')) {
     process.stdout.write(`${JSON.stringify(publicJob, null, 2)}\n`)
   } else {
-    process.stdout.write(`created job ${publicJob.id} (${publicJob.name}) for agent ${publicJob.agentId}, next run ${new Date(publicJob.nextRunAtMs).toISOString()}\n`)
+    const next = publicJob.nextRunAtMs
+      ?? computeNextRunAtMs(job.schedule, Date.now(), { jobId: job.id, fallbackAnchorMs: job.createdAtMs })
+    process.stdout.write(`created job ${publicJob.id} (${publicJob.name}) for agent ${publicJob.agentId}, next occurrence ${next !== undefined ? new Date(next).toISOString() : '(none)'}\n`)
   }
   return publicJob.id
 }
 
 async function cmdList(args) {
   const store = new JobStore(storePathFromArgs(args))
-  const jobs = (await store.load()).map(toPublicJob)
+  const doc = await store.loadDoc()
+  const nowMs = Date.now()
+  const rows = doc.jobs.map((job) => {
+    const fenced = doc.fences[job.id] !== undefined
+    const summary = deriveJobStateSummary(job, doc.occurrences, nowMs)
+    return { ...toPublicJob({ ...job, state: summary }), fenced, fence: fenced ? doc.fences[job.id] : undefined }
+  })
   if (hasFlag(args, '--json')) {
-    process.stdout.write(`${JSON.stringify({ jobs }, null, 2)}\n`)
+    process.stdout.write(`${JSON.stringify({ jobs: rows }, null, 2)}\n`)
   } else {
-    for (const job of jobs) {
-      process.stdout.write(`${job.id}\t${job.enabled ? 'enabled ' : 'disabled'}\t${job.agentId}\t${job.schedule.kind}\t${job.name}\n`)
+    for (const job of rows) {
+      process.stdout.write(`${job.id}\t${job.enabled ? 'enabled ' : 'disabled'}\t${job.fenced ? 'FENCED ' : '       '}\t${job.agentId}\t${job.schedule.kind}\t${job.name}\n`)
     }
   }
-  return jobs.length
+  return rows.length
 }
 
 async function cmdRuns(args) {
   const id = flagValue(args, '--id')
-  if (!id) throw new Error('--id is required')
   const limit = Number(flagValue(args, '--limit') ?? '10')
   const store = new JobStore(storePathFromArgs(args))
-  const entries = (await store.readRunEvents({ limit }))
-    .filter((e) => e.jobId === id)
+  const doc = await store.loadDoc()
+  const occurrences = (id === undefined ? doc.occurrences : doc.occurrences.filter((r) => r.jobId === id))
+    .slice(-limit)
     .reverse()
+  const occurrenceIds = new Set(doc.occurrences.filter((record) => record.jobId === id).map((record) => record.occurrenceId))
+  const events = (await store.readRunEvents({ limit: limit * 4 }))
+    .filter((event) => id === undefined || event.jobId === id || occurrenceIds.has(event.occurrenceId))
   if (hasFlag(args, '--json')) {
-    process.stdout.write(`${JSON.stringify({ entries }, null, 2)}\n`)
+    process.stdout.write(`${JSON.stringify({ occurrences, events }, null, 2)}\n`)
   } else {
-    for (const e of entries) {
-      process.stdout.write(`${e.action}\t${e.status ?? ''}\t${new Date(e.ts).toISOString()}\t${e.durationMs ?? ''}ms\n`)
+    for (const o of occurrences) {
+      const nominal = o.nominalScheduledAt ?? o.retryOfOccurrenceId ?? o.catchUpOfNominalAt
+      process.stdout.write(
+        `${o.occurrenceId}\t${o.runId}\t${o.kind}\t${o.state}${o.lateSettlement ? `->${o.lateSettlement.resolvedTo}(${o.lateSettlement.basis})` : ''}\t`
+        + `nominal=${typeof nominal === 'number' ? new Date(nominal).toISOString() : String(nominal ?? '-').slice(0, 24)}\t`
+        + `admitted=${new Date(o.admittedAt).toISOString()}\t`
+        + `started=${o.startedAt ? new Date(o.startedAt).toISOString() : '-'}\tended=${o.endedAt ? new Date(o.endedAt).toISOString() : '-'}\t`
+        + `delivery=${o.deliveryStatus ?? '-'}\tfence=${doc.fences[o.jobId] !== undefined ? 'ACTIVE' : '-'}\n`,
+      )
     }
+    if (occurrences.length === 0) process.stdout.write('(no occurrences)\n')
   }
 }
 
@@ -149,10 +170,10 @@ async function cmdRm(args) {
   const id = args.find((a) => !a.startsWith('--'))
   if (!id) throw new Error('job id is required')
   const store = new JobStore(storePathFromArgs(args))
-  await store.mutate((jobs) => {
-    const idx = jobs.findIndex((j) => j.id === id)
+  await store.mutateDoc((doc) => {
+    const idx = doc.jobs.findIndex((j) => j.id === id)
     if (idx < 0) throw new Error(`unknown job id: ${id}`)
-    jobs.splice(idx, 1)
+    doc.jobs.splice(idx, 1) // definition only — occurrence/run evidence persists
   })
   process.stdout.write(`deleted job ${id}\n`)
 }
@@ -161,17 +182,39 @@ async function cmdToggle(args, enabled) {
   const id = args.find((a) => !a.startsWith('--'))
   if (!id) throw new Error('job id is required')
   const store = new JobStore(storePathFromArgs(args))
-  const job = await store.mutate((jobs) => {
-    const target = jobs.find((j) => j.id === id)
-    if (!target) throw new Error(`unknown job id: ${id}`)
-    target.enabled = enabled
-    if (!enabled) {
-      target.state.nextRunAtMs = undefined
-      target.state.runningAtMs = undefined
-    }
-    return { value: toPublicJob(target) }
-  })
+  const job = enabled
+    ? await enableJobOp(store, id, { nowMs: Date.now() })
+    : await disableJobOp(store, id, { nowMs: Date.now() })
   process.stdout.write(`${enabled ? 'enabled' : 'disabled'} job ${job.id} (${job.name})\n`)
+}
+
+/**
+ * Explicit operator reconcile (C-029): resolve an unresolved outcome_unknown
+ * occurrence to succeeded|failed with an evidence note. Control-only; the
+ * operator identity is captured from the trusted control context (effective
+ * OS user) inside the op — never taken from these arguments.
+ */
+async function cmdReconcile(args) {
+  const occurrenceId = args.find((a) => !a.startsWith('--'))
+  if (!occurrenceId) throw new Error('occurrence id is required')
+  const runId = flagValue(args, '--run-id')
+  const resolvedTo = flagValue(args, '--to')
+  const note = flagValue(args, '--note')
+  if (!runId) throw new Error('--run-id is required')
+  if (resolvedTo !== 'succeeded' && resolvedTo !== 'failed') throw new Error('--to must be succeeded|failed')
+  if (!note || !note.trim()) throw new Error('--note (evidence) is required')
+  if (hasFlag(args, '--operator')) {
+    throw new Error('operator identity cannot be self-reported (--operator is untrusted request input; identity comes from the trusted control context)')
+  }
+  const store = new JobStore(storePathFromArgs(args))
+  const result = await reconcileOccurrence(store, { occurrenceId, runId, resolvedTo, evidenceNote: note })
+  const identity = result.identity
+  process.stdout.write(
+    `reconciled ${occurrenceId} -> ${resolvedTo} (basis operator-reconcile)\n`
+    + `operator identity: ${identity.username} (uid ${identity.uid}, ${identity.provenance})\n`
+    + `fence remaining on job ${result.record.jobId}: ${result.fenceRemaining ? 'ACTIVE (other unresolved unknowns)' : 'released'}\n`
+    + `evidence append: ${result.evidenceStatus.ok ? 'durable' : `FAILED (${result.evidenceStatus.error})`}\n`,
+  )
 }
 
 const COMMANDS = {
@@ -181,6 +224,7 @@ const COMMANDS = {
   rm: cmdRm,
   enable: (a) => cmdToggle(a, true),
   disable: (a) => cmdToggle(a, false),
+  reconcile: cmdReconcile,
 }
 
 async function main() {

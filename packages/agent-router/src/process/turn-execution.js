@@ -42,6 +42,7 @@ export class TurnExecution {
     this.terminalReason = null
     this.terminalObservationSeq = null
     this.idleObservationSeq = null
+    this.turnStartObservationSeq = null
     this.laterTurnStartSeen = false
     this.assistantSegments = []
     this.assistantOriginalBytes = 0

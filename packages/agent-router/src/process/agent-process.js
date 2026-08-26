@@ -264,6 +264,11 @@ export class AgentProcess {
     }
     const snapshot = record.snapshot
     const execution = this.executions.get(turnExecutionId)
+    // Additive diagnostics (bounded, secret-free): why is a still-pending
+    // record unresolved? Never a settlement input — read-only classification.
+    const diagnostic = record.state === 'pending'
+      ? this.unknownFenceDiagnostic(execution, snapshot.sessionId)
+      : null
     return {
       turnExecutionId,
       agentId: this.agentId,
@@ -281,6 +286,7 @@ export class AgentProcess {
       reconciliationHandle: turnExecutionId,
       finalAssistantOutputAvailable: snapshot.finalAssistantOutput !== null && snapshot.finalAssistantOutput !== undefined,
       finalAssistantOutputTruncated: snapshot.finalAssistantOutput?.truncated === true,
+      diagnostic,
       updatedAtWallMs: snapshot.settledAtWallMs ?? snapshot.createdAtWallMs,
     }
   }

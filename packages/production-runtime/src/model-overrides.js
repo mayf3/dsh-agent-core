@@ -1,19 +1,42 @@
 /**
- * Startup-only per-Agent model overrides.
+ * Startup-boundary per-Agent model route chain configuration.
  *
- * The deployment owns `<productionRoot>/agent-model-overrides.json`; this
- * module only reads and validates it. V1 deliberately accepts exactly one
- * opt-in tuple and exposes a plain resolver to the composition layer. It is
- * not a dynamic model router and never watches or writes the file.
+ * The deployment owns `<productionRoot>/agent-model-overrides.json` version 2
+ * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 §2 / CTR-001, implemented under
+ * AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-001): the ONLY route
+ * order authority. Schema:
+ *
+ *   { "version": 2,
+ *     "routeCatalog": { "<routeRef>": { provider, model, plugin,
+ *        pluginVersion, credentialReadiness, providerEnv? } },
+ *     "overrides": { "<agentId>": { "model": { "primary": <routeRef>,
+ *        "fallbacks": [<routeRef>, ...] } } } }
+ *
+ * ROUTE_CHAIN = [primary, ...fallbacks] (ordered, ≤ MAX_CONFIGURED_ROUTES;
+ * [] = strict). Route CONTENT and ORDER never come from product code
+ * (ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN). Malformed configs fail loud
+ * at load (duplicate JSON keys at any depth, unresolved/duplicate/alias
+ * routeRefs, providerEnv grammar, pin mismatch, out-of-scope agentId);
+ * config changes require a controlled restart — this module never watches
+ * or writes the file. A missing file (or no entry for an agent) is the
+ * rollback/legacy state: the global env route applies, byte-equivalent to
+ * the pre-chain behavior.
  */
 
 import { existsSync, readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { isIP } from 'node:net'
 
+import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
+
+/**
+ * Config-independent pins and scope (parent CTR-011 / CTR-IMPL-009
+ * carry-forward). Route tuple VALUES never come from here — only the
+ * dsh-codex/harness pins, the credential file name and the single activated
+ * agentId do.
+ */
 export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
   targetAgentId: 'agt_cto-agent',
-  provider: 'openai-codex',
-  model: 'gpt-5.6-luna',
   plugin: 'dsh-codex',
   pluginVersion: '0.2.3',
   dshVersion: '0.1.0-rc.8',
@@ -27,6 +50,9 @@ export const PROVIDER_ENV_ALLOWLIST = Object.freeze([
   'NO_PROXY',
   'NODE_USE_ENV_PROXY',
 ])
+
+/** Hard chain bound (parent Spec Q-1, Owner-frozen 2026-08-25). */
+export const MAX_CONFIGURED_ROUTES = 4
 
 function invalid(message, cause) {
   return Object.assign(new Error(`production-runtime: invalid agent model overrides: ${message}`, { cause }), {
@@ -198,10 +224,65 @@ function exactKeys(value, expected) {
 }
 
 /**
- * Load the frozen V1 schema. Missing file is the rollback/legacy state.
+ * CANONICAL_ROUTE_IDENTITY (parent CTR-003): six-field canonical form —
+ * provider, model, plugin, pluginVersion, credentialReadiness reference and
+ * canonical providerEnv. Pure deterministic normalization; nothing is
+ * dropped. Two different routeRefs resolving to the same canonical identity
+ * are a malformed config (no alias bypass of ATTEMPTED_AT_MOST_ONCE).
+ */
+function catalogCanonicalIdentity(route) {
+  return JSON.stringify([
+    route.provider,
+    route.model,
+    route.plugin,
+    route.pluginVersion,
+    route.credentialReadiness,
+    route.providerEnv === undefined
+      ? 'ABSENT'
+      : PROVIDER_ENV_ALLOWLIST.map((key) => [key, route.providerEnv[key]]),
+  ])
+}
+
+function assertNonEmptyString(value, what) {
+  if (typeof value !== 'string' || value === '') throw invalid(`${what} must be a non-empty string`)
+  return value
+}
+
+/** One resolved chain route entry: frozen process config + reuse identity. */
+function makeChainRoute(routeRef, route) {
+  const processConfig = Object.freeze({
+    provider: route.provider,
+    model: route.model,
+    omitEnv: Object.freeze(['OPENAI_API_KEY']),
+    ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),
+    subscription: Object.freeze({
+      plugin: route.plugin,
+      pluginVersion: route.pluginVersion,
+      dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
+      dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
+      credentialFile: CHATGPT_SUBSCRIPTION_V1.credentialFile,
+      ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
+        packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
+      }),
+    }),
+  })
+  return Object.freeze({
+    routeRef,
+    provider: route.provider,
+    model: route.model,
+    identity: canonicalRouteIdentity(processConfig),
+    processConfig,
+  })
+}
+
+/**
+ * Load the frozen V2 route chain schema. Missing file is the rollback/legacy
+ * state (global env route for every agent). Malformed files fail loud.
  * @param {string} file
  * @param {Iterable<string>} registeredAgentIds
- * @returns {{filePresent:boolean, overrides:Readonly<Record<string,object>>, resolve:(agentId:string, globalRoute:object)=>object}}
+ * @returns {{filePresent:boolean, overrides:Readonly<Record<string,object>>,
+ *   resolve:(agentId:string, globalRoute:object)=>object,
+ *   resolveChain:(agentId:string, globalRoute:object)=>object}}
  */
 export function loadAgentModelOverrides(file, registeredAgentIds) {
   const filePresent = existsSync(file)
@@ -217,54 +298,134 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       if (cause?.code === 'AGENT_MODEL_OVERRIDE_INVALID') throw cause
       throw invalid(`cannot parse ${file}`, cause)
     }
-    if (!exactKeys(parsed, ['overrides', 'version']) || parsed.version !== 1
+    if (!exactKeys(parsed, ['overrides', 'routeCatalog', 'version']) || parsed.version !== 2
+        || parsed.routeCatalog === null || typeof parsed.routeCatalog !== 'object'
+        || Array.isArray(parsed.routeCatalog)
         || parsed.overrides === null || typeof parsed.overrides !== 'object'
         || Array.isArray(parsed.overrides)) {
-      throw invalid(`${file} must be {"version":1,"overrides":{...}}`)
+      throw invalid(`${file} must be {"version":2,"routeCatalog":{...},"overrides":{...}} (version 1 files are not converted)`)
     }
-    const entries = Object.entries(parsed.overrides)
-    if (entries.length > 1) throw invalid('V1 allows at most one override')
-    const registered = new Set(registeredAgentIds)
-    for (const [agentId, route] of entries) {
-      if (!registered.has(agentId)) throw invalid(`unregistered agentId ${JSON.stringify(agentId)}`)
-      if (agentId !== CHATGPT_SUBSCRIPTION_V1.targetAgentId) {
-        throw invalid(`V1 only allows agentId ${CHATGPT_SUBSCRIPTION_V1.targetAgentId}`)
-      }
+    // routeCatalog: routeRef -> frozen validated route + canonical dedup.
+    const catalog = new Map()
+    const canonicalIdentities = new Map()
+    for (const [routeRef, route] of Object.entries(parsed.routeCatalog)) {
       const hasProviderEnv = Object.hasOwn(route ?? {}, 'providerEnv')
-      const routeKeys = ['model', 'plugin', 'pluginVersion', 'provider', ...(hasProviderEnv ? ['providerEnv'] : [])]
-      if (!exactKeys(route, routeKeys)) {
-        throw invalid(`override ${agentId} must contain provider, model, plugin, pluginVersion and optional providerEnv only`)
+      const routeKeys = ['credentialReadiness', 'model', 'plugin', 'pluginVersion', 'provider',
+        ...(hasProviderEnv ? ['providerEnv'] : [])]
+      if (routeRef === '' || !exactKeys(route, routeKeys)) {
+        throw invalid(`routeCatalog.${routeRef} must contain provider, model, plugin, pluginVersion, credentialReadiness and optional providerEnv only`)
       }
-      for (const field of ['provider', 'model', 'plugin', 'pluginVersion']) {
-        if (typeof route[field] !== 'string' || route[field] === '') {
-          throw invalid(`override ${agentId}.${field} must be a non-empty string`)
-        }
+      for (const field of ['provider', 'model', 'plugin', 'pluginVersion', 'credentialReadiness']) {
+        assertNonEmptyString(route[field], `routeCatalog.${routeRef}.${field}`)
       }
-      for (const field of ['provider', 'model', 'plugin', 'pluginVersion']) {
-        if (route[field] !== CHATGPT_SUBSCRIPTION_V1[field]) {
-          throw invalid(`override ${agentId}.${field} must equal ${JSON.stringify(CHATGPT_SUBSCRIPTION_V1[field])}`)
-        }
+      if (route.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
+          && route.pluginVersion !== CHATGPT_SUBSCRIPTION_V1.pluginVersion) {
+        // CTR-011: dsh-codex@0.2.3 exact — a pin mismatch is a config error,
+        // never a fallback trigger.
+        throw invalid(`routeCatalog.${routeRef}: pluginVersion pin mismatch (${CHATGPT_SUBSCRIPTION_V1.plugin} must be ${CHATGPT_SUBSCRIPTION_V1.pluginVersion} exactly)`)
       }
       const providerEnv = hasProviderEnv ? validateProviderEnv(route.providerEnv) : undefined
-      mutableOverrides.set(agentId, Object.freeze({
+      const frozenRoute = Object.freeze({
         provider: route.provider,
         model: route.model,
         plugin: route.plugin,
         pluginVersion: route.pluginVersion,
+        credentialReadiness: route.credentialReadiness,
         ...(providerEnv === undefined ? {} : { providerEnv }),
+      })
+      const canonical = catalogCanonicalIdentity(frozenRoute)
+      if (canonicalIdentities.has(canonical)) {
+        throw invalid(`routeCatalog.${routeRef} and ${canonicalIdentities.get(canonical)} resolve to the same canonical route identity`)
+      }
+      canonicalIdentities.set(canonical, routeRef)
+      catalog.set(routeRef, frozenRoute)
+    }
+    // overrides: exactly the activated scope, registered agents only.
+    const registered = new Set(registeredAgentIds)
+    for (const [agentId, entry] of Object.entries(parsed.overrides)) {
+      if (!registered.has(agentId)) throw invalid(`unregistered agentId ${JSON.stringify(agentId)}`)
+      if (agentId !== CHATGPT_SUBSCRIPTION_V1.targetAgentId) {
+        throw invalid(`V2 activation scope is exactly {${CHATGPT_SUBSCRIPTION_V1.targetAgentId}} (got ${JSON.stringify(agentId)})`)
+      }
+      if (!exactKeys(entry, ['model']) || entry.model === null || typeof entry.model !== 'object'
+          || Array.isArray(entry.model) || !exactKeys(entry.model, ['fallbacks', 'primary'])) {
+        throw invalid(`override ${agentId} must contain exactly model.{primary, fallbacks}`)
+      }
+      const primary = assertNonEmptyString(entry.model.primary, `override ${agentId}.model.primary`)
+      if (!Array.isArray(entry.model.fallbacks)) throw invalid(`override ${agentId}.model.fallbacks must be an array`)
+      const chain = [primary, ...entry.model.fallbacks]
+      const seenRefs = new Set()
+      for (const routeRef of chain) {
+        assertNonEmptyString(routeRef, `override ${agentId}.model routeRef`)
+        if (!catalog.has(routeRef)) throw invalid(`override ${agentId} references unknown routeCatalog entry ${JSON.stringify(routeRef)}`)
+        if (seenRefs.has(routeRef)) throw invalid(`override ${agentId} repeats routeRef ${JSON.stringify(routeRef)}`)
+        seenRefs.add(routeRef)
+      }
+      if (chain.length > MAX_CONFIGURED_ROUTES) {
+        throw invalid(`override ${agentId} chain length ${chain.length} exceeds MAX_CONFIGURED_ROUTES ${MAX_CONFIGURED_ROUTES}`)
+      }
+      mutableOverrides.set(agentId, Object.freeze({
+        primary,
+        fallbacks: Object.freeze([...entry.model.fallbacks]),
+        routes: Object.freeze(Object.fromEntries(chain.map((ref) => [ref, catalog.get(ref)]))),
       }))
     }
   }
   const overrides = Object.freeze(Object.fromEntries(mutableOverrides))
+
+  const passthroughRoute = (globalRoute) => Object.freeze({
+    routeRef: null,
+    provider: globalRoute.provider,
+    model: globalRoute.model,
+    identity: canonicalRouteIdentity(globalRoute),
+    processConfig: Object.freeze({ provider: globalRoute.provider, model: globalRoute.model }),
+  })
+
+  const chainIds = new Map()
+  function chainIdFor(agentId, identities) {
+    const digest = createHash('sha256').update(JSON.stringify(identities)).digest('hex').slice(0, 16)
+    const id = `chain-${agentId}-${digest}`
+    chainIds.set(id, true)
+    return id
+  }
 
   return Object.freeze({
     filePresent,
     overrides,
     resolve(agentId, globalRoute) {
       const override = overrides[agentId]
-      return override === undefined
-        ? Object.freeze({ provider: globalRoute.provider, model: globalRoute.model })
-        : Object.freeze({ ...override })
+      if (override === undefined) {
+        return Object.freeze({ provider: globalRoute.provider, model: globalRoute.model })
+      }
+      const route = override.routes[override.primary]
+      return Object.freeze({
+        provider: route.provider,
+        model: route.model,
+        plugin: route.plugin,
+        pluginVersion: route.pluginVersion,
+        ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),
+      })
+    },
+    /** Immutable turn-start chain snapshot (parent CTR-007). */
+    resolveChain(agentId, globalRoute) {
+      const override = overrides[agentId]
+      if (override === undefined) {
+        const route = passthroughRoute(globalRoute)
+        return Object.freeze({
+          agentId,
+          override: false,
+          chainId: chainIdFor(agentId, [route.identity]),
+          routes: Object.freeze([route]),
+        })
+      }
+      const chain = [override.primary, ...override.fallbacks]
+      const routes = Object.freeze(chain.map((ref) => makeChainRoute(ref, override.routes[ref])))
+      return Object.freeze({
+        agentId,
+        override: true,
+        chainId: chainIdFor(agentId, routes.map((route) => route.identity)),
+        routes,
+      })
     },
   })
 }
