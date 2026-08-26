@@ -78,22 +78,6 @@
       "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
     },
     {
-      "path": "packages/scheduler/src/scheduler.js",
-      "approved_max_lines": 713,
-      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (713 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
-      "approved_by": "mayf3",
-      "expires_at": "2027-08-22",
-      "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
-    },
-    {
-      "path": "packages/scheduler/test/scheduler.test.js",
-      "approved_max_lines": 660,
-      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (660 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
-      "approved_by": "mayf3",
-      "expires_at": "2027-08-22",
-      "split_followup": "split into per-behavior test files (describe/it blocks grouped by contract) before next major edit"
-    },
-    {
       "path": "scripts/feishu-phase-a-final-canary.mjs",
       "approved_max_lines": 1188,
       "reason": "legacy script file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (1188 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
