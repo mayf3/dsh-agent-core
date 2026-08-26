@@ -67,7 +67,7 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1` | proposed | contracts (on acceptance, once present in an implementation base that includes Scheduler V2) | minimal implementation-authorizing child authority under `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1`: grants bounded implementation of v2 loader + unified three-entrance route-attempt seam + per-hop gate + STOP_CHAIN + ONE_LOGICAL_TURN + journal + Scheduler chain inheritance + no hardcoded route order; freezes the parent's delegated Q-4 as route-identity-matched reuse / new generation; authorizes no production config write, credential, or deployment |
+| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1` | accepted（PR #74；active authority on merge into main） | contracts (effective once present in an implementation base that includes Scheduler V2) | minimal implementation-authorizing child authority under `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1`: grants bounded implementation of v2 loader + unified three-entrance route-attempt seam + per-hop gate + STOP_CHAIN + ONE_LOGICAL_TURN + journal + Scheduler chain inheritance + no hardcoded route order; freezes the parent's delegated Q-4 as route-identity-matched reuse / new generation; authorizes no production config write, credential, or deployment |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` | accepted / current | none | current agt_cto-agent model-route authority: ordered chain authority lives only in `agent-model-overrides.json` version 2; Scheduler jobs inherit only; canonical route aliases fail-loud; `providerEnv` is an optional four-key closed object with the old seam safety contracts fully absorbed; policy authority unchanged — implementation scope is granted only by the child authority above |
 | `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` | superseded | none | historical model-route authority replaced whole by `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` |
 | `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1` | superseded | none | historical v1 providerEnv seam authority replaced whole by `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` (safety contracts absorbed by CTR-010/CTR-014) |
@@ -79,6 +79,15 @@ current main `b296558` merge-tree clean): the new Spec becomes the current
 authority, both former main authorities are superseded with backlinks, and
 `implementation_authority` / `production_apply_authority` stay `none` — the
 transaction authorizes no implementation, configuration, or production change.
+
+The child implementation-authorizing acceptance (2026-08-26, 链路 授权采纳执行) is
+lifecycle-only relative to reviewed head `a3f787e673276942371bd0b5d8bb5b94d1302595`
+(链路 授权审计 = PASS, 0 blockers; accepted_by = mayf3): `proposed -> accepted` with
+provenance only, normative body byte-preserved; `implementation_authority:
+contracts` / `production_apply_authority: none` unchanged. Per
+SPEC_GOVERNANCE_V0 §2.1 the accepted content becomes active repository authority on
+merge into main (PR #74 stays OPEN, unmerged); the implementation gate additionally
+requires its presence in an implementation base that includes Scheduler V2.
 
 PR #60 / `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` 从未进入 main，定性为
 `ABANDONED_UNMERGED_CANDIDATE`，不是 active authority；PR #70 不 supersede 它。

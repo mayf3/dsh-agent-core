@@ -1,6 +1,11 @@
 ---
 spec_id: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-08-26
+accepted_reviewed_head: a3f787e673276942371bd0b5d8bb5b94d1302595
+review_verdict: PASS
+review_blocker_count: 0
 date: 2026-08-26
 type: implementation-authorizing child Spec (SPEC ONLY — 本轮只冻结实现授权边界；不实现、不配置 Credential、不部署)
 spec_kind: implementation
@@ -49,7 +54,10 @@ references:
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 — ordered route chain 的最小实现授权（implementation-authorizing child authority）
 
-> SPEC_STATUS = **proposed**（authoring round 2026-08-26；链路 授权执行）。
+> SPEC_STATUS = **accepted**（lifecycle-only acceptance finalize 2026-08-26 ·
+> accepted_reviewed_head = `a3f787e673276942371bd0b5d8bb5b94d1302595` ·
+> 链路 授权审计 = PASS · BLOCKER_COUNT = 0 · accepted_by = mayf3 ·
+> authoring round 2026-08-26；链路 授权执行）。
 > 本文件是 `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1`（accepted，下称**父 Spec**）的
 > **最小 implementation-authorizing child authority**：父 Spec 冻结
 > `implementation_authority = none` 并规定「实现须由独立 implementation-authorizing
@@ -68,6 +76,18 @@ references:
 > credential，不发送 Feishu 消息，不重启任何进程，不 merge。
 > `production_apply_authority = none`：生产配置写入 / 激活（父 Spec Q-2 zai
 > tuple 核实、Q-3 Luna 就绪轮）不在本 Spec 授权内，仍需独立轮次。
+>
+> **Acceptance finalize（2026-08-26，链路 授权采纳执行）**：mayf3 对 exact
+> reviewed head `a3f787e673276942371bd0b5d8bb5b94d1302595`（链路 授权审计 =
+> PASS，BLOCKER_COUNT = 0）执行 lifecycle-only acceptance：本文件
+> `status: proposed -> accepted`（acceptance provenance 仅记录于 frontmatter、
+> 本 header 段落与 §15）。**normative body 逐字不变**（NORMATIVE_BODY_CHANGE =
+> NONE——§1–§14 byte-preserved，含 proposed 阶段条件句与 authoring 轮
+> Final Output）。`implementation_authority = contracts` 与
+> `production_apply_authority = none` 保持不变；按 vendored
+> SPEC_GOVERNANCE_V0 §2.1，本文件 merge into main 前不是 active repository
+> authority，本 Spec 自身的实现 gate（accepted AND 存在于 implementation
+> base）在 merge 后方可满足。事务明细见 §15。
 
 ---
 
@@ -588,4 +608,51 @@ MERGE = NO
 PR60_LIFECYCLE_MUTATION = NONE
 
 NEXT_TASK = 链路 授权审计
+```
+
+---
+
+## 15. Final Output — Acceptance finalize（2026-08-26；链路 授权采纳执行轮填写）
+
+```text
+TASK_NAME = 链路 授权采纳执行
+TASK_STATUS = ACCEPTANCE_TRANSACTION_COMPLETE（lifecycle-only）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1
+accepted_reviewed_head = a3f787e673276942371bd0b5d8bb5b94d1302595
+accepted_by = mayf3
+review_verdict = PASS
+review_blocker_count = 0
+READY_FOR_ACCEPTANCE = YES（链路 授权审计轮结论）
+
+TRANSACTION（lifecycle-only，单 docs-only commit，normative body 零改动）：
+  status = proposed -> accepted（provenance 仅 frontmatter + header 段落 + 本节）
+  implementation_authority = contracts（保持；按本 Spec 自身 gate 生效：
+    accepted AND 存在于含 Scheduler V2 的 implementation base——
+    per SPEC_GOVERNANCE_V0 §2.1，merge into main 前不是 active authority）
+  production_apply_authority = none（保持）
+
+PRE_ACCEPTANCE_HEAD = 786e7acfe2c5d90408f057e4294090d4804dbf8c
+  （acceptance commit 前的分支 head：普通 merge current main
+    a1347c20d84490f4a99eb9a27ba3bd3e71d552c5 进入分支——no rebase /
+    no squash / no force-push；merge 仅带入 .agents/structure-registry.json
+    机械清理，与两份 docs 文件零冲突；PR #74 head 漂移核对 = NONE，
+    fresh-fetch 后 head 恰为 accepted_reviewed_head）
+
+SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = NONE（§1–§14 历史正文逐字保留）
+
+VALIDATION（merge 后 tree 实测执行）：git diff --check PASS；
+  python3 .agents/tools/verify_governance.py --target . PASS；
+  npm run verify:structure exit 0（零 error；WARNING 均为 base 预存）
+
+PR_LIFECYCLE = PR #74 CLOSED -> reopened -> 保持 OPEN（MERGE = NO；
+  merge 决策不在本轮授权内）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE = NO
+
+NEXT_TASK = 链路 授权采纳审计
 ```
