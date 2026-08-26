@@ -15,7 +15,8 @@
  *   broker                (gateway mode — the Trusted CP seam; credentials
  *                          file optional, calls fail closed without one)
  *   product-api           (thin mobile surface over the Router)
- *   notification-ingress  (thin POST /v1/deliver over agentRouter.deliver)
+ *   notification-ingress  (service-authenticated POST /v1/deliver with the
+ *                          durable idempotency authority over agentRouter.deliver)
  *   scheduler             (JobStore on the production store + engine loop)
  *     └─ scheduler-router seams (createRouterInvoker / createFeishuDeliver —
  *        the existing bridge, never re-implemented here)
@@ -42,14 +43,21 @@ import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
-import { apply as applyNotificationIngress } from '../../notification-ingress/src/index.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
-import { CHATGPT_SUBSCRIPTION_V1, loadAgentModelOverrides } from './model-overrides.js'
+import { loadAgentModelOverrides } from './model-overrides.js'
+import {
+  mountNotificationIngressRuntime,
+  wireNotificationIngressDeliveryEvidence,
+} from './notification-ingress-runtime.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
+import { resolveFeishuUxSwitches, resolveProcessingReactionConfig, resolveReplyRenderMode } from './feishu-env.js'
+
+// Re-exported for the existing test/compat imports (parseStrictBooleanEnv etc.).
+export { parseStrictBooleanEnv, resolveFeishuUxSwitches, resolveProcessingReactionConfig, resolveReplyRenderMode } from './feishu-env.js'
 
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
 export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
@@ -69,54 +77,6 @@ export function assertTargetProxyRuntime({ env = process.env, version = process.
   if (version !== TARGET_PROXY_NODE_VERSION) {
     throw invalidProxyRuntime('NODE_RUNTIME_VERSION', 'runtime_version_mismatch')
   }
-}
-
-/**
- * STRICT boolean env parsing for the Feishu UX switches: ONLY the exact
- * strings 'true' / 'false' are accepted. Any other value (case variants,
- * '1'/'0', 'yes', whitespace, ...) fails composition LOUD — a typo'd
- * supervision-unit env must never silently revert admission/mention policy.
- * Unset or empty means "not configured" (undefined): the connector's own
- * defaults (true/true) apply.
- *
- * @param {object} env - env map (process.env).
- * @param {string} key - the env var name.
- * @returns {boolean|undefined} true / false, or undefined when unset/empty.
- * @throws {Error} code FEISHU_UX_SWITCH_INVALID on any non-boolean value.
- */
-export function parseStrictBooleanEnv(env, key) {
-  const raw = env[key]
-  if (raw === undefined || raw === '') return undefined
-  if (raw === 'true') return true
-  if (raw === 'false') return false
-  throw Object.assign(
-    new Error(`production-runtime: ${key} must be exactly 'true' or 'false' (got ${JSON.stringify(raw)})`),
-    { code: 'FEISHU_UX_SWITCH_INVALID' },
-  )
-}
-
-/**
- * Resolve both Feishu UX switches from env (FEISHU_REQUIRE_MENTION_IN_GROUP /
- * FEISHU_AUTO_MENTION_TRIGGER_SENDER). Parsed BEFORE any mount so an invalid
- * value fails composition regardless of whether the channel is configured.
- *
- * @param {object} [env] - env map (default process.env).
- * @returns {{requireMentionInGroup?:boolean, autoMentionTriggerSender?:boolean}}
- *   only the configured keys (absent = connector defaults).
- */
-export function resolveFeishuUxSwitches(env = process.env) {
-  return dropUndefined({
-    requireMentionInGroup: parseStrictBooleanEnv(env, 'FEISHU_REQUIRE_MENTION_IN_GROUP'),
-    autoMentionTriggerSender: parseStrictBooleanEnv(env, 'FEISHU_AUTO_MENTION_TRIGGER_SENDER'),
-  })
-}
-
-function dropUndefined(obj) {
-  const out = {}
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) out[k] = v
-  }
-  return out
 }
 
 /**
@@ -160,6 +120,10 @@ export async function composeProductionRuntime(options = {}) {
   // Feishu UX switches: strict-parsed BEFORE any mount so an invalid value
   // fails composition loud even when the channel itself is unconfigured.
   const feishuUxSwitches = resolveFeishuUxSwitches()
+  // Processing-reaction switch: same fail-loud contract (unset/empty=false).
+  const processingReactionEnabled = resolveProcessingReactionConfig()
+  // Reply render mode: same fail-loud contract (unset/empty='markdown').
+  const replyRenderMode = resolveReplyRenderMode()
   const opts = options ?? {}
   const log = opts.log ?? {
     log: (...a) => process.stdout.write(`[production-runtime] ${a.join(' ')}\n`),
@@ -237,12 +201,13 @@ export async function composeProductionRuntime(options = {}) {
   }
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
 
-  // Accepted AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1: deployment-owned
-  // static config. The production composition validates it against the
-  // already-loaded Agent Definition. It then reloads at each NEW per-Agent
-  // process boundary so target-only rollback needs neither a runtime restart
-  // nor a file watcher. The Router receives only a synchronous resolved
-  // process config and never reads the file or learns provider/model rules.
+  // AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 (accepted) + IMPL_V1: deployment-
+  // owned static route chain config (agent-model-overrides.json version 2).
+  // The composition validates it against the already-loaded Agent Definition
+  // and re-reads it ONLY at each new process boundary (turn-start chain
+  // snapshot) so target-only rollback needs neither a runtime restart nor a
+  // file watcher. The Router receives the immutable snapshot resolver and
+  // never reads the file or learns provider/model rules.
   const globalRoute = Object.freeze(opts.globalRoute ?? {
     provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
     model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
@@ -250,36 +215,18 @@ export async function composeProductionRuntime(options = {}) {
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
   const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+    .resolveChain(agentId, globalRoute)
   const resolveProcessConfig = (agentId) => {
-    // Router calls this only after it has established that no live process
-    // can be reused and immediately before provisioning/spawn. Reloading here
-    // is process-start configuration, never per-turn dynamic routing.
-    const modelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
-    const route = modelOverrides.resolve(agentId, globalRoute)
-    const override = modelOverrides.overrides[agentId]
-    return Object.freeze({
-      provider: route.provider,
-      model: route.model,
-      ...(override === undefined ? {} : {
-        omitEnv: Object.freeze(['OPENAI_API_KEY']),
-        ...(override.providerEnv === undefined ? {} : { providerEnv: override.providerEnv }),
-        subscription: Object.freeze({
-          plugin: override.plugin,
-          pluginVersion: override.pluginVersion,
-          dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
-          dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
-          credentialFile: CHATGPT_SUBSCRIPTION_V1.credentialFile,
-          ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
-            packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
-          }),
-        }),
-      }),
-    })
+    // Default route = the chain's primary (route[0]); the unified chain
+    // executor drives ordered fallbacks through resolveRouteChain. This is
+    // process-start configuration, never per-turn dynamic routing.
+    const snapshot = resolveRouteChain(agentId)
+    return snapshot.routes[0].processConfig
   }
-  if (Object.keys(initialModelOverrides.overrides).length > 0) {
-    const target = CHATGPT_SUBSCRIPTION_V1.targetAgentId
-    const route = initialModelOverrides.resolve(target, globalRoute)
-    log.log(`agent model override loaded for ${target}: provider=${route.provider} model=${route.model}`)
+  for (const [agentId, override] of Object.entries(initialModelOverrides.overrides)) {
+    const chain = [override.primary, ...override.fallbacks]
+    log.log(`agent model route chain loaded for ${agentId}: ${chain.join(' -> ')} (length ${chain.length})`)
   }
 
   // Feishu channel: mounted ONLY with real credentials. Absent => honest
@@ -294,8 +241,14 @@ export async function composeProductionRuntime(options = {}) {
       // requireMentionInGroup / autoMentionTriggerSender: only the env-parsed
       // keys are forwarded (absent = connector defaults true/true).
       ...feishuUxSwitches,
+      // Processing reaction: definite boolean (unset/empty already resolved
+      // to false above — the connector default stays OFF).
+      processingReactionEnabled,
+      // Reply render mode: definite 'markdown' | 'card' (unset/empty already
+      // resolved to 'markdown' above — the byte-identical default).
+      replyRenderMode,
     })
-    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true})`)
+    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true} processingReactionEnabled=${processingReactionEnabled} replyRenderMode=${replyRenderMode})`)
   } else {
     log.warn(`feishu credentials not configured (FEISHU_CREDS_PATH=${feishuCredsPath ?? '(unset)'}); channel OFF — delivery-requesting jobs will be marked not-delivered`)
   }
@@ -308,6 +261,7 @@ export async function composeProductionRuntime(options = {}) {
     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),
     ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),
     resolveProcessConfig,
+    resolveRouteChain,
   })
 
   // V2 PREBOUND_ONLY Feishu ingress gate (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
@@ -348,11 +302,10 @@ export async function composeProductionRuntime(options = {}) {
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
   })
 
-  const ingressCfg = opts.notificationIngress ?? {}
-  const notificationIngress = applyNotificationIngress(ctx, {
-    enabled: ingressCfg.enabled ?? process.env.NOTIFICATION_INGRESS_ENABLED !== '0',
-    host: ingressCfg.host ?? process.env.NOTIFICATION_INGRESS_HOST ?? '127.0.0.1',
-    port: ingressCfg.port ?? Number.parseInt(process.env.NOTIFICATION_INGRESS_PORT ?? '8790', 10),
+  const notificationIngress = mountNotificationIngressRuntime({
+    ctx,
+    config: opts.notificationIngress,
+    layout,
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
@@ -380,44 +333,12 @@ export async function composeProductionRuntime(options = {}) {
     })
     return outcome
   }
+  // Preserve Scheduler V2's synchronous runnable-Agent admission gate through
+  // the observability wrapper; no job/store/deploy behavior is changed here.
+  invoker.assertRunnable = rawInvoker.assertRunnable
 
-  // Observability for the Delivery V0 admission seam: one evidence line per
-  // accepted deliver (wrap, never re-implement — the Router still owns it).
-  const deliverRouterOwned = router.deliver
-  router.deliver = async (req) => {
-    try {
-      const result = await deliverRouterOwned.call(router, req)
-      const proc = router.registrySnapshot().find((p) => p.agentId === req?.agentId)
-      writeEvidence({
-        kind: 'deliver',
-        pid: process.pid,
-        requestId: req?.requestId,
-        agentId: req?.agentId,
-        sessionMode: req?.sessionMode,
-        sessionId: result?.sessionId,
-        status: result?.status ?? null,
-        reconciliationHandle: result?.reconciliationHandle ?? null,
-        evidence: result?.evidence ?? null,
-        routerProcessPid: proc?.pid ?? null,
-        routerProcessAlive: proc?.alive ?? null,
-      })
-      return result
-    } catch (error) {
-      writeEvidence({
-        kind: 'deliver',
-        pid: process.pid,
-        requestId: req?.requestId,
-        agentId: req?.agentId,
-        sessionMode: req?.sessionMode,
-        status: error?.status ?? 'error',
-        reconciliationHandle: error?.reconciliationHandle ?? null,
-        deadlineAtWallMs: error?.deadlineAtWallMs ?? null,
-        evidence: error?.evidence ?? null,
-        error: error?.message ?? String(error),
-      })
-      throw error
-    }
-  }
+  // Admission observability remains a wrap around Router-owned delivery.
+  wireNotificationIngressDeliveryEvidence(router, writeEvidence)
 
   const deliver = feishu !== undefined
     ? createFeishuDeliver(feishu)

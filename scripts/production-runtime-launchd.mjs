@@ -77,6 +77,14 @@ const PASS_THROUGH_ENV = [
   'FEISHU_CREDS_PATH',
   'FEISHU_REQUIRE_MENTION_IN_GROUP',
   'FEISHU_AUTO_MENTION_TRIGGER_SENDER',
+  // PROCESSING_REACTION pass-through: forwarded into the plist only when set
+  // at install time (production target FEISHU_PROCESSING_REACTION_ENABLED=
+  // true is frozen for DEPLOY time; NOT deployed this round).
+  'FEISHU_PROCESSING_REACTION_ENABLED',
+  // REPLY_RENDER_MODE pass-through: forwarded into the plist only when set
+  // at install time (production target FEISHU_REPLY_RENDER_MODE=card is
+  // frozen for DEPLOY time; NOT deployed this round).
+  'FEISHU_REPLY_RENDER_MODE',
   'DSH_AGENT_PROVIDER',
   'DSH_AGENT_MODEL',
   'AGENT_CORE_CREDENTIALS_FILE',

@@ -31,6 +31,11 @@ import {
   conversationWorkspaceId,
 } from './core.js'
 import { normalizedToIngressEvent, createBridgeHandler, createReceiptReply } from './bridge.js'
+import {
+  createProcessingReactionLifecycle,
+  bridgeConfigWithProcessingReaction,
+} from './processing-reaction.js'
+import { replyCardSendPlan } from './reply-card.js'
 import { createRedactingLogger, sdkLoggerAdapter } from './log-redaction.js'
 
 // Re-export the pure adapter helpers for thin adapters and tests
@@ -62,6 +67,19 @@ const DEFAULTS = {
   // semantics). An explicit false disables exactly one activation.
   requireMentionInGroup: true,
   autoMentionTriggerSender: true,
+  // PROCESSING_REACTION switch (OWNER_RULING = ENABLE_FEISHU_PROCESSING_
+  // REACTION): default false — one `Typing` reaction on the ORIGINAL inbound
+  // message while the admitted Agent turn runs, removed in the turn's
+  // finally. Strict env parsing lives in production-runtime
+  // (FEISHU_PROCESSING_REACTION_ENABLED; invalid values fail loud).
+  processingReactionEnabled: false,
+  // REPLY_RENDER_MODE switch (OWNER_RULING = ENABLE_STATIC_FEISHU_REPLY_CARD,
+  // STATIC_FINAL_CARD_V1): default 'markdown' — byte-identical current
+  // production rendering. 'card' re-renders ONLY the Router success reply
+  // (the sole caller carrying ux intent) as a button-less CardKit 2.0 static
+  // card. Strict env parsing lives in production-runtime
+  // (FEISHU_REPLY_RENDER_MODE; invalid values fail loud).
+  replyRenderMode: 'markdown',
   onEvent: null,
   // V2 PREBOUND_ONLY pre-forward gate predicate (programmatically injected by
   // the composition layer, e.g. production-runtime wiring it to
@@ -94,6 +112,17 @@ export const Config = z.object({
   // intent: false composes NO opts.mentions (markdown / anchoring / body
   // untouched). Default true = the frozen UX Phase1 behavior.
   autoMentionTriggerSender: z.boolean().default(true),
+  // One-shot `Typing` processing reaction on the original inbound message
+  // around the full admitted Agent turn (see src/processing-reaction.js).
+  // Default false = off. The emoji type is NOT configurable (a typo'd
+  // emoji_type would fail silently inside Feishu).
+  processingReactionEnabled: z.boolean().default(false),
+  // Final success-reply rendering mode (STATIC_FINAL_CARD_V1, see
+  // src/reply-card.js). 'markdown' (default) = the frozen UX Phase1
+  // behavior, byte-identical. 'card' = button-less CardKit 2.0 static card
+  // for the Router success reply ONLY. apply() rejects any other value
+  // fail-loud (FEISHU_REPLY_RENDER_MODE_INVALID).
+  replyRenderMode: z.string().default('markdown'),
 })
 
 function loadCredentials(config) {
@@ -150,13 +179,21 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
     }
   }
 
+  // PROCESSING_REACTION lifecycle (default OFF): wraps the Router's onEvent
+  // at the connector callback seam — strictly AFTER bridge admission — so
+  // only admitted messages can gain the one-shot `Typing` reaction. The
+  // facade keeps every bridge-read config key LIVE over cfg (bridge.js stays
+  // byte-identical; the reaction lifecycle lives entirely in
+  // src/processing-reaction.js).
+  const processingReaction = createProcessingReactionLifecycle({ channel, log })
+
   // EVENT_SURFACE = MESSAGE_ONLY (spec §9): the sole Feishu event handler is
   // `message`. reconnecting/reconnected/error are channel lifecycle
   // callbacks, not event surfaces — cardAction / reaction / comment /
   // meeting handlers are NOT registered and no onRawEvent catch-all exists.
   const onSdkMessage = createBridgeHandler({
     resolveBotIdentity: () => channel.getBotIdentity(),
-    config: cfg,
+    config: bridgeConfigWithProcessingReaction(cfg, processingReaction),
     reply: createReceiptReply(channel, log),
     log,
   })
@@ -216,7 +253,28 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
       const ux = cfg.autoMentionTriggerSender === false && opts?.ux?.autoMentionTriggerSender === true
         ? { ...opts.ux, autoMentionTriggerSender: false }
         : opts?.ux
-      const plan = replyTargetToSdkSend(replyTarget, text, ux)
+      // REPLY_RENDER_MODE (STATIC_FINAL_CARD_V1): the connector is the final
+      // display-policy authority. In card mode ONLY the Router success reply
+      // (the sole caller carrying ux rendering intent) is re-rendered as a
+      // static card; every other caller (receipts, scheduler/proactive,
+      // system/operator) sends without ux and keeps its existing plan. The
+      // card decision is deterministic and PRE-send: oversize or empty bodies
+      // never attempt the card API and fall back to the existing markdown
+      // plan (CARD_NOT_ATTEMPTED). The card plan carries no mentions key
+      // (CARD_AUTO_MENTION = NONE) and the same anchoring as markdown.
+      let plan
+      if (cfg.replyRenderMode === 'card' && ux?.rendering === 'markdown') {
+        const card = replyCardSendPlan(replyTarget, text)
+        if (card.plan !== undefined) {
+          plan = card.plan
+          log('info', '[feishu] reply rendered as static card', { wireBytes: card.wireBytes })
+        } else {
+          log('warn', `[feishu] CARD_NOT_ATTEMPTED (${card.notAttempted}${card.wireBytes !== undefined ? ` ${card.wireBytes}B` : ''}) — deterministic markdown fallback`)
+          plan = replyTargetToSdkSend(replyTarget, text, ux)
+        }
+      } else {
+        plan = replyTargetToSdkSend(replyTarget, text, ux)
+      }
       const result = await channel.send(plan.to, plan.input, plan.opts)
       if (!result?.messageId) {
         // EMPTY_MESSAGE_ID_REJECTION (spec §10): a send that "succeeded"
@@ -250,6 +308,15 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
     setCallback(fn) {
       cfg.onEvent = typeof fn === 'function' ? fn : cfg.onEvent
     },
+    /**
+     * PROCESSING_REACTION graceful dispose: ONE best-effort delete pass over
+     * the reactions still active in memory (no keepalive, no retry loop).
+     * Called by the shell's disposer before channel.disconnect(). Abrupt
+     * process death is a KNOWN_LIMITATION (ghost reaction possible).
+     */
+    async disposeProcessingReactions() {
+      await processingReaction.dispose()
+    },
     /** Swap the V2 pre-forward ingress gate predicate (e.g. the composition
      *  layer wiring PREBOUND_ONLY via the Router's generic read APIs). */
     setIngressGate(fn) {
@@ -281,6 +348,27 @@ function mapConnectionState(sdkState) {
  */
 export function apply(ctx, config, { createChannel = createLarkChannel } = {}) {
   const cfg = { ...DEFAULTS, ...(config ?? {}) }
+
+  // REPLY_RENDER_MODE strict validation (STATIC_FINAL_CARD_V1): anything but
+  // 'markdown' | 'card' fails startup LOUD — a typo'd render mode must never
+  // silently select a rendering strategy.
+  if (cfg.replyRenderMode !== 'markdown' && cfg.replyRenderMode !== 'card') {
+    throw Object.assign(
+      new Error(`[feishu] replyRenderMode must be 'markdown' or 'card' (got ${JSON.stringify(cfg.replyRenderMode)})`),
+      { code: 'FEISHU_REPLY_RENDER_MODE_INVALID' },
+    )
+  }
+  // CARD_AUTO_MENTION = NONE: card-internal user mention is NOT implemented
+  // in STATIC_FINAL_CARD_V1. Card mode together with an auto-mention policy
+  // that could still ask for mentions must fail startup LOUD instead of
+  // silently dropping the mention intent.
+  if (cfg.replyRenderMode === 'card' && cfg.autoMentionTriggerSender !== false) {
+    throw Object.assign(
+      new Error('[feishu] replyRenderMode=card requires autoMentionTriggerSender=false (card auto-mention is not implemented; set FEISHU_AUTO_MENTION_TRIGGER_SENDER=false)'),
+      { code: 'FEISHU_CARD_AUTO_MENTION_UNSUPPORTED' },
+    )
+  }
+
   const rawLog = cfg.log ?? ((level, ...args) => {
     const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
     fn(...args)
@@ -321,8 +409,11 @@ export function apply(ctx, config, { createChannel = createLarkChannel } = {}) {
   // connection down. NOTE: context.effect consumes a SYNCHRONOUS disposer
   // (an async return value would never be registered — the V0 shell's
   // `ctx.effect(async ...)` disposer was silently dropped); the async
-  // lifecycle itself is carried by ready(), not by this hook.
+  // lifecycle itself is carried by ready(), not by this hook. The processing
+  // reactions' best-effort cleanup is kicked off first (same microtask
+  // race; both are logged, neither blocks the other).
   ctx.effect(() => () => {
+    handle.disposeProcessingReactions().catch(() => { /* best effort; already logged */ })
     channel.disconnect().catch((error) => {
       log('warn', '[feishu] disconnect cleanup failed', error)
     })

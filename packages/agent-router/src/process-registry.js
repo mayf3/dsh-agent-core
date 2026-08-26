@@ -24,6 +24,8 @@ import { randomUUID } from 'node:crypto'
 
 import { redactSensitiveText } from './process/index.js'
 import { createParentRpcHandler } from './parent-rpc-relay.js'
+import { canonicalRouteIdentity } from './route-chain.js'
+import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
 import { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'
 
 /**
@@ -58,37 +60,25 @@ export function createProcessRegistry({
   const staleSlotAudits = []
   let disposing = false
 
+  // DEC-IMPL-004 route-aware reuse gate (ordered route chain Q-4): the
+  // route-aware ensureRunning variant the unified chain executor calls.
+  const routeGate = createRouteGate({
+    log,
+    lifecycleSlots,
+    installStartup: (agentId) => installStartup(agentId),
+    bootstrapStartup,
+    assertRunnable,
+    isDisposing: () => disposing,
+  })
+
   function auditStaleSlot(detail) {
     staleSlotAudits.push({ detail, observedAtWallMs: Date.now() })
     if (staleSlotAudits.length > 64) staleSlotAudits.shift()
   }
 
   /** CAS(EMPTY -> STARTUP) — synchronous, before any further async work. */
-  function installStartupSlot(agentId) {
-    const generation = (agentGenerations.get(agentId) ?? 0) + 1
-    agentGenerations.set(agentId, generation)
-    let resolveResult
-    let rejectResult
-    const resultPromise = new Promise((resolvePromise, rejectPromise) => {
-      resolveResult = resolvePromise
-      rejectResult = rejectPromise
-    })
-    // Single-caller failures reject this promise with no other awaiter —
-    // mark it handled up front (shared awaiters still observe rejections).
-    resultPromise.catch(() => {})
-    const entry = {
-      state: 'STARTUP',
-      generation,
-      entryId: randomUUID(),
-      resultPromise,
-      resolveResult,
-      rejectResult,
-      processRef: null,
-      ownershipToken: null,
-      startupSettled: false,
-    }
-    lifecycleSlots.set(agentId, entry)
-    return entry
+  function installStartup(agentId) {
+    return installStartupSlot(lifecycleSlots, agentGenerations, agentId)
   }
 
   /**
@@ -280,7 +270,7 @@ export function createProcessRegistry({
     } else if (initial?.state === 'REAP') {
       return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
     }
-    const entry = installStartupSlot(agentId)
+    const entry = installStartup(agentId)
     void bootstrapStartup(agentId, entry)
     return entry.resultPromise
   }
@@ -325,7 +315,13 @@ export function createProcessRegistry({
       entry.startupFailureStage = 'resolveDshHome'
       home = workspaceBootstrap.resolveDshHome(agentId)
       entry.startupFailureStage = 'resolveProcessConfig'
-      processConfig = resolveProcessConfig(agentId) ?? {}
+      // Route-chain spawns freeze the wanted route's process config onto the
+      // slot at turn-start snapshot time (parent CTR-007); legacy spawns keep
+      // resolving the default route here (process-boundary re-read only).
+      processConfig = entry.spawnConfig?.processConfig ?? resolveProcessConfig(agentId) ?? {}
+      // DEC-IMPL-004 reuse identity: recorded on the slot so the route gate
+      // can compare later attempts against this process's frozen route.
+      entry.routeIdentity = entry.spawnConfig?.routeIdentity ?? canonicalRouteIdentity(processConfig)
       // Provision the agent home (settings/credentials/profile/plugin farm)
       // and the workspace directory — idempotent. The provisioning is driven
       // by cfg.agentProfile: whatever profile this router spawns must be
@@ -465,6 +461,7 @@ export function createProcessRegistry({
       state: slot.state,
       generation: slot.generation,
       entryId: slot.entryId,
+      ...(slot.routeIdentity === null || slot.routeIdentity === undefined ? {} : { routeIdentity: slot.routeIdentity }),
       ...(slot.cause === undefined ? {} : { cause: slot.cause }),
       ...(slot.state === 'STARTUP' ? { startupSettled: slot.startupSettled === true } : {}),
     }
@@ -488,6 +485,7 @@ export function createProcessRegistry({
   return {
     lifecycleSlots,
     ensureRunning,
+    ensureRunningForRoute: routeGate.ensureRunningForRoute,
     findOwningProcess,
     registrySnapshot,
     lifecycleSlotSnapshot,
