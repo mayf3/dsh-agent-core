@@ -1,5 +1,5 @@
 /**
- * @agent-core/agent-router/test/route-chain.test.js — unit tests for the
+ * @agent-core/agent-router/test/route-chain/route-chain.test.js — unit tests for the
  * unified ordered route-attempt chain executor
  * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-002..008; policy:
  * AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 CTR-003..CTR-009).
@@ -16,7 +16,7 @@ import {
   createRouteChainExecutor,
   ROUTE_HOP_FAILURE_CLASSES,
   ROUTE_STOP_REASONS,
-} from '../src/route-chain.js'
+} from '../../src/route-chain.js'
 
 const quietLog = { log() {}, warn() {}, error() {} }
 
