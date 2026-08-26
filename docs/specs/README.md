@@ -92,3 +92,16 @@ requires its presence in an implementation base that includes Scheduler V2.
 PR #60 / `AGT_CTO_AGENT_GLM53_PRIMARY_LUNA_FALLBACK_V1` 从未进入 main，定性为
 `ABANDONED_UNMERGED_CANDIDATE`，不是 active authority；PR #70 不 supersede 它。
 PR #60 必须关闭且永不 merge。
+
+Amendment 1（2026-08-26，Builtin Route Kind；proposed，Draft PR 未 merge）对
+两份 route-chain authority 各追加一个 in-place Amendment 节：引入
+`routeKind = builtin | subscription`（builtin route 的 plugin/pluginVersion =
+ABSENT/FORBIDDEN；subscription route 必填 + exact pin），把
+`CANONICAL_ROUTE_IDENTITY` 扩为七字段（routeKind + plugin-or-ABSENT/
+pluginVersion-or-ABSENT），以新证据（zai/glm-5.3 受控探针 PASS、ZAI 为
+Harness 内建 provider、无真实 dsh-zai 插件、dsh-codex fake carrier 禁止）
+关闭父 Spec Q-2 并冻结初始链 tuple（glm53 builtin + luna subscription）。
+两份 Spec 基础正文逐字保留；Amendment accepted 前，基础正文的 plugin-必填
+schema 仍是现行权威。MAX_CONFIGURED_ROUTES = 4、primary + fallbacks[]、
+STOP_CHAIN、ONE_LOGICAL_TURN、Scheduler INHERIT_AGENT_CHAIN_ONLY、
+ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN 等全部 ruling 不重开。
