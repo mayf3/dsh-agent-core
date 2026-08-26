@@ -4,12 +4,10 @@ status: proposed
 date: 2026-08-24
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
-production_apply_authority: none
-identity_execution_authority: single_bounded_round_after_acceptance_and_merge
+implementation_authority: contracts
 scope:
   - mayf3/dsh-agent-core
-  - dedicated workflow-admin Agent identity bootstrap for exactly one new Agent (agt_workflow-admin-agent / 工作流总管): one Agent Definition entry + auth-service machine identity (S1 principal + S2 client) + trusted credential store entry + durable evidence receipts
+  - dedicated workflow-admin Agent identity bootstrap for exactly one new Agent (agt_workflow-admin-agent / 工作流总管): one Agent Definition entry + auth-service machine identity (S1 principal + S2 client) + trusted credential store entry + durable evidence receipts + durable non-secret attempt ledger + safe disabled staged-identity failure terminal state (same single bounded execution round; Revision 3)
 governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities:
@@ -23,7 +21,7 @@ owners:
   - mayf3
 type: dedicated-admin-agent-identity-bootstrap-spec
 review_status: AWAITING_FRESH_FULL_REVIEW
-owner_intent_provenance: direct Owner instruction, 「身份 执行」 authoring task 2026-08-24 (Owner 决策 §0 Batch 1 全部冻结); direct Owner Revision 1 instruction 2026-08-25 (auth-service 坐标更正 + INITIAL_DEFINITION_DISABLED=true + disabled 状态语义 + activation boundary 冻结, §0 Batch 2); direct Owner current-main ingress reconciliation instruction 2026-08-25 (Notification Ingress premature-activation boundary, Revision 2)
+owner_intent_provenance: direct Owner instruction, 「身份 执行」 authoring task 2026-08-24 (Owner 决策 §0 Batch 1 全部冻结); direct Owner Revision 1 instruction 2026-08-25 (auth-service 坐标更正 + INITIAL_DEFINITION_DISABLED=true + disabled 状态语义 + activation boundary 冻结, §0 Batch 2); direct Owner current-main ingress reconciliation instruction 2026-08-25 (Notification Ingress premature-activation boundary, Revision 2); direct Owner Revision 3 instruction 2026-08-26 (governance-authority and failure-recovery closure——implementation_authority=contracts 治理字段修正 + verification mint 成功语义完整继承 + durable attempt ledger 与 S1/S2 outcome_unknown 闭合 + SAFE_DISABLED_STAGED_IDENTITY rollback + activation authority 完整冻结, §0 Batch 3)
 references:
   - docs/specs/AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1.md (accepted; present on main 73ec666 as blob df74e92759ad3083328dfd337667fc8a4ec618a0; its Part C.4 external_ref functions, Part D/D.7 Phase A order, Part G store contract, Part H secret handoff and D.5 mint classification are INHERITED and NOT modified by this Spec)
   - docs/specs/AGENT_TRUSTED_FLEET_CUTOVER_V1.md (accepted; its exact-86 roster, EXACT_ROSTER_SHA256 and frozen plan are NOT modified by this Spec)
@@ -39,20 +37,29 @@ references:
 > 一个**新的专用管理 Agent** —— `agt_workflow-admin-agent`（displayName `工作流总管`，
 > `AGENT_KIND = DEDICATED_ADMIN_AGENT`）。它是 svc-workflow 已接受产品方向
 > `SVC_WORKFLOW_PRODUCT_BOUNDARY_V3` §18 **Slice A（Dedicated Admin Agent identity）**
-> 在 dsh-agent-core 侧的 child authority：在独立 review、Owner acceptance 并合入 main
-> **之后**，授权**恰好一次**独立的「身份 执行」round，建立
+> 在 dsh-agent-core 侧的 child authority。本 Spec 是 implementation kind
+> （`implementation_authority: contracts`——治理协议 `SPEC_GOVERNANCE_V0` 唯一认可的
+> 实现授权字段形式；Revision 3 起本 frontmatter 不再携带任何治理协议未识别的
+> authority 字段）。**文档合并本身不执行任何运行时写入**
+> （`DOCS_MERGE_PERFORMS_RUNTIME_WRITE = NO`）；accepted + merge 后，本 Spec 成为
+> 下列有界写入的**合法实现权威**：必须由**另一次独立派发的「身份 执行」任务**
+> （`SEPARATE_EXECUTION_TASK_REQUIRED = YES`；无需第二份 Spec，
+> `SEPARATE_EXECUTION_SPEC_REQUIRED = NO`）在满足 §9 CTR-WA-008 冻结执行门后执行
+> **恰好一轮**，建立
 > （1）`agents.json` 中的 **1 条 Agent Definition entry**（初始 `disabled: true`，
 > 见 §0 Batch 2），
 > （2）auth-service 机器身份（S1 ownerless agent principal + S2 machine client，
 > deterministic `agentcore:v1` external_refs），
 > （3）trusted credential store entry，并
 > （4）在 `docs/evidence/` 落盘记录 **exact Principal UUID 与 exact Client ID** 的
-> durable receipts。
+> durable receipts；执行轮还必须先落盘 durable 非 secret attempt ledger
+> （CTR-WA-010），且 bootstrap 成功判据完整继承父权威 Phase A——**含 verification
+> mint 成功**（CTR-WA-005）。
 >
 > 本轮（authoring round）**只交付本文件**：不创建 Agent、Principal、Client、credential、
 > workspace、Home、Feishu Binding 或任何 Grant；不写 `agents.json`，不调用任何
 > auth-service seam，不 merge。acceptance + merge 之前
-> `IDENTITY_EXECUTION_AUTHORIZED_NOW = NO`。
+> `IDENTITY_BOOTSTRAP_EXECUTION_IN_THIS_AUTHORING_ROUND = NO`。
 >
 > **REVISION 1（2026-08-25，同一 PR 内修订轮，仍 DOCS ONLY——只改本文件）**：
 > 按 Owner 修订指令完成四项修正：(1) auth-service 坐标更正（§3——`170736e` 为
@@ -77,6 +84,28 @@ references:
 > authority。本次语义修订不得复用 Revision 1 review 结论；修订提交后必须由下一轮
 > 独立审计重新做 fresh full review，当前不得标记 Ready。
 >
+> **REVISION 3（2026-08-26，同一 PR 内 governance-authority and failure-recovery
+> closure，仍 DOCS ONLY——只改本文件）**：关闭 Revision 2 独立审计的全部 blocker：
+> (B1) authority form 修正——`implementation_authority: none → contracts`，删除
+> 治理协议未识别的 `identity_execution_authority` / `production_apply_authority`
+> 字段，冻结「docs merge 不执行运行时写入；accepted+merged 后成为有界实现权威；
+> 执行需独立任务、绑定 exact accepted revision」语义（§1 / DEC-WA-008 /
+> CTR-WA-008）；(B2) activation authority 完整冻结——exact authority ID
+> `AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1` 与 exact target-admission child
+> ID `AGENT_CORE_WORKFLOW_ADMIN_AGENT_NOTIFICATION_TARGET_ADMISSION_V1`、前置条件、
+> exact enable/reload/evidence/rollback 事务全部可独立起草，零 TBD（DEC-WA-011 /
+> CTR-WA-009 / CTR-WA-012）；(B3) 父 credential authority 成功语义完整继承——
+> verification mint 成功是 bootstrap 成功条件，mint 失败/不确定 ⇒
+> `BOOTSTRAP_RESULT = INCOMPLETE`、`IDENTITY_STATE = PARTIAL_SAFE_DISABLED`，绝不
+> 报告成功（CTR-WA-005）；(B4) S1/S2 `outcome_unknown` 闭合——durable 非 secret
+> attempt ledger + 分类决策树 + S2 secret 不可取回时 STOP 与唯一显式 rotation 恢复
+> 路径（CTR-WA-010）；(B5) rollback 可实现性——删除对不存在的 Agent Definition
+> remove seam 的依赖（OBS-WA-011），失败终态冻结为
+> `SAFE_DISABLED_STAGED_IDENTITY`（CTR-WA-011）。第 6 项 structure blocker
+> （stale scheduler registry entry）已由 current main 独立清册提交修复，本修订
+> 不触碰 `.agents/structure-registry.json`，合入 current main 后复验关闭。新增
+> CTR/ACC-WA-010..012（Contract 与 Acceptance 计数 12/12）。
+>
 > 本 Spec **不授权**：svc-workflow 权限供给（Slice C，auth-service 侧独立权威）、
 > Feishu 命令路由/Binding（Slice F）、`SVC_WORKFLOW_TRUSTED_ADMIN_AGENT_ROOT_V1`
 > designation root（Slice B，svc-workflow 仓库所有）、workspace/Home provisioning、
@@ -86,7 +115,7 @@ references:
 
 ## 0. Owner 冻结决策（frozen — 实现轮不得更改、不得重新决定）
 
-以下决策由 Owner 冻结，效力高于本 Spec 任何实现轮的裁量。两批，各自逐字转录、
+以下决策由 Owner 冻结，效力高于本 Spec 任何实现轮的裁量。三批，各自逐字转录、
 无增删：
 
 **Batch 1（authoring task 2026-08-24，「身份 执行」authoring）：**
@@ -152,6 +181,44 @@ disabled:true -> false 必须经过独立受控 activation authority；
 不得由 Slice A 身份 bootstrap 自动启用
 ```
 
+**Batch 3（Revision 3 修订指令 2026-08-26，同一 PR 内）：**
+
+```text
+IMPLEMENTATION_AUTHORITY_FORM =
+contracts（治理协议唯一认可字段；
+删除 identity_execution_authority / production_apply_authority 自创字段）
+
+DOCS_MERGE_PERFORMS_RUNTIME_WRITE =
+NO
+
+BOOTSTRAP_SUCCESS_REQUIRES_VERIFICATION_MINT =
+YES
+
+VERIFICATION_MINT_FAILED_OR_INCONCLUSIVE =
+BOOTSTRAP_INCOMPLETE
+
+ATTEMPT_LEDGER_REQUIRED =
+YES
+
+S2_SECRET_LOSS_RECOVERY =
+STOP_AND_EXPLICIT_ROTATION_RECOVERY
+
+ROLLBACK_TARGET =
+SAFE_DISABLED_STAGED_IDENTITY
+
+AGENT_DEFINITION_REMOVE_REQUIRED =
+NO
+
+ACTIVATION_AUTHORITY_ID =
+AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1
+
+TARGET_ADMISSION_AUTHORITY_ID =
+AGENT_CORE_WORKFLOW_ADMIN_AGENT_NOTIFICATION_TARGET_ADMISSION_V1
+
+THIS_BOOTSTRAP_SPEC_AUTHORIZES_ACTIVATION =
+NO
+```
+
 ---
 
 ## 1. Goal
@@ -167,40 +234,81 @@ AUTHORITY_KIND        = governing_spec (implementation kind, docs-only delivery)
 SUBJECT               = exactly one new dedicated Agent: agt_workflow-admin-agent
 THIS_ROUND            = SPEC_ONLY (single new file; no execution)
 ACTIVATION            = independent review + Owner acceptance + merge to main
-POST_ACTIVATION_GRANT = exactly one separate bounded identity-execution round
-IDENTITY_EXECUTION_AUTHORIZED_NOW = NO
-IMPLEMENTATION_AUTHORIZED_NOW      = NO
-PRODUCTION_APPLY_AUTHORIZED_NOW    = NO
+POST_MERGE_AUTHORITY  = bounded implementation authority (implementation_authority: contracts)
+IDENTITY_BOOTSTRAP_EXECUTION_IN_THIS_AUTHORING_ROUND = NO
 ```
+
+治理权威形式冻结（Revision 3，§0 Batch 3；治理协议只承认
+`implementation_authority: none | contracts`，本 Spec 不携带任何自创 authority 字段）：
+
+```text
+DOCS_MERGE_PERFORMS_RUNTIME_WRITE =
+NO
+
+ACCEPTED_AND_MERGED_SPEC_AUTHORIZES_BOUNDED_IMPLEMENTATION =
+YES
+
+SEPARATE_EXECUTION_TASK_REQUIRED =
+YES
+
+SEPARATE_EXECUTION_SPEC_REQUIRED =
+NO
+
+EXECUTION_ALLOWED_ONLY_WHEN =
+the exact accepted Spec revision is present in the implementation base;
+preflight reports IMPLEMENTATION_ALLOWED=YES;
+the execution task records exact implementation/evidence coordinates;
+Contract-by-Contract conformance is evaluated.
+
+IDENTITY_BOOTSTRAP_EXECUTION_IN_THIS_AUTHORING_ROUND =
+NO
+```
+
+也就是说：这份 Spec accepted + 合入 main 后即成为上述单次有界身份 bootstrap 的
+合法实现权威；**合并文档本身不执行任何生产写入**；实际执行必须由另一次独立
+派发的「身份 执行」任务完成，且该任务必须绑定 exact accepted Spec revision、
+implementation Base 与逐 Contract conformance record（CTR-WA-008）。
 
 「身份 执行」round 的**唯一目标产出**：
 
 ```text
+0. docs/evidence/workflow-admin-agent-bootstrap-v1/attempt-ledger.json ——
+   durable 非 secret attempt ledger，在首次外部写入前原子创建（CTR-WA-010）
 1. agents.json 新增恰好 1 条 entry：{ id: agt_workflow-admin-agent, name: 工作流总管,
    disabled: true, description: null }（CTR-WA-001；初始 disabled:true——启用另需
    独立 activation authority，CTR-WA-009）
 2. auth-service 机器身份（S1/S2 幂等 seam，deterministic external_refs，
    principal_type=agent，owner_user_id absent）（CTR-WA-002）
 3. trusted credential store entry（AGENT_CORE_CREDENTIALS_FILE，Part G 契约）（CTR-WA-004）
-4. docs/evidence/ 下 durable receipts：exact Principal UUID、exact Client ID、
-   external_refs、created/active 状态、前后 agent 计数、执行坐标（CTR-WA-006）
+4. verification mint 成功（父权威 Phase A 成功条件完整继承，CTR-WA-005）
+5. docs/evidence/ 下 durable receipts：exact Principal UUID、exact Client ID、
+   external_refs、created/active 状态、bootstrap 结果分类（SUCCESS | INCOMPLETE）、
+   前后 agent 计数、执行坐标（CTR-WA-006）
 ```
 
 ## 2. Scope and non-goals
 
-### 2.1 In scope（仅在 accepted + merged 之后的单次「身份 执行」round 内）
+### 2.1 In scope（仅在 CTR-WA-008 执行门全部满足后的单次「身份 执行」round 内）
 
+- 在首次外部写入前原子创建 durable 非 secret attempt ledger
+  （`docs/evidence/workflow-admin-agent-bootstrap-v1/attempt-ledger.json`；
+  CTR-WA-010），此后按阶段原子更新。
 - 写入**恰好一条**新 Agent Definition entry（§0 冻结字段，**初始 `disabled: true`**
   （§0 Batch 2）；deployment-side writer seam；`defaultAgentId` 不变；不触碰任何
   既有 entry）。
 - 经 auth-service 既有幂等 seam（S1 `POST /api/v1/principals` / S2
   `POST /api/v1/clients`）以 §0 冻结的 deterministic external_refs 建立 ownerless
-  agent principal 与 machine client（调用体逐字冻结于 CTR-WA-002）。
+  agent principal 与 machine client（调用体逐字冻结于 CTR-WA-002；S1/S2
+  `outcome_unknown` 按 CTR-WA-010 分类决策树闭合）。
 - 按 `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1` Phase A（D.7.1/D.7.2）执行
-  clean bootstrap，含 trusted store 写入（Part G）与 verification mint（D.5 分类）。
+  clean bootstrap，含 trusted store 写入（Part G）与 verification mint（D.5 分类）；
+  **Phase A 成功条件完整继承，不降低——verification mint 成功是本 round 报告
+  `BOOTSTRAP_RESULT = SUCCESS` 的必要条件**（CTR-WA-005）；mint 失败或不确定 ⇒
+  `BOOTSTRAP_RESULT = INCOMPLETE`、`IDENTITY_STATE = PARTIAL_SAFE_DISABLED`。
 - 落盘 identity receipts + manifest（Stage F receipt 形状；含 sha256；不含任何
-  secret 材料）。
-- 执行轮自身的 docs-only 提交（evidence 文件）。
+  secret 材料；记录 bootstrap 结果分类与 ledger attemptId）。
+- 失败/STOP 时的合法终态是 `SAFE_DISABLED_STAGED_IDENTITY`（CTR-WA-011）。
+- 执行轮自身的 docs-only 提交（evidence + ledger 文件）。
 
 ### 2.2 Explicit non-goals（本 Spec 明确不授权；任何一项都需要各自独立权威）
 
@@ -290,6 +398,9 @@ INHERITED_IN_REPO_AUTHORITY = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
     Part G store 写契约 · Part H secret handoff · D.5 verification mint 分类表
   relation = reuse（本 Spec 是该 accepted 权威对单个新 Agent 的 subject-bounded
     适用，不修改其任何冻结）
+  inherited_success_semantics (Revision 3) = Phase A clean-bootstrap 成功条件
+    完整继承、不降低——verification mint 成功属成功条件；mint 失败或按 D.5
+    不可排除 profile 类成因的 401 ⇒ BOOTSTRAP_INCOMPLETE，不是成功（CTR-WA-005）
 
 CURRENT_MAIN_INGRESS_REFERENCE (Revision 2 factual reconciliation):
   dsh-agent-core main = b3a6d4fe089c4b95bdc22df0cabd24eeb3ccb724
@@ -336,10 +447,13 @@ GOVERNANCE = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0 (accepted, current)
 - `STATE-WA-002` — 本 Spec authoring round 的 repo delta = 本文件一个新文件；
   工作树基于 `73ec666`（github/main HEAD at authoring）。Revision 1（2026-08-25）
   修订轮 delta = 仅修改本文件（同 PR 第二个 commit），基仍为 `73ec666`，不
-  rebase、不 force-push。Revision 2（2026-08-25）继续在同一 PR branch 原位修订
-  同一 proposed Spec；入口事实以 current-main ingress coordinate `b3a6d4fe` 复核，
-  repo delta 仍仅本文件，不 rebase、不 force-push。Basis: 三轮 git 状态与 PR
-  Conversation reconciliation record。
+rebase、不 force-push。Revision 2（2026-08-25）继续在同一 PR branch 原位修订
+同一 proposed Spec；入口事实以 current-main ingress coordinate `b3a6d4fe` 复核，
+repo delta 仍仅本文件，不 rebase、不 force-push。Revision 3（2026-08-26）在同一
+PR branch 原位修订同一 proposed Spec：以普通 merge 合入 current main
+`c52bd1ca2720bbea763a9fd9eb4b9069285b47ff`（无冲突），相对 current main 的净变化
+仍仅本文件，不 rebase、不 force-push。Basis: 四轮 git 状态与 PR Conversation
+reconciliation record。
 
 ## 5. Observations
 
@@ -514,6 +628,33 @@ GOVERNANCE = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0 (accepted, current)
 - Provenance: current-main 源码 + PR #67 Conversation comment
   `WORKFLOW_ADMIN_AGENT_INGRESS_RECONCILIATION`。
 
+### OBS-WA-011 — current main 的 Agent Definition writer seam 清单：无通用 enable seam，无 remove seam（Revision 3 新增核实）
+
+- Subject: `packages/agent-definition/src/config.js` 与 `src/access.js` 导出的全部
+  deployment-side writer seam。
+- Source revision: dsh-agent-core current main `c52bd1ca2720bbea763a9fd9eb4b9069285b47ff`
+  （Revision 3 合入基；含 PR #74/#76 route-chain 变更后复核——该变更不触碰
+  agent-definition writer 家族）。
+- Method: 导出符号清点与源码读取。
+- Result:
+  - 存在的 seam：`writeAgentDefinition`、`adoptAgents`、`createAgentInConfig`
+    （:253）、`updateAgentInConfig`（:279——**只允许 display 字段**，docstring
+    明言 `disabled is NOT touchable through update (use disableAgentInConfig)`，
+    且 `id` IMMUTABLE）、`disableAgentInConfig`（:312——**单向** disabled:false→true；
+    禁用当前 default 被拒绝 VALIDATION_ERROR）、`setDefaultAgentInConfig`（:341）；
+  - **不存在** `enableAgentInConfig` 或任何 disabled:true→false 的通用 writer
+    seam——`updateAgentInConfig` 显式不可触碰 `disabled`；
+  - **不存在** `removeAgentInConfig` / `deleteAgentInConfig` 或任何 Agent Definition
+    entry 删除 seam（`access.js:27` 导入清单亦无）。
+- Consequence（本 Spec 两处冻结的事实基础）：
+  1. 任何「失败后把 Agent 删除回不存在」的 rollback 要求都依赖不存在的 remove
+     seam ⇒ 本 Spec 失败终态冻结为保留 disabled entry 的
+     `SAFE_DISABLED_STAGED_IDENTITY`（CTR-WA-011）；
+  2. `disabled:true → false` 在 current main 没有任何现存可调用 seam ⇒ activation
+     authority 必须自带 exact-subject、one-time、非通用的配置事务（CAS + 原子写 +
+     reload + post-read + evidence；CTR-WA-012），不得声称有现存 enable seam 可用。
+- Provenance: 本仓库 current-main 源码（Revision 3 复核）。
+
 ## 6. Claims and assumptions
 
 ### CLM-WA-001 — 本 subject 是 Phase A clean bootstrap 候选
@@ -539,9 +680,12 @@ GOVERNANCE = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0 (accepted, current)
 - Support state: SUPPORTED
 - Supported by evidence: `EVD-WA-003`
 - Contradicted by evidence: none known
-- Uncertainty: 部署修订未在本次 authoring/revision 中现场确认（OBS-WA-007）；
-  因此本 Spec 的成功判据**不包含** token mint 200（见 CTR-WA-005）——该保守
-  posture 不因漂移收敛而降低。
+- Uncertainty: 部署修订未在本次 authoring/revision 中现场确认（OBS-WA-007）。
+  Revision 3 起，该不确定性**不再降低父权威成功条件**：verification mint 成功是
+  bootstrap 成功的必要条件（CTR-WA-005）；mint 失败或按 D.5 不可排除 profile 类
+  成因的 401 ⇒ `BOOTSTRAP_RESULT = INCOMPLETE`、
+  `IDENTITY_STATE = PARTIAL_SAFE_DISABLED`——既不默认归因 secret invalid、不触发
+  blind rotate，也不得报告成功。
 
 ### CLM-WA-004 — disabled:true 使该 Agent 在身份齐备后仍不可被任何表面启动
 
@@ -674,40 +818,120 @@ GOVERNANCE = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0 (accepted, current)
 - Decision owner: `mayf3`
 - Decision: T4 之后的任何 STOP 保留已写入的 Agent Definition entry（disabled:true
   ⇒ 任何表面不可启动；credential 未写入时 Broker 侧另 fail-closed
-  `credential_unavailable`）并如实记录。重跑时 S1 `created=false` 可确定性找回
-  **同一 principal** 并继续；但在 store entry absent 前提下，S2
-  `created=false` 表示 existing client 的 raw secret 已不可读回，MUST STOP
-  `existing_credential_resolution_required`，不得谎称 clean-bootstrap 可自动恢复。
-  该状态只能由继承权威 Phase B 的 SAME-client rotation 独立后续权威处理；本 Spec
-  与本执行轮禁止 rotation、第二个 principal/client 及 legacy
-  `machine-admin client create`。
-- Rejected alternative: 失败即删 entry 重来（多余的生产配置变更且可能制造平行身份）；
-  将 S2 `created=false` 当作可继续（响应没有 raw secret，无法合法写 store）。
+  `credential_unavailable`）并如实记录——失败终态是
+  `SAFE_DISABLED_STAGED_IDENTITY`（DEC-WA-010 / CTR-WA-011），**不删除 entry**
+  （current main 无 remove seam，OBS-WA-011；失败即删也是被否决的反模式）。重入/
+  recovery 必须先读取同一 attempt ledger（CTR-WA-010），复用同一 attemptId 与
+  同一 external_refs；S1 `created=false` 或 `outcome_unknown` 解析为 exact principal
+  external_ref PRESENT exact-match 时可确定性找回**同一 principal** 并继续；但
+  store entry absent 前提下，S2 `created=false` 或 `outcome_unknown` 解析为
+  CLIENT_PRESENT_AND_SECRET_UNAVAILABLE 表示 existing client 的 raw secret 已不可
+  读回，MUST STOP `existing_credential_resolution_required`，
+  `BOOTSTRAP_RESULT = INCOMPLETE`，不得谎称 clean-bootstrap 可自动恢复。该状态
+  只能由继承权威 Phase B 的 SAME-client rotation 独立后续权威处理（CTR-WA-010
+  冻结的唯一恢复路径）；本 Spec 与本执行轮禁止 unrecorded rotation、第二个
+  principal/client 及 legacy `machine-admin client create`。
+- Rejected alternative: 失败即删 entry 重来（依赖不存在的 remove seam 且可能制造
+  平行身份）；将 S2 `created=false` / secret 不可取回当作可继续（响应没有 raw
+  secret，无法合法写 store）；响应丢失后自动无记录 rotate。
 - Owner input remaining: none。
 
 ### DEC-WA-007 — 初始 disabled:true；启用是独立受控 activation authority 的动作
 
-- Decision owner: `mayf3`（§0 Batch 2 冻结，Revision 1 2026-08-25）
+- Decision owner: `mayf3`（§0 Batch 2 冻结，Revision 1 2026-08-25；Revision 3
+  冻结 exact authority ID）
 - Decision: T4 写入的 Definition entry 初始 `disabled: true`；身份链（Principal /
   Client / Credential / receipts）在 disabled 状态下照常完成；「身份 执行」round
   **不得**将 `disabled` 翻转为 `false`。`disabled:true → false` 的启用转换必须
-  经过**独立受控 activation authority**（单独的 accepted Spec / Owner 决策；该
-  权威须显式引用本 Spec 执行轮 receipts（exact Principal UUID / Client ID），并
-  评估 Slice B（designation root）/ Slice C（grant supply）/ Slice F（Feishu
-  路由）就绪状态，并显式评估 Notification Ingress 的 target admission 后才可授予）。
-  Slice A 身份 bootstrap 自动启用 = FORBIDDEN；Notification caller allowlist 命中与
-  body `agentId` 命中均不得被视为 activation authorization（OBS-WA-010）。
+  经过**独立受控 activation authority**，其 stable authority ID 冻结为
+  `AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1`，其 Notification target
+  admission child 冻结为
+  `AGENT_CORE_WORKFLOW_ADMIN_AGENT_NOTIFICATION_TARGET_ADMISSION_V1`（§0 Batch 3 /
+  DEC-WA-011 / CTR-WA-009 / CTR-WA-012）。activation 前置条件、exact enable
+  事务与 rollback 事务在本 Spec 完整冻结（CTR-WA-009 / CTR-WA-012），使该权威
+  可据此独立起草、零 TBD。Slice A 身份 bootstrap 自动启用 = FORBIDDEN；
+  Notification caller allowlist 命中与 body `agentId` 命中均不得被视为 activation
+  authorization（OBS-WA-010）。
 - Rejected alternative: bootstrap 完成即 enabled（原稿 `disabled: false`——Owner
   Revision 1 否决：身份准备与运行启用必须是两个独立受控步骤）；执行轮顺带启用
   （与 V3 Slice 分离 / CTR-V3-031 同构禁止）。
-- Owner input remaining: none（activation authority 的具体形态属未来独立权威；
-  「必须独立受控」本身已冻结）。
+- Owner input remaining: none。
+
+### DEC-WA-008 — 治理权威形式：contracts 字段 + docs merge 零运行时写入 + 独立执行任务（Revision 3 新增）
+
+- Decision owner: `mayf3`（§0 Batch 3 冻结）
+- Decision: 本 Spec 使用治理协议唯一认可的 `implementation_authority: contracts`
+  形式；frontmatter 不携带 `identity_execution_authority`、
+  `production_apply_authority` 或任何治理协议未识别的 authority 字段
+  （Revision 3 已删除）。冻结：`DOCS_MERGE_PERFORMS_RUNTIME_WRITE = NO`——
+  本 Spec 的 review/acceptance/merge 是文档生命周期事件，本身不触发、也不自动
+  授权任何生产写入；accepted + merged 后本 Spec 成为单次有界身份 bootstrap 的
+  合法实现权威；实际执行必须由**独立派发的执行任务**承载
+  （`SEPARATE_EXECUTION_TASK_REQUIRED = YES`），且无需也不得再建第二份 Bootstrap
+  Spec（`SEPARATE_EXECUTION_SPEC_REQUIRED = NO`——本 Spec 已是完整实现权威）。
+  执行门冻结于 CTR-WA-008。
+- Rejected alternative: 保留自创 authority 字段绕过治理（Revision 2 审计
+  AUTHORITY_FORM_REVIEW=FAIL 的根因）；「merge 后即可执行一次真实写入」的自动
+  执行语义（CONTRADICTORY，已删除）；为执行另写第二份 Bootstrap Spec（冗余，
+  DUPLICATE_AUTHORITY 风险）。
+- Owner input remaining: none。
+
+### DEC-WA-009 — Durable attempt ledger 与 S1/S2 outcome_unknown 闭合（Revision 3 新增）
+
+- Decision owner: `mayf3`（§0 Batch 3 冻结）
+- Decision: 执行轮在首次外部写入前必须原子创建 durable 非 secret attempt ledger
+  （exact path 冻结于 CTR-WA-010），绑定 exact Spec revision / Base / agentId /
+  external_refs 与 S1/S2 canonical request digest；每阶段原子替换持久化；永不记录
+  Client secret / Token / Authorization。S1/S2 响应丢失（`outcome_unknown`）时，
+  必须先经 ledger + exact external_ref 解析分类再动作（ABSENT ⇒ 同 attemptId
+  重试；PRESENT exact-match ⇒ 继续；PRESENT conflict ⇒ fail loud STOP）。S2
+  解析为 CLIENT_PRESENT_AND_SECRET_UNAVAILABLE ⇒ STOP +
+  `BOOTSTRAP_RESULT = INCOMPLETE`，唯一恢复路径是独立受控的 SAME-client
+  rotation 执行（CTR-WA-010）；本执行轮不得自动、无记录地 rotate。
+- Rejected alternative: 无 ledger 直接执行 S1/S2（审计不可恢复）；outcome_unknown
+  后换 external_ref 重来（制造平行身份）；S2 reuse 时伪造/回显旧 secret（不可能
+  合法——raw secret 一次性返回，不可读回）。
+- Owner input remaining: none。
+
+### DEC-WA-010 — Rollback 终态 = SAFE_DISABLED_STAGED_IDENTITY；零 Definition remove 依赖（Revision 3 新增）
+
+- Decision owner: `mayf3`（§0 Batch 3 冻结）
+- Decision: `AGENT_DEFINITION_REMOVE_REQUIRED = NO`（current main 无 remove seam，
+  OBS-WA-011）。失败/放弃后的合法终态冻结为 `SAFE_DISABLED_STAGED_IDENTITY`：
+  Agent Definition 保留在场且 `disabled = true`、`defaultAgentId` 不变、
+  non-routable、non-runnable、无 Binding、无 workflow Grant、无 Root activation。
+  按产生的外部状态执行收敛（credential-store entry ⇒ 父权威原子移除/reconciliation
+  路径；Client ⇒ 需要时 revoke exact Client；Principal ⇒ 需要遏制时 disable exact
+  Principal；durable audit/evidence ⇒ 永不删除）。重新执行必须读取同一 attempt
+  ledger 收敛同一 subject，不创建第二身份。
+- Rejected alternative: rollback 依赖不存在的 Definition remove seam（Revision 2
+  审计 ROLLBACK_IMPLEMENTABILITY=FAIL 的根因）；把 rollback 伪装成「数据库从未
+  发生过写入」；删除审计事实；临时复用业务 Agent 顶替。
+- Owner input remaining: none。
+
+### DEC-WA-011 — Activation authority 可独立起草：exact IDs + 前置 + 事务全部冻结（Revision 3 新增）
+
+- Decision owner: `mayf3`（§0 Batch 3 冻结）
+- Decision: `THIS_BOOTSTRAP_SPEC_AUTHORIZES_ACTIVATION = NO`——本 Spec 不授权
+  activation，但必须把 activation authority 起草所需的全部稳定输入冻结：
+  `ACTIVATION_AUTHORITY_ID = AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1`、
+  `TARGET_ADMISSION_AUTHORITY_ID =
+  AGENT_CORE_WORKFLOW_ADMIN_AGENT_NOTIFICATION_TARGET_ADMISSION_V1`、activation
+  前置条件（CTR-WA-009）、target admission child 保障、exact enable 事务与
+  rollback 事务（CTR-WA-012）。具体 wire/storage 归该 child 自己所有，但稳定
+  authority ID 与 activation 前置在本 Spec 冻结；不得留 TBD。
+- Rejected alternative: activation authority 留 TBD（Revision 2 审计
+  ACTIVATION_AUTHORITY_AUTHORABLE=NO 的根因）；把 caller allowlist
+  （svc-forum / svc-workflow）当作 target activation authority（OBS-WA-010）；
+  授权通用动态 `enable any Agent` API。
+- Owner input remaining: none。
 
 ## 9. Contracts
 
 ### CTR-WA-001 — Agent Definition 精确单条写入
 
-执行轮 MUST 经 deployment-side writer seam（`createAgentInConfig` /
+执行轮 MUST 已按 CTR-WA-010 原子创建 attempt ledger（本写入是首个外部写入），
+再经 deployment-side writer seam（`createAgentInConfig` /
 `writeAgentDefinition` 家族）向生产 `agents.json` 写入**恰好一条**新 entry：
 
 ```text
@@ -750,6 +974,10 @@ S2 只有 `created=true` 可继续接收一次性 raw secret 并写 store；S2
 NOT 使用 legacy `machine-admin client create`、直连 DB、
 `expected_principal_id`/`expected_client_id` claim 或任何非 S1/S2 路径。
 `clientId` MUST 按响应原样记录（auth 生成），MUST NOT 被预测或 hard-code。
+S1/S2 调用 MUST 先经 attempt ledger 持久化（canonical request digest；CTR-WA-010）；
+响应丢失（`outcome_unknown`）时 MUST 按 CTR-WA-010 分类决策树解析 exact
+external_ref 后再动作，MUST NOT 更换 external_ref、MUST NOT 创建第二个
+principal/client。
 
 ### CTR-WA-003 — Clean-bootstrap 前置与 STOP 语义（Phase A 继承）
 
@@ -769,14 +997,63 @@ temp + rename）→ 0600 store entry`；store 写入 MUST preserve 全部无关 
 manifest、argv、env、stdout/stderr、log、child、workspace、`agents.json`、任何 IM
 （`SECRET_IN_GIT_OR_REPORT = FORBIDDEN`；错误 detail 只允许 agentId 与 clientId）。
 
-### CTR-WA-005 — Verification mint 仅作记录与分类；成功判据不含 200
+### CTR-WA-005 — Verification mint 是成功条件；父权威 Phase A 成功语义完整继承
+
+执行轮 MUST 完整继承
+`AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1` Phase A clean-bootstrap 成功条件，
+不得降低。bootstrap 成功判据冻结为：
+
+```text
+BOOTSTRAP_SUCCESS_REQUIRES =
+1. exact disabled Agent Definition exists;
+2. S1 exact Principal resolved/created;
+3. S2 exact Client resolved/created;
+4. created/rotated secret atomically persisted;
+5. verification mint succeeds under the parent authority;
+6. exact Principal/Client/store post-state verified;
+7. durable receipts persisted.
+```
 
 执行轮 MUST 在 store 写入后执行一次 verification mint 并按 D.5 分类表记录结果：
-200 ⇒ credential 有效；400 invalid_scope（machine_grant_missing 等）⇒ credential
-层 PASS、grant 缺口如实记录（预期结果——本 Scope 零 grant）；401 ⇒ 按规则式归因
-（profile 类成因不可排除时记 (d) 证据 / INCONCLUSIVE）。本 round 的成功判据
-**不含** mint 200。任何非 200 结果 MUST NOT 触发 rotation、第二个 client/principal
-或任何恢复动作（恢复语义属 Phase B / 后续权威）。
+200 ⇒ mint 成功；400 invalid_scope（machine_grant_missing 等）⇒ credential 层
+有效、grant 缺口如实记录（预期结果——本 Scope 零 grant），但**不满足条件 5**
+（mint 未成功）⇒ `BOOTSTRAP_RESULT = INCOMPLETE`；401 ⇒ 按规则式归因（profile 类
+成因不可排除时记 (d) 证据 / INCONCLUSIVE）。冻结：
+
+```text
+VERIFICATION_MINT_FAILED_OR_INCONCLUSIVE =
+BOOTSTRAP_INCOMPLETE
+
+VERIFICATION_MINT_401_PROFILE_CLASS =
+classified under parent D.5;
+not secret-invalid by default;
+not success;
+no blind rotate;
+no parallel identity.
+
+ROOT_AUTHORING_ALLOWED_AFTER_INCOMPLETE_BOOTSTRAP =
+NO
+
+ACTIVATION_ALLOWED_AFTER_INCOMPLETE_BOOTSTRAP =
+NO
+```
+
+若身份对象已产生但 mint 未成功，执行轮 MUST 报告：
+
+```text
+IDENTITY_STATE =
+PARTIAL_SAFE_DISABLED
+
+BOOTSTRAP_RESULT =
+INCOMPLETE
+```
+
+MUST NOT 报告成功。任何非成功 mint 结果 MUST NOT 触发 blind rotation、第二个
+client/principal 或任何自动恢复动作（恢复语义属 Phase B / 后续权威；S2 secret
+不可取回场景的唯一恢复路径见 CTR-WA-010）。`INCOMPLETE` 状态下：
+`SVC_WORKFLOW_TRUSTED_ADMIN_AGENT_ROOT_V1` 的 root authoring 不被允许、activation
+不被允许（其前置含 bootstrap verification mint = PASS，CTR-WA-009）；已建立的
+身份对象按 CTR-WA-011 保持 `SAFE_DISABLED_STAGED_IDENTITY`。
 
 ### CTR-WA-006 — Durable evidence receipts（精确身份值，零 secret）
 
@@ -784,30 +1061,62 @@ manifest、argv、env、stdout/stderr、log、child、workspace、`agents.json`�
 schema：`agent_id`、`principal_external_ref`、`client_external_ref`、
 `principal_id`（exact UUID）、`client_id`（exact）、`created`、`principal_type`、
 `principal_active`、`client_active`、`recorded_at`、坐标）+ 一份 manifest（逐文件
-sha256）+ agents.json 前后计数与 sha256。receipts/manifest/report 中 MUST NOT
-出现任何 secret 材料。evidence 提交是 docs-only commit。
+sha256）+ agents.json 前后计数与 sha256。receipt/manifest/report MUST 记录
+bootstrap 结果分类（`SUCCESS` | `INCOMPLETE`；`INCOMPLETE` 时附
+`IDENTITY_STATE = PARTIAL_SAFE_DISABLED`）并绑定 attempt ledger 的 attemptId 与
+ledger 路径（CTR-WA-010）。receipts/manifest/report 中 MUST NOT 出现任何 secret
+材料。evidence + ledger 提交是 docs-only commit。
 
 ### CTR-WA-007 — 硬边界（本轮执行的动作清点为封闭集）
 
 「身份 执行」round **成功路径**的动作清单 MUST 恰为：读生产 `agents.json`、读/写
-credential store（仅目标 entry）、写一条 **disabled:true** Definition entry、调用
-S1/S2 各一次幂等 ensure、一次 verification mint、写 evidence 文件、提交 docs-only
-commit。任一冻结 STOP 条件触发时，合法动作集只能是该成功路径截至 STOP 点的前缀
-加 STOP receipt；不得为凑齐后续动作而继续。除此之外 MUST NOT 发生：任何 svc-workflow grant/MachineAccessGrant/audience-scope
+credential store（仅目标 entry）、原子创建并按阶段更新 attempt ledger
+（CTR-WA-010 的 exact path）、写一条 **disabled:true** Definition entry、调用
+S1/S2 各一次幂等 ensure（每次调用前先持久化 ledger）、一次 verification mint、
+写 evidence 文件、提交 docs-only commit。任一冻结 STOP 条件触发时，合法动作集
+只能是该成功路径截至 STOP 点的前缀加 STOP receipt 与 ledger 状态更新；不得为凑齐
+后续动作而继续。除此之外 MUST NOT 发生：任何 svc-workflow grant/MachineAccessGrant/audience-scope
 变更、任何 Feishu binding/app/tenant/conversation 配置、任何 designation root 文件、
 任何 workspace/Home/primary-workspaces.json 变更、任何 broker capability/
 Scheduler/Runtime 变更、任何 auth-service 代码或配置变更、fleet cutover 冻结值
-（exact-86 roster、`EXACT_ROSTER_SHA256`）的任何改动、以及任何
+（exact-86 roster、`EXACT_ROSTER_SHA256`）的任何改动、任何 unrecorded rotation
+（响应丢失后的恢复必须走 CTR-WA-010 冻结的分类与显式恢复路径）、以及任何
 `disabled:true → false` 的启用翻转（含经 writer seam、手改 `agents.json` 或借
 runtime reload 的任何路径；启用属独立 activation authority，CTR-WA-009）。
 
-### CTR-WA-008 — 单次有界执行轮与激活门
+### CTR-WA-008 — 治理执行门：contracts 权威 + 独立执行任务 + 单次有界执行
 
-本 Spec MUST 保持 `IDENTITY_EXECUTION_AUTHORIZED_NOW = NO` 直至：独立 review
-PASS、Owner acceptance、accepted 内容合入本仓库 main。「身份 执行」round
-MUST 恰好一次、以本 Spec 合入后的 main 为基、于执行时重新基线化（re-verify
-spec 在 main、记录当时 main HEAD、重验 CTR-WA-003 前置）。任何与冻结值/顺序/
-边界的偏差 ⇒ STOP + OWNER_DECISION，不得现场裁量。
+本 Spec 以 `implementation_authority: contracts` 为唯一实现授权形式（治理协议
+`SPEC_GOVERNANCE_V0` §2.4/§4 preflight step 8；DEC-WA-008），MUST NOT 携带或复活
+任何治理协议未识别的 authority 字段。冻结：
+
+```text
+DOCS_MERGE_PERFORMS_RUNTIME_WRITE = NO
+ACCEPTED_AND_MERGED_SPEC_AUTHORIZES_BOUNDED_IMPLEMENTATION = YES
+SEPARATE_EXECUTION_TASK_REQUIRED = YES
+SEPARATE_EXECUTION_SPEC_REQUIRED = NO
+```
+
+「身份 执行」MUST 仅在以下条件全部满足后开始：
+
+```text
+EXECUTION_ALLOWED_ONLY_WHEN =
+the exact accepted Spec revision is present in the implementation base;
+preflight reports IMPLEMENTATION_ALLOWED=YES;
+the execution task records exact implementation/evidence coordinates;
+Contract-by-Contract conformance is evaluated.
+```
+
+即：独立 review PASS、Owner acceptance、**exact accepted revision 已存在于
+implementation base**（accepted 内容合入本仓库 main，且执行 base 包含该提交）、
+preflight 报告 `IMPLEMENTATION_ALLOWED = YES`、执行任务记录 exact
+implementation/evidence 坐标（Spec revision sha、implementation base HEAD、
+evidence 目录、attempt ledger path）、并按 Contract 逐条评估 conformance。执行
+MUST 恰好一次、以包含该 accepted revision 的 main 为基、于执行时重新基线化
+（re-verify spec 在 main、记录当时 main HEAD、重验 CTR-WA-003 前置、读取既有
+attempt ledger 并复用同一 attemptId）。任何与冻结值/顺序/边界的偏差 ⇒ STOP +
+OWNER_DECISION，不得现场裁量。本 Spec 的 review/acceptance/merge 本身 MUST NOT
+触发或被表述为触发任何生产写入。
 
 ### CTR-WA-009 — Activation boundary：disabled:true → false 仅经独立受控权威
 
@@ -816,10 +1125,37 @@ spec 在 main、记录当时 main HEAD、重验 CTR-WA-003 前置）。任何与
 deployment writer seam、手改 `agents.json`、借 runtime reload、或任何其他方式。
 
 `disabled:true → false` 的启用转换 MUST 由**独立受控 activation authority**
-授权：单独的 accepted Spec / Owner 决策，且该权威 MUST 显式引用本 Spec 执行轮
-receipts（exact Principal UUID / Client ID），并评估 Slice B（designation
-root）/ Slice C（grant supply）/ Slice F（Feishu 路由）就绪状态与 Notification
-Ingress target admission 后方可授予。
+授权，其 stable authority ID 与 activation 前置在本 Spec 冻结（零 TBD，使该权威
+可据此独立起草；DEC-WA-011）：
+
+```text
+ACTIVATION_AUTHORITY_ID =
+AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1
+
+TARGET_ADMISSION_AUTHORITY_ID =
+AGENT_CORE_WORKFLOW_ADMIN_AGENT_NOTIFICATION_TARGET_ADMISSION_V1
+
+THIS_BOOTSTRAP_SPEC_AUTHORIZES_ACTIVATION =
+NO
+```
+
+activation authority 授予启用 MUST 至少满足以下前置（全部冻结）：
+
+```text
+1. exact Agent Definition exists and disabled=true
+2. exact Principal UUID receipt exists
+3. exact Client ID receipt exists
+4. bootstrap verification mint = PASS
+5. SVC_WORKFLOW_TRUSTED_ADMIN_AGENT_ROOT_V1 accepted and merged
+6. auth-service permission-supply child accepted and conformed
+7. svc-workflow scheduler/domain-admin children accepted and conformed
+8. TARGET_ADMISSION_AUTHORITY_ID accepted, merged and conformed
+```
+
+（第 4 项意味着 `BOOTSTRAP_RESULT = INCOMPLETE` 时 activation 被阻塞，
+CTR-WA-005。）activation authority MUST 显式引用本 Spec 执行轮 receipts（exact
+Principal UUID / Client ID），其 exact enable 事务与 rollback 事务的契约边界由
+CTR-WA-012 冻结。
 
 disabled 状态期间（无论身份/credential 是否已备）：Notification ingress、
 Feishu ingress、Product API、Scheduler 均不可启动该 Agent（OBS-WA-009 /
@@ -838,6 +1174,190 @@ idempotency authority 将其记录为 proven no-admission；process-registry 的
 两条路径均 MUST NOT 产生 `accepted:true`、Router delivered terminal、Agent
 process 或 Workspace/Home provisioning。
 
+### CTR-WA-010 — Durable attempt ledger 与 S1/S2 outcome_unknown 闭合
+
+执行轮 MUST 维护一份 exact non-secret attempt ledger：
+
+```text
+ATTEMPT_LEDGER_PATH =
+docs/evidence/workflow-admin-agent-bootstrap-v1/attempt-ledger.json
+```
+
+该 ledger MUST：
+
+- 在首次外部写入前原子创建（同目录 temp + rename；CTR-WA-001 引用）；
+- 使用唯一、稳定的 `attemptId`（recovery/重入复用同一 attemptId，不新建）；
+- 绑定 exact Spec revision（blob sha）、implementation Base HEAD、agentId、
+  external_refs；
+- 记录 S1/S2 canonical request digest（逐字冻结调用体的脱敏摘要）；
+- 记录阶段、时间、结果分类（success | failed | outcome_unknown | stopped）；
+- 记录 Principal UUID / Client ID（获得后）；
+- **永不记录** Client secret、Token 或 Authorization（任何形式）；
+- 每个阶段使用原子替换并持久化；
+- recovery MUST 复用同一 attemptId 和同一 external_refs。
+
+**S1 outcome_unknown**（请求已发出、响应未获得）MUST 按以下决策树闭合：
+
+```text
+S1 outcome_unknown
+→ resolve exact principal external_ref
+→ ABSENT: same request / same attempt retry
+→ PRESENT exact match: continue
+→ PRESENT conflict: fail loud / stop
+```
+
+**S2 outcome_unknown** MUST 先持久化 ledger 再调用：
+
+```text
+S2 request prepared
+→ ledger persisted
+→ S2 call
+```
+
+若 S2 响应丢失，MUST resolve exact client external_ref，分类冻结为：
+
+```text
+CLIENT_ABSENT =
+same request / same attempt retry
+
+CLIENT_PRESENT_AND_LOCAL_SECRET_ALREADY_VERIFIED =
+continue
+
+CLIENT_PRESENT_AND_SECRET_UNAVAILABLE =
+STOP
+BOOTSTRAP_RESULT = INCOMPLETE
+do not create another Client
+do not change external_ref
+do not fabricate/recover old secret
+```
+
+`CLIENT_PRESENT_AND_SECRET_UNAVAILABLE` 的唯一恢复路径冻结为：
+
+```text
+separate bounded credential-recovery execution
+under an accepted Client rotation authority
+→ rotate the exact existing Client
+→ receive one new secret
+→ atomically store it
+→ verify old secret invalid
+→ run verification mint
+→ update the same attempt ledger
+```
+
+本 Bootstrap execution MUST NOT 在响应丢失后自动、无记录地 rotate（CTR-WA-007
+封闭动作集排除 unrecorded rotation）。
+
+### CTR-WA-011 — 失败/回滚终态：SAFE_DISABLED_STAGED_IDENTITY；零 Definition remove 依赖
+
+本 Spec 及其执行轮 MUST NOT 依赖任何 Agent Definition remove seam（current main
+不存在该 seam，OBS-WA-011）。冻结：
+
+```text
+AGENT_DEFINITION_REMOVE_REQUIRED =
+NO
+
+ROLLBACK_TARGET =
+SAFE_DISABLED_STAGED_IDENTITY
+```
+
+失败后的合法终态 MUST 恰为：
+
+```text
+Agent Definition remains present
+disabled = true
+defaultAgentId unchanged
+non-routable
+non-runnable
+no Binding
+no workflow Grant
+no Root activation
+```
+
+按已产生的外部状态执行收敛：
+
+```text
+credential-store entry created
+→ parent-authority atomic removal/reconciliation path
+
+Client created
+→ revoke exact Client when rollback or compromise requires it
+
+Principal created
+→ disable exact Principal when containment requires it
+
+durable audit/evidence
+→ never deleted
+```
+
+执行轮与回滚动作 MUST NOT：删除审计事实；创建新 external_ref；临时复用业务
+Agent；把 rollback 伪装成「数据库从未发生过写入」。重新执行 MUST 读取同一
+attempt ledger（CTR-WA-010），收敛同一 subject，不创建第二身份。
+
+### CTR-WA-012 — Activation authority 可起草性：exact target-admission child 与 exact enable/rollback 事务
+
+Activation authority（`AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1`，
+CTR-WA-009）MUST 拥有独立 Notification target admission child，其 stable
+authority ID 冻结为
+`AGENT_CORE_WORKFLOW_ADMIN_AGENT_NOTIFICATION_TARGET_ADMISSION_V1`。current
+caller allowlist（`svc-forum` / `svc-workflow`，OBS-WA-010）MUST NOT 被当作
+target activation authority。target-admission child MUST 确保：
+
+```text
+body.agentId alone cannot activate an undesignated target
+exact Admin Agent admission is server-side
+disabled still overrides all admission
+revocation/disable fails closed
+no general arbitrary-Agent target allowlist is silently created
+```
+
+具体 wire/storage 由该 child 自己拥有，但其 stable authority ID 与 activation
+前置（CTR-WA-009 八项）在本 Spec 冻结。
+
+由于 current main 没有通用 enable seam（OBS-WA-011：`updateAgentInConfig` 不可
+触碰 `disabled`，无 `enableAgentInConfig`），Activation Spec MUST 拥有一个
+**exact-subject、one-time、非通用 API** 的配置事务：
+
+```text
+before:
+exact agt_workflow-admin-agent entry
+disabled=true
+
+after:
+same id/name/description
+disabled=false
+
+unchanged:
+all other Agent entries
+defaultAgentId
+file schema/version
+```
+
+事务要求冻结为：
+
+```text
+compare-and-swap on exact pre-image digest
+atomic config write
+definition.reload()
+post-read verification
+durable before/after evidence
+same-key replay = no-op
+different pre-image = conflict / fail loud
+```
+
+MUST NOT 授权通用动态 `enable any Agent` API。Activation rollback 事务 MUST：
+
+```text
+same exact subject
+disabled=false → true
+atomic write
+reload
+verify resolveAgentRef rejects
+verify Notification/Feishu/Product/Scheduler cannot admit
+persist durable evidence
+```
+
+Emergency disable 只撤权，MUST NOT 指定替代 Agent。
+
 ## 10. Acceptance
 
 ### ACC-WA-001 — Definition 精确单条写入
@@ -847,8 +1367,11 @@ process 或 Workspace/Home provisioning。
 - Expected: delta = 恰好一条新增 entry，字段逐字等于冻结值（含
   `disabled === true`）；无其他 entry/defaultAgentId 变化；无 persona/
   workspace/credential 字段
-- Required evidence: 前后 sha256、解析 diff、写入后 loader 校验输出
+- Required evidence: 前后 sha256、解析 diff、写入后 loader 校验输出、
+  attempt ledger 已存在且绑定本次 attemptId（CTR-WA-010）
 - Failure condition: 任何额外 entry 被改、字段漂移、文档不可加载
+- Negative path: 在 attempt ledger 缺席时执行本写入 ⇒ 必须被判定为违规
+  （无 ledger 的外部写入）；写入 `disabled:false` ⇒ 违规（启用越权）
 
 ### ACC-WA-002 — S1/S2 幂等身份建立
 
@@ -858,11 +1381,17 @@ process 或 Workspace/Home provisioning。
   §0；principal `status=active`；S1 `created=false` 可找回同一 principal 继续；S2
   `created=true` 才可用一次性 secret 继续，`client_id` 为 auth 生成 `mc_*`；S2
   `created=false` + store absent ⇒ STOP `existing_credential_resolution_required`，零
-  store write / mint / rotation；created 标志如实记录
+  store write / mint / rotation；created 标志如实记录；每次 S1/S2 调用前 ledger
+  已持久化 request digest，`outcome_unknown` 按 CTR-WA-010 分类闭合且 external_ref
+  不变
 - Required evidence: 成功时 receipts（`identity-*.json`）+ manifest sha256；STOP 时
-  脱敏 STOP receipt（同一 principal/client id、created 标志、零后续动作计数）
+  脱敏 STOP receipt（同一 principal/client id、created 标志、零后续动作计数）；
+  attempt ledger 阶段记录
 - Failure condition: external_ref 漂移、走 legacy/DB 路径、principal 非 active、
   client_id 被预写/断言，或 S2 `created=false` 后仍写 store / mint / rotate / 继续
+- Negative path: `outcome_unknown` 后更换 external_ref 重发 ⇒ 违规（平行身份）；
+  无 ledger 记录的 S1/S2 调用 ⇒ 违规；伪造或回显旧 secret ⇒ 违规（且不可能通过
+  mint 验证）
 
 ### ACC-WA-003 — Clean-bootstrap 负向门
 
@@ -872,63 +1401,101 @@ process 或 Workspace/Home provisioning。
   Auth 调用计数 = 0
 - Required evidence: STOP receipt（若触发）；未触发时前置检查的执行记录
 - Failure condition: 任何前置失败后仍发生 Auth 调用或 store 写入
+- Negative path: store entry 已存在却进入 S1/S2 ⇒ 违规；（c）未就绪却调用 Auth
+  ⇒ 违规；store malformed 时静默覆盖 ⇒ 违规
 
 ### ACC-WA-004 — Secret 路径与 store 契约
 
 - Contracts: `CTR-WA-004`
 - Method/environment: store 文件权限/属主检查 + 本轮全部产出物 secret 扫描
-- Expected: store entry 0600、trusted 属主；git delta 与全部报告/receipts 经
-  模式扫描无 secret 材料；无关 entry 逐字节不变
+- Expected: store entry 0600、trusted 属主；git delta 与全部报告/receipts/
+  attempt ledger 经模式扫描无 secret 材料；无关 entry 逐字节不变
 - Required evidence: `ls -l`/等价权限记录、扫描命令与结果、store 前后文档对比
 - Failure condition: secret 出现在任何产出物、权限/属主不符、无关 entry 被动
+- Negative path: secret 进入 Git、日志、stdout/stderr、workspace、聊天或报告
+  （任一通道）⇒ 必须被扫描捕获并判定违规；attempt ledger 含 Token/Authorization
+  ⇒ 违规
 
-### ACC-WA-005 — Mint 分类记录
+### ACC-WA-005 — Verification mint 是成功条件；INCOMPLETE 如实报告
 
 - Contracts: `CTR-WA-005`
-- Method/environment: 执行轮 verification mint 结果记录
-- Expected: 单次 mint、结果按 D.5 分类入 receipt；非 200 时零恢复动作
-- Required evidence: receipt 中的 mint 结果与分类字段
-- Failure condition: 触发 rotation/平行身份、或把 401 无上下文归因 secret
+- Method/environment: 执行轮 verification mint 结果记录 + bootstrap 结果分类
+  复核（对照 BOOTSTRAP_SUCCESS_REQUIRES 七项逐条判定）
+- Expected: 单次 mint、结果按 D.5 分类入 receipt；`BOOTSTRAP_RESULT = SUCCESS`
+  当且仅当七项成功条件全部满足（含 mint 成功）；mint 失败或 INCONCLUSIVE ⇒
+  receipt 记录 `BOOTSTRAP_RESULT = INCOMPLETE` +
+  `IDENTITY_STATE = PARTIAL_SAFE_DISABLED`，且零恢复动作（无 rotation、无平行
+  身份）；401 profile 类按 D.5 归因、不默认 secret-invalid
+- Required evidence: receipt 中的 mint 结果与分类字段、bootstrap 结果分类、
+  七项成功条件逐项判定记录
+- Failure condition: 触发 rotation/平行身份、把 401 无上下文归因 secret、或七项
+  未齐却报告 `SUCCESS`
+- Negative path: mint 失败（含 400 invalid_scope / 401 profile 类）却把 bootstrap
+  报告为成功 ⇒ 必须被验收拒绝；INCOMPLETE 后继续 root authoring 或 activation
+  ⇒ 违规（CTR-WA-005/009 前置阻塞）
 
 ### ACC-WA-006 — Receipts 完整性
 
 - Contracts: `CTR-WA-006`
 - Method/environment: evidence 目录 review（Stage F schema 对照）
 - Expected: exact UUID + exact Client ID 在列、manifest sha256 齐全、零 secret、
-  agents.json 前后计数在列
-- Required evidence: evidence 文件 + manifest
-- Failure condition: 精确身份值缺失、manifest 缺 sha256、出现敏感材料
+  agents.json 前后计数在列、bootstrap 结果分类（SUCCESS | INCOMPLETE）与
+  attemptId/ledger 路径绑定在列
+- Required evidence: evidence 文件 + manifest + attempt ledger 引用
+- Failure condition: 精确身份值缺失、manifest 缺 sha256、出现敏感材料、结果
+  分类或 ledger 绑定缺失
+- Negative path: INCOMPLETE 被记为 SUCCESS、或 receipt 与 ledger attemptId 不一致
+  ⇒ 违规
 
 ### ACC-WA-007 — 封闭动作清点
 
 - Contracts: `CTR-WA-007`
 - Method/environment: 执行轮命令清单与生产面 post-state 核查
-- Expected: 动作集合 ⊆ CTR-WA-007 枚举；svc-workflow grant 面、binding 面、
-  designation 面、workspace 面、fleet 冻结值零变化
+- Expected: 动作集合 ⊆ CTR-WA-007 枚举（含 ledger 原子创建/更新）；svc-workflow
+  grant 面、binding 面、designation 面、workspace 面、fleet 冻结值零变化；零
+  unrecorded rotation；identity bootstrap 未被表述/记录为 Root、Grant 或 Feishu
+  已完成
 - Required evidence: 命令清单、post-state 检查记录（如 roster sha 复算不变）
 - Failure condition: 清单外任何生产面变更
+- Negative path: identity bootstrap 被写成 Root/Grant/Feishu 已完成 ⇒ 违规
+  （三项 §0 Batch 1 = NO）；响应丢失后自动 rotate 而无 ledger 分类 ⇒ 违规
 
-### ACC-WA-008 — Authoring 边界与 post-merge 单次执行激活门
+### ACC-WA-008 — 治理权威形式与执行门
 
 - Contracts: `CTR-WA-008`
 - Method/environment:
-  - authoring/revision 侧：本 PR repo delta + 校验工具；
-  - future execution 侧：执行开始前读取 accepted Spec 的 main 包含关系、记录
-    execution base HEAD、核对此前 execution receipt/attempt ledger、重跑
-    CTR-WA-003 前置与冻结值/顺序/边界检查。
+  - authoring/revision 侧：本 PR repo delta + frontmatter 权威字段检查 + 校验工具；
+  - future execution 侧：执行开始前 preflight（exact accepted revision 在
+    implementation base 的包含关系、`IMPLEMENTATION_ALLOWED=YES` 报告、执行坐标
+    记录、Contract-by-Contract conformance 清单、既有 attempt ledger 读取与
+    attemptId 复用、CTR-WA-003 前置重跑）。
 - Expected:
+  - frontmatter 恰为 `implementation_authority: contracts`，无
+    `identity_execution_authority` / `production_apply_authority` 或任何治理协议
+    未识别的 authority 字段；
+  - 本 Spec 及其 review/acceptance/merge 均不执行、不触发、不表述为触发任何
+    生产写入（`DOCS_MERGE_PERFORMS_RUNTIME_WRITE = NO`）；合并的是文档权威，
+    执行由独立任务承载（`SEPARATE_EXECUTION_TASK_REQUIRED = YES`）；
   - authoring/revision delta = 本文件一个新文件；`git diff --check` PASS；
-    `python3 .agents/tools/verify_governance.py --target .` PASS；
-    `npm run verify:structure` 退出码 0（既有 warnings 除外）；
-  - execution 仅在 independent review PASS + Owner acceptance + accepted Spec 已合入
-    main 后开始；base 是当时 main；此前成功/进行中的同 authority execution = 0；
-    re-baseline 与 CTR-WA-003 前置 PASS 后才进入 T4；执行恰好一次。
-- Required evidence: 本修订 commit 与校验输出；future execution 的 accepted-main
-  ancestry/HEAD record、attempt-ledger 零记录、re-baseline checklist、CTR-WA-003
-  前置输出与唯一 execution receipt。
+    `python3 .agents/tools/verify_governance.py --target . --require-accepted` PASS；
+    `npm run verify:structure -- --base github/main` PASS；
+  - execution 仅在 CTR-WA-008 `EXECUTION_ALLOWED_ONLY_WHEN` 四条件全满足后开始；
+    base 是包含 exact accepted revision 的当时 main；此前成功/进行中的同
+    authority execution = 0；执行恰好一次。
+- Required evidence: 本修订 commit 与校验输出；future execution 的 preflight
+  报告（`IMPLEMENTATION_ALLOWED=YES`）、accepted-main ancestry/HEAD record、
+  执行坐标（Spec revision sha + base HEAD + evidence/ledger path）、
+  Contract-by-Contract conformance record、attempt-ledger 复用记录、re-baseline
+  checklist 与唯一 execution receipt。
 - Failure condition: 携带任何非本文件 delta 或校验失败；或 future execution 在
-  review/acceptance/merge 前开始、base 非当时 main、未 re-baseline、已有成功/进行中
-  execution、重复执行，或冻结值/顺序/边界偏差后未 STOP + OWNER_DECISION。
+  review/acceptance/merge 或 preflight 四条件缺一时开始、base 不含 exact
+  accepted revision、未 re-baseline、已有成功/进行中 execution、重复执行，或
+  冻结值/顺序/边界偏差后未 STOP + OWNER_DECISION。
+- Negative path: 以下三种构造都必须被验收拒绝——(1) Spec 声称
+  `implementation_authority: none` 却执行真实生产写入；(2) 使用自创 authority
+  字段（如 `identity_execution_authority` / `production_apply_authority`）绕过
+  治理；(3) 声称 docs merge 自动执行生产写入（含「合并后可执行一次真实写入」
+  的自动化语义）。
 
 ### ACC-WA-009 — Activation boundary 未被越过
 
@@ -939,19 +1506,94 @@ process 或 Workspace/Home provisioning。
 - Expected: 执行轮结束时该 entry `disabled === true`；全程无任何启用动作（无
   writer-seam enable、无手改 `agents.json`、无借 reload 启用）；source path 证明
   caller allowlist + body `agentId` 后仍经 disabled gate，且 gate 位于
-  ensureRunning/spawn 前；报告显式记录 activation boundary 引用（后续启用须独立
-  受控 activation authority）
+  ensureRunning/spawn 前；报告显式记录 activation boundary 引用
+  （`ACTIVATION_AUTHORITY_ID = AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1`；
+  `THIS_BOOTSTRAP_SPEC_AUTHORIZES_ACTIVATION = NO`）与八项 activation 前置
 - Required evidence: agents.json 后快照解析输出（disabled 字段在列）、命令清单、
   current-main source coordinate 与 OBS-WA-010 静态核验记录
 - Failure condition: `disabled` 被翻转、存在任何启用路径的调用，或 source path
   允许 authorized Notification caller + body `agentId` 在 activation 前绕过
   disabled gate admission / delivery / process spawn / provisioning
+- Negative path: caller allowlist 命中 + body `agentId` 命中被当作 activation
+  authorization ⇒ 违规；bootstrap/INCOMPLETE 状态下任何 activation 授予 ⇒ 违规
+  （第 4 项前置 mint=PASS 未满足）
+
+### ACC-WA-010 — Attempt ledger 与 S1/S2 outcome_unknown 闭合
+
+- Contracts: `CTR-WA-010`
+- Method/environment: attempt ledger 文件审查（时序、attemptId 稳定性、绑定字段、
+  secret 扫描）+ S1/S2 `outcome_unknown` 分类路径推演
+- Expected: ledger 在首次外部写入前原子创建；attemptId 唯一且 recovery 复用；
+  绑定 exact Spec revision / Base / agentId / external_refs；含 S1/S2 canonical
+  request digest、阶段、时间、结果分类、Principal UUID / Client ID；零 secret/
+  Token/Authorization；S1 `outcome_unknown` → external_ref 解析三分支（ABSENT 重试 /
+  PRESENT exact-match 继续 / PRESENT conflict STOP）；S2 响应丢失 → 三分类
+  （CLIENT_ABSENT 同 attempt 重试 / 已验证继续 / SECRET_UNAVAILABLE STOP+
+  INCOMPLETE）；STOP 后零第二 Client、零 external_ref 变更、零伪造 secret
+- Required evidence: attempt-ledger.json（含阶段历史）、S1/S2 调用时序记录、
+  STOP/incomplete receipt（若触发）
+- Failure condition: ledger 缺失/迟到（首个外部写入后才创建）、attemptId 或
+  external_refs 在 recovery 中漂移、ledger 含 secret 材料、任一 outcome_unknown
+  未按冻结分类闭合
+- Negative path: 以下构造都必须被验收拒绝——S2 response lost 后创建第二个
+  Client；S2 reuse 时伪造或回显旧 secret；无 attempt ledger 执行 S1/S2；
+  `outcome_unknown` 后更换 external_ref。唯一合法的 secret 恢复是 CTR-WA-010
+  冻结的独立受控 rotation 执行（rotate exact Client → 新 secret 原子入 store →
+  验证旧 secret 失效 → verification mint → 更新同一 ledger）。
+
+### ACC-WA-011 — 安全失败终态：SAFE_DISABLED_STAGED_IDENTITY
+
+- Contracts: `CTR-WA-011`
+- Method/environment: 失败/STOP 后生产面 post-state 核查（agents.json 解析、
+  Router/Scheduler 静态门、store/auth 状态、evidence 在场性）
+- Expected: Agent Definition 仍在场且 `disabled = true`；`defaultAgentId` 不变；
+  non-routable（resolveAgentRef 拒绝）/ non-runnable（AGENT_DISABLED）；无
+  Binding、无 workflow Grant、无 Root activation；credential-store entry 按
+  父权威路径收敛；Client/Principal 仅在需要时 revoke/disable exact 对象；
+  durable audit/evidence 全部保留；重新执行读取同一 ledger 收敛同一 subject
+- Required evidence: post-state 快照（agents.json + store + auth 对象）、失败
+  receipt、ledger attemptId 复用记录
+- Failure condition: rollback 依赖或要求删除 Agent Definition entry；失败后
+  Agent 变为 routable/runnable；defaultAgentId 变化；审计/证据被删；重入创建
+  第二身份
+- Negative path: 以下构造都必须被验收拒绝——rollback 要求删除 Definition；
+  rollback 后 Agent 变为 routable；删除审计事实；把 rollback 伪装成「数据库
+  从未发生过写入」；临时复用业务 Agent 顶替；重入时新 attemptId/新
+  external_ref 制造第二身份。
+
+### ACC-WA-012 — Activation authority 可起草性与 exact 事务
+
+- Contracts: `CTR-WA-012`
+- Method/environment: 对本 Spec 文本的静态审查（activation authority 是否零 TBD
+  可独立起草）+ 对 activation 执行的 future 核查项冻结
+- Expected: `ACTIVATION_AUTHORITY_ID` /
+  `TARGET_ADMISSION_AUTHORITY_ID` 在本 Spec 冻结；target-admission child 五项
+  保障在列；exact enable 事务（exact before/after/unchanged 状态 + CAS on
+  pre-image digest + 原子写 + `definition.reload()` + post-read + durable
+  before/after evidence + same-key replay no-op + different pre-image conflict）
+  与 rollback 事务（exact subject + reload + resolveAgentRef 拒绝 + 四表面
+  admission 验证 + durable evidence）全部冻结；无通用 `enable any Agent` API
+  授权
+- Required evidence: 本 Spec CTR-WA-009/012 冻结块；activation 执行轮的
+  before/after evidence、pre-image digest、reload 与 post-read 记录（future）
+- Failure condition: activation authority 含 TBD 或缺 exact target-admission
+  child；声称使用现存通用 enable seam（不存在，OBS-WA-011）；activation 修改
+  其他 Agent 或 `defaultAgentId`；缺 reload/post-read/evidence；replay 重复写；
+  rollback 后仍可投递
+- Negative path: 以下构造都必须被验收拒绝——activation authority 无 exact
+  target-admission child；caller allowlist 被当成 target authority；无现存
+  enable seam 却声称 activation 可执行；activation 修改其他 Agent 或
+  defaultAgentId；activation 无 reload / post-read / evidence；activation replay
+  重复写；activation rollback 后仍能投递；emergency disable 指定替代 Agent。
 
 **覆盖对照**：CTR-WA-001→ACC-WA-001 · 002→002 · 003→003 · 004→004 · 005→005 ·
-006→006 · 007→007 · 008→008 · 009→009（无 uncovered contract；ACC-001..009
+006→006 · 007→007 · 008→008 · 009→009 · 010→010 · 011→011 · 012→012
+（CONTRACT_COUNT = 12；CONTRACTS_WITH_ACCEPTANCE = 12；ACCEPTANCE_COUNT = 12；
+无 uncovered contract、无 declaration-only / coverage-table-only 边；ACC-001..012
 中涉及执行面的证据均属未来「身份 执行」round，属 runtime/manual evidence 类，
 理由：其 subject 在 authoring round 中依法不存在；ACC-WA-008 同时覆盖本轮
-spec-only delta 与 future execution gate 两侧）。
+spec-only delta 与 future execution gate 两侧；ACC-WA-012 覆盖本 Spec 文本冻结
+与 future activation 执行两侧）。
 
 ## 11. Alternatives and disposition
 
@@ -976,6 +1618,24 @@ spec-only delta 与 future execution gate 两侧）。
   否决——Owner Revision 1 冻结（§0 Batch 2）：身份准备与运行启用必须是两个
   独立受控步骤；activation boundary 由独立受控 activation authority 持有
   （DEC-WA-007 / CTR-WA-009）。
+- **自创 authority 字段 / docs-merge 自动执行语义**（Revision 3 否决）：
+  `identity_execution_authority` / `production_apply_authority` 不是治理协议
+  认可的授权形式；「合并后自动执行一次真实写入」与 authority 字段自相矛盾
+  （Revision 2 审计 AUTHORITY_FORM_REVIEW=FAIL / POST_MERGE_RUNTIME_WRITE_
+  AUTHORITY=CONTRADICTORY）——改为 `implementation_authority: contracts` +
+  `DOCS_MERGE_PERFORMS_RUNTIME_WRITE = NO` + 独立执行任务（DEC-WA-008 /
+  CTR-WA-008）。
+- **降低父权威成功条件（mint 不作成功判据）**（Revision 3 否决）：完整继承
+  Phase A 成功条件；mint 失败/不确定 ⇒ `BOOTSTRAP_INCOMPLETE` +
+  `PARTIAL_SAFE_DISABLED`，绝不报成功（CTR-WA-005）。
+- **响应丢失后自动 rotate / 无 ledger 执行**（Revision 3 否决）：S1/S2
+  `outcome_unknown` 必须先经 attempt ledger + external_ref 解析分类；secret
+  不可取回 ⇒ STOP，唯一恢复是独立受控 SAME-client rotation 执行（CTR-WA-010）。
+- **删除 Definition 式 rollback**（Revision 3 否决）：current main 无 remove seam
+  （OBS-WA-011）；安全终态是保留 disabled entry 的
+  `SAFE_DISABLED_STAGED_IDENTITY`（CTR-WA-011）。
+- **通用 `enable any Agent` API**（Revision 3 否决）：activation 只允许
+  exact-subject、one-time、CAS 保护的事务（CTR-WA-012）。
 
 ## 12. Migration, compatibility, and rollback
 
@@ -985,12 +1645,20 @@ spec-only delta 与 future execution gate 两侧）。
   `disabled: true` definition gate 证明 activation 前 non-routable / non-runnable；
   无 credential、无 grant、无 Feishu Binding 仅是各自表面的附加 fail-closed
   边界，不能替代 target activation gate。不触碰 fleet 冻结值。
-- **执行中断**：T4 后 STOP ⇒ 保留惰性 entry + STOP receipt（DEC-WA-006）；重入按
-  S1/S2 幂等找回同一身份。
-- **回滚（若 Owner 决定放弃该身份）**：按 credential spec Part J fail-closed 顺序
-  ——先移除 store entry（本地即刻 fail-closed），再 revoke Auth client（外部、
-  幂等），再 disable/remove Definition entry（既有 seam）；全程记录 durable
-  receipt。回滚本身是新的运维动作，需在回滚 receipt 中引用本 Spec 并记录理由。
+- **执行中断**：T4 后 STOP ⇒ 保留惰性 entry + STOP receipt（DEC-WA-006）+
+  ledger 状态更新（CTR-WA-010）；重入先读同一 ledger、复用同一 attemptId，按
+  S1/S2 幂等与 outcome_unknown 分类找回同一身份。
+- **回滚（若 Owner 决定放弃该身份；Revision 3 重写）**：回滚目标冻结为
+  `SAFE_DISABLED_STAGED_IDENTITY`（CTR-WA-011）——**不删除 Agent Definition
+  entry**（current main 无 remove seam，OBS-WA-011；entry 保持 disabled:true 即
+  non-routable/non-runnable，留场无害且可审计）。按已产生的外部状态收敛：
+  credential-store entry ⇒ 经父权威（credential spec Part G/J）原子移除/
+  reconciliation 路径；Client ⇒ 需要时 revoke exact Client（外部、幂等）；
+  Principal ⇒ 需要遏制时 disable exact Principal；durable audit/evidence/ledger
+  ⇒ 永不删除。全程记录 durable receipt，回滚 receipt 需引用本 Spec 并记录理由；
+  不得删除审计事实、不得创建新 external_ref、不得临时复用业务 Agent、不得把
+  rollback 伪装成「数据库从未发生过写入」。重新执行读取同一 attempt ledger
+  收敛同一 subject。
 - **启用路径（非回滚方向）**：`disabled:true → false` 不在本 Spec 权限内——
   独立受控 activation authority（CTR-WA-009）；回滚（移除）与启用（翻转
   disabled）是两个方向相反、各自独立的权威动作。
@@ -1011,10 +1679,14 @@ DUPLICATE_AUTHORITY_RISK = NONE（OBS-WA-004 零命中）
 ```
 
 非规范跟进（不改变本 Spec 语义，均由各自权威持有）：Slice B/C/F 的 child
-authority；独立受控 activation authority 的建立（须引用本 Spec 执行轮 receipts
-并评估 Slice 就绪状态，CTR-WA-009）；部署面实际 auth-service 修订的现场确认
-（OBS-WA-007 Revision 1：main 已收敛，但部署修订仍未现场观测；本 Spec 以
-D.5 分类 + 成功判据不含 mint 200 免疫）。
+authority；独立受控 activation authority
+`AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1` 与其 target-admission child
+`AGENT_CORE_WORKFLOW_ADMIN_AGENT_NOTIFICATION_TARGET_ADMISSION_V1` 的起草
+（其稳定 ID 与前置已在本 Spec 冻结，CTR-WA-009 / CTR-WA-012；起草时须引用
+本 Spec 执行轮 receipts）；`CLIENT_PRESENT_AND_SECRET_UNAVAILABLE` 场景的
+Client rotation recovery 权威（CTR-WA-010 冻结路径）；部署面实际 auth-service
+修订的现场确认（OBS-WA-007：main 已收敛，但部署修订仍未现场观测——现场确认
+失败只影响 bootstrap 结果分类为 INCOMPLETE，不降低成功条件，CTR-WA-005）。
 
 ## 14. Final Output（authoring round 冻结输出）
 
@@ -1024,15 +1696,20 @@ AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1 = PROPOSED (docs-only, single new f
 ADMIN_AGENT_ID = agt_workflow-admin-agent
 ADMIN_AGENT_DISPLAY_NAME = 工作流总管
 AGENT_KIND = DEDICATED_ADMIN_AGENT
-IDENTITY_EXECUTION_ORDER = T1 re-baseline → T2 agents.json 读+前后记录 →
-  T3 store 读+完整校验+目标 entry 判定（exists ⇒ STOP 零 Auth 调用）→
-  T4 写恰好一条 disabled:true Definition entry（CTR-WA-001）→ T5 (c) 前置检查
-  （未就绪 ⇒ fail-loud，Auth=0）→ T6 S1（body 冻结；created=false 可继续同一
-  principal）→ T7 S2（body 冻结；created=true 的一次性 secret→内存；
-  created=false ⇒ STOP existing_credential_resolution_required）→ T8 Part G 原子
-  store 写 + 单次 verification mint（D.5 分类
-  记录）→ T9 receipts+manifest（exact UUID/Client ID；零 secret）+ docs-only
-  commit
+IDENTITY_EXECUTION_ORDER = T1 re-baseline（preflight：exact accepted revision
+  在 implementation base、IMPLEMENTATION_ALLOWED=YES、执行坐标记录、读同一
+  attempt ledger）→ T2 agents.json 读+前后记录 → T3 store 读+完整校验+目标
+  entry 判定（exists ⇒ STOP 零 Auth 调用）→ T3.5 attempt ledger 原子创建/复用
+  （首次外部写入前；CTR-WA-010）→ T4 写恰好一条 disabled:true Definition entry
+  （CTR-WA-001）→ T5 (c) 前置检查（未就绪 ⇒ fail-loud，Auth=0）→ T6 S1（body
+  冻结；ledger 先持久化 request digest；created=false 可继续同一 principal；
+  outcome_unknown 按 CTR-WA-010 分类）→ T7 S2（body 冻结；ledger 先持久化；
+  created=true 的一次性 secret→内存；created=false / secret 不可取回 ⇒ STOP
+  existing_credential_resolution_required）→ T8 Part G 原子 store 写 + 单次
+  verification mint（D.5 分类；**mint 成功属成功条件**——失败/不确定 ⇒
+  BOOTSTRAP_RESULT = INCOMPLETE、IDENTITY_STATE = PARTIAL_SAFE_DISABLED，
+  CTR-WA-005）→ T9 receipts+manifest（exact UUID/Client ID；bootstrap 结果分类
+  SUCCESS | INCOMPLETE；零 secret）+ docs-only commit
 
 REUSE (EXISTING/BUSINESS/CANARY/SECURITY_CEO_CTO) = FORBIDDEN
 PRINCIPAL_EXTERNAL_REF = agentcore:v1:principal:agt_workflow-admin-agent
@@ -1045,8 +1722,9 @@ WORKSPACE_HOME_PROVISIONING_IN_THIS_SCOPE = NO
 SECRET_IN_GIT_OR_REPORT = FORBIDDEN
 INITIAL_DEFINITION_DISABLED = true
 ACTIVATION_TRANSITION_AUTHORITY = INDEPENDENT_CONTROLLED_ONLY
-  （disabled:true -> false 必须经过独立受控 activation authority；
-    Slice A 身份 bootstrap 自动启用 = FORBIDDEN；CTR-WA-009）
+  （disabled:true -> false 必须经过独立受控 activation authority =
+    AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1；
+    Slice A 身份 bootstrap 自动启用 = FORBIDDEN；CTR-WA-009 / CTR-WA-012）
 DISABLED_STATE_SEMANTICS = Identity/Principal/Client/Credential 可准备；
   Notification/Feishu/Product API/Scheduler 均不能启动该 Agent；
   零 spawn、零 Workspace/Home 自动创建（OBS-WA-009）
@@ -1093,8 +1771,46 @@ REVISION 2 (2026-08-25) current-main ingress reconciliation：
     RUNTIME_WRITE = NO · AGENT_START_OR_RESTART = NO · MERGE = NO
   FRESH_FULL_REVIEW_REQUIRED = YES（不得复用 Revision 1 review）
 
-激活路径 = 独立 review PASS + Owner acceptance + merge to main ⇒ 恰好一次
-  「身份 执行」round（CTR-WA-008）；在其之前 IDENTITY_EXECUTION_AUTHORIZED_NOW = NO
+REVISION 3 (2026-08-26) governance-authority and failure-recovery closure：
+  REVISION_3_CLASS = GOVERNANCE_AUTHORITY_AND_FAILURE_RECOVERY_CLOSURE
+  RECONCILED_MAIN = c52bd1ca2720bbea763a9fd9eb4b9069285b47ff（普通 merge，无冲突）
+  IMPLEMENTATION_AUTHORITY = contracts（治理协议唯一认可字段）
+  UNRECOGNIZED_AUTHORITY_FIELDS_REMOVED = YES
+    （identity_execution_authority / production_apply_authority 已从 frontmatter 删除）
+  DOCS_MERGE_PERFORMS_RUNTIME_WRITE = NO
+  SEPARATE_EXECUTION_TASK_REQUIRED = YES
+  SEPARATE_EXECUTION_SPEC_REQUIRED = NO
+  EXECUTION_ALLOWED_ONLY_WHEN = exact accepted revision in implementation base ·
+    preflight IMPLEMENTATION_ALLOWED=YES · execution task records exact
+    implementation/evidence coordinates · Contract-by-Contract conformance
+  BOOTSTRAP_SUCCESS_REQUIRES_VERIFICATION_MINT = YES（父权威 Phase A 成功条件完整继承）
+  VERIFICATION_MINT_FAILED_OR_INCONCLUSIVE = BOOTSTRAP_INCOMPLETE
+    （IDENTITY_STATE = PARTIAL_SAFE_DISABLED；不报成功；不 blind rotate）
+  ATTEMPT_LEDGER_REQUIRED = YES
+    （docs/evidence/workflow-admin-agent-bootstrap-v1/attempt-ledger.json）
+  S2_OUTCOME_UNKNOWN_CLOSED = YES
+    （CLIENT_ABSENT 重试 / 已验证继续 / SECRET_UNAVAILABLE STOP+
+    INCOMPLETE；唯一恢复 = 独立受控 SAME-client rotation 执行）
+  ROLLBACK_TARGET = SAFE_DISABLED_STAGED_IDENTITY
+  AGENT_DEFINITION_REMOVE_REQUIRED = NO（current main 无 remove seam，OBS-WA-011）
+  ACTIVATION_AUTHORITY_ID = AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1
+  TARGET_ADMISSION_AUTHORITY_ID =
+    AGENT_CORE_WORKFLOW_ADMIN_AGENT_NOTIFICATION_TARGET_ADMISSION_V1
+  THIS_BOOTSTRAP_SPEC_AUTHORIZES_ACTIVATION = NO（八项 activation 前置已冻结）
+  CONTRACT_COUNT = 12 · CONTRACTS_WITH_ACCEPTANCE = 12 · ACCEPTANCE_COUNT = 12
+  OWNER_PRODUCT_DIRECTION_CHANGED = NO
+  EXACT_AGENT_SUBJECT_CHANGED = NO
+  SLICE_BOUNDARY_EXPANDED = NO
+  SECURITY_BOUNDARY_STRENGTHENED = YES
+  REVISION_3_ROUND = DOCS ONLY · SAME SPEC · SAME DRAFT PR ·
+    PRODUCT_CODE_CHANGE = NONE · TEST_CHANGE = NONE · SCRIPT_CHANGE = NONE ·
+    STRUCTURE_REGISTRY_CHANGE = NO · RUNTIME_WRITE = NO ·
+    AGENT_START_OR_RESTART = NO · MERGE = NO
+  FRESH_FULL_REVIEW_REQUIRED = YES（不得复用 Revision 1/2 review）
+
+权威激活路径 = 独立 review PASS + Owner acceptance + merge to main ⇒ 本 Spec
+  成为单次有界身份 bootstrap 的合法实现权威（docs merge 本身零运行时写入）⇒
+  另行独立派发的「身份 执行」任务在 CTR-WA-008 执行门全部满足后恰好执行一次
 NEXT_TASK = 独立 review（身份 审计；必须重新做 full review，不得沿用旧语义
   审计）→ Owner acceptance → merge
 ```
