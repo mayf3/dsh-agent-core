@@ -6,7 +6,13 @@ acceptance_audit: PASS
 acceptance_audit_blocker_count: 0
 owner_decision_max_configured_routes: 4
 amendment_1: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1_AMENDMENT_1_BUILTIN_ROUTE_KIND
-amendment_1_status: proposed（awaiting independent review；Draft PR，未 merge）
+amendment_1_status: accepted
+amendment_1_accepted_by: mayf3
+amendment_1_accepted_date: 2026-08-27
+amendment_1_reviewed_head: 8b76909c33dfc39693c6f8e760eb1a29c80d0727
+amendment_1_review_verdict: PASS
+amendment_1_blocker_count: 0
+amendment_1_normative_body_change: NONE
 date: 2026-08-25
 type: implementation-spec (SPEC ONLY — 本轮只冻结授权边界与配置 schema；不实现、不配置、不部署)
 spec_kind: implementation
@@ -44,12 +50,17 @@ references:
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 — CTO Agent 有序可配置路由链（ordered configurable route chain）
 
-> **Amendment 1（2026-08-26，Builtin Route Kind；proposed）**：文末
+> **Amendment 1（2026-08-26，Builtin Route Kind；accepted）**：文末
 > 「Amendment 1」节引入 `routeKind = builtin | subscription`（builtin route
 > 的 plugin/pluginVersion = ABSENT/FORBIDDEN），显式 supersede 基础正文中
 > 「每 route 必填 plugin/pluginVersion」的 schema 条款并关闭 Q-2；其余全部
 > 冻结 ruling 原样不变。该 Amendment accepted 前，基础正文仍是现行权威。
 > 基础正文（§1–§15）保持历史原样，不作改写。
+> Acceptance finalize 2026-08-27（链路 内建路由采纳执行）：accepted_by =
+> mayf3 · reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727 ·
+> 链路 内建路由审计 = PASS · READY_FOR_ACCEPTANCE = YES · BLOCKER_COUNT = 0 ·
+> NORMATIVE_BODY_CHANGE = NONE（lifecycle-only；与 child authority
+> `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1` Amendment 1 同一事务）。
 
 > SPEC_STATUS = **accepted**（mechanical acceptance finalize 2026-08-25 ·
 > accepted_reviewed_head = ee13cb224660416c9044203610b93cb8f13873bb ·
@@ -893,11 +904,15 @@ NEXT_TASK = 链路 采纳审计
 
 ---
 
-## Amendment 1（2026-08-26）— Builtin Route Kind（routeKind = builtin | subscription）
+## Amendment 1（2026-08-26）— Builtin Route Kind（routeKind = builtin | subscription；accepted）
 
-> AMENDMENT_STATUS = **proposed**（authoring 2026-08-26，任务「链路 内建路由修订」；
-> awaiting independent review；Draft PR，不 merge、不改产品代码、不写配置、
-> 不配置 Credential、不触碰 production）。
+> AMENDMENT_STATUS = **accepted**（authoring 2026-08-26，任务「链路 内建路由修订」；
+> acceptance finalize 2026-08-27，任务「链路 内建路由采纳执行」：
+> accepted_by = mayf3 · reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727 ·
+> review_verdict = PASS · blocker_count = 0 · READY_FOR_ACCEPTANCE = YES ·
+> normative_body_change = NONE（lifecycle-only 状态翻转与 provenance 记录；
+> A1.0–A1.8 normative 内容逐字保留）；Draft PR，不 merge、不改产品代码、
+> 不写配置、不配置 Credential、不触碰 production）。
 > **Amendment 形式依据**：`.agents/README.md` standing order 6（「scope 需要
 > 澄清/纠正但方向未变，走 AMEND」）+ 本 Spec 自身冻结的变更路径（DEC-008
 > 「后续变更走本 Spec 自身 amendment」、CTR-004「分类修订须走本 Spec
@@ -1182,4 +1197,49 @@ DEPLOYMENT = NONE
 MERGE = NO（Draft PR）
 
 NEXT_TASK = 链路 内建路由审计
+```
+
+### A1.9 Final Output — Amendment 1 Acceptance finalize（2026-08-27；链路 内建路由采纳执行轮填写）
+
+```text
+TASK_NAME = 链路 内建路由采纳执行
+TASK_STATUS = ACCEPTANCE_TRANSACTION_COMPLETE（lifecycle-only）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
+AMENDMENT_ID = AMENDMENT_1_BUILTIN_ROUTE_KIND
+amendment_status = proposed -> accepted
+accepted_by = mayf3
+reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727
+review_verdict = PASS
+blocker_count = 0
+READY_FOR_ACCEPTANCE = YES（链路 内建路由审计轮结论）
+normative_body_change = NONE
+
+TRANSACTION（lifecycle-only，单 docs-only commit；Amendment 节 normative
+内容零改动——A1.0–A1.8 与基础正文 §1–§15 逐字保留，含 proposed 阶段
+条件句与 authoring 轮 Final Output）：
+  status mirrors = frontmatter amendment_1_* + 文头镜像 + Amendment 节
+  标题与 AMENDMENT_STATUS + 本节 provenance；与 child authority
+  AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 Amendment 1 同一事务
+
+PRESERVED（逐字保持，本轮零改动）：
+  routeKind = builtin | subscription（closed enum）
+  builtin: plugin/pluginVersion = ABSENT / FORBIDDEN
+  subscription: plugin/pluginVersion = required + exact pin
+  CANONICAL_ROUTE_IDENTITY = 七字段（routeKind 参与）
+  production_apply_authority = none
+  Q_2_STATUS = CLOSED（A1.4）；Q_3_STATUS = OPEN
+  MAX_CONFIGURED_ROUTES = 4；primary + fallbacks[]；STOP_CHAIN；
+  ONE_LOGICAL_TURN；INHERIT_AGENT_CHAIN_ONLY；fleet 隔离；pin 值不变
+
+PR_LIFECYCLE = PR #77 保持 OPEN（Draft；MERGE = NO；merge 决策不在本轮
+  授权内）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE = NO
+
+NEXT_TASK = 链路 内建路由采纳审计
 ```
