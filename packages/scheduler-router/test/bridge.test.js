@@ -20,14 +20,24 @@ function fakeProc({ reply = 'ok-reply', turnResult = null, turnError = null, tur
   }
 }
 
-function fakeRouter({ proc, ensureError = null, ensured = [] } = {}) {
+/**
+ * The bridge contract target: the Router's PUBLISHED chain seam. The fake
+ * keeps the fake-proc turn engine and mirrors the executor's dispatch
+ * position (onDispatch exactly once, right before the first attempt's turn).
+ */
+function fakeRouter({ proc, ensureError = null, ensured = [], seen = [], onArgs = null } = {}) {
   return {
-    ensureRunning: async (agentId) => {
+    runTurnWithRouteChain: async (agentId, args = {}) => {
       ensured.push(agentId)
+      seen.push({ agentId, ...args })
+      if (typeof onArgs === 'function') onArgs({ agentId, ...args })
       if (ensureError) throw ensureError
-      return proc
+      const opts = args.opts ?? {}
+      opts.onDispatch?.()
+      return proc.turn(args.sessionId, args.message, opts, args.deadlineMs)
     },
     ensured,
+    seen,
   }
 }
 
@@ -156,7 +166,7 @@ test('invoker: definition validation rejects an unknown agent as error outcome',
   const outcome = await invokeAgent({ agentId: 'nope', sessionId: 's', message: 'hi' })
   assert.equal(outcome.status, 'error')
   assert.match(outcome.error, /not found/)
-  assert.equal(router.ensured.length, 0, 'ensureRunning must not be called for unknown agents')
+  assert.equal(router.ensured.length, 0, 'the chain seam must not be called for unknown agents')
 })
 
 test('invoker: an aborted signal is recorded on the call log', async () => {
@@ -222,7 +232,7 @@ test('deliver: feishu.reply failure propagates -> not-delivered', async () => {
   await assert.rejects(() => deliver({ job, result: { status: 'ok' }, text: 'x' }), /chat not found/)
 })
 
-test('invoker: a DISABLED agent is rejected BEFORE ensureRunning (runnable-agent semantics)', async () => {
+test('invoker: a DISABLED agent is rejected BEFORE the chain seam (runnable-agent semantics)', async () => {
   const proc = fakeProc()
   const router = fakeRouter({ proc })
   const definition = {
@@ -232,6 +242,66 @@ test('invoker: a DISABLED agent is rejected BEFORE ensureRunning (runnable-agent
   const outcome = await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi' })
   assert.equal(outcome.status, 'error')
   assert.match(outcome.error, /disabled/)
-  assert.equal(router.ensured.length, 0, 'ensureRunning must not be called for a disabled agent')
+  assert.equal(router.ensured.length, 0, 'the chain seam must not be called for a disabled agent')
   assert.equal(invokeAgent.calls[0].outcome.status, 'error')
+})
+
+test('CTR-IMPL-002: the bridge calls ONLY the published runTurnWithRouteChain seam (no ensureRunning)', async () => {
+  const router = fakeRouter({ proc: fakeProc() })
+  assert.equal(typeof router.runTurnWithRouteChain, 'function')
+  assert.equal(router.ensureRunning, undefined, 'the bridge must not touch per-process registry handles')
+  const invokeAgent = createRouterInvoker(router)
+  await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi' })
+  assert.equal(router.seen.length, 1)
+})
+
+test('DEC-IMPL-005: an explicit request.model selects STRICT_CHAIN_MODE; absent model inherits the agent chain', async () => {
+  const router = fakeRouter({ proc: fakeProc() })
+  const invokeAgent = createRouterInvoker(router)
+  await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi', model: 'glm-5.3' })
+  assert.equal(router.seen[0].strictReason, 'explicit_model_strict')
+  await invokeAgent({ agentId: 'agent-x', sessionId: 's2', message: 'hi' })
+  assert.equal(router.seen[1].strictReason, undefined, 'no explicit model -> the agent chain applies unmodified')
+})
+
+test('CTR-IMPL-005: onStart fires EXACTLY once at the first dispatched attempt and drives `started`', async () => {
+  let onStartCalls = 0
+  let dispatchBeforeTurn = false
+  const proc = {
+    pid: 9,
+    turn: async () => ({ reply: 'ok' }),
+  }
+  const router = {
+    runTurnWithRouteChain: async (agentId, args) => {
+      // Simulate an internal multi-attempt chain: attempt 1 fails proven
+      // no-admission BEFORE dispatch (onDispatch is NOT called for it);
+      // attempt 2 dispatches and succeeds.
+      args.opts.onDispatch()
+      const result = await proc.turn(args.sessionId, args.message, args.opts)
+      dispatchBeforeTurn = onStartCalls === 1
+      return result
+    },
+  }
+  const invokeAgent = createRouterInvoker(router)
+  const outcome = await invokeAgent({
+    agentId: 'agent-x', sessionId: 's', message: 'hi',
+    onStart: () => { onStartCalls += 1 },
+  })
+  assert.equal(outcome.status, 'ok')
+  assert.equal(onStartCalls, 1, 'onStart exactly once across the whole multi-attempt chain')
+  assert.equal(dispatchBeforeTurn, true)
+})
+
+test('CTR-IMPL-005: a pre-start rejection (no attempt ever dispatched) keeps started:false', async () => {
+  const spawnFailure = Object.assign(
+    new Error('spawn failed without child for agent agent-x: ENOENT'),
+    { code: 'AGENT_PROCESS_SPAWN_FAILED', startupFailureStage: 'spawn' },
+  )
+  const router = {
+    runTurnWithRouteChain: async () => { throw spawnFailure },
+  }
+  const invokeAgent = createRouterInvoker(router)
+  const outcome = await invokeAgent({ agentId: 'agent-x', sessionId: 's', message: 'hi' })
+  assert.equal(outcome.status, 'error')
+  assert.equal(outcome.started, false, 'proven pre-start rejection (C-004) — the chain never dispatched a turn')
 })

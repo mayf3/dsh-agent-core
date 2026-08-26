@@ -25,14 +25,16 @@ import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation
  * @param {object} deps.workspaceBootstrap - workspace-bootstrap service.
  * @param {object} deps.store - BindingStore (fresh-session mapping table).
  * @param {object} deps.reconciliationStore - the Router reconciliation store.
- * @param {function} deps.ensureRunning - registry find-or-start.
+ * @param {object} deps.routeChain - the unified route-attempt chain executor
+ *   (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-002): both entries
+ *   below call the SAME seam — no entry-local chain logic exists.
  * @param {function} deps.resolveAgentRef - Agent Definition ref resolver.
  * @param {function} deps.resolveChannelConversation - first-contact resolve.
  * @param {function} deps.resolveEffectiveWorkspace - Binding workspace rule.
  */
 export function createIngressDelivery({
   log, feishu, workspaceBootstrap, store, reconciliationStore,
-  ensureRunning, resolveAgentRef, resolveChannelConversation, resolveEffectiveWorkspace,
+  routeChain, resolveAgentRef, resolveChannelConversation, resolveEffectiveWorkspace,
 }) {
   /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
@@ -83,14 +85,20 @@ export function createIngressDelivery({
       }
       // CLAUSE-PROC-BOUNDED rule 8: capacity precheck before spawn/write.
       reconciliationStore.assertMintCapacity(binding.activeAgentId)
-      const proc = await ensureRunning(binding.activeAgentId)
-      const turnResult = await proc.turn(binding.activeSessionId, ingress.text ?? '', {
-        // The turn belongs to this ChannelConversation: the DSH switch tool
-        // inside the agent switches exactly this Binding.
-        bindingContext: channelConversation.id,
-        // The session's effective workspace cwd (per-session, NOT the
-        // process-level cwd — one Agent stays one process across workspaces).
-        cwd: workspacePath,
+      // Unified route-attempt seam (CTR-IMPL-002): the ordered route chain,
+      // per-attempt journal and STOP_CHAIN policy all live in the executor —
+      // this entry owns only the channel/binding resolution around it.
+      const turnResult = await routeChain.runTurnWithRouteChain(binding.activeAgentId, {
+        sessionId: binding.activeSessionId,
+        message: ingress.text ?? '',
+        opts: {
+          // The turn belongs to this ChannelConversation: the DSH switch tool
+          // inside the agent switches exactly this Binding.
+          bindingContext: channelConversation.id,
+          // The session's effective workspace cwd (per-session, NOT the
+          // process-level cwd — one Agent stays one process across workspaces).
+          cwd: workspacePath,
+        },
       })
       // C-010 closed envelope. `outcome_unknown` is NOT an ordinary failure:
       // the turn may still be running — surface a structured timeout error
@@ -111,7 +119,7 @@ export function createIngressDelivery({
         )
       }
       const reply = turnResult?.reply ?? ''
-      log.log(`agent ${binding.activeAgentId} (pid ${proc.pid}) replied: ${(reply ?? '').slice(0, 80)}`)
+      log.log(`agent ${binding.activeAgentId} (pid ${turnResult.pid}) replied: ${(reply ?? '').slice(0, 80)}`)
       // Feishu reply is the FEISHU entry's transport half; non-feishu
       // surfaces (mobile Product API) return the reply to their own caller.
       if (feishu !== undefined && isFeishuEntry) {
@@ -124,7 +132,7 @@ export function createIngressDelivery({
         reply,
         agentId: binding.activeAgentId,
         sessionId: binding.activeSessionId,
-        pid: proc.pid,
+        pid: turnResult.pid,
         ...(turnResult?.status === undefined ? {} : { status: turnResult.status }),
         ...(turnResult?.reconciliationHandle === undefined ? {} : { reconciliationHandle: turnResult.reconciliationHandle }),
         ...(turnResult?.evidence === undefined ? {} : { evidence: turnResult.evidence }),
@@ -220,16 +228,22 @@ export function createIngressDelivery({
           return id
         })).sessionId
     const started = Date.now()
-    const proc = await ensureRunning(agent.id)
     // AGENT_CORE_BINDING_WORKSPACE_V1: Delivery V0 has no ChannelConversation
     // and therefore no Binding — the Default Workspace Rule applies
     // mechanically (agent default workspace), passed as the per-session cwd
     // exactly like the turn path (R1/R2/R3 enforced in the demo-server seam).
     const workspacePath = workspaceBootstrap.resolveWorkspace(agent.id)
+    // Unified route-attempt seam (CTR-IMPL-002), admission variant: hop only
+    // on proven-no-admission failures; `accepted: true` (inbox accept) ends
+    // the chain — anything after it is in the STOP_CHAIN domain.
     // callerCorrelation: the Delivery V0 requestId becomes the exact
     // secondary index (occurrenceId/runId absent) so callers can restore the
     // reconciliationHandle after losing their in-memory reference (C-010).
-    const receipt = await proc.deliver(sessionId, message, { cwd: workspacePath, callerCorrelation: { requestId } })
+    const receipt = await routeChain.admitWithRouteChain(agent.id, {
+      sessionId,
+      message,
+      opts: { cwd: workspacePath, callerCorrelation: { requestId } },
+    })
     deliveries.push({
       requestId,
       agentId: agent.id,
