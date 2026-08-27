@@ -117,8 +117,12 @@ if [ -n "${BAK:-}" ]; then
   HARNESS_STAMP="$(git -C "$HARNESS_SRC" rev-parse HEAD 2>/dev/null)$(git -C "$HARNESS_SRC" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
   if [ -n "$HARNESS_STAMP" ] && [ -f "$BAK/harness/.source-stamp" ] \
      && [ "$(cat "$BAK/harness/.source-stamp" 2>/dev/null)" = "$HARNESS_STAMP" ]; then
+    rmdir "$TRUSTED_ROOT/harness"
     mv "$BAK/harness" "$TRUSTED_ROOT/harness"
-    mv "$BAK/.cache" "$TRUSTED_ROOT/.cache" 2>/dev/null || true
+    if [ -d "$BAK/.cache" ]; then
+      rmdir "$TRUSTED_ROOT/.cache"
+      mv "$BAK/.cache" "$TRUSTED_ROOT/.cache"
+    fi
     REUSE_HARNESS=1
     echo "  harness closure REUSED from $BAK (source commit unchanged — tar+pnpm skipped)"
   fi
