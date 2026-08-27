@@ -25,6 +25,8 @@ export const SELF_SERVICE_ERROR_CODES = {
   ACCESS_DENIED: 'access_denied',
   JOB_NOT_FOUND: 'job_not_found',
   VALIDATION_ERROR: 'validation_error',
+  MUTATION_OUTCOME_UNKNOWN: 'mutation_outcome_unknown',
+  INTERNAL_ERROR: 'internal_error',
 }
 
 const MANAGE_ANY_SCOPE = 'scheduler.manage:any'
@@ -63,7 +65,14 @@ function currentConversationDestination(context) {
 
 function definitionDigest(job) {
   if (job === undefined || job === null) return undefined
-  const { state, ...definition } = cloneJob(job)
+  const definition = cloneJob(job)
+  // Control operations return toPublicJob(value). Strip that public projection
+  // exactly as we strip stored `state`, leaving the persisted definition bytes.
+  delete definition.state
+  for (const key of [
+    'nextRunAtMs', 'lastRunAtMs', 'lastStatus', 'lastRunStatus', 'lastDurationMs',
+    'lastDeliveryStatus', 'lastError', 'consecutiveErrors',
+  ]) delete definition[key]
   return `sha256:${createHash('sha256').update(canonicalJSON(definition)).digest('hex')}`
 }
 
@@ -103,7 +112,7 @@ function normalizedSchedule(schedule) {
 }
 
 function committedResult(job, auditStatus) {
-  const nextRunAtMs = job.state?.nextRunAtMs
+  const nextRunAtMs = job.state?.nextRunAtMs ?? job.nextRunAtMs
   const destination = job.delivery?.mode === 'announce'
     ? { channel: job.delivery.channel, to: job.delivery.to }
     : null
@@ -179,6 +188,34 @@ function validationFailure(error) {
   )
 }
 
+function mutationFailure(error) {
+  if (error?.code === 'SELF_SERVICE_ACCESS_DENIED') {
+    return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, 'job is not visible to the trusted caller')
+  }
+  if (error instanceof TypeError || error?.code === 'RESTORE_GATE_CLOSED') return validationFailure(error)
+  if (error?.mutationOutcome === 'not_committed') {
+    return err(SELF_SERVICE_ERROR_CODES.INTERNAL_ERROR, 'scheduler mutation failed before commit')
+  }
+  if (/^unknown job id:/u.test(error?.message ?? '')) {
+    return err(SELF_SERVICE_ERROR_CODES.JOB_NOT_FOUND, 'job no longer exists')
+  }
+  // Once a control operation enters the JobStore mutation authority, an I/O,
+  // process, or transport failure may occur after atomic rename. Never retry
+  // or mislabel that ambiguity as validation failure.
+  return err(
+    SELF_SERVICE_ERROR_CODES.MUTATION_OUTCOME_UNKNOWN,
+    'scheduler mutation outcome is unknown; inspect current state before any manual retry',
+  )
+}
+
+function ownershipGuard(callerAgentId, allowAny) {
+  return (current) => {
+    if (!allowAny && current.agentId !== callerAgentId) {
+      throw Object.assign(new Error('job ownership changed before mutation'), { code: 'SELF_SERVICE_ACCESS_DENIED' })
+    }
+  }
+}
+
 /**
  * @param {object} opts
  * @param {import('./store.js').JobStore} opts.store
@@ -229,10 +266,11 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
     const doc = await store.loadDoc({ force: true })
     const job = doc.jobs.find((candidate) => candidate.id === jobId)
     if (job === undefined) return { error: err(SELF_SERVICE_ERROR_CODES.JOB_NOT_FOUND, `no visible job with id ${jobId}`) }
-    if (job.agentId !== caller && !(await requireAdmin())) {
+    const allowAny = job.agentId !== caller ? await requireAdmin() : false
+    if (job.agentId !== caller && !allowAny) {
       return { error: err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, `no visible job with id ${jobId}`) }
     }
-    return { job, doc }
+    return { job, doc, allowAny }
   }
 
   const handlers = {
@@ -268,18 +306,22 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             ...(args.auto_retry === true ? { retry: { auto: true } } : {}),
           }, { nowMs })
         } catch (error) {
-          return validationFailure(error)
+          if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
+            created = toPublicJob(error.committedValue)
+          } else {
+            return mutationFailure(error)
+          }
         }
-        const doc = await store.loadDoc({ force: true })
-        const stored = doc.jobs.find((job) => job.id === created.id)
+        // The control op's returned value is the exact committed projection;
+        // do not perform a second fallible/racy read before the audit append.
         const auditStatus = await appendAudit('create', {
           jobId: created.id,
           operatorAgentId: caller,
-          targetAgentId: stored.agentId,
-          after: definitionDigest(stored),
+          targetAgentId: created.agentId,
+          after: definitionDigest(created),
           nowMs,
         })
-        return { ok: true, result: committedResult(stored, auditStatus) }
+        return { ok: true, result: committedResult(created, auditStatus) }
       },
 
       async list(args, context) {
@@ -349,21 +391,26 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         const before = definitionDigest(scoped.job)
         let updated
         try {
-          updated = await updateJobOp(store, args.job_id, patch, { nowMs })
+          updated = await updateJobOp(store, args.job_id, patch, {
+            nowMs,
+            assertJob: ownershipGuard(caller, scoped.allowAny),
+          })
         } catch (error) {
-          return validationFailure(error)
+          if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
+            updated = toPublicJob(error.committedValue)
+          } else {
+            return mutationFailure(error)
+          }
         }
-        const doc = await store.loadDoc({ force: true })
-        const stored = doc.jobs.find((job) => job.id === updated.id)
         const auditStatus = await appendAudit('update', {
           jobId: updated.id,
           operatorAgentId: caller,
-          targetAgentId: stored.agentId,
+          targetAgentId: updated.agentId,
           before,
-          after: definitionDigest(stored),
+          after: definitionDigest(updated),
           nowMs,
         })
-        return { ok: true, result: committedResult(stored, auditStatus) }
+        return { ok: true, result: committedResult(updated, auditStatus) }
       },
 
       async enable(args, context) {
@@ -383,9 +430,11 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         const nowMs = Date.now()
         const before = definitionDigest(scoped.job)
         try {
-          await deleteJobOp(store, args.job_id)
+          await deleteJobOp(store, args.job_id, {
+            assertJob: ownershipGuard(caller, scoped.allowAny),
+          })
         } catch (error) {
-          return validationFailure(error)
+          if (error?.mutationOutcome !== 'committed') return mutationFailure(error)
         }
         const auditStatus = await appendAudit('remove', {
           jobId: args.job_id,
@@ -409,27 +458,32 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
     const before = definitionDigest(scoped.job)
     let updated
     try {
-      updated = await controlOp(store, args.job_id, { nowMs })
+      updated = await controlOp(store, args.job_id, {
+        nowMs,
+        assertJob: ownershipGuard(caller, scoped.allowAny),
+      })
     } catch (error) {
-      return validationFailure(error)
+      if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
+        updated = toPublicJob(error.committedValue)
+      } else {
+        return mutationFailure(error)
+      }
     }
-    const doc = await store.loadDoc({ force: true })
-    const stored = doc.jobs.find((job) => job.id === updated.id)
     const auditStatus = await appendAudit(operation, {
       jobId: updated.id,
       operatorAgentId: caller,
-      targetAgentId: stored.agentId,
+      targetAgentId: updated.agentId,
       before,
-      after: definitionDigest(stored),
+      after: definitionDigest(updated),
       nowMs,
     })
     return {
       ok: true,
       result: {
-        jobId: stored.id,
-        enabled: stored.enabled,
-        nextRunAt: Number.isFinite(stored.state?.nextRunAtMs)
-          ? new Date(stored.state.nextRunAtMs).toISOString()
+        jobId: updated.id,
+        enabled: updated.enabled,
+        nextRunAt: Number.isFinite(updated.nextRunAtMs)
+          ? new Date(updated.nextRunAtMs).toISOString()
           : null,
         auditStatus,
       },

@@ -99,6 +99,7 @@ export function createBrokerGateway({
     return handlers[manifest.id]?.[operation]
   }
 
+  const schedulerMutations = new Set(['create', 'update', 'enable', 'disable', 'remove'])
   const schedulerContextFields = [
     'callerAgentId', 'processGeneration', 'turnExecutionId',
     'channelNamespace', 'channelConversationId', 'feishuChatId',
@@ -179,7 +180,9 @@ export function createBrokerGateway({
     }
 
     let trustedContext = Object.freeze({ ...context, agentId, callerAgentId: agentId })
-    let localArgs = call?.args ?? {}
+    // Scheduler's exact object-root contract rejects absent/null args; older
+    // manifests retain their historical empty-object default.
+    let localArgs = manifest.id === 'scheduler' ? call?.args : (call?.args ?? {})
     if (manifest.id === 'scheduler') {
       // This is the authoritative boundary: a child can bypass its own tool
       // mapper and call parent RPC directly, so repeat exact validation here
@@ -255,7 +258,13 @@ export function createBrokerGateway({
         return await localHandler(localArgs, trustedContext)
       } catch (error) {
         log(`[broker-gateway] local capability ${manifest.id}.${operation} failed: ${error?.message ?? error}`)
-        return { ok: false, error: { code: 'internal_error', detail: error?.message ?? 'local capability failure' } }
+        const uncertainMutation = manifest.id === 'scheduler' && schedulerMutations.has(operation)
+        return {
+          ok: false,
+          error: uncertainMutation
+            ? { code: 'mutation_outcome_unknown', detail: 'scheduler mutation outcome is unknown; inspect current state before any manual retry' }
+            : { code: 'internal_error', detail: error?.message ?? 'local capability failure' },
+        }
       }
     }
 

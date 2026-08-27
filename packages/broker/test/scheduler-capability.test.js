@@ -103,6 +103,24 @@ test('all seven valid actions relay locally and action is removed from business 
   assert.deepEqual(calls[0].args, { name: 'daily', schedule_kind: 'every', every_ms: 60_000, message: 'work' })
 })
 
+test('mutation relay loss is outcome-unknown with zero automatic retry', async () => {
+  let attempts = 0
+  const definition = schedulerDefinition(async () => {
+    attempts += 1
+    throw new Error('response channel lost after possible commit')
+  })
+  for (const action of ['create', 'update', 'enable', 'disable', 'remove']) {
+    const out = await definition.execute(validCalls[action])
+    assert.equal(out.ok, false)
+    assert.equal(out.error.code, 'mutation_outcome_unknown')
+  }
+  assert.equal(attempts, 5)
+  const read = await definition.execute(validCalls.list)
+  assert.equal(read.ok, false)
+  assert.equal(read.error.code, 'invalid_arguments')
+  assert.equal(attempts, 6)
+})
+
 test('closed action validation rejects unknown, cross-action, nested, and identity fields before relay', async () => {
   let relayCalls = 0
   const definition = schedulerDefinition(async () => {
@@ -188,12 +206,15 @@ test('gateway repeats authoritative validation before credential or local handle
     credentialsFile: '/definitely/not/read',
     localHandlers: { scheduler: { list: async () => { handlerCalls += 1 } } },
   })
-  const out = await gateway.execute(
+  for (const call of [
     { capabilityId: 'scheduler', operation: 'list', args: { callerAgentId: 'forged' } },
-    trustedContext(),
-  )
-  assert.equal(out.ok, false)
-  assert.equal(out.error.code, 'invalid_arguments')
+    { capabilityId: 'scheduler', operation: 'list', args: null },
+    { capabilityId: 'scheduler', operation: 'list' },
+  ]) {
+    const out = await gateway.execute(call, trustedContext())
+    assert.equal(out.ok, false)
+    assert.equal(out.error.code, 'invalid_arguments')
+  }
   assert.equal(handlerCalls, 0)
 })
 
@@ -226,6 +247,20 @@ test('gateway maps unified actions and flattens Router ingress context for local
   assert.deepEqual(seen[0].context, trustedContext())
   assert.equal(Object.hasOwn(seen[0].context, 'ingressContext'), false)
   assert.equal(Object.hasOwn(seen[0].args, 'callerAgentId'), false)
+})
+
+test('gateway classifies an uncaught mutation-handler failure as outcome unknown', async (t) => {
+  let calls = 0
+  const gateway = await gatewayRig(t, {
+    scheduler: { create: async () => { calls += 1; throw new Error('post-commit/pre-response fault') } },
+  })
+  const { action: _action, ...businessArgs } = validCalls.create
+  const out = await gateway.execute({
+    capabilityId: 'scheduler', operation: 'create', args: businessArgs,
+  }, routerGatewayContext())
+  assert.equal(out.ok, false)
+  assert.equal(out.error.code, 'mutation_outcome_unknown')
+  assert.equal(calls, 1)
 })
 
 test('gateway rejects missing/mismatched trusted identity and turn context before handlers', async (t) => {

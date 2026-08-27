@@ -49,9 +49,10 @@ export async function createJobOp(store, input, { nowMs = Date.now() } = {}) {
  * bumps `scheduleRevision` (D-007 §5.2): existing occurrences stay bound to
  * their creation revision; future occurrences mint in the new space.
  */
-export async function updateJobOp(store, id, patch, { nowMs = Date.now() } = {}) {
+export async function updateJobOp(store, id, patch, { nowMs = Date.now(), assertJob } = {}) {
   const { value } = await store.mutateDoc((latest) => {
     const current = findJob(latest.jobs, id)
+    if (typeof assertJob === 'function') assertJob(current)
     if (current.migrationRestoreBlocked === true
       && ((Object.prototype.hasOwnProperty.call(patch, 'migrationRestoreBlocked')
         && patch.migrationRestoreBlocked !== true) || patch.enabled === true)) {
@@ -84,9 +85,10 @@ export async function updateJobOp(store, id, patch, { nowMs = Date.now() } = {})
 }
 
 /** enable only restores FUTURE schedule eligibility (D-007 §12.3): it never clears a fence, never replays history. */
-export async function enableJobOp(store, id, { nowMs = Date.now() } = {}) {
+export async function enableJobOp(store, id, { nowMs = Date.now(), assertJob } = {}) {
   const { value } = await store.mutateDoc((latest) => {
     const job = findJob(latest.jobs, id)
+    if (typeof assertJob === 'function') assertJob(job)
     if (job.migrationRestoreBlocked === true) {
       throw Object.assign(new Error(`job ${id} restore gate is closed`), { code: 'RESTORE_GATE_CLOSED' })
     }
@@ -100,9 +102,10 @@ export async function enableJobOp(store, id, { nowMs = Date.now() } = {}) {
 }
 
 /** disable blocks future occurrence minting; existing occurrence evidence and fences are untouched. */
-export async function disableJobOp(store, id, { nowMs = Date.now() } = {}) {
+export async function disableJobOp(store, id, { nowMs = Date.now(), assertJob } = {}) {
   const { value } = await store.mutateDoc((latest) => {
     const job = findJob(latest.jobs, id)
+    if (typeof assertJob === 'function') assertJob(job)
     job.enabled = false
     job.updatedAtMs = nowMs
     job.state = deriveJobStateSummary(job, latest.occurrences, nowMs)
@@ -112,9 +115,10 @@ export async function disableJobOp(store, id, { nowMs = Date.now() } = {}) {
 }
 
 /** delete removes ONLY the definition — occurrence/run evidence always persists (D-007 §12.3). */
-export async function deleteJobOp(store, id) {
+export async function deleteJobOp(store, id, { assertJob } = {}) {
   await store.mutateDoc((latest) => {
     const job = findJob(latest.jobs, id)
+    if (typeof assertJob === 'function') assertJob(job)
     latest.jobs.splice(latest.jobs.indexOf(job), 1)
   })
   return true

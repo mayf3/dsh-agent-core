@@ -38,6 +38,8 @@
  */
 export const BROKER_RPC_METHOD = 'agent-core/broker'
 
+const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove'])
+
 /**
  * Build per-operation relay handlers for one HTTP capability manifest.
  *
@@ -76,9 +78,12 @@ export function createRelayHandlers(manifest, requestFn) {
           args,
         })
       } catch (err) {
+        const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
         return {
-          errorCode: 'invalid_arguments',
-          detail: `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
+          errorCode: uncertainMutation ? 'mutation_outcome_unknown' : 'invalid_arguments',
+          detail: uncertainMutation
+            ? 'scheduler mutation response was lost; inspect current state before any manual retry'
+            : `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
         }
       }
       const parent = envelope && envelope.ok === true ? envelope.result : undefined
