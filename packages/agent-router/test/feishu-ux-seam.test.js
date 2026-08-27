@@ -144,25 +144,24 @@ test('UX-SEAM-3: the deterministic FAILURE receipt call is byte-preserved — tw
   assert.equal(target.kind, 'reply')
 })
 
-test('UX-SEAM-4: Router source delta is confined to the single success call site', async () => {
-  const { execFileSync } = await import('node:child_process')
-  // git diff vs base main confined to authorized surfaces
-  const sourcePath = 'packages/agent-router/src/ingress-delivery.js'
-  const diff = execFileSync('git', ['diff', 'origin/main', '--', sourcePath], {
-    cwd: new URL('../../..', import.meta.url).pathname,
-    encoding: 'utf8',
-  }).toString()
-  const removed = diff.split('\n').filter((line) => line.startsWith('-') && !line.startsWith('---'))
-  assert.deepEqual(removed, [
-    '-        await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)',
-  ], 'the ONLY removed line in Router product code is the old success call')
-  const added = diff.split('\n').filter((line) => line.startsWith('+') && !line.startsWith('+++'))
-  assert.deepEqual(added, [
-    "+        await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply, { ux: { rendering: 'markdown', autoMentionTriggerSender: true } })",
-  ], 'the ONLY added line in Router product code is the approved UX intent call')
-  const otherRouterFiles = execFileSync('git', ['diff', '--name-only', 'origin/main', '--', 'packages/agent-router/src/'], {
-    cwd: new URL('../../..', import.meta.url).pathname,
-    encoding: 'utf8',
-  }).toString().trim()
-  assert.equal(otherRouterFiles, sourcePath, 'no other Router source file changes')
+test('UX-SEAM-4: Router source keeps the frozen UX call shapes (main-stable structural check)', async () => {
+  const { readFileSync } = await import('node:fs')
+  // The original UX-SEAM-4 froze the PR-branch git delta (exactly one
+  // removed/added line vs then-main); that assertion self-breaks once merged
+  // (empty diff on main) and again under any later authorized call-site
+  // change. The main-stable form below keeps the SAME invariant: exactly one
+  // success call site carrying exactly the D-U1 approved intent, and a
+  // two-argument deterministic failure receipt (UX-SEAM-1/2/3 cover the
+  // behavior).
+  const source = readFileSync(new URL('../src/ingress-delivery.js', import.meta.url), 'utf8')
+  const replyCallLines = source.split('\n').filter((line) => line.includes('await feishu.reply('))
+  const successCalls = replyCallLines.filter((line) => line.includes('), reply,'))
+  assert.equal(successCalls.length, 1, 'exactly one success reply call site')
+  assert.ok(
+    successCalls[0].includes("{ ux: { rendering: 'markdown', autoMentionTriggerSender: true } }"),
+    'the success call carries EXACTLY the approved UX intent object',
+  )
+  const failureCalls = replyCallLines.filter((line) => line.includes('delivery failed'))
+  assert.equal(failureCalls.length, 1, 'exactly one failure receipt call site')
+  assert.ok(!failureCalls[0].includes('{ ux'), 'the failure receipt passes exactly (target, text) — no UX opts')
 })
