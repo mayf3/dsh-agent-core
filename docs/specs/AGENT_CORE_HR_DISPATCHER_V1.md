@@ -14,7 +14,14 @@ revision: r3（2026-08-27 修订：按 OWNER_RULING = DEDICATED_SYSTEM_AGENT_MOD
   （DUAL_GLOBAL_READER_MODEL：dispatcher 与 HR 主身份各获 GLOBAL_WORKFLOW_
   READER，双方不获 COORDINATOR），§2.3 协调点已解；dispatcher 权限面冻结
   workflow.read + agent.wake，workflow.execute/admin 与一切 scheduler scope
-  FORBIDDEN。r2→r3 就地演进，无已发布语义损失。）
+  FORBIDDEN。r2→r3 就地演进，无已发布语义损失。r3.1（2026-08-27
+  dependency-DAG sync）：四 Spec 单向依赖链 31 → 14 → 83 → 87 定稿——
+  #31 为根节点（去除全部反向 pin），#14 唯一依赖 #31，#83 唯一依赖 #14；
+  本 Spec 为链尾，exact-pin 三份上游最终 head（#31 50b5ad3 /
+  #14 83e14ca / #83 517ae95，同时修正 #31 / #83 两个 stale pin——
+  旧 revision 见本修订 commit message）；姊妹 PR #86 关闭
+  （SUPERSEDED_BY_PR_87）。零语义变更，
+  纯依赖元数据修订。）
 task_name: 调度 执行
 task_type: DOCS_ONLY_SPEC_AUTHORING
 scope:
@@ -33,9 +40,14 @@ governed_by:
     via PR #68；实现已合入 main e40c140 / PR #82）
   - docs/specs/AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1.md（accepted — 凭据/身份供给）
 external_authorities:
+  # DAG apex (dependency chain, frozen: auth-service PR #31 -> svc-workflow
+  # PR #14 -> dsh-agent-core PR #83 -> THIS Spec PR #87). This Spec is the
+  # ONLY one allowed to exact-pin all three upstream final heads; no
+  # upstream Spec pins THIS Spec's head (one-way DAG,
+  # CIRCULAR_AUTHORITY_PIN_COUNT = 0).
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1
-    revision: 57f0268d76aa975b7d07a78874a1bf69d2ec3c4d
+    revision: 83e14ca12b5f02644455b06ccdc6a336dc7462ce
     relation: prerequisite_role_grant（proposed；唯一治理面 = 新
       GLOBAL_WORKFLOW_READER 只读角色 + 双授予（HR 主身份 UUID 已冻结；
       专用 dispatcher principal UUID 由 auth identity 建立后 amendment
@@ -43,16 +55,17 @@ external_authorities:
       （无 migration））
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1
-    revision: 441c52e31e995fee032bc49b066bb0226990993d
+    revision: 50b5ad313536f0f75382c06ebb56c38114b0db4a
     relation: prerequisite_identity（proposed；唯一治理面 = 专用 Principal/
       Client/exact grants（workflow.read + agent.wake；workflow.execute/
       admin 与一切 scheduler scope FORBIDDEN）/secret handoff/rerun NOOP/
       rollback）
   - repository: mayf3/dsh-agent-core（姊妹 Spec，未上 main）
     authority_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1
-    revision: 3f9b91a（PR #83 分支 head）
+    revision: 517ae95728dde41314ee4c9712530ad9f2b08a79（PR #83 最终 head）
     relation: prerequisite_capability（proposed；broker 只读能力 workflow_global_instances，
-      对任意服务端 coordinator 凭据通用，与运行身份无关）
+      对任意服务端合法调用者（GLOBAL_WORKFLOW_READER 或
+      GLOBAL_WORKFLOW_COORDINATOR 凭据持有者）通用，与运行身份无关）
 supersedes: []
 superseded_by: null
 owners:
@@ -61,7 +74,9 @@ owners:
 
 # AGENT_CORE_HR_DISPATCHER_V1 — 专用 Workflow Dispatcher recurring job + HR 有界 Scheduler 管理能力
 
-> 状态：**proposed**（r3）。本 Spec 当前不授予任何实现、合并或 production apply 权限。
+> 状态：**proposed**（r3.1——r3 + 2026-08-27 dependency-DAG sync：本 Spec 为
+> 四 Spec 单向链 31 → 14 → 83 → 87 的链尾，唯一允许 exact-pin 三份上游最终
+> head；无任何上游 Spec 反向 pin 本 Spec）。本 Spec 当前不授予任何实现、合并或 production apply 权限。
 > `implementation_authority = none`；`production_apply_authority = none`。
 > 本轮 **不创建 job、不修改生产 store、不部署、不授予任何角色/scope、不创建 PR**。
 > NEXT_TASK = 调度 审计（independent review）。
@@ -159,6 +174,21 @@ FORBIDDEN（永久）: 恢复或修改 ~/.openclaw/cron/jobs.json；使用 OpenC
 
 ### 2.1 依赖事实（2026-08-27）
 
+跨仓依赖 DAG（2026-08-27 sync 冻结，单向不可倒置）：
+
+```text
+mayf3/auth-service PR #31（AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1，根）
+  → mayf3/svc-workflow PR #14（SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1）
+    → mayf3/dsh-agent-core PR #83（AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1）
+      → mayf3/dsh-agent-core PR #87（本 Spec，AGENT_CORE_HR_DISPATCHER_V1，链尾）
+```
+
+本 Spec exact-pin 且仅 pin 三份上游最终 head（frontmatter `external_authorities`：
+#31 @ 50b5ad313536f0f75382c06ebb56c38114b0db4a、
+#14 @ 83e14ca12b5f02644455b06ccdc6a336dc7462ce、
+#83 @ 517ae95728dde41314ee4c9712530ad9f2b08a79）；任何上游 Spec 均不 pin
+本 Spec 的 head（CIRCULAR_AUTHORITY_PIN_COUNT = 0）。
+
 | 依赖 | 状态 | 证据 |
 |---|---|---|
 | D-007 Scheduler 语义 | **accepted**（Current Authority） | decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md |
@@ -166,9 +196,9 @@ FORBIDDEN（永久）: 恢复或修改 ~/.openclaw/cron/jobs.json；使用 OpenC
 | `agentRouter.deliver`（现有正式派发机制） | **merged**（AGENT_ROUTER_DELIVERY_V0） | packages/agent-router/src/index.js:741；`{requestId, agentId, sessionMode: 'main'\|'fresh', message}`；fresh = (agentId, requestId) 锁内 durable read-or-mint native session；返回 `{accepted, sessionId}` |
 | notification-ingress `POST /v1/deliver`（同一机制的 HTTP ingress 形态） | merged | packages/notification-ingress/src/index.js:174 → router.deliver；含 idempotency。本 Spec 的受控暴露优先绑进程内 seam（§4），HTTP 形态不作为 Agent 工具面 |
 | broker local capability 先例（scope 门禁 + trusted identity） | merged | packages/broker/src/capabilities/agent-definition.js（agent.definition.write）；gateway.js localHandlers `async (args, {agentId})`——caller 身份来自 Router spawn 关系，永不出自 call payload |
-| `workflow_global_instances` broker 能力 | **proposed**（姊妹 Spec，PR #83 @ ab8c636，base main e40c140） | AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1；能力对 coordinator 凭据通用，不绑定特定 principal |
-| GLOBAL_WORKFLOW_READER 授予（dispatcher） | **proposed**（外部 svc-workflow PR #14 @ 57f0268，DUAL_GLOBAL_READER_MODEL 终版）；授予对象 = 专用 dispatcher principal（UUID 由 auth identity 建立后 amendment 回填，回填前不得 apply）；HR 主身份同获 READER（手工只读查看）；双方不获 COORDINATOR | SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 §1/§6 |
-| 专用 system Agent 身份（agt_workflow-dispatcher-hr-agent） | **不存在**（待供给）；Principal/Client/exact grants/secret handoff/rerun NOOP/rollback 由 auth-service Spec 独占治理 | auth-service PR #31 @ 441c52e（AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1）；本 Spec 治理其 Agent definition / 最小运行目录 / scheduler 执行面（G0 本侧部分） |
+| `workflow_global_instances` broker 能力 | **proposed**（姊妹 Spec，PR #83 @ 517ae95728dde41314ee4c9712530ad9f2b08a79，base main e40c140） | AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1；能力对任意服务端合法调用者（READER 或 COORDINATOR 凭据持有者）通用，不绑定特定 principal |
+| GLOBAL_WORKFLOW_READER 授予（dispatcher） | **proposed**（外部 svc-workflow PR #14 @ 83e14ca12b5f02644455b06ccdc6a336dc7462ce，DUAL_GLOBAL_READER_MODEL 终版）；授予对象 = 专用 dispatcher principal（UUID 由 auth identity 建立后 amendment 回填，回填前不得 apply）；HR 主身份同获 READER（手工只读查看）；双方不获 COORDINATOR | SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 §1/§6 |
+| 专用 system Agent 身份（agt_workflow-dispatcher-hr-agent） | **不存在**（待供给）；Principal/Client/exact grants/secret handoff/rerun NOOP/rollback 由 auth-service Spec 独占治理 | auth-service PR #31 @ 50b5ad313536f0f75382c06ebb56c38114b0db4a（AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1，DAG 根节点——不 pin 任何下游 head）；本 Spec 治理其 Agent definition / 最小运行目录 / scheduler 执行面（G0 本侧部分） |
 | agt_hr-agent（交互式 HR 助手）有效 grant 面 | machine_access_grants v1 = {forum.read, forum.write} + v2 = **{workflow.read, workflow.execute}**（auth-service 只读查询，2026-08-27；有效面是 grants 表，非 machine_clients.allowed_scopes 列） | mc_IuBMfCYe9-b522IhSWKBGjyz（active）——HR 主身份不得因此获得 coordinator / 直接扫描 / 任意调度写（§0.1） |
 
 ### 2.2 Gate 链（冻结；顺序不可跳跃）
@@ -186,7 +216,7 @@ G0b 供给专用身份的 Agent 侧（本 Spec 治理，同一独立轮次内）
 G1  姊妹 Spec AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1
     accepted + 实现 merged + 部署于生产 lineage
 G2  GLOBAL_WORKFLOW_READER 于 svc-workflow 生产 apply（外部 Spec
-    PR #14 @ 57f0268 独占治理，DUAL_GLOBAL_READER_MODEL 终版）；授予对象 =
+    PR #14 @ 83e14ca 独占治理，DUAL_GLOBAL_READER_MODEL 终版）；授予对象 =
     专用 dispatcher principal（其 UUID 已由 auth identity 建立并 amendment
     回填到该 Spec——apply 对 <PENDING> 无效）；HR 主身份的 READER 授予由
     同一外部 Spec 的 grantee-1 路径独立 apply；双方不获 COORDINATOR
@@ -216,9 +246,9 @@ principal，与本 Spec 的 RUN_AS=专用身份冲突）已由 OWNER_RULING =
 DEDICATED_SYSTEM_AGENT_MODEL 的跨仓 authority 拆分**解决**：
 
 - 授予对象 = 专用 system Agent 的 principal，角色 = GLOBAL_WORKFLOW_READER
-  （只读，DUAL_GLOBAL_READER_MODEL 终版；svc-workflow PR #14 @ 57f0268
+  （只读，DUAL_GLOBAL_READER_MODEL 终版；svc-workflow PR #14 @ 83e14ca
   独占冻结；UUID 待 auth identity 建立后 amendment 回填）；
-- 身份/Client/grant = auth-service PR #31 @ 441c52e 独占冻结；
+- 身份/Client/grant = auth-service PR #31 @ 50b5ad3 独占冻结；
 - HR 主身份（含 legacy 谱系）零角色、零扫描权、零任意调度写（§0.1）。
 
 无遗留协调点；两个外部 Spec 各自独立评审，本 Spec 不修改外部文件。
@@ -728,7 +758,8 @@ D-007 / D-005 / 其他 Spec 文件 = 未修改（GOVERNING_SPEC_UNMODIFIED）
 TASK_NAME = 调度 执行
 TASK_TYPE = DOCS_ONLY_SPEC_AUTHORING
 SPEC_ID = AGENT_CORE_HR_DISPATCHER_V1
-SPEC_STATUS = proposed（r3，DUAL_GLOBAL_READER_MODEL 终版同步）
+SPEC_STATUS = proposed（r3.1，DUAL_GLOBAL_READER_MODEL 终版同步 +
+  dependency-DAG sync：链尾节点）
 DELIVERABLE = docs/specs/AGENT_CORE_HR_DISPATCHER_V1.md（单文件，就地修订）
 SPEC_PR = OPENED（docs/hr-dispatcher-scheduler-v1-spec，Draft；r3 按
   DUAL_GLOBAL_READER_MODEL 终版与跨仓 authority 拆分同步）
@@ -775,6 +806,17 @@ PART_B_RERUN_IDEMPOTENT = YES（§5.5）
 PREREQUISITE_GATES = G0a/G0b, G1..G7（§2.2；§2.3 协调点已解——最终
   DUAL_GLOBAL_READER_MODEL：dispatcher 获 GLOBAL_WORKFLOW_READER（UUID
   回填后 apply），HR 主身份同获 READER；双方不获 COORDINATOR）
+DEPENDENCY_GRAPH = 31 -> 14 -> 83 -> 87（单向；本 Spec = 链尾）
+IDENTITY_SPEC_HEAD   = mayf3/auth-service PR #31 @
+  50b5ad313536f0f75382c06ebb56c38114b0db4a（根节点，零外部 pin）
+GLOBAL_READER_SPEC_HEAD = mayf3/svc-workflow PR #14 @
+  83e14ca12b5f02644455b06ccdc6a336dc7462ce（唯一依赖 = PR #31）
+GLOBAL_TOOL_SPEC_HEAD = mayf3/dsh-agent-core PR #83 @
+  517ae95728dde41314ee4c9712530ad9f2b08a79（唯一依赖 = PR #14）
+SCHEDULER_SPEC_HEAD  = 本 Spec（PR #87 最终 head = 本修订 commit）
+PR_86_DISPOSITION    = SUPERSEDED_BY_PR_87（姊妹分支 docs/hr-dispatcher-v1-spec
+  关闭，不合并）
+CIRCULAR_AUTHORITY_PIN_COUNT = 0
 PRODUCTION_CHANGE = NONE
 PRODUCTION_APPLY = NONE
 PRODUCT_CODE_CHANGE = NONE
