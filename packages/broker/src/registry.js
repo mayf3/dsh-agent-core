@@ -22,6 +22,37 @@
 
 import { assertValidManifest, invoke } from './mapping.js'
 
+const MODEL_ANNOTATIONS = ['description', 'title', 'default', 'examples']
+
+/** Convert a full manifest schema node into the intentionally smaller
+ * defineTool value-schema DSL. Bounds stay authoritative in mapping.js. */
+function modelValueSchema(spec, required = false) {
+  const out = {}
+  for (const key of MODEL_ANNOTATIONS) {
+    if (Object.hasOwn(spec, key)) out[key] = spec[key]
+  }
+  if (required) out.required = true
+  if (Array.isArray(spec.oneOf)) {
+    out.oneOf = spec.oneOf.map((branch) => modelValueSchema(branch))
+    return out
+  }
+  out.type = spec.type
+  if (spec.type === 'object') {
+    out.additionalProperties = spec.additionalProperties !== false
+    const requiredNames = new Set(Array.isArray(spec.required) ? spec.required : [])
+    out.properties = Object.fromEntries(Object.entries(spec.properties ?? {}).map(([name, child]) => [
+      name,
+      modelValueSchema(child, requiredNames.has(name)),
+    ]))
+  } else if (spec.type === 'array' && spec.items !== undefined) {
+    out.items = modelValueSchema(spec.items)
+  } else {
+    if (Array.isArray(spec.enum)) out.enum = spec.enum
+    if (Object.hasOwn(spec, 'const')) out.const = spec.const
+  }
+  return out
+}
+
 /**
  * Build the exact `defineTool({...})` options object plus the capability id.
  *
@@ -54,11 +85,10 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
   for (const op of manifest.operations) {
     for (const [name, spec] of Object.entries(op.arguments.properties)) {
       if (!Object.hasOwn(parameters, name)) {
-        const { validationError: _validationError, ...modelSchema } = spec
-        parameters[name] = {
-          ...modelSchema,
+        parameters[name] = modelValueSchema({
+          ...spec,
           description: spec.description || `${op.name}: ${name}`,
-        }
+        })
       }
       const opReq = Array.isArray(op.arguments.required) && op.arguments.required.includes(name)
       requiredEverywhere[name] = (requiredEverywhere[name] ?? true) && opReq

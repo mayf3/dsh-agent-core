@@ -71,7 +71,13 @@ test('selector compatibility: scheduler exposes action; existing manifests retai
   assert.equal(scheduler.parameters.action.required, true)
   assert.equal(scheduler.parameters.operation, undefined)
   assert.equal(scheduler.parameters.destination.additionalProperties, false)
-  assert.deepEqual(scheduler.parameters.destination.required, ['channel', 'to'])
+  assert.equal(scheduler.parameters.destination.required, undefined)
+  assert.equal(scheduler.parameters.destination.properties.channel.required, true)
+  assert.equal(scheduler.parameters.destination.properties.to.required, true)
+  // Bounds are authoritative Broker validation, not unsupported defineTool DSL keys.
+  assert.equal(scheduler.parameters.limit.minimum, undefined)
+  assert.equal(scheduler.parameters.limit.maximum, undefined)
+  assert.equal(scheduler.parameters.name.minLength, undefined)
 
   const calculator = buildToolDefinition({ manifest: calculatorManifest, handlers: calculatorHandlers }).definition
   assert.deepEqual(calculator.parameters.operation.enum, ['add', 'subtract', 'multiply', 'divide'])
