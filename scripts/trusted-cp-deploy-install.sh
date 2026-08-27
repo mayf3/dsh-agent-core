@@ -283,7 +283,7 @@ ln -s ../../harness/node_modules/.pnpm/node_modules/@deepseek-ai app/node_module
 for dep in "$MAIN_REPO"/node_modules/*/; do
   name="$(basename "$dep")"
   case "$name" in
-    @deepseek-ai|@agent-core) continue ;;
+    @deepseek-ai|@agent-core|node_modules) continue ;;
   esac
   [ -e "$dep" ] || continue
   cp -RL "$dep" "app/node_modules/$name"
