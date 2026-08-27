@@ -1,7 +1,8 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1
-status: proposed
+status: accepted
 date: 2026-08-25
+accepted_date: 2026-08-27
 type: implementation-spec (error preservation + pagination validation; implementation exists as WIP, authority pending this Spec's acceptance)
 scope:
   - Broker generic HTTP transport downstream error preservation (service code / status / sanitized detail / x-request-id)
@@ -16,15 +17,19 @@ references:
   - svc-workflow/src/http/mod.rs:31-32 (x-request-id via tower-http UUID middleware)
   - docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md (Spec governance; §10 Report ≠ authority)
 implementation_authority: none
+accepted_reviewed_head: efc815a14f6642b724e6d21301995b7ea8c9ebab
+independent_audit_result: PASS
+independent_audit_blockers: NONE
+acceptance_verdict: READY_FOR_ACCEPTANCE
 ---
 
 # AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1 — Workflow Broker 错误保留与分页校验
 
-> 状态：**proposed**。本 Spec 当前**不授予**任何实现或 production apply 权限。
-> `production_apply_authority = none`。
-> 一个完整实现已作为 WIP 保存在分支
-> `impl/broker-error-preservation-v1-wip`（base b5ab589，broker 包 89/89 测试
-> PASS）；该实现**未获授权合并**，accept 本 Spec 是其唯一授权路径。
+> 状态：**accepted**（2026-08-27 lifecycle-only acceptance finalize，PR #68）。  
+> 独立审计：AUDIT_RESULT = PASS · BLOCKERS = NONE · READY_FOR_ACCEPTANCE = YES。  
+> 本 Spec 自 merged on main 起成为本 scope 的唯一实现授权；preserved WIP
+> （`impl/broker-error-preservation-v1-wip` @ ef2bcac）在此授权下移植到
+> fresh main。`production_apply_authority = none`（deployment 仍需独立授权）。
 
 ## 0. 问题（已实证）
 
