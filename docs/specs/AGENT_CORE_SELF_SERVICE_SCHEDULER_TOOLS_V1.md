@@ -15,8 +15,12 @@ governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
   - SCHEDULER_OCCURRENCE_OUTCOME_V2
   - SCHEDULER_TIMEOUT_OUTCOME_V2
-  - PRODUCTION_RUNTIME_V1
-external_authorities: []
+  - AGENT_TRUSTED_FLEET_CUTOVER_V1
+external_authorities:
+  - repository: mayf3/auth-service
+    authority_id: MINIMAL_AUTH_FOUNDATION_V2
+    revision: d529bd3c28ece3967149ad793794f8dac2020276
+    relation: constrained_by
 supersedes: []
 superseded_by: null
 owners:
@@ -59,7 +63,7 @@ may be published only after this exact Spec is accepted and present in `main`.
 - `create`, `list`, `runs`, `update`, `enable`, `disable`, and `remove`;
 - exact create/update result evidence;
 - Scheduler-only skill guidance and fail-loud retirement of OpenClaw cron paths;
-- hot activation of the tool/control surface without restarting the production Runtime;
+- post-deployment JobStore/tick hot reload without restarting the active canary Runtime generation;
 - one production 15-minute one-shot canary after implementation deployment.
 
 ### Non-goals
@@ -84,9 +88,16 @@ may be published only after this exact Spec is accepted and present in `main`.
   preserved.
 - `SCHEDULER_TIMEOUT_OUTCOME_V2` governs the implemented Scheduler V2 state machine and
   migration/no-catch-up behavior.
-- `PRODUCTION_RUNTIME_V1` owns production composition and the single resident Runtime.
-- Auth service remains the grant authority for `scheduler.manage:any`; this Spec changes no
-  Auth protocol, credential format, or token semantics.
+- `AGENT_TRUSTED_FLEET_CUTOVER_V1` freezes one active `authsvc` production Runtime and
+  forbids a second Runtime writer.
+- External `MINIMAL_AUTH_FOUNDATION_V2` at `mayf3/auth-service@d529bd3c...` constrains
+  audience-scoped Machine Grants and strict scope rejection. Its incorporated
+  `grants-and-audiences.md` requires a new resource audience/scope and Grant supply to be
+  separately authorized in auth-service. Therefore this Spec defines only Agent Core's
+  fail-closed interpretation of `scheduler.manage:any`: until an accepted auth-service CCR
+  registers the Scheduler audience/scope and a separately authorized Grant supply provisions
+  a caller, production `manage:any` availability is **NONE**. This Spec creates no Auth scope,
+  audience, Grant, credential, token, or production Auth mutation.
 - This Spec is `NEW`: no accepted implementation Spec currently authorizes an Agent-facing
   general self-service Scheduler capability or its trusted current-conversation security
   contract.
@@ -101,10 +112,11 @@ may be published only after this exact Spec is accepted and present in `main`.
   (`scheduler_create`, `scheduler_list`, `scheduler_runs`, `scheduler_enable`,
   `scheduler_disable`, `scheduler_remove`) plus a proposed Spec in the same commit. Basis:
   `OBS-003`, `OBS-004`.
-- `STATE-003` — The active `cron-helper` guidance requires only a unified `scheduler` tool
-  and fail-loud behavior when that tool is unavailable. Basis: `OBS-005`.
-- `STATE-004` — No production activation or canary evidence for the unified tool exists at
-  authoring time. Basis: `OBS-006`.
+- `STATE-003` — The pinned `cron-helper` bytes require only a unified `scheduler` tool and
+  fail-loud behavior when that tool is unavailable. Basis: `OBS-005`.
+- `STATE-004` — Current Router source has exact Feishu `chatId` at ingress and a turn-scoped
+  parent-only `activeBindingContext`, but only the binding ID is currently propagated. Basis:
+  `OBS-006`.
 
 ## 5. Observations
 
@@ -154,27 +166,31 @@ may be published only after this exact Spec is accepted and present in `main`.
   current-conversation resolution and unified model manifest are absent.
 - Provenance: candidate source
 
-### OBS-005 — Scheduler-only skill rule is active
+### OBS-005 — Pinned Scheduler-only skill bytes
 
 - Subject: user skill `cron-helper` v4.0.0
-- Source revision: local skill content observed 2026-08-27
-- Environment: efficiency-agent/DSH skill registry
+- Source revision: SHA-256
+  `caec00409d0804985cfa06b9047db1ab8b3382f937de6dce32633f0dce12ec8b`, 6613 bytes
+- Environment: `/Users/yanfenma/.agents/skills/cron-helper/SKILL.md`
 - Observed at: 2026-08-27
-- Method: loaded skill content
-- Result: the skill permits only `scheduler(action=...)`, forbids OpenClaw cron, Gateway
-  restart, and manual jobs JSON access, and requires exact create evidence.
-- Provenance: `/Users/yanfenma/.agents/skills/cron-helper/SKILL.md`
+- Method: load complete content, then `shasum -a 256` and `stat`
+- Result: the pinned bytes permit only `scheduler(action=...)`, forbid OpenClaw cron,
+  Gateway restart, and manual jobs JSON access, and require exact create evidence.
+- Provenance: local immutable content digest recorded above; review must re-hash before use
 
-### OBS-006 — Unified production tool is unavailable before implementation
+### OBS-006 — Router has turn-scoped parent state and exact ingress fields
 
-- Subject: current Agent tool catalog
-- Source revision: current production session snapshot
-- Environment: production DSH session
+- Subject: Router ingress and parent-RPC path
+- Source revision: `e40c1400266b57ae7746ac766e6b281cf1fbb943`
+- Environment: repository source
 - Observed at: 2026-08-27
-- Method: inspect available tool catalog
-- Result: no callable `scheduler` tool is present; production canary cannot be truthfully
-  executed before implementation activation.
-- Provenance: current session tool inventory
+- Method: inspect `ingress-delivery.js`, `turn-execution.js`, `parent-rpc-relay.js`, and
+  Feishu connector bridge
+- Result: Feishu ingress carries exact `chatId`, `conversationId`, and message identity;
+  `AgentProcess.activeBindingContext` is set only while one routed turn executes and cleared
+  in `finally`; parent RPC already binds the actual Agent process. Current code passes only a
+  binding ID, so exact trusted delivery context is an additive implementation requirement.
+- Provenance: repository source at the pinned revision
 
 ## 6. Claims and assumptions
 
@@ -193,13 +209,13 @@ may be published only after this exact Spec is accepted and present in `main`.
 - Uncertainty: exact internal context object shape is an implementation detail, but its
   trust origin and rejection behavior are normative
 
-### CLM-003 — Hot control-surface activation can preserve the resident engine
+### CLM-003 — Job definitions hot-reload after implementation activation
 
-- Support state: INFERRED
+- Support state: SUPPORTED
 - Supported by evidence: `EVD-003`
 - Contradicted by evidence: none known
-- Uncertainty: production activation mechanism must be proven against the deployed Runtime;
-  starting a second Runtime or restarting production does not satisfy this Claim
+- Uncertainty: this Claim is only about JobStore mutation reload after a conforming Runtime
+  generation is active; it does not claim that Node code or tool registration hot-loads
 
 ## 7. Evidence relations
 
@@ -213,24 +229,25 @@ may be published only after this exact Spec is accepted and present in `main`.
 - Limitations: does not establish accepted authority or production conformance
 - Provenance: repository diff and source reads
 
-### EVD-002 — Architecture and skill behavior support trusted injection
+### EVD-002 — Pinned skill and Router observations support trusted injection
 
-- Source observations: `OBS-005`, plus Architecture trusted process relationship
+- Source observations: `OBS-005`, `OBS-006`
 - Target: `CLM-002`
 - Relation: SUPPORTS
-- Bound coordinates: Architecture and active skill observed 2026-08-27
-- Strength/sufficiency: strong for the negative trust boundary
-- Limitations: does not select a concrete JavaScript property layout
-- Provenance: local authorities and skill content
+- Bound coordinates: repository `e40c140`; skill SHA-256 `caec0040...ec8b`
+- Strength/sufficiency: strong for the negative trust boundary and available source fields
+- Limitations: implementation and concurrency tests must prove the additive context shape
+- Provenance: pinned repository source and pinned skill bytes
 
-### EVD-003 — Existing reload behavior supports no-restart activation feasibility
+### EVD-003 — Existing store reload supports post-create no-restart execution
 
 - Source observations: `OBS-001`, `OBS-002`
 - Target: `CLM-003`
 - Relation: SUPPORTS
 - Bound coordinates: repository `e40c140`
-- Strength/sufficiency: moderate until production canary is executed
-- Limitations: source behavior alone is not production activation evidence
+- Strength/sufficiency: strong for JobStore mtime/tick reload; production remains to prove
+- Limitations: does not support code/tool hot loading; implementation deployment requires a
+  controlled replacement of the production Runtime generation
 - Provenance: Scheduler and production composition source
 
 ## 8. Decisions
@@ -305,59 +322,137 @@ The Broker MUST register exactly one model-visible Scheduler self-service tool n
 `scheduler_disable`, or `scheduler_remove`. Internal handler names MAY remain unchanged.
 `reconcile` MUST NOT be reachable through `scheduler`.
 
-### CTR-TOOL-002 — Action discriminator and closed schemas
+### CTR-TOOL-002 — Action discriminator and exact closed schemas
 
-`scheduler.action` MUST be required and MUST be one of `create`, `list`, `runs`, `update`,
-`enable`, `disable`, `remove`. Validation MUST reject unknown fields and fields belonging to
-another action before mutation or grant lookup.
+The manifest MUST declare its model selector name as `action`; the generic Broker MUST keep
+`operation` as the default selector for every existing manifest. Registry dispatch MUST
+remove `action` from business arguments and map it internally to the selected handler. Both
+the DSH schema and trusted mapping layer MUST enforce the same object-rooted discriminated
+union. Every action object and nested object has `additionalProperties: false`.
 
-Action schemas:
+Common leaf definitions are exact:
 
 ```text
-create required: action, name, schedule_kind, message
-create allowed:  action, name, schedule_kind, cron_expr, at, every_ms, timezone,
-                 message, timeout, light_context, model, delivery_mode,
-                 delivery_target, destination, best_effort, delete_after_run,
-                 auto_retry, target_agent_id
-list allowed:    action, all_agents
-runs allowed:    action, job_id, limit, all_agents
-update required: action, job_id
-update allowed:  action, job_id, name, schedule_kind, cron_expr, at, every_ms,
-                 timezone, message, timeout, light_context, model, delivery_mode,
-                 delivery_target, destination, best_effort, delete_after_run,
-                 auto_retry, target_agent_id
-enable required: action, job_id
-disable required: action, job_id
-remove required: action, job_id
+NonEmptyString = {type:string, minLength:1}
+action          = enum(create,list,runs,update,enable,disable,remove)
+job_id/name/message/model/target_agent_id = NonEmptyString
+schedule_kind   = enum(cron,at,every)
+cron_expr       = NonEmptyString (standard five-field expression; six-field rejected)
+at               = NonEmptyString parsed by existing parseAtToMs
+                       (relative positive duration or ISO instant)
+every_ms         = integer minimum 1
+timezone          = NonEmptyString accepted by existing Scheduler timezone validation
+timeout           = integer minimum 1
+light_context/best_effort/delete_after_run/auto_retry/all_agents = boolean
+limit             = integer minimum 1 maximum 100
+delivery_mode     = enum(announce,none,silent)
+delivery_target   = const current_conversation
+destination       = object, additionalProperties:false,
+                    required:[channel,to], properties:{channel:NonEmptyString,to:NonEmptyString}
 ```
 
-For `schedule_kind=cron`, `cron_expr` and `timezone` MUST be present. For `at`, `at` MUST be
-present and normalize to a strictly future instant. For `every`, `every_ms` MUST be a
-positive integer. Conditional violations MUST fail as `invalid_arguments`.
+The seven top-level branches are exact:
 
-`callerAgentId`, `agentId`, `channel`, `to`, `chatId`, `chat_id`, `ingress`, `session`, and
-`reconcile` MUST NOT be accepted tool properties.
+```text
+create:
+  action=const create
+  required=[action,name,schedule_kind,message]
+  allowed=[action,name,schedule_kind,cron_expr,at,every_ms,timezone,message,
+           timeout,light_context,model,delivery_mode,delivery_target,destination,
+           best_effort,delete_after_run,auto_retry,target_agent_id]
 
-### CTR-CTX-001 — Trusted caller identity
+list:
+  action=const list
+  required=[action]
+  allowed=[action,all_agents]
 
-The Parent Runtime MUST inject non-empty `callerAgentId` from the actual Router/child process
-relationship. No tool argument may set or override it. Missing trusted caller identity MUST
-fail loud before store access. Self authorization MUST compare `job.agentId` only with this
-trusted value.
+runs:
+  action=const runs
+  required=[action]
+  allowed=[action,job_id,limit,all_agents]
+
+update:
+  action=const update
+  required=[action,job_id]
+  allowed=[action,job_id,name,schedule_kind,cron_expr,at,every_ms,timezone,message,
+           timeout,light_context,model,delivery_mode,delivery_target,destination,
+           best_effort,delete_after_run,auto_retry,target_agent_id]
+  additional rule: at least one mutable property besides action/job_id is required
+
+enable: action=const enable; required=[action,job_id]; allowed=[action,job_id]
+disable: action=const disable; required=[action,job_id]; allowed=[action,job_id]
+remove: action=const remove; required=[action,job_id]; allowed=[action,job_id]
+```
+
+Conditional closure is exact:
+
+1. `schedule_kind=cron` requires exactly `cron_expr` + `timezone` and forbids `at/every_ms`.
+2. `schedule_kind=at` requires exactly `at`, forbids `cron_expr/every_ms/timezone`, and the
+   normalized instant MUST be later than the atomic definition commit timestamp.
+3. `schedule_kind=every` requires exactly `every_ms` and forbids
+   `cron_expr/at/timezone`.
+4. Create always has `schedule_kind`. Update accepts no schedule leaf unless
+   `schedule_kind` is present; when present, rules 1–3 require a complete replacement
+   schedule. Update never merges an incomplete schedule.
+5. Create defaults `delivery_mode=none`, `auto_retry=false`, and
+   `delete_after_run=(schedule_kind==at)`. Update preserves every omitted field.
+6. `delivery_mode=announce` requires exactly one of `delivery_target` or `destination`;
+   `destination` is admin-only. `delivery_mode=none|silent` forbids
+   `delivery_target/destination/best_effort`. Update accepts no delivery leaf unless
+   `delivery_mode` is present; when present it replaces the complete delivery object.
+7. `target_agent_id`, `destination`, and `all_agents=true` invoke the manage-any path;
+   their presence never asserts authorization.
+8. Empty/whitespace-only strings fail `invalid_arguments` after trimming; normalization
+   stores trimmed strings. Unknown, cross-action, nested-unknown, identity, chat, session,
+   or reconcile fields fail before store read, grant lookup, or mutation.
+
+Forbidden properties include `callerAgentId`, `caller_agent_id`, `agentId`, `agent_id`,
+`channel`, `to`, `chatId`, `chat_id`, `ingress`, `session`, `operation`, and `reconcile`.
+
+### CTR-CTX-001 — Trusted caller and invocation context
+
+The Parent Runtime MUST inject a non-empty context derived only from the actual process slot
+and active routed turn:
+
+```text
+callerAgentId
+processGeneration
+turnExecutionId
+channelNamespace
+channelConversationId
+feishuChatId
+feishuConversationId
+feishuMessageId
+```
+
+`callerAgentId` and `processGeneration` come from the actual Router-owned process slot.
+`turnExecutionId` comes from that slot's active turn execution. The Feishu fields come from
+the ingress object passed to that same turn. No child/model parameter can set or override any
+context field. Missing trusted caller/process/turn identity MUST fail before store access.
+Self authorization compares `job.agentId` only with trusted `callerAgentId`.
+
+The Router MUST install one immutable `activeIngressContext` together with
+`activeBindingContext` immediately before prompt write and clear both in the same `finally`.
+The process single-flight queue MUST install the queued turn's own context only after the
+prior turn clears. Parent Broker RPC reads context directly from that process object; the
+child relay transmits no ingress context. Gateway forwards it only to LOCAL handlers.
 
 ### CTR-CTX-002 — Trusted current Feishu conversation
 
-For a Feishu ingress turn, the Parent Runtime MAY attach a trusted ingress context containing
-the exact ingress chat identifier. When `delivery_target=current_conversation`, the handler
-MUST resolve that context to exactly:
+When `delivery_target=current_conversation`, the handler MUST require the active trusted
+context to belong to the exact tool-calling `(callerAgentId, processGeneration,
+turnExecutionId)` and to have `channelNamespace=feishu` plus a valid exact `feishuChatId`.
+It MUST resolve only that field to:
 
 ```json
-{"channel":"feishu","to":"chat:<exact ingress chat id>"}
+{"channel":"feishu","to":"chat:<exact feishuChatId>"}
 ```
 
-The resolved destination MUST be persisted on the Job. The model MUST NOT provide any part
-of the chat identifier. Missing, non-Feishu, malformed, or stale/unbound ingress context MUST
-fail loud and MUST NOT create/update a Job.
+It MUST NOT parse a chat ID from `channelConversationId` or `feishuConversationId` because a
+thread conversation ID may contain topic identity. The committed definition MUST persist the
+resolved object. Context is valid only for the active turn; after turn completion, process
+generation replacement, queued-turn handoff, or cross-Agent call it MUST fail loud. Context
+MUST never be cached as “last conversation,” replayed, or accepted from child RPC params.
 
 ### CTR-CTX-003 — Other destinations are admin-only
 
@@ -373,11 +468,19 @@ jobs whose persisted `agentId` equals trusted `callerAgentId`. `list` and `runs`
 foreign definitions/evidence. Mutations of a foreign job MUST return a non-leaking denied or
 not-found error and MUST NOT mutate or append a success audit record.
 
-### CTR-AUTH-002 — Admin scope
+### CTR-AUTH-002 — Admin scope and external prerequisite
 
-Only a caller for whom the trusted Auth seam authorizes `scheduler.manage:any` MAY use
-`all_agents`, create/update for another Agent, mutate another Agent's job, or specify another
-delivery destination. Tool arguments MUST NOT assert this scope.
+Only a caller for whom the trusted Auth seam authorizes exact scope
+`scheduler.manage:any` for the future Scheduler resource audience MAY use `all_agents`,
+create/update for another Agent, mutate another Agent's job, or specify another delivery
+destination. Tool arguments MUST NOT assert this scope. Auth denial, unavailable audience,
+missing Grant, token failure, or uncertainty MUST deny the operation.
+
+This local implementation MUST support the fail-closed seam and tests with an injected Auth
+stub, but MUST NOT claim production admin availability. Production admin enablement is
+blocked until a separate accepted auth-service CCR registers the Scheduler audience and
+scope, its source is implemented/deployed, and a separately authorized Grant supply is
+applied. Ordinary self operations do not request `manage:any`.
 
 ### CTR-MUT-001 — Existing control operations only
 
@@ -405,12 +508,43 @@ existing `updateJobOp` revision semantics and affect future eligible slots only.
 one-shot MUST be rejected. Update MUST apply the same ownership and destination rules as
 create. No update may clear a fence, replay an occurrence, or invoke reconcile.
 
-### CTR-AUDIT-001 — Mutation audit
+### CTR-AUDIT-001 — Mutation audit and append failure
 
-Successful create/update/enable/disable/remove MUST append the existing sanitized
-self-service mutation audit evidence with operation, job ID, trusted operator Agent ID,
-target Agent ID, timestamp, and before/after definition digests as applicable. It MUST NOT
-record message bodies, credentials, secrets, or a model-supplied identity.
+Each committed create/update/enable/disable/remove MUST attempt exactly one append of the
+existing sanitized self-service mutation evidence with operation, job ID, trusted operator
+Agent ID, target Agent ID, timestamp, and before/after definition digests as applicable. It
+MUST NOT record message bodies, credentials, secrets, or a model-supplied identity.
+
+Definition/occurrence authority and `runs.jsonl` are not one transaction (D-007 §11.5).
+Therefore an audit append failure after a known definition commit MUST NOT roll back or deny
+the known commit and MUST NOT be reported as an ordinary clean failure. The handler MUST
+return the committed projection plus `auditStatus=append_failed`; production Runtime MUST
+emit a sanitized operator-visible error containing operation/job ID but no message/secret.
+The Agent MUST report the mutation as committed with incomplete audit and MUST NOT retry it.
+An append failure before any definition commit leaves store state unchanged.
+
+### CTR-FAIL-001 — Mutation retry and unknown outcome
+
+Self-service mutations are not generally idempotent and the relay/gateway MUST perform zero
+automatic retries. `MUTATION_AUTORETRY = FORBIDDEN`.
+
+- validation/Auth failures occur before mutation and are safe non-commits;
+- a known control-op result is returned exactly once, subject to `CTR-AUDIT-001`;
+- if transport/process failure prevents the caller from knowing whether the control op
+  committed, the result MUST be `mutation_outcome_unknown`; it MUST NOT claim success or
+  failure and MUST NOT automatically issue the mutation again;
+- after unknown create/update/enable/disable, the next action is `list` (and `runs` when
+  applicable) to observe current state before any user-authorized retry;
+- after unknown remove, ordinary self scope may no longer authorize the deleted ID, so the
+  Agent MUST stop and escalate to operator evidence rather than retry;
+- repeated user-directed create is a new mutation and may create another Job; the Agent MUST
+  present observed matches and obtain confirmation before retrying an unknown create.
+
+Fault behavior is frozen as: pre-commit failure = no mutation; post-commit/pre-audit failure =
+known commit with `auditStatus=append_failed` when the handler remains alive; post-audit/
+pre-response transport loss = unknown to caller but no automatic retry; explicit later retry
+requires the observation rules above. This Spec introduces no durable idempotency table and
+no Scheduler schema change.
 
 ### CTR-RESULT-001 — Exact create/update evidence
 
@@ -430,17 +564,30 @@ deleteAfterRun
 ```
 
 The response MUST be built from the committed persisted definition, not only request input.
-`nextRunAt` for an enabled at-job MUST be a strictly future timestamp at commit response
-time. `exactPersistedDeliveryDestination` MUST contain the persisted `{channel,to}` for
+For an enabled at-job, normalized `nextRunAt` MUST be strictly later than the atomic JobStore
+commit timestamp recorded/observed by the mutation. The handler MUST reject an at-time whose
+normalized instant is not later at that commit boundary; response transmission latency does
+not retroactively change a valid commit into a false claim. The production canary separately
+requires `nextRunAt > createResponseObservedAt` by using a 15-minute lead.
+`exactPersistedDeliveryDestination` MUST contain the persisted `{channel,to}` for
 announce delivery, or an explicit null/not-requested representation for no delivery. A model
 or skill MUST NOT report success as “created/configured” when these fields are absent.
 
 ### CTR-RESULT-002 — List, runs and lifecycle evidence
 
-`list` MUST return only visible persisted job projections without message bodies. `runs` MUST
-return visible occurrence evidence including occurrence ID, run ID, state, execution outcome,
-delivery status, and relevant fence/late-settlement projection. `remove` MUST delete only the
-definition; occurrence evidence MUST remain queryable under existing evidence retention.
+`list` MUST return only visible persisted job projections without message bodies. While a Job
+definition exists, `runs` MUST authorize through its persisted `job.agentId` and return visible
+occurrence evidence including occurrence ID, run ID, state, execution outcome, delivery
+status, and relevant fence/late-settlement projection.
+
+`remove` MUST delete only the definition; authoritative occurrence evidence remains retained
+under D-007. Because current occurrence records do not carry an immutable Agent owner,
+ordinary self-service `runs(job_id=...)` MUST return not-found after definition deletion and
+MUST NOT infer authorization from bounded `runs.jsonl`, old request data, name, or chat.
+Retained post-delete evidence is operator/audit evidence under existing Scheduler authority;
+this Spec does not add a tombstone or change occurrence schema. The production canary's
+post-delete evidence check is therefore an independently authorized operator read/query, not
+an Agent self-service read.
 
 ### CTR-LEGACY-001 — Legacy paths fail loud
 
@@ -459,12 +606,20 @@ If `scheduler` is absent or denied, the Agent MUST state that self-service Sched
 safely available and MUST NOT fall back to shell, CLI, curl, direct store access, or legacy
 OpenClaw behavior.
 
-### CTR-HOT-001 — No-restart activation
+### CTR-HOT-001 — Post-deployment Job hot reload without restart
 
-Implementation deployment MUST NOT restart the production Runtime and MUST NOT start a
-second Scheduler Runtime or Feishu WebSocket. The activation mechanism MUST add/refresh the
-Broker tool/control surface in the existing parent Runtime. A Job committed through the
-unified tool MUST be observed by the already-running resident Scheduler on a later tick.
+Current Node composition does not hot-load code or tool registrations. A conforming
+implementation deployment MAY perform one controlled replacement of the sole `authsvc`
+production Runtime generation under the existing deployment/runbook authority; that restart
+is deployment, not canary evidence. It MUST NOT overlap two production Runtime writers or
+start a second Scheduler Runtime/Feishu WebSocket.
+
+After the conforming Runtime generation and child tool catalog are active, the canary window
+begins. From immediately before `scheduler(action=create)` until after occurrence,
+delivery, auto-delete, and evidence observation, the production Runtime PID/start time MUST
+remain unchanged. The Job committed through the unified tool MUST be observed by that
+already-running resident Scheduler on a later mtime/tick reload. Thus
+`HOT_RELOAD_WITHOUT_RESTART` means **Job definition reload**, never code/tool hot loading.
 
 ### CTR-CANARY-001 — Production one-shot canary
 
@@ -481,7 +636,10 @@ scheduler(action="create", name="15分钟提醒", schedule_kind="at", at="15m",
 The canary MUST prove: no Runtime restart; production JobStore used; exact trusted chat
 persisted; `nextRunAt` strictly future; occurrence created and succeeded; delivery status
 `delivered`; message visible in the current group; definition automatically deleted; retained
-occurrence evidence; and no read/write/change to the OpenClaw store during the operation.
+occurrence evidence; zero Runtime/Agent operational access to the OpenClaw store; and an
+independently authorized operator's read-only before/after metadata/hash observation showing
+that legacy store bytes did not change. The operator observation is evidence only and MUST
+NOT feed Scheduler behavior or expose the store to the Agent.
 
 ### CTR-OPS-001 — Reconcile and CLI boundaries
 
@@ -503,21 +661,28 @@ product code unless a Contract requires revision.
 - Contracts: `CTR-TOOL-001`, `CTR-TOOL-002`, `CTR-OPS-001`
 - Method: Broker manifest/unit tests and child tool-catalog integration test
 - Environment: clean implementation worktree
-- Required evidence: exact implementation commit, test command/output, registered tool names
-- Expected result: only `scheduler`; seven valid actions route correctly; unknown/action-wrong
-  fields and `reconcile` fail before handler mutation
-- Failure condition: any legacy Scheduler tool is model-visible or permissive fields pass
+- Required evidence: exact implementation commit, test command/output, registered tool names,
+  generated schema with selector `action`
+- Expected result: only `scheduler`; existing non-Scheduler tools retain selector `operation`;
+  seven actions route correctly; every unknown/cross-action/nested-unknown/conditional-invalid
+  field and `reconcile` fails before store read, grant call, or mutation
+- Failure condition: any legacy Scheduler tool is model-visible, any existing capability's
+  selector changes, or any permissive field passes
 
 ### ACC-CTX-001 — Trusted identity and conversation
 
 - Contracts: `CTR-CTX-001`, `CTR-CTX-002`, `CTR-CTX-003`
-- Method: integration tests with trusted Feishu, missing context, non-chat context, forged chat
-  fields, explicit destination, self and admin callers
+- Method: integration tests with trusted Feishu, missing/non-chat context, forged relay/chat
+  fields, process-generation replacement, two conversations queued for one Agent, concurrent
+  calls from two Agents, stale context replay, explicit destination, self and admin stubs
 - Environment: Parent Runtime/Broker test composition
-- Required evidence: executed tests and persisted job projection
-- Expected result: current conversation persists exact injected Feishu destination; forged or
-  missing context fails; explicit other destination works only with manage:any
-- Failure condition: any model-supplied identity/chat value affects ownership or destination
+- Required evidence: executed tests, active-turn IDs/context lifecycle trace, and persisted job
+  projection
+- Expected result: only the exact tool-calling turn's injected `feishuChatId` persists; prior,
+  queued, cross-Agent, forged, or missing context fails; thread conversation ID is never parsed
+  as chat ID; explicit other destination works only with manage:any
+- Failure condition: any model/child-supplied or wrong-turn identity/chat value affects
+  ownership or destination
 
 ### ACC-AUTH-001 — Self/admin authorization
 
@@ -525,22 +690,30 @@ product code unless a Contract requires revision.
 - Method: unit/integration tests across two Agents plus authorized admin
 - Environment: isolated JobStore with real control operations
 - Required evidence: store before/after, handler results, grant call record
-- Expected result: self access succeeds; foreign ordinary access leaks/mutates nothing; admin
-  access succeeds only after trusted grant
-- Failure condition: ordinary cross-Agent visibility or mutation
+- Expected result: self access succeeds without manage-any token request; foreign ordinary
+  access leaks/mutates nothing; injected admin-stub path succeeds only after trusted grant;
+  production admin path remains denied while external Scheduler audience/scope/Grant is absent
+- Failure condition: ordinary cross-Agent visibility/mutation, tool-asserted scope, or claim of
+  production admin availability without accepted/deployed external authority
 
 ### ACC-MUT-001 — Mutation, update, audit and results
 
-- Contracts: `CTR-MUT-001`, `CTR-MUT-002`, `CTR-AUDIT-001`, `CTR-RESULT-001`,
-  `CTR-RESULT-002`
-- Method: real Scheduler package tests using a temporary V2 store
+- Contracts: `CTR-MUT-001`, `CTR-MUT-002`, `CTR-AUDIT-001`, `CTR-FAIL-001`,
+  `CTR-RESULT-001`, `CTR-RESULT-002`
+- Method: real Scheduler package tests using a temporary V2 store plus fault injection before
+  commit, post-commit/pre-audit, post-audit/pre-response, and relay transport loss for every
+  mutation action
 - Environment: isolated filesystem
-- Required evidence: normalized persisted definitions, audit lines, occurrence records,
-  revision values, exact result envelopes
-- Expected result: all writes use control ops; update preserves ID and revisions future
-  semantics; create/update return every required committed field; remove retains occurrence
-- Failure condition: direct store write, missing evidence field, leaked message, replay/fence
-  change, or deleted occurrence evidence
+- Required evidence: normalized persisted definitions, audit lines/runtime error record,
+  occurrence records, revision values, exact result envelopes, control-op/automatic-retry
+  call counts, and operator post-delete evidence query
+- Expected result: all writes use one control op; automatic mutation retry count is zero;
+  update preserves ID/future revision semantics; create/update return every committed field;
+  audit failure returns known commit + `auditStatus=append_failed`; response loss returns
+  unknown; remove retains operator evidence while ordinary post-delete runs returns not-found
+- Failure condition: direct store write, automatic retry, false success/failure on unknown,
+  missing result field, leaked message, replay/fence change, inferred post-delete ownership,
+  or deleted occurrence evidence
 
 ### ACC-LEGACY-001 — Retired paths
 
@@ -557,10 +730,12 @@ product code unless a Contract requires revision.
 - Contracts: `CTR-HOT-001`, `CTR-CANARY-001`
 - Method: deployment provenance plus current-group one-shot canary and post-run evidence query
 - Environment: production Runtime and `/Users/authsvc/.agent-core/scheduler/jobs.json`
-- Required evidence: Runtime PID/start-time before and after; registered tool catalog; create
-  response; committed definition projection; occurrence and delivery evidence; current-group
-  message observation; post-run list/runs; OpenClaw store unchanged evidence gathered without
-  using it as an operational input
+- Required evidence: deployment generation/provenance; then Runtime PID/start-time captured
+  immediately before create and after canary completion; registered tool catalog; create
+  response; committed definition projection; occurrence/delivery evidence; current-group
+  message observation; post-run list plus operator occurrence query; Runtime/Agent file-access
+  trace showing zero OpenClaw store access; separately authorized operator read-only
+  before/after metadata/hash observation
 - Expected result:
 
 ```text
@@ -602,8 +777,9 @@ OPENCLAW_STORE_UNCHANGED = YES
   mutation authority.
 - `ALT-006` — Fall back to OpenClaw cron or restart Gateway. Rejected by `DEC-006`: retired
   wrong-store path and false activation.
-- `ALT-007` — Restart production to load the tool. Rejected by `DEC-005`/`CTR-HOT-001` for
-  this rollout; it would not prove hot activation.
+- `ALT-007` — Claim that copying Node files hot-loads a running parent. Rejected by
+  `CTR-HOT-001`: current composition has no code/tool HMR. Deployment uses one controlled
+  generation replacement; the no-restart proof begins immediately before Job creation.
 - `ALT-008` — Treat candidate `4595ed3` as self-authorizing. Rejected by `DEC-007` and local
   governance.
 
@@ -617,8 +793,9 @@ OPENCLAW_STORE_UNCHANGED = YES
    from model registration, add the unified manifest/dispatcher/update path, and add trusted
    ingress context resolution.
 4. Keep existing internal access handlers and CLI when conforming; no Scheduler core rewrite.
-5. Activate the control/tool surface in the existing production Runtime without starting a
-   second resident engine or Feishu connection.
+5. Deploy with the existing trusted production procedure and controlled replacement of the
+   sole Runtime generation; never overlap a second resident engine or Feishu connection.
+   Capture the new generation/PID, then begin the no-restart Job hot-reload canary window.
 6. Rollback of tool activation disables/removes the Agent-facing manifest/control surface;
    it MUST NOT delete Jobs/occurrences, mutate Scheduler core, touch OpenClaw store, or restart
    Gateway. A canary Job may be removed only through the unified tool/control operation.
@@ -633,8 +810,9 @@ UNRESOLVED_AUTHORITY_CONFLICT = NONE
 PARTIAL_SUPERSESSION = NONE
 ```
 
-Implementation may select the concrete trusted context object/property names and hot-loading
-mechanism, provided all Contracts and Acceptance evidence are satisfied.
+Implementation may select internal JavaScript property names only; the trusted context
+fields, lifetime/binding, action schemas, deployment generation boundary, and Job hot-reload
+semantics above are normative and may not be weakened.
 
 ---
 
@@ -650,7 +828,7 @@ EXTERNAL_AUTHORITIES = NONE
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
-CONTRACT_COUNT = 17
-CONTRACTS_WITH_ACCEPTANCE = 17
+CONTRACT_COUNT = 18
+CONTRACTS_WITH_ACCEPTANCE = 18
 AUTHORING_READY_FOR_REVIEW = YES
 ```
