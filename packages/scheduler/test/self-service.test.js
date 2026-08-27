@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdtemp, rm, readFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -103,11 +103,13 @@ test('create returns the exact 11-field committed projection and resolves only t
 })
 
 test('all seven actions use capability id scheduler and ordinary self actions make zero grant requests', async (t) => {
-  const { call, grantCalls } = await rig(t)
+  const { call, store, grantCalls } = await rig(t)
   const created = await call('create', {
     name: 'self', schedule_kind: 'every', every_ms: 60_000, message: 'm',
   })
   const jobId = created.result.jobId
+  const everyJob = (await store.loadDoc({ force: true })).jobs.find((job) => job.id === jobId)
+  assert.equal(everyJob.schedule.anchorMs, everyJob.createdAtMs, 'self-service every jobs are runnable from their mutation anchor')
   assert.equal((await call('list', {})).ok, true)
   assert.equal((await call('runs', { job_id: jobId })).ok, true)
   const updated = await call('update', { job_id: jobId, name: 'self updated' })
@@ -322,19 +324,20 @@ test('locked update preserves concurrently changed omitted fields and audits the
   assert.equal(updateAudit.beforeDigest, storedDefinitionDigest(concurrentDefinition))
 })
 
-test('post-rename control failure is outcome-unknown and never fabricates an audit attempt', async (t) => {
+test('live post-rename fault returns known committed projection and attempts one audit append', async (t) => {
   const { call, store } = await rig(t)
   let syncCalls = 0
   let auditAttempts = 0
   store._syncDir = async () => { syncCalls += 1; throw new Error('injected directory sync failure after rename') }
   store.appendRunEvent = async () => { auditAttempts += 1; return { ok: true } }
   const out = await call('create', { name: 'durable', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
-  assert.equal(out.ok, false)
-  assert.equal(out.error.code, 'mutation_outcome_unknown')
+  assert.equal(out.ok, true)
+  assertExactCommittedResult(out.result)
+  assert.equal(out.result.auditStatus, 'appended')
   assert.equal(syncCalls, 1)
-  assert.equal(auditAttempts, 0)
+  assert.equal(auditAttempts, 1)
   const doc = await store.loadDoc({ force: true })
-  assert.equal(doc.jobs.some((job) => job.name === 'durable'), true, 'operator observation finds the possible commit')
+  assert.equal(doc.jobs.some((job) => job.id === out.result.jobId), true)
 })
 
 test('pre-commit failure is known clean; uncertain commit failure is outcome-unknown with zero retry', async (t) => {
@@ -365,6 +368,14 @@ test('pre-commit failure is known clean; uncertain commit failure is outcome-unk
   const noLock = await lockFailure.call('create', { name: 'lock-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
   assert.equal(noLock.ok, false)
   assert.equal(noLock.error.code, 'internal_error')
+
+  const renameFailure = await rig(t)
+  renameFailure.store.beforeCommit = async () => { await mkdir(renameFailure.store.filePath) }
+  const noRename = await renameFailure.call('create', {
+    name: 'rename-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm',
+  })
+  assert.equal(noRename.ok, false)
+  assert.equal(noRename.error.code, 'internal_error', 'a rejected commit-point rename proves no mutation')
 
   const second = await rig(t)
   let attempts = 0

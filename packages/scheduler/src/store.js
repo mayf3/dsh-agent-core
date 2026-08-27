@@ -312,7 +312,6 @@ export class JobStore {
     const run = this._writeChain.then(async () => {
       await this._ensureDir()
       const tmp = `${this.filePath}.tmp-${process.pid}-${seq}-${this.clock()}`
-      let renameAttempted = false
       let renamed = false
       try {
         const handle = await fs.open(tmp, 'wx')
@@ -322,7 +321,6 @@ export class JobStore {
         } finally {
           await handle.close()
         }
-        renameAttempted = true
         await fs.rename(tmp, this.filePath)
         renamed = true
         await this._syncDir(path.dirname(this.filePath))
@@ -330,7 +328,7 @@ export class JobStore {
         await fs.rm(tmp, { force: true }).catch(() => {})
         const wrapped = new Error(`scheduler store: atomic write ${tmp} -> ${this.filePath}: ${error?.message ?? error}`)
         wrapped.cause = error
-        wrapped.mutationOutcome = renamed ? 'committed' : (renameAttempted ? 'unknown' : 'not_committed')
+        wrapped.mutationOutcome = renamed ? 'committed' : 'not_committed'
         throw wrapped
       }
     })

@@ -138,6 +138,10 @@ test('mutation relay loss is outcome-unknown with zero automatic retry', async (
   assert.equal(attempts, 6)
 
   const { auditStatus: _auditStatus, ...missingAudit } = schedulerResult('create')
+  const malformedEvery = { ...schedulerResult('create'), normalizedSchedule: { kind: 'every', everyMs: 0 } }
+  const malformedAt = {
+    ...schedulerResult('create'), normalizedSchedule: { kind: 'at', at: 'not-iso' }, nextRunAt: 'not-iso',
+  }
   for (const lostEnvelope of [
     undefined,
     { ok: false, error: { code: 'channel_closed' } },
@@ -146,14 +150,30 @@ test('mutation relay loss is outcome-unknown with zero automatic retry', async (
     { ok: true, result: { ok: true, result: {} } },
     { ok: true, result: { ok: true, result: [] } },
     { ok: true, result: { ok: true, result: missingAudit } },
+    { ok: true, result: { ok: true, result: malformedEvery } },
+    { ok: true, result: { ok: true, result: malformedAt } },
     { ok: true, result: { ok: false, error: { code: '' } } },
     { ok: true, result: { ok: false, error: { code: 'undeclared' } } },
+    { ok: true, result: { ok: false, error: { code: 'internal_error', extra: true } } },
+    { ok: true, result: { ok: false, error: { code: 'internal_error', detail: 42 } } },
+    { ok: true, result: { ok: false, error: { code: 'internal_error' }, extra: true } },
+    { ok: true, result: { ok: false, error: { code: 'internal_error' } }, extra: true },
   ]) {
     const resolvedLoss = schedulerDefinition(async () => lostEnvelope)
     const out = await resolvedLoss.execute(validCalls.create)
     assert.equal(out.ok, false)
     assert.equal(out.error.code, 'mutation_outcome_unknown')
   }
+
+  const cronResult = {
+    ...schedulerResult('create'),
+    normalizedSchedule: { kind: 'cron', expr: '0 * * * *', timezone: 'UTC' },
+    timezone: 'UTC',
+  }
+  const validCron = schedulerDefinition(async () => ({
+    ok: true, result: { ok: true, result: cronResult },
+  }))
+  assert.deepEqual(await validCron.execute(validCalls.create), { ok: true, result: cronResult })
 })
 
 test('closed action validation rejects unknown, cross-action, nested, and identity fields before relay', async () => {
