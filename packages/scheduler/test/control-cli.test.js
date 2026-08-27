@@ -3,8 +3,9 @@ import assert from 'node:assert/strict'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { JobStore } from '../src/store.js'
+import { updateJobOp } from '../src/control.js'
 import { applyTransition, buildOccurrenceRecord, rebuildFences } from '../src/occurrence-model.js'
 
 const root = join(import.meta.dirname, '..', '..', '..')
@@ -19,6 +20,17 @@ const job = {
 
 function run(args) {
   return spawnSync(process.execPath, [cli, ...args], { cwd: root, encoding: 'utf8' })
+}
+
+function runAsync(args) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [cli, ...args], { cwd: root })
+    let stdout = ''
+    let stderr = ''
+    child.stdout.setEncoding('utf8').on('data', (chunk) => { stdout += chunk })
+    child.stderr.setEncoding('utf8').on('data', (chunk) => { stderr += chunk })
+    child.on('close', (status) => resolve({ status, stdout, stderr }))
+  })
 }
 
 async function fixture() {
@@ -70,4 +82,32 @@ test('ACC-029/032 CLI reconcile uses exact run identity and durable operator evi
   assert.equal(doc.occurrences[0].state, 'failed')
   assert.equal(doc.occurrences[0].lateSettlement.basis, 'operator-reconcile')
   assert.deepEqual(doc.fences, {})
+})
+
+test('CLI update merges omitted payload fields from locked-current definition', async () => {
+  const { file, store } = await fixture()
+  await updateJobOp(store, job.id, {
+    payload: { kind: 'agentTurn', message: 'old', timeoutSeconds: 10, model: 'old-model' },
+  })
+
+  let releaseCommit
+  let enteredCommit
+  const entered = new Promise((resolve) => { enteredCommit = resolve })
+  const release = new Promise((resolve) => { releaseCommit = resolve })
+  store.beforeCommit = async () => { enteredCommit(); await release }
+  const concurrent = updateJobOp(store, job.id, {
+    payload: { kind: 'agentTurn', message: 'old', timeoutSeconds: 99, model: 'concurrent-model' },
+  })
+  await entered
+
+  const cliRun = runAsync(['update', job.id, '--message', 'cli-message', '--json', '--store', file])
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  releaseCommit()
+  await concurrent
+  const result = await cliRun
+  assert.equal(result.status, 0, result.stderr)
+  const final = (await store.loadDoc({ force: true })).jobs.find((candidate) => candidate.id === job.id)
+  assert.equal(final.payload.message, 'cli-message')
+  assert.equal(final.payload.timeoutSeconds, 99)
+  assert.equal(final.payload.model, 'concurrent-model')
 })

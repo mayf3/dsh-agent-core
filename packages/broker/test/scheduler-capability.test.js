@@ -275,6 +275,22 @@ test('gateway classifies an uncaught mutation-handler failure as outcome unknown
   assert.equal(calls, 1)
 })
 
+test('gateway preserves explicit pre-commit mutation evidence as a clean internal failure', async (t) => {
+  const gateway = await gatewayRig(t, {
+    scheduler: {
+      update: async () => {
+        throw Object.assign(new Error('pre-write read failed'), { mutationOutcome: 'not_committed' })
+      },
+    },
+  })
+  const out = await gateway.execute({
+    capabilityId: 'scheduler', operation: 'update', args: { job_id: 'job-1', name: 'n' },
+  }, routerGatewayContext())
+  assert.equal(out.ok, false)
+  assert.equal(out.error.code, 'internal_error')
+  assert.equal(out.error.detail, 'local capability failed before commit')
+})
+
 test('gateway rejects missing/mismatched trusted identity and turn context before handlers', async (t) => {
   let handlerCalls = 0
   const gateway = await gatewayRig(t, {

@@ -258,12 +258,14 @@ export function createBrokerGateway({
         return await localHandler(localArgs, trustedContext)
       } catch (error) {
         log(`[broker-gateway] local capability ${manifest.id}.${operation} failed: ${error?.message ?? error}`)
-        const uncertainMutation = manifest.id === 'scheduler' && schedulerMutations.has(operation)
+        const uncertainMutation = manifest.id === 'scheduler'
+          && schedulerMutations.has(operation)
+          && error?.mutationOutcome !== 'not_committed'
         return {
           ok: false,
           error: uncertainMutation
             ? { code: 'mutation_outcome_unknown', detail: 'scheduler mutation outcome is unknown; inspect current state before any manual retry' }
-            : { code: 'internal_error', detail: error?.message ?? 'local capability failure' },
+            : { code: 'internal_error', detail: 'local capability failed before commit' },
         }
       }
     }

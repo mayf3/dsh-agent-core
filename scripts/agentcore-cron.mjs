@@ -168,30 +168,18 @@ async function cmdUpdate(args) {
   const tz = flagValue(args, '--tz')
   const kindCount = [at, cronExpr, everyMs].filter(Boolean).length
   if (kindCount > 1) throw new Error('at most one of --at | --cron | --every-ms may be given')
-  if (kindCount === 1) {
-    patch.schedule = at
-      ? { kind: 'at', at: parseAtFlag(at) }
-      : cronExpr
-        ? { kind: 'cron', expr: cronExpr, ...(tz ? { tz } : current.schedule.kind === 'cron' && current.schedule.tz ? { tz: current.schedule.tz } : {}) }
-        : { kind: 'every', everyMs: Number(everyMs) }
-  } else if (tz !== undefined) {
-    if (current.schedule.kind !== 'cron') throw new Error('--tz without a new --cron is only valid for cron-scheduled jobs')
-    patch.schedule = { ...current.schedule, tz }
+  const scheduleRequested = kindCount === 1 || tz !== undefined
+  if (kindCount === 0 && tz !== undefined && current.schedule.kind !== 'cron') {
+    throw new Error('--tz without a new --cron is only valid for cron-scheduled jobs')
   }
 
-  // Payload: rebuilt from the CURRENT payload so unrelated fields
-  // (timeoutSeconds/lightContext/model) survive a message-only update.
-  const payload = { ...current.payload }
+  // Payload and partial schedule changes are merged from the locked-current
+  // definition below, never this authorization/UX snapshot.
   const message = flagValue(args, '--message')
-  if (message !== undefined) payload.message = message
   const timeoutSeconds = flagValue(args, '--timeout-seconds')
-  if (timeoutSeconds !== undefined) payload.timeoutSeconds = Number(timeoutSeconds)
-  if (hasFlag(args, '--light-context')) payload.lightContext = true
+  const lightContext = hasFlag(args, '--light-context')
   const model = flagValue(args, '--model')
-  if (model !== undefined) payload.model = model
-  if (message !== undefined || timeoutSeconds !== undefined || hasFlag(args, '--light-context') || model !== undefined) {
-    patch.payload = payload
-  }
+  const payloadRequested = message !== undefined || timeoutSeconds !== undefined || lightContext || model !== undefined
 
   if (hasFlag(args, '--deliver') || hasFlag(args, '--no-deliver')) {
     patch.delivery = hasFlag(args, '--no-deliver')
@@ -199,10 +187,38 @@ async function cmdUpdate(args) {
       : resolveDeliveryFlags(args, 'update')
   }
 
-  if (Object.keys(patch).length === 0) throw new Error('nothing to update (pass --name/--message/--timeout-seconds/--model/--light-context/schedule or delivery flags)')
+  if (Object.keys(patch).length === 0 && !scheduleRequested && !payloadRequested) {
+    throw new Error('nothing to update (pass --name/--message/--timeout-seconds/--model/--light-context/schedule or delivery flags)')
+  }
 
-  // updateJobOp already returns the public projection.
-  const publicJob = await updateJobOp(store, id, patch)
+  // updateJobOp already returns the public projection. Partial schedule and
+  // payload changes are constructed from the exact definition under its lock.
+  const publicJob = await updateJobOp(store, id, patch, {
+    buildPatch: (lockedCurrent, basePatch) => {
+      const effective = { ...basePatch }
+      if (kindCount === 1) {
+        effective.schedule = at
+          ? { kind: 'at', at: parseAtFlag(at) }
+          : cronExpr
+            ? { kind: 'cron', expr: cronExpr, ...(tz ? { tz } : lockedCurrent.schedule.kind === 'cron' && lockedCurrent.schedule.tz ? { tz: lockedCurrent.schedule.tz } : {}) }
+            : { kind: 'every', everyMs: Number(everyMs) }
+      } else if (tz !== undefined) {
+        if (lockedCurrent.schedule.kind !== 'cron') {
+          throw new Error('--tz without a new --cron is only valid for cron-scheduled jobs')
+        }
+        effective.schedule = { ...lockedCurrent.schedule, tz }
+      }
+      if (payloadRequested) {
+        const payload = { ...lockedCurrent.payload }
+        if (message !== undefined) payload.message = message
+        if (timeoutSeconds !== undefined) payload.timeoutSeconds = Number(timeoutSeconds)
+        if (lightContext) payload.lightContext = true
+        if (model !== undefined) payload.model = model
+        effective.payload = payload
+      }
+      return effective
+    },
+  })
   if (hasFlag(args, '--json')) {
     process.stdout.write(`${JSON.stringify(publicJob, null, 2)}\n`)
   } else {
