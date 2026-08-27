@@ -5,6 +5,14 @@ accepted_reviewed_head: ee13cb224660416c9044203610b93cb8f13873bb
 acceptance_audit: PASS
 acceptance_audit_blocker_count: 0
 owner_decision_max_configured_routes: 4
+amendment_1: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1_AMENDMENT_1_BUILTIN_ROUTE_KIND
+amendment_1_status: accepted
+amendment_1_accepted_by: mayf3
+amendment_1_accepted_date: 2026-08-27
+amendment_1_reviewed_head: 8b76909c33dfc39693c6f8e760eb1a29c80d0727
+amendment_1_review_verdict: PASS
+amendment_1_blocker_count: 0
+amendment_1_normative_body_change: NONE
 date: 2026-08-25
 type: implementation-spec (SPEC ONLY — 本轮只冻结授权边界与配置 schema；不实现、不配置、不部署)
 spec_kind: implementation
@@ -41,6 +49,18 @@ references:
 ---
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 — CTO Agent 有序可配置路由链（ordered configurable route chain）
+
+> **Amendment 1（2026-08-26，Builtin Route Kind；accepted）**：文末
+> 「Amendment 1」节引入 `routeKind = builtin | subscription`（builtin route
+> 的 plugin/pluginVersion = ABSENT/FORBIDDEN），显式 supersede 基础正文中
+> 「每 route 必填 plugin/pluginVersion」的 schema 条款并关闭 Q-2；其余全部
+> 冻结 ruling 原样不变。该 Amendment accepted 前，基础正文仍是现行权威。
+> 基础正文（§1–§15）保持历史原样，不作改写。
+> Acceptance finalize 2026-08-27（链路 内建路由采纳执行）：accepted_by =
+> mayf3 · reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727 ·
+> 链路 内建路由审计 = PASS · READY_FOR_ACCEPTANCE = YES · BLOCKER_COUNT = 0 ·
+> NORMATIVE_BODY_CHANGE = NONE（lifecycle-only；与 child authority
+> `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1` Amendment 1 同一事务）。
 
 > SPEC_STATUS = **accepted**（mechanical acceptance finalize 2026-08-25 ·
 > accepted_reviewed_head = ee13cb224660416c9044203610b93cb8f13873bb ·
@@ -880,4 +900,346 @@ MERGE = NO（PR #70 保持 OPEN；是否 merge 不在本轮授权内，MIG-002�
 PR_UPDATE = ORDINARY_FAST_FORWARD_ONLY（普通提交追加于 ee13cb2 之上，分支 ref 快进更新）
 
 NEXT_TASK = 链路 采纳审计
+```
+
+---
+
+## Amendment 1（2026-08-26）— Builtin Route Kind（routeKind = builtin | subscription；accepted）
+
+> AMENDMENT_STATUS = **accepted**（authoring 2026-08-26，任务「链路 内建路由修订」；
+> acceptance finalize 2026-08-27，任务「链路 内建路由采纳执行」：
+> accepted_by = mayf3 · reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727 ·
+> review_verdict = PASS · blocker_count = 0 · READY_FOR_ACCEPTANCE = YES ·
+> normative_body_change = NONE（lifecycle-only 状态翻转与 provenance 记录；
+> A1.0–A1.8 normative 内容逐字保留）；Draft PR，不 merge、不改产品代码、
+> 不写配置、不配置 Credential、不触碰 production）。
+> **Amendment 形式依据**：`.agents/README.md` standing order 6（「scope 需要
+> 澄清/纠正但方向未变，走 AMEND」）+ 本 Spec 自身冻结的变更路径（DEC-008
+> 「后续变更走本 Spec 自身 amendment」、CTR-004「分类修订须走本 Spec
+> amendment」）+ accepted-Spec in-place amendment 先例
+> （`AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` Amendment 2：基础正文逐字
+> 保留，Amendment 节显式 supersede 特定冻结值，独立评审 + acceptance
+> finalize 后生效）。**方向未变**：ordered configurable route chain、
+> config-owned 顺序、全部 gate/STOP/journal/隔离 ruling 逐字保持；本
+> Amendment 只修正 route schema 的 plugin 必填条款并关闭 Q-2，因此不走
+> whole-authority SUPERSEDE（ALT-A1-001）。
+> **生效条件**：本 Amendment 经 independent review PASS 并由 mayf3 acceptance
+> finalize（Amendment 节内记录 provenance）。生效前，基础正文的
+> plugin-必填 schema 仍是现行权威，实现按其执行。
+
+### A1.0 新证据与冲突陈述（Owner 给定事实，原样引用，无需重做）
+
+```text
+EVIDENCE_A1_1  zai/glm-5.3 已在生产同款环境受控探针 PASS（NEW_EVIDENCE，
+               关闭基础正文 Q-2 / CLM-005 的 zai tuple 待核实项）
+EVIDENCE_A1_2  ZAI 是 Harness 内建 provider（无 plugin 承载需求）
+EVIDENCE_A1_3  不存在真实 dsh-zai npm 插件
+EVIDENCE_A1_4  不得使用 dsh-codex 作为虚假 carrier plugin（fake plugin tuple
+               = 伪造配置事实，违反本 Spec「字段值必须真实」边界）
+```
+
+作者侧只读核实（2026-08-26，production-same harness checkout，均只读）：
+
+- Harness 的 pi-ai adapter（`@deepseek-ai/dsh-llm-pi-ai`，内嵌
+  `@earendil-works/pi-ai@0.82.1`）`dist/providers/zai.js` 存在且经
+  `dist/providers/all.js` 的 `builtinProviders()` 注册（`zaiProvider()`）；
+  其 auth 方法为 `apiKey: envApiKeyAuth("Z.AI API key", ["ZAI_API_KEY"])`
+  ——即 ZAI 以 API-key 内建 provider 形态随 harness 携带，**不经任何
+  dsh plugin 安装/解析路径**（对照：Luna 的 `openai-codex` OAuth 形态必须
+  由 `dsh-codex@0.2.3` plugin 承载）。
+- vendored pi-ai catalog 数据（`data/zai.json`）当前列出 glm-4.5-air /
+  glm-4.7 / glm-5-turbo / glm-5.1 / glm-5.2 / glm-5v-turbo；glm-5.3 不在
+  auto-generated catalog 内——pi-ai 的 catalog 机制允许条目级 model 声明
+  覆盖/扩展，且 zai/glm-5.3 已有生产执行记录（基础正文 STATE-003）与本
+  Amendment EVIDENCE_A1_1 的受控探针 PASS。此差异不构成本 Amendment 的
+  阻塞项，如实登记。
+- 冲突坐实（current main `c52bd1c`，PR #76 实现已合并）：
+  `packages/production-runtime/src/model-overrides.js:313-318` 强制每个
+  routeCatalog entry 精确包含 `credentialReadiness/model/plugin/
+  pluginVersion/provider`（plugin/pluginVersion 必填），`:230-243`
+  `catalogCanonicalIdentity` 六字段 canonical form 含 plugin/pluginVersion。
+  在该 schema 下，初始目标链的 glm53 route **不可合法表达**——要么填入
+  不存在的 dsh-zai 插件（伪造），要么挪用 dsh-codex 作 fake carrier
+  （EVIDENCE_A1_4 禁止）。这是 accepted authority 与新证据之间的
+  contract gap，按 governance §10 走本 docs-only 修订。
+
+### A1.1 被 supersede 的基础正文条款（精确清单，其余逐字保持）
+
+本 Amendment 显式 supersede 基础正文以下条款中「plugin/pluginVersion 对
+每 route 必填」的语义，且仅此语义：
+
+| 基础正文位置 | 原语义 | Amendment 后语义 |
+|---|---|---|
+| §2.1 schema（route entry 字段表） | plugin/pluginVersion 为每 route 必填 non-empty string | 由 A1.2 routeKind 条件化字段集取代 |
+| §2.2「每 route 必须精确包含 provider、model、plugin、pluginVersion、credentialReadiness」 | 五字段一律必填 | 由 A1.2 取代（routeKind + provider + model + credentialReadiness 恒必填；plugin/pluginVersion 按 routeKind） |
+| §2.2 / CTR-003 `CANONICAL_ROUTE_IDENTITY` 六字段 tuple | provider/model/plugin/pluginVersion/credentialReadiness/canonical providerEnv | 由 A1.3 七字段 tuple 取代（增 routeKind；plugin/pluginVersion 规范化为 or-ABSENT） |
+| CTR-001 routeCatalog 字段列举 | 同 §2.1 | 同 A1.2 |
+| §2.4 初始目标配置中 glm53 的 plugin/pluginVersion/credentialReadiness「由 Q-2 核实后冻结」 | 开放待决 | 由 A1.4 冻结关闭（Q-2 CLOSED） |
+| §13 Q-2 / §6 CLM-005 | OPEN（zai tuple 待核实） | CLOSED（EVIDENCE_A1_1..A1_4 + A1.4 冻结 tuple） |
+
+明确**不在** supersede 范围（逐字保持，不得借本 Amendment 重开）：
+§1 全部 Owner 裁决；§2.2 其余校验语义（routeRef 去重、引用完整性、
+duplicate-key 扫描、version=2、激活范围恰好 `{agt_cto-agent}`、静态配置
+fail-loud / controlled restart）；§2.3 hard bound 与
+`MAX_CONFIGURED_ROUTES = 4`（OWNER_DECISION 已冻结）；§2.4 的
+`fallbacks: ["route-B","route-C","luna"]` 可表达性；§3 authority lineage
+（supersedes 两份旧 authority、PR #60 处置全量保持）；§4/§5 历史
+observations；CTR-002/004/005/006/007/008/009/010/012/013/014 全文；
+CTR-011（harness pin `0.1.0-rc.8 @ 514ab7b…` 与 dsh-codex@0.2.3 exact
+pin——其适用范围由 A1.5 明确为 subscription route，pin 值本身不变）；
+DEC-001..013（除 DEC-009 中「Luna 唯一 fallback + dsh-codex@0.2.3 承载」
+保持不变外，无任何重开）；§10 ACC 框架（增补见 A1.6）；§11 ALT 全部
+ disposition；§12 MIG/ROLLBACK。
+
+### A1.2 修订 schema：routeKind（冻结）
+
+`routeCatalog.<routeRef>` 的合法字段集由 routeKind 决定（closed enum，
+其余任何 routeKind 值 = malformed → startup fail-loud）：
+
+```jsonc
+{
+  "version": 2,
+  "routeCatalog": {
+    "<routeRef>": {
+      "routeKind":          "builtin" | "subscription",   // 必填，closed enum
+      // —— 恒必填（两种 routeKind 相同）——
+      "provider":            "<non-empty string>",
+      "model":               "<non-empty string>",
+      "credentialReadiness": "<non-empty readiness reference；绝不含 raw credential>",
+      // —— optional（两种 routeKind 相同；语义不变，CTR-010/CTR-014 全文保持）——
+      "providerEnv": { /* 四键 closed object，整个字段可缺省 */ },
+      // —— 仅 subscription route 必填 ——
+      "plugin":              "<non-empty string>",         // builtin: ABSENT（FORBIDDEN）
+      "pluginVersion":       "<exact version pin string>"  // builtin: ABSENT（FORBIDDEN）
+    }
+  },
+  "overrides": { /* 不变：primary + fallbacks[] */ }
+}
+```
+
+校验规则（冻结，全部 startup fail-loud）：
+
+- `routeKind` 缺失 / 非 string / 非 `builtin`|`subscription` → malformed；
+- **builtin route**：`plugin` 或 `pluginVersion` 键**存在**（无论值为何，
+  含 null/空串）→ malformed（ABSENT 是唯一合法形态；FORBIDDEN）；
+- **subscription route**：`plugin` 或 `pluginVersion` 缺失 / 空 / 非
+  string → malformed；`pluginVersion` 必须是 exact pin（沿用基础正文
+  语义：禁 `^`/`~` 范围；命名 dsh-codex 的 route 必须精确 `0.2.3`，
+  CTR-011 不变）；
+- 其余全部校验（exact keys、duplicate-key 扫描、引用完整性、去重、
+  链长 bound、version、激活范围、providerEnv grammar/redaction）逐字
+  按基础正文执行；
+- `overrides`/`primary`/`fallbacks[]`/`ROUTE_CHAIN` 语义零变化。
+
+### A1.3 CANONICAL_ROUTE_IDENTITY（七字段，取代六字段）
+
+```text
+CANONICAL_ROUTE_IDENTITY =
+  routeKind + provider + model + plugin-or-ABSENT + pluginVersion-or-ABSENT
+  + credentialReadiness reference + canonical providerEnv
+```
+
+- `routeKind` 参与 canonical tuple（builtin 与 subscription 永不视为同一
+  route，即便 provider/model 等其余字段相同）；
+- builtin route 的 plugin/pluginVersion 规范化为显式 `ABSENT`；
+  subscription route 保持精确 string 值——与基础正文 providerEnv 缺省
+  规范化为 `ABSENT` 同一确定性原则，纯结构规范化，不丢字段；
+- 两个不同 routeRef 解析为相同 canonical tuple → startup fail-loud；
+  每 canonical route 每 turn ATTEMPTED_AT_MOST_ONCE——全部不变。
+
+### A1.4 初始链冻结 tuple（Q-2 关闭；Q-3 保持开放）
+
+```jsonc
+{
+  "version": 2,
+  "routeCatalog": {
+    "glm53": {
+      "routeKind": "builtin",
+      "provider": "zai",
+      "model": "glm-5.3",
+      "plugin": /* ABSENT — FORBIDDEN on builtin */,
+      "pluginVersion": /* ABSENT — FORBIDDEN on builtin */,
+      "credentialReadiness": "zai-api-key-home",
+      "providerEnv": /* ABSENT */
+    },
+    "luna": {
+      "routeKind": "subscription",
+      "provider": "openai-codex",
+      "model": "gpt-5.6-luna",
+      "plugin": "dsh-codex",
+      "pluginVersion": "0.2.3",
+      "credentialReadiness": "luna-oauth-home",
+      "providerEnv": { /* 四键 closed object；具体值属部署事实，见下行 */ }
+    }
+  },
+  "overrides": {
+    "agt_cto-agent": { "model": { "primary": "glm53", "fallbacks": ["luna"] } }
+  }
+}
+```
+
+- glm53（builtin）：`credentialReadiness = zai-api-key-home` 冻结为
+  readiness reference（API-key 形态，对应 pi-ai `ZAI_API_KEY` env auth
+  seam；raw key 绝不进配置，CTR-010 不变）；`providerEnv = ABSENT`。
+- luna（subscription）：plugin/pluginVersion 沿用基础正文冻结值
+  （dsh-codex / 0.2.3 exact）；`providerEnv` 为四键 closed object 的
+  **形态**在此冻结（键集与 grammar 按 CTR-010/CTR-014 全文）；四值的
+  具体内容属部署事实，与 Luna credential 就绪（Q-3，provisioning +
+  operator 交互式 OAuth）同属独立部署轮，**本 Amendment 不写入任何
+  配置、不授权激活**（`production_apply_authority = none` 不变）。
+- `MAX_CONFIGURED_ROUTES = 4`、链形态 primary + fallbacks[]、
+  `fallbacks: []` = strict——全部不变。
+
+### A1.5 plugin pin 的适用范围（明确，不改值）
+
+- `dsh-codex@0.2.3` exact pin（CTR-011）：只对 `routeKind = subscription`
+  且 `plugin = dsh-codex` 的 route 生效；builtin route 无 plugin 字段，
+  自然无 plugin pin 校验。
+- Harness pin（`deepseek-harness 0.1.0-rc.8 @ 514ab7b…`，CTR-011）：
+  Agent 进程级不变量，与 routeKind 无关，逐字保持；mismatch = fail-loud
+  且**不是** fallback 触发类（不在 CTR-004 白名单）——不变。
+- 禁止事项（冻结为 Amendment 级 ALT，见 A1.7）：为 builtin route 伪造
+  dsh-zai 插件条目；用 dsh-codex 作 builtin route 的 fake carrier；
+  在 builtin route 上填任何 plugin/pluginVersion 值。
+
+### A1.6 实现影响与排序（本轮 DOCS ONLY）
+
+- current main（`c52bd1c`）的 v2 loader 仍按基础正文 plugin-必填 schema
+  校验（`model-overrides.js:313-325`）；本 Amendment 生效后，实现需要
+  一轮**后续 implementation round**（在子权威
+  `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1`（含其 Amendment 1）授权内）
+  把 loader 校验、canonical identity 与 processConfig.subscription 构造
+  对齐 A1.2/A1.3（builtin route 不构造 subscription block）。本 Amendment
+  轮不改任何产品代码。
+- 生产现状不受影响：生产 root 无 override 文件（OBS-003 / OBS-IMPL-010），
+  链代码 inert；本 Amendment 不写配置、不重启、不部署。
+- 验收增补（在 §10 ACC 框架上追加，编号接续）：
+  - `ACC-016` routeKind 校验族：缺 routeKind / 非法枚举值 / builtin 携带
+    plugin 或 pluginVersion（含 null/空值）⇒ startup fail-loud；subscription
+    缺 plugin/pluginVersion ⇒ fail-loud；合法 builtin route 加载成功且
+    resolved processConfig 无 subscription block；
+  - `ACC-017` canonical identity v2：builtin 与 subscription 即便
+    provider/model 相同也不坍缩为同一 canonical route；builtin 的
+    plugin/pluginVersion 规范化为 ABSENT 参与 alias 去重；
+  - `ACC-018` 初始链 tuple：A1.4 的 glm53/luna 配置通过校验；dsh-codex
+    pin 校验只作用于 luna（subscription）route；
+  - `ACC-019` 复用 gate 身份：DEC-IMPL-004 的 route 身份 =
+    A1.3 canonical identity（routeKind 参与；builtin process 不与
+    subscription process 互相复用）。
+
+### A1.7 Alternatives（Amendment 级）
+
+- `ALT-A1-001` whole-authority SUPERSEDE 另立 V2 Spec：**REJECTED**——
+  方向未变，仅 schema 纠错；整权威替换会把 15 条 ACC / 14 条 CTR /
+  13 条 DEC 全部重开重冻，违反「不得重开其他已冻结决策」与最窄合法
+  形式要求。
+- `ALT-A1-002` 保留 plugin 必填、为 zai 造 dsh-zai 假插件：**REJECTED /
+  FORBIDDEN**——不存在真实 dsh-zai npm 插件（EVIDENCE_A1_3），伪造
+  插件 tuple 违反字段真实性。
+- `ALT-A1-003` 保留 plugin 必填、glm53 填 dsh-codex 作 carrier：
+  **REJECTED / FORBIDDEN**——fake carrier（EVIDENCE_A1_4）；dsh-codex
+  是 openai-codex OAuth 的承载插件，与 zai API-key 路径无关，会把
+  plugin pin / provisioning / credential 语义错误耦合到 builtin route。
+- `ALT-A1-004` 把 ZAI 做成需要插件的自定义 provider：**REJECTED**——
+  ZAI 已是 harness 内建 provider（A1.0 核实），另造承载层 = 无依据的
+  新机制。
+- `ALT-A1-005` 借本 Amendment 调整链顺序 / bound / gate / Scheduler
+  政策：**FORBIDDEN**——超出本 Amendment 范围（A1.1 清单外一律不动）。
+
+### A1.8 Final Output（Amendment 1 authoring 轮填写）
+
+```text
+TASK_NAME = 链路 内建路由修订
+TASK_STATUS = AUTHORING_COMPLETE（proposed；READY_FOR_INDEPENDENT_REVIEW）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
+AMENDMENT_ID = AMENDMENT_1_BUILTIN_ROUTE_KIND
+AMENDMENT_STATUS = proposed（awaiting independent review；Draft PR 不 merge）
+AMENDMENT_FORM = IN_PLACE_APPENDED_AMENDMENT（基础正文 §1–§15 逐字保留）
+
+NEW_EVIDENCE =
+  zai/glm-5.3 生产同款环境受控探针 PASS
+  ZAI = Harness 内建 provider（pi-ai builtinProviders；apiKey/ZAI_API_KEY）
+  无真实 dsh-zai npm 插件
+  dsh-codex fake carrier = FORBIDDEN
+
+ROUTE_KIND = builtin | subscription（closed enum）
+BUILTIN_PLUGIN_FIELDS = ABSENT / FORBIDDEN
+SUBSCRIPTION_PLUGIN_FIELDS = REQUIRED + EXACT_PIN
+CANONICAL_ROUTE_IDENTITY = routeKind + provider + model +
+  plugin-or-ABSENT + pluginVersion-or-ABSENT + credentialReadiness +
+  canonical providerEnv
+
+INITIAL_CHAIN（policy target；本轮不写入）=
+  glm53: builtin / zai / glm-5.3 / plugin ABSENT / pluginVersion ABSENT /
+         zai-api-key-home / providerEnv ABSENT
+  luna:  subscription / openai-codex / gpt-5.6-luna / dsh-codex / 0.2.3 /
+         luna-oauth-home / providerEnv 四键 closed object（值属部署轮）
+
+PRESERVED（不重开）=
+  MAX_CONFIGURED_ROUTES = 4；primary + fallbacks[]；STOP_CHAIN（九类封闭集）；
+  ONE_LOGICAL_TURN；SCHEDULER_JOB_ROUTE_POLICY = INHERIT_AGENT_CHAIN_ONLY；
+  ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN；四类 hop 白名单（CTR-004）；
+  journal/redaction（CTR-008）；credential/providerEnv 契约（CTR-010/014）；
+  harness pin 0.1.0-rc.8 @ 514ab7b + dsh-codex@0.2.3 exact（值不变，范围
+  = subscription route）；fleet 隔离（CTR-012）；authority lineage 与
+  PR #60 处置
+
+Q_2_STATUS = CLOSED（本 Amendment A1.4）
+Q_3_STATUS = OPEN（Luna 就绪轮，独立部署轮，不 gate 本 Amendment）
+IMPLEMENTATION_DELTA = 后续 implementation round（子权威 + 其 Amendment 1
+  授权内；本轮零代码改动）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE = NO（Draft PR）
+
+NEXT_TASK = 链路 内建路由审计
+```
+
+### A1.9 Final Output — Amendment 1 Acceptance finalize（2026-08-27；链路 内建路由采纳执行轮填写）
+
+```text
+TASK_NAME = 链路 内建路由采纳执行
+TASK_STATUS = ACCEPTANCE_TRANSACTION_COMPLETE（lifecycle-only）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
+AMENDMENT_ID = AMENDMENT_1_BUILTIN_ROUTE_KIND
+amendment_status = proposed -> accepted
+accepted_by = mayf3
+reviewed_head = 8b76909c33dfc39693c6f8e760eb1a29c80d0727
+review_verdict = PASS
+blocker_count = 0
+READY_FOR_ACCEPTANCE = YES（链路 内建路由审计轮结论）
+normative_body_change = NONE
+
+TRANSACTION（lifecycle-only，单 docs-only commit；Amendment 节 normative
+内容零改动——A1.0–A1.8 与基础正文 §1–§15 逐字保留，含 proposed 阶段
+条件句与 authoring 轮 Final Output）：
+  status mirrors = frontmatter amendment_1_* + 文头镜像 + Amendment 节
+  标题与 AMENDMENT_STATUS + 本节 provenance；与 child authority
+  AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 Amendment 1 同一事务
+
+PRESERVED（逐字保持，本轮零改动）：
+  routeKind = builtin | subscription（closed enum）
+  builtin: plugin/pluginVersion = ABSENT / FORBIDDEN
+  subscription: plugin/pluginVersion = required + exact pin
+  CANONICAL_ROUTE_IDENTITY = 七字段（routeKind 参与）
+  production_apply_authority = none
+  Q_2_STATUS = CLOSED（A1.4）；Q_3_STATUS = OPEN
+  MAX_CONFIGURED_ROUTES = 4；primary + fallbacks[]；STOP_CHAIN；
+  ONE_LOGICAL_TURN；INHERIT_AGENT_CHAIN_ONLY；fleet 隔离；pin 值不变
+
+PR_LIFECYCLE = PR #77 保持 OPEN（Draft；MERGE = NO；merge 决策不在本轮
+  授权内）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+MERGE = NO
+
+NEXT_TASK = 链路 内建路由采纳审计
 ```
