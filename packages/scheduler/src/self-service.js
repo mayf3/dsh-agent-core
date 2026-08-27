@@ -306,11 +306,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             ...(args.auto_retry === true ? { retry: { auto: true } } : {}),
           }, { nowMs })
         } catch (error) {
-          if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
-            created = toPublicJob(error.committedValue)
-          } else {
-            return mutationFailure(error)
-          }
+          return mutationFailure(error)
         }
         // The control op's returned value is the exact committed projection;
         // do not perform a second fallible/racy read before the audit append.
@@ -396,11 +392,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             assertJob: ownershipGuard(caller, scoped.allowAny),
           })
         } catch (error) {
-          if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
-            updated = toPublicJob(error.committedValue)
-          } else {
-            return mutationFailure(error)
-          }
+          return mutationFailure(error)
         }
         const auditStatus = await appendAudit('update', {
           jobId: updated.id,
@@ -434,7 +426,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             assertJob: ownershipGuard(caller, scoped.allowAny),
           })
         } catch (error) {
-          if (error?.mutationOutcome !== 'committed') return mutationFailure(error)
+          return mutationFailure(error)
         }
         const auditStatus = await appendAudit('remove', {
           jobId: args.job_id,
@@ -463,11 +455,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         assertJob: ownershipGuard(caller, scoped.allowAny),
       })
     } catch (error) {
-      if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
-        updated = toPublicJob(error.committedValue)
-      } else {
-        return mutationFailure(error)
-      }
+      return mutationFailure(error)
     }
     const auditStatus = await appendAudit(operation, {
       jobId: updated.id,
