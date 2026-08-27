@@ -1,6 +1,10 @@
 ---
 spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_at: 2026-08-28
+accepted_reviewed_head: eca5baaeab778ad8c6ba8fcfaf9c96ad12f2f965
+acceptance_review_verdict: PASS
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -28,6 +32,12 @@ owners:
 ---
 
 # AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
+
+> **Accepted 2026-08-28 by repository owner `mayf3`.** Independent semantic review bound to
+> reviewed head `eca5baaeab778ad8c6ba8fcfaf9c96ad12f2f965` returned
+> `SPEC_REVIEW=ACCEPT`, `READY_TO_MARK_ACCEPTED=YES`, `BLOCKERS=0`; a second adversarial
+> reviewer independently returned PASS. This acceptance commit changes lifecycle/provenance
+> only; Contracts and Acceptance content are byte-identical to the reviewed head.
 
 ## 1. Goal
 
@@ -912,7 +922,7 @@ semantics above are normative and may not be weakened.
 SPEC_GOVERNANCE_MODE = AUTHOR
 SPEC_ID = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
 SPEC_KIND = implementation
-STATUS = proposed
+STATUS = accepted
 AUTHORITY_LEVEL = governing_spec
 IMPLEMENTATION_AUTHORITY = contracts
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
@@ -922,5 +932,8 @@ NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 18
 CONTRACTS_WITH_ACCEPTANCE = 18
-AUTHORING_READY_FOR_REVIEW = YES
+AUTHORING_READY_FOR_REVIEW = COMPLETED
+INDEPENDENT_REVIEW = PASS
+READY_TO_MARK_ACCEPTED = YES
+ACCEPTED_REVIEWED_HEAD = eca5baaeab778ad8c6ba8fcfaf9c96ad12f2f965
 ```
