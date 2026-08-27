@@ -13,8 +13,13 @@ governed_by:
 external_authorities:
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1
-    revision: 57f0268d76aa975b7d07a78874a1bf69d2ec3c4d
+    revision: 83e14ca12b5f02644455b06ccdc6a336dc7462ce
     relation: interoperates_with
+    # Sole external/upstream authority (dependency DAG, frozen:
+    # auth-service PR #31 -> svc-workflow PR #14 -> THIS Spec (PR #83) ->
+    # dsh-agent-core PR #87). No reverse dependency on PR #31 or PR #87:
+    # AGENT_CORE_HR_DISPATCHER_V1 (PR #87) depends on THIS Spec, never the
+    # reverse; identity/scheduler governance is described for context only.
 supersedes: []
 superseded_by: null
 owners:
@@ -25,7 +30,7 @@ owners:
 
 > 状态：**proposed**（revision 5，按**最终** OWNER_RULING = DUAL_GLOBAL_READER_MODEL
 > 修订：服务端 global gate = GLOBAL_WORKFLOW_READER OR GLOBAL_WORKFLOW_COORDINATOR
->（external authority SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 @ 57f0268 冻结新只读
+>（external authority SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 @ 83e14ca 冻结新只读
 > 角色 + 双授予——HR 主身份与专用 Dispatcher Agent 各获 READER，双方均不获
 > COORDINATOR）；错误表恢复双码声明——`global_read_role_required`（目标契约）+
 > `global_coordinator_required`（部署过渡现实）；本能力保持**通用只读工具**，
@@ -35,6 +40,12 @@ owners:
 > 姊妹 Spec（未上 main、非本 Spec 的 parent）：`AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1`
 >（proposed，domain 维度单页枚举）；两者共享 manifest 家族与错误保留纪律，实现时以
 > main 实际基线做计数调和。
+>
+> **依赖方向（2026-08-27 DAG sync，冻结）**：本 Spec 在四 Spec 链
+> 31 → 14 → 83 → 87 中为节点 3，**唯一**上游规范依赖 = svc-workflow
+> `SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1`（其最终服务端 GLOBAL_WORKFLOW_READER
+> 合同，@ 83e14ca）。本 Spec 不依赖（也不得反向依赖）PR #31 或 PR #87；
+> `AGENT_CORE_HR_DISPATCHER_V1`（PR #87）依赖本 Spec，方向不可倒置。
 
 ## 1. Goal
 
@@ -85,18 +96,20 @@ Out of scope / 明确不授权：
   - `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1`：Broker-first 凭据链
     （trusted store → client_credentials → scoped token）为既有冻结语义。
 - `external_authorities`：svc-workflow 侧的最终双读者角色 Spec
-  （proposed，57f0268）— `interoperates_with`。外部引用不授予本地权威：该
+  （proposed，83e14ca）— `interoperates_with`。外部引用不授予本地权威：该
   Spec 按 OWNER_RULING = DUAL_GLOBAL_READER_MODEL（最终，不再切换）引入
   `GLOBAL_WORKFLOW_READER` 只读角色（唯一许可面 = global instance list），服务端
   gate 改为 READER OR COORDINATOR，写端点/assistance/provisioning 维持仅
   COORDINATOR；双冻结授予对象 = HR 主身份（agt_hr-agent /
   dc702687-6515-4a2a-91ae-e572a9bbd766，UUID 已冻结）与专用 Dispatcher Agent
   （agt_workflow-dispatcher-hr-agent，UUID 待身份创建后 amendment 回填，回填前
-  不得 role apply）；双方均不获 COORDINATOR；legacy bc970ced 禁授。其身份/
-  Client/grant 由 mayf3/auth-service
-  `AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1`（proposed，PR #31）治理；
-  Agent/scheduler 面由 `AGENT_CORE_HR_DISPATCHER_V1`（proposed）治理。
-  本能力不依赖上述任何 proposed Spec 即可实现与验收；落地后 HR 主会话与
+  不得 role apply）；双方均不获 COORDINATOR；legacy bc970ced 禁授。
+  （语境描述，非依赖：dispatcher 的身份/Client/grant 由 mayf3/auth-service
+  `AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1`（proposed，PR #31）治理，
+  Agent/scheduler 执行面由本仓 `AGENT_CORE_HR_DISPATCHER_V1`（proposed，PR #87）
+  治理——依赖方向为 PR #31 与 PR #87 均可依赖本 Spec，本 Spec 不反向依赖
+  二者，也不 pin 其 head。）本能力的实现与本地验收不等待任何上述 proposed
+  Spec 的合并/部署（双码时序声明见下）；落地后 HR 主会话与
   dispatcher 凭据都是本工具的普通合法调用方。
 - **错误码时序声明**：broker 实现可在 svc-workflow READER 修订部署之前或之后
   落地。修订前服务端 gate 失败码为 `global_coordinator_required`，修订后为
@@ -145,7 +158,7 @@ Out of scope / 明确不授权：
   `GLOBAL_WORKFLOW_COORDINATOR`）；非持有者 →
   `WorkflowQueryError::GlobalCoordinatorRequired` → HTTP 403
   `global_coordinator_required`（`error.rs:516-519`）。external authority
-  （SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 §4–§5，57f0268）修订部署后：谓词
+  （SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 §4–§5，83e14ca）修订部署后：谓词
   接受 `GLOBAL_WORKFLOW_READER` OR `GLOBAL_WORKFLOW_COORDINATOR`，失败码改为
   403 `global_read_role_required`；coordinator 写端点与 assistance 路径维持仅
   COORDINATOR。
