@@ -60,18 +60,41 @@ function nonEmpty(value) {
   return typeof value === 'string' && value.length > 0
 }
 
+function validIso(value) {
+  if (!nonEmpty(value)) return false
+  const parsed = Date.parse(value)
+  return Number.isFinite(parsed) && new Date(parsed).toISOString() === value
+}
+
 function validSchedule(value) {
-  if (value?.kind === 'at') return exactKeys(value, ['at', 'kind']) && nonEmpty(value.at)
-  if (value?.kind === 'every') return exactKeys(value, ['everyMs', 'kind']) && Number.isFinite(value.everyMs)
+  if (value?.kind === 'at') return exactKeys(value, ['at', 'kind']) && validIso(value.at)
+  if (value?.kind === 'every') {
+    return exactKeys(value, ['everyMs', 'kind'])
+      && Number.isSafeInteger(value.everyMs)
+      && value.everyMs >= 1
+  }
   return value?.kind === 'cron'
-    && exactKeys(value, ['expr', 'kind', 'tz'])
+    && exactKeys(value, ['expr', 'kind', 'timezone'])
     && nonEmpty(value.expr)
-    && nonEmpty(value.tz)
+    && nonEmpty(value.timezone)
 }
 
 function validDestination(value) {
   return value === null
     || (exactKeys(value, ['channel', 'to']) && nonEmpty(value.channel) && nonEmpty(value.to))
+}
+
+function validSchedulerFailure(parent, manifest) {
+  if (!exactKeys(parent, ['error', 'ok']) || parent.ok !== false) return false
+  const error = parent.error
+  if (error === null || typeof error !== 'object' || Array.isArray(error)) return false
+  const allowed = new Set(['code', 'detail', 'requestId', 'status'])
+  if (Object.keys(error).some((key) => !allowed.has(key))) return false
+  return nonEmpty(error.code)
+    && manifest.errors.some((candidate) => candidate.code === error.code)
+    && (error.detail === undefined || typeof error.detail === 'string')
+    && (error.requestId === undefined || nonEmpty(error.requestId))
+    && (error.status === undefined || Number.isSafeInteger(error.status))
 }
 
 function validSchedulerMutationResult(operation, result) {
@@ -81,8 +104,11 @@ function validSchedulerMutationResult(operation, result) {
       && nonEmpty(result.name)
       && typeof result.enabled === 'boolean'
       && validSchedule(result.normalizedSchedule)
-      && (result.timezone === null || nonEmpty(result.timezone))
-      && (result.nextRunAt === null || nonEmpty(result.nextRunAt))
+      && (result.normalizedSchedule.kind === 'cron'
+        ? result.timezone === result.normalizedSchedule.timezone
+        : result.timezone === null)
+      && (result.nextRunAt === null || validIso(result.nextRunAt))
+      && (operation !== 'create' || (result.enabled === true && result.nextRunAt !== null))
       && nonEmpty(result.targetAgentId)
       && validDestination(result.exactPersistedDeliveryDestination)
       && typeof result.autoRetry === 'boolean'
@@ -93,7 +119,7 @@ function validSchedulerMutationResult(operation, result) {
     return exactKeys(result, ['auditStatus', 'enabled', 'jobId', 'nextRunAt'])
       && nonEmpty(result.jobId)
       && typeof result.enabled === 'boolean'
-      && (result.nextRunAt === null || nonEmpty(result.nextRunAt))
+      && (result.nextRunAt === null || validIso(result.nextRunAt))
       && validAuditStatus(result.auditStatus)
   }
   return operation === 'remove'
@@ -149,15 +175,13 @@ export function createRelayHandlers(manifest, requestFn) {
             : `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
         }
       }
-      const parent = envelope && envelope.ok === true ? envelope.result : undefined
+      const structuredTransport = exactKeys(envelope, ['ok', 'result']) && envelope.ok === true
+      const parent = structuredTransport ? envelope.result : undefined
       const structuredParentSuccess = parent?.ok === true
         && (!uncertainMutation || validSchedulerMutationResult(op.name, parent.result))
-      const structuredParentFailure = parent?.ok === false
-        && parent.error !== null
-        && typeof parent.error === 'object'
-        && typeof parent.error.code === 'string'
-        && parent.error.code.length > 0
-        && manifest.errors.some((candidate) => candidate.code === parent.error.code)
+      const structuredParentFailure = uncertainMutation
+        ? validSchedulerFailure(parent, manifest)
+        : parent?.ok === false && parent.error !== null && typeof parent.error === 'object'
       if (uncertainMutation && !structuredParentSuccess && !structuredParentFailure) {
         return {
           errorCode: 'mutation_outcome_unknown',

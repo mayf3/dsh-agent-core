@@ -53,6 +53,20 @@ async function fixture() {
   return { file, store, occurrence }
 }
 
+test('CLI add anchors every schedules for runtime eligibility', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'scheduler-cli-every-'))
+  const file = join(dir, 'jobs.json')
+  const result = run([
+    'add', '--agent', 'agent-a', '--name', 'every', '--every-ms', '1000',
+    '--message', 'tick', '--no-deliver', '--json', '--store', file,
+  ])
+  assert.equal(result.status, 0, result.stderr)
+  const created = JSON.parse(result.stdout)
+  const stored = (await new JobStore(file).loadDoc({ force: true })).jobs.find((candidate) => candidate.id === created.id)
+  assert.equal(Number.isFinite(stored.schedule.anchorMs), true)
+  assert.equal(stored.schedule.anchorMs, stored.createdAtMs)
+})
+
 test('ACC-032 list/runs are control-only occurrence and fence projections', async () => {
   const { file, occurrence } = await fixture()
   const listed = run(['list', '--json', '--store', file])

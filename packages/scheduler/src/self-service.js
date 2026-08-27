@@ -142,7 +142,7 @@ function scheduleFromArgs(args, nowMs) {
     }
     return { kind: 'at', at: new Date(atMs).toISOString() }
   }
-  if (args.schedule_kind === 'every') return { kind: 'every', everyMs: args.every_ms }
+  if (args.schedule_kind === 'every') return { kind: 'every', everyMs: args.every_ms, anchorMs: nowMs }
   throw new TypeError(`unsupported schedule_kind: ${String(args.schedule_kind)}`)
 }
 
@@ -312,7 +312,11 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             ...(args.auto_retry === true ? { retry: { auto: true } } : {}),
           }, { nowMs })
         } catch (error) {
-          return mutationFailure(error)
+          if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
+            created = toPublicJob(error.committedValue)
+          } else {
+            return mutationFailure(error)
+          }
         }
         // The control op's returned value is the exact committed projection;
         // do not perform a second fallible/racy read before the audit append.
@@ -402,7 +406,11 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             },
           })
         } catch (error) {
-          return mutationFailure(error)
+          if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
+            updated = toPublicJob(error.committedValue)
+          } else {
+            return mutationFailure(error)
+          }
         }
         const auditStatus = await appendAudit('update', {
           jobId: updated.id,
@@ -436,7 +444,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
           })
         } catch (error) {
-          return mutationFailure(error)
+          if (error?.mutationOutcome !== 'committed') return mutationFailure(error)
         }
         const auditStatus = await appendAudit('remove', {
           jobId: args.job_id,
@@ -465,7 +473,11 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
       })
     } catch (error) {
-      return mutationFailure(error)
+      if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
+        updated = toPublicJob(error.committedValue)
+      } else {
+        return mutationFailure(error)
+      }
     }
     const auditStatus = await appendAudit(operation, {
       jobId: updated.id,

@@ -75,11 +75,12 @@ async function cmdAdd(args) {
   const kinds = [at, cronExpr, everyMs].filter(Boolean).length
   if (kinds !== 1) throw new Error('exactly one of --at | --cron | --every-ms is required')
 
+  const addNowMs = Date.now()
   const schedule = at
     ? { kind: 'at', at: parseAtFlag(at) }
     : cronExpr
       ? { kind: 'cron', expr: cronExpr, ...(flagValue(args, '--tz') ? { tz: flagValue(args, '--tz') } : {}) }
-      : { kind: 'every', everyMs: Number(everyMs) }
+      : { kind: 'every', everyMs: Number(everyMs), anchorMs: addNowMs }
 
   const payload = { kind: 'agentTurn', message }
   const timeoutSeconds = flagValue(args, '--timeout-seconds')
@@ -193,7 +194,9 @@ async function cmdUpdate(args) {
 
   // updateJobOp already returns the public projection. Partial schedule and
   // payload changes are constructed from the exact definition under its lock.
+  const updateNowMs = Date.now()
   const publicJob = await updateJobOp(store, id, patch, {
+    nowMs: updateNowMs,
     buildPatch: (lockedCurrent, basePatch) => {
       const effective = { ...basePatch }
       if (kindCount === 1) {
@@ -201,7 +204,7 @@ async function cmdUpdate(args) {
           ? { kind: 'at', at: parseAtFlag(at) }
           : cronExpr
             ? { kind: 'cron', expr: cronExpr, ...(tz ? { tz } : lockedCurrent.schedule.kind === 'cron' && lockedCurrent.schedule.tz ? { tz: lockedCurrent.schedule.tz } : {}) }
-            : { kind: 'every', everyMs: Number(everyMs) }
+            : { kind: 'every', everyMs: Number(everyMs), anchorMs: updateNowMs }
       } else if (tz !== undefined) {
         if (lockedCurrent.schedule.kind !== 'cron') {
           throw new Error('--tz without a new --cron is only valid for cron-scheduled jobs')
