@@ -1,6 +1,11 @@
 ---
 spec_id: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+reviewed_head: f4e1e04aa6725f9652cfabe86ef8c044a92e4e6e
+review_verdict: PASS
+blocker_count: 0
+normative_body_change: NONE
 date: 2026-08-27
 type: unified activation-authorizing child Spec (SPEC ONLY — 本轮只冻结三阶段授权边界；不实现、不写凭据、不登录 OAuth、不改配置、不部署、不重启)
 spec_kind: implementation
@@ -64,9 +69,10 @@ references:
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1 — agt_cto-agent 路由链激活的统一授权（unified activation-authorizing child authority）
 
-> SPEC_STATUS = **proposed**（authoring 2026-08-27，任务「链路 激活授权执行」；
-> awaiting independent review；Draft PR，不 merge、不实现、不写凭据、不登录
-> OAuth、不改配置、不部署、不重启）。
+> SPEC_STATUS = **accepted**（acceptance 2026-08-27，accepted_by = mayf3；
+> reviewed_head = `f4e1e04aa6725f9652cfabe86ef8c044a92e4e6e`；review_verdict = PASS；
+> blocker_count = 0；normative_body_change = NONE；Draft PR 保持 OPEN / unmerged，
+> 本轮不实现、不写凭据、不登录 OAuth、不改配置、不部署、不重启）。
 > 本文件是 `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1`（accepted，下称**父 Spec**）的
 > **最小统一激活 child authority**：父 Spec §13 Q-3 冻结「Luna 就绪轮……的独立
 > 授权与执行时序：另行 dispatch」，IMPL 子 Spec §2.2 冻结生产配置写入 / 激活 /
@@ -85,8 +91,8 @@ references:
 > GATE-2`；`PHASE_B_ALLOWED = GATE-1 AND GATE-2 AND GATE-3`；
 > `PHASE_C_ALLOWED = GATE-1 AND GATE-2 AND GATE-3 AND GATE-4`。GATE-5 是
 > production activation 的最终完成判据，不是启动 Phase A/B/C 的前置条件；
-> GATE-5 未完成前不得宣称 `ACTIVATION_COMPLETE`。proposed 阶段因 GATE-1 未满足，
-> 本 Spec 不授权任何操作。
+> GATE-5 未完成前不得宣称 `ACTIVATION_COMPLETE`。本 Spec 虽已 accepted，但在进入
+> main 前 GATE-1 仍未满足，因此不授权任何操作。
 >
 > 本轮（authoring round）DOCS ONLY：不改任何 packages/ 代码，不写任何
 > Credential，不执行 OAuth，不安装插件，不写 agent-model-overrides.json，不部署
@@ -206,8 +212,8 @@ GATE_5_ROLE = COMPLETION_CRITERION
 ACTIVATION_COMPLETE = GATE-5（GATE-5 未完成前不得宣称 ACTIVATION_COMPLETE；
                               GATE-5 不是启动 Phase A/B/C 的前置条件）
 
-IMPLEMENTATION_ALLOWED_NOW = NO（proposed；GATE-1 未满足；GATE-2 已满足）
-PRODUCTION_OPERATIONS_ALLOWED_NOW = NO（proposed；GATE-1 未满足；GATE-2 已满足）
+IMPLEMENTATION_ALLOWED_NOW = NO（accepted but unmerged；GATE-1 未满足；GATE-2 已满足）
+PRODUCTION_OPERATIONS_ALLOWED_NOW = NO（accepted but unmerged；GATE-1 未满足；GATE-2 已满足）
 ```
 
 - 与父 Spec 的分工：父 Spec = 路由政策与 schema authority；IMPL 子 Spec = 链
@@ -794,11 +800,16 @@ Home mode 无 open question：`HOME_DIRECTORY_MODE = 0755`、`HOME_OWNER_UID = 5
   （fail-loud），处置（树重装 / pin amendment / 放弃 luna）归 Owner 决策；
   本 Spec 不预设答案（CLM-ACT-006 / CTR-ACT-C102）。
 
-## 14. Final Output（authoring 轮填写）
+## 14. Final Output（acceptance 轮填写）
 
 ```text
-TASK_NAME = 链路 激活授权执行
-TASK_STATUS = AUTHORING_COMPLETE（proposed；READY_FOR_INDEPENDENT_REVIEW）
+TASK_NAME = 采纳 执行
+TASK_TYPE = 执行
+TASK_STATUS = ACCEPTANCE_COMPLETE（accepted；Draft PR 保持 OPEN / unmerged）
+PRE_ACCEPTANCE_HEAD = f4e1e04aa6725f9652cfabe86ef8c044a92e4e6e
+REVIEW_VERDICT = PASS
+BLOCKER_COUNT = 0
+NORMATIVE_BODY_CHANGE = NONE
 
 SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1
 AUTHORITY_FORM = unified activation-authorizing child Spec（不 supersede 任何 Spec；
@@ -894,7 +905,7 @@ DEPLOYMENT = NONE
 RESTART = NONE
 MERGE = NO（Draft PR）
 PR78_LIFECYCLE_MUTATION = NONE（处置仅记录于 §3.4）
-READY_FOR_REVIEW = YES
+ACCEPTANCE_FINALIZED = YES
 
-NEXT_TASK = 激活 审计
+NEXT_TASK = 采纳 审计
 ```
