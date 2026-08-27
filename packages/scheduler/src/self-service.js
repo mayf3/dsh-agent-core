@@ -199,9 +199,6 @@ function mutationFailure(error) {
   if (/^unknown job id:/u.test(error?.message ?? '')) {
     return err(SELF_SERVICE_ERROR_CODES.JOB_NOT_FOUND, 'job no longer exists')
   }
-  // Once a control operation enters the JobStore mutation authority, an I/O,
-  // process, or transport failure may occur after atomic rename. Never retry
-  // or mislabel that ambiguity as validation failure.
   return err(
     SELF_SERVICE_ERROR_CODES.MUTATION_OUTCOME_UNKNOWN,
     'scheduler mutation outcome is unknown; inspect current state before any manual retry',
@@ -318,8 +315,6 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             return mutationFailure(error)
           }
         }
-        // The control op's returned value is the exact committed projection;
-        // do not perform a second fallible/racy read before the audit append.
         const auditStatus = await appendAudit('create', {
           jobId: created.id,
           operatorAgentId: caller,
