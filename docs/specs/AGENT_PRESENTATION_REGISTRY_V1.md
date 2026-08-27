@@ -41,7 +41,8 @@ PREVIOUS_REVIEW_COMMENT = 5411478885
 PREVIOUS_REVIEWED_HEAD = 007a257b2f07ef54e0874ffe482550c9cc6b8c13
 SPEC_GOVERNANCE_MODE = AUTHOR
 PREFLIGHT_MODE = NEW
-STATUS = proposed
+AUTHORING_STATUS_AT_START = proposed
+CURRENT_SPEC_STATUS = accepted
 IMPLEMENTATION_AUTHORITY = contracts
 AUTHORING_BASE = b3a6d4fe089c4b95bdc22df0cabd24eeb3ccb724
 PRODUCT_CODE_CHANGE_THIS_ROUND = NONE
@@ -53,17 +54,19 @@ PRODUCTION_APPLY_AUTHORITY = NONE
 ## 1. Goal
 
 Create one Product Presentation authority, separate from Agent Definition and
-Workspace persona, for stable Agent imagery and discovery metadata. Once this exact
-Spec is accepted into the authority branch, its Contracts authorize only a later,
-bounded implementation in this repository of:
+Workspace persona, for stable Agent imagery and discovery metadata. Once this
+owner-accepted Spec is merged into the authority branch, its Contracts authorize only
+a later, bounded implementation in this repository of:
 
 1. a deployment-owned, read-only `agent-presentations.json` reader;
 2. the `AgentDefinition LEFT JOIN Presentation by agentId` Product Agent view;
 3. the corresponding Product API projection, validation, tests, and local
    configuration seam.
 
-This proposed document does not itself authorize or perform implementation,
-deployment, runtime mutation, Mobile changes, or canary changes.
+This Spec was authored while proposed and has now been owner-accepted on this
+PR branch. It becomes active repository authority only after merge to main.
+No Acceptance item, product implementation, deployment, runtime mutation,
+Mobile change, or canary change has been executed.
 
 ## 2. Scope and non-goals
 
@@ -115,7 +118,7 @@ REQUESTED_CHANGE              = new presentation registry and merged Product Age
 CHANGE_CLASS                  = NON_MECHANICAL
 PREFLIGHT_MODE                = NEW
 GOVERNANCE_ADOPTION_STATUS    = accepted
-PRIMARY_GOVERNING_SPEC        = AGENT_PRESENTATION_REGISTRY_V1 (this proposed Spec)
+PRIMARY_GOVERNING_SPEC        = AGENT_PRESENTATION_REGISTRY_V1 (proposed at authoring time)
 SPEC_PRESENT_IN_BASE          = NO
 SPEC_STATUS_IN_BASE           = NONE
 IMPLEMENTATION_ALLOWED        = NO
@@ -706,7 +709,7 @@ Mobile back-navigation remains unresolved by this Backend Spec.
 ## 10. Acceptance
 
 All items below are future implementation Acceptance definitions. None is claimed
-executed or `PASS` by this proposed docs-only change.
+executed or `PASS` by this owner-accepted docs-only change.
 
 ### ACC-PRESENTATION-SCHEMA-001 — Validate registry schema and forbidden fields
 
@@ -979,8 +982,8 @@ permitted.
 The later implementation rollback unit is the presentation reader/Product API merge
 and its local configuration. Removing the optional configuration returns to empty-
 registry behavior. Rollback MUST NOT rewrite Registry, Agent Definition, Binding,
-Session, Workspace, or Mobile state. This proposed docs-only PR requires only Git
-revert if rejected; it has no runtime rollback.
+Session, Workspace, or Mobile state. This owner-accepted docs-only PR requires only
+Git revert if rejected; it has no runtime rollback.
 
 ## 13. Open questions
 
@@ -1003,9 +1006,9 @@ CURRENT_EXTERNAL_AUTHORITY_FACT = Mobile previous state + switchSession
 CURRENT_IMPLEMENTATION_FACT = HTTP switchSession is NOT_IMPLEMENTED
 ```
 
-After this Spec is independently reviewed and accepted, a separate Backend
-implementation task may implement only its Contracts. A separate docs-only Mobile
-Spec task for `MOBILE_AGENT_ROLE_SURFACE_V1` MUST first run PREFLIGHT in
+After this owner-accepted Spec is merged into the authority branch, a separate
+Backend implementation task may implement only its Contracts. A separate docs-only
+Mobile Spec task for `MOBILE_AGENT_ROLE_SURFACE_V1` MUST first run PREFLIGHT in
 `mayf3/agent-core-mobile` and classify back-navigation as exactly one of `REUSE`,
 `AMEND`, or `SUPERSEDE`. Only that repository's authority review and owner acceptance
 may decide to implement `switchSession`, choose `previousAgentId + switchAgent`, or
