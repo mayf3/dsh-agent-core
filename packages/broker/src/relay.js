@@ -38,6 +38,93 @@
  */
 export const BROKER_RPC_METHOD = 'agent-core/broker'
 
+const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove'])
+const COMMITTED_FIELDS = [
+  'auditStatus', 'autoRetry', 'deleteAfterRun', 'enabled',
+  'exactPersistedDeliveryDestination', 'jobId', 'name', 'nextRunAt',
+  'normalizedSchedule', 'targetAgentId', 'timezone',
+]
+
+function exactKeys(value, expected) {
+  return value !== null
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && Object.keys(value).sort().join('\0') === [...expected].sort().join('\0')
+}
+
+function validAuditStatus(value) {
+  return value === 'appended' || value === 'append_failed'
+}
+
+function nonEmpty(value) {
+  return typeof value === 'string' && value.length > 0
+}
+
+function validIso(value) {
+  if (!nonEmpty(value)) return false
+  const parsed = Date.parse(value)
+  return Number.isFinite(parsed) && new Date(parsed).toISOString() === value
+}
+
+function validSchedule(value) {
+  if (value?.kind === 'at') return exactKeys(value, ['at', 'kind']) && validIso(value.at)
+  if (value?.kind === 'every') {
+    return exactKeys(value, ['everyMs', 'kind'])
+      && Number.isSafeInteger(value.everyMs)
+      && value.everyMs >= 1
+  }
+  return value?.kind === 'cron'
+    && exactKeys(value, ['expr', 'kind', 'timezone'])
+    && nonEmpty(value.expr)
+    && nonEmpty(value.timezone)
+}
+
+function validDestination(value) {
+  return value === null
+    || (exactKeys(value, ['channel', 'to']) && nonEmpty(value.channel) && nonEmpty(value.to))
+}
+
+function validSchedulerFailure(parent, manifest) {
+  if (!exactKeys(parent, ['error', 'ok']) || parent.ok !== false) return false
+  const error = parent.error
+  return exactKeys(error, ['code', 'detail'])
+    && nonEmpty(error.code)
+    && typeof error.detail === 'string'
+    && manifest.errors.some((candidate) => candidate.code === error.code)
+}
+
+function validSchedulerMutationResult(operation, result) {
+  if (operation === 'create' || operation === 'update') {
+    return exactKeys(result, COMMITTED_FIELDS)
+      && nonEmpty(result.jobId)
+      && nonEmpty(result.name)
+      && typeof result.enabled === 'boolean'
+      && validSchedule(result.normalizedSchedule)
+      && (result.normalizedSchedule.kind === 'cron'
+        ? result.timezone === result.normalizedSchedule.timezone
+        : result.timezone === null)
+      && (result.nextRunAt === null || validIso(result.nextRunAt))
+      && (operation !== 'create' || (result.enabled === true && result.nextRunAt !== null))
+      && nonEmpty(result.targetAgentId)
+      && validDestination(result.exactPersistedDeliveryDestination)
+      && typeof result.autoRetry === 'boolean'
+      && typeof result.deleteAfterRun === 'boolean'
+      && validAuditStatus(result.auditStatus)
+  }
+  if (operation === 'enable' || operation === 'disable') {
+    return exactKeys(result, ['auditStatus', 'enabled', 'jobId', 'nextRunAt'])
+      && nonEmpty(result.jobId)
+      && typeof result.enabled === 'boolean'
+      && (result.nextRunAt === null || validIso(result.nextRunAt))
+      && validAuditStatus(result.auditStatus)
+  }
+  return operation === 'remove'
+    && exactKeys(result, ['auditStatus', 'jobId', 'removed'])
+    && result.removed === true
+    && nonEmpty(result.jobId)
+    && validAuditStatus(result.auditStatus)
+}
+
 /**
  * Build per-operation relay handlers for one HTTP capability manifest.
  *
@@ -60,9 +147,14 @@ export const BROKER_RPC_METHOD = 'agent-core/broker'
  */
 export function createRelayHandlers(manifest, requestFn) {
   const handlers = {}
+  // LOCAL (in-process) capabilities relay exactly like HTTP-bound ones: the
+  // parent's gateway executes them and answers in the same envelope shape,
+  // so the child-side wire result is identical either way.
+  const isLocalManifest = manifest?.local !== undefined
   for (const op of manifest.operations) {
-    if (!op.http) continue
+    if (!op.http && !isLocalManifest) continue
     handlers[op.name] = async (_operation, args) => {
+      const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
       let envelope
       try {
         // Transport envelope from the parent RPC: { ok: true, result: <invoke> }.
@@ -73,11 +165,25 @@ export function createRelayHandlers(manifest, requestFn) {
         })
       } catch (err) {
         return {
-          errorCode: 'invalid_arguments',
-          detail: `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
+          errorCode: uncertainMutation ? 'mutation_outcome_unknown' : 'invalid_arguments',
+          detail: uncertainMutation
+            ? 'scheduler mutation response was lost; inspect current state before any manual retry'
+            : `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
         }
       }
-      const parent = envelope && envelope.ok === true ? envelope.result : undefined
+      const structuredTransport = exactKeys(envelope, ['ok', 'result']) && envelope.ok === true
+      const parent = structuredTransport ? envelope.result : undefined
+      const structuredParentSuccess = parent?.ok === true
+        && (!uncertainMutation || validSchedulerMutationResult(op.name, parent.result))
+      const structuredParentFailure = uncertainMutation
+        ? validSchedulerFailure(parent, manifest)
+        : parent?.ok === false && parent.error !== null && typeof parent.error === 'object'
+      if (uncertainMutation && !structuredParentSuccess && !structuredParentFailure) {
+        return {
+          errorCode: 'mutation_outcome_unknown',
+          detail: 'scheduler mutation response was lost; inspect current state before any manual retry',
+        }
+      }
       if (parent && parent.ok === true) {
         // Unwrap: child-side invoke re-wraps as { ok: true, result }.
         return parent.result

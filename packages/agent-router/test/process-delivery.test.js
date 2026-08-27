@@ -45,6 +45,8 @@ test('DLV1 deliver resolves on the receipt alone — no event, no idle, no turn/
   assert.equal(prompts(fx).length, 1, 'one session/prompt written')
   assert.equal(prompts(fx)[0].params.sessionId, 'main')
   assert.deepEqual(prompts(fx)[0].params.contentBlocks, [{ type: 'text', text: 'hello inbox' }])
+  assert.equal(typeof prompts(fx)[0].params.turnExecutionId, 'string')
+  assert.equal(fx.proc.executions.has(prompts(fx)[0].params.turnExecutionId), true, 'parent mints the prompt origin token')
 
   // Resolve the receipt WITHOUT injecting any event or setting any status —
   // the session never becomes idle in this test.
