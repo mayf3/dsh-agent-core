@@ -39,6 +39,69 @@
 export const BROKER_RPC_METHOD = 'agent-core/broker'
 
 const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove'])
+const COMMITTED_FIELDS = [
+  'auditStatus', 'autoRetry', 'deleteAfterRun', 'enabled',
+  'exactPersistedDeliveryDestination', 'jobId', 'name', 'nextRunAt',
+  'normalizedSchedule', 'targetAgentId', 'timezone',
+]
+
+function exactKeys(value, expected) {
+  return value !== null
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && Object.keys(value).sort().join('\0') === [...expected].sort().join('\0')
+}
+
+function validAuditStatus(value) {
+  return value === 'appended' || value === 'append_failed'
+}
+
+function nonEmpty(value) {
+  return typeof value === 'string' && value.length > 0
+}
+
+function validSchedule(value) {
+  if (value?.kind === 'at') return exactKeys(value, ['at', 'kind']) && nonEmpty(value.at)
+  if (value?.kind === 'every') return exactKeys(value, ['everyMs', 'kind']) && Number.isFinite(value.everyMs)
+  return value?.kind === 'cron'
+    && exactKeys(value, ['expr', 'kind', 'tz'])
+    && nonEmpty(value.expr)
+    && nonEmpty(value.tz)
+}
+
+function validDestination(value) {
+  return value === null
+    || (exactKeys(value, ['channel', 'to']) && nonEmpty(value.channel) && nonEmpty(value.to))
+}
+
+function validSchedulerMutationResult(operation, result) {
+  if (operation === 'create' || operation === 'update') {
+    return exactKeys(result, COMMITTED_FIELDS)
+      && nonEmpty(result.jobId)
+      && nonEmpty(result.name)
+      && typeof result.enabled === 'boolean'
+      && validSchedule(result.normalizedSchedule)
+      && (result.timezone === null || nonEmpty(result.timezone))
+      && (result.nextRunAt === null || nonEmpty(result.nextRunAt))
+      && nonEmpty(result.targetAgentId)
+      && validDestination(result.exactPersistedDeliveryDestination)
+      && typeof result.autoRetry === 'boolean'
+      && typeof result.deleteAfterRun === 'boolean'
+      && validAuditStatus(result.auditStatus)
+  }
+  if (operation === 'enable' || operation === 'disable') {
+    return exactKeys(result, ['auditStatus', 'enabled', 'jobId', 'nextRunAt'])
+      && nonEmpty(result.jobId)
+      && typeof result.enabled === 'boolean'
+      && (result.nextRunAt === null || nonEmpty(result.nextRunAt))
+      && validAuditStatus(result.auditStatus)
+  }
+  return operation === 'remove'
+    && exactKeys(result, ['auditStatus', 'jobId', 'removed'])
+    && result.removed === true
+    && nonEmpty(result.jobId)
+    && validAuditStatus(result.auditStatus)
+}
 
 /**
  * Build per-operation relay handlers for one HTTP capability manifest.
@@ -88,12 +151,13 @@ export function createRelayHandlers(manifest, requestFn) {
       }
       const parent = envelope && envelope.ok === true ? envelope.result : undefined
       const structuredParentSuccess = parent?.ok === true
-        && parent.result !== null
-        && typeof parent.result === 'object'
+        && (!uncertainMutation || validSchedulerMutationResult(op.name, parent.result))
       const structuredParentFailure = parent?.ok === false
         && parent.error !== null
         && typeof parent.error === 'object'
         && typeof parent.error.code === 'string'
+        && parent.error.code.length > 0
+        && manifest.errors.some((candidate) => candidate.code === parent.error.code)
       if (uncertainMutation && !structuredParentSuccess && !structuredParentFailure) {
         return {
           errorCode: 'mutation_outcome_unknown',

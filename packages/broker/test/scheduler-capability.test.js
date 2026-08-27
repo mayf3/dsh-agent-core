@@ -42,7 +42,24 @@ const validCalls = {
   remove: { action: 'remove', job_id: 'job-1' },
 }
 
-function schedulerDefinition(requestFn = async (call) => ({ ok: true, result: { ok: true, result: call } })) {
+function schedulerResult(action) {
+  if (action === 'create' || action === 'update') {
+    return {
+      jobId: 'job-1', name: 'daily', enabled: true,
+      normalizedSchedule: { kind: 'every', everyMs: 60_000 }, timezone: null,
+      nextRunAt: '2030-01-01T00:00:00.000Z', targetAgentId: 'agt_a',
+      exactPersistedDeliveryDestination: null, autoRetry: false,
+      deleteAfterRun: false, auditStatus: 'appended',
+    }
+  }
+  if (action === 'enable' || action === 'disable') {
+    return { jobId: 'job-1', enabled: action === 'enable', nextRunAt: null, auditStatus: 'appended' }
+  }
+  if (action === 'remove') return { removed: true, jobId: 'job-1', auditStatus: 'appended' }
+  return { selected: action }
+}
+
+function schedulerDefinition(requestFn = async (call) => ({ ok: true, result: { ok: true, result: schedulerResult(call.operation) } })) {
   return buildToolDefinition({
     manifest: schedulerManifest,
     handlers: createRelayHandlers(schedulerManifest, requestFn),
@@ -90,12 +107,12 @@ test('all seven valid actions relay locally and action is removed from business 
   const calls = []
   const definition = schedulerDefinition(async (call) => {
     calls.push(call)
-    return { ok: true, result: { ok: true, result: { selected: call.operation } } }
+    return { ok: true, result: { ok: true, result: schedulerResult(call.operation) } }
   })
 
   for (const action of ACTIONS) {
     const out = await definition.execute(validCalls[action])
-    assert.deepEqual(out, { ok: true, result: { selected: action } })
+    assert.deepEqual(out, { ok: true, result: schedulerResult(action) })
   }
   assert.deepEqual(calls.map((call) => call.operation), ACTIONS)
   assert.equal(calls.every((call) => call.capabilityId === 'scheduler'), true)
@@ -120,11 +137,17 @@ test('mutation relay loss is outcome-unknown with zero automatic retry', async (
   assert.equal(read.error.code, 'invalid_arguments')
   assert.equal(attempts, 6)
 
+  const { auditStatus: _auditStatus, ...missingAudit } = schedulerResult('create')
   for (const lostEnvelope of [
     undefined,
     { ok: false, error: { code: 'channel_closed' } },
     { ok: true, result: {} },
     { ok: true, result: { ok: true } },
+    { ok: true, result: { ok: true, result: {} } },
+    { ok: true, result: { ok: true, result: [] } },
+    { ok: true, result: { ok: true, result: missingAudit } },
+    { ok: true, result: { ok: false, error: { code: '' } } },
+    { ok: true, result: { ok: false, error: { code: 'undeclared' } } },
   ]) {
     const resolvedLoss = schedulerDefinition(async () => lostEnvelope)
     const out = await resolvedLoss.execute(validCalls.create)
