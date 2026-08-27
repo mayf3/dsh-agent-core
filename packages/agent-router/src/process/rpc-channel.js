@@ -98,7 +98,7 @@ export const rpcChannelMethods = {
    * child — bounded by ONE absolute deadline with the fixed response-write
    * reserve (C-005). One wire response attempt, no re-invocation.
    */
-  async handleRpcRequest({ requestId, method, params } = {}) {
+  async handleRpcRequest({ requestId, method, params, turnExecutionId } = {}) {
     if (typeof requestId !== 'string' || typeof method !== 'string') return
     const receivedAtMono = monotonicNowMs()
     // B03: an attributable execution contributes its original absolute
@@ -132,7 +132,13 @@ export const rpcChannelMethods = {
         if (typeof this.onRpcRequest !== 'function') {
           throw new Error(`process ${this.agentId}: no parent-RPC handler for ${method}`)
         }
-        return this.onRpcRequest(method, params, { handlerDeadlineMono, totalDeadlineMono, deadlineAtWallMs, signal: controller.signal })
+        return this.onRpcRequest(method, params, {
+          handlerDeadlineMono,
+          totalDeadlineMono,
+          deadlineAtWallMs,
+          signal: controller.signal,
+          turnExecutionId,
+        })
       }).then(
         value => ({ kind: 'result', value }),
         cause => ({ kind: 'error', cause }),

@@ -95,6 +95,16 @@ export function createIngressDelivery({
           // The turn belongs to this ChannelConversation: the DSH switch tool
           // inside the agent switches exactly this Binding.
           bindingContext: channelConversation.id,
+          // Trusted ingress leaves are copied exactly. In particular chatId
+          // is never derived from conversationId: a thread conversation can
+          // include topic identity and is not a delivery destination.
+          ingressContext: Object.freeze({
+            channelNamespace: namespace,
+            channelConversationId: channelConversation.id,
+            feishuChatId: isFeishuEntry ? ingress.chatId : undefined,
+            feishuConversationId: isFeishuEntry ? ingress.conversationId : undefined,
+            feishuMessageId: isFeishuEntry ? ingress.messageId : undefined,
+          }),
           // The session's effective workspace cwd (per-session, NOT the
           // process-level cwd — one Agent stays one process across workspaces).
           cwd: workspacePath,
