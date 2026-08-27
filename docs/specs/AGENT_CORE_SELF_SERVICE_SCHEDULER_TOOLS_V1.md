@@ -584,6 +584,9 @@ autoRetry
 deleteAfterRun
 ```
 
+The result additionally carries mandatory `auditStatus`; the ten fields above remain the
+user-required committed evidence and may never be omitted.
+
 Their exact JSON wire schema is:
 
 ```text
@@ -605,15 +608,20 @@ exactPersistedDeliveryDestination:
                                       # committed announce channel/to; null for none/silent
 autoRetry: boolean                    # committed job.retry?.auto === true
 deleteAfterRun: boolean               # committed job.deleteAfterRun
+auditStatus: enum(appended,append_failed)
+                                      # append_failed only under CTR-AUDIT-001 known-commit path
 ```
 
-The top-level result object has exactly these ten required properties and
+The top-level result object has exactly these eleven required properties and
 `additionalProperties:false`. It MUST be built from the committed persisted definition, not
 only request input. `normalizedSchedule.timezone` is named `timezone` in the cron result
 projection even though the persisted schedule leaf is `tz`; no `staggerMs` or `anchorMs` is
-exposed by this self-service result. Disabled updates return `nextRunAt:null`; successful
-enabled create/update MUST return a non-null eligible `nextRunAt` or fail loud rather than
-claim success.
+exposed by this self-service result. Successful enabled create MUST return a non-null eligible
+`nextRunAt`. Update returns the committed projection: `nextRunAt:null` is valid when disabled
+or when existing Scheduler eligibility/fence semantics yield no eligible next run (including
+an unresolved `outcome_unknown` fence). Update MUST NOT clear that fence and MUST NOT turn a
+known committed update into failure merely because the next run is null; Acceptance records
+the corresponding store fence/state separately without adding an eleventh wire field.
 
 For an enabled at-job, normalized `nextRunAt` MUST be strictly later than the existing
 control operation's logical mutation timestamp (`nowMs`, persisted as
@@ -763,12 +771,15 @@ product code unless a Contract requires revision.
 - Contracts: `CTR-AUTH-001`, `CTR-AUTH-002`
 - Method: unit/integration tests across two Agents plus authorized admin
 - Environment: isolated JobStore with real control operations
-- Required evidence: store before/after, handler results, grant call record
-- Expected result: self access succeeds without manage-any token request; foreign ordinary
-  access leaks/mutates nothing; injected admin-stub path succeeds only after trusted grant;
-  production admin path remains denied while external Scheduler audience/scope/Grant is absent
-- Failure condition: ordinary cross-Agent visibility/mutation, tool-asserted scope, or claim of
-  production admin availability without accepted/deployed external authority
+- Required evidence: store before/after, handler results, and per-action Auth token-request
+  call records for create/list/runs/update/enable/disable/remove self cases plus admin cases
+- Expected result: every ordinary self action has Auth token-request count exactly zero;
+  foreign ordinary access leaks/mutates nothing; injected admin-stub path succeeds only after
+  trusted grant; production admin path remains denied while external Scheduler
+  audience/scope/Grant is absent
+- Failure condition: any Auth token request during an ordinary self action, ordinary
+  cross-Agent visibility/mutation, tool-asserted scope, or claim of production admin
+  availability without accepted/deployed external authority
 
 ### ACC-MUT-001 — Mutation, update, audit and results
 
@@ -779,11 +790,14 @@ product code unless a Contract requires revision.
   mutation action
 - Environment: isolated filesystem
 - Required evidence: normalized persisted definitions, audit lines/runtime error record,
-  occurrence records, revision values, exact result envelopes, control-op/automatic-retry
-  call counts, and operator post-delete evidence query
+  occurrence records, revision values, exact result envelopes, fenced enabled-update store
+  projection proving `nextRunAt:null` without fence clearing, control-op/automatic-retry call
+  counts, and operator post-delete evidence query
 - Expected result: all writes use one control op; automatic mutation retry count is zero;
-  update preserves ID/future revision semantics; create/update return every committed field;
-  live-handler audit failure returns known commit + `auditStatus=append_failed`; process death
+  update preserves ID/future revision semantics and unresolved fences; create/update return
+  every committed field; enabled create has non-null next run while fenced enabled update may
+  return explicit null; live-handler audit failure returns known commit +
+  `auditStatus=append_failed`; process death
   post-commit/pre-audit returns caller-unknown with zero guaranteed append and a detectable
   operator reconciliation gap; response loss returns unknown; remove retains operator evidence
   while ordinary post-delete runs returns not-found
