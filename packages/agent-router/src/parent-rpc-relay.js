@@ -36,7 +36,7 @@ export const BROKER_RPC_METHOD = 'agent-core/broker'
  *   (binding-resolution).
  */
 export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway, switchAgent }) {
-  return async (method, params) => {
+  return async (method, params, rpcMeta = {}) => {
     if (method === BROKER_RPC_METHOD) {
       // TRUSTED CREDENTIAL BROKER: the caller identity is THIS proc's
       // actual agentId (the trusted spawning relationship) — never
@@ -56,6 +56,7 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
       const boundIngressContext = active
         && active.callerAgentId === agentId
         && active.processGeneration === proc.processGeneration
+        && rpcMeta.turnExecutionId === active.turnExecutionId
         && activeExecution !== undefined
         && activeExecution.settled !== true
         ? active

@@ -319,6 +319,9 @@ export const turnExecutionMethods = {
     const receipt = await this.request('session/prompt', {
       sessionId,
       contentBlocks: [{ type: 'text', text }],
+      // Parent-minted protocol metadata, consumed by demo-server's private
+      // agentRpc carrier and never exposed as model tool arguments.
+      turnExecutionId: execution.handle,
       ...(opts?.cwd === undefined ? {} : { cwd: opts.cwd }),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,

@@ -123,63 +123,72 @@ export class JobStore {
   }
 
   async _mutateDocLocked(fn) {
-    return this._withLock(async () => {
-      const loaded = await this._loadDocForMutation()
-      const doc = loaded.doc
-      const beforeJobsDigest = digestJSON(doc.jobs)
-      const result = await fn(doc, {
-        existed: loaded.existed,
-        sourceStatus: loaded.sourceStatus,
-        upgrade: loaded.upgrade ?? null,
-      })
-      let value
-      if (result && typeof result === 'object') {
-        if (Array.isArray(result.jobs)) doc.jobs = result.jobs
-        if (Array.isArray(result.occurrences)) doc.occurrences = result.occurrences
-        if (result.fences && typeof result.fences === 'object' && !Array.isArray(result.fences)) {
-          doc.fences = result.fences
-        }
-        value = result.value
-      }
-      this._validateDocument(doc)
-      const jobsChanged = digestJSON(doc.jobs) !== beforeJobsDigest
-      if (jobsChanged) await this._markV2JobMutation()
-      if (typeof this.beforeCommit === 'function') {
+    let committed = false
+    try {
+      return await this._withLock(async () => {
+        let loaded
+        let doc
+        let value
         try {
-          await this.beforeCommit()
+          loaded = await this._loadDocForMutation()
+          doc = loaded.doc
+          const beforeJobsDigest = digestJSON(doc.jobs)
+          const result = await fn(doc, {
+            existed: loaded.existed,
+            sourceStatus: loaded.sourceStatus,
+            upgrade: loaded.upgrade ?? null,
+          })
+          if (result && typeof result === 'object') {
+            if (Array.isArray(result.jobs)) doc.jobs = result.jobs
+            if (Array.isArray(result.occurrences)) doc.occurrences = result.occurrences
+            if (result.fences && typeof result.fences === 'object' && !Array.isArray(result.fences)) {
+              doc.fences = result.fences
+            }
+            value = result.value
+          }
+          this._validateDocument(doc)
+          const jobsChanged = digestJSON(doc.jobs) !== beforeJobsDigest
+          if (jobsChanged) await this._markV2JobMutation()
+          if (typeof this.beforeCommit === 'function') await this.beforeCommit()
         } catch (error) {
-          error.mutationOutcome = 'not_committed'
+          if (error?.mutationOutcome === undefined) error.mutationOutcome = 'not_committed'
           throw error
         }
-      }
-      try {
-        await this._writeAtomicDoc(doc)
-      } catch (error) {
-        if (error?.mutationOutcome === 'committed') {
+        try {
+          await this._writeAtomicDoc(doc)
+          committed = true
+        } catch (error) {
+          if (error?.mutationOutcome === 'committed') {
+            error.committedDoc = clone(doc)
+            error.committedValue = clone(value)
+          }
+          throw error
+        }
+        this._cacheDoc = clone(doc)
+        try {
+          this._mtimeMs = (await fs.stat(this.filePath)).mtimeMs
+        } catch (error) {
+          error.mutationOutcome = 'committed'
           error.committedDoc = clone(doc)
           error.committedValue = clone(value)
+          throw error
         }
-        throw error
+        let upgrade = loaded.upgrade ?? null
+        if (upgrade) {
+          const evidenceStatus = await this.appendRunEvent({
+            ts: this.clock(), action: 'store_upgrade', from: 1, to: STORE_VERSION,
+            backupFile: upgrade.backupFile, report: upgrade.report,
+          })
+          upgrade = { ...upgrade, evidenceStatus }
+        }
+        return { doc: clone(doc), value, upgrade }
+      })
+    } catch (error) {
+      if (error?.mutationOutcome === undefined) {
+        error.mutationOutcome = committed ? 'committed' : 'not_committed'
       }
-      this._cacheDoc = clone(doc)
-      try {
-        this._mtimeMs = (await fs.stat(this.filePath)).mtimeMs
-      } catch (error) {
-        error.mutationOutcome = 'committed'
-        error.committedDoc = clone(doc)
-        error.committedValue = clone(value)
-        throw error
-      }
-      let upgrade = loaded.upgrade ?? null
-      if (upgrade) {
-        const evidenceStatus = await this.appendRunEvent({
-          ts: this.clock(), action: 'store_upgrade', from: 1, to: STORE_VERSION,
-          backupFile: upgrade.backupFile, report: upgrade.report,
-        })
-        upgrade = { ...upgrade, evidenceStatus }
-      }
-      return { doc: clone(doc), value, upgrade }
-    })
+      throw error
+    }
   }
 
   async mutate(fn) {

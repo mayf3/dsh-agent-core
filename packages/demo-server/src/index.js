@@ -31,6 +31,8 @@
  * stdout stays pure JSON-RPC. All diagnostics go to stderr.
  */
 
+import { AsyncLocalStorage } from 'node:async_hooks'
+
 import z from '@deepseek-ai/schemastery'
 
 import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'
@@ -57,6 +59,10 @@ const METHODS = new Set(['initialize', 'session/prompt', 'shutdown', 'rpc.respon
  */
 export function apply(ctx) {
   const pendingRpc = new Map() // requestId -> { resolve, reject }
+  // Parent mints one opaque execution handle per prompt. AsyncLocalStorage
+  // preserves its origin across delayed async work, so an RPC born in turn A
+  // cannot inherit turn B merely because B is current when it reaches stdout.
+  const rpcTurnContext = new AsyncLocalStorage()
   const exit = () => { process.exit(0) }
   const notify = (method, params) => {
     process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', method, params })}\n`)
@@ -77,7 +83,12 @@ export function apply(ctx) {
       return new Promise((resolveRequest, rejectRequest) => {
         const requestId = `rpc-${++rpcSeq}`
         pendingRpc.set(requestId, { resolve: resolveRequest, reject: rejectRequest })
-        notify('rpc.request', { requestId, method, params })
+        notify('rpc.request', {
+          requestId,
+          method,
+          params,
+          turnExecutionId: rpcTurnContext.getStore(),
+        })
       })
     },
   }
@@ -185,7 +196,10 @@ export function apply(ctx) {
         // params.cwd = the Router-resolved effective workspace for THIS
         // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the
         // initialize-time process cwd (legacy/scheduler callers).
-        result = await prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd)
+        result = await rpcTurnContext.run(
+          params?.turnExecutionId,
+          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd),
+        )
       } else if (method === 'rpc.response') {
         // Parent's answer to a rpc.request: resolve the pending plugin call.
         const waiter = pendingRpc.get(params?.requestId)

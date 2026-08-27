@@ -119,6 +119,13 @@ test('mutation relay loss is outcome-unknown with zero automatic retry', async (
   assert.equal(read.ok, false)
   assert.equal(read.error.code, 'invalid_arguments')
   assert.equal(attempts, 6)
+
+  for (const lostEnvelope of [undefined, { ok: false, error: { code: 'channel_closed' } }]) {
+    const resolvedLoss = schedulerDefinition(async () => lostEnvelope)
+    const out = await resolvedLoss.execute(validCalls.create)
+    assert.equal(out.ok, false)
+    assert.equal(out.error.code, 'mutation_outcome_unknown')
+  }
 })
 
 test('closed action validation rejects unknown, cross-action, nested, and identity fields before relay', async () => {

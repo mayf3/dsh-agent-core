@@ -208,11 +208,12 @@ function mutationFailure(error) {
   )
 }
 
-function ownershipGuard(callerAgentId, allowAny) {
+function ownershipGuard(callerAgentId, allowAny, captureCurrent) {
   return (current) => {
     if (!allowAny && current.agentId !== callerAgentId) {
       throw Object.assign(new Error('job ownership changed before mutation'), { code: 'SELF_SERVICE_ACCESS_DENIED' })
     }
+    if (typeof captureCurrent === 'function') captureCurrent(cloneJob(current))
   }
 }
 
@@ -377,19 +378,23 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         if (args.schedule_kind !== undefined) {
           try { patch.schedule = scheduleFromArgs(args, nowMs) } catch (error) { return validationFailure(error) }
         }
-        const payload = payloadPatch(scoped.job.payload, args)
-        if (payload !== undefined) patch.payload = payload
         if (args.delivery_mode !== undefined) {
           try { patch.delivery = deliveryFromArgs(args, context) } catch (error) { return validationFailure(error) }
         }
         if (args.delete_after_run !== undefined) patch.deleteAfterRun = args.delete_after_run
         if (args.auto_retry !== undefined) patch.retry = { auto: args.auto_retry }
-        const before = definitionDigest(scoped.job)
+        let lockedBefore
         let updated
         try {
           updated = await updateJobOp(store, args.job_id, patch, {
             nowMs,
-            assertJob: ownershipGuard(caller, scoped.allowAny),
+            assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
+            buildPatch: (current, basePatch) => {
+              const effective = { ...basePatch }
+              const payload = payloadPatch(current.payload, args)
+              if (payload !== undefined) effective.payload = payload
+              return effective
+            },
           })
         } catch (error) {
           return mutationFailure(error)
@@ -398,7 +403,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
           jobId: updated.id,
           operatorAgentId: caller,
           targetAgentId: updated.agentId,
-          before,
+          before: definitionDigest(lockedBefore),
           after: definitionDigest(updated),
           nowMs,
         })
@@ -420,10 +425,10 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         const scoped = await loadScopedJob(args.job_id, caller, () => (adminPromise ??= adminAuthorized(caller)))
         if (scoped.error !== undefined) return scoped.error
         const nowMs = Date.now()
-        const before = definitionDigest(scoped.job)
+        let lockedBefore
         try {
           await deleteJobOp(store, args.job_id, {
-            assertJob: ownershipGuard(caller, scoped.allowAny),
+            assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
           })
         } catch (error) {
           return mutationFailure(error)
@@ -431,8 +436,8 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         const auditStatus = await appendAudit('remove', {
           jobId: args.job_id,
           operatorAgentId: caller,
-          targetAgentId: scoped.job.agentId,
-          before,
+          targetAgentId: lockedBefore.agentId,
+          before: definitionDigest(lockedBefore),
           nowMs,
         })
         return { ok: true, result: { removed: true, jobId: args.job_id, auditStatus } }
@@ -447,12 +452,12 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
     const scoped = await loadScopedJob(args.job_id, caller, () => (adminPromise ??= adminAuthorized(caller)))
     if (scoped.error !== undefined) return scoped.error
     const nowMs = Date.now()
-    const before = definitionDigest(scoped.job)
+    let lockedBefore
     let updated
     try {
       updated = await controlOp(store, args.job_id, {
         nowMs,
-        assertJob: ownershipGuard(caller, scoped.allowAny),
+        assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
       })
     } catch (error) {
       return mutationFailure(error)
@@ -461,7 +466,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
       jobId: updated.id,
       operatorAgentId: caller,
       targetAgentId: updated.agentId,
-      before,
+      before: definitionDigest(lockedBefore),
       after: definitionDigest(updated),
       nowMs,
     })
