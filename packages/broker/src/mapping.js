@@ -8,6 +8,12 @@
  *   success:   { ok: true, result: <number> }
  *   failure:   { ok: false, error: { code: invalid_arguments|unsupported_operation|divide_by_zero } }
  *
+ * Transport-produced failures additionally carry the preserved downstream
+ * diagnostics on the error object (all optional): `status` (upstream HTTP
+ * status), `detail` (SANITIZED upstream message / broker violation message)
+ * and `requestId` (the downstream `x-request-id`, verbatim, never fabricated)
+ * — see transport.js "Downstream error preservation".
+ *
  * A capability handler is a plain function `(operation, args, principal) =>
  * (something)`. The converter turns the handler's return value into the wire
  * envelope, validating error codes against the manifest's error table. All
@@ -35,9 +41,26 @@ const FALLBACK_ERRORS = {
  * @returns {string[]} human-readable violations; empty means valid.
  */
 export function validateArguments(argumentSchema, args) {
+  return validateArgumentsDetailed(argumentSchema, args).violations
+}
+
+/**
+ * Detailed variant of validateArguments: besides the human-readable violation
+ * strings, surfaces the DECLARED error code a violation should report (e.g.
+ * `invalid_pagination` for an out-of-range `limit`), when the violated
+ * property schema carries `validationError`. Bounds checking (`minimum` /
+ * `maximum`) runs Broker-side BEFORE any HTTP request is issued, so an
+ * out-of-range page size fails fast locally instead of surfacing as a
+ * generic downstream 4xx/422.
+ * @param {object} argumentSchema - { properties, required }.
+ * @param {unknown} args - candidate arguments, however malformed.
+ * @returns {{ violations: string[], code?: string }}
+ */
+export function validateArgumentsDetailed(argumentSchema, args) {
   const violations = []
+  let code
   if (args === null || typeof args !== 'object' || Array.isArray(args)) {
-    return ['arguments must be an object']
+    return { violations: ['arguments must be an object'] }
   }
   const props = argumentSchema.properties || {}
   const required = argumentSchema.required || []
@@ -58,6 +81,15 @@ export function validateArguments(argumentSchema, args) {
         violations.push(`property "${name}" must be a finite number`)
       } else if (spec.type === 'integer' && !Number.isInteger(val)) {
         violations.push(`property "${name}" must be an integer`)
+      } else {
+        if (typeof spec.minimum === 'number' && val < spec.minimum) {
+          violations.push(`property "${name}" must be >= ${spec.minimum}`)
+          if (code === undefined && typeof spec.validationError === 'string') code = spec.validationError
+        }
+        if (typeof spec.maximum === 'number' && val > spec.maximum) {
+          violations.push(`property "${name}" must be <= ${spec.maximum}`)
+          if (code === undefined && typeof spec.validationError === 'string') code = spec.validationError
+        }
       }
     } else if (spec.type === 'string') {
       if (typeof val !== 'string') violations.push(`property "${name}" must be a string`)
@@ -68,7 +100,7 @@ export function validateArguments(argumentSchema, args) {
       violations.push(`property "${name}" must be one of ${JSON.stringify(spec.enum)}`)
     }
   }
-  return violations
+  return code === undefined ? { violations } : { violations, code }
 }
 
 /**
@@ -110,9 +142,16 @@ export async function invoke(manifest, handlers, call, deps) {
   }
 
   // Argument validation against this operation's OWN schema.
-  const violations = validateArguments(op.arguments, call.args)
+  const { violations, code: violationCode } = validateArgumentsDetailed(op.arguments, call.args)
   if (violations.length > 0) {
-    return { ok: false, error: resolveCode(manifest, 'invalid_arguments', FALLBACK_ERRORS.invalid_arguments) }
+    // A violation category may declare its own wire code (e.g. an
+    // out-of-range page size reports `invalid_pagination`); resolved through
+    // the manifest's table, failing closed to invalid_arguments. A coded
+    // violation additionally carries the broker-generated violation message
+    // as detail (our own text — no upstream content, nothing to sanitize).
+    const resolved = resolveCode(manifest, violationCode ?? FALLBACK_ERRORS.invalid_arguments, FALLBACK_ERRORS.invalid_arguments)
+    const error = violationCode !== undefined ? { ...resolved, detail: violations.join('; ') } : resolved
+    return { ok: false, error }
   }
 
   // Identity: obtained ONLY from the injected resolver; there is no
@@ -132,13 +171,23 @@ export async function invoke(manifest, handlers, call, deps) {
     return { ok: false, error: resolveCode(manifest, raw.error.code, FALLBACK_ERRORS.invalid_arguments) }
   }
   // Handler declared a direct error code. Transport-produced codes may carry
-  // optional `status` (upstream HTTP status) and `detail` (upstream body / cause)
+  // optional `status` (upstream HTTP status), `detail` (SANITIZED upstream
+  // message) and `requestId` (the downstream `x-request-id`, when present)
   // which are passed through on the wire envelope for the model's benefit.
+  // Downstream error preservation: when the transport extracted a downstream
+  // service code, it is offered as `errorCode` and resolved against the
+  // manifest's DECLARED table; when the service code is not declared the
+  // status-aware canonical fallback (`http_4xx` / `http_5xx`, always declared
+  // for HTTP capabilities via withTransportErrors) wins — an undeclared code
+  // never reaches the wire, and a downstream 404 never degrades to
+  // `invalid_arguments`.
   if (raw && typeof raw === 'object' && typeof raw.errorCode === 'string') {
-    const code = resolveCode(manifest, raw.errorCode, FALLBACK_ERRORS.invalid_arguments)
+    const statusFallback = typeof raw.status === 'number' ? (raw.status < 500 ? 'http_4xx' : 'http_5xx') : FALLBACK_ERRORS.invalid_arguments
+    const code = resolveCode(manifest, raw.errorCode, statusFallback)
     const error = { code: code.code }
     if (typeof raw.status === 'number') error.status = raw.status
     if (typeof raw.detail === 'string') error.detail = raw.detail
+    if (typeof raw.requestId === 'string' && raw.requestId.length > 0) error.requestId = raw.requestId
     return { ok: false, error }
   }
   return { ok: true, result: raw }
