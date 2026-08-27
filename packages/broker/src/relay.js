@@ -87,14 +87,10 @@ function validDestination(value) {
 function validSchedulerFailure(parent, manifest) {
   if (!exactKeys(parent, ['error', 'ok']) || parent.ok !== false) return false
   const error = parent.error
-  if (error === null || typeof error !== 'object' || Array.isArray(error)) return false
-  const allowed = new Set(['code', 'detail', 'requestId', 'status'])
-  if (Object.keys(error).some((key) => !allowed.has(key))) return false
-  return nonEmpty(error.code)
+  return exactKeys(error, ['code', 'detail'])
+    && nonEmpty(error.code)
+    && typeof error.detail === 'string'
     && manifest.errors.some((candidate) => candidate.code === error.code)
-    && (error.detail === undefined || typeof error.detail === 'string')
-    && (error.requestId === undefined || nonEmpty(error.requestId))
-    && (error.status === undefined || Number.isSafeInteger(error.status))
 }
 
 function validSchedulerMutationResult(operation, result) {
