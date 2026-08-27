@@ -285,17 +285,19 @@ test('ownership is rechecked inside the locked control mutation (TOCTOU fails cl
   assert.deepEqual(grantCalls, [])
 })
 
-test('post-commit store fault returns committed projection and still attempts one audit append', async (t) => {
+test('post-rename control failure is outcome-unknown and never fabricates an audit attempt', async (t) => {
   const { call, store } = await rig(t)
   let syncCalls = 0
+  let auditAttempts = 0
   store._syncDir = async () => { syncCalls += 1; throw new Error('injected directory sync failure after rename') }
+  store.appendRunEvent = async () => { auditAttempts += 1; return { ok: true } }
   const out = await call('create', { name: 'durable', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
-  assert.equal(out.ok, true)
-  assertExactCommittedResult(out.result)
-  assert.equal(out.result.auditStatus, 'appended')
+  assert.equal(out.ok, false)
+  assert.equal(out.error.code, 'mutation_outcome_unknown')
   assert.equal(syncCalls, 1)
+  assert.equal(auditAttempts, 0)
   const doc = await store.loadDoc({ force: true })
-  assert.equal(doc.jobs.some((job) => job.id === out.result.jobId), true)
+  assert.equal(doc.jobs.some((job) => job.name === 'durable'), true, 'operator observation finds the possible commit')
 })
 
 test('pre-commit failure is known clean; uncertain commit failure is outcome-unknown with zero retry', async (t) => {
