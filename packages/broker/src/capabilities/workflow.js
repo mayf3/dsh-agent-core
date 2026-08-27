@@ -11,6 +11,16 @@
  *   workflow_instance_detail   GET /internal/v1/workflow-instances/{workflowInstanceId} workflow.read
  *   workflow_submission_history GET /internal/v1/workflow-instances/{workflowInstanceId}/submissions workflow.read
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
+ *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
+ *
+ * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1):
+ * read-only domain-wide instance enumeration for DOMAIN_OWNERs. The DOMAIN_OWNER
+ * check is enforced SERVER-SIDE by svc-workflow (query_service.list_domain_instances
+ * -> check_domain_owner; non-owner -> workflow_instance_not_found_or_not_visible);
+ * the broker never replicates or relaxes it. Wire param is `domainId` (downstream
+ * serde rename_all=camelCase + deny_unknown_fields); cursors and filter params
+ * (lifecycle/status/definitionKey/currentNodeKey/assigneePrincipalId) are
+ * deliberately NOT exposed (first-batch cursor discipline).
  *
  * Opaque-cursor paging (before_created_at/before_id, after_created_at/after_id)
  * is deliberately NOT exposed in the first batch (deferred, see report); only
@@ -186,10 +196,60 @@ export const workflowMyDomainsManifest = withTransportErrors({
   ],
 })
 
+/**
+ * Domain-wide instance enumeration (read-only).
+ *
+ * Proxies the deployed svc-workflow endpoint GET /internal/v1/workflow-instances/domain.
+ * Authorization is wholly server-side: only DOMAIN_OWNERs of `domainId` pass
+ * (others get workflow_instance_not_found_or_not_visible, which also covers a
+ * nonexistent domain). The summary projection passes through untouched
+ * (items: workflow_instance_id / title / is_terminal / current_node /
+ * current_assignee_principal_id / created_at / updated_at, + next_cursor);
+ * cursor params are NOT exposed, so the model-facing contract is single-page.
+ */
+export const workflowDomainInstancesManifest = withTransportErrors({
+  id: 'workflow_domain_instances',
+  toolName: 'workflow_domain_instances',
+  name: 'Workflow Domain Instances',
+  description:
+    'Agent Core capability `workflow_domain_instances` (svc-workflow): list all workflow instances in one domain (read-only; DOMAIN_OWNER of the domain only — enforced server-side). ' +
+    'Returns {ok: true, result: <domain instance page>} on success.',
+  requiredScopes: ['workflow.read'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    ...paginationErrors,
+    { code: 'workflow_instance_not_found_or_not_visible', description: 'Caller is not the owner of the domain, or the domain does not exist (HTTP 404).' },
+  ],
+  operations: [
+    {
+      name: 'list',
+      description: 'List the instances of the given domainId (UUID). Optional: limit (1-20).',
+      arguments: {
+        properties: {
+          domainId: { type: 'string', description: 'Workflow domain id (UUID) to enumerate.' },
+          limit: limitProperty,
+        },
+        required: ['domainId'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments', 'invalid_pagination'],
+      http: {
+        target: 'svc-workflow',
+        method: 'GET',
+        path: '/internal/v1/workflow-instances/domain',
+        query: ['domainId', 'limit'],
+      },
+    },
+  ],
+})
+
 /** All first-batch Workflow manifests. */
 export const manifests = [
   workflowMyTasksManifest,
   workflowInstanceDetailManifest,
   workflowSubmissionHistoryManifest,
   workflowMyDomainsManifest,
+  workflowDomainInstancesManifest,
 ]
