@@ -21,6 +21,10 @@ import {
   createHttpTransport,
   createHttpHandlers,
   withTransportErrors,
+  parseServiceErrorBody,
+  sanitizeErrorDetail,
+  extractRequestId,
+  buildDownstreamError,
 } from '../src/transport.js'
 import { assertValidManifest, invoke } from '../src/mapping.js'
 
@@ -104,10 +108,12 @@ function makeManifest(overrides = {}) {
       id: overrides.id ?? 'demo.items',
       description: 'Demo HTTP capability for transport tests.',
       requiredScopes: overrides.requiredScopes ?? ['demo.read'],
-      errors: [
-        { code: 'invalid_arguments', description: 'Invalid.' },
-        { code: 'unsupported_operation', description: 'Unsupported.' },
-      ],
+      errors:
+        overrides.errors ??
+        [
+          { code: 'invalid_arguments', description: 'Invalid.' },
+          { code: 'unsupported_operation', description: 'Unsupported.' },
+        ],
       operations: [
         {
           name: overrides.operation ?? 'read',
@@ -730,4 +736,177 @@ test('handlers: createHttpHandlers maps only http-bound operations', () => {
   const handlers = createHttpHandlers(manifest, { execute: async () => 'via-transport' })
   assert.equal(typeof handlers.read, 'function')
   assert.equal(handlers.other, undefined)
+})
+
+// ─── Downstream error preservation (helpers + end-to-end) ───────────────────
+
+test('parseServiceErrorBody: recognized envelope shapes', () => {
+  // svc-workflow: {"error":{"code","message"}}
+  assert.deepEqual(parseServiceErrorBody('{"error":{"code":"principal_not_found","message":"principal not found"}}'), {
+    code: 'principal_not_found',
+    message: 'principal not found',
+  })
+  // generic: {"code","message"}
+  assert.deepEqual(parseServiceErrorBody('{"code":"teapot","message":"short and stout"}'), {
+    code: 'teapot',
+    message: 'short and stout',
+  })
+  // forum/legacy: {"error":"slug","message":...}
+  assert.deepEqual(parseServiceErrorBody('{"error":"not_found","message":"no such thread"}'), {
+    code: 'not_found',
+    message: 'no such thread',
+  })
+  // {"error":"human prose"} → prose is a message, NOT a code
+  assert.deepEqual(parseServiceErrorBody('{"error":"no such thread"}'), { message: 'no such thread' })
+  // unsafe / non-matching codes are never surfaced
+  assert.deepEqual(parseServiceErrorBody('{"error":{"code":"NOT A CODE!"}}'), {})
+  assert.deepEqual(parseServiceErrorBody(`{"error":{"code":"${'x'.repeat(65)}"}}`), {})
+  // unparsable / non-object bodies
+  assert.deepEqual(parseServiceErrorBody('<html>boom</html>'), {})
+  assert.deepEqual(parseServiceErrorBody('[1,2]'), {})
+})
+
+test('sanitizeErrorDetail: redacts credential-shaped content, truncates', () => {
+  const out = sanitizeErrorDetail('Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.token=abc')
+  assert.ok(!out.includes('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'))
+  assert.ok(!out.includes('token=abc'))
+  assert.match(out, /authorization: \[REDACTED\]/i)
+  const secret = sanitizeErrorDetail('rejected because api_key="sk-live-999999999999" password=hunter2')
+  assert.ok(!secret.includes('sk-live-999999999999'))
+  assert.ok(!secret.includes('hunter2'))
+  const long = sanitizeErrorDetail(`detail: ${'no such item; '.repeat(40)}`)
+  assert.ok(long.length < 600)
+  assert.match(long, /\[truncated\]$/)
+  // innocent messages pass through untouched
+  assert.equal(sanitizeErrorDetail('principal not found'), 'principal not found')
+})
+
+test('sanitizeErrorDetail: redacts scheme-prefixed Authorization values (Basic/NTLM/Digest)', () => {
+  // "authorization=Basic <b64>" previously lost only the scheme word to the
+  // generic authorization rule and the credentials survived — the exact trap
+  // the bearer rule documents, for the non-Bearer schemes.
+  const basic = sanitizeErrorDetail('authorization=Basic dXNlcjpwYXNz api-key=sk-live-9f8e7d6c5b4a3210')
+  assert.ok(!basic.includes('dXNlcjpwYXNz'), 'basic credentials must be redacted')
+  assert.ok(!basic.includes('sk-live-9f8e7d6c5b4a3210'))
+  assert.match(basic, /authorization=\[REDACTED\]/)
+  const ntlm = sanitizeErrorDetail('Authorization: NTLM TlRMTVNTUAABAAAAAAAABgAAAAAAAQ==')
+  assert.ok(!ntlm.includes('TlRMTVNTUAABAAAAAAAABgAAAAAAAQ'))
+  assert.match(ntlm, /authorization: \[REDACTED\]/i)
+  const digest = sanitizeErrorDetail('authorization: Digest response=6629fae49393a053974509785505ff5f')
+  assert.ok(!digest.includes('6629fae49393a053974509785505ff5f'), 'digest response hash must be redacted')
+})
+
+test('extractRequestId: pass-through verbatim, null when absent/invalid, never fabricated', () => {
+  const make = (id) => new Headers(id === undefined ? {} : { 'x-request-id': id })
+  assert.equal(extractRequestId(make('0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0')), '0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0')
+  assert.equal(extractRequestId(make('abc-123')), 'abc-123')
+  assert.equal(extractRequestId(make(undefined)), null)
+  assert.equal(extractRequestId(make('')), null)
+  assert.equal(extractRequestId(make('not visible char')), null)
+  assert.equal(extractRequestId(make('x'.repeat(129))), null)
+})
+
+test('buildDownstreamError: non-JSON body never surfaced raw; empty body placeholder', () => {
+  const err = buildDownstreamError(502, '<html><body>gateway explode</body></html>', new Headers())
+  assert.equal(err.errorCode, 'http_5xx')
+  assert.equal(err.status, 502)
+  assert.equal(err.detail, '(downstream returned a non-JSON error body)')
+  assert.equal(err.requestId, null)
+  const empty = buildDownstreamError(404, '', new Headers())
+  assert.equal(empty.detail, '(downstream returned an empty error body)')
+})
+
+test('error preservation: declared service code surfaces with status + request-id (end-to-end)', async () => {
+  const requestId = '11111111-2222-3333-4444-555555555555'
+  const tokenServer = await startTokenServer()
+  const bizServer = await startMockServer((req, res) => {
+    res.writeHead(404, { 'Content-Type': 'application/json', 'x-request-id': requestId })
+    res.end(JSON.stringify({ error: { code: 'item_not_found', message: 'no such item' } }))
+  })
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
+  const manifest = makeManifest({
+    errors: [
+      { code: 'invalid_arguments', description: 'Invalid.' },
+      { code: 'unsupported_operation', description: 'Unsupported.' },
+      { code: 'item_not_found', description: 'Declared downstream code.' },
+    ],
+  })
+
+  const res = await run(manifest, transport, { id: 'missing' })
+  assert.equal(res.ok, false)
+  assert.equal(res.error.code, 'item_not_found')
+  assert.equal(res.error.status, 404)
+  assert.equal(res.error.detail, 'no such item')
+  assert.equal(res.error.requestId, requestId)
+
+  await tokenServer.close()
+  await bizServer.close()
+})
+
+test('error preservation: undeclared service code degrades to declared http_4xx (fail-closed)', async () => {
+  const tokenServer = await startTokenServer()
+  const bizServer = await startMockServer((req, res) =>
+    json(res, 409, { error: { code: 'brand_new_downstream_code', message: 'server grew a new error' } }),
+  )
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
+  const manifest = makeManifest()
+
+  const res = await run(manifest, transport, { id: 'x' })
+  assert.equal(res.ok, false)
+  assert.equal(res.error.code, 'http_4xx') // never an undeclared wire code
+  assert.equal(res.error.status, 409)
+  assert.equal(res.error.detail, 'server grew a new error')
+
+  await tokenServer.close()
+  await bizServer.close()
+})
+
+test('error preservation: 5xx with undeclared code degrades to http_5xx, not invalid_arguments', async () => {
+  const tokenServer = await startTokenServer()
+  const bizServer = await startMockServer((req, res) =>
+    json(res, 503, { error: { code: 'storage_melted', message: 'storage is melting' } }),
+  )
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
+  const manifest = makeManifest()
+
+  const res = await run(manifest, transport, { id: 'x' })
+  assert.equal(res.ok, false)
+  assert.equal(res.error.code, 'http_5xx')
+  assert.equal(res.error.status, 503)
+  assert.equal(res.error.detail, 'storage is melting')
+
+  await tokenServer.close()
+  await bizServer.close()
+})
+
+test('bounds validation: minimum/maximum + validationError fails fast before any HTTP', async () => {
+  const tokenServer = await startTokenServer()
+  const bizServer = await startMockServer((req, res) => json(res, 200, { ok: true }))
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
+  const manifest = makeManifest({
+    arguments: { properties: { id: { type: 'string' }, limit: { type: 'integer', minimum: 1, maximum: 20, validationError: 'invalid_pagination' } }, required: ['id'] },
+    http: { target: 'demo-target', method: 'GET', path: '/v1/items/{id}', pathParams: ['id'], query: ['limit'] },
+    errors: [
+      { code: 'invalid_arguments', description: 'Invalid.' },
+      { code: 'unsupported_operation', description: 'Unsupported.' },
+      { code: 'invalid_pagination', description: 'Pagination.' },
+    ],
+  })
+
+  for (const limit of [0, -1, 21]) {
+    const res = await run(manifest, transport, { id: 'x', limit })
+    assert.equal(res.ok, false, `limit=${limit}`)
+    assert.equal(res.error.code, 'invalid_pagination', `limit=${limit}`)
+    assert.match(res.error.detail, /limit/)
+  }
+  // local fail-fast: NOTHING hit the wire — no token request, no business call
+  assert.equal(tokenServer.requests.length, 0)
+  assert.equal(bizServer.requests.length, 0)
+  // type violations still report invalid_arguments
+  const res = await run(manifest, transport, { id: 'x', limit: 'many' })
+  assert.equal(res.error.code, 'invalid_arguments')
+  assert.equal(bizServer.requests.length, 0)
+
+  await tokenServer.close()
+  await bizServer.close()
 })
