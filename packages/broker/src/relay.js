@@ -87,11 +87,14 @@ export function createRelayHandlers(manifest, requestFn) {
         }
       }
       const parent = envelope && envelope.ok === true ? envelope.result : undefined
+      const structuredParentSuccess = parent?.ok === true
+        && parent.result !== null
+        && typeof parent.result === 'object'
       const structuredParentFailure = parent?.ok === false
         && parent.error !== null
         && typeof parent.error === 'object'
         && typeof parent.error.code === 'string'
-      if (uncertainMutation && parent?.ok !== true && !structuredParentFailure) {
+      if (uncertainMutation && !structuredParentSuccess && !structuredParentFailure) {
         return {
           errorCode: 'mutation_outcome_unknown',
           detail: 'scheduler mutation response was lost; inspect current state before any manual retry',

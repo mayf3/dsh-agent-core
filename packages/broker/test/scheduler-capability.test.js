@@ -120,7 +120,12 @@ test('mutation relay loss is outcome-unknown with zero automatic retry', async (
   assert.equal(read.error.code, 'invalid_arguments')
   assert.equal(attempts, 6)
 
-  for (const lostEnvelope of [undefined, { ok: false, error: { code: 'channel_closed' } }, { ok: true, result: {} }]) {
+  for (const lostEnvelope of [
+    undefined,
+    { ok: false, error: { code: 'channel_closed' } },
+    { ok: true, result: {} },
+    { ok: true, result: { ok: true } },
+  ]) {
     const resolvedLoss = schedulerDefinition(async () => lostEnvelope)
     const out = await resolvedLoss.execute(validCalls.create)
     assert.equal(out.ok, false)
