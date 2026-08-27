@@ -104,7 +104,7 @@ async function cmdAdd(args) {
     ...(hasFlag(args, '--auto-retry') ? { retry: { auto: true } } : {}),
     delivery: resolveDeliveryFlags(args, 'add'),
     deleteAfterRun: hasFlag(args, '--delete-after-run') || schedule.kind === 'at',
-  })
+  }, { nowMs: addNowMs })
   const { value: created } = await store.mutate((jobs) => {
     jobs.push(job)
     return { value: job }
