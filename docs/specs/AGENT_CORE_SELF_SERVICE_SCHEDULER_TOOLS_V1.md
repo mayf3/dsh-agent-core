@@ -326,9 +326,12 @@ The Broker MUST register exactly one model-visible Scheduler self-service tool n
 
 The manifest MUST declare its model selector name as `action`; the generic Broker MUST keep
 `operation` as the default selector for every existing manifest. Registry dispatch MUST
-remove `action` from business arguments and map it internally to the selected handler. Both
-the DSH schema and trusted mapping layer MUST enforce the same object-rooted discriminated
-union. Every action object and nested object has `additionalProperties: false`.
+remove `action` from business arguments and map it internally to the selected handler. The
+model-facing DSH parameter map MUST expose only the selector plus the union of documented
+properties as guidance. Because the current `defineTool` API compiles an implicit open root,
+the trusted Broker mapping layer is the authoritative enforcement point: before grant/store
+access it MUST enforce the exact object-rooted discriminated union below. Every selected
+action object and nested object is closed; unknown properties are violations.
 
 Common leaf definitions are exact:
 
@@ -388,7 +391,8 @@ Conditional closure is exact:
 
 1. `schedule_kind=cron` requires exactly `cron_expr` + `timezone` and forbids `at/every_ms`.
 2. `schedule_kind=at` requires exactly `at`, forbids `cron_expr/every_ms/timezone`, and the
-   normalized instant MUST be later than the atomic definition commit timestamp.
+   normalized instant MUST be later than the control operation's logical mutation timestamp
+   (`nowMs`, persisted as `createdAtMs`/`updatedAtMs` by existing control semantics).
 3. `schedule_kind=every` requires exactly `every_ms` and forbids
    `cron_expr/at/timezone`.
 4. Create always has `schedule_kind`. Update accepts no schedule leaf unless
@@ -510,18 +514,26 @@ create. No update may clear a fence, replay an occurrence, or invoke reconcile.
 
 ### CTR-AUDIT-001 — Mutation audit and append failure
 
-Each committed create/update/enable/disable/remove MUST attempt exactly one append of the
-existing sanitized self-service mutation evidence with operation, job ID, trusted operator
-Agent ID, target Agent ID, timestamp, and before/after definition digests as applicable. It
-MUST NOT record message bodies, credentials, secrets, or a model-supplied identity.
+Every handler execution that remains alive after a committed
+create/update/enable/disable/remove and reaches the audit step MUST attempt exactly one append
+of the existing sanitized self-service mutation evidence with operation, job ID, trusted
+operator Agent ID, target Agent ID, timestamp, and before/after definition digests as
+applicable. It MUST NOT record message bodies, credentials, secrets, or a model-supplied
+identity.
 
-Definition/occurrence authority and `runs.jsonl` are not one transaction (D-007 §11.5).
-Therefore an audit append failure after a known definition commit MUST NOT roll back or deny
-the known commit and MUST NOT be reported as an ordinary clean failure. The handler MUST
-return the committed projection plus `auditStatus=append_failed`; production Runtime MUST
-emit a sanitized operator-visible error containing operation/job ID but no message/secret.
-The Agent MUST report the mutation as committed with incomplete audit and MUST NOT retry it.
-An append failure before any definition commit leaves store state unchanged.
+Definition/occurrence authority and `runs.jsonl` are not one transaction (D-007 §11.5). When
+the handler remains alive and `appendRunEvent` returns/throws failure after a known definition
+commit, the failure MUST NOT roll back or deny the known commit and MUST NOT be reported as an
+ordinary clean failure. The handler MUST return the committed projection plus
+`auditStatus=append_failed`; production Runtime MUST emit a sanitized operator-visible error
+containing operation/job ID but no message/secret. The Agent MUST report the mutation as
+committed with incomplete audit and MUST NOT retry it. An audit failure before any definition
+commit leaves store state unchanged.
+
+A process death after definition commit but before the audit step provides no guarantee that
+an append was attempted. That case is governed by `CTR-FAIL-001`: caller outcome unknown,
+possible durable audit gap, operator reconciliation required, and no automatic retry. The
+Spec does not fabricate an audit event or claim exactly-one append across process death.
 
 ### CTR-FAIL-001 — Mutation retry and unknown outcome
 
@@ -540,9 +552,11 @@ automatic retries. `MUTATION_AUTORETRY = FORBIDDEN`.
 - repeated user-directed create is a new mutation and may create another Job; the Agent MUST
   present observed matches and obtain confirmation before retrying an unknown create.
 
-Fault behavior is frozen as: pre-commit failure = no mutation; post-commit/pre-audit failure =
-known commit with `auditStatus=append_failed` when the handler remains alive; post-audit/
-pre-response transport loss = unknown to caller but no automatic retry; explicit later retry
+Fault behavior is frozen as: pre-commit failure = no mutation; handler alive +
+post-commit audit append returns failure = known commit with `auditStatus=append_failed` and
+one attempted append; process death after commit before audit = caller unknown, zero
+guaranteed append, durable audit-gap/operator-reconciliation evidence required; post-audit/
+pre-response transport loss = unknown to caller but no automatic retry. Explicit later retry
 requires the observation rules above. This Spec introduces no durable idempotency table and
 no Scheduler schema change.
 
@@ -564,10 +578,12 @@ deleteAfterRun
 ```
 
 The response MUST be built from the committed persisted definition, not only request input.
-For an enabled at-job, normalized `nextRunAt` MUST be strictly later than the atomic JobStore
-commit timestamp recorded/observed by the mutation. The handler MUST reject an at-time whose
-normalized instant is not later at that commit boundary; response transmission latency does
-not retroactively change a valid commit into a false claim. The production canary separately
+For an enabled at-job, normalized `nextRunAt` MUST be strictly later than the existing
+control operation's logical mutation timestamp (`nowMs`, persisted as
+`createdAtMs`/`updatedAtMs`). The handler MUST capture one `nowMs` immediately before calling
+the control op, validate against that same value, and pass it into the control op; it MUST NOT
+claim or infer the later fsync/rename wall-clock instant. Response transmission latency does
+not retroactively change this logical-time invariant. The production canary separately
 requires `nextRunAt > createResponseObservedAt` by using a 15-minute lead.
 `exactPersistedDeliveryDestination` MUST contain the persisted `{channel,to}` for
 announce delivery, or an explicit null/not-requested representation for no delivery. A model
@@ -709,8 +725,10 @@ product code unless a Contract requires revision.
   call counts, and operator post-delete evidence query
 - Expected result: all writes use one control op; automatic mutation retry count is zero;
   update preserves ID/future revision semantics; create/update return every committed field;
-  audit failure returns known commit + `auditStatus=append_failed`; response loss returns
-  unknown; remove retains operator evidence while ordinary post-delete runs returns not-found
+  live-handler audit failure returns known commit + `auditStatus=append_failed`; process death
+  post-commit/pre-audit returns caller-unknown with zero guaranteed append and a detectable
+  operator reconciliation gap; response loss returns unknown; remove retains operator evidence
+  while ordinary post-delete runs returns not-found
 - Failure condition: direct store write, automatic retry, false success/failure on unknown,
   missing result field, leaked message, replay/fence change, inferred post-delete ownership,
   or deleted occurrence evidence
@@ -824,7 +842,7 @@ STATUS = proposed
 AUTHORITY_LEVEL = governing_spec
 IMPLEMENTATION_AUTHORITY = contracts
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
-EXTERNAL_AUTHORITIES = NONE
+EXTERNAL_AUTHORITIES = mayf3/auth-service#MINIMAL_AUTH_FOUNDATION_V2@d529bd3c28ece3967149ad793794f8dac2020276 (constrained_by)
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
