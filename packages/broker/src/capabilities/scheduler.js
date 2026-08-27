@@ -62,6 +62,7 @@ const baseErrors = [
   { code: 'access_denied', description: 'The caller is not authorized for the requested target.' },
   { code: 'job_not_found', description: 'No visible job has the requested id.' },
   { code: 'validation_error', description: 'The Scheduler rejected the normalized definition.' },
+  { code: 'mutation_outcome_unknown', description: 'The mutation may have committed; inspect before any manual retry.' },
   { code: 'internal_error', description: 'The local Scheduler handler failed.' },
 ]
 

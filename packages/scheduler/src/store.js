@@ -144,10 +144,32 @@ export class JobStore {
       this._validateDocument(doc)
       const jobsChanged = digestJSON(doc.jobs) !== beforeJobsDigest
       if (jobsChanged) await this._markV2JobMutation()
-      if (typeof this.beforeCommit === 'function') await this.beforeCommit()
-      await this._writeAtomicDoc(doc)
+      if (typeof this.beforeCommit === 'function') {
+        try {
+          await this.beforeCommit()
+        } catch (error) {
+          error.mutationOutcome = 'not_committed'
+          throw error
+        }
+      }
+      try {
+        await this._writeAtomicDoc(doc)
+      } catch (error) {
+        if (error?.mutationOutcome === 'committed') {
+          error.committedDoc = clone(doc)
+          error.committedValue = clone(value)
+        }
+        throw error
+      }
       this._cacheDoc = clone(doc)
-      this._mtimeMs = (await fs.stat(this.filePath)).mtimeMs
+      try {
+        this._mtimeMs = (await fs.stat(this.filePath)).mtimeMs
+      } catch (error) {
+        error.mutationOutcome = 'committed'
+        error.committedDoc = clone(doc)
+        error.committedValue = clone(value)
+        throw error
+      }
       let upgrade = loaded.upgrade ?? null
       if (upgrade) {
         const evidenceStatus = await this.appendRunEvent({
@@ -281,6 +303,8 @@ export class JobStore {
     const run = this._writeChain.then(async () => {
       await this._ensureDir()
       const tmp = `${this.filePath}.tmp-${process.pid}-${seq}-${this.clock()}`
+      let renameAttempted = false
+      let renamed = false
       try {
         const handle = await fs.open(tmp, 'wx')
         try {
@@ -289,11 +313,16 @@ export class JobStore {
         } finally {
           await handle.close()
         }
+        renameAttempted = true
         await fs.rename(tmp, this.filePath)
+        renamed = true
         await this._syncDir(path.dirname(this.filePath))
       } catch (error) {
         await fs.rm(tmp, { force: true }).catch(() => {})
-        failLoud(`atomic write ${tmp} -> ${this.filePath}`, error)
+        const wrapped = new Error(`scheduler store: atomic write ${tmp} -> ${this.filePath}: ${error?.message ?? error}`)
+        wrapped.cause = error
+        wrapped.mutationOutcome = renamed ? 'committed' : (renameAttempted ? 'unknown' : 'not_committed')
+        throw wrapped
       }
     })
     this._writeChain = run.catch(() => {})

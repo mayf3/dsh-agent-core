@@ -262,6 +262,62 @@ test('fenced enabled update commits with nextRunAt null and does not clear or re
   assert.equal(after.occurrences.length, occurrenceCount)
 })
 
+test('ownership is rechecked inside the locked control mutation (TOCTOU fails closed)', async (t) => {
+  const { call, store, grantCalls } = await rig(t)
+  const created = await call('create', { name: 'owned', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  const jobId = created.result.jobId
+  const originalLoad = store.loadDoc.bind(store)
+  let swapped = false
+  store.loadDoc = async (...args) => {
+    const snapshot = await originalLoad(...args)
+    if (!swapped) {
+      swapped = true
+      await store.mutateDoc((doc) => { doc.jobs.find((job) => job.id === jobId).agentId = 'agt_b' })
+    }
+    return snapshot
+  }
+  const out = await call('update', { job_id: jobId, name: 'must-not-commit' })
+  assert.equal(out.ok, false)
+  assert.equal(out.error.code, 'access_denied')
+  const doc = await originalLoad({ force: true })
+  assert.equal(doc.jobs[0].agentId, 'agt_b')
+  assert.equal(doc.jobs[0].name, 'owned')
+  assert.deepEqual(grantCalls, [])
+})
+
+test('post-commit store fault returns committed projection and still attempts one audit append', async (t) => {
+  const { call, store } = await rig(t)
+  let syncCalls = 0
+  store._syncDir = async () => { syncCalls += 1; throw new Error('injected directory sync failure after rename') }
+  const out = await call('create', { name: 'durable', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  assert.equal(out.ok, true)
+  assertExactCommittedResult(out.result)
+  assert.equal(out.result.auditStatus, 'appended')
+  assert.equal(syncCalls, 1)
+  const doc = await store.loadDoc({ force: true })
+  assert.equal(doc.jobs.some((job) => job.id === out.result.jobId), true)
+})
+
+test('pre-commit failure is known clean; uncertain commit failure is outcome-unknown with zero retry', async (t) => {
+  const first = await rig(t)
+  first.store.beforeCommit = async () => { throw new Error('before commit') }
+  const clean = await first.call('create', { name: 'clean-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  assert.equal(clean.ok, false)
+  assert.equal(clean.error.code, 'internal_error')
+  assert.equal((await first.store.loadDoc({ force: true })).jobs.length, 0)
+
+  const second = await rig(t)
+  let attempts = 0
+  second.store._writeAtomicDoc = async () => {
+    attempts += 1
+    throw Object.assign(new Error('rename outcome unavailable'), { mutationOutcome: 'unknown' })
+  }
+  const unknown = await second.call('create', { name: 'unknown', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  assert.equal(unknown.ok, false)
+  assert.equal(unknown.error.code, 'mutation_outcome_unknown')
+  assert.equal(attempts, 1)
+})
+
 test('audit append failure returns known committed result, logs sanitized coordinates, and does not retry', async (t) => {
   const { call, store, auditErrors } = await rig(t, { auditFailure: true })
   let appendAttempts = 0

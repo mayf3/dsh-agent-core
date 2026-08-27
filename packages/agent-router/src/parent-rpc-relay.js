@@ -51,6 +51,15 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         log.log(`[broker] agent ${agentId}: IGNORING child-supplied identity fields: ${selfReported.join(', ')}`)
       }
       const proc = getProc()
+      const active = proc.activeIngressContext
+      const activeExecution = active && proc.executions?.get(active.turnExecutionId)
+      const boundIngressContext = active
+        && active.callerAgentId === agentId
+        && active.processGeneration === proc.processGeneration
+        && activeExecution !== undefined
+        && activeExecution.settled !== true
+        ? active
+        : undefined
       const gateway = getBrokerGateway()
       if (gateway === undefined || typeof gateway.execute !== 'function') {
         return {
@@ -69,7 +78,10 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
           { capabilityId: params?.capabilityId, operation: params?.operation, args: params?.args },
           {
             agentId, // ACTUAL identity — decided here, never from params
-            ingressContext: proc.activeIngressContext,
+            // Re-verify the Router-owned process/generation/execution binding
+            // at RPC receipt; stale/cleared/replaced contexts become absent and
+            // Scheduler fails before any credential or store access.
+            ingressContext: boundIngressContext,
           },
         ),
       }

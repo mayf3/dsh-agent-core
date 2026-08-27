@@ -129,6 +129,7 @@ test('broker RPC: passes the exact immutable active-turn context beside actual a
     feishuMessageId: 'om_exact',
   })
   proc.activeIngressContext = activeIngressContext
+  proc.executions.set(activeIngressContext.turnExecutionId, { settled: false })
 
   await proc.onRpcRequest(BROKER_RPC_METHOD, {
     capabilityId: 'scheduler', operation: 'create', args: { action: 'create' },
@@ -138,6 +139,30 @@ test('broker RPC: passes the exact immutable active-turn context beside actual a
   assert.equal(gatewayCalls[0].ctx.ingressContext, activeIngressContext, 'parent forwards the exact Router-owned immutable object')
   assert.equal(gatewayCalls[0].ctx.ingressContext.feishuChatId, 'oc_exact_chat')
   assert.notEqual(gatewayCalls[0].ctx.ingressContext.feishuChatId, gatewayCalls[0].ctx.ingressContext.feishuConversationId)
+})
+
+test('broker RPC: stale generation, settled execution, and cleared turn never forward ingress context', async (t) => {
+  stubAgentProcess()
+  const gatewayCalls = []
+  const gateway = { execute: async (_call, ctx) => { gatewayCalls.push(ctx); return { ok: false, error: { code: 'invalid_arguments' } } } }
+  const { router, agentA } = await freshRouter(t, { brokerGateway: gateway })
+  const proc = await router.ensureRunning(agentA.id)
+  const base = {
+    callerAgentId: agentA.id,
+    processGeneration: proc.processGeneration,
+    turnExecutionId: 'turn:stale',
+    channelNamespace: 'feishu',
+    feishuChatId: 'oc_stale',
+  }
+  proc.activeIngressContext = Object.freeze({ ...base, processGeneration: proc.processGeneration - 1 })
+  proc.executions.set('turn:stale', { settled: false })
+  await proc.onRpcRequest(BROKER_RPC_METHOD, { capabilityId: 'scheduler', operation: 'list', args: {} })
+  proc.activeIngressContext = Object.freeze(base)
+  proc.executions.set('turn:stale', { settled: true })
+  await proc.onRpcRequest(BROKER_RPC_METHOD, { capabilityId: 'scheduler', operation: 'list', args: {} })
+  proc.activeIngressContext = undefined
+  await proc.onRpcRequest(BROKER_RPC_METHOD, { capabilityId: 'scheduler', operation: 'list', args: {} })
+  assert.deepEqual(gatewayCalls.map((ctx) => ctx.ingressContext), [undefined, undefined, undefined])
 })
 
 test('broker RPC: forged child-supplied identity/context is IGNORED (actual Router values win)', async (t) => {
@@ -162,6 +187,7 @@ test('broker RPC: forged child-supplied identity/context is IGNORED (actual Rout
     feishuMessageId: 'om_trusted',
   })
   proc.activeIngressContext = trustedContext
+  proc.executions.set(trustedContext.turnExecutionId, { settled: false })
 
   const result = await proc.onRpcRequest(BROKER_RPC_METHOD, {
     capabilityId: 'forum_my_notifications',
