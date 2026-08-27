@@ -1,7 +1,15 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1
-status: proposed
+status: accepted
 date: 2026-08-24
+accepted_date: 2026-08-27
+accepted_by: mayf3
+accepted_at: 2026-08-27T15:45:22Z
+accepted_reviewed_base: b620907fc6f58292b6ee096c977f0071921d747e
+accepted_reviewed_spec_commit: f82a2dbda0c67c6249c057a05546a183fe78679f
+accepted_reviewer_id: deepseek-harness-local-independent-spec-reviewer-clean-r4
+acceptance_review_result: ACCEPT
+semantic_delta_after_review: NONE
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -20,7 +28,7 @@ superseded_by: null
 owners:
   - mayf3
 type: dedicated-admin-agent-identity-bootstrap-spec
-review_status: AWAITING_FRESH_FULL_REVIEW
+review_status: ACCEPTED_AFTER_INDEPENDENT_REVIEW
 owner_intent_provenance: direct Owner instruction, 「身份 执行」 authoring task 2026-08-24 (Owner 决策 §0 Batch 1 全部冻结); direct Owner Revision 1 instruction 2026-08-25 (auth-service 坐标更正 + INITIAL_DEFINITION_DISABLED=true + disabled 状态语义 + activation boundary 冻结, §0 Batch 2); direct Owner current-main ingress reconciliation instruction 2026-08-25 (Notification Ingress premature-activation boundary, Revision 2); direct Owner Revision 3 instruction 2026-08-26 (governance-authority and failure-recovery closure——implementation_authority=contracts 治理字段修正 + verification mint success classification + durable attempt ledger 与 S1/S2 outcome_unknown 闭合 + SAFE_DISABLED_STAGED_IDENTITY rollback + activation authority 完整冻结, §0 Batch 3); direct Owner Revision 4 clean-base replacement instruction 2026-08-27 (clean-base provenance + exact parent D.5 credential-layer classification + minimal final durable receipt allowlist, §0 Batch 4)
 references:
   - docs/specs/AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1.md (accepted; present on main 73ec666 as blob df74e92759ad3083328dfd337667fc8a4ec618a0; its Part C.4 external_ref functions, Part D/D.7 Phase A order, Part G store contract, Part H secret handoff and D.5 mint classification are INHERITED and NOT modified by this Spec)
@@ -31,7 +39,15 @@ references:
 
 # AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1 — 专用「工作流总管」Agent 身份 bootstrap 权威
 
-> **PROPOSED / DOCS-ONLY / SPEC ONLY — 本轮不执行任何身份动作。**
+> **ACCEPTED CANDIDATE / DOCS-ONLY / SPEC ONLY — 本轮不执行任何身份动作。**
+>
+> **Owner acceptance receipt（2026-08-27）**：reviewed base
+> `b620907fc6f58292b6ee096c977f0071921d747e`；reviewed Spec head
+> `f82a2dbda0c67c6249c057a05546a183fe78679f`；independent reviewer
+> `deepseek-harness-local-independent-spec-reviewer-clean-r4`；review result `ACCEPT`；
+> acceptance actor `mayf3`；`SEMANTIC_DELTA_AFTER_REVIEW = NONE`。本 accepted candidate
+> 仅在合入 designated authority branch `main` 后成为 active repository authority；
+> acceptance 本身不执行运行时写入、不创建或启用 Agent、也不授权 Ready 或 merge。
 >
 > 本 Spec 是 **subject-bounded 的单 Agent 身份 bootstrap child authority**：唯一 subject 是
 > 一个**新的专用管理 Agent** —— `agt_workflow-admin-agent`（displayName `工作流总管`，
@@ -1837,7 +1853,7 @@ Client rotation recovery 权威（CTR-WA-010 冻结路径）；部署面实际 a
 ## 14. Final Output（authoring round 冻结输出）
 
 ```text
-AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1 = PROPOSED (docs-only, single new file)
+AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1 = ACCEPTED_CANDIDATE (docs-only; active authority only after merge to main)
 
 ADMIN_AGENT_ID = agt_workflow-admin-agent
 ADMIN_AGENT_DISPLAY_NAME = 工作流总管
@@ -2002,6 +2018,6 @@ REVISION 4 (2026-08-27) clean-base and parent semantic alignment：
 权威激活路径 = 独立 review PASS + Owner acceptance + merge to main ⇒ 本 Spec
   成为单次有界身份 bootstrap 的合法实现权威（docs merge 本身零运行时写入）⇒
   另行独立派发的「身份 执行」任务在 CTR-WA-008 执行门全部满足后恰好执行一次
-NEXT_TASK = 独立 review（身份 审计；必须重新做 full review，不得沿用旧语义
-  审计）→ Owner acceptance → merge
+NEXT_TASK = 授权 审计（全新的本地审计 Agent 对 lifecycle-only accepted head 做
+  final-head recheck；FINAL_HEAD_RECHECK=PENDING；MERGE_ALLOWED=NO）
 ```
