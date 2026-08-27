@@ -22,6 +22,24 @@
  *   6. parse JSON / text responses; map non-2xx, malformed bodies, network
  *      and timeout failures onto the capability error table.
  *
+ * Downstream error preservation (error-mapping hardening): a non-2xx response
+ * is never flattened to a bare `http_4xx`. The transport extracts, GENERICALLY
+ * and from response data only:
+ *
+ *   - `errorCode`: the downstream service error `code` when the body carries
+ *     one in a recognized envelope shape and it matches the safe code grammar
+ *     (e.g. svc-workflow `{"error":{"code":"principal_not_found",...}}`,
+ *     forum `{"error":"not_found"}`, generic `{"code":...}`); otherwise the
+ *     canonical `http_4xx` / `http_5xx`. The mapping layer still resolves the
+ *     code against the manifest's declared error table (fail-closed), so an
+ *     undeclared service code degrades to the declared `http_4xx`/`http_5xx`
+ *     — never to an undeclared wire code.
+ *   - `status`: the upstream HTTP status (unchanged).
+ *   - `detail`: the SANITIZED service message (redacted + truncated); raw
+ *     bodies / headers / credentials never reach the caller.
+ *   - `requestId`: the downstream `x-request-id` response header, validated
+ *     and passed through verbatim; null when absent — NEVER fabricated.
+ *
  * Security discipline (translated from the OpenClaw BrokerCore design, same
  * guarantees):
  *   - origin / method / path / audience / scope come ONLY from trusted
@@ -288,6 +306,136 @@ export function buildQuery(query) {
   return params.toString()
 }
 
+// ── Downstream error preservation (generic; response data only) ─────────────
+
+/** Safe grammar a downstream error `code` must match to be surfaced at all. */
+export const SERVICE_CODE_PATTERN = /^[a-z][a-zA-Z0-9_]{0,63}$/
+
+/** `x-request-id` pass-through contract: visible ASCII, bounded; else null. */
+export const REQUEST_ID_PATTERN = /^[\x21-\x7e]{1,128}$/
+
+/** Max characters of a sanitized detail string (truncation marker appended). */
+const DETAIL_MAX_LENGTH = 500
+
+/**
+ * Sensitive-content redaction patterns applied to EVERY detail string. The
+ * detail is derived from the service's own `message` field only (never from
+ * raw headers / raw bodies), and these patterns are the second line of
+ * defense: an upstream echo of auth material is replaced, not forwarded.
+ */
+const DETAIL_REDACTIONS = [
+  // "Bearer <token>" anywhere (also inside sentences) — must run BEFORE the
+  // Authorization-header rule, which would otherwise consume only the word
+  // "Bearer" and leave the token itself exposed.
+  [/bearer\s+[A-Za-z0-9._~+/=-]+/gi, 'bearer [REDACTED]'],
+  // "Authorization: Basic <credentials>" / "authorization=NTLM <blob>" —
+  // scheme-prefixed values: the scheme word alone is not the secret, the
+  // credentials token after it are. Without this rule the generic rule below
+  // consumes only the scheme word and the credentials survive (the same trap
+  // the bearer rule documents for in-sentence tokens).
+  [/(authorization\s*[:=]\s*)(?:basic|bearer|digest|dpop|hoba|mutual|negotiate|ntlm|scram-sha-1|scram-sha-256|vapid)\s+[A-Za-z0-9._~+/=-]+/gi, '$1[REDACTED]'],
+  // "Authorization: <value>" / "authorization=<value>" → keep the key, drop the value.
+  [/(authorization\s*[:=]\s*)([^\s,;"']+)/gi, '$1[REDACTED]'],
+  // "token"/"secret"/"password"/"credential"/"api-key" assignments.
+  [/((?:api[_-]?key|token|secret|password|credential)["']?\s*[:=]\s*)["']?[^\s,;"'}]+/gi, '$1[REDACTED]'],
+  // Long opaque runs (JWTs / hex / base64 keys) even without a keyword.
+  [/[A-Za-z0-9+/_-]{40,}={0,2}/g, '[REDACTED]'],
+]
+
+/**
+ * Sanitize a downstream error message for the caller-visible `detail`:
+ * redact credential-shaped content, then truncate. Pure function.
+ * @param {string} text - the service-provided message string.
+ * @returns {string} redacted + truncated text.
+ */
+export function sanitizeErrorDetail(text) {
+  let out = String(text)
+  for (const [re, replacement] of DETAIL_REDACTIONS) out = out.replace(re, replacement)
+  if (out.length > DETAIL_MAX_LENGTH) out = `${out.slice(0, DETAIL_MAX_LENGTH)}…[truncated]`
+  return out
+}
+
+/**
+ * Extract `{ code?, message? }` from a downstream error body, generically.
+ * Recognized envelope shapes (checked in order):
+ *   svc-workflow  {"error": {"code": "...", "message": "...", "details": ...}}
+ *   generic       {"code": "...", "message": "..."}
+ *   forum/legacy  {"error": "<slug-or-text>", "message": "..."}
+ * A `code` is only returned when it matches the safe SERVICE_CODE_PATTERN
+ * (human prose like "no such thread" is a message, not a code). Never throws;
+ * unparsable input yields `{}`.
+ * @param {string} bodyText - raw response body text.
+ * @returns {{ code?: string, message?: string }}
+ */
+export function parseServiceErrorBody(bodyText) {
+  let data
+  try {
+    data = JSON.parse(bodyText)
+  } catch {
+    return {}
+  }
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) return {}
+  const nested = data.error
+  const source =
+    nested !== null && typeof nested === 'object' && !Array.isArray(nested) ? nested : data
+  const out = {}
+  if (typeof source.code === 'string' && SERVICE_CODE_PATTERN.test(source.code)) {
+    out.code = source.code
+  } else if (typeof data.error === 'string' && SERVICE_CODE_PATTERN.test(data.error)) {
+    out.code = data.error
+  }
+  for (const key of ['message', 'error', 'detail']) {
+    const value = source[key]
+    if (typeof value === 'string' && value.length > 0) {
+      out.message = value
+      break
+    }
+  }
+  return out
+}
+
+/**
+ * Read the downstream `x-request-id` response header for error correlation.
+ * Validated against REQUEST_ID_PATTERN; anything missing/oversized/non-visible
+ * yields null. NEVER generates an id — a fabricated request-id would send the
+ * operator debugging a request that does not exist.
+ * @param {Headers} headers - the fetch response headers.
+ * @returns {string | null}
+ */
+export function extractRequestId(headers) {
+  const raw = headers.get('x-request-id')
+  if (raw === null) return null
+  const value = raw.trim()
+  return REQUEST_ID_PATTERN.test(value) ? value : null
+}
+
+/**
+ * Build the transport error object for a non-2xx (or malformed) downstream
+ * response. Pure given (status, bodyText, headers).
+ * @param {number} status - upstream HTTP status.
+ * @param {string} bodyText - raw upstream body text (never surfaced raw).
+ * @param {Headers} headers - upstream response headers.
+ * @returns {{ errorCode: string, status: number, detail: string, requestId: string | null }}
+ */
+export function buildDownstreamError(status, bodyText, headers) {
+  const { code, message } = parseServiceErrorBody(bodyText)
+  const canonical = status < 500 ? 'http_4xx' : 'http_5xx'
+  return {
+    // A pattern-valid downstream code is offered to the mapping layer, which
+    // still resolves it against the manifest's DECLARED error table and falls
+    // back to this canonical code when the service code is not declared.
+    errorCode: code ?? canonical,
+    status,
+    detail:
+      message !== undefined
+        ? sanitizeErrorDetail(message)
+        : bodyText.trim() === ''
+          ? '(downstream returned an empty error body)'
+          : '(downstream returned a non-JSON error body)',
+    requestId: extractRequestId(headers),
+  }
+}
+
 /**
  * Normalize extra request headers against the allowlist (Idempotency-Key
  * only). Anything else is rejected — no model-controllable header can reach
@@ -533,9 +681,8 @@ export function createHttpTransport(opts = {}) {
     }
 
     if (!res.ok) {
-      const status = res.status
-      const bodyText = await res.text().catch(() => '(no body)')
-      return { errorCode: status < 500 ? 'http_4xx' : 'http_5xx', status, detail: bodyText }
+      const bodyText = await res.text().catch(() => '')
+      return buildDownstreamError(res.status, bodyText, res.headers)
     }
 
     const contentType = res.headers.get('content-type') || ''
@@ -543,7 +690,7 @@ export function createHttpTransport(opts = {}) {
       try {
         return await res.json()
       } catch {
-        return { errorCode: 'malformed_response', status: res.status }
+        return { errorCode: 'malformed_response', status: res.status, requestId: extractRequestId(res.headers) }
       }
     }
     const text = await res.text().catch(() => '')
