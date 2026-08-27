@@ -12,8 +12,8 @@ governed_by:
   - AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
 external_authorities:
   - repository: mayf3/svc-workflow
-    authority_id: SVC_WORKFLOW_HR_DISPATCHER_IDENTITY_V1
-    revision: d1298b989042779b137282b2b665f81cb3eaecbc
+    authority_id: SVC_WORKFLOW_HR_DISPATCHER_COORDINATOR_GRANT_V1
+    revision: 5efcd814b981706652dcd3ca6c02471cf256239c
     relation: interoperates_with
 supersedes: []
 superseded_by: null
@@ -23,10 +23,12 @@ owners:
 
 # AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1 — 全域实例只读枚举 Broker 能力
 
-> 状态：**proposed**（revision 3，按 OWNER_RULING =
-> P0_USE_DEDICATED_WORKFLOW_DISPATCHER_IDENTITY 修订：本能力回归为**通用
-> Coordinator 工具**——服务端 gate 维持部署现状「仅 GLOBAL_WORKFLOW_COORDINATOR」，
-> svc-workflow 0 改动；不再引入 READER 角色 / 双错误码；不得硬绑定 HR 主会话，
+> 状态：**proposed**（revision 4：按 OWNER_RULING = DEDICATED_SYSTEM_AGENT_MODEL
+> 与跨仓 authority 拆分 repin——base 同步到 main **e40c140**（含 PR #82
+> error-preservation 实现，limit 校验单路径化）；external authority 改指
+> SVC_WORKFLOW_HR_DISPATCHER_COORDINATOR_GRANT_V1 @ 5efcd81；本能力保持
+> **通用 Coordinator 工具**——服务端 gate 维持部署现状「仅
+> GLOBAL_WORKFLOW_COORDINATOR」，svc-workflow 0 改动；不得硬绑定 HR 主会话，
 > 详见 DEC-008）。本 Spec 当前不授予任何实现、合并或 production apply 权限。
 > `implementation_authority = none`；accept 仅开启按 §9 Contracts 的实现评审路径。
 > 姊妹 Spec（未上 main、非本 Spec 的 parent）：`AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1`
@@ -72,34 +74,35 @@ Out of scope / 明确不授权：
 ## 3. Authority and dependencies
 
 - `governed_by`（均已 accepted，本地权威）：
-  - `AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1`（main 2328fa6，PR #68）：
-    本能力的错误信封（code/status/sanitized detail/requestId）、fail-closed 降级、
-    broker-side limit 校验机制族直接继承其 R1–R5。
+  - `AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1`（accepted via PR #68
+    2328fa6；**实现已合入 main e40c140（PR #82）**——validationError/
+    minimum/maximum 校验、错误信封、脱敏、request-id 传递均已在 main 产品
+    代码上生效）：本能力的错误信封（code/status/sanitized detail/requestId）、
+    fail-closed 降级、broker-side limit 校验机制族直接继承其 R1–R5。
   - `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1`：Broker-first 凭据链
     （trusted store → client_credentials → scoped token）为既有冻结语义。
-- `external_authorities`：svc-workflow 侧的独立 dispatcher 身份计划 Spec
-  （proposed，d1298b9）— `interoperates_with`。外部引用不授予本地权威：该 Spec
-  按 OWNER_RULING = P0_USE_DEDICATED_WORKFLOW_DISPATCHER_IDENTITY 冻结了一个
-  **future** 独立身份计划（独立 Principal + 独立 Client + grant 仅
-  {workflow.read} + 授现有 GLOBAL_WORKFLOW_COORDINATOR；不创建生产身份；
-  HR 主身份与 legacy 谱系零变更；86 fleet roster 零影响），且 **svc-workflow
-  服务端 0 改动**（无新角色、无 gate 变更、无错误码变更）。本能力不依赖该
-  计划即可实现与验收；该计划落地后，dispatcher 凭据（如
-  `agt_workflow-dispatcher-hr-agent`）与本能力天然兼容——凭据链对 Coordinator
-  通用，无需任何 per-agent 适配。
+- `external_authorities`：svc-workflow 侧的 coordinator 授予 Spec
+  （proposed，5efcd81）— `interoperates_with`。外部引用不授予本地权威：该
+  Spec 按 OWNER_RULING = DEDICATED_SYSTEM_AGENT_MODEL 与跨仓 authority 拆分，
+  仅治理「现有 GLOBAL_WORKFLOW_COORDINATOR 角色授予专用 system Agent
+  `agt_workflow-dispatcher-hr-agent` 的 principal + HR 主身份不获角色 +
+  svc-workflow 0 改动」；其身份/Client/grant 由 mayf3/auth-service
+  `AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1`（proposed，PR #31）治理；
+  Agent/scheduler 面由 `AGENT_CORE_HR_DISPATCHER_V1`（proposed）治理。
+  本能力不依赖上述任何 proposed Spec 即可实现与验收；落地后 dispatcher
+  凭据与本能力天然兼容——凭据链对 Coordinator 通用，无需任何 per-agent 适配。
 - **通用性时序声明**：本能力在任何时候都按部署现状的服务端契约工作
   （global gate = 仅 GLOBAL_WORKFLOW_COORDINATOR，错误码
   `global_coordinator_required`）；无部署时序分支。
-- 实现叠加声明（与 domain-instances 姊妹 Spec 同款 dual-path）：error-preservation
-  的**实现**在 main 2328fa6 上尚未落地（accepted authority + 可移植 WIP）。若其先
-  落地，本 manifest 的 `limit` bounds（minimum/maximum/validationError）获得
-  broker-side fail-fast；若未落地，bounds 字段在纯 main schema 上为无害额外字段，
-  limit 越界由下游 422 `invalid_pagination`（已声明码）兜底。两种演化路径下
-  CTR-002 合同不破。
+- 实现叠加声明（**已收敛为单路径**）：本 Spec base = main e40c140（含
+  PR #82 error-preservation 实现）。`limit` bounds
+  （minimum/maximum/validationError）在 main schema 上即时生效——越界在
+  token/HTTP 之前本地 fail-fast `invalid_pagination`；仅当下游 422 兜底路径
+  保留为防御性回退（码已声明）。CTR-002 合同单一形态。
 
 ## 4. Current State
 
-- `STATE-001` — dsh-agent-core main 2328fa6 上 Broker 暴露 12 个 capability
+- `STATE-001` — dsh-agent-core main e40c140 上 Broker 暴露 12 个 capability
   manifests（workflow 读族 4 个：my_tasks / instance_detail / submission_history /
   my_domains），无任何 global 列表代理。basis: OBS-008。
 - `STATE-002` — svc-workflow github/main 2ff81ae 已部署
@@ -130,7 +133,8 @@ Out of scope / 明确不授权：
   `GLOBAL_WORKFLOW_COORDINATOR` AND enabled=TRUE）；非持有者 →
   `WorkflowQueryError::GlobalCoordinatorRequired` → HTTP 403
   `global_coordinator_required`（`error.rs:516-519`）。该 gate 为部署现状，
-  external authority（SVC_WORKFLOW_HR_DISPATCHER_IDENTITY_V1，d1298b9）维持
+  external authority（SVC_WORKFLOW_HR_DISPATCHER_COORDINATOR_GRANT_V1，
+  5efcd81）维持
   服务端 0 改动。
 - `OBS-004` — limit 服务端边界：default 20、0 或 >100 → 422
   `invalid_pagination`（`query_global_instances.rs:14-26`；纯 SELECT 投影，
@@ -142,13 +146,13 @@ Out of scope / 明确不授权：
   `status ∈ {active, cancelled, archived, all}`；非法值 → 422 `invalid_lifecycle`
   / `invalid_status`（`dto.rs:160/189`）。默认语义：二者全缺省 → status=active；
   仅 lifecycle 给定 → status=all（`instances.rs:188-195`）。
-- `OBS-007` — Broker 身份纪律（main 2328fa6）：transport 从不读 `args` 里的
+- `OBS-007` — Broker 身份纪律（main e40c140）：transport 从不读 `args` 里的
   identity，credential 只来自 trusted identity seam（`transport.js:30`；
   `credential.js:28` `ctx.credentials.resolve`；`transport.js:106` MachineClient
   credential from trusted store）；token 按 manifest.requiredScopes 请求。
-- `OBS-008` — main 2328fa6 的 `schema.js` 尚无 minimum/maximum/validationError
-  校验（error-preservation 实现未落 main）；`capabilities.test.js:115` 断言
-  manifests 计数 = 12。
+- `OBS-008` — main e40c140（含 PR #82）：`schema.js` 已含
+  minimum/maximum/validationError 校验（error-preservation 实现已合入）；
+  `capabilities.test.js:115` 断言 manifests 计数 = 12；broker 测试基线 159。
 - `OBS-009` — 生产只读查询（auth-service DB，2026-08-27）：
   `agt_hr-agent` → principal `dc702687-6515-4a2a-91ae-e572a9bbd766`（active，
   HR助手）；现有绑定 = DOMAIN_OWNER×1（hr-onboarding）+ DOMAIN_MEMBER×8；无
@@ -159,7 +163,8 @@ Out of scope / 明确不授权：
   （openclaw:agent:hr-agent）持 active client
   `mc_4Ud_9wGR1mwQM9W7s7foX8qp`（{workflow.admin, workflow.read,
   workflow.execute}）——故该角色不得授予 HR 主身份；只读全局查看改由
-  **独立 dispatcher 身份**（grant 仅 {workflow.read} + COORDINATOR 角色，
+  **专用 system Agent**（agt_workflow-dispatcher-hr-agent；grant 仅
+  {workflow.read} + agent-wake + COORDINATOR 角色，
   结构性不可达写端点）实现，见 external authority。
 
 ## 6. Claims and assumptions
@@ -176,7 +181,7 @@ Out of scope / 明确不授权：
 
 - `EVD-001`：OBS-001/002/003/004/005/006（svc-workflow 2ff81ae 源码行证）→
   支撑 STATE-002 与 §9 全部参数/错误 Contracts。
-- `EVD-002`：OBS-007（main 2328fa6 broker 源码行证）→ 支撑 CTR-003（身份不可
+- `EVD-002`：OBS-007（main e40c140 broker 源码行证）→ 支撑 CTR-003（身份不可
   替换）与 CTR-006（Broker-first 凭据）。
 - `EVD-003`：OBS-008 → 支撑 STATE-001、CLM-001、§3 dual-path。
 - `EVD-004`：OBS-009（生产只读查询）→ 支撑 STATE-003 与 external authority 的
@@ -283,7 +288,7 @@ Out of scope / 明确不授权：
   结果含 `next_cursor`。
 - `ACC-005` → CTR-003：携带 `assigneePrincipalId` 调用时，token subject /
   credential 不因参数变化（identity 来自 seam 的结构断言）。
-- `ACC-006` → CTR-001/007：DEFAULT_MANIFESTS 计数 = 基线 +1（基线 2328fa6 =
+- `ACC-006` → CTR-001/007：DEFAULT_MANIFESTS 计数 = 基线 +1（基线 e40c140 =
   12→13；若 domain-instances 姊妹先合并则 13→14，以实现时 main 实测为准）；全部
   broker 测试 PASS。
 - `ACC-007` → CTR-005：manifest schema 校验过 validateManifest；operation http
