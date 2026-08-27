@@ -345,6 +345,15 @@ test('pre-commit failure is known clean; uncertain commit failure is outcome-unk
   assert.equal(clean.error.code, 'internal_error')
   assert.equal((await first.store.loadDoc({ force: true })).jobs.length, 0)
 
+  const scopedReadFailure = await rig(t)
+  const scopedJob = await scopedReadFailure.call('create', {
+    name: 'scoped-read', schedule_kind: 'every', every_ms: 60_000, message: 'm',
+  })
+  scopedReadFailure.store.loadDoc = async () => { throw new Error('injected authorization snapshot failure') }
+  const scopedKnown = await scopedReadFailure.call('update', { job_id: scopedJob.result.jobId, name: 'never' })
+  assert.equal(scopedKnown.ok, false)
+  assert.equal(scopedKnown.error.code, 'internal_error')
+
   const readFailure = await rig(t)
   readFailure.store._loadDocForMutation = async () => { throw new Error('injected pre-write load failure') }
   const known = await readFailure.call('create', { name: 'read-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm' })

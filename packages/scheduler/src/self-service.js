@@ -264,7 +264,12 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
   }
 
   async function loadScopedJob(jobId, caller, requireAdmin) {
-    const doc = await store.loadDoc({ force: true })
+    let doc
+    try {
+      doc = await store.loadDoc({ force: true })
+    } catch {
+      return { error: err(SELF_SERVICE_ERROR_CODES.INTERNAL_ERROR, 'scheduler store read failed before mutation') }
+    }
     const job = doc.jobs.find((candidate) => candidate.id === jobId)
     if (job === undefined) return { error: err(SELF_SERVICE_ERROR_CODES.JOB_NOT_FOUND, `no visible job with id ${jobId}`) }
     const allowAny = job.agentId !== caller ? await requireAdmin() : false
