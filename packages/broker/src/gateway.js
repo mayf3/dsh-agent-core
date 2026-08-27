@@ -30,8 +30,9 @@
 
 import { createHttpTransport, createHttpHandlers, requestAccessToken } from './transport.js'
 import { buildTargetMap } from './targets.js'
-import { invoke } from './mapping.js'
+import { invoke, validateInvocation } from './mapping.js'
 import { loadCredentialFor } from './credential-store.js'
+import { validateSchedulerTrustedContext } from './scheduler-validation.js'
 
 /**
  * Create the in-process broker gateway.
@@ -94,6 +95,36 @@ export function createBrokerGateway({
     return {}
   }
 
+  function localHandlerFor(handlers, manifest, operation) {
+    return handlers[manifest.id]?.[operation]
+  }
+
+  const schedulerContextFields = [
+    'callerAgentId', 'processGeneration', 'turnExecutionId',
+    'channelNamespace', 'channelConversationId', 'feishuChatId',
+    'feishuConversationId', 'feishuMessageId',
+  ]
+
+  /** Flatten only Router-owned, allowlisted active-ingress leaves. */
+  function schedulerTrustedContext(context, agentId) {
+    const ingress = context?.ingressContext
+    const violations = []
+    if (ingress !== undefined && (ingress === null || typeof ingress !== 'object' || Array.isArray(ingress))) {
+      violations.push('trusted ingressContext must be an object')
+    }
+    const usableIngress = ingress && typeof ingress === 'object' && !Array.isArray(ingress) ? ingress : {}
+    const flattened = { agentId }
+    for (const field of schedulerContextFields) {
+      const nested = usableIngress[field]
+      const legacyFlat = context?.[field]
+      if (nested !== undefined && legacyFlat !== undefined && !Object.is(nested, legacyFlat)) {
+        violations.push(`trusted context ${field} conflicts with ingressContext`)
+      }
+      flattened[field] = nested !== undefined ? nested : legacyFlat
+    }
+    return { context: Object.freeze(flattened), violations }
+  }
+
   /** One transport per agentId: shared token cache per identity, never
    *  across identities. The credential provider re-reads the store on every
    *  getCredential() so rotation is picked up without restart. */
@@ -127,7 +158,8 @@ export function createBrokerGateway({
    * @returns {Promise<{ok:boolean, result?:unknown,
    *   error?:{code:string, status?:number, detail?:string}}>}
    */
-  async function execute(call, { agentId }) {
+  async function execute(call, context = {}) {
+    const agentId = context?.agentId
     const manifest = byCapability.get(call?.capabilityId)
     if (manifest === undefined) {
       return { ok: false, error: { code: 'unsupported_operation', detail: `capability not served by the gateway: ${call?.capabilityId}` } }
@@ -135,7 +167,8 @@ export function createBrokerGateway({
     const isLocal = manifest.local !== undefined
     const operation = call?.operation
     const localHandlersNow = handlersForCall()
-    if (isLocal && (typeof operation !== 'string' || localHandlersNow[manifest.id]?.[operation] === undefined)) {
+    const localHandler = isLocal ? localHandlerFor(localHandlersNow, manifest, operation) : undefined
+    if (isLocal && (typeof operation !== 'string' || localHandler === undefined)) {
       return { ok: false, error: { code: 'unsupported_operation', detail: `operation not served by the gateway: ${manifest.id}.${operation}` } }
     }
     if (!Array.isArray(manifest.operations)) {
@@ -144,6 +177,32 @@ export function createBrokerGateway({
     if (!isLocal && !manifest.operations.some((o) => o && o.http)) {
       return { ok: false, error: { code: 'unsupported_operation', detail: `capability not served by the gateway: ${manifest.id}` } }
     }
+
+    let trustedContext = Object.freeze({ ...context, agentId, callerAgentId: agentId })
+    let localArgs = call?.args ?? {}
+    if (manifest.id === 'scheduler') {
+      // This is the authoritative boundary: a child can bypass its own tool
+      // mapper and call parent RPC directly, so repeat exact validation here
+      // before credential, grant, handler, or store access.
+      const validated = validateInvocation(manifest, { operation, args: localArgs })
+      if (!validated.ok) return validated
+
+      // Router calls the gateway as { agentId, ingressContext }. Flatten only
+      // the active, allowlisted ingress leaves; never forward the nested bag or
+      // derive identity from model/business args. Legacy flat trusted callers
+      // remain supported, but a nested/flat disagreement fails closed.
+      const flattened = schedulerTrustedContext(context, agentId)
+      if (flattened.violations.length > 0) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: flattened.violations.join('; ') } }
+      }
+      trustedContext = flattened.context
+      const contextViolations = validateSchedulerTrustedContext(trustedContext, validated.args)
+      if (contextViolations.length > 0) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: contextViolations.join('; ') } }
+      }
+      localArgs = validated.args
+    }
+
     let credential
     try {
       credential = loadCredentialFor(credentialsFile, agentId)
@@ -189,9 +248,11 @@ export function createBrokerGateway({
           }
         }
       }
-      const handler = localHandlersNow[manifest.id]?.[operation]
       try {
-        return await handler(call?.args ?? {}, { agentId })
+        // Forward the Parent-owned invocation context, not anything from args.
+        // `agentId`/`callerAgentId` are overwritten from the actual gateway
+        // caller relationship and the snapshot is immutable for the handler.
+        return await localHandler(localArgs, trustedContext)
       } catch (error) {
         log(`[broker-gateway] local capability ${manifest.id}.${operation} failed: ${error?.message ?? error}`)
         return { ok: false, error: { code: 'internal_error', detail: error?.message ?? 'local capability failure' } }

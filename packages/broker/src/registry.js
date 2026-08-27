@@ -38,24 +38,25 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
   const wireId = manifest.id
 
   // Model-facing parameter schema in `defineTool` format (per-property map
-  // with `required: true`). `operation` is always required; shared properties
-  // are required only when EVERY operation requires them (the coarse schema is
-  // a model hint; strict per-operation validation happens in mapping.js).
+  // with `required: true`). Existing manifests default to `operation`; an
+  // opted-in manifest (Scheduler V1) may declare `action`. The coarse schema
+  // is guidance; authoritative per-branch validation happens in mapping.js.
+  const selector = manifest.selector ?? 'operation'
   const parameters = {
-    operation: {
+    [selector]: {
       type: 'string',
       required: true,
       enum: manifest.operations.map((o) => o.name),
-      description: 'The capability operation to perform.',
+      description: `The capability ${selector} to perform.`,
     },
   }
   const requiredEverywhere = {}
   for (const op of manifest.operations) {
     for (const [name, spec] of Object.entries(op.arguments.properties)) {
       if (!Object.hasOwn(parameters, name)) {
+        const { validationError: _validationError, ...modelSchema } = spec
         parameters[name] = {
-          type: spec.type,
-          ...(spec.enum ? { enum: spec.enum } : {}),
+          ...modelSchema,
           description: spec.description || `${op.name}: ${name}`,
         }
       }
@@ -92,7 +93,7 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
 
   const renderArgs = (args) =>
     Object.entries(args)
-      .filter(([k]) => k !== 'operation')
+      .filter(([k]) => k !== selector)
       // Values only, in argument order — keeps the V0 acceptance text format
       // (`external.calculator: multiply(6, 7) = 42 (ok: true)`) byte-identical.
       .map(([, v]) => (typeof v === 'string' ? v : JSON.stringify(v)))
@@ -121,12 +122,15 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
         schema: outputSchema,
         render: (args, value) =>
           value && value.ok === true
-            ? [{ type: 'text', text: `${wireId}: ${args.operation}(${renderArgs(args)}) = ${JSON.stringify(value.result)} (ok: true)` }]
-            : [{ type: 'text', text: `${wireId}: ${args.operation}(${renderArgs(args)}) failed: ${renderError(value?.error)}` }],
+            ? [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) = ${JSON.stringify(value.result)} (ok: true)` }]
+            : [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) failed: ${renderError(value?.error)}` }],
       },
       async execute(args) {
-        // Single identity source: resolvePrincipal, never from args.
-        return invoke(manifest, handlers, { operation: args.operation, args }, { resolvePrincipal })
+        // Dispatch consumes the selector; handlers receive only business args.
+        // Identity remains exclusively resolvePrincipal/trusted gateway context.
+        const operation = args?.[selector]
+        const businessArgs = Object.fromEntries(Object.entries(args ?? {}).filter(([key]) => key !== selector))
+        return invoke(manifest, handlers, { operation, args: businessArgs }, { resolvePrincipal })
       },
       presentCall: (args) => ({
         card: 'generic',

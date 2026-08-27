@@ -60,8 +60,12 @@ export const BROKER_RPC_METHOD = 'agent-core/broker'
  */
 export function createRelayHandlers(manifest, requestFn) {
   const handlers = {}
+  // LOCAL (in-process) capabilities relay exactly like HTTP-bound ones: the
+  // parent's gateway executes them and answers in the same envelope shape,
+  // so the child-side wire result is identical either way.
+  const isLocalManifest = manifest?.local !== undefined
   for (const op of manifest.operations) {
-    if (!op.http) continue
+    if (!op.http && !isLocalManifest) continue
     handlers[op.name] = async (_operation, args) => {
       let envelope
       try {

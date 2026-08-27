@@ -33,9 +33,11 @@ import { JobStore } from '../packages/scheduler/src/store.js'
 import { normalizeJob, toPublicJob } from '../packages/scheduler/src/job-model.js'
 import { computeNextRunAtMs, parseAtToMs } from '../packages/scheduler/src/schedule.js'
 import { deriveJobStateSummary } from '../packages/scheduler/src/eligibility.js'
-import { disableJobOp, enableJobOp, reconcileOccurrence } from '../packages/scheduler/src/control.js'
+import { disableJobOp, enableJobOp, updateJobOp, reconcileOccurrence } from '../packages/scheduler/src/control.js'
 
-const USAGE = `usage: agentcore-cron <add|list|runs|rm|enable|disable|reconcile> [flags] [--json] [--store <path>]
+const USAGE = `usage: agentcore-cron <add|list|runs|rm|enable|disable|update|reconcile> [flags] [--json] [--store <path>]
+  add --deliver --channel <channel> --to <destination> [--best-effort]   (explicit delivery target)
+  update <id> [--name --message --timeout-seconds --model --light-context --cron/--at/--every-ms/--tz --deliver/--no-deliver ...]
   reconcile <occurrenceId> --run-id <runId> --to succeeded|failed --note <evidence>`
 
 function storePathFromArgs(args) {
@@ -99,9 +101,7 @@ async function cmdAdd(args) {
     schedule,
     payload,
     ...(hasFlag(args, '--auto-retry') ? { retry: { auto: true } } : {}),
-    delivery: hasFlag(args, '--deliver')
-      ? { mode: 'announce' }
-      : { mode: 'none', channel: 'last' }, // --no-deliver default, like the daemons
+    delivery: resolveDeliveryFlags(args, 'add'),
     deleteAfterRun: hasFlag(args, '--delete-after-run') || schedule.kind === 'at',
   })
   const { value: created } = await store.mutate((jobs) => {
@@ -115,6 +115,103 @@ async function cmdAdd(args) {
     const next = publicJob.nextRunAtMs
       ?? computeNextRunAtMs(job.schedule, Date.now(), { jobId: job.id, fallbackAnchorMs: job.createdAtMs })
     process.stdout.write(`created job ${publicJob.id} (${publicJob.name}) for agent ${publicJob.agentId}, next occurrence ${next !== undefined ? new Date(next).toISOString() : '(none)'}\n`)
+  }
+  return publicJob.id
+}
+
+
+/**
+ * Delivery flags (SELF_SERVICE_SCHEDULER_TOOLS_V1 CLI-1/CLI-2):
+ * --channel/--to/--best-effort are only valid under --deliver; announce
+ * without an explicit target fails LOUD — the ONLY escape is the explicit
+ * internal compatibility mode --compat-last-channel, which preserves the
+ * legacy target-less {mode:'announce'} shape.
+ */
+function resolveDeliveryFlags(args, command) {
+  const channel = flagValue(args, '--channel')
+  const to = flagValue(args, '--to')
+  const bestEffort = hasFlag(args, '--best-effort')
+  if ((channel !== undefined || to !== undefined || bestEffort) && !hasFlag(args, '--deliver')) {
+    throw new Error('--channel/--to/--best-effort are only valid together with --deliver')
+  }
+  if (!hasFlag(args, '--deliver')) return { mode: 'none', channel: 'last' } // --no-deliver default, like the daemons
+  if (hasFlag(args, '--compat-last-channel')) {
+    if (channel !== undefined || to !== undefined || bestEffort) {
+      throw new Error('--compat-last-channel produces the legacy target-less announce shape; it cannot be combined with --channel/--to/--best-effort')
+    }
+    return { mode: 'announce' }
+  }
+  if (channel === undefined || to === undefined) {
+    throw new Error(`${command}: --deliver requires an explicit delivery target — pass --channel <channel> --to <destination> (implicit last-channel is forbidden; --compat-last-channel opts into the legacy internal-compat shape)`)
+  }
+  return { mode: 'announce', channel, to, ...(bestEffort ? { bestEffort: true } : {}) }
+}
+
+async function cmdUpdate(args) {
+  const id = args.find((a) => !a.startsWith('--'))
+  if (!id) throw new Error('job id is required')
+  const store = new JobStore(storePathFromArgs(args))
+  const doc = await store.loadDoc()
+  const current = doc.jobs.find((j) => j.id === id)
+  if (!current) throw new Error(`unknown job id: ${id}`)
+
+  const patch = {}
+  const name = flagValue(args, '--name')
+  if (name !== undefined) patch.name = name
+
+  // Schedule: a full respecification uses the same exactly-one-of rule as
+  // add; --tz alone retunes an existing cron schedule. Semantic changes bump
+  // scheduleRevision inside updateJobOp (future slots only — never a replay).
+  const at = flagValue(args, '--at')
+  const cronExpr = flagValue(args, '--cron')
+  const everyMs = flagValue(args, '--every-ms')
+  const tz = flagValue(args, '--tz')
+  const kindCount = [at, cronExpr, everyMs].filter(Boolean).length
+  if (kindCount > 1) throw new Error('at most one of --at | --cron | --every-ms may be given')
+  if (kindCount === 1) {
+    patch.schedule = at
+      ? { kind: 'at', at: parseAtFlag(at) }
+      : cronExpr
+        ? { kind: 'cron', expr: cronExpr, ...(tz ? { tz } : current.schedule.kind === 'cron' && current.schedule.tz ? { tz: current.schedule.tz } : {}) }
+        : { kind: 'every', everyMs: Number(everyMs) }
+  } else if (tz !== undefined) {
+    if (current.schedule.kind !== 'cron') throw new Error('--tz without a new --cron is only valid for cron-scheduled jobs')
+    patch.schedule = { ...current.schedule, tz }
+  }
+
+  // Payload: rebuilt from the CURRENT payload so unrelated fields
+  // (timeoutSeconds/lightContext/model) survive a message-only update.
+  const payload = { ...current.payload }
+  const message = flagValue(args, '--message')
+  if (message !== undefined) payload.message = message
+  const timeoutSeconds = flagValue(args, '--timeout-seconds')
+  if (timeoutSeconds !== undefined) payload.timeoutSeconds = Number(timeoutSeconds)
+  if (hasFlag(args, '--light-context')) payload.lightContext = true
+  const model = flagValue(args, '--model')
+  if (model !== undefined) payload.model = model
+  if (message !== undefined || timeoutSeconds !== undefined || hasFlag(args, '--light-context') || model !== undefined) {
+    patch.payload = payload
+  }
+
+  if (hasFlag(args, '--deliver') || hasFlag(args, '--no-deliver')) {
+    patch.delivery = hasFlag(args, '--no-deliver')
+      ? { mode: 'none', channel: 'last' }
+      : resolveDeliveryFlags(args, 'update')
+  }
+
+  if (Object.keys(patch).length === 0) throw new Error('nothing to update (pass --name/--message/--timeout-seconds/--model/--light-context/schedule or delivery flags)')
+
+  // updateJobOp already returns the public projection.
+  const publicJob = await updateJobOp(store, id, patch)
+  if (hasFlag(args, '--json')) {
+    process.stdout.write(`${JSON.stringify(publicJob, null, 2)}\n`)
+  } else {
+    process.stdout.write(
+      `updated job ${publicJob.id} (scheduleRevision ${publicJob.scheduleRevision})\n`
+      + `  schedule: ${JSON.stringify(publicJob.schedule)}\n`
+      + `  delivery: ${JSON.stringify(publicJob.delivery)}\n`
+      + `  next occurrence: ${publicJob.nextRunAtMs !== undefined ? new Date(publicJob.nextRunAtMs).toISOString() : '(none)'}\n`,
+    )
   }
   return publicJob.id
 }
@@ -224,6 +321,7 @@ const COMMANDS = {
   rm: cmdRm,
   enable: (a) => cmdToggle(a, true),
   disable: (a) => cmdToggle(a, false),
+  update: cmdUpdate,
   reconcile: cmdReconcile,
 }
 
