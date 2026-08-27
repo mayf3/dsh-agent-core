@@ -160,6 +160,17 @@ export function validateManifest(input) {
         errors.push(argErr)
         continue
       }
+      // A property's declared validationError code must exist in the
+      // capability error table (fail-closed: the mapping layer resolves
+      // violation codes against that table and would silently downgrade an
+      // undeclared one to invalid_arguments).
+      for (const [pname, p] of Object.entries(op.arguments?.properties || {})) {
+        if (p && typeof p.validationError === 'string') {
+          if (input.errors === undefined || !input.errors.some((e) => e && e.code === p.validationError)) {
+            errors.push(opPath + `.arguments.properties["${pname}"].validationError references undeclared code "${p.validationError}"`)
+          }
+        }
+      }
       // optional generic HTTP binding (the authorized-HTTP transport contract;
       // see transport.js). When present, this operation is executed by the
       // generic transport instead of a process-internal handler. A LOCAL
@@ -265,6 +276,23 @@ function validatePropertiesSchema(value, at) {
       }
       if (p.type !== undefined && !['string', 'number', 'integer', 'boolean', 'array', 'object', 'null', 'json'].includes(p.type)) {
         return `${at}.properties["${name}"].type "${p.type}" is not allowed`
+      }
+      // Broker-side bounds (fail-fast BEFORE any HTTP request): numeric leaves
+      // may declare minimum/maximum; a bounds violation reports the leaf's
+      // declared `validationError` code (which must exist in the capability's
+      // error table — checked below at manifest level).
+      for (const bound of ['minimum', 'maximum']) {
+        if (p[bound] !== undefined && typeof p[bound] !== 'number') {
+          return `${at}.properties["${name}"].${bound} must be a number`
+        }
+      }
+      if (p.validationError !== undefined) {
+        if (typeof p.validationError !== 'string' || !/^[a-z][a-zA-Z0-9_]*$/.test(p.validationError)) {
+          return `${at}.properties["${name}"].validationError "${p.validationError}" must be a lowercase identifier`
+        }
+        if ((p.minimum === undefined && p.maximum === undefined)) {
+          return `${at}.properties["${name}"].validationError requires minimum or maximum`
+        }
       }
     }
   }

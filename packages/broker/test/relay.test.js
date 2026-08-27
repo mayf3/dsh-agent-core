@@ -25,6 +25,7 @@ const manifest = withTransportErrors({
     { code: 'invalid_arguments', description: 'bad args' },
     { code: 'unsupported_operation', description: 'unsupported' },
     { code: 'credential_unavailable', description: 'no credential' },
+    { code: 'principal_not_found', description: 'downstream 404 (declared like the shipped workflow manifests)' },
   ],
   operations: [{
     name: 'op',
@@ -65,6 +66,22 @@ test('relay reshapes parent failure into {errorCode, status, detail}', async () 
     ok: false,
     error: { code: 'credential_unavailable', status: 401, detail: 'no MachineClient credential bound' },
   })
+})
+
+test('relay preserves the downstream x-request-id through the parent envelope', async () => {
+  const handlers = createRelayHandlers(manifest, async () => ({
+    ok: true,
+    result: {
+      ok: false,
+      error: { code: 'principal_not_found', status: 404, detail: 'principal not found', requestId: 'req-abc-123' },
+    },
+  }))
+  const result = await run(handlers, 'op', {})
+  assert.equal(result.ok, false)
+  assert.equal(result.error.code, 'principal_not_found')
+  assert.equal(result.error.status, 404)
+  assert.equal(result.error.detail, 'principal not found')
+  assert.equal(result.error.requestId, 'req-abc-123')
 })
 
 test('relay fails closed when the parent returned nothing', async () => {
