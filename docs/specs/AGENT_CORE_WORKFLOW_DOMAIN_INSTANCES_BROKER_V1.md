@@ -15,7 +15,8 @@ references:
   - svc-workflow/src/http/dto.rs:104-118（DomainInstanceQuery：serde camelCase + deny_unknown_fields；domainId 为 wire 参数名）
   - svc-workflow/src/store/postgres/workflow_instance_repository/query_domain_instances.rs:14-26（limit 1..100，默认 20）
   - svc-workflow/src/http/error.rs:503-530（from_query 错误码映射）
-  - docs/specs/AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1.md（proposed；本 Spec 复用其分页校验/错误保留机制族）
+  - svc-workflow 源码证据 revision pin：git 6f1f546787bd5fb1644ec91327d3e7374dc28165（references 与 §0 引用的 svc-workflow/* 源码行号证据均属该 revision；与 AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1 的 svc-workflow external evidence pin 相同）
+  - docs/specs/AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1.md（accepted；2026-08-27 经 PR #68 accept（2328fa6），实现已经 PR #82 合入 main（e40c140）；本 Spec 复用其分页校验/错误保留机制族）
   - git 33533ce（Broker Transport V1：first-batch workflow 读能力与「cursor 不透出」纪律来源）
 implementation_authority: none
 ---
@@ -131,7 +132,11 @@ Spec 的实现随之获得 broker-side fail-fast；若其被拒，本 manifest �
 
 ## 3. 测试验收（WIP 已达成）
 
-- 全部 broker 测试 PASS（基线 89 + 新增 fixture）。
+- 全部 broker 测试 PASS（基线 89 + 新增 fixture；89 属历史 WIP 叠加快照坐标：
+  error-preservation WIP ef2bcac @ base b5ab589 的 89/89，叠加本 Spec fixture 后
+  该快照为 92/92（b8594e4，本轮实测复验）。当前 base（PR #82 合入后的 main =
+  e40c140，即本 PR base）的 broker 基线为 159/159（本轮在 PR tree 实测复验）；
+  实现轮 port 至该 base 后按 159 基线复跑）。
 - schema 校验：新 manifest 过 validateManifest；http op target/method 合法。
 - fixture：GET /internal/v1/workflow-instances/domain 收到
   `?domainId=<uuid>&limit=<n>`（camelCase 实证）；token 请求 scope=workflow.read；
