@@ -133,7 +133,7 @@ test('broker RPC: passes the exact immutable active-turn context beside actual a
 
   await proc.onRpcRequest(BROKER_RPC_METHOD, {
     capabilityId: 'scheduler', operation: 'create', args: { action: 'create' },
-  })
+  }, { turnExecutionId: activeIngressContext.turnExecutionId })
 
   assert.equal(gatewayCalls[0].ctx.agentId, agentA.id)
   assert.equal(gatewayCalls[0].ctx.ingressContext, activeIngressContext, 'parent forwards the exact Router-owned immutable object')
@@ -163,6 +163,28 @@ test('broker RPC: stale generation, settled execution, and cleared turn never fo
   proc.activeIngressContext = undefined
   await proc.onRpcRequest(BROKER_RPC_METHOD, { capabilityId: 'scheduler', operation: 'list', args: {} })
   assert.deepEqual(gatewayCalls.map((ctx) => ctx.ingressContext), [undefined, undefined, undefined])
+})
+
+test('broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context', async (t) => {
+  stubAgentProcess()
+  const seen = []
+  const gateway = { execute: async (_call, ctx) => { seen.push(ctx.ingressContext); return { ok: true, result: 'ok' } } }
+  const { router, agentA } = await freshRouter(t, { brokerGateway: gateway })
+  const proc = await router.ensureRunning(agentA.id)
+  const turnB = Object.freeze({
+    callerAgentId: agentA.id,
+    processGeneration: proc.processGeneration,
+    turnExecutionId: 'turn:B',
+    channelNamespace: 'feishu',
+    feishuChatId: 'oc_B',
+  })
+  proc.activeIngressContext = turnB
+  proc.executions.set('turn:B', { settled: false })
+  const call = { capabilityId: 'scheduler', operation: 'list', args: {} }
+  await proc.onRpcRequest(BROKER_RPC_METHOD, call, { turnExecutionId: 'turn:A' })
+  await proc.onRpcRequest(BROKER_RPC_METHOD, call, { turnExecutionId: 'turn:B' })
+  assert.equal(seen[0], undefined, 'turn-A origin token cannot borrow B')
+  assert.equal(seen[1], turnB, 'the exact B origin token receives B context')
 })
 
 test('broker RPC: forged child-supplied identity/context is IGNORED (actual Router values win)', async (t) => {
@@ -205,7 +227,7 @@ test('broker RPC: forged child-supplied identity/context is IGNORED (actual Rout
     feishuChatId: 'oc_forged',
     ingressContext: { feishuChatId: 'oc_forged_nested' },
     activeIngressContext: { feishuChatId: 'oc_forged_active' },
-  })
+  }, { turnExecutionId: trustedContext.turnExecutionId })
   assert.equal(result.ok, true)
   assert.equal(result.result.ok, true)
   assert.equal(gatewayCalls[0].ctx.agentId, agentA.id, 'forged fields never reach the gateway identity')

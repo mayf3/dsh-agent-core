@@ -69,6 +69,7 @@ export function createRelayHandlers(manifest, requestFn) {
   for (const op of manifest.operations) {
     if (!op.http && !isLocalManifest) continue
     handlers[op.name] = async (_operation, args) => {
+      const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
       let envelope
       try {
         // Transport envelope from the parent RPC: { ok: true, result: <invoke> }.
@@ -78,7 +79,6 @@ export function createRelayHandlers(manifest, requestFn) {
           args,
         })
       } catch (err) {
-        const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
         return {
           errorCode: uncertainMutation ? 'mutation_outcome_unknown' : 'invalid_arguments',
           detail: uncertainMutation
@@ -87,6 +87,12 @@ export function createRelayHandlers(manifest, requestFn) {
         }
       }
       const parent = envelope && envelope.ok === true ? envelope.result : undefined
+      if (uncertainMutation && (parent === undefined || parent === null || typeof parent !== 'object')) {
+        return {
+          errorCode: 'mutation_outcome_unknown',
+          detail: 'scheduler mutation response was lost; inspect current state before any manual retry',
+        }
+      }
       if (parent && parent.ok === true) {
         // Unwrap: child-side invoke re-wraps as { ok: true, result }.
         return parent.result

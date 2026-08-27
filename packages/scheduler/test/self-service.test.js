@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { mkdtemp, rm, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -6,7 +7,7 @@ import { test } from 'node:test'
 
 import { JobStore } from '../src/store.js'
 import { createSelfServiceSchedulerAccess } from '../src/self-service.js'
-import { buildOccurrenceRecord, applyTransition, rebuildFences } from '../src/occurrence-model.js'
+import { buildOccurrenceRecord, applyTransition, rebuildFences, canonicalJSON } from '../src/occurrence-model.js'
 
 function trusted(agentId = 'agt_a', overrides = {}) {
   return {
@@ -52,6 +53,11 @@ function createAtArgs(overrides = {}) {
     delivery_target: 'current_conversation',
     ...overrides,
   }
+}
+
+function storedDefinitionDigest(job) {
+  const { state: _state, ...definition } = structuredClone(job)
+  return `sha256:${createHash('sha256').update(canonicalJSON(definition)).digest('hex')}`
 }
 
 function assertExactCommittedResult(result) {
@@ -285,6 +291,37 @@ test('ownership is rechecked inside the locked control mutation (TOCTOU fails cl
   assert.deepEqual(grantCalls, [])
 })
 
+test('locked update preserves concurrently changed omitted fields and audits the exact preimage', async (t) => {
+  const { call, store, dir } = await rig(t)
+  const created = await call('create', {
+    name: 'merge', schedule_kind: 'every', every_ms: 60_000, message: 'old', timeout: 30,
+  })
+  const jobId = created.result.jobId
+  const originalLoad = store.loadDoc.bind(store)
+  let concurrentDefinition
+  let injected = false
+  store.loadDoc = async (...args) => {
+    const snapshot = await originalLoad(...args)
+    if (!injected) {
+      injected = true
+      await store.mutateDoc((doc) => {
+        const job = doc.jobs.find((candidate) => candidate.id === jobId)
+        job.payload.timeoutSeconds = 99
+      })
+      concurrentDefinition = (await originalLoad({ force: true })).jobs.find((job) => job.id === jobId)
+    }
+    return snapshot
+  }
+  const out = await call('update', { job_id: jobId, message: 'new' })
+  assert.equal(out.ok, true)
+  const finalJob = (await originalLoad({ force: true })).jobs.find((job) => job.id === jobId)
+  assert.equal(finalJob.payload.message, 'new')
+  assert.equal(finalJob.payload.timeoutSeconds, 99)
+  const events = (await readFile(join(dir, 'runs.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse)
+  const updateAudit = events.findLast((event) => event.operation === 'update')
+  assert.equal(updateAudit.beforeDigest, storedDefinitionDigest(concurrentDefinition))
+})
+
 test('post-rename control failure is outcome-unknown and never fabricates an audit attempt', async (t) => {
   const { call, store } = await rig(t)
   let syncCalls = 0
@@ -307,6 +344,18 @@ test('pre-commit failure is known clean; uncertain commit failure is outcome-unk
   assert.equal(clean.ok, false)
   assert.equal(clean.error.code, 'internal_error')
   assert.equal((await first.store.loadDoc({ force: true })).jobs.length, 0)
+
+  const readFailure = await rig(t)
+  readFailure.store._loadDocForMutation = async () => { throw new Error('injected pre-write load failure') }
+  const known = await readFailure.call('create', { name: 'read-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  assert.equal(known.ok, false)
+  assert.equal(known.error.code, 'internal_error')
+
+  const lockFailure = await rig(t)
+  lockFailure.store._withLock = async () => { throw new Error('injected lock acquisition failure') }
+  const noLock = await lockFailure.call('create', { name: 'lock-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  assert.equal(noLock.ok, false)
+  assert.equal(noLock.error.code, 'internal_error')
 
   const second = await rig(t)
   let attempts = 0
