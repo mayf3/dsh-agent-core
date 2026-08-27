@@ -621,7 +621,7 @@ exposed by this self-service result. Successful enabled create MUST return a non
 or when existing Scheduler eligibility/fence semantics yield no eligible next run (including
 an unresolved `outcome_unknown` fence). Update MUST NOT clear that fence and MUST NOT turn a
 known committed update into failure merely because the next run is null; Acceptance records
-the corresponding store fence/state separately without adding an eleventh wire field.
+the corresponding store fence/state separately without adding a twelfth wire field.
 
 For an enabled at-job, normalized `nextRunAt` MUST be strictly later than the existing
 control operation's logical mutation timestamp (`nowMs`, persisted as
