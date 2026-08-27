@@ -96,8 +96,11 @@ may be published only after this exact Spec is accepted and present in `main`.
   separately authorized in auth-service. Therefore this Spec defines only Agent Core's
   fail-closed interpretation of `scheduler.manage:any`: until an accepted auth-service CCR
   registers the Scheduler audience/scope and a separately authorized Grant supply provisions
-  a caller, production `manage:any` availability is **NONE**. This Spec creates no Auth scope,
-  audience, Grant, credential, token, or production Auth mutation.
+  a caller, production `manage:any` availability is **NONE**. `scheduler.read:self` and
+  `scheduler.manage:self` are local authorization labels implemented only by trusted
+  `callerAgentId == job.agentId`; they are not token scopes and are never requested from
+  auth-service. This Spec creates no Auth scope, audience, Grant, credential, token, or
+  production Auth mutation.
 - This Spec is `NEW`: no accepted implementation Spec currently authorizes an Agent-facing
   general self-service Scheduler capability or its trusted current-conversation security
   contract.
@@ -263,9 +266,11 @@ may be published only after this exact Spec is accepted and present in `main`.
 ### DEC-002 — Closed schema by action
 
 - Decision owner: repository maintainers
-- Decision: validate a discriminated union with `additionalProperties: false` at both the
-  model schema and trusted handler boundary. Each action accepts only its documented keys.
-- Rejected alternative: one permissive bag of optional fields.
+- Decision: the model-facing parameter map advertises only `action` plus documented union
+  properties. Because current `defineTool` compiles an implicit-open root, the trusted Broker
+  mapping layer authoritatively validates the exact per-action discriminated union with
+  `additionalProperties:false` semantics before grant/store access.
+- Rejected alternative: one permissive trusted-handler bag of optional fields.
 - Reason: action-confused fields, caller identity, and destination spoofing must fail loud.
 
 ### DEC-003 — Parent Runtime owns identity and current conversation
@@ -467,9 +472,11 @@ caller. Denial or Auth uncertainty MUST fail closed.
 
 ### CTR-AUTH-001 — Self read and manage scopes
 
-A credentialed ordinary Agent has `scheduler.read:self` and `scheduler.manage:self` only for
-jobs whose persisted `agentId` equals trusted `callerAgentId`. `list` and `runs` MUST hide
-foreign definitions/evidence. Mutations of a foreign job MUST return a non-leaking denied or
+A credentialed ordinary Agent has local entitlements labelled `scheduler.read:self` and
+`scheduler.manage:self` only for jobs whose persisted `agentId` equals trusted
+`callerAgentId`. These labels are Agent Core authorization outcomes, not Auth token scopes:
+ordinary self operations MUST perform zero token requests. `list` and `runs` MUST hide foreign
+definitions/evidence. Mutations of a foreign job MUST return a non-leaking denied or
 not-found error and MUST NOT mutate or append a success audit record.
 
 ### CTR-AUTH-002 — Admin scope and external prerequisite
@@ -577,7 +584,37 @@ autoRetry
 deleteAfterRun
 ```
 
-The response MUST be built from the committed persisted definition, not only request input.
+Their exact JSON wire schema is:
+
+```text
+jobId: NonEmptyString                 # committed job.id
+name: NonEmptyString                  # committed job.name
+enabled: boolean                      # committed job.enabled
+normalizedSchedule:
+  oneOf:
+    {kind:const cron, expr:NonEmptyString, timezone:NonEmptyString}
+    {kind:const at, at:NonEmptyString}        # canonical UTC ISO string
+    {kind:const every, everyMs:integer>=1}
+  each branch additionalProperties:false
+timezone: NonEmptyString | null       # cron persisted tz; null for at/every
+nextRunAt: NonEmptyString | null      # canonical UTC ISO from persisted nextRunAtMs;
+                                      # null only when committed definition has no eligible next run
+targetAgentId: NonEmptyString         # committed job.agentId
+exactPersistedDeliveryDestination:
+  {channel:NonEmptyString,to:NonEmptyString,additionalProperties:false} | null
+                                      # committed announce channel/to; null for none/silent
+autoRetry: boolean                    # committed job.retry?.auto === true
+deleteAfterRun: boolean               # committed job.deleteAfterRun
+```
+
+The top-level result object has exactly these ten required properties and
+`additionalProperties:false`. It MUST be built from the committed persisted definition, not
+only request input. `normalizedSchedule.timezone` is named `timezone` in the cron result
+projection even though the persisted schedule leaf is `tz`; no `staggerMs` or `anchorMs` is
+exposed by this self-service result. Disabled updates return `nextRunAt:null`; successful
+enabled create/update MUST return a non-null eligible `nextRunAt` or fail loud rather than
+claim success.
+
 For an enabled at-job, normalized `nextRunAt` MUST be strictly later than the existing
 control operation's logical mutation timestamp (`nowMs`, persisted as
 `createdAtMs`/`updatedAtMs`). The handler MUST capture one `nowMs` immediately before calling
@@ -652,10 +689,31 @@ scheduler(action="create", name="15分钟提醒", schedule_kind="at", at="15m",
 The canary MUST prove: no Runtime restart; production JobStore used; exact trusted chat
 persisted; `nextRunAt` strictly future; occurrence created and succeeded; delivery status
 `delivered`; message visible in the current group; definition automatically deleted; retained
-occurrence evidence; zero Runtime/Agent operational access to the OpenClaw store; and an
-independently authorized operator's read-only before/after metadata/hash observation showing
-that legacy store bytes did not change. The operator observation is evidence only and MUST
-NOT feed Scheduler behavior or expose the store to the Agent.
+occurrence evidence; zero Runtime/Agent operational access to the exact legacy path
+`/Users/yanfenma/.openclaw/cron/jobs.json`; and unchanged legacy bytes.
+
+The negative-evidence method is frozen:
+
+1. `CANARY_EVIDENCE_OPERATOR` is repository owner `mayf3` or an explicitly delegated
+   production operator recorded in the deployment PR/runbook; it is not the Agent/model.
+2. Before create, that operator records legacy file existence, size, mtime, inode, and SHA-256
+   through a read-only observation, plus production Runtime PID/start time and its current
+   descendant PID set.
+3. Before create, the operator starts whole-host macOS filesystem tracing with
+   `sudo fs_usage -w -f filesystem` (not PID-filtered), records trace PID/start marker, and
+   verifies it remains alive. The window ends only after occurrence/delivery/auto-delete and
+   operator evidence observation. Non-zero tracer exit, missing start/end marker, truncation,
+   or capture gap invalidates the canary.
+4. The retained raw trace MUST contain zero event whose path equals or is beneath
+   `/Users/yanfenma/.openclaw/cron/`; this covers Runtime, descendants, Agent children, and all
+   other host processes rather than relying on an incomplete PID list.
+5. After the window, the operator repeats existence/size/mtime/inode/SHA-256. Exact equality
+   proves unchanged bytes/metadata; the whole-host trace separately proves zero accesses in
+   the bounded window.
+6. The raw trace is retained outside Git with SHA-256, byte count, start/end wall times,
+   Runtime/descendant snapshots, command, exit status, and operator identity recorded in the
+   production evidence report. No legacy bytes/path observation feeds Scheduler behavior or
+   becomes visible to the Agent.
 
 ### CTR-OPS-001 — Reconcile and CLI boundaries
 
@@ -751,9 +809,10 @@ product code unless a Contract requires revision.
 - Required evidence: deployment generation/provenance; then Runtime PID/start-time captured
   immediately before create and after canary completion; registered tool catalog; create
   response; committed definition projection; occurrence/delivery evidence; current-group
-  message observation; post-run list plus operator occurrence query; Runtime/Agent file-access
-  trace showing zero OpenClaw store access; separately authorized operator read-only
-  before/after metadata/hash observation
+  message observation; post-run list plus operator occurrence query; whole-host raw `fs_usage`
+  trace with command/operator/start-end markers/exit status/byte count/SHA-256 and zero legacy
+  path events; Runtime/descendant PID snapshots; exact operator before/after legacy
+  existence/size/mtime/inode/SHA-256 equality; evidence-report retention coordinates
 - Expected result:
 
 ```text
@@ -769,8 +828,9 @@ OCCURRENCE_EVIDENCE_RETAINED = YES
 OPENCLAW_STORE_UNCHANGED = YES
 ```
 
-- Failure condition: any line differs, evidence is missing, another Runtime is started, or
-  legacy store is touched by the operation
+- Failure condition: any line differs; evidence is missing; another Runtime overlaps; tracer
+  is late, filtered, truncated, exits non-zero, or has a capture gap; any legacy path event
+  appears; or before/after legacy metadata/hash differs
 
 ### ACC-GOV-001 — Two-stage publication
 
