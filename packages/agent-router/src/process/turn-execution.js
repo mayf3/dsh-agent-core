@@ -252,7 +252,23 @@ export const turnExecutionMethods = {
       return
     }
     this.executions.set(handle, execution)
-    if (mode === 'turn') this.activeBindingContext = opts?.bindingContext
+    if (mode === 'turn') {
+      const ingress = opts?.ingressContext
+      // CTR-CTX-001: identity comes only from this Router-owned process and
+      // the handle minted for THIS execution. Copy only the allowlisted
+      // ingress leaves so queued callers cannot mutate or inject identity.
+      this.activeIngressContext = Object.freeze({
+        callerAgentId: this.agentId,
+        processGeneration: this.processGeneration,
+        turnExecutionId: handle,
+        channelNamespace: ingress?.channelNamespace,
+        channelConversationId: ingress?.channelConversationId,
+        feishuChatId: ingress?.feishuChatId,
+        feishuConversationId: ingress?.feishuConversationId,
+        feishuMessageId: ingress?.feishuMessageId,
+      })
+      this.activeBindingContext = opts?.bindingContext
+    }
     const startedWall = Date.now()
     execution.phase = 'prompt_sending'
     try {
@@ -288,7 +304,12 @@ export const turnExecutionMethods = {
     } catch (error) {
       this.handleExecutionCallerError(execution, error, reject)
     } finally {
-      if (mode === 'turn') this.activeBindingContext = undefined
+      if (mode === 'turn') {
+        // Clear both turn-scoped contexts together before the single-flight
+        // queue may install the next turn's values.
+        this.activeBindingContext = undefined
+        this.activeIngressContext = undefined
+      }
     }
   },
 

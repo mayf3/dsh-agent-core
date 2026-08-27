@@ -71,7 +71,7 @@ function stubFeishu() {
  * tests assert spawn = 0 for non-runnable agents).
  */
 function stubAgentProcess() {
-  const spawns = { count: 0 }
+  const spawns = { count: 0, turns: [] }
   AgentProcess.prototype.spawn = function spawnStub() {
     spawns.count += 1
     this.pid = 4242
@@ -80,7 +80,10 @@ function stubAgentProcess() {
     return this
   }
   AgentProcess.prototype.ready = async () => 0
-  AgentProcess.prototype.turn = async () => ({ reply: 'stub-reply', messageId: 'stub-msg' })
+  AgentProcess.prototype.turn = async function turnStub(sessionId, text, opts) {
+    spawns.turns.push({ agentId: this.agentId, sessionId, text, opts })
+    return { reply: 'stub-reply', messageId: 'stub-msg' }
+  }
   AgentProcess.prototype.shutdown = async () => ({ code: 0, signal: null })
   return spawns
 }
@@ -151,6 +154,34 @@ test('FEISHU_REPLY_OWED: every Feishu subtype owes a reply; mobile never does', 
 })
 
 // ------------------------------------------------------------- full path
+
+test('TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the routed turn without parsing', async (t) => {
+  const spawns = stubAgentProcess()
+  const { router } = await freshFeishuRouter(t)
+  const input = {
+    channel: 'thread',
+    chatId: 'oc_exact_chat',
+    conversationId: 'oc_exact_chat:topic_exact',
+    messageId: 'om_exact_message',
+    sender: { openId: 'ou_test' },
+    text: 'thread turn',
+  }
+
+  const result = await router.route(input)
+  assert.equal(result.error, undefined)
+  assert.equal(spawns.turns.length, 1)
+  const trusted = spawns.turns[0].opts.ingressContext
+  assert.deepEqual(trusted, {
+    channelNamespace: 'feishu',
+    channelConversationId: 'feishu:oc_exact_chat:topic_exact',
+    feishuChatId: 'oc_exact_chat',
+    feishuConversationId: 'oc_exact_chat:topic_exact',
+    feishuMessageId: 'om_exact_message',
+  })
+  assert.equal(Object.isFrozen(trusted), true)
+  assert.notEqual(trusted.feishuChatId, trusted.feishuConversationId,
+    'thread conversation identity must never be parsed or reused as chatId')
+})
 
 test('FEISHU_P2P_REPLY: p2p ingress replies to Feishu and binds under feishu:<conversationId>', async (t) => {
   stubAgentProcess()

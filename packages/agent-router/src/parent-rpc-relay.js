@@ -41,11 +41,16 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
       // TRUSTED CREDENTIAL BROKER: the caller identity is THIS proc's
       // actual agentId (the trusted spawning relationship) — never
       // anything the child says. Forged self-reported fields are ignored.
-      const selfReported = ['agentId', 'principalId', 'clientId', 'scope', 'audience', 'authorization']
-        .filter((field) => params?.[field] !== undefined)
+      const selfReported = [
+        'agentId', 'callerAgentId', 'principalId', 'clientId', 'scope', 'audience', 'authorization',
+        'processGeneration', 'turnExecutionId', 'channelNamespace', 'channelConversationId',
+        'feishuChatId', 'feishuConversationId', 'feishuMessageId',
+        'ingressContext', 'activeIngressContext',
+      ].filter((field) => params?.[field] !== undefined)
       if (selfReported.length > 0) {
         log.log(`[broker] agent ${agentId}: IGNORING child-supplied identity fields: ${selfReported.join(', ')}`)
       }
+      const proc = getProc()
       const gateway = getBrokerGateway()
       if (gateway === undefined || typeof gateway.execute !== 'function') {
         return {
@@ -62,7 +67,10 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         ok: true,
         result: await gateway.execute(
           { capabilityId: params?.capabilityId, operation: params?.operation, args: params?.args },
-          { agentId }, // ACTUAL identity — decided here, never from params
+          {
+            agentId, // ACTUAL identity — decided here, never from params
+            ingressContext: proc.activeIngressContext,
+          },
         ),
       }
     }
