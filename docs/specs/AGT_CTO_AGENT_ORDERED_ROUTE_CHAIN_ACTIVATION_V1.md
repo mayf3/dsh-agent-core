@@ -5,8 +5,8 @@ date: 2026-08-27
 type: unified activation-authorizing child Spec (SPEC ONLY — 本轮只冻结三阶段授权边界；不实现、不写凭据、不登录 OAuth、不改配置、不部署、不重启)
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: contracts (gated; §3 GATE 全部满足前不授权任何操作)
-production_apply_authority: contracts (gated; §3 GATE 全部满足前不授权任何操作)
+implementation_authority: contracts (gated; Phase A = GATE-1 AND GATE-2; Phase B = GATE-1 AND GATE-2 AND GATE-3; §3)
+production_apply_authority: contracts (gated; Phase C = GATE-1 AND GATE-2 AND GATE-3 AND GATE-4; GATE-5 = production activation completion criterion; §3)
 parent_policy_authority:
   AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
 governed_by:
@@ -32,19 +32,19 @@ scope:
   - Phase C 激活：部署 route-chain 实现到生产 runtime + 写 agent-model-overrides.json
     version 2（仅 agt_cto-agent；primary = glm53；fallbacks = [luna]）+
     controlled restart / new generation + 强制 canary A–D
-  - 生效硬依赖：PR#77（两份 Amendment 1）accepted **且已进入 main** 之后本
-    authority 方能生效（§3 GATE-2）
+  - 生效硬依赖 GATE-2 已满足：PR#77（两份 Amendment 1）accepted **且已由 merge
+    commit b620907fc6f58292b6ee096c977f0071921d747e 进入 main**（§3 GATE-2）
 owners:
   - repository-maintainers
 references:
   - docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1.md（accepted @ main 7ab2e6d；
     父 policy authority；其 Amendment 1 Builtin Route Kind 已于 2026-08-27 在
-    PR#77 分支 acceptance finalize（accepted_by = mayf3；reviewed_head 8b76909；
-    链路 内建路由审计 = PASS；blocker 0），PR#77 本轮 authoring 时仍 Draft/OPEN、
-    未进入 main——GATE-2 的剩余条件精确为 merge into main）
+    PR#77 acceptance finalize（accepted_by = mayf3；reviewed_head 8b76909；
+    链路 内建路由审计 = PASS；blocker 0），并已由 merge commit
+    b620907fc6f58292b6ee096c977f0071921d747e 进入 main；GATE-2 = SATISFIED）
   - docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1.md（accepted @ main 4d92e31；
-    sibling 实现授权 child；其 Amendment 1（对齐）同样已 accepted @ PR#77、未进
-    main；其 §2.2 冻结「生产配置写入 / 激活」「Credential / provisioning / OAuth」
+    sibling 实现授权 child；其 Amendment 1（对齐）同样已随 PR#77 进入 main；
+    其 §2.2 冻结「生产配置写入 / 激活」「Credential / provisioning / OAuth」
     「部署 / 重启 / 生产状态」零授权并指向独立轮次——本文件即该独立轮次）
   - docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_CREDENTIAL_V1.md（proposed @
     PR#78 Draft/OPEN，从未 accepted、从未进入 main，不是 active authority；
@@ -77,13 +77,16 @@ references:
 > Spec**：父 Spec 保持唯一 model-route policy authority；本 Spec 只在家族已
 > 显式预留的缝内，授予有界的实现补齐 + 生产操作权限，并冻结执行轮绑定决策。
 >
-> **授权生效条件（§3 冻结，五条件链）**：(GATE-1) 本 Spec `status: accepted`
-> 且已进入 main；(GATE-2) PR #77 两份 Amendment 1 已 accepted（**authoring 时
-> 已完成**：417247d，2026-08-27，accepted_by = mayf3）**且已进入 main**（authoring
-> 时未完成：PR #77 Draft/OPEN）；(GATE-3) Phase A 独立实现审计 PASS；
-> (GATE-4) Phase B 凭据 readiness PASS；(GATE-5) Phase C 强制 canary A–D 全
-> PASS。任一未满足时对应阶段 `ALLOWED = NO`。proposed 阶段本 Spec 不授权任何
-> 操作（Owner 任务指令 2026-08-27 原文冻结）。
+> **逐阶段授权条件（§3 冻结）**：(GATE-1) 本 Spec `status: accepted` 且已进入
+> main；(GATE-2) PR #77 两份 Amendment 1 已 accepted 且已由 merge commit
+> `b620907fc6f58292b6ee096c977f0071921d747e` 进入 main（**SATISFIED**）；
+> (GATE-3) Phase A 独立实现审计 PASS；(GATE-4) Phase B 凭据 readiness PASS；
+> (GATE-5) Phase C 强制 canary A–D 全 PASS。`PHASE_A_ALLOWED = GATE-1 AND
+> GATE-2`；`PHASE_B_ALLOWED = GATE-1 AND GATE-2 AND GATE-3`；
+> `PHASE_C_ALLOWED = GATE-1 AND GATE-2 AND GATE-3 AND GATE-4`。GATE-5 是
+> production activation 的最终完成判据，不是启动 Phase A/B/C 的前置条件；
+> GATE-5 未完成前不得宣称 `ACTIVATION_COMPLETE`。proposed 阶段因 GATE-1 未满足，
+> 本 Spec 不授权任何操作。
 >
 > 本轮（authoring round）DOCS ONLY：不改任何 packages/ 代码，不写任何
 > Credential，不执行 OAuth，不安装插件，不写 agent-model-overrides.json，不部署
@@ -134,7 +137,8 @@ docs-only 变更 → 重启执行。
   - Luna：`profiles/node_modules` 下 dsh-codex@0.2.3 exact registry 安装 +
     19 项 peerDependencies 预核验 + bundles 原子追加、Owner 亲自交互式 OAuth
     全新生成 `.openai-codex-auth.json`、0600 / uid 502、受控 no-tool canary；
-  - Home 目录 mode 按 §13 Q-ACT-1（默认 (a)：保持 0755，见 §8 DEC-ACT-006）。
+  - Home 目录 mode 唯一冻结为 0755、owner uid 502（见 §8 DEC-ACT-006）；
+    HOME_MODE_0700 = OUT_OF_SCOPE / DEFERRED。
 - **Phase C（激活；生产 root + runtime）**：
   - 部署 route-chain 实现文件集到生产 runtime 树（冻结 path→blob 清单，唯一
     提取源 = 审计通过的实现 commit；§9 CTR-ACT-C101）；
@@ -159,13 +163,16 @@ docs-only 变更 → 重启执行。
   等不变；**禁止**把 `ZAI_API_KEY` 或任何 token/secret 写进 launchd env。
 - **第二 Feishu consumer**：单一 Feishu WebSocket 保持；不建任何第二出站/
   入站 transport。
-- **raw Credential 进入 override**（或任何配置文件）：父 CTR-010 全文。
+- **raw Credential 越过专用 store 边界**：只允许写入 `<HOME>/.credentials.yaml`
+  的 `ZAI_API_KEY` 与 `<HOME>/.openai-codex-auth.json`；禁止进入 override、launchd、
+  settings.yaml、日志/输出、PR/证据或任何其他非 credential 配置。
 - **复制旧 OAuth**（旧 OpenClaw、旧 root、`~/.codex/auth.json`）与复制
   `.git` 到 production：§9 安全边界。
 - **per-hop deadline 刷新 / outcome_unknown fallback / 直接把 dsh-codex 当
   ZAI carrier**：父 CTR-005、DEC-IMPL-007、A1.0 EVIDENCE_A1_4 原样禁止。
-- **Phase A 范围外产品改动**：`provisionAgentHome` 的 0755/0700 适配（Q-ACT-1
-  的 deferred 项）、DSH / dsh-codex / pi-ai / harness 任何改动、pin 变更——
+- **Phase A 范围外产品改动**：`provisionAgentHome` 的 0755/0700 适配
+  （DEC-ACT-006 的 deferred 项）、DSH / dsh-codex / pi-ai / harness 任何改动、
+  pin 变更——
   均不在 A-1..A-3 清单内，触碰即 out-of-spec（ALT-ACT-009）。
 - **父 / IMPL / Amendment 1 Spec 文件改动**：`GOVERNING_SPEC_UNMODIFIED`——
   执行轮不得修改 `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1.md`、
@@ -184,32 +191,32 @@ PARENT_POLICY    = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1（accepted @ main 7ab2e6
 SIBLING_IMPL     = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1（accepted @ main 4d92e31）
 
 GATE-1 = 本 Spec accepted AND 已进入 main
-GATE-2 = PR #77 两份 Amendment 1 accepted AND 已进入 main
-         （accepted 半 @ authoring 时已完成：分支 head 417247d，2026-08-27
-          acceptance finalize，accepted_by = mayf3，reviewed_head 8b76909，
-          链路 内建路由审计 = PASS，blocker 0；in-main 半未完成：PR #77
-          Draft / OPEN / unmerged）
+GATE-2 = PR #77 两份 Amendment 1 accepted AND 已进入 main = SATISFIED
+         （acceptance finalize：417247d，2026-08-27，accepted_by = mayf3，
+          reviewed_head 8b76909，链路 内建路由审计 = PASS，blocker 0；
+          merge commit = b620907fc6f58292b6ee096c977f0071921d747e）
 GATE-3 = Phase A 独立实现审计 PASS（审计对象 = A-1..A-3 + 测试 + SPEC_COMPLIANCE）
 GATE-4 = Phase B 凭据 readiness PASS（两 canary + 全部 ACC-ACT B 族）
-GATE-5 = Phase C 强制 canary A–D 全 PASS（本 authority 的最终验收）
+GATE-5 = Phase C 强制 canary A–D 全 PASS（production activation 最终完成判据）
 
 PHASE_A_ALLOWED = GATE-1 AND GATE-2
 PHASE_B_ALLOWED = GATE-1 AND GATE-2 AND GATE-3（阶段有顺序：A 审计通过后才开工 B）
 PHASE_C_ALLOWED = GATE-1 AND GATE-2 AND GATE-3 AND GATE-4
-AUTHORITY_FINAL = GATE-5（canary 全 PASS 后本 authority 目标达成）
+GATE_5_ROLE = COMPLETION_CRITERION
+ACTIVATION_COMPLETE = GATE-5（GATE-5 未完成前不得宣称 ACTIVATION_COMPLETE；
+                              GATE-5 不是启动 Phase A/B/C 的前置条件）
 
-IMPLEMENTATION_ALLOWED_NOW = NO（proposed；GATE-1/2 未满足）
-PRODUCTION_OPERATIONS_ALLOWED_NOW = NO（同上）
+IMPLEMENTATION_ALLOWED_NOW = NO（proposed；GATE-1 未满足；GATE-2 已满足）
+PRODUCTION_OPERATIONS_ALLOWED_NOW = NO（proposed；GATE-1 未满足；GATE-2 已满足）
 ```
 
 - 与父 Spec 的分工：父 Spec = 路由政策与 schema authority；IMPL 子 Spec = 链
   机制实现授权（已完成，PR #76）；本 Spec = **激活路径**的授权与执行轮绑定
   （实现补齐谁做、凭据怎么就绪、生产怎么激活）。政策语义冲突时以父 Spec 为准，
   本 Spec 对应条文自动失效并触发 governance §10 gap 流程。
-- 生效顺序冻结：本 Spec 的 acceptance 可以先于 PR #77 merge 完成（authoring /
-  review / accept 不依赖 GATE-2 的 in-main 半）；但**执行**（Phase A 第一个
-  代码改动）必须在 GATE-1 AND GATE-2 同时成立后开始。每个 Phase 开工时必须
-  fresh-fetch 核验 gate 并记录 commit 坐标。
+- 生效顺序冻结：PR #77 已进入 main，GATE-2 = SATISFIED；**执行**（Phase A
+  第一个代码改动）仍必须在 GATE-1 AND GATE-2 同时成立后开始。每个 Phase 开工
+  时必须 fresh-fetch 核验 gate 并记录 commit 坐标。
 - 与 `DSH_PROVIDER_FALLBACK_CHAIN_V1`（proposed，未 merge）无关：父 Spec
   ALT-007 已拒绝该层实现链；PR #60 处置不变（`ABANDONED_UNMERGED_CANDIDATE`）。
 
@@ -218,16 +225,16 @@ PRODUCTION_OPERATIONS_ALLOWED_NOW = NO（同上）
 ```text
 PR77_ROLE            = 父 + IMPL 两份 Amendment 1 的载体（Builtin Route Kind）
 PR77_ACCEPTED        = YES（417247d acceptance finalize 2026-08-27）
-PR77_IN_MAIN         = NO（authoring 时 Draft / OPEN / unmerged）
-GATE2_REMAINING      = PR #77 merge into main
+PR77_IN_MAIN         = YES
+PR77_MERGE_COMMIT    = b620907fc6f58292b6ee096c977f0071921d747e
+GATE-2               = SATISFIED
 AMENDMENT_EFFECTIVE_ON_MERGE = YES（SPEC_GOVERNANCE_V0 §2.1）
 ```
 
 理由（机械）：`routeKind = builtin` 的配置语法、`zai-api-key-home` /
 `luna-oauth-home` 两个 credentialReadiness reference、七字段 canonical
-identity、初始链 tuple（A1.4）全部由 Amendment 1 冻结；Amendment 1 未进 main
-时，Phase A 的对齐实现无有效目标 schema，Phase C 的 v2 配置在权威 schema 下
-不可合法表达。
+identity、初始链 tuple（A1.4）全部由 Amendment 1 冻结；这些 authority 已随
+PR #77 进入 main，因此 Phase A/Phase C 的该项 schema 依赖已经满足。
 
 ### 3.3 与 IMPL 子 Spec Amendment 1 的授权分工（无双重授权）
 
@@ -255,21 +262,22 @@ PR #78（`AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_CREDENTIAL_V1`，Draft/OPEN，head
 3a655a5）是「仅凭据授权」的拆分候选。Owner 指令 2026-08-27（NEW_EVIDENCE，
 原样引用）：「创建一份最小、统一的 Route Chain 激活 child authority，不要
 再拆成『凭据授权 / Harness identity / 配置激活』三份文档」。本 Spec 把其
-授权内容吸收重冻为 Phase B（含其全部安全边界与 Q-C-1 → Q-ACT-1 承接），并
+授权内容吸收重冻为 Phase B（含其全部安全边界；Home mode 由 DEC-ACT-006
+裁决），并
 按三阶段统一扩展。PR #78 的 lifecycle 关闭动作不在本轮授权内（本轮零 PR
 lifecycle mutation）；其 §4/§5 的 2026-08-27 同日生产观测被本 Spec §4/§5
 引用并已独立只读复核一致（见 OBS-ACT-006..008）。
 
-## 4. Current State（只读核实；2026-08-27，base = origin/main `c52bd1c`）
+## 4. Current State（只读核实；2026-08-27，base 含 PR #77 merge commit `b620907`）
 
 - `STATE-ACT-001` — main `c52bd1c` 已含 PR #76 链实现（v2 loader、统一
   chain executor、route-gate、journal），但 loader 仍按基础（plugin 必填）
   schema 校验；生产 runtime 部署基线**不含** PR #76（调度部署 runbook：
   PR76_EXCLUDED = YES）。链代码在 main 与生产均 inert（生产 root 无 override
   文件）。Basis: `OBS-ACT-002`、`OBS-ACT-005`。
-- `STATE-ACT-002` — PR #77 两份 Amendment 1 已 accepted（分支 417247d，
-  2026-08-27），未进 main；基础 schema 仍是 main 上的现行权威。Basis:
-  `OBS-ACT-001`。
+- `STATE-ACT-002` — PR #77 两份 Amendment 1 已 accepted（417247d，
+  2026-08-27），并已由 merge commit `b620907fc6f58292b6ee096c977f0071921d747e`
+  进入 main；GATE-2 = SATISFIED。Basis: `OBS-ACT-001`。
 - `STATE-ACT-003` — 生产 harness（`/usr/local/libexec/agent-core/harness`）=
   0.1.0-rc.8、authsvc 属主、**无 `.git`**：`readHarnessIdentity()`（git
   rev-parse）在生产不可执行 ⇒ 任何携带 subscription block 的 spawn（激活后
@@ -294,14 +302,14 @@ lifecycle mutation）；其 §4/§5 的 2026-08-27 同日生产观测被本 Spec
 
 ## 5. Observations（只读，2026-08-27）
 
-### A. 权威与代码事实（base = origin/main `c52bd1c`）
+### A. 权威与代码事实（base 含 PR #77 merge commit `b620907`）
 
-- `OBS-ACT-001` — PR #77 现状。GitHub：OPEN / Draft，head `417247d`；分支
-  log：`417247d` = AGT_CTO_ROUTE_CHAIN_BUILTIN_ROUTE_KIND_AMENDMENT_1_ACCEPTANCE_
-  FINALIZE（两份 Amendment 1 同时 proposed → accepted；accepted_by = mayf3；
-  accepted_date = 2026-08-27；reviewed_head = `8b76909`；链路 内建路由审计 =
-  PASS；blocker 0；NORMATIVE_BODY_CHANGE = NONE）。两份 Spec frontmatter
-  `amendment_1_status: accepted`。
+- `OBS-ACT-001` — PR #77 已进入 main。`417247d` = AGT_CTO_ROUTE_CHAIN_BUILTIN_
+  ROUTE_KIND_AMENDMENT_1_ACCEPTANCE_FINALIZE（两份 Amendment 1 同时 proposed →
+  accepted；accepted_by = mayf3；accepted_date = 2026-08-27；reviewed_head =
+  `8b76909`；链路 内建路由审计 = PASS；blocker 0；NORMATIVE_BODY_CHANGE = NONE）；
+  merge commit = `b620907fc6f58292b6ee096c977f0071921d747e`。两份 Spec frontmatter
+  `amendment_1_status: accepted`；PR77_IN_MAIN = YES；GATE-2 = SATISFIED。
 - `OBS-ACT-002` — main `c52bd1c` loader 现状（Phase A 对齐对象）。
   `packages/production-runtime/src/model-overrides.js`：`:313-318` routeCatalog
   entry 键集仍含 plugin/pluginVersion 必填；`:321-325` dsh-codex pin 校验；
@@ -354,7 +362,7 @@ lifecycle mutation）；其 §4/§5 的 2026-08-27 同日生产观测被本 Spec
 ## 6. Claims and assumptions
 
 - `CLM-ACT-001`（SUPPORTED）— Phase A 的 A-1/A-2 已有授权（IMPL Amendment 1
-  accepted @ PR #77），本 Spec 无需也不得重复授予；A-3 是净新授权面。
+  已随 PR #77 进入 main），本 Spec 无需也不得重复授予；A-3 是净新授权面。
   Basis: `EVD-ACT-001`。
 - `CLM-ACT-002`（SUPPORTED）— Phase A 是 Phase C 的硬前置：(i) 不做 A-1/A-2，
   v2 配置中的 builtin glm53 route 在 main/生产 loader（plugin 必填）下
@@ -436,22 +444,22 @@ lifecycle mutation）；其 §4/§5 的 2026-08-27 同日生产观测被本 Spec
   （identity 仍先于 installed-check；mismatch 仍非 fallback 触发类）。
 - `DEC-ACT-005` — **key 交付与 OAuth 主体 = Owner 亲自**（承接 PR #78
   DEC-C-001 全文语义）：`ZAI_API_KEY` 明文与 ChatGPT OAuth 登录只能由 Owner
-  本人完成/输入；值不经 agent 会话、prompt、env、argv、日志、Feishu、
-  commit、PR；执行 agent 只做写入前后**元数据**核验（key 名存在、非空、
-  mode/owner 正确）与行为 canary，**永不读取/回显值本身**。OAuth = Owner
-  交互式执行 dsh-codex login（`DSH_HOME=<HOME>` 下 production profile），
-  一次性落盘。
-- `DEC-ACT-006` — **Home 目录 mode（Q-ACT-1，OWNER_DECISION_REQUIRED）**：
-  任务指令与父 CTR-014 的字面「directory 0700」与 authsvc 运行时存在机械
-  冲突（OBS-ACT-008(a)：全部 96 活动 Home 0755；0700 ⇒ provisionAgentHome
-  在下一次 spawn EACCES fail-loud；2026-08-22 permrepair 即该故障修复痕迹）。
-  本 Spec 默认冻结推荐方案 **(a)**：Phase B/C 全程 Home 目录保持 **0755**
-  不变（不授权 chmod 0700）；隐私实质由文件级 0600 + uid 502 承载；0700 的
-  达成与 provisioner 适配**不属于 Phase A 冻结清单**，需另行独立 authority
-  完成后方可改裁。Owner 亦可裁 **(b)**：坚持 0700——则必须先 dispatch 并
-  完成上述 runtime 适配 authority，在此之前 Phase B 的目录 mode 部分
-  BLOCKED。**默认执行语义 = (a)**，除非 Owner 在本 Spec review/acceptance 时
-  明确改裁 (b)。
+  本人完成/输入；唯一允许的受控 credential store 为 `<HOME>/.credentials.yaml`
+  （键恰为 `ZAI_API_KEY`）与 `<HOME>/.openai-codex-auth.json`（Owner 交互式 OAuth
+  全新生成），二者均 owner uid 502 / mode 0600。值不经 agent 会话、prompt、
+  argv、日志、Feishu、commit、PR、证据，也不写入 override、launchd、
+  settings.yaml 或任何其他非 credential 配置；执行 agent 只做写入前后**元数据**
+  核验（key 名存在、非空、mode/owner 正确）与行为 canary，**永不读取/回显值
+  本身**。OAuth = Owner 交互式执行 dsh-codex login（`DSH_HOME=<HOME>` 下
+  production profile），一次性落盘。
+- `DEC-ACT-006` — **Home 目录 mode 唯一冻结**：Owner 已裁决
+  `HOME_DIRECTORY_MODE = 0755`、`HOME_OWNER_UID = 502`。Phase B/C 全程 Home
+  目录保持 0755，不授权 chmod 0700；敏感文件 `settings.yaml`、
+  `.credentials.yaml`、`.openai-codex-auth.json` 均为 0600 / uid 502。
+  `HOME_MODE_0700 = OUT_OF_SCOPE / DEFERRED`：只有未来完成 cross-UID
+  provisioner 适配并取得独立 authority 后，才可重新讨论。本 Spec 不保留 0700
+  Owner 选择题。Basis: OBS-ACT-008(a)（0700 会令当前 authsvc provisioner 在
+  下一次 spawn EACCES fail-loud）。
 - `DEC-ACT-007` — **GLM settings 编辑形态**（承接 PR #78 DEC-C-003）：仅向
   `llm-pi-ai.providers` 追加 zai 块（grammar = OBS-ACT-008(c) 先例：
   `apiKeyEnv: ZAI_API_KEY` + `models: [{id: glm-5.3}]`）；`agent-default-model`
@@ -516,8 +524,15 @@ lifecycle mutation）；其 §4/§5 的 2026-08-27 同日生产观测被本 Spec
 ### 9.1 安全边界（全阶段适用；违反即 out-of-spec + 事故记录）
 
 ```text
-secret 明文进入 agent 会话 / prompt / env / argv / stdout / 日志 / Feishu —— 禁止
-ZAI_API_KEY 或 token 写入 launchd / agent-model-overrides.json / 任何配置 —— 禁止
+RAW_CREDENTIAL_IN_OVERRIDE = FORBIDDEN
+RAW_CREDENTIAL_IN_LAUNCHD = FORBIDDEN
+RAW_CREDENTIAL_IN_SETTINGS_YAML = FORBIDDEN
+RAW_CREDENTIAL_IN_LOGS_OR_OUTPUT = FORBIDDEN
+RAW_CREDENTIAL_IN_ANY_NON_CREDENTIAL_CONFIG = FORBIDDEN
+唯一受控 credential store（GLM）= $DSH_HOME/.credentials.yaml；键 = ZAI_API_KEY；owner uid 502；mode 0600
+唯一受控 credential store（Luna）= $DSH_HOME/.openai-codex-auth.json；owner uid 502；mode 0600；Owner 交互式 OAuth 全新生成
+settings.yaml 仅允许模型声明与 apiKeyEnv 引用，不得包含 raw key
+raw credential 进入 agent 会话 / prompt / argv / stdout / 日志 / Feishu / PR / 证据 —— 禁止
 复制旧 OpenClaw / 旧 root OAuth / ~/.codex/auth.json（含读取后转写）—— 禁止
 复制 .git 到 production（含部分复制 / symlink）—— 禁止
 .credentials.yaml / .openai-codex-auth.json 的明文备份或第二副本 —— 禁止
@@ -527,7 +542,6 @@ bundles 注册未过 19/19 peers 预核验即触碰 profile package.json —— 
 修改共享模板 profile-production/ / 其他 Agent Home / 其他 Agent —— 禁止
 修改 Scheduler job / Binding / Agent Definition / launchd plist —— 禁止
 第二 Feishu consumer / 第二出站 transport —— 禁止
-raw credential 进入 override（或任何配置文件）—— 禁止
 per-hop deadline 刷新 / outcome_unknown fallback —— 禁止（父 CTR-005 /
 DEC-IMPL-007 原样）
 直接把 dsh-codex 当 ZAI carrier（fake carrier）—— 禁止（A1.0 EVIDENCE_A1_4）
@@ -571,8 +585,9 @@ DEC-IMPL-007 原样）
 ### 9.3 Phase B contracts（CTR-ACT-B*；承接 PR #78 CTR-C-1xx/2xx 重冻）
 
 - `CTR-ACT-B01`（settings.yaml zai 声明）— additive 追加 zai provider 块，
-  形态 = DEC-ACT-007；`agent-default-model` 与其余键逐字节不变；原子替换；
-  编辑后 0600 / uid 502 核验；`.bak` 允许（非 secret）。
+  形态 = DEC-ACT-007；只允许模型声明与 `apiKeyEnv: ZAI_API_KEY` 引用，raw key
+  = FORBIDDEN；`agent-default-model` 与其余键逐字节不变；原子替换；编辑后
+  0600 / uid 502 核验；`.bak` 允许（settings 无 secret）。
 - `CTR-ACT-B02`（.credentials.yaml ZAI_API_KEY）— 严格 `CredentialRef →
   string` YAML 顶层映射（harness `@deepseek-ai/dsh-credentials-local` 契约）；
   仅新增 `ZAI_API_KEY` 一个顶层 key，其余 entry / 注释 / 排版原样；Owner
@@ -589,10 +604,10 @@ DEC-IMPL-007 原样）
   并作为 ACC 核验）；禁止 `OPENAI_API_KEY` / API credits 路径（父 CTR-014
   原文延续）。
 - `CTR-ACT-B06`（OAuth 文件边界）— 登录后核验：regular file、0600、uid 502；
-  目录 mode 按 Q-ACT-1 默认 (a) 维持 0755 并记录偏差说明（如 Owner 裁 (b)
-  且前置已完成则 0700）；token / refresh token 永不进入 env（非目标进程）/
-  argv / prompt / Feishu / 日志 / commit / PR；日志仅允许文件名、大小、
-  mtime、mode、owner 与 hash 指纹。
+  Home 目录 mode 唯一为 0755；HOME_MODE_0700 = OUT_OF_SCOPE / DEFERRED；token /
+  refresh token 永不进入 override、launchd、settings.yaml、其他非 credential
+  配置、argv、prompt、Feishu、日志/输出、commit、PR 或证据；日志仅允许文件名、
+  大小、mtime、mode、owner 与 hash 指纹。
 - `CTR-ACT-B07`（Luna canary）— DEC-ACT-008 隔离语义 + 代理前置；route =
   openai-codex / gpt-5.6-luna；pass 判据同 CTR-ACT-B03。
 - `CTR-ACT-B08`（launchd / overrides 不变量）— Phase B 执行前后核验：plist
@@ -703,7 +718,7 @@ CANARY-D（duplicate protection）
 | ACC-ACT-B5 | `.openai-codex-auth.json` 全新生成（Owner 交互式）；0600/uid502；`~/.codex/auth.json` hash/mtime 不变 | CTR-ACT-B05/B06 |
 | ACC-ACT-B6 | Luna canary PASS（同 B3 语义 + 代理前置现场复核记录） | CTR-ACT-B07 |
 | ACC-ACT-B7 | launchd plist 字节不变；无 ZAI/token env；生产 root overrides 文件 Phase B 结束时仍 ABSENT | CTR-ACT-B08 |
-| ACC-ACT-B8 | GATE-4：凭据 readiness PASS 判定记录（`zai-api-key-home` / `luna-oauth-home` = SATISFIABLE；Q-ACT-1 裁决记录） | §3/DEC-ACT-006 |
+| ACC-ACT-B8 | GATE-4：凭据 readiness PASS 判定记录（`zai-api-key-home` / `luna-oauth-home` = SATISFIABLE；Home = 0755/uid502；三个敏感文件 = 0600/uid502） | §3/DEC-ACT-006 |
 | ACC-ACT-C1 | 部署：冻结 path→blob 清单逐条对账（提取源 = audited commit；无 worktree/dirty 提取；无清单外文件）；回滚面记录 | CTR-ACT-C101 |
 | ACC-ACT-C2 | `.source-stamp`：commit 值 + dirtyCount 诚实测定记录（含比对方法）；实测 dirtyCount = 0（或 ≠ 0 时激活 BLOCKED + Owner 处置记录） | CTR-ACT-C102 |
 | ACC-ACT-C3 | restart #1 后健康核验：runtime up；单 Feishu WebSocket；非目标 Agent 直通零变化；agt_cto-agent 以全局 env route 正常 spawn | DEC-ACT-012(3) |
@@ -715,7 +730,7 @@ CANARY-D（duplicate protection）
 | ACC-ACT-C9 | 注入清除 + 清洁复验 turn（glm53 attempts=1、FINAL_ROUTE=glm53）+ 生产终态记录 | CTR-ACT-C104 |
 | ACC-ACT-C10 | 隔离回归：非目标 Agent resolved route/env/网络路径零变化；launchd 字节不变；Scheduler store 零改动 | §2.2/CTR-012 |
 | ACC-ACT-C11 | redaction 扫描：三阶段全部输出/日志/commit/PR 文本无 secret（key/token/Authorization/provider raw error body） | §9.1 |
-| ACC-ACT-C12 | GATE-5：canary A–D 全 PASS 判定 + 本 authority 最终验收记录 | §3 |
+| ACC-ACT-C12 | GATE-5：canary A–D 全 PASS 判定 + `ACTIVATION_COMPLETE` 最终验收记录；GATE-5 是完成判据，不是启动 Phase A/B/C 的前置条件 | §3 |
 
 ## 11. Alternatives and disposition
 
@@ -740,7 +755,7 @@ CANARY-D（duplicate protection）
   形态）：**REJECTED**——全局默认路由不在本授权内；激活只经 v2 override 链。
 - `ALT-ACT-009` — Phase A 顺带实现 provisioner 0700 适配 / 任何清单外改动：
   **REJECTED / FORBIDDEN**——Phase A 清单冻结（任务指令 + CTR-ACT-A04）；
-  0700 适配需独立 authority（Q-ACT-1）。
+  0700 适配需独立 authority（DEC-ACT-006；HOME_MODE_0700 = DEFERRED）。
 - `ALT-ACT-010` — 配置先于代码部署写入（省一次 restart）：**REJECTED /
   FORBIDDEN**——制造目标 Agent spawn fail-loud 中断窗口（CLM-ACT-003）。
 - `ALT-ACT-011` — canary 以单一 curl / 单一 model roundtrip / 测试 rig 替代：
@@ -765,17 +780,15 @@ CANARY-D（duplicate protection）
   store；DSH 版本不回滚。
 - `MIG-ACT-003` — v1 → v2 无存量迁移面（生产 root 从无 override 文件；
   父 MIG-004）。
-- `MIG-ACT-004` — PR #77 merge 顺序：本 Spec 的 acceptance 不依赖 PR #77
-  merge，但任何 Phase 执行依赖（GATE-2）；若本 Spec 先 merge，Phase 执行
-  开工前必须 fresh-fetch 复核 PR #77 已在 main。
+- `MIG-ACT-004` — PR #77 merge 依赖已满足：merge commit =
+  `b620907fc6f58292b6ee096c977f0071921d747e`，PR77_IN_MAIN = YES，GATE-2 =
+  SATISFIED；每个 Phase 开工前仍须 fresh-fetch 并记录该 main commit 坐标。
 
 ## 13. Open questions
 
-- `Q-ACT-1`（OWNER_DECISION_REQUIRED）— Home 目录 mode：采纳默认 **(a)**
-  （0755 保持；隐私实质 = 文件 0600 + uid 502；0700 归独立 runtime 适配
-  authority 后的后续轮）或 **(b)**（本轮即 0700——须先完成 provisioner
-  适配 authority，否则 Phase B 目录部分 BLOCKED）。默认执行语义 = (a)；
-  review/acceptance 时 Owner 显式确认或改裁（证据：OBS-ACT-008(a)）。
+Home mode 无 open question：`HOME_DIRECTORY_MODE = 0755`、`HOME_OWNER_UID = 502`；
+`HOME_MODE_0700 = OUT_OF_SCOPE / DEFERRED`（DEC-ACT-006）。
+
 - `Q-ACT-2`（执行轮事实项，非本authoring轮可决）— 生产 harness 树相对 pin
   commit `514ab7b…` 的 dirtyCount 实测值：若 ≠ 0，luna 路由激活 BLOCKED
   （fail-loud），处置（树重装 / pin amendment / 放弃 luna）归 Owner 决策；
@@ -791,17 +804,25 @@ SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1
 AUTHORITY_FORM = unified activation-authorizing child Spec（不 supersede 任何 Spec；
   PR #78 CONSOLIDATED_UNMERGED_CANDIDATE，推荐关闭、永不 merge、本 Spec 零
   PR lifecycle mutation）
-IMPLEMENTATION_AUTHORITY = contracts（gated；GATE-1..2 满足前不授权）
-PRODUCTION_APPLY_AUTHORITY = contracts（gated；GATE-1..2 满足前不授权）
+IMPLEMENTATION_AUTHORITY = contracts（逐阶段 gated；§3）
+PRODUCTION_APPLY_AUTHORITY = contracts（逐阶段 gated；§3）
+
+PR77_IN_MAIN = YES
+PR77_MERGE_COMMIT = b620907fc6f58292b6ee096c977f0071921d747e
+GATE_2 = SATISFIED
 
 GATES =
   GATE-1 本 Spec accepted AND 进入 main
-  GATE-2 PR #77 两份 Amendment 1 accepted（已完成：417247d 2026-08-27）
-         AND 进入 main（未完成：PR #77 Draft/OPEN）
+  GATE-2 PR #77 两份 Amendment 1 accepted AND 进入 main = SATISFIED
   GATE-3 Phase A 独立实现审计 PASS
   GATE-4 Phase B 凭据 readiness PASS
   GATE-5 Phase C 强制 canary A–D 全 PASS
-  阶段顺序 = A → B → C 严格；未完成 A/B 即执行 C = FORBIDDEN
+PHASE_A_GATE = GATE-1 AND GATE-2
+PHASE_B_GATE = GATE-1 AND GATE-2 AND GATE-3
+PHASE_C_GATE = GATE-1 AND GATE-2 AND GATE-3 AND GATE-4
+GATE_5_ROLE = COMPLETION_CRITERION
+ACTIVATION_COMPLETE = FORBIDDEN UNTIL GATE-5 PASS
+阶段顺序 = A → B → C 严格；未完成 A/B 即执行 C = FORBIDDEN
 
 PHASE_A_SCOPE（最小产品改动，仅此三项）=
   A-1 v2 loader routeKind = builtin|subscription（builtin plugin 键 ABSENT、
@@ -821,8 +842,11 @@ PHASE_B_SCOPE（仅 agt_cto-agent production Home）=
        Owner 亲自交互式 OAuth 全新 .openai-codex-auth.json；禁复制旧
        OpenClaw/旧 root/~/.codex/auth.json；auth file 0600；uid 502；
        initialize + no-tool canary
-  目录 mode = Q-ACT-1 默认 (a)：保持 0755（0700 与 authsvc spawn 冲突实证；
-       适配归独立 authority）
+  HOME_DIRECTORY_MODE = 0755
+  HOME_OWNER_UID = 502
+  settings.yaml / .credentials.yaml / .openai-codex-auth.json = 0600 / uid 502
+  HOME_MODE_0700 = DEFERRED（OUT_OF_SCOPE；仅未来 cross-UID provisioner 适配 +
+       独立 authority 完成后可重新讨论）
 
 PHASE_C_SCOPE（激活）=
   部署 route-chain 实现（冻结 path→blob；唯一提取源 = audited commit）
@@ -844,12 +868,23 @@ MANDATORY_CANARIES =
   D duplicate protection（single logical turn / transcript / external
     delivery；onStart/onDispatch exactly once）
 
+CREDENTIAL_STORE_EXCEPTION =
+  GLM: $DSH_HOME/.credentials.yaml；键 = ZAI_API_KEY；owner uid 502；mode 0600
+  Luna: $DSH_HOME/.openai-codex-auth.json；owner uid 502；mode 0600；Owner 交互式
+        OAuth 全新生成
+RAW_CREDENTIAL_NON_STORE_CONFIG = FORBIDDEN
+RAW_CREDENTIAL_IN_OVERRIDE = FORBIDDEN
+RAW_CREDENTIAL_IN_LAUNCHD = FORBIDDEN
+RAW_CREDENTIAL_IN_SETTINGS_YAML = FORBIDDEN
+RAW_CREDENTIAL_IN_LOGS_OR_OUTPUT = FORBIDDEN
+settings.yaml = 仅模型声明 + apiKeyEnv 引用，不含 raw key
+
 NOT_AUTHORIZED（全阶段）=
   修改其他 Agent / Scheduler job / Binding / Definition / launchd；第二
-  Feishu consumer；raw credential 进 override；复制旧 OAuth；复制 .git 到
-  production；per-hop deadline 刷新；outcome_unknown fallback；dsh-codex 作
-  ZAI carrier；未完成 A/B 即执行 C；Phase A 清单外产品改动（含 provisioner
-  0700 适配）；配置先于代码部署写入
+  Feishu consumer；raw credential 进入专用 store 之外的任何配置、日志、PR 或
+  证据；复制旧 OAuth；复制 .git 到 production；per-hop deadline 刷新；
+  outcome_unknown fallback；dsh-codex 作 ZAI carrier；未完成 A/B 即执行 C；
+  Phase A 清单外产品改动（含 provisioner 0700 适配）；配置先于代码部署写入
 
 PRODUCT_CODE_CHANGE = NONE
 CREDENTIAL_CHANGE = NONE（本轮零执行）
@@ -859,6 +894,7 @@ DEPLOYMENT = NONE
 RESTART = NONE
 MERGE = NO（Draft PR）
 PR78_LIFECYCLE_MUTATION = NONE（处置仅记录于 §3.4）
+READY_FOR_REVIEW = YES
 
-NEXT_TASK = 链路 激活授权审计
+NEXT_TASK = 激活 审计
 ```
