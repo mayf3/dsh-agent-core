@@ -31,24 +31,26 @@ const VALID_PROVIDER_ENV = Object.freeze({
 
 /**
  * agent-model-overrides.json version 2 (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
- * §2): routeCatalog + overrides.<agentId>.model.{primary, fallbacks[]}.
- * Route CONTENT lives entirely in the config — the code constant below only
- * carries pins/scope (F-10 / ACC-014).
+ * §2 + Amendment 1 A1.2/A1.4): routeCatalog + overrides.<agentId>.model.
+ * {primary, fallbacks[]}. The fixture IS the frozen initial chain tuple:
+ * glm53 = builtin (plugin/pluginVersion ABSENT), luna = subscription
+ * (dsh-codex@0.2.3 exact). Route CONTENT lives entirely in the config — the
+ * code constant below only carries pins/scope (F-10 / ACC-014).
  */
 const CATALOG = Object.freeze({
   glm53: {
+    routeKind: 'builtin',
     provider: 'zai',
     model: 'glm-5.3',
-    plugin: 'dsh-zai',
-    pluginVersion: '1.4.2',
-    credentialReadiness: 'zai-oauth',
+    credentialReadiness: 'zai-api-key-home',
   },
   luna: {
+    routeKind: 'subscription',
     provider: 'openai-codex',
     model: 'gpt-5.6-luna',
     plugin: 'dsh-codex',
     pluginVersion: '0.2.3',
-    credentialReadiness: 'luna-oauth',
+    credentialReadiness: 'luna-oauth-home',
   },
 })
 const VALID = {
@@ -119,9 +121,10 @@ test('missing file = global passthrough; valid v2 chain resolves primary-first w
   assert.notEqual(chain.routes[0].identity, chain.routes[1].identity)
   assert.equal(Object.isFrozen(chain.routes), true)
   assert.equal(Object.isFrozen(chain.routes[0].processConfig), true)
-  // Compat single-route resolver = the chain's primary.
+  // Compat single-route resolver = the chain's primary (a builtin route
+  // carries no plugin fields).
   assert.deepEqual(loaded.resolve(TARGET, GLOBAL), {
-    provider: 'zai', model: 'glm-5.3', plugin: 'dsh-zai', pluginVersion: '1.4.2',
+    provider: 'zai', model: 'glm-5.3',
   })
   assert.deepEqual(loaded.resolve(OTHER, GLOBAL), GLOBAL)
   // Same config -> stable chain identity across loads (turn snapshot anchor).
@@ -154,13 +157,19 @@ test('reference integrity and dedup: unknown ref, repeated ref, canonical alias 
   invalid(file, { ...VALID, overrides: { [TARGET]: { model: { primary: 'missing', fallbacks: [] } } } })
   invalid(file, { ...VALID, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['glm53'] } } } })
   invalid(file, { ...VALID, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna', 'luna'] } } } })
-  // Two different routeRefs with the SAME canonical six-field identity.
+  // Two different routeRefs with the SAME canonical seven-field identity
+  // (ACC-017: builtin plugin/pluginVersion normalize to explicit ABSENT).
   const aliased = { ...CATALOG, glm53_alias: { ...CATALOG.glm53 } }
   invalid(file, { ...VALID, routeCatalog: aliased })
   // Same provider/model but a different credentialReadiness is a distinct
   // canonical route (the reference is part of the identity).
   const distinct = { ...CATALOG, luna_canary: { ...CATALOG.luna, credentialReadiness: 'luna-oauth-canary' } }
   write(file, { ...VALID, routeCatalog: distinct, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna', 'luna_canary'] } } } })
+  assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
+  // ACC-017: a builtin and a subscription route with the SAME provider/model
+  // never collapse — routeKind participates in the canonical identity.
+  const crossKind = { ...CATALOG, glm53_sub: { ...CATALOG.glm53, routeKind: 'subscription', plugin: 'dsh-codex', pluginVersion: '0.2.3' } }
+  write(file, { ...VALID, routeCatalog: crossKind, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['glm53_sub'] } } } })
   assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
 })
 
@@ -199,9 +208,80 @@ test('CTR-011 pin: a dsh-codex route with any other pluginVersion fails loud (no
   for (const pluginVersion of ['0.2.4', '^0.2.3', '0.2.2']) {
     invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, pluginVersion } } })
   }
-  // Non-dsh-codex plugins are not pinned by the code constant.
+  // Non-dsh-codex plugins are not pinned by the code constant, but every
+  // subscription pluginVersion must still be an exact pin (A1.2: no ^/~
+  // ranges — same grammar the provisioner enforces).
   write(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, plugin: 'other-plugin', pluginVersion: '9.9.9' } } })
   assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
+  for (const pluginVersion of ['^9.9.9', '~9.9.0', '9.9.x', '9.x', '9.9.9 || 9.9.10', '9.9.9 - 9.9.10']) {
+    invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, plugin: 'other-plugin', pluginVersion } } })
+  }
+})
+
+test('ACC-016 routeKind family: missing/invalid routeKind and plugin keys on a builtin fail loud', (t) => {
+  const { file } = fixture(t)
+  const { routeKind, ...bareGlm53 } = CATALOG.glm53
+  // Missing / non-string / non-enum routeKind values are malformed.
+  for (const routeKind of [undefined, 7, null, 'BUILTIN', 'hybrid', '']) {
+    const glm53 = routeKind === undefined ? bareGlm53 : { ...CATALOG.glm53, routeKind }
+    invalid(file, { ...VALID, routeCatalog: { ...CATALOG, glm53 } })
+  }
+  // A builtin route with a plugin or pluginVersion KEY present is malformed
+  // whatever the value — ABSENT is the only legal builtin form.
+  for (const extra of [
+    { plugin: 'dsh-zai' },
+    { plugin: null },
+    { plugin: '' },
+    { pluginVersion: '1.4.2' },
+    { pluginVersion: null },
+    { pluginVersion: '' },
+    { plugin: 'dsh-zai', pluginVersion: '1.4.2' },
+  ]) {
+    invalid(file, { ...VALID, routeCatalog: { ...CATALOG, glm53: { ...CATALOG.glm53, ...extra } } })
+  }
+  // A subscription route missing plugin or pluginVersion is malformed.
+  const bareLuna = (({ plugin, pluginVersion, ...rest }) => rest)(CATALOG.luna)
+  invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: bareLuna } })
+  const lunaNoVersion = (({ pluginVersion, ...rest }) => rest)(CATALOG.luna)
+  invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: lunaNoVersion } })
+})
+
+test('ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConfig has NO subscription block', (t) => {
+  const { file } = fixture(t)
+  // The A1.4 frozen tuple itself (glm53 builtin + luna subscription).
+  write(file, VALID)
+  const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
+  const [primary, fallback] = loaded.resolveChain(TARGET, GLOBAL).routes
+  // builtin: no subscription block, no plugin fields anywhere resolved.
+  assert.equal('subscription' in primary.processConfig, false)
+  assert.equal(primary.processConfig.subscription, undefined)
+  assert.equal(loaded.overrides[TARGET].routes.glm53.plugin, undefined)
+  assert.equal(Object.hasOwn(loaded.overrides[TARGET].routes.glm53, 'plugin'), false)
+  // subscription: the provisioning block is constructed with the frozen pins.
+  assert.deepEqual(fallback.processConfig.subscription, {
+    plugin: 'dsh-codex',
+    pluginVersion: '0.2.3',
+    dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
+    dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
+    credentialFile: '.openai-codex-auth.json',
+  })
+})
+
+test('ACC-019 reuse-gate identity: builtin and subscription processes never share an identity', (t) => {
+  const { file } = fixture(t)
+  // Same provider/model/env on both sides of the routeKind boundary.
+  const catalog = {
+    builtinRoute: { routeKind: 'builtin', provider: 'zai', model: 'glm-5.3', credentialReadiness: 'zai-api-key-home' },
+    subscriptionRoute: { routeKind: 'subscription', provider: 'zai', model: 'glm-5.3', plugin: 'dsh-codex', pluginVersion: '0.2.3', credentialReadiness: 'zai-api-key-home' },
+  }
+  write(file, { version: 2, routeCatalog: catalog, overrides: { [TARGET]: { model: { primary: 'builtinRoute', fallbacks: ['subscriptionRoute'] } } } })
+  const [builtin, subscription] = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
+  assert.notEqual(builtin.identity, subscription.identity)
+  // The identity difference is exactly the plugin fields the subscription
+  // process carries (canonicalRouteIdentity: plugin/pluginVersion null vs
+  // exact strings) — same provider/model on both tuples.
+  assert.equal(builtin.processConfig.provider, subscription.processConfig.provider)
+  assert.equal(builtin.processConfig.model, subscription.processConfig.model)
 })
 
 test('providerEnv accepts only the frozen four-key set and safe host-list grammar', (t) => {
@@ -384,13 +464,9 @@ test('composition resolves the v2 primary to target and the global route to anot
   )
   assert.equal(spawned[0].subscription, undefined, 'subscription provisioning is not a child-process concern')
   assert.deepEqual({ provider: spawned[1].provider, model: spawned[1].model }, GLOBAL)
-  assert.deepEqual(provisioned[0].options.subscription, {
-    plugin: 'dsh-zai',
-    pluginVersion: '1.4.2',
-    dshVersion: '0.1.0-rc.8',
-    dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
-    credentialFile: '.openai-codex-auth.json',
-  })
+  // ACC-016/DEC-IMPL-011: the builtin glm53 primary carries NO subscription
+  // provisioning block — a builtin spawn stays off the plugin/pin path.
+  assert.equal(provisioned[0].options.subscription, undefined)
   assert.equal(provisioned[1].options.subscription, undefined)
 })
 
