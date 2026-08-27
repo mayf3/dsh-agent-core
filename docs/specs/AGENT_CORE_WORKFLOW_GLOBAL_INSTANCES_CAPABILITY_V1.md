@@ -12,8 +12,8 @@ governed_by:
   - AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
 external_authorities:
   - repository: mayf3/svc-workflow
-    authority_id: SVC_WORKFLOW_HR_DISPATCHER_COORDINATOR_GRANT_V1
-    revision: 5efcd814b981706652dcd3ca6c02471cf256239c
+    authority_id: SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1
+    revision: 57f0268d76aa975b7d07a78874a1bf69d2ec3c4d
     relation: interoperates_with
 supersedes: []
 superseded_by: null
@@ -23,13 +23,14 @@ owners:
 
 # AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1 — 全域实例只读枚举 Broker 能力
 
-> 状态：**proposed**（revision 4：按 OWNER_RULING = DEDICATED_SYSTEM_AGENT_MODEL
-> 与跨仓 authority 拆分 repin——base 同步到 main **e40c140**（含 PR #82
-> error-preservation 实现，limit 校验单路径化）；external authority 改指
-> SVC_WORKFLOW_HR_DISPATCHER_COORDINATOR_GRANT_V1 @ 5efcd81；本能力保持
-> **通用 Coordinator 工具**——服务端 gate 维持部署现状「仅
-> GLOBAL_WORKFLOW_COORDINATOR」，svc-workflow 0 改动；不得硬绑定 HR 主会话，
-> 详见 DEC-008）。本 Spec 当前不授予任何实现、合并或 production apply 权限。
+> 状态：**proposed**（revision 5，按**最终** OWNER_RULING = DUAL_GLOBAL_READER_MODEL
+> 修订：服务端 global gate = GLOBAL_WORKFLOW_READER OR GLOBAL_WORKFLOW_COORDINATOR
+>（external authority SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 @ 57f0268 冻结新只读
+> 角色 + 双授予——HR 主身份与专用 Dispatcher Agent 各获 READER，双方均不获
+> COORDINATOR）；错误表恢复双码声明——`global_read_role_required`（目标契约）+
+> `global_coordinator_required`（部署过渡现实）；本能力保持**通用只读工具**，
+> 不硬编码 HR 或 Dispatcher（DEC-008）。base = main e40c140（含 PR #82）。
+> 后续不再切换身份模型）。本 Spec 当前不授予任何实现、合并或 production apply 权限。
 > `implementation_authority = none`；accept 仅开启按 §9 Contracts 的实现评审路径。
 > 姊妹 Spec（未上 main、非本 Spec 的 parent）：`AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1`
 >（proposed，domain 维度单页枚举）；两者共享 manifest 家族与错误保留纪律，实现时以
@@ -37,9 +38,10 @@ owners:
 
 ## 1. Goal
 
-为持有 svc-workflow `GLOBAL_WORKFLOW_COORDINATOR` 角色（服务端强制）的任意
-调用方提供一个、且仅一个新增 Broker 只读能力 `workflow_global_instances`——
-**通用 Coordinator 工具，不绑定任何特定 Agent 会话**（DEC-008）——代理
+为持有 svc-workflow global 只读角色（目标契约：`GLOBAL_WORKFLOW_READER` 或
+`GLOBAL_WORKFLOW_COORDINATOR`，服务端强制）的任意调用方提供一个、且仅一个新增
+Broker 只读能力 `workflow_global_instances`——**通用只读工具，不硬编码 HR 或
+Dispatcher，不绑定任何特定 Agent 会话**（DEC-008）——代理
 svc-workflow **已部署**的
 `GET /internal/v1/workflow-instances/global`，使其可经 Broker-first 凭据链枚举
 **所有 Domain** 的 workflow 实例摘要。授权判断完全在 svc-workflow 服务端；
@@ -56,11 +58,12 @@ In scope（accept 后的实现面，仅此两项文件）：
 
 Out of scope / 明确不授权：
 
-- svc-workflow **0 改动**（路由/代码/迁移；端点已部署于 base 2ff81ae，
-  mod.rs:119）。
+- 本 Spec 不授权任何 svc-workflow 改动（external authority 另行治理其受控
+  角色注入/gate 代码修改——READER 角色 + 双角色谓词 + 双码契约；端点本身
+  已部署于 base 2ff81ae，mod.rs:119，无新路由）。
 - 任何角色授予/身份变更（由 external authority
-  `SVC_WORKFLOW_HR_DISPATCHER_IDENTITY_V1` 独立治理；本能力对任意服务端
-  Coordinator 凭据持有者通用，与该身份计划互不依赖）。
+  `SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1` 独立治理；本能力对任意服务端合法
+  调用者（READER 或 COORDINATOR 凭据持有者）通用，与任何具体授予互不依赖）。
 - 写面：transition / assignment / Domain / provisioning 一概不触及；
   无 POST/PUT/DELETE 绑定、无 Idempotency-Key；**不含任何 Scheduler 写操作**
   （无 scheduler mutation 面、无 job 触发面——本能力与 Scheduler 系统零交集）。
@@ -81,19 +84,24 @@ Out of scope / 明确不授权：
     fail-closed 降级、broker-side limit 校验机制族直接继承其 R1–R5。
   - `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1`：Broker-first 凭据链
     （trusted store → client_credentials → scoped token）为既有冻结语义。
-- `external_authorities`：svc-workflow 侧的 coordinator 授予 Spec
-  （proposed，5efcd81）— `interoperates_with`。外部引用不授予本地权威：该
-  Spec 按 OWNER_RULING = DEDICATED_SYSTEM_AGENT_MODEL 与跨仓 authority 拆分，
-  仅治理「现有 GLOBAL_WORKFLOW_COORDINATOR 角色授予专用 system Agent
-  `agt_workflow-dispatcher-hr-agent` 的 principal + HR 主身份不获角色 +
-  svc-workflow 0 改动」；其身份/Client/grant 由 mayf3/auth-service
+- `external_authorities`：svc-workflow 侧的最终双读者角色 Spec
+  （proposed，57f0268）— `interoperates_with`。外部引用不授予本地权威：该
+  Spec 按 OWNER_RULING = DUAL_GLOBAL_READER_MODEL（最终，不再切换）引入
+  `GLOBAL_WORKFLOW_READER` 只读角色（唯一许可面 = global instance list），服务端
+  gate 改为 READER OR COORDINATOR，写端点/assistance/provisioning 维持仅
+  COORDINATOR；双冻结授予对象 = HR 主身份（agt_hr-agent /
+  dc702687-6515-4a2a-91ae-e572a9bbd766，UUID 已冻结）与专用 Dispatcher Agent
+  （agt_workflow-dispatcher-hr-agent，UUID 待身份创建后 amendment 回填，回填前
+  不得 role apply）；双方均不获 COORDINATOR；legacy bc970ced 禁授。其身份/
+  Client/grant 由 mayf3/auth-service
   `AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1`（proposed，PR #31）治理；
   Agent/scheduler 面由 `AGENT_CORE_HR_DISPATCHER_V1`（proposed）治理。
-  本能力不依赖上述任何 proposed Spec 即可实现与验收；落地后 dispatcher
-  凭据与本能力天然兼容——凭据链对 Coordinator 通用，无需任何 per-agent 适配。
-- **通用性时序声明**：本能力在任何时候都按部署现状的服务端契约工作
-  （global gate = 仅 GLOBAL_WORKFLOW_COORDINATOR，错误码
-  `global_coordinator_required`）；无部署时序分支。
+  本能力不依赖上述任何 proposed Spec 即可实现与验收；落地后 HR 主会话与
+  dispatcher 凭据都是本工具的普通合法调用方。
+- **错误码时序声明**：broker 实现可在 svc-workflow READER 修订部署之前或之后
+  落地。修订前服务端 gate 失败码为 `global_coordinator_required`，修订后为
+  `global_read_role_required`——两码均在本能力错误表声明（CTR-001），两种
+  时序下错误保留纪律均成立；最终目标契约为 `global_read_role_required`。
 - 实现叠加声明（**已收敛为单路径**）：本 Spec base = main e40c140（含
   PR #82 error-preservation 实现）。`limit` bounds
   （minimum/maximum/validationError）在 main schema 上即时生效——越界在
@@ -107,13 +115,17 @@ Out of scope / 明确不授权：
   my_domains），无任何 global 列表代理。basis: OBS-008。
 - `STATE-002` — svc-workflow github/main 2ff81ae 已部署
   `GET /internal/v1/workflow-instances/global`，服务端强制
-  `workflow.read` scope + `GLOBAL_WORKFLOW_COORDINATOR` 角色双闸（部署现状，
-  external authority 维持其不变）。basis: OBS-001, OBS-003。
+  `workflow.read` scope + global 只读角色双闸（当前部署：仅
+  `GLOBAL_WORKFLOW_COORDINATOR`；external authority 修订部署后：
+  `GLOBAL_WORKFLOW_READER` OR `GLOBAL_WORKFLOW_COORDINATOR`）。basis:
+  OBS-001, OBS-003。
 - `STATE-003` — 生产（2026-08-27 只读查询）：principal
   `dc702687-6515-4a2a-91ae-e572a9bbd766`（agt_hr-agent，active）当前无任何
-  enabled global 角色绑定，且按 OWNER_RULING 冻结
-  **HR_MAIN_COORDINATOR_ROLE = NO**（该身份永不因本 Spec 家族获得该角色）；
-  其今日调用该端点必得 403 `global_coordinator_required`。basis: OBS-009。
+  enabled global 角色绑定——其今日调用该端点必得 403（码按部署态见
+  STATE-002 时序）。按最终 Ruling 计划：**HR_GLOBAL_READER = YES**（获 READER，
+  手工只读查看），HR_GLOBAL_COORDINATOR = NO；专用 Dispatcher 计划
+  DISPATCHER_GLOBAL_READER_PLAN = YES（UUID 回填前不得 apply），
+  DISPATCHER_GLOBAL_COORDINATOR = NO。basis: OBS-009。
 
 ## 5. Observations
 
@@ -129,13 +141,14 @@ Out of scope / 明确不授权：
   `currentNodeKey`、`assigneePrincipalId`（UUID）、`status`。
 - `OBS-003` — 服务端授权：`WorkflowInstanceQueryService::list_global_instances`
   （`query_service.rs:103-131`）先 `check_global_workflow_coordinator(actor)`
-  （`query_visibility.rs:54-65`，谓词 = 仅
-  `GLOBAL_WORKFLOW_COORDINATOR` AND enabled=TRUE）；非持有者 →
+  （`query_visibility.rs:54-65`，当前部署谓词 = 仅
+  `GLOBAL_WORKFLOW_COORDINATOR`）；非持有者 →
   `WorkflowQueryError::GlobalCoordinatorRequired` → HTTP 403
-  `global_coordinator_required`（`error.rs:516-519`）。该 gate 为部署现状，
-  external authority（SVC_WORKFLOW_HR_DISPATCHER_COORDINATOR_GRANT_V1，
-  5efcd81）维持
-  服务端 0 改动。
+  `global_coordinator_required`（`error.rs:516-519`）。external authority
+  （SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 §4–§5，57f0268）修订部署后：谓词
+  接受 `GLOBAL_WORKFLOW_READER` OR `GLOBAL_WORKFLOW_COORDINATOR`，失败码改为
+  403 `global_read_role_required`；coordinator 写端点与 assistance 路径维持仅
+  COORDINATOR。
 - `OBS-004` — limit 服务端边界：default 20、0 或 >100 → 422
   `invalid_pagination`（`query_global_instances.rs:14-26`；纯 SELECT 投影，
   零写入）。
@@ -162,10 +175,11 @@ Out of scope / 明确不授权：
   另有 legacy 谱系 principal `bc970ced-710f-4479-9ff0-e295a1c59424`
   （openclaw:agent:hr-agent）持 active client
   `mc_4Ud_9wGR1mwQM9W7s7foX8qp`（{workflow.admin, workflow.read,
-  workflow.execute}）——故该角色不得授予 HR 主身份；只读全局查看改由
-  **专用 system Agent**（agt_workflow-dispatcher-hr-agent；grant 仅
-  {workflow.read} + agent-wake + COORDINATOR 角色，
-  结构性不可达写端点）实现，见 external authority。
+  workflow.execute}）——故 COORDINATOR（兼 gate 写端点）不得授予任何 HR 谱系
+  身份；最终模型 = DUAL_GLOBAL_READER：HR 主身份与专用 Dispatcher Agent
+  （agt_workflow-dispatcher-hr-agent，计划 grant 仅 {workflow.read} +
+  agent-wake）各获只读 GLOBAL_WORKFLOW_READER，双方零写可达，见 external
+  authority。
 
 ## 6. Claims and assumptions
 
@@ -174,8 +188,9 @@ Out of scope / 明确不授权：
   first-batch + domain-instances 姊妹 Spec 的同一结论；basis: OBS-008）。
 - `CLM-002` SUPPORTED — transport 只转发 manifest 声明的 query 名，未声明参数
   物理上到不了 svc-workflow（deny_unknown_fields 兜底前移）。basis: OBS-002/007。
-- `CLM-003` SUPPORTED（dual-path 声明消除 OPEN 假设）— §3 的两条演化路径均使
-  CTR-002 成立；无待定实现假设。
+- `CLM-003` SUPPORTED — 外部时序均被显式声明消解：error-preservation 实现
+  已在 base main e40c140 落地（limit 校验单路径）；svc-workflow READER 修订
+  的先/后部署由双码声明覆盖（§3）。无待定实现假设。
 
 ## 7. Evidence relations
 
@@ -206,18 +221,19 @@ Out of scope / 明确不授权：
 - `DEC-003` 身份不可替换：`assigneePrincipalId` 是且仅是服务端结果过滤参数；
   调用者身份只能来自 trusted credential seam（OBS-007 结构性保证），模型不得、
   也不可能经参数冒充其他 principal。
-- `DEC-004` 授权语义：完全服务端权威——`GLOBAL_WORKFLOW_COORDINATOR` 由
-  svc-workflow `check_global_workflow_coordinator` 谓词强制（部署现状，0 改动）；
-  非 Coordinator → **fail-closed** 403 `global_coordinator_required`（码声明并
-  按 error-preservation R1 保留 status/detail/request-id）。Broker 不做、不复制、
-  不缓存任何角色判断，不提供任何以放宽该语义为效果的参数或路径。
-- `DEC-008` 通用工具语义（P0 Ruling）：本能力是**通用 Coordinator 工具**——
+- `DEC-004` 授权语义：完全服务端权威——global 只读角色闸（目标契约：
+  `GLOBAL_WORKFLOW_READER` OR `GLOBAL_WORKFLOW_COORDINATOR`；部署过渡期：仅
+  COORDINATOR）由 svc-workflow 服务端谓词强制；非合法调用者 → **fail-closed**
+  403（目标码 `global_read_role_required`，过渡码 `global_coordinator_required`；
+  双码均声明并按 error-preservation R1 保留 status/detail/request-id）。Broker
+  不做、不复制、不缓存任何角色判断，不提供任何以放宽该语义为效果的参数或路径。
+- `DEC-008` 通用工具语义（最终 Ruling）：本能力是**通用只读工具**——
   调用者身份 = 当前会话经 trusted credential seam 解析出的凭据（OBS-007），
-  服务端 Coordinator verification 是唯一授权权威；manifest / 实现中**不得**
-  出现任何 HR 主会话、特定 Agent、特定 principal 的硬绑定、特判或 wiring
-  （无 per-agent 路由、无 identity 参数、无 HR 专属分支）。未来的
-  `agt_workflow-dispatcher-hr-agent` 凭据（external authority 计划）只是又一个
-  普通 Coordinator 调用方，不获任何特殊路径。
+  服务端角色 verification 是唯一授权权威；manifest / 实现中**不得**
+  出现任何 HR 主会话、Dispatcher、特定 Agent、特定 principal 的硬绑定、特判
+  或 wiring（无 per-agent 路由、无 identity 参数、无专属分支）。HR 主会话
+  （获 READER 后）与 `agt_workflow-dispatcher-hr-agent` 都只是本工具的普通
+  合法调用方，不获任何特殊路径。
 - `DEC-005` 只读红线：GET-only manifest，零写 operation；服务端该路径为纯
   SELECT 投影（OBS-004），全链路零数据库写入。
 - `DEC-006` 凭据红线：Broker-first——沿用既有 identity seam（trusted store →
@@ -238,12 +254,15 @@ Out of scope / 明确不授权：
   `packages/broker/test/capabilities.test.js`（计数 +1、新增 fixture）。manifest
   错误表声明：`invalid_arguments`、`unsupported_operation`、`unauthenticated`、
   `forbidden`、`principal_not_found`、`principal_disabled`、
-  `global_coordinator_required`、
+  `global_coordinator_required`、`global_read_role_required`、
   `invalid_pagination`、`invalid_cursor`、
   `invalid_lifecycle`、`invalid_status`、`internal_consistency_error`、
   `service_unavailable`（`invalid_lifecycle`/`invalid_status` 为本能力新增声明，
-  因本能力首次透出对应参数；canonical `http_4xx`/`http_5xx` 由
-  `withTransportErrors` 机制保证）。超出闭包的改动不在本 Spec 授权内。
+  因本能力首次透出对应参数；`global_read_role_required` 为 external authority
+  修订部署后的目标契约码，`global_coordinator_required` 为修订前部署的过渡
+  现实码——双码并申以覆盖 §3 时序声明的两种部署态；canonical `http_4xx`/
+  `http_5xx` 由 `withTransportErrors` 机制保证）。超出闭包的改动不在本 Spec
+  授权内。
 - `CTR-002`（参数校验）— `limit` 声明 `{type:'integer', minimum:1, maximum:20,
   validationError:'invalid_pagination'}`；在 error-preservation 实现已落的
   基线上，越界在任何 token/HTTP 请求之前本地 fail-fast；未落基线上该字段无害、
@@ -255,7 +274,8 @@ Out of scope / 明确不授权：
   trusted seam（OBS-007）。
 - `CTR-004`（错误保留）— 继承 accepted
   `AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1` R1–R5 全部纪律；
-  非 Coordinator 403 `global_coordinator_required` 端到端保留 code + status +
+  非合法调用者 403 端到端保留 code（按部署态为
+  `global_read_role_required` 或 `global_coordinator_required`）+ status +
   sanitized detail + `x-request-id`（不伪造、不降级为 `invalid_arguments`/
   `forbidden` 之外的码；scope 403 仍为 `forbidden`）。
 - `CTR-008`（通用性 + Scheduler 负面合同，对应 DEC-008）— manifest 与实现中
@@ -277,8 +297,9 @@ Out of scope / 明确不授权：
   收到 `GET /internal/v1/workflow-instances/global` 且 query 名全为 camelCase
   声明集（`limit`/`lifecycle`/`status`/`definitionKey`/`currentNodeKey`/
   `assigneePrincipalId`/`beforeCreatedAt`/`beforeId`）。
-- `ACC-002` → CTR-004：非 Coordinator（无 GLOBAL_WORKFLOW_COORDINATOR 绑定）
-  403 `global_coordinator_required` 端到端透出（code + status=403 +
+- `ACC-002` → CTR-004：非合法调用者（无 READER 亦无 COORDINATOR）403 端到端
+  透出（code = fixture 所模拟部署态的声明码
+  `global_read_role_required` / `global_coordinator_required` + status=403 +
   request-id 保留，来自下游 `x-request-id`；fail-closed）。
 - `ACC-003` → CTR-002：`limit=0` / `limit=21` 在 error-preservation 基线上
   本地 fail-fast `invalid_pagination`（token/业务 HTTP 计数 = 0）；在未落基线
@@ -299,7 +320,7 @@ Out of scope / 明确不授权：
   mutation 面（Scheduler 零交集）。
 
 （生产侧 AC-1..AC-8 型真机验收归 external authority
-`SVC_WORKFLOW_HR_DISPATCHER_IDENTITY_V1` §7；本地验收以上述
+`SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1` §7；本地验收以上述
 fixture 为准，不要求 test-app/生产环境。）
 
 ## 11. Alternatives and disposition
@@ -313,15 +334,17 @@ fixture 为准，不要求 test-app/生产环境。）
   （DEC-004；同族 DOMAIN_OWNER 先例同判）。
 - `ALT-004` 直接读取 `~/.openclaw/credentials` 或直连 token 端点 — **否决**：
   违反 Broker-first 凭据链与 505-private 分区纪律（DEC-006）。
-- `ALT-005` 引入 GLOBAL_WORKFLOW_READER 角色 + 服务端 gate/错误码变更
-  （本 Spec revision 2 方案）— **否决 per OWNER_RULING =
-  P0_USE_DEDICATED_WORKFLOW_DISPATCHER_IDENTITY**：只读性改由独立 dispatcher
-  身份的 credential scope 分离结构性实现，服务端 0 改动、无错误码 churn；
-  双码声明（global_read_role_required/global_coordinator_required）随 READER
-  方案一并撤回。
-- `ALT-006` 将本工具硬绑定 HR 主会话 / HR 专属凭据路由 — **否决**：违反
-  DEC-008 通用工具语义（服务端 Coordinator verification 为唯一权威；HR 主身份
-  按 P0 Ruling 亦不持有该角色，绑定无意义且越权）。
+- `ALT-005` 身份模型演化弧（如实记录）：r2 引入 GLOBAL_WORKFLOW_READER 单授
+  予方案 → r3 按 P0_USE_DEDICATED_WORKFLOW_DISPATCHER_IDENTITY 撤回（改
+  coordinator-to-dispatcher，服务端 0 改动）→ **最终 OWNER_RULING =
+  DUAL_GLOBAL_READER_MODEL 恢复并定稿 READER 方案**（双授予：HR 主身份 +
+  Dispatcher；双方不获 COORDINATOR；服务端受控代码修改，无 migration）。
+  本 Spec 以最终裁决为准；双码声明（global_read_role_required /
+  global_coordinator_required）恢复。coordinator 授予任何 HR 谱系或 dispatcher
+  的方案族全部 REJECTED。
+- `ALT-006` 将本工具硬编码 HR / Dispatcher / 专属凭据路由 — **否决**：违反
+  DEC-008 通用只读工具语义（服务端角色 verification 为唯一权威；HR 主身份与
+  dispatcher 都是普通合法调用方，无专属路径）。
 
 ## 12. Migration, compatibility, and rollback
 
@@ -331,6 +354,6 @@ production apply 权限；生产可见性需独立部署授权（本 Spec 不授
 
 ## 13. Open questions
 
-Not applicable — 全部 normative 内容已冻结；唯一外部时序（error-preservation
-实现与 domain-instances 姊妹 Spec 谁先落 main）已由 §3 dual-path 与 ACC-006 的
-基线实测规则消解。
+Not applicable — 全部 normative 内容已冻结；外部时序（svc-workflow READER
+修订先/后部署、domain-instances 姊妹 Spec 先/后合并）已由 §3 双码时序声明与
+ACC-006 的基线实测规则消解。
