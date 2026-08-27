@@ -103,6 +103,23 @@ PR #60 必须关闭且永不 merge。
 定性 `CONSOLIDATED_UNMERGED_CANDIDATE`：推荐关闭且永不 merge；该 activation
 authoring 轮对其执行零 lifecycle mutation。本 Spec 的执行授权受五条件 gate 链
 （GATE-1 本 Spec accepted+in main；GATE-2 PR #77 两份 Amendment 1 accepted+in
-main——accepted 半已于 2026-08-27 在 PR #77 分支 417247d 完成，in-main 半待
-merge；GATE-3 Phase A 独立实现审计 PASS；GATE-4 凭据 readiness PASS；GATE-5
-强制 canary A–D 全 PASS）与严格阶段顺序 A→B→C 约束。
+main——已由 merge commit `b620907fc6f58292b6ee096c977f0071921d747e` 满足；
+GATE-3 Phase A 独立实现审计 PASS；GATE-4 凭据 readiness PASS；GATE-5 强制
+canary A–D 全 PASS）与严格阶段顺序 A→B→C 约束。
+
+Amendment 1（2026-08-26，Builtin Route Kind；accepted — acceptance finalize
+2026-08-27，链路 内建路由采纳执行，accepted_by = mayf3 · reviewed_head =
+8b76909c33dfc39693c6f8e760eb1a29c80d0727 · 链路 内建路由审计 = PASS ·
+blocker 0 · NORMATIVE_BODY_CHANGE = NONE；PR #77 已由 merge commit
+`b620907fc6f58292b6ee096c977f0071921d747e` 进入 main）对两份 route-chain
+authority 各追加一个 in-place Amendment 节：引入
+`routeKind = builtin | subscription`（builtin route 的 plugin/pluginVersion =
+ABSENT/FORBIDDEN；subscription route 必填 + exact pin），把
+`CANONICAL_ROUTE_IDENTITY` 扩为七字段（routeKind + plugin-or-ABSENT/
+pluginVersion-or-ABSENT），以新证据（zai/glm-5.3 受控探针 PASS、ZAI 为
+Harness 内建 provider、无真实 dsh-zai 插件、dsh-codex fake carrier 禁止）
+关闭父 Spec Q-2 并冻结初始链 tuple（glm53 builtin + luna subscription）。
+两份 Spec 基础正文逐字保留；Amendment 已随 PR #77 进入 main。
+MAX_CONFIGURED_ROUTES = 4、primary + fallbacks[]、STOP_CHAIN、
+ONE_LOGICAL_TURN、Scheduler INHERIT_AGENT_CHAIN_ONLY、
+ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN 等全部 ruling 不重开。
