@@ -99,6 +99,11 @@ export function validateArgumentsDetailed(argumentSchema, args) {
       } else if (spec.type === 'string') {
         if (typeof val !== 'string') violations.push(`property "${label}" must be a string`)
         else if (typeof spec.minLength === 'number' && val.length < spec.minLength) violations.push(`property "${label}" must have length >= ${spec.minLength}`)
+        // `nonBlank: true` (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1
+        // CTR-FMC-006): reject empty / whitespace-only strings LOCALLY, before
+        // any token mint or business HTTP call — e.g. a resolve without an
+        // outcome summary never leaves the broker.
+        else if (spec.nonBlank === true && val.trim() === '') violations.push(`property "${label}" must be a non-blank string`)
       } else if (spec.type === 'boolean') {
         if (typeof val !== 'boolean') violations.push(`property "${label}" must be a boolean`)
       } else if (spec.type === 'object') {

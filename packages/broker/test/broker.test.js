@@ -272,3 +272,219 @@ test('buildToolDefinition exposes capabilityId constant', () => {
   assert.equal(capabilityId, 'external.calculator')
   assert.equal(definition.name, 'external_calculator')
 })
+
+// ═══ AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1 (accepted) ═════════════════
+//
+// Moderator pack registration boundary (CTR-FMC-004) + the three bounded
+// generic deltas (CTR-FMC-013): PATCH allowlist, nonBlank leaf validation,
+// and the sanitizer's additive hardening are unit-proved here (their
+// end-to-end business behavior is proved in capabilities.test.js).
+
+// The broker plugin entry (src/index.js) imports `@deepseek-ai/dsh-tools`
+// (defineTool), which exists only in the DSH runtime composition — that is why
+// no historical test imports index.js. The registration boundary
+// (CTR-FMC-004) lives there, so these tests bootstrap a MINIMAL passthrough
+// stub into the gitignored root node_modules (never overwriting a real
+// package when one is present) and import the entry dynamically. The stub
+// changes no product file and no closure file.
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
+const stubDir = join(repoRoot, 'node_modules', '@deepseek-ai', 'dsh-tools')
+if (!existsSync(join(stubDir, 'package.json'))) {
+  mkdirSync(stubDir, { recursive: true })
+  writeFileSync(join(stubDir, 'package.json'), `${JSON.stringify({
+    name: '@deepseek-ai/dsh-tools',
+    version: '0.0.0-unit-test-passthrough',
+    type: 'module',
+    main: 'index.js',
+    exports: './index.js',
+  }, null, 2)}\n`)
+  writeFileSync(join(stubDir, 'index.js'), 'export const defineTool = (options) => options\n')
+}
+const {
+  DEFAULT_MANIFESTS,
+  resolveForumModeratorRegistration,
+  apply: brokerApply,
+} = await import('../src/index.js')
+import { validateArgumentsDetailed } from '../src/mapping.js'
+import { manifests as forumFirstBatch } from '../src/capabilities/forum.js'
+
+const MODERATOR_TOOL_NAMES = [
+  'forum_pin_or_feature_thread', 'forum_delete_thread', 'forum_delete_message',
+  'forum_resolve_thread', 'forum_archive_thread', 'forum_moderation_queue',
+  'forum_handle_report', 'forum_admin_unread',
+]
+
+const withEnv = (env, fn) => {
+  const saved = { ...process.env }
+  Object.assign(process.env, env)
+  try {
+    return fn()
+  } finally {
+    process.env = { ...saved }
+  }
+}
+
+// ─── CTR-FMC-004: closed-list registration resolution (pure matrix) ────────
+
+test('CTR-FMC-004: exact moderator id + valid closed list registers 8 tools', () => {
+  const { manifests, reason } = withEnv(
+    { DSH_AGENT_ID: 'agt_course-community-agent-2' },
+    () => resolveForumModeratorRegistration({ forumModeratorAgentIds: ['agt_course-community-agent-2'] }),
+  )
+  assert.equal(manifests.length, 8)
+  assert.deepEqual(manifests.map((m) => m.toolName).sort(), [...MODERATOR_TOOL_NAMES].sort())
+  assert.match(reason, /registered for "agt_course-community-agent-2"/)
+})
+
+test('CTR-FMC-004: non-member agent registers ZERO moderator tools', () => {
+  for (const agentId of ['agt_someone-else', 'course-community-agent-2', 'agt_course-community-agent', '']) {
+    const { manifests } = withEnv(
+      { DSH_AGENT_ID: agentId },
+      () => resolveForumModeratorRegistration({ forumModeratorAgentIds: ['agt_course-community-agent-2'] }),
+    )
+    assert.equal(manifests.length, 0, `agentId=${JSON.stringify(agentId)} must get zero moderator tools`)
+  }
+})
+
+test('CTR-FMC-004: missing/absent DSH_AGENT_ID registers ZERO moderator tools', () => {
+  withEnv({ DSH_AGENT_ID: '' }, () => {
+    const { manifests, reason } = resolveForumModeratorRegistration({ forumModeratorAgentIds: ['agt_course-community-agent-2'] })
+    assert.equal(manifests.length, 0)
+    assert.match(reason, /DSH_AGENT_ID is absent/)
+  })
+  const envWithout = { ...process.env }
+  delete envWithout.DSH_AGENT_ID
+  const { manifests } = resolveForumModeratorRegistration({ forumModeratorAgentIds: ['agt_x'] }, envWithout)
+  assert.equal(manifests.length, 0)
+})
+
+test('CTR-FMC-004: malformed config fails closed with ZERO moderator tools', () => {
+  const validEnv = { DSH_AGENT_ID: 'agt_course-community-agent-2' }
+  for (const config of [
+    {}, // missing
+    { forumModeratorAgentIds: [] }, // empty
+    { forumModeratorAgentIds: ['agt_a', 'agt_a'] }, // duplicate
+    { forumModeratorAgentIds: ['course-community-agent-2'] }, // non-agt_*
+    { forumModeratorAgentIds: ['agt_ok', 'not-agt'] }, // one invalid entry
+    { forumModeratorAgentIds: 'agt_course-community-agent-2' }, // wrong type
+    { forumModeratorAgentIds: [42] }, // non-string entry
+    { forumModeratorAgentIds: ['*'] }, // wildcard
+  ]) {
+    const { manifests, reason } = withEnv(validEnv, () => resolveForumModeratorRegistration(config))
+    assert.equal(manifests.length, 0, `config=${JSON.stringify(config)} must register zero moderator tools`)
+    assert.ok(typeof reason === 'string' && reason.length > 0)
+  }
+})
+
+test('CTR-FMC-002: DEFAULT_MANIFESTS gains the five normal tools and NO moderator tools', () => {
+  const ids = DEFAULT_MANIFESTS.map((m) => m.id)
+  for (const id of ['forum_create_thread', 'forum_watch_thread', 'forum_unwatch_thread', 'forum_report_content', 'forum_stats']) {
+    assert.ok(ids.includes(id), `${id} must be in DEFAULT_MANIFESTS`)
+  }
+  for (const id of ['forum_pin_or_feature_thread', 'forum_delete_thread', 'forum_delete_message', 'forum_resolve_thread', 'forum_archive_thread', 'forum_moderation_queue', 'forum_handle_report', 'forum_admin_unread']) {
+    assert.ok(!ids.includes(id), `${id} must NOT be default-registered (closed-list gate only)`)
+  }
+  // The seven first-batch Forum tools are all still default-registered.
+  for (const m of forumFirstBatch) assert.ok(ids.includes(m.id))
+})
+
+// ─── apply()-level child registration: normal fast path vs moderator gate ───
+
+function fakeCtx() {
+  const registered = []
+  return {
+    registered,
+    tools: { register: (definition) => registered.push(definition) },
+    get: () => undefined,
+    provide: () => {},
+  }
+}
+
+test('apply() child mode: normal agent registers the 5 normal tools, ZERO moderator tools (config present)', () => {
+  const ctx = fakeCtx()
+  withEnv({ DSH_AGENT_ID: 'agt_plain-agent' }, () => {
+    brokerApply(ctx, { mode: 'child', forumModeratorAgentIds: ['agt_course-community-agent-2'] })
+  })
+  const names = new Set(ctx.registered.map((d) => d.name))
+  for (const t of ['forum_create_thread', 'forum_watch_thread', 'forum_unwatch_thread', 'forum_report_content', 'forum_stats']) {
+    assert.ok(names.has(t), `normal agent missing normal tool ${t}`)
+  }
+  for (const t of MODERATOR_TOOL_NAMES) assert.ok(!names.has(t), `normal agent must NOT see ${t}`)
+})
+
+test('apply() child mode: normal pack works with NO moderator config at all (fast path)', () => {
+  const ctx = fakeCtx()
+  withEnv({ DSH_AGENT_ID: 'agt_plain-agent' }, () => brokerApply(ctx, { mode: 'child' }))
+  const names = new Set(ctx.registered.map((d) => d.name))
+  assert.ok(names.has('forum_stats'))
+  assert.ok(names.has('forum_reply')) // first-batch still present
+  for (const t of MODERATOR_TOOL_NAMES) assert.ok(!names.has(t))
+})
+
+test('apply() child mode: exact moderator registers all 8 moderator tools', () => {
+  const ctx = fakeCtx()
+  withEnv({ DSH_AGENT_ID: 'agt_course-community-agent-2' }, () => {
+    brokerApply(ctx, { mode: 'child', forumModeratorAgentIds: ['agt_course-community-agent-2'] })
+  })
+  const names = new Set(ctx.registered.map((d) => d.name))
+  for (const t of MODERATOR_TOOL_NAMES) assert.ok(names.has(t), `moderator missing ${t}`)
+  // and the normal pack is fully present too
+  for (const t of ['forum_create_thread', 'forum_stats', 'forum_reply']) assert.ok(names.has(t))
+})
+
+test('apply() child mode: malformed moderator config fails closed without breaking normal tools', () => {
+  const ctx = fakeCtx()
+  withEnv({ DSH_AGENT_ID: 'agt_course-community-agent-2' }, () => {
+    brokerApply(ctx, { mode: 'child', forumModeratorAgentIds: ['dup', 'dup'] })
+  })
+  const names = new Set(ctx.registered.map((d) => d.name))
+  for (const t of MODERATOR_TOOL_NAMES) assert.ok(!names.has(t))
+  assert.ok(names.has('forum_create_thread'), 'normal pack must survive invalid moderator config')
+})
+
+test('apply() gateway mode: moderator manifests retained for trusted relay execution', async () => {
+  const provided = []
+  const ctx = {
+    tools: { register: () => {} },
+    get: () => undefined,
+    provide: (key, value) => provided.push({ key, value }),
+  }
+  withEnv({ DSH_AGENT_ID: 'agt_plain-agent' }, () => {
+    brokerApply(ctx, { mode: 'gateway', credentialsFile: '/nonexistent-test-store.json' })
+  })
+  assert.equal(provided.length, 1)
+  assert.equal(provided[0].key, 'brokerGateway')
+  const gateway = provided[0].value
+  // A moderator capability is resolvable in the gateway (reaches the
+  // credential layer and fails closed credential_unavailable — versus an
+  // unknown capability which is rejected as unsupported before that).
+  const known = await gateway.execute({ capabilityId: 'forum_admin_unread', operation: 'unread', args: {} })
+  assert.equal(known.ok, false)
+  assert.equal(known.error.code, 'credential_unavailable')
+  const unknown = await gateway.execute({ capabilityId: 'forum_does_not_exist', operation: 'x', args: {} })
+  assert.equal(unknown.ok, false)
+  assert.notEqual(unknown.error.code, 'credential_unavailable')
+})
+
+// ─── CTR-FMC-006 (mapping): nonBlank local enforcement ──────────────────────
+
+test('nonBlank: empty and whitespace-only strings are rejected locally', () => {
+  const schema = {
+    properties: { summaryMd: { type: 'string', nonBlank: true } },
+    required: ['summaryMd'],
+  }
+  const ok = validateArgumentsDetailed(schema, { summaryMd: '## Outcome' })
+  assert.deepEqual(ok.violations, [])
+  for (const bad of ['', '   ', '\t\n ']) {
+    const out = validateArgumentsDetailed(schema, { summaryMd: bad })
+    assert.ok(out.violations.some((v) => v.includes('non-blank')), `value ${JSON.stringify(bad)} must be rejected as blank`)
+  }
+  const missing = validateArgumentsDetailed(schema, {})
+  assert.ok(missing.violations.some((v) => v.includes('missing required property "summaryMd"')))
+  const wrongType = validateArgumentsDetailed(schema, { summaryMd: 42 })
+  assert.ok(wrongType.violations.some((v) => v.includes('must be a string')))
+})
