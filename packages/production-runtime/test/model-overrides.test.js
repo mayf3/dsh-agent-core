@@ -1,23 +1,15 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { writeAgentDefinition } from '../../agent-definition/src/config.js'
-import { RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/process.js'
-import {
-  assertTargetProxyRuntime,
-  composeProductionRuntime,
-  TARGET_PROXY_NODE_VERSION,
-} from '../src/compose.js'
 import {
   CHATGPT_SUBSCRIPTION_V1,
   loadAgentModelOverrides,
   MAX_CONFIGURED_ROUTES,
   PROVIDER_ENV_ALLOWLIST,
 } from '../src/model-overrides.js'
-import { resolveProductionLayout } from '../src/paths.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
 const OTHER = 'agt_other'
@@ -31,24 +23,26 @@ const VALID_PROVIDER_ENV = Object.freeze({
 
 /**
  * agent-model-overrides.json version 2 (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
- * §2): routeCatalog + overrides.<agentId>.model.{primary, fallbacks[]}.
- * Route CONTENT lives entirely in the config — the code constant below only
- * carries pins/scope (F-10 / ACC-014).
+ * §2 + Amendment 1 A1.2/A1.4): routeCatalog + overrides.<agentId>.model.
+ * {primary, fallbacks[]}. The fixture IS the frozen initial chain tuple:
+ * glm53 = builtin (plugin/pluginVersion ABSENT), luna = subscription
+ * (dsh-codex@0.2.3 exact). Route CONTENT lives entirely in the config — the
+ * code constant below only carries pins/scope (F-10 / ACC-014).
  */
 const CATALOG = Object.freeze({
   glm53: {
+    routeKind: 'builtin',
     provider: 'zai',
     model: 'glm-5.3',
-    plugin: 'dsh-zai',
-    pluginVersion: '1.4.2',
-    credentialReadiness: 'zai-oauth',
+    credentialReadiness: 'zai-api-key-home',
   },
   luna: {
+    routeKind: 'subscription',
     provider: 'openai-codex',
     model: 'gpt-5.6-luna',
     plugin: 'dsh-codex',
     pluginVersion: '0.2.3',
-    credentialReadiness: 'luna-oauth',
+    credentialReadiness: 'luna-oauth-home',
   },
 })
 const VALID = {
@@ -119,9 +113,10 @@ test('missing file = global passthrough; valid v2 chain resolves primary-first w
   assert.notEqual(chain.routes[0].identity, chain.routes[1].identity)
   assert.equal(Object.isFrozen(chain.routes), true)
   assert.equal(Object.isFrozen(chain.routes[0].processConfig), true)
-  // Compat single-route resolver = the chain's primary.
+  // Compat single-route resolver = the chain's primary (a builtin route
+  // carries no plugin fields).
   assert.deepEqual(loaded.resolve(TARGET, GLOBAL), {
-    provider: 'zai', model: 'glm-5.3', plugin: 'dsh-zai', pluginVersion: '1.4.2',
+    provider: 'zai', model: 'glm-5.3',
   })
   assert.deepEqual(loaded.resolve(OTHER, GLOBAL), GLOBAL)
   // Same config -> stable chain identity across loads (turn snapshot anchor).
@@ -154,13 +149,19 @@ test('reference integrity and dedup: unknown ref, repeated ref, canonical alias 
   invalid(file, { ...VALID, overrides: { [TARGET]: { model: { primary: 'missing', fallbacks: [] } } } })
   invalid(file, { ...VALID, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['glm53'] } } } })
   invalid(file, { ...VALID, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna', 'luna'] } } } })
-  // Two different routeRefs with the SAME canonical six-field identity.
+  // Two different routeRefs with the SAME canonical seven-field identity
+  // (ACC-017: builtin plugin/pluginVersion normalize to explicit ABSENT).
   const aliased = { ...CATALOG, glm53_alias: { ...CATALOG.glm53 } }
   invalid(file, { ...VALID, routeCatalog: aliased })
   // Same provider/model but a different credentialReadiness is a distinct
   // canonical route (the reference is part of the identity).
   const distinct = { ...CATALOG, luna_canary: { ...CATALOG.luna, credentialReadiness: 'luna-oauth-canary' } }
   write(file, { ...VALID, routeCatalog: distinct, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna', 'luna_canary'] } } } })
+  assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
+  // ACC-017: a builtin and a subscription route with the SAME provider/model
+  // never collapse — routeKind participates in the canonical identity.
+  const crossKind = { ...CATALOG, glm53_sub: { ...CATALOG.glm53, routeKind: 'subscription', plugin: 'dsh-codex', pluginVersion: '0.2.3' } }
+  write(file, { ...VALID, routeCatalog: crossKind, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['glm53_sub'] } } } })
   assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
 })
 
@@ -199,9 +200,80 @@ test('CTR-011 pin: a dsh-codex route with any other pluginVersion fails loud (no
   for (const pluginVersion of ['0.2.4', '^0.2.3', '0.2.2']) {
     invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, pluginVersion } } })
   }
-  // Non-dsh-codex plugins are not pinned by the code constant.
+  // Non-dsh-codex plugins are not pinned by the code constant, but every
+  // subscription pluginVersion must still be an exact pin (A1.2: no ^/~
+  // ranges — same grammar the provisioner enforces).
   write(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, plugin: 'other-plugin', pluginVersion: '9.9.9' } } })
   assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
+  for (const pluginVersion of ['^9.9.9', '~9.9.0', '9.9.x', '9.x', '9.9.9 || 9.9.10', '9.9.9 - 9.9.10']) {
+    invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, plugin: 'other-plugin', pluginVersion } } })
+  }
+})
+
+test('ACC-016 routeKind family: missing/invalid routeKind and plugin keys on a builtin fail loud', (t) => {
+  const { file } = fixture(t)
+  const { routeKind, ...bareGlm53 } = CATALOG.glm53
+  // Missing / non-string / non-enum routeKind values are malformed.
+  for (const routeKind of [undefined, 7, null, 'BUILTIN', 'hybrid', '']) {
+    const glm53 = routeKind === undefined ? bareGlm53 : { ...CATALOG.glm53, routeKind }
+    invalid(file, { ...VALID, routeCatalog: { ...CATALOG, glm53 } })
+  }
+  // A builtin route with a plugin or pluginVersion KEY present is malformed
+  // whatever the value — ABSENT is the only legal builtin form.
+  for (const extra of [
+    { plugin: 'dsh-zai' },
+    { plugin: null },
+    { plugin: '' },
+    { pluginVersion: '1.4.2' },
+    { pluginVersion: null },
+    { pluginVersion: '' },
+    { plugin: 'dsh-zai', pluginVersion: '1.4.2' },
+  ]) {
+    invalid(file, { ...VALID, routeCatalog: { ...CATALOG, glm53: { ...CATALOG.glm53, ...extra } } })
+  }
+  // A subscription route missing plugin or pluginVersion is malformed.
+  const bareLuna = (({ plugin, pluginVersion, ...rest }) => rest)(CATALOG.luna)
+  invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: bareLuna } })
+  const lunaNoVersion = (({ pluginVersion, ...rest }) => rest)(CATALOG.luna)
+  invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: lunaNoVersion } })
+})
+
+test('ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConfig has NO subscription block', (t) => {
+  const { file } = fixture(t)
+  // The A1.4 frozen tuple itself (glm53 builtin + luna subscription).
+  write(file, VALID)
+  const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
+  const [primary, fallback] = loaded.resolveChain(TARGET, GLOBAL).routes
+  // builtin: no subscription block, no plugin fields anywhere resolved.
+  assert.equal('subscription' in primary.processConfig, false)
+  assert.equal(primary.processConfig.subscription, undefined)
+  assert.equal(loaded.overrides[TARGET].routes.glm53.plugin, undefined)
+  assert.equal(Object.hasOwn(loaded.overrides[TARGET].routes.glm53, 'plugin'), false)
+  // subscription: the provisioning block is constructed with the frozen pins.
+  assert.deepEqual(fallback.processConfig.subscription, {
+    plugin: 'dsh-codex',
+    pluginVersion: '0.2.3',
+    dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
+    dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
+    credentialFile: '.openai-codex-auth.json',
+  })
+})
+
+test('ACC-019 reuse-gate identity: builtin and subscription processes never share an identity', (t) => {
+  const { file } = fixture(t)
+  // Same provider/model/env on both sides of the routeKind boundary.
+  const catalog = {
+    builtinRoute: { routeKind: 'builtin', provider: 'zai', model: 'glm-5.3', credentialReadiness: 'zai-api-key-home' },
+    subscriptionRoute: { routeKind: 'subscription', provider: 'zai', model: 'glm-5.3', plugin: 'dsh-codex', pluginVersion: '0.2.3', credentialReadiness: 'zai-api-key-home' },
+  }
+  write(file, { version: 2, routeCatalog: catalog, overrides: { [TARGET]: { model: { primary: 'builtinRoute', fallbacks: ['subscriptionRoute'] } } } })
+  const [builtin, subscription] = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
+  assert.notEqual(builtin.identity, subscription.identity)
+  // The identity difference is exactly the plugin fields the subscription
+  // process carries (canonicalRouteIdentity: plugin/pluginVersion null vs
+  // exact strings) — same provider/model on both tuples.
+  assert.equal(builtin.processConfig.provider, subscription.processConfig.provider)
+  assert.equal(builtin.processConfig.model, subscription.processConfig.model)
 })
 
 test('providerEnv accepts only the frozen four-key set and safe host-list grammar', (t) => {
@@ -286,158 +358,8 @@ test('providerEnv URL, key and value failures are fail-loud without secret echo'
   )
 })
 
-test('runtime gate rejects every recognized proxy key and any non-exact Node version without values', () => {
-  assert.doesNotThrow(() => assertTargetProxyRuntime({ env: {}, version: TARGET_PROXY_NODE_VERSION }))
-  for (const key of RECOGNIZED_PROXY_ENV_KEYS) {
-    assert.throws(
-      () => assertTargetProxyRuntime({ env: { [key]: 'secret-runtime-value' }, version: TARGET_PROXY_NODE_VERSION }),
-      (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID'
-        && error.message.includes(`${key}: runtime_proxy_env_present`)
-        && !error.message.includes('secret-runtime-value'),
-      key,
-    )
-  }
-  for (const version of ['v24.99.0', 'v25.6.0', 'v25.6.2', '25.6.1']) {
-    assert.throws(
-      () => assertTargetProxyRuntime({ env: {}, version }),
-      (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID'
-        && error.message.includes('NODE_RUNTIME_VERSION: runtime_version_mismatch')
-        && !error.message.includes(version),
-      version,
-    )
-  }
-})
-
-test('production composition applies the runtime proxy gate before any mount or layout read', async () => {
-  const previous = process.env.http_proxy
-  process.env.http_proxy = 'http://secret-runtime-proxy.invalid'
-  try {
-    await assert.rejects(
-      composeProductionRuntime({
-        layout: new Proxy({}, {
-          get() { throw new Error('layout must not be read before the runtime gate') },
-        }),
-      }),
-      (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID'
-        && error.message.includes('http_proxy: runtime_proxy_env_present')
-        && !error.message.includes('secret-runtime-proxy.invalid'),
-    )
-  } finally {
-    if (previous === undefined) delete process.env.http_proxy
-    else process.env.http_proxy = previous
-  }
-})
-
-class FakeProc {
-  constructor(options) {
-    Object.assign(this, options)
-    this.pid = FakeProc.nextPid++
-    this.exit = undefined
-    this.exitPromise = new Promise(() => {})
-    this.creations = []
-  }
-  spawn() { return this }
-  async ready() { return 1 }
-  async shutdown() {
-    this.exit = { code: 0, signal: null }
-    this.exitPromise = Promise.resolve(this.exit)
-    return this.exit
-  }
-  async turn() { return { reply: 'ok', ms: 1, promptMs: 1, messageId: 'm' } }
-  async deliver() { return { accepted: true, sessionId: 'main', messageId: 'm' } }
-}
-FakeProc.nextPid = 7100
-
-async function runtimeFixture(t, withOverride) {
-  const root = mkdtempSync(join(tmpdir(), 'model-runtime-'))
-  t.after(() => rmSync(root, { recursive: true, force: true }))
-  const layout = resolveProductionLayout(root)
-  mkdirSync(join(root, 'scheduler'), { recursive: true })
-  await writeAgentDefinition(layout.agentsConfig, {
-    defaultAgentId: TARGET,
-    agents: [{ id: TARGET, name: 'CTO' }, { id: OTHER, name: 'Other' }],
-  })
-  if (withOverride) write(layout.agentModelOverrides, VALID)
-  const spawned = []
-  const provisioned = []
-  const runtime = await composeProductionRuntime({
-    layout,
-    globalRoute: GLOBAL,
-    productApi: { enabled: false },
-    notificationIngress: { enabled: false },
-    processFactory: (options) => { const proc = new FakeProc(options); spawned.push(proc); return proc },
-    provisionHome: (home, workspace, options) => provisioned.push({ home, workspace, options }),
-    log: { log() {}, warn() {}, error() {} },
-  })
-  t.after(() => runtime.stop())
-  return { runtime, spawned, provisioned, layout }
-}
-
-test('composition resolves the v2 primary to target and the global route to another Agent', async (t) => {
-  const { runtime, spawned, provisioned } = await runtimeFixture(t, true)
-  await runtime.router.ensureRunning(TARGET)
-  await runtime.router.ensureRunning(OTHER)
-  assert.equal(spawned.length, 2)
-  assert.deepEqual(
-    { provider: spawned[0].provider, model: spawned[0].model, providerEnv: spawned[0].providerEnv, omitEnv: spawned[0].omitEnv },
-    { provider: 'zai', model: 'glm-5.3', providerEnv: undefined, omitEnv: ['OPENAI_API_KEY'] },
-  )
-  assert.equal(spawned[0].subscription, undefined, 'subscription provisioning is not a child-process concern')
-  assert.deepEqual({ provider: spawned[1].provider, model: spawned[1].model }, GLOBAL)
-  assert.deepEqual(provisioned[0].options.subscription, {
-    plugin: 'dsh-zai',
-    pluginVersion: '1.4.2',
-    dshVersion: '0.1.0-rc.8',
-    dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
-    credentialFile: '.openai-codex-auth.json',
-  })
-  assert.equal(provisioned[1].options.subscription, undefined)
-})
-
-test('target-only rollback rewrites the config file; non-target PID and route unchanged', async (t) => {
-  const { runtime, spawned, layout } = await runtimeFixture(t, true)
-  const targetBefore = await runtime.router.ensureRunning(TARGET)
-  const otherBefore = await runtime.router.ensureRunning(OTHER)
-  assert.deepEqual({ provider: targetBefore.provider, model: targetBefore.model }, { provider: 'zai', model: 'glm-5.3' })
-  assert.deepEqual({ provider: otherBefore.provider, model: otherBefore.model }, GLOBAL)
-
-  // Proxy-only rollback: remove providerEnv from the primary's catalog entry.
-  write(layout.agentModelOverrides, {
-    version: 2,
-    routeCatalog: { ...CATALOG, glm53: { ...CATALOG.glm53, providerEnv: VALID_PROVIDER_ENV } },
-    overrides: VALID.overrides,
-  })
-  await targetBefore.shutdown()
-  const targetWithProxy = await runtime.router.ensureRunning(TARGET)
-  assert.notEqual(targetWithProxy.pid, targetBefore.pid)
-  assert.deepEqual(targetWithProxy.providerEnv, VALID_PROVIDER_ENV)
-
-  // Full rollback: remove the whole override — target falls back to global.
-  unlinkSync(layout.agentModelOverrides)
-  await targetWithProxy.shutdown()
-  const targetAfter = await runtime.router.ensureRunning(TARGET)
-  assert.notEqual(targetAfter.pid, targetWithProxy.pid)
-  assert.deepEqual({ provider: targetAfter.provider, model: targetAfter.model }, GLOBAL)
-  assert.equal((await runtime.router.ensureRunning(OTHER)).pid, otherBefore.pid)
-  assert.deepEqual({ provider: otherBefore.provider, model: otherBefore.model }, GLOBAL)
-  assert.equal(spawned.length, 4, 'only the target process was replaced for both rollback layers')
-})
-
-test('malformed config fails target respawn loud without disturbing a running non-target', async (t) => {
-  const { runtime, spawned, layout } = await runtimeFixture(t, true)
-  const target = await runtime.router.ensureRunning(TARGET)
-  const other = await runtime.router.ensureRunning(OTHER)
-  const otherPid = other.pid
-
-  write(layout.agentModelOverrides, '{malformed')
-  await target.shutdown()
-  await assert.rejects(
-    runtime.router.ensureRunning(TARGET),
-    (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID',
-  )
-
-  assert.equal(spawned.length, 2, 'invalid config is rejected before target spawn')
-  assert.equal((await runtime.router.ensureRunning(OTHER)).pid, otherPid)
-  assert.equal(other.exit, undefined)
-  assert.deepEqual({ provider: other.provider, model: other.model }, GLOBAL)
-})
+// The composition-level runtime tests (target-proxy runtime gate, the
+// runtimeFixture family: primary/global resolution, target-only rollback,
+// malformed-config respawn isolation) live in model-overrides-runtime.test.js
+// since the 500-line structure cap split — same suite glob, zero semantic
+// change.
