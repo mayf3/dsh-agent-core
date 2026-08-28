@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 scope:
   - mayf3/dsh-agent-core
   - packages/broker Forum capability surface
@@ -23,6 +23,13 @@ owners:
 > authority while it remains proposed. This authoring PR adds exactly this Spec,
 > changes no product or test file, performs no runtime reload or deployment, and
 > grants no Forum scope. `PRODUCTION_APPLY_AUTHORITY = none`.
+>
+> **ACCEPTED 2026-08-28** (lifecycle-only acceptance; see §16):
+> `status: proposed -> accepted`, `implementation_authority: none -> contracts`
+> against independently reviewed head `67509abcad137ba8d36dade79656a0fccfc6b2c5`
+> (版管 审计 = PASS, BLOCKERS = NONE). `PRODUCTION_APPLY_AUTHORITY` stays
+> `none`; production apply/deploy/reload remains separately authorized. §1–§15
+> are byte-preserved by the acceptance transaction.
 
 ## 1. Goal
 
@@ -810,4 +817,37 @@ AUTHORING_READY_FOR_REVIEW = YES
 PRODUCT_CODE_CHANGE = NONE
 GRANT_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
+```
+
+---
+
+## 16. Acceptance Record (2026-08-28, 版管 执行 Part A)
+
+```text
+ACCEPTANCE_KIND = LIFECYCLE_ONLY
+ACCEPTED_SPEC = AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1
+REVIEWED_HEAD = 67509abcad137ba8d36dade79656a0fccfc6b2c5
+PR = mayf3/dsh-agent-core#93 (exactly one file: this Spec)
+
+INDEPENDENT_AUDIT = 版管 审计
+AUDIT_VERDICT = PASS
+NORMAL_TOOL_FAST_PATH = PASS
+MODERATOR_TOOL_BOUNDARY = PASS
+IMPLEMENTATION_CLOSURE = COMPLETE
+BLOCKERS = NONE
+READY_FOR_ACCEPTANCE_FINALIZE = YES
+PRODUCTION_CHANGE = NONE
+
+LIFECYCLE_TRANSITIONS = exactly two:
+  status: proposed -> accepted
+  implementation_authority: none -> contracts
+PRODUCTION_APPLY_AUTHORITY = none (unchanged)
+SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = NONE (tools, scopes, routes, contracts,
+  closures, §1-§15 body byte-preserved; only frontmatter lifecycle fields,
+  header status note, and this Record added)
+REQUIRED_FIXES = NONE
+
+IMPLEMENTATION_GATE = open: implementation may begin from fresh merged main
+  against the frozen nine-file closure (CTR-FMC-014) and three bounded generic
+  deltas (CTR-FMC-013) only.
 ```
