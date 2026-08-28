@@ -117,8 +117,12 @@ if [ -n "${BAK:-}" ]; then
   HARNESS_STAMP="$(git -C "$HARNESS_SRC" rev-parse HEAD 2>/dev/null)$(git -C "$HARNESS_SRC" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
   if [ -n "$HARNESS_STAMP" ] && [ -f "$BAK/harness/.source-stamp" ] \
      && [ "$(cat "$BAK/harness/.source-stamp" 2>/dev/null)" = "$HARNESS_STAMP" ]; then
+    rmdir "$TRUSTED_ROOT/harness"
     mv "$BAK/harness" "$TRUSTED_ROOT/harness"
-    mv "$BAK/.cache" "$TRUSTED_ROOT/.cache" 2>/dev/null || true
+    if [ -d "$BAK/.cache" ]; then
+      rmdir "$TRUSTED_ROOT/.cache"
+      mv "$BAK/.cache" "$TRUSTED_ROOT/.cache"
+    fi
     REUSE_HARNESS=1
     echo "  harness closure REUSED from $BAK (source commit unchanged — tar+pnpm skipped)"
   fi
@@ -283,7 +287,7 @@ ln -s ../../harness/node_modules/.pnpm/node_modules/@deepseek-ai app/node_module
 for dep in "$MAIN_REPO"/node_modules/*/; do
   name="$(basename "$dep")"
   case "$name" in
-    @deepseek-ai|@agent-core) continue ;;
+    @deepseek-ai|@agent-core|node_modules) continue ;;
   esac
   [ -e "$dep" ] || continue
   cp -RL "$dep" "app/node_modules/$name"

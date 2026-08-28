@@ -55,6 +55,7 @@ import { manifests as forumManifests } from './capabilities/forum.js'
 import { manifests as workflowManifests } from './capabilities/workflow.js'
 import { manifests as okrManifests } from './capabilities/okr.js'
 import { agentDefinitionManifests } from './capabilities/agent-definition.js'
+import { schedulerManifests } from './capabilities/scheduler.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'
@@ -78,6 +79,7 @@ export const DEFAULT_MANIFESTS = [
   ...workflowManifests,
   ...okrManifests,
   ...agentDefinitionManifests,
+  ...schedulerManifests,
 ]
 
 /** Default auth-service token endpoint origin (deployment-local). */
@@ -179,7 +181,13 @@ export function apply(ctx, config = {}) {
       targets,
       authServiceOrigin,
       credentialsFile: config.credentialsFile,
-      localHandlerResolver: () => ctx.get('agentDefinitionAccess')?.handlers ?? {},
+      // LOCAL capability handlers are injected by the control-plane
+      // composition and resolved at EXECUTE time (sibling services are
+      // concurrent-loaded; reading them at APPLY time would race).
+      localHandlerResolver: () => ({
+        ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),
+        ...(ctx.get('selfServiceSchedulerAccess')?.handlers ?? {}),
+      }),
       log: (msg) => process.stderr.write(`${msg}\n`),
     })
     ctx.provide('brokerGateway', gateway)

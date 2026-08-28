@@ -78,6 +78,18 @@ export function validateManifest(input) {
     }
   }
 
+  // ---- model selector (backward-compatible default: operation) ----
+  // Existing manifests omit this field and keep the historical `operation`
+  // selector. A manifest may opt into another lowercase selector (the unified
+  // Scheduler declares `action`).
+  if (input.selector === undefined) {
+    manifest.selector = 'operation'
+  } else if (typeof input.selector !== 'string' || !/^[a-z][a-zA-Z0-9_]*$/.test(input.selector)) {
+    errors.push(path('selector') + ' must be a lowercase identifier')
+  } else {
+    manifest.selector = input.selector
+  }
+
   // ---- human-facing text ----
   if (input.name !== undefined && typeof input.name !== 'string') {
     errors.push(path('name') + ' must be a string')
@@ -160,6 +172,17 @@ export function validateManifest(input) {
         errors.push(argErr)
         continue
       }
+      // A property's declared validationError code must exist in the
+      // capability error table (fail-closed: the mapping layer resolves
+      // violation codes against that table and would silently downgrade an
+      // undeclared one to invalid_arguments).
+      for (const [pname, p] of Object.entries(op.arguments?.properties || {})) {
+        if (p && typeof p.validationError === 'string') {
+          if (input.errors === undefined || !input.errors.some((e) => e && e.code === p.validationError)) {
+            errors.push(opPath + `.arguments.properties["${pname}"].validationError references undeclared code "${p.validationError}"`)
+          }
+        }
+      }
       // optional generic HTTP binding (the authorized-HTTP transport contract;
       // see transport.js). When present, this operation is executed by the
       // generic transport instead of a process-internal handler. A LOCAL
@@ -207,7 +230,12 @@ export function validateManifest(input) {
         arguments:
           op.arguments === undefined
             ? { type: 'object', properties: {}, required: [] }
-            : { type: 'object', properties: op.arguments.properties || {}, required: Array.isArray(op.arguments.required) ? op.arguments.required : [] },
+            : {
+                type: 'object',
+                properties: op.arguments.properties || {},
+                required: Array.isArray(op.arguments.required) ? op.arguments.required : [],
+                ...(op.arguments.additionalProperties === false ? { additionalProperties: false } : {}),
+              },
         result: op.result === undefined ? { type: 'json' } : op.result,
         errors: [...opErrors],
         http,
@@ -254,6 +282,9 @@ function validatePropertiesSchema(value, at) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     return `${at} must be { properties, required } or omitted`
   }
+  if (value.additionalProperties !== undefined && value.additionalProperties !== false) {
+    return `${at}.additionalProperties may only be false when declared`
+  }
   const props = value.properties
   if (props !== undefined) {
     if (props === null || typeof props !== 'object' || Array.isArray(props)) {
@@ -265,6 +296,23 @@ function validatePropertiesSchema(value, at) {
       }
       if (p.type !== undefined && !['string', 'number', 'integer', 'boolean', 'array', 'object', 'null', 'json'].includes(p.type)) {
         return `${at}.properties["${name}"].type "${p.type}" is not allowed`
+      }
+      // Broker-side bounds (fail-fast BEFORE any HTTP request): numeric leaves
+      // may declare minimum/maximum; a bounds violation reports the leaf's
+      // declared `validationError` code (which must exist in the capability's
+      // error table — checked below at manifest level).
+      for (const bound of ['minimum', 'maximum']) {
+        if (p[bound] !== undefined && typeof p[bound] !== 'number') {
+          return `${at}.properties["${name}"].${bound} must be a number`
+        }
+      }
+      if (p.validationError !== undefined) {
+        if (typeof p.validationError !== 'string' || !/^[a-z][a-zA-Z0-9_]*$/.test(p.validationError)) {
+          return `${at}.properties["${name}"].validationError "${p.validationError}" must be a lowercase identifier`
+        }
+        if ((p.minimum === undefined && p.maximum === undefined)) {
+          return `${at}.properties["${name}"].validationError requires minimum or maximum`
+        }
       }
     }
   }
