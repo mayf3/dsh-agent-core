@@ -65,10 +65,13 @@ test('PARENT_RPC_RESPONSE_WRITE_RESERVE: handler deadline aborts; ONE timeout re
     deadlineCtx.signal.addEventListener('abort', () => { aborted = true })
     return new Promise(() => {}) // deliberately ignores AbortSignal forever
   }
-  const relay = fx.proc.handleRpcRequest({ requestId: 'r-1', method: 'agent-core/switchAgent', params: {} })
+  const relay = fx.proc.handleRpcRequest({
+    requestId: 'r-1', method: 'agent-core/switchAgent', params: {}, turnExecutionId: 'turn:origin',
+  })
   await fx.sleep(1400)
   await relay
   assert.equal(aborted, true, 'uncooperative handler receives cooperative abort')
+  assert.equal(hookContext.turnExecutionId, 'turn:origin', 'wire carrier preserves the originating prompt token')
   assert.equal(fx.counts().rpcResponseWriteAttempts, 1, 'exactly one wire response attempt')
   const responses = fx.writes.filter(w => w.method === 'rpc.response')
   assert.equal(responses.length, 1)
