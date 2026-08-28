@@ -701,3 +701,113 @@ AUTHORING_READY_FOR_REVIEW = YES
 PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 ```
+
+---
+
+## 15. Revision record — 2026-08-28 re-verification (版管 执行 R2)
+
+This revision is a docs-only, purely additive round. §1–§14 above are
+byte-preserved; this section records the independent re-verification performed
+before the authoring PR was opened, and one base update.
+
+### 15.1 Base update
+
+The authoring branch was rebased from `b620907f` onto current `main@9cb17a1`
+(PR #79 merge). The branch's only content is this Spec file, so the rebase
+changed no semantics and introduced no conflict.
+
+### 15.2 Broker observations still current at `main@9cb17a1`
+
+- `packages/broker/src/capabilities/forum.js` blob `f068c171c2c8bd66b774c197bdbae09d1bcf809b`
+  and `packages/broker/src/index.js` blob `06f939588f573fa4becafe1a0743cf2a85d2db02`
+  re-resolved via `git rev-parse 9cb17a1:<path>` = both identical to the
+  `OBS-FMC-001` / `OBS-FMC-002` coordinates. `STATE-FMC-001` therefore remains
+  current at the new base: exactly seven Forum manifests, default registration
+  unchanged.
+
+### 15.3 Deployed consumer re-observed (2026-08-28)
+
+- `docker ps` / `docker port svc-forum`: container `svc-forum` still runs image
+  `svc-forum:502cfca` (image id
+  `sha256:93a9eda5b4adb1edbb186e511c801f482d2c702e6079c1faa6dc357e56ec6f97`,
+  created `2026-08-14T00:26:34.979779587Z`), bound `3460/tcp -> 127.0.0.1:3460`,
+  matching `targets.js` `svc-forum` origin and §3.1 exactly. The pinned revision
+  in §3.1 is unchanged; no new compatibility observation is required.
+
+### 15.4 Independent route re-extraction (2026-08-28)
+
+The complete `svc-forum@502cfca5...` route table was independently re-extracted
+from source (app.ts mounts + threads/messages/reports/stats/admin route files +
+scope-guard / forum-writer middleware) and re-compared against §9.1,
+`CTR-FMC-002`, and `CTR-FMC-003`. Verified verbatim matches include:
+
+- all thirteen frozen routes and their guards;
+- `forum.moderate` exactly for queue / handle-report (stacked with
+  `forum.write`), thread/message delete, and all of `/api/admin/*`;
+- resolve (`summaryMd` required) and archive guarded only by `forum.write`
+  server-side — confirming `CTR-FMC-009`'s Broker-side narrowing decision;
+- report reasons `spam|abuse|off_topic|violation|other`, queue statuses
+  `pending|ignored|warned|deleted`, handle action exactly `ignore|warn|delete`;
+- thread soft delete = `status='deleted'`; message soft delete = `deletedAt`
+  timestamp — no hard-delete seam anywhere;
+- admin unread is the only `/api/admin` route and requires `forum.moderate`;
+  **no route anywhere in the deployed service requires `forum.admin`** (zero
+  occurrences of that literal in source) — confirming `CTR-FMC-005`.
+
+### 15.5 Production read-only identity/grant cross-check (2026-08-28)
+
+Read-only `SELECT` queries against the production auth database (read-only
+role; no write, no secret material read or reproduced) confirmed:
+
+```text
+PRINCIPAL_UUID(agt_course-community-agent-2) = 9f7cf4c5-7b2c-4239-9993-d9b2a2e0df56
+CLIENT(mc_hvEfjkJ5BTKA8HZXRmbzNVw0).internal_id = 7f35380c-f155-4275-b29f-307a3335775a
+CLIENT.external_ref = agentcore:v1:client:agt_course-community-agent-2
+CLIENT.status = active, revoked_at = null
+CLIENTS_OF_TARGET_PRINCIPAL = exactly 1 (no client-side ambiguity)
+GRANTS(client) = svc-forum[forum.read,forum.write]@v1 ; svc-workflow[workflow.read]@v1
+AUDIENCE(svc-forum).registered_scopes = {forum.read,forum.write}, status=active, version=1
+GRANTS_CONTAINING_forum.moderate = 0 rows (today)
+```
+
+Consequences recorded for review:
+
+- `CTR-FMC-015`'s Auth prerequisite is **not currently satisfied** (expected):
+  `forum.moderate` is neither registered for `svc-forum` nor granted to any
+  client. V1 token minting additionally fails closed for any grant row carrying
+  an unregistered scope (`machine_grant_state_invalid`,
+  `src/lib/oauth/v1/direct.ts` scope-subset check), so the Broker-side
+  `forum.moderate` prerequisite correctly remains hard-unavailable until the
+  Auth-side spec is implemented and separately applied.
+- Near-collision principals exist and are explicitly non-target:
+  `course-community-agent-2` **without** the `agt_` prefix
+  (`132ab857-35ab-408b-b909-bc0b1deab55b`, principal of the legacy
+  `mc_oc_IV5jxnaVRJKwUmMMwQEiOqjd` client), `course-community-agent`, and
+  `agt_course-community-agent`. `CTR-FMC-004`'s closed list matches on the exact
+  `agt_course-community-agent-2` string only; no prefix-less or display-name
+  resolution is representable.
+
+### 15.6 Sister-spec linkage
+
+The Auth prerequisite (register `forum.moderate` for `svc-forum` at Bundle
+`1.5.0` after the reserved `1.4.0`, then supply the single exact moderator
+Grant) is specified in `mayf3/auth-service` proposed Spec
+`AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_V1` (authored on branch
+`docs/forum-moderator-grant-supply-v1`, same round). Neither spec authorizes
+the other's implementation; both stay `proposed` with
+`implementation_authority: none`.
+
+### 15.7 Revision result
+
+```text
+REVISION_ROUND = 2 (版管 执行 re-verification)
+REBASED_BASE = 9cb17a1 (from b620907f; spec content unchanged by rebase)
+SPEC_SECTIONS_1_14 = BYTE_PRESERVED
+FRESH_EVIDENCE_ADDED = OBS(15.2,15.3,15.4,15.5)
+AUTH_PREREQUISITE_CURRENTLY_SATISFIED = NO (expected; sister spec governs)
+STATUS = proposed (unchanged)
+AUTHORING_READY_FOR_REVIEW = YES
+PRODUCT_CODE_CHANGE = NONE
+GRANT_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+```
