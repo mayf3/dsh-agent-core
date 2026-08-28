@@ -51,7 +51,11 @@ import { BROKER_RPC_METHOD, createRelayHandlers } from './relay.js'
 import { createBrokerGateway } from './gateway.js'
 import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
-import { manifests as forumManifests } from './capabilities/forum.js'
+import {
+  manifests as forumManifests,
+  normalManifests as forumNormalManifests,
+  moderatorManifests as forumModeratorManifests,
+} from './capabilities/forum.js'
 import { manifests as workflowManifests } from './capabilities/workflow.js'
 import { manifests as okrManifests } from './capabilities/okr.js'
 import { agentDefinitionManifests } from './capabilities/agent-definition.js'
@@ -69,13 +73,18 @@ export const inject = ['tools']
  * Definition capabilities (read ×2, write ×4 — AGENT_DEFINITION_ACCESS_V1:
  * LOCAL capabilities whose tools every agent carries; read is open to every
  * credentialed agent, write is gated by the Auth grant for
- * `agent.definition.write`). All HTTP capabilities fail CLOSED at execution
- * time without a credential from the seam; registration itself never
- * requires one.
+ * `agent.definition.write`) + the Forum second-batch NORMAL pack (×5 —
+ * AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1 CTR-FMC-002: create/watch/
+ * unwatch/report/stats for every Agent child). The Forum MODERATOR pack (×8)
+ * is deliberately NOT here: it is appended per-mode in apply() under the
+ * closed-list gate (CTR-FMC-004). All HTTP capabilities fail CLOSED at
+ * execution time without a credential from the seam; registration itself
+ * never requires one.
  */
 export const DEFAULT_MANIFESTS = [
   calculatorManifest,
   ...forumManifests,
+  ...forumNormalManifests,
   ...workflowManifests,
   ...okrManifests,
   ...agentDefinitionManifests,
@@ -129,6 +138,18 @@ export const Config = z.object({
    * Never enabled in product configurations.
    */
   fixtureSelfAssert: z.boolean().default(false),
+  /**
+   * Closed moderator-Agent list (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1
+   * CTR-FMC-004). In CHILD mode the eight Forum moderator tools are
+   * registered ONLY when this config is a valid closed list (non-empty,
+   * duplicate-free, every entry an exact `agt_*` string) AND the process's
+   * actual DSH_AGENT_ID is a member. Missing / empty / malformed config, a
+   * non-member agent, or an absent DSH_AGENT_ID each yield ZERO moderator
+   * tools while every normal tool stays registered — the normal pack never
+   * depends on this config. Gateway mode always keeps the moderator manifests
+   * (trusted control plane); tool visibility there is not authorization.
+   */
+  forumModeratorAgentIds: z.array(z.string()),
 })
 
 /**
@@ -140,6 +161,54 @@ const handlersByCapability = {
   'external.calculator': calculatorHandlers,
 }
 
+/** Exact moderator-Agent id grammar (CTR-FMC-004: non-`agt_*` entries are invalid). */
+const MODERATOR_AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
+
+/**
+ * Resolve the child-mode Forum moderator registration
+ * (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1 CTR-FMC-004).
+ *
+ * The eight moderator manifests are returned ONLY when the closed
+ * `forumModeratorAgentIds` config is valid (non-empty, duplicate-free, every
+ * entry an exact `agt_*` string) AND the process's actual `DSH_AGENT_ID`
+ * environment is a member. Missing / empty / malformed config, a non-member
+ * or absent agent id each yield an EMPTY set with a machine-readable reason —
+ * fail-closed BEFORE moderator registration, with zero impact on the normal
+ * pack (normal tools never depend on this config). Model arguments can never
+ * influence this resolution: it reads trusted config + process env only.
+ *
+ * @param {object} config - resolved plugin config.
+ * @param {object} [env] - process environment (injectable for tests).
+ * @returns {{ manifests: object[], reason: string }}
+ */
+export function resolveForumModeratorRegistration(config = {}, env = process.env) {
+  const list = config.forumModeratorAgentIds
+  if (list === undefined || list === null) {
+    return { manifests: [], reason: 'forumModeratorAgentIds not configured' }
+  }
+  if (!Array.isArray(list) || list.length === 0) {
+    return { manifests: [], reason: 'forumModeratorAgentIds is missing or empty' }
+  }
+  const seen = new Set()
+  for (const entry of list) {
+    if (typeof entry !== 'string' || !MODERATOR_AGENT_ID_RE.test(entry)) {
+      return { manifests: [], reason: `invalid forumModeratorAgentIds entry ${JSON.stringify(entry)} (must be exact agt_* strings)` }
+    }
+    if (seen.has(entry)) {
+      return { manifests: [], reason: `duplicate forumModeratorAgentIds entry "${entry}"` }
+    }
+    seen.add(entry)
+  }
+  const agentId = env?.DSH_AGENT_ID
+  if (typeof agentId !== 'string' || agentId.length === 0) {
+    return { manifests: [], reason: 'DSH_AGENT_ID is absent' }
+  }
+  if (!seen.has(agentId)) {
+    return { manifests: [], reason: `agent "${agentId}" is not in the closed moderator list` }
+  }
+  return { manifests: forumModeratorManifests, reason: `moderator tools registered for "${agentId}"` }
+}
+
 /**
  * Register every configured capability manifest as a model-facing tool.
  * Identity is resolved only through the internal `resolvePrincipal` interface
@@ -148,10 +217,26 @@ const handlersByCapability = {
  * @param {object} [config] - resolved plugin config.
  */
 export function apply(ctx, config = {}) {
-  const manifests = config.manifests ?? DEFAULT_MANIFESTS
   const targets = config.targets ?? defaultTargets
   const authServiceOrigin = config.authServiceOrigin ?? DEFAULT_AUTH_SERVICE_ORIGIN
   const mode = config.mode ?? 'child'
+
+  // Moderator pack selection (CTR-FMC-004): the trusted gateway retains ALL
+  // manifests; a child registers moderator tools only for the exact closed
+  // list member matching its actual DSH_AGENT_ID. Both paths are fail-closed.
+  const moderatorSelection =
+    mode === 'gateway'
+      ? { manifests: forumModeratorManifests, reason: 'gateway mode retains all manifests (trusted control plane)' }
+      : resolveForumModeratorRegistration(config)
+  const baseManifests = config.manifests ?? DEFAULT_MANIFESTS
+  const presentIds = new Set(baseManifests.map((m) => m && m.id))
+  const manifests = [
+    ...baseManifests,
+    ...moderatorSelection.manifests.filter((m) => !presentIds.has(m.id)),
+  ]
+  if (mode === 'child') {
+    process.stderr.write(`[broker] forum moderator pack: ${moderatorSelection.manifests.length} tools (${moderatorSelection.reason})\n`)
+  }
 
   // Fail fast on broken wiring: every http-bound capability must reference a
   // known target (origin/audience stay pinned to trusted config).
