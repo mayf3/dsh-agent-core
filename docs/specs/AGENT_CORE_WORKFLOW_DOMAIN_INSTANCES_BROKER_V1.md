@@ -1,7 +1,8 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1
-status: proposed
+status: accepted
 date: 2026-08-27
+accepted_date: 2026-08-28
 type: implementation-spec (single read-only broker capability; WIP exists without authority, pending this Spec's acceptance)
 scope:
   - packages/broker 新增只读 capability manifest `workflow_domain_instances`（任务语义：domain_instances(domain_id)），代理 svc-workflow 已部署端点 GET /internal/v1/workflow-instances/domain
@@ -19,15 +20,23 @@ references:
   - docs/specs/AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1.md（accepted；2026-08-27 经 PR #68 accept（2328fa6），实现已经 PR #82 合入 main（e40c140）；本 Spec 复用其分页校验/错误保留机制族）
   - git 33533ce（Broker Transport V1：first-batch workflow 读能力与「cursor 不透出」纪律来源）
 implementation_authority: none
+accepted_reviewed_head: 8bba6e13fc2d2f2f4e9520ddc46eae4140b43f1c
+independent_audit_result: PASS
+independent_audit_blockers: NONE
+independent_audit_required_fixes_closed: 3/3
+acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
 ---
 
 # AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 — Domain 实例只读枚举能力
 
-> 状态：**proposed**。本 Spec 当前**不授予**任何实现或 production apply 权限。
-> `production_apply_authority = none`。
-> 一个完整实现已作为 WIP 保存在 worktree（broker 测试 PASS）；该实现**未获授权
-> 合并**，accept 本 Spec 是其唯一授权路径（对齐 ef2bcac WIP-preservation 先例与
-> AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1 的授权模型）。
+> 状态：**accepted**（2026-08-28 lifecycle-only acceptance finalize，PR #85）。
+> 独立审计：AUDIT_RESULT = PASS · BLOCKERS = NONE · REQUIRED_FIXES_CLOSED = 3/3 ·
+> READY_FOR_ACCEPTANCE_FINALIZE = YES（accepted_reviewed_head =
+> 8bba6e13fc2d2f2f4e9520ddc46eae4140b43f1c）。
+> 本 Spec 自 merged on main 起成为本 scope 的唯一实现授权；实现按 §2 文件闭包在
+> 独立 worktree 从 fresh main 进行，评审按 GOVERNING_SPEC_UNMODIFIED 纪律合并。
+> `production_apply_authority = none`（deployment 仍需独立授权）。
+> Acceptance Record 见 §6。
 >
 > 修订（2026-08-27，域查 修订轮）：Owner 裁决
 > **P0_REUSE_EXISTING_DOMAIN_LIST_ENDPOINT** 已记录于 §5 —— P0 维持本 Spec 的
@@ -182,3 +191,27 @@ DOMAIN_OWNER 能列出自己域内实例。Owner 七条裁决逐条落地：
 frontmatter 与 §0–§4 逐字节保留；packages/、scripts/、svc-workflow 仓库、
 production、PR #13/#81/#83 分支与 push 均不动；工作区既有 WIP 实现快照与
 未提交状态原样保留。
+
+## 6. Acceptance Record（2026-08-28，域查 执行轮）
+
+ACCEPTANCE_TRANSACTION = LIFECYCLE_ONLY，ONE commit，ONE file（本文件）。
+
+- 独立审计（域查 审计轮）：AUDIT_RESULT = **PASS**；HEAD_DRIFT = **NONE**；
+  REQUIRED_FIXES_CLOSED = **3/3**（8bba6e1 AUDIT_FOCUSFIX 关闭）；BLOCKERS = **NONE**；
+  READY_FOR_ACCEPTANCE_FINALIZE = **YES**。
+- accepted_reviewed_head = `8bba6e13fc2d2f2f4e9520ddc46eae4140b43f1c`
+  （PR #85 审计时 head；fresh fetch 后核对无漂移）。
+- 语义变化 = STATUS_MIRROR_AND_PROVENANCE_ONLY：本事务仅翻转 status、记录
+  acceptance provenance（frontmatter 字段 + 头部引注 + 本节）；§0–§5 全部冻结
+  ruling（含 §5 OWNER_RULING = P0_REUSE_EXISTING_DOMAIN_LIST_ENDPOINT 七条裁决
+  与最终冻结字段）逐字节保留；正文中先于 acceptance 的条件句按既有纪律作为
+  历史记录原样保留。
+- 授权生效语义：本 Spec merged on main 起成为本 scope 的唯一实现授权
+  （R1–R6 合同 + §2 文件闭包）；实现 PR 不得修改本文件
+  （GOVERNING_SPEC_UNMODIFIED）；`production_apply_authority = none` ——
+  deploy / restart / production state 变更仍需独立授权。
+- 事务边界：DOCS_ONLY；PRODUCT_CODE_CHANGE = NONE；SERVER_CODE_CHANGE = NONE；
+  PRODUCTION_CHANGE = NONE；packages/、scripts/、svc-workflow 仓库、production、
+  PR #13/#81/#83 分支均不动；工作区既有 WIP 实现快照原样保留。
+- Merge：本 commit 之后随即 merge PR #85（merge commit 为本 Spec 的
+  effective-on-main 坐标，记录于 merge 后的 main lineage）。
