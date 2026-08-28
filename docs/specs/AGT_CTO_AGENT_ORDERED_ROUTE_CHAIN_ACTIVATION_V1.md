@@ -7,7 +7,13 @@ review_verdict: PASS
 blocker_count: 0
 normative_body_change: NONE
 amendment_1: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1_AMENDMENT_1_GLM_STRICT_STAGING
-amendment_1_status: proposed（awaiting independent review；Draft PR，未 merge）
+amendment_1_status: accepted
+amendment_1_accepted_by: mayf3
+amendment_1_accepted_date: 2026-08-28
+amendment_1_reviewed_head: 4e71fd2db78db9f8b80b8636d6c8255d7764d39a
+amendment_1_review_verdict: PASS
+amendment_1_blocker_count: 0
+amendment_1_normative_body_change: NONE
 date: 2026-08-27
 type: unified activation-authorizing child Spec (SPEC ONLY — 本轮只冻结三阶段授权边界；不实现、不写凭据、不登录 OAuth、不改配置、不部署、不重启)
 spec_kind: implementation
@@ -71,7 +77,7 @@ references:
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1 — agt_cto-agent 路由链激活的统一授权（unified activation-authorizing child authority）
 
-> **Amendment 1（2026-08-28，GLM Strict Staging；proposed）**：文末
+> **Amendment 1（2026-08-28，GLM Strict Staging；accepted）**：文末
 > 「Amendment 1」节把激活重排为两个 Stage：STAGE_1 = GLM_STRICT（GLM 以
 > strict 单路由正式上线：routeKind = builtin / provider = zai / model =
 > glm-5.3 / primary = glm53 / fallbacks = []）与 STAGE_2 =
@@ -83,6 +89,11 @@ references:
 > 与 §9.1 全部安全语义、父 Spec / IMPL 全部 ruling 逐字保持。该 Amendment
 > 经独立评审 + Owner acceptance finalize 前，基础正文仍是现行权威。基础
 > 正文（§1–§14）保持历史原样，不作改写。
+> Acceptance finalize 2026-08-28（模型 执行）：accepted_by = mayf3 ·
+> reviewed_head = 4e71fd2db78db9f8b80b8636d6c8255d7764d39a ·
+> 模型 审计 = PASS · BLOCKER_COUNT = 0 · NORMATIVE_BODY_CHANGE = NONE
+> （lifecycle-only；active-authority 语义按 vendored SPEC_GOVERNANCE_V0
+> §2.1——on merge into main；PR #94 保持 OPEN / UNMERGED）。
 
 > SPEC_STATUS = **accepted**（acceptance 2026-08-27，accepted_by = mayf3；
 > reviewed_head = `f4e1e04aa6725f9652cfabe86ef8c044a92e4e6e`；review_verdict = PASS；
@@ -925,11 +936,15 @@ ACCEPTANCE_FINALIZED = YES
 NEXT_TASK = 采纳 审计
 ```
 
-## Amendment 1（2026-08-28）— GLM Strict Staging（STAGE_1 = GLM_STRICT；STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED）
+## Amendment 1（2026-08-28）— GLM Strict Staging（STAGE_1 = GLM_STRICT；STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED；accepted）
 
-> AMENDMENT_STATUS = **proposed**（authoring 2026-08-28，任务「模型 执行」；
-> awaiting independent review；Draft PR，不 merge、不 acceptance、不改产品
-> 代码、不写配置、不配置 Credential、不触碰 production）。
+> AMENDMENT_STATUS = **accepted**（authoring 2026-08-28，任务「模型 执行」；
+> acceptance finalize 2026-08-28，任务「模型 执行」：
+> accepted_by = mayf3 · reviewed_head = 4e71fd2db78db9f8b80b8636d6c8255d7764d39a ·
+> review_verdict = PASS · blocker_count = 0 · normative_body_change = NONE
+> （lifecycle-only 状态翻转与 provenance 记录；A1.0–A1.7 normative 内容
+> 逐字保留）；Draft PR，不 merge、不改产品代码、不写配置、不配置
+> Credential、不触碰 production）。
 > **Amendment 形式依据**：`.agents/README.md` standing order 6（「scope 需要
 > 澄清/纠正但方向未变，走 AMEND」）+ accepted-Spec in-place amendment 先例
 > （父 Spec / IMPL Amendment 1 Builtin Route Kind，PR#77：基础正文逐字保留，
@@ -1203,4 +1218,57 @@ DEPLOYMENT = NONE
 RESTART = NONE
 MERGE = NO（Draft PR）
 NEXT_TASK = 模型 审计
+```
+
+### A1.8 Final Output — Amendment 1 Acceptance finalize（2026-08-28；模型 执行轮填写）
+
+```text
+TASK_NAME = 模型 执行
+TASK_STATUS = ACCEPTANCE_TRANSACTION_COMPLETE（lifecycle-only）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1
+AMENDMENT_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1_AMENDMENT_1_GLM_STRICT_STAGING
+amendment_1_status = proposed -> accepted
+accepted_by = mayf3
+accepted_date = 2026-08-28
+reviewed_head = 4e71fd2db78db9f8b80b8636d6c8255d7764d39a
+review_verdict = PASS
+blocker_count = 0
+READY_FOR_ACCEPTANCE = YES（模型 审计轮结论，任务给定）
+normative_body_change = NONE
+
+TRANSACTION（lifecycle-only；Amendment 节 normative 内容零改动——
+A1.0–A1.7 与基础正文 §1–§14 逐字保留，含 proposed 阶段条件句与
+authoring 轮 Final Output）：
+  status mirrors = frontmatter amendment_1_* + 文头镜像 + Amendment 节
+  标题与 AMENDMENT_STATUS + 本节 provenance + docs/specs/README.md 状态镜像
+  pre-acceptance step = 新 main（1f40896，含 PR #95 Phase A 已审计闭包）
+    以普通 merge commit 机械带入本分支（无 rebase / squash / force-push；
+   带入前后 Amendment 文件与 README 字节不变，diff = 空）
+
+PRESERVED（逐字保持，本轮零改动）：
+  STAGE_1 = GLM_STRICT（routeKind = builtin；provider = zai；model =
+    glm-5.3；primary = glm53；fallbacks = []）
+  STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED（不阻塞 Stage 1；重新 OAuth /
+    删除-复制-刷新 OAuth / 安装-升级 dsh-codex / 生产 Luna model call /
+    加入 Stage-1 override 全部 FORBIDDEN；加入 fallbacks[] 仅凭 Owner
+    再次明确授权）
+  Phase A 全部（a708fc3 / GATE-3 = PASS，已随 PR #95 进入 main）
+  §9.1 安全边界全文；父 / IMPL 全部 ruling（MAX_CONFIGURED_ROUTES = 4、
+    STOP_CHAIN、proven-no-admission 白名单、ONE_LOGICAL_TURN、
+    INHERIT_AGENT_CHAIN_ONLY、ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN、
+    raw credential 边界、dsh-codex fake carrier 禁止）
+
+PR_LIFECYCLE = PR #94 保持 OPEN（Draft；MERGE = NO；merge 决策不在本轮
+  授权内，等待独立采纳审计）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+CONFIG_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+RESTART = NONE
+MERGE = NO
+
+NEXT_TASK = 采纳 审计
 ```
