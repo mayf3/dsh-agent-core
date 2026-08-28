@@ -7,8 +7,9 @@
  * order authority. Schema:
  *
  *   { "version": 2,
- *     "routeCatalog": { "<routeRef>": { provider, model, plugin,
- *        pluginVersion, credentialReadiness, providerEnv? } },
+ *     "routeCatalog": { "<routeRef>": { routeKind: builtin|subscription,
+ *        provider, model, credentialReadiness, providerEnv?,
+ *        plugin + pluginVersion (subscription ONLY — FORBIDDEN on builtin) } },
  *     "overrides": { "<agentId>": { "model": { "primary": <routeRef>,
  *        "fallbacks": [<routeRef>, ...] } } } }
  *
@@ -224,18 +225,21 @@ function exactKeys(value, expected) {
 }
 
 /**
- * CANONICAL_ROUTE_IDENTITY (parent CTR-003): six-field canonical form —
- * provider, model, plugin, pluginVersion, credentialReadiness reference and
- * canonical providerEnv. Pure deterministic normalization; nothing is
- * dropped. Two different routeRefs resolving to the same canonical identity
- * are a malformed config (no alias bypass of ATTEMPTED_AT_MOST_ONCE).
+ * CANONICAL_ROUTE_IDENTITY (parent Amendment 1 A1.3): seven-field canonical
+ * form — routeKind, provider, model, plugin-or-ABSENT, pluginVersion-or-ABSENT,
+ * credentialReadiness reference and canonical providerEnv. Pure deterministic
+ * normalization; nothing is dropped. A builtin and a subscription route never
+ * collapse to the same identity even when every other field matches. Two
+ * different routeRefs resolving to the same canonical identity are a malformed
+ * config (no alias bypass of ATTEMPTED_AT_MOST_ONCE).
  */
 function catalogCanonicalIdentity(route) {
   return JSON.stringify([
+    route.routeKind,
     route.provider,
     route.model,
-    route.plugin,
-    route.pluginVersion,
+    route.plugin ?? 'ABSENT',
+    route.pluginVersion ?? 'ABSENT',
     route.credentialReadiness,
     route.providerEnv === undefined
       ? 'ABSENT'
@@ -255,16 +259,21 @@ function makeChainRoute(routeRef, route) {
     model: route.model,
     omitEnv: Object.freeze(['OPENAI_API_KEY']),
     ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),
-    subscription: Object.freeze({
-      plugin: route.plugin,
-      pluginVersion: route.pluginVersion,
-      dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
-      dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
-      credentialFile: CHATGPT_SUBSCRIPTION_V1.credentialFile,
-      ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
-        packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
+    // DEC-IMPL-011: only a subscription route carries the provisioning
+    // block; a builtin processConfig has NO subscription key, so the spawn
+    // side's conditional expansion keeps it off the plugin/pin path entirely.
+    ...(route.routeKind === 'subscription' ? {
+      subscription: Object.freeze({
+        plugin: route.plugin,
+        pluginVersion: route.pluginVersion,
+        dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
+        dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
+        credentialFile: CHATGPT_SUBSCRIPTION_V1.credentialFile,
+        ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
+          packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
+        }),
       }),
-    }),
+    } : {}),
   })
   return Object.freeze({
     routeRef,
@@ -309,27 +318,47 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
     const catalog = new Map()
     const canonicalIdentities = new Map()
     for (const [routeRef, route] of Object.entries(parsed.routeCatalog)) {
-      const hasProviderEnv = Object.hasOwn(route ?? {}, 'providerEnv')
-      const routeKeys = ['credentialReadiness', 'model', 'plugin', 'pluginVersion', 'provider',
-        ...(hasProviderEnv ? ['providerEnv'] : [])]
-      if (routeRef === '' || !exactKeys(route, routeKeys)) {
-        throw invalid(`routeCatalog.${routeRef} must contain provider, model, plugin, pluginVersion, credentialReadiness and optional providerEnv only`)
+      // Parent Amendment 1 A1.2: routeKind is the closed-enum discriminator;
+      // the legal key set is routeKind-conditional (an existing plugin/
+      // pluginVersion key is malformed on a builtin route whatever its value).
+      const routeKind = route?.routeKind
+      if (routeKind !== 'builtin' && routeKind !== 'subscription') {
+        throw invalid(`routeCatalog.${routeRef}.routeKind must be "builtin" or "subscription" (got ${JSON.stringify(routeKind)})`)
       }
-      for (const field of ['provider', 'model', 'plugin', 'pluginVersion', 'credentialReadiness']) {
+      const isSubscription = routeKind === 'subscription'
+      const hasProviderEnv = Object.hasOwn(route ?? {}, 'providerEnv')
+      const routeKeys = [
+        'credentialReadiness', 'model', 'provider', 'routeKind',
+        ...(isSubscription ? ['plugin', 'pluginVersion'] : []),
+        ...(hasProviderEnv ? ['providerEnv'] : []),
+      ]
+      if (routeRef === '' || !exactKeys(route, routeKeys)) {
+        throw invalid(isSubscription
+          ? `routeCatalog.${routeRef} must contain routeKind, provider, model, plugin, pluginVersion, credentialReadiness and optional providerEnv only`
+          : `routeCatalog.${routeRef} must contain routeKind, provider, model, credentialReadiness and optional providerEnv only (plugin/pluginVersion are FORBIDDEN on a builtin route)`)
+      }
+      const requiredFields = isSubscription
+        ? ['provider', 'model', 'plugin', 'pluginVersion', 'credentialReadiness']
+        : ['provider', 'model', 'credentialReadiness']
+      for (const field of requiredFields) {
         assertNonEmptyString(route[field], `routeCatalog.${routeRef}.${field}`)
       }
-      if (route.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
+      if (isSubscription && /^[~^*]|[xX]$|\s\|\||\s-\s/u.test(route.pluginVersion)) {
+        throw invalid(`routeCatalog.${routeRef}.pluginVersion must be an exact pin (got ${route.pluginVersion})`)
+      }
+      if (isSubscription && route.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
           && route.pluginVersion !== CHATGPT_SUBSCRIPTION_V1.pluginVersion) {
         // CTR-011: dsh-codex@0.2.3 exact — a pin mismatch is a config error,
-        // never a fallback trigger.
+        // never a fallback trigger. Scoped to subscription routes carrying
+        // the plugin (a builtin route has no plugin key at all).
         throw invalid(`routeCatalog.${routeRef}: pluginVersion pin mismatch (${CHATGPT_SUBSCRIPTION_V1.plugin} must be ${CHATGPT_SUBSCRIPTION_V1.pluginVersion} exactly)`)
       }
       const providerEnv = hasProviderEnv ? validateProviderEnv(route.providerEnv) : undefined
       const frozenRoute = Object.freeze({
+        routeKind,
         provider: route.provider,
         model: route.model,
-        plugin: route.plugin,
-        pluginVersion: route.pluginVersion,
+        ...(isSubscription ? { plugin: route.plugin, pluginVersion: route.pluginVersion } : {}),
         credentialReadiness: route.credentialReadiness,
         ...(providerEnv === undefined ? {} : { providerEnv }),
       })
@@ -401,8 +430,7 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       return Object.freeze({
         provider: route.provider,
         model: route.model,
-        plugin: route.plugin,
-        pluginVersion: route.pluginVersion,
+        ...(route.plugin === undefined ? {} : { plugin: route.plugin, pluginVersion: route.pluginVersion }),
         ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),
       })
     },
