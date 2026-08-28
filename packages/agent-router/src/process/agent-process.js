@@ -124,6 +124,8 @@ export class AgentProcess {
     // --- turn admission (C-013) ------------------------------------------
     /** ChannelConversation of the in-flight turn (switch tool relay target). */
     this.activeBindingContext = undefined
+    /** Immutable trusted invocation/ingress identity for the in-flight turn. */
+    this.activeIngressContext = undefined
     this.turnQueueEntries = []
     this.turnInFlight = false
     this.queuedPromptBytes = 0
