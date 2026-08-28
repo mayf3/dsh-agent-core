@@ -113,6 +113,28 @@ store（`.credentials.yaml` 的 `ZAI_API_KEY` 与 Owner OAuth 新生成的
 `.openai-codex-auth.json`），禁止进入 override、launchd、settings、日志/输出、
 PR、证据或其他配置。严格阶段顺序 A→B→C 不变。
 
+Activation Amendment 1（2026-08-28，GLM Strict Staging；**accepted** —
+acceptance finalize 2026-08-28，模型 执行：accepted_by = mayf3 ·
+reviewed_head = 4e71fd2db78db9f8b80b8636d6c8255d7764d39a · 模型 审计 =
+PASS · blocker 0 · NORMATIVE_BODY_CHANGE = NONE；PR #94 Draft 保持
+OPEN / 未 merge，active-authority 语义按 SPEC_GOVERNANCE_V0 §2.1 on
+merge into main）对本 Spec 追加 in-place Amendment 节：把激活
+重排为两个 Stage——STAGE_1 = GLM_STRICT（GLM 以 strict 单路由正式上线：
+builtin / zai / glm-5.3 / primary = glm53 / `fallbacks = []`，Stage-1
+routeCatalog 仅含 glm53 entry）与 STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED
+（Luna 冷备候选推迟，不阻塞 Stage 1；Owner 再次明确授权前禁止重新安装 /
+重新 OAuth / 刷新凭据 / 生产 Luna model call / 进入 fallbacks[]）。GATE-4
+重定义为 Stage-1 的 GLM（zai-api-key-home）readiness 单边；CTR-ACT-C103
+的两 entry 配置形态与 CANARY-B/C 的 luna 判据保留为 Stage-2 目标形态。
+Phase A（已执行 @ `a708fc3`，GATE-3 = PASS 任务给定；已随 PR #95 merge
+commit `1f40896` 进入 main）与 §9.1 安全语义、
+父 Spec / IMPL 全部 ruling（MAX_CONFIGURED_ROUTES = 4、STOP_CHAIN、
+proven-no-admission 白名单、ONE_LOGICAL_TURN、Scheduler
+INHERIT_AGENT_CHAIN_ONLY、ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN、
+raw credential 边界、dsh-codex fake carrier 禁止）逐字保持。基础正文
+（§1–§14）与 Amendment 节 normative 内容（A1.0–A1.7）逐字保留；
+不新建第二套 Route Chain Spec（Owner 指令 2026-08-28）。
+
 Amendment 1（2026-08-26，Builtin Route Kind；accepted — acceptance finalize
 2026-08-27，链路 内建路由采纳执行，accepted_by = mayf3 · reviewed_head =
 8b76909c33dfc39693c6f8e760eb1a29c80d0727 · 链路 内建路由审计 = PASS ·

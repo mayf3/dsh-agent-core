@@ -6,6 +6,14 @@ reviewed_head: f4e1e04aa6725f9652cfabe86ef8c044a92e4e6e
 review_verdict: PASS
 blocker_count: 0
 normative_body_change: NONE
+amendment_1: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1_AMENDMENT_1_GLM_STRICT_STAGING
+amendment_1_status: accepted
+amendment_1_accepted_by: mayf3
+amendment_1_accepted_date: 2026-08-28
+amendment_1_reviewed_head: 4e71fd2db78db9f8b80b8636d6c8255d7764d39a
+amendment_1_review_verdict: PASS
+amendment_1_blocker_count: 0
+amendment_1_normative_body_change: NONE
 date: 2026-08-27
 type: unified activation-authorizing child Spec (SPEC ONLY — 本轮只冻结三阶段授权边界；不实现、不写凭据、不登录 OAuth、不改配置、不部署、不重启)
 spec_kind: implementation
@@ -68,6 +76,24 @@ references:
 ---
 
 # AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1 — agt_cto-agent 路由链激活的统一授权（unified activation-authorizing child authority）
+
+> **Amendment 1（2026-08-28，GLM Strict Staging；accepted）**：文末
+> 「Amendment 1」节把激活重排为两个 Stage：STAGE_1 = GLM_STRICT（GLM 以
+> strict 单路由正式上线：routeKind = builtin / provider = zai / model =
+> glm-5.3 / primary = glm53 / fallbacks = []）与 STAGE_2 =
+> LUNA_COLD_FALLBACK_DEFERRED（Luna 冷备候选推迟：不阻塞 Stage 1；Owner 再次
+> 明确授权前禁止重新安装 / 重新 OAuth / 刷新凭据 / 生产 Luna model call /
+> 进入 override fallbacks[]）；显式 supersede 基础正文中「GLM 与 Luna 凭据
+> readiness 一起构成 GATE-4 / Phase B 双块前置」与 CTR-ACT-C103 的
+> `fallbacks = [luna]` 配置形态等指名条款；Phase A（已执行、GATE-3 = PASS）
+> 与 §9.1 全部安全语义、父 Spec / IMPL 全部 ruling 逐字保持。该 Amendment
+> 经独立评审 + Owner acceptance finalize 前，基础正文仍是现行权威。基础
+> 正文（§1–§14）保持历史原样，不作改写。
+> Acceptance finalize 2026-08-28（模型 执行）：accepted_by = mayf3 ·
+> reviewed_head = 4e71fd2db78db9f8b80b8636d6c8255d7764d39a ·
+> 模型 审计 = PASS · BLOCKER_COUNT = 0 · NORMATIVE_BODY_CHANGE = NONE
+> （lifecycle-only；active-authority 语义按 vendored SPEC_GOVERNANCE_V0
+> §2.1——on merge into main；PR #94 保持 OPEN / UNMERGED）。
 
 > SPEC_STATUS = **accepted**（acceptance 2026-08-27，accepted_by = mayf3；
 > reviewed_head = `f4e1e04aa6725f9652cfabe86ef8c044a92e4e6e`；review_verdict = PASS；
@@ -906,6 +932,343 @@ RESTART = NONE
 MERGE = NO（Draft PR）
 PR78_LIFECYCLE_MUTATION = NONE（处置仅记录于 §3.4）
 ACCEPTANCE_FINALIZED = YES
+
+NEXT_TASK = 采纳 审计
+```
+
+## Amendment 1（2026-08-28）— GLM Strict Staging（STAGE_1 = GLM_STRICT；STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED；accepted）
+
+> AMENDMENT_STATUS = **accepted**（authoring 2026-08-28，任务「模型 执行」；
+> acceptance finalize 2026-08-28，任务「模型 执行」：
+> accepted_by = mayf3 · reviewed_head = 4e71fd2db78db9f8b80b8636d6c8255d7764d39a ·
+> review_verdict = PASS · blocker_count = 0 · normative_body_change = NONE
+> （lifecycle-only 状态翻转与 provenance 记录；A1.0–A1.7 normative 内容
+> 逐字保留）；Draft PR，不 merge、不改产品代码、不写配置、不配置
+> Credential、不触碰 production）。
+> **Amendment 形式依据**：`.agents/README.md` standing order 6（「scope 需要
+> 澄清/纠正但方向未变，走 AMEND」）+ accepted-Spec in-place amendment 先例
+> （父 Spec / IMPL Amendment 1 Builtin Route Kind，PR#77：基础正文逐字保留，
+> Amendment 节显式 supersede 特定条款，独立评审 + acceptance finalize 后生效）。
+> **方向未变**：三阶段（A→B→C）激活路径、gate 链结构、§9.1 全部安全语义、
+> 父 Spec / IMPL ruling 逐字保持；本 Amendment 只把 Phase B/C 的激活目标从
+> 「GLM + Luna 双路由一次激活」重排为「GLM strict 单路由先上线（Stage 1）+
+> Luna 冷备推迟（Stage 2）」，因此不走 whole-authority SUPERSEDE，也**不新建
+> 第二套 Route Chain Spec**（Owner 指令 2026-08-28 明令禁止）。
+> **生效条件**：本 Amendment 经 independent review PASS 并由 mayf3 acceptance
+> finalize（于本节记录 provenance）后、且随 PR 进入 main 时生效。生效前，
+> 基础正文的 GLM+Luna 双前置语义仍是现行权威。GLM_STRICT 生产激活在本
+> Amendment 生效前 = NOT AUTHORIZED。
+
+### A1.0 Owner 新裁决与任务给定坐标（2026-08-28，原样冻结，无需重做）
+
+```text
+OWNER_RULING_S1_1  STAGE_1 = GLM_STRICT：GLM 以 strict 单路由模式正式上线
+OWNER_RULING_S1_2  STAGE_1 冻结配置：routeKind = builtin；provider = zai；
+                   model = glm-5.3；primary = glm53；fallbacks = []
+OWNER_RULING_S1_3  STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED：Luna 保持冷备候选，
+                   不阻塞 GLM strict 激活
+OWNER_RULING_S1_4  Luna 本轮禁绝：不重新安装、不重新 OAuth、不刷新凭据、
+                   不做生产 Luna model call、不进入 Stage-1 override
+OWNER_RULING_S1_5  以后只有 Owner 再次明确授权，才允许把 Luna 加入 fallbacks[]
+TASK_GIVEN         GATE-3 = PASS（Phase A 独立实现审计）；
+                   PHASE_A_AUDITED_HEAD = a708fc39fef7f9f5e6352af3de7facce27236342
+                   （分支 impl/route-chain-activation-phase-a-v1；本 authoring
+                    轮只读记录坐标，不改其内容）
+AMENDMENT_FORM     最小原位 amendment；不得新建第二套 Route Chain Spec
+```
+
+作者侧只读核实（2026-08-28，base = fresh-fetched origin/main `ab34372`）：
+
+- 本 Spec 自 merge commit `9cb17a1` 进入 main 后在 main 上字节未变
+  （`git diff 9cb17a1 origin/main -- <本文件>` 为空）；GATE-1 / GATE-2 保持
+  SATISFIED。
+- strict 空链是已实现语义：main `ab34372`
+  `packages/production-runtime/src/model-overrides.js` 头部注释冻结
+  「ROUTE_CHAIN = [primary, ...fallbacks] (ordered, ≤ MAX_CONFIGURED_ROUTES;
+  [] = strict)」；override 校验要求 `model.{primary, fallbacks}` 键集精确、
+  `fallbacks` 为 array（空数组合法）、chain 内每个 routeRef 必须命中
+  routeCatalog——因此 Stage-1 配置只需 glm53 一个 catalog entry，luna entry
+  不写入即不存在未就绪 route。
+- Phase A 审计头 `a708fc3` = 分支 `impl/route-chain-activation-phase-a-v1`
+  本地与 origin 远端 head（fresh-fetch 核验，无 drift）；其
+  AUDIT_BLOCKER_FIX 提交（测试文件机械拆分）自证审计闭环。
+
+### A1.1 被 supersede 的基础正文条款（精确清单，其余逐字保持）
+
+本 Amendment 显式 supersede 基础正文以下条款中「GLM 与 Luna 一起作为生产
+激活前置 / 双路由一次激活」的语义，且仅此语义：
+
+| 基础正文位置 | 原语义 | Amendment 后语义 |
+|---|---|---|
+| §1 表 B-2 行 + §2.1 Phase B 的 Luna 半边 | Luna 安装 + OAuth + canary 属 Phase B 授权范围 | 移出 Stage-1 授权面：LUNA = DEFERRED（A1.5）；GLM 半边（B-1）不变 |
+| §3.1 GATE-4（「Phase B 凭据 readiness PASS（两 canary + 全部 ACC-ACT B 族）」） | GLM + Luna 双块全 PASS 才算 GATE-4 | Stage-1 GATE-4 = GLM（zai-api-key-home）readiness 半边 PASS（A1.3）；Luna 半边转 Stage-2 前置 |
+| §3.1 PHASE_C_ALLOWED 引用的 GATE-4 | 同上 | 引用 Stage-1 GATE-4（A1.3） |
+| DEC-ACT-002「两块全部 PASS 才算 GATE-4」 | 同 §3.1 | 同上 |
+| CTR-ACT-C103 冻结 JSONC（routeCatalog 两 entry + `fallbacks: ["luna"]`） | Stage 概念不存在；一次写入双路由链 | Stage-1 写入形态 = A1.2 冻结 JSONC（仅 glm53 entry；`fallbacks: []`）；C103 原两 entry 形态保留为 Stage-2 目标形态；其余写入边界（无 secret / owner / mode / 时序）原文不变 |
+| CTR-ACT-C104 CANARY-B / CANARY-C 判据 | B = 注入后 fallback 到 luna；C 以 luna attempts 计数表达 STOP_CHAIN | Stage-1 判据 = A1.4 重定义（无 fallback 路径的 fail-loud 终结；STOP_CHAIN 语义不变）；原 B/C luna 判据保留为 Stage-2 canary 集 |
+| ACC-ACT-B4/B5/B6 作为 GATE-4 组成 + ACC-ACT-B8 双 readiness 判定 | Luna readiness 属 Phase B 验收 | 转为 Stage-2 前置（冻结形态不变）；Stage-1 GATE-4 判定 = ACC-ACT-B1/B2/B3/B7 + B8 的 GLM 相关项（A1.3） |
+| §13 Q-ACT-2 处置时点 | dirtyCount ≠ 0 ⇒ luna 路由激活 BLOCKED（当轮 Phase C 处置） | 移至 Stage-2 依赖面（Stage-1 无 luna route，不构成 Stage-1 阻塞）；CTR-ACT-C102 stamp 诚实测定义务原文不变 |
+
+明确**不在** supersede 范围（逐字保持，不得借本 Amendment 重开）：
+
+- **Phase A 全部**：A-1/A-2/A-3、CTR-ACT-A01..A04、ACC-ACT-01..06——已按
+  基础正文执行完毕（impl 分支 `a708fc3`）且 GATE-3 = PASS（A1.0 任务给定）；
+  本 Amendment 不要求任何 Phase A 代码回退或修改（strict 空链与
+  subscription 均为其已实现并测试的能力面）。
+- §9.1 安全边界全文（raw credential 五重禁止、credential store 边界、
+  复制禁止、launchd / Scheduler / Binding / 第二 Feishu consumer 禁改、
+  per-hop deadline 刷新与 outcome_unknown fallback 禁止、dsh-codex 冒充
+  ZAI carrier 禁止、GOVERNING_SPEC_UNMODIFIED）。
+- 父 Spec 与 IMPL（含各自 Amendment 1）全部 ruling：
+  MAX_CONFIGURED_ROUTES = 4、proven-no-admission 封闭白名单、STOP_CHAIN
+  封闭禁止集、ONE_LOGICAL_TURN、ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN、
+  SCHEDULER_JOB_ROUTE_POLICY = INHERIT_AGENT_CHAIN_ONLY、harness /
+  dsh-codex pin。
+- DEC-ACT-005（Owner 亲手交付 key / OAuth）、DEC-ACT-006（Home 0755 / uid
+  502）、DEC-ACT-007..011（GLM settings 编辑形态、probe 隔离、Phase C 部署
+  纪律、v2 配置写入形态）、DEC-ACT-012 激活顺序（部署 → controlled
+  restart → 健康核验 → 写配置 → new generation；反向 FORBIDDEN）、
+  DEC-ACT-013 注入边界、DEC-ACT-014 restart 边界；CTR-ACT-B01/B02/B03/
+  B08、CTR-ACT-C101/C102/C105；§3.4 PR #78 处置；MIG-ACT-001..004。
+
+### A1.2 Stage 划分与 Stage-1 冻结配置（supersede CTR-ACT-C103 形态）
+
+```text
+STAGE_1 = GLM_STRICT
+GLM_STAGE_1_ROUTE =
+  routeKind = builtin
+  provider  = zai
+  model     = glm-5.3
+  primary   = glm53
+  fallbacks = []
+STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED（A1.5）
+```
+
+Stage-1 写入生产 root `/Users/authsvc/.agent-core/agent-model-overrides.json`
+的内容恰为（值逐字冻结；相对 CTR-ACT-C103 仅删去 luna entry 与 fallback
+元素，其余写入边界——无 secret、owner/mode 按 DEC-ACT-011、时序按
+DEC-ACT-012——原文不变）：
+
+```jsonc
+{
+  "version": 2,
+  "routeCatalog": {
+    "glm53": {
+      "routeKind": "builtin",
+      "provider": "zai",
+      "model": "glm-5.3",
+      "credentialReadiness": "zai-api-key-home"
+      // plugin / pluginVersion / providerEnv：ABSENT（builtin；键存在即 malformed）
+    }
+  },
+  "overrides": {
+    "agt_cto-agent": { "model": { "primary": "glm53", "fallbacks": [] } }
+  }
+}
+```
+
+- `fallbacks: []` = loader 已实现并注释冻结的 strict 语义（A1.0 核实）；
+  `overrides` 合法 key 仍恰为 `{agt_cto-agent}`（父 CTR-012）。
+- Stage-1 routeCatalog **不含** luna entry：Stage-1 override 不引用 luna，
+  未激活 route 不进 Stage-1 配置（loader 要求 chain 内 routeRef 全部命中
+  catalog；未引用的 entry 无需存在）；luna tuple 冻结值（父 A1.4 /
+  CTR-ACT-C103 原 JSONC）保留为 Stage-2 目标形态，本 Amendment 不改其任何
+  字段值。
+- chain 长度 1 ≤ MAX_CONFIGURED_ROUTES = 4（父 OWNER_DECISION 不变）。
+
+### A1.3 GATE-4 重定义（Stage-1）与 gate 链
+
+```text
+GATE-4_STAGE_1 = GLM credential readiness PASS
+  = zai-api-key-home SATISFIABLE（CTR-ACT-B01 settings.yaml zai 块 +
+    CTR-ACT-B02 .credentials.yaml ZAI_API_KEY，Owner 亲手交付）
+  AND GLM canary PASS（CTR-ACT-B03，DEC-ACT-008 隔离语义）
+  AND CTR-ACT-B08 不变量（launchd 字节不变；无 ZAI/token env；
+    生产 root overrides 文件激活写入前保持 ABSENT）
+  验收 = ACC-ACT-B1 / B2 / B3 / B7 + B8 的 GLM 相关判定
+LUNA_READINESS_STAGE_1 = NOT_REQUIRED（DEFERRED；ACC-ACT-B4/B5/B6 转为
+  Stage-2 前置，冻结形态不变、本轮不执行）
+PHASE_B_ALLOWED = GATE-1 AND GATE-2 AND GATE-3（不变）
+  —— Stage-1 的 Phase B 授权面收窄为 GLM 半边（B-1 / CTR-ACT-B01..B03 + B08）
+PHASE_C_ALLOWED_STAGE_1 = GATE-1 AND GATE-2 AND GATE-3 AND GATE-4_STAGE_1
+GATE-5 = Stage-1 强制 canary 集（A1.4）全 PASS = STAGE_1_COMPLETE 判据
+GATE_5_ROLE = COMPLETION_CRITERION（不变；GATE-5 未完成前不得宣称
+  STAGE_1_COMPLETE / ACTIVATION_COMPLETE）
+```
+
+GATE-1 / GATE-2 / GATE-3 定义与 SATISFIED 状态不变（GATE-3 = PASS，任务
+给定坐标见 A1.0）。Phase C 的部署面（CTR-ACT-C101 冻结 path→blob 清单——
+含 Phase A 增量文件集——与 CTR-ACT-C102 `.source-stamp` 诚实生成）原文
+不变：部署内容 = 已审计实现（含 readHarnessIdentity fallback 能力）；Stage-1
+配置不引用任何 subscription route 不影响其部署合法性；Q-ACT-2 的
+dirtyCount ≠ 0 处置仅对 Stage-2 有约束力（A1.1 表末行）。
+
+### A1.4 Stage-1 强制 canary 集（supersede CTR-ACT-C104 的 B/C 判据；A/D 不变）
+
+双通道验收（Owner 真实飞书端到端 + journal 结构化取证，互不替代）与
+DEC-ACT-013 注入边界、ACC-ACT-C9 注入清除 + 清洁复验，原文不变：
+
+```text
+CANARY-A（GLM primary success）——不变
+  glm53 attempts = 1；FINAL_ROUTE = glm53；TOTAL_ROUTE_ATTEMPTS = 1；
+  FALLBACK_ACTIVATED = false；零 luna 网络活动（Stage 1 配置结构性不存在
+  luna route）；Owner 收到恰好一条 glm53 业务回复。
+
+CANARY-B-S1（proven-no-admission ⇒ strict 模式 fail-loud 终结）
+  glm53 注入白名单类 pre-admission 失败（FAILURE_CLASS ∈ CTR-004 四类
+  白名单；ADMISSION_PROVEN = false；注入向量按 DEC-ACT-013 边界，仅作用
+  于 glm53）：glm53 attempts = 1；TOTAL_ROUTE_ATTEMPTS = 1；
+  FALLBACK_ACTIVATED = false；FINAL_OUTCOME = failed（fail-loud）；
+  对外 = 恰好一条失败回执、无第二条业务回复（ONE_LOGICAL_TURN）。
+  hop 语义本身不变：proven-no-admission 仍是唯一可 hop 转换类；Stage 1
+  因 fallbacks = [] 无可跳目标，链在 primary 失败后即终结。
+
+CANARY-C（outcome_unknown ⇒ STOP_CHAIN）——语义不变
+  glm53 注入 outcome_unknown：glm53 attempts = 1；STOP_CHAIN；turn 以
+  fail-loud / outcome_unknown 终结；无 replay；Owner 观察到失败回执且无
+  第二条回复。
+
+CANARY-D（duplicate protection）——不变
+  覆盖 A–C 全部 turn：single logical turn；single transcript；single
+  external delivery；onStart / onDispatch exactly once。
+```
+
+基础正文 CANARY-B / CANARY-C 的 luna 判据（fallback 到 luna 的
+proven-no-admission hop / luna attempts 计数）保留为 **Stage-2 canary 集**
+的组成（Stage-2 轮连同 luna readiness 一起按 A1.5 授权条件重新执行）。
+
+### A1.5 LUNA_COLD_FALLBACK_DEFERRED 冻结边界（Stage-2 授权前全程有效）
+
+```text
+LUNA_STATUS = DEFERRED（冷备候选；不阻塞 Stage-1 任何 gate / phase）
+LUNA_REINSTALL_OR_UPGRADE = FORBIDDEN（不安装 / 不升级 dsh-codex）
+LUNA_RE_OAUTH = FORBIDDEN
+LUNA_CREDENTIAL_REFRESH = FORBIDDEN（不刷新任何凭据）
+LUNA_OAUTH_DELETE_OR_COPY = FORBIDDEN（现有 OAuth 物料不删除、不复制；
+  生产 Home 现无 .openai-codex-auth.json（STATE-ACT-004），保持 ABSENT
+  即为合规）
+LUNA_PRODUCTION_MODEL_CALL = FORBIDDEN（含 canary / probe / 任何路径的
+  生产 Luna model call）
+LUNA_IN_STAGE1_OVERRIDE = FORBIDDEN（Stage-1 fallbacks 恒 = []）
+LUNA_JOIN_FALLBACKS_REQUIRES =
+  OWNER_EXPLICIT_NEW_AUTHORIZATION（Owner 再次明确授权）
+  AND 本 Spec 后续 amendment（或后继 authority）按 governance 评审生效
+  AND Stage-2 readiness：ACC-ACT-B4/B5/B6 全 PASS（冻结形态 = 基础正文
+    CTR-ACT-B04..B07 原文）
+  AND Q-ACT-2 dirtyCount 处置完成（= 0，或 ≠ 0 时 Owner 裁决的处置落地）
+  AND Stage-2 专属 canary 集全 PASS（含基础正文 CANARY-B/C 的 luna 判据）
+```
+
+基础正文 Phase B 的 Luna 半边（B-2 / CTR-ACT-B04..B07）与 DEC-ACT-009 全部
+条文不被删除、不改写——其地位从「Stage-1 授权面」移为「Stage-2 冻结形
+态」；在上述条件全部满足前，执行其中任何一项 = out-of-spec。
+
+### A1.6 安全语义全量保持（逐字重申，无一项放松）
+
+- `outcome_unknown = STOP_CHAIN`（父 CTR-005 / DEC-IMPL-007 原样）。
+- `proven-no-admission` 白名单 = 唯一可 hop 转换类（Stage 1 因空
+  fallbacks 结构性无 hop；语义不因 Stage 划分改变）。
+- `ONE_LOGICAL_TURN` 外部语义（无论链内 attempts 几何，对外恰好一次交付
+  或一条失败回执）。
+- `MAX_CONFIGURED_ROUTES = 4`（父 OWNER_DECISION 冻结值不变）。
+- `SCHEDULER_JOB_ROUTE_POLICY = INHERIT_AGENT_CHAIN_ONLY`（Scheduler 只继承
+  Agent chain；本 Amendment 不开 Scheduler 独立路由面）。
+- 路由顺序唯一 authority = 部署拥有的配置文件
+  （`ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN`）。
+- raw credential 不进 override / launchd / settings / 日志 / 输出 / PR /
+  证据（§9.1 全文不变；Stage-1 唯一涉及凭据 = ZAI_API_KEY，仍走
+  `<HOME>/.credentials.yaml` 受控 store）。
+- 不允许 dsh-codex 冒充 ZAI carrier（fake carrier 禁止，原样）。
+
+### A1.7 Final Output（Amendment authoring 轮填写）
+
+```text
+TASK_NAME = 模型 执行
+TASK_TYPE = 执行
+TASK_STATUS = AMENDMENT_AUTHORED（proposed；Draft PR 保持 OPEN / unmerged）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1
+AMENDMENT_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1_AMENDMENT_1_GLM_STRICT_STAGING
+AMENDMENT_STATUS = proposed（awaiting independent review；不 acceptance、
+  不 merge、不 production apply）
+
+STAGE_1 = GLM_STRICT（routeKind = builtin；provider = zai；model =
+  glm-5.3；primary = glm53；fallbacks = []）
+STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED
+GLM_STRICT_AUTHORIZED_AFTER_ACCEPTANCE = YES（本 Amendment 经独立评审 +
+  Owner acceptance finalize 并进入 main 后，Phase B 的 GLM 半边与 Phase C
+  的 Stage-1 形态方可在其 gate 链下开工；此前 NOT AUTHORIZED）
+LUNA_DEFERRED = YES（A1.5 全部边界生效）
+LUNA_CREDENTIAL_TOUCHED = NO
+LUNA_OAUTH_TOUCHED = NO
+PRODUCTION_CHANGE = NONE
+
+BASE_BODY_PRESERVED = YES（§1–§14 + 基础 frontmatter 历史原样；本
+  Amendment = frontmatter amendment_1 字段 + 文首 blockquote + 文末追加节，
+  纯增量）
+SECOND_ROUTE_CHAIN_SPEC_CREATED = NO
+SAFETY_SEMANTICS_PRESERVED = YES（A1.6 八项）
+PHASE_A_UNCHANGED = YES（a708fc3 / GATE-3 = PASS，不回退不改写）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+CONFIG_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+RESTART = NONE
+MERGE = NO（Draft PR）
+NEXT_TASK = 模型 审计
+```
+
+### A1.8 Final Output — Amendment 1 Acceptance finalize（2026-08-28；模型 执行轮填写）
+
+```text
+TASK_NAME = 模型 执行
+TASK_STATUS = ACCEPTANCE_TRANSACTION_COMPLETE（lifecycle-only）
+
+SPEC_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1
+AMENDMENT_ID = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1_AMENDMENT_1_GLM_STRICT_STAGING
+amendment_1_status = proposed -> accepted
+accepted_by = mayf3
+accepted_date = 2026-08-28
+reviewed_head = 4e71fd2db78db9f8b80b8636d6c8255d7764d39a
+review_verdict = PASS
+blocker_count = 0
+READY_FOR_ACCEPTANCE = YES（模型 审计轮结论，任务给定）
+normative_body_change = NONE
+
+TRANSACTION（lifecycle-only；Amendment 节 normative 内容零改动——
+A1.0–A1.7 与基础正文 §1–§14 逐字保留，含 proposed 阶段条件句与
+authoring 轮 Final Output）：
+  status mirrors = frontmatter amendment_1_* + 文头镜像 + Amendment 节
+  标题与 AMENDMENT_STATUS + 本节 provenance + docs/specs/README.md 状态镜像
+  pre-acceptance step = 新 main（1f40896，含 PR #95 Phase A 已审计闭包）
+    以普通 merge commit 机械带入本分支（无 rebase / squash / force-push；
+   带入前后 Amendment 文件与 README 字节不变，diff = 空）
+
+PRESERVED（逐字保持，本轮零改动）：
+  STAGE_1 = GLM_STRICT（routeKind = builtin；provider = zai；model =
+    glm-5.3；primary = glm53；fallbacks = []）
+  STAGE_2 = LUNA_COLD_FALLBACK_DEFERRED（不阻塞 Stage 1；重新 OAuth /
+    删除-复制-刷新 OAuth / 安装-升级 dsh-codex / 生产 Luna model call /
+    加入 Stage-1 override 全部 FORBIDDEN；加入 fallbacks[] 仅凭 Owner
+    再次明确授权）
+  Phase A 全部（a708fc3 / GATE-3 = PASS，已随 PR #95 进入 main）
+  §9.1 安全边界全文；父 / IMPL 全部 ruling（MAX_CONFIGURED_ROUTES = 4、
+    STOP_CHAIN、proven-no-admission 白名单、ONE_LOGICAL_TURN、
+    INHERIT_AGENT_CHAIN_ONLY、ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN、
+    raw credential 边界、dsh-codex fake carrier 禁止）
+
+PR_LIFECYCLE = PR #94 保持 OPEN（Draft；MERGE = NO；merge 决策不在本轮
+  授权内，等待独立采纳审计）
+
+PRODUCT_CODE_CHANGE = NONE
+CREDENTIAL_CHANGE = NONE
+CONFIG_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+DEPLOYMENT = NONE
+RESTART = NONE
+MERGE = NO
 
 NEXT_TASK = 采纳 审计
 ```
