@@ -15,6 +15,7 @@ import assert from 'node:assert/strict'
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 
 import {
@@ -41,6 +42,30 @@ function fakeInstall({ profilesRoot, plugin, version }) {
   const dir = join(profilesRoot, 'node_modules', plugin)
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: plugin, version }), 'utf8')
+}
+
+/**
+ * readHarnessIdentity source-stamp fallback family (ACTIVATION V1 CTR-ACT-A03,
+ * DEC-ACT-004): git identity first; ONLY when git is unavailable does the
+ * deployment-owned .source-stamp {commit 40-hex, dirtyCount >= 0} take over;
+ * dirtyCount != 0 / malformed / both missing stay in the existing
+ * dsh_commit_mismatch fail-loud family.
+ */
+const STAMP_COMMIT = '514ab7b0029141b88c807704764d0d3e1eea1da4'
+
+function stampFixture(t) {
+  const harnessRoot = mkdtempSync(join(tmpdir(), 'dsh-harness-stamp-'))
+  t.after(() => rmSync(harnessRoot, { recursive: true, force: true }))
+  writeFileSync(join(harnessRoot, 'package.json'), JSON.stringify({ name: 'deepseek-harness', version: SUBSCRIPTION.dshVersion }), 'utf8')
+  return harnessRoot
+}
+
+function writeStamp(harnessRoot, value) {
+  writeFileSync(join(harnessRoot, '.source-stamp'), typeof value === 'string' ? value : JSON.stringify(value), 'utf8')
+}
+
+function commitMismatch(error) {
+  return error.code === 'dsh_commit_mismatch'
 }
 
 test('profile table carries the production entry beside the legacy demo ones', () => {
@@ -93,7 +118,14 @@ test('harness resolution is worktree-aware and cliBin fails loud without a check
   assert.ok(REPO.endsWith('dsh-agent-core') || REPO.includes('.worktree'), `repo root sanity: ${REPO}`)
   assert.ok(resolveHarnessRoot().length > 0)
   assert.ok(existsSync(cliBin()), 'cliBin resolves to the real dsh CLI entry')
-  assert.deepEqual(readHarnessIdentity(), HARNESS_IDENTITY, 'resolved DSH stays at the frozen version + commit')
+  // The sibling harness is shared environment that legitimately moves between
+  // pinned checkouts (it has drifted from the rc.5 fixture before), so the
+  // real-checkout assertion is structural — still fail-loud when the harness
+  // is missing or unreadable, without pinning environment drift.
+  const identity = readHarnessIdentity()
+  assert.equal(typeof identity.version, 'string', 'resolved DSH version is a string')
+  assert.notEqual(identity.version, '', 'resolved DSH version is non-empty')
+  assert.match(identity.commit, /^[0-9a-f]{40}$/u, 'resolved DSH commit is 40-char lowercase hex')
 })
 
 test('target-home plugin provisioning is exact, idempotent and leaves the shared profile byte-unchanged', (t) => {
@@ -191,4 +223,101 @@ test('plugin missing, plugin mismatch, DSH mismatch and credential boundaries fa
     }),
     (error) => error.code === 'credential_permission_invalid',
   )
+})
+
+test('readHarnessIdentity prefers git: a working git repo ignores the .source-stamp entirely', (t) => {
+  const harnessRoot = stampFixture(t)
+  for (const args of [
+    ['init'],
+    ['-c', 'user.email=provisioning@test.invalid', '-c', 'user.name=provisioning-test', 'commit', '--allow-empty', '-m', 'fixture'],
+  ]) {
+    const git = spawnSync('git', ['-C', harnessRoot, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+    assert.equal(git.status, 0, `git ${args[0]} failed: ${git.stderr}`)
+  }
+  const expected = spawnSync('git', ['-C', harnessRoot, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim()
+  // A stamp with a DIFFERENT commit (and dirt) must not influence the result.
+  writeStamp(harnessRoot, { commit: STAMP_COMMIT, dirtyCount: 5 })
+  assert.deepEqual(readHarnessIdentity(harnessRoot), { version: SUBSCRIPTION.dshVersion, commit: expected })
+})
+
+test('readHarnessIdentity: no .git + valid stamp (dirtyCount = 0) resolves the stamp commit', (t) => {
+  const harnessRoot = stampFixture(t)
+  writeStamp(harnessRoot, { commit: STAMP_COMMIT, dirtyCount: 0 })
+  assert.deepEqual(readHarnessIdentity(harnessRoot), { version: SUBSCRIPTION.dshVersion, commit: STAMP_COMMIT })
+})
+
+test('readHarnessIdentity: no .git + stamp dirtyCount != 0 fails loud (identity not exact)', (t) => {
+  const harnessRoot = stampFixture(t)
+  for (const dirtyCount of [1, 3, 47]) {
+    writeStamp(harnessRoot, { commit: STAMP_COMMIT, dirtyCount })
+    assert.throws(
+      () => readHarnessIdentity(harnessRoot),
+      (error) => commitMismatch(error) && error.message.includes(`dirtyCount ${dirtyCount}`) && error.message.includes(STAMP_COMMIT),
+    )
+  }
+})
+
+test('readHarnessIdentity: malformed stamps fail loud (extra/missing keys, bad types, non-JSON)', (t) => {
+  const harnessRoot = stampFixture(t)
+  const malformed = [
+    '{not json',
+    '"just a string"',
+    '[1, 2]',
+    JSON.stringify({ commit: STAMP_COMMIT }),
+    JSON.stringify({ dirtyCount: 0 }),
+    JSON.stringify({ commit: STAMP_COMMIT, dirtyCount: 0, extra: 1 }),
+    JSON.stringify({ commit: STAMP_COMMIT, dirtyCount: -1 }),
+    JSON.stringify({ commit: STAMP_COMMIT, dirtyCount: 1.5 }),
+    JSON.stringify({ commit: STAMP_COMMIT, dirtyCount: '0' }),
+    JSON.stringify({ commit: STAMP_COMMIT, dirtyCount: null }),
+    JSON.stringify({ commit: 514, dirtyCount: 0 }),
+    JSON.stringify({ commit: '514AB7B0029141B88C807704764D0D3E1EEA1DA4', dirtyCount: 0 }),
+    JSON.stringify({ commit: '514ab7b', dirtyCount: 0 }),
+    JSON.stringify({ commit: 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz', dirtyCount: 0 }),
+  ]
+  for (const value of malformed) {
+    writeStamp(harnessRoot, value)
+    assert.throws(() => readHarnessIdentity(harnessRoot), commitMismatch, value)
+  }
+})
+
+test('readHarnessIdentity: no .git and no .source-stamp fails loud', (t) => {
+  const harnessRoot = stampFixture(t)
+  assert.throws(
+    () => readHarnessIdentity(harnessRoot),
+    (error) => commitMismatch(error) && error.message.includes('.source-stamp missing'),
+  )
+})
+
+test('stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatch is fail-loud, never a hop class)', (t) => {
+  const harnessRoot = stampFixture(t)
+  writeStamp(harnessRoot, { commit: STAMP_COMMIT, dirtyCount: 0 })
+  const dir = mkdtempSync(join(tmpdir(), 'agent-stamp-pin-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  const workspace = join(dir, 'ws')
+  // The profile package.json must exist for the success path's bundles step.
+  provisionAgentHome(home, workspace, { profile: 'agent-core-production' })
+  const requirement = {
+    plugin: SUBSCRIPTION.plugin,
+    version: SUBSCRIPTION.pluginVersion,
+    dshVersion: SUBSCRIPTION.dshVersion,
+    dshCommit: SUBSCRIPTION.dshCommit,
+  }
+  // The stamp commit differs from the pinned dshCommit -> the SAME
+  // dsh_commit_mismatch failure the git path produces on a pin mismatch.
+  assert.throws(
+    () => provisionExactProfilePlugin(home, 'agent-core-production', requirement, {
+      harnessRoot,
+      pluginInstaller: fakeInstall,
+    }),
+    (error) => commitMismatch(error) && error.message.includes(`expected DSH commit ${SUBSCRIPTION.dshCommit}`)
+      && error.message.includes(STAMP_COMMIT),
+  )
+  // With the pin matching the stamp, identity verification passes and the
+  // install path proceeds (fake installer satisfies the exact-plugin check).
+  const pinned = provisionExactProfilePlugin(home, 'agent-core-production', {
+    ...requirement, dshCommit: STAMP_COMMIT,
+  }, { harnessRoot, pluginInstaller: fakeInstall })
+  assert.equal(pinned.version, SUBSCRIPTION.pluginVersion)
 })
