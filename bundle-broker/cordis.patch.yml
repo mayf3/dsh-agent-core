@@ -19,6 +19,12 @@
       name: '@agent-core/broker'
       config:
         mode: 'child'
+        # Closed Forum moderator list (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1
+        # CTR-FMC-004): the eight moderator tools register in a child ONLY when
+        # the process's actual DSH_AGENT_ID is an exact member of this list.
+        # Every other agent (and any missing/empty/malformed list) registers
+        # zero moderator tools; the normal Forum pack never depends on it.
+        forumModeratorAgentIds: ['agt_course-community-agent-2']
         # Acceptance fixture only: register broker_self_assert_test so the
         # TRUSTED_CREDENTIAL_BROKER acceptance can prove forged child-supplied
         # identity is IGNORED by the parent. Never set in product configs.

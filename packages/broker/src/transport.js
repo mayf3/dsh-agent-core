@@ -56,8 +56,12 @@
  * src/capabilities/).
  */
 
+import { sanitizeErrorDetail } from './error-detail-sanitizer.js'
+
+export { sanitizeErrorDetail }
+
 /** HTTP methods the transport will execute (pinned per capability). */
-export const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE']
+export const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 
 /** Request headers the transport is willing to forward beyond Authorization. */
 export const ALLOWED_REQUEST_HEADERS = new Set(['Idempotency-Key'])
@@ -313,47 +317,6 @@ export const SERVICE_CODE_PATTERN = /^[a-z][a-zA-Z0-9_]{0,63}$/
 
 /** `x-request-id` pass-through contract: visible ASCII, bounded; else null. */
 export const REQUEST_ID_PATTERN = /^[\x21-\x7e]{1,128}$/
-
-/** Max characters of a sanitized detail string (truncation marker appended). */
-const DETAIL_MAX_LENGTH = 500
-
-/**
- * Sensitive-content redaction patterns applied to EVERY detail string. The
- * detail is derived from the service's own `message` field only (never from
- * raw headers / raw bodies), and these patterns are the second line of
- * defense: an upstream echo of auth material is replaced, not forwarded.
- */
-const DETAIL_REDACTIONS = [
-  // "Bearer <token>" anywhere (also inside sentences) — must run BEFORE the
-  // Authorization-header rule, which would otherwise consume only the word
-  // "Bearer" and leave the token itself exposed.
-  [/bearer\s+[A-Za-z0-9._~+/=-]+/gi, 'bearer [REDACTED]'],
-  // "Authorization: Basic <credentials>" / "authorization=NTLM <blob>" —
-  // scheme-prefixed values: the scheme word alone is not the secret, the
-  // credentials token after it are. Without this rule the generic rule below
-  // consumes only the scheme word and the credentials survive (the same trap
-  // the bearer rule documents for in-sentence tokens).
-  [/(authorization\s*[:=]\s*)(?:basic|bearer|digest|dpop|hoba|mutual|negotiate|ntlm|scram-sha-1|scram-sha-256|vapid)\s+[A-Za-z0-9._~+/=-]+/gi, '$1[REDACTED]'],
-  // "Authorization: <value>" / "authorization=<value>" → keep the key, drop the value.
-  [/(authorization\s*[:=]\s*)([^\s,;"']+)/gi, '$1[REDACTED]'],
-  // "token"/"secret"/"password"/"credential"/"api-key" assignments.
-  [/((?:api[_-]?key|token|secret|password|credential)["']?\s*[:=]\s*)["']?[^\s,;"'}]+/gi, '$1[REDACTED]'],
-  // Long opaque runs (JWTs / hex / base64 keys) even without a keyword.
-  [/[A-Za-z0-9+/_-]{40,}={0,2}/g, '[REDACTED]'],
-]
-
-/**
- * Sanitize a downstream error message for the caller-visible `detail`:
- * redact credential-shaped content, then truncate. Pure function.
- * @param {string} text - the service-provided message string.
- * @returns {string} redacted + truncated text.
- */
-export function sanitizeErrorDetail(text) {
-  let out = String(text)
-  for (const [re, replacement] of DETAIL_REDACTIONS) out = out.replace(re, replacement)
-  if (out.length > DETAIL_MAX_LENGTH) out = `${out.slice(0, DETAIL_MAX_LENGTH)}…[truncated]`
-  return out
-}
 
 /**
  * Extract `{ code?, message? }` from a downstream error body, generically.
