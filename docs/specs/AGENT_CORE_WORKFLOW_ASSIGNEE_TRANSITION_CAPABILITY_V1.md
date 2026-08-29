@@ -42,6 +42,22 @@ owners:
 > 500 `internal_consistency_error`）。修订明细与验证见 §15；status 仍为
 > proposed，接受仍需独立审计轮。
 
+> **FOCUSED AMENDMENT 2026-08-29（流转 联动 修订，本轮）**：按 shared
+> decomposition（PR #107，
+> `AGENT_CORE_BROKER_CAPABILITIES_TEST_DECOMPOSITION_V1` §8 步骤 3）对本
+> accepted Spec 做 focused in-place amendment，共三项——(1) 实现闭包的测试
+> 落点自未登记 legacy 聚合测试文件迁至 decomposition DEC-006 冻结的
+> dedicated home
+> `packages/broker/test/capabilities/workflow-transition.test.js`（该聚合
+> 文件即 pinned 8-path 的 D 行，任何 touch 都触发
+> `UNREGISTERED_LEGACY_TOUCHED` 结构死锁）；(2) 新增 aggregate inventory
+> 计数授权 14→15（唯一落点 `manifest-inventory.test.js`）；(3) 冻结
+> `implementation_authority: none → contracts` 的授权方案（§17 AMEND-3）。
+> 产品合同零变化（DEC-001..006、CTR-001..008、§9 写红线、§10 验收语义
+> 全部不变）；本修订轮不改 lifecycle 字段——`status` 仍 accepted、
+> `implementation_authority` 仍 none，直至 §17 授权方案的 gate 事务。
+> 修订明细与验证见 §17。
+
 ## 1. Goal
 
 让**当前节点的 exact assignee** 能够通过正式 Broker 工具提交合法
@@ -57,11 +73,19 @@ Agent 当前可用的 workflow broker 能力面（5 个，全只读）：
 
 ## 2. Scope and non-goals
 
-**In scope（accept 后的实现闭包）**：
+**In scope（accept 后的实现闭包；2026-08-29 流转 联动 修订后，见 §17）**：
 - `packages/broker/src/capabilities/workflow.js` 新增唯一写 capability
   manifest `workflow_transition`（operation `submit`）并加入 `manifests`
   导出数组——纯 manifest 数据，零新 transport/schema 机制（§4 OBS-004）。
-- `packages/broker/test/capabilities.test.js`：新增 fixture（§10）。
+- `packages/broker/test/capabilities/workflow-transition.test.js`：新增
+  fixture（§10）——shared decomposition（PR #107）DEC-006 冻结的 dedicated
+  home：该文件由 decomposition 8-path 实现创建并先承接 generic
+  transition-shaped idempotency fixture，本能力的正式 fixture **只追加**
+  该职责，不另建文件。
+- `packages/broker/test/capabilities/manifest-inventory.test.js`：aggregate
+  manifest 计数断言 **14→15** 的唯一调整点（decomposition DEC-003 冻结该
+  文件为 aggregate inventory 唯一 owner；三 spec 联动协调序：13
+  →Global Instances V2→ 14 →本 Spec→ 15；Domain Pagination V2 不改变计数）。
 
 **Non-goals（本 Spec 明确不做）**：
 - 不改 svc-workflow（端点已部署；本 Spec 是 broker 侧代理合同）。
@@ -515,3 +539,143 @@ replay，DEC-003）。
 - `implementation_authority = none` 与 `PRODUCTION_APPLY_AUTHORITY = none`
   均保持 reviewed value 不变；因此本 acceptance 不自行授予产品实现或部署权限。
 - PRODUCT_CODE_CHANGE = NONE；GRANT_CHANGE = NONE；PRODUCTION_CHANGE = NONE。
+
+## 17. Amendment record (2026-08-29, 流转 联动 修订)
+
+- 事务：TASK_NAME = 联动 执行（PR 3/3：Transition focused amendment）；
+  TASK_TYPE = DOCS_ONLY_THREE_SPEC_COORDINATION；base = current main
+  `f54679cb1a9cb9fe5e4ca38b9b354a5d25ef6221`（fresh-main 独立 worktree）；
+  ONE commit / ONE file（本文件）。姊妹协调 PR（同轮 authoring、各自独立
+  审计与 acceptance）：Global Instances V2 successor
+  （`AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2`）与 Domain
+  Pagination V2 successor
+  （`AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2`）。
+- 动机（decomposition §8 步骤 3 的明文要求）：本 Spec §2 原把实现 fixture
+  冻结在 744 行、未登记 structure-registry 的 legacy 聚合测试文件
+  （`capabilities.test.js`）——active `CODE_STRUCTURE_GUARDRAILS_V1` 的机械
+  语义 = 该文件只要被触及且 registry 无 entry 即报
+  `UNREGISTERED_LEGACY_TOUCHED`，净增/净零/净减均不改判——因此本能力的任何
+  实现都会被结构性死锁（PR #101/#102 同文件同 violation class 的已实测
+  复现）。shared decomposition（PR #107）已裁决唯一出路，并把 Transition 的
+  dedicated home 冻结为其 exact 8-path 闭包的成员（唯一一个由 decomposition
+  本身创建、先承接 generic transition-shaped idempotency fixture 的 home）。
+
+### 8-path decomposition pin（逐字冻结）
+
+本修订 pin dsh-agent-core PR #107（branch
+`docs/broker-capabilities-shared-decomposition-spec`，authoring-round reviewed
+head `deda45d87635c577be37d6402ba1c26c8a483428`，
+`AGENT_CORE_BROKER_CAPABILITIES_TEST_DECOMPOSITION_V1` §5）的 exact 8-path
+实现闭包：
+
+```text
+D packages/broker/test/capabilities.test.js
+A packages/broker/test-support/capability-fixtures.js
+A packages/broker/test/capabilities/manifest-inventory.test.js
+A packages/broker/test/capabilities/forum.test.js
+A packages/broker/test/capabilities/okr.test.js
+A packages/broker/test/capabilities/workflow-instances.test.js
+A packages/broker/test/capabilities/workflow-my-tasks.test.js
+A packages/broker/test/capabilities/workflow-transition.test.js
+```
+
+本修订不实现、不修改、不预先创建上述任何 path。本文件（含 §17 修订记录）
+中该聚合文件的字面路径只出现于非授权语境——上述 pin 的 D 行、本节动机段的
+死锁事实描述、AMEND-1 对被替换旧条目的修订对照引用、以及负面禁止纪律
+（本轮边界、AMEND-3 失败语义）——零处作为实现落点；§2 In-scope 已不再
+包含该路径（修订前的唯一落点引用已由 AMEND-1 替换）。
+
+### AMEND-1（测试落点迁移）
+
+§2 In-scope 第 2 条目原为「`packages/broker/test/capabilities.test.js`：
+新增 fixture（§10）」，修订为 dedicated home
+`packages/broker/test/capabilities/workflow-transition.test.js`：该文件由
+decomposition 8-path 实现创建（先承接既有 generic transition-shaped
+Idempotency-Key fixture），本能力的正式 fixture 只追加该职责。**本 Spec
+不以该聚合文件作为任何实现落点或闭包成员**；实现 diff 中不得出现该路径。
+ACC-002 的 fixture 断言面（POST path/body camelCase、scope、Idempotency-Key
+不可注入、错误信封透出、identity-neutral）语义不变，仅物理落点更换；
+「基线 173 + 新增」的数值基线以实现时 fresh main 为准（decomposition 后
+基线不含该聚合文件，test 数以 gate 输出为准，不硬编码 173）。
+
+### AMEND-2（aggregate inventory 计数授权）
+
+新增授权：aggregate manifest 计数断言 **14→15** 的唯一调整点 =
+`packages/broker/test/capabilities/manifest-inventory.test.js`
+（decomposition DEC-003 冻结该文件为 aggregate inventory 的唯一 owner，
+拆分事务本身保持 13；「后续 capability PR 只能在其 governing Spec 明确
+授权时单独调整 inventory count」规则的两个行使者 = Global Instances V2
+（13→14）与本修订（14→15）；Domain Pagination V2 扩展现有 manifest、
+不改变计数）。实现 diff 中 `manifest-inventory.test.js` 的改动仅限计数
+断言值 14→15 与因新 manifest 加入 aggregate 数组所需的导入（若有），
+不得改动其 validation assertion 语义。协调序 = decomposition §8 步骤 7
+的冻结顺序（PR #101 → PR #102 → Transition）；若实现顺序偏离，计数以
+「then-current 值 +1」语义执行，最终态仍为 15。
+
+### AMEND-3（`implementation_authority: none → contracts` 授权方案）
+
+本 Spec 当前 `status: accepted`、`implementation_authority: none`（§16
+acceptance 明确不自行授予产品实现权限）。授权方案（单一受控路径，无其它
+flip 通道）：
+
+1. **本轮（authoring）**：docs-only Draft PR 记录本修订；lifecycle 字段
+   零变化（status 仍 accepted、implementation_authority 仍 none、
+   production_apply_authority 仍 none）；不实现、不 merge、不授 Grant。
+2. **审计 gate**：独立「流转 审计」轮对本修订后的完整文件给出 PASS
+   verdict（BINDING：reviewed head pin、产品合同零变化确认、AMEND-1/2/3
+   语义确认）。
+3. **authority-flip 事务**：审计 PASS 后，ONE commit / ONE file 的
+   lifecycle-only 事务翻转 `implementation_authority: none → contracts` +
+   记录 provenance（amendment_reviewed_head 等字段写入本节）；除此之外
+   reviewed semantics 逐字节保留。该事务可与同轮姊妹协调 spec（Global
+   Instances V2 / Domain Pagination V2 successors）的 acceptance 事务及
+   decomposition 本身的 lifecycle-only acceptance（其 §8 步骤 4）在同一
+   原子 authority transaction 内协调完成。flip 前 `production_apply_authority`
+   保持 none 且 flip 不改变它。
+4. **实现前置（flip 不免除）**：本能力的实现 PR 只能从满足以下条件的
+   fresh main 开工：(a) decomposition 已 accepted 且其 exact 8-path 实现
+   已 merge（dedicated home 已存在、聚合文件已删除、
+   `manifest-inventory.test.js` 为 aggregate owner）；(b)
+   GOVERNING_SPEC_UNMODIFIED——实现 PR 不得修改本文件。
+5. **失败语义**：若 decomposition 最终未 accepted / 未实现，前置永不满足，
+   实现不得开工；任何状态下本 Spec 都不授权 touch 未登记 legacy 聚合文件
+   或 `.agents/structure-registry.json` / guardrails 规则。
+
+### 保持不变（审计对照面）
+
+工具 `workflow_transition`、端点
+`POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions`、
+参数面（`workflowInstanceId` / `transitionDefinitionId` /
+`expectedWorkflowStateVersion` / `submissionPayload` 可选）、scope
+`workflow.execute`、actor 仅来自 token、服务端 current-assignee 权威 +
+transition legality + CAS + idempotency + exact replay + deterministic
+failure replay + conflict fail-closed、Idempotency-Key trusted Broker 生成
+模型不可覆盖 + 401 retry 复用同 key、`executable_for_actor` =
+ADVISORY_ONLY、manifest-only error envelope（无结构化 error.details）、
+错误表（含 `definition_version_draft` 不在表内）、全部禁止清单
+（actor/principal override、Domain Owner 替别人提交、assignment mutation、
+create_instance、Definition management、Coordinator、手工 SQL、Grant
+change）、§8 DEC-001..006、§9 CTR-001..008、§15 三项 fix、§16 acceptance
+记录——均逐字保持。
+
+### 本轮边界与验证
+
+- 只修改本 Spec 文件；不实现代码、不 flip lifecycle 字段、不 merge、
+  不授 Grant、不部署；不修改 PR #101/#102/#107；不创建/修改 decomposition
+  8-path 任何成员；`.agents/**` 与 `packages/**` 零变化。
+- 验证（fresh-main worktree 实测）：frontmatter YAML 解析 PASS（status
+  accepted、implementation_authority none 不变）；
+  `python3 .agents/tools/verify_governance.py --target .` PASS；
+  `npm run verify:structure`（vs origin/main）PASS / 0 violations；
+  `git diff --check` PASS；packages/broker `node --test` = 173/173
+  PASS（docs-only 无影响复核）。
+- 冻结字段：AMENDMENT_KIND = FOCUSED_IN_PLACE；TEST_HOME =
+  packages/broker/test/capabilities/workflow-transition.test.js；
+  INVENTORY_COUNT_AUTHORITY = 14 -> 15 @ manifest-inventory.test.js（sole
+  adjustment point）；AUTHORITY_SCHEME = AUDIT_THEN_LIFECYCLE_FLIP（本节
+  AMEND-3）；PRODUCT_CONTRACT_DELTA = NONE；PR_101_MODIFIED = NO；
+  PR_102_MODIFIED = NO；PR_107_MODIFIED = NO；PRODUCT_CODE_CHANGE = NONE；
+  GRANT_CHANGE = NONE；PRODUCTION_CHANGE = NONE。
+- 下一事务：独立 review（流转 审计）→ 通过后按 AMEND-3 执行
+  authority-flip 事务（与姊妹 spec / decomposition acceptance 协调）→
+  实现前置满足后实现轮（ACC-002/003，dedicated home + inventory 14→15）。
