@@ -50,9 +50,10 @@ export function validateArguments(argumentSchema, args) {
  * strings, surfaces the DECLARED error code a violation should report (e.g.
  * `invalid_pagination` for an out-of-range `limit`), when the violated
  * property schema carries `validationError`. Bounds checking (`minimum` /
- * `maximum`) runs Broker-side BEFORE any HTTP request is issued, so an
- * out-of-range page size fails fast locally instead of surfacing as a
- * generic downstream 4xx/422.
+ * `maximum`) and manifest-declared all-or-none co-presence groups run
+ * Broker-side BEFORE any HTTP request is issued, so an out-of-range page
+ * size or a half-given group (e.g. one cursor field without its pair) fails
+ * fast locally instead of surfacing as a generic downstream 4xx/422.
  * @param {object} argumentSchema - { properties, required }.
  * @param {unknown} args - candidate arguments, however malformed.
  * @returns {{ violations: string[], code?: string }}
@@ -112,6 +113,23 @@ export function validateArgumentsDetailed(argumentSchema, args) {
   }
 
   validateObject(argumentSchema, args)
+
+  // Generic manifest-declared all-or-none groups (root level; see schema.js):
+  // when ANY member of a group is present, EVERY member must be — e.g. a
+  // composite keyset cursor pair declared as { properties: [a, b] }. A
+  // violation fails fast HERE, inside validateInvocation, strictly before the
+  // handler runs (so before any credential lookup, token request or business
+  // HTTP call), reporting the group's declared `validationError` code. Purely
+  // manifest-driven: no capability id or field name is special-cased.
+  for (const group of argumentSchema.allOrNone ?? []) {
+    const present = group.properties.filter((name) => Object.hasOwn(args, name) && args[name] !== undefined)
+    if (present.length > 0 && present.length < group.properties.length) {
+      const missing = group.properties.filter((name) => !present.includes(name))
+      violations.push(`properties [${present.join(', ')}] require [${missing.join(', ')}] to be given together (all-or-none group)`)
+      if (code === undefined && typeof group.validationError === 'string') code = group.validationError
+    }
+  }
+
   return code === undefined ? { violations } : { violations, code }
 }
 

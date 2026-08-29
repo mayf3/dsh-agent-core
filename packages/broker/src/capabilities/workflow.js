@@ -13,22 +13,24 @@
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
  *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
  *
- * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1):
+ * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 +
+ * AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1):
  * read-only domain-wide instance enumeration for DOMAIN_OWNERs. The DOMAIN_OWNER
  * check is enforced SERVER-SIDE by svc-workflow (query_service.list_domain_instances
  * -> check_domain_owner; non-owner -> workflow_instance_not_found_or_not_visible);
  * the broker never replicates or relaxes it. Wire param is `domainId` (downstream
- * serde rename_all=camelCase + deny_unknown_fields); cursors and filter params
- * (lifecycle/status/definitionKey/currentNodeKey/assigneePrincipalId) are
- * deliberately NOT exposed (first-batch cursor discipline).
- *
- * Opaque-cursor paging (before_created_at/before_id, after_created_at/after_id)
- * is deliberately NOT exposed in the first batch (deferred, see report); only
- * `limit` is surfaced — the transport forwards ONLY manifest-declared query
- * names, so cursor parameters can never reach svc-workflow (not even "half"
- * a cursor). The write surface (transitions / create_instance / cancel /
- * archive / domain ops) is deferred with the Idempotency-Key generic
- * mechanism already in place for it (transport `idempotencyKey` flag).
+ * serde rename_all=camelCase + deny_unknown_fields); filter params
+ * (lifecycle/status/definitionKey/currentNodeKey/assigneePrincipalId) remain
+ * deliberately NOT exposed. P1 pagination (accepted Spec above) exposes the
+ * server's composite keyset cursor as the argument pair beforeCreatedAt +
+ * beforeId: both given = next page, both absent = first page, one without the
+ * other fails fast locally with `invalid_cursor` (generic manifest-declared
+ * allOrNone group) BEFORE any credential, token or HTTP work. A full cursor is
+ * forwarded verbatim (query allowlist) and the response Page — including
+ * next_cursor {created_at, id} — passes through untouched. The write surface
+ * (transitions / create_instance / cancel / archive / domain ops) is deferred
+ * with the Idempotency-Key generic mechanism already in place for it
+ * (transport `idempotencyKey` flag).
  *
  * Downstream error preservation: each manifest DECLARES the svc-workflow
  * read-side error codes its endpoints can produce (evidence: svc-workflow
@@ -68,7 +70,7 @@ const queryErrors = [
 
 const paginationErrors = [
   { code: 'invalid_pagination', description: 'Pagination parameters are invalid (limit must be 1-20).' },
-  { code: 'invalid_cursor', description: 'Cursor parameters are invalid (cursors are not exposed by this capability).' },
+  { code: 'invalid_cursor', description: 'Cursor parameters are invalid (cursor fields must be given as a complete all-or-none group).' },
 ]
 
 /** `limit` bound contract: Broker-side fail-fast before any HTTP request. */
@@ -204,8 +206,17 @@ export const workflowMyDomainsManifest = withTransportErrors({
  * (others get workflow_instance_not_found_or_not_visible, which also covers a
  * nonexistent domain). The summary projection passes through untouched
  * (items: workflow_instance_id / title / is_terminal / current_node /
- * current_assignee_principal_id / created_at / updated_at, + next_cursor);
- * cursor params are NOT exposed, so the model-facing contract is single-page.
+ * current_assignee_principal_id / created_at / updated_at, + next_cursor).
+ *
+ * P1 pagination (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1): the
+ * server's composite keyset cursor is exposed as the optional argument pair
+ * beforeCreatedAt + beforeId. The pair is declared as a GENERIC manifest
+ * allOrNone group: one field without the other fails fast in the mapping
+ * layer with `invalid_cursor` BEFORE any credential lookup, token request or
+ * HTTP call (auth/token/business call counts = 0). A full cursor is forwarded
+ * verbatim via the http.query allowlist — no renaming, no precision/timezone
+ * rewriting, no opaque encoding; `next_cursor = {created_at, id} | null` in
+ * the response maps by name to the next call's beforeCreatedAt/beforeId.
  */
 export const workflowDomainInstancesManifest = withTransportErrors({
   id: 'workflow_domain_instances',
@@ -213,6 +224,7 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   name: 'Workflow Domain Instances',
   description:
     'Agent Core capability `workflow_domain_instances` (svc-workflow): list all workflow instances in one domain (read-only; DOMAIN_OWNER of the domain only — enforced server-side). ' +
+    'Pages forward: pass the previous page\'s next_cursor values as beforeCreatedAt (= next_cursor.created_at) and beforeId (= next_cursor.id); both fields together, or neither. ' +
     'Returns {ok: true, result: <domain instance page>} on success.',
   requiredScopes: ['workflow.read'],
   errors: [
@@ -225,21 +237,31 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   operations: [
     {
       name: 'list',
-      description: 'List the instances of the given domainId (UUID). Optional: limit (1-20).',
+      description:
+        'List the instances of the given domainId (UUID). Optional: limit (1-20); beforeCreatedAt + beforeId (all-or-none cursor pair taken verbatim from a previous page\'s next_cursor).',
       arguments: {
         properties: {
           domainId: { type: 'string', description: 'Workflow domain id (UUID) to enumerate.' },
           limit: limitProperty,
+          beforeCreatedAt: {
+            type: 'string',
+            description: 'Cursor: the created_at value of a previous page\'s next_cursor (RFC 3339 timestamp, forwarded verbatim). Must be given together with beforeId.',
+          },
+          beforeId: {
+            type: 'string',
+            description: 'Cursor: the id value of a previous page\'s next_cursor (workflow_instance_id UUID, forwarded verbatim). Must be given together with beforeCreatedAt.',
+          },
         },
         required: ['domainId'],
+        allOrNone: [{ properties: ['beforeCreatedAt', 'beforeId'], validationError: 'invalid_cursor' }],
       },
       result: { type: 'json' },
-      errors: ['invalid_arguments', 'invalid_pagination'],
+      errors: ['invalid_arguments', 'invalid_pagination', 'invalid_cursor'],
       http: {
         target: 'svc-workflow',
         method: 'GET',
         path: '/internal/v1/workflow-instances/domain',
-        query: ['domainId', 'limit'],
+        query: ['domainId', 'limit', 'beforeCreatedAt', 'beforeId'],
       },
     },
   ],
