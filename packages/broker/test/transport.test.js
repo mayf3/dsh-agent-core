@@ -776,7 +776,7 @@ test('sanitizeErrorDetail: redacts credential-shaped content, truncates', () => 
   assert.ok(!secret.includes('hunter2'))
   const long = sanitizeErrorDetail(`detail: ${'no such item; '.repeat(40)}`)
   assert.ok(long.length < 600)
-  assert.match(long, /\[truncated\]$/)
+  assert.equal([...long].length, 500)
   // innocent messages pass through untouched
   assert.equal(sanitizeErrorDetail('principal not found'), 'principal not found')
 })

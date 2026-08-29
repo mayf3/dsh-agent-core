@@ -314,6 +314,18 @@ function validatePropertiesSchema(value, at) {
           return `${at}.properties["${name}"].validationError requires minimum or maximum`
         }
       }
+      // `nonBlank: true` (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2
+      // CTR-FMC-006): a string-leaf-only flag; the mapping layer rejects
+      // missing/empty/whitespace-only values locally with invalid_arguments
+      // before any token mint or business HTTP call.
+      if (p.nonBlank !== undefined) {
+        if (p.nonBlank !== true && p.nonBlank !== false) {
+          return `${at}.properties["${name}"].nonBlank must be a boolean`
+        }
+        if (p.type !== 'string') {
+          return `${at}.properties["${name}"].nonBlank is only allowed on string leaves`
+        }
+      }
     }
   }
   const req = value.required
@@ -326,14 +338,14 @@ function validatePropertiesSchema(value, at) {
 }
 
 /** HTTP methods the generic transport is willing to execute. */
-const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE'])
+const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 
 /**
  * Validate one operation's optional `http` binding block:
  *
  *   http: {
  *     target: 'svc-forum',                 // targetId from the targets registry (trusted config)
- *     method: 'GET',                       // GET | POST | PUT | DELETE (pinned, model cannot change)
+ *     method: 'GET',                       // GET | POST | PUT | DELETE | PATCH (pinned, model cannot change)
  *     path: '/api/threads/{threadId}',     // path template; {name} placeholders
  *     pathParams: ['threadId'],            // arg names bound to {placeholders} (exact match)
  *     query: ['page', 'limit'],            // arg names forwarded as query params
