@@ -1,0 +1,25 @@
+Pager usage is off.
+domain_role_bindings|1623|42a053f90d91f3e86e696ceebe3c90b5
+domains|39|d78654ac9aac7c2a030415e29cad1c47
+global_role_bindings|14|f53f3acbc441a2992f7ceeb056d23f8f
+principals|256|1fff458dc2fa1f63337797f31d6f752d
+workflow_assistance_cases|12|fe97382f854c5c3dd0886b062e27dc35
+workflow_command_attempt_audits|10|e5ee05784fc5b7f002087a9390c579e4
+workflow_command_receipts|4540|d77ba1e735a90335f1631543dd6373cd
+workflow_context_revisions|538|88a805eae903d9ddd0c373ad8c2be666
+workflow_definition_versions|118|280c51e6a8ec2c593dcd0421bf9e7a91
+workflow_definitions|69|4667e609aae73593390baa4f98071de9
+workflow_events|2327|fcf04f64294c8a13398673d04457349b
+workflow_instance_node_assignees|3|817a82388ea84fe5ebf77faef531ace3
+workflow_instances|537|4e040be95df3217379d7c7ddd4860f7b
+workflow_node_definitions|769|34ba8b44c6b8c4521a2b4ee9734c2805
+workflow_node_visits|2199|3e168e1347d07fbc08ae8450d60e466c
+workflow_security_audits|1433|b0128f651b4ebe53d84b4a5604b5a22f
+workflow_submissions|1533|b8c449593ee8d8532059d9e3c7d1d5d1
+workflow_transition_definitions|916|308c6523f5343ba8be3077ae99986a7c
+psql:/tmp/audit-snap.sql:21: ERROR:  operator is not unique: text || "char"
+LINE 1: SELECT 'TRIGGERS', string_agg(tgname || ':' || tgenabled, ' ...
+                                                    ^
+HINT:  Could not choose a best candidate operator. You might need to add explicit type casts.
+MAXTS|2026-08-29 08:17:43.997024+08
+trg_assistance_case_change:O trg_assistance_case_insert:O trg_assistance_command_refs:O trg_command_receipts_completed_immutable:O trg_command_receipts_status_check:O trg_context_revisions_immutable:O trg_definition_version_immutable:O trg_definition_version_status_transition:O trg_events_immutable:O trg_instance_immutable_fields:O trg_node_definitions_graph_immutable:O trg_node_visit_assignee:O trg_node_visits_immutable:O trg_receipt_check_completed_fields:O trg_receipt_identity_immutable:O trg_receipt_set_completed_at:O trg_submissions_immutable:O trg_transition_definitions_graph_immutable:O

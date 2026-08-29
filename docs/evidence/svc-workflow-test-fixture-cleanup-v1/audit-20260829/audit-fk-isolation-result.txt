@@ -1,0 +1,10 @@
+# svc-workflow dogfood fixture cleanup audit — 60-FK two-directional isolation (2026-08-29)
+# Method: DO block looping over ALL pg_constraint contype='f' in public schema (60 constraints),
+# window sets derived INLINE from created_at in [2026-08-29 08:17:36+08, 2026-08-29 08:17:45+08)
+# (independent of the allowlist temp tables; read-only session, default_transaction_read_only=on).
+# dirA = window rows whose FK columns are all non-null and reference rows OUTSIDE the window set.
+# dirB = rows OUTSIDE the window set of the referencing table (or any row of a non-window table)
+#        referencing a window row of the referenced table.
+# Composite FKs (e.g. fk_event_ctx_same_instance) checked over the full confkey column list.
+# Full query: audit-queries-all.sql (audit-q7.sql section).
+psql:/tmp/audit-q7.sql:72: NOTICE:  RESULT constraints=60 total_dirA=0 total_dirB=0 violating_constraints=0

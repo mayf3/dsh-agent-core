@@ -1,0 +1,3 @@
+
+DRYRUN: pre-checks, guarded deletes, and ALL post-checks executed inside the transaction.
+DRYRUN: rolling back now — ZERO writes will be committed.
