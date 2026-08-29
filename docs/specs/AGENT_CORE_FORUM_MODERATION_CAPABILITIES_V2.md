@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 scope:
   - mayf3/dsh-agent-core
   - packages/broker Forum capability surface
@@ -54,6 +54,15 @@ owners:
 > probed — the merged test file measures 578 > 500 and fails the structure gate,
 > so per the task's own STOP rule the twelve-file closure STANDS with the
 > measurement recorded (§15.7). See §18.
+>
+> **ACCEPTED 2026-08-29** (lifecycle-only whole-Spec acceptance; see §19):
+> `status: proposed -> accepted`, `implementation_authority: none -> contracts`
+> against independently reviewed head `8d2f591a5d2e9df78f39b5d40afb6219d7377258`
+> (版管 审计 = PASS, BLOCKERS = NONE, READY_FOR_ACCEPTANCE_FINALIZE = YES), after a
+> mechanical base reconciliation (plain merge of current main, V2 blob
+> byte-identical — §19). `PRODUCTION_APPLY_AUTHORITY` stays `none`. In the same
+> atomic transaction V1 flipped to `superseded` with `superseded_by` naming this
+> Spec (backlinks change atomically per `SPEC_FORMAT_V0` §2.7).
 
 ## 1. Goal
 
@@ -1371,4 +1380,52 @@ ACCEPTANCE_CHANGED = NO (status stays proposed; acceptance is a separate future 
 PRODUCTION_CHANGE = NONE (scratch worktree local-only; never pushed)
 READY_FOR_FOCUSED_REVIEW = YES
 NEXT_TASK = 版管 审计
+```
+
+---
+
+## 19. Acceptance Record (2026-08-29, 版管 执行)
+
+```text
+ACCEPTANCE_KIND = LIFECYCLE_ONLY (atomic whole-Spec supersession transaction)
+ACCEPTED_SPEC = AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2
+REVIEWED_HEAD = 8d2f591a5d2e9df78f39b5d40afb6219d7377258
+PR = mayf3/dsh-agent-core#98 (spec-only across R1 + R2; product files: none)
+
+BASE_RECONCILIATION = mechanical PLAIN merge of github/main@9883c4b as merge
+  commit 68ccf22 (no rebase, no force-push, zero conflicts; brings unrelated
+  main history — the workflow-assignee-transition spec lineage — and nothing else)
+BASE_RECONCILIATION_SEMANTIC_DELTA = NONE (V2 spec blob
+  3993f88dfaee5ffba52e97bac20b4113e0818fc6 byte-identical before/after the
+  reconciliation merge)
+
+INDEPENDENT_AUDIT = 版管 审计 (focused re-review of REVIEWED_HEAD)
+AUDIT_VERDICT = PASS
+VAPID_NAME = CORRECTED
+ELEVEN_FILE_PROBE = INFEASIBLE-VERIFIED (§15.7 P1: merged 578 > 500)
+TWELVE_FILE_PROBE = PASS-VERIFIED (§15.7 P2: gate exit 0, 203/203 tests)
+IMPLEMENTATION_CLOSURE = 12 (CTR-FMC-014)
+PRODUCT_CONTRACT_PRESERVED = YES
+OTHER_SEMANTIC_DRIFT = NONE
+BLOCKERS = NONE
+READY_FOR_ACCEPTANCE_FINALIZE = YES
+
+LIFECYCLE_TRANSITIONS (all atomic in this one docs-only commit):
+  V2: status proposed -> accepted ; implementation_authority none -> contracts
+  V1: status accepted -> superseded ;
+      superseded_by null -> AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 ;
+      implementation_authority contracts -> none (authority passes to V2 alone, §12.2)
+  docs/specs/README.md: Forum authority section synced (V2 accepted / V1 superseded)
+PRODUCTION_APPLY_AUTHORITY = none (unchanged)
+SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = lifecycle/mirror only: the two V2 frontmatter
+  fields, the header acceptance note, this §19 Record, the V1 backlink transaction,
+  and the README mirror. §1–§18 of this Spec are otherwise byte-preserved.
+REQUIRED_FIXES = NONE
+
+IMPLEMENTATION_GATE = open: implementation may begin from fresh merged main
+  against the frozen twelve-file closure (CTR-FMC-014) and the three bounded
+  generic deltas (CTR-FMC-013) only. PR #97 stays unmerged and is superseded by
+  the fresh implementation PR (§12.3). Production apply/deploy/reload and any
+  Grant change remain separately authorized actions; this transaction performs
+  none of them.
 ```

@@ -151,3 +151,16 @@ Harness 内建 provider、无真实 dsh-zai 插件、dsh-codex fake carrier 禁�
 MAX_CONFIGURED_ROUTES = 4、primary + fallbacks[]、STOP_CHAIN、
 ONE_LOGICAL_TURN、Scheduler INHERIT_AGENT_CHAIN_ONLY、
 ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN 等全部 ruling 不重开。
+
+## Forum moderation capabilities authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2` | accepted / current | contracts | whole successor: 5 normal + 8 moderator Forum Broker tools, closed-list moderator visibility, case-insensitive auth-scheme sanitizer, twelve-file implementation closure |
+| `AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1` | superseded | none | historical authority replaced whole by V2 (2026-08-29 atomic acceptance; backlink in V1 frontmatter) |
+
+V2 was accepted against independently reviewed head `8d2f591a5d2e9df78f39b5d40afb6219d7377258`
+(版管 审计 = PASS, BLOCKERS = NONE) after a mechanical base reconciliation merge
+with zero semantic delta (V2 §19). `production_apply_authority` stays `none`:
+code merge, bundle deployment, moderator-list configuration, runtime reload,
+Forum deployment, and Grant apply each remain separately authorized actions.
