@@ -68,7 +68,7 @@ Workspace migration or production change, and `production_apply_authority` stays
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1` | accepted / current（accepted head `bb0db28`；merge `91cab84` / PR #80） | contracts | single-subject identity bootstrap authority for `agt_workflow-admin-agent`（disabled staged identity；activation boundary 冻结归独立 activation authority） |
-| `AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_OPERATOR_V1` | proposed | contracts (effective only on acceptance) | single-use local uid502→uid505 execution channel child authority: dedicated local-only Unix-domain operator endpoint（single operation `workflow_admin_agent_bootstrap_v1`，kernel-verified caller uid 502，运行于现有 authsvc uid505 trusted runtime 进程内）executing exactly one bootstrap of exactly one Agent; docs-only authoring round, separate implementation / deployment+audit / execution tasks required |
+| `AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_OPERATOR_V1` | proposed (Amendment Round 1; fresh full review required) | contracts (effective only on acceptance and merge) | deployment-prebound exact-attempt child authority for `workflow_admin_agent_bootstrap_v1` / `agt_workflow-admin-agent`: `TRIGGER_IS_NOT_AUTHORITY`; UDS is local transport only; peer UID and request body grant no authority; parent repository ledger remains authoritative; exact implementation/deployment/audit/window/execution tasks are separate |
 
 ## agt_cto-agent model-route authority
 
