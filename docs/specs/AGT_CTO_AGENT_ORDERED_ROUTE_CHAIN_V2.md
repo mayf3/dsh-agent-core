@@ -1,6 +1,12 @@
 ---
 spec_id: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-08-29
+accepted_reviewed_head: 85431b5aa61493d9e472ab9b731ef58e896e581b
+review_verdict: PASS
+review_blocker_count: 0
+normative_body_change: NONE
 date: 2026-08-29
 type: implementation-spec (complete standalone policy-authority successor of AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1; docs only)
 spec_kind: implementation
@@ -8,7 +14,8 @@ authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
 replaces_on_acceptance: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
-supersedes: []
+supersedes:
+  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
 superseded_by: null
 governed_by:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
@@ -454,3 +461,27 @@ LUNA_MODEL_CALL = NO
 LUNA_OAUTH_TOUCHED = NO
 NEXT_TASK = 冷备 审计
 ```
+
+## 16. Acceptance Record（2026-08-29，冷备 执行 / ATOMIC_ACCEPTANCE）
+
+```text
+ACCEPTANCE_TRANSACTION = THREE_WHOLE_AUTHORITY_SUCCESSORS_LIFECYCLE_ONLY
+ACCEPTED_BY = mayf3
+ACCEPTED_REVIEWED_HEAD = 85431b5aa61493d9e472ab9b731ef58e896e581b
+REVIEW_VERDICT = PASS
+REVIEW_BLOCKER_COUNT = 0
+NORMATIVE_BODY_CHANGE = NONE
+PARENT_V2_ACCEPTED = YES
+PARENT_V1_SUPERSEDED = YES
+IMPL_V2_ACCEPTED = YES
+IMPL_V1_SUPERSEDED = YES
+ACTIVATION_V2_ACCEPTED = YES
+ACTIVATION_V1_SUPERSEDED = YES
+ATOMIC_TRANSACTION = PASS
+PR_MERGE = NOT_PERFORMED
+```
+
+本记录与 IMPL V2、Activation V2 的 Acceptance Record 及三份 V1 lifecycle backlink
+属于同一个 acceptance commit。除 frontmatter lifecycle/provenance、本记录和
+`docs/specs/README.md` lifecycle mirror 外，reviewed head 的 normative body 逐字节保持；
+PR #103 保持 OPEN / DRAFT / UNMERGED，生效仍等待 merge into main。
