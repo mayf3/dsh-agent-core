@@ -378,7 +378,7 @@ PRUNE_ORDER = oldest settled updatedAt first
 UNRESOLVED_AUTO_PRUNE = FORBIDDEN
 ```
 
-Startup/write pruning MUST first remove settled records older than 30 days, then oldest settled until within cap。Unresolved/operator-required MUST NOT auto-prune。If 10,000 records are unprunable, Store MUST fail-loud `TURN_RECOVERY_STORE_CAPACITY_EXHAUSTED`、retain fences and reject admission that would create unprotected execution；MUST NOT delete safety evidence。
+For pruning only, a record is `fully_settled` iff recoveryState is terminal, `receiptTimeoutState=acknowledged`, `receiptTerminalKind!=none`, and `receiptTerminalState=acknowledged`。Recovery-terminal records with pending/ambiguous/failed A or queued/unacknowledged terminal receipt remain unresolved and unprunable。Startup/write pruning MUST first remove fully_settled records older than 30 days, then oldest fully_settled until within cap。All other unresolved/operator-required/receipt-pending records MUST NOT auto-prune。If 10,000 records are unprunable, Store MUST fail-loud `TURN_RECOVERY_STORE_CAPACITY_EXHAUSTED`、retain fences and reject admission that would create unprotected execution；MUST NOT delete safety evidence。
 
 ## 10. Acceptance
 
@@ -447,11 +447,11 @@ Startup/write pruning MUST first remove settled records older than 30 days, then
 
 ### ACC-TWR-008 — Store schema, restart, atomicity, retention
 
-- Contracts：`CTR-TWR-014`、`CTR-TWR-015`、`CTR-TWR-016`、`CTR-TWR-017`。
+- Contracts：`CTR-TWR-007`、`CTR-TWR-014`、`CTR-TWR-015`、`CTR-TWR-016`、`CTR-TWR-017`。
 - Method：schema validation；crash injection before/after every durable write、cancel send/ACK、SIGTERM send、A/terminal receipt reserve/send/ack and while terminal is queued；restart at every recovery/receipt state；PID reuse/non-PID handshake mismatch；secret corpus；retention/capacity。
 - Environment：isolated filesystem, idempotent cancel receiver, surface receipt dedup/reconciliation, and registry/live-child simulator。
 - Required evidence：on-disk schema/recordVersion/non-PID identities/action/receipt IDs, fsync/rename trace, receiver/surface dedup log, signal and visible-message counts, A-before-terminal trace, recovery transitions, secret scan, prune report。
-- Expected：cancel retry uses same id and receiver applies once；SIGTERM prepared/ambiguous crash never resends and becomes operator-required；receipt restart keeps same receiptId, resumes reconciliation, produces no visible duplicate, and never exposes terminal before acknowledged A；terminal recovery state with queued receipt survives/restarts；unfinished safe process states resume only after exact non-PID ownership recheck；no secrets；64 KiB bound；30-day/10,000 cap；unresolved preserved；capacity fail-loud。
+- Expected：cancel retry uses same id and receiver applies once；SIGTERM prepared/ambiguous crash never resends and becomes operator-required；receipt restart keeps same receiptId, resumes reconciliation, produces no visible duplicate, and never exposes terminal before acknowledged A；terminal recovery state with pending/queued receipt survives/restarts and is unprunable；only fully_settled receipt-acknowledged records enter 30-day/oldest-first pruning；unfinished safe process states resume only after exact non-PID ownership recheck；no secrets；64 KiB bound；10,000 cap；capacity fail-loud。
 - Failure：partial record、PID-only signal、second SIGTERM、second logical cancel、new receiptId/duplicate visibility、terminal-before-A、lost queued receipt、unresolved prune或secret persistence。
 
 ### ACC-TWR-009 — Global safety matrix
