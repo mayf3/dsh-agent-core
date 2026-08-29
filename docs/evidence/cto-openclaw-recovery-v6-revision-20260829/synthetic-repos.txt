@@ -1,0 +1,5 @@
+repoA(pinned commit absent)=/private/tmp/cto-v6-revision-evidence/scratch/repo-no-commit
+repoB(spec status: draft) HEAD=8c00dbd86c6e302b527cfc04e28bfdd92a34ecc0 path=/private/tmp/cto-v6-revision-evidence/scratch/repo-spec-draft
+repoC(.git symlink)=/private/tmp/cto-v6-revision-evidence/scratch/repo-dotgit-symlink
+alias: Symbolic Link /tmp/cto-v6-revision-evidence/scratch/alias-repo
+repoC/.git: Symbolic Link /tmp/cto-v6-revision-evidence/scratch/repo-dotgit-symlink/.git

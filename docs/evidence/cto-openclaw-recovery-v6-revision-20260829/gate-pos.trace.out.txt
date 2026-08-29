@@ -1,0 +1,115 @@
++ read -r -d '' ATOMIC_JS
++ true
++ trap 'rc=$?; if [ "$rc" -ne 0 ] && [ "$WRITES_STARTED" = "1" ] && [ "$ROLLBACK_ACTIVE" = "0" ] && [ "$SUCCESS" = "0" ]; then rollback "unexpected exit rc=$rc"; fi' EXIT
++ '[' '' = --synthetic-case ']'
++ '[' 0 -eq 0 ']'
++ :
++ printf 'Type the exact confirmation phrase to continue:\n  %s\n> ' 'APPLY EXACT_CTO_OPENCLAW_RECOVERY_V6'
+Type the exact confirmation phrase to continue:
+  APPLY EXACT_CTO_OPENCLAW_RECOVERY_V6
+> + IFS=
++ read -r OWNER_CONFIRMATION
++ '[' 'APPLY EXACT_CTO_OPENCLAW_RECOVERY_V6' = 'APPLY EXACT_CTO_OPENCLAW_RECOVERY_V6' ']'
++ log 'AGENT_CORE_CTO_OPENCLAW_RECOVERY_V6 start ts=20260829-215440 log=/tmp/agent-core-cto-openclaw-recovery-v4-20260829-215440-58881.log'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:54:40 'AGENT_CORE_CTO_OPENCLAW_RECOVERY_V6 start ts=20260829-215440 log=/tmp/agent-core-cto-openclaw-recovery-v4-20260829-215440-58881.log'
+[21:54:40] AGENT_CORE_CTO_OPENCLAW_RECOVERY_V6 start ts=20260829-215440 log=/tmp/agent-core-cto-openclaw-recovery-v4-20260829-215440-58881.log
++ ok 'interactive Owner confirmation accepted'
+++ date +%H:%M:%S
++ printf '[%s] OK  %s\n' 21:54:40 'interactive Owner confirmation accepted'
+[21:54:40] OK  interactive Owner confirmation accepted
++ '[' http://127.0.0.1:8790 = http://127.0.0.1:8790 ']'
++ '[' http://127.0.0.1:8790/health = http://127.0.0.1:8790/health ']'
++ '[' http://127.0.0.1:8790/v1/deliver = http://127.0.0.1:8790/v1/deliver ']'
+++ /bin/realpath /Users/yanfenma/workspace/project/dsh-agent-core
++ REPO_REAL=/Users/yanfenma/workspace/project/dsh-agent-core
++ '[' /Users/yanfenma/workspace/project/dsh-agent-core = /Users/yanfenma/workspace/project/dsh-agent-core ']'
+++ stat -f %HT /Users/yanfenma/workspace/project/dsh-agent-core
++ '[' Directory = Directory ']'
+++ stat -f %u /Users/yanfenma/workspace/project/dsh-agent-core
++ '[' 502 = 502 ']'
+++ stat -f %HT /Users/yanfenma/workspace/project/dsh-agent-core/.git
++ '[' Directory = Directory ']'
++ '[' '!' -L /Users/yanfenma/workspace/project/dsh-agent-core/.git ']'
+++ /usr/bin/id -u yanfenma
++ '[' 502 = 502 ']'
+++ git_as_repo_owner cat-file -t 73ec666fb860d7257b2f48c3dc76bc967bb578cd
++ '[' commit = commit ']'
+++ git_as_repo_owner show 73ec666fb860d7257b2f48c3dc76bc967bb578cd:docs/specs/AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1.md
+++ sed -n 1,20p
++ AUTH_HEAD='---
+spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1
+status: accepted
+accepted_date: 2026-08-23
+accepted_by: mayf3
+accepted_reviewed_base: 344975d1d6aa2ab560d2f213d4460d34c9f6ae60
+accepted_reviewed_spec_commit: 06feadf95f196a4c9581d453c256362b5d9e5914
+accepted_reviewed_spec_blob: 5b6ccef2add9ae602bc8168a3e324b4babdb11c3
+primary_review: 总监 审计
+primary_review_result: PASS
+required_fixes: NONE
+semantic_delta_after_review: NONE
+date: 2026-08-23
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: none
+production_apply_authority: none
+scope:
+  - single-Agent companion Workspace authority for agt_cto-agent only (out-of-roster boundary canary; V3/fleet exact-86 bound untouched)
+  - direct in-place reuse of its exact historical OpenClaw Workspace via primary-workspaces.json (direct adopt in place, zero copy)'
++ printf '%s\n' '---
+spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1
+status: accepted
+accepted_date: 2026-08-23
+accepted_by: mayf3
+accepted_reviewed_base: 344975d1d6aa2ab560d2f213d4460d34c9f6ae60
+accepted_reviewed_spec_commit: 06feadf95f196a4c9581d453c256362b5d9e5914
+accepted_reviewed_spec_blob: 5b6ccef2add9ae602bc8168a3e324b4babdb11c3
+primary_review: 总监 审计
+primary_review_result: PASS
+required_fixes: NONE
+semantic_delta_after_review: NONE
+date: 2026-08-23
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: none
+production_apply_authority: none
+scope:
+  - single-Agent companion Workspace authority for agt_cto-agent only (out-of-roster boundary canary; V3/fleet exact-86 bound untouched)
+  - direct in-place reuse of its exact historical OpenClaw Workspace via primary-workspaces.json (direct adopt in place, zero copy)'
++ /usr/bin/grep -q '^spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1$'
++ printf '%s\n' '---
+spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1
+status: accepted
+accepted_date: 2026-08-23
+accepted_by: mayf3
+accepted_reviewed_base: 344975d1d6aa2ab560d2f213d4460d34c9f6ae60
+accepted_reviewed_spec_commit: 06feadf95f196a4c9581d453c256362b5d9e5914
+accepted_reviewed_spec_blob: 5b6ccef2add9ae602bc8168a3e324b4babdb11c3
+primary_review: 总监 审计
+primary_review_result: PASS
+required_fixes: NONE
+semantic_delta_after_review: NONE
+date: 2026-08-23
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: none
+production_apply_authority: none
+scope:
+  - single-Agent companion Workspace authority for agt_cto-agent only (out-of-roster boundary canary; V3/fleet exact-86 bound untouched)
+  - direct in-place reuse of its exact historical OpenClaw Workspace via primary-workspaces.json (direct adopt in place, zero copy)'
++ /usr/bin/grep -q '^status: accepted$'
+++ git_as_repo_owner merge-base --is-ancestor 73ec666fb860d7257b2f48c3dc76bc967bb578cd main
+++ printf %s 0
++ '[' 0 = 0 ']'
++ ok 'accepted governing Spec is in main; separate execution and production authorization bound'
+++ date +%H:%M:%S
++ printf '[%s] OK  %s\n' 21:54:40 'accepted governing Spec is in main; separate execution and production authorization bound'
+[21:54:40] OK  accepted governing Spec is in main; separate execution and production authorization bound
++ log 'GATE_TEST: authority gate passed as repo-owner identity; controlled stop before any production-path step'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:54:40 'GATE_TEST: authority gate passed as repo-owner identity; controlled stop before any production-path step'
+[21:54:40] GATE_TEST: authority gate passed as repo-owner identity; controlled stop before any production-path step
++ exit 0
++ rc=0
++ '[' 0 -ne 0 ']'

@@ -1,0 +1,29 @@
+--- /tmp/run-agent-core-cto-openclaw-recovery-v6.sh	2026-08-29 21:44:37
++++ /tmp/cto-v6-revision-evidence/scratch/copies/pos.sh	2026-08-29 21:54:39
+@@ -94,7 +94,7 @@
+ # Authority queries must run as the repository owner (uid 502). Running bare git
+ # as root trips git >= 2.35.2 dubious-ownership (CVE-2022-24765) and aborts here.
+ git_as_repo_owner() {
+-  /usr/bin/sudo -n -u yanfenma /usr/bin/git -C "$REPO" "$@"
++  /usr/bin/git -C "$REPO" "$@" # GATE-TEST: direct uid-502 identity (identical to sudo -n -u yanfenma output identity; sudo not executable this round)
+ }
+
+ credential_pin_check() {
+@@ -535,7 +535,7 @@
+ fi
+
+ [ "$#" -eq 0 ] || zero_write_exit "unexpected arguments; run exactly: sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v6.sh"
+-[ "$(id -u)" = "0" ] || zero_write_exit "must run through sudo as root"
++: # GATE-TEST root gate neutralized
+ printf 'Type the exact confirmation phrase to continue:\n  %s\n> ' "$CONFIRM_PHRASE"
+ IFS= read -r OWNER_CONFIRMATION || zero_write_exit "confirmation input unavailable"
+ [ "$OWNER_CONFIRMATION" = "$CONFIRM_PHRASE" ] || zero_write_exit "confirmation phrase mismatch"
+@@ -559,7 +559,7 @@
+ printf '%s\n' "$AUTH_HEAD" | /usr/bin/grep -q '^spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1$' || zero_write_exit "authority spec id mismatch"
+ printf '%s\n' "$AUTH_HEAD" | /usr/bin/grep -q '^status: accepted$' || zero_write_exit "authority spec not accepted"
+ [ "$(git_as_repo_owner merge-base --is-ancestor "$AUTH_COMMIT" main >/dev/null 2>&1; printf '%s' $?)" = "0" ] || zero_write_exit "accepted authority is not in main"
+-ok "accepted governing Spec is in main; separate execution and production authorization bound"
++ok "accepted governing Spec is in main; separate execution and production authorization bound"; log "GATE_TEST: authority gate passed as repo-owner identity; controlled stop before any production-path step"; exit 0
+
+ for p in "$ROOT" "$HOME_DIR" "$TARGET_WS"; do [ ! -L "$p" ] || zero_write_exit "symlink substitution rejected: $p"; done
+ [ "$(stat -f '%HT' "$HOME_DIR" 2>/dev/null)" = "Directory" ] || zero_write_exit "home is not a directory"

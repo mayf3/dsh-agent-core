@@ -1,0 +1,111 @@
+run_synthetic_case() {
+  local scenario="$1" synth_root promote_out expected corrupt victim forced
+  synth_root="$(/usr/bin/mktemp -d /tmp/cto-v4-runner-matrix.XXXXXXXX)" || exit 90
+  ROOT="$synth_root/root"
+  HOME_DIR="$ROOT/homes/$AGENT_ID"
+  FALLBACK_WS="$ROOT/workspaces/$AGENT_ID"
+  CREDENTIAL_FILE="$HOME_DIR/.credentials.yaml"
+  MAP_FILE="$ROOT/primary-workspaces.json"
+  TARGET_WS="$synth_root/target"
+  MARKER_FILE="$TARGET_WS/.agent-core-cto-recovery-v4-canary.txt"
+  RUNTIME_LOG="$synth_root/runtime.log"
+  RUNTIME_ERR="$synth_root/runtime.err.log"
+  BACKUP_DIR="$synth_root/backup"
+  BACKUP_FILE="$BACKUP_DIR/primary-workspaces.json"
+  /bin/mkdir -p "$HOME_DIR" "$FALLBACK_WS" "$TARGET_WS" "$BACKUP_DIR" || exit 90
+  /usr/bin/touch "$RUNTIME_LOG" "$RUNTIME_ERR" "$CREDENTIAL_FILE" || exit 90
+  /bin/chmod 755 "$HOME_DIR"; /bin/chmod 600 "$CREDENTIAL_FILE"
+  "$NODE_BIN" -e '
+const fs=require("fs"); const o={};
+for(let i=0;i<87;i++) o[`agt_fixture_${String(i).padStart(2,"0")}`]=`/fixture/ws/${i}`;
+fs.writeFileSync(process.argv[1],JSON.stringify(o,null,2)+"\n",{mode:0o600});
+' "$MAP_FILE" || exit 90
+  /bin/cp "$MAP_FILE" "$BACKUP_FILE"; /bin/chmod 600 "$BACKUP_FILE"
+
+  PIN_HOME_INODE="$(stat -f '%i' "$HOME_DIR")"; PIN_HOME_UID="$(stat -f '%u' "$HOME_DIR")"; PIN_HOME_GID="$(stat -f '%g' "$HOME_DIR")"
+  PIN_CRED_INODE="$(stat -f '%i' "$CREDENTIAL_FILE")"; PIN_CRED_UID="$(stat -f '%u' "$CREDENTIAL_FILE")"; PIN_CRED_GID="$(stat -f '%g' "$CREDENTIAL_FILE")"; PIN_CRED_MTIME="$(stat -f '%m' "$CREDENTIAL_FILE")"
+  PIN_MAP_UID="$(stat -f '%u' "$MAP_FILE")"; PIN_MAP_GID="$(stat -f '%g' "$MAP_FILE")"
+  PRE_SHA256="$(sha256_file "$MAP_FILE")"; PRE_MAP_DEV="$(stat -f '%d' "$MAP_FILE")"; PRE_MAP_INODE="$(stat -f '%i' "$MAP_FILE")"
+  RUNTIME_PID_OLD=999991; SYN_PID=999991; SYN_RESTARTS=0; SYN_HEALTH=1
+
+  _atomic_direct() { /usr/bin/env PATH="/usr/bin:/bin:/usr/sbin:/sbin" HOME="$synth_root" ${RECOVERY_ATOMIC_TEST_CANDIDATE:+RECOVERY_ATOMIC_TEST_CANDIDATE=$RECOVERY_ATOMIC_TEST_CANDIDATE} ${RECOVERY_ATOMIC_TEST_FAULT:+RECOVERY_ATOMIC_TEST_FAULT=$RECOVERY_ATOMIC_TEST_FAULT} "$NODE_BIN" -e "$ATOMIC_JS" "$@"; }
+  run_atomic_as_authsvc() {
+    if [ "$scenario" = "rollback-primary-mapping-restore-fail" ] && [ "${1:-}" = "restore" ]; then
+      RECOVERY_ATOMIC_TEST_FAULT=parent-sync _atomic_direct "$@"
+    else
+      _atomic_direct "$@"
+    fi
+  }
+  map_shape_check() {
+    "$NODE_BIN" -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));const n=+process.argv[2],a=process.argv[3],p=process.argv[4],v=process.argv[5];const h=Object.prototype.hasOwnProperty.call(o,a);process.exit(Object.keys(o).length===n&&(p==="absent"?!h:(h&&o[a]===v))?0:1)' "$MAP_FILE" "$1" "$AGENT_ID" "$2" "${3:-}"
+  }
+  map_count_check() { "$NODE_BIN" -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(Object.keys(o).length===Number(process.argv[2])?0:1)' "$MAP_FILE" "$1"; }
+  map_key_absent_check() { "$NODE_BIN" -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(Object.prototype.hasOwnProperty.call(o,process.argv[2])?1:0)' "$MAP_FILE" "$AGENT_ID"; }
+  fallback_resolution_check() {
+    [ "$scenario" = "rollback-fallback-proof-fail" ] && return 1
+    map_shape_check "$PIN_MAP_ENTRIES" absent && [ "$FALLBACK_WS" = "$ROOT/workspaces/$AGENT_ID" ]
+  }
+  service_pid() { printf '%s\n' "$SYN_PID"; }
+  health_ok() { [ "$SYN_HEALTH" = "1" ]; }
+  capture_log_sizes() { :; }
+  appended_log_text() { printf 'primary workspace imports loaded from synthetic fixture: agt_fixture_00 -> /fixture/ws/0\n'; }
+  stability_pause() { :; }
+  restart_service() {
+    SYN_RESTARTS=$((SYN_RESTARTS + 1))
+    if [ "$scenario" = "restart-fail" ] && [ "$ROLLBACK_ACTIVE" = "0" ]; then return 1; fi
+    if [ "$scenario" = "rollback-restart-fail" ] && [ "$ROLLBACK_ACTIVE" = "1" ]; then return 1; fi
+    SYN_PID=$((SYN_PID + 1))
+    if [ "$scenario" = "health-fail" ] && [ "$ROLLBACK_ACTIVE" = "0" ]; then SYN_HEALTH=0
+    elif [ "$scenario" = "rollback-health-fail" ] && [ "$ROLLBACK_ACTIVE" = "1" ]; then SYN_HEALTH=0
+    else SYN_HEALTH=1; fi
+    return 0
+  }
+  wait_runtime_healthy() { [ "$SYN_HEALTH" = "1" ] || return 1; RUNTIME_PID_NEW="$SYN_PID"; return 0; }
+  change_home_mode() {
+    if [ "$scenario" = "rollback-home-mode-restore-fail" ] && [ "$ROLLBACK_ACTIVE" = "1" ] && [ "$1" = "755" ]; then return 1; fi
+    /bin/chmod "$1" "$HOME_DIR"
+  }
+
+  WRITES_STARTED=1; HOME_MODE_CHANGED=1; MAP_MUTATION_POSSIBLE=1
+  change_home_mode 700 || fail "synthetic home mode"
+  unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
+  if [ "$scenario" = "mapping-promote-fail" ]; then
+    RECOVERY_ATOMIC_TEST_FAULT=rename
+  fi
+  promote_out="$(run_atomic_as_authsvc promote "$MAP_FILE" "$BACKUP_FILE" "$AGENT_ID" "$TARGET_WS" "$PIN_MAP_ENTRIES" "$PRE_SHA256" "$PRE_MAP_DEV" "$PRE_MAP_INODE" 2>&1)" || {
+    unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
+    fail "synthetic $scenario"
+  }
+  unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
+  POST_SHA256="$(sha256_file "$MAP_FILE")"
+
+  restart_service || fail "synthetic restart-fail"
+  wait_runtime_healthy 1 "$RUNTIME_PID_OLD" || fail "synthetic health-fail"
+  case "$scenario" in
+    delivery-404) fail "synthetic delivery-404" ;;
+    delivery-accepted-false) fail "synthetic delivery-accepted-false" ;;
+    marker-timeout) fail "synthetic marker-timeout" ;;
+    rollback-primary-mapping-restore-fail|rollback-home-mode-restore-fail|rollback-restart-fail|rollback-health-fail|rollback-fallback-proof-fail) fail "synthetic $scenario" ;;
+  esac
+
+  expected="$BACKUP_DIR/expected"; write_expected_marker "$expected" || fail "synthetic expected marker"
+  case "$scenario" in
+    marker-open-failed)
+      printf 'uid=502\nDSH_HOME=%s\nDSH_PRIMARY_WORKSPACE=%s\ncwd=%s\ncredential read-open=OPEN_FAILED\n' "$HOME_DIR" "$TARGET_WS" "$TARGET_WS" > "$MARKER_FILE" ;;
+    marker-cwd-wrong)
+      printf 'uid=502\nDSH_HOME=%s\nDSH_PRIMARY_WORKSPACE=%s\ncwd=%s\ncredential read-open=OPEN_OK\n' "$HOME_DIR" "$TARGET_WS" "$FALLBACK_WS" > "$MARKER_FILE" ;;
+    *) write_expected_marker "$MARKER_FILE" || fail "synthetic marker create" ;;
+  esac
+  marker_bytes_exact "$expected" "$MARKER_FILE" || fail "synthetic marker exact validation failed: $scenario"
+  /bin/rm -f "$MARKER_FILE"
+  SUCCESS=1; trap - EXIT
+  log "FINAL: SUCCESS; EXIT=0; SYNTHETIC_CASE=$scenario; ROLLBACK_CALLS=0"
+  exit 0
+}
+
+trap 'rc=$?; if [ "$rc" -ne 0 ] && [ "$WRITES_STARTED" = "1" ] && [ "$ROLLBACK_ACTIVE" = "0" ] && [ "$SUCCESS" = "0" ]; then rollback "unexpected exit rc=$rc"; fi' EXIT
+
+if [ "${1:-}" = "--synthetic-case" ]; then
+  [ -n "${2:-}" ] || { log "missing synthetic case"; exit 90; }
+  run_synthetic_case "$2"
+fi

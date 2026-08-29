@@ -1,0 +1,47 @@
+RUNNER: /tmp/run-agent-core-cto-openclaw-recovery-v6.sh
+SHA256: ca47ef9fbbde891484798a10aeda221fa9d1ccca7c326127631b2144af3db018
+
+== forbidden destructive/exfil strings (expect no output) ==
+grep_rc=1 (1 = zero matches)
+
+== sudo inventory (every occurrence must be -n -u <specific user>) ==
+3:#   sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v6.sh
+97:  /usr/bin/sudo -n -u yanfenma /usr/bin/git -C "$REPO" "$@"
+286:  /usr/bin/sudo -n -u authsvc /usr/bin/env -i \
+293:  /usr/bin/sudo -n -u authsvc "$NODE_BIN" -e '
+310:  /usr/bin/sudo -n -u authsvc "$NODE_BIN" -e 'try{const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(o!==null&&typeof o==="object"&&!Array.isArray(o)&&Object.keys(o).length===Number(process.argv[2])?0:1)}catch{process.exit(1)}' "$MAP_FILE" "$1"
+314:  /usr/bin/sudo -n -u authsvc "$NODE_BIN" -e 'try{const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(!Object.prototype.hasOwnProperty.call(o,process.argv[2])?0:1)}catch{process.exit(1)}' "$MAP_FILE" "$AGENT_ID"
+318:  /usr/bin/sudo -n -u authsvc "$NODE_BIN" --input-type=module -e '
+537:[ "$#" -eq 0 ] || zero_write_exit "unexpected arguments; run exactly: sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v6.sh"
+538:[ "$(id -u)" = "0" ] || zero_write_exit "must run through sudo as root"
+583:  /usr/bin/sudo -n -u '#502' /bin/test -x "$p" 2>/dev/null || zero_write_exit "uid 502 cannot traverse $p"
+585:/usr/bin/sudo -n -u '#502' /bin/test -r "$TARGET_WS" 2>/dev/null || zero_write_exit "uid 502 cannot read target"
+586:/usr/bin/sudo -n -u '#502' /bin/test -w "$TARGET_WS" 2>/dev/null || zero_write_exit "uid 502 cannot write target"
+595:BACKUP_DIR="$(/usr/bin/sudo -n -u authsvc /usr/bin/mktemp -d /tmp/agent-core-cto-recovery-v4.XXXXXXXX)" || zero_write_exit "cannot create private backup directory"
+597:/usr/bin/sudo -n -u authsvc /bin/cp "$MAP_FILE" "$BACKUP_FILE" || zero_write_exit "mapping backup failed"
+598:/usr/bin/sudo -n -u authsvc /bin/chmod 600 "$BACKUP_FILE" || zero_write_exit "backup mode failed"
+599:/usr/bin/sudo -n -u authsvc "$NODE_BIN" -e '
+624:VAL_OUT="$(/usr/bin/sudo -n -u authsvc "$NODE_BIN" --input-type=module -e '
+691:/usr/bin/sudo -n -u authsvc /bin/test -r "$CREDENTIAL_FILE" 2>/dev/null && fail "runtime account can read credential unexpectedly"
+692:/usr/bin/sudo -n -u '#502' /bin/test -r "$CREDENTIAL_FILE" 2>/dev/null || fail "uid 502 cannot open credential"
+
+== git seam inventory ==
+96:git_as_repo_owner() {
+97:  /usr/bin/sudo -n -u yanfenma /usr/bin/git -C "$REPO" "$@"
+557:[ "$(git_as_repo_owner cat-file -t "$AUTH_COMMIT" 2>/dev/null)" = "commit" ] || zero_write_exit "authority commit missing"
+558:AUTH_HEAD="$(git_as_repo_owner show "$AUTH_COMMIT:$AUTH_SPEC_PATH" 2>/dev/null | sed -n '1,20p')"
+561:[ "$(git_as_repo_owner merge-base --is-ancestor "$AUTH_COMMIT" main >/dev/null 2>&1; printf '%s' $?)" = "0" ] || zero_write_exit "accepted authority is not in main"
+
+== launchctl inventory ==
+77:service_pid() { /bin/launchctl print "$SERVICE" 2>/dev/null | awk '/^[[:space:]]*pid =/{print $3; exit}'; }
+78:service_state() { /bin/launchctl print "$SERVICE" 2>/dev/null | awk '/^[[:space:]]*state =/{print $3; exit}'; }
+79:restart_service() { /bin/launchctl kickstart -k "$SERVICE"; }
+
+== kill inventory ==
+387:    if [ -n "$stale" ] && [ "$stale" != "${rollback_pid:-}" ] && /bin/kill -0 "$stale" 2>/dev/null; then rb_stale_absent=0; bad="${bad}\n- stale pre-rollback process remains alive: $stale"; fi
+635:/bin/kill -0 "$RUNTIME_PID_OLD" 2>/dev/null && fail "old runtime pid still alive"
+
+== URL inventory ==
+16:BASE_URL="http://127.0.0.1:8790"
+546:[ "$BASE_URL" = "http://127.0.0.1:8790" ] || zero_write_exit "BASE_URL pin mismatch"
+SYNTHETIC_BLOCK_BYTE_IDENTICAL = YES (run_synthetic_case() through the --synthetic-case dispatch, byte-identical between v5 and v6)

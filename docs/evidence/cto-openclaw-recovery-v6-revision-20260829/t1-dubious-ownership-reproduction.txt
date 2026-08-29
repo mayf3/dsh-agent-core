@@ -1,0 +1,21 @@
+== GIT_TEST_ASSUME_DIFFERENT_OWNER=1 /usr/bin/git -C $REPO cat-file -t 73ec666fb860d7257b2f48c3dc76bc967bb578cd ==
+rc=128
+stdout=[]
+stderr: fatal: detected dubious ownership in repository at '/Users/yanfenma/workspace/project/dsh-agent-core'
+stderr: To add an exception for this directory, call:
+stderr:
+stderr: 	git config --global --add safe.directory /Users/yanfenma/workspace/project/dsh-agent-core
+== GIT_TEST_ASSUME_DIFFERENT_OWNER=1 /usr/bin/git -C $REPO show 73ec666fb860d7257b2f48c3dc76bc967bb578cd:docs/specs/AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1.md ==
+rc=128
+stdout=[]
+stderr: fatal: detected dubious ownership in repository at '/Users/yanfenma/workspace/project/dsh-agent-core'
+stderr: To add an exception for this directory, call:
+stderr:
+stderr: 	git config --global --add safe.directory /Users/yanfenma/workspace/project/dsh-agent-core
+== GIT_TEST_ASSUME_DIFFERENT_OWNER=1 /usr/bin/git -C $REPO merge-base --is-ancestor 73ec666fb860d7257b2f48c3dc76bc967bb578cd main ==
+rc=128
+stdout=[]
+stderr: fatal: detected dubious ownership in repository at '/Users/yanfenma/workspace/project/dsh-agent-core'
+stderr: To add an exception for this directory, call:
+stderr:
+stderr: 	git config --global --add safe.directory /Users/yanfenma/workspace/project/dsh-agent-core

@@ -1,0 +1,11 @@
+== uid 502 (repo owner; the identity sudo -n -u yanfenma produces) ==
+-- cat-file --
+rc=0 out=[commit]
+-- show spec blob | sed 1,20p --
+---
+spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1
+status: accepted
+spec_id grep rc=1
+status grep rc=1
+-- merge-base --
+rc=0

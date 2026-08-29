@@ -1,0 +1,71 @@
+# Evidence manifest — cto-openclaw-recovery-v6-revision-20260829
+
+- OLD_RUNNER (sealed): /tmp/run-agent-core-cto-openclaw-recovery-v5.sh sha256 f55a6069d3b819d879b767066d75469464224bf50e1e3051519925ff9aff5d37
+- NEW_RUNNER: /tmp/run-agent-core-cto-openclaw-recovery-v6.sh sha256 ca47ef9fbbde891484798a10aeda221fa9d1ccca7c326127631b2144af3db018 (archive below byte-identical)
+- NORMALIZATION NOTE: diff/patch/t1 transcripts and synthetic-block extracts are whitespace-normalized (trailing blanks / diff blank-line rendering) to satisfy git whitespace policy; the archived v6 runner is NOT normalized and remains byte-identical to /tmp; synthetic-block equality re-verified post-normalization and against fresh unnormalized extraction.
+- 20260830 INCIDENT NOTE: overnight (after the 20260829 22:00 commit, before 20260830 07:49) an external action deleted all cto-prefixed /tmp artifacts including both runners; restored with sha verification — v6 byte-copied from this archive (ca47ef9f… re-verified), v5 reconstructed by exact inverse of the 8 unique forward replacements (f55a6069… re-verified). /tmp copies are therefore sha-identical to the sealed originals; the git-committed archive remains the authoritative v6 bytes.
+- gate-test copies are PATCHED, DO-NOT-RUN artifacts (root gate neutralized; helper identity direct uid 502); never executed against production paths.
+
+946a30980dae91dc3f29b8a0e03d53cb435d46de2d3fc8d5bebec35423ba2873  bashx-baseline.out.txt
+5729a58a809a03f00618ffdd7636987647cda6a28be13da7a0ae746757c0d981  bashx-baseline.trace.txt
+404619ad26d5f4d750d9360e066696f8ae6bb777783064cc334de7f648eb5dbe  bashx-rollback.out.txt
+b7ece44618202d8b4f4b621eb4746ef0215056a4c5d9405161b029324f0edae8  bashx-rollback.trace.txt
+43d6b807809c30ea87975064338636b780d82784db19844236e6dfef31d78b21  cleanup-new-matrixdirs.txt
+a6af69fbb8d38b80df841a0a2eb314c71562a150adebc25b662aa6bfd9cc2f18  cleanup-new-v4logs.txt
+836cb4a58d9460a0064a6b6f39027891afbe6d237fe982118c9051768f689066  gate-commit-missing.out.txt
+924f0cf358e67d1a33552d756aaa1764f5430348bd85b65d8a521bcf240acbbb  gate-dotgit-symlink.out.txt
+5ba74db2c5271a26efb25848d8ea4d064d8b1dbeed314256b90a371e27ed6d94  gate-owner-drift.out.txt
+f17b99b5f1269ccab35a419d3f8455c145a4065f57e6bc9c38ff6366ada8e1e5  gate-path-drift.out.txt
+154597f8b171c2e2057e81b18f6460eaa7d0b321a02479ea92712034c604536e  gate-path-unresolved.out.txt
+5fca6c4cf57fa490c433dbc1ef68a3dbfe41a1a72450e562966aaa55d08be199  gate-pos.out.txt
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  gate-pos.trace-sudo-count.txt
+9a81756ac5ca1e846d4b355ce63e6f8941755838a6ddf2eb2ff13a0f126c4e94  gate-pos.trace.out.txt
+3e1bdadd31ef46ca83f423a28c5aeff6a192bda69d2bb1b7408ea11e7cd49840  gate-pos.trace.txt
+941c32f12b1dc9b62bc3969f9ab3ae94338264d905e1d3e480d95d2e0d2e21bb  gate-repo-symlink.out.txt
+8bd490eb8727bb822a88220fca6e6b889a1f19c063586054e8c931c727480aa2  gate-spec-draft.out.txt
+ac82a43328a2a292044f9669dcd6e04f322b4abca156a4ab595b38fe2d8d3e15  gate-test-copy-commit-missing-DO-NOT-RUN.txt
+58b0611b03001be6433085fa1eb61555f74a77781f453aa869efd06048f92304  gate-test-copy-dotgit-symlink-DO-NOT-RUN.txt
+8a08b0b1793ca899c9f2166335f04c969ec5f87676c0d532d2e658b7425dc295  gate-test-copy-owner-drift-DO-NOT-RUN.txt
+fd4ca3d1e0f54c611358f777c1e8446825ea4584fb212474b89ed37b25cf3603  gate-test-copy-path-drift-DO-NOT-RUN.txt
+7bad0fba5124f73cace9fb634b4fdd1dfa01da6bf1969d51adc0598824ca264a  gate-test-copy-path-unresolved-DO-NOT-RUN.txt
+c0ee6258cd1b1f77cd5cd7ee2d53486adcfec7a6e789d3b845b76996ee6c5fc3  gate-test-copy-pos-DO-NOT-RUN.txt
+784cfd0a128ba7f00898edc11a49e85216158b00f5e2dda763042061d6caa2bc  gate-test-copy-repo-symlink-DO-NOT-RUN.txt
+1347d7553cdf8429aeeef571b7cc47c00619963bced1245a85a25313082d923b  gate-test-copy-spec-draft-DO-NOT-RUN.txt
+fe6ee177857e4dddb9f481d92ad4ce903d2f7904e212b2d00b8e425e6ea70ced  identity-facts.txt
+ca30ae71378a87d722f5d0539239ab51ddd92da2910ceca30e73acd6a7f5e1a3  matrix-summary.txt
+72bd4e482776d126ccb64364efa7f9ceb517deefc6c3c841607696f826b58315  matrix/case-baseline.txt
+aa2931cfef194ee013b48b17083431a05e0d41ee02ce795359390f7dfef59e83  matrix/case-delivery-404.txt
+c3965aee0a95fa8fbdd064d6e299a0fe47f82c543dab7e90f0ceaf296e3e8e59  matrix/case-delivery-accepted-false.txt
+9ce9282e196b5e222be5a7c403018f1e81138f2a8954dbf2dc8678728242da08  matrix/case-fault-env-pollution-ignored.txt
+496ab0a8a0fed18cc068ab609bf7fae753e35ffeaeeb123c063f7bb98fd75a25  matrix/case-health-fail.txt
+436179bc78f38de7cb2d501df697373b3899220288ff917de4c1227201a989df  matrix/case-mapping-promote-fail.txt
+1fd3b10929a6620c92dfdcc655bdc210a19fbb8b929f38aae6164d4be11f9223  matrix/case-marker-cwd-wrong.txt
+4c8149b847356ecc564247ebb86c65c8050f4b807d3bc13c5eeedaf2d44879d7  matrix/case-marker-open-failed.txt
+36f1edf2bdd0bfc897c0c2793d3348db3457cdae327fd98aab3bea5f96be2732  matrix/case-marker-timeout.txt
+289979d3c60382e9cdba8f0a0351aeeaa686b636fa8c161ecb6dafeadbdfb487  matrix/case-restart-fail.txt
+279f7b57bd1c0430a3c13d8d979f9c049882a8ed8438d855f9613e9962014b52  matrix/case-rollback-fallback-proof-fail.txt
+c741deb48ea72ca33dc7159a228a59809f5bd8538105962361823206bdcab9bf  matrix/case-rollback-health-fail.txt
+8537962ecef4cceca2ed91de50217a84ad41e82a7a8fe26b7ae101a10c5de276  matrix/case-rollback-home-mode-restore-fail.txt
+cb63d028602d40cd34e2a85844b80ee9169ae92a065a4339f6f59f41b15f701e  matrix/case-rollback-primary-mapping-restore-fail.txt
+8fa0470947898d22830957adea8a1860a72da8144a6cc69f1c90a129e68b1555  matrix/case-rollback-restart-fail.txt
+7dd69d26d284298c8ac570c037519c47f890a02dcf3ff195e2242298f9cba525  patch-commit-missing.diff
+fc68f5898974db32bd13de687d97ba242725e1c94db6b6f6b848c62760d67f8e  patch-dotgit-symlink.diff
+1fb7fb453ff734c2ad0d8d0b7ffa0eeb97ae80b5766f617423f8142080a51cac  patch-owner-drift.diff
+535ee1f4c2b49356d331a6cd83e5532da41707f38a1721a35cf1709283cc3164  patch-path-drift.diff
+fb308781caa2af3232babfa36a1cc795eb0974a066cc3be722fb98e9c7b770ec  patch-path-unresolved.diff
+0a52205c017e8e6bfc3fc1a00406aa76478b11fde139cc20a57bed780b463fb6  patch-pos.diff
+7d1473eb81d04ddde6474240f2d7719cd51f05e25e011ee7ee37a4e5ff1caf64  patch-repo-symlink.diff
+ba54d287dfcc6fafe543f0121d99d2b82e9d2a2f7805fa6ae989d0bc6c4b486d  patch-spec-draft.diff
+ffc62d8bd1f4bedd270148ea9e64269c39af30bd63e2383424974a94f8ccb2c9  repo-state-after.txt
+ffc62d8bd1f4bedd270148ea9e64269c39af30bd63e2383424974a94f8ccb2c9  repo-state-before.txt
+ca47ef9fbbde891484798a10aeda221fa9d1ccca7c326127631b2144af3db018  run-agent-core-cto-openclaw-recovery-v6.sh
+29ff3b8df6891f33ab0c48b797941019affaef07ae68063af1637db35a006606  run-gate-tests.sh
+9fdb1ac51ad53c5a88a1e208bf1e99dcdebb370743201d70dc5d6d0fa101b771  run-matrix-v6.sh
+a5e6ef02750af8c022dc2961c29b36fa0b7ce3d54cbe340c3a2d302e46232535  static-analysis.txt
+1cdcbb02dda925b78faf9b40d51cb28772266b57a4050561a62b52353eb28e15  synthetic-block-v5.txt
+1cdcbb02dda925b78faf9b40d51cb28772266b57a4050561a62b52353eb28e15  synthetic-block-v6.txt
+e3d943f1e3e80c9ba9b33bfc9214723d2a94092d4eedf2d54499a5a837cf3c59  synthetic-repos.txt
+c99aa6975e83b9561895670eda3639fbef1b7a10ed5bdda371d88afc6a579268  t1-dubious-ownership-reproduction.txt
+7d0e91edcb086b1a99a639c8c30ac094053e0727bac0293690e3b1f837cc94ca  t2-repo-owner-identity-success.txt
+3f92dbbca38623902e2ce7ab80f1e2877d70f558e69c061d23f3ff203963bcd6  tmp-v4logs-before.txt
+0e70ae3ab3576761743bb0382cf4dfdbcf49feb02e16412c78717b2fa17c46aa  v5-v6-diff.txt

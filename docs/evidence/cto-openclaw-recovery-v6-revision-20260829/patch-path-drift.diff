@@ -1,0 +1,29 @@
+--- /tmp/run-agent-core-cto-openclaw-recovery-v6.sh	2026-08-29 21:44:37
++++ /tmp/cto-v6-revision-evidence/scratch/copies/path-drift.sh	2026-08-29 21:54:39
+@@ -21,7 +21,7 @@
+ EVIDENCE_JSONL="$ROOT/control/runtime-evidence.jsonl"
+ NODE_BIN="/usr/local/libexec/agent-core/node-runtime/bin/node"
+ VALIDATOR_MOD="/usr/local/libexec/agent-core/app/node_modules/@agent-core/workspace-bootstrap/src/index.js"
+-REPO="/Users/yanfenma/workspace/project/dsh-agent-core"
++REPO="/private/tmp/cto-v6-revision-evidence/scratch/repo-no-commit"
+ AUTH_COMMIT="73ec666fb860d7257b2f48c3dc76bc967bb578cd"
+ AUTH_SPEC_PATH="docs/specs/AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1.md"
+ REPO_PIN="/Users/yanfenma/workspace/project/dsh-agent-core"
+@@ -94,7 +94,7 @@
+ # Authority queries must run as the repository owner (uid 502). Running bare git
+ # as root trips git >= 2.35.2 dubious-ownership (CVE-2022-24765) and aborts here.
+ git_as_repo_owner() {
+-  /usr/bin/sudo -n -u yanfenma /usr/bin/git -C "$REPO" "$@"
++  /usr/bin/git -C "$REPO" "$@" # GATE-TEST: direct uid-502 identity (identical to sudo -n -u yanfenma output identity; sudo not executable this round)
+ }
+
+ credential_pin_check() {
+@@ -535,7 +535,7 @@
+ fi
+
+ [ "$#" -eq 0 ] || zero_write_exit "unexpected arguments; run exactly: sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v6.sh"
+-[ "$(id -u)" = "0" ] || zero_write_exit "must run through sudo as root"
++: # GATE-TEST root gate neutralized
+ printf 'Type the exact confirmation phrase to continue:\n  %s\n> ' "$CONFIRM_PHRASE"
+ IFS= read -r OWNER_CONFIRMATION || zero_write_exit "confirmation input unavailable"
+ [ "$OWNER_CONFIRMATION" = "$CONFIRM_PHRASE" ] || zero_write_exit "confirmation phrase mismatch"
