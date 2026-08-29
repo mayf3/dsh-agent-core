@@ -7,13 +7,7 @@ authority_level: governing_spec
 implementation_authority: contracts
 scope:
   - mayf3/dsh-agent-core
-  - >-
-    single-use local uid502→uid505 execution channel for exactly one accepted
-    operation (workflow_admin_agent_bootstrap_v1) with exactly one subject
-    (agt_workflow-admin-agent) — a dedicated local-only Unix-domain operator
-    endpoint composed in-process into the existing authsvc (uid 505) trusted
-    production runtime; docs-only authoring round (this round writes no code,
-    no runtime state, no secret)
+  - deployment-prebound, exact-attempt, single-operation local trigger channel for workflow_admin_agent_bootstrap_v1 and agt_workflow-admin-agent; implementation, deployment, audit, execution-window and bootstrap execution are separate tasks
 governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 depends_on:
@@ -22,1369 +16,1374 @@ depends_on:
 external_authorities:
   - repository: mayf3/auth-service
     authority_id: MINIMAL_AUTH_FOUNDATION_V2
-    revision: b88512881135dd8a0d382e8ca76650059df33725
+    revision: 7110463636693b3c2eced9d97ccb186adf46907d
     relation: depends_on
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_OWNERLESS_AGENT_PRINCIPAL_V1
-    revision: b88512881135dd8a0d382e8ca76650059df33725
+    revision: 7110463636693b3c2eced9d97ccb186adf46907d
     relation: depends_on
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_AGENTCORE_IDENTITY_RESOLUTION_V1
-    revision: b88512881135dd8a0d382e8ca76650059df33725
+    revision: 7110463636693b3c2eced9d97ccb186adf46907d
     relation: depends_on
 supersedes: []
 superseded_by: null
 owners:
   - mayf3
 type: dedicated-bootstrap-operator-channel-spec
-references:
-  - >-
-    docs/specs/AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1.md (accepted; on
-    authoring base df3b299 as blob a190c4496a889432ace9e874e0dc50ca8005ca9a;
-    accepted head bb0db2855470650da531431c35c4b0e2a7ae1157; merge
-    91cab8473c5042e833b559ea9c4f35723d147739; its CTR-WA-001..012, execution
-    order T1–T9, attempt ledger, final receipt, outcome_unknown decision trees
-    and SAFE_DISABLED_STAGED_IDENTITY terminal state are INHERITED and NOT
-    modified by this Spec)
-  - >-
-    docs/specs/AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1.md (accepted; Part
-    C.4 deterministic external_refs, Part D/D.5 verification mint
-    classification, D.7 Phase A order, E.4(c) bootstrap provisioner
-    prerequisite, Part G store write contract, Part H secret handoff are
-    INHERITED and NOT modified by this Spec)
-  - >-
-    docs/reports/trusted-control-plane-deployment-hardening-v1.md (accepted
-    production topology evidence: trusted install /usr/local/libexec/agent-core,
-    authsvc uid 505 control plane, config 0700, trusted Node, uid 502
-    read-only over all trusted code/config)
-  - >-
-    docs/reports/trusted-credential-505-final-acceptance-v2.md (uid 505 / uid
-    502 privilege boundary acceptance precedent: 505-private credential zone,
-    uid 502 store read DENIED)
 ---
 
-# AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_OPERATOR_V1 — 单 Agent bootstrap 的 uid502→uid505 本地执行通道权威
+# AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_OPERATOR_V1 — Trigger 不是 Authority 的单次 Bootstrap Operator
 
-> **PROPOSED / DOCS-ONLY / SPEC ONLY — 本轮不实现 operator、不部署、不执行任何运行时写入。**
+> **PROPOSED / DOCS-ONLY / SPEC ONLY。** Amendment Round 1 原位修订同一 proposed
+> Spec 与 Draft PR #100。本轮不实现、不部署、不创建 socket、不打开执行窗口、不执行
+> Bootstrap、不写 production runtime / Agent Definition / credential store / attempt
+> ledger，不调用 auth-service，不读取或输出 secret，不 accepted、不 Ready、不 merge。
 >
-> 本 Spec 是已 accepted 并进入 main 的
-> `AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1`（下称 **Bootstrap Spec**）的
-> **child authority**：为它的单次「身份 执行」round 建立一条**最小、exact-subject、
-> secret-safe** 的 uid502→uid505 本地执行通道。生产拓扑下（OBS-OP-003/OBS-OP-004），
-> Bootstrap Spec 要求的全部运行时写入目标——生产 `agents.json`（canonical Agent
-> Definition writer）、trusted credential store（Part G）、S1/S2 与 verification
-> mint——都在 authsvc（uid 505）私有边界内，uid 502（`yanfenma`，本机
-> authorized local requester）对它们零写权限。因此执行通道必须在 uid 505 内部
-> 承载执行，而 uid 502 只能以**一个固定的、已 accepted 的 exact operation** 发起。
->
-> 本通道最终只允许完成一件事：**`agt_workflow-admin-agent` 这一名 Agent 的一次
-> Bootstrap**（operation = `workflow_admin_agent_bootstrap_v1`）。它不是通用
-> operator，不是 authsvc shell，不是通用文件 writer，不提供任意 method /
-> command / path / Agent ID / Principal UUID / Client ID / secret / Token /
-> Authorization / Grant / Binding / Root / activation 参数的任何入口。
->
-> 治理权威形式冻结（继承 Bootstrap Spec DEC-WA-008 / CTR-WA-008 的同一形式）：
+> 独立审计结论 `REVISE`（reviewed head
+> `d45269bf1e46579249690ba1dc4c8b1ab3b69e44`）指出旧模型错误地把
+> `LOCAL_PEERCRED / peer uid 502` 当成授权来源，并让 uid505 private state 取代父
+> repository attempt ledger。本 Amendment 完整删除该安全依赖并恢复父 authority：
 >
 > ```text
-> DOCS_MERGE_DEPLOYS_OPERATOR = NO
-> ACCEPTED_AND_MERGED_SPEC_AUTHORIZES_IMPLEMENTATION = YES
-> SEPARATE_OPERATOR_IMPLEMENTATION_TASK_REQUIRED = YES
-> SEPARATE_OPERATOR_DEPLOYMENT_AND_AUDIT_REQUIRED = YES
-> BOOTSTRAP_RUNTIME_WRITE_AUTHORIZED_BY_THIS_AUTHORING_ROUND = NO
+> TRIGGER_IS_NOT_AUTHORITY
+> CALLER_AUTHORIZATION_MODEL = PREBOUND_EXACT_OPERATION
+> REPOSITORY_ATTEMPT_LEDGER = AUTHORITATIVE
+> UID505_PRIVATE_OPERATOR_STATE = CRASH_RECOVERY_REPLICA_ONLY
+> UDS_PURPOSE = local transport only
 > ```
->
-> 即：本 Spec accepted + 合入 main 后，成为 operator 代码实现（独立任务）、
-> operator 部署与 pinning（独立任务 + 独立审计）、以及**经由该通道执行的
-> Bootstrap Spec 单次执行 round**（独立任务）的合法实现权威；文档合并本身不
-> 部署、不启用、不执行任何东西。本轮（authoring round）只交付本文件与
-> `docs/specs/README.md` 的 index 行，不创建 attempt ledger、不创建
-> Agent/Principal/Client/secret、不调用 auth-service resolution/S1/S2、不创建
-> Workspace/Home/Binding/Grant/Root、不执行 activation、不修改
-> owner/group/mode/ACL/sudoers、不使用 root/sudo/launchctl、不输出或读取任何
-> secret、不 accepted、不 Ready、不 merge。
 
 ---
 
-## 0. Owner 冻结决策（frozen — 实现轮不得更改、不得重新决定）
-
-以下决策由 Owner 派发指令冻结，效力高于本 Spec 任何实现轮的裁量：
+## 0. Owner 冻结（实现、部署与执行任务不得重新决定）
 
 ```text
-CANONICAL_RUNTIME_USER =
-authsvc
+EXACT_OPERATION = workflow_admin_agent_bootstrap_v1
+EXACT_AGENT_ID = agt_workflow-admin-agent
+EXACT_DISPLAY_NAME = 工作流总管
+EXACT_PRINCIPAL_EXTERNAL_REF = agentcore:v1:principal:agt_workflow-admin-agent
+EXACT_CLIENT_EXTERNAL_REF = agentcore:v1:client:agt_workflow-admin-agent
+OPERATOR_RUNTIME_UID = 505
+TRIGGER_UID = 502
 
-CANONICAL_RUNTIME_UID =
-505
+CALLER_AUTHORIZATION_MODEL = PREBOUND_EXACT_OPERATION
+PEER_UID_IS_AUTHORITY = NO
+REQUEST_BODY_IS_AUTHORITY = NO
+TRIGGER_IS_AUTHORITY = NO
+UDS_IS_AUTHORIZATION_SOURCE = NO
+UDS_PURPOSE = local transport only
 
-AUTHORIZED_LOCAL_REQUESTER_USER =
-yanfenma
+EXECUTION_AUTHORIZATION_SOURCE =
+a deployment-time immutable exact-attempt binding installed inside the
+uid505-owned trusted closure by a separately accepted and audited deployment task
 
-AUTHORIZED_LOCAL_REQUESTER_UID =
-502
+OTHER_UID502_PROCESS_CAN_CONNECT = YES
+OTHER_UID502_PROCESS_CAN_SELECT_OPERATION = NO
+OTHER_UID502_PROCESS_CAN_SELECT_AGENT = NO
+OTHER_UID502_PROCESS_CAN_CHANGE_REQUEST = NO
+EARLY_TRIGGER_BEFORE_EXECUTION_WINDOW = REJECTED
+TRIGGER_DURING_OPEN_WINDOW = may only advance the already approved exact attempt
 
-EXACT_AGENT_ID =
-agt_workflow-admin-agent
-
-EXACT_DISPLAY_NAME =
-工作流总管
-
-EXACT_PRINCIPAL_EXTERNAL_REF =
-agentcore:v1:principal:agt_workflow-admin-agent
-
-EXACT_CLIENT_EXTERNAL_REF =
-agentcore:v1:client:agt_workflow-admin-agent
-
-EXACT_OPERATION =
-workflow_admin_agent_bootstrap_v1
-
-GENERAL_OPERATOR_CAPABILITY =
-FORBIDDEN
-
-ARBITRARY_AGENT_ID =
-FORBIDDEN
-
-SHELL_EXECUTION =
-FORBIDDEN
-
-SECRET_CROSSES_UID_BOUNDARY =
-NO
-
-AUTH_SERVICE_NEW_PROVISIONER_CHILD_REQUIRED =
-NO
-
-ROLLBACK_TARGET =
-SAFE_DISABLED_STAGED_IDENTITY
-
-OPERATOR_CAPABILITY_SCOPE =
-single Spec + single exact subject
-
-OPERATOR_DEFAULT_STATE =
-disabled / unavailable until its own deployment gate passes
-
-OPERATOR_AFTER_TERMINAL_SUCCESS =
-reject all new bootstrap attempts
+REPOSITORY_ATTEMPT_LEDGER = AUTHORITATIVE
+UID505_PRIVATE_OPERATOR_STATE = CRASH_RECOVERY_REPLICA_ONLY
+AUTH_SERVICE_NEW_PROVISIONER_CHILD_REQUIRED = NO
+MEMORY_ZEROIZATION = BEST_EFFORT
+ROLLBACK_TARGET = SAFE_DISABLED_STAGED_IDENTITY
+GENERAL_OPERATOR_CAPABILITY = FORBIDDEN
+SECRET_CROSSES_UID_BOUNDARY = NO
 ```
 
----
+任何 uid502 进程最多触发同一个已经获批的动作。它不能授予动作、选择 subject、改变
+参数、扩大权限或取得 secret。若错误进程抢先触发，其最大效果仍只能是推进部署任务已
+预绑定的同一 attempt；endpoint 不在 exact execution window 时全部请求拒绝。
 
 ## 1. Goal
 
-为 Bootstrap Spec 的单次「身份 执行」round 建立**唯一合法的 uid502→uid505 发起
-通道**权威：一个 dedicated local-only Unix-domain operator endpoint，运行在现有
-authsvc（uid 505）trusted production runtime 进程内，只接受本机 uid 502 的**一个
-固定 operation**（`workflow_admin_agent_bootstrap_v1`），在 uid 505 边界内完整执行
-Bootstrap Spec 冻结的 T4–T8（disabled Agent Definition 写入 → S1/S2 → secret 内存
-→ Part G store 原子写 → 父 D.5 verification mint），只返回非秘密闭合结果。
+为父 Spec `AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1` 的单次「身份 执行」建立一条
+local-only trigger transport。真正的执行授权在部署时已经绑定为一个 immutable exact
+attempt；trigger 仅提交阶段推进证明。Operator 在 uid505 trusted closure 内执行父 Spec
+允许的同一动作：建立 `agt_workflow-admin-agent` 的 disabled identity，零 Grant、零
+Binding、零 Root、不可路由、不可运行，并保持后续 Slice 完全独立。
 
 ```text
-AUTHORITY_ID          = AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_OPERATOR_V1
-AUTHORITY_KIND        = governing_spec (implementation kind, docs-only delivery)
-SUBJECT               = exactly one bootstrap of agt_workflow-admin-agent via
-                       exactly one operation workflow_admin_agent_bootstrap_v1
-THIS_ROUND            = SPEC_ONLY (single new file + README index row; no execution)
-ACTIVATION            = independent review + Owner acceptance + merge to main
-POST_MERGE_AUTHORITY  = bounded implementation authority (implementation_authority: contracts)
-BOOTSTRAP_RUNTIME_WRITE_PERFORMED_IN_THIS_ROUND = NO
+SPEC_DEDUP_CLASSIFICATION = AMEND
+DUPLICATE_SPEC_RISK = NONE
+PARTIAL_SUPERSESSION = NONE
+DOCS_MERGE_DEPLOYS_OPERATOR = NO
+BOOTSTRAP_RUNTIME_WRITE_AUTHORIZED_NOW = NO
 ```
 
 ## 2. Scope and non-goals
 
-### 2.1 In scope（仅在各自独立任务的门全部满足后）
+### 2.1 In scope（仅为后续任务建立 Contract）
 
-- 定义 operator 的 transport 与 caller 边界：exact socket path、uid 505 属主、
-  kernel-verified peer credentials、仅本机、无网络监听（CTR-OP-002）。
-- 定义 request 的非秘密闭合字段集合与 fail-closed 校验（CTR-OP-001）。
-- 定义 operator 在 uid 505 内部的完整事务顺序（含 canonical writers、S1/S2、
-  Part G store 写、父 D.5 verification、uid 505 私有 transaction state、非秘密
-  response）（CTR-OP-007 / CTR-OP-009）。
-- 定义 bootstrap provisioner（credential spec E.4(c)）的 fresh revalidation 义务
-  与失败 STOP 语义（CTR-OP-006）。
-- 定义 one-shot、幂等、防重放与崩溃恢复语义（CTR-OP-010）。
-- 定义失败与安全终态（继承 `SAFE_DISABLED_STAGED_IDENTITY`）（CTR-OP-011）。
-- 定义通道生命周期（默认 disabled、terminal success 后永久拒绝、retirement 归
-  后续 Spec）（CTR-OP-012）。
-- 定义 operator 自身的部署门与审计边界（CTR-OP-014）。
+- deployment-time exact-attempt binding、有限 `notBefore/expiresAt` window；
+- local UDS transport、safe pathname lifecycle、strict framed JSON parser；
+- repository ledger acknowledgement 与 uid505 crash-recovery replica；
+- canonical Agent Definition writer、auth-service S1/S2、Part G store writer 与父 D.5
+  verification 的阶段化编排；
+- one-shot、single-instance、mutex、stateVersion CAS、crash/replay/reconciliation；
+- non-secret closed success/error responses；
+- dedicated auth client 的日志、trace、exception、diagnostic 与 memory handling；
+- exact implementation/deployment file closure 与五段任务生命周期。
 
-### 2.2 Explicit non-goals（本 Spec 明确不授权）
+### 2.2 Explicit non-goals
 
 ```text
-GENERAL_OPERATOR_CAPABILITY      = FORBIDDEN（不得演化成通用 privileged API）
-ARBITRARY_AGENT_ID               = FORBIDDEN（第二 Agent subject = rejected）
-SHELL_EXECUTION                  = FORBIDDEN（无 shell、无任意 argv/exec）
-ARBITRARY_METHOD_COMMAND_PATH    = FORBIDDEN（不存在任意 method/command/path 面）
-TCP_OR_PUBLIC_HTTP_TRANSPORT     = FORBIDDEN
-ROOT_HOST_EXEC                   = FORBIDDEN
-SUDO_OR_LAUNCHCTL_ASUSER_BYPASS  = FORBIDDEN
-DIRECT_DATABASE_WRITE            = FORBIDDEN
-GENERIC_FILE_WRITER              = FORBIDDEN（operator 不是通用文件写入器）
-SUDOERS_OR_ACL_CHANGE            = NOT_AUTHORIZED_BY_THIS_SPEC
-PROVISIONER_CREDENTIAL_CHANGE    = NOT_AUTHORIZED_BY_THIS_SPEC（复用现有 accepted
-  auth-service provisioner authorities；不定义、不修改其 credential）
-AUTH_SERVICE_CODE_CHANGE         = NO_IN_REPO
-PRODUCT_CODE_CHANGE_IN_AUTHORING_ROUND = NONE（本轮零代码）
-ACTIVATION                       = NO（不得自动启用
-  AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1；disabled:true → false 仍仅归
-  该独立 activation authority，Bootstrap Spec CTR-WA-009）
-BINDING_GRANT_ROOT_CREATION      = NO
-WORKSPACE_HOME_CREATION          = NO
+GENERAL_OPERATOR / ARBITRARY_AGENT / ARBITRARY_OPERATION = FORBIDDEN
+SHELL / COMMAND / ARGV / FILE_PATH / GENERIC_FILE_WRITER = FORBIDDEN
+TCP / PUBLIC_HTTP / ROOT_HOST_EXEC / SUDO / LAUNCHCTL_ASUSER = FORBIDDEN
+DIRECT_DATABASE_WRITE = FORBIDDEN
+REQUEST_SUPPLIED_AUTHORITY = FORBIDDEN
+PRINCIPAL_UUID_OR_CLIENT_ID_INPUT = FORBIDDEN
+GRANT / BINDING / ROOT / ACTIVATION = FORBIDDEN
+WORKSPACE / HOME / SCHEDULER / DOMAIN / FEISHU = OUT_OF_SCOPE
+AUTH_SERVICE_CODE_OR_AUTHORITY_CHANGE = OUT_OF_SCOPE
+OPERATOR_IMPLEMENTATION_OR_DEPLOYMENT_IN_THIS_ROUND = NO
 ```
 
-Bootstrap Spec §2.2 的全部 non-goals（Slice 分离：无 svc-workflow grant、无 Feishu
-Binding、无 designation root、无 workspace/Home provisioning、无 capability/
-Scheduler/Runtime/fleet 变更）在本通道内**逐字继续有效**：operator 的动作集合是
-Bootstrap Spec CTR-WA-007 封闭动作清单的 uid 505 侧子集，不得扩张。
-
-### 2.3 通道参与方与职责分工（composition，不修改父契约）
-
-Bootstrap Spec 的「身份 执行」round 义务按下列分工联合履行（round 级
-Contract-by-Contract conformance 仍按 Bootstrap Spec 评估）：
-
-```text
-REQUESTER（uid 502 执行任务的职责）:
-  T1 re-baseline / preflight（父 CTR-WA-008 四条件）;
-  T2/T3 生产面只读检查的 coordination;
-  T3.5 PREPARED attempt ledger 的准备与 docs-only evidence commit（先于任何
-      运行时写入落盘，满足父 CTR-WA-010 "首个外部写入前" 义务）;
-  调用 operator（一次 UDS request）;
-  响应后：按 operator 返回的非秘密结果更新同一 attempt ledger、写父 CTR-WA-006
-      六字段 final receipt、提交 docs-only evidence commit。
-
-OPERATOR（uid 505 内部职责，本 Spec 冻结）:
-  验证（spec pin / evidence commit / PREPARED ledger / provisioner /
-      pre-state）→ 父 T4–T8 的 uid 505 侧执行（canonical Definition writer、
-      exact resolution/S1/S2、secret 内存路径、Part G 原子 store 写、父 D.5
-      verification mint 分类）→ uid 505 私有 transaction state → 非秘密 response。
-```
-
-operator MUST NOT 写 dsh-agent-core 仓库工作树（502 属主；且 trusted CP 的冻结
-posture 是 505 进程不打开 dev-repo 文件，OBS-OP-003）。repo 侧 ledger/receipt/
-evidence 全部由 requester 侧提交。
+Bootstrap 后仍必须是 `{ disabled: true }`、无 Grant、无 Root、无 Binding；本 Spec 不得
+顺手完成 V3 后续任何 Slice。
 
 ## 3. Authority and dependencies
 
 ```text
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1
-  repository = mayf3/dsh-agent-core
-  blob on authoring base (github/main df3b299) = a190c4496a889432ace9e874e0dc50ca8005ca9a
-  accepted_head = bb0db2855470650da531431c35c4b0e2a7ae1157 (in main ancestry)
-  merge_commit = 91cab8473c5042e833b559ea9c4f35723d147739 (PR #80, in main ancestry)
-  relation = depends_on（本 Spec 是该 accepted 权威对「执行通道」这一实现侧面的
-    subject-bounded child authority；不修改其任何冻结；其全部 CTR-WA-* 在本通道
-    执行内继续逐字有效）
+PARENT_ACCEPTED_HEAD = bb0db2855470650da531431c35c4b0e2a7ae1157
+PARENT_RELATION = child transport/orchestration authority; no parent redefinition
 
-INHERITED_IN_REPO_AUTHORITY = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
-  blob on authoring base = df74e92759ad3083328dfd337667fc8a4ec618a0
-  inherited_seams = Part C.4 external_ref 纯函数 · Part D/D.7 Phase A 固定顺序 ·
-    D.5 verification mint 分类表 · E.4(c) bootstrap provisioner 前置 ·
-    Part G store 写契约 · Part H secret handoff
-  relation = reuse（零修改）
+INHERITED_AUTHORITY = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
+INHERITED_SEAMS = C.4 external_ref; D/D.5/D.7; E.4(c); G store writer; H secret handoff
 
-PRODUCTION_RUNTIME_REFERENCE = TRUSTED_CONTROL_PLANE_DEPLOYMENT_HARDENING_V1 /
-  TRUSTED_CREDENTIAL_505_FINAL_ACCEPTANCE_V2（docs/reports；生产拓扑 evidence）
-  trusted install root = /usr/local/libexec/agent-core（authsvc:authsvc，uid 502 只读）
-  control plane = uid 505 authsvc 进程（trusted Node + trusted harness/app 闭包）
-  config = <trusted>/config（agents.json / bindings / credential store，authsvc 0700/0600）
-  relation = constrained_by（operator 是该拓扑内的 additive endpoint，不得削弱
-    其任何已验收边界：trusted Node、502 只读、store 505-private、CP 不打开
-    dev-repo 文件）
-
-EXTERNAL (interoperates_with / depends_on, no local supersession):
-  mayf3/auth-service github/main = b88512881135dd8a0d382e8ca76650059df33725
-    （2026-08-29 fetch；较 Bootstrap Spec authoring 时的 observed 325e781 前进，
-     新增 delta 仅 AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_* closure Specs——
-     不涉及 provisioner Principal/Client authority、S1/S2、secret handoff 或
-     同范围 operator authority，OBS-OP-007）
-  MINIMAL_AUTH_FOUNDATION_V2 = accepted（docs/contracts/minimal-auth-v2/）
-  AUTH_SERVICE_OWNERLESS_AGENT_PRINCIPAL_V1 = accepted（ownerless agent principal）
-  AUTH_SERVICE_AGENTCORE_IDENTITY_RESOLUTION_V1 = accepted（exact external_ref
-    resolution seams；operator 的 resolution/outcome_unknown 解析按其语义）
-  现有 provisioner Principal/Client authority、S1/S2 幂等 seam、
-  rotate/revoke/disable authority = 由 auth-service 侧各自权威持有；本 Spec 只读
-  复用（AUTH_SERVICE_NEW_PROVISIONER_CHILD_REQUIRED = NO）
-  auth-service 行为由其自身权威治理，本 Spec 仅引用不改。
-
-GOVERNANCE = AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0 (accepted, current)
+DSH_MAIN_OBSERVED = 9883c4b012a3cd1a83f028a356eb2760c23a1fda
+AUTH_SERVICE_MAIN_OBSERVED = 7110463636693b3c2eced9d97ccb186adf46907d
 ```
 
-权威边界一句话：**「这一次 bootstrap 执行什么」全部在 Bootstrap Spec；「uid502
-如何合法地发起、uid505 如何在边界内执行、如何保证只此一次」在本 Spec。**
+父 Spec 的 repo ledger、outcome_unknown、final receipt、`SAFE_DISABLED_STAGED_IDENTITY`
+与 Slice 分离逐字有效。uid505 private state 只复制执行所需的最小非秘密事实用于 crash
+recovery；它不接受、更改或替代 repo ledger authority。
 
 ## 4. Current State
 
-- `STATE-OP-001` — 截至 authoring 基准（dsh-agent-core github/main `df3b299`，
-  2026-08-29 fetch），Bootstrap Spec `status: accepted` 且已在 main（blob
-  `a190c44`；accepted head `bb0db28` 与 merge `91cab84` 均在 main ancestry）；
-  仓库内不存在任何 bootstrap-operator 同范围 Spec、branch、PR 或未提交草案
-  （OBS-OP-001 / OBS-OP-008）。执行轮必须在执行时重新核实（CTR-OP-005）。
-- `STATE-OP-002` — 生产控制面拓扑为 uid 505 authsvc trusted install
-  （`/usr/local/libexec/agent-core`；config 0700；trusted Node；502 对全部
-  trusted code/config 只读；credential store 505-private 0600；505 进程打开
-  0 个 dev-repo 文件）（OBS-OP-003）。因此 Bootstrap Spec 要求的全部运行时
-  写入目标都在 uid 505 边界内，uid 502 无直接写路径（OBS-OP-004）。
-- `STATE-OP-003` — current main 代码中不存在任何可精确限制到单一 operation 的
-  uid 505-owned 本地控制面入口：无 UDS server 代码；trusted broker gateway 为
-  进程内组件（无 listener）；CP 对外仅 localhost TCP（通用 agent RPC）；spawn
-  helper 是单向 505→502 降权（OBS-OP-002）。
+- `STATE-OP-001` — PR #100 在 Amendment 开始时为 OPEN / Draft / unmerged，head
+  `d45269bf1e46579249690ba1dc4c8b1ab3b69e44`；本 Spec 为 proposed。Basis:
+  `OBS-OP-001`。
+- `STATE-OP-002` — dsh-agent-core main `9883c4b...` 已有 canonical Agent Definition
+  writer、agent credential provisioning writer 与 production-runtime composition，但没有本
+  Operator package。Basis: `OBS-OP-002`、`OBS-OP-003`。
+- `STATE-OP-003` — 本机 trusted root 存在，但专用 run directory 尚不存在；该事实不
+  授权创建它。Basis: `OBS-OP-004`。
 
 ## 5. Observations
 
-### OBS-OP-001 — Bootstrap Spec 已 accepted 并进入 main
+### OBS-OP-001 — PR 与 revision gate
 
-- Subject: `docs/specs/AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1.md`。
-- Source revision: dsh-agent-core github/main `df3b299ec5ab78a2f1c944c01803a5e1caf28f85`。
-- Method: `git rev-parse github/main:docs/specs/...`（blob =
-  `a190c4496a889432ace9e874e0dc50ca8005ca9a`）；`git merge-base --is-ancestor
-  bb0db28... HEAD` 与 `91cab84... HEAD`（均 true）；frontmatter `status:
-  accepted`、`implementation_authority: contracts`、acceptance receipt
-  2026-08-27（reviewer `deepseek-harness-local-independent-spec-reviewer-clean-r4`，
-  `SEMANTIC_DELTA_AFTER_REVIEW = NONE`）。
-- Result: Bootstrap Spec 是 main 上的 active authority，且
-  `SEPARATE_EXECUTION_TASK_REQUIRED = YES`、`SEPARATE_EXECUTION_SPEC_REQUIRED =
-  NO`（身份动作本身无需第二份 Spec；本 Spec 只治理「执行通道」，不重复定义
-  bootstrap 动作）。
-- Provenance: 本轮 git 命令记录。
+- Subject: mayf3/dsh-agent-core PR #100。
+- Source revision: head `d45269bf...`; main `9883c4b...`。
+- Method: `git fetch github --prune`; `gh pr view 100`。
+- Result: OPEN, Draft, unmerged, mergeable; head 未漂移。
+- Provenance: Amendment Round 1 execution record and PR conversation comment
+  `WORKFLOW_ADMIN_BOOTSTRAP_OPERATOR_R1_INDEPENDENT_REVIEW`。
 
-### OBS-OP-002 — 不存在可复用的、可精确限制本 operation 的 uid505 本地控制面 seam
+### OBS-OP-002 — Canonical writers exist on current main
 
-- Subject: current main 全部 uid 505 侧本地入口。
-- Source revision: dsh-agent-core `df3b299`。
-- Method: 全仓 grep（`unix.?domain|\.sock|createServer.*socket|UDS`，排除
-  node_modules）；读取 `docs/reports/trusted-credential-broker-integration-v1.md`、
-  `trusted-credential-505-final-acceptance-v2.md`、
-  `trusted-control-plane-deployment-hardening-v1.md`。
-- Result:
-  - 仓库内无任何 Unix-domain socket server 代码（唯一 grep 命中是一个测试中
-    对 `net.Socket` connect 的 mock guard，非 server）；
-  - trusted broker gateway 是控制面进程**内**组件，无 socket 可连（验收字段
-    `A_DIRECT_TCB_ACCESS` 实测无 listener）；复用它将把单次管理 operation 混入
-    通用 agent RPC 面（禁止，§7/CTR-OP-013），且该面经 localhost TCP（本 Spec
-    禁止的 transport）；
-  - CP 服务端口为 localhost TCP（验收驱动预检端口 8787），属通用 agent 面；
-  - spawn helper（`/usr/local/libexec/dsh-agent-spawn-helper`，root:wheel 4755）
-    是单向 505→502 降权 exec（只接受 502/20、清 supplemental groups、固定
-    argv、无 shell），不是 operation 入口；
-  - 既有验收明言「未新建任何 daemon / IPC / 通用 sudo 框架 / Auth」。
-- Consequence: Owner 冻结的选择顺序第 1 项（复用既有 seam）不可用；本 Spec
-  按第 2 项冻结 dedicated local UDS endpoint（DEC-OP-001）。
-- Provenance: grep 命令与三份 reports。
+- Subject: `packages/agent-definition/src/config.js` and
+  `packages/agent-credential-provisioning/src/{index,auth-client,store-writer}.js`。
+- Source revision: dsh-agent-core `9883c4b...`。
+- Method: source inventory and read-only inspection。
+- Result: `createAgentInConfig` / `writeAgentDefinition` and the credential provisioning
+  adapters exist; Operator must call them rather than duplicate their authority。
+- Provenance: current-main tree inventory。
 
-### OBS-OP-003 — 生产拓扑已冻结并验收：trusted install / uid505 / 502 只读
+### OBS-OP-003 — Production runtime composition and supervision seams
 
-- Subject: 生产控制面部署形态。
-- Source revision: docs/reports/trusted-control-plane-deployment-hardening-v1.md
-  与 trusted-credential-505-final-acceptance-v2.md（main `df3b299` 在场）。
-- Method: report 全文读取。
-- Result: trusted install root `/usr/local/libexec/agent-core`（authsvc:authsvc，
-  0755/0644，uid 502 写/替换/symlink 全部 DENIED——攻击矩阵实测）；CP 以
-  `sudo -u authsvc` + trusted Node 运行（uid 505）；config（agents.json /
-  bindings / credential store）authsvc 0700、store 0600；credential store 读取
-  自 502 DENIED；505 进程打开 0 个 dev-repo 文件（lsof 断言）。
-- Provenance: 两份 reports 的验收字段。
+- Subject: `packages/production-runtime/src/compose.js`,
+  `scripts/production-runtime-launchd.mjs`, `scripts/trusted-cp-deploy-install.sh`。
+- Source revision: dsh-agent-core `9883c4b...`。
+- Method: source inspection。
+- Result: composition is centralized in `compose.js`; trusted target and launchd env are rendered by
+  the named scripts. Any Operator mount/config gate must use those exact seams。
+- Provenance: current-main source。
 
-### OBS-OP-004 — Bootstrap Spec 的运行时写入目标全部 uid505 属主，uid502 零直接写路径
+### OBS-OP-004 — Current trusted path coordinates
 
-- Subject: 生产 `agents.json`、trusted credential store、auth-service 调用面。
-- Source revision: Bootstrap Spec CTR-WA-001/CTR-WA-004 + OBS-OP-003 拓扑。
-- Method: 契约与拓扑交叉推导。
-- Result: 生产 `agents.json` 在 `<trusted>/config`（authsvc 0700）；store 按
-  Part G.1 在 505-private trusted 目录 0600；canonical Agent Definition writer
-  seam（`createAgentInConfig` 家族，Bootstrap Spec OBS-WA-011 清点）在 trusted
-  code 内执行时进程身份即 uid 505。uid 502 进程对该三面零写权限（OBS-OP-003
-  攻击矩阵实测 DENIED）。
-- Provenance: Bootstrap Spec §9 与 hardening report §4 攻击矩阵。
+- Subject: `/usr/local/libexec/agent-core`, its `run` and `config` children, local uid/gid records。
+- Environment/observed at: amendment host, 2026-08-29。
+- Method: read-only `stat`, `id`, `dscl`。
+- Result: trusted root currently `uid=0 gid=0 mode=0755`; `run` absent; `config` currently
+  `uid=0 gid=0 mode=0755`; authsvc uid/gid = `505/601`; requester uid/gid = `502/20`。
+- Limitation: these are pre-deployment facts, not a claim that the future dedicated directory already
+  conforms. Deployment must create and audit the exact closure in `CTR-OP-015`。
 
-### OBS-OP-005 — 父执行链（T4–T8）所需 seam 在 current main 全部在场
+### OBS-OP-005 — Node peer UID is not an implementation premise
 
-- Subject: canonical Agent Definition writer、Part G store 写、S1/S2、D.5 mint。
-- Source revision: Bootstrap Spec OBS-WA-011（writer 清点）、
-  AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1 Part C.4/D.5/G/H、auth-service
-  `src/routes/idempotent.ts`（Bootstrap Spec OBS-WA-006 三修订一致）。
-- Method: 权威文件读取。
-- Result: `createAgentInConfig`/`writeAgentDefinition` 家族、Part G 同目录
-  0600-temp+rename 原子写、S1 `POST /api/v1/principals` / S2
-  `POST /api/v1/clients` 幂等 seam、exact external_ref resolution 路由
-  （auth-service main `45b1b890` 起在场）、D.5 mode-aware 分类表——operator
-  需要的全部机制在 current main 与既有 accepted 权威中**已存在**，无需新建
-  任何 product seam。
-- Provenance: 两份 Specs 与 auth-service 源码坐标（经 Bootstrap Spec OBS 转引）。
+- Subject: proposed Darwin UDS caller model。
+- Source revision: reviewed Spec head `d45269bf...` and independent review record。
+- Method: semantic and implementability review。
+- Result: multiple Agents share uid502, and the selected Node runtime does not expose a required
+  built-in Darwin peer-UID API. Native addon/FFI/helper would enlarge build/sign/deploy closure without
+  proving which uid502 Agent was authorized。
+- Provenance: PR #100 independent review comment。
 
-### OBS-OP-006 — macOS 内核为 UDS 提供 peer credential（LOCAL_PEERCRED）
+### OBS-OP-006 — Darwin peer identity cannot distinguish the authorized Agent
 
-- Subject: 本机（darwin 25.5.0 arm64）Unix-domain socket 的本地 caller 证明能力。
-- Source revision: 平台 API（SOL_LOCAL / `LOCAL_PEERCRED` / `struct xucred`，
-  `cr_uid` 字段）。
-- Method: 平台文档知识 + 本机为 darwin（生产 CP 同机运行，OBS-OP-003）。
-- Result: UDS 上 `getsockopt(fd, SOL_LOCAL, LOCAL_PEERCRED, &xucred)` 返回由
-  **内核**提供的对端有效 uid/gid，连接方无法自报伪造。该能力使「只允许本机
-  uid 502」可以构造性闭合（CTR-OP-002）。
-- Limitations: authoring round 未在本机运行代码验证（DOCS-ONLY）；implementation/
-  deployment 任务必须在部署主机现场验证该 syscall 行为（ACC-OP-002 required
-  evidence），验证失败即 STOP 并报告 Owner decision（DEC-OP-002）。
-- Provenance: darwin socket API。
+- Subject: all local Agent processes running as uid502 on the single-user host。
+- Source revision/environment: amendment host, reviewed model at `d45269bf...`。
+- Method: compare the former `peer uid == 502` predicate with the deployment-prebound subject tuple。
+- Result: peer UID can at most classify a local account; it cannot identify the exact authorized Agent,
+  attempt or operation. It is therefore telemetry/locality evidence only, never authority。
+- Provenance: independent review record and Owner Amendment Round 1 ruling。
 
-### OBS-OP-007 — auth-service main 前进（325e781→b885128），delta 与本 scope 无交集
+### OBS-OP-007 — auth-service current main is unchanged from the fixed input
 
 - Subject: mayf3/auth-service github/main。
-- Source revision: `b88512881135dd8a0d382e8ca76650059df33725`（2026-08-29
-  `git ls-remote` + fetch）。
-- Method: `git log --oneline 325e781..github/main`（3 commits + merge）。
-- Result: 新增 delta 全部为
-  `AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V2`
-  及其 elaboration/acceptance（notification ingress closure、validate.mjs、
-  audience registry）——不涉及 canonical Agent Definition writer、
-  credential-store writer、local control-plane/UDS/operator、auth-service
-  provisioner、secret handoff 或同范围 operator authority。
-  `MINIMAL_AUTH_FOUNDATION_V2` / `AUTH_SERVICE_OWNERLESS_AGENT_PRINCIPAL_V1` /
-  `AUTH_SERVICE_AGENTCORE_IDENTITY_RESOLUTION_V1` 在该修订均为 accepted。
-- Provenance: auth-service 仓库 git 记录（只读）。
+- Source revision: `7110463636693b3c2eced9d97ccb186adf46907d`。
+- Method: `git fetch github --prune; git rev-parse github/main`。
+- Result: exact match with the fixed observed revision; no auth-service drift classification is needed in
+  this authoring round. Current source exposes loopback HTTP health/S1/S2 but no audited uid505-private
+  provisioning UDS or equivalent pre-credential server authentication; the named external transport
+  prerequisite is therefore NOT_ESTABLISHED. Runtime compatibility still requires fresh execution-time
+  revalidation after that prerequisite exists。
+- Provenance: Amendment Round 1 gate output。
 
-### OBS-OP-008 — 无同范围重复 authority
+### OBS-OP-008 — This work is an in-place amendment, not a duplicate authority
 
-- Subject: dsh-agent-core branches / open PRs / specs 目录 / 未提交草案。
-- Source revision: `df3b299` + `git ls-remote github` + `gh pr list`（2026-08-29）。
-- Method: `grep -iE "operator|bootstrap"` over spec dir、branch 名、open PR
-  标题；main worktree dirty 文件扫描。
-- Result: 无 `*_BOOTSTRAP_OPERATOR_*` Spec 文件；无 operator-scope branch/PR；
-  main worktree 未提交草案与本 scope 无交集（既有 open PR #62
-  `AGENT_TRUSTED_HOME_CROSS_UID_ACCESS_V1` 是 Homes/Workspace 跨 UID 权限模型
-  draft，属不同 authority 面，与本通道无重叠）。DUPLICATE_SPEC_RISK = NONE。
-- Provenance: 本轮命令记录。
+- Subject: dsh-agent-core Specs, PR #100 and its source branch。
+- Source revision: PR head `d45269bf...`, main `9883c4b...`。
+- Method: exact Spec path/ID and PR branch inspection。
+- Result: the same proposed Spec and same Draft PR are amended; no second Operator Spec or PR exists or
+  is created. `SPEC_DEDUP_CLASSIFICATION = AMEND`; `DUPLICATE_SPEC_RISK = NONE`。
+- Provenance: repository and PR gate outputs。
 
 ## 6. Claims and assumptions
 
-### CLM-OP-001 — 复用既有 seam 不可行，dedicated local UDS endpoint 是唯一符合冻结选择顺序的模型
+### CLM-OP-001 — A trigger can be non-authoritative
 
 - Support state: SUPPORTED
 - Supported by evidence: `EVD-OP-001`
-- Contradicted by evidence: none known
-- Uncertainty: none（OBS-OP-002 的清点是 current main 的构造性事实；未来新增
-  seam 属新权威裁量，不改变本 Spec 选择）。
+- Uncertainty: none; authority fields are absent from the request and immutable in uid505 deployment
+  state。
 
-### CLM-OP-002 — UDS peer credentials 可在本机可靠限制 caller 为 uid 502
+### CLM-OP-002 — Repository ledger authority and private recovery state can coexist
 
 - Support state: SUPPORTED
 - Supported by evidence: `EVD-OP-002`
-- Contradicted by evidence: none known
-- Uncertainty: authoring round 未现场执行 syscall 验证（OBS-OP-006 limitations）；
-  implementation/deployment 任务必须现场验证，失败即 STOP 报 Owner（DEC-OP-002）。
+- Uncertainty: crash injection remains future conformance evidence, not authoring evidence。
 
-### CLM-OP-003 — operator 可在 uid 505 内完整执行父 T4–T8，零新增 product seam
+### CLM-OP-003 — The implementation closure is determinate on current main
 
 - Support state: SUPPORTED
 - Supported by evidence: `EVD-OP-003`
-- Contradicted by evidence: none known
-- Uncertainty: 部署面实际 auth-service 运行修订仍按 Bootstrap Spec OBS-WA-007
-  的现场确认义务处理（operator 侧继承，不降低）。
+- Uncertainty: future main drift is fail-closed under `CTR-OP-018`。
 
-### CLM-OP-004 — 该通道不授予 uid 502 任何 authsvc 侧特权
+### CLM-OP-004 — The channel grants uid502 no selectable uid505 capability
 
 - Support state: SUPPORTED
 - Supported by evidence: `EVD-OP-004`
-- Contradicted by evidence: none known
-- Uncertainty: none（response 闭合集合 + secret 边界 + 单 operation 构造性保证；
-  uid 502 下其他进程能到达 socket 也只能触发同一 exact operation，§7/CTR-OP-002）。
+- Uncertainty: future implementation conformance remains subject to ACC-OP-001/002/003/013; the
+  normative construction itself contains no caller-selected subject, operation parameters or path。
 
 ## 7. Evidence relations
 
-### EVD-OP-001 — 入口清零观察支持「无既有 seam 可复用」
+### EVD-OP-001 — Review finding supports prebound authority
 
-- Source observations: `OBS-OP-002`
+- Source observations: `OBS-OP-001`, `OBS-OP-005`
 - Target: `CLM-OP-001`
 - Relation: SUPPORTS
-- Bound coordinates: dsh-agent-core `df3b299`（grep + 三份 reports）
-- Strength/sufficiency: 对 current main 充分
-- Limitations: 不覆盖未来新增 surface
-- Provenance: OBS-OP-002 所列命令与文件
+- Bound coordinates: PR #100 reviewed head `d45269bf...`
+- Strength/sufficiency: sufficient for the selected authorization model
+- Limitations: future implementation still needs conformance tests
+- Provenance: independent review comment and this amendment
 
-### EVD-OP-002 — 平台能力支持「kernel-verified caller proof」
+### EVD-OP-002 — Parent authority supports repository-ledger primacy
 
-- Source observations: `OBS-OP-006`, `OBS-OP-003`（生产 CP 同机 darwin）
+- Source observations: `OBS-OP-002`
 - Target: `CLM-OP-002`
 - Relation: SUPPORTS
-- Bound coordinates: darwin 25.5.0 arm64（本机 = 生产主机，OBS-OP-003 拓扑）
-- Strength/sufficiency: 平台 API 层面充分
-- Limitations: 未现场执行验证（由 ACC-OP-002 兜底）
-- Provenance: OBS-OP-006
+- Bound coordinates: parent accepted head `bb0db285...`, dsh main `9883c4b...`
+- Strength/sufficiency: normative parent authority plus current seams
+- Limitations: runtime durability requires later fault-injection evidence
+- Provenance: parent Spec and current source
 
-### EVD-OP-003 — 权威在场清单支持「零新增 product seam 可执行」
+### EVD-OP-003 — Current source inventory supports exact closure
 
-- Source observations: `OBS-OP-005`, `OBS-OP-001`
+- Source observations: `OBS-OP-002`, `OBS-OP-003`, `OBS-OP-004`
 - Target: `CLM-OP-003`
 - Relation: SUPPORTS
-- Bound coordinates: dsh-agent-core `df3b299` + auth-service `b885128`
-- Strength/sufficiency: 对所列 seam 充分
-- Limitations: 部署面 auth 修订现场确认义务保留（Bootstrap Spec OBS-WA-007）
-- Provenance: OBS-OP-005 所列权威坐标
+- Bound coordinates: dsh main `9883c4b...`, amendment host path facts
+- Strength/sufficiency: sufficient to freeze file and deployment closure
+- Limitations: no claim that files are implemented now
+- Provenance: current-main inventory
 
-### EVD-OP-004 — 拓扑与闭合集合支持「通道 ≠ 特权」
+### EVD-OP-004 — Prebound fields and closed request support non-selectable capability
 
-- Source observations: `OBS-OP-003`, `OBS-OP-004`
+- Source observations: `OBS-OP-005`, `OBS-OP-006`, `OBS-OP-008`
 - Target: `CLM-OP-004`
 - Relation: SUPPORTS
-- Bound coordinates: trusted install 拓扑（hardening report 验收字段）
-- Strength/sufficiency: 充分
-- Limitations: none
-- Provenance: OBS-OP-003 / OBS-OP-004
+- Bound coordinates: Owner Amendment Round 1 ruling and PR #100 in-place amendment
+- Strength/sufficiency: constructive at the normative schema boundary
+- Limitations: implementation must still satisfy the negative Acceptance matrix
+- Provenance: §0, CTR-OP-001/002/003/013 and independent review record
 
 ## 8. Decisions
 
-### DEC-OP-001 — Operator 模型：现有 authsvc runtime 内的 dedicated local-only UDS endpoint（进程内组合）
+### DEC-OP-001 — UDS remains transport only
 
-- Decision owner: `mayf3`（派发指令冻结选择顺序）
-- Decision: `SELECTED_OPERATOR_MODEL = dedicated local-only Unix-domain operator
-  endpoint (single fixed operation workflow_admin_agent_bootstrap_v1), composed
-  in-process into the existing trusted authsvc (uid 505) control-plane runtime
-  within the trusted install closure`。选择顺序按 Owner 指令执行：第 1 项
-  （复用既有 uid505 seam）经 OBS-OP-002 清点不可用；第 2 项即本决定；第 3 项
-  全部禁止（TCP/公网 HTTP、通用 shell、通用文件 writer、root host-exec、
-  sudo、launchctl-asuser、数据库直写）。冻结：
-  ```text
-  OPERATOR_SOCKET_PATH =
-  /usr/local/libexec/agent-core/run/workflow-admin-bootstrap-operator.sock
-
-  OPERATOR_SOCKET_DIR = /usr/local/libexec/agent-core/run
-    （authsvc:authsvc 0755——目录可遍历；socket 文件 authsvc 属主）
-
-  OPERATOR_STATE_DIR =
-  /usr/local/libexec/agent-core/config/operator/workflow-admin-bootstrap-v1
-    （authsvc:authsvc 0700——uid 505 私有）
-
-  OPERATOR_STATE_PATH = <OPERATOR_STATE_DIR>/state.json（0600，原子 temp+rename）
-  OPERATOR_CONFIG_PATH = <OPERATOR_STATE_DIR>/operator-config.json
-    （0600，deployment 任务写入并 pin；runtime 只读）
-  ```
-  socket 文件权限**不是** caller 授权机制（macOS UDS 无按 uid 的 connect ACL）；
-  唯一授权机制是 kernel peer credentials（CTR-OP-002）。socket mode MAY 为
-  0666（允许 connect），但任何 mode 都 MUST NOT 替代 peer-credential gate。
-  不新建 daemon（与既有「进程内组合优先」验收先例一致）；endpoint 生命周期
-  随 CP 进程，但 one-shot 状态不依赖进程存活（CTR-OP-010）。
-- Rejected alternatives: 见 §11（复用 broker gateway / CP TCP / spawn helper /
-  sudo wrapper / root daemon / 通用文件 writer / TCP localhost）。
+- Decision owner: mayf3
+- Decision: use a dedicated local UDS at
+  `/usr/local/libexec/agent-core/run/workflow-admin-bootstrap-operator-v1/operator.sock`.
+  It supplies locality only; it is not an authorization source.
+- Rejected alternative: LOCAL_PEERCRED/native helper/FFI as authority; TCP/public HTTP。
 - Owner input remaining: none。
 
-### DEC-OP-002 — Caller 授权 = 本机 OS 边界 + exact accepted operation；无 per-process proof
+### DEC-OP-002 — Authorization is the deployment-time exact-attempt binding
 
-- Decision owner: `mayf3`
-- Decision:
-  ```text
-  AUTHORIZED_CALLER_UID = 502
-  CALLER_AUTHORIZATION_SOURCE = local operating-system boundary + exact accepted operation
-  CALLER_IS_RUNTIME_ACTOR = NO
-  ```
-  operator MUST 在处理任何 request 前 `getsockopt(LOCAL_PEERCRED)` 取 kernel
-  提供的 `cr_uid` 并要求 `== 502`，否则 fail closed、零运行时写入。任何 uid ≠ 502
-  的连接 MUST 在读取 body 前关闭。UID502 获得的**不是**：authsvc shell、canonical
-  file read/write、provisioner credential、通用 operator、其他 Agent 创建权限。
-  即使 uid 502 下其他进程能到达该本地入口，operator 也只能执行这一个已经
-  accepted 的 exact operation，且只有一个 exact subject（无 per-process 区分——
-  这是本通道接受的冻结边界，非缺陷）。若部署主机验证 LOCAL_PEERCRED 行为失败，
-  MUST STOP 并报告 Owner decision（不得假装已闭合）。
-- Rejected alternative: per-process token / mTLS / 二次 secret 认证（引入 secret
-  通道，违反 SECRET_CROSSES_UID_BOUNDARY = NO 且无必要）；文件属主授权（macOS
-  UDS 无此能力）。
+- Decision owner: mayf3
+- Decision: endpoint reads all subject and authority fields from immutable uid505-owned deployment
+  binding. Peer UID, request body and trigger timing never grant authority. Peer identity MAY be recorded
+  as telemetry only and MUST NOT gate correctness。
+- Rejected alternative: treating uid502, a process identity, or request-carried UID as Principal。
 - Owner input remaining: none。
 
-### DEC-OP-003 — Revision 绑定两阶段：deployment pin + execution match + 只读 GitHub evidence 验证
+### DEC-OP-003 — Revision binding separates implementation base and evidence commit
 
-- Decision owner: `mayf3`
-- Decision: operator 对「exact accepted Spec 已进入 main」与「evidence commit 与
-  PREPARED attempt ledger」的验证按两阶段冻结：
-  **Deployment 阶段**（独立部署任务）：验证 Bootstrap Spec accepted + 已在
-  dsh-agent-core main；把下列值 pin 进 `OPERATOR_CONFIG_PATH`（uid 505 私有）：
-  ```text
-  PIN_PARENT_SPEC_BLOB_SHA（部署时实测的 accepted Spec 文件 blob sha）
-  PIN_PARENT_ACCEPTED_HEAD / PIN_PARENT_MERGE（ancestry 证据）
-  PIN_ALLOWED_CALLER_UID = 502
-  PIN_AGENT_ID / PIN_PRINCIPAL_EXTERNAL_REF / PIN_CLIENT_EXTERNAL_REF
-  PIN_SOCKET_PATH / PIN_STATE_PATH
-  PIN_AUTH_SERVICE_ORIGIN（生产 auth-service origin，与 trusted broker 同源）
-  PIN_PROVISIONER_COORDINATES（非 secret 引用：principal external_ref、client id、
-    audience svc-auth、scope auth.identity.provision）
-  ```
-  **Execution 阶段**（每次 request，operator 内部、只读、零 repo 写入）：
-  1. `request.acceptedSpecRevision == PIN_PARENT_SPEC_BLOB_SHA`（不匹配 ⇒ fail
-     closed）；
-  2. 只读 GitHub 验证（HTTPS，`git ls-remote github mayf3/dsh-agent-core main`
-     或等价 API）：current main HEAD == `request.evidenceCommit`；
-  3. 只读获取 `evidenceCommit` 处
-     `docs/evidence/workflow-admin-agent-bootstrap-v1/attempt-ledger.json`
-     （父 CTR-WA-010 冻结 path）：state == `PREPARED`、canonical sha256 ==
-     `request.attemptLedgerDigest`、其绑定字段（attemptId / specRevision /
-     base == request.implementationBase / agentId / external_refs / s1、s2
-     request digest）与 request 字段逐字相等；
-  4. `evidenceCommit` 恰为 `implementationBase` 之上**一个** docs-only commit
-     且只改该 ledger 文件（只读 diff 验证）；该 commit 处 Bootstrap Spec 文件
-     blob == pin。
-  任一验证失败 ⇒ fail closed、零运行时写入。operator 不得写任何仓库状态；本地
-  git / dev-repo 文件读取禁止（保持 OBS-OP-003 的「505 进程打开 0 个 dev-repo
-  文件」posture——operator 是 trusted CP 进程内组件）。
-- Rejected alternatives: operator 现场做完整 git fetch/clone（新增可写状态与
-  攻击面）；信任 request 自带 ledger 内容（request 字段闭合集合冻结，不含内容）；
-  由 uid502 传入文件路径（禁止任意 path）。
+- Decision owner: mayf3
+- Decision: `implementationBase` is exact main at authorization; `evidenceCommit` is its descendant in
+  one OPEN/DRAFT/unmerged evidence PR and changes only
+  `docs/evidence/workflow-admin-agent-bootstrap-v1/**`. Current main must remain exactly
+  `implementationBase` throughout the execution window。
+- Rejected alternative: `main HEAD == evidenceCommit`。
 - Owner input remaining: none。
 
-### DEC-OP-004 — 职责分工：requester 准备 ledger / operator 执行 uid505 侧 / requester 落盘 receipt
+### DEC-OP-004 — Parent repo ledger stays authoritative
 
-- Decision owner: `mayf3`
-- Decision: 按 §2.3 冻结分工。PREPARED attempt ledger 在任何运行时写入前已
-  持久化于 main（满足并强于父 CTR-WA-010「首个外部写入前原子创建」——此处为
-  commit 级持久化）；operator 侧阶段事实记入 uid 505 私有 `OPERATOR_STATE_PATH`
-  （事务内的 authoritative 记录）；repo ledger 的阶段更新、父 CTR-WA-006 final
-  receipt 与 evidence commit 由 requester 在收到 operator response 后完成，
-  数据来源仅为 response 的非秘密闭合字段与 operator state 的非秘密引用。
-- Rejected alternative: operator 直接写 repo evidence（502 属主区 + 破坏
-  trusted posture + 需要 git 凭据面）。
+- Decision owner: mayf3
+- Decision: requester commits PREPARED ledger; Operator verifies commit/digest; Operator persists
+  INTENT, performs one stage, persists RESULT, returns non-secret result, then waits for a new repository
+  ledger commit/digest acknowledgement before entering the next stage. Multiple ledger-only phase
+  commits are expected and allowed。
+- Rejected alternative: uid505 state as authoritative transaction ledger。
 - Owner input remaining: none。
 
-### DEC-OP-005 — Provisioner 复用（零新增 auth-service child）；每次执行 fresh revalidation
+### DEC-OP-005 — Provisioner reuse requires fresh zero-write revalidation
 
-- Decision owner: `mayf3`
-- Decision:
-  ```text
-  AUTH_SERVICE_NEW_PROVISIONER_CHILD_REQUIRED = NO
-  ```
-  operator 复用现有 accepted auth-service provisioner authorities（E.4(c) 元组：
-  active service principal + active machine client + usable client secret +
-  MachineAccessGrant(audience svc-auth, scope auth.identity.provision)，全部
-  位于 trusted deployment/operator zone）。每次执行前 MUST 在 uid 505 内 fresh
-  revalidate：provisioner Principal active、Client active、audience 正确、
-  `auth.identity.provision` grant 存在、credential 可用（in-memory token mint
-  验证）、credential 不离开 uid 505。任何 revalidation 失败：
-  ```text
-  BOOTSTRAP_OPERATOR_RESULT = STOPPED
-  ```
-  零 Definition / S1 / S2 / store 写入。本 Spec 不定义、不修改 provisioner
-  credential；provisioner 身份坐标只在 deployment pin 中以非 secret 引用存在。
-- Rejected alternative: 为本次 bootstrap 新建 provisioner child（冗余 authority，
-  AUTH_SERVICE_NEW_PROVISIONER_CHILD_REQUIRED = NO）；operator 跳过 revalidation
-  直接复用缓存 token（违反 fresh 语义）。
+- Decision owner: mayf3
+- Decision: no new provisioner child. Before implementation/deployment, require the separately accepted
+  auth-service uid505-private provisioning UDS transport; unauthenticated loopback HTTP is forbidden.
+  Before every Bootstrap side effect, validate active Principal, active Client, correct audience,
+  `auth.identity.provision` grant, usable credential and current auth-service compatibility. Failure = STOP
+  with zero Definition/S1/S2/store writes。
+- Rejected alternative: document-time assertion that live provisioner is active。
 - Owner input remaining: none。
 
-### DEC-OP-006 — One-shot 语义与 uid505 私有 durable operator state
+### DEC-OP-006 — Private state is a durable CAS recovery replica
 
-- Decision owner: `mayf3`
-- Decision: operator MUST 维护 `OPERATOR_STATE_PATH`（uid 505 私有、0600、原子
-  temp+rename），绑定 exact attemptId、exact Spec revision、exact implementation
-  Base、request digest（全部 request 字段的 canonical sha256）、operation、
-  subject、阶段与结果。语义冻结：
-  ```text
-  same attempt + same request digest = resume / reconcile 或 terminal replay
-  same attempt + different request digest = conflict / fail loud
-  new attempt after terminal success = rejected
-  second Agent subject = rejected
-  ```
-  operator MUST NOT 仅依赖 socket 进程存活保存状态（CP 重启后从 durable state
-  恢复；进程内缓存只是加速）。完成或安全终止后：operator 不得再次创建对象、
-  不得生成第二 Client、不得更换 external_ref、不得删除 durable audit。
-- Rejected alternative: 状态只存进程内存（崩溃即失忆，防重放失效）；按
-  caller-session 记账（无会话语义）。
+- Decision owner: mayf3
+- Decision: private state uses explicit phases and monotonically increasing `stateVersion`; one process
+  mutex plus persistent CAS prevents double execution. It stores no secret and cannot advance without
+  matching repository-ledger acknowledgement。
+- Rejected alternative: in-memory-only state or private state replacing repo evidence。
 - Owner input remaining: none。
 
-### DEC-OP-007 — Secret 边界冻结
+### DEC-OP-007 — Secret handling is bounded and zeroization is best effort
 
-- Decision owner: `mayf3`
-- Decision:
-  ```text
-  S2 secret =
-  auth-service response memory
-  → canonical credential-store writer (Part G)
-  → memory zeroization / release
-  ```
-  禁止：secret 进入 uid 502、operator response、socket/request、argv/env、日志、
-  临时文件、attempt ledger、evidence、Git/PR/chat。任何异常日志路径只能记录
-  `secretPresent = true|false`，不得记录值或可逆编码。provisioner token（fresh
-  revalidation 所 mint）同样只存在于 uid 505 进程内存，用后释放。
-- Rejected alternative: 把 secret 回传 requester 由其写 store（uid 502 无写权限
-  且违反 Part H）；secret 经 env 传给子进程（Part H 禁止清单）。
+- Decision owner: mayf3
+- Decision: dedicated auth client disables body debug and redacts Authorization; state/log/trace/error/
+  diagnostic surfaces contain no secret. Prefer overwriteable Buffer; immutable strings receive shortest
+  lifetime and reference release only. JavaScript physical zeroization is not claimed。
+- Rejected alternative: whole-store digest, response-body logging, guaranteed JS string zeroization。
 - Owner input remaining: none。
 
-### DEC-OP-008 — 失败终态继承 SAFE_DISABLED_STAGED_IDENTITY；零 Definition remove 依赖
+### DEC-OP-008 — Safety terminal remains parent-defined
 
-- Decision owner: `mayf3`
-- Decision: `ROLLBACK_TARGET = SAFE_DISABLED_STAGED_IDENTITY`（父 CTR-WA-011
-  逐字继承）；operator MUST NOT 依赖 Agent Definition remove seam（current main
-  不存在，父 OBS-WA-011）。全部失败模式（§9 CTR-OP-011 列举）的合法终态保持：
-  Agent Definition present or absent according to completed stage；若 present：
-  disabled=true、non-routable、non-runnable、defaultAgentId 不变、无 Binding、
-  无 workflow Grant、无 Root、无 activation。
-- Rejected alternative: 失败后删除 entry 回滚（依赖不存在 seam）；伪装「从未写入」。
+- Decision owner: mayf3
+- Decision: failure converges to `SAFE_DISABLED_STAGED_IDENTITY`; no Definition delete seam, second
+  Client, changed external_ref, Grant, Binding, Root or activation。
+- Rejected alternative: inventing rollback deletion or continuing after secret loss。
 - Owner input remaining: none。
 
-### DEC-OP-009 — 通道生命周期：默认 disabled、单 Spec 单 subject、terminal success 后永久拒绝
+### DEC-OP-009 — One-shot lifecycle and execution window
 
-- Decision owner: `mayf3`
-- Decision:
-  ```text
-  OPERATOR_CAPABILITY_SCOPE = single Spec + single exact subject
-  OPERATOR_DEFAULT_STATE = disabled / unavailable until its own deployment gate passes
-  OPERATOR_AFTER_TERMINAL_SUCCESS = reject all new bootstrap attempts
-  ```
-  该通道 MUST NOT 永久成为通用管理入口。是否删除 socket/code 由后续 retirement
-  Spec 决定，但功能上 MUST 永久拒绝第二次 bootstrap。operator MUST NOT 自动启用
-  `AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1`，也不得对其前置做任何动作。
-- Rejected alternative: 保留为长期 admin 面（通用 privileged API 演化，禁止）。
+- Decision owner: mayf3
+- Decision: deployed endpoint is default disabled/unavailable. Only a separately installed exact binding
+  with finite `notBefore/expiresAt` opens the window. Early/late triggers reject. Terminal success rejects
+  every new attempt forever; same terminal request may replay its non-secret result。
+- Rejected alternative: permanent generic admin endpoint。
 - Owner input remaining: none。
 
-### DEC-OP-010 — 治理形式：contracts + 三段分离（implementation / deployment+audit / bootstrap 执行）
+### DEC-OP-010 — Five tasks, never an implementation/deployment/execution bundle
 
-- Decision owner: `mayf3`
-- Decision: 本 Spec 以 `implementation_authority: contracts` 为唯一授权形式，
-  不携带任何治理协议未识别的 authority 字段。冻结：文档合并不部署 operator
-  （`DOCS_MERGE_DEPLOYS_OPERATOR = NO`）；accepted+merged 后依次需要：
-  (1) **独立的 operator implementation 任务**（写代码 + 测试，按本 Spec Contracts）；
-  (2) **独立的 operator deployment 任务 + 独立审计**（进入 trusted install、
-  pin、部署门通过后才可用；`SEPARATE_OPERATOR_DEPLOYMENT_AND_AUDIT_REQUIRED =
-  YES`）；(3) **独立的 Bootstrap 执行任务**（uid 502 requester 侧，按 §2.3
-  分工 + 父 CTR-WA-008 四条件）。本轮 authoring 不执行其中任何一段。
-- Rejected alternative: merge 即部署/启用（违反 docs-merge 零部署语义）；单任务
-  连写带部署带执行（失去独立审计）。
+- Decision owner: mayf3
+- Decision: A implementation; B disabled deployment; C independent deployment audit; D exact-window
+  binding; E Bootstrap trigger/execution. No earlier task may perform a later task's action。
+- Rejected alternative: deploying Operator and opportunistically bootstrapping the Agent。
 - Owner input remaining: none。
 
 ## 9. Contracts
 
-### CTR-OP-001 — Exact 单 operation 与 request 闭合字段集合
+### CTR-OP-001 — Closed trigger request; authority fields are absent
 
-operator MUST 只接受一个固定 operation：`workflow_admin_agent_bootstrap_v1`。
-request MUST 为单个 JSON 对象，字段集合**严格且仅为**（键名逐字）：
+One length-prefixed frame contains exactly one JSON object with exactly:
 
 ```text
 operation
-acceptedSpecRevision
+attemptId
+phase
+evidenceCommit
+ledgerDigest
+operatorStateVersion
+```
+
+`operation` MUST equal `workflow_admin_agent_bootstrap_v1`; it is a consistency discriminator, not
+an authority selector. Client MUST NOT send agentId, external_ref, accepted revisions,
+implementationBase, command, shell, argv, path, Principal UUID, Client ID, secret, Token, Grant,
+Binding, Root or activation input. Framing/UTF-8/JSON/schema failures, including unknown/missing/invalid
+`attemptId` or `phase`, close the connection with no response and zero write, because no truthful response
+identity exists before validation. Only a fully valid six-field request receives CTR-OP-009 success/error。
+
+### CTR-OP-002 — Trigger is not authority
+
+Operator MUST obtain execution authority only from the deployment binding in `CTR-OP-003`.
+`LOCAL_PEERCRED`, peer UID, request-carried UID, uid502 identity and socket mode MUST NOT authorize an
+operation. Other uid502 processes may connect, but cannot select or mutate operation/subject/parameters.
+Before `notBefore`, after `expiresAt`, with no binding, or after binding revocation, every request rejects
+before any Bootstrap side effect. No native addon, FFI or helper is required for peer UID.
+
+### CTR-OP-003 — Immutable exact-attempt binding and exact subject
+
+The uid505-owned binding MUST contain exactly these immutable fields:
+
+```text
+bindingVersion (= 1)
+bindingGeneration (lowercase UUID)
+repository (= mayf3/dsh-agent-core)
+operatorImplementationPrNumber (positive integer)
+evidencePrNumber (positive integer)
+evidenceHeadRepository (= mayf3/dsh-agent-core)
+evidenceHeadRef (refs/heads/<safe branch>)
+acceptedOperatorSpecRevision
+acceptedBootstrapSpecRevision
+runtimeConfigDigest
+authContractVersion
+authContractDigest
 implementationBase
 attemptId
-agentId
+exactOperation
+exactAgentId
 principalExternalRef
 clientExternalRef
-s1RequestDigest
-s2RequestDigest
-attemptLedgerDigest
-evidenceCommit
+initialEvidenceCommit
+initialLedgerDigest
+notBefore
+expiresAt
 ```
 
-固定值：`operation = workflow_admin_agent_bootstrap_v1`、`agentId =
-agt_workflow-admin-agent`、`principalExternalRef =
-agentcore:v1:principal:agt_workflow-admin-agent`、`clientExternalRef =
-agentcore:v1:client:agt_workflow-admin-agent`。operator MUST NOT 接收：任意命令、
-shell argv、文件路径、任意 Agent ID、Principal UUID、Client ID、secret、Token、
-Authorization、业务 Grant、Binding、Root、activation 参数。任何多余字段、缺失
-字段、错误 subject、错误 Spec SHA、错误 digest ⇒ **fail closed，零运行时写入**，
-返回结构化拒绝（含原因码，零秘密）。每连接至多一个 request，response 后即关闭
-连接；无 session、无 streaming、无 method 路由表。
-
-### CTR-OP-002 — 仅本地 transport 与 kernel caller 边界
-
-operator MUST 只经 exact socket path
-`/usr/local/libexec/agent-core/run/workflow-admin-bootstrap-operator.sock`
-（DEC-OP-001 冻结；目录 authsvc:authsvc 0755、socket authsvc 属主）接受连接；
-MUST NOT 监听任何 TCP/网络端口（local-only 构造性保证：filesystem namespace）。
-operator MUST 在读取 request body 前 `getsockopt(LOCAL_PEERCRED)` 取 kernel 提供
-的 `cr_uid`，且仅当 `cr_uid == 502` 才继续；uid ≠ 502 ⇒ 关闭连接、零读取、零
-运行时写入。socket 文件权限 MUST NOT 被当作授权机制（唯一授权 = kernel peer
-credentials + exact accepted operation）。该授权授予 uid 502 的仅是「发起这一个
-operation」——NOT authsvc shell、NOT canonical file read/write、NOT provisioner
-credential、NOT 通用 operator、NOT 其他 Agent 创建权限（`CALLER_IS_RUNTIME_ACTOR
-= NO`）。
-
-### CTR-OP-003 — Exact subject 冻结；任意 Agent 拒绝
-
-operator 的唯一 subject 是 `agt_workflow-admin-agent`（displayName `工作流总管`）。
-request 中 agentId / principalExternalRef / clientExternalRef 与 §0 冻结值任一
-不匹配 ⇒ fail closed、零运行时写入。operator MUST NOT 接受、创建、枚举或操作
-任何第二 Agent subject（`second Agent subject = rejected`；`ARBITRARY_AGENT_ID =
-FORBIDDEN`）。operator state 中 subject 字段与 request 不一致 ⇒ conflict / fail
-loud。
-
-### CTR-OP-004 — 治理绑定与三段分离；无特权绕过
-
-operator 是 Bootstrap Spec 的 child implementation authority：仅当
-`AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_OPERATOR_V1` **accepted 且已在
-implementation base** 时才允许实现；仅当其 **deployment gate 通过并 pin 完成**
-后才可用；仅当 Bootstrap Spec **accepted 且在执行 base** 时才允许执行
-operation。冻结：
+All revision/base/commit fields are lowercase 40-hex Git object IDs; digest fields are lowercase 64-hex;
+PR numbers are positive safe integers; generation/attempt are lowercase UUID; `authContractVersion` is
+ASCII `[A-Za-z0-9._-]{1,64}` and `authContractDigest` is lowercase 64-hex; notBefore/expiresAt are
+canonical RFC3339 UTC milliseconds with notBefore < expiresAt and a maximum 30-minute window.
+`evidenceHeadRef` matches `refs/heads/[A-Za-z0-9._/-]{1,200}` with no `..`, `//`, leading slash after the
+prefix or trailing slash. Values for operation/Agent/external_refs are §0 literals. Client cannot override
+them. A different attempt, Agent, path, external_ref, revision or operation rejects with zero side effect.
+Binding is written
+only by task D after task C audit; runtime reads it but never edits authority fields。Exact private paths
+and modes are:
 
 ```text
-DOCS_MERGE_DEPLOYS_OPERATOR = NO
-ACCEPTED_AND_MERGED_SPEC_AUTHORIZES_IMPLEMENTATION = YES
-SEPARATE_OPERATOR_IMPLEMENTATION_TASK_REQUIRED = YES
-SEPARATE_OPERATOR_DEPLOYMENT_AND_AUDIT_REQUIRED = YES
-BOOTSTRAP_RUNTIME_WRITE_AUTHORIZED_BY_THIS_AUTHORING_ROUND = NO
+PRIVATE_DIR = /usr/local/libexec/agent-core/config/operator/workflow-admin-bootstrap-v1
+PRIVATE_DIR_OWNER = uid505:gid601
+PRIVATE_DIR_MODE = 0700
+RUNTIME_CONFIG_PATH = <PRIVATE_DIR>/runtime-config.json
+PROVISIONER_CREDENTIAL_PATH = <PRIVATE_DIR>/provisioner-credential.json
+BINDING_PATH = <PRIVATE_DIR>/exact-attempt-binding.json
+ACTIVATION_PATH = <PRIVATE_DIR>/window-activation.json
+STATE_PATH = <PRIVATE_DIR>/state.json
+LOCK_PATH = <PRIVATE_DIR>/operator.lock
+RUNTIME_CONFIG_MODE = 0400
+PROVISIONER_CREDENTIAL_MODE = 0400
+BINDING_MODE = 0400 after durable installation
+ACTIVATION_MODE = 0400 after durable installation
+STATE_MODE = 0600
+LOCK_MODE = 0700 directory lock
+
+PRIVATE_ANCESTORS =
+/usr, /usr/local, /usr/local/libexec = uid0:gid0, non-symlink directory,
+  not group/other writable
+/usr/local/libexec/agent-core = uid0:gid0 mode0755, no inherited ACL, uid502 not writable
+/usr/local/libexec/agent-core/config = uid0:gid0 mode0755, no inherited ACL, uid502 not writable
+/usr/local/libexec/agent-core/config/operator = uid505:gid601 mode0700, no ACL, uid502 no traverse
+<PRIVATE_DIR> = uid505:gid601 mode0700, no ACL, uid502 no traverse
 ```
 
-operator 自身 MUST NOT 以 root host-exec、sudo、launchctl asuser、直连数据库或
-任何 sudoers/ACL 变更实现其任何功能；其全部动作在 uid 505 进程内完成。本 Spec
-authoring round 的 repo delta 仅为新 Spec 文件 + README index 行。
+Deployment, D1/D2/D3, runtime startup/before-stage and rollback lstat every ancestor and pin dev/inode/type/
+owner/mode/ACL inheritance. Node lacks a public openat traversal API, so the accepted equivalent under this
+threat model is: pre-walk pins all ancestors, leaf opens use O_NOFOLLOW, post-walk requires every pinned
+ancestor dev/inode unchanged, and CTR-OP-010 singleton lock excludes another trusted uid505 Operator.
+Root and malicious uid505 are host/trusted-closure controllers outside the defended threat model; any
+untrusted-writable ancestor or ambiguity fails closed。
 
-### CTR-OP-005 — 执行前置验证（spec pin / evidence commit / PREPARED ledger）
-
-operator 在任何运行时写入前 MUST 全部完成（DEC-OP-003 冻结机制，只读、零 repo
-写入）：
+Runtime config is RFC 8785 JCS with exactly:
 
 ```text
-1. request.acceptedSpecRevision == PIN_PARENT_SPEC_BLOB_SHA
-2. read-only GitHub 验证：dsh-agent-core current main HEAD == request.evidenceCommit
-3. evidenceCommit 处（只读获取）父冻结 path 的 attempt ledger：
-   state == PREPARED
-   canonical sha256 == request.attemptLedgerDigest
-   绑定字段（attemptId / specRevision / implementationBase / agentId /
-     principalExternalRef / clientExternalRef / s1RequestDigest /
-     s2RequestDigest）与 request 逐字相等
-4. evidenceCommit == implementationBase + 恰一个 docs-only commit（只改该
-   ledger 文件）；该 commit 处 Bootstrap Spec blob == pin
+version = 1
+authServiceSocketPath = /usr/local/libexec/auth-service/run/agent-core-bootstrap-v1/auth.sock
+agentsConfigPath = /usr/local/libexec/agent-core/config/agents.json
+credentialStorePath = /usr/local/libexec/agent-core/config/agent-credentials.json
+provisionerCredentialPath = <PROVISIONER_CREDENTIAL_PATH literal>
 ```
 
-任一项失败 ⇒ fail closed、零运行时写入。**ledger 尚未在 main 持久化（PREPARED
-未验证）时，operator MUST NOT 执行任何运行时写入**（父 CTR-WA-010 的强化表述：
-commit 级持久化先于运行时写入）。
+It contains no secret; its exact JCS digest equals binding `runtimeConfigDigest`. The auth socket is an
+**external prerequisite**, not created by this repository: auth-service must first accept, merge, implement
+and independently audit a child authority whose stable expected ID is
+`AUTH_SERVICE_AGENT_CORE_BOOTSTRAP_PROVISIONING_UDS_V1`. That external authority must expose the existing
+health/S1/S2/resolution/token semantics over this one uid505-private UDS, with the exact component matrix:
+`/usr`, `/usr/local`, `/usr/local/libexec` are uid0:gid0 non-symlink directories not group/other writable;
+`/usr/local/libexec/auth-service` is uid0:gid0 mode0755, no inherited ACL and not uid502-writable;
+`.../run` and `.../run/agent-core-bootstrap-v1` are uid505:gid601 mode0700, ACL inheritance disabled,
+no uid502 traverse/write ACE; `auth.sock` is uid505:gid601 mode0600 with no uid502 ACL. The external
+authority must freeze and audit each component, no TCP fallback, safe inode lifecycle and exact current
+auth-contract reporting. At observed auth-service main `71104636...`, this authenticated transport is not
+established; therefore task B/D/E MUST STOP until the external prerequisite is active and audited.
+`AUTH_SERVICE_NEW_PROVISIONER_CHILD_REQUIRED=NO` remains true: this prerequisite authenticates transport
+and creates no provisioner Principal/Client/Grant。
 
-### CTR-OP-006 — Provisioner fresh revalidation；失败即 STOP
+Loopback HTTP `127.0.0.1:4001` is explicitly forbidden for provisioner credential/token/S1/S2 traffic:
+a different local UID could bind it while auth-service is absent and steal the credential. The dedicated
+client uses Node built-in HTTP-over-UDS `socketPath` only, verifies exact socket ancestor owner/mode/dev/inode
+before connect and after response, and sends no credential until those checks pass. Inability to satisfy the
+external UDS prerequisite is `PROVISIONER_NOT_READY` with zero Bootstrap write, not permission to fall back。
 
-operator MUST 在每次执行任何写动作前，于 uid 505 内 fresh revalidate 现有
-accepted auth-service provisioner（credential spec E.4(c) 元组；零新增
-auth-service provisioner child）：
+The provisioner file is a separate 0400 uid505:gid601 regular no-symlink file with exactly
+`{clientId,clientSecret}` and is never hashed into binding/evidence/output. Task B may install an already-authorized credential input but MUST NOT
+create a new Principal/Client/Grant; task C audits only path type/owner/mode/nonzero length and never opens,
+reads or logs the secret file. Runtime parses it only inside the fresh revalidation boundary. Missing,
+unreadable or malformed credential means revalidation failure and zero Bootstrap write。
+
+Binding JSON is RFC 8785 JCS of exactly the listed fields; its identity is lowercase hex
+`SHA-256(exact JCS bytes)`. It is created as generation-specific 0600 temp, validated, fsynced, renamed,
+directory-fsynced, then chmod 0400 and re-read/digested. Runtime opens with `O_RDONLY|O_NOFOLLOW`, verifies
+regular file/owner/mode/dev/inode before and after read, and pins generation+digest for the process lifetime.
+It never replaces binding bytes. Revocation is an atomic replacement of `ACTIVATION_PATH` with closed
+`active:false` bytes by task D3; runtime re-reads activation before each stage。
+
+`ACTIVATION_PATH` is exact RFC 8785 JCS with fields
+`{version,bindingGeneration,bindingDigest,auditCommentId,auditReviewerId,auditReviewerSessionId,
+auditReceiptCommit,auditReceiptDigest,active,activatedAt,revokedAt}`. Types/invariants:
 
 ```text
-provisioner Principal active
-provisioner Client active
-audience 正确（svc-auth）
-auth.identity.provision grant 存在
-credential 可用（in-memory client_credentials mint 验证）
-credential 不离开 uid 505（token/secret 均仅进程内存，用后释放）
+version = 1
+bindingGeneration = lowercase UUID equal binding
+auditCommentId = positive safe integer
+auditReviewerId = ASCII [A-Za-z0-9._:@/-]{1,128}
+auditReviewerSessionId = same grammar, equal receipt reviewerSessionId
+auditReceiptCommit = lowercase 40-hex
+auditReceiptDigest = lowercase 64-hex
+bindingDigest = lowercase 64-hex equal binding JCS digest
+active = boolean
+never activated: active=false, activatedAt=null, revokedAt=null
+active window: active=true, activatedAt=canonical RFC3339 UTC milliseconds, revokedAt=null
+revoked: active=false, activatedAt=<original activation timestamp>,
+  revokedAt=canonical timestamp >= activatedAt
 ```
 
-任何 revalidation 失败 ⇒ `BOOTSTRAP_OPERATOR_RESULT = STOPPED`，零 Definition /
-S1 / S2 / store 写入，response 如实报告 STOPPED 与原因码（零秘密）。revalidation
-通过后、S1/S2 调用前的窗口内 operator MUST NOT 缓存跨执行复用（每次执行 fresh）。
-本 Spec 不定义、不修改 provisioner credential；provisioner 坐标仅以非 secret
-引用存在于 deployment pin。
+Its artifact digest is SHA-256(exact JCS bytes). `active:true` is legal only after the independently
+persisted comment and audit receipt report PASS for the exact binding/config digest and reviewer identity.
+Revocation atomically replaces only activation with the same generation/audit coordinates and later
+`revokedAt`; reactivation of a revoked generation is forbidden. A new binding generation is allowed only
+after the old activation is false and no stage is in flight; it requires a fresh D1/D2/D3 transaction and
+cannot follow `TERMINAL_SUCCESS`。
 
-### CTR-OP-007 — uid505 内部事务与 canonical writers（封闭顺序）
+All private artifacts use same-directory temp + fsync(file) + atomic rename + fsync(directory), reject
+symlinks/non-regular files, and are never readable by uid502. Torn/corrupt/missing/changed artifacts fail
+closed. Binding/activation replacement or revocation belongs only to task D; state mutation belongs only
+to the runtime CAS in `CTR-OP-010`。
 
-operator MUST 完全在 uid 505/authsvc 边界中按下列固定顺序执行（每步之间原子
-更新 `OPERATOR_STATE_PATH`；任一步失败按 CTR-OP-011 终止）：
+### CTR-OP-004 — Governance and five-task separation
+
+Operator implementation requires this exact accepted Spec in its implementation base. Tasks A–E in
+`DEC-OP-010` MUST have separate persisted records. Docs merge performs no deployment; implementation
+performs no deployment or Bootstrap; deployment leaves endpoint disabled/unavailable and performs no
+Bootstrap; audit performs no mutation; exact-window task installs only binding/window; execution only
+triggers the prebound attempt. No root host-exec, sudoers, launchctl-asuser or direct DB bypass is allowed。
+
+### CTR-OP-005 — Correct main/evidence/ledger binding
+
+Before each stage:
 
 ```text
-1. 验证 exact accepted Spec 已进入 main（CTR-OP-005）
-2. 验证 evidence commit 与 PREPARED attempt ledger（CTR-OP-005）
-3. fresh revalidate provisioner Principal/Client（CTR-OP-006）
-4. 检查 canonical Definition/store pre-state：
-   - 生产 agents.json 中 agt_workflow-admin-agent entry 与目标 credential
-     store entry 的在场性；store entry 存在 ⇒ ZERO_AUTH_CALL_STOP（父
-     CTR-WA-003 reentry 语义逐字继承：current invocation STOPPED，零新
-     durable write）
-5. 经 canonical Agent Definition writer（createAgentInConfig /
-   writeAgentDefinition 家族）写 disabled Agent Definition：
-   { id: agt_workflow-admin-agent, name: 工作流总管, disabled: true,
-     description: null }（父 CTR-WA-001 逐字；defaultAgentId 不变；不触碰
-   任何既有 entry；不写 enabled Agent）
-6. 调用 exact resolution / S1 / S2（调用体父 CTR-WA-002 逐字冻结；resolution
-   用于 pre-state 与 outcome_unknown 分类，AUTH_SERVICE_AGENTCORE_IDENTITY_
-   RESOLUTION_V1 语义；每次 S1/S2 调用前先持久化 operator state 的 request
-   digest；outcome_unknown 按父 CTR-WA-010 决策树闭合）
-7. S2 created secret 只保留在当前 uid 505 进程内存（CTR-OP-008）
-8. 经 canonical credential-store writer（Part G validate-preserve-atomic，
-   同目录 0600 temp + rename）原子写 credential store
-9. 执行父 D.5 verification mint 并按父 D.5 mode-aware 表分类
-   （CREDENTIAL_LAYER_VERIFICATION / BUSINESS_GRANT_READINESS /
-   BOOTSTRAP_RESULT 三层；exact zero-Grant `400 invalid_scope` reason =
-   machine_grant_missing ⇒ PASS / NOT_READY / SUCCESS_IDENTITY_ONLY）
-10. 写 uid505 私有 transaction state（阶段、结果、时间、digest；零 secret）
-11. 只返回非秘密结果（CTR-OP-009 闭合集合）
+current main HEAD == implementationBase
+accepted Operator and Bootstrap revisions match binding
+evidenceCommit is a descendant of implementationBase
+evidenceCommit equals the current head SHA of the bound evidencePrNumber
+the PR repository/headRepository/headRef equal the bound values
+PR state is OPEN, draft=true and merged=false
+evidenceCommit descends from both implementationBase and initialEvidenceCommit
+compare status is ahead or identical; force-push/history rewrite is rejected
+diff implementationBase..evidenceCommit is only
+  docs/evidence/workflow-admin-agent-bootstrap-v1/**
+ledger file at evidenceCommit has canonical digest == ledgerDigest
+ledger attempt/phase/binding fields match the exact attempt
+binding audit comment exists on operatorImplementationPrNumber, author login is mayf3,
+  and exact body fields bind auditReviewerId/sessionId, bindingDigest, runtimeConfigDigest,
+  authContractVersion/digest, auditReceiptCommit/digest and RESULT=PASS
+audit receipt bytes at auditReceiptCommit match digest, PASS and all independence predicates
 ```
 
-operator 的动作集合是父 CTR-WA-007 封闭动作清单的 uid 505 侧子集：MUST NOT
-修改 defaultAgentId、MUST NOT 创建 enabled Agent、MUST NOT 创建任何
-Binding/Grant/Root、MUST NOT 执行 activation 或 `disabled:true → false` 的任何
-路径、MUST NOT 生成第二 Client、MUST NOT 更换 external_ref。
+Repository verification uses only Node v25.6.1 built-in `fetch` in `evidence-verifier.js`, with fixed origin
+`https://api.github.com`, fixed repository `mayf3/dsh-agent-core`, system CA trust, `redirect:'error'`,
+`cache:'no-store'`, 10-second deadline, `Accept: application/vnd.github+json`, and exact REST resources:
+`/git/ref/heads/main`, `/pulls/{number}`, `/compare/{base}...{head}`,
+`/contents/{fixed-ledger-or-audit-receipt-path}?ref={sha}`, and `/issues/comments/{auditCommentId}`. It sends no credential
+(the repository/PR data are public), accepts only HTTPS 2xx JSON with expected GitHub API media type, uses
+no local/dev repository and no persisted cache, and treats DNS/TLS/timeout/rate-limit/schema/staleness/
+pagination ambiguity as STOPPED. Compare/file lists must be complete; truncation or more than 100 evidence
+files is rejected。
 
-### CTR-OP-008 — Secret 边界（uid 505 内闭合）
+`evidenceCommit` need not equal main. Operator checks main immediately before and immediately after each
+side effect. If main moves in the check→write interval, the already-started indivisible side effect may
+have committed; Operator MUST persist its exact RESULT, set `TERMINAL_STOPPED`, perform no next stage, and
+require reconciliation/new binding. It MUST NOT falsely claim the write was prevented or classify drift as
+unrelated. Ledger-only phase commits may be multiple。
 
-S2 secret 的唯一路径冻结（父 Part H 逐字继承 + 通道侧强化）：
+### CTR-OP-006 — Fresh provisioner gate before all Bootstrap writes
+
+Every execution/resume before its first Bootstrap side effect MUST freshly verify Principal active,
+Client active, audience `svc-auth`, grant `auth.identity.provision`, credential usable and auth-service
+current compatibility PASS. Compatibility means a fresh HTTP-over-UDS `GET /api/health` through the exact
+uid505-private `authServiceSocketPath` (no TCP fallback) returns `ok=true`, `service="auth-service"`, `authContractMode="v1"`, exact bound
+`authContractVersion` and `authContractDigest`, and a timestamp within 30 seconds of the Operator monotonic/
+wall-clock sample; then the exact provisioner successfully mints the required svc-auth token. Unknown/extra
+health fields are ignored, but missing/wrong typed required fields fail. Failure returns closed STOPPED error
+and makes zero Definition/S1/S2/store write. The Spec MUST NOT claim current live provisioner readiness in
+advance。
+
+### CTR-OP-007 — Repository-acknowledged stage protocol and canonical writers
+
+For every side-effect stage Operator MUST follow exactly:
 
 ```text
-auth-service HTTPS response body
-→ uid 505 operator 进程内存
-→ canonical credential-store writer（Part G，0600 原子写）
-→ memory zeroization / release
+1 requester commits PREPARED/ack ledger commit
+2 operator verifies commit and digest
+3 operator CAS-persists private INTENT
+4 operator performs exactly one side-effect stage
+5 operator atomically CAS-persists RESULT
+6 operator returns a non-secret stage result
+7 requester updates and commits the same repo ledger
+8 operator verifies the new commit/digest before any next stage
 ```
 
-secret MUST NOT 进入：uid 502（任何形式）、operator response、socket/request、
-argv/env、日志、临时文件、attempt ledger、evidence、Git/PR/chat。任何异常/诊断
-日志路径只能记录 `secretPresent = true|false`，不得记录值或可逆编码（Base64/
-hex/截断/前缀均禁止）。provisioner token 同样仅 uid 505 进程内存。父 Part H
-禁止清单（curl -u、child 传递、workspace、IM 等）逐字有效。
+Side-effect stages use only canonical writers/adapters: disabled Agent Definition via
+`packages/agent-definition/src/config.js`; S1/S2/resolution and verification via dedicated adapter built
+on `packages/agent-credential-provisioning`; Part G atomic store writer. No stage creates Grant, Binding,
+Root, Workspace/Home, enabled Agent, second Client or changed external_ref。
 
-### CTR-OP-009 — Response 闭合字段集合（非秘密）
+### CTR-OP-008 — Secret, trace, exception, diagnostic and memory boundary
 
-operator response MUST 为单个 JSON 对象，字段集合**严格且仅为**（键名逐字）：
+Dedicated auth client MUST disable request/response body debug, redact Authorization headers, prohibit
+serialization of auth responses, record only closed metric/span categories, map unhandled errors without
+body/path, and never persist retry objects containing secret. Operator state/UDS/repo/test fixtures contain
+no real secret. Inspector, heap snapshots and diagnostic reports in this runtime MUST be disabled or
+access-controlled; core dumps MUST be disabled or isolated by audited deployment configuration.
 
 ```text
-attemptId
-principalId
-clientId
-credentialDigest
-credentialLayerVerification
-businessGrantReadiness
-bootstrapResult
-evidenceRefs
+MEMORY_ZEROIZATION = BEST_EFFORT
 ```
 
-语义冻结：`principalId` / `clientId` 为 exact 解析值（未解析时 null）；
-`credentialDigest` = store 原子写完成后 credential-store **文档字节**的 sha256
-（hex；非 secret 派生、uid 505 侧可复算验证；MUST NOT 是 secret 或其可逆编码）；
-`credentialLayerVerification ∈ PASS | FAIL | INCONCLUSIVE`；`businessGrantReadiness
-∈ READY | NOT_READY`；`bootstrapResult ∈ SUCCESS_IDENTITY_ONLY | INCOMPLETE |
-STOPPED`；`evidenceRefs` = 非秘密引用数组（如 operator state 文件标签与
-evidenceCommit）。operator MUST NOT 返回：secret、Token、Authorization、
-provisioner credential、credential-store 内容、其他 Agent 配置。任何额外字段 ⇒
-实现违规。
+Prefer overwriteable Buffer and overwrite it after Part G write. If a library returns immutable string,
+keep shortest lifetime, do not copy, write store, release references immediately, and make no physical
+zeroization claim。
 
-### CTR-OP-010 — One-shot、幂等与防重放（durable uid505 state）
+### CTR-OP-009 — Disjoint closed success and error responses
 
-operator MUST 维护 `OPERATOR_STATE_PATH`（DEC-OP-006 冻结绑定字段；0600；原子
-temp+rename；每阶段更新）。语义逐字冻结：
+Success response fields are exactly:
 
 ```text
-same attemptId + same request digest  → resume / reconcile（按父 outcome_unknown
-  树与已完成阶段继续）或 terminal replay（返回已持久化的终态结果，零新对象创建）
-same attemptId + different request digest → conflict / fail loud（零运行时写入）
-new attemptId after terminal success → rejected（零运行时写入）
-second Agent subject → rejected（零运行时写入）
+attemptId phase status principalId clientId
+credentialLayerVerification businessGrantReadiness evidenceRefs
 ```
 
-operator MUST NOT 仅依赖 socket 进程存活保存状态（CP 崩溃/重启后从 durable
-state 恢复同一 attempt 的 same-attempt reconciliation）。完成或安全终止后：
-operator MUST NOT 再次创建对象、MUST NOT 生成第二 Client、MUST NOT 更换
-external_ref、MUST NOT 删除 durable audit（operator state 只追加/原子替换，
-永不删除）。
-
-### CTR-OP-011 — 失败与安全终态（SAFE_DISABLED_STAGED_IDENTITY 继承）
-
-`ROLLBACK_TARGET = SAFE_DISABLED_STAGED_IDENTITY`（父 CTR-WA-011 逐字）；MUST NOT
-依赖 Agent Definition remove seam。operator MUST 覆盖并闭合下列失败模式（分类
-与动作全部继承父权威，通道侧不得弱化）：
+Error response fields are exactly:
 
 ```text
-- Agent Definition 写后 S1 失败          → 按父 DEC-WA-006/CTR-WA-002 处置 + 状态记录
-- S1 outcome_unknown                    → 父 CTR-WA-010 决策树（resolve exact
-                                           principal external_ref：ABSENT 同
-                                           attempt 重试 / PRESENT exact-match 继续
-                                           / PRESENT conflict STOP）
-- S2 outcome_unknown                    → 父 CTR-WA-010 决策树（CLIENT_ABSENT 同
-                                           attempt 重试 / 已本地验证继续 /
-                                           CLIENT_PRESENT_AND_SECRET_UNAVAILABLE
-                                           STOP + INCOMPLETE；零第二 Client、零
-                                           external_ref 变更、零伪造 secret）
-- Client 存在但 secret 不可恢复         → STOP + INCOMPLETE；唯一恢复路径 =
-                                           独立受控 SAME-client rotation 执行
-                                           （父 CTR-WA-010 冻结；operator 不得
-                                           自动 rotate）
-- store 写失败                          → 状态记录 + 按已完成阶段收敛（secret
-                                           不落任何非 Part G 位置）
-- verification 失败/不确定              → 父 D.5 分类（FAIL/INCONCLUSIVE ⇒
-                                           INCOMPLETE；零 blind rotation）
-- operator 崩溃/重启                    → durable state 恢复；same attemptId +
-                                           same digest 请求 ⇒ reconcile/replay
-- response 丢失                         → requester 重发同 digest 请求 ⇒
-                                           terminal replay（不重复执行已终态动作）
-- uid502 重复提交                       → 同 attempt 同 digest = replay；新
-                                           attempt / 不同 digest = rejected/conflict
+attemptId phase status errorCode retryClass evidenceRefs
 ```
 
-安全终态 MUST 保持：Agent Definition present or absent according to completed
-stage；若 present：`disabled=true`、non-routable、non-runnable、
-`defaultAgentId` unchanged、无 Binding、无 workflow Grant、无 Root、无 activation。
-
-### CTR-OP-012 — 通道生命周期（默认 disabled；terminal success 后永久拒绝）
+Success and error fields MUST NOT mix. Closed values are:
 
 ```text
-OPERATOR_CAPABILITY_SCOPE = single Spec + single exact subject
-OPERATOR_DEFAULT_STATE = disabled / unavailable until its own deployment gate passes
-OPERATOR_AFTER_TERMINAL_SUCCESS = reject all new bootstrap attempts
+SUCCESS.status = STAGE_COMMITTED | TERMINAL_SUCCESS
+ERROR.status = REJECTED | BUSY | CONFLICT | STOPPED | INCOMPLETE
+errorCode = NO_BINDING | WINDOW_NOT_OPEN | WINDOW_EXPIRED | REQUEST_INVALID |
+  ATTEMPT_MISMATCH | PHASE_MISMATCH | STATE_VERSION_CONFLICT | BUSY |
+  MAIN_DRIFT | REVISION_MISMATCH | EVIDENCE_INVALID | LEDGER_MISMATCH |
+  PROVISIONER_NOT_READY | CLIENT_SECRET_UNAVAILABLE | AUTH_OUTCOME_UNKNOWN |
+  STORE_WRITE_FAILED | VERIFICATION_FAILED | TERMINAL_REJECTED | INTERNAL_FAILURE
+retryClass = NEVER | SAME_REQUEST | AFTER_REBIND | EXACT_CLIENT_ROTATION_REQUIRED
+credentialLayerVerification = PASS | FAIL | INCONCLUSIVE
+businessGrantReadiness = READY | NOT_READY
+principalId = lowercase UUID | null
+clientId = "mc_" + exactly 24 ASCII alphanumeric characters | null
+evidenceRefs = array length 0..8 of ASCII strings length 1..240, each matching exactly
+  git:<lowercase-40-hex>:docs/evidence/workflow-admin-agent-bootstrap-v1/<safe-relative-name>
+  or state:<non-negative-safe-integer>
 ```
 
-deployment gate 通过前 operator MUST 处于 disabled/unavailable（socket 不存在或
-拒绝一切请求）。terminal success（`bootstrapResult = SUCCESS_IDENTITY_ONLY` 已
-持久化于 operator state）后，operator MUST 永久拒绝所有新 bootstrap attempts
-（新 attemptId、新 subject、任何变形），返回结构化 rejected，零运行时写入。
-socket/code 的删除由后续 retirement Spec 决定；本 Spec 不授权删除，但功能拒绝
-必须立即生效且不可被配置关闭。operator MUST NOT 自动启用
-`AGENT_CORE_WORKFLOW_ADMIN_AGENT_ACTIVATION_V1` 或对其八项前置做任何动作。
+`<safe-relative-name>` is one or more segments matching `[A-Za-z0-9._-]+`, with no `..`, empty segment
+or leading slash. Empty evidenceRefs is allowed only for a valid request rejected before any durable binding/
+state/evidence reference exists (for example NO_BINDING); after PRECHECKED at least one reference is required.
+Before `PRINCIPAL_RESOLVED`, both IDs are null; after Principal but before Client,
+principalId is non-null and clientId null; after Client both are non-null. Credential/grant fields are
+`INCONCLUSIVE`/`NOT_READY` until verification. Responses are strict UTF-8 RFC 8785 JCS in the same
+length-prefixed framing and 4096-byte maximum as requests. No whole-store digest, store content, secret, token, stack, errno path, provisioner detail or sensitive
+status is returned. Unknown failures map to `INTERNAL_FAILURE` + `NEVER`. `evidenceRefs` contains only
+repo commit/path labels and non-secret state-version references。
 
-### CTR-OP-013 — 能力封闭（不得演化为通用 privileged API）
+### CTR-OP-010 — Single instance, mutex, CAS and one-shot replay
 
-operator MUST NOT 提供（且其实现 MUST NOT 留有任何可启用面）：create arbitrary
-Agent、rotate arbitrary Client、read credential store（读取操作也不提供——
-operator 只按 CTR-OP-007 顺序写与验证，无读回接口）、modify arbitrary config、
-general privileged RPC、任意 method/command/path 分发、shell/exec、文件读写入口。
-request 集合在 CTR-OP-001 冻结后 MUST NOT 以任何配置、feature flag、版本或参数
-扩展；扩展即需新的 accepted authority（whole successor 或新 child）。
+Production runtime MUST mount one Operator instance only. Before socket inspection/cleanup/bind, it MUST
+acquire the exclusive cross-process directory lock at `LOCK_PATH` using atomic `mkdir(0700)`, then write
+exact owner record at `<LOCK_PATH>/owner.json`. Owner bytes are `UTF8(JCS(object))+LF`, file uid505:gid601
+mode0600, object keys exactly:
 
-### CTR-OP-014 — Operator 部署门与审计边界
+```text
+version=1
+pid=<positive 32-bit integer>
+processStartEpochMs=<positive safe integer>
+bindingGeneration=<lowercase UUID>
+randomNonce=<64 lowercase hex characters from 32 bytes crypto.randomBytes>
+```
 
-operator 代码 MUST 经独立 implementation 任务实现（按本 Spec Contracts + 测试），
-经独立 deployment 任务进入 trusted install（authsvc 属主、uid 502 只读、trusted
-Node 执行——与既有 hardening 拓扑一致），并经独立审计后才可用。deployment 任务
-MUST：验证本 Spec accepted + 在 main；验证 Bootstrap Spec accepted + 在 main；
-完成 DEC-OP-003 的全部 pin；在部署主机现场验证 LOCAL_PEERCRED 行为（ACC-OP-002）；
-记录部署坐标（commit、pin 值、socket/state 路径、验收输出）。operator 的
-durable audit（operator state、部署 pin、验证输出）MUST NOT 被任何后续任务删除。
-本 Spec 不授权任何 sudoers/ACL/owner/group/mode 变更，除 operator 自身的
-socket/state/config 文件按 DEC-OP-001 冻结的属主与模式创建外。
+The winner creates `owner.json.tmp.<randomNonce>` with `O_CREAT|O_EXCL|O_WRONLY|O_NOFOLLOW` 0600, writes
+all bytes, fsyncs file, renames to owner.json, fsyncs LOCK_PATH, then lstat/reopens O_RDONLY|O_NOFOLLOW and
+verifies dev/inode/bytes. Missing/malformed/unknown-key/wrong-owner/mode/inode record is BUSY and may be
+quarantined only by the separately audited rollback/recovery script, never guessed by runtime. A second
+process fails startup BUSY before touching the socket/state. For crash recovery, a contender with a valid
+owner record may quarantine a stale lock only after exact owner/mode/no-symlink checks and `kill(pid,0)`
+returns ESRCH; it atomically
+renames the lock directory to a nonce quarantine, then races to mkdir the canonical lock (only one winner).
+PID reuse or ambiguous permission returns BUSY, never stale removal. Quarantine removal occurs only after
+the winner holds the canonical lock. Graceful shutdown removes only its matching nonce lock after socket
+cleanup。
+
+While holding this cross-process lock, one in-process global mutex plus durable `stateVersion` CAS is
+mandatory. CAS means: read exact state dev/inode/version under lock; compute next version; write/fsync a
+versioned temp; re-check canonical dev/inode/version under lock; rename only if unchanged; fsync directory;
+re-read/verify. Corrupt/torn/missing-after-start state is STOPPED, not reset:
+
+```text
+same attempt + same phase + same digest = resume or terminal replay
+same attempt + same phase + different digest = CONFLICT / zero side effect
+same attempt + exact next phase + newly acknowledged ledger digest = eligible to advance once
+phase skip/regression or next phase without acknowledgement = CONFLICT / zero side effect
+concurrent second request = BUSY / zero side effect
+new attempt after terminal success = REJECTED / zero side effect
+second subject = REJECTED / zero side effect
+```
+
+A lost response is replayable from persisted non-secret RESULT. Private state MUST NOT rely only on
+memory; a stale stateVersion can never write or advance。
+
+### CTR-OP-011 — Durable state machine and complete crash recovery
+
+Private state is RFC 8785 JCS and has exactly:
+
+```text
+version (=1), bindingGeneration, bindingDigest, attemptId, phase, stateVersion,
+requestDigest, evidenceCommit, ledgerDigest, intent, result, terminalResponse
+```
+
+`intent` is null or exactly `{kind,requestDigest,evidenceCommit,ledgerDigest,startedAt}`; `result` is null
+or exactly `{kind,status,principalId,clientId,credentialLayerVerification,businessGrantReadiness,
+evidenceRefs,completedAt,errorCode}`. `kind` is `DEFINITION|PRINCIPAL|CLIENT|SECRET_STORE|VERIFICATION`;
+digests/commits/IDs/enums/evidenceRefs use CTR-OP-009/016 formats; timestamps are canonical RFC3339 UTC
+with millisecond precision; nullable IDs follow CTR-OP-009; `errorCode` is null on success and a closed
+CTR-OP-009 value otherwise. `terminalResponse` is null or one exact CTR-OP-009 response object. Unknown
+keys reject. State path/mode/durability/no-follow/CAS are fixed by CTR-OP-003/010. Private state phases are
+exactly:
+
+```text
+PRECHECKED
+DEFINITION_INTENT
+DEFINITION_COMMITTED
+PRINCIPAL_INTENT
+PRINCIPAL_RESOLVED
+CLIENT_INTENT
+CLIENT_RESOLVED
+SECRET_STORE_INTENT
+SECRET_STORED
+VERIFICATION_INTENT
+VERIFIED
+TERMINAL_SUCCESS
+TERMINAL_STOPPED
+```
+
+Every transition is intent → side effect → result → response → repo acknowledgement. Normative recovery
+matrix:
+
+| Crash/unknown point | Required recovery |
+|---|---|
+| Definition writer returned/committed before RESULT | read exact Agent entry; exact disabled tuple ⇒ persist `DEFINITION_COMMITTED`; absent ⇒ retry same stage; conflict ⇒ `TERMINAL_STOPPED` |
+| S1 outcome_unknown/response lost | resolve exact principalExternalRef; absent ⇒ retry same S1 request digest; exact active match ⇒ `PRINCIPAL_RESOLVED`; conflict/inactive ⇒ STOPPED |
+| S2 outcome_unknown/response lost | resolve exact clientExternalRef; absent ⇒ retry same S2 request digest; present and same-attempt secret Buffer still available ⇒ continue; present with secret unavailable ⇒ INCOMPLETE/STOPPED |
+| secret acquired, crash before store rename | secret is lost; resolve client present ⇒ INCOMPLETE/STOPPED, never second Client |
+| store rename succeeded before RESULT | recovery adapter may call canonical `loadCredentialFor(credentialStorePath, exactAgentId)` for this entry only; require exact clientId, hold returned secret only in CTR-OP-008 bounded memory, run parent D.5, release/overwrite where possible, then persist `SECRET_STORED`; absent/mismatch/corruption ⇒ STOPPED |
+| verification response lost | rerun only parent D.5 verification for exact stored client; classify result; no S1/S2/store rewrite |
+| UDS response disconnect after RESULT | identical request replays persisted non-secret RESULT; no side effect |
+| process crash/restart | acquire cross-process lock, validate binding/activation/state, execute this matrix, then require repo acknowledgement |
+| repeated uid502 request | CTR-OP-010 digest/phase/CAS semantics; no caller identity inference |
+
+`Client present + secret unavailable` ⇒ STOP/INCOMPLETE, no second Client/new external_ref, later accepted
+exact-Client rotation recovery only. Exact store entry present but state stale ⇒ the internal recovery
+adapter may read only that exact entry including its credential for D.5, under CTR-OP-008 lifetime/
+redaction rules; no store-read API is exposed and no other entry is enumerated; reconcile same attempt. No recovery path fabricates secret or
+advances without repo acknowledgement。
+
+### CTR-OP-012 — Window, terminal and disabled lifecycle
+
+Endpoint before task D is absent or rejects all requests. `notBefore <= now < expiresAt` is required for
+non-terminal advancement. Expiry during work stops before the next stage and persists
+`TERMINAL_STOPPED`; it never authorizes cleanup writes. After `TERMINAL_SUCCESS`, new attempts are
+permanently rejected, while identical terminal replay remains available. No activation or later V3 Slice
+is triggered。
+
+### CTR-OP-013 — Capability closure
+
+Implementation MUST expose no operation router, generic RPC, shell, command, argv, arbitrary path,
+generic file read/write, credential-store read API, arbitrary Agent/client manipulation, feature flag or
+configuration that widens the six-field request or exact binding. Expansion requires a new accepted
+authority。
+
+### CTR-OP-014 — Deployment gate and trusted closure
+
+Deployment MUST verify exact accepted revisions, current main, frozen file closure, trusted source stamp,
+uid505 runtime, dedicated path ownership/mode/ACL, disabled startup gate, absence of TCP listeners,
+Operator singleton, diagnostics/core-dump controls and rollback material. It installs no exact-attempt
+binding and opens no window. An independent audit must PASS before task D. Durable non-secret deployment
+and state audit must remain available; secret is excluded。
+
+### CTR-OP-015 — UDS path, ACL, inode and lifecycle safety
+
+Path is exactly:
+
+```text
+TRUSTED_ROOT = /usr/local/libexec/agent-core
+TRUSTED_ROOT_EXPECTED = uid0:gid0 mode0755, no inherited ACL, uid502 not writable
+RUN_PARENT = <TRUSTED_ROOT>/run
+RUN_PARENT_EXPECTED = uid505:gid601 mode0700, ACL inheritance disabled,
+  one explicit uid502 search/traverse ACE only
+DIRECTORY = <RUN_PARENT>/workflow-admin-bootstrap-operator-v1
+DIRECTORY_EXPECTED = uid505:gid601 mode0700, ACL inheritance disabled,
+  one explicit uid502 search/traverse ACE only
+SOCKET = <DIRECTORY>/operator.sock
+SOCKET_EXPECTED = uid505:gid601 mode0600, no inherited ACL,
+  one explicit uid502 minimum connect/write ACE only
+FORBIDDEN_UID502_ACL_RIGHTS = add_file, add_subdirectory, delete, delete_child,
+  writeattr, writeextattr, writeowner, writesecurity
+```
+
+Deployment audits every path component from `/usr` through SOCKET with `lstat`; `/usr`, `/usr/local` and
+`/usr/local/libexec` must be root-owned, non-symlink directories and not group/other writable. No inherited
+or group-wide grant is allowed. Deployment must prove uid502 can connect but cannot create/unlink/rename;
+all other ordinary UIDs cannot traverse/connect. If Darwin ACL/socket behavior cannot enforce this exact
+matrix, deployment fails closed and no window opens. Root is host-complete-controller and is not claimed
+as a defeated threat。
+
+Runtime acquires CTR-OP-010 cross-process lock before any socket action and uses safe umask `0077`;
+`lstat` before bind; symlink/non-socket/regular file/active socket fail closed; stale socket removal only
+after exact owner/mode/dev/inode, failed-connect and stale-lock checks. On pinned trusted Node v25.6.1,
+post-bind obtains the listening descriptor through the runtime-validated `net.Server._handle.fd`, calls
+`fstatSync(fd)`, and requires equality with path `lstat` dev/inode/type. This pinned internal accessor is
+permitted only for this check, is tested in task A, and absence/shape drift fails startup before opening the
+window; no native addon/FFI/helper fallback is allowed. Shutdown unlinks only when path lstat still matches
+the pinned fstat dev/inode and lock nonce; restart/crash cleanup follows the same rules. No TCP listener。
+
+### CTR-OP-016 — Framing, parsing and canonicalization
+
+Transport uses strict UTF-8, unsigned 32-bit network-byte-order length prefix, body length 1..4096 bytes,
+one frame per connection and no trailing bytes. Server backlog and `maxConnections` are both 16; at most 8
+connections may be in parser work concurrently; overflow connections are immediately destroyed without
+response. First byte must arrive within 250 monotonic milliseconds and the complete frame within 2000
+monotonic milliseconds from accept; timeout destroys the connection and bounded buffer. Each connection
+allocates at most 4100 frame bytes plus fixed parser state. Parsing never acquires the global operation mutex;
+only a fully validated request may attempt it. Malformed frame/UTF-8/JSON/schema causes zero write and no
+response. Parser MUST reject duplicate JSON keys before object materialization and reject unknown fields. Types, lengths and
+charsets are exact: attemptId lowercase UUID; Git SHA lowercase 40-hex; digest lowercase 64-hex;
+operatorStateVersion non-negative safe integer; operation literal. Request `phase` is exactly one of:
+
+```text
+PRECHECKED | DEFINITION | PRINCIPAL | CLIENT | SECRET_STORE | VERIFICATION | TERMINAL
+```
+
+No case folding, aliases or extension values are accepted。
+
+Canonical serialization is RFC 8785 JCS over exactly the six request fields in `CTR-OP-001`; request
+digest is lowercase hex `SHA-256(UTF8(JCS(request)))`. Ledger digest is lowercase hex
+`SHA-256(exact file bytes at evidenceCommit)`. No locale, whitespace or key-order discretion。
+
+### CTR-OP-017 — Exact implementation file closure
+
+Task A may change only this closure (plus package-manager lock only if deterministically required by adding
+the workspace package):
+
+| Purpose | Exact file(s) |
+|---|---|
+| dedicated package manifest | `packages/workflow-admin-bootstrap-operator/package.json` |
+| public composition handle | `packages/workflow-admin-bootstrap-operator/src/index.js` |
+| startup/config/binding/window gate | `packages/workflow-admin-bootstrap-operator/src/config.js` |
+| UDS path and inode lifecycle | `packages/workflow-admin-bootstrap-operator/src/socket-lifecycle.js` |
+| length frame, strict UTF-8/duplicate-key parser/JCS | `packages/workflow-admin-bootstrap-operator/src/protocol.js` |
+| durable phases, mutex and stateVersion CAS | `packages/workflow-admin-bootstrap-operator/src/state-machine.js` |
+| dedicated redacted auth adapter | `packages/workflow-admin-bootstrap-operator/src/auth-client.js` |
+| canonical Definition/store adapters | `packages/workflow-admin-bootstrap-operator/src/writers.js` |
+| repo revision/ledger verifier | `packages/workflow-admin-bootstrap-operator/src/evidence-verifier.js` |
+| focused unit/integration/fault tests | `packages/workflow-admin-bootstrap-operator/test/{protocol,socket-lifecycle,state-machine,operator}.test.js` |
+| production composition mount | `packages/production-runtime/src/compose.js` |
+| composition/launchd/start-disabled tests | `packages/production-runtime/test/workflow-admin-bootstrap-operator.test.js` |
+| strict launchd env pass-through | `scripts/production-runtime-launchd.mjs` |
+| disabled deployment + ACL/state-directory installer | `scripts/workflow-admin-bootstrap-operator-deploy.mjs` |
+| independent read-only deployment/binding audit | `scripts/workflow-admin-bootstrap-operator-audit.mjs` |
+| D1 inactive binding + D3 activation/revocation | `scripts/workflow-admin-bootstrap-operator-window.mjs` |
+| ordered rollback | `scripts/workflow-admin-bootstrap-operator-rollback.mjs` |
+| deployment/window/rollback tests | `packages/workflow-admin-bootstrap-operator/test/deployment.test.js` |
+| package/workspace truth | no root `package.json` or lockfile change: repository test glob already discovers the package and implementation must use only Node built-ins/current dependencies |
+| structure registry | no `.agents/structure-registry.json` change: new files MUST remain under guardrails; adding an exception is a closure violation |
+| trusted installer | no `scripts/trusted-cp-deploy-install.sh` change: it already installs the full trusted app closure; task B verifies the new package and four scripts' exact bytes are present |
+
+The only new launchd variable is
+`WORKFLOW_ADMIN_BOOTSTRAP_OPERATOR_ENABLED`, strict literal `0|1`, unset = `0`. Task B and D1/D2 keep `0`; only D3 may change it to `1` in the activation transaction for the already
+installed and independently audited exact D1 binding, then perform a controlled restart through the existing
+launchd unit. The binding path, state path, socket path,
+subject and operation are not env-configurable. A `1` value without a valid current binding still rejects
+all requests and performs zero Bootstrap side effects。
+
+Implementation Agent MUST NOT choose another location or introduce a native addon/helper. Any required file
+outside this table stops task A and requires an in-place Spec amendment/review before implementation。
+
+### CTR-OP-018 — Current-main drift is an unconditional stop
+
+Task D binds the then-current exact main as `implementationBase`. Any change to current main before or
+during the window, regardless of apparent relevance, yields `STOPPED`, closes advancement and requires a
+new separately audited binding. Operator/runtime MUST NOT make an “unrelated drift” judgment。
+
+### CTR-OP-019 — Repository ledger authority and exact Operator acknowledgement schema
+
+The same ledger at
+`docs/evidence/workflow-admin-agent-bootstrap-v1/attempt-ledger.json` remains authoritative. It retains all
+parent CTR-WA-010 fields and adds exactly one top-level `operator` object; no parent field is removed or
+reinterpreted. The file bytes are exactly `UTF8(RFC8785-JCS(root-object)) + 0x0A`. `operator` is exactly:
+
+```text
+{
+  schemaVersion: 1,
+  bindingGeneration: <lowercase UUID>,
+  bindingDigest: <lowercase 64-hex>,
+  exactOperation: "workflow_admin_agent_bootstrap_v1",
+  nextSequence: <integer 0..6>,
+  currentGate: null | {
+    sequence: <integer 0..6>,
+    phase: PRECHECKED|DEFINITION|PRINCIPAL|CLIENT|SECRET_STORE|VERIFICATION|TERMINAL,
+    status: PREPARED,
+    expectedOperatorStateVersion: <non-negative safe integer>,
+    previousResultDigest: <lowercase 64-hex|null>,
+    preparedAt: <canonical RFC3339 UTC milliseconds>
+  },
+  history: [<zero or more exact acknowledgement records>]
+}
+```
+
+Each history record is exactly:
+
+```text
+{
+  sequence: <integer 0..6>,
+  phase: <same closed enum>,
+  status: RESULT_ACKNOWLEDGED|TERMINAL_ACKNOWLEDGED,
+  requestDigest: <lowercase 64-hex>,
+  resultDigest: <lowercase 64-hex>,
+  operatorStateVersion: <positive safe integer>,
+  resultStatus: STAGE_COMMITTED|TERMINAL_SUCCESS|STOPPED|INCOMPLETE,
+  acknowledgedAt: <canonical RFC3339 UTC milliseconds>
+}
+```
+
+History is append-only, sequences start at 0 and increase by exactly one, phases follow the closed order,
+stateVersion strictly increases, and `resultDigest = SHA-256(UTF8(JCS(exact CTR-OP-009 response)))`.
+A PREPARED gate authorizes only its exact sequence/phase/expected state version; after Operator RESULT,
+requester appends the matching acknowledgement and either sets the exact next PREPARED gate or null for a
+terminal. Unknown keys, duplicate history sequence, phase skip/regression, digest mismatch, changed prior
+history or binding mismatch reject. Initial PREPARED has empty history, nextSequence=0,
+phase=PRECHECKED, expectedOperatorStateVersion=0, previousResultDigest=null.
+
+Every PREPARED/acknowledgement is a commit in the same Draft evidence PR; each phase commit diff is confined
+to `docs/evidence/workflow-admin-agent-bootstrap-v1/**`. Private state may record only commit/digest/version
+replicas. Mismatch, missing acknowledgement or rewritten evidence history stops with zero next-stage side
+effect。
+
+### CTR-OP-020 — Install and rollback closure
+
+Task B deployment order is: verify accepted implementation artifact/source stamp → stop runtime → install
+trusted app closure including dedicated package → create audited dedicated directory/ACL → install
+startup config with Operator disabled and no binding → render/update existing production launchd plist/env
+only through `scripts/production-runtime-launchd.mjs` → start runtime → prove socket absent or all requests
+rejected → persist non-secret deployment evidence. `scripts/trusted-cp-deploy-install.sh` is the only trusted
+app install seam and MUST remain unchanged; if its current behavior cannot install the frozen closure, task A
+stops and this Spec must be amended/reviewed before any installer change。
+
+Task D has three mandatory substeps. **D1** re-verifies task-C audit and unchanged main, stops runtime,
+atomically installs binding with activation `active:false`, keeps launchd env `0`, restarts disabled and
+publishes the exact binding digest. Task A and D1 each first persist an owner-authored ordinary comment on
+the bound implementation PR with exact fields
+`RECEIPT_KIND=WORKFLOW_ADMIN_BOOTSTRAP_TASK_RECEIPT`, `TASK=A_IMPLEMENTATION|D1_BINDING_PREPARATION`,
+`ACTOR_ID=<ASCII identity>`, `SESSION_ID=<ASCII session identity>`, `RESULT=PASS`; no duplicate/extra fields.
+Their GitHub comment IDs are the task receipt IDs. **D2** is a fresh independent read-only runtime audit that
+runs the exact audit script and fetches both receipts from fixed GitHub API。
+
+Independence is governed honestly as `ENFORCEMENT_LEVEL=MANUAL_POLICY`, matching repository governance:
+DSH/GitHub currently exposes no cryptographically issuer-signed per-session identity receipt. Actor/session
+strings are provenance coordinates, not security Principals. The authenticated `mayf3` GitHub comment is
+the explicit Owner attestation and authority-opening approval that the named D2 reviewer is independent and
+that the exact binding audit passed. Runtime verifies that Owner attestation and exact bytes; it MUST NOT
+claim cryptographic proof of reviewer independence. A dishonest/compromised repository Owner can already
+accept/change authority and is outside this Operator threat model. Governance review rejects missing,
+malformed, non-mayf3-authored, duplicate-task or equal identity/session records before Owner attestation. Its only write is a docs-only receipt at
+`docs/evidence/workflow-admin-agent-bootstrap-v1/operator-binding-audit.json` in the bound evidence PR.
+Receipt bytes are `UTF8(JCS(object))+LF`; object keys are exactly:
+
+```text
+schemaVersion=1, receiptId=<lowercase UUID>, bindingDigest=<lowercase 64-hex>,
+bindingGeneration=<lowercase UUID>, runtimeConfigDigest=<lowercase 64-hex>,
+authContractVersion=<bound ASCII version>, authContractDigest=<bound lowercase 64-hex>,
+implementationBase=<lowercase 40-hex>, evidencePrNumber=<positive integer>,
+implementationTaskReceiptCommentId=<positive integer>,
+implementationActorId=<ASCII identity>, implementationSessionId=<ASCII identity>,
+bindingPreparationReceiptCommentId=<positive integer>,
+bindingPreparerId=<ASCII identity>, bindingPreparerSessionId=<ASCII identity>,
+reviewerId=<ASCII [A-Za-z0-9._:@/-]{1,128}>, reviewerSessionId=<same grammar>,
+reviewerDidNotAuthorImplementation=true, reviewerDidNotPrepareBinding=true,
+reviewerWillNotActivateWindow=true, result=PASS, reviewedAt=<canonical RFC3339 UTC milliseconds>
+```
+
+D2 reviewer/session must differ from task-A implementer identity/session and D1 preparer identity/session as
+recorded in their persisted task receipts; equality or a missing receipt fails independence. D2 then persists
+this exact block as an ordinary GitHub comment on the bound implementation PR:
+
+```text
+WORKFLOW_ADMIN_BOOTSTRAP_BINDING_AUDIT
+BINDING_DIGEST = <lowercase-64-hex>
+BINDING_GENERATION = <lowercase-uuid>
+RUNTIME_CONFIG_DIGEST = <lowercase-64-hex>
+AUTH_CONTRACT_VERSION = <bound ASCII version>
+AUTH_CONTRACT_DIGEST = <bound lowercase-64-hex>
+IMPLEMENTATION_BASE = <lowercase-40-hex>
+EVIDENCE_PR = <positive integer>
+REVIEWER_ID = <exact receipt reviewerId>
+REVIEWER_SESSION_ID = <exact receipt reviewerSessionId>
+AUDIT_RECEIPT_COMMIT = <lowercase-40-hex>
+AUDIT_RECEIPT_DIGEST = <SHA-256 exact receipt bytes>
+RESULT = PASS
+RUNTIME_WRITE_PERFORMED = NO
+```
+
+The comment author login must be `mayf3`; any additional/changed field, stale receipt, identity mismatch,
+failed independence predicate or non-PASS result is invalid. **D3** verifies comment and receipt bytes through
+CTR-OP-005, stops runtime, atomically writes activation bound to
+the exact digest/comment/reviewer, renders the existing plist with
+`WORKFLOW_ADMIN_BOOTSTRAP_OPERATOR_ENABLED=1`, restarts runtime, verifies binding/window/read-only gates
+and socket ACL/inode, then declares the window open. No D substep performs a Bootstrap stage. Failure rolls
+back env to `0`, writes activation `active:false`, removes only an inactive not-yet-used binding by exact
+owner/mode/dev/inode match, and restarts disabled。
+
+Rollback order is: close/omit window binding → stop runtime → restore prior trusted app closure and prior
+plist/env → remove socket only with inode-match rule → preserve private non-secret audit state and repo
+ledger → restart prior runtime → verify no listener. Rollback never deletes parent evidence or performs
+Bootstrap。
 
 ## 10. Acceptance
 
-### ACC-OP-001 — Request 闭合集合与 fail-closed
+Every Acceptance below requires an executed result bound to implementation commit and environment; test
+names alone are not evidence. Every item includes a negative case and an explicit failure condition。
 
-- Contracts: `CTR-OP-001`
-- Method/environment: operator 单元/集成测试（畸形 request 矩阵）
-- Expected: 11 字段 exact key-set 校验；固定值字段逐字匹配；任何多余/缺失/
-  错值字段 ⇒ 结构化拒绝 + 零运行时写入（验证 writers 与 auth client 零调用）
-- Required evidence: 测试用例矩阵（含每类畸形 request）与零写入断言输出
-- Failure condition: 任何畸形 request 触发写动作；任一禁止类字段（command/
-  shell/path/任意 agentId/UUID/ClientID/secret/Token/Authorization/Grant/
-  Binding/Root/activation）被接受
-- Negative path: 携带 `command`、`argv`、`path`、`agentId: agt_other`、
-  `principalUuid`、`secret`、`authorization` 字段的 request ⇒ 全部拒绝且零写入
+### ACC-OP-001 — Closed trigger schema
+- Contracts: `CTR-OP-001`, `CTR-OP-003`
+- Method/environment: parser/operator unit and integration matrix。
+- Expected result: only six exact fields accepted; subject/authority come only from binding。
+- Required evidence: matrix plus zero-writer/auth-call counters。
+- Failure condition: request can choose Agent/external_ref/path/authority, or malformed input writes/receives a fabricated attempt response。
+- Negative case: add `agentId`/`path`/secret, omit or malform attemptId/phase, duplicate a key, or send invalid UTF-8 ⇒ close with no response and zero write。
 
-### ACC-OP-002 — 仅本地 transport 与 caller 边界
-
+### ACC-OP-002 — Trigger is not authority
 - Contracts: `CTR-OP-002`
-- Method/environment: 部署主机现场验证（deployment gate）+ 测试
-- Expected: socket 仅存在于冻结 path；进程无任何 TCP listener（`lsof`/`netstat`
-  断言）；LOCAL_PEERCRED 现场验证返回 kernel uid；uid 502 连接被处理、uid ≠ 502
-  （含 root、505 自连、其他本地 uid）连接在 body 读取前关闭且零写入；socket
-  mode 变化不改变授权结果
-- Required evidence: 部署主机 syscall 验证记录、多 uid 连接测试矩阵、listener
-  断言输出
-- Failure condition: 任何网络监听存在；任何 uid ≠ 502 的连接被处理；授权依赖
-  socket 文件 mode 而非 peer credentials；LOCAL_PEERCRED 现场验证失败却继续部署
-- Negative path: root/sudo/launchctl 路径尝试到达 operator ⇒ 拒绝（caller uid
-  ≠ 502）；502 直读 uid505 store 的独立攻击 ⇒ 仍 DENIED（store 0600 authsvc
-  不因本通道改变）
+- Method/environment: multi-process same-uid502 test and code audit with no peercred/native dependency。
+- Expected result: wrong uid502 process can at most advance the same prebound attempt; early/late/no-binding rejects。
+- Required evidence: two uid502 processes, prebound-state comparison, 16/8 connection-limit and slowloris timing results, native dependency inventory。
+- Failure condition: peer UID/process/request grants authority, partial frames exhaust service beyond bounds, parser holds operation mutex, or native helper is required。
+- Negative case: second uid502 tries different operation/Agent while 16 slow partial connections fill backlog ⇒ no authority change, bounded closes/timeouts, approved full frame remains processable after capacity frees。
 
-### ACC-OP-003 — Exact subject
+### ACC-OP-003 — Exact subject from binding
+- Contracts: `CTR-OP-003`, `CTR-OP-013`
+- Method/environment: binding corruption and interface-surface tests。
+- Expected result: only exact literals exist; no widening surface。
+- Required evidence: binding/activation validator matrices and JCS vectors, every-private-ancestor pre/post dev/inode/ACL walk, owner/mode/no-follow/fsync fault tests and exported-interface inventory。
+- Failure condition: caller selects subject/path, private ancestor symlink/replacement is missed, feature flag widens operation, or malformed activation timestamp/reviewer/receipt, leaf replacement, torn write, permission drift or unaudited generation is accepted。
+- Negative case: symlink `config/operator`, replace ancestor between pre/post walk, use active=false with invalid timestamps, or binding digest without matching receipt/comment/activation ⇒ startup/window fails closed。
 
-- Contracts: `CTR-OP-003`
-- Method/environment: 测试（subject 漂移矩阵）
-- Expected: 仅冻结 agentId + 两个 external_refs 的组合被接受；其他任何组合 ⇒
-  拒绝 + 零写入；operator state subject 与 request 不一致 ⇒ conflict fail-loud
-- Required evidence: 漂移矩阵测试输出
-- Failure condition: 任意第二 Agent subject 被接受或创建
-- Negative path: `agentId: agt_anything-else` / 修改任一 external_ref ⇒ 拒绝
-
-### ACC-OP-004 — 治理形式与三段分离
-
+### ACC-OP-004 — Five-task governance boundary
 - Contracts: `CTR-OP-004`
-- Method/environment: 本 PR repo delta + frontmatter 检查 + 校验工具；operator
-  实现侧代码审查（无 sudo/launchctl/DB/root exec 调用面）
-- Expected: frontmatter 恰为 `implementation_authority: contracts`，零自创
-  authority 字段；本 authoring round delta = 新 Spec 文件 + README index 行；
-  operator 实现不含 privilege-bypass 调用；`git diff --check` PASS、
-  `python3 .agents/tools/verify_governance.py --target . --require-accepted`
-  PASS、`npm run verify:structure -- --base github/main` PASS
-- Required evidence: 本 PR diff 与校验输出；operator implementation PR 的代码
-  审查记录
-- Failure condition: 携带额外文件 delta；operator 实现引入 sudo/launchctl/
-  直连 DB/root exec；specs/authority 字段漂移
-- Negative path: 以 `sudo -u authsvc`、修改 sudoers、launchctl asuser 实现
-  通道任一功能 ⇒ 违规
+- Method/environment: PR/task record review。
+- Expected result: A–E records separate; B has no binding/window/Bootstrap; this PR docs-only。
+- Required evidence: diffs and task receipts。
+- Failure condition: implementation/deployment performs Bootstrap or this PR changes code/runtime。
+- Negative case: deployment test creates Agent identity ⇒ acceptance fails。
 
-### ACC-OP-005 — 执行前置验证
+### ACC-OP-005 — Main/evidence binding
+- Contracts: `CTR-OP-005`, `CTR-OP-018`
+- Method/environment: Git fixture matrix and live read-only preflight。
+- Expected result: descendant evidence, path-only diff, digest match; any main drift STOPPED。
+- Required evidence: PR identity/head-ref, audit-comment, ancestry/diff/digest outputs, pre/post-main checks and writer counters。
+- Failure condition: `main==evidenceCommit` required, PR/repository/ref spoof or force-push accepted, unrelated drift continues, truncated API data is trusted, or wrong path accepted。
+- Negative case: (a) same commit exposed from a different PR/head repo, (b) force-push removing initialEvidenceCommit, or (c) advance main inside check→write interval ⇒ exact current stage is reconciled and `TERMINAL_STOPPED` before any next stage。
 
-- Contracts: `CTR-OP-005`
-- Method/environment: 集成测试（pin/commit/ledger 漂移矩阵，mock GitHub 只读源）
-- Expected: 四项验证逐项执行且全部通过才进入 CTR-OP-006/007；错误
-  acceptedSpecRevision、main HEAD ≠ evidenceCommit、ledger 非 PREPARED、digest
-  不匹配、绑定字段不等、evidence commit 非单 commit/多文件 ⇒ 全部 fail closed
-  零写入
-- Required evidence: 漂移矩阵测试输出（每项的拒绝原因码与零写入断言）
-- Failure condition: 任一验证缺失或失败后仍发生任何运行时写入（含 Definition
-  写、Auth 调用、store 写）；**ledger 未在 main 持久化即执行运行时写入**
-- Negative path: (1) 错误 Spec revision ⇒ 拒绝；(2) request 引用未 commit 的
-  ledger（main HEAD 不同）⇒ 拒绝零写入
-
-### ACC-OP-006 — Provisioner fresh revalidation
-
+### ACC-OP-006 — Provisioner revalidation
 - Contracts: `CTR-OP-006`
-- Method/environment: 集成测试（provisioner 状态故障注入矩阵：principal
-  disabled / client inactive / grant 缺失 / credential 不可用）
-- Expected: 每次执行前逐项 revalidate；任一失败 ⇒ `bootstrapResult = STOPPED`
-  + 原因码 + 零 Definition/S1/S2/store 写入；provisioner token 仅内存（响应/
-  日志/状态零 token 材料）
-- Required evidence: 故障注入矩阵输出 + 零写入断言 + secret 扫描
-- Failure condition: revalidation 失败后仍执行任何写动作；provisioner
-  credential/token 材料出现在任何输出
-- Negative path: (1) grant `auth.identity.provision` 缺失仍执行 ⇒ 违规；
-  (2) provisioner secret 经 response/env/log 跨 UID ⇒ 违规
+- Method/environment: fault matrix for missing/external-unaudited UDS, TCP listener takeover/forged health, socket ancestor/inode drift, inactive Principal/Client, wrong audience, missing grant, bad credential, incompatible auth revision。
+- Expected result: no provisioner secret/token is sent until private UDS checks pass; every failure STOPPED with zero Definition/S1/S2/store call and no TCP fallback。
+- Required evidence: malicious uid502 listener capture showing zero received credential bytes, UDS path/inode trace, call counters and closed responses。
+- Failure condition: any credential goes to loopback TCP/unauthenticated server, failed revalidation still writes, or Spec assumes live readiness。
+- Negative case: legitimate auth UDS absent while uid502 serves forged expected health on 127.0.0.1:4001 ⇒ Operator never connects/sends and performs zero write。
 
-### ACC-OP-007 — uid505 内部事务与 canonical writers
+### ACC-OP-007 — Repository-acknowledged canonical stages
+- Contracts: `CTR-OP-007`, `CTR-OP-019`
+- Method/environment: integration test with fake Git evidence service and canonical writer spies。
+- Expected result: exactly one stage per acknowledged ledger commit; canonical writers only。
+- Required evidence: parent+operator exact ledger JCS vectors, ordered trace, append-only history/commit/digest chain, writer identity/counters。
+- Failure condition: unknown Operator ledger key/status, changed prior history, phase skip/regression, stateVersion/request/result digest mismatch, next stage before acknowledgement, or private state replaces ledger。
+- Negative case: omit ack, alter an old history record, duplicate sequence, set PREPARED for skipped phase or wrong expected stateVersion ⇒ next stage zero calls。
 
-- Contracts: `CTR-OP-007`
-- Method/environment: 集成测试（顺序断言、writer 调用面、pre-state 分支）+
-  生产面 post-state 核查（future 执行轮）
-- Expected: 11 步顺序执行且阶段间 operator state 原子更新；Definition 写入经
-  canonical writer（disabled:true entry、defaultAgentId 不变、其他 entry 字节
-  不变）；store 写入 Part G validate-preserve-atomic；verification 按父 D.5
-  三层分类；store entry 存在 ⇒ ZERO_AUTH_CALL_STOP reentry 语义
-- Required evidence: 顺序/阶段断言、agents.json 与 store 前后快照（sha256 +
-  解析 diff）、D.5 分类记录
-- Failure condition: 任一步越序或跳过；defaultAgentId 变化；enabled Agent 被
-  创建；Binding/Grant/Root/activation 被创建；第二 Client 或 external_ref 更换
-- Negative path: (1) 写 enabled entry ⇒ 违规；(2) defaultAgentId 漂移 ⇒ 违规；
-  (3) 顺手创建任何 Binding/Grant ⇒ 违规
-
-### ACC-OP-008 — Secret 边界
-
+### ACC-OP-008 — Secret/error/diagnostic boundary
 - Contracts: `CTR-OP-008`
-- Method/environment: 全产出物 secret 扫描（response、socket 采样、日志、
-  env、argv、tmp、operator state、attempt ledger、evidence、PR/chat 约定）
-  + 内存路径代码审查
-- Expected: secret 仅存在于 S2 response→store 写之间的 uid 505 进程内存与最终
-  0600 store entry；写后 zeroization；异常日志仅 `secretPresent` 布尔；扫描零
-  命中（含可逆编码）
-- Required evidence: 扫描命令与结果、zeroization 代码审查记录、store 权限记录
-- Failure condition: secret（或其可逆编码/截断/前缀）出现在任何扫描面
-- Negative path: secret 进入 response/log/tmp/env/argv 任一通道 ⇒ 必须被捕获
-  并判定违规
+- Method/environment: code review, fault injection, output/log/trace/state/core/diagnostic scans。
+- Expected result: no real secret outside uid505 memory/store; Buffer overwrite where possible; best-effort claim only。
+- Required evidence: scan output, runtime diagnostic configuration, exact-entry post-rename recovery trace and review record。
+- Failure condition: secret/body/header enters trace/error/report, recovery enumerates/exposes another entry, exact-entry secret outlives D.5, or guaranteed JS zeroization is claimed。
+- Negative case: auth client throws a secret-bearing body or post-rename recovery loads exact credential then D.5 fails ⇒ fixed closed error, no body/stack/secret leak and memory reference released。
 
-### ACC-OP-009 — Response 闭合集合
-
+### ACC-OP-009 — Disjoint response/error schemas
 - Contracts: `CTR-OP-009`
-- Method/environment: response schema exact-equality 测试 + secret 扫描
-- Expected: 恰 8 字段；credentialDigest 为 store 文档 sha256（uid 505 侧可复算
-  相等）；principalId/clientId null 规则正确；枚举值域正确
-- Required evidence: response 样本（脱敏）+ digest 复算记录
-- Failure condition: 任何额外字段；返回 credential-store 内容、其他 Agent 配置、
-  secret/Token/Authorization/provisioner credential
-- Negative path: response 携带 `store`、其他 agent entry、token 材料 ⇒ 违规
+- Method/environment: exact-key schema tests for every status/error enum。
+- Expected result: closed disjoint sets; no whole-store digest; unknown error maps INTERNAL_FAILURE。
+- Required evidence: sanitized samples, every enum/cross-field/nullability/JCS vector, pre-validation no-response capture and exact-key assertions。
+- Failure condition: malformed request receives fabricated attempt/phase, success/error fields mix, empty evidenceRefs appears after PRECHECKED, or store digest/content crosses UID。
+- Negative case: invalid attemptId/phase ⇒ no response; valid NO_BINDING ⇒ closed error with truthful empty evidenceRefs; adapter errno/stack/store digest ⇒ omitted/mapped。
 
-### ACC-OP-010 — One-shot / 幂等 / 防重放 / 崩溃恢复
-
+### ACC-OP-010 — Mutex/CAS/concurrency/terminal replay
 - Contracts: `CTR-OP-010`
-- Method/environment: 状态机测试（同/异 digest 重放、崩溃注入（kill -9 后重启
-  operator）、跨进程重启恢复）
-- Expected: 四条语义逐字成立；operator state 每阶段原子持久；崩溃后同 attempt
-  同 digest 请求 ⇒ reconcile 或 terminal replay，零第二身份；terminal success
-  后一切新 attempt 拒绝
-- Required evidence: 状态机测试矩阵 + 崩溃注入恢复记录
-- Failure condition: 状态仅存进程内存；same attempt + different digest 被执行；
-  terminal success 后第二次执行被接受；崩溃后无法 same-attempt reconciliation
-- Negative path: (1) terminal success 后重放新 attemptId ⇒ rejected；(2) 同
-  attemptId 换 digest ⇒ conflict fail-loud；(3) operator 重启后另起 attempt ⇒
-  违规
+- Method/environment: simultaneous connections, stale CAS, restart and replay tests。
+- Expected result: one side effect; second BUSY; stale state CONFLICT; terminal replay byte-equivalent non-secret result。
+- Required evidence: owner.json JCS/nonce/mode/fsync vectors, barrier-controlled two-process trace, lock quarantine/PID-reuse matrix, state no-follow/inode/fsync/CAS faults and writer counts。
+- Failure condition: malformed/missing owner record is runtime-quarantined, nonce is weak/nonmatching, double execution, in-memory-only state, two processes clean/bind concurrently, stale/torn state resets, or second attempt succeeds。
+- Negative case: missing owner.json, wrong mode, unknown key, PID reuse, bad nonce, or simultaneous stale cleanup + same-phase requests ⇒ BUSY/manual audited recovery or one valid owner and exactly one stage write。
 
-### ACC-OP-011 — 失败终态安全
-
+### ACC-OP-011 — Crash recovery matrix
 - Contracts: `CTR-OP-011`
-- Method/environment: 故障注入矩阵（§CTR-OP-011 九类失败逐类注入）+ post-state
-  核查
-- Expected: 每类失败按父分类树闭合；终态满足 SAFE_DISABLED_STAGED_IDENTITY 八
-  属性（present-or-absent by stage / disabled=true / non-routable /
-  non-runnable / defaultAgentId unchanged / 无 Binding / 无 Grant / 无 Root /
-  无 activation）；零 unrecorded rotation、零第二 Client、零 external_ref 变更
-- Required evidence: 每类注入的 post-state 快照（agents.json 解析、store 状态、
-  auth 对象、operator state 阶段记录）
-- Failure condition: 任一失败模式未闭合即产生不一致状态；终态违反任一属性；
-  rollback 依赖 Definition remove seam
-- Negative path: (1) S2 response 丢失后创建 second Client ⇒ 违规；(2) 更换
-  external_ref 重试 ⇒ 违规；(3) 伪造/回显旧 secret ⇒ 违规
+- Method/environment: kill/fault injection at every intent/side-effect/result boundary。
+- Expected result: each listed crash reconciles same attempt or STOPPED safely; no second Client/external_ref。
+- Required evidence: full matrix, post-state, repo acknowledgement and auth call counts。
+- Failure condition: any crash path is undefined, duplicates identity, fabricates/leaks secret, reads more than the exact store entry, or skips ack。
+- Negative case: Client exists but secret lost ⇒ INCOMPLETE and zero S2 retry/new Client; store rename succeeded/state stale ⇒ exact-entry-only read + D.5, no enumeration/leak。
 
-### ACC-OP-012 — 通道生命周期
-
+### ACC-OP-012 — Window and terminal lifecycle
 - Contracts: `CTR-OP-012`
-- Method/environment: 状态机测试（deployment-gate 前不可用；terminal success
-  后永久拒绝）
-- Expected: gate 前 socket 不可用/全拒绝；terminal success 后任何新 attempt
-  （含新 subject、变形 request）⇒ 结构化 rejected + 零写入；功能拒绝不可经
-  配置关闭；无任何自动 activation 触发
-- Required evidence: 生命周期测试输出
-- Failure condition: gate 前可用；terminal success 后任何新 bootstrap 被接受；
-  存在关闭永久拒绝的配置开关
-- Negative path: terminal success 后以新 attemptId/新 agentId 重试 ⇒ 必须
-  rejected
+- Method/environment: fake clock boundary tests and post-success attempts。
+- Expected result: early/expired rejects; expiry stops before next stage; new post-success attempt rejected; replay works。
+- Required evidence: clock/state trace and zero-write assertions。
+- Failure condition: early trigger writes, expired window continues or second attempt succeeds。
+- Negative case: trigger at `expiresAt` ⇒ rejected/zero side effect。
 
-### ACC-OP-013 — 能力封闭
-
+### ACC-OP-013 — No generic privileged API
 - Contracts: `CTR-OP-013`
-- Method/environment: 代码审查 + 接口面测试（尝试任意 method/command/path/
-  config/store 读取构造）
-- Expected: 无任何通用面存在或可启用；request 集合与 CTR-OP-001 完全一致；
-  无 feature flag 扩展点
-- Required evidence: 接口面清单与测试输出、实现代码审查记录
-- Failure condition: 实现中存在任意 method 分发、exec、文件读写、store 读回、
-  arbitrary agent/client 操作的可达代码路径
-- Negative path: operator 演化为通用 privileged API（新增任意 operation/
-  method/config 面）⇒ 违规
+- Method/environment: exported-route/config/code audit and fuzzed unknown operations。
+- Expected result: no router/exec/path/store-read/widening switch。
+- Required evidence: reachable API inventory and fuzz results。
+- Failure condition: any arbitrary operation or read/write primitive is reachable。
+- Negative case: operation `anything_else` ⇒ closed rejection。
 
-### ACC-OP-014 — 部署门与审计边界
+### ACC-OP-014 — Deployment audit boundary
+- Contracts: `CTR-OP-014`, `CTR-OP-020`
+- Method/environment: clean-host deployment rehearsal and independent audit。
+- Expected result: disabled/no-binding deployment, trusted source stamp, audited rollback, no Bootstrap。
+- Required evidence: installation/rollback transcript, hashes, private-ancestor walks, plist/env diff, D1 digest, D2 receipt commit/bytes/digest + exact comment/API verification + task identity receipts, D3 activation bytes and listener checks。
+- Failure condition: window opens before exact independent binding audit, D2 reviewer/session equals implementer or preparer, independence predicate false, receipt/comment author/body/digest differs, deployment creates identity or rollback deletes evidence。
+- Negative case: task-C audit exists but D2 is same-author/self-review, stale/mismatched receipt or wrong digest ⇒ D3 activation and task E forbidden。
 
-- Contracts: `CTR-OP-014`
-- Method/environment: deployment 任务执行记录 + 独立审计报告
-- Expected: 三段分离可追溯（implementation PR / deployment 记录 / 独立审计）；
-  pin 完整（spec blob、accepted head、caller uid、subject、socket/state 路径、
-  auth origin、provisioner 非 secret 坐标）；operator 文件 authsvc 属主且
-  502 只读；LOCAL_PEERCRED 现场验证记录在场；durable audit 永不删除
-- Required evidence: 部署记录（坐标 + pin 值 + 验收输出）、审计报告、文件
-  属主/模式快照
-- Failure condition: 部署跳过任一 pin 或现场验证；operator 代码 502 可写；
-  durable audit 被删除或改写历史
-- Negative path: 未经独立审计即启用 operator ⇒ 违规
+### ACC-OP-015 — Socket path race and ACL matrix
+- Contracts: `CTR-OP-015`
+- Method/environment: deployment host users, symlink/regular/active/stale socket, inode replacement, crash/restart tests。
+- Expected result: uid502 connect only; no create/unlink/rename; other ordinary UID denied; all race checks fail closed; no TCP。
+- Required evidence: every-ancestor `lstat`/ACL/inheritance snapshot, two-process lock trace, pinned Node fd/fstat proof and attack matrix。
+- Failure condition: ancestor symlink/writable/inherited ACL is ignored, internal fd accessor unavailable yet startup continues, symlink/stale/inode race accepted, group-wide access, uid502 directory write, or other UID connects。
+- Negative case: inherited ACE on RUN_PARENT, competing runtime during stale cleanup, or socket inode replacement before shutdown ⇒ startup/cleanup fails closed and replacement is not unlinked。
 
-**覆盖对照**：CTR-OP-001→ACC-OP-001 · 002→002 · 003→003 · 004→004 ·
-005→005 · 006→006 · 007→007 · 008→008 · 009→009 · 010→010 · 011→011 ·
-012→012 · 013→013 · 014→014（CONTRACT_COUNT = 14；CONTRACTS_WITH_ACCEPTANCE
-= 14；ACCEPTANCE_COUNT = 14；DANGLING_CONTRACT_REFERENCES = 0；
-UNCOVERED_CONTRACTS = 0；ACCEPTANCE_WITHOUT_FAILURE_CONDITION = 0。涉及
-operator 运行面的证据属未来独立 implementation/deployment/execution 任务，
-为 runtime/manual evidence 类，理由：其 subject 在 authoring round 中依法
-不存在）。
+### ACC-OP-016 — Strict framing, duplicate keys and JCS
+- Contracts: `CTR-OP-016`
+- Method/environment: byte-level parser corpus and RFC 8785 vectors。
+- Expected result: strict UTF-8, max 4096, duplicate/unknown rejection, stable digest exact bytes。
+- Required evidence: corpus/JCS results, first-byte/full-frame monotonic deadline tests, 16/8 capacity and fixed-buffer measurements, no-operation-mutex parser trace。
+- Failure condition: duplicate key last-wins, malformed UTF-8 accepted, canonical digest varies, partial frame exceeds time/memory/concurrency bound, or parser blocks operation mutex。
+- Negative case: duplicate attemptId, 4097-byte frame, no first byte for 250ms, or drip frame beyond 2000ms ⇒ no response, bounded close, zero write。
 
-**Owner 派发的 18 项拒绝构造 → 验收映射**：
+### ACC-OP-017 — File closure rejects wrong implementation
+- Contracts: `CTR-OP-017`
+- Method/environment: implementation PR exact-path diff and structure verification。
+- Expected result: all required modules/tests/mount/deploy/audit/window/rollback scripts present only at table paths; no native artifact/helper, root package, lockfile, structure exception or trusted-installer change。
+- Required evidence: name-status diff, structure output, script dry-run tests and dependency inventory。
+- Failure condition: implementation or deployment uses manual/unspecified tooling, chooses unspecified placement, omits closure component or adds native helper。
+- Negative case: parser embedded ad hoc in `compose.js`, ACL installed by an untracked shell command, or binding written outside the exact window script ⇒ fail。
+
+### ACC-OP-018 — Parent ledger remains authoritative
+- Contracts: `CTR-OP-019`
+- Method/environment: mutate private state without repo ack and rewrite evidence history tests。
+- Expected result: no advancement; mismatch STOPPED; phase commits path-confined。
+- Required evidence: repo/private version trace and Git path diffs。
+- Failure condition: private state alone authorizes advancement or non-evidence file enters phase commit。
+- Negative case: valid private RESULT + stale repo ledger ⇒ next stage zero writes。
+
+### ACC-OP-019 — Install/rollback exact order
+- Contracts: `CTR-OP-020`
+- Method/environment: deployment rehearsal with ordered event recording。
+- Expected result: install and rollback follow exact sequence; prior runtime restored without Bootstrap/evidence deletion。
+- Required evidence: ordered transcript, artifact hashes and post-rollback listener/state checks。
+- Failure condition: launch before disabled config, remove socket without inode check, or delete ledger/state audit。
+- Negative case: failed post-start check ⇒ rollback before any task-D binding exists。
+
+### ACC-OP-020 — Safe staged identity terminal
+- Contracts: `CTR-OP-007`, `CTR-OP-011`, `CTR-OP-012`
+- Method/environment: end-to-end fault matrix with production-shaped fixtures。
+- Expected result: any partial identity remains absent-or-disabled, non-routable/non-runnable, default unchanged, no Grant/Binding/Root/activation。
+- Required evidence: exact before/after Definition/store/auth/route snapshots without secret。
+- Failure condition: enabled/routable identity, permission Slice, second Client or external_ref change。
+- Negative case: failure after Definition write ⇒ disabled entry only, no later Slice action。
+
+### Coverage and mechanical integrity
 
 ```text
-1  uid502 直接读取 uid505 store           → ACC-OP-002（negative）/ ACC-OP-008
-2  provisioner secret 跨 UID              → ACC-OP-006（negative）
-3  root/sudo/launchctl 绕过               → ACC-OP-004（negative）/ ACC-OP-002
-4  任意 Agent ID                          → ACC-OP-003
-5  任意 shell/command/path                → ACC-OP-001（negative）
-6  错误 Spec revision                     → ACC-OP-005（negative (1)）
-7  ledger 未持久化即写运行时              → ACC-OP-005（negative (2)）
-8  provisioner revalidation 失败后仍执行  → ACC-OP-006（negative (1)）
-9  secret 出现在 response/log/tmp/env/argv→ ACC-OP-008 / ACC-OP-009
-10 second Client                          → ACC-OP-011（negative (1)）
-11 更换 external_ref                      → ACC-OP-011（negative (2)）/ ACC-OP-007
-12 terminal success 后第二次执行          → ACC-OP-010（negative (1)）/ ACC-OP-012
-13 修改 defaultAgentId                    → ACC-OP-007（negative (2)）
-14 创建 enabled Agent                     → ACC-OP-007（negative (1)）
-15 创建 Binding/Grant/Root/activation     → ACC-OP-007（negative (3)）
-16 operator 崩溃后无法 same-attempt reconciliation → ACC-OP-010（negative (3)）
-17 返回其他 Agent 配置或 credential       → ACC-OP-009（negative）
-18 operator 演化为通用 privileged API     → ACC-OP-013（negative）
+CONTRACT_COUNT = 20
+CONTRACTS_WITH_ACCEPTANCE = 20
+ACCEPTANCE_COUNT = 20
+DUPLICATE_CONTRACT_IDS = 0
+DUPLICATE_ACCEPTANCE_IDS = 0
+DANGLING_CONTRACT_REFERENCES = 0
+UNCOVERED_CONTRACTS = 0
+DECLARATION_ONLY_EDGES = 0
+COVERAGE_TABLE_ONLY_EDGES = 0
+ACCEPTANCE_WITHOUT_FAILURE_CONDITION = 0
+ACCEPTANCE_WITHOUT_NEGATIVE_CASE = 0
 ```
+
+Direct coverage: CTR-OP-001→ACC-OP-001; 002→002; 003→001/003; 004→004;
+005→005; 006→006; 007→007/020; 008→008; 009→009; 010→010; 011→011/020;
+012→012/020; 013→003/013; 014→014; 015→015; 016→016; 017→017; 018→005;
+019→007/018; 020→014/019。
+
+Blocker coverage:
+
+| Independent-review blocker | Contract | Acceptance |
+|---|---|---|
+| parent repo ledger replaced by private state | CTR-OP-007/019 | ACC-OP-007/018 |
+| peer UID treated as authority / nonexistent Node API | CTR-OP-002 | ACC-OP-002 |
+| socket symlink/stale/inode/race | CTR-OP-015 | ACC-OP-015 |
+| other uid502 process triggers first | CTR-OP-002/003/012 | ACC-OP-002/012 |
+| main/evidence contradiction and later main drift | CTR-OP-005/018 | ACC-OP-005 |
+| duplicate JSON keys | CTR-OP-016 | ACC-OP-016 |
+| canonicalization undefined | CTR-OP-016 | ACC-OP-016 |
+| response/error conflict and whole-store digest | CTR-OP-009 | ACC-OP-009 |
+| crash recovery incomplete | CTR-OP-011 | ACC-OP-011 |
+| concurrent double execution / second terminal attempt | CTR-OP-010/012 | ACC-OP-010/012 |
+| secret in trace/exception/report; JS zeroization overclaim | CTR-OP-008 | ACC-OP-008 |
+| implementation/deployment closure missing or bundled Bootstrap | CTR-OP-004/014/017/020 | ACC-OP-004/014/017/019 |
+| caller selects Agent/path | CTR-OP-001/003/013 | ACC-OP-001/003/013 |
+| provisioner failure still writes | CTR-OP-006 | ACC-OP-006 |
 
 ## 11. Alternatives and disposition
 
-- **复用既有 uid505 本地控制面 seam（Owner 顺序第 1 项）**：否决——OBS-OP-002
-  清点：无 UDS server；broker gateway 进程内无 listener，复用即把单次管理
-  operation 混入通用 agent RPC 面且经 localhost TCP（禁止 transport）；spawn
-  helper 单向 505→502，非 operation 入口。
-- **localhost TCP / 公网 HTTP endpoint**：否决——Owner 冻结 FORBIDDEN；TCP
-  无本机 uid 构造性证明，且产生网络监听面。
-- **sudo / sudoers / launchctl asuser 包装**：否决——Owner 冻结 FORBIDDEN；
-  等于授予 uid502 通用 authsvc 执行权，无法精确限制单一 operation。
-- **root host-exec daemon / setuid operator**：否决——引入常驻 root 面；
-  operator 全部动作可在 uid 505 完成（OBS-OP-005），无需提权。
-- **通用文件 writer（uid502 写请求文件、uid505 轮询执行）**：否决——通用
-  文件 writer 禁止；无精确 caller proof（文件属主可伪造上下文）；轮询引入
-  TOCTOU。
-- **SSH 到 authsvc 账户执行**：否决——SHELL_EXECUTION FORBIDDEN；授予 shell
-  即授予全部能力。
-- **数据库直写（直接改 auth DB 建 principal/client）**：否决——绕过 S1/S2
-  幂等 seam 与全部审计；父 CTR-WA-002 明令禁止。
-- **uid502 直接执行 bootstrap（不经通道）**：不可行——全部写入目标 uid505
-  属主（OBS-OP-004），且 secret 按 Part H 只能进 uid505 私有 store。
-- **独立 operator daemon（新进程）**：否决——与既有「进程内组合优先、未新建
-  daemon」拓扑先例冲突；in-process endpoint 足够且状态经 durable 文件不依赖
-  进程存活。
-- **operator 现场做完整 git fetch/clone 验证 evidence**：否决——新增可写
-  状态与攻击面；改为只读 GitHub 验证（DEC-OP-003）。
-- **为本次 bootstrap 新建 auth-service provisioner child**：否决——
-  AUTH_SERVICE_NEW_PROVISIONER_CHILD_REQUIRED = NO；复用现有 accepted
-  provisioner authorities + fresh revalidation（DEC-OP-005）。
-- **per-process token/mTLS 认证 caller**：否决——引入 secret 通道
-  （SECRET_CROSSES_UID_BOUNDARY = NO）；OS 边界 + exact operation 已闭合
-  所需边界（DEC-OP-002）。
+- **LOCAL_PEERCRED as authority** — rejected: uid502 is shared and Node peer UID is not a portable
+  built-in premise; native closure is unnecessary. Peer UID may be telemetry only。
+- **Per-trigger secret/mTLS** — rejected: new secret channel is unnecessary when authority is prebound。
+- **TCP/public HTTP** — rejected: widens transport; locality-only UDS is sufficient。
+- **Generic privileged broker/shell/file writer** — rejected: caller could select action/path。
+- **uid505 private state as ledger authority** — rejected: redefines parent Spec。
+- **`main HEAD == evidenceCommit`** — rejected: evidence lives on a Draft PR descendant。
+- **One implementation+deployment+execution task** — rejected: removes independent audit and may
+  bootstrap during installation。
 
 ## 12. Migration, compatibility, and rollback
 
-- **本轮（authoring）**：docs-only，新增本文件 + README index 行；零代码、零
-  运行时写入、零部署。
-- **实现轮**：独立 implementation 任务按本 Spec Contracts 实现 operator（新
-  代码进入 trusted closure 的方式由 deployment 任务执行）；不修改任何既有
-  product 包的语义（operator 是 additive 组合组件）。
-- **部署轮**：独立 deployment 任务 + 独立审计；pin 完成且部署门通过前 operator
-  保持 disabled；不改变既有 hardening 边界（trusted Node、502 只读、store
-  505-private、CP 不打开 dev-repo 文件全部保持）。
-- **执行轮**：独立 Bootstrap 执行任务（uid 502 requester 侧）；父 CTR-WA-008
-  四条件 + 本 Spec CTR-OP-005 前置全部满足后恰一次。
-- **回滚（通道侧）**：随时可禁用 operator（移除 socket / 停用 endpoint）；
-  operator state 与全部 durable audit 永不删除（审计事实）。bootstrap 侧失败
-  终态继承 `SAFE_DISABLED_STAGED_IDENTITY`（CTR-OP-011）；通道禁用不改变已
-  完成阶段的合法终态。
-- **权威回滚**：本 Spec 未 accepted ⇒ PR 关闭即无痕；accepted 后撤回需
-  whole-authority successor（SPEC_GOVERNANCE_V0 §9.2）。retirement Spec（是否
-  删除 socket/code）是后续独立权威。
+### A. Operator implementation task
+
+Writes only `CTR-OP-017` closure and tests; no deployment, binding, window or Bootstrap。
+
+### B. Operator deployment task
+
+May start only after `AUTH_SERVICE_AGENT_CORE_BOOTSTRAP_PROVISIONING_UDS_V1` is accepted, merged,
+implemented and audited. It installs trusted closure and disabled startup configuration; endpoint absent or
+rejects all requests; no binding/window/Bootstrap。
+
+### C. Deployment audit
+
+Independent read-only verification of artifact hashes, source stamp, singleton, path/ACL, diagnostics,
+listener absence, disabled behavior and rollback readiness。
+
+### D. Exact execution-window task
+
+D1 installs one immutable inactive uid505 binding; D2 independently audits its exact digest and persists
+the closed GitHub comment; D3 verifies that receipt, writes the separate activation artifact, enables the
+existing mount and opens the finite window. No D substep performs Bootstrap side effects。
+### E. Bootstrap execution
+
+uid502 sends only trigger/advance frames for the prebound attempt. Repo ledger acknowledgements gate each
+stage. It cannot activate or provision later Slices。
+
+Rollback follows `CTR-OP-020`; parent `SAFE_DISABLED_STAGED_IDENTITY` remains the only Bootstrap failure
+terminal. No authority is silently superseded。
 
 ## 13. Open questions
 
 ```text
-OPEN_OWNER_DECISIONS = NONE（§0 全部冻结）
+OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE
 PARTIAL_SUPERSESSION = NONE
-DUPLICATE_SPEC_RISK = NONE（OBS-OP-008 零命中）
+DUPLICATE_SPEC_RISK = NONE
+AUTHORING_READY_FOR_REVIEW = YES
 ```
 
-非规范跟进（不改变本 Spec 语义）：operator retirement Spec（terminal success
-或永久放弃后是否删除 socket/code）；Bootstrap Spec 既有非规范跟进（activation
-authority、target-admission child、Client rotation recovery 权威、部署面
-auth-service 修订现场确认）继续由各自权威持有。
+Non-normative future work: independent full review; Owner acceptance; merge; auth-service separately owns
+and must establish the named authenticated provisioning-UDS prerequisite; only then A→B→C→D→E may pass
+their gates; later exact-Client rotation authority if secret loss occurs; later activation/Grant/Root/
+Binding Slices。
 
-## 14. Final Output（authoring round 冻结输出）
+## 14. Final Output
 
 ```text
-AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_OPERATOR_V1 = PROPOSED_CANDIDATE
-  (docs-only; zero code, zero runtime write, zero secret)
-
-SELECTED_OPERATOR_MODEL =
-dedicated local-only Unix-domain operator endpoint (single fixed operation
-workflow_admin_agent_bootstrap_v1), composed in-process into the existing
-trusted authsvc (uid 505) control-plane runtime within the trusted install
-closure; caller authorization = kernel-verified UDS peer credentials
-(LOCAL_PEERCRED) restricted to uid 502
-
-OPERATOR_SOCKET_PATH = /usr/local/libexec/agent-core/run/workflow-admin-bootstrap-operator.sock
-OPERATOR_STATE_PATH  = /usr/local/libexec/agent-core/config/operator/workflow-admin-bootstrap-v1/state.json
-OPERATOR_CONFIG_PATH = /usr/local/libexec/agent-core/config/operator/workflow-admin-bootstrap-v1/operator-config.json
-
-AUTHORIZED_CALLER_UID = 502
-OPERATOR_RUNTIME_UID = 505
-EXACT_AGENT_ID = agt_workflow-admin-agent
-EXACT_OPERATION = workflow_admin_agent_bootstrap_v1
-GENERAL_OPERATOR_CAPABILITY = NO
-AUTH_SERVICE_NEW_PROVISIONER_CHILD_REQUIRED = NO
-SECRET_CROSSES_UID_BOUNDARY = NO
-ROLLBACK_TARGET = SAFE_DISABLED_STAGED_IDENTITY
-OPERATOR_DEFAULT_STATE = disabled / unavailable until its own deployment gate passes
-OPERATOR_AFTER_TERMINAL_SUCCESS = reject all new bootstrap attempts
-DOCS_MERGE_DEPLOYS_OPERATOR = NO
-SEPARATE_OPERATOR_IMPLEMENTATION_TASK_REQUIRED = YES
-SEPARATE_OPERATOR_DEPLOYMENT_AND_AUDIT_REQUIRED = YES
-BOOTSTRAP_RUNTIME_WRITE_PERFORMED_IN_THIS_ROUND = NO
-
-CONTRACT_COUNT = 14
-CONTRACTS_WITH_ACCEPTANCE = 14
-ACCEPTANCE_COUNT = 14
-DANGLING_CONTRACT_REFERENCES = 0
-UNCOVERED_CONTRACTS = 0
-ACCEPTANCE_WITHOUT_FAILURE_CONDITION = 0
-
-AUTHORING_ROUND：PRODUCT_CODE_CHANGE = NONE · OPERATOR_IMPLEMENTED = NO ·
-OPERATOR_DEPLOYED = NO · AGENTS_JSON_CHANGE = NO · CREDENTIAL_STORE_CHANGE = NO ·
-AUTH_IDENTITY_CREATED = 0 · ATTEMPT_LEDGER_CREATED = NO ·
-AGENT_PRINCIPAL_CLIENT_SECRET_CREATED = NO · WORKSPACE_HOME_CREATED = NO ·
-BINDING_GRANT_ROOT_CREATED = NO · ACTIVATION_PERFORMED = NO ·
-SUDOERS_ACL_OWNER_GROUP_MODE_CHANGE = NO · ROOT_SUDO_LAUNCHCTL_USED = NO ·
-AUTH_SERVICE_RESOLUTION_S1_S2_CALLED = NO · MERGE_PERFORMED = NO ·
+AMENDMENT_ROUND = 1
+AMENDMENT_CLASS = TRIGGER_NOT_AUTHORITY_AND_OPERATOR_CLOSURE
+CALLER_AUTHORIZATION_MODEL = PREBOUND_EXACT_OPERATION
+PEER_UID_SECURITY_DEPENDENCY = REMOVED
+REPOSITORY_LEDGER_AUTHORITY = PRESERVED
+MAIN_EVIDENCE_BINDING = CORRECTED
+SOCKET_SECURITY = CLOSED_BY_CONTRACT_AND_DEPLOYMENT_AUDIT
+REQUEST_RESPONSE_SCHEMA = CLOSED
+CRASH_AND_CONCURRENCY_RECOVERY = CLOSED
+MEMORY_ZEROIZATION = BEST_EFFORT
+IMPLEMENTATION_AND_DEPLOYMENT_CLOSURE = FROZEN
+AUTH_SERVICE_AUTHENTICATED_TRANSPORT_PREREQUISITE = NOT_ESTABLISHED
+DEPLOYMENT_ALLOWED_NOW = NO
+SPEC_STATUS = proposed
+FRESH_FULL_REVIEW_REQUIRED = YES
+INDEPENDENT_REVIEW_RESULT = PENDING
+READY_TO_MARK_ACCEPTED = NO
+RUNTIME_WRITE_AUTHORIZED_NOW = NO
+PRODUCT_CODE_CHANGED_IN_THIS_ROUND = NO
 SECRET_READ_OR_EXPOSED = NO
-
-权威激活路径 = 独立 review PASS + Owner acceptance + merge to main ⇒
-  本 Spec 成为 operator 实现/部署/审计与经通道执行的 Bootstrap 单次执行的
-  合法实现权威（docs merge 本身零部署零执行）⇒ 独立 implementation 任务 ⇒
-  独立 deployment 任务 + 独立审计（gate 通过后 operator 可用）⇒ 独立 Bootstrap
-  执行任务在全部前置满足后恰执行一次
-
-NEXT_TASK = 通道 审计（全新的本地审计 Agent 对本 proposed head 做独立 review；
-  FRESH_FULL_REVIEW_REQUIRED = YES；MERGE_ALLOWED = NO until review PASS +
-  Owner acceptance）
+NEXT_TASK_NAME = 通道 审计
+NEXT_TASK_AGENT = 全新的本地审计 Agent
 ```
