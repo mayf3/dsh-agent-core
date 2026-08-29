@@ -4,6 +4,7 @@ status: proposed
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
+production_apply_authority: none
 scope:
   - mayf3/dsh-agent-core
   - packages/broker/test capability baseline decomposition only
@@ -75,10 +76,15 @@ Active structure verifier 的机械语义：head 中仍超过 500 行的 base le
 `packages/broker/test-support/capability-fixtures.js`
 
 helper 位于 `test-support/`，不得以 `.test.js` 结尾，不得注册 `node:test`，不得包含
-capability-specific fixture、manifest count、产品合同断言或未来功能行为。它只容纳当前文件
-已有、被多个职责文件共享的：
-`startMockServer`、`safeJson`、`json`、`startTokenServer`、`wire`、`mockTargets`、`svcError`
+capability-specific fixture、manifest count、产品合同断言或未来功能行为。shared helper 的
+成员合同是：仅承载被 **两个及以上** 拆分测试文件共同使用的 helper。它只容纳当前文件已有、
+满足该合同的：
+`startMockServer`、`safeJson`、`json`、`startTokenServer`、`wire`、`mockTargets`
 及其最低必要 imports/exports。
+
+`svcError` **不属于 shared helper**：它仅服务于 workflow-my-tasks 测试族（单一职责文件），
+不满足“两个及以上文件共享”的成员合同，因此保留在
+`packages/broker/test/capabilities/workflow-my-tasks.test.js`，随该文件一起搬迁。
 
 ### DEC-003 — Aggregate inventory has one owner
 
@@ -171,7 +177,7 @@ A packages/broker/test/capabilities/workflow-transition.test.js
 
 | Target | Current blocks moved verbatim | Lines |
 |---|---|---:|
-| `test-support/capability-fixtures.js` | common mock/token/wire/error helpers only | 83 |
+| `test-support/capability-fixtures.js` | common mock/token/wire helpers shared by 2+ split files (no `svcError`; it stays in workflow-my-tasks.test.js) | 83 |
 | `capabilities/manifest-inventory.test.js` | aggregate 13-manifest validation | 28 |
 | `capabilities/forum.test.js` | forum safe-kind, required query, reply wire fixture, undeclared-code fallback | 143 |
 | `capabilities/okr.test.js` | OKR read fixture | 39 |
