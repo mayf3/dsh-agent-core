@@ -1,9 +1,14 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
+accepted_date: 2026-08-29
+accepted_reviewed_head: cd7a9ae55dd0add8d619ccadabcdadc278124318
+independent_audit_result: PASS
+independent_audit_blockers: NONE
+acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
 date: 2026-08-27
 scope:
   - packages/broker
@@ -32,7 +37,8 @@ owners:
 
 # AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1 — 全域实例只读枚举 Broker 能力
 
-> 状态：**proposed**（revision 6，按**最终** OWNER_RULING = DUAL_GLOBAL_READER_MODEL
+> 状态：**accepted**（2026-08-29 lifecycle-only acceptance finalize，PR #83；
+> revision 6，按**最终** OWNER_RULING = DUAL_GLOBAL_READER_MODEL
 > 修订：服务端 global gate = GLOBAL_WORKFLOW_READER OR GLOBAL_WORKFLOW_COORDINATOR
 >（external authority SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 **已 accepted** @ PR #14
 > merge fb54f9dfaeeec667b8ba72d56d8303390cd189a6，兼容服务实现已合入 svc-workflow
@@ -43,8 +49,21 @@ owners:
 > 过渡兼容，修订 production 部署完成前的既有部署态）；本能力保持**通用只读
 > 工具**，不硬编码 HR 或 Dispatcher（DEC-008）。base = main df3b299（含 PR #82
 > error-preservation 实现 + PR #85 domain-instances 接受与实现[已部署]）。
-> 后续不再切换身份模型）。本 Spec 当前不授予任何实现、合并或 production apply 权限。
-> `implementation_authority = none`；accept 仅开启按 §9 Contracts 的实现评审路径。
+> 后续不再切换身份模型）。
+> 独立审计（接入 审计轮，2026-08-29）：AUDIT_RESULT = **PASS** · HEAD_DRIFT =
+> **NONE** · DEPENDENCY_MODEL = **CLEAN** · SERVICE_CONTRACT = **VERIFIED** ·
+> BROKER_CREDENTIAL_BOUNDARY = **VERIFIED** · IMPLEMENTATION_CLOSURE =
+> **EXACT_TWO_FILES** · BLOCKERS = **NONE** · READY_FOR_ACCEPTANCE_FINALIZE =
+> **YES**（accepted_reviewed_head =
+> `cd7a9ae55dd0add8d619ccadabcdadc278124318`，fresh fetch 后核对无漂移）。
+> 本 Spec 自 merged on main 起成为本 scope 的唯一实现授权
+> （`implementation_authority = contracts`）；实现按 §2/CTR-001 两文件闭包在
+> 独立 worktree 从 fresh merged main 进行，评审按 GOVERNING_SPEC_UNMODIFIED
+> 纪律合并（实现 PR 不得修改本文件）。
+> `production_apply_authority = none`（deploy / restart / 角色授予 / production
+> state 变更仍需独立授权；HR READER 授予与 Dispatcher 身份创建均归 external
+> authority 治理，不在本 Spec 授权面内）。
+> Acceptance Record 见 §14。
 > 姊妹 Spec（已在 main accepted 并实现部署，非本 Spec 的 parent）：
 > `AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1`（PR #85，domain 维度单页枚举）；
 > 两者共享 manifest 家族与错误保留纪律，计数调和已定（ACC-006：13→14）。
@@ -397,3 +416,39 @@ production apply 权限；生产可见性需独立部署授权（本 Spec 不授
 Not applicable — 全部 normative 内容已冻结；外部时序（svc-workflow READER
 修订的 production 部署先/后）已由 §3 双码时序声明消解；domain-instances
 姊妹 Spec 已 accepted 合并并实现（计数调和见 ACC-006）。
+
+## 14. Acceptance Record（2026-08-29，接入 执行轮）
+
+ACCEPTANCE_TRANSACTION = LIFECYCLE_ONLY，ONE commit，ONE file（本文件）。
+
+- 独立审计（接入 审计轮）：AUDIT_RESULT = **PASS**；HEAD_DRIFT = **NONE**；
+  DEPENDENCY_MODEL = **CLEAN**；SERVICE_CONTRACT = **VERIFIED**；
+  BROKER_CREDENTIAL_BOUNDARY = **VERIFIED**；IMPLEMENTATION_CLOSURE =
+  **EXACT_TWO_FILES**；BLOCKERS = **NONE**；READY_FOR_ACCEPTANCE_FINALIZE =
+  **YES**。
+- accepted_reviewed_head = `cd7a9ae55dd0add8d619ccadabcdadc278124318`
+  （PR #83 审计时 head；fresh fetch 后核对无漂移）。
+- 规范性服务坐标（审计轮冻结）：SERVICE_SPEC =
+  `fb54f9dfaeeec667b8ba72d56d8303390cd189a6`（svc-workflow accepted
+  `SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1`，PR #14 merge）；
+  SERVICE_IMPLEMENTATION = `bf875c265843b3e07570a96b734051e9cfe27a43`
+  （svc-workflow PR #15 merge，兼容实现）。
+- 语义变化 = STATUS_MIRROR_AND_PROVENANCE_ONLY：本事务仅翻转 status
+  （proposed → accepted）与 implementation_authority（none → contracts）、
+  记录 acceptance provenance（frontmatter 字段 + 头部引注 + 本节）；§1–§13
+  全部冻结内容（§8 DEC-001..008、§9 CTR-001..008、§10 ACC-001..009、
+  §11 ALT-001..006、§12/§13）逐字节保留；正文中先于 acceptance 的条件句按
+  既有纪律作为历史记录原样保留。
+- 授权生效语义：本 Spec merged on main 起成为本 scope 的唯一实现授权
+  （§2/CTR-001 恰好两文件闭包：`packages/broker/src/capabilities/workflow.js` +
+  `packages/broker/test/capabilities.test.js`）；实现 PR 不得修改本文件
+  （GOVERNING_SPEC_UNMODIFIED）；`production_apply_authority = none` ——
+  deploy / restart / 角色授予 / production state 变更仍需独立授权（HR 主身份
+  READER 授予与专用 Dispatcher Agent 身份创建/授予均归 external authority
+  `SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1` 及身份治理，不在本 Spec 授权面内）。
+- 事务边界：DOCS_ONLY；PRODUCT_CODE_CHANGE = NONE；SERVER_CODE_CHANGE =
+  NONE；PRODUCTION_CHANGE = NONE；packages/、scripts/、svc-workflow /
+  auth-service 仓库、production、其他 PR 分支均不动；工作区既有 WIP 实现快照
+  与未提交状态原样保留。
+- Merge：本 commit 之后随即 mark ready 并 merge PR #83（merge commit 为本
+  Spec 的 effective-on-main 坐标，记录于 merge 后的 main lineage）。
