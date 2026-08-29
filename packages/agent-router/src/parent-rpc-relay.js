@@ -36,16 +36,31 @@ export const BROKER_RPC_METHOD = 'agent-core/broker'
  *   (binding-resolution).
  */
 export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway, switchAgent }) {
-  return async (method, params) => {
+  return async (method, params, rpcMeta = {}) => {
     if (method === BROKER_RPC_METHOD) {
       // TRUSTED CREDENTIAL BROKER: the caller identity is THIS proc's
       // actual agentId (the trusted spawning relationship) — never
       // anything the child says. Forged self-reported fields are ignored.
-      const selfReported = ['agentId', 'principalId', 'clientId', 'scope', 'audience', 'authorization']
-        .filter((field) => params?.[field] !== undefined)
+      const selfReported = [
+        'agentId', 'callerAgentId', 'principalId', 'clientId', 'scope', 'audience', 'authorization',
+        'processGeneration', 'turnExecutionId', 'channelNamespace', 'channelConversationId',
+        'feishuChatId', 'feishuConversationId', 'feishuMessageId',
+        'ingressContext', 'activeIngressContext',
+      ].filter((field) => params?.[field] !== undefined)
       if (selfReported.length > 0) {
         log.log(`[broker] agent ${agentId}: IGNORING child-supplied identity fields: ${selfReported.join(', ')}`)
       }
+      const proc = getProc()
+      const active = proc.activeIngressContext
+      const activeExecution = active && proc.executions?.get(active.turnExecutionId)
+      const boundIngressContext = active
+        && active.callerAgentId === agentId
+        && active.processGeneration === proc.processGeneration
+        && rpcMeta.turnExecutionId === active.turnExecutionId
+        && activeExecution !== undefined
+        && activeExecution.settled !== true
+        ? active
+        : undefined
       const gateway = getBrokerGateway()
       if (gateway === undefined || typeof gateway.execute !== 'function') {
         return {
@@ -62,7 +77,13 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         ok: true,
         result: await gateway.execute(
           { capabilityId: params?.capabilityId, operation: params?.operation, args: params?.args },
-          { agentId }, // ACTUAL identity — decided here, never from params
+          {
+            agentId, // ACTUAL identity — decided here, never from params
+            // Re-verify the Router-owned process/generation/execution binding
+            // at RPC receipt; stale/cleared/replaced contexts become absent and
+            // Scheduler fails before any credential or store access.
+            ingressContext: boundIngressContext,
+          },
         ),
       }
     }

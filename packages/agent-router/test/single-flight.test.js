@@ -30,6 +30,49 @@ import { makeFx } from './helpers/fake-child.js'
 
 const prompts = (fx) => fx.writes.filter((write) => write.method === 'session/prompt')
 
+const ingress = (suffix) => ({
+  channelNamespace: 'feishu',
+  channelConversationId: `feishu:conversation-${suffix}`,
+  feishuChatId: `chat-${suffix}`,
+  feishuConversationId: `conversation-${suffix}:topic-${suffix}`,
+  feishuMessageId: `message-${suffix}`,
+})
+
+test('CTX exact active ingress context is immutable and bound to actual process/turn identity', async () => {
+  const fx = makeFx({ generation: 7 })
+  await fx.readyNow()
+
+  const supplied = {
+    ...ingress('a'),
+    callerAgentId: 'agt_forged',
+    processGeneration: 999,
+    turnExecutionId: 'turn:forged',
+    ignored: 'not allowlisted',
+  }
+  const turn = fx.proc.turn('main', 'text-a', {
+    bindingContext: 'binding-a',
+    ingressContext: supplied,
+  })
+  await fx.tick()
+
+  const handle = fx.store.records.keys().next().value
+  assert.deepEqual(fx.proc.activeIngressContext, {
+    callerAgentId: 'agt_fx',
+    processGeneration: 7,
+    turnExecutionId: handle,
+    ...ingress('a'),
+  })
+  assert.equal(Object.isFrozen(fx.proc.activeIngressContext), true)
+  assert.throws(() => { fx.proc.activeIngressContext.feishuChatId = 'chat-mutated' }, TypeError)
+  assert.equal(fx.proc.activeIngressContext.feishuChatId, 'chat-a')
+
+  fx.respondTo('session/prompt', { messageId: 'm-a' })
+  await fx.tick()
+  fx.completeTurn('main', 'm-a', 'A-REPLY')
+  await turn
+  assert.equal(fx.proc.activeIngressContext, undefined, 'context is stale immediately after turn completion')
+})
+
 test('FIX2.1 same session: turn B waits for turn A; bindingContext stays A\'s', async () => {
   const fx = makeFx()
   await fx.readyNow()
@@ -62,6 +105,43 @@ test('FIX2.1 same session: turn B waits for turn A; bindingContext stays A\'s', 
   fx.completeTurn('main', 'm-b', 'B-REPLY')
   const resultB = await turnB
   assert.equal(resultB.reply, 'B-REPLY')
+})
+
+test('CTX queued conversations install only their own context after stale clear', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+
+  const turnA = fx.proc.turn('session-a', 'text-a', {
+    bindingContext: 'binding-a',
+    ingressContext: Object.freeze(ingress('a')),
+  })
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-a' })
+  await fx.tick()
+
+  const turnB = fx.proc.turn('session-b', 'text-b', {
+    bindingContext: 'binding-b',
+    ingressContext: Object.freeze(ingress('b')),
+  })
+  await fx.tick()
+  assert.equal(prompts(fx).length, 1)
+  assert.equal(fx.proc.activeIngressContext.feishuChatId, 'chat-a')
+  assert.equal(fx.proc.activeIngressContext.feishuConversationId, 'conversation-a:topic-a')
+
+  fx.completeTurn('session-a', 'm-a', 'A-REPLY')
+  await turnA
+  assert.equal(fx.proc.activeIngressContext, undefined, 'A clears before B is installed')
+
+  await fx.tick()
+  assert.equal(fx.proc.activeIngressContext.feishuChatId, 'chat-b')
+  assert.equal(fx.proc.activeIngressContext.feishuConversationId, 'conversation-b:topic-b')
+  assert.notEqual(fx.proc.activeIngressContext.feishuChatId, 'chat-a')
+
+  fx.respondTo('session/prompt', { messageId: 'm-b' })
+  await fx.tick()
+  fx.completeTurn('session-b', 'm-b', 'B-REPLY')
+  await turnB
+  assert.equal(fx.proc.activeIngressContext, undefined, 'B also clears without retaining last conversation')
 })
 
 test('FIX2.2 switch-tool relay during turn A sees exactly A\'s bindingContext', async () => {
@@ -132,12 +212,17 @@ test('FIX2.4 a failed turn does not wedge the single-flight queue', async () => 
   const fx = makeFx()
   await fx.readyNow()
 
-  const turnA = fx.proc.turn('main', 'text-a', { bindingContext: 'binding-a' })
+  const turnA = fx.proc.turn('main', 'text-a', {
+    bindingContext: 'binding-a',
+    ingressContext: Object.freeze(ingress('failed')),
+  })
   await fx.tick()
+  assert.equal(fx.proc.activeIngressContext.feishuChatId, 'chat-failed')
   const promptWrite = prompts(fx).at(-1)
   fx.emit({ id: promptWrite.id, error: { code: 'QUOTA', message: 'insufficient_quota' } })
   await assert.rejects(() => turnA, (error) => error.status === 'failed' && error.code === 'account_quota_exhausted')
   assert.equal(fx.proc.activeBindingContext, undefined, 'failed turn still releases the binding context')
+  assert.equal(fx.proc.activeIngressContext, undefined, 'failed turn cannot leave stale ingress context')
 
   // The queue survives the rejection; the next turn runs normally.
   const turnB = fx.proc.turn('main', 'text-b', { bindingContext: 'binding-b' })
