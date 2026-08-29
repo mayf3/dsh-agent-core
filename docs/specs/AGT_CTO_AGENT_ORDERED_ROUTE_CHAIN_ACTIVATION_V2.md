@@ -22,7 +22,7 @@ scope:
   - agt_cto-agent GLM strict 生产终态的完整保留
   - Luna 既有 OAuth 与 dsh-codex@0.2.3 资产原位复用
   - Harness identity fail-loud closure
-  - GLM 429 classifier fail-closed correction
+  - GLM terminal pre-generation quota classifier exact correction
   - glm53 primary + luna cold fallback 的 gated activation 与一次性 canary
 owners:
   - repository-maintainers
@@ -71,17 +71,21 @@ readiness、production target、canary、rollback 与 acceptance；不依赖 V1 
 ### 1.1 Product goal
 
 ```text
-PRODUCTION_TARGET = GLM_PRIMARY_WITH_LUNA_COLD_BACKUP
+PRODUCTION_TARGET = GLM_PRIMARY_WITH_LUNA_QUOTA_BACKUP
 TARGET_AGENT = agt_cto-agent
 PRIMARY_ROUTE = glm53
 FALLBACKS = [luna]
 LUNA_BACKUP_FOR_PROVEN_NO_ADMISSION = YES
-LUNA_BACKUP_FOR_GLM_429_QUOTA = NO
+GLM_429_FAILURE_CLASS = provider_quota_rejected_before_generation
+GLM_429_HOP_ALLOWED = YES
+LUNA_BACKUP_FOR_GLM_429_QUOTA = YES
 ```
 
-GLM 继续作为主模型；Luna 只作为自动冷备，且只覆盖本 Spec 封闭列举的
-proven-no-admission failure。完成 Stage-2 后才允许另行处理 x64→ARM64；本 Spec
-不授权 ARM64、HR Dispatcher 或 Workflow 工作。
+GLM 继续作为主模型；Luna 只作为自动冷备，覆盖本 Spec 封闭列举的
+proven-no-admission failure，以及证据完整的独立
+`provider_quota_rejected_before_generation` failure。任何 ambiguous/partial/tool/unknown 429
+仍 STOP。完成 Stage-2 后才允许另行处理 x64→ARM64；本 Spec 不授权 ARM64、HR
+Dispatcher 或 Workflow 工作。
 
 ### 1.2 V1 → V2 complete replacement delta
 
@@ -236,17 +240,26 @@ QUOTA `Usage limit reached for 5 hour` → `turn/end(error)`。
 
 ```text
 PROVIDER_FAILURE_CLASS = account_quota_exhausted
-POLICY_ROUTE_FAILURE_CLASS = post_admission_failure
-ADMISSION_PROVEN = admitted
-MODEL_OUTPUT_STARTED = NO (exact transcript)
-TOOL_STARTED = NO (exact transcript)
-TRANSCRIPT_PRODUCED = YES
-SIDE_EFFECT_UNCERTAIN = NO (exact terminal no-tool evidence)
-POLICY_HOP_ALLOWED = NO
+POLICY_ROUTE_FAILURE_CLASS = provider_quota_rejected_before_generation
+PROVIDER_REQUEST_SENT = YES
+HTTP_STATUS = 429
+RESPONSE_TERMINAL = YES (turn/end(error), no timeout)
+MODEL_OUTPUT_TOKEN_COUNT = 0
+PARTIAL_OUTPUT = NO
+ASSISTANT_CONTENT = NO
+TOOL_CALL = NO
+TOOL_STARTED = NO
+EXTERNAL_SIDE_EFFECT = NO
+OUTCOME_UNKNOWN = NO
+TRANSPORT_TIMEOUT = NO
+USER_TRANSCRIPT_PRODUCED = YES
+POLICY_HOP_ALLOWED = YES (when fallback exists)
 ```
 
-HTTP status、message 或 provider taxonomy 不能把 post-admission failure 变成
-proven-no-admission。
+user transcript 与 provider request 不等于模型生成，也不得被伪装成
+`proven_no_admission`。HTTP status、message 或 provider taxonomy 单独均不足；上列完整终态、
+零输出、零工具、零副作用证据共同成立才允许新 quota class。该历史 transcript 只作为分类
+证据，不得重复消耗额度制造 429；当时 strict config 无 Luna，故不声称历史 turn 实际 hop。
 
 ### 3.7 Stable observations and evidence relations
 
@@ -304,7 +317,7 @@ Qualified evidence relations（exact relation/target revision/environment/streng
 EVD-V2-001 SUPPORTS target Definition/Home current metadata
 EVD-V2-002 SUPPORTS existing Luna asset metadata/offline-load readiness only
 EVD-V2-003 SUPPORTS CLM-V2-003 current Harness identity blocker/fix need
-EVD-V2-004 SUPPORTS CLM-V2-004 observed real-429 admission ordering (STOP is policy)
+EVD-V2-004 SUPPORTS CLM-V2-004 observed real-429 terminal pre-generation evidence (hop predicates are policy)
 EVD-V2-005 SUPPORTS CLM-V2-005 current classifier fix need at pinned source blobs
 EVD-V2-006 SUPPORTS CLM-V2-006 bounded GLM strict success observation
 ```
@@ -345,34 +358,38 @@ plugin-or-ABSENT、pluginVersion-or-ABSENT、credentialReadiness ref、canonical
 providerEnv；不得增删字段或以未 canonical 的对象身份参与复用判断。
 不同 identity 的 process 不复用；route change 使用 new process generation。
 
-### 4.3 Per-hop closed whitelist
+### 4.3 Per-hop closed classes
 
-route_i → route_i+1 仅当两项同时成立：
+route_i → route_i+1 仅允许以下两条互斥路径之一：
 
-1. attempt i 的 prompt admission 被机械证明为假；
-2. failure class 恰为以下四类之一：
+1. attempt i 的 prompt admission 被机械证明为假，且 failure class 恰为：
    - `spawn_failed_without_child`；
    - `initialize_provider_unavailable`，且明确发生在 initialize、process 未达 READY、
      prompt admission=false；
    - `session_create_resume_rejection`，structured 且非 timeout/unknown；
-   - `turnqueue_not_admitted`，即 validation/capacity fail 或 proven pre-send zero-byte rejection。
+   - `turnqueue_not_admitted`，即 validation/capacity fail 或 proven pre-send zero-byte rejection；
+2. failure class=`provider_quota_rejected_before_generation`，且 request 已发出、status=429
+   或结构化 quota-exhausted code、response 完整终态、output tokens=0、无 partial/content、
+   无 tool call/start、无 external side effect、无 outcome_unknown、无 transport timeout。
 
-白名单外类别默认 STOP；HTTP code/message/provider taxonomy 本身不是 lifecycle proof。
-V2 不新增 quota whitelist。
+新 quota class 是独立 failure class，不是 `initialize_provider_unavailable`，也不得伪装为
+`proven_no_admission`。白名单外类别默认 STOP；HTTP code/message/provider taxonomy 单独不是
+lifecycle proof。
 
 ### 4.4 STOP_CHAIN closed set
 
 以下任一成立即 `NO_FURTHER_FALLBACK = YES`，fail-loud / outcome_unknown，绝不 replay：
 
 - outcome_unknown；
-- timeout without proven termination；
-- prompt receipt / watermark established；
-- partial assistant output；
-- tool emitted/materialized/started/executed；
-- transcript produced；
-- post-admission provider failure，包括真实 GLM 429 quota；
-- side-effect uncertainty；
+- transport timeout 或 response termination 未证明；
+- partial assistant/model output 或任何 assistant content；
+- tool call emitted/materialized 或 tool started/executed；
+- external side effect 或 side-effect uncertainty；
+- ambiguous/text-only quota，或缺少 §4.3 quota path 任一 positive-zero/terminal evidence；
 - unknown failure class 或 lifecycle evidence missing。
+
+provider request、prompt receipt 或 user transcript 本身不等于 assistant/model generation，
+也不单独触发 STOP；但它们绝不替代完整 quota safety evidence。
 
 ### 4.5 ONE_LOGICAL_TURN
 
@@ -487,17 +504,19 @@ activation BLOCKED，须另行合法 implementation authority；不得在执行�
 
 ## 7. Activation dependency — IMPL V2 429 classifier closure
 
-### DEC-V2-002 — lifecycle evidence precedes provider taxonomy
+### DEC-V2-002 — safety evidence precedes exact quota evidence, taxonomy last
 
-classifier 必须先判定 admission/receipt/transcript/output/tool/side-effect evidence，再看
-provider taxonomy。`account_quota_exhausted` 只描述 provider subtype，不证明 initialize
-phase 或 no-admission。
+classifier precedence 必须精确冻结为：(1) output/content/tool/side-effect/outcome_unknown/
+timeout/termination uncertainty；(2) 明确终态 quota rejection 的完整 evidence；(3) provider
+taxonomy/message 文本只作 subtype。既有 lifecycle stage class 仍须由自身结构化 evidence
+独立证明，不得覆盖第1项或借 taxonomy 伪造 origin。`account_quota_exhausted` 文本单独不证明
+initialize、no-admission 或安全 quota hop。
 
-当前 defect：`FAIL_LOUD_PROVIDER_ERRORS` precedence 可把带 accepted receipt 的 quota
-carrier 错分为 `initialize_provider_unavailable / proven_no_admission`，存在配置 Luna
-后 unsafe hop 风险。
+当前 defect：`FAIL_LOUD_PROVIDER_ERRORS` precedence 可把 quota carrier 错分为
+`initialize_provider_unavailable / proven_no_admission`。修复后不得继续该误分类，也不得把
+所有 429 粗暴 STOP；只有精确新 class 的完整证据允许 hop。
 
-### CTR-V2-002 — fail-closed correction acceptance dependency
+### CTR-V2-002 — exact quota-class correction acceptance dependency
 
 文件 ownership 与实现授权只来自 `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2`。
 Activation V2 不直接授权 `route-chain.js` 或测试改动；这里只冻结 production activation
@@ -506,19 +525,24 @@ Activation V2 不直接授权 `route-chain.js` 或测试改动；这里只冻结
 
 IMPL V2 implementation + independent audit 必须证明：
 
-1. `failed + promptReceipt=accepted`、transcript/output/tool/uncertainty 任一成立 → STOP；
-2. bare quota/429 缺 lifecycle origin → unknown + STOP；
-3. 仅 explicit initialize-origin + never READY + admission=false 可归 whitelist class 2；
-4. outcome_unknown 永远 STOP；
-5. classifier 不从 HTTP status/message 推断 admission。
+1. exact terminal quota rejection + output tokens0 + zero partial/content/tool/side-effect +
+   outcome known + no timeout → `provider_quota_rejected_before_generation` → hop；
+2. partial output、assistant content、tool call/start、external side effect、outcome_unknown、
+   timeout 或 termination unknown 任一优先命中 STOP；
+3. bare/text-only quota/429 缺完整 evidence → unknown + STOP；
+4. explicit initialize-origin + never READY + admission=false 只归既有 class 2；
+5. 新 quota class 不得归 initialize，也不得标记 proven_no_admission。
 
-回归测试必须覆盖：accepted-receipt quota → STOP + second acquire 0；bare quota → STOP；
-exact real 429 text → subtype quota 但 route STOP；explicit initialize-origin quota + proven
-no admission → 既有 class 2 hop；output/tool/uncertainty 各自强制 STOP。
+回归测试必须覆盖用户要求的 A-D：A exact controlled 429 fixture 使 glm53 attempt1 → luna
+attempt2 → success，TOTAL=2、fallback=true、FINAL_ROUTE=luna、Luna call1；B 429+partial、
+C 429+outcome_unknown、D 429+tool started 均 attempts1、Luna0、STOP。另覆盖 assistant
+content/tool call/side effect/timeout/termination unknown/text-only negatives。
 
 ```text
 QUOTA_CLASSIFIER_FIX_REQUIRED = YES
-LUNA_BACKUP_FOR_GLM_429_QUOTA = NO
+GLM_429_FAILURE_CLASS = provider_quota_rejected_before_generation
+GLM_429_HOP_ALLOWED = YES
+LUNA_BACKUP_FOR_GLM_429_QUOTA = YES
 ```
 
 ---
@@ -650,12 +674,15 @@ Harness version/commit/dirty=0 和 dsh-codex pin。candidate runtime read-back �
 
 candidate 必须使用 CTR-I2-015 同一 runtime-root-relative seam，descriptor exact path 为
 `<candidateRuntimeRoot>/route-chain-canary-injection.json`；candidate root owner/mode 与
-production rule 同构且 production absolute path lstat before/after 均不变。不得使用 test-only
-fake seam 替代。随后在隔离 candidate ingress 注入一项既有合法 proven-no-admission failure
-（推荐 `turnqueue_not_admitted`）。不写 production override、不改变生产 ingress；candidate
-只按 Parent V2 边界原位使用既有 OAuth，由 exact dsh-codex@0.2.3 发起恰一次 Luna call。
-执行前必须 Parent/IMPL/Activation V2 已原子 accepted+merged、classifier implementation
-已审计、Harness identity ready；失败不重试。
+production rule 同构且 production absolute path lstat before/after 均不变。不得使用临时 test-only seam 替代。
+随后在隔离 candidate ingress 使用受控 fixture：glm53 attempt 发出受 observer 证明的 provider
+request，fixture 返回 exact terminal 429/quota-exhausted、output tokens0、零 partial/content、
+零 tool call/start、零 external side effect、outcome known、无 timeout、termination proven；
+classifier 必须归 `provider_quota_rejected_before_generation`，再 hop Luna success。fixture 不得
+真实消耗 GLM 额度，也不得靠重复真实 429。candidate 不写 production override、不改变生产
+ingress；只按 Parent V2 边界原位使用既有 OAuth，由 exact dsh-codex@0.2.3 发起恰一次
+Luna call。执行前必须 Parent/IMPL/Activation V2 已原子 accepted+merged、classifier
+implementation 已审计、Harness identity ready；失败不重试。
 
 ```text
 GLM_ATTEMPTS = 1
@@ -669,8 +696,9 @@ ONE_LOGICAL_TURN = YES
 DUPLICATE_REPLY = NO
 ```
 
-同一 suite 必须证明 accepted-receipt 429、bare quota、outcome_unknown、output、tool、
-side-effect uncertainty 均 STOP 且 second acquire=0。
+同一 suite 必须证明 429+partial output、429+outcome_unknown、429+tool started，以及
+assistant content/tool call/external side effect/transport timeout/termination unknown/bare或text-only
+quota 均 STOP 且 second acquire=0、Luna call=0。
 
 ### 10.2 Final production A–D
 
@@ -685,8 +713,9 @@ route attempt 不得替代 model-call count；journal 不伪造 duplicate fields
 CANARY-A CLEAN PRIMARY
   glm53=1；luna=0；TOTAL=1；FINAL_ROUTE=glm53；success；fallback=false
 
-CANARY-B ONE REAL FALLBACK
-  注入一个合法 proven-no-admission failure（不得用 quota/429）
+CANARY-B ONE CONTROLLED QUOTA FALLBACK
+  使用受控 exact terminal-429 fixture；不得真实耗尽额度制造 429
+  failureClass=provider_quota_rejected_before_generation
   glm53=1；luna=1；TOTAL=2；fallback=true
   FINAL_ROUTE=luna；FINAL_OUTCOME=success
   ONE_LOGICAL_TURN=YES；DUPLICATE_REPLY=NO
@@ -709,8 +738,9 @@ TOTAL_REAL_LUNA_MODEL_CALLS_ACROSS_A_TO_D = 1
 ```text
 A: target admission quiesced -> verify no injection -> open exactly one A turn
    -> await terminal + both evidence channels -> quiesce target
-B: install one bounded reversible glm53-only proven-no-admission injection
+B: install one bounded reversible glm53-only exact terminal-quota fixture
    -> verify luna credential/path untouched -> open exactly one B turn
+   -> prove glm request dispatch then controlled zero-generation terminal 429 -> luna success
    -> await terminal + both channels -> quiesce -> clear B injection -> verify absent
 C: install a distinct bounded glm53-only outcome_unknown injection
    -> open exactly one C turn -> await failure receipt + both evidence channels -> quiesce
@@ -723,7 +753,7 @@ FINAL: restore/verify clean config+injection state -> controlled clean generatio
 
 唯一合法机制是 IMPL V2 CTR-I2-015 的 exact one-shot descriptor：
 `/Users/authsvc/.agent-core/route-chain-canary-injection.json`（authsvc505/0600）。B mode=
-`turnqueue_not_admitted`，C mode=`outcome_unknown`；每 case 用新 nonce、future expiry、
+`provider_quota_rejected_before_generation`，C mode=`outcome_unknown`；每 case 用新 nonce、future expiry、
 maxUses=1，并写 exact binding `{channel:"feishu",senderOpenId:<Owner authenticated ingress id>,
 marker:<entire exact canary prompt>}`。Owner 只能从该 sender 发送 entire marker；不得靠 prompt
 自报身份。consume=descriptor 原子 rename 到
@@ -823,12 +853,12 @@ missing evidence or any Reject condition fails activation。
 | ACC-V2-003 | GATE-3 | lstat before/after + Owner provenance record | target Home | exact path uid502 mode0600 metadata unchanged; no OAuth ops | metadata drift/no Owner acceptance |
 | ACC-V2-004 | GATE-4 | package/profile/19 peers/offline import | production x64 offline | exact0.2.3, registered, 19/19, PASS, install0 | mismatch/install/mutation |
 | ACC-V2-005 | CTR-V2-001 / GATE-5 | source tests + installed-tree comparison + stamp read-back | test + production | rc8/exact commit/dirty0; negatives fail-loud | forged/missing/malformed/dirty/version trust |
-| ACC-V2-006 | CTR-V2-002 / GATE-6 | IMPL CTR-I2-008..011 suite + independent audit | pinned merged implementation | accepted 429 post-admission STOP, acquire1/Luna0 | classifier/hop/audit failure |
-| ACC-V2-007 | §10.1 / GATE-7 | manifest-bound isolated candidate using candidate-root seam | audited candidate artifact | attempts2, Luna call1/retry0, one turn, production injection path untouched | source mismatch/fake seam/call≠1 |
+| ACC-V2-006 | CTR-V2-002 / GATE-6 | IMPL CTR-I2-008..011 A-D/negative suite + independent audit | pinned merged implementation | exact terminal quota class hops; partial/outcome_unknown/tool-started/ambiguous 429 acquire1/Luna0 STOP | misclassification, unsafe hop, or audit failure |
+| ACC-V2-007 | §10.1 / GATE-7 | manifest-bound isolated candidate using candidate-root controlled terminal-429 seam | audited candidate artifact | glm attempt1→luna attempt2, Luna call1/retry0, one turn, production injection path untouched, no real quota exhaustion | source mismatch/temporary seam/call≠1/real 429 manufacture |
 | ACC-V2-008 | CTR-V2-003/005 | recursive parse, atomic write/read-back, secret scan | production target config | exact two routes/order/providerEnv; only target override; no raw secret | schema/owner/mode/secret/non-target drift |
 | ACC-V2-009 | CTR-V2-006 | before/after path→blob manifest and read-back hashes | deployment staging + production | only audited merged blobs/stamp artifact | worktree/latest/unlisted file |
 | ACC-V2-010 | CTR-V2-004 | all-affected ingress close + drain ledger + restart health | shared production runtime | zero unknown in-flight; single connector; non-target semantics unchanged | busy/unknown restart or health drift |
-| ACC-V2-011 | §10.2 A/B | Owner Feishu + journal + canary observer | production target | A glm success; B attempts2/Luna call1/retry0/delivery1 | missing channel/count mismatch/retry |
+| ACC-V2-011 | §10.2 A/B | Owner Feishu + journal + canary observer | production target | A glm success; B controlled terminal-quota attempts2/Luna call1/retry0/delivery1; no real quota exhaustion | missing channel/count mismatch/retry/real 429 manufacture |
 | ACC-V2-012 | §10.2 C/D | bound outcome_unknown descriptor + both channels | production target | C pre-acquire start/dispatch0, STOP/Luna0; per-case exact counts/no duplicates | dispatch in C/hop/duplicate/missing evidence |
 | ACC-V2-013 | CTR-I2-015 / §10.2 | schema/binding/atomic rename/cleanup read-backs | candidate + production roots | correct root, authenticated binding, consume1, used/temp absent | path traversal/wrong root/collision/leftover |
 | ACC-V2-014 | §§10.3/11 | target and shared-suspect rollback drills/review | controlled production maintenance | strict config; before blobs; honest restored-tree stamp; safe health | trusted identity impossible/partial restore |
@@ -843,7 +873,8 @@ missing evidence or any Reject condition fails activation。
 
 - 仅 exact `dsh-codex@0.2.3` 可在 target Luna route process 内存读取既有 OAuth：
   candidate 与 final production CANARY-B 各恰一次；ACTIVATED_TERMINAL 后 ordinary
-  proven-no-admission fallback 也可按 Parent V2 chain contract 读取。operator/audit/其他
+  proven-no-admission 或 `provider_quota_rejected_before_generation` fallback 也可按 Parent V2
+  chain contract 读取。operator/audit/其他
   process 永不读取或输出 token；禁止 hash、复制、删除、refresh、自动 refresh、持久化
   改写或重新登录；若
   protocol 要求 refresh 则 canary fail-loud + rollback，不得触发 refresh；
@@ -855,7 +886,8 @@ missing evidence or any Reject condition fails activation。
 - 禁止 dsh-zai/fake ZAI plugin carrier；glm53 只能使用 Harness builtin zai provider；
 - 禁止修改 shared profile/template、全局 bundles 或建立第二 outbound transport/daemon/
   Feishu consumer；既有 dsh-codex 只在 target Home profile 内；
-- outcome_unknown/post-admission/unknown 永远 STOP；
+- ambiguous/partial-output/tool-started/outcome_unknown/timeout/termination-unknown 429 永远 STOP；
+  仅完整证据的 `provider_quota_rejected_before_generation` 可 hop；
 - 不修改当前 GLM strict override，直到 production apply gates 全 PASS；
 - ARM64_MIGRATION = HOLD；HR_DISPATCHER = OUT_OF_SCOPE；WORKFLOW = OUT_OF_SCOPE。
 
@@ -869,9 +901,9 @@ missing evidence or any Reject condition fails activation。
 | parallel second active route authority | REJECTED：atomic V2 acceptance leaves exactly one active authority |
 | re-OAuth / refresh / copy credential | REJECTED |
 | install/reinstall/upgrade dsh-codex | REJECTED |
-| treat HTTP 429 as safe no-admission | REJECTED：real evidence is post-admission |
-| add quota as fifth hop class | REJECTED |
-| post-admission replay | REJECTED |
+| treat HTTP 429/text as sufficient hop proof | REJECTED：必须全部终态/零生成安全证据 |
+| classify quota rejection as initialize or proven_no_admission | REJECTED：新 class 独立 |
+| partial-output/tool-started/side-effect quota replay | REJECTED |
 | outcome_unknown fallback | REJECTED |
 | consume quota/delete key/corrupt provider to test | REJECTED |
 | Scheduler hardcoded route order | REJECTED |
@@ -894,7 +926,13 @@ HARNESS_IDENTITY_FIX_REQUIRED = YES
 QUOTA_CLASSIFIER_FIX_REQUIRED = YES
 
 LUNA_BACKUP_FOR_PROVEN_NO_ADMISSION = YES
-LUNA_BACKUP_FOR_GLM_429_QUOTA = NO
+GLM_429_FAILURE_CLASS = provider_quota_rejected_before_generation
+GLM_429_HOP_ALLOWED = YES
+LUNA_BACKUP_FOR_GLM_429_QUOTA = YES
+AMBIGUOUS_429_STOP_CHAIN = YES
+PARTIAL_OUTPUT_429_STOP_CHAIN = YES
+TOOL_STARTED_429_STOP_CHAIN = YES
+OUTCOME_UNKNOWN_429_STOP_CHAIN = YES
 
 PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE

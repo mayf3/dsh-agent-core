@@ -19,7 +19,7 @@ scope:
   - agt_cto-agent ordered model-route policy
   - route schema, ordering, hop and stop semantics
   - Luna existing OAuth/plugin reuse policy
-  - GLM quota post-admission policy
+  - GLM terminal pre-generation quota-rejection policy
 owners:
   - repository-maintainers
 references:
@@ -59,7 +59,9 @@ journal/redaction、fleet isolation、Harness/plugin pins 与 providerEnv 安全
 1. 根据现有生产资产新证据，允许 agt_cto-agent 原位复用既有 Luna OAuth 与
    dsh-codex@0.2.3，不重新 OAuth、不安装；
 2. 生产 Home current mode 冻结为 0755/uid502，credential files 保持 0600/uid502；
-3. 真实 GLM account quota 429 冻结为 post-admission failure，永不 hop。
+3. 新增独立、精确的 `provider_quota_rejected_before_generation` hop class：provider
+   request 已发出，但明确终态 quota rejection 在任何模型生成前返回；仅完整安全证据成立时
+   允许 GLM→Luna，任何歧义、partial output、tool、side effect、timeout 或 unknown 均 STOP。
 
 ```text
 LUNA_EXISTING_OAUTH_REUSE = ALLOWED
@@ -69,7 +71,9 @@ HOME_DIRECTORY_MODE = 0755
 CREDENTIAL_FILES_MODE = 0600
 CREDENTIAL_OWNER_UID = 502
 LUNA_BACKUP_FOR_PROVEN_NO_ADMISSION = YES
-LUNA_BACKUP_FOR_GLM_429_QUOTA = NO
+GLM_429_FAILURE_CLASS = provider_quota_rejected_before_generation
+GLM_429_HOP_ALLOWED = YES
+LUNA_BACKUP_FOR_GLM_429_QUOTA = YES
 ```
 
 ## 2. Atomic authority lifecycle
@@ -160,49 +164,70 @@ presence 任一差异即 identity mismatch。不得增删七字段。process reu
 
 ## 4. Hop and stop semantics
 
-### POL-V2-004 — proven-no-admission closed whitelist
+### POL-V2-004 — closed hop classes
 
-route_i → route_i+1 只在以下两项同时成立：
+route_i → route_i+1 只允许以下两条互斥路径之一：
 
-- prompt admission 被 attempt-local machine evidence 证明为 false；
-- failureClass 恰为：
-  1. `spawn_failed_without_child`；
-  2. `initialize_provider_unavailable`：explicit initialize origin、never READY、
+1. prompt admission 被 attempt-local machine evidence 证明为 false，且 failureClass 恰为：
+   - `spawn_failed_without_child`；
+   - `initialize_provider_unavailable`：explicit initialize origin、never READY、
      prompt admission=false；
-  3. `session_create_resume_rejection`：structured、terminal、非 timeout/unknown；
-  4. `turnqueue_not_admitted`：validation/capacity 或 proven pre-send zero-byte rejection。
+   - `session_create_resume_rejection`：structured、terminal、非 timeout/unknown；
+   - `turnqueue_not_admitted`：validation/capacity 或 proven pre-send zero-byte rejection；
+2. failureClass 恰为独立类别 `provider_quota_rejected_before_generation`，并满足
+   POL-V2-006 的全部终态、零生成、零工具、零副作用证据。
 
-provider HTTP status/message/taxonomy 不是 lifecycle proof。白名单外类别默认 STOP；
-新增类别必须由未来 Parent whole-authority successor，禁止 amendment/运行时发明。
+`provider_quota_rejected_before_generation` 不是 `initialize_provider_unavailable`，也不得
+伪装成 `proven_no_admission`。除 POL-V2-006 的完整结构化证据外，provider HTTP
+status/message/taxonomy 不是 lifecycle proof。白名单外类别默认 STOP；新增类别必须由未来
+Parent whole-authority successor，禁止运行时发明。
 
 ### POL-V2-005 — STOP_CHAIN closed set
 
 任一成立即 no further fallback、no replay：
 
 - outcome_unknown；
-- timeout without proven termination；
-- prompt receipt/watermark established；
-- partial assistant output；
-- tool emit/materialize/start/execute；
-- transcript produced；
-- post-admission provider failure；
-- side-effect uncertainty；
+- transport timeout 或 response termination 未证明；
+- partial assistant/model output，或任何 assistant content；
+- tool call emitted/materialized，或 tool started/executed；
+- external side effect 或 side-effect uncertainty；
+- 已有模型生成/assistant transcript；
+- quota rejection 不明确、非终态，或缺少 POL-V2-006 任一证据；
 - unknown class/evidence missing。
 
-### POL-V2-006 — GLM quota 429
+provider request、prompt receipt 或 user transcript 本身不等于模型生成，也不单独否决
+POL-V2-006；但不得据此推断零输出、终态或安全 hop。
 
-稳定 policy：
+### POL-V2-006 — terminal quota rejection before generation
+
+精确 failure class：
 
 ```text
-ACCOUNT_QUOTA_EXHAUSTED = post_admission_failure
-ADMISSION_PROVEN = admitted
-HOP_ALLOWED = NO
-STOP_CHAIN = YES
+GLM_429_FAILURE_CLASS = provider_quota_rejected_before_generation
+GLM_429_HOP_ALLOWED = YES
+LUNA_BACKUP_FOR_GLM_429_QUOTA = YES
 ```
 
-依据：真实 production turn 在 quota terminal 前已经 provider request、prompt admission、
-user transcript。不得归 `initialize_provider_unavailable` 或 `proven_no_admission`。
-Luna 不是额度耗尽自动备份。
+该类语义为 provider request 已发出，provider 已完整、终态返回明确 quota rejection，且
+模型生成从未开始。只有以下证据**全部**成立才允许 hop：
+
+- HTTP status=429，或结构化错误码明确为 quota exhausted；
+- provider response 已完整、终态返回，response termination 已被证明；
+- assistant/model output token count=0；
+- partial output=NO，assistant content=NO；
+- tool call=NO，tool started=NO；
+- external side effect=NO；
+- outcome_unknown=NO；
+- transport timeout=NO。
+
+分类必须先看 output/tool/side-effect/outcome_unknown evidence，再看明确终态 quota
+rejection evidence，最后才可把 provider taxonomy 文本作为 subtype；不得仅凭消息含
+`quota`、`limit` 或 `429` 跳转。已有 partial output、assistant content、tool call/tool
+started、transport timeout、termination 不确定、outcome_unknown 或无法确认明确 quota
+rejection 的 429 全部 STOP_CHAIN。
+
+现有真实 production 429 transcript 可作为 classifier 形状证据；不得重复消耗真实额度制造
+429。它不得被误归为 `initialize_provider_unavailable` 或 `proven_no_admission`。
 
 ## 5. ONE_LOGICAL_TURN and deadline
 
@@ -264,7 +289,8 @@ credential、Authorization、OAuth object。错误只记录 stable closed class�
 
 仅 exact dsh-codex@0.2.3 可在经授权的 target Luna route process 内存读取 credential，
 范围包括 candidate canary、production CANARY-B，以及 ACTIVATED_TERMINAL 后普通合法
-proven-no-admission fallback 的 Luna attempt；token 不得外显或持久改写。canary call count
+proven-no-admission 或 `provider_quota_rejected_before_generation` fallback 的 Luna attempt；
+token 不得外显或持久改写。canary call count
 限制不限制 future ordinary authorized fallback，但每个 ordinary logical turn 仍执行 chain
 attempt/retry contract。protocol 若要求 refresh，
 call fail-loud，activation rollback；不得 refresh。
@@ -388,9 +414,9 @@ commits; absent evidence is failure。
 | ACC-P2-001 | POL-V2-001 | recursive parser + reorder/max/duplicate tests | clean test runtime | test log: closed schema, max4, config order, once/route | any malformed accepted/order hardcoded/retry |
 | ACC-P2-002 | POL-V2-002 | builtin/subscription positive+negative fixtures | clean test runtime | exact key/type/ref results | extra/missing/wrong kind accepted |
 | ACC-P2-003 | POL-V2-003 | canonical golden vectors + reuse gate test | clean test runtime | seven-field bytes and mismatch/new-generation evidence | normalization/field drift/wrong reuse |
-| ACC-P2-004 | POL-V2-004 | inject each four classes at first/middle hop | deterministic executor | each advances exactly once only with no-admission | any fifth/text-derived hop |
-| ACC-P2-005 | POL-V2-005 | inject all nine STOP families | deterministic executor | journal + acquire count prove zero next route | any replay/hop/unknown collapse |
-| ACC-P2-006 | POL-V2-006 | real-shape accepted 429 regression | pinned implementation test | post-admission, FINAL_ROUTE=NONE, second acquire=0 | initialize/no-admission/hop |
+| ACC-P2-004 | POL-V2-004 | inject four no-admission classes plus exact terminal quota class at first/middle hop | deterministic executor | each advances exactly once only under its complete evidence contract | text-derived/ambiguous hop or quota mislabeled no-admission |
+| ACC-P2-005 | POL-V2-005 | inject every STOP family, including partial output/tool started/outcome_unknown/ambiguous 429 | deterministic executor | journal + acquire count prove zero next route | any replay/hop/unknown collapse |
+| ACC-P2-006 | POL-V2-006 | controlled terminal-429 fixture + negative evidence matrix | pinned implementation test | exact quota/zero-output/zero-tool/terminal fixture reaches Luna attempt2 and success; every missing/unsafe predicate acquire1/Luna0 | initialize/no-admission misclassification, text-only hop, or unsafe second acquire |
 | ACC-P2-007 | POL-V2-007 | lstat before/after + candidate/final/ordinary route authorization tests | target Home + isolated/production canaries | metadata unchanged; exact authorized reads; no refresh/login/copy | operator exposure, mutation, unauthorized read |
 | ACC-P2-008 | POL-V2-008 | lstat/traverse test | production target Home | Home0755 uid502; sensitive0600 uid502 | mode/owner mismatch |
 | ACC-P2-009 | POL-V2-009 | exact package/registration/peer/import checks | production x64 offline | 0.2.3, 19/19, import PASS, install count0 | version/load/peer/install mismatch |
@@ -401,9 +427,10 @@ commits; absent evidence is failure。
 
 ## 14. Rejected alternatives
 
-partial supersession、fresh OAuth、0700 current requirement、plugin install/upgrade、quota
-hop、fifth whitelist class、post-admission replay、outcome_unknown fallback、hardcoded route、
-per-hop deadline reset、second transport、fleet rollout 均 REJECTED。
+partial supersession、fresh OAuth、0700 current requirement、plugin install/upgrade、ambiguous或
+text-only quota hop、把 quota class 伪装成 initialize/no-admission、partial-output/tool-started/
+outcome_unknown fallback、post-generation replay、hardcoded route、per-hop deadline reset、second
+transport、fleet rollout 均 REJECTED。
 
 ## 15. Final
 
@@ -414,7 +441,13 @@ LUNA_REAUTH_REQUIRED = NO
 DSH_CODEX_REINSTALL_REQUIRED = NO
 HOME_DIRECTORY_MODE = 0755
 LUNA_BACKUP_FOR_PROVEN_NO_ADMISSION = YES
-LUNA_BACKUP_FOR_GLM_429_QUOTA = NO
+GLM_429_FAILURE_CLASS = provider_quota_rejected_before_generation
+GLM_429_HOP_ALLOWED = YES
+LUNA_BACKUP_FOR_GLM_429_QUOTA = YES
+AMBIGUOUS_429_STOP_CHAIN = YES
+PARTIAL_OUTPUT_429_STOP_CHAIN = YES
+TOOL_STARTED_429_STOP_CHAIN = YES
+OUTCOME_UNKNOWN_429_STOP_CHAIN = YES
 PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 LUNA_MODEL_CALL = NO
