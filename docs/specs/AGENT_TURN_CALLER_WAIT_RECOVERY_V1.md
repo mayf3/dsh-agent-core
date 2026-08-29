@@ -238,7 +238,7 @@ OPEN_ASSUMPTION = NONE
 ### DEC-TWR-003 — Timeout takes delivery ownership from the old child
 
 - Decision owner：repository owner `mayf3`。
-- Decision：receipt A 后 old-child ordinary delivery 永久进入 suppression gate；parent 最多发一个 normalized terminal receipt。
+- Decision：`CALLER_WAIT_EXPIRED` durable reservation 时 old-child ordinary delivery 即永久进入 suppression gate，independent of receipt A transport state；parent 最多发一个 normalized terminal receipt。
 - Rejected alternative：原回复与 recovery receipt 都投递、Feishu-only receipt path。
 - Reason：保证 exactly-once、跨 surface 一致与用户可理解状态。
 
@@ -286,11 +286,11 @@ DUPLICATE_REPLY = NO
 LATE_CHILD_DELIVERY = SUPPRESSED_AFTER_TIMEOUT
 ```
 
-Exactly-once count means **one surface-confirmed visible message per stable `receiptId`**，not merely one local reservation or send attempt。Every surface adapter MUST support stable idempotency/dedup key and reconciliation lookup by that key（native or existing parent outbox）；rollout to a surface without both capabilities MUST fail closed。Receipt reservation/send/ack/final state MUST separate persist。For ambiguous send，coordinator MUST reconcile by `receiptId` before retry；confirmed-present becomes acknowledged without resend，confirmed-absent MAY retry with the same key，unreconcilable remains pending/operator-visible and MUST NOT blind resend。Recovery settlement proceeds independently，but `TIMEOUT_RECEIPT_COUNT=1` is not considered satisfied until one visible A is confirmed。
+Exactly-once count means **one surface-confirmed visible message per stable `receiptId`**，not merely one local reservation or send attempt。Every surface adapter MUST support stable idempotency/dedup key and reconciliation lookup by that key（native or existing parent outbox）；rollout to a surface without both capabilities MUST fail closed。Receipt reservation/send/ack/final state MUST separate persist。For ambiguous send，coordinator MUST reconcile by `receiptId` before retry；confirmed-present becomes acknowledged without resend，confirmed-absent MAY retry with the same key，unreconcilable remains pending/operator-visible and MUST NOT blind resend。Recovery settlement proceeds independently，but `TIMEOUT_RECEIPT_COUNT=1` is not considered satisfied until one visible A is confirmed；terminal receipt MUST remain queued and MUST NOT become visible before A is acknowledged。
 
 ### CTR-TWR-008 — User-visible receipt text
 
-Parent runtime MUST direct-send through the originating surface, independent of fenced child。下列中文前缀（含标点）MUST byte-exact：
+Parent runtime MUST direct-send through the originating surface, independent of fenced child。A、B、late-failure、D 的下列中文字符串（含标点）MUST be the complete byte-exact business payload，MUST NOT add any prefix/suffix/business text；C 仅允许本文明确规定的 final-result suffix。Transport envelope/framing is outside the business payload and MUST NOT alter it：
 
 A — timeout：
 
@@ -424,8 +424,8 @@ Startup/write pruning MUST first remove settled records older than 30 days, then
 - Method：Feishu/Product API/Notification ingress adapter integration matrix, including cleanup failure and send outcomes present/absent/ambiguous reconciled by stable receiptId。
 - Environment：surface test doubles with native/outbox dedup and lookup。
 - Required evidence：byte-exact user text, idempotency key, reconciliation trace, target identity, reaction lifecycle, sanitized cleanup audit。
-- Expected：one surface-confirmed visible A；B/C/D mutually exclusive total<=1；ambiguous present causes no resend, confirmed absent retries same key, unreconcilable causes no blind resend；reaction not left processing；Core has no Feishu-only dependency。
-- Failure：wrong text/target、duplicate receipt、unkeyed retry、permanent reaction、raw outcome code或 rollout to a surface without dedup+lookup。
+- Expected：reconciled-present → one confirmed visible A and zero resend；reconciled-absent → retry same key then one confirmed visible A；lookup temporarily unavailable → A stays pending/operator-visible, zero resend, terminal receipt queued/not visible, count not falsely claimed；after lookup recovery it converges through one of the first two branches。After A acknowledgement, B/C/D are mutually exclusive total<=1。Reaction is not left processing；Core has no Feishu-only dependency。
+- Failure：wrong text/target、duplicate receipt、unkeyed retry、terminal visible before A、false exactly-once claim while pending、permanent reaction、raw outcome code或 rollout to a surface without dedup+lookup。
 
 ### ACC-TWR-006 — Background detach and budget guard
 
