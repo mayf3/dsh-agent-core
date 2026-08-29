@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: contracts
+implementation_authority: none
 scope:
   - mayf3/dsh-agent-core
   - packages/broker Forum capability surface
@@ -12,7 +12,7 @@ governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2
 owners:
   - mayf3
 ---
@@ -30,6 +30,12 @@ owners:
 > (版管 审计 = PASS, BLOCKERS = NONE). `PRODUCTION_APPLY_AUTHORITY` stays
 > `none`; production apply/deploy/reload remains separately authorized. §1–§15
 > are byte-preserved by the acceptance transaction.
+>
+> **SUPERSEDED 2026-08-29** by `AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2`
+> (whole-Spec successor, accepted in the same atomic transaction — see V2 §19
+> for the binding record). The Forum capability implementation authority now
+> lives exclusively in V2; this file remains as historical superseded authority
+> and its `superseded_by` frontmatter names the replacement.
 
 ## 1. Goal
 
