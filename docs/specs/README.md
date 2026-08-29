@@ -151,3 +151,11 @@ Harness 内建 provider、无真实 dsh-zai 插件、dsh-codex fake carrier 禁�
 MAX_CONFIGURED_ROUTES = 4、primary + fallbacks[]、STOP_CHAIN、
 ONE_LOGICAL_TURN、Scheduler INHERIT_AGENT_CHAIN_ONLY、
 ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN 等全部 ruling 不重开。
+
+## Agent Presentation authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_PRESENTATION_REGISTRY_V1` | accepted (docs-only Draft PR; amended after independent request-changes review) | contracts | future deployment-owned read-only Agent Presentation Registry (`agent-presentations.json`) + `AgentDefinition LEFT JOIN Presentation` Product Agent view authority; invalid presentation is contained to deterministic `GET /v1/agents` 503; identity/name/default/disabled stay with Agent Definition, persona stays with Workspace, switching stays with Router/Binding |
+
+This proposal authorizes nothing until accepted into main; Mobile rendering and unresolved Mobile back-navigation, TTS/STT, persona, `agents.json` roster, deployment, and canary changes remain out of scope.
