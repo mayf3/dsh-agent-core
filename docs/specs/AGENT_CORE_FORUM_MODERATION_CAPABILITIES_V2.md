@@ -46,6 +46,14 @@ owners:
 > therefore is: no in-place edit of accepted V1, no prose-only partial
 > amendment, author this whole successor instead. PR #97 is NOT modified by this
 > round and stays DRAFT / NOT FOR MERGE until V2 is accepted (§12.3).
+>
+> **FOCUSED AMENDMENT R2 (2026-08-29, 版管 执行).** Review of the R1 head
+> returned REVISE with two fixes: (1) the mistyped protection name corrected
+> to the real deployed protection `VAPID` everywhere (zero residual of the
+> typo in this file); (2) an eleven-file minimal-closure route was demanded and mechanically
+> probed — the merged test file measures 578 > 500 and fails the structure gate,
+> so per the task's own STOP rule the twelve-file closure STANDS with the
+> measurement recorded (§15.7). See §18.
 
 ## 1. Goal
 
@@ -628,7 +636,7 @@ mixed-case   Basic   e.g. 'failed with BaSiC QUJDREVG'
 layer that PR #97 documented as running after the spec policy — password /
 api-key / token / secret / credential keyed assignments, scheme-prefixed
 `authorization[:=]` values (Basic/Bearer/Digest/DPoP/HoBA/Mutual/Negotiate/
-NTLM/SCRAM-SHA-1/SCRAM-SHA-256/VAPOP and a generic fallback), and ≥40-character
+NTLM/SCRAM-SHA-1/SCRAM-SHA-256/VAPID and a generic fallback), and ≥40-character
 opaque runs — MUST remain in force with its existing semantics, still effective
 after the spec layer. Removing, weakening, skipping, or reordering-away that
 layer behind the spec layer is FORBIDDEN (`SECURITY_REGRESSION = FORBIDDEN`).
@@ -685,11 +693,12 @@ Per-file boundaries (each also mechanically enforced by
   ≈ 431 lines from the PR #97 content, §15.4).
 - `forum-moderation.js` (new) — sole owner of the eight moderator manifests, the
   shared `moderatorScopes` constant, and the `moderatorManifests` export. MUST
-  NOT import or re-export normal-pack manifests. ≤ 500 lines (budget ≈ 290).
+  NOT import or re-export normal-pack manifests. ≤ 500 lines (scratch-measured
+  294; §15.7).
 - `error-detail-sanitizer.js` (new) — sole owner of the complete
   `sanitizeErrorDetail` implementation: the `CTR-FMC-012` spec-policy layer, the
   preserved pre-existing redaction layer, and the code-point truncation helpers.
-  ≤ 500 lines (budget ≈ 140).
+  ≤ 500 lines (scratch-measured 135; §15.7).
 - `transport.js` — limited to: adding exact uppercase `PATCH` to
   `ALLOWED_METHODS`; importing `sanitizeErrorDetail` from
   `error-detail-sanitizer.js` and calling it at the existing error-detail seam;
@@ -698,13 +707,14 @@ Per-file boundaries (each also mechanically enforced by
   and removing the relocated inline sanitizer code (`DETAIL_MAX_LENGTH`,
   `DETAIL_REDACTIONS`, the `sanitizeErrorDetail` body). Head physical lines MUST
   NOT exceed the merge-base count, added lines ≤ 100, and added+deleted ≤ 20% of
-  base (gate `MUST_NOT_GROW` / `MUST_SPLIT`; budget ≈ 686 ≤ 727 at `df3b299`).
+  base (gate `MUST_NOT_GROW` / `MUST_SPLIT`; scratch-measured 690 ≤ 727 at
+  `df3b299`, added 5 ≤ 100, added+deleted 47 ≤ 145; §15.7).
 - `schema.js`, `mapping.js` — limited to the `CTR-FMC-013` deltas exactly as in
   V1 (nonBlank validation; PATCH in `HTTP_METHODS`; nonBlank enforcement).
 - `index.js` — limited to config validation (`forumModeratorAgentIds`), normal
   pack default registration, the moderator selection seam
   (`resolveForumModeratorRegistration` and the `apply()` child/gateway wiring).
-  ≤ 500 lines (budget ≈ 333).
+  ≤ 500 lines (scratch-measured 330).
 - `broker.test.js` — limited to registration/config/visibility/apply-mode tests
   for the normal and moderator packs. ≤ 500 lines (budget ≈ 490).
 - `transport.test.js` — limited to the single truncation-assertion update
@@ -715,14 +725,17 @@ Per-file boundaries (each also mechanically enforced by
   matrix: manifest-schema validation for all 13 new manifests, exact tool
   ids/scopes, identity-field absence, seven-tool frozen-projection regression,
   and per-pack wire-shape execution tests (PR #97's `capabilities.test.js`
-  additions relocate here wholesale). ≤ 500 lines (budget ≈ 365).
+  additions relocate here wholesale, plus the host helper block they depend on).
+  ≤ 500 lines (scratch-measured 458; §15.7).
 - `generic-deltas.test.js` (new) — sole owner of the tests for the three bounded
   generic deltas: `ALLOWED_METHODS` PATCH positive/negative, schema PATCH-binding
   and `nonBlank` validation tests, and the full sanitizer unit matrix including
   the six-case matrix, idempotency, code-point truncation, layer-2
   no-regression, and downstream-error canary tests (PR #97's
   `transport.test.js` additions relocate here wholesale). ≤ 500 lines
-  (budget ≈ 115).
+  (scratch-measured 139; §15.7 — this fourth new path is REQUIRED: merging it
+  into `forum-capabilities.test.js` measures 578 > 500 and fails the gate;
+  §15.7 probe P1).
 - `cordis.patch.yml` — limited to mapping the closed moderator-Agent list into
   Broker config.
 
@@ -1103,24 +1116,31 @@ host its content:
    `manifests`, five normal manifests, `normalManifests`) stay in `forum.js`
    (431 ≤ 500); lines 433–708 (moderator scopes/errors, eight moderator
    manifests, `moderatorManifests`) move to the new file (276 lines + own
-   header/imports ≈ 290 ≤ 500). Sole responsibility: the moderator pack.
+   header/imports = 294 ≤ 500, scratch-measured §15.7). Sole responsibility:
+   the moderator pack.
 2. `error-detail-sanitizer.js` (new) — necessary: `transport.js` is a registered
    legacy file whose any growth is `MUST_NOT_GROW`; PR #97 added 84 sanitizer
    lines to it (727 → 804). Relocating the complete sanitizer (spec-policy layer
    ≈ 84 lines + the pre-existing `DETAIL_MAX_LENGTH` / `DETAIL_REDACTIONS` /
    `sanitizeErrorDetail` block ≈ 45 lines at base + module header) into one
-   module ≈ 140 ≤ 500 leaves `transport.js` with a ≈3-line import/call/(re-)export
-   seam and a net-negative delta (budget ≈ 686 ≤ 727; added ≈ 6 ≤ 100;
-   added+deleted ≈ 51 ≤ 145).
+   module = 135 ≤ 500 (scratch-measured §15.7) leaves `transport.js` with a
+   ≈3-line import/call/(re-)export seam and a net-negative delta
+   (690 ≤ 727; added 5 ≤ 100; added+deleted 47 ≤ 145).
 3. `forum-capabilities.test.js` (new) — necessary: V1's test home
    `capabilities.test.js` is a 744-line **unregistered** legacy file; any touch
    is `UNREGISTERED_LEGACY_TOUCHED`. PR #97's +353 Forum capability tests
-   relocate here (≈ 365 ≤ 500 with header).
+   relocate here together with the host helper block they depend on
+   (`startMockServer`/`safeJson`/`json`/`startTokenServer`/`wire`/`mockTargets`,
+   79 lines at base) = 458 ≤ 500 (scratch-measured §15.7).
 4. `generic-deltas.test.js` (new) — necessary: `transport.test.js` is a
    registered legacy file that must not grow (912 → 1019 violation); PR #97's
    +104 generic-delta tests (PATCH allowlist, schema PATCH-binding, schema
    `nonBlank`, sanitizer matrix incl. the V2 six-case matrix, code-point
-   truncation, downstream-error canary) relocate here (≈ 115 ≤ 500).
+   truncation, downstream-error canary) relocate here = 139 ≤ 500
+   (scratch-measured §15.7). Merging these tests into
+   `forum-capabilities.test.js` instead measures 578 > 500 — the merged file
+   is a `NEW_FILE_OVER_500` gate violation — so the fourth new path is
+   mechanically REQUIRED (§15.7 probe P1; eleven-file closure infeasible).
 5. `transport.test.js` (kept, single-edit) — the pre-existing
    `sanitizeErrorDetail` truncation test asserts `/\[truncated\]$/`, which the
    exact code-point contract (step 4, no marker) makes fail; the single
@@ -1149,6 +1169,58 @@ NO_REGISTRY_CHANGE = YES   (.agents/structure-registry.json not in closure; no e
 NO_RULE_CHANGE = YES       (.agents/local/CODE_STRUCTURE_GUARDRAILS_V1 untouched; no V2 rule authored)
 NO_ANTI_EVASION = YES      (no minification / statement packing / generated banners / copy-split; §11 ALT-FMC-012)
 ```
+
+### 15.7 Scratch-layout mechanical validation (2026-08-29, 版管 执行 R2)
+
+The budgets above are no longer estimates: this round built the complete
+implementation layout twice in a local scratch worktree (branch
+`scratch/forum-v2-11file`, base `df3b299`; real files relocated verbatim from
+PR #97 content — moderator split, sanitizer module with the `i`-flag fix and
+the six-case matrix, net-zero transport.test.js assertion swap — dependencies
+installed, full Broker suite executed, structure gate run; scratch never
+pushed, no product tree touched).
+
+**Probe P2 — the V2 twelve-file closure (this Spec's `CTR-FMC-014`): PASS.**
+
+```text
+git diff --name-status df3b299 <scratch head> = exactly the 12 closure paths
+npm test (packages/broker) = 203 tests / 203 pass / 0 fail
+node scripts/verify-code-structure.mjs --base df3b299 --head <scratch head>
+  = PASS, exit 0, violations 0 (pre-existing warnings only)
+measured: forum.js 431; forum-moderation.js 294; error-detail-sanitizer.js 135;
+  transport.js 690 (base 727; added 5; added+deleted 47); index.js 330;
+  schema.js 433; mapping.js 246; broker.test.js 490; transport.test.js 912
+  (+1/-1); forum-capabilities.test.js 458; generic-deltas.test.js 139;
+  cordis.patch.yml +6
+directories: src/ 16, capabilities/ 6, test/ 11 immediate children; depth ≤ 2
+  — no directory violation or warning
+```
+
+**Probe P1 — the proposed eleven-file merge (owner Fix 2 route): INFEASIBLE.**
+
+Merging the `generic-deltas.test.js` responsibility into
+`forum-capabilities.test.js` (one combined file hosting the Forum capability
+matrix + helper block + the three generic deltas' tests + the six-case matrix)
+was built and measured:
+
+```text
+MERGED_TEST_FILE_LINES = 578  (> 500)
+test suite = still 203/203 pass (the layout is functionally sound)
+structure gate = STRUCTURE_VIOLATION exit 1 with EXACTLY ONE violation:
+  NEW_FILE_OVER_500 packages/broker/test/forum-capabilities.test.js (578 lines)
+FIX2_STATUS = STOPPED_INFEASIBLE (per the authoring task's own STOP rule:
+  merged > 500 -> stop and report; no fabricated feasibility)
+IMPLEMENTATION_CLOSURE_COUNT stays 12; EXTRA_FILE_COUNT stays 0
+```
+
+The 78-line excess is structural, not padding: the Forum capability matrix
+(353 relocated lines) + its required host helper block (79 lines) + imports and
+headers already measure 458; the three generic deltas' tests add 101 relocated
+lines plus the frozen six-case matrix — beyond what one ≤500-line file can
+legally host. Compressing assertions to fit the ceiling would weaken mandated
+coverage (`ACC-FMC-001/005/009`), which this Spec forbids; therefore the
+twelve-file closure stands and the eleven-file route is recorded as
+mechanically rejected.
 
 ## 16. V1 → V2 whole-supersession coverage audit
 
@@ -1233,5 +1305,70 @@ PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE (svc-forum read-only re-observation only: docker ps / docker inspect, no writes)
 GRANT_CHANGE = NONE
 READY_FOR_INDEPENDENT_REVIEW = YES
+NEXT_TASK = 版管 审计
+```
+
+---
+
+## 18. Focused amendment record — 2026-08-29 R2 (版管 执行)
+
+Focused review of the R1 head returned REVISE with two fixes; this docs-only
+amendment applies them to exactly this Spec file. Nothing else changes: V1
+untouched, PR #97 untouched, no product code, no acceptance transaction, no
+production change.
+
+### 18.1 Fix 1 — protection-name correction
+
+The R1 head mistyped the deployed Web Push auth protection `VAPID` (whose
+literal appears in the PR #97 layer-2 regex
+`(?:basic|bearer|digest|dpop|hoba|mutual|negotiate|ntlm|scram-sha-1|scram-sha-256|vapid)`)
+as a wrong four-letter name in `CTR-FMC-012`'s no-regression clause; it
+is corrected to `VAPID`. No protection
+category is added or removed: the frozen set remains password / api-key /
+token / secret / credential / VAPID / NTLM / Digest / DPoP / HoBA / Mutual /
+Negotiate / SCRAM-SHA-1 / SCRAM-SHA-256 / Basic / Bearer and the generic
+fallback, plus all other existing stronger redactions. This restores the
+clause's fidelity to the deployed code; it is a name correction, not a semantic
+change (`OTHER_SEMANTIC_DRIFT = NONE`).
+
+### 18.2 Fix 2 — eleven-file minimal-closure probe: STOPPED (infeasible)
+
+The demanded eleven-file route (merging `generic-deltas.test.js` into
+`forum-capabilities.test.js`, leaving three new files) was mechanically probed
+in a local scratch implementation layout (§15.7): the merged file measures
+**578 > 500** physical lines and the structure gate fails with exactly that one
+`NEW_FILE_OVER_500` violation, while the same content split per
+`CTR-FMC-014` passes the gate with zero violations and a 203/203 test suite.
+Per the task's own STOP rule ("if the actual merged file > 500 or the gate
+fails: STOP, report, do not fabricate eleven-file feasibility"), the twelve-file
+closure STANDS unchanged; the measurement is recorded as the rejection evidence
+(§15.7 probe P1). No coverage was compressed and no anti-evasion was used to
+force feasibility.
+
+### 18.3 Amendment result
+
+```text
+AMENDMENT_KIND = DOCS_ONLY_FOCUSED_AMENDMENT (exactly one file: this Spec)
+OLD_HEAD = d66181cae6c20a6ef03ebbc8a00e0ca653194466
+NEW_HEAD = (this commit)
+VAPID_NAME_CORRECTED = YES
+TYPO_RESIDUAL_COUNT = 0 (mistyped-name full-text scan of this file; PR body also corrected)
+FIX2_STATUS = STOPPED_INFEASIBLE (MERGED_TEST_FILE_PROJECTED_LINES = 578 > 500;
+  gate exit 1 with exactly one NEW_FILE_OVER_500 violation; §15.7 P1)
+IMPLEMENTATION_CLOSURE_COUNT = 12 (unchanged; §15.7 P2 scratch PASS: gate exit 0,
+  203/203 tests, exactly 12 paths, directories 16/6/11 children depth<=2)
+STRUCTURE_GATE = PASS (twelve-file closure, scratch-validated; the eleven-file
+  merge probe alone fails as recorded above)
+PRODUCT_CONTRACT_PRESERVED = YES (5 normal + 8 moderator tools, exact scopes,
+  moderator visibility, soft delete, summaryMd nonBlank, ignore|warn|delete,
+  admin unread = forum.moderate, forum.admin banned, Broker-first Credential,
+  seven-tool zero regression, zero new server routes, /gi six-case matrix — all
+  unchanged by this amendment)
+OTHER_SEMANTIC_DRIFT = NONE
+PR_97_CHANGED = NO
+V1_CHANGED = NO
+ACCEPTANCE_CHANGED = NO (status stays proposed; acceptance is a separate future round)
+PRODUCTION_CHANGE = NONE (scratch worktree local-only; never pushed)
+READY_FOR_FOCUSED_REVIEW = YES
 NEXT_TASK = 版管 审计
 ```
