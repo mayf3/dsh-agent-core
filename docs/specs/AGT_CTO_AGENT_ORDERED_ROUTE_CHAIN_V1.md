@@ -1,6 +1,6 @@
 ---
 spec_id: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
-status: accepted
+status: superseded
 accepted_reviewed_head: ee13cb224660416c9044203610b93cb8f13873bb
 acceptance_audit: PASS
 acceptance_audit_blocker_count: 0
@@ -25,7 +25,7 @@ replaces_on_acceptance:
 supersedes:
   - AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1
   - AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1
-superseded_by: null
+superseded_by: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
 scope:
   - agt_cto-agent 的 model-route 政策：ordered configurable route chain（直接 whole-authority replacement main 上当前 active model-route authority）
   - agent-model-overrides.json version 2 配置 schema：routeCatalog + overrides.<agentId>.model.primary / fallbacks[]
