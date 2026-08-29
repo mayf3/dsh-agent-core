@@ -1,6 +1,6 @@
 ---
 spec_id: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1
-status: accepted
+status: superseded
 accepted_by: mayf3
 accepted_date: 2026-08-26
 accepted_reviewed_head: a3f787e673276942371bd0b5d8bb5b94d1302595
@@ -21,7 +21,7 @@ governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2
 amendment_1: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1_AMENDMENT_1_BUILTIN_ROUTE_KIND
 amendment_1_status: accepted
 amendment_1_accepted_by: mayf3
