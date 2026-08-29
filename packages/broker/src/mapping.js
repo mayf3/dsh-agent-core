@@ -26,6 +26,7 @@
  */
 
 import { validateManifest } from './schema.js'
+import { validateSchedulerArguments } from './scheduler-validation.js'
 
 /** Client-supplied error codes the mapping emits for structural failures. */
 const FALLBACK_ERRORS = {
@@ -62,44 +63,55 @@ export function validateArgumentsDetailed(argumentSchema, args) {
   if (args === null || typeof args !== 'object' || Array.isArray(args)) {
     return { violations: ['arguments must be an object'] }
   }
-  const props = argumentSchema.properties || {}
-  const required = argumentSchema.required || []
-  for (const name of required) {
-    if (!Object.hasOwn(args, name) || args[name] === undefined) {
-      violations.push(`missing required property "${name}"`)
-    }
-  }
-  for (const [name, val] of Object.entries(args)) {
-    const spec = props[name]
-    if (spec === undefined) {
-      // Unknown keys are tolerated structurally but never treated as identity;
-      // a caller-provided principalId is intentionally ignored here.
-      continue
-    }
-    if (spec.type === 'number' || spec.type === 'integer') {
-      if (typeof val !== 'number' || !Number.isFinite(val)) {
-        violations.push(`property "${name}" must be a finite number`)
-      } else if (spec.type === 'integer' && !Number.isInteger(val)) {
-        violations.push(`property "${name}" must be an integer`)
-      } else {
-        if (typeof spec.minimum === 'number' && val < spec.minimum) {
-          violations.push(`property "${name}" must be >= ${spec.minimum}`)
-          if (code === undefined && typeof spec.validationError === 'string') code = spec.validationError
-        }
-        if (typeof spec.maximum === 'number' && val > spec.maximum) {
-          violations.push(`property "${name}" must be <= ${spec.maximum}`)
-          if (code === undefined && typeof spec.validationError === 'string') code = spec.validationError
-        }
+
+  const validateObject = (schema, value, at = '') => {
+    const props = schema.properties || {}
+    const required = schema.required || []
+    for (const name of required) {
+      if (!Object.hasOwn(value, name) || value[name] === undefined) {
+        violations.push(`missing required property "${at}${name}"`)
       }
-    } else if (spec.type === 'string') {
-      if (typeof val !== 'string') violations.push(`property "${name}" must be a string`)
-    } else if (spec.type === 'boolean') {
-      if (typeof val !== 'boolean') violations.push(`property "${name}" must be a boolean`)
     }
-    if (spec.enum !== undefined && !spec.enum.includes(val)) {
-      violations.push(`property "${name}" must be one of ${JSON.stringify(spec.enum)}`)
+    for (const [name, val] of Object.entries(value)) {
+      const spec = props[name]
+      const label = `${at}${name}`
+      if (spec === undefined) {
+        // Historical manifests remain open. Closed manifests opt in explicitly;
+        // Scheduler V1 does so at the action root and nested destination.
+        if (schema.additionalProperties === false) violations.push(`unknown property "${label}"`)
+        continue
+      }
+      if (spec.type === 'number' || spec.type === 'integer') {
+        if (typeof val !== 'number' || !Number.isFinite(val)) {
+          violations.push(`property "${label}" must be a finite number`)
+        } else if (spec.type === 'integer' && !Number.isInteger(val)) {
+          violations.push(`property "${label}" must be an integer`)
+        } else {
+          if (typeof spec.minimum === 'number' && val < spec.minimum) {
+            violations.push(`property "${label}" must be >= ${spec.minimum}`)
+            if (code === undefined && typeof spec.validationError === 'string') code = spec.validationError
+          }
+          if (typeof spec.maximum === 'number' && val > spec.maximum) {
+            violations.push(`property "${label}" must be <= ${spec.maximum}`)
+            if (code === undefined && typeof spec.validationError === 'string') code = spec.validationError
+          }
+        }
+      } else if (spec.type === 'string') {
+        if (typeof val !== 'string') violations.push(`property "${label}" must be a string`)
+        else if (typeof spec.minLength === 'number' && val.length < spec.minLength) violations.push(`property "${label}" must have length >= ${spec.minLength}`)
+      } else if (spec.type === 'boolean') {
+        if (typeof val !== 'boolean') violations.push(`property "${label}" must be a boolean`)
+      } else if (spec.type === 'object') {
+        if (val === null || typeof val !== 'object' || Array.isArray(val)) violations.push(`property "${label}" must be an object`)
+        else validateObject(spec, val, `${label}.`)
+      }
+      if (spec.enum !== undefined && !spec.enum.includes(val)) {
+        violations.push(`property "${label}" must be one of ${JSON.stringify(spec.enum)}`)
+      }
     }
   }
+
+  validateObject(argumentSchema, args)
   return code === undefined ? { violations } : { violations, code }
 }
 
@@ -121,6 +133,40 @@ export function resolveCode(manifest, code, fallback) {
   return { code: 'invalid_arguments' }
 }
 
+/** Validate and normalize one selected operation before any handler runs. */
+export function validateInvocation(manifest, call) {
+  const operation = call?.operation
+  const op = manifest.operations.find((candidate) => candidate.name === operation)
+  if (op === undefined) {
+    return { ok: false, error: resolveCode(manifest, 'unsupported_operation', FALLBACK_ERRORS.unsupported_operation) }
+  }
+
+  let args = call?.args
+  let scheduler
+  if (manifest.id === 'scheduler' && args !== null && typeof args === 'object' && !Array.isArray(args)) {
+    // String normalization precedes enum/non-empty checks, matching the
+    // accepted contract that stored string leaves are trimmed.
+    scheduler = validateSchedulerArguments(operation, args)
+    args = scheduler.args
+  }
+
+  const structural = validateArgumentsDetailed(op.arguments, args)
+  if (structural.violations.length > 0) {
+    const resolved = resolveCode(manifest, structural.code ?? FALLBACK_ERRORS.invalid_arguments, FALLBACK_ERRORS.invalid_arguments)
+    return {
+      ok: false,
+      error: structural.code === undefined ? resolved : { ...resolved, detail: structural.violations.join('; ') },
+    }
+  }
+  if (scheduler && scheduler.violations.length > 0) {
+    return {
+      ok: false,
+      error: { ...resolveCode(manifest, FALLBACK_ERRORS.invalid_arguments, FALLBACK_ERRORS.invalid_arguments), detail: scheduler.violations.join('; ') },
+    }
+  }
+  return { ok: true, operation, op, args }
+}
+
 /**
  * Convert one capability invocation to the wire envelope.
  *
@@ -132,26 +178,13 @@ export function resolveCode(manifest, code, fallback) {
  * @returns {Promise<{ ok: true, result: unknown } | { ok: false, error: { code: string } }>}
  */
 export async function invoke(manifest, handlers, call, deps) {
-  const operation = call.operation
-  const op = manifest.operations.find((o) => o.name === operation)
+  const validated = validateInvocation(manifest, call)
+  if (!validated.ok) return validated
+  const { operation, args } = validated
   const handler = handlers && handlers[operation]
 
-  // Unsupported / unknown operation.
-  if (op === undefined || handler === undefined) {
+  if (handler === undefined) {
     return { ok: false, error: resolveCode(manifest, 'unsupported_operation', FALLBACK_ERRORS.unsupported_operation) }
-  }
-
-  // Argument validation against this operation's OWN schema.
-  const { violations, code: violationCode } = validateArgumentsDetailed(op.arguments, call.args)
-  if (violations.length > 0) {
-    // A violation category may declare its own wire code (e.g. an
-    // out-of-range page size reports `invalid_pagination`); resolved through
-    // the manifest's table, failing closed to invalid_arguments. A coded
-    // violation additionally carries the broker-generated violation message
-    // as detail (our own text — no upstream content, nothing to sanitize).
-    const resolved = resolveCode(manifest, violationCode ?? FALLBACK_ERRORS.invalid_arguments, FALLBACK_ERRORS.invalid_arguments)
-    const error = violationCode !== undefined ? { ...resolved, detail: violations.join('; ') } : resolved
-    return { ok: false, error }
   }
 
   // Identity: obtained ONLY from the injected resolver; there is no
@@ -160,7 +193,7 @@ export async function invoke(manifest, handlers, call, deps) {
 
   let raw
   try {
-    raw = await handler(operation, call.args, principal)
+    raw = await handler(operation, args, principal)
   } catch (err) {
     // A thrown handler implies an internal failure; downgrade to a declared code.
     return { ok: false, error: resolveCode(manifest, 'invalid_arguments', FALLBACK_ERRORS.invalid_arguments) }

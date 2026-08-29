@@ -22,6 +22,37 @@
 
 import { assertValidManifest, invoke } from './mapping.js'
 
+const MODEL_ANNOTATIONS = ['description', 'title', 'default', 'examples']
+
+/** Convert a full manifest schema node into the intentionally smaller
+ * defineTool value-schema DSL. Bounds stay authoritative in mapping.js. */
+function modelValueSchema(spec, required = false) {
+  const out = {}
+  for (const key of MODEL_ANNOTATIONS) {
+    if (Object.hasOwn(spec, key)) out[key] = spec[key]
+  }
+  if (required) out.required = true
+  if (Array.isArray(spec.oneOf)) {
+    out.oneOf = spec.oneOf.map((branch) => modelValueSchema(branch))
+    return out
+  }
+  out.type = spec.type
+  if (spec.type === 'object') {
+    out.additionalProperties = spec.additionalProperties !== false
+    const requiredNames = new Set(Array.isArray(spec.required) ? spec.required : [])
+    out.properties = Object.fromEntries(Object.entries(spec.properties ?? {}).map(([name, child]) => [
+      name,
+      modelValueSchema(child, requiredNames.has(name)),
+    ]))
+  } else if (spec.type === 'array' && spec.items !== undefined) {
+    out.items = modelValueSchema(spec.items)
+  } else {
+    if (Array.isArray(spec.enum)) out.enum = spec.enum
+    if (Object.hasOwn(spec, 'const')) out.const = spec.const
+  }
+  return out
+}
+
 /**
  * Build the exact `defineTool({...})` options object plus the capability id.
  *
@@ -38,26 +69,26 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
   const wireId = manifest.id
 
   // Model-facing parameter schema in `defineTool` format (per-property map
-  // with `required: true`). `operation` is always required; shared properties
-  // are required only when EVERY operation requires them (the coarse schema is
-  // a model hint; strict per-operation validation happens in mapping.js).
+  // with `required: true`). Existing manifests default to `operation`; an
+  // opted-in manifest (Scheduler V1) may declare `action`. The coarse schema
+  // is guidance; authoritative per-branch validation happens in mapping.js.
+  const selector = manifest.selector ?? 'operation'
   const parameters = {
-    operation: {
+    [selector]: {
       type: 'string',
       required: true,
       enum: manifest.operations.map((o) => o.name),
-      description: 'The capability operation to perform.',
+      description: `The capability ${selector} to perform.`,
     },
   }
   const requiredEverywhere = {}
   for (const op of manifest.operations) {
     for (const [name, spec] of Object.entries(op.arguments.properties)) {
       if (!Object.hasOwn(parameters, name)) {
-        parameters[name] = {
-          type: spec.type,
-          ...(spec.enum ? { enum: spec.enum } : {}),
+        parameters[name] = modelValueSchema({
+          ...spec,
           description: spec.description || `${op.name}: ${name}`,
-        }
+        })
       }
       const opReq = Array.isArray(op.arguments.required) && op.arguments.required.includes(name)
       requiredEverywhere[name] = (requiredEverywhere[name] ?? true) && opReq
@@ -92,7 +123,7 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
 
   const renderArgs = (args) =>
     Object.entries(args)
-      .filter(([k]) => k !== 'operation')
+      .filter(([k]) => k !== selector)
       // Values only, in argument order — keeps the V0 acceptance text format
       // (`external.calculator: multiply(6, 7) = 42 (ok: true)`) byte-identical.
       .map(([, v]) => (typeof v === 'string' ? v : JSON.stringify(v)))
@@ -121,12 +152,15 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
         schema: outputSchema,
         render: (args, value) =>
           value && value.ok === true
-            ? [{ type: 'text', text: `${wireId}: ${args.operation}(${renderArgs(args)}) = ${JSON.stringify(value.result)} (ok: true)` }]
-            : [{ type: 'text', text: `${wireId}: ${args.operation}(${renderArgs(args)}) failed: ${renderError(value?.error)}` }],
+            ? [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) = ${JSON.stringify(value.result)} (ok: true)` }]
+            : [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) failed: ${renderError(value?.error)}` }],
       },
       async execute(args) {
-        // Single identity source: resolvePrincipal, never from args.
-        return invoke(manifest, handlers, { operation: args.operation, args }, { resolvePrincipal })
+        // Dispatch consumes the selector; handlers receive only business args.
+        // Identity remains exclusively resolvePrincipal/trusted gateway context.
+        const operation = args?.[selector]
+        const businessArgs = Object.fromEntries(Object.entries(args ?? {}).filter(([key]) => key !== selector))
+        return invoke(manifest, handlers, { operation, args: businessArgs }, { resolvePrincipal })
       },
       presentCall: (args) => ({
         card: 'generic',
