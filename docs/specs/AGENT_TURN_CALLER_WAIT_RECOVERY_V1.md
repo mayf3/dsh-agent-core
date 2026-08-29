@@ -358,7 +358,7 @@ stderrTailRedacted, stderrTailTruncated, stderrDroppedBytes,
 createdAt, updatedAt
 ```
 
-`processInstanceId` and `childSpawnId` MUST be unguessable/stable identities issued at process/spawn creation and independently matched by trusted registry/live-child handshake；they are not PID aliases。Action states MUST be `none|prepared|sent|acknowledged|ambiguous|failed`。Receipt states MUST be `none|reserved|sending|sent|acknowledged|ambiguous|failed`；terminal kind MUST be `none|late_success|late_failure|recovery_complete|recovery_failed`。`recordVersion` MUST provide CAS monotonicity。Transport failure MUST NOT overwrite recovery outcome。
+`processInstanceId` and `childSpawnId` MUST be unguessable/stable identities issued at process/spawn creation and independently matched by trusted registry/live-child handshake；they are not PID aliases。Action states MUST be `none|prepared|sent|acknowledged|ambiguous|failed`。Receipt states MUST be `none|reserved|sending|sent|acknowledged|ambiguous|failed`；for terminal receipts, **queued is canonically represented as `receiptTerminalKind != none` plus `receiptTerminalState=reserved`**，不得另造隐式状态。Terminal kind MUST be `none|late_success|late_failure|recovery_complete|recovery_failed`。`recordVersion` MUST provide CAS monotonicity。Transport failure MUST NOT overwrite recovery outcome。
 
 ### CTR-TWR-015 — Recovery data classification
 
@@ -366,7 +366,7 @@ createdAt, updatedAt
 
 ### CTR-TWR-016 — Atomic write and restart recovery
 
-Transitions MUST use crash-safe same-filesystem temporary full write + file sync + atomic rename/replace + directory metadata sync；unsupported durability step MUST fail-loud, never partial-overwrite fallback。Transitions MUST CAS on `recordVersion`；duplicate exact transition MUST be NOOP。Restart MUST scan unfinished records and match `processInstanceId + childSpawnId + processGeneration + four-part turn identity` against trusted registry and live-child handshake before any action；durable PID alone MUST NOT authorize signal。If exact non-PID identity/occupancy cannot be re-established, or `sigtermActionState=prepared|ambiguous` cannot prove unsent, coordinator MUST become operator-required with fence/evidence retained and zero resend。
+Transitions MUST use crash-safe same-filesystem temporary full write + file sync + atomic rename/replace + directory metadata sync；unsupported durability step MUST fail-loud, never partial-overwrite fallback。Transitions MUST CAS on `recordVersion`；duplicate exact transition MUST be NOOP。Restart MUST scan both (a) unfinished recovery states and (b) any record where **`receiptTimeoutState != acknowledged` or (`receiptTerminalKind != none` and `receiptTerminalState != acknowledged`)**，even when `recoveryState` is terminal；it MUST resume receipt reconciliation/delivery with the same `receiptId` and preserve A-before-terminal ordering。Before any process action it MUST match `processInstanceId + childSpawnId + processGeneration + four-part turn identity` against trusted registry and live-child handshake；durable PID alone MUST NOT authorize signal。If exact non-PID identity/occupancy cannot be re-established, or `sigtermActionState=prepared|ambiguous` cannot prove unsent, coordinator MUST become operator-required with fence/evidence retained and zero resend。
 
 ### CTR-TWR-017 — Retention and capacity
 
@@ -415,8 +415,8 @@ Startup/write pruning MUST first remove settled records older than 30 days, then
 - Method：race exact late success/failure against exit callback and old reply delivery；repeat with A state=`reserved|sending|failed|ambiguous|acknowledged`。
 - Environment：deterministic event scheduler。
 - Required evidence：CAS winner, suppression activation transition, delivery ledger, payload count/content。
-- Expected：suppression starts atomically at timeout reservation and old reply=0 for every A state；success gives C=1 + one final result；failure gives one normalized failure；terminal total<=1。
-- Failure：double settle/reply or raw technical error to user。
+- Expected：suppression starts atomically at timeout reservation and old reply=0 for every A state。When A is not acknowledged, visible terminal count=0 and exactly one terminal kind/state=`reserved` is queued；after A acknowledgement, success gives C=1 + one final result or failure gives one normalized failure；terminal visible total<=1。
+- Failure：terminal visible before A acknowledgement、more than one queued slot、double settle/reply or raw technical error to user。
 
 ### ACC-TWR-005 — Surface-aware UX and reaction
 
@@ -448,11 +448,11 @@ Startup/write pruning MUST first remove settled records older than 30 days, then
 ### ACC-TWR-008 — Store schema, restart, atomicity, retention
 
 - Contracts：`CTR-TWR-014`、`CTR-TWR-015`、`CTR-TWR-016`、`CTR-TWR-017`。
-- Method：schema validation；crash injection before/after every durable write、cancel send/ACK、SIGTERM send；restart at every state；PID reuse/non-PID handshake mismatch；secret corpus；retention/capacity。
-- Environment：isolated filesystem, idempotent cancel receiver and registry/live-child simulator。
-- Required evidence：on-disk schema/recordVersion/non-PID identities/action IDs, fsync/rename trace, receiver dedup log, signal count, recovery transitions, secret scan, prune report。
-- Expected：cancel retry uses same id and receiver applies once；SIGTERM prepared/ambiguous crash never resends and becomes operator-required；unfinished safe states resume only after exact non-PID ownership recheck；no secrets；64 KiB bound；30-day/10,000 cap；unresolved preserved；capacity fail-loud。
-- Failure：partial record、PID-only signal、second SIGTERM、second logical cancel、unresolved prune或secret persistence。
+- Method：schema validation；crash injection before/after every durable write、cancel send/ACK、SIGTERM send、A/terminal receipt reserve/send/ack and while terminal is queued；restart at every recovery/receipt state；PID reuse/non-PID handshake mismatch；secret corpus；retention/capacity。
+- Environment：isolated filesystem, idempotent cancel receiver, surface receipt dedup/reconciliation, and registry/live-child simulator。
+- Required evidence：on-disk schema/recordVersion/non-PID identities/action/receipt IDs, fsync/rename trace, receiver/surface dedup log, signal and visible-message counts, A-before-terminal trace, recovery transitions, secret scan, prune report。
+- Expected：cancel retry uses same id and receiver applies once；SIGTERM prepared/ambiguous crash never resends and becomes operator-required；receipt restart keeps same receiptId, resumes reconciliation, produces no visible duplicate, and never exposes terminal before acknowledged A；terminal recovery state with queued receipt survives/restarts；unfinished safe process states resume only after exact non-PID ownership recheck；no secrets；64 KiB bound；30-day/10,000 cap；unresolved preserved；capacity fail-loud。
+- Failure：partial record、PID-only signal、second SIGTERM、second logical cancel、new receiptId/duplicate visibility、terminal-before-A、lost queued receipt、unresolved prune或secret persistence。
 
 ### ACC-TWR-009 — Global safety matrix
 
