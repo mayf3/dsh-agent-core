@@ -101,15 +101,23 @@ turn contains usage 0/0 and no assistant message/tool event.
 
 ```text
 provider request established = YES
-prompt/transcript admission evidence = YES
+user transcript present = YES
 provider class = account_quota_exhausted
-assistant output = NO in bounded turn
-tool event = NO in bounded turn
+HTTP status = 429
+response termination = proven by turn/end(error); no timeout
+assistant/model output token count = 0
+partial output = NO in bounded turn
+assistant content = NO in bounded turn
+tool call / tool started = NO in bounded turn
+external side effect = NO in bounded terminal no-tool turn
+outcome_unknown = NO
 terminal = 429 QUOTA / Usage limit reached for 5 hour
 ```
 
 Limitations: transcript does not expose or retain raw HTTP body here; zero usage is not
-no-admission proof. It supports admitted/post-admission policy, not credential health.
+no-admission proof. The evidence supports classification as the distinct terminal pre-generation
+quota class under the V2 policy, not credential health. It must not be reproduced by consuming
+additional real quota.
 
 ## OBS-V2-006 — current classifier defect
 
@@ -131,7 +139,8 @@ account_quota_exhausted` carrier and invoke current classifier.
 
 ```text
 actual current classification = initialize_provider_unavailable / proven_no_admission
-expected policy classification = post_admission_failure / admitted / STOP_CHAIN
+expected policy classification = provider_quota_rejected_before_generation
+expected hop decision = YES only with all terminal/zero-generation safety evidence
 defect = CONFIRMED
 ```
 
@@ -157,13 +166,13 @@ before and after deployment/canary operations.
 CLM-V2-001 [SUPPORTED; backlink EVD-V2-001] TARGET_HOME_CURRENT_METADATA = path + directory 0755/uid502 at observed_at
 CLM-V2-002 [SUPPORTED; backlink EVD-V2-002] EXISTING_LUNA_ASSET_OFFLINE_READY = OAuth metadata valid + dsh-codex 0.2.3 offline load ready
 CLM-V2-003 [SUPPORTED; backlink EVD-V2-003] HARNESS_IDENTITY_BLOCKED_CURRENT = deployed identity returns dsh_commit_mismatch; fix required
-CLM-V2-004 [SUPPORTED; backlink EVD-V2-004] REAL_GLM_429_ADMISSION_ESTABLISHED = request/transcript admission precedes quota terminal
+CLM-V2-004 [SUPPORTED; backlink EVD-V2-004] REAL_GLM_429_TERMINAL_PREGEN_EVIDENCE = provider request precedes terminal quota rejection with zero generation/tool/side-effect evidence
 CLM-V2-005 [SUPPORTED; backlink EVD-V2-005] CURRENT_CLASSIFIER_FIX_REQUIRED = pinned base misclassifies accepted quota carrier
 CLM-V2-006 [SUPPORTED; backlink EVD-V2-006] GLM_STRICT_BOUNDED_SUCCESS_OBSERVED = one zai/glm-5.3 terminal success at coordinate
 ```
 
 These Claims describe observed state only. Parent/IMPL/Activation Contracts independently impose
-normative STOP, fix, readiness and activation consequences.
+the exact quota-hop predicates, ambiguous/unsafe STOP rules, fix, readiness and activation consequences.
 
 ## Qualified evidence relations
 

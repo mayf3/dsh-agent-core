@@ -55,13 +55,16 @@ route-aware process reuse/new generation、closed hop/stop、one logical turn、
 fixed journal、Scheduler inheritance、strict explicit model、isolation/redaction。
 
 新增且有界的 implementation deltas 恰为两项：(1) 修复 failure classifier precedence，
-使 structured admission lifecycle evidence 永远先于 provider error taxonomy，真实 GLM
-quota 429 STOP；(2) 为 Activation V2 冻结默认关闭、target-only、one-shot 的 closed
-canary injection seam，消除执行轮临时机制选择。
+实现独立精确类 `provider_quota_rejected_before_generation`，只在明确终态 quota rejection
+且零生成/零工具/零副作用的完整证据成立时 hop，任何歧义证据均 STOP；(2) 为 Activation V2
+冻结默认关闭、target-only、one-shot 的 controlled terminal-429 fixture seam，消除执行轮临时
+机制选择并避免靠真实额度耗尽测试。
 
 ```text
 QUOTA_CLASSIFIER_FIX_REQUIRED = YES
-ACCOUNT_QUOTA_EXHAUSTED_ROUTE_RESULT = stop:post_admission_failure
+GLM_429_FAILURE_CLASS = provider_quota_rejected_before_generation
+GLM_429_HOP_ALLOWED = YES
+LUNA_BACKUP_FOR_GLM_429_QUOTA = YES
 ```
 
 ## 2. Atomic lifecycle
@@ -185,57 +188,68 @@ turn-local attempted-once accounting 正交。
 
 ### CTR-I2-008 — evidence precedence
 
-分类顺序冻结：
+分类优先级精确冻结为：
 
-1. outcome_unknown / timeout without termination；
-2. admission/receipt/watermark/transcript/output/tool/side-effect evidence；
-3. explicit startup stage / initialize lifecycle evidence；
-4. structured session rejection / turnQueue not_admitted；
-5. provider taxonomy only as subtype, never lifecycle proof；
-6. otherwise unknown STOP。
+1. assistant/model output、partial output、tool call/tool started、external side effect、
+   outcome_unknown、transport timeout 或 termination uncertainty evidence；任一 unsafe/unknown
+   均立即 STOP；
+2. 明确终态 quota rejection evidence：status=429 或结构化 code 明确 quota exhausted，且
+   response 完整终止、output tokens=0、partial/content/tool/side-effect/unknown/timeout 全部为
+   proven NO；全部成立才归 `provider_quota_rejected_before_generation`；
+3. provider taxonomy/message 文本只可作为 subtype，绝不单独构成 hop proof；otherwise
+   unknown STOP。
 
-任何 accepted receipt、transcript 或 post-admission carrier 先命中 STOP，不得被
-`FAIL_LOUD_PROVIDER_ERRORS` 覆盖。
+既有 explicit startup/initialize、structured session rejection 与 turnQueue not_admitted 仍按其
+结构化 lifecycle evidence 分类，但不得覆盖第1项，也不得借 provider taxonomy 伪造 origin。
+不得仅凭错误消息包含 `quota`、`limit` 或 `429` 跳转。provider request、prompt receipt 或
+user transcript 本身不等于 generation；但也不证明 generation 未开始。`FAIL_LOUD_PROVIDER_ERRORS`
+不得覆盖上述优先级。
 
 ### CTR-I2-009 — whitelist implementation
 
-non-null hop class 只可为 Parent V2 四类，且同时 admission=`proven_no_admission`。
-`initialize_provider_unavailable` 还要求 explicit initialize origin + never READY + no prompt
+non-null hop class 只可来自两条互斥路径：(a) Parent V2 四类，且 admission=
+`proven_no_admission`；或 (b) 独立类 `provider_quota_rejected_before_generation`，且
+CTR-I2-008 的全部 terminal/zero evidence predicates 为真。该 quota class 不是
+`initialize_provider_unavailable`，admission 也不得伪装成 `proven_no_admission`。
+`initialize_provider_unavailable` 仍要求 explicit initialize origin + never READY + no prompt
 attempt。bare provider error、HTTP code/message、quota text 不足。
 
-### CTR-I2-010 — real GLM 429 result
+### CTR-I2-010 — exact terminal GLM 429 result
 
-对具有真实同类 evidence 的 carrier：
+对 controlled exact quota carrier：
 
 ```text
 providerClass = account_quota_exhausted
-failureClass = post_admission_failure
-admissionProven = admitted
-hopAllowed = false
-attemptOutcome = stop:post_admission_failure
-TOTAL_ROUTE_ATTEMPTS = 1
-FALLBACK_ACTIVATED = false (derived)
-LUNA_MODEL_CALL_COUNT = 0
-TERMINAL_ATTEMPT_ROUTE = glm53 (derived projection)
-FINAL_ROUTE = NONE (fixed journal; no successful route)
-FINAL_OUTCOME = stop:post_admission_failure
+failureClass = provider_quota_rejected_before_generation
+admissionProven = provider_request_sent_generation_not_started
+hopAllowed = true
+attemptOutcome = hop:provider_quota_rejected_before_generation
+TOTAL_ROUTE_ATTEMPTS = 2
+FALLBACK_ACTIVATED = true (derived)
+LUNA_MODEL_CALL_COUNT = 1
+FINAL_ROUTE = luna
+FINAL_OUTCOME = success
 ```
 
-对外 canary 报告若需要 Owner 给定 `FINAL_ROUTE=glm53` 字段，必须命名为
-`TERMINAL_ATTEMPT_ROUTE=glm53`；不得改写 fixed journal 的 FINAL_ROUTE=NONE。second
-acquire 必须=0。
+该 carrier 必须证明 status/code quota、response terminal、output tokens=0、无 partial/content、
+无 tool call/start、无 external side effect、无 outcome_unknown、无 transport timeout。任一字段
+缺失、false/unknown 或 termination 未证明时，glm53 attempt 1 后 STOP，second acquire=0、
+Luna call=0、FINAL_ROUTE=NONE。
 
 ### CTR-I2-011 — exact regression tests
 
 至少覆盖：
 
-1. config primary glm53/fallbacks[luna] + accepted-receipt quota carrier：acquire count=1、
-   Luna call=0、STOP；
-2. exact text `Usage limit reached for 5 hour` 只影响 subtype，不影响 STOP；
-3. bare quota no origin：unknown STOP；
-4. explicit initialize-origin quota + never READY + admission=false：class 2 hop；
-5. output/tool/side-effect uncertainty individually STOP；
-6. outcome_unknown STOP；
+A. config primary glm53/fallbacks[luna] + exact terminal 429、零输出、零工具 fixture：
+   glm53 attempt1 → luna attempt2 → success；`TOTAL_ROUTE_ATTEMPTS=2`、
+   `FALLBACK_ACTIVATED=true`、`FINAL_ROUTE=luna`、`LUNA_MODEL_CALL_COUNT=1`；
+B. 429 + partial output：attempts=1、Luna calls=0、STOP_CHAIN；
+C. 429 + outcome_unknown：attempts=1、Luna calls=0、STOP_CHAIN；
+D. 429 + tool started：attempts=1、Luna calls=0、STOP_CHAIN；
+5. 429 + assistant content、tool call、external side effect、transport timeout、termination unknown
+   或 ambiguous/text-only quota 各自 attempts=1、Luna calls=0、STOP；
+6. explicit initialize-origin quota + never READY + admission=false 只按既有 class 2 hop，
+   不得误用新 quota class；
 7. all four valid no-admission classes each hop once；
 8. no next route/budget exhaustion stop；
 9. journal contains only frozen fields and no raw error body。
@@ -244,8 +258,14 @@ acquire 必须=0。
 
 ### CTR-I2-012 — hop gate
 
-hopAllowed = whitelisted class AND proven_no_admission AND next route exists AND deadline budget
-remains。否则 STOP/terminal。last route failure terminal；no cycle/restart。
+hopAllowed = next route exists AND deadline budget remains AND 以下互斥条件之一成立：
+
+- failureClass 为既有四类之一 AND admission=`proven_no_admission`；或
+- failureClass=`provider_quota_rejected_before_generation` AND CTR-I2-008 全部精确 quota
+  predicates proven true。
+
+否则 STOP/terminal。last route failure terminal；no cycle/restart。quota class 不得通过
+`proven_no_admission` 分支。
 
 ### CTR-I2-013 — one deadline
 
@@ -255,9 +275,11 @@ never hop。
 
 ### CTR-I2-014 — ONE_LOGICAL_TURN
 
-executor owns one logical result promise/receipt/delivery。route hop occurs only before admission，
-因此不得生成 duplicate user transcript/reply/tool/external delivery。Delivery accepted=true
-ends chain domain；after accepted 的 error 全部 STOP。
+executor owns one logical result promise/receipt/delivery。route hop 只可发生于 proven-no-admission
+路径，或 provider request 已发出但 generation 从未开始且完整终态 quota evidence 成立的精确
+例外；两者均不得生成 duplicate user transcript/reply/tool/external delivery。Delivery
+accepted=true 本身不覆盖 quota 例外，但任何 assistant/model output、tool、side effect、unknown
+或 termination uncertainty 均 ends chain domain 并 STOP。
 
 ### CTR-I2-015 — controlled one-shot production canary injection seam
 
@@ -268,7 +290,7 @@ ends chain domain；after accepted 的 error 全部 STOP。
 代码/path rule 不触碰 production root。descriptor owner=该 runtime owner（production
 =authsvc505）、mode0600，exact schema `{version:1,agentId:"agt_cto-agent",routeRef:"glm53",mode,nonce,expiresAt,
 maxUses:1,binding:{channel:"feishu",senderOpenId,marker}}`；mode 仅
-`turnqueue_not_admitted | outcome_unknown`；nonce 必须匹配
+`provider_quota_rejected_before_generation | outcome_unknown`；nonce 必须匹配
 `^[A-Za-z0-9_-]{16,64}$`（无 dot/slash/percent/control，作为 basename suffix 安全）；
 senderOpenId non-empty ≤256 chars；marker non-empty UTF-8 ≤128 bytes 且恰为 Owner 发送的
 整个 canary prompt。expiresAt 必须 canonical RFC3339 UTC `YYYY-MM-DDTHH:mm:ssZ` string，
@@ -282,11 +304,17 @@ runtime-root-relative descriptor；absent 是普通 fast path。install/clear �
 quiesced，随后只放行 exact bound canary turn，不要求 runtime/process reload。executor 仅当
 exact target+route + channel + authenticated senderOpenId + whole-prompt marker
 全部匹配时消费。消费原语固定为把 descriptor 原子 rename 到 exact
-`route-chain-canary-injection.used.<nonce>`，成功 rename 的唯一 process 才产生 synthetic
-carrier：B=`turnqueue_not_admitted/proven_no_admission`，C=`outcome_unknown/STOP`。它发生在
-provider/process acquire 前，不读/改 credential，不调用 glm53，不影响其他 Agent。普通
-turn、任一 binding mismatch、absent/expired/used descriptor 均不得注入；used marker 禁止
-second consume，crash 后也 fail-closed。
+`route-chain-canary-injection.used.<nonce>`，成功 rename 的唯一 process 才可激活 fixture。
+
+quota mode 必须进入正常 glm53 attempt/acquire/dispatch 边界，在 provider request 已被 observer
+证明发出后、任何 generation/output/tool 前，由 controlled fixture 返回固定结构化 terminal
+response：HTTP 429 + quota-exhausted code、termination proven、output tokens=0、partial/content=
+NO、tool call/start=NO、external side effect=NO、outcome_unknown=NO、transport timeout=NO；它
+不得向真实 GLM 网络端制造额度耗尽。classifier 必须据此产生
+`provider_quota_rejected_before_generation` 并 hop。outcome_unknown mode 仍在 provider/model
+acquire 前生成 STOP carrier。fixture 不读/改 credential；普通 turn、任一 binding mismatch、
+absent/expired/used descriptor 均不得注入；used marker 禁止 second consume，crash 后也
+fail-closed。
 
 除 fixed route journal 外，既有 durable non-surface ops audit 必须为 matching canary nonce
 记录 bounded observer：`providerDispatchCount/modelCallStartCount/providerRetryCount/onStartCount/
@@ -297,8 +325,9 @@ points 机械计数，禁止推算 route attempt=模型调用，禁止 prompt/se
 install/clear/verify 只能是同目录 atomic create/remove + lstat/read-back exact metadata/schema；
 clear 后 descriptor/temp/exact used marker 全 absent 才可切 case/resume。测试覆盖 disabled
 zero-effect、target/route/channel/sender/marker/nonce mismatch、expiry、one-shot race、crash
-post-rename、clear、observer exact counts、other-Agent isolation、B hop once、C zero hop。
-seam 不得成为通用 fault API/model router。
+post-rename、clear、observer exact counts、other-Agent isolation、exact terminal-quota hop once、
+outcome_unknown zero hop，以及 partial output/tool started negative fixtures。seam 不得成为通用
+fault API/model router，且不得通过真实额度耗尽制造 429。
 
 ## 8. Journal implementation
 
@@ -394,13 +423,13 @@ Reject condition fails acceptance。
 | ACC-I2-005 | CTR-I2-005 | structural call graph + three-entry tests | repository + test runtime | one published executor called by all entries | duplicated local chain/internal import |
 | ACC-I2-006 | CTR-I2-006 | order/snapshot/restart-turn tests | deterministic executor | immutable turn snapshot, once/route, next turn primary | mid-turn config effect/stickiness |
 | ACC-I2-007 | CTR-I2-007 | READY/idle/busy mismatch lifecycle injection | process-registry harness | match reuse; idle controlled exit; busy no force-kill | wrong reuse/kill/mutate route |
-| ACC-I2-008 | CTR-I2-008 | precedence table tests | classifier harness | uncertainty/admission evidence precedes taxonomy | provider set overrides receipt |
-| ACC-I2-009 | CTR-I2-009 | four whitelist + negatives | classifier/executor harness | only closed classes + no-admission hop | text/bare provider creates hop |
-| ACC-I2-010 | CTR-I2-010 | pinned real-shape 429 carrier | classifier/executor harness | admitted post-admission STOP, FINAL_ROUTE NONE, acquire1 | Luna acquire/call or initialize class |
-| ACC-I2-011 | CTR-I2-011 | listed regression suite | clean test runtime | all nine cases and redaction PASS logs | any case absent/fails/raw body logged |
+| ACC-I2-008 | CTR-I2-008 | precedence table tests | classifier harness | unsafe/unknown evidence first; exact terminal quota second; taxonomy last | text overrides evidence or unsafe 429 hops |
+| ACC-I2-009 | CTR-I2-009 | four no-admission classes + exact quota class + negatives | classifier/executor harness | only closed classes hop under their distinct evidence gates | quota mislabeled no-admission or text/bare provider hops |
+| ACC-I2-010 | CTR-I2-010 | controlled exact terminal-429 carrier | classifier/executor harness | glm attempt1 → luna attempt2 success, FINAL_ROUTE luna, Luna call1 | initialize/no-admission class, STOP despite full proof, or real quota exhaustion |
+| ACC-I2-011 | CTR-I2-011 | A-D plus complete negative matrix | clean test runtime | exact quota success; partial/outcome_unknown/tool-started and every ambiguous case STOP; redaction PASS | any case absent/fails/raw body logged |
 | ACC-I2-012 | CTR-I2-012 | hop truth-table/property test | deterministic executor | hop only all four predicates true | hop when predicate false/restart cycle |
 | ACC-I2-013 | CTR-I2-013 | monotonic deadline injection | deterministic clock | one decreasing budget, no refresh | per-hop reset or unknown hop |
-| ACC-I2-014 | CTR-I2-014 | multi-attempt transcript/tool/delivery counters | integration harness | one logical result/delivery, accepted=>STOP | duplicate or post-admission hop |
+| ACC-I2-014 | CTR-I2-014 | multi-attempt transcript/tool/delivery counters | integration harness | one logical result/delivery; only exact zero-generation terminal quota exception may hop after request dispatch | duplicate, unsafe post-request hop, or quota hop with incomplete proof |
 | ACC-I2-015 | CTR-I2-015 | schema/path/binding/race/crash/observer/isolation suite | candidate root + production-like harness | default-off; exact binding; rename winner1; bounded counters; cleanup | path traversal, collision overwrite, wrong consume, missing counts |
 | ACC-I2-016 | §§8-9 | journal sink + Scheduler bridge tests | durable audit + Scheduler harness | fixed fields, durable non-surface; idempotency/started/reconcile/store-lock preserved; no model→catalog seam | field expansion/transient sink/envelope drift |
 | ACC-I2-017 | §3/§11 | exact path manifest + independent code audit | implementation PR | in-scope only, all gates PASS, no network/OAuth | scope expansion or missing audit |
@@ -411,6 +440,13 @@ Reject condition fails acceptance。
 TASK_NAME = 冷备 执行
 IMPL_V2 = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2
 QUOTA_CLASSIFIER_FIX_REQUIRED = YES
+GLM_429_FAILURE_CLASS = provider_quota_rejected_before_generation
+GLM_429_HOP_ALLOWED = YES
+LUNA_BACKUP_FOR_GLM_429_QUOTA = YES
+AMBIGUOUS_429_STOP_CHAIN = YES
+PARTIAL_OUTPUT_429_STOP_CHAIN = YES
+TOOL_STARTED_429_STOP_CHAIN = YES
+OUTCOME_UNKNOWN_429_STOP_CHAIN = YES
 PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 LUNA_MODEL_CALL = NO
