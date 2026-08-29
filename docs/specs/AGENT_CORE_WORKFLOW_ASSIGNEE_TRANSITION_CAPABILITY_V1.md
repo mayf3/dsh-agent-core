@@ -1,6 +1,13 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
-status: proposed
+status: accepted
+accepted_date: 2026-08-29
+accepted_by: mayf3
+accepted_at: 2026-08-29T07:25:51Z
+accepted_reviewed_head: 90d414d19f0e3e03810c7ef68cd1bce27819c83e
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
@@ -20,10 +27,12 @@ owners:
 
 # AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
 
-> **PROPOSED — DOCS ONLY.** 本 Spec 在保持 proposed 期间不创建任何实现
-> authority。本 authoring PR 只添加本 Spec 文件，不修改任何产品或测试文件，
-> 不执行任何 runtime reload 或部署，不授予任何 workflow scope。
-> `implementation_authority = none`、`PRODUCTION_APPLY_AUTHORITY = none`。
+> **ACCEPTED（2026-08-29，lifecycle-only acceptance finalize）。** 独立复审绑定
+> `90d414d19f0e3e03810c7ef68cd1bce27819c83e`：PASS / BLOCKERS = NONE /
+> READY_FOR_ACCEPTANCE_FINALIZE = YES。此次 acceptance 仅变更 lifecycle 与
+> provenance，不修改 reviewed semantics；`implementation_authority = none`、
+> `PRODUCTION_APPLY_AUTHORITY = none`，因此 acceptance 本身不授权产品实现、
+> runtime reload、部署或任何 workflow Grant 变更。
 
 > **REVISE AMENDMENT 2026-08-29（流转 修订）**：按独立审计 REVISE 结论与
 > Owner 路线 KEEP_MANIFEST_ONLY_ERROR_ENVELOPE 完成三项 focused fix——
@@ -491,4 +500,18 @@ replay，DEC-003）。
   MANIFEST_PLUS_TESTS；OTHER_SEMANTIC_DELTA = NONE；PRODUCT_CODE_CHANGE =
   NONE；GRANT_CHANGE = NONE；PRODUCTION_CHANGE = NONE。接受（proposed →
   accepted）仍需独立审计轮 VERDICT，本轮不做。
-- 下一事务：独立 review（流转 审计）→ accepted 后实现轮（ACC-002/003）。
+- 下一事务：独立 review（流转 审计）→ accepted 后重新执行 implementation-authority gate。
+
+## 16. Acceptance record (2026-08-29)
+
+- REVIEWED_HEAD = `90d414d19f0e3e03810c7ef68cd1bce27819c83e`。
+- 流转 审计 = PASS；BLOCKERS = NONE；READY_FOR_ACCEPTANCE_FINALIZE = YES。
+- STRUCTURED_ERROR_DETAILS_REQUIRED = NO。
+- EXECUTABLE_FOR_ACTOR_CLASSIFICATION = ADVISORY_ONLY。
+- DEFINITION_VERSION_DRAFT_REMOVED = YES。
+- IMPLEMENTATION_CLOSURE = MANIFEST_PLUS_TESTS。
+- SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = NONE；本 transaction 仅写入
+  accepted lifecycle mirror 与 review provenance。
+- `implementation_authority = none` 与 `PRODUCTION_APPLY_AUTHORITY = none`
+  均保持 reviewed value 不变；因此本 acceptance 不自行授予产品实现或部署权限。
+- PRODUCT_CODE_CHANGE = NONE；GRANT_CHANGE = NONE；PRODUCTION_CHANGE = NONE。
