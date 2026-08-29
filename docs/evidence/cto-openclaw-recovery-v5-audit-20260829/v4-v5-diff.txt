@@ -1,0 +1,51 @@
+2,3c2,3
+< # One-shot agt_cto-agent recovery runner. Production execution requires --apply
+< # plus the exact independent Owner authorization values checked below.
+---
+> # One-shot agt_cto-agent recovery runner. Owner command:
+> #   sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v5.sh
+17,18c17,18
+< HEALTH_URL="http://127.0.0.1:8790/health"
+< DELIVER_URL="http://127.0.0.1:8790/v1/deliver"
+---
+> HEALTH_URL="${BASE_URL}/health"
+> DELIVER_URL="${BASE_URL}/v1/deliver"
+27,32c27
+< REQUIRED_OWNER_RULING="AUTHORIZE_EXACT_CTO_OPENCLAW_RECOVERY_V4"
+< REQUIRED_PRODUCTION_APPROVAL="YES"
+< APPROVAL_RECEIPT="/tmp/agent-core-cto-openclaw-recovery-v4-owner-approval.txt"
+< APPROVAL_RECEIPT_SHA256="ee5953a43ca911b6f2d7f7c4c11f23aca16c5f10decf43570c42c4f2c4d50d41"
+< AUTHORIZED_OPERATOR_USER="yanfenma"
+< AUTHORIZED_OPERATOR_UID="502"
+---
+> CONFIRM_PHRASE="APPLY EXACT_CTO_OPENCLAW_RECOVERY_V5"
+533,535c528
+< [ "${1:-}" = "--apply" ] || zero_write_exit "usage: sudo env OWNER_RULING=... OWNER_PRODUCTION_APPROVAL=YES bash $0 --apply"
+< [ "${OWNER_RULING:-}" = "$REQUIRED_OWNER_RULING" ] || zero_write_exit "exact independent Owner ruling missing"
+< [ "${OWNER_PRODUCTION_APPROVAL:-}" = "$REQUIRED_PRODUCTION_APPROVAL" ] || zero_write_exit "independent production approval missing"
+---
+> [ "$#" -eq 0 ] || zero_write_exit "unexpected arguments; run exactly: sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v5.sh"
+537,542c530,532
+< [ "${SUDO_USER:-}" = "$AUTHORIZED_OPERATOR_USER" ] || zero_write_exit "sudo operator user is not the authorized Owner"
+< [ "${SUDO_UID:-}" = "$AUTHORIZED_OPERATOR_UID" ] || zero_write_exit "sudo operator uid is not the authorized Owner"
+< [ ! -L "$APPROVAL_RECEIPT" ] && [ "$(stat -f '%HT' "$APPROVAL_RECEIPT" 2>/dev/null)" = "Regular File" ] || zero_write_exit "Owner approval receipt is missing or unsafe"
+< [ "$(stat -f '%u' "$APPROVAL_RECEIPT")" = "$AUTHORIZED_OPERATOR_UID" ] || zero_write_exit "Owner approval receipt uid mismatch"
+< [ "$(stat -f '%Lp' "$APPROVAL_RECEIPT")" = "600" ] || zero_write_exit "Owner approval receipt mode mismatch"
+< [ "$(sha256_file "$APPROVAL_RECEIPT")" = "$APPROVAL_RECEIPT_SHA256" ] || zero_write_exit "Owner approval receipt hash mismatch"
+---
+> printf 'Type the exact confirmation phrase to continue:\n  %s\n> ' "$CONFIRM_PHRASE"
+> IFS= read -r OWNER_CONFIRMATION || zero_write_exit "confirmation input unavailable"
+> [ "$OWNER_CONFIRMATION" = "$CONFIRM_PHRASE" ] || zero_write_exit "confirmation phrase mismatch"
+544,545c534,535
+< log "AGENT_CORE_CTO_OPENCLAW_RECOVERY_V4 start ts=$TS log=$LOG_FILE"
+< ok "OWNER_APPROVAL_BOUND pinned receipt + exact Owner uid/user + ruling + production approval + explicit --apply"
+---
+> log "AGENT_CORE_CTO_OPENCLAW_RECOVERY_V5 start ts=$TS log=$LOG_FILE"
+> ok "interactive Owner confirmation accepted"
+548,550c538,539
+< [ "$HEALTH_URL" = "http://127.0.0.1:8790/health" ] || zero_write_exit "HEALTH_URL pin mismatch"
+< [ "$DELIVER_URL" = "http://127.0.0.1:8790/v1/deliver" ] || zero_write_exit "DELIVER_URL pin mismatch"
+< case "$DELIVER_URL" in *'/health/v1/deliver'*) zero_write_exit "DELIVER_URL contains forbidden health path" ;; esac
+---
+> [ "$HEALTH_URL" = "${BASE_URL}/health" ] || zero_write_exit "HEALTH_URL pin mismatch"
+> [ "$DELIVER_URL" = "${BASE_URL}/v1/deliver" ] || zero_write_exit "DELIVER_URL pin mismatch"

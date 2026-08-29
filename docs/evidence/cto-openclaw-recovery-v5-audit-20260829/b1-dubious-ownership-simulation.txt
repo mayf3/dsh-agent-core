@@ -1,0 +1,42 @@
+== /usr/bin/git version ==
+git version 2.50.1 (Apple Git-155)
+
+== repo ownership ==
+502 yanfenma /Users/yanfenma/workspace/project/dsh-agent-core
+502 yanfenma /Users/yanfenma/workspace/project/dsh-agent-core/.git
+
+== git binaries visible ==
+/usr/bin/git
+ls: /opt/homebrew/bin/git: No such file or directory
+ls: /usr/local/bin/git: No such file or directory
+
+== system gitconfig files ==
+ls: /etc/gitconfig: No such file or directory
+ls: /usr/local/etc/gitconfig: No such file or directory
+
+== safe.directory entries visible to uid 502 ==
+file:/Users/yanfenma/.gitconfig	safe.directory=/Users/yanfenma/.openclaw
+file:/Users/yanfenma/.gitconfig	safe.directory=/Users/yanfenma/workspace/project/openclaw-adc-canary-extension
+
+== /var/root access wall ==
+drwxr-x--- root:wheel /var/root
+ls: /var/root/.gitconfig: Permission denied
+
+== SIMULATION: exact failure mode root would hit (GIT_TEST_ASSUME_DIFFERENT_OWNER=1 forces the euid!=owner code path of git 2.50.1) ==
+rc=128
+runner-captured-stdout=[]
+NO_MATCH
+
+== authority gate lines in runner ==
+[ "$(git -C "$REPO" cat-file -t "$AUTH_COMMIT" 2>/dev/null)" = "commit" ] || zero_write_exit "authority commit missing"
+AUTH_HEAD="$(git -C "$REPO" show "$AUTH_COMMIT:$AUTH_SPEC_PATH" 2>/dev/null | sed -n '1,20p')"
+printf '%s\n' "$AUTH_HEAD" | /usr/bin/grep -q '^spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1$' || zero_write_exit "authority spec id mismatch"
+printf '%s\n' "$AUTH_HEAD" | /usr/bin/grep -q '^status: accepted$' || zero_write_exit "authority spec not accepted"
+[ "$(git -C "$REPO" merge-base --is-ancestor "$AUTH_COMMIT" main >/dev/null 2>&1; printf '%s' $?)" = "0" ] || zero_write_exit "accepted authority is not in main"
+ok "accepted governing Spec is in main; separate execution and production authorization bound"
+
+== simulation stderr (captured separately) ==
+fatal: detected dubious ownership in repository at '/Users/yanfenma/workspace/project/dsh-agent-core'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /Users/yanfenma/workspace/project/dsh-agent-core

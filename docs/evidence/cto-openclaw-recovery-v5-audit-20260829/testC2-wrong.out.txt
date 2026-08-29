@@ -1,0 +1,5 @@
+Type the exact confirmation phrase to continue:
+  APPLY EXACT_CTO_OPENCLAW_RECOVERY_V5
+> [21:14:54] RESULT: PREFLIGHT_FAIL (ZERO WRITES) — confirmation phrase mismatch
+[21:14:54] FINAL: FAILED_PRE_FLIGHT; WRITES=NONE; READY_FOR_OWNER_RUN=NO
+C2_EXIT=2

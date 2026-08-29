@@ -1,0 +1,7 @@
+Type the exact confirmation phrase to continue:
+  APPLY EXACT_CTO_OPENCLAW_RECOVERY_V5
+> [21:14:54] AGENT_CORE_CTO_OPENCLAW_RECOVERY_V5 start ts=20260829-211454 log=/tmp/agent-core-cto-openclaw-recovery-v4-20260829-211454-59781.log
+[21:14:54] OK  interactive Owner confirmation accepted
+[21:14:54] RESULT: PREFLIGHT_FAIL (ZERO WRITES) — authority commit missing
+[21:14:54] FINAL: FAILED_PRE_FLIGHT; WRITES=NONE; READY_FOR_OWNER_RUN=NO
+C3_EXIT=2

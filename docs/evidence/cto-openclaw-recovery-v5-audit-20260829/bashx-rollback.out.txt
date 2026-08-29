@@ -1,0 +1,515 @@
++ read -r -d '' ATOMIC_JS
++ true
++ trap 'rc=$?; if [ "$rc" -ne 0 ] && [ "$WRITES_STARTED" = "1" ] && [ "$ROLLBACK_ACTIVE" = "0" ] && [ "$SUCCESS" = "0" ]; then rollback "unexpected exit rc=$rc"; fi' EXIT
++ '[' --synthetic-case = --synthetic-case ']'
++ '[' -n rollback-restart-fail ']'
++ run_synthetic_case rollback-restart-fail
++ local scenario=rollback-restart-fail synth_root promote_out expected corrupt victim forced
+++ /usr/bin/mktemp -d /tmp/cto-v4-runner-matrix.XXXXXXXX
++ synth_root=/tmp/cto-v4-runner-matrix.i2RRbP3T
++ ROOT=/tmp/cto-v4-runner-matrix.i2RRbP3T/root
++ HOME_DIR=/tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent
++ FALLBACK_WS=/tmp/cto-v4-runner-matrix.i2RRbP3T/root/workspaces/agt_cto-agent
++ CREDENTIAL_FILE=/tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ MAP_FILE=/tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ TARGET_WS=/tmp/cto-v4-runner-matrix.i2RRbP3T/target
++ MARKER_FILE=/tmp/cto-v4-runner-matrix.i2RRbP3T/target/.agent-core-cto-recovery-v4-canary.txt
++ RUNTIME_LOG=/tmp/cto-v4-runner-matrix.i2RRbP3T/runtime.log
++ RUNTIME_ERR=/tmp/cto-v4-runner-matrix.i2RRbP3T/runtime.err.log
++ BACKUP_DIR=/tmp/cto-v4-runner-matrix.i2RRbP3T/backup
++ BACKUP_FILE=/tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json
++ /bin/mkdir -p /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent /tmp/cto-v4-runner-matrix.i2RRbP3T/root/workspaces/agt_cto-agent /tmp/cto-v4-runner-matrix.i2RRbP3T/target /tmp/cto-v4-runner-matrix.i2RRbP3T/backup
++ /usr/bin/touch /tmp/cto-v4-runner-matrix.i2RRbP3T/runtime.log /tmp/cto-v4-runner-matrix.i2RRbP3T/runtime.err.log /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ /bin/chmod 755 /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent
++ /bin/chmod 600 /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ /usr/local/libexec/agent-core/node-runtime/bin/node -e '
+const fs=require("fs"); const o={};
+for(let i=0;i<87;i++) o[`agt_fixture_${String(i).padStart(2,"0")}`]=`/fixture/ws/${i}`;
+fs.writeFileSync(process.argv[1],JSON.stringify(o,null,2)+"\n",{mode:0o600});
+' /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ /bin/cp /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json
++ /bin/chmod 600 /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json
+++ stat -f %i /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent
++ PIN_HOME_INODE=58992877
+++ stat -f %u /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent
++ PIN_HOME_UID=502
+++ stat -f %g /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent
++ PIN_HOME_GID=0
+++ stat -f %i /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ PIN_CRED_INODE=58992884
+++ stat -f %u /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ PIN_CRED_UID=502
+++ stat -f %g /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ PIN_CRED_GID=0
+++ stat -f %m /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ PIN_CRED_MTIME=1788009456
+++ stat -f %u /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ PIN_MAP_UID=502
+++ stat -f %g /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ PIN_MAP_GID=0
+++ sha256_file /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
+++ /usr/bin/shasum -a 256 /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
+++ awk '{print $1}'
++ PRE_SHA256=fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055
+++ stat -f %d /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ PRE_MAP_DEV=16777232
+++ stat -f %i /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ PRE_MAP_INODE=58992885
++ RUNTIME_PID_OLD=999991
++ SYN_PID=999991
++ SYN_RESTARTS=0
++ SYN_HEALTH=1
++ WRITES_STARTED=1
++ HOME_MODE_CHANGED=1
++ MAP_MUTATION_POSSIBLE=1
++ change_home_mode 700
++ '[' rollback-restart-fail = rollback-home-mode-restore-fail ']'
++ /bin/chmod 700 /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent
++ unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
++ '[' rollback-restart-fail = mapping-promote-fail ']'
+++ run_atomic_as_authsvc promote /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.i2RRbP3T/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 16777232 58992885
++ promote_out='++ '\''['\'' rollback-restart-fail = rollback-primary-mapping-restore-fail '\'']'\''
+++ _atomic_direct promote /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.i2RRbP3T/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 16777232 58992885
+++ /usr/bin/env PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME=/tmp/cto-v4-runner-matrix.i2RRbP3T /usr/local/libexec/agent-core/node-runtime/bin/node -e '\''const fs = require('\''\'\'''\''fs'\''\'\'''\'');
+const path = require('\''\'\'''\''path'\''\'\'''\'');
+const crypto = require('\''\'\'''\''crypto'\''\'\'''\'');
+
+function die(message) {
+  throw new Error(`ATOMIC_ERROR:${message}`);
+}
+function digest(bytes) {
+  return crypto.createHash('\''\'\'''\''sha256'\''\'\'''\'').update(bytes).digest('\''\'\'''\''hex'\''\'\'''\'');
+}
+function objectJson(bytes, label) {
+  let value;
+  try { value = JSON.parse(bytes.toString('\''\'\'''\''utf8'\''\'\'''\'')); }
+  catch (error) { die(`${label}:json:${error.message}`); }
+  if (value === null || typeof value !== '\''\'\'''\''object'\''\'\'''\'' || Array.isArray(value)) die(`${label}:not-object`);
+  return value;
+}
+function writeAll(fd, bytes) {
+  let offset = 0;
+  while (offset < bytes.length) {
+    const n = fs.writeSync(fd, bytes, offset, bytes.length - offset, null);
+    if (!Number.isInteger(n) || n <= 0) die('\''\'\'''\''short-write'\''\'\'''\'');
+    offset += n;
+  }
+}
+function syncDirectory(dir) {
+  let dfd;
+  try {
+    dfd = fs.openSync(dir, fs.constants.O_RDONLY);
+    fs.fsyncSync(dfd);
+  } catch (error) {
+    die(`parent-sync:${error.code || error.message}`);
+  } finally {
+    if (dfd !== undefined) try { fs.closeSync(dfd); } catch {}
+  }
+}
+function secureInstall(destination, bytes, expectedLive) {
+  const dir = path.dirname(destination);
+  const base = path.basename(destination);
+  const forced = process.env.RECOVERY_ATOMIC_TEST_CANDIDATE;
+  const tmp = forced || path.join(dir, `.${base}.txn-${crypto.randomBytes(24).toString('\''\'\'''\''hex'\''\'\'''\'')}`);
+  if (path.dirname(tmp) !== dir) die('\''\'\'''\''temp-parent'\''\'\'''\'');
+  let fd;
+  let created = false;
+  let renamed = false;
+  try {
+    const flags = fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW;
+    fd = fs.openSync(tmp, flags, 0o600);
+    created = true;
+    const ls = fs.lstatSync(tmp);
+    const ss = fs.fstatSync(fd);
+    if (!ls.isFile() || ls.isSymbolicLink() || !ss.isFile() || ls.dev !== ss.dev || ls.ino !== ss.ino) die('\''\'\'''\''temp-not-regular'\''\'\'''\'');
+    if ((ss.mode & 0o777) !== 0o600) die(`temp-mode:${(ss.mode & 0o777).toString(8)}`);
+    writeAll(fd, bytes);
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    fd = undefined;
+
+    const staged = fs.readFileSync(tmp);
+    if (!staged.equals(bytes)) die('\''\'\'''\''temp-bytes'\''\'\'''\'');
+    objectJson(staged, '\''\'\'''\''temp'\''\'\'''\'');
+
+    if (expectedLive) {
+      let liveFd;
+      try {
+        liveFd = fs.openSync(destination, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+        const liveStat = fs.fstatSync(liveFd);
+        const liveBytes = fs.readFileSync(liveFd);
+        if (!liveStat.isFile()) die('\''\'\'''\''live-not-regular'\''\'\'''\'');
+        if (String(liveStat.dev) !== expectedLive.dev || String(liveStat.ino) !== expectedLive.ino) die('\''\'\'''\''live-identity-drift'\''\'\'''\'');
+        if (digest(liveBytes) !== expectedLive.sha) die('\''\'\'''\''live-sha-drift'\''\'\'''\'');
+      } finally {
+        if (liveFd !== undefined) try { fs.closeSync(liveFd); } catch {}
+      }
+    } else {
+      const liveStat = fs.lstatSync(destination);
+      if (!liveStat.isFile() || liveStat.isSymbolicLink()) die('\''\'\'''\''live-not-regular'\''\'\'''\'');
+    }
+
+    if (process.env.RECOVERY_ATOMIC_TEST_FAULT === '\''\'\'''\''rename'\''\'\'''\'') die('\''\'\'''\''injected-rename'\''\'\'''\'');
+    fs.renameSync(tmp, destination);
+    renamed = true;
+    if (process.env.RECOVERY_ATOMIC_TEST_FAULT === '\''\'\'''\''parent-sync'\''\'\'''\'') die('\''\'\'''\''injected-parent-sync'\''\'\'''\'');
+    syncDirectory(dir);
+    const finalBytes = fs.readFileSync(destination);
+    if (!finalBytes.equals(bytes)) die('\''\'\'''\''final-bytes'\''\'\'''\'');
+    const finalStat = fs.lstatSync(destination);
+    if (!finalStat.isFile() || finalStat.isSymbolicLink()) die('\''\'\'''\''final-not-regular'\''\'\'''\'');
+    if ((finalStat.mode & 0o777) !== 0o600) die(`final-mode:${(finalStat.mode & 0o777).toString(8)}`);
+    return { sha: digest(finalBytes), uid: finalStat.uid, gid: finalStat.gid, mode: (finalStat.mode & 0o777).toString(8) };
+  } catch (error) {
+    if (String(error && error.message || '\''\'\'''\'''\''\'\'''\'').startsWith('\''\'\'''\''ATOMIC_ERROR:'\''\'\'''\'')) throw error;
+    die(`${renamed ? '\''\'\'''\''after-rename'\''\'\'''\'' : '\''\'\'''\''before-rename'\''\'\'''\''}:${error.code || error.message}`);
+  } finally {
+    if (fd !== undefined) try { fs.closeSync(fd); } catch {}
+    if (created && !renamed) try { fs.unlinkSync(tmp); } catch {}
+  }
+}
+
+const [action, mapFile, backupFile, agentId, target, countText, expectedSha, dev, ino] = process.argv.slice(1);
+const count = Number(countText);
+if (!Number.isSafeInteger(count) || count < 0) die('\''\'\'''\''bad-count'\''\'\'''\'');
+if (action === '\''\'\'''\''promote'\''\'\'''\'') {
+  const beforeBytes = fs.readFileSync(mapFile);
+  if (digest(beforeBytes) !== expectedSha) die('\''\'\'''\''pre-sha'\''\'\'''\'');
+  const before = objectJson(beforeBytes, '\''\'\'''\''pre'\''\'\'''\'');
+  if (Object.keys(before).length !== count) die('\''\'\'''\''pre-count'\''\'\'''\'');
+  if (Object.prototype.hasOwnProperty.call(before, agentId)) die('\''\'\'''\''pre-key-present'\''\'\'''\'');
+  const after = Object.assign({}, before, { [agentId]: target });
+  const body = Buffer.from(JSON.stringify(after, null, 2) + '\''\'\'''\''\n'\''\'\'''\'', '\''\'\'''\''utf8'\''\'\'''\'');
+  const report = secureInstall(mapFile, body, { sha: expectedSha, dev, ino });
+  const checkBytes = fs.readFileSync(mapFile);
+  const check = objectJson(checkBytes, '\''\'\'''\''post'\''\'\'''\'');
+  if (digest(checkBytes) !== report.sha) die('\''\'\'''\''post-sha'\''\'\'''\'');
+  if (Object.keys(check).length !== count + 1 || check[agentId] !== target) die('\''\'\'''\''post-exact'\''\'\'''\'');
+  for (const key of Object.keys(before)) if (check[key] !== before[key]) die(`post-existing:${key}`);
+  process.stdout.write(JSON.stringify({ status: '\''\'\'''\''PROMOTE_OK'\''\'\'''\'', ...report }) + '\''\'\'''\''\n'\''\'\'''\'');
+} else if (action === '\''\'\'''\''restore'\''\'\'''\'') {
+  const original = fs.readFileSync(backupFile);
+  if (digest(original) !== expectedSha) die('\''\'\'''\''backup-sha'\''\'\'''\'');
+  const before = objectJson(original, '\''\'\'''\''backup'\''\'\'''\'');
+  if (Object.keys(before).length !== count || Object.prototype.hasOwnProperty.call(before, agentId)) die('\''\'\'''\''backup-shape'\''\'\'''\'');
+  const report = secureInstall(mapFile, original, null);
+  const check = objectJson(fs.readFileSync(mapFile), '\''\'\'''\''restored'\''\'\'''\'');
+  if (Object.keys(check).length !== count || Object.prototype.hasOwnProperty.call(check, agentId)) die('\''\'\'''\''restore-shape'\''\'\'''\'');
+  if (report.sha !== expectedSha) die('\''\'\'''\''restore-sha'\''\'\'''\'');
+  process.stdout.write(JSON.stringify({ status: '\''\'\'''\''RESTORE_OK'\''\'\'''\'', ...report }) + '\''\'\'''\''\n'\''\'\'''\'');
+} else {
+  die('\''\'\'''\''bad-action'\''\'\'''\'');
+}'\'' promote /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.i2RRbP3T/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 16777232 58992885
+{"status":"PROMOTE_OK","sha":"0aefcc13f82c494c706736de692ad6e132bddc05facfe21dd5b4256041d82169","uid":502,"gid":0,"mode":"600"}'
++ unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
+++ sha256_file /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
+++ /usr/bin/shasum -a 256 /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
+++ awk '{print $1}'
++ POST_SHA256=0aefcc13f82c494c706736de692ad6e132bddc05facfe21dd5b4256041d82169
++ restart_service
++ SYN_RESTARTS=1
++ '[' rollback-restart-fail = restart-fail ']'
++ '[' rollback-restart-fail = rollback-restart-fail ']'
++ '[' 0 = 1 ']'
++ SYN_PID=999992
++ '[' rollback-restart-fail = health-fail ']'
++ '[' rollback-restart-fail = rollback-health-fail ']'
++ SYN_HEALTH=1
++ return 0
++ wait_runtime_healthy 1 999991
++ '[' 1 = 1 ']'
++ RUNTIME_PID_NEW=999992
++ return 0
++ case "$scenario" in
++ fail 'synthetic rollback-restart-fail'
++ '[' 1 = 1 ']'
++ rollback 'synthetic rollback-restart-fail'
++ local 'reason=synthetic rollback-restart-fail' old_pid rollback_pid appended current_pid out stale
++ local bad=
++ local rb_map_bytes=0 rb_map_sha=0 rb_key_absent=0 rb_map_metadata=0 rb_map_count=0
++ local rb_home_mode=0 rb_credential=0 rb_restart=0 rb_health=0 rb_pid_stable=0
++ local rb_boot_absent=0 rb_fallback=0 rb_marker_absent=0 rb_stale_absent=1
++ '[' 0 = 1 ']'
++ ROLLBACK_ACTIVE=1
++ trap - EXIT
++ log '── ROLLBACK (reason: synthetic rollback-restart-fail)'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:37 '── ROLLBACK (reason: synthetic rollback-restart-fail)'
+[21:17:37] ── ROLLBACK (reason: synthetic rollback-restart-fail)
++ /bin/rm -f /tmp/cto-v4-runner-matrix.i2RRbP3T/target/.agent-core-cto-recovery-v4-canary.txt
++ '[' '!' -e /tmp/cto-v4-runner-matrix.i2RRbP3T/target/.agent-core-cto-recovery-v4-canary.txt ']'
++ rb_marker_absent=1
++ '[' 1 = 1 ']'
++ '[' -n /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json ']'
++ '[' -f /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json ']'
+++ run_atomic_as_authsvc restore /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.i2RRbP3T/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 - -
++ out='++ '\''['\'' rollback-restart-fail = rollback-primary-mapping-restore-fail '\'']'\''
+++ _atomic_direct restore /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.i2RRbP3T/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 - -
+++ /usr/bin/env PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME=/tmp/cto-v4-runner-matrix.i2RRbP3T /usr/local/libexec/agent-core/node-runtime/bin/node -e '\''const fs = require('\''\'\'''\''fs'\''\'\'''\'');
+const path = require('\''\'\'''\''path'\''\'\'''\'');
+const crypto = require('\''\'\'''\''crypto'\''\'\'''\'');
+
+function die(message) {
+  throw new Error(`ATOMIC_ERROR:${message}`);
+}
+function digest(bytes) {
+  return crypto.createHash('\''\'\'''\''sha256'\''\'\'''\'').update(bytes).digest('\''\'\'''\''hex'\''\'\'''\'');
+}
+function objectJson(bytes, label) {
+  let value;
+  try { value = JSON.parse(bytes.toString('\''\'\'''\''utf8'\''\'\'''\'')); }
+  catch (error) { die(`${label}:json:${error.message}`); }
+  if (value === null || typeof value !== '\''\'\'''\''object'\''\'\'''\'' || Array.isArray(value)) die(`${label}:not-object`);
+  return value;
+}
+function writeAll(fd, bytes) {
+  let offset = 0;
+  while (offset < bytes.length) {
+    const n = fs.writeSync(fd, bytes, offset, bytes.length - offset, null);
+    if (!Number.isInteger(n) || n <= 0) die('\''\'\'''\''short-write'\''\'\'''\'');
+    offset += n;
+  }
+}
+function syncDirectory(dir) {
+  let dfd;
+  try {
+    dfd = fs.openSync(dir, fs.constants.O_RDONLY);
+    fs.fsyncSync(dfd);
+  } catch (error) {
+    die(`parent-sync:${error.code || error.message}`);
+  } finally {
+    if (dfd !== undefined) try { fs.closeSync(dfd); } catch {}
+  }
+}
+function secureInstall(destination, bytes, expectedLive) {
+  const dir = path.dirname(destination);
+  const base = path.basename(destination);
+  const forced = process.env.RECOVERY_ATOMIC_TEST_CANDIDATE;
+  const tmp = forced || path.join(dir, `.${base}.txn-${crypto.randomBytes(24).toString('\''\'\'''\''hex'\''\'\'''\'')}`);
+  if (path.dirname(tmp) !== dir) die('\''\'\'''\''temp-parent'\''\'\'''\'');
+  let fd;
+  let created = false;
+  let renamed = false;
+  try {
+    const flags = fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW;
+    fd = fs.openSync(tmp, flags, 0o600);
+    created = true;
+    const ls = fs.lstatSync(tmp);
+    const ss = fs.fstatSync(fd);
+    if (!ls.isFile() || ls.isSymbolicLink() || !ss.isFile() || ls.dev !== ss.dev || ls.ino !== ss.ino) die('\''\'\'''\''temp-not-regular'\''\'\'''\'');
+    if ((ss.mode & 0o777) !== 0o600) die(`temp-mode:${(ss.mode & 0o777).toString(8)}`);
+    writeAll(fd, bytes);
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    fd = undefined;
+
+    const staged = fs.readFileSync(tmp);
+    if (!staged.equals(bytes)) die('\''\'\'''\''temp-bytes'\''\'\'''\'');
+    objectJson(staged, '\''\'\'''\''temp'\''\'\'''\'');
+
+    if (expectedLive) {
+      let liveFd;
+      try {
+        liveFd = fs.openSync(destination, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+        const liveStat = fs.fstatSync(liveFd);
+        const liveBytes = fs.readFileSync(liveFd);
+        if (!liveStat.isFile()) die('\''\'\'''\''live-not-regular'\''\'\'''\'');
+        if (String(liveStat.dev) !== expectedLive.dev || String(liveStat.ino) !== expectedLive.ino) die('\''\'\'''\''live-identity-drift'\''\'\'''\'');
+        if (digest(liveBytes) !== expectedLive.sha) die('\''\'\'''\''live-sha-drift'\''\'\'''\'');
+      } finally {
+        if (liveFd !== undefined) try { fs.closeSync(liveFd); } catch {}
+      }
+    } else {
+      const liveStat = fs.lstatSync(destination);
+      if (!liveStat.isFile() || liveStat.isSymbolicLink()) die('\''\'\'''\''live-not-regular'\''\'\'''\'');
+    }
+
+    if (process.env.RECOVERY_ATOMIC_TEST_FAULT === '\''\'\'''\''rename'\''\'\'''\'') die('\''\'\'''\''injected-rename'\''\'\'''\'');
+    fs.renameSync(tmp, destination);
+    renamed = true;
+    if (process.env.RECOVERY_ATOMIC_TEST_FAULT === '\''\'\'''\''parent-sync'\''\'\'''\'') die('\''\'\'''\''injected-parent-sync'\''\'\'''\'');
+    syncDirectory(dir);
+    const finalBytes = fs.readFileSync(destination);
+    if (!finalBytes.equals(bytes)) die('\''\'\'''\''final-bytes'\''\'\'''\'');
+    const finalStat = fs.lstatSync(destination);
+    if (!finalStat.isFile() || finalStat.isSymbolicLink()) die('\''\'\'''\''final-not-regular'\''\'\'''\'');
+    if ((finalStat.mode & 0o777) !== 0o600) die(`final-mode:${(finalStat.mode & 0o777).toString(8)}`);
+    return { sha: digest(finalBytes), uid: finalStat.uid, gid: finalStat.gid, mode: (finalStat.mode & 0o777).toString(8) };
+  } catch (error) {
+    if (String(error && error.message || '\''\'\'''\'''\''\'\'''\'').startsWith('\''\'\'''\''ATOMIC_ERROR:'\''\'\'''\'')) throw error;
+    die(`${renamed ? '\''\'\'''\''after-rename'\''\'\'''\'' : '\''\'\'''\''before-rename'\''\'\'''\''}:${error.code || error.message}`);
+  } finally {
+    if (fd !== undefined) try { fs.closeSync(fd); } catch {}
+    if (created && !renamed) try { fs.unlinkSync(tmp); } catch {}
+  }
+}
+
+const [action, mapFile, backupFile, agentId, target, countText, expectedSha, dev, ino] = process.argv.slice(1);
+const count = Number(countText);
+if (!Number.isSafeInteger(count) || count < 0) die('\''\'\'''\''bad-count'\''\'\'''\'');
+if (action === '\''\'\'''\''promote'\''\'\'''\'') {
+  const beforeBytes = fs.readFileSync(mapFile);
+  if (digest(beforeBytes) !== expectedSha) die('\''\'\'''\''pre-sha'\''\'\'''\'');
+  const before = objectJson(beforeBytes, '\''\'\'''\''pre'\''\'\'''\'');
+  if (Object.keys(before).length !== count) die('\''\'\'''\''pre-count'\''\'\'''\'');
+  if (Object.prototype.hasOwnProperty.call(before, agentId)) die('\''\'\'''\''pre-key-present'\''\'\'''\'');
+  const after = Object.assign({}, before, { [agentId]: target });
+  const body = Buffer.from(JSON.stringify(after, null, 2) + '\''\'\'''\''\n'\''\'\'''\'', '\''\'\'''\''utf8'\''\'\'''\'');
+  const report = secureInstall(mapFile, body, { sha: expectedSha, dev, ino });
+  const checkBytes = fs.readFileSync(mapFile);
+  const check = objectJson(checkBytes, '\''\'\'''\''post'\''\'\'''\'');
+  if (digest(checkBytes) !== report.sha) die('\''\'\'''\''post-sha'\''\'\'''\'');
+  if (Object.keys(check).length !== count + 1 || check[agentId] !== target) die('\''\'\'''\''post-exact'\''\'\'''\'');
+  for (const key of Object.keys(before)) if (check[key] !== before[key]) die(`post-existing:${key}`);
+  process.stdout.write(JSON.stringify({ status: '\''\'\'''\''PROMOTE_OK'\''\'\'''\'', ...report }) + '\''\'\'''\''\n'\''\'\'''\'');
+} else if (action === '\''\'\'''\''restore'\''\'\'''\'') {
+  const original = fs.readFileSync(backupFile);
+  if (digest(original) !== expectedSha) die('\''\'\'''\''backup-sha'\''\'\'''\'');
+  const before = objectJson(original, '\''\'\'''\''backup'\''\'\'''\'');
+  if (Object.keys(before).length !== count || Object.prototype.hasOwnProperty.call(before, agentId)) die('\''\'\'''\''backup-shape'\''\'\'''\'');
+  const report = secureInstall(mapFile, original, null);
+  const check = objectJson(fs.readFileSync(mapFile), '\''\'\'''\''restored'\''\'\'''\'');
+  if (Object.keys(check).length !== count || Object.prototype.hasOwnProperty.call(check, agentId)) die('\''\'\'''\''restore-shape'\''\'\'''\'');
+  if (report.sha !== expectedSha) die('\''\'\'''\''restore-sha'\''\'\'''\'');
+  process.stdout.write(JSON.stringify({ status: '\''\'\'''\''RESTORE_OK'\''\'\'''\'', ...report }) + '\''\'\'''\''\n'\''\'\'''\'');
+} else {
+  die('\''\'\'''\''bad-action'\''\'\'''\'');
+}'\'' restore /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.i2RRbP3T/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 - -
+{"status":"RESTORE_OK","sha":"fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055","uid":502,"gid":0,"mode":"600"}'
++ :
++ '[' -n /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json ']'
++ '[' -f /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json ']'
++ /usr/bin/cmp -s /tmp/cto-v4-runner-matrix.i2RRbP3T/backup/primary-workspaces.json /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ rb_map_bytes=1
+++ sha256_file /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ '[' fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 = fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 ']'
++ rb_map_sha=1
++ map_key_absent_check
++ /usr/local/libexec/agent-core/node-runtime/bin/node -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(Object.prototype.hasOwnProperty.call(o,process.argv[2])?1:0)' /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json agt_cto-agent
++ rb_key_absent=1
++ map_count_check 87
++ /usr/local/libexec/agent-core/node-runtime/bin/node -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(Object.keys(o).length===Number(process.argv[2])?0:1)' /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json 87
++ rb_map_count=1
+++ map_uid
+++ stat -f %u /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ '[' 502 = 502 ']'
+++ map_gid
+++ stat -f %g /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ '[' 0 = 0 ']'
+++ map_mode
+++ stat -f %Lp /tmp/cto-v4-runner-matrix.i2RRbP3T/root/primary-workspaces.json
++ '[' 600 = 600 ']'
++ rb_map_metadata=1
++ '[' 1 = 1 ']'
++ change_home_mode 755
+++ stat -f %Lp /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent
++ '[' 755 = 755 ']'
++ rb_home_mode=1
++ credential_pin_check
++ local t i u g m mt
+++ stat -f %HT /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ t='Regular File'
+++ stat -f %i /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ i=58992884
+++ stat -f %u /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ u=502
+++ stat -f %g /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ g=0
+++ stat -f %Lp /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ m=600
+++ stat -f %m /tmp/cto-v4-runner-matrix.i2RRbP3T/root/homes/agt_cto-agent/.credentials.yaml
++ mt=1788009456
++ '[' 'Regular File' = 'Regular File' ']'
++ '[' 58992884 = 58992884 ']'
++ '[' 502 = 502 ']'
++ '[' 0 = 0 ']'
++ '[' 600 = 600 ']'
++ '[' 1788009456 = 1788009456 ']'
++ rb_credential=1
+++ service_pid
+++ printf '%s\n' 999992
++ old_pid=999992
++ capture_log_sizes
++ :
++ restart_service
++ bad='\n- rollback service restart command failed'
++ '[' 0 = 1 ']'
++ for stale in '"$CHILD_PID"' '"$RUNTIME_PID_OLD"' '"$old_pid"'
++ '[' -n '' ']'
++ for stale in '"$CHILD_PID"' '"$RUNTIME_PID_OLD"' '"$old_pid"'
++ '[' -n 999991 ']'
++ '[' 999991 '!=' '' ']'
++ /bin/kill -0 999991
++ for stale in '"$CHILD_PID"' '"$RUNTIME_PID_OLD"' '"$old_pid"'
++ '[' -n 999992 ']'
++ '[' 999992 '!=' '' ']'
++ /bin/kill -0 999992
++ log 'ROLLBACK_CHECK MAP_EXACT_PRE_BYTES=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK MAP_EXACT_PRE_BYTES=1'
+[21:17:38] ROLLBACK_CHECK MAP_EXACT_PRE_BYTES=1
++ log 'ROLLBACK_CHECK MAP_SHA256_PRE=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK MAP_SHA256_PRE=1'
+[21:17:38] ROLLBACK_CHECK MAP_SHA256_PRE=1
++ log 'ROLLBACK_CHECK CTO_KEY_ABSENT=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK CTO_KEY_ABSENT=1'
+[21:17:38] ROLLBACK_CHECK CTO_KEY_ABSENT=1
++ log 'ROLLBACK_CHECK MAP_OWNER_GROUP_MODE=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK MAP_OWNER_GROUP_MODE=1'
+[21:17:38] ROLLBACK_CHECK MAP_OWNER_GROUP_MODE=1
++ log 'ROLLBACK_CHECK MAP_ENTRY_COUNT=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK MAP_ENTRY_COUNT=1'
+[21:17:38] ROLLBACK_CHECK MAP_ENTRY_COUNT=1
++ log 'ROLLBACK_CHECK HOME_MODE_755=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK HOME_MODE_755=1'
+[21:17:38] ROLLBACK_CHECK HOME_MODE_755=1
++ log 'ROLLBACK_CHECK CREDENTIAL_PIN=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK CREDENTIAL_PIN=1'
+[21:17:38] ROLLBACK_CHECK CREDENTIAL_PIN=1
++ log 'ROLLBACK_CHECK RESTART_SUCCEEDED=0'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK RESTART_SUCCEEDED=0'
+[21:17:38] ROLLBACK_CHECK RESTART_SUCCEEDED=0
++ log 'ROLLBACK_CHECK HEALTH_URL_OK=0'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK HEALTH_URL_OK=0'
+[21:17:38] ROLLBACK_CHECK HEALTH_URL_OK=0
++ log 'ROLLBACK_CHECK RUNTIME_PID_UPDATED_STABLE=0'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK RUNTIME_PID_UPDATED_STABLE=0'
+[21:17:38] ROLLBACK_CHECK RUNTIME_PID_UPDATED_STABLE=0
++ log 'ROLLBACK_CHECK BOOT_MAPPING_ABSENT=0'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK BOOT_MAPPING_ABSENT=0'
+[21:17:38] ROLLBACK_CHECK BOOT_MAPPING_ABSENT=0
++ log 'ROLLBACK_CHECK FALLBACK_PROOF=0'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK FALLBACK_PROOF=0'
+[21:17:38] ROLLBACK_CHECK FALLBACK_PROOF=0
++ log 'ROLLBACK_CHECK MARKER_ABSENT=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK MARKER_ABSENT=1'
+[21:17:38] ROLLBACK_CHECK MARKER_ABSENT=1
++ log 'ROLLBACK_CHECK STALE_PROCESSES_ABSENT=1'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'ROLLBACK_CHECK STALE_PROCESSES_ABSENT=1'
+[21:17:38] ROLLBACK_CHECK STALE_PROCESSES_ABSENT=1
++ '[' -z '\n- rollback service restart command failed' ']'
++ log 'RESULT: ROLLBACK_INCOMPLETE — synthetic rollback-restart-fail'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'RESULT: ROLLBACK_INCOMPLETE — synthetic rollback-restart-fail'
+[21:17:38] RESULT: ROLLBACK_INCOMPLETE — synthetic rollback-restart-fail
++ printf '%b\n' 'UNRESTORED_STATE:\n- rollback service restart command failed'
+UNRESTORED_STATE:
+- rollback service restart command failed
++ log 'FINAL: ROLLBACK_INCOMPLETE; EXIT=4; BACKUP=/tmp/cto-v4-runner-matrix.i2RRbP3T/backup'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 21:17:38 'FINAL: ROLLBACK_INCOMPLETE; EXIT=4; BACKUP=/tmp/cto-v4-runner-matrix.i2RRbP3T/backup'
+[21:17:38] FINAL: ROLLBACK_INCOMPLETE; EXIT=4; BACKUP=/tmp/cto-v4-runner-matrix.i2RRbP3T/backup
++ exit 4

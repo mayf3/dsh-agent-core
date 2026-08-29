@@ -1,0 +1,697 @@
+#!/bin/bash
+# One-shot agt_cto-agent recovery runner. Owner command:
+#   sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v5.sh
+
+set -u -o pipefail
+
+AGENT_ID="agt_cto-agent"
+ROOT="/Users/authsvc/.agent-core"
+HOME_DIR="$ROOT/homes/$AGENT_ID"
+FALLBACK_WS="$ROOT/workspaces/$AGENT_ID"
+CREDENTIAL_FILE="$HOME_DIR/.credentials.yaml"
+MAP_FILE="$ROOT/primary-workspaces.json"
+TARGET_WS="/Users/yanfenma/.openclaw/groups/workspace-oc_648db8f3df0ef0249b761ebb0b7a56ab"
+MARKER_FILE="$TARGET_WS/.agent-core-cto-recovery-v4-canary.txt"
+SERVICE="system/ai.agent-core.runtime"
+BASE_URL="http://127.0.0.1:8790"
+HEALTH_URL="${BASE_URL}/health"
+DELIVER_URL="${BASE_URL}/v1/deliver"
+RUNTIME_LOG="$ROOT/logs/runtime.log"
+RUNTIME_ERR="$ROOT/logs/runtime.err.log"
+EVIDENCE_JSONL="$ROOT/control/runtime-evidence.jsonl"
+NODE_BIN="/usr/local/libexec/agent-core/node-runtime/bin/node"
+VALIDATOR_MOD="/usr/local/libexec/agent-core/app/node_modules/@agent-core/workspace-bootstrap/src/index.js"
+REPO="/tmp/cto-v5-audit-evidence/nonexistent-repo"
+AUTH_COMMIT="73ec666fb860d7257b2f48c3dc76bc967bb578cd"
+AUTH_SPEC_PATH="docs/specs/AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1.md"
+CONFIRM_PHRASE="APPLY EXACT_CTO_OPENCLAW_RECOVERY_V5"
+
+PIN_HOME_INODE=45083538
+PIN_HOME_UID=502
+PIN_HOME_GID=20
+PIN_HOME_MODE_PRE=755
+PIN_HOME_MODE_POST=700
+PIN_CRED_INODE=53849610
+PIN_CRED_UID=502
+PIN_CRED_GID=20
+PIN_CRED_MODE=600
+PIN_CRED_MTIME=1787837552
+PIN_MAP_UID=505
+PIN_MAP_GID=601
+PIN_MAP_MODE=600
+PIN_MAP_ENTRIES=87
+PIN_MAP_ENTRIES_AFTER=88
+MARKER_TIMEOUT_S=900
+
+TS="$(date +%Y%m%d-%H%M%S)"
+REQUEST_ID="cto-openclaw-recovery-v4-${TS}-$$"
+LOG_FILE="/tmp/agent-core-cto-openclaw-recovery-v4-${TS}-$$.log"
+BACKUP_DIR=""
+BACKUP_FILE=""
+PRE_SHA256=""
+POST_SHA256=""
+PRE_MAP_DEV=""
+PRE_MAP_INODE=""
+RUNTIME_PID_OLD=""
+RUNTIME_PID_NEW=""
+CHILD_PID=""
+LOG_SIZE_PRE_RESTART=0
+ERR_SIZE_PRE_RESTART=0
+WRITES_STARTED=0
+MAP_MUTATION_POSSIBLE=0
+HOME_MODE_CHANGED=0
+ROLLBACK_ACTIVE=0
+SUCCESS=0
+
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+log() { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*"; }
+ok() { printf '[%s] OK  %s\n' "$(date +%H:%M:%S)" "$*"; }
+sha256_file() { /usr/bin/shasum -a 256 "$1" | awk '{print $1}'; }
+map_uid() { stat -f '%u' "$MAP_FILE" 2>/dev/null; }
+map_gid() { stat -f '%g' "$MAP_FILE" 2>/dev/null; }
+map_mode() { stat -f '%Lp' "$MAP_FILE" 2>/dev/null; }
+service_pid() { /bin/launchctl print "$SERVICE" 2>/dev/null | awk '/^[[:space:]]*pid =/{print $3; exit}'; }
+service_state() { /bin/launchctl print "$SERVICE" 2>/dev/null | awk '/^[[:space:]]*state =/{print $3; exit}'; }
+restart_service() { /bin/launchctl kickstart -k "$SERVICE"; }
+change_home_mode() { /bin/chmod "$1" "$HOME_DIR"; }
+stability_pause() { sleep 2; }
+write_expected_marker() {
+  printf 'uid=502\nDSH_HOME=%s\nDSH_PRIMARY_WORKSPACE=%s\ncwd=%s\ncredential read-open=OPEN_OK\n' "$HOME_DIR" "$TARGET_WS" "$TARGET_WS" > "$1"
+}
+marker_bytes_exact() { /usr/bin/cmp -s "$1" "$2"; }
+
+zero_write_exit() {
+  trap - EXIT
+  log "RESULT: PREFLIGHT_FAIL (ZERO WRITES) — $1"
+  log "FINAL: FAILED_PRE_FLIGHT; WRITES=NONE; READY_FOR_OWNER_RUN=NO"
+  exit 2
+}
+
+credential_pin_check() {
+  local t i u g m mt
+  t="$(stat -f '%HT' "$CREDENTIAL_FILE" 2>/dev/null)" || return 1
+  i="$(stat -f '%i' "$CREDENTIAL_FILE" 2>/dev/null)" || return 1
+  u="$(stat -f '%u' "$CREDENTIAL_FILE" 2>/dev/null)" || return 1
+  g="$(stat -f '%g' "$CREDENTIAL_FILE" 2>/dev/null)" || return 1
+  m="$(stat -f '%Lp' "$CREDENTIAL_FILE" 2>/dev/null)" || return 1
+  mt="$(stat -f '%m' "$CREDENTIAL_FILE" 2>/dev/null)" || return 1
+  [ "$t" = "Regular File" ] && [ "$i" = "$PIN_CRED_INODE" ] \
+    && [ "$u" = "$PIN_CRED_UID" ] && [ "$g" = "$PIN_CRED_GID" ] \
+    && [ "$m" = "$PIN_CRED_MODE" ] && [ "$mt" = "$PIN_CRED_MTIME" ]
+}
+
+health_ok() {
+  local body
+  body="$(/usr/bin/curl -fsS --max-time 5 "$HEALTH_URL" 2>/dev/null)" || return 1
+  printf '%s' "$body" | "$NODE_BIN" -e '
+let s="";
+process.stdin.on("data",d=>s+=d).on("end",()=>{
+  try { const o=JSON.parse(s); process.exit(o.ok===true && o.deliverReady===true ? 0 : 1) }
+  catch { process.exit(1) }
+});'
+}
+
+capture_log_sizes() {
+  LOG_SIZE_PRE_RESTART="$(stat -f '%z' "$RUNTIME_LOG" 2>/dev/null || printf '0')"
+  ERR_SIZE_PRE_RESTART="$(stat -f '%z' "$RUNTIME_ERR" 2>/dev/null || printf '0')"
+}
+
+appended_log_text() {
+  {
+    tail -c +$((LOG_SIZE_PRE_RESTART + 1)) "$RUNTIME_LOG" 2>/dev/null
+    tail -c +$((ERR_SIZE_PRE_RESTART + 1)) "$RUNTIME_ERR" 2>/dev/null
+  }
+}
+
+wait_runtime_healthy() {
+  local max_s="$1" old_pid="$2" deadline pid
+  deadline=$(( $(date +%s) + max_s ))
+  while [ "$(date +%s)" -lt "$deadline" ]; do
+    if health_ok; then
+      pid="$(service_pid)"
+      if [ -n "$pid" ] && [ "$pid" != "$old_pid" ]; then
+        RUNTIME_PID_NEW="$pid"
+        return 0
+      fi
+    fi
+    sleep 2
+  done
+  return 1
+}
+
+read -r -d '' ATOMIC_JS <<'NODEJS' || true
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+function die(message) {
+  throw new Error(`ATOMIC_ERROR:${message}`);
+}
+function digest(bytes) {
+  return crypto.createHash('sha256').update(bytes).digest('hex');
+}
+function objectJson(bytes, label) {
+  let value;
+  try { value = JSON.parse(bytes.toString('utf8')); }
+  catch (error) { die(`${label}:json:${error.message}`); }
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) die(`${label}:not-object`);
+  return value;
+}
+function writeAll(fd, bytes) {
+  let offset = 0;
+  while (offset < bytes.length) {
+    const n = fs.writeSync(fd, bytes, offset, bytes.length - offset, null);
+    if (!Number.isInteger(n) || n <= 0) die('short-write');
+    offset += n;
+  }
+}
+function syncDirectory(dir) {
+  let dfd;
+  try {
+    dfd = fs.openSync(dir, fs.constants.O_RDONLY);
+    fs.fsyncSync(dfd);
+  } catch (error) {
+    die(`parent-sync:${error.code || error.message}`);
+  } finally {
+    if (dfd !== undefined) try { fs.closeSync(dfd); } catch {}
+  }
+}
+function secureInstall(destination, bytes, expectedLive) {
+  const dir = path.dirname(destination);
+  const base = path.basename(destination);
+  const forced = process.env.RECOVERY_ATOMIC_TEST_CANDIDATE;
+  const tmp = forced || path.join(dir, `.${base}.txn-${crypto.randomBytes(24).toString('hex')}`);
+  if (path.dirname(tmp) !== dir) die('temp-parent');
+  let fd;
+  let created = false;
+  let renamed = false;
+  try {
+    const flags = fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW;
+    fd = fs.openSync(tmp, flags, 0o600);
+    created = true;
+    const ls = fs.lstatSync(tmp);
+    const ss = fs.fstatSync(fd);
+    if (!ls.isFile() || ls.isSymbolicLink() || !ss.isFile() || ls.dev !== ss.dev || ls.ino !== ss.ino) die('temp-not-regular');
+    if ((ss.mode & 0o777) !== 0o600) die(`temp-mode:${(ss.mode & 0o777).toString(8)}`);
+    writeAll(fd, bytes);
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    fd = undefined;
+
+    const staged = fs.readFileSync(tmp);
+    if (!staged.equals(bytes)) die('temp-bytes');
+    objectJson(staged, 'temp');
+
+    if (expectedLive) {
+      let liveFd;
+      try {
+        liveFd = fs.openSync(destination, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+        const liveStat = fs.fstatSync(liveFd);
+        const liveBytes = fs.readFileSync(liveFd);
+        if (!liveStat.isFile()) die('live-not-regular');
+        if (String(liveStat.dev) !== expectedLive.dev || String(liveStat.ino) !== expectedLive.ino) die('live-identity-drift');
+        if (digest(liveBytes) !== expectedLive.sha) die('live-sha-drift');
+      } finally {
+        if (liveFd !== undefined) try { fs.closeSync(liveFd); } catch {}
+      }
+    } else {
+      const liveStat = fs.lstatSync(destination);
+      if (!liveStat.isFile() || liveStat.isSymbolicLink()) die('live-not-regular');
+    }
+
+    if (process.env.RECOVERY_ATOMIC_TEST_FAULT === 'rename') die('injected-rename');
+    fs.renameSync(tmp, destination);
+    renamed = true;
+    if (process.env.RECOVERY_ATOMIC_TEST_FAULT === 'parent-sync') die('injected-parent-sync');
+    syncDirectory(dir);
+    const finalBytes = fs.readFileSync(destination);
+    if (!finalBytes.equals(bytes)) die('final-bytes');
+    const finalStat = fs.lstatSync(destination);
+    if (!finalStat.isFile() || finalStat.isSymbolicLink()) die('final-not-regular');
+    if ((finalStat.mode & 0o777) !== 0o600) die(`final-mode:${(finalStat.mode & 0o777).toString(8)}`);
+    return { sha: digest(finalBytes), uid: finalStat.uid, gid: finalStat.gid, mode: (finalStat.mode & 0o777).toString(8) };
+  } catch (error) {
+    if (String(error && error.message || '').startsWith('ATOMIC_ERROR:')) throw error;
+    die(`${renamed ? 'after-rename' : 'before-rename'}:${error.code || error.message}`);
+  } finally {
+    if (fd !== undefined) try { fs.closeSync(fd); } catch {}
+    if (created && !renamed) try { fs.unlinkSync(tmp); } catch {}
+  }
+}
+
+const [action, mapFile, backupFile, agentId, target, countText, expectedSha, dev, ino] = process.argv.slice(1);
+const count = Number(countText);
+if (!Number.isSafeInteger(count) || count < 0) die('bad-count');
+if (action === 'promote') {
+  const beforeBytes = fs.readFileSync(mapFile);
+  if (digest(beforeBytes) !== expectedSha) die('pre-sha');
+  const before = objectJson(beforeBytes, 'pre');
+  if (Object.keys(before).length !== count) die('pre-count');
+  if (Object.prototype.hasOwnProperty.call(before, agentId)) die('pre-key-present');
+  const after = Object.assign({}, before, { [agentId]: target });
+  const body = Buffer.from(JSON.stringify(after, null, 2) + '\n', 'utf8');
+  const report = secureInstall(mapFile, body, { sha: expectedSha, dev, ino });
+  const checkBytes = fs.readFileSync(mapFile);
+  const check = objectJson(checkBytes, 'post');
+  if (digest(checkBytes) !== report.sha) die('post-sha');
+  if (Object.keys(check).length !== count + 1 || check[agentId] !== target) die('post-exact');
+  for (const key of Object.keys(before)) if (check[key] !== before[key]) die(`post-existing:${key}`);
+  process.stdout.write(JSON.stringify({ status: 'PROMOTE_OK', ...report }) + '\n');
+} else if (action === 'restore') {
+  const original = fs.readFileSync(backupFile);
+  if (digest(original) !== expectedSha) die('backup-sha');
+  const before = objectJson(original, 'backup');
+  if (Object.keys(before).length !== count || Object.prototype.hasOwnProperty.call(before, agentId)) die('backup-shape');
+  const report = secureInstall(mapFile, original, null);
+  const check = objectJson(fs.readFileSync(mapFile), 'restored');
+  if (Object.keys(check).length !== count || Object.prototype.hasOwnProperty.call(check, agentId)) die('restore-shape');
+  if (report.sha !== expectedSha) die('restore-sha');
+  process.stdout.write(JSON.stringify({ status: 'RESTORE_OK', ...report }) + '\n');
+} else {
+  die('bad-action');
+}
+NODEJS
+
+run_atomic_as_authsvc() {
+  /usr/bin/sudo -n -u authsvc /usr/bin/env -i \
+    PATH="/usr/bin:/bin:/usr/sbin:/sbin" HOME="/Users/authsvc" \
+    "$NODE_BIN" -e "$ATOMIC_JS" "$@"
+}
+
+map_shape_check() {
+  local expected_count="$1" expected_presence="$2" expected_value="${3:-}"
+  /usr/bin/sudo -n -u authsvc "$NODE_BIN" -e '
+const fs=require("fs");
+try {
+  const o=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+  const count=Number(process.argv[2]);
+  const agent=process.argv[3];
+  const presence=process.argv[4];
+  const target=process.argv[5];
+  if (o===null || typeof o!=="object" || Array.isArray(o)) process.exit(1);
+  if (Object.keys(o).length!==count) process.exit(1);
+  const has=Object.prototype.hasOwnProperty.call(o,agent);
+  if (presence==="absent" ? has : (!has || o[agent]!==target)) process.exit(1);
+} catch { process.exit(1); }
+' "$MAP_FILE" "$expected_count" "$AGENT_ID" "$expected_presence" "$expected_value"
+}
+
+map_count_check() {
+  /usr/bin/sudo -n -u authsvc "$NODE_BIN" -e 'try{const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(o!==null&&typeof o==="object"&&!Array.isArray(o)&&Object.keys(o).length===Number(process.argv[2])?0:1)}catch{process.exit(1)}' "$MAP_FILE" "$1"
+}
+
+map_key_absent_check() {
+  /usr/bin/sudo -n -u authsvc "$NODE_BIN" -e 'try{const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(!Object.prototype.hasOwnProperty.call(o,process.argv[2])?0:1)}catch{process.exit(1)}' "$MAP_FILE" "$AGENT_ID"
+}
+
+fallback_resolution_check() {
+  /usr/bin/sudo -n -u authsvc "$NODE_BIN" --input-type=module -e '
+import { readFileSync } from "node:fs";
+const mod=await import(process.argv[1]);
+const map=JSON.parse(readFileSync(process.argv[2],"utf8"));
+mod.validatePrimaryWorkspaces(map);
+if (Object.prototype.hasOwnProperty.call(map,process.argv[3])) process.exit(1);
+const got=mod.resolveWorkspace(process.argv[3],process.argv[4],{},map);
+process.exit(got===process.argv[5] ? 0 : 1);
+' "file://$VALIDATOR_MOD" "$MAP_FILE" "$AGENT_ID" "$ROOT/workspaces" "$FALLBACK_WS"
+}
+
+rollback() {
+  local reason="$1" old_pid rollback_pid appended current_pid out stale
+  local bad=""
+  local rb_map_bytes=0 rb_map_sha=0 rb_key_absent=0 rb_map_metadata=0 rb_map_count=0
+  local rb_home_mode=0 rb_credential=0 rb_restart=0 rb_health=0 rb_pid_stable=0
+  local rb_boot_absent=0 rb_fallback=0 rb_marker_absent=0 rb_stale_absent=1
+  [ "$ROLLBACK_ACTIVE" = "1" ] && return 4
+  ROLLBACK_ACTIVE=1
+  trap - EXIT
+  log "── ROLLBACK (reason: $reason)"
+
+  if /bin/rm -f "$MARKER_FILE" 2>/dev/null && [ ! -e "$MARKER_FILE" ]; then rb_marker_absent=1; else bad="${bad}\n- canary marker still present"; fi
+
+  if [ "$MAP_MUTATION_POSSIBLE" = "1" ]; then
+    if [ -n "$BACKUP_FILE" ] && [ -f "$BACKUP_FILE" ]; then
+      if out="$(run_atomic_as_authsvc restore "$MAP_FILE" "$BACKUP_FILE" "$AGENT_ID" "$TARGET_WS" "$PIN_MAP_ENTRIES" "$PRE_SHA256" "-" "-" 2>&1)"; then :; else bad="${bad}\n- mapping restore transaction failed: $out"; fi
+    else
+      bad="${bad}\n- mapping restore prerequisites unavailable"
+    fi
+  fi
+
+  [ -n "$BACKUP_FILE" ] && [ -f "$BACKUP_FILE" ] && /usr/bin/cmp -s "$BACKUP_FILE" "$MAP_FILE" && rb_map_bytes=1 || bad="${bad}\n- mapping exact pre-bytes mismatch"
+  [ "$(sha256_file "$MAP_FILE" 2>/dev/null)" = "$PRE_SHA256" ] && rb_map_sha=1 || bad="${bad}\n- mapping SHA mismatch"
+  map_key_absent_check && rb_key_absent=1 || bad="${bad}\n- CTO mapping key is not absent"
+  map_count_check "$PIN_MAP_ENTRIES" && rb_map_count=1 || bad="${bad}\n- mapping entry count mismatch"
+  if [ "$(map_uid)" = "$PIN_MAP_UID" ] && [ "$(map_gid)" = "$PIN_MAP_GID" ] && [ "$(map_mode)" = "$PIN_MAP_MODE" ]; then rb_map_metadata=1; else bad="${bad}\n- mapping owner/group/mode mismatch"; fi
+
+  if [ "$HOME_MODE_CHANGED" = "1" ]; then change_home_mode 755 2>/dev/null || bad="${bad}\n- home mode restore command failed"; fi
+  [ "$(stat -f '%Lp' "$HOME_DIR" 2>/dev/null)" = "755" ] && rb_home_mode=1 || bad="${bad}\n- home numeric mode is not 755"
+  credential_pin_check && rb_credential=1 || bad="${bad}\n- credential metadata pin mismatch"
+
+  old_pid="$(service_pid)"
+  capture_log_sizes
+  if restart_service 2>/dev/null; then
+    rb_restart=1
+    if wait_runtime_healthy 180 "$old_pid"; then
+      rb_health=1
+      rollback_pid="$RUNTIME_PID_NEW"
+      stability_pause
+      current_pid="$(service_pid)"
+      if health_ok; then :; else rb_health=0; bad="${bad}\n- rollback HEALTH_URL did not remain healthy"; fi
+      if [ "$rb_health" = "1" ] && [ -n "$rollback_pid" ] && [ "$current_pid" = "$rollback_pid" ] && [ "$rollback_pid" != "$old_pid" ]; then rb_pid_stable=1; else bad="${bad}\n- rollback runtime PID is not updated and stable"; fi
+    else
+      bad="${bad}\n- rollback HEALTH_URL/new-pid check failed"
+    fi
+  else
+    bad="${bad}\n- rollback service restart command failed"
+  fi
+
+  if [ "$rb_health" = "1" ]; then
+    appended="$(appended_log_text)"
+    if ! printf '%s' "$appended" | /usr/bin/grep -qF 'primary workspace imports loaded'; then bad="${bad}\n- rollback boot evidence is missing import composition proof"
+    elif printf '%s' "$appended" | /usr/bin/grep -qF "$AGENT_ID -> $TARGET_WS"; then bad="${bad}\n- rollback boot evidence still contains target mapping"
+    else rb_boot_absent=1; fi
+    if fallback_resolution_check; then rb_fallback=1; else bad="${bad}\n- deployed resolver does not return exact fallback path"; fi
+  fi
+
+  for stale in "$CHILD_PID" "$RUNTIME_PID_OLD" "$old_pid"; do
+    if [ -n "$stale" ] && [ "$stale" != "${rollback_pid:-}" ] && /bin/kill -0 "$stale" 2>/dev/null; then rb_stale_absent=0; bad="${bad}\n- stale pre-rollback process remains alive: $stale"; fi
+  done
+
+  log "ROLLBACK_CHECK MAP_EXACT_PRE_BYTES=$rb_map_bytes"
+  log "ROLLBACK_CHECK MAP_SHA256_PRE=$rb_map_sha"
+  log "ROLLBACK_CHECK CTO_KEY_ABSENT=$rb_key_absent"
+  log "ROLLBACK_CHECK MAP_OWNER_GROUP_MODE=$rb_map_metadata"
+  log "ROLLBACK_CHECK MAP_ENTRY_COUNT=$rb_map_count"
+  log "ROLLBACK_CHECK HOME_MODE_755=$rb_home_mode"
+  log "ROLLBACK_CHECK CREDENTIAL_PIN=$rb_credential"
+  log "ROLLBACK_CHECK RESTART_SUCCEEDED=$rb_restart"
+  log "ROLLBACK_CHECK HEALTH_URL_OK=$rb_health"
+  log "ROLLBACK_CHECK RUNTIME_PID_UPDATED_STABLE=$rb_pid_stable"
+  log "ROLLBACK_CHECK BOOT_MAPPING_ABSENT=$rb_boot_absent"
+  log "ROLLBACK_CHECK FALLBACK_PROOF=$rb_fallback"
+  log "ROLLBACK_CHECK MARKER_ABSENT=$rb_marker_absent"
+  log "ROLLBACK_CHECK STALE_PROCESSES_ABSENT=$rb_stale_absent"
+
+  if [ -z "$bad" ] && [ "$rb_map_bytes" = "1" ] && [ "$rb_map_sha" = "1" ] && [ "$rb_key_absent" = "1" ] \
+    && [ "$rb_map_metadata" = "1" ] && [ "$rb_map_count" = "1" ] && [ "$rb_home_mode" = "1" ] \
+    && [ "$rb_credential" = "1" ] && [ "$rb_restart" = "1" ] && [ "$rb_health" = "1" ] \
+    && [ "$rb_pid_stable" = "1" ] && [ "$rb_boot_absent" = "1" ] && [ "$rb_fallback" = "1" ] \
+    && [ "$rb_marker_absent" = "1" ] && [ "$rb_stale_absent" = "1" ]; then
+    log "RESULT: FAILED_AND_ROLLED_BACK — $reason"
+    log "FINAL: FAILED_AND_ROLLED_BACK; EXIT=1"
+    exit 1
+  fi
+
+  log "RESULT: ROLLBACK_INCOMPLETE — $reason"
+  printf '%b\n' "UNRESTORED_STATE:${bad}"
+  log "FINAL: ROLLBACK_INCOMPLETE; EXIT=4; BACKUP=${BACKUP_DIR:-unavailable}"
+  exit 4
+}
+
+fail() {
+  if [ "$WRITES_STARTED" = "1" ]; then rollback "$1"; else zero_write_exit "$1"; fi
+}
+
+run_synthetic_case() {
+  local scenario="$1" synth_root promote_out expected corrupt victim forced
+  synth_root="$(/usr/bin/mktemp -d /tmp/cto-v4-runner-matrix.XXXXXXXX)" || exit 90
+  ROOT="$synth_root/root"
+  HOME_DIR="$ROOT/homes/$AGENT_ID"
+  FALLBACK_WS="$ROOT/workspaces/$AGENT_ID"
+  CREDENTIAL_FILE="$HOME_DIR/.credentials.yaml"
+  MAP_FILE="$ROOT/primary-workspaces.json"
+  TARGET_WS="$synth_root/target"
+  MARKER_FILE="$TARGET_WS/.agent-core-cto-recovery-v4-canary.txt"
+  RUNTIME_LOG="$synth_root/runtime.log"
+  RUNTIME_ERR="$synth_root/runtime.err.log"
+  BACKUP_DIR="$synth_root/backup"
+  BACKUP_FILE="$BACKUP_DIR/primary-workspaces.json"
+  /bin/mkdir -p "$HOME_DIR" "$FALLBACK_WS" "$TARGET_WS" "$BACKUP_DIR" || exit 90
+  /usr/bin/touch "$RUNTIME_LOG" "$RUNTIME_ERR" "$CREDENTIAL_FILE" || exit 90
+  /bin/chmod 755 "$HOME_DIR"; /bin/chmod 600 "$CREDENTIAL_FILE"
+  "$NODE_BIN" -e '
+const fs=require("fs"); const o={};
+for(let i=0;i<87;i++) o[`agt_fixture_${String(i).padStart(2,"0")}`]=`/fixture/ws/${i}`;
+fs.writeFileSync(process.argv[1],JSON.stringify(o,null,2)+"\n",{mode:0o600});
+' "$MAP_FILE" || exit 90
+  /bin/cp "$MAP_FILE" "$BACKUP_FILE"; /bin/chmod 600 "$BACKUP_FILE"
+
+  PIN_HOME_INODE="$(stat -f '%i' "$HOME_DIR")"; PIN_HOME_UID="$(stat -f '%u' "$HOME_DIR")"; PIN_HOME_GID="$(stat -f '%g' "$HOME_DIR")"
+  PIN_CRED_INODE="$(stat -f '%i' "$CREDENTIAL_FILE")"; PIN_CRED_UID="$(stat -f '%u' "$CREDENTIAL_FILE")"; PIN_CRED_GID="$(stat -f '%g' "$CREDENTIAL_FILE")"; PIN_CRED_MTIME="$(stat -f '%m' "$CREDENTIAL_FILE")"
+  PIN_MAP_UID="$(stat -f '%u' "$MAP_FILE")"; PIN_MAP_GID="$(stat -f '%g' "$MAP_FILE")"
+  PRE_SHA256="$(sha256_file "$MAP_FILE")"; PRE_MAP_DEV="$(stat -f '%d' "$MAP_FILE")"; PRE_MAP_INODE="$(stat -f '%i' "$MAP_FILE")"
+  RUNTIME_PID_OLD=999991; SYN_PID=999991; SYN_RESTARTS=0; SYN_HEALTH=1
+
+  _atomic_direct() { /usr/bin/env PATH="/usr/bin:/bin:/usr/sbin:/sbin" HOME="$synth_root" ${RECOVERY_ATOMIC_TEST_CANDIDATE:+RECOVERY_ATOMIC_TEST_CANDIDATE=$RECOVERY_ATOMIC_TEST_CANDIDATE} ${RECOVERY_ATOMIC_TEST_FAULT:+RECOVERY_ATOMIC_TEST_FAULT=$RECOVERY_ATOMIC_TEST_FAULT} "$NODE_BIN" -e "$ATOMIC_JS" "$@"; }
+  run_atomic_as_authsvc() {
+    if [ "$scenario" = "rollback-primary-mapping-restore-fail" ] && [ "${1:-}" = "restore" ]; then
+      RECOVERY_ATOMIC_TEST_FAULT=parent-sync _atomic_direct "$@"
+    else
+      _atomic_direct "$@"
+    fi
+  }
+  map_shape_check() {
+    "$NODE_BIN" -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));const n=+process.argv[2],a=process.argv[3],p=process.argv[4],v=process.argv[5];const h=Object.prototype.hasOwnProperty.call(o,a);process.exit(Object.keys(o).length===n&&(p==="absent"?!h:(h&&o[a]===v))?0:1)' "$MAP_FILE" "$1" "$AGENT_ID" "$2" "${3:-}"
+  }
+  map_count_check() { "$NODE_BIN" -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(Object.keys(o).length===Number(process.argv[2])?0:1)' "$MAP_FILE" "$1"; }
+  map_key_absent_check() { "$NODE_BIN" -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(Object.prototype.hasOwnProperty.call(o,process.argv[2])?1:0)' "$MAP_FILE" "$AGENT_ID"; }
+  fallback_resolution_check() {
+    [ "$scenario" = "rollback-fallback-proof-fail" ] && return 1
+    map_shape_check "$PIN_MAP_ENTRIES" absent && [ "$FALLBACK_WS" = "$ROOT/workspaces/$AGENT_ID" ]
+  }
+  service_pid() { printf '%s\n' "$SYN_PID"; }
+  health_ok() { [ "$SYN_HEALTH" = "1" ]; }
+  capture_log_sizes() { :; }
+  appended_log_text() { printf 'primary workspace imports loaded from synthetic fixture: agt_fixture_00 -> /fixture/ws/0\n'; }
+  stability_pause() { :; }
+  restart_service() {
+    SYN_RESTARTS=$((SYN_RESTARTS + 1))
+    if [ "$scenario" = "restart-fail" ] && [ "$ROLLBACK_ACTIVE" = "0" ]; then return 1; fi
+    if [ "$scenario" = "rollback-restart-fail" ] && [ "$ROLLBACK_ACTIVE" = "1" ]; then return 1; fi
+    SYN_PID=$((SYN_PID + 1))
+    if [ "$scenario" = "health-fail" ] && [ "$ROLLBACK_ACTIVE" = "0" ]; then SYN_HEALTH=0
+    elif [ "$scenario" = "rollback-health-fail" ] && [ "$ROLLBACK_ACTIVE" = "1" ]; then SYN_HEALTH=0
+    else SYN_HEALTH=1; fi
+    return 0
+  }
+  wait_runtime_healthy() { [ "$SYN_HEALTH" = "1" ] || return 1; RUNTIME_PID_NEW="$SYN_PID"; return 0; }
+  change_home_mode() {
+    if [ "$scenario" = "rollback-home-mode-restore-fail" ] && [ "$ROLLBACK_ACTIVE" = "1" ] && [ "$1" = "755" ]; then return 1; fi
+    /bin/chmod "$1" "$HOME_DIR"
+  }
+
+  WRITES_STARTED=1; HOME_MODE_CHANGED=1; MAP_MUTATION_POSSIBLE=1
+  change_home_mode 700 || fail "synthetic home mode"
+  unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
+  if [ "$scenario" = "mapping-promote-fail" ]; then
+    RECOVERY_ATOMIC_TEST_FAULT=rename
+  fi
+  promote_out="$(run_atomic_as_authsvc promote "$MAP_FILE" "$BACKUP_FILE" "$AGENT_ID" "$TARGET_WS" "$PIN_MAP_ENTRIES" "$PRE_SHA256" "$PRE_MAP_DEV" "$PRE_MAP_INODE" 2>&1)" || {
+    unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
+    fail "synthetic $scenario"
+  }
+  unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
+  POST_SHA256="$(sha256_file "$MAP_FILE")"
+
+  restart_service || fail "synthetic restart-fail"
+  wait_runtime_healthy 1 "$RUNTIME_PID_OLD" || fail "synthetic health-fail"
+  case "$scenario" in
+    delivery-404) fail "synthetic delivery-404" ;;
+    delivery-accepted-false) fail "synthetic delivery-accepted-false" ;;
+    marker-timeout) fail "synthetic marker-timeout" ;;
+    rollback-primary-mapping-restore-fail|rollback-home-mode-restore-fail|rollback-restart-fail|rollback-health-fail|rollback-fallback-proof-fail) fail "synthetic $scenario" ;;
+  esac
+
+  expected="$BACKUP_DIR/expected"; write_expected_marker "$expected" || fail "synthetic expected marker"
+  case "$scenario" in
+    marker-open-failed)
+      printf 'uid=502\nDSH_HOME=%s\nDSH_PRIMARY_WORKSPACE=%s\ncwd=%s\ncredential read-open=OPEN_FAILED\n' "$HOME_DIR" "$TARGET_WS" "$TARGET_WS" > "$MARKER_FILE" ;;
+    marker-cwd-wrong)
+      printf 'uid=502\nDSH_HOME=%s\nDSH_PRIMARY_WORKSPACE=%s\ncwd=%s\ncredential read-open=OPEN_OK\n' "$HOME_DIR" "$TARGET_WS" "$FALLBACK_WS" > "$MARKER_FILE" ;;
+    *) write_expected_marker "$MARKER_FILE" || fail "synthetic marker create" ;;
+  esac
+  marker_bytes_exact "$expected" "$MARKER_FILE" || fail "synthetic marker exact validation failed: $scenario"
+  /bin/rm -f "$MARKER_FILE"
+  SUCCESS=1; trap - EXIT
+  log "FINAL: SUCCESS; EXIT=0; SYNTHETIC_CASE=$scenario; ROLLBACK_CALLS=0"
+  exit 0
+}
+
+trap 'rc=$?; if [ "$rc" -ne 0 ] && [ "$WRITES_STARTED" = "1" ] && [ "$ROLLBACK_ACTIVE" = "0" ] && [ "$SUCCESS" = "0" ]; then rollback "unexpected exit rc=$rc"; fi' EXIT
+
+if [ "${1:-}" = "--synthetic-case" ]; then
+  [ -n "${2:-}" ] || { log "missing synthetic case"; exit 90; }
+  run_synthetic_case "$2"
+fi
+
+[ "$#" -eq 0 ] || zero_write_exit "unexpected arguments; run exactly: sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v5.sh"
+: # AUDIT-ONLY root gate neutralized
+printf 'Type the exact confirmation phrase to continue:\n  %s\n> ' "$CONFIRM_PHRASE"
+IFS= read -r OWNER_CONFIRMATION || zero_write_exit "confirmation input unavailable"
+[ "$OWNER_CONFIRMATION" = "$CONFIRM_PHRASE" ] || zero_write_exit "confirmation phrase mismatch"
+
+log "AGENT_CORE_CTO_OPENCLAW_RECOVERY_V5 start ts=$TS log=$LOG_FILE"
+ok "interactive Owner confirmation accepted"
+
+[ "$BASE_URL" = "http://127.0.0.1:8790" ] || zero_write_exit "BASE_URL pin mismatch"
+[ "$HEALTH_URL" = "${BASE_URL}/health" ] || zero_write_exit "HEALTH_URL pin mismatch"
+[ "$DELIVER_URL" = "${BASE_URL}/v1/deliver" ] || zero_write_exit "DELIVER_URL pin mismatch"
+
+[ "$(git -C "$REPO" cat-file -t "$AUTH_COMMIT" 2>/dev/null)" = "commit" ] || zero_write_exit "authority commit missing"
+AUTH_HEAD="$(git -C "$REPO" show "$AUTH_COMMIT:$AUTH_SPEC_PATH" 2>/dev/null | sed -n '1,20p')"
+printf '%s\n' "$AUTH_HEAD" | /usr/bin/grep -q '^spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1$' || zero_write_exit "authority spec id mismatch"
+printf '%s\n' "$AUTH_HEAD" | /usr/bin/grep -q '^status: accepted$' || zero_write_exit "authority spec not accepted"
+[ "$(git -C "$REPO" merge-base --is-ancestor "$AUTH_COMMIT" main >/dev/null 2>&1; printf '%s' $?)" = "0" ] || zero_write_exit "accepted authority is not in main"
+ok "accepted governing Spec is in main; separate execution and production authorization bound"
+
+for p in "$ROOT" "$HOME_DIR" "$TARGET_WS"; do [ ! -L "$p" ] || zero_write_exit "symlink substitution rejected: $p"; done
+[ "$(stat -f '%HT' "$HOME_DIR" 2>/dev/null)" = "Directory" ] || zero_write_exit "home is not a directory"
+[ "$(stat -f '%i' "$HOME_DIR")" = "$PIN_HOME_INODE" ] || zero_write_exit "home inode drift"
+[ "$(stat -f '%u' "$HOME_DIR")" = "$PIN_HOME_UID" ] || zero_write_exit "home uid drift"
+[ "$(stat -f '%g' "$HOME_DIR")" = "$PIN_HOME_GID" ] || zero_write_exit "home gid drift"
+[ "$(stat -f '%Lp' "$HOME_DIR")" = "$PIN_HOME_MODE_PRE" ] || zero_write_exit "home mode drift"
+credential_pin_check || zero_write_exit "credential metadata pin drift"
+
+[ "$(stat -f '%HT' "$MAP_FILE" 2>/dev/null)" = "Regular File" ] || zero_write_exit "mapping is not a regular file"
+[ ! -L "$MAP_FILE" ] || zero_write_exit "mapping is a symlink"
+[ "$(map_uid)" = "$PIN_MAP_UID" ] && [ "$(map_gid)" = "$PIN_MAP_GID" ] && [ "$(map_mode)" = "$PIN_MAP_MODE" ] || zero_write_exit "mapping metadata drift"
+PRE_SHA256="$(sha256_file "$MAP_FILE")"
+[ -n "$PRE_SHA256" ] || zero_write_exit "mapping hash unavailable"
+map_shape_check "$PIN_MAP_ENTRIES" absent || zero_write_exit "mapping count/key precondition failed"
+PRE_MAP_DEV="$(stat -f '%d' "$MAP_FILE")"
+PRE_MAP_INODE="$(stat -f '%i' "$MAP_FILE")"
+
+[ "$(stat -f '%HT' "$TARGET_WS" 2>/dev/null)" = "Directory" ] || zero_write_exit "target is not a directory"
+for p in /Users /Users/yanfenma /Users/yanfenma/.openclaw /Users/yanfenma/.openclaw/groups "$TARGET_WS"; do
+  /usr/bin/sudo -n -u '#502' /bin/test -x "$p" 2>/dev/null || zero_write_exit "uid 502 cannot traverse $p"
+done
+/usr/bin/sudo -n -u '#502' /bin/test -r "$TARGET_WS" 2>/dev/null || zero_write_exit "uid 502 cannot read target"
+/usr/bin/sudo -n -u '#502' /bin/test -w "$TARGET_WS" 2>/dev/null || zero_write_exit "uid 502 cannot write target"
+[ ! -e "$MARKER_FILE" ] && [ ! -L "$MARKER_FILE" ] || zero_write_exit "canary marker residue exists"
+
+[ "$(service_state)" = "running" ] || zero_write_exit "runtime service not running"
+RUNTIME_PID_OLD="$(service_pid)"
+[ -n "$RUNTIME_PID_OLD" ] || zero_write_exit "runtime pid unavailable"
+ps_cmd="$(ps -o command= -p "$RUNTIME_PID_OLD" 2>/dev/null)"
+printf '%s' "$ps_cmd" | /usr/bin/grep -q 'production-runtime.mjs' && printf '%s' "$ps_cmd" | /usr/bin/grep -q -- '--root /Users/authsvc/.agent-core' || zero_write_exit "unexpected runtime process"
+
+BACKUP_DIR="$(/usr/bin/sudo -n -u authsvc /usr/bin/mktemp -d /tmp/agent-core-cto-recovery-v4.XXXXXXXX)" || zero_write_exit "cannot create private backup directory"
+BACKUP_FILE="$BACKUP_DIR/primary-workspaces.json"
+/usr/bin/sudo -n -u authsvc /bin/cp "$MAP_FILE" "$BACKUP_FILE" || zero_write_exit "mapping backup failed"
+/usr/bin/sudo -n -u authsvc /bin/chmod 600 "$BACKUP_FILE" || zero_write_exit "backup mode failed"
+/usr/bin/sudo -n -u authsvc "$NODE_BIN" -e '
+const fs=require("fs"),path=require("path");
+const p=process.argv[1], s=fs.lstatSync(p);
+if (!s.isFile() || s.isSymbolicLink() || (s.mode&0o777)!==0o600) process.exit(1);
+let fd=fs.openSync(p,fs.constants.O_RDONLY); fs.fsyncSync(fd); fs.closeSync(fd);
+fd=fs.openSync(path.dirname(p),fs.constants.O_RDONLY); fs.fsyncSync(fd); fs.closeSync(fd);
+' "$BACKUP_FILE" || zero_write_exit "backup durability check failed"
+[ "$(sha256_file "$BACKUP_FILE")" = "$PRE_SHA256" ] || zero_write_exit "backup hash mismatch"
+ok "preflight and durable byte backup complete; production writes not started"
+
+WRITES_STARTED=1
+HOME_MODE_CHANGED=1
+change_home_mode 700 || fail "home mode change failed"
+[ "$(stat -f '%Lp' "$HOME_DIR")" = "$PIN_HOME_MODE_POST" ] || fail "home mode post-check failed"
+credential_pin_check || fail "credential metadata changed after home mode update"
+
+MAP_MUTATION_POSSIBLE=1
+PROMOTE_OUT="$(run_atomic_as_authsvc promote "$MAP_FILE" "$BACKUP_FILE" "$AGENT_ID" "$TARGET_WS" "$PIN_MAP_ENTRIES" "$PRE_SHA256" "$PRE_MAP_DEV" "$PRE_MAP_INODE" 2>&1)" || fail "mapping atomic promotion failed: $PROMOTE_OUT"
+printf '%s' "$PROMOTE_OUT" | /usr/bin/grep -q '"status":"PROMOTE_OK"' || fail "mapping promotion receipt invalid"
+[ "$(map_uid)" = "$PIN_MAP_UID" ] && [ "$(map_gid)" = "$PIN_MAP_GID" ] && [ "$(map_mode)" = "$PIN_MAP_MODE" ] || fail "mapping metadata changed"
+map_shape_check "$PIN_MAP_ENTRIES_AFTER" present "$TARGET_WS" || fail "mapping exact postcondition failed"
+POST_SHA256="$(sha256_file "$MAP_FILE")"
+[ -n "$POST_SHA256" ] && [ "$POST_SHA256" != "$PRE_SHA256" ] || fail "mapping post hash invalid"
+credential_pin_check || fail "credential metadata changed after mapping update"
+
+VAL_OUT="$(/usr/bin/sudo -n -u authsvc "$NODE_BIN" --input-type=module -e '
+import { readFileSync } from "node:fs";
+const mod=await import(process.argv[1]);
+mod.validatePrimaryWorkspaces(JSON.parse(readFileSync(process.argv[2],"utf8")));
+process.stdout.write("VALIDATE_OK\n");
+' "file://$VALIDATOR_MOD" "$MAP_FILE" 2>&1)" || fail "deployed mapping validator failed: $VAL_OUT"
+[ "$VAL_OUT" = "VALIDATE_OK" ] || fail "deployed mapping validator receipt invalid"
+
+capture_log_sizes
+restart_service || fail "runtime restart command failed"
+wait_runtime_healthy 180 "$RUNTIME_PID_OLD" || fail "runtime health failed after restart"
+/bin/kill -0 "$RUNTIME_PID_OLD" 2>/dev/null && fail "old runtime pid still alive"
+appended="$(appended_log_text)"
+printf '%s' "$appended" | /usr/bin/grep -qF "$AGENT_ID -> $TARGET_WS" || fail "boot evidence lacks exact mapping"
+credential_pin_check || fail "credential metadata changed after restart"
+
+read -r -d '' CANARY_MSG <<EOF || true
+【AGT_CTO_AGENT_OPENCLAW_RECOVERY_V4 一次性无业务副作用 canary】只执行下面的 shell；不要执行其他动作，不要读取、显示或复制 credential 内容。回复只能是 DONE。
+
+umask 077
+cd \"\$DSH_PRIMARY_WORKSPACE\" || exit 91
+CREDENTIAL_FILE=\"\$DSH_HOME/.credentials.yaml\"
+if exec 3<\"\$CREDENTIAL_FILE\"; then
+  exec 3<&-
+  OPEN_RESULT=OPEN_OK
+else
+  OPEN_RESULT=OPEN_FAILED
+fi
+marker=\".agent-core-cto-recovery-v4-canary.txt\"
+set -C
+exec 4>\"\$marker\" 2>/dev/null || exit 92
+{
+  printf 'uid=%s\\n' \"\$(id -u)\"
+  printf 'DSH_HOME=%s\\n' \"\$DSH_HOME\"
+  printf 'DSH_PRIMARY_WORKSPACE=%s\\n' \"\$DSH_PRIMARY_WORKSPACE\"
+  printf 'cwd=%s\\n' \"\$(pwd -P)\"
+  printf 'credential read-open=%s\\n' \"\$OPEN_RESULT\"
+} >&4
+exec 4>&-
+printf 'DONE\\n'
+EOF
+BODY_FILE="$BACKUP_DIR/deliver-body.json"
+RESP_FILE="$BACKUP_DIR/deliver-response.json"
+CURL_ERR="$BACKUP_DIR/deliver-error.txt"
+"$NODE_BIN" -e 'require("fs").writeFileSync(process.argv[1],JSON.stringify({requestId:process.argv[2],agentId:process.argv[3],sessionMode:"fresh",message:process.argv[4]}),{mode:0o600})' "$BODY_FILE" "$REQUEST_ID" "$AGENT_ID" "$CANARY_MSG" || fail "cannot build delivery body"
+http_code="$(/usr/bin/curl -sS -o "$RESP_FILE" -w '%{http_code}' --max-time 180 -H 'content-type: application/json' --data @"$BODY_FILE" "$DELIVER_URL" 2>"$CURL_ERR")" || fail "delivery transport failed"
+[ "$http_code" = "200" ] || fail "delivery http status $http_code"
+DELIVERY_OK="$("$NODE_BIN" -e 'try{const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(o.accepted===true && typeof o.sessionId==="string" && o.sessionId.startsWith("fresh-") ? "YES" : "NO")}catch{process.stdout.write("NO")}' "$RESP_FILE")"
+[ "$DELIVERY_OK" = "YES" ] || fail "delivery was not accepted"
+ok "Router accepted inbox delivery; waiting for independent child marker proof"
+
+sleep 2
+EV_LINE="$(/usr/bin/grep -F "\"requestId\":\"$REQUEST_ID\"" "$EVIDENCE_JSONL" 2>/dev/null | tail -1)"
+if [ -n "$EV_LINE" ]; then
+  CHILD_PID="$("$NODE_BIN" -e 'try{const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.routerProcessPid||""))}catch{}' "$EV_LINE")"
+fi
+
+deadline=$(( $(date +%s) + MARKER_TIMEOUT_S ))
+while [ "$(date +%s)" -lt "$deadline" ]; do [ -f "$MARKER_FILE" ] && break; sleep 5; done
+[ -f "$MARKER_FILE" ] && [ ! -L "$MARKER_FILE" ] || fail "canary marker timeout or unsafe marker"
+[ "$(stat -f '%u' "$MARKER_FILE")" = "502" ] || fail "canary marker uid mismatch"
+[ "$(stat -f '%Lp' "$MARKER_FILE")" = "600" ] || fail "canary marker mode mismatch"
+EXPECTED_MARKER_FILE="$BACKUP_DIR/expected-canary-marker.txt"
+write_expected_marker "$EXPECTED_MARKER_FILE" || fail "cannot build expected marker"
+marker_bytes_exact "$EXPECTED_MARKER_FILE" "$MARKER_FILE" || fail "canary marker exact bytes/schema/value mismatch"
+ok "child marker proves uid/home/primary/cwd/credential-open; accepted response alone was not treated as success"
+
+/usr/bin/sudo -n -u authsvc /bin/test -r "$CREDENTIAL_FILE" 2>/dev/null && fail "runtime account can read credential unexpectedly"
+/usr/bin/sudo -n -u '#502' /bin/test -r "$CREDENTIAL_FILE" 2>/dev/null || fail "uid 502 cannot open credential"
+credential_pin_check || fail "credential metadata changed after canary"
+[ "$(stat -f '%Lp' "$HOME_DIR")" = "$PIN_HOME_MODE_POST" ] || fail "home mode drift after canary"
+map_shape_check "$PIN_MAP_ENTRIES_AFTER" present "$TARGET_WS" || fail "final mapping shape failed"
+[ "$(sha256_file "$MAP_FILE")" = "$POST_SHA256" ] || fail "final mapping hash drift"
+/bin/rm -f "$MARKER_FILE" || fail "canary marker cleanup failed"
+[ ! -e "$MARKER_FILE" ] || fail "canary marker remains"
+
+SUCCESS=1
+trap - EXIT
+log "HOME_PRE_MODE = $PIN_HOME_MODE_PRE"
+log "HOME_TARGET_MODE = $PIN_HOME_MODE_POST"
+log "MAPPING_ENTRY_BEFORE = ABSENT"
+log "MAPPING_ENTRY_AFTER = $TARGET_WS"
+log "MAPPING_SHA256_PRE = $PRE_SHA256"
+log "MAPPING_SHA256_POST = $POST_SHA256"
+log "RUNTIME_PID = $RUNTIME_PID_OLD -> $RUNTIME_PID_NEW"
+log "CREDENTIAL_UNCHANGED = YES (inode/owner/group/mode/mtime)"
+log "CANARY = PASS (Router acceptance plus exact child marker; marker removed)"
+log "BACKUP = $BACKUP_DIR"
+log "FINAL: SUCCESS; EXIT=0"
+exit 0
