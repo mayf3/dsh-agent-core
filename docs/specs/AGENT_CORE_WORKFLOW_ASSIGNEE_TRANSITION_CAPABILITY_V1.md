@@ -25,6 +25,14 @@ owners:
 > 不执行任何 runtime reload 或部署，不授予任何 workflow scope。
 > `implementation_authority = none`、`PRODUCTION_APPLY_AUTHORITY = none`。
 
+> **REVISE AMENDMENT 2026-08-29（流转 修订）**：按独立审计 REVISE 结论与
+> Owner 路线 KEEP_MANIFEST_ONLY_ERROR_ENVELOPE 完成三项 focused fix——
+> (1) CAS 错误合同去结构化（信封四要素，OBS-008）；(2)
+> `executable_for_actor` 分类冻结 ADVISORY_ONLY（读时 advisory snapshot，
+> 三项已知差异）；(3) 错误表移除 `definition_version_draft`（HTTP 层映射
+> 500 `internal_consistency_error`）。修订明细与验证见 §15；status 仍为
+> proposed，接受仍需独立审计轮。
+
 ## 1. Goal
 
 让**当前节点的 exact assignee** 能够通过正式 Broker 工具提交合法
@@ -128,13 +136,19 @@ OBS-003 — 服务端原子授权（`transition_transaction.rs`，同一 instanc
 事务内）：Step 7 :198-202 `current_visit.assignee_principal_id !=
 Some(principal_uuid)` → 403 `principal_not_assignee`；Step 10 :247-319
 transition 必须属于当前 definition_version 且 source_node = 当前节点
-（ADVANCE/RETURN/TERMINATE 语义规则）否则 409 `transition_not_applicable`；
-CAS 不匹配 → 409 `workflow_state_version_conflict`（body 携带
-expected/actual）；fail-close 族：`assistance_open`、`source_node_terminal`、
-`definition_version_revoked`、`definition_version_draft`、
+（ADVANCE/RETURN/TERMINATE 语义规则；ADVANCE 合法性依赖实例 semantics
+模式——Legacy(1) 仅 primary ADVANCE、Minimal(2) 任意合法出口 ADVANCE，
+:261-266）否则 409 `transition_not_applicable`；CAS 不匹配 → 409
+`workflow_state_version_conflict`（**服务端** body 经 `with_details`
+携带结构化 `{expected, actual}`，error.rs:200-204——该结构只存在于下游
+响应体，Broker 正式错误信封不保留它，OBS-008）；HTTP fail-close 族：
+`assistance_open`、`source_node_terminal`、`definition_version_revoked`、
 `submission_required`、`submission_validation_failed`、
 `size_limit_exceeded`（413，1 MiB）、`invalid_return_references`、
-`assignee_resolution_failed`。
+`assignee_resolution_failed`。DRAFT / DEPRECATED definition version 在
+domain 层 fail-close，但 HTTP 层映射为 500 `internal_consistency_error`
+（error.rs:196-197）——`definition_version_draft` **不会作为 HTTP
+service code 返回**，不进入 CTR-005 错误表。
 
 OBS-004 — 幂等与 exact rerun（`execute_transition.rs` + receipt）：
 request hash 覆盖 principal + key + instance + CAS + transition + payload
@@ -151,7 +165,14 @@ OBS-005 — 读侧 per-actor 投影：`workflow_instance_detail` 已暴露
 `executable_for_actor = blocked_reason.is_none()`（query_detail.rs:145），
 blocked 原因族：ActorNotCurrentAssignee / CurrentNodeTerminal /
 DefinitionVersionRevoked / DefinitionVersionDraft / AdvanceNotPrimary /
-TargetAssigneeUnavailable——与执行侧检查同源，服务端是权威。
+TargetAssigneeUnavailable。该投影是**读时 advisory snapshot**，与执行侧
+检查**不同源、不等价**，已知差异至少三项：(1) 投影不含 `assistance_open`
+检查（blocked 链 query_detail.rs:112-135 无该项，执行侧会 fail-close）；
+(2) 投影无条件 block 非 primary ADVANCE（:124-126），而执行侧 Minimal(2)
+模式允许任意合法出口 ADVANCE（transition_transaction.rs:261-266）——投影
+false 不代表执行侧必然拒绝；(3) 详情读取与执行之间状态可变（TOCTOU）。
+因此 `executable_for_actor` 只用于 UI/Agent 预判（DEC-002），投影 true 不
+构成执行授权或成功保证——服务端执行事务始终是唯一权威（CTR-003）。
 
 OBS-006 — dsh-agent-core broker 写通道机制（fresh main `df3b299`
 committed 源逐行验证；transport revision
@@ -174,6 +195,19 @@ OBS-007 — 稳定错误码合同：svc-workflow
 `submission_validation_failed` / `invalid_return_references` /
 `assignee_resolution_failed`；425 `command_still_processing`；500
 `internal_consistency_error`）。
+
+OBS-008 — Broker 正式错误信封（accepted ERROR_PRESERVATION 纪律，
+committed main `df3b299` 机制逐行验证）：transport 只从下游错误体提取
+`code` 与**字符串** `message`（`parseServiceErrorBody` 仅认
+`message`/`error`/`detail` 字符串键，transport.js:370-395）；`detail` 是
+sanitized 字符串（脱敏 + 截断，:346-356、:429-434）；`requestId` 只来自
+下游 `x-request-id` 响应头（:405-410）。下游结构化 `details` 对象（如 CAS
+conflict 的 `{expected, actual}`）**不在提取面内、不进入 Broker 信封**；
+若要端到端保留结构化 error.details，须扩展
+transport/mapping/relay/schema 通用机制——Owner 路线
+KEEP_MANIFEST_ONLY_ERROR_ENVELOPE 明确不做（§15）。CAS 冲突恢复路径 =
+客户端收到 `workflow_state_version_conflict` 后重新调用
+`workflow_instance_detail` 获取最新 `workflow_state_version`（DEC-004）。
 
 ## 6. Claims and assumptions
 
@@ -217,8 +251,12 @@ transition_transaction.rs Step 10），`transition_key` 是读侧展示字段
 `outgoingTransitions[].transition_id` 取值（CTR-008）。
 
 DEC-002 — broker 执行**零权限逻辑**：不复制 assignee 判断、不缓存
-`executable_for_actor`、不预检。读侧标志仅是模型导航提示；服务端是
-唯一权威（同 DOMAIN_INSTANCES_BROKER_V1 授权模型）。
+`executable_for_actor`、不预检。`executable_for_actor` 分类冻结为
+**ADVISORY_ONLY**：读时 advisory snapshot，只用于 UI/Agent 预判与导航，
+不构成执行授权、不等价于执行侧合法性、不完整保证可执行（OBS-005 三项
+已知差异）。即使投影 `true`，服务端仍可合法返回 fail-closed 错误；即使
+投影 `false` 或过时，Broker 也不得绕过服务端自行决定可执行性。服务端
+执行事务始终是唯一权威（同 DOMAIN_INSTANCES_BROKER_V1 授权模型）。
 
 DEC-003 — Idempotency-Key 由 trusted Broker seam 生成
 （manifest `http.idempotencyKey: true` → transport 受信区），模型不能
@@ -226,8 +264,10 @@ DEC-003 — Idempotency-Key 由 trusted Broker seam 生成
 工具调用 = 一个新 key；broker 不跨调用复用 key。
 
 DEC-004 — **禁止 broker 自动 CAS 重试**：`workflow_state_version_conflict`
-原样透出（含 expected/actual），由模型重读 `workflow_instance_detail`
-后显式重提。自动重试会掩盖「transition 是否已生效」的可见性，违背
+按 Broker 正式错误信封透出（code + HTTP status + sanitized detail +
+downstream requestId；结构化 expected/actual 不保留，OBS-008），由模型
+重读 `workflow_instance_detail` 获取最新 `workflow_state_version` 后显式
+重提。自动重试会掩盖「transition 是否已生效」的可见性，违背
 fail-closed。
 
 DEC-005 — Grant 不动：本 Spec 及其实现 PR 不授予、不申请、不修改任何
@@ -263,10 +303,12 @@ assignee / onBehalfOf 类字段——identity 只经 credential seam（token
 CTR-003 — **服务端唯一权威**。全部强制在 svc-workflow 原子事务内：
 scope `workflow.execute`；actor = exact current assignee（token 派生，
 payload 永不参与）；transition 合法性（definition 成员 + source_node =
-当前节点 + ADVANCE/RETURN/TERMINATE 规则）；CAS；
-`executable_for_actor=true` 由服务端 blocked-reason 族保证
-（ActorNotCurrentAssignee 等任一命中即拒）。**Domain Owner 替其他
-assignee 提交不可能发生**（Step 7 拒绝非 assignee principal）。
+当前节点 + ADVANCE/RETURN/TERMINATE 规则）；CAS。`executable_for_actor`
+是读时 advisory snapshot（ADVISORY_ONLY，DEC-002 / OBS-005）：它不由执行
+侧检查保证，也不保证执行必过——执行侧合法性只在执行事务内裁决，即使
+投影 `true` 服务端仍可合法返回 fail-closed 错误；投影 `false`/过时亦不
+授权 Broker 本地拦截。**Domain Owner 替其他 assignee 提交不可能发生**
+（Step 7 拒绝非 assignee principal）。
 
 CTR-004 — **Idempotency**。trusted seam 生成（DEC-003）；模型不可传入
 或覆盖；401 retry 复用相同 key；服务端 exact replay + deterministic
@@ -274,7 +316,10 @@ failure replay（OBS-004）；`idempotency_conflict`（同 key 异 payload）
 与 `command_still_processing`（425）原样透出。无 broker 自动 CAS 重试
 （DEC-004）。
 
-CTR-005 — **declared 错误表（fail-closed）**。
+CTR-005 — **declared 错误表（fail-closed）**。错误信封保持 manifest-only
+（code + HTTP status + sanitized detail + downstream requestId，OBS-008），
+本 Spec 不要求、也不声称 Broker 保留结构化 error.details（Owner 路线
+KEEP_MANIFEST_ONLY_ERROR_ENVELOPE，§15）。
 `invalid_arguments`、`unsupported_operation`、`unauthenticated`、
 `forbidden`、`credential_unavailable`、`binding_error`、
 `malformed_response`、`transport_failure`、`service_unavailable`、
@@ -283,12 +328,14 @@ per-capability 声明的 auth 层码）＋ 写族（OBS-007 stable codes）：
 `principal_not_found`、`principal_disabled`、`instance_not_found`、
 `current_visit_not_found`、`principal_not_assignee`、`assistance_open`、
 `source_node_terminal`、`definition_version_revoked`、
-`definition_version_draft`、`workflow_state_version_conflict`、
-`transition_not_applicable`、`submission_required`、
-`submission_validation_failed`、`size_limit_exceeded`、
-`invalid_return_references`、`assignee_resolution_failed`、
-`idempotency_conflict`、`command_still_processing`、
-`internal_consistency_error`。
+`workflow_state_version_conflict`、`transition_not_applicable`、
+`submission_required`、`submission_validation_failed`、
+`size_limit_exceeded`、`invalid_return_references`、
+`assignee_resolution_failed`、`idempotency_conflict`、
+`command_still_processing`、`internal_consistency_error`。
+（`definition_version_draft` 不在表内：DRAFT / DEPRECATED definition
+version 在 HTTP 层映射为 500 `internal_consistency_error`，不作为 HTTP
+service code 返回——OBS-003 / OBS-007，与本表一致。）
 
 CTR-006 — **返回透传，不 reshape**。succ =
 `{ ok: true, result: <ExecuteWorkflowTransitionResponse> }` 原样（OBS-002
@@ -305,10 +352,15 @@ Domain 变更、Definition 管理（版本发布/吊销）、任意 Coordinator 
 
 CTR-008 — **模型使用合同（冻结进工具 description）**。两步用法：
 (1) `workflow_instance_detail` 读 `workflow_state_version` 与
-`outgoingTransitions[]`，选择 `executable_for_actor: true` 的出口，取其
-`transition_id` 与 `submission_schema`；(2) 以该 exact 值调用
-`workflow_transition`。`executable_for_actor: false` 的出口提交将被
-服务端以对应错误拒绝——读侧标志是提示，服务端是权威。
+`outgoingTransitions[]`，以 `executable_for_actor: true` 的出口为优先
+预判，取其 `transition_id` 与 `submission_schema`；(2) 以该 exact 值调用
+`workflow_transition`。`executable_for_actor` 是读时 advisory snapshot
+（ADVISORY_ONLY，DEC-002）：投影 `true` 不保证执行必过（OBS-005 三项已知
+差异——投影不含 `assistance_open`、Minimal(2) 非 primary ADVANCE 读/执行
+分歧、读取后状态可变——任一命中时服务端仍合法 fail-close）；投影
+`false`/过时亦不授权 Broker 本地拦截。收到
+`workflow_state_version_conflict` 时，重读 `workflow_instance_detail`
+取最新 `workflow_state_version` 后显式重提（DEC-004）。
 
 ## 10. Acceptance
 
@@ -316,17 +368,19 @@ ACC-001 — 本 Spec 自身：docs-only authoring PR，exactly 1 commit /
 1 Spec 文件；base = current main；governance（vendored bytes + adoption
 lock）、structure（verify:structure vs origin/main）、
 `git diff --check`、frontmatter schema 校验全部 PASS；无产品代码、无
-Grant、无 production 变更。
+Grant、无 production 变更。（2026-08-29 REVISE 修订在同一 PR 追加第二个
+commit，仍只改本文件，验证同等执行——见 §15。）
 
 ACC-002 —（accept 后，实现轮验收）新增 manifest 过 `validateManifest`
 （method POST / body 绑定 / `idempotencyKey: true` boolean）；fixture
 断言：POST path/body camelCase（`transitionDefinitionId` /
 `expectedWorkflowStateVersion` / `submissionPayload`）、token 请求
 scope = `workflow.execute`、`Idempotency-Key` header 存在且模型参数无法
-注入、`principal_not_assignee` / `workflow_state_version_conflict`（含
-expected/actual）/ `idempotency_conflict` 错误码端到端透出、
-identity-neutral（args 携带 principalId/agentId 不达 wire）；broker
-测试全绿（基线 173 + 新增）。
+注入、`principal_not_assignee` / `workflow_state_version_conflict` /
+`idempotency_conflict` 错误按正式信封端到端透出（code + HTTP status +
+sanitized detail + requestId；**不**断言结构化 expected/actual——信封不
+保留 error.details，OBS-008）、identity-neutral（args 携带
+principalId/agentId 不达 wire）；broker 测试全绿（基线 173 + 新增）。
 
 ACC-003 —（accept 后）GOVERNING_SPEC_UNMODIFIED：实现 PR 不得修改本
 文件。
@@ -372,4 +426,69 @@ replay，DEC-003）。
 - 验证：governance（`verify_governance.py --target . --require-accepted`）
   PASS；`verify:structure`（vs origin/main）PASS；`git diff --check`
   PASS；frontmatter 过 `spec-frontmatter.schema.json`。
+- 下一事务：独立 review（流转 审计）→ accepted 后实现轮（ACC-002/003）。
+
+## 15. Amendment record (2026-08-29, 流转 修订)
+
+- 事务：TASK_NAME = 流转 执行，TASK_TYPE = SAFE_REMOTE_RECONCILIATION；
+  OLD_REMOTE_HEAD = `fa59f9056223f9f5fcf25577b3e532b21c08fe74`；
+  LOCAL_FIX_COMMIT = `2f210c6a2798f6c9c479dc1212fec153c430b68e`（base
+  `eb20d0c1863002d845486990e7b3fc69319919f5`）。本轮保留 OLD_REMOTE_HEAD
+  已有事实同步，仅机械重放三项 focused fix。独立审计（流转 审计）=
+  **REVISE**：ASSIGNEE_AUTHORIZATION /
+  IDEMPOTENCY_MODEL / GRANT_BOUNDARY 全 PASS，BLOCKERS = 1、
+  REQUIRED_FIXES = 3。Owner 路线 = **KEEP_MANIFEST_ONLY_ERROR_ENVELOPE**：
+  不扩展 transport/mapping/relay/schema 支持结构化 error.details——当前
+  Broker 正式错误信封只保证 code、HTTP status、sanitized string detail、
+  requestId；客户端收到 `workflow_state_version_conflict` 后重新调用
+  `workflow_instance_detail` 获取最新状态。
+- **Fix 1（CAS 错误合同）**：删除「`workflow_state_version_conflict` 必须
+  端到端保留 expected/actual」的全部冻结要求（原 OBS-003 括注、原
+  DEC-004、原 ACC-002 fixture）；改为必须保留 code + HTTP status +
+  sanitized message/detail + downstream request-id；新增 OBS-008 记录信封
+  机制事实（`parseServiceErrorBody` 仅提取字符串 message，结构化 details
+  不进信封）；任何文本不再声称 Broker 保留 structured error.details。
+  实现闭包保持 manifest + tests，不扩大通用 Broker 机制（§2 不变）。
+- **Fix 2（executable_for_actor）**：删除「与执行侧检查同源/等价/保证
+  可执行」声称（原 OBS-005、原 CTR-003 blocked-reason 保证句）；分类冻结
+  **ADVISORY_ONLY**——读时 advisory snapshot，只用于 UI/Agent 预判，不
+  构成执行授权（DEC-002）；记录三项已知差异（OBS-005）：(1) 投影不含
+  `assistance_open`；(2) Minimal(2) 非 primary ADVANCE 读侧/执行侧判断
+  存在差异；(3) 详情读取后、执行前状态可变。即使投影 true，服务端仍可
+  合法返回 fail-closed 错误；即使投影 false/过时，Broker 不得绕过服务端
+  自行决定可执行性（CTR-003 / CTR-008）。
+- **Fix 3（错误表）**：`definition_version_draft` 自 CTR-005 错误表移除
+  ——DRAFT / DEPRECATED definition version 在当前 HTTP 层映射为 500
+  `internal_consistency_error`（svc-workflow current `github/main @ fb54f9d`，
+  error.rs:196-197 复核），
+  不会作为 HTTP service code 返回；OBS-003 fail-close 族同步修正；OBS-007
+  stable errors registry（errors.json）本就无此码，与服务端实际实现一致。
+  读侧 `DefinitionVersionDraft`（OBS-005 blocked-reason 枚举）是投影面
+  事实，保留不动。
+- **保持不变**（审计「保持不变」节）：工具 `workflow_transition`、端点
+  `POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions`、
+  参数面（`workflowInstanceId` / `transitionDefinitionId` /
+  `expectedWorkflowStateVersion` / `submissionPayload` 可选）、scope
+  `workflow.execute`、actor 仅来自 token、服务端 current-assignee 权威 +
+  transition legality + CAS + idempotency + exact replay + deterministic
+  failure replay + conflict fail-closed、Idempotency-Key trusted Broker 生成
+  模型不可覆盖 + 401 retry 复用同 key、全部禁止清单（actor/principal
+  override、Domain Owner 替别人提交、assignment mutation、create_instance、
+  Definition management、Coordinator、手工 SQL、Grant change——CTR-002 /
+  CTR-007 / DEC-003 / DEC-005）。
+- 本轮边界：只修改本 Spec 文件；不实现代码、不接受、不 merge、不授
+  Grant、不部署。验证（实测）：`verify_governance.py --target .
+  --require-accepted` PASS；`npm run verify:structure`（vs origin/main）
+  exit 0（仅预先存在的 FILE_WARNING_LINES WARNING）；frontmatter 过
+  `spec-frontmatter.schema.json`（status 仍 proposed、
+  implementation_authority 仍 none）；`git diff --check` PASS；Contract /
+  Acceptance 条目覆盖扫描 PASS；dangling 引用扫描 PASS；残留扫描
+  （expected/actual、definition_version_draft、同源）仅否定/映射/废弃
+  注记。
+- 冻结字段：STRUCTURED_ERROR_DETAILS_REQUIRED = NO；
+  EXECUTABLE_FOR_ACTOR_CLASSIFICATION = ADVISORY_ONLY；
+  DEFINITION_VERSION_DRAFT_REMOVED = YES；IMPLEMENTATION_CLOSURE =
+  MANIFEST_PLUS_TESTS；OTHER_SEMANTIC_DELTA = NONE；PRODUCT_CODE_CHANGE =
+  NONE；GRANT_CHANGE = NONE；PRODUCTION_CHANGE = NONE。接受（proposed →
+  accepted）仍需独立审计轮 VERDICT，本轮不做。
 - 下一事务：独立 review（流转 审计）→ accepted 后实现轮（ACC-002/003）。
