@@ -1,6 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1
-status: proposed
+status: accepted
+accepted_date: 2026-08-29
 date: 2026-08-28
 type: implementation-spec (Broker-only pagination exposure for an existing read-only endpoint)
 scope:
@@ -16,14 +17,26 @@ references:
   - svc-workflow/src/application/workflow_instance/query_types.rs:42-52
   - svc-workflow/src/store/postgres/workflow_instance_repository/query_domain_instances.rs:14-26,99-195
   - svc-workflow/contracts/workflow-http/v1/openapi.yaml:424-483,1330-1341,2196-2207
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
+accepted_reviewed_head: 2dc70bcfafc068904ae2915a587501c1c8e2461e
+independent_audit_result: PASS
+independent_audit_blockers: NONE
+acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
 ---
 
 # AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1
 
-> 状态：**proposed**。本文件只提出 Broker P1 分页合同，不授予实现、合并、部署、
-> restart 或 production apply 权限。
+> 状态：**accepted**（2026-08-29 lifecycle-only acceptance finalize，PR #99）。
+> 独立审计（分页 审计）：AUDIT_RESULT = **PASS**；BLOCKERS = **NONE**；
+> SERVICE_CURSOR_CONTRACT = **VERIFIED**；SECOND_PAGE_LIVE_PROOF = **RECORDED_PASS**；
+> HALF_CURSOR_FAIL_FAST = **VERIFIED_FEASIBLE**；SERVER_CODE_CHANGE_REQUIRED = **NO**；
+> IMPLEMENTATION_CLOSURE = **COMPLETE**；READY_FOR_ACCEPTANCE_FINALIZE = **YES**
+> （accepted_reviewed_head = 2dc70bcfafc068904ae2915a587501c1c8e2461e）。
+> 本 Spec 自 merged on main 起成为本 scope 的唯一实现授权（R1–R6 合同 + §5 文件闭包）；
+> 实现按 GOVERNING_SPEC_UNMODIFIED 纪律在独立 worktree 从 fresh main 进行。
+> `production_apply_authority = none`（deployment 仍需独立授权）。
+> Acceptance Record 见 §8。
 >
 > 本轮交付边界：DOCS_ONLY；`PRODUCT_CODE_CHANGE = NONE`；
 > `SVC_WORKFLOW_CODE_CHANGE = NONE`；`PRODUCTION_CHANGE = NONE`。
@@ -298,3 +311,32 @@ PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 NEXT_TASK = 分页 审计
 ```
+
+## 8. Acceptance Record（2026-08-29，分页 执行轮）
+
+ACCEPTANCE_TRANSACTION = LIFECYCLE_ONLY，ONE commit，ONE file（本文件）。
+
+- 独立审计（分页 审计）：AUDIT_RESULT = **PASS**；BLOCKERS = **NONE**；
+  SERVICE_CURSOR_CONTRACT = **VERIFIED**；SECOND_PAGE_LIVE_PROOF = **RECORDED_PASS**；
+  HALF_CURSOR_FAIL_FAST = **VERIFIED_FEASIBLE**；SERVER_CODE_CHANGE_REQUIRED = **NO**；
+  IMPLEMENTATION_CLOSURE = **COMPLETE**；READY_FOR_ACCEPTANCE_FINALIZE = **YES**。
+- accepted_reviewed_head = `2dc70bcfafc068904ae2915a587501c1c8e2461e`
+  （PR #99 审计时 head；fresh fetch 后核对 `headRefOid` 无漂移，PR 单 commit 单文件）。
+- PR #99 本轮处于 non-Draft 状态；按本轮纪律 acceptance 事务仍不跳过——
+  先提交本 lifecycle-only acceptance commit，再 merge。
+- 语义变化 = STATUS_MIRROR_AND_PROVENANCE_ONLY：本事务仅翻转 status
+  （`proposed` → `accepted`）、翻转 `implementation_authority`（`none` → `contracts`）、
+  记录 acceptance provenance（frontmatter 字段 + 头部引注 + 本节）；§0–§7 全部冻结
+  ruling（含 R1–R6 合同、§5 文件闭包与 §7 最终冻结字段）逐字节保留；正文中先于
+  acceptance 的条件句（含 §6「本 proposed Spec 本身不满足实现前置」与 §7
+  `SPEC_STATUS = proposed`）按既有纪律作为历史记录原样保留。
+- 授权生效语义：本 Spec merged on main 起成为本 scope 的唯一实现授权
+  （R1–R6 合同 + §5 四文件闭包）；实现 PR 不得修改本文件
+  （GOVERNING_SPEC_UNMODIFIED）；`production_apply_authority = none` ——
+  deploy / restart / production state 变更仍需独立授权。
+- 事务边界：DOCS_ONLY；PRODUCT_CODE_CHANGE = NONE；SERVER_CODE_CHANGE = NONE；
+  PRODUCTION_CHANGE = NONE；packages/、scripts/、svc-workflow 仓库、production 均不动；
+  主 worktree 既有 WIP 实现快照（docs/lark-ux-phase1-v2-spec 上的 broker 修改与
+  未跟踪 docs）原样保留。
+- Merge：本 commit 之后随即 merge PR #99（merge commit 为本 Spec 的
+  effective-on-main 坐标，记录于 merge 后的 main lineage）。
