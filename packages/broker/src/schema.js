@@ -183,6 +183,14 @@ export function validateManifest(input) {
           }
         }
       }
+      // Same fail-closed discipline for allOrNone group codes.
+      for (const [gi, g] of (op.arguments?.allOrNone ?? []).entries()) {
+        if (g && typeof g.validationError === 'string') {
+          if (input.errors === undefined || !input.errors.some((e) => e && e.code === g.validationError)) {
+            errors.push(opPath + `.arguments.allOrNone[${gi}].validationError references undeclared code "${g.validationError}"`)
+          }
+        }
+      }
       // optional generic HTTP binding (the authorized-HTTP transport contract;
       // see transport.js). When present, this operation is executed by the
       // generic transport instead of a process-internal handler. A LOCAL
@@ -235,6 +243,7 @@ export function validateManifest(input) {
                 properties: op.arguments.properties || {},
                 required: Array.isArray(op.arguments.required) ? op.arguments.required : [],
                 ...(op.arguments.additionalProperties === false ? { additionalProperties: false } : {}),
+                ...(Array.isArray(op.arguments.allOrNone) ? { allOrNone: op.arguments.allOrNone } : {}),
               },
         result: op.result === undefined ? { type: 'json' } : op.result,
         errors: [...opErrors],
@@ -320,6 +329,40 @@ function validatePropertiesSchema(value, at) {
   if (req !== undefined) {
     if (!Array.isArray(req) || req.some((r) => typeof r !== 'string')) {
       return `${at}.required must be an array of property names`
+    }
+  }
+  // Generic all-or-none co-presence groups (root level only; recognized on an
+  // operation's `arguments`, not on nested object leaves): when ANY property
+  // of a group is present in a call, EVERY property of the group must be. A
+  // violation reports the group's declared `validationError` code (which must
+  // exist in the capability's error table — checked at manifest level, same
+  // fail-closed rationale as per-property validationError). Declared by
+  // AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1 for the composite
+  // keyset cursor pair beforeCreatedAt/beforeId; purely manifest-driven, so
+  // any future capability can declare its own groups with no engine change.
+  const groups = value.allOrNone
+  if (groups !== undefined) {
+    if (!Array.isArray(groups) || groups.length === 0) {
+      return `${at}.allOrNone must be a non-empty array of groups`
+    }
+    for (const [i, g] of groups.entries()) {
+      if (g === null || typeof g !== 'object' || Array.isArray(g)) {
+        return `${at}.allOrNone[${i}] must be an object`
+      }
+      if (!Array.isArray(g.properties) || g.properties.length < 2 || g.properties.some((n) => typeof n !== 'string' || n.length === 0)) {
+        return `${at}.allOrNone[${i}].properties must be an array of at least 2 property names`
+      }
+      const groupSeen = new Set()
+      for (const name of g.properties) {
+        if (groupSeen.has(name)) return `${at}.allOrNone[${i}].properties contains duplicate "${name}"`
+        groupSeen.add(name)
+        if (props === undefined || !Object.hasOwn(props, name)) {
+          return `${at}.allOrNone[${i}] references undeclared property "${name}"`
+        }
+      }
+      if (typeof g.validationError !== 'string' || !/^[a-z][a-zA-Z0-9_]*$/.test(g.validationError)) {
+        return `${at}.allOrNone[${i}].validationError "${g.validationError}" must be a lowercase identifier`
+      }
     }
   }
   return null

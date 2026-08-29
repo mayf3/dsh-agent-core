@@ -14,7 +14,9 @@
  *   - workflow_my_tasks     GET /internal/v1/worklists/assigned-to-me workflow.read (svc-workflow)
  *   - workflow_domain_instances GET /internal/v1/workflow-instances/domain workflow.read (svc-workflow;
  *     AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 — read-only DOMAIN_OWNER enumeration,
- *     server-side auth, camelCase `domainId` wire param, snake_case summary passthrough)
+ *     server-side auth, camelCase `domainId` wire param, snake_case summary passthrough;
+ *     AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1 — all-or-none keyset cursor pair
+ *     beforeCreatedAt/beforeId: verbatim forwarding, local invalid_cursor on half pair)
  *   - okr_read              GET /api/goals/mine                    okr.read (svc-okr)
  *
  * The mock token endpoint implements the auth-service client_credentials
@@ -419,6 +421,169 @@ test('workflow_domain_instances: limit out of bounds fails fast locally — HTTP
 
   await tokenServer.close()
   await workflow.close()
+})
+
+// ─── P1 pagination: cursor pair exposure (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1) ─
+
+test('workflow_domain_instances: tool schema exposes exactly domainId/limit/beforeCreatedAt/beforeId + canonical allOrNone group', async () => {
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_domain_instances')
+  const tokenServer = await startTokenServer()
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': tokenServer.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(manifest, transport)
+  await tokenServer.close()
+
+  const params = definition.parameters
+  assert.deepEqual(
+    Object.keys(params).sort(),
+    ['beforeCreatedAt', 'beforeId', 'domainId', 'limit', 'operation'],
+  )
+  assert.equal(params.domainId.type, 'string')
+  assert.equal(params.domainId.required, true)
+  assert.equal(params.limit.type, 'integer')
+  assert.equal(params.limit.required, undefined)
+  assert.equal(params.beforeCreatedAt.type, 'string')
+  assert.equal(params.beforeCreatedAt.required, undefined)
+  assert.equal(params.beforeId.type, 'string')
+  assert.equal(params.beforeId.required, undefined)
+
+  // canonical manifest keeps the generic allOrNone group verbatim
+  const canonical = validateManifest(manifest)
+  assert.equal(canonical.ok, true)
+  assert.deepEqual(canonical.manifest.operations[0].arguments.allOrNone, [
+    { properties: ['beforeCreatedAt', 'beforeId'], validationError: 'invalid_cursor' },
+  ])
+  assert.ok(canonical.manifest.operations[0].errors.includes('invalid_cursor'))
+  assert.deepEqual(canonical.manifest.operations[0].http.query, ['domainId', 'limit', 'beforeCreatedAt', 'beforeId'])
+})
+
+test('workflow_domain_instances: full cursor forwarded VERBATIM in wire query; two pages pass through unreshaped', async () => {
+  const tokenServer = await startTokenServer()
+  const domainId = '1c2d3e4f-0000-4000-8000-00000000aa04'
+  // Microsecond-precision RFC 3339 timestamp (spec live-proof shape): proves
+  // the broker neither truncates precision nor rewrites the timezone.
+  const page1Cursor = { created_at: '2026-08-13T22:25:34.354961Z', id: '153f0eb5-4fba-43e5-95e3-e12e9640fcd6' }
+  const page1 = {
+    items: [
+      {
+        workflow_instance_id: '9c7f3b0a-0000-4000-8000-0000000000a1',
+        domain_id: domainId,
+        title: '调度 正式部署方案修订',
+        is_terminal: false,
+        current_node: { node_id: '2b3c4d5e-0000-4000-8000-0000000000e5', node_key: 'review', display_name: '评审', node_type: 'human' },
+        current_assignee_principal_id: '7a8b9c0d-0000-4000-8000-0000000000d4',
+        created_at: '2026-08-26T10:00:00Z',
+        updated_at: '2026-08-27T09:30:00Z',
+      },
+    ],
+    next_cursor: page1Cursor,
+  }
+  const page2 = { items: [], next_cursor: null }
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'GET' && entry.pathname === '/internal/v1/workflow-instances/domain') {
+      if (entry.query.domainId !== domainId) {
+        return json(res, 422, { error: { code: 'invalid_pagination', message: 'pagination parameters are invalid' } })
+      }
+      // Page 2 only when the full cursor pair arrives; page 1 otherwise.
+      if (entry.query.beforeCreatedAt !== undefined && entry.query.beforeId !== undefined) {
+        return json(res, 200, page2)
+      }
+      if (entry.query.beforeCreatedAt !== undefined || entry.query.beforeId !== undefined) {
+        return json(res, 422, { error: { code: 'invalid_cursor', message: 'half cursor must fail locally before the wire' } })
+      }
+      return json(res, 200, page1)
+    }
+    json(res, 404, { error: 'not_found' })
+  })
+
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_domain_instances')
+  const { definition } = wire(manifest, transport)
+
+  // Page 1: no cursor.
+  const first = await definition.execute({ operation: 'list', domainId, limit: 20 })
+  assert.equal(first.ok, true)
+  assert.deepEqual(first.result, page1, 'page 1 response must pass through untouched (incl. next_cursor object)')
+  assert.equal(workflow.requests[0].query.beforeCreatedAt, undefined)
+  assert.equal(workflow.requests[0].query.beforeId, undefined)
+
+  // Model contract: feed page 1's next_cursor values into the next call.
+  const second = await definition.execute({
+    operation: 'list',
+    domainId,
+    limit: 20,
+    beforeCreatedAt: first.result.next_cursor.created_at,
+    beforeId: first.result.next_cursor.id,
+  })
+  assert.equal(second.ok, true)
+  assert.deepEqual(second.result, page2, 'final page (next_cursor null) must pass through untouched')
+
+  // The full cursor reaches the wire VERBATIM (name + exact string value).
+  const bizReq = workflow.requests[1]
+  assert.equal(bizReq.pathname, '/internal/v1/workflow-instances/domain')
+  assert.deepEqual(bizReq.query, {
+    domainId,
+    limit: '20',
+    beforeCreatedAt: page1Cursor.created_at,
+    beforeId: page1Cursor.id,
+  })
+  assert.equal(bizReq.headers.authorization, 'Bearer tok-real')
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('workflow_domain_instances: half cursor (either field alone) fails fast locally with invalid_cursor — token + business HTTP call count = 0', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res) => json(res, 200, { items: [] }))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_domain_instances')
+  const { definition } = wire(manifest, transport)
+
+  const cases = [
+    { operation: 'list', domainId: '1c2d3e4f-0000-4000-8000-00000000aa05', beforeCreatedAt: '2026-08-13T22:25:34.354961Z' },
+    { operation: 'list', domainId: '1c2d3e4f-0000-4000-8000-00000000aa05', beforeId: '153f0eb5-4fba-43e5-95e3-e12e9640fcd6' },
+  ]
+  for (const args of cases) {
+    const res = await definition.execute(args)
+    assert.equal(res.ok, false, JSON.stringify(args))
+    assert.equal(res.error.code, 'invalid_cursor', JSON.stringify(args))
+    assert.equal(res.error.status, undefined, 'local failure: no upstream status')
+  }
+  assert.equal(workflow.requests.length, 0, 'no business call may leave the broker')
+  assert.equal(tokenServer.requests.length, 0, 'no token may be requested (fails before credential/token work)')
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('schema: generic allOrNone groups are validated fail-closed (undeclared property / single member / undeclared code)', () => {
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_domain_instances')
+  const raw = JSON.parse(JSON.stringify(manifest))
+  const op = raw.operations[0]
+
+  const withGroup = (group) => {
+    raw.operations[0] = { ...op, arguments: { ...op.arguments, allOrNone: [group] } }
+    return validateManifest(raw)
+  }
+
+  assert.equal(withGroup({ properties: ['beforeCreatedAt', 'noSuchParam'], validationError: 'invalid_cursor' }).ok, false)
+  assert.equal(withGroup({ properties: ['beforeCreatedAt'], validationError: 'invalid_cursor' }).ok, false)
+  assert.equal(withGroup({ properties: ['beforeCreatedAt', 'beforeId'], validationError: 'undeclared_code' }).ok, false)
+  assert.equal(withGroup({ properties: ['beforeCreatedAt', 'beforeCreatedAt'], validationError: 'invalid_cursor' }).ok, false)
+  // the shipped group itself stays valid
+  assert.equal(withGroup({ properties: ['beforeCreatedAt', 'beforeId'], validationError: 'invalid_cursor' }).ok, true)
 })
 
 // ─── Fixture 5: OKR read (GET, no params, okr.read) ────────────────────────
