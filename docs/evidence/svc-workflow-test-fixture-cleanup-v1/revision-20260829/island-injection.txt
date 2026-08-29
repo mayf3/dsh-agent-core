@@ -1,0 +1,21 @@
+TEST_DATABASE_URL target (DISPOSABLE ONLY): postgresql://svc_wf:dummysvc@127.0.0.1:5433/svc_workflow_dogfood_clean
+pre-injection fixture-pattern principals outside window: 0
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.69s
+     Running tests/23_global_coordinator.rs (target/debug/deps/23_global_coordinator-3e11f68460d7ea65)
+
+running 9 tests
+test reader_role_binding_provisioning_lifecycle ... ok
+test global_workflow_reader_sees_cross_domain_instances ... ok
+test domain_owner_boundary_unchanged_and_coordinator_gets_no_domain_powers ... ok
+test reader_gains_no_write_or_assistance_powers ... ok
+test coordinator_sees_multi_domain_and_other_assignee_instances ... ok
+test coordinator_list_pagination_is_continuous ... ok
+test normal_agent_and_domain_owner_without_coordinator_denied ... ok
+test coordinator_list_returns_summary_only ... ok
+test global_role_binding_provisioning_lifecycle ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.30s
+
+island rows (fixture-pattern, outside 08:17 window): principals=24 domains=13 instances=19 uuidv4-receipts=19
+ISLAND VARIANT DRYRUN EXIT=3
+ ZERO-WRITE CHECK after P2b abort: allowlist present p=24 dom=13 drb=13 g=8 def=13 ver=13 n=26 t=13 i=19 v=19 r=19 e=19 c=25 || island_still_present_p=24 || triggers_not_enabled=0

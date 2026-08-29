@@ -1,0 +1,87 @@
+svc-workflow test-fixture cleanup  ts=20260829T155050  dryrun=1
+target: svc_workflow_dogfood_clean @ 127.0.0.1:5433 (user: svc_wf)
+transcript: /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155050.log
+
+P2b LIFETIME_FIXTURE_PATTERN_DRIFT_GATE: per-table lifetime-vs-allowlist (must be equal; extra=0 missing=0):
+                t                | lf_cnt | al_cnt | extra | missing
+---------------------------------+--------+--------+-------+---------
+ domain_role_bindings            |     26 |     13 |    13 |       0
+ domains                         |     26 |     13 |    13 |       0
+ global_role_bindings            |     16 |      8 |     8 |       0
+ principals                      |     48 |     24 |    24 |       0
+ workflow_command_receipts       |     50 |     25 |    25 |       0
+ workflow_context_revisions      |     38 |     19 |    19 |       0
+ workflow_definition_versions    |     26 |     13 |    13 |       0
+ workflow_definitions            |     26 |     13 |    13 |       0
+ workflow_events                 |     38 |     19 |    19 |       0
+ workflow_instances              |     38 |     19 |    19 |       0
+ workflow_node_definitions       |     52 |     26 |    26 |       0
+ workflow_node_visits            |     38 |     19 |    19 |       0
+ workflow_transition_definitions |     26 |     13 |    13 |       0
+(13 rows)
+
+   t   | lf_cnt | al_cnt | extra | missing
+-------+--------+--------+-------+---------
+ TOTAL |    448 |    224 |   224 |       0
+(1 row)
+
+P2b diagnostic: lifetime fixture-pattern rows OUTSIDE the allowlist (first 50; empty => none):
+         tbl          |                  id
+----------------------+--------------------------------------
+ principals           | 0f50c00e-8eb9-41f0-8a79-dc7ef7ec013c
+ principals           | 8038109e-96ec-4d8b-bebc-f79b3abc75f1
+ principals           | 76bc12b3-696f-4195-a1f2-556d339a2c99
+ principals           | ec190b4b-35a7-4436-b0c1-78c4ac2b51de
+ principals           | 2e13664c-2dcc-4f65-ad96-fca3822272fd
+ principals           | 697ae741-cacb-4662-b783-3d0c99af6147
+ principals           | 1a67a453-beff-4274-b6ff-cd7b2738f631
+ principals           | 7677df2c-5ad9-4a15-b125-dd6fcf1ca012
+ principals           | 9b748359-bf98-4334-b282-c54e5267f9f5
+ principals           | 315711b9-65bd-4198-b725-549f1ab08063
+ principals           | c698d862-3314-4439-837e-519b6acc85da
+ principals           | 4a42ad56-f3e2-42e1-a5ad-5a1467fd5acb
+ principals           | b96c1c87-d896-4797-8123-155c561c2f8a
+ principals           | 445d1000-553c-41c8-823d-792b9083c598
+ principals           | 000bdc1d-e381-4dc5-9cc9-9001d0165b68
+ principals           | 8e3441d9-d00e-43d4-89a5-6a23f3bbd50f
+ principals           | a607f155-0646-4040-9c83-b2c0cbce04e1
+ principals           | abce41a1-370d-40e1-882d-9473bb2edae3
+ principals           | 40efcfd2-0727-4fbc-8925-d0f109b847ae
+ principals           | ebb7b0f5-51a8-479b-b3c6-3c5325133de3
+ principals           | 6e3ff1be-85fd-4703-a698-f33f757cb808
+ principals           | 4b1ca72c-aaa8-4b23-81bb-b84856256071
+ principals           | 6c378d16-96ea-47f8-92c5-72e1dcf38303
+ principals           | aaf08480-f34a-4783-ba95-351ae6c6b94f
+ domains              | b2da67f0-6ff9-450f-a3a3-c98c566d6488
+ domains              | b06bacfe-1bcd-4580-8e3e-a25cdd41a292
+ domains              | eb78abb9-96ed-428f-acd3-fc30fa950cf7
+ domains              | 651e5917-d7b7-4cb7-8252-668aab12aac2
+ domains              | 35c67981-7847-4c73-a827-57837656cabf
+ domains              | 485d276a-2226-4ab5-8442-6173e03283ed
+ domains              | cd5fa180-7a92-4020-bf9e-96b561cc65b7
+ domains              | eb7e1106-ffce-4bde-90b7-c2ec8aea4d79
+ domains              | 21e87553-93b1-4a52-8a93-c73c7cf3c1c3
+ domains              | 6786e698-e47d-4e44-911e-26d310ae6116
+ domains              | e9195a8d-2128-4b61-ab48-ec1f195a7628
+ domains              | e56217a9-237f-49ad-8762-69b285dbc78a
+ domains              | 798f2af3-784b-4b63-86dc-0ce86df25db3
+ domain_role_bindings | c1a4edb9-3725-4e33-95fe-ec7e8cbbd48b
+ domain_role_bindings | 0bb5132d-3854-4d3c-892b-68f81484cfa1
+ domain_role_bindings | 2281d5d5-5e7b-427e-909e-0689b6b89277
+ domain_role_bindings | 94c216b4-493d-4a88-ad2b-ab2372d179b5
+ domain_role_bindings | 8ac386d0-6e0b-4cbe-9995-3c1ab41c6503
+ domain_role_bindings | 0c408271-e301-4a66-b21c-4e67ffb2e590
+ domain_role_bindings | 0474e4b6-562b-4ca5-a943-cd09c98d1017
+ domain_role_bindings | b4381350-6e85-49f0-bc96-50bb548ea80b
+ domain_role_bindings | 8c8d6a37-6d7f-4375-aec3-eca4749d02f0
+ domain_role_bindings | e4f52570-e0e5-40a1-b2cc-f4d51b0387f7
+ domain_role_bindings | c1de6c4f-2370-4dd3-b291-6c8d96e0d773
+ domain_role_bindings | 11ca3d83-ca9d-4f91-a3d3-6f72cc8d2a56
+ domain_role_bindings | 8c94b1b6-ca39-4c92-9034-f728c33c5599
+(50 rows)
+
+ERROR:  P2b LIFETIME_FIXTURE_PATTERN_DRIFT_GATE FAILED: EXTRA_FIXTURE_ROW_COUNT=224 ALLOWLIST_MISSING=0 drifted_tables=13 principals (lifetime=48 allowlist=24 extra=24 missing=0); domains (lifetime=26 allowlist=13 extra=13 missing=0); domain_role_bindings (lifetime=26 allowlist=13 extra=13 missing=0); global_role_bindings (lifetime=16 allowlist=8 extra=8 missing=0); workflow_definitions (lifetime=26 allowlist=13 extra=13 missing=0); workflow_definition_versions (lifetime=26 allowlist=13 extra=13 missing=0); workflow_node_definitions (lifetime=52 allowlist=26 extra=26 missing=0); workflow_transition_definitions (lifetime=26 allowlist=13 extra=13 missing=0); workflow_instances (lifetime=38 allowlist=19 extra=19 missing=0); workflow_command_receipts (lifetime=50 allowlist=25 extra=25 missing=0); workflow_context_revisions (lifetime=38 allowlist=19 extra=19 missing=0); workflow_node_visits (lifetime=38 allowlist=19 extra=19 missing=0); workflow_events (lifetime=38 allowlist=19 extra=19 missing=0)
+HINT:  Fixture-pattern rows outside the 224-row allowlist (e.g. tests re-run against this DB) or changed allowlist rows require a NEW investigation round; this runner never auto-extends its allowlist. Aborted BEFORE any trigger disable and any DELETE: zero writes.
+CONTEXT:  PL/pgSQL function inline_code_block line 9 at RAISE
+
+RESULT: FAILED (transaction rolled back; zero rows committed). See /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155050.log

@@ -1,0 +1,6 @@
+DELETE 1
+ C1 injected: deleted 1 allowlist drb row; remaining allowlist drb present=12
+
+C1 VARIANT EXIT=3
+ERROR:  P1 domain_role_bindings: allowlist present=12 expected=13
+RESULT: FAILED (transaction rolled back; zero rows committed). See /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155128.log

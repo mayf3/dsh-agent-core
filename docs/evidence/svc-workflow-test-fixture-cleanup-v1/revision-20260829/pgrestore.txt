@@ -1,0 +1,73 @@
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT USAGE ON SCHEMA public TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public._sqlx_migrations TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.domain_role_bindings TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.domains TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.principals TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_command_attempt_audits TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_command_receipts TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_context_revisions TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_definition_versions TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_definitions TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_events TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_instance_node_assignees TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_instances TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_node_definitions TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_node_visits TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_security_audits TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_submissions TO auth_ro;
+
+
+pg_restore: error: could not execute query: ERROR:  role "auth_ro" does not exist
+Command was: GRANT SELECT ON TABLE public.workflow_transition_definitions TO auth_ro;
+
+
+pg_restore: warning: errors ignored on restore: 18

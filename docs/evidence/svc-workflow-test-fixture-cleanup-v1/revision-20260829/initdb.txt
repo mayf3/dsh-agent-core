@@ -1,0 +1,21 @@
+The files belonging to this database system will be owned by user "yanfenma".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "C.UTF-8".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+creating directory pgtest ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default max_connections ... 20
+selecting default shared_buffers ... 400kB
+selecting default time zone ... Asia/Shanghai
+creating configuration files ... ok
+running bootstrap script ... 2026-08-29 15:48:10.601 CST [32587] FATAL:  could not create shared memory segment: Cannot allocate memory
+2026-08-29 15:48:10.601 CST [32587] DETAIL:  Failed system call was shmget(key=58643441, size=56, 03600).
+2026-08-29 15:48:10.601 CST [32587] HINT:  This error usually means that PostgreSQL's request for a shared memory segment exceeded your kernel's SHMALL parameter.  You might need to reconfigure the kernel with larger SHMALL.
+	The PostgreSQL documentation contains more information about shared memory configuration.
+child process exited with exit code 1
+initdb: removing data directory "pgtest"

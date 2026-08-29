@@ -1,0 +1,8 @@
+svc-workflow test-fixture cleanup  ts=20260829T155140  dryrun=1
+target: svc_workflow_dogfood_clean @ 127.0.0.1:5433 (user: svc_wf)
+transcript: /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155140.log
+
+ERROR:  P3 principals: 1 allowlist rows fail pattern proof
+CONTEXT:  PL/pgSQL function inline_code_block line 9 at RAISE
+
+RESULT: FAILED (transaction rolled back; zero rows committed). See /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155140.log

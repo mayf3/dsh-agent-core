@@ -26,10 +26,10 @@
 Cleanup runner 已生成并通过**全路径 DRYRUN**（在事务内真实执行检查+守卫禁用+13 表删除+
 守卫恢复+零残留校验+业务 digest 对比，然后 ROLLBACK，零提交写入）：
 
-- `/tmp/run-svc-workflow-test-fixture-cleanup.sh`
-  （sha256 `9cf26d42d903b1ba71ffcef92acf34b0451f4cf370a9876777a3a2e246e391a7`）
-- 归档副本：`docs/evidence/svc-workflow-test-fixture-cleanup-v1/run-svc-workflow-test-fixture-cleanup.sh`
-- Owner 执行（单条命令）：`sudo bash /tmp/run-svc-workflow-test-fixture-cleanup.sh`
+- `/tmp/run-svc-workflow-test-fixture-cleanup-v2.sh`（**当前生效**，2026-08-29 修订轮；
+  sha256 `b77802236525bb8fd22bdf7f94e59b777e208f30ef7b24aa0a475c894bbd21d6`；见 §5.1）
+- 归档副本：`docs/evidence/svc-workflow-test-fixture-cleanup-v1/revision-20260829/`
+- Owner 执行（单条命令）：`sudo bash /tmp/run-svc-workflow-test-fixture-cleanup-v2.sh`
 
 ## 1. 事实基线（全部只读实测）
 
@@ -141,6 +141,27 @@ global_role_bindings → domain_role_bindings → domains → principals。
 - **本轮验证**：DRYRUN（全路径含删除与守卫操作，最终 ROLLBACK）exit 0 全绿；演练后复查
   生产库 24/13/19/25/19 原样、total principals=256、6 触发器全部 enabled —— 零净变更。
 
+### 5.1 v2 修订（2026-08-29，审计 B1 关闭；当前生效 runner）
+
+独立审计（344cce3）以唯一 blocker B1 判 REVISE：P2 的"窗口外同模式行 = 0"检查被 7.6 秒窗口
+合取限定，窗口外的 fixture 模式行（现实场景：同一 `TEST_DATABASE_URL` 误配置在 Owner 执行前
+重跑）对全部检查不可见。修订轮产出 **v2 runner**：
+
+- 路径：`/tmp/run-svc-workflow-test-fixture-cleanup-v2.sh`（72,781 B；sha256
+  `b77802236525bb8fd22bdf7f94e59b777e208f30ef7b24aa0a475c894bbd21d6`；归档于
+  `docs/evidence/svc-workflow-test-fixture-cleanup-v1/revision-20260829/`）
+- 唯一改动：新增 **P2b LIFETIME_FIXTURE_PATTERN_DRIFT_GATE** —— 13 表全生命周期（无时间窗）
+  fixture-signature 重算，lifetime 集合互引（不引用 allowlist，自洽第二孤岛完全可见），
+  要求与 224 行 allowlist 双向精确相等；EXTRA/MISSING 任一非零 → 在任何 trigger 禁用与
+  任何 DELETE 之前零写入中止，绝不自动扩展 allowlist。其余与 v1 字节一致（分段 diff 证明）。
+- 验证：生产 DRYRUN PASS（P2b 报告 224/224 extra=0 missing=0）+ 前后/轮末快照字节一致；
+  真实 tests/23 套件在 disposable 副本注入窗口外完整第二孤岛（224 行）→ P2b 以
+  EXTRA_FIXTURE_ROW_COUNT=224 fail closed（删除面零执行）；missing/changed allowlist →
+  P1/P3 先行中止。详见 `docs/reports/svc-workflow-test-fixture-cleanup-revision-v1.md`。
+- 勘误（修订轮复核）：§3 S5 的 "16-value title set" 实为 **19 个互异标题各 1 条**（多重集
+  逐字节相等的核心声称不受影响）；runner 体积以审计实测 58,761 B 为准。
+- M1（P7 补 `tgenabled='O'` 钉扎）仍为审计建议级，未纳入本轮。
+
 ## 6. 边界与不做的事
 
 - 本轮 **PRODUCTION_CHANGE = NONE**：全部数据库访问为只读（会话级
@@ -162,9 +183,9 @@ CONFIRMED_TEST_DEFINITIONS = 13     # 另有 13 versions / 26 nodes / 13 transit
 CONFIRMED_TEST_INSTANCES = 19       # 另有 19 visits / 19 revisions / 19 events / 25 receipts
 RELATED_ROW_TOTAL = 224             # 13 表全部窗口行（含上述关联行）
 UNKNOWN_ROW_COUNT = 0
-CLEANUP_RUNNER = /tmp/run-svc-workflow-test-fixture-cleanup.sh  # sha256 9cf26d42…391a7, DRYRUN 已验证
+CLEANUP_RUNNER = /tmp/run-svc-workflow-test-fixture-cleanup-v2.sh  # sha256 b7780223…21d6（v1 9cf26d42…391a7 已被 v2 取代，见 §5.1；DRYRUN 已验证）
 PRODUCTION_CHANGE = NONE
-READY_FOR_OWNER_CLEANUP = YES
+READY_FOR_OWNER_CLEANUP = YES   # 前提：审计轮对 v2 快速复审通过（NEXT_TASK = 残留 审计）
 ```
 
 ## 附录 A：完整 row ID allowlist（224 行）

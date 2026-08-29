@@ -1,0 +1,8 @@
+svc-workflow test-fixture cleanup  ts=20260829T155128  dryrun=1
+target: svc_workflow_dogfood_clean @ 127.0.0.1:5433 (user: svc_wf)
+transcript: /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155128.log
+
+ERROR:  P1 domain_role_bindings: allowlist present=12 expected=13
+CONTEXT:  PL/pgSQL function inline_code_block line 5 at RAISE
+
+RESULT: FAILED (transaction rolled back; zero rows committed). See /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155128.log

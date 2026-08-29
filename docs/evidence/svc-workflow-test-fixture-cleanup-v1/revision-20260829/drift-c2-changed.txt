@@ -1,0 +1,7 @@
+UPDATE 1
+ C2 injected: 1 allowlist principal renamed; matching-shape allowlist principals=23
+
+C2 VARIANT EXIT=3
+ERROR:  P3 principals: 1 allowlist rows fail pattern proof
+RESULT: FAILED (transaction rolled back; zero rows committed). See /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155140.log
+P2b view of the C2 drift: lifetime=23 allowlist=24 extra=0 missing=1

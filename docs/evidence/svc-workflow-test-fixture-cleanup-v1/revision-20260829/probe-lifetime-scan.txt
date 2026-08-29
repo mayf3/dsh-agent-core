@@ -1,0 +1,71 @@
+=== [R0] session / role privileges ===
+ current_user |      current_database      | can_createdb | is_superuser
+--------------+----------------------------+--------------+--------------
+ svc_wf       | svc_workflow_dogfood_clean | f            | f
+(1 row)
+
+=== [R1] lifetime-vs-allowlist set equality, 13 tables (lf / al / extra / missing) ===
+                t                | lf | al | extra | missing
+---------------------------------+----+----+-------+---------
+ principals                      | 24 | 24 |     0 |       0
+ domains                         | 13 | 13 |     0 |       0
+ domain_role_bindings            | 13 | 13 |     0 |       0
+ global_role_bindings            |  8 |  8 |     0 |       0
+ workflow_definitions            | 13 | 13 |     0 |       0
+ workflow_definition_versions    | 13 | 13 |     0 |       0
+ workflow_node_definitions       | 26 | 26 |     0 |       0
+ workflow_transition_definitions | 13 | 13 |     0 |       0
+ workflow_instances              | 19 | 19 |     0 |       0
+ workflow_command_receipts       | 25 | 25 |     0 |       0
+ workflow_context_revisions      | 19 | 19 |     0 |       0
+ workflow_node_visits            | 19 | 19 |     0 |       0
+ workflow_events                 | 19 | 19 |     0 |       0
+(13 rows)
+
+=== [R2] shape assumptions on the 224 allowlist rows (all must be 0 unless noted) ===
+ fixture_principals_not_enabled | fixture_domains_not_enabled | fixture_versions_with_context_schema | transitions_wrong_shape | nodes_wrong_shape | defs_failing_regex | domains_failing_regex
+--------------------------------+-----------------------------+--------------------------------------+-------------------------+-------------------+--------------------+-----------------------
+                              0 |                           0 |                                    0 |                       0 |                 0 |                  0 |                     0
+(1 row)
+
+=== [R2b] receipt key split on the 25 allowlist receipts (expect 19 uuid-v4 + 6 fixed) ===
+ is_uuid_v4_create | is_fixed_test_key | count
+-------------------+-------------------+-------
+ f                 | t                 |     6
+ t                 | f                 |    19
+(2 rows)
+
+=== [R2c] context title multiset on the 19 allowlist revisions ===
+       title        | count
+--------------------+-------
+ alpha-1            |     1
+ alpha-2            |     1
+ beta-1             |     1
+ boundary-a         |     1
+ boundary-b         |     1
+ denied-1           |     1
+ lifecycle-1        |     1
+ page-0             |     1
+ page-1             |     1
+ page-2             |     1
+ page-3             |     1
+ page-4             |     1
+ reader-a1          |     1
+ reader-a2          |     1
+ reader-b1          |     1
+ reader-lifecycle-1 |     1
+ reader-write-a     |     1
+ reader-write-b     |     1
+ summary-1          |     1
+(19 rows)
+
+=== [R2d] lifetime uuid-v4-create / fixed-key receipt totals DB-wide (expect 19 / 6) ===
+ lifetime_uuid_v4_create | lifetime_fixed_test_keys
+-------------------------+--------------------------
+                      19 |                        6
+(1 row)
+
+=== [R3] extra lifetime rows outside allowlist (must return 0 rows today) ===
+ tbl | id
+-----+----
+(0 rows)

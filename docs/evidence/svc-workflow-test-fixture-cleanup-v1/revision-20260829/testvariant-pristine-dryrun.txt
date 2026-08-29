@@ -1,0 +1,37 @@
+svc-workflow test-fixture cleanup  ts=20260829T155016  dryrun=1
+target: svc_workflow_dogfood_clean @ 127.0.0.1:5433 (user: svc_wf)
+transcript: /tmp/svc-workflow-test-fixture-cleanup-v2-20260829T155016.log
+
+P2b LIFETIME_FIXTURE_PATTERN_DRIFT_GATE: per-table lifetime-vs-allowlist (must be equal; extra=0 missing=0):
+                t                | lf_cnt | al_cnt | extra | missing
+---------------------------------+--------+--------+-------+---------
+ domain_role_bindings            |     13 |     13 |     0 |       0
+ domains                         |     13 |     13 |     0 |       0
+ global_role_bindings            |      8 |      8 |     0 |       0
+ principals                      |     24 |     24 |     0 |       0
+ workflow_command_receipts       |     25 |     25 |     0 |       0
+ workflow_context_revisions      |     19 |     19 |     0 |       0
+ workflow_definition_versions    |     13 |     13 |     0 |       0
+ workflow_definitions            |     13 |     13 |     0 |       0
+ workflow_events                 |     19 |     19 |     0 |       0
+ workflow_instances              |     19 |     19 |     0 |       0
+ workflow_node_definitions       |     26 |     26 |     0 |       0
+ workflow_node_visits            |     19 |     19 |     0 |       0
+ workflow_transition_definitions |     13 |     13 |     0 |       0
+(13 rows)
+
+   t   | lf_cnt | al_cnt | extra | missing
+-------+--------+--------+-------+---------
+ TOTAL |    224 |    224 |     0 |       0
+(1 row)
+
+P2b diagnostic: lifetime fixture-pattern rows OUTSIDE the allowlist (first 50; empty => none):
+ tbl | id
+-----+----
+(0 rows)
+
+
+DRYRUN: pre-checks, guarded deletes, and ALL post-checks executed inside the transaction.
+DRYRUN: rolling back now — ZERO writes will be committed.
+
+RESULT: DRYRUN PASSED — all pre-checks green, rolled back, zero writes.
