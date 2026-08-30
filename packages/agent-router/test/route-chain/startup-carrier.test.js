@@ -5,10 +5,12 @@
  * route-chain journal must stop after attempt two without cycling.
  */
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 import { AgentProcess } from '../../src/process.js'
 import {
@@ -17,6 +19,30 @@ import {
   ROUTE_HOP_FAILURE_CLASSES,
 } from '../../src/index.js'
 import { makeFakeChild } from '../helpers/fake-child.js'
+
+const ISOLATION_MARKER = 'startup-carrier'
+const ISOLATED_CHILD = process.env.DSH_LUNA_ROUTER_TEST_CHILD === ISOLATION_MARKER
+const isolatedTest = ISOLATED_CHILD ? test : () => {}
+const DEADLINE_ENV_KEYS = [
+  'DSH_AGENT_PROCESS_OVERRIDES_FILE', 'PRODUCTION_RUNTIME_ROOT',
+  'DSH_AGENT_INITIALIZE_TIMEOUT_MS', 'DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS',
+  'DSH_AGENT_TURN_TIMEOUT_MS', 'DSH_AGENT_SHUTDOWN_GRACE_MS',
+  'DSH_AGENT_TURN_TIMEOUT', 'DSH_AGENT_DELIVER_TIMEOUT',
+]
+
+if (!ISOLATED_CHILD) {
+  test('scenario 5 runs in a clean child-process environment', () => {
+    const env = { ...process.env, DSH_LUNA_ROUTER_TEST_CHILD: ISOLATION_MARKER }
+    for (const key of DEADLINE_ENV_KEYS) delete env[key]
+    const child = spawnSync(process.execPath, ['--test', fileURLToPath(import.meta.url)], {
+      env,
+      encoding: 'utf8',
+      maxBuffer: 8 * 1024 * 1024,
+    })
+    assert.equal(child.error, undefined)
+    assert.equal(child.status, 0, `${child.stdout}\n${child.stderr}`)
+  })
+}
 
 const AGENT_ID = 'agt_luna-startup-carrier'
 const GLM_CONFIG = Object.freeze({ provider: 'zai', model: 'glm-5.3' })
@@ -156,7 +182,7 @@ function bootstrap() {
   }
 }
 
-test('scenario 5: initialize RPC carrier is sanitized, classified, route-gated, and terminal after Luna', async (t) => {
+isolatedTest('scenario 5: initialize RPC carrier is sanitized, classified, route-gated, and terminal after Luna', async (t) => {
   const dir = await mkdtemp(join(tmpdir(), 'acr-scenario5-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const counters = {
