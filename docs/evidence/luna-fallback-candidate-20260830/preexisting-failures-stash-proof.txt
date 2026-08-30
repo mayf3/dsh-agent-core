@@ -1,0 +1,18 @@
+=== PRE-EXISTING failures re-proven at BASE CONTENT e2e1e22 (the 3 candidate-delta files checked out to base, same worktree env) ===
+candidate delta files now at base content; git diff e2e1e22 --stat (empty = exact base):
+
+--- feishu-regression at base:
+ℹ tests 9
+ℹ pass 8
+ℹ fail 1
+--- child-env at base:
+ℹ tests 5
+ℹ pass 4
+ℹ fail 1
+--- production-runtime at base:
+ℹ tests 40
+ℹ pass 33
+ℹ fail 6
+
+restored to candidate HEAD 8dd5845050ca46cba1814cf14272dd89fcaa79dd; status:
+       0

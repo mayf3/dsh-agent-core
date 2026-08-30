@@ -1,0 +1,3 @@
+mismatch => FAIL_CLOSED dsh_commit_mismatch | agent-provisioning: expected DSH commit 514ab7b0029141b88c807704764d0d3e1eea1da4, resolved
+dirty => FAIL_CLOSED dsh_commit_mismatch | agent-provisioning: cannot verify DSH commit under /var/folders/jh/5k4x44w12ps1kbrch8__f6b
+missing => FAIL_CLOSED dsh_commit_mismatch | agent-provisioning: cannot verify DSH commit under /var/folders/jh/5k4x44w12ps1kbrch8__f6b

@@ -1,0 +1,3 @@
+IDENTITY_OK {"version":"0.1.0-rc.8","commit":"514ab7b0029141b88c807704764d0d3e1eea1da4"}
+VERSION_PIN_MATCH true
+COMMIT_PIN_MATCH true

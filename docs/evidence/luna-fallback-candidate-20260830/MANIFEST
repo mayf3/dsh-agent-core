@@ -1,0 +1,34 @@
+candidate-harness-stamp.json
+candidate-path-blob-manifest.json
+glm53-builtin-evidence.txt
+governance-structure.txt
+harness-artifact.sha256
+harness-build-record.txt
+identity-negative.txt
+identity-positive.txt
+loader-readback-candidate-tree.txt
+loader-readback-negative-scenario10.txt
+loader-readback-positive.txt
+luna-credential-evidence.txt
+MANIFEST
+preexisting-failures-stash-proof.txt
+test-agent-provisioning.txt
+test-agent-router-full.txt
+test-production-runtime.txt
+
+f827db59e92babfaaca4c72c402622320fa5de95d41604cbb6573f8b8b0ae6eb  candidate-harness-stamp.json
+6f65bc073e6b8016b2670de4943a8e9ffbd6f74fe9880979962760425e6e35c2  candidate-path-blob-manifest.json
+fe7d109acbe00a3eb861c20e17e5a7f1939a151c1ba6f415026325980d3498dd  glm53-builtin-evidence.txt
+c9f87a58348f6e5d0bdf5e4a87a372ea4208945379e882a52db078fe66ff65b1  governance-structure.txt
+26e6917cbd566000c592721b5996f81ad2ae8414cb8ac7180caa99eb4f024c22  harness-artifact.sha256
+50277c640f1ee7b10222d1f72f432775c283c6ecd1dc76bedbb9e47bdab3bed1  harness-build-record.txt
+03a4b8aa85f1af70c16301ca330e846042ad65e37ef17621d2447f8f57e1c83b  identity-negative.txt
+c6a1faee48619f7d32361aac3b96e60f179cc67c94bd905f938167a2f9922825  identity-positive.txt
+b5f2fd3c4ea9b991f2dec0f2ade58150d5b936799258bd2399fc2c7f70987e56  loader-readback-candidate-tree.txt
+c53f08fb3485cbd6b9016695ab7d29f50a59bf62d3515bb4d178448a8d2b9805  loader-readback-negative-scenario10.txt
+915d37167519e08a06b6f1e5887aec302b4c39fee069b08804a6513afa530f49  loader-readback-positive.txt
+f302280a712e2bfe6fb728d2f7526fffa047bd8c303ae0a7ee22e33efd0614b2  luna-credential-evidence.txt
+4b418b89883476cc17dd27e812abf7e33c7dd0d3739510392c35e1c4a1d5ba63  preexisting-failures-stash-proof.txt
+37e52c336117a71a0c04cb1e3940cda0c269e501e922c18464a550a585545326  test-agent-provisioning.txt
+e4cf6319a8f7b8ac9a78e6d08564dbba2a03e517e94a285e6a9bbed8152c2010  test-agent-router-full.txt
+f83cacbbf53f24d2865353729bc0a12370a59c1314783238a0d81217373a3efb  test-production-runtime.txt
