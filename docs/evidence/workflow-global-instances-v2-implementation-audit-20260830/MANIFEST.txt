@@ -1,0 +1,25 @@
+# MANIFEST — workflow-global-instances-v2-implementation-audit-20260830
+
+Generated: 2026-08-30 (TASK_NAME = 接入 审计, INDEPENDENT_IMPLEMENTATION_REVIEW of PR #114)
+REVIEW_HEAD pin: 137fa9fc4c9ba49b64a96fb89465dfb443409d21
+Base: e2e1e22efabe99896bc0f83e02ac5e93d2c97f8d (= github/main at audit time, merge of PR #112)
+
+Normalization note: *.diff and *.txt transcripts are trailing-whitespace-normalized
+(byte-reproducible: sed -e 's/[[:space:]]*$//' <in> > <out>, FEISHU-round precedent).
+Authoritative fidelity = the sealed PR head commit 137fa9f itself + gh headRefOid.
+
+## Files (self excluded)
+
+743bb1c789a2cba33660a13d140aaec54cde1e2ca9b2c152b0c21ce0769c61d3  base-precondition.txt
+83db54f0289a21d9834a1ea56b5364fe0ab825a92143da0e71a0a7fdb0af884f  broker-test-base-173.txt
+f7098a16c515a3a90684463421e0f8caecf5d6ff7226b68a576d68bbe47e4493  broker-test-head-182.txt
+32a214ca721637014bfa9291ed99089947a97d6b17adf6dd3ef6e767bc90bf0d  closure-diffstat.txt
+34e4a3b0c95f4ded7752c08fa134fcd7f0f8af36a9589730794f19bdb7537b0a  closure-name-status.txt
+42a975ed9aa484e401e66ceed12edb64e7a9e02b116e9b3e2a3c063e50ea5b67  diff-check.txt
+9b4acc097f7a7fa4212af9d2a86283fced855c6ebbafb7f3a8629735b1c5b842  governance.txt
+90dfeb930d7b69eac05276e3dc23253e6b410370ad432efe096568f67dc233c4  hardcode-scan.txt
+b4ef8a412b6fa08306c27954184fd53b8b9ca2f188d160a7d32f23bbc3323d33  manifest-inventory.diff
+701bf49d27dea814a087f972c9b367b53972d1335313c1f1be7a6216fcbe2813  pr-114-metadata.json
+5d0d868f245b03999d2f63e81f146bc995e81244d1d1d126fccfcdab7c6f92b5  spec-blob-compare.txt
+c69d3aad40e7f5230cfa3daac26728185d9f8320e410424d7c7493af5f10f0df  structure-gate.txt
+ea5dabbd43dd6311e4434fcc16c0e95f4dcde784177107b74cf1ad576cecc8cf  workflow-js.diff

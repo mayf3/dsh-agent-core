@@ -1,0 +1,7 @@
+BASE=e2e1e22efabe99896bc0f83e02ac5e93d2c97f8d (merge commit of PR #112 decomposition)
+ℹ tests 173
+ℹ pass 173
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0

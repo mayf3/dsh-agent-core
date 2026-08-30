@@ -1,0 +1,10 @@
+capabilities.test.js at base:
+fatal: path 'packages/broker/test/capabilities.test.js' exists on disk, but not in 'e2e1e22efabe99896bc0f83e02ac5e93d2c97f8d'
+ABSENT
+manifest-inventory base count line:
+14:  assert.equal(all.length, 13)
+dedicated home at base:
+fatal: path 'packages/broker/test/capabilities/workflow-global-instances-v2.test.js' does not exist in 'e2e1e22efabe99896bc0f83e02ac5e93d2c97f8d'
+ABSENT
+dedicated home head line count:
+     317

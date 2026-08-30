@@ -1,0 +1,3 @@
+M	packages/broker/src/capabilities/workflow.js
+M	packages/broker/test/capabilities/manifest-inventory.test.js
+A	packages/broker/test/capabilities/workflow-global-instances-v2.test.js

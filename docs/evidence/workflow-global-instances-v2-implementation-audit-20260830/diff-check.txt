@@ -1,0 +1,4 @@
+git diff --check BASE..HEAD:
+rc=0
+git diff --check merge-base..HEAD:
+rc=0

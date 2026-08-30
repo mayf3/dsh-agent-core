@@ -1,0 +1,9 @@
+389:+test('workflow_global_instances: manifest shape — schema-valid, GET-only, no idempotency, declared error table', () => {
+396:+  // ACC-007: read-only binding — GET, no idempotency flag anywhere in the manifest.
+401:+  assert.equal(JSON.stringify(manifest).includes('idempotency'), false)
+425:+test('workflow_global_instances: generic tool — no per-agent wiring, no scheduler surface', () => {
+428:+  assert.equal(/agt_|dispatcher|scheduler/i.test(JSON.stringify(manifest)), false)
+429:+  // …and none in the capability module source, which stays free of scheduler bindings.
+431:+  assert.equal(/agt_|dispatcher|scheduler/i.test(source), false)
+432:+  assert.equal(source.includes('dc702687'), false)
+433:+  assert.equal(source.includes('bc970ced'), false)

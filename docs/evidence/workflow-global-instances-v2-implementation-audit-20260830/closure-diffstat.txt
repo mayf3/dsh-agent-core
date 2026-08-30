@@ -1,0 +1,4 @@
+ packages/broker/src/capabilities/workflow.js       |  76 +++++
+ .../test/capabilities/manifest-inventory.test.js   |   6 +-
+ .../workflow-global-instances-v2.test.js           | 317 +++++++++++++++++++++
+ 3 files changed, 396 insertions(+), 3 deletions(-)
