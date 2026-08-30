@@ -10,7 +10,7 @@ independent_review_blockers: NONE
 acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 scope:
   - mayf3/dsh-agent-core
   - packages/broker workflow capability surface（新增唯一写工具 workflow_transition）
@@ -57,6 +57,16 @@ owners:
 > 全部不变）；本修订轮不改 lifecycle 字段——`status` 仍 accepted、
 > `implementation_authority` 仍 none，直至 §17 授权方案的 gate 事务。
 > 修订明细与验证见 §17。
+>
+> **AUTHORITY FLIP（2026-08-30，联动 执行 / COORDINATED_ACCEPTANCE_AND_MERGE
+> step 4/4）。** 按 §17 AMEND-3 授权方案的 gate 事务：`implementation_authority:
+> none -> contracts` 生效（`status` 保持 accepted；`PRODUCTION_APPLY_AUTHORITY`
+> 保持 none）。reviewed head = focused-amendment head
+> `d1bc0f5b4e56d0eff6a4f14c7a955c4845d1101c`（fresh fetch 核对无漂移）+ 本 flip
+> commit。AMEND-3 步骤 2 的独立审计 gate 按 Owner 编排以直接 coordination
+> acceptance 执行（Owner-directed；§18 如实记录，不声明任何独立审计 verdict）。
+> 实现前置不变：分解 spec 已 accepted 并 merged（PR #107 merge `1fc3ad6`）——dedicated
+> home `workflow-transition.test.js` 由拆测 执行 轮创建。完整记录见 §18。
 
 ## 1. Goal
 
@@ -679,3 +689,53 @@ change）、§8 DEC-001..006、§9 CTR-001..008、§15 三项 fix、§16 accepta
 - 下一事务：独立 review（流转 审计）→ 通过后按 AMEND-3 执行
   authority-flip 事务（与姊妹 spec / decomposition acceptance 协调）→
   实现前置满足后实现轮（ACC-002/003，dedicated home + inventory 14→15）。
+
+## 18. Authority flip record (2026-08-30, 联动 执行 / COORDINATED_ACCEPTANCE_AND_MERGE)
+
+AUTHORITY_FLIP_TRANSACTION = LIFECYCLE_ONLY，ONE commit，ONE file（本文件）。
+
+- 事务：TASK_NAME = 联动 执行（step 4/4）；per §17 AMEND-3 授权方案第 3 步（gate
+  事务）；reviewed head = focused-amendment head
+  `d1bc0f5b4e56d0eff6a4f14c7a955c4845d1101c`（fresh fetch 核对无漂移）+ 本 flip
+  commit；独立 worktree。
+- 生命周期变化（唯一）：
+  - `implementation_authority: none -> contracts`（frontmatter 单行翻转原值
+    none——§16/§17 记录的 none 成为历史；本 Spec merged on main 起成为
+    workflow_transition scope 的实现授权）。
+  - `status` 保持 **accepted**（不新增 acceptance 事务；本 flip 是授权 gate，非
+    重新 acceptance）。
+  - `production_apply_authority` 保持 **none**（deploy / restart / Grant /
+    production state 变更仍需独立授权；§16 语义不变）。
+- **AMEND-3 步骤 2 的独立审计 gate（如实记录）**：§17 AMEND-3 的授权方案原要求
+  独立「流转 审计」轮 PASS 后再 flip；按 Owner 编排（TASK_TYPE =
+  COORDINATED_ACCEPTANCE_AND_MERGE，直接协调 acceptance），本事务以
+  Owner-directed 直接执行 flip，未运行独立审计轮。本记录**不声明任何独立审计
+  verdict**——没有审计 verdict 可记录，不伪造 `independent_review_result` 类字段。
+  机械化验证在 reviewed head 与 flip head 全部实测 PASS：frontmatter schema、
+  `verify_governance.py`（vendored bytes 匹配）、`npm run verify:structure`
+  （0 violations）、`git diff --check`、Broker 基线 `node --test` = 173/173。
+- **协调前置（已满足）**：分解 spec
+  `AGENT_CORE_BROKER_CAPABILITIES_TEST_DECOMPOSITION_V1` 已 accepted 并 merged
+  （PR #107 merge `1fc3ad6`）；姊妹 Global Instances V2（PR #108 merge
+  `4283657`）与 Domain Pagination V2（PR #109 merge `92891f8`）已 accepted 并
+  merged；inventory 协调序 13 →14（Global V2）→ 15（本 Spec）已由各方 authority
+  adopt。
+- **实现前置（flip 后仍成立，AMEND-3 第 4 步）**：本能力的实现 PR 只能从满足
+  以下条件的 fresh main 开工：(a) 分解 8-path exact closure 已 merge（dedicated
+  home `workflow-transition.test.js` 已存在并先承接 generic transition-shaped
+  idempotency fixture；legacy 聚合文件已删除；`manifest-inventory.test.js` 为
+  aggregate owner）；(b) 本文件 frontmatter 即实现基线上的这个翻转值
+  （contracts）；(c) GOVERNING_SPEC_UNMODIFIED——实现 PR 不得修改本文件。
+  因此实现轮必须排在拆测 执行 轮（NEXT_TASK = 拆测 执行）之后。
+- 语义变化（相对 reviewed focused-amendment head）= AUTHORITY_FIELD_ONLY：
+  frontmatter `implementation_authority` 单行翻转 + 头部 AUTHORITY FLIP 注记 +
+  本节；§1–§17（含 §2 AMEND-1 落点、AMEND-2 计数授权、AMEND-3 授权方案文字、
+  §15 三项 fix、§16 acceptance 记录）逐字节保留；§17 AMEND-3 中「审计 PASS 后
+  flip」的表述按既有纪律作为方案原文保留（本事务即该方案 gate 的 Owner-directed
+  执行）。
+- 事务边界：DOCS_ONLY（1 file）；PRODUCT_CODE_CHANGE = NONE；GRANT_CHANGE =
+  NONE；PRODUCTION_CHANGE = NONE；packages/、scripts/、.agents/**、auth-service、
+  production 均不动；PR #101/#102 不被本事务修改（PR #102 处置按分解 §8 步骤 7
+  属独立未来轮次）。
+- Merge：本 commit 之后随即 mark ready 并 merge PR #110（merge commit 为本
+  Spec authority flip 的 effective-on-main 坐标）。
