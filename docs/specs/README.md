@@ -162,20 +162,20 @@ MAX_CONFIGURED_ROUTES = 4、primary + fallbacks[]、STOP_CHAIN、
 ONE_LOGICAL_TURN、Scheduler INHERIT_AGENT_CHAIN_ONLY、
 ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN 等全部 ruling 不重开。
 
-## Agent Core global-route hemostasis proposal (amended)
+## Agent Core global-route hemostasis proposal (amendment R2)
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_GLOBAL_ROUTE_HEMOSTASIS_V1` | proposed / not accepted (amended after review `5061334894` = REVISE) | none (pure Governing / program Spec) | goals, boundaries, frozen decisions, child-authority DAG, four independent artifact-audit gates, target-universe partition, recipient set equality, canonical-source mechanical resolution, secret lifecycle, separate restore transaction, drain/diagnostic/expiry/post-COMMIT exit semantics; all implementation, deployment, restore, and apply authority belongs to future child authorities |
-| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2_HEMOSTASIS_COMPATIBILITY_AMENDMENT_V1` | proposed / not accepted | none | narrow precedence carve-out on the shared global environment surface for the hemostasis program only; preserves the CTO activation V2 historical boundary and the `agt_cto-agent` `zai/glm-5.3`, `fallbacks=[]` override invariants |
+| `AGENT_CORE_GLOBAL_ROUTE_HEMOSTASIS_V1` | proposed / not accepted (amended after review `5062138118` = REVISE) | none (pure Governing Program) | freezes goals, fail-closed boundaries, a named-node/explicit-edge prerequisite DAG, five generation→audit→exact-digest Owner artifact chains, source-stamp-before-write ordering, registry-union targets, restore branches, credential byte preservation, drain identity, diagnostic cleanup prerequisite, pre-unpause expiry monitor, and exactly 14 freshness classes |
 
-PR #117 and review `5061248705` are historical evidence inputs only (all PR #117
-state is `HISTORICAL_OBSERVATION_ONLY`, never apply-time proof). The five pre-existing
-home mutations are recorded as historical truth with the frozen disposition
-`ROLLBACK_BY_SEPARATELY_AUTHORIZED_RECONCILIATION_TRANSACTION`; the PR #117 runner remains
-forbidden and no retroactive authorization exists. The main Spec authorizes no code and
-carries no production-execution field. Await a new exact-head independent
-**“授权 审计”** and Owner acceptance; **DO NOT MERGE**.
+The former CTO compatibility-amendment candidate was removed from PR #120's final tree.
+CTO shared-environment compatibility is an **unresolved prerequisite** owned by a future,
+separately reviewed child Authority; this Program creates no carve-out, precedence rule,
+or supersession conclusion and permits no global environment mutation before that child
+is accepted and merged. PR #117 and review `5061248705` remain historical evidence only;
+its runner is forbidden, the five prior writes are not retroactively authorized, and the
+main Program authorizes no code or production execution. Await a new exact-head
+independent **“授权 审计”**; **DO NOT MERGE**.
 
 ## Forum moderation capabilities authority
 
