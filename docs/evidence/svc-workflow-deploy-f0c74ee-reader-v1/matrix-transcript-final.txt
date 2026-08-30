@@ -1,0 +1,109 @@
+PASS  TESTVARIANT line count matches sealed runner (     619)
+PASS  TESTVARIANT diff hunks = 12 lines (6 patches x 2) (12)
+=============== S4: baseline drift => zero-write refusal
+NOTICE:  relation "idx_grb_principal_role" already exists, skipping
+PASS  S4 exit code = 2 (zero-write gate) (2)
+PASS  S4 refusal names count drift
+PASS  S4 binary untouched (old) (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S4 injected row still present (7) (7)
+PASS  S4 no backup dirs created (0)
+=============== S5: grant SQL failure => full rollback
+NOTICE:  relation "idx_grb_principal_role" already exists, skipping
+PASS  S5 exit code = 1 (FAILED_AND_ROLLED_BACK) (1)
+PASS  S5 reports FAILED_AND_ROLLED_BACK
+PASS  S5 binary restored (old) (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S5 DB reader rows = 0 (0)
+PASS  S5 rollback health proof
+PASS  S5 ledger rollback record appended
+=============== S6: post-deploy unhealthiness survives restore => ROLLBACK_INCOMPLETE
+PASS  S6 exit code = 4 (ROLLBACK_INCOMPLETE) (4)
+PASS  S6 reports ROLLBACK_INCOMPLETE
+PASS  S6 names UNRESTORED_STATE
+PASS  S6 binary restored (old) though incomplete (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S6 old-healthy failed as designed
+=============== S3: version never flips => rollback after timeout
+NOTICE:  relation "idx_grb_principal_role" already exists, skipping
+PASS  S3 exit code = 1 (1)
+PASS  S3 failure names version timeout
+PASS  S3 binary restored (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S3 DB reader rows = 0 (0)
+=============== S2: new binary unhealthy => rollback
+NOTICE:  relation "idx_grb_principal_role" already exists, skipping
+PASS  S2 exit code = 1 (1)
+PASS  S2 failure names healthz
+PASS  S2 binary restored (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S2 old service healthy after restore
+=============== S1: full success path
+NOTICE:  relation "idx_grb_principal_role" already exists, skipping
+PASS  S1 exit code = 0 (0)
+PASS  S1 reports SUCCESS
+PASS  S1 binary == new artifact (4e633634b313f8c926ccaf7da07f3bfd9dbf25f024a4b63a3f0a88c5a0200356)
+PASS  S1 reader enabled = 1 (1)
+PASS  S1 coordinator absent = 0 (0)
+PASS  S1 grantee total rows = 1 (1)
+PASS  S1 non-grantee baseline intact (94d8249cb24587ac75bb3d46c8ddefdb)
+PASS  S1 legacy coordinator intact = 1 (1)
+PASS  S1 principals unchanged (232) (232)
+PASS  S1 ledger grant record appended
+PASS  S1 backup holds old binary (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+=============== S7: idempotent rerun => ALREADY_APPLIED
+PASS  S7 exit code = 0 (0)
+PASS  S7 reports ALREADY_APPLIED
+PASS  S7 DB still 7 rows (7)
+PASS  S7 ledger unchanged (10)
+PASS  S7 binary still new (4e633634b313f8c926ccaf7da07f3bfd9dbf25f024a4b63a3f0a88c5a0200356)
+=============== production invariants (assert untouched by the whole matrix)
+PASS  PROD binary unchanged (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  PROD grb baseline unchanged (6|94d8249cb24587ac75bb3d46c8ddefdb)
+PASS  PROD service pid still 1687 (1687)
+PASS  PROD ledger unchanged (12 lines) (12)
+
+=================== MATRIX SUMMARY
+
+PASS  TESTVARIANT line count matches sealed runner (     619)
+PASS  TESTVARIANT diff hunks = 12 lines (6 patches x 2) (12)
+PASS  S4 exit code = 2 (zero-write gate) (2)
+PASS  S4 refusal names count drift
+PASS  S4 binary untouched (old) (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S4 injected row still present (7) (7)
+PASS  S4 no backup dirs created (0)
+PASS  S5 exit code = 1 (FAILED_AND_ROLLED_BACK) (1)
+PASS  S5 reports FAILED_AND_ROLLED_BACK
+PASS  S5 binary restored (old) (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S5 DB reader rows = 0 (0)
+PASS  S5 rollback health proof
+PASS  S5 ledger rollback record appended
+PASS  S6 exit code = 4 (ROLLBACK_INCOMPLETE) (4)
+PASS  S6 reports ROLLBACK_INCOMPLETE
+PASS  S6 names UNRESTORED_STATE
+PASS  S6 binary restored (old) though incomplete (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S6 old-healthy failed as designed
+PASS  S3 exit code = 1 (1)
+PASS  S3 failure names version timeout
+PASS  S3 binary restored (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S3 DB reader rows = 0 (0)
+PASS  S2 exit code = 1 (1)
+PASS  S2 failure names healthz
+PASS  S2 binary restored (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S2 old service healthy after restore
+PASS  S1 exit code = 0 (0)
+PASS  S1 reports SUCCESS
+PASS  S1 binary == new artifact (4e633634b313f8c926ccaf7da07f3bfd9dbf25f024a4b63a3f0a88c5a0200356)
+PASS  S1 reader enabled = 1 (1)
+PASS  S1 coordinator absent = 0 (0)
+PASS  S1 grantee total rows = 1 (1)
+PASS  S1 non-grantee baseline intact (94d8249cb24587ac75bb3d46c8ddefdb)
+PASS  S1 legacy coordinator intact = 1 (1)
+PASS  S1 principals unchanged (232) (232)
+PASS  S1 ledger grant record appended
+PASS  S1 backup holds old binary (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  S7 exit code = 0 (0)
+PASS  S7 reports ALREADY_APPLIED
+PASS  S7 DB still 7 rows (7)
+PASS  S7 ledger unchanged (10)
+PASS  S7 binary still new (4e633634b313f8c926ccaf7da07f3bfd9dbf25f024a4b63a3f0a88c5a0200356)
+PASS  PROD binary unchanged (1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125)
+PASS  PROD grb baseline unchanged (6|94d8249cb24587ac75bb3d46c8ddefdb)
+PASS  PROD service pid still 1687 (1687)
+PASS  PROD ledger unchanged (12 lines) (12)
+PASS=46 FAIL=0

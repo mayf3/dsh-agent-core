@@ -1,0 +1,25 @@
+=== REAL-DB GRANT SQL DRYRUN (BEGIN...ROLLBACK; byte-identical to runner R1 block) ===
+grantee=dc702687-6515-4a2a-91ae-e572a9bbd766 test_binding_id=cca66d92-1ddb-44b2-9fd2-ac85b2190444
+PRE:  6|94d8249cb24587ac75bb3d46c8ddefdb
+BEGIN
+DO
+binding_id=cca66d92-1ddb-44b2-9fd2-ac85b2190444
+INSERT 0 1
+DO
+IN_TX_COUNT=7
+ROLLBACK
+POST: 6|94d8249cb24587ac75bb3d46c8ddefdb  (psql rc=0)
+VERDICT: GRANT DRYRUN = PASS
+  in-tx state: reader row inserted (enabled), coordinator absent, count 7,
+  non-grantee digest == baseline pin; ROLLBACK executed; pre==post byte-identical
+
+=== REAL-DB ROLLBACK SQL DRYRUN (BEGIN; INSERT; DELETE by binding_id; verify baseline; ROLLBACK) ===
+PRE:  6|94d8249cb24587ac75bb3d46c8ddefdb
+BEGIN
+INSERT 0 1
+DELETE 1
+DO
+POST_DELETE_COUNT=6
+ROLLBACK
+POST: 6|94d8249cb24587ac75bb3d46c8ddefdb  (psql rc=0)
+VERDICT: ROLLBACK DRYRUN = PASS

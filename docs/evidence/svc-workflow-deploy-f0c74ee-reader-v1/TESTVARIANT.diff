@@ -1,0 +1,20 @@
+122c122
+< SERVICE_DIR='/Users/yanfenma/.local/services/svc-workflow'
+---
+> SERVICE_DIR='/tmp/svc-wf-deploy-sbx/service'
+126,127c126,127
+< RELEASE_SH="$REPO/scripts/release.sh"
+< BASE_URL='http://127.0.0.1:8989'
+---
+> RELEASE_SH="/tmp/svc-wf-deploy-sbx/release-patched.sh"
+> BASE_URL='http://127.0.0.1:8990'
+166,167c166,167
+< service_pid() { /bin/launchctl print "gui/$(id -u)/$LABEL" 2>/dev/null | awk '/^[[:space:]]*pid =/{print $3; exit}'; }
+< restart_service() { /bin/launchctl kickstart -k "gui/$(id -u)/$LABEL"; }
+---
+> service_pid() { local f=/tmp/svc-wf-deploy-sbx/pid_counter; local n; n=$(cat "$f" 2>/dev/null || echo 0); n=$((n+1)); echo "$n" > "$f"; echo $((4700000+n)); }
+> restart_service() { echo "[TESTVARIANT] restart_service neutralized"; }
+487c487
+< if bash "$RELEASE_SH" deploy "$MAIN_COMMIT" 2>&1 | tee -a "$LOG"; then
+---
+> if SVC_WORKFLOW_SERVICE_DIR="$SERVICE_DIR" bash "$RELEASE_SH" deploy "$MAIN_COMMIT" 2>&1 | tee -a "$LOG"; then

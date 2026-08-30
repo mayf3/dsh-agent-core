@@ -1,0 +1,17 @@
+[deploy-runner 16:27:47] svc-workflow deploy runner v1  ts=20260830T162747
+[deploy-runner 16:27:47] target: MAIN_COMMIT=f0c74eefd63ca71a1fcb670ad31ac35f19f69539  (prod expected at 91fc4e40f400ee9cc17351f857a1ab2860682681)
+[deploy-runner 16:27:47] grant:  principal=dc702687-6515-4a2a-91ae-e572a9bbd766 role=GLOBAL_WORKFLOW_READER
+[deploy-runner 16:27:47] transcript: /tmp/svc-workflow-deploy-f0c74ee-v1-20260830T162747.log
+
+[deploy-runner 16:27:47] Type the exact phrase to confirm (APPLY SVC_WORKFLOW_DEPLOY_F0C74EE_READER_V1):
+[deploy-runner 16:27:47] interactive Owner confirmation accepted
+---- P1 git authority ----
+[deploy-runner 16:27:47] P1 PASS: github/main==f0c74eefd63ca71a1fcb670ad31ac35f19f69539; reader+return-422 ancestry proven; §4 content byte-proven
+---- P2 production state ----
+[deploy-runner 16:27:47] P2 PASS: prod state ok (already_deployed=0)
+---- P3 release artifact ----
+[deploy-runner 16:27:48] P3 PASS: artifact sha256 + provenance + 22 migration files byte-proven against MAIN_COMMIT
+---- P4 database preflight (read-only) ----
+[deploy-runner 16:27:48] P4 PASS: db=svc_workflow_dogfood_clean schema 0022; baseline 6 rows digest-ok; grantee AGENT/enabled; no reader/coordinator rows; legacy present
+[deploy-runner 16:27:48] RESULT: PREFLIGHT PASSED (P1-P4); writes have NOT started
+[deploy-runner 16:27:48] RESULT: PREFLIGHT_ONLY PASSED; WRITES=NONE

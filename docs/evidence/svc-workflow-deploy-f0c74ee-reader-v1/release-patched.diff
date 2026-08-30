@@ -1,0 +1,8 @@
+19c19
+< REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+---
+> REPO_ROOT="/Users/yanfenma/workspace/project/svc-workflow" # TESTVARIANT pin
+220c220
+<   launchctl kickstart -k "gui/$(id -u)/$LABEL"
+---
+>   echo "[TESTVARIANT release.sh] kickstart neutralized"

@@ -1,0 +1,9 @@
+{
+  "sourceSha": "f0c74eefd63ca71a1fcb670ad31ac35f19f69539",
+  "treeState": "clean",
+  "artifactSha256": "4e633634b313f8c926ccaf7da07f3bfd9dbf25f024a4b63a3f0a88c5a0200356",
+  "builtAt": "2026-08-30T07:47:59Z",
+  "buildCommand": "cargo build --release --locked (clean detached worktree @ f0c74eefd63ca71a1fcb670ad31ac35f19f69539)",
+  "migrationMaxVersion": "0022",
+  "migrationBundleDigest": "76b89716188a52b4d3bafa378963dbc04a2a57cb42ff1d085ccb0296f2b1987d"
+}
