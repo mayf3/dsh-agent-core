@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1
-status: accepted
+status: superseded
 accepted_date: 2026-08-29
 date: 2026-08-28
 type: implementation-spec (Broker-only pagination exposure for an existing read-only endpoint)
@@ -17,16 +17,25 @@ references:
   - svc-workflow/src/application/workflow_instance/query_types.rs:42-52
   - svc-workflow/src/store/postgres/workflow_instance_repository/query_domain_instances.rs:14-26,99-195
   - svc-workflow/contracts/workflow-http/v1/openapi.yaml:424-483,1330-1341,2196-2207
-implementation_authority: contracts
+implementation_authority: none
 production_apply_authority: none
 accepted_reviewed_head: 2dc70bcfafc068904ae2915a587501c1c8e2461e
 independent_audit_result: PASS
 independent_audit_blockers: NONE
 acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
+superseded_by: AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2
 ---
 
 # AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V1
 
+> **SUPERSEDED（2026-08-30）** by
+> `AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2`（whole-Spec successor，在
+> 联动 执行 / COORDINATED_ACCEPTANCE_AND_MERGE 协调 acceptance 事务中与 V2 的
+> `status: proposed -> accepted` 原子完成——见 V2 §10）。本 scope 的实现授权整体
+> 移交 V2（`implementation_authority: contracts -> none`、`superseded_by` 已回填
+> V2 ID）；本文件保留为历史 superseded authority，§0–§8 内容与 acceptance
+> provenance 原样保留。
+>
 > 状态：**accepted**（2026-08-29 lifecycle-only acceptance finalize，PR #99）。
 > 独立审计（分页 审计）：AUDIT_RESULT = **PASS**；BLOCKERS = **NONE**；
 > SERVICE_CURSOR_CONTRACT = **VERIFIED**；SECOND_PAGE_LIVE_PROOF = **RECORDED_PASS**；
