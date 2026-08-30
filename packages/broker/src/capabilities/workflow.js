@@ -13,22 +13,22 @@
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
  *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
  *
- * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1):
+ * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 +
+ * AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2):
  * read-only domain-wide instance enumeration for DOMAIN_OWNERs. The DOMAIN_OWNER
  * check is enforced SERVER-SIDE by svc-workflow (query_service.list_domain_instances
  * -> check_domain_owner; non-owner -> workflow_instance_not_found_or_not_visible);
  * the broker never replicates or relaxes it. Wire param is `domainId` (downstream
- * serde rename_all=camelCase + deny_unknown_fields); cursors and filter params
- * (lifecycle/status/definitionKey/currentNodeKey/assigneePrincipalId) are
- * deliberately NOT exposed (first-batch cursor discipline).
- *
- * Opaque-cursor paging (before_created_at/before_id, after_created_at/after_id)
- * is deliberately NOT exposed in the first batch (deferred, see report); only
- * `limit` is surfaced — the transport forwards ONLY manifest-declared query
- * names, so cursor parameters can never reach svc-workflow (not even "half"
- * a cursor). The write surface (transitions / create_instance / cancel /
- * archive / domain ops) is deferred with the Idempotency-Key generic
- * mechanism already in place for it (transport `idempotencyKey` flag).
+ * serde rename_all=camelCase + deny_unknown_fields); filter params
+ * (lifecycle/status/definitionKey/currentNodeKey/assigneePrincipalId) remain
+ * deliberately NOT exposed. Pagination exposes the server's composite keyset
+ * cursor as beforeCreatedAt + beforeId. Both absent means page one; both present
+ * means a later page; either alone fails fast locally with `invalid_cursor`
+ * before credential, token, or HTTP work. Full cursor strings are forwarded
+ * verbatim and the downstream page, including next_cursor, is not reshaped.
+ * The write surface (transitions / create_instance / cancel / archive / domain
+ * ops) remains deferred with the generic Idempotency-Key mechanism already in
+ * place for it (transport `idempotencyKey` flag).
  *
  * Downstream error preservation: each manifest DECLARES the svc-workflow
  * read-side error codes its endpoints can produce (evidence: svc-workflow
@@ -68,7 +68,7 @@ const queryErrors = [
 
 const paginationErrors = [
   { code: 'invalid_pagination', description: 'Pagination parameters are invalid (limit must be 1-20).' },
-  { code: 'invalid_cursor', description: 'Cursor parameters are invalid (cursors are not exposed by this capability).' },
+  { code: 'invalid_cursor', description: 'Cursor parameters are invalid (cursor fields must be given as a complete all-or-none group).' },
 ]
 
 /** `limit` bound contract: Broker-side fail-fast before any HTTP request. */
@@ -204,8 +204,13 @@ export const workflowMyDomainsManifest = withTransportErrors({
  * (others get workflow_instance_not_found_or_not_visible, which also covers a
  * nonexistent domain). The summary projection passes through untouched
  * (items: workflow_instance_id / title / is_terminal / current_node /
- * current_assignee_principal_id / created_at / updated_at, + next_cursor);
- * cursor params are NOT exposed, so the model-facing contract is single-page.
+ * current_assignee_principal_id / created_at / updated_at, + next_cursor).
+ *
+ * PAGINATION_V2 exposes the optional composite keyset cursor pair
+ * beforeCreatedAt + beforeId. A generic manifest allOrNone group rejects either
+ * half locally before credentials, tokens, handlers, or HTTP. Complete cursor
+ * strings are forwarded verbatim through the query allowlist; no timestamp
+ * precision, timezone, UUID, field names, or downstream response are changed.
  */
 export const workflowDomainInstancesManifest = withTransportErrors({
   id: 'workflow_domain_instances',
@@ -213,6 +218,7 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   name: 'Workflow Domain Instances',
   description:
     'Agent Core capability `workflow_domain_instances` (svc-workflow): list all workflow instances in one domain (read-only; DOMAIN_OWNER of the domain only — enforced server-side). ' +
+    'To continue, pass next_cursor.created_at as beforeCreatedAt and next_cursor.id as beforeId; provide both cursor fields or neither. ' +
     'Returns {ok: true, result: <domain instance page>} on success.',
   requiredScopes: ['workflow.read'],
   errors: [
@@ -225,21 +231,31 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   operations: [
     {
       name: 'list',
-      description: 'List the instances of the given domainId (UUID). Optional: limit (1-20).',
+      description:
+        'List the instances of the given domainId (UUID). Optional: limit (1-20); beforeCreatedAt + beforeId (all-or-none cursor pair copied verbatim from next_cursor).',
       arguments: {
         properties: {
           domainId: { type: 'string', description: 'Workflow domain id (UUID) to enumerate.' },
           limit: limitProperty,
+          beforeCreatedAt: {
+            type: 'string',
+            description: 'Cursor: next_cursor.created_at from the previous page (RFC 3339, forwarded verbatim). Must be paired with beforeId.',
+          },
+          beforeId: {
+            type: 'string',
+            description: 'Cursor: next_cursor.id from the previous page (UUID, forwarded verbatim). Must be paired with beforeCreatedAt.',
+          },
         },
         required: ['domainId'],
+        allOrNone: [{ properties: ['beforeCreatedAt', 'beforeId'], validationError: 'invalid_cursor' }],
       },
       result: { type: 'json' },
-      errors: ['invalid_arguments', 'invalid_pagination'],
+      errors: ['invalid_arguments', 'invalid_pagination', 'invalid_cursor'],
       http: {
         target: 'svc-workflow',
         method: 'GET',
         path: '/internal/v1/workflow-instances/domain',
-        query: ['domainId', 'limit'],
+        query: ['domainId', 'limit', 'beforeCreatedAt', 'beforeId'],
       },
     },
   ],
