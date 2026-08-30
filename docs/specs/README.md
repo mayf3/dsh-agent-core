@@ -162,17 +162,20 @@ MAX_CONFIGURED_ROUTES = 4、primary + fallbacks[]、STOP_CHAIN、
 ONE_LOGICAL_TURN、Scheduler INHERIT_AGENT_CHAIN_ONLY、
 ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN 等全部 ruling 不重开。
 
-## Agent Core global-route hemostasis proposal
+## Agent Core global-route hemostasis proposal (amended)
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_GLOBAL_ROUTE_HEMOSTASIS_V1` | proposed / not accepted | contracts on future acceptance only | temporary all-target-Agent `zai/glm-5.3`, `fallbacks=[]` hemostasis proposal; full inventory, first-spawn, credential, transaction, drain, diagnostic, expiry, and rollback authority; no current production permission |
+| `AGENT_CORE_GLOBAL_ROUTE_HEMOSTASIS_V1` | proposed / not accepted (amended after review `5061334894` = REVISE) | none (pure Governing / program Spec) | goals, boundaries, frozen decisions, child-authority DAG, four independent artifact-audit gates, target-universe partition, recipient set equality, canonical-source mechanical resolution, secret lifecycle, separate restore transaction, drain/diagnostic/expiry/post-COMMIT exit semantics; all implementation, deployment, restore, and apply authority belongs to future child authorities |
+| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2_HEMOSTASIS_COMPATIBILITY_AMENDMENT_V1` | proposed / not accepted | none | narrow precedence carve-out on the shared global environment surface for the hemostasis program only; preserves the CTO activation V2 historical boundary and the `agt_cto-agent` `zai/glm-5.3`, `fallbacks=[]` override invariants |
 
-This proposal is independent of the accepted `agt_cto-agent` route authority and does not
-modify its target-only meaning. PR #117 and independent review `5061248705` are evidence
-inputs only. The current runner remains forbidden; five pre-existing home mutations are
-recorded as historical truth and are not retroactively authorized. Await exact-head
-independent **“授权 审计”** and Owner acceptance; **DO NOT MERGE**.
+PR #117 and review `5061248705` are historical evidence inputs only (all PR #117
+state is `HISTORICAL_OBSERVATION_ONLY`, never apply-time proof). The five pre-existing
+home mutations are recorded as historical truth with the frozen disposition
+`ROLLBACK_BY_SEPARATELY_AUTHORIZED_RECONCILIATION_TRANSACTION`; the PR #117 runner remains
+forbidden and no retroactive authorization exists. The main Spec authorizes no code and
+carries no production-execution field. Await a new exact-head independent
+**“授权 审计”** and Owner acceptance; **DO NOT MERGE**.
 
 ## Forum moderation capabilities authority
 
