@@ -1,0 +1,9 @@
+== /Users/yanfenma/.openclaw/delivery-queue/02dd217c-a7c8-413f-bdaf-1fd93b29bdc8.json ==
+{
+ "id": "02dd217c-a7c8-413f-bdaf-1fd93b29bdc8",
+ "enqueuedAt": 1788024556920,
+ "channel": "feishu",
+ "to": "chat:oc_3ce9cb52ea6d64f64a3197a978dd8c89",
+ "retryCount": 1,
+ "lastError": "Cannot destructure property 'tenant_access_token' of '(intermediate value)' as it is undefined."
+}

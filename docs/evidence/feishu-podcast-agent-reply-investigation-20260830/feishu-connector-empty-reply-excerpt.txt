@@ -1,0 +1,9 @@
+== source: packages/feishu-connector/src/api.js ==
+18: export function textContent(text) {
+19:   return JSON.stringify({ text: String(text ?? '') })   // NO non-empty guard
+25: ... reply(client, replyTarget, text, opts)
+37:   const data = { content, msg_type: 'text' }            // '' -> {"text":""} sent as a message
+
+== implication ==
+A turn that returns reply = '' (empty/whitespace final text) is POSTED AS AN EMPTY TEXT REPLY
+to Feishu. Feishu renders it as a quote reply with no body ("回复 mayf3:" + quoted original).

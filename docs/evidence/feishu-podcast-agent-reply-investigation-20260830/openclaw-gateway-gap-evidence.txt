@@ -1,0 +1,19 @@
+== /Users/yanfenma/.openclaw/logs/gateway.log per-day line counts (2026-08-16..30) ==
+Aug 16: 5168
+Aug 17: 3258
+Aug 18: 2055
+Aug 19: 0
+Aug 20: 0
+Aug 21: 0
+Aug 22: 0
+Aug 23: 0
+Aug 24: 0
+Aug 25: 0
+Aug 26: 0
+Aug 27: 0
+Aug 28: 0
+Aug 29: 0
+Aug 30: 4675
+
+== last [feishu] event for chat oc_516baf in gateway.log ==
+2026-08-15T15:45:34.063+08:00 [feishu] feishu[default]: dispatching to agent (session=agent:podcast-producer-agent:feishu:group:oc_516baf0ca1dee279bd080ec1e929bac0)

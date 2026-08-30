@@ -1,0 +1,42 @@
+ui-onboarding:
+  welcomeNoticeVersion: 2026-08-13.1
+llm-pi-ai:
+  providers:
+    opencode-go:
+      apiKeyEnv: OPENCODE_GO_API_KEY
+    oc-go:
+      displayName: oc-go
+      apiKeyEnv: OC_GO_API_KEY
+      api: openai-completions
+      baseURL: https://opencode.ai/zen/go/v1
+      models:
+        - id: deepseek-v4-flash
+    ollama:
+      displayName: Ollama
+      apiKeyEnv: OLLAMA_LOCAL_API_KEY
+      api: openai-completions
+      baseURL: http://127.0.0.1:11434/v1
+      models:
+        - id: qwen3.8:27b-mtp-q4_K_M-64k
+          name: qwen3.8:27b-mtp-q4_K_M-64k
+          contextWindow: 65536
+          input:
+            - text
+            - image
+        - id: qwen3.8:27b-mtp-q4_K_M-128k
+          name: qwen3.8:27b-mtp-q4_K_M-128k
+          contextWindow: 131072
+          input:
+            - text
+            - image
+    zai:
+      apiKeyEnv: ZAI_API_KEY
+      models:
+        - id: glm-5.3
+agent-default-model:
+  provider: zai
+  model: glm-5.3
+agent-presets:
+  default: cordis-smart
+permission:
+  defaultPreset: danger-full-access

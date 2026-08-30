@@ -1,0 +1,23 @@
+== source: packages/agent-router/src/process.js (dsh-agent-core @ docs/lark-ux-phase1-v2-spec) ==
+386:  turn(sessionId, text, opts = {}, timeoutMs = Number.parseInt(process.env.DSH_AGENT_TURN_TIMEOUT ?? '300000', 10)) {
+396:  async runTurn(sessionId, text, opts, timeoutMs) {
+416:      while (!done && Date.now() - started < timeoutMs) {
+454:      if (!done) throw new Error(`turn timeout for session ${sessionId} (agent ${this.agentId})`)
+
+== source: packages/agent-router/src/index.js (onIngress catch path) ==
+      if (feishu !== undefined && isFeishuEntry) {
+        await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply)
+        log.log(`reply sent back to ...`)
+      }
+      return { reply, ... }
+    } catch (error) {
+      log.error(`delivery to ${binding.activeAgentId} failed: ${error?.message ?? error}`)
+      if (feishu !== undefined && isFeishuEntry) {
+        try { await feishu.reply(replyTarget..., `[agent-core] delivery failed: ${error.message ?? error}`) } catch {}
+      }
+      return { error }
+    }
+
+== observed runtime.err.log (yanfenma test copy /Users/yanfenma/.agent-core/logs/runtime.err.log) ==
+[router] ERROR delivery to agt_shopping-list-agent failed: turn timeout for session main (agent agt_shopping-list-agent)
+[router] ERROR delivery to agt_ceo-agent failed: turn timeout for session main (agent agt_ceo-agent)
