@@ -67,8 +67,8 @@ function quotaCarrier(evidence = {}) {
   })
 }
 
-function newCounters() {
-  return {
+function localLifecycleRecorder() {
+  const counters = {
     glmProviderAttempts: 0,
     lunaProviderAttempts: 0,
     failedGlmToolStarts: 0,
@@ -80,12 +80,24 @@ function newCounters() {
     externalBusinessDeliveries: 0,
     ingressFinalizations: 0,
   }
+  return {
+    counters,
+    providerAttempt(routeRef) { counters[routeRef === 'glm53' ? 'glmProviderAttempts' : 'lunaProviderAttempts'] += 1 },
+    toolStart(routeRef) { counters[routeRef === 'glm53' ? 'failedGlmToolStarts' : 'lunaToolStarts'] += 1 },
+    toolResult(routeRef) { counters[routeRef === 'glm53' ? 'failedGlmToolResults' : 'lunaToolResults'] += 1 },
+    logicalResult() { counters.finalLogicalResults += 1 },
+    ingressFinalized() { counters.ingressFinalizations += 1 },
+    externalDelivery(text) {
+      counters.externalBusinessDeliveries += 1
+      if (text === 'glm-result-must-not-deliver') counters.failedGlmExternalDeliveries += 1
+    },
+  }
 }
 
 class LocalProviderProcess {
-  constructor(options, counters, glmFailure) {
+  constructor(options, lifecycle, glmFailure) {
     Object.assign(this, options)
-    this.testCounters = counters
+    this.lifecycle = lifecycle
     this.glmFailure = glmFailure
     this.pid = options.provider === 'zai' ? 7101 : 7102
     this.exit = undefined
@@ -98,13 +110,12 @@ class LocalProviderProcess {
   spawn() { return this }
   async ready() { return 0 }
   async turn() {
-    if (this.provider === 'zai') {
-      this.testCounters.glmProviderAttempts += 1
-      throw this.glmFailure()
-    }
-    this.testCounters.lunaProviderAttempts += 1
-    this.testCounters.lunaToolStarts += 1
-    this.testCounters.lunaToolResults += 1
+    const routeRef = this.provider === 'zai' ? 'glm53' : 'luna'
+    this.lifecycle.providerAttempt(routeRef)
+    if (routeRef === 'glm53') throw this.glmFailure()
+    this.lifecycle.toolStart(routeRef)
+    this.lifecycle.toolResult(routeRef)
+    this.lifecycle.logicalResult()
     return { status: 'completed', reply: 'luna-only-result', messageId: 'luna-message-1' }
   }
   async shutdown() {
@@ -118,23 +129,35 @@ class LocalProviderProcess {
 
 function fakeCtx(services) {
   const provided = new Map()
+  const disposers = []
   return {
     get: (name) => services.get(name) ?? provided.get(name),
     provide: (name, value) => { provided.set(name, value) },
-    effect: () => () => {},
+    effect: (register) => {
+      const dispose = register()
+      disposers.push(dispose)
+      return dispose
+    },
+    async disposeAll() {
+      for (const dispose of disposers.reverse()) await dispose?.()
+    },
   }
 }
 
-function fakeFeishu(counters) {
+function fakeFeishu(lifecycle) {
   const replies = []
   return {
     replies,
-    setCallback(callback) { this.callback = callback },
+    setCallback(callback) {
+      this.callback = async (...args) => {
+        try { return await callback(...args) } finally { lifecycle.ingressFinalized() }
+      }
+    },
     replyTargetFor: (ingress) => ({
       replyTo: (messageId) => ({ conversationId: ingress.conversationId, messageId }),
     }),
     async reply(target, text) {
-      counters.externalBusinessDeliveries += 1
+      lifecycle.externalDelivery(text)
       replies.push({ target, text })
     },
   }
@@ -154,8 +177,8 @@ function ingress(caseId = 'safe') {
 async function freshRig(t, glmFailure) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-scenario7-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
-  const counters = newCounters()
-  const feishu = fakeFeishu(counters)
+  const lifecycle = localLifecycleRecorder()
+  const feishu = fakeFeishu(lifecycle)
   const workspaceBootstrap = {
     ensure: async () => ({}),
     resolveWorkspace: (agentId) => join('/tmp/ws', agentId),
@@ -172,8 +195,10 @@ async function freshRig(t, glmFailure) {
     ['agentDefinition', definition],
     ['feishu', feishu],
   ]))
+  t.after(() => ctx.disposeAll())
   const processes = []
   const router = applyRouter(ctx, {
+    productionRoot: join(dir, 'production-root'),
     bindingsStoreFile: join(dir, 'bindings.json'),
     defaultAgentId: AGENT_ID,
     defaultSessionId: 'main',
@@ -181,19 +206,17 @@ async function freshRig(t, glmFailure) {
     provisionHome: () => {},
     resolveRouteChain: snapshot,
     processFactory: (options) => {
-      const proc = new LocalProviderProcess(options, counters, glmFailure)
+      const proc = new LocalProviderProcess(options, lifecycle, glmFailure)
       processes.push(proc)
       return proc
     },
   })
-  return { router, feishu, counters, processes }
+  return { router, feishu, counters: lifecycle.counters, processes }
 }
 
 test('scenario 7: real onIngress path emits one Luna result and one external business delivery', async (t) => {
   const rig = await freshRig(t, () => quotaCarrier())
   const result = await rig.feishu.callback(ingress())
-  rig.counters.ingressFinalizations += 1
-  if (result.error === undefined) rig.counters.finalLogicalResults += 1
 
   const journal = rig.router.routeChainJournalSnapshot()
   const attempts = journal.filter((entry) => entry.kind === 'route_attempt')
@@ -243,7 +266,6 @@ test('scenario 7 negative carriers: unsafe, partial, incomplete, and outcome-unk
     await t.test(name, async (st) => {
       const rig = await freshRig(st, carrier)
       const result = await rig.feishu.callback(ingress(name))
-      rig.counters.ingressFinalizations += 1
       const journal = rig.router.routeChainJournalSnapshot()
       const attempts = journal.filter((entry) => entry.kind === 'route_attempt')
       const finals = journal.filter((entry) => entry.kind === 'route_chain_final')

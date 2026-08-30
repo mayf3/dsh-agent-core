@@ -133,10 +133,18 @@ class RpcInitializeFailureProcess extends AgentProcess {
 
 function fakeCtx(services) {
   const provided = new Map()
+  const disposers = []
   return {
     get: (name) => services.get(name) ?? provided.get(name),
     provide: (name, value) => { provided.set(name, value) },
-    effect: () => () => {},
+    effect: (register) => {
+      const dispose = register()
+      disposers.push(dispose)
+      return dispose
+    },
+    async disposeAll() {
+      for (const dispose of disposers.reverse()) await dispose?.()
+    },
   }
 }
 
@@ -168,8 +176,10 @@ test('scenario 5: initialize RPC carrier is sanitized, classified, route-gated, 
     ['workspaceBootstrap', bootstrap()],
     ['agentDefinition', definition],
   ]))
+  t.after(() => ctx.disposeAll())
   const spawned = []
   const router = applyRouter(ctx, {
+    productionRoot: join(dir, 'production-root'),
     bindingsStoreFile: join(dir, 'bindings.json'),
     defaultAgentId: AGENT_ID,
     defaultSessionId: 'main',
