@@ -1,0 +1,12 @@
+--- /tmp/mo-9bb5b97.js	2026-08-31 06:42:08
++++ /usr/local/libexec/agent-core/app/packages/production-runtime/src/model-overrides.js	2026-08-31 00:25:44
+@@ -373,9 +373,6 @@
+     const registered = new Set(registeredAgentIds)
+     for (const [agentId, entry] of Object.entries(parsed.overrides)) {
+       if (!registered.has(agentId)) throw invalid(`unregistered agentId ${JSON.stringify(agentId)}`)
+-      if (agentId !== CHATGPT_SUBSCRIPTION_V1.targetAgentId) {
+-        throw invalid(`V2 activation scope is exactly {${CHATGPT_SUBSCRIPTION_V1.targetAgentId}} (got ${JSON.stringify(agentId)})`)
+-      }
+       if (!exactKeys(entry, ['model']) || entry.model === null || typeof entry.model !== 'object'
+           || Array.isArray(entry.model) || !exactKeys(entry.model, ['fallbacks', 'primary'])) {
+         throw invalid(`override ${agentId} must contain exactly model.{primary, fallbacks}`)

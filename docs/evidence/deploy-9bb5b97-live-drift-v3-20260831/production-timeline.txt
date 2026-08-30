@@ -1,0 +1,68 @@
+# Post-audit production timeline (all observations read-only, 2026-08-31)
+
+## Deploy ledger (verbatim)
+2026-08-30T16:06:18Z applied target=9bb5b97442c7155da36f06e867d1a655410544ac backup=/usr/local/libexec/agent-core/.deploy-backups/agent-core-9bb5b97-20260830T160612Z health=http://127.0.0.1:8790/health state=TARGET
+
+## Deploy v2 backup README (verbatim, proves which runner applied 9bb5b97 and from which BASE)
+agent-core monotonic deploy backup (pre-apply BASE copies)
+created_utc   : 20260830T160612Z
+target_commit : 9bb5b97442c7155da36f06e867d1a655410544ac
+base_manifest : 15793b0e2c3cc07c32d3e9a96e1928428244a7d44f5c1dadf6bc06a992a7732d (131 files)
+added_path    : packages/agent-router/src/route-chain-canary.js (absent in BASE; rollback removes it)
+runner        : /tmp/run-agent-core-deploy-9bb5b97-v2.sh
+
+## Backup dir listings
+-- .deploy-backups/agent-core-9bb5b97-20260830T160612Z (6 BASE copies + README) --
+  /usr/local/libexec/agent-core/.deploy-backups/agent-core-9bb5b97-20260830T160612Z/README.txt
+  /usr/local/libexec/agent-core/.deploy-backups/agent-core-9bb5b97-20260830T160612Z/packages/agent-router/src/index.js
+  /usr/local/libexec/agent-core/.deploy-backups/agent-core-9bb5b97-20260830T160612Z/packages/agent-router/src/ingress-delivery.js
+  /usr/local/libexec/agent-core/.deploy-backups/agent-core-9bb5b97-20260830T160612Z/packages/agent-router/src/route-chain.js
+  /usr/local/libexec/agent-core/.deploy-backups/agent-core-9bb5b97-20260830T160612Z/packages/broker/src/capabilities/workflow.js
+  /usr/local/libexec/agent-core/.deploy-backups/agent-core-9bb5b97-20260830T160612Z/packages/production-runtime/src/compose.js
+-- .emergency-route-backups/ --
+  total 0
+  drwxr-xr-x@  4 root  wheel  128 Aug 31 00:23 .
+  drwxr-xr-x  13 root  wheel  416 Aug 31 00:23 ..
+  drwxr-xr-x@  5 root  wheel  160 Aug 31 00:15 20260830T161512Z
+  drwxr-xr-x@  6 root  wheel  192 Aug 31 00:23 luna-fleet-20260830T162358Z
+  glm53-cutover backup 20260830T161512Z: plist + agent-ids + settings yamls only (NO app files)
+  luna-fleet backup 20260830T162358Z files (top level):
+    /usr/local/libexec/agent-core/.emergency-route-backups/luna-fleet-20260830T162358Z/home-modes.txt
+    /usr/local/libexec/agent-core/.emergency-route-backups/luna-fleet-20260830T162358Z/model-overrides.js
+    /usr/local/libexec/agent-core/.emergency-route-backups/luna-fleet-20260830T162358Z/agent-model-overrides.json
+
+## Emergency backup copies: blob cross-check
+  luna-fleet model-overrides.js (pre-change) = f1e09d474143350fb0efe45e3d168cd480900c8b
+  (== 9bb5b97 blob f1e09d47... => live was exactly TARGET until the breakglass write)
+
+## /tmp operator scripts involved (sha256)
+  0297acda40161de715e5749205fbec7f53b16fbc9a8af62461c3cad0164d22b4  /tmp/agent-core-emergency-glm53-cutover-v1.sh
+  183c10d1e28b9e18db292281ddb1b02bce4fac9a90299d0d5a70811f5011c5e6  /tmp/agent-core-emergency-glm53-cutover-v2.sh
+  65aee43a520f3c7896da4af65846598fbb1fa094515c19dfd7d52f8948452b85  /tmp/agent-core-breakglass-luna-fleet-v1.sh
+  f6b6fb7bd33ffff7360784468e747f9ef940564873a8686a137dce89f75f04c8  /tmp/agent-core-restore-home-modes-v1.sh
+  181c35d4741255f391235d0f8a5ea88e2d47a375d9d90333ddd572bcd4ad5ece  /tmp/run-agent-core-deploy-9bb5b97-v1.sh
+  c64b452e76086f0028395a6b584f8bb20e31170feed4cd08e666bd5435ed48c0  /tmp/run-agent-core-deploy-9bb5b97-v2.sh
+  a4b74918c3c97cc8c9b6f54a55a15099d3976afd0e25788865ce3b8cf385ced8  /tmp/run-agent-core-deploy-9bb5b97-v3.sh
+
+## App-tree files modified since 2026-08-30 23:00 (find -newermt; = 6 deploy files + model-overrides.js)
+  /usr/local/libexec/agent-core/app/packages/production-runtime/src/compose.js
+  /usr/local/libexec/agent-core/app/packages/production-runtime/src/model-overrides.js
+  /usr/local/libexec/agent-core/app/packages/agent-router/src/route-chain.js
+  /usr/local/libexec/agent-core/app/packages/agent-router/src/index.js
+  /usr/local/libexec/agent-core/app/packages/agent-router/src/ingress-delivery.js
+  /usr/local/libexec/agent-core/app/packages/agent-router/src/route-chain-canary.js
+  /usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js
+
+## glm53-cutover v2 NEVER reached its write stage
+  - its backup dir *-v2 does NOT exist under .emergency-route-backups/
+  - app launcher scripts/production-runtime.mjs live OID == 9bb5b97 OID a215cacd (untouched)
+
+## Fleet overrides state (read-only JSON parse)
+  /Users/authsvc/.agent-model-overrides.json (505:601 0644, mtime 2026-08-31 00:25:45 +0800):
+  total=91 agents, lunaPrimary=91, routeCatalog=luna only
+  => the removed scope guard is load-bearing: with the guard present, all 91 non-CTO luna
+     overrides would fail loadAgentModelOverrides at boot; service is healthy => guard removal
+     is required by the CURRENT production config. Any revert MUST be coordinated with this file.
+
+## Runtime health (read-only)
+  {"ok":true,"service":"agent-core-notification-ingress","deliverReady":true,"authConfigured":false,"storeReady":true}  note: /Users/authsvc/.agent-core/logs/runtime.log not found at that path during this round

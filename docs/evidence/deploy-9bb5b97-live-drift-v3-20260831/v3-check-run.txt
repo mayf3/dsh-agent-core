@@ -1,0 +1,11 @@
+NOTICE: github/main advanced past the pinned target (main=9386ac4e4515ea628e2a450f402b540f165c13c3, pin=9bb5b97442c7155da36f06e867d1a655410544ac); the next monotonic deploy round must re-audit the new head
+TASK_NAME=接入 调查 (live-drift freeze + completion runner)
+TARGET_COMMIT=9bb5b97442c7155da36f06e867d1a655410544ac
+LIVE_STATE=FROZEN
+LIVE_FILES=132
+MISSING_FROM_TARGET=NONE (deploy v2 already applied all 6 files at 2026-08-30T16:06:18Z; ledger on record)
+DRIFT_VS_9BB5B97=1 file: packages/production-runtime/src/model-overrides.js (emergency breakglass, pending Owner ratification; pinned, never written by this runner)
+DEPLOY_DELTA_OF_V3=0-or-1 file (workflow.js only, iff live is PRE_V3)
+SERVICE=system/ai.agent-core.runtime
+HEALTH_URL=http://127.0.0.1:8790/health
+CHECK=PASS

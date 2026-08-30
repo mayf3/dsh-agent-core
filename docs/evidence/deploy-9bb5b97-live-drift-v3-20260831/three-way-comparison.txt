@@ -1,0 +1,44 @@
+# Three-way per-file comparison (2026-08-31, non-root read-only)
+
+LIVE recomputed with the deploy-runner manifest algorithm (find/prune node_modules,bundle-*,profile-*;
+per-file git blob OID; LC_ALL=C sort; sha256 of the listing):
+  LIVE    count=132 digest=9ac84954fefc3d5893b7e5ca7045b2bb7cf0ad7492d121607d2b0659a230f4b1
+  v2 BASE pin count=131 digest=15793b0e2c3cc07c32d3e9a96e1928428244a7d44f5c1dadf6bc06a992a7732d
+  v2 TARGET pin count=132 digest=6ea0b6142e7ee6d5342c444b186451f6da5fce5c289ce0cff28884fdc15f0422
+
+RECONSTRUCTION A (LIVE -> TARGET): swap exactly the model-overrides.js line ea44819a->f1e09d47:
+  count/digest: 132
+  6ea0b6142e7ee6d5342c444b186451f6da5fce5c289ce0cff28884fdc15f0422
+  => equals the audited TARGET pin bit-for-bit. LIVE differs from TARGET 9bb5b97 in EXACTLY ONE FILE.
+
+RECONSTRUCTION B (LIVE -> BASE): revert 5 deploy OIDs + model-overrides.js to f1e09d47, drop canary line:
+  count/digest: 131
+  15793b0e2c3cc07c32d3e9a96e1928428244a7d44f5c1dadf6bc06a992a7732d
+  => equals the audited BASE pin bit-for-bit. The other 125 files have ZERO drift since the v1 audit.
+
+RECONSTRUCTION C (LIVE -> PRE_V3 hypothetical, workflow.js at pre-114 289a76cf):
+  count/digest: 132
+  926c6b9dfa07fd02d87acae381625b0fae1c7e1a3ef95594f5a5abe860bd248d
+  => v3 runner PRE_V3 pin.
+
+PER-PATH OID TABLE (LIVE vs 9bb5b97 vs e2e1e22):
+  packages/agent-router/src/index.js                   LIVE=b37f9dac 9BB=b37f9dac E2E=b37f9dac
+  packages/agent-router/src/ingress-delivery.js        LIVE=c8cdc089 9BB=c8cdc089 E2E=c8cdc089
+  packages/agent-router/src/route-chain.js             LIVE=010df799 9BB=010df799 E2E=010df799
+  packages/broker/src/capabilities/workflow.js         LIVE=04ca8550 9BB=04ca8550 E2E=289a76cf
+  packages/production-runtime/src/compose.js           LIVE=f5c7a8d3 9BB=f5c7a8d3 E2E=f5c7a8d3
+  packages/agent-router/src/route-chain-canary.js      LIVE=97b678b2 9BB=97b678b2 E2E=97b678b2
+  packages/production-runtime/src/model-overrides.js   LIVE=ea44819a 9BB=f1e09d47 E2E=f1e09d47
+  scripts/production-runtime.mjs                       LIVE=a215cacd 9BB=a215cacd E2E=a215cacd
+
+model-overrides.js blob history across ALL refs (git log --all): each distinct blob:
+  07805fafdc37dc3b9315523c52010f87dd027f86 8dd5845050ca
+  1ee57e9b509b6b8c336206aedcbb0252cc22d20f e60b26cf30d2
+  4c777c7c6a41943add7dc0716e442f8864042adf e865fb882ca7
+  a3415679a228450d6d0d7dc96ff78f1bb4cce641 65f0b75db84c
+  c0854b5336c7c547142fef176527391f83b7b9a3 a3d1a15bccaf
+  c0854b5336c7c547142fef176527391f83b7b9a3 bc3a374e0d3c
+  f1e09d474143350fb0efe45e3d168cd480900c8b 4cf9b3ee92e4
+  LIVE blob ea44819a18085c6bd8665157d92caba205e720d9 found in git object DB:
+  0
+0  (NOT PRESENT in any commit/object — hand-edit provenance)

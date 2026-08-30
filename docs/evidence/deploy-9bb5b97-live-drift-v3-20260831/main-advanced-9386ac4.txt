@@ -1,0 +1,16 @@
+# github/main advanced past the pin (2026-08-31)
+/usr/bin/git fetch github main -> 9bb5b97..9386ac4
+github/main = 9386ac4e4515ea628e2a450f402b540f165c13c3
+
+  9386ac4 feat: enable scheduler success Feishu cards
+
+Files changed 9bb5b97..9386ac4 (app-surface src files are NOT deployed to production live; live == 9bb5b97 surface + breakglass file):
+   packages/feishu-connector/src/index.js             |  39 ++-
+   .../test/reply-card/reply-card.test.js             |   2 +-
+   .../test/reply-card/scheduler-card.test.js         | 298 +++++++++++++++++++++
+   packages/scheduler-router/src/index.js             |  39 ++-
+   packages/scheduler-router/test/bridge.test.js      |  52 +++-
+   5 files changed, 408 insertions(+), 22 deletions(-)
+
+9bb5b97 remains a merged ancestor of github/main (merge-base --is-ancestor => true).
+Next monotonic deploy round must re-audit head 9386ac4 (2 app-surface files + tests).
