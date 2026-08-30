@@ -63,6 +63,14 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 `accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
 
+## Agent response finalization integrity authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_RESPONSE_FINALIZATION_INTEGRITY_V1` | proposed / inactive | contracts (effective only after independent acceptance and merge) | empty-final guard, progress/final separation, visible output-limit truncation, finalization evidence, processing-reaction convergence, and single-owner caller-timeout receipt integration boundary |
+
+The proposed Spec is docs-only and grants no current implementation or production authority. Caller-wait recovery, fence, reaper, coordinator and timeout-receipt ownership remain outside this Spec; PR #106 is referenced only as an inactive compatibility boundary until independently accepted and merged.
+
 ## agt_cto-agent model-route authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
