@@ -1,0 +1,28 @@
+=== 架构门现场实测（2026-08-30，执行轮，零生产写入） ===
+[宿主] uname -m = arm64  —— 仅记录，绝不作为门输入（Rosetta 宿主，Owner 指令 2026-08-30）
+[trusted Node binary] /usr/local/libexec/agent-core/node-runtime/bin/node
+  file -b => "Mach-O 64-bit executable x86_64"                 → G2.1 PASS
+  node -p process.arch => "x64"                                  → G2.2 PASS
+  node -p process.version => "v25.6.1"; platform => "darwin"     → G2.2 PASS
+[addon 扫描规则] 两类形状：
+  (a) 架构风味包（lightningcss-darwin-x64 / @img/sharp-darwin-x64 / koffi /
+      rollup / rolldown / oxlint / oxc-* / node-addon-require-builtin /
+      fsevents[universal]…）：由安装架构选定 → 必须 x86_64 或 universal，
+      出现 arm64-only 即 harness.arm64-broken-20260828 失败模式 => FAIL
+  (b) 多平台 prebuild 菜单（node-pty prebuilds/darwin-x64|darwin-arm64|
+      linux-*|win32-*）：x64 Node 只加载当前元组 prebuilds/darwin-x64/*；
+      其余兄弟条目为 dormant 菜单文件（与 PE/ELF 同类）=> 忽略
+[实测-朴素规则的假阳性] naive "所有 Mach-O 必须 x86_64" 会误杀：
+  node_modules/.pnpm/node-pty@…/node-pty/prebuilds/darwin-arm64/pty.node
+  => "Mach-O 64-bit bundle arm64"（dormant 菜单项；当前元组
+     prebuilds/darwin-x64/pty.node 实测 "Mach-O 64-bit bundle x86_64"）
+  修正规则（runner addon_arch_check）对 3 棵真实树全部 PASS：
+    clean-source        /Users/yanfenma/workspace/github/deepseek-harness-clean-coldbackup-514ab7b/node_modules  PASS
+    installed-harness   /usr/local/libexec/agent-core/harness/node_modules                                        PASS
+    candidate-worktree  /Users/yanfenma/workspace/project/dsh-agent-core.worktree-luna-fallback-candidate/node_modules PASS（参考）
+[功能性 Rosetta 证明]
+  trusted x64 node 启动 clean harness CLI：
+  $ /usr/local/libexec/agent-core/node-runtime/bin/node apps/cli/lib/bin.js --version
+  => 0.1.0-rc.8（rc=0）
+[历史事故背景] /usr/local/libexec/agent-core/harness.arm64-broken-20260828-134711/
+  —— 2026-08-28 一次 arm64 harness 安装事故的现场残留，正是本架构门要防的失败模式。

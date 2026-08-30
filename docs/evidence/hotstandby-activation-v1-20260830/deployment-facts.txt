@@ -1,0 +1,64 @@
+=== 热备 执行 现场事实（2026-08-30，全部只读采集，零生产写入） ===
+
+[1] 权威与合并状态
+  github/main = e2e1e22efabe99896bc0f83e02ac5e93d2c97f8d（PR #112 merge, 21:35）
+  冷备实现 bd0eeae（TASK=冷备 执行）经 PR #111 合入（merge b53ebd6，is-ancestor 实测 PASS）
+  Activation V2 @ main：status: accepted；production_apply_authority: contracts（生产部署授权成立）
+  GATE-1..4 依据 spec §8 与 OBS-V2-001..007（spec 冻结事实，本轮未重测 OAuth 在线有效性——
+  其有效性唯一合法证明 = CANARY-B 的恰一次 Luna call）
+
+[2] 生产 harness 现状 = dirty 安装（GATE-5 FAIL 的根因）
+  trusted-cp-deploy-install.sh 原始安装用 HARNESS_SRC=deepseek-harness 主 worktree（dirty）
+  tar 导出 → 生产 harness 带 117 个 tracked 文件漂移（清单见 harness-dirty-list-117.txt）
+  含真实源码漂移：packages/client/runtime/src/**、package.json、pnpm-lock.yaml 等
+  .source-stamp 不存在（且旧安装脚本的 stamp 是另一种 reuse 格式，非 DEC-V2-001 JSON）
+  => 诚实 stamp 不可写；必须换 clean 514ab7b 树（含 x64 node_modules + clean 构建 bin.js）
+
+[3] clean x64 Harness 源（W1 安装源）
+  /Users/yanfenma/workspace/github/deepseek-harness-clean-coldbackup-514ab7b
+    HEAD = 514ab7b0029141b88c807704764d0d3e1eea1da4（= DSH_COMMIT_PIN，实测）
+    git status --porcelain = 空（clean，实测）
+    apps/cli/lib/bin.js 已构建（clean 源构建产物）；package.json version = 0.1.0-rc.8
+    node_modules = 856MB，全部 darwin 风味包为 darwin-x64（fsevents universal）；
+    tracked files = 7817（/tmp/harness-archive-514ab7b 导出核数一致）
+  参照导出：/tmp/harness-archive-514ab7b（67MB，tracked-only，无 node_modules）
+
+[4] 冷备代码部署面（CTR-V2-006 after-set，git show e2e1e22:<path> 唯一合法提取）
+  实测 deployed vs main 逐文件 cmp（agent-router 30 文件、production-runtime 9、
+  agent-provisioning 2、scheduler-router 2、notification-ingress 8、feishu-connector 7）：
+    DIFFER  packages/agent-router/src/route-chain.js          （V1 65f0b75 blob → V2）
+    DIFFER  packages/agent-router/src/index.js
+    DIFFER  packages/agent-router/src/ingress-delivery.js
+    MISSING packages/agent-router/src/route-chain-canary.js   （V2 新增 CTR-I2-015 seam）
+    DIFFER  packages/production-runtime/src/compose.js        （canaryRuntimeRoot: layout.root）
+  其余全部 == main（含 model-overrides.js：Phase A 补丁已等于 main blob，实测 cmp PASS）
+  部署集恰为 bd0eeae 声明的 closure（5 文件）；测试文件不部署
+
+[5] 生产配置现状（W4 before-pin）
+  /Users/authsvc/.agent-core/agent-model-overrides.json：505:601 / 0644 / 322B
+  sha256 = b9d301a7ef2e2e659357b2099d748402fcbefa4f3cab9a849a8b10a4d3708551
+  内容 = Phase A strict（version 2，routeCatalog 仅 glm53，fallbacks=[]）
+
+[6] providerEnv 现场值（AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1 冻结值 + ~/.zshrc 一致）
+  HTTP_PROXY = HTTPS_PROXY = http://127.0.0.1:7890
+  NO_PROXY = localhost,127.0.0.1,::1
+  NODE_USE_ENV_PROXY = "1"
+
+[7] canary seam 契约（main:route-chain-canary.js 逐行核对，runner 实现与其对齐）
+  描述符 <runtimeRoot>/route-chain-canary-injection.json：0600、owner=runtime euid(505)、
+  exact keys {version:1,agentId,routeRef,mode,nonce[16-64],expiresAt[RFC3339Z,≤5min],maxUses:1,
+  binding{channel:"feishu",senderOpenId,marker≤128B}}；消费=原子 rename 到 used.<nonce>
+  compose.js:273 canaryRuntimeRoot=layout.root=/Users/authsvc/.agent-core（生产已接线）
+  journal 行格式：`route-chain {json}`（route_attempt 携 agentId/attemptIndex/route/
+  failureClass/attemptOutcome；route_chain_final 携 finalRoute/finalOutcome[SUCCESS 大写]/
+  totalRouteAttempts/fallbackActivated）+ `route-chain-canary-observer {json}`
+  compose 启动行（仅 boot 时一条）：`agent model route chain loaded for agt_cto-agent: glm53 (length 1)`
+  —— strict 重启（W3）用它做 still-strict 证明；v2 生效的机械证明 = CANARY-B 实际 hop
+
+[8] 遗留现场（未触碰）
+  /Users/yanfenma/workspace/project/dsh-agent-core.worktree-luna-fallback-candidate
+  [impl/luna-fallback-candidate-v1 @ e2e1e22] 带 3 个未提交修改：
+    model-overrides.js（subscription omitEnv 扩展 OC_GO_API_KEY/OPENCODE_GO_API_KEY 屏蔽）
+    + quota-classifier.test.js / model-overrides.test.js（scenarios 5/7 测试）
+  属上会话未完成 WIP；三份 V2 spec 均未要求该 omitEnv 扩展（grep 无 omitEnv/OC_GO 契约），
+  且 CTR-V2-006 禁止部署 worktree/dirty 源 → 本轮不部署、不合并、原样保留
