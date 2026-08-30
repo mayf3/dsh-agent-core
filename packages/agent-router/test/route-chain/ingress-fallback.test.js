@@ -6,16 +6,42 @@
  * contacted.
  */
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 import {
   apply as applyRouter,
   canonicalRouteIdentity,
   ROUTE_STOP_REASONS,
 } from '../../src/index.js'
+
+const ISOLATION_MARKER = 'ingress-fallback'
+const ISOLATED_CHILD = process.env.DSH_LUNA_ROUTER_TEST_CHILD === ISOLATION_MARKER
+const isolatedTest = ISOLATED_CHILD ? test : () => {}
+const DEADLINE_ENV_KEYS = [
+  'DSH_AGENT_PROCESS_OVERRIDES_FILE', 'PRODUCTION_RUNTIME_ROOT',
+  'DSH_AGENT_INITIALIZE_TIMEOUT_MS', 'DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS',
+  'DSH_AGENT_TURN_TIMEOUT_MS', 'DSH_AGENT_SHUTDOWN_GRACE_MS',
+  'DSH_AGENT_TURN_TIMEOUT', 'DSH_AGENT_DELIVER_TIMEOUT',
+]
+
+if (!ISOLATED_CHILD) {
+  test('scenario 7 runs in a clean child-process environment', () => {
+    const env = { ...process.env, DSH_LUNA_ROUTER_TEST_CHILD: ISOLATION_MARKER }
+    for (const key of DEADLINE_ENV_KEYS) delete env[key]
+    const child = spawnSync(process.execPath, ['--test', fileURLToPath(import.meta.url)], {
+      env,
+      encoding: 'utf8',
+      maxBuffer: 8 * 1024 * 1024,
+    })
+    assert.equal(child.error, undefined)
+    assert.equal(child.status, 0, `${child.stdout}\n${child.stderr}`)
+  })
+}
 
 const AGENT_ID = 'agt_luna-ingress-carrier'
 const GLM_CONFIG = Object.freeze({ provider: 'zai', model: 'glm-5.3' })
@@ -214,7 +240,7 @@ async function freshRig(t, glmFailure) {
   return { router, feishu, counters: lifecycle.counters, processes }
 }
 
-test('scenario 7: real onIngress path emits one Luna result and one external business delivery', async (t) => {
+isolatedTest('scenario 7: real onIngress path emits one Luna result and one external business delivery', async (t) => {
   const rig = await freshRig(t, () => quotaCarrier())
   const result = await rig.feishu.callback(ingress())
 
@@ -249,7 +275,7 @@ test('scenario 7: real onIngress path emits one Luna result and one external bus
   assert.equal(rig.router.bindingsSnapshot().length, 1, 'one ingress binding finalization path')
 })
 
-test('scenario 7 negative carriers: unsafe, partial, incomplete, and outcome-unknown all STOP before Luna', async (t) => {
+isolatedTest('scenario 7 negative carriers: unsafe, partial, incomplete, and outcome-unknown all STOP before Luna', async (t) => {
   const cases = [
     ['unsafe-tool-started', () => quotaCarrier({ toolStarted: true }), `stop:${ROUTE_STOP_REASONS.POST_ADMISSION_FAILURE}`],
     ['partial-output', () => quotaCarrier({ partialOutput: true }), `stop:${ROUTE_STOP_REASONS.POST_ADMISSION_FAILURE}`],
