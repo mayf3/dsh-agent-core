@@ -1,0 +1,41 @@
+# VERIFICATION TRANSCRIPT — 注册 执行 ACCEPTANCE_FINALIZE_AND_MERGE (PR #38)
+# date: 2026-08-31 (UTC+8 round); operator session: verification-only (found executed)
+
+## fresh fetch + PR state
+FETCH_OK
+{"headRefName":"docs/ctr-nsc-005-006-production-authority","headRefOid":"98518d54e94c64268aa5c476aa783025d1bcb949","isDraft":false,"mergeCommit":"05fcf4074fe15d7f29ce1ef0f68767fbbebd54de","mergedAt":"2026-08-30T16:55:25Z","number":38,"state":"MERGED"}
+
+## PR commit list (expect exactly reviewed head + acceptance commit)
+8bfb767db165 docs: amend notification ingress supply authority
+98518d54e94c docs: accept notification ingress credential grant spec
+
+## main tip + ancestry
+05fcf4074fe15d7f29ce1ef0f68767fbbebd54de
+REVIEWED_HEAD_8bfb767_IS_ANCESTOR_OF_MAIN=YES
+ACCEPTANCE_COMMIT_IS_ANCESTOR_OF_MAIN=YES
+
+## lifecycle fields at main (YAML)
+spec_id: AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_SERVICE_CREDENTIAL_GRANT_V1
+status: accepted
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: contracts
+production_apply_authority: none
+scope:
+
+## acceptance commit stat + diff-check
+98518d5 docs: accept notification ingress credential grant spec
+ ...FICATION_INGRESS_SERVICE_CREDENTIAL_GRANT_V1.md | 76 +++++++++++++++-------
+ docs/specs/README.md                               |  2 +-
+ 2 files changed, 53 insertions(+), 25 deletions(-)
+DIFF_CHECK_98518d5=PASS
+DIFF_CHECK_8bfb767=PASS
+
+## governance verify at merge commit (clean detached worktree)
+vendored governance bytes match governance.lock.json
+WORKTREE_CLEANED
+
+## boundaries
+THREE_FILE_CLOSURE_IMPLEMENTED=NO (PR #38 files = spec + README only)
+WIP_RUNNER_RUN=NO
+PRODUCTION_DB_CONTACT=NO
