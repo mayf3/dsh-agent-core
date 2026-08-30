@@ -1,0 +1,107 @@
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+NOTICE:  truncate cascades to table "trusted_proxies"
+NOTICE:  truncate cascades to table "proxy_accepted_subject_audiences"
+NOTICE:  truncate cascades to table "authorization_transactions"
+NOTICE:  truncate cascades to table "authorization_codes"
+==================== MATRIX SUMMARY ====================
+PASS  S1 exit 0
+PASS  S1 phase B gated
+PASS  S1 phase A needed
+PASS  S1 zero-write audiences
+PASS  S1 zero-write security audits
+PASS  S2 exit 0
+PASS  S2 audience created
+PASS  S2 phase B skipped
+PASS  S2 audiences=6
+PASS  S2 NI row exact
+PASS  S2 audit row
+PASS  S2 non-target grant intact
+PASS  S2 no NI grants
+PASS  S2 plist flipped
+PASS  S2R exit 0
+PASS  S2R already applied
+PASS  S2R zero new audits
+PASS  S3 exit 0
+PASS  S3 forum committed
+PASS  S3 workflow committed
+PASS  S3 principals +2
+PASS  S3 clients +2
+PASS  S3 grants 2 exact
+PASS  S3 grant audits 2
+PASS  S3 audit after client projection
+PASS  S3 audit client keys exactly 3 (no secret_hash)
+PASS  S3 forum dest 2 lines
+PASS  S3 workflow dest keeps old keys
+PASS  S3 workflow dest 4 lines
+PASS  S3 legacy arrays empty
+PASS  S3 repo verifyClientSecret both true
+PASS  S4 exit 0
+PASS  S4 forum noop
+PASS  S4 workflow noop
+PASS  S4 no new clients
+PASS  S4 no new audits
+PASS  S4 forum dest unchanged
+PASS  S4 workflow dest unchanged
+PASS  S5a exit 2
+PASS  S5a wrong row untouched
+PASS  S5a zero audit writes
+PASS  S5b exit 2
+PASS  S5b zero audience writes
+PASS  S5c exit 2
+PASS  S5c P4 hit
+PASS  S5d exit 2
+PASS  S5d zero writes
+PASS  S6 exit nonzero partial (foreign-hardened semantics: rc=1)
+PASS  S6 forum refused P5
+PASS  S6 workflow committed
+PASS  S6 forum client absent
+PASS  S6 workflow client present
+PASS  S6 grant audits 1
+PASS  S7 exit 1 rolled back
+PASS  S7 rolled back
+PASS  S7 audience compensated
+PASS  S7 rollback audit
+PASS  S7 plist restored byte-equal
+PASS  S10 exit nonzero
+PASS  S10 forum rolled back
+PASS  S10 workflow committed
+PASS  S10 forum rows compensated
+PASS  S10 forum principal compensated
+PASS  S8 no secret in any output
+PASS  S8 every service:v1 client hash is scrypt salt:hash
+PASS=65 FAIL=0

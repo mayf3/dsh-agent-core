@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "$(date -u +%FT%TZ) $*" >> /tmp/ni-sandbox/stub/launchctl.log
+if [ "$1" = 'bootout' ]; then rm -f /tmp/ni-sandbox/stub/bootstrapped.marker; fi
+if [ "$1" = 'bootstrap' ]; then touch /tmp/ni-sandbox/stub/bootstrapped.marker; fi
+exit 0
