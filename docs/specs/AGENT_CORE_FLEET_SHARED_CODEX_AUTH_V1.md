@@ -659,23 +659,81 @@ unmodified npm artifact. No later dsh-codex feature/version may enter incident r
 ### CTR-SCA-014 — Migration candidate, activation and rollback
 
 Implementation completion does not grant production apply. A later controlled activation authority
-MUST execute, in order:
+MUST first establish and durably record both preconditions before inspecting any of the 91 legacy
+stores:
 
-1. inventory and quiesce all Luna refresh-capable children;
-2. select exactly one latest authoritative credential using metadata and controlled status validation;
+```text
+LUNA_DISPATCH_QUIESCED = YES
+REFRESH_WRITERS_QUIESCED = YES
+```
+
+The migration MUST derive a `PROVEN_GENERATION_SET` only from trustworthy local successful credential
+commit provenance. A proven generation record MUST mechanically bind one non-secret `generationId` to:
+
+1. one successful login or refresh remote operation;
+2. the corresponding new credential's completed atomic local commit;
+3. a commit point before the quiesce fence; and
+4. an ordered provenance history proving that no later successful refresh, later refresh
+   `outcome_unknown`, pending refresh-intent or competing committed generation exists after that commit.
+
+The provenance and every comparison MUST bind the candidate to the same configured expected account
+identity. Account identity and `generationId` MUST be non-secret identifiers recorded independently of
+credential bytes; neither may contain, derive from, compare, log or output an access token, refresh
+token, token hash or credential digest.
+
+Legacy credential reuse is permitted only when every candidate can be bound to the same expected
+account identity, `PROVEN_GENERATION_SET` contains exactly one generation, and the complete ordered
+provenance above has no conflict, tie, gap, pending intent or unknown outcome:
+
+```text
+LEGACY_CREDENTIAL_REUSE_ALLOWED = YES
+AUTHORITATIVE_STORE = <the sole proven generation's legacy store>
+```
+
+The following are forbidden selection evidence and MUST NOT rank, prefer or break a tie between
+candidates: `mtime`, `ctime`, `expiresAt`, file size, recent Agent use, access-token callability or any
+other manual inference. Migration MUST NOT probe-refresh, retry an old token or try the 91 refresh
+tokens in sequence.
+
+Zero proven generations, more than one different proven generation, conflicting provenance, a
+generation tie, insufficient provenance, a newer `mtime` with older provenance, a usable access token
+with unknown refresh generation, any pending/unknown refresh intent, or inability to prove that the
+last remote rotation was atomically committed MUST fail closed:
+
+```text
+LEGACY_CREDENTIAL_REUSE_ALLOWED = NO
+AUTHORITATIVE_STORE = NONE
+CANONICAL_REAUTH_REQUIRED = YES
+CANONICAL_REAUTH_COUNT_MAX = 1
+```
+
+The only allowed recovery from that state is one Owner OpenAI Codex login/reauth written directly to:
+
+```text
+/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+```
+
+It MUST NOT first write an Agent Home and copy from there. The controlled activation authority MUST
+then execute, in order:
+
+1. inventory and establish both quiesce preconditions and the durable fence;
+2. inspect all legacy candidates using only the provenance rule above;
 3. create/verify the canonical Model A directory and ACL domain;
-4. atomically write the authoritative credential once to canonical storage, without remote refresh;
+4. either atomically write the sole proven legacy credential once to canonical storage without remote
+   refresh, or perform exactly one direct canonical Owner reauth when reuse is not allowed;
 5. configure the single Luna route descriptor with canonical `credentialFile`;
-6. prove all per-home OAuth paths have zero runtime opens;
+6. prove all per-home OAuth paths have zero runtime opens and zero refresh writers;
 7. controlled restart under pinned clean Harness identity;
 8. CEO canary, then HR, Podcast and Shopping canaries;
 9. prove provider/model/path and zero oc-go/GLM use for Luna-only canaries as applicable;
-10. retain old per-home files read-only as rollback evidence, never runtime fallback.
+10. retain the 91 old per-home files only as read-only forensic evidence, never as a runtime source,
+    refresh source or rollback credential.
 
 If shared mode fails before any remote refresh, rollback MAY restore the previous software/config only
 after quiescence. It MUST disable Luna rather than resume independent writable OAuth copies. If a pending
 intent exists, rollback MUST preserve it and follow `CTR-SCA-008/009`; it MUST NOT restore or retry an old
-token. Production credential cleanup is a later explicit decision.
+token. Rollback MUST NOT restore any legacy rotating refresh token. Production credential cleanup is a
+later explicit decision.
 
 ### CTR-SCA-015 — Test and conformance isolation
 
@@ -811,13 +869,89 @@ authorize future bounded implementation under `CTR-SCA-*`; production apply rema
 ### ACC-SCA-012 — Migration/rollback dry run
 
 - Contracts: `CTR-SCA-014`, `CTR-SCA-015`
-- Method: disposable 91-Agent inventory fixture with one synthetic authoritative credential; execute full
-  candidate migration, canary order and rollback branches
-- Environment: isolated x64 candidate runtime, no production token
-- Required evidence: ordered action log, process/file-open evidence, route/path result, rollback result
-- Expected result: one canonical write, zero per-home runtime use, controlled restart/canaries, rollback
-  never restores independent writable copies
-- Failure condition: remote refresh during migration, 91 copies/logins, implicit fallback or route change
+- Method: execute the full candidate migration, canary order and rollback branches against disposable
+  91-Agent inventories containing the following synthetic provenance fixtures
+
+#### Fixture A — `ONE_PROVEN_GENERATION`
+
+- Environment: isolated x64 candidate runtime; 91 synthetic legacy stores; both quiesce fences proven;
+  one expected account identity; exactly one complete successful remote-operation-to-atomic-commit
+  provenance chain; no production token
+- Required evidence: ordered quiesce/fence log, non-secret generation/account identity, remote-success
+  receipt, atomic-commit receipt, complete later-event absence proof and canonical write record
+- Expected result: `LEGACY_CREDENTIAL_REUSE_ALLOWED=YES`; the sole proven generation is written once to
+  canonical storage without remote refresh
+- Reject condition: reuse without the complete provenance chain, more than one canonical write or any
+  remote refresh
+
+#### Fixture B — `MULTIPLE_CANDIDATES_ONE_PROVEN`
+
+- Environment: isolated x64 candidate runtime; multiple same-account synthetic candidates; exactly one
+  candidate has complete provenance; no pending/unknown intent; no production token
+- Required evidence: all candidate account bindings, complete candidate inventory, unique
+  `PROVEN_GENERATION_SET`, selected non-secret generation identity and canonical write record
+- Expected result: only the proven generation is selected; unproven candidates cannot rank or win
+- Reject condition: selection of an unproven candidate, ambiguity hidden by metadata or more than one
+  authoritative store
+
+#### Fixture C — `STALE_STORE_WITH_NEWER_MTIME`
+
+- Environment: isolated x64 candidate runtime; same-account stale unproven store has newer `mtime` than
+  the sole proven generation; no production token
+- Required evidence: provenance-only selection trace plus a negative proof that `mtime`/`ctime` were not
+  selection inputs
+- Expected result: the proven generation wins; the newer stale store does not
+- Reject condition: any timestamp ordering, preference or tie-break
+
+#### Fixture D — `TWO_CONFLICTING_PROVEN_GENERATIONS`
+
+- Environment: isolated x64 candidate runtime; two different same-account generation records each claim
+  complete but mutually conflicting provenance; no production token
+- Required evidence: both non-secret generation identities, conflict classification, zero legacy
+  refresh dispatches and direct-canonical reauth count
+- Expected result: `AUTHORITATIVE_STORE=NONE`; `CANONICAL_REAUTH_REQUIRED=YES`; exactly one Owner reauth
+  writes the canonical store directly
+- Reject condition: either legacy generation selected, any old-token refresh or reauth count other than one
+
+#### Fixture E — `TIE_OR_INSUFFICIENT_PROVENANCE`
+
+- Environment: isolated x64 candidate runtime; a generation tie or a missing remote-success,
+  atomic-commit, fence-order or later-event proof; no production token
+- Required evidence: exact missing/conflicting provenance field, fail-closed result, zero legacy refresh
+  dispatches and direct-canonical reauth count
+- Expected result: `AUTHORITATIVE_STORE=NONE`; `CANONICAL_REAUTH_REQUIRED=YES`; exactly one Owner reauth
+- Reject condition: guessed selection, metadata tie-break, old-token use or multiple reauths
+
+#### Fixture F — `ACCESS_TOKEN_VALID_BUT_REFRESH_GENERATION_UNKNOWN`
+
+- Environment: isolated x64 candidate runtime; synthetic access-token status is usable while refresh
+  generation provenance is unknown; no production token or real provider call
+- Required evidence: selection-input audit proving access-token validity was ignored, fail-closed result,
+  zero legacy refresh dispatches and direct-canonical reauth count
+- Expected result: `AUTHORITATIVE_STORE=NONE`; `CANONICAL_REAUTH_REQUIRED=YES`; exactly one Owner reauth
+- Reject condition: access-token probing/ranking, legacy reuse or more than one reauth
+
+#### Fixture G — `PENDING_REFRESH_INTENT_EXISTS`
+
+- Environment: isolated x64 candidate runtime; at least one same-account candidate has a pending or
+  outcome-unknown refresh intent; no production token
+- Required evidence: redacted intent state and generation identity, fail-closed result, preserved intent,
+  zero legacy refresh dispatches and direct-canonical reauth count
+- Expected result: `AUTHORITATIVE_STORE=NONE`; intent evidence remains; exactly one direct canonical Owner
+  reauth is required
+- Reject condition: intent clear/overwrite, legacy selection, automatic retry or multiple reauths
+
+#### Fixture H — `NO_LEGACY_PROVEN_GENERATION`
+
+- Environment: isolated x64 candidate runtime; 91 same-account synthetic candidates and no proven
+  generation; no production token
+- Required evidence: empty `PROVEN_GENERATION_SET`, zero probe/legacy refresh calls, one direct-canonical
+  login invocation, canonical metadata result and per-home file-open audit
+- Expected result: `LEGACY_CREDENTIAL_REUSE_ALLOWED=NO`; `AUTHORITATIVE_STORE=NONE`; exactly one canonical
+  Owner reauth establishes the shared store; zero per-home runtime use; controlled restart/canaries and
+  rollback never restore a legacy credential
+- Reject condition: guessing, 91 copies/logins, per-home runtime access, implicit fallback, route change
+  or rollback to any legacy rotating token
 
 ### Contract coverage
 
