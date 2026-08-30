@@ -7,11 +7,11 @@ import { manifests as forumManifests } from '../../src/capabilities/forum.js'
 import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
 import { manifests as okrManifests } from '../../src/capabilities/okr.js'
 
-// ─── Schema: all 13 shipped manifests are valid ─────────────────────────────
+// ─── Schema: all 14 shipped manifests are valid ─────────────────────────────
 
-test('schema: all 13 first-batch manifests validate', () => {
+test('schema: all 14 first-batch manifests validate', () => {
   const all = [...forumManifests, ...workflowManifests, ...okrManifests]
-  assert.equal(all.length, 13)
+  assert.equal(all.length, 14)
   for (const manifest of all) {
     const res = validateManifest(manifest)
     assert.equal(res.ok, true, `${manifest.id}: ${res.errors?.join('; ')}`)
