@@ -75,9 +75,10 @@ const DEFAULTS = {
   processingReactionEnabled: false,
   // REPLY_RENDER_MODE switch (OWNER_RULING = ENABLE_STATIC_FEISHU_REPLY_CARD,
   // STATIC_FINAL_CARD_V1): default 'markdown' — byte-identical current
-  // production rendering. 'card' re-renders ONLY the Router success reply
-  // (the sole caller carrying ux intent) as a button-less CardKit 2.0 static
-  // card. Strict env parsing lives in production-runtime
+  // production rendering. 'card' re-renders the card-eligible set — the
+  // Router success reply (ux intent) and the scheduler success announce
+  // (presentation intent, SCHEDULER_SUCCESS_CARD_ELIGIBLE) — as a button-less
+  // CardKit 2.0 static card. Strict env parsing lives in production-runtime
   // (FEISHU_REPLY_RENDER_MODE; invalid values fail loud).
   replyRenderMode: 'markdown',
   onEvent: null,
@@ -243,6 +244,15 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
      * the SDK SendOptions.mentions primitive. Callers that omit it (receipts,
      * scheduler/proactive) get the byte-identical V0 plain-text plan. The
      * SDK owns chunking/fallback/retry; this seam adds none.
+     *
+     * `opts.presentation` (SCHEDULER_SUCCESS_CARD_ELIGIBLE Owner ruling) is
+     * the NARROW outbound presentation-intent namespace — `{ cardEligible:
+     * true, source: 'scheduler' }`, carried ONLY by the scheduler's terminal
+     * success announce. It reuses nothing of the Router ingress ux authority:
+     * it never changes rendering, anchoring or mentions, and in card mode it
+     * makes the SAME STATIC_FINAL_CARD_V1 card the Router success reply gets
+     * (in markdown mode it is inert — the plain-text plan is byte-identical
+     * to a caller without the intent).
      */
     async reply(replyTarget, text, opts = {}) {
       // AUTO_MENTION_TRIGGER_SENDER config = the FINAL switch over the Router
@@ -254,16 +264,21 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
         ? { ...opts.ux, autoMentionTriggerSender: false }
         : opts?.ux
       // REPLY_RENDER_MODE (STATIC_FINAL_CARD_V1): the connector is the final
-      // display-policy authority. In card mode ONLY the Router success reply
-      // (the sole caller carrying ux rendering intent) is re-rendered as a
-      // static card; every other caller (receipts, scheduler/proactive,
-      // system/operator) sends without ux and keeps its existing plan. The
-      // card decision is deterministic and PRE-send: oversize or empty bodies
-      // never attempt the card API and fall back to the existing markdown
-      // plan (CARD_NOT_ATTEMPTED). The card plan carries no mentions key
-      // (CARD_AUTO_MENTION = NONE) and the same anchoring as markdown.
+      // display-policy authority. In card mode the card eligibility set is
+      // EXACTLY (a) the Router success reply (ux rendering intent — the sole
+      // ingress ux authority) and (b) the scheduler success announce
+      // (`presentation.cardEligible === true` AND `presentation.source ===
+      // 'scheduler'`, both required so no other caller can silently widen the
+      // set); every other caller (receipts, proactive, system/operator)
+      // sends without either intent and keeps its existing plan. The card
+      // decision is deterministic and PRE-send: oversize or empty bodies
+      // never attempt the card API and fall back to the existing plan of the
+      // SAME caller (CARD_NOT_ATTEMPTED). The card plan carries no mentions
+      // key (CARD_AUTO_MENTION = NONE) and the same anchoring as markdown.
+      const cardEligible = ux?.rendering === 'markdown'
+        || (opts?.presentation?.cardEligible === true && opts?.presentation?.source === 'scheduler')
       let plan
-      if (cfg.replyRenderMode === 'card' && ux?.rendering === 'markdown') {
+      if (cfg.replyRenderMode === 'card' && cardEligible) {
         const card = replyCardSendPlan(replyTarget, text)
         if (card.plan !== undefined) {
           plan = card.plan
