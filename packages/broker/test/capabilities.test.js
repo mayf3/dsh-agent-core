@@ -15,6 +15,10 @@
  *   - workflow_domain_instances GET /internal/v1/workflow-instances/domain workflow.read (svc-workflow;
  *     AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 — read-only DOMAIN_OWNER enumeration,
  *     server-side auth, camelCase `domainId` wire param, snake_case summary passthrough)
+ *   - workflow_global_instances GET /internal/v1/workflow-instances/global workflow.read (svc-workflow;
+ *     AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1 — generic read-only GLOBAL enumeration,
+ *     server-side GLOBAL_WORKFLOW_READER-OR-GLOBAL_WORKFLOW_COORDINATOR gate with dual 403 codes,
+ *     camelCase wire params incl. paired cursors, assigneePrincipalId result-filter-only)
  *   - okr_read              GET /api/goals/mine                    okr.read (svc-okr)
  *
  * The mock token endpoint implements the auth-service client_credentials
@@ -111,11 +115,11 @@ function mockTargets(overrides) {
   return targets.map((t) => (overrides[t.targetId] ? { ...t, allowedOrigin: overrides[t.targetId] } : t))
 }
 
-// ─── Schema: all 13 shipped manifests are valid ─────────────────────────────
+// ─── Schema: all 14 shipped manifests are valid ─────────────────────────────
 
-test('schema: all 13 first-batch manifests validate', () => {
+test('schema: all 14 first-batch manifests validate', () => {
   const all = [...forumManifests, ...workflowManifests, ...okrManifests]
-  assert.equal(all.length, 13)
+  assert.equal(all.length, 14)
   for (const manifest of all) {
     const res = validateManifest(manifest)
     assert.equal(res.ok, true, `${manifest.id}: ${res.errors?.join('; ')}`)
@@ -419,6 +423,244 @@ test('workflow_domain_instances: limit out of bounds fails fast locally — HTTP
 
   await tokenServer.close()
   await workflow.close()
+})
+
+// ─── Fixture 4b: Workflow global instances (GET, global read-role gate) ──────
+
+const GLOBAL_UUID = '9c7f3b0a-0000-4000-8000-0000000000a1'
+const GLOBAL_ITEM = {
+  workflow_instance_id: '9c7f3b0a-0000-4000-8000-0000000000a2',
+  domain_id: '1c2d3e4f-0000-4000-8000-00000000bb07',
+  definition_key: 'requirement_review',
+  current_assignee_principal_id: '7a8b9c0d-0000-4000-8000-0000000000d5',
+  current_node: { node_id: '2b3c4d5e-0000-4000-8000-0000000000e6', node_key: 'review', display_name: '评审', node_type: 'human' },
+  is_terminal: false,
+  title: '全域枚举 第一页',
+  created_at: '2026-08-28T08:00:00Z',
+  updated_at: '2026-08-29T06:00:00Z',
+}
+
+test('workflow_global_instances: GET with camelCase declared query set + workflow.read scope (ACC-001)', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'GET' && entry.pathname === '/internal/v1/workflow-instances/global') {
+      // Real shape: Page<DomainInstanceSummary> — downstream snake_case JSON.
+      return json(res, 200, { items: [GLOBAL_ITEM], next_cursor: { before_created_at: '2026-08-28T08:00:00Z', before_id: GLOBAL_ITEM.workflow_instance_id } })
+    }
+    json(res, 404, { error: 'not_found' })
+  })
+
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_global_instances')
+  const { definition } = wire(manifest, transport)
+
+  const res = await definition.execute({
+    operation: 'list',
+    limit: 20,
+    lifecycle: 'active',
+    status: 'all',
+    definitionKey: 'requirement_review',
+    currentNodeKey: 'review',
+    assigneePrincipalId: GLOBAL_UUID,
+    beforeCreatedAt: '2026-08-28T08:00:00Z',
+    beforeId: GLOBAL_ITEM.workflow_instance_id,
+  })
+  assert.equal(res.ok, true)
+  // summary passthrough untouched (snake_case downstream shape) + next_cursor
+  assert.equal(res.result.items[0].workflow_instance_id, GLOBAL_ITEM.workflow_instance_id)
+  assert.equal(res.result.items[0].current_node.node_key, 'review')
+  assert.equal(res.result.items[0].current_assignee_principal_id, '7a8b9c0d-0000-4000-8000-0000000000d5')
+  assert.equal(res.result.next_cursor.before_id, GLOBAL_ITEM.workflow_instance_id)
+
+  // token request: exactly the declared scope, Broker-first credential chain
+  assert.equal(tokenServer.requests[0].body.resource, 'svc-workflow')
+  assert.equal(tokenServer.requests[0].body.scope, 'workflow.read')
+  const bizReq = workflow.requests[0]
+  assert.equal(bizReq.method, 'GET')
+  assert.equal(bizReq.pathname, '/internal/v1/workflow-instances/global')
+  // camelCase wire names only — the full declared query set, nothing else
+  assert.deepEqual(bizReq.query, {
+    limit: '20',
+    lifecycle: 'active',
+    status: 'all',
+    definitionKey: 'requirement_review',
+    currentNodeKey: 'review',
+    assigneePrincipalId: GLOBAL_UUID,
+    beforeCreatedAt: '2026-08-28T08:00:00Z',
+    beforeId: GLOBAL_ITEM.workflow_instance_id,
+  })
+  assert.equal(bizReq.headers.authorization, 'Bearer tok-real')
+  assert.equal(bizReq.rawBody, '')
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('workflow_global_instances: role-less 403 preserves BOTH declared dual codes end-to-end (ACC-002)', async () => {
+  // Deployment states per the spec's dual-code timing declaration:
+  // pre-READER deployment -> global_coordinator_required; target contract ->
+  // global_read_role_required. Both must survive the whole pipeline.
+  for (const code of ['global_coordinator_required', 'global_read_role_required']) {
+    const requestId = `req-global-403-${code}`
+    const tokenServer = await startTokenServer()
+    const workflow = await startMockServer((req, res) => svcError(res, 403, code, 'global read role required', requestId))
+    const transport = createHttpTransport({
+      credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+      targets: mockTargets({ 'svc-workflow': workflow.origin }),
+      authServiceOrigin: tokenServer.origin,
+    })
+    const manifest = workflowManifests.find((m) => m.id === 'workflow_global_instances')
+    const { definition } = wire(manifest, transport)
+
+    const res = await definition.execute({ operation: 'list' })
+    assert.equal(res.ok, false, code)
+    // NOT flattened to forbidden/http_4xx: service code + status + sanitized
+    // detail + downstream request-id all reach the model-visible envelope.
+    assert.equal(res.error.code, code)
+    assert.equal(res.error.status, 403)
+    assert.equal(res.error.requestId, requestId)
+    assert.equal(res.error.detail, 'global read role required')
+
+    await tokenServer.close()
+    await workflow.close()
+  }
+})
+
+test('workflow_global_instances: limit out of bounds fails fast locally — HTTP call count = 0 (ACC-003)', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res) => json(res, 200, { items: [] }))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_global_instances')
+  const { definition } = wire(manifest, transport)
+
+  for (const limit of [0, -1, 21, 999]) {
+    const res = await definition.execute({ operation: 'list', limit })
+    assert.equal(res.ok, false, `limit=${limit}`)
+    assert.equal(res.error.code, 'invalid_pagination', `limit=${limit}`)
+    assert.match(res.error.detail, /limit/)
+  }
+  assert.equal(workflow.requests.length, 0, 'no business call may leave the broker')
+  assert.equal(tokenServer.requests.length, 0, 'no token may be requested')
+
+  // Boundary values 1 and 20 are legal and DO reach svc-workflow.
+  for (const limit of [1, 20]) {
+    const res = await definition.execute({ operation: 'list', limit })
+    assert.equal(res.ok, true, `limit=${limit}`)
+    assert.equal(workflow.requests.at(-1).query.limit, String(limit))
+  }
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('workflow_global_instances: half-cursor forwarded as declared → downstream 422 invalid_cursor preserved (ACC-004)', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    // Server-side paired-cursor discipline: a lone beforeCreatedAt is a 422.
+    if (entry.query.beforeCreatedAt !== undefined && entry.query.beforeId === undefined) {
+      return svcError(res, 422, 'invalid_cursor', 'cursor parameters must be given together', 'req-global-cursor-1')
+    }
+    return json(res, 200, { items: [GLOBAL_ITEM], next_cursor: null })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_global_instances')
+  const { definition } = wire(manifest, transport)
+
+  const res = await definition.execute({ operation: 'list', beforeCreatedAt: '2026-08-28T08:00:00Z' })
+  assert.equal(res.ok, false)
+  // the half cursor WAS forwarded as declared (capability-local cursor exposure)
+  assert.deepEqual(workflow.requests[0].query, { beforeCreatedAt: '2026-08-28T08:00:00Z' })
+  // ...and the downstream 422 verdict survives the pipeline fail-closed
+  assert.equal(res.error.code, 'invalid_cursor')
+  assert.equal(res.error.status, 422)
+  assert.equal(res.error.requestId, 'req-global-cursor-1')
+  assert.equal(res.error.detail, 'cursor parameters must be given together')
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('workflow_global_instances: assigneePrincipalId is a result filter only — identity comes from the seam (ACC-005)', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res) => json(res, 200, { items: [], next_cursor: null }))
+  const credentialProvider = { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) }
+  const transport = createHttpTransport({
+    credentialProvider,
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_global_instances')
+  const { definition } = wire(manifest, transport)
+
+  // same caller, once without and once with the filter param
+  const without = await definition.execute({ operation: 'list' })
+  const withFilter = await definition.execute({ operation: 'list', assigneePrincipalId: GLOBAL_UUID })
+  assert.equal(without.ok, true)
+  assert.equal(withFilter.ok, true)
+
+  // credential/token subject unchanged by the argument: ONE token request
+  // (cached), same Basic identity, same audience/scope; the filter param
+  // appears ONLY as a business query name, never in the token request.
+  assert.equal(tokenServer.requests.length, 1)
+  assert.equal(tokenServer.requests[0].headers.authorization, `Basic ${Buffer.from('wf-client:wf-secret').toString('base64')}`)
+  assert.equal(tokenServer.requests[0].body.resource, 'svc-workflow')
+  assert.equal(tokenServer.requests[0].body.scope, 'workflow.read')
+  assert.ok(!JSON.stringify(tokenServer.requests[0].body).includes(GLOBAL_UUID))
+  assert.deepEqual(workflow.requests[0].query, {})
+  assert.deepEqual(workflow.requests[1].query, { assigneePrincipalId: GLOBAL_UUID })
+  assert.equal(workflow.requests[1].headers.authorization, 'Bearer tok-real')
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('workflow_global_instances: static contract asserts — GET-only, no idempotency, generic tool, zero scheduler surface (ACC-007/009)', () => {
+  const manifest = workflowManifests.find((m) => m.id === 'workflow_global_instances')
+  const res = validateManifest(manifest)
+  assert.equal(res.ok, true, res.errors?.join('; '))
+
+  const op = manifest.operations[0]
+  assert.equal(op.http.method, 'GET', 'GET-only red line')
+  assert.equal(op.http.idempotencyKey, undefined, 'no idempotency flag on a read-only op')
+  assert.equal(op.http.body, undefined, 'no body binding')
+  assert.equal(op.http.path, '/internal/v1/workflow-instances/global')
+  assert.deepEqual(manifest.requiredScopes, ['workflow.read'])
+
+  // no write surface anywhere in the manifest
+  for (const o of manifest.operations) {
+    assert.ok(!['POST', 'PUT', 'DELETE'].includes(o.http.method))
+  }
+
+  // generic tool (DEC-008): no agent/principal/session hard-binding or
+  // special-casing — no HR/Dispatcher/agent ids, no per-agent routing.
+  const wire = JSON.stringify(manifest)
+  for (const forbidden of ['scheduler', 'agt_', 'hr-agent', 'hr_agent', 'dispatcher', 'Dispatcher', 'agentId', 'sessionId', 'per-agent']) {
+    assert.ok(!wire.includes(forbidden), `manifest must not mention "${forbidden}"`)
+  }
+  // assigneePrincipalId stays a declared result-filter query param only
+  assert.deepEqual(
+    Object.keys(op.arguments.properties).sort(),
+    ['assigneePrincipalId', 'beforeCreatedAt', 'beforeId', 'currentNodeKey', 'definitionKey', 'lifecycle', 'limit', 'status'].sort(),
+  )
+  // enum validation is NOT replicated broker-side (server-side 422 owns it)
+  assert.equal(op.arguments.properties.lifecycle.enum, undefined)
+  assert.equal(op.arguments.properties.status.enum, undefined)
+  // broker-side limit bound is declared with its fail-fast code
+  assert.equal(op.arguments.properties.limit.minimum, 1)
+  assert.equal(op.arguments.properties.limit.maximum, 20)
+  assert.equal(op.arguments.properties.limit.validationError, 'invalid_pagination')
 })
 
 // ─── Fixture 5: OKR read (GET, no params, okr.read) ────────────────────────

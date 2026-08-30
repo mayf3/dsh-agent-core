@@ -12,6 +12,7 @@
  *   workflow_submission_history GET /internal/v1/workflow-instances/{workflowInstanceId}/submissions workflow.read
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
  *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
+ *   workflow_global_instances  GET /internal/v1/workflow-instances/global              workflow.read
  *
  * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1):
  * read-only domain-wide instance enumeration for DOMAIN_OWNERs. The DOMAIN_OWNER
@@ -21,6 +22,21 @@
  * serde rename_all=camelCase + deny_unknown_fields); cursors and filter params
  * (lifecycle/status/definitionKey/currentNodeKey/assigneePrincipalId) are
  * deliberately NOT exposed (first-batch cursor discipline).
+ *
+ * workflow_global_instances (AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1):
+ * generic read-only GLOBAL (all-domain) instance enumeration proxying the
+ * deployed GET /internal/v1/workflow-instances/global. Authorization is wholly
+ * server-side (query_visibility.check_global_workflow_read_role: GLOBAL_WORKFLOW_READER
+ * OR GLOBAL_WORKFLOW_COORDINATOR; non-holders -> 403 global_read_role_required on
+ * the target contract deployment, 403 global_coordinator_required on the
+ * pre-READER deployment state — BOTH codes declared per the spec's dual-code
+ * timing declaration). The tool is agent-agnostic: no HR/Dispatcher/per-agent
+ * wiring — any server-legitimate caller is an ordinary caller. Cursor params
+ * (beforeCreatedAt+beforeId, given as a pair) ARE exposed as an explicit
+ * capability-local deviation from the first-batch cursor discipline (global
+ * enumeration must be pageable); enum/UUID/RFC3339 validation is NOT replicated
+ * broker-side — invalid values pass through and are rejected downstream with the
+ * declared invalid_lifecycle/invalid_status/invalid_cursor codes.
  *
  * Opaque-cursor paging (before_created_at/before_id, after_created_at/after_id)
  * is deliberately NOT exposed in the first batch (deferred, see report); only
@@ -245,6 +261,69 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   ],
 })
 
+/**
+ * Global (all-domain) instance enumeration (read-only).
+ *
+ * AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1: generic read-only tool
+ * proxying the deployed svc-workflow endpoint
+ * GET /internal/v1/workflow-instances/global. The global read-role gate
+ * (GLOBAL_WORKFLOW_READER OR GLOBAL_WORKFLOW_COORDINATOR) is enforced wholly
+ * SERVER-SIDE; the broker never replicates or caches any role decision, and
+ * there is no per-agent wiring of any kind. `assigneePrincipalId` is a RESULT
+ * FILTER only — caller identity always comes from the trusted credential
+ * seam, never from arguments. Wire names follow GlobalInstanceQuery (serde
+ * camelCase + deny_unknown_fields).
+ */
+export const workflowGlobalInstancesManifest = withTransportErrors({
+  id: 'workflow_global_instances',
+  toolName: 'workflow_global_instances',
+  name: 'Workflow Global Instances',
+  description:
+    'Agent Core capability `workflow_global_instances` (svc-workflow): list workflow instances across ALL domains (read-only; requires a server-side global read role — GLOBAL_WORKFLOW_READER or GLOBAL_WORKFLOW_COORDINATOR, enforced by svc-workflow). ' +
+    'Returns {ok: true, result: <global instance page>} on success. Page forward with the beforeCreatedAt+beforeId pair taken from next_cursor.',
+  requiredScopes: ['workflow.read'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    { code: 'global_read_role_required', description: 'Caller holds neither GLOBAL_WORKFLOW_READER nor GLOBAL_WORKFLOW_COORDINATOR (HTTP 403, target contract).' },
+    { code: 'global_coordinator_required', description: 'Caller lacks the global role required by the pre-READER deployment state (HTTP 403, deployment-transition compat).' },
+    { code: 'invalid_pagination', description: 'Pagination parameters are invalid (limit must be 1-20).' },
+    { code: 'invalid_cursor', description: 'Cursor parameters are invalid (beforeCreatedAt and beforeId must be given together).' },
+    { code: 'invalid_lifecycle', description: 'The lifecycle parameter is not one of active|terminal|all (HTTP 422).' },
+    { code: 'invalid_status', description: 'The status parameter is not one of active|cancelled|archived|all (HTTP 422).' },
+  ],
+  operations: [
+    {
+      name: 'list',
+      description:
+        'List workflow instances across all domains. Optional: limit (1-20), lifecycle (active|terminal|all), status (active|cancelled|archived|all), ' +
+        'definitionKey, currentNodeKey, assigneePrincipalId (result filter only), beforeCreatedAt+beforeId (paired page cursor from next_cursor).',
+      arguments: {
+        properties: {
+          limit: limitProperty,
+          lifecycle: { type: 'string', description: 'Lifecycle filter: active | terminal | all (validated server-side).' },
+          status: { type: 'string', description: 'Status filter: active | cancelled | archived | all (validated server-side).' },
+          definitionKey: { type: 'string', description: 'Filter by workflow definition key.' },
+          currentNodeKey: { type: 'string', description: 'Filter by current node key.' },
+          assigneePrincipalId: { type: 'string', description: 'Filter results to this assignee principal (UUID). Result filter only — never affects the caller identity.' },
+          beforeCreatedAt: { type: 'string', description: 'Page cursor: RFC 3339 created_at of the last item of the previous page; must be given together with beforeId.' },
+          beforeId: { type: 'string', description: 'Page cursor: UUID of the last item of the previous page; must be given together with beforeCreatedAt.' },
+        },
+        required: [],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments', 'invalid_pagination'],
+      http: {
+        target: 'svc-workflow',
+        method: 'GET',
+        path: '/internal/v1/workflow-instances/global',
+        query: ['limit', 'lifecycle', 'status', 'definitionKey', 'currentNodeKey', 'assigneePrincipalId', 'beforeCreatedAt', 'beforeId'],
+      },
+    },
+  ],
+})
+
 /** All first-batch Workflow manifests. */
 export const manifests = [
   workflowMyTasksManifest,
@@ -252,4 +331,5 @@ export const manifests = [
   workflowSubmissionHistoryManifest,
   workflowMyDomainsManifest,
   workflowDomainInstancesManifest,
+  workflowGlobalInstancesManifest,
 ]
