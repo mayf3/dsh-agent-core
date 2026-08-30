@@ -1,0 +1,20 @@
+✔ profile table carries the production entry beside the legacy demo ones (2.408667ms)
+✔ profile is required — no silent demo default in the production package (0.611459ms)
+✔ provisionAgentHome installs profile copies + farm links idempotently (14.60025ms)
+✔ harness resolution is worktree-aware and cliBin fails loud without a checkout (56.875583ms)
+✔ target-home plugin provisioning is exact, idempotent and leaves the shared profile byte-unchanged (10.467041ms)
+✔ plugin missing, plugin mismatch, DSH mismatch and credential boundaries fail loud (8.57975ms)
+✔ readHarnessIdentity prefers git: a working git repo ignores the .source-stamp entirely (192.871041ms)
+✔ readHarnessIdentity: no .git + valid stamp (dirtyCount = 0) resolves the stamp commit (41.228833ms)
+✔ readHarnessIdentity: no .git + stamp dirtyCount != 0 fails loud (identity not exact) (121.527875ms)
+✔ readHarnessIdentity: malformed stamps fail loud (extra/missing keys, bad types, non-JSON) (585.9735ms)
+✔ readHarnessIdentity: no .git and no .source-stamp fails loud (39.437416ms)
+✔ stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatch is fail-loud, never a hop class) (83.860166ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1340.785667

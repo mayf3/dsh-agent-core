@@ -1,0 +1,211 @@
+{
+  "schema": "luna-fallback-candidate-path-blob-manifest/1",
+  "repository": "mayf3/dsh-agent-core",
+  "candidateCommit": "8dd5845050ca46cba1814cf14272dd89fcaa79dd",
+  "baseCommit": "e2e1e22efabe99896bc0f83e02ac5e93d2c97f8d (origin/main at candidate worktree creation)",
+  "extractionRule": "git show <candidateCommit>:<path> only (CTR-V2-006 form; production apply re-freezes on the audited merged commit)",
+  "scope": "full src surface of the four route-chain runtime packages (IMPL V2 \u00a73 authorized files + the loader/executor/spawn surface they compose with)",
+  "fileCount": 40,
+  "files": [
+    {
+      "path": "packages/agent-router/src/binding-resolution.js",
+      "blobSha1": "0f687f5d0b0f59f9566b2cf9b9368108f5d69c01",
+      "bytes": 14092
+    },
+    {
+      "path": "packages/agent-router/src/binding-store.js",
+      "blobSha1": "66f499508043215fc05d51ea3d3efc27589054af",
+      "bytes": 21708
+    },
+    {
+      "path": "packages/agent-router/src/channel-conversation.js",
+      "blobSha1": "d78d86b76f596a734c94ae9084345d97675df758",
+      "bytes": 3310
+    },
+    {
+      "path": "packages/agent-router/src/deadline-config.js",
+      "blobSha1": "1c02218262c09dbb25cc5aa371f0a8f899c0970d",
+      "bytes": 10949
+    },
+    {
+      "path": "packages/agent-router/src/index.js",
+      "blobSha1": "b37f9dac94118e53fedf332ab66b7d79eae867cd",
+      "bytes": 18146
+    },
+    {
+      "path": "packages/agent-router/src/ingress-delivery.js",
+      "blobSha1": "c8cdc0897b8463b0595f8c7ef03701bf54e56973",
+      "bytes": 15893
+    },
+    {
+      "path": "packages/agent-router/src/parent-rpc-relay.js",
+      "blobSha1": "367bb0b80dc383b1aa89e8a32a1ca6f973c9c3d2",
+      "bytes": 4933
+    },
+    {
+      "path": "packages/agent-router/src/process-registry-route-gate.js",
+      "blobSha1": "be6479501afedde2656884c2faa9408147c04be3",
+      "bytes": 6988
+    },
+    {
+      "path": "packages/agent-router/src/process-registry-startup.js",
+      "blobSha1": "2bb75f3285d943f28eb839b97c977a8c8acd9c6f",
+      "bytes": 1750
+    },
+    {
+      "path": "packages/agent-router/src/process-registry.js",
+      "blobSha1": "59c790cb27e4e34a60f9c2af20ea641f9aca8b6a",
+      "bytes": 22773
+    },
+    {
+      "path": "packages/agent-router/src/process.js",
+      "blobSha1": "67b872b9adf087e6d6e83134e40c874dddf6b817",
+      "bytes": 565
+    },
+    {
+      "path": "packages/agent-router/src/process/agent-process.js",
+      "blobSha1": "80c35986d279cc3f3f6a59a291361ecb88173711",
+      "bytes": 15168
+    },
+    {
+      "path": "packages/agent-router/src/process/env.js",
+      "blobSha1": "2887ef53b7e53fde05425a2b219707f997ba44e6",
+      "bytes": 5593
+    },
+    {
+      "path": "packages/agent-router/src/process/event-correlation.js",
+      "blobSha1": "f51370a733aef03047c74a1caf40c4c19214986e",
+      "bytes": 11501
+    },
+    {
+      "path": "packages/agent-router/src/process/evidence-buffer.js",
+      "blobSha1": "994312d05b5435d61228d6c1b314cb3dc5986100",
+      "bytes": 6369
+    },
+    {
+      "path": "packages/agent-router/src/process/index.js",
+      "blobSha1": "71fbadc5ab25d934cc0f9324a3aee1c7b0c33fd1",
+      "bytes": 1440
+    },
+    {
+      "path": "packages/agent-router/src/process/provider-errors.js",
+      "blobSha1": "a89c0cf94394adf911083c259359099a95481085",
+      "bytes": 3298
+    },
+    {
+      "path": "packages/agent-router/src/process/rpc-channel.js",
+      "blobSha1": "c010dd0306529299d4a63c08424e801c12e550fe",
+      "bytes": 18554
+    },
+    {
+      "path": "packages/agent-router/src/process/shutdown.js",
+      "blobSha1": "271c0387cb0edc3e03f60ab51d767c429237713b",
+      "bytes": 8099
+    },
+    {
+      "path": "packages/agent-router/src/process/spawn.js",
+      "blobSha1": "4378e38fa79f5ab10adbcc871f391ce3f32f0e69",
+      "bytes": 9031
+    },
+    {
+      "path": "packages/agent-router/src/process/state-machine.js",
+      "blobSha1": "772d0ed2e0ca9a8c6ae781cc31e0ee24175cb64f",
+      "bytes": 2904
+    },
+    {
+      "path": "packages/agent-router/src/process/turn-execution.js",
+      "blobSha1": "bf1eb280d4d4d43e81f01886f3185061a74ceddf",
+      "bytes": 19691
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation-store.js",
+      "blobSha1": "d4ddc513945e526ca1136425841e8878727d9b8b",
+      "bytes": 443
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/capacity.js",
+      "blobSha1": "97b99ba996878406eadf780bed2fdbe9d4efd0d5",
+      "bytes": 2443
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/index.js",
+      "blobSha1": "2ae5ab4f2c377b301c3edf35adfb4f0e5d342e55",
+      "bytes": 823
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/query.js",
+      "blobSha1": "58b7782b7b039c94964453bc23453d0a7885abdb",
+      "bytes": 7456
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/state-machine.js",
+      "blobSha1": "5860cb838cc26c647f68fc4c38bbbdb0d168f51d",
+      "bytes": 6734
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/store.js",
+      "blobSha1": "d4f7facd72888f58e12dc6d60625a0b14345af9f",
+      "bytes": 23732
+    },
+    {
+      "path": "packages/agent-router/src/route-chain-canary.js",
+      "blobSha1": "97b678b2982e26ee4afea7241f00130bdc2df354",
+      "bytes": 12097
+    },
+    {
+      "path": "packages/agent-router/src/route-chain.js",
+      "blobSha1": "010df7992637abb16f04cc4637c48ea1711504b1",
+      "bytes": 22870
+    },
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "blobSha1": "f5c7a8d379a3de020b34d1cdf67992b57dfce361",
+      "bytes": 22362
+    },
+    {
+      "path": "packages/production-runtime/src/context.js",
+      "blobSha1": "248fd289508e7243f08809854c232d21d11b5670",
+      "bytes": 1486
+    },
+    {
+      "path": "packages/production-runtime/src/entry.js",
+      "blobSha1": "199fafe4722176f64a8efe112d3e95d9f96d7692",
+      "bytes": 4729
+    },
+    {
+      "path": "packages/production-runtime/src/feishu-env.js",
+      "blobSha1": "4e9d4f6d428d2e41cd2c83cd1a45f00494eafce7",
+      "bytes": 4148
+    },
+    {
+      "path": "packages/production-runtime/src/model-overrides.js",
+      "blobSha1": "07805fafdc37dc3b9315523c52010f87dd027f86",
+      "bytes": 19987
+    },
+    {
+      "path": "packages/production-runtime/src/notification-ingress-runtime.js",
+      "blobSha1": "82b047cdd0f3c2d3285fe0f89dd658f6870802df",
+      "bytes": 2932
+    },
+    {
+      "path": "packages/production-runtime/src/paths.js",
+      "blobSha1": "55392cee1dac9d6e05cccb515fb1fff98ea4bb40",
+      "bytes": 5440
+    },
+    {
+      "path": "packages/production-runtime/src/v2-ingress-gate.js",
+      "blobSha1": "3881314c166a4d8ec159554ef4ca9aa33d40d06a",
+      "bytes": 5523
+    },
+    {
+      "path": "packages/agent-provisioning/src/index.js",
+      "blobSha1": "b1d7b94d29c4566679ca85b2b631b282d902392a",
+      "bytes": 22465
+    },
+    {
+      "path": "packages/scheduler-router/src/index.js",
+      "blobSha1": "b1f5563411cb55c8ddc3391d6337a30aea2e0f45",
+      "bytes": 13093
+    }
+  ]
+}

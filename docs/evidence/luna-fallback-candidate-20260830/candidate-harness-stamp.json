@@ -1,0 +1,34 @@
+{
+  "schema": "luna-fallback-candidate-harness-stamp/1",
+  "repository": "https://github.com/deepseek-ai/deepseek-harness",
+  "commit": "514ab7b0029141b88c807704764d0d3e1eea1da4",
+  "builtAt": "2026-08-30T14:39:02Z",
+  "dirty": false,
+  "dirtyCountMeasured": 0,
+  "artifact": {
+    "path": "artifacts/harness-installed-tree.tar",
+    "algorithm": "sha256",
+    "digest": "14e62445d67045c6b761385cbdc9a7fef03d12022342896c082e6ceed91485aa",
+    "byteSize": 1031446528,
+    "form": "installed-tree tar (full tree incl. node_modules, excluding .git; runtime .source-stamp embedded at harness/.source-stamp)"
+  },
+  "runtimeSourceStamp": {
+    "path": "harness/.source-stamp",
+    "content": {
+      "commit": "514ab7b0029141b88c807704764d0d3e1eea1da4",
+      "dirtyCount": 0
+    },
+    "note": "exact DEC-V2-001 closed schema consumed by readHarnessIdentity when .git is absent; embedded in the artifact, so the artifact digest covers it"
+  },
+  "build": {
+    "command": "corepack pnpm build  (scripts/build.ts, executed at the clean worktree deepseek-harness-clean-coldbackup-514ab7b @ 514ab7b)",
+    "node": "v25.6.1",
+    "pnpm": "11.7.0",
+    "platform": "darwin arm64",
+    "packageVersion": "0.1.0-rc.8"
+  },
+  "pins": {
+    "DSH_VERSION_PIN": "0.1.0-rc.8",
+    "DSH_COMMIT_PIN": "514ab7b0029141b88c807704764d0d3e1eea1da4"
+  }
+}
