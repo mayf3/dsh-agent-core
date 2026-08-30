@@ -1,0 +1,9 @@
+24c24
+< REPO="/Users/yanfenma/workspace/project/dsh-agent-core"
+---
+> REPO="/tmp/cto-v6-audit-evidence/nonexistent-repo"
+538c538
+< [ "$(id -u)" = "0" ] || zero_write_exit "must run through sudo as root"
+---
+> : # AUDIT-ONLY root gate neutralized
+COPY_SHA256=b7ea572894b10c132b8f6148e92e58b80c865a38f8cf31c7eb0f3cc9b375028f

@@ -1,0 +1,238 @@
++ read -r -d '' ATOMIC_JS
++ true
++ trap 'rc=$?; if [ "$rc" -ne 0 ] && [ "$WRITES_STARTED" = "1" ] && [ "$ROLLBACK_ACTIVE" = "0" ] && [ "$SUCCESS" = "0" ]; then rollback "unexpected exit rc=$rc"; fi' EXIT
++ '[' --synthetic-case = --synthetic-case ']'
++ '[' -n baseline ']'
++ run_synthetic_case baseline
++ local scenario=baseline synth_root promote_out expected corrupt victim forced
+++ /usr/bin/mktemp -d /tmp/cto-v4-runner-matrix.XXXXXXXX
++ synth_root=/tmp/cto-v4-runner-matrix.pjGrPvXi
++ ROOT=/tmp/cto-v4-runner-matrix.pjGrPvXi/root
++ HOME_DIR=/tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent
++ FALLBACK_WS=/tmp/cto-v4-runner-matrix.pjGrPvXi/root/workspaces/agt_cto-agent
++ CREDENTIAL_FILE=/tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent/.credentials.yaml
++ MAP_FILE=/tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
++ TARGET_WS=/tmp/cto-v4-runner-matrix.pjGrPvXi/target
++ MARKER_FILE=/tmp/cto-v4-runner-matrix.pjGrPvXi/target/.agent-core-cto-recovery-v4-canary.txt
++ RUNTIME_LOG=/tmp/cto-v4-runner-matrix.pjGrPvXi/runtime.log
++ RUNTIME_ERR=/tmp/cto-v4-runner-matrix.pjGrPvXi/runtime.err.log
++ BACKUP_DIR=/tmp/cto-v4-runner-matrix.pjGrPvXi/backup
++ BACKUP_FILE=/tmp/cto-v4-runner-matrix.pjGrPvXi/backup/primary-workspaces.json
++ /bin/mkdir -p /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent /tmp/cto-v4-runner-matrix.pjGrPvXi/root/workspaces/agt_cto-agent /tmp/cto-v4-runner-matrix.pjGrPvXi/target /tmp/cto-v4-runner-matrix.pjGrPvXi/backup
++ /usr/bin/touch /tmp/cto-v4-runner-matrix.pjGrPvXi/runtime.log /tmp/cto-v4-runner-matrix.pjGrPvXi/runtime.err.log /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent/.credentials.yaml
++ /bin/chmod 755 /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent
++ /bin/chmod 600 /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent/.credentials.yaml
++ /usr/local/libexec/agent-core/node-runtime/bin/node -e '
+const fs=require("fs"); const o={};
+for(let i=0;i<87;i++) o[`agt_fixture_${String(i).padStart(2,"0")}`]=`/fixture/ws/${i}`;
+fs.writeFileSync(process.argv[1],JSON.stringify(o,null,2)+"\n",{mode:0o600});
+' /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
++ /bin/cp /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.pjGrPvXi/backup/primary-workspaces.json
++ /bin/chmod 600 /tmp/cto-v4-runner-matrix.pjGrPvXi/backup/primary-workspaces.json
+++ stat -f %i /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent
++ PIN_HOME_INODE=59441346
+++ stat -f %u /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent
++ PIN_HOME_UID=502
+++ stat -f %g /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent
++ PIN_HOME_GID=0
+++ stat -f %i /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent/.credentials.yaml
++ PIN_CRED_INODE=59441353
+++ stat -f %u /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent/.credentials.yaml
++ PIN_CRED_UID=502
+++ stat -f %g /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent/.credentials.yaml
++ PIN_CRED_GID=0
+++ stat -f %m /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent/.credentials.yaml
++ PIN_CRED_MTIME=1788072371
+++ stat -f %u /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
++ PIN_MAP_UID=502
+++ stat -f %g /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
++ PIN_MAP_GID=0
+++ sha256_file /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
+++ /usr/bin/shasum -a 256 /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
+++ awk '{print $1}'
++ PRE_SHA256=fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055
+++ stat -f %d /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
++ PRE_MAP_DEV=16777230
+++ stat -f %i /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
++ PRE_MAP_INODE=59441354
++ RUNTIME_PID_OLD=999991
++ SYN_PID=999991
++ SYN_RESTARTS=0
++ SYN_HEALTH=1
++ WRITES_STARTED=1
++ HOME_MODE_CHANGED=1
++ MAP_MUTATION_POSSIBLE=1
++ change_home_mode 700
++ '[' baseline = rollback-home-mode-restore-fail ']'
++ /bin/chmod 700 /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent
++ unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
++ '[' baseline = mapping-promote-fail ']'
+++ run_atomic_as_authsvc promote /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.pjGrPvXi/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.pjGrPvXi/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 16777230 59441354
++ promote_out='++ '\''['\'' baseline = rollback-primary-mapping-restore-fail '\'']'\''
+++ _atomic_direct promote /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.pjGrPvXi/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.pjGrPvXi/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 16777230 59441354
+++ /usr/bin/env PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME=/tmp/cto-v4-runner-matrix.pjGrPvXi /usr/local/libexec/agent-core/node-runtime/bin/node -e '\''const fs = require('\''\'\'''\''fs'\''\'\'''\'');
+const path = require('\''\'\'''\''path'\''\'\'''\'');
+const crypto = require('\''\'\'''\''crypto'\''\'\'''\'');
+
+function die(message) {
+  throw new Error(`ATOMIC_ERROR:${message}`);
+}
+function digest(bytes) {
+  return crypto.createHash('\''\'\'''\''sha256'\''\'\'''\'').update(bytes).digest('\''\'\'''\''hex'\''\'\'''\'');
+}
+function objectJson(bytes, label) {
+  let value;
+  try { value = JSON.parse(bytes.toString('\''\'\'''\''utf8'\''\'\'''\'')); }
+  catch (error) { die(`${label}:json:${error.message}`); }
+  if (value === null || typeof value !== '\''\'\'''\''object'\''\'\'''\'' || Array.isArray(value)) die(`${label}:not-object`);
+  return value;
+}
+function writeAll(fd, bytes) {
+  let offset = 0;
+  while (offset < bytes.length) {
+    const n = fs.writeSync(fd, bytes, offset, bytes.length - offset, null);
+    if (!Number.isInteger(n) || n <= 0) die('\''\'\'''\''short-write'\''\'\'''\'');
+    offset += n;
+  }
+}
+function syncDirectory(dir) {
+  let dfd;
+  try {
+    dfd = fs.openSync(dir, fs.constants.O_RDONLY);
+    fs.fsyncSync(dfd);
+  } catch (error) {
+    die(`parent-sync:${error.code || error.message}`);
+  } finally {
+    if (dfd !== undefined) try { fs.closeSync(dfd); } catch {}
+  }
+}
+function secureInstall(destination, bytes, expectedLive) {
+  const dir = path.dirname(destination);
+  const base = path.basename(destination);
+  const forced = process.env.RECOVERY_ATOMIC_TEST_CANDIDATE;
+  const tmp = forced || path.join(dir, `.${base}.txn-${crypto.randomBytes(24).toString('\''\'\'''\''hex'\''\'\'''\'')}`);
+  if (path.dirname(tmp) !== dir) die('\''\'\'''\''temp-parent'\''\'\'''\'');
+  let fd;
+  let created = false;
+  let renamed = false;
+  try {
+    const flags = fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW;
+    fd = fs.openSync(tmp, flags, 0o600);
+    created = true;
+    const ls = fs.lstatSync(tmp);
+    const ss = fs.fstatSync(fd);
+    if (!ls.isFile() || ls.isSymbolicLink() || !ss.isFile() || ls.dev !== ss.dev || ls.ino !== ss.ino) die('\''\'\'''\''temp-not-regular'\''\'\'''\'');
+    if ((ss.mode & 0o777) !== 0o600) die(`temp-mode:${(ss.mode & 0o777).toString(8)}`);
+    writeAll(fd, bytes);
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    fd = undefined;
+
+    const staged = fs.readFileSync(tmp);
+    if (!staged.equals(bytes)) die('\''\'\'''\''temp-bytes'\''\'\'''\'');
+    objectJson(staged, '\''\'\'''\''temp'\''\'\'''\'');
+
+    if (expectedLive) {
+      let liveFd;
+      try {
+        liveFd = fs.openSync(destination, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+        const liveStat = fs.fstatSync(liveFd);
+        const liveBytes = fs.readFileSync(liveFd);
+        if (!liveStat.isFile()) die('\''\'\'''\''live-not-regular'\''\'\'''\'');
+        if (String(liveStat.dev) !== expectedLive.dev || String(liveStat.ino) !== expectedLive.ino) die('\''\'\'''\''live-identity-drift'\''\'\'''\'');
+        if (digest(liveBytes) !== expectedLive.sha) die('\''\'\'''\''live-sha-drift'\''\'\'''\'');
+      } finally {
+        if (liveFd !== undefined) try { fs.closeSync(liveFd); } catch {}
+      }
+    } else {
+      const liveStat = fs.lstatSync(destination);
+      if (!liveStat.isFile() || liveStat.isSymbolicLink()) die('\''\'\'''\''live-not-regular'\''\'\'''\'');
+    }
+
+    if (process.env.RECOVERY_ATOMIC_TEST_FAULT === '\''\'\'''\''rename'\''\'\'''\'') die('\''\'\'''\''injected-rename'\''\'\'''\'');
+    fs.renameSync(tmp, destination);
+    renamed = true;
+    if (process.env.RECOVERY_ATOMIC_TEST_FAULT === '\''\'\'''\''parent-sync'\''\'\'''\'') die('\''\'\'''\''injected-parent-sync'\''\'\'''\'');
+    syncDirectory(dir);
+    const finalBytes = fs.readFileSync(destination);
+    if (!finalBytes.equals(bytes)) die('\''\'\'''\''final-bytes'\''\'\'''\'');
+    const finalStat = fs.lstatSync(destination);
+    if (!finalStat.isFile() || finalStat.isSymbolicLink()) die('\''\'\'''\''final-not-regular'\''\'\'''\'');
+    if ((finalStat.mode & 0o777) !== 0o600) die(`final-mode:${(finalStat.mode & 0o777).toString(8)}`);
+    return { sha: digest(finalBytes), uid: finalStat.uid, gid: finalStat.gid, mode: (finalStat.mode & 0o777).toString(8) };
+  } catch (error) {
+    if (String(error && error.message || '\''\'\'''\'''\''\'\'''\'').startsWith('\''\'\'''\''ATOMIC_ERROR:'\''\'\'''\'')) throw error;
+    die(`${renamed ? '\''\'\'''\''after-rename'\''\'\'''\'' : '\''\'\'''\''before-rename'\''\'\'''\''}:${error.code || error.message}`);
+  } finally {
+    if (fd !== undefined) try { fs.closeSync(fd); } catch {}
+    if (created && !renamed) try { fs.unlinkSync(tmp); } catch {}
+  }
+}
+
+const [action, mapFile, backupFile, agentId, target, countText, expectedSha, dev, ino] = process.argv.slice(1);
+const count = Number(countText);
+if (!Number.isSafeInteger(count) || count < 0) die('\''\'\'''\''bad-count'\''\'\'''\'');
+if (action === '\''\'\'''\''promote'\''\'\'''\'') {
+  const beforeBytes = fs.readFileSync(mapFile);
+  if (digest(beforeBytes) !== expectedSha) die('\''\'\'''\''pre-sha'\''\'\'''\'');
+  const before = objectJson(beforeBytes, '\''\'\'''\''pre'\''\'\'''\'');
+  if (Object.keys(before).length !== count) die('\''\'\'''\''pre-count'\''\'\'''\'');
+  if (Object.prototype.hasOwnProperty.call(before, agentId)) die('\''\'\'''\''pre-key-present'\''\'\'''\'');
+  const after = Object.assign({}, before, { [agentId]: target });
+  const body = Buffer.from(JSON.stringify(after, null, 2) + '\''\'\'''\''\n'\''\'\'''\'', '\''\'\'''\''utf8'\''\'\'''\'');
+  const report = secureInstall(mapFile, body, { sha: expectedSha, dev, ino });
+  const checkBytes = fs.readFileSync(mapFile);
+  const check = objectJson(checkBytes, '\''\'\'''\''post'\''\'\'''\'');
+  if (digest(checkBytes) !== report.sha) die('\''\'\'''\''post-sha'\''\'\'''\'');
+  if (Object.keys(check).length !== count + 1 || check[agentId] !== target) die('\''\'\'''\''post-exact'\''\'\'''\'');
+  for (const key of Object.keys(before)) if (check[key] !== before[key]) die(`post-existing:${key}`);
+  process.stdout.write(JSON.stringify({ status: '\''\'\'''\''PROMOTE_OK'\''\'\'''\'', ...report }) + '\''\'\'''\''\n'\''\'\'''\'');
+} else if (action === '\''\'\'''\''restore'\''\'\'''\'') {
+  const original = fs.readFileSync(backupFile);
+  if (digest(original) !== expectedSha) die('\''\'\'''\''backup-sha'\''\'\'''\'');
+  const before = objectJson(original, '\''\'\'''\''backup'\''\'\'''\'');
+  if (Object.keys(before).length !== count || Object.prototype.hasOwnProperty.call(before, agentId)) die('\''\'\'''\''backup-shape'\''\'\'''\'');
+  const report = secureInstall(mapFile, original, null);
+  const check = objectJson(fs.readFileSync(mapFile), '\''\'\'''\''restored'\''\'\'''\'');
+  if (Object.keys(check).length !== count || Object.prototype.hasOwnProperty.call(check, agentId)) die('\''\'\'''\''restore-shape'\''\'\'''\'');
+  if (report.sha !== expectedSha) die('\''\'\'''\''restore-sha'\''\'\'''\'');
+  process.stdout.write(JSON.stringify({ status: '\''\'\'''\''RESTORE_OK'\''\'\'''\'', ...report }) + '\''\'\'''\''\n'\''\'\'''\'');
+} else {
+  die('\''\'\'''\''bad-action'\''\'\'''\'');
+}'\'' promote /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json /tmp/cto-v4-runner-matrix.pjGrPvXi/backup/primary-workspaces.json agt_cto-agent /tmp/cto-v4-runner-matrix.pjGrPvXi/target 87 fa803af9c9c5708542e82dc03ef76aa432e0d99464a7062ffff009d396b24055 16777230 59441354
+{"status":"PROMOTE_OK","sha":"050881809add85a8a6b8f0b876f949291c6dd818cd0e749d63a60a00ea4d1646","uid":502,"gid":0,"mode":"600"}'
++ unset RECOVERY_ATOMIC_TEST_CANDIDATE RECOVERY_ATOMIC_TEST_FAULT
+++ sha256_file /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
+++ /usr/bin/shasum -a 256 /tmp/cto-v4-runner-matrix.pjGrPvXi/root/primary-workspaces.json
+++ awk '{print $1}'
++ POST_SHA256=050881809add85a8a6b8f0b876f949291c6dd818cd0e749d63a60a00ea4d1646
++ restart_service
++ SYN_RESTARTS=1
++ '[' baseline = restart-fail ']'
++ '[' baseline = rollback-restart-fail ']'
++ SYN_PID=999992
++ '[' baseline = health-fail ']'
++ '[' baseline = rollback-health-fail ']'
++ SYN_HEALTH=1
++ return 0
++ wait_runtime_healthy 1 999991
++ '[' 1 = 1 ']'
++ RUNTIME_PID_NEW=999992
++ return 0
++ case "$scenario" in
++ expected=/tmp/cto-v4-runner-matrix.pjGrPvXi/backup/expected
++ write_expected_marker /tmp/cto-v4-runner-matrix.pjGrPvXi/backup/expected
++ printf 'uid=502\nDSH_HOME=%s\nDSH_PRIMARY_WORKSPACE=%s\ncwd=%s\ncredential read-open=OPEN_OK\n' /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent /tmp/cto-v4-runner-matrix.pjGrPvXi/target /tmp/cto-v4-runner-matrix.pjGrPvXi/target
++ case "$scenario" in
++ write_expected_marker /tmp/cto-v4-runner-matrix.pjGrPvXi/target/.agent-core-cto-recovery-v4-canary.txt
++ printf 'uid=502\nDSH_HOME=%s\nDSH_PRIMARY_WORKSPACE=%s\ncwd=%s\ncredential read-open=OPEN_OK\n' /tmp/cto-v4-runner-matrix.pjGrPvXi/root/homes/agt_cto-agent /tmp/cto-v4-runner-matrix.pjGrPvXi/target /tmp/cto-v4-runner-matrix.pjGrPvXi/target
++ marker_bytes_exact /tmp/cto-v4-runner-matrix.pjGrPvXi/backup/expected /tmp/cto-v4-runner-matrix.pjGrPvXi/target/.agent-core-cto-recovery-v4-canary.txt
++ /usr/bin/cmp -s /tmp/cto-v4-runner-matrix.pjGrPvXi/backup/expected /tmp/cto-v4-runner-matrix.pjGrPvXi/target/.agent-core-cto-recovery-v4-canary.txt
++ /bin/rm -f /tmp/cto-v4-runner-matrix.pjGrPvXi/target/.agent-core-cto-recovery-v4-canary.txt
++ SUCCESS=1
++ trap - EXIT
++ log 'FINAL: SUCCESS; EXIT=0; SYNTHETIC_CASE=baseline; ROLLBACK_CALLS=0'
+++ date +%H:%M:%S
++ printf '[%s] %s\n' 14:46:12 'FINAL: SUCCESS; EXIT=0; SYNTHETIC_CASE=baseline; ROLLBACK_CALLS=0'
+[14:46:12] FINAL: SUCCESS; EXIT=0; SYNTHETIC_CASE=baseline; ROLLBACK_CALLS=0
++ exit 0

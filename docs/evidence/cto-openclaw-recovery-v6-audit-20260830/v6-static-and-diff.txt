@@ -1,0 +1,59 @@
+== v5->v6 full diff ==
+3c3
+< #   sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v5.sh
+---
+> #   sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v6.sh
+27c27,30
+< CONFIRM_PHRASE="APPLY EXACT_CTO_OPENCLAW_RECOVERY_V5"
+---
+> REPO_PIN="/Users/yanfenma/workspace/project/dsh-agent-core"
+> REPO_OWNER_NAME="yanfenma"
+> REPO_OWNER_UID="502"
+> CONFIRM_PHRASE="APPLY EXACT_CTO_OPENCLAW_RECOVERY_V6"
+90a94,99
+> # Authority queries must run as the repository owner (uid 502). Running bare git
+> # as root trips git >= 2.35.2 dubious-ownership (CVE-2022-24765) and aborts here.
+> git_as_repo_owner() {
+>   /usr/bin/sudo -n -u yanfenma /usr/bin/git -C "$REPO" "$@"
+> }
+>
+528c537
+< [ "$#" -eq 0 ] || zero_write_exit "unexpected arguments; run exactly: sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v5.sh"
+---
+> [ "$#" -eq 0 ] || zero_write_exit "unexpected arguments; run exactly: sudo bash /tmp/run-agent-core-cto-openclaw-recovery-v6.sh"
+534c543
+< log "AGENT_CORE_CTO_OPENCLAW_RECOVERY_V5 start ts=$TS log=$LOG_FILE"
+---
+> log "AGENT_CORE_CTO_OPENCLAW_RECOVERY_V6 start ts=$TS log=$LOG_FILE"
+541,542c550,558
+< [ "$(git -C "$REPO" cat-file -t "$AUTH_COMMIT" 2>/dev/null)" = "commit" ] || zero_write_exit "authority commit missing"
+< AUTH_HEAD="$(git -C "$REPO" show "$AUTH_COMMIT:$AUTH_SPEC_PATH" 2>/dev/null | sed -n '1,20p')"
+---
+> REPO_REAL="$(/bin/realpath "$REPO" 2>/dev/null)"
+> [ "$REPO_REAL" = "$REPO_PIN" ] || zero_write_exit "repo realpath drift: $REPO -> ${REPO_REAL:-unresolved}"
+> [ "$(stat -f '%HT' "$REPO" 2>/dev/null)" = "Directory" ] || zero_write_exit "repo is not a plain directory (symlink or wrong type)"
+> [ "$(stat -f '%u' "$REPO" 2>/dev/null)" = "$REPO_OWNER_UID" ] || zero_write_exit "repo owner uid drift"
+> [ "$(stat -f '%HT' "$REPO/.git" 2>/dev/null)" = "Directory" ] || zero_write_exit "repo .git missing or not a plain directory"
+> [ ! -L "$REPO/.git" ] || zero_write_exit "repo .git is a symlink"
+> [ "$(/usr/bin/id -u "$REPO_OWNER_NAME" 2>/dev/null)" = "$REPO_OWNER_UID" ] || zero_write_exit "repo owner name/uid binding drift"
+> [ "$(git_as_repo_owner cat-file -t "$AUTH_COMMIT" 2>/dev/null)" = "commit" ] || zero_write_exit "authority commit missing"
+> AUTH_HEAD="$(git_as_repo_owner show "$AUTH_COMMIT:$AUTH_SPEC_PATH" 2>/dev/null | sed -n '1,20p')"
+545c561
+< [ "$(git -C "$REPO" merge-base --is-ancestor "$AUTH_COMMIT" main >/dev/null 2>&1; printf '%s' $?)" = "0" ] || zero_write_exit "accepted authority is not in main"
+---
+> [ "$(git_as_repo_owner merge-base --is-ancestor "$AUTH_COMMIT" main >/dev/null 2>&1; printf '%s' $?)" = "0" ] || zero_write_exit "accepted authority is not in main"
+
+== bare git call inventory (expect only git_as_repo_owner + comment/.git stats) ==
+95:# as root trips git >= 2.35.2 dubious-ownership (CVE-2022-24765) and aborts here.
+97:  /usr/bin/sudo -n -u yanfenma /usr/bin/git -C "$REPO" "$@"
+554:[ "$(stat -f '%HT' "$REPO/.git" 2>/dev/null)" = "Directory" ] || zero_write_exit "repo .git missing or not a plain directory"
+555:[ ! -L "$REPO/.git" ] || zero_write_exit "repo .git is a symlink"
+
+== /bin/realpath exists ==
+-rwxr-xr-x  1 root  wheel  100880 Aug 13 10:51 /bin/realpath
+
+== name/uid binding ==
+502
+
+== forbidden strings recheck (empty = 0) ==
+grep_rc=1

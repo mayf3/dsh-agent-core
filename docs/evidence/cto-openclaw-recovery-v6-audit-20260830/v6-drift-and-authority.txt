@@ -1,0 +1,17 @@
+== drift predicates on real repo (runner lines 550-556, executed verbatim as uid 502) ==
+P1 realpath=pin PASS
+P2 PASS
+P3 PASS
+P4 PASS
+P5 PASS
+P6 PASS
+
+== authority queries at repo-owner euid (identical condition to git_as_repo_owner: euid 502 == owner 502, dubious-ownership cannot fire) ==
+commit
+---
+spec_id: AGT_CTO_AGENT_PRIMARY_WORKSPACE_OPENCLAW_IN_PLACE_V1
+status: accepted
+ancestor PASS
+
+== negative: live drift-gate firing on bogus path (from gate-test C3) ==
+[14:46:12] RESULT: PREFLIGHT_FAIL (ZERO WRITES) — repo realpath drift: /tmp/cto-v6-audit-evidence/nonexistent-repo -> unresolved

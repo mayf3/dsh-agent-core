@@ -1,0 +1,37 @@
+===== CASE rollback-primary-mapping-restore-fail (expect=incomplete rc=4) =====
+[14:46:01] ── ROLLBACK (reason: synthetic rollback-primary-mapping-restore-fail)
+[14:46:02] ROLLBACK_CHECK MAP_EXACT_PRE_BYTES=1
+[14:46:02] ROLLBACK_CHECK MAP_SHA256_PRE=1
+[14:46:02] ROLLBACK_CHECK CTO_KEY_ABSENT=1
+[14:46:02] ROLLBACK_CHECK MAP_OWNER_GROUP_MODE=1
+[14:46:02] ROLLBACK_CHECK MAP_ENTRY_COUNT=1
+[14:46:02] ROLLBACK_CHECK HOME_MODE_755=1
+[14:46:02] ROLLBACK_CHECK CREDENTIAL_PIN=1
+[14:46:02] ROLLBACK_CHECK RESTART_SUCCEEDED=1
+[14:46:02] ROLLBACK_CHECK HEALTH_URL_OK=1
+[14:46:02] ROLLBACK_CHECK RUNTIME_PID_UPDATED_STABLE=1
+[14:46:02] ROLLBACK_CHECK BOOT_MAPPING_ABSENT=1
+[14:46:02] ROLLBACK_CHECK FALLBACK_PROOF=1
+[14:46:02] ROLLBACK_CHECK MARKER_ABSENT=1
+[14:46:02] ROLLBACK_CHECK STALE_PROCESSES_ABSENT=1
+[14:46:02] RESULT: ROLLBACK_INCOMPLETE — synthetic rollback-primary-mapping-restore-fail
+UNRESTORED_STATE:
+- mapping restore transaction failed: [eval]:92
+    if (String(error && error.message || '').startsWith('ATOMIC_ERROR:')) throw error;
+                                                                          ^
+
+Error: ATOMIC_ERROR:injected-parent-sync
+    at die ([eval]:6:9)
+    at secureInstall ([eval]:83:67)
+    at [eval]:123:18
+    at [eval]:130:5
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:451:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:449:60)
+    at evalFunction (node:internal/process/execution:283:30)
+    at evalTypeScript (node:internal/process/execution:295:3)
+
+Node.js v25.6.1
+[14:46:02] FINAL: ROLLBACK_INCOMPLETE; EXIT=4; BACKUP=/tmp/cto-v4-runner-matrix.G4EPlysZ/backup
+RC=4

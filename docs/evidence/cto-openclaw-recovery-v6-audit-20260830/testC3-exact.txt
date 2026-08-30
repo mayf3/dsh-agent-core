@@ -1,0 +1,7 @@
+Type the exact confirmation phrase to continue:
+  APPLY EXACT_CTO_OPENCLAW_RECOVERY_V6
+> [14:46:12] AGENT_CORE_CTO_OPENCLAW_RECOVERY_V6 start ts=20260830-144612 log=/tmp/agent-core-cto-openclaw-recovery-v4-20260830-144612-39656.log
+[14:46:12] OK  interactive Owner confirmation accepted
+[14:46:12] RESULT: PREFLIGHT_FAIL (ZERO WRITES) — repo realpath drift: /tmp/cto-v6-audit-evidence/nonexistent-repo -> unresolved
+[14:46:12] FINAL: FAILED_PRE_FLIGHT; WRITES=NONE; READY_FOR_OWNER_RUN=NO
+C3_EXIT=2

@@ -1,0 +1,16 @@
+CASE baseline = PASS
+CASE fault-env-pollution-ignored = PASS
+CASE restart-fail = PASS
+CASE health-fail = PASS
+CASE delivery-404 = PASS
+CASE delivery-accepted-false = PASS
+CASE marker-timeout = PASS
+CASE marker-open-failed = PASS
+CASE marker-cwd-wrong = PASS
+CASE mapping-promote-fail = PASS
+CASE rollback-primary-mapping-restore-fail = PASS
+CASE rollback-home-mode-restore-fail = PASS
+CASE rollback-restart-fail = PASS
+CASE rollback-health-fail = PASS
+CASE rollback-fallback-proof-fail = PASS
+MATRIX_PASS=15 MATRIX_FAIL=0 TOTAL=15
