@@ -1,0 +1,8 @@
+D packages/broker/test/capabilities.test.js
+A packages/broker/test-support/capability-fixtures.js
+A packages/broker/test/capabilities/manifest-inventory.test.js
+A packages/broker/test/capabilities/forum.test.js
+A packages/broker/test/capabilities/okr.test.js
+A packages/broker/test/capabilities/workflow-instances.test.js
+A packages/broker/test/capabilities/workflow-my-tasks.test.js
+A packages/broker/test/capabilities/workflow-transition.test.js

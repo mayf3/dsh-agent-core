@@ -1,0 +1,20 @@
+== #109 Pagination V1->V2 full-text diff classification (2026-08-30) ==
+- frontmatter/lifecycle: proposed-successor rewrite (expected)
+- §1/§2/§3: body verbatim; only heading annotations added (与 V1 逐字一致 / 记录继承 V1 / current main 仍成立)
+- §4 R1-R6: zero body changes
+- §5: item 4 path changed to dedicated home + V2 附加闭包纪律 paragraph added; items 1-3 unchanged
+- §6: same gates + V2 structural gates appended
+- §7/§8/§9: V1 acceptance record replaced by V2 coordination/authoring sections (successor restructure)
+
+== #108 Global V1->V2 joined char-level opcodes (§8/§9/§10, whitespace-stripped) ==
+§8: +header line; DEC-001..007 identical; DEC-008 rewrap-only; +DEC-009 (new structural)
+§9: CTR-001 +annotation '与V1的唯一合同差异' + closure path swap to dedicated home + inventory 13->14 clause; CTR-002 dropped dead dual-path branch (error-preservation merged per §3/CLM-003); CTR-003..008 identical; +CTR-009
+§10: ACC-003 dual-path branch drop (same env-fact refresh); ACC-006 location wording update (semantics same); ACC-001/002/004/005/007/008/009 identical; +ACC-010
+
+== #110 Transition amendment char-level opcodes vs main (whole file, whitespace-stripped) ==
+5 insert ops, 0 delete/replace ops — strictly additive:
+ 1) §0 FOCUSED AMENDMENT quote block
+ 2) §2 heading suffix '；2026-08-29 流转 联动 修订后，见 §17'
+ 3)+4) §2 In-scope path 'capabilities[/.test.js' -> 'capabilities/workflow-transition.test.js' (insertion-realizable) + dedicated-home explanation + manifest-inventory 14->15 bullet
+ 5) §17 Amendment record (AMEND-1/2/3 + 保持不变 + 边界与验证)
+DEC-001..006 / CTR-001..008 / §15 / §16 / frontmatter: byte-preserved

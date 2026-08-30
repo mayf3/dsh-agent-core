@@ -1,0 +1,7 @@
+# MANIFEST — 联动 审计 evidence (2026-08-30)
+
+a10911c70676bd725c7180a672331efda5c31c5c558b1611364b837ca7f6e705  verifier-transcripts.txt
+2711cd0670f31ef3eccb0e5af8b3a792d78ab36ab5b0c8236520e2eed1240a16  broker-facts.txt
+4cb5d6746b77cf64c0d5bc7889f97061ef49256f805fe0356523e82ef1695cc8  pin-and-occurrence-audit.txt
+9dfe1c728a92533ca0e0516a2df481f8862ab0858ccf74a8fd76687c63377270  pin-107-reference.txt
+f8043d46e2475ad943a367e6e0f8bcfe796607b48c0ae5193ad9808f9ec7edf1  contract-delta-analysis.txt

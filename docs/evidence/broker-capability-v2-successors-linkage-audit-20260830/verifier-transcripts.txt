@@ -1,0 +1,42 @@
+== verifier exits per PR head (isolated detached worktrees, 2026-08-30) ==
+PR108 gov=0 struct=0 diffcheck=0
+PR109 gov=0 struct=0 diffcheck=0
+PR110 gov=0 struct=0 diffcheck=0
+
+== structure verifier full output (PR108 head, representative; warnings pre-exist on main, exit 0) ==
+> dsh-agent-core@0.0.0 verify:structure
+> node scripts/verify-code-structure.mjs --base origin/main --head HEAD
+verify-code-structure: PASS (base=b53ebd6b08 head=4f1d3b3be0)
+  in-scope files: 262; registry: 17 files / 2 directories; violations: 0; warnings: 34
+  WARNING  [FILE_WARNING_LINES] packages/agent-memory/src/memory.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-provisioning/src/index.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/process-registry.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/process/turn-execution.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/reconciliation/store.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/process-startup-wedge.test.js
+  WARNING  [TEST_LOGIC_IN_FIXTURE] packages/broker/src/fixtures/self-assert.js fixture file contains test-runner constructs
+  WARNING  [FILE_WARNING_LINES] packages/broker/src/schema.js
+  WARNING  [GRANDFATHERED] packages/broker/test/capabilities.test.js legacy over-limit file not listed in registry
+  WARNING  [FILE_WARNING_LINES] packages/broker/test/gateway.test.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/src/core.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/src/index.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/test/processing-reaction.test.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/test/reply-card/reply-card.test.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/test/ux-phase1-v2.test.js
+  WARNING  [FILE_WARNING_LINES] packages/notification-ingress/test/api.test.js
+  WARNING  [FILE_WARNING_LINES] packages/notification-ingress/test/integration.seam.test.js
+  WARNING  [FILE_WARNING_LINES] packages/production-runtime/src/compose.js
+  WARNING  [FILE_WARNING_LINES] packages/production-runtime/src/model-overrides.js
+  WARNING  [FILE_WARNING_LINES] packages/production-runtime/test/v2-ingress-gate.test.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/src/occurrence.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/src/self-service.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/src/store.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/test/scheduler.test.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/test/self-service.test.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/test/store-v2.test.js
+  WARNING  [FILE_WARNING_LINES] scripts/agent-core-backup-ops.sh
+  WARNING  [FILE_WARNING_LINES] scripts/agent-router-delivery-v0-verify.mjs
+  WARNING  [FILE_WARNING_LINES] scripts/memory-v1-verify.mjs
+  WARNING  [FILE_WARNING_LINES] scripts/production-runtime-v1-verify.mjs
+  ... 4 more warnings
+STRUCT_EXIT=0

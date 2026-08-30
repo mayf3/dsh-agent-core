@@ -1,0 +1,15 @@
+== 8-path pin byte-comparison vs PR #107 deda45d §5 (cmp, 2026-08-30) ==
+PR108 pin block: 8 lines, cmp vs PR107 = identical
+PR109 pin block (blockquote '> '-prefixed, prefixes stripped): 8 lines, cmp vs PR107 = identical
+PR110 pin block: 8 lines, cmp vs PR107 = identical
+
+== PR107 head stability (gh, 2026-08-30) ==
+#108 headRefOid = 4f1d3b3be0530494eccc3677e5a0f1d44636e9af
+#109 headRefOid = b8dea71290a99d7534aa2899a5ae7440814e3c45
+#110 headRefOid = d1bc0f5b4e56d0eff6a4f14c7a955c4845d1101c
+#107 headRefOid = deda45d87635c577be37d6402ba1c26c8a483428 (no drift)
+
+== capabilities.test.js occurrence census (context-audited) ==
+PR108: 12 occurrences — all non-authorizing (pin D-line L59; motivation L41; negative prohibitions L103/344/395/430; factual STATE/OBS L186/239/256; baseline note L421; ALT-007 L456; §14 prose L514/525)
+PR109: 4 occurrences — all non-authorizing (L54 motivation, L73 pin D-line, L104 §0 fact, L327 negative discipline)
+PR110: 3 occurrences — all non-authorizing (L555 §17 motivation, L572 pin D-line, L590 AMEND-1 old-text contrast); §2 In-scope no longer contains the path

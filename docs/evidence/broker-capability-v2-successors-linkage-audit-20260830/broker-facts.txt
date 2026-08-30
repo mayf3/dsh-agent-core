@@ -1,0 +1,18 @@
+== broker test baseline on PR108 head (= main broker bytes; node_modules symlinked from main repo) ==
+ℹ tests 173
+ℹ suites 0
+ℹ pass 173
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+
+== legacy aggregate file structure facts (PR108 head = main bytes) ==
+     744 packages/broker/test/capabilities.test.js
+test-block count (^test( ): 18
+test('schema: all 13 first-batch manifests validate', () => {
+  const all = [...forumManifests, ...workflowManifests, ...okrManifests]
+  assert.equal(all.length, 13)
+
+== live manifest count (forum+workflow+okr) ==
+total = 13
+forum_my_notifications, forum_read_thread, forum_read_transcript, forum_reply, forum_mark_read, forum_list_threads, forum_search_threads, workflow_my_tasks, workflow_instance_detail, workflow_submission_history, workflow_my_domains, workflow_domain_instances, okr_read
