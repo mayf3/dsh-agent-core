@@ -492,8 +492,10 @@ exact effective revision. External authority remains owned by auth-service.
 
 #### CTR-NI2-IDM-001 — key and payload hash
 
-The authority key is `(callerPrincipalId, requestId)`. Canonical payload bytes are UTF-8 bytes of
-exactly the no-whitespace result of:
+The authority key is `(callerPrincipalId, requestId)`. `requestId` MUST be a non-empty string;
+missing, empty or non-string `requestId` is pre-gate `400 VALIDATION_ERROR`, with zero idempotency
+mutation and zero Router call. Canonical payload bytes are UTF-8 bytes of exactly the no-whitespace
+result of:
 
 ```text
 JSON.stringify({
@@ -708,7 +710,8 @@ accepted-but-unmerged local or external authority grants no permission.
 ### ACC-NI2-IDM-001 — complete idempotency regression
 
 - Contracts: `CTR-NI2-IDM-001` through `CTR-NI2-IDM-006`.
-- Method: execute exact `JSON.stringify` canonical-byte/hash vectors, duplicate outcome shapes,
+- Method: execute missing, empty and non-string `requestId` cases with pre-gate 400/zero-mutation/
+  zero-Router assertions; exact `JSON.stringify` canonical-byte/hash vectors; duplicate outcome shapes,
   conflict, concurrency, crash W1-W4, real restart/kill -9 with `restart_unresolved` history assertion,
   deadline, late-settlement, corruption/version/schema, hourly/boot retention, evidence event/rotation,
   metadata/lock/fsync and BindingStore-isolation tests under both accepted origin classes.
