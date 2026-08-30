@@ -1,0 +1,9 @@
+TASK_NAME=接入 执行 (deploy preparation)
+TARGET_COMMIT=9bb5b97442c7155da36f06e867d1a655410544ac
+LIVE_STATE=BASE
+LIVE_FILES=131
+DELTA_FILES=6 (5 modified + 1 added)
+SERVICE=system/ai.agent-core.runtime
+HEALTH_URL=http://127.0.0.1:8790/health
+CHECK=PASS
+rc=0

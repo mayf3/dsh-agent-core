@@ -1,0 +1,15 @@
+18:#   --apply   requires uid 0 (the script NEVER invokes sudo) and the
+34:readonly HEALTH_URL="http://127.0.0.1:8790/health"
+95:  /bin/rm -f "$manifest"
+155:  /bin/launchctl print "$SERVICE_LABEL" >/dev/null 2>&1 \
+157:  /usr/bin/curl -fsS --max-time 3 "$HEALTH_URL" >/dev/null 2>&1 \
+175:    if /usr/bin/curl -fsS --max-time 2 "$HEALTH_URL" >/dev/null 2>&1; then
+209:  [ "$(/usr/bin/id -u)" = "0" ] || fail "--apply requires uid 0; this script never invokes sudo"
+262:          /bin/rm -f "$LIVE_ROOT/${ADD_PATHS[0]}" || rollback_ok=0
+271:          if ! /bin/launchctl kickstart -k "$SERVICE_LABEL"; then
+288:      /bin/rm -rf "$stage" || rollback_ok=0
+359:  /bin/launchctl kickstart -k "$SERVICE_LABEL"
+361:  /bin/launchctl print "$SERVICE_LABEL" >/dev/null 2>&1 \
+369:  /bin/rm -rf "$stage"; STAGE_CREATED=0
+391:The script never invokes sudo. Production values are fixed (no env overrides).
+bash -n OK

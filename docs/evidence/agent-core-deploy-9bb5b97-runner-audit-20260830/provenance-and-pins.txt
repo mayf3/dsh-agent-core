@@ -1,0 +1,36 @@
+runner: /tmp/run-agent-core-deploy-9bb5b97-v1.sh
+sha256 (start): 181c35d4741255f391235d0f8a5ea88e2d47a375d9d90333ddd572bcd4ad5ece
+sha256 (end):   re-verified identical
+expected: 181c35d4741255f391235d0f8a5ea88e2d47a375d9d90333ddd572bcd4ad5ece
+
+== manifest pins independently reproduced ==
+live BASE  = 15793b0e2c3cc07c32d3e9a96e1928428244a7d44f5c1dadf6bc06a992a7732d (131 files) — pin 15793b0e... MATCH
+derived TARGET = 6ea0b6142e7ee6d5342c444b186451f6da5fce5c289ce0cff28884fdc15f0422 (132 files) — pin 6ea0b614... MATCH
+derivation: BASE manifest + 5 OID swaps + 1 canary line insert (path-sorted position) = TARGET pin => delta is EXACTLY 6 files, other 126 files zero drift
+
+== provenance (task claimed PR #103 — CORRECTED) ==
+9bb5b97 Merge pull request #114 from mayf3/implementation/workflow-global-instances-v2
+e2e1e22 Merge pull request #112 from mayf3/implementation/broker-capabilities-test-decomposition
+a1815f0 Merge pull request #110 from mayf3/docs/workflow-assignee-transition-test-home-amendment
+92891f8 Merge pull request #109 from mayf3/docs/workflow-domain-instances-pagination-v2-successor
+4283657 Merge pull request #108 from mayf3/docs/workflow-global-instances-capability-v2-successor
+1fc3ad6 Merge pull request #107 from mayf3/docs/broker-capabilities-shared-decomposition-spec
+b53ebd6 Merge pull request #111 from mayf3/impl/luna-cold-backup-v2
+PR #103 f54679c diff-vs-main: docs only (8 files):
+docs/investigations/AGT_CTO_LUNA_COLD_BACKUP_V2_EVIDENCE.md
+docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1.md
+docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2.md
+docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1.md
+docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2.md
+docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1.md
+docs/specs/AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2.md
+docs/specs/README.md
+
+PR #111 b53ebd6 app-surface files:
+packages/agent-router/src/index.js
+packages/agent-router/src/ingress-delivery.js
+packages/agent-router/src/route-chain-canary.js
+packages/agent-router/src/route-chain.js
+packages/agent-router/test/route-chain/canary-seam.test.js
+packages/agent-router/test/route-chain/quota-classifier.test.js
+packages/production-runtime/src/compose.js

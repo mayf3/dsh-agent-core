@@ -1,0 +1,17 @@
+# MANIFEST — agent-core-deploy-9bb5b97-runner-audit-20260830
+
+Generated: 2026-08-30 (TASK_NAME = 接入 审计, DEPLOY_RUNNER_REVIEW of /tmp/run-agent-core-deploy-9bb5b97-v1.sh)
+RUNNER_SHA256 = 181c35d4741255f391235d0f8a5ea88e2d47a375d9d90333ddd572bcd4ad5ece (== EXPECTED, re-verified unchanged at round end)
+TARGET_COMMIT = 9bb5b97442c7155da36f06e867d1a655410544ac (== github/main at audit time)
+
+Note: manifest .txt files are the verbatim computed artifacts (no normalization applied).
+
+## Files (self excluded)
+
+1e3696cbd01c003d0b155b3e291c9f61ab27b66cc244f62ba4ebd5acba9943c6  blob-chain.txt
+92c33760d18b7bfa68b78bdcddc783a3dc68767db8cce2d70dacf5d6e3f0ea0d  check-transcript.txt
+15793b0e2c3cc07c32d3e9a96e1928428244a7d44f5c1dadf6bc06a992a7732d  live-base-manifest-131.txt
+a5ca2677694c23c07be581ef7b79639c681ee89aa1e0e4e7f99a273a72c3daec  pr114-merge.txt
+ddb18817bd7956d836074a9d10f82d9ca6f6329b364cf79d2019925b066a6076  provenance-and-pins.txt
+19b1d4048bfc221cf203d8525a504019acbe7fd49f58d96b53dee5b70a75f765  static-sweep.txt
+6ea0b6142e7ee6d5342c444b186451f6da5fce5c289ce0cff28884fdc15f0422  target-manifest-derived-132.txt

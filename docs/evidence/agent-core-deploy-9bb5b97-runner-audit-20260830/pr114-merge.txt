@@ -1,0 +1,3 @@
+{"m":"9bb5b97442c7155da36f06e867d1a655410544ac","n":114}
+{"m":"f54679cb1a9cb9fe5e4ca38b9b354a5d25ef6221","n":103,"t":"docs: propose coordinated ordered-route cold-backup V2 authorities"}
+{"m":"b53ebd6b08abf5ea1ea14d4ec51918873b7f20b9","n":111,"t":"impl: admission-first terminal-quota route fallback + one-shot canary seam (IMPL V2 round 1)"}

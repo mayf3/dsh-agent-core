@@ -1,0 +1,14 @@
+== target blobs at 9bb5b97 vs runner pins ==
+b37f9dac94118e53fedf332ab66b7d79eae867cd  packages/agent-router/src/index.js
+c8cdc0897b8463b0595f8c7ef03701bf54e56973  packages/agent-router/src/ingress-delivery.js
+010df7992637abb16f04cc4637c48ea1711504b1  packages/agent-router/src/route-chain.js
+04ca8550fbdaf9b66624dea42701a8a9af7547a8  packages/broker/src/capabilities/workflow.js
+f5c7a8d379a3de020b34d1cdf67992b57dfce361  packages/production-runtime/src/compose.js
+97b678b2982e26ee4afea7241f00130bdc2df354  packages/agent-router/src/route-chain-canary.js
+
+== base blobs at f54679c (pre-#111/#114) vs runner MOD_BASE_OIDS ==
+52c8e77c8e046c0eb8c48979eb8ff15daa6c2099  packages/agent-router/src/index.js
+16eb1617c0f893f8ac080b01ef681fea6a08c944  packages/agent-router/src/ingress-delivery.js
+4c7d54416c1f0eb7736cc7c153c475d0af4b9c70  packages/agent-router/src/route-chain.js
+b7c56db7d711bd4da46e5c00978b14bc996e01e0  packages/production-runtime/src/compose.js
+workflow.js pre-#114 blob: 289a76cf00255e95d51f921242969361b727f5de (289a76c = live BASE, PR #114 diff base index)
