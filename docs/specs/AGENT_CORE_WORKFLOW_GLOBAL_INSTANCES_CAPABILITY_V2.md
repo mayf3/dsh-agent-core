@@ -1,10 +1,12 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
+accepted_date: 2026-08-30
+accepted_reviewed_head: 4f1d3b3be0530494eccc3677e5a0f1d44636e9af
 date: 2026-08-29
 scope:
   - packages/broker
@@ -27,6 +29,17 @@ owners:
 
 > 状态：**proposed**。本轮只提交 docs-only Draft PR，不实现、不接受、不 merge。
 > `PRODUCT_CODE_CHANGE = NONE`；`PRODUCTION_CHANGE = NONE`。
+>
+> **ACCEPTED（2026-08-30，联动 执行 / COORDINATED_ACCEPTANCE_AND_MERGE）。**
+> 本 Spec 生命周期 acceptance：`status: proposed -> accepted`、
+> `implementation_authority: none -> contracts`、`PRODUCTION_APPLY_AUTHORITY =
+> none` 保持；authoring 轮 reviewed head =
+> `4f1d3b3be0530494eccc3677e5a0f1d44636e9af`（fresh fetch 核对无漂移）+ 本
+> acceptance commit。同一原子事务中 V1 完成 supersede 回填
+> （`V1.status -> superseded`、`V1.superseded_by -> 本 Spec`、
+> `V1.implementation_authority -> none`）。协调前置已满足：分解 spec 已 accepted
+> 并 merged（PR #107，merge `1fc3ad6`）。独立审计 verdict 未经独立审计轮产生——
+> 本 acceptance 为 Owner-directed 协调 acceptance（§16 如实记录）。完整记录见 §16。
 >
 > **WHOLE-SPEC SUCCESSOR。** 本 Spec 是
 > `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1`（accepted，PR #83 merge
@@ -541,3 +554,53 @@ PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 NEXT_TASK = 接入 审计
 ```
+
+## 16. Acceptance Record (2026-08-30, 联动 执行 / COORDINATED_ACCEPTANCE_AND_MERGE)
+
+ACCEPTANCE_TRANSACTION = LIFECYCLE_ONLY + V1 SUPERSEDE BACKLINK，ONE commit，
+TWO files（本文件 + `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1.md`）。
+
+- 事务：TASK_NAME = 联动 执行（step 2/4）；authoring-round reviewed head =
+  `4f1d3b3be0530494eccc3677e5a0f1d44636e9af`（fresh fetch 核对无漂移）+ 本
+  acceptance commit；独立 worktree。
+- **原子 backlink（SPEC_FORMAT_V0 §2.7，同一 docs-only change）**：
+  - V2：`status: proposed -> accepted`；`implementation_authority: none ->
+    contracts`（本 scope 唯一实现授权生效）。
+  - V1：`status: accepted -> superseded`；`superseded_by: null ->
+    AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2`；
+    `implementation_authority: contracts -> none`（authority 整体移交本 Spec）；
+    header 增加 SUPERSEDED 注记；§1–§14 与 acceptance provenance 原样保留。
+- **协调前置（已满足）**：分解 spec
+  `AGENT_CORE_BROKER_CAPABILITIES_TEST_DECOMPOSITION_V1` 已 accepted 并 merged
+  （PR #107 merge commit `1fc3ad6`）；DEC-006 home（
+  `capabilities/workflow-global-instances-v2.test.js`）与 DEC-003 aggregate owner
+  （`capabilities/manifest-inventory.test.js`）已按本 Spec §2/CTR-001/DEC-009 采用。
+- **姊妹协调**：Pagination V2 successor（#109）与 Transition amendment（#110）在
+  本事务之后按 Owner 编排顺序 #108 → #109 → #110 依次 merge；inventory 协调序 =
+  分解 13 → 本 Spec 13→14 → Transition 14→15；Pagination V2 不改变计数。
+- **独立审计状态（如实记录）**：本事务为 Owner-directed 协调 acceptance；独立
+  「接入 审计」轮未在本事务之前运行；本记录**不声明任何独立审计 verdict**——没
+  有审计 verdict 可记录，不伪造 `independent_audit_result` 类字段。机械化验证在
+  authoring head 与 acceptance head 全部实测 PASS：frontmatter schema、
+  `verify_governance.py`（vendored bytes 匹配）、`npm run verify:structure`
+  （0 violations）、`git diff --check`、Broker 基线 `node --test` = 173/173。
+- 语义变化 = STATUS_MIRROR_AND_PROVENANCE_ONLY + V1 原子 supersede：§1–§15 全部
+  冻结内容（§2 闭包、§8 DEC-001..009、§9 CTR-001..009、§10 ACC-001..010、
+  §11 ALT-001..010、§12–§14 序列、§15 authoring result）逐字节保留，body 未改动；
+  正文中 authoring 轮「V1 保持 accepted 不动 / backlink 保留给未来 acceptance」
+  的表述按既有纪律作为历史记录原样保留（本事务即该未来 acceptance）。
+- 授权生效语义：本 Spec merged on main 起成为本 scope 的唯一实现授权
+  （§2/CTR-001 闭包：`workflow.js` + dedicated home + `manifest-inventory.test.js`
+  计数 13→14）；实现 PR 不得修改本文件（GOVERNING_SPEC_UNMODIFIED）；
+  `production_apply_authority = none`——deploy / restart / 角色授予 / production
+  state 变更仍需独立授权（HR READER 授予与 Dispatcher 身份创建归 external
+  authority `SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1`）。
+- 实现前置：拆测 执行 轮（NEXT_TASK）先实现分解 spec §5 exact 8-path 闭包并
+  merge，随后本 Spec 的实现才可在 fresh main 开工（dedicated home 创建 +
+  inventory 计数 13→14）；PR #101（V1 旧闭包实现）按分解 §8 步骤 7 处置属
+  独立未来轮次（本事务不修改 PR #101）。
+- 事务边界：DOCS_ONLY（2 files）；PRODUCT_CODE_CHANGE = NONE；
+  PRODUCTION_CHANGE = NONE；packages/、scripts/、.agents/**、production 均不动；
+  PR #101/#102 不被本事务修改。
+- Merge：本 commit 之后随即 mark ready 并 merge PR #108（merge commit 为本
+  Spec 的 effective-on-main 坐标）。

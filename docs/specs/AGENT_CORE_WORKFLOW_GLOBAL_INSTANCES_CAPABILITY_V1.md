@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: contracts
+implementation_authority: none
 accepted_date: 2026-08-29
 accepted_reviewed_head: cd7a9ae55dd0add8d619ccadabcdadc278124318
 independent_audit_result: PASS
@@ -30,13 +30,21 @@ external_authorities:
     # and agent-wake are NOT dependencies of this Spec — no pin, no DAG edge,
     # no cycle (they are independently governed upstream/downstream concerns).
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2
 owners:
   - repository-maintainers
 ---
 
 # AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1 — 全域实例只读枚举 Broker 能力
 
+> **SUPERSEDED（2026-08-30）** by
+> `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2`（whole-Spec successor，
+> 在 联动 执行 / COORDINATED_ACCEPTANCE_AND_MERGE 协调 acceptance 事务中与 V2 的
+> `status: proposed -> accepted` 原子完成——见 V2 §16）。本 scope 的实现授权整体
+> 移交 V2（`implementation_authority: contracts -> none`、`superseded_by` 已回填
+> V2 ID）；本文件保留为历史 superseded authority，§1–§14 内容与 acceptance
+> provenance 原样保留。
+>
 > 状态：**accepted**（2026-08-29 lifecycle-only acceptance finalize，PR #83；
 > revision 6，按**最终** OWNER_RULING = DUAL_GLOBAL_READER_MODEL
 > 修订：服务端 global gate = GLOBAL_WORKFLOW_READER OR GLOBAL_WORKFLOW_COORDINATOR
