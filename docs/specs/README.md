@@ -67,11 +67,12 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` | accepted lifecycle in PR #103 / effective on merge into main | contracts (gated; effective only after coordinated acceptance commit merges) | complete standalone whole-authority successor of Activation V1: GLM primary with exact terminal-quota Luna backup, existing Luna reuse, Harness identity, audited IMPL V2 classifier, and controlled candidate/final canaries |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` | accepted lifecycle in PR #123 / effective on merge into main | contracts (production apply remains none) | accepted complete standalone successor of the Parent/Impl/Activation V2 authority set: preserves ordered-route safety while replacing per-home/no-refresh Luna credentials with one Permission-Model-A canonical store, serialized refresh intent, fail-closed uncertain outcome, and one canonical Owner reauth |
+| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | historical contracts only after successor merge | historical activation authority; reciprocal backlink points to the fleet-shared successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1` | superseded by Activation V2 in PR #103 / remains effective on current main until merge | historical contracts only after successor merge | historical activation authority; backlink = `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` |
-| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2` | accepted lifecycle in PR #103 / effective on merge into main | contracts (effective only after coordinated acceptance commit merges) | complete standalone IMPL V1 successor: preserves loader/executor/reuse/deadline/journal/Scheduler contracts and adds the exact terminal pre-generation quota class, unsafe-429 STOP precedence, and a closed controlled-429 canary seam |
+| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | historical contracts only after successor merge | historical implementation authority; reciprocal backlink points to the fleet-shared successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1` | superseded by IMPL V2 in PR #103 / remains effective on current main until merge | historical contracts only after successor merge | historical implementation authority; backlink = `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2` |
-| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2` | accepted lifecycle in PR #103 / effective on merge into main | none | complete standalone Parent V1 successor: preserves ordered-chain policy and freezes existing OAuth/plugin reuse, Home 0755, exact `provider_quota_rejected_before_generation` hop, and ambiguous/unsafe 429 STOP |
+| `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | none | historical parent authority; reciprocal backlink points to the fleet-shared successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` | superseded by Parent V2 in PR #103 / remains effective on current main until merge | none | historical parent authority after successor merge; backlink = `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2` |
 | `AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1` | superseded | none | historical model-route authority replaced whole by `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` |
 | `AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1` | superseded | none | historical v1 providerEnv seam authority replaced whole by `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1` (safety contracts absorbed by CTR-010/CTR-014) |
@@ -82,6 +83,13 @@ each V2 names its V1 predecessor in `supersedes` and each V1 has the reciprocal 
 backlink in the same acceptance commit. Until that commit merges main, the three V1 remain the
 effective authorities on current main and the accepted V2 contracts remain off-main；no mixed
 V1/V2 implementation or production apply is authorized.
+
+PR #123 atomic acceptance lineage: `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` is accepted at reviewed
+head `b9c0cd7140e2d265486103664d361724eec0d65f` (PASS, 0 blockers, normative body change NONE)；
+it names Parent/IMPL/Activation V2 in `supersedes`, and all three V2 authorities have the reciprocal
+`superseded_by` backlink in the same acceptance commit. Until that commit merges `main`, the three V2
+authorities remain effective on current main；after merge, the fleet-shared authority is the sole current
+whole authority and production apply remains separately gated.
 
 The ordered-route-chain acceptance transaction (2026-08-25) is lifecycle-only
 relative to reviewed head `ee13cb224660416c9044203610b93cb8f13873bb`
