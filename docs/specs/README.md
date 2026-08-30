@@ -162,6 +162,18 @@ MAX_CONFIGURED_ROUTES = 4、primary + fallbacks[]、STOP_CHAIN、
 ONE_LOGICAL_TURN、Scheduler INHERIT_AGENT_CHAIN_ONLY、
 ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN 等全部 ruling 不重开。
 
+## Agent Core global-route hemostasis proposal
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_GLOBAL_ROUTE_HEMOSTASIS_V1` | proposed / not accepted | contracts on future acceptance only | temporary all-target-Agent `zai/glm-5.3`, `fallbacks=[]` hemostasis proposal; full inventory, first-spawn, credential, transaction, drain, diagnostic, expiry, and rollback authority; no current production permission |
+
+This proposal is independent of the accepted `agt_cto-agent` route authority and does not
+modify its target-only meaning. PR #117 and independent review `5061248705` are evidence
+inputs only. The current runner remains forbidden; five pre-existing home mutations are
+recorded as historical truth and are not retroactively authorized. Await exact-head
+independent **“授权 审计”** and Owner acceptance; **DO NOT MERGE**.
+
 ## Forum moderation capabilities authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
