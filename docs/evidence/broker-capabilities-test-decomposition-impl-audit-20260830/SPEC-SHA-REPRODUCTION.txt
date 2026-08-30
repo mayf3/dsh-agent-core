@@ -1,0 +1,12 @@
+# sha recipe: 18 blocks, block = ^test( line .. first col-0 });/}) line (no trailing newline), sorted, each + "
+", concatenated, sha256
+# spec SCRATCH_TEST_BLOCK_SHA256 (§6) = e4c0e7971f43c7f5ad0e7f25d30f371da9da9fa584ef4d2444b52b4ef02901a4
+          old.join+nl b4ea4f08203b7610
+          old.join e47073cd9766c1d8
+          old.join\n\n 058ed37552ccdd8d
+          new.join+nl 69c15543418f13eb
+          new.join 353bb3232c59005b
+          old.concat-of-shas f2bf3fc852cd69da
+          new.concat-of-shas 0cc4eb1d3f683da4
+*** MATCH old.sorted.join+nl e4c0e7971f43c7f5
+new.sorted.join+nl = e4c0e7971f43c7f5ad0e7f25d30f371da9da9fa584ef4d2444b52b4ef02901a4  == SPEC_SCRATCH_SHA (BEFORE==AFTER)

@@ -1,0 +1,33 @@
+verify-code-structure: PASS (base=a1815f00ae head=6f8a06e7c8)
+  in-scope files: 270; registry: 17 files / 2 directories; violations: 0; warnings: 36
+  WARNING  [FILE_WARNING_LINES] packages/agent-memory/src/memory.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-provisioning/src/index.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/process-registry.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/process/turn-execution.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/reconciliation/store.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/route-chain.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/process-startup-wedge.test.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/route-chain/canary-seam.test.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/route-chain/quota-classifier.test.js
+  WARNING  [TEST_LOGIC_IN_FIXTURE] packages/broker/src/fixtures/self-assert.js fixture file contains test-runner constructs
+  WARNING  [FILE_WARNING_LINES] packages/broker/src/schema.js
+  WARNING  [FILE_WARNING_LINES] packages/broker/test/gateway.test.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/src/core.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/src/index.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/test/processing-reaction.test.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/test/reply-card/reply-card.test.js
+  WARNING  [FILE_WARNING_LINES] packages/feishu-connector/test/ux-phase1-v2.test.js
+  WARNING  [FILE_WARNING_LINES] packages/notification-ingress/test/api.test.js
+  WARNING  [FILE_WARNING_LINES] packages/notification-ingress/test/integration.seam.test.js
+  WARNING  [FILE_WARNING_LINES] packages/production-runtime/src/compose.js
+  WARNING  [FILE_WARNING_LINES] packages/production-runtime/src/model-overrides.js
+  WARNING  [FILE_WARNING_LINES] packages/production-runtime/test/v2-ingress-gate.test.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/src/occurrence.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/src/self-service.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/src/store.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/test/scheduler.test.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/test/self-service.test.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/test/store-v2.test.js
+  WARNING  [FILE_WARNING_LINES] scripts/agent-core-backup-ops.sh
+  WARNING  [FILE_WARNING_LINES] scripts/agent-router-delivery-v0-verify.mjs
+  ... 6 more warnings

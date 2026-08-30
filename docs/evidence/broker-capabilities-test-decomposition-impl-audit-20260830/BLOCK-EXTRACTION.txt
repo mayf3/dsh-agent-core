@@ -1,0 +1,44 @@
+OLD_BLOCKS=18 NEW_BLOCKS=18
+NAME_SETS_EQUAL=true
+OLD_ORDER_PRESERVED_IN_NEW=false
+BYTE_IDENTICAL_MULTISET=true
+--- per-block sha256 (old order) ---
+ 1 63e2662b7db4543d :L116-132 schema: all 13 first-batch manifests validate
+ 2 2be1304de859c121 :L136-166 forum_reply: kind is restricted to the reviewer-safe enum (no moderator-only kinds)
+ 3 5ecd92279be09489 :L168-199 forum_search_threads: q is required (manifest schema + tool schema + mapping)
+ 4 0af82ee6c0880555 :L201-245 forum_reply: manifest → tool → authorized POST → structured result
+ 5 3a4e1c733ab8733e :L249-281 workflow_instance_detail: GET with path param mapping + workflow.read scope
+ 6 fe2e8fbcd433f6e2 :L285-313 workflow_my_tasks: no-param GET with query mapping
+ 7 425164eedb457ce6 :L317-374 workflow_domain_instances: GET with camelCase domainId query mapping + workflow.read scope
+ 8 6cc9f896f8e66e57 :L376-399 workflow_domain_instances: non-owner 404 preserves service code, status, request-id
+ 9 24cd948895b7b97c :L401-422 workflow_domain_instances: limit out of bounds fails fast locally — HTTP call count = 0
+10 48e225c167529590 :L426-455 okr_read: no-param GET with okr.read scope (svc-okr target)
+11 367350e0ed170135 :L459-486 workflow_instance_detail: 404 preserves service code, status, request-id
+12 6b769e58b55492e8 :L498-519 A. workflow_my_tasks: projection exists, no tasks → 200 + items=[]
+13 cc9dbc95bacafad4 :L521-546 B. workflow_my_tasks: missing projection → 404 principal_not_found + request-id preserved
+14 fa759452195f66ed :L548-586 C. workflow_my_tasks: invalid limit fails fast locally — HTTP call count = 0
+15 d23b90a50a45f624 :L588-609 D. workflow_my_tasks: downstream 403 preserves status/code/request-id
+16 df464789bc664b08 :L611-647 E. workflow_my_tasks: sensitive material in the service message is sanitized
+17 ddb3bf559b03b8e3 :L649-671 F. forum broker non-regression: undeclared service code still degrades to declared http_4xx
+18 d5735b655a797f91 :L675-744 idempotency: generic IK mechanism works for a workflow-transition-shaped write
+--- per-block sha256 (new, file order) ---
+ 1 2be1304de859c121 forum.test.js :L11-41 forum_reply: kind is restricted to the reviewer-safe enum (no moderator-only kinds)
+ 2 5ecd92279be09489 forum.test.js :L43-74 forum_search_threads: q is required (manifest schema + tool schema + mapping)
+ 3 0af82ee6c0880555 forum.test.js :L76-120 forum_reply: manifest → tool → authorized POST → structured result
+ 4 ddb3bf559b03b8e3 forum.test.js :L121-143 F. forum broker non-regression: undeclared service code still degrades to declared http_4xx
+ 5 63e2662b7db4543d manifest-inventory.test.js :L12-28 schema: all 13 first-batch manifests validate
+ 6 48e225c167529590 okr.test.js :L10-39 okr_read: no-param GET with okr.read scope (svc-okr target)
+ 7 3a4e1c733ab8733e workflow-instances.test.js :L10-42 workflow_instance_detail: GET with path param mapping + workflow.read scope
+ 8 425164eedb457ce6 workflow-instances.test.js :L45-102 workflow_domain_instances: GET with camelCase domainId query mapping + workflow.read scope
+ 9 6cc9f896f8e66e57 workflow-instances.test.js :L104-127 workflow_domain_instances: non-owner 404 preserves service code, status, request-id
+10 24cd948895b7b97c workflow-instances.test.js :L129-150 workflow_domain_instances: limit out of bounds fails fast locally — HTTP call count = 0
+11 367350e0ed170135 workflow-instances.test.js :L153-180 workflow_instance_detail: 404 preserves service code, status, request-id
+12 fe2e8fbcd433f6e2 workflow-my-tasks.test.js :L10-38 workflow_my_tasks: no-param GET with query mapping
+13 6b769e58b55492e8 workflow-my-tasks.test.js :L49-70 A. workflow_my_tasks: projection exists, no tasks → 200 + items=[]
+14 cc9dbc95bacafad4 workflow-my-tasks.test.js :L72-97 B. workflow_my_tasks: missing projection → 404 principal_not_found + request-id preserved
+15 fa759452195f66ed workflow-my-tasks.test.js :L99-137 C. workflow_my_tasks: invalid limit fails fast locally — HTTP call count = 0
+16 d23b90a50a45f624 workflow-my-tasks.test.js :L139-160 D. workflow_my_tasks: downstream 403 preserves status/code/request-id
+17 df464789bc664b08 workflow-my-tasks.test.js :L162-198 E. workflow_my_tasks: sensitive material in the service message is sanitized
+18 d5735b655a797f91 workflow-transition.test.js :L9-78 idempotency: generic IK mechanism works for a workflow-transition-shaped write
+CONCAT_SHA_OLD=b4ea4f08203b76107b87a5ba2c336e23d0b1493334758a195512ad44dcd32631
+CONCAT_SHA_NEW=69c15543418f13eb701b956210364dc8cafb194da1d44374ee4e5d587cf14505

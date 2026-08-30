@@ -1,0 +1,32 @@
+startMockServer BYTE_IDENTICAL 973B/980B
+safeJson BYTE_IDENTICAL 99B/99B
+json BYTE_IDENTICAL 136B/143B
+startTokenServer DIFF 309B/316B
+---OLD---
+async function startTokenServer() {
+  return startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/oauth/token') {
+      return json(res, 200, { access_token: 'tok-real', token_type: 'Bearer', expires_in: 300 })
+    }
+    json(res, 404, { error: 'not_found' })
+  })
+}
+
+---NEW---
+function startTokenServer() {
+  return startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/oauth/token') {
+      return json(res, 200, { access_token: 'tok-real', token_type: 'Bearer', expires_in: 300 })
+    }
+    json(res, 404, { error: 'not_found' })
+  })
+}
+
+wire BYTE_IDENTICAL 193B/200B
+mockTargets BYTE_IDENTICAL 142B/149B
+USAGE startMockServer -> 5 files: forum.test.js, okr.test.js, workflow-instances.test.js, workflow-my-tasks.test.js, workflow-transition.test.js
+USAGE safeJson -> 0 files:
+USAGE json -> 5 files: forum.test.js, okr.test.js, workflow-instances.test.js, workflow-my-tasks.test.js, workflow-transition.test.js
+USAGE startTokenServer -> 5 files: forum.test.js, okr.test.js, workflow-instances.test.js, workflow-my-tasks.test.js, workflow-transition.test.js
+USAGE wire -> 5 files: forum.test.js, okr.test.js, workflow-instances.test.js, workflow-my-tasks.test.js, workflow-transition.test.js
+USAGE mockTargets -> 5 files: forum.test.js, okr.test.js, workflow-instances.test.js, workflow-my-tasks.test.js, workflow-transition.test.js

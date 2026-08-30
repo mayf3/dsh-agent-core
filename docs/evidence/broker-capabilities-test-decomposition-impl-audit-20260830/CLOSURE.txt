@@ -1,0 +1,15 @@
+== commit list (base..head) ==
+6f8a06e test(broker): decompose capability fixtures by responsibility
+
+== diff name-status ==
+A	packages/broker/test-support/capability-fixtures.js
+D	packages/broker/test/capabilities.test.js
+A	packages/broker/test/capabilities/forum.test.js
+A	packages/broker/test/capabilities/manifest-inventory.test.js
+A	packages/broker/test/capabilities/okr.test.js
+A	packages/broker/test/capabilities/workflow-instances.test.js
+A	packages/broker/test/capabilities/workflow-my-tasks.test.js
+A	packages/broker/test/capabilities/workflow-transition.test.js
+
+== extra path count (expect 0 beyond the 8) ==
+       0

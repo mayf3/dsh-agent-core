@@ -1,0 +1,76 @@
+== per-file prelude (non-block content) ==
+--- packages/broker/test/capabilities/forum.test.js ---
+1: import test from 'node:test'
+2: import assert from 'node:assert/strict'
+3:
+4: import { validateManifest } from '../../src/schema.js'
+5: import { manifests as forumManifests } from '../../src/capabilities/forum.js'
+6: import { createHttpTransport } from '../../src/transport.js'
+7: import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
+8:
+9: // ─── Fixture 1: Forum reply (POST, path param, JSON body, forum.write) ─────
+10:
+--- packages/broker/test/capabilities/manifest-inventory.test.js ---
+1: import test from 'node:test'
+2: import assert from 'node:assert/strict'
+3:
+4: import { validateManifest } from '../../src/schema.js'
+5: import { targets } from '../../src/targets.js'
+6: import { manifests as forumManifests } from '../../src/capabilities/forum.js'
+7: import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
+8: import { manifests as okrManifests } from '../../src/capabilities/okr.js'
+9:
+10: // ─── Schema: all 13 shipped manifests are valid ─────────────────────────────
+11:
+--- packages/broker/test/capabilities/okr.test.js ---
+1: import test from 'node:test'
+2: import assert from 'node:assert/strict'
+3:
+4: import { manifests as okrManifests } from '../../src/capabilities/okr.js'
+5: import { createHttpTransport } from '../../src/transport.js'
+6: import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
+7:
+8: // ─── Fixture 5: OKR read (GET, no params, okr.read) ────────────────────────
+9:
+--- packages/broker/test/capabilities/workflow-instances.test.js ---
+1: import test from 'node:test'
+2: import assert from 'node:assert/strict'
+3:
+4: import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
+5: import { createHttpTransport } from '../../src/transport.js'
+6: import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
+7:
+8: // ─── Fixture 2: Workflow instance detail (GET, path param, workflow.read) ───
+9:
+--- packages/broker/test/capabilities/workflow-my-tasks.test.js ---
+1: import test from 'node:test'
+2: import assert from 'node:assert/strict'
+3:
+4: import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
+5: import { createHttpTransport } from '../../src/transport.js'
+6: import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
+7:
+8: // ─── Fixture 3: Workflow my tasks (GET, no params, query limit) ────────────
+9:
+--- packages/broker/test/capabilities/workflow-transition.test.js ---
+1: import test from 'node:test'
+2: import assert from 'node:assert/strict'
+3:
+4: import { createHttpTransport } from '../../src/transport.js'
+5: import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
+6:
+7: // ─── Generic Idempotency-Key fixture (write shape, test-only capability) ───
+8:
+
+== aggregate count assertion census (expect sole manifest-inventory) ==
+packages/broker/test/capabilities/manifest-inventory.test.js:14:  assert.equal(all.length, 13)
+
+== physical lines ==
+      83 packages/broker/test-support/capability-fixtures.js
+     143 packages/broker/test/capabilities/forum.test.js
+      28 packages/broker/test/capabilities/manifest-inventory.test.js
+      39 packages/broker/test/capabilities/okr.test.js
+     180 packages/broker/test/capabilities/workflow-instances.test.js
+     198 packages/broker/test/capabilities/workflow-my-tasks.test.js
+      78 packages/broker/test/capabilities/workflow-transition.test.js
+     749 total

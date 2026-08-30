@@ -1,0 +1,25 @@
+== svcError definition (old L491-497) ==
+const svcError = (res, status, code, message, requestId) => {
+  const headers = { 'Content-Type': 'application/json' }
+  if (requestId !== undefined) headers['x-request-id'] = requestId
+  res.writeHead(status, headers)
+  res.end(JSON.stringify({ error: { code, message } }))
+}
+
+
+== svcError in new tree: all occurrences ==
+packages/broker/test/capabilities/workflow-my-tasks.test.js:42:const svcError = (res, status, code, message, requestId) => {
+packages/broker/test/capabilities/workflow-my-tasks.test.js:75:  const workflow = await startMockServer((req, res) => svcError(res, 404, 'principal_not_found', 'principal not found', requestId))
+packages/broker/test/capabilities/workflow-my-tasks.test.js:142:  const workflow = await startMockServer((req, res) => svcError(res, 403, 'forbidden', 'required scope is missing', requestId))
+packages/broker/test/capabilities/workflow-my-tasks.test.js:165:    svcError(
+
+== helper file head: location/naming/node-test assertions ==
+import { createServer } from 'node:http'
+
+import { buildToolDefinition } from '../src/registry.js'
+import { createHttpHandlers } from '../src/transport.js'
+import { targets } from '../src/targets.js'
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+0

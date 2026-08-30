@@ -1,0 +1,31 @@
+== ACC-007: product src / scripts / .agents / package.json diff (expect 0 lines) ==
+       0
+
+== ACC-007: capabilities manifest src blob ids base vs head ==
+packages/broker/src/capabilities/agent-definition.js 936789dce55ecd1873977b3ef08f2d86b7a73b4d 936789dce55ecd1873977b3ef08f2d86b7a73b4d
+packages/broker/src/capabilities/forum.js f068c171c2c8bd66b774c197bdbae09d1bcf809b f068c171c2c8bd66b774c197bdbae09d1bcf809b
+packages/broker/src/capabilities/okr.js 37e5791357390159da4587ebdad8f57b9c41f562 37e5791357390159da4587ebdad8f57b9c41f562
+packages/broker/src/capabilities/scheduler.js 39b34b5bbf2cd5a66d08a896242cdd7d1a6580a1 39b34b5bbf2cd5a66d08a896242cdd7d1a6580a1
+packages/broker/src/capabilities/workflow.js 289a76cf00255e95d51f921242969361b727f5de 289a76cf00255e95d51f921242969361b727f5de
+
+== ACC-008: capabilities/ dir listing (no V2 placeholders) ==
+forum.test.js
+manifest-inventory.test.js
+okr.test.js
+workflow-instances.test.js
+workflow-my-tasks.test.js
+workflow-transition.test.js
+
+== Forum V2 top-level home untouched (expect 0) ==
+       0
+
+== GOVERNING_SPEC_UNMODIFIED ==
+base d763aca29f82ebd8ca1e6d544a81f94a8bc23623
+head d763aca29f82ebd8ca1e6d544a81f94a8bc23623
+
+== DEC-001: references to old path (expect 0) ==
+       0
+
+== git diff --check (both range forms) ==
+rc=0
+rc=0
