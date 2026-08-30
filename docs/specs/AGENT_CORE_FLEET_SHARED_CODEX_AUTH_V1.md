@@ -1,6 +1,12 @@
 ---
 spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-08-31
+accepted_reviewed_head: b9c0cd7140e2d265486103664d361724eec0d65f
+review_verdict: PASS
+review_blocker_count: 0
+normative_body_change: NONE
 date: 2026-08-31
 type: implementation-spec (complete standalone whole-authority successor; docs only this round)
 spec_kind: implementation
@@ -11,7 +17,10 @@ replaces_on_acceptance:
   - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
   - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2
   - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2
-supersedes: []
+supersedes:
+  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
+  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2
+  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2
 superseded_by: null
 governed_by:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
@@ -1082,3 +1091,25 @@ PRODUCTION_CHANGE = NONE
 AUTHORING_READY_FOR_REVIEW = YES
 NEXT_TASK = 共享 审计
 ```
+
+## 15. Acceptance Record（2026-08-31，共享 执行 / OWNER_ACCEPTANCE）
+
+```text
+ACCEPTANCE_TRANSACTION = ONE_WHOLE_AUTHORITY_SUCCESSOR_LIFECYCLE_ONLY
+ACCEPTED_BY = mayf3
+ACCEPTED_REVIEWED_HEAD = b9c0cd7140e2d265486103664d361724eec0d65f
+REVIEW_VERDICT = PASS
+REVIEW_BLOCKER_COUNT = 0
+NORMATIVE_BODY_CHANGE = NONE
+SHARED_CODEX_AUTH_V1_ACCEPTED = YES
+PARENT_V2_SUPERSEDED = YES
+IMPL_V2_SUPERSEDED = YES
+ACTIVATION_V2_SUPERSEDED = YES
+ATOMIC_TRANSACTION = PASS
+PR_MERGE = NOT_PERFORMED
+```
+
+本记录、新 authority frontmatter、三份 V2 reciprocal lifecycle backlink 与
+`docs/specs/README.md` lifecycle mirror 属于同一个 acceptance commit。除这些 lifecycle /
+provenance metadata 与本记录外，reviewed head 的 normative body 逐字节保持；authority 仅在
+本 transaction 随 PR #123 merge into `main` 后生效。
