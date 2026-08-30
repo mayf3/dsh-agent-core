@@ -40,6 +40,14 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
 
+## Mobile Session history authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `MOBILE_SESSION_HISTORY_V1` | proposed | contracts (inactive until accepted and present in implementation base) | DSH-native Session read-only final-text projection; minimal backend history service with Product API as thin adapter |
+
+The proposal is docs-only: it performs no product, Mobile, canary, deployment, Agent Home, or Session change.
+
 ## Agent primary Workspace authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
