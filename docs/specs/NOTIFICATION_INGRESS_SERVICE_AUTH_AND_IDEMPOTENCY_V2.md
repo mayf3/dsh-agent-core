@@ -435,8 +435,10 @@ a body field or network source, is `callerPrincipalId`.
 
 Every request performs one online auth-service client-credentials mint using Basic credentials,
 `grant_type=client_credentials`, resource `agent-core-notification-ingress-v1`, and scope
-`notification.deliver`. No credential or positive/negative verification result is cached. The origin
-exception MUST NOT skip, stub, replace, downgrade or locally emulate this verification.
+`notification.deliver`. No credential or positive/negative verification result is cached. The verifier
+MUST expose an injectable `fetchImpl` transport seam for deterministic tests and acceptance, matching
+the established verification primitive; production defaults to the runtime fetch implementation. The
+origin exception MUST NOT skip, stub, replace, downgrade or locally emulate this verification.
 
 #### CTR-NI2-AUTH-003 — caller allowlist and separation
 
@@ -480,16 +482,30 @@ delegated_access_enabled = false
 svc-forum and svc-workflow = distinct service clients and distinct secrets; no delegation
 ```
 
-Any mismatch or semantic change in the external authority blocks implementation until this repository
-reviews and pins an exact replacement revision. External authority remains owned by auth-service.
+The pinned external authority at that exact revision MUST itself receive independent exact-revision
+review, authorized acceptance, and merge into the auth-service authority branch before Notification
+implementation may start. Any absent lifecycle proof, mismatch, or semantic change blocks
+implementation until auth-service completes its lifecycle and this repository reviews and pins the
+exact effective revision. External authority remains owned by auth-service.
 
 ### 9.3 Durable idempotency
 
 #### CTR-NI2-IDM-001 — key and payload hash
 
-The authority key is `(callerPrincipalId, requestId)`. The canonical payload is the fixed-order JSON
-object `{agentId,message,requestId,sessionMode}` and `payloadHash` is its UTF-8 SHA-256 lowercase hex.
-Unknown wire fields and delivery outcome are excluded.
+The authority key is `(callerPrincipalId, requestId)`. Canonical payload bytes are UTF-8 bytes of
+exactly the no-whitespace result of:
+
+```text
+JSON.stringify({
+  agentId,
+  message,
+  requestId,
+  sessionMode
+})
+```
+
+with that insertion order. `payloadHash` is the SHA-256 lowercase hex of those exact bytes. Unknown
+wire fields and delivery outcome are excluded.
 
 #### CTR-NI2-IDM-002 — authority store and persistence
 
@@ -535,9 +551,10 @@ Only Router `VALIDATION_ERROR` and `AGENT_NOT_FOUND`, proven before admission, b
 #### CTR-NI2-IDM-005 — crash, restart, late settlement, and remediation
 
 Crash before durable reserve permits a clean retry. Crash after reserve and before a proven terminal
-write becomes `outcome_unknown` on restart. Reserved records are swept to unknown; late Router
-settlement is evidence-only and never rewrites authority. Remediation requires caller business choice
-and a new requestId.
+write becomes `outcome_unknown` on restart. Boot atomically sweeps every non-terminal `reserved`
+record to `outcome_unknown` and appends history reason exactly `restart_unresolved`; no reserved record
+is resumed or re-delivered. Late Router settlement is evidence-only and never rewrites authority.
+Remediation requires caller business choice and a new requestId.
 
 #### CTR-NI2-IDM-006 — deadline, retention, evidence, and BindingStore boundary
 
@@ -561,16 +578,22 @@ never reads it and it is never delivery-idempotency authority.
 #### CTR-NI2-BND-001 — trusted auth.json seam
 
 `<production-root>/notification-ingress/auth.json` is an operator-owned regular non-symlink 0600 file
-inside a regular non-symlink 0700 directory, owned by the non-root control-plane account. It contains
-`authServiceOrigin`, exact audience mirror, the two-client allowlist, and optional positive integer
-router/retention limits; it contains no clientSecret. Missing or invalid config is a legal not-ready
-state: mount remains up and every delivery is `503 AUTH_NOT_CONFIGURED`, never anonymous acceptance.
+inside a regular non-symlink 0700 directory, owned by the non-root control-plane account. Its semantic
+keys are exactly `authServiceOrigin` (required), `audience` (required and exactly
+`agent-core-notification-ingress-v1`), `allowlist` (required object with exactly the required
+`svc-forum` and `svc-workflow` client mappings), plus optional positive integers
+`routerDeadlineMs`, `retentionMs`, and `maxRecords`; it contains no clientSecret. Missing or invalid
+config is a legal not-ready state: mount remains up and every delivery is
+`503 AUTH_NOT_CONFIGURED`, never anonymous acceptance.
 
 #### CTR-NI2-BND-002 — composition and Agent isolation
 
-Composition supplies only verifier/config/store paths. No Notification credential secret is accepted
-from global env or injected into Agent children. AgentProcess, uid separation and credential boundary
-remain unchanged.
+Composition supplies only verifier/config/store paths. No Notification credential or auth-config
+semantic value (`authServiceOrigin`, audience, allowlist, deadlines, retention, limits) is accepted
+from global `process.env`. `NOTIFICATION_INGRESS_*` environment inputs are limited to the existing
+non-secret `ENABLED`, `HOST`, and `PORT` controls plus the `AUTH_CONFIG` path pointer; no secret or
+semantic auth value may be introduced under another environment name. No Notification credential is
+injected into Agent children. AgentProcess and uid separation remain unchanged.
 
 #### CTR-NI2-BND-003 — Router boundary
 
@@ -613,8 +636,10 @@ There is no technical dependency on a new AgentProcess seam: the implementation 
 Nevertheless, Program order remains mandatory: AgentProcess implementation PASS precedes Notification
 implementation; Scheduler implementation waits for Notification implementation PASS. V2
 implementation may start only after V2 receives independent exact-revision review, is accepted and
-merged into the implementation base, the external equality in `CTR-NI2-AUTH-007` holds, and the
-AgentProcess prerequisite is PASS. Proposed or merely accepted-but-unmerged V2 grants no permission.
+merged into the implementation base; the exact pinned auth-service authority in
+`CTR-NI2-AUTH-007` has independent review, authorized acceptance and authority-branch merge proof;
+its equality holds; and the AgentProcess prerequisite is PASS. Proposed or merely
+accepted-but-unmerged local or external authority grants no permission.
 
 ## 10. Acceptance
 
@@ -652,8 +677,9 @@ AgentProcess prerequisite is PASS. Proposed or merely accepted-but-unmerged V2 g
 ### ACC-NI2-ORI-003 — redirect fail-closed drill
 
 - Contracts: `CTR-NI2-ORI-004`, `CTR-NI2-AUTH-004`, `CTR-NI2-AUTH-006`.
-- Method: token endpoint stubs for 301, 302, 303, 307 and 308 with same-origin and cross-origin
-  `Location` targets, exercised for accepted HTTP and valid HTTPS origins.
+- Method: table-drive every integer status `300..399` from a token endpoint stub, with same-origin and
+  cross-origin `Location` targets where the status permits a Location header, exercised for accepted
+  HTTP and valid HTTPS origins. No unlisted 3xx may rely on default behavior.
 - Environment: exact implementation commit, repository-supported Node runtime, local first-hop and
   redirect-target recorders on distinct ports, temporary config/store, recorder Router.
 - Required evidence: implementation SHA, Node version, runner command, per-status request/response
@@ -682,7 +708,8 @@ AgentProcess prerequisite is PASS. Proposed or merely accepted-but-unmerged V2 g
 ### ACC-NI2-IDM-001 — complete idempotency regression
 
 - Contracts: `CTR-NI2-IDM-001` through `CTR-NI2-IDM-006`.
-- Method: execute duplicate outcome shapes, conflict, concurrency, crash W1-W4, real restart/kill -9,
+- Method: execute exact `JSON.stringify` canonical-byte/hash vectors, duplicate outcome shapes,
+  conflict, concurrency, crash W1-W4, real restart/kill -9 with `restart_unresolved` history assertion,
   deadline, late-settlement, corruption/version/schema, hourly/boot retention, evidence event/rotation,
   metadata/lock/fsync and BindingStore-isolation tests under both accepted origin classes.
 - Environment: exact implementation commit, repository-supported Node runtime, temporary trusted root,
@@ -697,8 +724,10 @@ AgentProcess prerequisite is PASS. Proposed or merely accepted-but-unmerged V2 g
 
 - Contracts: `CTR-NI2-BND-001` through `CTR-NI2-BND-003`, `CTR-NI2-WIRE-001` through
   `CTR-NI2-WIRE-003`.
-- Method: trusted-file metadata matrix, missing/invalid config calls, child-env secret scan, Router
-  recorder, exact health/status/envelope/body-limit/unknown-field table, and changed-path audit.
+- Method: trusted-file metadata matrix; exact auth.json key/default/invalid-value table; source/runtime
+  proof that global env accepts only existing ENABLED/HOST/PORT controls plus the AUTH_CONFIG path
+  pointer and no auth semantic values; missing/invalid config calls; child-env secret scan; Router
+  recorder; exact health/status/envelope/body-limit/unknown-field table; and changed-path audit.
 - Environment: exact implementation commit, repository-supported Node runtime, temporary trusted root,
   mounted Notification Ingress with injected token/Router recorders and isolated child environment.
 - Required evidence: implementation SHA, Node version, runner command, file stat records, config cases,
@@ -716,11 +745,15 @@ AgentProcess prerequisite is PASS. Proposed or merely accepted-but-unmerged V2 g
 - Environment: proposed/accepted Spec Git commits, target implementation base branch, merged PR and
   conformance records; no production action.
 - Required evidence: V2 reviewed/accepted/merge SHAs, predecessor atomic lifecycle transaction,
-  implementation-base SHA, external pin equality result, AgentProcess implementation PASS record,
-  Notification changed-path list, and proof Scheduler implementation did not precede Notification PASS.
+  implementation-base SHA, pinned auth-service review record, authorized acceptance record and
+  authority-branch merge SHA at the exact external revision, external pin equality result, AgentProcess
+  implementation PASS record, Notification changed-path list, and proof Scheduler implementation did
+  not precede Notification PASS.
 - Expected result: every gate is PASS before semantic implementation begins.
-- Failure condition: implementation starts from a base without accepted V2, external mismatch exists,
-  AgentProcess prerequisite lacks PASS, predecessor lifecycle is non-atomic, or Scheduler runs early.
+- Failure condition: implementation starts from a base without accepted V2; the exact external
+  authority lacks independent review, authorized acceptance or authority-branch merge; an external
+  mismatch exists; AgentProcess prerequisite lacks PASS; predecessor lifecycle is non-atomic; or
+  Scheduler runs early.
 
 ### Contract coverage
 
