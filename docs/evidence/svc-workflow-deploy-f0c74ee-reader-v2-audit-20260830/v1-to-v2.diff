@@ -1,0 +1,425 @@
+3c3,4
+< # /tmp/run-svc-workflow-deploy-f0c74ee-v1.sh
+---
+> # /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh
+> # Focused audit amendment: disabled Reader classification + unified ERR/EXIT rollback.
+32,41c33,40
+< #   P4  database preflight (RO tx)   — db name pinned in-tx; _sqlx_migrations
+< #                                      max == 22; grantee principal exists,
+< #                                      AGENT + enabled; legacy principal
+< #                                      exists; global_role_bindings baseline
+< #                                      EXACTLY 6 rows / pinned digest; zero
+< #                                      GLOBAL_WORKFLOW_READER rows; zero rows
+< #                                      of any kind for the grantee; snapshot
+< #                                      principals digest + receipts count;
+< #                                      ALREADY_APPLIED short-circuit (exact
+< #                                      rerun => verify + exit 0, no writes)
+---
+> #   P4  database preflight (RO tx)   — db/schema/principal/legacy pinned;
+> #                                      six non-grantee baseline rows exact;
+> #                                      Reader state classified as absent =>
+> #                                      APPLY_NEEDED, exact disabled =>
+> #                                      APPLY_NEEDED, exact enabled + target
+> #                                      live => ALREADY_APPLIED, every other
+> #                                      shape => CONFLICT; complete role-table,
+> #                                      principals and receipts snapshots kept
+68,71c67,72
+< #   ANY failure after writes started => automatic FULL rollback:
+< #     Rb1 granted row deleted by exact binding_id; baseline count+digest
+< #         re-proven in the same transaction
+< #     Rb2 binary + migrations restored from the D1 backup; kickstart restart;
+---
+> #   ERR+EXIT traps are armed before the first D1 production write. ANY binary,
+> #   restart, role-write, final-verification, or success-ledger failure enters
+> #   the same automatic FULL rollback:
+> #     Rb1 inserted Reader deleted OR pre-existing disabled Reader restored;
+> #         complete pre-write role-table count+digest re-proven in one tx
+> #     Rb2 binary + migrations restored from D1 backup; kickstart restart;
+73c74
+< #     Rb3 append-only rollback record in the ledger (history never rewritten)
+---
+> #     Rb3 append-only rollback record (required; failure => incomplete)
+98c99
+< #             1 FAILED_AND_ROLLED_BACK | FAILED_BEFORE_INSTALL
+---
+> #             1 FAILED_AND_ROLLED_BACK
+103c104
+< #   bash /tmp/run-svc-workflow-deploy-f0c74ee-v1.sh
+---
+> #   bash /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh
+106c107
+< #   SVC_WF_DEPLOY_PREFLIGHT_ONLY=1 bash /tmp/run-svc-workflow-deploy-f0c74ee-v1.sh
+---
+> #   SVC_WF_DEPLOY_PREFLIGHT_ONLY=1 bash /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh
+108c109
+< set -euo pipefail
+---
+> set -Eeuo pipefail
+140c141
+< LOG="/tmp/svc-workflow-deploy-f0c74ee-v1-${TS}.log"
+---
+> LOG="/tmp/svc-workflow-deploy-f0c74ee-v2-${TS}.log"
+144,145c145,147
+< DEPLOY_INSTALLED=0
+< GRANT_APPLIED=0
+---
+> DEPLOY_ATTEMPTED=0
+> GRANT_WRITE_ATTEMPTED=0
+> GRANT_ROLLBACK_MODE='NONE'       # NONE | DELETE_INSERTED | RESTORE_DISABLED
+146a149
+> ORIGINAL_DISABLED_AT_HEX=''
+147a151,153
+> BACKUPS_BEFORE="/tmp/svc-wf-deploy-v2-backups-before-${TS}"
+> SNAP_GRB_COUNT=''
+> SNAP_GRB_DIGEST=''
+150a157,158
+> ROLLBACK_RUNNING=0
+> SUCCESS_COMMITTED=0
+157c165
+<   log "RESULT: REFUSED; WRITES=NONE; OWNER_COMMAND = bash /tmp/run-svc-workflow-deploy-f0c74ee-v1.sh"
+---
+>   log "RESULT: REFUSED; WRITES=NONE; OWNER_COMMAND = bash /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh"
+202,209c210,218
+< zero_write_deploy_intact_exit() {
+<   # release.sh failed BEFORE replacing the binary: require the old service
+<   # still healthy, then report a clean no-change failure
+<   local hz rz
+<   hz="$(http_code "$BASE_URL/healthz")"; rz="$(http_code "$BASE_URL/readyz")"
+<   if [ "$hz" = '200' ] && [ "$rz" = '200' ]; then
+<     log "RESULT: FAILED_BEFORE_INSTALL; SERVICE=INTACT($PROD_SHA healthy); grant=not-attempted"
+<     exit 1
+---
+> # From immediately before release.sh can perform the first production write,
+> # ERR and EXIT share this single rollback entry.  Explicit failures call the
+> # same entry.  The traps are disarmed only after the success ledger append.
+> reconcile_deploy_state() {
+>   local candidates
+>   if [ -z "$NEW_BACKUP" ] && [ -f "$BACKUPS_BEFORE" ]; then
+>     candidates="/tmp/svc-wf-deploy-v2-backups-current-${TS}"
+>     ls -d "$SERVICE_DIR"/svc-workflow.backup-* 2>/dev/null | sort > "$candidates" || true
+>     NEW_BACKUP="$(comm -13 "$BACKUPS_BEFORE" "$candidates" | head -1 || true)"
+211,212d219
+<   log "RESULT: ROLLBACK_INCOMPLETE; UNRESTORED_STATE: deploy failed pre-install yet old service unhealthy (healthz=$hz readyz=$rz) — investigate manually"
+<   exit 4
+216,218c223,231
+<   log "FAILURE: $1"
+<   log "auto-rollback starting"
+<   local bad='' rb_grant=0 rb_restore=0 rb_restart=0 rb_old_healthy=0 hz rz vold b i
+---
+>   local reason="$1"
+>   local bad='' rb_grant=0 rb_restore=0 rb_restart=0 rb_old_healthy=0 rb_ledger=0
+>   local hz rz vold b i current_sha
+>   ROLLBACK_RUNNING=1
+>   trap - ERR EXIT
+>   set +e
+>   log "FAILURE: $reason"
+>   log "auto-rollback starting (unified ERR/EXIT path)"
+>   reconcile_deploy_state
+220,221c233,249
+<   # Rb1 — remove the granted row by exact binding_id; re-prove baseline
+<   if [ "$GRANT_APPLIED" = '1' ]; then
+---
+>   # Rb1 — reverse either INSERT or disabled->enabled using the exact pre-write
+>   # snapshot, then prove the complete table count+digest byte-semantics again.
+>   if [ "$GRANT_WRITE_ATTEMPTED" = '1' ]; then
+>     if [ "$GRANT_ROLLBACK_MODE" = 'DELETE_INSERTED' ]; then
+>       grant_reverse_sql="DELETE FROM global_role_bindings WHERE binding_id = '$BINDING_ID' AND principal_id = '$GRANTEE' AND role_key = '$ROLE';"
+>     elif [ "$GRANT_ROLLBACK_MODE" = 'RESTORE_DISABLED' ] \
+>          && printf '%s' "$ORIGINAL_DISABLED_AT_HEX" | grep -Eq '^([0-9a-f]+)?$'; then
+>       if [ -n "$ORIGINAL_DISABLED_AT_HEX" ]; then
+>         disabled_expr="convert_from(decode('$ORIGINAL_DISABLED_AT_HEX','hex'),'UTF8')::timestamptz"
+>       else
+>         disabled_expr='NULL'
+>       fi
+>       grant_reverse_sql="UPDATE global_role_bindings SET enabled=false, disabled_at=$disabled_expr WHERE binding_id = '$BINDING_ID' AND principal_id = '$GRANTEE' AND role_key = '$ROLE';"
+>     else
+>       grant_reverse_sql='SELECT 1/0;'
+>       bad="${bad}"$'\n- unknown/unsafe grant rollback mode'
+>     fi
+227,228c255
+< DELETE FROM global_role_bindings
+< WHERE binding_id = '$BINDING_ID' AND principal_id = '$GRANTEE' AND role_key = '$ROLE';
+---
+> $grant_reverse_sql
+230,231c257,258
+<   IF (SELECT count(*) FROM global_role_bindings) <> $GRB_BASELINE_COUNT THEN
+<     RAISE EXCEPTION 'rollback verify: count <> baseline';
+---
+>   IF (SELECT count(*) FROM global_role_bindings) <> $SNAP_GRB_COUNT THEN
+>     RAISE EXCEPTION 'rollback verify: count <> pre-write snapshot';
+233,235c260,262
+<   IF (SELECT md5(string_agg(binding_id::text||'|'||principal_id::text||'|'||role_key||'|'||enabled::text, E'\\n' ORDER BY binding_id))
+<        FROM global_role_bindings) <> '$GRB_BASELINE_DIGEST' THEN
+<     RAISE EXCEPTION 'rollback verify: digest <> baseline';
+---
+>   IF (SELECT md5(string_agg(binding_id::text||'|'||principal_id::text||'|'||role_key||'|'||enabled::text||'|'||coalesce(disabled_at::text,''), E'\\n' ORDER BY binding_id))
+>        FROM global_role_bindings) <> '$SNAP_GRB_DIGEST' THEN
+>     RAISE EXCEPTION 'rollback verify: digest <> pre-write snapshot';
+240,241c267,268
+<     then rb_grant=1; log "ROLLBACK_CHECK GRANT_ROW_RESTORED=1 (baseline count+digest re-proven)"
+<     else bad="${bad}"$'\n- granted reader row could not be removed / baseline not restored'; fi
+---
+>     then rb_grant=1; log "ROLLBACK_CHECK GRANT_STATE_RESTORED=1 (mode=$GRANT_ROLLBACK_MODE; snapshot re-proven)"
+>     else bad="${bad}"$'\n- Reader grant state not restored to exact pre-write snapshot'; fi
+243c270
+<     rb_grant=1; log "ROLLBACK_CHECK GRANT_ROW_RESTORED=1 (grant was never committed)"
+---
+>     rb_grant=1; log "ROLLBACK_CHECK GRANT_STATE_RESTORED=1 (grant write was never attempted)"
+246,247c273,276
+<   # Rb2 — restore binary + migrations from the deploy backup; restart; verify
+<   if [ "$DEPLOY_INSTALLED" = '1' ]; then
+---
+>   # Rb2 — if deploy created a backup, always restore it (even when an
+>   # unexpected shell error happened before DEPLOY_INSTALLED could be set).
+>   # Without a backup, only an exact old binary is accepted, then restart it.
+>   if [ "$DEPLOY_ATTEMPTED" = '1' ]; then
+253c282
+<         rb_restore=1; log "ROLLBACK_CHECK BINARY_MIGRATIONS_RESTORED=1 (sha256 == $PROD_ARTIFACT_SHA256)"
+---
+>         rb_restore=1; log "ROLLBACK_CHECK BINARY_MIGRATIONS_RESTORED=1 (backup=$NEW_BACKUP)"
+255c284,290
+<     else bad="${bad}"$'\n- intact backup dir missing for restore'; fi
+---
+>     else
+>       current_sha="$(sha256_of "$SERVICE_DIR/svc-workflow" 2>/dev/null || true)"
+>       if [ "$current_sha" = "$PROD_ARTIFACT_SHA256" ]; then
+>         rb_restore=1; log "ROLLBACK_CHECK BINARY_MIGRATIONS_RESTORED=1 (deploy made no replacement; old sha intact)"
+>       else bad="${bad}"$'\n- no intact deploy backup and live binary is not old artifact'; fi
+>     fi
+>
+273c308
+<       else bad="${bad}"$'\n- rolled-back service did not serve /version=='"'"$PROD_SHA"'"' within 60s'; fi
+---
+>       else bad="${bad}"$'\n- rolled-back service did not serve pinned old version within 60s'; fi
+276,284c311,312
+<     rb_restore=1; rb_restart=1
+<     if [ "$WRITES_STARTED" = '0' ]; then
+<       rb_old_healthy=1; log "ROLLBACK_CHECK NOTHING_TO_RESTORE=1 (failure preceded all deploy writes)"
+<     else
+<       hz="$(http_code "$BASE_URL/healthz")"; rz="$(http_code "$BASE_URL/readyz")"
+<       if [ "$hz" = '200' ] && [ "$rz" = '200' ]; then
+<         rb_old_healthy=1; log "ROLLBACK_CHECK NOTHING_TO_RESTORE=1 (binary never replaced; service healthy)"
+<       else bad="${bad}"$'\n- service unhealthy though binary never replaced (healthz='"$hz"' readyz='"$rz"')'; fi
+<     fi
+---
+>     rb_restore=1; rb_restart=1; rb_old_healthy=1
+>     log "ROLLBACK_CHECK DEPLOY_STATE_RESTORED=1 (deploy write was never attempted)"
+287,288c315,316
+<   # Rb3 — append-only rollback ledger record
+<   jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg reason "$1" \
+---
+>   # Rb3 is itself required for a complete rollback; append failure is named.
+>   if jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg reason "$reason" \
+290,291c318,324
+<     '{type:"deploy-runner-rollback-v1", rolledBackAt:$ts, reason:$reason,
+<       attemptedSourceSha:$main, restoredSourceSha:$old, removedBindingId:$gid}' >> "$LEDGER" 2>/dev/null || true
+---
+>         --arg mode "$GRANT_ROLLBACK_MODE" \
+>     '{type:"deploy-runner-rollback-v2", rolledBackAt:$ts, reason:$reason,
+>       attemptedSourceSha:$main, restoredSourceSha:$old, bindingId:$gid, grantRollbackMode:$mode}' >> "$LEDGER" 2>/dev/null; then
+>     rb_ledger=1
+>   else
+>     bad="${bad}"$'\n- append-only rollback ledger record failed'
+>   fi
+293c326
+<   log "ROLLBACK_CHECK GRANT_ROW_RESTORED=$rb_grant"
+---
+>   log "ROLLBACK_CHECK GRANT_STATE_RESTORED=$rb_grant"
+297,298c330,333
+<   if [ "$rb_grant" = '1' ] && [ "$rb_restore" = '1' ] && [ "$rb_restart" = '1' ] && [ "$rb_old_healthy" = '1' ]; then
+<     log "RESULT: FAILED_AND_ROLLED_BACK; reason=$1; state=baseline restored ($PROD_SHA, $GRB_BASELINE_COUNT bindings)"
+---
+>   log "ROLLBACK_CHECK ROLLBACK_LEDGER_APPENDED=$rb_ledger"
+>   if [ "$rb_grant" = '1' ] && [ "$rb_restore" = '1' ] && [ "$rb_restart" = '1' ] \
+>      && [ "$rb_old_healthy" = '1' ] && [ "$rb_ledger" = '1' ]; then
+>     log "RESULT: FAILED_AND_ROLLED_BACK; reason=$reason; exact pre-write grant state + $PROD_SHA restored"
+304a340,363
+> rollback_trap_err() {
+>   local rc="$1" line="$2" command="$3"
+>   [ "$ROLLBACK_RUNNING" = '1' ] && exit "$rc"
+>   if [ "$WRITES_STARTED" = '1' ]; then
+>     fail_and_rollback "ERR trap rc=$rc line=$line command=$command"
+>   fi
+>   exit "$rc"
+> }
+>
+> rollback_trap_exit() {
+>   local rc="$1"
+>   [ "$ROLLBACK_RUNNING" = '1' ] && return
+>   if [ "$WRITES_STARTED" = '1' ] && [ "$SUCCESS_COMMITTED" != '1' ]; then
+>     fail_and_rollback "EXIT trap rc=$rc before success commit"
+>   fi
+> }
+>
+> arm_unified_rollback_traps() {
+>   trap 'rollback_trap_err $? $LINENO "$BASH_COMMAND"' ERR
+>   trap 'rollback_trap_exit $?' EXIT
+>   WRITES_STARTED=1
+>   log "UNIFIED_ROLLBACK_TRAP ARMED (ERR+EXIT; all subsequent production steps covered)"
+> }
+>
+308c367
+<   echo "Owner command: bash /tmp/run-svc-workflow-deploy-f0c74ee-v1.sh" >&2
+---
+>   echo "Owner command: bash /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh" >&2
+314c373
+<   echo 'Owner command: bash /tmp/run-svc-workflow-deploy-f0c74ee-v1.sh' >&2
+---
+>   echo 'Owner command: bash /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh' >&2
+323c382
+< log "svc-workflow deploy runner v1  ts=${TS}"
+---
+> log "svc-workflow deploy runner v2  ts=${TS}"
+435a495
+> SELECT 'grb_digest=' || coalesce(md5(string_agg(binding_id::text||'|'||principal_id::text||'|'||role_key||'|'||enabled::text||'|'||coalesce(disabled_at::text,''), E'\\n' ORDER BY binding_id)), 'empty') FROM global_role_bindings;
+437a498,502
+> SELECT 'grantee_reader_total=' || count(*)::text FROM global_role_bindings WHERE principal_id = '$GRANTEE' AND role_key = '$ROLE';
+> SELECT 'grantee_reader_enabled=' || count(*)::text FROM global_role_bindings WHERE principal_id = '$GRANTEE' AND role_key = '$ROLE' AND enabled;
+> SELECT 'grantee_reader_disabled=' || count(*)::text FROM global_role_bindings WHERE principal_id = '$GRANTEE' AND role_key = '$ROLE' AND NOT enabled;
+> SELECT 'grantee_reader_id=' || coalesce((SELECT binding_id::text FROM global_role_bindings WHERE principal_id = '$GRANTEE' AND role_key = '$ROLE'), '');
+> SELECT 'grantee_reader_disabled_at_hex=' || coalesce((SELECT encode(convert_to(coalesce(disabled_at::text,''),'UTF8'),'hex') FROM global_role_bindings WHERE principal_id = '$GRANTEE' AND role_key = '$ROLE'), '');
+449,453c514,537
+< # ALREADY_APPLIED short-circuit (exact idempotent rerun)
+< if [ "$(p4_val reader_rows)" = '1' ] && [ "$(p4_val grantee_rows)" = '1' ] \
+<    && [ "$(p4_val grantee_coord)" = '0' ] \
+<    && [ "$(p4_val non_grantee_count)" = "$GRB_BASELINE_COUNT" ] \
+<    && [ "$(p4_val non_grantee_digest)" = "$GRB_BASELINE_DIGEST" ]; then
+---
+> [ "$(p4_val migmax)" = '22' ] || zero_write_exit "_sqlx_migrations max version = $(p4_val migmax), expected 22"
+> gt="$(p4_val grantee)"; [ "$gt" = 'AGENT/true' ] || zero_write_exit "grantee principal state '$gt' != AGENT/true"
+> lt="$(p4_val legacy)"; [ "$lt" != 'MISSING' ] || zero_write_exit "legacy principal row missing"
+> [ "$(p4_val non_grantee_count)" = "$GRB_BASELINE_COUNT" ] \
+>   || zero_write_exit "CONFLICT: non-grantee baseline count drifted"
+> [ "$(p4_val non_grantee_digest)" = "$GRB_BASELINE_DIGEST" ] \
+>   || zero_write_exit "CONFLICT: non-grantee baseline digest drifted (legacy/other principal changed)"
+> [ "$(p4_val grantee_coord)" = '0' ] || zero_write_exit "CONFLICT: grantee holds GLOBAL_WORKFLOW_COORDINATOR — spec forbids"
+>
+> SNAP_GRB_COUNT="$(p4_val grb_count)"
+> SNAP_GRB_DIGEST="$(p4_val grb_digest)"
+> SNAP_PRINCIPALS_DIGEST="$(p4_val principals_digest)"
+> SNAP_RECEIPTS_COUNT="$(p4_val receipts)"
+> [ -n "$SNAP_GRB_COUNT" ] && [ -n "$SNAP_GRB_DIGEST" ] \
+>   && [ -n "$SNAP_PRINCIPALS_DIGEST" ] && [ -n "$SNAP_RECEIPTS_COUNT" ] \
+>   || zero_write_exit "snapshot values missing"
+>
+> # Exact state machine.  A disabled Reader is explicitly APPLY_NEEDED, never
+> # ALREADY_APPLIED.  Any non-exact shape is CONFLICT and remains zero-write.
+> if [ "$(p4_val grantee_reader_total)" = '1' ] \
+>    && [ "$(p4_val grantee_reader_enabled)" = '1' ] \
+>    && [ "$(p4_val grantee_reader_disabled)" = '0' ] \
+>    && [ "$(p4_val grantee_rows)" = '1' ] && [ "$(p4_val reader_rows)" = '1' ] \
+>    && [ "$SNAP_GRB_COUNT" = "$((GRB_BASELINE_COUNT + 1))" ]; then
+457c541,542
+<     log "RESULT: ALREADY_APPLIED; deployed=$MAIN_COMMIT; reader binding present+enabled; coordinator absent; baseline intact; no writes"
+---
+>     log "CLASSIFICATION: ALREADY_APPLIED (Reader exists and enabled=true)"
+>     log "RESULT: ALREADY_APPLIED; deployed=$MAIN_COMMIT; reader enabled=true; coordinator absent; baseline intact; no writes"
+460c545,568
+<   zero_write_exit "reader row present but service not healthy at MAIN_COMMIT — split state, resolve manually"
+---
+>   zero_write_exit "CONFLICT: enabled Reader exists but service is not healthy at MAIN_COMMIT"
+> elif [ "$(p4_val grantee_reader_total)" = '0' ] \
+>      && [ "$(p4_val grantee_rows)" = '0' ] && [ "$(p4_val reader_rows)" = '0' ] \
+>      && [ "$SNAP_GRB_COUNT" = "$GRB_BASELINE_COUNT" ]; then
+>   [ "$ALREADY_DEPLOYED" = '0' ] \
+>     || zero_write_exit "CONFLICT: target binary is already deployed but Reader is absent; use a role-only recovery plan"
+>   GRANT_ROLLBACK_MODE='DELETE_INSERTED'
+>   log "CLASSIFICATION: APPLY_NEEDED (Reader absent; exact insert path)"
+> elif [ "$(p4_val grantee_reader_total)" = '1' ] \
+>      && [ "$(p4_val grantee_reader_enabled)" = '0' ] \
+>      && [ "$(p4_val grantee_reader_disabled)" = '1' ] \
+>      && [ "$(p4_val grantee_rows)" = '1' ] && [ "$(p4_val reader_rows)" = '1' ] \
+>      && [ "$SNAP_GRB_COUNT" = "$((GRB_BASELINE_COUNT + 1))" ]; then
+>   [ "$ALREADY_DEPLOYED" = '0' ] \
+>     || zero_write_exit "CONFLICT: target binary is already deployed but Reader is disabled; use a role-only recovery plan"
+>   GRANT_ROLLBACK_MODE='RESTORE_DISABLED'
+>   BINDING_ID="$(p4_val grantee_reader_id)"
+>   ORIGINAL_DISABLED_AT_HEX="$(p4_val grantee_reader_disabled_at_hex)"
+>   [ -n "$BINDING_ID" ] || zero_write_exit "CONFLICT: disabled Reader has no binding_id"
+>   printf '%s' "$ORIGINAL_DISABLED_AT_HEX" | grep -Eq '^([0-9a-f]+)?$' \
+>     || zero_write_exit "CONFLICT: disabled Reader disabled_at snapshot encoding invalid"
+>   log "CLASSIFICATION: APPLY_NEEDED (Reader exists but enabled=false; exact re-enable path)"
+> else
+>   zero_write_exit "CONFLICT: Reader/grantee binding shape is neither absent, exact disabled, nor exact enabled"
+463,474c571
+< [ "$(p4_val migmax)" = '22' ] || zero_write_exit "_sqlx_migrations max version = $(p4_val migmax), expected 22"
+< gt="$(p4_val grantee)"; [ "$gt" = 'AGENT/true' ] || zero_write_exit "grantee principal state '$gt' != AGENT/true"
+< lt="$(p4_val legacy)";  [ "$lt" != 'MISSING' ] || zero_write_exit "legacy principal row missing"
+< [ "$(p4_val grb_count)" = "$GRB_BASELINE_COUNT" ] \
+<   || zero_write_exit "global_role_bindings baseline count $(p4_val grb_count) != $GRB_BASELINE_COUNT (drift — re-derive pins)"
+< [ "$(p4_val reader_rows)" = '0' ] || zero_write_exit "GLOBAL_WORKFLOW_READER rows present outside the pinned baseline"
+< [ "$(p4_val grantee_rows)" = '0' ] || zero_write_exit "grantee already holds global role bindings outside the pinned baseline"
+< [ "$(p4_val grantee_coord)" = '0' ] || zero_write_exit "grantee already holds GLOBAL_WORKFLOW_COORDINATOR — spec forbids"
+< SNAP_PRINCIPALS_DIGEST="$(p4_val principals_digest)"
+< SNAP_RECEIPTS_COUNT="$(p4_val receipts)"
+< [ -n "$SNAP_PRINCIPALS_DIGEST" ] && [ -n "$SNAP_RECEIPTS_COUNT" ] || zero_write_exit "snapshot values missing"
+< log "P4 PASS: db=$EXPECTED_DB schema 0022; baseline $GRB_BASELINE_COUNT rows digest-ok; grantee AGENT/enabled; no reader/coordinator rows; legacy present"
+---
+> log "P4 PASS: db=$EXPECTED_DB schema 0022; baseline $GRB_BASELINE_COUNT rows digest-ok; grantee AGENT/enabled; coordinator absent; legacy unchanged; apply_mode=$GRANT_ROLLBACK_MODE"
+484,485c581,585
+< WRITES_STARTED=1
+< ls -d "$SERVICE_DIR"/svc-workflow.backup-* 2>/dev/null | sort > "/tmp/svc-wf-deploy-v1-backups-before-${TS}" || true
+---
+> # Capture the read-only backup baseline first.  Arm ERR+EXIT before invoking the
+> # first command that can mutate production; never narrow the trap thereafter.
+> ls -d "$SERVICE_DIR"/svc-workflow.backup-* 2>/dev/null | sort > "$BACKUPS_BEFORE" || true
+> arm_unified_rollback_traps
+> DEPLOY_ATTEMPTED=1
+490c590,592
+<   log "release.sh deploy returned non-zero"
+---
+>   log "release.sh deploy returned non-zero; entering unified rollback"
+>   reconcile_deploy_state
+>   fail_and_rollback "release.sh deploy/restart returned non-zero"
+492,493c594
+< ls -d "$SERVICE_DIR"/svc-workflow.backup-* 2>/dev/null | sort > "/tmp/svc-wf-deploy-v1-backups-after-${TS}" || true
+< NEW_BACKUP="$(comm -13 "/tmp/svc-wf-deploy-v1-backups-before-${TS}" "/tmp/svc-wf-deploy-v1-backups-after-${TS}" | head -1 || true)"
+---
+> reconcile_deploy_state
+496d596
+<   DEPLOY_INSTALLED=1
+498,499c598,599
+<   if [ -z "$NEW_BACKUP" ] || [ ! -f "$NEW_BACKUP/svc-workflow" ]; then
+<     fail_and_rollback "binary replaced but no intact backup dir found"
+---
+>   if [ -z "$NEW_BACKUP" ] || [ ! -f "$NEW_BACKUP/svc-workflow" ] || [ ! -d "$NEW_BACKUP/migrations" ]; then
+>     fail_and_rollback "binary replaced but no intact binary+migrations backup found"
+502,504c602,603
+<   [ "$installed_sha" = "$PROD_ARTIFACT_SHA256" ] || fail_and_rollback "binary neither new nor old after failed deploy"
+<   log "binary untouched (still $PROD_SHA artifact); deploy failed before install"
+<   zero_write_deploy_intact_exit
+---
+>   [ "$installed_sha" = "$PROD_ARTIFACT_SHA256" ] || fail_and_rollback "binary neither new nor old after deploy attempt"
+>   fail_and_rollback "deploy returned without installing target artifact"
+534d632
+< DEPLOY_OK=1
+538c636,643
+< BINDING_ID="$(/usr/bin/uuidgen | tr 'A-Z' 'a-z')"
+---
+> if [ "$GRANT_ROLLBACK_MODE" = 'DELETE_INSERTED' ]; then
+>   BINDING_ID="$(/usr/bin/uuidgen | tr 'A-Z' 'a-z')"
+> elif [ "$GRANT_ROLLBACK_MODE" != 'RESTORE_DISABLED' ] || [ -z "$BINDING_ID" ]; then
+>   fail_and_rollback "invalid grant apply/rollback classification before R1"
+> fi
+> # Set before psql: if COMMIT succeeds but shell capture/parsing fails, the
+> # unified trap still knows exactly how to restore the pre-write role state.
+> GRANT_WRITE_ATTEMPTED=1
+575d679
+< GRANT_APPLIED=1
+611,612c715,717
+<       '{type:"deploy-runner-grant-v1", deployedAt:$ts, sourceSha:$main, artifactSha256:$art,
+<         grant:{bindingId:$gid, principalId:$grantee, roleKey:$role, enabled:true},
+---
+>       --arg applyMode "$GRANT_ROLLBACK_MODE" \
+>       '{type:"deploy-runner-grant-v2", deployedAt:$ts, sourceSha:$main, artifactSha256:$art,
+>         grant:{bindingId:$gid, principalId:$grantee, roleKey:$role, enabled:true, applyMode:$applyMode},
+615a721,725
+> # Commit the runner outcome only after every verification and the success
+> # ledger append.  No success text is emitted while rollback remains armed.
+> SUCCESS_COMMITTED=1
+> WRITES_STARTED=0
+> trap - ERR EXIT
+618c728
+< log "RESULT: SUCCESS; deployed=$MAIN_COMMIT; artifact=$ARTIFACT_SHA256; grant=$GRANTEE/$ROLE binding_id=$BINDING_ID; legacy+baseline unchanged"
+---
+> log "RESULT: SUCCESS; deployed=$MAIN_COMMIT; artifact=$ARTIFACT_SHA256; grant=$GRANTEE/$ROLE enabled=true binding_id=$BINDING_ID; legacy+baseline unchanged"

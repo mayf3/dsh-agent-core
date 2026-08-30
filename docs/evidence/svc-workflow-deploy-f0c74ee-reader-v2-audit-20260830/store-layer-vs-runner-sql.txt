@@ -1,0 +1,112 @@
+# store-layer upsert at f0c74eefd63ca71a1fcb670ad31ac35f19f69539
+== src/store/postgres/provisioning_repository/mod.rs (upsert fn, lines 388-433) ==
+
+/// Upsert a global (domain-independent) role binding (create or re-enable).
+///
+/// Only the principal existence/enabled state is checked — there is no
+/// domain dimension for global roles.
+pub(crate) async fn upsert_global_role_binding(
+    tx: &mut Transaction<'_, Postgres>,
+    principal_id: Uuid,
+    role_key: &str,
+    enabled: bool,
+) -> Result<Uuid, ProvisioningError> {
+    // Check principal exists and is enabled
+    let principal_enabled: Option<bool> =
+        sqlx::query_scalar("SELECT enabled FROM principals WHERE principal_id = $1 FOR UPDATE")
+            .bind(principal_id)
+            .fetch_optional(&mut **tx)
+            .await
+            .map_err(storage)?;
+
+    match principal_enabled {
+        None => return Err(ProvisioningError::PrincipalNotFound),
+        Some(false) => return Err(ProvisioningError::PrincipalDisabled),
+        Some(true) => {}
+    }
+
+    // UPSERT the binding
+    let binding_id = Uuid::new_v4();
+    let result: Option<(Uuid,)> = sqlx::query_as(
+        r#"
+        INSERT INTO global_role_bindings (binding_id, principal_id, role_key, enabled)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (principal_id, role_key) DO UPDATE
+        SET enabled = $4, disabled_at = CASE WHEN $4 THEN NULL ELSE now() END
+        RETURNING binding_id
+        "#,
+    )
+    .bind(binding_id)
+    .bind(principal_id)
+    .bind(role_key)
+    .bind(enabled)
+    .fetch_optional(&mut **tx)
+    .await
+    .map_err(storage)?;
+
+    Ok(result.map(|r| r.0).unwrap_or(binding_id))
+}
+
+== migrations/0020_global_role_bindings.sql ==
+-- ============================================================
+-- Global Role Bindings
+--
+-- Domain-independent (cross-domain) role bindings. The first and
+-- only supported role is GLOBAL_WORKFLOW_COORDINATOR: a read-only
+-- business role that may list workflow instance summaries across
+-- ALL domains. It deliberately grants no provisioning / transition /
+-- cancel / archive powers — those remain domain-owner or admin gated.
+--
+-- The role_key is free text at the schema level (mirroring
+-- domain_role_bindings); supported values are validated at the API
+-- layer.
+-- ============================================================
+
+CREATE TABLE global_role_bindings (
+    binding_id      UUID        NOT NULL PRIMARY KEY,
+    principal_id    UUID        NOT NULL REFERENCES principals(principal_id),
+    role_key        TEXT        NOT NULL CHECK (char_length(role_key) >= 1 AND char_length(role_key) <= 128),
+    enabled         BOOLEAN     NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    disabled_at     TIMESTAMPTZ
+);
+
+-- Constraint: each principal can hold at most one binding per role.
+CREATE UNIQUE INDEX idx_grb_principal_role
+    ON global_role_bindings (principal_id, role_key);
+
+CREATE INDEX idx_grb_principal ON global_role_bindings (principal_id);
+
+== runner R1 grant SQL (v2 lines 644-675) ==
+grant_out="$(psql_rw -A -t <<SQL
+BEGIN;
+DO \$\$ BEGIN
+  IF current_database() <> '$EXPECTED_DB' THEN RAISE EXCEPTION 'wrong database: %', current_database(); END IF;
+END \$\$;
+DO \$\$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM principals WHERE principal_id = '$GRANTEE' AND enabled) THEN
+    RAISE EXCEPTION 'grantee principal missing or disabled';
+  END IF;
+END \$\$;
+INSERT INTO global_role_bindings (binding_id, principal_id, role_key, enabled)
+VALUES ('$BINDING_ID', '$GRANTEE', '$ROLE', true)
+ON CONFLICT (principal_id, role_key) DO UPDATE
+  SET enabled = true, disabled_at = NULL
+RETURNING 'binding_id=' || binding_id::text;
+DO \$\$ BEGIN
+  IF (SELECT count(*) FROM global_role_bindings WHERE principal_id = '$GRANTEE' AND role_key = '$ROLE' AND enabled) <> 1 THEN
+    RAISE EXCEPTION 'grant verify: reader row not exactly-1 enabled';
+  END IF;
+  IF (SELECT count(*) FROM global_role_bindings WHERE principal_id = '$GRANTEE' AND role_key = '$ROLE_COORD') <> 0 THEN
+    RAISE EXCEPTION 'grant verify: coordinator present for grantee';
+  END IF;
+  IF (SELECT count(*) FROM global_role_bindings) <> $((GRB_BASELINE_COUNT + 1)) THEN
+    RAISE EXCEPTION 'grant verify: row count <> baseline+1';
+  END IF;
+  IF (SELECT md5(string_agg(binding_id::text||'|'||principal_id::text||'|'||role_key||'|'||enabled::text, E'\\n' ORDER BY binding_id))
+       FROM global_role_bindings WHERE principal_id <> '$GRANTEE') <> '$GRB_BASELINE_DIGEST' THEN
+    RAISE EXCEPTION 'grant verify: baseline rows changed';
+  END IF;
+END \$\$;
+COMMIT;
+SQL

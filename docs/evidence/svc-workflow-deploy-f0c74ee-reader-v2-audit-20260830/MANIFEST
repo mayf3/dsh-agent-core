@@ -1,0 +1,13 @@
+# MANIFEST — svc-workflow-deploy-f0c74ee-reader-v2-audit-20260830
+# generated 2026-08-30T12:19:22Z
+# NOTE: v1-to-v2.diff normalized with sed -E 's/[[:space:]]+$//' (trailing whitespace
+# inherited from the sealed v2 runner's space-only blank lines; reproduction:
+#   diff /tmp/run-svc-workflow-deploy-f0c74ee-v1.sh /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh | sed -E 's/[[:space:]]+$//'
+# byte-identical to the artifact. Sealed runner shas (authoritative):
+#   v2 e83f52afeb49809590110464fb4f29b8ace4847a1563bf630fac17e7dd9a92b0
+#   v1 dfcd25707d7260f7d2b8e83aa31f37f2964e3c7e74a8a48a32e01722d4128e92
+789fb5b5489934011b6b9915fef618f25228190222552240affd9672225d267d  matrix-rerun-transcript.txt
+87257deb0530837936f7221f44af2510c5618dda0089212f016abb1e29bdec19  v1-to-v2.diff
+3c2345ba3d2d3e508df202a5ee9de6622f78656825330af624aca33f04ea2442  live-readonly-facts.txt
+36c91aa14de4161de7b809a8e9773b349ec18a5ccc6910aec3f6866463e4b975  static-sweep.txt
+3f1d0c9a9eec59824b03d6283ddc19e70203c1952d33ae4488e72235fe757573  store-layer-vs-runner-sql.txt

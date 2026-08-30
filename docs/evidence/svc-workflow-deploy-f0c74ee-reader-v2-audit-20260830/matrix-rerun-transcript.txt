@@ -1,0 +1,52 @@
+# Independent rerun of /tmp/test-svc-workflow-deploy-f0c74ee-v2-matrix.sh (audit round, 2026-08-30)
+# harness sha256:
+5af0a0cca7e91f4865390604b8e490bd4c82bbab5deb9eece704735662a1b26d  /tmp/test-svc-workflow-deploy-f0c74ee-v2-matrix.sh
+
+PASS 01 C01_absent_prod => APPLY_INSERT
+PASS 02 C02_disabled_prod => APPLY_REENABLE
+PASS 03 C03_enabled_target => ALREADY_APPLIED
+PASS 04 C04_disabled_target => CONFLICT
+PASS 05 C05_absent_target => CONFLICT
+PASS 06 C06_enabled_prod => CONFLICT
+PASS 07 C07_disabled_with_coord => CONFLICT
+PASS 08 C08_absent_with_coord => CONFLICT
+PASS 09 C09_enabled_with_coord => CONFLICT
+PASS 10 C10_disabled_extra_grantee => CONFLICT
+PASS 11 C11_disabled_extra_reader => CONFLICT
+PASS 12 C12_disabled_bad_count => CONFLICT
+PASS 13 C13_two_reader_rows => CONFLICT
+PASS 14 C14_mixed_enabled_disabled => CONFLICT
+PASS 15 C15_enabled_plus_disabled => CONFLICT
+PASS 16 C16_enabled_extra_grantee => CONFLICT
+PASS 17 C17_enabled_extra_reader => CONFLICT
+PASS 18 C18_enabled_bad_count => CONFLICT
+PASS 19 C19_absent_bad_count => CONFLICT
+PASS 20 C20_absent_other_grantee_role => CONFLICT
+PASS 21 C21_absent_other_reader => CONFLICT
+PASS 22 C22_baseline_drift => CONFLICT
+PASS 23 C23_partial_corrupt_shape => CONFLICT
+PASS 24 R01_release_err => unified rollback
+PASS 25 R02_reconcile_err => unified rollback
+PASS 26 R03_missing_backup => unified rollback
+PASS 27 R04_wrong_binary => unified rollback
+PASS 28 R05_target_not_installed => unified rollback
+PASS 29 R06_version_timeout => unified rollback
+PASS 30 R07_tree_verify => unified rollback
+PASS 31 R08_schema_verify => unified rollback
+PASS 32 R09_health_verify => unified rollback
+PASS 33 R10_ready_verify => unified rollback
+PASS 34 R11_restart_pid_verify => unified rollback
+PASS 35 R12_old_pid_verify => unified rollback
+PASS 36 R13_binary_post_verify => unified rollback
+PASS 37 R14_grant_mode_verify => unified rollback
+PASS 38 R15_grant_sql => unified rollback
+PASS 39 R16_grant_return => unified rollback
+PASS 40 R17_final_ro_tx => unified rollback
+PASS 41 R18_final_reader_enabled => unified rollback
+PASS 42 R19_final_coordinator => unified rollback
+PASS 43 R20_final_legacy => unified rollback
+PASS 44 R21_final_health => unified rollback
+PASS 45 R22_final_version => unified rollback
+PASS 46 R23_rollback_incomplete => unified rollback
+SANDBOX_MATRIX = 46/46 PASS
+HARNESS_EXIT=0

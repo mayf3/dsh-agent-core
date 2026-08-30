@@ -1,0 +1,35 @@
+# Static sweep of /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh (sha256 e83f52afeb49809590110464fb4f29b8ace4847a1563bf630fac17e7dd9a92b0)
+== sudo ==
+12:#   G0  identity/argument gates      — run as yanfenma (uid 502) WITHOUT sudo;
+103:# Owner execution (single command, interactive, as yanfenma — NOT sudo):
+371:  echo 'REFUSED: run as yanfenma (uid 502) WITHOUT sudo — the service, files,' >&2
+== URLs ==
+92:#   * only URL scheme touched: http://127.0.0.1:8989/… (pinned)
+128:BASE_URL='http://127.0.0.1:8989'
+== launchctl ==
+44:#                                      ledger append -> kickstart restart);
+72:#     Rb2 binary + migrations restored from D1 backup; kickstart restart;
+94:#     kickstart -k — identical to scripts/release.sh itself)
+174:service_pid() { /bin/launchctl print "gui/$(id -u)/$LABEL" 2>/dev/null | awk '/^[[:space:]]*pid =/{print $3; exit}'; }
+175:restart_service() { /bin/launchctl kickstart -k "gui/$(id -u)/$LABEL"; }
+376:for t in psql curl jq /usr/bin/shasum /usr/bin/git /bin/launchctl /usr/bin/uuidgen /bin/realpath; do
+== kill ==
+95:#   * no chown; install -m 0755 mirrors release.sh; kill only as `kill -0`
+627:if [ "$PID_OLD" != '0' ] && kill -0 "$PID_OLD" 2>/dev/null; then
+== rm ==
+210:# From immediately before release.sh can perform the first production write,
+279:         && rm -rf "$SERVICE_DIR/migrations" \
+387:log "Type the exact phrase to confirm ($CONFIRM_PHRASE):"
+581:# Capture the read-only backup baseline first.  Arm ERR+EXIT before invoking the
+== eval/base64/chmod/chown/ssh/scp ==
+95:#   * no chown; install -m 0755 mirrors release.sh; kill only as `kill -0`
+== bash -n ==
+SYNTAX_OK
+== psql_rw call sites (writes confined to R1 grant + Rb1 rollback) ==
+204:psql_rw() {
+250:    if psql_rw -A -t <<SQL
+644:grant_out="$(psql_rw -A -t <<SQL
+== READ ONLY tx sessions ==
+198:# read-only session (callers wrap statements in BEGIN TRANSACTION READ ONLY)
+487:BEGIN TRANSACTION READ ONLY;
+685:BEGIN TRANSACTION READ ONLY;

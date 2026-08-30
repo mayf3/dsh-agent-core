@@ -1,0 +1,17 @@
+# Read-only live facts, 2026-08-30T12:17:24Z
+== /version ==
+{"service":"svc-workflow","version":"0.3.1","gitSha":"91fc4e40f400ee9cc17351f857a1ab2860682681","gitTreeState":"clean","buildTimestamp":"2026-08-16T00:07:15Z","schemaVersion":"0022","apiContractVersion":"internal-v0"}
+== healthz/readyz ==
+healthz=200
+readyz=200
+== live binary sha ==
+1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125  /Users/yanfenma/.local/services/svc-workflow/svc-workflow
+== release artifact sha ==
+4e633634b313f8c926ccaf7da07f3bfd9dbf25f024a4b63a3f0a88c5a0200356  /Users/yanfenma/.local/services/svc-workflow/releases/f0c74eefd63ca71a1fcb670ad31ac35f19f69539/svc-workflow
+== ledger tail ==
+{
+  "type": null,
+  "artifactSha256": "1e3fa45c53d7a5c48e9b4c3fe071ebc475327b77ac0659b7a4e91c65e6df8125"
+}
+== runner sha (start-of-round == end-of-round) ==
+e83f52afeb49809590110464fb4f29b8ace4847a1563bf630fac17e7dd9a92b0  /tmp/run-svc-workflow-deploy-f0c74ee-v2.sh
