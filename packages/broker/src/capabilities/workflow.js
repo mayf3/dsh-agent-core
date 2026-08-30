@@ -245,6 +245,81 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   ],
 })
 
+/**
+ * Global (all-domain) read-only instance enumeration
+ * (AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2).
+ *
+ * Proxies the deployed svc-workflow endpoint GET
+ * /internal/v1/workflow-instances/global. Authorization is wholly
+ * server-side: only callers holding a global read role
+ * (GLOBAL_WORKFLOW_READER or GLOBAL_WORKFLOW_COORDINATOR — target
+ * contract; coordinator-only on pre-READER-deployment installs) pass;
+ * everyone else fails closed with 403 global_read_role_required /
+ * global_coordinator_required (both declared to cover the two deployment
+ * timelines). The broker never replicates, relaxes or caches any role
+ * decision; the tool is generic — no per-agent wiring (DEC-008), and
+ * assigneePrincipalId is a server-side RESULT filter that can never
+ * influence the caller identity (DEC-003).
+ *
+ * Cursor discipline — explicit deviation (DEC-002): unlike the
+ * first-batch capabilities, the paired cursor beforeCreatedAt + beforeId
+ * IS exposed here, because fleet-wide enumeration must be pageable. The
+ * pair must be given together; a half cursor is forwarded untouched and
+ * rejected downstream with 422 invalid_cursor (declared). Enum / UUID /
+ * RFC3339 format checks are NOT replicated broker-side (CTR-002): only
+ * `limit` fails fast locally (1-20 -> invalid_pagination); illegal
+ * lifecycle/status values pass through and are rejected downstream with
+ * 422 invalid_lifecycle / invalid_status (declared).
+ */
+export const workflowGlobalInstancesManifest = withTransportErrors({
+  id: 'workflow_global_instances',
+  toolName: 'workflow_global_instances',
+  name: 'Workflow Global Instances',
+  description:
+    'Agent Core capability `workflow_global_instances` (svc-workflow): enumerate workflow-instance summaries across ALL domains (read-only; caller must hold GLOBAL_WORKFLOW_READER or GLOBAL_WORKFLOW_COORDINATOR — enforced server-side). ' +
+    'Returns {ok: true, result: <global instance page>} on success.',
+  requiredScopes: ['workflow.read'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    { code: 'invalid_pagination', description: 'Pagination parameters are invalid (limit must be 1-20).' },
+    { code: 'invalid_cursor', description: 'Cursor parameters are invalid (beforeCreatedAt and beforeId must be given together).' },
+    { code: 'invalid_lifecycle', description: 'lifecycle is not one of active|terminal|all (HTTP 422).' },
+    { code: 'invalid_status', description: 'status is not one of active|cancelled|archived|all (HTTP 422).' },
+    { code: 'global_coordinator_required', description: 'Caller holds no global read role — transition code of installs deployed before the READER revision (HTTP 403).' },
+    { code: 'global_read_role_required', description: 'Caller holds neither GLOBAL_WORKFLOW_READER nor GLOBAL_WORKFLOW_COORDINATOR (HTTP 403).' },
+  ],
+  operations: [
+    {
+      name: 'list',
+      description:
+        'List workflow-instance summaries across all domains. Optional: limit (1-20), lifecycle (active|terminal|all), status (active|cancelled|archived|all), definitionKey, currentNodeKey, assigneePrincipalId (result filter only), beforeCreatedAt + beforeId (paired cursor).',
+      arguments: {
+        properties: {
+          limit: limitProperty,
+          lifecycle: { type: 'string', description: 'Lifecycle filter: active | terminal | all (validated server-side).' },
+          status: { type: 'string', description: 'Status filter: active | cancelled | archived | all (validated server-side).' },
+          definitionKey: { type: 'string', description: 'Filter by workflow definition key.' },
+          currentNodeKey: { type: 'string', description: 'Filter by current node key.' },
+          assigneePrincipalId: { type: 'string', description: 'Filter results by assignee principal id (UUID). Result filter only — never affects the caller identity.' },
+          beforeCreatedAt: { type: 'string', description: 'Cursor: RFC 3339 timestamp of the last item seen; must be paired with beforeId.' },
+          beforeId: { type: 'string', description: 'Cursor: workflow instance id (UUID) of the last item seen; must be paired with beforeCreatedAt.' },
+        },
+        required: [],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments', 'invalid_pagination'],
+      http: {
+        target: 'svc-workflow',
+        method: 'GET',
+        path: '/internal/v1/workflow-instances/global',
+        query: ['limit', 'lifecycle', 'status', 'definitionKey', 'currentNodeKey', 'assigneePrincipalId', 'beforeCreatedAt', 'beforeId'],
+      },
+    },
+  ],
+})
+
 /** All first-batch Workflow manifests. */
 export const manifests = [
   workflowMyTasksManifest,
@@ -252,4 +327,5 @@ export const manifests = [
   workflowSubmissionHistoryManifest,
   workflowMyDomainsManifest,
   workflowDomainInstancesManifest,
+  workflowGlobalInstancesManifest,
 ]
