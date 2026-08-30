@@ -40,7 +40,8 @@ canary，也不授权在本 proposed revision 上实施。
 
 ```text
 HISTORY_AUTHORITY = DSH_SESSION
-PRODUCT_SESSION_ID = DSH_NATIVE_SESSION_ID
+HISTORY_REQUEST_SESSION_ID = DSH_NATIVE_TRAJECTORY_ID
+SECOND_SESSION_MAPPING = FORBIDDEN
 BACKEND_HISTORY_OWNER = @agent-core/session-history (minimal read-only service/module)
 PRODUCT_API_ROLE = THIN_ADAPTER
 COLD_READ_WITHOUT_AGENT_SPAWN = YES
@@ -70,7 +71,9 @@ COLD_READ_WITHOUT_AGENT_SPAWN = YES
 - Mobile↔Feishu mirror、双写、回流或以 Feishu 作为历史库；
 - `mobile`、`feishu`、`senderDisplayName`、`channelConversationId` 等来源字段；
 - 通过文本、`@` 占位符或 Binding 猜测 channel；
-- Product API authentication 协议或 loopback 之外的 exposure 变更；
+- Product API authentication 协议选择或 loopback 之外的 exposure 变更；history endpoint
+  activation nevertheless remains gated by the accepted+implemented authentication authority in
+  `CTR-SH-010`；
 - 完整 Session 管理组件。
 
 ## 3. Authority and dependencies
@@ -78,15 +81,22 @@ COLD_READ_WITHOUT_AGENT_SPAWN = YES
 1. `AGENT_CORE_PRODUCT_ARCHITECTURE_V1` 冻结 DSH 为 Session runtime、product sessionId 与
    DSH native sessionId 相同、Agent Core 不建第二套 Session engine/mapping/history。
 2. accepted Current Decision `AGENT_WORKSPACE_SESSION_MODEL_V2` 冻结 Session 是属于 Agent
-   的 trajectory，Mobile 只切换 active Agent/main，不拥有 Session。
+   的 trajectory，Mobile Human Binding 只持有 `activeAgent` 并始终进入 canonical logical
+   `main`；native DSH Session ID 是实现细节。为避免冲突，本 Spec 的 path `sessionId` 只命名
+   control plane 已解析出的 **current native trajectory artifact**，不是 Mobile 可选择或
+   Binding 可长期持有的第二个产品身份。main reset 后旧 native ID 不再代表 current main；
+   本 Spec 不决定 reset、archive 或旧 trajectory 可见性。
 3. accepted Program `AGENT_CORE_HARDENING_PROGRAM_V1` 将 Product API 定义为 Product Surface
    Control Plane，并要求未认证状态不得扩大到 loopback 外；本 Spec 不改变该边界。
 4. `mayf3/agent-core-mobile@3704bc289a63f66961cc31849459019715d358c1` 是 consumer
    协调坐标，不是本仓库的外部 governing authority。
-5. DSH JSONL 格式及 event schema 是运行时依赖，不由本仓库重新治理。本 Spec 只治理
-   Agent Core 对该 artifact 的只读、最小公开 projection。实现必须锁定其实际 DSH
-   dependency revision并以该 revision 的公共读取/解码能力为先；不得把未固定的本地
-   Harness checkout 当作生产 authority。
+5. DSH JSONL 格式及 event schema 是运行时依赖，不由本仓库重新治理。本 Spec 通过
+   `CTR-SH-003`–`CTR-SH-005` 建立本地、封闭的 compatibility allowlist：production profile
+   的 plaintext newline-delimited JSON、首条 header、连续 `seq`，以及本文逐字段列出的
+   event shape。实现必须锁定实际 DSH dependency revision并优先复用其公共只读 decoder；
+   但任何 revision 只有在满足该 allowlist 时才可读取，未知 format/version/shape 一律
+   `INTERNAL_ERROR`，不得由实现自行扩大。未固定的本地 Harness checkout 不是 production
+   authority。
 
 ### 3.1 PREFLIGHT ownership ruling
 
@@ -250,8 +260,9 @@ Session 文件。
 ### DEC-SH-001 — DSH Session remains the sole history authority
 
 - Decision owner: `mayf3/dsh-agent-core` maintainers
-- Decision: product Session ID equals DSH native Session ID; history is a read-only projection and
-  owns neither Session nor storage.
+- Decision: history path `sessionId` is the exact native trajectory artifact ID already resolved for
+  the selected Agent’s current canonical main; it is not a durable Human Binding field or a second
+  logical-main identity. History is a read-only projection and owns neither Session nor storage.
 - Rejected alternative: second database, message store or Session mapping.
 - Reason: preserve the accepted DSH-native Session boundary and avoid split truth.
 - Remaining owner input: none
@@ -298,10 +309,16 @@ Session 文件。
 ### CTR-SH-001 — Sole authority and backend ownership
 
 The implementation MUST treat the target DSH native Session artifact as the sole history authority.
-It MUST NOT create a database, message store, Session mapping or cached alternate truth.
-`@agent-core/session-history` MUST be the only backend module/service that reads raw DSH Session
-records and applies this projection. Product API, Mobile and connectors MUST NOT parse Session
-artifacts. The service MUST be read-only and MUST NOT expose a Session-management write surface.
+The path `sessionId` MUST equal the native trajectory artifact ID already resolved by the control
+plane for the selected Agent’s current canonical main; Mobile MUST NOT select it, and Human Binding
+MUST remain `activeAgent`-only. The implementation MUST NOT create a database, message store,
+logical-main→native mapping or cached alternate truth.
+
+`@agent-core/session-history` names one minimal read-only service contract; its implementation MAY be
+an internal module or a tiny package, but MUST NOT be an independent Session engine/manager.
+It MUST be the only backend owner that reads raw DSH Session records and applies this projection.
+Product API, Mobile and connectors MUST NOT parse Session artifacts. The service MUST NOT expose a
+Session-management write surface.
 
 ### CTR-SH-002 — Exact HTTP contract and validation
 
@@ -340,7 +357,9 @@ service result/error to the envelope. Minimum errors are:
 500 INTERNAL_ERROR
 ```
 
-An unknown `before` MUST be `400 VALIDATION_ERROR`; the service MUST NOT guess a cursor.
+`before` MUST decode as one non-empty UTF-8 message ID of at most 512 bytes; otherwise it is
+`400 VALIDATION_ERROR`. An unknown `before` MUST also be `400 VALIDATION_ERROR`; the service MUST
+NOT guess a cursor.
 
 ### CTR-SH-003 — Cold-read valid complete prefix
 
@@ -349,11 +368,28 @@ A history GET MUST NOT call `agentRouter.ensureRunning`, `AgentProcess.spawn`, a
 Workspace or Session; MUST NOT write a synthetic closer; MUST NOT repair or truncate a torn record;
 and MUST NOT start a cold Agent.
 
-The service MUST read a stable snapshot of the Session artifact and parse only its valid complete
-prefix. A final record lacking its terminating complete JSONL record boundary MUST be ignored.
-A malformed committed record, seq gap, unsupported format, unstable read that cannot be retried
-without an inconsistent snapshot, or other corruption MUST fail closed as `INTERNAL_ERROR`; it
-MUST NOT fabricate messages or write repair bytes.
+The service MUST use at most two bounded snapshot attempts. For each attempt it MUST open the
+artifact read-only, capture `(device,inode,size=S)` from that descriptor, read exactly bytes
+`[0,S)`, then re-stat the same descriptor. Same device/inode with final size `>= S` is a stable
+prefix; a concurrent append beyond `S` is excluded until the next GET. Replacement, truncation,
+short read or identity change retries once, then returns `INTERNAL_ERROR`. No attempt may wait for
+an Agent or writer.
+
+The accepted encoding is plaintext newline-delimited JSON used by the production profile. The first
+complete line MUST be a DSH v0 header object with `type = session`, `version = 0`, non-empty string
+`id`, non-negative integer `createdAt`, integer `delegationDepth >= 0`, and optional string `cwd`,
+`parentSession`, `origin`, `agentPreset` plus optional non-negative integer `seedLength`; unknown
+header fields or invalid optional values are malformed. Each following newline-terminated storage
+record MUST decode through the pinned DSH public decoder into zero or more individual events. Each
+expanded event MUST have string `type`, non-negative integer `seq`, non-negative integer millisecond
+`time`, and object `data`; expanded `seq` MUST be contiguous and zero-based. Event types outside the
+three projection/correlation types in `CTR-SH-004/005` are accepted only as ignored internal events.
+Packed chunk rows may decode only to ignored events; they never become messages. A final byte
+fragment with no newline is the only
+torn-tail case and MUST be ignored. Invalid JSON on a newline-terminated line, unknown/unsupported
+format or version, seq gap/duplicate, malformed header/event, or duplicate terminal boundary is
+committed corruption and MUST return
+`INTERNAL_ERROR`. The service MUST NOT fabricate messages or write repair bytes.
 
 ### CTR-SH-004 — User message projection
 
@@ -361,7 +397,10 @@ The projection MUST include only append-surface events satisfying:
 
 ```text
 event.type = user/message
+event.surfaceOp = append
 data.source.kind = user
+data.id = non-empty string
+data.content = array
 ```
 
 For each included event it MUST:
@@ -375,13 +414,18 @@ For each included event it MUST:
 It MUST exclude `agent/inbox/spliced`, `source.kind = plugin`, `source.kind = goal`, system
 reminders, memory snapshots and internal events. One logical input represented by
 `inbox/spliced + user/message` MUST appear exactly once, from the qualifying `user/message` only.
-Text order and bytes MUST otherwise be preserved.
+Text order and bytes MUST otherwise be preserved. This structural predicate is the complete
+`direct user` test; content text MUST NOT be inspected to infer source. A structurally malformed
+qualifying event MUST return `INTERNAL_ERROR`, not be silently reclassified.
 
 ### CTR-SH-005 — Assistant completed-turn projection
 
-The projection MUST group events by `data.turn` and include an assistant message only for a turn
-having `turn/end` with `reason.kind = completed` in the valid complete prefix. For each such turn it
-MUST select the highest-`seq` append-surface `assistant/message` whose
+The projection MUST group by integer `data.turn`. A turn is eligible only when the complete prefix
+contains exactly one later event with `event.type = turn/end`, matching `data.turn`, and
+`turn/end.data.reason.kind = completed`. The selected assistant event MUST precede that end event.
+Missing, duplicate or out-of-order terminal events make that turn non-projectable; a duplicate
+terminal for one turn is committed corruption under `CTR-SH-003`. For each eligible turn it MUST
+select the highest-`seq` `assistant/message` with `surfaceOp = append` whose
 `data.message.content` contains at least one non-empty `type = text` block, concatenate only those
 text blocks in block order, use `data.message.id` as `message.id`, and convert that
 `assistant/message.time` to ISO-8601 UTC as `createdAt`.
@@ -405,7 +449,10 @@ millisecond timestamps MUST not affect ordering.
 
 For an unchanged valid artifact prefix, repeated reads MUST preserve every `message.id`,
 `createdAt`, order and page boundary. Adjacent pages MUST have no duplicate or skipped projected
-message. Duplicate projected message IDs within one Session MUST fail closed as `INTERNAL_ERROR`.
+message. These no-gap guarantees bind one unchanged captured prefix; after reset, compaction or
+replacement removes a cursor, that cursor is unknown and MUST fail as `VALIDATION_ERROR` rather
+than being remapped. Duplicate projected message IDs within one Session MUST fail closed as
+`INTERNAL_ERROR`.
 
 ### CTR-SH-007 — Agent/Session identity and path confinement
 
@@ -430,7 +477,10 @@ The HTTP response MUST contain only user final text, assistant final completed t
 ID, timestamp, `agentId` and `sessionId`, plus top-level `hasMore`. It MUST NOT project or return
 reasoning, system prompts/reminders, tool parameters, tool results, usage, credentials, provider
 internal errors, workspace paths, Agent Home paths, raw DSH events, internal PIDs or Session header
-`cwd`. Error responses and logs MUST obey the same no-path/no-internal-payload boundary.
+`cwd`. Here “credentials / paths / provider errors” means separate internal event/header/error
+fields; `content` is the byte-preserved selected user data governed by `CTR-SH-004/005`. V1 is not a
+semantic DLP/redaction system and MUST NOT inspect prose to guess whether it resembles a secret or
+path. Error responses and logs MUST obey the same no-path/no-internal-payload boundary.
 
 ### CTR-SH-009 — Channel metadata omission
 
@@ -447,15 +497,24 @@ history. Multiple Channels may naturally observe one shared DSH Session trajecto
 actually reference the same `(agentId, sessionId)`; this MUST NOT be represented as a guarantee
 that their Bindings are equal.
 
+Because transcripts are private Product Surface data, the history route MUST default disabled and
+MUST NOT be activated or deployed until `PRODUCT_API_AUTHENTICATION_V1` (or its accepted whole
+successor) is accepted, present in the implementation base, implemented, and proves trusted caller
+identity, unauthorized denial, and Agent-child direct-access denial. The authentication owner defines
+401/403 details; this Spec MUST NOT invent a competing credential scheme. Loopback alone is never
+activation authority, and distinct Agent/Session 404s MUST occur only after authorization.
+
 The implementation MUST NOT modify Router/Ingress/demo-server behavior, Mobile repository, Agent
 Home, existing Session files or canary as part of implementing this Contract. Deployment, canary
-apply and merge remain separately authorized actions. Rollback is removal/disablement of the new
+apply and merge remain separately authorized actions. Rollback is disablement/removal of the new
 GET adapter and read-only service; because there is no owned persistence, no data migration or
 rollback write is allowed.
 
 ## 10. Acceptance
 
-Every item below is a future Acceptance definition:
+Every item below is a future Acceptance definition. Real transcript verification MUST run under the
+same authorized Product Surface access boundary, retain only hashes/counts/redacted excerpts in PR
+evidence, and MUST NOT commit raw transcript content.
 
 ```text
 EXECUTED_NOW = NO
@@ -467,17 +526,20 @@ EXECUTED_NOW = NO
 - Method: run the pinned implementation against a read-only snapshot of real `stock/main`
 - Environment: isolated acceptance environment; exact implementation and DSH revisions recorded
 - Required evidence: command/request, artifact hash before/after, projected IDs/roles/times/text
-- Expected result: direct user and completed-final assistant text are correct and ascending by seq
-- Failure condition: missing, extra, reordered, altered or non-final projected text
+- Expected result: direct user and completed-final assistant text are correct and ascending by seq;
+  success envelope has only frozen fields and every time is canonical ISO-8601 UTC
+- Failure condition: missing, extra, reordered, altered/non-final text, wrong envelope or time conversion
 - EXECUTED_NOW: NO
 
 ### ACC-SH-B — Real ceo/main isolation
 
 - Contracts: `CTR-SH-001`, `CTR-SH-007`
-- Method: independently read `stock/main` and `ceo/main`, including a cross-Agent request
+- Method: independently read `stock/main` and `ceo/main`, including unknown Agent, missing artifact,
+  header mismatch and cross-Agent requests
 - Environment: isolated acceptance environment
 - Required evidence: request/response records with sensitive content redacted, Home/file hashes
-- Expected result: histories remain isolated; cross-Agent Session read fails closed
+- Expected result: histories remain isolated; unknown Agent is `AGENT_NOT_FOUND`; missing or
+  cross-Agent artifact is `SESSION_NOT_FOUND`; header/corruption mismatch is `INTERNAL_ERROR`
 - Failure condition: any cross-Agent message or artifact is exposed
 - EXECUTED_NOW: NO
 
@@ -485,22 +547,28 @@ EXECUTED_NOW = NO
 
 - Contracts: `CTR-SH-003`, `CTR-SH-010`
 - Method: count Agent processes and instrument ensureRunning/spawn/model/session-prompt before,
-  during and after GET on a cold Agent
+  during and after GET on a cold Agent; fault-inject stable append, replacement, truncation, short
+  read, malformed committed JSON, seq gap/duplicate, unsupported format/version and disable rollback
 - Environment: canary-equivalent isolated environment, not live canary
 - Required evidence: process table, call counters/traces, file hashes
-- Expected result: process count unchanged and all prohibited call/write counters remain zero
-- Failure condition: spawn, model, prompt, Binding/Home/Session write or process-count increase
+- Expected result: process count/counters stay unchanged; append returns captured prefix; one
+  instability retries once; persistent instability/corruption returns `INTERNAL_ERROR`; disablement
+  removes the route/service with no data write
+- Failure condition: spawn/model/prompt/write/process increase, unbounded retry, corruption accepted,
+  or rollback mutates Session data
 - EXECUTED_NOW: NO
 
 ### ACC-SH-D — Internal-event and privacy exclusion
 
 - Contracts: `CTR-SH-005`, `CTR-SH-008`, `CTR-SH-009`, `CTR-SH-010`
 - Method: fixture containing tool/reasoning/chunk/plugin/goal/system/usage/internal-error/path/PID/
-  header-cwd/channel-shaped data plus final text
+  header-cwd/channel-shaped data plus final text; static dependency/changed-surface check; authorized,
+  unauthorized and Agent-child HTTP probes against the accepted Product API auth implementation
 - Environment: unit and HTTP integration tests
 - Required evidence: fixture, response, logs and static changed-file manifest
-- Expected result: only allowlisted fields/text return; no internal or channel metadata leaks; no
-  Feishu/Router/Ingress/demo-server history parsing or mirror path exists
+- Expected result: only an authorized Product Surface caller receives allowlisted fields/text;
+  unauthorized and Agent-child callers fail before Agent/Session lookup; no internal/channel data
+  leaks; no Feishu/Router/Ingress/demo-server history parsing or mirror path exists
 - Failure condition: any forbidden field/event/data or source inference appears
 - EXECUTED_NOW: NO
 
@@ -508,18 +576,21 @@ EXECUTED_NOW = NO
 
 - Contracts: `CTR-SH-004`
 - Method: fixture with one logical input represented by `agent/inbox/spliced` and qualifying
-  `user/message`
+  `user/message`, ordered mixed empty/non-empty text blocks, empty-only message, replace surface,
+  plugin/goal/system-reminder/internal user-shaped events and malformed qualifying event
 - Environment: unit test
 - Required evidence: fixture seqs and projected response
-- Expected result: exactly one user message, identified by `user/message.data.id`
-- Failure condition: duplicate or splice-derived public message
+- Expected result: exactly one direct user message with ordered non-empty text and data.id;
+  excluded/empty surfaces produce none; malformed qualifying input returns `INTERNAL_ERROR`
+- Failure condition: duplicate/splice/reminder/internal message, wrong block order or silent malformed skip
 - EXECUTED_NOW: NO
 
 ### ACC-SH-F — Last final assistant only
 
 - Contracts: `CTR-SH-005`
-- Method: completed and failed/incomplete turn fixtures with chunks, tool-only assistant messages,
-  multiple append assistant messages and final text
+- Method: completed, failed, blocked, max-tokens, interrupted, aborted and unterminated fixtures with
+  chunks, tool-only/multiple assistant messages, mismatched turn IDs, assistant-after-end and duplicate
+  terminal events
 - Environment: unit test
 - Required evidence: event fixtures and exact projection
 - Expected result: each completed turn returns only its last non-empty text assistant message;
@@ -540,8 +611,9 @@ EXECUTED_NOW = NO
 ### ACC-SH-H — Limit/before pagination
 
 - Contracts: `CTR-SH-002`, `CTR-SH-006`
-- Method: table tests for limits 1/50/200, invalid limits, newest page, all older pages, same-ms
-  events and unknown before
+- Method: table tests for limits 1/50/200, invalid values, malformed/oversize cursor, newest page,
+  all older pages, same-ms events, unknown/removed before, duplicate projected IDs, unchanged-prefix
+  paging and a later concurrent append
 - Environment: unit plus HTTP integration tests
 - Required evidence: full projected baseline, every page and error response
 - Expected result: ascending stable order, exclusive cursor, exact hasMore, no duplicates/gaps;
