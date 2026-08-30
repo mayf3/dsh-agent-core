@@ -265,6 +265,12 @@ export async function composeProductionRuntime(options = {}) {
     ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),
     resolveProcessConfig,
     resolveRouteChain,
+    // CTR-I2-015 (IMPL V2): the production runtime root instantiates the
+    // default-off one-shot canary seam at
+    // <root>/route-chain-canary-injection.json. An isolated candidate root
+    // (PRODUCTION_RUNTIME_ROOT) gets its own seam by the same rule — the
+    // production root is never touched from a candidate.
+    canaryRuntimeRoot: layout.root,
   })
 
   // V2 PREBOUND_ONLY Feishu ingress gate (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
