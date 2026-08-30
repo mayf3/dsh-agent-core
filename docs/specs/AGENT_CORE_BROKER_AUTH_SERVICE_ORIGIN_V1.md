@@ -42,13 +42,14 @@ SPEC_STATUS = proposed
 IMPLEMENTATION_AUTHORITY = none            （acceptance 翻转前不授权任何代码改动）
 PRODUCTION_APPLY_AUTHORITY = none
 
-PLAIN_HTTP_ALLOWED_FORM = http://127.0.0.1:<explicit-port>/
-PLAIN_HTTP_ALLOWED_HOST = 127.0.0.1         （parsed WHATWG hostname，精确相等）
-PLAIN_HTTP_HOST_FORBIDDEN = localhost | 0.0.0.0 | [::1] | 任何域名 | 任何非 127.0.0.1 的 IP（含全部私网/局域网段）
+PLAIN_HTTP_ALLOWED_FORM = http://127.0.0.1:<explicit-port>[/]
+PLAIN_HTTP_RAW_AUTHORITY_CHECK = BEFORE_WHATWG_PARSE
+PLAIN_HTTP_RAW_HOST = 127.0.0.1             （原始 authority 中的 hostname 必须逐字符精确相等）
+PLAIN_HTTP_HOST_FORBIDDEN = localhost | IPv6 | 非规范/别名 IPv4 | 尾点形式 | 任何域名 | 任何非 127.0.0.1 的 IP
 NON_LOOPBACK_SCHEME = https                 （强制；本 amendment 不放宽任何既有 HTTPS 要求）
-REQUIRED_PATH = /
-FORBIDDEN_URL_COMPONENTS = query | hash(fragment) | userinfo(username/password)
-PLAIN_HTTP_PORT = 显式十进制端口，1..65535（省略端口 = 非法；端口 0 = 非法）
+RAW_PATH = empty | /                        （dot-segment 与任何其他 path 均非法）
+FORBIDDEN_URL_COMPONENTS = query（空或非空） | hash(fragment，空或非空) | userinfo(username/password)
+PLAIN_HTTP_PORT = 原始 authority 中必须出现的显式十进制端口，1..65535（含显式 :80；省略端口 = 非法；端口 0 = 非法）
 HTTPS_PORT = 可选（省略 = 443）
 
 VALIDATION_PRIMITIVE = requestAccessToken   （transport.js 的单一 token mint 原语；三路调用方全覆盖）
@@ -78,9 +79,11 @@ fetch——**且未设置 `redirect` 策略**（fetch 默认 `follow`）。
 
 本 Spec 冻结一个最小、可机械验收的形态契约：
 
-1. **回环例外**——明文 HTTP **只允许** `http://127.0.0.1:<port>/` 一种形态
-   （host 精确为 `127.0.0.1`，显式端口，path 为 `/`，无 query/hash/userinfo）；
-2. **非回环不放宽**——parsed hostname 不是 `127.0.0.1` 的 origin **必须**
+1. **回环例外**——明文 HTTP **只允许** `http://127.0.0.1:<port>` 或
+   `http://127.0.0.1:<port>/`；在 WHATWG parse **之前**从原始 authority
+   检查 host 逐字符等于 `127.0.0.1`、端口显式且为十进制 `1..65535`，
+   并拒绝 userinfo、任何 query/fragment（包括空 `?` / `#`）及 dot-segment path；
+2. **非回环不放宽**——不满足上述 HTTP 原始字面量白名单的 origin **必须**
    是 HTTPS（本 amendment 不创造任何新的明文传输面）；
 3. **禁止重定向**——token endpoint 请求绝不跟随 redirect，任何 3xx 是
    DENIAL（Basic 凭据绝不能被重定向送往第二个 origin）；
@@ -226,14 +229,18 @@ origin 配置形态）。
   auth.json 契约）；broker transport 的 origin 形态无任何 Spec 覆盖。
   Observed at: 2026-08-30。
 - `OBS-005` — Subject: WHATWG URL 解析行为（Node v25.6.1，2026-08-30
-  实测）。Result（对 §10 向量表有直接影响的三个事实）：
+  实测）。Result（对 §10 向量表有直接影响的事实）：
   (a) 非规范 IPv4 写法 `127.1`、`127.000.000.001`、`2130706433`、
   `0x7f.0.0.1`、`127.0.0.1.`（尾点）解析后 **hostname 均规范化为
-  `127.0.0.1`**；
+  `127.0.0.1`**，故只检查 parsed hostname 会错误接受别名形态；
   (b) `[::1]` 的 hostname 序列化为 `'[::1]'`（含方括号），与
   `'127.0.0.1'` 不相等；
-  (c) 端口 `0` 可被 URL 解析（`port === '0'`），必须由端口范围规则显式
-  排除；省略端口时 `port === ''`。
+  (c) 端口 `0` 可被 URL 解析（`port === '0'`），省略端口时
+  `port === ''`，而显式 HTTP 默认端口 `:80` 也会被规范化为
+  `port === ''`，故必须从原始 authority 区分「未写端口」与显式 `:80`；
+  (d) 空 query `?`、空 fragment `#` 与 dot-segment path 可能在 parsed
+  `search` / `hash` / `pathname` 叶字段中丢失其原始形态，故这些禁止项也
+  必须以原始输入 presence/path 检查，不能只检查规范化后的叶字段。
   Basis: authoring 轮本地 node 实测（只读，零网络）。
 
 ## 6. Claims and assumptions
@@ -271,17 +278,21 @@ origin 配置形态）。
 
 ## 8. Decisions
 
-- `DEC-001`（校验语义 = parsed hostname 精确相等，非原始字符串相等）——
-  契约对象是**token 请求实际发往的地址**，因此以 WHATWG URL 解析后的
-  `hostname === '127.0.0.1'` 为准。非规范 IPv4 写法（`127.1`、
-  `2130706433`、`0x7f.0.0.1`、尾点 `127.0.0.1.` 等）解析后即
-  `127.0.0.1`，与规范写法同地址，**接受**（OBS-005(a)）；`localhost`
-  / `0.0.0.0` / `[::1]` / 域名 / 私网 IP 的 hostname 不等于
-  `'127.0.0.1'`，**拒绝**。判定永不依赖 DNS 解析（`127.0.0.1` 是字面量）。
-- `DEC-002`（回环形态要求显式端口，范围 1..65535）——省略端口意味着
-  默认 `:80`，生产 auth-service 不在 `:80` 监听，任何合法部署都带显式
-  端口（生产值 `4001`）；fail-closed 拒绝省略。端口 `0` 非连接端口，
-  显式排除（OBS-005(c)）。HTTPS 形态端口可选（省略 = 443，标准语义）。
+- `DEC-001`（HTTP 校验语义 = 原始 authority 字面量先验，而非 parsed
+  hostname 等值）——在调用 WHATWG `new URL()` **之前**，从原始输入中
+  定位 `http://` 后、首个 `/` / `?` / `#` 前的 authority，并要求其形态
+  恰为 `127.0.0.1:<decimal-port>`：无 `@`，hostname 逐字符等于
+  `127.0.0.1`，无尾点、无 IPv6 bracket、无别名或非规范 IPv4。故
+  `127.1`、`127.000.000.001`、`2130706433`、`0x7f.0.0.1`、
+  `127.0.0.1.`、`localhost` 与全部 IPv6 均**拒绝**；不得先让 WHATWG
+  规范化后再作 host allowlist 判定（OBS-005(a)）。通过原始检查后仍须
+  WHATWG parse 并满足其余合同；判定永不依赖 DNS。
+- `DEC-002`（回环形态要求原始 authority 中的显式端口，范围
+  1..65535）——必须在 WHATWG parse 前从原始 authority 证明冒号和端口
+  数字真实存在，以区分「未写端口」与「显式 `:80`」；两者在 parsed
+  `port` 中都可能呈现 `''`（OBS-005(c)），但前者拒绝、后者接受。端口
+  只允许 ASCII 十进制数字，数值范围 `1..65535`；`0`、超范围、空端口、
+  带符号或非十进制写法均拒绝。HTTPS 形态端口可选（省略 = 443）。
 - `DEC-003`（3xx = DENIAL，绝不跟随）——token 请求携带
   `Authorization: Basic base64(clientId:clientSecret)`；若跟随重定向，
   该凭据会被重新发给**任意第二个 origin**（配置者可控的凭据外送面）。
@@ -313,28 +324,33 @@ origin 配置形态）。
 以下合同在 accepted + `implementation_authority: contracts` 后生效；
 任何实现轮必须逐条满足，审计轮逐条复核。
 
-- `CTR-ORI-001`（形态白名单）——`authServiceOrigin` 必须能被 WHATWG
-  URL（Node `new URL()`）解析，且 `protocol ∈ {'http:', 'https:'}`；
-  任何其他 scheme（含解析失败）非法。`protocol === 'http:'` 当且仅当
-  同时满足 CTR-ORI-002 与 CTR-ORI-004 的回环条件；否则必须
-  `protocol === 'https:'`。
-- `CTR-ORI-002`（host 精确为 127.0.0.1，仅对 http 形态）——http 形态
-  要求 `parsed hostname === '127.0.0.1'`（DEC-001 语义）。因此
-  **禁止**（http 形态下）：`localhost`、`0.0.0.0`、`[::1]`（IPv6
-  回环不是本契约的字面量）、任何域名、任何非 `127.0.0.1` 的 IP
-  （含 `10.0.0.0/8`、`172.16.0.0/12`、`192.168.0.0/16` 等全部私网/
-  局域网段）。HTTPS 形态的 host 遵循标准 URL host 规则（域名或 IP
-  字面量均可），本层不另设 host allowlist。
-- `CTR-ORI-003`（path/query/hash/userinfo，对两种形态一律适用）——
-  `parsed pathname === '/'`（恰为根，无任何 segment）；`parsed search
-  === ''`（无 query）；`parsed hash === ''`（无 fragment）；
-  `parsed username === '' && parsed password === ''`（无 userinfo）。
-  违反任一项即非法（token endpoint 路径是代码常量
-  `/oauth/token`，origin 里出现任何 path/query/hash/userinfo 都是
-  配置错误且可能改写最终 URL）。
-- `CTR-ORI-004`（端口）——http 回环形态必须携带**显式十进制端口**且
-  `1 <= port <= 65535`（`port === ''` 与 `port === '0'` 均非法，DEC-002）；
-  HTTPS 形态端口可选（省略 = 443）。
+- `CTR-ORI-001`（形态白名单与检查顺序）——校验必须先检查原始字符串，
+  再调用 WHATWG URL（Node `new URL()`）；不得用 WHATWG 规范化结果替代
+  CTR-ORI-002/003/004 的原始形态检查。原始检查通过后，输入仍必须能被
+  WHATWG parse，且 parsed `protocol ∈ {'http:', 'https:'}`；任何其他
+  scheme（含解析失败）非法。不满足 HTTP 原始字面量白名单的 origin 必须
+  为 HTTPS。
+- `CTR-ORI-002`（原始 HTTP authority host 精确为 127.0.0.1）——对原始
+  scheme token 为 HTTP（ASCII 大小写不敏感）的输入，在 WHATWG parse
+  **之前**提取原始 authority；authority 必须恰由 host、一个端口分隔冒号
+  和端口组成，不得含 `@`。其中 host 必须逐字符等于 `127.0.0.1`。
+  **禁止**：`127.1`、`127.000.000.001`、`2130706433`、
+  `0x7f.0.0.1`、`127.0.0.1.`、`localhost`、任何 IPv6（含 `[::1]`）、
+  `0.0.0.0`、任何域名及任何其他 IP（含全部私网/局域网段）。HTTPS
+  形态的 host 遵循标准 URL host 规则，本层不另设 host allowlist。
+- `CTR-ORI-003`（原始 path/query/hash + userinfo，对两种形态一律适用）——
+  原始 authority 后的 path 只允许**省略**或恰为 `/`；任何其他 path
+  均非法，尤其禁止 `/.`、`/./`、`/..`、`/../`、`/a/../` 及其 percent-
+  encoded dot-segment 等会被 WHATWG 消解/规范化的形态。原始输入中不得
+  出现 query delimiter `?` 或 fragment delimiter `#`，无论其后内容为空
+  或非空；因此空 query `...?` 与空 fragment `...#` 也必须拒绝。原始
+  authority 不得含 userinfo，且 parsed `username === '' && password === ''`。
+  违反任一项即非法（token endpoint 路径是代码常量 `/oauth/token`）。
+- `CTR-ORI-004`（端口）——HTTP 回环形态必须在原始 authority 中携带
+  **显式 ASCII 十进制端口**，且数值 `1..65535`；必须基于原始 authority
+  区分省略端口与显式 `:80`，即省略非法、显式 `:80` 合法，即使 WHATWG
+  对两者都可能给出 parsed `port === ''`。空端口、`0`、`65536`、带符号
+  或非十进制端口均非法。HTTPS 形态端口可选（省略 = 443）。
 - `CTR-ORI-005`（校验落点与失败模式）——形态校验的**强制**落点是
   `requestAccessToken`（DEC-004；覆盖 gateway transport / gateway
   LOCAL grant check / compose `assertGrant` 全部调用方）。非法 origin
@@ -390,45 +406,62 @@ M packages/broker/test/gateway.test.js        （gateway 路径 e2e：非法 ori
 
 | # | 输入 | 拒绝依据 |
 |---|---|---|
-| R1 | `http://localhost:4001/` | http + hostname `localhost` ≠ `127.0.0.1`（CTR-ORI-002） |
-| R2 | `http://0.0.0.0:4001/` | http + `0.0.0.0` 非回环连接字面量（CTR-ORI-002） |
-| R3 | `http://[::1]:4001/` | IPv6 回环非本契约字面量（hostname 序列化 `[::1]`）（CTR-ORI-002） |
-| R4 | `http://192.168.1.10:4001/` | 局域网段明文（CTR-ORI-002） |
-| R5 | `http://10.0.0.5:4001/` | 私网段明文（CTR-ORI-002） |
-| R6 | `http://172.16.0.5:4001/` | 私网段明文（CTR-ORI-002） |
-| R7 | `http://auth.internal:4001/` | 域名明文（CTR-ORI-002） |
-| R8 | `http://127.0.0.1:4001/prefix` | path ≠ `/`（CTR-ORI-003） |
-| R9 | `http://127.0.0.1:4001/?audience=x` | query 存在（CTR-ORI-003） |
-| R10 | `http://127.0.0.1:4001/#frag` | fragment 存在（CTR-ORI-003） |
-| R11 | `http://user:secret@127.0.0.1:4001/` | userinfo 存在（CTR-ORI-003） |
-| R12 | `http://127.0.0.1` | http 形态无显式端口（CTR-ORI-004） |
-| R13 | `http://127.0.0.1:0/` | 端口 0（CTR-ORI-004） |
-| R14 | `ftp://127.0.0.1:4001/` | scheme ∉ {http, https}（CTR-ORI-001） |
-| R15 | `127.0.0.1:4001`（无 scheme） | URL 解析失败（CTR-ORI-001 / CLM-003） |
-| R16 | `https://auth.example.com/path` | HTTPS 但 path ≠ `/`（CTR-ORI-003 对两形态一律适用） |
-| R17 | `https://user@auth.example.com/` | HTTPS 但 userinfo 存在（CTR-ORI-003） |
-| R18 | `https://auth.example.com/?x=1` | HTTPS 但 query 存在（CTR-ORI-003） |
+| R1 | `http://127.1:4001/` | 原始 HTTP host 不是逐字符 `127.0.0.1`（CTR-ORI-002） |
+| R2 | `http://2130706433:4001/` | 整数 IPv4 alias（CTR-ORI-002） |
+| R3 | `http://0x7f.0.0.1:4001/` | 十六进制 IPv4 alias（CTR-ORI-002） |
+| R4 | `http://127.000.000.001:4001/` | 非规范 IPv4 alias（CTR-ORI-002） |
+| R5 | `http://127.0.0.1.:4001/` | 尾点 host（CTR-ORI-002） |
+| R6 | `http://localhost:4001/` | hostname `localhost` 非允许字面量（CTR-ORI-002） |
+| R7 | `http://0.0.0.0:4001/` | 非允许 IP 字面量（CTR-ORI-002） |
+| R8 | `http://[::1]:4001/` | IPv6 回环（CTR-ORI-002） |
+| R9 | `http://[2001:db8::1]:4001/` | IPv6 非回环（CTR-ORI-002） |
+| R10 | `http://192.168.1.10:4001/` | 局域网段明文（CTR-ORI-002） |
+| R11 | `http://10.0.0.5:4001/` | 私网段明文（CTR-ORI-002） |
+| R12 | `http://172.16.0.5:4001/` | 私网段明文（CTR-ORI-002） |
+| R13 | `http://auth.internal:4001/` | 域名明文（CTR-ORI-002） |
+| R14 | `http://127.0.0.1:4001/prefix` | 原始 path 非 empty 或 `/`（CTR-ORI-003） |
+| R15 | `http://127.0.0.1:4001/./` | dot-segment path（CTR-ORI-003） |
+| R16 | `http://127.0.0.1:4001/a/../` | 可规范化为根的 dot-segment path（CTR-ORI-003） |
+| R17 | `http://127.0.0.1:4001/?audience=x` | 非空 query（CTR-ORI-003） |
+| R18 | `http://127.0.0.1:4001/?` | 空 query delimiter 仍存在（CTR-ORI-003） |
+| R19 | `http://127.0.0.1:4001/#frag` | 非空 fragment（CTR-ORI-003） |
+| R20 | `http://127.0.0.1:4001/#` | 空 fragment delimiter 仍存在（CTR-ORI-003） |
+| R21 | `http://user:secret@127.0.0.1:4001/` | userinfo 存在（CTR-ORI-002/003） |
+| R22 | `http://127.0.0.1` | HTTP 形态省略端口（CTR-ORI-004） |
+| R23 | `http://127.0.0.1:0/` | 端口 0（CTR-ORI-004） |
+| R24 | `http://127.0.0.1:65536/` | 端口超范围（CTR-ORI-004） |
+| R25 | `ftp://127.0.0.1:4001/` | scheme ∉ {http, https}（CTR-ORI-001） |
+| R26 | `127.0.0.1:4001`（无 scheme） | URL 解析失败（CTR-ORI-001 / CLM-003） |
+| R27 | `https://auth.example.com/path` | HTTPS 但 path 非 empty 或 `/`（CTR-ORI-003） |
+| R28 | `https://auth.example.com/./` | HTTPS dot-segment path（CTR-ORI-003） |
+| R29 | `https://user@auth.example.com/` | HTTPS 但 userinfo 存在（CTR-ORI-003） |
+| R30 | `https://auth.example.com/?x=1` | HTTPS 非空 query（CTR-ORI-003） |
+| R31 | `https://auth.example.com/?` | HTTPS 空 query（CTR-ORI-003） |
+| R32 | `https://auth.example.com/#frag` | HTTPS 非空 fragment（CTR-ORI-003） |
+| R33 | `https://auth.example.com/#` | HTTPS 空 fragment（CTR-ORI-003） |
 
 ### 10.3 冻结 accept 向量表
 
 | # | 输入 | 说明 |
 |---|---|---|
-| A1 | `http://127.0.0.1:4001/` | 冻结生产值（CTR-ORI-008） |
-| A2 | `http://127.0.0.1:8443/` | 任意显式合法端口 |
-| A3 | `https://auth.example.com/` | 非回环 HTTPS（CTR-ORI-001） |
-| A4 | `https://auth.example.com:8443/` | HTTPS + 显式端口 |
-| A5 | `https://127.0.0.1:9443/` | 回环上的 HTTPS（允许；严于要求） |
-| A6 | `http://127.1:4001/` | parsed-hostname 等值（DEC-001；解析后 hostname = `127.0.0.1`，OBS-005(a)；同判适用 `127.000.000.001` / `2130706433` / `0x7f.0.0.1` / 尾点形式） |
+| A1 | `http://127.0.0.1:4001` | 冻结生产值（CTR-ORI-008） |
+| A2 | `http://127.0.0.1:4001/` | 冻结生产值的显式根路径等价形态 |
+| A3 | `http://127.0.0.1:80/` | 显式 `:80`；必须与省略端口区分（DEC-002） |
+| A4 | `http://127.0.0.1:8443/` | 任意显式合法端口 |
+| A5 | `https://auth.example.com/` | 非回环 HTTPS（CTR-ORI-001） |
+| A6 | `https://auth.example.com:8443/` | HTTPS + 显式端口 |
+| A7 | `https://127.0.0.1:9443/` | 回环上的 HTTPS（允许；严于要求） |
 
-accept 判定的运行时断言：token 请求 URL 恰为
-`${origin}/oauth/token`（无双重斜杠、无残留组件）。
+accept 判定的运行时断言：token 请求 URL 恰有一个 `/oauth/token` path
+分隔，无双重斜杠、无残留组件。
 
 ### 10.4 验收项（ACC）
 
-- `ACC-ORI-001`（reject 全表 + 零网络）——§10.2 R1..R18 逐项：校验
-  抛错且注入的 `fetchImpl` 调用数 = 0。
-- `ACC-ORI-002`（accept 全表 + 精确 URL）——§10.3 A1..A6 逐项：token
-  请求发出且 URL 恰为 `${origin}/oauth/token`。
+- `ACC-ORI-001`（reject 全表 + 零网络）——§10.2 R1..R33 逐项：校验
+  抛错且注入的 `fetchImpl` 调用数 = 0；尤其 alias host、空 query/
+  fragment、dot-segment 与省略端口不得因 WHATWG 规范化而漏过。
+- `ACC-ORI-002`（accept 全表 + 精确 URL）——§10.3 A1..A7 逐项：token
+  请求发出且最终 URL 恰有一个 `/oauth/token` path 分隔。
 - `ACC-ORI-003`(redirect 禁令)——token endpoint 以 301/302/307/308
   （`Location` 指向攻击者 origin）响应时：DENIAL；`fetchImpl` 以
   `redirect: 'error'`（或等价）调用；不出现第二次请求；Basic 凭据
