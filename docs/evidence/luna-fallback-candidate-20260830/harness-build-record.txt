@@ -1,0 +1,15 @@
+HARNESS CANDIDATE BUILD RECORD (备用 执行, 2026-08-30)
+source worktree   = /Users/yanfenma/workspace/github/deepseek-harness-clean-coldbackup-514ab7b (git worktree, branch master @ 514ab7b)
+build commit      = 514ab7b0029141b88c807704764d0d3e1eea1da4 (= Parent V2 POL-V2-010 DSH_COMMIT_PIN; on harness origin/master)
+package           = @deepseek-ai/dsh-root 0.1.0-rc.8 (= DSH_VERSION_PIN)
+pre-build state   = git status --porcelain EMPTY (dirtyCount measured 0 — honest, not assumed)
+build command     = corepack pnpm build   (packageManager pnpm@11.7.0 via corepack; scripts/build.ts)
+build environment = node v25.6.1 / darwin arm64 / pnpm 11.7.0 (exact packageManager version)
+build result      = exit 0 in ~25s (lib outputs incl. apps/cli/lib/bin.js; "recorded 200 client artifact(s)")
+post-build state  = git status --porcelain EMPTY (0 entries); git diff HEAD --stat EMPTY (tracked files untouched by build)
+installed tree    = rsync -a --exclude=.git --exclude=.source-stamp <worktree>/ -> <candidate>/harness/ (1.0G incl. node_modules, mirrors deployed form which also ships node_modules)
+runtime stamp     = harness/.source-stamp = {"commit":"514ab7b0029141b88c807704764d0d3e1eea1da4","dirtyCount":0}  (exact DEC-V2-001 closed schema, mode 0644)
+artifact          = artifacts/harness-installed-tree.tar (COPYFILE_DISABLE=1 tar -cf; full installed tree incl. embedded .source-stamp)
+artifact digest   = sha256 14e62445d67045c6b761385cbdc9a7fef03d12022342896c082e6ceed91485aa, 1,031,446,528 bytes
+mutual binding    = stamp JSON records the artifact digest; the artifact embeds the runtime .source-stamp carrying the commit — digest+commit+stamp are one closure; bsdtar (no GNU deterministic flags on darwin): digest binds THIS produced artifact byte-for-byte; reproducibility = exact commit + recorded command/env, not cross-host bit-identity
+rich stamp        = stamps/candidate-harness-stamp.json (repository/commit/builtAt/dirty=false/artifact digest/build command+versions/pins)

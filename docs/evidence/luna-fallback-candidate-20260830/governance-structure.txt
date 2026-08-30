@@ -1,0 +1,15 @@
+=== verify_governance (vendored bytes match) ===
+vendored governance bytes match governance.lock.json
+rc=0
+
+=== verify:structure ===
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/test/self-service.test.js
+  WARNING  [FILE_WARNING_LINES] packages/scheduler/test/store-v2.test.js
+  WARNING  [FILE_WARNING_LINES] scripts/agent-core-backup-ops.sh
+  WARNING  [FILE_WARNING_LINES] scripts/agent-router-delivery-v0-verify.mjs
+  ... 6 more warnings
+rc=0
+
+=== git diff --check (whitespace) ===
+       0
+       0
