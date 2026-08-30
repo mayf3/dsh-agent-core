@@ -1,10 +1,12 @@
 ---
 spec_id: AGENT_CORE_BROKER_CAPABILITIES_TEST_DECOMPOSITION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
+accepted_date: 2026-08-30
+accepted_reviewed_head: deda45d87635c577be37d6402ba1c26c8a483428
 scope:
   - mayf3/dsh-agent-core
   - packages/broker/test capability baseline decomposition only
@@ -29,6 +31,17 @@ owners:
 > 本 Spec 只有在独立“拆测 审计”通过、完成 lifecycle acceptance 并进入未来实现基线后，
 > 才能成为共享测试拆分 authority。`PRODUCT_CODE_CHANGE = NONE`；
 > `PRODUCTION_CHANGE = NONE`。
+>
+> **ACCEPTED（2026-08-30，联动 执行 / COORDINATED_ACCEPTANCE_AND_MERGE）。**
+> 生命周期 acceptance：`status: proposed -> accepted`；
+> `implementation_authority: none -> contracts`（成为共享测试拆分 authority；
+> 依据 §5 exact 8-path 闭包授权 拆测 执行轮）；`PRODUCTION_APPLY_AUTHORITY =
+> none` 保持。authoring 轮 reviewed head =
+> `deda45d87635c577be37d6402ba1c26c8a483428`（fresh fetch 核对无漂移），加本
+> acceptance commit。独立审计 verdict 未经独立审计轮产生——本 acceptance 为
+> Owner-directed 协调 acceptance（§10 如实记录，不声明任何独立审计 verdict）。
+> 本事务 docs-only：不实现 8-path、不 deploy、不改 PR #101/#102/#108/#109/#110。
+> 完整记录见 §10。
 
 ## 1. Goal
 
@@ -262,3 +275,55 @@ PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 NEXT_TASK = 拆测 审计
 ```
+
+## 10. Acceptance Record (2026-08-30, 联动 执行 / COORDINATED_ACCEPTANCE_AND_MERGE)
+
+ACCEPTANCE_TRANSACTION = LIFECYCLE_ONLY，ONE commit，ONE file（本文件）。
+
+- 事务：TASK_NAME = 联动 执行；TASK_TYPE = COORDINATED_ACCEPTANCE_AND_MERGE；
+  独立 worktree；authoring-round reviewed head =
+  `deda45d87635c577be37d6402ba1c26c8a483428`（fresh fetch 核对无漂移）+ 本
+  acceptance commit。main 状态坐标：authoring base f54679c；本事务执行时 main
+  已含并行的 PR #111（冷备 执行，merge b53ebd6）——与本文档零文件重叠，纯
+  lifecycle 无关。
+- **权威协调上下文**：本 acceptance 与姊妹协调 PR #108/#109/#110（Global
+  Instances V2 successor / Domain Pagination V2 successor / Transition focused
+  amendment）属同一 联动 执行 协调事务，按 Owner 编排顺序 #107 → #108 → #109
+  → #110 逐 PR 顺序 merge（本事务其后立即依次 merge）。结束态满足 §8 步骤 3–4：
+  冲突 accepted authorities（Global V1 / Pagination V1 闭包、Transition §2 落点）
+  已由三份协调 authority 解消，本 Spec 已 accepted、实现基线就绪；
+  #108/#109/#110 已显式 adopt DEC-006 路径（各自 acceptance 记录绑定）。
+- **独立审计状态（如实记录）**：本事务为 Owner-directed 协调 acceptance；
+  独立「拆测 审计」轮未在本事务之前运行；§8 步骤 2 的审计项按 Owner 编排后置
+  （NEXT_TASK = 拆测 执行 轮将实现 §5 exact 8-path 闭包；实现轮审计随实现
+  验收执行）。本记录**不声明任何独立审计 verdict**——没有审计 verdict 可记录，
+  不伪造 `independent_audit_result` 类字段。机械化验证在 authoring head 与
+  acceptance head 全部实测 PASS：frontmatter schema、`verify_governance.py`
+  （vendored bytes 匹配）、`npm run verify:structure`（0 violations）、
+  `git diff --check`、Broker 基线 `node --test` = 173/173。
+- 语义变化 = STATUS_MIRROR_AND_PROVENANCE_ONLY：本事务仅翻转 status
+  （proposed → accepted）、翻转 implementation_authority（none → contracts）、
+  记录 acceptance provenance（frontmatter 字段 + 头部引注 + 本节）；§1–§9 全部
+  冻结内容（§3 DEC-001..007、§5 exact 8-path closure、§6 scratch evidence、
+  §7 ACC-001..008、§8 生命周期序列、§9 authoring result）逐字节保留；正文中
+  先于 acceptance 的条件句（§1「只有在独立拆测 审计通过…」、§7「任一
+  acceptance contract 不满足，implementation 不得 merge」、§8 步骤 2、§9
+  `NEXT_TASK = 拆测 审计`）按既有纪律作为历史记录原样保留。
+- 授权生效语义：本 Spec merged on main 起成为共享测试拆分 authority
+  （`implementation_authority = contracts`）；拆测 执行 轮的实现按 §5 exact
+  8-path 闭包在独立 worktree 从 fresh merged main 进行；实现 PR 不得修改本
+  文件（GOVERNING_SPEC_UNMODIFIED）；`production_apply_authority = none` ——
+  deploy / restart / production state 变更仍需独立授权。
+- 协调文档冻结：DEC-006 dedicated homes（Global V2 =
+  `capabilities/workflow-global-instances-v2.test.js`、Pagination V2 =
+  `capabilities/workflow-domain-pagination-v2.test.js`、Transition =
+  `capabilities/workflow-transition.test.js`）与 DEC-003 aggregate owner
+  （`capabilities/manifest-inventory.test.js`）已由 #108/#109/#110 显式采用；
+  inventory 协调序 = 分解保持 13 → Global V2 13→14 → Transition 14→15；
+  Pagination V2 不改变计数。
+- 事务边界：DOCS_ONLY；PRODUCT_CODE_CHANGE = NONE；PRODUCTION_CHANGE = NONE；
+  packages/、scripts/、.agents/**、production 均不动；PR #101/#102 不被本事务
+  修改（其处置按 §8 步骤 7 属实现轮之后的独立未来轮次）；#108/#109/#110 仅在
+  其自己的 acceptance 轮被推进。
+- Merge：本 commit 之后随即 mark ready 并 merge PR #107（merge commit 为本
+  Spec 的 effective-on-main 坐标，记录于 merge 后的 main lineage）。
