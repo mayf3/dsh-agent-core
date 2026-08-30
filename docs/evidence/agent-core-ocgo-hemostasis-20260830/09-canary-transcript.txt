@@ -1,0 +1,58 @@
+# CANARY transcript (isolated, zero production writes) — 2026-08-30T14:44:16Z
+## runtime.log (full)
+[production-runtime] root=/private/tmp/zhixue-canary/root tickMs=500 concurrency=2 catchup=false
+[production-runtime] agent definition loaded: 1 agent(s), default=agt_shopping-list-agent (止血Canary)
+[production-runtime] WARN feishu credentials not configured (FEISHU_CREDS_PATH=/private/tmp/zhixue-canary/nonexistent-feishu-creds.json); channel OFF — delivery-requesting jobs will be marked not-delivered
+[router] binding store loaded: 0 binding(s) from /private/tmp/zhixue-canary/root/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 13 http capabilities ready, 3 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:18800 (deliverReady=true storeReady=true)
+[production-runtime] production runtime ready (pid 79134); scheduler loop online; ingress http://127.0.0.1:18800/health
+[router] [router] spawn helper /usr/local/libexec/dsh-agent-spawn-helper -> child uid 502 gid 20
+[router] route-chain {"kind":"route_attempt","tsWallMs":1788100660068,"routeChainId":"chain-agt_shopping-list-agent-af1eb808735ff68f","agentId":"agt_shopping-list-agent","attemptIndex":0,"route":"global:zai/glm-5.3","primaryRoute":"global:zai/glm-5.3","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:unknown_failure_class"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1788100660068,"routeChainId":"chain-agt_shopping-list-agent-af1eb808735ff68f","agentId":"agt_shopping-list-agent","primaryRoute":"global:zai/glm-5.3","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] [router] spawn helper /usr/local/libexec/dsh-agent-spawn-helper -> child uid 502 gid 20
+[router] route-chain {"kind":"route_attempt","tsWallMs":1788100879318,"routeChainId":"chain-agt_shopping-list-agent-af1eb808735ff68f","agentId":"agt_shopping-list-agent","attemptIndex":0,"route":"global:zai/glm-5.3","primaryRoute":"global:zai/glm-5.3","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:unknown_failure_class"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1788100879318,"routeChainId":"chain-agt_shopping-list-agent-af1eb808735ff68f","agentId":"agt_shopping-list-agent","primaryRoute":"global:zai/glm-5.3","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] [router] spawn helper /usr/local/libexec/dsh-agent-spawn-helper -> child uid 502 gid 20
+[router] [router] agent agt_shopping-list-agent ready pid=2193 (1171ms)
+[router] [router] agent agt_shopping-list-agent: session cron-run-occ:14505637bc5088cb created (0 events)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1788101006847,"routeChainId":"chain-agt_shopping-list-agent-af1eb808735ff68f","agentId":"agt_shopping-list-agent","attemptIndex":0,"route":"global:zai/glm-5.3","primaryRoute":"global:zai/glm-5.3","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1788101006847,"routeChainId":"chain-agt_shopping-list-agent-af1eb808735ff68f","agentId":"agt_shopping-list-agent","primaryRoute":"global:zai/glm-5.3","finalRoute":"global:zai/glm-5.3","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[production-runtime] SIGTERM received — graceful stop
+[production-runtime] stopped cleanly
+## runs.jsonl (all 3 diagnostic jobs: 2 failed pre-fix, 1 succeeded post-fix)
+{"ts":1788100658603,"action":"occurrence_reserved","occurrenceId":"occ:0b8614036c6e9cc6","runId":"run:occ:0b8614036c6e9cc6","jobId":"23ae7d0c-5bfd-4cc5-b708-4172e6671596","kind":"natural","nominal":1788100658591,"scheduleRevision":1,"payloadHash":"sha256:68ec6909a79aa9ae5e020a218d572724d1f0594dd39c820f39fccd8635fe6a27","executionDeadlineAtMs":1788104258603}
+{"ts":1788100658621,"action":"router_admission","phase":"attempted","occurrenceId":"occ:0b8614036c6e9cc6","runId":"run:occ:0b8614036c6e9cc6","requestId":"occ:0b8614036c6e9cc6"}
+{"ts":1788100660069,"action":"router_admission","phase":"error","occurrenceId":"occ:0b8614036c6e9cc6","runId":"run:occ:0b8614036c6e9cc6","requestId":"occ:0b8614036c6e9cc6","error":"initialize failed for agent agt_shopping-list-agent: child exited (1)"}
+{"ts":1788100660076,"action":"outcome","occurrenceId":"occ:0b8614036c6e9cc6","runId":"run:occ:0b8614036c6e9cc6","state":"failed","executionOutcome":"failed","deliveryStatus":"not-requested","reason":"initialize failed for agent agt_shopping-list-agent: child exited (1)","jobId":"23ae7d0c-5bfd-4cc5-b708-4172e6671596"}
+{"ts":1788100660076,"action":"delivery","occurrenceId":"occ:0b8614036c6e9cc6","runId":"run:occ:0b8614036c6e9cc6","deliveryStatus":"not-requested"}
+{"ts":1788100878022,"action":"occurrence_reserved","occurrenceId":"occ:a9ed5ab3dd1390e0","runId":"run:occ:a9ed5ab3dd1390e0","jobId":"7499a038-ac8c-443e-b152-db3481c2aeca","kind":"natural","nominal":1788100877608,"scheduleRevision":1,"payloadHash":"sha256:1b5c1ffaf4065047004c97a594e088577c0e0ef926b535f79d9452d100e66104","executionDeadlineAtMs":1788104478022}
+{"ts":1788100878037,"action":"router_admission","phase":"attempted","occurrenceId":"occ:a9ed5ab3dd1390e0","runId":"run:occ:a9ed5ab3dd1390e0","requestId":"occ:a9ed5ab3dd1390e0"}
+{"ts":1788100879321,"action":"router_admission","phase":"error","occurrenceId":"occ:a9ed5ab3dd1390e0","runId":"run:occ:a9ed5ab3dd1390e0","requestId":"occ:a9ed5ab3dd1390e0","error":"initialize failed for agent agt_shopping-list-agent: child exited (1)"}
+{"ts":1788100879328,"action":"outcome","occurrenceId":"occ:a9ed5ab3dd1390e0","runId":"run:occ:a9ed5ab3dd1390e0","state":"failed","executionOutcome":"failed","deliveryStatus":"not-requested","reason":"initialize failed for agent agt_shopping-list-agent: child exited (1)","jobId":"7499a038-ac8c-443e-b152-db3481c2aeca"}
+{"ts":1788100879328,"action":"delivery","occurrenceId":"occ:a9ed5ab3dd1390e0","runId":"run:occ:a9ed5ab3dd1390e0","deliveryStatus":"not-requested"}
+{"ts":1788100996243,"action":"occurrence_reserved","occurrenceId":"occ:14505637bc5088cb","runId":"run:occ:14505637bc5088cb","jobId":"77d9a4f6-146e-46ba-b6e3-2b352ba11c32","kind":"natural","nominal":1788100996011,"scheduleRevision":1,"payloadHash":"sha256:0097e3d4452ec5d813e78f52bcdb3a8776ec4bcd05cbd502062fa3e9a374cc7c","executionDeadlineAtMs":1788104596243}
+{"ts":1788100996266,"action":"router_admission","phase":"attempted","occurrenceId":"occ:14505637bc5088cb","runId":"run:occ:14505637bc5088cb","requestId":"occ:14505637bc5088cb"}
+{"ts":1788100997448,"action":"turn_start","occurrenceId":"occ:14505637bc5088cb","runId":"run:occ:14505637bc5088cb"}
+{"ts":1788101006847,"action":"router_admission","phase":"accepted","occurrenceId":"occ:14505637bc5088cb","runId":"run:occ:14505637bc5088cb","requestId":"occ:14505637bc5088cb","reconciliationHandle":"turn:fb5d6195-44bb-4cb4-ba55-72c48fa7ae3a:a1:g3:s1","evidence":{"eventWatermarkSeq":0,"promptRequestId":"req-3-3","messageId":"3dd1acea-71ab-4451-aeec-2634256e6765","promptReceipt":"accepted","terminationEvidence":"exact_terminal_then_idle","phase":"terminal"}}
+{"ts":1788101006852,"action":"outcome","occurrenceId":"occ:14505637bc5088cb","runId":"run:occ:14505637bc5088cb","state":"succeeded","executionOutcome":"succeeded","deliveryStatus":"not-requested","reason":"invoker returned terminal success","jobId":"77d9a4f6-146e-46ba-b6e3-2b352ba11c32"}
+{"ts":1788101006852,"action":"delivery","occurrenceId":"occ:14505637bc5088cb","runId":"run:occ:14505637bc5088cb","deliveryStatus":"not-requested"}
+## runtime-evidence.jsonl invocation entries
+{"kind":"invocation","pid":79134,"agentId":"agt_shopping-list-agent","sessionId":"cron-run-occ:0b8614036c6e9cc6","status":"error","summary":null,"error":"initialize failed for agent agt_shopping-list-agent: child exited (1)","reconciliationHandle":null,"deadlineAtWallMs":null,"evidence":null,"durationMs":1443,"routerProcessPid":null,"routerProcessAlive":null,"ts":1788100660068}
+{"kind":"invocation","pid":79134,"agentId":"agt_shopping-list-agent","sessionId":"cron-run-occ:a9ed5ab3dd1390e0","status":"error","summary":null,"error":"initialize failed for agent agt_shopping-list-agent: child exited (1)","reconciliationHandle":null,"deadlineAtWallMs":null,"evidence":null,"durationMs":1277,"routerProcessPid":null,"routerProcessAlive":null,"ts":1788100879319}
+{"kind":"invocation","pid":79134,"agentId":"agt_shopping-list-agent","sessionId":"cron-run-occ:14505637bc5088cb","status":"ok","summary":"ZHIXUE_OK","error":null,"reconciliationHandle":"turn:fb5d6195-44bb-4cb4-ba55-72c48fa7ae3a:a1:g3:s1","deadlineAtWallMs":null,"evidence":{"eventWatermarkSeq":0,"promptRequestId":"req-3-3","messageId":"3dd1acea-71ab-4451-aeec-2634256e6765","promptReceipt":"accepted","terminationEvidence":"exact_terminal_then_idle","phase":"terminal"},"durationMs":10577,"routerProcessPid":2193,"routerProcessAlive":true,"ts":1788101006847}
+## session provider/model census
+   7 "model":"glm-5.3"
+   1 "provider":"session-title-first-prompt-llm"
+   7 "provider":"zai"
+ZHIXUE_OK occurrences:
+6
+## settings diff vs cto (pre-fix snapshot preserved at settings-before-stanza.yaml)
+13a14,17
+>     zai:
+>       apiKeyEnv: ZAI_API_KEY
+>       models:
+>         - id: glm-5.3

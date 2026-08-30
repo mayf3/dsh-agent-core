@@ -1,0 +1,6 @@
++zsh:3> echo '# PREFLIGHT plist snapshot 2026-08-30T14:32:11Z'
+# PREFLIGHT plist snapshot 2026-08-30T14:32:11Z
++zsh:3> stat -f 'stat: %Sp %Su:%Sg %z bytes mtime=%Sm' /Library/LaunchDaemons/ai.agent-core.runtime.plist
+stat: -rw-r--r-- root:wheel 2433 bytes mtime=Aug 25 21:17:19 2026
++zsh:3> shasum -a 256 /Library/LaunchDaemons/ai.agent-core.runtime.plist
+9019f07178c13b0caa0d0dacfdc952665ddc20b2ab42b9076e28dd089004566b  /Library/LaunchDaemons/ai.agent-core.runtime.plist
