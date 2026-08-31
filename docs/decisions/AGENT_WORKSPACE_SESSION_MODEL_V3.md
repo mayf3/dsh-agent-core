@@ -1,10 +1,9 @@
 # AGENT_WORKSPACE_SESSION_MODEL_V3 — Agent / Workspace / Session / main 长期产品模型 Current Decision
 
-- 状态: proposed（**standalone replacement candidate**；独立审阅并 accepted 前，V2 仍是
-  Current Authority；V3 accepted 后整份取代 V2）
+- 状态: accepted（2026-09-01；**standalone Current Authority**；整份取代 D-006 / V2）
 - decision id: `D-008`
 - 日期: 2026-08-31
-- 类型: 正式决策候选（完整 Current Decision，不是 V2 §11 amendment）
+- 类型: 正式决策（完整 Current Decision，不是 V2 §11 amendment）
 - 范围: 只改 Decision/docs（PRODUCT_CODE_CHANGE = NONE / PRODUCTION_CHANGE = NONE /
   RUNTIME_CHANGE = NONE / ROUTER_CHANGE = NONE / BROKER_CHANGE = NONE /
   SCHEDULER_CHANGE = NONE / WORKFLOW_CHANGE = NONE / MIGRATION = NONE /
@@ -12,7 +11,12 @@
 - fresh authoring base: `mayf3/dsh-agent-core origin/main@1a9b81de19c2bf4af01f62f6189acffc1bb6839d`
 - base current decision: `D-006` / `docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md`（accepted）
   blob `c991010712f4c3a9b826bb38eac16189691bcc3f`
-- supersedes on acceptance: `D-006` / `AGENT_WORKSPACE_SESSION_MODEL_V2`（整份）
+- supersedes: `D-006` / `AGENT_WORKSPACE_SESSION_MODEL_V2`（整份；acceptance transaction
+  已同步将 D-006 标记为 superseded-by-D-008）
+- Acceptance provenance: reviewed head
+  `70bd5b2ed064a19f3e99a58e2454c3172c512bf9`；`模型 审计 = PASS`；
+  `BLOCKER/HIGH/MEDIUM = 0/0/0`；`SEMANTIC_DELTA_AFTER_REVIEW = NONE`；
+  accepted by Owner `mayf3` at `2026-08-31T21:56:51Z`。
 - read-only proposed input: `AGENT_CORE_AGENT_SESSION_MESSAGING_V1 r2`
   （`sha256:20820492d1b65842b0c607ee013baca1d5a3d6377b072d8914405eabff99d169`；
   不随本 Decision 提交、不在本轮接受或实现）
@@ -1061,7 +1065,7 @@ address、lifecycle 与 transcript ownership 问题。
 
 ---
 
-## Final Output
+## Final Output（accepted）
 
 ```text
 TASK_NAME = 模型 执行
@@ -1069,10 +1073,10 @@ TASK_TYPE = CURRENT_DECISION_V3_AUTHORING_ONLY
 
 SPEC_GOVERNANCE_MODE = AUTHOR
 AUTHORITY_KIND = CURRENT_DECISION
-STATUS = proposed
+STATUS = accepted
 IMPLEMENTATION_AUTHORITY = none
 OPEN_OWNER_DECISIONS = NONE
-OWNER_ACCEPTANCE_REQUIRED = YES
+OWNER_ACCEPTANCE_REQUIRED = NO
 NORMATIVE_TBD = NONE
 NEW_PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = NOT_APPLICABLE_CURRENT_DECISION
@@ -1098,7 +1102,7 @@ LONG_LIVED_PAIR_SESSION = NO
 SESSION_SELECTION_DEPENDS_ON = INTERACTION_PRIMITIVE
 
 V2_DISPOSITION = SUPERSEDED_BY_V3
-  (effective when V3 is accepted; before acceptance V2 remains Current Authority)
+  (activated by the 2026-09-01 atomic Owner acceptance transaction)
 
 V2_CORE_ALIGNMENT_SPEC_DISPOSITION = PRESERVE
   STILL_VALID_FOR_ITS_IMPLEMENTATION_SCOPE because Feishu → Agent primary Workspace → canonical
@@ -1137,6 +1141,11 @@ WORKFLOW_CHANGE = NONE
 MIGRATION = NONE
 DEPLOYMENT = NONE
 
-READY_FOR_INDEPENDENT_REVIEW = YES
-NEXT_TASK = 模型 审计
+ACCEPTED_REVIEWED_HEAD = 70bd5b2ed064a19f3e99a58e2454c3172c512bf9
+INDEPENDENT_REVIEW = 模型 审计 = PASS
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+ACCEPTED_BY = mayf3
+ACCEPTED_AT = 2026-08-31T21:56:51Z
+CURRENT_AUTHORITY_AFTER_ACCEPTANCE = D-008
+NEXT_TASK = 会话 执行
 ```
