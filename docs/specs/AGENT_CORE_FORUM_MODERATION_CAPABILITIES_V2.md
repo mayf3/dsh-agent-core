@@ -63,6 +63,22 @@ owners:
 > byte-identical — §19). `PRODUCTION_APPLY_AUTHORITY` stays `none`. In the same
 > atomic transaction V1 flipped to `superseded` with `superseded_by` naming this
 > Spec (backlinks change atomically per `SPEC_FORMAT_V0` §2.7).
+>
+> **FOCUSED ACCEPTANCE AMENDMENT (版管 修订).** This docs-only amendment corrects
+> only four acceptance obligations: writer-only moderator authorization reaches
+> Credential and Auth token mint once before Auth denies it; four short
+> scheme-credential sanitizer canaries are mandatory; every one of the 13 new
+> tools covers every required success/failure channel plus secret-canary scans;
+> and admin unread has a zero-argument success fixture. Auth Service remains the
+> sole Grant authority; Broker performs no local Grant inference. All other
+> product contracts and `PRODUCTION_APPLY_AUTHORITY = none` remain unchanged.
+>
+> **FOCUSED AMENDMENT ACCEPTED 2026-08-31** (lifecycle/provenance only; see §21):
+> independent 版管审计 returned PASS against reviewed head
+> `f475360716935bf486a4ea042cc0e66111a25e22`. The reviewed amendment text is
+> unchanged; only this acceptance pointer and §21 are added after a mechanical
+> plain-merge reconciliation with current main. No PR #105 product code, deploy,
+> production configuration, or Grant is changed.
 
 ## 1. Goal
 
@@ -652,6 +668,20 @@ layer behind the spec layer is FORBIDDEN (`SECURITY_REGRESSION = FORBIDDEN`).
 The composition order is frozen: spec-policy steps 1–3, then the pre-existing
 layer, then step-4 truncation.
 
+The sanitizer non-regression matrix MUST additionally contain these exact short
+scheme-credential inputs:
+
+```text
+NTLM abc123
+Digest abc123
+VAPID abc123
+DPoP abc123
+```
+
+For each input, every sanitized output and captured diagnostic channel MUST
+contain no residual `abc123`. Credential length MUST NOT exempt these forms from
+redaction.
+
 ### CTR-FMC-013 — Three bounded generic Broker deltas
 
 The only generic semantic changes authorized are:
@@ -827,11 +857,18 @@ record `STRUCTURE_GATE = PASS` (exit 0; warnings allowed) as required evidence
 - Environment: shared environment with exact moderator, ordinary, absent,
   duplicate-list, malformed, non-`agt_*`, and empty-config cases.
 - Method: build child sets for every case and exercise writer-only credentials.
-- Required evidence: tool-name projections, config errors, token/business counters
-  (in `broker.test.js`).
-- Expected result: only exact moderator receives eight moderator tools; all other
-  cases receive zero or fail closed; writer-only cannot execute moderation.
-- Failure condition: fleet-wide exposure, model-selected identity, or scope bypass.
+- Required evidence: tool-name projections, config errors, and separate
+  Credential/Auth-token/business counters (in `broker.test.js`).
+- Expected result: only the exact moderator receives eight moderator tools; all
+  other visibility/config cases receive zero or fail closed. For a selected
+  moderator Client whose Auth grant set is writer-only, invoking a moderator tool
+  MUST produce exactly `credentialCalls = 1`, `tokenCalls = 1`,
+  `businessCalls = 0`, and `result = authorization_denied`. Auth Service is the
+  sole Grant authority; Broker MUST NOT infer Grant sufficiency locally and this
+  fixture MUST NOT expect `credentialCalls = 0` or `tokenCalls = 0`.
+- Failure condition: fleet-wide exposure, model-selected identity, scope bypass,
+  local Broker Grant inference, a writer-only counter mismatch, or any writer-only
+  business call.
 
 ### ACC-FMC-003 — Pin and feature
 
@@ -886,30 +923,43 @@ record `STRUCTURE_GATE = PASS` (exit 0; warnings allowed) as required evidence
 
 - Contracts: `CTR-FMC-003`, `CTR-FMC-005`
 - Environment: shared environment.
-- Method: execute absent and present reason/since/agentId cases.
-- Required evidence: query and token-scope captures.
-- Expected result: exact route/query; three moderator scopes; no `forum.admin`.
-- Failure condition: broader scope, wrong route, or query drift.
+- Method: execute a zero-argument success fixture, then present
+  reason/since/agentId cases.
+- Required evidence: the zero-argument success result plus query and token-scope
+  captures for absent and present optional arguments.
+- Expected result: zero arguments succeeds against the exact route with no query;
+  present arguments map exactly; all cases use three moderator scopes and no
+  `forum.admin`.
+- Failure condition: zero-argument failure, broader scope, wrong route, or query
+  drift.
 
 ### ACC-FMC-009 — Secret non-disclosure (V2: adds the frozen case matrix)
 
 - Contracts: `CTR-FMC-011`, `CTR-FMC-012`, `CTR-FMC-013`
 - Environment: shared environment with unique canaries in credential, token,
   Authorization, every new tool's error detail, headers, and thrown causes.
-- Method: run success plus 4xx/5xx/token/network/malformed failures for all 13 new
-  tools; capture model envelope, renderer, error, stdout, and stderr.
-- Required evidence: channel-by-channel canary scan and sanitizer unit matrix —
-  the unit matrix MUST include the six-case matrix frozen in `CTR-FMC-012`
+- Method: execute a per-tool Cartesian matrix for every one of the 13 new tools:
+  success, downstream 4xx, downstream 5xx, token failure, network failure, and
+  malformed downstream response. Capture model envelope, renderer, thrown error,
+  stdout, and stderr for every cell; perform a secret-canary scan across every
+  captured channel for every tool and outcome.
+- Required evidence: a named 13-tool × 6-outcome result matrix with no omitted or
+  aggregate-only tool row, plus channel-by-channel canary scan results. The
+  sanitizer unit matrix MUST include the six-case matrix frozen in `CTR-FMC-012`
   (lowercase `bearer`, uppercase `Bearer`, mixed-case `Bearer`, lowercase
   `basic`, uppercase `Basic`, mixed-case `Basic` — each redacted by step 1 to
-  `<scheme-as-written> <AUTH_REDACTED>`), the layer-2 no-regression assertions
-  (password / api-key / NTLM / Digest forms still redacted), idempotency, and
-  the exact 500-code-point truncation.
-- Expected result: zero secret/Auth canary; permitted success business results
-  unchanged; error detail redacted and <=500 code points; all six scheme-case
-  inputs redacted by step 1.
-- Failure condition: any canary/raw Authorization leak, any scheme casing that
-  escapes step 1, any layer-2 regression, or success-body corruption.
+  `<scheme-as-written> <AUTH_REDACTED>`), the layer-2 no-regression assertions,
+  including exact inputs `NTLM abc123`, `Digest abc123`, `VAPID abc123`, and
+  `DPoP abc123` with zero residual `abc123`, idempotency, and the exact
+  500-code-point truncation.
+- Expected result: every one of the 13 tools passes all six outcome channels and
+  its secret-canary scan; zero secret/Auth canary is present; permitted success
+  business results are unchanged; error detail is redacted and <=500 code points;
+  all six scheme-case inputs are redacted by step 1 and all four short credential
+  canaries lose `abc123`.
+- Failure condition: any missing tool/outcome cell, any canary/raw Authorization
+  leak, any scheme casing that escapes step 1, any short credential retaining
+  `abc123`, any layer-2 regression, or success-body corruption.
 
 ### ACC-FMC-010 — Existing seven zero regression and exact closure (V2: 12 files + structure gate)
 
@@ -1428,4 +1478,70 @@ IMPLEMENTATION_GATE = open: implementation may begin from fresh merged main
   the fresh implementation PR (§12.3). Production apply/deploy/reload and any
   Grant change remain separately authorized actions; this transaction performs
   none of them.
+```
+
+---
+
+## 20. Focused Acceptance Amendment Record (版管 修订)
+
+This accepted-Spec amendment changes only the four acceptance obligations named
+below; it authorizes no implementation, merge, deployment, production mutation,
+or change to PR #105.
+
+```text
+AMENDMENT_KIND = DOCS_ONLY_FOCUSED_AMENDMENT
+WRITER_ONLY_EXPECTATION = credentialCalls=1; tokenCalls=1; businessCalls=0;
+  result=authorization_denied
+GRANT_AUTHORITY = Auth Service only; Broker local Grant inference forbidden
+SHORT_CREDENTIAL_CANARIES = NTLM abc123; Digest abc123; VAPID abc123; DPoP abc123
+SHORT_CREDENTIAL_EXPECTATION = abc123 residual count 0 for every case
+MULTI_CHANNEL_COVERAGE = each of 13 new tools: success; downstream 4xx;
+  downstream 5xx; token failure; network failure; malformed response;
+  secret canary scan across every captured channel
+ADMIN_UNREAD_ZERO_ARGUMENT_SUCCESS_FIXTURE = REQUIRED
+
+FROZEN_PRODUCT_CONTRACTS = 5 normal tools; 8 Moderator tools; exact scopes;
+  soft delete; summaryMd nonBlank; ignore|warn|delete; forum.admin forbidden;
+  closed moderator list; Broker-first Credential
+OTHER_SEMANTIC_DELTA = NONE
+PR_105_CHANGED = NO
+PRODUCTION_CHANGE = NONE
+READY_FOR_FOCUSED_REVIEW = YES
+NEXT_TASK = 版管 审计
+```
+
+---
+
+## 21. Focused Amendment Acceptance Record (2026-08-31, 版管 执行)
+
+```text
+ACCEPTANCE_KIND = LIFECYCLE_PROVENANCE_ONLY
+AMENDMENT_STATUS = accepted
+REVIEWED_HEAD = f475360716935bf486a4ea042cc0e66111a25e22
+INDEPENDENT_AUDIT = 版管 审计
+AUDIT_VERDICT = PASS
+BLOCKERS = NONE
+
+BASE_RECONCILIATION = mechanical plain merge of current main
+  1aa8248893766aaf1caae17b2905e40061f0a147 as merge commit
+  9932c979a0ef1d762fd89e94c809d477a828998f
+BASE_RECONCILIATION_AMENDMENT_DELTA = NONE (the reviewed Spec file at
+  f475360716935bf486a4ea042cc0e66111a25e22 is byte-identical through the merge)
+SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = NONE
+ACCEPTANCE_CHANGE = header lifecycle/provenance pointer plus this §21 only
+
+FROZEN_WRITER_ONLY_EXPECTATION = credentialCalls=1; tokenCalls=1;
+  businessCalls=0; result=authorization_denied
+FROZEN_SHORT_CREDENTIAL_CANARIES = NTLM abc123; Digest abc123; VAPID abc123;
+  DPoP abc123; residual abc123 count 0 for every case
+FROZEN_MULTI_CHANNEL_COVERAGE = each of 13 new tools covers success;
+  downstream 4xx; downstream 5xx; token failure; network failure;
+  malformed response; secret canary scan across every captured channel
+FROZEN_ADMIN_UNREAD_ZERO_ARGUMENT_SUCCESS_FIXTURE = REQUIRED
+
+PR_105_PRODUCT_CODE_CHANGED = NO
+GRANT_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+READY_FOR_AMENDMENT_MERGE = YES
+NEXT_TASK = 版管 执行
 ```

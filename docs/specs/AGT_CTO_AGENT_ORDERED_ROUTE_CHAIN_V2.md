@@ -1,6 +1,6 @@
 ---
 spec_id: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
-status: accepted
+status: superseded
 accepted_by: mayf3
 accepted_date: 2026-08-29
 accepted_reviewed_head: 85431b5aa61493d9e472ab9b731ef58e896e581b
@@ -16,7 +16,7 @@ production_apply_authority: none
 replaces_on_acceptance: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
 supersedes:
   - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
-superseded_by: null
+superseded_by: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
 governed_by:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
   - SCHEDULER_TIMEOUT_OUTCOME_V2

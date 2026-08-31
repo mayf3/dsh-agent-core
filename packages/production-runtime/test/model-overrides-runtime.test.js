@@ -1,5 +1,5 @@
 /**
- * Composition-level runtime tests for agent-model-overrides.json version 2
+ * Composition-level runtime tests for agent-model-overrides.json version 3
  * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 §2 + Amendment 1 A1.2/A1.4). Split
  * from model-overrides.test.js at the 500-line structure cap — the moved
  * tests are byte-identical, coverage and assertions unchanged.
@@ -17,7 +17,7 @@ import {
   composeProductionRuntime,
   TARGET_PROXY_NODE_VERSION,
 } from '../src/compose.js'
-import { CHATGPT_SUBSCRIPTION_V1 } from '../src/model-overrides.js'
+import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, CHATGPT_SUBSCRIPTION_V1 } from '../src/model-overrides.js'
 import { resolveProductionLayout } from '../src/paths.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
@@ -31,7 +31,7 @@ const VALID_PROVIDER_ENV = Object.freeze({
 })
 
 /**
- * agent-model-overrides.json version 2 (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
+ * agent-model-overrides.json version 3 (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
  * §2 + Amendment 1 A1.2/A1.4): routeCatalog + overrides.<agentId>.model.
  * {primary, fallbacks[]}. The fixture IS the frozen initial chain tuple:
  * glm53 = builtin (plugin/pluginVersion ABSENT), luna = subscription
@@ -51,11 +51,12 @@ const CATALOG = Object.freeze({
     model: 'gpt-5.6-luna',
     plugin: 'dsh-codex',
     pluginVersion: '0.2.3',
+    credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
     credentialReadiness: 'luna-oauth-home',
   },
 })
 const VALID = {
-  version: 2,
+  version: 3,
   routeCatalog: CATALOG,
   overrides: {
     [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna'] } },
@@ -153,7 +154,7 @@ async function runtimeFixture(t, withOverride) {
   return { runtime, spawned, provisioned, layout }
 }
 
-test('composition resolves the v2 primary to target and the global route to another Agent', async (t) => {
+test('composition resolves the v3 primary to target and the global route to another Agent', async (t) => {
   const { runtime, spawned, provisioned } = await runtimeFixture(t, true)
   await runtime.router.ensureRunning(TARGET)
   await runtime.router.ensureRunning(OTHER)
@@ -179,7 +180,7 @@ test('target-only rollback rewrites the config file; non-target PID and route un
 
   // Proxy-only rollback: remove providerEnv from the primary's catalog entry.
   write(layout.agentModelOverrides, {
-    version: 2,
+    version: 3,
     routeCatalog: { ...CATALOG, glm53: { ...CATALOG.glm53, providerEnv: VALID_PROVIDER_ENV } },
     overrides: VALID.overrides,
   })

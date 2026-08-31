@@ -1,7 +1,7 @@
 /**
  * Startup-boundary per-Agent model route chain configuration.
  *
- * The deployment owns `<productionRoot>/agent-model-overrides.json` version 2
+ * The deployment owns `<productionRoot>/agent-model-overrides.json` version 3
  * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 §2 / CTR-001, implemented under
  * AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-001): the ONLY route
  * order authority. Schema:
@@ -32,17 +32,20 @@ import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
 
 /**
  * Config-independent pins and scope (parent CTR-011 / CTR-IMPL-009
- * carry-forward). Route tuple VALUES never come from here — only the
- * dsh-codex/harness pins, the credential file name and the single activated
- * agentId do.
+ * carry-forward). Route tuple VALUES never come from here — only exact
+ * dsh-codex/Harness source identity and the canonical credential path do.
  */
+export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
+
 export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
   targetAgentId: 'agt_cto-agent',
   plugin: 'dsh-codex',
   pluginVersion: '0.2.3',
+  sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
+  artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
   dshVersion: '0.1.0-rc.8',
   dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
-  credentialFile: '.openai-codex-auth.json',
+  credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
 })
 
 export const PROVIDER_ENV_ALLOWLIST = Object.freeze([
@@ -240,6 +243,7 @@ function catalogCanonicalIdentity(route) {
     route.model,
     route.plugin ?? 'ABSENT',
     route.pluginVersion ?? 'ABSENT',
+    route.credentialFile ?? 'ABSENT',
     route.credentialReadiness,
     route.providerEnv === undefined
       ? 'ABSENT'
@@ -266,11 +270,16 @@ function makeChainRoute(routeRef, route) {
       subscription: Object.freeze({
         plugin: route.plugin,
         pluginVersion: route.pluginVersion,
+        sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,
+        artifactSha256: CHATGPT_SUBSCRIPTION_V1.artifactSha256,
         dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
         dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
-        credentialFile: CHATGPT_SUBSCRIPTION_V1.credentialFile,
+        ...(route.credentialFile === undefined ? {} : { credentialFile: route.credentialFile }),
         ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
           packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
+        }),
+        ...(process.env.DSH_CODEX_SOURCE_STAMP === undefined ? {} : {
+          sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP,
         }),
       }),
     } : {}),
@@ -285,7 +294,7 @@ function makeChainRoute(routeRef, route) {
 }
 
 /**
- * Load the frozen V2 route chain schema. Missing file is the rollback/legacy
+ * Load the frozen V3 route chain schema. Missing file is the rollback/legacy
  * state (global env route for every agent). Malformed files fail loud.
  * @param {string} file
  * @param {Iterable<string>} registeredAgentIds
@@ -307,12 +316,12 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       if (cause?.code === 'AGENT_MODEL_OVERRIDE_INVALID') throw cause
       throw invalid(`cannot parse ${file}`, cause)
     }
-    if (!exactKeys(parsed, ['overrides', 'routeCatalog', 'version']) || parsed.version !== 2
+    if (!exactKeys(parsed, ['overrides', 'routeCatalog', 'version']) || parsed.version !== 3
         || parsed.routeCatalog === null || typeof parsed.routeCatalog !== 'object'
         || Array.isArray(parsed.routeCatalog)
         || parsed.overrides === null || typeof parsed.overrides !== 'object'
         || Array.isArray(parsed.overrides)) {
-      throw invalid(`${file} must be {"version":2,"routeCatalog":{...},"overrides":{...}} (version 1 files are not converted)`)
+      throw invalid(`${file} must be {"version":3,"routeCatalog":{...},"overrides":{...}} (older files are not converted)`)
     }
     // routeCatalog: routeRef -> frozen validated route + canonical dedup.
     const catalog = new Map()
@@ -326,10 +335,12 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         throw invalid(`routeCatalog.${routeRef}.routeKind must be "builtin" or "subscription" (got ${JSON.stringify(routeKind)})`)
       }
       const isSubscription = routeKind === 'subscription'
+      const isOpenAICodex = route?.provider === 'openai-codex' || route?.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
       const hasProviderEnv = Object.hasOwn(route ?? {}, 'providerEnv')
       const routeKeys = [
         'credentialReadiness', 'model', 'provider', 'routeKind',
         ...(isSubscription ? ['plugin', 'pluginVersion'] : []),
+        ...(isSubscription && isOpenAICodex ? ['credentialFile'] : []),
         ...(hasProviderEnv ? ['providerEnv'] : []),
       ]
       if (routeRef === '' || !exactKeys(route, routeKeys)) {
@@ -353,12 +364,22 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         // the plugin (a builtin route has no plugin key at all).
         throw invalid(`routeCatalog.${routeRef}: pluginVersion pin mismatch (${CHATGPT_SUBSCRIPTION_V1.plugin} must be ${CHATGPT_SUBSCRIPTION_V1.pluginVersion} exactly)`)
       }
+      if (isOpenAICodex && (
+        !isSubscription
+        || route.provider !== 'openai-codex'
+        || route.plugin !== CHATGPT_SUBSCRIPTION_V1.plugin
+        || route.pluginVersion !== CHATGPT_SUBSCRIPTION_V1.pluginVersion
+        || route.credentialFile !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
+      )) {
+        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@0.2.3 and credentialFile ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
+      }
       const providerEnv = hasProviderEnv ? validateProviderEnv(route.providerEnv) : undefined
       const frozenRoute = Object.freeze({
         routeKind,
         provider: route.provider,
         model: route.model,
         ...(isSubscription ? { plugin: route.plugin, pluginVersion: route.pluginVersion } : {}),
+        ...(isOpenAICodex ? { credentialFile: route.credentialFile } : {}),
         credentialReadiness: route.credentialReadiness,
         ...(providerEnv === undefined ? {} : { providerEnv }),
       })
@@ -373,9 +394,6 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
     const registered = new Set(registeredAgentIds)
     for (const [agentId, entry] of Object.entries(parsed.overrides)) {
       if (!registered.has(agentId)) throw invalid(`unregistered agentId ${JSON.stringify(agentId)}`)
-      if (agentId !== CHATGPT_SUBSCRIPTION_V1.targetAgentId) {
-        throw invalid(`V2 activation scope is exactly {${CHATGPT_SUBSCRIPTION_V1.targetAgentId}} (got ${JSON.stringify(agentId)})`)
-      }
       if (!exactKeys(entry, ['model']) || entry.model === null || typeof entry.model !== 'object'
           || Array.isArray(entry.model) || !exactKeys(entry.model, ['fallbacks', 'primary'])) {
         throw invalid(`override ${agentId} must contain exactly model.{primary, fallbacks}`)
@@ -431,6 +449,7 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         provider: route.provider,
         model: route.model,
         ...(route.plugin === undefined ? {} : { plugin: route.plugin, pluginVersion: route.pluginVersion }),
+        ...(route.credentialFile === undefined ? {} : { credentialFile: route.credentialFile }),
         ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),
       })
     },

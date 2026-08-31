@@ -68,6 +68,25 @@ owners:
 > 实现前置不变：分解 spec 已 accepted 并 merged（PR #107 merge `1fc3ad6`）——dedicated
 > home `workflow-transition.test.js` 由拆测 执行 轮创建。完整记录见 §18。
 
+> **REVISE AMENDMENT 2026-08-31（执行 修订，本轮）。** 独立审计对 2026-08-31
+> 平行 spec 草案（`AGENT_CORE_WORKFLOW_EXECUTE_CAPABILITY_V1`，工作区草稿、
+> 从未 commit/push/PR）给出 **REVISE**：其立项前提「old spec proposed / zero
+> implementation / no accepted authority」在 github/main 已失效——本 Spec
+> 2026-08-29 accepted、2026-08-30 authority flip（§18）、2026-08-31 实现已
+> merge（PR #125，§4 STATE-007）。该草案本轮**撤回删除**，其「supersede old
+> proposed spec」模型作废；本 Spec 保持 workflow 写面**唯一 governing
+> authority**（`supersedes: []` / `superseded_by: null` 不变）。本轮 focused
+> in-place amendment 四项——(1) DEC-007 命名与 alias 裁决（KEEP
+> `workflow_transition`，任务语言名 `workflow_execute` 仅为 alias，不开第二
+> 写入口）；(2) STATE-007 证据刷新（main workflow manifests = 7 / shipped
+> 总量 15；PR #125 merge `1aa8248`）；(3) CTR-009 rollout canary gate
+> （`workflow_execute_canary_v1`，治理合同，非产品代码）；(4) OBS-009 审计
+> 回执字段映射。dispatch 修订六项中「错误合同删除 `definition_version_draft`」
+> 与「CAS 描述区分服务端内部细节 vs Broker 信封」已由 §15 Fix 1/Fix 3 满足，
+> 本轮零改动、仅记录确认。产品合同零变化（DEC-001..006、CTR-001..008 全部
+> 不变）；lifecycle 字段零变化（status accepted、implementation_authority
+> contracts、production_apply_authority none）。修订明细与处置对照见 §19。
+
 ## 1. Goal
 
 让**当前节点的 exact assignee** 能够通过正式 Broker 工具提交合法
@@ -156,6 +175,21 @@ STATE-006 — Grant 现况（auth-service 只读查询 2026-08-28，
 `{workflow.read}`。无 execute grant 的 Agent 调用本工具在 token 签发处
 fail-closed（HTTP capability 路径表现为已声明的 `transport_failure`
 "token acquisition failed"）。
+
+STATE-007 —（2026-08-31 刷新，执行 修订轮；dsh-agent-core `github/main` @
+`4d7ca24` fresh fetch 核对）**实现已 merge**：PR #125
+"feat(broker): add workflow_transition capability"（merge commit
+`1aa8248893766aaf1caae17b2905e40061f0a147`，2026-08-31T00:05:31Z），files
+= `packages/broker/src/capabilities/workflow.js` +
+`packages/broker/test/capabilities/workflow-transition.test.js` +
+`packages/broker/test/capabilities/manifest-inventory.test.js`——与 §2
+In-scope（§17 AMEND-1 dedicated home + AMEND-2 计数授权）的闭包一致。
+`workflow.js` 现注册 **7 个 workflow manifests**（STATE-002 的 5 只读 +
+`workflow_global_instances`（Global Instances V2，PR #108）+
+`workflow_transition`（本 Spec，唯一写工具））；aggregate shipped manifests
+= **15**（`manifest-inventory.test.js` 断言 `all.length === 15`）。主
+manifest 错误表与 CTR-005 逐码一致（无 `definition_version_draft`；
+`canary_read_only` 未声明——处置见 CTR-009 注记）。
 
 ## 5. Observations
 
@@ -252,6 +286,38 @@ KEEP_MANIFEST_ONLY_ERROR_ENVELOPE 明确不做（§15）。CAS 冲突恢复路�
 客户端收到 `workflow_state_version_conflict` 后重新调用
 `workflow_instance_detail` 获取最新 `workflow_state_version`（DEC-004）。
 
+OBS-009 — 审计回执面（2026-08-31 执行 修订轮新增实证；svc-workflow
+`github/main` @ `f0c74ee` 核对，canary/audit 相关文件自 `88ff814` 起
+zero drift，坐标在两 revision 均有效）：每次 execute——**成功、确定性失败、
+replay 三态都算**——在服务端产生 command receipt + attempt audit：
+
+- `workflow_command_receipts`（`command_id`、`principal_id` FK、
+  `idempotency_key`、`command_type`、`request_hash`、`receipt_status`；
+  ON CONFLICT `(principal_id, idempotency_key)` DO NOTHING——
+  transition_receipt.rs:30-33）；
+- `workflow_command_attempt_audits`（audit_id / command_id / principal_id /
+  idempotency_key / attempt_type，transition_receipt.rs:121-138）；
+- 成功态事实行：`workflow_submissions`（transition_helpers.rs:172）、
+  `workflow_node_visits`（新 visit，:209）、`workflow_events`（:308-316：
+  `event_sequence`、`actor_principal_id`、`command_id`、`transition_effect`、
+  `source_node_visit_id` / `target_node_visit_id`、`from_node_id` /
+  `to_node_id`、`old_workflow_state_version` / `new_workflow_state_version`、
+  `event_data` + `event_data_digest`）；
+- 确定性失败态：`persist_deterministic_failure` 先以错误 status +
+  response digest 完成 receipt 并 commit 再返回错误
+  （transition_validation.rs:579-596）——**拒绝本身可审计**。
+
+审计字段 ↔ 任务合同映射（「每次 execute 产生 command receipt + audit
+record，含 caller principal / instance / transition / before version /
+after version / result」）：caller principal = receipts.`principal_id` +
+events.`actor_principal_id`；instance = events.`workflow_instance_id`；
+transition = request_hash 全量覆盖 + events.`command_id` /
+`transition_effect` / from/to node；before/after version =
+events.`old_workflow_state_version` / `new_workflow_state_version`（after =
+响应 `workflowStateVersion`）；result = receipts.`receipt_status` +
+response digest。CTR-006 的「响应字段即回执、broker 不新造审计存储」维持
+不变，本条为其提供字段级证据。
+
 ## 6. Claims and assumptions
 
 CLM-001 — 本 Spec accept 后，exact assignee 无需任何新服务端/Grant 变更
@@ -320,6 +386,16 @@ fail-closed（STATE-006）。
 DEC-006 — 错误表遵循 accepted 的 error-preservation 纪律：declared
 service code 优先（code + status + sanitized detail + x-request-id）；
 undeclared → fail-closed 降级 `http_4xx`/`http_5xx`。
+
+DEC-007 — **命名与 alias 裁决（2026-08-31 执行 修订轮）**：唯一写工具名
+保持 **`workflow_transition`**——已随 PR #125 实现并 merge（STATE-007），
+tool id / wire 合同 / 测试断言 / inventory 计数全部锚定该名。任务语言名
+`workflow_execute` 是本能力在 dispatch 与 canary 计划语境下的 **alias**，
+不是第二个工具：**不 rename、不建 alias 工具、不开第二个 execute 写入口**
+（backward compatibility 冻结）。scope `workflow.execute` 本就是服务端
+合同名（require_scope），与 broker 工具名不需一致（读侧先例：
+`workflow.read` scope 对 5 个只读工具）。canary 计划名
+`workflow_execute_canary_v1`（CTR-009）所验收的工具即 `workflow_transition`。
 
 ## 9. Contracts
 
@@ -404,6 +480,43 @@ CTR-008 — **模型使用合同（冻结进工具 description）**。两步用�
 `false`/过时亦不授权 Broker 本地拦截。收到
 `workflow_state_version_conflict` 时，重读 `workflow_instance_detail`
 取最新 `workflow_state_version` 后显式重提（DEC-004）。
+
+CTR-009 — **Rollout canary gate（治理合同，非产品代码；2026-08-31 执行
+修订轮新增）**。`workflow.execute` 授予**不默认铺开全 fleet**（DEC-005
+Grant 边界不变）；rollout 走 `workflow_execute_canary_v1`，由三层既有
+fail-closed 闸门承载，**broker 侧零 per-identity 逻辑**（DEC-002 / CTR-003
+纪律不变，manifest 对全 fleet 可见但无 grant 即 fail-closed）：
+
+1. **svc-workflow 全局写闸门**：`AUTH_V1_CANARY_WRITE_ENABLED`（默认
+   false）——全部 transition 写在 token 验证前 403 `canary_read_only`
+   （`src/http/canary_guard.rs:29-46`，挂载于 transitions 路由
+   `mod.rs:49-54`，STATE-001）。单开关全局 kill / enable。
+2. **svc-workflow per-identity allowlist**：
+   `AUTH_V1_CANARY_ALLOWED_SUB` / `AUTH_V1_CANARY_ALLOWED_CLIENT_ID`
+   非空时，claims 精确匹配才通过（`jwks_verifier.rs:298-306`）——
+   **不改 auth-service 即可把有效面收窄到单一 canary identity**（即使
+   多名 Agent 持有 grant，STATE-006 的两名持有者亦被收窄）。
+3. **auth-service grant 供给**（DEC-005）：scope `workflow.execute` 的
+   `machine_access_grants` 决定谁能取得 token；无 grant → token 签发处
+   fail-closed（STATE-006）。
+
+canary 验收流（**后续独立执行轮次**，须 Owner 单独下令；
+`production_apply_authority` 仍 none，本条不授权执行）：G0 只读 gate
+（写闸门配置核实 / allowlist 值核实 / grant census 只读复核 / canary 对象
+选测试性质 domain——默认 canary identity = `agt_build-in-public-agent`，
+任意时刻至多一个 canary identity）→ A 经 `workflow_instance_detail` 读
+`workflow_state_version = V` 与出口 T（executable_for_actor 仅 advisory，
+DEC-002）→ B 以 `workflow_transition` 提交 → 断言响应
+`workflowStateVersion == V+1`、`eventSequence` 存在、
+`currentNodeVisitId != sourceNodeVisitId` → C 重读 detail 复核 version
+与新 current node visit → D 只读 SQL 复核 receipt / event 行（OBS-009
+字段映射；只读账号、零写）。失败即停（不重试不绕行）；全局 abort =
+`AUTH_V1_CANARY_WRITE_ENABLED` 置 false（即时 403）。
+
+注记（如实记录，不改实现）：`canary_read_only` 当前**未**在 CTR-005 声明、
+主 manifest（PR #125）亦未声明——闸门关闭时按 undeclared 降级 `http_4xx`
+透出，fail-closed 语义不受影响，仅损失码级可读性；若未来要求声明该码，
+须回本 Spec AMEND 并走独立实现轮（本轮不授权任何代码变化）。
 
 ## 10. Acceptance
 
@@ -739,3 +852,89 @@ AUTHORITY_FLIP_TRANSACTION = LIFECYCLE_ONLY，ONE commit，ONE file（本文件�
   属独立未来轮次）。
 - Merge：本 commit 之后随即 mark ready 并 merge PR #110（merge commit 为本
   Spec authority flip 的 effective-on-main 坐标）。
+
+## 19. Amendment record (2026-08-31, 执行 修订)
+
+- 事务：TASK_NAME = 执行 修订，TASK_TYPE = SPEC_AMENDMENT_ONLY；触发 =
+  独立审计 **REVISE**（对象：2026-08-31 平行 spec 草案
+  `AGENT_CORE_WORKFLOW_EXECUTE_CAPABILITY_V1`——其立项前提「old spec
+  proposed / zero implementation / no accepted authority」在 github/main
+  已全部失效：本 Spec 2026-08-29 accepted（§16）、2026-08-30 authority
+  flip 至 contracts（§18）、2026-08-31 PR #125 实现已 merge（STATE-007））。
+- **治理关系修正（本节核心）**：平行 spec 草案本轮**撤回删除**（工作区
+  未提交草稿，从未 commit / push / PR，删除无迁移成本）；该草案对本文件
+  作出的 `status: superseded` + `replaced_by` 翻转一并还原为 github/main
+  accepted 内容。本 Spec 保持 workflow 写面**唯一 governing authority**
+  （frontmatter `supersedes: []` / `superseded_by: null` 不变）；本轮为
+  **focused in-place AMEND**，非 supersede、非新建平行 Spec。
+
+### dispatch 六项处置对照
+
+| # | dispatch 要求 | 处置 |
+|---|---|---|
+| 1 | 删除错误声明（old spec proposed / zero implementation / no accepted authority） | 平行 spec 草案整文件删除（错误声明的唯一载体）；本文件 STATE 条目均为 dated pins，无失实声称 |
+| 2 | 处理 workflow_transition 已存在（rename / alias / backward compat） | **DEC-007：KEEP**——不 rename、不建 alias 工具、不开第二写入口；`workflow_execute` 冻结为任务语言 alias；backward compatibility 以 tool id / wire 合同 / 测试 / inventory 计数锚定 |
+| 3 | 刷新 Broker evidence（main workflow manifests = 7，非旧 4） | **STATE-007**：7 个 workflow manifests / shipped 总量 15；PR #125 merge `1aa8248`（文件闭包与 §2 一致）；「4 manifests」是平行草案基于 stale local HEAD 的错误计数 |
+| 4 | 错误合同删除 `definition_version_draft` | **已由 §15 Fix 3 / CTR-005 满足**（HTTP 层映射 500 `internal_consistency_error`）；PR #125 主 manifest 逐码一致（本轮复核）；本轮零改动 |
+| 5 | CAS 描述区分 service internal details vs Broker visible envelope | **已由 §15 Fix 1 满足**：OBS-003（服务端 body 结构化 `{expected, actual}`，仅存在于下游响应体）+ OBS-008（Broker 信封四要素：code + status + sanitized detail + requestId，不保留结构化 details）+ DEC-004（恢复路径 = 重读 detail）；本轮零改动 |
+| 6 | 保留安全合同（seam / assignee gate / CAS / submission schema / audit receipt / canary gate） | 全部维持：CTR-002（identity 只经 credential seam + submission schema 参数面）、CTR-003（服务端唯一权威 assignee gate）、DEC-004（CAS 禁自动重试）、CTR-006 + **OBS-009**（audit receipt 字段级细化）、**CTR-009**（canary gate 新增）。无任何放宽 |
+
+### 保持不变（审计对照面）
+
+frontmatter lifecycle 字段（status: accepted、implementation_authority:
+contracts、production_apply_authority: none）、DEC-001..006、CTR-001..008、
+§1–§14、§15 / §16 / §17 / §18 全部历史记录——逐字保持；§4 / §5 / §8 / §9
+仅**追加** STATE-007 / OBS-009 / DEC-007 / CTR-009，不改动既有条目。
+
+### 本轮边界与验证
+
+- DOCS_ONLY：只改本文件 + 删除工作区未提交的平行 spec 草案；不实现代码
+  （PR #125 之后 `packages/**` 零变化）、不 flip lifecycle、不 merge、不授
+  Grant、不部署；auth-service / svc-workflow / production 零接触（svc-workflow
+  仅本地只读 diff 核对 zero drift）。
+- 事实核对（fresh fetch 实测）：dsh-agent-core `github/main` @ `4d7ca24`
+  （PR #126 已合并）；本文件 main 版 frontmatter = accepted / contracts；
+  PR #125 state=MERGED、merge `1aa8248`、files 三项与 §2 闭包一致；
+  `workflow.js` 7 manifests、`manifest-inventory.test.js` 断言 15；主 manifest
+  错误表无 `definition_version_draft`。svc-workflow `github/main` @ `f0c74ee`，
+  canary / audit 相关源文件自 `88ff814` 起 zero drift（OBS-009 / CTR-009 坐标
+  有效）。
+- 机械验证：frontmatter YAML 解析 PASS（lifecycle 字段与 main 逐字一致）；
+  `git diff --check` PASS；§19 对照表与正文条目交叉引用扫描 PASS。
+
+### 冻结字段
+
+AMENDMENT_KIND = GOVERNANCE_RELATION_REVISE；PARALLEL_SPEC_DISPOSED =
+DELETED_UNCOMMITTED；TOOL_NAME = workflow_transition（KEEP，DEC-007）；
+TASK_ALIAS = workflow_execute；CANARY_PLAN = workflow_execute_canary_v1
+（CTR-009，design-only）；PRODUCT_CONTRACT_DELTA = NONE；
+PRODUCT_CODE_CHANGE = NONE；GRANT_CHANGE = NONE；PRODUCTION_CHANGE = NONE。
+
+- 下一事务：独立 acceptance review（本修订）→ 通过后本节成为 accepted
+  amendment；`workflow_execute_canary_v1` 执行轮须 Owner 单独下令（届时另行
+  授权，本 Spec 不自行授权 production 写）。
+
+## 20. Amendment acceptance record (2026-08-31, 执行 接受)
+
+- 事务：TASK_NAME = 执行 接受，TASK_TYPE = ACCEPTANCE_FINALIZE；对象 = §19
+  amendment（REVISE AMENDMENT 2026-08-31，执行 修订轮）。执行 审计 = **PASS**；
+  AMENDMENT_VALID = YES；BLOCKERS = NONE。
+- AMENDMENT_AUTHORED_AGAINST = `github/main` @ `4d7ca24`（authoring 与本
+  acceptance 轮两次 fresh fetch 核对，main 与该文件均零漂移）。amendment
+  delta = **纯追加**（STATE-007 / OBS-009 / DEC-007 / CTR-009 + 头部 REVISE
+  AMENDMENT banner + §19 记录；frontmatter 与 main 逐字一致，0 删除）。
+  amendment 未单独 commit，审计对象即工作区 diff；本 acceptance 与 amendment
+  由同一**单文件 commit** 落地（+174/-0 量级，docs-only）。
+- 受理语义（成为本 accepted Spec 的组成部分）：**DEC-007**（`workflow_transition`
+  KEEP——唯一写入口；`workflow_execute` 仅为任务语言 alias；不建
+  workflow_execute manifest、不开第二写面）、**CTR-009**（canary gate
+  design-only，`workflow_execute_canary_v1` 执行须 Owner 另行下令）、
+  **STATE-007**（证据刷新：PR #125 / 7 workflow manifests / inventory 15）、
+  **OBS-009**（审计回执字段映射）。
+- Lifecycle 不变：status = accepted；implementation_authority = contracts；
+  production_apply_authority = none。
+- 边界：DOCS_ONLY（本文件为唯一变更文件）；packages/ 零变化；PR #125 不动；
+  无 deploy；无 canary write。PRODUCT_CODE_CHANGE = NONE；GRANT_CHANGE =
+  NONE；PRODUCTION_CHANGE = NONE。
+- Merge：本 commit 经单一 PR merge 至 main（merge commit 即本 amendment
+  acceptance 的 effective-on-main 坐标）。
