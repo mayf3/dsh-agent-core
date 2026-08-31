@@ -369,7 +369,7 @@ test('13. unbound receipt: the bridge rejection receipt stays plain text in card
   assert.equal(JSON.parse(base.calls.reply[0].data.content).text.includes('未完成绑定'), true)
 })
 
-test('14. proactive/scheduler: explicit-parts targets without ux intent stay plain text in card mode', async () => {
+test('14. proactive/generic: direct-create targets WITHOUT card intent stay plain text in card mode (the scheduler success announce is the ONLY direct-create exception — see scheduler-card.test.js)', async () => {
   const base = stubbedChannel()
   const { handle } = mountedHandle({ renderMode: 'card', autoMention: false, channel: base.channel })
   const schedulerTarget = buildReplyTarget({ conversationId: 'oc_sched', chatId: 'oc_sched', channel: 'group' }).directChat()
