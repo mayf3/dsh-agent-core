@@ -592,7 +592,7 @@ export function createHttpTransport(opts = {}) {
     try {
       accessToken = await getAccessToken(credential, target, scope)
     } catch (err) {
-      return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: `token acquisition failed: ${err.message}` }
+      return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: sanitizeErrorDetail(`token acquisition failed: ${err.message}`) }
     }
 
     // Transport-controlled headers (Authorization / Content-Type / Accept) are
@@ -620,7 +620,7 @@ export function createHttpTransport(opts = {}) {
     try {
       res = await fetchImpl(`${target.allowedOrigin}${url}`, buildInit(accessToken))
     } catch (err) {
-      return { errorCode: 'transport_failure', detail: `network error: ${err.message}` }
+      return { errorCode: 'transport_failure', detail: sanitizeErrorDetail(`network error: ${err.message}`) }
     }
 
     // 401 → invalidate + re-issue + retry ONCE, reusing the same Idempotency-Key.
@@ -634,12 +634,12 @@ export function createHttpTransport(opts = {}) {
       try {
         accessToken = await getAccessToken(credential, target, scope)
       } catch (err) {
-        return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: `token refresh failed: ${err.message}` }
+        return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: sanitizeErrorDetail(`token refresh failed: ${err.message}`) }
       }
       try {
         res = await fetchImpl(`${target.allowedOrigin}${url}`, buildInit(accessToken))
       } catch (err) {
-        return { errorCode: 'transport_failure', detail: `network error on retry: ${err.message}` }
+        return { errorCode: 'transport_failure', detail: sanitizeErrorDetail(`network error on retry: ${err.message}`) }
       }
     }
 

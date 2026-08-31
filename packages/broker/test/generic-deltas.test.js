@@ -70,13 +70,14 @@ test('bounded delta 3: Bearer and Basic six-case matrix is case-insensitive', ()
   }
 })
 
-test('sanitizer preserves stronger password/api-key/NTLM/Digest/VAPID protections', () => {
+test('sanitizer preserves stronger password/api-key and short auth-scheme protections', () => {
   const cases = [
     ['password=hunter2', 'hunter2'],
     ['api_key="sk-live-999999999999"', 'sk-live-999999999999'],
     ['Authorization: NTLM TlRMTVNTUAABAAAAAAAABgAAAAAAAQ==', 'TlRMTVNTUAABAAAAAAAABgAAAAAAAQ'],
     ['authorization: Digest response=6629fae49393a053974509785505ff5f', '6629fae49393a053974509785505ff5f'],
     ['Authorization: VAPID cHVibGljLWtleS1tYXRlcmlhbA==', 'cHVibGljLWtleS1tYXRlcmlhbA'],
+    ...['NTLM', 'Digest', 'VAPID', 'DPoP'].map((scheme) => [`${scheme} abc123`, 'abc123']),
   ]
   for (const [input, secret] of cases) {
     assert.ok(!sanitizeErrorDetail(`rejected ${input}`).includes(secret), input)
