@@ -72,6 +72,13 @@ owners:
 > and admin unread has a zero-argument success fixture. Auth Service remains the
 > sole Grant authority; Broker performs no local Grant inference. All other
 > product contracts and `PRODUCTION_APPLY_AUTHORITY = none` remain unchanged.
+>
+> **FOCUSED AMENDMENT ACCEPTED 2026-08-31** (lifecycle/provenance only; see §21):
+> independent 版管审计 returned PASS against reviewed head
+> `f475360716935bf486a4ea042cc0e66111a25e22`. The reviewed amendment text is
+> unchanged; only this acceptance pointer and §21 are added after a mechanical
+> plain-merge reconciliation with current main. No PR #105 product code, deploy,
+> production configuration, or Grant is changed.
 
 ## 1. Goal
 
@@ -1501,4 +1508,40 @@ PR_105_CHANGED = NO
 PRODUCTION_CHANGE = NONE
 READY_FOR_FOCUSED_REVIEW = YES
 NEXT_TASK = 版管 审计
+```
+
+---
+
+## 21. Focused Amendment Acceptance Record (2026-08-31, 版管 执行)
+
+```text
+ACCEPTANCE_KIND = LIFECYCLE_PROVENANCE_ONLY
+AMENDMENT_STATUS = accepted
+REVIEWED_HEAD = f475360716935bf486a4ea042cc0e66111a25e22
+INDEPENDENT_AUDIT = 版管 审计
+AUDIT_VERDICT = PASS
+BLOCKERS = NONE
+
+BASE_RECONCILIATION = mechanical plain merge of current main
+  1aa8248893766aaf1caae17b2905e40061f0a147 as merge commit
+  9932c979a0ef1d762fd89e94c809d477a828998f
+BASE_RECONCILIATION_AMENDMENT_DELTA = NONE (the reviewed Spec file at
+  f475360716935bf486a4ea042cc0e66111a25e22 is byte-identical through the merge)
+SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = NONE
+ACCEPTANCE_CHANGE = header lifecycle/provenance pointer plus this §21 only
+
+FROZEN_WRITER_ONLY_EXPECTATION = credentialCalls=1; tokenCalls=1;
+  businessCalls=0; result=authorization_denied
+FROZEN_SHORT_CREDENTIAL_CANARIES = NTLM abc123; Digest abc123; VAPID abc123;
+  DPoP abc123; residual abc123 count 0 for every case
+FROZEN_MULTI_CHANNEL_COVERAGE = each of 13 new tools covers success;
+  downstream 4xx; downstream 5xx; token failure; network failure;
+  malformed response; secret canary scan across every captured channel
+FROZEN_ADMIN_UNREAD_ZERO_ARGUMENT_SUCCESS_FIXTURE = REQUIRED
+
+PR_105_PRODUCT_CODE_CHANGED = NO
+GRANT_CHANGE = NONE
+PRODUCTION_CHANGE = NONE
+READY_FOR_AMENDMENT_MERGE = YES
+NEXT_TASK = 版管 执行
 ```
