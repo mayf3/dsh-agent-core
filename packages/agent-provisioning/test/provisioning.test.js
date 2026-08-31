@@ -12,14 +12,16 @@
  */
 
 import assert from 'node:assert/strict'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { test } from 'node:test'
 
 import {
   AGENT_PROFILE_DEFS,
+  CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   REPO,
   assertOAuthCredentialBoundary,
   cliBin,
@@ -32,11 +34,18 @@ import {
 const SUBSCRIPTION = {
   plugin: 'dsh-codex',
   pluginVersion: '0.2.3',
+  sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
+  artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
   dshVersion: '0.1.0-rc.5',
   dshCommit: 'a12bb03c6861969985f066bfbf0cb7e5dd5ac567',
-  credentialFile: '.openai-codex-auth.json',
+  credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
 }
 const HARNESS_IDENTITY = { version: SUBSCRIPTION.dshVersion, commit: SUBSCRIPTION.dshCommit }
+const ARTIFACT_IDENTITY = {
+  version: 1,
+  sourceCommit: SUBSCRIPTION.sourceCommit,
+  artifactSha256: SUBSCRIPTION.artifactSha256,
+}
 
 function fakeInstall({ profilesRoot, plugin, version }) {
   const dir = join(profilesRoot, 'node_modules', plugin)
@@ -135,7 +144,6 @@ test('target-home plugin provisioning is exact, idempotent and leaves the shared
   const workspace = join(dir, 'ws')
   mkdirSync(home, { recursive: true, mode: 0o700 })
   chmodSync(home, 0o700)
-  writeFileSync(join(home, SUBSCRIPTION.credentialFile), '{"fixture":"not-a-token"}\n', { mode: 0o600 })
   const sharedBefore = readFileSync(join(REPO, 'profile-production', 'package.json'))
   let installs = 0
   const installer = (input) => { installs += 1; fakeInstall(input) }
@@ -145,6 +153,10 @@ test('target-home plugin provisioning is exact, idempotent and leaves the shared
     subscription: SUBSCRIPTION,
     harnessIdentity: HARNESS_IDENTITY,
     pluginInstaller: installer,
+    artifactIdentity: ARTIFACT_IDENTITY,
+    credentialBoundary(_home, credentialFile) {
+      assert.equal(credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+    },
   }
   provisionAgentHome(home, workspace, options)
   provisionAgentHome(home, workspace, options)
@@ -154,7 +166,31 @@ test('target-home plugin provisioning is exact, idempotent and leaves the shared
   assert.equal(installed.version, '0.2.3')
   const profile = JSON.parse(readFileSync(join(home, 'profiles', 'agent-core-production', 'package.json'), 'utf8'))
   assert.equal(profile.dsh.profile.bundles.filter((bundle) => bundle === 'dsh-codex').length, 1)
+  const patch = readFileSync(join(home, 'profiles', 'agent-core-production', 'cordis.patch.yml'), 'utf8')
+  assert.equal(patch.match(/BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1/gu)?.length, 1)
+  assert.ok(patch.includes(`credentialFile: ${JSON.stringify(CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)}`))
+  assert.equal(existsSync(join(home, '.openai-codex-auth.json')), false, 'per-home OAuth store is never created or read')
   assert.deepEqual(readFileSync(join(REPO, 'profile-production', 'package.json')), sharedBefore)
+})
+
+test('same-version legacy dsh-codex 0.2.3 is not reused without pinned artifact provenance', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-subscription-old-same-version-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  provisionAgentHome(home, join(dir, 'ws'), { profile: 'agent-core-production' })
+  fakeInstall({ profilesRoot: join(home, 'profiles'), plugin: 'dsh-codex', version: '0.2.3' })
+  let installs = 0
+  const result = provisionExactProfilePlugin(home, 'agent-core-production', {
+    plugin: SUBSCRIPTION.plugin, version: SUBSCRIPTION.pluginVersion,
+    sourceCommit: SUBSCRIPTION.sourceCommit, artifactSha256: SUBSCRIPTION.artifactSha256,
+    dshVersion: SUBSCRIPTION.dshVersion, dshCommit: SUBSCRIPTION.dshCommit,
+  }, {
+    harnessIdentity: HARNESS_IDENTITY,
+    artifactIdentity: ARTIFACT_IDENTITY,
+    pluginInstaller(input) { installs += 1; fakeInstall(input) },
+  })
+  assert.equal(result.version, '0.2.3')
+  assert.equal(installs, 1, 'same version without exact source/digest stamp must be replaced')
 })
 
 test('plugin missing, plugin mismatch, DSH mismatch and credential boundaries fail loud', (t) => {
@@ -167,12 +203,15 @@ test('plugin missing, plugin mismatch, DSH mismatch and credential boundaries fa
   const requirement = {
     plugin: SUBSCRIPTION.plugin,
     version: SUBSCRIPTION.pluginVersion,
+    sourceCommit: SUBSCRIPTION.sourceCommit,
+    artifactSha256: SUBSCRIPTION.artifactSha256,
     dshVersion: SUBSCRIPTION.dshVersion,
     dshCommit: SUBSCRIPTION.dshCommit,
   }
   assert.throws(
     () => provisionExactProfilePlugin(home, 'agent-core-production', requirement, {
       harnessIdentity: HARNESS_IDENTITY,
+      artifactIdentity: ARTIFACT_IDENTITY,
       pluginInstaller() {},
     }),
     (error) => error.code === 'plugin_missing',
@@ -180,13 +219,14 @@ test('plugin missing, plugin mismatch, DSH mismatch and credential boundaries fa
 
   fakeInstall({ profilesRoot: join(home, 'profiles'), plugin: 'dsh-codex', version: '0.2.4' })
   assert.throws(
-    () => provisionExactProfilePlugin(home, 'agent-core-production', requirement, { harnessIdentity: HARNESS_IDENTITY }),
+    () => provisionExactProfilePlugin(home, 'agent-core-production', requirement, { harnessIdentity: HARNESS_IDENTITY, artifactIdentity: ARTIFACT_IDENTITY }),
     (error) => error.code === 'plugin_version_mismatch',
   )
   rmSync(join(home, 'profiles', 'node_modules', 'dsh-codex'), { recursive: true, force: true })
   assert.throws(
     () => provisionExactProfilePlugin(home, 'agent-core-production', requirement, {
       harnessIdentity: { ...HARNESS_IDENTITY, version: '0.1.0-rc.6' },
+      artifactIdentity: ARTIFACT_IDENTITY,
       pluginInstaller: fakeInstall,
     }),
     (error) => error.code === 'dsh_version_mismatch',
@@ -194,35 +234,66 @@ test('plugin missing, plugin mismatch, DSH mismatch and credential boundaries fa
   assert.throws(
     () => provisionExactProfilePlugin(home, 'agent-core-production', requirement, {
       harnessIdentity: { ...HARNESS_IDENTITY, commit: 'deadbeef' },
+      artifactIdentity: ARTIFACT_IDENTITY,
       pluginInstaller: fakeInstall,
     }),
     (error) => error.code === 'dsh_commit_mismatch',
   )
 
   fakeInstall({ profilesRoot: join(home, 'profiles'), plugin: 'dsh-codex', version: '0.2.3' })
-  assert.doesNotThrow(
-    () => provisionAgentHome(home, workspace, {
-      profile: 'agent-core-production', subscription: SUBSCRIPTION, harnessIdentity: HARNESS_IDENTITY,
-    }),
-    'missing OAuth state is deferred until the real provider turn boundary',
-  )
-  assert.throws(() => assertOAuthCredentialBoundary(home, SUBSCRIPTION.credentialFile),
+  const canonicalRoot = join(realpathSync(dir), 'canonical')
+  mkdirSync(canonicalRoot, { mode: 0o700 })
+  chmodSync(canonicalRoot, 0o700)
+  const canonicalFile = join(canonicalRoot, '.openai-codex-auth.json')
+  assert.throws(() => assertOAuthCredentialBoundary(home, canonicalFile, { expectedCredentialFile: canonicalFile }),
     (error) => error.code === 'credential_missing')
-  writeFileSync(join(home, SUBSCRIPTION.credentialFile), '{}', { mode: 0o644 })
+  writeFileSync(canonicalFile, '{}', { mode: 0o644 })
   assert.throws(
-    () => provisionAgentHome(home, workspace, {
-      profile: 'agent-core-production', subscription: SUBSCRIPTION, harnessIdentity: HARNESS_IDENTITY,
-    }),
+    () => assertOAuthCredentialBoundary(home, canonicalFile, { expectedCredentialFile: canonicalFile }),
     (error) => error.code === 'credential_permission_invalid',
   )
-  chmodSync(join(home, SUBSCRIPTION.credentialFile), 0o600)
-  chmodSync(home, 0o755)
-  assert.throws(
-    () => provisionAgentHome(home, workspace, {
-      profile: 'agent-core-production', subscription: SUBSCRIPTION, harnessIdentity: HARNESS_IDENTITY,
-    }),
-    (error) => error.code === 'credential_permission_invalid',
-  )
+  chmodSync(canonicalFile, 0o600)
+  assert.equal(assertOAuthCredentialBoundary(home, canonicalFile, { expectedCredentialFile: canonicalFile }), canonicalFile)
+  assert.throws(() => assertOAuthCredentialBoundary(home, join(home, '.openai-codex-auth.json')),
+    (error) => error.code === 'credential_path_invalid')
+})
+
+test('modified 0.2.3 artifact requires an exact digest and source stamp', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-subscription-artifact-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  provisionAgentHome(home, join(dir, 'ws'), { profile: 'agent-core-production' })
+  const artifact = join(dir, 'dsh-codex-0.2.3.tgz')
+  const packageRoot = join(dir, 'package')
+  mkdirSync(packageRoot)
+  writeFileSync(join(packageRoot, 'package.json'), JSON.stringify({ name: 'dsh-codex', version: '0.2.3' }), 'utf8')
+  assert.equal(spawnSync('/usr/bin/tar', ['-czf', artifact, '-C', dir, 'package']).status, 0)
+  const artifactSha256 = createHash('sha256').update(readFileSync(artifact)).digest('hex')
+  const requirement = {
+    plugin: SUBSCRIPTION.plugin,
+    version: SUBSCRIPTION.pluginVersion,
+    sourceCommit: SUBSCRIPTION.sourceCommit,
+    artifactSha256,
+    dshVersion: SUBSCRIPTION.dshVersion,
+    dshCommit: SUBSCRIPTION.dshCommit,
+  }
+  const sourceStamp = join(dir, 'dsh-codex-source-stamp.json')
+  writeFileSync(sourceStamp, JSON.stringify({ version: 1, sourceCommit: SUBSCRIPTION.sourceCommit, artifactSha256 }), 'utf8')
+  assert.equal(provisionExactProfilePlugin(home, 'agent-core-production', requirement, {
+    harnessIdentity: HARNESS_IDENTITY,
+    packageArtifact: artifact,
+    sourceStamp,
+    pluginInstaller: fakeInstall,
+  }).version, '0.2.3')
+
+  rmSync(join(home, 'profiles', 'node_modules', 'dsh-codex'), { recursive: true, force: true })
+  writeFileSync(sourceStamp, JSON.stringify({ version: 1, sourceCommit: '0'.repeat(40), artifactSha256 }), 'utf8')
+  assert.throws(() => provisionExactProfilePlugin(home, 'agent-core-production', requirement, {
+    harnessIdentity: HARNESS_IDENTITY,
+    packageArtifact: artifact,
+    sourceStamp,
+    pluginInstaller: fakeInstall,
+  }), (error) => error.code === 'plugin_source_mismatch')
 })
 
 test('readHarnessIdentity prefers git: a working git repo ignores the .source-stamp entirely', (t) => {
@@ -301,6 +372,8 @@ test('stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatc
   const requirement = {
     plugin: SUBSCRIPTION.plugin,
     version: SUBSCRIPTION.pluginVersion,
+    sourceCommit: SUBSCRIPTION.sourceCommit,
+    artifactSha256: SUBSCRIPTION.artifactSha256,
     dshVersion: SUBSCRIPTION.dshVersion,
     dshCommit: SUBSCRIPTION.dshCommit,
   }
@@ -309,6 +382,7 @@ test('stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatc
   assert.throws(
     () => provisionExactProfilePlugin(home, 'agent-core-production', requirement, {
       harnessRoot,
+      artifactIdentity: ARTIFACT_IDENTITY,
       pluginInstaller: fakeInstall,
     }),
     (error) => commitMismatch(error) && error.message.includes(`expected DSH commit ${SUBSCRIPTION.dshCommit}`)
@@ -318,6 +392,6 @@ test('stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatc
   // install path proceeds (fake installer satisfies the exact-plugin check).
   const pinned = provisionExactProfilePlugin(home, 'agent-core-production', {
     ...requirement, dshCommit: STAMP_COMMIT,
-  }, { harnessRoot, pluginInstaller: fakeInstall })
+  }, { harnessRoot, pluginInstaller: fakeInstall, artifactIdentity: ARTIFACT_IDENTITY })
   assert.equal(pinned.version, SUBSCRIPTION.pluginVersion)
 })
