@@ -1,7 +1,8 @@
 # AGENT_WORKSPACE_SESSION_MODEL_V2 — Agent / Workspace / Session / main 长期产品模型 Current Decision
 
-- 状态: accepted（本决策是 V2 产品模型的 **Current Authority**；对旧 authority 的处置见
-  §24 Disposition——未来 Agent 读这一份 + 被标记 PRESERVE 的旧文档即可知道 Current Truth）
+- 状态: superseded（2026-09-01；此前为 V2 产品模型 Current Authority，历史正文保留）
+- superseded_by: D-008 / `AGENT_WORKSPACE_SESSION_MODEL_V3.md`（standalone complete
+  replacement；acceptance transaction 已原子激活）
 - 日期: 2026-08-17
 - 类型: 正式决策（**standalone Current Decision**，不是旧 Spec 的 amendment；不再给旧
   Spec 叠 amendment）
