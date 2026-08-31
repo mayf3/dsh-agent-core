@@ -81,7 +81,7 @@ inter-agent input -> trusted provenance, not direct-user provenance
 V1 intentionally does **not** copy OpenClaw arbitrary `sessionKey`, label, watch, announce,
 ping-pong, active-run steering, or historical-session targeting.
 
-## 1. Problem
+## 1. Goal and problem
 
 `agent_wake` modeled “start one fresh Session for one task”. That overlaps Scheduler `run_once` and
 misplaces a scheduling concern in an Agent-facing primitive. The missing generic primitive is instead:
@@ -105,7 +105,24 @@ Two gaps prevent direct exposure as the new capability:
 2. reconciliation has snapshots and an event subscriber, but no race-safe bounded “wait for this exact
    delivery's final reply” helper.
 
-## 2. Authority and disposition
+The Goal is to define exactly one generic, private, authenticated Agent-to-Agent Messaging capability
+whose Session, Run, provenance, execution-identity, timeout, failure, and audit behavior is complete enough
+to implement without hidden chat context. This Goal does not itself authorize implementation; only the
+lifecycle gate in §8B can do so after independent review and Owner acceptance.
+
+## 1A. Scope and non-goals
+
+In scope is only the capability summarized by the frontmatter `scope` list and frozen by `R1`–`R12`:
+`agent_session_send`, target canonical-main reuse, one new Run/Turn per send, runtime-owned provenance,
+target-owned execution identity, receipt-only and bounded one-reply modes, authorization, reconciliation,
+failure mapping, and audit.
+
+Out of scope is the unchanged list in §6, including arbitrary Session targeting, fresh Messaging Sessions,
+Delegation, Scheduler/Cron execution, active-run steering, watch/announce/replay, external delivery,
+impersonation/OBO, self-send, automatic ping-pong, durable restart recovery, and any new subsystem. This
+section indexes §6 and does not add, remove, or reinterpret a non-goal.
+
+## 2. Authority, dependencies, and disposition
 
 ### 2.1 Governance classification
 
@@ -150,7 +167,23 @@ IMPLEMENTATION_BEFORE_SPEC_ACCEPTANCE = FORBIDDEN
 
 Cron/Scheduler per-execution fresh Session semantics are not challenged.
 
-## 3. Current-main findings
+## 3. Current State and current-main findings
+
+- `STATE-MSG-001` — At `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`,
+  accepted/current D-008 is the controlling product-model authority: Messaging targets the target Agent's
+  canonical main while Delegation and Cron retain their distinct non-main models. Basis: `OBS-MSG-001`,
+  `CLM-MSG-001`, `EVD-MSG-001`.
+- `STATE-MSG-002` — At the same source revision, current Router/demo-server behavior already supplies
+  canonical-main selection, existing-main reuse, absent-main establishment, ordered next-Run delivery, and
+  bounded reconciliation state. Basis: `OBS-MSG-002`, `OBS-MSG-003`, `CLM-MSG-002`, `CLM-MSG-003`,
+  `EVD-MSG-002`, `EVD-MSG-003`.
+- `STATE-MSG-003` — At the same source revision, exact trusted `inter_agent` provenance propagation and a
+  race-safe bounded exact-reply wait helper remain implementation gaps. Basis: `OBS-MSG-003`,
+  `OBS-MSG-004`, `CLM-MSG-003`, `CLM-MSG-004`, `EVD-MSG-003`, `EVD-MSG-004`.
+- `STATE-MSG-004` — At proposed publication head
+  `54d3145258c8798e29c1688c1cb93b3647fe3de7`, the content-addressed source r2 normative span was preserved
+  byte-for-byte and carried no implementation or production authority. Basis: `OBS-MSG-005`,
+  `CLM-MSG-005`, `EVD-MSG-005`, plus the exact frontmatter provenance in this Spec.
 
 ### 3.1 Router main reuse
 
@@ -237,6 +270,239 @@ createUserMessage({
 
 Therefore `PROVENANCE_GAP = YES`. A textual prefix such as `[From agent A]` is not provenance: it can be
 forged by model input and cannot support audit or authorization.
+
+## 3A. Observations
+
+### OBS-MSG-001 — D-008 is accepted/current and explicitly aligns source r2
+
+- Subject: `AGENT_WORKSPACE_SESSION_MODEL_V3` and the repository Current Decision index.
+- Source revision: `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`.
+- Environment: fresh, clean, detached repository worktree; documentation authority inspection only.
+- Observed at: `2026-08-31T23:00:34Z`.
+- Method: inspect D-008 frontmatter, §27.7, §27.8, and `docs/decisions/README.md` at the exact revision.
+- Result: D-008 is accepted/current; §27.7 records content-addressed source r2 alignment `PASS` without
+  accepting or authorizing this implementation Spec; §27.8 fixes PR #130 disposition to `CLOSE`.
+- Provenance: `docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md` and
+  `docs/decisions/README.md` at the source revision above.
+
+### OBS-MSG-002 — Current main already owns canonical-main delivery mechanics
+
+- Subject: Agent Router delivery, AgentProcess turn execution, and demo-server main-Session seam.
+- Source revision: `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`.
+- Environment: source/test inspection in the same fresh worktree; no production or live Agent invocation.
+- Observed at: `2026-08-31T23:00:34Z`.
+- Method: inspect `packages/agent-router/src/ingress-delivery.js:173-285`,
+  `packages/agent-router/src/process/turn-execution.js:133-341`,
+  `packages/demo-server/src/session-seam.js:77-166`, and the existing process-delivery tests.
+- Result: `sessionMode='main'` selects logical main, starts/reuses the target process, resumes or creates
+  target main, single-flights concurrent creation, and admits distinct ordered prompt executions.
+- Provenance: exact files and line coordinates listed above at the source revision.
+
+### OBS-MSG-003 — Reconciliation exposes bounded authoritative state but no bounded wait helper
+
+- Subject: Agent Router turn-reconciliation interface and retained final-output projection.
+- Source revision: `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`.
+- Environment: source/test inspection in the same fresh worktree; no production state read or write.
+- Observed at: `2026-08-31T23:00:34Z`.
+- Method: inspect the exact reconciliation handle returned by delivery, `getTurnReconciliation`,
+  `readFinalAssistantOutput`, `onTurnReconciled`, and `turnExecutionSnapshot` definitions and tests.
+- Result: the Router distinguishes pending, complete, failed, truncated, evicted, restart-lost, and absent
+  outcomes, but has no Promise helper that closes the read/subscribe race under one reply deadline.
+- Provenance: `packages/agent-router/src/ingress-delivery.js`,
+  `packages/agent-router/src/process/turn-execution.js`, and their tests at the source revision.
+
+### OBS-MSG-004 — Current prompt path cannot carry trusted inter-Agent provenance
+
+- Subject: Router `deliver` through demo-server `createUserMessage` prompt construction.
+- Source revision: `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`.
+- Environment: source inspection in the same fresh worktree; no runtime mutation.
+- Observed at: `2026-08-31T23:00:34Z`.
+- Method: trace the message parameter from Router admission to `session/prompt` and `createUserMessage`.
+- Result: the path carries only string content and constructs `source:{kind:'user'}`; it has no trusted,
+  structured `inter_agent` sidecar or exact source-turn correlation.
+- Provenance: the code excerpt and file coordinates in §3.4 at the source revision.
+
+### OBS-MSG-005 — Source r2 normative span is content-addressed and preserved
+
+- Subject: local source r2 and its proposed publication at
+  `54d3145258c8798e29c1688c1cb93b3647fe3de7`.
+- Artifact revisions: source r2 SHA-256
+  `20820492d1b65842b0c607ee013baca1d5a3d6377b072d8914405eabff99d169`; proposed publication Git blob
+  `99335fc8df7811bde4847d3e132bab3d0fb14343`.
+- Environment: read-only local source plus fresh PR-head worktree.
+- Observed at: `2026-08-31T23:00:34Z`.
+- Method: hash the complete source, then byte-compare from `## 4. Frozen capability contract` through the
+  byte immediately before `## 8. Predicted implementation scope — not authorized`.
+- Result: the 17,143-byte source/publication span is byte-identical with SHA-256
+  `f1af8b47ee64238118cd0ac13b67a8b27f2d4c601395611a9ec88dec5f8215a8`.
+- Provenance: D-008 §27.7, this Spec's frontmatter, the content-addressed local source r2, and PR #133 head
+  `54d3145258c8798e29c1688c1cb93b3647fe3de7`.
+
+## 3B. Claims and assumptions
+
+### CLM-MSG-001 — The frozen Messaging model conforms to D-008
+
+- Support state: `SUPPORTED`.
+- Supported by evidence: `EVD-MSG-001`.
+- Contradicted by evidence: none known.
+- Uncertainty: D-008 alignment is product-model authority only; it does not prove implementation
+  conformance or grant implementation authority.
+
+### CLM-MSG-002 — Existing main delivery mechanics are the correct bounded reuse seam
+
+- Support state: `SUPPORTED`.
+- Supported by evidence: `EVD-MSG-002`.
+- Contradicted by evidence: none known.
+- Uncertainty: source/test inspection establishes the pinned revision only; future source drift requires a
+  new implementation-base conformance check.
+
+### CLM-MSG-003 — Exact-reply waiting is a thin orchestration gap, not a new state authority
+
+- Support state: `SUPPORTED`.
+- Supported by evidence: `EVD-MSG-003`.
+- Contradicted by evidence: none known.
+- Uncertainty: implementation must still demonstrate the frozen race, deadline, truncation, and terminal
+  mappings through executed tests.
+
+### CLM-MSG-004 — Structured trusted provenance is required and prompt text is insufficient
+
+- Support state: `SUPPORTED`.
+- Supported by evidence: `EVD-MSG-004`.
+- Contradicted by evidence: none known.
+- Uncertainty: the exact DSH declaration-augmentation seam must be verified at the pinned implementation
+  dependency revision without expanding the protocol boundary.
+
+### CLM-MSG-005 — Governance remediation can preserve source r2 normative meaning
+
+- Support state: `SUPPORTED`.
+- Supported by evidence: `EVD-MSG-005`.
+- Contradicted by evidence: none known.
+- Uncertainty: any future byte delta inside the frozen span invalidates this Claim and requires a fresh
+  semantic review against the content-addressed source.
+
+`OPEN_ASSUMPTION = NONE`; no unsupported assumption changes authority or Contract meaning.
+
+## 3C. Evidence relations
+
+### EVD-MSG-001 — D-008 observations support the model-alignment Claim
+
+- Source observations: `OBS-MSG-001`.
+- Target: `CLM-MSG-001`.
+- Relation: `SUPPORTS`.
+- Bound coordinates: `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`, D-008
+  §27.7/§27.8, documentation worktree, observed `2026-08-31T23:00:34Z`.
+- Strength/sufficiency: sufficient for canonical-main Messaging, distinct Delegation/Cron Session classes,
+  content-addressed r2 alignment, and PR #130 disposition.
+- Limitations: does not accept this proposed Spec and does not establish code/runtime conformance.
+- Provenance: `OBS-MSG-001` sources.
+
+### EVD-MSG-002 — Delivery observations support reuse of current main mechanics
+
+- Source observations: `OBS-MSG-002`.
+- Target: `CLM-MSG-002`.
+- Relation: `SUPPORTS`.
+- Bound coordinates: source/test files at
+  `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`, observed
+  `2026-08-31T23:00:34Z` in the fresh source worktree.
+- Strength/sufficiency: sufficient to select the existing Router/process/demo-server seam rather than a new
+  Session or Scheduler subsystem.
+- Limitations: source inspection is not production evidence and does not prove a future implementation.
+- Provenance: `OBS-MSG-002` sources.
+
+### EVD-MSG-003 — Reconciliation observations support the bounded-helper Claim
+
+- Source observations: `OBS-MSG-003`.
+- Target: `CLM-MSG-003`.
+- Relation: `SUPPORTS`.
+- Bound coordinates: Agent Router reconciliation source/tests at
+  `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`, observed
+  `2026-08-31T23:00:34Z`.
+- Strength/sufficiency: sufficient to identify both the authoritative state seam and the missing race-safe
+  wait orchestration.
+- Limitations: the proposed helper remains unimplemented and requires executed race/fault tests.
+- Provenance: `OBS-MSG-003` sources.
+
+### EVD-MSG-004 — Prompt-path observations support the provenance-gap Claim
+
+- Source observations: `OBS-MSG-004`.
+- Target: `CLM-MSG-004`.
+- Relation: `SUPPORTS`.
+- Bound coordinates: Router-to-demo-server prompt path at
+  `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`, observed
+  `2026-08-31T23:00:34Z`.
+- Strength/sufficiency: sufficient to reject a text-prefix provenance design and require a trusted structured
+  sidecar bounded by R3/R4.
+- Limitations: does not select an external repository type change or authorize dependency modification.
+- Provenance: `OBS-MSG-004` sources.
+
+### EVD-MSG-005 — Content hashes support preservation of the frozen normative body
+
+- Source observations: `OBS-MSG-005`.
+- Target: `CLM-MSG-005`.
+- Relation: `SUPPORTS`.
+- Bound coordinates: source r2 SHA-256
+  `20820492d1b65842b0c607ee013baca1d5a3d6377b072d8914405eabff99d169`, PR #133 reviewed head
+  `54d3145258c8798e29c1688c1cb93b3647fe3de7`, observed `2026-08-31T23:00:34Z`.
+- Strength/sufficiency: byte-level proof for R1–R12, result/error, non-goals, and original Acceptance scenarios.
+- Limitations: does not cover lifecycle/grammar material outside the 17,143-byte span and becomes stale if
+  that span changes.
+- Provenance: `OBS-MSG-005` sources and recorded digests.
+
+## 3D. Decisions
+
+### DEC-MSG-001 — Use canonical-main Messaging, not fresh execution
+
+- Decision owner: repository Owner through accepted/current D-008; this child Spec remains proposed.
+- Decision: `agent_session_send` targets only the target Agent's canonical main and each send creates one new
+  Run/Turn in that logical main, as frozen by R1–R4 and R10.
+- Rejected alternatives: `agent_wake`, arbitrary Session targeting, new Session per message, or reuse of
+  Delegation/Cron non-main models.
+- Reason: preserve the D-008 product-model boundary and reuse the current main delivery seam.
+- Owner input remaining: exact-head Spec acceptance only; no unresolved normative choice.
+
+### DEC-MSG-002 — Separate source provenance from target execution identity
+
+- Decision owner: repository Owner through accepted/current D-008 alignment; this child Spec remains proposed.
+- Decision: runtime-owned source Agent/turn provenance accompanies the message while B's own credential,
+  Principal, grants, and workspace govern B's execution, as frozen by R3–R6.
+- Rejected alternatives: prompt-text provenance, caller-supplied provenance, A impersonation/OBO, credential
+  selection from message origin, or grant inheritance.
+- Reason: make origin auditable without crossing the target Agent security boundary.
+- Owner input remaining: exact-head Spec acceptance only; no unresolved normative choice.
+
+### DEC-MSG-003 — Use receipt-only or one bounded exact reply
+
+- Decision owner: repository Owner through D-008 alignment and the preserved lifecycle authority; this child
+  Spec remains proposed.
+- Decision: timeout zero waits for a real inbox receipt; positive timeout waits from receipt for the exact
+  Run's complete successful non-truncated final output through the sole reconciliation authority, as frozen
+  by R7–R10.
+- Rejected alternatives: parent-queue acceptance, active steering, poll stores, retries/replay, watch,
+  cancellation of B, multiple replies, or late external announcement.
+- Reason: preserve exact admission/outcome truth and bounded caller waiting without a second state machine.
+- Owner input remaining: exact-head Spec acceptance only; no unresolved normative choice.
+
+### DEC-MSG-004 — Keep external delivery isolated and audit intent/outcome
+
+- Decision owner: repository Owner; this child Spec remains proposed.
+- Decision: no Binding/Product-Surface mutation occurs, and bounded secret-free two-level intent/outcome audit
+  behavior remains exactly as frozen by R11/R12.
+- Rejected alternatives: `onIngress`, copied external reply routes, Feishu/Forum/Workflow/Scheduler delivery,
+  message-content audit, or rewriting a proven receipt because of a later audit append failure.
+- Reason: keep the capability private, generic, non-forgeable, and operationally reconcilable.
+- Owner input remaining: exact-head Spec acceptance only; no unresolved normative choice.
+
+These Decision records index the unchanged R1–R12 Contracts; they do not expand or reinterpret the frozen
+source r2 span.
+
+## 3E. Contracts
+
+`R1` through `R12` in §4 are the twelve stable Contract IDs for this Spec; their global identities are
+`AGENT_CORE_AGENT_SESSION_MESSAGING_V1#R1` through
+`AGENT_CORE_AGENT_SESSION_MESSAGING_V1#R12`. The closed success/error envelopes in §5 and the explicit
+non-goals in §6 qualify those Contracts and remain part of their frozen meaning. Contract IDs must not be
+renumbered or reused after acceptance. Formal Acceptance mappings are recorded after the unchanged source
+span in §8A.
 
 ## 4. Frozen capability contract
 
@@ -701,6 +967,238 @@ AND no Feishu/Forum/Scheduler/Workflow delivery occurs
 
 ## 8. Predicted implementation scope — not authorized
 
+## 8A. Formal Acceptance records and bidirectional Contract coverage
+
+The original Cases A–I and additional mandatory cases in §7 remain the frozen behavioral scenarios. The
+records below qualify those scenarios with stable Acceptance IDs, Contract references, verification
+methods, environments, required evidence, expected results, and failure conditions. They define future
+conformance evidence; they are not claims that an implementation already exists or passes.
+
+### ACC-MSG-001 — Capability identity and inventory
+
+- Contracts: `R1`.
+- Existing scenario coverage: Cases A–I invoke the same capability entrypoint; this item adds the manifest
+  and inventory gate required before any scenario execution.
+- Method: load the Broker manifest/inventory and execute local-handler resolution tests that assert the exact
+  capability id, tool name, operation, kind, local resource, required scope, and single handler resolution.
+- Environment: isolated repository test workspace at the exact implementation commit whose base contains
+  accepted D-008 and an accepted exact revision of this Spec; no production services or credentials.
+- Required evidence: exact implementation commit, manifest bytes, inventory output, resolver test command,
+  complete stdout/stderr, exit status, and test report.
+- Expected result: exactly one `agent_session_send` local capability resolves with
+  `operation=send`, `local.resource=agent-session-messaging`, and only `agent.session.send` as required scope.
+- Failure condition: any missing/duplicate capability, mismatched field, remote relay substitution, or
+  resolution outside the authenticated local-capability path fails acceptance.
+
+### ACC-MSG-002 — Closed model-visible input and authoritative validation
+
+- Contracts: `R2`.
+- Existing scenario coverage: Case G plus the invalid-input matrix implied by R2.
+- Method: execute schema and direct parent-RPC negative tests for missing fields, wrong types, target pattern
+  and length, UTF-8 byte bounds, NUL, timeout bounds, timeout omission, and every undeclared property.
+- Environment: isolated Broker/production-runtime fixture at the exact implementation commit; Router
+  delivery, request-id generation, audit success, and target mutation counters instrumented; no production.
+- Required evidence: exact commit, generated model schema, full test matrix, command, stdout/stderr, exit
+  status, and zero-side-effect counter assertions for every rejected input.
+- Expected result: only the exact three-field input is accepted and every invalid or extra-property case
+  returns `invalid_arguments` before any side effect.
+- Failure condition: any forbidden field is visible/accepted, timeout defaults, byte/NUL bounds are wrong, or
+  a rejected call generates an id, success audit, Router delivery, or target mutation.
+
+### ACC-MSG-003 — Runtime-derived source identity and correlation
+
+- Contracts: `R3`.
+- Existing scenario coverage: Case G and the additional onward-A2A source-turn case.
+- Method: execute parent-RPC tests from direct and delivery-originated source Runs, including forged source
+  fields/text, stale/missing/generation-mismatched `turnExecutionId`, self-send, and valid exact source proof.
+- Environment: isolated parent-runtime/Router fixture with deterministic AgentProcess generations and
+  execution maps at the exact implementation commit; no external ingress or production writes.
+- Required evidence: exact commit, fixture identities/generations, command, stdout/stderr, exit status,
+  captured trusted invocation metadata, delivery counts, and resulting sanitized message-source records.
+- Expected result: valid calls derive actual A plus its exact live source `turnExecutionId`, fresh runtime
+  request id, `sessionMode='main'`, and `kind='inter_agent'`; missing/stale proof and self-send fail pre-delivery.
+- Failure condition: model input controls a trusted field, correlation is not the exact source turn, a stale
+  source delivers, self-send delivers, or a valid onward-A2A source depends on external ingress context.
+
+### ACC-MSG-004 — Strict trusted provenance propagation
+
+- Contracts: `R4`.
+- Existing scenario coverage: Cases G and I plus the additional onward-A2A source-turn case.
+- Method: execute Router→route admission→AgentProcess→session/prompt→demo-server propagation tests with
+  valid, omitted, malformed, oversized, unknown-field, and mutation-after-call sidecars.
+- Environment: isolated pinned Router/demo-server dependency fixture at the exact implementation commit;
+  existing non-A2A callers included; no external channel or production state.
+- Required evidence: exact commit and pinned dependency revision, type/declaration diff when needed, full
+  command/stdout/stderr/exit status, layer-by-layer captured metadata, and durable created-message records.
+- Expected result: exact allowlisted detached/frozen `inter_agent` provenance reaches durable message source;
+  omission preserves `source:{kind:'user'}` and malformed or unknown metadata fails closed.
+- Failure condition: provenance is only prompt text, any layer accepts/forwards unknown business fields,
+  caller mutation changes accepted metadata, existing callers regress, or Router learns Product-Surface data.
+
+### ACC-MSG-005 — Target-owned execution security identity
+
+- Contracts: `R5`.
+- Existing scenario coverage: Case H.
+- Method: have B process A's accepted message and invoke an authenticated Broker probe while instrumenting
+  parent caller derivation, credential lookup, Principal/grant evaluation, and workspace selection.
+- Environment: isolated multi-Agent auth/Broker fixture with distinct A/B credentials, Principals, grants,
+  and workspaces at the exact implementation commit; secret values redacted; no production credentials.
+- Required evidence: exact commit, fixture identity map without secrets, command, stdout/stderr, exit status,
+  redacted credential-selector trace, authorization decision, and workspace/caller assertions.
+- Expected result: provenance names A while callerAgentId, credential, Principal, grants, and workspace all
+  belong to B; child self-report and origin metadata cannot alter execution identity.
+- Failure condition: any A credential/Principal/grant/workspace is selected or inherited, B can impersonate A,
+  or targetAgentId/source metadata becomes Broker caller identity.
+
+### ACC-MSG-006 — Capability authorization and fail-closed denial
+
+- Contracts: `R6`.
+- Existing scenario coverage: Cases F and H.
+- Method: execute positive and negative authorization matrices for exact send grant, missing/invalid
+  credential, denied grant, invalid/disabled/missing target, invalid input, and unrelated Session permissions.
+- Environment: isolated Broker/Auth/Router fixture with synthetic non-secret credentials and distinct grants
+  at the exact implementation commit; no live auth-service or production mutation.
+- Required evidence: exact commit, fixture grant matrix, command, stdout/stderr, exit status, L0 denial
+  evidence, handler/delivery/mutation counters, and returned structured error classes.
+- Expected result: only an actual caller with valid credential and exact `agent.session.send` grant reaches the
+  handler; every denial is correctly classified with zero Router delivery and zero target mutation.
+- Failure condition: Session read/list permission implies send, a denial delivers/mutates, target selection
+  alters caller authority, or any credential/grant failure is treated as success.
+
+### ACC-MSG-007 — Receipt-only result is bound to real inbox acceptance
+
+- Contracts: `R7`.
+- Existing scenario coverage: Cases C and E.
+- Method: execute immediate, queued-busy, queue-cap, pre-receipt failure, and real-receipt fixtures at
+  `timeoutSeconds=0`, distinguishing parent queue admission from `session/prompt` receipt.
+- Environment: isolated Router/AgentProcess/demo-server fixture with controllable FIFO and receipt barriers at
+  the exact implementation commit; no production Agent invocation.
+- Required evidence: exact commit, fixture timing/barrier trace, command, stdout/stderr, exit status,
+  reconciliation handle, queue/delivery/prompt counters, and returned model-visible envelope.
+- Expected result: `{status:'accepted'}` appears only after the exact real inbox receipt and never waits for
+  model start/completion/reply; pre-receipt rejection produces its exact failure rather than acceptance.
+- Failure condition: queue admission is mislabeled accepted, accepted precedes the real receipt, reply/idle is
+  awaited, or the success envelope exposes an internal id/identity/handle.
+
+### ACC-MSG-008 — Positive timeout returns only one exact successful complete reply
+
+- Contracts: `R8`.
+- Existing scenario coverage: Case D plus the additional terminal/truncation/restart/timeout cases.
+- Method: execute the closed reconciliation matrix for completed, late-completed, failed, late-failed,
+  no-output, truncated, pending-to-timeout, not-admitted, evicted, restart-lost, and never-existed states.
+- Environment: isolated deterministic reconciliation fixture at the exact implementation commit with the
+  reply deadline beginning at a controlled real receipt; no production execution.
+- Required evidence: exact commit, state-matrix fixtures, receipt/deadline timestamps, command,
+  stdout/stderr, exit status, authoritative final-output snapshots, and returned envelopes/errors.
+- Expected result: only complete successful non-truncated text from the exact Run returns one
+  `{status:'replied',reply}`; deadline returns `{status:'timeout'}` and every other state maps exactly as R8.
+- Failure condition: partial/failed/truncated/wrong-Run text succeeds, queue time consumes the reply deadline,
+  timeout cancels/replays/announces B, a state becomes empty success, or a second delivery occurs.
+
+### ACC-MSG-009 — Race-safe exact-handle wait lifecycle
+
+- Contracts: `R9`.
+- Existing scenario coverage: Case D and the additional settled-before-subscribe,
+  settle-between-read/subscribe, and timeout/event-race cases.
+- Method: use deterministic barriers/fake timers to force each read→subscribe→read race position, unrelated
+  handle events, matching settlement, timer settlement, and every error exit.
+- Environment: isolated unit fixture over the sole Router reconciliation authority at the exact implementation
+  commit; no network, model, external channel, or production state.
+- Required evidence: exact commit, seeded race schedule, command, stdout/stderr, exit status, read/event/timer
+  trace, once-guard settlement count, and listener/timer disposal assertions.
+- Expected result: every schedule settles exactly once from authoritative exact-handle state, performs the
+  final pre-timeout read, ignores unrelated events, and disposes listener/timer on every exit.
+- Failure condition: lost settlement, duplicate result, wrong-handle result, poll loop/second cache, premature
+  timeout, or any leaked listener/timer fails acceptance.
+
+### ACC-MSG-010 — Canonical-main reuse, FIFO, and no automatic cycles
+
+- Contracts: `R10`.
+- Existing scenario coverage: Cases A, B, and E plus the additional self-send and two-send cases.
+- Method: execute existing-main, absent-main concurrent first sends, busy target, queue cap/fence, two distinct
+  request ids, explicit cyclic calls, and self-send fixtures with Session/Run/prompt counters.
+- Environment: isolated multi-Agent Router/demo-server concurrency fixture at the exact implementation commit;
+  no Scheduler, Workflow, external channel, or production processes.
+- Required evidence: exact commit, concurrency schedule, command, stdout/stderr, exit status, target Session
+  ids, Run/Turn ordering, prompt/delivery counters, receipt points, and rejection results.
+- Expected result: one target canonical main is reused/atomically established; each accepted send produces one
+  ordered next Run/Turn; busy work is not steered; cap/fence/self-send fail without target prompt bytes.
+- Failure condition: a send creates a fresh Session, two sends deduplicate, busy work is steered, queue receipt
+  is called inbox acceptance, rejection writes prompt bytes, or the capability automatically cycles/replays.
+
+### ACC-MSG-011 — Binding and Product-Surface isolation
+
+- Contracts: `R11`.
+- Existing scenario coverage: Case I and the additional late-result-after-timeout case.
+- Method: send from direct and externally-originated A turns while snapshotting all Binding, ingress context,
+  reply-route, Feishu, Forum, Scheduler, and Workflow call/mutation counters before and after B completion and
+  late completion.
+- Environment: isolated Router/demo-server integration fixture with fake Product-Surface adapters at the exact
+  implementation commit; real external services and production stores disabled.
+- Required evidence: exact commit, adapter fixtures, pre/post snapshots, command, stdout/stderr, exit status,
+  deliver-vs-onIngress trace, and zero-call/byte-identical mutation assertions.
+- Expected result: A2A uses generic `deliver`; Binding/external routes remain byte-identical; the requested
+  exact reply can return only in the tool result; all Product-Surface call/mutation counts remain zero.
+- Failure condition: any `onIngress`, Binding/context/reply-route mutation, synthesized external id, external
+  delivery, or ancestry value influencing routing/reply behavior fails acceptance.
+
+### ACC-MSG-012 — Two-level two-phase audit truth and secrecy
+
+- Contracts: `R12`.
+- Existing scenario coverage: Case F plus the additional intent-append and outcome-append failure cases.
+- Method: execute validation/credential/grant denials, intent append failure, pre-receipt delivery failure,
+  accepted/replied/timeout/terminal outcomes, and post-receipt outcome append failure with ordered audit sinks.
+- Environment: isolated Broker/capability/Router fixture with deterministic failing audit sink at the exact
+  implementation commit; synthetic secrets/message text; no production audit store.
+- Required evidence: exact commit, fixture configuration, command, complete stdout/stderr, exit status,
+  ordered sanitized L0/L1 records, Router/receipt counters, degradation signal, and secret-content scan.
+- Expected result: authoritative pre-handler denials are L0; L1 intent precedes delivery; failed intent gives
+  zero delivery; outcomes preserve exact business truth; post-receipt append failure emits sanitized
+  degradation without rewriting the result; forbidden content never appears.
+- Failure condition: delivery occurs without successful L1 intent, audit order is wrong, a proven receipt is
+  rewritten, an unknown outcome is guessed, any secret/message/history/route leaks, or audit failure is silent.
+
+### Contract-to-Acceptance coverage
+
+| Contract | Acceptance | Existing scenarios | Covered |
+|---|---|---|---|
+| `R1` | `ACC-MSG-001` | Cases A–I capability entrypoint | YES |
+| `R2` | `ACC-MSG-002` | Case G + invalid-input matrix | YES |
+| `R3` | `ACC-MSG-003` | Case G + onward-A2A additional case | YES |
+| `R4` | `ACC-MSG-004` | Cases G, I + onward-A2A additional case | YES |
+| `R5` | `ACC-MSG-005` | Case H | YES |
+| `R6` | `ACC-MSG-006` | Cases F, H | YES |
+| `R7` | `ACC-MSG-007` | Cases C, E | YES |
+| `R8` | `ACC-MSG-008` | Case D + terminal/timeout additional cases | YES |
+| `R9` | `ACC-MSG-009` | Case D + race additional cases | YES |
+| `R10` | `ACC-MSG-010` | Cases A, B, E + self/two-send additional cases | YES |
+| `R11` | `ACC-MSG-011` | Case I + late-result additional case | YES |
+| `R12` | `ACC-MSG-012` | Case F + audit-failure additional cases | YES |
+
+### Scenario-to-Contract coverage
+
+| Existing scenario | Contracts | Acceptance records |
+|---|---|---|
+| Case A — existing B main | `R1`, `R10` | `ACC-MSG-001`, `ACC-MSG-010` |
+| Case B — absent B main and concurrent first sends | `R10` | `ACC-MSG-010` |
+| Case C — receipt-only | `R7` | `ACC-MSG-007` |
+| Case D — one bounded reply | `R8`, `R9` | `ACC-MSG-008`, `ACC-MSG-009` |
+| Case E — B busy | `R7`, `R10` | `ACC-MSG-007`, `ACC-MSG-010` |
+| Case F — unauthorized sender | `R6`, `R12` | `ACC-MSG-006`, `ACC-MSG-012` |
+| Case G — unforgeable provenance | `R2`, `R3`, `R4` | `ACC-MSG-002`, `ACC-MSG-003`, `ACC-MSG-004` |
+| Case H — target-owned execution identity | `R5`, `R6` | `ACC-MSG-005`, `ACC-MSG-006` |
+| Case I — external route isolation | `R4`, `R11` | `ACC-MSG-004`, `ACC-MSG-011` |
+| §7 additional mandatory cases | `R2`, `R3`, `R6`, `R8`, `R9`, `R10`, `R11`, `R12` | `ACC-MSG-002`, `ACC-MSG-003`, `ACC-MSG-006`, `ACC-MSG-008`, `ACC-MSG-009`, `ACC-MSG-010`, `ACC-MSG-011`, `ACC-MSG-012` |
+
+```text
+ACTIVE_CONTRACTS = 12
+CONTRACTS_WITH_ACCEPTANCE = 12
+UNRESOLVED_ACCEPTANCE_REFERENCES = 0
+UNMAPPED_EXISTING_SCENARIOS = 0
+```
+
+## 8B. Predicted implementation scope details — not authorized
+
 Only a future atomic Owner acceptance transaction, after independent review, may change this Spec from
 `status: proposed` / `implementation_authority: none` to `status: accepted` /
 `implementation_authority: contracts`. The accepted Spec must then be present in the exact implementation
@@ -745,7 +1243,7 @@ PRODUCT_CODE_CHANGE = NONE   # this authoring task
 PRODUCTION_CHANGE = NONE
 ```
 
-## 9. Reused and retired agent_wake research
+## 9. Alternatives and disposition — reused and retired agent_wake research
 
 ### Reused
 
@@ -808,3 +1306,42 @@ PRODUCTION_CHANGE = NONE
 READY_FOR_INDEPENDENT_REVIEW = YES
 NEXT_TASK = 会话 审计
 ```
+
+## 11. Migration, compatibility, and rollback
+
+```text
+PROPOSED_SPEC_MIGRATION = none
+PRODUCT_MIGRATION_AUTHORIZED = NO
+CURRENT_CALLER_COMPATIBILITY = unchanged
+CURRENT_SESSION_COMPATIBILITY = unchanged
+CURRENT_EXTERNAL_ROUTE_COMPATIBILITY = unchanged
+ROLLBACK_BEFORE_ACCEPTANCE = revert/close the complete docs-only proposal
+ROLLBACK_AFTER_ACCEPTANCE = immutable authority; use a complete standalone successor and atomic whole-authority supersession
+IMPLEMENTATION_ROLLBACK = future implementation/conformance responsibility; not authorized by this proposed Spec
+```
+
+Compatibility is already frozen by R4, R10, and R11: existing callers that omit `messageOrigin` keep direct
+user source semantics; Messaging adds no arbitrary or fresh Session behavior; Delegation/Cron Session
+classes, Binding, external ingress/reply routes, and every existing Product Surface remain unchanged.
+
+There is no data migration, Session rewrite, backfill, Grant mutation, credential migration, deployment, or
+production action in this proposed-Spec lifecycle. If a future accepted implementation cannot satisfy these
+compatibility constraints, it fails the relevant Acceptance records rather than silently widening scope.
+
+## 12. Open questions and acceptance readiness
+
+```text
+OPEN_OWNER_DECISIONS = NONE
+NORMATIVE_TBD = NONE
+UNRESOLVED_AUTHORITY_CONFLICT = NONE
+PARTIAL_SUPERSESSION = NONE
+EXTERNAL_AUTHORITY_TBD = NONE
+ACTIVE_IMPLEMENTATION_AUTHORITY_WHILE_PROPOSED = NONE
+OWNER_ACCEPTANCE_REQUIRED = YES
+```
+
+The review focus in §10 asks the independent reviewer to verify frozen choices; it does not delegate any
+normative choice to implementation. A semantic delta anywhere in the Spec after review invalidates that
+review. Acceptance, if authorized, must bind the exact final head and atomically perform the lifecycle
+transition described in §8B together with required acceptance provenance and lifecycle mirrors; no product
+implementation, merge, or production authority exists in the current proposed state.
