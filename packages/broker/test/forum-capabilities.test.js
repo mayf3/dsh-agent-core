@@ -10,9 +10,7 @@ import { buildToolDefinition } from '../src/registry.js'
 import { createHttpTransport, createHttpHandlers } from '../src/transport.js'
 import { targets } from '../src/targets.js'
 import { manifests as forumManifests } from '../src/capabilities/forum.js'
-
 // ─── Helpers ────────────────────────────────────────────────────────────────
-
 function startMockServer(handler) {
   const requests = []
   const server = createServer((req, res) => {
@@ -89,6 +87,16 @@ function mockTargets(overrides) {
   return targets.map((t) => (overrides[t.targetId] ? { ...t, allowedOrigin: overrides[t.targetId] } : t))
 }
 
+async function captureChannels(definition, input) {
+  let stdout = '', stderr = '', thrownError = null, result
+  const [outWrite, errWrite] = [process.stdout.write, process.stderr.write]
+  process.stdout.write = (chunk) => { stdout += String(chunk); return true }
+  process.stderr.write = (chunk) => { stderr += String(chunk); return true }
+  try { result = await definition.execute(input) } catch (error) { thrownError = String(error) } finally {
+    [process.stdout.write, process.stderr.write] = [outWrite, errWrite]
+  }
+  return { result, thrownError, stdout, stderr }
+}
 // ═══ AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 (accepted) ═════════════════
 //
 // Second-batch Forum capability tests: the 5-tool normal pack, the 8-tool
@@ -103,23 +111,16 @@ import { moderatorManifests as forumModeratorManifests } from '../src/capabiliti
 
 const MODERATOR_SCOPES = ['forum.read', 'forum.write', 'forum.moderate']
 const TOOL_CHANNEL_FIXTURES = [
-  ['forum_create_thread', 'create', { title: 'fixture' }],
-  ['forum_watch_thread', 'watch', { threadId: 't-1' }],
-  ['forum_unwatch_thread', 'unwatch', { threadId: 't-1' }],
-  ['forum_report_content', 'report', { targetType: 'thread', targetId: 't-1', reason: 'spam' }],
-  ['forum_stats', 'stats', {}],
-  ['forum_pin_or_feature_thread', 'set_pinned', { threadId: 't-1', pinned: true }],
-  ['forum_delete_thread', 'delete_thread', { threadId: 't-1' }],
-  ['forum_delete_message', 'delete_message', { threadId: 't-1', messageId: 'm-1' }],
-  ['forum_resolve_thread', 'resolve', { threadId: 't-1', summaryMd: 'done' }],
-  ['forum_archive_thread', 'archive', { threadId: 't-1' }],
-  ['forum_moderation_queue', 'list', {}],
-  ['forum_handle_report', 'handle', { reportId: 'r-1', action: 'ignore' }],
+  ['forum_create_thread', 'create', { title: 'fixture' }], ['forum_watch_thread', 'watch', { threadId: 't-1' }],
+  ['forum_unwatch_thread', 'unwatch', { threadId: 't-1' }], ['forum_report_content', 'report', { targetType: 'thread', targetId: 't-1', reason: 'spam' }],
+  ['forum_stats', 'stats', {}], ['forum_pin_or_feature_thread', 'set_pinned', { threadId: 't-1', pinned: true }],
+  ['forum_delete_thread', 'delete_thread', { threadId: 't-1' }], ['forum_delete_message', 'delete_message', { threadId: 't-1', messageId: 'm-1' }],
+  ['forum_resolve_thread', 'resolve', { threadId: 't-1', summaryMd: 'done' }], ['forum_archive_thread', 'archive', { threadId: 't-1' }],
+  ['forum_moderation_queue', 'list', {}], ['forum_handle_report', 'handle', { reportId: 'r-1', action: 'ignore' }],
   ['forum_admin_unread', 'unread', {}],
 ]
 
 // ─── Schema: all 13 second-batch manifests validate; PATCH is allowed ───────
-
 test('schema: all 13 second-batch Forum manifests validate (5 normal + 8 moderator)', () => {
   assert.equal(forumNormalManifests.length, 5)
   assert.equal(forumModeratorManifests.length, 8)
@@ -442,18 +443,19 @@ test('all 13 new tools cover success and five failure channels with canary scans
   for (const [id, operation, args] of TOOL_CHANNEL_FIXTURES) {
     for (const channel of channels) await t.test(`${id}: ${channel}`, async () => {
       const calls = { credentialCalls: 0, tokenCalls: 0, businessCalls: 0 }
+      const headers = { 'content-type': 'application/json', 'x-secret-canary': 'header-canary-abc123' }
       const fetchImpl = async (url) => {
         if (String(url).endsWith('/oauth/token')) {
           calls.tokenCalls += 1
-          if (channel === 'token failure') return new Response('{"error":"invalid_scope"}', { status: 400, headers: { 'content-type': 'application/json' } })
-          return new Response('{"access_token":"token-canary-abc123","expires_in":300}', { status: 200, headers: { 'content-type': 'application/json' } })
+          if (channel === 'token failure') return new Response('{"error":"invalid_scope"}', { status: 400, headers })
+          return new Response('{"access_token":"token-canary-abc123","expires_in":300}', { status: 200, headers })
         }
         calls.businessCalls += 1
         if (channel === 'network failure') throw new Error('DPoP abc123')
-        if (channel === 'malformed response') return new Response('{broken', { status: 200, headers: { 'content-type': 'application/json' } })
+        if (channel === 'malformed response') return new Response('{broken', { status: 200, headers })
         const status = channel === 'downstream 4xx' ? 400 : channel === 'downstream 5xx' ? 500 : 200
         const body = status === 200 ? '{"fixture":"ok"}' : '{"error":{"message":"NTLM abc123"}}'
-        return new Response(body, { status, headers: { 'content-type': 'application/json' } })
+        return new Response(body, { status, headers })
       }
       const transport = createHttpTransport({
         credentialProvider: { getCredential: async () => { calls.credentialCalls += 1; return { clientId: 'writer', clientSecret: 'credential-canary-abc123' } } },
@@ -461,13 +463,15 @@ test('all 13 new tools cover success and five failure channels with canary scans
       })
       const { definition } = wire(manifests[id], transport)
       const input = { operation, ...args }
-      const result = await definition.execute(input)
+      const capturedChannels = await captureChannels(definition, input)
+      const { result } = capturedChannels
+      assert.equal(capturedChannels.thrownError, null, `${id}/${channel} threw`)
       const expectedCode = { 'downstream 4xx': 'http_4xx', 'downstream 5xx': 'http_5xx', 'token failure': 'authorization_denied', 'network failure': 'transport_failure', 'malformed response': 'malformed_response' }[channel]
       assert.equal(result.ok, channel === 'success', `${id}/${channel}`)
       if (expectedCode) assert.equal(result.error.code, expectedCode, `${id}/${channel}`)
       if (channel === 'token failure' && manifests[id].requiredScopes.includes('forum.moderate')) assert.equal(result.error.code, 'authorization_denied', `${id}: writer-only moderator denial`)
       assert.deepEqual(calls, { credentialCalls: 1, tokenCalls: 1, businessCalls: channel === 'token failure' ? 0 : 1 }, `${id}/${channel}`)
-      const captured = JSON.stringify({ modelEnvelope: result, renderer: definition.output.render(input, result), thrownError: null, stdout: '', stderr: '' })
+      const captured = JSON.stringify({ ...capturedChannels, modelEnvelope: result, renderer: definition.output.render(input, result) })
       for (const canary of ['credential-canary-abc123', 'token-canary-abc123', 'abc123']) assert.ok(!captured.includes(canary), `${id}/${channel} leaked ${canary}`)
     })
   }
