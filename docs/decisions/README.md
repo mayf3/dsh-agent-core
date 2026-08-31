@@ -15,26 +15,26 @@
 
 已登记决策：
 
-## D-008: Agent / Workspace / Session / main 长期产品模型 Current Decision（V3 candidate）
+## D-008: Agent / Workspace / Session / main 长期产品模型 Current Decision（V3）
 
-- 状态: proposed（standalone whole-authority replacement candidate；未 accepted、未进入
-  `main` 前不生效，D-006 / V2 仍是 Current Authority；全文见
+- 状态: accepted（2026-09-01；standalone Current Decision；Current Authority；
+  supersedes D-006 / V2；全文见
   `docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md`）
 - 日期: 2026-08-31（`TASK_NAME = 模型 执行`）
 - 背景: D-006 把普通 Agent-to-Agent Messaging 与 explicit Delegation 合并成单一
   per-task non-main 模型；Owner Current Model 要求前者进入 target Agent canonical main、
   后者保持 per-task non-main，并继续保持 cron per-execution non-main。
-- 决策: proposed V3 完整重述 D-006 的仍有效 Current Truth，只把 A2A 拆成两个明确
+- 决策: V3 完整重述 D-006 的仍有效 Current Truth，只把 A2A 拆成两个明确
   primitive：Messaging → target canonical main（reuse/establish same main；each send = new
   Run/Turn, not Session）；Delegation → one task one target non-main；Cron → one execution one
   target non-main。Session 选择由 interaction primitive 决定；target/executing Agent 保持其
   自己的 Workspace、Principal、credential 与 grants。
 - 替代方案: 保持所有 A2A per-task、所有 A2A 都进 main、long-lived pair Session、Scheduler
   `run_once` 代替 Messaging、只 amendment D-006 §11——均拒绝，详见 V3 §30。
-- 影响: 本轮只登记 proposed candidate；不翻转 D-006 lifecycle，不接受或实现 proposed
-  `AGENT_CORE_AGENT_SESSION_MESSAGING_V1 r2`，不修改任何 active child Spec、代码、Grant、
-  Scheduler、Workflow、部署或 production state。下一步是独立 `模型 审计`；审计 PASS 后仍需
-  authorized Owner 对 exact final head 执行 whole-authority acceptance。
+- 影响: D-006 已原子标记 superseded-by-D-008；七份 active child authority 全部 PRESERVE。
+  本次 acceptance 不接受或实现 proposed `AGENT_CORE_AGENT_SESSION_MESSAGING_V1 r2`，不修改
+  child Spec、代码、Grant、Scheduler、Workflow、部署或 production state；后续 `会话 执行`
+  仍需形成独立 implementation-authorizing Spec。
 
 ## D-007: Scheduler Occurrence / Outcome / Session / Migration Current Decision（V2）
 
@@ -69,7 +69,8 @@
 
 ## D-006: Agent / Workspace / Session / main 长期产品模型 Current Decision（V2）
 
-- 状态: accepted（standalone Current Decision，本文档为 Current Authority；全文见
+- 状态: superseded-by-D-008（此前为 standalone Current Decision；历史正文保留；Current
+  Authority 已由 D-008 / V3 接管，全文见
   `docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md`）
 - 日期: 2026-08-17
 - 背景: 旧 authority 之间出现需人工 merge 才能理解的产品模型分叉（D-002「Agent 固定
