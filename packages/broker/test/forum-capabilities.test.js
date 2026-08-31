@@ -102,6 +102,21 @@ import {
 import { moderatorManifests as forumModeratorManifests } from '../src/capabilities/forum-moderation.js'
 
 const MODERATOR_SCOPES = ['forum.read', 'forum.write', 'forum.moderate']
+const TOOL_CHANNEL_FIXTURES = [
+  ['forum_create_thread', 'create', { title: 'fixture' }],
+  ['forum_watch_thread', 'watch', { threadId: 't-1' }],
+  ['forum_unwatch_thread', 'unwatch', { threadId: 't-1' }],
+  ['forum_report_content', 'report', { targetType: 'thread', targetId: 't-1', reason: 'spam' }],
+  ['forum_stats', 'stats', {}],
+  ['forum_pin_or_feature_thread', 'set_pinned', { threadId: 't-1', pinned: true }],
+  ['forum_delete_thread', 'delete_thread', { threadId: 't-1' }],
+  ['forum_delete_message', 'delete_message', { threadId: 't-1', messageId: 'm-1' }],
+  ['forum_resolve_thread', 'resolve', { threadId: 't-1', summaryMd: 'done' }],
+  ['forum_archive_thread', 'archive', { threadId: 't-1' }],
+  ['forum_moderation_queue', 'list', {}],
+  ['forum_handle_report', 'handle', { reportId: 'r-1', action: 'ignore' }],
+  ['forum_admin_unread', 'unread', {}],
+]
 
 // ─── Schema: all 13 second-batch manifests validate; PATCH is allowed ───────
 
@@ -421,16 +436,56 @@ test('CTR-FMC-007: handle_report action closed to ignore|warn|delete locally', a
   await forum.close()
 })
 
+test('all 13 new tools cover success and five failure channels with canary scans', async (t) => {
+  const manifests = Object.fromEntries([...forumNormalManifests, ...forumModeratorManifests].map((m) => [m.id, m]))
+  const channels = ['success', 'downstream 4xx', 'downstream 5xx', 'token failure', 'network failure', 'malformed response']
+  for (const [id, operation, args] of TOOL_CHANNEL_FIXTURES) {
+    for (const channel of channels) await t.test(`${id}: ${channel}`, async () => {
+      const calls = { credentialCalls: 0, tokenCalls: 0, businessCalls: 0 }
+      const fetchImpl = async (url) => {
+        if (String(url).endsWith('/oauth/token')) {
+          calls.tokenCalls += 1
+          if (channel === 'token failure') return new Response('{"error":"invalid_scope"}', { status: 400, headers: { 'content-type': 'application/json' } })
+          return new Response('{"access_token":"token-canary-abc123","expires_in":300}', { status: 200, headers: { 'content-type': 'application/json' } })
+        }
+        calls.businessCalls += 1
+        if (channel === 'network failure') throw new Error('DPoP abc123')
+        if (channel === 'malformed response') return new Response('{broken', { status: 200, headers: { 'content-type': 'application/json' } })
+        const status = channel === 'downstream 4xx' ? 400 : channel === 'downstream 5xx' ? 500 : 200
+        const body = status === 200 ? '{"fixture":"ok"}' : '{"error":{"message":"NTLM abc123"}}'
+        return new Response(body, { status, headers: { 'content-type': 'application/json' } })
+      }
+      const transport = createHttpTransport({
+        credentialProvider: { getCredential: async () => { calls.credentialCalls += 1; return { clientId: 'writer', clientSecret: 'credential-canary-abc123' } } },
+        targets: mockTargets({ 'svc-forum': 'https://forum.invalid' }), authServiceOrigin: 'https://auth.invalid', fetchImpl,
+      })
+      const { definition } = wire(manifests[id], transport)
+      const input = { operation, ...args }
+      const result = await definition.execute(input)
+      const expectedCode = { 'downstream 4xx': 'http_4xx', 'downstream 5xx': 'http_5xx', 'token failure': 'authorization_denied', 'network failure': 'transport_failure', 'malformed response': 'malformed_response' }[channel]
+      assert.equal(result.ok, channel === 'success', `${id}/${channel}`)
+      if (expectedCode) assert.equal(result.error.code, expectedCode, `${id}/${channel}`)
+      if (channel === 'token failure' && manifests[id].requiredScopes.includes('forum.moderate')) assert.equal(result.error.code, 'authorization_denied', `${id}: writer-only moderator denial`)
+      assert.deepEqual(calls, { credentialCalls: 1, tokenCalls: 1, businessCalls: channel === 'token failure' ? 0 : 1 }, `${id}/${channel}`)
+      const captured = JSON.stringify({ modelEnvelope: result, renderer: definition.output.render(input, result), thrownError: null, stdout: '', stderr: '' })
+      for (const canary of ['credential-canary-abc123', 'token-canary-abc123', 'abc123']) assert.ok(!captured.includes(canary), `${id}/${channel} leaked ${canary}`)
+    })
+  }
+})
+
 test('CTR-FMC-005: admin unread uses exactly the moderator scopes', async () => {
   const tokenServer = await startTokenServer()
   const forum = await startForumMock()
   const transport = moderatorTransport(forum, tokenServer)
   const { definition } = wire(forumModeratorManifests.find((m) => m.id === 'forum_admin_unread'), transport)
+  const zero = await definition.execute({ operation: 'unread' })
+  assert.equal(zero.ok, true)
+  assert.deepEqual(forum.requests.at(-1).query, {})
   const res = await definition.execute({
     operation: 'unread', reason: 'mention', since: '2026-08-28T00:00:00Z', agentId: 'agt_other-agent',
   })
   assert.equal(res.ok, true)
-  const req = forum.requests.find((r) => r.pathname === '/api/admin/notifications/unread')
+  const req = forum.requests.at(-1)
   assert.equal(req.method, 'GET')
   assert.equal(req.query.reason, 'mention')
   assert.equal(req.query.since, '2026-08-28T00:00:00Z')

@@ -28,6 +28,9 @@ const DETAIL_REDACTIONS = [
   // consumes only the scheme word and the credentials survive (the same trap
   // the bearer rule documents for in-sentence tokens).
   [/(authorization\s*[:=]\s*)(?:basic|bearer|digest|dpop|hoba|mutual|negotiate|ntlm|scram-sha-1|scram-sha-256|vapid)\s+[A-Za-z0-9._~+/=-]+/gi, '$1[REDACTED]'],
+  // Short standalone non-Basic/Bearer auth credentials remain protected even
+  // when they are too short for the opaque-run fallback (focused amendment).
+  [/\b(ntlm|digest|vapid|dpop)\s+[A-Za-z0-9._~+/=-]+/gi, '$1 [REDACTED]'],
   // "Authorization: <value>" / "authorization=<value>" → keep the key, drop the value.
   [/(authorization\s*[:=]\s*)([^\s,;"']+)/gi, '$1[REDACTED]'],
   // "token"/"secret"/"password"/"credential"/"api-key" assignments.
