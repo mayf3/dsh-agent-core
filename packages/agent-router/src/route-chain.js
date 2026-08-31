@@ -20,9 +20,9 @@
  * refs/enums/counts only — never raw errors/tokens/credentials/bodies.
  */
 
+import { resolve } from 'node:path'
 import { FAIL_LOUD_PROVIDER_ERRORS } from './process/provider-errors.js'
 import { monotonicNowMs } from './process/state-machine.js'
-
 import {
   canaryOutcomeUnknownFixtureError, canaryQuotaFixtureError, createCanarySeam,
 } from './route-chain-canary.js'
@@ -127,8 +127,7 @@ function terminalQuotaEvidenceProven(error, turnEvidence) {
     && evidence.transportTimeout === false
 }
 
-/** DEC-IMPL-004 reuse-gate identity: five-field canonical form (ABSENT
- * sentinel for providerEnv); the CTR-I2-003 loader identity composes this. */
+/** Reuse identity, with ABSENT normalization; CTR-I2-003 composes this. */
 export function canonicalRouteIdentity(processConfig = {}) {
   const subscription = processConfig.subscription
   const providerEnv = processConfig.providerEnv
@@ -137,6 +136,7 @@ export function canonicalRouteIdentity(processConfig = {}) {
     processConfig.model ?? null,
     subscription?.plugin ?? null,
     subscription?.pluginVersion ?? null,
+    subscription?.credentialFile === undefined ? 'ABSENT' : resolve(subscription.credentialFile),
     providerEnv === undefined
       ? 'ABSENT'
       : PROVIDER_ENV_IDENTITY_KEYS.map((key) => [key, providerEnv[key] ?? null]),

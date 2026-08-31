@@ -24,6 +24,8 @@ const GLM_CONFIG = Object.freeze({ provider: 'zai', model: 'glm-5.3', subscripti
 const LUNA_CONFIG = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna', subscription: { plugin: 'dsh-codex', pluginVersion: '0.2.3' } })
 const GLM_IDENTITY = canonicalRouteIdentity(GLM_CONFIG)
 const LUNA_IDENTITY = canonicalRouteIdentity(LUNA_CONFIG)
+const PER_HOME_LUNA_CONFIG = Object.freeze({ ...LUNA_CONFIG, subscription: { ...LUNA_CONFIG.subscription, credentialFile: '/tmp/home/agt_gate-fx/.openai-codex-auth.json' } })
+const CANONICAL_LUNA_CONFIG = Object.freeze({ ...LUNA_CONFIG, subscription: { ...LUNA_CONFIG.subscription, credentialFile: '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json' } })
 
 function fakeCtx(services) {
   const provided = new Map()
@@ -131,6 +133,21 @@ test('DEC-IMPL-004: mismatched IDLE process is shut down through the existing co
   assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
   // The slot froze the wanted route's canonical identity at spawn time.
   assert.equal(router.lifecycleSlotSnapshot(AGT_ID).routeIdentity, LUNA_IDENTITY)
+})
+
+test('credential path switch never reuses the per-home OAuth child', async (t) => {
+  const { router, spawned } = await freshRig(t)
+  const oldChild = await router.ensureRunningForRoute(AGT_ID, {
+    routeIdentity: canonicalRouteIdentity(PER_HOME_LUNA_CONFIG), processConfig: PER_HOME_LUNA_CONFIG,
+  })
+  const newChild = await router.ensureRunningForRoute(AGT_ID, {
+    routeIdentity: canonicalRouteIdentity(CANONICAL_LUNA_CONFIG), processConfig: CANONICAL_LUNA_CONFIG,
+  })
+  assert.notEqual(newChild.proc, oldChild.proc)
+  assert.equal(oldChild.proc.shutdownCalls, 1)
+  assert.equal(spawned.length, 2)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).routeIdentity, canonicalRouteIdentity(CANONICAL_LUNA_CONFIG))
 })
 
 test('DEC-IMPL-004: mismatched BUSY process is never killed and never reused', async (t) => {

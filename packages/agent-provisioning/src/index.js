@@ -28,6 +28,7 @@ import { homedir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { assertOAuthCredentialBoundary, persistOpenAICodexCredentialFile } from './shared-codex.js'
+import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact } from './plugin-artifact.js'
 
 export { assertOAuthCredentialBoundary, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, persistOpenAICodexCredentialFile } from './shared-codex.js'
 
@@ -215,34 +216,32 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
     throw provisioningError('dsh_commit_mismatch', `expected DSH commit ${dshCommit}, resolved ${identity.commit ?? '(missing)'}`)
   }
 
+  const artifactIdentity = { version: 1, sourceCommit, artifactSha256 }
   const profilesRoot = join(home, 'profiles')
+  const installedRoot = join(profilesRoot, 'node_modules', plugin)
   const installedPackage = join(profilesRoot, 'node_modules', plugin, 'package.json')
-  if (existsSync(installedPackage)) {
-    let installedVersion
-    try {
-      installedVersion = JSON.parse(readFileSync(installedPackage, 'utf8')).version
-    } catch (cause) {
-      throw provisioningError('plugin_version_mismatch', `cannot verify installed ${plugin}`, cause)
-    }
-    if (installedVersion !== version) {
-      throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${installedVersion ?? '(missing)'}`)
-    }
-  } else {
+  const existingVersion = installedPluginVersion(installedPackage)
+  if (existingVersion !== undefined && existingVersion !== version) {
+    throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${existingVersion ?? '(missing)'}`)
+  }
+  // Same version is insufficient: reuse only exact installed artifact bytes.
+  if (!installedArtifactMatches(installedRoot, options.packageArtifact, artifactIdentity)) {
+    rmSync(installedRoot, { recursive: true, force: true })
     const installer = options.pluginInstaller ?? defaultPluginInstaller
     installer({ profilesRoot, plugin, version, packageArtifact: options.packageArtifact })
+    if (injectedArtifactIdentity !== undefined && existsSync(installedRoot)) stampInstalledArtifact(installedRoot, artifactIdentity)
   }
   if (!existsSync(installedPackage)) {
     throw provisioningError('plugin_missing', `${plugin}@${version} is not resolvable from ${profilesRoot}/node_modules`)
   }
-  let installedVersion
-  try {
-    installedVersion = JSON.parse(readFileSync(installedPackage, 'utf8')).version
-  } catch (cause) {
-    throw provisioningError('plugin_version_mismatch', `cannot verify installed ${plugin}`, cause)
-  }
+  const installedVersion = installedPluginVersion(installedPackage)
   if (installedVersion !== version) {
     throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${installedVersion ?? '(missing)'}`)
   }
+  if (!installedArtifactMatches(installedRoot, options.packageArtifact, artifactIdentity)) {
+    throw provisioningError('plugin_artifact_mismatch', `installed ${plugin}@${version} payload does not match the pinned artifact`)
+  }
+  stampInstalledArtifact(installedRoot, artifactIdentity)
 
   // External bundles declare DSH packages as peers. A local tarball install
   // intentionally uses --legacy-peer-deps so npm cannot consult the registry;

@@ -173,6 +173,26 @@ test('target-home plugin provisioning is exact, idempotent and leaves the shared
   assert.deepEqual(readFileSync(join(REPO, 'profile-production', 'package.json')), sharedBefore)
 })
 
+test('same-version legacy dsh-codex 0.2.3 is not reused without pinned artifact provenance', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-subscription-old-same-version-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  provisionAgentHome(home, join(dir, 'ws'), { profile: 'agent-core-production' })
+  fakeInstall({ profilesRoot: join(home, 'profiles'), plugin: 'dsh-codex', version: '0.2.3' })
+  let installs = 0
+  const result = provisionExactProfilePlugin(home, 'agent-core-production', {
+    plugin: SUBSCRIPTION.plugin, version: SUBSCRIPTION.pluginVersion,
+    sourceCommit: SUBSCRIPTION.sourceCommit, artifactSha256: SUBSCRIPTION.artifactSha256,
+    dshVersion: SUBSCRIPTION.dshVersion, dshCommit: SUBSCRIPTION.dshCommit,
+  }, {
+    harnessIdentity: HARNESS_IDENTITY,
+    artifactIdentity: ARTIFACT_IDENTITY,
+    pluginInstaller(input) { installs += 1; fakeInstall(input) },
+  })
+  assert.equal(result.version, '0.2.3')
+  assert.equal(installs, 1, 'same version without exact source/digest stamp must be replaced')
+})
+
 test('plugin missing, plugin mismatch, DSH mismatch and credential boundaries fail loud', (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'agent-subscription-fail-'))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
@@ -244,7 +264,10 @@ test('modified 0.2.3 artifact requires an exact digest and source stamp', (t) =>
   const home = join(dir, 'home')
   provisionAgentHome(home, join(dir, 'ws'), { profile: 'agent-core-production' })
   const artifact = join(dir, 'dsh-codex-0.2.3.tgz')
-  writeFileSync(artifact, 'synthetic-package-artifact', 'utf8')
+  const packageRoot = join(dir, 'package')
+  mkdirSync(packageRoot)
+  writeFileSync(join(packageRoot, 'package.json'), JSON.stringify({ name: 'dsh-codex', version: '0.2.3' }), 'utf8')
+  assert.equal(spawnSync('/usr/bin/tar', ['-czf', artifact, '-C', dir, 'package']).status, 0)
   const artifactSha256 = createHash('sha256').update(readFileSync(artifact)).digest('hex')
   const requirement = {
     plugin: SUBSCRIPTION.plugin,
