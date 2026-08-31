@@ -3,7 +3,7 @@ spec_id: AGENT_CORE_AGENT_SESSION_MESSAGING_V1
 status: proposed
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: contracts
+implementation_authority: none
 production_apply_authority: none
 date: 2026-08-31
 revision: r2
@@ -701,9 +701,11 @@ AND no Feishu/Forum/Scheduler/Workflow delivery occurs
 
 ## 8. Predicted implementation scope — not authorized
 
-Only after this Spec is independently reviewed, Owner-accepted, and present in the exact implementation
-base that already contains accepted/current D-008 may its bounded `implementation_authority: contracts`
-activate. Predicted code scope is:
+Only a future atomic Owner acceptance transaction, after independent review, may change this Spec from
+`status: proposed` / `implementation_authority: none` to `status: accepted` /
+`implementation_authority: contracts`. The accepted Spec must then be present in the exact implementation
+base that already contains accepted/current D-008 before its bounded Contracts may activate. Predicted
+code scope is:
 
 ```text
 packages/broker
@@ -796,7 +798,8 @@ SOURCE_R2_SHA256 = 20820492d1b65842b0c607ee013baca1d5a3d6377b072d8914405eabff99d
 FRESH_AUTHORING_BASE = 433b8bd06a163badae322da9db012b9851e148b6
 DECISION_ALIGNMENT_STATUS = SATISFIED_BY_D008
 PR130_DISPOSITION = CLOSE
-IMPLEMENTATION_AUTHORITY_ON_ACCEPTANCE = contracts
+PROPOSED_IMPLEMENTATION_AUTHORITY = none
+IMPLEMENTATION_AUTHORITY_ON_FUTURE_ACCEPTANCE = contracts
 ACTIVE_IMPLEMENTATION_AUTHORITY_WHILE_PROPOSED = NONE
 OWNER_ACCEPTANCE_REQUIRED = YES
 IMPLEMENTATION_SCOPE = Broker local capability + trusted provenance sidecar + thin reconciliation wait helper + production wiring/tests; no new Session/Scheduler subsystem
