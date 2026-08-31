@@ -11,6 +11,7 @@ import {
   sanitizeErrorDetail,
 } from '../src/transport.js'
 import { validateManifest } from '../src/schema.js'
+import { validateArgumentsDetailed } from '../src/mapping.js'
 
 function manifest(properties, method = 'GET') {
   return {
@@ -51,6 +52,17 @@ test('bounded delta 2: nonBlank is boolean-only and string-only', () => {
     assert.equal(result.ok, false)
     assert.ok(result.errors.some((error) => error.includes('nonBlank')))
   }
+})
+
+test('bounded delta 2: nonBlank enforcement rejects blank, missing, and wrong-type values locally', () => {
+  const schema = { properties: { summaryMd: { type: 'string', nonBlank: true } }, required: ['summaryMd'] }
+  assert.deepEqual(validateArgumentsDetailed(schema, { summaryMd: '## Outcome' }).violations, [])
+  for (const bad of ['', '   ', '\t\n ']) {
+    const out = validateArgumentsDetailed(schema, { summaryMd: bad })
+    assert.ok(out.violations.some((v) => v.includes('non-blank')), JSON.stringify(bad))
+  }
+  assert.ok(validateArgumentsDetailed(schema, {}).violations.some((v) => v.includes('missing required property "summaryMd"')))
+  assert.ok(validateArgumentsDetailed(schema, { summaryMd: 42 }).violations.some((v) => v.includes('must be a string')))
 })
 
 test('bounded delta 3: Bearer and Basic six-case matrix is case-insensitive', () => {

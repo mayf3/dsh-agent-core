@@ -309,8 +309,9 @@ const {
   resolveForumModeratorRegistration,
   apply: brokerApply,
 } = await import('../src/index.js')
-import { validateArgumentsDetailed } from '../src/mapping.js'
 import { manifests as forumFirstBatch } from '../src/capabilities/forum.js'
+import { moderatorManifests } from '../src/capabilities/forum-moderation.js'
+import { createHttpHandlers, createHttpTransport } from '../src/transport.js'
 
 const MODERATOR_TOOL_NAMES = [
   'forum_pin_or_feature_thread', 'forum_delete_thread', 'forum_delete_message',
@@ -470,21 +471,24 @@ test('apply() gateway mode: moderator manifests retained for trusted relay execu
   assert.notEqual(unknown.error.code, 'credential_unavailable')
 })
 
-// ─── CTR-FMC-006 (mapping): nonBlank local enforcement ──────────────────────
-
-test('nonBlank: empty and whitespace-only strings are rejected locally', () => {
-  const schema = {
-    properties: { summaryMd: { type: 'string', nonBlank: true } },
-    required: ['summaryMd'],
+test('writer-only moderator call reaches Credential/Auth once and never business HTTP', async () => {
+  const calls = { credentialCalls: 0, tokenCalls: 0, businessCalls: 0 }
+  const fetchImpl = async (url) => {
+    if (String(url).endsWith('/oauth/token')) {
+      calls.tokenCalls += 1
+      return new Response('{"error":"invalid_scope"}', { status: 400, headers: { 'content-type': 'application/json' } })
+    }
+    calls.businessCalls += 1
+    throw new Error('business HTTP must not run')
   }
-  const ok = validateArgumentsDetailed(schema, { summaryMd: '## Outcome' })
-  assert.deepEqual(ok.violations, [])
-  for (const bad of ['', '   ', '\t\n ']) {
-    const out = validateArgumentsDetailed(schema, { summaryMd: bad })
-    assert.ok(out.violations.some((v) => v.includes('non-blank')), `value ${JSON.stringify(bad)} must be rejected as blank`)
-  }
-  const missing = validateArgumentsDetailed(schema, {})
-  assert.ok(missing.violations.some((v) => v.includes('missing required property "summaryMd"')))
-  const wrongType = validateArgumentsDetailed(schema, { summaryMd: 42 })
-  assert.ok(wrongType.violations.some((v) => v.includes('must be a string')))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => { calls.credentialCalls += 1; return { clientId: 'writer', clientSecret: 'secret' } } },
+    targets: [{ targetId: 'svc-forum', audience: 'svc-forum', allowedOrigin: 'https://forum.invalid' }],
+    authServiceOrigin: 'https://auth.invalid', fetchImpl,
+  })
+  const manifest = moderatorManifests.find((item) => item.id === 'forum_admin_unread')
+  const { definition } = buildToolDefinition({ manifest, handlers: createHttpHandlers(manifest, transport), deps: { resolvePrincipal: () => undefined } })
+  const result = await definition.execute({ operation: 'unread' })
+  assert.equal(result.error.code, 'authorization_denied')
+  assert.deepEqual(calls, { credentialCalls: 1, tokenCalls: 1, businessCalls: 0 })
 })
