@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 
 import {
   runFleetSharedCodexAuthMigrationV1,
   selectAuthoritativeCodexGeneration,
 } from '../src/compose.js'
+import {
+  FLEET_SHARED_CODEX_ARTIFACT_PIN,
+} from '../src/shared-codex-migration-executable.js'
+import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE } from '../src/model-overrides.js'
 
 const ENVIRONMENT = Object.freeze({ lunaDispatchQuiesced: true, refreshWritersQuiesced: true })
 const ACCOUNT = 'expected-account-identity'
@@ -130,4 +139,75 @@ test('legacy inspection is rejected until both quiesce fences are established', 
     }),
     (error) => error.code === 'SHARED_CODEX_QUIESCE_REQUIRED',
   )
+})
+
+test('real executable bindings complete isolated production-like migrate and safe rollback', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'shared-codex-production-like-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const rooted = (absolute) => join(root, absolute.slice(1))
+  const provenancePath = '/control/provenance.json'
+  const sharedConfigPath = '/Users/authsvc/.agent-core/agent-model-overrides.json'
+  const artifactReceiptPath = '/control/artifact-receipt.json'
+  const events = rooted('/control/events.jsonl')
+  mkdirSync(rooted('/control'), { recursive: true })
+  mkdirSync(join(rooted(sharedConfigPath), '..'), { recursive: true })
+  writeFileSync(rooted(provenancePath), JSON.stringify({
+    expectedAccountIdentity: ACCOUNT,
+    candidates: Array.from({ length: 91 }, (_, index) => candidate({
+      storeId: `/legacy/agent-${index + 1}`,
+      generationId: `fs:1:${index + 1}`,
+      remoteOperationSucceeded: false,
+      atomicLocalCommitSucceeded: false,
+      lastRemoteRotationCommitted: false,
+    })),
+  }))
+  writeFileSync(rooted(sharedConfigPath), JSON.stringify({
+    version: 3,
+    routeCatalog: { luna: { provider: 'openai-codex', model: 'gpt-5.6-luna', credentialFile: '/tmp/legacy/.openai-codex-auth.json' } },
+    overrides: {},
+  }))
+  const command = (name, body = '') => [process.execPath, '-e', `
+    const fs=require('node:fs'); fs.appendFileSync(${JSON.stringify(events)}, ${JSON.stringify(`${name}\n`)}); ${body}
+  `]
+  const commands = {
+    quiesceLunaDispatch: command('quiesce-dispatch'),
+    quiesceRefreshWriters: command('quiesce-refresh'),
+    ownerReauthCanonical: command('owner-reauth', "fs.mkdirSync(require('node:path').dirname(process.env.AGENT_CORE_CANONICAL_CREDENTIAL),{recursive:true});fs.writeFileSync(process.env.AGENT_CORE_CANONICAL_CREDENTIAL,'{}',{mode:0o600})"),
+    grantControlPlaneAcl: command('grant-acl'),
+    probeUid502Read: command('uid502-read', "fs.accessSync(process.env.AGENT_CORE_CANONICAL_CREDENTIAL,fs.constants.R_OK)"),
+    probeUid502AtomicReplace: command('uid502-replace', "const p=process.env.AGENT_CORE_CANONICAL_CREDENTIAL,t=p+'.probe';fs.copyFileSync(p,t);fs.chmodSync(t,0o600);fs.renameSync(t,p)"),
+    probeAuthsvcControlPlane: command('authsvc-control'),
+    probeThirdUidDenied: command('third-uid-denied', "if((fs.statSync(process.env.AGENT_CORE_CANONICAL_CREDENTIAL).mode&0o077)!==0)process.exit(9)"),
+    installPinnedArtifact: command('install-artifact', `fs.writeFileSync(process.env.AGENT_CORE_ARTIFACT_RECEIPT,JSON.stringify(${JSON.stringify({ ...FLEET_SHARED_CODEX_ARTIFACT_PIN, sourceStamp: 'dsh-codex-source-stamp-v1' })}))`),
+    verifyZeroPerHomeRuntimeOpens: command('zero-per-home-opens'),
+    controlledRestart: command('restart'),
+    canaries: Object.fromEntries(['CEO', 'HR', 'Podcast', 'Shopping'].map((name) => [name, command(`canary-${name}`)])),
+    verifyFleetHealth: command('fleet-health'),
+    rollbackRuntime: command('rollback-retain-canonical'),
+  }
+  const config = {
+    root,
+    canonicalCredentialPath: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+    provenancePath, sharedConfigPath, artifactReceiptPath,
+    artifact: FLEET_SHARED_CODEX_ARTIFACT_PIN,
+    sourceStamp: 'dsh-codex-source-stamp-v1',
+    commands,
+  }
+  const configFile = join(root, 'migration-config.json')
+  writeFileSync(configFile, JSON.stringify(config))
+  const cli = fileURLToPath(new URL('../src/shared-codex-migration-cli.js', import.meta.url))
+  const migration = spawnSync(process.execPath, [cli, 'migrate', configFile], { encoding: 'utf8' })
+  assert.equal(migration.status, 0, migration.stderr)
+  const report = JSON.parse(migration.stdout)
+  assert.equal(report.canonicalReauthCount, 1)
+  assert.equal(readFileSync(events, 'utf8').split('\n').filter((line) => line === 'owner-reauth').length, 1)
+  assert.equal(readFileSync(events, 'utf8').includes('canary-CEO\ncanary-HR\ncanary-Podcast\ncanary-Shopping\nfleet-health'), true)
+  assert.equal(readFileSync(rooted(sharedConfigPath), 'utf8').includes(CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE), true)
+  assert.deepEqual(JSON.parse(readFileSync(rooted('/Users/authsvc/.agent-core/control/shared-codex-migration-fence.json'), 'utf8')), {
+    version: 1, lunaDispatchQuiesced: true, refreshWritersQuiesced: true,
+  })
+  assert.equal((statSync(report.canonicalCredential).mode & 0o077), 0)
+  const rollback = spawnSync(process.execPath, [cli, 'rollback', configFile], { encoding: 'utf8' })
+  assert.equal(rollback.status, 0, rollback.stderr)
+  assert.deepEqual(JSON.parse(rollback.stdout), { canonicalCredentialRetained: true, legacyCredentialRollback: false })
 })
