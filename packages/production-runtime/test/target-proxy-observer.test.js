@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { once } from 'node:events'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
@@ -13,7 +13,7 @@ import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
 import { RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/process.js'
 import { CHATGPT_SUBSCRIPTION_V1 } from '../src/model-overrides.js'
 
-const DSH_CODEX_PACKAGE_SHA256 = '8c3d4e3418c8e267a7b61dc4ad4cd982eaf1c1ec93a4e580961e0292579c23dc'
+const DSH_CODEX_PACKAGE_SHA256 = CHATGPT_SUBSCRIPTION_V1.artifactSha256
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex')
@@ -88,8 +88,9 @@ test('WebSocket proxy observer captures WebSocket CONNECT independently of SSE f
 
 test('real dsh-codex usage service has separate proxy CONNECT evidence', { timeout: 60_000 }, async (t) => {
   const artifact = process.env.DSH_CODEX_PACKAGE_TARBALL
-  if (artifact === undefined || artifact === '') {
-    t.skip('DSH_CODEX_PACKAGE_TARBALL is required for deterministic real-package acceptance')
+  const sourceStamp = process.env.DSH_CODEX_SOURCE_STAMP
+  if (artifact === undefined || artifact === '' || sourceStamp === undefined || sourceStamp === '') {
+    t.skip('DSH_CODEX_PACKAGE_TARBALL and DSH_CODEX_SOURCE_STAMP are required for deterministic real-package acceptance')
     return
   }
   assert.equal(isAbsolute(artifact), true, 'DSH_CODEX_PACKAGE_TARBALL must be absolute')
@@ -113,11 +114,12 @@ test('real dsh-codex usage service has separate proxy CONNECT evidence', { timeo
   try {
     provisionAgentHome(dshHome, join(root, 'workspace'), {
       profile: 'agent-core-production',
-      subscription: { ...CHATGPT_SUBSCRIPTION_V1, packageArtifact: artifact },
+      subscription: { ...CHATGPT_SUBSCRIPTION_V1, packageArtifact: artifact, sourceStamp },
       harnessIdentity: {
         version: CHATGPT_SUBSCRIPTION_V1.dshVersion,
         commit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
       },
+      credentialBoundary() {},
     })
   } finally {
     for (const [name, value] of Object.entries(envBefore)) {
@@ -141,8 +143,10 @@ test('real dsh-codex usage service has separate proxy CONNECT evidence', { timeo
       accountId: 'fixture-account-not-real',
     },
   }
+  const fixtureCredentialFile = join(realpathSync(root), 'canonical', '.openai-codex-auth.json')
+  mkdirSync(join(realpathSync(root), 'canonical'), { recursive: true, mode: 0o700 })
   writeFileSync(
-    join(dshHome, CHATGPT_SUBSCRIPTION_V1.credentialFile),
+    fixtureCredentialFile,
     `${JSON.stringify(fixtureCredential)}\n`,
     { mode: 0o600 },
   )
@@ -154,6 +158,7 @@ test('real dsh-codex usage service has separate proxy CONNECT evidence', { timeo
     script: `
       const { OpenAICodexService } = await import(${JSON.stringify(pluginEntry)})
       const service = new OpenAICodexService({
+        credentialFile: ${JSON.stringify(fixtureCredentialFile)},
         modifyReadImage: true,
         shareImagegenWithOtherModels: true,
         useWebSocketContextReuse: false,

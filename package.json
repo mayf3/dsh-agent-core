@@ -15,6 +15,7 @@
     "verify:delivery": "node scripts/agent-router-delivery-v0-verify.mjs",
     "verify:structure": "node scripts/verify-code-structure.mjs --base origin/main --head HEAD",
     "verify:agent-credential-provisioning": "node scripts/agent-credential-provisioning-v1-verify.mjs",
+    "migrate:fleet-shared-codex-auth": "node packages/production-runtime/src/shared-codex-migration-cli.js",
     "import:openclaw-jobs": "node scripts/openclaw-job-import.mjs"
   },
   "license": "UNLICENSED",
