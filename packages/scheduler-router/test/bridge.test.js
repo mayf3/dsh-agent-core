@@ -43,10 +43,10 @@ function fakeRouter({ proc, ensureError = null, ensured = [], seen = [], onArgs 
 
 function fakeFeishu({ replyError = null, replies = [] } = {}) {
   return {
-    reply: async (target, text) => {
+    reply: async (target, text, opts) => {
       if (replyError) throw replyError
       const result = { messageId: `om_${replies.length + 1}`, chatId: target.receiveId, method: 'create', code: 0 }
-      replies.push({ target, text, result })
+      replies.push({ target, text, opts, result })
       return result
     },
     replies,
@@ -215,6 +215,54 @@ test('deliver: announce maps job.delivery.to onto the feishu.reply seam', async 
   assert.equal(text, 'hello announce')
   assert.equal(deliver.deliveries.length, 1)
   assert.equal(deliver.deliveries[0].chatId, 'oc_abc123')
+})
+
+test('deliver: SCHEDULER_SUCCESS_CARD_ELIGIBLE — a terminal ok announce carries EXACTLY the narrow presentation intent', async () => {
+  const feishu = fakeFeishu()
+  const deliver = createFeishuDeliver(feishu)
+  const job = { id: 'j1', delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_abc123' } }
+  await deliver({ job, result: { status: 'ok', summary: 'done' }, text: 'done' })
+  assert.equal(feishu.replies.length, 1)
+  // EXACT shape: advice, not command — no ux authority is reused, no
+  // rendering / mention key ever appears at this seam.
+  assert.deepEqual(feishu.replies[0].opts, { presentation: { cardEligible: true, source: 'scheduler' } })
+  // The direct kind=create target and chatId stay byte-identical.
+  const target = feishu.replies[0].target
+  assert.equal(target.kind, 'create')
+  assert.equal(target.chatId, 'oc_abc123')
+  assert.equal(target.conversationId, 'group:oc_abc123')
+  assert.equal(target.channel, 'group')
+  assert.equal(target.receiveIdType, 'chat_id')
+  assert.equal(target.receiveId, 'oc_abc123')
+  assert.equal(target.threadId, undefined)
+  assert.equal(target.rootMsgId, undefined)
+  assert.equal(target.replyInThread, false)
+})
+
+test('deliver: successful silent delivery sends with NO opts (generic proactive stays on the plain-text plan)', async () => {
+  const feishu = fakeFeishu()
+  const deliver = createFeishuDeliver(feishu)
+  const job = { id: 'j5', delivery: { mode: 'silent', channel: 'feishu', to: 'chat:oc_x' } }
+  await deliver({ job, result: { status: 'ok', summary: 'done' }, text: 'silent text' })
+  assert.equal(feishu.replies.length, 1)
+  assert.equal(feishu.replies[0].opts, undefined)
+  assert.equal(feishu.replies[0].text, 'silent text')
+})
+
+test('deliver: error and outcome_unknown announces send with NO opts (stay on the plain-text plan)', async () => {
+  const feishu = fakeFeishu()
+  const deliver = createFeishuDeliver(feishu)
+  const job = { id: 'j4', delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_x' } }
+  await deliver({ job, result: { status: 'error', error: 'boom' }, text: 'failed text' })
+  await deliver({ job, result: { status: 'outcome_unknown', error: 'deadline' }, text: 'unknown text' })
+  assert.equal(feishu.replies.length, 2)
+  assert.equal(feishu.replies[0].opts, undefined, 'error announce carries no presentation intent')
+  assert.equal(feishu.replies[1].opts, undefined, 'outcome_unknown announce carries no presentation intent')
+  assert.equal(feishu.replies[0].text, 'failed text')
+  assert.equal(feishu.replies[1].text, 'unknown text')
+  // absent result also sends no intent (defensive parity)
+  await deliver({ job, result: undefined, text: 'x' })
+  assert.equal(feishu.replies[2].opts, undefined)
 })
 
 test('deliver: non-feishu channel throws -> scheduler marks not-delivered', async () => {

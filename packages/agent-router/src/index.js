@@ -238,18 +238,23 @@ export function apply(ctx, config) {
   })
   /**
    * The unified ordered route-attempt chain executor
-   * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-002): the ONE seam
+   * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2 CTR-I2-005): the ONE seam
    * behind onIngress, Delivery V0 and the scheduler invokeAgent bridge. The
    * immutable chain snapshot comes from the composition-owned
    * `resolveRouteChain(agentId)` (agent-model-overrides.json version 2;
    * absent => length-1 legacy passthrough with the router's existing default
-   * route resolution — byte-equivalent behavior).
+   * route resolution — byte-equivalent behavior). `canaryRuntimeRoot` (the
+   * production runtime root) instantiates the default-off CTR-I2-015
+   * one-shot canary seam; absent => the seam stays disabled.
    */
   const routeChain = createRouteChainExecutor({
     log,
     ensureRunningForRoute: registry.ensureRunningForRoute,
     resolveRouteChain: typeof cfg.resolveRouteChain === 'function' ? cfg.resolveRouteChain : undefined,
     resolveTurnDeadlineMs: (agentId) => deadlineConfig.perAgent(agentId).turnTimeoutMs,
+    ...(typeof cfg.canaryRuntimeRoot === 'string' && cfg.canaryRuntimeRoot !== ''
+      ? { canaryRuntimeRoot: cfg.canaryRuntimeRoot }
+      : {}),
   })
   const ingressDelivery = createIngressDelivery({
     log,

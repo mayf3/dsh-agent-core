@@ -20,10 +20,15 @@
  *     onIngress and Delivery V0). No Router source change, no scheduler
  *     special-case inside the Router, no chain logic in this bridge.
  *   - `createFeishuDeliver(feishu)` calls only `feishu.reply(ReplyTarget,
- *     text)` — the single existing outbound send (packages/feishu-connector,
- *     same seam the Router's onIngress reply path uses). It reads the opaque
- *     `job.delivery.{channel,to}` fields and builds the ReplyTarget; it
- *     never opens a second outbound path.
+ *     text, opts)` — the single existing outbound send (packages/
+ *     feishu-connector, same seam the Router's onIngress reply path uses). It
+ *     reads the opaque `job.delivery.{channel,to}` fields and builds the
+ *     ReplyTarget; it never opens a second outbound path. A terminal success
+ *     announce additionally carries the narrow outbound presentation intent
+ *     `{ presentation: { cardEligible: true, source: 'scheduler' } }`
+ *     (SCHEDULER_SUCCESS_CARD_ELIGIBLE Owner ruling) — NOT the Router ingress
+ *     ux authority; the connector remains the display-policy authority and
+ *     may still deliver plain text (markdown mode / oversize envelope).
  *
  * AbortSignal (scheduler TIMEOUT_ABORT audit): the scheduler passes
  * `request.signal` into the seam; this bridge OBSERVES it (records
@@ -228,16 +233,27 @@ export function createRouterInvoker(router, opts = {}) {
  * The real delivery seam: Scheduler.deliver -> existing Feishu outbound.
  *
  * Maps the scheduler's OPAQUE delivery directive onto the ONE existing
- * outbound seam: `feishu.reply(ReplyTarget, text)` (the same call the
+ * outbound seam: `feishu.reply(ReplyTarget, text, opts)` (the same call the
  * Router's onIngress reply path uses; im.message.create via a `create`
  * ReplyTarget). `job.delivery.{channel,to}` stay opaque to the Scheduler —
  * this adapter is the only place that reads them.
+ *
+ * Presentation intent (SCHEDULER_SUCCESS_CARD_ELIGIBLE Owner ruling): ONLY a
+ * terminal success (`result.status === 'ok'`) announce carries the narrow
+ * outbound presentation intent `{ presentation: { cardEligible: true,
+ * source: 'scheduler' } }` as the reply() third argument. This is a NEW
+ * namespace — it reuses NOTHING of the Router ingress ux authority (no
+ * rendering / auto-mention semantics live here), and it is ADVICE, not
+ * command: the connector stays the display-policy authority and keeps every
+ * non-card outcome (markdown mode, oversize envelope, empty body) on the
+ * byte-identical plain-text path. Every other result status (error /
+ * outcome_unknown) and every caller without the intent is unaffected.
  *
  * Throws for anything it cannot send -> the Scheduler marks the run
  * not-delivered (deliver throw = not-delivered, scheduler.js _runOne).
  *
  * @param {object} feishu - the published `feishu` channel handle exposing
- *   `reply(replyTarget, text) -> {messageId, chatId, code, msg}`.
+ *   `reply(replyTarget, text, opts) -> {messageId, chatId, code, msg}`.
  * @returns {Function} the deliver({job, result, text}) seam, with
  *   `.deliveries` log.
  */
@@ -266,7 +282,16 @@ export function createFeishuDeliver(feishu) {
       rootMsgId: undefined,
       replyInThread: false,
     }
-    const sent = await feishu.reply(target, String(text ?? ''))
+    // SCHEDULER_SUCCESS_CARD_ELIGIBLE (Owner ruling): ONLY the terminal
+    // success announce carries the presentation intent. `source` stays
+    // 'scheduler' so the connector's card gate can never be satisfied by any
+    // other caller; no ux authority is reused and no mention semantics exist
+    // here. Any other status (error / outcome_unknown) sends with NO opts and
+    // keeps the byte-identical plain-text plan.
+    const opts = delivery.mode === 'announce' && result?.status === 'ok'
+      ? { presentation: { cardEligible: true, source: 'scheduler' } }
+      : undefined
+    const sent = await feishu.reply(target, String(text ?? ''), opts)
     deliveries.push({
       jobId: job.id,
       channel: delivery.channel,

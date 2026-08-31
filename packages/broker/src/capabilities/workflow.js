@@ -12,6 +12,7 @@
  *   workflow_submission_history GET /internal/v1/workflow-instances/{workflowInstanceId}/submissions workflow.read
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
  *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
+ *   workflow_transition        POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions workflow.execute
  *
  * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1):
  * read-only domain-wide instance enumeration for DOMAIN_OWNERs. The DOMAIN_OWNER
@@ -26,9 +27,10 @@
  * is deliberately NOT exposed in the first batch (deferred, see report); only
  * `limit` is surfaced — the transport forwards ONLY manifest-declared query
  * names, so cursor parameters can never reach svc-workflow (not even "half"
- * a cursor). The write surface (transitions / create_instance / cancel /
- * archive / domain ops) is deferred with the Idempotency-Key generic
- * mechanism already in place for it (transport `idempotencyKey` flag).
+ * a cursor). The sole workflow write exposed here is exact-assignee transition
+ * submission; svc-workflow remains the authority for actor and transition
+ * legality, and the transport's trusted `idempotencyKey` seam generates its
+ * model-inaccessible Idempotency-Key.
  *
  * Downstream error preservation: each manifest DECLARES the svc-workflow
  * read-side error codes its endpoints can produce (evidence: svc-workflow
@@ -245,6 +247,137 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   ],
 })
 
+/**
+ * Global (all-domain) read-only instance enumeration
+ * (AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2).
+ *
+ * Proxies the deployed svc-workflow endpoint GET
+ * /internal/v1/workflow-instances/global. Authorization is wholly
+ * server-side: only callers holding a global read role
+ * (GLOBAL_WORKFLOW_READER or GLOBAL_WORKFLOW_COORDINATOR — target
+ * contract; coordinator-only on pre-READER-deployment installs) pass;
+ * everyone else fails closed with 403 global_read_role_required /
+ * global_coordinator_required (both declared to cover the two deployment
+ * timelines). The broker never replicates, relaxes or caches any role
+ * decision; the tool is generic — no per-agent wiring (DEC-008), and
+ * assigneePrincipalId is a server-side RESULT filter that can never
+ * influence the caller identity (DEC-003).
+ *
+ * Cursor discipline — explicit deviation (DEC-002): unlike the
+ * first-batch capabilities, the paired cursor beforeCreatedAt + beforeId
+ * IS exposed here, because fleet-wide enumeration must be pageable. The
+ * pair must be given together; a half cursor is forwarded untouched and
+ * rejected downstream with 422 invalid_cursor (declared). Enum / UUID /
+ * RFC3339 format checks are NOT replicated broker-side (CTR-002): only
+ * `limit` fails fast locally (1-20 -> invalid_pagination); illegal
+ * lifecycle/status values pass through and are rejected downstream with
+ * 422 invalid_lifecycle / invalid_status (declared).
+ */
+export const workflowGlobalInstancesManifest = withTransportErrors({
+  id: 'workflow_global_instances',
+  toolName: 'workflow_global_instances',
+  name: 'Workflow Global Instances',
+  description:
+    'Agent Core capability `workflow_global_instances` (svc-workflow): enumerate workflow-instance summaries across ALL domains (read-only; caller must hold GLOBAL_WORKFLOW_READER or GLOBAL_WORKFLOW_COORDINATOR — enforced server-side). ' +
+    'Returns {ok: true, result: <global instance page>} on success.',
+  requiredScopes: ['workflow.read'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    { code: 'invalid_pagination', description: 'Pagination parameters are invalid (limit must be 1-20).' },
+    { code: 'invalid_cursor', description: 'Cursor parameters are invalid (beforeCreatedAt and beforeId must be given together).' },
+    { code: 'invalid_lifecycle', description: 'lifecycle is not one of active|terminal|all (HTTP 422).' },
+    { code: 'invalid_status', description: 'status is not one of active|cancelled|archived|all (HTTP 422).' },
+    { code: 'global_coordinator_required', description: 'Caller holds no global read role — transition code of installs deployed before the READER revision (HTTP 403).' },
+    { code: 'global_read_role_required', description: 'Caller holds neither GLOBAL_WORKFLOW_READER nor GLOBAL_WORKFLOW_COORDINATOR (HTTP 403).' },
+  ],
+  operations: [
+    {
+      name: 'list',
+      description:
+        'List workflow-instance summaries across all domains. Optional: limit (1-20), lifecycle (active|terminal|all), status (active|cancelled|archived|all), definitionKey, currentNodeKey, assigneePrincipalId (result filter only), beforeCreatedAt + beforeId (paired cursor).',
+      arguments: {
+        properties: {
+          limit: limitProperty,
+          lifecycle: { type: 'string', description: 'Lifecycle filter: active | terminal | all (validated server-side).' },
+          status: { type: 'string', description: 'Status filter: active | cancelled | archived | all (validated server-side).' },
+          definitionKey: { type: 'string', description: 'Filter by workflow definition key.' },
+          currentNodeKey: { type: 'string', description: 'Filter by current node key.' },
+          assigneePrincipalId: { type: 'string', description: 'Filter results by assignee principal id (UUID). Result filter only — never affects the caller identity.' },
+          beforeCreatedAt: { type: 'string', description: 'Cursor: RFC 3339 timestamp of the last item seen; must be paired with beforeId.' },
+          beforeId: { type: 'string', description: 'Cursor: workflow instance id (UUID) of the last item seen; must be paired with beforeCreatedAt.' },
+        },
+        required: [],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments', 'invalid_pagination'],
+      http: {
+        target: 'svc-workflow',
+        method: 'GET',
+        path: '/internal/v1/workflow-instances/global',
+        query: ['limit', 'lifecycle', 'status', 'definitionKey', 'currentNodeKey', 'assigneePrincipalId', 'beforeCreatedAt', 'beforeId'],
+      },
+    },
+  ],
+})
+
+/** Exact-assignee transition submission; all authorization remains downstream. */
+export const workflowTransitionManifest = withTransportErrors({
+  id: 'workflow_transition',
+  toolName: 'workflow_transition',
+  name: 'Workflow Transition',
+  description:
+    'Agent Core capability `workflow_transition` (svc-workflow): first call `workflow_instance_detail` to read the current `workflow_state_version` and `outgoingTransitions[]`; use `executable_for_actor: true` only as an advisory preference, then submit the exact `transition_id` and payload matching `submission_schema`. ' +
+    'The downstream atomic transaction is authoritative, so advisory false/stale values are never blocked locally. On `workflow_state_version_conflict`, read the detail again and explicitly resubmit with the new version.',
+  requiredScopes: ['workflow.execute'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
+    { code: 'current_visit_not_found', description: 'Current node visit not found (HTTP 404).' },
+    { code: 'principal_not_assignee', description: 'Caller is not the current assignee (HTTP 403).' },
+    { code: 'assistance_open', description: 'Open assistance prevents transition execution (HTTP 409).' },
+    { code: 'source_node_terminal', description: 'The source node is terminal (HTTP 409).' },
+    { code: 'definition_version_revoked', description: 'The workflow definition version is revoked (HTTP 409).' },
+    { code: 'workflow_state_version_conflict', description: 'Expected workflow state version is stale (HTTP 409).' },
+    { code: 'transition_not_applicable', description: 'Transition is not applicable to the current node (HTTP 409).' },
+    { code: 'submission_required', description: 'This transition requires a submission payload (HTTP 422).' },
+    { code: 'submission_validation_failed', description: 'Submission payload failed validation (HTTP 422).' },
+    { code: 'size_limit_exceeded', description: 'Submission payload exceeds the service limit (HTTP 413).' },
+    { code: 'invalid_return_references', description: 'Return transition references are invalid (HTTP 422).' },
+    { code: 'assignee_resolution_failed', description: 'Target assignee resolution failed (HTTP 422).' },
+    { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
+    { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
+  ],
+  operations: [
+    {
+      name: 'submit',
+      description: 'Submit one transition using exact values read from workflow_instance_detail.',
+      arguments: {
+        properties: {
+          workflowInstanceId: { type: 'string', description: 'Workflow instance id (UUID).' },
+          transitionDefinitionId: { type: 'string', description: 'Exact outgoing transition definition id (UUID).' },
+          expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Current workflow state version used for CAS.' },
+          submissionPayload: { type: 'json', description: 'Optional payload matching the selected transition submission schema.' },
+        },
+        required: ['workflowInstanceId', 'transitionDefinitionId', 'expectedWorkflowStateVersion'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'POST',
+        path: '/internal/v1/workflow-instances/{workflowInstanceId}/transitions',
+        pathParams: ['workflowInstanceId'],
+        body: ['transitionDefinitionId', 'expectedWorkflowStateVersion', 'submissionPayload'],
+        idempotencyKey: true,
+      },
+    },
+  ],
+})
+
 /** All first-batch Workflow manifests. */
 export const manifests = [
   workflowMyTasksManifest,
@@ -252,4 +385,6 @@ export const manifests = [
   workflowSubmissionHistoryManifest,
   workflowMyDomainsManifest,
   workflowDomainInstancesManifest,
+  workflowGlobalInstancesManifest,
+  workflowTransitionManifest,
 ]

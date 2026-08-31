@@ -98,12 +98,16 @@ export function createIngressDelivery({
           // Trusted ingress leaves are copied exactly. In particular chatId
           // is never derived from conversationId: a thread conversation can
           // include topic identity and is not a delivery destination.
+          // feishuSenderOpenId carries the AUTHENTICATED sender identity from
+          // the Feishu ingress metadata (never anything the prompt itself
+          // reports) — the CTR-I2-015 canary binding input.
           ingressContext: Object.freeze({
             channelNamespace: namespace,
             channelConversationId: channelConversation.id,
             feishuChatId: isFeishuEntry ? ingress.chatId : undefined,
             feishuConversationId: isFeishuEntry ? ingress.conversationId : undefined,
             feishuMessageId: isFeishuEntry ? ingress.messageId : undefined,
+            feishuSenderOpenId: isFeishuEntry ? ingress.sender?.openId : undefined,
           }),
           // The session's effective workspace cwd (per-session, NOT the
           // process-level cwd — one Agent stays one process across workspaces).
@@ -138,6 +142,11 @@ export function createIngressDelivery({
         await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply, { ux: { rendering: 'markdown', autoMentionTriggerSender: true } })
         log.log(`reply sent back to ${ingress.conversationId.slice(0, 12)}...`)
       }
+      // CTR-I2-015 observer external-delivery lifecycle point (structural
+      // nonce only — never prompt/sender content).
+      if (turnResult?.canaryNonce !== undefined) {
+        routeChain.noteCanaryExternalDelivery?.(turnResult.canaryNonce)
+      }
       return {
         reply,
         agentId: binding.activeAgentId,
@@ -153,6 +162,9 @@ export function createIngressDelivery({
         try {
           await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error.message ?? error}`)
         } catch { /* best effort */ }
+        // CTR-I2-015 observer external-delivery lifecycle point (failure
+        // receipt path — CANARY-C expects exactly one failure delivery).
+        if (error?.canaryNonce !== undefined) routeChain.noteCanaryExternalDelivery?.(error.canaryNonce)
       }
       return { error }
     }

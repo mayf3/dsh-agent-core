@@ -1,6 +1,6 @@
 ---
 spec_id: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1
-status: accepted
+status: superseded
 accepted_by: mayf3
 reviewed_head: f4e1e04aa6725f9652cfabe86ef8c044a92e4e6e
 review_verdict: PASS
@@ -30,7 +30,7 @@ governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2
 scope:
   - agt_cto-agent Route Chain 激活的统一 child authority：实现补齐（Phase A）+
     凭据准备（Phase B）+ 生产激活（Phase C）一次冻结为三个**有顺序**的阶段，
