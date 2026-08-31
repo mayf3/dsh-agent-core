@@ -1,0 +1,474 @@
+#!/bin/bash
+# shellcheck disable=SC2016,SC2024
+# EFFICIENCY_SUCCESSOR_CLIENT_MAPPING_CANARY
+# Generated for independent review. This file does nothing unless explicitly executed.
+set -Eeuo pipefail
+umask 077
+
+CONFIG=/Users/yanfenma/.openclaw/openclaw.json
+CONFIG_DIR=/Users/yanfenma/.openclaw
+SERVICE=gui/505/ai.openclaw.gateway
+GATEWAY_HOST=127.0.0.1
+GATEWAY_PORT=18789
+USERSPACE_HOME=/Users/yanfenma
+OPENCLAW_CLI=/usr/local/bin/openclaw
+JQ=/usr/bin/jq
+AUTH_AUDIT_LOG=/Users/yanfenma/.openclaw/logs/auth-service.stderr.log
+CREDENTIAL_STORE_PATH=/Users/yanfenma/.openclaw/credentials/agent-efficiency-agent-secret
+AGENT_ID=efficiency-agent
+OLD_CLIENT_ID=mc_oc_itSaJ658mhitkJHKLmOKD1AR
+NEW_CLIENT_ID=mc_cF81DF-XND9Zmzao4F08rOK_
+OLD_PRINCIPAL_ID=95eab282-22c7-46a2-8580-abfef4942cdc
+NEW_PRINCIPAL_ID=b21ddb23-42f6-47c4-a27f-bc44950e554c
+PRE_SHA256=3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0
+POST_SHA256=96be335269ae6e88e0ad4b8dda1341429ed696eff40cfd1b9d158ccc062b92c8
+EXPECTED_ENABLED_DOMAIN_COUNT=10
+LOCK_DIR="$CONFIG_DIR/.efficiency-client-mapping-repair.lock"
+BACKUP=
+CANARY_OUT=
+SESSION_TAIL=
+AUDIT_TAIL=
+CREDENTIAL_STORE_META_BEFORE=
+RESTART_ATTEMPTED=0
+LOCK_ACQUIRED=0
+
+log() { printf '%s\n' "$*"; }
+die() { log "ERROR=$*" >&2; return 1; }
+sha256_file() {
+  /usr/bin/python3 - "$1" <<'PY'
+import hashlib, sys
+with open(sys.argv[1], 'rb') as f:
+    print(hashlib.sha256(f.read()).hexdigest())
+PY
+}
+credential_store_metadata() {
+  /usr/bin/python3 - "$CREDENTIAL_STORE_PATH" <<'PY'
+import os, stat, sys
+st = os.lstat(sys.argv[1])
+if not stat.S_ISREG(st.st_mode):
+    raise SystemExit('credential store must be a regular non-symlink file')
+print(':'.join(map(str, (
+    st.st_dev, st.st_ino, st.st_mode, st.st_nlink, st.st_uid, st.st_gid,
+    st.st_size, st.st_mtime_ns, st.st_ctime_ns, getattr(st, 'st_flags', 0),
+))))
+PY
+}
+service_pid() {
+  /bin/launchctl print "$SERVICE" 2>/dev/null | /usr/bin/awk '/^[[:space:]]*pid = [0-9]+/{print $3; exit}'
+}
+wait_gateway() {
+  local previous_pid=${1:-} pid=
+  for _ in $(/usr/bin/jot 40); do
+    pid=$(service_pid || true)
+    if [[ -n "$pid" && "$pid" != "$previous_pid" ]] && /usr/bin/nc -z "$GATEWAY_HOST" "$GATEWAY_PORT" >/dev/null 2>&1; then
+      log "GATEWAY_PID=$pid"
+      return 0
+    fi
+    /bin/sleep 0.5
+  done
+  die gateway_restart_health_timeout
+}
+restart_gateway() {
+  local previous_pid
+  previous_pid=$(service_pid || true)
+  RESTART_ATTEMPTED=1
+  /bin/launchctl kickstart -k "$SERVICE"
+  wait_gateway "$previous_pid"
+}
+restore_config() {
+  local runtime_reconcile=$RESTART_ATTEMPTED
+  [[ -n "$BACKUP" && -f "$BACKUP" ]] || die rollback_backup_missing
+  BACKUP="$BACKUP" CONFIG="$CONFIG" CONFIG_DIR="$CONFIG_DIR" PRE_SHA256="$PRE_SHA256" POST_SHA256="$POST_SHA256" /usr/bin/python3 <<'PY'
+import ctypes, hashlib, os
+backup = os.environ['BACKUP']
+config = os.environ['CONFIG']
+directory = os.environ['CONFIG_DIR']
+expected_pre = os.environ['PRE_SHA256']
+expected_post = os.environ['POST_SHA256']
+
+def digest(path):
+    with open(path, 'rb') as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+def swap(a, b):
+    libc = ctypes.CDLL(None, use_errno=True)
+    fn = libc.renamex_np
+    fn.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+    fn.restype = ctypes.c_int
+    if fn(os.fsencode(a), os.fsencode(b), 0x00000002) != 0:  # RENAME_SWAP
+        errno = ctypes.get_errno()
+        raise OSError(errno, os.strerror(errno))
+
+def fsync_dir():
+    dfd = os.open(directory, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+
+if digest(backup) != expected_pre:
+    raise SystemExit('rollback backup SHA256 mismatch')
+tmp = os.path.join(directory, '.openclaw.json.rollback.' + str(os.getpid()))
+try:
+    os.link(backup, tmp)
+    swap(tmp, config)
+    if digest(tmp) != expected_post:
+        swap(tmp, config)
+        fsync_dir()
+        raise SystemExit('rollback refused concurrent config image')
+    os.unlink(tmp)
+    fsync_dir()
+finally:
+    if os.path.lexists(tmp):
+        os.unlink(tmp)
+PY
+  [[ "$(sha256_file "$CONFIG")" == "$PRE_SHA256" ]] || die rollback_sha_mismatch
+  if [[ $runtime_reconcile -eq 1 ]]; then
+    if ! restart_gateway; then
+      log ROLLBACK_RUNTIME_RECONCILE=FAILED >&2
+      return 1
+    fi
+  fi
+  log ROLLBACK=COMPLETE
+}
+cleanup() {
+  local rc=$? current_sha='' rollback_rc=0
+  trap - EXIT
+  if [[ $rc -ne 0 && -n "$BACKUP" && -f "$BACKUP" ]]; then
+    # Detect replacement even if the atomic-write subprocess failed after rename
+    # but before returning control to this shell.
+    current_sha=$(sha256_file "$CONFIG" 2>/dev/null || true)
+    if [[ "$current_sha" == "$POST_SHA256" ]]; then
+      set +e
+      restore_config
+      rollback_rc=$?
+      set -e
+      if [[ $rollback_rc -ne 0 ]]; then
+        log ROLLBACK=FAILED >&2
+        rc=1
+      fi
+    elif [[ "$current_sha" != "$PRE_SHA256" ]]; then
+      # Never overwrite an unrecognized concurrent writer's image.
+      log "ROLLBACK=BLOCKED_UNRECOGNIZED_CONFIG_SHA:$current_sha" >&2
+      rc=1
+    fi
+  fi
+  if [[ -n "$CREDENTIAL_STORE_META_BEFORE" ]]; then
+    local credential_meta_after=''
+    credential_meta_after=$(credential_store_metadata 2>/dev/null || true)
+    if [[ "$credential_meta_after" != "$CREDENTIAL_STORE_META_BEFORE" ]]; then
+      log CREDENTIAL_STORE_METADATA_CHANGE=DETECTED >&2
+      rc=1
+    fi
+  fi
+  [[ -z "$CANARY_OUT" ]] || /bin/rm -f "$CANARY_OUT"
+  [[ -z "$SESSION_TAIL" ]] || /bin/rm -f "$SESSION_TAIL"
+  [[ -z "$AUDIT_TAIL" ]] || /bin/rm -f "$AUDIT_TAIL"
+  if [[ $LOCK_ACQUIRED -eq 1 ]]; then
+    /bin/rmdir "$LOCK_DIR" 2>/dev/null || true
+  fi
+  exit "$rc"
+}
+trap cleanup EXIT
+
+[[ $EUID -eq 0 ]] || die must_run_as_root
+[[ -f "$CONFIG" && ! -L "$CONFIG" ]] || die config_must_be_regular_non_symlink
+[[ -x "$OPENCLAW_CLI" ]] || die openclaw_cli_missing
+[[ -x "$JQ" ]] || die jq_missing
+[[ -f "$AUTH_AUDIT_LOG" ]] || die auth_audit_log_missing
+# Metadata-only validation: os.lstat; the store is never opened by this runner.
+CREDENTIAL_STORE_META_BEFORE=$(credential_store_metadata)
+/bin/mkdir "$LOCK_DIR" || die repair_lock_busy
+LOCK_ACQUIRED=1
+
+# Fresh read and frozen pre-image gate. Any drift aborts before backup or write.
+ACTUAL_PRE_SHA256=$(sha256_file "$CONFIG")
+[[ "$ACTUAL_PRE_SHA256" == "$PRE_SHA256" ]] || die "pre_sha_drift:$ACTUAL_PRE_SHA256"
+
+# PRE_SHA256 freezes the reviewed JSON pointer and all 87 mappings. Build the
+# proposed image by replacing the byte-unique public old client ID only; the
+# frozen POST_SHA256 proves the exact one-field successor image.
+CONFIG="$CONFIG" OLD_CLIENT_ID="$OLD_CLIENT_ID" NEW_CLIENT_ID="$NEW_CLIENT_ID" PRE_SHA256="$PRE_SHA256" POST_SHA256="$POST_SHA256" /usr/bin/python3 <<'PY'
+import hashlib, os
+p = os.environ['CONFIG']
+old = os.environ['OLD_CLIENT_ID'].encode()
+new = os.environ['NEW_CLIENT_ID'].encode()
+with open(p, 'rb') as f:
+    raw = f.read()
+if hashlib.sha256(raw).hexdigest() != os.environ['PRE_SHA256']:
+    raise SystemExit('pre-image drift')
+if raw.count(old) != 1:
+    raise SystemExit('old client id is not byte-unique')
+post = raw.replace(old, new, 1)
+if hashlib.sha256(post).hexdigest() != os.environ['POST_SHA256']:
+    raise SystemExit('proposed post SHA256 mismatch')
+PY
+
+# Credential material is deliberately absent from this runner. Post-restart
+# acceptance uses a normal Gateway Agent turn, so only the Broker process performs
+# its ordinary token mint. This runner observes public tool results and audit IDs.
+
+# Backup without copying file bytes: a same-directory hard-link snapshot of the
+# pre-image. Atomic replacement below gives CONFIG a new inode while BACKUP keeps
+# the exact old inode. Parent-directory fsync makes the link durable.
+TS=$(/bin/date -u +%Y%m%dT%H%M%SZ)
+BACKUP="$CONFIG_DIR/openclaw.json.pre-efficiency-client-$TS-$PRE_SHA256.bak"
+CONFIG="$CONFIG" CONFIG_DIR="$CONFIG_DIR" BACKUP="$BACKUP" /usr/bin/python3 <<'PY'
+import os
+config, directory, backup = os.environ['CONFIG'], os.environ['CONFIG_DIR'], os.environ['BACKUP']
+os.link(config, backup)
+dfd = os.open(directory, os.O_RDONLY)
+try:
+    os.fsync(dfd)
+finally:
+    os.close(dfd)
+PY
+[[ "$(sha256_file "$BACKUP")" == "$PRE_SHA256" ]] || die backup_sha_mismatch
+log "BACKUP=$BACKUP"
+
+# Byte-preserving, same-directory atomic update. The exact old client id must be
+# unique, and every semantic value except the target clientId is checked again.
+CONFIG="$CONFIG" CONFIG_DIR="$CONFIG_DIR" OLD_CLIENT_ID="$OLD_CLIENT_ID" NEW_CLIENT_ID="$NEW_CLIENT_ID" PRE_SHA256="$PRE_SHA256" POST_SHA256="$POST_SHA256" /usr/bin/python3 <<'PY'
+import ctypes, hashlib, os, stat
+p, directory = os.environ['CONFIG'], os.environ['CONFIG_DIR']
+old, new = os.environ['OLD_CLIENT_ID'].encode(), os.environ['NEW_CLIENT_ID'].encode()
+pre, post = os.environ['PRE_SHA256'], os.environ['POST_SHA256']
+st = os.stat(p, follow_symlinks=False)
+original_identity = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns)
+if not stat.S_ISREG(st.st_mode):
+    raise SystemExit('config is not regular')
+# os.listxattr/os.getxattr are unavailable in this /usr/bin/python3 build; the
+# metadata gate calls libc directly (XATTR_NOFOLLOW == follow_symlinks=False)
+# and carries the pre-image xattrs onto the replacement inode, so the atomic
+# exchange stays metadata-identical. Any xattr that cannot be snapshotted,
+# copied, or verified back aborts before or rolls back after the swap.
+XATTR_NOFOLLOW = 0x00000001
+
+def _errno_or_raise(result):
+    if result < 0:
+        errno = ctypes.get_errno()
+        raise OSError(errno, os.strerror(errno))
+    return result
+
+def snapshot_xattrs(path):
+    libc = ctypes.CDLL(None, use_errno=True)
+    listxattr = libc.listxattr
+    listxattr.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_uint32]
+    listxattr.restype = ctypes.c_ssize_t
+    getxattr = libc.getxattr
+    getxattr.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_uint32, ctypes.c_int]
+    getxattr.restype = ctypes.c_ssize_t
+    encoded = os.fsencode(path)
+    size = _errno_or_raise(listxattr(encoded, None, 0, XATTR_NOFOLLOW))
+    if size == 0:
+        return {}
+    namebuf = ctypes.create_string_buffer(size)
+    size = _errno_or_raise(listxattr(encoded, namebuf, size, XATTR_NOFOLLOW))
+    snapshot = {}
+    for raw_name in namebuf.raw[:size].split(b'\x00'):
+        if not raw_name:
+            continue
+        value_size = _errno_or_raise(getxattr(encoded, raw_name, None, 0, 0, XATTR_NOFOLLOW))
+        value = b''
+        if value_size > 0:
+            valuebuf = ctypes.create_string_buffer(value_size)
+            got = _errno_or_raise(getxattr(encoded, raw_name, valuebuf, value_size, 0, XATTR_NOFOLLOW))
+            value = valuebuf.raw[:got]
+        snapshot[raw_name] = value
+    return snapshot
+
+def write_xattrs(path, snapshot):
+    libc = ctypes.CDLL(None, use_errno=True)
+    setxattr = libc.setxattr
+    setxattr.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_uint32, ctypes.c_int]
+    setxattr.restype = ctypes.c_int
+    encoded = os.fsencode(path)
+    for raw_name, value in snapshot.items():
+        if setxattr(encoded, raw_name, value, len(value), 0, XATTR_NOFOLLOW) != 0:
+            errno = ctypes.get_errno()
+            raise OSError(errno, os.strerror(errno))
+
+xattrs_before = snapshot_xattrs(p)
+with open(p, 'rb') as f:
+    raw = f.read()
+if hashlib.sha256(raw).hexdigest() != pre or raw.count(old) != 1:
+    raise SystemExit('pre-image drift before atomic write')
+mutated = raw.replace(old, new, 1)
+if hashlib.sha256(mutated).hexdigest() != post:
+    raise SystemExit('post-image mismatch before atomic write')
+tmp = os.path.join(directory, '.openclaw.json.efficiency-repair.' + str(os.getpid()))
+fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, stat.S_IMODE(st.st_mode))
+try:
+    os.fchown(fd, st.st_uid, st.st_gid)
+    view = memoryview(mutated)
+    while view:
+        n = os.write(fd, view)
+        view = view[n:]
+    os.fsync(fd)
+finally:
+    os.close(fd)
+# Carry the pre-image xattrs onto the replacement inode before the exchange so
+# the live config never observably loses metadata, then fsync again.
+write_xattrs(tmp, xattrs_before)
+xattr_sync_fd = os.open(tmp, os.O_RDONLY)
+try:
+    os.fsync(xattr_sync_fd)
+finally:
+    os.close(xattr_sync_fd)
+def digest(path):
+    with open(path, 'rb') as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+def swap(a, b):
+    libc = ctypes.CDLL(None, use_errno=True)
+    fn = libc.renamex_np
+    fn.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+    fn.restype = ctypes.c_int
+    if fn(os.fsencode(a), os.fsencode(b), 0x00000002) != 0:  # RENAME_SWAP
+        errno = ctypes.get_errno()
+        raise OSError(errno, os.strerror(errno))
+
+def fsync_dir():
+    dfd = os.open(directory, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+
+try:
+    current = os.stat(p, follow_symlinks=False)
+    if (current.st_dev, current.st_ino, current.st_size, current.st_mtime_ns) != original_identity:
+        raise SystemExit('concurrent config change detected before atomic exchange')
+    # Atomic exchange gives us the displaced predecessor at tmp. This permits a
+    # post-swap CAS check with lossless swap-back if a writer won the race.
+    swap(tmp, p)
+    if digest(tmp) != pre:
+        swap(tmp, p)
+        fsync_dir()
+        raise SystemExit('concurrent config change detected during atomic exchange')
+    if snapshot_xattrs(p) != xattrs_before:
+        swap(tmp, p)
+        fsync_dir()
+        raise SystemExit('xattr preservation failed; refusing metadata-changing replacement')
+    os.unlink(tmp)
+    fsync_dir()
+finally:
+    if os.path.lexists(tmp):
+        os.unlink(tmp)
+PY
+[[ "$(sha256_file "$CONFIG")" == "$POST_SHA256" ]] || die post_write_sha_mismatch
+
+# Exact POST_SHA256 plus byte-unique replacement proves all other 86 mappings
+# and every unrelated byte are unchanged.
+log NON_TARGET_MAPPING_CHANGE=NONE
+
+# Formal macOS service-manager restart seam; only the OpenClaw gateway is touched.
+restart_gateway
+
+# Post-restart acceptance uses the normal production path:
+# OpenClaw CLI -> Gateway -> efficiency-agent -> workflow_read(action=my_domains)
+# -> Broker-owned token mint -> svc-workflow. The runner handles public IDs and
+# public audit fields only. No create_instance call is present.
+log POST_RESTART_NORMAL_BROKER_CANARY=BEGIN
+SESSION_DIR="$USERSPACE_HOME/.openclaw/agents/$AGENT_ID/sessions"
+SESSION_INDEX="$SESSION_DIR/sessions.json"
+MAIN_KEY="agent:$AGENT_ID:main"
+resolve_session() {
+  if [[ -f "$SESSION_INDEX" ]]; then
+    "$JQ" -r --arg k "$MAIN_KEY" '.[$k].sessionId // empty' "$SESSION_INDEX" 2>/dev/null
+  fi
+}
+SESSION_ID=$(resolve_session)
+SESSION_FILE=
+SESSION_PRE_SIZE=0
+if [[ -n "$SESSION_ID" && -f "$SESSION_DIR/$SESSION_ID.jsonl" ]]; then
+  SESSION_FILE="$SESSION_DIR/$SESSION_ID.jsonl"
+  SESSION_PRE_SIZE=$(/usr/bin/wc -c < "$SESSION_FILE" | /usr/bin/tr -d ' ')
+fi
+AUDIT_PRE_SIZE=$(/usr/bin/wc -c < "$AUTH_AUDIT_LOG" | /usr/bin/tr -d ' ')
+CANARY_OUT=$(/usr/bin/mktemp /private/tmp/efficiency-broker-canary.XXXXXX.json)
+PROMPT='身份修复只读 CANARY：只调用一次 workflow_read，参数严格为 {"action":"my_domains"}。禁止调用任何其他工具，禁止读取文件，禁止执行命令，禁止 create_instance。调用后仅简短报告返回的 Domain 数量。'
+if ! /usr/bin/sudo -u authsvc /usr/bin/env HOME="$USERSPACE_HOME" \
+    "$OPENCLAW_CLI" agent --agent "$AGENT_ID" --message "$PROMPT" --json --timeout 420 \
+    >"$CANARY_OUT" 2>&1; then
+  die normal_broker_canary_turn_failed
+fi
+[[ "$("$JQ" -r '.status // "unknown"' "$CANARY_OUT" 2>/dev/null)" == ok ]] || die normal_broker_canary_status_failed
+/bin/sleep 2
+
+NEW_SESSION_ID=$(resolve_session)
+if [[ -n "$NEW_SESSION_ID" && "$NEW_SESSION_ID" != "$SESSION_ID" ]]; then
+  SESSION_ID="$NEW_SESSION_ID"
+  SESSION_FILE="$SESSION_DIR/$SESSION_ID.jsonl"
+  SESSION_PRE_SIZE=0
+elif [[ -z "$SESSION_FILE" && -n "$NEW_SESSION_ID" ]]; then
+  SESSION_FILE="$SESSION_DIR/$NEW_SESSION_ID.jsonl"
+  SESSION_PRE_SIZE=0
+fi
+[[ -n "$SESSION_FILE" && -f "$SESSION_FILE" ]] || die canary_session_transcript_missing
+SESSION_TAIL=$(/usr/bin/mktemp /private/tmp/efficiency-session-tail.XXXXXX.jsonl)
+/usr/bin/tail -c +$((SESSION_PRE_SIZE + 1)) "$SESSION_FILE" > "$SESSION_TAIL"
+
+TOOL_CALL_COUNT=$("$JQ" -s '[.[] | select(.type=="message") | .message |
+  select(.role=="assistant") | .content[]? | select(.type=="toolCall")] | length' "$SESSION_TAIL")
+[[ "$TOOL_CALL_COUNT" == 1 ]] || die "unexpected_canary_tool_call_count:$TOOL_CALL_COUNT"
+EXACT_TOOL_CALL_COUNT=$("$JQ" -s '[.[] | select(.type=="message") | .message |
+  select(.role=="assistant") | .content[]? |
+  select(.type=="toolCall" and .name=="workflow_read" and .arguments=={"action":"my_domains"})] | length' "$SESSION_TAIL")
+[[ "$EXACT_TOOL_CALL_COUNT" == 1 ]] || die canary_tool_call_not_exact_workflow_my_domains
+TOOL_RESULT_COUNT=$("$JQ" -s '[.[] | select(.type=="message") | .message | select(.role=="toolResult")] | length' "$SESSION_TAIL")
+[[ "$TOOL_RESULT_COUNT" == 1 ]] || die "unexpected_canary_tool_result_count:$TOOL_RESULT_COUNT"
+DOMAIN_RESULT_COUNT=$("$JQ" -s --argjson expected "$EXPECTED_ENABLED_DOMAIN_COUNT" '
+  [.[] | select(.type=="message") | .message |
+   select(.role=="toolResult" and .toolName=="workflow_read"
+          and (.details.action // "")=="my_domains"
+          and (.isError // false)==false) |
+   (.content | map(select(.type=="text") | .text) | join("") | fromjson?) |
+   select((.items | type)=="array" and (.items | length)==$expected)] | length
+' "$SESSION_TAIL")
+[[ "$DOMAIN_RESULT_COUNT" == 1 ]] || die workflow_my_domains_not_exactly_10
+
+AUDIT_TAIL=$(/usr/bin/mktemp /private/tmp/efficiency-auth-audit-tail.XXXXXX.log)
+/usr/bin/tail -c +$((AUDIT_PRE_SIZE + 1)) "$AUTH_AUDIT_LOG" > "$AUDIT_TAIL"
+AUDIT_TAIL="$AUDIT_TAIL" AGENT_ID="$AGENT_ID" NEW_CLIENT_ID="$NEW_CLIENT_ID" NEW_PRINCIPAL_ID="$NEW_PRINCIPAL_ID" /usr/bin/python3 <<'PY'
+import json, os
+path = os.environ['AUDIT_TAIL']
+agent = os.environ['AGENT_ID']
+client = os.environ['NEW_CLIENT_ID']
+principal = os.environ['NEW_PRINCIPAL_ID']
+masked_client = client[:8] + ('...' if len(client) > 8 else '')
+matched = False
+with open(path, encoding='utf-8', errors='replace') as f:
+    for line in f:
+        marker = '[AUDIT] '
+        if marker not in line:
+            continue
+        try:
+            event = json.loads(line.split(marker, 1)[1])
+        except json.JSONDecodeError:
+            continue
+        if (event.get('type') == 'v1.direct.issued'
+                and event.get('success') is True
+                and event.get('principalId') == principal
+                and event.get('agentId') == agent
+                and event.get('clientId') == masked_client
+                and event.get('resource') == 'svc-workflow'
+                and 'workflow.read' in str(event.get('scopes', '')).split()):
+            matched = True
+            break
+if not matched:
+    raise SystemExit('successor normal Broker mint audit event not found')
+PY
+[[ "$(sha256_file "$CONFIG")" == "$POST_SHA256" ]] || die post_canary_config_sha_drift
+[[ "$(credential_store_metadata)" == "$CREDENTIAL_STORE_META_BEFORE" ]] || die credential_store_metadata_changed
+log "TOKEN_CLIENT_ID=$NEW_CLIENT_ID"
+log "TRUSTED_TOKEN_SUB=$NEW_PRINCIPAL_ID"
+log "ENABLED_DOMAIN_COUNT=$EXPECTED_ENABLED_DOMAIN_COUNT"
+log SECRET_OPEN_COUNT=0
+log CREDENTIAL_STORE_CHANGED=NO
+log POST_RESTART_NORMAL_BROKER_CANARY=PASS
+log OLD_MAPPING="$AGENT_ID -> $OLD_CLIENT_ID -> principal $OLD_PRINCIPAL_ID"
+log NEW_MAPPING="$AGENT_ID -> $NEW_CLIENT_ID -> principal $NEW_PRINCIPAL_ID"
+log DOMAIN_DATA_CHANGE=NONE
+log PRODUCTION_CHANGE=SUCCESS
+log NEXT_TASK='身份 审计'

@@ -1,0 +1,74 @@
+# STATE SNAPSHOT — openclaw-mapping-repair-termination-20260831
+# Collected 2026-08-31 21:26-21:30 +0800, read-only, as yanfenma (uid 502), zero sudo.
+
+## uid identities
+$ id 505 / id -u yanfenma
+uid=505(authsvc) gid=601(authsvc) groups=601(authsvc),599(oc-canary),12(everyone),61(localaccounts),100(_lpoperator)
+502
+
+## openclaw.json current image vs runner PRE/POST pins
+# runner pins: PRE_SHA256=3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0
+#              POST_SHA256=96be335269ae6e88e0ad4b8dda1341429ed696eff40cfd1b9d158ccc062b92c8
+$ shasum -a 256 /Users/yanfenma/.openclaw/openclaw.json
+3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0  /Users/yanfenma/.openclaw/openclaw.json
+=> matches PRE_SHA256: mapping repair NOT in effect (auto-rolled-back byte-exact).
+
+## pre-image backups (hardlinks, authsvc-owned) left in place as historical evidence
+$ ls -la /Users/yanfenma/.openclaw/ | grep pre-efficiency
+-rw-------@   3 authsvc   authsvc    140299 Aug 16 12:33 openclaw.json.pre-efficiency-client-20260831T015151Z-3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0.bak
+-rw-------@   3 authsvc   authsvc    140299 Aug 16 12:33 openclaw.json.pre-efficiency-client-20260831T124501Z-3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0.bak
+$ shasum -a 256 both backups
+3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0  /Users/yanfenma/.openclaw/openclaw.json.pre-efficiency-client-20260831T015151Z-3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0.bak
+3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0  /Users/yanfenma/.openclaw/openclaw.json.pre-efficiency-client-20260831T124501Z-3d34b79c2ea0341f8e7a5018aea3965638b84fcf46885d8d58c720aa8dcf78f0.bak
+=> both backups hash to PRE_SHA256 (same original inode, link count 3 with live config).
+
+## repair lock dir
+$ ls -ld /Users/yanfenma/.openclaw/.efficiency-client-mapping-repair.lock
+ls: /Users/yanfenma/.openclaw/.efficiency-client-mapping-repair.lock: No such file or directory
+absent: no stale lock left behind.
+
+## gateway service / port state
+$ launchctl print gui/505/ai.openclaw.gateway (as yanfenma)
+Could not print domain: 125: Domain does not support specified action
+$ launchctl print gui/505 2>&1 | head -3
+Could not print domain: 125: Domain does not support specified action
+$ launchctl print gui/505 2>/dev/null | grep -ci openclaw (0 = none)
+0
+grep_rc=1
+$ nc -z -w 2 127.0.0.1 18789
+nc_rc=1
+=> port 18789 closed; ai.openclaw.gateway not loaded/printable in gui/505;
+   same 125 error appeared in the root kickstart attempts inside efficiency-repair-v2-run.log.
+
+## processes mentioning openclaw/gateway (ps aux, all users visible to yanfenma)
+$ ps aux | grep -iE "openclaw|gateway" | grep -v grep
+yanfenma          3704   0.0  0.1 436177984  30736   ??  Ss   Sun01AM   0:02.28 /opt/homebrew/Cellar/node/26.7.0/bin/node /Users/yanfenma/.dsh/profiles/web/node_modules/dsh-remote-plugin/gateway.cjs
+yanfenma          1710   0.0  0.0 36214280   2892   ??  S    Sun01AM   0:21.65 /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/yanfenma/.openclaw/groups/workspace-oc_1c2c268623b837e0817513fdd6bdfbd7/smart-home/scripts/video_bridge.py start
+yanfenma          1714   0.0  0.0 36343696   2720   ??  S    Sun01AM   0:21.66 /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/yanfenma/.openclaw/groups/workspace-oc_1c2c268623b837e0817513fdd6bdfbd7/smart-home/scripts/ir_bridge.py start
+=> no OpenClaw gateway process. Survivors: dsh-remote-plugin gateway.cjs (current DSH chain,
+   yanfenma) + two legacy .openclaw smart-home python bridges (outside this ruling, not touched).
+
+## LaunchAgents plists referencing openclaw (left in place, read-only)
+$ ls -la /Users/yanfenma/Library/LaunchAgents/ | grep -iE "openclaw|18789"
+-rw-------    1 authsvc   authsvc  3488 Aug  5 08:51 ai.openclaw.gateway.plist
+-rw-------@   1 yanfenma  staff    3234 Jun  6 08:47 ai.openclaw.gateway.plist.bak.20260606-211639
+-rw-------@   1 yanfenma  staff    3068 Jun  6 21:16 ai.openclaw.gateway.plist.bak.20260606-212058
+-rw-------@   1 yanfenma  staff    3769 Jul 11 21:20 ai.openclaw.gateway.plist.bak.qa-canary-20260805-085121
+-rw-r--r--    1 yanfenma  staff    1277 Mar 22 22:53 ai.openclaw.gateway.second.plist.disabled
+-rw-r--r--@   1 yanfenma  staff    1228 Aug 11 08:28 com.openclaw.agent-node-502.plist
+-rw-r--r--@   1 yanfenma  staff    1300 Aug 11 08:28 com.openclaw.agent-node-502.plist.bak-home-restore-20260811
+-rw-r--r--    1 yanfenma  staff    1236 Mar  9 20:57 com.openclaw.auto-repair.plist
+-rw-r--r--    1 yanfenma  staff    1323 Mar  9 20:56 com.openclaw.control-api.plist
+
+## repair runner in repo (untracked, left in place as historical evidence)
+$ ls -la scripts/repair-efficiency-agent-client-mapping-canary.sh + shasum
+-rwx------@ 1 yanfenma  staff  19683 Aug 31 20:43 /Users/yanfenma/workspace/project/dsh-agent-core/scripts/repair-efficiency-agent-client-mapping-canary.sh
+4a383831aa20ceb2f248b539bc20fc08622fc4600456faa26330e509f972e40f  /Users/yanfenma/workspace/project/dsh-agent-core/scripts/repair-efficiency-agent-client-mapping-canary.sh
+$ git status --short of the runner
+?? scripts/repair-efficiency-agent-client-mapping-canary.sh
+
+## /tmp historical traces of the repair workstream
+$ ls -la /tmp/ | grep -E "efficiency-repair"
+-rw-r--r--@   1 yanfenma  wheel         242 Aug 31 20:44 efficiency-repair-launch.scpt
+-rw-r--r--    1 root      wheel         484 Aug 31 20:45 efficiency-repair-v2-run.log
+=> morning (015151Z) run log was overwritten by the v2 redirect; its backup filename is the only trace.

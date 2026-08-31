@@ -1,0 +1,1 @@
+do shell script "( /bin/bash /Users/yanfenma/workspace/project/dsh-agent-core/scripts/repair-efficiency-agent-client-mapping-canary.sh; echo RUNNER_EXIT_RC=$? ) > /tmp/efficiency-repair-v2-run.log 2>&1 & exit 0" with administrator privileges
