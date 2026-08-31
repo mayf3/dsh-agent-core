@@ -244,3 +244,188 @@ export const manifests = [
   forumListThreadsManifest,
   forumSearchThreadsManifest,
 ]
+
+// ── AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 (accepted) ───────────────────
+//
+// Second-batch Forum capabilities, still pure manifest data over the SAME
+// generic pipeline. Route/scope facts are pinned to the deployed consumer
+// svc-forum@502cfca5 (see the Spec §3.1 / §9.1):
+//
+// Normal pack (every Agent child; scopes follow the deployed guards):
+//   forum_create_thread     POST   /api/threads                       forum.write
+//   forum_watch_thread      PUT    /api/threads/{threadId}/watch      forum.write
+//   forum_unwatch_thread    DELETE /api/threads/{threadId}/watch      forum.write
+//   forum_report_content    POST   /api/reports                       forum.write
+//   forum_stats             GET    /api/stats                         forum.read
+//
+// Moderator pack (registered ONLY for the closed forumModeratorAgentIds list;
+// every manifest requires all three scopes — resolve/archive are deliberately
+// Broker-side narrowed to the moderator pack per CTR-FMC-009 even though the
+// deployed server guards them with forum.write alone):
+//   forum_pin_or_feature_thread  PATCH  /api/threads/{threadId}                      (pinned|featured body; server inline-checks forum.moderate)
+//   forum_delete_thread          DELETE /api/threads/{threadId}                      forum.moderate+forum.write (soft delete)
+//   forum_delete_message         DELETE /api/threads/{threadId}/messages/{messageId} forum.moderate+forum.write (soft delete)
+//   forum_resolve_thread         POST   /api/threads/{threadId}/resolve               summaryMd REQUIRED nonBlank
+//   forum_archive_thread         POST   /api/threads/{threadId}/archive
+//   forum_moderation_queue       GET    /api/reports                                   forum.moderate
+//   forum_handle_report          PATCH  /api/reports/{reportId}                       action enum ignore|warn|delete
+//   forum_admin_unread           GET    /api/admin/notifications/unread               forum.moderate
+
+export const forumCreateThreadManifest = withTransportErrors({
+  id: 'forum_create_thread',
+  toolName: 'forum_create_thread',
+  name: 'Forum Create Thread',
+  description:
+    'Agent Core capability `forum_create_thread` (svc-forum): create a new forum thread. ' +
+    'The caller is always added as the creator participant; identity comes from the credential, never from arguments. ' +
+    'Returns {ok: true, result: <thread>} on success.',
+  requiredScopes: ['forum.write'],
+  errors: baseErrors,
+  operations: [
+    {
+      name: 'create',
+      description:
+        'Create a thread. title is required (non-blank). Optional: type (server default discussion), contextType, ' +
+        'contextId, pipeline, layer, tags (string[]), participants ({agentId, agentName, role?, status?}[]).',
+      arguments: {
+        properties: {
+          title: { type: 'string', nonBlank: true, description: 'Thread title (required, non-blank).' },
+          type: { type: 'string', description: 'Thread type (server default: discussion).' },
+          contextType: { type: 'string', description: 'Optional context type.' },
+          contextId: { type: 'string', description: 'Optional context id.' },
+          pipeline: { type: 'string', description: 'Optional pipeline.' },
+          layer: { type: 'string', description: 'Optional layer.' },
+          tags: { type: 'json', description: 'Optional tags array (server-validated).' },
+          participants: { type: 'json', description: 'Optional participants array (server-validated).' },
+        },
+        required: ['title'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-forum',
+        method: 'POST',
+        path: '/api/threads',
+        body: ['title', 'type', 'contextType', 'contextId', 'pipeline', 'layer', 'tags', 'participants'],
+      },
+    },
+  ],
+})
+
+export const forumWatchThreadManifest = withTransportErrors({
+  id: 'forum_watch_thread',
+  toolName: 'forum_watch_thread',
+  name: 'Forum Watch Thread',
+  description:
+    'Agent Core capability `forum_watch_thread` (svc-forum): watch a thread for the calling agent (idempotent). ' +
+    'Returns {ok: true, result: <participant>} on success.',
+  requiredScopes: ['forum.write'],
+  errors: baseErrors,
+  operations: [
+    {
+      name: 'watch',
+      description: 'Start watching the thread with the given threadId (idempotent; identity = caller).',
+      arguments: {
+        properties: { threadId: { type: 'string', description: 'Forum thread id.' } },
+        required: ['threadId'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: { target: 'svc-forum', method: 'PUT', path: '/api/threads/{threadId}/watch', pathParams: ['threadId'] },
+    },
+  ],
+})
+
+export const forumUnwatchThreadManifest = withTransportErrors({
+  id: 'forum_unwatch_thread',
+  toolName: 'forum_unwatch_thread',
+  name: 'Forum Unwatch Thread',
+  description:
+    'Agent Core capability `forum_unwatch_thread` (svc-forum): stop watching a thread for the calling agent. ' +
+    'Returns {ok: true, result: <participant>} on success.',
+  requiredScopes: ['forum.write'],
+  errors: baseErrors,
+  operations: [
+    {
+      name: 'unwatch',
+      description: 'Stop watching the thread with the given threadId (404 when not watching).',
+      arguments: {
+        properties: { threadId: { type: 'string', description: 'Forum thread id.' } },
+        required: ['threadId'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: { target: 'svc-forum', method: 'DELETE', path: '/api/threads/{threadId}/watch', pathParams: ['threadId'] },
+    },
+  ],
+})
+
+export const forumReportContentManifest = withTransportErrors({
+  id: 'forum_report_content',
+  toolName: 'forum_report_content',
+  name: 'Forum Report Content',
+  description:
+    'Agent Core capability `forum_report_content` (svc-forum): report a thread or message to the moderation queue. ' +
+    'Returns {ok: true, result: <report>} on success.',
+  requiredScopes: ['forum.write'],
+  errors: baseErrors,
+  operations: [
+    {
+      name: 'report',
+      description:
+        'Report content. targetType (thread|message), targetId and reason (spam|abuse|off_topic|violation|other) ' +
+        'are required; note is optional. Duplicate reports by the same caller are rejected server-side (409).',
+      arguments: {
+        properties: {
+          targetType: { type: 'string', enum: ['thread', 'message'], description: 'Reported content type.' },
+          targetId: { type: 'string', description: 'Reported thread or message id.' },
+          reason: {
+            type: 'string',
+            enum: ['spam', 'abuse', 'off_topic', 'violation', 'other'],
+            description: 'Report reason.',
+          },
+          note: { type: 'string', description: 'Optional free-text note.' },
+        },
+        required: ['targetType', 'targetId', 'reason'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-forum',
+        method: 'POST',
+        path: '/api/reports',
+        body: ['targetType', 'targetId', 'reason', 'note'],
+      },
+    },
+  ],
+})
+
+export const forumStatsManifest = withTransportErrors({
+  id: 'forum_stats',
+  toolName: 'forum_stats',
+  name: 'Forum Stats',
+  description:
+    'Agent Core capability `forum_stats` (svc-forum): read aggregate forum statistics. ' +
+    'Returns {ok: true, result: <stats>} on success.',
+  requiredScopes: ['forum.read'],
+  errors: baseErrors,
+  operations: [
+    {
+      name: 'stats',
+      description: 'Read forum stats (threads by status/type, message totals, participants, reply rate). No arguments.',
+      arguments: { properties: {}, required: [] },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: { target: 'svc-forum', method: 'GET', path: '/api/stats' },
+    },
+  ],
+})
+
+/** Normal second-batch Forum manifests (registered for every Agent child). */
+export const normalManifests = [
+  forumCreateThreadManifest,
+  forumWatchThreadManifest,
+  forumUnwatchThreadManifest,
+  forumReportContentManifest,
+  forumStatsManifest,
+]
