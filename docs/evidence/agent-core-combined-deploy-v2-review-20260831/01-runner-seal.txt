@@ -1,0 +1,8 @@
+=== INDEPENDENT REVIEW EVIDENCE — AGT_CORE_COMBINED_DEPLOY_V2 (2026-08-31) ===
+generated_utc=2026-08-31T13:46:50Z
+
+runner /tmp sha256:
+18c1fdc64941f67b1a0fc3a7f03cad48063d9620a9e0b57a837eee8635708944  /tmp/run-agent-core-combined-deploy-v2.sh
+authoring sealed copy sha256:
+18c1fdc64941f67b1a0fc3a7f03cad48063d9620a9e0b57a837eee8635708944  /Users/yanfenma/workspace/project/dsh-agent-core/docs/evidence/agent-core-combined-deploy-v2-authoring-20260831/run-agent-core-combined-deploy-v2.sh
+expect both = 18c1fdc64941f67b1a0fc3a7f03cad48063d9620a9e0b57a837eee8635708944 (dispatch RUNNER_SHA256)

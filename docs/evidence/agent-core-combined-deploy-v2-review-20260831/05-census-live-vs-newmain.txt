@@ -1,0 +1,21 @@
+=== DIAGNOSTIC: live vs NEW main 1fdf8c36 (HEAD_DRIFT scope) ===
+differing existing paths: 13
+package.json
+packages/agent-provisioning/src/index.js
+packages/agent-router/src/route-chain.js
+packages/broker/src/capabilities/forum.js
+packages/broker/src/capabilities/workflow.js
+packages/broker/src/index.js
+packages/broker/src/mapping.js
+packages/broker/src/schema.js
+packages/broker/src/transport.js
+packages/feishu-connector/src/index.js
+packages/production-runtime/src/compose.js
+packages/production-runtime/src/model-overrides.js
+packages/scheduler-router/src/index.js
+
+PR #127 new-main-only src files (absent live, NOT deployable by this runner):
+packages/agent-provisioning/src/plugin-artifact.js
+packages/agent-provisioning/src/shared-codex.js
+packages/production-runtime/src/shared-codex-migration-cli.js
+packages/production-runtime/src/shared-codex-migration-executable.js

@@ -1,0 +1,7 @@
+=== CHECK execution this round (read-only) ===
+$ bash /tmp/run-agent-core-combined-deploy-v2.sh --check
+ERROR: fresh main moved: expected=2392a41d4655ba25ed9e9749fbf8beb0ad1c71b4 actual=1fdf8c361f2010864f686d8310b68a40df5a5184; re-audit required
+EXIT_RC=2
+
+Authoring-time --check (21:29 local, main==2392a41): all gates PASS except canary file_missing => CHECK=FAIL rc=2 (see authoring evidence check-output.txt).
+This round: fails EARLIER at the fresh-main gate (HEAD_DRIFT) — fail-closed confirmed.

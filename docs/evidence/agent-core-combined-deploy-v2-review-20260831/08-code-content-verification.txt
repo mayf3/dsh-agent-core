@@ -1,0 +1,153 @@
+=== AUDIT 4/5: target-blob code content verification (git show @TARGET_COMMIT) ===
+--- workflow.js @83df50eb: manifest ids ---
+  id: 'workflow_my_tasks',
+  id: 'workflow_instance_detail',
+  id: 'workflow_submission_history',
+  id: 'workflow_my_domains',
+  id: 'workflow_domain_instances',
+  id: 'workflow_global_instances',
+  id: 'workflow_transition',
+
+--- workflow.js: http methods (write surface) ---
+104:      http: { target: 'svc-workflow', method: 'GET', path: '/internal/v1/worklists/assigned-to-me', query: ['limit'] },
+134:      http: { target: 'svc-workflow', method: 'GET', path: '/internal/v1/workflow-instances/{workflowInstanceId}', pathParams: ['workflowInstanceId'] },
+171:        method: 'GET',
+196:      http: { target: 'svc-workflow', method: 'GET', path: '/internal/v1/principals/me/domains' },
+258:        method: 'GET',
+333:        method: 'GET',
+387:        method: 'POST',
+=> exactly one POST (workflow_transition.submit @line 387); all six pre-existing manifests GET
+
+--- workflow_transition submit binding + idempotency ---
+      http: {
+        target: 'svc-workflow',
+        method: 'POST',
+        path: '/internal/v1/workflow-instances/{workflowInstanceId}/transitions',
+        pathParams: ['workflowInstanceId'],
+        body: ['transitionDefinitionId', 'expectedWorkflowStateVersion', 'submissionPayload'],
+        idempotencyKey: true,
+      },
+    },
+391:        idempotencyKey: true,
+
+--- workflow_execute existence (workflow.js + index.js) ---
+/tmp/at-workflow.js:0
+/tmp/at-index.js:0
+ABSENT in both (grep rc=1)
+
+--- pagination successor (PR #126) in target blob ---
+beforeCreatedAt refs: live=6 target=14
+
+--- forum.js @b64b7357: manifest ids ---
+  id: 'forum_my_notifications',
+  id: 'forum_read_thread',
+  id: 'forum_read_transcript',
+  id: 'forum_reply',
+  id: 'forum_mark_read',
+  id: 'forum_list_threads',
+  id: 'forum_search_threads',
+  id: 'forum_create_thread',
+  id: 'forum_watch_thread',
+  id: 'forum_unwatch_thread',
+  id: 'forum_report_content',
+  id: 'forum_stats',
+
+--- forum.js: requiredScopes in file order ---
+38:  requiredScopes: ['forum.read'],
+66:  requiredScopes: ['forum.read'],
+90:  requiredScopes: ['forum.read'],
+117:  requiredScopes: ['forum.write'],
+161:  requiredScopes: ['forum.write'],
+185:  requiredScopes: ['forum.read'],
+216:  requiredScopes: ['forum.read'],
+282:  requiredScopes: ['forum.write'],
+322:  requiredScopes: ['forum.write'],
+346:  requiredScopes: ['forum.write'],
+370:  requiredScopes: ['forum.write'],
+410:  requiredScopes: ['forum.read'],
+(order: my_notifications=read, read_thread=read, read_transcript=read, reply=write, mark_read=write, list_threads=read, search_threads=read, create=write, watch=write, unwatch=write, report=write, stats=read)
+
+--- normalManifests export (5 ids) ---
+export const normalManifests = [
+  forumCreateThreadManifest,
+  forumWatchThreadManifest,
+  forumUnwatchThreadManifest,
+  forumReportContentManifest,
+  forumStatsManifest,
+]
+
+--- forum-moderation.js @90cf87c3: 8 ids ---
+  id: 'forum_pin_or_feature_thread',
+  id: 'forum_delete_thread',
+  id: 'forum_delete_message',
+  id: 'forum_resolve_thread',
+  id: 'forum_archive_thread',
+  id: 'forum_moderation_queue',
+  id: 'forum_handle_report',
+  id: 'forum_admin_unread',
+--- moderatorScopes constant + refs ---
+15:export const moderatorScopes = ['forum.read', 'forum.write', 'forum.moderate']
+25:  requiredScopes: moderatorScopes,
+67:  requiredScopes: moderatorScopes,
+92:  requiredScopes: moderatorScopes,
+125:  requiredScopes: moderatorScopes,
+164:  requiredScopes: moderatorScopes,
+188:  requiredScopes: moderatorScopes,
+219:  requiredScopes: moderatorScopes,
+256:  requiredScopes: moderatorScopes,
+
+--- index.js @a543e586: DEFAULT_MANIFESTS ---
+export const DEFAULT_MANIFESTS = [
+  calculatorManifest,
+  ...forumManifests,
+  ...forumNormalManifests,
+  ...workflowManifests,
+  ...okrManifests,
+  ...agentDefinitionManifests,
+  ...schedulerManifests,
+]
+
+
+--- index.js: resolveForumModeratorRegistration fail-closed matrix ---
+export function resolveForumModeratorRegistration(config = {}, env = process.env) {
+  const list = config.forumModeratorAgentIds
+  if (list === undefined || list === null) {
+    return { manifests: [], reason: 'forumModeratorAgentIds not configured' }
+  }
+  if (!Array.isArray(list) || list.length === 0) {
+    return { manifests: [], reason: 'forumModeratorAgentIds is missing or empty' }
+  }
+  const seen = new Set()
+  for (const entry of list) {
+    if (typeof entry !== 'string' || !MODERATOR_AGENT_ID_RE.test(entry)) {
+      return { manifests: [], reason: `invalid forumModeratorAgentIds entry ${JSON.stringify(entry)} (must be exact agt_* strings)` }
+    }
+    if (seen.has(entry)) {
+      return { manifests: [], reason: `duplicate forumModeratorAgentIds entry "${entry}"` }
+    }
+    seen.add(entry)
+  }
+  const agentId = env?.DSH_AGENT_ID
+  if (typeof agentId !== 'string' || agentId.length === 0) {
+    return { manifests: [], reason: 'DSH_AGENT_ID is absent' }
+  }
+  if (!seen.has(agentId)) {
+    return { manifests: [], reason: `agent "${agentId}" is not in the closed moderator list` }
+  }
+  return { manifests: forumModeratorManifests, reason: `moderator tools registered for "${agentId}"` }
+}
+
+/**
+ * Register every configured capability manifest as a model-facing tool.
+
+--- cordis.patch.yml @768ddec: closed list ---
+27:        forumModeratorAgentIds: ['agt_course-community-agent-2']
+
+--- transport.js @942e9880: sanitizer wiring ---
+59:import { sanitizeErrorDetail } from './error-detail-sanitizer.js'
+60:export { sanitizeErrorDetail } from './error-detail-sanitizer.js'
+394:        ? sanitizeErrorDetail(message)
+595:      return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: sanitizeErrorDetail(`token acquisition failed: ${err.message}`) }
+623:      return { errorCode: 'transport_failure', detail: sanitizeErrorDetail(`network error: ${err.message}`) }
+637:        return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: sanitizeErrorDetail(`token refresh failed: ${err.message}`) }
+642:        return { errorCode: 'transport_failure', detail: sanitizeErrorDetail(`network error on retry: ${err.message}`) }

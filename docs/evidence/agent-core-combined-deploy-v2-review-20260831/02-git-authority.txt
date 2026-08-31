@@ -1,0 +1,67 @@
+=== AUDIT 1: fresh authority (2026-08-31) ===
+$ git fetch github main
+ * branch            main       -> FETCH_HEAD
+
+github/main = 1fdf8c361f2010864f686d8310b68a40df5a5184
+TARGET_MAIN = 2392a41d4655ba25ed9e9749fbf8beb0ad1c71b4
+RESULT: HEAD_DRIFT (STOP per dispatch)
+
+--- ancestor checks vs fresh main 1fdf8c361f2010864f686d8310b68a40df5a5184 ---
+1aa8248893766aaf1caae17b2905e40061f0a147 (transition-PR125) ancestor=YES
+4d7ca245ec0b9f6ed8a650f742b94b39728331a7 (pagination-PR126) ancestor=YES
+83165dea530956a8836e9830c54811eb3a8ae93e (forum-impl-head-PR105) ancestor=YES
+2392a41d4655ba25ed9e9749fbf8beb0ad1c71b4 (forum-merge-TARGET_MAIN) ancestor=YES
+
+--- commits TARGET_MAIN..new main ---
+1fdf8c3 Merge pull request #127 from mayf3/codex/fleet-shared-codex-auth-implementation
+280592f fix: close shared Codex implementation blockers
+f222b59 feat: provision fleet shared Codex auth
+
+--- PR #127 touched files ---
+package.json
+packages/agent-provisioning/src/index.js
+packages/agent-provisioning/src/plugin-artifact.js
+packages/agent-provisioning/src/shared-codex.js
+packages/agent-provisioning/test/provisioning.test.js
+packages/agent-router/src/route-chain.js
+packages/agent-router/test/route-chain/process-registry-route-gate.test.js
+packages/agent-router/test/route-chain/route-chain.test.js
+packages/production-runtime/src/compose.js
+packages/production-runtime/src/model-overrides.js
+packages/production-runtime/src/shared-codex-migration-cli.js
+packages/production-runtime/src/shared-codex-migration-executable.js
+packages/production-runtime/test/model-overrides-runtime.test.js
+packages/production-runtime/test/model-overrides.test.js
+packages/production-runtime/test/shared-codex-migration.test.js
+packages/production-runtime/test/target-proxy-observer.test.js
+
+--- overlap with 9 delta paths ---
+UNCHANGED packages/broker/src/capabilities/workflow.js
+UNCHANGED packages/broker/src/mapping.js
+UNCHANGED packages/broker/src/schema.js
+UNCHANGED packages/broker/src/capabilities/forum.js
+UNCHANGED packages/broker/src/capabilities/forum-moderation.js
+UNCHANGED packages/broker/src/error-detail-sanitizer.js
+UNCHANGED packages/broker/src/index.js
+UNCHANGED packages/broker/src/transport.js
+UNCHANGED bundle-broker/cordis.patch.yml
+
+--- 9 target blob pins at TARGET_COMMIT ---
+PIN_OK packages/broker/src/capabilities/workflow.js
+PIN_OK packages/broker/src/mapping.js
+PIN_OK packages/broker/src/schema.js
+PIN_OK packages/broker/src/capabilities/forum.js
+PIN_OK packages/broker/src/capabilities/forum-moderation.js
+PIN_OK packages/broker/src/error-detail-sanitizer.js
+PIN_OK packages/broker/src/index.js
+PIN_OK packages/broker/src/transport.js
+PIN_OK bundle-broker/cordis.patch.yml
+
+--- governing spec frontmatter at TARGET_COMMIT ---
+AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1: status: accepted implementation_authority: contracts
+AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2: status: accepted implementation_authority: contracts
+AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1: status: accepted implementation_authority: none
+AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2: status: accepted implementation_authority: contracts
+
+--- CTR-009 canary identity authority (accepted transition spec) ---
+506:选测试性质 domain——默认 canary identity = `agt_build-in-public-agent`，

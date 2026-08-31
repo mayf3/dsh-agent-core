@@ -1,0 +1,19 @@
+=== AUDIT 2: OID census live vs TARGET_MAIN 2392a41 ===
+packages/broker/src/capabilities/forum.js  live=f068c171c2c8bd66b774c197bdbae09d1bcf809b  target=b64b73578f9645777025d8bff74e82f551de3866
+packages/broker/src/capabilities/workflow.js  live=04ca8550fbdaf9b66624dea42701a8a9af7547a8  target=83df50eb9947c865a2df531b05285c5e0f3eae0c
+packages/broker/src/index.js  live=6c4a60af4c529dd052ad45bd641213d40ee6800c  target=a543e586792aa18c592b7d2afb535b4ff575d286
+packages/broker/src/mapping.js  live=890d35b97700e741b0b6960049b619da03645483  target=74e83e11660a0ea5a9dffc47fe2a8897f17f9809
+packages/broker/src/schema.js  live=13f80f87ce3591669224a061a243fa6cce96a553  target=1bd36bbe5f3fc796dffdf633b557fbb7fff2741b
+packages/broker/src/transport.js  live=b697850cfd1961ac7ee88aa625d0a5c711aa7eac  target=942e9880ff11fbc672481f66f7e96d35778dfc4f
+packages/feishu-connector/src/index.js  live=2e6bd0896dd0354877aebc99361a986a05c1e06a  target=bd3b0e5b1cf28fe5151d3dbcd1489aaae012d4fc
+packages/production-runtime/src/model-overrides.js  live=ea44819a18085c6bd8665157d92caba205e720d9  target=f1e09d474143350fb0efe45e3d168cd480900c8b
+packages/scheduler-router/src/index.js  live=b1f5563411cb55c8ddc3391d6337a30aea2e0f45  target=c05c6087a450fafacee3d64939c9dc812d902e79
+
+authorized new files absent in live:
+ABSENT packages/broker/src/capabilities/forum-moderation.js
+ABSENT packages/broker/src/error-detail-sanitizer.js
+
+out-of-manifest bundle pin: bundle-broker/cordis.patch.yml live=b84c629679e900ea886896c9656c8ecb9fb792ae expect=b84c629679e900ea886896c9656c8ecb9fb792ae
+
+test files anywhere in live tree:
+NONE
