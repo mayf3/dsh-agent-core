@@ -12,23 +12,25 @@
  *   workflow_submission_history GET /internal/v1/workflow-instances/{workflowInstanceId}/submissions workflow.read
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
  *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
+ *   workflow_transition        POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions workflow.execute
  *
- * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1):
+ * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 +
+ * AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2):
  * read-only domain-wide instance enumeration for DOMAIN_OWNERs. The DOMAIN_OWNER
  * check is enforced SERVER-SIDE by svc-workflow (query_service.list_domain_instances
  * -> check_domain_owner; non-owner -> workflow_instance_not_found_or_not_visible);
  * the broker never replicates or relaxes it. Wire param is `domainId` (downstream
- * serde rename_all=camelCase + deny_unknown_fields); cursors and filter params
- * (lifecycle/status/definitionKey/currentNodeKey/assigneePrincipalId) are
- * deliberately NOT exposed (first-batch cursor discipline).
- *
- * Opaque-cursor paging (before_created_at/before_id, after_created_at/after_id)
- * is deliberately NOT exposed in the first batch (deferred, see report); only
- * `limit` is surfaced — the transport forwards ONLY manifest-declared query
- * names, so cursor parameters can never reach svc-workflow (not even "half"
- * a cursor). The write surface (transitions / create_instance / cancel /
- * archive / domain ops) is deferred with the Idempotency-Key generic
- * mechanism already in place for it (transport `idempotencyKey` flag).
+ * serde rename_all=camelCase + deny_unknown_fields); filter params
+ * (lifecycle/status/definitionKey/currentNodeKey/assigneePrincipalId) remain
+ * deliberately NOT exposed. Pagination exposes the server's composite keyset
+ * cursor as beforeCreatedAt + beforeId. Both absent means page one; both present
+ * means a later page; either alone fails fast locally with `invalid_cursor`
+ * before credential, token, or HTTP work. Full cursor strings are forwarded
+ * verbatim and the downstream page, including next_cursor, is not reshaped.
+ * The sole workflow write exposed here is exact-assignee transition submission;
+ * svc-workflow remains authoritative for actor and transition legality, and the
+ * transport's trusted `idempotencyKey` seam generates its model-inaccessible
+ * Idempotency-Key.
  *
  * Downstream error preservation: each manifest DECLARES the svc-workflow
  * read-side error codes its endpoints can produce (evidence: svc-workflow
@@ -68,7 +70,7 @@ const queryErrors = [
 
 const paginationErrors = [
   { code: 'invalid_pagination', description: 'Pagination parameters are invalid (limit must be 1-20).' },
-  { code: 'invalid_cursor', description: 'Cursor parameters are invalid (cursors are not exposed by this capability).' },
+  { code: 'invalid_cursor', description: 'Cursor parameters are invalid (cursor fields must be given as a complete all-or-none group).' },
 ]
 
 /** `limit` bound contract: Broker-side fail-fast before any HTTP request. */
@@ -204,8 +206,13 @@ export const workflowMyDomainsManifest = withTransportErrors({
  * (others get workflow_instance_not_found_or_not_visible, which also covers a
  * nonexistent domain). The summary projection passes through untouched
  * (items: workflow_instance_id / title / is_terminal / current_node /
- * current_assignee_principal_id / created_at / updated_at, + next_cursor);
- * cursor params are NOT exposed, so the model-facing contract is single-page.
+ * current_assignee_principal_id / created_at / updated_at, + next_cursor).
+ *
+ * PAGINATION_V2 exposes the optional composite keyset cursor pair
+ * beforeCreatedAt + beforeId. A generic manifest allOrNone group rejects either
+ * half locally before credentials, tokens, handlers, or HTTP. Complete cursor
+ * strings are forwarded verbatim through the query allowlist; no timestamp
+ * precision, timezone, UUID, field names, or downstream response are changed.
  */
 export const workflowDomainInstancesManifest = withTransportErrors({
   id: 'workflow_domain_instances',
@@ -213,6 +220,7 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   name: 'Workflow Domain Instances',
   description:
     'Agent Core capability `workflow_domain_instances` (svc-workflow): list all workflow instances in one domain (read-only; DOMAIN_OWNER of the domain only — enforced server-side). ' +
+    'To continue, pass next_cursor.created_at as beforeCreatedAt and next_cursor.id as beforeId; provide both cursor fields or neither. ' +
     'Returns {ok: true, result: <domain instance page>} on success.',
   requiredScopes: ['workflow.read'],
   errors: [
@@ -225,21 +233,31 @@ export const workflowDomainInstancesManifest = withTransportErrors({
   operations: [
     {
       name: 'list',
-      description: 'List the instances of the given domainId (UUID). Optional: limit (1-20).',
+      description:
+        'List the instances of the given domainId (UUID). Optional: limit (1-20); beforeCreatedAt + beforeId (all-or-none cursor pair copied verbatim from next_cursor).',
       arguments: {
         properties: {
           domainId: { type: 'string', description: 'Workflow domain id (UUID) to enumerate.' },
           limit: limitProperty,
+          beforeCreatedAt: {
+            type: 'string',
+            description: 'Cursor: next_cursor.created_at from the previous page (RFC 3339, forwarded verbatim). Must be paired with beforeId.',
+          },
+          beforeId: {
+            type: 'string',
+            description: 'Cursor: next_cursor.id from the previous page (UUID, forwarded verbatim). Must be paired with beforeCreatedAt.',
+          },
         },
         required: ['domainId'],
+        allOrNone: [{ properties: ['beforeCreatedAt', 'beforeId'], validationError: 'invalid_cursor' }],
       },
       result: { type: 'json' },
-      errors: ['invalid_arguments', 'invalid_pagination'],
+      errors: ['invalid_arguments', 'invalid_pagination', 'invalid_cursor'],
       http: {
         target: 'svc-workflow',
         method: 'GET',
         path: '/internal/v1/workflow-instances/domain',
-        query: ['domainId', 'limit'],
+        query: ['domainId', 'limit', 'beforeCreatedAt', 'beforeId'],
       },
     },
   ],
@@ -320,6 +338,62 @@ export const workflowGlobalInstancesManifest = withTransportErrors({
   ],
 })
 
+/** Exact-assignee transition submission; all authorization remains downstream. */
+export const workflowTransitionManifest = withTransportErrors({
+  id: 'workflow_transition',
+  toolName: 'workflow_transition',
+  name: 'Workflow Transition',
+  description:
+    'Agent Core capability `workflow_transition` (svc-workflow): first call `workflow_instance_detail` to read the current `workflow_state_version` and `outgoingTransitions[]`; use `executable_for_actor: true` only as an advisory preference, then submit the exact `transition_id` and payload matching `submission_schema`. ' +
+    'The downstream atomic transaction is authoritative, so advisory false/stale values are never blocked locally. On `workflow_state_version_conflict`, read the detail again and explicitly resubmit with the new version.',
+  requiredScopes: ['workflow.execute'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
+    { code: 'current_visit_not_found', description: 'Current node visit not found (HTTP 404).' },
+    { code: 'principal_not_assignee', description: 'Caller is not the current assignee (HTTP 403).' },
+    { code: 'assistance_open', description: 'Open assistance prevents transition execution (HTTP 409).' },
+    { code: 'source_node_terminal', description: 'The source node is terminal (HTTP 409).' },
+    { code: 'definition_version_revoked', description: 'The workflow definition version is revoked (HTTP 409).' },
+    { code: 'workflow_state_version_conflict', description: 'Expected workflow state version is stale (HTTP 409).' },
+    { code: 'transition_not_applicable', description: 'Transition is not applicable to the current node (HTTP 409).' },
+    { code: 'submission_required', description: 'This transition requires a submission payload (HTTP 422).' },
+    { code: 'submission_validation_failed', description: 'Submission payload failed validation (HTTP 422).' },
+    { code: 'size_limit_exceeded', description: 'Submission payload exceeds the service limit (HTTP 413).' },
+    { code: 'invalid_return_references', description: 'Return transition references are invalid (HTTP 422).' },
+    { code: 'assignee_resolution_failed', description: 'Target assignee resolution failed (HTTP 422).' },
+    { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
+    { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
+  ],
+  operations: [
+    {
+      name: 'submit',
+      description: 'Submit one transition using exact values read from workflow_instance_detail.',
+      arguments: {
+        properties: {
+          workflowInstanceId: { type: 'string', description: 'Workflow instance id (UUID).' },
+          transitionDefinitionId: { type: 'string', description: 'Exact outgoing transition definition id (UUID).' },
+          expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Current workflow state version used for CAS.' },
+          submissionPayload: { type: 'json', description: 'Optional payload matching the selected transition submission schema.' },
+        },
+        required: ['workflowInstanceId', 'transitionDefinitionId', 'expectedWorkflowStateVersion'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'POST',
+        path: '/internal/v1/workflow-instances/{workflowInstanceId}/transitions',
+        pathParams: ['workflowInstanceId'],
+        body: ['transitionDefinitionId', 'expectedWorkflowStateVersion', 'submissionPayload'],
+        idempotencyKey: true,
+      },
+    },
+  ],
+})
+
 /** All first-batch Workflow manifests. */
 export const manifests = [
   workflowMyTasksManifest,
@@ -328,4 +402,5 @@ export const manifests = [
   workflowMyDomainsManifest,
   workflowDomainInstancesManifest,
   workflowGlobalInstancesManifest,
+  workflowTransitionManifest,
 ]
