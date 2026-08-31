@@ -15,6 +15,31 @@
 
 已登记决策：
 
+## D-008: OpenClaw Retirement — DO_NOT_RESTORE 终局裁决
+
+- 状态: accepted（Owner 终局裁决，TASK_NAME = 旧链 终止，
+  TASK_STATUS = CANCELLED_BY_OWNER；全文见
+  `docs/decisions/OPENCLAW_RETIREMENT_V1.md`）
+- 日期: 2026-08-31
+- 背景: efficiency-agent 经 OpenClaw 旧链不可用；2026-08-31 client-mapping canary
+  修复 runner 两次以 root 执行，均在 gateway 重启缝失败
+  （`launchctl kickstart gui/505/ai.openclaw.gateway` → `125: Domain does not
+  support specified action`），`openclaw.json` 已被 runner 自动字节级回滚至 PRE image
+  （映射替换从未生效）。Owner 裁决：OpenClaw 已退出目标运行架构，不再修复。
+- 决策: **DO_NOT_RESTORE_OPENCLAW**——五项禁止：不修 restart、不恢复
+  `gui/505/ai.openclaw.gateway`（18789）、不修改 `openclaw.json`、不执行 mapping
+  runner、不为兼容旧 OpenClaw 增加任何代码。efficiency-agent 若仍不可用 → 单独
+  round 调查迁入当前 Agent Core / DSH Broker 正式链路，不得以恢复 OpenClaw 为方案
+  （含部分/临时/"先救活再迁"）。现存 runner / backup / logs 保留为历史证据
+  （evidence `docs/evidence/openclaw-mapping-repair-termination-20260831/`）。
+  重开条件 = 仅 Owner 新裁决（NEW_OWNER_RULING）。
+- 替代方案: 修复 launchd domain 加载以恢复 gateway——否决（Owner ruling）；重放或
+  续修 client-mapping repair——否决（配置已在 PRE，且方向整体终止）；OpenClaw 兼容
+  层——否决。
+- 影响: 关闭 Path B 类"回 OpenClaw"回退路径（2026-08-15 的 Path B 记录为历史事实）；
+  本决策不授权任何实现（closing ruling，无代码、无 production 变更）；后续
+  efficiency-agent 迁移需独立 investigation + accepted Spec。
+
 ## D-007: Scheduler Occurrence / Outcome / Session / Migration Current Decision（V2）
 
 - 状态: accepted（standalone Current Decision；Current Scheduler Authority；全文见
