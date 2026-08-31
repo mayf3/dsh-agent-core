@@ -108,7 +108,7 @@ Two gaps prevent direct exposure as the new capability:
 The Goal is to define exactly one generic, private, authenticated Agent-to-Agent Messaging capability
 whose Session, Run, provenance, execution-identity, timeout, failure, and audit behavior is complete enough
 to implement without hidden chat context. This Goal does not itself authorize implementation; only the
-lifecycle gate in §8B can do so after independent review and Owner acceptance.
+lifecycle gate in §8C can do so after independent review and Owner acceptance.
 
 ## 1A. Scope and non-goals
 
@@ -184,6 +184,15 @@ Cron/Scheduler per-execution fresh Session semantics are not challenged.
   `54d3145258c8798e29c1688c1cb93b3647fe3de7`, the content-addressed source r2 normative span was preserved
   byte-for-byte and carried no implementation or production authority. Basis: `OBS-MSG-005`,
   `CLM-MSG-005`, `EVD-MSG-005`, plus the exact frontmatter provenance in this Spec.
+- `STATE-MSG-005` — At `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`,
+  accepted Process Lifecycle authority defines `terminated_without_outcome` as a terminal reconciliation
+  state distinct from success and failure; reviewed proposed head
+  `361540bc3799bb7166c0bf6592826a0573b6c95e` did not classify it and contained overlapping R8 predicates.
+  Basis: `OBS-MSG-006`, `CLM-MSG-006`, `EVD-MSG-006`.
+- `STATE-MSG-006` — At the same repository revision, the generic non-Scheduler child relay converts any
+  parent-RPC rejection/channel loss to `invalid_arguments`, even though the parent handler and B delivery may
+  already have occurred. This is an implementation gap for `agent_session_send`, not reusable correct
+  behavior. Basis: `OBS-MSG-007`, `CLM-MSG-007`, `EVD-MSG-007`.
 
 ### 3.1 Router main reuse
 
@@ -338,6 +347,38 @@ forged by model input and cannot support audit or authorization.
 - Provenance: D-008 §27.7, this Spec's frontmatter, the content-addressed local source r2, and PR #133 head
   `54d3145258c8798e29c1688c1cb93b3647fe3de7`.
 
+### OBS-MSG-006 — Reviewed R8 classification is not exhaustive or mutually exclusive
+
+- Subject: accepted `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` reconciliation model and R8 at reviewed PR #133
+  head `361540bc3799bb7166c0bf6592826a0573b6c95e`.
+- Source revisions: `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6` and proposed head
+  `361540bc3799bb7166c0bf6592826a0573b6c95e`.
+- Environment: fresh, clean, independent documentation worktree; no runtime or production mutation.
+- Observed at: `2026-08-31T23:26:32Z`.
+- Method: compare Process Lifecycle C-015–C-019 and `readFinalAssistantOutput` with the R8 closed mapping,
+  then enumerate `outputState × terminalState × truncated` predicates.
+- Result: accepted authority includes terminal `terminated_without_outcome`; R8 omitted it. R8 also mapped
+  every `available + truncated=true` to `reply_unavailable` while separately mapping
+  `available + terminalState in {failed,late_failed}` to `target_run_failed`, so failed/late-failed retained
+  output with `truncated=true` matched both branches.
+- Provenance: `docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V2.md` C-015–C-019 and
+  `docs/specs/AGENT_CORE_AGENT_SESSION_MESSAGING_V1.md` R8 at the stated commits.
+
+### OBS-MSG-007 — Generic relay currently misclassifies ambiguous non-Scheduler loss
+
+- Subject: child-side Broker relay and its fixed behavior tests for non-Scheduler capabilities.
+- Source revision: `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`.
+- Environment: fresh, clean source worktree; source/test inspection only; no Broker or Agent invocation.
+- Observed at: `2026-08-31T23:26:32Z`.
+- Method: inspect `packages/broker/src/relay.js:157-195` and
+  `packages/broker/test/relay.test.js:87-100,119-127`, then compare Scheduler mutation-loss handling in
+  `packages/broker/test/scheduler-capability.test.js:123-166`.
+- Result: for every non-Scheduler capability, a rejected parent request or missing/unstructured response is
+  returned as `invalid_arguments`; only Scheduler mutations preserve ambiguity as
+  `mutation_outcome_unknown`. The relay therefore cannot distinguish proven pre-handler invalid input from a
+  parent-RPC deadline/channel loss after possible handler execution and target delivery.
+- Provenance: exact code/tests and line coordinates above at the stated revision.
+
 ## 3B. Claims and assumptions
 
 ### CLM-MSG-001 — The frozen Messaging model conforms to D-008
@@ -379,6 +420,22 @@ forged by model input and cannot support audit or authorization.
 - Contradicted by evidence: none known.
 - Uncertainty: any future byte delta inside the frozen span invalidates this Claim and requires a fresh
   semantic review against the content-addressed source.
+
+### CLM-MSG-006 — R8 requires one authoritative exhaustive classification supplement
+
+- Support state: `SUPPORTED`.
+- Supported by evidence: `EVD-MSG-006`.
+- Contradicted by evidence: none known.
+- Uncertainty: none for the accepted lifecycle states and exact reviewed R8 predicates; future lifecycle
+  authority changes require a fresh alignment review.
+
+### CLM-MSG-007 — Ambiguous relay loss cannot truthfully be invalid arguments
+
+- Support state: `SUPPORTED`.
+- Supported by evidence: `EVD-MSG-007`.
+- Contradicted by evidence: none known.
+- Uncertainty: source inspection does not determine whether any particular lost call reached B; that exact
+  inability to prove delivery or non-delivery is the `outcome_unknown` condition.
 
 `OPEN_ASSUMPTION = NONE`; no unsupported assumption changes authority or Contract meaning.
 
@@ -448,6 +505,33 @@ forged by model input and cannot support audit or authorization.
   that span changes.
 - Provenance: `OBS-MSG-005` sources and recorded digests.
 
+### EVD-MSG-006 — Lifecycle comparison supports a binding R8 classification supplement
+
+- Source observations: `OBS-MSG-006`.
+- Target: `CLM-MSG-006`.
+- Relation: `SUPPORTS`.
+- Bound coordinates: accepted Process Lifecycle at
+  `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`, proposed Messaging head
+  `361540bc3799bb7166c0bf6592826a0573b6c95e`, observed `2026-08-31T23:26:32Z`.
+- Strength/sufficiency: direct finite-state comparison proves one missing terminal class and one overlapping
+  predicate; sufficient to require the explicit matrix in §8A.
+- Limitations: evaluates the proposed Contract text, not an implementation or production runtime.
+- Provenance: `OBS-MSG-006` sources.
+
+### EVD-MSG-007 — Relay source and tests support the ambiguous-loss gap Claim
+
+- Source observations: `OBS-MSG-007`.
+- Target: `CLM-MSG-007`.
+- Relation: `SUPPORTS`.
+- Bound coordinates: Broker relay source/tests at
+  `mayf3/dsh-agent-core@433b8bd06a163badae322da9db012b9851e148b6`, observed
+  `2026-08-31T23:26:32Z`.
+- Strength/sufficiency: direct branch and assertion evidence establishes current non-Scheduler
+  `invalid_arguments` behavior and its contrast with Scheduler mutation uncertainty.
+- Limitations: does not prove whether any individual lost request reached B and grants no permission to edit
+  relay code in this docs-only task.
+- Provenance: `OBS-MSG-007` sources.
+
 ## 3D. Decisions
 
 ### DEC-MSG-001 — Use canonical-main Messaging, not fresh execution
@@ -492,8 +576,36 @@ forged by model input and cannot support audit or authorization.
 - Reason: keep the capability private, generic, non-forgeable, and operationally reconcilable.
 - Owner input remaining: exact-head Spec acceptance only; no unresolved normative choice.
 
-These Decision records index the unchanged R1–R12 Contracts; they do not expand or reinterpret the frozen
-source r2 span.
+### DEC-MSG-005 — Classify terminal outcome before output availability or truncation
+
+- Decision owner: repository Owner; this child Spec remains proposed.
+- Decision: §8A is the binding, mutually exclusive, exhaustive interpretation of R8. Terminal outcome is the
+  primary classification axis; output availability and `truncated` qualify only that outcome. In particular,
+  failed/late-failed always map to `target_run_failed`, while `terminated_without_outcome` always preserves
+  `outcome_unknown`, regardless of retained or truncated text.
+- Rejected alternatives: output-state-first predicates that overlap terminal failure, omitting
+  `terminated_without_outcome`, treating captured text as success, or treating proven termination as a proven
+  business failure.
+- Reason: preserve the accepted Process Lifecycle distinction between outcome evidence, termination evidence,
+  and bounded final-output retention.
+- Owner input remaining: exact-head Spec acceptance only; no unresolved normative choice.
+
+### DEC-MSG-006 — Parent-RPC ambiguity is outcome unknown and never auto-retried
+
+- Decision owner: repository Owner; this child Spec remains proposed.
+- Decision: `invalid_arguments` is permitted only for authoritative validation rejection that proves zero
+  parent-handler execution and zero Router/target delivery. Once the child relay's request may have entered the
+  parent-RPC channel, deadline, channel loss, missing response, or malformed/unstructured response that cannot
+  prove zero execution must return `outcome_unknown`; automatic retry/re-invocation/replay count is zero.
+- Rejected alternatives: current generic non-Scheduler `invalid_arguments` fallback, guessing non-delivery,
+  silently retrying, or deduplicating a later explicit call as though it were the original send.
+- Reason: B may already have received and executed the message; false invalid-input classification invites a
+  duplicate send and contradicts the accepted Process Lifecycle unknown-outcome discipline.
+- Owner input remaining: exact-head Spec acceptance only; no unresolved normative choice.
+
+`DEC-MSG-001`–`DEC-MSG-004` index the unchanged source-r2 Contracts. `DEC-MSG-005` and `DEC-MSG-006`
+provide the binding parent-authority clarifications required by independent review, outside the byte-frozen
+source span; they do not change its bytes or broaden capability scope.
 
 ## 3E. Contracts
 
@@ -502,7 +614,7 @@ source r2 span.
 `AGENT_CORE_AGENT_SESSION_MESSAGING_V1#R12`. The closed success/error envelopes in §5 and the explicit
 non-goals in §6 qualify those Contracts and remain part of their frozen meaning. Contract IDs must not be
 renumbered or reused after acceptance. Formal Acceptance mappings are recorded after the unchanged source
-span in §8A.
+span in §8B.
 
 ## 4. Frozen capability contract
 
@@ -967,7 +1079,117 @@ AND no Feishu/Forum/Scheduler/Workflow delivery occurs
 
 ## 8. Predicted implementation scope — not authorized
 
-## 8A. Formal Acceptance records and bidirectional Contract coverage
+## 8A. Binding R8 reconciliation classification and relay-ambiguity discipline
+
+This section is a normative clarification of R2, R7, R8, R10, and R12 under accepted Process Lifecycle
+authority. It preserves the frozen source-r2 bytes while closing the reviewed result-classification and
+parent-RPC ambiguity gaps. It adds no API field, retry mechanism, Session mode, public reconciliation
+surface, or implementation authority.
+
+### 8A.1 Admission and child-to-parent relay classification
+
+The capability first classifies whether execution is proven impossible or may already have occurred:
+
+```text
+authoritative child-side schema rejection before parent-RPC request write
+  -> invalid_arguments; parent handler count=0; Router delivery count=0; target mutation count=0
+
+authoritative parent-side credential/grant/target/input rejection with proven zero Router delivery
+  -> exact structured denial/error; Router delivery count=0; target mutation count=0
+
+parent-RPC request proven not written, or proven rejected before parent handler entry with zero execution
+  -> not_admitted(reason=parent_rpc_not_sent); Router delivery count=0; target mutation count=0
+
+parent returns proven not_admitted / zero target prompt bytes
+  -> not_admitted
+
+real target inbox receipt returned
+  -> admission proven; timeoutSeconds=0 returns accepted; timeoutSeconds>0 enters exact-handle reply wait
+
+parent-RPC request may have been written, but deadline/channel loss/missing or malformed transport envelope
+prevents proof of either parent-handler non-execution or target non-delivery
+  -> outcome_unknown(reason=parent_rpc_ambiguous)
+```
+
+`invalid_arguments` is therefore never a generic transport fallback for `agent_session_send`. It is valid
+only when authoritative validation proves the request was invalid before any possible execution. After a
+parent-RPC request may have entered the channel, absence of a trustworthy response is not evidence that B
+did not receive the message.
+
+For `parent_rpc_ambiguous`:
+
+```text
+AUTOMATIC_RELAY_RETRY = 0
+AUTOMATIC_HANDLER_REINVOCATION = 0
+AUTOMATIC_ROUTER_REDELIVERY = 0
+AUTOMATIC_PROMPT_REPLAY = 0
+MODEL_VISIBLE_ERROR_CLASS = outcome_unknown
+```
+
+The trusted runtime retains its bounded L0/L1 request/correlation evidence for operations reconciliation
+when available, but does not expose an internal request id or reconciliation handle in the model-visible
+error. A later explicit model call is a new send and new Run; it must not be presented as a safe retry or be
+silently deduplicated against the ambiguous call. This Spec adds no public inspect/retry operation.
+
+Relay ambiguity does not rewrite a parent-side L1 business outcome that the parent already proved. The parent
+retains its exact `accepted`, `not_admitted`, or terminal outcome record; the child returns `outcome_unknown`
+when that proof did not cross the response channel. When no parent outcome is available, bounded sanitized
+relay evidence records `parent_rpc_ambiguous`. R12's separate rule still applies: audit-append failure after a
+proven receipt never converts that proven business result to unknown.
+
+### 8A.2 Mutually exclusive and exhaustive R8 matrix
+
+After a real receipt, terminal outcome is classified before output availability. `truncated` is consulted
+only after a success terminal is proven. The complete valid Cartesian result space is:
+
+| Reconciliation/output state | `terminalState` | `truncated` | Exact tool result |
+|---|---|---:|---|
+| `available` | `completed` or `late_completed` | `false` | `{status:'replied',reply:text}` |
+| `available` | `completed` or `late_completed` | `true` | `reply_unavailable(reason=truncated)` |
+| `no_output` | `completed` or `late_completed` | not applicable | `reply_unavailable(reason=no_output)` |
+| `available` | `failed` or `late_failed` | `false` or `true` | `target_run_failed` |
+| `no_output` | `failed` or `late_failed` | not applicable | `target_run_failed` |
+| `available` | `terminated_without_outcome` | `false` or `true` | `outcome_unknown(reason=terminated_without_outcome)` |
+| `no_output` | `terminated_without_outcome` | not applicable | `outcome_unknown(reason=terminated_without_outcome)` |
+| `pending` | not terminal | not applicable | continue exact-handle wait; final read at reply deadline then `{status:'timeout'}` if still pending |
+| delivery result `not_admitted` | not applicable | not applicable | `not_admitted` |
+| `evicted` | not available | not applicable | `reply_unavailable(reason=evicted)` |
+| `restart_lost` | not available | not applicable | `reply_unavailable(reason=restart_lost)` |
+| `never_existed` | not available | not applicable | `reply_unavailable(reason=never_existed)` |
+
+The rows are disjoint by ordered classification:
+
+```text
+1. proven admission state / parent-RPC ambiguity
+2. terminalState = success | failure | terminated_without_outcome | not terminal
+3. output state = available | no_output | absence state
+4. truncated only within available + success
+```
+
+Consequences:
+
+- The frozen R8 predicate `available + truncated=true` is restricted to
+  `terminalState in {completed,late_completed}`; it is not a terminal-state-independent branch.
+- `available + failed|late_failed + truncated=true` matches only `target_run_failed`; truncation never masks
+  a proven target failure.
+- `terminated_without_outcome` matches only `outcome_unknown`, with or without retained/truncated text;
+  termination proof is not success/failure proof and retained text is not returned as a reply.
+- unknown terminal values, malformed combinations, or unstructured reconciliation output after possible
+  admission fail closed as `outcome_unknown(reason=reconciliation_invariant)` with zero automatic retry;
+  they never fall through to `invalid_arguments`, `replied`, or empty success.
+- `timeout`, `outcome_unknown`, and every failure/absence result produce no replay, second Router delivery,
+  second Session, external announce, cancellation, or active steering.
+
+### 8A.3 Current implementation gap
+
+At base `433b8bd06a163badae322da9db012b9851e148b6`, `packages/broker/src/relay.js` applies
+`invalid_arguments` to non-Scheduler request rejection and missing/unstructured parent responses. That
+behavior is explicitly non-conforming for `agent_session_send`; it must not be reused unchanged. The future
+implementation must give this local capability an exact ambiguity-preserving relay result or a generic
+equivalent that does not weaken other capability contracts. This observation grants no code-change authority
+while the Spec remains proposed.
+
+## 8B. Formal Acceptance records and bidirectional Contract coverage
 
 The original Cases A–I and additional mandatory cases in §7 remain the frozen behavioral scenarios. The
 records below qualify those scenarios with stable Acceptance IDs, Contract references, verification
@@ -1083,17 +1305,28 @@ conformance evidence; they are not claims that an implementation already exists 
 ### ACC-MSG-008 — Positive timeout returns only one exact successful complete reply
 
 - Contracts: `R8`.
-- Existing scenario coverage: Case D plus the additional terminal/truncation/restart/timeout cases.
-- Method: execute the closed reconciliation matrix for completed, late-completed, failed, late-failed,
-  no-output, truncated, pending-to-timeout, not-admitted, evicted, restart-lost, and never-existed states.
+- Existing scenario coverage: Case D plus every terminal/truncation/restart/timeout case in §7 and the binding
+  §8A.2 matrix.
+- Method: table-drive the complete valid Cartesian space: `available × {completed,late_completed,failed,
+  late_failed,terminated_without_outcome} × {truncated=false,true}`; `no_output ×` the same five terminal
+  states; `pending` before and at the reply deadline; `not_admitted`; `evicted`; `restart_lost`;
+  `never_existed`; plus unknown terminal and malformed/unstructured reconciliation shapes. Assert exactly one
+  selected result branch for every fixture.
 - Environment: isolated deterministic reconciliation fixture at the exact implementation commit with the
   reply deadline beginning at a controlled real receipt; no production execution.
-- Required evidence: exact commit, state-matrix fixtures, receipt/deadline timestamps, command,
-  stdout/stderr, exit status, authoritative final-output snapshots, and returned envelopes/errors.
-- Expected result: only complete successful non-truncated text from the exact Run returns one
-  `{status:'replied',reply}`; deadline returns `{status:'timeout'}` and every other state maps exactly as R8.
-- Failure condition: partial/failed/truncated/wrong-Run text succeeds, queue time consumes the reply deadline,
-  timeout cancels/replays/announces B, a state becomes empty success, or a second delivery occurs.
+- Required evidence: exact commit, generated fixture list proving every combination above, receipt/deadline
+  timestamps, command, stdout/stderr, exit status, authoritative final-output snapshots, selected-branch count,
+  returned envelope/error, and prompt/replay/external-delivery counters for each fixture.
+- Expected result: the §8A.2 row is selected exactly once for every valid combination; only
+  `available + completed|late_completed + truncated=false` returns `{status:'replied',reply}`;
+  failed/late-failed always return `target_run_failed`; `terminated_without_outcome` and malformed post-
+  admission states return `outcome_unknown`; still-pending final read returns `{status:'timeout'}`; every
+  replay/redelivery/external-delivery counter remains zero.
+- Failure condition: any fixture selects zero or multiple rows; failed/late-failed plus `truncated=true` becomes
+  `reply_unavailable`; any `terminated_without_outcome` combination is missing or becomes success/failure;
+  retained text from a non-success terminal is returned; queue time consumes the reply deadline; malformed
+  post-admission state becomes `invalid_arguments`; timeout/unknown cancels, retries, replays, announces, or
+  causes a second delivery; or any state becomes empty success.
 
 ### ACC-MSG-009 — Race-safe exact-handle wait lifecycle
 
@@ -1158,22 +1391,47 @@ conformance evidence; they are not claims that an implementation already exists 
 - Failure condition: delivery occurs without successful L1 intent, audit order is wrong, a proven receipt is
   rewritten, an unknown outcome is guessed, any secret/message/history/route leaks, or audit failure is silent.
 
+### ACC-MSG-013 — Parent-RPC loss preserves send ambiguity and forbids duplicate retry
+
+- Contracts: `R2`, `R7`, `R8`, `R10`, `R12`.
+- Existing scenario coverage: Cases C and D plus the §7 no-replay/second-delivery additional cases and the
+  binding §8A.1 relay classification.
+- Method: instrument child schema validation, parent-RPC request-write boundary, parent handler entry, Router
+  delivery, target receipt, response write, and child relay result. Execute: proven child-side invalid input;
+  rejection before request write; parent deadline before handler entry with proof; parent deadline after
+  handler entry; channel loss after B receipt but before response; request rejection with unknown write state;
+  missing response; malformed/unstructured transport/parent envelopes; and a later explicit second call.
+- Environment: isolated Broker/AgentProcess/production-runtime/Router fixture at the exact implementation
+  commit with deterministic RPC barriers and B receipt counters; no production services or credentials.
+- Required evidence: exact commit, relay source/test diff, complete fixture matrix, exact command,
+  stdout/stderr, exit status, request-write/handler/delivery/receipt/response counters, model-visible error,
+  L0/L1 correlation/audit evidence, automatic retry/re-invocation/replay counts, and explicit-second-call Run
+  identities.
+- Expected result: only proven validation/non-execution fixtures return `invalid_arguments` or their exact
+  pre-delivery denial; every loss lacking proof of zero parent execution and zero B delivery returns
+  `outcome_unknown`; automatic retry, handler re-invocation, Router redelivery, and prompt replay counts are
+  zero; a later explicit call is a distinct send/Run and is not described as a safe retry.
+- Failure condition: the current generic relay behavior—non-Scheduler request rejection/channel loss or
+  missing/unstructured response returning `invalid_arguments`—is observed for `agent_session_send`; any
+  ambiguous loss claims not-admitted/failed/no-side-effect; any automatic second attempt occurs; B receives
+  duplicate prompt bytes from one tool call; or internal correlation/secret material becomes model-visible.
+
 ### Contract-to-Acceptance coverage
 
 | Contract | Acceptance | Existing scenarios | Covered |
 |---|---|---|---|
 | `R1` | `ACC-MSG-001` | Cases A–I capability entrypoint | YES |
-| `R2` | `ACC-MSG-002` | Case G + invalid-input matrix | YES |
+| `R2` | `ACC-MSG-002`, `ACC-MSG-013` | Case G + invalid-input/relay-loss matrices | YES |
 | `R3` | `ACC-MSG-003` | Case G + onward-A2A additional case | YES |
 | `R4` | `ACC-MSG-004` | Cases G, I + onward-A2A additional case | YES |
 | `R5` | `ACC-MSG-005` | Case H | YES |
 | `R6` | `ACC-MSG-006` | Cases F, H | YES |
-| `R7` | `ACC-MSG-007` | Cases C, E | YES |
-| `R8` | `ACC-MSG-008` | Case D + terminal/timeout additional cases | YES |
+| `R7` | `ACC-MSG-007`, `ACC-MSG-013` | Cases C, E + relay-loss matrix | YES |
+| `R8` | `ACC-MSG-008`, `ACC-MSG-013` | Case D + terminal/timeout/relay-loss cases | YES |
 | `R9` | `ACC-MSG-009` | Case D + race additional cases | YES |
-| `R10` | `ACC-MSG-010` | Cases A, B, E + self/two-send additional cases | YES |
+| `R10` | `ACC-MSG-010`, `ACC-MSG-013` | Cases A, B, E + self/two-send/no-retry cases | YES |
 | `R11` | `ACC-MSG-011` | Case I + late-result additional case | YES |
-| `R12` | `ACC-MSG-012` | Case F + audit-failure additional cases | YES |
+| `R12` | `ACC-MSG-012`, `ACC-MSG-013` | Case F + audit-failure/relay-loss cases | YES |
 
 ### Scenario-to-Contract coverage
 
@@ -1181,23 +1439,24 @@ conformance evidence; they are not claims that an implementation already exists 
 |---|---|---|
 | Case A — existing B main | `R1`, `R10` | `ACC-MSG-001`, `ACC-MSG-010` |
 | Case B — absent B main and concurrent first sends | `R10` | `ACC-MSG-010` |
-| Case C — receipt-only | `R7` | `ACC-MSG-007` |
-| Case D — one bounded reply | `R8`, `R9` | `ACC-MSG-008`, `ACC-MSG-009` |
+| Case C — receipt-only | `R7` | `ACC-MSG-007`, `ACC-MSG-013` |
+| Case D — one bounded reply | `R8`, `R9` | `ACC-MSG-008`, `ACC-MSG-009`, `ACC-MSG-013` |
 | Case E — B busy | `R7`, `R10` | `ACC-MSG-007`, `ACC-MSG-010` |
 | Case F — unauthorized sender | `R6`, `R12` | `ACC-MSG-006`, `ACC-MSG-012` |
 | Case G — unforgeable provenance | `R2`, `R3`, `R4` | `ACC-MSG-002`, `ACC-MSG-003`, `ACC-MSG-004` |
 | Case H — target-owned execution identity | `R5`, `R6` | `ACC-MSG-005`, `ACC-MSG-006` |
 | Case I — external route isolation | `R4`, `R11` | `ACC-MSG-004`, `ACC-MSG-011` |
-| §7 additional mandatory cases | `R2`, `R3`, `R6`, `R8`, `R9`, `R10`, `R11`, `R12` | `ACC-MSG-002`, `ACC-MSG-003`, `ACC-MSG-006`, `ACC-MSG-008`, `ACC-MSG-009`, `ACC-MSG-010`, `ACC-MSG-011`, `ACC-MSG-012` |
+| §7 additional mandatory cases | `R2`, `R3`, `R6`, `R8`, `R9`, `R10`, `R11`, `R12` | `ACC-MSG-002`, `ACC-MSG-003`, `ACC-MSG-006`, `ACC-MSG-008`, `ACC-MSG-009`, `ACC-MSG-010`, `ACC-MSG-011`, `ACC-MSG-012`, `ACC-MSG-013` |
 
 ```text
 ACTIVE_CONTRACTS = 12
+ACCEPTANCE_RECORDS = 13
 CONTRACTS_WITH_ACCEPTANCE = 12
 UNRESOLVED_ACCEPTANCE_REFERENCES = 0
 UNMAPPED_EXISTING_SCENARIOS = 0
 ```
 
-## 8B. Predicted implementation scope details — not authorized
+## 8C. Predicted implementation scope details — not authorized
 
 Only a future atomic Owner acceptance transaction, after independent review, may change this Spec from
 `status: proposed` / `implementation_authority: none` to `status: accepted` /
@@ -1208,7 +1467,8 @@ code scope is:
 ```text
 packages/broker
   - agent_session_send local capability manifest and inventory tests
-  - reuse existing local relay
+  - reuse the existing local relay transport path, but not its generic non-Scheduler invalid_arguments fallback
+  - exact agent_session_send parent-RPC ambiguity -> outcome_unknown + zero automatic retry mapping/tests
   - authoritative trusted-handler validation tests
 
 packages/production-runtime
@@ -1282,7 +1542,11 @@ Independent review must specifically decide:
 2. the frozen `timeoutSeconds=0..300` bound and receipt-relative reply deadline;
 3. exact DSH `inter_agent` message-source augmentation at the pinned runtime version;
 4. whether self-send rejection is sufficient for V1 queue safety;
-5. error mapping for Router `outcome_unknown` and reply reconciliation absence states.
+5. error mapping for Router `outcome_unknown` and reply reconciliation absence states;
+6. §8A.2's mutually exclusive/exhaustive matrix, including every failed/late-failed truncation combination
+   and every `terminated_without_outcome` output combination;
+7. parent-RPC ambiguous-loss classification, zero automatic retry/re-invocation/redelivery/replay, and the
+   explicit non-conformance of the current generic non-Scheduler `invalid_arguments` fallback.
 
 ```text
 TASK_NAME = 会话 执行
@@ -1290,6 +1554,12 @@ OPENCLAW_MODEL = reuse target Agent main Session; each send creates one new Run/
 CURRENT_ROUTER_REUSE = PARTIAL
 PROVENANCE_GAP = YES
 WAIT_REPLY_GAP = YES
+R8_CLOSED_CLASSIFICATION = TERMINAL_OUTCOME_FIRST + OUTPUT_STATE_SECOND + TRUNCATION_ONLY_FOR_SUCCESS
+TERMINATED_WITHOUT_OUTCOME = outcome_unknown; retained/truncated text is not a reply
+PARENT_RPC_AMBIGUITY_GAP = YES
+PARENT_RPC_AMBIGUITY_RESULT = outcome_unknown
+AUTOMATIC_RELAY_RETRY = 0
+ACCEPTANCE_RECORDS = 13
 PROPOSED_SPEC = AGENT_CORE_AGENT_SESSION_MESSAGING_V1
 SPEC_STATUS = proposed
 SOURCE_R2_SHA256 = 20820492d1b65842b0c607ee013baca1d5a3d6377b072d8914405eabff99d169
@@ -1343,5 +1613,5 @@ OWNER_ACCEPTANCE_REQUIRED = YES
 The review focus in §10 asks the independent reviewer to verify frozen choices; it does not delegate any
 normative choice to implementation. A semantic delta anywhere in the Spec after review invalidates that
 review. Acceptance, if authorized, must bind the exact final head and atomically perform the lifecycle
-transition described in §8B together with required acceptance provenance and lifecycle mirrors; no product
+transition described in §8C together with required acceptance provenance and lifecycle mirrors; no product
 implementation, merge, or production authority exists in the current proposed state.
