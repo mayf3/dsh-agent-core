@@ -1,10 +1,10 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_TRANSITION_PINNED_HOTFIX_DEPLOYMENT_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
-production_apply_authority: none
+implementation_authority: contracts
+production_apply_authority: contracts
 date: 2026-08-31
 type: implementation-spec (production deployment authority proposal; docs-only authoring round)
 scope:
@@ -673,3 +673,26 @@ evidence 解析，OBS-HD-002/004）；不构建制品；不进入任何旧制品
 5. **失败语义**：审计 REVISE / Owner 拒绝 → 本提案回到 proposed 修订或按
    SPEC_GOVERNANCE_V0 §8.4 记录 rejected disposition；任何状态下本轮都不产生
    生产变化。
+
+### Acceptance record（2026-08-31 lifecycle-only acceptance）
+
+```text
+REVIEWED_BASE_COMMIT         = 647835676e7acb904dae48e9b543f4722dcc3ccb
+REVIEWED_SPEC_COMMIT         = cf5606163d75f5c1a0bf7504f45e47d56c2a17db
+REVIEWER_ID                  = 独立 review 5067223455
+REVIEW_RESULT                = ACCEPT
+BLOCKERS                     = NONE
+FINAL_ACCEPTED_HEAD           = SEE_THIS_FINALIZE_COMMIT_AND_PR_DESCRIPTION
+ACCEPTANCE_ACTOR             = mayf3
+ACCEPTED_AT                  = 2026-08-31T13:58:22Z
+SEMANTIC_DELTA_AFTER_REVIEW  = NONE
+
+NEXT_TASK                    = 接受 审计
+READY_TO_MERGE               = NO
+ARTIFACT_BUILD_ALLOWED       = NO
+PRODUCTION_APPLY_ALLOWED     = NO
+```
+
+`FINAL_ACCEPTED_HEAD` 在本 lifecycle commit 产生后由该 Git object identity 与 PR
+描述绑定完整 SHA；commit 不能在自身内容中预填或伪造自身 SHA。final-head 独立复核
+通过前，禁止 merge、制品构建与生产 apply。
