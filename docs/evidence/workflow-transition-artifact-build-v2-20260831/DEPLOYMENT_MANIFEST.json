@@ -1,0 +1,84 @@
+{
+  "manifest_version": 1,
+  "round": "制品 执行 (ARTIFACT_BUILD, CTR-HD-006 chain step 2, new provenance per CTR-HD-010)",
+  "authority": {
+    "spec_id": "AGENT_CORE_WORKFLOW_TRANSITION_PINNED_HOTFIX_DEPLOYMENT_V1",
+    "spec_status_at_build": "accepted",
+    "authority_merge_commit": "1a9b81de19c2bf4af01f62f6189acffc1bb6839d",
+    "authority_acceptance_commit": "317c101f730d920aa60255223a8b766d50f65a60",
+    "authority_baseline_commit": "647835676e7acb904dae48e9b543f4722dcc3ccb",
+    "governing_capability_spec": "AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1",
+    "release_strategy": "PINNED_TRANSITION_ONLY_HOTFIX",
+    "release_feature_set": "workflow_transition only",
+    "excluded_feature_set": "workflow_domain_instances Pagination V2"
+  },
+  "deployment_scope": {
+    "file_count": 1,
+    "deployment_unit": "single directly imported ESM source file",
+    "deployment_path_allowlist": [
+      "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js"
+    ]
+  },
+  "source": {
+    "repository": "mayf3/dsh-agent-core",
+    "release_source_commit": "f4bc4311225c9e0fd906ce108a5b9ffdbd83a957",
+    "source_tree": "1f327d8a6c8f3ffefcb1dad85c3b59a7ab7cbd9b",
+    "source_relative_path": "packages/broker/src/capabilities/workflow.js",
+    "target_git_blob": "577c8778cf35810ce7538aff52ab354e0c1dddc6",
+    "target_sha256": "d162670d64227613bf5c8004fc8491a296f62835722f3bdcde7ddc4131890f8e",
+    "target_byte_size": 20058
+  },
+  "preimage": {
+    "expected_production_preimage_blob": "04ca8550fbdaf9b66624dea42701a8a9af7547a8",
+    "preimage_sha256": "ca27f3a8a1a34f09858988edb57e892ebdb2a98d7ceb755f0eab252a9641a93e",
+    "preimage_byte_size": 16107,
+    "fresh_recheck_required_before_write": true,
+    "observed_at_preflight_utc": "2026-08-31 (this round, read-only)",
+    "on_mismatch": "DEPLOYMENT = STOPPED; never auto-adopt a new production file as preimage (CTR-HD-004)"
+  },
+  "file_policy": {
+    "owner": "root",
+    "group": "wheel",
+    "mode": "0644",
+    "preserve_owner_group_mode": true,
+    "acl": "none (verified absent at preflight)",
+    "xattr": "none (verified absent at preflight)",
+    "symlink": "forbidden (regular file required, both sides)",
+    "install_tool": "sudo install (never sudo cp; never interpret/extract artifacts as root from /tmp)"
+  },
+  "service": {
+    "label": "ai.agent-core.runtime",
+    "domain": "system",
+    "plist": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+    "entrypoint": "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+    "restart": "exact single-label restart (launchctl kickstart -k system/ai.agent-core.runtime)",
+    "pid_evidence_required": "old pid exits AND new pid appears; no stale broker process"
+  },
+  "deploy_allowlist": [
+    "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js"
+  ],
+  "rollback_allowlist": [
+    "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js",
+    "exact service restart of label ai.agent-core.runtime"
+  ],
+  "rollback_scope_matches_deployment_scope": true,
+  "write_gate": {
+    "AUTH_V1_CANARY_WRITE_ENABLED_required_state": "false",
+    "verified_at_preflight": "true (absent from com.svc-workflow environment -> default false)",
+    "this_round_modifies_gate": false
+  },
+  "artifacts": {
+    "artifact_path": "workflow-transition-f4bc431.tar",
+    "artifact_sha256": "67e5e183722ed50601ff84ca7dc0f6c217bc4f67c4ce826f301f53ef40f82473",
+    "artifact_byte_size": 30720,
+    "artifact_member": "workflow.js (regular file, mode 0644, uid 0/gid 0, single member)",
+    "rollback_bundle_path": "rollback/rollback-preimage-04ca8550.tar",
+    "rollback_bundle_sha256": "fe290f9fefb112f9b50a9ec0fff273267d37c02c5f4dc7c4e90e286d252eedb6",
+    "rollback_member": "workflow.js (regular file, preimage bytes)",
+    "rollback_metadata": "rollback/PREIMAGE_META.json"
+  },
+  "rejected_old_artifacts_never_referenced": [
+    "db573426e6510777b095625456f4fc965551d028f19f3857250d289363860f98",
+    "482e19c90d08aef415aa4b75316d281160785e1ebae09be40ddf78bcfccf9d5b"
+  ]
+}

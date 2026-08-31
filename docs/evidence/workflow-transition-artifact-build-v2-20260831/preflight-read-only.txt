@@ -1,0 +1,55 @@
+=== PRODUCTION PREFLIGHT (READ-ONLY) — 制品 执行 round, 2026-08-31 (~14:3x–14:48Z) ===
+method: zero production writes; health GET + stat/hash/launchctl print (read-only) +
+manifest enumeration on a per-file hash-verified byte-copy of the live broker src.
+
+[P1] Broker health = PASS
+  curl -s http://127.0.0.1:8790/health
+  -> {"ok":true,"service":"agent-core-notification-ingress","deliverReady":true,"authConfigured":false,"storeReady":true}
+  note: production runtime is a monolith (scripts/production-runtime.mjs composes the
+  broker in-process via applyBroker); 127.0.0.1:8790/health is its health surface
+  (entry.js logs "production runtime ready ... ingress http://127.0.0.1:<port>/health").
+
+[P2] live workflow.js blob == EXPECTED_PRODUCTION_PREIMAGE_BLOB  = MATCH
+  path: /usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js
+  git hash-object -> 04ca8550fbdaf9b66624dea42701a8a9af7547a8
+  sha256          -> ca27f3a8a1a34f09858988edb57e892ebdb2a98d7ceb755f0eab252a9641a93e
+  size            -> 16107 bytes
+
+[P3] deployment path file posture = OK
+  regular file, NOT a symlink (lstat + file(1) confirm); -rw-r--r-- root wheel
+  no ACL (ls -lde shows no '+' / no ACL entries); no xattr (xattr -l empty)
+  owner root(0) group wheel(0) mode 0644
+
+[P4] workflow_transition currently ABSENT + shipped manifest count = 14
+  method: copied live packages/broker/src (19/19 files hash-identical to production,
+  workflow.js blob == 04ca8550…), enumerated exactly like f4bc431's
+  manifest-inventory.test.js (forum + workflow + okr, all validateManifest'd):
+    aggregate = 14 (forum 7 + workflow 6 + okr 1)
+    workflow ids = my_tasks, instance_detail, submission_history, my_domains,
+                   domain_instances, global_instances   (no transition)
+    all 14 manifests validate OK
+  full JSON: drill/rollback-drill-transcript.txt STEP 1
+
+[P5] AUTH_V1_CANARY_WRITE_ENABLED = false
+  launchctl print system/com.svc-workflow | grep -i AUTH_V1  -> no AUTH_V1_* vars set
+  (CTR-009: gate lives in svc-workflow canary_guard.rs, default false ->
+  all transition writes 403 canary_read_only before token verification)
+  broker side: grep of live tree confirms zero AUTH_V1_CANARY* consumers (broker has
+  no per-identity logic; grant supply + svc-workflow gates are the write boundary)
+
+[SVC] production service coordinates unchanged (stop-condition check)
+  label ai.agent-core.runtime: state = running, pid = 2766
+  program /usr/local/libexec/agent-core/node-runtime/bin/node
+  args: .../app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core --catchup 0
+  plist /Library/LaunchDaemons/ai.agent-core.runtime.plist
+  deployment unit = single directly imported ESM file — unchanged
+
+[DRIFT] origin/main at fetch = 1a9b81de (authority merge commit, PR #131) == tip;
+  6478356..1a9b81d contains: authority spec propose+accept (docs), PR #127 fleet
+  shared codex auth (agent-provisioning/router/production-runtime + package.json +
+  broker TEST files), PR #105 forum moderation (broker src forum files) —
+  NONE touch packages/broker/src/capabilities/workflow.js, none supersede the
+  authority (superseded_by: null), capability spec untouched, packaging/deployment
+  unit unchanged => per CTR-HD-007 drift is UNRELATED; release baseline NOT invalidated.
+
+VERDICT: all five dispatch preflight checks PASS; no stop condition triggered.

@@ -1,0 +1,10 @@
+=== EVIDENCE MANIFEST — workflow-transition-artifact-build-v2-20260831 ===
+artifact dir (canonical, user-private 0700): /Users/yanfenma/workspace/deployment-artifacts/workflow-transition-final-f4bc431
+15be1175082f262783c1d1bca28ab85548bd0073cd69050f4252c897623e635e  DEPLOYMENT_MANIFEST.json
+bfca69d42005f04a5845a7052d8f2f7e6d7ce637b552e16fa8853d6dc5b29f93  SOURCE_STAMP.json
+a86ec671ab7a2ceec5ae53204a1f29335b70a6addd6bc96a80876189ce6bbde3  artifact-dir-MANIFEST.md
+21860dc5e5b6072a77f045f3fb0baaea2f9634292bb315580a195a622aa1b2c1  artifact-dir-MANIFEST.sha256
+533eb2c2f33d0bd126673111569e8c963e0d877a98464f53046ae339715f3825  preflight-read-only.txt
+ca8b2137a9f1326cd16b78c09b41b0bbafab1c8356db32ec327482e49dac208c  rollback-drill-transcript.txt
+7a30bbda31436ecb43ee562f3dbb69cf3fc06790341ad354e52f2b6206969013  secret-scan.txt
+c9722740bf0d835da8ca6027b4afa1581246bb21e143e95e4f96570cf284ebbe  test-matrix.txt

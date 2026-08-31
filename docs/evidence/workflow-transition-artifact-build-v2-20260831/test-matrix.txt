@@ -1,0 +1,45 @@
+=== TEST EVIDENCE — pinned worktree @ f4bc4311225c9e0fd906ce108a5b9ffdbd83a957 — 2026-08-31T14:50:47Z (re-run capture) ===
+worktree: /Users/yanfenma/workspace/deployment-worktrees/workflow-transition-final-f4bc431 (detached, porcelain-clean)
+
+=== [1] broker full suite ===
+ℹ tests 186
+ℹ pass 186
+ℹ fail 0
+ℹ skipped 0
+
+=== [2] workflow-transition.test.js ===
+✔ idempotency: generic IK mechanism works for a workflow-transition-shaped write (20.20725ms)
+✔ workflow_transition: manifest freezes the submit-only trusted write contract (0.702041ms)
+✔ workflow_transition: authorized POST preserves body, scope, trusted IK and token-only actor (4.417125ms)
+✔ workflow_transition: optional submissionPayload is omitted from the wire when absent (1.866709ms)
+✔ workflow_transition: declared transition failures preserve the formal error envelope (4.805625ms)
+ℹ tests 5
+ℹ pass 5
+ℹ fail 0
+
+=== [3] manifest-inventory.test.js ===
+✔ schema: all 15 first-batch manifests validate (2.151958ms)
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
+
+=== [4] semantic check on target blob (import from pinned worktree) ===
+workflow_module_manifests=7
+transition_present=true
+operations=submit
+requiredScopes=["workflow.execute"]
+model_facing_arguments=workflowInstanceId,transitionDefinitionId,expectedWorkflowStateVersion,submissionPayload
+banned_present=0
+trusted_ik=true
+
+=== [5] governance verify ===
+vendored governance bytes match governance.lock.json
+rc=0
+
+=== [6] structure verify (identity) ===
+verify-code-structure: PASS (base=f4bc431122 head=f4bc431122)
+  in-scope files: 272; registry: 17 files / 2 directories; violations: 0; warnings: 36
+
+=== [7] diff check ===
+git diff --check: clean
+tracked files: CLEAN

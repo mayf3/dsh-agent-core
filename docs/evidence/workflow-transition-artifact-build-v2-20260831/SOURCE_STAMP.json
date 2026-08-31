@@ -1,0 +1,59 @@
+{
+  "stamp_version": 1,
+  "round": "制品 执行 (ARTIFACT_BUILD)",
+  "repository": "mayf3/dsh-agent-core",
+  "remote": "https://github.com/mayf3/dsh-agent-core (origin)",
+  "source_commit": "f4bc4311225c9e0fd906ce108a5b9ffdbd83a957",
+  "source_commit_subject": "Merge accepted forum moderation focused amendment",
+  "source_tree": "1f327d8a6c8f3ffefcb1dad85c3b59a7ab7cbd9b",
+  "dirty": false,
+  "worktree": "detached clean worktree at the pinned commit; porcelain empty at checkout; tracked files never modified during the round (node_modules installed untracked for tests only; artifact bytes taken from the git object, not from working files)",
+  "provenance_class": "pinned-ancestor release (PINNED_TRANSITION_ONLY_HOTFIX; CTR-HD-002 frozen coordinates; build agent did not chase main)",
+  "main_at_build": "1a9b81de19c2bf4af01f62f6189acffc1bb6839d (authority merge commit == origin/main tip; post-freeze drift ruled unrelated per CTR-HD-007: PR #127 fleet-codex-auth + PR #105 forum-moderation touched no workflow.js / no authority / no packaging of this unit)",
+  "toolchain": {
+    "node": "v26.7.0",
+    "npm": "11.19.0",
+    "python3": "3.14.7 (deterministic tar construction)",
+    "os": "darwin 25.6.0 arm64"
+  },
+  "build_commands": [
+    "git fetch origin",
+    "git merge-base --is-ancestor 1a9b81de19c2bf4af01f62f6189acffc1bb6839d origin/main",
+    "git worktree add --detach <wt> f4bc4311225c9e0fd906ce108a5b9ffdbd83a957",
+    "git rev-parse HEAD:packages/broker/src/capabilities/workflow.js  # == 577c8778cf35810ce7538aff52ab354e0c1dddc6",
+    "npm install --no-package-lock --no-audit --no-fund  # test deps only, untracked",
+    "(cd packages/broker && node --test)  # 186/186",
+    "node --test packages/broker/test/capabilities/workflow-transition.test.js  # 5/5",
+    "node --test packages/broker/test/capabilities/manifest-inventory.test.js  # inventory 15",
+    "python3 .agents/tools/verify_governance.py --target .  # PASS",
+    "node scripts/verify-code-structure.mjs --base HEAD --head HEAD  # PASS",
+    "git show f4bc4311225c9e0fd906ce108a5b9ffdbd83a957:packages/broker/src/capabilities/workflow.js > workflow-target.js",
+    "python3 - <<tar builder: USTAR, single regular member 'workflow.js', mode 0644, uid/gid 0, mtime=1788139692 (source commit time)>>",
+    "cat /usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js > workflow-preimage.js  # read-only copy for rollback bundle"
+  ],
+  "artifact": {
+    "path": "workflow-transition-f4bc431.tar",
+    "sha256": "67e5e183722ed50601ff84ca7dc0f6c217bc4f67c4ce826f301f53ef40f82473",
+    "byte_size": 30720,
+    "member_git_blob": "577c8778cf35810ce7538aff52ab354e0c1dddc6",
+    "member_sha256": "d162670d64227613bf5c8004fc8491a296f62835722f3bdcde7ddc4131890f8e",
+    "member_byte_size": 20058
+  },
+  "deployment_manifest": {
+    "path": "DEPLOYMENT_MANIFEST.json",
+    "sha256": "15be1175082f262783c1d1bca28ab85548bd0073cd69050f4252c897623e635e"
+  },
+  "test_matrix": {
+    "broker_tests": "186/186 PASS",
+    "workflow_transition_tests": "5/5 PASS",
+    "manifest_inventory_tests": "PASS (aggregate = 15; workflow module = 7 manifests incl. workflow_transition)",
+    "governance_verify": "PASS (vendored bytes match governance.lock.json)",
+    "structure_verify": "PASS (0 violations; frozen tree identity + vs first parent)",
+    "diff_check": "PASS (git diff --check clean; worktree tracked files untouched)",
+    "secret_scan": "PASS (see drill/secret-scan.txt)"
+  },
+  "built_at_utc": "2026-08-31T14:48:45Z",
+  "built_by": "new Deployment Build Agent (制品 执行 round; independent per DEC-HD-003/CTR-HD-008)",
+  "old_artifacts_reused_or_referenced": "NONE (db573426… and 482e19c9… remain rejected per CTR-HD-010; neither directory entered, no bytes read)",
+  "production_touched": "NONE (read-only preflight only: health GET, stat/hash/launchctl print, env dump)"
+}

@@ -1,0 +1,100 @@
+=== ISOLATED ROLLBACK DRILL — 2026-08-31T14:48:03Z ===
+sandbox=/Users/yanfenma/workspace/deployment-worktrees/drill-sandbox-f4bc431 (live-replica broker src; zero production writes)
+
+--- STEP 1: preflight enumeration on live-replica (preimage state) ---
+{
+  "broker_src_root": "/Users/yanfenma/workspace/deployment-worktrees/drill-sandbox-f4bc431/broker-src",
+  "counts": {
+    "forum": 7,
+    "workflow": 6,
+    "okr": 1,
+    "aggregate": 14
+  },
+  "workflow_manifest_ids": [
+    "workflow_my_tasks",
+    "workflow_instance_detail",
+    "workflow_submission_history",
+    "workflow_my_domains",
+    "workflow_domain_instances",
+    "workflow_global_instances"
+  ],
+  "workflow_transition_present": false,
+  "all_manifests_validate": true,
+  "invalid": []
+}
+
+--- STEP 2: apply NEW workflow.js from THE artifact tar (temp+rename, mode 0644) ---
+d162670d64227613bf5c8004fc8491a296f62835722f3bdcde7ddc4131890f8e  /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/tmp.8ac6F3xVWO/workflow.js
+577c8778cf35810ce7538aff52ab354e0c1dddc6
+applied: mode=-rw-r--r-- size=20058 bytes
+
+--- STEP 3: enumeration after apply (target state) ---
+{
+  "broker_src_root": "/Users/yanfenma/workspace/deployment-worktrees/drill-sandbox-f4bc431/broker-src",
+  "counts": {
+    "forum": 7,
+    "workflow": 7,
+    "okr": 1,
+    "aggregate": 15
+  },
+  "workflow_manifest_ids": [
+    "workflow_my_tasks",
+    "workflow_instance_detail",
+    "workflow_submission_history",
+    "workflow_my_domains",
+    "workflow_domain_instances",
+    "workflow_global_instances",
+    "workflow_transition"
+  ],
+  "workflow_transition_present": true,
+  "all_manifests_validate": true,
+  "invalid": [],
+  "transition": {
+    "toolName": "workflow_transition",
+    "requiredScopes": [
+      "workflow.execute"
+    ],
+    "operations": [
+      "submit"
+    ],
+    "model_facing_arguments": [
+      "workflowInstanceId",
+      "transitionDefinitionId",
+      "expectedWorkflowStateVersion",
+      "submissionPayload"
+    ],
+    "banned_arguments_present": [],
+    "http": {
+      "target": "svc-workflow",
+      "method": "POST",
+      "path": "/internal/v1/workflow-instances/{workflowInstanceId}/transitions",
+      "pathParams": [
+        "workflowInstanceId"
+      ],
+      "body": [
+        "transitionDefinitionId",
+        "expectedWorkflowStateVersion",
+        "submissionPayload"
+      ],
+      "idempotencyKey": true
+    },
+    "trusted_idempotency_key": true
+  }
+}
+
+--- STEP 4: ROLLBACK from the rollback bundle tar (temp+rename, mode 0644) ---
+ca27f3a8a1a34f09858988edb57e892ebdb2a98d7ceb755f0eab252a9641a93e  /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/tmp.8ac6F3xVWO/workflow.js
+04ca8550fbdaf9b66624dea42701a8a9af7547a8
+
+--- STEP 5: enumeration after rollback (must equal preimage state) ---
+aggregate=14 (forum 7 + workflow 6 + okr 1)
+workflow_transition_present=false
+all_manifests_validate=true
+
+--- STEP 6: byte & metadata restoration proof ---
+sha256 = ca27f3a8a1a34f09858988edb57e892ebdb2a98d7ceb755f0eab252a9641a93e  (expect ca27f3a8…641a93e)
+blob   = 04ca8550fbdaf9b66624dea42701a8a9af7547a8  (expect 04ca8550…5477a8)
+mode=-rw-r--r-- uid=502 gid=20 size=16107
+--- STEP 7: no-residue check (whole sandbox tree vs live, plus no *.new/*.restore leftovers) ---
+tree_diff_count=0
+no .new/.restore leftovers
