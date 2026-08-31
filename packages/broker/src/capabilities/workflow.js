@@ -12,6 +12,7 @@
  *   workflow_submission_history GET /internal/v1/workflow-instances/{workflowInstanceId}/submissions workflow.read
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
  *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
+ *   workflow_transition        POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions workflow.execute
  *
  * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 +
  * AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2):
@@ -26,9 +27,10 @@
  * means a later page; either alone fails fast locally with `invalid_cursor`
  * before credential, token, or HTTP work. Full cursor strings are forwarded
  * verbatim and the downstream page, including next_cursor, is not reshaped.
- * The write surface (transitions / create_instance / cancel / archive / domain
- * ops) remains deferred with the generic Idempotency-Key mechanism already in
- * place for it (transport `idempotencyKey` flag).
+ * The sole workflow write exposed here is exact-assignee transition submission;
+ * svc-workflow remains authoritative for actor and transition legality, and the
+ * transport's trusted `idempotencyKey` seam generates its model-inaccessible
+ * Idempotency-Key.
  *
  * Downstream error preservation: each manifest DECLARES the svc-workflow
  * read-side error codes its endpoints can produce (evidence: svc-workflow
@@ -336,6 +338,62 @@ export const workflowGlobalInstancesManifest = withTransportErrors({
   ],
 })
 
+/** Exact-assignee transition submission; all authorization remains downstream. */
+export const workflowTransitionManifest = withTransportErrors({
+  id: 'workflow_transition',
+  toolName: 'workflow_transition',
+  name: 'Workflow Transition',
+  description:
+    'Agent Core capability `workflow_transition` (svc-workflow): first call `workflow_instance_detail` to read the current `workflow_state_version` and `outgoingTransitions[]`; use `executable_for_actor: true` only as an advisory preference, then submit the exact `transition_id` and payload matching `submission_schema`. ' +
+    'The downstream atomic transaction is authoritative, so advisory false/stale values are never blocked locally. On `workflow_state_version_conflict`, read the detail again and explicitly resubmit with the new version.',
+  requiredScopes: ['workflow.execute'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
+    { code: 'current_visit_not_found', description: 'Current node visit not found (HTTP 404).' },
+    { code: 'principal_not_assignee', description: 'Caller is not the current assignee (HTTP 403).' },
+    { code: 'assistance_open', description: 'Open assistance prevents transition execution (HTTP 409).' },
+    { code: 'source_node_terminal', description: 'The source node is terminal (HTTP 409).' },
+    { code: 'definition_version_revoked', description: 'The workflow definition version is revoked (HTTP 409).' },
+    { code: 'workflow_state_version_conflict', description: 'Expected workflow state version is stale (HTTP 409).' },
+    { code: 'transition_not_applicable', description: 'Transition is not applicable to the current node (HTTP 409).' },
+    { code: 'submission_required', description: 'This transition requires a submission payload (HTTP 422).' },
+    { code: 'submission_validation_failed', description: 'Submission payload failed validation (HTTP 422).' },
+    { code: 'size_limit_exceeded', description: 'Submission payload exceeds the service limit (HTTP 413).' },
+    { code: 'invalid_return_references', description: 'Return transition references are invalid (HTTP 422).' },
+    { code: 'assignee_resolution_failed', description: 'Target assignee resolution failed (HTTP 422).' },
+    { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
+    { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
+  ],
+  operations: [
+    {
+      name: 'submit',
+      description: 'Submit one transition using exact values read from workflow_instance_detail.',
+      arguments: {
+        properties: {
+          workflowInstanceId: { type: 'string', description: 'Workflow instance id (UUID).' },
+          transitionDefinitionId: { type: 'string', description: 'Exact outgoing transition definition id (UUID).' },
+          expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Current workflow state version used for CAS.' },
+          submissionPayload: { type: 'json', description: 'Optional payload matching the selected transition submission schema.' },
+        },
+        required: ['workflowInstanceId', 'transitionDefinitionId', 'expectedWorkflowStateVersion'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'POST',
+        path: '/internal/v1/workflow-instances/{workflowInstanceId}/transitions',
+        pathParams: ['workflowInstanceId'],
+        body: ['transitionDefinitionId', 'expectedWorkflowStateVersion', 'submissionPayload'],
+        idempotencyKey: true,
+      },
+    },
+  ],
+})
+
 /** All first-batch Workflow manifests. */
 export const manifests = [
   workflowMyTasksManifest,
@@ -344,4 +402,5 @@ export const manifests = [
   workflowMyDomainsManifest,
   workflowDomainInstancesManifest,
   workflowGlobalInstancesManifest,
+  workflowTransitionManifest,
 ]
