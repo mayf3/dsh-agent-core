@@ -8,17 +8,6 @@
  * single place that makes such a spawn self-sufficient — no verification
  * driver or operator may be needed to pre-provision an agent home.
  *
- * Responsibilities (additive only, idempotent — running twice is a no-op):
- *
- *   <home>/
- *     settings.yaml          # copy of the operator's ~/.dsh/settings.yaml (pi-ai route)
- *     .credentials.yaml      # copy of ~/.dsh/.credentials.yaml (OPENCODE_GO_API_KEY)
- *     profiles/<profile>/{package.json,cordis.patch.yml}   # COPIES (the CLI
- *                             # rewrites cordis.yml in this dir on every boot, so
- *                             # sharing one symlinked dir across agents is unsafe)
- *     profiles/node_modules/@agent-core/...                # farm SYMLINKS into the repo
- *     workspace/             # created by the caller (workspace-bootstrap owns it)
- *
  * The profile table (`AGENT_PROFILE_DEFS`) is the SINGLE mapping from a
  * profile name to the repo profile dir + the out-of-tree plugin farm links
  * its composition needs. Production runtimes use `agent-core-production`
@@ -34,9 +23,13 @@ import {
   renameSync, rmSync, symlinkSync, writeFileSync,
 } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { assertOAuthCredentialBoundary, persistOpenAICodexCredentialFile } from './shared-codex.js'
+
+export { assertOAuthCredentialBoundary, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, persistOpenAICodexCredentialFile } from './shared-codex.js'
 
 /** Repo root (three levels up from src/: packages/agent-provisioning/src). */
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
@@ -171,14 +164,47 @@ function defaultPluginInstaller({ profilesRoot, plugin, version, packageArtifact
  * so ordinary automation has no npm-registry dependency.
  */
 export function provisionExactProfilePlugin(home, profile, requirement, options = {}) {
-  const { plugin, version, dshVersion, dshCommit } = requirement ?? {}
-  for (const [field, value] of Object.entries({ plugin, version, dshVersion, dshCommit })) {
+  const { plugin, version, sourceCommit, artifactSha256, dshVersion, dshCommit } = requirement ?? {}
+  for (const [field, value] of Object.entries({ plugin, version, sourceCommit, artifactSha256, dshVersion, dshCommit })) {
     if (typeof value !== 'string' || value === '') {
       throw provisioningError('plugin_provisioning_invalid', `${field} must be a non-empty exact value`)
     }
   }
   if (/^[~^*]|[xX]$|\s\|\||\s-\s/u.test(version)) {
     throw provisioningError('plugin_version_mismatch', `plugin version must be exact (got ${version})`)
+  }
+  if (!/^[0-9a-f]{40}$/u.test(sourceCommit)) {
+    throw provisioningError('plugin_source_mismatch', `plugin sourceCommit must be 40-character lowercase hex`)
+  }
+  if (!/^[0-9a-f]{64}$/u.test(artifactSha256)) {
+    throw provisioningError('plugin_artifact_mismatch', `plugin artifactSha256 must be 64-character lowercase hex`)
+  }
+
+  const injectedArtifactIdentity = options.artifactIdentity
+  if (injectedArtifactIdentity === undefined) {
+    const packageArtifact = options.packageArtifact
+    const sourceStamp = options.sourceStamp
+    if (!isAbsolute(packageArtifact ?? '') || !existsSync(packageArtifact)) {
+      throw provisioningError('plugin_artifact_mismatch', `exact local package artifact is required for modified ${plugin}@${version}`)
+    }
+    if (!isAbsolute(sourceStamp ?? '') || !existsSync(sourceStamp)) {
+      throw provisioningError('plugin_source_mismatch', `exact absolute source stamp is required for modified ${plugin}@${version}`)
+    }
+    const actualDigest = createHash('sha256').update(readFileSync(packageArtifact)).digest('hex')
+    if (actualDigest !== artifactSha256) {
+      throw provisioningError('plugin_artifact_mismatch', `artifact digest does not match the accepted ${plugin}@${version} candidate`)
+    }
+    let stamp
+    try {
+      stamp = JSON.parse(readFileSync(sourceStamp, 'utf8'))
+    } catch (cause) {
+      throw provisioningError('plugin_source_mismatch', `cannot read exact source stamp for ${plugin}@${version}`, cause)
+    }
+    if (!exactObject(stamp, { version: 1, sourceCommit, artifactSha256 })) {
+      throw provisioningError('plugin_source_mismatch', `source stamp does not match the accepted ${plugin}@${version} candidate`)
+    }
+  } else if (!exactObject(injectedArtifactIdentity, { version: 1, sourceCommit, artifactSha256 })) {
+    throw provisioningError('plugin_source_mismatch', `injected artifact identity does not match the accepted ${plugin}@${version} candidate`)
   }
 
   const identity = options.harnessIdentity ?? readHarnessIdentity(options.harnessRoot)
@@ -250,25 +276,12 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
   return { plugin, version, installedPackage, profilePackageFile }
 }
 
-/** Validate the Agent-owned OAuth store without ever reading its contents. */
-export function assertOAuthCredentialBoundary(home, credentialFile, options = {}) {
-  const file = join(home, credentialFile)
-  let stat
-  try {
-    stat = lstatSync(file)
-  } catch (cause) {
-    if (cause?.code === 'ENOENT' && options.allowMissing === true) return undefined
-    if (cause?.code === 'ENOENT') throw provisioningError('credential_missing', `credential_missing: ${file}`)
-    throw provisioningError('credential_missing', `credential_missing: cannot stat ${file}`, cause)
-  }
-  if (!stat.isFile()) throw provisioningError('credential_permission_invalid', `credential store must be a regular file: ${file}`)
-  if ((stat.mode & 0o777) !== 0o600) {
-    throw provisioningError('credential_permission_invalid', `credential store permissions must be 0600: ${file}`)
-  }
-  if ((lstatSync(home).mode & 0o777) !== 0o700) {
-    throw provisioningError('credential_permission_invalid', `credential directory permissions must be 0700: ${home}`)
-  }
-  return file
+function exactObject(value, expected) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
+  const keys = Object.keys(value).sort()
+  const expectedKeys = Object.keys(expected).sort()
+  return keys.length === expectedKeys.length
+    && keys.every((key, index) => key === expectedKeys[index] && value[key] === expected[key])
 }
 
 /** Create (or repair) one symlink; fails loud on a real file at the target. */
@@ -449,14 +462,19 @@ export function provisionAgentHome(home, workspace, options = {}) {
     provisionExactProfilePlugin(home, profile, {
       plugin: subscription.plugin,
       version: subscription.pluginVersion,
+      sourceCommit: subscription.sourceCommit,
+      artifactSha256: subscription.artifactSha256,
       dshVersion: subscription.dshVersion,
       dshCommit: subscription.dshCommit,
     }, {
       pluginInstaller: options.pluginInstaller,
       packageArtifact: subscription.packageArtifact,
+      sourceStamp: subscription.sourceStamp,
+      artifactIdentity: options.artifactIdentity,
       harnessIdentity: options.harnessIdentity,
       harnessRoot: options.harnessRoot,
     })
+    persistOpenAICodexCredentialFile(join(profileDir, 'cordis.patch.yml'), subscription.credentialFile)
   }
 
   // Out-of-tree plugin resolution links for this profile's composition.
@@ -472,10 +490,8 @@ export function provisionAgentHome(home, workspace, options = {}) {
   // requested exact install/check inside this home; it never selects agents.
   if (options.subscription !== undefined) {
     const subscription = options.subscription
-    // Missing OAuth state is a runtime/provider boundary: the plugin must
-    // load and the configured provider must register before the turn fails.
-    // If a store exists, its ownership boundary is still validated here.
-    assertOAuthCredentialBoundary(home, subscription.credentialFile, { allowMissing: true })
+    const credentialBoundary = options.credentialBoundary ?? assertOAuthCredentialBoundary
+    credentialBoundary(home, subscription.credentialFile)
   }
 
   mkdirSync(workspace, { recursive: true })
