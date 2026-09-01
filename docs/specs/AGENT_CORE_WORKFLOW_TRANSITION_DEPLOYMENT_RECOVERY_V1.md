@@ -1,10 +1,10 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_TRANSITION_DEPLOYMENT_RECOVERY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
-production_apply_authority: none
+implementation_authority: contracts
+production_apply_authority: contracts
 date: 2026-09-01
 scope:
   - mayf3/dsh-agent-core
@@ -1854,6 +1854,38 @@ The only activation path is:
 7. Only then may a new Recovery Build Agent start `CTR-REC-007`. Acceptance does
    not itself authorize `osascript` or production mutation; those still require
    the same-seal audit and gate chain in `CTR-REC-015`.
+
+### Acceptance record (2026-09-01 lifecycle-only acceptance)
+
+```text
+REVIEWED_BASE_COMMIT          = 433b8bd06a163badae322da9db012b9851e148b6
+REVIEWED_SPEC_COMMIT          = 298c2ec3c3337a51c8019b0a9ccc256264a63827
+REVIEWED_SPEC_BLOB            = 93aeccee4bfd87fe250dd6c3441c693f4b30a2f9
+REVIEWED_SPEC_SHA256          = 937659c406010bac07925cae125eb2dfc44ba57af78cc7dd14cf0fb1d261eaf6
+REVIEWER_ID                   = /root/recovery_authority_audit_r4
+PASS_COMMENT_ID               = 5487556026
+REVIEW_RESULT                 = ACCEPT
+BLOCKERS                      = NONE
+ACCEPTANCE_ACTOR              = mayf3
+OWNER_AUTHORIZATION_SOURCE    = /Users/yanfenma/.codex/attachments/3a8243dc-c482-4197-8dae-268cfbcc50d0/pasted-text-1.txt
+OWNER_AUTHORIZATION_SHA256    = a023ad37eb5da0d356c3498ab3f1741c1d324b5088bfd58ebd44ce002ff8d647
+OWNER_AUTHORIZATION_BASIS     = GOAL_OWNER=mayf3; all non-privileged phases auto-execute
+ACCEPTED_AT_UTC               = 2026-09-01T01:57:33Z
+SEMANTIC_DELTA_AFTER_REVIEW   = NONE
+FINAL_ACCEPTED_HEAD           = SELF_REFERENCE_SAFE_LIFECYCLE_COMMIT_GIT_OBJECT
+FINAL_ACCEPTED_HEAD_BINDING   = independent final-head audit plus persistent PR record
+
+NEXT_TASK                     = final-head audit
+READY_FOR_FINAL_HEAD_AUDIT    = YES
+READY_TO_MERGE                = NO
+ARTIFACT_BUILD_ALLOWED        = NO
+PRODUCTION_APPLY_ALLOWED      = NO
+```
+
+`FINAL_ACCEPTED_HEAD` is intentionally self-reference-safe: this file does not
+pre-fill or invent the SHA of the commit that contains it. The exact full SHA is
+bound by that lifecycle commit's Git object identity, the independent final-head
+audit, and the persistent PR record.
 
 The authoring Agent, semantic Reviewer, acceptance actor, final-head Reviewer,
 build Agent, candidate Reviewers, gate Reviewer, executor, and post-recovery
