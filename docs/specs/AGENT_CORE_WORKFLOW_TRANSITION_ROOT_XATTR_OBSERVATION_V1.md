@@ -53,8 +53,9 @@ The observation transaction is successful only when it:
    this observation on success, handled failure, or trapped signal, while
    retaining only the exact closed durable evidence finals; and
 7. produces an authentic root-owned observation receipt, an exact non-secret
-   user-visible mirror, a detached terminal-publication index, and two
-   independent post-observation PASS audits.
+   user-visible mirror, a detached terminal-publication index, an empty
+   root-owned publication-complete marker, one externally recomputed terminal-
+   predicate record, and two independent post-observation PASS audits.
 
 The successful root terminal is:
 
@@ -84,8 +85,9 @@ consume it only under `CTR-XOBS-015` after both post-observation audits PASS.
   the production target directory, created with no-clobber and never renamed
   over the target;
 - root-owned durable non-secret records, an exact non-secret user-visible
-  mirror, and a detached terminal-publication index whose publication graph is
-  finite and non-self-referential;
+  mirror, a detached terminal-publication index, and an empty root-owned
+  `PUBLICATION_COMPLETE` directory marker whose publication graph is finite
+  and non-self-referential;
 - two independent post-observation audits proving receipt authenticity, zero
   production mutation, and zero observation residue; and
 - a closed compatibility vector that a brand-new Recovery R3 must seal and
@@ -150,6 +152,9 @@ ROOT_RECEIPT_CLASS =
 ROOT_TERMINAL_PUBLICATION_INDEX_CLASS =
   <ROOT_RECEIPT_DIRECTORY_CLASS>/TERMINAL_PUBLICATION_INDEX.json
 
+ROOT_PUBLICATION_COMPLETE_MARKER_CLASS =
+  <ROOT_RECEIPT_DIRECTORY_CLASS>/PUBLICATION_COMPLETE
+
 DEPLOYMENT_TEMP_SIBLING_CLASS =
   <PRODUCTION_TARGET_DIRECTORY>/
   .workflow.js.root-xattr-observation.<transaction-id>.<random>.tmp
@@ -159,6 +164,15 @@ ATOMIC_PUBLICATION_TEMP_CLASSES =
   user-mirror, terminal-publication-index, attempt-record, Gate-record,
   terminal-index-readback-record, and consumption-record
 ```
+
+`ROOT_PUBLICATION_COMPLETE_MARKER_CLASS` is the sole no-temp publication
+object. It is predeclared at one unique never-before-existing path and is
+created directly with exclusive `mkdir(2)` semantics only after the terminal
+index has been published and every root-transaction publication temp has been
+proved absent. The external terminal-index-readback record retains its own
+predeclared atomic-publication temp; that temp's post-publication absence is an
+external record-publication condition and is never asserted inside the record's
+own immutable bytes.
 
 Line wrapping above is documentary only; every sealed path is one canonical
 absolute path with no whitespace, expansion, glob, unresolved variable, or
@@ -505,7 +519,8 @@ repository implementation authority and does not override this Spec lifecycle.
 
 - Decision owner: mayf3
 - Decision: Recovery R3 seals the exact canonical observation-row digest,
-  receipt/index identities and digests, and post-audit records, then must match
+  receipt/index identities and digests, publication-complete marker identity,
+  external terminal-predicate record, and post-audit records, then must match
   the complete source/OS/tool/parent/operation/simulation-object tuple vector
   before and during execution; publication-object xattrs are never tuple input
 - Rejected alternatives: consume only the provenance value, accept compatible-
@@ -531,7 +546,9 @@ The design MUST reject at least these threats:
 | R5 stage deletion or R2 supply reuse | hard failure and role/audit violation |
 | Crash between prelaunch record and process creation | no second dialog/process; reconcile or unknown/manual |
 | Root receipt/mirror mismatch or partial write | no consumption; manual recovery |
-| Receipt/mirror/index self-hash, publication-object observation row, or future-object dependency | reject cyclic graph; no verified terminal |
+| Receipt/mirror/index self-hash, index claim about its own post-publication temp, publication-object observation row, or future-object dependency | reject cyclic graph; no verified terminal |
+| Publication-complete marker missing, malformed, non-empty, or created before the index/absence checks | no effective terminal; manual recovery; no repeated authorization |
+| Marker exists but the external closed predicate or root exit result mismatches | manual recovery; no repair, consumption, or repeated authorization |
 | Receipt replay on different source, OS, tool, filesystem, parent, or operation | R3 stops prewrite and requires new observation |
 
 No implementation may weaken these dispositions to warnings.
@@ -584,8 +601,9 @@ candidate root. Every member is a regular non-symlink, link-count-one file owned
 by uid 502, and every path component is canonical and non-symlink. The Build
 Agent MUST freeze the candidate ID, unpredictable transaction ID, root stage,
 receipt, mirror, terminal-publication-index, authorization paths, exact
-terminal-index-readback-record path, source-subject manifest, exact operation
-plan, and one randomized temp-sibling path before serialization.
+terminal-index-readback-record path and temp, exact publication-complete marker
+path, source-subject manifest, exact operation plan, every publication temp,
+and one randomized temp-sibling path before serialization.
 
 The source-subject manifest MUST separate:
 
@@ -668,8 +686,9 @@ READY_FOR_ROOT_OBSERVATION = YES
 only after both exact-same-seal PASS records. The external Gate record MUST bind
 all three hashes, exact authorization paths/digests, fixed transaction/stage/
 receipt/mirror/terminal-publication-index/index-readback-record/temp/target
-coordinates, source/tool/OS/parent/operation signatures, Reviewer identities,
-and verdicts. It is not a candidate member and cannot change candidate bytes.
+coordinates, exact publication-complete marker coordinate, source/tool/OS/
+parent/operation signatures, Reviewer identities, and verdicts. It is not a
+candidate member and cannot change candidate bytes.
 
 Only that exact Gate permits one macOS authorization attempt. Immediately before
 attempt publication, the coordinator MUST verify console user `yanfenma`, uid
@@ -696,8 +715,9 @@ Cancellation/denial with proof that root execution did not begin becomes
 `AUTHORIZATION_OUTCOME_UNKNOWN` and `MANUAL_RECOVERY_REQUIRED`. A coordinator
 restart with a non-terminal attempt MUST NOT create another process or dialog;
 it may wait for the same mechanically identified live process or reconcile the
-fixed root receipt/mirror/terminal-publication-index/stage. Irreducible
-uncertainty is terminal manual recovery, never a retry.
+fixed root receipt/mirror/terminal-publication-index/publication-complete-marker/
+external-predicate-record/stage under `CTR-XOBS-012`. Irreducible uncertainty is
+terminal manual recovery, never a retry.
 
 ### CTR-XOBS-005 — Fixed root bootstrap, closed environment, and path safety
 
@@ -718,8 +738,8 @@ administrator privileges. The bootstrap MUST:
    the sealed allowlist, then re-hash and re-stat root copies;
 7. execute only the root-owned audited transaction copy;
 8. write only the sealed stage, receipt, mirror, terminal-publication-index,
-   PRE_RECORD, object-record journal, lock, and exact production temp-sibling
-   paths; and
+   empty publication-complete marker, PRE_RECORD, object-record journal, lock,
+   and exact production temp-sibling paths; and
 9. refuse to enumerate, delete, normalize, execute, or reuse an old R5 or other
    pre-existing root stage beyond the bounded parent-name/identity census needed
    to prove this transaction created no residue.
@@ -784,14 +804,16 @@ explicit_future_recovery_other (one row per exact sealed object, permitted only
 The second set is `PUBLICATION_AND_CONTROL_PLUMBING_SET`. It MUST enumerate the
 bootstrap/worker/supervisor-only controls, `PRE_RECORD`, object-record journal,
 transaction lock, root-receipt temp/final, user-mirror temp/final,
-terminal-publication-index temp/final, and every other exact sealed
+terminal-publication-index temp/final, the empty publication-complete marker,
+the external terminal-predicate record temp/final, and every other exact sealed
 publication/control temp or final object. These objects receive separate path,
 type, owner/group/mode, link/inode, length/digest where applicable, complete
 xattr inventory, fsync/readback, and final-residue checks. They MUST NOT append
 or otherwise contribute an `OBSERVATION_ROWS` row, must not change `Dobs`, and
 their xattrs MUST NOT be offered to Recovery R3 as tuple evidence. In
-particular, root-receipt, mirror, and terminal-index temp/final objects are
-publication plumbing, never simulation objects. No publication/control xattr
+particular, root-receipt, mirror, terminal-index, publication-complete marker,
+and external terminal-predicate record temp/final objects are publication
+plumbing, never simulation objects. No publication/control xattr
 may be normalized to make evidence eligible; unreadable, ambiguous,
 quarantine/resource-fork/additional, or policy-mismatched publication metadata
 fails closed without creating a row.
@@ -995,7 +1017,8 @@ Any mismatch, uncertainty, transient drift, or missing proof forbids
 ### CTR-XOBS-012 — Durable receipts, mirror, and closed terminals
 
 The terminal-evidence publication graph MUST be the following exact finite
-total order. An implementation MUST reject any dependency edge not listed here:
+total order with eleven high-level nodes and ten edges. An implementation MUST
+reject any dependency edge not listed here:
 
 ```text
 durable PRE_RECORD and append-only OBJECT_RECORDS journal
@@ -1004,21 +1027,31 @@ durable PRE_RECORD and append-only OBJECT_RECORDS journal
   -> freeze canonical OBSERVATION_ROWS and Dobs
   -> atomically publish ROOT_OBSERVATION_RECEIPT.json
   -> atomically publish its byte-identical user mirror
-  -> atomically publish detached TERMINAL_PUBLICATION_INDEX.json
-  -> external coordinator records the final index SHA-256 and metadata
+  -> atomically publish detached TERMINAL_PUBLICATION_INDEX.json from its
+     predeclared same-directory temp
+  -> fsync/read back/hash the final index and prove every predeclared
+     root-transaction publication temp absent
+  -> directly create, verify, and fsync the empty PUBLICATION_COMPLETE marker
+     without a publication temp
+  -> the exact original root process exits with status 0
+  -> the external coordinator recomputes and records the closed terminal
+     predicate and its digest
 ```
 
-`PRE_RECORD`, journal, root-receipt temp/final, mirror temp/final, and
-terminal-index temp/final are publication plumbing outside the simulation tuple
-set. Their creation, xattrs, normalization state, and propagation MUST NOT add
-an `OBSERVATION_ROWS` row or alter `Dobs`. Every publication object still has an
+`PRE_RECORD`, journal, root-receipt temp/final, mirror temp/final, terminal-index
+temp/final, publication-complete marker, and external predicate-record
+temp/final are publication plumbing outside the simulation tuple set. Their
+creation, xattrs, normalization state, and propagation MUST NOT add an
+`OBSERVATION_ROWS` row or alter `Dobs`. Every publication object still has an
 exact sealed path/primitive and receives complete separately auditable metadata,
 xattr, fsync, readback, and residue checks under this Contract. Publication
 xattrs are never Recovery R3 compatibility evidence.
 
-All three final publications use a fresh exact same-directory temp, exclusive
-no-clobber creation, file fsync, atomic no-clobber rename/link discipline,
-readback, and directory fsync. The root receipt is canonical non-secret JSON,
+The receipt, mirror, and index publications use a fresh exact same-directory
+temp, exclusive no-clobber creation, file fsync, atomic no-clobber rename/link
+discipline, readback, and directory fsync. The publication-complete marker is
+the explicit exception: it has no temp and follows the direct exclusive
+directory-creation protocol below. The root receipt is canonical non-secret JSON,
 root:wheel `0600`, at `ROOT_OBSERVATION_RECEIPT.json`. It uses the same canonical
 JSON rules as `CTR-XOBS-008` and binds:
 
@@ -1061,24 +1094,100 @@ binds:
   realpath, complete publication-only xattr metadata, and fsync/readback proof;
 - mirror path and the same metadata, exact length/SHA-256 equality with the root
   receipt, and fsync/readback proof;
-- absence of every sealed receipt/mirror/index temp and every simulation object;
-  and
-- one closed terminal, failure stage, final `receiptUsableForRecovery`, and
-  timestamps.
+- the already-observed absence of every sealed simulation object and of the
+  receipt/mirror publication temps, including exact path/inode-parent/time/
+  result fields for those observations;
+- the exact predeclared index-temp path, final-index path,
+  publication-complete-marker path, external predicate-record final/temp paths,
+  sorted `ROOT_POST_INDEX_TEMP_SET`, and versioned required post-publication
+  predicate schema, but no result for a fact that becomes observable only after
+  the immutable index bytes are published; and
+- one proposed closed terminal, failure stage, proposed
+  `receiptUsableForRecovery` (`pending_external_terminal_predicate` or `false`),
+  and timestamps already known before index serialization.
 
-The terminal index excludes itself and its temp, never contains its own hash or
-future publication-object observations, and is never mutated after publication.
-After index file fsync, atomic publication, readback, directory fsync, and a
-second complete temp/residue absence check, the external coordinator MUST hash
-the exact final index bytes and atomically no-clobber publish a uid 502/group 20/
-mode `0600` `TERMINAL_INDEX_READBACK_RECORD_CLASS` with file fsync, readback, and
-directory fsync. It records the index hash plus index path/length/type/uid/gid/
-mode/link/device/inode/realpath and publication-only xattr metadata. That
-external record is not an observation row, contains no self hash, and cannot
-modify the index.
+`ROOT_POST_INDEX_TEMP_SET` is the exact sorted, pre-sealed list of every
+transaction-owned temp path whose creation can occur before the root process
+creates the marker, including PRE_RECORD/journal/control temps and the exact
+receipt, mirror, and index temps. It has no wildcard or runtime-discovered
+member. It excludes only the external predicate-record temp, because that temp
+is first created by the coordinator after root exit and has the separate
+external publication condition below; the marker has no temp. The index's
+predicate-schema member is a versioned field/algorithm descriptor only. It
+contains no future predicate bytes, digest, observation result, marker metadata,
+or process-exit value.
 
-Effective root transaction terminals are closed to the terminal value in a
-valid durable index:
+The immutable index excludes itself and the marker as observed objects, never
+contains its own hash, never asserts that its own temp is finally absent, never
+contains marker metadata or root-process exit status, and never contains any
+other future publication-object observation. Its temp appears in index bytes
+only as an exact path in `ROOT_POST_INDEX_TEMP_SET` and as a required future
+predicate. The index is never mutated after publication.
+
+The root supervisor MUST publish the index in this exact order: exclusively
+create the predeclared same-directory temp, write the immutable bytes, file-
+fsync the temp, atomically no-clobber rename it to the predeclared final path,
+fsync the parent directory, read back the final bytes, and compute their exact
+length and SHA-256. It then performs a complete absence observation of every
+path in `ROOT_POST_INDEX_TEMP_SET`, including the index, receipt, and mirror
+temps. Each absence row binds exact path, expected parent device/inode/realpath,
+wall and monotonic observation time, `lstat` result `ENOENT`, and tool/syscall
+result. An unreadable parent, alternate errno, path/parent drift, or any present
+temp fails closed. No result of this step is written back into the index.
+
+Only after all those checks pass may that same root process directly create the
+predeclared unique `PUBLICATION_COMPLETE` path with one exclusive `mkdir(2)`
+operation, `umask 077`, effective uid/gid `0/0`, and requested mode `0700`.
+Existence before that operation or `EEXIST` is failure; the marker MUST NOT be
+made through a temp, rename, link, file write, or reusable path. Root MUST use
+`lstat` plus a no-follow directory descriptor to prove the marker is a directory
+and not a symlink, is empty except for `.` and `..`, is uid 0/gid 0/mode `0700`,
+has the expected device/inode/realpath and complete publication-only xattr
+metadata, then fsync the marker directory and its parent. After the marker is
+durable, the root transaction may only close descriptors and exit; it MUST NOT
+create another object, modify the index/receipt/mirror/marker, or change `Dobs`.
+
+The external coordinator MUST synchronously obtain the exact original root
+process's `waitpid`-equivalent result. Exit-by-signal, missing/ambiguous wait
+status, a different process identity, or any status other than exit code zero
+cannot satisfy terminal publication. Exit code zero means only that the sealed
+publication protocol completed; the proposed terminal inside the index still
+determines whether the semantic outcome is verified, failed, or manual.
+
+After observing exact root-process exit zero, the coordinator MUST independently
+read and validate all final objects, repeat every
+`ROOT_POST_INDEX_TEMP_SET` absence check with new exact path/parent/time/result
+rows, repeat the marker no-follow type/emptiness/uid/gid/mode/device/inode/
+realpath/xattr checks, and canonically serialize
+`TERMINAL_PUBLICATION_PREDICATE_V1` with at least:
+
+```text
+transaction/attempt IDs and proposed index terminal
+Dobs digest
+root receipt exact path, length, and SHA-256
+mirror exact path, length, SHA-256, and exact byte-equality with root receipt
+index exact path, length, and SHA-256
+every ROOT_POST_INDEX_TEMP_SET absence row
+publication-complete marker path/type/non-symlink/emptiness/uid/gid/mode/
+  device/inode/realpath/xattr facts and the index-declared marker/parent fsync
+  requirement
+exact root process identity/start coordinate and exited=true/exitCode=0
+```
+
+It computes `Dterminal = SHA-256(exact canonical predicate bytes)` using the
+canonical JSON rules in `CTR-XOBS-008`, then atomically no-clobber publishes a
+uid 502/group 20/mode `0600` `TERMINAL_INDEX_READBACK_RECORD_CLASS` through its
+own predeclared same-directory temp with file fsync, rename, parent-directory
+fsync, and final readback. The record contains the exact predicate bytes,
+`Dterminal`, and index publication-only metadata. It contains no self hash and
+does not assert the final absence of its own publication temp. That temp's
+absence and record fsync/readback/directory-fsync state are external atomic-
+publication conditions rechecked by every reconciler, post-auditor, and R3
+consumer; they never become a `Dobs` row or R3 tuple.
+
+Effective root transaction terminals are closed to the proposed terminal in the
+index only when the external closed predicate and predicate-record publication
+conditions both pass:
 
 ```text
 ROOT_XATTR_OBSERVATION_VERIFIED
@@ -1089,30 +1198,54 @@ MANUAL_RECOVERY_REQUIRED
 `COMMITTED`, recovery/deployment success, `STOPPED_PREWRITE`, and R5 success are
 forbidden terminals. Unknown/quarantine/resource-fork/additional attributes,
 command failure, drift, missing cleanup, mismatched mirror, malformed/partial
-receipt/index, or any uncertainty sets `receiptUsableForRecovery=false`.
+receipt/index/predicate record, marker mismatch, nonzero or unknown root exit,
+external-record temp residue, or any uncertainty sets
+`receiptUsableForRecovery=false`.
 
-`ROOT_XATTR_OBSERVATION_VERIFIED` does not exist effectively until the index is
-durable, read back, directory-fsynced, every publication temp is absent, and the
-external coordinator records its hash. It still sets
+`ROOT_XATTR_OBSERVATION_VERIFIED` does not exist effectively until exact
+recomputation proves the closed set `{Dobs digest, root receipt hash, exact
+mirror hash equality, index hash, all ROOT_POST_INDEX_TEMP_SET paths absent,
+completion marker existence and metadata/fsync, exact root process exit 0}`;
+the predicate bytes and `Dterminal` are durable in the externally published
+record; and that record's own temp is externally proved absent after its final
+readback and parent-directory fsync. No assertion serialized inside the index
+may substitute for any member of this set. A valid verified result still sets
 `receiptUsableForRecovery=pending_post_audits`; only `CTR-XOBS-014` can produce
-the external audited-consumption state. Stdout, exit status, AppleScript return,
-receipt alone, or mirror alone is never authoritative.
+the audited-consumption state. Stdout, AppleScript return alone, receipt alone,
+mirror alone, index alone, marker alone, or process exit alone is never
+authoritative.
 
-Reconciliation is deterministic and never republishes, repairs, or completes a
-partial graph after the root supervisor is gone:
+Reconciliation is deterministic. Every partial state is non-consumable, blocks
+automatic reauthorization, and is never inferred as a successful unused
+attempt:
 
-| Durable state | Reconciled result |
+| Durable or observed state | Reconciled result |
 |---|---|
-| Valid externally hashed index + all bound receipt/mirror bytes and metadata + no temp | exact index terminal |
+| Exact receipt + mirror + immutable index + marker + root exit 0 + valid `Dterminal` record + every root temp absent + external-record temp externally absent after record fsync/readback/dir-fsync | exact proposed index terminal; verified terminal remains pending post-audits |
 | Valid receipt and optional valid mirror, but no valid index | `MANUAL_RECOVERY_REQUIRED`; publication incomplete; no retry |
-| Index missing/invalid, index/receipt/mirror mismatch, unexpected final/temp, or unknown metadata | `MANUAL_RECOVERY_REQUIRED`; receipt unusable |
-| PRE_RECORD/root-start proof but no valid receipt | `AUTHORIZATION_OUTCOME_UNKNOWN` and `MANUAL_RECOVERY_REQUIRED` |
-| Valid failure index proving known no-mutation and cleanup | `OBSERVATION_FAILED`; never recovery-consumable |
+| Valid receipt + mirror + index, but marker absent after root process exit or root liveness unknown | `MANUAL_RECOVERY_REQUIRED`; incomplete; no consumption or retry |
+| Marker exists but index/receipt/mirror/absence/marker metadata/root-exit predicate mismatches | `MANUAL_RECOVERY_REQUIRED`; marker is not removed or replaced; no retry |
+| Valid receipt + mirror + index + marker, but external predicate record is missing | `MANUAL_RECOVERY_REQUIRED`; no later coordinator completion or retry |
+| External predicate-record temp exists without final | `MANUAL_RECOVERY_REQUIRED`; partial external publication; no retry |
+| External predicate-record final exists before its readback or parent-directory fsync is proved | `MANUAL_RECOVERY_REQUIRED`; partial external publication; no retry |
+| Otherwise valid external predicate record with its own temp or any unexpected temp present | `MANUAL_RECOVERY_REQUIRED`; receipt unusable; no retry |
+| Index missing/invalid, index/receipt/mirror mismatch, unexpected final/temp, or unknown metadata | `MANUAL_RECOVERY_REQUIRED`; receipt unusable; no retry |
+| PRE_RECORD/root-start proof but no valid receipt | `AUTHORIZATION_OUTCOME_UNKNOWN` and `MANUAL_RECOVERY_REQUIRED`; no retry |
+| Complete valid predicate record whose proposed index terminal is `OBSERVATION_FAILED` and which proves known no-mutation and cleanup | `OBSERVATION_FAILED`; never recovery-consumable |
 
-A still-live, mechanically identified original root supervisor may finish its
-already-started total order; no coordinator, later process, or new authorization
-attempt may do so. A failure index may bind `Dobs=null`; a verified index MUST
-bind the exact frozen non-null `Dobs` and complete rows.
+Only the still-live, mechanically identified original root supervisor in the
+same process, same authorization invocation, and same held transaction lock MAY
+reconcile the narrow window after an exact index final is already published but
+before its own exit. It MUST NOT change index bytes. It may create and finalize
+the marker only if index publication fsync/readback/hash is already complete,
+receipt/mirror equality remains exact, every path in
+`ROOT_POST_INDEX_TEMP_SET` is absent, and every other required pre-marker
+predicate passes. Any ambiguity, existing/malformed marker, present temp, lost
+lock, changed process identity, or already-exited root process fails manual.
+No coordinator, later root process, repair process, or new authorization attempt
+may publish the marker or complete any missing external predicate record. A
+failure index may bind `Dobs=null`; a verified index MUST bind the exact frozen
+non-null `Dobs` and complete rows.
 
 ### CTR-XOBS-013 — Concurrency, faults, signals, partial writes, and cleanup
 
@@ -1136,19 +1269,33 @@ PRE_RECORD/object-event append/fsync/readback
 root-stage cleanup
 simulation cleanup/residue proof and OBSERVATION_ROWS/Dobs freeze
 root-receipt, mirror, and terminal-index temp-write, file-fsync, publish,
-  readback, dir-fsync, and temp-absence checks
+  readback, dir-fsync, final-index hash, and post-index temp-absence checks
+immediately before/during/after direct PUBLICATION_COMPLETE mkdir, marker
+  lstat/open/emptiness/metadata checks, marker fsync, and parent-dir fsync
+after marker durability and before exact root-process exit 0 is observed
+external predicate recomputation/Dterminal and predicate-record temp-write,
+  file-fsync, publish, readback, dir-fsync, and external temp-absence check
 ```
 
 `INT`, `TERM`, and `HUP` MUST enter one idempotent bounded cleanup path, remove
 the exact temp sibling and all ephemeral simulation/control/temp objects
-attributed to this transaction, prove zero new simulation/temp residue, and
-publish a valid `OBSERVATION_FAILED` failure index unless state is uncertain,
-which publishes `MANUAL_RECOVERY_REQUIRED`. No signal/fault path may append a
-publication-object row, change frozen `OBSERVATION_ROWS`/`Dobs`, publish success
-before the index, or complete a partial publication from a new process. The root
-bootstrap MUST supervise a killable worker so injected worker `KILL` is
-detected and cleaned by the root-owned supervisor. A `KILL` of the root
-supervisor itself is untrappable;
+attributed to this transaction and prove zero new simulation/temp residue. If
+no immutable index final exists, the same root supervisor may publish a valid
+`OBSERVATION_FAILED` or `MANUAL_RECOVERY_REQUIRED` index, complete its marker,
+and exit zero as a successfully published non-success protocol outcome. Once an
+index final exists, no handler may rewrite or replace it: the same-process
+supervisor may only use the narrow pre-exit marker reconciliation in
+`CTR-XOBS-012`, otherwise the outcome is manual. Once the marker exists, it is
+never removed or replaced; any failure before exact root exit zero makes the
+external predicate fail manual. Any signal/fault during external predicate-
+record publication is a partial external state and is manual, not republished.
+
+No signal/fault path may append a publication-object row, change frozen
+`OBSERVATION_ROWS`/`Dobs`, publish success before the external predicate closes,
+or complete a partial publication from a new process. The root bootstrap MUST
+supervise a killable worker so injected worker `KILL` is detected and cleaned
+by the root-owned supervisor. A `KILL` of the root supervisor itself is
+untrappable;
 the coordinator MUST NOT repeat authorization and MUST classify missing
 terminal proof as `AUTHORIZATION_OUTCOME_UNKNOWN` /
 `MANUAL_RECOVERY_REQUIRED`. It may not claim zero residue without a later
@@ -1156,8 +1303,9 @@ separately authorized cleanup authority.
 
 Handled success, ordinary failure, trapped signal, and supervised worker-KILL
 MUST leave zero transaction-created simulation/stage/temp residue. Durable
-PRE_RECORD/journal/receipt/mirror/index finals are evidence, not residue, and
-their exact presence must match the reconciliation table in `CTR-XOBS-012`.
+PRE_RECORD/journal/receipt/mirror/index/marker/predicate-record finals are
+evidence, not residue, and their exact presence must match the reconciliation
+table in `CTR-XOBS-012`.
 Cleanup targets are exact sealed paths and inodes; recursive unresolved paths,
 globs, broad parent
 deletion, or old-stage cleanup are forbidden. Cleanup failure cannot be hidden
@@ -1165,10 +1313,12 @@ by receipt publication.
 
 ### CTR-XOBS-014 — Independent post-observation dual audit
 
-After a valid externally hashed `ROOT_XATTR_OBSERVATION_VERIFIED` terminal index
-binds the exact root receipt and mirror, two new independent Reviewers, distinct
-from the Author, acceptance actors, Build Agent, pre-execution Reviewers, Gate
-Reviewer, and executor, MUST audit in parallel:
+After a valid `ROOT_XATTR_OBSERVATION_VERIFIED` external terminal-predicate
+record binds the exact root receipt, mirror, immutable index,
+publication-complete marker, root exit zero, `Dterminal`, and all external
+record-publication conditions, two new independent Reviewers, distinct from the
+Author, acceptance actors, Build Agent, pre-execution Reviewers, Gate Reviewer,
+and executor, MUST audit in parallel:
 
 ```text
 Post-Observation Receipt Authenticity Reviewer
@@ -1176,12 +1326,15 @@ Post-Observation Production Boundary Reviewer
 ```
 
 Both bind the exact observation seal, Gate, attempt, root receipt, mirror,
-terminal index and external index hash, `Dobs`, and transaction/tool/OS/parent/
-operation/object tuple coordinates. The Receipt Reviewer reconstructs the
+terminal index, marker, external predicate bytes/`Dterminal`, root process exit
+proof, external predicate-record final/temp publication condition, `Dobs`, and
+transaction/tool/OS/parent/operation/object tuple coordinates. The Receipt
+Reviewer reconstructs the
 layered seal, recomputes canonical `OBSERVATION_ROWS` and `Dobs`, authenticates
 every receipt field, simulation row, xattr representation, propagation edge,
-mirror byte, publication metadata record, index field, and all temp exclusions,
-and proves no publication object contributed a row. The
+mirror byte, index field, marker metadata, closed terminal predicate, predicate-
+record publication, and all temp exclusions, and proves no publication object
+contributed a row. The
 Boundary Reviewer independently re-runs fresh read-only production snapshots,
 proves the target/env/services/PID/health/catalog/Grant/workflow state matches
 the receipt's after state and admissible before state, and proves zero
@@ -1189,8 +1342,9 @@ transaction residue without deleting anything.
 
 Any `REVISE`, missing evidence, stale/mixed seal, inability to read, or drift
 sets the observation state `MANUAL_RECOVERY_REQUIRED` and the receipt unusable.
-Only two PASS reports for the same exact receipt/index/`Dobs` tuple may produce
-an external `ROOT_XATTR_OBSERVATION_AUDITED_V1` consumption record under
+Only two PASS reports for the same exact receipt/index/marker/`Dobs`/
+`Dterminal` tuple may produce an external `ROOT_XATTR_OBSERVATION_AUDITED_V1`
+consumption record under
 `GOAL_STATE_ROOT`. That record binds both audit paths/digests/identities/verdicts
 and sets:
 
@@ -1210,10 +1364,12 @@ A later Recovery R3 MUST be a brand-new candidate and transaction built under
 the accepted recovery parent. It MUST NOT reuse R2 or observation executable
 bytes/stages. Its compatibility input may consume only the canonical
 `OBSERVATION_ROWS`/`Dobs` from the exact root receipt plus the receipt and
-terminal-index identities/digests bound by both post-audit reports and the
-external audited-consumption record. It may verify mirror equality through the
-index/audits, but MUST NOT consume receipt/mirror/index/journal/temp/control
-xattrs or any other publication-object metadata as a recovery tuple.
+terminal-index identities/digests, publication-complete marker identity,
+external terminal-predicate record/`Dterminal`, and root-exit proof bound by
+both post-audit reports and the external audited-consumption record. It may
+verify mirror equality through the index/predicate/audits, but MUST NOT consume
+receipt/mirror/index/marker/predicate-record/journal/temp/control xattrs or any
+other publication-object metadata as a recovery tuple.
 
 Before R3 sealing, its manifest and detached seal MUST include exact digests and
 paths for that evidence and freeze the complete compatibility vector:
@@ -1221,8 +1377,9 @@ paths for that evidence and freeze the complete compatibility vector:
 ```text
 observation candidate seal and accepted observation Spec coordinates
 canonical OBSERVATION_ROWS and Dobs
-root receipt, terminal index, external index-hash record, mirror-equality proof,
-  and post-audit record digests
+root receipt, terminal index, publication-complete marker, external terminal-
+  predicate record/Dterminal/root-exit proof, mirror-equality proof, and post-
+  audit record digests
 root bootstrap and observation transaction tool identities
 OS version, Darwin build, architecture
 target-parent realpath/device/inode/filesystem/volume/security metadata
@@ -1354,14 +1511,17 @@ implementation exception.
 - Contracts: `CTR-XOBS-007`, `CTR-XOBS-012`
 - Method: execute each required simulation class, helpers/policies and explicit
   future-recovery-other of cardinality zero/one/many; enumerate all publication
-  plumbing; topologically sort the declared runtime publication graph; inject
-  set overlap, implicit/generic other, unenumerated objects, publication-object
-  rows, self/future-object edges, alternate tools/defaults/locale/env, source
-  digest/xattr drift, wrong order, and operation fallback
+  plumbing including marker and external predicate-record temp/final;
+  topologically sort the declared 11-node/10-edge runtime publication graph;
+  inject set overlap, implicit/generic other, unenumerated objects, publication-
+  object rows, index claims about its own final temp absence, self/future-object
+  edges, alternate tools/defaults/locale/env, source digest/xattr drift, wrong
+  order, and operation fallback
 - Environment: macOS root-stage simulation then authorized observation only
   after all gates
 - Required evidence: both disjoint object inventories, complete simulation
-  edges, publication DAG/topological order, and exact signature records
+  edges, publication DAG/topological order, marker/no-temp classification,
+  publication-to-`Dobs` exclusion trace, and exact signature records
 - Expected result: every actual object is sealed in exactly one set; only finite
   future-recovery simulation objects produce rows; no implicit primitive,
   object, publication row, or dependency cycle exists
@@ -1437,32 +1597,49 @@ implementation exception.
 - Method: mechanically topologically sort the exact terminal-publication graph;
   reject every added self/future/publication-row edge; byte-mutate, corrupt,
   truncate, reorder, or partially publish every root-receipt, mirror, and
-  terminal-index temp/write/fsync/rename/readback/dir-fsync boundary; mismatch
-  every path/length/hash/metadata/`Dobs`/coordinate; leave each temp; inject
-  forbidden terminal, index self-hash, future-object row, and secret
+  terminal-index temp/write/fsync/rename/readback/dir-fsync boundary; mutate the
+  predeclared index temp/final/marker/predicate schema; force an index claim of
+  its own final temp absence; mismatch every path/length/hash/metadata/`Dobs`/
+  root-exit coordinate; leave each temp; exercise marker pre-existence,
+  symlink/file/non-empty/wrong uid/gid/mode/fsync cases and every external
+  predicate-record publication boundary; inject forbidden terminal, index self-
+  hash, future-object row, and secret. Exhaustively enumerate the finite
+  publication state machine, including at least: valid receipt+mirror+index with
+  missing external record; external-record temp only; external-record final
+  before readback/dir-fsync; and valid external record with any unexpected temp
 - Environment: isolated receipt roots with root/user ownership simulation
-- Required evidence: canonical row/receipt/index bytes, `Dobs`, root receipt/
-  mirror/index lengths and digests, exact equality, publication metadata,
-  fsync/readback/temp-absence trace, external index-hash record, reconciliation
-  table result, redaction result, and recovery-usability decision
+- Required evidence: canonical row/receipt/index/predicate bytes, `Dobs` and
+  `Dterminal`, root receipt/mirror/index lengths and digests, exact equality,
+  index-temp absence observations, marker metadata/emptiness/fsync, root exit
+  proof, external record publication condition, exhaustive state table, DAG and
+  byte-mutation output, redaction result, and recovery-usability decision
 - Expected result: finite total order, immutable receipt, exact durable mirror,
-  detached externally hashed index, no publication row, no temp, only closed
-  terminals, and success effective only after index durability/readback
+  immutable detached index that predeclares but never claims its own future temp
+  result, direct no-temp marker, no publication row, no temp, only closed
+  terminals, and success effective only after the external closed predicate and
+  external record-publication condition pass
 - Failure condition: cycle, byte mutation or partial/mismatched publication
-  passes, receipt/index self-reference, publication xattr becomes tuple evidence,
-  stdout controls state, secret leaks, or `COMMITTED`/recovery success appears
+  passes, receipt/index/predicate self-reference, future temp fact is serialized
+  early, marker or root exit is ignored, publication xattr becomes tuple
+  evidence, stdout controls state, secret leaks, or `COMMITTED`/recovery success
+  appears
 
 ### ACC-XOBS-013 — Fault, signal, and cleanup matrix
 
 - Contracts: `CTR-XOBS-013`
 - Method: command failure, timeout, partial write, fsync/publish failure, INT/
   TERM/HUP at every named window including row freeze and every receipt/mirror/
-  index publication substep, worker KILL, supervisor KILL, concurrent lock,
-  cleanup error, pre-existing old stages, and coordinator restart
+  index publication substep, post-index temp scan, marker mkdir/verification/
+  fsync, marker-to-root-exit window, root exit capture, predicate recomputation,
+  and external-record publication substep; worker KILL, supervisor KILL,
+  concurrent lock, cleanup error, pre-existing old stages, and coordinator
+  restart. Exercise same-process pre-exit marker reconciliation and reject the
+  same operation from every new/later process
 - Environment: isolated root supervisor/payload and filesystem mocks
 - Required evidence: PRE_RECORD, lock/process identity, state sequence, signal/
   fault trace, exact cleanup targets, residue census, invocation count,
-  receipt/mirror/index reconciliation state
+  receipt/mirror/index/marker/predicate-record reconciliation state and
+  exhaustive kill-window matrix
 - Expected result: handled paths have zero new residue and no early success;
   supervisor KILL is unknown/manual with no repeated authorization or false
   cleanup claim
@@ -1474,15 +1651,16 @@ implementation exception.
 
 - Contracts: `CTR-XOBS-014`
 - Method: independent reconstruction by two roles; tamper receipt/mirror/Gate/
-  terminal-index/external-index-hash/seal/audit identity; mutate `Dobs`; inject
-  a publication-object row; fresh production and residue readback; mixed audit
-  tuple
+  terminal-index/marker/external-predicate/seal/audit/root-exit identity; mutate
+  `Dobs` or `Dterminal`; inject a publication-object row; fresh production and
+  residue readback; mixed audit tuple
 - Environment: exact production host after root execution
-- Required evidence: two reports and digests, fresh boundary snapshot, receipt
-  and terminal-index authentication chain, row/index reconstruction, role
-  matrix, and external consumption record
-- Expected result: only two exact-same-receipt/index/`Dobs` PASS audits make
-  evidence consumable; no production action is authorized
+- Required evidence: two reports and digests, fresh boundary snapshot, receipt/
+  index/marker/predicate authentication chain, row/index/predicate
+  reconstruction, root-exit and external-record-publication proof, role matrix,
+  and external consumption record
+- Expected result: only two exact-same-receipt/index/marker/`Dobs`/`Dterminal`
+  PASS audits make evidence consumable; no production action is authorized
 - Failure condition: one audit, reused role, stale/mixed evidence, cleanup by
   Reviewer, or direct recovery readiness inference
 
@@ -1492,12 +1670,13 @@ implementation exception.
 - Method: construct a new R3 seal with exact evidence, then independently mutate
   every source digest/xattr, OS/build/arch, tool/version/binary, parent/filesystem/
   volume, operation signature, simulation-object mapping, observed tuple,
-  propagation edge, `OBSERVATION_ROWS` byte, `Dobs`, receipt/index identity, and
-  publication-object xattr at pre-seal and execution time
+  propagation edge, `OBSERVATION_ROWS` byte, `Dobs`, receipt/index/marker/
+  predicate identity, `Dterminal`, root-exit proof, and publication-object xattr
+  at pre-seal and execution time
 - Environment: isolated recovery build/root-stage harness; no production write
 - Required evidence: R3 manifests/seal, compatibility matrix, `Dobs` and
-  receipt/index bindings, tuple readbacks, publication-exclusion trace, stop
-  receipts, and zero-prewrite mutation census
+  receipt/index/marker/predicate/`Dterminal` bindings, tuple readbacks,
+  publication-exclusion trace, stop receipts, and zero-prewrite mutation census
 - Expected result: exact vector is a prerequisite only; every drift stops
   prewrite and requires new observation; publication-object xattrs are ignored
   as tuple supply and cannot make a missing/mismatched simulation row pass
@@ -1604,8 +1783,9 @@ environment/time tuple; a test definition alone proves nothing.
 ### ALT-XOBS-008 — Treat terminal observation evidence as direct R3 authority
 
 - Disposition: rejected
-- Reason: receipt/index authenticity and `Dobs` compatibility need independent
-  post-audits, and recovery remains governed by the accepted parent
+- Reason: receipt/index/marker/external-predicate authenticity and `Dobs`
+  compatibility need independent post-audits, and recovery remains governed by
+  the accepted parent
 - Evidence/Claims considered: `DEC-XOBS-007`, `CLM-XOBS-004`
 - What would reopen: none; the authority separation is intentional
 
@@ -1621,8 +1801,9 @@ PRODUCTION_ROLLBACK = NOT APPLICABLE; production target is never changed
 OBSERVATION_FAILURE_CONTAINMENT = exact transaction-owned cleanup, then
   OBSERVATION_FAILED or MANUAL_RECOVERY_REQUIRED
 OLD_STAGE_HANDLING = identify as pre-existing evidence if visible; never delete
-RECEIPT_COMPATIBILITY = exact OBSERVATION_ROWS/Dobs plus receipt/index identity
-  vector under CTR-XOBS-015; no fuzzy match; no publication-xattr tuple input
+RECEIPT_COMPATIBILITY = exact OBSERVATION_ROWS/Dobs plus receipt/index/marker/
+  external-predicate identity vector under CTR-XOBS-015; no fuzzy match; no
+  publication-xattr tuple input
 ```
 
 There is no automatic rerun after authorization cancellation, denial, crash, or
@@ -1662,7 +1843,7 @@ NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 16
 CONTRACTS_WITH_ACCEPTANCE = 16
-TERMINAL_PUBLICATION_GRAPH = FINITE_ACYCLIC
+TERMINAL_PUBLICATION_GRAPH = FINITE_ACYCLIC; HIGH_LEVEL_NODES=11; EDGES=10
 AUTHORING_READY_FOR_REVIEW = YES, subject to CTR-XOBS-016 checks
 ```
 
@@ -1692,10 +1873,11 @@ or production conformance.
 7. Only then may a new Observation Build Agent start. Acceptance alone does not
    display an authorization dialog; `CTR-XOBS-004` still requires two
    exact-same-seal candidate reviews and an independent Gate.
-8. Only a verified root receipt, detached terminal index, external index-hash
-   record, and the two independent post-observation PASS audits can make the
-   exact `OBSERVATION_ROWS`/`Dobs` eligible evidence for a brand-new Recovery R3
-   under `CTR-XOBS-015`.
+8. Only a verified root receipt, detached terminal index, empty root-owned
+   publication-complete marker, external terminal-predicate record/`Dterminal`,
+   exact root-exit proof, and the two independent post-observation PASS audits
+   can make the exact `OBSERVATION_ROWS`/`Dobs` eligible evidence for a brand-new
+   Recovery R3 under `CTR-XOBS-015`.
 
 The Spec Author, semantic Reviewer, acceptance actor, final-head Reviewer,
 Observation Build Agent, two pre-execution Reviewers, Gate Reviewer, root
