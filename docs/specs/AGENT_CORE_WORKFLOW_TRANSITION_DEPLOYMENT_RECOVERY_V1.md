@@ -64,7 +64,8 @@ implemented and exercised in the same sealed recovery transaction.
   `workflow.js`, or safely close the svc-workflow write gate and atomically
   restore the frozen preimage;
 - use a new immutable recovery candidate, manifest, stamp, Owner launcher,
-  root transaction, random root-owned staging directory, and seal;
+  root transaction, pre-seal authorization bundle, random root-owned staging
+  directory, and seal;
 - preserve R5 as `FAILED_WITH_UNCERTAIN_TERMINAL`; never retry, modify, reseal,
   or relabel R5 as successful;
 - distinguish `ROOT_STAGE_XATTR_POLICY` from `FINAL_TARGET_XATTR_POLICY` and
@@ -113,9 +114,11 @@ EPHEMERAL_PATHS =
   exact root staging objects enumerated by the sealed manifest
 ```
 
-The manifest MAY create only the exact authorization records, root transaction
-inputs, incident evidence, receipt, log, lock, and temporary objects required by
-this Spec. The incident evidence MUST NOT contain the dotenv contents, secret
+The Build Agent MAY create only the exact authorization records and root
+transaction inputs required by this Spec, all before manifest/seal completion.
+The sealed transaction MAY create only the exact incident evidence, receipt,
+log, lock, and temporary objects required by this Spec. The incident evidence
+MUST NOT contain the dotenv contents, secret
 values, credential material, token material, or secret/hash columns. It may
 record only the exact gate key state, whole-file SHA-256, metadata, xattr
 inventory, controller identity, non-secret censuses, target source bytes, and
@@ -166,6 +169,9 @@ SVC_WORKFLOW_ENV_TRUE_SHA256       = 5eba1e7924f554b0686216b5a4303480b67f9b7a90f
 SVC_WORKFLOW_ENV_FALSE_SHA256      = 3b8d266c62b96ba2e701549d9498e829c3af885d2ace7e6a371dd35aa290167a
 SVC_WORKFLOW_ENV_METADATA          = regular;uid=502;gid=20;mode=0600;ACL=none
 SVC_WORKFLOW_ENV_XATTRS            = exactly com.apple.provenance
+SVC_WORKFLOW_PROVENANCE_VALUE_BYTES = 11
+SVC_WORKFLOW_PROVENANCE_CANONICAL_HEX_CHARS = 22
+SVC_WORKFLOW_PROVENANCE_CANONICAL_HEX = 01020061595AF3DBA174A4
 SVC_WORKFLOW_PROVENANCE_HEX_SHA256 = e6be2a51db86e14d2c2d62856a05db6294590e572c98109f004ac17a6cee2819
 ```
 
@@ -173,6 +179,22 @@ No other dotenv line, dotenv value, credential, token, secret, secret hash, or
 environment content is authorized for output. The false postimage digest is a
 whole-file identity derived by replacing only the unique exact gate value; it
 does not disclose any other line.
+
+The provenance coordinate is canonical and non-secret. It was obtained by the
+coordinator's bounded read-only measurement
+`/usr/bin/xattr -px com.apple.provenance <dotenv-path>`: remove every ASCII
+whitespace byte from that command's stdout and use uppercase hexadecimal. The
+result MUST be the 22-character contiguous ASCII string
+`01020061595AF3DBA174A4`, representing exactly 11 value bytes. The recorded
+SHA-256 is over the 22 ASCII bytes of that uppercase contiguous string, not the
+11 decoded value bytes and not command stdout containing spaces or a newline.
+
+`/usr/bin/xattr -p` raw/default output is not a permitted representation. The
+current value contains embedded NUL bytes; the prior default-output pipe
+captured only `0x01 0x02 0x0a` (three bytes) and cannot represent the complete
+11-byte value. Lowercase hex, whitespace-bearing stored hex, odd-length hex,
+non-hex data, raw bytes, or a digest over any of those forms is non-canonical
+and MUST fail closed.
 
 The new recovery candidate MUST derive rollback bytes independently from the
 frozen Git object. R5/v5/v6 artifacts, their root stages, and their receipts are
@@ -255,10 +277,15 @@ required before any candidate build. Basis: Git/PR coordinates in §3 and
 - Subject: `/Users/yanfenma/.local/services/svc-workflow/.env`
 - Environment: svc-workflow WorkingDirectory on the production host
 - Method: exact-key read without printing the file or any other value; whole-file
-  digest and metadata/xattr inventory
+  digest and metadata/xattr inventory; bounded provenance read with
+  `/usr/bin/xattr -px`, ASCII-whitespace removal, uppercase-hex validation, byte
+  length calculation, and digest of the contiguous canonical hex ASCII bytes
 - Result: exact gate `true`; whole-file SHA-256
   `5eba1e7924f554b0686216b5a4303480b67f9b7a90f524e8803a957fde255748`;
-  uid/gid/mode `502/20/0600`; no ACL; sole xattr `com.apple.provenance`
+  uid/gid/mode `502/20/0600`; no ACL; sole xattr `com.apple.provenance`;
+  canonical value `01020061595AF3DBA174A4`, 22 hex characters / 11 value
+  bytes, canonical-hex ASCII SHA-256
+  `e6be2a51db86e14d2c2d62856a05db6294590e572c98109f004ac17a6cee2819`
 - Provenance: PR #134 comment `5486244042`
 
 ### OBS-REC-004 — v6 configuration-surface blind spot
@@ -351,24 +378,30 @@ required before any candidate build. Basis: Git/PR coordinates in §3 and
 
 ## 7. Evidence relations
 
-### EVD-REC-001 — R5 stop plus later target contradicts a certified prewrite terminal
+### EVD-REC-001 — R5 stop plus later target requires deterministic reconciliation
 
 - Source observations: `OBS-REC-001`, `OBS-REC-002`
-- Target: `STATE-REC-001`, `CLM-REC-001`
+- Target: `STATE-REC-001`, `CLM-REC-001`, `CLM-REC-005`
 - Relation: SUPPORTS
 - Coordinates: R5 incident followed by production observation 2026-09-01
-- Strength: strong for invalidating the combined `STOPPED_PREWRITE` claim
-- Limitation: does not identify the later mutating actor
+- Strength: strong for invalidating the combined `STOPPED_PREWRITE` claim and
+  establishing that one explicit recovery branch must close the incident
+- Limitation: does not identify the later mutating actor or by itself select
+  forward versus rollback; that execution-time distinction is supplied by
+  `EVD-REC-002`
 - Provenance: incident records and PR #134
 
-### EVD-REC-002 — Effective true gate supports rollback selection and ordering
+### EVD-REC-002 — Effective gate supports the two-branch selector and rollback ordering
 
 - Source observations: `OBS-REC-003`, `OBS-REC-004`, `OBS-REC-005`
-- Target: `STATE-REC-003`, `CLM-REC-002`, `CLM-REC-003`
+- Target: `STATE-REC-003`, `CLM-REC-002`, `CLM-REC-003`, `CLM-REC-005`
 - Relation: SUPPORTS
 - Coordinates: exact dotenv digest and pinned runtime loading path
-- Strength: strong; file identity, loading path, and v6 blind spot converge
-- Limitation: execution must recheck freshness before mutation
+- Strength: strong; file identity, loading path, and v6 blind spot converge on
+  rollback at the recorded coordinate, while time-sensitive drift requires the
+  transaction to retain and execute the complete two-branch selector
+- Limitation: execution must recheck freshness before mutation; the observation
+  predicts the current branch but does not authorize hard-coding rollback
 - Provenance: PR #134 comment `5486244042`
 
 ### EVD-REC-003 — Accepted parent supports fail-closed rollback boundaries
@@ -485,8 +518,11 @@ Post-Recovery Boundary Reviewer
 
 One person/session MUST NOT satisfy incompatible roles. Any semantic Spec change
 invalidates the prior Authority review. Any candidate byte, manifest, stamp,
-wrapper, transaction, bootstrap, authorization file, plan, or seal change
-invalidates all candidate audits and the Owner gate.
+wrapper, transaction, bootstrap, authorization file, authorization bundle
+digest, fixed transaction ID, root transaction path, root receipt path, plan,
+or seal change invalidates all candidate audits and the Owner gate. Those
+objects MUST all exist and be sealed before either candidate audit begins; no
+privilege-broker input may be generated or changed after the Owner gate.
 
 ### CTR-REC-002 — Incident truth and old-candidate immutability
 
@@ -576,6 +612,17 @@ provenance value. It MUST boot out only
 absent, and prove port 8989 has no listener. Any uncertainty stops before the
 dotenv write.
 
+The provenance verification MUST run `/usr/bin/xattr -px
+com.apple.provenance <dotenv-path>`, remove all ASCII whitespace from stdout,
+then require the remaining text itself to match uppercase hexadecimal, have an
+even length, and equal exactly `01020061595AF3DBA174A4`. It MUST compute value
+length as `hex_chars / 2` and require exactly 22 hex characters / 11 bytes, then
+hash the 22 ASCII bytes and require
+`e6be2a51db86e14d2c2d62856a05db6294590e572c98109f004ac17a6cee2819`.
+There is no silent lowercase conversion during execution. Any xattr command,
+parse, normalization, length, exact-hex, or digest failure stops prewrite.
+`xattr -p` raw/default output MUST NOT be piped or compared as a substitute.
+
 It then MUST create one fresh same-directory regular-file non-symlink sibling,
 perform only the exact `true` to `false` substitution, verify the full false
 postimage digest, preserve uid 502/gid 20/mode 0600/no ACL/exact preimage xattr,
@@ -650,6 +697,36 @@ file SHA-256 table, semantic stamp, execution plan, authorization plan, and seal
 Candidate files MUST be regular, non-symlink, link-count one, owner uid 502, and
 unmodified after seal. User-side and root-side hashes MUST both match the seal.
 
+Before computing the candidate manifest or seal, the Build Agent MUST generate
+and freeze one unpredictable transaction ID, its exact root transaction path,
+and its exact root receipt path. It MUST then generate these exact files under
+the private `GOAL_STATE_ROOT/authorization/<transaction-id>/` directory:
+
+```text
+AUTH_REQUEST.json
+AUTH_LAUNCH.applescript
+AUTH_LAUNCH.sha256
+ROOT_BOOTSTRAP.sh
+ROOT_BOOTSTRAP.sha256
+```
+
+All five files, their absolute paths, types, owners, modes, byte lengths, and
+SHA-256 digests, plus the fixed transaction ID and receipt path, MUST be
+first-class entries in the candidate content manifest and therefore members of
+the candidate seal. `AUTH_REQUEST.json` and the literal AppleScript/bootstrap
+command MUST bind the candidate ID, canonical content-manifest digest, fixed
+transaction ID, exact root transaction/receipt paths, accepted Spec commit,
+execution-plan digest, rollback-artifact digest, target/preimage identities,
+service labels, and closed production path allowlist.
+
+The seal construction MUST be non-circular: the canonical content manifest
+lists every sealed input and authorization-bundle member; the detached seal is
+the digest of that completed manifest and is not a self-listed mutable member.
+No authorization member may embed a placeholder later replaced with the final
+seal. After sealing, the files are immutable. A later byte, metadata, path,
+digest, transaction-ID, or receipt-path change rejects the candidate and
+requires a new candidate, both reviewers, and a new Release Gate.
+
 No privileged command may copy, interpret, expand, or execute content from
 `/tmp`. The only privileged bootstrap is the exact inline command sealed with
 the candidate. It MUST:
@@ -687,12 +764,29 @@ length, exact value bytes as bounded hex or a sealed non-secret digest plus
 length, whether the value is expected to propagate, the normalization action,
 and the post-normalization set.
 
+Every provenance value MUST use the same canonical procedure as §3.1:
+`/usr/bin/xattr -px` only, strip all ASCII whitespace from stdout, require the
+remaining text to be uppercase even-length hex, derive byte length as
+`hex_chars / 2`, and bind exact hex, byte length, and SHA-256 of the contiguous
+uppercase hex ASCII bytes. Command, list, read, parse, or normalization failure
+is fail closed. Raw/default `xattr -p`, lowercase hex, and whitespace-bearing
+stored canonical values are forbidden representations.
+
 The only allowed pre-normalization states are:
 
 1. empty xattr set; or
 2. for an explicitly enumerated root-controlled object only, exactly one
    `com.apple.provenance` tuple whose exact value representation and length are
    frozen in the sealed manifest.
+
+The dotenv tuple in §3.1 is frozen for the dotenv only. It does not automatically
+authorize a root-stage object. Each root-controlled object's tuple MUST be
+mechanically observed, separately enumerated, and separately sealed. It is
+classified equal to the dotenv tuple only when its canonical hex, 11-byte
+length, and canonical-hex ASCII digest all match exactly; otherwise it is a
+distinct tuple and is forbidden unless that exact per-object tuple was
+independently frozen by the candidate audits. An absent or ambiguous per-object
+relation stops before production mutation.
 
 Attribute-name-only acceptance is forbidden. `com.apple.quarantine`,
 `com.apple.ResourceFork`, resource forks exposed by any other API, any additional
@@ -730,6 +824,13 @@ The transaction MUST use an exclusive transaction lock whose ownership,
 process liveness, transaction ID, and seal are mechanically verified. An active
 or ambiguous concurrent transaction stops prewrite. All state writes use fresh
 same-directory temp files, file fsync, atomic rename, and directory fsync.
+
+The authorization attempt is in the same single-transaction concurrency domain.
+One sealed transaction permits at most one launch-attempt record and one
+privilege-broker process creation. Any existing non-terminal authorization
+attempt blocks a new candidate, a new attempt ID, and another dialog until the
+original attempt is reconciled under `CTR-REC-013`; ambiguity is never treated
+as an unused attempt.
 
 A root-owned durable `PRE_RECORD` MUST exist before the first production
 mutation. `COMMITTED`, `MANUALLY_RECONCILED_FORWARD`, and
@@ -791,9 +892,22 @@ blockers
 nextAutomaticAction
 ownerActionRequired
 authorizationState
+authorizationAttemptId
+authorizationInvocationCount
+authorizationBundleDigests
 rootReceiptPath
 lastUpdatedAtUtc
 ```
+
+Before any privilege-broker process creation, the coordinator MUST also persist
+one non-secret authorization-attempt record under `authorization/`. It binds the
+unique attempt ID, fixed transaction ID, candidate seal, all five sealed
+authorization-member digests, `AUTH_DIALOG_REQUESTED=YES`,
+`authorizationState=REQUESTED_NOT_YET_TERMINAL`, invocation count exactly one,
+and timestamps. This mutable coordination record is not a privilege-broker
+input. It MUST be written through a fresh same-directory temp, file fsync,
+atomic no-clobber publication/rename under the transaction lock, and directory
+fsync. Failure at any step means no `osascript` process is created.
 
 Ordinary automatic phases persist `ownerActionRequired=NONE`. Network or remote
 write failure MUST persist the pending operation in
@@ -839,10 +953,12 @@ If attribution is absent or ambiguous, leave the old stage untouched, record
 the blocker, and return `MANUAL_RECOVERY_REQUIRED`; never broaden a deletion
 target or use a recursive unresolved path.
 
-### CTR-REC-013 — macOS authorization-dialog-only execution
+### CTR-REC-013 — Sealed macOS authorization and crash-safe single attempt
 
-Before creating an authorization request the coordinator MUST mechanically
-prove:
+The complete authorization bundle already exists as a manifest/seal member
+under `CTR-REC-007`; it MUST NOT be created, materialized, rewritten, patched,
+or re-signed after either candidate audit or the Release Gate. Immediately
+before any launch attempt, the coordinator MUST mechanically prove:
 
 ```text
 OWNER_INTERACTION_MODE = MACOS_AUTHORIZATION_DIALOG_ONLY
@@ -862,9 +978,13 @@ mutation.
 
 Only after both same-seal audits and the independent Release Gate Reviewer emit
 `OWNER_GATE=ACCEPT` and `READY_FOR_OWNER_EXECUTION=YES` may the coordinator
-create sealed `AUTH_REQUEST.json`, `AUTH_LAUNCH.applescript`,
-`AUTH_LAUNCH.sha256`, `ROOT_BOOTSTRAP.sh`, and `ROOT_BOOTSTRAP.sha256` under the
-private authorization directory and synchronously invoke `/usr/bin/osascript`.
+prepare a launch attempt. It MUST first re-read the Gate record and recompute
+the candidate seal, canonical content-manifest digest, all five authorization-
+member digests, fixed transaction ID, root transaction path, root receipt path,
+file types, ownership, modes, and link counts. Any absence or drift invalidates
+all three approvals and stops without creating an authorization attempt. The
+coordinator may invoke only the exact sealed `AUTH_LAUNCH.applescript` at the
+manifest path; it MUST NOT generate any post-Gate privilege-broker input.
 
 The AppleScript may execute only one literal
 `do shell script <FIXED_AUDITED_BOOTSTRAP_COMMAND> with administrator privileges`
@@ -877,13 +997,45 @@ The coordinator MUST NOT ask the Owner to paste a command, reply `continue`, or
 report `executed`; the native authorization dialog is the only normal
 interaction for this privileged transaction.
 
-Cancellation or authentication failure yields
-`AUTHORIZATION_NOT_GRANTED`, persists the state, performs no production write,
-and is not automatically retried. The terminal transaction result is derived
-from the verified root receipt, never inferred from `osascript` stdout/status.
-After the synchronous invocation begins, the coordinator MUST persist
-`AUTH_DIALOG_REQUESTED=YES`, wait for completion, and validate the receipt's
-transaction ID and digest before choosing any next action.
+Before creating the `/usr/bin/osascript` process, and while holding the exact
+transaction lock, the coordinator MUST create a unique unpredictable
+`authorizationAttemptId` and durably publish the authorization-attempt record
+specified by `CTR-REC-011`. In particular, the record MUST already contain:
+
+```text
+AUTH_DIALOG_REQUESTED = YES
+authorizationState = REQUESTED_NOT_YET_TERMINAL
+authorizationInvocationCount = 1
+```
+
+The temp write, file fsync, atomic no-clobber rename, readback, and directory
+fsync MUST all complete before process creation. Only then may the coordinator
+synchronously invoke `/usr/bin/osascript` with the exact sealed AppleScript
+path and no dynamic command argument.
+
+After the process returns, the coordinator MUST inspect the fixed root
+transaction path, root-owned `PRE_RECORD`, and exact receipt path before
+classifying the outcome. A valid terminal receipt with matching transaction ID,
+candidate seal, and digest controls the receipt-derived terminal state. Only a
+mechanically identified cancellation/authentication denial with no root
+transaction, `PRE_RECORD`, or receipt evidence may atomically transition the
+attempt to `AUTHORIZATION_NOT_GRANTED`. Missing, malformed, conflicting, or
+non-terminal root evidence yields `AUTHORIZATION_OUTCOME_UNKNOWN` and
+`MANUAL_RECOVERY_REQUIRED`; stdout or exit status alone never establishes a
+production terminal. The terminal attempt update again requires temp, file
+fsync, atomic rename, readback, and directory fsync.
+
+If the coordinator crashes or restarts with an attempt in
+`REQUESTED_NOT_YET_TERMINAL`, it MUST NOT create another process or display
+another dialog. It MUST first reconcile the exact prior `osascript` process when
+mechanically identifiable, the fixed root transaction, `PRE_RECORD`, receipt,
+on-disk target/gate state, and transaction lock. It may wait for the same live
+attempt or persist a receipt-derived terminal. If those sources still cannot
+decide whether authorization or root execution occurred, it MUST persist
+`AUTHORIZATION_OUTCOME_UNKNOWN`, set `MANUAL_RECOVERY_REQUIRED`, notify the
+Owner, and stop. The transaction and authorization attempt are never
+automatically retried, including when the crash happened after requested-state
+fsync but before process creation.
 
 ### CTR-REC-014 — Grant, canary, and real-transition exclusion
 
@@ -925,12 +1077,19 @@ Production Boundary Reviewer
 Both MUST verify branch mutual exclusion, all 23 gates, current expected
 rollback selection, R5 truth, rollback source, xattr/ACL policy, bootstrap,
 signals/faults/partial writes, receipts, cleanup, exclusions, and seal-to-script
-identity. Any `REVISE` rejects that candidate; a new Recovery Build Agent must
-create a new candidate/seal.
+identity. They MUST also byte-review all five authorization-bundle members and
+bind their manifest entries/digests, the fixed transaction ID, root transaction
+path, root receipt path, canonical content-manifest digest, and non-circular
+seal construction. Any `REVISE` rejects that candidate; a new Recovery Build
+Agent must create a new candidate/seal.
 
 Only two PASS results allow a third independent Release Gate Reviewer to bind
-the same seal. Only `OWNER_GATE=ACCEPT` plus
-`READY_FOR_OWNER_EXECUTION=YES` allows authorization.
+the same seal and every exact authorization-member digest/path plus the fixed
+transaction/receipt coordinates. Only `OWNER_GATE=ACCEPT` plus
+`READY_FOR_OWNER_EXECUTION=YES` allows the one crash-safe authorization attempt.
+The Gate MUST invalidate itself on any later byte, metadata, path, digest, seal,
+or fixed-coordinate change; it MUST NOT authorize post-Gate generation or
+materialization of privilege-broker input.
 
 After execution, new independent Runtime and Boundary Reviewers MUST verify the
 root receipt, selected branch, runtime-loaded bytes, both services, health,
@@ -971,14 +1130,17 @@ must pass before push.
 
 - Contracts: `CTR-REC-001`
 - Method: inspect PR/merge topology, exact Spec commits, acceptance record,
-  task/session identities, and candidate audit identities
+  task/session identities, candidate audit identities, and authorization-bundle
+  creation/seal chronology
 - Environment: clean detached worktrees plus persistent PR records
 - Required evidence: reviewed head, final accepted head, merge commit, main
-  readback, role matrix, and semantic-delta verdict
+  readback, role matrix, semantic-delta verdict, manifest timestamps/digests,
+  and Gate-bound transaction/receipt coordinates
 - Expected result: no build before accepted main; all incompatible roles are
-  independent
+  independent; every authorization input exists before candidate audits
 - Failure condition: acceptance is inferred, reviewed bytes changed, build
-  precedes accepted main, or a role is improperly reused
+  precedes accepted main, a role is improperly reused, or any privilege-broker
+  input is generated or changed after candidate audit/Gate
 
 ### ACC-REC-002 — R5 truth and old-artifact rejection
 
@@ -1022,15 +1184,20 @@ must pass before push.
 
 - Contracts: `CTR-REC-005`
 - Method: positive exact true-to-false fixture and faults at every stop/edit/
-  fsync/rename/bootstrap/PID/health/probe/census boundary
+  fsync/rename/bootstrap/PID/health/probe/census boundary; canonical provenance
+  fixtures for formatted `xattr -px` output, raw/default output, truncated raw
+  pipes, lowercase, stored whitespace, odd length, non-hex, and digest mismatch
 - Environment: isolated copied dotenv with mocked launchctl/listener/service/DB
 - Required evidence: whole-file pre/post digests, redacted one-key diff,
-  metadata/ACL/xattrs, PIDs, listener state, exact request/response, database
-  zero delta, temp absence, and receipt
+  metadata/ACL/xattrs, canonical hex/hex length/value-byte length/canonical ASCII
+  digest, PIDs, listener state, exact request/response, database zero delta,
+  temp absence, and receipt
 - Expected result: old true-gate process cannot serve before edit; success proves
-  one false-gate process; failures are offline or proven false; gate never true
+  one false-gate process; only the exact 22-character uppercase hex / 11-byte
+  tuple passes; failures are offline or proven false; gate never true
 - Failure condition: other dotenv bytes leak/change, true gate returns, an
-  unproved process remains, non-403 passes, row delta occurs, or temp survives
+  unproved process remains, a non-canonical/raw xattr representation passes,
+  non-403 passes, row delta occurs, or temp survives
 
 ### ACC-REC-006 — Atomic frozen-preimage rollback and postflight
 
@@ -1051,14 +1218,18 @@ must pass before push.
 
 - Contracts: `CTR-REC-007`
 - Method: candidate/root-side hash comparison and adversarial path/type/owner/
-  mode/link/archive/environment/bootstrap fixtures
+  mode/link/archive/environment/bootstrap fixtures; mutate each authorization
+  member and each fixed transaction/receipt coordinate before and after Gate
 - Environment: user-private candidate and synthetic root staging tree
-- Required evidence: inventory, stamp, seal, bootstrap literal, root-copy hashes,
-  allowlist trace, and zero production writes on rejection
+- Required evidence: inventory, stamp, canonical content manifest, seal, all five
+  authorization-member bytes/digests, bootstrap literal, fixed transaction and
+  receipt paths, root-copy hashes, allowlist trace, and zero production writes
+  on rejection
 - Expected result: only exact sealed inputs enter a new root-owned stage and only
-  root-owned audited code executes
+  root-owned audited code executes; no authorization input is created post-Gate
 - Failure condition: `/tmp` use, user-writable privileged execution, dynamic
-  command injection, old stage reuse, hash drift, or allowlist escape
+  command injection, old stage reuse, hash drift, post-Gate materialization, or
+  allowlist escape
 
 ### ACC-REC-008 — Root-stage xattr regression matrix
 
@@ -1066,7 +1237,8 @@ must pass before push.
 - Method: execute all cases A-M below on macOS-capable isolated fixtures
 - Environment: fresh user candidate and fresh root-owned staging per case
 - Required evidence: complete `XATTR_OBSERVATION_TABLE`, commands, outputs,
-  exit codes, propagation trace, PRE_RECORD, receipt, cleanup, and target census
+  canonical hex/length/digest calculations, exit codes, propagation trace,
+  PRE_RECORD, receipt, cleanup, and target census
 - Expected result: only empty or the exact sealed provenance tuple is
   normalizable on root-controlled objects; every other case fails closed
 - Failure condition: name-only acceptance, unread attribute, failed deletion,
@@ -1088,6 +1260,14 @@ L. success and handled failure leave zero new temp/root-stage residue
 M. INT/TERM/HUP occurs in every xattr observation/normalization window;
    KILL is reconciled on the next same-transaction invocation
 ```
+
+Cases B/C/I/J MUST independently exercise the canonical representation
+boundary: normal formatted `xattr -px` stdout passes only after ASCII-whitespace
+removal; raw/default `xattr -p` bytes or the known truncated three-byte pipe,
+lowercase canonical text, whitespace-bearing stored canonical text, odd-length
+or non-hex text, wrong byte length, wrong exact hex, and wrong canonical-ASCII
+digest all fail closed. These fixtures MUST prove the user candidate and its
+seal remain byte-for-byte unchanged.
 
 Every A-M case MUST also prove: prewrite failure does not touch production;
 post-mutation failure reaches the safe containment defined by this Spec; a
@@ -1114,27 +1294,36 @@ preimage metadata contract.
 - Contracts: `CTR-REC-010`
 - Method: concurrent-lock fixtures; INT/TERM/HUP at every named window; KILL and
   restart reconciliation; partial/truncated write, fsync, rename, PID, timeout,
-  and readback failures
+  and readback failures; coordinator crashes before requested-state publication,
+  after its fsync/rename but before process creation, immediately after process
+  creation, while the dialog/process is live, and after root execution but
+  before terminal-attempt persistence
 - Environment: isolated filesystem and service mocks
 - Required evidence: lock ownership, PRE_RECORD sequence, on-disk states,
-  controller states, cleanup, resume decision, and terminal receipt
+  authorization-attempt sequence and invocation census, controller states,
+  cleanup, resume decision, and terminal receipt
 - Expected result: no overlapping transaction, no early success, safe gate,
-  exact target or stopped service, and deterministic same-transaction recovery
+  exact target or stopped service, no repeated dialog/process, and deterministic
+  same-transaction recovery
 - Failure condition: new transaction starts over unresolved state, receipt lies,
-  target is ambiguous while service runs, or gate becomes true
+  a non-terminal attempt relaunches, target is ambiguous while service runs, or
+  gate becomes true
 
 ### ACC-REC-011 — Goal state and durable receipt integrity
 
 - Contracts: `CTR-REC-011`
 - Method: crash each atomic state write, corrupt/truncate receipt fields, mismatch
-  transaction/seal, and restart a coordinator without chat context
+  transaction/seal/authorization-member digest, collide attempt IDs, and restart
+  a coordinator without chat context at every authorization launch window
 - Environment: isolated goal-state and receipt roots
 - Required evidence: fsync/rename trace, recovered state, receipt validation,
-  redaction scan, and next-action decision
+  attempt record/readback, invocation census, redaction scan, and next-action
+  decision
 - Expected result: coordinator resumes from durable state; malformed/missing
-  receipt yields manual recovery; no secret appears
+  receipt or irreducibly uncertain attempt yields manual recovery without a new
+  dialog; no secret appears
 - Failure condition: chat is required to recover truth, stdout alone determines
-  success, or a corrupt receipt passes
+  success, a corrupt receipt passes, or non-terminal launch intent is reused
 
 ### ACC-REC-012 — New-temp and R5-stage cleanup
 
@@ -1153,14 +1342,22 @@ preimage metadata contract.
 
 - Contracts: `CTR-REC-013`
 - Method: GUI/session precondition fixtures, AppleScript/bootstrap inspection,
-  cancelled-dialog fixture, auth-failure fixture, and secret-channel scan
+  sealed-member drift fixtures, cancelled-dialog fixture, auth-failure fixture,
+  every pre-spawn/post-spawn crash window, restart reconciliation, and secret-
+  channel scan
 - Environment: macOS UI test harness without a real password
-- Required evidence: console/uid/session checks, exact sealed files/command,
+- Required evidence: console/uid/session checks, Gate-recorded seal and exact five
+  file digests, pre-spawn requested-state fsync/rename trace, unique attempt ID,
+  exact sealed command, process/root-transaction/PRE_RECORD/receipt reconciliation,
   invocation count, filesystem/process delta, and redaction scan
-- Expected result: only one native dialog after gate acceptance; cancellation is
-  no-op; no password is agent-visible; no fallback or retry loop
+- Expected result: only one exact sealed native dialog after Gate acceptance;
+  cancellation is no-op; crash/restart never repeats it; definitive receipt
+  controls production state; uncertainty becomes manual recovery; no password is
+  agent-visible; no fallback or retry loop
 - Failure condition: dialog before gate, missing GUI bypass, password channel,
-  dynamic command, write on cancel, or automatic repeated prompt
+  post-Gate file generation, bundle drift, missing requested-state durability,
+  dynamic command, write on cancel, outcome inferred from stdout alone, or any
+  automatic repeated prompt
 
 ### ACC-REC-014 — Forbidden-change census
 
@@ -1180,14 +1377,17 @@ preimage metadata contract.
 
 - Contracts: `CTR-REC-015`
 - Method: compare reviewer identities, candidate seals, script hashes, verdicts,
-  Owner gate, authorization request, root receipt, and post-recovery reports
+  Owner gate, all authorization-member bytes/digests and fixed transaction/
+  receipt paths, authorization attempt, root receipt, and post-recovery reports
 - Environment: persistent PR/task records plus sealed artifact roots
 - Required evidence: one seal across both audits/gate/execution, independent
-  identities, PASS verdicts, and post-recovery reports
-- Expected result: no authorization before three exact-seal approvals; no
-  milestone before two post-recovery PASS results
-- Failure condition: mixed seal, reused role, skipped review, stale verdict, or
-  post-recovery result inferred from executor output
+  identities, exact authorization inputs in both audit reports and Gate record,
+  PASS verdicts, and post-recovery reports
+- Expected result: no authorization before three exact-seal/exact-byte approvals;
+  no post-Gate generation; no milestone before two post-recovery PASS results
+- Failure condition: mixed seal, unbound authorization byte/path, reused role,
+  skipped review, stale verdict, post-Gate materialization, or post-recovery
+  result inferred from executor output
 
 ### ACC-REC-016 — Terminal routing and no recovery canary
 
@@ -1330,10 +1530,12 @@ UNRESOLVED_AUTHORITY_CONFLICT = NONE
 PARTIAL_SUPERSESSION = NONE
 ```
 
-Execution-time evidence values such as PID, generation, fresh Grant census,
-preimage ACL/xattr bytes, exact provenance tuple, and random transaction ID are
-required sealed build/execution outputs, not open policy choices. Missing or
-ambiguous values fail closed under the Contracts above.
+Execution-time evidence values such as PID, generation, and fresh Grant census
+remain runtime observations. The random transaction ID, receipt path, and each
+per-object root-stage provenance tuple are sealed build outputs. The dotenv
+provenance tuple is already frozen canonically in §3.1; preimage ACL/xattr bytes
+remain independently frozen policy inputs. None is an open policy choice, and
+missing or ambiguous values fail closed under the Contracts above.
 
 ## 14. Authoring result
 
