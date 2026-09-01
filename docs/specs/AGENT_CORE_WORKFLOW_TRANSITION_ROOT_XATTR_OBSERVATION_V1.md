@@ -1,10 +1,10 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_TRANSITION_ROOT_XATTR_OBSERVATION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
-production_apply_authority: none
+implementation_authority: contracts
+production_apply_authority: contracts
 date: 2026-09-01
 scope:
   - mayf3/dsh-agent-core
@@ -1878,6 +1878,38 @@ or production conformance.
    exact root-exit proof, and the two independent post-observation PASS audits
    can make the exact `OBSERVATION_ROWS`/`Dobs` eligible evidence for a brand-new
    Recovery R3 under `CTR-XOBS-015`.
+
+### Acceptance record (2026-09-01 lifecycle-only acceptance)
+
+```text
+REVIEWED_BASE_COMMIT          = fb046c51dab5dfeaf3c32b480fb4efb8a2860e3d
+REVIEWED_SPEC_COMMIT          = d77841103a5c6225d12b05bea5a7b2e62eeab4c3
+REVIEWED_SPEC_BLOB            = 66b6dee25522a25b904241f08181a0cadc0b1b5d
+REVIEWED_SPEC_SHA256          = f5b7d70ca93645f84fbe9929dfd654439b93626201c69747bb004d456e715161
+REVIEWER_ID                   = /root/root_xattr_observation_authority_reaudit_r3
+PASS_COMMENT_ID               = 5488997789
+REVIEW_RESULT                 = ACCEPT
+BLOCKERS                      = NONE
+ACCEPTANCE_ACTOR              = mayf3
+OWNER_AUTHORIZATION_SOURCE    = /Users/yanfenma/.codex/attachments/3a8243dc-c482-4197-8dae-268cfbcc50d0/pasted-text-1.txt
+OWNER_AUTHORIZATION_SHA256    = a023ad37eb5da0d356c3498ab3f1741c1d324b5088bfd58ebd44ce002ff8d647
+OWNER_AUTHORIZATION_BASIS     = GOAL_OWNER=mayf3; all non-privileged phases auto-execute
+ACCEPTED_AT_UTC               = 2026-09-01T04:46:43Z
+SEMANTIC_DELTA_AFTER_REVIEW   = NONE
+FINAL_ACCEPTED_HEAD           = SELF_REFERENCE_SAFE_LIFECYCLE_COMMIT_GIT_OBJECT
+FINAL_ACCEPTED_HEAD_BINDING   = independent final-head audit plus persistent PR record
+
+NEXT_TASK                     = final-head audit
+READY_FOR_FINAL_HEAD_AUDIT    = YES
+READY_TO_MERGE                = NO
+ARTIFACT_BUILD_ALLOWED        = NO
+PRODUCTION_APPLY_ALLOWED      = NO
+```
+
+`FINAL_ACCEPTED_HEAD` is intentionally self-reference-safe: this file does not
+pre-fill or invent the SHA of the commit that contains it. The exact full SHA is
+bound by that lifecycle commit's Git object identity, the independent final-head
+audit, and the persistent PR record.
 
 The Spec Author, semantic Reviewer, acceptance actor, final-head Reviewer,
 Observation Build Agent, two pre-execution Reviewers, Gate Reviewer, root
