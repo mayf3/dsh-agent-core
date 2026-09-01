@@ -41,18 +41,20 @@ The observation transaction is successful only when it:
 1. uses the same sealed source objects, absolute tool identities, operation
    signatures, OS build, filesystem coordinates, and object classes that a
    later brand-new Recovery R3 candidate proposes to use;
-2. mechanically creates and observes every root-controlled object class,
-   including one same-filesystem deployment temporary sibling in the exact
-   production target directory;
-3. records complete pre-normalization and post-normalization xattr tuples for
-   each object and the propagation relation between adjacent objects;
+2. mechanically creates and metadata-checks every sealed root-controlled object
+   class, including one same-filesystem deployment temporary sibling in the
+   exact production target directory;
+3. records complete pre-normalization and post-normalization xattr tuples and
+   propagation relations only for the closed future-recovery simulation set;
 4. never renames the deployment temporary sibling over the production target;
 5. proves the production target, environment, services, runtime, catalog,
    Grant census, and workflow census are unchanged;
-6. removes every object created by this observation on success, handled
-   failure, or trapped signal; and
-7. produces an authentic root-owned terminal receipt, an exact non-secret
-   user-visible mirror, and two independent post-observation PASS audits.
+6. removes every ephemeral simulation and publication-temp object created by
+   this observation on success, handled failure, or trapped signal, while
+   retaining only the exact closed durable evidence finals; and
+7. produces an authentic root-owned observation receipt, an exact non-secret
+   user-visible mirror, a detached terminal-publication index, and two
+   independent post-observation PASS audits.
 
 The successful root terminal is:
 
@@ -81,8 +83,9 @@ consume it only under `CTR-XOBS-015` after both post-observation audits PASS.
 - one exact randomized same-filesystem deployment temp sibling directly under
   the production target directory, created with no-clobber and never renamed
   over the target;
-- root-owned durable non-secret records and an exact non-secret user-visible
-  mirror;
+- root-owned durable non-secret records, an exact non-secret user-visible
+  mirror, and a detached terminal-publication index whose publication graph is
+  finite and non-self-referential;
 - two independent post-observation audits proving receipt authenticity, zero
   production mutation, and zero observation residue; and
 - a closed compatibility vector that a brand-new Recovery R3 must seal and
@@ -118,6 +121,10 @@ AUTHORIZATION_ATTEMPT_RECORD_CLASS =
 OBSERVATION_GATE_RECORD_CLASS =
   <GOAL_STATE_ROOT>/reports/root-xattr-observation-gate-<transaction-id>.json
 
+TERMINAL_INDEX_READBACK_RECORD_CLASS =
+  <GOAL_STATE_ROOT>/reports/
+  root-xattr-observation-terminal-index-<transaction-id>.json
+
 USER_RECEIPT_MIRROR_CLASS =
   <GOAL_STATE_ROOT>/receipts/root-xattr-observation-<transaction-id>.json
 
@@ -138,15 +145,19 @@ ROOT_TRANSACTION_LOCK_CLASS =
   <ROOT_RECEIPT_DIRECTORY_CLASS>/transaction.lock
 
 ROOT_RECEIPT_CLASS =
-  <ROOT_RECEIPT_DIRECTORY_CLASS>/receipt.json
+  <ROOT_RECEIPT_DIRECTORY_CLASS>/ROOT_OBSERVATION_RECEIPT.json
+
+ROOT_TERMINAL_PUBLICATION_INDEX_CLASS =
+  <ROOT_RECEIPT_DIRECTORY_CLASS>/TERMINAL_PUBLICATION_INDEX.json
 
 DEPLOYMENT_TEMP_SIBLING_CLASS =
   <PRODUCTION_TARGET_DIRECTORY>/
   .workflow.js.root-xattr-observation.<transaction-id>.<random>.tmp
 
 ATOMIC_PUBLICATION_TEMP_CLASSES =
-  one exact sealed same-directory temp sibling per PRE_RECORD, object-record,
-  root-receipt, user-mirror, attempt-record, Gate-record, and consumption-record
+  one exact sealed same-directory temp sibling per PRE_RECORD, root-receipt,
+  user-mirror, terminal-publication-index, attempt-record, Gate-record,
+  terminal-index-readback-record, and consumption-record
 ```
 
 Line wrapping above is documentary only; every sealed path is one canonical
@@ -493,9 +504,10 @@ repository implementation authority and does not override this Spec lifecycle.
 ### DEC-XOBS-007 — Receipt use is a separate compatibility decision
 
 - Decision owner: mayf3
-- Decision: Recovery R3 seals the exact receipt and post-audit records and must
-  match the complete source/OS/tool/parent/operation/object tuple vector before
-  and during execution
+- Decision: Recovery R3 seals the exact canonical observation-row digest,
+  receipt/index identities and digests, and post-audit records, then must match
+  the complete source/OS/tool/parent/operation/simulation-object tuple vector
+  before and during execution; publication-object xattrs are never tuple input
 - Rejected alternatives: consume only the provenance value, accept compatible-
   looking drift, or treat the observation success as recovery Gate acceptance
 - Reason: a tuple is qualified only at its bound execution coordinates
@@ -519,6 +531,7 @@ The design MUST reject at least these threats:
 | R5 stage deletion or R2 supply reuse | hard failure and role/audit violation |
 | Crash between prelaunch record and process creation | no second dialog/process; reconcile or unknown/manual |
 | Root receipt/mirror mismatch or partial write | no consumption; manual recovery |
+| Receipt/mirror/index self-hash, publication-object observation row, or future-object dependency | reject cyclic graph; no verified terminal |
 | Receipt replay on different source, OS, tool, filesystem, parent, or operation | R3 stops prewrite and requires new observation |
 
 No implementation may weaken these dispositions to warnings.
@@ -561,7 +574,8 @@ R2/R5/v5/v6 candidate bytes, scripts, manifests, wrappers, stages, seals, or
 receipts MUST NOT supply observation or recovery executable content. The exact
 R2 preflight/stop/evidence digests may be cited only as non-executable evidence.
 The observation uses a new candidate root, IDs, manifests, source subject set,
-wrapper, transaction, authorization envelope, seal, stage, receipt, and mirror.
+wrapper, transaction, authorization envelope, seal, stage, receipt, mirror, and
+terminal-publication index.
 
 ### CTR-XOBS-003 — Fresh candidate and acyclic detached seal
 
@@ -569,15 +583,17 @@ The Observation Build Agent MUST create a new uid-502-owned `0700`, non-symlink
 candidate root. Every member is a regular non-symlink, link-count-one file owned
 by uid 502, and every path component is canonical and non-symlink. The Build
 Agent MUST freeze the candidate ID, unpredictable transaction ID, root stage,
-receipt, mirror, authorization paths, exact source-subject manifest, exact
-operation plan, and one randomized temp-sibling path before serialization.
+receipt, mirror, terminal-publication-index, authorization paths, exact
+terminal-index-readback-record path, source-subject manifest, exact operation
+plan, and one randomized temp-sibling path before serialization.
 
 The source-subject manifest MUST separate:
 
 ```text
 observation_control = bootstrap/transaction/control members needed only to
-  perform observation; observed for complete root-object accounting but never
-  offered to R3 as reusable executable supply
+  perform observation; enumerated and separately checked as execution or
+  publication plumbing, but excluded from compatibility-bearing
+  OBSERVATION_ROWS and never offered to R3 as reusable executable supply
 recovery_subject = inert target/preimage/artifact/helper/policy source members
   independently derived under the accepted recovery parent, with exact bytes
   intended for a brand-new R3; installed and extracted for observation but
@@ -651,9 +667,9 @@ READY_FOR_ROOT_OBSERVATION = YES
 
 only after both exact-same-seal PASS records. The external Gate record MUST bind
 all three hashes, exact authorization paths/digests, fixed transaction/stage/
-receipt/mirror/temp/target coordinates, source/tool/OS/parent/operation
-signatures, Reviewer identities, and verdicts. It is not a candidate member and
-cannot change candidate bytes.
+receipt/mirror/terminal-publication-index/index-readback-record/temp/target
+coordinates, source/tool/OS/parent/operation signatures, Reviewer identities,
+and verdicts. It is not a candidate member and cannot change candidate bytes.
 
 Only that exact Gate permits one macOS authorization attempt. Immediately before
 attempt publication, the coordinator MUST verify console user `yanfenma`, uid
@@ -680,8 +696,8 @@ Cancellation/denial with proof that root execution did not begin becomes
 `AUTHORIZATION_OUTCOME_UNKNOWN` and `MANUAL_RECOVERY_REQUIRED`. A coordinator
 restart with a non-terminal attempt MUST NOT create another process or dialog;
 it may wait for the same mechanically identified live process or reconcile the
-fixed root receipt/mirror/stage. Irreducible uncertainty is terminal manual
-recovery, never a retry.
+fixed root receipt/mirror/terminal-publication-index/stage. Irreducible
+uncertainty is terminal manual recovery, never a retry.
 
 ### CTR-XOBS-005 — Fixed root bootstrap, closed environment, and path safety
 
@@ -701,8 +717,9 @@ administrator privileges. The bootstrap MUST:
    root-stage directory creation and every source-to-stage install, copy only
    the sealed allowlist, then re-hash and re-stat root copies;
 7. execute only the root-owned audited transaction copy;
-8. write only the sealed stage, receipt, mirror, PRE_RECORD, lock, and exact
-   production temp-sibling paths; and
+8. write only the sealed stage, receipt, mirror, terminal-publication-index,
+   PRE_RECORD, object-record journal, lock, and exact production temp-sibling
+   paths; and
 9. refuse to enumerate, delete, normalize, execute, or reuse an old R5 or other
    pre-existing root stage beyond the bounded parent-name/identity census needed
    to prove this transaction created no residue.
@@ -748,7 +765,9 @@ count without the canonical projection/digest never establishes equality.
 ### CTR-XOBS-007 — Complete object graph and exact operation signatures
 
 The sealed observation plan MUST enumerate every root-controlled object before
-execution. The required object classes are:
+execution and classify it into exactly one of two disjoint sets. Only the
+closed `FUTURE_RECOVERY_SIMULATION_OBJECT_SET` supplies compatibility-bearing
+xattr rows:
 
 ```text
 root_staging_directory
@@ -757,17 +776,35 @@ extracted_workflow_js
 installed_helper (one row per helper)
 installed_policy (one row per policy)
 deployment_temp_sibling
-pre_record_temp_and_final
-root_receipt_temp_and_final
-user_mirror_temp_and_final
-transaction_lock
-every_other_root_controlled_object_created by bootstrap or payload
+explicit_future_recovery_other (one row per exact sealed object, permitted only
+  when a future R3 operation will create the same object class by the same
+  source-to-object operation)
 ```
 
-No unenumerated root-controlled file, directory, archive member, hard link,
-symlink, FIFO, socket, device, named fork, or temp object may be created. The
-plan MUST use the same primitive for each corresponding source-to-object edge
-that later Recovery R3 will use. For every operation, it freezes:
+The second set is `PUBLICATION_AND_CONTROL_PLUMBING_SET`. It MUST enumerate the
+bootstrap/worker/supervisor-only controls, `PRE_RECORD`, object-record journal,
+transaction lock, root-receipt temp/final, user-mirror temp/final,
+terminal-publication-index temp/final, and every other exact sealed
+publication/control temp or final object. These objects receive separate path,
+type, owner/group/mode, link/inode, length/digest where applicable, complete
+xattr inventory, fsync/readback, and final-residue checks. They MUST NOT append
+or otherwise contribute an `OBSERVATION_ROWS` row, must not change `Dobs`, and
+their xattrs MUST NOT be offered to Recovery R3 as tuple evidence. In
+particular, root-receipt, mirror, and terminal-index temp/final objects are
+publication plumbing, never simulation objects. No publication/control xattr
+may be normalized to make evidence eligible; unreadable, ambiguous,
+quarantine/resource-fork/additional, or policy-mismatched publication metadata
+fails closed without creating a row.
+
+The two sets MUST be sealed as sorted lists of exact object IDs and paths with
+no overlap, implicit catch-all, or runtime reclassification. No unenumerated
+root-controlled file, directory, archive member, hard link, symlink, FIFO,
+socket, device, named fork, or temp object may be created. An
+`explicit_future_recovery_other` entry MUST name its future R3 operation and
+source/destination edge; a generic `other`, `every object`, or publication
+object is invalid. The plan MUST use the same primitive for each simulation
+source-to-object edge that later Recovery R3 will use. For every such
+operation, it freezes:
 
 ```text
 stepId and total sequence
@@ -788,19 +825,32 @@ unsealed archive entries, and alternate fallback primitives are forbidden. Any
 execution mismatch from the sealed signature fails before the next object is
 created and makes the receipt unusable for recovery.
 
-The bootstrap/transaction control members themselves are classified
-`observation_control`; their tuples remain in the complete receipt but R3 MUST
-NOT reuse their bytes. The `recovery_subject` rows are the compatibility-bearing
-rows. Root-stage directory creation and installed source/artifact/helper/policy
-copies use the exact sealed `/usr/bin/install` operations. Extraction and the
+The bootstrap/transaction control members are `observation_control` plumbing;
+their bytes and xattrs are never compatibility-bearing rows and R3 MUST NOT
+reuse them. The root-stage directory and installed/extracted
+`recovery_subject` objects listed above are the compatibility-bearing rows.
+Root-stage directory creation and installed source/artifact/helper/policy copies
+use the exact sealed `/usr/bin/install` operations. Extraction and the
 same-directory deployment-temp creation/population use the exact separately
 sealed primitives that R3 proposes to use. Any different primitive requires a
 new observation rather than a fallback.
 
 ### CTR-XOBS-008 — Per-object metadata and canonical xattr observation
 
-Immediately after each object creation and before any normalization, the root
-transaction MUST append and durably read back one object record containing:
+Immediately after each simulation-object creation and before any normalization,
+the root transaction MUST append, file-fsync, and read back one canonical
+`OBJECT_PRE_OBSERVATION` event in `OBJECT_RECORDS.jsonl`. Later normalization,
+propagation, deletion, and cleanup facts are append-only canonical events for
+the same object ID; no event is rewritten. The journal is publication plumbing
+under `CTR-XOBS-007`: its file, inode, xattrs, and publication operations never
+produce an observation row and never enter `Dobs`.
+
+After every member of `FUTURE_RECOVERY_SIMULATION_OBJECT_SET` has been observed,
+all required normalization and propagation edges are determined, every
+simulation object including the root stage and deployment temp is removed, and
+the exact sealed residue census proves zero simulation-object residue, the root
+supervisor MUST deterministically reduce the durable events to exactly one
+ordered `OBSERVATION_ROWS` row per sealed simulation object. Each row contains:
 
 ```text
 objectId, objectClass, exactPath, pathClass, creationStepId
@@ -818,6 +868,24 @@ nextObjectId and observedPropagationToNext
 actuallyPropagatedToProductionTarget
 normalization action/result and complete post-normalization set
 ```
+
+Row order is the sealed simulation-plan sequence, with `objectId` as a unique
+secondary assertion; duplicate, missing, extra, reordered, or post-cleanup
+events fail closed. `OBSERVATION_ROWS` canonical serialization is a single
+UTF-8 JSON array with no BOM or insignificant whitespace, lexicographically
+sorted object-member keys, lowercase JSON literals, base-10 integers without
+leading zeros, and shortest JSON escapes (UTF-8 characters remain unescaped
+except control characters, quote, and backslash). No floating-point value is
+allowed. The implementation MUST seal positive and adversarial serializer test
+vectors. The root supervisor freezes:
+
+```text
+Dobs = SHA-256(exact canonical OBSERVATION_ROWS bytes)
+```
+
+only after the zero-residue proof. Neither the canonical rows nor `Dobs` may be
+changed afterward, and no publication/control object may append a row before or
+after the freeze.
 
 Xattr listing, value reads, deletion, and readback use exact sealed absolute
 macOS tools and locale. Each value read MUST use `/usr/bin/xattr -px <name>
@@ -839,9 +907,9 @@ command ambiguity MUST be recorded and make
 
 ### CTR-XOBS-009 — Root-only normalization and propagation proof
 
-Normalization may occur only after the pre-normalization record is durable and
-only on exact observation-owned root-stage objects or the observation's exact
-deployment temp sibling. It may remove only the exact just-observed
+Normalization may occur only after the `OBJECT_PRE_OBSERVATION` event is
+durable and only on exact observation-owned root-stage objects or the exact
+observation deployment temp sibling. It may remove only the exact just-observed
 `com.apple.provenance` name/value/inode tuple. It MUST verify by complete list
 and readback that the post-normalization set equals the sealed expected set.
 Deletion/readback failure, inode/path drift, or any other attribute is fail
@@ -868,9 +936,10 @@ eligible for later R3 use. No staging provenance may remain on the temp.
 
 ### CTR-XOBS-010 — Same-filesystem deployment temp without replacement
 
-Only after all earlier root object rows remain valid may the transaction create
-the exact randomized temp sibling sealed under §2. It MUST use the exact future
-R3 creation/copy primitive and prove, before and after population:
+Only after all earlier simulation-object observation events remain valid may the
+transaction create the exact randomized temp sibling sealed under §2. It MUST
+use the exact future R3 creation/copy primitive and prove, before and after
+population:
 
 - target and parent realpaths/inodes remain the sealed objects;
 - temp and target share device/filesystem/volume identity;
@@ -883,15 +952,17 @@ R3 creation/copy primitive and prove, before and after population:
 - no rename, exchange, clone-over-target, link-over-target, chmod/chown/xattr on
   target, or service action occurs.
 
-After the final temp record is durable, the temp MUST be unlinked and directory
-contents read back. Failure to prove unlink or target identity is
+After the final temp observation/normalization events are durable, the temp MUST
+be unlinked, the deletion event made durable, and directory contents read back.
+Failure to prove unlink or target identity is
 `MANUAL_RECOVERY_REQUIRED`, never observation success.
 
 ### CTR-XOBS-011 — Exact after snapshot and zero mutation
 
-After all observation-owned objects are removed and before success may be
-terminal, the transaction MUST repeat every field in `CTR-XOBS-006`. Equality
-is exact for target bytes/Git blob/security metadata/xattrs, environment whole-
+After all simulation objects and then-existing publication temps are removed,
+and before `OBSERVATION_ROWS`/`Dobs` freeze or terminal publication, the
+transaction MUST repeat every field in `CTR-XOBS-006`. Equality is exact for
+target bytes/Git blob/security metadata/xattrs, environment whole-
 file digests/metadata/effective gate, controller/service/PID/generation/start
 time/binary/plist/argv/working-directory/listener/ancestry, exact health
 status/body bytes, catalog projection/digest, Grant projection/digest, and every
@@ -923,26 +994,91 @@ Any mismatch, uncertainty, transient drift, or missing proof forbids
 
 ### CTR-XOBS-012 — Durable receipts, mirror, and closed terminals
 
-The root transaction MUST use atomic no-clobber publication with fresh same-
-directory temp, file fsync, rename/link discipline appropriate to no-clobber,
-readback, and directory fsync for `PRE_RECORD`, object records, root receipt,
-and mirror. The root receipt is root:wheel `0600` under the exact root receipt
-class. The user-visible mirror is uid 502, group 20, `0600`, contains exactly
-the same non-secret canonical receipt bytes, and is published only after the
-root receipt is durable and read back. The receipt binds:
+The terminal-evidence publication graph MUST be the following exact finite
+total order. An implementation MUST reject any dependency edge not listed here:
+
+```text
+durable PRE_RECORD and append-only OBJECT_RECORDS journal
+  -> create/observe/normalize/remove every simulation object
+  -> after snapshot and zero simulation-object residue
+  -> freeze canonical OBSERVATION_ROWS and Dobs
+  -> atomically publish ROOT_OBSERVATION_RECEIPT.json
+  -> atomically publish its byte-identical user mirror
+  -> atomically publish detached TERMINAL_PUBLICATION_INDEX.json
+  -> external coordinator records the final index SHA-256 and metadata
+```
+
+`PRE_RECORD`, journal, root-receipt temp/final, mirror temp/final, and
+terminal-index temp/final are publication plumbing outside the simulation tuple
+set. Their creation, xattrs, normalization state, and propagation MUST NOT add
+an `OBSERVATION_ROWS` row or alter `Dobs`. Every publication object still has an
+exact sealed path/primitive and receives complete separately auditable metadata,
+xattr, fsync, readback, and residue checks under this Contract. Publication
+xattrs are never Recovery R3 compatibility evidence.
+
+All three final publications use a fresh exact same-directory temp, exclusive
+no-clobber creation, file fsync, atomic no-clobber rename/link discipline,
+readback, and directory fsync. The root receipt is canonical non-secret JSON,
+root:wheel `0600`, at `ROOT_OBSERVATION_RECEIPT.json`. It uses the same canonical
+JSON rules as `CTR-XOBS-008` and binds:
 
 - candidate ID, transaction/attempt IDs, accepted Spec and parent coordinates;
 - `D1`, `D2`, external observation seal hash, exact Gate path/digest;
 - root bootstrap/transaction/tool bytes and digests, OS/Darwin build, arch;
 - target-parent path/device/inode/filesystem/volume/security metadata;
 - source-subject manifest and every operation-signature digest;
-- every ordered object row and complete xattr tuple;
+- exact canonical `OBSERVATION_ROWS` bytes and `Dobs` for a complete
+  observation, or explicit `Dobs=null` plus the journal digest and incomplete
+  row IDs for a handled failure before the freeze;
 - normalization/delete/readback and propagation results;
 - before/after production snapshots and mutation ledger;
 - cleanup/residue census and old-stage non-mutation assertion; and
-- terminal, failure stage, `receiptUsableForRecovery`, and timestamps.
+- proposed terminal, failure stage, proposed receipt usability
+  (`pending_terminal_publication` or `false`), publication state
+  `PENDING_TERMINAL_INDEX`, and timestamps.
 
-Root receipt terminals are closed to:
+The root receipt contains neither its own length/hash/metadata nor any predicted
+or actual row for itself, its temp, the future mirror/temp, the future terminal
+index/temp, or other publication objects. Once the final receipt bytes are
+durable and read back, the root supervisor computes their exact byte length and
+SHA-256 without changing them.
+
+The root supervisor then copies those exact final receipt bytes, never a
+re-serialization, into a fresh sealed temp in the user-visible receipt
+directory, sets exact uid 502/group 20/mode `0600`, file-fsyncs, publishes
+atomically with no clobber, directory-fsyncs, and reads back. Exact receipt and
+mirror byte length and SHA-256 MUST be equal. Mirror xattrs and other metadata
+are checked and recorded only as publication metadata; they never supply a
+recovery tuple.
+
+Only after that equality proof may root canonically serialize and atomically
+publish root:wheel `0600` `TERMINAL_PUBLICATION_INDEX.json`. The detached index
+binds:
+
+- transaction/attempt IDs, exact Gate digest, candidate `D1`/`D2`/external seal
+  hash, accepted Spec/parent coordinates, and `Dobs`;
+- root receipt path, exact length/SHA-256, type/uid/gid/mode/link/device/inode/
+  realpath, complete publication-only xattr metadata, and fsync/readback proof;
+- mirror path and the same metadata, exact length/SHA-256 equality with the root
+  receipt, and fsync/readback proof;
+- absence of every sealed receipt/mirror/index temp and every simulation object;
+  and
+- one closed terminal, failure stage, final `receiptUsableForRecovery`, and
+  timestamps.
+
+The terminal index excludes itself and its temp, never contains its own hash or
+future publication-object observations, and is never mutated after publication.
+After index file fsync, atomic publication, readback, directory fsync, and a
+second complete temp/residue absence check, the external coordinator MUST hash
+the exact final index bytes and atomically no-clobber publish a uid 502/group 20/
+mode `0600` `TERMINAL_INDEX_READBACK_RECORD_CLASS` with file fsync, readback, and
+directory fsync. It records the index hash plus index path/length/type/uid/gid/
+mode/link/device/inode/realpath and publication-only xattr metadata. That
+external record is not an observation row, contains no self hash, and cannot
+modify the index.
+
+Effective root transaction terminals are closed to the terminal value in a
+valid durable index:
 
 ```text
 ROOT_XATTR_OBSERVATION_VERIFIED
@@ -953,12 +1089,30 @@ MANUAL_RECOVERY_REQUIRED
 `COMMITTED`, recovery/deployment success, `STOPPED_PREWRITE`, and R5 success are
 forbidden terminals. Unknown/quarantine/resource-fork/additional attributes,
 command failure, drift, missing cleanup, mismatched mirror, malformed/partial
-receipt, or any uncertainty sets `receiptUsableForRecovery=false`.
+receipt/index, or any uncertainty sets `receiptUsableForRecovery=false`.
 
-The root terminal `ROOT_XATTR_OBSERVATION_VERIFIED` still sets
+`ROOT_XATTR_OBSERVATION_VERIFIED` does not exist effectively until the index is
+durable, read back, directory-fsynced, every publication temp is absent, and the
+external coordinator records its hash. It still sets
 `receiptUsableForRecovery=pending_post_audits`; only `CTR-XOBS-014` can produce
 the external audited-consumption state. Stdout, exit status, AppleScript return,
-or mirror alone is never authoritative.
+receipt alone, or mirror alone is never authoritative.
+
+Reconciliation is deterministic and never republishes, repairs, or completes a
+partial graph after the root supervisor is gone:
+
+| Durable state | Reconciled result |
+|---|---|
+| Valid externally hashed index + all bound receipt/mirror bytes and metadata + no temp | exact index terminal |
+| Valid receipt and optional valid mirror, but no valid index | `MANUAL_RECOVERY_REQUIRED`; publication incomplete; no retry |
+| Index missing/invalid, index/receipt/mirror mismatch, unexpected final/temp, or unknown metadata | `MANUAL_RECOVERY_REQUIRED`; receipt unusable |
+| PRE_RECORD/root-start proof but no valid receipt | `AUTHORIZATION_OUTCOME_UNKNOWN` and `MANUAL_RECOVERY_REQUIRED` |
+| Valid failure index proving known no-mutation and cleanup | `OBSERVATION_FAILED`; never recovery-consumable |
+
+A still-live, mechanically identified original root supervisor may finish its
+already-started total order; no coordinator, later process, or new authorization
+attempt may do so. A failure index may bind `Dobs=null`; a verified index MUST
+bind the exact frozen non-null `Dobs` and complete rows.
 
 ### CTR-XOBS-013 — Concurrency, faults, signals, partial writes, and cleanup
 
@@ -978,33 +1132,43 @@ xattr list/read/canonicalization
 xattr delete and readback
 deployment temp create/populate/normalize/unlink
 before/after production snapshot
-PRE_RECORD/object-record/receipt/mirror temp-write, fsync, publish, and dir-fsync
+PRE_RECORD/object-event append/fsync/readback
 root-stage cleanup
+simulation cleanup/residue proof and OBSERVATION_ROWS/Dobs freeze
+root-receipt, mirror, and terminal-index temp-write, file-fsync, publish,
+  readback, dir-fsync, and temp-absence checks
 ```
 
 `INT`, `TERM`, and `HUP` MUST enter one idempotent bounded cleanup path, remove
-the exact temp sibling and all objects attributed to this transaction, prove
-zero new residue, and publish `OBSERVATION_FAILED` unless state is uncertain,
-which publishes `MANUAL_RECOVERY_REQUIRED`. The root bootstrap MUST supervise a
-killable worker so injected worker `KILL` is detected and cleaned by the
-root-owned supervisor. A `KILL` of the root supervisor itself is untrappable;
+the exact temp sibling and all ephemeral simulation/control/temp objects
+attributed to this transaction, prove zero new simulation/temp residue, and
+publish a valid `OBSERVATION_FAILED` failure index unless state is uncertain,
+which publishes `MANUAL_RECOVERY_REQUIRED`. No signal/fault path may append a
+publication-object row, change frozen `OBSERVATION_ROWS`/`Dobs`, publish success
+before the index, or complete a partial publication from a new process. The root
+bootstrap MUST supervise a killable worker so injected worker `KILL` is
+detected and cleaned by the root-owned supervisor. A `KILL` of the root
+supervisor itself is untrappable;
 the coordinator MUST NOT repeat authorization and MUST classify missing
 terminal proof as `AUTHORIZATION_OUTCOME_UNKNOWN` /
 `MANUAL_RECOVERY_REQUIRED`. It may not claim zero residue without a later
 separately authorized cleanup authority.
 
 Handled success, ordinary failure, trapped signal, and supervised worker-KILL
-MUST leave zero transaction-created stage/temp residue. Cleanup targets are
-exact sealed paths and inodes; recursive unresolved paths, globs, broad parent
+MUST leave zero transaction-created simulation/stage/temp residue. Durable
+PRE_RECORD/journal/receipt/mirror/index finals are evidence, not residue, and
+their exact presence must match the reconciliation table in `CTR-XOBS-012`.
+Cleanup targets are exact sealed paths and inodes; recursive unresolved paths,
+globs, broad parent
 deletion, or old-stage cleanup are forbidden. Cleanup failure cannot be hidden
 by receipt publication.
 
 ### CTR-XOBS-014 — Independent post-observation dual audit
 
-After a root `ROOT_XATTR_OBSERVATION_VERIFIED` receipt and exact mirror appear,
-two new independent Reviewers, distinct from the Author, acceptance actors,
-Build Agent, pre-execution Reviewers, Gate Reviewer, and executor, MUST audit in
-parallel:
+After a valid externally hashed `ROOT_XATTR_OBSERVATION_VERIFIED` terminal index
+binds the exact root receipt and mirror, two new independent Reviewers, distinct
+from the Author, acceptance actors, Build Agent, pre-execution Reviewers, Gate
+Reviewer, and executor, MUST audit in parallel:
 
 ```text
 Post-Observation Receipt Authenticity Reviewer
@@ -1012,9 +1176,12 @@ Post-Observation Production Boundary Reviewer
 ```
 
 Both bind the exact observation seal, Gate, attempt, root receipt, mirror,
-transaction/tool/OS/parent/operation/object tuple coordinates. The Receipt
-Reviewer reconstructs the layered seal and authenticates every receipt field,
-object row, xattr representation, propagation edge, and mirror byte. The
+terminal index and external index hash, `Dobs`, and transaction/tool/OS/parent/
+operation/object tuple coordinates. The Receipt Reviewer reconstructs the
+layered seal, recomputes canonical `OBSERVATION_ROWS` and `Dobs`, authenticates
+every receipt field, simulation row, xattr representation, propagation edge,
+mirror byte, publication metadata record, index field, and all temp exclusions,
+and proves no publication object contributed a row. The
 Boundary Reviewer independently re-runs fresh read-only production snapshots,
 proves the target/env/services/PID/health/catalog/Grant/workflow state matches
 the receipt's after state and admissible before state, and proves zero
@@ -1022,9 +1189,10 @@ transaction residue without deleting anything.
 
 Any `REVISE`, missing evidence, stale/mixed seal, inability to read, or drift
 sets the observation state `MANUAL_RECOVERY_REQUIRED` and the receipt unusable.
-Only two PASS reports for the same exact receipt digest may produce an external
-`ROOT_XATTR_OBSERVATION_AUDITED_V1` consumption record under `GOAL_STATE_ROOT`.
-That record binds both audit paths/digests/identities/verdicts and sets:
+Only two PASS reports for the same exact receipt/index/`Dobs` tuple may produce
+an external `ROOT_XATTR_OBSERVATION_AUDITED_V1` consumption record under
+`GOAL_STATE_ROOT`. That record binds both audit paths/digests/identities/verdicts
+and sets:
 
 ```text
 ROOT_XATTR_OBSERVATION_VERIFIED = YES
@@ -1040,23 +1208,34 @@ It does not authorize R3 build, execution, or production mutation.
 
 A later Recovery R3 MUST be a brand-new candidate and transaction built under
 the accepted recovery parent. It MUST NOT reuse R2 or observation executable
-bytes/stages. It may consume only the exact root receipt plus mirror, both post-
-audit reports, and the external audited-consumption record as evidence.
+bytes/stages. Its compatibility input may consume only the canonical
+`OBSERVATION_ROWS`/`Dobs` from the exact root receipt plus the receipt and
+terminal-index identities/digests bound by both post-audit reports and the
+external audited-consumption record. It may verify mirror equality through the
+index/audits, but MUST NOT consume receipt/mirror/index/journal/temp/control
+xattrs or any other publication-object metadata as a recovery tuple.
 
 Before R3 sealing, its manifest and detached seal MUST include exact digests and
 paths for that evidence and freeze the complete compatibility vector:
 
 ```text
 observation candidate seal and accepted observation Spec coordinates
-root receipt/mirror and post-audit record digests
+canonical OBSERVATION_ROWS and Dobs
+root receipt, terminal index, external index-hash record, mirror-equality proof,
+  and post-audit record digests
 root bootstrap and observation transaction tool identities
 OS version, Darwin build, architecture
 target-parent realpath/device/inode/filesystem/volume/security metadata
 each source object class/path policy/byte digest/Git blob/metadata/ACL/xattr tuple
 each absolute tool/version/binary digest and exact operation signature
-each object-class pre/post xattr tuple and propagation edge
+each simulation-object-class pre/post xattr tuple and propagation edge
 final-target preimage metadata/ACL/xattr policy
 ```
+
+The vector MUST reject any observation row whose object ID/path is not in the
+sealed `FUTURE_RECOVERY_SIMULATION_OBJECT_SET`, any missing simulation row, any
+publication/control row, and any `Dobs` mismatch. Publication metadata may
+authenticate evidence handling but cannot satisfy any parent xattr prerequisite.
 
 Source object/digest/xattr, OS/build/arch, tool bytes/version, target-parent,
 filesystem/volume, operation signature, or object-class mapping drift makes the
@@ -1086,8 +1265,9 @@ MUST NOT be emitted.
 This authoring PR MUST remain Draft, change exactly this one Spec, preserve the
 parent, and pass governance integrity, frontmatter, required sections, stable
 IDs, bidirectional Contract/Acceptance coverage, authority/relations,
-non-circular seal graph, structure, diff hygiene, docs-only scope, and secret
-scan checks. This Contract grants no implementation exception.
+non-circular seal graph, finite terminal-publication graph, structure, diff
+hygiene, docs-only scope, and secret scan checks. This Contract grants no
+implementation exception.
 
 ## 11. Acceptance
 
@@ -1171,17 +1351,23 @@ scan checks. This Contract grants no implementation exception.
 
 ### ACC-XOBS-007 — Object inventory and operation signatures
 
-- Contracts: `CTR-XOBS-007`
-- Method: execute each required class, helpers/policies of cardinality zero/one/
-  many, and inject unenumerated objects, alternate tools/defaults/locale/env,
-  source digest/xattr drift, wrong order, and operation fallback
+- Contracts: `CTR-XOBS-007`, `CTR-XOBS-012`
+- Method: execute each required simulation class, helpers/policies and explicit
+  future-recovery-other of cardinality zero/one/many; enumerate all publication
+  plumbing; topologically sort the declared runtime publication graph; inject
+  set overlap, implicit/generic other, unenumerated objects, publication-object
+  rows, self/future-object edges, alternate tools/defaults/locale/env, source
+  digest/xattr drift, wrong order, and operation fallback
 - Environment: macOS root-stage simulation then authorized observation only
   after all gates
-- Required evidence: complete object/edge inventory and exact signature records
-- Expected result: every actual object and edge is sealed; no implicit primitive
-  or object exists
-- Failure condition: missing/extra object, incomplete source tuple, tool/argv/
-  env/OS/parent drift, or fallback succeeds
+- Required evidence: both disjoint object inventories, complete simulation
+  edges, publication DAG/topological order, and exact signature records
+- Expected result: every actual object is sealed in exactly one set; only finite
+  future-recovery simulation objects produce rows; no implicit primitive,
+  object, publication row, or dependency cycle exists
+- Failure condition: missing/extra/overlapping object, publication row,
+  self/future edge, incomplete source tuple, tool/argv/env/OS/parent drift, or
+  fallback succeeds
 
 ### ACC-XOBS-008 — Canonical per-object xattr matrix
 
@@ -1193,11 +1379,15 @@ scan checks. This Contract grants no implementation exception.
   inode swap
 - Environment: fresh root-owned objects per case on the qualified macOS volume
 - Required evidence: exact commands/outputs/exit codes, canonical hex/length/
-  digest math, source tuples, object rows, and receipt usability
+  digest math, source tuples, append-only events, canonical
+  `OBSERVATION_ROWS`/`Dobs`, publication-object exclusion trace, and receipt
+  usability
 - Expected result: complete exact tuple or explicit ABSENT; every ambiguity and
-  forbidden state is recorded and fails closed
+  forbidden state is recorded and fails closed; rows freeze only after cleanup,
+  and publication-object xattrs cannot change `Dobs`
 - Failure condition: name-only acceptance, unknown attr passes, command failure
-  passes, or representation is normalized permissively
+  passes, representation is normalized permissively, publication plumbing adds
+  a row, or byte/key/order mutation preserves `Dobs`
 
 ### ACC-XOBS-009 — Normalization and propagation
 
@@ -1243,42 +1433,56 @@ scan checks. This Contract grants no implementation exception.
 
 ### ACC-XOBS-012 — Receipt, mirror, and terminal integrity
 
-- Contracts: `CTR-XOBS-012`
-- Method: crash/corrupt/truncate/reorder every receipt and mirror publication
-  boundary; mismatch every coordinate; inject forbidden terminal and secret
+- Contracts: `CTR-XOBS-008`, `CTR-XOBS-012`
+- Method: mechanically topologically sort the exact terminal-publication graph;
+  reject every added self/future/publication-row edge; byte-mutate, corrupt,
+  truncate, reorder, or partially publish every root-receipt, mirror, and
+  terminal-index temp/write/fsync/rename/readback/dir-fsync boundary; mismatch
+  every path/length/hash/metadata/`Dobs`/coordinate; leave each temp; inject
+  forbidden terminal, index self-hash, future-object row, and secret
 - Environment: isolated receipt roots with root/user ownership simulation
-- Required evidence: fsync/publication trace, raw receipt/mirror bytes/digests,
-  redaction results, and recovery-usability decision
-- Expected result: exact durable mirror; only closed terminals; success remains
-  pending until post audits
-- Failure condition: partial/mismatched receipt passes, stdout controls state,
-  secret leaks, or `COMMITTED`/recovery success appears
+- Required evidence: canonical row/receipt/index bytes, `Dobs`, root receipt/
+  mirror/index lengths and digests, exact equality, publication metadata,
+  fsync/readback/temp-absence trace, external index-hash record, reconciliation
+  table result, redaction result, and recovery-usability decision
+- Expected result: finite total order, immutable receipt, exact durable mirror,
+  detached externally hashed index, no publication row, no temp, only closed
+  terminals, and success effective only after index durability/readback
+- Failure condition: cycle, byte mutation or partial/mismatched publication
+  passes, receipt/index self-reference, publication xattr becomes tuple evidence,
+  stdout controls state, secret leaks, or `COMMITTED`/recovery success appears
 
 ### ACC-XOBS-013 — Fault, signal, and cleanup matrix
 
 - Contracts: `CTR-XOBS-013`
 - Method: command failure, timeout, partial write, fsync/publish failure, INT/
-  TERM/HUP at every named window, worker KILL, supervisor KILL, concurrent lock,
+  TERM/HUP at every named window including row freeze and every receipt/mirror/
+  index publication substep, worker KILL, supervisor KILL, concurrent lock,
   cleanup error, pre-existing old stages, and coordinator restart
 - Environment: isolated root supervisor/payload and filesystem mocks
 - Required evidence: PRE_RECORD, lock/process identity, state sequence, signal/
-  fault trace, exact cleanup targets, residue census, invocation count, receipt
+  fault trace, exact cleanup targets, residue census, invocation count,
+  receipt/mirror/index reconciliation state
 - Expected result: handled paths have zero new residue and no early success;
   supervisor KILL is unknown/manual with no repeated authorization or false
   cleanup claim
-- Failure condition: repeat dialog, broad deletion, old-stage mutation, early
-  success, residue hidden, or ambiguous outcome passes
+- Failure condition: repeat dialog, broad deletion, old-stage mutation, frozen
+  rows change, partial publication is completed by a new process, early success,
+  residue hidden, or ambiguous outcome passes
 
 ### ACC-XOBS-014 — Post-observation dual audit
 
 - Contracts: `CTR-XOBS-014`
 - Method: independent reconstruction by two roles; tamper receipt/mirror/Gate/
-  seal/audit identity; fresh production and residue readback; mixed audit tuple
+  terminal-index/external-index-hash/seal/audit identity; mutate `Dobs`; inject
+  a publication-object row; fresh production and residue readback; mixed audit
+  tuple
 - Environment: exact production host after root execution
 - Required evidence: two reports and digests, fresh boundary snapshot, receipt
-  authentication chain, role matrix, and external consumption record
-- Expected result: only two exact-same-receipt PASS audits make evidence
-  consumable; no production action is authorized
+  and terminal-index authentication chain, row/index reconstruction, role
+  matrix, and external consumption record
+- Expected result: only two exact-same-receipt/index/`Dobs` PASS audits make
+  evidence consumable; no production action is authorized
 - Failure condition: one audit, reused role, stale/mixed evidence, cleanup by
   Reviewer, or direct recovery readiness inference
 
@@ -1287,13 +1491,16 @@ scan checks. This Contract grants no implementation exception.
 - Contracts: `CTR-XOBS-015`
 - Method: construct a new R3 seal with exact evidence, then independently mutate
   every source digest/xattr, OS/build/arch, tool/version/binary, parent/filesystem/
-  volume, operation signature, object mapping, observed tuple, and propagation
-  edge at pre-seal and execution time
+  volume, operation signature, simulation-object mapping, observed tuple,
+  propagation edge, `OBSERVATION_ROWS` byte, `Dobs`, receipt/index identity, and
+  publication-object xattr at pre-seal and execution time
 - Environment: isolated recovery build/root-stage harness; no production write
-- Required evidence: R3 manifests/seal, compatibility matrix, tuple readbacks,
-  stop receipts, and zero-prewrite mutation census
+- Required evidence: R3 manifests/seal, compatibility matrix, `Dobs` and
+  receipt/index bindings, tuple readbacks, publication-exclusion trace, stop
+  receipts, and zero-prewrite mutation census
 - Expected result: exact vector is a prerequisite only; every drift stops
-  prewrite and requires new observation
+  prewrite and requires new observation; publication-object xattrs are ignored
+  as tuple supply and cannot make a missing/mismatched simulation row pass
 - Failure condition: receipt reused across drift, partial vector match passes,
   R2/observation executable bytes are reused, or observation bypasses recovery
   audits/Gate
@@ -1302,8 +1509,9 @@ scan checks. This Contract grants no implementation exception.
 
 - Contracts: `CTR-XOBS-016`
 - Method: governance/frontmatter/required-section/stable-ID/relations and
-  bidirectional coverage checks; seal-cycle test; structure verifier; diff and
-  docs-only scope; gitleaks/secret/env-content scan; Draft PR inspection
+  bidirectional coverage checks; seal-cycle and terminal-publication-cycle
+  tests; structure verifier; diff and docs-only scope; gitleaks/secret/env-
+  content scan; Draft PR inspection
 - Environment: clean isolated worktree at exact PR head
 - Required evidence: commands, exit codes, exact diff, base/head pins, scan
   output, and Draft state
@@ -1323,11 +1531,11 @@ scan checks. This Contract grants no implementation exception.
 | `CTR-XOBS-005` | `ACC-XOBS-005` |
 | `CTR-XOBS-006` | `ACC-XOBS-006` |
 | `CTR-XOBS-007` | `ACC-XOBS-007` |
-| `CTR-XOBS-008` | `ACC-XOBS-008` |
+| `CTR-XOBS-008` | `ACC-XOBS-008`, `ACC-XOBS-012` |
 | `CTR-XOBS-009` | `ACC-XOBS-009` |
 | `CTR-XOBS-010` | `ACC-XOBS-010` |
 | `CTR-XOBS-011` | `ACC-XOBS-011` |
-| `CTR-XOBS-012` | `ACC-XOBS-012` |
+| `CTR-XOBS-012` | `ACC-XOBS-007`, `ACC-XOBS-012` |
 | `CTR-XOBS-013` | `ACC-XOBS-013` |
 | `CTR-XOBS-014` | `ACC-XOBS-014` |
 | `CTR-XOBS-015` | `ACC-XOBS-015` |
@@ -1393,11 +1601,11 @@ environment/time tuple; a test definition alone proves nothing.
 - Evidence/Claims considered: `DEC-XOBS-006`
 - What would reopen: separate accepted cleanup/recovery authority
 
-### ALT-XOBS-008 — Treat the root receipt as direct R3 authority
+### ALT-XOBS-008 — Treat terminal observation evidence as direct R3 authority
 
 - Disposition: rejected
-- Reason: receipt authenticity and compatibility need independent post-audits,
-  and recovery remains governed by the accepted parent
+- Reason: receipt/index authenticity and `Dobs` compatibility need independent
+  post-audits, and recovery remains governed by the accepted parent
 - Evidence/Claims considered: `DEC-XOBS-007`, `CLM-XOBS-004`
 - What would reopen: none; the authority separation is intentional
 
@@ -1413,7 +1621,8 @@ PRODUCTION_ROLLBACK = NOT APPLICABLE; production target is never changed
 OBSERVATION_FAILURE_CONTAINMENT = exact transaction-owned cleanup, then
   OBSERVATION_FAILED or MANUAL_RECOVERY_REQUIRED
 OLD_STAGE_HANDLING = identify as pre-existing evidence if visible; never delete
-RECEIPT_COMPATIBILITY = exact closed vector under CTR-XOBS-015; no fuzzy match
+RECEIPT_COMPATIBILITY = exact OBSERVATION_ROWS/Dobs plus receipt/index identity
+  vector under CTR-XOBS-015; no fuzzy match; no publication-xattr tuple input
 ```
 
 There is no automatic rerun after authorization cancellation, denial, crash, or
@@ -1453,6 +1662,7 @@ NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 16
 CONTRACTS_WITH_ACCEPTANCE = 16
+TERMINAL_PUBLICATION_GRAPH = FINITE_ACYCLIC
 AUTHORING_READY_FOR_REVIEW = YES, subject to CTR-XOBS-016 checks
 ```
 
@@ -1465,8 +1675,9 @@ or production conformance.
 1. This exact docs-only head remains proposed on a Draft PR.
 2. A new independent Root Xattr Observation Authority Reviewer binds the exact
    base, head, Spec blob/SHA-256, parent commit/blob/SHA-256, all primitive IDs,
-   16 Contracts, 16 Acceptance items, threats, seal graph, and Owner instruction
-   digest, then returns `ACCEPT` or `REVISE` in a persistent PR record.
+   16 Contracts, 16 Acceptance items, threats, seal graph, finite terminal-
+   publication graph, and Owner instruction digest, then returns `ACCEPT` or
+   `REVISE` in a persistent PR record.
 3. `REVISE` returns to a new authoring revision. No artifact build,
    authorization, or observation may begin.
 4. Only after `ACCEPT`, mayf3 or an explicitly authorized maintainer perform a
@@ -1481,9 +1692,10 @@ or production conformance.
 7. Only then may a new Observation Build Agent start. Acceptance alone does not
    display an authorization dialog; `CTR-XOBS-004` still requires two
    exact-same-seal candidate reviews and an independent Gate.
-8. Only a verified root receipt plus the two independent post-observation PASS
-   audits can become eligible evidence for a brand-new Recovery R3 under
-   `CTR-XOBS-015`.
+8. Only a verified root receipt, detached terminal index, external index-hash
+   record, and the two independent post-observation PASS audits can make the
+   exact `OBSERVATION_ROWS`/`Dobs` eligible evidence for a brand-new Recovery R3
+   under `CTR-XOBS-015`.
 
 The Spec Author, semantic Reviewer, acceptance actor, final-head Reviewer,
 Observation Build Agent, two pre-execution Reviewers, Gate Reviewer, root
