@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_TRANSITION_DIRECT_ROLLBACK_AMENDMENT_V1
-status: proposed
+status: accepted
 type: child amendment (spec-only; docs-only)
 amends:
   - AGENT_CORE_WORKFLOW_TRANSITION_ROOT_XATTR_OBSERVATION_V1
@@ -916,6 +916,18 @@ implementation, rollback authorization, or production conformance.
    be authored under the accepted recovery parent as amended by this Spec,
    following the full `CTR-REC-001`…`CTR-REC-016` chain with `CTR-DRB-003`'s
    preserved obligations and `CTR-DRB-004`'s staging-tuple license.
+
+### Acceptance record (2026-09-01 lifecycle-only acceptance)
+
+```text
+REVIEWED_BASE                = 9ce88de6cbb6fe93c19f8e39b0065f95de1b7ffc
+REVIEWED_SPEC_COMMIT         = f83dce94428b451047a4e472d93130244d7d2fe9
+REVIEW_VERDICT               = PASS (0 blockers; 3 non-blocking observations)
+REVIEW_COMMENT               = PR #136 issuecomment 5494269132
+REQUIRED_FIXES               = NONE
+SEMANTIC_DELTA_AFTER_REVIEW  = NONE
+ACCEPTED_BY                  = Owner standing directive WORKFLOW_TRANSITION_FAST_GO_LIVE_V1 (2026-09-01)
+```
 
 The amendment author, semantic reviewer, acceptance actor, final-head
 reviewer, and all later recovery-chain roles MUST remain distinct.
