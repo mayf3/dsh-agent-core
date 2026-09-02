@@ -58,7 +58,7 @@
  */
 
 import { readFileSync } from 'node:fs'
-import { chmod, chown, mkdir, open, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { mkdir, open, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { dirname } from 'node:path'
 import {
@@ -142,7 +142,14 @@ export const MEMORY_HEADER = [
 ].join('\n')
 
 function esc(text, limits) {
-  return guardField(text, 'escaped field', limits).replace(ESCAPE, '\\$1')
+  const escaped = guardField(text, 'escaped field', limits).replace(ESCAPE, '\\$1')
+  // The stored form is what parse() will decode, so the ESCAPED length is
+  // bounded here as well: a legal write can never produce a value that a
+  // later read would refuse (write-permits/read-refuses would brick the file).
+  if (escaped.length > limits.maxFieldChars) {
+    throw new MemoryGuardError('escaped field (stored)', limits.maxFieldChars, escaped.length)
+  }
+  return escaped
 }
 
 function unescape(text, limits) {
@@ -208,7 +215,11 @@ export function escapeFieldValue(text, limits = MEMORY_GUARD_LIMITS) {
 
 function tagsToText(tags, limits) {
   if (tags.length > limits.maxTagCount) throw new MemoryGuardError('tag count', limits.maxTagCount, tags.length)
-  return tags.map((t) => `\`${esc(t, limits)}\``).join(' ')
+  const line = tags.map((t) => `\`${esc(t, limits)}\``).join(' ')
+  // The joined line is what parse() decodes back, so it carries the same
+  // stored-form bound as any other field (write-permits/read-refuses symmetry).
+  if (line.length > limits.maxFieldChars) throw new MemoryGuardError('tags line', limits.maxFieldChars, line.length)
+  return line
 }
 
 function tagsFromText(text, limits) {
@@ -262,17 +273,21 @@ export function renderEntry(entry, { limits = MEMORY_GUARD_LIMITS } = {}) {
 
 /**
  * Render a full MEMORY.md document from entries. The document bound is
- * checked additively BEFORE any per-entry rendering: each field at most
- * doubles under escaping and the fixed per-entry overhead is < 128 chars, so
- * `2 × (raw input) + 128 × entries + header` is a strict upper bound.
+ * checked additively BEFORE any per-entry rendering. It is a strict upper
+ * bound: escaped fields at most double (raw × 2), id/updatedAt render
+ * verbatim (counted × 2 for margin), the tags line costs ≤ 5 chars per tag
+ * plus 2× its content, and the fixed per-entry scaffolding is ≤ 320 chars.
  */
 export function renderEntries(entries, { limits = MEMORY_GUARD_LIMITS } = {}) {
   let upper = MEMORY_HEADER.length
   for (const entry of entries) {
-    upper += 128
+    upper += 320
       + 2 * String(entry.title ?? '').length
       + 2 * String(entry.source ?? '').length
+      + 2 * String(entry.id ?? '').length
+      + 2 * String(entry.updatedAt ?? '').length
       + String(entry.content ?? '').length
+      + 5 * (entry.tags ?? []).length
       + 4 * (entry.tags ?? []).reduce((n, t) => n + String(t).length, 0)
   }
   if (upper > limits.maxRenderChars) {
@@ -415,15 +430,16 @@ export async function writeEntries(memoryFile, entries, { limits = MEMORY_GUARD_
     const handle = await open(tmp, 'w', (previous?.mode ?? 0o644) & 0o7777)
     try {
       await handle.write(rendered, 0, 'utf8')
+      if (previous) {
+        // Carry owner/group/mode of the replaced file (same-user writes are
+        // no-ops; a root-side repair write restores the original ownership),
+        // BEFORE the fsync so the synced metadata is final.
+        await handle.chmod(previous.mode & 0o7777)
+        if (process.getuid?.() === 0) await handle.chown(previous.uid, previous.gid)
+      }
       await handle.sync()
     } finally {
       await handle.close()
-    }
-    if (previous) {
-      // Carry owner/group/mode of the replaced file (same-user writes are
-      // no-ops; a root-side repair write restores the original ownership).
-      await chmod(tmp, previous.mode & 0o7777)
-      if (process.getuid?.() === 0) await chown(tmp, previous.uid, previous.gid)
     }
     await rename(tmp, memoryFile)
   } catch (error) {
