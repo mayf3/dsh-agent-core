@@ -134,7 +134,9 @@ test('R3: a missing or stale source-turn proof fails BEFORE Router delivery', as
     assert.equal(envelope.error.code, 'internal_error')
   }
   assert.equal(router.deliveries.length, 0, 'zero Router deliveries')
-  assert.equal(auditRows(file).length, 0, 'no audit rows for unprovable calls')
+  const rows = auditRows(file)
+  assert.equal(rows.length, 3, 'every unprovable call has one L0 denial row')
+  assert.ok(rows.every((row) => row.phase === 'denial' && row.code === 'internal_error'))
 })
 
 test('R3: self-send is rejected before delivery and before any audit intent', async () => {
@@ -146,7 +148,19 @@ test('R3: self-send is rejected before delivery and before any audit intent', as
   )
   assert.equal(envelope.error.code, 'self_send_not_supported')
   assert.equal(router.deliveries.length, 0)
-  assert.equal(auditRows(file).length, 0)
+  assert.deepEqual(auditRows(file).map((row) => [row.phase, row.code]), [['denial', 'self_send_not_supported']])
+})
+
+test('R3/R4: a trusted legal opaque source id with underscores is preserved exactly', async () => {
+  const router = fakeRouter()
+  const { access } = buildAccess({ router })
+  const sourceAgentId = 'agt_stock_agent'
+  const envelope = await access.handlers.agent_session_send.send(
+    VALID_ARGS,
+    { callerAgentId: sourceAgentId, sourceTurnExecutionId: PROOF },
+  )
+  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted' } })
+  assert.equal(router.deliveries[0].controlOpts.messageOrigin.sourceAgentId, sourceAgentId)
 })
 
 test('R3/R4: one deliver carries the frozen inter_agent messageOrigin built from trusted context', async () => {
@@ -165,6 +179,22 @@ test('R3/R4: one deliver carries the frozen inter_agent messageOrigin built from
 })
 
 // ------------------------------------------------------- R7 + R12 receipt
+
+test('R12: authoritative argument validation denial writes one L0 row and zero deliveries', async () => {
+  const router = fakeRouter()
+  const { access, file } = buildAccess({ router })
+  const envelope = await access.handlers.agent_session_send.send(
+    { ...VALID_ARGS, sessionId: 'forged' },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF },
+  )
+  assert.equal(envelope.error.code, 'invalid_arguments')
+  assert.equal(router.deliveries.length, 0)
+  const rows = auditRows(file)
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].phase, 'denial')
+  assert.equal(rows[0].sourceAgentId, CALLER)
+  assert.equal(rows[0].code, 'invalid_arguments')
+})
 
 test('R12: intent row precedes delivery; outcome row follows the receipt', async () => {
   const file = join(mkdtempSync(join(tmpdir(), 'asm-order-')), 'audit.jsonl')
@@ -331,6 +361,7 @@ test('deliver failures map to exact §5 classes and never retry', async () => {
     [Object.assign(new Error('cap'), { envelope: 'not_admitted', code: 'AGENT_PROCESS_QUEUE_CAP' }), 'queue_capacity_exceeded'],
     [Object.assign(new Error('fence'), { envelope: 'not_admitted' }), 'not_admitted'],
     [Object.assign(new Error('nf'), { code: 'AGENT_NOT_FOUND' }), 'target_not_found'],
+    [Object.assign(new Error('disabled'), { code: 'AGENT_DISABLED', proven: 'zero_byte' }), 'target_disabled'],
     [Object.assign(new Error('unknown'), { envelope: 'outcome_unknown' }), 'outcome_unknown'],
     [new Error('process exploded'), 'outcome_unknown'],
   ]

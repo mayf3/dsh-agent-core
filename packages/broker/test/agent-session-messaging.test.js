@@ -104,6 +104,23 @@ test('LOCAL relay preserves structured parent failures through the child invoke 
   assert.equal(failure.errorCode, 'self_send_not_supported')
 })
 
+test('LOCAL relay maps a rejected or malformed parent response to parent_rpc_ambiguous without retry', async () => {
+  for (const response of ['throw', 'missing-envelope', 'malformed-success', 'undeclared-failure']) {
+    let calls = 0
+    const handlers = createRelayHandlers(agentSessionMessagingManifest, async () => {
+      calls += 1
+      if (response === 'throw') throw new Error('response lost after possible delivery')
+      if (response === 'malformed-success') return { ok: true, result: { ok: true, result: undefined } }
+      if (response === 'undeclared-failure') return { ok: true, result: { ok: false, error: { code: 'mystery' } } }
+      return undefined
+    })
+    const failure = await handlers.send({}, { targetAgentId: 'agt_target', message: 'x', timeoutSeconds: 0 })
+    assert.equal(failure.errorCode, 'outcome_unknown', response)
+    assert.match(failure.detail, /parent_rpc_ambiguous/, response)
+    assert.equal(calls, 1, `${response}: relay never replays an ambiguous send`)
+  }
+})
+
 test('BROKER_RPC_METHOD stays in lockstep between relay and router', () => {
   assert.equal(BROKER_RPC_METHOD, 'agent-core/broker')
 })
