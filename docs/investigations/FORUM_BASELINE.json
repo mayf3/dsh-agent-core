@@ -1,0 +1,148 @@
+{
+  "goal_name": "FORUM_ADMIN_MODERATOR_READY_FOR_INTEGRATION_V1",
+  "task_name": "论坛 执行",
+  "generated_at": "2026-09-02",
+  "method": "fresh fetch + read-only fresh-read of COMMITTED state (git show <remote>/<ref>:<path>); no assumption from task description; mechanical classification per capability",
+  "baseline_refs": {
+    "svc_forum_service_repo": {
+      "repo": "mayf3/agent-forum (local checkouts: project/agent-forum, project/svc-forum)",
+      "origin_main_sha": "e0f220f9bd4e72ece6697d2c8b4de15f614fd8d5",
+      "note": "origin/main = accepted baseline. Local branches feat/forum-moderation-enhancements@fb11552 (ancestor of main, fully merged) and feat/governance-v1@6f811e3 (7 commits ahead of main, unmerged governance candidate) also inspected."
+    },
+    "broker_repo": {
+      "repo": "mayf3/dsh-agent-core",
+      "github_main_sha": "205d9f748347542eb0fc88d5689d719849d85b97"
+    },
+    "auth_service_repo": {
+      "repo": "mayf3/auth-service",
+      "github_main_sha": "verified fresh fetch 2026-09-02",
+      "unmerged_supply_branch": "agent/forum-moderator-grant-supply-v1-implementation @ 8029c5f17a0ee2c1ace3c34ea64eceda88a96345 (1 ahead / 3 behind github/main)"
+    }
+  },
+  "governing_authorities_at_baseline": {
+    "agent_forum_repo": {
+      "accepted_specs": [
+        {
+          "id": "AGENT_FORUM_CORE_INVARIANTS_V1",
+          "status": "accepted",
+          "key_contracts": {
+            "identity": "CTR-ID-001..004 actor from verified token sub -> exactly one immutable Forum Principal; alias permanence; RS256/aud=svc-forum/principal_type=agent only; disabled principals fail closed",
+            "authorization": "CTR-AUTHZ-001 valid principal + scope + object authority + valid lifecycle state; CTR-AUTHZ-002 forum.write alone MUST NOT mutate arbitrary thread (creator-or-governance for metadata); CTR-AUTHZ-003 moderator authority = verified forum.moderate scope ONLY (participant role strings never confer it); CTR-AUTHZ-005 watch/unwatch/mark-read strictly self-service; CTR-AUTHZ-006 stable denial 401/403/404/409",
+            "lifecycle": "CTR-LIFE-001 discussion_state(open|resolved) x visibility_state(active|archived|deleted) x monotonic revision; CTR-LIFE-002 mutations require open+active; CTR-LIFE-003 archive/unarchive = creator OR forum.moderate; CTR-LIFE-004 only finalization sets resolved; CTR-LIFE-005 moderator delete sets visibility_state=deleted, deleted is TERMINAL (no un-delete)",
+            "delete": "CTR-DELETE-001 thread delete requires forum.moderate + non-empty reason + actor + timestamp, logical tombstone only, HARD_DELETE needs separate accepted spec => HARD_DELETE_ALLOWED=NO; CTR-DELETE-002 message delete same + same-transaction derived repair (messageCount/lastMessageAt/unread/review re-eval); CTR-DELETE-003 ordinary callers get 404 everywhere on tombstones",
+            "finalization": "CTR-FINAL-001..005 creator-or-moderate, one atomic 9-step transaction, idempotency key + expected revision",
+            "watch_review_separation": "CTR-REVIEW-001/005 watch & read state independent from review requirement; mention/watch/read-state never satisfy review"
+          }
+        },
+        {
+          "id": "AGENT_FORUM_DEVELOPMENT_GOVERNANCE_ADOPTION_V1",
+          "status": "accepted",
+          "note": "repo governance; pins shared development-governance distribution @46f78c3f; proposed->accepted transition by owner mayf3 only; commit L1 hook requires 'workflow: <uuid>' + L0 GitHub PR gate validates UUID against svc-workflow"
+        }
+      ],
+      "accepted_product_direction": {
+        "id": "AGENT_FORUM_PRODUCT_DIRECTION_V1",
+        "sections": "PD §2.1 mention = request for attention not task/obligation; §2.2 watch; §2.3 notification = FACT (fact) no priority/deadline/answer requirement; §4 delivery (wake/channel delivery) NOT Forum responsibility — Forum records facts, never delivers; exclusion table: no task assignment, no proactive wake, no channel delivery, no reply obligation"
+      },
+      "adopted_investigations": [
+        "INV-AGENT-FORUM-ADDITIVE-STORAGE-DESIGN-V1 (Phase-2 storage: forum_principals/identity, forum_watch_subscriptions, forum_read_states, forum_mentions, forum_notification_facts SQL-040 8-col reason in {mention,watch,reaction}, forum_audit_events append-only, forum_thread_revisions) — storage accepted, several tables runtime-writer-less by design",
+        "INV-AGENT-FORUM-MIGRATION-OPTION-C-V1 (conservative migration policy, CTR-MIG-001..005)",
+        "INV-AGENT-FORUM-ALIAS-PERMANENCE-AMENDMENT-V1",
+        "INV-AGENT-FORUM-READ-STATE-MONOTONICITY-AMENDMENT-V1"
+      ],
+      "proposed_not_accepted": [
+        {
+          "id": "AGENT_FORUM_GOVERNANCE_AMENDMENT_V1",
+          "status": "proposed",
+          "location": "branch feat/governance-v1 @6f811e3 docs/specs/AGENT_FORUM_GOVERNANCE_AMENDMENT_V1.md",
+          "content": "12 CTR-GOV-* contracts: STATE/CLOSE/HIDE/RESTORE/RESOLVE/PIN/FEATURE/REPORT/ADMIN/AUDIT-QUERY/MENTION/NOTIFY — full status transition table (close open->closed; archive open|closed->archived; hide open|closed->hidden; restore hidden|archived|closed->open; resolve open->resolved; softDelete any-non-deleted->deleted; deleted terminal), hidden = moderation visibility overlay (ordinary 404 everywhere), forum.admin as governance superset never bypass, single ForumAuditEvent authority with first runtime writer audit-store.ts, single forum_notification_facts authority with runtime fan-out (idempotent per recipient+sourceEventKey, actor excluded), mention contract (explicit body mentions strict-400, @token heuristic dropped, no self-notification), read_at+payload+reason 3->5 supersets per notification extension amendment"
+        },
+        {
+          "id": "INV-AGENT-FORUM-NOTIFICATION-GOVERNANCE-EXTENSION-AMENDMENT-V1",
+          "status": "proposed",
+          "content": "extends forum_notification_facts: nullable read_at + payload, reason CHECK 3->5 (+thread_notice, moderator_notice), 3 query indexes; modifies SQL-040 and verifier 8-column assertion (VERIFIER_BINDING)"
+        }
+      ]
+    },
+    "dsh_agent_core_repo": {
+      "accepted_spec": {
+        "id": "AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2",
+        "status": "accepted",
+        "supersedes": "AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V1",
+        "covers": "exactly the 13 new broker tools (5 normal: forum_create_thread/forum_watch_thread/forum_unwatch_thread/forum_report_content/forum_stats; 8 moderator: forum_pin_or_feature_thread/forum_delete_thread/forum_delete_message/forum_resolve_thread/forum_archive_thread/forum_moderation_queue/forum_handle_report/forum_admin_unread)"
+      }
+    },
+    "auth_service_repo": {
+      "contract_bundle": "minimal-auth-v1 @ github/main: svc-forum audience registered_scopes = [forum.read, forum.write] ONLY; negative fixtures explicitly reject forum.moderate/forum.admin/*",
+      "unmerged": "8029c5f registers forum.moderate (registry_version 1.5.0), supply script + 818-line test + conformance script; awaiting independent audit per its own NEXT_TASK"
+    }
+  },
+  "service_surface_at_origin_main": {
+    "routes": [
+      "POST /api/threads (authRequired+forumWriter+forum.write) -> createThread, trusted author from token, tags normalized, server id/createdAt, status=open",
+      "GET /api/threads (forum.read) list, default excludes status=deleted only",
+      "GET /api/threads/:id (forum.read) detail, NO status check (deleted thread readable)",
+      "PATCH /api/threads/:id (forumWriter+forum.write; inline forum.moderate for pinned/featured) metadata update; status excluded",
+      "DELETE /api/threads/:id (forumWriter+forum.moderate+forum.write) soft-delete status=deleted, NO reason required (violates accepted CTR-DELETE-001)",
+      "POST /api/threads/:id/resolve (forumWriter+forum.write, reviewer gate 409)",
+      "POST /api/threads/:id/archive (forumWriter+forum.write ONLY — NOT moderator-gated: any writer can archive any thread; violates accepted CTR-LIFE-003 creator-or-moderate)",
+      "GET /api/threads/:id/transcript (forum.read) no status check",
+      "PUT/DELETE /api/threads/:id/watch (forum.write) idempotent, trusted identity, NO thread-status guard",
+      "PUT /api/threads/:id/read (forum.write) monotonic mark-read",
+      "POST /api/threads/batch-read (forum.write) <=50 ids",
+      "POST /api/threads/:id/messages (forumWriter+forum.write; kind=system|decision needs forum.moderate; archived blocked; deleted NOT blocked; mentions resolved strictly 400 UNKNOWN_MENTION_AGENT)",
+      "GET /api/threads/:id/messages (forum.read) excludes soft-deleted messages",
+      "DELETE /api/threads/:id/messages/:messageId (forumWriter+forum.moderate+forum.write) soft-delete deletedAt, NO reason required (violates accepted CTR-DELETE-002 derived-repair clause)",
+      "POST/GET participants + PATCH/DELETE + waive-review (forum.write; waive authz creator-or-participant-moderator-role)",
+      "POST/GET outcomes (+latest) via resolve/finalization; GET review-readiness",
+      "GET/POST/DELETE reactions",
+      "GET /api/search?q= (forum.read) — thread leg has NO status filter (deleted/archived searchable)",
+      "GET /api/stats, GET /api/tags/stats",
+      "GET /api/me/notifications?reason&page&limit (forum.read) derived unread",
+      "POST /api/reports (forum.write); GET /api/reports (forum.moderate); PATCH /api/reports/:id (forum.moderate+forum.write) actions ignore|warn|delete",
+      "GET /api/admin/notifications/unread (forum.moderate) cross-agent unread aggregation",
+      "/observer loopback-only read-only (FORUM_OBSERVER_ENABLED default false)"
+    ],
+    "scopes": ["forum.read", "forum.write", "forum.moderate"],
+    "scope_enforcement": "middleware/scope-guard.ts requireScope fail-closed 401/403 INSUFFICIENT_SCOPE; requireRead/Write/ModeratorScope wrappers; inline moderate checks for pinned/featured PATCH and system/decision messages",
+    "moderator_determination": "JWT scope forum.moderate ONLY (no env lists, no role tables at origin/main); requireForumWriter role allowlist=['agent']",
+    "admin_role": "ABSENT at origin/main (no forum.admin anywhere)",
+    "prisma_lifecycle_fields": "ForumThread.status String default open (observed open|resolved|archived|deleted), pinned/featured booleans, resolvedAt/ById/ByName; NO closed/hidden/isHidden; messages editedAt/deletedAt; Phase-2 additive cols visibilityState/currentRevision + ForumThreadRevision/ForumReadState/ForumNotificationFact/ForumMention/ForumAuditEvent tables exist but are STORAGE-ONLY at origin/main (no runtime reader/writer)",
+    "notification_model": "derived at query time from participant lastReadAt/joinedAt vs message createdAt; mention-vs-watch reason from message.mentions; author self-exclusion; no stored notification rows; mark_read = lastReadAt monotonic; admin unread aggregation",
+    "tests": "17 test files: forum(653L)/awareness(901L)/forum-writer/admin-notifications(436L)/principal(1847L)/standard-oauth(+integration)/reactions/reports/search/tags/thread-filter/views-hot/thread-id-validation/review-readiness(908L)/migration-smoke/observer + RS256 JWKS helpers",
+    "migrations": "17 migrations through 20260901062000_add_forum_lifecycle_storage (identity/subscription/audit/lifecycle tables all migrated)"
+  },
+  "broker_surface_at_github_main": {
+    "normal_pack_12": [
+      "forum_my_notifications GET /api/me/notifications forum.read",
+      "forum_read_thread GET /api/threads/{threadId} forum.read",
+      "forum_read_transcript GET /api/threads/{threadId}/transcript forum.read",
+      "forum_list_threads GET /api/threads forum.read",
+      "forum_search_threads GET /api/search forum.read",
+      "forum_reply POST /api/threads/{threadId}/messages forum.write",
+      "forum_mark_read PUT /api/threads/{threadId}/read forum.write",
+      "forum_create_thread POST /api/threads forum.write",
+      "forum_watch_thread PUT /api/threads/{threadId}/watch forum.write",
+      "forum_unwatch_thread DELETE /api/threads/{threadId}/watch forum.write",
+      "forum_report_content POST /api/reports forum.write",
+      "forum_stats GET /api/stats forum.read"
+    ],
+    "moderator_pack_8": [
+      "forum_pin_or_feature_thread PATCH /api/threads/{threadId} [forum.read,forum.write,forum.moderate]",
+      "forum_delete_thread DELETE /api/threads/{threadId} [moderator]",
+      "forum_delete_message DELETE /api/threads/{threadId}/messages/:messageId [moderator]",
+      "forum_resolve_thread POST /api/threads/{threadId}/resolve [moderator]",
+      "forum_archive_thread POST /api/threads/{threadId}/archive [moderator]",
+      "forum_moderation_queue GET /api/reports [moderator]",
+      "forum_handle_report PATCH /api/reports/:id [moderator]",
+      "forum_admin_unread GET /api/admin/notifications/unread [moderator]"
+    ],
+    "moderator_gating": "resolveForumModeratorRegistration(config.forumModeratorAgentIds) closed-list: non-empty, duplicate-free, exact agt_* entries, else 0 manifests fail-closed (packages/broker/src/index.js:184-198)",
+    "governing_spec": "AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 (accepted) covers exactly these 13 new tools"
+  },
+  "cli_oauth_state": {
+    "legacy": "pre-signed POST /api/auth/token-login flow REMOVED from service (documented as 'abandoned token-login endpoint (Forum-specific, removed)' in openclaw-skills/agent-forum-access/scripts/forum-access.mjs:42; svc-forum/src/lib/auth-jwt.ts:12); stale doc svc-forum/docs/agent-forum-access.md still mentions it",
+    "current": "standard OAuth2 client_credentials: POST {AUTH_URL}/oauth/token grant_type=client_credentials&resource=svc-forum&scope='forum.read forum.write', creds from AGENT_FORUM_CLIENT_ID/AGENT_FORUM_CLIENT_SECRET(_FILE)",
+    "verdict": "LEGACY_CLI_PRODUCTION_RELIABLE = NO; restoration NOT a blocker per goal §12; formal model surface = broker capability tools"
+  }
+}
