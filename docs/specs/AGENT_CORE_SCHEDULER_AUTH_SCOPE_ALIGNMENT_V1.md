@@ -124,62 +124,153 @@ remain distinct events.
 
 ## 4. Current State
 
-- `STATE-SA-001`: At the exact proposal base, Scheduler self-service defines
-  `MANAGE_ANY_SCOPE = 'scheduler.manage:any'` and passes it directly to `assertGrant` with
-  resource `scheduler`.
-- `STATE-SA-002`: Focused Scheduler tests expect `scheduler.manage:any` in the proof seam,
-  and the composed production-runtime cross-agent test expects it in the OAuth token request.
-- `STATE-SA-003`: The accepted parent deliberately defines `scheduler.manage:any` as the
-  local cross-agent predicate and defines both `*:self` labels as local outcomes rather
-  than token scopes.
-- `STATE-SA-004`: No compatible exact auth-service wire scope is authorized by current
-  dsh-agent-core authority, so real external proof cannot satisfy the accepted local
-  predicate under the pinned grammar.
+### STATE-SA-001 — Scheduler reuses the local predicate at the proof seam
+- Subject: Scheduler self-service cross-agent authorization proof.
+- As of commit or artifact revision: dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`, source blob `4a236fed3b201ac8c4de59d86cbbc414beee4ba7`.
+- Environment: isolated source worktree; no runtime or production process.
+- Observed at: `2026-09-02T21:23:05Z`.
+- State assertion: `MANAGE_ANY_SCOPE = 'scheduler.manage:any'` is passed directly to `assertGrant` with resource `scheduler`.
+- Basis: `OBS-SA-002`.
+
+### STATE-SA-002 — Focused tests expect the colon form at the external seam
+- Subject: Scheduler unit/cross-agent tests and composed production-runtime history test.
+- As of commit or artifact revision: dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`; test blobs listed in `OBS-SA-003`.
+- Environment: isolated source worktree; tests inspected but not executed for this descriptive State.
+- Observed at: `2026-09-02T21:23:05Z`.
+- State assertion: focused tests expect `scheduler.manage:any` in the proof seam, including the composed OAuth token request body.
+- Basis: `OBS-SA-003`.
+
+### STATE-SA-003 — Accepted local policy uses colon-form predicates
+- Subject: accepted `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1` authorization boundary.
+- As of commit or artifact revision: parent blob `b3cebc5d3bd64013d8b605311e2cc12cf52cab7f`.
+- Environment: dsh-agent-core repository object database at proposal base.
+- Observed at: `2026-09-02T21:23:05Z`.
+- State assertion: `scheduler.manage:any` is the local cross-agent predicate; `scheduler.read:self` and `scheduler.manage:self` are local outcomes, not token scopes.
+- Basis: `OBS-SA-001`.
+
+### STATE-SA-004 — Current local proof value is incompatible with external grammar
+- Subject: the exact Scheduler proof input evaluated against auth-service scope grammar.
+- As of commit or artifact revision: dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622` and auth-service `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de`.
+- Environment: isolated read-only source worktrees; no auth-service or production mutation.
+- Observed at: `2026-09-02T21:23:05Z`.
+- State assertion: `scheduler.manage:any` fails the pinned scope grammar, while `scheduler.manage-any` satisfies it.
+- Basis: `OBS-SA-002`, `OBS-SA-004`, `CLM-SA-001`.
 
 ## 5. Observations
 
-- `OBS-SA-001` (2026-09-03, repository object inspection): the accepted parent file has
-  blob `b3cebc5d3bd64013d8b605311e2cc12cf52cab7f`; its `CTR-AUTH-002` names the exact local
-  predicate `scheduler.manage:any`.
-- `OBS-SA-002` (2026-09-03, exact-base source inspection):
-  `packages/scheduler/src/self-service.js` uses the same colon-form string both as local
-  vocabulary and as the `assertGrant` scope argument.
-- `OBS-SA-003` (2026-09-03, exact-base test inspection): the three named Scheduler/runtime
-  proof tests assert the colon form at that external seam, including the composed HTTP token
-  body.
-- `OBS-SA-004` (2026-09-03, pinned auth-service source/manifest inspection): at external
-  head `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de`, the exact scope grammar
-  `^[a-z][a-z0-9-]*\.[a-z][a-z0-9._-]*$` excludes colon and admits the proposed hyphen form.
-- `OBS-SA-005` (2026-09-03, composition inspection): production composition forwards the
-  requested scope; no production composition product-code change is required for this
-  alignment.
+### OBS-SA-001 — Parent authority preserves local colon-form predicates
+- Subject: `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1`, especially `CTR-AUTH-001` and `CTR-AUTH-002`.
+- Source revision: dsh-agent-core proposal base `9e15808f336e7964f5059e871c32f25e6045e622`, parent blob `b3cebc5d3bd64013d8b605311e2cc12cf52cab7f`.
+- Environment: local repository object database.
+- Observed at: `2026-09-02T21:23:05Z`.
+- Method: verify the file blob with `git rev-parse` and inspect the authorization Contracts.
+- Result: the parent names `scheduler.manage:any` locally and says both `*:self` labels are local outcomes rather than token scopes.
+- Provenance: `docs/specs/AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1.md` at the stated blob.
+
+### OBS-SA-002 — Self-service passes the colon form to assertGrant
+- Subject: `packages/scheduler/src/self-service.js` cross-agent proof path.
+- Source revision: blob `4a236fed3b201ac8c4de59d86cbbc414beee4ba7` at dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`.
+- Environment: isolated dsh-agent-core source worktree.
+- Observed at: `2026-09-02T21:23:05Z`.
+- Method: inspect constant definitions and the `adminAuthorized` `assertGrant` call.
+- Result: one colon-form string, `scheduler.manage:any`, serves as local vocabulary and the external scope argument; resource is `scheduler`.
+- Provenance: exact-base source file and repository object named above.
+
+### OBS-SA-003 — Focused tests assert colon-form external proof input
+- Subject: the two Scheduler proof test files and composed production-runtime history test.
+- Source revision: blobs `b48b58e02d997393cdd99aac94a8a2aa500b1429`, `b5bba97fcee963cffd5e7fbc893e9660922f8a60`, and `b1acd3d82b885944ef66ea722eba3ae2652f2414` at dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`.
+- Environment: isolated dsh-agent-core source worktree; no test execution.
+- Observed at: `2026-09-02T21:23:05Z`.
+- Method: inspect proof-seam assertions and the composed OAuth request-body assertion.
+- Result: all three test surfaces expect `scheduler.manage:any` at the external seam.
+- Provenance: `packages/scheduler/test/self-service.test.js`, `packages/scheduler/test/cross-agent.test.js`, and `packages/production-runtime/test/compose-cross-agent-history.test.js` at the stated blobs.
+
+### OBS-SA-004 — Auth-service grammar rejects colon and admits hyphen
+- Subject: auth-service V1 OAuth scope parser and minimal-auth V1 contract manifest incorporated by the V2 authority.
+- Source revision: auth-service `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de`; source blob `f97ddf417f367a9e87d1a271d566b1807c12a84d`, manifest blob `983719d905f9609f6662b71ffb303a817ea292db`.
+- Environment: isolated auth-service read-only source worktree; no service or data mutation.
+- Observed at: `2026-09-02T21:23:05Z`.
+- Method: inspect parser line 3 and manifest `scope_wire_format.item_pattern`, then evaluate the two exact literals against `^[a-z][a-z0-9-]*\.[a-z][a-z0-9._-]*$`.
+- Result: `scheduler.manage:any` does not match; `scheduler.manage-any` matches with namespace `scheduler`.
+- Provenance: `src/lib/oauth/v1/scope.ts` and `contract-bundles/minimal-auth-v1/contract-manifest.json` at the stated revision/blobs.
+
+### OBS-SA-005 — Production composition forwards the requested scope
+- Subject: production-runtime self-service Scheduler authorization composition.
+- Source revision: `packages/production-runtime/src/compose.js` blob `c407b064fe846446888109bcc219514a7d15b094` at dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`.
+- Environment: isolated dsh-agent-core source worktree; no runtime execution.
+- Observed at: `2026-09-02T21:23:05Z`.
+- Method: inspect the composed `assertGrant` transport from Scheduler access to auth request.
+- Result: composition forwards its requested scope and does not hard-code a Scheduler scope.
+- Provenance: exact-base composition source file and repository object named above.
 
 ## 6. Claims and assumptions
 
-- `CLM-SA-001`: Distinguishing the local predicate string from the auth wire scope is both
-  necessary and sufficient to remove this grammar mismatch without changing local policy.
-  Basis: `OBS-SA-002`, `OBS-SA-004`, and the parent's local/external boundary.
-- `CLM-SA-002`: A successful exact proof of resource `scheduler` plus wire scope
-  `scheduler.manage-any` may establish only the already-defined local predicate
-  `scheduler.manage:any`; it creates no broader or differently named authority.
-  Basis: closed mapping in `CTR-SA-001` and fail-closed proof in `CTR-SA-002`.
-- `CLM-SA-003`: No product-code composition change is necessary because the existing proof
-  transport forwards the requested scope unchanged. Basis: `OBS-SA-005`. If implementation
-  evidence disproves this claim, work MUST stop for a new or amended Spec; the four-file
-  closure MUST NOT be silently expanded.
+### CLM-SA-001 — A distinct wire scope resolves the observed grammar mismatch
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-SA-001`, `EVD-SA-002`.
+- Contradicted by evidence: none known.
+- Uncertainty: source evidence proves compatibility at the two pinned revisions; future revisions require re-verification.
+
+### CLM-SA-002 — Exact external proof can establish only the existing local predicate
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-SA-003`.
+- Contradicted by evidence: none known.
+- Uncertainty: this is a bounded policy mapping; actual authorization remains unproved until future implementation tests and separately authorized external/runtime evidence pass.
+
+### CLM-SA-003 — Production composition product code needs no alignment change
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-SA-004`.
+- Contradicted by evidence: none known.
+- Uncertainty: source inspection covers exact base only. If implementation evidence contradicts this Claim, work MUST stop for new or amended authority rather than expand the four-file closure.
 
 No normative Contract depends on an unresolved assumption.
 
 ## 7. Evidence relations
 
-- `EVD-SA-001`: `OBS-SA-001` + `OBS-SA-002` establish that the colon form is normative
-  locally but is currently reused at the external proof seam.
-- `EVD-SA-002`: `OBS-SA-004` establishes the incompatibility of that wire value and the
-  grammar compatibility of `scheduler.manage-any`.
-- `EVD-SA-003`: `EVD-SA-001` + `EVD-SA-002` support the one-to-one mapping frozen by
-  `DEC-SA-001`; they do not support aliases or a local predicate rename.
-- `EVD-SA-004`: `OBS-SA-003` + `OBS-SA-005` identify the smallest discriminating regression
-  surface and support the exact four-file closure.
+### EVD-SA-001 — Local authority and source support predicate/wire separation
+- Source observations: `OBS-SA-001`, `OBS-SA-002`.
+- Target: `CLM-SA-001`.
+- Relation: SUPPORTS.
+- Bound coordinates: dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`, parent/source blobs stated above, observed `2026-09-02T21:23:05Z`.
+- Strength/sufficiency: strong for intentional local naming and current external reuse; sufficient only together with `EVD-SA-002`.
+- Limitations: does not prove external grammar behavior or runtime success.
+- Provenance: exact repository objects in `OBS-SA-001` and `OBS-SA-002`.
+
+### EVD-SA-002 — External grammar supports the hyphen-form wire value
+- Source observations: `OBS-SA-004`.
+- Target: `CLM-SA-001`.
+- Relation: SUPPORTS.
+- Bound coordinates: auth-service `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de`,
+  source/manifest blobs stated above, observed `2026-09-02T21:23:05Z`.
+- Strength/sufficiency: strong for exact admission/rejection at the pinned revision; with
+  `EVD-SA-001`, sufficient for the alignment Claim.
+- Limitations: does not prove audience registration, Grant existence, deployment, or runtime
+  authorization.
+- Provenance: exact auth-service repository objects in `OBS-SA-004`.
+
+### EVD-SA-003 — Parent policy and grammar support the one-to-one proof mapping
+- Source observations: `OBS-SA-001`, `OBS-SA-004`.
+- Target: `CLM-SA-002`.
+- Relation: SUPPORTS.
+- Bound coordinates: parent blob `b3cebc5d3bd64013d8b605311e2cc12cf52cab7f`,
+  auth-service `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de`, observed
+  `2026-09-02T21:23:05Z`.
+- Strength/sufficiency: strong and sufficient for the bounded policy mapping, but not runtime
+  conformance.
+- Limitations: supports no alias, `scheduler.admin`, self token scope, Grant, or activation.
+- Provenance: exact objects and methods in `OBS-SA-001` and `OBS-SA-004`.
+
+### EVD-SA-004 — Scope forwarding supports a test-only runtime-test change
+- Source observations: `OBS-SA-003`, `OBS-SA-005`.
+- Target: `CLM-SA-003`.
+- Relation: SUPPORTS.
+- Bound coordinates: dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`,
+  test/composition blobs stated above, observed `2026-09-02T21:23:05Z`.
+- Strength/sufficiency: strong for the exact-base composition shape and sufficient to bound
+  the planned production-runtime edit to the focused test.
+- Limitations: source inspection does not replace future executed regression evidence; a
+  contradictory implementation result forces governance STOP.
+- Provenance: exact repository objects in `OBS-SA-003` and `OBS-SA-005`.
 
 ## 8. Decisions
 
@@ -281,31 +372,69 @@ operations with their own evidence.
 
 ## 10. Acceptance
 
-- `ACC-SA-001` (`CTR-SA-001`, `CTR-SA-002`, `CTR-SA-005`): focused source/unit evidence
-  proves a cross-agent operation asks once for exact scope `scheduler.manage-any` and resource
-  `scheduler`, then exposes only local predicate/denial vocabulary `scheduler.manage:any`.
-- `ACC-SA-002` (`CTR-SA-002`, `CTR-SA-003`): positive evidence proves exact verified success
-  permits the existing cross-agent operation; negative table evidence proves colon-form,
-  alias, `scheduler.admin`, denial, error, malformed, and unavailable proof cannot authorize,
-  cannot trigger a second request, and cannot read or mutate the target.
-- `ACC-SA-003` (`CTR-SA-004`): self read and self mutation tests prove successful local
-  behavior with zero `assertGrant` / token requests.
-- `ACC-SA-004` (`CTR-SA-005`, `CTR-SA-006`): cross-agent Scheduler tests retain existing
-  ownership and result semantics, and diff inspection proves the exact four-file closure with
-  no production composition source change.
-- `ACC-SA-005` (`CTR-SA-001`, `CTR-SA-002`, `CTR-SA-003`, `CTR-SA-005`): the composed
-  production-runtime test captures the OAuth request body and proves exact wire scope
-  `scheduler.manage-any`; it simultaneously preserves target-owned identity, absence of
-  source Grant/credential propagation into execution, exactly-once/no-replay behavior, and
-  linked job/occurrence/run/session/target/correlation/parent/terminal history truth.
-- `ACC-SA-006` (`CTR-SA-006`): the exact new/focused tests and relevant scheduler and
-  production-runtime suites pass under the repository-pinned Node runtime, and repository
-  structure/governance checks pass.
-- `ACC-SA-007` (`CTR-SA-007`, `CTR-SA-008`): governance review confirms the acyclic DAG,
-  exact local/external pins, Owner acceptance gate, and zero Grant/credential/registry/
-  database/deployment effects.
-- `ACC-SA-008` (`CTR-SA-009`): migration review confirms no data migration; rollback review
-  proves a four-file preimage restore and forbids alias/dual-scope fallback.
+### ACC-SA-001 — Exact proof tuple and stable local vocabulary
+- Contracts: `CTR-SA-001`, `CTR-SA-002`, `CTR-SA-005`.
+- Method: focused source inspection plus unit test of one authorized cross-agent operation.
+- Environment: isolated implementation worktree at the future accepted implementation head.
+- Required evidence: exact diff, executed test command/result, captured `assertGrant` arguments, and returned local denial/policy labels.
+- Expected result: one call uses scope `scheduler.manage-any` and resource `scheduler`; local vocabulary remains `scheduler.manage:any`.
+- Failure condition: wrong tuple/call count, a colon-form wire request, or any local predicate/label rename.
+
+### ACC-SA-002 — Exact success and fail-closed negative matrix
+- Contracts: `CTR-SA-002`, `CTR-SA-003`.
+- Method: table-driven unit tests with an exact-success stub and colon/alias/admin/denial/error/malformed/unavailable cases.
+- Environment: isolated Scheduler test process with no production service, Grant, or credential.
+- Required evidence: executed matrix results, proof-call ledger, and target store read/mutation ledger.
+- Expected result: only exact verified success authorizes; every negative case denies with one or zero calls as applicable, no alternate request, and no target access/mutation.
+- Failure condition: any negative authorizes, any fallback/second spelling occurs, or the target is read or mutated.
+
+### ACC-SA-003 — Self access makes no external proof request
+- Contracts: `CTR-SA-004`.
+- Method: self read and self mutation unit tests with an assert-fail-if-called proof stub.
+- Environment: isolated Scheduler test process using caller-owned fixture data.
+- Required evidence: executed test results, successful self-operation results, and zero-call proof ledger.
+- Expected result: self operations succeed under local ownership with zero `assertGrant` or token requests.
+- Failure condition: any external proof request, including either `*:self` label or a substitute.
+
+### ACC-SA-004 — Stable semantics and exact four-file closure
+- Contracts: `CTR-SA-005`, `CTR-SA-006`.
+- Method: focused Scheduler regression tests plus exact accepted-base-to-head diff inspection.
+- Environment: isolated implementation worktree; no production process.
+- Required evidence: executed results and name-status/stat diff covering the complete implementation candidate.
+- Expected result: ownership/results remain unchanged; only the four named files change and production composition source is untouched.
+- Failure condition: semantic drift, a fifth file, or any production-runtime product-code change.
+
+### ACC-SA-005 — Composed exact wire proof and preserved HistoryStore truth
+- Contracts: `CTR-SA-001`, `CTR-SA-002`, `CTR-SA-003`, `CTR-SA-005`.
+- Method: composed production-runtime cross-agent test with local OAuth capture and credential-propagation rejection seams.
+- Environment: isolated test process with disposable stores and no production network/service.
+- Required evidence: executed result, captured OAuth body, proof call count, execution payload inspection, and HistoryStore queries.
+- Expected result: body scope is `scheduler.manage-any`; target identity, no source Grant/credential propagation, exactly once/no replay, and linked job/occurrence/run/session/target/correlation/parent/terminal truth all remain proved.
+- Failure condition: wrong/alternate scope, leaked source authority material, replay, identity mismatch, or broken/missing history linkage.
+
+### ACC-SA-006 — Focused suites and repository gates
+- Contracts: `CTR-SA-006`.
+- Method: run exact focused tests/relevant suites under the repository-pinned Node runtime, then structure/governance checks.
+- Environment: isolated implementation worktree with proxy variables unset.
+- Required evidence: exact commands, exit statuses, test totals, structure output, and governance output bound to exact base/head.
+- Expected result: every command passes, changed-file closure is exact, and structure violations are zero.
+- Failure condition: any failure, skipped required suite, unpinned runtime, scope drift, or new structure violation.
+
+### ACC-SA-007 — Authority DAG and zero-production boundary
+- Contracts: `CTR-SA-007`, `CTR-SA-008`.
+- Method: independent exact-head Spec governance review and external/local authority-edge audit.
+- Environment: docs-only candidate; read-only repository evidence; no production mutation.
+- Required evidence: reviewed/final heads, parent/external pins, reviewer verdict, DAG audit, and zero-effect audit.
+- Expected result: DAG is acyclic, future auth CCR depends downstream on this accepted final head, Owner gate remains explicit, and no Grant/credential/registry/database/deploy effect occurred.
+- Failure condition: circular/missing authority, unbound review, premature authority claim, prohibited effect, or production authority other than `none`.
+
+### ACC-SA-008 — Migration and rollback are bounded and alias-free
+- Contracts: `CTR-SA-009`.
+- Method: exact diff/preimage review and rollback procedure audit.
+- Environment: isolated source/test candidate; no data migration or production rollback execution.
+- Required evidence: four-file preimage identities, migration diff, rollback steps, and external-action separation checklist.
+- Expected result: no data migration; rollback restores the four preimages without aliases/dual scope and does not claim external state changed.
+- Failure condition: data/schema mutation, incomplete preimage, alias/fallback, or conflation with Grant/auth/runtime rollback.
 
 Acceptance of this Spec does not itself satisfy implementation, external auth, production,
 or canary acceptance. Those events require their own exact-head and runtime evidence.
