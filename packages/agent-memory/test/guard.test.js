@@ -112,6 +112,29 @@ describe('memory guard: bounds precede every String.replace', () => {
     }
   })
 
+
+  test('write-permits/read-refuses symmetry: a field whose STORED form exceeds the bound refuses at render (no brick)', () => {
+    // 4096 all-special chars escape to exactly 8192 (boundary: legal, and
+    // parseable again); 4097 escape to 8194 > 8192 — refused BEFORE any IO.
+    const boundary = renderEntry(entry({ title: '*'.repeat(4096) }))
+    assert.equal(parseEntries(boundary)[0].title, '*'.repeat(4096))
+    guardError(() => renderEntry(entry({ title: '*'.repeat(4097) })))
+    guardError(() => renderEntry(entry({ source: '#'.repeat(4097) })))
+  })
+
+  test('a joined tags line over the stored bound refuses at render', () => {
+    const tags = Array.from({ length: 64 }, (_, i) => 't'.repeat(130) + String(i))
+    guardError(() => renderEntry(entry({ tags })))
+  })
+
+  test('document bound includes id and updatedAt (truly strict upper bound)', () => {
+    const fat = [entry({}), { ...entry({}), id: 'x'.repeat(40_000_000) }]
+    const err = guardError(() => renderEntries(fat))
+    assert.equal(err.which, 'rendered document')
+    const fat2 = [entry({}), { ...entry({}), updatedAt: 'u'.repeat(40_000_000) }]
+    guardError(() => renderEntries(fat2))
+  })
+
   test('loadEntries refuses an oversized file BEFORE reading/parsing it', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'agent-memory-guard-'))
     try {

@@ -243,11 +243,11 @@ try {
   const handle = await open(tmp, 'w', info.mode & 0o7777)
   try {
     await handle.write(out, 0, 'utf8')
+    try { await handle.chown(info.uid, info.gid) } catch { /* best effort when not the owner */ }
     await handle.sync()
   } finally {
     await handle.close()
   }
-  try { await chown(tmp, info.uid, info.gid) } catch { /* best effort when not the owner */ }
   // Preimage gate: the live file must still be exactly what we analyzed.
   const gateStat = await stat(file)
   const gateSha = sha256(await readFile(file))
@@ -272,7 +272,21 @@ try {
   console.log(JSON.stringify(report, null, 1))
   console.log(`${TOOL}: APPLIED — backup ${backupPath}, ${validations.rewrittenCount} line(s) rewritten, post-validate PASS`)
   process.exit(0)
-} catch (error) {
+}
+catch (error) {
+  report.applied = false
+  report.error = error.message
+  if (error.code === 'PREIMAGE_GATE') {
+    // The live file was modified by someone else after our analysis: it is
+    // not ours to touch. Leave it byte-exact as the concurrent writer left
+    // it (never clobber their newer content with the analyzed preimage).
+    report.restoredFrom = null
+    report.leftUntouched = true
+    await writeReport(report).catch(() => {})
+    console.error(JSON.stringify(report, null, 1))
+    console.error(`${TOOL}: REFUSED — ${error.message} (live file left untouched)`)
+    process.exit(2)
+  }
   const mutated = backupPath !== undefined
     && (await stat(file).then(async () => sha256(await readFile(file)) !== rawSha).catch(() => true))
   let restored = null
@@ -280,10 +294,9 @@ try {
     await restoreFromBackup(backupPath)
     restored = backupPath
   }
-  report.applied = false
-  report.error = error.message
   report.restoredFrom = restored
+  await writeReport(report).catch(() => {})
   console.error(JSON.stringify(report, null, 1))
   console.error(`${TOOL}: FAILED — ${error.message}${restored ? ` (original restored from ${restored}, sha verified)` : ' (no mutation had been performed)'}`)
-  process.exit(error.code === 'PREIMAGE_GATE' ? 2 : 1)
+  process.exit(1)
 }
