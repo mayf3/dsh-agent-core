@@ -89,11 +89,13 @@ export class HistoryStore {
 
   /** Read immutable facts, heal projections, then atomically publish RAM state. */
   async load() {
-    const { state, corruptLines } = readHistoryState(this, { empty: true })
-    await healHistoryPartitions(state)
-    this._installState(state)
-    this._reportCorruptLines(corruptLines)
-    this._loaded = true
+    return this._lock.runExclusive(async () => {
+      const { state, corruptLines } = readHistoryState(this, { empty: true })
+      await healHistoryPartitions(state)
+      this._installState(state)
+      this._reportCorruptLines(corruptLines)
+      this._loaded = true
+    })
   }
 
   // ── engine-facing record API (called at lifecycle boundaries) ──────────

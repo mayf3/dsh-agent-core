@@ -54,6 +54,27 @@ test('ACC-006 two preloaded writers re-read under lock and preserve monotonic se
   assert.deepEqual(new Set(fresh.queryRuns({}).runs.map((run) => run.job_id)), new Set(['writer-a', 'writer-b']))
 })
 
+test('ACC-006 load read-heal-install runs after an already-started writer under the same lock', async () => {
+  const dir = historyDir()
+  const seed = new HistoryStore({ dir, nowMs: () => SEP })
+  await seed.occurrenceReserved(fixture(SEP, 'loader-a'))
+  const writer = new HistoryStore({ dir, nowMs: () => SEP + 1_000 })
+  await writer.load()
+
+  const loader = new HistoryStore({ dir, nowMs: () => SEP })
+  const runExclusive = loader._lock.runExclusive.bind(loader._lock)
+  loader._lock.runExclusive = async (loadTransaction) => {
+    await writer.occurrenceReserved(fixture(SEP + 1_000, 'loader-b'))
+    return runExclusive(loadTransaction)
+  }
+  await loader.load()
+
+  const partition = JSON.parse(readFileSync(join(dir, 'runs-202609.json'), 'utf8'))
+  assert.equal(partition.last_event_seq, 2)
+  assert.deepEqual(new Set(partition.records.map((run) => run.job_id)), new Set(['loader-a', 'loader-b']))
+  assert.deepEqual(new Set(loader.queryRuns({}).runs.map((run) => run.job_id)), new Set(['loader-a', 'loader-b']))
+})
+
 test('ACC-006 replay heal detects a complete-seq projection with a missing record', async () => {
   const dir = historyDir()
   const history = new HistoryStore({ dir, nowMs: () => SEP })

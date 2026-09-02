@@ -356,7 +356,7 @@ export async function composeProductionRuntime(options = {}) {
   // its own directory (events.jsonl + monthly projections) and its own lock.
   // It records facts at the engine's lifecycle boundaries and NEVER gates
   // admission (R-H1); jobs.json / runs.jsonl authorities are untouched.
-  const history = mountSchedulerHistoryRuntime({
+  const history = await mountSchedulerHistoryRuntime({
     ctx,
     layout,
     schedulerAuth: opts.schedulerAuth,
