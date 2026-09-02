@@ -117,6 +117,12 @@ export async function reserveOccurrence(candidate) {
     })
   }
   const job = doc.jobs.find((entry) => entry.id === value.record.jobId)
+  if (!value.deduped) {
+    await this._historyWrite('occurrenceReserved', {
+      record: structuredClone(value.record),
+      job: job === undefined ? undefined : structuredClone(job),
+    })
+  }
   return { job, record: structuredClone(value.record), deduped: value.deduped }
 }
 
@@ -124,6 +130,7 @@ export async function reserveOccurrence(candidate) {
 export function markOccurrenceRunning(record) {
   record.__started = true
   const at = this.nowMs()
+  record.__startedAt = at
   void this.store.mutateDoc((doc) => {
     const current = findOccurrenceById(doc.occurrences, record.occurrenceId)
     if (!current || current.runId !== record.runId || current.state !== 'admitted') return {}
@@ -138,6 +145,7 @@ export function markOccurrenceRunning(record) {
     this.log.error(`start evidence write failed for ${record.occurrenceId}: ${error?.message ?? error}`)
   })
   void this._evidence({ ts: at, action: 'turn_start', occurrenceId: record.occurrenceId, runId: record.runId })
+  void this._historyWrite('runStarted', { record: structuredClone(record) })
 }
 
 /** Invoke, classify, deliver, and write one occurrence; never creates another admission. */
@@ -168,7 +176,8 @@ export async function runOccurrence(job, record) {
       evidence: outcome.evidence,
     })
     const deliveryStatus = await this._deliverOccurrence(job, classification)
-    await this._writeOccurrenceOutcome(working, classification, deliveryStatus)
+    void this._historyWrite('deliveryOutcome', { record: structuredClone(working), deliveryStatus })
+    await this._writeOccurrenceOutcome(working, classification, deliveryStatus, outcome)
     // The unknown state and fence MUST commit before a fast late result can
     // resolve it. Starting the watcher earlier races and can strand the fence.
     if (classification.state === 'outcome_unknown' && outcome.__timedOut) {
@@ -290,7 +299,7 @@ export async function deliverOccurrence(job, classification) {
 }
 
 /** C-027: terminal/unknown writeback always re-reads the latest document. */
-export async function writeOccurrenceOutcome(record, classification, deliveryStatus) {
+export async function writeOccurrenceOutcome(record, classification, deliveryStatus, outcome = {}) {
   const endedAt = this.nowMs()
   const { doc, value } = await this.store.mutateDoc((latest) => {
     const current = findOccurrenceById(latest.occurrences, record.occurrenceId)
@@ -346,6 +355,23 @@ export async function writeOccurrenceOutcome(record, classification, deliverySta
     occurrenceId: record.occurrenceId,
     runId: record.runId,
     deliveryStatus,
+  })
+  // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: the structured execution-history
+  // terminal fact (outcome classification + delivery + the trusted wrapper's
+  // structured result, persisted verbatim and never interpreted — R4/R-H7).
+  // History NEVER gates admission (R-H1) — a history failure is fail-soft.
+  await this._historyWrite('runTerminal', {
+    record: structuredClone(record),
+    classification: {
+      state: classification.state,
+      reason: classification.reason,
+      endedAt,
+      terminalEvidence: classification.terminalEvidence,
+      rejectionCode: classification.rejectionCode,
+    },
+    deliveryStatus,
+    outcome,
+    startedAt: record.__started === true ? record.__startedAt : undefined,
   })
   return value
 }
@@ -418,6 +444,12 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
       evidenceRef,
       evidence: lateEvidence,
     })
+    await this._historyWrite('lateSettlement', {
+      record: structuredClone(record),
+      resolvedTo,
+      basis: 'trusted-late-evidence',
+      note,
+    })
   } catch (error) {
     this.log.error(`late settlement failed for ${record.occurrenceId}: ${error?.message ?? error}`)
   }
@@ -429,6 +461,22 @@ export async function appendOccurrenceEvidence(event) {
     this.log.warn(`runs.jsonl evidence append failed (${result.error}) — authoritative state unaffected`)
   }
   return result
+}
+
+/**
+ * AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: optional structured-history sink
+ * (deps.history). History records facts only and NEVER gates admission or
+ * changes any engine decision (spec R-H1) — a history failure is fail-soft
+ * and visible in the log while the authoritative state proceeds.
+ */
+export async function writeToHistory(method, payload) {
+  const history = this.history
+  if (history === undefined || history === null) return
+  try {
+    await history[method](payload)
+  } catch (error) {
+    this.log.warn(`history.${method} failed (authoritative state unaffected): ${error?.message ?? error}`)
+  }
 }
 
 function applyJobCompletion(doc, occurrence, nowMs) {
@@ -473,4 +521,5 @@ export const occurrenceEngineMethods = {
   _watchLateSettlement: watchLateSettlement,
   _applyLateSettlement: applyLateSettlement,
   _evidence: appendOccurrenceEvidence,
+  _historyWrite: writeToHistory,
 }
