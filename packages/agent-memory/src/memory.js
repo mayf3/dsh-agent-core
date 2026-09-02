@@ -22,20 +22,43 @@
  *   - **Importance**: 1-5
  *   - **Tags**: `a` `b`
  *   - **Updated**: <ISO>
- *   - **Source**: <provenance>
+ *   - **Source**: <escaped provenance>
  *
  *   <content body>
  *
  *   ---
  *
- * Only the title is markdown-escaped; the content body is stored verbatim so
- * user text round-trips exactly. Entries are anchored on the structural
- * `- **ID**:` line (always followed by `- **Type**:`), which a body line
- * cannot forge.
+ * The title, tags and source are markdown-escaped; the content body is stored
+ * verbatim so user text round-trips exactly. Entries are anchored on the
+ * structural `- **ID**:` line (always followed by `- **Type**:`), which a
+ * body line cannot forge.
+ *
+ * SOURCE CODEC CONTRACT (frozen, SIGTRAP fix v1):
+ *   render:  stored line = esc(value)   (every ESCAPE char prefixed with `\`)
+ *   parse:   value      = unescape(stored line)   — the strict inverse.
+ * The historical defect decoded title/tags but NOT source, so every
+ * read-modify-write cycle escaped the source one more time (the ESCAPE set
+ * includes `\`, so escaping is self-amplifying: esc^k grows ~2x per cycle)
+ * until the String.prototype.replace replacement builder hit a V8 fatal
+ * (SIGTRAP, uncatchable from JS). Source now decodes like title/tags, making
+ * parse(render(e)) === e and render(parse(render(e))) === render(e)
+ * fixpoints; legacy files written by the asymmetric codec are repaired by
+ * scripts/agent-memory-sigtrap-migration-v1.mjs (a separate concern — a
+ * parser-side unescape alone does NOT restore an already-amplified source).
+ *
+ * MEMORY GUARD (bounded validation BEFORE every String.replace):
+ * V8 regexp replacement fatals cannot be recovered from JS, so every replace
+ * is gated by explicit size bounds (MEMORY_GUARD_LIMITS). A limit violation
+ * throws a MemoryGuardError (code MEMORY_GUARD_LIMIT) BEFORE the replace and
+ * BEFORE any file mutation — FAIL_LOUD_BUT_NON_FATAL: callers catch it, the
+ * agent turn keeps its exact outcome, the original MEMORY.md is never
+ * touched, and no half-written file is produced. Corrupted (oversized) files
+ * are refused at load, which also freezes them against further machine
+ * writes until migrated.
  */
 
 import { readFileSync } from 'node:fs'
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { chmod, chown, mkdir, open, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { dirname } from 'node:path'
 import {
@@ -51,9 +74,64 @@ export const ENTRY_TYPES = new Set(['preference', 'project', 'decision', 'histor
 /** Types that are eligible for automatic context injection. */
 export const INJECT_TYPES = new Set(['preference', 'project', 'decision'])
 
-/** Escaping for the title line only (content is stored verbatim). */
+/** Escaping for the title/tags/source lines (content is stored verbatim). */
 const ESCAPE = /([\\`*_[\]{}()#+.!|>~-])/g
 const UNESCAPE = new RegExp('\\\\' + ESCAPE.source, 'g')
+
+/**
+ * Bounded-validation limits (SIGTRAP fix v1). Generous vs. real usage
+ * (observed healthy corpus: titles ≤ 64, sources ≤ 51, contents ≤ 900
+ * chars; files ≤ a few hundred KB) yet far below the ~2^26-char region where
+ * the old runaway allocation reached V8 fatal. `maxFileBytes` gates LOAD so
+ * an already-corrupted file fails loud instead of re-entering giant regexp
+ * replacement; it also keeps such files frozen (unwritable) until migrated.
+ */
+export const MEMORY_GUARD_LIMITS = Object.freeze({
+  maxFieldChars: 8192,      // one escaped string field (title / source / tag)
+  maxContentChars: 65536,   // one entry content body (verbatim, no escaping)
+  maxTagCount: 64,          // tags per entry
+  maxFileBytes: 33554432,   // 32 MiB MEMORY.md load refusal threshold
+  maxRenderChars: 33554432, // renderEntries document upper bound (chars)
+  maxRecoveryLayers: 256,   // recoverSource() unwrap bound
+})
+
+/**
+ * Explicit oversized allowances for the one-off migration tool, which MUST
+ * be able to parse the legacy corrupted files the production limits refuse.
+ * Never used by runtime call sites (they take MEMORY_GUARD_LIMITS defaults).
+ */
+export const MIGRATION_GUARD_LIMITS = Object.freeze({
+  maxFieldChars: 268435456, // 2^28
+  maxContentChars: 268435456,
+  maxTagCount: 4096,
+  maxFileBytes: Number.POSITIVE_INFINITY,
+  maxRenderChars: Number.POSITIVE_INFINITY,
+  maxRecoveryLayers: 256,
+})
+
+/** FAIL_LOUD_BUT_NON_FATAL guard violation (thrown BEFORE any replace/IO). */
+export class MemoryGuardError extends TypeError {
+  constructor(which, limit, actual) {
+    super(`agent-memory guard: ${which} too large (limit ${limit}, got ${actual})`)
+    this.name = 'MemoryGuardError'
+    this.code = 'MEMORY_GUARD_LIMIT'
+    this.which = which
+    this.limit = limit
+    this.actual = actual
+  }
+}
+
+function guardField(text, which, limits) {
+  const s = String(text)
+  if (s.length > limits.maxFieldChars) throw new MemoryGuardError(which, limits.maxFieldChars, s.length)
+  return s
+}
+
+function guardContent(text, limits) {
+  const s = String(text)
+  if (s.length > limits.maxContentChars) throw new MemoryGuardError('content', limits.maxContentChars, s.length)
+  return s
+}
 
 /** Header written when a MEMORY.md file is first created. */
 export const MEMORY_HEADER = [
@@ -63,21 +141,81 @@ export const MEMORY_HEADER = [
   '',
 ].join('\n')
 
-function esc(text) {
-  return String(text).replace(ESCAPE, '\\$1')
+function esc(text, limits) {
+  return guardField(text, 'escaped field', limits).replace(ESCAPE, '\\$1')
 }
 
-function unescape(text) {
-  return String(text).replace(UNESCAPE, '$1')
+function unescape(text, limits) {
+  return guardField(text, 'decoded field', limits).replace(UNESCAPE, '$1')
 }
 
-function tagsToText(tags) {
-  return (tags ?? []).map((t) => `\`${esc(t)}\``).join(' ')
+/**
+ * Escape-canonicality: `esc(unescape(x)) === x` holds exactly on the image
+ * of esc (esc is a left inverse of unescape precisely there). Exported for
+ * the migration tool's mechanical layer analysis (see recoverSource).
+ */
+export function isEscapeCanonical(text, limits = MEMORY_GUARD_LIMITS) {
+  const s = guardField(text, 'decoded field', limits)
+  return esc(unescape(s, limits), limits) === s
 }
 
-function tagsFromText(text) {
+/**
+ * Recover the original source from one raw (as-stored) `- **Source**:` line
+ * value written by the historical asymmetric codec.
+ *
+ * Mechanically: the stored value is esc^k(original) for the number of write
+ * cycles k. Unwrapping while escape-canonical walks esc^k → esc^0; a
+ * non-canonical state CANNOT be esc(anything), so it is exactly the original.
+ * A fixpoint state (`unescape(x) === x`, no `\`+ESCAPE pairs at all) has
+ * k = 0 and is its own original.
+ *
+ * All byte-level hypotheses agree on the backslash-free projection of the
+ * value (unescape only removes `\`+ESCAPE pairs), so the LOGICAL recovery is
+ * always unique. Where the original itself could have contained literal
+ * `\`+ESCAPE pairs, it is indistinguishable from one extra amplification
+ * layer — undecidable from bytes alone — and instead of guessing, the entry
+ * is flagged: ambiguous = true iff the candidate still carries a `\`+ESCAPE
+ * pair or the unwrap bound was hit. Callers must keep the raw evidence (the
+ * immutable file backup) and report ambiguous entries separately.
+ * @returns `{ source, layers, ambiguous, bounded }`.
+ */
+export function recoverSource(rawStoredSource, limits = MEMORY_GUARD_LIMITS) {
+  let x = guardField(rawStoredSource, 'decoded field', limits)
+  let layers = 0
+  let bounded = false
+  while (layers < limits.maxRecoveryLayers) {
+    if (!isEscapeCanonical(x, limits)) break
+    const next = unescape(x, limits)
+    if (next === x) break
+    x = next
+    layers++
+  }
+  if (layers >= limits.maxRecoveryLayers) bounded = true
+  const stillPairable = UNESCAPE.test(x)
+  UNESCAPE.lastIndex = 0
+  return { source: x, layers, ambiguous: bounded || stillPairable, bounded }
+}
+
+/**
+ * Public codec surface: the render-side escape, one layer, under guard
+ * limits. The frozen contract is `parse(render(entry))` symmetry, so the
+ * migration tool re-encodes recovered sources with THIS function (never a
+ * local re-implementation that could drift from the frozen ESCAPE set).
+ */
+export function escapeFieldValue(text, limits = MEMORY_GUARD_LIMITS) {
+  return esc(text, limits)
+}
+
+function tagsToText(tags, limits) {
+  if (tags.length > limits.maxTagCount) throw new MemoryGuardError('tag count', limits.maxTagCount, tags.length)
+  return tags.map((t) => `\`${esc(t, limits)}\``).join(' ')
+}
+
+function tagsFromText(text, limits) {
   const out = []
-  for (const match of String(text ?? '').matchAll(/`([^`]+)`/g)) out.push(unescape(match[1]))
+  for (const match of guardField(text, 'decoded field', limits).matchAll(/`([^`]+)`/g)) {
+    out.push(unescape(match[1], limits))
+  }
   return out
 }
 
@@ -102,18 +240,19 @@ export function normalizeEntry(entry, now = new Date().toISOString()) {
 }
 
 /** Render one entry to its Markdown block. */
-export function renderEntry(entry) {
+export function renderEntry(entry, { limits = MEMORY_GUARD_LIMITS } = {}) {
+  const content = guardContent(entry.content, limits)
   const lines = [
-    `## ${esc(entry.title)}`,
+    `## ${esc(entry.title, limits)}`,
     '',
     `- **ID**: \`${entry.id}\``,
     `- **Type**: ${entry.type}`,
     `- **Importance**: ${entry.importance}`,
-    `- **Tags**: ${tagsToText(entry.tags)}`,
+    `- **Tags**: ${tagsToText(entry.tags ?? [], limits)}`,
     `- **Updated**: ${entry.updatedAt}`,
-    `- **Source**: ${esc(entry.source ?? '')}`,
+    `- **Source**: ${esc(entry.source ?? '', limits)}`,
     '',
-    entry.content,
+    content,
     '',
     '---',
     '',
@@ -121,9 +260,25 @@ export function renderEntry(entry) {
   return lines.join('\n')
 }
 
-/** Render a full MEMORY.md document from entries. */
-export function renderEntries(entries) {
-  return MEMORY_HEADER + entries.map(renderEntry).join('')
+/**
+ * Render a full MEMORY.md document from entries. The document bound is
+ * checked additively BEFORE any per-entry rendering: each field at most
+ * doubles under escaping and the fixed per-entry overhead is < 128 chars, so
+ * `2 × (raw input) + 128 × entries + header` is a strict upper bound.
+ */
+export function renderEntries(entries, { limits = MEMORY_GUARD_LIMITS } = {}) {
+  let upper = MEMORY_HEADER.length
+  for (const entry of entries) {
+    upper += 128
+      + 2 * String(entry.title ?? '').length
+      + 2 * String(entry.source ?? '').length
+      + String(entry.content ?? '').length
+      + 4 * (entry.tags ?? []).reduce((n, t) => n + String(t).length, 0)
+  }
+  if (upper > limits.maxRenderChars) {
+    throw new MemoryGuardError('rendered document', limits.maxRenderChars, upper)
+  }
+  return MEMORY_HEADER + entries.map((e) => renderEntry(e, { limits })).join('')
 }
 
 const META_RE = {
@@ -140,11 +295,13 @@ const META_RE = {
  * `- **Type**:`), so a body line that looks like metadata cannot forge an
  * entry or split a block. Title = the last `## ` heading before the anchor;
  * body = everything between the metadata head and the trailing `---`
- * separator, verbatim.
+ * separator, verbatim. Title/tags/source are decoded (strict esc inverse);
+ * the source decode is the SIGTRAP-fix codec contract (frozen above).
  * @param text - the document text.
+ * @param options - `{ limits }` guard limits (defaults MEMORY_GUARD_LIMITS).
  * @returns the parsed entries.
  */
-export function parseEntries(text) {
+export function parseEntries(text, { limits = MEMORY_GUARD_LIMITS } = {}) {
   const entries = []
   const anchors = [...String(text ?? '').matchAll(/^- \*\*ID\*\*: `([^`]+)`\n- \*\*Type\*\*:/gm)]
   let prevEnd = 0
@@ -175,12 +332,14 @@ export function parseEntries(text) {
     const importance = Number.parseInt(meta.importance ?? '', 10)
     entries.push({
       id: anchor[1],
-      title: titleMatch ? unescape(titleMatch[1]).trim() : '',
+      title: titleMatch ? unescape(titleMatch[1], limits).trim() : '',
       type: meta.type ?? '',
       importance: Number.isInteger(importance) ? importance : 3,
-      tags: tagsFromText(meta.tags),
+      tags: meta.tags !== undefined ? tagsFromText(meta.tags, limits) : [],
       updatedAt: meta.updated ?? '',
-      source: meta.source ?? '',
+      // Codec contract: stored = esc(value); decode the strict inverse here
+      // (the historical defect read it raw, re-escaping once per write).
+      source: meta.source !== undefined ? unescape(meta.source, limits) : '',
       content,
     })
 
@@ -190,40 +349,88 @@ export function parseEntries(text) {
   return entries
 }
 
-/** Read and parse MEMORY.md; a missing file yields an empty list. */
-export async function loadEntries(memoryFile) {
-  let text
-  try {
-    text = await readFile(memoryFile, 'utf8')
-  } catch (error) {
-    if (error?.code === 'ENOENT') return []
+/**
+ * Read and parse MEMORY.md; a missing file yields an empty list. The file
+ * size is bounded (stat BEFORE reading): an oversized — e.g. historically
+ * corrupted — file throws MemoryGuardError instead of re-entering giant
+ * regexp work, which also freezes it against further machine writes until
+ * the migration tool repairs it.
+ */
+export async function loadEntries(memoryFile, { limits = MEMORY_GUARD_LIMITS } = {}) {
+  const info = await stat(memoryFile).catch((error) => {
+    if (error?.code === 'ENOENT') return undefined
     throw error
-  }
-  return parseEntries(text)
+  })
+  if (info === undefined) return []
+  if (info.size > limits.maxFileBytes) throw new MemoryGuardError('memory file', limits.maxFileBytes, info.size)
+  const text = await readFile(memoryFile, 'utf8')
+  return parseEntries(text, { limits })
 }
 
 /**
  * Synchronous variant for prompt-assembly providers (systemPrompt.context
  * evaluates text providers synchronously — a fresh file read per assembly,
- * so human edits are visible on the very next turn).
+ * so human edits are visible on the very next turn). Same size guard as
+ * loadEntries (call sites catch and degrade to an empty injection block).
  */
-export function loadEntriesSync(memoryFile) {
-  let text
-  try {
-    text = readFileSync(memoryFile, 'utf8')
-  } catch (error) {
-    if (error?.code === 'ENOENT') return []
-    throw error
-  }
-  return parseEntries(text)
+export function loadEntriesSync(memoryFile, { limits = MEMORY_GUARD_LIMITS } = {}) {
+  const info = readFileSync(memoryFile)
+  if (info.byteLength > limits.maxFileBytes) throw new MemoryGuardError('memory file', limits.maxFileBytes, info.byteLength)
+  return parseEntries(info.toString('utf8'), { limits })
 }
 
-/** Atomically write entries to MEMORY.md (tmp + rename on the same fs). */
-export async function writeEntries(memoryFile, entries) {
-  await mkdir(dirname(memoryFile), { recursive: true })
+/** fsync a directory so a completed rename is durable. */
+async function fsyncDir(dir) {
+  const handle = await open(dir, 'r')
+  try {
+    await handle.sync()
+  } finally {
+    await handle.close()
+  }
+}
+
+/**
+ * Atomically write entries to MEMORY.md (tmp + fsync + rename on the same
+ * fs, directory fsynced). The previous file's mode/uid/gid are carried onto
+ * the replacement so repeated writes never drift metadata; on any failure
+ * the tmp file is removed and the original stays untouched (no half-written
+ * file). Guard limits throw BEFORE any byte is written.
+ */
+export async function writeEntries(memoryFile, entries, { limits = MEMORY_GUARD_LIMITS } = {}) {
+  const rendered = renderEntries(entries, { limits })
+  const dir = dirname(memoryFile)
+  await mkdir(dir, { recursive: true })
+  const previous = await stat(memoryFile).catch((error) => {
+    if (error?.code === 'ENOENT') return undefined
+    throw error
+  })
+  // Write-side freeze: an oversized (corrupted) file is refused exactly like
+  // loadEntries refuses it, so no runtime path can silently replace a file
+  // the guard declared unparseable — repair goes through the migration tool.
+  if (previous && previous.size > limits.maxFileBytes) {
+    throw new MemoryGuardError('memory file', limits.maxFileBytes, previous.size)
+  }
   const tmp = `${memoryFile}.tmp-${process.pid}-${randomUUID().slice(0, 8)}`
-  await writeFile(tmp, renderEntries(entries), 'utf8')
-  await rename(tmp, memoryFile)
+  try {
+    const handle = await open(tmp, 'w', (previous?.mode ?? 0o644) & 0o7777)
+    try {
+      await handle.write(rendered, 0, 'utf8')
+      await handle.sync()
+    } finally {
+      await handle.close()
+    }
+    if (previous) {
+      // Carry owner/group/mode of the replaced file (same-user writes are
+      // no-ops; a root-side repair write restores the original ownership).
+      await chmod(tmp, previous.mode & 0o7777)
+      if (process.getuid?.() === 0) await chown(tmp, previous.uid, previous.gid)
+    }
+    await rename(tmp, memoryFile)
+  } catch (error) {
+    await unlink(tmp).catch(() => {})
+    throw error
+  }
+  await fsyncDir(dir)
 }
 
 /**
@@ -359,6 +566,10 @@ export async function readDailyNotes(workspace, { days = 7, now = new Date() } =
  * layer even though it did not reach the curated file. The daily note is
  * always appended on a successful run too (provenance / audit trail).
  *
+ * A guard violation (oversized/corrupted MEMORY.md) surfaces AFTER the daily
+ * note is appended — evidence is never lost — and propagates to the caller,
+ * whose catch paths log loudly without losing the agent turn.
+ *
  * @param options - `{ workspace, memoryFile?, evidence, distill?, dailyNotes?=true, logger?, now? }`.
  * @returns `{ saved: entry[], fallback: boolean, fallbackFile?, entries }`.
  */
@@ -424,15 +635,15 @@ export async function consolidate({
 }
 
 /** Convenience glue: full load(agentId) — resolve workspace + parse file. */
-export async function load(agentId, { workspaceRoot, memoryFile } = {}) {
+export async function load(agentId, { workspaceRoot, memoryFile, limits } = {}) {
   const workspace = resolveAgentWorkspace(agentId, workspaceRoot)
   const file = memoryFile ?? resolveMemoryFile(workspace)
-  return { workspace, memoryFile: file, entries: await loadEntries(file) }
+  return { workspace, memoryFile: file, entries: await loadEntries(file, { limits }) }
 }
 
 /** Convenience glue: renderForContext(agentId) — load + render. */
-export async function renderForContext(agentId, { workspaceRoot, memoryFile, maxEntries, maxChars, threshold } = {}) {
-  const { workspace, memoryFile: file, entries } = await load(agentId, { workspaceRoot, memoryFile })
+export async function renderForContext(agentId, { workspaceRoot, memoryFile, maxEntries, maxChars, threshold, limits } = {}) {
+  const { workspace, memoryFile: file, entries } = await load(agentId, { workspaceRoot, memoryFile, limits })
   return {
     workspace,
     memoryFile: file,
