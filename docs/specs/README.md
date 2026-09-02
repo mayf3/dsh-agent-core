@@ -194,3 +194,10 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_EXECUTE_UNIFIED_DEPLOYMENT_V1` | proposed（acceptance 前） | none（flip 后 contracts） | unified `workflow_execute` 写工具的两文件生产部署授权：workflow.js + registry.js（DEC-010 cutover），两文件等面回滚、blob pins + preimage 分支 STOPPED 语义、post-deploy 证明面、dedicated disposable-fixture E2E、CTR-HD-006/009 机制按引用继承；执行成功即构成 transition hotfix 的 CTR-HD-011 retirement record |
+
+## Mobile session history authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `MOBILE_SESSION_HISTORY_V1` | proposed | contracts（proposed；实现仍被 lifecycle 禁止） | Mobile 当前 Binding `activeAgent` 的 current canonical `main` trajectory 只读历史：logical-main 身份、deterministic current-main resolver、deterministic composite public message ID（HEADER_SUBSET + CONTENT_ANCHOR generation）、stale-cursor 分页、冻结资源上限、confinement/隐私边界；与 sibling `PRODUCT_API_AUTHENTICATION_V1`（candidate `0d8f050`）按 trusted authContext / 唯一 Binding reader 边界拆分 |
+| `PRODUCT_API_AUTHENTICATION_V1` | proposed | contracts（proposed；实现仍被 lifecycle 禁止） | Tailnet-local Mobile history 身份边界 Child（parent `AGENT_CORE_HARDENING_PROGRAM_V1`）：`tailcfg.StableNodeID` WhoIs 身份、配置 (StableID, surfaceId) pair、trustedAuthContext 唯一输出、`AUTH_LAYER_READS_BINDING = NO`、fail-closed 403/503 语义、restart-only config generation；public/non-Tailnet history 仍禁止 |
