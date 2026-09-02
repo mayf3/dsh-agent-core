@@ -12,10 +12,18 @@ jobs:
   verify-adoption:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout consumer candidate
+      - name: Checkout evidence branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+
+      - name: Checkout exact consumer candidate
+        uses: actions/checkout@v4
+        with:
+          repository: mayf3/dsh-agent-core
+          ref: 669d6f40bcfe37d0e299f5b1bea3957d0f5ca785
+          path: consumer
+          fetch-depth: 1
 
       - name: Checkout exact upstream release source
         uses: actions/checkout@v4
@@ -35,19 +43,20 @@ jobs:
           echo "TASK_NAME=修订 执行"
           echo "EVIDENCE_KIND=INDEPENDENT_CI_EXECUTION_SURFACE"
           echo "CONSUMER_REPOSITORY=mayf3/dsh-agent-core"
-          echo "CONSUMER_CHECKOUT_HEAD=$(git rev-parse HEAD)"
+          echo "CONSUMER_CHECKOUT_HEAD=$(git -C consumer rev-parse HEAD)"
           echo "UPSTREAM_CHECKOUT_HEAD=$(git -C upstream rev-parse HEAD)"
           echo "RUNNER_OS=$RUNNER_OS"
           echo "PYTHON_VERSION=$(python3 --version 2>&1)"
           echo "EXECUTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-          test "$(git rev-parse HEAD)" = "669d6f40bcfe37d0e299f5b1bea3957d0f5ca785"
+          test "$(git -C consumer rev-parse HEAD)" = "669d6f40bcfe37d0e299f5b1bea3957d0f5ca785"
           test "$(git -C upstream rev-parse HEAD)" = "902842735a69797b54016eeaa88d2f949f5879a9"
+          test -z "$(git -C consumer status --porcelain=v1 --untracked-files=all)"
           test -z "$(git -C upstream status --porcelain=v1 --untracked-files=all)"
 
           echo "--- VENDOR_DRY_RUN_BEGIN ---"
           python3 upstream/tools/vendor.py \
-            --target . \
+            --target consumer \
             --source-commit 902842735a69797b54016eeaa88d2f949f5879a9 \
             --prepared-by "PR140 execution evidence" \
             --prepared-at "2026-09-02T21:15:00Z" \
@@ -55,20 +64,20 @@ jobs:
             | tee "$RUNNER_TEMP/vendor-dry-run.txt"
           grep -F "DRY-RUN: 26 file operations" "$RUNNER_TEMP/vendor-dry-run.txt"
           grep -F "No files written." "$RUNNER_TEMP/vendor-dry-run.txt"
-          test -z "$(git status --porcelain=v1 --untracked-files=all -- .agents AGENTS.md docs/specs/README.md)"
+          test -z "$(git -C consumer status --porcelain=v1 --untracked-files=all)"
           echo "VENDOR_DRY_RUN_EXIT=0"
           echo "VENDOR_DRY_RUN_WRITE_DELTA=NONE"
           echo "--- VENDOR_DRY_RUN_END ---"
 
           echo "--- GOVERNANCE_VERIFIER_BEGIN ---"
-          python3 .agents/tools/verify_governance.py --target .
+          python3 consumer/.agents/tools/verify_governance.py --target consumer
           echo "GOVERNANCE_VERIFIER_EXIT=0"
           echo "--- GOVERNANCE_VERIFIER_END ---"
 
           python3 -m py_compile \
-            .agents/tools/verify_governance.py \
-            .agents/tools/validate_spec_transition.py \
-            .agents/tools/validate_governance_route.py
+            consumer/.agents/tools/verify_governance.py \
+            consumer/.agents/tools/validate_spec_transition.py \
+            consumer/.agents/tools/validate_governance_route.py
           echo "PY_COMPILE_EXIT=0"
 
           cat > "$RUNNER_TEMP/valid-route.json" <<'JSON'
@@ -173,12 +182,12 @@ jobs:
           printf '{' > "$RUNNER_TEMP/malformed-route.json"
 
           echo "--- ROUTE_VALIDATOR_BEGIN ---"
-          python3 .agents/tools/validate_governance_route.py "$RUNNER_TEMP/valid-route.json"
+          python3 consumer/.agents/tools/validate_governance_route.py "$RUNNER_TEMP/valid-route.json"
           valid_rc=$?
           set +e
-          python3 .agents/tools/validate_governance_route.py "$RUNNER_TEMP/contradictory-route.json"
+          python3 consumer/.agents/tools/validate_governance_route.py "$RUNNER_TEMP/contradictory-route.json"
           contradictory_rc=$?
-          python3 .agents/tools/validate_governance_route.py "$RUNNER_TEMP/malformed-route.json"
+          python3 consumer/.agents/tools/validate_governance_route.py "$RUNNER_TEMP/malformed-route.json"
           malformed_rc=$?
           set -e
           echo "ROUTE_VALIDATOR_VALID_EXIT=$valid_rc"
