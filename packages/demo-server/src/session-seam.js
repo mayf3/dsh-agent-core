@@ -158,13 +158,43 @@ export function createSessionSeam({ ctx, settings }) {
     return creation
   }
 
+  /**
+   * AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R4 — exact-allowlist validation of
+   * the optional trusted inter-agent source sidecar carried as session/prompt
+   * sibling metadata. Absent sidecar keeps the historical `source:
+   * {kind:'user'}`; a malformed sidecar is a trusted-protocol violation and
+   * rejects the prompt before any message is created.
+   */
+  function validateMessageOrigin(messageOrigin) {
+    if (messageOrigin === undefined) return { kind: 'user' }
+    if (messageOrigin === null || typeof messageOrigin !== 'object' || Array.isArray(messageOrigin)) {
+      throw new TypeError('demo-server: messageOrigin must be an object when present')
+    }
+    const keys = Object.keys(messageOrigin)
+    if (keys.length !== 3
+      || !keys.includes('kind') || !keys.includes('sourceAgentId') || !keys.includes('correlation')) {
+      throw new TypeError('demo-server: messageOrigin must be exactly { kind, sourceAgentId, correlation }')
+    }
+    if (messageOrigin.kind !== 'inter_agent') {
+      throw new TypeError('demo-server: messageOrigin.kind must be "inter_agent"')
+    }
+    if (typeof messageOrigin.sourceAgentId !== 'string' || !/^agt_[a-z0-9-]+$/.test(messageOrigin.sourceAgentId)) {
+      throw new TypeError('demo-server: messageOrigin.sourceAgentId must be an exact agt_* id')
+    }
+    if (typeof messageOrigin.correlation !== 'string' || messageOrigin.correlation === '') {
+      throw new TypeError('demo-server: messageOrigin.correlation must be a non-empty opaque string')
+    }
+    return { kind: messageOrigin.kind, sourceAgentId: messageOrigin.sourceAgentId, correlation: messageOrigin.correlation }
+  }
+
   /** Queue one user prompt on a session, creating or resuming it first. */
-  async function prompt(sessionId, contentBlocks, resolvedCwd) {
+  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined) {
     const handle = await getOrCreateSession(sessionId, resolvedCwd)
-    const message = createUserMessage({ content: contentBlocks, source: { kind: 'user' } })
+    const source = validateMessageOrigin(messageOrigin)
+    const message = createUserMessage({ content: contentBlocks, source })
     handle.agent.followup(message)
     return { messageId: message.id }
   }
 
-  return { handles, pendingCreations, getOrCreateSession, prompt, assertSessionCwd }
+  return { handles, pendingCreations, getOrCreateSession, prompt, assertSessionCwd, validateMessageOrigin }
 }
