@@ -22,7 +22,7 @@ CREDENTIAL_DEPENDENCY    = NONE（仅本地飞书 channel 凭据；未触碰 Bro
 KERNEL_CHANGE            = NONE
 ```
 
-验收驱动：`node scripts/scheduler-router-final-v1-verify.mjs` → **16/16 checks PASS**。
+验收驱动：`node scripts/scheduler/scheduler-router-final-v1-verify.mjs` → **16/16 checks PASS**。
 
 ## 链路（真实接线）
 
@@ -123,7 +123,7 @@ Scheduler 预留的 AbortSignal（TIMEOUT_ABORT 审计）沿真实 Router invoca
 |---|---|
 | `packages/scheduler-router/` | 新包 `@agent-core/scheduler-router`：`createRouterInvoker(router, {registry})` + `createFeishuDeliver(feishu)` + `chatIdFromDeliveryTo`；零外部依赖（只调用传入服务的 public 方法） |
 | `packages/scheduler-router/test/bridge.test.js` | 9 个单元测试（fake router/feishu 钉死 seam 契约，不 spawn 进程） |
-| `scripts/scheduler-router-final-v1-verify.mjs` | 真实验收驱动（fixture Agent + 真实调度 + 真实进程/模型/飞书发送 + abort 证据） |
+| `scripts/scheduler/scheduler-router-final-v1-verify.mjs` | 真实验收驱动（fixture Agent + 真实调度 + 真实进程/模型/飞书发送 + abort 证据） |
 | `docs/reports/scheduler-router-final-integration-v1.md` | 本报告 |
 | `package.json` | 补两根真实运行时依赖（`@deepseek-ai/schemastery`、`@larksuiteoapi/node-sdk`，此前靠手工拷贝 node_modules；与 croner 同款先例） |
 
@@ -135,7 +135,7 @@ Scheduler 预留的 AbortSignal（TIMEOUT_ABORT 审计）沿真实 Router invoca
 ```bash
 cd .worktree/scheduler-router-final-v1
 npm install                       # croner + schemastery + larksuite SDK（node_modules 未入库）
-node scripts/scheduler-router-final-v1-verify.mjs
+node scripts/scheduler/scheduler-router-final-v1-verify.mjs
 # 环境变量：DSH_SRF_FEISHU=0 关闭真实飞书；DSH_SRF_TEST_CHAT 换测试群；DSH_HARNESS_ROOT 显式指定 harness
 ```
 

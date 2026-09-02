@@ -17,6 +17,7 @@ import {
   retryChainLength,
   ONE_SHOT_RETRY_BACKOFF_MS,
 } from './eligibility.js'
+import { writeTerminalToHistory, writeToHistory } from './history-sink.js'
 
 export const AGENT_TURN_SAFETY_TIMEOUT_MS = 3600 * 1000
 export const TIMEOUT_ERROR_TEXT = 'cron: job execution timed out'
@@ -360,19 +361,7 @@ export async function writeOccurrenceOutcome(record, classification, deliverySta
   // terminal fact (outcome classification + delivery + the trusted wrapper's
   // structured result, persisted verbatim and never interpreted — R4/R-H7).
   // History NEVER gates admission (R-H1) — a history failure is fail-soft.
-  await this._historyWrite('runTerminal', {
-    record: structuredClone(record),
-    classification: {
-      state: classification.state,
-      reason: classification.reason,
-      endedAt,
-      terminalEvidence: classification.terminalEvidence,
-      rejectionCode: classification.rejectionCode,
-    },
-    deliveryStatus,
-    outcome,
-    startedAt: record.__started === true ? record.__startedAt : undefined,
-  })
+  await this._writeTerminalHistory(record, classification, deliveryStatus, outcome, endedAt)
   return value
 }
 
@@ -463,22 +452,6 @@ export async function appendOccurrenceEvidence(event) {
   return result
 }
 
-/**
- * AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: optional structured-history sink
- * (deps.history). History records facts only and NEVER gates admission or
- * changes any engine decision (spec R-H1) — a history failure is fail-soft
- * and visible in the log while the authoritative state proceeds.
- */
-export async function writeToHistory(method, payload) {
-  const history = this.history
-  if (history === undefined || history === null) return
-  try {
-    await history[method](payload)
-  } catch (error) {
-    this.log.warn(`history.${method} failed (authoritative state unaffected): ${error?.message ?? error}`)
-  }
-}
-
 function applyJobCompletion(doc, occurrence, nowMs) {
   const job = doc.jobs.find((entry) => entry.id === occurrence.jobId)
   if ((occurrence.state === 'succeeded' || occurrence.state === 'failed')
@@ -522,4 +495,5 @@ export const occurrenceEngineMethods = {
   _applyLateSettlement: applyLateSettlement,
   _evidence: appendOccurrenceEvidence,
   _historyWrite: writeToHistory,
+  _writeTerminalHistory: writeTerminalToHistory,
 }
