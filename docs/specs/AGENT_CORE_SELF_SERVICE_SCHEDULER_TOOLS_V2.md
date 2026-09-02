@@ -468,9 +468,9 @@ delta may be published only after accepted V2 is present in `main`.
 ### DEC-010 — Whole-successor acceptance is atomic
 
 - Decision owner: repository owner `mayf3`
-- Decision: keep V1 current and untouched while V2 is proposed. After explicit Owner authority, an authorized actor prepares one atomic lifecycle-only docs commit; an independent reviewer must return `FINAL_HEAD_RECHECK=PASS` on that new exact head before merge.
+- Decision: keep V1 current and untouched while V2 is proposed. After explicit Owner authority, an authorized actor prepares one atomic lifecycle-only docs commit containing only the exhaustive field/line allowlist in `CTR-GOV-001`; an independent reviewer must return `FINAL_HEAD_RECHECK=PASS` on that new exact head before merge.
 - Rejected alternative: child amendment, early V1 mutation, partial supersession, review only of the proposed pre-lifecycle head, or merge before final-head recheck.
-- Reason: one complete current authority plus post-preparation exact-head verification prevents split authority and acceptance-byte drift.
+- Reason: one complete current authority plus an exhaustive lifecycle/provenance allowlist and post-preparation exact-head verification prevents split authority, stale accepted markers, and behavioral drift.
 
 ## 9. Contracts
 
@@ -923,23 +923,51 @@ skill MUST NOT call the CLI.
 
 While V2 is proposed it has no implementation authority, V1 remains accepted/current, and
 V1 MUST NOT be modified. Only after explicit Owner `mayf3` authority, an authorized actor MAY
-prepare one atomic lifecycle-only docs commit. Its complete semantic lifecycle delta MUST be:
-V2 `proposed -> accepted`; V2 `implementation_authority: none -> contracts`; exact V2
-acceptance provenance; V1 `accepted -> superseded`; V1
-`superseded_by: null -> AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2`; and navigation-only
-README lifecycle alignment if needed. V2 MUST retain `production_apply_authority: none`;
-V1's existing production-apply meaning MUST remain none without any additional body or
-frontmatter change beyond its lifecycle/backlink fields. No other semantic delta is allowed.
+prepare one atomic lifecycle-only docs commit. That commit's permitted changes are the
+following exhaustive allowlist; everything not listed is forbidden:
+
+1. V2 frontmatter: `status: proposed -> accepted`;
+2. V2 frontmatter: `implementation_authority: none -> contracts`;
+3. V2 frontmatter: insert only `accepted_by: mayf3`, exact `accepted_at`,
+   `accepted_reviewed_head` naming the independently reviewed proposed-content head, and
+   `acceptance_review_verdict: PASS` consistent with that reviewer identity/outcome;
+4. V1 frontmatter: `status: accepted -> superseded`;
+5. V1 frontmatter: `superseded_by: null -> AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2`;
+6. V2 introductory blockquote lifecycle sentence only, exact two-line replacement:
+
+   ```text
+   FROM: > **Proposed whole-Spec successor.** V1 remains accepted/current and byte-unchanged while V2
+         > is proposed.
+   TO:   > **Accepted whole-Spec successor.** V1 was superseded by V2 through the atomic lifecycle
+         > transaction.
+   ```
+7. V2 frozen summary: `STATUS = proposed -> accepted`;
+8. V2 frozen summary: `IMPLEMENTATION_AUTHORITY = none -> contracts`;
+9. V2 frozen summary: `INDEPENDENT_REVIEW = PENDING -> PASS`;
+10. V2 frozen summary: `READY_TO_MARK_ACCEPTED = NO -> YES`; and
+11. V2 frozen summary: `ACCEPTED_REVIEWED_HEAD = NONE -> <exact reviewed proposed head>`.
+
+The README row is lifecycle-neutral and MUST NOT change in this transaction. V2 MUST retain
+`production_apply_authority: none`; V1's existing production-apply meaning MUST remain none
+without a new field. V1 normative body MUST remain byte-identical. All non-allowlisted V2
+normative-body bytes, including every Decision, Contract, and Acceptance behavior, MUST remain
+byte-identical to the reviewed proposed content. Every other use of `proposed`, `accepted`,
+or future-tense acceptance language in Goal/authority/Decision/Contract/Acceptance/migration
+text is historical or conditional governance meaning, not a lifecycle marker, and is
+therefore explicitly non-allowlisted and byte-frozen.
 
 Before that prepared commit may merge, an independent reviewer MUST review its new exact
 head and return `FINAL_HEAD_RECHECK=PASS`. The recheck MUST prove all of:
 
-1. the lifecycle delta is exactly the closed list above;
-2. V2's normative body is byte-identical to the independently reviewed proposed content;
-3. V1's normative body is byte-identical to its accepted preimage, with changes limited to
-   frontmatter lifecycle/backlink fields;
-4. `SEMANTIC_DELTA=NONE` for the acceptance transaction; and
-5. the proposed review base and current `main` introduce no authority drift affecting V2.
+1. every changed byte is inside an exact allowlist item and every required item is present;
+2. every non-allowlisted V2 normative-body byte is identical to reviewed proposed content;
+3. V1 normative body and all frontmatter except `status`/`superseded_by` are identical to the
+   accepted preimage;
+4. each new lifecycle/provenance value agrees with explicit Owner authority, V2
+   accepted/contracts frontmatter, and the named reviewer identity/outcome;
+5. `SEMANTIC_DELTA=NONE`, meaning Scheduler Contract/behavior semantics did not change; this
+   does not prohibit the enumerated lifecycle/provenance synchronizations; and
+6. the proposed review base and current `main` introduce no authority drift affecting V2.
 
 Any failure, ambiguity, main/base drift, or post-recheck byte change invalidates the gate and
 requires a new exact-head recheck. Only the exact head that passed may merge. That merge MUST
@@ -1081,9 +1109,9 @@ OPENCLAW_STORE_UNCHANGED = YES
 - Contracts: `CTR-GOV-001`
 - Method: after explicit Owner authority, inspect authorized-actor provenance, the prepared lifecycle-only commit, independent review of that commit's exact head, base/main comparison, git/PR ancestry, and prohibited-effect audit
 - Environment: GitHub repository
-- Required evidence: reviewed proposed V2 head/body digest; explicit Owner instruction; authorized actor identity; prepared atomic docs commit/head; field-level lifecycle diff; V2 proposed-versus-lifecycle normative-body byte comparison; V1 accepted-preimage-versus-lifecycle normative-body byte comparison; current-main authority diff; independent reviewer result containing `FINAL_HEAD_RECHECK=PASS` and `SEMANTIC_DELTA=NONE`; merge commit; later separate four-file implementation ancestry; zero-effect evidence
-- Expected result: V1 remains current/unchanged while V2 is proposed; the authorized actor then prepares exactly one allowed lifecycle commit; before merge an independent reviewer proves on that new exact head that the lifecycle delta is exact, V2 normative body is byte-identical, V1 differs only in frontmatter lifecycle/backlink, semantic delta is none, and base/main have no authority drift; only that passing head merges; production authority stays none
-- Failure condition: current-round V1 edit; preparation without explicit Owner authority or by an unauthorized actor; partial/extra lifecycle delta; V2 normative-body drift; V1 body or non-lifecycle-frontmatter drift; missing/failed/stale `FINAL_HEAD_RECHECK`; `SEMANTIC_DELTA` other than `NONE`; base/main authority drift; post-recheck head change; merge before PASS; implementation before accepted V2 reaches main; Spec edit in implementation; or any auth/Grant/credential/registry/database/deploy effect
+- Required evidence: reviewed proposed V2 head and normative-body digest; explicit Owner instruction; authorized actor identity; prepared atomic docs commit/head; byte/field diff mapped one-to-one to all 11 allowlist items; non-allowlisted V2 byte comparison; V1 accepted-preimage comparison; exact new frontmatter/footer/banner values and reviewer identity/outcome; current-main authority diff; independent reviewer result containing `FINAL_HEAD_RECHECK=PASS` and behavioral `SEMANTIC_DELTA=NONE`; merge commit; later separate four-file implementation ancestry; zero-effect evidence
+- Expected result: V1 remains current/unchanged while V2 is proposed; the authorized actor then prepares exactly one lifecycle commit whose changes are all and only the exhaustive allowlist; every non-allowlisted V2 normative byte and the V1 normative body are identical; every new value matches Owner authority, accepted/contracts frontmatter, and review provenance; `SEMANTIC_DELTA=NONE` confirms no Contract/behavior change while permitting the listed lifecycle/provenance synchronization; base/main have no authority drift; only the unchanged exact head with final recheck PASS merges; production authority stays none
+- Failure condition: current-round V1 lifecycle edit; preparation without explicit Owner authority or by an unauthorized actor; missing or extra allowlist delta; non-allowlisted V2 normative drift; V1 body or frontmatter drift beyond `status`/`superseded_by`; inconsistent lifecycle/provenance value; missing/failed/stale `FINAL_HEAD_RECHECK`; Contract/behavior semantic delta; base/main authority drift; post-recheck head change; README change in the transaction; merge before PASS; implementation before accepted V2 reaches main; Spec edit in implementation; or any auth/Grant/credential/registry/database/deploy effect
 
 ## 11. Alternatives and disposition
 
@@ -1109,11 +1137,12 @@ OPENCLAW_STORE_UNCHANGED = YES
 1. Preserve candidate `4595ed3` as implementation input; do not force-push it away before the
    accepted implementation replacement is durably published.
 2. Keep V2 proposed/none and V1 accepted/current/untouched until explicit Owner authority.
-   Then an authorized actor prepares one lifecycle-only docs commit with exactly the
-   `CTR-GOV-001` atomic fields. Before merge, an independent reviewer rechecks that new exact
-   head and must return `FINAL_HEAD_RECHECK=PASS`, including normative-byte comparisons,
-   `SEMANTIC_DELTA=NONE`, and no base/main authority drift. Only that unchanged passing head
-   may merge and become active in `main`.
+   Then an authorized actor prepares one lifecycle-only docs commit containing all and only
+   the 11 `CTR-GOV-001` allowlist items; the lifecycle-neutral README does not change. Before
+   merge, an independent reviewer rechecks that new exact head and must return
+   `FINAL_HEAD_RECHECK=PASS`, proving non-allowlisted byte identity, new-value consistency,
+   behavioral `SEMANTIC_DELTA=NONE`, and no base/main authority drift. Only that unchanged
+   passing head may merge and become active in `main`.
 3. Rebase/port the original candidate product and tests onto that accepted main as required
    by the unchanged V1 authority. Implement the V2 proof delta only in the exact four files
    named by `CTR-AUTH-003`; production composition source and `packages/scheduler/src/store.js`
@@ -1159,13 +1188,14 @@ IMPLEMENTATION_AUTHORITY = none
 PRODUCTION_APPLY_AUTHORITY = none
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
 EXTERNAL_AUTHORITIES = mayf3/auth-service#MINIMAL_AUTH_FOUNDATION_V2@05fcf4074fe15d7f29ce1ef0f68767fbbebd54de (constrained_by)
-SUPERSEDES_ON_ATOMIC_ACCEPTANCE = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
-FUTURE_LIFECYCLE_ACTOR = OWNER_AUTHORIZED_ACTOR_ONLY
-FUTURE_ACCEPTANCE_COMMIT = SINGLE_LIFECYCLE_ONLY_DOCS_COMMIT
-PREMERGE_FINAL_HEAD_RECHECK = REQUIRED
-FINAL_HEAD_RECHECK = PENDING
-ACCEPTANCE_SEMANTIC_DELTA = NONE_REQUIRED
-BASE_MAIN_AUTHORITY_DRIFT = MUST_BE_NONE
+SUPERSEDES = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
+LIFECYCLE_ACTOR_REQUIREMENT = OWNER_AUTHORIZED_ACTOR_ONLY
+ACCEPTANCE_COMMIT_REQUIREMENT = SINGLE_LIFECYCLE_ONLY_DOCS_COMMIT
+ACCEPTANCE_DELTA_ALLOWLIST_ITEMS = 11
+PREMERGE_FINAL_HEAD_RECHECK_REQUIREMENT = PASS_ON_ACCEPTANCE_COMMIT_EXACT_HEAD
+FINAL_HEAD_RECHECK_EVIDENCE = EXTERNAL_PR_EVIDENCE_REQUIRED_BEFORE_MERGE
+ACCEPTANCE_SEMANTIC_DELTA_REQUIREMENT = NONE_FOR_CONTRACT_AND_BEHAVIOR
+BASE_MAIN_AUTHORITY_DRIFT_REQUIREMENT = NONE
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
