@@ -55,6 +55,9 @@ export class Scheduler {
     this.deadlineSetTimeout = deps.deadlineSetTimeout ?? setTimeout
     this.deadlineClearTimeout = deps.deadlineClearTimeout ?? clearTimeout
     this.log = deps.log ?? defaultLog
+    // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: optional structured-history sink.
+    // Facts only — never consulted by admission (spec R-H1).
+    this.history = deps.history ?? null
 
     this.doc = { version: 2, jobs: [], occurrences: [], fences: {} }
     this._timer = null
@@ -220,15 +223,20 @@ export class Scheduler {
           reason: 'restart_unresolved: no termination proof at recovery',
           deliveryStatus: record.deliveryStatus ?? 'unknown',
         })
-        swept.push(record.occurrenceId)
+        swept.push({ occurrenceId: record.occurrenceId, runId: record.runId, jobId: record.jobId })
       }
       doc.fences = rebuildFences(doc.occurrences)
       for (const job of doc.jobs) job.state = deriveJobStateSummary(job, doc.occurrences, now)
     })
-    for (const occurrenceId of swept) {
-      await this._evidence({ ts: now, action: 'outcome', occurrenceId, state: 'outcome_unknown', reason: 'restart_unresolved' })
+    for (const record of swept) {
+      await this._evidence({ ts: now, action: 'outcome', occurrenceId: record.occurrenceId, state: 'outcome_unknown', reason: 'restart_unresolved' })
+      await this._historyWrite('runState', {
+        record,
+        state: 'outcome_unknown',
+        reason: 'restart_unresolved: no termination proof at recovery',
+      })
     }
-    return swept
+    return swept.map((record) => record.occurrenceId)
   }
 
   /** Native restart policy: at most the most recent eligible missed slot. */
@@ -334,6 +342,13 @@ export class Scheduler {
       occurrenceId, runId, resolvedTo, evidenceNote, nowMs: this.nowMs(),
     })
     await this.load()
+    await this._historyWrite('lateSettlement', {
+      record: result.record,
+      resolvedTo,
+      basis: 'operator-reconcile',
+      note: evidenceNote,
+      operatorIdentity: result.identity,
+    })
     return result
   }
 
