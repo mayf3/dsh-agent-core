@@ -36,6 +36,7 @@ EXECUTED_NOW = NO
 AUTHORING_MAIN = 205d9f748347542eb0fc88d5689d719849d85b97
 AMENDMENT_TRIGGER = audit comment 5480338347 (blockers 6-12 history/cross side)
 AMENDMENT_TRIGGER += D-008 authority reconciliation (D-006 / AGENT_WORKSPACE_SESSION_MODEL_V2 superseded whole by D-008 / AGENT_WORKSPACE_SESSION_MODEL_V3)
+AMENDMENT_TRIGGER += independent review of ef8fe85 (blocker union = 1: CTR-SH-012 generation reset-provability cited a nonexistent CTR-SH-013 reuse-rejection rule; fixed via HEADER_SUBSET + CONTENT_ANCHOR generation, ACC-SH-N case 3a/8)
 AMENDMENT_DATE = 2026-09-03
 ```
 
@@ -501,13 +502,19 @@ trusted authContext schema 以 `CTR-PA-003` 冻结者为准：
 
 - Decision owner: `mayf3/dsh-agent-core` maintainers
 - Decision: `CTR-SH-012` 的 mandatory generation component 取 current main trajectory
-  header 封闭字段子集的 SHA-256 canonical digest；native DSH session id 是
+  的 HEADER_SUBSET canonical digest 与 CONTENT_ANCHOR（captured bytes 的 SHA-256）的
+  组合 canonical digest；native DSH session id 是
   SERVER-INTERNAL，只以摘要形式参与，永不出现在 tuple 明文、响应或日志中；wire codec
   （u32 BE length-prefix、fixed order、base64url no-pad、51 字符总长）按 `CTR-SH-012`
   精确冻结。
 - Rejected alternative: 以 native id 明文作为 generation token；以时间戳作为 generation
-  （不 provably 随 reset 变化且引入时钟依赖）。
-- Reason: generation 必须可证明随 main reset 变化，同时不泄露 server-internal 身份。
+  （不 provably 随 reset 变化且引入时钟依赖）；仅以 header 子集
+  `{version, id, createdAt, delegationDepth}` 作为 generation 输入（D-008 §9 对 native-id
+  复用留白，`createdAt` 同毫秒复用时无法证明 reset 后 digest 变化——独立审计
+  blocker，2026-09-03）。
+- Reason: generation 必须可证明随 main reset 变化（不依赖 D-008 留白的复用假设），
+  同时不泄露 server-internal 身份；CONTENT_ANCHOR 使 digest 相同当且仅当新 trajectory
+  逐字节相同——此时历史完全相同，旧 cursor 被接受不构成跨 generation 误读。
 - Remaining owner input: none
 
 ## 9. Contracts
@@ -758,9 +765,12 @@ WELL_FORMED_BUT_NOT_IN_CURRENT_MAIN（含 reset 后旧 cursor）= 409 HISTORY_CU
 For an unchanged valid artifact prefix, repeated reads MUST preserve every public `message.id`,
 `createdAt`, order and page boundary. Adjacent pages MUST have no duplicate or skipped projected
 message. These no-gap guarantees bind one unchanged captured prefix AND one unchanged
-currentMainGenerationDigest; after main reset, every previously issued public ID is structurally
-stale（generation digest 变化使旧 ID 无法匹配新 trajectory，即使 raw DSH ID 巧合复用）and
-MUST return `409 HISTORY_CURSOR_STALE` rather than being remapped. Duplicate public message IDs
+currentMainGenerationDigest; after main reset, every previously issued public ID from a
+non-byte-identical new trajectory is structurally stale（generation digest 由
+HEADER_SUBSET + CONTENT_ANCHOR 派生，随 captured bytes 变化，即使 raw DSH ID 巧合复用）and
+MUST return `409 HISTORY_CURSOR_STALE` rather than being remapped. The only case where an
+old cursor remains valid is a byte-identical new trajectory（见 `CTR-SH-012`：此时呈现的
+历史完全相同，不存在误读）。Duplicate public message IDs
 within one trajectory snapshot MUST fail closed as `INTERNAL_ERROR`.
 
 ### CTR-SH-007 — Agent/Session identity and canonical Session-root confinement
@@ -966,18 +976,37 @@ base64url 输出长度固定为 43（256 bits）；`=` padding、标准 base64 �
 **Generation component（reset-provably-changing 且不暴露内部 id）**
 
 - `currentMainGenerationDigest` MUST be present in every tuple（mandatory component）；
-- 其来源 MUST 是 `CTR-SH-013` 解析出的 current canonical main trajectory：对该 trajectory
-  header 的封闭已知字段子集 `{version, id, createdAt, delegationDepth}` 按
-  `JSON canonical form`（key 排序、无空白、UTF-8、整数无 `-0`）序列化后取
-  `SHA-256`，hex 小写，作为 tuple 元素；
+- 其来源 MUST 是 `CTR-SH-013` 解析出的 current canonical main trajectory 在 `CTR-SH-003`
+  stable snapshot 捕获到的确切字节内容，按两级定义冻结：
+
+```text
+CONTENT_ANCHOR             = SHA-256(captured artifact bytes)（hex 小写；
+                             即 CTR-SH-003 stable snapshot 捕获的完整 canonical
+                             artifact 内容；流式计算，随读取进行，无二次 I/O）
+HEADER_SUBSET_CANONICAL    = JSON canonical form（key 排序、无空白、UTF-8、
+                             整数无 -0）of {version, id, createdAt, delegationDepth}
+currentMainGenerationDigest = SHA-256(
+                               canonical_length_prefixed_tuple(
+                                 HEADER_SUBSET_CANONICAL, CONTENT_ANCHOR))（hex 小写）
+```
+
+  该定义是无记忆的纯函数：除被捕获的 artifact 本身外不依赖任何存储、缓存或历史状态
+  （无 second history store、无 logical→native mapping）；
 - current main trajectory 的 native DSH session id 是 SERVER-INTERNAL
   （D-008 §8 `NATIVE_DSH_SESSION_ID = IMPLEMENTATION_DETAIL`）。generation digest MUST 只以
-  SHA-256 摘要形式存在：digest 输入/输出 MUST NOT 包含 `cwd`、路径或 header 明文；
-  原像抵抗保证 native id 不因 digest 泄露；
-- 该来源 provably changes on main reset：reset 后新 trajectory 的 header `id` 或
-  `createdAt` 与旧 trajectory 不同（同 `(id, createdAt)` 复用被 `CTR-SH-013` 的
-  fail-closed 规则拒绝），故 generation digest MUST 与旧 trajectory 不同；
-- main reset 后新 trajectory 的 generation digest MUST 与旧 trajectory 不同；
+  SHA-256 摘要形式存在：digest 输入/输出 MUST NOT 包含 `cwd`、路径、header 明文或
+  transcript 内容（CONTENT_ANCHOR 只以摘要形式参与）；原像抵抗保证 native id 不因 digest
+  泄露；
+- 该来源 provably changes on main reset，不依赖 D-008 §9 留白的 native-id 复用假设：
+  digest 相同当且仅当新 trajectory 的 captured bytes 与旧 trajectory 完全相同（header
+  子集与内容均一致）。D-008 §9 对 native DSH Session ID 是否复用未做决定，因此本
+  Contract 不假设 reset 后 `id`/`createdAt` 必然变化；任何内容差异（不同消息、不同
+  event 数量、不同 header 字段值）都改变 CONTENT_ANCHOR，从而改变 generation digest；
+  若 reset 后的 trajectory 与旧 trajectory 逐字节相同，则全部公共 ID 与 cursor 也逐字节
+  相同，此时旧 cursor 被接受呈现的是完全相同的历史——语义上不存在跨 generation 误读；
+- main reset 后（captured bytes 非逐字节相同时）新 trajectory 的 generation digest MUST
+  与旧 trajectory 不同，旧公共 ID 结构上无法匹配新 trajectory，行为是
+  `409 HISTORY_CURSOR_STALE`；
 - 同一 snapshot 重复读取的公共 ID 完全稳定；
 - 跨 role、跨 Agent、跨 trajectory、reset 前后不冲突（tuple 已绑定全部四维）；
 - 不需要数据库、sidecar 或 mapping；
@@ -1255,14 +1284,20 @@ EXECUTED_NOW = NO
 
 - Contracts: `CTR-SH-002`, `CTR-SH-006`, `CTR-SH-012`
 - Method: fixtures with (1) user 与 assistant raw DSH ID 相同；(2) 两个 Agent 的 raw DSH ID
-  相同；(3) reset 前后 raw DSH ID 相同；(4) malformed public ID；(5) reset 前签发的旧
-  cursor；(6) 同 snapshot 重复读取；(7) cursor 值逆向检查（无 cwd/路径/native/raw ID 泄露）
+  相同；(3) reset 前后 raw DSH ID 相同；(3a) reset 前后 native DSH session id 与
+  `createdAt`（同毫秒）均相同、但 trajectory 内容不同——复现独立审计 blocker 场景；
+  (4) malformed public ID；(5) reset 前签发的旧
+  cursor；(6) 同 snapshot 重复读取；(7) cursor 值逆向检查（无 cwd/路径/native/raw ID 泄露）；
+  (8) reset 前后 trajectory captured bytes 逐字节相同（旧 cursor 语义无害场景）
 - Environment: unit/fixture tests
 - Required evidence: fixture raw ID 布局、公共 ID 输出、generation digest 变化记录、响应
-- Expected result: (1)(2)(3) 产生的公共 ID 互不相同；(4) `400 VALIDATION_ERROR`；(5)
+- Expected result: (1)(2)(3) 产生的公共 ID 互不相同；(3a) generation digest 不同、reset 前
+  cursor 在新 trajectory 上为 `409 HISTORY_CURSOR_STALE`（证明 reset-provability 不依赖
+  native-id 复用假设）；(4) `400 VALIDATION_ERROR`；(5)
   `409 HISTORY_CURSOR_STALE`（即使新 trajectory 存在相同 raw ID）；(6) 公共 ID 逐字节稳定；
-  (7) 公共 ID 不含任何内部值
-- Failure condition: 任何跨 role/Agent/reset 碰撞、旧 cursor 被接受、ID 漂移或内部值泄露
+  (7) 公共 ID 不含任何内部值；(8) 旧 cursor 被接受且呈现的历史与 reset 前逐字节相同
+- Failure condition: 任何跨 role/Agent/reset 碰撞、(3a) 场景下旧 cursor 被接受、ID 漂移或
+  内部值泄露
 - EXECUTED_NOW: NO
 
 ### ACC-SH-O — Split activation: local Tailnet vs public
