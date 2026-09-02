@@ -37,7 +37,8 @@ owners:
 > and `8f05a1725d3cb3542738938bbe05288604cd3c08` are review history only and grant no
 > authority. V2 independently restates the complete active V1 product authority. Its sole
 > product semantic delta is the exact external Scheduler proof mapping and the minimum
-> read-only ownership lookup needed to select self versus admin authorization.
+> whole-document JobStore load/validation needed to select self versus admin authorization;
+> authorization may consume only job existence and `job.agentId` from that loaded document.
 
 ## 1. Goal
 
@@ -117,11 +118,15 @@ delta may be published only after accepted V2 is present in `main`.
   `manage:any` availability is **NONE**. This Spec creates no Auth scope, audience, Grant,
   credential, token, registry/database mutation, deployment, or production Auth mutation.
 - V2 is a whole-Spec successor to accepted V1, not a child amendment. While proposed, V1 is
-  the sole current authority and remains byte-unchanged. After exact-head independent review
-  and Owner `mayf3` authorization, one future docs-only acceptance commit MUST atomically set
-  V2 to `accepted` with `implementation_authority: contracts` and acceptance provenance,
-  set V1 to `superseded` with `superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2`,
-  and preserve `production_apply_authority: none`. No partial/mixed lifecycle is valid.
+  the sole current authority and remains byte-unchanged. After explicit Owner `mayf3`
+  authority, an authorized actor may prepare one lifecycle-only docs commit that atomically
+  sets V2 to `accepted` with `implementation_authority: contracts` and acceptance provenance,
+  sets V1 to `superseded` with `superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2`,
+  and preserves `production_apply_authority: none`. Before merge, an independent reviewer
+  MUST review that newly prepared exact commit head and return `FINAL_HEAD_RECHECK=PASS`,
+  proving the exact lifecycle delta, normative-byte invariants, `SEMANTIC_DELTA=NONE`, and no
+  base/main authority drift. Only then may the commit merge. No partial/mixed lifecycle or
+  pre-recheck merge is valid.
 - Authority is acyclic: accepted V1 -> accepted V2 final head -> future auth-service Scheduler
   Audience CCR -> separately authorized auth source/deploy -> separately authorized Grant ->
   separately authorized local activation/canary. The future auth CCR may depend on accepted
@@ -250,7 +255,7 @@ delta may be published only after accepted V2 is present in `main`.
 - Environment: isolated dsh-agent-core source worktree
 - Observed at: `2026-09-02T21:23:05Z`
 - Method: inspect `MANAGE_ANY_SCOPE`, `SCHEDULER_RESOURCE`, `adminAuthorized`, and `loadScopedJob`
-- Result: `assertGrant` receives `(callerAgentId, 'scheduler.manage:any', 'scheduler')`; existing job operations load persisted ownership before deciding whether admin proof is required
+- Result: `assertGrant` receives `(callerAgentId, 'scheduler.manage:any', 'scheduler')`; existing job operations call JobStore whole-document load/validation over `{jobs, occurrences, fences}`, then use job existence and `job.agentId` to decide whether admin proof is required
 - Provenance: exact source blob and commit named above
 
 ### OBS-008 — Auth-service grammar rejects colon and admits hyphen
@@ -305,12 +310,12 @@ delta may be published only after accepted V2 is present in `main`.
 - Contradicted by evidence: none known
 - Uncertainty: source evidence is bound to pinned revisions; registration, Grant, deployment, and runtime authorization remain separately unproved
 
-### CLM-005 — Minimum ownership lookup is required before conditional admin proof
+### CLM-005 — Whole-document validation is compatible with narrow authorization consumption
 
 - Support state: SUPPORTED
 - Supported by evidence: `EVD-005`
 - Contradicted by evidence: none known
-- Uncertainty: future tests must prove the lookup reveals no public data and causes no mutation or success audit on denial
+- Uncertainty: future tests must prove whole-document validation does not let authorization consume or disclose occurrence/history and that denial causes no mutation or success audit
 
 ### CLM-006 — Production composition source needs no proof-scope change
 
@@ -362,14 +367,14 @@ delta may be published only after accepted V2 is present in `main`.
 - Limitations: does not establish audience registration, Grant, deployment, or production success
 - Provenance: exact repository objects in `OBS-007` and `OBS-008`
 
-### EVD-005 — Existing access sequencing supports bounded ownership lookup
+### EVD-005 — Existing access sequencing supports bounded authorization consumption
 
 - Source observations: `OBS-007`
 - Target: `CLM-005`
 - Relation: SUPPORTS
 - Bound coordinates: dsh-agent-core source blob `4a236fed3b201ac8c4de59d86cbbc414beee4ba7`, observed `2026-09-02T21:23:05Z`
-- Strength/sufficiency: strong for showing persisted ownership is needed to select the self/admin branch for existing jobs
-- Limitations: source inspection does not prove future non-disclosure and no-success-audit behavior
+- Strength/sufficiency: strong for showing existing JobStore whole-document load/validation precedes consumption of job existence and `job.agentId` to select the self/admin branch
+- Limitations: source inspection does not prove future prohibition on occurrence/history projection/query/filter/return or future non-disclosure/no-success-audit behavior
 - Provenance: exact source inspection in `OBS-007`
 
 ### EVD-006 — Existing scope forwarding supports test-only composition coverage
@@ -453,19 +458,19 @@ delta may be published only after accepted V2 is present in `main`.
 - Rejected alternative: rename local policy, request colon form, translate aliases, retry/fallback, or introduce `scheduler.admin`.
 - Reason: preserve V1 semantics while satisfying the exact external scope grammar without widening authority.
 
-### DEC-009 — Permit only the ownership lookup needed to select the proof branch
+### DEC-009 — Permit whole-document validation but consume only existence and owner
 
 - Decision owner: repository owner `mayf3` / repository maintainers
-- Decision: authorization may read only persisted ownership needed to determine self versus admin proof. A denied operation discloses no persisted content/result and performs no mutation or success audit.
-- Rejected alternative: forbid all reads before denial, or expose the inspected foreign definition.
-- Reason: ownership is persisted data, so conditional proof cannot be selected without reading it; that internal read grants no visibility.
+- Decision: authorization may call the existing JobStore whole-document load/validation over `{jobs, occurrences, fences}`, but may consume only whether the requested job exists and that job's `job.agentId`. If those fields show that admin proof is required, then before exact proof succeeds the authorization path may not project, query, filter, return, disclose, or use occurrence/history as authorization input. Denial performs no mutation or success audit and returns no persisted content. Authorized self history behavior remains unchanged and makes zero Auth requests.
+- Rejected alternative: forbid the existing whole-document validation, consume occurrence/history during authorization, or expose the inspected foreign definition.
+- Reason: the current JobStore validates one whole document and ownership is persisted in its job definition; permitting that mechanism does not grant occurrence/history visibility or decision authority.
 
 ### DEC-010 — Whole-successor acceptance is atomic
 
 - Decision owner: repository owner `mayf3`
-- Decision: keep V1 current and untouched while V2 is proposed; future acceptance atomically accepts V2/contracts and supersedes/backlinks V1 in one docs-only Owner-authorized commit.
-- Rejected alternative: child amendment, early V1 mutation, partial supersession, or acceptance without exact-head review.
-- Reason: one complete current authority avoids split or cyclic interpretation.
+- Decision: keep V1 current and untouched while V2 is proposed. After explicit Owner authority, an authorized actor prepares one atomic lifecycle-only docs commit; an independent reviewer must return `FINAL_HEAD_RECHECK=PASS` on that new exact head before merge.
+- Rejected alternative: child amendment, early V1 mutation, partial supersession, review only of the proposed pre-lifecycle head, or merge before final-head recheck.
+- Reason: one complete current authority plus post-preparation exact-head verification prevents split authority and acceptance-byte drift.
 
 ## 9. Contracts
 
@@ -630,11 +635,16 @@ definitions/evidence. Mutations of a foreign job MUST return a non-leaking denie
 not-found error and MUST NOT mutate or append a success audit record.
 
 To select self versus admin authorization for an operation on an existing job, the access
-layer MAY perform the minimum read-only persisted lookup of that job's ownership. This lookup
-is internal authorization input, not visibility: denial MUST disclose no persisted job,
-definition, occurrence, message, owner identity, or other public result and MUST perform no
-mutation or success audit. This permission does not allow occurrence/history reads before
-authorization except the minimum ownership field already contained in the loaded definition.
+layer MAY call the existing JobStore whole-document load and validation, whose returned
+document contains `{jobs, occurrences, fences}`. The authorization decision MAY consume from
+that document only (a) whether the requested job exists and (b) that job's `job.agentId`.
+If those permitted fields show the requested job is foreign and admin proof is required,
+then before exact proof succeeds the authorization path MUST NOT project, query, filter,
+return, or disclose occurrence/history, and MUST NOT use occurrence/history as authorization
+input. Authorized self `runs` behavior remains unchanged and makes zero Auth requests.
+Whole-document parsing/validation is permitted but grants no visibility. Denial MUST return
+no persisted job/definition/occurrence/history/message/owner content or other public result
+and MUST perform no mutation or success audit.
 
 ### CTR-AUTH-002 — Admin scope and external prerequisite
 
@@ -646,7 +656,9 @@ assert either value. The proof path MUST NOT request or accept `scheduler.manage
 wire scope, translate/normalize an alias, try multiple spellings, fall back after failure, or
 introduce `scheduler.admin`. Auth denial, unavailable audience, missing Grant, token failure,
 malformed response, or uncertainty MUST deny the operation without disclosure, mutation, or
-success audit; the minimum ownership lookup permitted by `CTR-AUTH-001` remains allowed.
+success audit. The whole-document load/validation permitted by `CTR-AUTH-001` remains allowed,
+but the decision may consume only job existence and `job.agentId`; on the admin-required
+branch occurrence/history remain forbidden as authorization input or pre-proof output.
 
 This local implementation MUST support the fail-closed seam and tests with an injected Auth
 stub, but MUST NOT claim production admin availability. Production admin enablement is
@@ -910,15 +922,30 @@ skill MUST NOT call the CLI.
 ### CTR-GOV-001 — Spec/implementation split
 
 While V2 is proposed it has no implementation authority, V1 remains accepted/current, and
-V1 MUST NOT be modified. After independent review of the exact V2 candidate and explicit
-Owner `mayf3` authority, one docs-only acceptance commit MUST atomically: set V2 status to
-`accepted`; set V2 `implementation_authority: contracts` with exact acceptance provenance;
-set V1 status to `superseded`; add V1 backlink
-`superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2`; and leave
-`production_apply_authority: none`. That atomic commit MUST merge into `main` before the
-four-file delta implementation PR is based/published. The implementation PR MUST NOT modify
-either governing Spec. Acceptance authorizes no auth-service, Grant, credential,
-registry/database, deployment, or production action.
+V1 MUST NOT be modified. Only after explicit Owner `mayf3` authority, an authorized actor MAY
+prepare one atomic lifecycle-only docs commit. Its complete semantic lifecycle delta MUST be:
+V2 `proposed -> accepted`; V2 `implementation_authority: none -> contracts`; exact V2
+acceptance provenance; V1 `accepted -> superseded`; V1
+`superseded_by: null -> AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2`; and navigation-only
+README lifecycle alignment if needed. V2 MUST retain `production_apply_authority: none`;
+V1's existing production-apply meaning MUST remain none without any additional body or
+frontmatter change beyond its lifecycle/backlink fields. No other semantic delta is allowed.
+
+Before that prepared commit may merge, an independent reviewer MUST review its new exact
+head and return `FINAL_HEAD_RECHECK=PASS`. The recheck MUST prove all of:
+
+1. the lifecycle delta is exactly the closed list above;
+2. V2's normative body is byte-identical to the independently reviewed proposed content;
+3. V1's normative body is byte-identical to its accepted preimage, with changes limited to
+   frontmatter lifecycle/backlink fields;
+4. `SEMANTIC_DELTA=NONE` for the acceptance transaction; and
+5. the proposed review base and current `main` introduce no authority drift affecting V2.
+
+Any failure, ambiguity, main/base drift, or post-recheck byte change invalidates the gate and
+requires a new exact-head recheck. Only the exact head that passed may merge. That merge MUST
+precede the four-file delta implementation PR. The implementation PR MUST NOT modify either
+governing Spec. Acceptance authorizes no auth-service, Grant, credential, registry/database,
+deployment, or production action.
 
 ## 10. Acceptance
 
@@ -957,14 +984,21 @@ registry/database, deployment, or production action.
 - Environment: isolated JobStore with real control operations
 - Required evidence: store before/after, handler results, and per-action Auth token-request
   call records for create/list/runs/update/enable/disable/remove self/admin/negative cases;
-  read/mutation/audit ledger distinguishing the minimum ownership lookup from disclosure
+  instrumented JobStore/read ledger proving whole-document load/validation and an
+  authorization-consumption ledger limited to job existence plus `job.agentId`; occurrence/
+  history projection/query/filter/return ledger; mutation/audit ledger
 - Expected result: every ordinary self action has Auth request count exactly zero; admin proof
   requests exactly `(scheduler, scheduler.manage-any)` once; only exact success establishes
-  local `scheduler.manage:any`; denial may read minimum ownership but returns no persisted
-  content and makes no mutation/success audit; production admin stays denied until external
-  audience/scope/deployment/Grant gates pass
+  local `scheduler.manage:any`; authorization may load/validate `{jobs, occurrences, fences}`
+  but consumes only requested-job existence and `job.agentId`; on the admin-required branch,
+  before proof it performs zero occurrence/history projection/query/filter/return and does
+  not use them as decision input; authorized self history remains unchanged with zero Auth;
+  denial returns no persisted content and makes no mutation/success audit; production admin
+  stays denied until external audience/scope/deployment/Grant gates pass
 - Failure condition: any Auth token request during an ordinary self action, ordinary
-  cross-Agent visibility/mutation/success audit, denial of the necessary ownership lookup,
+  cross-Agent visibility/mutation/success audit, a test that treats permitted whole-document
+  load/validation itself as forbidden, authorization consumption beyond existence/`job.agentId`, any
+  admin-required pre-proof occurrence/history projection/query/filter/return or decision use,
   colon/alias/fallback/admin wire scope, multiple proof requests, tool-asserted authority, or
   claim of production admin availability without accepted/deployed external authority
 
@@ -1045,11 +1079,11 @@ OPENCLAW_STORE_UNCHANGED = YES
 ### ACC-GOV-001 — Two-stage publication
 
 - Contracts: `CTR-GOV-001`
-- Method: inspect exact-head review, Owner authorization, atomic lifecycle diff, git and PR ancestry, and prohibited-effect audit
+- Method: after explicit Owner authority, inspect authorized-actor provenance, the prepared lifecycle-only commit, independent review of that commit's exact head, base/main comparison, git/PR ancestry, and prohibited-effect audit
 - Environment: GitHub repository
-- Required evidence: reviewed V2 head/verdict; Owner instruction; one docs-only commit accepting V2/contracts and superseding/backlinking V1; merge commit; separate four-file implementation PR based on that main; zero-effect evidence
-- Expected result: V1 remains current/unchanged while V2 is proposed; future acceptance is atomic; authority precedes implementation; production authority stays none
-- Failure condition: current-round V1 edit, partial lifecycle, missing backlink/provenance/Owner authority, implementation before accepted V2 reaches main, Spec edit in implementation, or any auth/Grant/credential/registry/database/deploy effect
+- Required evidence: reviewed proposed V2 head/body digest; explicit Owner instruction; authorized actor identity; prepared atomic docs commit/head; field-level lifecycle diff; V2 proposed-versus-lifecycle normative-body byte comparison; V1 accepted-preimage-versus-lifecycle normative-body byte comparison; current-main authority diff; independent reviewer result containing `FINAL_HEAD_RECHECK=PASS` and `SEMANTIC_DELTA=NONE`; merge commit; later separate four-file implementation ancestry; zero-effect evidence
+- Expected result: V1 remains current/unchanged while V2 is proposed; the authorized actor then prepares exactly one allowed lifecycle commit; before merge an independent reviewer proves on that new exact head that the lifecycle delta is exact, V2 normative body is byte-identical, V1 differs only in frontmatter lifecycle/backlink, semantic delta is none, and base/main have no authority drift; only that passing head merges; production authority stays none
+- Failure condition: current-round V1 edit; preparation without explicit Owner authority or by an unauthorized actor; partial/extra lifecycle delta; V2 normative-body drift; V1 body or non-lifecycle-frontmatter drift; missing/failed/stale `FINAL_HEAD_RECHECK`; `SEMANTIC_DELTA` other than `NONE`; base/main authority drift; post-recheck head change; merge before PASS; implementation before accepted V2 reaches main; Spec edit in implementation; or any auth/Grant/credential/registry/database/deploy effect
 
 ## 11. Alternatives and disposition
 
@@ -1074,12 +1108,19 @@ OPENCLAW_STORE_UNCHANGED = YES
 
 1. Preserve candidate `4595ed3` as implementation input; do not force-push it away before the
    accepted implementation replacement is durably published.
-2. Merge this docs-only Spec first. Acceptance binds an exact reviewed commit and becomes
-   active only in `main`; the same future Owner-authorized docs-only commit MUST atomically
-   accept V2/contracts and supersede/backlink V1. V1 remains untouched before that commit.
+2. Keep V2 proposed/none and V1 accepted/current/untouched until explicit Owner authority.
+   Then an authorized actor prepares one lifecycle-only docs commit with exactly the
+   `CTR-GOV-001` atomic fields. Before merge, an independent reviewer rechecks that new exact
+   head and must return `FINAL_HEAD_RECHECK=PASS`, including normative-byte comparisons,
+   `SEMANTIC_DELTA=NONE`, and no base/main authority drift. Only that unchanged passing head
+   may merge and become active in `main`.
 3. Rebase/port the original candidate product and tests onto that accepted main as required
    by the unchanged V1 authority. Implement the V2 proof delta only in the exact four files
-   named by `CTR-AUTH-003`; production composition source remains unchanged.
+   named by `CTR-AUTH-003`; production composition source and `packages/scheduler/src/store.js`
+   remain unchanged. Continue using existing whole-document JobStore load/validation, while
+   authorization consumes only requested-job existence and `job.agentId`; the admin-required
+   branch performs no pre-proof occurrence/history projection/query/filter/return or decision
+   use, while authorized self history retains zero-Auth behavior.
 4. Keep existing internal access handlers and CLI when conforming; no Scheduler core rewrite.
 5. Deploy with the existing trusted production procedure and controlled replacement of the
    sole Runtime generation; never overlap a second resident engine or Feishu connection.
@@ -1119,6 +1160,12 @@ PRODUCTION_APPLY_AUTHORITY = none
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
 EXTERNAL_AUTHORITIES = mayf3/auth-service#MINIMAL_AUTH_FOUNDATION_V2@05fcf4074fe15d7f29ce1ef0f68767fbbebd54de (constrained_by)
 SUPERSEDES_ON_ATOMIC_ACCEPTANCE = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
+FUTURE_LIFECYCLE_ACTOR = OWNER_AUTHORIZED_ACTOR_ONLY
+FUTURE_ACCEPTANCE_COMMIT = SINGLE_LIFECYCLE_ONLY_DOCS_COMMIT
+PREMERGE_FINAL_HEAD_RECHECK = REQUIRED
+FINAL_HEAD_RECHECK = PENDING
+ACCEPTANCE_SEMANTIC_DELTA = NONE_REQUIRED
+BASE_MAIN_AUTHORITY_DRIFT = MUST_BE_NONE
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
