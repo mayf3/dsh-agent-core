@@ -414,7 +414,7 @@ export async function composeProductionRuntime(options = {}) {
     router,
     audit: agentSessionAudit,
     onAuditFailure: ({ phase, requestId }) => {
-      log.error(`[agent-session-messaging] audit ${phase} append failed after requestId ${requestId}`)
+      log.error(`[agent-session-messaging] audit ${phase} append failed after requestId ${requestId ?? '(not-minted)'}`)
     },
   }))
 

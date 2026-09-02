@@ -34,6 +34,7 @@ import { AGENT_SESSION_SEND_CAPABILITY_ID } from '../../broker/src/capabilities/
 import { createFinalReplyWaiter, mapFinalAssistantOutputToOutcome } from './agent-session-reply-wait.js'
 
 const TARGET_AGENT_ID_RE = /^agt_[a-z0-9-]+$/
+const TRUSTED_SOURCE_AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
 const MESSAGE_MAX_UTF8_BYTES = 65536
 const TIMEOUT_MAX_SECONDS = 300
 
@@ -80,6 +81,7 @@ export function validateSendArgs(input) {
  * and nothing here ever retries.
  */
 function mapDeliverError(error) {
+  if (error?.code === 'AGENT_DISABLED') return { code: 'target_disabled', detail: 'targetAgentId resolves to a disabled Agent' }
   if (error?.code === 'AGENT_NOT_FOUND') return { code: 'target_not_found', detail: 'no enabled Agent resolves targetAgentId' }
   if (error?.envelope === 'not_admitted') {
     return error?.code === 'AGENT_PROCESS_QUEUE_CAP'
@@ -120,7 +122,8 @@ export function createAgentSessionMessagingAccess({
     || typeof router.onTurnReconciled !== 'function') {
     throw new TypeError('agent-session-messaging: router with deliver/readFinalAssistantOutput/onTurnReconciled is required')
   }
-  if (audit === undefined || typeof audit.appendIntent !== 'function' || typeof audit.appendOutcome !== 'function') {
+  if (audit === undefined || typeof audit.appendIntent !== 'function'
+    || typeof audit.appendOutcome !== 'function' || typeof audit.appendDenial !== 'function') {
     throw new TypeError('agent-session-messaging: audit surface is required')
   }
   const waitForFinalAssistantReply = createFinalReplyWaiter({
@@ -136,6 +139,15 @@ export function createAgentSessionMessagingAccess({
     } catch { /* the sanitized signal is best-effort by contract */ }
   }
 
+  function deny(sourceAgentId, code, detail) {
+    if (audit.appendDenial({
+      capabilityId: AGENT_SESSION_SEND_CAPABILITY_ID,
+      agentId: typeof sourceAgentId === 'string' ? sourceAgentId : undefined,
+      code,
+    }) !== 'appended') auditFailed(undefined, 'denial')
+    return { ok: false, error: { code, detail } }
+  }
+
   /**
    * The `send` operation handler: (args, trustedContext) -> broker envelope.
    */
@@ -143,24 +155,24 @@ export function createAgentSessionMessagingAccess({
     // ── R2: authoritative validation, first action, no side effects yet ────
     const checked = validateSendArgs(rawArgs)
     if (!checked.ok) {
-      return { ok: false, error: { code: 'invalid_arguments', detail: checked.detail } }
+      return deny(context?.callerAgentId, 'invalid_arguments', checked.detail)
     }
     const { targetAgentId, message, timeoutSeconds } = checked.args
 
     // ── R3: trusted runtime-derived identity + exact source-turn proof ────
     const sourceAgentId = context?.callerAgentId
-    if (typeof sourceAgentId !== 'string' || !TARGET_AGENT_ID_RE.test(sourceAgentId)) {
-      return { ok: false, error: { code: 'internal_error', detail: 'trusted caller identity missing from the gateway context' } }
+    if (typeof sourceAgentId !== 'string' || !TRUSTED_SOURCE_AGENT_ID_RE.test(sourceAgentId)) {
+      return deny(sourceAgentId, 'internal_error', 'trusted caller identity missing from the gateway context')
     }
     const correlation = context?.sourceTurnExecutionId
     if (typeof correlation !== 'string' || correlation === '') {
       // Missing or stale source execution proof fails BEFORE Router delivery.
-      return { ok: false, error: { code: 'internal_error', detail: 'trusted source turn proof missing or stale' } }
+      return deny(sourceAgentId, 'internal_error', 'trusted source turn proof missing or stale')
     }
     if (targetAgentId === sourceAgentId) {
       // R3: self-send would self-deadlock the per-process queue — rejected
       // before delivery, never smuggled through as accepted.
-      return { ok: false, error: { code: 'self_send_not_supported', detail: 'sending to the calling Agent itself is not supported' } }
+      return deny(sourceAgentId, 'self_send_not_supported', 'sending to the calling Agent itself is not supported')
     }
 
     const timeoutMode = timeoutSeconds === 0 ? 'receipt_only' : 'wait_reply'

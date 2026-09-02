@@ -178,7 +178,7 @@ export function createSessionSeam({ ctx, settings }) {
     if (messageOrigin.kind !== 'inter_agent') {
       throw new TypeError('demo-server: messageOrigin.kind must be "inter_agent"')
     }
-    if (typeof messageOrigin.sourceAgentId !== 'string' || !/^agt_[a-z0-9-]+$/.test(messageOrigin.sourceAgentId)) {
+    if (typeof messageOrigin.sourceAgentId !== 'string' || !/^agt_[A-Za-z0-9_-]+$/.test(messageOrigin.sourceAgentId)) {
       throw new TypeError('demo-server: messageOrigin.sourceAgentId must be an exact agt_* id')
     }
     if (typeof messageOrigin.correlation !== 'string' || messageOrigin.correlation === '') {

@@ -56,7 +56,7 @@ function seam(ctx) {
   return createSessionSeam({ ctx, settings: { cwd: WS_A, provider: 'p', model: 'm' } })
 }
 
-const VALID_ORIGIN = { kind: 'inter_agent', sourceAgentId: 'agt_a-caller', correlation: 'turn:1:a1:g1:s9' }
+const VALID_ORIGIN = { kind: 'inter_agent', sourceAgentId: 'agt_stock_agent', correlation: 'turn:1:a1:g1:s9' }
 
 test('R4: an absent sidecar keeps the historical user source', async () => {
   const { ctx, calls } = fakeCtx()
@@ -73,7 +73,7 @@ test('R4: a valid inter_agent sidecar becomes the durable message source verbati
   assert.equal(calls.followups.length, 1)
   assert.deepEqual(calls.followups[0].message.source, VALID_ORIGIN)
   assert.equal(calls.followups[0].message.source.kind, 'inter_agent')
-  assert.equal(calls.followups[0].message.source.sourceAgentId, 'agt_a-caller')
+  assert.equal(calls.followups[0].message.source.sourceAgentId, 'agt_stock_agent')
   assert.equal(calls.followups[0].message.source.correlation, 'turn:1:a1:g1:s9')
 })
 

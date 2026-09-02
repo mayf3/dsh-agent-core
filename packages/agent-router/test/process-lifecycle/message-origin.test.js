@@ -12,9 +12,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { createIngressDelivery } from '../src/ingress-delivery.js'
-import { turnExecutionMethods, TurnExecution } from '../src/process/turn-execution.js'
-import { createParentRpcHandler, BROKER_RPC_METHOD } from '../src/parent-rpc-relay.js'
+import { createIngressDelivery } from '../../src/ingress-delivery.js'
+import { turnExecutionMethods, TurnExecution } from '../../src/process/turn-execution.js'
+import { createParentRpcHandler, BROKER_RPC_METHOD } from '../../src/parent-rpc-relay.js'
 
 // ------------------------------------------------------ deliver (R4 sidecar)
 
@@ -37,7 +37,7 @@ function deliveryDeps({ routeChain }) {
   }
 }
 
-const VALID_ORIGIN = { kind: 'inter_agent', sourceAgentId: 'agt_a-caller', correlation: 'turn:1:a1:g1:s2' }
+const VALID_ORIGIN = { kind: 'inter_agent', sourceAgentId: 'agt_stock_agent', correlation: 'turn:1:a1:g1:s2' }
 
 test('R4: deliver forwards a valid messageOrigin (frozen) into the admission opts', async () => {
   const admissions = []
