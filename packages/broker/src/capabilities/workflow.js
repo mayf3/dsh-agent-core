@@ -12,7 +12,12 @@
  *   workflow_submission_history GET /internal/v1/workflow-instances/{workflowInstanceId}/submissions workflow.read
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
  *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
- *   workflow_transition        POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions workflow.execute
+ *   workflow_execute           POST /internal/v1/workflow-instances                   workflow.execute
+ *                              POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions
+ *   (workflow_execute per AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
+ *   §21 DEC-010/CTR-010: the ONLY workflow write tool — operations
+ *   `create_instance` + `transition`; workflow_transition was removed from the
+ *   model tool face in the same cutover and must never coexist.)
  *
  * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 +
  * AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2):
@@ -27,10 +32,11 @@
  * means a later page; either alone fails fast locally with `invalid_cursor`
  * before credential, token, or HTTP work. Full cursor strings are forwarded
  * verbatim and the downstream page, including next_cursor, is not reshaped.
- * The sole workflow write exposed here is exact-assignee transition submission;
- * svc-workflow remains authoritative for actor and transition legality, and the
- * transport's trusted `idempotencyKey` seam generates its model-inaccessible
- * Idempotency-Key.
+ * The sole workflow write tool exposed here is `workflow_execute` (DEC-010:
+ * ONE unified write entry; `create_instance` + `transition` operations);
+ * svc-workflow remains authoritative for actor, initial assignee resolution
+ * and transition legality, and the transport's trusted `idempotencyKey` seam
+ * generates the model-inaccessible Idempotency-Key for both write operations.
  *
  * Downstream error preservation: each manifest DECLARES the svc-workflow
  * read-side error codes its endpoints can produce (evidence: svc-workflow
@@ -338,19 +344,41 @@ export const workflowGlobalInstancesManifest = withTransportErrors({
   ],
 })
 
-/** Exact-assignee transition submission; all authorization remains downstream. */
-export const workflowTransitionManifest = withTransportErrors({
-  id: 'workflow_transition',
-  toolName: 'workflow_transition',
-  name: 'Workflow Transition',
+/**
+ * The ONE unified workflow write tool (AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
+ * §21 DEC-010 / CTR-010): operations `create_instance` + `transition`, the only
+ * workflow write entry. `transition` migrates the production-verified
+ * workflow_transition contract item-by-item (CTR-001..009 — endpoint, args,
+ * CAS, trusted Idempotency-Key, error table); `create_instance` binds the
+ * EXISTING svc-workflow endpoint POST /internal/v1/workflow-instances
+ * (CASE A — service zero change). Initial assignee is resolved SERVER-SIDE
+ * from the definition entry node; identity travels only through the
+ * credential seam — no principalId/agentId/actor/assignee/Idempotency-Key is
+ * model-facing. No broker-side automatic retry (DEC-004).
+ */
+export const workflowExecuteManifest = withTransportErrors({
+  id: 'workflow_execute',
+  toolName: 'workflow_execute',
+  name: 'Workflow Execute',
   description:
-    'Agent Core capability `workflow_transition` (svc-workflow): first call `workflow_instance_detail` to read the current `workflow_state_version` and `outgoingTransitions[]`; use `executable_for_actor: true` only as an advisory preference, then submit the exact `transition_id` and payload matching `submission_schema`. ' +
+    'Agent Core capability `workflow_execute` (svc-workflow) — the single workflow write entry with two operations. ' +
+    'operation="create_instance": create a workflow instance in a domain from a PUBLISHED definition version; the server resolves the initial assignee from the entry node and returns {workflowInstanceId, workflowStateVersion=1, ...}. ' +
+    'operation="transition": first call `workflow_instance_detail` to read the current `workflow_state_version` and `outgoingTransitions[]`; use `executable_for_actor: true` only as an advisory preference, then submit the exact `transition_id` and payload matching `submission_schema`. ' +
     'The downstream atomic transaction is authoritative, so advisory false/stale values are never blocked locally. On `workflow_state_version_conflict`, read the detail again and explicitly resubmit with the new version.',
   requiredScopes: ['workflow.execute'],
   errors: [
     ...baseErrors,
     ...authErrors,
     ...queryErrors,
+    // create_instance family (svc-workflow error.rs from_create; CASE A).
+    { code: 'domain_not_found', description: 'Target domain not found (HTTP 404).' },
+    { code: 'domain_disabled', description: 'Target domain is disabled (HTTP 403).' },
+    { code: 'domain_membership_required', description: 'Caller is not an active member of the target domain (HTTP 403).' },
+    { code: 'cross_domain_violation', description: 'Caller may not create instances in this domain (HTTP 403).' },
+    { code: 'definition_version_not_found', description: 'Workflow definition version not found (HTTP 404).' },
+    { code: 'version_not_published', description: 'Workflow definition version is not PUBLISHED (HTTP 409).' },
+    { code: 'context_validation_failed', description: 'contextPayload failed the entry node context schema (HTTP 422).' },
+    // transition family (CTR-005, migrated verbatim from workflow_transition).
     { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
     { code: 'current_visit_not_found', description: 'Current node visit not found (HTTP 404).' },
     { code: 'principal_not_assignee', description: 'Caller is not the current assignee (HTTP 403).' },
@@ -361,15 +389,40 @@ export const workflowTransitionManifest = withTransportErrors({
     { code: 'transition_not_applicable', description: 'Transition is not applicable to the current node (HTTP 409).' },
     { code: 'submission_required', description: 'This transition requires a submission payload (HTTP 422).' },
     { code: 'submission_validation_failed', description: 'Submission payload failed validation (HTTP 422).' },
-    { code: 'size_limit_exceeded', description: 'Submission payload exceeds the service limit (HTTP 413).' },
+    { code: 'size_limit_exceeded', description: 'Submission payload or metadata exceeds the service limit (HTTP 413).' },
     { code: 'invalid_return_references', description: 'Return transition references are invalid (HTTP 422).' },
-    { code: 'assignee_resolution_failed', description: 'Target assignee resolution failed (HTTP 422).' },
+    { code: 'assignee_resolution_failed', description: 'Assignee resolution failed (HTTP 422).' },
     { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
     { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
   ],
   operations: [
     {
-      name: 'submit',
+      name: 'create_instance',
+      description:
+        'Create one workflow instance. Required: domainId, definitionVersionId (a PUBLISHED definition version), contextPayload (must satisfy the entry node context schema), metadata (JSON; pass null when empty). Optional: externalReference (<=512 chars), externalUrl.',
+      arguments: {
+        properties: {
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID); caller must be an active member.' },
+          definitionVersionId: { type: 'string', description: 'PUBLISHED workflow definition version id (UUID).' },
+          contextPayload: { type: 'json', description: 'Initial context payload; validated against the entry node context schema.' },
+          metadata: { type: 'json', description: 'Arbitrary metadata JSON (<=64 KiB); pass null when there is none.' },
+          externalReference: { type: 'string', description: 'Optional external reference string (<=512 chars).' },
+          externalUrl: { type: 'string', description: 'Optional external URL.' },
+        },
+        required: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'POST',
+        path: '/internal/v1/workflow-instances',
+        body: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata', 'externalReference', 'externalUrl'],
+        idempotencyKey: true,
+      },
+    },
+    {
+      name: 'transition',
       description: 'Submit one transition using exact values read from workflow_instance_detail.',
       arguments: {
         properties: {
@@ -394,7 +447,7 @@ export const workflowTransitionManifest = withTransportErrors({
   ],
 })
 
-/** All first-batch Workflow manifests. */
+/** All first-batch Workflow manifests (6 reads + the ONE unified write tool). */
 export const manifests = [
   workflowMyTasksManifest,
   workflowInstanceDetailManifest,
@@ -402,5 +455,5 @@ export const manifests = [
   workflowMyDomainsManifest,
   workflowDomainInstancesManifest,
   workflowGlobalInstancesManifest,
-  workflowTransitionManifest,
+  workflowExecuteManifest,
 ]
