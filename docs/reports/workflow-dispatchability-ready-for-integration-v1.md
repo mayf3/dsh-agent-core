@@ -238,6 +238,19 @@ cd packages/broker && npm test               # node --test（含 capabilities/wo
 - 结论：裁决后无论走 (a)/(b)，两条路径的实现-测试-审计链条在本地均即时可执行；
   LOCAL_E2E 的全部前置（build、test runner、DB 容器、分页测试目标）已实证就绪。
 
+### 6.3 坐标现势性注记（同日稍后复核）
+
+- dsh-agent-core main 已前进 `4318be3 → a7e732f`（PR #142 合入
+  WORKFLOW_EXECUTE_UNIFIED_WRITE_TOOL_IMPL_V1，属另一 goal 链）：`workflow.js`
+  blob 变为 `db7688fe1cc428aa1260e1372920ff744a076013`（workflow_transition →
+  workflow_execute 统一写工具），broker 测试数 301 → 309。**机械复核：该变更对
+  `workflow_global_instances` / `workflow_domain_instances` 读 manifests 及任何
+  dispatchability 相关行为零触碰（diff 中 global/dispatchable 相关行数 = 0），
+  本报告裁决不受影响**；§6 中 dsh 坐标（4318be3 / blob 83df50eb / 301 tests）为
+  报告观测时点快照。
+- svc-workflow 侧无任何变化：main 仍 `efdfb7e`，PR #21 仍 OPEN（head `2a91d0c`），
+  PR #19 仍 OPEN（`0c63d35`）；Owner gate 状态不变。
+
 ## 7. 通往 READY_FOR_INTEGRATION = YES 的合法路径（merge dependencies / order）
 
 ```text
