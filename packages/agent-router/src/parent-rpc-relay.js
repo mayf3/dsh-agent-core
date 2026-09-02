@@ -23,6 +23,25 @@ export const SWITCH_RPC_METHOD = 'agent-core/switchAgent'
 export const BROKER_RPC_METHOD = 'agent-core/broker'
 
 /**
+ * AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R3 — exact source-turn proof at the
+ * parent-RPC boundary. The runtime-owned source correlation is the child's
+ * rpcMeta.turnExecutionId, trusted ONLY when it passes all three frozen
+ * conditions: it belongs to THIS AgentProcess generation (the executions map
+ * is per-process and minted under this generation), it is present in that
+ * process's execution map, and it is not settled. This works for a source
+ * Run that itself originated through deliver() (no activeIngressContext
+ * exists there) and for the ordinary turn-mode path alike; missing or stale
+ * proof yields `undefined` and the capability fails before Router delivery.
+ */
+function provenSourceTurnExecutionId(proc, rpcMeta) {
+  const candidate = rpcMeta?.turnExecutionId
+  if (typeof candidate !== 'string' || candidate === '') return undefined
+  const execution = proc.executions?.get(candidate)
+  if (execution === undefined || execution.settled === true) return undefined
+  return candidate
+}
+
+/**
  * Create the per-process parent-RPC handler bound to one agent slot.
  * @param {object} deps
  * @param {string} deps.agentId - the ACTUAL identity of the owning process
@@ -83,6 +102,9 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
             // at RPC receipt; stale/cleared/replaced contexts become absent and
             // Scheduler fails before any credential or store access.
             ingressContext: boundIngressContext,
+            // R3 exact source-turn correlation for the messaging capability —
+            // proven against the execution map above, absent when stale.
+            sourceTurnExecutionId: provenSourceTurnExecutionId(proc, rpcMeta),
           },
         ),
       }
