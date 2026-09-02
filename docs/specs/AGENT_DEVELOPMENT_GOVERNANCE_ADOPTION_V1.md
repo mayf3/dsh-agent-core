@@ -59,58 +59,253 @@ independent Review, Owner acceptance, atomic lifecycle transition, and merge.
 
 ## 4. Current State
 
-- `STATE-ADOPT-001` — At Base
-  `840d2f4ad91f8252eb1f163330c041216a0dd9c4`, V0 is accepted/current and the
-  lock pins `0.1.0-draft.1@46f78c3f00d768d99a4c8c2da975b124bce042f9`.
-- `STATE-ADOPT-002` — On this Draft PR, exact v1.0.0 bytes and proposed metadata
-  are prepared, but V1 is not active local authority.
+### STATE-ADOPT-001 — V0 is current at the preparation Base
+
+- Subject: local development-governance adoption authority and governance lock
+  in `mayf3/dsh-agent-core`.
+- As-of revision: consumer Base
+  `840d2f4ad91f8252eb1f163330c041216a0dd9c4`.
+- Environment: GitHub repository object tree for the designated `main`
+  authority branch; runtime and production state are not evaluated.
+- Observed at: `2026-09-01T23:16:14Z`.
+- Basis: `OBS-ADOPT-001`, `EVD-ADOPT-001`.
+- State: `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` is accepted/current and
+  `.agents/governance.lock.json` pins
+  `0.1.0-draft.1@46f78c3f00d768d99a4c8c2da975b124bce042f9`.
+
+### STATE-ADOPT-002 — The prepared candidate remains proposed
+
+- Subject: Governance v1.0.0 adoption candidate in PR #140.
+- As-of revision:
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`.
+- Environment: clean detached consumer checkout on GitHub Actions Ubuntu
+  runner; repository object state only, with no runtime or production mutation.
+- Observed at: `2026-09-02T21:06:49Z`.
+- Basis: `OBS-ADOPT-004`, `OBS-ADOPT-005`, `OBS-ADOPT-006`,
+  `EVD-ADOPT-004`.
+- State: the 25 exact v1.0.0 managed files and a proposed lock are present;
+  V1 is proposed, V0 remains current, and no local adoption is active.
+
+### STATE-ADOPT-003 — Required execution evidence is reproducible
+
+- Subject: vendor dry-run, vendored-byte verifier, Python entrypoint
+  compilation, and route-validator fixtures for the PR #140 candidate.
+- As-of revision: consumer candidate
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`; upstream source
+  `902842735a69797b54016eeaa88d2f949f5879a9`.
+- Environment: GitHub-hosted Ubuntu 24.04 runner, Python 3.12.3.
+- Observed at: `2026-09-02T21:06:49Z`.
+- Basis: `OBS-ADOPT-005`, `OBS-ADOPT-006`, `EVD-ADOPT-005`.
+- State: the actual upstream vendor dry-run and candidate validators completed
+  with their required `0 / 1 / 2` outcomes; this is execution evidence for a
+  later independent Review, not an acceptance decision.
 
 ## 5. Observations
 
-### OBS-ADOPT-001 — Consumer Base
+### OBS-ADOPT-001 — Consumer Base authority state
 
-- Source revision: `840d2f4ad91f8252eb1f163330c041216a0dd9c4`.
-- Method: read Base branch and local governance files.
-- Result: V0/lock are accepted; local extensions exist and are separate.
-- Provenance: preparation report Git coordinates and blob matrix.
+- Subject: V0 adoption Spec, governance lock, `AGENTS.md`, and
+  `.agents/local/**` in `mayf3/dsh-agent-core`.
+- Source revision:
+  `840d2f4ad91f8252eb1f163330c041216a0dd9c4`.
+- Environment: GitHub repository object tree; no runtime or production access.
+- Observed at: `2026-09-01T23:16:14Z`.
+- Method: read the Base commit, governing Spec frontmatter, lock metadata, and
+  local-governance blobs.
+- Result: V0 and its lock are accepted/current; local extensions exist as
+  separate repository-owned authority.
+- Provenance:
+  `docs/reports/AGENT_DEVELOPMENT_GOVERNANCE_V1_ADOPTION_PREPARATION.md`
+  §1 and §5, with the exact Base and preserved blob matrix.
 
 ### OBS-ADOPT-002 — Upstream release identity
 
-- Source: annotated tag object `bb98937d176890088da736fa4a45f48279f19d50`.
-- Result: tag `v1.0.0` resolves exactly to
+- Subject: upstream ref `refs/tags/v1.0.0`, annotated tag object, and peeled
+  target in `mayf3/agent-development-governance`.
+- Source revision: tag object
+  `bb98937d176890088da736fa4a45f48279f19d50`.
+- Environment: GitHub Git object API and exact upstream source checkout.
+- Observed at: `2026-09-02T21:06:49Z`.
+- Method: inspect the tag ref/object and check out its peeled target.
+- Result: `v1.0.0` is annotated and resolves exactly to
+  `902842735a69797b54016eeaa88d2f949f5879a9`; the tag object is unsigned.
+- Provenance: upstream tag ref/object plus GitHub Actions run `33683264969`,
+  job `100424581220`.
+
+### OBS-ADOPT-003 — Distribution manifest identity
+
+- Subject: upstream `VERSION` and `distribution/manifest.json`.
+- Source revision:
   `902842735a69797b54016eeaa88d2f949f5879a9`.
-- Provenance: upstream tag ref and annotated tag object.
-
-### OBS-ADOPT-003 — Distribution manifest
-
-- Source revision: `902842735a69797b54016eeaa88d2f949f5879a9`.
-- Result: distribution=`development-governance-v0`, version=`1.0.0`, files=25,
-  manifest Git blob=`d4e37f492653260aa24878af1a9208f53122db5d`, SHA-256=
+- Environment: exact clean upstream checkout and GitHub Git object API.
+- Observed at: `2026-09-02T21:06:49Z`.
+- Method: read `VERSION`, parse the manifest, and verify its Git object,
+  SHA-256, distribution, version, and file count.
+- Result: version=`1.0.0`, distribution=`development-governance-v0`,
+  managed files=25, manifest Git blob=
+  `d4e37f492653260aa24878af1a9208f53122db5d`, manifest SHA-256=
   `c1fa620da4a16e4073d617e49eb5080487f2a117e3bab6502fd223afee0f06e0`.
+- Provenance: upstream `VERSION`, manifest object, and preparation report §2.
 
-### OBS-ADOPT-004 — Vendor plan
+### OBS-ADOPT-004 — Candidate bytes and lifecycle
 
-The exact upstream `tools/vendor.py` plan changes only manifest-managed shared
-governance bytes and `.agents/governance.lock.json`; it excludes `AGENTS.md`,
-`.agents/local/**`, and local product authorities. The network-isolated execution
-environment could not run the CLI against a fresh upstream checkout, so the
-preparation applied the same exact manifest plan using verified upstream Git
-blobs; this limitation is explicit and MUST be independently reviewed.
+- Subject: PR #140 candidate governance tree and local adoption metadata.
+- Source revision:
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`.
+- Environment: GitHub repository object tree and clean detached checkout.
+- Observed at: `2026-09-02T21:06:49Z`.
+- Method: compare all manifest-managed paths and the lock to the upstream
+  source; compare protected local and product paths to the Base.
+- Result: 25/25 managed bytes match; the lock is proposed with null acceptance
+  metadata; V0, `AGENTS.md`, `.agents/local/**`, product, runtime, and
+  production paths are unchanged.
+- Provenance: preparation report §4–§7 and GitHub Actions run `33683264969`.
+
+### OBS-ADOPT-005 — Actual upstream vendor dry-run
+
+- Subject: exact upstream `tools/vendor.py` operating on the exact consumer
+  candidate.
+- Source revision: upstream
+  `902842735a69797b54016eeaa88d2f949f5879a9`; consumer
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`.
+- Environment: GitHub-hosted Ubuntu 24.04 runner, Python 3.12.3.
+- Observed at: `2026-09-02T21:06:49Z`.
+- Method: run `python3 upstream/tools/vendor.py --target consumer
+  --source-commit 902842735a69797b54016eeaa88d2f949f5879a9
+  --prepared-by "PR140 execution evidence"
+  --prepared-at "2026-09-02T21:15:00Z" --adoption-status proposed`
+  without `--apply`, then inspect the consumer worktree.
+- Result: exit 0; 26 operations were planned (25 managed files plus the lock);
+  no file was written and the consumer checkout remained clean.
+- Provenance: GitHub Actions run `33683264969`, job `100424581220`, artifact
+  `9867075055`, receipt `pr140-adoption-execution-receipt.txt`.
+
+### OBS-ADOPT-006 — Candidate verifier and route outcomes
+
+- Subject: exact vendored verifier, transition validator compilation, and
+  Governance V1 route validator in the consumer candidate.
+- Source revision:
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`.
+- Environment: GitHub-hosted Ubuntu 24.04 runner, Python 3.12.3.
+- Observed at: `2026-09-02T21:06:49Z`.
+- Method: execute `verify_governance.py --target consumer`, compile all three
+  Python tools, and run valid, contradictory, and malformed route fixtures.
+- Result: governance verifier exit 0; Python compile exit 0; valid route exit
+  0; contradictory `SUPERSEDE + implementation_allowed=YES` exit 1;
+  malformed JSON exit 2.
+- Provenance: GitHub Actions run `33683264969`, job `100424581220`, artifact
+  `9867075055`, fixture and receipt files.
 
 ## 6. Claims and assumptions
 
-- `CLM-ADOPT-001` (`SUPPORTED`) — The obligation change requires
-  `SUPERSEDE`, supported by `EVD-ADOPT-001`.
-- `CLM-ADOPT-002` (`SUPPORTED`) — Exact manifest vendoring preserves local
-  authority boundaries, supported by `EVD-ADOPT-002`.
-- Open assumptions affecting normative meaning: none.
+### CLM-ADOPT-001 — The obligation change requires whole-authority replacement
+
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-ADOPT-001`.
+- Contradicted by evidence: none known.
+- Uncertainty: local activation remains contingent on independent Review,
+  Owner acceptance, atomic lifecycle closure, and merge.
+
+### CLM-ADOPT-002 — Exact manifest vendoring preserves local authority boundaries
+
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-ADOPT-002`.
+- Contradicted by evidence: none known.
+- Uncertainty: the conclusion applies to the pinned distribution and exact
+  consumer candidate only.
+
+### CLM-ADOPT-003 — The candidate supplies reviewable execution evidence
+
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-ADOPT-003`.
+- Contradicted by evidence: none known.
+- Uncertainty: the CI execution is author-side evidence; it does not replace
+  the required independent exact-Head Review or final accepted-Head recheck.
+
+Open assumptions affecting normative meaning: none.
 
 ## 7. Evidence relations
 
-- `EVD-ADOPT-001` — `OBS-ADOPT-001..003` SUPPORT `CLM-ADOPT-001` at the exact
-  consumer/upstream coordinates; sufficient for PREFLIGHT, not acceptance.
-- `EVD-ADOPT-002` — `OBS-ADOPT-003..004` SUPPORT `CLM-ADOPT-002`; sufficient
-  for candidate-byte preparation, with the stated vendor-CLI limitation.
+### EVD-ADOPT-001 — Base and upstream facts support whole-authority replacement
+
+- Source observations: `OBS-ADOPT-001`, `OBS-ADOPT-002`,
+  `OBS-ADOPT-003`.
+- Target: `CLM-ADOPT-001`.
+- Relation: SUPPORTS.
+- Bound coordinates: consumer Base
+  `840d2f4ad91f8252eb1f163330c041216a0dd9c4`; upstream tag object
+  `bb98937d176890088da736fa4a45f48279f19d50`; upstream source
+  `902842735a69797b54016eeaa88d2f949f5879a9`.
+- Strength/sufficiency: sufficient to classify `AUTHORITY_ACTION=SUPERSEDE`
+  because V1 changes long-lived routing obligations.
+- Limitations: does not perform or authorize local acceptance.
+- Provenance: preparation report §1–§2, Base object reads, and upstream tag
+  object reads.
+
+### EVD-ADOPT-002 — Manifest and candidate comparison support local preservation
+
+- Source observations: `OBS-ADOPT-003`, `OBS-ADOPT-004`,
+  `OBS-ADOPT-005`.
+- Target: `CLM-ADOPT-002`.
+- Relation: SUPPORTS.
+- Bound coordinates: upstream source
+  `902842735a69797b54016eeaa88d2f949f5879a9`; consumer Base
+  `840d2f4ad91f8252eb1f163330c041216a0dd9c4`; prepared candidate
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`.
+- Strength/sufficiency: strong for the 25 managed paths, lock fields, and
+  protected local/product path set.
+- Limitations: vendor dry-run proves planning and no-write behavior; candidate
+  byte identity is established separately by object/hash comparison.
+- Provenance: preparation report §3–§7 and GitHub Actions run `33683264969`.
+
+### EVD-ADOPT-003 — Executed checks support candidate reviewability
+
+- Source observations: `OBS-ADOPT-004`, `OBS-ADOPT-005`,
+  `OBS-ADOPT-006`.
+- Target: `CLM-ADOPT-003`.
+- Relation: SUPPORTS.
+- Bound coordinates: consumer candidate
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`; upstream source
+  `902842735a69797b54016eeaa88d2f949f5879a9`; GitHub Actions run
+  `33683264969`, job `100424581220`.
+- Strength/sufficiency: sufficient author-side executed evidence for an
+  independent Reviewer to reproduce and evaluate the adoption candidate.
+- Limitations: does not constitute independent Review or local acceptance.
+- Provenance: successful run logs and artifact `9867075055`, plus the persisted
+  preparation report.
+
+### EVD-ADOPT-004 — Candidate object and execution observations support proposed state
+
+- Source observations: `OBS-ADOPT-004`, `OBS-ADOPT-005`,
+  `OBS-ADOPT-006`.
+- Target: `STATE-ADOPT-002`.
+- Relation: SUPPORTS.
+- Bound coordinates: consumer candidate
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`; consumer Base
+  `840d2f4ad91f8252eb1f163330c041216a0dd9c4`.
+- Strength/sufficiency: sufficient to establish that the prepared candidate is
+  proposed, byte-exact for managed files, and non-mutating outside its scope.
+- Limitations: the resulting amendment Head must receive a new exact-Head
+  review; this relation does not predict future Base movement.
+- Provenance: candidate/Base object comparison and GitHub Actions run
+  `33683264969`.
+
+### EVD-ADOPT-005 — Execution receipt supports reproducibility state
+
+- Source observations: `OBS-ADOPT-005`, `OBS-ADOPT-006`.
+- Target: `STATE-ADOPT-003`.
+- Relation: SUPPORTS.
+- Bound coordinates: consumer candidate
+  `669d6f40bcfe37d0e299f5b1bea3957d0f5ca785`; upstream source
+  `902842735a69797b54016eeaa88d2f949f5879a9`; Ubuntu 24.04,
+  Python 3.12.3, observed `2026-09-02T21:06:49Z`.
+- Strength/sufficiency: strong for the recorded commands, outputs, exit codes,
+  and no-write dry-run property.
+- Limitations: the amendment changes only this proposed Spec and its
+  preparation report; an independent Reviewer must bind the resulting exact
+  Head and re-evaluate Base impact.
+- Provenance: GitHub Actions run `33683264969`, job `100424581220`, artifact
+  `9867075055`.
 
 ## 8. Decisions
 
@@ -165,38 +360,70 @@ lock, update navigation, pass final-Head recheck, and merge.
 ### ACC-ADOPT-001 — Release identity
 
 - Contracts: `CTR-ADOPT-001`.
-- Method: inspect tag ref/object and recompute manifest identity.
-- Required evidence: exact tag object, commit, manifest hash, and 25-path matrix.
-- Failure: any lightweight/different/missing tag, path, hash, size, pin, or ID.
+- Method: inspect the upstream tag ref/object, peel it to the exact commit,
+  inspect `VERSION`, recompute the manifest identity, and compare all 25
+  manifest entries to the candidate.
+- Environment: clean upstream and consumer checkouts on a Linux runner with
+  Git and Python 3; GitHub Git object API for annotated-tag identity.
+- Required evidence: exact tag ref/type/object, peeled commit, `VERSION`,
+  manifest Git blob and SHA-256, and a 25-path size/hash/byte matrix.
+- Expected result: annotated tag object
+  `bb98937d176890088da736fa4a45f48279f19d50` peels to
+  `902842735a69797b54016eeaa88d2f949f5879a9`; distribution/version are
+  `development-governance-v0`/`1.0.0`; all 25 candidate files match.
+- Failure condition: any lightweight, different, missing, or unverifiable tag,
+  path, hash, size, pin, version, or distribution ID fails acceptance.
 
 ### ACC-ADOPT-002 — Lifecycle and preservation
 
 - Contracts: `CTR-ADOPT-002`, `CTR-ADOPT-003`, `CTR-ADOPT-005`.
-- Method: compare Base/candidate paths and blobs; inspect lock, Specs, PR state.
-- Required evidence: changed-file list; hashes for `AGENTS.md`, `.agents/local/**`,
-  V0, product/runtime paths; exact Draft PR Head.
-- Failure: premature acceptance/supersession/merge or any unauthorized local,
-  product, runtime, or production change.
+- Method: compare Base and candidate trees; inspect the lock, V0/V1
+  frontmatter, PR state, protected local paths, and product/runtime path set.
+- Environment: exact Git object comparison plus a clean detached candidate
+  checkout; no production or runtime access is required.
+- Required evidence: Base/candidate coordinates, changed-file list, lock
+  metadata, V0/V1 lifecycle fields, PR Draft state, and blob/path comparison
+  for `AGENTS.md`, `.agents/local/**`, local authorities, and product/runtime
+  paths.
+- Expected result: V1 and lock remain proposed with null acceptance metadata;
+  V0 remains accepted/current and unchanged; PR remains Draft/unmerged; every
+  protected local, product, runtime, and production path has zero delta.
+- Failure condition: premature acceptance, supersession, Ready state, merge,
+  or any unauthorized local, product, runtime, production, permission,
+  credential, Secret, or GitHub-setting change fails acceptance.
 
 ### ACC-ADOPT-003 — Governance validation
 
 - Contracts: `CTR-ADOPT-001`, `CTR-ADOPT-004`.
-- Method: validate lock/schema/managed bytes and run route validator fixtures.
-- Expected: valid route exits 0, contradiction exits 1, malformed input exits 2.
-- Failure: mismatch, false pass/fail, or unavailable route validator.
+- Method: run the exact upstream vendor CLI in dry-run mode against the exact
+  candidate; run the candidate vendored-byte verifier; compile all candidate
+  Python tools; run valid, contradictory, and malformed route fixtures.
+- Environment: clean exact consumer/upstream checkouts on GitHub-hosted Ubuntu
+  24.04 with Python 3.12.3, or an independently reproduced equivalent
+  environment with the same bound revisions.
+- Required evidence: commands, runner and Python versions, execution time,
+  consumer/upstream Head SHAs, complete operation plan, no-write worktree
+  check, verifier output, fixture inputs, stdout/stderr, and exit codes.
+- Expected result: vendor dry-run exits 0 with 26 planned operations and no
+  writes; governance verifier and Python compilation exit 0; valid route exits
+  0; contradictory route exits 1; malformed JSON exits 2.
+- Failure condition: a write during dry-run, an unexpected path, byte/lock
+  mismatch, compile failure, false pass/fail, wrong exit code, unavailable
+  provenance, or evidence not bound to the candidate fails acceptance.
 
 ## 11. Alternatives and disposition
 
-Rejected: in-place V0 rewrite; pinning upstream `main`; renaming the compatibility
-distribution ID; auto-accepting during vendoring; bulk historical rewrite.
+Rejected: in-place V0 rewrite; pinning upstream `main`; renaming the
+compatibility distribution ID; auto-accepting during vendoring; bulk historical
+rewrite.
 
 ## 12. Migration, compatibility, and rollback
 
 `PRODUCT_CODE_MIGRATION=NONE`, `DATA_MIGRATION=NONE`,
 `RUNTIME_MIGRATION=NONE`, `PRODUCTION_MIGRATION=NONE`.
 Existing product authorities and local extensions retain meaning. Before
-acceptance, rollback is closing the Draft PR. After acceptance, rollback requires
-a new accepted successor; accepted V1 meaning is not rewritten.
+acceptance, rollback is closing the Draft PR. After acceptance, rollback
+requires a new accepted successor; accepted V1 meaning is not rewritten.
 
 ## 13. Open questions
 
