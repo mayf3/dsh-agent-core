@@ -1,0 +1,11 @@
+=== negative test: wrong phrase (validated copy, live mocks) ===
+rc=1
+[canary-prep-v2] Type APPLY WORKFLOW_CANARY_PREP_V2 to continue: [canary-prep-v2] FAIL: phrase mismatch — aborting with zero changes
+
+=== negative test: allowlist vars present in .env (validated copy, live mocks) ===
+rc=1
+[canary-prep-v2] Type APPLY WORKFLOW_CANARY_PREP_V2 to continue: [canary-prep-v2] FAIL: /tmp/canary-prep-v2-test/mock2.env: allowlist vars already present — this round is forbidden from touching them and refuses to run in that state
+
+=== negative test: non-root (SEALED runner, production paths) ===
+rc=1
+[canary-prep-v2] FAIL: must run as root (sudo bash run-agent-core-workflow-canary-prep-v2.sh)

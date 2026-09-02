@@ -1,0 +1,11 @@
+# RE-AUDIT r2 — AGENT_MEMORY_SIGTRAP_FIX_V1 delta d4802a9..c21c8f3
+VERDICT: RE_AUDIT_PASS  (no blocking issues)
+PREIMAGE_GATE no-clobber + failure-path writeReport = PASS (single throw site before rename; concurrent
+writer content never touched; genuine post-rename failures still sha-verified restore, exit 1)
+Stored-bound symmetry = PASS (esc bounds stored length 8192; tagsToText bounds joined line; no bypass via any
+render path; boundary 4096 all-special = 8192 legal / 4097 refuses; write-permits==read-permits now)
+Document bound strictness = PASS (320 + 2x fields incl id/updatedAt + 5x tagCount + 4x tagChars; algebraic
+proof bound-actual >= 208+|id|+|updatedAt|+2n+2Σ; 300-case fuzz min slack 394; 40M id/updatedAt refuse)
+Suite 83/83; ceo migration byte-identity bd3a866b... ; pathological 4/4 (old SIGTRAP, new survives)
+Non-blocking residuals: commit-message wording overclaim on codec comment scope; restore-proxy conflation
+needs two independent rare events; restore-path failure-injection test still open (one-off tool residual).

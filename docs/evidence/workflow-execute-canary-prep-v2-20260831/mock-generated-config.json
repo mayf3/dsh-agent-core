@@ -1,0 +1,20 @@
+{
+  "agentId": "agt_build-in-public-agent",
+  "domainId": "10000000-0000-0000-0000-000000000100",
+  "canaryInstanceId": "7dafa4f0-adf5-566b-83bb-6d07c59ae6fb",
+  "controlInstanceId": "f189d34b-bf8f-5607-82ce-f0ea314944ac",
+  "expectedAssigneePrincipalId": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+  "expectedCanaryTitle": "CANARY workflow_execute_canary_v1 — dedicated disposable fixture (do not process)",
+  "transitionDefinitionId": "7493f6ca-6cf0-4ebf-95f8-f565f2b231ec",
+  "expectedWorkflowStateVersion": 1,
+  "paginationLimit": 2,
+  "expectedMinimumPages": 2,
+  "expectedMinimumInstances": 10,
+  "dedicatedNoBusinessSideEffects": true,
+  "submissionPayload": {
+    "summary": "workflow_execute_canary_v1: combined deploy canary transition (disposable fixture)"
+  },
+  "expectedSubmissionSchemaKeys": [
+    "summary"
+  ]
+}

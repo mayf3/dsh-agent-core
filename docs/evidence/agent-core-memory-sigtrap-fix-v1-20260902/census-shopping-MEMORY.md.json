@@ -1,0 +1,523 @@
+{
+ "bytes": 69271612,
+ "chars": 69255648,
+ "entries": 137,
+ "parseMs": 53,
+ "maxSourceRaw": 67108885,
+ "maxTitleRaw": 50,
+ "maxContent": 565,
+ "maxTags": 4,
+ "sourcesWithLayers": 3,
+ "maxLayers": 25,
+ "ambiguousCount": 134,
+ "layerHist": {
+  "0": 134,
+  "12": 1,
+  "20": 1,
+  "25": 1
+ },
+ "oversizedUnderGuard": {
+  "source": 0,
+  "title": 0,
+  "content": 0
+ },
+ "top5": [
+  {
+   "id": "14d39d87-db2a-4585-90b2-d1647df34bf5",
+   "srcLen": 67108885,
+   "layers": 25,
+   "recovered": 23,
+   "stoppedBy": "non-canonical",
+   "head": "session 2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "session 2026-08-24 床笠调研"
+  },
+  {
+   "id": "4d83aa35-35b3-4a93-a5b4-9276fe632392",
+   "srcLen": 2097175,
+   "layers": 20,
+   "recovered": 25,
+   "stoppedBy": "non-canonical",
+   "head": "session 2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "session 2026-08-24 搬家打包调研"
+  },
+  {
+   "id": "9cfb4462-9270-4286-95f7-ab02e494ecd1",
+   "srcLen": 8218,
+   "layers": 12,
+   "recovered": 28,
+   "stoppedBy": "non-canonical",
+   "head": "session 2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "session 2026-08-24 京东购物车操作经验"
+  },
+  {
+   "id": "3a8bfbba-aaab-4aa7-a588-55987d23f5fd",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "6598b546-e7e6-4f74-9e24-986d69632b7e",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  }
+ ],
+ "allTop50": [
+  {
+   "id": "14d39d87-db2a-4585-90b2-d1647df34bf5",
+   "srcLen": 67108885,
+   "layers": 25,
+   "recovered": 23,
+   "stoppedBy": "non-canonical",
+   "head": "session 2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "session 2026-08-24 床笠调研"
+  },
+  {
+   "id": "4d83aa35-35b3-4a93-a5b4-9276fe632392",
+   "srcLen": 2097175,
+   "layers": 20,
+   "recovered": 25,
+   "stoppedBy": "non-canonical",
+   "head": "session 2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "session 2026-08-24 搬家打包调研"
+  },
+  {
+   "id": "9cfb4462-9270-4286-95f7-ab02e494ecd1",
+   "srcLen": 8218,
+   "layers": 12,
+   "recovered": 28,
+   "stoppedBy": "non-canonical",
+   "head": "session 2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "session 2026-08-24 京东购物车操作经验"
+  },
+  {
+   "id": "3a8bfbba-aaab-4aa7-a588-55987d23f5fd",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "6598b546-e7e6-4f74-9e24-986d69632b7e",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "e040829e-c650-4699-a759-1569538c1178",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "dc929e9b-74af-4fa8-b146-5a4e68096311",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "d8f9489f-1df8-4102-b263-74ceffd36639",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "2ccfb4f2-e33d-44a3-87f7-2e6a820fbdf8",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "507e0688-714a-44c8-84c8-2f64e025bb33",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "d3fa8dc5-eb23-4079-a152-b37b04d4603f",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "0e4e50d2-81c2-44ab-9e55-d75a82a01745",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "c30727b4-29f3-4f16-a053-bf3a90ffdf45",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "015a2867-719f-4035-b774-b99849c8dc35",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "eafa2df3-b927-4b21-9610-bcb75e031316",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "f55ac5f5-1d57-44c6-ba0c-cf7e3fd8b64c",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "dcd84339-2ffe-472c-9795-8853d0b2d6f2",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "a25b9e1e-f37a-44b0-8cce-72ea1e765c4f",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "398f4a76-f837-47d5-bb56-8f6d85f6b83b",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "607aa49b-af48-47b3-99c4-759d273ca69e",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "1498df50-f9ec-4f20-ba28-e18dfbdee0ba",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "42a2fd5b-8f92-4ac9-95ea-812db8b8d5e5",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "e85a216e-3337-4ce8-bab0-569f1dbaabb9",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "f95767d3-9a19-4d17-99da-367ea918d3dc",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "da014864-48ec-44cc-bc6a-ed195f59f80a",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "6a9f4273-1fc1-4da0-b21a-5346ebc980b3",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "18127f03-a8c9-4d0f-91e7-bed5d2fe820d",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "782d84a8-3276-4ce0-a987-97bba4d7b8b1",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "e989882b-1001-4f1a-8a5c-5e67ebf2b0bd",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "be058ea7-48e7-4ccf-9d18-22ecb58ed297",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "f7a80108-f9bf-47cb-b00e-aa03becc3a9a",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "e0b682c5-dfd0-4eb3-aca3-8a48646294c5",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "f97a814e-a34e-4621-8474-d0033224dd03",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "6a92207f-fb58-4c2a-b2e6-1113fdbda0cd",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "7f255a9c-5300-4aae-b431-34bc28f56590",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "8816fe00-3716-4d3b-b12d-8324466de8bd",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "0af2d25b-f895-4ee4-bbf4-95932a35bedb",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "7a275f9b-5eb7-4829-abf0-c70b47d5dbcb",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "5b9b8b20-7f18-4c31-b201-fe51b402a2e7",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "848dd3f4-f06c-445f-924c-61116fc8dda6",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "cc2f27b9-67f6-43b1-a68d-bbffede14cb9",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "b6eb3e5f-f2d8-4ae5-bbb9-bb7a75fa00e2",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "3327de24-ab62-4e1b-8f84-496a63996406",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "ec392860-e4ff-46ac-b815-18a5341b3199",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "4afe30b5-3ff8-4752-867f-00468ce44431",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "ec2bcfec-63c5-4011-906f-edf06652068f",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "10045085-fea2-42a8-a179-c2ad6ad56eba",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "d89ede71-3244-448e-8323-1180d7053c2c",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "20f6e291-3a2e-48d6-9e91-ecb873979747",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "53f4f6c6-18b6-44de-bcb3-e5dfea94f279",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  }
+ ]
+}

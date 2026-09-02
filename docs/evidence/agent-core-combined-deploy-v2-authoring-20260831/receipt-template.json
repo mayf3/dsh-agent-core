@@ -1,0 +1,36 @@
+{
+  "receipt": "AGENT_CORE_COMBINED_DEPLOY_V1",
+  "created_utc": "@TS@",
+  "runner": "/tmp/run-agent-core-combined-deploy-v2.sh",
+  "runner_sha256": "@RUNNER_SHA@",
+  "target_main": "2392a41d4655ba25ed9e9749fbf8beb0ad1c71b4",
+  "merged_authority": {
+    "workflow_transition": {"spec": "AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1", "merge": "1aa8248893766aaf1caae17b2905e40061f0a147", "pr": 125},
+    "domain_pagination": {"spec": "AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2", "merge": "4d7ca245ec0b9f6ed8a650f742b94b39728331a7", "pr": 126},
+    "error_preservation": {"spec": "AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1", "note": "family discipline; own implementation already deployed at PR #82; V2 sanitizer restated by CTR-FMC-12"},
+    "forum_moderation": {"spec": "AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2", "merge": "2392a41d4655ba25ed9e9749fbf8beb0ad1c71b4", "impl_head": "83165dea530956a8836e9830c54811eb3a8ae93e", "pr": 105}
+  },
+  "base_manifest": {"count": 132, "sha256": "9ac84954fefc3d5893b7e5ca7045b2bb7cf0ad7492d121607d2b0659a230f4b1"},
+  "target_manifest": {"count": 134, "sha256": "865b6569591e361b18ffcde01251c0b2c2ba160818a0738127a2e8a0bcf2a8d6"},
+  "delta": [
+    {"path": "packages/broker/src/capabilities/workflow.js", "base": "04ca8550fbdaf9b66624dea42701a8a9af7547a8", "target": "83df50eb9947c865a2df531b05285c5e0f3eae0c"},
+    {"path": "packages/broker/src/mapping.js", "base": "890d35b97700e741b0b6960049b619da03645483", "target": "74e83e11660a0ea5a9dffc47fe2a8897f17f9809"},
+    {"path": "packages/broker/src/schema.js", "base": "13f80f87ce3591669224a061a243fa6cce96a553", "target": "1bd36bbe5f3fc796dffdf633b557fbb7fff2741b"},
+    {"path": "packages/broker/src/capabilities/forum.js", "base": "f068c171c2c8bd66b774c197bdbae09d1bcf809b", "target": "b64b73578f9645777025d8bff74e82f551de3866"},
+    {"path": "packages/broker/src/capabilities/forum-moderation.js", "base": "ABSENT", "target": "90cf87c3e4afd424574b4f18b12742306c5968df"},
+    {"path": "packages/broker/src/error-detail-sanitizer.js", "base": "ABSENT", "target": "25e02239255f95c55e59454bd32703550e3ad5b0"},
+    {"path": "packages/broker/src/index.js", "base": "6c4a60af4c529dd052ad45bd641213d40ee6800c", "target": "a543e586792aa18c592b7d2afb535b4ff575d286"},
+    {"path": "packages/broker/src/transport.js", "base": "b697850cfd1961ac7ee88aa625d0a5c711aa7eac", "target": "942e9880ff11fbc672481f66f7e96d35778dfc4f"},
+    {"path": "bundle-broker/cordis.patch.yml", "base": "b84c629679e900ea886896c9656c8ecb9fb792ae", "target": "768ddecaea5fedabe3c44cb63c11926cdfb2b885", "note": "outside app manifest (bundle-* pruned); pinned by blob OID; enters production via the normal bundle build flow"}
+  ],
+  "excluded_drift_untouched": [
+    {"path": "packages/production-runtime/src/model-overrides.js", "live": "ea44819a18085c6bd8665157d92caba205e720d9", "reason": "emergency breakglass pending Owner ratification"},
+    {"path": "packages/feishu-connector/src/index.js", "live": "2e6bd0896dd0354877aebc99361a986a05c1e06a", "reason": "unauthorized 9386ac4 feishu delta; no deployment authority"},
+    {"path": "packages/scheduler-router/src/index.js", "live": "b1f5563411cb55c8ddc3391d6337a30aea2e0f45", "reason": "unauthorized 9386ac4 scheduler delta; no deployment authority"}
+  ],
+  "canary_config": {"path": "/tmp/agent-core-workflow-canary-v1.json", "sha256": "@CANARY_SHA@", "identity": "agt_build-in-public-agent (CTR-009)"},
+  "canary": "@CANARY_SUMMARY@",
+  "smoke": "@SMOKE_SUMMARY@",
+  "reload": {"target": "system/ai.agent-core.runtime", "count": 1},
+  "backup_path": "@BACKUP@"
+}

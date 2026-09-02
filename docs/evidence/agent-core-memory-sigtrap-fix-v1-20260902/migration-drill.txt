@@ -1,0 +1,49 @@
+════════ hr ════════
+pre:  sha=e6e86809d806cd39bbb61b4b7342f729ce6f85fb042663026ec42c738856c2be size=134394733 mode=100644
+dry-run: file untouched OK
+post: sha=da831a348dad597ee5f6ac3ab4c73b819c27a6387721074cea3a26561cb51afa size=41365 mode=100644
+shrink: 134394733 -> 41365 OK
+mode preserved OK
+100x stability PASS: entries=106 sources stable, bytes stable at 41365
+100x cycles byte-idempotent OK
+backup sha == preimage OK
+rollback restored exact bytes OK
+re-apply idempotent, final= da831a348dad597ee5f6ac3ab4c73b819c27a6387721074cea3a26561cb51afa OK
+
+════════ efficiency ════════
+pre:  sha=28c003ba6779f40d1956e0b72171ac48c6c6b8cfe643ed81fac04a98d2e4aa7e size=89194752 mode=100644
+dry-run: file untouched OK
+post: sha=fbf1e471375212503767c50e15443f857aa24ef1891ae4bf9b252022f0d5c0c0 size=37926 mode=100644
+shrink: 89194752 -> 37926 OK
+mode preserved OK
+100x stability PASS: entries=76 sources stable, bytes stable at 37926
+100x cycles byte-idempotent OK
+backup sha == preimage OK
+rollback restored exact bytes OK
+re-apply idempotent, final= fbf1e471375212503767c50e15443f857aa24ef1891ae4bf9b252022f0d5c0c0 OK
+
+════════ shopping ════════
+pre:  sha=3b8a9aff144851054b4e5834394dfd29d6d7e18feb85ab516a33507443971f2d size=69271612 mode=100644
+dry-run: file untouched OK
+post: sha=c9a20704875aafe295897bc4d95b04d3684502d22fc6fda1203c8077519db2b7 size=57416 mode=100644
+shrink: 69271612 -> 57416 OK
+mode preserved OK
+100x stability PASS: entries=137 sources stable, bytes stable at 57416
+100x cycles byte-idempotent OK
+backup sha == preimage OK
+rollback restored exact bytes OK
+re-apply idempotent, final= c9a20704875aafe295897bc4d95b04d3684502d22fc6fda1203c8077519db2b7 OK
+
+════════ ceo ════════
+pre:  sha=d00002672c9af324febb287cfd4c73f7634708b4cb93b20e24068b29abadeed7 size=50382793 mode=100644
+dry-run: file untouched OK
+post: sha=bd3a866b48e96f56e4b3066553a22a0f8ee824292d2f0f70f9f3b96b6f28ca83 size=51151 mode=100644
+shrink: 50382793 -> 51151 OK
+mode preserved OK
+100x stability PASS: entries=112 sources stable, bytes stable at 51151
+100x cycles byte-idempotent OK
+backup sha == preimage OK
+rollback restored exact bytes OK
+re-apply idempotent, final= bd3a866b48e96f56e4b3066553a22a0f8ee824292d2f0f70f9f3b96b6f28ca83 OK
+
+ALL DRILLS PASS

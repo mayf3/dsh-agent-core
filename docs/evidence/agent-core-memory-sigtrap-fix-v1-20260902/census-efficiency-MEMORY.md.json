@@ -1,0 +1,527 @@
+{
+ "bytes": 89194752,
+ "chars": 89190338,
+ "entries": 76,
+ "parseMs": 68,
+ "maxSourceRaw": 67108879,
+ "maxTitleRaw": 64,
+ "maxContent": 897,
+ "maxTags": 4,
+ "sourcesWithLayers": 9,
+ "maxLayers": 25,
+ "ambiguousCount": 67,
+ "layerHist": {
+  "0": 67,
+  "7": 1,
+  "9": 3,
+  "13": 1,
+  "19": 1,
+  "21": 1,
+  "23": 1,
+  "25": 1
+ },
+ "oversizedUnderGuard": {
+  "source": 0,
+  "title": 0,
+  "content": 0
+ },
+ "top5": [
+  {
+   "id": "7e205306-50d6-4b26-ae8b-5e78880fa564",
+   "srcLen": 67108879,
+   "layers": 25,
+   "recovered": 17,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-25 与小马哥对话"
+  },
+  {
+   "id": "2342d9b6-b2e0-4689-949b-13e3cff9f34a",
+   "srcLen": 16777231,
+   "layers": 23,
+   "recovered": 17,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-27 与小马哥对话"
+  },
+  {
+   "id": "8786b903-049f-487d-843f-a11977062e39",
+   "srcLen": 4194319,
+   "layers": 21,
+   "recovered": 17,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-27 与小马哥对话"
+  },
+  {
+   "id": "e05c728c-c916-4516-bf7f-648d15f82399",
+   "srcLen": 1048591,
+   "layers": 19,
+   "recovered": 17,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-27 与小马哥对话"
+  },
+  {
+   "id": "94ff5779-3fc9-45df-b43b-1d24ceaf94ff",
+   "srcLen": 24606,
+   "layers": 13,
+   "recovered": 33,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-27 与小马哥对话（TASK_NAME=技能执行）"
+  }
+ ],
+ "allTop50": [
+  {
+   "id": "7e205306-50d6-4b26-ae8b-5e78880fa564",
+   "srcLen": 67108879,
+   "layers": 25,
+   "recovered": 17,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-25 与小马哥对话"
+  },
+  {
+   "id": "2342d9b6-b2e0-4689-949b-13e3cff9f34a",
+   "srcLen": 16777231,
+   "layers": 23,
+   "recovered": 17,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-27 与小马哥对话"
+  },
+  {
+   "id": "8786b903-049f-487d-843f-a11977062e39",
+   "srcLen": 4194319,
+   "layers": 21,
+   "recovered": 17,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-27 与小马哥对话"
+  },
+  {
+   "id": "e05c728c-c916-4516-bf7f-648d15f82399",
+   "srcLen": 1048591,
+   "layers": 19,
+   "recovered": 17,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-27 与小马哥对话"
+  },
+  {
+   "id": "94ff5779-3fc9-45df-b43b-1d24ceaf94ff",
+   "srcLen": 24606,
+   "layers": 13,
+   "recovered": 33,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-27 与小马哥对话（TASK_NAME=技能执行）"
+  },
+  {
+   "id": "8b7f56ec-c303-4a7f-b53a-648dcdaa060a",
+   "srcLen": 1073,
+   "layers": 9,
+   "recovered": 51,
+   "stoppedBy": "non-canonical",
+   "head": "consolidation:session:cron\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "consolidation:session:cron-run-occ:de8210910d11c"
+  },
+  {
+   "id": "976608f0-41dd-4288-8219-497ad3eb704e",
+   "srcLen": 1073,
+   "layers": 9,
+   "recovered": 51,
+   "stoppedBy": "non-canonical",
+   "head": "consolidation:session:cron\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "consolidation:session:cron-run-occ:de8210910d11c"
+  },
+  {
+   "id": "361ab61c-f836-4d90-871d-bb580ff51fe7",
+   "srcLen": 1073,
+   "layers": 9,
+   "recovered": 51,
+   "stoppedBy": "non-canonical",
+   "head": "consolidation:session:cron\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "consolidation:session:cron-run-occ:de8210910d11c"
+  },
+  {
+   "id": "f0285404-5974-46a8-bc76-1d27beb5643c",
+   "srcLen": 275,
+   "layers": 7,
+   "recovered": 21,
+   "stoppedBy": "non-canonical",
+   "head": "2026\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
+   "recoveredHead": "2026-08-28 小马哥询问任务可见性"
+  },
+  {
+   "id": "1548f33f-f0a7-49ad-8907-a8b17ef59d20",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "ea248c2e-e0fc-4d8b-94e0-3da4fb856884",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "8abb86ba-baa1-458f-8882-3774eb2e094c",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "a515c0e6-7ed6-4d0d-bb69-5d35eef21ab5",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "4a887062-98b7-4805-9d38-d96faa7d6891",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "df162c8f-c8b8-4e47-a0cd-1ee4f43339a4",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "b87ca5df-88ea-4d64-bcce-bd0f7636be67",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "f92b458a-526c-46f9-ae1a-193a4a1d400c",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "9ca54b1c-455e-4449-8d1f-0656bd1981e7",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "5f9dce7c-93c0-4c71-8d2d-4447ae92fb8a",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "ad3aad5e-aecc-4bce-ac6d-d93e05acc342",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "87ba7fb4-4f10-4810-865d-f5b67fc2b27c",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "a4e10055-0ab2-4982-895c-30ed6f038b1d",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "ffff601e-57cd-4baa-b816-9ca57107bf18",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "ae5de81b-a05e-47fe-a290-2688755c128c",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "47b51b26-14d0-4c3a-8006-49061ccff949",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "6f952937-0868-41c9-8ab9-193f0e915800",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "f91b11b1-efe6-4279-bc34-ee90d6666ef0",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "03cecf15-8f16-4b69-8d00-2c52a5cbc30a",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "57747271-4082-4876-ae40-f5dbb5112443",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "48d5ebc3-6223-47e8-a9a8-4765adb27402",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "9a71bf73-0bb3-432c-ab87-b0d3d4286af7",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "eb13138e-de2e-43be-922d-c5a7ca48138a",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "b9d0be69-ca08-4792-b6a9-7ae35d326a5e",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "f8d622b8-b82d-4093-824b-a16e6c552049",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "df06aad4-5495-465f-91c9-2bbb5e40570b",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "4033603e-b3bf-4560-8a5e-854aea704587",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "3e0bba8b-5957-4617-a56f-9ecfbf3f4284",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "6ceecd1d-c731-4d2c-8eaf-ac55aa5621a3",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "ab14cd89-09bb-49ad-ab29-878ba44fa2b1",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "b8fae590-348f-4ac1-a7bb-76a5679e4211",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "139a98a0-e403-48eb-8fa7-5274774fcc9c",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "1a1bbf2e-c808-40a0-878f-f5b76b46482d",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "9099407e-750a-4bcd-8b1a-d4576abbcbc8",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "ff0a1997-82a7-4986-8f9d-439a4d635907",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "3bbddbaf-63e7-421d-a592-a316078ccc41",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "2f92cfd5-d5e7-48f5-97ec-0a57bd82caf1",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "0f70ae7f-4955-4d0e-b32a-b20483a68929",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "3b2cfadc-2303-4552-93ac-2f1b348906a0",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "06ff20ea-1dc3-4bba-856e-2765850fc437",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  },
+  {
+   "id": "d6907d83-109d-43ce-b1fd-b40e708f6e61",
+   "srcLen": 26,
+   "layers": 0,
+   "recovered": 26,
+   "stoppedBy": "fixpoint",
+   "head": "consolidation:session:main",
+   "recoveredHead": "consolidation:session:main"
+  }
+ ]
+}

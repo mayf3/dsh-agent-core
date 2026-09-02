@@ -1,0 +1,4 @@
+SMOKE_WORKFLOW=PASS visible=7 transition_submit=post+idempotent domain_instances=visible global_instances=visible
+SMOKE_FORUM_NORMAL=PASS existing_7=invariant create=visible watch=visible unwatch=visible report=visible stats=visible
+SMOKE_MODERATOR=PASS pack=8 member=agt_course-community-agent-2 non_member=0 absent_env=0 malformed_list=fail_closed bundle_config=exact forum_moderate_grant=not_probed_by_design
+FORUM_WIRE_SMOKE=SKIPPED_NO_IDENTITY (config lacks forumSmokeAgentId; registration surface fully verified)

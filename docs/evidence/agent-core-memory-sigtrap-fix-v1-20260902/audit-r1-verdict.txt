@@ -1,0 +1,11 @@
+# INDEPENDENT AUDIT r1 — agent-memory SIGTRAP fix v1 (worktree d4802a9, base 840d2f4)
+VERDICT: AUDIT_PASS  REQUIRED_FIXES: none
+Per-item: CODEC_SYMMETRY=PASS GUARD_BEFORE_REGEXP=PASS NON_FATAL_FAILURE=PASS NO_PARTIAL_WRITE=PASS
+MIGRATION_NON_DESTRUCTIVE=PASS ROLLBACK=PASS FOUR_AGENT_REPAIR=PASS (dry-run census 10/9/3/1 rewritten, 0 ambiguous,
+corpus sha byte-identical before/after) REGRESSION_TEST=PASS (80/80; independent old-code SIGTRAP repro:
+exit 133, V8 fatal "invalid size error 218103808", stack CompiledReplacement::Apply -> ReplacementStringBuilder
+-> FixedArrayBuilder::EnsureCapacity -> V8_Fatal)
+Concerns (all non-blocking, all adopted in r2): 2a document bound omitted id/updatedAt; 2b write-permits/
+read-refuses asymmetry (4097-char all-special title writable then unreadable); 4a PREIMAGE_GATE failure path
+restored over concurrent writer; comments overclaim; minor nits (short-write, chmod-after-fsync, restore-path
+test gap). Full text: session transcript; this file is the sealed verdict summary.

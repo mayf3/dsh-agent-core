@@ -1,0 +1,138 @@
+▶ source codec contract (SIGTRAP fix v1)
+  ✔ every ESCAPE-set character round-trips in source (3.839125ms)
+  ✔ parse(render(entry)) is exact for title, tags, source and content (2.163042ms)
+  ✔ render(parse(render(e))) === render(e) byte fixpoint (1.254917ms)
+  ✔ mixed sources: normal, path, URL, literal backslash, repeated backslash, markdown, unicode, empty (2.641917ms)
+  ✔ legacy one-layer files (historical codec) parse back to the original source (0.119667ms)
+  ✔ legacy amplified sources are STABLE under the fixed codec (no growth per write cycle) (0.457792ms)
+  ✔ repeated write stability 100x: SOURCE_LENGTH_GROWTH = 0, byte-identical document (9.589125ms)
+  ✔ repeated disk write/read stability 100x (writeEntries + loadEntries) (918.352417ms)
+✔ source codec contract (SIGTRAP fix v1) (940.41775ms)
+▶ memory guard: bounds precede every String.replace
+  ✔ oversized source field refuses render (before replace) (3.005584ms)
+  ✔ oversized title field refuses render (0.133459ms)
+  ✔ oversized content refuses render (no escaping involved, still bounded) (0.072375ms)
+  ✔ too many tags refuse render (0.101416ms)
+  ✔ oversized document bound refuses renderEntries before any per-entry work (3.136708ms)
+  ✔ oversized parse-side field (decoded) refuses parseEntries (6.053958ms)
+  ✔ writeEntries: guard fires before ANY byte is written; original untouched; no tmp residue (26.8955ms)
+  ✔ write-permits/read-refuses symmetry: a field whose STORED form exceeds the bound refuses at render (no brick) (1.78275ms)
+  ✔ a joined tags line over the stored bound refuses at render (0.439542ms)
+  ✔ document bound includes id and updatedAt (truly strict upper bound) (1.296917ms)
+  ✔ loadEntries refuses an oversized file BEFORE reading/parsing it (35.317833ms)
+  ✔ corrupted-but-under-file-bound file refuses at the decoded-field guard (3.382792ms)
+  ✔ consolidate() fails loud but non-fatal: daily note kept, MEMORY.md untouched, turn outcome preserved (4.973042ms)
+  ✔ system-prompt injection pattern: loadEntriesSync throw degrades to an empty block (22.651291ms)
+✔ memory guard: bounds precede every String.replace (112.055708ms)
+▶ parse/render round-trip
+  ✔ entries survive a full render→parse cycle with content verbatim (4.391459ms)
+  ✔ titles are escaped on render and unescaped on parse (0.817917ms)
+  ✔ a body ID line NOT followed by a Type line cannot forge an entry (0.59325ms)
+  ✔ empty / missing text parses to no entries (0.559583ms)
+✔ parse/render round-trip (7.691083ms)
+▶ saveWithDedupe / update / remove
+  ✔ same (type, title) merges; different titles create (0.985167ms)
+  ✔ updateEntry patches by id; unknown id is a no-op (0.359166ms)
+  ✔ removeEntry deletes by id; unknown id is a no-op (0.096458ms)
+  ✔ normalizeEntry rejects bad types / empty titles (1.742375ms)
+✔ saveWithDedupe / update / remove (3.969041ms)
+▶ search / render
+  ✔ searchEntries matches title, content and tags, case-insensitive (1.942708ms)
+  ✔ renderContextText: preferences first, threshold-gated, capped (2.66825ms)
+  ✔ renderContextText: empty entries render empty; maxChars truncates (0.577792ms)
+✔ search / render (6.634958ms)
+▶ file store
+  ✔ writeEntries is atomic and loadEntries round-trips; missing file = [] (29.58275ms)
+  ✔ human edits win: a manual edit of MEMORY.md is what loadEntries returns (10.918ms)
+  ✔ daily notes append and read back (4.804875ms)
+✔ file store (45.891125ms)
+▶ consolidate
+  ✔ success: distill output is validated, deduped and written to MEMORY.md (12.686125ms)
+  ✔ fallback: distill failure keeps raw evidence in the daily note, MEMORY.md untouched (2.247125ms)
+  ✔ fallback: no distill function at all still preserves evidence (1.067ms)
+  ✔ empty evidence is a no-op (no daily note either) (0.368583ms)
+  ✔ dedupe across consolidations: same title merges, does not duplicate (18.033458ms)
+✔ consolidate (34.686916ms)
+▶ agent-memory-sigtrap-migration-v1 CLI
+  ✔ dry-run: correct rewrite census, zero mutation, report written (158.155792ms)
+  ✔ apply: rewrites only the amplified line, backup immutable + sha-verified, metadata preserved, fixpoint installed (170.702209ms)
+  ✔ apply is idempotent: second run rewrites nothing and keeps bytes (311.962166ms)
+  ✔ refusal: a file failing the candidate validation is never mutated (exit 2) (145.354333ms)
+  ✔ missing --file is a usage refusal (128.541917ms)
+✔ agent-memory-sigtrap-migration-v1 CLI (916.180875ms)
+▶ pathological regression fixtures (child-process calibrated)
+  ✔ OLD codec on the 2^26-char fixture: REPRO_SIGTRAP = YES (process dies, uncatchable) (4405.929958ms)
+  ✔ OLD codec just below the boundary survives (calibration sanity: 2^25 region) (3080.030708ms)
+  ✔ NEW code on the same fatal-region file: SIGTRAP = NO, PROCESS_SURVIVES = YES, file untouched (3275.721083ms)
+  ✔ NEW code on a mid-size corrupted file (under file bound): decoded-field guard, process survives (144.667917ms)
+✔ pathological regression fixtures (child-process calibrated) (10911.170792ms)
+✔ memory files resolve inside the agent workspace (1.433958ms)
+✔ daily note file uses the UTC date part, deterministically (1.220667ms)
+✔ resolveAgentWorkspace delegates to workspace-bootstrap (single owner) (0.389ms)
+✔ resolveAgentWorkspace rejects unsafe ids (workspace-bootstrap sanitize) (0.693292ms)
+✔ agentIdFromCwd derives the last path component (0.563083ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-EWPosY/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-EWPosY/agt_v2/MEMORY.md)
+[agent-memory] memory created: session-fact
+✔ service save/load/search: session.header.cwd -> <cwd>/MEMORY.md (40.824584ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-g6OwBo/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-g6OwBo/agt_v2/MEMORY.md)
+[agent-memory] memory created: gone-soon
+✔ service remove: session-aware (24.828375ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-XLGw6o/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-XLGw6o/agt_v2/MEMORY.md)
+[agent-memory] memory created: tool-fact
+✔ memory_save tool: exec.agent.session.header.cwd -> <cwd>/MEMORY.md (20.66875ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-TpOvEO/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-TpOvEO/agt_v2/MEMORY.md)
+[agent-memory] memory created: needle
+✔ memory_search / memory_list tools resolve the session cwd (15.260834ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-fBOOVB/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-fBOOVB/agt_v2/MEMORY.md)
+[agent-memory] memory created: mutable
+✔ memory_update / memory_delete tools resolve the session cwd (27.983125ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-atvwYG/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-atvwYG/agt_v2/MEMORY.md)
+[agent-memory] consolidation: 0 entries saved, fallback=true
+✔ turn/end consolidation lands in the triggering session cwd (daily-note fallback) (31.081333ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-aZMtqe/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-aZMtqe/agt_v2/MEMORY.md)
+[agent-memory] consolidation: 0 entries saved, fallback=true
+✔ memory_consolidate tool (explicit) resolves the session cwd (4.025916ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-lKyoBZ/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-lKyoBZ/agt_v2/MEMORY.md)
+✔ readDailyNotes: session cwd when a session is given, primary otherwise (4.345291ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-piWA5H/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-piWA5H/agt_v2/MEMORY.md)
+✔ system-prompt [memory] injection reads Agent.primaryWorkspace/MEMORY.md (never a session cwd) (2.29975ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-JDXgiu/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-JDXgiu/agt_v2/MEMORY.md)
+[agent-memory] injection render failed: Error: ENOENT: no such file or directory, open '/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-JDXgiu/agt_v2/MEMORY.md'
+✔ injection re-reads from disk per assembly (fresh primary edits visible) (3.059916ms)
+[agent-memory] mounted for agent agt_v2 (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-kV3z7s/agt_v2, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-v2-kV3z7s/agt_v2/MEMORY.md)
+[agent-memory] memory created: equality fact
+✔ MEMORY_WORKSPACE_EQUALITY: session cwd == resolveWorkspace(agentId) -> tool write and injection share ONE MEMORY.md (10.344291ms)
+[agent-memory] mounted for agent agt_stock_agent (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-8zLx9q/workspace-oc_imported, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-8zLx9q/workspace-oc_imported/MEMORY.md)
+✔ E: $DSH_PRIMARY_WORKSPACE (imported dir) wins over the <root>/<agentId> derivation (13.06475ms)
+[agent-memory] mounted for agent agt_stock_agent (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-JbJPUt/workspace-oc_imported, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-JbJPUt/workspace-oc_imported/MEMORY.md)
+[agent-memory] memory created: coffee
+✔ E: session-less system-prompt injection reads MEMORY.md under the imported dir (23.345875ms)
+[agent-memory] mounted for agent agt_stock_agent (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-PTAVKa/workspace-oc_imported, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-PTAVKa/workspace-oc_imported/MEMORY.md)
+[agent-memory] memory created: session fact
+✔ E: session-aware writes keep session.header.cwd (env priority never leaks into them) (19.38525ms)
+[agent-memory] mounted for agent agt_stock_agent (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-QhEUVq/workspace-oc_imported, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-QhEUVq/workspace-oc_imported/MEMORY.md)
+✔ E: normal-path equality — session.header.cwd == Agent.primaryWorkspace == memory primary (AC4) (9.474917ms)
+[agent-memory] mounted for agent agt_stock_agent (workspace /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-TBHD94/agt_stock_agent, memory /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acm-priws-TBHD94/agt_stock_agent/MEMORY.md)
+✔ E: env unset → the legacy <workspaceRoot>/<agentId> derivation is unchanged (4.516916ms)
+✔ E: a set-but-relative $DSH_PRIMARY_WORKSPACE fails loud (never a silent cwd-relative guess) (1.158208ms)
+▶ recoverSource: mechanical esc^k recovery
+  ✔ recovers exactly across 16 amplification layers: consolidation:session:cr (25.638792ms)
+  ✔ recovers exactly across 16 amplification layers: 2026-08-24/25 老板拍板 + 执行验 (34.153875ms)
+  ✔ recovers exactly across 16 amplification layers: tool (v1.0) (32.900417ms)
+  ✔ recovers exactly across 16 amplification layers: https://example.com/a?b= (21.616625ms)
+  ✔ deep amplification (21 layers, production corpus scale) recovers exactly (540.384292ms)
+  ✔ zero-layer stored values (no specials) are their own original (0.572ms)
+  ✔ backslash-bearing originals without special pairs recover exactly (0.15325ms)
+  ✔ a lone-backslash original recovers exactly through the fixpoint rule (0.360584ms)
+  ✔ canonical-with-pairs originals resolve by the declared maximal-unwrap prior (deterministic) (1.918958ms)
+  ✔ unwrap bound is honored and flagged (ambiguous = true, no guessing) (1.482458ms)
+  ✔ isEscapeCanonical matches the image of esc (0.344375ms)
+✔ recoverSource: mechanical esc^k recovery (661.946667ms)
+ℹ tests 83
+ℹ suites 10
+ℹ pass 83
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15392.104083

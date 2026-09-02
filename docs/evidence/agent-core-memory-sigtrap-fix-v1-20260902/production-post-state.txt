@@ -1,0 +1,16 @@
+== installed memory.js
+-rw-r--r--@ 1 root  wheel  27874 Sep  2 12:39 /usr/local/libexec/agent-core/app/packages/agent-memory/src/memory.js
+99d59bdeb055e18d7827d5529f2505783252e6b75124f8fb45c91d5a96bf2b7d  /usr/local/libexec/agent-core/app/packages/agent-memory/src/memory.js
+== runtime
+	state = running
+	pid = 75917
+	last exit code = 0
+== four MEMORY.md post-state
+zsh:3: no matches found: /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/MEMORY.md.tmp-*
+agt_hr-agent size=41365 mode=100644 uid=502 tmp_residue=0 sha=da831a348dad597ee5f6ac3ab4c73b819c27a6387721074cea3a26561cb51afa
+zsh:3: no matches found: /Users/yanfenma/.openclaw/groups/workspace-oc_c6fa97d6255912b25a277e25441f6c11/MEMORY.md.tmp-*
+agt_efficiency-agent size=37926 mode=100644 uid=502 tmp_residue=0 sha=fbf1e471375212503767c50e15443f857aa24ef1891ae4bf9b252022f0d5c0c0
+zsh:3: no matches found: /Users/yanfenma/.openclaw/groups/workspace-oc_96ba3f8c3476edac2fb64ee89f842f4e/MEMORY.md.tmp-*
+agt_shopping-list-agent size=57416 mode=100644 uid=502 tmp_residue=0 sha=c9a20704875aafe295897bc4d95b04d3684502d22fc6fda1203c8077519db2b7
+zsh:3: no matches found: /Users/yanfenma/.openclaw/groups/workspace-oc_3ce9cb52ea6d64f64a3197a978dd8c89/MEMORY.md.tmp-*
+agt_ceo-agent size=51151 mode=100644 uid=502 tmp_residue=0 sha=bd3a866b48e96f56e4b3066553a22a0f8ee824292d2f0f70f9f3b96b6f28ca83

@@ -1,0 +1,30 @@
+=== fixture valid.json ===
+CANARY_CONFIG_SHA256=963303180846dd7ff9d47e8fd98e5fa8b5b13f3c3d80daaa470fd5be98a612e3
+CANARY_PREREQS_READY=YES
+=== fixture placeholder.json ===
+CANARY_CONFIG_SHA256=7d7fe4092146c58034a423cb6b759b2e9c55282038548ecb19e601a9c1826393
+CANARY_ISSUE=placeholder_pattern=\bTODO\b
+CANARY_ISSUE=not_a_uuid=domainId
+CANARY_PREREQS_READY=NO
+=== fixture secret.json ===
+CANARY_CONFIG_SHA256=1425f92fc933aca9f04b01b4f7272bf1271999f0da83484c73c91d3514ec6120
+CANARY_ISSUE=secret_key_with_value
+CANARY_ISSUE=missing_or_empty=canaryInstanceId
+CANARY_ISSUE=missing_or_empty=controlInstanceId
+CANARY_ISSUE=missing_or_empty=expectedAssigneePrincipalId
+CANARY_ISSUE=missing_or_empty=expectedCanaryTitle
+CANARY_ISSUE=missing_or_empty=transitionDefinitionId
+CANARY_ISSUE=dedicatedNoBusinessSideEffects_not_true
+CANARY_ISSUE=control_instance_equals_canary_instance
+CANARY_ISSUE=canary_title_not_marked
+CANARY_ISSUE=expectedWorkflowStateVersion_invalid (integer >= 1)
+CANARY_ISSUE=expectedMinimumPages_invalid (integer >= 2)
+CANARY_ISSUE=expectedMinimumInstances_invalid (must exceed one page)
+CANARY_PREREQS_READY=NO
+=== fixture wrongid.json ===
+CANARY_CONFIG_SHA256=4f76b3f63e4a738f29a3bff9475c752cdb9be94fc7c32ee1371975609c42a89c
+CANARY_ISSUE=canary_identity_not_ctr009_default (expected agt_build-in-public-agent)
+CANARY_PREREQS_READY=NO
+=== fixture missing ===
+CANARY_ISSUE=file_missing: /tmp/validator-fixtures/nonexistent.json
+CANARY_PREREQS_READY=NO

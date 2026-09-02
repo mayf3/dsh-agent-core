@@ -1,0 +1,8 @@
+CANARY_ISSUE=file_missing: /tmp/agent-core-workflow-canary-v1.json
+CANARY_PREREQS_READY=NO
+LIVE_MANIFEST=132/9ac84954fefc3d5893b7e5ca7045b2bb7cf0ad7492d121607d2b0659a230f4b1 state=BASE
+DEPLOYMENT_DELTA=9 files (7 modified + 2 new; 8 in-manifest + 1 bundle config) iff state=BASE; 0 iff state=TARGET
+BREAKGLASS=packages/production-runtime/src/model-overrides.js@ea44819a18085c6bd8665157d92caba205e720d9 pinned-never-written
+EXCLUDED_DRIFT=packages/feishu-connector/src/index.js@2e6bd0896dd0354877aebc99361a986a05c1e06a packages/scheduler-router/src/index.js@b1f5563411cb55c8ddc3391d6337a30aea2e0f45 (unauthorized 9386ac4; pinned-never-written)
+TARGET_MAIN=2392a41d4655ba25ed9e9749fbf8beb0ad1c71b4 contains=1aa8248893766aaf1caae17b2905e40061f0a147,4d7ca245ec0b9f6ed8a650f742b94b39728331a7,2392a41d4655ba25ed9e9749fbf8beb0ad1c71b4 (forum impl head 83165dea530956a8836e9830c54811eb3a8ae93e)
+CHECK=FAIL (canary prerequisites not ready; apply is refused)

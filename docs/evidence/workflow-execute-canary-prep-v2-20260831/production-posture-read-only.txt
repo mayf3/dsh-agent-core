@@ -1,0 +1,80 @@
+WORKFLOW_EXECUTE_CANARY_V1 fixture prep — production posture snapshot (ALL READ-ONLY)
+date: 2026-08-31 (preparator round; zero production writes this round)
+
+[A] svc-workflow canary gate posture (/Users/yanfenma/.local/services/svc-workflow/.env, read-only grep)
+    AUTH_V1_CANARY_ENABLED=true
+    AUTH_V1_CANARY_WRITE_ENABLED=true
+    AUTH_V1_CANARY_ALLOWED_SUB            (ABSENT — never set)
+    AUTH_V1_CANARY_ALLOWED_CLIENT_ID      (ABSENT — never set)
+    WORKFLOW_PROVISIONING_PRINCIPAL_IDS=00000000-0000-0000-0000-000000000001,10000000-0000-0000-0000-000000000001,10000000-0000-0000-0000-000000000101,bc970ced-710f-4479-9ff0-e295a1c59424
+    => instance create (POST /internal/v1/workflow-instances) is currently
+       permitted for granted identities; canary_write_guard (f0c74ee source:
+       src/http/canary_guard.rs:29-46) passes. No env change needed for this round.
+
+[B] frozen canary identity (auth-service principal lookup, read-only)
+    agent_id     = agt_build-in-public-agent
+    principal_id = d5b3aeb2-e754-49a9-9914-b963521c0985  (THE frozen canary principal)
+    display_name = Build in Public 主理人 ; status = active
+    client (TRANSITION V1 STATE-006) = mc_ohDTyGYRpBLI4qN_sVU88aob
+    credential location = /usr/local/libexec/agent-core/config/agent-credentials.json
+      (0600 authsvc uid 505 — root-readable only; hence the owner-run sudo runner)
+
+[C] domain roles of the canary principal (svc-workflow DB, read-only session)
+    build-in-public-dogfood  DOMAIN_OWNER  enabled   (domain_id f9b5682c-1c9c-5ace-a7b1-01b9a3be5965)
+    workflow-todo-dogfood    DOMAIN_MEMBER enabled   (domain_id 10000000-0000-0000-0000-000000000100)
+    (+ 7 other domains as DOMAIN_MEMBER)
+    workflow-todo-dogfood enabled DOMAIN_OWNERs: only b21ddb23-42f6-47c4-a27f-bc44950e554c
+      (agt_efficiency-agent). The canary principal is NOT an owner of workflow-todo-dogfood.
+    => BLOCKER-2: GET /internal/v1/workflow-instances/domain enforces DOMAIN_OWNER
+       (deployed f0c74ee: query_service.rs list_domain_instances -> check_domain_owner,
+       query_visibility.rs:34-50); the sealed combined-deploy-v2 runner's canary
+       paginateDomain() executes as cfg.agentId (= canary identity) on cfg.domainId
+       (= workflow-todo-dogfood) => 403 => canary fails closed => durable rollback.
+
+[D] fixture definition (svc-workflow DB, read-only)
+    domain      workflow-todo-dogfood = 10000000-0000-0000-0000-000000000100 (enabled)
+    definition  personal_quick_item_v1, definition_version 95aacea2-5599-4e74-b576-e2eeb61e27a0
+                (v1, PUBLISHED) — exists ONLY in this domain (no other domain copy)
+    nodes: open (DRAFT, assignee_ref_type=WORKFLOW_CREATOR) -> completed (TERMINAL), cancelled (TERMINAL)
+    transitions (open):
+      7493f6ca-6cf0-4ebf-95f8-f565f2b231ec  advance-to-completed  ADVANCE
+        submission_schema {"type":"object","required":["summary"],"properties":{"summary":{"type":"string","maxLength":2000}},"additionalProperties":false}
+      f7cb47fe-f5cd-4567-a864-4dcebc532461  cancel  TERMINATE  required ["reason"]
+    => entry node assigns the WORKFLOW CREATOR as current assignee => creating as
+       the canary identity makes the frozen canary principal the exact assignee.
+
+[E] instance census (read-only)
+    workflow-todo-dogfood total instances: 192
+    instances ever created by the canary principal (any domain): 0
+    node visits ever assigned to the canary principal: 0
+    prior canary-titled instances: only July/August test rows by OTHER principals
+      (readable by the canary identity: NO — detail visibility is owner /
+       current-assignee / creator-draft / historical-participant only,
+       query_visibility.rs classify_visibility)
+    => a readable CONTROL instance cannot be picked from existing rows; the prep
+       runner provisions one dedicated control fixture (never transitioned).
+
+[f] BLOCKER-1 evidence (sealed combined runner 18c1fdc6…, embedded canary program)
+    workflow_instance_detail broker result = RAW HTTP body {"visibility","detail":{…}}
+      (TARGET 2392a41 mapping.js invoke: "return { ok: true, result: raw }";
+       transport.js success: "return await res.json()"; manifest result {type:'json'};
+       svc-workflow dto.rs detail_response: {"visibility":…,"detail":…})
+    canary program reads TOP-LEVEL before.title / before.workflow_state_version /
+      before.current_assignee_principal_id / before.outgoing_transitions /
+      before.current_node_visit — ALL undefined on the real envelope
+      (title actually at detail.current_context.payload.title; version at
+      detail.instance.workflow_state_version; assignee at
+      detail.current_visit.assignee_principal_id; transitions at
+      detail.outgoing_transitions) => asserts fail even after BLOCKER-2 is fixed.
+    Verified working parts (for the record): Idempotency-Key prefix
+      ik-workflow-transition- matches transport createIdempotencyKey; page shape
+      {items,next_cursor{created_at,id}} matches server Page serialization.
+
+[G] prior related artifacts (context)
+    /tmp/run-canary-prereq-v1.sh sha256 754d9daf645a21977db00413827687fb8f0e0f173843a56ca5212c5395eca7f5
+      — authored 2026-08-31 by a parallel session for the same dispatch family;
+        includes W6 allowlist-set + W7 reload steps that THIS round is explicitly
+        forbidden from performing; NEVER EXECUTED (no instance by the canary
+        principal exists; no allowlist lines in .env; no marker files). Left untouched.
+    combined deploy runner v2 sha256 18c1fdc64941f67b1a0fc3a7f03cad48063d9620a9e0b57a837eee8635708944
+      (/tmp copy byte-identical to sealed evidence copy).

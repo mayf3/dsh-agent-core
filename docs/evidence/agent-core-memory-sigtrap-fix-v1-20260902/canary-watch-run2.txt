@@ -1,0 +1,3 @@
+canary-watch: 36 imported agents, watching for MEMORY.md writes after 2026-09-02T04:41:30.000Z, window 1800s
+CANARY agt_ceo-agent: PASS {"parse":true,"renderFixpoint":true,"stable":true,"entries":115,"maxSource":51,"drillOk":true,"size":52226}
+CANARY_SUMMARY {"observedTurns":1,"allPass":true,"results":[{"agentId":"agt_ceo-agent","pass":true,"parse":true,"renderFixpoint":true,"stable":true,"entries":115,"maxSource":51,"drillOk":true,"size":52226}]}

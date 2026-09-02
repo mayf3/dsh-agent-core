@@ -1,0 +1,54 @@
+[canary-prep-v2] ABOUT TO: create EXACTLY TWO dedicated disposable fixture instances
+  (1 canary + 1 read-only control) in domain workflow-todo-dogfood
+  (definition personal_quick_item_v1) as the frozen CTR-009 canary identity
+  agt_build-in-public-agent, then freeze facts and generate
+  /tmp/canary-prep-v2-test/sandbox/agent-core-workflow-canary-v1.json.
+[canary-prep-v2] This round does NOT set the canary allowlist, does NOT reload
+  svc-workflow, and does NOT execute any workflow_transition (writes stay 0).
+[canary-prep-v2] Type APPLY WORKFLOW_CANARY_PREP_V2 to continue: [canary-prep-v2] G0 preflight PASS (root, files, healthz=200, auth=200, write gate enabled, allowlist ABSENT)
+[canary-prep-v2] W1 PASS: frozen canary credential found (agentId=agt_build-in-public-agent clientId=mc_ohDTyGYRpBLI4qN_sVU88aob)
+[canary-prep-v2] W2 canary token acquired: sub=d5b3aeb2-e754-49a9-9914-b963521c0985 client_id=mc_ohDTyGYRpBLI4qN_sVU88aob scope=workflow.read workflow.execute
+[canary-prep-v2] W2 PASS: grant census empirical — canary principal holds workflow.execute via auth-service
+[canary-prep-v2] W3 create canary instance (externalReference=workflow_execute_canary_v1) — exactly one
+[canary-prep-v2]   PASS: workflow_execute_canary_v1 instance created — id=7dafa4f0-adf5-566b-83bb-6d07c59ae6fb (idempotency-key=canary-prep-v2-canary-20260831T135535Z)
+[canary-prep-v2] W3b create control instance (externalReference=workflow_execute_canary_v1_control) — read-only control, never transitioned
+[canary-prep-v2]   PASS: workflow_execute_canary_v1_control instance created — id=f189d34b-bf8f-5607-82ce-f0ea314944ac (idempotency-key=canary-prep-v2-control-20260831T135535Z)
+[canary-prep-v2] W3 PASS: fixtures in place — canary=7dafa4f0-adf5-566b-83bb-6d07c59ae6fb control=f189d34b-bf8f-5607-82ce-f0ea314944ac
+[canary-prep-v2] W4 canary baseline: version=1 nodeVisit=b3119262-9307-583a-93ea-76a8f8995872 assignee=d5b3aeb2-e754-49a9-9914-b963521c0985 transition=7493f6ca-6cf0-4ebf-95f8-f565f2b231ec executable=True schemaRequired=['summary']
+[canary-prep-v2] W4 control baseline: version=1 nodeVisit=48b96803-8c40-58b8-9fff-4db856e2c721 assignee=d5b3aeb2-e754-49a9-9914-b963521c0985 title-marked=True
+[canary-prep-v2] W4 PASS: both baselines frozen (visibility=full, assignee=frozen canary principal, node=open, non-terminal)
+[canary-prep-v2] W4b POSTURE_EVIDENCE (read-only): domain listing as canary identity —
+[canary-prep-v2]   workflow-todo-dogfood  HTTP=403 body={"error": {"code": "workflow_instance_not_found_or_not_visible", "message": "not a domain owner"}}
+[canary-prep-v2]   build-in-public-dogfood HTTP=200 body={"items": [{"workflow_instance_id": "91ebf6a2-27e6-512c-a9bc-d51deeadfdf6"}, {"workflow_instance_id": "5c6312f6-4ddf-553
+[canary-prep-v2]   EXPECTED-CONFLICT CONFIRMED: canary identity is DOMAIN_MEMBER (not DOMAIN_OWNER) of workflow-todo-dogfood;
+[canary-prep-v2]   the sealed combined-deploy-v2 runner's canary pagination step will fail closed on this domain until the
+[canary-prep-v2]   ownership conflict is resolved by the Owner (see round report BLOCKER-2).
+[canary-prep-v2] W5 receipts/events baseline (read-only SELECT, rolled back):
+    census_domain|192
+    canary_transition_events|0
+    canary_events|INSTANCE_CREATED|1
+    control_events|INSTANCE_CREATED|1
+[canary-prep-v2] W5 PASS: zero transition events (idempotency keys: canary=canary-prep-v2-canary-20260831T135535Z control=canary-prep-v2-control-20260831T135535Z); domain census (rows in workflow-todo-dogfood incl. fixtures) = 192
+/tmp/canary-prep-v2-test/sandbox/agent-core-workflow-canary-v1.json
+[canary-prep-v2] W6 PASS: config generated at /tmp/canary-prep-v2-test/sandbox/agent-core-workflow-canary-v1.json (title frozen from server response)
+  CANARY_CONFIG_SHA256=6f2f495aac7b72363b61e7f2392c1699ec6515dbfe1cae1506a65e04f098a8ba
+  CANARY_PREREQS_READY=YES
+[canary-prep-v2] W7 PASS: config validated by the VERBATIM sealed-runner validator — CANARY_PREREQS_READY=YES
+[canary-prep-v2] W8 PASS: allowlist untouched (absent), zero reloads performed, zero workflow_transition submissions
+[canary-prep-v2] DONE.
+
+================ CANARY PREP V2 SUMMARY ================
+CANARY_INSTANCE_PROVISIONED = YES
+CANARY_INSTANCE_ID = 7dafa4f0-adf5-566b-83bb-6d07c59ae6fb
+CONTROL_INSTANCE_ID = f189d34b-bf8f-5607-82ce-f0ea314944ac
+CANARY_AGENT_ID = agt_build-in-public-agent (clientId mc_ohDTyGYRpBLI4qN_sVU88aob, sub d5b3aeb2-e754-49a9-9914-b963521c0985)
+DOMAIN = workflow-todo-dogfood (10000000-0000-0000-0000-000000000100), definition personal_quick_item_v1 (95aacea2-5599-4e74-b576-e2eeb61e27a0)
+STATE_VERSION = 1 ; TRANSITION = advance-to-completed (7493f6ca-6cf0-4ebf-95f8-f565f2b231ec)
+CANARY_CONFIG = /tmp/canary-prep-v2-test/sandbox/agent-core-workflow-canary-v1.json
+CANARY_CONFIG_SHA256 = 6f2f495aac7b72363b61e7f2392c1699ec6515dbfe1cae1506a65e04f098a8ba
+CANARY_TRANSITIONS_EXECUTED = 0
+SVC_WORKFLOW_RELOADS = 0
+ALLOWLIST_SET = NO (verified absent before and after)
+PRODUCTION_CHANGE = CANARY_FIXTURE_ONLY (2 disposable fixture instances via official create endpoint)
+POSTURE: todo-domain listing as canary HTTP=403 / owned-domain listing HTTP=200 (see report BLOCKER-2)
+=========================================================
