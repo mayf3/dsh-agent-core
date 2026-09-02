@@ -10,13 +10,13 @@ const KID = 'scheduler-auth-test-key'
 const AGENT_ID = 'agt_scheduler-test'
 const AGENT_SUB = '10000000-0000-4000-8000-000000000001'
 const SERVICE_SUB = '10000000-0000-4000-8000-000000000002'
+const NOW = Math.floor(Date.now() / 1000)
 
 const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
 const publicJwk = publicKey.export({ format: 'jwk' })
 const jwk = { ...publicJwk, kid: KID, kty: 'RSA', alg: 'RS256', use: 'sig' }
 
 function baseClaims(overrides = {}) {
-  const now = Math.floor(Date.now() / 1000)
   return {
     iss: ISSUER,
     sub: AGENT_SUB,
@@ -29,9 +29,9 @@ function baseClaims(overrides = {}) {
     scope: 'scheduler.audit scheduler.read',
     agent_id: AGENT_ID,
     jti: randomUUID(),
-    iat: now,
-    nbf: now,
-    exp: now + 600,
+    iat: NOW,
+    nbf: NOW,
+    exp: NOW + 600,
     ...overrides,
   }
 }
@@ -49,6 +49,7 @@ function verifier(overrides = {}) {
     jwksUrl: 'https://auth.test/.well-known/jwks.json',
     issuer: ISSUER,
     audience: AUDIENCE,
+    nowMs: () => NOW * 1000,
     fetchImpl: async () => ({ ok: true, json: async () => ({ keys: [jwk] }) }),
     ...overrides,
   })
@@ -91,7 +92,6 @@ test('Auth V1 verifier requires issuer and audience configuration', () => {
 })
 
 test('Auth V1 direct-machine claim/profile violations fail closed', async (t) => {
-  const now = Math.floor(Date.now() / 1000)
   const cases = [
     ['audience array', { aud: [AUDIENCE] }],
     ['wrong token version', { version: 'v2' }],
@@ -100,9 +100,9 @@ test('Auth V1 direct-machine claim/profile violations fail closed', async (t) =>
     ['non-UUID subject', { sub: 'principal-agent' }],
     ['missing client', { client_id: '' }],
     ['short jti', { jti: 'short' }],
-    ['nbf after iat', { nbf: now + 1 }],
-    ['non-positive lifetime', { exp: now }],
-    ['TTL over 600 seconds', { exp: now + 601 }],
+    ['nbf after iat', { nbf: NOW + 1 }],
+    ['non-positive lifetime', { exp: NOW }],
+    ['TTL over 600 seconds', { exp: NOW + 601 }],
     ['leading scope space', { scope: ' scheduler.read' }],
     ['duplicate scope', { scope: 'scheduler.read scheduler.read' }],
     ['unsorted scopes', { scope: 'scheduler.read scheduler.audit' }],
@@ -122,7 +122,7 @@ test('Auth V1 direct-machine claim/profile violations fail closed', async (t) =>
   await t.test('service profile carrying agent_id', () => rejectsContract(serviceWithAgent))
 
   await t.test('future iat/nbf is not yet valid', async () => {
-    const claims = baseClaims({ iat: now + 61, nbf: now + 61, exp: now + 661 })
+    const claims = baseClaims({ iat: NOW + 61, nbf: NOW + 61, exp: NOW + 661 })
     await assert.rejects(
       () => verifier().verify(signToken(claims)),
       (error) => error?.kind === 'TOKEN_INVALID_OR_EXPIRED',

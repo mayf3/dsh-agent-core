@@ -93,6 +93,7 @@ function parseCanonicalScopes(scope) {
  * @param {number} [opts.cacheTtlMs] - JWKS cache TTL (default 300s)
  * @param {number} [opts.maxStaleMs] - trusted-cache maximum age (default 600s)
  * @param {number} [opts.clockToleranceSec] - exp/nbf tolerance (default 60s)
+ * @param {Function} [opts.nowMs] - injectable wall clock (tests)
  * @param {Function} [opts.fetchImpl] - injectable fetch (tests)
  * @param {object} [opts.log] - { warn? } sink
  * @returns {{ verify: (bearer: string) => Promise<object> }} principal =
@@ -113,6 +114,7 @@ export function createJwksTokenVerifier(opts = {}) {
   const cacheTtlMs = opts.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS
   const maxStaleMs = opts.maxStaleMs ?? DEFAULT_MAX_STALE_MS
   const toleranceSec = opts.clockToleranceSec ?? DEFAULT_CLOCK_TOLERANCE_SEC
+  const nowMs = opts.nowMs ?? (() => Date.now())
   const log = opts.log ?? {}
   let cache = null // { keys: Map<kid, CryptoKey>, fetchedAt }
 
@@ -141,15 +143,15 @@ export function createJwksTokenVerifier(opts = {}) {
         ;(log.warn ?? (() => {}))(`scheduler-auth: skipping unusable JWKS kid ${jwk.kid}: ${error?.message}`)
       }
     }
-    cache = { keys, fetchedAt: Date.now() }
+    cache = { keys, fetchedAt: nowMs() }
     return cache
   }
 
   async function keyFor(kid) {
-    const fresh = cache !== null && Date.now() - cache.fetchedAt < cacheTtlMs
+    const fresh = cache !== null && nowMs() - cache.fetchedAt < cacheTtlMs
     if (cache === null) await fetchJwks()
     else if (!fresh) {
-      const trustedStale = Date.now() - cache.fetchedAt <= maxStaleMs
+      const trustedStale = nowMs() - cache.fetchedAt <= maxStaleMs
       try {
         await fetchJwks()
       } catch (error) {
@@ -212,7 +214,7 @@ export function createJwksTokenVerifier(opts = {}) {
         throw new TokenVerifyError('TOKEN_CONTRACT_INVALID', `direct machine token carries forbidden claim: ${claim}`)
       }
     }
-    const nowSec = Math.floor(Date.now() / 1000)
+    const nowSec = Math.floor(nowMs() / 1000)
     const iat = requireNumericDate(claims, 'iat')
     const nbf = requireNumericDate(claims, 'nbf')
     const exp = requireNumericDate(claims, 'exp')

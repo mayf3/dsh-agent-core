@@ -5,8 +5,6 @@
  * facts verbatim and never gates admission, retry, or fence decisions.
  */
 
-import { promises as fs } from 'node:fs'
-import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { OwnerLock } from './lock.js'
 import {
@@ -29,6 +27,12 @@ import {
   publicHistoryOccurrence,
   writeHistoryPartition,
 } from './history-projection.js'
+import {
+  appendHistoryEvent,
+  healHistoryPartitions,
+  readHistoryState,
+  readProjectionRuns,
+} from './history-storage.js'
 
 export {
   HISTORY_STORE_VERSION,
@@ -83,74 +87,13 @@ export class HistoryStore {
     return this._loadPromise
   }
 
-  /** Read events + partitions, heal stale partitions. Idempotent. */
+  /** Read immutable facts, heal projections, then atomically publish RAM state. */
   async load() {
-    mkdirSync(this.dir, { recursive: true })
-    this._occurrences.clear()
-    this._runs.clear()
-    this._seq = 0
-    let corruptLines = 0
-    if (existsSync(this.eventsPath)) {
-      const raw = readFileSync(this.eventsPath, 'utf8')
-      if (raw.length > 0) {
-        for (const line of raw.split('\n')) {
-          if (line.trim() === '') continue
-          let event
-          try {
-            event = JSON.parse(line)
-          } catch {
-            corruptLines += 1
-            continue
-          }
-          try {
-            this._applyEvent(event)
-          } catch {
-            corruptLines += 1
-            continue
-          }
-        }
-      }
-    }
-    if (corruptLines > 0) {
-      // fail-visible: skipped corrupt lines never invalidate the stream
-      ;(this.log.warn ?? (() => {}))(`history store: skipped ${corruptLines} unparseable events.jsonl line(s) during load`)
-    }
-    await this._healPartitions()
+    const { state, corruptLines } = readHistoryState(this, { empty: true })
+    await healHistoryPartitions(state)
+    this._installState(state)
+    this._reportCorruptLines(corruptLines)
     this._loaded = true
-  }
-
-  /** Rewrite any month whose on-disk projection lags its events (replay heal). */
-  async _healPartitions() {
-    const maxSeqByMonth = new Map()
-    for (const view of this._occurrences.values()) {
-      for (const month of view.months ?? []) {
-        maxSeqByMonth.set(month, Math.max(maxSeqByMonth.get(month) ?? 0, view.maxSeq ?? 0))
-      }
-    }
-    const onDisk = new Map() // month -> partition | null (corrupt)
-    if (existsSync(this.dir)) {
-      for (const entry of readdirSync(this.dir)) {
-        const match = /^runs-(\d{6})\.json$/.exec(entry)
-        if (!match) continue
-        try {
-          const partition = JSON.parse(readFileSync(path.join(this.dir, entry), 'utf8'))
-          onDisk.set(match[1], partition?.version === HISTORY_STORE_VERSION ? partition : null)
-        } catch {
-          onDisk.set(match[1], null)
-        }
-      }
-    }
-    const monthsNeeded = new Set(maxSeqByMonth.keys())
-    for (const month of onDisk.keys()) {
-      if (!monthsNeeded.has(month)) monthsNeeded.add(month)
-    }
-    for (const month of monthsNeeded) {
-      const partition = onDisk.get(month)
-      const expected = maxSeqByMonth.get(month) ?? 0
-      if (partition === undefined || partition === null || partition.last_event_seq < expected) {
-        await this._writePartition(month)
-      }
-    }
   }
 
   // ── engine-facing record API (called at lifecycle boundaries) ──────────
@@ -362,14 +305,14 @@ export class HistoryStore {
    */
   queryRuns(filters = {}) {
     this._assertLoaded()
-    const { runs, nextCursor, notice } = applyRunFilters(this._runs, filters)
+    const { runs, nextCursor, notice } = applyRunFilters(readProjectionRuns(this.dir, filters), filters)
     return { runs, next_cursor: nextCursor, ...(notice !== undefined ? { notice } : {}) }
   }
 
   /** One run by id (or null). */
   getRun(runId) {
     this._assertLoaded()
-    return clone(this._runs.get(runId)) ?? null
+    return clone(readProjectionRuns(this.dir).get(runId)) ?? null
   }
 
   /**
@@ -380,12 +323,13 @@ export class HistoryStore {
     this._assertLoaded()
     const view = this._occurrences.get(occurrenceId)
     if (view === undefined) return null
-    const runs = [...this._runs.values()]
+    const projectionRuns = readProjectionRuns(this.dir)
+    const runs = [...projectionRuns.values()]
       .filter((record) => record.occurrence_id === occurrenceId)
       .sort((a, b) => String(a.scheduled_at).localeCompare(String(b.scheduled_at)))
     const retryChain = this._chainRootFirst(occurrenceId).map((id) => {
       const entry = this._occurrences.get(id)
-      const run = [...this._runs.values()].find((record) => record.occurrence_id === id)
+      const run = [...projectionRuns.values()].find((record) => record.occurrence_id === id)
       return {
         occurrence_id: id,
         scheduled_at: isoOf(entry?.scheduledAtMs),
@@ -398,7 +342,7 @@ export class HistoryStore {
   /** job_snapshot for a run or occurrence id (R5 query self-containment), or null. */
   getJobSnapshot(runIdOrOccurrenceId) {
     this._assertLoaded()
-    const run = this._runs.get(runIdOrOccurrenceId)
+    const run = readProjectionRuns(this.dir).get(runIdOrOccurrenceId)
     const occurrenceId = run?.occurrence_id ?? runIdOrOccurrenceId
     return clone(this._occurrences.get(occurrenceId)?.jobSnapshot) ?? null
   }
@@ -417,7 +361,13 @@ export class HistoryStore {
 
   async _withLock(fn) {
     await this.ensureLoaded()
-    return this._lock.runExclusive(fn)
+    return this._lock.runExclusive(async () => {
+      const { state, corruptLines } = readHistoryState(this)
+      await healHistoryPartitions(state)
+      this._installState(state)
+      this._reportCorruptLines(corruptLines)
+      return fn()
+    })
   }
 
   /**
@@ -427,23 +377,20 @@ export class HistoryStore {
    * heals on load.
    */
   async _appendEvent(event) {
-    this._seq += 1
-    const line = `${JSON.stringify({ seq: this._seq, ...event })}\n`
-    await fs.appendFile(this.eventsPath, line, { encoding: 'utf8' })
-    const handle = await fs.open(this.eventsPath, 'r+')
     try {
-      await handle.sync()
-    } finally {
-      await handle.close()
+      const state = await appendHistoryEvent(this, event, (next, draft) => this._monthsTouched(next, draft))
+      this._installState(state)
+    } catch (error) {
+      this._loaded = false
+      this._loadPromise = null
+      throw error
     }
-    this._applyEvent({ seq: this._seq, ...event })
-    for (const month of this._monthsTouched(event)) await this._writePartition(month)
   }
 
   /** Months whose projection content this event can change. */
-  _monthsTouched(event) {
+  _monthsTouched(event, state = this) {
     const months = new Set()
-    const view = this._occurrences.get(event.occurrence_id)
+    const view = state._occurrences.get(event.occurrence_id)
     if (view !== undefined) for (const month of view.months ?? []) months.add(month)
     if (Number.isFinite(event.scheduled_at_ms)) months.add(monthOf(event.scheduled_at_ms))
     const record = event.run_record
@@ -458,6 +405,18 @@ export class HistoryStore {
    */
   _applyEvent(event) {
     return applyHistoryEvent(this, event)
+  }
+
+  _installState(state) {
+    this._seq = state._seq
+    this._occurrences = state._occurrences
+    this._runs = state._runs
+  }
+
+  _reportCorruptLines(count) {
+    if (count > 0) {
+      ;(this.log.warn ?? (() => {}))(`history store: skipped ${count} unparseable or invalid events.jsonl line(s) during load`)
+    }
   }
 
   /** Rebuild the query-surface record for a run from its current facts, carrying richer earlier faces forward. */
