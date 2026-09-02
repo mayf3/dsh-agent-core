@@ -48,6 +48,8 @@ import { createSelfServiceSchedulerAccess } from '../../scheduler/src/self-servi
 import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
+import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
+import { createAgentSessionMessagingAudit } from './agent-session-messaging-audit.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
@@ -82,70 +84,10 @@ export function assertTargetProxyRuntime({ env = process.env, version = process.
   }
 }
 
-export function selectAuthoritativeCodexGeneration(input) {
-  if (input?.lunaDispatchQuiesced !== true || input?.refreshWritersQuiesced !== true) {
-    throw Object.assign(new Error('shared-codex-migration: both quiesce fences are required before legacy inspection'), { code: 'SHARED_CODEX_QUIESCE_REQUIRED' })
-  }
-  const { expectedAccountIdentity, candidates } = input
-  if (typeof expectedAccountIdentity !== 'string' || expectedAccountIdentity === '' || !Array.isArray(candidates)) {
-    throw Object.assign(new Error('shared-codex-migration: invalid non-secret provenance input'), { code: 'SHARED_CODEX_PROVENANCE_INVALID' })
-  }
-  const ambiguous = candidates.some((candidate) => (
-    candidate === null
-    || typeof candidate !== 'object'
-    || Object.keys(candidate).some((key) => /(?:access|refresh).*token|token.*(?:access|refresh)|credentialHash|tokenHash/iu.test(key))
-    || candidate.accountIdentity !== expectedAccountIdentity
-    || candidate.pendingRefreshIntent === true
-    || candidate.laterOutcomeUnknown === true
-    || candidate.competingCommittedGeneration === true
-  ))
-  const proven = ambiguous ? [] : candidates.filter((candidate) => (
-    typeof candidate.storeId === 'string' && candidate.storeId !== ''
-    && typeof candidate.generationId === 'string' && /^fs:[0-9]+:[0-9]+$/u.test(candidate.generationId)
-    && candidate.remoteOperationSucceeded === true
-    && candidate.atomicLocalCommitSucceeded === true
-    && candidate.committedBeforeQuiesceFence === true
-    && candidate.laterSuccessfulRefresh === false
-    && candidate.laterOutcomeUnknown === false
-    && candidate.pendingRefreshIntent === false
-    && candidate.competingCommittedGeneration === false
-    && candidate.lastRemoteRotationCommitted === true
-  ))
-  if (new Set(proven.map((candidate) => candidate.generationId)).size !== 1 || proven.length !== 1) {
-    return Object.freeze({ legacyCredentialReuseAllowed: false, authoritativeStore: null, canonicalReauthRequired: true, canonicalReauthCountMax: 1 })
-  }
-  return Object.freeze({
-    legacyCredentialReuseAllowed: true, authoritativeStore: proven[0].storeId,
-    generationId: proven[0].generationId, canonicalReauthRequired: false, canonicalReauthCountMax: 1,
-  })
-}
-
-export async function runFleetSharedCodexAuthMigrationV1(operations) {
-  const required = [
-    'quiesceLunaDispatch', 'quiesceRefreshWriters', 'inventoryLegacyProvenance', 'prepareCanonicalPermissionModelA',
-    'commitAuthoritativeToCanonical', 'ownerReauthCanonical', 'writeSharedConfigV3', 'verifyZeroPerHomeRuntimeOpens', 'controlledRestart', 'runCanary', 'verifyFleetHealth',
-  ]
-  for (const name of required) {
-    if (typeof operations?.[name] !== 'function') throw new TypeError(`shared-codex-migration: operation ${name} is required`)
-  }
-  const lunaDispatchQuiesced = await operations.quiesceLunaDispatch(); const refreshWritersQuiesced = await operations.quiesceRefreshWriters()
-  if (lunaDispatchQuiesced !== true || refreshWritersQuiesced !== true) {
-    throw Object.assign(new Error('shared-codex-migration: quiesce failed'), { code: 'SHARED_CODEX_QUIESCE_REQUIRED' })
-  }
-  const inventory = await operations.inventoryLegacyProvenance()
-  const selection = selectAuthoritativeCodexGeneration({ lunaDispatchQuiesced, refreshWritersQuiesced, ...inventory })
-  await operations.prepareCanonicalPermissionModelA()
-  let canonicalReauthCount = 0
-  if (selection.legacyCredentialReuseAllowed) await operations.commitAuthoritativeToCanonical(selection.authoritativeStore, selection.generationId)
-  else { canonicalReauthCount += 1; await operations.ownerReauthCanonical() }
-  if (canonicalReauthCount > 1) throw new Error('shared-codex-migration: canonical reauth count exceeded 1')
-  await operations.writeSharedConfigV3()
-  await operations.verifyZeroPerHomeRuntimeOpens()
-  await operations.controlledRestart()
-  for (const canary of ['CEO', 'HR', 'Podcast', 'Shopping']) await operations.runCanary(canary)
-  await operations.verifyFleetHealth()
-  return Object.freeze({ selection, canonicalReauthCount, canaries: Object.freeze(['CEO', 'HR', 'Podcast', 'Shopping']) })
-}
+// The fleet shared-Codex migration functions live in their own module
+// (structure-only move; compose keeps the stable re-export surface for the
+// existing tests and the executable).
+export { runFleetSharedCodexAuthMigrationV1, selectAuthoritativeCodexGeneration } from './shared-codex-migration.js'
 
 /**
  * Compose the Production Runtime.
@@ -363,10 +305,22 @@ export async function composeProductionRuntime(options = {}) {
   // and auth origin arrive via env from the supervision unit. Without a
   // credentials file every capability call fails closed
   // (credential_unavailable) — the gateway never fakes authorization.
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R12: the L0 pre-handler denial
+  // hook is scoped to exactly the agent_session_send capability; a failed
+  // denial append never changes the denial itself.
+  const agentSessionAudit = createAgentSessionMessagingAudit({
+    auditFile: join(layout.controlDir, 'agent-session-messaging-audit.jsonl'),
+  })
   const broker = applyBroker(ctx, {
     mode: 'gateway',
     credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
     authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
+    auditDenial: (info) => {
+      if (info?.capabilityId !== 'agent_session_send') return
+      if (agentSessionAudit.appendDenial(info) !== 'appended') {
+        log.error('[agent-session-messaging] L0 denial audit append failed')
+      }
+    },
   })
 
   const productApiCfg = opts.productApi ?? {}
@@ -447,6 +401,20 @@ export async function composeProductionRuntime(options = {}) {
     // destination, credentials, and digests never enter the Runtime log.
     onAuditFailure: ({ operation, jobId }) => {
       log.error(`[scheduler-self-service] audit append failed after committed ${operation} for job ${jobId}`)
+    },
+  }))
+
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3): the trusted LOCAL
+  // provider for agent_session_send. It reuses the Router's sole delivery
+  // and reconciliation seams — one send = one new Run/Turn in the target
+  // canonical main; the runtime derives source identity + exact source-turn
+  // correlation (never model args); the L1 intent/outcome append surface is
+  // the agentSessionAudit file with sanitized onAuditFailure signals.
+  ctx.provide('agentSessionMessagingAccess', createAgentSessionMessagingAccess({
+    router,
+    audit: agentSessionAudit,
+    onAuditFailure: ({ phase, requestId }) => {
+      log.error(`[agent-session-messaging] audit ${phase} append failed after requestId ${requestId}`)
     },
   }))
 

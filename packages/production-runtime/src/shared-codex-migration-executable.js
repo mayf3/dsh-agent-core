@@ -4,7 +4,7 @@ import {
 import { spawnSync } from 'node:child_process'
 import { dirname, isAbsolute, join, normalize } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { selectAuthoritativeCodexGeneration } from './compose.js'
+import { selectAuthoritativeCodexGeneration } from './shared-codex-migration.js'
 import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE } from './model-overrides.js'
 
 const PIN = Object.freeze({

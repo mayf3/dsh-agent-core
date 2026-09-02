@@ -59,6 +59,13 @@ import { validateSchedulerTrustedContext } from './scheduler-validation.js'
  *   composition row is active) — the loader applies sibling rows
  *   concurrently, so reading a sibling's service at APPLY time would race.
  *   `localHandlers` wins when both are provided.
+ * @param {({capabilityId:string, operation:string, agentId:string,
+ *   code:string}) => void} [opts.auditDenial] - optional L0 evidence hook
+ *   (AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R12): invoked for LOCAL-capability
+ *   denials that occur BEFORE the local handler runs (missing handler,
+ *   credential, grant). The denial result itself is never altered by this
+ *   hook — a broken audit sink must not change authorization outcomes; the
+ *   composition decides which capability ids are recorded.
  * @param {(msg: string) => void} [opts.log] - parent log sink.
  * @returns {{ execute(call: {capabilityId:string, operation:string,
  *   args:object}, ctx: {agentId:string}): Promise<object> }}
@@ -70,6 +77,7 @@ export function createBrokerGateway({
   credentialsFile,
   localHandlers,
   localHandlerResolver,
+  auditDenial,
   log = () => {},
 }) {
   const targetMap = buildTargetMap(targets)
@@ -97,6 +105,17 @@ export function createBrokerGateway({
 
   function localHandlerFor(handlers, manifest, operation) {
     return handlers[manifest.id]?.[operation]
+  }
+
+  /** L0 pre-handler denial evidence (see auditDenial above): best-effort,
+   *  never throws, never rewrites the denial it observes. */
+  function noteDenial(manifest, operation, agentId, code) {
+    if (typeof auditDenial !== 'function') return
+    try {
+      auditDenial({ capabilityId: manifest.id, operation, agentId, code })
+    } catch (cause) {
+      log(`[broker-gateway] auditDenial hook failed for ${manifest.id}.${operation}: ${cause?.message ?? cause}`)
+    }
   }
 
   const schedulerMutations = new Set(['create', 'update', 'enable', 'disable', 'remove'])
@@ -170,6 +189,7 @@ export function createBrokerGateway({
     const localHandlersNow = handlersForCall()
     const localHandler = isLocal ? localHandlerFor(localHandlersNow, manifest, operation) : undefined
     if (isLocal && (typeof operation !== 'string' || localHandler === undefined)) {
+      noteDenial(manifest, operation, agentId, 'unsupported_operation')
       return { ok: false, error: { code: 'unsupported_operation', detail: `operation not served by the gateway: ${manifest.id}.${operation}` } }
     }
     if (!Array.isArray(manifest.operations)) {
@@ -213,10 +233,12 @@ export function createBrokerGateway({
       // A broken credential store must never crash the parent RPC; fail the
       // call closed with the store error detail (never the secret).
       log(`[broker-gateway] credential store error for agent ${agentId}: ${error?.message ?? error}`)
+      if (isLocal) noteDenial(manifest, operation, agentId, 'credential_unavailable')
       return { ok: false, error: { code: 'credential_unavailable', detail: error?.message ?? 'credential store error' } }
     }
     if (credential === undefined) {
       log(`[broker-gateway] agent ${agentId}: no credential bound (fails closed)`)
+      if (isLocal) noteDenial(manifest, operation, agentId, 'credential_unavailable')
       return { ok: false, error: { code: 'credential_unavailable', detail: `no MachineClient credential bound to agent ${agentId}` } }
     }
 
@@ -240,12 +262,14 @@ export function createBrokerGateway({
           })
         } catch (error) {
           log(`[broker-gateway] agent ${agentId}: ${manifest.id} grant denied: ${error?.message ?? error}`)
+          const code = error?.errorCode === 'credential_invalid' ? 'credential_invalid'
+            : error?.errorCode === 'transport_failure' ? 'transport_failure'
+              : 'access_denied'
+          noteDenial(manifest, operation, agentId, code)
           return {
             ok: false,
             error: {
-              code: error?.errorCode === 'credential_invalid' ? 'credential_invalid'
-                : error?.errorCode === 'transport_failure' ? 'transport_failure'
-                  : 'access_denied',
+              code,
               detail: `grant for ${requiredScopes.join(' ')} not available to this agent`,
             },
           }

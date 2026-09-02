@@ -196,9 +196,11 @@ export function apply(ctx) {
         // params.cwd = the Router-resolved effective workspace for THIS
         // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the
         // initialize-time process cwd (legacy/scheduler callers).
+        // params.messageOrigin = the R4 trusted inter-agent source sidecar
+        // (AGENT_CORE_AGENT_SESSION_MESSAGING_V1); absent => source user.
         result = await rpcTurnContext.run(
           params?.turnExecutionId,
-          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd),
+          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin),
         )
       } else if (method === 'rpc.response') {
         // Parent's answer to a rpc.request: resolve the pending plugin call.
