@@ -188,3 +188,9 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_TRANSITION_DIRECT_ROLLBACK_AMENDMENT_V1` | accepted (Draft PR) | none | narrow docs-only child amendment: removes `DEC-XOBS-001`/`CTR-XOBS-015` pre-seal root staging observation precondition for rollback-to-frozen-preimage only (basis: `SCHEME_AUDIT_R1` sha256 `4ff6defe…ebd74` + NEW_EVIDENCE); both parents (`…DEPLOYMENT_RECOVERY_V1`, `…ROOT_XATTR_OBSERVATION_V1`) stay accepted and byte-unchanged; no whole-Spec supersession, no scope expansion, no new observation authority |
+
+## workflow-execute unified deployment authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_EXECUTE_UNIFIED_DEPLOYMENT_V1` | proposed（acceptance 前） | none（flip 后 contracts） | unified `workflow_execute` 写工具的两文件生产部署授权：workflow.js + registry.js（DEC-010 cutover），两文件等面回滚、blob pins + preimage 分支 STOPPED 语义、post-deploy 证明面、dedicated disposable-fixture E2E、CTR-HD-006/009 机制按引用继承；执行成功即构成 transition hotfix 的 CTR-HD-011 retirement record |
