@@ -29,10 +29,15 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { writeAgentDefinition } from '../../agent-definition/src/config.js'
+import { createParentRpcHandler, BROKER_RPC_METHOD } from '../../agent-router/src/parent-rpc-relay.js'
+import { agentSessionMessagingManifest } from '../../broker/src/capabilities/agent-session-messaging.js'
+import { invoke } from '../../broker/src/mapping.js'
+import { createRelayHandlers } from '../../broker/src/relay.js'
+import { createSessionSeam } from '../../demo-server/src/session-seam.js'
 import { composeProductionRuntime } from '../src/compose.js'
 import { resolveProductionLayout } from '../src/paths.js'
 
-const SOURCE = 'agt_a2a-source-agent'
+const SOURCE = 'agt_stock_agent'
 const TARGET = 'agt_a2a-target-agent'
 const PROOF = 'turn:9:src:g1:s7'
 
@@ -54,6 +59,38 @@ class FakeProc {
     this.exitPromise = new Promise((resolve) => { this.exitResolve = resolve })
     this.deliveries = []
     this.turns = []
+    this.sessionMessages = []
+    this.persistedHeaders = []
+    const handlesById = new Map()
+    const persistence = { list: async () => this.persistedHeaders.map((header) => ({ ...header })) }
+    const agents = {
+      create: async ({ sessionId, meta }) => {
+        const key = String(sessionId)
+        const handle = {
+          agent: {
+            session: { header: { id: sessionId, cwd: meta.cwd }, seq: 0 },
+            followup: (message) => {
+              handle.agent.session.seq += 1
+              this.sessionMessages.push({ sessionId: key, message })
+            },
+          },
+        }
+        handlesById.set(key, handle)
+        this.persistedHeaders.push(handle.agent.session.header)
+        return handle
+      },
+      resume: async ({ resumeSessionId }) => handlesById.get(String(resumeSessionId)),
+    }
+    const services = new Map([
+      ['loader', { await: async () => {} }],
+      ['agentLoop', {}],
+      ['sessionPersistence', persistence],
+      ['agents', agents],
+    ])
+    this.sessionSeam = createSessionSeam({
+      ctx: { get: (name) => services.get(name) },
+      settings: { cwd: this.workspace, provider: 'fake', model: 'fake-model' },
+    })
   }
 
   spawn() {}
@@ -62,10 +99,16 @@ class FakeProc {
 
   async deliver(sessionId, text, opts = {}) {
     this.deliveries.push({ sessionId, text, opts })
+    const promptReceipt = await this.sessionSeam.prompt(
+      sessionId,
+      [{ type: 'text', text }],
+      opts.cwd,
+      opts.messageOrigin,
+    )
     return {
       accepted: true,
       sessionId,
-      messageId: `msg-${this.deliveries.length}`,
+      messageId: promptReceipt.messageId,
       reconciliationHandle: `turn:fake-${this.agentId}-${this.deliveries.length}`,
       evidence: { promptReceipt: 'accepted' },
     }
@@ -115,15 +158,15 @@ function stubAuthServer(mode) {
   })
 }
 
-async function seedRuntime(t, { authMode = 'grant' } = {}) {
+async function seedRuntime(t, { authMode = 'grant', targetDisabled = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'a2a-int-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const layout = resolveProductionLayout(root)
   mkdirSync(join(root, 'scheduler'), { recursive: true })
   await writeAgentDefinition(layout.agentsConfig, {
-    defaultAgentId: TARGET,
+    defaultAgentId: targetDisabled ? SOURCE : TARGET,
     agents: [
-      { id: TARGET, name: 'A2A Target' },
+      { id: TARGET, name: 'A2A Target', disabled: targetDisabled },
       { id: SOURCE, name: 'A2A Source' },
     ],
   })
@@ -156,9 +199,28 @@ async function seedRuntime(t, { authMode = 'grant' } = {}) {
 }
 
 function gatewayCall(runtime, { agentId, sourceTurnExecutionId, args }) {
-  return runtime.ctx.get('brokerGateway').execute(
-    { capabilityId: 'agent_session_send', operation: 'send', args },
-    { agentId, sourceTurnExecutionId },
+  const sourceProc = {
+    agentId,
+    processGeneration: 1,
+    executions: new Map([[sourceTurnExecutionId, { settled: false }]]),
+    activeIngressContext: undefined,
+  }
+  const parentHandler = createParentRpcHandler({
+    agentId,
+    log: silentLog,
+    getProc: () => sourceProc,
+    getBrokerGateway: () => runtime.ctx.get('brokerGateway'),
+    switchAgent: async () => ({}),
+  })
+  const relayHandlers = createRelayHandlers(
+    agentSessionMessagingManifest,
+    (call) => parentHandler(BROKER_RPC_METHOD, call, { turnExecutionId: sourceTurnExecutionId }),
+  )
+  return invoke(
+    agentSessionMessagingManifest,
+    relayHandlers,
+    { operation: 'send', args },
+    { resolvePrincipal: () => undefined },
   )
 }
 
@@ -178,6 +240,10 @@ test('Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned
     kind: 'inter_agent',
     sourceAgentId: SOURCE,
     correlation: PROOF,
+  })
+  assert.equal(target.sessionMessages.length, 1, 'the real session seam accepted exactly one prompt')
+  assert.deepEqual(target.sessionMessages[0].message.source, {
+    kind: 'inter_agent', sourceAgentId: SOURCE, correlation: PROOF,
   })
   const rows = readFileSync(auditFile, 'utf8').trim().split('\n').map((l) => JSON.parse(l))
   assert.deepEqual(rows.map((r) => r.phase), ['intent', 'outcome'])
@@ -271,6 +337,14 @@ test('Case F (F23): a grant-check transport outage is transport_failure, never a
   assert.equal(envelope.ok, false)
   assert.equal(envelope.error.code, 'transport_failure')
   assert.notEqual(envelope.error.code, 'access_denied')
+  assert.equal(spawned.filter((p) => p.agentId === TARGET).length, 0)
+})
+
+test('disabled target is target_disabled with zero target process or prompt', async (t) => {
+  const { runtime, spawned } = await seedRuntime(t, { targetDisabled: true })
+  const envelope = await gatewayCall(runtime, { agentId: SOURCE, sourceTurnExecutionId: PROOF, args: SEND })
+  assert.equal(envelope.ok, false)
+  assert.equal(envelope.error.code, 'target_disabled')
   assert.equal(spawned.filter((p) => p.agentId === TARGET).length, 0)
 })
 

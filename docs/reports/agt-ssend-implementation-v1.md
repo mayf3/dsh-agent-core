@@ -88,3 +88,23 @@ MAIN_MERGE = NONE（不 merge、不推送；PR #138 保持 OPEN 不由本链处�
    分类保留在闭合表内，出现频率为零。
 4. relay 本地路径仅补最小覆盖（G8）；waiter 无持久化（R9 明确 V1 不做 restart 恢复）。
 5. agent_wake PR #130 待 owner close-as-obsolete（spec §2.1 disposition）。
+
+## 6. Independent-audit closure addendum
+
+The exact-`c2a1194` independent implementation audit returned `REVISE`; its
+frozen seven-item blocker union is persisted in
+`docs/reports/agt-ssend-implementation-audit-revise-v1.md`.
+
+The earlier structure-PASS statement above did not reproduce on takeover:
+`packages/agent-router/test` had 21 direct tracked children. The closure moves
+the new message-origin test into the existing `test/process-lifecycle/`
+directory; it does not add an exception. The same closure also fixes only the
+audited blockers: parent-RPC ambiguous outcome classification, legal opaque
+source Agent ids, disabled-target distinction, R12 validation-denial evidence,
+and a composed test path that now traverses child mapping/relay, parent-RPC,
+the real gateway/provider/Router, and the real target session seam.
+
+The standalone accepted-Spec final-head evidence is persisted at
+`docs/reports/agt-ssend-final-head-audit-v1.md`. Final readiness is determined
+only by the subsequent exact-new-head independent re-audit, not by this author
+addendum.

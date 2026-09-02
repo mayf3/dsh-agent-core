@@ -34,7 +34,7 @@ import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation
  */
 export function createIngressDelivery({
   log, feishu, workspaceBootstrap, store, reconciliationStore,
-  routeChain, resolveAgentRef, resolveChannelConversation, resolveEffectiveWorkspace,
+  routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
 }) {
   /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
@@ -201,7 +201,7 @@ export function createIngressDelivery({
     if (origin.kind !== 'inter_agent') {
       throw new TypeError('agent-router: messageOrigin.kind must be "inter_agent"')
     }
-    if (typeof origin.sourceAgentId !== 'string' || !/^agt_[a-z0-9-]+$/.test(origin.sourceAgentId)) {
+    if (typeof origin.sourceAgentId !== 'string' || !/^agt_[A-Za-z0-9_-]+$/.test(origin.sourceAgentId)) {
       throw new TypeError('agent-router: messageOrigin.sourceAgentId must be an exact agt_* id')
     }
     if (typeof origin.correlation !== 'string' || origin.correlation === '') {
@@ -275,7 +275,27 @@ export function createIngressDelivery({
     if (typeof agentRef !== 'string' || agentRef.trim() === '') {
       throw new TypeError('agent-router: deliver agentId must be a non-empty string')
     }
-    const agent = resolveAgentRef(agentRef)
+    let agent
+    try {
+      agent = resolveAgentRef(agentRef)
+    } catch (error) {
+      if (messageOrigin !== undefined
+        && error?.code === 'AGENT_NOT_FOUND'
+        && typeof resolveAgentById === 'function') {
+        try {
+          const defined = resolveAgentById(agentRef)
+          if (defined?.disabled === true) {
+            throw Object.assign(new Error(`agent-router: target Agent is disabled: ${agentRef}`), {
+              code: 'AGENT_DISABLED',
+              proven: 'zero_byte',
+            })
+          }
+        } catch (lookupError) {
+          if (lookupError?.code === 'AGENT_DISABLED') throw lookupError
+        }
+      }
+      throw error
+    }
     // CLAUSE-PROC-BOUNDED rule 8: reconciliation capacity is checked BEFORE
     // spawn/write — an exhausted store must never cost a spawn or a prompt
     // byte (§10.3 ROUTER_GLOBAL_RECONCILIATION_CAP: S/W = 0/0).
