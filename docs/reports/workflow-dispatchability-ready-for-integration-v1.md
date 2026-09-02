@@ -210,6 +210,34 @@ cd packages/broker && npm test               # node --test（含 capabilities/wo
 `workflow_global_instances(lifecycle=active, dispatchableOnly=true)` 分页到
 `next_cursor=null` + blocked/dispatchable fixture 断言（仅在第 7 节路径合法打通后执行）。
 
+### 6.2 Baseline readiness probe（2026-09-02 实测，gate-neutral，无任何 dispatchability 实现）
+
+在 pinned heads 上实际执行了 §6.1 的命令，全部通过：
+
+```text
+[dsh-agent-core @ 4318be3]  packages/broker: npm install（worktree 内）+ npm test
+  → tests 301 / pass 301 / fail 0（node v26.7.0）
+
+[svc-workflow @ efdfb7e]    cargo test --workspace --no-run
+  → exit 0，全部测试目标编译通过
+[svc-workflow @ efdfb7e]    cargo test --lib
+  → 149 passed / 0 failed
+[svc-workflow @ efdfb7e]    TEST_DATABASE_URL='postgres://postgres:postgres@127.0.0.1:55432/svc_workflow_rfi_probe'
+                            cargo test --test 23_global_coordinator
+  → 9 passed / 0 failed（含 coordinator_list_pagination_is_continuous，
+    即未来要扩展的 global list keyset 分页面；隔离 DB + 幂等 migrations）
+```
+
+- 测试 DB 约定：`TEST_DATABASE_URL`（tests/common/mod.rs，默认
+  `postgres://postgres:postgres@localhost:5432/svc_workflow`，可用 env 覆盖）；
+  本轮用本地 docker 测试容器 `svc-workflow-test-pg`（127.0.0.1:55432）上的专属
+  DB `svc_workflow_rfi_probe`，probe 后已 DROP，无残留。
+- probe worktrees（均 detached、主 checkout 未动）：
+  - svc: /Users/yanfenma/workspace/worktrees/svc-wf-dispatch-rfi-baseline @ efdfb7e
+  - dsh: /Users/yanfenma/workspace/worktrees/dsh-wf-dispatchability-rfi-v1 @ f925f55（4318be3 + 本报告）
+- 结论：裁决后无论走 (a)/(b)，两条路径的实现-测试-审计链条在本地均即时可执行；
+  LOCAL_E2E 的全部前置（build、test runner、DB 容器、分页测试目标）已实证就绪。
+
 ## 7. 通往 READY_FOR_INTEGRATION = YES 的合法路径（merge dependencies / order）
 
 ```text
