@@ -43,11 +43,11 @@ import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
-import { Scheduler, JobStore, HistoryStore } from '../../scheduler/src/index.js'
+import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createSelfServiceSchedulerAccess } from '../../scheduler/src/self-service.js'
-import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
-import { ingestSchedulerResult } from './scheduler-result.js'
-import { createJwksTokenVerifier } from '../../product-api/src/scheduler-auth.js'
+import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
+import { mountSchedulerHistoryRuntime } from './scheduler-history-runtime.js'
+import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
@@ -339,42 +339,7 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
-  const rawInvoker = createRouterInvoker(router, { definition })
-  // Thin observability (evidence surface, not a framework): one line per
-  // invocation with the router process state — same pattern the resident used.
-  const invoker = async (request) => {
-    const started = Date.now()
-    const outcome = await rawInvoker(request)
-    // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1 §3 R4: structured business-result
-    // ingestion in the TRUSTED wrapper (the scheduler core stays product-
-    // ignorant, R-H7). Fail-soft — a rejected block never affects the
-    // execution outcome or the delivery.
-    if (outcome?.status === 'ok' && typeof outcome.summary === 'string') {
-      const ingested = ingestSchedulerResult(outcome.summary)
-      if (ingested.result !== undefined) outcome.result = ingested.result
-      else if (ingested.result_error_code !== undefined) outcome.result_error_code = ingested.result_error_code
-    }
-    const proc = router.registrySnapshot().find((p) => p.agentId === request.agentId)
-    writeEvidence({
-      kind: 'invocation',
-      pid: process.pid,
-      agentId: request.agentId,
-      sessionId: request.sessionId,
-      status: outcome.status,
-      summary: outcome.status === 'ok' ? (outcome.summary ?? null) : null,
-      error: outcome.status === 'ok' ? null : (outcome.error ?? null),
-      reconciliationHandle: outcome.reconciliationHandle ?? null,
-      deadlineAtWallMs: outcome.deadlineAtWallMs ?? null,
-      evidence: outcome.evidence ?? null,
-      durationMs: Date.now() - started,
-      routerProcessPid: proc?.pid ?? null,
-      routerProcessAlive: proc?.alive ?? null,
-    })
-    return outcome
-  }
-  // Preserve Scheduler V2's synchronous runnable-Agent admission gate through
-  // the observability wrapper; no job/store/deploy behavior is changed here.
-  invoker.assertRunnable = rawInvoker.assertRunnable
+  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence })
 
   // Admission observability remains a wrap around Router-owned delivery.
   wireNotificationIngressDeliveryEvidence(router, writeEvidence)
@@ -391,25 +356,12 @@ export async function composeProductionRuntime(options = {}) {
   // its own directory (events.jsonl + monthly projections) and its own lock.
   // It records facts at the engine's lifecycle boundaries and NEVER gates
   // admission (R-H1); jobs.json / runs.jsonl authorities are untouched.
-  const history = new HistoryStore({
-    dir: layout.historyDir,
-    log: { warn: (...a) => log.warn('[scheduler-history]', ...a) },
+  const history = mountSchedulerHistoryRuntime({
+    ctx,
+    layout,
+    schedulerAuth: opts.schedulerAuth,
+    log,
   })
-  history.ensureLoaded?.()
-  ctx.provide('schedulerHistory', history)
-
-  // R8 gate seam: auth-service RS256/JWKS token verification for
-  // /scheduler/*. Unconfigured = null = the product-api gate 401s every
-  // scheduler request (fail-closed; G4 grants supply scopes externally).
-  const schedulerJwksUrl = opts.schedulerAuth?.jwksUrl ?? process.env.SCHEDULER_AUTH_JWKS_URL
-  ctx.provide('schedulerTokenVerifier', schedulerJwksUrl
-    ? createJwksTokenVerifier({
-        jwksUrl: schedulerJwksUrl,
-        issuer: opts.schedulerAuth?.issuer ?? process.env.SCHEDULER_AUTH_ISSUER,
-        audience: opts.schedulerAuth?.audience ?? process.env.SCHEDULER_AUTH_AUDIENCE,
-        log: { warn: (...a) => log.warn('[scheduler-auth]', ...a) },
-      })
-    : null)
 
   // AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1: the LOCAL (in-process) broker
   // capability seam over the SAME store — every mutation reuses the store's

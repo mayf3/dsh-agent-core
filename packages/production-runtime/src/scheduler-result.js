@@ -104,3 +104,12 @@ export function ingestSchedulerResult(summary) {
   if (wakeSent !== undefined) result.wake_sent = wakeSent
   return { result, result_error_code: undefined, reason: undefined }
 }
+
+/** Attach a validated business result to a successful router outcome in place. */
+export function attachSchedulerResult(outcome) {
+  if (outcome?.status !== 'ok' || typeof outcome.summary !== 'string') return outcome
+  const ingested = ingestSchedulerResult(outcome.summary)
+  if (ingested.result !== undefined) outcome.result = ingested.result
+  else if (ingested.result_error_code !== undefined) outcome.result_error_code = ingested.result_error_code
+  return outcome
+}
