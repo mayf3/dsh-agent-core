@@ -31,11 +31,11 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
-## Scheduler authorization scope alignment
+## Scheduler self-service authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_SCHEDULER_AUTH_SCOPE_ALIGNMENT_V1` | proposed | none | bounded child alignment: preserve local `scheduler.manage:any`, prove it with exact auth wire scope `scheduler.manage-any`, and reserve an exact four-file future implementation closure; zero Grant, credential, registry, database, or deployment authority |
+| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | proposed whole successor; V1 remains accepted/current until atomic acceptance | none | complete V1 self-service Scheduler authority plus exact auth wire scope `scheduler.manage-any` and bounded denial ownership lookup; future acceptance atomically supersedes V1, while production authority remains none |
 
 ## Governance transition
 
