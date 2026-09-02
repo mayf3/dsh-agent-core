@@ -35,7 +35,7 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | consult Spec frontmatter; V1 remains current until the atomic acceptance transaction merges | consult Spec frontmatter | whole successor carrying complete V1 authority plus exact `scheduler.admin` control / `scheduler.audit` history proof separation and bounded denial ownership lookup; production apply authority remains none |
+| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | consult Spec frontmatter; V1 remains current until the atomic acceptance transaction merges | consult Spec frontmatter | whole successor carrying complete V1 authority plus exact `scheduler.admin` mutation-control / `scheduler.audit` history separation, fail-closed global definition listing, and bounded denial ownership lookup; production apply authority remains none |
 
 ## Governance transition
 
