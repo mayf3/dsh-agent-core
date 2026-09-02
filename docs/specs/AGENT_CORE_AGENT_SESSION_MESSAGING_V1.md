@@ -1,13 +1,26 @@
 ---
 spec_id: AGENT_CORE_AGENT_SESSION_MESSAGING_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 date: 2026-08-31
 revision: r3
 revision_date: 2026-09-02
+accepted_date: 2026-09-02
+accepted_by: mayf3
+accepted_at: 2026-09-02T11:47:15Z
+accepted_reviewed_head: eaa3e3d9754a608946165841408d01035a6e1b25
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
+acceptance_finalize_semantic_change: none
+acceptance_authority_basis: >-
+  owner goal AGENT_SESSION_SEND_READY_FOR_INTEGRATION_V1 (autonomous chain:
+  promotion/fresh-head review -> independent audit PASS -> lifecycle acceptance
+  -> final-head audit -> implementation -> independent implementation audit;
+  production deployment NOT_RUN; main merge NOT_RUN by this chain)
 task_name: 会话 规格
 task_type: SPEC_AUTHORING_ONLY
 scope:
@@ -48,15 +61,23 @@ change_log:
 
 # AGENT_CORE_AGENT_SESSION_MESSAGING_V1
 
-> 状态：**proposed r3**（docs-only 修订：按 R1 准备阶段调查关闭 authority 对齐（F10）与五项
-> minor/note 修订（F9、F12、F19、F22、F23；另记录 F8/G8 测试覆盖缺口）。本 Spec 只起草合同，
-> 不授予实现、合并、grant、部署或 production apply 权限。
+> 状态：**accepted r3（2026-09-02 lifecycle acceptance finalize）**。独立审计绑定
+> `eaa3e3d9754a608946165841408d01035a6e1b25`（branch `prep/session-spec-revision-v1` / PR #138）：
+> **PASS**（0 blocker / 0 major / 2 minor F1·F2 / 3 note；报告
+> `docs/reports/agt-prep-audit-pr138-session-spec-r3.md` @ commit `0bd94f1`；
+> audit BASE `github/main 840d2f4`，acceptance 时 main 未漂移）。acceptance 仅变更
+> lifecycle 与 provenance 字段，reviewed semantics 零改动
+> （`acceptance_finalize_semantic_change: none`）；`implementation_authority: contracts`
+> 按 owner goal `AGENT_SESSION_SEND_READY_FOR_INTEGRATION_V1` 的自主链授权按本 Spec
+> contracts 实现；`production_apply_authority: none` 不变——本链不部署、不 merge main、
+> 不变更 Grant/credential/production state。F1（PR #130 disposition 注记）与 F2
+> （§3 证据行锚点）为已记录 non-blocking note，属 FOLLOW_UP_DEBT。
 >
-> 调查基线：r2 基于 `origin/main@1a9b81de19c2bf4af01f62f6189acffc1bb6839d`；r3 全部 BASE 事实
+> 起草历史：r2 基于 `origin/main@1a9b81de19c2bf4af01f62f6189acffc1bb6839d`；r3 全部 BASE 事实
 > 已由 R1 调查在 `github/main@840d2f4ad91f8252eb1f163330c041216a0dd9c4` 重新核实（
 > `AGENT_SESSION_MESSAGING_PREP_INVESTIGATION_V1`，branch `prep/session-messaging-investigation-v1`）。
 >
-> `PRODUCT_CODE_CHANGE = NONE`；`PRODUCTION_CHANGE = NONE`。
+> r3 authoring 时点：`PRODUCT_CODE_CHANGE = NONE`；`PRODUCTION_CHANGE = NONE`。
 
 ## 0. Owner Ruling 与一句话模型
 
