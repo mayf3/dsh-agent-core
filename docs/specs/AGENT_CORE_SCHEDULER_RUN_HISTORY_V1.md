@@ -1,9 +1,17 @@
 ---
 spec_id: AGENT_CORE_SCHEDULER_RUN_HISTORY_V1
-status: proposed
+status: accepted
+accepted_date: 2026-09-02
+accepted_by: mayf3
+accepted_reviewed_base: 840d2f4ad91f8252eb1f163330c041216a0dd9c4
+accepted_reviewed_spec_commit: 4c285c6d104b7de301b27b05fa39551ca488a2e5
+final_audit: 调度历史 审计（G1 promotion-context independent audit，PASS：
+  0 blockers / 0 majors / 3 minors / 3 notes）
+final_audit_result: PASS
+required_fixes: NONE
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 date: 2026-08-31
 revision: r2（2026-09-02 现状事实刷新修订（preparation track）：按 R1 调查
@@ -70,12 +78,19 @@ owners:
 
 # AGENT_CORE_SCHEDULER_RUN_HISTORY_V1 — Scheduler 结构化执行历史（Occurrence / Run ledger + 只读查询面）
 
-> 状态：**proposed**（r2——r1 的现状事实刷新修订；目标语义与冻结合同不变）。
-> 本 Spec 当前不授予任何实现、合并或 production apply 权限。
-> `implementation_authority = none`；`production_apply_authority = none`。
-> 本轮 **零代码改动、零 store 修改、零 jobs.json 修改、零数据库、零 API 部署、
-> 零生产访问**（§8）。
-> NEXT_TASK = 调度历史 审计（independent review）。
+> 状态：**accepted**（2026-09-02 lifecycle acceptance；accepted_by = mayf3；
+> accepted_reviewed_base = 840d2f4；accepted_reviewed_spec_commit = 4c285c6）。
+> G1 promotion-context independent audit = **PASS**（0 blockers / 0 majors /
+> 3 minors / 3 notes；docs/reports/agt-scheduler-run-history-g1-audit-v1.md；
+> 前置 preparation audit PREP_AUDIT_SPEC_REVISIONS_V1 亦 PASS）。
+> `implementation_authority = contracts`（§2.2 G2：实现闭包按
+> GOVERNING_SPEC_UNMODIFIED 评审进行——实现轮不得修改本文件）；
+> `production_apply_authority = none`（G3 生产部署 = 独立 operator 轮次，
+> 本 Spec 不含）。§0–§9 为 authoring 轮原文（其「proposed / 零实现」表述
+> 是 authoring 轮历史记录，acceptance 不改写）；本轮唯一 delta =
+> frontmatter 验收元数据 + 本 banner。
+> 本分支为 G2 实现 carrier（branch sched/run-history-integration-v1）；
+> merge 进 main 与 G3–G5（部署 / scope 供给 / canary）均属独立后续轮次。
 
 ## 0. 任务语境与一句话模型
 
