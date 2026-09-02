@@ -188,3 +188,9 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_TRANSITION_DIRECT_ROLLBACK_AMENDMENT_V1` | accepted (Draft PR) | none | narrow docs-only child amendment: removes `DEC-XOBS-001`/`CTR-XOBS-015` pre-seal root staging observation precondition for rollback-to-frozen-preimage only (basis: `SCHEME_AUDIT_R1` sha256 `4ff6defe…ebd74` + NEW_EVIDENCE); both parents (`…DEPLOYMENT_RECOVERY_V1`, `…ROOT_XATTR_OBSERVATION_V1`) stay accepted and byte-unchanged; no whole-Spec supersession, no scope expansion, no new observation authority |
+
+## workflow-transition canary execution authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_TRANSITION_CANARY_V1` | proposed (Draft PR, 试跑 授权 authoring round) | none / production apply none | `workflow_execute_canary_v1` production execution authority proposal (CTR-HD-006 chain `CANARY_EXECUTION_AUTHORITY` link; TRACK = WORKFLOW_TRANSITION_CANARY_V1, recovery-track-independent): exactly one V→V+1 transition on a dedicated disposable fixture via the existing lawful `workflow.execute` identity (default `agt_build-in-public-agent`, zero Grant change), single audited write-gate window with safe terminal state (gate false + allowlist absent), full server-side receipt/event/audit evidence, independent recovery-isomorphic seal/dual-audit/Owner-osascript chain with its own IDs, fail-stop no-retry no-scope-expansion; authoring-round precheck recorded CANARY_PREREQ = MISSING(dedicated disposable fixture not provisioned), identity side READY_WITH_BASIS |
