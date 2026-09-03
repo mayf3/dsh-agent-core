@@ -485,7 +485,7 @@ Runtime PID/start unchanged, source `agt_efficiency-agent` invokes only unified
 `name=daily-autonomy-scheduler-canary-<lowercase-uuid>`, `schedule_kind=at`,
 `at=<gate_observed_at plus exactly 180 seconds as RFC3339 UTC>`,
 `message=<below>`, `timeout=120`, `light_context=true`,
-`delivery_mode=none`, `best_effort=false`, `delete_after_run=true`,
+`delivery_mode=none`, `delete_after_run=true`,
 `auto_retry=false`, and `target_agent_id=blog-agent`; no omitted, defaulted, or
 extra field is allowed. The run must allocate a fresh non-main target session.
 The correlation-bound message is exactly
@@ -513,7 +513,7 @@ write except fencing an exactly attributable row. Completed occurrence/run/
 delivery/session steps are never replayed.
 
 Before create, fsync a root:wheel 0600 hash-chained
-`CANARY_JOURNAL.jsonl`; record exact `INIT,CREATE_BEGIN,CREATE_RESULT,FENCE_BEGIN,FENCE_PASS,OCCURRENCE_TERMINAL,RUN_TERMINAL,TARGET_TURN_PROVED,CLEANUP_BEGIN,CLEANUP_PASS,CANARY_PASS,SIGNAL,OUTCOME_UNKNOWN,MANUAL_RECOVERY_REQUIRED`
+`CANARY_JOURNAL.jsonl`; record exact `INIT,CREATE_BEGIN,CREATE_RESULT,FENCE_BEGIN,FENCE_PASS,OCCURRENCE_TERMINAL,RUN_TERMINAL,TARGET_TURN_PROVED,CLEANUP_BEGIN,CLEANUP_PASS,CANARY_PASS,CANARY_FAILED_UNCHANGED,CANARY_FAILED_CLEAN,SIGNAL,OUTCOME_UNKNOWN,MANUAL_RECOVERY_REQUIRED`
 events with exact envelope
 `schema_version,sequence,previous_sha256,event,at,correlation_id,details` and one
 correlation. Details bind, respectively: authority/deployment/Grant hashes;
@@ -528,16 +528,50 @@ corruption. Publish atomic
 The receipt's exact keys are
 `schema_version,outcome,correlation_id,authority_accepted_head,phase_c_receipt_sha256,deployment_receipt_sha256,request_sha256,gate_observed_at,due_at,late_window_end,job_id,occurrence_id,run_id,target_session_id,target_turn_id,delivery_id,job_count,occurrence_count,run_count,target_turn_count,delivery_count,source_agent_id,target_agent_id,target_session_fresh_non_main,target_own_principal,target_own_credential,source_privilege_propagated,auto_ping_pong,runtime_pid,runtime_started_at,runtime_health,cleanup_complete,enabled_job_count,journal_sha256,signal_count,finished_at,unavailable_fields_json,unavailable_fields_sha256`.
 The result file has exactly
-`schema_version,correlation_id,outcome,receipt_sha256,journal_sha256,finished_at`;
+`schema_version,correlation_id,outcome,receipt_sha256,journal_sha256,publication_journal_sha256,finished_at`;
 only receipt hash may be null after publication failure. Values follow the same
 UUID/time/hash/safe-integer/boolean/null-list grammar as deployment receipt.
 These fields bind authority/Phase-C/deployment receipts, exact
 request and time, Job/occurrence/run/session/turn/delivery IDs and counts,
 source/target identities, credential/privilege propagation, PID/health,
 cleanup/late-window state, journal, signals, and outcome
-`CANARY_PASS|CANARY_FAILED_CLEAN|CANARY_OUTCOME_UNKNOWN|CANARY_MANUAL_RECOVERY_REQUIRED`.
+`CANARY_PASS|CANARY_FAILED_UNCHANGED|CANARY_FAILED_CLEAN|CANARY_OUTCOME_UNKNOWN|CANARY_MANUAL_RECOVERY_REQUIRED`.
 Only `CANARY_PASS` with all exact one-counts, cleanup complete, no enabled Job,
 target ownership true, propagation/ping-pong false, and health true is success.
+
+Ignoring `SIGNAL` self-loops, the only legal canary journal paths are:
+
+```text
+INIT -> CREATE_BEGIN -> CREATE_RESULT
+CREATE_BEGIN -> OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED
+CREATE_RESULT(definitive failure, no Job) -> CANARY_FAILED_UNCHANGED
+CREATE_RESULT(created) -> OCCURRENCE_TERMINAL -> RUN_TERMINAL
+  -> TARGET_TURN_PROVED -> CLEANUP_BEGIN -> CLEANUP_PASS -> CANARY_PASS
+CREATE_RESULT(created)|OCCURRENCE_TERMINAL|RUN_TERMINAL|TARGET_TURN_PROVED
+  -> FENCE_BEGIN -> FENCE_PASS -> CLEANUP_BEGIN -> CLEANUP_PASS
+  -> CANARY_FAILED_CLEAN
+CREATE_RESULT(created)|FENCE_BEGIN -> OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED
+```
+
+The receipt matrix is exact: `CANARY_PASS` has all six IDs non-null, all five
+counts 1, ownership/fresh-session/health/cleanup true, propagation/ping-pong
+false, enabled count 0, and unavailable `[]`; `CANARY_FAILED_UNCHANGED` has all
+Job-through-delivery IDs null, all five counts 0, cleanup/health true, enabled 0,
+and unavailable JSON naming exactly those six IDs; `CANARY_FAILED_CLEAN` has a
+non-null Job ID, cleanup/health true and enabled 0, while later IDs/counts equal
+the exact terminal journal prefix and every unobserved ID is null/named in
+unavailable JSON; unknown/manual likewise copy every observed typed coordinate
+from the terminal journal, null/name every unreadable coordinate, make no
+success claim, and manual alone may have nonzero enabled count when no exact row
+can safely be fenced. Any value not forced by these rules is corruption.
+
+Receipt publication uses separate root:wheel 0600
+`CANARY_PUBLICATION_JOURNAL.jsonl` with the deployment publication envelope,
+inline-details, prefix-hash, atomic-rename, lost-rename recovery, and one
+non-success evidence-only resume rules. No publication event changes the frozen
+canary journal hash. The result channel binds the final complete canary and
+publication journals; failure after the second non-success publication attempt
+records null receipt hash and never reruns create, target execution, or cleanup.
 
 ### CTR-SRD-007 — Legacy zero-access and non-propagation
 
@@ -614,6 +648,8 @@ changes before accepted exact-head merge and final-head recheck.
   trace hash/bytes/markers/exit, legacy metadata; simulator injects before/after
   create response, zero/one/multiple tuple readback, every fence/late-window/
   occurrence/run/turn/cleanup/publication boundary, signals, and stale PID/health
+  plus wrong journal edge/schema, every canary outcome value/null/unavailable
+  matrix, lost receipt rename, forbidden success retry, and second publication failure
 - Pass/fail: exactly one occurrence/run/delivery/turn, correct fresh non-main
   target, deletion/retained evidence, no restart/retry/ping-pong/legacy access,
   privilege propagation, or enabled late Job; otherwise fail.
