@@ -20,7 +20,7 @@ external_authorities:
     relation: prerequisite
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_DAILY_AUTONOMY_OPERATIONAL_GRANTS_V1
-    revision: 226b1592fbda34bbcf79c0f76afaa0771d53c04e
+    revision: 07c8a9c4f7ad1b76dfd1bcfd1cc4a52b9effae00
     relation: prerequisite
 supersedes: []
 superseded_by: null
@@ -69,7 +69,7 @@ Apply begins only after: this Spec accepted/merged/final-head PASS; accepted ASM
 Deployment V2 exact semantic head `e225d7b...` has terminal Stage B/D/E and temp
 Grant compensation PASS; Auth Scheduler 1.7 exact semantic head `f1dcd4b...` is
 accepted/merged/production PASS; permanent-Grant semantic head
-`226b1592fbda34bbcf79c0f76afaa0771d53c04e` is independently reviewed,
+`07c8a9c4f7ad1b76dfd1bcfd1cc4a52b9effae00` is independently reviewed,
 accepted/merged/applied and exact `agent.session.send` plus `scheduler.admin` rows are live
 only for `agt_efficiency-agent`; the sole Runtime is healthy; no production
 transaction is active/authorized for the window/outcome-ambiguous; and fresh
