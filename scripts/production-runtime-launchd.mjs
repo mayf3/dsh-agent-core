@@ -26,7 +26,15 @@
  *                        AGENT_CORE_CREDENTIALS_FILE, BROKER_AUTH_ORIGIN,
  *                        DSH_AGENT_CHILD_UID/GID, DSH_AGENT_SPAWN_HELPER —
  *                        the TRUSTED_CP seam: hardening lands by setting env
- *                        here, not by changing runtime code)
+ *                        here, not by changing runtime code — and
+ *                        DSH_AGENTS_HOME: the DeepSeek Harness skill-
+ *                        filesystem resolves its shared user skill root as
+ *                        config.agentsHome ?? $DSH_AGENTS_HOME ?? ~/.agents,
+ *                        so the deploying lifecycle sets it to the canonical
+ *                        shared skills home at install time; per-agent DSH
+ *                        homes are unaffected because the runtime passes the
+ *                        configured agentsHome to workspace-bootstrap, whose
+ *                        configured root outranks this env var)
  *   Standard{Out,Error}  <root>/logs/runtime{,.err}.log
  *
  * TARGET SELECTION (PRODUCTION_INTEGRATION_V1, Task 2): the production
@@ -92,6 +100,13 @@ const PASS_THROUGH_ENV = [
   'DSH_AGENT_CHILD_UID',
   'DSH_AGENT_CHILD_GID',
   'DSH_AGENT_SPAWN_HELPER',
+  // Shared skill root for the DeepSeek Harness skill-filesystem
+  // (config.agentsHome ?? $DSH_AGENTS_HOME ?? ~/.agents). Forwarded only when
+  // set at install time — the deploying lifecycle owns the canonical value;
+  // nothing is hardcoded here. Per-agent DSH-home resolution is unaffected:
+  // the runtime gives workspace-bootstrap a configured agentsHome, which
+  // outranks this env var.
+  'DSH_AGENTS_HOME',
 ]
 
 function argValue(args, name, fallback) {
