@@ -1,16 +1,16 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
-production_apply_authority: none
+implementation_authority: contracts
+production_apply_authority: contracts
 date: 2026-09-03
-accepted_date: null
-accepted_by: null
-accepted_reviewed_base: null
-accepted_reviewed_spec_commit: null
-acceptance_review_verdict: null
+accepted_date: 2026-09-03
+accepted_by: mayf3
+accepted_reviewed_base: a0ce485483bbc82623d3df4f91cf6d4bc2297470
+accepted_reviewed_spec_commit: ed6916ea7459389251f789c3f3a13c7e085c656a
+acceptance_review_verdict: PASS
 type: implementation-spec (narrow whole-Spec successor to accepted AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V1; docs-only authoring round)
 scope:
   - mayf3/dsh-agent-core
@@ -38,11 +38,12 @@ owners:
 
 # AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V2
 
-> **PROPOSED / NOT ACCEPTED.** 本文件只提出 V1 的 narrow whole-Spec successor。
-> 本 authoring 轮仅可写本文与索引；不得写 production、不得 sudo、不得修改
-> P1/P2、不得重启或回滚 runtime、不得重复 Workflow E2E、不得修改 Grant 或
-> credential。只有独立审计 PASS、Owner 对 exact reviewed head 作出接受决定并把
-> lifecycle/authority 字段翻转后，才可能进入 artifact 轮。
+> **ACCEPTED / RECEIPT-RECOVERY AUTHORITY (V2, supersedes V1).** Owner、exact
+> reviewed proposal head 与 PASS verdict 只取本文件 frontmatter 的 accepted_by、
+> accepted_reviewed_spec_commit 与 acceptance_review_verdict；BLOCKERS = 0。本
+> acceptance 仅开放本文冻结的 receipt-only artifact/Owner transaction 链；
+> production apply 仍须 ONE targeted artifact Gate PASS 与 macOS native Owner
+> authorization，不授权任何其他 mutation。
 
 ## 1. Problem statement and new evidence
 
