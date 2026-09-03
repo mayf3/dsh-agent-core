@@ -7,13 +7,13 @@ import { manifests as forumManifests } from '../../src/capabilities/forum.js'
 import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
 import { manifests as okrManifests } from '../../src/capabilities/okr.js'
 
-// ─── Schema: all 17 shipped manifests are valid ─────────────────────────────
+// ─── Schema: all 18 shipped manifests are valid ─────────────────────────────
 // (15 first-batch + the 2 VISIT_ACTIVATION_V1 activation-model tools from
 // AGENT_CORE_WORKFLOW_DISPATCH_INTENT_BROKER_V1: due poll + wake.)
 
-test('schema: all 17 shipped manifests validate', () => {
+test('schema: all 18 shipped manifests validate', () => {
   const all = [...forumManifests, ...workflowManifests, ...okrManifests]
-  assert.equal(all.length, 17)
+  assert.equal(all.length, 18)
   for (const manifest of all) {
     const res = validateManifest(manifest)
     assert.equal(res.ok, true, `${manifest.id}: ${res.errors?.join('; ')}`)

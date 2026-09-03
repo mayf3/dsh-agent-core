@@ -20,7 +20,7 @@ const svcError = (res, status, code, message, requestId) => {
 
 // ─── Single write entry (DEC-010) ───────────────────────────────────────────
 
-test('workflow_execute is the ONLY workflow-STATE write tool; workflow_transition no longer exists', () => {
+test('workflow_execute is the only instance-execution write tool; workflow_transition remains absent', () => {
   // DEC-010 governs workflow-state mutation writes. The wake tool
   // (AGENT_CORE_WORKFLOW_DISPATCH_INTENT_BROKER_V1) is an activation-model
   // eligibility command, not a workflow-state write: it never touches
@@ -29,7 +29,15 @@ test('workflow_execute is the ONLY workflow-STATE write tool; workflow_transitio
   const writes = workflowManifests.filter((m) =>
     m.operations.some((op) => op.http && m.requiredScopes.includes('workflow.execute'))
   )
-  assert.deepEqual(writes.map((m) => m.id), ['workflow_execute', 'workflow_wake_dispatch_intent'])
+  assert.deepEqual(writes.map((m) => m.id), [
+    'workflow_execute',
+    'workflow_definition_authoring',
+    'workflow_wake_dispatch_intent',
+  ])
+  assert.deepEqual(
+    writes.filter((m) => m.id !== 'workflow_definition_authoring' && m.id !== 'workflow_wake_dispatch_intent').map((m) => m.id),
+    ['workflow_execute'],
+  )
   assert.ok(!workflowManifests.some((m) => m.id === 'workflow_transition'))
   assert.ok(!workflowManifests.some((m) => m.toolName === 'workflow_transition'))
   // 6 compat read tools + the due-intent read (activation model) + 1 write.
