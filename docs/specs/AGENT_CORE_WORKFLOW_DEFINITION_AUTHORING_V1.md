@@ -170,9 +170,12 @@ Declare `invalid_arguments`, transport fallbacks, and current endpoint codes:
 | 503 | `service_unavailable` |
 
 Tests assert only codes reachable per operation. Undeclared downstream codes
-fail closed through existing `http_4xx|http_5xx`. Current graph/schema/fixed-
-principal/digest failures mapped by service to `internal_consistency_error` stay
-unchanged. Detail remains behind the existing sanitized transport boundary.
+fail closed through existing `http_4xx|http_5xx`. Current graph/schema/digest
+failures mapped by service to 500 `internal_consistency_error` stay unchanged;
+fixed-principal rejection is deliberately opaque 404 `definition_not_found`;
+invalid node-type or transition-effect parsing currently becomes 503
+`service_unavailable`. Detail remains behind the existing sanitized transport
+boundary. Operation fixtures pin these current outcomes without relabeling them.
 
 ### CTR-WDA-005 — compatibility
 
