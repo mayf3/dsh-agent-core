@@ -107,7 +107,7 @@ with hash/bytes/type/owner/group/mode. Post-ASM compose must equal Git blob
 its fresh readback is sealed as a
 non-write guard. Release files are non-symlink `root:wheel 0644`.
 
-The complete non-write compatibility vector is also a hard Gate
+The minimum static non-write compatibility vector is also a hard Gate
 (`path = expected Git blob / SHA-256`):
 
 ```text
@@ -126,6 +126,8 @@ packages/scheduler-router/src/index.js = b1f5563411cb55c8ddc3391d6337a30aea2e0f4
 packages/scheduler-router/package.json = f9642e7e2292dfa2de7260d0a544e0486a91c911 / ae3f42b21de78d61193d9968c8f239fc5648ed816d4045235982c8d86976d80d
 packages/broker/src/capabilities/scheduler.js = 39b34b5bbf2cd5a66d08a896242cdd7d1a6580a1 / 1fa5181d399dc7ffe64a5b8f07bd0be70bf69c645d4bac5fbc6286da0bba8b71
 packages/broker/src/registry.js = 2f5e55b772e25093b7fec480a76fe47d6993b860 / 628abde2069028c832eb76699ad2dd8521528288f396680d39dffb353d985382
+packages/broker/src/mapping.js = 890d35b97700e741b0b6960049b619da03645483 / 6b737ffdeb808f9f2a84896f9b226839c0186aa7b45b64f9473b7aa120df1f08
+packages/broker/src/scheduler-validation.js = da7bdf69624af020645c607bad91d6dba4e7b97b / 8c8c532df57a59b5ca2a7f0131fe211a19d4cfced050f1f9aa4cd87f60a598d8
 packages/broker/src/index.js = eec8c6f9de6cb8434075fac3c984cf4a7e21f660 / 5a629aa477864b63170dff2d53ccd50f4aa2b9f53efec7df72d95d4d63981e94
 packages/broker/src/gateway.js = 68ec4eecf55888fc0eb202c5fe128e3f703ce954 / 984d0d048382b31e87920b3dc85b00c9f12b7aab08a058792c7ba5ae8857e339
 packages/broker/src/relay.js = 2ec4acf764d13a53d60050ba22569e51885cab4d / 730e20338544ec36871461f9f7febc43bcd50f195c38f63e0472aa97c3b4983c
@@ -138,7 +140,13 @@ rows, and execute a composed proof that the model catalog contains exactly one
 handler, and cross-Agent control reaches exactly
 `createSelfServiceSchedulerAccess` → `assertGrant(agentId, scope, resource)`
 with `scheduler.admin`; self create reaches the same production JobStore with
-zero Auth call. Any vector or composed-proof drift stops before production.
+zero Auth call. The proof MUST instrument module loading and emit an exhaustive
+catalog of every loaded local source/package/config file across catalog, relay,
+Parent, self, and admin paths—including credential/transport plumbing. It seals
+path/type/blob/SHA-256/bytes for that entire dynamic closure and re-verifies
+every row under the production lock immediately before apply; any extra,
+missing, or changed loaded row stops. The 21 named rows are mandatory minimums,
+not a claim that static inspection alone enumerates the transitive closure.
 
 ## 4. State, observations, claims, evidence, decisions
 
@@ -149,8 +157,10 @@ zero Auth call. Any vector or composed-proof drift stops before production.
 - `STATE-SRD-002` — The present production scheduler face is the 15-file
   pre-history tree captured by the prototype; ASM will change Broker/compose but
   not scheduler files. Basis: `OBS-SRD-002`, `EVD-SRD-002`.
-- `STATE-SRD-003` — The only coherent selective target is ten writes plus the
-  closed non-write vector above; history remains dormant. Basis: `OBS-SRD-003`,
+- `STATE-SRD-003` — The candidate selective target is ten writes plus the
+  minimum static vector and future exhaustive loaded-source Gate above; its
+  sufficiency remains INFERRED until that Gate passes, and history is designed
+  to remain dormant. Basis: `OBS-SRD-003`,
   `CLM-SRD-001`, `EVD-SRD-003`.
 - `STATE-SRD-004` — The accepted canary requires one self Job and whole-host
   legacy-path evidence after deployment, without restart or Auth. Basis:
@@ -199,30 +209,42 @@ zero Auth call. Any vector or composed-proof drift stops before production.
 
 ### CLM-SRD-001 — Selective activation is sufficient but history stays dormant
 
-- Support: `OBS-SRD-003` plus synthetic proof required by `CTR-SRD-001`.
+- Support state: INFERRED.
+- Support: `EVD-SRD-003` relates the exact import/dependency inspection to this
+  claim; the synthetic proof required by `CTR-SRD-001` is a future conformance
+  Gate and is not misclassified as present authoring evidence.
 - Uncertainty: no production behavior is claimed until the post-ASM artifact
   proof and target-bound deployment/canary receipts pass.
 
 - `EVD-SRD-001` — source `OBS-SRD-001`; target `STATE-SRD-001`; relation
-  SUPPORTS; exact commits above; conclusive for lineage/authority gap, not runtime.
+  SUPPORTS; coordinates the exact commits above; environment isolated dsh Git
+  worktree; provenance local Git object database and the two accepted Specs;
+  conclusive for lineage/authority gap, not runtime behavior.
 - `EVD-SRD-002` — source `OBS-SRD-002`; target `STATE-SRD-002`; relation
-  SUPPORTS; prototype manifest/census hashes; strong historical preface, stale
-  after ASM by design.
+  SUPPORTS; coordinates prototype manifest/census hashes and exact live root;
+  environment production Mac read-only census; provenance prototype artifact;
+  strong historical preface, intentionally stale after ASM.
 - `EVD-SRD-003` — source `OBS-SRD-003`; target `CLM-SRD-001`; relation SUPPORTS;
-  exact mutation/non-write blobs; qualified by mandatory synthetic proof.
+  coordinates all ten mutation and now 21 non-write blobs; environment isolated
+  dsh worktree plus read-only live blob census; provenance Git objects, accepted
+  ASM V2 §4, and prototype manifest; sufficient for INFERRED design selection,
+  not execution—the synthetic proof remains a mandatory conformance Gate.
 - `EVD-SRD-004` — source `OBS-SRD-004`; target `STATE-SRD-004`; relation
-  SUPPORTS; accepted Contract IDs; conclusive for canary shape, not execution.
+  SUPPORTS; coordinates accepted Contract IDs and exact V2 acceptance commit;
+  environment isolated dsh worktree; provenance Scheduler V2 Spec; conclusive
+  for canary shape, not future production execution.
 
 ### DEC-SRD-001 — Rebuild after ASM; never reuse the prototype
 
 Select a fresh native-gated artifact with post-ASM guards. Reject the stale
 prototype, terminal sudo, checkout copy, and compose deployment.
 
-### DEC-SRD-002 — Ten writes plus a closed compatibility vector
+### DEC-SRD-002 — Ten writes plus static and dynamic compatibility closure
 
-Select the minimum import-complete ten-file set and freeze every supporting
-non-write blob. Reject dormant partial copy without its imported modules and
-reject broader history-runtime activation.
+Select the minimum import-complete ten-file set, freeze the named static vector,
+then seal/reverify the exhaustive instrumented loaded-source closure. Reject a
+static-list-only claim, dormant partial copy without imported modules, and
+broader history-runtime activation.
 
 ### DEC-SRD-003 — Separate deployment smoke from the one business canary
 
@@ -244,6 +266,9 @@ synthetic post-ASM overlay proof for single catalog registration, schema
 validation, child relay, Parent handler, exact admin `assertGrant` mapping, and
 self-operation zero-Auth JobStore path. It MUST record the full History ancestry
 including `2e54d0a...`; an import-only smoke cannot substitute for this proof.
+The synthetic proof's instrumented exhaustive loaded-source catalog MUST be
+sealed and every row reverified under the production lock immediately before
+apply as required by §3; no unsealed loaded local dependency is allowed.
 
 ### CTR-SRD-002 — Native serialized transaction
 
