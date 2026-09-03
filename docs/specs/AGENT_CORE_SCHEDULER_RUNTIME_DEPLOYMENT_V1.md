@@ -20,7 +20,7 @@ external_authorities:
     relation: depends_on
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_DAILY_AUTONOMY_OPERATIONAL_GRANTS_V1
-    revision: 07c8a9c4f7ad1b76dfd1bcfd1cc4a52b9effae00
+    revision: 5e8b391339da0d03474f708debab2c7138259360
     relation: interoperates_with
 supersedes: []
 superseded_by: null
@@ -74,7 +74,7 @@ Deployment V2 exact semantic head `e225d7b...` has terminal Stage B/D/E and temp
 Grant compensation PASS; Auth Scheduler 1.7 exact semantic head `c708b37...` is
 byte-equivalent apart from its declared lifecycle-only acceptance to an
 accepted/merged descendant and has production PASS; permanent-Grant semantic
-head `07c8a9c4f7ad1b76dfd1bcfd1cc4a52b9effae00` is independently reviewed and
+head `5e8b391339da0d03474f708debab2c7138259360` is independently reviewed and
 accepted/merged, with its Phase B terminal and exact permanent
 `agent.session.send` live, but Phase C `scheduler.admin` not yet applied. The
 sole Runtime is healthy; no production
