@@ -1,13 +1,14 @@
 ---
-spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
-status: superseded
+spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
+status: accepted
 accepted_by: mayf3
-accepted_at: 2026-08-28
-accepted_reviewed_head: eca5baaeab778ad8c6ba8fcfaf9c96ad12f2f965
+accepted_at: 2026-09-03
+accepted_reviewed_head: efdd754f0db0b9e7041757ca83246d5695cf83f4
 acceptance_review_verdict: PASS
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
+production_apply_authority: none
 scope:
   - broker
   - scheduler
@@ -19,25 +20,31 @@ governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
   - SCHEDULER_OCCURRENCE_OUTCOME_V2
   - SCHEDULER_TIMEOUT_OUTCOME_V2
+  - AGENT_CORE_SCHEDULER_RUN_HISTORY_V1
   - AGENT_TRUSTED_FLEET_CUTOVER_V1
 external_authorities:
   - repository: mayf3/auth-service
     authority_id: MINIMAL_AUTH_FOUNDATION_V2
-    revision: d529bd3c28ece3967149ad793794f8dac2020276
+    revision: 05fcf4074fe15d7f29ce1ef0f68767fbbebd54de
     relation: constrained_by
-supersedes: []
-superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
+supersedes:
+  - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
+superseded_by: null
 owners:
+  - mayf3
   - repository-maintainers
 ---
 
-# AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
+# AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
 
-> **Accepted 2026-08-28 by repository owner `mayf3`.** Independent semantic review bound to
-> reviewed head `eca5baaeab778ad8c6ba8fcfaf9c96ad12f2f965` returned
-> `SPEC_REVIEW=ACCEPT`, `READY_TO_MARK_ACCEPTED=YES`, `BLOCKERS=0`; a second adversarial
-> reviewer independently returned PASS. This acceptance commit changes lifecycle/provenance
-> only; Contracts and Acceptance content are byte-identical to the reviewed head.
+> **Accepted whole-Spec successor.** V1 was superseded by V2 through the atomic lifecycle
+> transaction. Rejected child-proposal heads `be1d7f2695af62c7fc058dd65102747655c779a6`
+> and `8f05a1725d3cb3542738938bbe05288604cd3c08` are review history only and grant no
+> authority. V2 independently restates the complete active V1 product authority. Its sole
+> product semantic delta is the exact external Scheduler proof mapping and the minimum
+> whole-document JobStore load/validation needed to select self versus required external
+> authorization;
+> authorization may consume only job existence and `job.agentId` from that loaded document.
 
 ## 1. Goal
 
@@ -56,10 +63,13 @@ For a Feishu ingress turn, `delivery_target=current_conversation` is resolved on
 Parent Runtime from trusted ingress context to the exact persisted destination. The model
 never supplies, guesses, or derives the chat identifier.
 
-This Spec is the docs-only authority half of the split required for source candidate
-`4595ed3`. That candidate's product code is retained as implementation input, but its
-co-located proposed Spec does not authorize that implementation. Product implementation
-may be published only after this exact Spec is accepted and present in `main`.
+V2 carries forward the complete accepted V1 product authority, including the original
+candidate `4595ed3` provenance, and replaces V1 only through the future atomic transaction in
+`CTR-GOV-001`. While proposed, V2 authorizes no implementation. Its exact four-file semantic
+delta may be published only after accepted V2 is present in `main`.
+The mapping deliberately tightens V1 at one least-privilege edge: `list(all_agents=true)`
+remains schema-compatible but unavailable because no accepted global job-definition-read
+scope exists. This is normative denial, not a missing implementation or a new scope proposal.
 
 ## 2. Scope and non-goals
 
@@ -90,6 +100,10 @@ may be published only after this exact Spec is accepted and present in `main`.
 
 ## 3. Authority and dependencies
 
+- Accepted V1 blob `b3cebc5d3bd64013d8b605311e2cc12cf52cab7f` is the complete
+  product-authority baseline copied into this whole successor. V2 was proposed from exact
+  dsh-agent-core base `9e15808f336e7964f5059e871c32f25e6045e622`; future review and
+  acceptance MUST bind the final V2 head, not this proposal base or either rejected child head.
 - `AGENT_CORE_PRODUCT_ARCHITECTURE_V1` owns the process-external trusted caller
   relationship, Broker/tool boundary, and rule that Agent Core does not recreate the DSH
   tool runtime.
@@ -100,36 +114,93 @@ may be published only after this exact Spec is accepted and present in `main`.
   migration/no-catch-up behavior.
 - `AGENT_TRUSTED_FLEET_CUTOVER_V1` freezes one active `authsvc` production Runtime and
   forbids a second Runtime writer.
-- External `MINIMAL_AUTH_FOUNDATION_V2` at `mayf3/auth-service@d529bd3c...` constrains
-  audience-scoped Machine Grants and strict scope rejection. Its incorporated
-  `grants-and-audiences.md` requires a new resource audience/scope and Grant supply to be
-  separately authorized in auth-service. Therefore this Spec defines only Agent Core's
-  fail-closed interpretation of `scheduler.manage:any`: until an accepted auth-service CCR
-  registers the Scheduler audience/scope and a separately authorized Grant supply provisions
-  a caller, production `manage:any` availability is **NONE**. `scheduler.read:self` and
-  `scheduler.manage:self` are local authorization labels implemented only by trusted
-  `callerAgentId == job.agentId`; they are not token scopes and are never requested from
-  auth-service. This Spec creates no Auth scope, audience, Grant, credential, token, or
-  production Auth mutation.
-- This Spec is `NEW`: no accepted implementation Spec currently authorizes an Agent-facing
-  general self-service Scheduler capability or its trusted current-conversation security
-  contract.
+- Accepted `AGENT_CORE_SCHEDULER_RUN_HISTORY_V1` at acceptance commit
+  `a2919174338dc19ff16d9554d2f00c025d482410`, current exact blob
+  `1f719514dc79a515a49aa592a0bd66961fcaed8a`, freezes in Contract R8 the external Scheduler
+  token-scope family `scheduler.read` / `scheduler.audit` / `scheduler.admin`, with
+  `scheduler.admin` governing job-definition mutation. R8 also confirms that
+  `scheduler.read:self`, `scheduler.manage:self`, and `scheduler.manage:any` are local trusted
+  authorization labels, not token scopes. V2 preserves those local predicates. Cross-Agent
+  job-definition mutation/control and explicit destination access prove local
+  `scheduler.manage:any` only through exact tuple
+  `(resource='scheduler', scope='scheduler.admin')`; global or foreign execution-history access
+  is separate and requires exact `(resource='scheduler', scope='scheduler.audit')`. Neither
+  scope implies the other. No accepted authority defines a global job-definition-read scope;
+  therefore `list(all_agents=true)` remains unavailable and fail-closed rather than borrowing
+  admin, audit, or a local predicate.
+- External `MINIMAL_AUTH_FOUNDATION_V2` at exact auth-service head
+  `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de` constrains audience-scoped Machine Grants and
+  enforces exact scope grammar `^[a-z][a-z0-9-]*\.[a-z][a-z0-9._-]*$`. That grammar admits the
+  accepted R8 wire literals but creates no Scheduler semantic authority. The two `*:self`
+  labels remain local-only and cause zero Auth requests. The proof path MUST NOT request wire
+  `scheduler.manage:any` or `scheduler.manage-any`, normalize an alias, try multiple spellings,
+  or fall back after failure. Exact external success establishes only its named local result;
+  it propagates no token, credential, Grant, caller authority, or source-Agent identity.
+  Until a separately accepted auth-service CCR registers the audience/scope, its source is
+  implemented/deployed, and separately authorized Grants are supplied/applied, production
+  `manage:any` and audit availability are **NONE**. This Spec creates no Auth scope, audience,
+  Grant, credential, token, registry/database mutation, deployment, or production Auth mutation.
+- V2 is a whole-Spec successor to accepted V1, not a child amendment. While proposed, V1 is
+  the sole current authority and remains byte-unchanged. After explicit Owner `mayf3`
+  authority, an authorized actor may prepare one lifecycle-only docs commit that atomically
+  sets V2 to `accepted` with `implementation_authority: contracts` and acceptance provenance,
+  sets V1 to `superseded` with `superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2`,
+  and preserves `production_apply_authority: none`. Before merge, an independent reviewer
+  MUST review that newly prepared exact commit head and return `FINAL_HEAD_RECHECK=PASS`,
+  proving the exact lifecycle delta, normative-byte invariants, `SEMANTIC_DELTA=NONE`, and no
+  base/main authority drift. Only then may the commit merge. No partial/mixed lifecycle or
+  pre-recheck merge is valid.
+- Authority is acyclic: accepted V1 -> accepted V2 final head -> future auth-service Scheduler
+  Audience CCR -> separately authorized auth source/deploy -> separately authorized Grant ->
+  separately authorized local activation/canary. The future auth CCR may depend on accepted
+  V2; V2 is constrained by current external grammar but does not depend on that future CCR.
 
 ## 4. Current State
 
-- `STATE-001` — At repository `mayf3/dsh-agent-core` commit `e40c140`, `main` has the
-  Scheduler V2 engine, JobStore control operations, Broker relay, production Runtime, and
-  operator CLI, but no model-visible self-service `scheduler` tool. Basis: `OBS-001`,
-  `OBS-002`.
-- `STATE-002` — Candidate `4595ed3` contains six model-visible manifests
-  (`scheduler_create`, `scheduler_list`, `scheduler_runs`, `scheduler_enable`,
-  `scheduler_disable`, `scheduler_remove`) plus a proposed Spec in the same commit. Basis:
-  `OBS-003`, `OBS-004`.
-- `STATE-003` — The pinned `cron-helper` bytes require only a unified `scheduler` tool and
-  fail-loud behavior when that tool is unavailable. Basis: `OBS-005`.
-- `STATE-004` — Current Router source has exact Feishu `chatId` at ingress and a turn-scoped
-  parent-only `activeBindingContext`, but only the binding ID is currently propagated. Basis:
-  `OBS-006`.
+### STATE-001 — Baseline main lacked the unified model-visible tool
+- Subject: dsh-agent-core Scheduler/Broker/Runtime/CLI baseline.
+- As of commit or artifact revision: `e40c1400266b57ae7746ac766e6b281cf1fbb943`.
+- Environment: fresh fetched `origin/main` source snapshot.
+- Observed at: 2026-08-27.
+- State assertion: Scheduler V2, JobStore operations, Broker relay, production Runtime, and CLI existed, but no model-visible unified `scheduler` tool existed.
+- Basis: `OBS-001`, `OBS-002`.
+
+### STATE-002 — Candidate baseline exposed six tool manifests
+- Subject: candidate `4595ed3b2063206922f1a3cdda048abe4fa871ab`.
+- As of commit or artifact revision: `4595ed3b2063206922f1a3cdda048abe4fa871ab`.
+- Environment: local candidate worktree.
+- Observed at: 2026-08-27.
+- State assertion: six operation-specific Scheduler manifests and a co-located proposed Spec existed; unified action dispatch and update were absent.
+- Basis: `OBS-003`, `OBS-004`.
+
+### STATE-003 — Pinned skill requires unified Scheduler access
+- Subject: user `cron-helper` skill v4.0.0.
+- As of commit or artifact revision: SHA-256 `caec00409d0804985cfa06b9047db1ab8b3382f937de6dce32633f0dce12ec8b`, 6613 bytes.
+- Environment: `/Users/yanfenma/.agents/skills/cron-helper/SKILL.md`.
+- Observed at: 2026-08-27.
+- State assertion: the skill requires only unified `scheduler(action=...)` and fails loud when unavailable.
+- Basis: `OBS-005`.
+
+### STATE-004 — Router baseline had exact ingress identity but incomplete propagation
+- Subject: Router ingress and Parent RPC context path.
+- As of commit or artifact revision: `e40c1400266b57ae7746ac766e6b281cf1fbb943`.
+- Environment: repository source snapshot.
+- Observed at: 2026-08-27.
+- State assertion: exact Feishu `chatId` and parent turn-scoped context existed, but only binding ID was propagated.
+- Basis: `OBS-006`.
+
+### STATE-005 — Current proof seam conflicts with grammar and accepted Scheduler scope authority
+- Subject: Scheduler cross-agent `assertGrant` request versus auth-service scope grammar.
+- As of commit or artifact revision: dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`; auth-service `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de`.
+- Environment: isolated read-only source worktrees; no runtime/production mutation.
+- Observed at: `2026-09-02T21:23:05Z`.
+- State assertion: local `scheduler.manage:any` is sent as wire scope and fails the external
+  grammar; both `scheduler.manage-any` and R8's `scheduler.admin` satisfy the grammar, but only
+  accepted Run History R8 supplies semantic authority and freezes `scheduler.admin` for
+  job-definition mutation plus separate `scheduler.audit` for global/foreign history. Neither
+  R8 nor another accepted authority defines global job-definition read, so
+  `list(all_agents=true)` has no usable external proof and must remain unavailable.
+- Basis: `OBS-007`, `OBS-008`, `OBS-010`, `CLM-004`.
 
 ## 5. Observations
 
@@ -205,6 +276,55 @@ may be published only after this exact Spec is accepted and present in `main`.
   binding ID, so exact trusted delivery context is an additive implementation requirement.
 - Provenance: repository source at the pinned revision
 
+### OBS-007 — Current Scheduler reuses the local predicate as wire scope
+
+- Subject: `packages/scheduler/src/self-service.js` cross-agent proof path
+- Source revision: blob `4a236fed3b201ac8c4de59d86cbbc414beee4ba7` at dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`
+- Environment: isolated dsh-agent-core source worktree
+- Observed at: `2026-09-02T21:23:05Z`
+- Method: inspect `MANAGE_ANY_SCOPE`, `SCHEDULER_RESOURCE`, `adminAuthorized`, and `loadScopedJob`
+- Result: `assertGrant` receives `(callerAgentId, 'scheduler.manage:any', 'scheduler')`; existing job operations call JobStore whole-document load/validation over `{jobs, occurrences, fences}`, then use job existence and `job.agentId` to decide whether admin proof is required
+- Provenance: exact source blob and commit named above
+
+### OBS-008 — Auth-service grammar rejects colon but does not select Scheduler semantics
+
+- Subject: auth-service V1 OAuth scope parser and minimal-auth V1 manifest incorporated by V2 authority
+- Source revision: auth-service `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de`; source blob `f97ddf417f367a9e87d1a271d566b1807c12a84d`; manifest blob `983719d905f9609f6662b71ffb303a817ea292db`
+- Environment: isolated auth-service read-only source worktree
+- Observed at: `2026-09-02T21:23:05Z`
+- Method: inspect parser line 3 and manifest `scope_wire_format.item_pattern`; evaluate
+  `scheduler.manage:any`, `scheduler.manage-any`, `scheduler.admin`, and `scheduler.audit`
+  against `^[a-z][a-z0-9-]*\.[a-z][a-z0-9._-]*$`
+- Result: colon-form `scheduler.manage:any` does not match; `scheduler.manage-any`,
+  `scheduler.admin`, and `scheduler.audit` all match with namespace/resource `scheduler`, so
+  grammar alone cannot choose their domain meaning
+- Provenance: `src/lib/oauth/v1/scope.ts` and `contract-bundles/minimal-auth-v1/contract-manifest.json` at the stated revision/blobs
+
+### OBS-009 — Production composition forwards the requested scope
+
+- Subject: production-runtime self-service Scheduler authorization composition
+- Source revision: `packages/production-runtime/src/compose.js` blob `c407b064fe846446888109bcc219514a7d15b094` at dsh-agent-core `9e15808f336e7964f5059e871c32f25e6045e622`
+- Environment: isolated dsh-agent-core source worktree; no runtime execution
+- Observed at: `2026-09-02T21:23:05Z`
+- Method: inspect the composed `assertGrant` transport from Scheduler access to auth request
+- Result: composition forwards the requested scope and does not hard-code a Scheduler scope
+- Provenance: exact composition source blob and commit named above
+
+### OBS-010 — Accepted Run History R8 freezes the external Scheduler scope family
+
+- Subject: accepted `AGENT_CORE_SCHEDULER_RUN_HISTORY_V1` Contract R8
+- Source revision: acceptance commit `a2919174338dc19ff16d9554d2f00c025d482410`;
+  current exact Spec blob `1f719514dc79a515a49aa592a0bd66961fcaed8a`
+- Environment: isolated dsh-agent-core source worktree; no runtime/production mutation
+- Observed at: `2026-09-02T22:36:26Z`
+- Method: inspect frontmatter scope and R8 permission table plus naming-reconciliation clauses
+- Result: R8 freezes external token scopes `scheduler.read`, `scheduler.audit`, and
+  `scheduler.admin`; `scheduler.admin` governs job-definition mutation, `scheduler.audit`
+  governs global history, and local `scheduler.manage:any` is explicitly not a token scope;
+  R8 does not assign any scope to global job-definition read
+- Provenance: `docs/specs/AGENT_CORE_SCHEDULER_RUN_HISTORY_V1.md` at the stated acceptance
+  commit/blob, frontmatter scope and Contract R8
+
 ## 6. Claims and assumptions
 
 ### CLM-001 — Candidate code is reusable but not publishable as-is
@@ -229,6 +349,29 @@ may be published only after this exact Spec is accepted and present in `main`.
 - Contradicted by evidence: none known
 - Uncertainty: this Claim is only about JobStore mutation reload after a conforming Runtime
   generation is active; it does not claim that Node code or tool registration hot-loads
+
+### CLM-004 — Accepted authority selects mutation/history scopes and leaves global definition read closed
+
+- Support state: SUPPORTED
+- Supported by evidence: `EVD-004`
+- Contradicted by evidence: none known
+- Uncertainty: source evidence is bound to pinned revisions; audience registration, Grants,
+  deployment, and runtime authorization remain separately unproved, and no future global
+  definition-read scope is inferred or named here
+
+### CLM-005 — Whole-document validation is compatible with narrow authorization consumption
+
+- Support state: SUPPORTED
+- Supported by evidence: `EVD-005`
+- Contradicted by evidence: none known
+- Uncertainty: future tests must prove whole-document validation does not let authorization consume or disclose occurrence/history and that denial causes no mutation or success audit
+
+### CLM-006 — Production composition source needs no proof-scope change
+
+- Support state: SUPPORTED
+- Supported by evidence: `EVD-006`
+- Contradicted by evidence: none known
+- Uncertainty: source inspection covers the pinned base; contradictory implementation evidence requires governance STOP
 
 ## 7. Evidence relations
 
@@ -262,6 +405,41 @@ may be published only after this exact Spec is accepted and present in `main`.
 - Limitations: does not support code/tool hot loading; implementation deployment requires a
   controlled replacement of the production Runtime generation
 - Provenance: Scheduler and production composition source
+
+### EVD-004 — Local proof source, grammar, and accepted R8 support exact scope separation
+
+- Source observations: `OBS-007`, `OBS-008`, `OBS-010`
+- Target: `CLM-004`
+- Relation: SUPPORTS
+- Bound coordinates: dsh-agent-core source `9e15808f336e7964f5059e871c32f25e6045e622`;
+  accepted Run History commit `a2919174338dc19ff16d9554d2f00c025d482410` / blob
+  `1f719514dc79a515a49aa592a0bd66961fcaed8a`; auth-service
+  `05fcf4074fe15d7f29ce1ef0f68767fbbebd54de`; observations dated 2026-09-02/03
+- Strength/sufficiency: strong and sufficient for the exact local/wire separation, grammar,
+  Scheduler semantic mapping, and absence of an accepted global definition-read scope at the
+  pinned revisions
+- Limitations: does not establish audience registration, Grant, deployment, or production success
+- Provenance: exact repository objects in `OBS-007`, `OBS-008`, and `OBS-010`
+
+### EVD-005 — Existing access sequencing supports bounded authorization consumption
+
+- Source observations: `OBS-007`
+- Target: `CLM-005`
+- Relation: SUPPORTS
+- Bound coordinates: dsh-agent-core source blob `4a236fed3b201ac8c4de59d86cbbc414beee4ba7`, observed `2026-09-02T21:23:05Z`
+- Strength/sufficiency: strong for showing existing JobStore whole-document load/validation precedes consumption of job existence and `job.agentId` to select the self/admin branch
+- Limitations: source inspection does not prove future prohibition on occurrence/history projection/query/filter/return or future non-disclosure/no-success-audit behavior
+- Provenance: exact source inspection in `OBS-007`
+
+### EVD-006 — Existing scope forwarding supports test-only composition coverage
+
+- Source observations: `OBS-009`
+- Target: `CLM-006`
+- Relation: SUPPORTS
+- Bound coordinates: dsh-agent-core composition blob `c407b064fe846446888109bcc219514a7d15b094`, observed `2026-09-02T21:23:05Z`
+- Strength/sufficiency: strong and sufficient for the pinned composition source shape
+- Limitations: does not replace future execution of the composed regression test
+- Provenance: exact source inspection in `OBS-009`
 
 ## 8. Decisions
 
@@ -326,6 +504,36 @@ may be published only after this exact Spec is accepted and present in `main`.
   only conforming implementation; finally execute the production canary.
 - Rejected alternative: use the proposed Spec co-located with candidate code as authority.
 - Reason: proposed same-candidate text cannot authorize its own implementation.
+
+### DEC-008 — Separate local authorization name from exact external proof scope
+
+- Decision owner: repository owner `mayf3` / repository maintainers
+- Decision: preserve local `scheduler.manage:any`; prove cross-Agent job-definition
+  mutation/control and explicit destination access only with `(scheduler, scheduler.admin)`.
+  Require separate `(scheduler,
+  scheduler.audit)` for global/foreign execution history; neither proof implies the other.
+  Preserve both `*:self` labels as local-only. Keep `list(all_agents=true)` schema-compatible
+  but unconditionally unavailable until a future separately accepted authority defines its
+  exact external proof; admin, audit, and local manage-any MUST NOT authorize it.
+- Rejected alternative: rename local policy, request colon or hyphen manage-any wire forms,
+  translate/normalize aliases, try multiple spellings, fall back, infer audit from admin, or
+  borrow admin/audit for global job-definition read.
+- Reason: preserve V1 local semantics while conforming to accepted Run History R8; grammar
+  constrains syntax but does not create domain authority.
+
+### DEC-009 — Permit whole-document validation but consume only existence and owner
+
+- Decision owner: repository owner `mayf3` / repository maintainers
+- Decision: authorization may call the existing JobStore whole-document load/validation over `{jobs, occurrences, fences}`, but may consume only whether the requested job exists and that job's `job.agentId`. If those fields show that an external proof is required, then before exact proof succeeds the authorization path may not project, query, filter, return, disclose, or use occurrence/history as authorization input. Denial performs no mutation or success audit and returns no persisted content. Authorized self history behavior remains unchanged and makes zero Auth requests.
+- Rejected alternative: forbid the existing whole-document validation, consume occurrence/history during authorization, or expose the inspected foreign definition.
+- Reason: the current JobStore validates one whole document and ownership is persisted in its job definition; permitting that mechanism does not grant occurrence/history visibility or decision authority.
+
+### DEC-010 — Whole-successor acceptance is atomic
+
+- Decision owner: repository owner `mayf3`
+- Decision: keep V1 current and untouched while V2 is proposed. After explicit Owner authority, an authorized actor prepares one atomic lifecycle-only docs commit containing only the exhaustive field/line allowlist in `CTR-GOV-001`; an independent reviewer must return `FINAL_HEAD_RECHECK=PASS` on that new exact head before merge.
+- Rejected alternative: child amendment, early V1 mutation, partial supersession, review only of the proposed pre-lifecycle head, or merge before final-head recheck.
+- Reason: one complete current authority plus an exhaustive lifecycle/provenance allowlist and post-preparation exact-head verification prevents split authority, stale accepted markers, and behavioral drift.
 
 ## 9. Contracts
 
@@ -419,8 +627,9 @@ Conditional closure is exact:
    `destination` is admin-only. `delivery_mode=none|silent` forbids
    `delivery_target/destination/best_effort`. Update accepts no delivery leaf unless
    `delivery_mode` is present; when present it replaces the complete delivery object.
-7. `target_agent_id`, `destination`, and `all_agents=true` invoke the manage-any path;
-   their presence never asserts authorization.
+7. `target_agent_id` and `destination` invoke the local manage-any path. `all_agents=true`
+   follows the action-specific rule in `CTR-AUTH-002`: `list` is unavailable and `runs`
+   requires audit. Their presence never asserts authorization.
 8. Empty/whitespace-only strings fail `invalid_arguments` after trimming; normalization
    stores trimmed strings. Unknown, cross-action, nested-unknown, identity, chat, session,
    or reconcile fields fail before store read, grant lookup, or mutation.
@@ -489,19 +698,90 @@ ordinary self operations MUST perform zero token requests. `list` and `runs` MUS
 definitions/evidence. Mutations of a foreign job MUST return a non-leaking denied or
 not-found error and MUST NOT mutate or append a success audit record.
 
-### CTR-AUTH-002 — Admin scope and external prerequisite
+To select self versus external authorization for an operation on an existing job, the access
+layer MAY call the existing JobStore whole-document load and validation, whose returned
+document contains `{jobs, occurrences, fences}`. The authorization decision MAY consume from
+that document only (a) whether the requested job exists and (b) that job's `job.agentId`.
+If those permitted fields show the requested job is foreign and external proof is required,
+then before exact proof succeeds the authorization path MUST NOT project, query, filter,
+return, or disclose occurrence/history, and MUST NOT use occurrence/history as authorization
+input. Authorized self `runs` behavior remains unchanged and makes zero Auth requests.
+Whole-document parsing/validation is permitted but grants no visibility. Denial MUST return
+no persisted job/definition/occurrence/history/message/owner content or other public result
+and MUST perform no mutation or success audit.
 
-Only a caller for whom the trusted Auth seam authorizes exact scope
-`scheduler.manage:any` for the future Scheduler resource audience MAY use `all_agents`,
-create/update for another Agent, mutate another Agent's job, or specify another delivery
-destination. Tool arguments MUST NOT assert this scope. Auth denial, unavailable audience,
-missing Grant, token failure, or uncertainty MUST deny the operation.
+### CTR-AUTH-002 — Exact admin/audit separation and external prerequisites
 
-This local implementation MUST support the fail-closed seam and tests with an injected Auth
-stub, but MUST NOT claim production admin availability. Production admin enablement is
-blocked until a separate accepted auth-service CCR registers the Scheduler audience and
+The trusted Auth seam MUST enforce this operation matrix; scope names imply no capability
+beyond the explicit row:
+
+```text
+operation / data                          exact external proof                 local result
+----------------------------------------  -----------------------------------  --------------------------
+create with target_agent_id/destination  (scheduler, scheduler.admin)         scheduler.manage:any
+update with target_agent_id/destination  (scheduler, scheduler.admin)         scheduler.manage:any
+foreign update/enable/disable/remove      (scheduler, scheduler.admin)         scheduler.manage:any
+list(all_agents=true)                     NONE; stable fail-closed             unavailable
+runs(all_agents=true) or foreign runs     (scheduler, scheduler.audit)         history visibility only
+self create/list/runs/update/control      none; Auth request count = zero      read:self / manage:self
+```
+
+Thus exact `(resource='scheduler', scope='scheduler.admin')` is the only external proof for
+cross-Agent job-definition mutation/control or explicit destination access. Its success may
+establish only local `scheduler.manage:any`, whose consumption is bounded by the matrix; it
+MUST NOT propagate authority or authorize global/foreign execution history. Exact `(resource='scheduler',
+scope='scheduler.audit')` is the only external proof for `runs(all_agents=true)` or foreign
+execution history; its success MUST NOT establish `scheduler.manage:any`, list foreign job
+definitions, select another target/destination, or mutate any job. Possessing or proving one
+scope never implies, substitutes for, or triggers a request for the other.
+
+`list(all_agents=true)` remains in the closed request schema for compatibility, but no
+accepted global job-definition-read scope exists. It MUST return one stable non-leaking
+access-denied result before any store read or content disclosure and MUST make zero Auth
+requests, even when the caller independently has exact `scheduler.admin`, exact
+`scheduler.audit`, or both. Neither external scope, local `scheduler.manage:any`, a scope-name
+inference, nor any fallback may authorize it. Rejection MUST return no persisted definition,
+message, owner identity, occurrence, history, or other content and perform no mutation or
+success audit. This is V2's intentional least-privilege tightening of V1, not a missing
+implementation and not creation or reservation of a new wire scope.
+
+Tool arguments MUST NOT assert a resource, wire scope, Grant, or local predicate. Neither
+proof path may request or accept wire `scheduler.manage:any` or `scheduler.manage-any`,
+translate or normalize an alias, try multiple spellings, combine alternate spellings, or fall
+back after failure. Auth denial, unavailable audience, missing Grant, token failure, malformed
+response, wrong-only scope, both wrong spellings, or uncertainty MUST deny the operation
+without disclosure, mutation, or success audit. The whole-document load/validation permitted
+by `CTR-AUTH-001` remains allowed, but the decision may consume only job existence and
+`job.agentId`; on every external-proof branch occurrence/history remain forbidden as
+authorization input or pre-proof output. A successful proof MUST NOT propagate the token,
+credential, Grant, caller authority, source-Agent identity, or authorization fields into the
+job, occurrence, run, session, execution request, or target workspace.
+
+This local implementation MUST support the fail-closed seams and tests with an injected Auth
+stub, but MUST NOT claim production admin or audit availability. Each external capability is
+blocked until a separate accepted auth-service CCR registers the Scheduler audience and exact
 scope, its source is implemented/deployed, and a separately authorized Grant supply is
-applied. Ordinary self operations do not request `manage:any`.
+applied. Ordinary self operations make zero Auth requests, including zero requests for
+`scheduler.read:self`, `scheduler.manage:self`, `scheduler.manage:any`, `scheduler.admin`, or
+`scheduler.audit`.
+
+### CTR-AUTH-003 — Exact V2 delta implementation closure
+
+After future atomic acceptance, the V2 wire-proof/denial delta MUST change product or test
+files only in this closed list:
+
+1. `packages/scheduler/src/self-service.js`;
+2. `packages/scheduler/test/self-service.test.js`;
+3. `packages/scheduler/test/cross-agent.test.js`;
+4. `packages/production-runtime/test/compose-cross-agent-history.test.js`.
+
+The production-runtime entry is test-only. `packages/production-runtime/src/compose.js` and
+all other product files MUST remain unchanged. Local messages and policy assertions MUST keep
+the colon-form labels; only `assertGrant` and its resulting token requests use exact R8 wire
+scopes `scheduler.admin` or `scheduler.audit` according to `CTR-AUTH-002`.
+`list(all_agents=true)` makes no `assertGrant` or token request.
+If implementation requires a fifth file or production composition source change, work MUST
+stop for new/amended accepted authority rather than expand this closure.
 
 ### CTR-MUT-001 — Existing control operations only
 
@@ -646,10 +926,17 @@ or skill MUST NOT report success as “created/configured” when these fields a
 
 ### CTR-RESULT-002 — List, runs and lifecycle evidence
 
-`list` MUST return only visible persisted job projections without message bodies. While a Job
-definition exists, `runs` MUST authorize through its persisted `job.agentId` and return visible
+Self `list` MUST make zero Auth requests and return only caller-owned persisted job projections
+without message bodies. `list(all_agents=true)` MUST follow the unconditional pre-store denial
+in `CTR-AUTH-002` and return no projection. While a Job definition exists, `runs` MUST
+authorize through its persisted `job.agentId` and return visible
 occurrence evidence including occurrence ID, run ID, state, execution outcome, delivery
 status, and relevant fence/late-settlement projection.
+
+Ordinary `runs` remains self-only with zero Auth requests. `runs(all_agents=true)` and any
+foreign-job history read require exact `scheduler.audit` under `CTR-AUTH-002`; a
+`scheduler.admin` proof alone MUST be denied without history disclosure. Conversely,
+`scheduler.audit` does not authorize `list(all_agents=true)` or any job-definition mutation.
 
 `remove` MUST delete only the definition; authoritative occurrence evidence remains retained
 under D-007. Because current occurrence records do not carry an immutable Agent owner,
@@ -741,10 +1028,59 @@ skill MUST NOT call the CLI.
 
 ### CTR-GOV-001 — Spec/implementation split
 
-The docs-only Spec MUST be independently reviewed, accepted by an authorized maintainer at an
-exact revision, and merged into `main` before the implementation PR is based/published. The
-implementation PR MUST NOT modify its governing accepted Spec and MUST retain the candidate
-product code unless a Contract requires revision.
+While V2 is proposed it has no implementation authority, V1 remains accepted/current, and
+V1 MUST NOT be modified. Only after explicit Owner `mayf3` authority, an authorized actor MAY
+prepare one atomic lifecycle-only docs commit. That commit's permitted changes are the
+following exhaustive allowlist; everything not listed is forbidden:
+
+1. V2 frontmatter: `status: proposed -> accepted`;
+2. V2 frontmatter: `implementation_authority: none -> contracts`;
+3. V2 frontmatter: insert only `accepted_by: mayf3`, exact `accepted_at`,
+   `accepted_reviewed_head` naming the independently reviewed proposed-content head, and
+   `acceptance_review_verdict: PASS` consistent with that reviewer identity/outcome;
+4. V1 frontmatter: `status: accepted -> superseded`;
+5. V1 frontmatter: `superseded_by: null -> AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2`;
+6. V2 introductory blockquote lifecycle sentence only, exact two-line replacement:
+
+   ```text
+   FROM: > **Proposed whole-Spec successor.** V1 remains accepted/current and byte-unchanged while V2
+         > is proposed.
+   TO:   > **Accepted whole-Spec successor.** V1 was superseded by V2 through the atomic lifecycle
+         > transaction.
+   ```
+7. V2 frozen summary: `STATUS = proposed -> accepted`;
+8. V2 frozen summary: `IMPLEMENTATION_AUTHORITY = none -> contracts`;
+9. V2 frozen summary: `INDEPENDENT_REVIEW = PENDING -> PASS`;
+10. V2 frozen summary: `READY_TO_MARK_ACCEPTED = NO -> YES`; and
+11. V2 frozen summary: `ACCEPTED_REVIEWED_HEAD = NONE -> <exact reviewed proposed head>`.
+
+The README row is lifecycle-neutral and MUST NOT change in this transaction. V2 MUST retain
+`production_apply_authority: none`; V1's existing production-apply meaning MUST remain none
+without a new field. V1 normative body MUST remain byte-identical. All non-allowlisted V2
+normative-body bytes, including every Decision, Contract, and Acceptance behavior, MUST remain
+byte-identical to the reviewed proposed content. Every other use of `proposed`, `accepted`,
+or future-tense acceptance language in Goal/authority/Decision/Contract/Acceptance/migration
+text is historical or conditional governance meaning, not a lifecycle marker, and is
+therefore explicitly non-allowlisted and byte-frozen.
+
+Before that prepared commit may merge, an independent reviewer MUST review its new exact
+head and return `FINAL_HEAD_RECHECK=PASS`. The recheck MUST prove all of:
+
+1. every changed byte is inside an exact allowlist item and every required item is present;
+2. every non-allowlisted V2 normative-body byte is identical to reviewed proposed content;
+3. V1 normative body and all frontmatter except `status`/`superseded_by` are identical to the
+   accepted preimage;
+4. each new lifecycle/provenance value agrees with explicit Owner authority, V2
+   accepted/contracts frontmatter, and the named reviewer identity/outcome;
+5. `SEMANTIC_DELTA=NONE`, meaning Scheduler Contract/behavior semantics did not change; this
+   does not prohibit the enumerated lifecycle/provenance synchronizations; and
+6. the proposed review base and current `main` introduce no authority drift affecting V2.
+
+Any failure, ambiguity, main/base drift, or post-recheck byte change invalidates the gate and
+requires a new exact-head recheck. Only the exact head that passed may merge. That merge MUST
+precede the four-file delta implementation PR. The implementation PR MUST NOT modify either
+governing Spec. Acceptance authorizes no auth-service, Grant, credential, registry/database,
+deployment, or production action.
 
 ## 10. Acceptance
 
@@ -776,20 +1112,65 @@ product code unless a Contract requires revision.
 - Failure condition: any model/child-supplied or wrong-turn identity/chat value affects
   ownership or destination
 
-### ACC-AUTH-001 — Self/admin authorization
+### ACC-AUTH-001 — Self/admin/audit authorization matrix
 
 - Contracts: `CTR-AUTH-001`, `CTR-AUTH-002`
-- Method: unit/integration tests across two Agents plus authorized admin
+- Method: unit/integration operation matrix across two Agents with independent exact admin and
+  audit proofs, admin-only/audit-only/both-scope `list(all_agents=true)` callers, wrong-scope/
+  cross-scope/dual-spelling inputs, proof denial/error/malformed/unavailable cases, and
+  assert-fail-if-called self and global-list cases
 - Environment: isolated JobStore with real control operations
 - Required evidence: store before/after, handler results, and per-action Auth token-request
-  call records for create/list/runs/update/enable/disable/remove self cases plus admin cases
-- Expected result: every ordinary self action has Auth token-request count exactly zero;
-  foreign ordinary access leaks/mutates nothing; injected admin-stub path succeeds only after
-  trusted grant; production admin path remains denied while external Scheduler
-  audience/scope/Grant is absent
-- Failure condition: any Auth token request during an ordinary self action, ordinary
-  cross-Agent visibility/mutation, tool-asserted scope, or claim of production admin
-  availability without accepted/deployed external authority
+  call records for create/list/runs/update/enable/disable/remove self/admin/audit/negative cases;
+  instrumented JobStore/read ledger proving whole-document load/validation and an
+  authorization-consumption ledger limited to job existence plus `job.agentId`; occurrence/
+  history projection/query/filter/return ledger; mutation/audit ledger
+- Expected result: every ordinary self action has Auth request count exactly zero; each foreign
+  explicit target/destination create/update and foreign update/enable/disable/remove requests
+  exactly `(scheduler, scheduler.admin)` once; only exact
+  admin success establishes local `scheduler.manage:any`, consumed only for the matrix row;
+  `runs(all_agents=true)` and foreign runs request exactly `(scheduler, scheduler.audit)` once;
+  admin alone reveals no foreign/global history and audit alone grants no foreign mutation;
+  self `list` makes zero Auth requests and returns only caller-owned definitions;
+  `list(all_agents=true)` always makes zero Auth requests and zero store reads and returns the
+  same access-denied result with no persisted content or owner identity when the caller has
+  admin, audit, both, neither, or local manage-any; authorization for existing-job operations
+  may load/validate `{jobs, occurrences, fences}`
+  but consumes only requested-job existence and `job.agentId`; on every external-proof branch,
+  before proof it performs zero occurrence/history projection/query/filter/return and does
+  not use them as decision input; authorized self history remains unchanged with zero Auth;
+  denial returns no persisted content and makes no mutation/success audit; production admin
+  and audit stay denied until their external audience/scope/deployment/Grant gates pass
+- Failure condition: any Auth token request during an ordinary self action, admin-to-audit or
+  audit-to-admin implication, any successful or data-dependent `list(all_agents=true)`, any
+  Auth request/store read/content or owner disclosure on that path, ordinary cross-Agent
+  visibility/mutation/success audit, a test
+  that treats permitted whole-document load/validation itself as forbidden, authorization
+  consumption beyond existence/`job.agentId`, any
+  external-proof pre-success occurrence/history projection/query/filter/return or decision use,
+  `scheduler.manage:any`/`scheduler.manage-any` wire request, alias/normalization/multiple
+  spelling/fallback, wrong or multiple proof requests, tool-asserted authority, authority or
+  credential propagation, or claim of production admin/audit availability without
+  accepted/deployed external authority
+
+### ACC-AUTH-002 — Exact four-file delta and composed proof
+
+- Contracts: `CTR-AUTH-003`
+- Method: accepted-base-to-head diff census plus focused Scheduler tests and composed production-runtime cross-agent history test with local OAuth capture
+- Environment: isolated implementation worktree under repository-pinned Node with proxy variables unset; disposable stores; no production service
+- Required evidence: exact changed-file list, executed commands/results, captured OAuth body and count, execution payload authority-key scan, and HistoryStore queries
+- Expected result: only the four named files change; production compose source is unchanged;
+  captured OAuth bodies use `scheduler.admin` for cross-Agent mutation/control/destination and
+  `scheduler.audit` only for global/foreign history; local labels remain colon-form; admin and
+  audit are mutually non-implying; `list(all_agents=true)` produces no OAuth request and is
+  denied before store read even with admin, audit, or both; target identity, no source Grant/credential/authority
+  propagation, exactly once/no replay, and linked job/occurrence/run/session/target/
+  correlation/parent/terminal truth remain proved
+- Failure condition: fifth file, production compose source edit, wrong/alternate/combined
+  scope, `scheduler.manage:any` or `scheduler.manage-any` wire value, alias/normalization/
+  retry/fallback, admin/audit implication, any authorized/data-bearing global definition list,
+  authority leakage, replay, identity mismatch, or
+  missing/broken history linkage
 
 ### ACC-MUT-001 — Mutation, update, audit and results
 
@@ -859,12 +1240,11 @@ OPENCLAW_STORE_UNCHANGED = YES
 ### ACC-GOV-001 — Two-stage publication
 
 - Contracts: `CTR-GOV-001`
-- Method: inspect git and PR ancestry
+- Method: after explicit Owner authority, inspect authorized-actor provenance, the prepared lifecycle-only commit, independent review of that commit's exact head, base/main comparison, git/PR ancestry, and prohibited-effect audit
 - Environment: GitHub repository
-- Required evidence: docs-only Spec PR merge commit; accepted exact Spec revision in main;
-  separate implementation PR based on that main; governing Spec unchanged in implementation
-- Expected result: authority precedes implementation publication
-- Failure condition: mixed proposed-Spec implementation merge or discarded candidate code
+- Required evidence: reviewed proposed V2 head and normative-body digest; explicit Owner instruction; authorized actor identity; prepared atomic docs commit/head; byte/field diff mapped one-to-one to all 11 allowlist items; non-allowlisted V2 byte comparison; V1 accepted-preimage comparison; exact new frontmatter/footer/banner values and reviewer identity/outcome; current-main authority diff; independent reviewer result containing `FINAL_HEAD_RECHECK=PASS` and behavioral `SEMANTIC_DELTA=NONE`; merge commit; later separate four-file implementation ancestry; zero-effect evidence
+- Expected result: V1 remains current/unchanged while V2 is proposed; the authorized actor then prepares exactly one lifecycle commit whose changes are all and only the exhaustive allowlist; every non-allowlisted V2 normative byte and the V1 normative body are identical; every new value matches Owner authority, accepted/contracts frontmatter, and review provenance; `SEMANTIC_DELTA=NONE` confirms no Contract/behavior change while permitting the listed lifecycle/provenance synchronization; base/main have no authority drift; only the unchanged exact head with final recheck PASS merges; production authority stays none
+- Failure condition: current-round V1 lifecycle edit; preparation without explicit Owner authority or by an unauthorized actor; missing or extra allowlist delta; non-allowlisted V2 normative drift; V1 body or frontmatter drift beyond `status`/`superseded_by`; inconsistent lifecycle/provenance value; missing/failed/stale `FINAL_HEAD_RECHECK`; Contract/behavior semantic delta; base/main authority drift; post-recheck head change; README change in the transaction; merge before PASS; implementation before accepted V2 reaches main; Spec edit in implementation; or any auth/Grant/credential/registry/database/deploy effect
 
 ## 11. Alternatives and disposition
 
@@ -884,16 +1264,38 @@ OPENCLAW_STORE_UNCHANGED = YES
   generation replacement; the no-restart proof begins immediately before Job creation.
 - `ALT-008` — Treat candidate `4595ed3` as self-authorizing. Rejected by `DEC-007` and local
   governance.
+- `ALT-009` — Use grammar-valid `scheduler.manage-any` as wire authority. Rejected by
+  `DEC-008`: auth grammar supplies shape only, while accepted Run History R8 freezes
+  `scheduler.admin` for job-definition mutation.
+- `ALT-010` — Let admin imply audit, audit imply admin, or request both opportunistically.
+  Rejected by `DEC-008` and `CTR-AUTH-002`: definition control and execution history are
+  distinct least-privilege capabilities.
+- `ALT-011` — Let admin, audit, both, or local manage-any authorize
+  `list(all_agents=true)`. Rejected by `DEC-008`: no accepted authority defines global
+  job-definition read, and a scope name cannot create or imply that capability.
 
 ## 12. Migration, compatibility, and rollback
 
 1. Preserve candidate `4595ed3` as implementation input; do not force-push it away before the
    accepted implementation replacement is durably published.
-2. Merge this docs-only Spec first. Acceptance binds an exact reviewed commit and becomes
-   active only in `main`.
-3. Rebase/port the candidate product and tests onto that accepted main. Remove six manifests
-   from model registration, add the unified manifest/dispatcher/update path, and add trusted
-   ingress context resolution.
+2. Keep V2 proposed/none and V1 accepted/current/untouched until explicit Owner authority.
+   Then an authorized actor prepares one lifecycle-only docs commit containing all and only
+   the 11 `CTR-GOV-001` allowlist items; the lifecycle-neutral README does not change. Before
+   merge, an independent reviewer rechecks that new exact head and must return
+   `FINAL_HEAD_RECHECK=PASS`, proving non-allowlisted byte identity, new-value consistency,
+   behavioral `SEMANTIC_DELTA=NONE`, and no base/main authority drift. Only that unchanged
+   passing head may merge and become active in `main`.
+3. Rebase/port the original candidate product and tests onto that accepted main as required
+   by the unchanged V1 authority. Implement the V2 proof delta only in the exact four files
+   named by `CTR-AUTH-003`; production composition source and `packages/scheduler/src/store.js`
+   remain unchanged. Continue using existing whole-document JobStore load/validation, while
+   authorization consumes only requested-job existence and `job.agentId`; every external-proof
+   branch performs no pre-proof occurrence/history projection/query/filter/return or decision
+   use, while authorized self list/history retain zero-Auth behavior. Cross-Agent mutation,
+   control, and explicit destination rows use only `scheduler.admin`; global/foreign history
+   rows use only `scheduler.audit`; neither implies the other. Preserve the `all_agents`
+   schema field for list compatibility, but reject `list(all_agents=true)` before store read
+   with no Auth request until future separately accepted authority defines an exact scope.
 4. Keep existing internal access handlers and CLI when conforming; no Scheduler core rewrite.
 5. Deploy with the existing trusted production procedure and controlled replacement of the
    sole Runtime generation; never overlap a second resident engine or Feishu connection.
@@ -902,6 +1304,11 @@ OPENCLAW_STORE_UNCHANGED = YES
    it MUST NOT delete Jobs/occurrences, mutate Scheduler core, touch OpenClaw store, or restart
    Gateway. A canary Job may be removed only through the unified tool/control operation.
 7. No historical OpenClaw job import or compatibility fallback is part of this migration.
+8. V2 proof-delta rollback restores the exact four-file accepted preimage and MUST NOT add
+   a manage-any wire alias, normalization, alternate spelling, scope implication, or dual-scope
+   fallback. Auth registration rollback, Grant revocation, and runtime
+   rollback remain separate Owner-authorized operations; local rollback MUST NOT claim those
+   external states changed.
 
 ## 13. Open questions
 
@@ -920,20 +1327,39 @@ semantics above are normative and may not be weakened.
 
 ```text
 SPEC_GOVERNANCE_MODE = AUTHOR
-SPEC_ID = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
+SPEC_ID = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
 SPEC_KIND = implementation
 STATUS = accepted
 AUTHORITY_LEVEL = governing_spec
 IMPLEMENTATION_AUTHORITY = contracts
+PRODUCTION_APPLY_AUTHORITY = none
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
-EXTERNAL_AUTHORITIES = mayf3/auth-service#MINIMAL_AUTH_FOUNDATION_V2@d529bd3c28ece3967149ad793794f8dac2020276 (constrained_by)
+ACCEPTED_SCOPE_AUTHORITY = AGENT_CORE_SCHEDULER_RUN_HISTORY_V1@a2919174338dc19ff16d9554d2f00c025d482410#blob-1f719514dc79a515a49aa592a0bd66961fcaed8a:R8
+EXTERNAL_AUTHORITIES = mayf3/auth-service#MINIMAL_AUTH_FOUNDATION_V2@05fcf4074fe15d7f29ce1ef0f68767fbbebd54de (constrained_by)
+SUPERSEDES = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
+LOCAL_PREDICATES = scheduler.read:self | scheduler.manage:self | scheduler.manage:any
+CROSS_AGENT_MUTATION_DESTINATION_PROOF = resource:scheduler + scope:scheduler.admin
+GLOBAL_FOREIGN_HISTORY_PROOF = resource:scheduler + scope:scheduler.audit
+GLOBAL_JOB_DEFINITION_LIST = UNAVAILABLE_NO_ACCEPTED_SCOPE
+LIST_ALL_AGENTS_AUTH_REQUESTS = ZERO
+LIST_ALL_AGENTS_STORE_READS = ZERO
+ADMIN_IMPLIES_AUDIT = NO
+AUDIT_IMPLIES_ADMIN = NO
+WIRE_MANAGE_ANY_FORMS = FORBIDDEN
+LIFECYCLE_ACTOR_REQUIREMENT = OWNER_AUTHORIZED_ACTOR_ONLY
+ACCEPTANCE_COMMIT_REQUIREMENT = SINGLE_LIFECYCLE_ONLY_DOCS_COMMIT
+ACCEPTANCE_DELTA_ALLOWLIST_ITEMS = 11
+PREMERGE_FINAL_HEAD_RECHECK_REQUIREMENT = PASS_ON_ACCEPTANCE_COMMIT_EXACT_HEAD
+FINAL_HEAD_RECHECK_EVIDENCE = EXTERNAL_PR_EVIDENCE_REQUIRED_BEFORE_MERGE
+ACCEPTANCE_SEMANTIC_DELTA_REQUIREMENT = NONE_FOR_CONTRACT_AND_BEHAVIOR
+BASE_MAIN_AUTHORITY_DRIFT_REQUIREMENT = NONE
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
-CONTRACT_COUNT = 18
-CONTRACTS_WITH_ACCEPTANCE = 18
+CONTRACT_COUNT = 19
+CONTRACTS_WITH_ACCEPTANCE = 19
 AUTHORING_READY_FOR_REVIEW = COMPLETED
 INDEPENDENT_REVIEW = PASS
 READY_TO_MARK_ACCEPTED = YES
-ACCEPTED_REVIEWED_HEAD = eca5baaeab778ad8c6ba8fcfaf9c96ad12f2f965
+ACCEPTED_REVIEWED_HEAD = efdd754f0db0b9e7041757ca83246d5695cf83f4
 ```
