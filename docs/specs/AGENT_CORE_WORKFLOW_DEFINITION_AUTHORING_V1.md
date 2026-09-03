@@ -1,6 +1,12 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V1
-status: proposed
+status: accepted
+accepted_date: 2026-09-03
+accepted_by: mayf3
+accepted_reviewed_head: 6aadb57f887e91c41dbfeb35fd505ba8deb6ec73
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -231,14 +237,14 @@ This is the complete review union for this round.
 ## 7. Lifecycle
 
 No data, service, scope, Grant, credential, production, or deployment change is
-authorized. Owner acceptance of the independently reviewed exact authority head
-is required before implementation. After acceptance, implementation receives
-one independent code audit and stops at
+authorized. Owner mayf3 accepted independently reviewed exact head
+`6aadb57f887e91c41dbfeb35fd505ba8deb6ec73`. Implementation receives one
+independent code audit and stops at
 `WORKFLOW_DEFINITION_AUTHORING_READY_FOR_INTEGRATION = YES`.
 
 ```text
 SPEC_GOVERNANCE_MODE = AUTHOR
-STATUS = proposed
+STATUS = accepted
 IMPLEMENTATION_AUTHORITY = contracts
 EXTERNAL_AUTHORITIES = SVC_WORKFLOW_PRODUCT_BOUNDARY_V6@22e862af8e47050ae1bf9e7c5db7eb22a4d81ee7
 OPEN_OWNER_DECISIONS = NONE
@@ -247,4 +253,17 @@ PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 7
 CONTRACTS_WITH_ACCEPTANCE = 7
 AUTHORING_READY_FOR_REVIEW = YES
+```
+
+## 8. Acceptance record (2026-09-03)
+
+```text
+ACCEPTANCE_ACTOR = mayf3
+ACCEPTED_REVIEWED_HEAD = 6aadb57f887e91c41dbfeb35fd505ba8deb6ec73
+INDEPENDENT_REVIEW_RESULT = PASS
+SHIP_BLOCKERS = NONE
+ACCEPTANCE_DELTA_CLASS = LIFECYCLE_PROVENANCE_ONLY
+SEMANTIC_DELTA_FROM_REVIEWED_HEAD = NONE
+IMPLEMENTATION_AUTHORITY = contracts
+PRODUCTION_APPLY_AUTHORITY = none
 ```
