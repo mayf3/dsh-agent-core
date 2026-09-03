@@ -21,7 +21,7 @@ governed_by:
   - AGENT_CORE_WORKFLOW_TRANSITION_PINNED_HOTFIX_DEPLOYMENT_V1
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V2
 owners:
   - mayf3
 ---
