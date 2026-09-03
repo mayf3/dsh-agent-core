@@ -202,6 +202,7 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | `AGENT_CORE_WORKFLOW_EXECUTE_UNIFIED_DEPLOYMENT_V1` | accepted / current | contracts | unified `workflow_execute` 写工具的两文件生产部署授权：workflow.js + registry.js（DEC-010 cutover），两文件等面回滚、blob pins + preimage 分支 STOPPED 语义、post-deploy 证明面、dedicated disposable-fixture E2E、CTR-HD-006/009 机制按引用继承；执行成功即构成 transition hotfix 的 CTR-HD-011 retirement record |
 | `AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V1` | superseded | contracts | narrow child Authority：只允许一次 post-hoc root-owned supplement receipt publication；原零字节 receipt byte-preserved，原 tx/snapshot 缺失值保持 unknown；禁止 P1/P2、restart、rollback、E2E、Grant/credential 或其他 production mutation |
 | `AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V2` | accepted | contracts | V1 的 narrow whole-Spec successor：唯一 delta = publication 后才能观察的值（identity_after / publication outcome / production-ready conclusion）从 immutable supplement 本体移到独立 post-publication audit evidence（修复 FUTURE_FACT_CYCLE fail-closed）；§3/§4/§8 边界逐字继承，§6/§7/§9 仅含各自括注声明的 delta 编辑 |
+| `AGENT_CORE_WORKFLOW_EXECUTE_PRODUCTION_READY_RESOLUTION_V1` | accepted | contracts | V2 §9 composite 规则的 focused amendment：原事务历史值（original_transaction.*、owner_root_exit_zero_*，UNKNOWN_NOT_DURABLY_RECORDED by design）不阻断 composite 结论；仍阻断类 = catalog/E2E/recovery 自身 transcript exit-zero/recovery 时全部只读回查/publication audit；acceptance 后授权 docs-only resolution record（WORKFLOW_EXECUTE_PRODUCTION_READY 判定落盘） |
 
 ## agent-session messaging production deployment authority
 
