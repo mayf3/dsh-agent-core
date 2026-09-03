@@ -1,11 +1,16 @@
 /**
  * Cross-Agent Scheduler integration-readiness suite.
  *
- * Governing authority: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1 (accepted
- * 2026-08-28) DEC-004 "self by default, explicit admin any" + D-007
- * SCHEDULER_OCCURRENCE_OUTCOME_V2 execution semantics. No product code is
- * exercised here beyond the shipped origin/main implementation; these tests
- * pin the CROSS-AGENT behavior on the REAL composition:
+ * Governing authority: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2 (accepted
+ * 2026-09-03; supersedes V1) DEC-008/CTR-AUTH-002 exact external proof
+ * mapping — cross-Agent definition mutation/control/destination proves local
+ * scheduler.manage:any ONLY through (scheduler, scheduler.admin); global or
+ * foreign execution history requires (scheduler, scheduler.audit);
+ * list(all_agents=true) is normatively unavailable (stable fail-closed, zero
+ * Auth, zero store reads) — plus D-007 SCHEDULER_OCCURRENCE_OUTCOME_V2
+ * execution semantics. No product code is exercised here beyond the shipped
+ * origin/main implementation; these tests pin the CROSS-AGENT behavior on the
+ * REAL composition:
  *
  *   self-service access layer (authorization/ownership/audit)
  *     -> JobStore (durable v2 document + runs.jsonl evidence)
@@ -79,7 +84,7 @@ function writeRosterFile(t) {
  * the clock minutes past the mutation instant (well inside the at
  * catch-up grace and far beyond any realistic test runtime).
  */
-async function rig(t, { adminAgents = new Set([SOURCE]), routerBehavior, immediateDeadline = false } = {}) {
+async function rig(t, { adminAgents = new Set([SOURCE]), auditAgents = new Set([SOURCE]), routerBehavior, immediateDeadline = false } = {}) {
   const dir = writeRosterFile(t)
   const definition = new AgentDefinition({ configFile: join(dir, 'agents.json') })
   const clock = { value: Date.now() }
@@ -118,7 +123,10 @@ async function rig(t, { adminAgents = new Set([SOURCE]), routerBehavior, immedia
     store,
     assertGrant: async (agentId, scope, resource) => {
       grantCalls.push({ agentId, scope, resource })
-      return adminAgents.has(agentId)
+      // Independent exact wire proofs (CTR-AUTH-002): admin never satisfies
+      // the audit row and audit never satisfies the admin row.
+      return (scope === 'scheduler.admin' && adminAgents.has(agentId))
+        || (scope === 'scheduler.audit' && auditAgents.has(agentId))
     },
   })
   const call = (action, args, context = trusted(SOURCE)) => access.handlers.scheduler[action](args, context)
@@ -233,6 +241,8 @@ test('CROSS-AGENT-4 at + deleteAfterRun: the cross-agent definition is removed a
 
   const adminRuns = await ctx.call('runs', { all_agents: true })
   assert.equal(adminRuns.ok, true)
+  assert.deepEqual(ctx.grantCalls.at(-1), { agentId: SOURCE, scope: 'scheduler.audit', resource: 'scheduler' },
+    'runs(all_agents=true) proves exactly (scheduler, scheduler.audit) once')
   assert.equal(adminRuns.result.occurrences.length, 0,
     'tool-surface run visibility is derived from LIVE jobs; post-delete evidence stays in the occurrence authority store (queryable post-delete surface = RUN_HISTORY follow-up debt)')
 })
@@ -270,8 +280,10 @@ test('CROSS-AGENT-7 source with self-service scheduler access but no scheduler.m
   assert.equal(denied.error.code, 'access_denied')
   assert.deepEqual(denied.error.detail, 'scheduler.manage:any grant required for explicit target or destination')
   assert.equal((await jobs(ctx)).length, 0, 'no store mutation without authorization')
-  assert.deepEqual(ctx.grantCalls, [{ agentId: PLAIN, scope: 'scheduler.manage:any', resource: 'scheduler' }],
-    'the exact admin scope is consulted at the trusted Auth seam and nothing else')
+  assert.deepEqual(ctx.grantCalls, [{ agentId: PLAIN, scope: 'scheduler.admin', resource: 'scheduler' }],
+    'the exact R8 admin wire scope is consulted at the trusted Auth seam and nothing else')
+  assert.equal(ctx.grantCalls.some((call) => call.scope === 'scheduler.manage:any' || call.scope === 'scheduler.manage-any'), false,
+    'the colon-form local label and hyphen alias never reach the wire')
 })
 
 test('CROSS-AGENT-8 explicit targeting requires the admin scope even when the target equals the caller (least privilege)', async (t) => {
@@ -388,11 +400,13 @@ test('CROSS-AGENT-14 run history links job -> occurrence -> target Agent -> Run 
   await runDue(ctx, 5 * 60_000)
   await runDue(ctx, 5 * 60_000)
 
-  const adminList = await ctx.call('list', { all_agents: true })
-  assert.equal(adminList.ok, true)
-  const projectedJob = adminList.result.jobs.find((job) => job.id === jobId)
-  assert.notEqual(projectedJob, undefined)
-  assert.equal(projectedJob.agentId, TARGET, 'the definition projection exposes the target Agent identity')
+  const globalListDenial = await ctx.call('list', { all_agents: true }, trusted(SOURCE))
+  assert.equal(globalListDenial.ok, false)
+  assert.equal(globalListDenial.error.code, 'access_denied',
+    'list(all_agents=true) is normatively unavailable even for an admin+audit holder (CTR-AUTH-002)')
+  assert.equal(JSON.stringify(globalListDenial).includes(TARGET), false, 'the denial discloses no foreign definition or owner')
+  const retargetedDefinition = (await jobs(ctx)).find((job) => job.id === jobId)
+  assert.equal(retargetedDefinition.agentId, TARGET, 'the persisted definition keeps the target Agent identity')
 
   const adminRuns = await ctx.call('runs', { all_agents: true })
   assert.equal(adminRuns.result.occurrences.length, 2)
@@ -443,4 +457,62 @@ test('CROSS-AGENT-16 re-targeting via update is admin-gated and bumps the schedu
   assert.equal(retargeted.agentId, TARGET)
   assert.equal(retargeted.scheduleRevision, beforeRevision + 1,
     'changing the target Agent is a semantic revision (D-007 §5.2)')
+})
+
+test('CROSS-AGENT-17 foreign update/enable/disable/remove each prove exactly (scheduler, scheduler.admin) once; denial mutates and audits nothing', async (t) => {
+  const ctx = await rig(t, { adminAgents: new Set([SOURCE]), auditAgents: new Set() })
+  const own = await ctx.call('create', createArgs({ schedule_kind: 'every', every_ms: 60_000, at: undefined }), trusted(PLAIN))
+  assert.equal(own.ok, true, JSON.stringify(own))
+  const jobId = own.result.jobId
+  const auditLogBefore = ctx.runsLog().filter((event) => event.action === 'self_service_mutation').length
+
+  const denied = await ctx.call('disable', { job_id: jobId }, trusted(TARGET))
+  assert.equal(denied.ok, false)
+  assert.equal(denied.error.code, 'access_denied')
+  assert.deepEqual(ctx.grantCalls, [{ agentId: TARGET, scope: 'scheduler.admin', resource: 'scheduler' }],
+    'the grant-less foreign caller requests exactly the admin wire proof once and is denied')
+  assert.equal(JSON.stringify(denied).includes('cross-agent scheduled hello'), false, 'denial discloses no foreign definition content')
+  assert.equal((await jobs(ctx)).find((job) => job.id === jobId).enabled, true, 'denied foreign control mutates nothing')
+  assert.equal(ctx.runsLog().filter((event) => event.action === 'self_service_mutation').length, auditLogBefore,
+    'denied foreign control appends no success audit')
+
+  for (const action of ['update', 'enable', 'disable', 'remove']) {
+    ctx.grantCalls.length = 0
+    const args = action === 'update'
+      ? { job_id: jobId, name: 'renamed by admin source' }
+      : { job_id: jobId }
+    const out = await ctx.call(action, args, trusted(SOURCE))
+    assert.equal(out.ok, true, JSON.stringify(out))
+    assert.deepEqual(ctx.grantCalls, [{ agentId: SOURCE, scope: 'scheduler.admin', resource: 'scheduler' }],
+      `foreign ${action} proves exactly (scheduler, scheduler.admin) once`)
+  }
+  assert.equal((await jobs(ctx)).length, 0, 'the admin remove completed the foreign lifecycle')
+})
+
+test('CROSS-AGENT-18 list(all_agents=true) is fail-closed with zero Auth and zero store reads for every scope combination', async (t) => {
+  const ctx = await rig(t, {
+    adminAgents: new Set([SOURCE]),
+    auditAgents: new Set([SOURCE, PLAIN]),
+  })
+  const created = await ctx.call('create', createArgs({ target_agent_id: TARGET }))
+  assert.equal(created.ok, true, JSON.stringify(created))
+
+  let reads = 0
+  const originalLoad = ctx.store.loadDoc.bind(ctx.store)
+  ctx.store.loadDoc = async (...args) => { reads += 1; return originalLoad(...args) }
+  reads = 0
+  const grantCallsBefore = ctx.grantCalls.length
+
+  let baseline
+  for (const [agentId, label] of [[SOURCE, 'admin+audit'], [PLAIN, 'audit-only'], [TARGET, 'neither']]) {
+    const denial = await ctx.call('list', { all_agents: true }, trusted(agentId))
+    assert.equal(denial.ok, false)
+    assert.equal(denial.error.code, 'access_denied')
+    baseline ??= JSON.stringify(denial)
+    assert.equal(JSON.stringify(denial), baseline, `stable identical denial for the ${label} holder`)
+    assert.equal(JSON.stringify(denial).includes(TARGET), false)
+  }
+  assert.equal(ctx.grantCalls.length, grantCallsBefore,
+    'zero Auth requests on the list(all_agents=true) path for admin, audit, and grant-less callers alike')
+  assert.equal(reads, 0, 'zero store reads before the stable denial')
 })

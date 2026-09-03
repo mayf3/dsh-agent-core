@@ -29,7 +29,15 @@ export const SELF_SERVICE_ERROR_CODES = {
   INTERNAL_ERROR: 'internal_error',
 }
 
-const MANAGE_ANY_SCOPE = 'scheduler.manage:any'
+// AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2 (CTR-AUTH-002): the exact R8
+// wire-proof mapping. Local predicates (scheduler.read:self /
+// scheduler.manage:self / scheduler.manage:any) are Agent Core authorization
+// outcomes, NOT token scopes, and never travel in an Auth request. Only these
+// two exact wire scope literals may be requested, each with
+// resource='scheduler'; neither implies the other, no alias, normalization,
+// alternate spelling, or post-denial fallback exists.
+const ADMIN_WIRE_SCOPE = 'scheduler.admin' // proves local scheduler.manage:any (cross-agent definition mutation/control/destination)
+const AUDIT_WIRE_SCOPE = 'scheduler.audit' // proves global/foreign execution-history visibility only
 const SCHEDULER_RESOURCE = 'scheduler'
 
 function err(code, detail) {
@@ -217,16 +225,36 @@ function ownershipGuard(callerAgentId, allowAny, captureCurrent) {
 /**
  * @param {object} opts
  * @param {import('./store.js').JobStore} opts.store
- * @param {(agentId:string, scope:string, resource:string)=>Promise<boolean>} [opts.assertGrant]
+ * @param {(agentId:string, scope:'scheduler.admin'|'scheduler.audit', resource:'scheduler')=>Promise<boolean>} [opts.assertGrant]
+ *     Exact external wire-proof seam (CTR-AUTH-002). `scope` is only the R8
+ *     wire literal 'scheduler.admin' (cross-agent definition mutation/control/
+ *     destination -> local scheduler.manage:any) or 'scheduler.audit'
+ *     (runs(all_agents=true)/foreign history). Local colon-form labels are
+ *     never requested.
  * @param {(event:{operation:string,jobId:string})=>void} [opts.onAuditFailure]
  */
 export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFailure = () => {} }) {
   if (store === undefined || store === null) throw new TypeError('self-service: store is required')
 
+  /** Admin proof: exact (scheduler, scheduler.admin) — establishes local scheduler.manage:any only. */
   async function adminAuthorized(callerAgentId) {
+    return externalProof(callerAgentId, ADMIN_WIRE_SCOPE)
+  }
+
+  /** Audit proof: exact (scheduler, scheduler.audit) — global/foreign history visibility only. */
+  async function auditAuthorized(callerAgentId) {
+    return externalProof(callerAgentId, AUDIT_WIRE_SCOPE)
+  }
+
+  /**
+   * Exact external wire proof (CTR-AUTH-002). `wireScope` is exactly
+   * 'scheduler.admin' or 'scheduler.audit' — never a colon-form local label.
+   * Auth denial, error, or uncertainty fails closed to `false`.
+   */
+  async function externalProof(callerAgentId, wireScope) {
     if (typeof assertGrant !== 'function') return false
     try {
-      return await assertGrant(callerAgentId, MANAGE_ANY_SCOPE, SCHEDULER_RESOURCE) === true
+      return await assertGrant(callerAgentId, wireScope, SCHEDULER_RESOURCE) === true
     } catch {
       return false
     }
@@ -328,12 +356,16 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
       async list(args, context) {
         const caller = contextOrError(context, 'scheduler.list')
         if (typeof caller !== 'string') return caller
-        if (args.all_agents === true && !(await adminAuthorized(caller))) {
-          return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, 'scheduler.manage:any grant required for all_agents')
+        // CTR-AUTH-002: list(all_agents=true) is normatively unavailable — no
+        // accepted global job-definition-read scope exists. Stable fail-closed
+        // denial BEFORE any store read with ZERO Auth requests, regardless of
+        // any admin/audit/local manage-any entitlement the caller may hold.
+        if (args.all_agents === true) {
+          return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, 'all_agents job-definition list is unavailable: no accepted global job-definition-read scope')
         }
         const doc = await store.loadDoc({ force: true })
         const jobs = doc.jobs
-          .filter((job) => args.all_agents === true || job.agentId === caller)
+          .filter((job) => job.agentId === caller)
           .map((job) => ({ ...publicJobWithoutMessage(job), fenced: doc.fences[job.id] !== undefined }))
         return { ok: true, result: { jobs } }
       },
@@ -341,17 +373,20 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
       async runs(args, context) {
         const caller = contextOrError(context, 'scheduler.runs')
         if (typeof caller !== 'string') return caller
-        let adminPromise
-        const requireAdmin = () => (adminPromise ??= adminAuthorized(caller))
-        if (args.all_agents === true && !(await requireAdmin())) {
-          return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, 'scheduler.manage:any grant required for all_agents')
+        // CTR-AUTH-002: runs(all_agents=true) and foreign-job history require
+        // exactly (scheduler, scheduler.audit); an admin proof alone is never
+        // consulted for or substituted into this row. Self runs: zero Auth.
+        let auditPromise
+        const requireAudit = () => (auditPromise ??= auditAuthorized(caller))
+        if (args.all_agents === true && !(await requireAudit())) {
+          return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, 'scheduler.audit grant required for all_agents history')
         }
         const doc = await store.loadDoc({ force: true })
         let visibleJobs = doc.jobs.filter((job) => args.all_agents === true || job.agentId === caller)
         if (args.job_id !== undefined) {
           const job = doc.jobs.find((candidate) => candidate.id === args.job_id)
           if (job === undefined) return err(SELF_SERVICE_ERROR_CODES.JOB_NOT_FOUND, `no visible job with id ${args.job_id}`)
-          if (job.agentId !== caller && !(await requireAdmin())) {
+          if (job.agentId !== caller && !(await requireAudit())) {
             return err(SELF_SERVICE_ERROR_CODES.JOB_NOT_FOUND, `no visible job with id ${args.job_id}`)
           }
           visibleJobs = [job]
