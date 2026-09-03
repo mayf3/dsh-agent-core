@@ -10,7 +10,8 @@ import { createHttpTransport } from '../../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
 
 const executeManifest = () => workflowManifests.find((manifest) => manifest.id === 'workflow_execute')
-const readManifestIds = () => workflowManifests.filter((m) => m.id !== 'workflow_execute').map((m) => m.id)
+const readManifestIds = () =>
+  workflowManifests.filter((m) => m.requiredScopes.includes('workflow.read')).map((m) => m.id)
 
 const svcError = (res, status, code, message, requestId) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'x-request-id': requestId })
@@ -19,14 +20,19 @@ const svcError = (res, status, code, message, requestId) => {
 
 // ─── Single write entry (DEC-010) ───────────────────────────────────────────
 
-test('workflow_execute is the ONLY workflow write tool; workflow_transition no longer exists', () => {
+test('workflow_execute is the ONLY workflow-STATE write tool; workflow_transition no longer exists', () => {
+  // DEC-010 governs workflow-state mutation writes. The wake tool
+  // (AGENT_CORE_WORKFLOW_DISPATCH_INTENT_BROKER_V1) is an activation-model
+  // eligibility command, not a workflow-state write: it never touches
+  // workflowStateVersion downstream semantics of transitions and creates no
+  // Visit/Submission. workflow_transition remains absent from the tool face.
   const writes = workflowManifests.filter((m) =>
     m.operations.some((op) => op.http && m.requiredScopes.includes('workflow.execute'))
   )
-  assert.deepEqual(writes.map((m) => m.id), ['workflow_execute'])
+  assert.deepEqual(writes.map((m) => m.id), ['workflow_execute', 'workflow_wake_dispatch_intent'])
   assert.ok(!workflowManifests.some((m) => m.id === 'workflow_transition'))
   assert.ok(!workflowManifests.some((m) => m.toolName === 'workflow_transition'))
-  // 6 read tools untouched + 1 write tool.
+  // 6 compat read tools + the due-intent read (activation model) + 1 write.
   assert.deepEqual(readManifestIds(), [
     'workflow_my_tasks',
     'workflow_instance_detail',
@@ -34,6 +40,7 @@ test('workflow_execute is the ONLY workflow write tool; workflow_transition no l
     'workflow_my_domains',
     'workflow_domain_instances',
     'workflow_global_instances',
+    'workflow_dispatch_intents',
   ])
   for (const id of readManifestIds()) {
     const manifest = workflowManifests.find((m) => m.id === id)
