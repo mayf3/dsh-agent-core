@@ -26,7 +26,8 @@ BASE = 044aebd73e991a655f1ec29c1533f92258df90e1 (91a0513f synced with 1fdf8c36)
 AUTHORING_MAIN = 1fdf8c361f2010864f686d8310b68a40df5a5184
 AMENDMENT_BASE = cf6df95492cd8477302a19e65d024bd5acad5d63
 AMENDMENT_TRIGGER = audit comment 5480338347 (REQUEST_CHANGES): Auth blockers 1-5 + cross-spec blocker 12 (auth side)
-AMENDMENT_DATE = 2026-09-02
+AMENDMENT_TRIGGER += PR #145 Codex review blocker union B1/B3 (2026-09-03): dedicated history-only Tailnet listener (HISTORY_LISTENER, CTR-PA-001) — existing Product API server MUST stay loopback-only (EXPOSURE_BEYOND_LOOPBACK_BEFORE_AUTH = FORBIDDEN); TAILNET_LISTENER_ROUTE_OWNERSHIP = ALL_REQUESTS_ADMITTED; selector≠main 400 owned by History after admission (single ownership chain)
+AMENDMENT_DATE = 2026-09-03
 SPEC_STATUS = proposed
 IMPLEMENTATION_ALLOWED_NOW = NO
 EXECUTED_NOW = NO
@@ -56,7 +57,9 @@ AGENT_CHILD_DIRECT_ACCESS = FORBIDDEN
 AUTH_PROFILE_DEFAULT = DISABLED
 AUTH_LAYER_READS_BINDING = NO
 BINDING_READ_OWNER = HISTORY_ONLY
-ROUTE_PROFILE_MATCH = EXACT_HISTORY_GET_ONLY
+ROUTE_PROFILE_MATCH = HISTORY_LISTENER_ALL_ADMITTED (selector-agnostic shape match)
+EXPOSURE_MODEL = DEDICATED_HISTORY_ONLY_TAILNET_LISTENER
+LOOPBACK_SURFACE_BIND = LOOPBACK_ONLY_UNCHANGED
 L7_PROXY_FOR_LOCAL_PROFILE = FORBIDDEN
 DIRECT_PEER_REQUIREMENT = DIRECT_TAILNET_SOCKET_PEER
 CONFIG_ACTIVATION_MODE = RESTART_ONLY
@@ -72,8 +75,12 @@ NOT_READY_STATUS = 503 (PRODUCT_API_AUTH_NOT_READY)
 
 ### 2.1 In scope
 
-- 恰好一条授权路由：`GET /v1/agents/{agentId}/sessions/main/messages`，且 profile 匹配
-  语义是精确 method+path 匹配；不匹配者不属于本 profile（保持现有行为）；
+- 恰好一条授权路由：`GET /v1/agents/{agentId}/sessions/{selector}/messages`，且只存在于
+  专用 history-only Tailnet listener（`HISTORY_LISTENER`）上；该 listener 上所有请求都
+  进入 profile admission（`TAILNET_LISTENER_ROUTE_OWNERSHIP = ALL_REQUESTS_ADMITTED`，
+  selector 值不影响匹配）；selector ≠ `main` 在 admission 后由 History Spec 以
+  `400 VALIDATION_ERROR` 拒绝；现有 Product API server 保持 loopback-only、行为不变，
+  history route 在其上保持 absent；
 - 直接 Tailnet peer 连接的 caller 身份解析（TCP remote address 的 canonicalization → 本机
   tailscaled LocalAPI `/localapi/v0/whois` → `apitype.WhoIsResponse.Node.StableID`，字段
   类型 `tailcfg.StableNodeID`；**不使用** transient `tailcfg.Node.ID`）；
@@ -476,18 +483,25 @@ Session/Binding owner。
 - Reason: 父 Program 禁止未认证 exposure；两份 proposed Spec 均未授权实现。
 - Remaining owner input: none
 
-### DEC-PA-007 — Route ownership：profile 只匹配精确 history GET（audit blocker 4 修正）
+### DEC-PA-007 — Route ownership：专用 listener 统一 admission（audit blocker 4 修正 + PR #145 B3 修复）
 
 - Decision owner: repository owner mayf3（Owner Cross-Spec Ruling 冻结）
-- Decision: `AUTH_PROFILE_MATCHES_ONLY = GET /v1/agents/{agentId}/sessions/main/messages`
-  （method + path 全精确）。只有匹配该 route 后，本 Child 的 auth 逻辑才运行。其它任何
-  route/method：`NOT_HANDLED_BY_THIS_AUTH_PROFILE`、`PRESERVE_EXISTING_BEHAVIOR`；本
-  Child 不得对其强制 403/503。wrong method / wrong route ≠ auth forbidden，只是「不匹配
-  此 profile」。
+- Decision: 本 Child 的 admission 只运行在专用 history-only `HISTORY_LISTENER` 上
+  （`CTR-PA-001`）：`TAILNET_LISTENER_ROUTE_OWNERSHIP = ALL_REQUESTS_ADMITTED`——该
+  listener 上每个请求都进入 auth 逻辑；匹配 `GET /v1/agents/{agentId}/sessions/{selector}/messages`
+  （selector 值不影响匹配）且 admission 通过的请求交给 sibling History Spec（selector≠main
+  → `400 VALIDATION_ERROR`，History input validation）；listener 上其它一切请求
+  `403 PRODUCT_API_AUTH_FORBIDDEN`。loopback surface 上其它任何 route/method：
+  `NOT_HANDLED_BY_THIS_AUTH_PROFILE`、`PRESERVE_EXISTING_BEHAVIOR`；本 Child 不得对其强制
+  403/503。wrong method / wrong route 在 loopback 上 ≠ auth forbidden，只是「不匹配此
+  profile」；在 `HISTORY_LISTENER` 上则统一 admission（不存在未认证行为面）。
 - Rejected alternatives: 全 Product API 统一 auth 栅栏（改变现有 route 行为）；对
-  non-profile 请求也返回 403（与 `CTR-PA-001` 的 preserve-existing-behavior 直接冲突，
-  是 audit blocker 4 的根源）。
-- Reason: 本 Child 是窄 profile 的 caller 身份边界，不是 Product API 全局闸门；状态码
+  loopback non-profile 请求也返回 403（与 `CTR-PA-001` 的 preserve-existing-behavior
+  直接冲突，是 audit blocker 4 的根源）；把 selector≠main 判为「不匹配 profile /
+  preserve-existing」而 loopback server 同时暴露 history route（PR #145 review blocker
+  B3：与 History `CTR-SH-002` 的 400 ownership 冲突，且与 B1 的 exposure 修复冲突）。
+- Reason: 本 Child 是窄 profile 的 caller 身份边界，不是 Product API 全局闸门；专用
+  listener 同时满足 hardening 的 beyond-loopback 禁令与单一 ownership 链；状态码
   所有权必须唯一。
 - Remaining owner input: none
 
@@ -534,10 +548,11 @@ Session/Binding owner。
 
 - Decision owner: repository owner mayf3（Owner 裁决冻结）
 - Decision: Auth profile 只允许 `DIRECT_TAILNET_SOCKET_PEER`；
-  `L7_PROXY_FOR_LOCAL_PROFILE = FORBIDDEN`——本 profile 的 Product API 监听必须直接位于
+  `L7_PROXY_FOR_LOCAL_PROFILE = FORBIDDEN`——本 profile 的 **history-only
+  `HISTORY_LISTENER`**（`CTR-PA-001`）必须直接监听
   Tailscale 接口上，不得部署在任何 L7 proxy 之后，且 MUST NOT 读取任何转发 header。判定
   规则是闭合的：身份 = WhoIs(真实 socket peer)；若路径上存在 proxy（phone → proxy node →
-  Product API），WhoIs 只能看到 proxy Node，其 StableID 不是配置的 phone StableID →
+  HISTORY_LISTENER），WhoIs 只能看到 proxy Node，其 StableID 不是配置的 phone StableID →
   403；proxy 转发的「原始 caller」header 一律无效。同一授权 phone Node 内的代理/其它进程
   属于 Node principal trust boundary（`CTR-PA-012`），不得声称精确 App process isolation。
 - Rejected alternatives: 允许受信 proxy 并解析其转发头（重新引入可伪造身份面）。
@@ -547,20 +562,47 @@ Session/Binding owner。
 
 ## 9. Contracts
 
-### CTR-PA-001 — 唯一授权路由与 profile 匹配语义
-
-本 Child 授权的 route class 恰好是：
+### CTR-PA-001 — 唯一授权路由、专用 Tailnet listener 与 profile 匹配语义
 
 ```text
-GET /v1/agents/{agentId}/sessions/main/messages
+EXPOSURE_MODEL = DEDICATED_HISTORY_ONLY_TAILNET_LISTENER
+LOOPBACK_SURFACE_BIND = LOOPBACK_ONLY_UNCHANGED
+TAILNET_LISTENER_ROUTE_OWNERSHIP = ALL_REQUESTS_ADMITTED
 ```
 
-`ROUTE_PROFILE_MATCH = EXACT_HISTORY_GET_ONLY`：只有 canonical method（`GET`）与
-canonical path class（`/v1/agents/{agentId}/sessions/main/messages`，`agentId` 为单段
-path 参数）**同时**精确匹配时，请求才进入本 profile 的 admission（`CTR-PA-006`）。任何
-其它 method 或 path——含 `GET /v1/agents`、`GET /v1/binding`、`POST /v1/switch-agent`、
-`POST /v1/message`、Notification Ingress、Agent-to-Agent delegation、任何公网入口、对
-history path 的 wrong-method 变体、以及 session selector ≠ 字面量 `main` 的 path——
+本 Child 授权并暴露的 route class 恰好是，且只存在于专用 history-only Tailnet listener
+（`HISTORY_LISTENER`）上：
+
+```text
+GET /v1/agents/{agentId}/sessions/{selector}/messages
+```
+
+`HISTORY_LISTENER` 的确定性规则（闭合，PR #145 review blocker B1/B3 的联合修复）：
+
+1. `HISTORY_LISTENER` 是一个**只服务上述 route class** 的独立 HTTP listener，绑定
+   Tailscale 地址（`DEC-PA-011`：直接 bind、无 L7 proxy、不读转发 header）。现有
+   Product API server（`/v1/binding`、`/v1/agents`、`/v1/switch-agent`、`/v1/message`）
+   MUST 保持 loopback-only bind，MUST NOT 绑定 Tailscale 或任何非 loopback 地址，
+   其行为、路由与响应 MUST NOT 因本 Child 改变——否则未认证 routes 将被暴露到
+   beyond-loopback，违反 `AGENT_CORE_HARDENING_PROGRAM_V1`
+   `EXPOSURE_BEYOND_LOOPBACK_BEFORE_AUTH = FORBIDDEN`；
+2. 在 `HISTORY_LISTENER` 上，**每个请求都进入本 profile 的 admission**（`CTR-PA-006`）：
+   `TAILNET_LISTENER_ROUTE_OWNERSHIP = ALL_REQUESTS_ADMITTED`。匹配上述 route class
+   （`GET` + 单段 `agentId` + 任意 `selector` 值 + `messages` 尾段；selector 值**不影响**
+   profile match）且 admission 通过的请求，交由 sibling History Spec 处理；其它一切
+   ——wrong method（POST/PUT/DELETE/…）、其它任何 path、任何无法解析为该 route class
+   的请求——admission 之后一律 `403 PRODUCT_API_AUTH_FORBIDDEN`（本 listener 上不存在
+   「不经 auth 的行为」）；admission 失败按 `CTR-PA-007` 矩阵返回；
+3. `selector ≠ 字面量 main` 的请求在 admission 通过后由 sibling History Spec 以
+   `400 VALIDATION_ERROR` 拒绝（其 input validation，见 `MOBILE_SESSION_HISTORY_V1`
+   `CTR-SH-002`）——不是本 Child 的 403。ownership 链唯一：auth admission →
+   History input validation；两份 Spec 对同一请求不存在双重 owner；
+4. loopback surface 上本 Child 不挂载任何 route：history route 在现有 loopback server
+   上 MUST 保持 absent（`LOCAL_TAILNET_HISTORY_ROUTE_DEFAULT = DISABLED` 的既有语义）。
+
+除 `HISTORY_LISTENER` 上的上述规则外，任何其它 method 或 path——含 loopback server 上的
+`GET /v1/agents`、`GET /v1/binding`、`POST /v1/switch-agent`、`POST /v1/message`、
+Notification Ingress、Agent-to-Agent delegation、任何公网入口——
 
 ```text
 PROFILE_MATCH_RESULT = NOT_HANDLED_BY_THIS_AUTH_PROFILE
@@ -569,9 +611,9 @@ REQUIRED_BEHAVIOR = PRESERVE_EXISTING_BEHAVIOR
 
 即：不得借用本 Child 的 auth profile 获得授权、ready 状态或 403/503 语义；不得因本
 Child 的失败而改变行为；它们当前的状态不因本 Child 被合法化或扩张。wrong method /
-wrong route ≠ auth forbidden。session selector ≠ `main` 的拒绝语义由 sibling History
-Spec 拥有（`400 VALIDATION_ERROR`），不是本 Child 的 403。本 Child 的 auth 日志只针对
-profile 匹配的请求。
+wrong route ≠ auth forbidden（在 `HISTORY_LISTENER` 上除外——那里没有 preserve-existing
+行为面，规则 2 的 403 唯一适用）。本 Child 的 auth 日志只针对 `HISTORY_LISTENER` 上
+profile 处理的请求。
 
 ### CTR-PA-002 — Tailnet peer 身份链与精确 Tailscale identity
 
@@ -688,16 +730,19 @@ mode 不宽于 `0600`；regular file only；禁止 symlink；schema 封闭；fai
 `version`/`profile` 不匹配、`generation` 缺失或空 → `PROFILE_NOT_READY`，即启动 fail
 closed：**profile 匹配的 History route 上 auth = `503 PRODUCT_API_AUTH_NOT_READY`**
 （`CTR-PA-007`）；同时其它 Product API 现有 route MUST NOT 因该 Child 失败而全部挂掉
-（`PRESERVE_EXISTING_BEHAVIOR`，`CTR-PA-001`）。所有配置错误 MUST fail loud，MUST NOT
+（`PRESERVE_EXISTING_BEHAVIOR`，`CTR-PA-001` loopback surface）。所有配置错误 MUST fail
+loud，MUST NOT
 静默降级为 allow-all 或 loopback 放行。
 
 ### CTR-PA-006 — 请求 admission 顺序（Binding 不在链上）
 
-对 profile 匹配的每个请求 MUST 按以下精确顺序执行，任一步失败即按 `CTR-PA-007` 拒绝并
-停止：
+对 `HISTORY_LISTENER` 上进入本 Child 的每个请求（`CTR-PA-001`：
+`TAILNET_LISTENER_ROUTE_OWNERSHIP = ALL_REQUESTS_ADMITTED`）MUST 按以下精确顺序执行，
+任一步失败即按 `CTR-PA-007` 拒绝并停止：
 
 ```text
-1. canonical route match（CTR-PA-001；不匹配则整体不属于本 Child）
+1. route class match（CTR-PA-001；HISTORY_LISTENER 上非 history class → 403；
+   匹配 class 的 selector 值不影响 match，交由 History input validation）
 2. direct socket peer（身份来源 = accepted socket 真实对端；L7 proxy 禁止）
 3. canonicalize peer address（CTR-PA-013）
 4. WhoIs（CTR-PA-002）
@@ -774,8 +819,10 @@ LOCAL_TAILNET_HISTORY_ROUTE_DEFAULT = DISABLED
 ```
 
 只有以下全部成立才允许实现期启用：本 Child Spec accepted 并进入 main；sibling
-`MOBILE_SESSION_HISTORY_V1` accepted 并进入 main；两份实现均通过独立审计；Product API
-直接绑定 Tailscale 地址（非公网 wildcard，且无 L7 proxy，`DEC-PA-011`）；tailscaled
+`MOBILE_SESSION_HISTORY_V1` accepted 并进入 main；两份实现均通过独立审计；
+**专用 history-only `HISTORY_LISTENER`** 直接绑定 Tailscale 地址（非公网 wildcard，且无
+L7 proxy，`DEC-PA-011`；`CTR-PA-001` 规则 1：现有 Product API server MUST 保持
+loopback-only bind，MUST NOT 绑定 Tailscale 地址）；tailscaled
 identity 接口 ready 且版本 = 钉住 revision；config 文件 valid 且 generation 存在；exact
 Node/surface pair 存在；History endpoint acceptance 通过。任一条件不成立时 route MUST
 保持 absent/disabled（现有行为）；强制 enable 在 identity/config 未 ready 时 MUST fail
@@ -981,18 +1028,25 @@ EXECUTED_NOW = NO
 - Failure condition: 静默降级、allow-all、其它 route 连带失败、部分生效
 - EXECUTED_NOW: NO
 
-### ACC-PA-J — 非 profile route / wrong method 保持现有行为
+### ACC-PA-J — loopback 非 profile route 保持现有行为；Tailnet listener 无未认证行为面
 
 - Contracts: `CTR-PA-001`, `CTR-PA-006`, `CTR-PA-007`
-- Method: 用 exact 合法 pair 请求 `GET /v1/agents`、`GET /v1/binding`、
-  `POST /v1/switch-agent`、`POST /v1/message`、history path 的 wrong-method 变体（POST/
-  PUT/DELETE）、session selector ≠ `main` 的 path；同时用**无 auth 配置**的基线重复
+- Method: （loopback surface）用 exact 合法 pair 请求 `GET /v1/agents`、`GET /v1/binding`、
+  `POST /v1/switch-agent`、`POST /v1/message`，并用**无 auth 配置**的基线重复，逐变体
+  对比状态/响应体；（Tailnet surface）对 `HISTORY_LISTENER` 请求 wrong-method 变体
+  （POST/PUT/DELETE history path）、非 history path（`/v1/binding`、`/v1/agents`、
+  `/`、任意 path）、以及 `selector ≠ main` 的合法 pair GET；同时验证现有 Product API
+  server 的 bind 配置仍为 loopback-only、`HISTORY_LISTENER` bind 配置恰为 Tailscale 地址
 - Environment: 同 A
-- Required evidence: 每个变体在「auth child 启用」与「基线」两种条件下的状态/响应体对比
-- Expected result: 逐变体一致——这些请求 `NOT_HANDLED_BY_THIS_AUTH_PROFILE`，
-  `PRESERVE_EXISTING_BEHAVIOR`；不因合法 pair 获得授权/ready/403/503 语义；本 Child 未
-  为任何其它 route 提供授权或拒绝
-- Failure condition: 任何变体因本 Child 的存在而改变状态
+- Required evidence: 两个 surface 的每变体请求/响应、bind 配置记录
+- Expected result: loopback surface 逐变体与基线一致——`NOT_HANDLED_BY_THIS_AUTH_PROFILE`、
+  `PRESERVE_EXISTING_BEHAVIOR`，不因合法 pair 获得授权/ready/403/503 语义，history route
+  absent；Tailnet surface 上 wrong-method 与非 history path 一律
+  `403 PRODUCT_API_AUTH_FORBIDDEN`（无未认证行为面），`selector ≠ main` 的合法 pair
+  GET 在 admission 通过后由 History 返回 `400 VALIDATION_ERROR`
+- Failure condition: loopback 任一变体因本 Child 改变状态；loopback server 绑定了非
+  loopback 地址；Tailnet listener 上存在任何绕过 admission 的行为面；selector≠main 被
+  auth 403 或在 admission 前被处理
 - EXECUTED_NOW: NO
 
 ### ACC-PA-K — denial 时 History service 调用次数 = 0，Session 读取字节 = 0
@@ -1045,8 +1099,9 @@ EXECUTED_NOW = NO
 ### ACC-PA-O — public / non-Tailnet 入口始终不授权
 
 - Contracts: `CTR-PA-001`, `CTR-PA-007`
-- Method: 从非 Tailnet 网络（公网/LAN 非 Tailnet 地址）请求该 endpoint；并验证 Product
-  API 未绑定公网 wildcard、未部署于 L7 proxy 之后（`DEC-PA-011`）
+- Method: 从非 Tailnet 网络（公网/LAN 非 Tailnet 地址）请求该 endpoint；并验证
+  `HISTORY_LISTENER` 未绑定公网 wildcard、未部署于 L7 proxy 之后（`DEC-PA-011`），且现有
+  Product API server 未绑定任何非 loopback 地址（`CTR-PA-001` 规则 1）
 - Environment: isolated network probes
 - Required evidence: 请求/响应与 bind 配置
 - Expected result: 非 Tailnet peer 无法解析为 Node → `503 PRODUCT_API_AUTH_NOT_READY`
@@ -1196,10 +1251,13 @@ implementation authority。
 
 ## 12. Migration, compatibility, and rollback
 
-- Migration: none。本 Child 只新增 auth 前置层；现有 loopback 产品路径不受影响。
+- Migration: none。本 Child 只新增 auth 前置层与专用 history-only `HISTORY_LISTENER`
+  （`CTR-PA-001`）；现有 loopback 产品路径不受影响，现有 Product API server 保持
+  loopback-only bind。
 - Compatibility: 现有 `GET /v1/agents`、`GET /v1/binding`、`POST /v1/switch-agent`、
   `POST /v1/message` 的行为不因本 Child 改变（`CTR-PA-001` preserve-existing-behavior；
-  `ACC-PA-J` 逐变体验证）。
+  `ACC-PA-J` 逐变体验证）；`HISTORY_LISTENER` 上不存在未认证行为面（`ACC-PA-J` Tailnet
+  surface 逐变体验证）。
 - Rollout: 默认关闭；activation 条件见 `CTR-PA-009`；配置激活仅经 graceful restart
   （`CTR-PA-005`/`CTR-PA-010`）。
 - Rollback: `CTR-PA-010` 的 generation 回滚（temp+validate+fsync+rename + graceful
@@ -1240,7 +1298,9 @@ PRINCIPAL = AUTHORIZED_PHONE_NODE_WITH_CONFIGURED_SURFACE_LABEL
 TAILSCALE_STABLE_FIELD = WhoIsResponse.Node.StableID (tailcfg.StableNodeID)
 TAILSCALE_REVISION_OR_VERSION = 1.94.2 (commit 2de4d317a8c2595904f1563ebd98fdcf843da275)
 SURFACE_FORMAT = canonical lowercase UUID v4 (36 ASCII; regex-frozen)
-ROUTE_PROFILE_MATCH = EXACT_HISTORY_GET_ONLY
+ROUTE_PROFILE_MATCH = HISTORY_LISTENER_ALL_ADMITTED (selector-agnostic shape match)
+EXPOSURE_MODEL = DEDICATED_HISTORY_ONLY_TAILNET_LISTENER
+LOOPBACK_SURFACE_BIND = LOOPBACK_ONLY_UNCHANGED
 CONFIG_ACTIVATION_MODE = RESTART_ONLY
 CONFIG_GENERATION = IMMUTABLE_PER_PROCESS
 REVOCATION_EFFECTIVE_AT = SUCCESSFUL_RUNTIME_RESTART
