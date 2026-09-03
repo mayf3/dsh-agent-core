@@ -328,8 +328,11 @@ are sanitized and never carry logs, inputs, secrets, or credentials.
 ### CTR-SRD-003 — One restart and runtime proof
 
 Before stop, require no in-flight occurrence, unresolved/ambiguous run,
-already-due slot, or next due slot through the 300-second worst-case deployment
-window. Stop the exact old PID, acquire `SCHEDULER_ENGINE_LOCK` through the
+already-due slot, or next due slot through a 420-second safety horizon. From
+this census through transaction/evidence/receipt/publication fsync and result-
+channel rename, the lock-held operation has one 300-second absolute deadline;
+receipt publication gets at most 10 seconds and result publication at most 5
+seconds within it. Stop the exact old PID, acquire `SCHEDULER_ENGINE_LOCK` through the
 accepted OwnerLock primitive, re-read the census and JobStore hash, and release
 that engine lock only immediately before the new start. A failed/uncertain stop
 while the old PID remains healthy performs zero restart; after confirmed stop
@@ -357,6 +360,10 @@ the preceding exact UTF-8 line without newline. A companion root-owned 0600
 `EVENT_DETAILS.jsonl` has exactly one same-sequence/event record whose canonical
 details hash equals `details_sha256`. Install ordinals are 1..10 in manifest
 order; restore ordinals are only mutated targets in strict reverse order.
+For an overwrite install, before/after hashes are preimage/release; for a create
+install, `before_sha256` is exactly null and `after_sha256` is release. For an
+overwrite restore they are release/preimage; for removal of an exact created
+file they are release/null. No other null hash is legal.
 The exact root output closure is `TRANSACTION_JOURNAL.jsonl`,
 `EVENT_DETAILS.jsonl`, `PUBLICATION_JOURNAL.jsonl`, `RECEIPT.json` or its one
 failed temp, and nothing else; every file is regular non-symlink root:wheel 0600.
@@ -419,6 +426,11 @@ compensates. Reconcile under both locks uses this exhaustive precedence:
 
 Receipt publication has its own root:wheel 0600 hash-chained canonical
 `PUBLICATION_JOURNAL.jsonl` with exact events `PUB_BEGIN,PUB_SIGNAL,PUB_PUBLISHED,PUB_FAILED,PUB_RESUME`.
+Each line has exact inline keys
+`schema_version,sequence,previous_sha256,event,at,correlation_id,details`; it
+uses the same genesis/sequence/previous-line hash rules, and its canonical
+`details` object is retained inside that immutable line rather than referenced
+through an unretained details hash.
 `PUB_BEGIN/PUB_RESUME` bind outcome, fixed `RECEIPT.json.tmp` path, current
 transaction/evidence prefix hashes, and receipt-payload hash. Transaction and
 evidence prefixes are fsynced before construction; publication events never
@@ -438,22 +450,30 @@ Publication records use the same exact envelope/hash rules; details keys are
 Publish the atomic root-owned 0600 receipt at
 `/private/var/root/agent-core-scheduler-deploy-v1-<nonce>/RECEIPT.json`. Its
 exact keys are
-`schema_version,outcome,correlation_id,started_at,finished_at,owner_id,approval_ref,authority_spec,authority_semantic_head,authority_accepted_head,auth_semantic_head,auth_accepted_head,artifact_manifest_sha256,runner_sha256,transaction_prefix_sha256,event_details_prefix_sha256,journal_last_sequence,authorization_method,auth_lock_dev_inode,agent_core_lock_dev_inode,old_pid,new_pid,old_started_at,new_started_at,preimage_catalog_sha256,postimage_catalog_sha256,compose_sha256,plist_sha256,jobs_sha256_before,jobs_sha256_after,forward_restart_count,rollback_restart_count,launchd_running,import_export_count,fatal_log_delta_count,history_storage_created_count,job_occurrence_delta_count,signal_event_count,signal_events_sha256,unavailable_fields_sha256`.
+`schema_version,outcome,correlation_id,started_at,finished_at,owner_id,approval_ref,authority_spec,authority_semantic_head,authority_accepted_head,auth_semantic_head,auth_accepted_head,artifact_manifest_sha256,runner_sha256,transaction_prefix_sha256,event_details_prefix_sha256,journal_last_sequence,authorization_method,auth_lock_dev_inode,agent_core_lock_dev_inode,old_pid,new_pid,old_started_at,new_started_at,preimage_catalog_sha256,postimage_catalog_sha256,compose_sha256,plist_sha256,jobs_sha256_before,jobs_sha256_after,forward_restart_count,rollback_restart_count,launchd_running,import_export_count,fatal_log_delta_count,history_storage_created_count,job_occurrence_delta_count,signal_event_count,signal_events_sha256,unavailable_fields_json,unavailable_fields_sha256`.
 No extra key/array/object is permitted. Schema version is integer 1; UUIDs are
 lowercase; heads 40-hex; non-null SHA fields 64-hex; times RFC3339 UTC; lock
 identities decimal `device:inode`; PIDs positive safe integers; counts
 nonnegative safe integers; launchd is boolean; authorization method exactly
-`macos_native_authorization`. Null is legal only when the field name appears in
-the sorted canonical string-array hashed by `unavailable_fields_sha256`.
+`macos_native_authorization`. `unavailable_fields_json` is a scalar string
+containing the lexicographically sorted canonical JSON array of exactly the null
+field names; its SHA-256 binds those UTF-8 bytes. Null is legal only when named
+there.
 The one closed outcome is:
 `STOPPED_PREMUTATION|QUIESCENCE_ABORTED|FORWARD_ACTIVE|COMPENSATED|OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED`.
-Only `FORWARD_ACTIVE` is deployment success. The manifest duplicates the exact
-field/type/nullability schema and these invariants byte-for-byte: forward means
-release catalog/new healthy PID/restart 1:0/all proofs zero-or-69/jobs equal;
-compensated means preimage/old healthy face/rollback restart exactly one/jobs
-equal; prestop means preimage/old healthy/0:0; quiescence-aborted means
-preimage/fresh old healthy/0:1; manual means known Job drift and stopped restored
-code; unknown makes no success claim and records every unavailable coordinate.
+Only `FORWARD_ACTIVE` is deployment success. Exact outcome values are:
+
+| Outcome | Exact required value/null matrix |
+|---|---|
+| `STOPPED_PREMUTATION` | pre/post catalogs equal preimage; old PID/start present; new PID/start and import count null; restart 0/0; launchd true; jobs equal; fatal/history/job deltas 0; unavailable JSON exactly `["import_export_count","new_pid","new_started_at"]` |
+| `QUIESCENCE_ABORTED` | pre/post preimage; old and fresh-new PID/start present and unequal; restart 0/1; launchd true; import 69; jobs equal; fatal/history/job deltas 0; unavailable JSON `[]` |
+| `FORWARD_ACTIVE` | post exact release; old/new PID/start present and unequal; restart 1/0; launchd true; import 69; jobs equal; fatal/history/job deltas 0; unavailable JSON `[]` |
+| `COMPENSATED` | post exact preimage; old/fresh-new PID/start present and unequal; forward restart exactly 0 or 1 as journal, rollback 1; launchd true; import 69; jobs equal; fatal/history/job deltas 0; unavailable JSON `[]` |
+| `MANUAL_RECOVERY_REQUIRED` | only known Job drift; code post exact preimage; old PID/start present; new PID/start/import null; launchd false; restart counts exact journal; jobs differ; measured fatal/history/job deltas nonnegative; unavailable JSON exactly `["import_export_count","new_pid","new_started_at"]` |
+| `OUTCOME_UNKNOWN` | priority 2/11 only; no success invariant; every readable field typed, every unreadable field null, and unavailable names exactly all and only null fields |
+
+The manifest duplicates this exact
+field/type/nullability/outcome matrix byte-for-byte.
 No individual
 Gate/dialog/file/PID/health/receipt is success.
 
@@ -461,9 +481,14 @@ Gate/dialog/file/PID/health/receipt is success.
 
 After deployment `FORWARD_ACTIVE` and Auth Phase C terminal `C_ACTIVE`, with
 Runtime PID/start unchanged, source `agt_efficiency-agent` invokes only unified
-`scheduler` with `action=create`, `schedule_kind=at`, one future bounded UTC
-instant, `delete_after_run=true`, `auto_retry=false`, target `blog-agent`, and a
-fresh non-main target session. The correlation-bound message is exactly
+`scheduler` with exactly `action=create`,
+`name=daily-autonomy-scheduler-canary-<lowercase-uuid>`, `schedule_kind=at`,
+`at=<gate_observed_at plus exactly 180 seconds as RFC3339 UTC>`,
+`message=<below>`, `timeout=120`, `light_context=true`,
+`delivery_mode=none`, `best_effort=false`, `delete_after_run=true`,
+`auto_retry=false`, and `target_agent_id=blog-agent`; no omitted, defaulted, or
+extra field is allowed. The run must allocate a fresh non-main target session.
+The correlation-bound message is exactly
 `SCHEDULER-CANARY-<lowercase-uuid>: acknowledge receipt only; perform no other business action`.
 The accepted wire path requests only `scheduler.admin` for the source; no
 alias/local-manage/two-scope request is allowed.
@@ -474,10 +499,45 @@ credential/scope/token propagation, no automatic ping-pong, exactly-once, and
 unchanged Runtime health/PID. The target must not execute workflow or another
 business tool. On pre-fire failure, disable then remove the exact
 correlation-bound definition. On post-due ambiguity, first fence it disabled,
-wait through the bounded late-fire window, census occurrence/run/delivery, and
+wait through the exact late-fire window ending 180 seconds after `at`, census occurrence/run/delivery, and
 remove only when no future fire is possible. Receipt publication may never
 leave an enabled late Job. This is the Goal's only Scheduler Job; no self-only
 canary is also run.
+
+The create call is single-attempt/no-retry. A timeout, transport loss, or
+ambiguous response triggers read-only reconciliation by exact name/message/
+source/target/at tuple and JobStore revision: zero matches is
+`CANARY_OUTCOME_UNKNOWN` with no replay; one match is fenced and reconciled as
+above; multiple/mismatched matches are `CANARY_MANUAL_RECOVERY_REQUIRED` with no
+write except fencing an exactly attributable row. Completed occurrence/run/
+delivery/session steps are never replayed.
+
+Before create, fsync a root:wheel 0600 hash-chained
+`CANARY_JOURNAL.jsonl`; record exact `INIT,CREATE_BEGIN,CREATE_RESULT,FENCE_BEGIN,FENCE_PASS,OCCURRENCE_TERMINAL,RUN_TERMINAL,TARGET_TURN_PROVED,CLEANUP_BEGIN,CLEANUP_PASS,CANARY_PASS,SIGNAL,OUTCOME_UNKNOWN,MANUAL_RECOVERY_REQUIRED`
+events with exact envelope
+`schema_version,sequence,previous_sha256,event,at,correlation_id,details` and one
+correlation. Details bind, respectively: authority/deployment/Grant hashes;
+request hash/due time; result class/job ID; fence reason/job ID; disabled
+readback; occurrence ID/count/status; run ID/count/status; target
+session/turn/delivery IDs plus ownership/propagation booleans; cleanup job ID;
+zero enabled/exact deletion; all final counts/booleans; signal/after-event; or
+error class plus complete observed IDs/counts. Extra/missing keys or edges are
+corruption. Publish atomic
+`CANARY_RECEIPT.json` and the non-secret
+`/private/var/tmp/agent-core-scheduler-deploy-v1/<nonce>.canary-result.json`.
+The receipt's exact keys are
+`schema_version,outcome,correlation_id,authority_accepted_head,phase_c_receipt_sha256,deployment_receipt_sha256,request_sha256,gate_observed_at,due_at,late_window_end,job_id,occurrence_id,run_id,target_session_id,target_turn_id,delivery_id,job_count,occurrence_count,run_count,target_turn_count,delivery_count,source_agent_id,target_agent_id,target_session_fresh_non_main,target_own_principal,target_own_credential,source_privilege_propagated,auto_ping_pong,runtime_pid,runtime_started_at,runtime_health,cleanup_complete,enabled_job_count,journal_sha256,signal_count,finished_at,unavailable_fields_json,unavailable_fields_sha256`.
+The result file has exactly
+`schema_version,correlation_id,outcome,receipt_sha256,journal_sha256,finished_at`;
+only receipt hash may be null after publication failure. Values follow the same
+UUID/time/hash/safe-integer/boolean/null-list grammar as deployment receipt.
+These fields bind authority/Phase-C/deployment receipts, exact
+request and time, Job/occurrence/run/session/turn/delivery IDs and counts,
+source/target identities, credential/privilege propagation, PID/health,
+cleanup/late-window state, journal, signals, and outcome
+`CANARY_PASS|CANARY_FAILED_CLEAN|CANARY_OUTCOME_UNKNOWN|CANARY_MANUAL_RECOVERY_REQUIRED`.
+Only `CANARY_PASS` with all exact one-counts, cleanup complete, no enabled Job,
+target ownership true, propagation/ping-pong false, and health true is success.
 
 ### CTR-SRD-007 — Legacy zero-access and non-propagation
 
@@ -499,8 +559,16 @@ proves the exact source `scheduler.admin` decision and no privilege propagation.
 
 Acceptance may change only: (1) frontmatter `status: proposed -> accepted`; (2)
 add `accepted_date,accepted_by,accepted_at,accepted_reviewed_base,accepted_reviewed_head,independent_review_result,independent_review_blockers,acceptance_verdict,acceptance_semantic_delta,acceptance_authority_basis`;
-(3) replace the opening banner with `ACCEPTED / PRODUCTION DEPLOYMENT AUTHORITY`
-and the exact recorded Owner/reviewed-head statement; (4) authoring footer
+(3) replace the opening banner with exactly:
+
+```text
+> **ACCEPTED / PRODUCTION DEPLOYMENT AUTHORITY.** Accepted by `mayf3` at the
+> exact independently reviewed base/head recorded in frontmatter. Contracts
+> become active only after this lifecycle commit merges to `main`; every Gate,
+> native authorization, rollback, receipt, and runtime/canary proof remains mandatory.
+```
+
+(4) authoring footer
 `STATUS: proposed -> accepted` and `OPEN_OWNER_DECISIONS: EXACT_HEAD_ACCEPTANCE -> NONE`;
 and (5) the README row lifecycle cell `proposed -> accepted`. Every other byte
 must remain identical; added values bind exact base/head, reviewer PASS/zero
@@ -519,7 +587,9 @@ changes before accepted exact-head merge and final-head recheck.
   lock, stop/start and old/new/absent/ambiguous PID, health/import/log proof,
   JobStore drift, every signal/journal marker, bad chain/schema/ordinal/details,
   receipt temp/fsync/rename/lost-publication, legal single evidence-only resume,
-  forbidden success retry, and re-entry after every compensation step
+  forbidden success retry, absent/create/remove null-hash grammar, inline
+  publication details, every outcome value/null/unavailable matrix, absolute
+  deadline/horizon expiry, and re-entry after every compensation step
 - Pass/fail: fresh read-only CHECK plus full simulator PASS, deterministic exact
   ten rows, one exhaustive classifier action at every boundary, complete
   rollback/bounds/no secret/no replay; fail on extra path, stale guard,
@@ -540,7 +610,10 @@ changes before accepted exact-head merge and final-head recheck.
 - Environment/evidence: production Runtime and fresh target session; UTC time,
   Phase-C receipt, unchanged PID/start, exact source/target request/result,
   definition/occurrence/run/session/delivery/deletion, target principal and
-  credential ownership, Auth decision, trace hash/bytes/markers/exit, legacy metadata
+  credential ownership, Auth decision, canary journal/receipt/result hashes,
+  trace hash/bytes/markers/exit, legacy metadata; simulator injects before/after
+  create response, zero/one/multiple tuple readback, every fence/late-window/
+  occurrence/run/turn/cleanup/publication boundary, signals, and stale PID/health
 - Pass/fail: exactly one occurrence/run/delivery/turn, correct fresh non-main
   target, deletion/retained evidence, no restart/retry/ping-pong/legacy access,
   privilege propagation, or enabled late Job; otherwise fail.
