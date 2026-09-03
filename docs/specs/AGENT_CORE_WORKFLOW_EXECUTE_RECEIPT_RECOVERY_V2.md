@@ -29,8 +29,9 @@ successor_delta: >
   receipt_recovery_publication, workflow_execute_production_ready) is removed
   from the immutable supplement body and durably recorded instead in the
   independent post-publication audit evidence under CTR-RR-005. All other
-  receipt-recovery boundaries (CTR-RR-001..006 surfaces, taxonomy, artifact
-  Gate, prohibitions, success criterion) are frozen verbatim from V1.
+  receipt-recovery boundaries are frozen from V1: sections 3 (CTR-RR-001),
+  4 (CTR-RR-002) and 8 (CTR-RR-006) verbatim; sections 6/7/9 carry only the
+  declared delta-family edits noted in their own parentheticals.
 owners:
   - mayf3
 ---
@@ -95,10 +96,11 @@ NEW_ACCEPTED_AUTHORITY_CONFLICT。
 ——`original_receipt.identity_after`（time/extract）、
 `receipt_recovery_publication`、`workflow_execute_production_ready`——从 immutable
 supplement 本体移除，其持久记录改由 CTR-RR-005 的独立 post-publication audit
-evidence 承载。除此之外，V1 的 receipt-recovery 边界（§3–§9 的 CTR-RR-001..006、
-evidence taxonomy、artifact/Gate 链、禁止清单、success criterion）全部逐字冻结
-继承；本 Spec 不修改、不 supersede 父部署 Authority 的产品、部署或 E2E 语义，不
-重建已经丢失的 contemporaneous evidence，只发布带 provenance 的 supplement。
+evidence 承载。除此之外，V1 的 receipt-recovery 边界冻结继承：§3（CTR-RR-001）、
+§4（evidence taxonomy）与 §8（禁止清单）与 V1 逐字一致；§6/§7/§9 仅携带各自括注
+声明的 delta-family 编辑。本 Spec 不修改、不 supersede 父部署 Authority 的产品、
+部署或 E2E 语义，不重建已经丢失的 contemporaneous evidence，只发布带 provenance
+的 supplement。
 
 若独立审计判定本 successor 形式无效（例如要求改回 V1 in-place amendment），本
 proposal = BLOCKED，必须先按该结论改形，不能自行接受。
@@ -252,6 +254,9 @@ durable exact source，MUST 写为 `null` 且 provenance =
 - 新增常量字段 `post_publication_audit_evidence`：`declared_path` 是 artifact
   manifest 在 publication 前冻结的 exact absolute path，指向独立 audit evidence；
   该字段本身不含任何 publication 后观察值。
+- `receipt_kind` 由 `RECEIPT_RECOVERY_SUPPLEMENT_V1` 改为
+  `RECEIPT_RECOVERY_SUPPLEMENT_V2`、`recovery_authority.spec_id` 相应指向本 Spec：
+  succession 的机械命名结果，无语义变化。
 
 `owner_root_exit_zero_evidence` 只有在 durable locator 能机械回读时才能填值；否则为
 `null`，其 time/digest/conclusion 也必须为 `null`，provenance 必须是
@@ -285,7 +290,9 @@ absolute 常量 path，并与 wrapper 中输出的值逐字节一致。
 4. evidence provenance 无升级、无伪造、unknown 字段保持 unknown；supplement 本体
    不含任何 publication 后才能观察的值（identity_after /
    receipt_recovery_publication / production-ready conclusion MUST NOT appear in the
-   immutable body）；
+   immutable body；`post_publication_audit_evidence.declared_path`/`carries`
+   中的指针性名称提及除外——禁止的是这些事实的字段/值本体，不是对 audit
+   evidence 位置的指针）；
 5. wrapper 中不存在 install P1/P2、launchctl、restart、rollback、Workflow E2E、
    Grant/credential mutation 或网络 mutation 路径。
 
@@ -368,8 +375,8 @@ WORKFLOW_EXECUTE_RECEIPT_TERMINALIZATION = PASS
 evidence），只能在以下 evidence 全部具有可校验 locator/time/digest 且彼此一致时成
 立：pre-recovery durable target-live catalog、create/transition/final-readback
 E2E、Owner/root exit-zero 与由 exact wrapper 导出的安全 assertions、recovery 时
-P1/P2/PID/health/current Grant/current credential 只读回查、以及 publication 后
-original receipt + supplement 的 identity record。任一缺失或 provenance 为
+P1/P2/PID/health/current Grant/current credential
+只读回查。任一缺失或 provenance 为
 unknown 时，MUST 写 `WORKFLOW_EXECUTE_PRODUCTION_READY = NOT_ESTABLISHED`；
 receipt recovery 不得自行升级父事务证据。unknown original values 永远保持
 unknown。
@@ -396,8 +403,9 @@ exhaustive allowlist 仅为：
 4. V1（`AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V1.md`）frontmatter 仅允许
    `superseded_by: null -> AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V2` 一处
    backlink，其余 bytes 冻结；
-5. `docs/specs/README.md` 仅允许：新增本 Spec 一行（proposed -> accepted /
-   none -> contracts 的同步行）与 V1 行 `accepted -> superseded` 标记同步。
+5. `docs/specs/README.md` 仅允许：本 Spec 现有行的 lifecycle `proposed ->
+   accepted` 与 authority `none -> contracts` 两处同步，以及 V1 行
+   `accepted -> superseded` 标记同步。
 
 除此之外，本文（含本节）与索引其他 bytes 全部冻结；不得追加 acceptance footer 或
 顺手修文。Lifecycle commit 形成后，必须由独立 Reviewer 对新 exact head 执行
