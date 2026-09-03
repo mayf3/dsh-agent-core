@@ -159,17 +159,32 @@ each file row binds relative path/action/type/bytes/mode/SHA-256/source Git blob
 Inputs are read-only regular files; no secret, credential, token, environment,
 job data, log content, symlink, or special file is allowed.
 
-The canonical Owner wrapper invokes the macOS authorization dialog, then its
-authorized root phase exclusively creates a nonce-scoped
+The user-owned canonical wrapper never runs as root and is not a trust anchor.
+After two reproducible builds and independent artifact review, the review record
+and Owner packet freeze the exact manifest SHA-256 and every non-manifest path
+hash. The first native authorization invokes only a literal, separately displayed
+bootstrap command composed from system `/bin` and `/usr/bin` tools plus those
+externally frozen hashes; it does not execute artifact code. That bootstrap
+exclusively creates a nonce-scoped
 `/private/var/root/agent-core-scheduler-deploy-v1-*` directory owned
 `root:wheel 0700`, copies every input without following symlinks, and rechecks
 source and destination inode/type/owner/mode/bytes/hash plus the complete
-manifest before execution. Data are regular `root:wheel 0600`, runner regular
-`root:wheel 0700`; exclusive creation and post-copy restat defeat source/target
-swap. Only the root-owned copy may mutate production. The root phase returns
-only a nonce-scoped non-secret result code/hash file; stdout/stderr are sanitized.
-It must not invoke `sudo`, accept a password fallback, or execute from the
-user-owned artifact directory.
+manifest before execution. The manifest's `files` array covers every other one
+of the 20 artifact paths exactly once; the manifest itself is bound only by the
+external reviewed SHA-256, eliminating self-hash recursion. Data are regular
+`root:wheel 0600`, runner regular `root:wheel 0700`; exclusive creation and
+post-copy restat defeat source/target swap. A separate native authorization may
+execute only that already sealed root-owned runner, again binding its externally
+frozen digest. No user-owned artifact code executes as root.
+
+The non-secret result channel is exactly
+`/private/var/tmp/agent-core-scheduler-deploy-v1/<nonce>.result.json`; its parent
+is exclusively created `root:wheel 0755` and the atomic file is regular,
+non-symlink `root:wheel 0644` with exact keys `schema_version`, `nonce`,
+`correlation_id`, `outcome`, `receipt_sha256`, and `finished_at`. It contains no
+logs or path-selected input. stdout/stderr are sanitized. Neither native phase
+may invoke `sudo`, accept a password fallback, or execute from the user-owned
+artifact directory.
 
 ### CTR-SCD-003 — Gates and serialization
 
@@ -198,9 +213,10 @@ no next due slot through the full worst-case 300-second deployment window. Then
 stop the old process, acquire the exact Scheduler `OwnerLock` at
 `/Users/authsvc/.agent-core/scheduler/jobs.json.engine.lock` using the accepted
 lock primitive, re-read the same census and jobs hash, and release that engine
-lock only immediately before starting the new process. If quiescence fails,
-restart the unchanged old runtime exactly once and classify
-`QUIESCENCE_ABORTED`; no file is written. Natural or unknown job-store change
+lock only immediately before starting the new process. A failed census/signal/
+timeout while the original PID remains healthy uses zero restart and
+`STOPPED_PREMUTATION`; only a failure after confirmed stop starts the unchanged
+old runtime exactly once as `QUIESCENCE_ABORTED`. No file is written. Natural or unknown job-store change
 at any later point forbids success and enters the rollback classifier; this
 Spec never edits a job definition to manufacture quiescence.
 
@@ -219,40 +235,50 @@ stop/start 30/90 seconds; proof 60 seconds with at most one poll per second.
 
 ### CTR-SCD-005 — Reconcile and rollback
 
-Before stopping the service, create/fsync an append-only root journal with the
-correlation and initial catalog. Fsync a marker after quiescence, before first
-file write, after each file/fsync/rename, after stop/start, after every proof,
-before/after compensation, and before receipt publication. After any signal,
-interruption, timeout, or failed proof, enter reconciliation under both locks;
-re-entry is always reconciliation-only. Bind the journal, every target hash,
-job-store hash, loaded job, PID/start time, proof set, receipt, and staging to
-exactly one mutually exclusive class:
+Before the first census, create/fsync exactly
+`/private/var/root/agent-core-scheduler-deploy-v1-<nonce>/TRANSACTION_JOURNAL.jsonl`
+as regular non-symlink `root:wheel 0600`. Each canonical-JSON line has exactly
+`schema_version=1`, monotonic `sequence`, `previous_sha256`, `event`, UTC `at`,
+`correlation_id`, and `details_sha256`; each line's hash chains the next.
+Allowed events are exactly `INIT`, `PRECHECK_PASS`, `PRECHECK_FAIL`,
+`STOP_BEGIN`, `STOP_CONFIRMED`, `QUIESCENCE_PASS`, `WRITE_BEGIN`,
+`FILE_INSTALLED`, `INSTALL_PASS`, `START_BEGIN`, `START_CONFIRMED`, `PROOF_PASS`,
+`SIGNAL`, `COMPENSATION_BEGIN`, `FILE_RESTORED`,
+`COMPENSATION_START_CONFIRMED`, `COMPENSATION_PASS`, `RECEIPT_BEGIN`,
+`RECEIPT_PUBLISHED`, and `RECEIPT_FAILED`. Fsync each boundary. Any sequence,
+hash-chain, schema, owner/mode/type, correlation, or event violation is corrupt.
 
-| Class | Exact face | Only permitted action/outcome |
+After any signal, interruption, timeout, or failed proof, enter reconciliation
+under both locks; re-entry is always reconciliation-only. Apply this precedence
+top-to-bottom, making the classes mutually exclusive and exhaustive:
+
+| Priority/class | Exact predicate | Only permitted action/outcome |
 |---|---|---|
-| `INITIAL` | journal absent; all preimage; old healthy; jobs exact | forward may begin |
-| `STOPPED_SAFE` | journal ends at quiesced; all preimage; no PID; jobs exact | same live invocation may install; re-entry/signal restarts old once, `QUIESCENCE_ABORTED` |
-| `STOPPED_UNSAFE` | journal proves stop but quiescence failed; all preimage; no PID; jobs exact | restart old once, `QUIESCENCE_ABORTED` |
-| `KNOWN_MUTATION` | journal shows first write; every target is exact preimage/release; not a recorded success; jobs exact | restore all preimages/remove exact creates and start old once, `COMPENSATED` |
-| `FORWARD_UNRECEIPTED` | all release; fresh new PID; all proofs complete; exact success receipt absent/failed | compensate and start old once, `COMPENSATED`; never infer success |
-| `FORWARD_RECORDED` | all release; fresh new PID; proofs complete; exact atomic success receipt | read-only `FORWARD_ACTIVE` |
-| `COMPENSATED_UNRECEIPTED` | journal proves compensation; all preimage; fresh old PID/health; jobs exact; receipt absent | publish evidence-only `COMPENSATED` receipt; zero restart |
-| `KNOWN_FILES_JOB_DRIFT` | target files all known but jobs hash changed | stop the runtime if running, restore code/remove creates, never edit jobs, leave runtime stopped; `MANUAL_RECOVERY_REQUIRED` |
-| `UNKNOWN` | any unknown target/staging hash, journal/correlation/process ambiguity, or unavailable required read | no target write and no restart; evidence-only `OUTCOME_UNKNOWN` receipt if publication is safe |
+| 1 `RECORDED_TERMINAL` | one valid atomic receipt exists and current state matches its outcome | return the same outcome read-only; `FORWARD_ACTIVE` requires all-release/new healthy/proofs, compensated/stopped outcomes require their recorded faces |
+| 2 `RECEIPT_CONTRADICTION` | receipt exists but state, journal, correlation, or proof differs | no target write/restart; evidence-only `OUTCOME_UNKNOWN` |
+| 3 `INITIAL` | no journal/receipt; all preimage; original PID healthy; jobs exact | forward may begin |
+| 4 `JOURNALED_PRESTOP` | valid journal but no `STOP_CONFIRMED`; all preimage; original PID remains healthy; jobs exact | zero file write/restart; `STOPPED_PREMUTATION` |
+| 5 `STOPPED_SAFE` | `STOP_CONFIRMED`, no `WRITE_BEGIN`; all preimage; no PID; jobs exact | same live invocation may continue only after `QUIESCENCE_PASS`; any re-entry/failure starts old once, `QUIESCENCE_ABORTED` |
+| 6 `COMPENSATION_COMPLETE_UNRECEIPTED` | `COMPENSATION_PASS`; all preimage; fresh old PID/health; jobs exact; no receipt | publish evidence-only `COMPENSATED`; zero restart |
+| 7 `COMPENSATION_IN_PROGRESS` | `COMPENSATION_BEGIN` without `COMPENSATION_PASS`; every target has exact preimage/release face; jobs exact | resume only unfinished hash-guarded steps under the same correlation, then start old at most once; this is continuation, never replay of a completed step |
+| 8 `KNOWN_FILES_JOB_DRIFT` | every target is exact preimage/release but jobs hash differs | stop if running; restore code/remove exact creates; never edit jobs and do not restart; `MANUAL_RECOVERY_REQUIRED` |
+| 9 `FORWARD_UNRECEIPTED` | no compensation marker; `PROOF_PASS`; all release; fresh new PID/health; success receipt absent/failed | begin compensation, restore/start old once, `COMPENSATED`; never infer success |
+| 10 `KNOWN_MUTATION` | no compensation marker/proof success; `WRITE_BEGIN`; every target is exact preimage/release; jobs exact | begin compensation, restore/remove and start old once, `COMPENSATED` |
+| 11 `UNKNOWN` | every remaining face, including corrupt/missing-required journal, unknown hash, unexpected PID/job, unreadable proof, or receipt ambiguity | no target write/restart/replay; evidence-only `OUTCOME_UNKNOWN` if safe |
 
 Evidence-only receipt publication is not a target/business mutation and is
-permitted for `COMPENSATED_UNRECEIPTED`, `MANUAL_RECOVERY_REQUIRED`, and
-`OUTCOME_UNKNOWN`; it cannot convert them to success. If even that publication
-fails, the fsynced root journal and nonce result-channel hash remain, and the
-next invocation stays reconciliation-only. Staging is removed only by exact
-sealed catalog; otherwise it remains quarantined. No forward or compensation
-action is retried.
+permitted for `STOPPED_PREMUTATION`, `QUIESCENCE_ABORTED`,
+`COMPENSATION_COMPLETE_UNRECEIPTED`, `MANUAL_RECOVERY_REQUIRED`, and
+`OUTCOME_UNKNOWN`; it cannot convert them to success. If publication fails, the
+fsynced root journal and exact nonce result channel remain and re-entry stays
+read-only classification/guarded compensation continuation. A resumed
+compensation rechecks each step and skips already completed exact faces; it never
+reissues a completed rename/delete/restart. Staging is removed only by exact
+sealed catalog; otherwise quarantined.
 
-Signals are deferred from the quiescence stop through proof and receipt. Before
-stop they produce `STOPPED_PREMUTATION`; at `STOPPED_SAFE` they restore the old
-process; after the first write they follow the table; after proof but before
-receipt they force `FORWARD_UNRECEIPTED` compensation. Repeated signals do not
-change class or action.
+Signals before confirmed stop use priority 4; after confirmed stop but before
+write use 5; after first write use 7/9/10; after proof but before receipt use 9.
+Repeated signals do not change class or action.
 
 ### CTR-SCD-006 — Durable receipt and no overclaim
 
@@ -261,10 +287,16 @@ the root staging directory. Exact keys: `schema_version`, `outcome`,
 `correlation_id`, `started_at`, `finished_at`, `authority_spec`,
 `authority_semantic_head`, `authority_accepted_head`, `auth_semantic_head`,
 `auth_accepted_head`, `artifact_manifest_sha256`, `runner_sha256`, `journal_sha256`,
-`authorization_method`, `lock_identities`, `old_pid`, `new_pid`,
+`journal_last_sequence`, `authorization_method`, `auth_lock_dev_inode`,
+`agent_core_lock_dev_inode`, `old_pid`, `new_pid`,
 `preimage_catalog_sha256`, `postimage_catalog_sha256`, `compose_sha256`,
-`plist_sha256`, `jobs_sha256_before`, `jobs_sha256_after`, `restart_counts`,
-`runtime_checks`, `signal_events`, and `evidence_sha256`. Closed outcomes are
+`plist_sha256`, `jobs_sha256_before`, `jobs_sha256_after`,
+`forward_restart_count`, `rollback_restart_count`, `launchd_running`,
+`import_export_count`, `fatal_log_delta_count`, `history_storage_created_count`,
+`job_occurrence_delta_count`, `signal_event_count`, `signal_events_sha256`, and
+`evidence_sha256`. Every value is a scalar string/integer/boolean or null as
+declared by the manifest receipt schema; arrays/objects and extra keys are forbidden.
+Closed outcomes are
 `STOPPED_PREMUTATION|QUIESCENCE_ABORTED|FORWARD_ACTIVE|COMPENSATED|OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED`.
 The first four are invocation-terminal; only `FORWARD_ACTIVE` is Goal-success.
 `OUTCOME_UNKNOWN` and `MANUAL_RECOVERY_REQUIRED` are invocation-terminal but
@@ -309,8 +341,11 @@ precede artifact construction or apply.
   each of 10 copies, each fsync and rename, quiescence stop/engine-lock/release,
   launch stop/start, old/new/absent/ambiguous PID, health/import/log check,
   job-store drift, each global lock, every signal boundary, each journal marker,
-  receipt temp-write/fsync/rename/publication failure, missing receipt, and
-  re-entry. Every enumerated family must prove the unique table class/action,
+  prestop census failure/crash with old PID healthy, journal corruption/hash-
+  chain break, receipt temp-write/fsync/rename/publication failure, every
+  recorded terminal outcome re-entry, missing receipt, and interruption/resume
+  after every compensation step. Every enumerated family must prove exactly one
+  table class/action,
   exact compensation or containment, no blind replay, restart count, evidence-
   only receipt rule, and honest unknown/manual outcome.
 - `ACC-GSCD-001`: independent exact-head review, Owner acceptance, exhaustive
