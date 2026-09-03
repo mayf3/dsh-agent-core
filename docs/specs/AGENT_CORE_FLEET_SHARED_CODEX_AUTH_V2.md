@@ -1,6 +1,12 @@
 ---
 spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-09-03
+accepted_reviewed_head: d6550a5b1998cb16866cb6e4261a925a98c502a2
+review_verdict: PASS
+review_blocker_count: 0
+normative_body_change: NONE
 date: 2026-09-01
 type: implementation-spec (complete standalone emergency-bootstrap successor; docs only this round)
 spec_kind: implementation
@@ -1368,3 +1374,28 @@ PRODUCTION_CHANGE = NONE
 AUTHORING_READY_FOR_REVIEW = YES
 NEXT_TASK = 共享 审计
 ```
+
+## 15. Acceptance Record（2026-09-03，共享 审计 · OWNER_ACCEPTANCE）
+
+```text
+ACCEPTANCE_TRANSACTION = ONE_WHOLE_AUTHORITY_SUCCESSOR_LIFECYCLE_ONLY
+ACCEPTED_BY = mayf3
+ACCEPTED_REVIEWED_HEAD = d6550a5b1998cb16866cb6e4261a925a98c502a2
+REVIEW_VERDICT = PASS
+REVIEW_BLOCKER_COUNT = 0
+NORMATIVE_BODY_CHANGE = NONE
+SHARED_CODEX_AUTH_V2_ACCEPTED = YES
+LEGACY_CONVERGED_BOOTSTRAP_AUTHORIZED_BY = CTR-SCA-017 (one-time, named P0 transaction only)
+V1_SUPERSEDED = YES
+ATOMIC_TRANSACTION = PASS
+PR_MERGE = PR #150
+```
+
+本记录、本 authority frontmatter lifecycle flip、`AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` 的
+reciprocal `superseded_by` backlink 与 `docs/specs/README.md` lifecycle mirror 属于同一个
+acceptance commit。除这些 lifecycle / provenance metadata 与本记录外，reviewed head
+`d6550a5b1998cb16866cb6e4261a925a98c502a2` 的 normative body 逐字节保持；authority 仅在
+本 transaction 随 PR #150 merge into `main` 后生效。`production_apply_authority` 保持 none：
+canonical credential production migration、91 份 per-home OAuth 变更、fleet route mutation、
+GLM rollout 与 batch activation 全部仍需后续单独 activation/production-apply authority；
+`FLEET_PRODUCTION_APPLY = HOLD` per Owner ruling 2026-09-03。
