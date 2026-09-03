@@ -3,6 +3,13 @@
  * Scheduler Run History contracts. Uses the real production composition,
  * self-service authorization, Router seam, Scheduler, and HistoryStore with a
  * fake target process and loopback Auth token endpoint only.
+ *
+ * AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2 (CTR-AUTH-002/CTR-AUTH-003):
+ * compose.js is unchanged — it forwards whatever scope the access layer
+ * requests — so the captured OAuth body proves the exact wire mapping:
+ * cross-agent definition create proves (resource='scheduler',
+ * scope='scheduler.admin'); the colon-form local label never appears on the
+ * wire.
  */
 import assert from 'node:assert/strict'
 import { writeFileSync } from 'node:fs'
@@ -35,7 +42,7 @@ test('cross-agent scheduler authorization flows one target-owned fresh Run into 
     req.on('end', () => {
       grantRequests.push({ authorization: req.headers.authorization, body })
       res.setHeader('content-type', 'application/json')
-      res.end(JSON.stringify({ access_token: 'scheduler-manage-any-token', expires_in: 300 }))
+      res.end(JSON.stringify({ access_token: 'scheduler-admin-token', expires_in: 300 }))
     })
   })
   await new Promise((resolve) => authServer.listen(0, '127.0.0.1', resolve))
@@ -74,11 +81,15 @@ test('cross-agent scheduler authorization flows one target-owned fresh Run into 
   })
   assert.equal(created.ok, true, JSON.stringify(created))
   assert.equal(created.result.targetAgentId, targetAgentId)
-  assert.equal(grantRequests.length, 1, 'the source credential is consulted exactly once for scheduler.manage:any')
+  assert.equal(grantRequests.length, 1, 'the source credential is consulted exactly once for the cross-agent definition create')
   assert.equal(grantRequests[0].authorization, `Basic ${Buffer.from(`history-source-client:${sourceSecret}`).toString('base64')}`)
   const grantBody = new URLSearchParams(grantRequests[0].body)
   assert.equal(grantBody.get('resource'), 'scheduler')
-  assert.equal(grantBody.get('scope'), 'scheduler.manage:any')
+  assert.equal(grantBody.get('scope'), 'scheduler.admin',
+    'the composed production Auth transport requests exactly (resource=scheduler, scope=scheduler.admin) for cross-agent create')
+  assert.equal(JSON.stringify(grantRequests).includes('manage:any'), false)
+  assert.equal(JSON.stringify(grantRequests).includes('manage-any'), false,
+    'neither the colon-form local label nor the hyphen alias ever reaches the OAuth wire')
 
   await runtime.scheduler.start({ autoStart: false, catchup: false })
   const waitMs = Math.max(0, Date.parse(dueAt) - Date.now() + 25)

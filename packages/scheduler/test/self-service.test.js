@@ -24,7 +24,7 @@ function trusted(agentId = 'agt_a', overrides = {}) {
   }
 }
 
-async function rig(t, { adminAgents = new Set(), auditFailure = false } = {}) {
+async function rig(t, { adminAgents = new Set(), auditAgents = new Set(), auditFailure = false } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'scheduler-self-service-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const store = new JobStore(join(dir, 'jobs.json'), { runLogPath: join(dir, 'runs.jsonl') })
@@ -35,12 +35,18 @@ async function rig(t, { adminAgents = new Set(), auditFailure = false } = {}) {
     store,
     assertGrant: async (agentId, scope, resource) => {
       grantCalls.push({ agentId, scope, resource })
-      return adminAgents.has(agentId)
+      // Independent exact proofs: an admin grant never satisfies the audit
+      // scope and vice versa (CTR-AUTH-002 mutual non-implication).
+      return (scope === 'scheduler.admin' && adminAgents.has(agentId))
+        || (scope === 'scheduler.audit' && auditAgents.has(agentId))
     },
     onAuditFailure: (event) => auditErrors.push(event),
   })
   const call = (action, args, context = trusted()) => access.handlers.scheduler[action](args, context)
-  return { store, call, dir, grantCalls, auditErrors }
+  let storeReads = 0
+  const originalLoad = store.loadDoc.bind(store)
+  store.loadDoc = async (...args) => { storeReads += 1; return originalLoad(...args) }
+  return { store, call, dir, grantCalls, auditErrors, storeReads: () => storeReads }
 }
 
 function createAtArgs(overrides = {}) {
@@ -183,31 +189,176 @@ test('explicit target/destination are admin-only even when values equal self/cur
   assert.deepEqual(admin.result.exactPersistedDeliveryDestination, { channel: 'feishu', to: 'chat:oc_other' })
   assert.equal((await store.loadDoc({ force: true })).jobs.at(-1).agentId, 'agt_b')
   assert.deepEqual(grantCalls.map((call) => call.scope), [
-    'scheduler.manage:any', 'scheduler.manage:any', 'scheduler.manage:any',
-  ])
+    'scheduler.admin', 'scheduler.admin', 'scheduler.admin',
+  ], 'every cross-agent create/destination proof requests exactly the R8 admin wire scope')
+  assert.deepEqual(grantCalls.map((call) => call.resource), ['scheduler', 'scheduler', 'scheduler'])
 })
 
-test('ownership hides foreign definitions/evidence; trusted admin stub unlocks manage:any', async (t) => {
-  const { call, grantCalls } = await rig(t, { adminAgents: new Set(['agt_admin']) })
+test('V2 proof matrix: foreign control is admin-gated, foreign history is audit-gated, self stays zero-Auth', async (t) => {
+  const { call, grantCalls, dir } = await rig(t, { adminAgents: new Set(['agt_admin']), auditAgents: new Set(['agt_admin']) })
   const a = await call('create', { name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
   const b = await call('create', { name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
+  assert.deepEqual(grantCalls, [], 'self create performs zero Auth token requests')
   const listA = await call('list', {}, trusted('agt_a'))
   assert.deepEqual(listA.result.jobs.map((job) => job.id), [a.result.jobId])
   assert.equal(JSON.stringify(listA).includes('"message"'), false)
+  const selfRuns = await call('runs', { job_id: a.result.jobId }, trusted('agt_a'))
+  assert.equal(selfRuns.ok, true)
+  assert.deepEqual(grantCalls, [], 'self list/runs perform zero Auth token requests')
 
   const foreignRuns = await call('runs', { job_id: b.result.jobId }, trusted('agt_a'))
   assert.equal(foreignRuns.ok, false)
   assert.equal(foreignRuns.error.code, 'job_not_found')
+  assert.deepEqual(grantCalls, [{ agentId: 'agt_a', scope: 'scheduler.audit', resource: 'scheduler' }],
+    'foreign runs consults exactly (scheduler, scheduler.audit) once and nothing else')
   const foreignDisable = await call('disable', { job_id: a.result.jobId }, trusted('agt_b'))
   assert.equal(foreignDisable.ok, false)
   assert.equal(foreignDisable.error.code, 'access_denied')
+  assert.deepEqual(grantCalls.at(-1), { agentId: 'agt_b', scope: 'scheduler.admin', resource: 'scheduler' },
+    'foreign control consults exactly (scheduler, scheduler.admin)')
+  assert.equal(JSON.stringify(foreignDisable).includes('"message"'), false)
+  assert.equal(JSON.stringify(foreignDisable).includes('agt_a'), false, 'denial discloses no owner identity')
+  const events = (await readFile(join(dir, 'runs.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse)
+  assert.deepEqual(events.map((event) => event.operation), ['create', 'create'],
+    'denied foreign mutation appends no success audit record')
 
-  const all = await call('list', { all_agents: true }, trusted('agt_admin'))
-  assert.equal(all.ok, true)
-  assert.equal(all.result.jobs.length, 2)
-  const disabled = await call('disable', { job_id: a.result.jobId }, trusted('agt_admin'))
-  assert.equal(disabled.ok, true)
-  assert.equal(grantCalls.every((call) => call.scope === 'scheduler.manage:any' && call.resource === 'scheduler'), true)
+  const adminDisable = await call('disable', { job_id: a.result.jobId }, trusted('agt_admin'))
+  assert.equal(adminDisable.ok, true)
+  assert.deepEqual(grantCalls.at(-1), { agentId: 'agt_admin', scope: 'scheduler.admin', resource: 'scheduler' })
+  assert.equal(grantCalls.every((c) => c.scope === 'scheduler.admin' || c.scope === 'scheduler.audit'), true)
+  assert.equal(grantCalls.some((c) => c.scope === 'scheduler.manage:any' || c.scope === 'scheduler.manage-any'), false,
+    'no colon-form local label or hyphen alias is ever requested on the wire')
+})
+
+test('foreign update/enable/disable/remove each request exactly (scheduler, scheduler.admin) once; self update stays zero-Auth', async (t) => {
+  const { call, grantCalls } = await rig(t, { adminAgents: new Set(['agt_admin']) })
+  const owned = await call('create', { name: 'owned', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' }, trusted('agt_plain'))
+  const jobId = owned.result.jobId
+  const foreignUpdate = await call('update', { job_id: jobId, name: 'renamed by admin' }, trusted('agt_admin'))
+  assert.equal(foreignUpdate.ok, true)
+  assert.equal(foreignUpdate.result.targetAgentId, 'agt_plain')
+  assert.deepEqual(grantCalls, [{ agentId: 'agt_admin', scope: 'scheduler.admin', resource: 'scheduler' }],
+    'one foreign update = exactly one admin wire proof')
+
+  for (const action of ['enable', 'disable', 'remove']) {
+    grantCalls.length = 0
+    const out = await call(action, { job_id: jobId }, trusted('agt_admin'))
+    assert.equal(out.ok, true)
+    assert.deepEqual(grantCalls, [{ agentId: 'agt_admin', scope: 'scheduler.admin', resource: 'scheduler' }],
+      `foreign ${action} = exactly one (scheduler, scheduler.admin) request`)
+  }
+
+  const own = await call('create', { name: 'own', schedule_kind: 'every', every_ms: 1000, message: 'm' }, trusted('agt_admin'))
+  grantCalls.length = 0
+  const selfUpdate = await call('update', { job_id: own.result.jobId, name: 'self rename' }, trusted('agt_admin'))
+  assert.equal(selfUpdate.ok, true)
+  assert.deepEqual(grantCalls, [], 'self update never requests a token')
+})
+
+test('runs(all_agents=true) needs exactly (scheduler, scheduler.audit); admin alone reveals no history; audit alone mutates nothing', async (t) => {
+  const { call, grantCalls } = await rig(t, { adminAgents: new Set(['agt_admin']) })
+  await call('create', { name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
+  const b = await call('create', { name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
+
+  const adminGlobalRuns = await call('runs', { all_agents: true }, trusted('agt_admin'))
+  assert.equal(adminGlobalRuns.ok, false)
+  assert.equal(adminGlobalRuns.error.code, 'access_denied')
+  assert.deepEqual(grantCalls, [{ agentId: 'agt_admin', scope: 'scheduler.audit', resource: 'scheduler' }],
+    'exactly the audit wire proof is requested for the global-history row; admin possession is never consulted, substituted, or dual-requested')
+  grantCalls.length = 0
+  const adminForeignRuns = await call('runs', { job_id: b.result.jobId }, trusted('agt_admin'))
+  assert.equal(adminForeignRuns.ok, false)
+  assert.equal(adminForeignRuns.error.code, 'job_not_found')
+  assert.deepEqual(grantCalls, [{ agentId: 'agt_admin', scope: 'scheduler.audit', resource: 'scheduler' }])
+  assert.equal(JSON.stringify(adminForeignRuns).includes('occurrences'), false, 'no history disclosure on admin-only denial')
+
+  const auditRig = await rig(t, { auditAgents: new Set(['agt_audit']) })
+  const createdA = await auditRig.call('create', { name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
+  const createdB = await auditRig.call('create', { name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
+  assert.deepEqual(auditRig.grantCalls, [])
+  const globalRuns = await auditRig.call('runs', { all_agents: true }, trusted('agt_audit'))
+  assert.equal(globalRuns.ok, true)
+  assert.deepEqual(auditRig.grantCalls, [{ agentId: 'agt_audit', scope: 'scheduler.audit', resource: 'scheduler' }])
+  auditRig.grantCalls.length = 0
+  const foreignRuns = await auditRig.call('runs', { job_id: createdB.result.jobId }, trusted('agt_audit'))
+  assert.equal(foreignRuns.ok, true)
+  assert.deepEqual(auditRig.grantCalls, [{ agentId: 'agt_audit', scope: 'scheduler.audit', resource: 'scheduler' }])
+  auditRig.grantCalls.length = 0
+  const auditMutate = await auditRig.call('disable', { job_id: createdA.result.jobId }, trusted('agt_audit'))
+  assert.equal(auditMutate.ok, false)
+  assert.deepEqual(auditRig.grantCalls, [{ agentId: 'agt_audit', scope: 'scheduler.admin', resource: 'scheduler' }],
+    'the audit proof alone never authorizes foreign control; the separate admin proof is requested and denied')
+})
+
+test('list(all_agents=true) is denied before any store read with zero Auth requests regardless of held scopes', async (t) => {
+  const { call, grantCalls, store, storeReads, dir } = await rig(t, {
+    adminAgents: new Set(['agt_admin', 'agt_both']),
+    auditAgents: new Set(['agt_audit', 'agt_both']),
+  })
+  const a = await call('create', { name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' }, trusted('agt_a'))
+  const b = await call('create', { name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
+  assert.deepEqual(grantCalls, [])
+  const readsBefore = storeReads()
+
+  let baseline
+  for (const agentId of ['agt_both', 'agt_admin', 'agt_audit', 'agt_none']) {
+    const denial = await call('list', { all_agents: true }, trusted(agentId))
+    assert.equal(denial.ok, false)
+    assert.equal(denial.error.code, 'access_denied')
+    baseline ??= JSON.stringify(denial)
+    assert.equal(JSON.stringify(denial), baseline, `stable identical denial for ${agentId}`)
+    assert.equal(JSON.stringify(denial).includes('SECRET-MESSAGE'), false)
+    assert.equal(JSON.stringify(denial).includes(a.result.jobId), false)
+    assert.equal(JSON.stringify(denial).includes(b.result.jobId), false)
+    assert.equal(JSON.stringify(denial).includes('agt_a'), false, 'no owner identity disclosure')
+  }
+  assert.deepEqual(grantCalls, [], 'list(all_agents=true) makes zero Auth requests even with admin, audit, both, or neither')
+  assert.equal(storeReads(), readsBefore, 'list(all_agents=true) performs zero store reads')
+  const doc = await store.loadDoc({ force: true })
+  assert.equal(doc.jobs.length, 2, 'no mutation on the denied path')
+  const events = (await readFile(join(dir, 'runs.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse)
+  assert.deepEqual(events.map((event) => event.operation), ['create', 'create'],
+    'the denied global list appends no success audit record')
+})
+
+test('auth denial/error/uncertainty fails closed with exactly one proof attempt and no fallback spelling', async (t) => {
+  for (const mode of ['deny', 'throw']) {
+    const dir = await mkdtemp(join(tmpdir(), 'scheduler-self-service-'))
+    t.after(() => rm(dir, { recursive: true, force: true }))
+    const store = new JobStore(join(dir, 'jobs.json'), { runLogPath: join(dir, 'runs.jsonl') })
+    const attempts = []
+    const access = createSelfServiceSchedulerAccess({
+      store,
+      assertGrant: async (agentId, scope, resource) => {
+        attempts.push({ agentId, scope, resource })
+        if (mode === 'throw') throw new Error('auth unavailable')
+        return false
+      },
+    })
+    const call = (action, args, context = trusted()) => access.handlers.scheduler[action](args, context)
+
+    const selfCreate = await call('create', { name: 'owned', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' })
+    assert.equal(selfCreate.ok, true)
+    assert.deepEqual(attempts, [], `self create performs zero Auth requests even when the seam would ${mode}`)
+
+    attempts.length = 0
+    const denied = await call('create', createAtArgs({
+      delivery_mode: 'none', delivery_target: undefined, target_agent_id: 'agt_other',
+    }))
+    assert.equal(denied.ok, false)
+    assert.equal(denied.error.code, 'access_denied')
+    assert.deepEqual(attempts, [{ agentId: 'agt_a', scope: 'scheduler.admin', resource: 'scheduler' }],
+      `exactly one admin proof attempt under ${mode}; no alias, second spelling, or fallback request`)
+    assert.equal(JSON.stringify(denied).includes('SECRET-MESSAGE'), false)
+    assert.equal((await store.loadDoc({ force: true })).jobs.some((job) => job.agentId === 'agt_other'), false,
+      'no mutation after proof denial')
+
+    attempts.length = 0
+    const globalList = await call('list', { all_agents: true })
+    assert.equal(globalList.ok, false)
+    assert.equal(globalList.error.code, 'access_denied')
+    assert.deepEqual(attempts, [], `global list denial makes zero Auth requests even when the seam would ${mode}`)
+  }
 })
 
 test('update uses updateJobOp semantics, preserves omitted fields, and returns committed normalized evidence', async (t) => {
