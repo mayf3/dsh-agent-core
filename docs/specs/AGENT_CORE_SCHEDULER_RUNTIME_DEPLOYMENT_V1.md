@@ -16,7 +16,7 @@ governed_by:
 external_authorities:
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_SCHEDULER_BUNDLE_1_7_DEPLOYMENT_V1
-    revision: f1dcd4b672c89e42c802d5a1460a0f8ce1c6cde8
+    revision: c708b37cbfa1e577f80da40439bf18cfc259c84d
     relation: prerequisite
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_DAILY_AUTONOMY_OPERATIONAL_GRANTS_V1
@@ -67,7 +67,7 @@ row, Job/occurrence/history store, legacy path, workflow, or target workspace.
 
 Apply begins only after: this Spec accepted/merged/final-head PASS; accepted ASM
 Deployment V2 exact semantic head `e225d7b...` has terminal Stage B/D/E and temp
-Grant compensation PASS; Auth Scheduler 1.7 exact semantic head `f1dcd4b...` is
+Grant compensation PASS; Auth Scheduler 1.7 exact semantic head `c708b37...` is
 accepted/merged/production PASS; permanent-Grant semantic head
 `07c8a9c4f7ad1b76dfd1bcfd1cc4a52b9effae00` is independently reviewed,
 accepted/merged/applied and exact `agent.session.send` plus `scheduler.admin` rows are live
