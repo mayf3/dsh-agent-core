@@ -44,3 +44,48 @@ and process-local key material were destroyed after the run.
   `@larksuite/channel`) and one unrelated notification-ingress test failed.
   This is recorded as environment/pre-existing regression debt, not hidden or
   counted as conformance evidence.
+
+## Structure fix (WORKFLOW_DEFINITION_AUTHORING_STRUCTURE_FIX_V1)
+
+The first slice touched the over-limit legacy
+`packages/broker/src/capabilities/workflow.js`, tripping the structure gate
+(`UNREGISTERED_LEGACY_TOUCHED`). Mechanical fix, applied in
+WORKFLOW_DEFINITION_AUTHORING_STRUCTURE_FIX_V1:
+
+- The `workflow_definition_authoring` manifest (plus the authoring error table
+  and node/transition item schemas) moved byte-identical into
+  `packages/broker/src/capabilities/workflow-definition-authoring.js`. The
+  shared svc-workflow base/auth error rows moved with it as the single source;
+  `workflow.js` imports them back, so all other manifests are unchanged.
+- `workflow.js` is now import + manifests-inventory wiring only: 722 -> 590
+  lines (integration base a0ce485 measures 601; no growth). The legacy file is
+  registered in `.agents/structure-registry.json` (ceiling = baseline,
+  must-not-grow, house pattern).
+- registry / mapping / transport / svc-workflow: UNCHANGED.
+
+Post-fix verification (all re-run after the move):
+
+```text
+STRUCTURE_GATE   = PASS (violations 0, base a0ce485 head dc0e58c)
+FOCUSED_TESTS    = 19/19 PASS (definition-authoring, execute, transition,
+                   manifest inventory)
+BROKER_SUITE     = 336/336 PASS (packages/broker full node --test)
+LOCAL_E2E_RERUN  = PASS (create_definition -> create_draft_version(model 2)
+                   -> replace_draft_graph -> publish_version
+                   -> workflow_execute(create_instance) -> instance detail
+                   readback; ephemeral PG 16 + svc-workflow 22e862a + ephemeral
+                   RS256 JWKS/token server; all temporary processes, container,
+                   database, and key material destroyed after the run)
+definitionId             = 92d5c871-a0fa-470c-89d9-e36374050f06
+published definitionVersionId = f9b2e98c-96c8-4b76-9691-6bbcf7fe536f
+instanceId               = 23795053-2feb-4937-9a0e-d9c5016ac3f5
+instance bound definitionVersionId = f9b2e98c-96c8-4b76-9691-6bbcf7fe536f (equal)
+REGRESSION_INTRODUCED_BY_CANDIDATE = NO (production-runtime failures at this
+                   checkout are the same missing-private-module family as at
+                   base 005ffbb: 21 vs 23 failing files, same packages;
+                   classified INHERITED_ENVIRONMENT_OR_PREEXISTING)
+```
+
+The E2E harness ran entirely on ephemeral localhost resources; the write chain
+exercised the real Broker credential -> token -> HTTP transport with trusted
+Idempotency-Key generation and no model-supplied identity fields.
