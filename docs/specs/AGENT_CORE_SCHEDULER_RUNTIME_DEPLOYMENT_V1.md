@@ -20,7 +20,7 @@ external_authorities:
     relation: prerequisite
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_DAILY_AUTONOMY_OPERATIONAL_GRANTS_V1
-    revision: 29c3e2e32e7009d9ce0165e00aa9ba3053023c7d
+    revision: 226b1592fbda34bbcf79c0f76afaa0771d53c04e
     relation: prerequisite
 supersedes: []
 superseded_by: null
@@ -69,7 +69,7 @@ Apply begins only after: this Spec accepted/merged/final-head PASS; accepted ASM
 Deployment V2 exact semantic head `e225d7b...` has terminal Stage B/D/E and temp
 Grant compensation PASS; Auth Scheduler 1.7 exact semantic head `f1dcd4b...` is
 accepted/merged/production PASS; permanent-Grant semantic head
-`29c3e2e32e7009d9ce0165e00aa9ba3053023c7d` is independently reviewed,
+`226b1592fbda34bbcf79c0f76afaa0771d53c04e` is independently reviewed,
 accepted/merged/applied and exact `agent.session.send` plus `scheduler.admin` rows are live
 only for `agt_efficiency-agent`; the sole Runtime is healthy; no production
 transaction is active/authorized for the window/outcome-ambiguous; and fresh
@@ -102,10 +102,135 @@ All bytes come from `RELEASE_SOURCE`; destinations are under `TARGET_ROOT`.
 
 Create paths must be absent. Overwrite preimages are freshly sealed after ASM
 with hash/bytes/type/owner/group/mode. Post-ASM compose must equal Git blob
-`f5c7a8d379a3de020b34d1cdf67992b57dfce361`; its fresh SHA-256 is sealed as a
+`cdd3eacf4c52c97c43249e59ffb841cb6e1801cc` with SHA-256
+`be869f57ed07b01607dcab88bd36c1b3700062afc04c41095d4a5b774aed1f5a`;
+its fresh readback is sealed as a
 non-write guard. Release files are non-symlink `root:wheel 0644`.
 
-## 4. Contracts
+The complete non-write compatibility vector is also a hard Gate
+(`path = expected Git blob / SHA-256`):
+
+```text
+packages/scheduler/src/control.js = c3d623a487d01e95a5d7149532d490752d1c4949 / 501d1e22f95fc609764bf5d2a9182b0e7dc230583f33a277300d3e4bcf28d4bb
+packages/scheduler/src/eligibility.js = 86313158ad9427c622106eb263f58aa6bba6fac9 / cc66fe26cdd688856aaf14698f0130a8b8c22f6806c5c1a60b61466074593cae
+packages/scheduler/src/import-openclaw.js = bce4c4dab93a85b7a1ea8f5dfb1a20e79cd839fe / 890ccfabd4203d40eaed3cadb88885c29948db68e5a09ada744df9811a532005
+packages/scheduler/src/job-model.js = 066ad9c1485993d9ff8916f89328976fd4a22178 / 25320008e3597a76cc8c5f2b1dec1539d2ece5bf79432de63fcbe61ce3dec040
+packages/scheduler/src/lock.js = d681bc583ea056ffe933fbd7b15035eebcbc9092 / 7f725f4289e8f57c97c0ad7987c95e48fa0e0b8660a0ba5b92ba302bd95700f8
+packages/scheduler/src/occurrence-model.js = 48b6a54569d5bd7168cf725ac39274565708c04f / 157f3b86d59cfbbc6df61bcd181ba436db1f580fea43d9c6eeea513d3dc146a7
+packages/scheduler/src/reconcile.js = 9c89cef22494126f0c9f50b706199f137743f215 / 54424c728d58a939d4a21d0227424f75d3985a1547e89ddff8f64e90ae231ff8
+packages/scheduler/src/schedule.js = 9af19a3d88e26d07294976018e5a8d394f1f306e / be487dfe542bb0006ed5a3443c9cacf3fbf67a665451afbd356ca80fb23e1933
+packages/scheduler/src/store-migration.js = f8faade6218d85b95c0f22c92b4927900f940f95 / f5647ab196087c279782cb6f2634566fb6b6aec14edb55e4338cb82a84e5db58
+packages/scheduler/src/store.js = c77a4bbcf81a3779172942db57bb6d5a0a4212d3 / 208c8a504579a1c84b6cfe1cf8b03478cc4200e2bd260f4c136837c1e55bc8fd
+packages/scheduler/package.json = db0838e694f079be12db9ff400420abcf342e366 / c2ca188c4bbcc06b3a1baa31cfd92965cf326b44b2c2f8611927b0da642ec05e
+packages/scheduler-router/src/index.js = b1f5563411cb55c8ddc3391d6337a30aea2e0f45 / b8ca13b573edf586dfd90060e05dde6678a793fa9ad032d9e458ffea89548bbe
+packages/scheduler-router/package.json = f9642e7e2292dfa2de7260d0a544e0486a91c911 / ae3f42b21de78d61193d9968c8f239fc5648ed816d4045235982c8d86976d80d
+packages/broker/src/capabilities/scheduler.js = 39b34b5bbf2cd5a66d08a896242cdd7d1a6580a1 / 1fa5181d399dc7ffe64a5b8f07bd0be70bf69c645d4bac5fbc6286da0bba8b71
+packages/broker/src/registry.js = 2f5e55b772e25093b7fec480a76fe47d6993b860 / 628abde2069028c832eb76699ad2dd8521528288f396680d39dffb353d985382
+packages/broker/src/index.js = eec8c6f9de6cb8434075fac3c984cf4a7e21f660 / 5a629aa477864b63170dff2d53ccd50f4aa2b9f53efec7df72d95d4d63981e94
+packages/broker/src/gateway.js = 68ec4eecf55888fc0eb202c5fe128e3f703ce954 / 984d0d048382b31e87920b3dc85b00c9f12b7aab08a058792c7ba5ae8857e339
+packages/broker/src/relay.js = 2ec4acf764d13a53d60050ba22569e51885cab4d / 730e20338544ec36871461f9f7febc43bcd50f195c38f63e0472aa97c3b4983c
+packages/production-runtime/src/compose.js = cdd3eacf4c52c97c43249e59ffb841cb6e1801cc / be869f57ed07b01607dcab88bd36c1b3700062afc04c41095d4a5b774aed1f5a
+```
+
+The artifact MUST build a synthetic post-ASM tree, overlay only the ten release
+rows, and execute a composed proof that the model catalog contains exactly one
+`scheduler`, every action schema validates, child relay reaches the Parent
+handler, and cross-Agent control reaches exactly
+`createSelfServiceSchedulerAccess` → `assertGrant(agentId, scope, resource)`
+with `scheduler.admin`; self create reaches the same production JobStore with
+zero Auth call. Any vector or composed-proof drift stops before production.
+
+## 4. State, observations, claims, evidence, decisions
+
+- `STATE-SRD-001` — Accepted Scheduler V2 and History authorities permit their
+  exact implementations but retain `production_apply_authority:none`; source
+  implementations are merged through `18f96e2...`. Basis: `OBS-SRD-001`,
+  `EVD-SRD-001`.
+- `STATE-SRD-002` — The present production scheduler face is the 15-file
+  pre-history tree captured by the prototype; ASM will change Broker/compose but
+  not scheduler files. Basis: `OBS-SRD-002`, `EVD-SRD-002`.
+- `STATE-SRD-003` — The only coherent selective target is ten writes plus the
+  closed non-write vector above; history remains dormant. Basis: `OBS-SRD-003`,
+  `CLM-SRD-001`, `EVD-SRD-003`.
+- `STATE-SRD-004` — The accepted canary requires one self Job and whole-host
+  legacy-path evidence after deployment, without restart or Auth. Basis:
+  `OBS-SRD-004`, `EVD-SRD-004`.
+
+### OBS-SRD-001 — Accepted lineage and complete history ancestry
+
+- Subject/revision/environment/observed_at: dsh Git objects in this isolated
+  worktree, `2026-09-04`; V2 accepted `4c0a623...`, implementation `a420cb6...`,
+  release merge `18f96e2...`; History accepted `a291917...`, implementation
+  `8343f8f...`, structural refactor `2e54d0a...`, lock fixes `94f4d1a...` and
+  `447e5a5...`
+- Method/result: ancestry, path/blob, and accepted-closure census; all are
+  ancestors/subsumed by `RELEASE_SOURCE`, while both parent Specs reserve deploy.
+
+### OBS-SRD-002 — Current production face and stale prototype
+
+- Subject/revision/environment/observed_at: `/usr/local/libexec/agent-core/app`,
+  production Mac, read-only census prepared `2026-09-03` and refreshed during
+  authoring `2026-09-04`
+- Method/result: 15 scheduler source files; five future history paths absent;
+  prototype census SHA-256
+  `1424701f6fdad9d0a2e47dca0121ef0ad0cba9a1bb46dc2214e0f9f53abf6572`.
+  Its pre-ASM compose guard/terminal-sudo launcher make it non-executable here.
+- Limitation: ASM changes compose/Broker later, so the apply artifact must
+  fresh-read and seal the exact post-ASM vector rather than inherit this census.
+
+### OBS-SRD-003 — Ten-file necessity and post-ASM compatibility
+
+- Subject/revision/environment/observed_at: exact Git blobs in §3 plus accepted
+  ASM V2 release blob `cdd3eacf...`, isolated worktree, `2026-09-04`
+- Method/result: import/reverse-dependency inspection. Five overwrites carry
+  History integration and exact wire scopes; occurrence imports history-sink,
+  requiring five creates. Post-ASM compose retains the trusted
+  `assertGrant(agentId,scope,resource)` seam and does not mount history.
+- Limitation: static sufficiency is conditional on the required synthetic
+  overlay/catalog/relay/composed proof in `CTR-SRD-001`.
+
+### OBS-SRD-004 — Accepted production canary contract
+
+- Subject/revision/environment/observed_at: Scheduler V2
+  `4c0a623.../CTR-HOT-001/CTR-CANARY-001`, Git worktree, `2026-09-04`
+- Method/result: authority inspection freezes exact one-shot request, current
+  trusted Feishu conversation, stable Runtime PID, delivery/deletion/evidence,
+  and whole-host `fs_usage` legacy exclusion.
+
+### CLM-SRD-001 — Selective activation is sufficient but history stays dormant
+
+- Support: `OBS-SRD-003` plus synthetic proof required by `CTR-SRD-001`.
+- Uncertainty: no production behavior is claimed until the post-ASM artifact
+  proof and target-bound deployment/canary receipts pass.
+
+- `EVD-SRD-001` — source `OBS-SRD-001`; target `STATE-SRD-001`; relation
+  SUPPORTS; exact commits above; conclusive for lineage/authority gap, not runtime.
+- `EVD-SRD-002` — source `OBS-SRD-002`; target `STATE-SRD-002`; relation
+  SUPPORTS; prototype manifest/census hashes; strong historical preface, stale
+  after ASM by design.
+- `EVD-SRD-003` — source `OBS-SRD-003`; target `CLM-SRD-001`; relation SUPPORTS;
+  exact mutation/non-write blobs; qualified by mandatory synthetic proof.
+- `EVD-SRD-004` — source `OBS-SRD-004`; target `STATE-SRD-004`; relation
+  SUPPORTS; accepted Contract IDs; conclusive for canary shape, not execution.
+
+### DEC-SRD-001 — Rebuild after ASM; never reuse the prototype
+
+Select a fresh native-gated artifact with post-ASM guards. Reject the stale
+prototype, terminal sudo, checkout copy, and compose deployment.
+
+### DEC-SRD-002 — Ten writes plus a closed compatibility vector
+
+Select the minimum import-complete ten-file set and freeze every supporting
+non-write blob. Reject dormant partial copy without its imported modules and
+reject broader history-runtime activation.
+
+### DEC-SRD-003 — Separate deployment smoke from the one business canary
+
+Deployment proof is import-only with one restart and zero Jobs; after PASS, the
+accepted self one-shot is the sole Scheduler business mutation and uses hot
+reload with no restart/Auth request.
+
+## 5. Contracts
 
 ### CTR-SRD-001 — Reproducible post-ASM artifact
 
@@ -114,6 +239,11 @@ manifests. Under the runtime lock fresh-read post-ASM live preimages/compose and
 seal release/rollback manifests, source/blob/hash/metadata, native launcher,
 root helper, simulator, receipt schema. No secret/env dump. Stale prototype,
 source mismatch, symlink/special file, missing rollback byte, or drift stops.
+The artifact MUST verify every §3 non-write vector row and run the required
+synthetic post-ASM overlay proof for single catalog registration, schema
+validation, child relay, Parent handler, exact admin `assertGrant` mapping, and
+self-operation zero-Auth JobStore path. It MUST record the full History ancestry
+including `2e54d0a...`; an import-only smoke cannot substitute for this proof.
 
 ### CTR-SRD-002 — Native serialized transaction
 
@@ -153,18 +283,28 @@ terminal outcome. No individual Gate/dialog/file/PID/health/receipt is success.
 
 After deployment PASS, with Runtime PID/start unchanged, `agt_efficiency-agent`
 in the current trusted Feishu conversation invokes only unified `scheduler`:
-`create`, name `15分钟提醒`, `schedule_kind=at`, `at=15m`, message
+`action=create`, `name=15分钟提醒`, `schedule_kind=at`, `at=15m`, `message=`
 `⏰ Agent Core Scheduler 自助任务触发成功`, announce/current conversation,
-`delete_after_run=true`, `auto_retry=false`. Prove future definition, resident
+`delivery_mode=announce`, `delivery_target=current_conversation`,
+`delete_after_run=true`, `auto_retry=false`. No omitted/defaulted substitute is
+accepted. Prove future definition, resident
 tick hot reload without restart, exactly one succeeded/delivered occurrence,
 visible message, automatic definition deletion, retained evidence, no retry.
+Correlation-bound Parent instrumentation plus Auth access-log delta MUST prove
+exactly zero `assertGrant`, OAuth/token, credential-store read, or other Auth
+request for this self operation. Any such access fails the canary.
 
 ### CTR-SRD-007 — Legacy zero-access and non-propagation
 
 Owner runs whole-host `fs_usage -w -f filesystem` before create through
-deletion, retaining start/end markers and untruncated zero-exit trace. Prove zero
-access at/below `/Users/yanfenma/.openclaw/cron/` and exact before/after
-existence/size/mtime/inode/SHA-256. The permanent `scheduler.admin` credential/
+deletion through the same native authorization-dialog/no-password/no-fallback
+boundary as deployment, retaining start/end markers and untruncated zero-exit
+trace. Prove directory-wide zero access at/below
+`/Users/yanfenma/.openclaw/cron/`; separately prove exact before/after
+existence/size/mtime/inode/SHA-256 for
+`/Users/yanfenma/.openclaw/cron/jobs.json`. The trace also proves zero access to
+`/usr/local/libexec/agent-core/config/agent-credentials.json` in the canary
+window. The permanent `scheduler.admin` credential/
 token is unnecessary for self canary and must never enter a Job, run, child,
 target, message, trace, or receipt.
 
@@ -175,7 +315,7 @@ README row, with no
 normative semantic delta. No artifact/production byte changes before accepted
 exact-head merge and final-head recheck.
 
-## 5. Acceptance
+## 6. Acceptance
 
 ### ACC-SRD-001 — Closure and simulator
 
@@ -202,7 +342,7 @@ exact-head merge and final-head recheck.
   time, unchanged PID/start, exact request/result, occurrence/delivery/deletion,
   visible-message coordinate, trace hash/bytes/markers/exit, legacy metadata
 - Pass/fail: one delivery, deletion/evidence, no restart/retry/legacy access or
-  authority copy; otherwise fail.
+  Auth/credential access or authority copy; otherwise fail.
 
 ### ACC-GSRD-001 — Lifecycle
 
@@ -212,7 +352,7 @@ exact-head merge and final-head recheck.
 - Pass/fail: accepted merged exact head, zero semantic drift/early effect;
   otherwise fail.
 
-## 6. Authoring status
+## 7. Authoring status
 
 ```text
 SPEC_GOVERNANCE_MODE = AUTHOR
