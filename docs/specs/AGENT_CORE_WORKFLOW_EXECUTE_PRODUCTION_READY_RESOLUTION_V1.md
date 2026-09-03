@@ -58,12 +58,15 @@ receipt 的成因本身），不存在任何可采集来源，属 Goal 明示的
 
 对 V2 §9 的 composite 规则作唯一修订（V2 其余全部 bytes 冻结不动）：
 
-- **不阻断类**：`original_transaction.*` 与原事务
-  `owner_root_exit_zero_*` 等"原事务历史值"，凡 provenance 已按 CTR-RR-002
+- **不阻断类**：原事务历史值——封闭集合：`original_transaction` 的
+  `transaction_id` / `a4_before` / `grant_before_sha256` /
+  `credential_before_sha256` 四字段、原事务 `owner_root_exit_zero_evidence`
+  / `_time` / `_extract_sha256` / `conclusion` 四字段、以及由原 wrapper
+  bytes 导出的原事务安全 assertions——凡 provenance 已按 CTR-RR-002
   记为 `UNKNOWN_NOT_DURABLY_RECORDED` 且在 evidence 中显式列出的，不阻断
-  composite 结论——因为不存在也不曾存在其 durable 证据来源； RECEIPT
+  composite 结论——因为不存在也不曾存在其 durable 证据来源；RECEIPT
   TERMINALIZATION 的目的恰是以带 provenance 的 supplement + 独立 audit
-  承载这一不可重建性。
+  承载这一不可重建性。本封闭集合之外无任何"等"类推空间。
 - **仍阻断类**：以下任一缺失/provenance unknown 仍 MUST 写
   NOT_ESTABLISHED——(i) pre-recovery durable target-live catalog；(ii)
   create/transition/final-readback E2E 事件链；(iii) **recovery 事务自身**
@@ -94,9 +97,13 @@ restart；resolution record 纯 docs-only。
 
 proposed → 独立审计（判断：冲突真实性、focused 形式有效性、修订后规则
 的可判定性、resolution record 内容与 evidence 指针一致性）→ Owner 对
-exact head 接受 → lifecycle allowlist（frontmatter status/authorities、
-accepted_* 五字段、banner FROM→TO、README 行）→ FINAL_HEAD_RECHECK →
-merge。Literal `FROM` = 本文件标题下 banner；`TO`：
+exact head 接受 → lifecycle allowlist（frontmatter `status:
+proposed -> accepted`、`implementation_authority: none -> contracts`，
+`production_apply_authority` 保持 `none` 不翻转；
+`accepted_by/accepted_date/accepted_reviewed_base/
+accepted_reviewed_spec_commit/acceptance_review_verdict` 五字段置值；
+banner FROM→TO 替换；README 行 lifecycle/authority 同步）→
+FINAL_HEAD_RECHECK → merge。Literal `FROM` = 本文件标题下 banner；`TO`：
 
 ```text
 > **ACCEPTED / RESOLUTION AUTHORITY.** V2 §9 composite 规则按本文件 §2
