@@ -1,27 +1,23 @@
 ---
-spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-status: superseded
+spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+status: accepted
 accepted_by: mayf3
-accepted_date: 2026-08-31
-accepted_reviewed_head: b9c0cd7140e2d265486103664d361724eec0d65f
+accepted_date: 2026-09-03
+accepted_reviewed_head: d6550a5b1998cb16866cb6e4261a925a98c502a2
 review_verdict: PASS
 review_blocker_count: 0
 normative_body_change: NONE
-date: 2026-08-31
-type: implementation-spec (complete standalone whole-authority successor; docs only this round)
+date: 2026-09-01
+type: implementation-spec (complete standalone emergency-bootstrap successor; docs only this round)
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 replaces_on_acceptance:
-  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
-  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2
-  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2
+  - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
 supersedes:
-  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
-  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2
-  - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2
-superseded_by: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+  - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
+superseded_by: null
 governed_by:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
   - SCHEDULER_TIMEOUT_OUTCOME_V2
@@ -36,22 +32,24 @@ scope:
   - dsh-codex 0.2.3-line explicit credentialFile and durable refresh-intent contracts
   - Agent Core Luna route/profile wiring and shared-store fail-loud admission
   - Permission Model A for the canonical credential domain
+  - one-time LEGACY_CONVERGED_BOOTSTRAP for the named P0 recovery transaction
   - unchanged ordered-route safety policy carried forward from the V2 authority set
 owners:
   - repository-maintainers
 ---
 
-# AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
+# AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
 
-> `TASK_NAME = 共享 执行` · `ROUND = SPEC_AMENDMENT` · **docs only**。
+> `TASK_NAME = 共享 执行` · `ROUND = EMERGENCY_BOOTSTRAP_AMENDMENT` · **docs only**。
 > 本轮不修改产品代码、production 配置、OAuth、credential、模型路由或进程。
 >
-> 这不是对 accepted stable ID 的原地 amendment。共享 writable OAuth、允许 refresh、
-> Permission Model A 与 fleet scope 会反转现行 V2 authority 的 per-home/no-refresh/
-> CTO-only/0755 语义，因此按 `SPEC_GOVERNANCE_V0` §9.2 使用新的 complete standalone
-> whole-authority successor。proposal 阶段不修改旧 Spec lifecycle；只有独立 Review PASS
-> 后，由 Owner 在一个 docs-only acceptance transaction 中原子写入全部前后向 backlink，
-> 并 merge 到 `main` 后才生效。
+> `CTR-SCA-014` 的 zero-proven-generation 分支原本只允许 canonical Owner reauth；本轮增加
+> `LEGACY_CONVERGED_BOOTSTRAP` 会改变已接受的 migration/failure meaning，因此不能原地改写
+> accepted stable ID。按 `SPEC_GOVERNANCE_V0` §9.2，本文件是 V1 的 complete standalone
+> whole-authority successor。除该一次性 bootstrap、它的 first-refresh failure semantics 与
+> 对应 fixtures 外，V1 的 shared OAuth topology、route、Permission Model A 和 runtime contracts
+> 保持不变。proposal 阶段不修改 V1 lifecycle；仅在独立 focused Review PASS 后，由 Owner 在
+> docs-only acceptance transaction 原子写入 reciprocal backlink，merge 到 `main` 后才生效。
 
 ## 1. Goal
 
@@ -87,8 +85,8 @@ writer lock、同一个 atomic replacement 和同一个 refresh-intent 状态机
   Luna-enabled Agent 的 copied production profile；
 - production shared mode 下 effective credential filename 不等于 canonical path 时 startup /
   admission fail-loud；
-- Permission Model A、normal concurrency、stale reader、crash/outcome-unknown、single Owner
-  reauth、migration/rollback 与 redaction contracts；
+- Permission Model A、normal concurrency、stale reader、crash/outcome-unknown、normal single Owner
+  reauth、一次性 `LEGACY_CONVERGED_BOOTSTRAP`、migration/rollback 与 redaction contracts；
 - 完整 carry forward ordered route 的配置所有权、hop/STOP、ONE_LOGICAL_TURN、deadline、
   journal、Scheduler 与 providerEnv 安全语义；共享 credential 迁移不得改变 route membership
   或顺序。
@@ -109,24 +107,24 @@ writer lock、同一个 atomic replacement 和同一个 refresh-intent 状态机
 SPEC_GOVERNANCE_MODE = AUTHOR
 CHANGE_CLASS = NON_MECHANICAL
 PREFLIGHT_MODE = SUPERSEDE
-PRIMARY_CURRENT_POLICY = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
-CURRENT_IMPLEMENTATION_AUTHORITY = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2
-CURRENT_ACTIVATION_AUTHORITY = AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2
+PRIMARY_CURRENT_POLICY = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
+CURRENT_IMPLEMENTATION_AUTHORITY = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
+CURRENT_ACTIVATION_AUTHORITY = NONE
 REPLACEMENT_FORM = COMPLETE_STANDALONE_WHOLE_AUTHORITY
 PARTIAL_SUPERSESSION = NONE
 ```
 
-现行三份 V2 分别拥有 Luna credential policy、implementation scope 和 production
-activation。它们冻结了 target-home OAuth 原位读取、禁止 refresh、Home 0755/uid502、
-非 target fleet 零变化；这些含义不能与本 Spec 并行 accepted。
+accepted V1 拥有 shared OAuth topology、migration candidate 规则和 implementation scope。
+本轮允许 provenance 不完整的 converged snapshot 进入 canonical 会改变 V1 的 migration 和
+failure meaning；按治理协议，不能以 partial amendment 与 V1 并行 accepted。
 
 proposal 阶段：
 
 ```text
 NEW.status = proposed
-NEW.supersedes = []
-OLD_V2.status = accepted
-OLD_V2.superseded_by = null
+NEW.supersedes = [AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1] # intended transition only
+OLD_V1.status = accepted
+OLD_V1.superseded_by = null
 IMPLEMENTATION_ALLOWED_FROM_THIS_PROPOSAL = NO
 ```
 
@@ -134,13 +132,9 @@ future acceptance transaction 必须原子完成：
 
 ```text
 NEW.status = accepted
-NEW.supersedes = [PARENT_V2, IMPL_V2, ACTIVATION_V2]
-PARENT_V2.status = superseded
-PARENT_V2.superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-IMPL_V2.status = superseded
-IMPL_V2.superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-ACTIVATION_V2.status = superseded
-ACTIVATION_V2.superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
+NEW.supersedes = [AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1]
+OLD_V1.status = superseded
+OLD_V1.superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
 docs/specs/README.md = lifecycle mirrors updated
 ```
 
@@ -185,6 +179,18 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
 - Environment: production filesystem, metadata-only check
 - Projection: `/Users/authsvc/.agent-core/shared-credentials` and descendants are absent.
 - Basis: `OBS-SCA-008`, `EVD-SCA-004`
+
+### STATE-SCA-005 — P0 containment has one unpromoted 91-member converged snapshot
+
+- Subject: named `TASK_NAME = 共享 执行` P0 recovery transaction
+- As of Owner record: 2026-09-01, before any action authorized by this proposal
+- Environment: production fleet; runtime state and credential contents were not independently reopened
+  by this docs-only authoring round
+- Projection: Owner reports canonical absent, production Luna disabled after safe rollback, 91 registered
+  legacy credential files byte-equal, and CEO/HR/Podcast/Shopping canaries previously passed after the
+  temporary convergence. These facts do not establish generation provenance and are not self-executing;
+  every bootstrap gate MUST be re-proved inside the future quiesced transaction.
+- Basis: `OBS-SCA-010`, `OBS-SCA-011`, `CLM-SCA-005`, `EVD-SCA-006`
 
 ## 5. Observations
 
@@ -289,6 +295,31 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
 - Provenance: `packages/production-runtime/src/model-overrides.js`,
   `packages/production-runtime/src/compose.js`, `packages/agent-provisioning/src/index.js`
 
+### OBS-SCA-010 — Owner recorded a byte-converged P0 containment snapshot
+
+- Subject: named shared-Codex production incident recovery
+- Repository/source: Owner ruling persisted in this proposed successor
+- Environment: production fleet, before this authoring round
+- Observed at: 2026-09-01
+- Method: Owner-supplied incident result; this docs-only round did not reread credential contents or
+  mutate production
+- Result: `INVENTORY=91`, legacy credential bytes `91/91` equal, canonical absent, Luna disabled after
+  rollback, runner selftest `64/64`, and CEO/HR/Podcast/Shopping temporary-convergence canaries passed.
+- Provenance: `TASK_NAME = 共享 执行`, `ROUND = EMERGENCY_BOOTSTRAP_AMENDMENT` Owner input
+
+### OBS-SCA-011 — Accepted CTR-SCA-014 rejects the reported snapshot without generation provenance
+
+- Subject: `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1#CTR-SCA-014`
+- Repository/source: `mayf3/dsh-agent-core`
+- Commit/artifact: `origin/main@433b8bd06a163badae322da9db012b9851e148b6`
+- Environment: docs-only source inspection
+- Observed at: 2026-09-01
+- Method: inspect the accepted zero-proven-generation and insufficient-provenance branches
+- Result: V1 forbids legacy promotion and requires one canonical Owner reauth when complete generation
+  provenance is absent; Owner has now explicitly forbidden both production OAuth and canonical reauth
+  for the named P0 transaction.
+- Provenance: `docs/specs/AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1.md`
+
 ## 6. Claims and assumptions
 
 ### CLM-SCA-001 — Independent writable copies are causally unsafe for rotating tokens
@@ -320,6 +351,23 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
 - Contradicted by evidence: none known
 - Uncertainty: future providers may require separate credential policies; this Spec governs only
   `openai-codex`.
+
+### CLM-SCA-005 — A fenced equality set can safely bootstrap topology without claiming provenance
+
+- Support state: INFERRED
+- Supported by evidence: `EVD-SCA-006`
+- Contradicted by evidence: none known under every `CTR-SCA-017` gate
+- Uncertainty: equality cannot recover historical remote-operation provenance; therefore the copied
+  credential remains explicitly unproven until a later successful canonical refresh is atomically
+  committed.
+
+### CLM-SCA-006 — First canonical refresh is the provenance boundary
+
+- Support state: SUPPORTED
+- Supported by evidence: `EVD-SCA-003`, `EVD-SCA-006`
+- Contradicted by evidence: none known
+- Uncertainty: an unknown or stale-token outcome cannot establish provenance and cannot be repaired by
+  automatic retry or legacy fallback.
 
 ## 7. Evidence relations
 
@@ -374,6 +422,19 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
 - Limitations: implementation conformance remains future work
 - Provenance: files named by source Observations
 
+### EVD-SCA-006 — P0 state and V1 conflict support a bounded bootstrap Decision
+
+- Source observations: `OBS-SCA-010`, `OBS-SCA-011`
+- Target: `CLM-SCA-005`, `CLM-SCA-006`, `STATE-SCA-005`
+- Relation: SUPPORTS
+- Bound coordinates: Owner-recorded production state on 2026-09-01 and accepted V1 at
+  `origin/main@433b8bd06a163badae322da9db012b9851e148b6`
+- Strength/sufficiency: sufficient to define a fail-closed, mechanically fenced exception; not
+  sufficient to prove current production eligibility before the future transaction reruns every gate
+- Limitations: no historical generation provenance is inferred; no production credential was read or
+  refreshed during authoring
+- Provenance: `OBS-SCA-010`, `OBS-SCA-011`
+
 ## 8. Decisions
 
 ### DEC-SCA-001 — One canonical writable store for every Luna-enabled Agent
@@ -422,6 +483,19 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
   the credential carrier for routes already authorized to use `openai-codex`.
 - Rejected alternatives: `ALT-SCA-006`
 - Reason: credential correctness and model selection are separate authorities.
+- Owner decision remaining: NONE
+
+### DEC-SCA-006 — One fenced converged snapshot may bootstrap the canonical domain
+
+- Decision owner: repository Owner `mayf3`
+- Decision: for the named P0 recovery transaction only, permit `COPY EXACT BYTES ONCE` from a member
+  of a quiesced, complete, byte-identical 91-store equality set when every `CTR-SCA-017` gate passes.
+  Classify the result as `BOOTSTRAP_FROM_CONVERGED_SNAPSHOT`, never as
+  `AUTHORITATIVE_GENERATION_PROVEN`. Production OAuth and canonical reauth remain forbidden.
+- Rejected alternatives: `ALT-SCA-001`, `ALT-SCA-002`, `ALT-SCA-005`, `ALT-SCA-007`
+- Reason: the exception closes a one-time topology bootstrap under two equality fences while preserving
+  the central safety invariant: after promotion there is exactly one writable runtime credential and
+  any first-refresh uncertainty fails closed without retry or legacy fallback.
 - Owner decision remaining: NONE
 
 ## 9. Contracts
@@ -704,10 +778,11 @@ candidates: `mtime`, `ctime`, `expiresAt`, file size, recent Agent use, access-t
 other manual inference. Migration MUST NOT probe-refresh, retry an old token or try the 91 refresh
 tokens in sequence.
 
-Zero proven generations, more than one different proven generation, conflicting provenance, a
-generation tie, insufficient provenance, a newer `mtime` with older provenance, a usable access token
-with unknown refresh generation, any pending/unknown refresh intent, or inability to prove that the
-last remote rotation was atomically committed MUST fail closed:
+Except for the exact `LEGACY_CONVERGED_BOOTSTRAP` branch in `CTR-SCA-017`, zero proven generations,
+more than one different proven generation, conflicting provenance, a generation tie, insufficient
+provenance, a newer `mtime` with older provenance, a usable access token with unknown refresh
+generation, any pending/unknown refresh intent, or inability to prove that the last remote rotation
+was atomically committed MUST fail closed:
 
 ```text
 LEGACY_CREDENTIAL_REUSE_ALLOWED = NO
@@ -716,20 +791,23 @@ CANONICAL_REAUTH_REQUIRED = YES
 CANONICAL_REAUTH_COUNT_MAX = 1
 ```
 
-The only allowed recovery from that state is one Owner OpenAI Codex login/reauth written directly to:
+Outside the named P0 bootstrap transaction, the only allowed recovery from that state is one Owner
+OpenAI Codex login/reauth written directly to:
 
 ```text
 /Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
 ```
 
-It MUST NOT first write an Agent Home and copy from there. The controlled activation authority MUST
-then execute, in order:
+It MUST NOT first write an Agent Home and copy from there. For the named P0 bootstrap transaction,
+`PRODUCTION_OAUTH=FORBIDDEN` and `CANONICAL_REAUTH=FORBIDDEN`; failure of any `CTR-SCA-017` gate enters
+`OPERATOR_BLOCKED` instead of reauth. The controlled activation authority MUST then execute, in order:
 
 1. inventory and establish both quiesce preconditions and the durable fence;
 2. inspect all legacy candidates using only the provenance rule above;
 3. create/verify the canonical Model A directory and ACL domain;
-4. either atomically write the sole proven legacy credential once to canonical storage without remote
-   refresh, or perform exactly one direct canonical Owner reauth when reuse is not allowed;
+4. either atomically write the sole proven legacy credential once, execute the exact
+   `LEGACY_CONVERGED_BOOTSTRAP` copy, or—only outside the named P0 transaction—perform exactly one direct
+   canonical Owner reauth when reuse is not allowed;
 5. configure the single Luna route descriptor with canonical `credentialFile`;
 6. prove all per-home OAuth paths have zero runtime opens and zero refresh writers;
 7. controlled restart under pinned clean Harness identity;
@@ -756,6 +834,105 @@ dispatch, after remote success/before local write, and after atomic canonical wr
 This proposed Spec and its PR MUST contain docs only. It MUST NOT modify production, OAuth, credential,
 route configuration, package installation, process state or source code. Acceptance of this Spec may
 authorize future bounded implementation under `CTR-SCA-*`; production apply remains separately gated.
+
+### CTR-SCA-017 — LEGACY_CONVERGED_BOOTSTRAP
+
+This Contract is a one-time exception for the named `TASK_NAME = 共享 执行` P0 recovery transaction.
+It authorizes no OAuth call and no production action by this authoring round. A later separately
+authorized deployment transaction MAY set:
+
+```text
+MIGRATION_CANDIDATE_CLASS = BOOTSTRAP_FROM_CONVERGED_SNAPSHOT
+AUTHORITATIVE_GENERATION_PROVEN = NO
+PRODUCTION_OAUTH = FORBIDDEN
+CANONICAL_REAUTH = FORBIDDEN
+```
+
+only when all ten gates below pass before activation:
+
+1. `LUNA_DISPATCH_QUIESCED=YES`: no Luna admission, queued dispatch or child capable of opening an
+   OAuth store remains live; the fence is durably recorded.
+2. `REFRESH_WRITERS_QUIESCED=YES`: every legacy/canonical refresh writer is stopped and no refresh
+   callback can begin during the transaction.
+3. `PRODUCTION_INVENTORY_COUNT=91`: the authoritative Agent registry expands to exactly 91 distinct
+   expected legacy paths, with no missing, duplicate or extra runtime member.
+4. `LEGACY_BYTE_EQUALITY=91/91`: all 91 regular, single-link credential files are compared as exact
+   byte sequences and are equal. Credential bytes, token hashes and credential digests MUST NOT be
+   logged or persisted as evidence.
+5. `ACCOUNT_AND_SHAPE_CONSISTENT=YES`: all 91 documents parse under the accepted credential schema and
+   have identical structural shape. Every non-secret account-identity field is identical across the
+   set or uniformly absent; absence MUST NOT be replaced by a guessed identity.
+6. `CANONICAL_REFRESH_INTENT_ABSENT=YES`: canonical intent does not exist; no legacy pending intent may
+   be reclassified or cleared to satisfy this gate.
+7. `PROMOTION_WINDOW_DRIFT=NONE`: from the first equality fence through the post-copy fence, every
+   legacy path retains the same device/inode identity, `mtime`, size and exact content. Metadata may be
+   compared only as a mutation fence, never to rank or select a credential.
+8. `KNOWN_REFRESH_EVENT_AFTER_FENCE=NONE`: complete configured evidence surfaces show no successful
+   refresh, `outcome_unknown` refresh or pending refresh from the first equality fence onward, and no
+   unresolved prior unknown/pending intent exists. Historical refresh activity before the fence does
+   not become provenance and MUST NOT be inferred from the equal bytes.
+9. `VALID_ACCESS_CREDENTIAL_PRESENT=YES`: at least one equality-set member contains a locally valid,
+   unexpired access credential. This is a liveness gate only; it MUST NOT be remotely probed or used as
+   selection, authority or generation-provenance evidence.
+10. `BYTE_EQUALITY_FENCE_BEFORE=91/91` and `BYTE_EQUALITY_FENCE_AFTER=91/91`: the transaction repeats
+    exact equality immediately before and immediately after the canonical atomic commit. Both fences
+    must bind the same 91 registry paths and the same pre-recorded file identities.
+
+After gates 1–9 and the immediate pre-copy part of gate 10 pass, the transaction MUST create/verify
+Permission Model A and perform exactly one canonical commit:
+
+```text
+SOURCE = any deterministic registry member already proved inside the 91/91 equality set
+OPERATION = COPY EXACT BYTES ONCE
+DESTINATION = /Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+CANONICAL_DIRECTORY_MODE = 0700
+CANONICAL_CREDENTIAL_MODE = 0600
+CANONICAL_COMMIT_COUNT = 1
+```
+
+Source choice conveys no recency, authority or provenance. The writer MUST open a new same-directory
+temporary regular file with exclusive creation and mode `0600`, write the already fenced bytes, flush
+the file, atomically rename it to the canonical path, flush the directory, and then complete the
+post-copy equality/content fence. It MUST reject symlinks, hardlinks, `rsync`, continuous sync and any
+copy that leaves a per-home runtime writer. No refresh probe or provider call is permitted.
+
+If any pre-commit gate fails, canonical commit count MUST remain zero. If drift is detected after the
+atomic canonical commit but before activation, the candidate MUST NOT activate; Luna remains disabled,
+the canonical copy is non-authoritative and non-runtime, drift evidence is preserved, and the
+transaction enters `OPERATOR_BLOCKED`. Because no remote refresh occurred, a bounded rollback MAY
+remove that unactivated copy after re-quiescing, but MUST NOT re-enable any legacy runtime store.
+
+Only after the post-copy fence passes may the result be recorded as:
+
+```text
+LEGACY_CONVERGED_BOOTSTRAP = PASS
+BOOTSTRAP_FROM_CONVERGED_SNAPSHOT = YES
+AUTHORITATIVE_GENERATION_PROVEN = NO
+LEGACY_CREDENTIAL_REUSE_ALLOWED = YES_BY_BOOTSTRAP_EXCEPTION
+```
+
+No fabricated `generationId`, remote-success receipt, atomic-commit provenance history or
+`AUTHORITATIVE_STORE` claim is allowed. The canonical atomic copy receipt proves only the bootstrap
+commit, not the copied credential's historical generation.
+
+Immediately after promotion and before any child restart, configuration and permissions MUST make the
+canonical path the only runtime store: every child receives the same exact `credentialFile`; every
+refresh uses the canonical filename lock and canonical refresh-intent domain; all 91 per-home stores
+are read-only forensic evidence with zero runtime opens, zero refresh writers and zero fallback. A
+config switch, restart or canary is forbidden until those conditions are mechanically proven.
+
+The first canonical refresh is the provenance boundary:
+
+- remote refresh success followed by validated atomic canonical commit and durable intent resolution
+  begins the first formal canonical generation provenance at that newly committed generation;
+- `refresh_token_reused`, `invalid_grant`, any other stale-token result, or `outcome_unknown` sets
+  `FAIL_CLOSED=YES`, `AUTO_RETRY=NO`, `LEGACY_FALLBACK=NO`, and `OPERATOR_BLOCKED=YES`;
+- an unknown outcome preserves the pending canonical intent; a known stale-token failure preserves its
+  terminal evidence. Neither case may retry, reauth, reopen, recopy or restore a legacy store.
+
+Because Owner forbids production OAuth/reauth for this incident, `OPERATOR_BLOCKED` is terminal for the
+authorized transaction. It does not silently weaken the generic canonical reauth contract outside this
+named exception.
 
 ## 10. Acceptance
 
@@ -962,6 +1139,93 @@ authorize future bounded implementation under `CTR-SCA-*`; production apply rema
 - Reject condition: guessing, 91 copies/logins, per-home runtime access, implicit fallback, route change
   or rollback to any legacy rotating token
 
+### ACC-SCA-013 — Converged-snapshot bootstrap and first canonical refresh
+
+- Contracts: `CTR-SCA-005`, `CTR-SCA-007` through `CTR-SCA-010`, `CTR-SCA-014` through
+  `CTR-SCA-017`
+- Method: run the complete production-like migration transaction and all fault branches against
+  disposable 91-Agent inventories, synthetic credentials and an isolated fake OAuth endpoint
+- Environment: production-like filesystem ownership/ACL/process topology; no production credential,
+  provider call, OAuth login or reauth
+
+#### Bootstrap Fixture A — `91_EQUAL_QUIESCED_NO_DRIFT`
+
+- Setup: exactly 91 registered regular single-link legacy stores with identical bytes, consistent
+  shape/account fields, a locally valid access credential, both quiesce gates, no canonical intent,
+  no unresolved or post-fence refresh evidence, and stable metadata/content across both fences
+- Required evidence: registry-bound 91-path manifest; writer/dispatch quiesce receipts; redacted shape
+  and account-consistency result; pre/post device/inode/mtime/content equality results; Model A metadata;
+  provider-call count and canonical atomic-commit count
+- Expected result: `LEGACY_CONVERGED_BOOTSTRAP=PASS`,
+  `BOOTSTRAP_FROM_CONVERGED_SNAPSHOT=YES`, `AUTHORITATIVE_GENERATION_PROVEN=NO`, canonical bytes equal
+  all 91 inputs, `CANONICAL_COMMIT_COUNT=1`, `PRODUCTION_OAUTH_CALLS=0`
+- Failure condition: promotion is rejected despite every gate passing; more than one commit; any remote
+  call; raw token/hash/digest output; or a provenance claim for the copied generation
+
+#### Bootstrap Fixture B — `90_OF_91_EQUAL_ONE_DIFFERENT`
+
+- Setup: same as A except one registry member differs by one byte while all metadata is otherwise
+  plausible
+- Required evidence: equality count `90/91`, unnamed mismatch classification, zero canonical commits,
+  zero provider calls and Luna-disabled state
+- Expected result: bootstrap forbidden; `LEGACY_CONVERGED_BOOTSTRAP=FAIL`, `OPERATOR_BLOCKED=YES`
+- Failure condition: any member selection, `mtime`/use/size tie-break, canonical commit, refresh or reauth
+
+#### Bootstrap Fixture C — `PROMOTION_WINDOW_INODE_OR_CONTENT_DRIFT`
+
+- Setup: begin from fixture A, then atomically replace one legacy inode in one run and mutate one
+  legacy content sequence in a second run between the pre- and post-copy fences
+- Required evidence: injected path identity/content delta, exact fence phase, activation count zero,
+  provider-call count zero and bounded rollback disposition
+- Expected result: both runs forbid activation and enter `OPERATOR_BLOCKED`; a pre-commit drift leaves
+  zero canonical commits, while post-commit drift leaves only an unactivated non-runtime copy eligible
+  for the bounded pre-refresh rollback in `CTR-SCA-017`
+- Failure condition: drift is ignored, source is reselected, migration retries, Luna starts, or any
+  legacy store becomes runtime fallback
+
+#### Bootstrap Fixture D — `PENDING_OR_UNKNOWN_REFRESH_EVIDENCE`
+
+- Setup: fixture A plus, in separate runs, one pending intent, one `outcome_unknown` event and one
+  post-fence successful-refresh receipt
+- Required evidence: redacted blocking record, preserved intent where applicable, zero canonical
+  commits, zero provider calls, zero retries and zero reauths
+- Expected result: all runs forbid bootstrap and enter `OPERATOR_BLOCKED`
+- Failure condition: evidence is cleared/ignored, copy proceeds, refresh probe occurs, or canonical
+  reauth is requested
+
+#### Bootstrap Fixture E — `POST_PROMOTION_CANONICAL_ONLY`
+
+- Setup: complete fixture A, switch the synthetic fleet config, then attempt runtime opens/writes via
+  the canonical path and every legacy path under all 91 child identities
+- Required evidence: 91 resolved `credentialFile` values, file-open audit, lock/intent filenames,
+  legacy write denials, restart simulation and config diff
+- Expected result: all 91 children resolve only the one canonical file and one canonical lock/intent
+  domain; per-home runtime opens/writers/fallback are zero; route membership/order is unchanged
+- Failure condition: any per-home runtime path, second writable domain, fallback, link/sync topology or
+  route change
+
+#### Bootstrap Fixture F — `FIRST_CANONICAL_REFRESH_SUCCESS`
+
+- Setup: complete fixture E with an expired synthetic bootstrap credential; fake provider returns one
+  successful rotation and the canonical atomic commit completes
+- Required evidence: one intent-create receipt, one remote-success receipt, one canonical atomic-commit
+  receipt, one intent resolution, old/new device:inode, and total remote-call count
+- Expected result: `REMOTE_REFRESH_CALL_COUNT=1`; formal canonical provenance begins only at the newly
+  committed generation; the copied bootstrap generation remains unproven
+- Failure condition: provenance begins at copy time, missing remote-to-commit binding, more than one
+  remote call, per-home write or unresolved successful intent
+
+#### Bootstrap Fixture G — `FIRST_CANONICAL_REFRESH_STALE_OR_UNKNOWN`
+
+- Setup: complete fixture E; fake provider returns `refresh_token_reused`, `invalid_grant`, and
+  `outcome_unknown` in separate runs
+- Required evidence: one dispatch at most per run, zero retry count, zero reauth count, preserved
+  canonical intent for unknown, terminal evidence for known stale failures, and file-open audit
+- Expected result: every run sets `FAIL_CLOSED=YES`, `AUTO_RETRY=NO`, `LEGACY_FALLBACK=NO`,
+  `OPERATOR_BLOCKED=YES`; Luna does not continue and no formal provenance is created
+- Failure condition: automatic retry, OAuth/reauth, intent loss, legacy recopy/open/fallback, or fleet
+  continuation on the failed credential
+
 ### Contract coverage
 
 | Contract | Acceptance | Covered |
@@ -979,9 +1243,10 @@ authorize future bounded implementation under `CTR-SCA-*`; production apply rema
 | `CTR-SCA-011` | `ACC-SCA-010` | YES |
 | `CTR-SCA-012` | `ACC-SCA-010` | YES |
 | `CTR-SCA-013` | `ACC-SCA-011` | YES |
-| `CTR-SCA-014` | `ACC-SCA-008`, `ACC-SCA-012` | YES |
-| `CTR-SCA-015` | `ACC-SCA-003` through `ACC-SCA-007`, `ACC-SCA-012` | YES |
+| `CTR-SCA-014` | `ACC-SCA-008`, `ACC-SCA-012`, `ACC-SCA-013` | YES |
+| `CTR-SCA-015` | `ACC-SCA-003` through `ACC-SCA-007`, `ACC-SCA-012`, `ACC-SCA-013` | YES |
 | `CTR-SCA-016` | `ACC-SCA-011` | YES |
+| `CTR-SCA-017` | `ACC-SCA-013` | YES |
 
 ## 11. Alternatives and disposition
 
@@ -1029,14 +1294,23 @@ authorize future bounded implementation under `CTR-SCA-*`; production apply rema
 - Evidence/Claims considered: `CLM-SCA-004`, Owner scope
 - What would reopen: separate accepted route-policy successor
 
+### ALT-SCA-007 — Guess or keep synchronizing a legacy source after promotion
+
+- Disposition: rejected
+- Reason: recency, use and access-token liveness cannot prove a rotating-token generation; retaining a
+  legacy runtime writer recreates the multi-generation race that canonicalization removes
+- Evidence/Claims considered: `CLM-SCA-001`, `CLM-SCA-005`, `DEC-SCA-001`, `DEC-SCA-006`
+- What would reopen: none for this one-subscription canonical-store architecture
+
 ## 12. Migration, compatibility, and rollback
 
 ```text
-MIGRATION = CTR-SCA-014 ordered candidate and separately authorized production activation
+MIGRATION = CTR-SCA-014 ordered candidate plus CTR-SCA-017 one-time converged bootstrap
 COMPATIBILITY = absent credentialFile retains upstream per-home behavior outside production shared mode
 PRODUCTION_SHARED_MODE = explicit canonical credentialFile mandatory and fail-loud
 OLD_PER_HOME_FILES = read-only evidence; never runtime fallback
-UNKNOWN_REFRESH = fail closed; one canonical Owner reauth
+NORMAL_UNKNOWN_REFRESH = fail closed; one canonical Owner reauth
+BOOTSTRAP_FIRST_REFRESH_FAILURE = fail closed; zero retry; zero reauth; zero legacy fallback; OPERATOR_BLOCKED
 ROLLBACK = quiesce and disable Luna or restore known-good shared implementation; never restore writable copies
 EMERGENCY_CONTAINMENT = quiesce Luna children, preserve intent/lock/credential metadata, no refresh retry
 ```
@@ -1060,16 +1334,16 @@ READY_FOR_INDEPENDENT_REVIEW = YES
 
 ```text
 TASK_NAME = 共享 执行
-ROUND = SPEC_AMENDMENT
+ROUND = EMERGENCY_BOOTSTRAP_AMENDMENT
 
 SPEC_GOVERNANCE_MODE = AUTHOR
-SPEC_ID = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
+SPEC_ID = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
 SPEC_KIND = implementation
 STATUS = proposed
 AUTHORITY_LEVEL = governing_spec
 IMPLEMENTATION_AUTHORITY = contracts
 PRODUCTION_APPLY_AUTHORITY = none
-PRIMARY_PARENT_AUTHORITY = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+SUPERSEDES_ON_ACCEPTANCE = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
 EXTERNAL_AUTHORITIES = Yan-Zero/dsh-codex@c35d7a41d16cdf6d202cdb1db4108b32cbafaa0e
 
 FLEET_SHARED_CODEX_AUTH = YES
@@ -1080,36 +1354,48 @@ GLOBAL_REFRESH_LOCK = REQUIRED
 REFRESH_OUTCOME_UNKNOWN = FAIL_CLOSED_REAUTH_REQUIRED
 AUTO_RETRY_AFTER_UNCERTAIN_REFRESH = FORBIDDEN
 CRASH_AFTER_REMOTE_ROTATION_ACCEPTANCE = PASS_IF_FAIL_CLOSED_WITHOUT_TOKEN_REUSE
+LEGACY_CONVERGED_BOOTSTRAP = AUTHORIZED_ONLY_BY_CTR-SCA-017_GATES
+BOOTSTRAP_CLASSIFICATION = BOOTSTRAP_FROM_CONVERGED_SNAPSHOT
+BOOTSTRAP_AUTHORITATIVE_GENERATION_PROVEN = NO
+BOOTSTRAP_PRODUCTION_OAUTH = FORBIDDEN
+BOOTSTRAP_CANONICAL_REAUTH = FORBIDDEN
+BOOTSTRAP_FIRST_REFRESH_FAILURE = OPERATOR_BLOCKED
+BOOTSTRAP_EXCEPTION_ADDED = YES
+CTR_SCA_014_AMENDED = YES_VIA_V2_SUCCESSOR
+PRODUCTION_OAUTH_REQUIRED = NO
 
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
-CONTRACT_COUNT = 16
-CONTRACTS_WITH_ACCEPTANCE = 16
+CONTRACT_COUNT = 17
+CONTRACTS_WITH_ACCEPTANCE = 17
 PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 AUTHORING_READY_FOR_REVIEW = YES
 NEXT_TASK = 共享 审计
 ```
 
-## 15. Acceptance Record（2026-08-31，共享 执行 / OWNER_ACCEPTANCE）
+## 15. Acceptance Record（2026-09-03，共享 审计 · OWNER_ACCEPTANCE）
 
 ```text
 ACCEPTANCE_TRANSACTION = ONE_WHOLE_AUTHORITY_SUCCESSOR_LIFECYCLE_ONLY
 ACCEPTED_BY = mayf3
-ACCEPTED_REVIEWED_HEAD = b9c0cd7140e2d265486103664d361724eec0d65f
+ACCEPTED_REVIEWED_HEAD = d6550a5b1998cb16866cb6e4261a925a98c502a2
 REVIEW_VERDICT = PASS
 REVIEW_BLOCKER_COUNT = 0
 NORMATIVE_BODY_CHANGE = NONE
-SHARED_CODEX_AUTH_V1_ACCEPTED = YES
-PARENT_V2_SUPERSEDED = YES
-IMPL_V2_SUPERSEDED = YES
-ACTIVATION_V2_SUPERSEDED = YES
+SHARED_CODEX_AUTH_V2_ACCEPTED = YES
+LEGACY_CONVERGED_BOOTSTRAP_AUTHORIZED_BY = CTR-SCA-017 (one-time, named P0 transaction only)
+V1_SUPERSEDED = YES
 ATOMIC_TRANSACTION = PASS
-PR_MERGE = NOT_PERFORMED
+PR_MERGE = PR #150
 ```
 
-本记录、新 authority frontmatter、三份 V2 reciprocal lifecycle backlink 与
-`docs/specs/README.md` lifecycle mirror 属于同一个 acceptance commit。除这些 lifecycle /
-provenance metadata 与本记录外，reviewed head 的 normative body 逐字节保持；authority 仅在
-本 transaction 随 PR #123 merge into `main` 后生效。
+本记录、本 authority frontmatter lifecycle flip、`AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` 的
+reciprocal `superseded_by` backlink 与 `docs/specs/README.md` lifecycle mirror 属于同一个
+acceptance commit。除这些 lifecycle / provenance metadata 与本记录外，reviewed head
+`d6550a5b1998cb16866cb6e4261a925a98c502a2` 的 normative body 逐字节保持；authority 仅在
+本 transaction 随 PR #150 merge into `main` 后生效。`production_apply_authority` 保持 none：
+canonical credential production migration、91 份 per-home OAuth 变更、fleet route mutation、
+GLM rollout 与 batch activation 全部仍需后续单独 activation/production-apply authority；
+`FLEET_PRODUCTION_APPLY = HOLD` per Owner ruling 2026-09-03。
