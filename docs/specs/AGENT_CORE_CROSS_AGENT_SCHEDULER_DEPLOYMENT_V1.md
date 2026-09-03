@@ -21,7 +21,7 @@ external_authorities:
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_SCHEDULER_BUNDLE_1_7_DEPLOYMENT_V1
     revision: 15d246f2b17cffc6d8cc343d3bb148d8034d0493
-    relation: prerequisite
+    relation: prerequisite_semantic_body
 supersedes: []
 superseded_by: null
 owners: [mayf3]
@@ -62,6 +62,8 @@ LIVE_ROOT = /usr/local/libexec/agent-core/app
 TARGET_DIR = packages/scheduler/src
 COMPOSE_GUARD_SHA256 = 54a0353c3d00e9207712d045f8226f89ae936896c20bb005921898a90fad9a79
 LAUNCHD_TARGET = system/ai.agent-core.runtime
+JOBS_FILE = /Users/authsvc/.agent-core/scheduler/jobs.json
+SCHEDULER_ENGINE_LOCK = /Users/authsvc/.agent-core/scheduler/jobs.json.engine.lock
 ARTIFACT_V1 = /Users/yanfenma/workspace/deployment-artifacts/scheduler-runtime-deploy
 ARTIFACT_V1_MANIFEST_SHA256 = 9bd8245ef1511bbced7d346ac98ff237e78dd59b4190e76061a6b2f6203a7ccc
 ARTIFACT_V1_PREIMAGE_SHA256 = 1424701f6fdad9d0a2e47dca0121ef0ad0cba9a1bb46dc2214e0f9f53abf6572
@@ -79,9 +81,14 @@ authority. Auth 1.7 deployment is an external prerequisite, not locally owned.
 - `OBS-SCD-001` — At `2026-09-04`, Git inspection binds the accepted scheduler
   implementation to release `18f96e25...`; the production-runtime tree at that
   revision is not compatible with the current live tree and is excluded.
-- `OBS-SCD-002` — Fresh read-only invocation of artifact V1 `CHECK` returned
-  `CHECK_ALL_OK=true`; its five overwrite preimages, five create absences,
-  compose guard, plist guard, and module import smoke still match production.
+- `OBS-SCD-002` — On the production Mac at `2026-09-03T16:59:53Z`, direct
+  read-only invocation
+  `/Users/yanfenma/workspace/deployment-artifacts/scheduler-runtime-deploy/RUN_SCHEDULER_RUNTIME_UPDATE_OWNER.sh CHECK`
+  returned `PRE_SMOKE_OK exports=69` and `CHECK_ALL_OK=true`. The four-line
+  sanitized transcript SHA-256 is
+  `852f0bfc302fdf34c8fdace34489d0f0d68416b78c3782ed15a0262000760e90`;
+  its five overwrite preimages, five create absences, compose/plist guards, and
+  module import smoke match production.
 - `OBS-SCD-003` — Artifact V1 is not itself executable authority: its manifest
   names an earlier Goal, its prerequisites are not enforced, it has no global
   mutation lock or closed receipt schema, and its non-root path can be modified.
@@ -140,25 +147,37 @@ paths must remain byte-equivalent. Every installed file is regular
 After this Spec is accepted and merged, construct exactly
 `/Users/yanfenma/workspace/deployment-artifacts/scheduler-runtime-deploy-v2`.
 It may reuse V1's five release and five preimage payloads only after matching
-the hashes above. Its exhaustive closure is: those ten release payloads, five
-preimage payloads, one exact manifest/catalog, one canonical
-`RUN_SCHEDULER_RUNTIME_DEPLOY_OWNER.sh`, one read-only checker, and SHA-256 lists;
-no other file. Manifest rows bind path/type/bytes/mode/hash and source Git blob.
+the hashes above. Its exhaustive closure is exactly:
+`payload/release/{index.js,occurrence.js,scheduler.js,seams.js,self-service.js,history.js,history-model.js,history-projection.js,history-sink.js,history-storage.js}`;
+`payload/preimage/{index.js,occurrence.js,scheduler.js,seams.js,self-service.js}`;
+`ARTIFACT_MANIFEST.json`; `RELEASE_SHA256.txt`; `PREIMAGE_SHA256.txt`;
+`RUN_SCHEDULER_RUNTIME_DEPLOY_OWNER.sh`;
+`CHECK_SCHEDULER_RUNTIME_DEPLOY.sh`; and
+`SIMULATE_SCHEDULER_RUNTIME_DEPLOY.sh`; no other path. Manifest schema is
+exactly `{schema_version,authority,release_commit,target,files,locks,timeouts,receipt_schema}`;
+each file row binds relative path/action/type/bytes/mode/SHA-256/source Git blob.
 Inputs are read-only regular files; no secret, credential, token, environment,
 job data, log content, symlink, or special file is allowed.
 
-The canonical runner and inputs are copied to a nonce-scoped
+The canonical Owner wrapper invokes the macOS authorization dialog, then its
+authorized root phase exclusively creates a nonce-scoped
 `/private/var/root/agent-core-scheduler-deploy-v1-*` directory owned
-`root:wheel 0700`; data are regular `0600`, runner `0700`. Only an
-Owner-approved macOS native authorization dialog may launch it as root. It must
-not invoke `sudo`, accept a password fallback, or execute from the user-owned
-artifact directory.
+`root:wheel 0700`, copies every input without following symlinks, and rechecks
+source and destination inode/type/owner/mode/bytes/hash plus the complete
+manifest before execution. Data are regular `root:wheel 0600`, runner regular
+`root:wheel 0700`; exclusive creation and post-copy restat defeat source/target
+swap. Only the root-owned copy may mutate production. The root phase returns
+only a nonce-scoped non-secret result code/hash file; stdout/stderr are sanitized.
+It must not invoke `sudo`, accept a password fallback, or execute from the
+user-owned artifact directory.
 
 ### CTR-SCD-003 — Gates and serialization
 
 Before mutation, prove: this exact accepted semantic body/merge/final-head PASS;
 Lane B terminal `PRODUCTION_READY` with permanent ASM permission active; Auth
-Scheduler bundle exact `15d246f...` accepted/merged and production PASS; no
+Scheduler bundle semantic body exact `15d246f...` plus an accepted merged
+descendant whose diff is only its declared lifecycle allowlist, both heads
+independently checked and recorded, and production PASS; no
 Scheduler permanent Grant yet; V1 and V2 seals; fresh exact live preimages;
 compose/plist/other-file invariants; launchd state/PID/start time; job-store hash;
 and no incomplete/ambiguous participant receipt.
@@ -169,6 +188,21 @@ read and hold it through receipt publication. Also acquire the shared
 then Agent Core lock) so this restart cannot overlap the Scheduler Auth deploy or
 permanent-Grant phases. Lock acquisition is bounded to 30 seconds; contention or
 drift stops before mutation. No automatic retry is allowed.
+Both locks MUST be regular, non-symlink `root:wheel 0600` files opened without
+symlink following; the root helper binds device/inode before and after locking
+and rejects a changed link count, owner, group, mode, type, or inode.
+
+Before stopping the old service, take a read-only scheduler census and require
+no in-flight occurrence, no unresolved/ambiguous run, no already-due slot, and
+no next due slot through the full worst-case 300-second deployment window. Then
+stop the old process, acquire the exact Scheduler `OwnerLock` at
+`/Users/authsvc/.agent-core/scheduler/jobs.json.engine.lock` using the accepted
+lock primitive, re-read the same census and jobs hash, and release that engine
+lock only immediately before starting the new process. If quiescence fails,
+restart the unchanged old runtime exactly once and classify
+`QUIESCENCE_ABORTED`; no file is written. Natural or unknown job-store change
+at any later point forbids success and enters the rollback classifier; this
+Spec never edits a job definition to manufacture quiescence.
 
 ### CTR-SCD-004 — Bounded apply and runtime proof
 
@@ -179,43 +213,63 @@ compose guard, then restart `system/ai.agent-core.runtime` exactly once. Prove
 old PID termination, fresh PID/start time, running state, import of the scheduler
 index with `HistoryStore` and exactly 69 exports, no new fatal module/syntax log
 delta, unchanged job-store bytes, no new job/occurrence/history storage, and
-HistoryStore unwired. Bounds: native dialog 120 seconds; install 30 seconds;
+HistoryStore unwired. The before/after jobs hashes must be identical; a scheduler
+tick/recovery write is not dismissed as natural drift. Bounds: native dialog 120 seconds; install 30 seconds;
 stop/start 30/90 seconds; proof 60 seconds with at most one poll per second.
 
 ### CTR-SCD-005 — Reconcile and rollback
 
-After any signal, interruption, timeout, or failed proof, enter read-only
-reconciliation under both locks. Classify every target file as exact preimage,
-exact release, or unknown; bind loaded job, PID/start time, receipt, staging, and
-logs. `PRESTATE` (all preimage, creates absent, old healthy) stops unchanged.
-`PARTIAL_INSTALL` (only exact preimage/release faces) restores all overwrites and
-removes only exact-hash creates, then performs exactly one restart because the
-old process may have loaded changed modules. `FORWARD_STARTED_UNVERIFIED`
-(all release plus new/absent PID but incomplete proof) restores the same way and
-restarts old exactly once. `FORWARD_ACTIVE` is success only when every runtime
-proof passed. `COMPENSATED` is read-only terminal. Any unknown hash, process,
-loaded-job, or receipt face is `OUTCOME_UNKNOWN`: no write/restart/replay and
-manual recovery. Staging is removed only by exact sealed catalog; otherwise it
-remains quarantined. Rollback proves full preimage, absent five creates, fresh
-healthy PID, unchanged jobs/compose/plist/config, and durable receipt.
+Before stopping the service, create/fsync an append-only root journal with the
+correlation and initial catalog. Fsync a marker after quiescence, before first
+file write, after each file/fsync/rename, after stop/start, after every proof,
+before/after compensation, and before receipt publication. After any signal,
+interruption, timeout, or failed proof, enter reconciliation under both locks;
+re-entry is always reconciliation-only. Bind the journal, every target hash,
+job-store hash, loaded job, PID/start time, proof set, receipt, and staging to
+exactly one mutually exclusive class:
 
-Signals are deferred from immediately before the first file-write attempt until
-success/compensation receipt. Repeated signals do not change the action. A
-missing receipt forces reconciliation-only on the next invocation.
+| Class | Exact face | Only permitted action/outcome |
+|---|---|---|
+| `INITIAL` | journal absent; all preimage; old healthy; jobs exact | forward may begin |
+| `STOPPED_SAFE` | journal ends at quiesced; all preimage; no PID; jobs exact | same live invocation may install; re-entry/signal restarts old once, `QUIESCENCE_ABORTED` |
+| `STOPPED_UNSAFE` | journal proves stop but quiescence failed; all preimage; no PID; jobs exact | restart old once, `QUIESCENCE_ABORTED` |
+| `KNOWN_MUTATION` | journal shows first write; every target is exact preimage/release; not a recorded success; jobs exact | restore all preimages/remove exact creates and start old once, `COMPENSATED` |
+| `FORWARD_UNRECEIPTED` | all release; fresh new PID; all proofs complete; exact success receipt absent/failed | compensate and start old once, `COMPENSATED`; never infer success |
+| `FORWARD_RECORDED` | all release; fresh new PID; proofs complete; exact atomic success receipt | read-only `FORWARD_ACTIVE` |
+| `COMPENSATED_UNRECEIPTED` | journal proves compensation; all preimage; fresh old PID/health; jobs exact; receipt absent | publish evidence-only `COMPENSATED` receipt; zero restart |
+| `KNOWN_FILES_JOB_DRIFT` | target files all known but jobs hash changed | stop the runtime if running, restore code/remove creates, never edit jobs, leave runtime stopped; `MANUAL_RECOVERY_REQUIRED` |
+| `UNKNOWN` | any unknown target/staging hash, journal/correlation/process ambiguity, or unavailable required read | no target write and no restart; evidence-only `OUTCOME_UNKNOWN` receipt if publication is safe |
+
+Evidence-only receipt publication is not a target/business mutation and is
+permitted for `COMPENSATED_UNRECEIPTED`, `MANUAL_RECOVERY_REQUIRED`, and
+`OUTCOME_UNKNOWN`; it cannot convert them to success. If even that publication
+fails, the fsynced root journal and nonce result-channel hash remain, and the
+next invocation stays reconciliation-only. Staging is removed only by exact
+sealed catalog; otherwise it remains quarantined. No forward or compensation
+action is retried.
+
+Signals are deferred from the quiescence stop through proof and receipt. Before
+stop they produce `STOPPED_PREMUTATION`; at `STOPPED_SAFE` they restore the old
+process; after the first write they follow the table; after proof but before
+receipt they force `FORWARD_UNRECEIPTED` compensation. Repeated signals do not
+change class or action.
 
 ### CTR-SCD-006 — Durable receipt and no overclaim
 
 Publish exactly one atomic regular non-symlink `root:wheel 0600` JSON receipt in
 the root staging directory. Exact keys: `schema_version`, `outcome`,
 `correlation_id`, `started_at`, `finished_at`, `authority_spec`,
-`authority_semantic_head`, `artifact_manifest_sha256`, `runner_sha256`,
+`authority_semantic_head`, `authority_accepted_head`, `auth_semantic_head`,
+`auth_accepted_head`, `artifact_manifest_sha256`, `runner_sha256`, `journal_sha256`,
 `authorization_method`, `lock_identities`, `old_pid`, `new_pid`,
 `preimage_catalog_sha256`, `postimage_catalog_sha256`, `compose_sha256`,
 `plist_sha256`, `jobs_sha256_before`, `jobs_sha256_after`, `restart_counts`,
 `runtime_checks`, `signal_events`, and `evidence_sha256`. Closed outcomes are
-`STOPPED_PREMUTATION|FORWARD_ACTIVE|COMPENSATED|OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED`.
-Only `FORWARD_ACTIVE` can support Scheduler runtime readiness. A dialog, install,
-restart, import smoke, or receipt alone is not success.
+`STOPPED_PREMUTATION|QUIESCENCE_ABORTED|FORWARD_ACTIVE|COMPENSATED|OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED`.
+The first four are invocation-terminal; only `FORWARD_ACTIVE` is Goal-success.
+`OUTCOME_UNKNOWN` and `MANUAL_RECOVERY_REQUIRED` are invocation-terminal but
+Goal-nonterminal and require Owner recovery. A dialog, install, restart, import
+smoke, or receipt alone is not success.
 
 ### CTR-GSCD-001 — Lifecycle boundary
 
@@ -246,12 +300,19 @@ precede artifact construction or apply.
 
 - `ACC-SCD-001` (`CTR-SCD-001/002`): two clean artifact builds are byte-identical;
   exact closure/catalog/seals pass; secret/extra/symlink/writable-input tests deny.
-- `ACC-SCD-002` (`CTR-SCD-003/004`): isolated harness and locked read-only CHECK
-  prove prerequisites, no overlap, exact 10-file plan, one restart, 69-export
-  import, unchanged jobs/compose/plist, and dormant history.
-- `ACC-SCD-003` (`CTR-SCD-005/006`): failure injection at every file/restart/
-  health/receipt/signal boundary proves closed classification, exact compensation,
-  no blind replay, correct restart count, and honest unknown outcome.
+- `ACC-SCD-002` (`CTR-SCD-003/004`): a fresh locked read-only CHECK proves only
+  current prerequisites/preimages. Separately, the sealed isolated simulator
+  must prove dual-lock order/contention and successful quiesce/install/restart/
+  69-export import with unchanged jobs/compose/plist and dormant history. Only
+  after both PASS may Owner apply; target runtime evidence comes only from apply.
+- `ACC-SCD-003` (`CTR-SCD-005/006`): the simulator injects failure before/after
+  each of 10 copies, each fsync and rename, quiescence stop/engine-lock/release,
+  launch stop/start, old/new/absent/ambiguous PID, health/import/log check,
+  job-store drift, each global lock, every signal boundary, each journal marker,
+  receipt temp-write/fsync/rename/publication failure, missing receipt, and
+  re-entry. Every enumerated family must prove the unique table class/action,
+  exact compensation or containment, no blind replay, restart count, evidence-
+  only receipt rule, and honest unknown/manual outcome.
 - `ACC-GSCD-001`: independent exact-head review, Owner acceptance, exhaustive
   lifecycle diff, final-head recheck, and merge ancestry; no early production.
 
