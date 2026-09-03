@@ -54,19 +54,8 @@
  * fail fast in the mapping layer with `invalid_pagination` BEFORE any token
  * request or HTTP call reaches svc-workflow.
  */
-
 import { withTransportErrors } from '../transport.js'
-
-const baseErrors = [
-  { code: 'invalid_arguments', description: 'Arguments did not satisfy the operation schema.' },
-  { code: 'unsupported_operation', description: 'The requested operation is not supported by this capability.' },
-]
-
-/** Auth-layer codes every svc-workflow endpoint can produce (claims.rs / error.rs). */
-const authErrors = [
-  { code: 'unauthenticated', description: 'Downstream rejected the bearer token (HTTP 401).' },
-  { code: 'forbidden', description: 'Downstream rejected the required scope (HTTP 403).' },
-]
+import { authErrors, baseErrors, workflowDefinitionAuthoringManifest } from './workflow-definition-authoring.js'
 
 /** Shared read-side query codes (error.rs from_query WorkflowQueryError). */
 const queryErrors = [
@@ -449,7 +438,6 @@ export const workflowExecuteManifest = withTransportErrors({
   ],
 })
 
-
 /**
  * Due Dispatch Intent poll (VISIT_ACTIVATION_V1 scheduler read).
  *
@@ -587,7 +575,7 @@ export const workflowWakeDispatchIntentManifest = withTransportErrors({
   ],
 })
 
-/** All first-batch Workflow manifests (6 reads + the ONE unified write tool + the 2 activation-model tools). */
+/** Workflow manifests: instance execution and Definition Authoring are distinct write families. */
 export const manifests = [
   workflowMyTasksManifest,
   workflowInstanceDetailManifest,
@@ -596,6 +584,7 @@ export const manifests = [
   workflowDomainInstancesManifest,
   workflowGlobalInstancesManifest,
   workflowExecuteManifest,
+  workflowDefinitionAuthoringManifest,
   workflowDispatchIntentsManifest,
   workflowWakeDispatchIntentManifest,
 ]
