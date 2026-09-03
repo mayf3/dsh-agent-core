@@ -199,4 +199,4 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | proposed | none | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |
+| `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |

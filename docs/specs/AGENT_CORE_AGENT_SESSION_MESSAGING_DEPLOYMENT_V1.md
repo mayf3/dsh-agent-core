@@ -1,12 +1,23 @@
 ---
 spec_id: AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
-production_apply_authority: none
+implementation_authority: contracts
+production_apply_authority: contracts
 date: 2026-09-03
 revision: r1
+accepted_date: 2026-09-03
+accepted_by: mayf3
+accepted_at: 2026-09-03T01:29:29Z
+accepted_reviewed_head: 9853b92e3c701ae4694c7b200acbabc8b3a8c6ee
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
+acceptance_finalize_semantic_change: none
+acceptance_authority_basis: >-
+  Owner ACCEPT PR #149 at exact reviewed head
+  9853b92e3c701ae4694c7b200acbabc8b3a8c6ee on 2026-09-03.
 scope:
   - exact production release closure for canonical agent_session_send
   - serialized Auth prerequisite, Agent Core apply, Grant, runtime proof, and A2A canary gates
@@ -27,8 +38,8 @@ owners:
 
 # AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1
 
-> **Proposed / docs only.** This revision grants no implementation, deployment,
-> restart, Grant, credential, or production-write authority.
+> **Accepted / exact-head lifecycle authority.** Owner accepted exact reviewed
+> head `9853b92e3c701ae4694c7b200acbabc8b3a8c6ee`; independent review PASS with zero blockers and semantic change none.
 ## 1. Goal
 
 Authorize, only after acceptance and every prerequisite below, one bounded Agent Core production release of the already-implemented canonical capability:
@@ -417,9 +428,9 @@ OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE
 PARTIAL_SUPERSESSION = NONE
-CURRENT_STATUS = proposed
-IMPLEMENTATION_AUTHORITY = none
-PRODUCTION_APPLY_AUTHORITY = none
+CURRENT_STATUS = accepted
+IMPLEMENTATION_AUTHORITY = contracts
+PRODUCTION_APPLY_AUTHORITY = contracts
 AUTH_AUDIENCE_AUTHORITY = MISSING_EXTERNAL_PREREQUISITE
 AUTH_AUDIENCE_DEPLOYMENT = MISSING_EXTERNAL_PREREQUISITE
 AGENT_CORE_RELEASE_ARTIFACT = NOT_BUILT
