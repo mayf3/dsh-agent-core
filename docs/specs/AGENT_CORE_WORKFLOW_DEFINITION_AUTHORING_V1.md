@@ -6,8 +6,7 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 date: 2026-09-03
-scope:
-  - packages/broker
+scope: [packages/broker]
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
   - AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
@@ -16,308 +15,233 @@ external_authorities:
     authority_id: SVC_WORKFLOW_PRODUCT_BOUNDARY_V6
     revision: 22e862af8e47050ae1bf9e7c5db7eb22a4d81ee7
     relation: constrained_by
-  - repository: mayf3/svc-workflow
-    authority_id: SVC_WORKFLOW_DEFINITION_AUTHORING_HTTP_CONFORMANCE_V1
-    revision: aa9b3e116bab8881fe83d6bc400f9a2f6e739066
-    relation: interoperates_with
 supersedes: []
 superseded_by: null
-owners:
-  - repository-maintainers
+owners: [repository-maintainers]
 ---
 
 # AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V1
 
-## 1. Goal
+## 1. Goal and boundary
 
-Expose exactly four existing svc-workflow Definition Authoring writes to the
-model through the trusted Broker seam:
-
-```text
-create_definition
-create_draft_version
-replace_draft_graph
-publish_version
-```
-
-The terminal proof is a disposable local chain ending in the already accepted
-`workflow_execute(operation="create_instance")` consuming the newly published
-version. Production apply is not authorized.
-
-## 2. Scope and non-goals
-
-In scope: four new model-facing Broker manifests, exact service bindings,
-strict schemas, trusted identity/credential/idempotency seams, downstream error
-preservation, registration, and focused/local integration tests.
-
-Out of scope: adding operations to `workflow_execute`; changing its
-`create_instance|transition` semantics; Workflow read tools; archive,
-deprecate, revoke, delete, patch-node, patch-edge, Domain management; Grant or
-scope mutation; a generic builder/admin framework; deployment or live writes.
-
-## 3. Authority and dependencies
-
-The local Product Architecture requires external products to remain behind the
-generic Broker and forbids trusting request-body identity. The accepted
-`AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1` remains authoritative
-for `workflow_execute`, whose operation list stays exactly
-`create_instance|transition`.
-
-The external service owns Definition semantics. This proposed Spec pins the
-exact proposed service conformance revision named in frontmatter. Before local
-acceptance, that pin must be advanced mechanically to the independently
-reviewed, Owner-accepted service head; implementation cannot start earlier.
-
-## 4. Current State
-
-At dsh base `bf2efd52f28a63c95d5b07253031ff793390bd1a` and service
-base `22e862af8e47050ae1bf9e7c5db7eb22a4d81ee7`:
-
-- all four service routes exist and use Direct Token, `workflow.execute`,
-  Domain Owner authorization, and server-side business rules;
-- dsh-agent-core has no corresponding manifests;
-- the service adapter has the conformance gaps recorded in
-  `WORKFLOW_DEFINITION_AUTHORING_CENSUS_V1` OBS-CEN-003.
-
-## 5. Observations
-
-- **OBS-001:** census OBS-CEN-001/002 records the exact four HTTP bindings and
-  service-owned rule boundary.
-- **OBS-002:** census OBS-CEN-004 records zero Broker authoring manifests and
-  the accepted `workflow_execute` exclusion.
-- **OBS-003:** census OBS-CEN-003 records path-binding, transaction, receipt
-  hash, and validation-error defects in the service adapter.
-- **OBS-004:** existing Broker transport generates `Idempotency-Key` only from
-  the trusted side when `http.idempotencyKey=true`; it never sources actor or
-  credential fields from model arguments.
-
-## 6. Claims and assumptions
-
-- **CLM-001 (SUPPORTED):** four standalone tools are the minimum packaging:
-  every capability is directly discoverable, schemas stay operation-specific,
-  and no multi-operation builder or `workflow_execute` contract changes.
-- **CLM-002 (SUPPORTED):** reusing the service's currently frozen
-  `workflow.execute` route scope creates no new privilege or Grant. The Broker
-  requests the exact endpoint scope and a caller without it fails closed.
-- **CLM-003 (SUPPORTED):** service rules and typed service errors must pass
-  through; implementing lifecycle or graph validation in Broker would create a
-  competing authority.
-- **OPEN_ASSUMPTION:** none. The external accepted revision pin is an explicit
-  lifecycle prerequisite, not an assumption.
-
-## 7. Evidence relations
-
-- **EVD-001:** OBS-001 supports CLM-003 and the four route bindings.
-- **EVD-002:** OBS-002 supports CLM-001 and the need for this new Spec.
-- **EVD-003:** OBS-003 supports the external conformance dependency and prevents
-  premature Broker acceptance.
-- **EVD-004:** OBS-004 supports the identity, credential, and trusted
-  idempotency contracts below.
-
-## 8. Decisions
-
-- **DEC-001 — packaging:** add four standalone tools named
-  `workflow_create_definition`, `workflow_create_draft_version`,
-  `workflow_replace_draft_graph`, and `workflow_publish_version`.
-- **DEC-002 — authority:** svc-workflow remains the sole business-rule and
-  authorization authority. Broker performs only strict argument-shape checks
-  already supported by its generic manifest pipeline.
-- **DEC-003 — privilege:** request the exact service route scope
-  `workflow.execute`; make no Grant change and create no `workflow.admin` or new
-  scope. A future scope split is separate authority.
-- **DEC-004 — writes:** all four use trusted `Idempotency-Key`; the key is not a
-  model argument. Broker automatic retry is forbidden, apart from the existing
-  transport's same-key 401 credential refresh behavior for idempotent writes.
-
-## 9. Contracts
-
-### CTR-WDA-001 — create_definition
-
-`workflow_create_definition` has one `create_definition` operation:
+Expose four existing svc-workflow writes through one model-facing capability:
 
 ```text
-POST /internal/v1/domains/{domainId}/definitions
-pathParams = [domainId]
-body = [definitionKey, displayName, description, metadata]
-required = [domainId, definitionKey, displayName]
-idempotencyKey = true
-requiredScopes = [workflow.execute]
+workflow_definition_authoring(operation = create_definition |
+  create_draft_version | replace_draft_graph | publish_version)
 ```
 
-It returns the canonical `workflowDefinitionId` needed by the next operation.
-The model cannot supply actor, principal, credential, token, audit identity, or
-idempotency key.
+Prove a disposable local author → publish → unchanged
+`workflow_execute(operation="create_instance")` chain. Production apply is not
+authorized.
 
-### CTR-WDA-002 — create_draft_version
+In scope: one Broker manifest/four operations, current service bindings, strict
+model schemas, trusted identity/credential/idempotency seams, current error
+preservation, wiring, focused tests, and local E2E. Out of scope: svc-workflow
+code; any `workflow_execute` change; reads/archive/deprecate/revoke/delete;
+model-3 enablement; CAS, transaction/audit, receipt, scope, Grant, credential,
+or generic schema-framework redesign; deployment/live writes.
 
-`workflow_create_draft_version` has one `create_draft_version` operation:
+## 2. Authority and reclassification
+
+The accepted parent explicitly excluded Definition management from its
+implementation scope. Its DEC-010 unified the instance-execution operations
+`create_instance|transition`; it did not define authoring semantics. The focused
+§23 amendment makes that boundary explicit without replacing or changing
+`workflow_execute`.
+
+The current endpoints are existing service-owned contracts. No reviewed finding
+proves Broker cannot safely bind them while svc-workflow remains sole identity,
+authorization, validation, lifecycle, persistence, audit, and receipt authority.
 
 ```text
-POST /internal/v1/domains/{domainId}/definitions/{definitionId}/versions
-pathParams = [domainId, definitionId]
-body = [contextSchema, jsonSchemaDialect, validatorVersion, metadata,
-        semanticModelVersion]
-required = [domainId, definitionId]
-idempotencyKey = true
-requiredScopes = [workflow.execute]
+AUTHORITY_MEANING = A_WITH_MINIMAL_CLARIFICATION
+WHOLE_SUCCESSOR_REQUIRED = NO
+SERVICE_CHANGE_REQUIRED_FOR_BUSINESS_GOAL = NO
+SERVICE_CHANGE = FORBIDDEN
 ```
 
-`semanticModelVersion`, when supplied, is exactly service-supported integer
-`1|2`; no ancestry/fork field is invented. Success returns canonical
-`definitionVersionId`, version number, and DRAFT status.
+At dsh `bf2efd52f28a63c95d5b07253031ff793390bd1a` and svc-workflow
+`22e862af8e47050ae1bf9e7c5db7eb22a4d81ee7`:
 
-### CTR-WDA-003 — replace_draft_graph
+| Operation | Exact current endpoint |
+|---|---|
+| `create_definition` | `POST /internal/v1/domains/{domainId}/definitions` |
+| `create_draft_version` | `POST /internal/v1/domains/{domainId}/definitions/{definitionId}/versions` |
+| `replace_draft_graph` | `PUT /internal/v1/domains/{domainId}/definitions/{definitionId}/draft` |
+| `publish_version` | `POST /internal/v1/domains/{domainId}/definitions/{definitionId}/publish` |
 
-`workflow_replace_draft_graph` has one `replace_draft_graph` operation:
+All require Direct Machine Token, `workflow.execute`, Domain Owner authorization,
+and server-consumed `Idempotency-Key`; actor identity comes from the token. Where
+a current path coordinate is descriptive rather than consumed, Broker forwards
+one deterministic mapping and never infers or authorizes object relationships.
+
+## 3. Decisions
+
+- **DEC-001:** add exactly one capability/tool, `workflow_definition_authoring`,
+  with four operations, following ONE CAPABILITY → ONE TOOL / MULTI-OPERATION.
+- **DEC-002:** Broker performs shape validation and transport mapping only;
+  svc-workflow remains the sole business/security authority.
+- **DEC-003:** use current exact scope `workflow.execute`; no scope/Grant change.
+- **DEC-004:** trusted Broker generates the key; it is not a model argument. No
+  automatic business retry except existing same-key 401 credential refresh.
+- **DEC-005:** expose service-supported semantic models `1|2`; keep
+  `expectedRevision` optional and preserve `revision_conflict` when supplied.
+
+## 4. Contracts
+
+### CTR-WDA-001 — exact bindings
 
 ```text
-PUT /internal/v1/domains/{domainId}/definitions/{definitionId}/draft
-pathParams = [domainId, definitionId]
-body = [definitionVersionId, contextSchema, nodes, transitions]
-required = [domainId, definitionId, definitionVersionId, nodes, transitions]
-idempotencyKey = true
-requiredScopes = [workflow.execute]
+create_definition:
+  path [domainId]
+  body [definitionKey, displayName, description?, metadata?]
+  required [domainId, definitionKey, displayName]
+create_draft_version:
+  path [domainId, definitionId]
+  body [contextSchema?, jsonSchemaDialect?, validatorVersion?, metadata?,
+        semanticModelVersion?]
+  required [domainId, definitionId]; semanticModelVersion enum [1,2]
+replace_draft_graph:
+  path [domainId, definitionId]
+  body [definitionVersionId, contextSchema?, nodes, transitions]
+  required [domainId, definitionId, definitionVersionId, nodes, transitions]
+publish_version:
+  path [domainId, definitionId]
+  body [versionId, expectedRevision?]
+  required [domainId, definitionId, versionId]
 ```
 
-This is whole-graph replacement only. Node and transition objects expose
-exactly the service DTO fields; every object schema rejects additional
-properties. Broker does not add patch behavior or validate graph meaning.
-Service failure leaves the prior graph unchanged.
+All set `idempotencyKey=true`, `requiredScopes=['workflow.execute']`, and pass
+response JSON through unchanged.
 
-### CTR-WDA-004 — publish_version
+### CTR-WDA-002 — strict model schema
 
-`workflow_publish_version` has one `publish_version` operation:
+Every operation root has `additionalProperties=false`. Generated model schema
+uses the existing recursive `items`/`properties` renderer. Node items have:
 
 ```text
-POST /internal/v1/domains/{domainId}/definitions/{definitionId}/publish
-pathParams = [domainId, definitionId]
-body = [versionId, expectedRevision]
-required = [domainId, definitionId, versionId]
-idempotencyKey = true
-requiredScopes = [workflow.execute]
+required: node_key, display_name, order_index, node_type
+optional: assignee_ref_type, fixed_principal_id, assignee_input_key, instructions,
+          primary_advance_transition_key, metadata
+node_type: DRAFT | NORMAL | TASK | TERMINAL
+assignee_ref_type: WORKFLOW_CREATOR | DOMAIN_OWNER | FIXED_PRINCIPAL |
+                   INSTANCE_INPUT_PRINCIPAL
+additionalProperties: false
 ```
 
-Publication validation and CAS are server-authoritative. Success returns the
-canonical version status/digest/published timestamp. There is no broker retry.
-
-### CTR-WDA-005 — strict schema and trusted seams
-
-Every generated tool schema has `additionalProperties=false`, including nested
-node and transition objects. Required fields are operation-local. The four
-tools contain no `principalId`, `agentId`, `actor`, `subject`, `credential`,
-`accessToken`, `clientSecret`, `idempotencyKey`, or trusted audit field.
-Identity and credentials come only from the existing caller-bound Broker seam.
-
-### CTR-WDA-006 — downstream errors
-
-The manifests declare and preserve the service's actual typed families:
+Transition items have:
 
 ```text
-401 unauthenticated
-403 forbidden | direct_token_required | domain_disabled | not_domain_owner
-404 definition_not_found
-409 definition_key_conflict | definition_not_editable |
-    definition_version_immutable | revision_conflict | idempotency_conflict
-422 unknown_field | invalid_json | invalid_semantic_model_version |
-    graph_validation_failed | schema_validation_failed |
-    fixed_principal_invalid | digest_failure
-425 command_still_processing
-413 size_limit_exceeded
-500 internal_consistency_error
-503 service_unavailable
+required: transition_key, display_name, source_node_key, target_node_key,
+          transition_effect
+optional: submission_schema, metadata
+transition_effect: ADVANCE | RETURN | TERMINATE
+additionalProperties: false
 ```
 
-Only codes mechanically present in the accepted service revision may remain in
-the final table. The Broker must not collapse a declared downstream code into a
-generic transport error.
+The outer handler body is camelCase, while these nested service structs use the
+snake_case names shown above; tests pin that exact mixed wire shape. No generic
+recursive validator is authorized. Current service validation remains
+authoritative for graph meaning and rejects invalid graphs.
 
-### CTR-WDA-007 — registration and compatibility
+### CTR-WDA-003 — trusted seams
 
-The four manifests join the existing workflow manifest set and register exactly
-once. `workflow_execute` remains one tool with exactly
-`create_instance|transition`; `workflow_transition` remains absent; all existing
-Workflow read manifests and their semantics are byte-for-meaning unchanged.
+Schemas contain no `principalId`, `agentId`, `actor`, `subject`, credential,
+token, secret, `idempotencyKey`, or trusted audit identity. Principal/credential
+come only from the caller-bound seam. Transport generates one fresh key per
+logical call and reuses it only for the existing idempotent 401 refresh path.
 
-### CTR-WDA-008 — local integration chain
+### CTR-WDA-004 — actual errors
 
-A disposable local database/service/Broker test performs, via the public
-bindings and trusted credential seam:
+Declare `invalid_arguments`, transport fallbacks, and current endpoint codes:
 
-```text
-create_definition
--> create_draft_version
--> replace_draft_graph
--> publish_version
--> workflow_execute(create_instance)
-```
+| HTTP | Codes |
+|---|---|
+| 400 | `unknown_field`, `invalid_json`, `missing_idempotency_key`, `invalid_idempotency_key` |
+| 401 | `unauthenticated` |
+| 403 | `forbidden`, `direct_token_required`, `domain_disabled` |
+| 404 | `definition_not_found` |
+| 409 | `definition_key_conflict`, `definition_not_editable`, `definition_version_immutable`, `revision_conflict`, `idempotency_conflict` |
+| 413 | `size_limit_exceeded` |
+| 422 | `invalid_semantic_model_version` |
+| 425 | `command_still_processing` |
+| 500 | `internal_consistency_error` |
+| 503 | `service_unavailable` |
 
-It mechanically reads the generated catalog, invokes all five calls, verifies
-the published version is immutable, and verifies the created instance binds
-that exact canonical version. It touches no production service, database,
-Grant, or credential.
+Tests assert only codes reachable per operation. Undeclared downstream codes
+fail closed through existing `http_4xx|http_5xx`. Current graph/schema/fixed-
+principal/digest failures mapped by service to `internal_consistency_error` stay
+unchanged. Detail remains behind the existing sanitized transport boundary.
 
-### CTR-WDA-009 — implementation boundary
+### CTR-WDA-005 — compatibility
 
-Allowed dsh code is limited to the Workflow capability manifests, their export
-and default-inventory wiring if mechanically required, and focused/integration
-tests. Registry, mapping, transport, relay, gateway, or compose algorithms may
-change only if a failing acceptance test mechanically proves the existing
-generic path cannot host these single-operation manifests; any fix is minimal
-and recorded. No service business rule is copied into Broker.
+`workflow_execute` remains exactly `create_instance|transition`;
+`workflow_transition` remains absent. Existing read tools and service wires are
+unchanged. The new capability registers exactly once.
 
-## 10. Acceptance
+### CTR-WDA-006 — local proof
 
-| ACC | Contract | Required evidence |
+The disposable test invokes all four authoring operations (model 2), then
+`workflow_execute(create_instance)`. Catalog and canonical readback prove the
+instance binds the exact published version. It also proves invalid graph
+rejection, published immutability, supplied stale-CAS preservation, root unknown
+field rejection, nested closed item schemas in catalog, identity-field
+exclusion, and no auto retry. No production resource is used.
+
+### CTR-WDA-007 — implementation boundary
+
+Product code is limited to Workflow manifest/export/inventory wiring and tests.
+Registry, mapping, transport, relay, gateway, or compose algorithms may change
+only after a failing acceptance test proves the existing path cannot host this
+manifest and the Spec returns to review. No svc-workflow code is authorized.
+
+## 5. Acceptance
+
+| ACC | Evidence |
+|---|---|
+| ACC-WDA-001 | catalog has one tool/four operations; fake transport proves exact method/path/body/scope/result |
+| ACC-WDA-002 | catalog proves exact nested item schemas; legal graph expressible; service rejects invalid graph |
+| ACC-WDA-003 | identity/credential/key absent from schema/wire; trusted key behavior passes |
+| ACC-WDA-004 | operation fixtures prove current status/code preservation and fallback |
+| ACC-WDA-005 | inventory/regression proves existing surface unchanged and one new tool once |
+| ACC-WDA-006 | disposable local five-call chain and negative/security assertions PASS |
+| ACC-WDA-007 | structure and exact diff-scope gates PASS |
+
+## 6. Frozen blocker disposition
+
+| Finding | Classification | Disposition |
 |---|---|---|
-| ACC-WDA-001 | CTR-WDA-001..004 | generated catalog contains all four tools; fake transport tests prove exact methods/paths/bodies/scopes/results |
-| ACC-WDA-002 | CTR-WDA-005 | unknown top-level/nested fields fail before token/HTTP; forbidden identity/credential/key fields absent from schema and wire |
-| ACC-WDA-003 | CTR-WDA-006 | one test per real error family proves exact downstream code/status preservation |
-| ACC-WDA-004 | CTR-WDA-003..004 | service-backed tests prove invalid replacement is atomic, published replacement is rejected, invalid publish fails closed, CAS conflict preserved |
-| ACC-WDA-005 | CTR-WDA-007 | inventory and regression tests prove exact existing write/read surface unchanged |
-| ACC-WDA-006 | CTR-WDA-008 | disposable local five-call chain PASS with canonical version/instance readback |
-| ACC-WDA-007 | CTR-WDA-009 | structure gate and exact diff scope PASS |
+| BU-001 single-write-tool conflict | SHIP_BLOCKER | §23 amendment; no successor |
+| BU-002 model-3 | FOLLOW_UP_DEBT | use supported model 2 |
+| BU-003 required CAS | FOLLOW_UP_DEBT | current optional field |
+| BU-004 transaction/audit | OUT_OF_SCOPE_SERVICE_HARDENING | no service change |
+| BU-005 receipt hash/version | OUT_OF_SCOPE_SERVICE_HARDENING | no service change |
+| BU-006 recursive array schema | MECHANICAL_FIX | existing renderer; no framework |
+| BU-007 error truth/redaction | SHIP_BLOCKER | current table/fallback only |
+| BU-008 proposed service pin | MECHANICAL_FIX | removed |
+| BU-009 400/422 drift | MECHANICAL_FIX | corrected above |
+| BU-010 dedicated scope | FOLLOW_UP_DEBT | current scope; zero Grant change |
 
-## 11. Alternatives and disposition
+This is the complete review union for this round.
 
-- **ALT-001:** add the four operations to `workflow_execute` — rejected; it
-  contradicts the accepted exact two-operation contract.
-- **ALT-002:** one generic `workflow_admin` or builder engine — rejected as
-  excessive privilege and framework scope.
-- **ALT-003:** duplicate graph/lifecycle checks in Broker — rejected; creates a
-  second business authority and drift risk.
-- **ALT-004:** invent a new scope — rejected; the existing service contract has
-  an exact scope, and this repository cannot govern auth-service Grants.
+## 7. Lifecycle
 
-## 12. Migration, compatibility, and rollback
-
-The change is additive at the Broker catalog. No persisted data migration,
-Grant migration, or production rollout is authorized. Local rollback removes
-the four new manifests/wiring and tests; existing tools are untouched.
-Production deployment and rollback require a separate authority.
-
-## 13. Open questions
-
-```text
-OPEN_OWNER_DECISIONS = NONE
-NORMATIVE_TBD = external accepted revision pin only
-```
-
-The pin is filled mechanically after service Spec acceptance and before this
-Spec's final acceptance head. It is not delegated to implementation.
+No data, service, scope, Grant, credential, production, or deployment change is
+authorized. Owner acceptance of the independently reviewed exact authority head
+is required before implementation. After acceptance, implementation receives
+one independent code audit and stops at
+`WORKFLOW_DEFINITION_AUTHORING_READY_FOR_INTEGRATION = YES`.
 
 ```text
 SPEC_GOVERNANCE_MODE = AUTHOR
-SPEC_ID = AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V1
-SPEC_KIND = implementation
 STATUS = proposed
-AUTHORITY_LEVEL = governing_spec
 IMPLEMENTATION_AUTHORITY = contracts
-PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
-EXTERNAL_AUTHORITIES = SVC_WORKFLOW_PRODUCT_BOUNDARY_V6 + SVC_WORKFLOW_DEFINITION_AUTHORING_HTTP_CONFORMANCE_V1
+EXTERNAL_AUTHORITIES = SVC_WORKFLOW_PRODUCT_BOUNDARY_V6@22e862af8e47050ae1bf9e7c5db7eb22a4d81ee7
 OPEN_OWNER_DECISIONS = NONE
-NORMATIVE_TBD = external accepted revision pin
+NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
-CONTRACT_COUNT = 9
-CONTRACTS_WITH_ACCEPTANCE = 9
+CONTRACT_COUNT = 7
+CONTRACTS_WITH_ACCEPTANCE = 7
 AUTHORING_READY_FOR_REVIEW = YES
 ```
