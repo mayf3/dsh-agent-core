@@ -7,7 +7,7 @@ implementation_authority: contracts
 production_apply_authority: contracts
 date: 2026-09-04
 revision: r1
-scope: [scheduler-runtime-selective-deployment, production-one-shot-canary]
+scope: [scheduler-runtime-selective-deployment, production-cross-agent-one-shot-canary]
 governed_by:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
   - AGENT_CORE_SCHEDULER_RUN_HISTORY_V1
@@ -17,11 +17,11 @@ external_authorities:
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_SCHEDULER_BUNDLE_1_7_DEPLOYMENT_V1
     revision: c708b37cbfa1e577f80da40439bf18cfc259c84d
-    relation: prerequisite
+    relation: depends_on
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_DAILY_AUTONOMY_OPERATIONAL_GRANTS_V1
     revision: 07c8a9c4f7ad1b76dfd1bcfd1cc4a52b9effae00
-    relation: prerequisite
+    relation: interoperates_with
 supersedes: []
 superseded_by: null
 owners: [mayf3]
@@ -36,8 +36,8 @@ owners: [mayf3]
 ## 1. Goal and exact transition
 
 Deploy the accepted Scheduler closure into the sole production Agent Core
-Runtime, then run exactly the one-shot self-service canary frozen by
-`AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2/CTR-CANARY-001`.
+Runtime, pause for the exact Phase-C operational Grant, then run exactly one
+cross-Agent one-shot canary required by `CORE_RUNTIME_DAILY_AUTONOMY_OVERNIGHT_V1`.
 
 ```text
 AUTHORING_BASE = e225d7b22e90d09f5658e267edb7c871c808434a
@@ -49,7 +49,10 @@ HISTORY_IMPLEMENTATION = 8343f8f6bc175a6e1d3a8943e7b611992eec603a
 HISTORY_LOCK_FIXES = 94f4d1a32c4d28096d860b5b756dda3b98c4073a,447e5a50162e21b571b8a557a81b0379073af9b1
 TARGET_ROOT = /usr/local/libexec/agent-core/app
 LAUNCHD_TARGET = system/ai.agent-core.runtime
-GLOBAL_RUNTIME_LOCK = /usr/local/libexec/agent-core/.deployment.lock
+AUTH_MUTATION_LOCK = /var/run/auth-service-production-mutation.lock
+GLOBAL_RUNTIME_LOCK = /var/run/agent-core-production-mutation.lock
+SCHEDULER_ENGINE_LOCK = /Users/authsvc/.agent-core/scheduler/jobs.json.engine.lock
+ARTIFACT_V2 = /Users/yanfenma/workspace/deployment-artifacts/scheduler-runtime-deploy-v2
 ```
 
 This is a selective ten-file transition, never a checkout copy. History storage
@@ -65,15 +68,23 @@ The deployment transaction touches only §3 destinations. It changes no Broker,
 production-runtime/compose, product-api, plist, environment, credential, Auth
 row, Job/occurrence/history store, legacy path, workflow, or target workspace.
 
-Apply begins only after: this Spec accepted/merged/final-head PASS; accepted ASM
+The runtime-deployment stage begins only after: this Spec
+accepted/merged/final-head PASS; accepted ASM
 Deployment V2 exact semantic head `e225d7b...` has terminal Stage B/D/E and temp
 Grant compensation PASS; Auth Scheduler 1.7 exact semantic head `c708b37...` is
-accepted/merged/production PASS; permanent-Grant semantic head
-`07c8a9c4f7ad1b76dfd1bcfd1cc4a52b9effae00` is independently reviewed,
-accepted/merged/applied and exact `agent.session.send` plus `scheduler.admin` rows are live
-only for `agt_efficiency-agent`; the sole Runtime is healthy; no production
+byte-equivalent apart from its declared lifecycle-only acceptance to an
+accepted/merged descendant and has production PASS; permanent-Grant semantic
+head `07c8a9c4f7ad1b76dfd1bcfd1cc4a52b9effae00` is independently reviewed and
+accepted/merged, with its Phase B terminal and exact permanent
+`agent.session.send` live, but Phase C `scheduler.admin` not yet applied. The
+sole Runtime is healthy; no production
 transaction is active/authorized for the window/outcome-ambiguous; and fresh
-post-ASM preimages match. Any unmet or drifted condition stops unchanged.
+post-ASM preimages match. Any unmet or drifted condition stops unchanged. After
+the runtime receipt is terminal `FORWARD_ACTIVE`, Auth Phase C may add the exact
+permanent `scheduler.admin` row. Only after its terminal `C_ACTIVE` receipt may
+this Spec's canary stage execute. Thus the single order is Lane B terminal →
+Auth 1.7 → Runtime deployment → Phase C Grant → one cross-Agent canary; no stage
+waits on its own downstream result.
 
 Prototype `/Users/yanfenma/workspace/deployment-artifacts/scheduler-runtime-deploy`
 is evidence only. Manifest SHA-256 is
@@ -162,8 +173,10 @@ not a claim that static inspection alone enumerates the transitive closure.
   sufficiency remains INFERRED until that Gate passes, and history is designed
   to remain dormant. Basis: `OBS-SRD-003`,
   `CLM-SRD-001`, `EVD-SRD-003`.
-- `STATE-SRD-004` — The accepted canary requires one self Job and whole-host
-  legacy-path evidence after deployment, without restart or Auth. Basis:
+- `STATE-SRD-004` — The Master Goal requires exactly one cross-Agent Job from
+  the authorized orchestrator to a safe target fresh non-main session after
+  runtime deployment and Phase C Grant, with whole-host legacy-path evidence.
+  Basis:
   `OBS-SRD-004`, `EVD-SRD-004`.
 
 ### OBS-SRD-001 — Accepted lineage and complete history ancestry
@@ -199,13 +212,15 @@ not a claim that static inspection alone enumerates the transitive closure.
 - Limitation: static sufficiency is conditional on the required synthetic
   overlay/catalog/relay/composed proof in `CTR-SRD-001`.
 
-### OBS-SRD-004 — Accepted production canary contract
+### OBS-SRD-004 — Governing production canary contract
 
-- Subject/revision/environment/observed_at: Scheduler V2
-  `4c0a623.../CTR-HOT-001/CTR-CANARY-001`, Git worktree, `2026-09-04`
-- Method/result: authority inspection freezes exact one-shot request, current
-  trusted Feishu conversation, stable Runtime PID, delivery/deletion/evidence,
-  and whole-host `fs_usage` legacy exclusion.
+- Subject/revision/environment/observed_at: `CORE_RUNTIME_DAILY_AUTONOMY_OVERNIGHT_V1`
+  plus Scheduler V2 wire contracts, Git worktree, `2026-09-04`
+- Method/result: the Goal freezes one disposable `at` Job created through
+  `scheduler.admin`, correct target Agent, fresh non-main session, exactly one
+  occurrence/run, target-owned identity/credential, no privilege propagation,
+  cleanup/retained evidence, and whole-host legacy-path exclusion. The older
+  self-only canary shape is not used in this Goal.
 
 ### CLM-SRD-001 — Selective activation is sufficient but history stays dormant
 
@@ -246,20 +261,28 @@ then seal/reverify the exhaustive instrumented loaded-source closure. Reject a
 static-list-only claim, dormant partial copy without imported modules, and
 broader history-runtime activation.
 
-### DEC-SRD-003 — Separate deployment smoke from the one business canary
+### DEC-SRD-003 — Separate deployment smoke from the one cross-Agent canary
 
-Deployment proof is import-only with one restart and zero Jobs; after PASS, the
-accepted self one-shot is the sole Scheduler business mutation and uses hot
-reload with no restart/Auth request.
+Deployment proof is import-only with one restart and zero Jobs. Auth Phase C
+then activates the one exact orchestrator Grant. Only afterward does the sole
+Scheduler business mutation create one cross-Agent `at` Job; no self-only Job
+is also created.
 
 ## 5. Contracts
 
 ### CTR-SRD-001 — Reproducible post-ASM artifact
 
-Build twice from clean detached `18f96e2...`; require identical ten-file
-manifests. Under the runtime lock fresh-read post-ASM live preimages/compose and
-seal release/rollback manifests, source/blob/hash/metadata, native launcher,
-root helper, simulator, receipt schema. No secret/env dump. Stale prototype,
+Build twice from clean detached `18f96e2...`; require identical artifacts at
+exactly `ARTIFACT_V2`. Its closure is exactly ten release payloads, five
+overwrite preimages, `ARTIFACT_MANIFEST.json`, `RELEASE_SHA256.txt`,
+`PREIMAGE_SHA256.txt`, `RUN_SCHEDULER_RUNTIME_DEPLOY_OWNER.sh`,
+`CHECK_SCHEDULER_RUNTIME_DEPLOY.sh`, and
+`SIMULATE_SCHEDULER_RUNTIME_DEPLOY.sh`; no other path. The manifest schema is
+exactly `{schema_version,authority,release_commit,target,files,loaded_sources,locks,timeouts,receipt_schema}`;
+every row binds relative path, action, type, byte count, mode, SHA-256, and Git
+blob where applicable. Under both locks fresh-read post-ASM live
+preimages/compose and seal release/rollback manifests, source/blob/hash/metadata,
+native launcher, root helper, simulator, receipt schema. No secret/env dump. Stale prototype,
 source mismatch, symlink/special file, missing rollback byte, or drift stops.
 The artifact MUST verify every §3 non-write vector row and run the required
 synthetic post-ASM overlay proof for single catalog registration, schema
@@ -269,17 +292,50 @@ including `2e54d0a...`; an import-only smoke cannot substitute for this proof.
 The synthetic proof's instrumented exhaustive loaded-source catalog MUST be
 sealed and every row reverified under the production lock immediately before
 apply as required by §3; no unsealed loaded local dependency is allowed.
+Two clean builds, a secret/extra-path scan, fresh read-only CHECK, and the full
+simulator MUST pass before an Owner execution packet may be formed.
 
 ### CTR-SRD-002 — Native serialized transaction
 
 Only Owner-approved macOS native authorization may invoke the helper; no
-password input/storage/fallback. Hold `GLOBAL_RUNTIME_LOCK` from first target
-read through receipt. Goal ledger, process/receipt census, and Owner attestation
-prove no concurrent/ambiguous Agent Core/Auth mutation. Atomically install only
-ten rows via no-clobber create or hash-guarded overwrite, fsync, exact metadata,
-and readback. No other path changes.
+password input/storage/fallback. Before any artifact code executes, a literal
+bootstrap made only from `/bin` and `/usr/bin` tools creates a nonce-scoped
+`/private/var/root/agent-core-scheduler-deploy-v1-<nonce>` directory as
+`root:wheel 0700`, copies the externally reviewed manifest and every input
+without following symlinks, and verifies source/destination device, inode,
+link-count, type, owner, group, mode, bytes, and SHA-256. Data are root:wheel
+0600 and the runner 0700. A separate native authorization may execute only that
+sealed root-owned runner by its frozen external digest. User-owned artifact code
+never executes as root.
+
+Acquire `AUTH_MUTATION_LOCK` then `GLOBAL_RUNTIME_LOCK` before the first target
+read and hold both through terminal receipt publication. Each is opened without
+symlink following and must remain a regular `root:wheel 0600` file with stable
+device/inode/link-count. Acquisition is bounded to 30 seconds; no retry. Goal
+ledger, process/receipt census, and Owner attestation prove no concurrent or
+ambiguous Agent Core/Auth participant. Atomically install only ten rows via
+no-clobber create or hash-guarded overwrite, fsync file and parent directory,
+prove exact metadata/readback, and change no other path.
+
+The only non-secret output is the atomic regular `root:wheel 0644` file
+`/private/var/tmp/agent-core-scheduler-deploy-v1/<nonce>.result.json`, beneath an
+exclusively created root:wheel 0755 parent, with exact scalar keys
+`schema_version,nonce,correlation_id,outcome,receipt_sha256,transaction_journal_sha256,event_details_sha256,publication_journal_sha256,finished_at`.
+UUIDs are lowercase, times RFC3339 UTC, hashes lowercase 64-hex; only
+`receipt_sha256` may be null after bounded publication failure. stdout/stderr
+are sanitized and never carry logs, inputs, secrets, or credentials.
 
 ### CTR-SRD-003 — One restart and runtime proof
+
+Before stop, require no in-flight occurrence, unresolved/ambiguous run,
+already-due slot, or next due slot through the 300-second worst-case deployment
+window. Stop the exact old PID, acquire `SCHEDULER_ENGINE_LOCK` through the
+accepted OwnerLock primitive, re-read the census and JobStore hash, and release
+that engine lock only immediately before the new start. A failed/uncertain stop
+while the old PID remains healthy performs zero restart; after confirmed stop
+but before a write, failure starts the unchanged old runtime once. No Job is
+edited to manufacture quiescence. Any later JobStore change forbids success and
+enters the closed reconcile classifier.
 
 Restart exactly `system/ai.agent-core.runtime` once. Prove old PID terminated;
 one fresh parent PID/start; health; ten hashes; unchanged compose/plist/
@@ -292,32 +348,136 @@ occurrence, run, child session, or message during deployment proof.
 Post-mutation failure restores five exact preimages, removes create paths only
 when hashes equal sealed release, performs exactly one rollback restart, and
 proves full post-ASM preface/unrelated invariants. Ambiguous write/restart is
-read back, never replayed. After first mutation signals are recorded/deferred
-through rollback/receipt; repeats cannot abort/retarget. Drift during cleanup is
-`MANUAL_RECOVERY_REQUIRED`, not destructive removal or success.
+read back, never replayed. A root-owned fsynced transaction journal records
+`INIT,PRECHECK_PASS|PRECHECK_FAIL,STOP_BEGIN,STOP_CONFIRMED,QUIESCENCE_PASS,WRITE_BEGIN,FILE_INSTALLED,INSTALL_PASS,START_BEGIN,START_CONFIRMED,PROOF_PASS,SIGNAL,COMPENSATION_BEGIN,FILE_RESTORED,COMPENSATION_START_CONFIRMED,COMPENSATION_PASS`.
+Each canonical JSONL record has exact keys
+`schema_version,sequence,previous_sha256,event,at,correlation_id,details_sha256`;
+sequence begins at 1, genesis previous hash is 64 zeroes, and later records hash
+the preceding exact UTF-8 line without newline. A companion root-owned 0600
+`EVENT_DETAILS.jsonl` has exactly one same-sequence/event record whose canonical
+details hash equals `details_sha256`. Install ordinals are 1..10 in manifest
+order; restore ordinals are only mutated targets in strict reverse order.
+The exact root output closure is `TRANSACTION_JOURNAL.jsonl`,
+`EVENT_DETAILS.jsonl`, `PUBLICATION_JOURNAL.jsonl`, `RECEIPT.json` or its one
+failed temp, and nothing else; every file is regular non-symlink root:wheel 0600.
+Canonical details have these exact keys: `INIT` =
+`nonce,artifact_manifest_sha256,authority_semantic_head`;
+`PRECHECK_PASS|PRECHECK_FAIL` =
+`preimage_catalog_sha256,jobs_sha256,old_pid,result_code`; `STOP_BEGIN` =
+`old_pid`; `STOP_CONFIRMED` = `old_pid,stopped_at`; `QUIESCENCE_PASS` =
+`jobs_sha256,next_due_at,in_flight_count,unresolved_count,engine_lock_token_sha256`;
+`WRITE_BEGIN` = `target_count`; `FILE_INSTALLED|FILE_RESTORED` =
+`ordinal,path,action,before_sha256,after_sha256`; `INSTALL_PASS` =
+`postimage_catalog_sha256`; `START_BEGIN` = `intended_face`;
+`START_CONFIRMED|COMPENSATION_START_CONFIRMED` = `pid,started_at`;
+`PROOF_PASS|COMPENSATION_PASS` =
+`catalog_sha256,jobs_sha256,compose_sha256,plist_sha256,launchd_running,import_export_count,fatal_log_delta_count,history_storage_created_count,job_occurrence_delta_count`;
+`SIGNAL` = `signal,after_event`; and `COMPENSATION_BEGIN` =
+`reason,from_event`. Extra/missing keys or evidence lines are corruption.
+
+Ignoring `SIGNAL` self-loops, legal transaction paths are exactly:
+
+```text
+INIT -> PRECHECK_FAIL
+INIT -> PRECHECK_PASS -> STOP_BEGIN -> STOP_CONFIRMED -> QUIESCENCE_PASS
+QUIESCENCE_PASS -> WRITE_BEGIN -> FILE_INSTALLED{1..10} -> INSTALL_PASS
+INSTALL_PASS -> START_BEGIN -> START_CONFIRMED -> PROOF_PASS
+PROOF_PASS -> COMPENSATION_BEGIN
+STOP_CONFIRMED|QUIESCENCE_PASS|WRITE_BEGIN|FILE_INSTALLED|INSTALL_PASS|START_BEGIN|START_CONFIRMED
+  -> COMPENSATION_BEGIN
+COMPENSATION_BEGIN -> FILE_RESTORED{0..10} -> START_BEGIN
+  -> COMPENSATION_START_CONFIRMED -> COMPENSATION_PASS
+```
+
+`INIT`, `PRECHECK_FAIL`, `PRECHECK_PASS`, and `STOP_BEGIN` are legal prestop
+terminal prefixes when the old PID remains healthy. A compensation resume
+continues only the uncompleted, hash-guarded suffix. After first mutation,
+signals are journaled/deferred through rollback/receipt; repeats cannot abort or
+retarget. Unknown face, invalid edge/hash/ordinal, or drift during cleanup is
+`OUTCOME_UNKNOWN`/`MANUAL_RECOVERY_REQUIRED`, never guessed deletion, restart,
+or success.
 
 ### CTR-SRD-005 — Bounds and receipt
 
 Lock/dialog/install/restart/health bounds are 30/120/30/90/60 seconds; health
 polls at most once/second. Premutation timeout exits unchanged; later timeout
-compensates. Atomic root-owned receipt binds Owner, authority/artifact/seal,
-manifests, signals, PIDs/restarts, health/smoke/stderr, invariant digests, and
-terminal outcome. No individual Gate/dialog/file/PID/health/receipt is success.
+compensates. Reconcile under both locks uses this exhaustive precedence:
+
+| Priority | Exact face | Sole action |
+|---|---|---|
+| 1 | valid receipt and matching recorded state | return same outcome read-only |
+| 2 | receipt contradicts state/journal/proof | no mutation; `OUTCOME_UNKNOWN` |
+| 3 | no journal/receipt, exact preimage, old healthy, jobs exact | forward may begin |
+| 4 | legal prestop prefix, exact preimage, old healthy, jobs exact | zero restart; `STOPPED_PREMUTATION` |
+| 5 | stopped before write, exact preimage/jobs, no PID | start old once; `QUIESCENCE_ABORTED` |
+| 6 | `COMPENSATION_PASS`, exact preimage/old healthy/jobs, no receipt | publish `COMPENSATED` only |
+| 7 | compensation in progress, every target exact preimage/release, jobs exact | resume unfinished compensation only |
+| 8 | targets known but JobStore drifted | stop if running, restore known code, no restart; `MANUAL_RECOVERY_REQUIRED` |
+| 9 | `PROOF_PASS`, release/new healthy/jobs exact, success receipt absent/failed | compensate; never infer success |
+| 10 | write begun, no proof/compensation, targets known, jobs exact | compensate |
+| 11 | every other face | no mutation/replay; `OUTCOME_UNKNOWN` |
+
+Receipt publication has its own root:wheel 0600 hash-chained canonical
+`PUBLICATION_JOURNAL.jsonl` with exact events `PUB_BEGIN,PUB_SIGNAL,PUB_PUBLISHED,PUB_FAILED,PUB_RESUME`.
+`PUB_BEGIN/PUB_RESUME` bind outcome, fixed `RECEIPT.json.tmp` path, current
+transaction/evidence prefix hashes, and receipt-payload hash. Transaction and
+evidence prefixes are fsynced before construction; publication events never
+enter those prefixes, preventing self-reference. Legal paths are one begin to
+published/failed; one evidence-only resume is allowed only for a non-success
+outcome with identical payload. A failed `FORWARD_ACTIVE` publication must
+advance the transaction through compensation and begin a new `COMPENSATED`
+publication, never retry success. If rename succeeded before the published
+marker, re-entry may validate the exact pending payload and append only
+`PUB_PUBLISHED`. A second non-success failure is terminal with null receipt hash.
+Publication records use the same exact envelope/hash rules; details keys are
+`PUB_BEGIN|PUB_RESUME` =
+`outcome,temporary_path,transaction_prefix_sha256,event_details_prefix_sha256,receipt_payload_sha256`,
+`PUB_SIGNAL` = `signal,after_event`, `PUB_PUBLISHED` =
+`outcome,receipt_sha256`, and `PUB_FAILED` = `outcome,error_class`.
+
+Publish the atomic root-owned 0600 receipt at
+`/private/var/root/agent-core-scheduler-deploy-v1-<nonce>/RECEIPT.json`. Its
+exact keys are
+`schema_version,outcome,correlation_id,started_at,finished_at,owner_id,approval_ref,authority_spec,authority_semantic_head,authority_accepted_head,auth_semantic_head,auth_accepted_head,artifact_manifest_sha256,runner_sha256,transaction_prefix_sha256,event_details_prefix_sha256,journal_last_sequence,authorization_method,auth_lock_dev_inode,agent_core_lock_dev_inode,old_pid,new_pid,old_started_at,new_started_at,preimage_catalog_sha256,postimage_catalog_sha256,compose_sha256,plist_sha256,jobs_sha256_before,jobs_sha256_after,forward_restart_count,rollback_restart_count,launchd_running,import_export_count,fatal_log_delta_count,history_storage_created_count,job_occurrence_delta_count,signal_event_count,signal_events_sha256,unavailable_fields_sha256`.
+No extra key/array/object is permitted. Schema version is integer 1; UUIDs are
+lowercase; heads 40-hex; non-null SHA fields 64-hex; times RFC3339 UTC; lock
+identities decimal `device:inode`; PIDs positive safe integers; counts
+nonnegative safe integers; launchd is boolean; authorization method exactly
+`macos_native_authorization`. Null is legal only when the field name appears in
+the sorted canonical string-array hashed by `unavailable_fields_sha256`.
+The one closed outcome is:
+`STOPPED_PREMUTATION|QUIESCENCE_ABORTED|FORWARD_ACTIVE|COMPENSATED|OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED`.
+Only `FORWARD_ACTIVE` is deployment success. The manifest duplicates the exact
+field/type/nullability schema and these invariants byte-for-byte: forward means
+release catalog/new healthy PID/restart 1:0/all proofs zero-or-69/jobs equal;
+compensated means preimage/old healthy face/rollback restart exactly one/jobs
+equal; prestop means preimage/old healthy/0:0; quiescence-aborted means
+preimage/fresh old healthy/0:1; manual means known Job drift and stopped restored
+code; unknown makes no success claim and records every unavailable coordinate.
+No individual
+Gate/dialog/file/PID/health/receipt is success.
 
 ### CTR-SRD-006 — Exact one-shot canary
 
-After deployment PASS, with Runtime PID/start unchanged, `agt_efficiency-agent`
-in the current trusted Feishu conversation invokes only unified `scheduler`:
-`action=create`, `name=15分钟提醒`, `schedule_kind=at`, `at=15m`, `message=`
-`⏰ Agent Core Scheduler 自助任务触发成功`, announce/current conversation,
-`delivery_mode=announce`, `delivery_target=current_conversation`,
-`delete_after_run=true`, `auto_retry=false`. No omitted/defaulted substitute is
-accepted. Prove future definition, resident
-tick hot reload without restart, exactly one succeeded/delivered occurrence,
-visible message, automatic definition deletion, retained evidence, no retry.
-Correlation-bound Parent instrumentation plus Auth access-log delta MUST prove
-exactly zero `assertGrant`, OAuth/token, credential-store read, or other Auth
-request for this self operation. Any such access fails the canary.
+After deployment `FORWARD_ACTIVE` and Auth Phase C terminal `C_ACTIVE`, with
+Runtime PID/start unchanged, source `agt_efficiency-agent` invokes only unified
+`scheduler` with `action=create`, `schedule_kind=at`, one future bounded UTC
+instant, `delete_after_run=true`, `auto_retry=false`, target `blog-agent`, and a
+fresh non-main target session. The correlation-bound message is exactly
+`SCHEDULER-CANARY-<lowercase-uuid>: acknowledge receipt only; perform no other business action`.
+The accepted wire path requests only `scheduler.admin` for the source; no
+alias/local-manage/two-scope request is allowed.
+
+Prove exact target Agent/session, one definition, one occurrence, one run, one
+delivery/target turn, target-owned principal and credential, no source
+credential/scope/token propagation, no automatic ping-pong, exactly-once, and
+unchanged Runtime health/PID. The target must not execute workflow or another
+business tool. On pre-fire failure, disable then remove the exact
+correlation-bound definition. On post-due ambiguity, first fence it disabled,
+wait through the bounded late-fire window, census occurrence/run/delivery, and
+remove only when no future fire is possible. Receipt publication may never
+leave an enabled late Job. This is the Goal's only Scheduler Job; no self-only
+canary is also run.
 
 ### CTR-SRD-007 — Legacy zero-access and non-propagation
 
@@ -328,17 +488,25 @@ trace. Prove directory-wide zero access at/below
 `/Users/yanfenma/.openclaw/cron/`; separately prove exact before/after
 existence/size/mtime/inode/SHA-256 for
 `/Users/yanfenma/.openclaw/cron/jobs.json`. The trace also proves zero access to
-`/usr/local/libexec/agent-core/config/agent-credentials.json` in the canary
-window. The permanent `scheduler.admin` credential/
-token is unnecessary for self canary and must never enter a Job, run, child,
-target, message, trace, or receipt.
+`/usr/local/libexec/agent-core/config/agent-credentials.json` from any target
+process. The source credential may be read only by the trusted source-side Auth
+seam and must not appear in the Job, run, target session, message, trace, or
+receipt. Target credential access must be solely target-owned. Correlation-bound
+Auth, relay, Parent, JobStore, occurrence, run, session, and delivery evidence
+proves the exact source `scheduler.admin` decision and no privilege propagation.
 
 ### CTR-GSRD-001 — Lifecycle only
 
-Acceptance may change only this Spec lifecycle/provenance/banner/footer and
-README row, with no
-normative semantic delta. No artifact/production byte changes before accepted
-exact-head merge and final-head recheck.
+Acceptance may change only: (1) frontmatter `status: proposed -> accepted`; (2)
+add `accepted_date,accepted_by,accepted_at,accepted_reviewed_base,accepted_reviewed_head,independent_review_result,independent_review_blockers,acceptance_verdict,acceptance_semantic_delta,acceptance_authority_basis`;
+(3) replace the opening banner with `ACCEPTED / PRODUCTION DEPLOYMENT AUTHORITY`
+and the exact recorded Owner/reviewed-head statement; (4) authoring footer
+`STATUS: proposed -> accepted` and `OPEN_OWNER_DECISIONS: EXACT_HEAD_ACCEPTANCE -> NONE`;
+and (5) the README row lifecycle cell `proposed -> accepted`. Every other byte
+must remain identical; added values bind exact base/head, reviewer PASS/zero
+blockers, Owner identity/time/decision, `acceptance_verdict: accepted`, and
+`acceptance_semantic_delta: none_after_review`. No artifact/production byte
+changes before accepted exact-head merge and final-head recheck.
 
 ## 6. Acceptance
 
@@ -347,9 +515,15 @@ exact-head merge and final-head recheck.
 - Contracts: `CTR-SRD-001`, `CTR-SRD-004`, `CTR-SRD-005`
 - Environment/evidence: two clean worktrees plus disposable filesystem/process/
   signal harness; UTC time, toolchain/source/blob hashes, builds, secret scan,
-  every failure boundary and repeated-signal transcript
-- Pass/fail: deterministic exact ten rows, complete rollback/bounds/no secret;
-  fail on extra path, stale guard, nondeterminism, interruption, ambiguity.
+  and injection before/after each copy/fsync/rename, both global locks, engine
+  lock, stop/start and old/new/absent/ambiguous PID, health/import/log proof,
+  JobStore drift, every signal/journal marker, bad chain/schema/ordinal/details,
+  receipt temp/fsync/rename/lost-publication, legal single evidence-only resume,
+  forbidden success retry, and re-entry after every compensation step
+- Pass/fail: fresh read-only CHECK plus full simulator PASS, deterministic exact
+  ten rows, one exhaustive classifier action at every boundary, complete
+  rollback/bounds/no secret/no replay; fail on extra path, stale guard,
+  nondeterminism, interruption, ambiguity, enabled late Job, or overclaim.
 
 ### ACC-SRD-002 — Production deployment
 
@@ -360,14 +534,16 @@ exact-head merge and final-head recheck.
 - Pass/fail: ten files, one healthy generation, zero business/unrelated change;
   fail on overlap/drift/extra path/restart/mutation/bad metadata/evidence.
 
-### ACC-SRD-003 — Hot-reload canary
+### ACC-SRD-003 — Cross-Agent canary
 
 - Contracts: `CTR-SRD-006`, `CTR-SRD-007`
-- Environment/evidence: production Runtime/current trusted Feishu group; UTC
-  time, unchanged PID/start, exact request/result, occurrence/delivery/deletion,
-  visible-message coordinate, trace hash/bytes/markers/exit, legacy metadata
-- Pass/fail: one delivery, deletion/evidence, no restart/retry/legacy access or
-  Auth/credential access or authority copy; otherwise fail.
+- Environment/evidence: production Runtime and fresh target session; UTC time,
+  Phase-C receipt, unchanged PID/start, exact source/target request/result,
+  definition/occurrence/run/session/delivery/deletion, target principal and
+  credential ownership, Auth decision, trace hash/bytes/markers/exit, legacy metadata
+- Pass/fail: exactly one occurrence/run/delivery/turn, correct fresh non-main
+  target, deletion/retained evidence, no restart/retry/ping-pong/legacy access,
+  privilege propagation, or enabled late Job; otherwise fail.
 
 ### ACC-GSRD-001 — Lifecycle
 
@@ -384,7 +560,7 @@ SPEC_GOVERNANCE_MODE = AUTHOR
 STATUS = proposed
 CONTRACT_COUNT = 8
 CONTRACTS_WITH_ACCEPTANCE = 8
-OPEN_OWNER_DECISIONS = NONE
+OPEN_OWNER_DECISIONS = EXACT_HEAD_ACCEPTANCE
 NORMATIVE_TBD = NONE
 AUTHORING_READY_FOR_REVIEW = YES
 PRODUCTION_CHANGE_THIS_ROUND = NONE
