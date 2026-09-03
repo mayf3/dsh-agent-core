@@ -16,19 +16,12 @@ governed_by:
 external_authorities:
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_AGENT_SESSION_MESSAGING_AUDIENCE_CCR_V1
-    accepted_revision: e5a1b8b5ea7801ac9aa6d7fd1170ffa7c5d654e6
-    current_main_blob: 6fe4cae2e72cb518b81d966f183c3635f8225af9
-    current_main_sha256: 0223a307c09552c34d7f5cffceaba7c13a1feceac9b466b4cf32dc254292d1f3
-    relation: phase_a_prerequisite
+    revision: 34ca9c6f2d677096a7c2b17a6ed023fa62c0da2e
+    relation: depends_on
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_AGENT_SESSION_MESSAGING_TEMP_GRANT_V1
-    accepted_revision: d759265f003e7fdfe4f31341251bd6b452bb05d8
-    enforcement_amendment_revision: 95f8ea9275b0184416d2ac7a1043746c58fe5f57
-    merged_amendment_revision: ff9e1bec7d364568a92be91f6ffbd49d1d2101de
-    current_main_blob: 0744e53a1be9365761bf0bd3330c905ff4d4fdee
-    current_main_sha256: 020c6b6bed220fd31bb93f46ae40c7ffcd42785875477bad8977f5a13716b174
-    current_production_apply_authority: none
-    relation: phase_c_tuple_and_compensation_contract; separate exact production authority required
+    revision: 95f8ea9275b0184416d2ac7a1043746c58fe5f57
+    relation: depends_on
 supersedes:
   - AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1
 superseded_by: null
