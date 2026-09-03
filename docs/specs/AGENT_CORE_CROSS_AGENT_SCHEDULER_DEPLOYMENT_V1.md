@@ -181,12 +181,14 @@ The non-secret result channel is exactly
 `/private/var/tmp/agent-core-scheduler-deploy-v1/<nonce>.result.json`; its parent
 is exclusively created `root:wheel 0755` and the atomic file is regular,
 non-symlink `root:wheel 0644` with exact keys `schema_version`, `nonce`,
-`correlation_id`, `outcome`, `receipt_sha256`, and `finished_at`. It contains no
+`correlation_id`, `outcome`, `receipt_sha256`, `transaction_journal_sha256`,
+`event_details_sha256`, `publication_journal_sha256`, and `finished_at`. It contains no
 logs or path-selected input. `schema_version` is integer 1; nonce and correlation
 are lowercase UUIDs; outcome is one closed receipt outcome; `finished_at` is
 RFC3339 UTC; `receipt_sha256` is lowercase 64-hex iff a receipt exists and is
-exactly null after receipt-publication failure. Extra keys or other nulls/types
-are invalid. stdout/stderr are sanitized. Neither native phase
+exactly null after receipt-publication failure. The three journal hashes are
+always lowercase 64-hex and bind the complete final files after their last
+fsync. Extra keys or other nulls/types are invalid. stdout/stderr are sanitized. Neither native phase
 may invoke `sudo`, accept a password fallback, or execute from the user-owned
 artifact directory.
 
@@ -248,8 +250,7 @@ Allowed events are exactly `INIT`, `PRECHECK_PASS`, `PRECHECK_FAIL`,
 `STOP_BEGIN`, `STOP_CONFIRMED`, `QUIESCENCE_PASS`, `WRITE_BEGIN`,
 `FILE_INSTALLED`, `INSTALL_PASS`, `START_BEGIN`, `START_CONFIRMED`, `PROOF_PASS`,
 `SIGNAL`, `COMPENSATION_BEGIN`, `FILE_RESTORED`,
-`COMPENSATION_START_CONFIRMED`, `COMPENSATION_PASS`, `RECEIPT_BEGIN`,
-`RECEIPT_PUBLISHED`, and `RECEIPT_FAILED`. Fsync each boundary. Any sequence,
+`COMPENSATION_START_CONFIRMED`, and `COMPENSATION_PASS`. Fsync each boundary. Any sequence,
 hash-chain, schema, owner/mode/type, correlation, or event violation is corrupt.
 
 The companion runtime evidence file is exactly
@@ -258,8 +259,9 @@ regular non-symlink `root:wheel 0600`. It contains exactly one canonical-JSON
 line per journal line with keys `sequence`, `event`, and `details`; sequence/event
 must equal the journal and `details` must have the event-specific key set below.
 The SHA-256 of canonical `details` must equal the corresponding
-`details_sha256`; the receipt's `evidence_sha256` hashes this complete file.
-Journal, event-details, final receipt (or its failed temp name), and no other
+`details_sha256`; each receipt attempt binds the exact journal and evidence byte
+prefixes current at its `PUB_BEGIN`. Transaction journal, event-details,
+`PUBLICATION_JOURNAL.jsonl`, final receipt (or its failed temp name), and no other
 runtime output form the root transaction-output closure. A missing/extra line or
 path, duplicate ordinal, or mismatch is corruption.
 
@@ -284,9 +286,6 @@ sorted keys, no whitespace/newline) with these exact event-specific keys:
 | `PROOF_PASS`,`COMPENSATION_PASS` | `catalog_sha256,jobs_sha256,compose_sha256,plist_sha256,launchd_running,import_export_count,fatal_log_delta_count,history_storage_created_count,job_occurrence_delta_count` |
 | `SIGNAL` | `signal,after_event` |
 | `COMPENSATION_BEGIN` | `reason,from_event` |
-| `RECEIPT_BEGIN` | `outcome,temporary_path,evidence_sha256` |
-| `RECEIPT_PUBLISHED` | `outcome,receipt_sha256` |
-| `RECEIPT_FAILED` | `outcome,error_class,evidence_sha256` |
 
 Strings, hashes, UUIDs, paths, integers, booleans, and RFC3339 UTC timestamps
 must match the same formats frozen for the receipt below; `next_due_at` alone may
@@ -302,34 +301,67 @@ Ignoring any number of `SIGNAL` self-loops, the only legal non-signal transition
 grammar is:
 
 ```text
-INIT -> PRECHECK_FAIL -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
+INIT -> PRECHECK_FAIL
 INIT -> PRECHECK_PASS -> STOP_BEGIN -> STOP_CONFIRMED -> QUIESCENCE_PASS
-PRECHECK_PASS|STOP_BEGIN -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
 QUIESCENCE_PASS -> WRITE_BEGIN -> FILE_INSTALLED{1..10 in manifest order} -> INSTALL_PASS
 INSTALL_PASS -> START_BEGIN -> START_CONFIRMED -> PROOF_PASS
-PROOF_PASS -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED
-PROOF_PASS -> RECEIPT_BEGIN -> RECEIPT_FAILED -> COMPENSATION_BEGIN
+PROOF_PASS -> COMPENSATION_BEGIN
 STOP_CONFIRMED|QUIESCENCE_PASS|WRITE_BEGIN|FILE_INSTALLED|INSTALL_PASS|START_BEGIN|START_CONFIRMED
   -> COMPENSATION_BEGIN
 COMPENSATION_BEGIN -> FILE_RESTORED{0..10, only unfinished targets in reverse manifest order}
   -> START_BEGIN -> COMPENSATION_START_CONFIRMED -> COMPENSATION_PASS
-  -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
-RECEIPT_FAILED -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
-  (at most once; same non-FORWARD_ACTIVE outcome, temporary path, and evidence digest)
 ```
 
 `STOP_BEGIN` followed by a failed/uncertain stop while the original PID remains
-healthy uses the PRECHECK-failure receipt suffix and is `JOURNALED_PRESTOP`;
+healthy leaves the legal `PRECHECK_PASS` or `STOP_BEGIN` terminal prefix and is
+`JOURNALED_PRESTOP`; `INIT` and `PRECHECK_FAIL` are also legal prestop terminal
+prefixes. No receipt event is ever appended to this journal and
 no `STOP_CONFIRMED` is fabricated. A compensation resume continues from the
 last valid event using only the still-required suffix. Any other edge, skipped
-required ordinal, duplicate completed ordinal, or event after
-`RECEIPT_PUBLISHED` is corruption and priority 11 `UNKNOWN`.
-The single receipt-publication resume is evidence-only and runs no Gate, file,
-process, forward, or compensation step. A forward-success receipt failure must
-enter compensation and is never eligible for this edge. After a second
-`RECEIPT_FAILED`, no third `RECEIPT_BEGIN` may be appended; the result channel
-records null receipt hash and later invocations return the already classified
-non-success face without another publication attempt.
+required ordinal, or duplicate completed ordinal is corruption and priority 11
+`UNKNOWN`.
+
+Receipt publication is recorded separately in exactly
+`/private/var/root/agent-core-scheduler-deploy-v1-<nonce>/PUBLICATION_JOURNAL.jsonl`,
+regular non-symlink `root:wheel 0600`. It uses the same canonical line envelope,
+genesis hash, correlation, sequence, hash-chain, fsync, and corruption rules as
+the transaction journal, except its allowed events and exact details keys are:
+
+| Event | Exact details keys |
+|---|---|
+| `PUB_BEGIN` | `outcome,temporary_path,transaction_prefix_sha256,event_details_prefix_sha256,receipt_payload_sha256` |
+| `PUB_SIGNAL` | `signal,after_event` |
+| `PUB_PUBLISHED` | `outcome,receipt_sha256` |
+| `PUB_FAILED` | `outcome,error_class` |
+| `PUB_RESUME` | `outcome,temporary_path,transaction_prefix_sha256,event_details_prefix_sha256,receipt_payload_sha256` |
+
+Immediately before each `PUB_BEGIN` or `PUB_RESUME`, fsync the transaction and
+event-details files. The two prefix hashes bind all bytes then present through
+the same last sequence; the receipt payload contains those prefix hashes and
+that sequence. No publication event is included in either prefix, so no field
+hashes a file that its own publication later changes. Ignoring `PUB_SIGNAL`, the
+only legal publication sequences are:
+
+```text
+PUB_BEGIN(any outcome) -> PUB_PUBLISHED|PUB_FAILED
+PUB_FAILED(non-FORWARD_ACTIVE) -> PUB_RESUME -> PUB_PUBLISHED|PUB_FAILED
+PUB_FAILED(FORWARD_ACTIVE) -> PUB_BEGIN(COMPENSATED)
+  -> PUB_PUBLISHED|PUB_FAILED
+PUB_FAILED(COMPENSATED after failed FORWARD_ACTIVE publication)
+  -> PUB_RESUME -> PUB_PUBLISHED|PUB_FAILED
+```
+
+The `FORWARD_ACTIVE` to `COMPENSATED` edge is legal only after the transaction
+journal has advanced from `PROOF_PASS` through the complete compensation suffix;
+it is a new terminal-outcome publication, not a success retry. Any other second
+attempt, changed same-outcome payload/path/prefix, or third same-outcome attempt
+is corruption. If the receipt rename succeeded but `PUB_PUBLISHED` was not
+fsynced, re-entry may validate that the receipt bytes hash to the pending
+`receipt_payload_sha256`, append only `PUB_PUBLISHED`, and write the result
+channel. Otherwise the single `PUB_RESUME` is evidence-only and runs no Gate,
+file, process, forward, or compensation step. After its failure, the result
+channel records a null receipt hash and later invocations return the already
+classified non-success face without another publication attempt.
 
 After any signal, interruption, timeout, or failed proof, enter reconciliation
 under both locks; re-entry is always reconciliation-only. Apply this precedence
@@ -353,7 +385,7 @@ Evidence-only receipt publication is not a target/business mutation and is
 permitted for `STOPPED_PREMUTATION`, `QUIESCENCE_ABORTED`,
 `COMPENSATION_COMPLETE_UNRECEIPTED`, `MANUAL_RECOVERY_REQUIRED`, and
 `OUTCOME_UNKNOWN`; it cannot convert them to success. If publication fails, the
-fsynced root journal and exact nonce result channel remain and re-entry stays
+fsynced root journals and exact nonce result channel remain and re-entry stays
 read-only classification/guarded compensation continuation. A resumed
 compensation rechecks each step and skips already completed exact faces; it never
 reissues a completed rename/delete/restart. Staging is removed only by exact
@@ -365,11 +397,14 @@ Repeated signals do not change class or action.
 
 ### CTR-SCD-006 — Durable receipt and no overclaim
 
-Publish exactly one atomic regular non-symlink `root:wheel 0600` JSON receipt in
-the root staging directory. Exact keys: `schema_version`, `outcome`,
+Publish exactly one atomic regular non-symlink `root:wheel 0600` JSON receipt at
+`/private/var/root/agent-core-scheduler-deploy-v1-<nonce>/RECEIPT.json`, using
+only same-directory `RECEIPT.json.tmp` before fsync and rename. Exact keys:
+`schema_version`, `outcome`,
 `correlation_id`, `started_at`, `finished_at`, `authority_spec`,
 `authority_semantic_head`, `authority_accepted_head`, `auth_semantic_head`,
-`auth_accepted_head`, `artifact_manifest_sha256`, `runner_sha256`, `journal_sha256`,
+`auth_accepted_head`, `artifact_manifest_sha256`, `runner_sha256`,
+`transaction_prefix_sha256`, `event_details_prefix_sha256`,
 `journal_last_sequence`, `authorization_method`, `auth_lock_dev_inode`,
 `agent_core_lock_dev_inode`, `old_pid`, `new_pid`,
 `preimage_catalog_sha256`, `postimage_catalog_sha256`, `compose_sha256`,
@@ -377,7 +412,7 @@ the root staging directory. Exact keys: `schema_version`, `outcome`,
 `forward_restart_count`, `rollback_restart_count`, `launchd_running`,
 `import_export_count`, `fatal_log_delta_count`, `history_storage_created_count`,
 `job_occurrence_delta_count`, `signal_event_count`, `signal_events_sha256`, and
-`unavailable_fields_sha256`, and `evidence_sha256`. Every value is a scalar string/integer/boolean or null as
+`unavailable_fields_sha256`. Every value is a scalar string/integer/boolean or null as
 frozen here; arrays/objects and extra keys are forbidden. `schema_version` is
 integer 1; outcome is the enum below; correlation is lowercase UUID; timestamps
 are RFC3339 UTC; authority names are exact nonempty strings; all heads are
@@ -405,7 +440,7 @@ Outcome invariants are exact:
 | `FORWARD_ACTIVE` | old/new PIDs positive and unequal; post catalog exact release; compose/plist unchanged; jobs equal; restart 1/0; launchd true; import 69; fatal/history/job-occurrence 0; unavailable list empty |
 | `COMPENSATED` | old/new PIDs positive and unequal; post catalog exact preimage; compose/plist/jobs equal; rollback 1; forward 0 or 1 exactly as journal; launchd true; import 69; fatal/history/job-occurrence 0; unavailable list empty |
 | `MANUAL_RECOVERY_REQUIRED` | known job-drift class only; old PID positive, `new_pid=null`; post catalog exact preimage; compose/plist equal; jobs differ; counts equal journal; launchd false; `import_export_count=null`; fatal/history/job-occurrence are measured nonnegative integers; unavailable list exactly `["import_export_count","new_pid"]` with hash above |
-| `OUTCOME_UNKNOWN` | priority 2 or 11 only; no success invariant; every observed coordinate typed/present, every unreadable coordinate null, and unavailable-list hash exactly binds the sorted null field names; evidence hash mandatory |
+| `OUTCOME_UNKNOWN` | priority 2 or 11 only; no success invariant; every observed coordinate typed/present, every unreadable coordinate null, and unavailable-list hash exactly binds the sorted null field names; transaction/evidence prefix hashes mandatory |
 
 The manifest must duplicate this schema byte-for-byte and cannot loosen it.
 
@@ -465,8 +500,9 @@ precede artifact construction or apply.
 
 This is an in-place scheduler module migration only. Existing job schemas,
 jobs.json, occurrence semantics, runtime compose, configuration, and APIs remain
-compatible. New history modules are dormant. Rollback restores the exact fifteen-
-file preimage and restarts once; unknown state never triggers guessed deletion.
+compatible. New history modules are dormant. Rollback restores the exact ten-file
+target set to its five-file preimage plus five exact absences and restarts once;
+unknown state never triggers guessed deletion.
 
 ## 11. Alternatives
 
