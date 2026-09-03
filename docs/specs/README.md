@@ -31,6 +31,12 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Scheduler self-service authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | consult Spec frontmatter; V1 remains current until the atomic acceptance transaction merges | consult Spec frontmatter | whole successor carrying complete V1 authority plus exact `scheduler.admin` mutation-control / `scheduler.audit` history separation, fail-closed global definition listing, and bounded denial ownership lookup; production apply authority remains none |
+
 ## Governance transition
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
