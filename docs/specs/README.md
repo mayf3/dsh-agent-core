@@ -195,3 +195,9 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_EXECUTE_UNIFIED_DEPLOYMENT_V1` | accepted / current | contracts | unified `workflow_execute` 写工具的两文件生产部署授权：workflow.js + registry.js（DEC-010 cutover），两文件等面回滚、blob pins + preimage 分支 STOPPED 语义、post-deploy 证明面、dedicated disposable-fixture E2E、CTR-HD-006/009 机制按引用继承；执行成功即构成 transition hotfix 的 CTR-HD-011 retirement record |
 | `AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V1` | accepted | contracts | narrow child Authority：只允许一次 post-hoc root-owned supplement receipt publication；原零字节 receipt byte-preserved，原 tx/snapshot 缺失值保持 unknown；禁止 P1/P2、restart、rollback、E2E、Grant/credential 或其他 production mutation |
+
+## agent-session messaging production deployment authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |
