@@ -1,9 +1,13 @@
 ---
 spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_at: 2026-09-03
+accepted_reviewed_head: efdd754f0db0b9e7041757ca83246d5695cf83f4
+acceptance_review_verdict: PASS
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 scope:
   - broker
@@ -33,8 +37,8 @@ owners:
 
 # AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
 
-> **Proposed whole-Spec successor.** V1 remains accepted/current and byte-unchanged while V2
-> is proposed. Rejected child-proposal heads `be1d7f2695af62c7fc058dd65102747655c779a6`
+> **Accepted whole-Spec successor.** V1 was superseded by V2 through the atomic lifecycle
+> transaction. Rejected child-proposal heads `be1d7f2695af62c7fc058dd65102747655c779a6`
 > and `8f05a1725d3cb3542738938bbe05288604cd3c08` are review history only and grant no
 > authority. V2 independently restates the complete active V1 product authority. Its sole
 > product semantic delta is the exact external Scheduler proof mapping and the minimum
@@ -1325,9 +1329,9 @@ semantics above are normative and may not be weakened.
 SPEC_GOVERNANCE_MODE = AUTHOR
 SPEC_ID = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
 SPEC_KIND = implementation
-STATUS = proposed
+STATUS = accepted
 AUTHORITY_LEVEL = governing_spec
-IMPLEMENTATION_AUTHORITY = none
+IMPLEMENTATION_AUTHORITY = contracts
 PRODUCTION_APPLY_AUTHORITY = none
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
 ACCEPTED_SCOPE_AUTHORITY = AGENT_CORE_SCHEDULER_RUN_HISTORY_V1@a2919174338dc19ff16d9554d2f00c025d482410#blob-1f719514dc79a515a49aa592a0bd66961fcaed8a:R8
@@ -1355,7 +1359,7 @@ PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 19
 CONTRACTS_WITH_ACCEPTANCE = 19
 AUTHORING_READY_FOR_REVIEW = COMPLETED
-INDEPENDENT_REVIEW = PENDING
-READY_TO_MARK_ACCEPTED = NO
-ACCEPTED_REVIEWED_HEAD = NONE
+INDEPENDENT_REVIEW = PASS
+READY_TO_MARK_ACCEPTED = YES
+ACCEPTED_REVIEWED_HEAD = efdd754f0db0b9e7041757ca83246d5695cf83f4
 ```
