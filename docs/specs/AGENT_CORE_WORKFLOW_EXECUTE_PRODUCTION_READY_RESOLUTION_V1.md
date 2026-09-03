@@ -1,11 +1,16 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTE_PRODUCTION_READY_RESOLUTION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 date: 2026-09-03
+accepted_by: mayf3
+accepted_date: 2026-09-03
+accepted_reviewed_base: 97ac086907d6a1f18c6743294e3330a4f14fd10c
+accepted_reviewed_spec_commit: b1c12102d1fec4ae2750ad612be40362289e74ab
+acceptance_review_verdict: PASS
 scope:
   - mayf3/dsh-agent-core
   - workflow_execute receipt recovery composite-conclusion rule only
@@ -20,9 +25,8 @@ owners:
 
 # AGENT_CORE_WORKFLOW_EXECUTE_PRODUCTION_READY_RESOLUTION_V1
 
-> **PROPOSED / NOT ACCEPTED.** 本文件只提出 V2 §9 composite-conclusion 规则的
-> focused amendment（docs-only）。独立审计 PASS、Owner 接受 exact head 并翻转
-> lifecycle 字段前无任何效力；authoring 轮零生产效果。
+> **ACCEPTED / RESOLUTION AUTHORITY.** V2 §9 composite 规则按本文件 §2
+> 修订；resolution record 按 §3 落盘。不授权任何生产动作。
 
 ## 1. Problem statement and new evidence (NEW_ACCEPTED_AUTHORITY_CONFLICT)
 
