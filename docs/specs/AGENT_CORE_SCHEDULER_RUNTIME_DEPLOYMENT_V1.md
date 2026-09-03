@@ -550,14 +550,18 @@ CREATE_RESULT(created) -> OCCURRENCE_TERMINAL -> RUN_TERMINAL
 CREATE_RESULT(created)|OCCURRENCE_TERMINAL|RUN_TERMINAL|TARGET_TURN_PROVED
   -> FENCE_BEGIN -> FENCE_PASS -> CLEANUP_BEGIN -> CLEANUP_PASS
   -> CANARY_FAILED_CLEAN
-CREATE_RESULT(created)|FENCE_BEGIN -> OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED
+CREATE_RESULT(created)|FENCE_BEGIN|FENCE_PASS|CLEANUP_BEGIN
+  -> OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED
 ```
 
 The receipt matrix is exact: `CANARY_PASS` has all six IDs non-null, all five
 counts 1, ownership/fresh-session/health/cleanup true, propagation/ping-pong
 false, enabled count 0, and unavailable `[]`; `CANARY_FAILED_UNCHANGED` has all
-Job-through-delivery IDs null, all five counts 0, cleanup/health true, enabled 0,
-and unavailable JSON naming exactly those six IDs; `CANARY_FAILED_CLEAN` has a
+Job-through-delivery IDs plus the three target-session/ownership booleans null,
+all five counts 0, cleanup/health true, propagation/ping-pong false, enabled 0,
+and unavailable JSON exactly
+`["delivery_id","job_id","occurrence_id","run_id","target_own_credential","target_own_principal","target_session_fresh_non_main","target_session_id","target_turn_id"]`;
+`CANARY_FAILED_CLEAN` has a
 non-null Job ID, cleanup/health true and enabled 0, while later IDs/counts equal
 the exact terminal journal prefix and every unobserved ID is null/named in
 unavailable JSON; unknown/manual likewise copy every observed typed coordinate
@@ -572,6 +576,15 @@ non-success evidence-only resume rules. No publication event changes the frozen
 canary journal hash. The result channel binds the final complete canary and
 publication journals; failure after the second non-success publication attempt
 records null receipt hash and never reruns create, target execution, or cleanup.
+If a `CANARY_PASS` receipt publication definitively fails before rename, append
+`PUB_FAILED`, delete only the exact temp when its hash matches the pending
+payload, and publish result outcome `CANARY_EVIDENCE_PUBLICATION_FAILED` with
+null receipt hash. That result is terminal Goal-nonsuccess; re-entry returns it
+read-only and never retries receipt publication or any business step. If rename
+may have succeeded, only exact receipt-hash validation may append
+`PUB_PUBLISHED`; otherwise classify `CANARY_OUTCOME_UNKNOWN`. The result outcome
+enum is therefore the five receipt outcomes plus
+`CANARY_EVIDENCE_PUBLICATION_FAILED`.
 
 ### CTR-SRD-007 — Legacy zero-access and non-propagation
 
@@ -650,6 +663,7 @@ changes before accepted exact-head merge and final-head recheck.
   occurrence/run/turn/cleanup/publication boundary, signals, and stale PID/health
   plus wrong journal edge/schema, every canary outcome value/null/unavailable
   matrix, lost receipt rename, forbidden success retry, and second publication failure
+  including definitive post-`CANARY_PASS` publication failure and read-only re-entry
 - Pass/fail: exactly one occurrence/run/delivery/turn, correct fresh non-main
   target, deletion/retained evidence, no restart/retry/ping-pong/legacy access,
   privilege propagation, or enabled late Job; otherwise fail.
