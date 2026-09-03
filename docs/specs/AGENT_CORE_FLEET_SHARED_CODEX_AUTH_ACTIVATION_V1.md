@@ -141,8 +141,9 @@ fence 之前任何 per-home OAuth 写/refresh 即 fail closed。
 全 PASS 的 gate script receipt，含 91 registry 路径绑定与 inode/mtime/content 双 fence 结果）
 与 `bootstrapStore`（等值集内 registry member）；selection 固定为
 `{legacyCredentialReuseAllowed:true, authoritativeStore:bootstrapStore, bootstrap:true,
-canonicalReauthRequired:false}`；该模式下 `ownerReauthCanonical` binding 若存在 ⇒ fail closed
-（Owner 对本 incident 禁 reauth/OAuth）。非 bootstrap 模式行为逐字节不变；V1 provenance 与
+canonicalReauthRequired:false}`；bootstrap 模式下 `validateConfig` 豁免
+`ownerReauthCanonical`（不要求提供），且 config 若提供该键 ⇒ fail closed（Owner 对本
+incident 禁 reauth/OAuth）。非 bootstrap 模式行为逐字节不变；V1 provenance 与
 fail-closed reauth 契约（CTR-SCA-008/009）保留。
 
 ### CTR-ACT-006 — Ten-gate receipt is the only credential-acquisition authority
