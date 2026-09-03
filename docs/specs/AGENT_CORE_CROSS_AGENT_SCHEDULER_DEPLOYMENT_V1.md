@@ -182,7 +182,11 @@ The non-secret result channel is exactly
 is exclusively created `root:wheel 0755` and the atomic file is regular,
 non-symlink `root:wheel 0644` with exact keys `schema_version`, `nonce`,
 `correlation_id`, `outcome`, `receipt_sha256`, and `finished_at`. It contains no
-logs or path-selected input. stdout/stderr are sanitized. Neither native phase
+logs or path-selected input. `schema_version` is integer 1; nonce and correlation
+are lowercase UUIDs; outcome is one closed receipt outcome; `finished_at` is
+RFC3339 UTC; `receipt_sha256` is lowercase 64-hex iff a receipt exists and is
+exactly null after receipt-publication failure. Extra keys or other nulls/types
+are invalid. stdout/stderr are sanitized. Neither native phase
 may invoke `sudo`, accept a password fallback, or execute from the user-owned
 artifact directory.
 
@@ -248,6 +252,62 @@ Allowed events are exactly `INIT`, `PRECHECK_PASS`, `PRECHECK_FAIL`,
 `RECEIPT_PUBLISHED`, and `RECEIPT_FAILED`. Fsync each boundary. Any sequence,
 hash-chain, schema, owner/mode/type, correlation, or event violation is corrupt.
 
+The first line is `sequence=1`, `event=INIT`, and
+`previous_sha256=0000000000000000000000000000000000000000000000000000000000000000`;
+later lines use the SHA-256 of the preceding line's exact UTF-8 bytes excluding
+its newline. `details_sha256` hashes canonical JSON (UTF-8, lexicographically
+sorted keys, no whitespace/newline) with these exact event-specific keys:
+
+| Event | Exact details keys |
+|---|---|
+| `INIT` | `nonce,artifact_manifest_sha256,authority_semantic_head` |
+| `PRECHECK_PASS`,`PRECHECK_FAIL` | `preimage_catalog_sha256,jobs_sha256,old_pid,result_code` |
+| `STOP_BEGIN` | `old_pid` |
+| `STOP_CONFIRMED` | `old_pid,stopped_at` |
+| `QUIESCENCE_PASS` | `jobs_sha256,next_due_at,in_flight_count,unresolved_count,engine_lock_token_sha256` |
+| `WRITE_BEGIN` | `target_count` |
+| `FILE_INSTALLED`,`FILE_RESTORED` | `ordinal,path,action,before_sha256,after_sha256` |
+| `INSTALL_PASS` | `postimage_catalog_sha256` |
+| `START_BEGIN` | `intended_face` |
+| `START_CONFIRMED`,`COMPENSATION_START_CONFIRMED` | `pid,started_at` |
+| `PROOF_PASS`,`COMPENSATION_PASS` | `catalog_sha256,jobs_sha256,compose_sha256,plist_sha256,launchd_running,import_export_count,fatal_log_delta_count,history_storage_created_count,job_occurrence_delta_count` |
+| `SIGNAL` | `signal,after_event` |
+| `COMPENSATION_BEGIN` | `reason,from_event` |
+| `RECEIPT_BEGIN` | `outcome,temporary_path` |
+| `RECEIPT_PUBLISHED` | `outcome,receipt_sha256` |
+| `RECEIPT_FAILED` | `outcome,error_class` |
+
+Strings, hashes, UUIDs, paths, integers, booleans, and RFC3339 UTC timestamps
+must match the same formats frozen for the receipt below; `next_due_at` alone may
+be null. No details object or secret bytes are stored in the journal, only its
+hash; the exact canonical details are retained in the sealed evidence file bound
+by the receipt.
+
+Ignoring any number of `SIGNAL` self-loops, the only legal non-signal transition
+grammar is:
+
+```text
+INIT -> PRECHECK_FAIL -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
+INIT -> PRECHECK_PASS -> STOP_BEGIN -> STOP_CONFIRMED -> QUIESCENCE_PASS
+PRECHECK_PASS|STOP_BEGIN -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
+QUIESCENCE_PASS -> WRITE_BEGIN -> FILE_INSTALLED{1..10 in manifest order} -> INSTALL_PASS
+INSTALL_PASS -> START_BEGIN -> START_CONFIRMED -> PROOF_PASS
+PROOF_PASS -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED
+PROOF_PASS -> RECEIPT_BEGIN -> RECEIPT_FAILED -> COMPENSATION_BEGIN
+STOP_CONFIRMED|QUIESCENCE_PASS|WRITE_BEGIN|FILE_INSTALLED|INSTALL_PASS|START_BEGIN|START_CONFIRMED
+  -> COMPENSATION_BEGIN
+COMPENSATION_BEGIN -> FILE_RESTORED{0..10, only unfinished targets in reverse manifest order}
+  -> START_BEGIN -> COMPENSATION_START_CONFIRMED -> COMPENSATION_PASS
+  -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
+```
+
+`STOP_BEGIN` followed by a failed/uncertain stop while the original PID remains
+healthy uses the PRECHECK-failure receipt suffix and is `JOURNALED_PRESTOP`;
+no `STOP_CONFIRMED` is fabricated. A compensation resume continues from the
+last valid event using only the still-required suffix. Any other edge, skipped
+required ordinal, duplicate completed ordinal, or event after
+`RECEIPT_PUBLISHED` is corruption and priority 11 `UNKNOWN`.
+
 After any signal, interruption, timeout, or failed proof, enter reconciliation
 under both locks; re-entry is always reconciliation-only. Apply this precedence
 top-to-bottom, making the classes mutually exclusive and exhaustive:
@@ -295,13 +355,33 @@ the root staging directory. Exact keys: `schema_version`, `outcome`,
 `import_export_count`, `fatal_log_delta_count`, `history_storage_created_count`,
 `job_occurrence_delta_count`, `signal_event_count`, `signal_events_sha256`, and
 `evidence_sha256`. Every value is a scalar string/integer/boolean or null as
-declared by the manifest receipt schema; arrays/objects and extra keys are forbidden.
+frozen here; arrays/objects and extra keys are forbidden. `schema_version` is
+integer 1; outcome is the enum below; correlation is lowercase UUID; timestamps
+are RFC3339 UTC; authority names are exact nonempty strings; all heads are
+lowercase 40-hex; all SHA fields are lowercase 64-hex; authorization method is
+exactly `macos_native_authorization`; lock identities are `device:inode` decimal
+strings; PIDs are positive safe integers or null; counts are nonnegative safe
+integers; `launchd_running` is boolean. No other field may be null except PIDs
+and state hashes proven unavailable for an unknown/manual outcome.
 Closed outcomes are
 `STOPPED_PREMUTATION|QUIESCENCE_ABORTED|FORWARD_ACTIVE|COMPENSATED|OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED`.
 The first four are invocation-terminal; only `FORWARD_ACTIVE` is Goal-success.
 `OUTCOME_UNKNOWN` and `MANUAL_RECOVERY_REQUIRED` are invocation-terminal but
 Goal-nonterminal and require Owner recovery. A dialog, install, restart, import
 smoke, or receipt alone is not success.
+
+Outcome invariants are exact:
+
+| Outcome | Required invariants |
+|---|---|
+| `STOPPED_PREMUTATION` | original PID remains live (`old_pid>0`,`new_pid=null`); pre/post catalogs and jobs hashes equal; restart counts 0/0; no runtime delta |
+| `QUIESCENCE_ABORTED` | old service was confirmed stopped then restored (`old_pid>0`,`new_pid>0`, unequal); pre/post catalogs and jobs equal; restart counts 0/1; launchd true; import 69; all three delta counts zero |
+| `FORWARD_ACTIVE` | old/new PIDs positive and unequal; post catalog is exact release; jobs hashes equal; restart counts 1/0; launchd true; import 69; fatal/history/job-occurrence deltas zero |
+| `COMPENSATED` | old/new PIDs positive and unequal; post catalog equals preimage and jobs hashes equal; rollback count exactly 1; forward count is 0 or 1 according to journal; launchd true; import 69; all deltas zero |
+| `MANUAL_RECOVERY_REQUIRED` | journal proves known file faces plus job drift; post catalog is exact preimage after containment; launchd false; job hashes differ; restart counts equal journal; unavailable PID/hash fields alone may be null |
+| `OUTCOME_UNKNOWN` | priority 2 or 11 evidence class; no success invariant may be asserted; every successfully observed coordinate is typed and present, only specifically unreadable coordinates are null, and evidence hash is mandatory |
+
+The manifest must duplicate this schema byte-for-byte and cannot loosen it.
 
 ### CTR-GSCD-001 — Lifecycle boundary
 
@@ -342,7 +422,9 @@ precede artifact construction or apply.
   launch stop/start, old/new/absent/ambiguous PID, health/import/log check,
   job-store drift, each global lock, every signal boundary, each journal marker,
   prestop census failure/crash with old PID healthy, journal corruption/hash-
-  chain break, receipt temp-write/fsync/rename/publication failure, every
+  chain break, wrong genesis/transition/ordinal/details hash, receipt and result-
+  channel wrong type/null/format/extra key/outcome invariant, receipt temp-write/
+  fsync/rename/publication failure, every
   recorded terminal outcome re-entry, missing receipt, and interruption/resume
   after every compensation step. Every enumerated family must prove exactly one
   table class/action,
