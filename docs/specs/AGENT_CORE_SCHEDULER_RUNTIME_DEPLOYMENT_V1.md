@@ -20,7 +20,7 @@ external_authorities:
     relation: depends_on
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_DAILY_AUTONOMY_OPERATIONAL_GRANTS_V1
-    revision: 37608604069ae82df172614f75ed80982d62cc2b
+    revision: 3ec474379670f3c0a905b24499f4acaaf8e1ead9
     relation: interoperates_with
 supersedes: []
 superseded_by: null
@@ -40,7 +40,7 @@ Runtime, pause for the exact Phase-C operational Grant, then run exactly one
 cross-Agent one-shot canary required by `CORE_RUNTIME_DAILY_AUTONOMY_OVERNIGHT_V1`.
 
 ```text
-AUTHORING_BASE = e225d7b22e90d09f5658e267edb7c871c808434a
+AUTHORING_BASE = 99958d3abd51e029aee2944b3055b6f8732de556
 RELEASE_SOURCE = 18f96e25af623c1547956ee00447a664a7fba741
 SCHEDULER_V2_ACCEPTANCE = 4c0a62382cabb9641dbf512a8d5f8ce8a9fed1f2
 SCHEDULER_V2_IMPLEMENTATION = a420cb6895f69211f2275bc26a54bc9f8cdabf8e
@@ -70,11 +70,11 @@ row, Job/occurrence/history store, legacy path, workflow, or target workspace.
 
 The runtime-deployment stage begins only after: this Spec
 accepted/merged/final-head PASS; accepted ASM
-Deployment V2 exact semantic head `e225d7b...` has terminal Stage B/D/E and temp
+Deployment V2 exact semantic head `99958d3...` has terminal Stage B/D/E and temp
 Grant compensation PASS; Auth Scheduler 1.7 exact semantic head `c708b37...` is
 byte-equivalent apart from its declared lifecycle-only acceptance to an
 accepted/merged descendant and has production PASS; permanent-Grant semantic
-head `37608604069ae82df172614f75ed80982d62cc2b` is independently reviewed and
+head `3ec474379670f3c0a905b24499f4acaaf8e1ead9` is independently reviewed and
 accepted/merged, with its Phase B terminal and exact permanent
 `agent.session.send` live, but Phase C `scheduler.admin` not yet applied. The
 sole Runtime is healthy; no production
