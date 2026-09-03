@@ -23,7 +23,7 @@ external_authorities:
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_AGENT_SESSION_MESSAGING_TEMP_GRANT_V1
     accepted_revision: d759265f003e7fdfe4f31341251bd6b452bb05d8
-    enforcement_amendment_revision: 95f8ea9
+    enforcement_amendment_revision: 95f8ea9275b0184416d2ac7a1043746c58fe5f57
     merged_amendment_revision: ff9e1bec7d364568a92be91f6ffbd49d1d2101de
     current_main_blob: 0744e53a1be9365761bf0bd3330c905ff4d4fdee
     current_main_sha256: 020c6b6bed220fd31bb93f46ae40c7ffcd42785875477bad8977f5a13716b174
@@ -490,7 +490,9 @@ Proposed banner with accepted lifecycle/review provenance; (4) V2 footer values
 `OPEN_OWNER_DECISIONS`; (5) deployment V1 frontmatter only
 `status: accepted→superseded` and
 `superseded_by: null→AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V2`; (6) the
-V1 and V2 README row lifecycle/authority-role cells. No other byte may change.
+V1 README row `Current lifecycle` and `Authority role` cells; (7) the V2 README
+row `Current lifecycle`, `Implementation authority` (`none→contracts`), and
+`Authority role` cells. No other byte may change.
 
 Before that commit, the authorized actor MUST fetch current main, bind its exact head,
 prove the accepted parents/external authority have not drifted, and recheck the 17
