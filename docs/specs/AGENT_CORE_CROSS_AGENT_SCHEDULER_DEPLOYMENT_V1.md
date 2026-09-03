@@ -252,6 +252,17 @@ Allowed events are exactly `INIT`, `PRECHECK_PASS`, `PRECHECK_FAIL`,
 `RECEIPT_PUBLISHED`, and `RECEIPT_FAILED`. Fsync each boundary. Any sequence,
 hash-chain, schema, owner/mode/type, correlation, or event violation is corrupt.
 
+The companion runtime evidence file is exactly
+`/private/var/root/agent-core-scheduler-deploy-v1-<nonce>/EVENT_DETAILS.jsonl`,
+regular non-symlink `root:wheel 0600`. It contains exactly one canonical-JSON
+line per journal line with keys `sequence`, `event`, and `details`; sequence/event
+must equal the journal and `details` must have the event-specific key set below.
+The SHA-256 of canonical `details` must equal the corresponding
+`details_sha256`; the receipt's `evidence_sha256` hashes this complete file.
+Journal, event-details, final receipt (or its failed temp name), and no other
+runtime output form the root transaction-output closure. A missing/extra line or
+path, duplicate ordinal, or mismatch is corruption.
+
 The first line is `sequence=1`, `event=INIT`, and
 `previous_sha256=0000000000000000000000000000000000000000000000000000000000000000`;
 later lines use the SHA-256 of the preceding line's exact UTF-8 bytes excluding
@@ -273,15 +284,19 @@ sorted keys, no whitespace/newline) with these exact event-specific keys:
 | `PROOF_PASS`,`COMPENSATION_PASS` | `catalog_sha256,jobs_sha256,compose_sha256,plist_sha256,launchd_running,import_export_count,fatal_log_delta_count,history_storage_created_count,job_occurrence_delta_count` |
 | `SIGNAL` | `signal,after_event` |
 | `COMPENSATION_BEGIN` | `reason,from_event` |
-| `RECEIPT_BEGIN` | `outcome,temporary_path` |
+| `RECEIPT_BEGIN` | `outcome,temporary_path,evidence_sha256` |
 | `RECEIPT_PUBLISHED` | `outcome,receipt_sha256` |
-| `RECEIPT_FAILED` | `outcome,error_class` |
+| `RECEIPT_FAILED` | `outcome,error_class,evidence_sha256` |
 
 Strings, hashes, UUIDs, paths, integers, booleans, and RFC3339 UTC timestamps
 must match the same formats frozen for the receipt below; `next_due_at` alone may
 be null. No details object or secret bytes are stored in the journal, only its
 hash; the exact canonical details are retained in the sealed evidence file bound
 by the receipt.
+For `FILE_INSTALLED`, ordinal is exactly 1 through 10 in manifest order and
+path/action/hashes equal that manifest row. `FILE_RESTORED` uses the same
+original ordinal/path/action and exact reversed hashes, once per mutated target,
+in strictly decreasing ordinal order; untouched targets emit no restore event.
 
 Ignoring any number of `SIGNAL` self-loops, the only legal non-signal transition
 grammar is:
@@ -299,6 +314,8 @@ STOP_CONFIRMED|QUIESCENCE_PASS|WRITE_BEGIN|FILE_INSTALLED|INSTALL_PASS|START_BEG
 COMPENSATION_BEGIN -> FILE_RESTORED{0..10, only unfinished targets in reverse manifest order}
   -> START_BEGIN -> COMPENSATION_START_CONFIRMED -> COMPENSATION_PASS
   -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
+RECEIPT_FAILED -> RECEIPT_BEGIN -> RECEIPT_PUBLISHED|RECEIPT_FAILED
+  (at most once; same non-FORWARD_ACTIVE outcome, temporary path, and evidence digest)
 ```
 
 `STOP_BEGIN` followed by a failed/uncertain stop while the original PID remains
@@ -307,6 +324,12 @@ no `STOP_CONFIRMED` is fabricated. A compensation resume continues from the
 last valid event using only the still-required suffix. Any other edge, skipped
 required ordinal, duplicate completed ordinal, or event after
 `RECEIPT_PUBLISHED` is corruption and priority 11 `UNKNOWN`.
+The single receipt-publication resume is evidence-only and runs no Gate, file,
+process, forward, or compensation step. A forward-success receipt failure must
+enter compensation and is never eligible for this edge. After a second
+`RECEIPT_FAILED`, no third `RECEIPT_BEGIN` may be appended; the result channel
+records null receipt hash and later invocations return the already classified
+non-success face without another publication attempt.
 
 After any signal, interruption, timeout, or failed proof, enter reconciliation
 under both locks; re-entry is always reconciliation-only. Apply this precedence
@@ -354,15 +377,18 @@ the root staging directory. Exact keys: `schema_version`, `outcome`,
 `forward_restart_count`, `rollback_restart_count`, `launchd_running`,
 `import_export_count`, `fatal_log_delta_count`, `history_storage_created_count`,
 `job_occurrence_delta_count`, `signal_event_count`, `signal_events_sha256`, and
-`evidence_sha256`. Every value is a scalar string/integer/boolean or null as
+`unavailable_fields_sha256`, and `evidence_sha256`. Every value is a scalar string/integer/boolean or null as
 frozen here; arrays/objects and extra keys are forbidden. `schema_version` is
 integer 1; outcome is the enum below; correlation is lowercase UUID; timestamps
 are RFC3339 UTC; authority names are exact nonempty strings; all heads are
 lowercase 40-hex; all SHA fields are lowercase 64-hex; authorization method is
 exactly `macos_native_authorization`; lock identities are `device:inode` decimal
 strings; PIDs are positive safe integers or null; counts are nonnegative safe
-integers; `launchd_running` is boolean. No other field may be null except PIDs
-and state hashes proven unavailable for an unknown/manual outcome.
+integers; `launchd_running` is boolean. A null is legal only when its exact field
+name occurs in the lexicographically sorted canonical JSON string-array hashed by
+`unavailable_fields_sha256`; non-null fields must not occur in that list. For an
+empty list the hash is exactly
+`4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`.
 Closed outcomes are
 `STOPPED_PREMUTATION|QUIESCENCE_ABORTED|FORWARD_ACTIVE|COMPENSATED|OUTCOME_UNKNOWN|MANUAL_RECOVERY_REQUIRED`.
 The first four are invocation-terminal; only `FORWARD_ACTIVE` is Goal-success.
@@ -374,12 +400,12 @@ Outcome invariants are exact:
 
 | Outcome | Required invariants |
 |---|---|
-| `STOPPED_PREMUTATION` | original PID remains live (`old_pid>0`,`new_pid=null`); pre/post catalogs and jobs hashes equal; restart counts 0/0; no runtime delta |
-| `QUIESCENCE_ABORTED` | old service was confirmed stopped then restored (`old_pid>0`,`new_pid>0`, unequal); pre/post catalogs and jobs equal; restart counts 0/1; launchd true; import 69; all three delta counts zero |
-| `FORWARD_ACTIVE` | old/new PIDs positive and unequal; post catalog is exact release; jobs hashes equal; restart counts 1/0; launchd true; import 69; fatal/history/job-occurrence deltas zero |
-| `COMPENSATED` | old/new PIDs positive and unequal; post catalog equals preimage and jobs hashes equal; rollback count exactly 1; forward count is 0 or 1 according to journal; launchd true; import 69; all deltas zero |
-| `MANUAL_RECOVERY_REQUIRED` | journal proves known file faces plus job drift; post catalog is exact preimage after containment; launchd false; job hashes differ; restart counts equal journal; unavailable PID/hash fields alone may be null |
-| `OUTCOME_UNKNOWN` | priority 2 or 11 evidence class; no success invariant may be asserted; every successfully observed coordinate is typed and present, only specifically unreadable coordinates are null, and evidence hash is mandatory |
+| `STOPPED_PREMUTATION` | `old_pid>0`; `new_pid=null`; pre/post catalogs, compose, plist, and jobs hashes equal; restart 0/0; `launchd_running=true`; `import_export_count=null`; fatal/history/job-occurrence counts 0; unavailable list exactly `["import_export_count","new_pid"]` (hash `8f421cf67a21347b148c055c7a64c71d8d82e454491eb64ce9f25641eb1f9bac`) |
+| `QUIESCENCE_ABORTED` | old/new PIDs positive and unequal; pre/post catalogs, compose, plist, and jobs equal; restart 0/1; launchd true; import 69; fatal/history/job-occurrence 0; unavailable list empty |
+| `FORWARD_ACTIVE` | old/new PIDs positive and unequal; post catalog exact release; compose/plist unchanged; jobs equal; restart 1/0; launchd true; import 69; fatal/history/job-occurrence 0; unavailable list empty |
+| `COMPENSATED` | old/new PIDs positive and unequal; post catalog exact preimage; compose/plist/jobs equal; rollback 1; forward 0 or 1 exactly as journal; launchd true; import 69; fatal/history/job-occurrence 0; unavailable list empty |
+| `MANUAL_RECOVERY_REQUIRED` | known job-drift class only; old PID positive, `new_pid=null`; post catalog exact preimage; compose/plist equal; jobs differ; counts equal journal; launchd false; `import_export_count=null`; fatal/history/job-occurrence are measured nonnegative integers; unavailable list exactly `["import_export_count","new_pid"]` with hash above |
+| `OUTCOME_UNKNOWN` | priority 2 or 11 only; no success invariant; every observed coordinate typed/present, every unreadable coordinate null, and unavailable-list hash exactly binds the sorted null field names; evidence hash mandatory |
 
 The manifest must duplicate this schema byte-for-byte and cannot loosen it.
 
@@ -422,7 +448,9 @@ precede artifact construction or apply.
   launch stop/start, old/new/absent/ambiguous PID, health/import/log check,
   job-store drift, each global lock, every signal boundary, each journal marker,
   prestop census failure/crash with old PID healthy, journal corruption/hash-
-  chain break, wrong genesis/transition/ordinal/details hash, receipt and result-
+  chain break, missing/extra/mismatched event-details file, wrong genesis/
+  transition/ordinal/details hash, one legal evidence-only receipt resume,
+  forbidden forward-success or second receipt resume, receipt and result-
   channel wrong type/null/format/extra key/outcome invariant, receipt temp-write/
   fsync/rename/publication failure, every
   recorded terminal outcome re-entry, missing receipt, and interruption/resume
