@@ -6,10 +6,10 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: contracts
 date: 2026-09-03
-revision: r2
+revision: r3
 amended_date: 2026-09-04
 amended_by: mayf3
-amendment_ref: ASM_RELEASE_BOOT_CLOSURE_AMENDMENT_V1 (NEW_EVIDENCE: production apply 2026-09-03T22:44Z crashed — broker/src/index.js@7921f4a eagerly imports ./capabilities/forum-moderation.js, absent from live tree and from the r1 17-file closure; auto-rollback restored baseline byte-exact; see §4.1)
+amendment_ref: r2 = BOOT_CLOSURE_AMENDMENT (first apply crash: missing forum-moderation.js; §4.1); r3 = BOOT_GENERATION_AMENDMENT (second apply crash 23:23Z: ESM named-export coupling broker/index.js→forum.js normalManifests; §4.2)
 accepted_date: 2026-09-03
 accepted_by: mayf3
 accepted_at: 2026-09-03T01:29:29Z
@@ -59,7 +59,7 @@ The release MUST preserve target-owned execution identity, trusted source deriva
 ## 2. Scope and non-goals
 
 ### In scope
-- the exact 18-file release closure and current production preimage census in §4 (r2: 17 r1 rows + row 18 added by §4.1);
+- the exact 25-file release closure and current production preimage census in §4 (r3: r2 18 rows + rows 19–28 added by §4.2);
 - an immutable, hash-verifiable staging artifact and equal-face rollback artifact;
 - the serial Gate sequence in `CTR-DEP-004`;
 - fresh-runtime catalog/header proof and one bounded A2A canary;
@@ -110,7 +110,7 @@ The external Auth parent supplies grammar and issuance architecture only. It doe
   Session Messaging; revision: repository scan at `github/main@bf2efd52...`;
   environment: Agent Core repository; observed at: `2026-09-03T00:57:47Z`;
   basis: `OBS-DEP-004`, `EVD-DEP-004`.
-Production target root for every row is exactly `/usr/local/libexec/agent-core/app/`. All 18 destinations after apply MUST be non-symlink regular files owned `root:wheel` with mode `0644`; the 11 present preimages were observed with exactly that type/owner/mode, and each of the 7 `ABSENT` preimages is a required absence, not a wildcard. The rollback manifest MUST record each preimage's existence, blob, bytes, type, owner, group, mode, and destination.
+Production target root for every row is exactly `/usr/local/libexec/agent-core/app/`. All 25 destinations after apply MUST be non-symlink regular files owned `root:wheel` with mode `0644`; the 11 present preimages were observed with exactly that type/owner/mode, and each of the 7 `ABSENT` preimages is a required absence, not a wildcard. The rollback manifest MUST record each preimage's existence, blob, bytes, type, owner, group, mode, and destination.
 
 ### §4.1 AMENDMENT r2 — BOOT-CLOSURE EXTENSION (NEW_EVIDENCE 2026-09-04)
 
@@ -138,8 +138,28 @@ r2 修订（仅此）：§4 表新增第 18 行（forum-moderation.js，preimage
 | 16 | `packages/production-runtime/src/shared-codex-migration-executable.js` | `090f547133906c8b078e2f714a136869b8b7feaf` | 10076 | `ABSENT` | 0 |
 | 17 | `packages/production-runtime/src/shared-codex-migration.js` | `70e74439d34fb58f21b093cef0ba4785cc1ca1a2` | 4620 | `ABSENT` | 0 |
 | 18 | `packages/broker/src/capabilities/forum-moderation.js` | `90cf87c3e4afd424574b4f18b12742306c5968df` | 11523 | `ABSENT` | 0 |
+| 19 | `packages/agent-provisioning/src/index.js` | `34479d812b14db870c568a1512a767a982220e31` | 24031 | `PRESENT` | — |
+| 20 | `packages/agent-provisioning/src/plugin-artifact.js` | `89394ab32dcbc3bc0acf6b3e8468510b28f11add` | 2610 | `ABSENT` | — |
+| 21 | `packages/agent-provisioning/src/shared-codex.js` | `963d03bea20110dc08c012dca975212cc27b1195` | 3585 | `ABSENT` | — |
+| 22 | `packages/agent-router/src/route-chain.js` | `e2f69dac5bb1d18d287405b15738d29154780abc` | 22928 | `PRESENT` | — |
+| 23 | `packages/broker/src/capabilities/forum.js` | `b64b73578f9645777025d8bff74e82f551de3866` | 18354 | `PRESENT` | — |
+| 24 | `packages/broker/src/error-detail-sanitizer.js` | `25e02239255f95c55e59454bd32703550e3ad5b0` | 6318 | `ABSENT` | — |
+| 25 | `packages/broker/src/mapping.js` | `74e83e11660a0ea5a9dffc47fe2a8897f17f9809` | 12867 | `PRESENT` | — |
+| 26 | `packages/broker/src/registry.js` | `7cd71350226ebe63bada5bbfa1372fabd81585ee` | 8540 | `PRESENT` | — |
+| 27 | `packages/broker/src/schema.js` | `1bd36bbe5f3fc796dffdf633b557fbb7fff2741b` | 21558 | `PRESENT` | — |
+| 28 | `packages/broker/src/transport.js` | `942e9880ff11fbc672481f66f7e96d35778dfc4f` | 29266 | `PRESENT` | — |
 
 ## 5. Observations
+
+### §4.2 AMENDMENT r3 — BOOT-GENERATION CLOSURE (NEW_EVIDENCE 2026-09-04)
+
+第二次生产 apply（2026-09-03T23:23Z）再次 fail-closed：新父进程已起但随即 `SyntaxError: './capabilities/forum.js' does not provide an export named 'normalManifests'`（candidate `broker/src/index.js`@`eec8c6f9` 与 live `forum.js` 的 ESM 命名导出版本耦合）。r2 的存在性闭包不检查导出面。本 amendment 把闭包从「实现 PR 文件集」升级为 **candidate 启动世代闭包**：
+
+- **闭包定义（r3）** = `7921f4a` 树内从 `scripts/production-runtime.mjs` 出发的入口 BFS（101 模块）中与 live blob 不一致的文件，**减去受保护 live 集**：`capabilities/workflow.js`（Lane A `db7688fe`——candidate `83df50eb` 是旧 transition 面，部署即回归）、`feishu-connector/src/index.js`、`scheduler-router/src/index.js`、`model-overrides.js`（combined-deploy v2 excluded drift pins，有意生产漂移）。共 **25 文件**（r2 的 18 全保留 + rows 19–28）。
+- **导出面 Gate（强制）**：闭包文件对每个保留 live 目标的具名导入 ⊆ 该 live 文件导出面（r2 教训一般化）。机械验证 EXPORT_INCOMPAT=0（`broker/index.js → workflow.js` 仅需 `manifests` ✓；candidate `registry.js` 支持多 operation manifests ✓）。
+- **真实 boot rehearsal（强制）**：Owner 执行前必须沙箱真实 boot（生产 node 二进制 + live 副本 + 25 文件 + 合成 root state + 独立端口 + 无代理 env）至 health ok 存活 ≥60s。已执行：`production runtime ready` + health ok；`DEFAULT_MANIFESTS` 含 `agent_session_send` ✓ `workflow_execute` ✓ `workflow_transition` ABSENT ✓。
+- **Surface 披露**：candidate `broker/src/index.js` 同时注册 forum normal pack（12 manifests）；实际使用仍由 per-agent Grant 门控。moderator 面默认不注册。
+- 其余合同不变；回滚面以 ROLLBACK_MANIFEST 为准。
 
 ### OBS-DEP-001 — Accepted source is present on main
 
@@ -274,7 +294,7 @@ r2 修订（仅此）：§4 表新增第 18 行（forum-moderation.js，preimage
 
 ## 8. Decisions
 
-### DEC-DEP-001 — Pin the audited 18-file candidate release (r2)
+### DEC-DEP-001 — Pin the audited 25-file candidate boot-closure release (r3)
 
 - Decision owner: repository Owner
 - Decision: release exactly the §4 blobs from `7921f4a...`; do not deploy current-main
@@ -292,7 +312,7 @@ r2 修订（仅此）：§4 表新增第 18 行（forum-moderation.js，preimage
 ### DEC-DEP-003 — Use one fail-closed transaction with equal-face rollback
 
 - Decision owner: repository Owner
-- Decision: stage and verify release plus rollback faces, apply all 18 regular `root:wheel` `0644` files under a lock, restart once, then prove health; any mismatch or failure stops or rolls back the whole face.
+- Decision: stage and verify release plus rollback faces, apply all 25 regular `root:wheel` `0644` files under a lock, restart once, then prove health; any mismatch or failure stops or rolls back the whole face.
 - Rejected alternative: piecemeal copy, partial restart, or best-effort continuation.
 - Reason: mixed Broker/Router/runtime versions violate the accepted composition boundary.
 
@@ -308,7 +328,7 @@ r2 修订（仅此）：§4 表新增第 18 行（forum-moderation.js，preimage
 
 ### CTR-DEP-001 — Exact source and closure
 
-An authorized builder MUST extract exactly the 18 §4 blobs from
+An authorized builder MUST extract exactly the 25 §4 blobs from
 `7921f4aecdfe3146210bce7b4a559fe4bc8087cc`, record an ordered manifest with path,
 blob, SHA-256, byte count, mode, owner, and destination, and prove all non-compose
 feature blobs are present identically in `github/main@495b163...`. It MUST prove the
@@ -353,13 +373,13 @@ After the verified restart, a fresh ordinary source Session/header and fresh pos
 
 ### CTR-DEP-008 — Failure and rollback
 
-Any failed preimage, integrity, Auth, restart, health, header, identity, delivery, exactly-once, or leakage check MUST fail closed. If files changed, the operator MUST restore the complete 18-path §4 preimage face and metadata (deleting only the seven `ABSENT` preimages), restart once, and re-prove baseline health/hashes. If Phase C applied a Grant, D/E failure or terminal completion MUST trigger only the separately authorized compensation in `CTR-DEP-006` and prove absence. Evidence/audit rows MAY remain; secrets MUST NOT be recorded. A Gate, dialog, artifact, restart, or receipt alone MUST NOT be reported as success.
+Any failed preimage, integrity, Auth, restart, health, header, identity, delivery, exactly-once, or leakage check MUST fail closed. If files changed, the operator MUST restore the complete 25-path §4 preimage face and metadata (deleting only the `ABSENT` preimages per the rollback manifest), restart once, and re-prove baseline health/hashes. If Phase C applied a Grant, D/E failure or terminal completion MUST trigger only the separately authorized compensation in `CTR-DEP-006` and prove absence. Evidence/audit rows MAY remain; secrets MUST NOT be recorded. A Gate, dialog, artifact, restart, or receipt alone MUST NOT be reported as success.
 
 ### CTR-GOV-001 — Lifecycle and final-head authority
 
 This proposal authorizes no code, artifact apply, restart, Auth change, Grant, or canary. After independent exact-head review and explicit Owner authority, one lifecycle-only docs commit MAY change only this exhaustive allowlist: (1) V1 frontmatter `status: proposed→accepted`, `implementation_authority: none→contracts`, `production_apply_authority: none→contracts`; (2) add frontmatter `accepted_date`, `accepted_by`, `accepted_at`, `accepted_reviewed_head`, `independent_review_result`, `independent_review_blockers`, `acceptance_verdict`, `acceptance_finalize_semantic_change`, and `acceptance_authority_basis`; (3) replace only the two-line Proposed banner with accepted lifecycle/review provenance; (4) footer values `CURRENT_STATUS`, `IMPLEMENTATION_AUTHORITY`, and `PRODUCTION_APPLY_AUTHORITY`; (5) this Spec's README row cells `Current lifecycle` and `Implementation authority`. No other byte may change.
 
-Before that commit, the authorized actor MUST fetch current main, bind its exact head, prove the accepted parents/external authority have not drifted, and recheck the 18 release paths against current main (17 exact-equal candidate blobs plus separately reviewed compose delta) and all 18 production preimages/metadata. After the lifecycle commit, an independent reviewer MUST verify every changed byte is allowlisted; all non-allowlisted normative bytes are identical; new values match Owner authority and review identity/outcome; `SEMANTIC_DELTA=NONE` means product/deployment behavior is unchanged; and the current-main/18-path checks remain PASS. `FINAL_HEAD_RECHECK=PASS` binds that exact accepted head; the head MUST NOT change before merge. Merge activates only these contracts.
+Before that commit, the authorized actor MUST fetch current main, bind its exact head, prove the accepted parents/external authority have not drifted, and recheck the 25 release paths against their §4/§4.2 provenance and all 25 production preimages/metadata. After the lifecycle commit, an independent reviewer MUST verify every changed byte is allowlisted; all non-allowlisted normative bytes are identical; new values match Owner authority and review identity/outcome; `SEMANTIC_DELTA=NONE` means product/deployment behavior is unchanged; and the closure-path checks remain PASS. `FINAL_HEAD_RECHECK=PASS` binds that exact accepted head; the head MUST NOT change before merge. Merge activates only these contracts.
 
 ## 10. Acceptance
 
@@ -370,7 +390,7 @@ Before that commit, the authorized actor MUST fetch current main, bind its exact
 - Environment: isolated builder with read-only Git source and non-production staging root
 - Required evidence: exact commits, 18 source blobs, SHA-256 manifest, preimage/rollback manifest,
   zero-secret scan, dry-run transcript
-- Expected result: exact 18/18 regular `root:wheel` `0644` release face and exact rollback metadata/absence face; zero extra paths
+- Expected result: exact 25/25 regular `root:wheel` `0644` release face and exact rollback metadata/absence face; zero extra paths
 - Failure condition: any mismatch, mutable source, missing rollback byte/metadata, symlink/directory/special file, secret, or extra path.
 
 ### ACC-DEP-002 — Auth prerequisite
@@ -388,7 +408,7 @@ Before that commit, the authorized actor MUST fetch current main, bind its exact
 - Method: execute audited wrapper after A PASS; verify hashes, process start times/generations, and health
 - Environment: production Agent Core host under Owner-approved privileged operation
 - Required evidence: phase receipts, authorization identity, before/after manifests with metadata, restart receipt, fresh parent/child coordinates, health output, unrelated-path no-change proof
-- Expected result: exactly one complete apply/restart; all 18 targets equal release blobs and are regular `root:wheel` `0644`
+- Expected result: exactly one complete apply/restart; all 25 targets equal release blobs and are regular `root:wheel` `0644`
 - Failure condition: skipped/out-of-order phase, partial/wrong-metadata face, stale child, extra restart/change, or failed health.
 
 ### ACC-DEP-004 — Grant, header, and canary
