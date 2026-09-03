@@ -469,8 +469,9 @@ trusted authContext schema 以 `CTR-PA-003` 冻结者为准：
 - Decision owner: repository owner mayf3（审计 blocker 4 裁决方向）
 - Decision: 不公开裸 DSH raw message ID；`CTR-SH-012` 冻结
   `msg_sh1_<base64url(SHA-256(canonical_length_prefixed_tuple(...)))>`，tuple 绑定 spec
-  常量、agentId、`main`、currentMainGenerationDigest、role 与 rawDshMessageId；无 store、无
-  mapping；碰撞 fail-closed；reset 换 generation digest 后旧 cursor 自然 stale。
+  常量、agentId、`main`、currentMainGenerationDigest、role、rawDshMessageId 与
+  messageRecordDigest（内容绑定）；无 store、无
+  mapping；碰撞 fail-closed；reset 后旧 cursor 按 `CTR-SH-006` 的内容绑定规则 stale。
 - Rejected alternatives: 直接返回 raw DSH ID（跨 role/Agent/reset 无全局唯一性证明）；随机
   ID + sidecar store（违反 SECOND_HISTORY_STORE = FORBIDDEN）。
 - Reason: 继承 Message API 的全局唯一语义而不新建存储；同 snapshot 稳定、跨域不冲突、reset
@@ -1052,8 +1053,8 @@ currentMainGenerationDigest = SHA-256(
   误读）；首条 record 相同但后续 record 内容不同（即使 rawId 复用）的旧 cursor 因
   `messageRecordDigest` 不同而结构上无法匹配，行为是 `409 HISTORY_CURSOR_STALE`；
 - 同一 snapshot 重复读取的公共 ID 完全稳定；
-- 跨 role、跨 Agent、跨 trajectory、reset 前后不冲突（tuple 已绑定全部五维，含内容
-  绑定）；
+- 跨 role、跨 Agent、跨 trajectory、reset 前后不冲突（tuple 六个非 tag 维度绑定：
+  agentId、logical main、generation、role、rawId、messageRecordDigest）；
 - 不需要数据库、sidecar 或 mapping；
 - **碰撞语义**：同一 snapshot 内出现公共 ID 碰撞（同 ID 不同消息）→ 整个请求 fail-closed
   `INTERNAL_ERROR`；跨 snapshot/generation 的 256-bit 哈希碰撞不是本 Spec 可检测或可恢复
