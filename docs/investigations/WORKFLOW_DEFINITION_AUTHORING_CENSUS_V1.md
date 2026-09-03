@@ -43,10 +43,10 @@ publication validation/CAS, and database-triggered immutability of non-DRAFT
 graph rows (`migrations/0007` plus the parent-move correction in `0008`). These
 rules are not Broker responsibilities.
 
-### OBS-CEN-003 — current HTTP conformance gaps
+### OBS-CEN-003 — observed service hardening opportunities (not Goal blockers)
 
-The four routes exist, but the current adapter/governance wrapper has four
-mechanical gaps that block the requested model-facing contract:
+The four routes exist. Read-only inspection found four adapter/governance
+hardening opportunities:
 
 1. draft/create-version, graph-replace, and publish handlers ignore one or both
    route ownership coordinates (`domainId`, `definitionId`) and authorize only
@@ -64,8 +64,13 @@ mechanical gaps that block the requested model-facing contract:
    `internal_consistency_error` instead of the typed 422 families already used
    by the non-governance definition adapter.
 
-These are service-owned conformance defects. A Broker must not duplicate or
-mask them.
+None permits bypass of Direct Token, `workflow.execute`, Domain Owner, canonical
+object authorization, or server business validation. Broker can bind the exact
+current endpoints without duplicating or masking them: route/body fields map
+deterministically, current receipt/audit behavior remains service-owned, and
+current error codes are preserved. No item proves that the requested legal
+author → publish → create-instance chain is unsafe or unusable. They are
+`OUT_OF_SCOPE_SERVICE_HARDENING`, not authority for service modification here.
 
 ### OBS-CEN-004 — no Broker implementation or accepted authoring Spec
 
@@ -92,16 +97,18 @@ own accepted service/auth authority and is not part of this Goal.
 - **CLM-CEN-002 (SUPPORTED):** model-facing product authority is partial: the
   service surface exists, but dsh-agent-core has neither an implementation
   authority nor a Broker surface.
-- **CLM-CEN-003 (SUPPORTED):** the service conformance gaps in OBS-CEN-003 must
-  be fixed at the service, under a service-owned Spec, before integration
-  acceptance can pass.
-- **CLM-CEN-004 (SUPPORTED):** four standalone Broker tools are the smallest
-  packaging consistent with the existing single-operation manifest pattern and
-  do not reopen the accepted two-operation `workflow_execute` contract.
+- **CLM-CEN-003 (SUPPORTED):** no service product-code change is required for
+  safe model-facing exposure of the four current operations; OBS-CEN-003 is
+  follow-up hardening under separate service authority.
+- **CLM-CEN-004 (SUPPORTED):** one `workflow_definition_authoring` capability
+  with four operations follows the existing one-capability/one-tool architecture
+  and remains separate from the two-operation instance-execution tool.
 
 ```text
-AUTHORITY_REUSE = NO
-SERVICE_CHANGE = MINIMAL_CONFORMANCE_FIX_REQUIRED
+AUTHORITY_REUSE = MINIMAL_PARENT_BOUNDARY_AMENDMENT_REQUIRED
+WHOLE_SUCCESSOR_REQUIRED = NO
+SERVICE_CHANGE_REQUIRED_FOR_BUSINESS_GOAL = NO
+SERVICE_CHANGE = FORBIDDEN
 SERVER_AUTHORITY = PRESERVE
 MODEL_CAN_SUPPLY_PRINCIPAL = NO
 MODEL_CAN_SUPPLY_CREDENTIAL = NO

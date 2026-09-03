@@ -102,6 +102,13 @@ owners:
 > `POST /internal/v1/workflow-instances` 已存在，服务端零改动）。修订明细
 > 见 §21；status 仍 accepted，接受需独立审计轮。
 
+> **PROPOSED FOCUSED AMENDMENT 2026-09-03（Definition Authoring boundary）。**
+> 本轮仅澄清 DEC-010 的“唯一写工具”是唯一 **instance-execution** 写工具；
+> Definition management 在本 Spec 中一直明确 out-of-scope，可由独立 governing
+> Spec 授权一个 `workflow_definition_authoring` 工具。`workflow_execute` 仍恰为
+> `create_instance|transition`，全部既有合同不变。见 §23；本段尚未受理，需绑定
+> exact head 的独立审阅与 Owner acceptance。
+
 ## 1. Goal
 
 让**当前节点的 exact assignee** 能够通过正式 Broker 工具提交合法
@@ -1172,3 +1179,36 @@ registry 重构]。
   PRODUCTION_CHANGE = NONE。
 - Merge：本 commit 经单一 PR merge 至 main（merge commit 即本 amendment
   acceptance 的 effective-on-main 坐标）。
+
+## 23. Proposed focused amendment (2026-09-03, Definition Authoring boundary)
+
+This section is **proposed** and has no implementation effect until independently
+reviewed and Owner-accepted on its exact commit. It clarifies the boundary of
+DEC-010 without replacing this Spec or changing any accepted instance-execution
+contract.
+
+### DEC-011 — write-family boundary clarification
+
+DEC-010's “one Workflow write entry” means one **instance-execution** model tool:
+`workflow_execute`, with exactly `create_instance|transition`. Definition
+management was explicitly excluded from this Spec (§2/§9 and prior amendment
+scope) and is a separate product capability family.
+
+One independently governed tool `workflow_definition_authoring`, containing
+only `create_definition|create_draft_version|replace_draft_graph|publish_version`,
+may therefore coexist with `workflow_execute`. It is not an alias, replacement,
+or added operation of `workflow_execute`, and it does not reopen transition or
+instance-execution semantics.
+
+This is a bounded additive clarification: `workflow_execute` name, operations,
+wire bindings, identity seam, error contracts, inventory presence, and absence
+of `workflow_transition` remain byte-for-meaning unchanged. Definition Authoring
+implementation authority exists only in a separately accepted governing Spec.
+
+```text
+AMENDMENT_STATUS = proposed
+AUTHORITY_MEANING = INSTANCE_EXECUTION_WRITE_FAMILY_ONLY
+WHOLE_SUCCESSOR_REQUIRED = NO
+WORKFLOW_EXECUTE_CHANGE = NONE
+PRODUCTION_APPLY_AUTHORITY = none
+```
