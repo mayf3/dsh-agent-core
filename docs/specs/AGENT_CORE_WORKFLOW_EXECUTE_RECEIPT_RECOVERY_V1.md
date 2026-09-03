@@ -6,6 +6,11 @@ authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
 date: 2026-09-03
+accepted_date: null
+accepted_by: null
+accepted_reviewed_base: null
+accepted_reviewed_spec_commit: null
+acceptance_review_verdict: null
 type: implementation-spec (one-shot receipt recovery authority proposal; docs-only authoring round)
 scope:
   - mayf3/dsh-agent-core
@@ -67,31 +72,49 @@ root 写事务。
 
 ## 3. Frozen production write surface (CTR-RR-001)
 
-唯一允许的 production-side write 是创建：
+唯一允许的 durable production-side output 是创建：
 
 ```text
 /Users/yanfenma/workspace/deployment-artifacts/
   workflow-execute-unified-a7e732f/DEPLOYMENT_RECEIPT_RECOVERY_V1.json
 ```
 
-- 文件 MUST 为 regular file、无 symlink、无 hardlink，最终 `root:wheel 0644`；
-- MUST 使用 root-owned 0700 same-filesystem staging、nonempty gate、`jq -e` schema
-  gate、`fsync` 与 atomic rename；
-- 原零字节 `DEPLOYMENT_RECEIPT.json` MUST byte-preserved，不得覆盖、删除、移动或
-  伪装成 repaired original；
-- 除上述新文件外，`PRODUCTION_WRITE_ALLOWLIST = EMPTY`。P1/P2、launchd plist、
-  runtime state、Grant、credential、auth-service、svc-workflow 与其他文件均不得写。
+- `DURABLE_OUTPUT_ALLOWLIST` 恰为上述一个 absolute path；执行前 user-side 与
+  root-side 均 MUST 证明目标不存在（包含 symlink 的 `lstat` 检查）。若存在，事务
+  `STOPPED_ALREADY_EXISTS`，禁止覆盖、替换、删除或重试；
+- Artifact manifest MUST 冻结一个随机 nonce，并把
+  `TRANSIENT_MACHINERY_ALLOWLIST` 冻结为 same-filesystem 下一个 exact absolute
+  root-owned 0700 staging directory 及其中一个 exact temporary receipt path；不得使用
+  glob、未解析变量或第二个 transient path。publication 后只允许删除该 exact temp 与
+  空 staging directory；
+- 发布 MUST 使用经 artifact Gate 证明的 atomic no-clobber primitive；普通可覆盖式
+  `rename(2)` / `mv` 不合格。最终文件 MUST 为 regular file、`nlink=1`、无 symlink、
+  最终 `root:wheel 0644`；
+- temporary receipt 必须经过 nonempty、`jq -e` schema、`fsync`、user/root 双 hash
+  gate 后才可 no-clobber publish；
+- 原零字节 `DEPLOYMENT_RECEIPT.json` MUST byte-and-identity-preserved。执行前冻结并在
+  publication 后逐项比较：`device=16777230`、`inode=62490135`、`size=0`、`uid=0`、
+  `gid=0`、`mode=0644`、`mtime_epoch=1788391655`、`birthtime_epoch=1788391655`、
+  `nlink=1`、SHA-256 = empty-file hash、flags = `-`、ACL = empty、xattr = empty。
+  任一字段变化均为 FAIL；不得 chmod/chown、改 ACL/xattr、删除、移动或重建；
+- 除 `DURABLE_OUTPUT_ALLOWLIST` 与 `TRANSIENT_MACHINERY_ALLOWLIST` 外，所有
+  production write 均禁止。P1/P2、launchd plist、runtime state、Grant、credential、
+  auth-service、svc-workflow 与其他文件均不得写。
 
 ## 4. Evidence taxonomy (CTR-RR-002)
 
 Recovery receipt 中每项事实 MUST 显式标记下列一种 provenance：
 
-- `ORIGINAL_DURABLE`：来自原事务期间形成、现在仍可机械定位和校验的 durable
-  evidence；
+- `PRE_RECOVERY_DURABLE`：在 receipt recovery 之前形成、现在仍可机械定位和校验的
+  durable evidence；可来自原部署事务，也可来自随后独立的 header/E2E turn；
 - `CONTROL_FLOW_DERIVED`：由 exact audited wrapper bytes、Owner/root exit status 与
   immutable transcript 推导出的控制流结论；
 - `CURRENT_REOBSERVED`：recovery 轮重新只读采集的当前状态；
 - `UNKNOWN_NOT_DURABLY_RECORDED`：原事务值没有 durable exact source。
+
+每个关键事实必须是独立 evidence record，至少含 `value`、`provenance`、exact
+`path/session_id`、event `seq` 或文件 identity、epoch-ms `time` 和该 exact evidence
+extract 的 SHA-256。禁止用一个对象级 provenance 覆盖多个不同来源字段。
 
 禁止：
 
@@ -118,50 +141,72 @@ durable exact source，MUST 写为 `null` 且 provenance =
     "artifact_sha256": "<exact audited artifact hash>"
   },
   "original_receipt": {
-    "path": "<exact original path>",
-    "size": 0,
-    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "provenance": "ORIGINAL_DURABLE"
+    "identity_before": {
+      "value": "device=16777230 inode=62490135 size=0 uid=0 gid=0 mode=0644 mtime_epoch=1788391655 birthtime_epoch=1788391655 nlink=1 flags=- acl=empty xattr=empty sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/Users/yanfenma/workspace/deployment-artifacts/workflow-execute-unified-a7e732f/DEPLOYMENT_RECEIPT.json",
+      "time": "<recovery preflight epoch-ms>",
+      "extract_sha256": "<exact census extract hash>",
+      "provenance": "CURRENT_REOBSERVED"
+    },
+    "identity_after": {
+      "value": "<must exactly equal identity_before value>",
+      "path": "/Users/yanfenma/workspace/deployment-artifacts/workflow-execute-unified-a7e732f/DEPLOYMENT_RECEIPT.json",
+      "time": "<post-publication epoch-ms>",
+      "extract_sha256": "<exact census extract hash>",
+      "provenance": "CURRENT_REOBSERVED"
+    }
   },
   "original_transaction": {
     "transaction_id": null,
     "a4_before": null,
     "grant_before_sha256": null,
     "credential_before_sha256": null,
-    "provenance": "UNKNOWN_NOT_DURABLY_RECORDED"
+    "provenance_by_field": "UNKNOWN_NOT_DURABLY_RECORDED"
   },
   "control_flow": {
     "audited_wrapper_sha256": "9aa3dfc0c308a8f95d97be8f043e4644eabd356cd8a54f5b12868ec7bfb9ff21",
     "owner_root_exit_zero_evidence": "<durable locator or null>",
-    "conclusion": "<bounded derived conclusion or unavailable>",
-    "provenance": "CONTROL_FLOW_DERIVED"
+    "owner_root_exit_zero_time": "<epoch-ms or null>",
+    "owner_root_exit_zero_extract_sha256": "<sha256 or null>",
+    "conclusion": "<bounded derived conclusion or null>",
+    "provenance": "<CONTROL_FLOW_DERIVED only when locator/time/digest are all present; otherwise UNKNOWN_NOT_DURABLY_RECORDED>"
+  },
+  "pre_recovery_durable": {
+    "catalog_header": {
+      "value": "workflow_execute visible; operations=create_instance,transition; workflow_transition absent",
+      "session_id": "/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl",
+      "seq": 49984,
+      "time": 1788391646586,
+      "extract_sha256": "9e17c49b828651f4aa062b60a7a50e0be83fa1cb7053ada914765c74663dc7e9",
+      "provenance": "PRE_RECOVERY_DURABLE"
+    },
+    "e2e_events": [
+      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50593,"time":1788392601576,"extract_sha256":"eae7d5bd8c75ffa63ec68e43f1d3f3b3493a6f99820b7d5a184bea5ed3fa38f3","provenance":"PRE_RECOVERY_DURABLE"},
+      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50594,"time":1788392601763,"extract_sha256":"6b587ea7f2b75fa7507c04587c3f57383d63dead520edf98af3cd19165134dbf","provenance":"PRE_RECOVERY_DURABLE"},
+      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50976,"time":1788392635037,"extract_sha256":"61271699713f1459a3b3117bfe867657029a7fa268a650a8df5225144e6ab386","provenance":"PRE_RECOVERY_DURABLE"},
+      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50977,"time":1788392635135,"extract_sha256":"55c89022619c3eb10f7ea0ce4aab15386ec12fc7741d3858730a87f75ecbb440","provenance":"PRE_RECOVERY_DURABLE"},
+      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":51037,"time":1788392640436,"extract_sha256":"9d736e23807d6d279eb6b5e24539caf90c80378e13768b700a1ffc981e751497","provenance":"PRE_RECOVERY_DURABLE"},
+      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":51038,"time":1788392640488,"extract_sha256":"536f7c82683bc811f7087c6d35b45cc7210c8a36cd69b01132be79b86248ad38","provenance":"PRE_RECOVERY_DURABLE"}
+    ]
   },
   "current_reobserved": {
-    "runtime_health": "PASS",
-    "workflow_execute_visible": true,
-    "workflow_execute_operations": ["create_instance", "transition"],
-    "workflow_transition_visible": false,
-    "p1_git_blob": "db7688fe1cc428aa1260e1372920ff744a076013",
-    "p2_git_blob": "2f5e55b772e25093b7fec480a76fe47d6993b860",
-    "grant_changed": "NOT_RECONSTRUCTABLE_FROM_CURRENT_STATE",
-    "credential_changed": "NOT_RECONSTRUCTABLE_FROM_CURRENT_STATE",
-    "provenance": "CURRENT_REOBSERVED"
+    "runtime_health": "<independent fact record>",
+    "p1_git_blob": "<independent fact record>",
+    "p2_git_blob": "<independent fact record>",
+    "parent_child_pid_start": "<independent fact records>",
+    "grant_current": "<independent fact record; never labelled unchanged without valid control-flow evidence>",
+    "credential_current": "<independent fact record; never labelled unchanged without valid control-flow evidence>"
   },
-  "e2e_evidence": {
-    "workflow_instance_id": "dbf46d4c-26bd-410a-b8fa-441758ec0658",
-    "create_instance": "PASS",
-    "transition": "PASS",
-    "exactly_once": "PASS",
-    "final_state": "completed",
-    "final_version": 2,
-    "provenance": "ORIGINAL_DURABLE"
-  },
-  "recovery_result": "PASS"
+  "receipt_recovery_publication": "PASS",
+  "workflow_execute_production_ready": "<YES or NOT_ESTABLISHED>"
 }
 ```
 
 `owner_root_exit_zero_evidence` 只有在 durable locator 能机械回读时才能填值；否则为
-`null`，且 `control_flow.conclusion` 不得声称原 equality checks 已通过。
+`null`，其 time/digest/conclusion 也必须为 `null`，provenance 必须是
+`UNKNOWN_NOT_DURABLY_RECORDED`。上述 event digest 定义为 exact JSONL event 经
+`jq -c 'select(.seq==N)'` 生成并追加一个 LF 后的 SHA-256；所有 E2E event 共用上述
+exact session path，receipt 中 MUST 对每项显式重复该 path，不能靠对象级继承省略。
 
 ## 6. Recovery artifact and one targeted Gate (CTR-RR-004)
 
@@ -178,7 +223,9 @@ user-side hash 与 root-side hash 相等。任一失败 → 不发布、无其�
 只做 ONE targeted independent Gate，范围限于：
 
 1. exact accepted Authority / artifact / output path pins；
-2. allowlist 恰为一个 supplement 路径，原 receipt byte-preserved；
+2. durable allowlist 恰为一个 supplement 路径，transient allowlist 是 manifest 冻结的
+   exact nonce directory/temp path；目标预先不存在且 no-clobber，原 receipt
+   byte-and-identity-preserved；
 3. jq totality、nonempty、schema、hash、ownership、atomicity；
 4. evidence provenance 无升级、无伪造、unknown 字段保持 unknown；
 5. wrapper 中不存在 install P1/P2、launchctl、restart、rollback、Workflow E2E、
@@ -199,9 +246,11 @@ AUTHORITY_ACCEPTED
 → INDEPENDENT_READ_ONLY_PUBLICATION_AUDIT
 ```
 
-publication audit 必须验证新文件 nonempty、JSON schema、hash、`root:wheel 0644`、原
-receipt hash仍为 empty-file hash、P1/P2 blobs 不变、parent/child PIDs 与 start time
-不因本事务改变、runtime health PASS、无 Grant/credential/Workflow/business mutation。
+publication audit 必须验证新文件 nonempty、JSON schema、hash、`root:wheel 0644`、
+`nlink=1`；原 receipt 的 device/inode/size/hash/uid/gid/mode/mtime/birthtime/nlink/
+flags/ACL/xattr 全部不变；transient allowlist 已清空；P1/P2 blobs 不变、parent/child
+PIDs 与 start time 不因本事务改变、runtime health PASS、无
+Grant/credential/Workflow/business mutation。
 
 ## 8. Explicit prohibitions (CTR-RR-006)
 
@@ -212,12 +261,13 @@ receipt hash仍为 empty-file hash、P1/P2 blobs 不变、parent/child PIDs 与 
 - 再跑 catalog probe、create/transition E2E 或其他 Workflow write；
 - Grant、credential、principal、client、scope 或 auth configuration 变化；
 - 覆盖原 receipt；
+- 覆盖或重试已存在的 supplement；supplement path 已存在时只能 STOP；
 - 宣称恢复了原 contemporaneous receipt 或所有父 Spec §5 evidence；
 - 以 receipt closure 阻断其他 Lane 的 read-only Authority/artifact/Gate 准备。
 
 ## 9. Success criterion
 
-只有下列全部成立才可写：
+Supplement publication 成功只允许写：
 
 ```text
 RECEIPT_RECOVERY_AUTHORITY = ACCEPTED
@@ -231,11 +281,15 @@ GRANT_CHANGED = NO
 CREDENTIAL_CHANGED = NO
 UNRELATED_PRODUCTION_MUTATION = NONE
 WORKFLOW_EXECUTE_RECEIPT_TERMINALIZATION = PASS
-WORKFLOW_EXECUTE_PRODUCTION_READY = YES
 ```
 
-unknown original values remain unknown and do not become PASS claims. 本 Spec 只关闭 receipt
-publication 缺口，不改写原 deployment transaction 的历史证据强度。
+`WORKFLOW_EXECUTE_PRODUCTION_READY = YES` 是独立的综合结论，只能在以下 evidence
+全部具有可校验 locator/time/digest 且彼此一致时成立：pre-recovery durable target-live
+catalog、create/transition/final-readback E2E、Owner/root exit-zero 与由 exact wrapper
+导出的安全 assertions、recovery 时 P1/P2/PID/health/current Grant/current credential
+只读回查。任一缺失或 provenance 为 unknown 时，MUST 写
+`WORKFLOW_EXECUTE_PRODUCTION_READY = NOT_ESTABLISHED`；receipt recovery 不得自行
+升级父事务证据。unknown original values 永远保持 unknown。
 
 ## 10. Acceptance scheme
 
@@ -244,7 +298,22 @@ publication 缺口，不改写原 deployment transaction 的历史证据强度�
 若审计判定新增 root-write transaction 必须 whole-Spec successor，则本 proposal =
 BLOCKED，必须先按该结论改用 successor，不能自行接受。
 
-审计 PASS 后，Owner 对 exact reviewed head 作出接受决定；独立 lifecycle transaction
-才可把 `status` 翻转为 `accepted`，将 `implementation_authority` 与
-`production_apply_authority` 翻转为 `contracts`，记录 reviewed head/verdict/date，
-并保持 §1–§9 normative bytes 不变。
+审计 PASS 后，Owner 对 exact reviewed head 作出接受决定。Lifecycle transaction 的
+exhaustive allowlist 仅为：
+
+1. frontmatter `status: proposed -> accepted`、两项 authority `none -> contracts`；
+2. `accepted_date: null -> 2026-09-03`、`accepted_by: null -> mayf3`、
+   `accepted_reviewed_base: null -> <审计冻结的 exact base>`、
+   `accepted_reviewed_spec_commit: null -> <审计冻结的 exact proposal head>`、
+   `acceptance_review_verdict: null -> PASS`；
+3. 标题下方的 proposal banner 整块替换为：`ACCEPTED`、Owner、reviewed head、
+   verdict、blocker=0、production apply仍须 artifact Gate + native Owner transaction 的
+   同值摘要；
+4. `docs/specs/README.md` 本 Spec 行只允许 lifecycle `proposed -> accepted` 与
+   authority `none -> contracts` 两处同步。
+
+除此之外，本文（含本节）与索引其他 bytes 全部冻结；不得追加 acceptance footer 或
+顺手修文。Lifecycle commit 形成后，必须由独立 Reviewer 对新 exact head 执行
+`FINAL_HEAD_RECHECK = PASS`，证明 delta 恰为以上 allowlist、Owner decision 与 review
+provenance 一致、normative semantic drift = NONE。只有通过 recheck 的 exact head 且
+随后不再变化才可 merge；否则 acceptance 与后续 artifact authority 均无效。
