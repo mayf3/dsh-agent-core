@@ -181,12 +181,12 @@ durable exact source，MUST 写为 `null` 且 provenance =
       "provenance": "PRE_RECOVERY_DURABLE"
     },
     "e2e_events": [
-      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50593,"time":1788392601576,"extract_sha256":"eae7d5bd8c75ffa63ec68e43f1d3f3b3493a6f99820b7d5a184bea5ed3fa38f3","provenance":"PRE_RECOVERY_DURABLE"},
-      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50594,"time":1788392601763,"extract_sha256":"6b587ea7f2b75fa7507c04587c3f57383d63dead520edf98af3cd19165134dbf","provenance":"PRE_RECOVERY_DURABLE"},
-      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50976,"time":1788392635037,"extract_sha256":"61271699713f1459a3b3117bfe867657029a7fa268a650a8df5225144e6ab386","provenance":"PRE_RECOVERY_DURABLE"},
-      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50977,"time":1788392635135,"extract_sha256":"55c89022619c3eb10f7ea0ce4aab15386ec12fc7741d3858730a87f75ecbb440","provenance":"PRE_RECOVERY_DURABLE"},
-      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":51037,"time":1788392640436,"extract_sha256":"9d736e23807d6d279eb6b5e24539caf90c80378e13768b700a1ffc981e751497","provenance":"PRE_RECOVERY_DURABLE"},
-      {"session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":51038,"time":1788392640488,"extract_sha256":"536f7c82683bc811f7087c6d35b45cc7210c8a36cd69b01132be79b86248ad38","provenance":"PRE_RECOVERY_DURABLE"}
+      {"value":"create_instance call: external_reference=wfexec-production-ready-canary-20260903-0742, disposable=true","session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50593,"time":1788392601576,"extract_sha256":"eae7d5bd8c75ffa63ec68e43f1d3f3b3493a6f99820b7d5a184bea5ed3fa38f3","provenance":"PRE_RECOVERY_DURABLE"},
+      {"value":"create_instance PASS: instance=dbf46d4c-26bd-410a-b8fa-441758ec0658, version=1, node_visit=b1cf751e-6174-44ce-9911-f72e1d092524, event_sequence=1","session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50594,"time":1788392601763,"extract_sha256":"6b587ea7f2b75fa7507c04587c3f57383d63dead520edf98af3cd19165134dbf","provenance":"PRE_RECOVERY_DURABLE"},
+      {"value":"transition call exactly once: instance=dbf46d4c-26bd-410a-b8fa-441758ec0658, transition=7493f6ca-6cf0-4ebf-95f8-f565f2b231ec, expected_version=1","session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50976,"time":1788392635037,"extract_sha256":"61271699713f1459a3b3117bfe867657029a7fa268a650a8df5225144e6ab386","provenance":"PRE_RECOVERY_DURABLE"},
+      {"value":"transition PASS: same instance, version=2, node_visit=734910f2-c59d-4522-9c32-3285fd19dbff, submission=269d55c9-452a-48eb-9d36-e37805fb1b17, event_sequence=2","session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":50977,"time":1788392635135,"extract_sha256":"55c89022619c3eb10f7ea0ce4aab15386ec12fc7741d3858730a87f75ecbb440","provenance":"PRE_RECOVERY_DURABLE"},
+      {"value":"final read call: instance=dbf46d4c-26bd-410a-b8fa-441758ec0658","session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":51037,"time":1788392640436,"extract_sha256":"9d736e23807d6d279eb6b5e24539caf90c80378e13768b700a1ffc981e751497","provenance":"PRE_RECOVERY_DURABLE"},
+      {"value":"final readback PASS: same instance, version=2, node=completed, node_type=TERMINAL, is_terminal=true, outgoing_transitions=empty; together with the single transition call/result binds EXACTLY_ONCE=PASS","session_id":"/Users/authsvc/.agent-core/homes/agt_efficiency-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_c6fa97d6255912b25a277e25441f6c11--/main/session.jsonl","seq":51038,"time":1788392640488,"extract_sha256":"536f7c82683bc811f7087c6d35b45cc7210c8a36cd69b01132be79b86248ad38","provenance":"PRE_RECOVERY_DURABLE"}
     ]
   },
   "current_reobserved": {
@@ -306,9 +306,7 @@ exhaustive allowlist 仅为：
    `accepted_reviewed_base: null -> <审计冻结的 exact base>`、
    `accepted_reviewed_spec_commit: null -> <审计冻结的 exact proposal head>`、
    `acceptance_review_verdict: null -> PASS`；
-3. 标题下方的 proposal banner 整块替换为：`ACCEPTED`、Owner、reviewed head、
-   verdict、blocker=0、production apply仍须 artifact Gate + native Owner transaction 的
-   同值摘要；
+3. 标题下方 proposal banner 必须进行下述 exact literal `FROM` → `TO` 替换；
 4. `docs/specs/README.md` 本 Spec 行只允许 lifecycle `proposed -> accepted` 与
    authority `none -> contracts` 两处同步。
 
@@ -317,3 +315,23 @@ exhaustive allowlist 仅为：
 `FINAL_HEAD_RECHECK = PASS`，证明 delta 恰为以上 allowlist、Owner decision 与 review
 provenance 一致、normative semantic drift = NONE。只有通过 recheck 的 exact head 且
 随后不再变化才可 merge；否则 acceptance 与后续 artifact authority 均无效。
+
+Literal `FROM`：
+
+```text
+> **PROPOSED / NOT ACCEPTED.** 本文件只提出一次性的 receipt recovery Authority。
+> 本 authoring 轮仅可写本文与索引；不得写 production、不得 sudo、不得修改
+> P1/P2、不得重启或回滚 runtime、不得重复 Workflow E2E、不得修改 Grant 或
+> credential。只有独立审计 PASS、Owner 对 exact reviewed head 作出接受决定并把
+> lifecycle/authority 字段翻转后，才可能进入 artifact 轮。
+```
+
+Literal `TO`：
+
+```text
+> **ACCEPTED / RECEIPT-RECOVERY AUTHORITY.** Owner、exact reviewed proposal head 与
+> PASS verdict 只取本文件 frontmatter 的 accepted_by、accepted_reviewed_spec_commit
+> 与 acceptance_review_verdict；BLOCKERS = 0。本 acceptance 仅开放本文冻结的
+> receipt-only artifact/Owner transaction 链；production apply 仍须 ONE targeted
+> artifact Gate PASS 与 macOS native Owner authorization，不授权任何其他 mutation。
+```
