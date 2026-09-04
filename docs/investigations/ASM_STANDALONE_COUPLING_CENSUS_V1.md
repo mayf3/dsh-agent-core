@@ -198,8 +198,17 @@ scheduler 仍 1、moderator 0）。
       接受 synthetic v2 文件
 - [x] workflow/scheduler 回归（面级）：workflow.js/scheduler* 零字节改动（哈希验证）+
       catalog 在场 + boot scheduler loop online；auth face 1.7.0 未触碰
-- [ ] FULL_PREMUTATION_SIMULATION（§18 failure families）——待 artifact 轮
-- [ ] ASM_NO_FLEET_COUPLING_GATE 终判（deployment closure 冻结后，全 NO + IMPORT_CLOSURE=PASS）
+- [x] FULL_PREMUTATION_SIMULATION（§18 failure families）——2026-09-04 二轮全 PASS：
+      happy_path（DEPLOY_OK 17/17 生效）、stale_preimage（rc=2 零写）、missing_artifact_file
+      （rc=2）、hash_mismatch（rc=2）、import_failure（rc=4 回滚 byte-exact）、boot_failure
+      （rc=4 回滚）、health_failure（rc=4 回滚 byte-exact）、catalog_mismatch（rc=4 回滚）、
+      fleet_discipline_in_closure（rc=2 G2 零写拦截）、partial_install（rc=4 恢复）、
+      rollback_failure（rc=3 ROLLBACK_INCOMPLETE 终态）、receipt_failure（rc=4 回滚 byte-exact）。
+      证据：SIM_RESULTS.txt（sealed）；vehicle = RUN_ASM_STANDALONE_OWNER.sh（G0 artifact /
+      G1 fresh preimage / G2 no-fleet / G3 stage + 原子写 + 单次 restart + retry-window health +
+      catalog 证明 + receipt commit-point + equal-face rollback，支持 sim 注入钩子）。
+- [x] ASM_NO_FLEET_COUPLING_GATE 终判 = PASS：§5 门全 NO（结构 + G2 车辆拦截 + sim
+      fleet 家族验证）+ IMPORT_CLOSURE=PASS（boot + 三套件 + census）
 
 ## 6. CASE 判定
 
