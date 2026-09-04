@@ -31,6 +31,12 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Scheduler self-service authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | consult Spec frontmatter; V1 remains current until the atomic acceptance transaction merges | consult Spec frontmatter | whole successor carrying complete V1 authority plus exact `scheduler.admin` mutation-control / `scheduler.audit` history separation, fail-closed global definition listing, and bounded denial ownership lookup; production apply authority remains none |
+
 ## Governance transition
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
@@ -67,7 +73,8 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` | accepted lifecycle in PR #123 / effective on merge into main | contracts (production apply remains none) | accepted complete standalone successor of the Parent/Impl/Activation V2 authority set: preserves ordered-route safety while replacing per-home/no-refresh Luna credentials with one Permission-Model-A canonical store, serialized refresh intent, fail-closed uncertain outcome, and one canonical Owner reauth |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` | accepted lifecycle in PR #150 / effective on merge into main | contracts (production apply remains none; FLEET_PRODUCTION_APPLY = HOLD per Owner 2026-09-03) | accepted complete standalone emergency-bootstrap successor of V1: everything in V1 preserved, plus one-time LEGACY_CONVERGED_BOOTSTRAP (CTR-SCA-017) allowing a quiesced 91/91 byte-equal snapshot to seed the canonical store without OAuth/reauth, classified BOOTSTRAP_FROM_CONVERGED_SNAPSHOT and never AUTHORITATIVE_GENERATION_PROVEN |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` in PR #150 / remains effective on current main until merge | historical contracts only after successor merge | historical fleet-shared Codex authority; reciprocal backlink points to the converged-bootstrap successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | historical contracts only after successor merge | historical activation authority; reciprocal backlink points to the fleet-shared successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1` | superseded by Activation V2 in PR #103 / remains effective on current main until merge | historical contracts only after successor merge | historical activation authority; backlink = `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | historical contracts only after successor merge | historical implementation authority; reciprocal backlink points to the fleet-shared successor |
@@ -90,6 +97,13 @@ it names Parent/IMPL/Activation V2 in `supersedes`, and all three V2 authorities
 `superseded_by` backlink in the same acceptance commit. Until that commit merges `main`, the three V2
 authorities remain effective on current main；after merge, the fleet-shared authority is the sole current
 whole authority and production apply remains separately gated.
+PR #150 atomic acceptance lineage: `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` is accepted at reviewed
+head `d6550a5b1998cb16866cb6e4261a925a98c502a2` (PASS, 0 blockers, normative body change NONE)；
+it names V1 in `supersedes`, and V1 carries the reciprocal `superseded_by` backlink in the same
+acceptance commit. Until that commit merges `main`, V1 remains effective on current main；after
+merge, the V2 converged-bootstrap successor is the sole current whole authority and production
+apply remains separately gated under `FLEET_PRODUCTION_APPLY = HOLD`.
+
 
 The ordered-route-chain acceptance transaction (2026-08-25) is lifecycle-only
 relative to reviewed head `ee13cb224660416c9044203610b93cb8f13873bb`
@@ -188,3 +202,18 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_TRANSITION_DIRECT_ROLLBACK_AMENDMENT_V1` | accepted (Draft PR) | none | narrow docs-only child amendment: removes `DEC-XOBS-001`/`CTR-XOBS-015` pre-seal root staging observation precondition for rollback-to-frozen-preimage only (basis: `SCHEME_AUDIT_R1` sha256 `4ff6defe…ebd74` + NEW_EVIDENCE); both parents (`…DEPLOYMENT_RECOVERY_V1`, `…ROOT_XATTR_OBSERVATION_V1`) stay accepted and byte-unchanged; no whole-Spec supersession, no scope expansion, no new observation authority |
+
+## workflow-execute unified deployment authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_EXECUTE_UNIFIED_DEPLOYMENT_V1` | accepted / current | contracts | unified `workflow_execute` 写工具的两文件生产部署授权：workflow.js + registry.js（DEC-010 cutover），两文件等面回滚、blob pins + preimage 分支 STOPPED 语义、post-deploy 证明面、dedicated disposable-fixture E2E、CTR-HD-006/009 机制按引用继承；执行成功即构成 transition hotfix 的 CTR-HD-011 retirement record |
+| `AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V1` | superseded | contracts | narrow child Authority：只允许一次 post-hoc root-owned supplement receipt publication；原零字节 receipt byte-preserved，原 tx/snapshot 缺失值保持 unknown；禁止 P1/P2、restart、rollback、E2E、Grant/credential 或其他 production mutation |
+| `AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V2` | accepted | contracts | V1 的 narrow whole-Spec successor：唯一 delta = publication 后才能观察的值（identity_after / publication outcome / production-ready conclusion）从 immutable supplement 本体移到独立 post-publication audit evidence（修复 FUTURE_FACT_CYCLE fail-closed）；§3/§4/§8 边界逐字继承，§6/§7/§9 仅含各自括注声明的 delta 编辑 |
+| `AGENT_CORE_WORKFLOW_EXECUTE_PRODUCTION_READY_RESOLUTION_V1` | accepted | contracts | V2 §9 composite 规则的 focused amendment：原事务历史值（original_transaction.*、owner_root_exit_zero_*，UNKNOWN_NOT_DURABLY_RECORDED by design）不阻断 composite 结论；仍阻断类 = catalog/E2E/recovery 自身 transcript exit-zero/recovery 时全部只读回查/publication audit；acceptance 后授权 docs-only resolution record（WORKFLOW_EXECUTE_PRODUCTION_READY 判定落盘） |
+
+## agent-session messaging production deployment authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |

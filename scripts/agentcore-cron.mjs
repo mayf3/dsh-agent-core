@@ -28,8 +28,10 @@
  */
 
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { join, dirname } from 'node:path'
+import { existsSync } from 'node:fs'
 import { JobStore } from '../packages/scheduler/src/store.js'
+import { HistoryStore } from '../packages/scheduler/src/history.js'
 import { normalizeJob, toPublicJob } from '../packages/scheduler/src/job-model.js'
 import { computeNextRunAtMs, parseAtToMs } from '../packages/scheduler/src/schedule.js'
 import { deriveJobStateSummary } from '../packages/scheduler/src/eligibility.js'
@@ -259,6 +261,40 @@ async function cmdRuns(args) {
   const limit = Number(flagValue(args, '--limit') ?? '10')
   const store = new JobStore(storePathFromArgs(args))
   const doc = await store.loadDoc()
+
+  // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: when the structured history store
+  // exists it is the primary query surface (server-side filter/pagination +
+  // status_view / error_code / structured result / correlation chain). The
+  // ledger/evidence path below stays as the fallback (D-007 §12.2).
+  const historyDir = join(dirname(storePathFromArgs(args)), 'history')
+  if (existsSync(historyDir)) {
+    const history = new HistoryStore({ dir: historyDir })
+    await history.load()
+    const { runs, next_cursor: nextCursor } = history.queryRuns({ jobId: id, limit: Math.min(Math.max(limit, 1), 200) })
+    if (hasFlag(args, '--json')) {
+      process.stdout.write(`${JSON.stringify({ runs, next_cursor: nextCursor }, null, 2)}\n`)
+      return
+    }
+    for (const run of runs) {
+      const resultFace = run.result_recorded
+        ? `result=${run.result_status}${run.result?.counters ? ` counters={${Object.entries(run.result.counters).map(([k, v]) => `${k}:${v}`).join(',')}}` : ''}`
+        : run.result_error_code
+          ? `result=ERROR(${run.result_error_code})`
+          : 'result=-'
+      process.stdout.write(
+        `${run.run_id}\t${run.occurrence_id}\t${run.outcome}/${run.status_view}\t`
+        + `error=${run.error_code ?? '-'}\t`
+        + `scheduled=${run.scheduled_at ?? '-'}\t`
+        + `admitted=${run.admitted_at ?? '-'}\tstarted=${run.started_at ?? '-'}\tended=${run.ended_at ?? '-'}\t`
+        + `delivery=${run.delivery_status}\tcorr=${run.correlation_id}\t`
+        + `parent=${run.parent_run_id ?? '-'}\tretry=${run.retry_count}\t${resultFace}\n`,
+      )
+    }
+    if (runs.length === 0) process.stdout.write('(no runs in history)\n')
+    if (nextCursor !== null) process.stdout.write(`(more runs; pass a pager or narrow --id)\n`)
+    return
+  }
+
   const occurrences = (id === undefined ? doc.occurrences : doc.occurrences.filter((r) => r.jobId === id))
     .slice(-limit)
     .reverse()

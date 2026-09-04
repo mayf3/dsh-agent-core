@@ -60,6 +60,7 @@ import { manifests as workflowManifests } from './capabilities/workflow.js'
 import { manifests as okrManifests } from './capabilities/okr.js'
 import { agentDefinitionManifests } from './capabilities/agent-definition.js'
 import { schedulerManifests } from './capabilities/scheduler.js'
+import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'
@@ -89,6 +90,7 @@ export const DEFAULT_MANIFESTS = [
   ...okrManifests,
   ...agentDefinitionManifests,
   ...schedulerManifests,
+  ...agentSessionMessagingManifests,
 ]
 
 /** Default auth-service token endpoint origin (deployment-local). */
@@ -266,12 +268,19 @@ export function apply(ctx, config = {}) {
       targets,
       authServiceOrigin,
       credentialsFile: config.credentialsFile,
+      // Optional L0 pre-handler denial evidence hook (R12); the composition
+      // scopes it to the capabilities it records. Never alters outcomes.
+      ...(config.auditDenial === undefined ? {} : { auditDenial: config.auditDenial }),
       // LOCAL capability handlers are injected by the control-plane
       // composition and resolved at EXECUTE time (sibling services are
       // concurrent-loaded; reading them at APPLY time would race).
       localHandlerResolver: () => ({
         ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),
         ...(ctx.get('selfServiceSchedulerAccess')?.handlers ?? {}),
+        // AGENT_CORE_AGENT_SESSION_MESSAGING_V1: third LOCAL provider — the
+        // generalization keeps the execute-time resolve-at-call contract
+        // (sibling rows load concurrently; reading at APPLY time would race).
+        ...(ctx.get('agentSessionMessagingAccess')?.handlers ?? {}),
       }),
       log: (msg) => process.stderr.write(`${msg}\n`),
     })

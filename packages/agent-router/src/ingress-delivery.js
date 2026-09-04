@@ -34,7 +34,7 @@ import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation
  */
 export function createIngressDelivery({
   log, feishu, workspaceBootstrap, store, reconciliationStore,
-  routeChain, resolveAgentRef, resolveChannelConversation, resolveEffectiveWorkspace,
+  routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
 }) {
   /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
@@ -171,11 +171,56 @@ export function createIngressDelivery({
   }
 
   /**
+   * AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R4 — exact-allowlist validation of
+   * the optional trusted message-source sidecar. The sidecar is a
+   * control-plane argument (never model input): every field is allowlisted,
+   * the object is frozen (detach) before it travels, malformed metadata is
+   * rejected fail-loud, and unknown control fields never forward. Callers
+   * that omit the sidecar keep the historical `source:{kind:'user'}`.
+   */
+  function validateMessageOrigin(controlOpts) {
+    if (controlOpts === undefined || controlOpts === null) return undefined
+    if (typeof controlOpts !== 'object' || Array.isArray(controlOpts)) {
+      throw new TypeError('agent-router: deliver control options must be an object')
+    }
+    for (const key of Object.keys(controlOpts)) {
+      if (key !== 'messageOrigin') {
+        throw new TypeError(`agent-router: deliver control option "${key}" is not allowlisted`)
+      }
+    }
+    const origin = controlOpts.messageOrigin
+    if (origin === undefined) return undefined
+    if (origin === null || typeof origin !== 'object' || Array.isArray(origin)) {
+      throw new TypeError('agent-router: messageOrigin must be an object')
+    }
+    const originKeys = Object.keys(origin)
+    if (originKeys.length !== 3
+      || !originKeys.includes('kind') || !originKeys.includes('sourceAgentId') || !originKeys.includes('correlation')) {
+      throw new TypeError('agent-router: messageOrigin must be exactly { kind, sourceAgentId, correlation }')
+    }
+    if (origin.kind !== 'inter_agent') {
+      throw new TypeError('agent-router: messageOrigin.kind must be "inter_agent"')
+    }
+    if (typeof origin.sourceAgentId !== 'string' || !/^agt_[A-Za-z0-9_-]+$/.test(origin.sourceAgentId)) {
+      throw new TypeError('agent-router: messageOrigin.sourceAgentId must be an exact agt_* id')
+    }
+    if (typeof origin.correlation !== 'string' || origin.correlation === '') {
+      throw new TypeError('agent-router: messageOrigin.correlation must be a non-empty opaque string')
+    }
+    return Object.freeze({ kind: origin.kind, sourceAgentId: origin.sourceAgentId, correlation: origin.correlation })
+  }
+
+  /**
    * AGENT ROUTER DELIVERY V0 — the frozen admission interface:
    *
    *   deliver({ requestId, agentId, sessionMode: 'main'|'fresh', message })
    *     -> { accepted: true, sessionId }
    *
+   * AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R4 adds ONE optional trusted
+   * control-plane argument: `deliver(req, { messageOrigin })` — the generic
+   * parent-owned source sidecar (exact-allowlisted, frozen, malformed
+   * input rejected) that rides the admission opts into the process prompt
+   * path. Session selection remains Router-owned and untouched.
    * `accepted: true` means ONLY "the message entered the correct DSH
    * Session's inbox" — it NEVER waits for the agent turn / model round to
    * finish (the turn continues asynchronously). The admission seam is:
@@ -205,10 +250,12 @@ export function createIngressDelivery({
    * @param {object} req - { requestId, agentId, sessionMode, message }.
    * @returns {Promise<{accepted:true, sessionId:string}>}
    */
-  async function deliver(req) {
+  async function deliver(req, controlOpts = undefined) {
     const requestId = req?.requestId
     const sessionMode = req?.sessionMode
     const message = req?.message
+    // R4: trusted sidecar validated + frozen BEFORE any admission work.
+    const messageOrigin = validateMessageOrigin(controlOpts)
     if (typeof requestId !== 'string' || requestId === '') {
       throw new TypeError('agent-router: deliver requestId must be a non-empty string')
     }
@@ -228,7 +275,27 @@ export function createIngressDelivery({
     if (typeof agentRef !== 'string' || agentRef.trim() === '') {
       throw new TypeError('agent-router: deliver agentId must be a non-empty string')
     }
-    const agent = resolveAgentRef(agentRef)
+    let agent
+    try {
+      agent = resolveAgentRef(agentRef)
+    } catch (error) {
+      if (messageOrigin !== undefined
+        && error?.code === 'AGENT_NOT_FOUND'
+        && typeof resolveAgentById === 'function') {
+        try {
+          const defined = resolveAgentById(agentRef)
+          if (defined?.disabled === true) {
+            throw Object.assign(new Error(`agent-router: target Agent is disabled: ${agentRef}`), {
+              code: 'AGENT_DISABLED',
+              proven: 'zero_byte',
+            })
+          }
+        } catch (lookupError) {
+          if (lookupError?.code === 'AGENT_DISABLED') throw lookupError
+        }
+      }
+      throw error
+    }
     // CLAUSE-PROC-BOUNDED rule 8: reconciliation capacity is checked BEFORE
     // spawn/write — an exhausted store must never cost a spawn or a prompt
     // byte (§10.3 ROUTER_GLOBAL_RECONCILIATION_CAP: S/W = 0/0).
@@ -264,7 +331,11 @@ export function createIngressDelivery({
     const receipt = await routeChain.admitWithRouteChain(agent.id, {
       sessionId,
       message,
-      opts: { cwd: workspacePath, callerCorrelation: { requestId } },
+      opts: {
+        cwd: workspacePath,
+        callerCorrelation: { requestId },
+        ...(messageOrigin === undefined ? {} : { messageOrigin }),
+      },
     })
     deliveries.push({
       requestId,

@@ -12,7 +12,14 @@
  *   workflow_submission_history GET /internal/v1/workflow-instances/{workflowInstanceId}/submissions workflow.read
  *   workflow_my_domains        GET /internal/v1/principals/me/domains                 workflow.read
  *   workflow_domain_instances  GET /internal/v1/workflow-instances/domain              workflow.read
- *   workflow_transition        POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions workflow.execute
+ *   workflow_dispatch_intents  GET /internal/v1/dispatch-intents                       workflow.read
+ *   workflow_wake_dispatch_intent POST .../node-visits/{nodeVisitId}/wake              workflow.execute
+ *   workflow_execute           POST /internal/v1/workflow-instances                   workflow.execute
+ *                              POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions
+ *   (workflow_execute per AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
+ *   §21 DEC-010/CTR-010: the ONLY workflow write tool — operations
+ *   `create_instance` + `transition`; workflow_transition was removed from the
+ *   model tool face in the same cutover and must never coexist.)
  *
  * workflow_domain_instances (AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1 +
  * AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_PAGINATION_V2):
@@ -27,10 +34,11 @@
  * means a later page; either alone fails fast locally with `invalid_cursor`
  * before credential, token, or HTTP work. Full cursor strings are forwarded
  * verbatim and the downstream page, including next_cursor, is not reshaped.
- * The sole workflow write exposed here is exact-assignee transition submission;
- * svc-workflow remains authoritative for actor and transition legality, and the
- * transport's trusted `idempotencyKey` seam generates its model-inaccessible
- * Idempotency-Key.
+ * The sole workflow write tool exposed here is `workflow_execute` (DEC-010:
+ * ONE unified write entry; `create_instance` + `transition` operations);
+ * svc-workflow remains authoritative for actor, initial assignee resolution
+ * and transition legality, and the transport's trusted `idempotencyKey` seam
+ * generates the model-inaccessible Idempotency-Key for both write operations.
  *
  * Downstream error preservation: each manifest DECLARES the svc-workflow
  * read-side error codes its endpoints can produce (evidence: svc-workflow
@@ -46,19 +54,8 @@
  * fail fast in the mapping layer with `invalid_pagination` BEFORE any token
  * request or HTTP call reaches svc-workflow.
  */
-
 import { withTransportErrors } from '../transport.js'
-
-const baseErrors = [
-  { code: 'invalid_arguments', description: 'Arguments did not satisfy the operation schema.' },
-  { code: 'unsupported_operation', description: 'The requested operation is not supported by this capability.' },
-]
-
-/** Auth-layer codes every svc-workflow endpoint can produce (claims.rs / error.rs). */
-const authErrors = [
-  { code: 'unauthenticated', description: 'Downstream rejected the bearer token (HTTP 401).' },
-  { code: 'forbidden', description: 'Downstream rejected the required scope (HTTP 403).' },
-]
+import { authErrors, baseErrors, workflowDefinitionAuthoringManifest } from './workflow-definition-authoring.js'
 
 /** Shared read-side query codes (error.rs from_query WorkflowQueryError). */
 const queryErrors = [
@@ -338,19 +335,41 @@ export const workflowGlobalInstancesManifest = withTransportErrors({
   ],
 })
 
-/** Exact-assignee transition submission; all authorization remains downstream. */
-export const workflowTransitionManifest = withTransportErrors({
-  id: 'workflow_transition',
-  toolName: 'workflow_transition',
-  name: 'Workflow Transition',
+/**
+ * The ONE unified workflow write tool (AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
+ * §21 DEC-010 / CTR-010): operations `create_instance` + `transition`, the only
+ * workflow write entry. `transition` migrates the production-verified
+ * workflow_transition contract item-by-item (CTR-001..009 — endpoint, args,
+ * CAS, trusted Idempotency-Key, error table); `create_instance` binds the
+ * EXISTING svc-workflow endpoint POST /internal/v1/workflow-instances
+ * (CASE A — service zero change). Initial assignee is resolved SERVER-SIDE
+ * from the definition entry node; identity travels only through the
+ * credential seam — no principalId/agentId/actor/assignee/Idempotency-Key is
+ * model-facing. No broker-side automatic retry (DEC-004).
+ */
+export const workflowExecuteManifest = withTransportErrors({
+  id: 'workflow_execute',
+  toolName: 'workflow_execute',
+  name: 'Workflow Execute',
   description:
-    'Agent Core capability `workflow_transition` (svc-workflow): first call `workflow_instance_detail` to read the current `workflow_state_version` and `outgoingTransitions[]`; use `executable_for_actor: true` only as an advisory preference, then submit the exact `transition_id` and payload matching `submission_schema`. ' +
+    'Agent Core capability `workflow_execute` (svc-workflow) — the single workflow write entry with two operations. ' +
+    'operation="create_instance": create a workflow instance in a domain from a PUBLISHED definition version; the server resolves the initial assignee from the entry node and returns {workflowInstanceId, workflowStateVersion=1, ...}. ' +
+    'operation="transition": first call `workflow_instance_detail` to read the current `workflow_state_version` and `outgoingTransitions[]`; use `executable_for_actor: true` only as an advisory preference, then submit the exact `transition_id` and payload matching `submission_schema`. ' +
     'The downstream atomic transaction is authoritative, so advisory false/stale values are never blocked locally. On `workflow_state_version_conflict`, read the detail again and explicitly resubmit with the new version.',
   requiredScopes: ['workflow.execute'],
   errors: [
     ...baseErrors,
     ...authErrors,
     ...queryErrors,
+    // create_instance family (svc-workflow error.rs from_create; CASE A).
+    { code: 'domain_not_found', description: 'Target domain not found (HTTP 404).' },
+    { code: 'domain_disabled', description: 'Target domain is disabled (HTTP 403).' },
+    { code: 'domain_membership_required', description: 'Caller is not an active member of the target domain (HTTP 403).' },
+    { code: 'cross_domain_violation', description: 'Caller may not create instances in this domain (HTTP 403).' },
+    { code: 'definition_version_not_found', description: 'Workflow definition version not found (HTTP 404).' },
+    { code: 'version_not_published', description: 'Workflow definition version is not PUBLISHED (HTTP 409).' },
+    { code: 'context_validation_failed', description: 'contextPayload failed the entry node context schema (HTTP 422).' },
+    // transition family (CTR-005, migrated verbatim from workflow_transition).
     { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
     { code: 'current_visit_not_found', description: 'Current node visit not found (HTTP 404).' },
     { code: 'principal_not_assignee', description: 'Caller is not the current assignee (HTTP 403).' },
@@ -361,15 +380,40 @@ export const workflowTransitionManifest = withTransportErrors({
     { code: 'transition_not_applicable', description: 'Transition is not applicable to the current node (HTTP 409).' },
     { code: 'submission_required', description: 'This transition requires a submission payload (HTTP 422).' },
     { code: 'submission_validation_failed', description: 'Submission payload failed validation (HTTP 422).' },
-    { code: 'size_limit_exceeded', description: 'Submission payload exceeds the service limit (HTTP 413).' },
+    { code: 'size_limit_exceeded', description: 'Submission payload or metadata exceeds the service limit (HTTP 413).' },
     { code: 'invalid_return_references', description: 'Return transition references are invalid (HTTP 422).' },
-    { code: 'assignee_resolution_failed', description: 'Target assignee resolution failed (HTTP 422).' },
+    { code: 'assignee_resolution_failed', description: 'Assignee resolution failed (HTTP 422).' },
     { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
     { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
   ],
   operations: [
     {
-      name: 'submit',
+      name: 'create_instance',
+      description:
+        'Create one workflow instance. Required: domainId, definitionVersionId (a PUBLISHED definition version), contextPayload (must satisfy the entry node context schema), metadata (JSON; pass null when empty). Optional: externalReference (<=512 chars), externalUrl.',
+      arguments: {
+        properties: {
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID); caller must be an active member.' },
+          definitionVersionId: { type: 'string', description: 'PUBLISHED workflow definition version id (UUID).' },
+          contextPayload: { type: 'json', description: 'Initial context payload; validated against the entry node context schema.' },
+          metadata: { type: 'json', description: 'Arbitrary metadata JSON (<=64 KiB); pass null when there is none.' },
+          externalReference: { type: 'string', description: 'Optional external reference string (<=512 chars).' },
+          externalUrl: { type: 'string', description: 'Optional external URL.' },
+        },
+        required: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'POST',
+        path: '/internal/v1/workflow-instances',
+        body: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata', 'externalReference', 'externalUrl'],
+        idempotencyKey: true,
+      },
+    },
+    {
+      name: 'transition',
       description: 'Submit one transition using exact values read from workflow_instance_detail.',
       arguments: {
         properties: {
@@ -394,7 +438,144 @@ export const workflowTransitionManifest = withTransportErrors({
   ],
 })
 
-/** All first-batch Workflow manifests. */
+/**
+ * Due Dispatch Intent poll (VISIT_ACTIVATION_V1 scheduler read).
+ *
+ * AGENT_CORE_WORKFLOW_DISPATCH_INTENT_BROKER_V1 CTR-DIB-001. Proxies the
+ * deployed svc-workflow endpoint GET /internal/v1/dispatch-intents
+ * (svc main 22e862a). The projection is the accepted v0.4.0 §5.7 minimum
+ * Scheduler-facing record — exactly dispatchIntentId, nodeVisitId,
+ * workflowInstanceId, ownerPrincipalId, nextEligibleAt, createdAt,
+ * updatedAt — and is passed through verbatim: the broker never filters,
+ * orders, augments, or caches. The GLOBAL_SCHEDULER_READ authorization is
+ * enforced SERVER-SIDE (fail-closed; a caller holding only the legacy
+ * GLOBAL_WORKFLOW_READER role gets 403 scheduler_read_role_required); the
+ * broker never replicates or relaxes it. This tool is an additive
+ * consumer of the canonical activation model — per the Owner ruling
+ * KEEP_ACCEPTED_V6 it is NOT a retrofitted dispatch feed on
+ * workflow_global_instances / workflow_domain_instances, and it carries no
+ * scheduler policy (fairness/quota/retry/mapping stay external).
+ */
+export const workflowDispatchIntentsManifest = withTransportErrors({
+  id: 'workflow_dispatch_intents',
+  toolName: 'workflow_dispatch_intents',
+  name: 'Workflow Dispatch Intents',
+  description:
+    'Agent Core capability `workflow_dispatch_intents` (svc-workflow): poll ACTIVE due Dispatch Intents ' +
+    '(canonical Agent work units of the VISIT_ACTIVATION_V1 activation model; read-only). ' +
+    'Each record is exactly {dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId, nextEligibleAt, createdAt, updatedAt}. ' +
+    'The caller must hold the server-side GLOBAL_SCHEDULER_READ binding (enforced by svc-workflow; 403 scheduler_read_role_required otherwise). ' +
+    'Returns {ok: true, result: {items: [...]}}; poll again for new due intents rather than retrying.',
+  requiredScopes: ['workflow.read'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    { code: 'scheduler_read_role_required', description: 'Caller holds no enabled GLOBAL_SCHEDULER_READ binding (HTTP 403; also returned to GLOBAL_WORKFLOW_READER holders — the legacy read role is not mapped onto the scheduler capability).' },
+    { code: 'invalid_pagination', description: 'limit is outside 1-100 (HTTP 422).' },
+    { code: 'internal_consistency_error', description: 'Downstream internal consistency failure (HTTP 500).' },
+    { code: 'service_unavailable', description: 'Downstream storage unavailable (HTTP 503).' },
+  ],
+  operations: [
+    {
+      name: 'list',
+      description:
+        'List active due Dispatch Intents (nextEligibleAt <= server now), ordered by (nextEligibleAt, activation id). Optional: limit (1-100, default 50).',
+      arguments: {
+        properties: {
+          limit: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 100,
+            validationError: 'invalid_pagination',
+            description: 'Maximum records returned, 1-100 (server default 50).',
+          },
+        },
+        required: [],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'GET',
+        path: '/internal/v1/dispatch-intents',
+        query: ['limit'],
+      },
+    },
+  ],
+})
+
+/**
+ * Authorized early wake of one DISPATCH_INTENT (VISIT_ACTIVATION_V1).
+ *
+ * AGENT_CORE_WORKFLOW_DISPATCH_INTENT_BROKER_V1 CTR-DIB-002. Proxies the
+ * deployed svc-workflow endpoint POST
+ * /internal/v1/workflow-instances/{workflowInstanceId}/node-visits/{nodeVisitId}/wake.
+ * The wake binds the exact Visit, is authorized SERVER-SIDE by the
+ * GLOBAL_SCHEDULER_READ binding (fail-closed), and either advances the
+ * intent's nextEligibleAt to the authoritative server now (wakeApplied=true;
+ * one workflowStateVersion increment + one WAKE event downstream) or is a
+ * durable no-op (HTTP 200 wakeApplied=false with a machine-readable reason:
+ * INSTANCE_CLOSED | ACTIVATION_CLOSED | VISIT_NOT_CURRENT | VERSION_MISMATCH
+ * | ALREADY_DUE) — the no-op is a SUCCESS response, never an error. The
+ * wake can never choose a timestamp, create an activation, mutate node or
+ * owner, perform a transition, or start an Agent. The trusted credential
+ * seam generates the model-inaccessible Idempotency-Key (same-key replay,
+ * changed-request conflict) and the broker performs NO automatic retry
+ * (command_still_processing passes through).
+ */
+export const workflowWakeDispatchIntentManifest = withTransportErrors({
+  id: 'workflow_wake_dispatch_intent',
+  toolName: 'workflow_wake_dispatch_intent',
+  name: 'Workflow Wake Dispatch Intent',
+  description:
+    'Agent Core capability `workflow_wake_dispatch_intent` (svc-workflow): authorized early wake of one Dispatch Intent so the Scheduler may consider it immediately. ' +
+    'Bind the exact workflowInstanceId + nodeVisitId (from workflow_dispatch_intents) and the current workflowStateVersion (from workflow_instance_detail). ' +
+    'wakeApplied=false with a reason is a durable SUCCESS no-op (e.g. ALREADY_DUE, VERSION_MISMATCH, ACTIVATION_CLOSED) — do not treat it as an error and do not blind-retry with a new identity. ' +
+    'The caller must hold the server-side GLOBAL_SCHEDULER_READ binding (403 scheduler_read_role_required otherwise).',
+  requiredScopes: ['workflow.execute'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    { code: 'scheduler_read_role_required', description: 'Caller holds no enabled GLOBAL_SCHEDULER_READ binding (HTTP 403).' },
+    { code: 'principal_not_found', description: 'No principal projection exists for the caller (HTTP 404).' },
+    { code: 'principal_disabled', description: 'The caller principal is disabled (HTTP 403).' },
+    { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
+    { code: 'dispatch_intent_not_found', description: 'No DISPATCH_INTENT activation exists for the given instance and node visit (HTTP 404; also covers HUMAN_WORK_ITEM visits — those are never wakeable).' },
+    { code: 'invalid_cause', description: 'The optional wake cause is invalid (empty, >64 chars, or control characters) (HTTP 422).' },
+    { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
+    { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
+    { code: 'internal_consistency_error', description: 'Downstream internal consistency failure (HTTP 500).' },
+    { code: 'service_unavailable', description: 'Downstream storage unavailable (HTTP 503).' },
+  ],
+  operations: [
+    {
+      name: 'wake',
+      description:
+        'Wake one Dispatch Intent. Required: workflowInstanceId, nodeVisitId, expectedWorkflowStateVersion. Optional: cause (<=64 chars, non-sensitive label recorded in the wake event).',
+      arguments: {
+        properties: {
+          workflowInstanceId: { type: 'string', description: 'Workflow instance id (UUID) owning the dispatch intent.' },
+          nodeVisitId: { type: 'string', description: 'Exact current node visit id (UUID) bound to the activation.' },
+          expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Current workflow state version used for CAS; a mismatch is a durable no-op (wakeApplied=false, reason=VERSION_MISMATCH).' },
+          cause: { type: 'string', description: 'Optional non-sensitive cause label (<=64 chars); becomes part of the request identity.' },
+        },
+        required: ['workflowInstanceId', 'nodeVisitId', 'expectedWorkflowStateVersion'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'POST',
+        path: '/internal/v1/workflow-instances/{workflowInstanceId}/node-visits/{nodeVisitId}/wake',
+        pathParams: ['workflowInstanceId', 'nodeVisitId'],
+        body: ['expectedWorkflowStateVersion', 'cause'],
+        idempotencyKey: true,
+      },
+    },
+  ],
+})
+
+/** Workflow manifests: instance execution and Definition Authoring are distinct write families. */
 export const manifests = [
   workflowMyTasksManifest,
   workflowInstanceDetailManifest,
@@ -402,5 +583,8 @@ export const manifests = [
   workflowMyDomainsManifest,
   workflowDomainInstancesManifest,
   workflowGlobalInstancesManifest,
-  workflowTransitionManifest,
+  workflowExecuteManifest,
+  workflowDefinitionAuthoringManifest,
+  workflowDispatchIntentsManifest,
+  workflowWakeDispatchIntentManifest,
 ]

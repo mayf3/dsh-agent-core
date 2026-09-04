@@ -87,6 +87,29 @@ owners:
 > 不变）；lifecycle 字段零变化（status accepted、implementation_authority
 > contracts、production_apply_authority none）。修订明细与处置对照见 §19。
 
+> **OWNER PRODUCT AMENDMENT 2026-09-02（工具 修订，本轮）。** Owner 产品裁决：
+> Workflow 写面最终只有一个模型工具——canonical tool = **`workflow_execute`**
+> （判别器 `operation`，不引入 `action`），operations 冻结为
+> **`create_instance` + `transition`** 二项。本修订**反转 §19 DEC-007 的命名
+> 裁决**（`workflow_transition` KEEP 作废；其理由「不开第二写入口」恰由本
+> 裁决继承——`workflow_execute` 是**替代**而非并存，`workflow_transition`
+> 在同一次切换中退出模型工具面，**不得并存形成第二写入口**），并解除
+> CTR-007 写红线中对 `create_instance` 的禁止（该 operation 经本修订授权，
+> 红线其余项全部维持）。全部安全合同不变：trusted identity seam /
+> `workflow.execute` scope / server-side authorization / transition CAS /
+> trusted Idempotency-Key / no automatic retry / Grant 不自动扩大 / write gate
+> / svc-workflow 最终权威。create_instance 合同按 **CASE A** 冻结（svc-workflow
+> `POST /internal/v1/workflow-instances` 已存在，服务端零改动）。修订明细
+> 见 §21；status 仍 accepted，接受需独立审计轮。
+
+> **ACCEPTED FOCUSED AMENDMENT 2026-09-03（Definition Authoring boundary）。**
+> 本轮仅澄清 DEC-010 的“唯一写工具”是唯一 **instance-execution** 写工具；
+> Definition management 在本 Spec 中一直明确 out-of-scope，可由独立 governing
+> Spec 授权一个 `workflow_definition_authoring` 工具。`workflow_execute` 仍恰为
+> `create_instance|transition`，全部既有合同不变。见 §23；本段尚未受理，需绑定
+> exact reviewed head `6aadb57f887e91c41dbfeb35fd505ba8deb6ec73` 的独立审阅
+> PASS 后由 Owner mayf3 接受；acceptance record 见 §24。
+
 ## 1. Goal
 
 让**当前节点的 exact assignee** 能够通过正式 Broker 工具提交合法
@@ -938,3 +961,267 @@ PRODUCT_CODE_CHANGE = NONE；GRANT_CHANGE = NONE；PRODUCTION_CHANGE = NONE。
   NONE；PRODUCTION_CHANGE = NONE。
 - Merge：本 commit 经单一 PR merge 至 main（merge commit 即本 amendment
   acceptance 的 effective-on-main 坐标）。
+
+## 21. Amendment record (2026-09-02, 工具 修订 — unified write tool)
+
+- 事务：TASK_NAME = 工具 执行（Spec amendment），TASK_TYPE =
+  SPEC_AMENDMENT_ONLY；触发 = **Owner 产品裁决（NEW_OWNER_PRODUCT_RULING）**：
+  Workflow 写面最终只能有一个模型工具 `workflow_execute`，本轮实现
+  `workflow_execute(operation="create_instance")` 与
+  `workflow_execute(operation="transition")`；当前 `workflow_transition`
+  在同一次切换中退出模型工具面，不得与 `workflow_execute` 并存形成第二
+  写入口。产品 blocker：`DOWNSTREAM_NEEDS_WORKFLOW_EXECUTE = YES` /
+  `CREATE_INSTANCE_NOT_EXPOSED = YES`。
+- **治理关系**：本 Spec 仍为 workflow 写面唯一 governing authority
+  （`supersedes: []` / `superseded_by: null` 不变）；本轮 focused in-place
+  AMEND，不新建平行 Spec。2026-08-31 被撤回的平行草案
+  `AGENT_CORE_WORKFLOW_EXECUTE_CAPABILITY_V1` 的拒绝理由是「第二写入口」；
+  本轮 Owner 裁决明确 `workflow_execute` 是**统一/替代**入口而非第二入口，
+  构成 NEW_EVIDENCE，拒绝前提不复存在。
+- 前置事实核对（本轮只读探查，非新调查 Goal）：svc-workflow（本地 repo
+  `/Users/yanfenma/workspace/project/svc-workflow`）`POST
+  /internal/v1/workflow-instances` **已存在**（CASE A）：route
+  `src/http/mod.rs:37-43`，handler `src/http/handlers/instances.rs:26-76`，
+  DTO `src/http/dto.rs:12-31`，事务
+  `workflow_instance_repository/create_transaction.rs`，错误映射
+  `src/http/error.rs:121-167`（`from_create`）。服务端零改动，本轮实现
+  仅补 broker binding。
+
+### DEC-010 — 统一写工具裁决（Owner 产品裁决，2026-09-02）
+
+OLD（§19 DEC-007，就此作废）：固定 `workflow_transition`，禁止
+`workflow_execute` manifest。
+
+NEW：Workflow 只允许一个 write entry，其 canonical model tool 为
+**`workflow_execute`**；`workflow_transition` 被其 `transition` operation
+**替代**，在同一次切换中退出模型工具面，不得并存形成第二写入口。
+
+`workflow_execute` operations 冻结为恰好两项（本轮）：
+
+1. `create_instance`
+2. `transition`
+
+判别器 = 现有 broker 术语 **`operation`**（不引入新 `action` 判别器，
+不改 registry/mapping 全局协议）。模型侧工具签名即
+`workflow_execute(operation="create_instance"|"transition", ...)`。
+
+### CTR-010 — workflow_execute capability 面（唯一写工具）
+
+- id / toolName = `workflow_execute`；requiredScopes =
+  `['workflow.execute']`；沿用既有 broker 架构 **ONE CAPABILITY → ONE
+  TOOL / MULTI-OPERATION DISPATCH**（不重构）。
+- **transition operation**：HTTP binding、arguments、errors、idempotency、
+  trusted identity behavior 从已生产验证的 `workflow_transition`
+  （CTR-001..CTR-009 全部合同）**逐项迁移，不重新设计**：
+  `POST /internal/v1/workflow-instances/{workflowInstanceId}/transitions`，
+  args `workflowInstanceId` / `transitionDefinitionId` /
+  `expectedWorkflowStateVersion` / `submissionPayload`，
+  `http.idempotencyKey: true`（trusted seam 生成，模型不可见不可传），
+  错误表 = CTR-005 全量迁移。
+- **create_instance operation**（CASE A，合同按 svc-workflow 现有 domain
+  model 冻结，不另造第二套数据模型）：
+  - HTTP binding：`{ target: 'svc-workflow', method: 'POST', path:
+    '/internal/v1/workflow-instances', idempotencyKey: true }`（服务端
+    要求 Idempotency-Key 1-128 visible ASCII，`handlers/mod.rs:33-59`；
+    trusted seam 生成语义同 CTR-004）。
+  - 模型可控参数（wire 名 = 下游 serde camelCase +
+    `deny_unknown_fields`，`dto.rs:12-21`）：`domainId`（必填 UUID）、
+    `definitionVersionId`（必填 UUID，= accepted Definition 的
+    PUBLISHED version）、`contextPayload`（必填 JSON，须过 entry node
+    context schema）、`metadata`（必填 JSON，≤64 KiB，超限 413
+    `size_limit_exceeded`）、`externalReference`（可选，≤512 chars）、
+    `externalUrl`（可选）。
+  - **禁止模型控制**（不进参数面，与 CTR-002 同纪律）：`principalId`、
+    `agentId`、`actor`、assignee、trusted provenance、Idempotency-Key——
+    identity 只经 credential seam（token `sub`）；initial assignee 由
+    服务端按 entry node assignee ref 解析（`resolve_assignee`，
+    create_transaction.rs:267；V2 minimal definitions 禁 DOMAIN_OWNER
+    assignee ref，:251-255），broker 零权限逻辑。
+  - 初始语义（服务端事务冻结）：`workflowStateVersion = 1`、首条
+    context revision（revision 1）、entry node 首 visit、`eventSequence
+    = 1` + 初始创建事件；creator = authenticated principal
+    （`created_by_principal_id` / context revision `created_by` / event
+    `actor_principal_id`）。
+  - scope / 授权：`require_scope workflow.execute`（instances.rs:32）；
+    principal 须存在且为该 domain 活跃成员（403
+    `domain_membership_required` / `cross_domain_violation`）。
+  - declared 错误表（fail-closed，`error.rs:121-167`）：transport 族
+    （CTR-005 不变）＋ create 族：`principal_not_found`、
+    `principal_disabled`、`domain_not_found`、`domain_disabled`、
+    `domain_membership_required`、`cross_domain_violation`、
+    `definition_version_not_found`、`version_not_published`、
+    `context_validation_failed`、`assignee_resolution_failed`、
+    `size_limit_exceeded`、`idempotency_conflict`、
+    `command_still_processing`、`internal_consistency_error`、
+    `service_unavailable`（信封四要素纪律 OBS-008 不变）。
+  - 返回透传不 reshape：201 + `{ workflowInstanceId,
+    workflowStateVersion, currentContextRevisionId, currentNodeVisitId,
+    eventSequence }`（`dto.rs:23-31`）；`workflowStateVersion` 供首次
+    transition CAS 链接。
+  - 幂等：CTR-004 语义逐项适用（one call = one fresh trusted key；
+    exact replay / deterministic failure replay / `idempotency_conflict`
+    / 425 原样透出；no broker auto retry）。
+- **切换语义**：`workflow_transition` manifest 与 `workflow_execute`
+  不得并存于 shipped 工具面；实现 PR 必须在同一次变更中移除
+  `workflow_transition` 独立 manifest，transition 语义经
+  `workflow_execute(operation="transition")` 承载。6 个既有 read tools
+  保持原样（零回归）。
+
+### CTR-011 — registry coarse-required 处置纪律
+
+不预先修改 `registry.js`。实现轮先写真实 multi-operation tool test：
+`create_instance` 不提供 transition-only 参数、`transition` 不提供
+create-only 参数时 DSH host 是否放行。host 正常 → `REGISTRY_CHANGE =
+NONE`；host 因 coarse required schema 真正拒绝 → 只做最小修复：工具级
+required 仅含「所有 operations 都声明且都要求」的参数；mapping 层保持
+per-operation 严格 validation。禁止扩张为 schema framework 重构。
+
+### 范围围栏（FOLLOW_UP_DEBT，本轮全部不做）
+
+`workflow_query`、6 read tools 收敛、Forum 工具收敛、Scheduler 工具
+收敛、其他 workflow actions（assign/cancel/archive）、通用 capability
+framework、registry 重构——全部 FOLLOW_UP_DEBT。判别器：每发现一个问题先问
+`DOES_THIS_BLOCK_CREATE_INSTANCE_OR_UNIFIED_WRITE_TOOL_SHIPPING`；NO 即
+记 debt 不处理。
+
+### 实现与验收围栏
+
+- 最低测试 = 12 项 ship blocker：单写工具暴露；`workflow_transition`
+  不再独立暴露；create_instance 可调用；transition 与生产行为等价；
+  per-op strict validation；`workflow.execute` scope 正确；trusted
+  identity 不暴露；trusted Idempotency-Key；create exactly once；
+  transition exactly once；6 read tools 无回归；DSH host 可正确调用两
+  operations。全 PASS 即停止开发，不加 adversarial matrix。
+- Skill（todo-client / requirement-client）对齐到真实生产工具
+  `workflow_execute`（definitionVersionId / contextPayload / RETURN /
+  CAS recovery / domain mapping 留在 Skill，不塞 tool schema）。
+- 部署复用既有已验证 production deployment machinery；部署后验证
+  `WORKFLOW_EXECUTE_VISIBLE = YES` /
+  `WORKFLOW_EXECUTE_CREATE_INSTANCE_CALLABLE = YES` /
+  `WORKFLOW_EXECUTE_TRANSITION_CALLABLE = YES` /
+  `WORKFLOW_TRANSITION_STANDALONE_VISIBLE = NO` / `GRANT_CHANGED = NO` /
+  `UNRELATED_PRODUCTION_MUTATION = NONE`，并跑 dedicated E2E
+  （create_instance → disposable instance → transition → V→V+1 exactly
+  once）。
+- 与 §19 冲突处置：DEC-007 命名裁决与 CTR-007 中「禁止 create_instance」
+  由本节**替代**；CTR-001..009 其余全部合同对 transition operation 继续
+  有效并被本修订继承。DEC-005（Grant 不动）、CTR-009（canary gate）不受
+  本修订影响（写闸门现况按 fe1bed8 Owner ruling fleet-open，非本 Spec
+  授权变更）。
+
+### 本轮边界与验证
+
+- DOCS_ONLY：本轮只改本文件；不实现代码、不 flip lifecycle、不部署、
+  不动 Grant；svc-workflow / auth-service / production 零接触（svc-workflow
+  仅本地只读代码核对）。
+- 工作区既有 WIP（broker 未提交修改、未跟踪 docs）不在本轮闭包内，
+  保持原样；本轮 amendment 落在含 §19/§20 的当前工作区文件之上。
+- 机械验证：`git diff --check`（显式 pathspec commit）。
+
+### 冻结字段
+
+AMENDMENT_KIND = OWNER_PRODUCT_RULING_IN_PLACE；TOOL_NAME =
+workflow_execute（canonical，替代 workflow_transition）；OPERATIONS =
+[create_instance, transition]；DISCRIMINATOR = operation；CASE_A =
+YES（backend create 已存在）；REGISTRY_CHANGE = PENDING_TEST（CTR-011
+纪律）；PRODUCT_CODE_CHANGE = NONE（本轮）；GRANT_CHANGE = NONE；
+PRODUCTION_CHANGE = NONE；FOLLOW_UP_DEBT = [workflow_query, read-tool
+收敛, forum/scheduler 收敛, assign/cancel/archive, capability framework,
+registry 重构]。
+
+- 下一事务：独立审计（本修订）→ 通过后 lifecycle acceptance →
+  final-head 审计 → merge → 实现（实现完成后不回询 Owner，直达
+  WORKFLOW_EXECUTE_PRODUCTION_READY）。
+
+## 22. Amendment acceptance record (2026-09-02, 工具 接受)
+
+- 事务：TASK_NAME = 工具 接受，TASK_TYPE = ACCEPTANCE_FINALIZE；对象 = §21
+  amendment（OWNER PRODUCT AMENDMENT 2026-09-02，工具 修订轮）。独立审计
+  （TASK_NAME = 工具 审计）= **PASS**；BLOCKERS = NONE；AMENDMENT_VALID =
+  YES。
+- Authoring 与审计对象 = commit `ce37352`（fresh-main mechanical replay）：
+  025eefc（stale base fe1bed8，非 main 祖先）按 GOAL phase-1 规则机械重放
+  至 fresh current main `840d2f4`（PR #136 merge）之上；spec 文件与 025eefc
+  **逐字节一致**，SEMANTIC_DELTA_FROM_025EEF = NONE；delta vs main =
+  纯追加（header banner + §21，186 insertions / 0 deletions，0 删除；
+  frontmatter 与 main 逐字一致）。本 acceptance 与 amendment 由同一
+  单文件 commit 落地。
+- 受理语义（成为本 accepted Spec 的组成部分）：**DEC-010**（统一写工具
+  `workflow_execute`——operations 恰为 `create_instance` + `transition`，
+  判别器 `operation`；`workflow_transition` 同一次切换退出模型工具面，
+  不得并存）、**CTR-010**（capability 面冻结：transition 从
+  CTR-001..009 逐项迁移；create_instance CASE A 绑定既有 svc-workflow
+  `POST /internal/v1/workflow-instances`，服务端零改动）、**CTR-011**
+  （registry test-first 最小修复纪律）。§19 DEC-007 命名裁决与 CTR-007
+  create_instance 禁止由 §21 替代；其余合同全部继承。
+- 审计对照（8 项 checklist 全 no-blocker）：DEC-007 替代一致性；唯一写
+  入口三处显式（banner / §21 / CTR-010 切换语义）；operations 恰两项；
+  transition 合同逐项对 CTR-001..009 验证；create_instance 全部断言对
+  svc-workflow 真实源码逐条核实（含 15/15 错误码 exact match
+  from_create、初始语义 stateVersion=1 / revision 1 / visit 1 /
+  eventSequence=1、服务端 resolve_assignee）；安全边界零漂移；范围围栏
+  无偷偷扩张；机械验证 PASS（diff --check、frontmatter 不变、单文件）。
+- FOLLOW_UP_DEBT（审计记录，非阻断，不得据本轮实现扩张）：(1) §21 两处
+  行号 citation 微偏（create route 实为 mod.rs:36-40；resolve_assignee
+  调用实为 create_transaction.rs:268）——verified 不误导；(2) create 面
+  handler 级 `missing_idempotency_key` / `invalid_idempotency_key` /
+  `invalid_input`（externalReference>512）不在 CTR-010 declared 表——经
+  trusted seam 不可达或按 DEC-006 fail-closed 降级 `http_4xx`，与已上线
+  transition 面同 posture；如需 declared 须未来 spec 轮，实现轮不得自行
+  扩表；(3) §21 中 fe1bed8 引用不在 main lineage（该句明示非本 Spec 授权
+  变更）——未来机会再锚定；(4) frontmatter scope 行文仍提
+  `workflow_transition`——纯追加约束下保持不变，以 DEC-010 为准，未来
+  frontmatter-permitted amendment 再修。
+- Lifecycle 不变：status = accepted；implementation_authority = contracts；
+  production_apply_authority = none（本 acceptance 不授权部署；部署走
+  独立 deployment authority 轮）。
+- 边界：DOCS_ONLY（本文件为唯一变更文件）；packages/ 零变化；无 deploy；
+  无 canary write。PRODUCT_CODE_CHANGE = NONE；GRANT_CHANGE = NONE；
+  PRODUCTION_CHANGE = NONE。
+- Merge：本 commit 经单一 PR merge 至 main（merge commit 即本 amendment
+  acceptance 的 effective-on-main 坐标）。
+
+## 23. Focused amendment (2026-09-03, Definition Authoring boundary)
+
+This section was independently reviewed at exact head
+`6aadb57f887e91c41dbfeb35fd505ba8deb6ec73` and accepted by Owner mayf3. It
+clarifies the boundary of
+DEC-010 without replacing this Spec or changing any accepted instance-execution
+contract.
+
+### DEC-011 — write-family boundary clarification
+
+DEC-010's “one Workflow write entry” means one **instance-execution** model tool:
+`workflow_execute`, with exactly `create_instance|transition`. Definition
+management was explicitly excluded from this Spec (§2/§9 and prior amendment
+scope) and is a separate product capability family.
+
+One independently governed tool `workflow_definition_authoring`, containing
+only `create_definition|create_draft_version|replace_draft_graph|publish_version`,
+may therefore coexist with `workflow_execute`. It is not an alias, replacement,
+or added operation of `workflow_execute`, and it does not reopen transition or
+instance-execution semantics.
+
+This is a bounded additive clarification: `workflow_execute` name, operations,
+wire bindings, identity seam, error contracts, inventory presence, and absence
+of `workflow_transition` remain byte-for-meaning unchanged. Definition Authoring
+implementation authority exists only in a separately accepted governing Spec.
+
+```text
+AMENDMENT_STATUS = accepted
+AUTHORITY_MEANING = INSTANCE_EXECUTION_WRITE_FAMILY_ONLY
+WHOLE_SUCCESSOR_REQUIRED = NO
+WORKFLOW_EXECUTE_CHANGE = NONE
+PRODUCTION_APPLY_AUTHORITY = none
+```
+
+## 24. Amendment acceptance record (2026-09-03, Definition Authoring boundary)
+
+- Reviewed semantic head = `6aadb57f887e91c41dbfeb35fd505ba8deb6ec73`;
+  independent re-review = **PASS**; ship blockers = **NONE**.
+- Owner mayf3 explicitly accepted that exact head on 2026-09-03.
+- This finalize changes lifecycle/provenance only. §23 semantics are unchanged;
+  `workflow_execute` remains exactly `create_instance|transition` and
+  production apply authority remains none.
+- The separately accepted `AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V1` is the
+  only implementation authority for the new Definition Authoring family.

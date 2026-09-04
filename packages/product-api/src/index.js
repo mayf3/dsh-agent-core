@@ -50,6 +50,7 @@
 
 import { createServer } from 'node:http'
 import z from '@deepseek-ai/schemastery'
+import { handleSchedulerRequest } from './scheduler-routes.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'product-api'
@@ -258,6 +259,29 @@ export function apply(ctx, config = {}) {
       if (req.method === 'POST' && url.pathname === '/v1/message') {
         const result = await sendMessage(await readBody(req))
         json(res, 200, result)
+        return
+      }
+      if (url.pathname === '/scheduler' || url.pathname.startsWith('/scheduler/')) {
+        // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: gate ALWAYS runs first
+        // (R-H9), then the frozen GET-only contract (R7). The gate error
+        // keeps the exact { error: { code, message } } envelope.
+        try {
+          const { status, body } = await handleSchedulerRequest({
+            // These optional services are provided later in the production
+            // compose sequence than product-api is mounted. Resolve them at
+            // request time so the gate sees the configured verifier instead
+            // of permanently capturing the initial null values.
+            req,
+            url,
+            history: ctx.get('schedulerHistory') ?? null,
+            verifier: ctx.get('schedulerTokenVerifier') ?? null,
+          })
+          json(res, status, body)
+        } catch (error) {
+          const status = error?.status ?? 500
+          const code = error?.code ?? 'internal'
+          json(res, status, errorBody(code, error?.message ?? 'internal error'))
+        }
         return
       }
       if (['GET', 'POST'].includes(req.method ?? '')) {
