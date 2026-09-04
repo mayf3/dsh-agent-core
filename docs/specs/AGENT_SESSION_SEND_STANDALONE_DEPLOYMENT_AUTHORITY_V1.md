@@ -1,18 +1,18 @@
 ---
 spec_id: AGENT_SESSION_SEND_STANDALONE_DEPLOYMENT_AUTHORITY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: contracts
 date: 2026-09-04
-revision: r1
-accepted_date: null
-accepted_by: null
-accepted_reviewed_head: null
-independent_review_result: PENDING
-independent_review_blockers: PENDING
-acceptance_verdict: PENDING
+revision: r2
+accepted_date: 2026-09-05
+accepted_by: mayf3
+accepted_reviewed_head: 575fa92abb2017fb64d763523257e859af19c12d
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_verdict: ACCEPTED_R1_LIFECYCLE_FINALIZED_2026_09_05
 owner_goal: AGENT_SESSION_SEND_STANDALONE_PRODUCTION_V1
 governed_by:
   - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3 — capability semantics, unchanged)
@@ -175,6 +175,95 @@ artifact + FULL_PREMUTATION_SIMULATION → Owner 执行包（sudo 部署 + 飞�
 
 STOP 条件：fresh main 移动触碰 face 文件 blob；fresh preimage 与普查 blob 漂移；
 §5 Gate 任一翻转；sim 任一 family FAIL——任一触发即终止本轮并重出证据，不得带伤部署。
+
+## 12. r2 AMENDMENT — PR #167 envelope-fix closure refresh (2026-09-05)
+
+> AMENDMENT SCOPE (minimal, per Owner directive SAME GOAL 2026-09-05): ONLY the
+> authorized release source, the parent-rpc-relay exact blob, the artifact
+> hashes/preimage, and PR #167 compatibility evidence are updated. ASM product
+> semantics, Model Fleet, Forum/Scheduler/Workflow faces, grant state, and every
+> safety contract of r1 are UNCHANGED and inherited verbatim. This amendment
+> becomes effective upon Owner merge of its PR (the merge = the exact-head
+> acceptance act, matching the r1 provenance pattern).
+
+### 12.1 Why r2 exists (STOP condition honestly invoked)
+
+r1 §10 froze: "STOP 条件：fresh main 移动触碰 face 文件 blob". That STOP fired:
+PR #167 (merge 9ea30c8c6b7fb2e4347e90afb432629f2c1701f5) replaced
+`agent-router/src/parent-rpc-relay.js` — a WHOLESALE member of the 17-file
+closure — fixing the DOUBLE TRANSPORT ENVELOPE defect (independently audited,
+blocker-union-free, merged). The defect: the r1-generation parent-rpc-relay
+wrapped the gateway's invoke-shaped return in an extra {ok,result} transport
+layer; the child relay unwraps exactly two layers, so (a) every scheduler
+create returned mutation_outcome_unknown while the store had committed, and
+(b) agent_session_send's strict validSessionSendResult — LIVE in production
+since the r1 deployment (live relay sha256 730e20338544ec36871461f9f7febc43
+bcd50f195c38f63e0472aa97c3b4983c == main@7c7c03) — would classify every
+structured accepted/replied/timeout success as ambiguous outcome_unknown.
+This is the leading candidate root cause of canary #1 (2026-09-05,
+outcome_unknown, blog-agent zero workspace writes, no retry, no ping-pong);
+final attribution is proven only by the post-fix canary.
+
+### 12.2 Deployed-state reconciliation (fresh census 2026-09-05, read-only)
+
+- LIVE production == the r1 17-file target face, **17/17 byte-identical**
+  (census: /tmp/live-census-17.txt; receipts ASM-STANDALONE-20260904T230257Z
+  DEPLOY_OK). The r1 deployment is intact; there is NO pre-ASM baseline to
+  rebuild from — the incremental deploy starts from the DEPLOYED face.
+- packages/ delta main@7c7c03a -> main@9ea30c8 = exactly
+  `agent-router/src/parent-rpc-relay.js` (+ its test file). Every other
+  closure byte is identical across both pins; the two COMPOSED files remain
+  live-only compositions (never written back to main, per r1 §1).
+
+### 12.3 Refreshed deployment closure (r2)
+
+```text
+AUTHORIZED_RELEASE_SOURCE (r2) = mayf3/dsh-agent-core @ 9ea30c8c6b7fb2e4347e
+                                  90afb432629f2c1701f5  (PR #167 merge)
+DEPLOYMENT_DELTA (r2)          = EXACTLY ONE FILE:
+  packages/agent-router/src/parent-rpc-relay.js
+    live preimage  sha256 e5d474a6f7b66c63e25636b6bada3ce91c58e04b1d4e92dea
+                    993623632c80cd7  (r1 generation, == main@7c7c03a content)
+    target         sha256 ed183a770e6d6688241cbb92ce61bb7e9190662948c1ff9c4
+                    9ee8a14dd9d8eca  (PR #167 generation, == main@9ea30c8,
+                    git blob 70e8d473a142fb2a9c04a928ada552764771cd0d)
+ALL OTHER 16 CLOSURE FILES     = KEEP LIVE (already == r1 targets; fresh
+                                 census 17/17 equal; zero re-touch)
+ASM_PRODUCT_SEMANTIC_DELTA     = NONE
+MODEL_FLEET_DELTA              = NONE
+```
+
+### 12.4 r2 vehicle, gates, and proofs
+
+- Vehicle: `deployment-artifacts/asm-standalone-envelope-fix-v1/
+  RUN_ASM_ENVELOPE_FIX_OWNER.sh` — single-file form of the r1-proven vehicle
+  mechanics (uid-0 gate, owner phrase, fresh preimage gate == e5d474a6…,
+  staged-hash verify, temp+rename atomic replace, exactly ONE success-path
+  launchctl kickstart, read-back == ed183a77…, root receipt, failure →
+  preimage restore + second kickstart). The r1 RUN_ASM_STANDALONE_OWNER.sh is
+  RETIRED (STALE); it must not be executed.
+- FULL_PREMUTATION_SIMULATION (sandbox, zero production mutation) must PASS
+  before the packet: happy_path, preimage_mismatch (STOP, zero writes),
+  readback_mismatch (rollback, restart accounting), restart-count invariant.
+- Gates (r2, all inherited-trivial): ASM_NO_FLEET_COUPLING_GATE = PASS
+  (single router file; every §5 item NO); BROKER_RPC_ENVELOPE_FIX_INCLUDED =
+  YES (target hash equality + seal); FRESH_PREIMAGE = PASS (live == e5d474a6
+  at execution time, else STOP).
+- Post-deploy proofs: BROKER_RPC_ENVELOPE_FIX_PRODUCTION_ACTIVE = YES (live
+  parent-rpc-relay sha256 == ed183a77… + runtime restart evidence); natural
+  verification: scheduler.create returns jobId directly and scheduler.list
+  no longer leaks the extra {ok,result} wrapper; THEN exactly ONE Feishu ASM
+  canary per r1 §9 (efficiency-agent -> agent_session_send -> blog-agent
+  canonical main) proving A2A_SESSION_MESSAGING_E2E / EXACTLY_ONCE /
+  TARGET_OWN_IDENTITY / SOURCE_CREDENTIAL_PROPAGATED=NO /
+  MODEL_FLEET_PRODUCTION_MUTATION=NONE.
+
+### 12.5 Explicitly unchanged
+
+ASM implementation (the 17-face semantics), agent-session-messaging grant
+state (§6), rollback doctrine (equal-face; here single-file preimage
+restore), canary doctrine (§9), and all r1 boundaries. No Model Fleet, no
+Forum/Scheduler/Workflow face bytes, no new capability framework.
 
 ## 11. BOUNDARIES
 
