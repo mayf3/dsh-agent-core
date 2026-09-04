@@ -338,3 +338,32 @@ test('seam: a structured gateway failure passes through declared codes verbatim 
   assert.equal(out.errorCode, 'mutation_outcome_unknown')
   assert.match(out.detail, /outcome is unknown/)
 })
+
+// Same seam, same fix, cross-goal consumer (ASM): agent_session_send results
+// must survive the corrected envelope depth — accepted/replied/timeout are
+// the strict-shape successes the relay's validSessionSendResult demands, and
+// an extra transport layer would turn every one into outcome_unknown.
+import { agentSessionMessagingManifest } from '../../broker/src/capabilities/agent-session-messaging.js'
+
+test('seam: agent_session_send accepted/replied/timeout survive the corrected depth; a gateway throw stays outcome_unknown with zero retry', async () => {
+  const cases = [
+    { status: 'accepted' },
+    { status: 'timeout' },
+    { status: 'replied', reply: 'the target answered' },
+  ]
+  for (const business of cases) {
+    const relay = createRelayHandlers(agentSessionMessagingManifest, async () => childResolved({ ok: true, result: business }))
+    const out = await relay.send({}, { targetAgentId: 'agt_b-target', message: 'hi', timeoutSeconds: 1 })
+    assert.deepEqual(out, business, `wire result for ${business.status}`)
+  }
+
+  const calls = []
+  const relay = createRelayHandlers(agentSessionMessagingManifest, async (call) => {
+    calls.push(call)
+    throw new Error('parent RPC channel died mid-send')
+  })
+  const out = await relay.send({}, { targetAgentId: 'agt_b-target', message: 'hi', timeoutSeconds: 1 })
+  assert.equal(out.errorCode, 'outcome_unknown')
+  assert.match(out.detail, /do not retry automatically/)
+  assert.equal(calls.length, 1, 'zero automatic retry')
+})
