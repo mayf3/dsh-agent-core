@@ -1,18 +1,18 @@
 ---
 spec_id: AGENT_SESSION_SEND_STANDALONE_DEPLOYMENT_AUTHORITY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: contracts
 date: 2026-09-04
 revision: r1
-accepted_date: null
-accepted_by: null
-accepted_reviewed_head: null
-independent_review_result: PENDING
-independent_review_blockers: PENDING
-acceptance_verdict: PENDING
+accepted_date: 2026-09-05
+accepted_by: mayf3
+accepted_reviewed_head: 575fa92abb2017fb64d763523257e859af19c12d
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_verdict: ACCEPTED_R1_LIFECYCLE_FINALIZED_2026_09_05
 owner_goal: AGENT_SESSION_SEND_STANDALONE_PRODUCTION_V1
 governed_by:
   - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3 — capability semantics, unchanged)
