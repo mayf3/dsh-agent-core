@@ -1,6 +1,7 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
-status: accepted
+status: superseded
+superseded_by: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
@@ -14,14 +15,13 @@ external_authorities:
     relation: constrained_by
 supersedes:
   - AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1
-superseded_by: null
 owners:
   - mayf3
 ---
 
 # AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 
-> 状态：**accepted；独立治理采用复审通过并由 mayf3 授权完成 acceptance**。
+> 状态：**superseded**；由 `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1`（Governance v1.0.1 adoption，accepted 2026-09-04）完整取代。历史 normative meaning 保持不变。
 > 本轮仅初始化 repository development governance。
 > 不修改产品行为、Runtime、Router、Scheduler、Broker、Auth、部署或生产状态。
 > 本 Spec 不授权任何产品 implementation。
