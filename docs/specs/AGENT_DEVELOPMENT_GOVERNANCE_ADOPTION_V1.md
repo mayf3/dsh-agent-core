@@ -1,9 +1,23 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1
-status: proposed
+status: accepted
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
+accepted_date: 2026-09-04
+accepted_by: mayf3
+accepted_at: 2026-09-04T15:11:51Z
+accepted_reviewed_spec_commit: 9b42fc0dfeeede6213a825687e79dda860e404d5
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner-issued Execution Mandate GOVERNANCE_V1_0_1_CONSUMER_ADOPTION_TO_MAIN_V1
+  (OWNER_DECISION = ADOPT_GOVERNANCE_V1_0_1) pre-authorized acceptance after one
+  independent proposed-Head review (REVISE, 1 blocker: illegal V2 supersedes edge
+  to the never-effective proposed ADOPTION_V2), the minimal amendment
+  9b42fc0dfeeede6213a825687e79dda860e404d5 (proposed V2 deleted; this Spec
+  amended in place to pin v1.0.1), and ONE exact-Head re-audit (ACCEPT,
+  BLOCKERS = 0, BASE_IMPACT = BOUNDED). Reviewed content unchanged by
+  lifecycle finalization.
 scope:
   - mayf3/dsh-agent-core development governance adoption
   - shared vendored governance integrity and local activation lifecycle
@@ -21,6 +35,12 @@ owners:
 ---
 
 # Agent Development Governance v1.0.1 Adoption V1
+
+> 状态：**accepted**；独立 proposed-Head 审计（REVISE→最小修订）与唯一一次 exact-Head
+> re-audit（ACCEPT / BLOCKERS = 0）通过后，由 mayf3 依据 Owner-issued Execution
+> Mandate `GOVERNANCE_V1_0_1_CONSUMER_ADOPTION_TO_MAIN_V1` 完成 acceptance。
+> reviewed head `9b42fc0dfeeede6213a825687e79dda860e404d5` 的内容在 lifecycle
+> finalization 中保持不变；本 Spec 不授权任何产品 implementation。
 
 ## 1. Goal
 
