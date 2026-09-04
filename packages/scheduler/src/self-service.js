@@ -213,6 +213,33 @@ function mutationFailure(error) {
   )
 }
 
+// A KNOWN commit must never surface as mutation_outcome_unknown (that code is
+// reserved by CTR-FAIL-001 for genuinely unknown outcomes and would invite a
+// duplicate mutation). When the store committed but the post-commit response
+// could not be assembled (committedValue lost or projection failure), return
+// this deterministic partial-success envelope instead; jobId is null when the
+// committed definition bytes were not carried on the error, and the caller
+// observes current state via scheduler.list.
+function degradedCommittedResult(jobId) {
+  return {
+    ok: true,
+    result: { mutationStatus: 'committed', responseStatus: 'degraded', jobId: jobId ?? null },
+  }
+}
+
+// Recovery for a control-op error the store tagged as committed: with
+// committedValue the exact committed projection is recoverable; without it the
+// commit is still certain, so the envelope degrades instead of going unknown.
+function recoverCommitted(error, jobIdIfKnown) {
+  if (error?.mutationOutcome !== 'committed') return undefined
+  if (error.committedValue !== undefined) return toPublicJob(error.committedValue)
+  return degradedCommittedResult(jobIdIfKnown)
+}
+
+function isDegradedEnvelope(value) {
+  return value?.result?.mutationStatus === 'committed' && value?.result?.responseStatus === 'degraded'
+}
+
 function ownershipGuard(callerAgentId, allowAny, captureCurrent) {
   return (current) => {
     if (!allowAny && current.agentId !== callerAgentId) {
@@ -337,20 +364,24 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             ...(args.auto_retry === true ? { retry: { auto: true } } : {}),
           }, { nowMs })
         } catch (error) {
-          if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
-            created = toPublicJob(error.committedValue)
-          } else {
-            return mutationFailure(error)
-          }
+          created = recoverCommitted(error, null)
+          if (created === undefined) return mutationFailure(error)
+          if (isDegradedEnvelope(created)) return created
         }
-        const auditStatus = await appendAudit('create', {
-          jobId: created.id,
-          operatorAgentId: caller,
-          targetAgentId: created.agentId,
-          after: definitionDigest(created),
-          nowMs,
-        })
-        return { ok: true, result: committedResult(created, auditStatus) }
+        // Post-commit response assembly: any failure here must still report the
+        // known commit, never an ambiguous outcome.
+        try {
+          const auditStatus = await appendAudit('create', {
+            jobId: created.id,
+            operatorAgentId: caller,
+            targetAgentId: created.agentId,
+            after: definitionDigest(created),
+            nowMs,
+          })
+          return { ok: true, result: committedResult(created, auditStatus) }
+        } catch {
+          return degradedCommittedResult(created.id)
+        }
       },
 
       async list(args, context) {
@@ -436,21 +467,25 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
             },
           })
         } catch (error) {
-          if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
-            updated = toPublicJob(error.committedValue)
-          } else {
-            return mutationFailure(error)
-          }
+          updated = recoverCommitted(error, args.job_id)
+          if (updated === undefined) return mutationFailure(error)
+          if (isDegradedEnvelope(updated)) return updated
         }
-        const auditStatus = await appendAudit('update', {
-          jobId: updated.id,
-          operatorAgentId: caller,
-          targetAgentId: updated.agentId,
-          before: definitionDigest(lockedBefore),
-          after: definitionDigest(updated),
-          nowMs,
-        })
-        return { ok: true, result: committedResult(updated, auditStatus) }
+        // Post-commit response assembly: any failure here must still report the
+        // known commit, never an ambiguous outcome.
+        try {
+          const auditStatus = await appendAudit('update', {
+            jobId: updated.id,
+            operatorAgentId: caller,
+            targetAgentId: updated.agentId,
+            before: definitionDigest(lockedBefore),
+            after: definitionDigest(updated),
+            nowMs,
+          })
+          return { ok: true, result: committedResult(updated, auditStatus) }
+        } catch {
+          return degradedCommittedResult(updated.id)
+        }
       },
 
       async enable(args, context) {
@@ -476,14 +511,20 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         } catch (error) {
           if (error?.mutationOutcome !== 'committed') return mutationFailure(error)
         }
-        const auditStatus = await appendAudit('remove', {
-          jobId: args.job_id,
-          operatorAgentId: caller,
-          targetAgentId: lockedBefore.agentId,
-          before: definitionDigest(lockedBefore),
-          nowMs,
-        })
-        return { ok: true, result: { removed: true, jobId: args.job_id, auditStatus } }
+        // Post-commit response assembly: any failure here must still report the
+        // known commit, never an ambiguous outcome.
+        try {
+          const auditStatus = await appendAudit('remove', {
+            jobId: args.job_id,
+            operatorAgentId: caller,
+            targetAgentId: lockedBefore.agentId,
+            before: definitionDigest(lockedBefore),
+            nowMs,
+          })
+          return { ok: true, result: { removed: true, jobId: args.job_id, auditStatus } }
+        } catch {
+          return degradedCommittedResult(args.job_id)
+        }
       },
     },
   }
@@ -503,30 +544,34 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
       })
     } catch (error) {
-      if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
-        updated = toPublicJob(error.committedValue)
-      } else {
-        return mutationFailure(error)
-      }
+      updated = recoverCommitted(error, args.job_id)
+      if (updated === undefined) return mutationFailure(error)
+      if (isDegradedEnvelope(updated)) return updated
     }
-    const auditStatus = await appendAudit(operation, {
-      jobId: updated.id,
-      operatorAgentId: caller,
-      targetAgentId: updated.agentId,
-      before: definitionDigest(lockedBefore),
-      after: definitionDigest(updated),
-      nowMs,
-    })
-    return {
-      ok: true,
-      result: {
+    // Post-commit response assembly: any failure here must still report the
+    // known commit, never an ambiguous outcome.
+    try {
+      const auditStatus = await appendAudit(operation, {
         jobId: updated.id,
-        enabled: updated.enabled,
-        nextRunAt: Number.isFinite(updated.nextRunAtMs)
-          ? new Date(updated.nextRunAtMs).toISOString()
-          : null,
-        auditStatus,
-      },
+        operatorAgentId: caller,
+        targetAgentId: updated.agentId,
+        before: definitionDigest(lockedBefore),
+        after: definitionDigest(updated),
+        nowMs,
+      })
+      return {
+        ok: true,
+        result: {
+          jobId: updated.id,
+          enabled: updated.enabled,
+          nextRunAt: Number.isFinite(updated.nextRunAtMs)
+            ? new Date(updated.nextRunAtMs).toISOString()
+            : null,
+          auditStatus,
+        },
+      }
+    } catch {
+      return degradedCommittedResult(updated.id)
     }
   }
 
