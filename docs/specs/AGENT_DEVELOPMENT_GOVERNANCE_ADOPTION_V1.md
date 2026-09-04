@@ -11,7 +11,7 @@ governed_by: []
 external_authorities:
   - repository: mayf3/agent-development-governance
     authority_id: AGENT_DEVELOPMENT_GOVERNANCE_V1
-    revision: 902842735a69797b54016eeaa88d2f949f5879a9
+    revision: 3de35f8617616dda4c717233899d6a93a634d5d8
     relation: constrained_by
 supersedes:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
@@ -20,16 +20,19 @@ owners:
   - mayf3
 ---
 
-# Agent Development Governance v1.0.0 Adoption V1
+# Agent Development Governance v1.0.1 Adoption V1
 
 ## 1. Goal
 
 Adopt the exact upstream `development-governance-v0` distribution released as
-annotated tag `v1.0.0` at source commit
-`902842735a69797b54016eeaa88d2f949f5879a9`, through this repository's own
-independent Review and Owner acceptance. After activation, future applicable
-work independently classifies Authority, Plan, and Assurance, and stops when
-`DONE_WHEN` is met unless an `EXPANSION_TRIGGER` fires.
+annotated tag `v1.0.1` (tag object
+`a7a60006861d09d502e3e7ea5c1a67c31280c571`, release
+https://github.com/mayf3/agent-development-governance/releases/tag/v1.0.1) at
+source commit `3de35f8617616dda4c717233899d6a93a634d5d8`, through this
+repository's own independent Review and Owner acceptance. After activation,
+future applicable work independently classifies Authority, Plan, and
+Assurance, and stops when `DONE_WHEN` is met unless an `EXPANSION_TRIGGER`
+fires.
 
 ## 2. Scope and non-goals
 
@@ -46,7 +49,7 @@ permissions, Grants, credentials, Secrets, historical records, or
 ### DEC-ADOPT-001 — Whole-authority successor
 
 The accepted/current `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` owns local
-adoption today. Governance v1.0.0 changes long-lived routing obligations
+adoption today. Governance v1.0.1 changes long-lived routing obligations
 (Authority/Plan/Assurance, Execution Mandates, isolated writes, route stages,
 load-bearing gaps, and stop controls), so V0 MUST NOT be rewritten in place.
 This proposed V1 is its complete successor.
@@ -85,6 +88,19 @@ independent Review, Owner acceptance, atomic lifecycle transition, and merge.
   `EVD-ADOPT-004`.
 - State: the 25 exact v1.0.0 managed files and a proposed lock are present;
   V1 is proposed, V0 remains current, and no local adoption is active.
+- Amendment: 2026-09-04 (REVISE round 1) — this proposed candidate was amended
+  in place to pin upstream `v1.0.1`
+  (`3de35f8617616dda4c717233899d6a93a634d5d8`, annotated tag
+  `a7a60006861d09d502e3e7ea5c1a67c31280c571`), and the drafted proposed
+  `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` successor was removed before any
+  acceptance. Proposed Specs amend in place, so no supersession event
+  occurred; V0 remains accepted/current and this Spec stays `proposed`. The
+  `2026-09-02` records above and in §5–§7 describe the earlier v1.0.0
+  generation of this same candidate and are retained as history; the
+  re-vendored lock (`.agents/governance.lock.json`, manifest SHA-256
+  `c84f6557c7c9de404ebce81440d31d2febbc239dc16c0d0e504f94179c774eaf`) binds
+  the `v1.0.1` bytes, and independent exact-Head Review MUST re-verify the
+  re-pinned release identity before acceptance.
 
 ### STATE-ADOPT-003 — Required execution evidence is reproducible
 
@@ -312,7 +328,7 @@ Open assumptions affecting normative meaning: none.
 ### DEC-ADOPT-003 — Exact pin
 
 The local lock MUST pin source repository `mayf3/agent-development-governance`,
-source commit `902842735a69797b54016eeaa88d2f949f5879a9`, version `1.0.0`, and
+source commit `3de35f8617616dda4c717233899d6a93a634d5d8`, version `1.0.1`, and
 compatibility distribution ID `development-governance-v0`. Mutable upstream
 branches or a different commit MUST NOT substitute.
 
@@ -328,7 +344,7 @@ the index, pass final-Head recheck, and merge into `main`.
 ### CTR-ADOPT-001 — Exact release and bytes
 
 The tag, source commit, manifest identity, 25 managed paths, hashes, sizes,
-version, and distribution ID MUST match upstream v1.0.0 exactly.
+version, and distribution ID MUST match upstream v1.0.1 exactly.
 
 ### CTR-ADOPT-002 — Proposed lifecycle
 
@@ -368,9 +384,9 @@ lock, update navigation, pass final-Head recheck, and merge.
 - Required evidence: exact tag ref/type/object, peeled commit, `VERSION`,
   manifest Git blob and SHA-256, and a 25-path size/hash/byte matrix.
 - Expected result: annotated tag object
-  `bb98937d176890088da736fa4a45f48279f19d50` peels to
-  `902842735a69797b54016eeaa88d2f949f5879a9`; distribution/version are
-  `development-governance-v0`/`1.0.0`; all 25 candidate files match.
+  `a7a60006861d09d502e3e7ea5c1a67c31280c571` peels to
+  `3de35f8617616dda4c717233899d6a93a634d5d8`; distribution/version are
+  `development-governance-v0`/`1.0.1`; all 25 candidate files match.
 - Failure condition: any lightweight, different, missing, or unverifiable tag,
   path, hash, size, pin, version, or distribution ID fails acceptance.
 
