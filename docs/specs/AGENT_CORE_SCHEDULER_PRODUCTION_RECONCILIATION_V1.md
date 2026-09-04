@@ -1,11 +1,20 @@
 ---
 spec_id: AGENT_CORE_SCHEDULER_PRODUCTION_RECONCILIATION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
 date: 2026-09-04
+accepted_date: 2026-09-04
+accepted_by: mayf3
+accepted_reviewed_spec_commit: dfa0f599193ab586cfaa4dc95055eb216db79241
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner BATCHED OWNER ACCEPTANCE = ACCEPT of both reconciliation PRs at these
+  exact heads (dsh PR #164 @ dfa0f599…, auth PR #52 @ f3a4599…) on 2026-09-04,
+  after ONE independent reconciliation review + ONE blocker-union fix + ONE
+  exact-head re-audit (RE_AUDIT=PASS, BLOCKER_UNION_RESIDUAL=[]).
 scope:
   - current-state adoption record for the already-live scheduler production state (runtime generation, canary outcome, traceability result)
   - honest recording of the early-production-execution authority gap
@@ -21,7 +30,9 @@ owners: [mayf3]
 
 # AGENT_CORE_SCHEDULER_PRODUCTION_RECONCILIATION_V1
 
-> **PROPOSED / RECONCILIATION RECORD.** 本 Spec 不授权任何新的生产 mutation，
+> **ACCEPTED / RECONCILIATION RECORD** (Owner exact-head acceptance
+> dfa0f599193ab586cfaa4dc95055eb216db79241 on 2026-09-04; reviewed content
+> unchanged by lifecycle finalization). 本 Spec 不授权任何新的生产 mutation，
 > 不产生任何新的 implementation power（implementation_authority = none）。
 > 它只采纳并记录一个已经存在、且被 §2 机械证明为安全的当前生产状态。
 >
