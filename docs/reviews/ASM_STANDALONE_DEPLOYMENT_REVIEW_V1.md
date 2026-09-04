@@ -50,11 +50,23 @@ Authority 冲突（capability spec r3 未动；旧 DEPLOYMENT_V1 r3 记为 histo
 | 5 | SIGKILL 时 lock 残留 | 保留 debt（fail-closed 方向安全） |
 | 6 | 小项（空行/xattr/死代码/sim 恢复源） | 保留 debt（reviewer 已独立验证 sim 恢复源 == main 字节） |
 
-## 4. 修复后回归
+## 4. 修复后回归 + delta re-audit
 
 vehicle 修复（#1/#2）后 FULL_PREMUTATION_SIMULATION 重跑：12/12 全 PASS；
 happy_path receipt = DEPLOY_OK / 17 files / health ok:true（spec §8 schema 落地）。
-制品重新 seal（SEALED_INPUT_MANIFEST.sha256，23 文件）。
+
+Delta re-audit（同一 reviewer session）：**RE_AUDIT = PASS**。静态复核确认修复 a
+（fail_stop 回滚分支，调用点安全、bash3.2 set-u 守卫齐备）与修复 b（富 receipt 成功
+commit point + JSON 校验失败即回滚 + 绕过 finish() 覆盖）实现正确；sim 复跑 happy_path
+（rc=0，receipt files=17/restart=1/health/catalog 逐项验签，after 哈希与 reviewer 独立
+复算 17/17 相等）、receipt_failure（rc=4）、partial_install（rc=4）外加 reviewer 自加的
+midapply_io 定向家族（第 11 文件注入 cp EACCES → rc=3、树字节级恢复 drift=0/17）全部符合。
+已知保守语义：mid-apply 自然 I/O 失败的 ROLLBACK_INCOMPLETE 为保守误报方向（fail-loud，
+树实际已恢复）——Owner packet 对 rc=3 的处置指引（不动现场、报告 agent）覆盖该情况。
+原裁决维持：SAFE_TO_DEPLOY_ASM_WITHOUT_MODEL_FLEET_CHANGE = YES，BLOCKER_UNION = NONE。
+
+制品最终 seal：SEALED_INPUT_MANIFEST.sha256 24 文件（23 部署输入 + OWNER_PACKET.md 指引件；
+vehicle sha256 1ddb1498… 已验签）。
 
 ## 5. 边界
 
