@@ -217,3 +217,10 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |
+
+## Scheduler production state reconciliation authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_SCHEDULER_PRODUCTION_RECONCILIATION_V1` | accepted (PR #164, reviewed head dfa0f599…) | none（current-state adoption + continued-operation declaration only；implementation_authority=none；任何未来 maintenance mutation 需 NEW fresh authority） | 采纳并记录已在生产的 scheduler 10-file runtime face（generation 18f96e2）的 current state 与 canary/traceability 结果；§1 诚实记录 E1–E5 全部 EARLY_PRODUCTION_EXECUTION；THIS_AUTHORITY_DOES_NOT_RETROACTIVELY_AUTHORIZE_PAST_EXECUTION；不 ratify Lane B/agent_session_send |
+| `AGENT_CORE_SCHEDULER_RUNTIME_DEPLOYMENT_V1`（PR #159，未合并、从未生效） | HISTORICAL_ENGINEERING_INPUT / STALE_PROPOSED_CANDIDATE（非 authority predecessor，无 supersession 关系） | n/a | 历史工程输入：§3 十文件闭包与分析被 reconciliation spec 引用为事实记录；其冻结时序前置与实际执行路径已漂移 |
