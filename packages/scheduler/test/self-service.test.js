@@ -611,3 +611,69 @@ test('past one-shot create/update fail before control mutation', async (t) => {
   const after = (await store.loadDoc({ force: true })).jobs[0]
   assert.equal(after.scheduleRevision, before.scheduleRevision)
 })
+
+// ── SCHEDULER_TOOL_SURFACE_RESPONSE_FIX_V1: a KNOWN commit must never surface
+// as mutation_outcome_unknown — it returns the success projection, or the
+// deterministic degraded partial-success envelope when the post-commit
+// response could not be assembled. ──
+
+function commitThenThrow(store, { withCommittedValue = false } = {}) {
+  const original = store.mutateDoc.bind(store)
+  const state = { calls: 0 }
+  store.mutateDoc = async (fn) => {
+    state.calls += 1
+    const out = await original(fn)
+    throw Object.assign(new Error('post-commit response assembly fault'), {
+      mutationOutcome: 'committed',
+      ...(withCommittedValue ? { committedValue: out.value } : {}),
+    })
+  }
+  return state
+}
+
+test('create success returns the success envelope exactly once (no degraded path)', async (t) => {
+  const { call, store } = await rig(t)
+  const out = await call('create', createAtArgs())
+  assert.equal(out.ok, true)
+  assert.equal(out.result.mutationStatus, undefined)
+  const doc = await store.loadDoc({ force: true })
+  assert.equal(doc.jobs.length, 1)
+  assert.equal(doc.occurrences.length, 0)
+})
+
+test('create commit followed by a post-commit response fault degrades deterministically with zero duplicate mutation', async (t) => {
+  const { call, store } = await rig(t)
+  const state = commitThenThrow(store)
+  const out = await call('create', createAtArgs())
+  assert.equal(out.ok, true)
+  assert.deepEqual(out.result, { mutationStatus: 'committed', responseStatus: 'degraded', jobId: null })
+  assert.equal(state.calls, 1, 'the mutation ran exactly once — no automatic retry')
+  const doc = await store.loadDoc({ force: true })
+  assert.equal(doc.jobs.length, 1, 'exactly one job committed — no duplicate')
+  assert.equal(doc.occurrences.length, 0, 'no second occurrence')
+})
+
+test('create commit with recoverable committedValue still returns the full 11-field projection', async (t) => {
+  const { call, store } = await rig(t)
+  commitThenThrow(store, { withCommittedValue: true })
+  const out = await call('create', createAtArgs())
+  assert.equal(out.ok, true)
+  assert.equal(out.result.mutationStatus, undefined)
+  assertExactCommittedResult(out.result)
+  assert.equal(out.result.auditStatus, 'appended')
+})
+
+test('update commit followed by a post-commit response fault degrades with the known jobId and zero duplicate mutation', async (t) => {
+  const { call, store } = await rig(t)
+  const created = await call('create', createAtArgs())
+  assert.equal(created.ok, true)
+  const state = commitThenThrow(store)
+  const out = await call('update', { job_id: created.result.jobId, name: '改名' })
+  assert.equal(out.ok, true)
+  assert.deepEqual(out.result, {
+    mutationStatus: 'committed', responseStatus: 'degraded', jobId: created.result.jobId,
+  })
+  assert.equal(state.calls, 1, 'the mutation ran exactly once — no automatic retry')
+  const doc = await store.loadDoc({ force: true })
+  assert.equal(doc.jobs.length, 1)
+})

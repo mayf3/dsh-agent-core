@@ -355,3 +355,64 @@ test('gateway rejects missing/mismatched trusted identity and turn context befor
   }
   assert.equal(handlerCalls, 0)
 })
+
+// ── SCHEDULER_TOOL_SURFACE_RESPONSE_FIX_V1: a store-tagged KNOWN commit is a
+// deterministic partial success end-to-end — the gateway must not rewrite it
+// to mutation_outcome_unknown and the child relay must pass it through. ──
+
+test('gateway returns a degraded committed success for a store-tagged committed mutation failure', async (t) => {
+  const gateway = await gatewayRig(t, {
+    scheduler: {
+      create: async () => {
+        throw Object.assign(new Error('post-commit stat failed'), {
+          mutationOutcome: 'committed',
+          committedValue: { id: 'job-committed' },
+        })
+      },
+    },
+  })
+  const { action: _action, ...businessArgs } = validCalls.create
+  const out = await gateway.execute({
+    capabilityId: 'scheduler', operation: 'create', args: businessArgs,
+  }, routerGatewayContext())
+  assert.equal(out.ok, true)
+  assert.deepEqual(out.result, {
+    mutationStatus: 'committed', responseStatus: 'degraded', jobId: 'job-committed',
+  })
+})
+
+test('gateway degrades with jobId null when the committed error carries no committedValue', async (t) => {
+  const gateway = await gatewayRig(t, {
+    scheduler: {
+      enable: async () => {
+        throw Object.assign(new Error('post-commit append failed'), { mutationOutcome: 'committed' })
+      },
+    },
+  })
+  const out = await gateway.execute({
+    capabilityId: 'scheduler', operation: 'enable', args: { job_id: 'job-1' },
+  }, routerGatewayContext())
+  assert.equal(out.ok, true)
+  assert.deepEqual(out.result, {
+    mutationStatus: 'committed', responseStatus: 'degraded', jobId: null,
+  })
+})
+
+test('relay passes a degraded committed envelope through as structured success with zero automatic retry', async () => {
+  const degraded = { mutationStatus: 'committed', responseStatus: 'degraded', jobId: 'job-9' }
+  let attempts = 0
+  const definition = schedulerDefinition(async () => {
+    attempts += 1
+    return { ok: true, result: { ok: true, result: degraded } }
+  })
+  const out = await definition.execute(validCalls.create)
+  assert.deepEqual(out, { ok: true, result: degraded })
+  assert.equal(attempts, 1, 'no automatic retry')
+  const nullJobId = schedulerDefinition(async () => ({
+    ok: true, result: { ok: true, result: { ...degraded, jobId: null } },
+  }))
+  assert.deepEqual(
+    await nullJobId.execute(validCalls.remove),
+    { ok: true, result: { mutationStatus: 'committed', responseStatus: 'degraded', jobId: null } },
+  )
+})
