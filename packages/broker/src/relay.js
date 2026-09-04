@@ -125,6 +125,24 @@ function validSchedulerMutationResult(operation, result) {
     && validAuditStatus(result.auditStatus)
 }
 
+function validSessionSendResult(result) {
+  if (result?.status === 'accepted' || result?.status === 'timeout') {
+    return exactKeys(result, ['status'])
+  }
+  return result?.status === 'replied'
+    && exactKeys(result, ['reply', 'status'])
+    && typeof result.reply === 'string'
+    && result.reply.length > 0
+}
+
+function validDeclaredFailure(parent, manifest) {
+  return parent?.ok === false
+    && parent.error !== null
+    && typeof parent.error === 'object'
+    && typeof parent.error.code === 'string'
+    && manifest.errors.some((candidate) => candidate.code === parent.error.code)
+}
+
 /**
  * Build per-operation relay handlers for one HTTP capability manifest.
  *
@@ -155,6 +173,16 @@ export function createRelayHandlers(manifest, requestFn) {
     if (!op.http && !isLocalManifest) continue
     handlers[op.name] = async (_operation, args) => {
       const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
+      const uncertainSessionSend = manifest.id === 'agent_session_send' && op.name === 'send'
+      const ambiguousError = uncertainMutation
+        ? {
+            errorCode: 'mutation_outcome_unknown',
+            detail: 'scheduler mutation response was lost; inspect current state before any manual retry',
+          }
+        : {
+            errorCode: 'outcome_unknown',
+            detail: 'parent_rpc_ambiguous: agent session send response was lost; do not retry automatically',
+          }
       let envelope
       try {
         // Transport envelope from the parent RPC: { ok: true, result: <invoke> }.
@@ -164,25 +192,22 @@ export function createRelayHandlers(manifest, requestFn) {
           args,
         })
       } catch (err) {
-        return {
-          errorCode: uncertainMutation ? 'mutation_outcome_unknown' : 'invalid_arguments',
-          detail: uncertainMutation
-            ? 'scheduler mutation response was lost; inspect current state before any manual retry'
-            : `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
-        }
+        if (uncertainMutation || uncertainSessionSend) return ambiguousError
+        return { errorCode: 'invalid_arguments', detail: `broker relay failed: ${err instanceof Error ? err.message : String(err)}` }
       }
       const structuredTransport = exactKeys(envelope, ['ok', 'result']) && envelope.ok === true
       const parent = structuredTransport ? envelope.result : undefined
       const structuredParentSuccess = parent?.ok === true
         && (!uncertainMutation || validSchedulerMutationResult(op.name, parent.result))
+        && (!uncertainSessionSend || validSessionSendResult(parent.result))
       const structuredParentFailure = uncertainMutation
         ? validSchedulerFailure(parent, manifest)
-        : parent?.ok === false && parent.error !== null && typeof parent.error === 'object'
+        : validDeclaredFailure(parent, manifest)
       if (uncertainMutation && !structuredParentSuccess && !structuredParentFailure) {
-        return {
-          errorCode: 'mutation_outcome_unknown',
-          detail: 'scheduler mutation response was lost; inspect current state before any manual retry',
-        }
+        return ambiguousError
+      }
+      if (uncertainSessionSend && !structuredParentSuccess && !structuredParentFailure) {
+        return ambiguousError
       }
       if (parent && parent.ok === true) {
         // Unwrap: child-side invoke re-wraps as { ok: true, result }.

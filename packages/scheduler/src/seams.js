@@ -46,6 +46,18 @@ export const INVOKE_CONTRACT = {
       + '(distinguishes pre-start rejections from terminal failures; C-004)',
     reconciliationHandle: 'string|undefined — outcome_unknown carriers',
     evidence: 'object|undefined',
+    // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1 R4 (ADDITIVE, optional): the
+    // trusted production-runtime wrapper ingests the final
+    // ```scheduler-result fenced block and attaches the validated structured
+    // business result. The scheduler persists it VERBATIM into the history
+    // RunRecord and never interprets business keys (opaque JSON; R-H7).
+    // Shape contract: { final_status: 'PASS'|'PARTIAL'|'FAIL',
+    // counters: flat string->integer map, notes?: string(<=500),
+    // wake_sent?: [{target_agent_id, workflow_instance_id, request_id, session_id}] }.
+    result: 'object|undefined — opaque structured business result (R4)',
+    // Set INSTEAD of result when ingestion rejected the block (fail-soft;
+    // execution outcome and delivery are never affected — R4 step 4).
+    result_error_code: "'UNPARSEABLE' | 'OVERSIZE' | 'INVALID_SCHEMA' | undefined",
   },
 }
 

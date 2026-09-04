@@ -94,6 +94,21 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
       requiredEverywhere[name] = (requiredEverywhere[name] ?? true) && opReq
     }
   }
+  // CTR-011 (workflow_execute unified write tool): "required everywhere" means
+  // EVERY operation declares the property AND requires it. The collection loop
+  // above only ANDs across operations that declare a property, so an argument
+  // required by just one operation of a multi-operation manifest (declared by
+  // none of the others) would be lifted to a tool-level requirement and the
+  // coarse host schema would demand create args for transition calls and vice
+  // versa. Recompute over all operations; per-operation strictness stays in
+  // mapping.js.
+  for (const name of Object.keys(requiredEverywhere)) {
+    requiredEverywhere[name] = manifest.operations.every((op) =>
+      Object.hasOwn(op.arguments.properties, name)
+      && Array.isArray(op.arguments.required)
+      && op.arguments.required.includes(name)
+    )
+  }
   for (const [name, allRequire] of Object.entries(requiredEverywhere)) {
     if (allRequire && !parameters[name].required) parameters[name].required = true
   }

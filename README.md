@@ -56,7 +56,7 @@ dsh-agent-core/
 │   ├── integration-v1-verify.mjs      # Integration V1 验收（真实飞书链路）
 │   ├── product-integration-v1-verify.mjs # Product Integration V1 验收（A/B 双 Agent、switch、重启、crash resume）
 │   ├── scheduler-v1-verify.mjs        # Scheduler V1 验收驱动（59 测试 + 兼容扫描 + 重启证据 + 审计回归）
-│   ├── scheduler-router-final-v1-verify.mjs # Scheduler↔Router Final Integration 验收（真实进程/模型/飞书 + abort 证据）
+│   ├── scheduler/                          # Scheduler subsystem verification drivers
 │   ├── agentcore-cron.mjs             # openclaw cron add/list/runs 的 Agent Core 提交面（daemon 换用）
 │   ├── openclaw-job-import.mjs        # 真实 OpenClaw jobs → V1 store 迁移工具（默认 dry-run + 锁内守卫）
 │   ├── mobile-gate1-verify.mjs        # Mobile Gate 1 验收（Emulator → adb reverse → Product API → Router → real DSH）
