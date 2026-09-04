@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "distribution": "development-governance-v0",
-  "version": "0.1.0-draft.1",
+  "version": "0.2.0-draft.1",
   "source_repository": "mayf3/agent-development-governance",
-  "source_commit": "46f78c3f00d768d99a4c8c2da975b124bce042f9",
-  "distribution_manifest_sha256": "58b5b28bb801538fe62be0ac98a7bc539ff34ec24fa368c48996dd40d8653ba0",
+  "source_commit": "d32b946cbbbc1baa99165d7656fc22e8823a651f",
+  "distribution_manifest_sha256": "4dd6e16ff0aeb70124408651da970a83551f07961b0386cc41b20aca6dbb5fb1",
   "adoption": {
     "mode": "vendored",
     "status": "accepted",
@@ -16,18 +16,18 @@
   "files": [
     {
       "path": ".agents/README.md",
-      "sha256": "276081dae1e48959e98e8d2a7d379a10514d2318891cb286d099c67268b8fb39",
-      "size": 15418
+      "sha256": "23c86e5f60ee2321c637572c5199cd66d232a28eb5f36262fcc414f23161341a",
+      "size": 16007
     },
     {
       "path": ".agents/protocol/SPEC_GOVERNANCE_V0.md",
-      "sha256": "7a85b39f4fd9ca4965c90f85d3521d5e0334793f76194cd2f16a0e61a15be9a5",
-      "size": 15979
+      "sha256": "eaa0ea44581b6f25d1c6d0b9e5842cc9643cc98ccb6a06d3e7407e7f5c2edd7a",
+      "size": 18612
     },
     {
       "path": ".agents/protocol/SPEC_FORMAT_V0.md",
-      "sha256": "c9a5e3bebb6f8928de5559c1f9024038c10530bd8da1f1aeee9fbbf9f6c6b036",
-      "size": 12010
+      "sha256": "73cd134f60f66e270e5d774966fb96d94a0e7d8eff34275b32a3028aee7f2adb",
+      "size": 13201
     },
     {
       "path": ".agents/skills/spec-governance/SKILL.md",
@@ -60,14 +60,19 @@
       "size": 7938
     },
     {
+      "path": ".agents/tools/validate_spec_transition.py",
+      "sha256": "255838a907607aeb931b18e38473b603c5da9af07eb61d66219eaf393deecf6c",
+      "size": 10901
+    },
+    {
       "path": ".agents/schemas/distribution-manifest.schema.json",
       "sha256": "9255c0772bf552b6118b664cd3e7a399b5ccbe6f7bedb711a9049f9716072041",
       "size": 1113
     },
     {
       "path": ".agents/schemas/spec-frontmatter.schema.json",
-      "sha256": "445860137a5f8229871f15566ae2ed0ce0322305d5c0d14e72849610e8af9de8",
-      "size": 2424
+      "sha256": "132b7325f8e6a286d237f67c226336cd092c828eb52c718b108c4b7ec06a923e",
+      "size": 3190
     },
     {
       "path": ".agents/schemas/governance-lock.schema.json",
