@@ -84,13 +84,6 @@ function validDestination(value) {
     || (exactKeys(value, ['channel', 'to']) && nonEmpty(value.channel) && nonEmpty(value.to))
 }
 
-function validDegradedMutationResult(result) {
-  return exactKeys(result, ['jobId', 'mutationStatus', 'responseStatus'])
-    && result.mutationStatus === 'committed'
-    && result.responseStatus === 'degraded'
-    && (result.jobId === null || nonEmpty(result.jobId))
-}
-
 function validSchedulerFailure(parent, manifest) {
   if (!exactKeys(parent, ['error', 'ok']) || parent.ok !== false) return false
   const error = parent.error
@@ -204,13 +197,8 @@ export function createRelayHandlers(manifest, requestFn) {
       }
       const structuredTransport = exactKeys(envelope, ['ok', 'result']) && envelope.ok === true
       const parent = structuredTransport ? envelope.result : undefined
-      // A degraded partial-success (known commit, degraded response) is a
-      // STRUCTURED success: rewriting it to mutation_outcome_unknown would be
-      // false and could induce a duplicate mutation. Mirrors the scheduler
-      // self-service degradedCommittedResult shape.
       const structuredParentSuccess = parent?.ok === true
-        && (!uncertainMutation || validSchedulerMutationResult(op.name, parent.result)
-          || validDegradedMutationResult(parent.result))
+        && (!uncertainMutation || validSchedulerMutationResult(op.name, parent.result))
         && (!uncertainSessionSend || validSessionSendResult(parent.result))
       const structuredParentFailure = uncertainMutation
         ? validSchedulerFailure(parent, manifest)

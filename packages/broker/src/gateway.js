@@ -282,22 +282,6 @@ export function createBrokerGateway({
         return await localHandler(localArgs, trustedContext)
       } catch (error) {
         log(`[broker-gateway] local capability ${manifest.id}.${operation} failed: ${error?.message ?? error}`)
-        if (manifest.id === 'scheduler'
-          && schedulerMutations.has(operation)
-          && error?.mutationOutcome === 'committed') {
-          // The store tagged this error as committed: reporting
-          // mutation_outcome_unknown would be false and could induce a
-          // duplicate mutation. Return the deterministic partial-success
-          // envelope (mirrors scheduler self-service degradedCommittedResult).
-          return {
-            ok: true,
-            result: {
-              mutationStatus: 'committed',
-              responseStatus: 'degraded',
-              jobId: error?.committedValue?.id ?? null,
-            },
-          }
-        }
         const uncertainMutation = manifest.id === 'scheduler'
           && schedulerMutations.has(operation)
           && error?.mutationOutcome !== 'not_committed'
