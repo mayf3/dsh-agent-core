@@ -238,3 +238,25 @@ implementation_authority=contracts):
 
 PRODUCTION_APPLY_ALLOWED = NO (unchanged; Visit Activation owns the slot).
 BLOCKER_UNION = [] so far at implementation-audit time (audits next).
+
+## Implementation audit round (2026-09-05 night)
+
+ONE independent cross-repo implementation audit (agent_a62b06ae, read-only)
+covered all three branches: DSH_VERDICT = PASS, AUTH_LANE_B_VERDICT = PASS,
+AUTH_LANE_A_VERDICT = PASS, BLOCKER_UNION = [] (frozen, empty — no repair
+round). All gates rerun by the auditor green (dsh structure PASS + focused
+37/37; auth bundle valid + tsc clean + 37/37 + 23/23). Two MECHANICAL_FIXES
+applied in-candidate and rechecked: explicit client-row select projections in
+both grant vehicles (secretHash never fetched) + a rollback-identity runbook
+note. FINAL_HEADS: dsh 4438806 (auditor rerun = recheck), auth Lane B cc0f2ec,
+auth Lane A bcb5c26. Durable record:
+docs/audits/HR_DISPATCH_DELIVERY_IMPLEMENTATION_AUDIT_V1.md (goal worktree).
+
+HR_AGENT_DELIVERY_IMPLEMENTATION_READY = YES (source-side). Remaining are
+separately gated operational rounds: isolated-DB conformance execution,
+production read-only census, CTR-HRG-004 token proof, runbook rehearsal
+(ACC-EAPR-007), Lane C composed canary — each behind the shared production
+mutation slot release (VISIT_ACTIVATION_PRODUCTION_READY=YES +
+DISPATCH_INTENT_BROKER_PRODUCTION_READY=YES + PRODUCTION_RUNTIME_LOCK=IDLE)
+and native Owner authorization where privileged.
+OWNER_ACTION_REQUIRED = NONE at this stage.
