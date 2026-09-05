@@ -39,7 +39,9 @@ owners:
 > **AMENDMENT（2026-09-05，Owner APPROVE_MINIMAL_ACTIVATION_SPEC_AMENDMENT_DIRECTION）**：
 > (1) 权威 fleet registry 91→**92**（一次性现行生产 reconcile，不是动态 N/N 框架）；
 > (2) 部署闭包改绑 **CLOSURE_REFREEZE_V2**（main 513c691，compose EXCLUDED）。除此之外
-> 零语义变化；stale proposed head dc22db8 由本 head 取代。
+> 零语义变化；stale proposed head dc22db8 由本 head 取代。母授权 V2 CTR-SCA-017
+> 门 3/4/5/10 与 CTR-SCA-014 step 10 的字面 91（含 fixtures）在本一次性事务中按
+> Owner ruling 同步适用为 92——V2 accepted 文本不改，本句即 controlled exception。
 
 ## 1. Goal
 
@@ -63,7 +65,7 @@ PRODUCTION_APPLY_REMAINS_SEPARATELY_GATED = YES
 ### 2.1 In scope
 
 - §4 冻结的 selective per-file deployment closure（CLOSURE_REFREEZE_V2：8 blob 全部取自 main `513c691`，compose EXCLUDED，BLOBS.manifest 逐 oid 冻结）；
-- CTR-ACT-009 的 bounded runner bootstrap 分支（≈10 行 + 测试；其余 runner 行为逐字节不变）；
+- CTR-ACT-005 的 bounded runner bootstrap 分支（≈10 行 + 测试；其余 runner 行为逐字节不变）；
 - 一次性 CTR-SCA-017 十门事务的 gate script 与 transaction bindings 设计；
 - `agent-model-overrides.json` v2→v3 语义不变升级 + `credentialFile` 注入的原子顺序；
 - quiesce/fence、fresh-production gate、canonical canaries（CEO/HR/Podcast/Shopping）、
@@ -197,7 +199,7 @@ drift ⇒ 不激活、保留证据、bounded rollback 仅删未激活副本（CT
 ### CTR-ACT-009 — Zero per-home runtime use
 
 `verifyZeroPerHomeRuntimeOpens` 通过（CTR-SCA-005）：92 份 per-home 文件此后 read-only
-forensic；任何 runtime open/refresh/fallback ⇒ fail closed 并按共享 auth 故障面处置。（92 份）
+forensic；任何 runtime open/refresh/fallback ⇒ fail closed 并按共享 auth 故障面处置。
 
 ### CTR-ACT-010 — Canary → small batch → 92/92 判别阶梯
 
