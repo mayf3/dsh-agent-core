@@ -1,8 +1,12 @@
 ---
 spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1
-status: proposed
+status: accepted
 date: 2026-09-03
 amendment: 2026-09-05 fleet-92 + CLOSURE_REFREEZE_V2 (Owner APPROVE_MINIMAL_ACTIVATION_SPEC_AMENDMENT_DIRECTION; supersedes stale proposed head dc22db8)
+accepted_by: mayf3
+accepted_date: 2026-09-05
+accepted_reviewed_head: b5717e3345ad98b063709f995750f8ddf934437f
+acceptance_semantics: FLEET_ROSTER_COUNT=92 exact; AGENTS_CANONICAL_TARGET=92/92; CLOSURE_REFREEZE_V2 accepted; COMPOSE_IN_CLOSURE=NO; v2->v3 = version:3 + canonical credentialFile injection atomically; SAFE_QUOTA_HOP preserved; outcome_unknown=STOP_CHAIN; ONE_LOGICAL_TURN + NO_DUPLICATE_WORK/TOOL/EXTERNAL_DELIVERY REQUIRED; TEN_GATE_BOOTSTRAP REQUIRED; OWNER_REAUTH forbidden for this incident; PRODUCTION_MUTATION_CONCURRENCY=1
 type: activation/deployment authority (docs-only this round; one bounded implementation contract inside the already-merged implementation surface)
 spec_kind: implementation
 authority_level: governing_spec
@@ -259,8 +263,8 @@ ACCEPTANCE_FORM = 唯一 activation decision（与 shared production lock 同时
 
 ```text
 TASK_NAME = 激活 制备
-ROUND = AUTHORITY_AUTHORING
-STATUS = proposed
+ROUND = AUTHORITY_AUTHORING → ACCEPTED（Owner exact-head acceptance 2026-09-05 @ b5717e3…）
+STATUS = accepted
 IMPLEMENTATION_AUTHORITY = contracts
 PRODUCTION_APPLY_AUTHORITY = none
 FLEET_PRODUCTION_APPLY = HOLD
