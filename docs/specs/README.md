@@ -186,6 +186,21 @@ MAX_CONFIGURED_ROUTES = 4、primary + fallbacks[]、STOP_CHAIN、
 ONE_LOGICAL_TURN、Scheduler INHERIT_AGENT_CHAIN_ONLY、
 ROUTE_ORDER_HARDCODED_IN_CODE = FORBIDDEN 等全部 ruling 不重开。
 
+## Agent Core global-route hemostasis proposal (amendment R2)
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_GLOBAL_ROUTE_HEMOSTASIS_V1` | proposed / not accepted (amended after review `5062138118` = REVISE) | none (pure Governing Program) | freezes goals, fail-closed boundaries, a named-node/explicit-edge prerequisite DAG, five generation→audit→exact-digest Owner artifact chains, source-stamp-before-write ordering, registry-union targets, restore branches, credential byte preservation, drain identity, diagnostic cleanup prerequisite, pre-unpause expiry monitor, and exactly 14 freshness classes |
+
+The former CTO compatibility-amendment candidate was removed from PR #120's final tree.
+CTO shared-environment compatibility is an **unresolved prerequisite** owned by a future,
+separately reviewed child Authority; this Program creates no carve-out, precedence rule,
+or supersession conclusion and permits no global environment mutation before that child
+is accepted and merged. PR #117 and review `5061248705` remain historical evidence only;
+its runner is forbidden, the five prior writes are not retroactively authorized, and the
+main Program authorizes no code or production execution. Await a new exact-head
+independent **“授权 审计”**; **DO NOT MERGE**.
+
 ## Forum moderation capabilities authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
