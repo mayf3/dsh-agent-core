@@ -1,9 +1,25 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2
-status: proposed
+status: accepted
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
+accepted_date: 2026-09-05
+accepted_by: mayf3
+accepted_at: 2026-09-05T00:21:28Z
+accepted_reviewed_spec_commit: 8eed354656e9de249f7dfab3f9b0610132ebb167
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner-issued Master Goal GOVERNANCE_TRANSITION_CHAIN_CONFORMANCE_RECONCILIATION_V1
+  (OWNER_DECISION = FORWARD_RECONCILE_WITHOUT_AUTOMATIC_ROLLBACK) pre-authorized
+  the full lifecycle after the upstream v1.0.3 publication (PR #13; independent
+  implementation audit ACCEPT comment 5547708677; exact-Head release review
+  ACCEPT comment 5547784462), one independent proposed-Head review of this
+  candidate (ACCEPT, BLOCKERS = 0, BASE_IMPACT = NONE, comment 5548006704),
+  and the non-waivable raw full-graph transition gate executed at this
+  acceptance Head. Reviewed content unchanged by lifecycle finalization
+  except the two reviewer-authorized SPEC_GAP record corrections and the
+  authorized lifecycle fields.
 scope:
   - mayf3/dsh-agent-core development governance adoption
   - shared vendored governance integrity and local activation lifecycle
@@ -21,6 +37,13 @@ owners:
 ---
 
 # Agent Development Governance v1.0.3 Adoption V2
+
+> 状态：**accepted**；独立 proposed-Head 审计（ACCEPT / BLOCKERS = 0，comment
+> 5548006704）通过后，由 mayf3 依据 Owner-issued Master Goal
+> `GOVERNANCE_TRANSITION_CHAIN_CONFORMANCE_RECONCILIATION_V1` 完成 acceptance。
+> reviewed head `8eed354656e9de249f7dfab3f9b0610132ebb167` 的 normative 内容在
+> lifecycle finalization 中保持不变（另含两条 reviewer 授权的记录修正）；本 Spec
+> 不授权任何产品 implementation。
 
 ## 1. Goal
 
@@ -176,7 +199,7 @@ rewriting of this repository's historical governance records.
   the upstream checkout and the manifest.
 - Result: 25/25 exact, 0 mismatches. Content delta versus the v1.0.1
   vendored set is exactly three files: `.agents/README.md`
-  (GRAMMAR_VERSION 1.0.2 -> 1.0.3), `.agents/tools/validate_spec_transition.py`
+  (GRAMMAR_VERSION 1.0.1 -> 1.0.3), `.agents/tools/validate_spec_transition.py`
   (the v1.0.3 fix, blob `dec8944...` -> `7f95666...`), and
   `.agents/governance.lock.json` (v1.0.3 pins, proposed lifecycle). Two
   further files show mode-only changes from the vendor CLI not preserving
@@ -222,25 +245,26 @@ rewriting of this repository's historical governance records.
 
 ### CLM-201 — The obligation change requires whole-authority replacement
 
-- Claim: the v1.0.3 validator change is an obligation change to the adopted
-  governance grammar, so it must arrive by whole-authority succession from
-  accepted V1, not by in-place edit or vendor drift.
-- Support: STATE-201, OBS-202, DEC-201.
-- Assumptions: none affecting normative meaning.
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-201`.
+- Contradicted by evidence: none known.
+- Uncertainty: local activation remains contingent on independent Review,
+  Owner-authorized acceptance, atomic lifecycle closure, and merge.
 
 ### CLM-202 — Exact manifest vendoring preserves local authority boundaries
 
-- Claim: vendoring exactly the 25 manifest-managed bytes with a proposed
-  lock changes no local product authority, permission, or runtime behavior.
-- Support: OBS-204, CTR-203, and the zero-delta scope of the vendored set.
-- Assumptions: none.
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-202`.
+- Contradicted by evidence: none known.
+- Uncertainty: none affecting normative meaning.
 
 ### CLM-203 — The candidate supplies reviewable execution evidence
 
-- Claim: this round's records are sufficient for an independent reviewer to
-  re-execute every load-bearing check without trusting this document.
-- Support: STATE-203, OBS-205, OBS-206, CTR-205.
-- Assumptions: none.
+- Support state: SUPPORTED.
+- Supported by evidence: `EVD-203`.
+- Contradicted by evidence: none known.
+- Uncertainty: author-side executions are supporting only; the binding
+  reproduction is the independent reviewer's own.
 
 ## 7. Evidence relations
 
@@ -435,8 +459,9 @@ successor; accepted V2 meaning is not rewritten.
 ## 13. Open questions
 
 ```text
-OPEN_QUESTIONS = NONE
+OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
+UNRESOLVED_AUTHORITY_CONFLICT = NONE
 PARTIAL_SUPERSESSION = NONE
 ```
 
