@@ -1,6 +1,23 @@
 ---
-spec_id: AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1
-status: superseded
+spec_id: AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2
+status: accepted
+accepted_date: 2026-09-05
+accepted_by: mayf3
+accepted_reviewed_spec_commit: eedf4690d47df12b5db89961e4e6792945472835
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner BATCHED EXACT-HEAD ACCEPTANCE = YES on 2026-09-05 for the three
+  HR_DISPATCH_DELIVERY_READINESS_V1 subject-correction successors, binding
+  this V2 at reviewed semantic head
+  eedf4690d47df12b5db89961e4e6792945472835 (round-1 review REVISE on one
+  front-matter metadata blocker; exact one-line repair per the reviewer's
+  MINIMAL_CLOSURE; delta re-audit PASS; pushed verbatim and remote-verified
+  before finalization). The upstream pin (auth
+  AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V2 @ 87beb77) is re-affirmed:
+  that reviewed revision is now an ancestor of auth main dde3967 with its
+  normative body byte-identical to the accepted auth V2. Acceptance is atomic
+  with V1 -> superseded (reciprocal backlink). Reviewed normative body
+  preserved byte-for-byte.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -14,42 +31,16 @@ governed_by:
   - AGENT_CORE_AGENT_SESSION_MESSAGING_V1
 external_authorities:
   - repository: mayf3/auth-service
-    authority_id: AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V1
-    revision: b5eef6cdf00aa9ebb581f6a18adbae8d975f9f26
+    authority_id: AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V2
+    revision: 87beb7783d7e81bdf479cbb109c42cac86a9bfbf
     relation: depends_on
-supersedes: []
-superseded_by: AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2
-accepted_date: 2026-09-05
-accepted_by: mayf3
-accepted_reviewed_spec_commit: f3b11d78f4e38aa9f60caa0d9b3c5ce7dc6abfa2
-acceptance_review_verdict: PASS
-superseded_note: >-
-  Superseded 2026-09-05 by AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2
-  (whole-Spec subject successor: canary/proof subject bc970ced…/hr-agent ->
-  dc702687…/agt_hr-agent per Owner fresh identity fact). Its subject-generic
-  resolution and exact-ID admission contracts remain in force verbatim through
-  V2; the legacy Principal is no longer a valid business assignee/canary
-  subject (its agent_id grammar already fails closed downstream).
-acceptance_authority_basis: >-
-  Owner BATCHED EXACT-HEAD ACCEPTANCE = YES on 2026-09-05 for the three
-  HR_DISPATCH_DELIVERY_READINESS_V1 authority candidates, binding this Spec at
-  reviewed semantic head f3b11d78f4e38aa9f60caa0d9b3c5ce7dc6abfa2 after one
-  independent first review (ACCEPT, BLOCKERS = 0, MERGE_READY = YES,
-  UPSTREAM_PIN_CONSISTENCY = PASS one-for-one; review record 2f6fd7e). The
-  external_authorities revision pin is updated 0359575dd… -> b5eef6cdf… (the
-  accepted Auth acceptance-transaction revision, reachable from auth main
-  bb5b6f2) exactly as this Spec's section 1 requires and the review FOLLOW_UP
-  directs; the pinned Auth contracts are byte-identical between the two
-  revisions, so there is no semantic movement and no re-preflight is triggered.
-  The reviewed normative body is otherwise preserved byte-for-byte. The review
-  SPEC_GAP (credential_missing vs credential_unavailable naming) and
-  TOOLING_DEBT (500-line legacy-file ceiling) stay implementation-preflight
-  obligations, not shipping blockers.
+supersedes: [AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1]
+superseded_by: null
 owners:
   - mayf3
 ---
 
-# AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1
+# AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2
 
 ## 1. Goal, mandate and route
 
@@ -235,9 +226,14 @@ Mutation concurrency is one. Production remains on hold until fresh evidence
 establishes VISIT_ACTIVATION_PRODUCTION_READY=YES,
 DISPATCH_INTENT_BROKER_PRODUCTION_READY=YES and PRODUCTION_RUNTIME_LOCK=IDLE.
 For privileged access use native Owner authorization where required. Before real
-canary, prove A and B production ready, exact HR Principal
-bc970ced-710f-4479-9ff0-e295a1c59424 binding, and exact enabled authorized target
-mechanically. One harmless disposable canary may then perform resolution -> HR
+canary, prove A and B production ready, exact HR business Principal
+dc702687-6515-4a2a-91ae-e572a9bbd766 (canonical agent_id agt_hr-agent)
+binding, and exact enabled authorized target
+mechanically. The legacy OpenClaw-era Principal
+bc970ced-710f-4479-9ff0-e295a1c59424 (hr-agent) MUST NOT be used as the
+canary subject or the resolved business assignee; a resolution returning the
+legacy agent_id grammar fails closed at the existing CTR-EPAR-003 grammar
+check. One harmless disposable canary may then perform resolution -> HR
 send -> canonical main. No real private content, target auto-reply task, Workflow
 transition or scheduler mutation. Prove accepted/replied, delivery_count=1,
 new_target_run_count=1, canonical main, no source credential propagation/ping-pong,
@@ -286,3 +282,25 @@ AUTHORING_DONE_WHEN = independent exact-head review ready
 IMPLEMENTATION_READY = NO
 PRODUCTION_READY = NO
 ```
+
+## 8. Supersession from V1
+
+Whole-Spec successor of accepted AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1
+(dsh main 51dafbe, reviewed semantic head f3b11d78f4e38aa9f60caa0d9b3c5ce7dc6abfa2).
+Sole semantic correction: the canary/proof subject changes from the legacy
+OpenClaw-era Principal bc970ced-710f-4479-9ff0-e295a1c59424 to the current
+formal HR business identity Principal dc702687-6515-4a2a-91ae-e572a9bbd766
+(canonical agent_id agt_hr-agent), per the Owner's fresh identity fact of
+2026-09-05, with the legacy Principal explicitly forbidden as canary subject
+or business assignee. The resolution Contracts themselves are subject-generic
+and unchanged (the existing CTR-EPAR-003 stored-id grammar check already
+fails closed on the legacy agent_id spelling). The upstream pin moves to
+AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V2 at its proposed head
+87beb7783d7e81bdf479cbb109c42cac86a9bfbf (subject-generic resolution contracts
+byte-identical to the accepted V1; only the HR read-grant recipient changes);
+the pin is re-affirmed against the final accepted auth revision at the atomic
+acceptance transaction per section 1. Every other
+accepted Decision, Contract, and Acceptance mapping is preserved
+byte-semantically. Acceptance is atomic: this V2 becomes accepted and V1
+becomes superseded with the reciprocal backlink in the same acceptance
+transaction.
