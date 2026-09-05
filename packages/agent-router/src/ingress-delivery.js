@@ -276,25 +276,56 @@ export function createIngressDelivery({
       throw new TypeError('agent-router: deliver agentId must be a non-empty string')
     }
     let agent
-    try {
-      agent = resolveAgentRef(agentRef)
-    } catch (error) {
-      if (messageOrigin !== undefined
-        && error?.code === 'AGENT_NOT_FOUND'
-        && typeof resolveAgentById === 'function') {
-        try {
-          const defined = resolveAgentById(agentRef)
-          if (defined?.disabled === true) {
-            throw Object.assign(new Error(`agent-router: target Agent is disabled: ${agentRef}`), {
-              code: 'AGENT_DISABLED',
-              proven: 'zero_byte',
-            })
-          }
-        } catch (lookupError) {
-          if (lookupError?.code === 'AGENT_DISABLED') throw lookupError
-        }
+    if (messageOrigin?.kind === 'inter_agent') {
+      // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 CTR-EPAR-005: A2A
+      // message-origin admission resolves the target by EXACT Agent
+      // Definition id only — the display-name fallback of resolveAgentRef
+      // must never pick a different Agent whose name matches a previously
+      // valid id (TOCTOU wrong-target family). Missing -> AGENT_NOT_FOUND,
+      // disabled -> AGENT_DISABLED, both before any prompt byte (the codes
+      // are the existing §5 delivery taxonomy the ASM provider maps). One
+      // synchronous exact lookup: no await between read and enabled check.
+      try {
+        agent = resolveAgentById(agentRef)
+      } catch {
+        throw Object.assign(new Error(`agent-router: agent not found: ${agentRef}`), {
+          code: 'AGENT_NOT_FOUND',
+          proven: 'zero_byte',
+        })
       }
-      throw error
+      if (agent?.disabled === true) {
+        throw Object.assign(new Error(`agent-router: target Agent is disabled: ${agentRef}`), {
+          code: 'AGENT_DISABLED',
+          proven: 'zero_byte',
+        })
+      }
+      if (agent?.id !== agentRef) {
+        throw Object.assign(new Error(`agent-router: agent not found: ${agentRef}`), {
+          code: 'AGENT_NOT_FOUND',
+          proven: 'zero_byte',
+        })
+      }
+    } else {
+      try {
+        agent = resolveAgentRef(agentRef)
+      } catch (error) {
+        if (messageOrigin !== undefined
+          && error?.code === 'AGENT_NOT_FOUND'
+          && typeof resolveAgentById === 'function') {
+          try {
+            const defined = resolveAgentById(agentRef)
+            if (defined?.disabled === true) {
+              throw Object.assign(new Error(`agent-router: target Agent is disabled: ${agentRef}`), {
+                code: 'AGENT_DISABLED',
+                proven: 'zero_byte',
+              })
+            }
+          } catch (lookupError) {
+            if (lookupError?.code === 'AGENT_DISABLED') throw lookupError
+          }
+        }
+        throw error
+      }
     }
     // CLAUSE-PROC-BOUNDED rule 8: reconciliation capacity is checked BEFORE
     // spawn/write — an exhausted store must never cost a spawn or a prompt
