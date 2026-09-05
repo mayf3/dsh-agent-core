@@ -48,6 +48,19 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
 
+## Mobile Session history authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `MOBILE_SESSION_HISTORY_V1` | proposed | contracts (inactive until accepted and present in implementation base) | DSH-native Session read-only final-text projection via logical `main`; minimal backend history service with Product API as thin adapter; consumes the sibling auth Child's trusted authContext |
+| `PRODUCT_API_AUTHENTICATION_V1` | proposed | contracts (inactive until accepted and present in implementation base) | named Child of `AGENT_CORE_HARDENING_PROGRAM_V1`: Tailnet-local Mobile history caller identity only — stable Tailscale Node ID + exact surface pair, admission order, denial, auth config, rotation/rollback, auth log privacy |
+
+Both proposals are docs-only and not implementation authority: neither Spec authorizes any product,
+Mobile, canary, deployment, Agent Home, Session, or auth-config change until each is independently
+reviewed and accepted into main. The two Specs are siblings in one PR with a bidirectional
+dependency (History activation requires the auth Child's local profile readiness); they must be
+accepted or rejected in separate independent rulings.
+
 ## Agent primary Workspace authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
