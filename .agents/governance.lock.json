@@ -7,11 +7,11 @@
   "distribution_manifest_sha256": "f4aa7779623e670a384195ccc40e509fb5600ddfb97363f8b907386fffbceca2",
   "adoption": {
     "mode": "vendored",
-    "status": "proposed",
+    "status": "accepted",
     "prepared_by": "ZCode / re-vendor-adoption-preparation-agent",
     "prepared_at": "2026-09-04T23:54:32Z",
-    "accepted_by": null,
-    "accepted_at": null
+    "accepted_by": "mayf3",
+    "accepted_at": "2026-09-05T00:21:28Z"
   },
   "files": [
     {
