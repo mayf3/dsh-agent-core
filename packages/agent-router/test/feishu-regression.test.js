@@ -161,10 +161,13 @@ test('TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the r
   const input = {
     channel: 'thread',
     chatId: 'oc_exact_chat',
-    conversationId: 'oc_exact_chat:topic_exact',
+    conversationId: 'oc_thread_conv:topic_exact',
     messageId: 'om_exact_message',
     sender: { openId: 'ou_test' },
-    text: 'thread turn',
+    // The text embeds a decoy self-reported open id: feishuSenderOpenId in
+    // the trusted context must come from the authenticated ingress sender
+    // metadata, never from anything the prompt itself reports.
+    text: 'thread turn mentions ou_decoy_id',
   }
 
   const result = await router.route(input)
@@ -173,9 +176,9 @@ test('TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the r
   const trusted = spawns.turns[0].opts.ingressContext
   assert.deepEqual(trusted, {
     channelNamespace: 'feishu',
-    channelConversationId: 'feishu:oc_exact_chat:topic_exact',
+    channelConversationId: 'feishu:oc_thread_conv:topic_exact',
     feishuChatId: 'oc_exact_chat',
-    feishuConversationId: 'oc_exact_chat:topic_exact',
+    feishuConversationId: 'oc_thread_conv:topic_exact',
     feishuMessageId: 'om_exact_message',
     feishuSenderOpenId: 'ou_test',
   })
