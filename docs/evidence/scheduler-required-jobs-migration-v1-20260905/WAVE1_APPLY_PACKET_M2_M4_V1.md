@@ -18,8 +18,10 @@ G3 canonical store fresh readback（Owner sudo cat，或经 fleet agent schedule
      m4-daily-thought-summary}（§1/§2 冻结名）零命中
    - idempotency key collision：零命中
    - DUPLICATE_ACTIVE_SCHEDULES 基线记录（apply 后比对增量）
-G4 target agent enabled：agt_hr-agent（BUSINESS=dc702687）、agt_blog-agent 现役
-   enabled（经 broker/registry readback，不认记忆值）
+G4 target agent enabled：registry 维度已闭合（2026-09-05 auth-service 生产 registry
+   只读查询，全部 active——agt_hr-agent=dc702687…、agt_blog-agent=fd58881a…、
+   agt_daily-thought-agent=4074e8c2…，全表见 CLOSURE §8）；剩余 readback 维度 =
+   agents.json fleet 在役证明（authsvc 0700，apply 轮经 Owner 或 broker 通道）
 G5 M4 专项：bip_article_pipeline_v1 生产 current definitionVersionId fresh 核验
    （legacy 硬编码 ba00866b-1a37-4911-ab00-a83f78bd9b85 是否仍 current；
     失效 → §2 payload 中该行改为「按 definitionKey 解析 current version」冻结文本，
@@ -70,9 +72,10 @@ ACCEPTANCE（EXECUTION_ONLY）= 创建后首个 occurrence：DEFINITION_COUNT=1�
 ```
 JOB_NAME = m4-daily-thought-summary
 LEGACY_SOURCE_ROWS = daily-thoughts-summary-001（「每日随想总结 - 22点」，04:22 执行）×1
-OWNER_AGENT / TARGET_AGENT = daily-thought 上游 agent（执行轮按 G4 同标准 readback
-  其 canonical id；若该 agent 未迁入 fleet → 本条降级 BLOCKED(B5) 并从 packet 摘除，
-  仅保留下游 2.2）
+OWNER_AGENT / TARGET_AGENT = agt_daily-thought-agent（principal 4074e8c2-67f1-409f-
+  830c-1690cc7c64f2，active @ auth-service 生产 registry，2026-09-05 G4 readback 实证；
+  非 legacy `daily-thought-agent`/2a24b855。G4 剩余维度：agents.json fleet 在役证明
+  apply 前 readback，FAIL 才摘除降 BLOCKED(B5-runtime)）
 SCHEDULE_KIND = cron | EXPR = 22 4 * * * | TZ = Asia/Shanghai
 TIMEOUT = 3600s | ENABLED_AT_CREATE = true | DELETE_AFTER_RUN = false
 DELIVERY_REQUIREMENT = EXECUTION_ONLY（7 天回溯补总结是业务本体；汇报 announce

@@ -207,3 +207,29 @@ apply packet 的事实，均不改变 §4 的 gate 判定，但修正其分类�
 4. 核验项新增：随想源目录路径 `/Users/yanfenma/.openclaw/groups/workspace-…/daily-thoughts/`
    在 canonical runtime fresh session 下的可达性（OpenClaw workspace 路径 ≠ 当前
    agent workspace，可能需要路径迁移或 symlink 裁决）。
+
+## 8. G4 身份 readback 第一批结果（2026-09-05 补充，auth-service 生产 registry 只读查询）
+
+经 auth-service（port 4001）`lookup-principal` 对全部迁移 owner agent 做生产 registry
+只读查询，**registry 维度全部存在且 active**（含双写时代 legacy id + canonical agt_ id）：
+
+| canonical target agent | principal_id（agt_ 身份） | 状态 |
+|---|---|---|
+| agt_hr-agent | dc702687-6515-4a2a-91ae-e572a9bbd766 | active |
+| agt_blog-agent | fd58881a-fdba-4ef2-9a80-b733671f24f1 | active |
+| agt_daily-thought-agent | 4074e8c2-67f1-409f-830c-1690cc7c64f2 | active |
+| agt_knowledge-curator-agent / agt_3d-print-agent | active（UUID 见查询输出） | active |
+| agt_open-source-agent / agt_security-agent | active | active |
+| agt_podcast-producer-agent / agt_needs-radar-agent / agt_ceo-agent | active | active |
+| agt_family-doctor-2-agent / agt_shopping-list-agent / agt_efficiency-agent | active | active |
+
+结论与影响：
+1. **B5 的「registry 存在性」维度 = 全绿**（M1–M13 全部 owner 均有 canonical agt_ 身份）。
+2. **B5 剩余维度** = fleet 运行面在役证明：`agents.json`/credentials 均在 authsvc 0700 下
+   本轮实测不可读 → 每 job apply 前仍须 G4 的 broker/agents.json readback（「registry
+   active」≠「能在生产 harness 跑 turn」）。
+3. **M4 上游摘除条款解除**：`agt_daily-thought-agent` canonical 身份存在 → packet 2.1
+   保留，TARGET_AGENT 冻结为 agt_ 身份（非 legacy `daily-thought-agent`/2a24b855，
+   规避 agt_ 前缀双身份陷阱）。
+4. Wave 2 各项 gate 由 BLOCKED(B5) 精确化为 BLOCKED(B5-runtime)（仅剩运行面证明）；
+   M1/M5/M6/B2 类 gate 不变。
