@@ -1,0 +1,11 @@
+--- /Library/…/ai.agent-core.runtime.plist	2026-09-01 06:13:24
++++ /Users/yanfenma/workspace/project/dsh-agent-core/docs/evidence/shared-skill-root-activation-v1-20260905/ai.agent-core.runtime.plist.staged-new	2026-09-05 16:32:47
+@@ -8,6 +8,8 @@
+ 		<string>/usr/local/libexec/agent-core/config/agent-credentials.json</string>
+ 		<key>BROKER_AUTH_ORIGIN</key>
+ 		<string>http://127.0.0.1:4001</string>
++		<key>DSH_AGENTS_HOME</key>
++		<string>/Users/yanfenma/.agents</string>
+ 		<key>DSH_AGENT_CHILD_GID</key>
+ 		<string>20</string>
+ 		<key>DSH_AGENT_CHILD_UID</key>
