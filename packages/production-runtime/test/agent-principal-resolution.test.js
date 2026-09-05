@@ -205,10 +205,24 @@ test('no automatic retry: a 500 is surfaced as-is with exactly one auth read', a
 test('constructor: provider seams and bounded deadline are enforced', () => {
   const base = { definition: definition(), authServiceOrigin: ORIGIN, acquireCallerToken: async () => ({ accessToken: 't' }) }
   assert.throws(() => createAgentPrincipalResolutionAccess({ ...base, definition: undefined }), /definition with getAgent/)
-  assert.throws(() => createAgentPrincipalResolutionAccess({ ...base, authServiceOrigin: '' }), /authServiceOrigin/)
+  assert.throws(() => createAgentPrincipalResolutionAccess({ ...base, authServiceOrigin: 42 }), /authServiceOrigin/)
   assert.throws(() => createAgentPrincipalResolutionAccess({ ...base, acquireCallerToken: undefined }), /acquireCallerToken/)
   assert.throws(() => createAgentPrincipalResolutionAccess({ ...base, timeoutMs: 5001 }), /timeoutMs/)
   assert.throws(() => createAgentPrincipalResolutionAccess({ ...base, timeoutMs: 0 }), /timeoutMs/)
+  // An unconfigured origin must NOT break runtime composition (the runtime
+  // boots without an auth origin, like the credential-store fail-closed
+  // posture); the failure surfaces per call instead.
+  const unconfigured = createAgentPrincipalResolutionAccess({
+    definition: definition(),
+    authServiceOrigin: undefined,
+    acquireCallerToken: async () => ({ accessToken: 't' }),
+    fetchImpl: async () => { throw new Error('transport must not be used') },
+  })
+  return resolve(unconfigured).then((res) => {
+    assert.equal(res.ok, false)
+    assert.equal(res.error.code, 'transport_failure')
+    assert.match(res.error.detail, /origin is not configured/)
+  })
 })
 
 test('mapAuthResponse: unit coverage of the closed mapping table', () => {

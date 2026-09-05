@@ -129,8 +129,8 @@ export function createAgentPrincipalResolutionAccess({
   if (definition === undefined || typeof definition.getAgent !== 'function') {
     throw new TypeError('agent-principal-resolution: definition with getAgent is required')
   }
-  if (typeof authServiceOrigin !== 'string' || authServiceOrigin === '') {
-    throw new TypeError('agent-principal-resolution: fixed authServiceOrigin is required')
+  if (authServiceOrigin !== undefined && (typeof authServiceOrigin !== 'string' || authServiceOrigin === '')) {
+    throw new TypeError('agent-principal-resolution: authServiceOrigin must be a non-empty string when provided')
   }
   if (typeof acquireCallerToken !== 'function') {
     throw new TypeError('agent-principal-resolution: acquireCallerToken seam is required')
@@ -151,6 +151,13 @@ export function createAgentPrincipalResolutionAccess({
     const checked = validateResolveArgs(rawArgs)
     if (!checked.ok) return deny('invalid_arguments', checked.detail)
     const { principalId } = checked
+
+    // An unconfigured fixed origin is a deployment wiring fault: fail closed
+    // per call (never at composition time — the runtime must boot without an
+    // auth origin, exactly like the credential-store fail-closed posture).
+    if (typeof authServiceOrigin !== 'string' || authServiceOrigin === '') {
+      return deny('transport_failure', 'the fixed auth-service origin is not configured')
+    }
 
     // ── Trusted runtime-derived caller (never from args, CTR-EPAR-002) ────
     const callerAgentId = context?.callerAgentId
