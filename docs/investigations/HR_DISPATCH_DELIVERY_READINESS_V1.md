@@ -347,3 +347,58 @@ VISIT_ACTIVATION_PRODUCTION_READY=YES + DISPATCH_INTENT_BROKER_PRODUCTION_READY=
 privileged): controlled runbook rounds (isolated-DB conformance, production
 read-only census binding dc702687…/agt_hr-agent, grant applies per
 CTR-HRG-003/CTR-EAPR-007, token proofs, one Lane C canary).
+
+## Production gate round (2026-09-05 night)
+
+Fresh upstream fact (Owner): VISIT_ACTIVATION_DISPATCH_PRODUCTION_V1 = COMPLETE; slot RELEASED.
+This Goal claimed the single production mutation slot (PRODUCTION_SLOT_OWNER =
+HR_DISPATCH_DELIVERY_READINESS_V1).
+
+Fresh read-only production census (nonprivileged surfaces):
+
+- AUTH_PRODUCTION_REVISION = 1.7.0 (contract digest 577a1879…) live via
+  /api/health; process authsvc pid 56983 running snapshot
+  production-auth-service-57258ec… (com.auth-service launchd, KeepAlive).
+- DSH_RUNTIME = authsvc pid 33139 running /usr/local/libexec/agent-core/app
+  (root-owned installed tree, older-generation base + WDA file closures;
+  NO agent-principal-resolution capability deployed — Lane B absent as
+  expected). broker index.js/compose.js deployed variants differ from main
+  generation (pre-forum-V2 / pre-scheduler-history) — closure design = hunk
+  ports onto deployed variants, NOT whole-file replacement;
+  ingress-delivery.js deployed == 51dafbe so the audited guard file applies
+  directly. notification-ingress /health ok; svc-workflow 8989 ok; no other
+  production transaction in flight => PRODUCTION_RUNTIME_LOCK = IDLE.
+- LANE_A/LANE_B grant preimages: production DB readable only as
+  root/authsvc -> preimage+apply delegated to the packet script (vehicle
+  plan/verify runs are fail-closed and receipt-bearing).
+- AGENT_SESSION_SEND_PRODUCTION_STATE: ASM capability file deployed
+  (Sep 5 07:02 envelope-fix era); compose wires the ASM provider; runtime
+  healthy.
+
+Deployment closure built and frozen (all unprivileged):
+
+- auth snapshot production-auth-service-a805556… (git a805556; npm install
+  with x64 toolchain — bcrypt x86_64 verified; dist built; generated
+  runtime-contract 1.8.0 x 9 audiences incl agent-principal-resolution;
+  runtime digest 8fba7214…; unprivileged boot smoke PASS with route 401
+  probes). In-place-per-deploy snapshot convention per auth 1.6.0 deploy
+  precedent; plist candidate swap + bootout/bootstrap + rollback closure.
+- dsh closure: 5 files staged with sha256 (2 new verbatim from merged main;
+  3 ported onto deployed variants: index.js registration hunks, compose.js
+  provider wiring, ingress-delivery.js exact-ID guard); preimage extraction +
+  readback plan in ARTIFACT_MANIFEST.json (manifest_sha256 frozen).
+- ONE Owner execution packet:
+  /Users/yanfenma/workspace/deployment-artifacts/hr-dispatch-delivery-v1/
+  (DEPLOY_HR_DISPATCH_DELIVERY_V1.sh + OWNER_PACKET.md + ARTIFACT_MANIFEST.json +
+  staged/ + preimage/), mirroring the proven auth-bundle-1.6.0 deploy:
+  user-phase self-verification -> sudo re-exec -> frozen verification ->
+  Lane A vehicle plan/apply/verify -> auth smoke(4501/4502)+plist swap+health
+  -> Lane B vehicle plan/apply/verify + route negative probes -> dsh closure
+  copy+readback+kickstart+health -> marker/receipts; --simulate mode =
+  ZERO_PRODUCTION_MUTATION; automatic rollback closures both surfaces.
+
+STATE = OWNER_GATE (native sudo/password — the only non-delegable step).
+OWNER_ACTION_REQUIRED = run the packet (--simulate first, then real).
+Coordinator resumes automatically on DEPLOYMENT_OK: token proofs, Lane C
+composed canary (resolution -> agent_session_send, exactly-once receipts),
+invariants, final readback -> HR_DISPATCH_DELIVERY_PRODUCTION_READY.
