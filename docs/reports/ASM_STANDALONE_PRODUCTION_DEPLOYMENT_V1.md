@@ -97,3 +97,52 @@ GOAL_STATUS                         = COMPLETE
 制品与证据索引：deployment-artifacts/asm-standalone-candidate-v1/（SEALED 25 文件；
 SIM_RESULTS 12/12）；PR #165（census+authority+review）；deployment receipts ×3
 （224401Z 之前旧世代、225945Z ROLLED_BACK、230257Z DEPLOY_OK）。
+
+---
+
+# r2 — ENVELOPE_FIX 收口（2026-09-05 终态增补）
+
+## 背景（修正 r1 判读）
+r1 canary 中效率管家收到的 "failed: outcome_unknown" 并非单纯转述失实——根因是
+parent-rpc-relay 双层传输信封 defect（PR #167 根因）：parent 侧 audit 权威 accepted，
+child relay 把结构化 success 误分类为 outcome_unknown。r1 的 LANE_B=READY 判定因此
+由 Owner 重开为 NOT_YET_FINAL，r2 amendment（PR #168，main aa8fbe5）授权单文件修复。
+
+## 部署与 readback
+```text
+DEPLOY            = RUN_ASM_ENVELOPE_FIX_OWNER.sh DEPLOY_OK 23:37:53Z
+                    （e5d474a6 → ed183a77 == main 9ea30c8 blob；restarts 记 1）
+车辆缺陷（诚实）  = kickstart 缺 -k（对运行中服务 no-op）→ 生产 5131 未重启；
+                    Owner 补 sudo launchctl kickstart -k → 新 pid 63411；车辆已修
+READBACK          = relay 字节 ed183a77 / health ok / Fleet+forum UNCHANGED /
+                    catalog 20（asm/workflow7/scheduler/forum7）恰一次重启
+```
+
+## 真实验证（模型面 RAW + audit 机械双证）
+```text
+A. SCHEDULER（效率管家）:
+   scheduler.create = SUCCESS；RAW 含 jobId f1dda993-… + nextRunAt 2026-09-05T00:28:44Z
+   + autoRetry=false + deleteAfterRun=true；mutation_outcome_unknown = ABSENT；
+   scheduler.list RAW = {"jobs":[…]} 无 {ok,result} 双层包装；无自动重试。
+B. SESSION SEND（效率管家 → blog-agent，B3）:
+   RAW_TOOL_RESULT = {"status":"accepted"}（单层精确；非 outcome_unknown）
+   audit intent/outcome 对 requestId 511ff518 result=accepted handle :a4:g1:s1
+   stderr: blog-agent ready pid=66046；session main RESUMED (534 events)=canonical main；
+   route-chain luna SUCCESS；deliver accepted 恰一次 1000ms
+   DELIVERY_COUNT=1 / NEW_RUN_COUNT=1 / OWN_IDENTITY=PASS / NO_PROPAGATION / NO_PING_PONG
+   / EXACTLY_ONCE=PASS
+   （B2 的 access_denied 来自 agt_hr-agent 调用——grant 边界 fail-closed 正确拒绝，
+   反证 L0 拒绝路径与 envelope 透传正确；openai-codex refresh 报错属 family-steward
+   的 Fleet 面既有问题，与 ASM 无关）
+```
+
+## 最终状态
+```text
+BROKER_RPC_ENVELOPE_FIX_PRODUCTION_ACTIVE = YES
+AGENT_SESSION_SEND_PRODUCTION_READY       = YES
+LANE_B_AGENT_SESSION_SEND                 = PRODUCTION_READY
+DAILY_WORKFLOW_AUTONOMY_READY             = YES
+CORE_RUNTIME_DAILY_AUTONOMY_OVERNIGHT_V1  = COMPLETE
+GOAL_STATUS                               = COMPLETE
+SCHEDULER_TOOL_SURFACE_RESPONSE_FIX       = PRODUCTION_VERIFIED（通知 scheduler lane）
+```
