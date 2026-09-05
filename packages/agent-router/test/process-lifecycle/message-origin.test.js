@@ -31,6 +31,12 @@ function deliveryDeps({ routeChain }) {
       }
       return { id: ref }
     },
+    resolveAgentById: (id) => {
+      if (id === 'agt_unknown-target') {
+        throw Object.assign(new Error('agent-definition: agent not found'), { code: 'AGENT_NOT_FOUND' })
+      }
+      return { id, disabled: false }
+    },
     resolveChannelConversation: async () => { throw new Error('not expected in deliver tests') },
     resolveEffectiveWorkspace: () => { throw new Error('not expected in deliver tests') },
     routeChain,
