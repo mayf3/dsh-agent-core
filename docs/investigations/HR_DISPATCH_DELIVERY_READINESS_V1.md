@@ -171,3 +171,70 @@ production remain disallowed before acceptance; PRODUCTION_APPLY_ALLOWED = NO
 (Visit Activation dispatch still owns the shared mutation slot).
 OWNER_ACTION_REQUIRED = exact-head acceptance of the three reviewed candidates
 (batched single gate).
+
+## Owner acceptance and implementation round (2026-09-05 night)
+
+Owner BATCHED EXACT-HEAD ACCEPTANCE = YES for all three semantic heads
+(9b3b4bd / 0359575 / f3b11d7); review-record commits explicitly not
+substituted. Lifecycle executed:
+
+- AUTH_SERVICE_HR_AGENT_SESSION_SEND_GRANT_V1: accepted at auth tx d77ea94
+  (implementation_authority none->contracts per its section 3;
+  production_apply_authority stays none), merged via PR #54.
+- AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V1: accepted at auth tx
+  b5eef6c (production_apply_authority conditional_controlled_operation
+  ratified per review SPEC_GAP-3), merged via PR #55; auth main bb5b6f2
+  contains both reviewed semantic heads and both transactions.
+- AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1: accepted at dsh tx 30d230a
+  on merged-main branch (merge keeps f3b11d7 reachable); external_authorities
+  pin re-pinned 0359575 -> b5eef6c per spec section 1 + review FOLLOW_UP
+  (byte-identical Auth contracts = no semantic movement, no re-preflight);
+  merged via PR #172; dsh main 51dafbe.
+- Gates at acceptance: auth validate_spec_transition exit 0 (with documented
+  single-element legacy superseded_by equivalence normalization applied
+  identically to both sides — 5 pre-list-discipline records), verify_governance
+  exit 0 + --require-accepted exit 0; dsh transition delta proof (base,base)
+  vs (base,+record) shows ZERO new errors (pre-existing raw-graph
+  non-conformance at main documented and untouched); verify_governance exit 0;
+  dsh structure gate PASS.
+
+IMPLEMENTATION (DEVELOPMENT_PREFLIGHT emitted; all three authorities accepted;
+implementation_authority=contracts):
+
+- Lane B dsh branch codex/principal-agent-resolution-impl-v1 (base 51dafbe):
+  broker manifest agent_resolve_principal + registration; trusted composed
+  provider (fixed Auth origin, redirect rejection, bounded 5s deadline, closed
+  two-field validation, local exact-ID + enabled Definition check after Auth,
+  no retry/cache/writes, caller token via trusted seam, never surfaced);
+  CTR-EPAR-005 A2A ingress exact-ID admission guard (inter_agent origin only;
+  display-name TOCTOU family closed; non-A2A resolution unchanged); tests
+  3+12+5; message-origin harness gains resolveAgentById seam. Commits dd175ae,
+  c3503c5 (cherry-pick of the ASM fixture transport-envelope repair 5f776e6 —
+  the 5 parent_rpc_ambiguous failures were the same pre-existing fixture
+  drift), 4438806 (A/B-proven regression fix: unconfigured auth origin now
+  fails closed per call instead of throwing at composition — compose.test.js
+  was 11/11 at main, 9 failures + hang with the constructor throw).
+  Evidence: broker 282/282; agent-router 309/310 (1 pre-existing
+  feishu-regression TRUSTED_INGRESS failure, reproduced identically at main
+  via detach A/B = NOT MY REGRESSION); provider 12/12; ASM integration 8/8;
+  compose 11/11; structure gate PASS. Runs require production node
+  /usr/local/bin/node (v25.6.1) with proxy env unset.
+- Lane B auth branch codex/principal-resolution-impl-v1 (base bb5b6f2):
+  implementation subagent produced 23 files +2503/-18 with docs/ byte-identical
+  (GOVERNING_SPEC_UNMODIFIED verified): additive CCR entry +
+  1.7.0->1.8.0 additive minor across all linked surfaces per the wake
+  CTR-AW-005 recipe; dedicated resolver/middleware/route
+  (GET /v1/agent-principals/:principal_id/agent, {error: CODE} envelope per
+  review SPEC_GAP-1); grant supply vehicle plan/apply/verify with
+  audience-row + grant + grant_change_audits same-tx materialization (review
+  SPEC_GAP-2 closure) gated behind an explicit env, refusing before any DB
+  connection; fixtures positive 1 + negative 15. MINIMAL_AUTH_V1_BUNDLE_VALID
+  =true; tsc clean; focused tests 37/37 after a harness ordering fix
+  (JWT_SECRET default moved to module top, commit 566f916 — bare tsx --test
+  previously failed 6 route-server tests on the late assignment).
+- Lane A auth branch codex/hr-send-grant-impl-v1: operational
+  plan/census-apply-verify-rollback vehicle + focused disposable tests in
+  progress (offline; production gated by shared slot + native privilege).
+
+PRODUCTION_APPLY_ALLOWED = NO (unchanged; Visit Activation owns the slot).
+BLOCKER_UNION = [] so far at implementation-audit time (audits next).
