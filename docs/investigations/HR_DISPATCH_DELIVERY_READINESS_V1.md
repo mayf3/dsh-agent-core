@@ -402,3 +402,45 @@ OWNER_ACTION_REQUIRED = run the packet (--simulate first, then real).
 Coordinator resumes automatically on DEPLOYMENT_OK: token proofs, Lane C
 composed canary (resolution -> agent_session_send, exactly-once receipts),
 invariants, final readback -> HR_DISPATCH_DELIVERY_PRODUCTION_READY.
+
+## Production apply executed (2026-09-05 23:42 UTC+8)
+
+Owner ran DEPLOY_HR_DISPATCH_DELIVERY_V1.sh (after a --simulate PASS and two
+fail-closed aborts on packet-logic defects, each fixed with zero production
+mutation; defects recorded: prepare-digest vs file-sha confusion; staged
+basename layout; parent-dir vs file existence; credential-store wrapped
+format; Prisma engine perms under strict umask; git dubious-ownership via
+safe.directory; MISSING plist install step in the real path — all folded into
+repo-execution-gotchas memory). Transcript ends DEPLOYMENT_OK:
+
+- LANE_A: session-send Grant LIVE (first run CREATED with full receipt
+  audit_correlation_id 45409482…; rerun LIVE_NOOP write-free; verify PASS;
+  unrelated digest e2e5bff9… invariant).
+- AUTH: 1.8.0 LIVE at /api/health digest 8fba7214… (normalized digest —
+  matches prepare output), process authsvc running snapshot a805556, plist
+  switched (preimage backed up), rollback closure armed.
+- LANE_B auth: audience row + exact read tuple CREATED (audit change
+  45adaf6c…), verify PASS; route negative probes unauth=401.
+- LANE_B runtime: 5-file closure installed+readback; kickstart; pid 17035
+  stable; notification-ingress healthy; agent-principal-resolution capability
+  file present.
+- Canary census: target agt_blog-agent principal fd58881a… single active
+  AGENT row; marker HR-DISPATCH-CANARY-20260905T234229Z-11832.
+
+Independent post-deploy readback (coordinator): all above re-verified live;
+svc-workflow untouched (c4f1fa8d — slot order respected); legacy runtimes
+untouched.
+
+LANE_C drive-channel census (mechanical): scheduler mutation forbidden
+(SCHEDULER_MUTATION=NONE) and agent_wake forbidden; system-runtime
+notification-ingress is auth-unconfigured (fail-closed; provisioning it is
+another goal's accepted closure, not inventable here); product-api disabled;
+no ops turn-injection CLI; user-domain 8791 ingress belongs to the legacy
+runtime (wrong surface). The one legitimate drive = REAL-USER feishu message
+into the HR-bound conversation (canonical production path; visit-goal
+precedent with Owner 话术; gate-policy item 5). Receipt audit
+(agent-session-messaging-audit.jsonl + HR turn evidence) lives under
+/Users/authsvc/.agent-core (root-readable only) -> one read-only root command.
+
+STATE = OWNER_GATE (Lane C real-user drive + one read-only receipt grep).
+OWNER_ACTION_REQUIRED = the two minimal actions in the Lane C packet below.
