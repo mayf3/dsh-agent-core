@@ -155,3 +155,39 @@ NEXT                   = Phase 3 drift analysis + three-piece artifact
                          Owner packet → READY_FOR_DEPLOYMENT
 OWNER_ACTION_REQUIRED  = NONE yet (packet at end of Phase 4)
 ```
+
+---
+
+## ADDENDUM (round-3 fresh check, 2026-09-05): model-3 authoring gap blocks production acceptance steps 1–2
+
+Fresh re-verification during the HOLD round surfaced a precondition gap that the
+round-1/2 evidence masked (the scratch simulation seeded its definition via SQL,
+exactly like `tests/28_visit_activation_v1.rs`, so no API path was exercised):
+
+- At the deploy target svc `22e862a`, `create_draft_version` validates
+  `semanticModelVersion ∈ {1, 2}` only (`src/http/handlers/definitions.rs:268-277`
+  — "semanticModelVersion must be 1 (Legacy) or 2 (Minimal)"); no other accepted
+  endpoint sets a definition version's semantic model. The VAI impl spec is the
+  "phase-1 **runtime core**" slice; model-3 (VISIT_ACTIVATION_V1) definition
+  authoring was never in any accepted surface.
+- Consequence: after deploying planes 1–3, production can poll/wake/report, but
+  **no VISIT_ACTIVATION_V1 instance can ever be created** (no model-3 definition
+  can exist), so Goal acceptance steps 1–2 (create disposable visit → due
+  activation) have an unsatisfied precondition. The visit_activation graph
+  validator IS already wired into draft+publish dispatch (`publish.rs:74`), so
+  the authoring-side constraint is a policy line in the handler, not missing
+  machinery.
+
+Options for the Owner (DECISION 3 in the packet):
+
+| Option | Path | Cost |
+|---|---|---|
+| 3a | Spec AMEND (new mini-spec or VAI amendment) authorizing `semanticModelVersion: 3` through create_draft_version; rebuild + redeploy the svc artifact | clean, audited; adds one rebuild/redeploy cycle to this Goal |
+| 3b | Owner-authorized disposable SQL seed of ONE model-3 definition for verification only | no code change; writes production DB outside the service command surface (against governance spirit) |
+| 3c | Defer acceptance steps 1–8 to the authoring-integration slice; this Goal completes planes 1–3 + broker-face production verification (tools visible, binding-gated poll 200/403) and stops short of final COMPLETE | goal cannot reach COMPLETE this round |
+
+WDA gate re-checked 2026-09-05 ~12:20: `CANARY_RESULT.json` still ABSENT; WDA
+scripts updated 11:25–11:26 (canary debugging in progress) — HOLD stands.
+Production drift probe: live routes still pre-merge (route_not_found), DB max
+migration still 22, GLOBAL_SCHEDULER_READ bindings still 0, runtime pid 72082
+healthy — census findings unchanged.
