@@ -1,6 +1,13 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V2
-status: proposed
+status: accepted
+accepted_date: 2026-09-05
+accepted_by: mayf3
+accepted_reviewed_head: 092d9c16a4ec0f6e8f60468373b1560f7e846565
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_delta_class: lifecycle_provenance_only
+semantic_delta_from_reviewed_head: none
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -331,14 +338,14 @@ separate exact artifact/preimage/rollback/health gate under the Goal mandate.
 
 ## 13. Open questions
 
-OPEN_OWNER_DECISIONS = NONE (only exact-head acceptance remains)
+OPEN_OWNER_DECISIONS = NONE (Owner accepted exact reviewed head on 2026-09-05)
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE
 PARTIAL_SUPERSESSION = NONE
 
 SPEC_GOVERNANCE_MODE = AUTHOR
 AUTHORITY_ACTION = SUPERSEDE
-STATUS = proposed
+STATUS = accepted
 IMPLEMENTATION_AUTHORITY = contracts
 PLAN_LEVEL = BRIEF
 ASSURANCE_LEVEL = CONTROLLED
@@ -346,4 +353,4 @@ DOCS_FIRST_REQUIRED = YES
 CONTRACT_COUNT = 9
 CONTRACTS_WITH_ACCEPTANCE = 9
 AUTHORING_READY_FOR_REVIEW = YES
-NEXT_ACTION = REVIEW
+NEXT_ACTION = INDEPENDENT_FINAL_HEAD_RECHECK
