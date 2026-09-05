@@ -1,0 +1,50 @@
+# PREFLIGHT process matrix 2026-08-30T14:32:05Z
+## runtime process
+  PID   UID USER    STARTED                      COMMAND
+53919   505 authsvc Sun Aug 30 15:33:45 2026     /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core --catchup 0
+## agent child processes (profile agent-core-production) + route env
+=== PID 3501 ===
+ 3501   502 yanfenma Sun Aug 30 18:53:52 2026     /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/harness/apps/cli/lib/bin.js --profile agent-core-production
+AGENT_CORE_CREDENTIALS_FILE=/usr/local/libexec/agent-core/config/agent-credentials.json
+DSH_AGENT_CHILD_GID=20
+DSH_AGENT_CHILD_UID=502
+DSH_AGENT_ID=agt_hr-agent
+DSH_AGENT_MODEL=deepseek-v4-flash
+DSH_AGENT_PROVIDER=oc-go
+DSH_HARNESS_ROOT=/usr/local/libexec/agent-core/harness
+=== PID 3941 ===
+ 3941   502 yanfenma Sun Aug 30 18:55:25 2026     /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/harness/apps/cli/lib/bin.js --profile agent-core-production
+AGENT_CORE_CREDENTIALS_FILE=/usr/local/libexec/agent-core/config/agent-credentials.json
+DSH_AGENT_CHILD_GID=20
+DSH_AGENT_CHILD_UID=502
+DSH_AGENT_ID=agt_podcast-producer-agent
+DSH_AGENT_MODEL=deepseek-v4-flash
+DSH_AGENT_PROVIDER=oc-go
+DSH_HARNESS_ROOT=/usr/local/libexec/agent-core/harness
+=== PID 8045 ===
+ 8045   502 yanfenma Sun Aug 30 19:14:07 2026     /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/harness/apps/cli/lib/bin.js --profile agent-core-production
+AGENT_CORE_CREDENTIALS_FILE=/usr/local/libexec/agent-core/config/agent-credentials.json
+DSH_AGENT_CHILD_GID=20
+DSH_AGENT_CHILD_UID=502
+DSH_AGENT_ID=agt_family-steward-agent
+DSH_AGENT_MODEL=deepseek-v4-flash
+DSH_AGENT_PROVIDER=oc-go
+DSH_HARNESS_ROOT=/usr/local/libexec/agent-core/harness
+=== PID 27448 ===
+27448   502 yanfenma Sun Aug 30 20:29:31 2026     /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/harness/apps/cli/lib/bin.js --profile agent-core-production
+AGENT_CORE_CREDENTIALS_FILE=/usr/local/libexec/agent-core/config/agent-credentials.json
+DSH_AGENT_CHILD_GID=20
+DSH_AGENT_CHILD_UID=502
+DSH_AGENT_ID=agt_shopping-list-agent
+DSH_AGENT_MODEL=deepseek-v4-flash
+DSH_AGENT_PROVIDER=oc-go
+DSH_HARNESS_ROOT=/usr/local/libexec/agent-core/harness
+=== PID 31147 ===
+31147   502 yanfenma Sun Aug 30 20:44:03 2026     /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/harness/apps/cli/lib/bin.js --profile agent-core-production
+AGENT_CORE_CREDENTIALS_FILE=/usr/local/libexec/agent-core/config/agent-credentials.json
+DSH_AGENT_CHILD_GID=20
+DSH_AGENT_CHILD_UID=502
+DSH_AGENT_ID=agt_efficiency-agent
+DSH_AGENT_MODEL=deepseek-v4-flash
+DSH_AGENT_PROVIDER=oc-go
+DSH_HARNESS_ROOT=/usr/local/libexec/agent-core/harness

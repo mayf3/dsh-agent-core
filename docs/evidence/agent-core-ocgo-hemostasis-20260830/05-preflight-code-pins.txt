@@ -1,0 +1,13 @@
+# PREFLIGHT deployed code pins 2026-08-30T14:32:05Z
+ca48020c68a5241b0748d675747d7465f02544ddf37337bb849f3648e2fc6b0a  /usr/local/libexec/agent-core/app/packages/production-runtime/src/entry.js
+f83cfdbcab13f8e88cdef91af53073d81e7885cd72f1d4870621b22ed7a82cbf  /usr/local/libexec/agent-core/app/packages/production-runtime/src/compose.js
+83440aadd5333d10ee29eacd2d1d52ecfd83eb8e451a45693d5ad22b2370f5ee  /usr/local/libexec/agent-core/app/packages/production-runtime/src/model-overrides.js
+e99add385746fe81bf1e9f7c35f6a5eeadf93604cbf0d8c83a4d3e13889a5e91  /usr/local/libexec/agent-core/app/packages/production-runtime/src/paths.js
+74ef61f01f7ce38a1d5d68371d5f32528599ff0e490440be5f453641e2129292  /usr/local/libexec/agent-core/app/packages/agent-router/src/process/env.js
+55f08ab75084d527ac9e268678224b1fdd08121c0dab43c7accfb3fa5f745166  /usr/local/libexec/agent-core/app/packages/agent-router/src/process/spawn.js
+f1ee09b904ec1dcd74d8f3392f8f7c63ef95ff41c6e19b44741e66e2e7837c92  /usr/local/libexec/agent-core/app/packages/agent-router/src/process/agent-process.js
+805c18ea8b087182a5d4375b1cdb3678d46bbf238c17b6c5c48c2954b9f5d776  /usr/local/libexec/agent-core/app/packages/agent-router/src/process-registry.js
+3ac7332957717e70c03b92a682a83ca1e60180140688903c5a746b4c9803db4a  /usr/local/libexec/agent-core/app/packages/agent-definition/src/definition.js
+857a6103bf69e947c71bdbf9a22f3b5fe0e5e1ff569529514aeef8f08190f692  /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs
+c011487165ca717eb4c564d6bcd16c07703ceb8cf756f68fec14e5989c78bef2  /usr/local/libexec/dsh-agent-spawn-helper
+c0226687bb20f45c603ec6fe50f3de16d1c3510c3a803304ec575ef9bc366c62  /usr/local/libexec/agent-core/harness/apps/cli/lib/bin.js
