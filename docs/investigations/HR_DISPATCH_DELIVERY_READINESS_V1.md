@@ -300,3 +300,50 @@ vehicles + focused wrong-target tests (legacy principal receives no grant;
 wrong-principal-by-name denied; unrelated grants byte-invariant) + ONE
 affected-head implementation audit. PRODUCTION_MUTATION = NONE throughout.
 OWNER_ACTION_REQUIRED = exact-head acceptance of the three V2 candidates.
+
+## Subject-correction acceptance and integration round (2026-09-05 night)
+
+Owner BATCHED EXACT-HEAD ACCEPTANCE = YES for the three V2 successors
+(3a5e01e / 87beb77 / eedf469). Executed autonomously:
+
+- Candidate branches pushed VERBATIM before finalization; remote SHAs
+  byte-verified equal (no rebase/amend/squash).
+- auth lifecycle tx 08126b9 (PR #56): both V2s accepted (bodies byte-verified
+  identical to reviewed heads; Lane A implementation_authority -> contracts per
+  its section 3), both V1s -> superseded with reciprocal backlinks + bounded
+  provisioning/admin preservation notes, README rows flipped/added. Gates:
+  validate_spec_transition exit 0 (with the documented legacy list-form
+  equivalence normalization), verify_governance --require-accepted exit 0.
+  auth main -> dde3967.
+- dsh lifecycle tx 4d4b2ff (PR #173): dsh V2 accepted (accepted_reviewed_spec_commit
+  = eedf469; upstream pin re-affirmed — auth V2 @ 87beb77 now an ancestor of
+  auth main, body byte-identical), dsh V1 -> superseded + backlink, README
+  updated. Gates: transition delta proof zero new errors vs (base,base);
+  verify_governance --require-accepted exit 0; structure gate PASS.
+  dsh main -> 365296a.
+- Implementation mechanical subject corrections (reused audited candidates,
+  no architecture change): auth Lane A vehicle ce0e4e1 (PR #57; PRINCIPAL_ID
+  -> dc702687…, AGENT_ID -> agt_hr-agent, LEGACY_PRINCIPAL_ID, wrong-target
+  negative tests, 24/24); auth Lane B vehicle 326c5fb (PR #58; FIXED_PRINCIPAL_ID
+  -> dc702687…, legacy-only-DB negative test, 38/38); dsh 10f4cae (PR #174;
+  implementation subject-generic UNCHANGED, focused wrong-target test proves
+  legacy agent_id 'hr-agent' fails the stored-id grammar fail-closed, 13/13).
+- ONE affected-head independent implementation audit (agent_79f41474):
+  VERDICT x3 = PASS, BLOCKER_UNION = [], WRONG_TARGET_PROOF = PASS (all five
+  Owner bullets), READY_FOR_PRODUCTION_DEPENDENCY = YES. Gates rerun by the
+  auditor: 24/24, 38/38, 21/21, tsc clean x2, structure PASS.
+- All impl branches merged: auth main a805556 (PRs #57/#58), dsh main ebd5b56
+  (PR #174). Post-merge readback: accepted V2 statuses + superseded V1
+  backlinks + corrected vehicle constants at merged mains; focused suites
+  21/21 at detached merged dsh main.
+
+WRONG_TARGET = CLOSED. CURRENT_HR_SUBJECT = dc702687-6515-4a2a-91ae-e572a9bbd766
+(agt_hr-agent). HR_AGENT_DELIVERY_IMPLEMENTATION_READY = YES on merged mains.
+
+Remaining work is exclusively production-gated (shared mutation slot owned by
+VISIT_ACTIVATION_DISPATCH_PRODUCTION_V1; release needs fresh
+VISIT_ACTIVATION_PRODUCTION_READY=YES + DISPATCH_INTENT_BROKER_PRODUCTION_READY=YES
++ PRODUCTION_RUNTIME_LOCK=IDLE; plus native Owner authorization where
+privileged): controlled runbook rounds (isolated-DB conformance, production
+read-only census binding dc702687…/agt_hr-agent, grant applies per
+CTR-HRG-003/CTR-EAPR-007, token proofs, one Lane C canary).
