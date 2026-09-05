@@ -260,3 +260,43 @@ mutation slot release (VISIT_ACTIVATION_PRODUCTION_READY=YES +
 DISPATCH_INTENT_BROKER_PRODUCTION_READY=YES + PRODUCTION_RUNTIME_LOCK=IDLE)
 and native Owner authorization where privileged.
 OWNER_ACTION_REQUIRED = NONE at this stage.
+
+
+## Identity-binding reconciliation round (2026-09-05 night)
+
+Owner fresh identity fact: current HR business Principal =
+dc702687-6515-4a2a-91ae-e572a9bbd766 (agent_id agt_hr-agent); legacy
+bc970ced-710f-4479-9ff0-e295a1c59424 (hr-agent) is a bounded
+provisioning/admin actor only. SOURCE_MERGE = HOLD. Exact-UUID census proved
+all three accepted authorities + the two grant vehicles bind the LEGACY
+principal as the HR business subject (V1 lines: Lane A spec :30/:140 +
+vehicle :85; auth Lane B CTR-EAPR-005:179 + vehicle FIXED_PRINCIPAL_ID :51;
+dsh CTR-EPAR-007:213; dsh resolution implementation itself subject-generic).
+WRONG_TARGET_SHIP_BLOCKER = YES; NEW_AUTHORITY_REQUIRED = YES; MERGE_ALLOWED
+= NO. Governance form per SPEC_FORMAT_V0 §14.3: whole-Spec successors (new
+Spec IDs), not in-place amendment.
+
+Three V2 successor candidates authored + ONE independent exact-head review
+(ACCEPT, ACCEPT, REVISE-on-one-front-matter-blocker) + one-line fix per the
+reviewer's MINIMAL_CLOSURE + delta re-audit PASS:
+
+- AUTH_SERVICE_HR_AGENT_SESSION_SEND_GRANT_V2 @ 3a5e01e (auth branch
+  codex/hr-subject-correction-v2)
+- AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V2 @ 87beb77 (same branch)
+- AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2 @ eedf469 (dsh branch
+  codex/principal-resolution-subject-correction-v2; pins auth V2 @ 87beb77,
+  re-affirmed at atomic acceptance)
+
+Sole semantic content of each V2: the subject swap
+bc970ced/hr-agent -> dc702687/agt_hr-agent + normative legacy-exclusion MUST
+NOT clauses + supersession section; all capability semantics byte-preserved
+(minimal send authorization only; zero scheduler.admin/agent_wake/cross-agent
+mutation/credential/admin creep). Durable record:
+docs/audits/HR_SUBJECT_CORRECTION_REVIEW_RECORD_V1.md.
+
+STATE = READY_FOR_OWNER_ACCEPTANCE (one batched exact-head gate over the
+three V2 heads). After acceptance: mechanical subject swap in the two grant
+vehicles + focused wrong-target tests (legacy principal receives no grant;
+wrong-principal-by-name denied; unrelated grants byte-invariant) + ONE
+affected-head implementation audit. PRODUCTION_MUTATION = NONE throughout.
+OWNER_ACTION_REQUIRED = exact-head acceptance of the three V2 candidates.
