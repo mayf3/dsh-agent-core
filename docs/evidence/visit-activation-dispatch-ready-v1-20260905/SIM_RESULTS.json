@@ -1,0 +1,100 @@
+{
+  "sim": "visit-activation-dispatch-v1-phase4",
+  "binarySourceSha": "22e862af8e47050ae1bf9e7c5db7eb22a4d81ee7",
+  "allOk": true,
+  "steps": [
+    {
+      "step": "scratch_db_created",
+      "ok": true
+    },
+    {
+      "step": "simulation_token_local_jwks",
+      "ok": true,
+      "kid": "vad-sim-1788581265",
+      "note": "SIMULATION ONLY: locally generated JWKS; protocol path exercised, production auth endpoint NOT used (credential dir is authsvc-owned, unreadable from agent shell)"
+    },
+    {
+      "step": "boot_healthz",
+      "ok": true
+    },
+    {
+      "step": "migrations_0023_applied",
+      "ok": true,
+      "maxVersion": 23
+    },
+    {
+      "step": "version_sha_clean",
+      "ok": true
+    },
+    {
+      "step": "due_poll_failclosed_403",
+      "ok": true
+    },
+    {
+      "step": "provisioning_put_scheduler_read",
+      "ok": true,
+      "http": 200
+    },
+    {
+      "step": "due_poll_empty_200",
+      "ok": true
+    },
+    {
+      "step": "wake_route_404_contract",
+      "ok": true
+    },
+    {
+      "step": "seed_v1_definition",
+      "ok": true
+    },
+    {
+      "step": "create_instance",
+      "ok": true,
+      "http": 201,
+      "instanceId": "318731e2-b7aa-428a-85e5-28bcd085bff5",
+      "entryVisitId": "d619b149-16f0-4a21-a4db-798b63d72187",
+      "stateVersion": 1
+    },
+    {
+      "step": "due_poll_sees_entry_intent",
+      "ok": true
+    },
+    {
+      "step": "projection_exact_7_fields",
+      "ok": true,
+      "keys": "createdAt,dispatchIntentId,nextEligibleAt,nodeVisitId,ownerPrincipalId,updatedAt,workflowInstanceId"
+    },
+    {
+      "step": "identity_stable_across_polls",
+      "ok": true,
+      "dispatchIntentId": "0c2350ff-60be-4419-bbb2-8c1ddcba7891"
+    },
+    {
+      "step": "transition_advance1",
+      "ok": true,
+      "newStateVersion": 2,
+      "newVisitId": "3b8fb88b-ffff-43f3-8a57-b40a209ca46a"
+    },
+    {
+      "step": "closed_intent_leaves_due_set",
+      "ok": true
+    },
+    {
+      "step": "work_node_intent_visible_with_assignee",
+      "ok": true,
+      "ownerPrincipalId": "6e1a11d1-1111-4222-8333-444455556666"
+    },
+    {
+      "step": "wake_stale_version_durable_noop",
+      "ok": true
+    },
+    {
+      "step": "wake_already_due_durable_noop",
+      "ok": true
+    },
+    {
+      "step": "archive_failclosed_active_activation",
+      "ok": true
+    }
+  ]
+}
