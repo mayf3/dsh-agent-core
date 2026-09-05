@@ -177,6 +177,7 @@ test('TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the r
     feishuChatId: 'oc_exact_chat',
     feishuConversationId: 'oc_exact_chat:topic_exact',
     feishuMessageId: 'om_exact_message',
+    feishuSenderOpenId: 'ou_test',
   })
   assert.equal(Object.isFrozen(trusted), true)
   assert.notEqual(trusted.feishuChatId, trusted.feishuConversationId,
