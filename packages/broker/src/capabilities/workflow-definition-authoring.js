@@ -113,7 +113,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
         properties: {
           domainId: { type: 'string' }, definitionId: { type: 'string' }, contextSchema: { type: 'json' },
           jsonSchemaDialect: { type: 'string' }, validatorVersion: { type: 'string' }, metadata: { type: 'json' },
-          semanticModelVersion: { type: 'integer', enum: [1, 2] },
+          semanticModelVersion: { type: 'integer', enum: [1, 2, 3] },
         },
         required: ['domainId', 'definitionId'],
       },

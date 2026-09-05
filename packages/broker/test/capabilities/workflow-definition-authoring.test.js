@@ -149,3 +149,35 @@ test('disposable local chain publishes a version then workflow_execute creates f
   ])
   await token.close(); await svc.close()
 })
+
+
+test('model 3 catalog and wire preserve exact supported numbers and omission; invalid models do not write', async (t) => {
+  const { definition: catalog } = buildToolDefinition({ manifest: manifest(), handlers: {} })
+  assert.deepEqual(catalog.parameters.semanticModelVersion.enum, [1, 2, 3])
+  const token = await startTokenServer()
+  t.after(() => token.close())
+  const svc = await startMockServer((_req, res) => json(res, 201, { definitionVersionId: 'v' }))
+  t.after(() => svc.close())
+  const transport = createHttpTransport({ credentialProvider: { getCredential: async () => ({ clientId: 'c', clientSecret: 's' }) }, targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin })
+  const author = wire(manifest(), transport).definition
+  const base = { operation: 'create_draft_version', domainId: 'd', definitionId: 'x' }
+  for (const semanticModelVersion of [0, 4, '3', null, 1.5]) {
+    const result = await author.execute({ ...base, semanticModelVersion })
+    assert.equal(result.ok, false)
+    assert.equal(result.error.code, 'invalid_arguments')
+  }
+  assert.equal(svc.requests.length, 0)
+  assert.equal(token.requests.length, 0)
+  for (const semanticModelVersion of [1, 2, 3]) {
+    assert.equal((await author.execute({ ...base, semanticModelVersion })).ok, true)
+    assert.deepEqual(svc.requests.at(-1).body, { semanticModelVersion })
+  }
+  assert.equal((await author.execute(base)).ok, true)
+  assert.equal(svc.requests.at(-1).body, undefined)
+  assert.equal(svc.requests.length, 4)
+  assert.ok(svc.requests.every((r) => r.method === 'POST' && r.pathname === '/internal/v1/domains/d/definitions/x/versions'))
+  assert.equal(new Set(svc.requests.map((r) => r.headers['idempotency-key'])).size, 4)
+  for (const op of manifest().operations.filter((op) => op.name !== 'create_draft_version')) {
+    assert.equal(op.arguments.properties?.semanticModelVersion, undefined)
+  }
+})
