@@ -214,7 +214,11 @@ function gatewayCall(runtime, { agentId, sourceTurnExecutionId, args }) {
   })
   const relayHandlers = createRelayHandlers(
     agentSessionMessagingManifest,
-    (call) => parentHandler(BROKER_RPC_METHOD, call, { turnExecutionId: sourceTurnExecutionId }),
+    // The real RPC wire wraps the parent handler's business envelope.
+    async (call) => ({
+      ok: true,
+      result: await parentHandler(BROKER_RPC_METHOD, call, { turnExecutionId: sourceTurnExecutionId }),
+    }),
   )
   return invoke(
     agentSessionMessagingManifest,
