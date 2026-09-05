@@ -1,22 +1,22 @@
 {
   "schema_version": 1,
   "distribution": "development-governance-v0",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "source_repository": "mayf3/agent-development-governance",
-  "source_commit": "3de35f8617616dda4c717233899d6a93a634d5d8",
-  "distribution_manifest_sha256": "c84f6557c7c9de404ebce81440d31d2febbc239dc16c0d0e504f94179c774eaf",
+  "source_commit": "0d61433339ef563f82307b70120d9fcee168cdab",
+  "distribution_manifest_sha256": "f4aa7779623e670a384195ccc40e509fb5600ddfb97363f8b907386fffbceca2",
   "adoption": {
     "mode": "vendored",
     "status": "accepted",
     "prepared_by": "ZCode / re-vendor-adoption-preparation-agent",
-    "prepared_at": "2026-09-04T00:13:38Z",
+    "prepared_at": "2026-09-04T23:54:32Z",
     "accepted_by": "mayf3",
-    "accepted_at": "2026-09-04T15:11:51Z"
+    "accepted_at": "2026-09-05T00:21:28Z"
   },
   "files": [
     {
       "path": ".agents/README.md",
-      "sha256": "5e134a23424e9fae9ca2c92f38fd899f2321ed62ea01abb4fa326ce28371bf14",
+      "sha256": "1fff395516880b972d785ad898298a49d5ea8dbcc3dc031bebef23973b29906d",
       "size": 13167
     },
     {
@@ -66,8 +66,8 @@
     },
     {
       "path": ".agents/tools/validate_spec_transition.py",
-      "sha256": "b6afa390a70854c7c53174622db1430f13eabf3662a958d5527c7094f3dc0643",
-      "size": 12088
+      "sha256": "1f34e8fe1a52464a60893b4ef7ca1493aa14cac836fb1e940ec7a3c80859ce6a",
+      "size": 15168
     },
     {
       "path": ".agents/tools/validate_governance_route.py",

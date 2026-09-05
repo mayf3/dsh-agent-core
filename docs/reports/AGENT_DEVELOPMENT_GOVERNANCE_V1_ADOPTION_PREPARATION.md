@@ -362,3 +362,52 @@ READY_FOR_OWNER_ACCEPTANCE = NO
 ADOPTION_ACCEPTED = NO
 MERGE_READY = NO
 ```
+
+---
+
+## v1.0.3 forward update (2026-09-05, MASTER GOAL GOVERNANCE_TRANSITION_CHAIN_CONFORMANCE_RECONCILIATION_V1, LANE_D)
+
+Honest continuation of this preparation narrative. The v1.0.1 adoption was
+merged (PR #140, `237d422`), and an independent post-merge conformance audit
+established `OWNER_MANDATE_CONFORMANCE = FAIL` for that round: the raw
+accepted-state full-graph transition exited 1 (4 errors) and was downgraded
+to "TOOLING_DEBT" without Owner authorization before merge. The Owner ruled
+FORWARD_RECONCILE_WITHOUT_AUTOMATIC_ROLLBACK and issued Master Goal
+`GOVERNANCE_TRANSITION_CHAIN_CONFORMANCE_RECONCILIATION_V1`. The persistent
+record is `docs/investigations/GOVERNANCE_V1_0_1_MANDATE_CONFORMANCE_RECONCILIATION_V1`;
+the original v1.0.1-round records above are retained unchanged, including
+their reliance on input normalization and the non-blocking classification —
+they are historical facts, not precedents.
+
+This update prepares the consumer adoption of the exact upstream v1.0.3
+patch (annotated tag object `008214f673d11dd345fa1d4416036d1c0f25314a`
+peeling to `0d61433339ef563f82307b70120d9fcee168cdab`, manifest SHA-256
+`f4aa7779623e670a384195ccc40e509fb5600ddfb97363f8b907386fffbceca2`), whose
+validator fix removes the tool-side need for any normalization or exemption.
+Proposed successor: `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2`
+(`supersedes = [AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1]`; V1 is accepted
+on main, so the direct successor edge is legal).
+
+### Executed this round (author-side, supporting evidence)
+
+```text
+PREPARATION_BASE = aa8fbe5 (current main; includes 237d422)
+VENDOR_DRY_RUN = exit 0, "No files written", zero-dirty tree
+VENDOR_APPLY = exit 0; 25/25 manifest paths byte-exact vs upstream v1.0.3
+CONTENT_DELTA_VS_V1_0_1_VENDORED_SET = 3 files (.agents/README.md version line;
+  validate_spec_transition.py fix dec8944->7f95666; governance.lock.json)
+MODE_BIT_NOTE = vendor CLI dropped exec bits on verify_governance.py /
+  validate_governance_route.py (content unchanged); committed modes restored 100755
+  (upstream TOOLING_DEBT, recorded since the v1.0.0 round)
+VERIFY_GOVERNANCE_PROPOSED = exit 0
+PY_COMPILE = exit 0
+ROUTE_FIXTURES = 0 / 1 / 2 PASS
+RAW_TRANSITION_PROPOSED_FULL_GRAPH = exit 0 (RKGV1+V0+V1 base -> +V2 proposed, zero normalization)
+RAW_TRANSITION_MAIN_SELF = exit 0
+OLD_V1_0_1_VALIDATOR_SAME_INPUTS = exit 1 (governed_by/supersedes array failures) —
+  the obligation gap this adoption closes
+LOCK = proposed / accepted_by=null / accepted_at=null;
+  prepared_by="ZCode / re-vendor-adoption-preparation-agent"; prepared_at=2026-09-04T23:54:32Z
+ADOPTION_STATUS = proposed
+NON_WAIVABLE_GATE_AHEAD = raw full-graph exit 0 required on accepted candidate AND merged main
+```

@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1
-status: accepted
+status: superseded
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
@@ -29,18 +29,15 @@ external_authorities:
     relation: constrained_by
 supersedes:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
-superseded_by: null
+superseded_by: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2
 owners:
   - mayf3
 ---
 
 # Agent Development Governance v1.0.1 Adoption V1
 
-> 状态：**accepted**；独立 proposed-Head 审计（REVISE→最小修订）与唯一一次 exact-Head
-> re-audit（ACCEPT / BLOCKERS = 0）通过后，由 mayf3 依据 Owner-issued Execution
-> Mandate `GOVERNANCE_V1_0_1_CONSUMER_ADOPTION_TO_MAIN_V1` 完成 acceptance。
-> reviewed head `9b42fc0dfeeede6213a825687e79dda860e404d5` 的内容在 lifecycle
-> finalization 中保持不变；本 Spec 不授权任何产品 implementation。
+> 状态：**superseded**；由 `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2`（Governance v1.0.3 adoption，accepted 2026-09-05）完整取代。历史 normative meaning 保持不变。
+> 本 Spec 不授权任何产品 implementation。
 
 ## 1. Goal
 
