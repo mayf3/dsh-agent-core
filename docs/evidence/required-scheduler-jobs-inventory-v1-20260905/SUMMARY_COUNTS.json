@@ -1,0 +1,27 @@
+{
+ "snapshot_total": 279,
+ "enabled_total": 126,
+ "disabled_total": 153,
+ "buckets": {
+  "MIGRATE:M1-工作流唤醒派发": 2,
+  "MIGRATE:M10-播客流水线": 2,
+  "MIGRATE:M11-GitHub泄露扫描": 2,
+  "MIGRATE:M12-需求调研族": 10,
+  "MIGRATE:M13-Owner管线监督": 2,
+  "MIGRATE:M2-HR档案同步": 1,
+  "MIGRATE:M3-每日任务早报": 1,
+  "MIGRATE:M4-博客随想流水线": 2,
+  "MIGRATE:M5-stock-agent割接包": 6,
+  "MIGRATE:M6-论坛动态与周报": 2,
+  "MIGRATE:M7-Wiki维护族": 4,
+  "MIGRATE:M8-家庭提醒与健康": 5,
+  "MIGRATE:M9-数学练习打印": 1,
+  "RETIRE:RETIRE-disabled": 1,
+  "RETIRE:RETIRE-disabled-longtail": 150,
+  "RETIRE:RETIRE-dup-healthcheck": 1,
+  "RETIRE:RETIRE-lifestyle-content": 12,
+  "RETIRE:RETIRE-meta-learning": 73,
+  "RETIRE:RETIRE-selfevo": 1,
+  "RETIRE:RETIRE-stale-oneshot": 1
+ }
+}
