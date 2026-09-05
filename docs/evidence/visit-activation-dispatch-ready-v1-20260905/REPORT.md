@@ -64,6 +64,14 @@ Net: the Goal's acceptance script (steps 1–8) rehearses green end-to-end on th
 real artifact; DISPATCH_IDEMPOTENCY_COORDINATE = `dispatchIntentId` empirically
 holds (steps 7–8).
 
+**Production precondition caveat (found in the round-3 fresh check, 2026-09-05):**
+the scratch rehearsal seeded its definition via SQL (mirroring tests/28); the
+deploy target's authoring API caps `semanticModelVersion` at {1, 2}
+(`definitions.rs:268-277`), so production has NO path to a model-3 definition
+until an amendment (3a), an Owner-authorized seed (3b), or the authoring slice
+(3c) lands. Recorded as packet DECISION 3; does not invalidate the artifact or
+the runtime-contract evidence above.
+
 ## Deployment plan (Phase 5 — HOLD until WDA gate clears)
 
 ```text
