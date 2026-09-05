@@ -256,12 +256,25 @@ function assertNonEmptyString(value, what) {
   return value
 }
 
+/**
+ * Per-route child-env credential omissions. A subscription (ChatGPT
+ * OAuth) route must never inherit the legacy global oc-go env credentials:
+ * env.js injects OPENCODE_GO_API_KEY from <home>/.credentials.yaml into
+ * every spawn and the launchd parent can carry OC_GO_API_KEY, either of
+ * which would leave the Luna child able to reach the wrong provider
+ * (Parent V2 §8/§10: Luna uses ONLY the in-place OAuth store; no silent
+ * success with a wrong provider). A builtin route keeps the legacy
+ * byte-identical single omission.
+ */
+const BUILTIN_OMIT_ENV = Object.freeze(['OPENAI_API_KEY'])
+const SUBSCRIPTION_OMIT_ENV = Object.freeze(['OC_GO_API_KEY', 'OPENAI_API_KEY', 'OPENCODE_GO_API_KEY'])
+
 /** One resolved chain route entry: frozen process config + reuse identity. */
 function makeChainRoute(routeRef, route) {
   const processConfig = Object.freeze({
     provider: route.provider,
     model: route.model,
-    omitEnv: Object.freeze(['OPENAI_API_KEY']),
+    omitEnv: route.routeKind === 'subscription' ? SUBSCRIPTION_OMIT_ENV : BUILTIN_OMIT_ENV,
     ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),
     // DEC-IMPL-011: only a subscription route carries the provisioning
     // block; a builtin processConfig has NO subscription key, so the spawn
