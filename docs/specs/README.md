@@ -220,6 +220,12 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 |---|---|---|---|
 | `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |
 
+## HR dispatch delivery resolution authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1` | accepted (PR pending merge, reviewed head f3b11d7…, Owner batched exact-head acceptance 2026-09-05) | contracts（生产 apply 另受 shared mutation slot + controlled runbook 约束，`production_apply_authority: conditional_controlled_operation`） | HR_DISPATCH_DELIVERY_READINESS_V1 Lane B：只读 capability `agent_resolve_principal`（exact AGENT Principal UUID → canonical enabled agentId；trusted-caller-only、fixed Auth origin/path、audience `agent-principal-resolution` × `auth.agent.resolve`、closed 两字段响应、全族 fail-closed 404/409/422/500/504→lowercase 映射）+ A2A Router ingress exact-ID admission guard（闭合 resolveAgentRef display-name fallback TOCTOU 错投族；不动 ASM 三字段 schema/授权/receipt/no-replay）；上游 = auth `AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V1` accepted @ b5eef6cd…（depends_on pin）；禁止 second identity source / display-name guessing / dispatcher / agent_wake；Lane C 组合 canary 另受 shared slot 释放条件约束 |
+
 ## Scheduler production state reconciliation authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |

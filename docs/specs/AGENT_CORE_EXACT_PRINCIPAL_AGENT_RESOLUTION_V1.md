@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -15,10 +15,29 @@ governed_by:
 external_authorities:
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V1
-    revision: 0359575dd1481aa5e6c294a495fbaabce97e40bf
+    revision: b5eef6cdf00aa9ebb581f6a18adbae8d975f9f26
     relation: depends_on
 supersedes: []
 superseded_by: null
+accepted_date: 2026-09-05
+accepted_by: mayf3
+accepted_reviewed_spec_commit: f3b11d78f4e38aa9f60caa0d9b3c5ce7dc6abfa2
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner BATCHED EXACT-HEAD ACCEPTANCE = YES on 2026-09-05 for the three
+  HR_DISPATCH_DELIVERY_READINESS_V1 authority candidates, binding this Spec at
+  reviewed semantic head f3b11d78f4e38aa9f60caa0d9b3c5ce7dc6abfa2 after one
+  independent first review (ACCEPT, BLOCKERS = 0, MERGE_READY = YES,
+  UPSTREAM_PIN_CONSISTENCY = PASS one-for-one; review record 2f6fd7e). The
+  external_authorities revision pin is updated 0359575dd… -> b5eef6cdf… (the
+  accepted Auth acceptance-transaction revision, reachable from auth main
+  bb5b6f2) exactly as this Spec's section 1 requires and the review FOLLOW_UP
+  directs; the pinned Auth contracts are byte-identical between the two
+  revisions, so there is no semantic movement and no re-preflight is triggered.
+  The reviewed normative body is otherwise preserved byte-for-byte. The review
+  SPEC_GAP (credential_missing vs credential_unavailable naming) and
+  TOOLING_DEBT (500-line legacy-file ceiling) stay implementation-preflight
+  obligations, not shipping blockers.
 owners:
   - mayf3
 ---
