@@ -118,3 +118,15 @@ read-only subagent 全项机械复核（A Authority / B main 实现 / C 测试�
 
 Upstream 漂移备注（审计发现，pin 不失效）：census 后 origin/main 前移 4bb01e0 → 513c691（PR #121，仅 agent-router 测试文件，broker/spec 零变化）；auth github/main 前移 ae6da9a → bb5b6f2（docs-only lifecycle），registry 内容实测不变。packet 制品 pin（4bb01e0）与 auth pin（ae6da9a）继续有效；部署轮执行时以当时 main 的 broker/forum 面仍为上述 sha256 为前置校验。
 
+## 12. OWNER FREEZE RULING — GOAL 收口到生产 Gate（2026-09-05）
+
+Owner 裁定本 Goal 收口到生产 Gate 前，冻结全部已达成状态，不再调查或实施：
+
+- **GOAL_STATUS = READY_FOR_PRODUCTION_GATE**；SOURCE_READY=YES（dsh 4bb01e0，337/337 + 结构门禁 PASS）；V3 = PROPOSED / OUT_OF_SCOPE；DEPLOYMENT_PACKET_READY=YES；BROKER_LIVE_FACE=PRE_V2；AUTH_LIVE_FORUM_MODERATE_REGISTERED=NO；MODERATOR_GRANT_LIVE=NOT_READY；SVC_FORUM_CONSUMER=READY@502cfca；BLOCKERS=[]；PRODUCTION_APPLY_ALLOWED=NO（slot 未确认 FREE + CTR-FMG-016 独立授权要求）。
+- **OWNER_ACTION_REQUIRED = DEFERRED_UNTIL_PRODUCTION_WINDOW**（非 NONE）。
+- **冻结清单**：accepted V2 Authority / source implementation / 337-337 evidence / broker deployment closure / auth registry+grant census / svc-forum consumer census / canary design / rollback+preimage packet。除非 FRESH_PRODUCTION_REGRESSION=YES 不重新调查。
+- **禁止**：改 V3、重做 source audit、重做 implementation、改 workflow.js、搭车 Visit Activation、提前改 Auth DB、提前部署 Broker、占用 shared mutation slot。
+- **RESUME CONDITION**：仅当 `SHARED_PRODUCTION_MUTATION_SLOT = FREE`，fresh Agent 以 RESUME SAME GOAL = FORUM_ADMIN_MODERATOR_PRODUCTION_V1、CURRENT_PHASE = PRODUCTION_APPLY 恢复。FIRST ACTION = fresh readback（broker preimage / auth runtime+registry preimage / moderator Grant preimage / svc-forum health / mutation slot），确认零 drift 后生成 ONE_OWNER_EXECUTION_PACKET，一次性绑定 exact accepted Authority、broker closure、auth deployment closure、moderator Agent / Principal / Client / audience / scopes、reason、rollback、canary——Owner Gate 通过后才允许生产 mutation。
+- GOAL_HANDOFF_COMPLETE = YES；CURRENT_AGENT = STOP。
+
+
