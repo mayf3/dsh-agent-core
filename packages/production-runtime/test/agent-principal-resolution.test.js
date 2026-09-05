@@ -225,6 +225,21 @@ test('constructor: provider seams and bounded deadline are enforced', () => {
   })
 })
 
+test('wrong-target: the legacy HR agent_id spelling fails closed at the stored-id grammar (V2 subject correction)', async () => {
+  // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2 corrects the business
+  // subject to dc702687…/agt_hr-agent; the legacy OpenClaw-era identity
+  // resolves in Auth to agent_id 'hr-agent', which does NOT satisfy the
+  // ^agt_[a-z0-9-]+$ stored-id grammar — the composed read fails closed as
+  // identity_resolution_unavailable and can never deliver to the legacy
+  // identity by name or by spelling.
+  const legacy = makeProvider({ body: { principalId: UUID, agentId: 'hr-agent' } })
+  const res = await resolve(legacy.provider)
+  assert.equal(res.ok, false)
+  assert.equal(res.error.code, 'identity_resolution_unavailable')
+  assert.match(res.error.detail, /stored-id grammar/)
+  assert.equal(legacy.calls.length, 1, 'no retry after the fail-closed classification')
+})
+
 test('mapAuthResponse: unit coverage of the closed mapping table', () => {
   assert.equal(mapAuthResponse({ status: 200, body: { principalId: UUID, agentId: AGENT_ID } }).kind, 'ok')
   const unavailable = mapAuthResponse({ status: 503, body: undefined })
