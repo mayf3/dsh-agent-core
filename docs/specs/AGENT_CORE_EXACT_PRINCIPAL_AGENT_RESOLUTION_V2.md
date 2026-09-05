@@ -1,6 +1,23 @@
 ---
 spec_id: AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2
-status: proposed
+status: accepted
+accepted_date: 2026-09-05
+accepted_by: mayf3
+accepted_reviewed_spec_commit: eedf4690d47df12b5db89961e4e6792945472835
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner BATCHED EXACT-HEAD ACCEPTANCE = YES on 2026-09-05 for the three
+  HR_DISPATCH_DELIVERY_READINESS_V1 subject-correction successors, binding
+  this V2 at reviewed semantic head
+  eedf4690d47df12b5db89961e4e6792945472835 (round-1 review REVISE on one
+  front-matter metadata blocker; exact one-line repair per the reviewer's
+  MINIMAL_CLOSURE; delta re-audit PASS; pushed verbatim and remote-verified
+  before finalization). The upstream pin (auth
+  AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V2 @ 87beb77) is re-affirmed:
+  that reviewed revision is now an ancestor of auth main dde3967 with its
+  normative body byte-identical to the accepted auth V2. Acceptance is atomic
+  with V1 -> superseded (reciprocal backlink). Reviewed normative body
+  preserved byte-for-byte.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts

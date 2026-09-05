@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -18,11 +18,18 @@ external_authorities:
     revision: b5eef6cdf00aa9ebb581f6a18adbae8d975f9f26
     relation: depends_on
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2
 accepted_date: 2026-09-05
 accepted_by: mayf3
 accepted_reviewed_spec_commit: f3b11d78f4e38aa9f60caa0d9b3c5ce7dc6abfa2
 acceptance_review_verdict: PASS
+superseded_note: >-
+  Superseded 2026-09-05 by AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2
+  (whole-Spec subject successor: canary/proof subject bc970ced…/hr-agent ->
+  dc702687…/agt_hr-agent per Owner fresh identity fact). Its subject-generic
+  resolution and exact-ID admission contracts remain in force verbatim through
+  V2; the legacy Principal is no longer a valid business assignee/canary
+  subject (its agent_id grammar already fails closed downstream).
 acceptance_authority_basis: >-
   Owner BATCHED EXACT-HEAD ACCEPTANCE = YES on 2026-09-05 for the three
   HR_DISPATCH_DELIVERY_READINESS_V1 authority candidates, binding this Spec at
