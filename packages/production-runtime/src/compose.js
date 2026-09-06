@@ -329,7 +329,7 @@ export async function composeProductionRuntime(options = {}) {
 
   const productApiCfg = opts.productApi ?? {}
   const productApi = applyProductApi(ctx, {
-    workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.WORKFLOW_ADMISSION_AUTH_JWKS_URL }),
+    workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
