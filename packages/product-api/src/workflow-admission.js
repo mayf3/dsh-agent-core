@@ -1,11 +1,15 @@
-import { createHash } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
 import { createJwksTokenVerifier } from './scheduler-auth.js'
 
-const PREFIX = '/v1/workflow-admission/agents'
-const CALLER = 'cedb954a-3d99-4e5a-b568-d312441bcc56'
-const CLIENT = 'svc-workflow-canonical-admission-v1'
-const SCOPE = 'agent.definition.admission.read'
+// AGENT_CORE_INTERNAL_AGENT_DIRECTORY_V1 (CTR-IAD-001..004): the superseded
+// dedicated-caller admission route (route prefix /v1/workflow-admission/agents,
+// pinned SERVICE principal/client, audience workflow-agent-admission, scope
+// agent.definition.admission.read, 5-second issued-at pin) is retired. This is
+// now the generic internal directory read for ANY authenticated canonical
+// agent or service principal; the verifier's own time policy is authoritative.
+const PREFIX = '/v1/directory/agents'
+const AUDIENCE = 'agent-directory'
+const SCOPE = 'agent.directory.read'
 const validId = id => typeof id === 'string' && id.length <= 128 && /^agt_[a-z0-9-]+$/.test(id)
 const failure = (status, error) => ({ status, body: { error } })
 
@@ -14,7 +18,7 @@ export function createWorkflowAdmissionHandler({ definition, jwksUrl, nowMs = Da
   fetchImpl = fetch, timeoutMs = 1000 }) {
   if (!(timeoutMs > 0 && timeoutMs <= 1000)) throw new TypeError('Invalid admission timeout')
   const verifier = jwksUrl ? createJwksTokenVerifier({
-    jwksUrl, issuer: 'auth-service', audience: 'workflow-agent-admission', nowMs, fetchImpl,
+    jwksUrl, issuer: 'auth-service', audience: AUDIENCE, nowMs, fetchImpl,
   }) : null
 
   return async function handle(req, url) {
@@ -29,15 +33,17 @@ export function createWorkflowAdmissionHandler({ definition, jwksUrl, nowMs = Da
       try {
         if (!verifier) throw new Error('Unavailable verifier')
         caller = await verifier.verify(token)
-        // The exact token was already signature/profile verified above. Read
-        // its signed iat only to impose this resource's stricter age limit.
-        const { iat } = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'))
-        if (nowMs() / 1000 - iat > 5) return failure(401, 'UNAUTHORIZED')
-        if (caller.principalType !== 'service') return failure(401, 'UNAUTHORIZED')
       } catch { return failure(401, 'UNAUTHORIZED') }
       if (expired()) return failure(504, 'AGENT_DEFINITION_TIMEOUT')
-      if (caller.principalId !== CALLER || caller.clientId !== CLIENT
-        || caller.scopes.size !== 1 || !caller.scopes.has(SCOPE)) return failure(403, 'ACCESS_DENIED')
+      // CTR-IAD-002: generic internal callers — machine principals only. The
+      // verifier profile already 401s human tokens; this predicate stays as
+      // defense in depth. No principalId/clientId pinning: eligibility is the
+      // principal type plus the baseline directory scope (presence-checked,
+      // not exact-single — CTR-IAD-002 pins the audience, not a scope count).
+      if (caller.principalType !== 'agent' && caller.principalType !== 'service') {
+        return failure(403, 'ACCESS_DENIED')
+      }
+      if (!caller.scopes.has(SCOPE)) return failure(403, 'ACCESS_DENIED')
       let agentId
       try { agentId = decodeURIComponent(url.pathname.slice(PREFIX.length + 1)) }
       catch { return failure(400, 'INVALID_AGENT_ID') }
@@ -57,11 +63,13 @@ export function createWorkflowAdmissionHandler({ definition, jwksUrl, nowMs = Da
         }
         const row = snapshot.find(row => row.id === agentId)
         if (expired()) return failure(504, 'AGENT_DEFINITION_TIMEOUT')
-        if (!row) return failure(404, 'AGENT_NOT_FOUND')
-        if (row.disabled === true) return failure(409, 'AGENT_DISABLED')
-        const observed = { agentId, enabled: true }
-        const observationDigest = createHash('sha256').update(JSON.stringify(observed)).digest('hex')
-        return { status: 200, body: { ...observed, observationDigest } }
+        // CTR-IAD-003: existence is the authorized minimal datum — a missing
+        // exact ID is a 200 observation {exists:false}, not an error shape;
+        // enabled reflects disabled != true. No digest, no other fields.
+        return {
+          status: 200,
+          body: { agentId, exists: row !== undefined, enabled: row !== undefined && row.disabled !== true },
+        }
       } catch { return failure(500, 'AGENT_DEFINITION_QUERY_FAILED') }
     }
     try {
