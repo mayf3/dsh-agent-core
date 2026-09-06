@@ -530,3 +530,69 @@ ADVANCE(bc970ced start->work 1->2) + 3 ADVANCE(dc702687 work->done 2->3);
 receipts 6/6 COMPLETED 200; instance terminal at done); requery shows
 currentNodeKey=done stateVersion=3. No scheduler mutation, no agent_wake,
 no second ledger, no credential propagation.
+
+## TERMINAL_CLEANUP_AND_HANDOFF (2026-09-06, Owner-directed; all three Goals COMPLETE)
+
+Frozen steady-state architecture (supersedes any intermediate hypothesis in
+this record and its memory mirrors):
+
+```text
+HR_ROLE = DISCOVERY_AND_DISPATCH (workflow_global_instances -> ACTIONABLE_NOW
+          selection -> exact assignee -> canonical Agent resolution ->
+          agent_session_send exactly once)
+TARGET_AGENT_ROLE = BUSINESS_EXECUTION_AND_SELF_TRANSITION (bounded work ->
+          workflow_execute.transition as itself)
+WORKFLOW_ROLE = AUTHORITATIVE_STATE_MACHINE (validates transition actor ==
+          exact current node assignee; advances authoritative state)
+SCHEDULER_ROLE = PERIODIC_WAKE / NEXT_DISCOVERY_CYCLE
+HR_COMPLETION_APPROVAL_REQUIRED = NO
+HR_PROXY_TRANSITION_REQUIRED = NO
+COMPLETION_CALLBACK_TO_HR_REQUIRED = NO
+IMMEDIATE_HR_REQUERY_REQUIRED = NO (canary requery was mechanical proof only)
+WORK_AUTHORITY = WORKFLOW
+CANONICAL_WORK_DISCOVERY = workflow_global_instances
+DISPATCH_INTENT_ROLE = DEFERRED_ELIGIBILITY / TIMER AUXILIARY
+DISPATCH_INTENT_IS_TASK_LEDGER = NO
+EMPTY_DISPATCH_INTENTS_MEANS_NO_WORK = NO
+```
+
+Superseded historical reasoning (obsolete hypotheses, NOT current
+architecture; recorded here so no future reader resurrects them):
+- "HR performs the target Agent's normal completion transition" — disproven
+  (steady-state canary STEADY-STATE-R1: blog self-transitioned).
+- "HR must approve every Agent completion / re-query after each task" —
+  disproven (Owner correction; NO_PING_PONG enforced and observed).
+- "Target Agents require a new self-transition authorization architecture /
+  TARGET_AGENT_WORKFLOW_EXECUTE_GRANT is missing" — DISPROVEN by DB
+  attestation: agt_blog-agent's canonical client mc_sWqLVY9rPrVRdXM909b8QKyT
+  already holds svc-workflow[workflow.read, workflow.execute] v2 via the
+  accepted trusted-fleet grant supply (fleet row 10). No new authorization
+  framework was created or needed. This record's earlier FOLLOW_UP_DEBT line
+  ("target Agent needs its own workflow grant") is retracted by this note.
+- Authorization truth: existing production grants suffice; the security
+  boundary is the existing Workflow enforcement (transition actor == exact
+  current node assignee). RUN-1 (HR != assignee -> rejected) is the negative
+  evidence; STEADY-STATE-R1 (blog == assignee -> self-transition accepted,
+  work->done, stateVersion 2->3, TERMINAL) is the positive evidence.
+
+Authorization truth (DB-attested): the earlier FOLLOW_UP_DEBT hypothesis
+"target Agent needs its own workflow grant / a new self-transition
+authorization" is RETRACTED — agt_blog-agent's canonical client already held
+svc-workflow[workflow.read, workflow.execute] v2 via the accepted
+trusted-fleet grant supply; no new framework was created. The security
+boundary is the existing Workflow enforcement (transition actor == exact
+current node assignee), preserved unchanged.
+
+Final handoff:
+HR_DELIVERY=COMPLETE; WORKFLOW_GLOBAL_DISCOVERY=PRODUCTION_PASS;
+ELIGIBILITY=PRODUCTION_PASS; PRINCIPAL_TO_AGENT=PRODUCTION_PASS;
+AGENT_SESSION_SEND=PRODUCTION_PASS; TARGET_AGENT_EXECUTION=PRODUCTION_PASS;
+TARGET_AGENT_SELF_TRANSITION=PRODUCTION_PASS;
+ACTOR_ASSIGNEE_ENFORCEMENT=PRODUCTION_PASS; EXACTLY_ONCE_CHAIN=PASS;
+NO_HR_PROXY_TRANSITION=PASS; NO_COMPLETION_APPROVAL=PASS;
+NO_PING_PONG=PASS; WORKFLOW_AUTHORITATIVE_STATE_ADVANCE=PASS;
+STEADY_STATE_AUTONOMOUS_WORKFLOW_LOOP=PASS.
+GOAL_STATUS=COMPLETE (all three). OWNER_ACTION_REQUIRED=NONE.
+NEXT_ACTIVE_GOAL=WORKFLOW_DEFINITION_AUTHORING (GLM_LUNA fallback HOLD).
+Evidence preserved byte-for-byte in deployment-artifacts/…; no production
+mutation during cleanup; no canary re-run; no audits reopened.
