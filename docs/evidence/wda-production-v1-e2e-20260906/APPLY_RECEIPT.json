@@ -1,0 +1,42 @@
+{
+  "goal": "WORKFLOW_DEFINITION_AUTHORING_PRODUCTION_V1",
+  "mode": "apply",
+  "epoch": "1788668907",
+  "authClientUsed": "mc_FdRIJ5THMv1V4tGAC3PPqL83",
+  "domain": {
+    "id": "0aa0532a-fb56-43b7-be69-1638e66df456",
+    "key": "canary-wda-prod-v1-1788668907",
+    "source": "CREATED_DISPOSABLE"
+  },
+  "definition": {
+    "id": "c6552b9d-0437-43d2-b056-d40329b213ab",
+    "key": "canary_wda_prod_v1_1788668907"
+  },
+  "PUBLISHED_VERSION_ID": "de38aebc-8f14-493a-a608-78b7bffff0fb",
+  "instances": {
+    "A": {
+      "workflowInstanceId": "3b44f839-0ce2-435c-9439-2a93f8029c49",
+      "assigneePrincipalId": "fd58881a-fdba-4ef2-9a80-b733671f24f1",
+      "assigneeAgent": "agt_blog-agent"
+    },
+    "B": {
+      "workflowInstanceId": "adea4ad4-ba6d-4920-991a-46a6b9cee341",
+      "assigneePrincipalId": "b21ddb23-42f6-47c4-a27f-bc44950e554c",
+      "assigneeAgent": "agt_efficiency-agent"
+    }
+  },
+  "creatorPrincipalId": "bc970ced-710f-4479-9ff0-e295a1c59424",
+  "results": {
+    "DRAFT_CREATE": "PASS",
+    "NEG1_INVALID_DEFINITION_REJECTED": "PASS(http=500,rejected)",
+    "REPLACE_DRAFT_GRAPH": "PASS",
+    "NEG2_DRAFT_NOT_INSTANTIABLE": "PASS(http=409,rejected)",
+    "DEFINITION_PUBLISH": "PASS",
+    "NEG3_UNKNOWN_ASSIGNEE_REJECTED": "PASS(http=422,rejected)",
+    "INSTANCE_CREATE": "PASS(x2)",
+    "INSTANCE_USES_EXACT_PUBLISHED_VERSION": "PASS(x2)",
+    "WORK_GENERATED_AND_KICKED": "PASS(x2)",
+    "NEG4_NON_ASSIGNEE_TRANSITION_FAIL_CLOSED": "PASS(http=403,rejected)",
+    "WORK_VISIBLE_ACTIONABLE_NOW_EXACT_ASSIGNEE": "PASS(x2)"
+  }
+}
