@@ -444,3 +444,65 @@ precedent with Owner 话术; gate-policy item 5). Receipt audit
 
 STATE = OWNER_GATE (Lane C real-user drive + one read-only receipt grep).
 OWNER_ACTION_REQUIRED = the two minimal actions in the Lane C packet below.
+
+## Lane C executed and terminal handoff (2026-09-06)
+
+Round 1 (legacy-UUID, archived as the wrong-target negative proof): HR used
+the stale fixture UUID 81c7fc7e… whose auth agentId is the legacy spelling
+'blog-agent' -> dsh stored-id grammar fail-closed identity_resolution_unavailable;
+zero sends, zero retries, no name fallback. Auth audit simultaneously proved
+both token mints (gateway grant check + provider) succeed for
+agent-principal-resolution/auth.agent.resolve as dc702687/agt_hr-agent.
+
+Round 2 (current principal): resolution returned EXACTLY
+{"principalId":"fd58881a-fdba-4ef2-9a80-b733671f24f1","agentId":"agt_blog-agent"};
+agent_session_send -> {"status":"accepted"}, SEND_ATTEMPTS=1.
+
+Mechanical receipts (root read-only grep):
+- audit: exactly 1 intent + 1 outcome, same requestId 50aa9843-918e-4844-8996-7d01bfadf894,
+  source=agt_hr-agent target=agt_blog-agent, timeoutMode=receipt_only,
+  result=accepted, durationMs=1277, reconciliationHandle=turn:8eda8347-9e3c-4d95-9882-e8e9c4e3cf5a:a3:g1:s1
+  (one target run; the marker text is absent from audit rows BY DESIGN — R12
+  sanitized metadata-only rows);
+- target side: marker present in exactly ONE file = agt_blog-agent canonical
+  main session (4 occurrences = append-only chunk/message duplicates of the
+  same single delivered turn);
+- historical bookend: an earlier phase=denial code=access_denied row
+  (~23.6h before) = the imported pre-grant fact, now superseded.
+
+## FINAL COMPLETION RECORD
+
+CURRENT_HR_SUBJECT = dc702687-6515-4a2a-91ae-e572a9bbd766 / agt_hr-agent
+HR_AGENT_SESSION_SEND_AUTHORIZATION = PRODUCTION_ACTIVE (grant row LIVE;
+token mint PASS; accepted delivery)
+PRINCIPAL_TO_AGENT_RESOLUTION = PRODUCTION_ACTIVE (route 200 exact two-field
+envelope in HR's hands; auth 1.8.0 face)
+WRONG_TARGET_NEGATIVES = PASS (legacy spelling fail-closed + zero-send
+discipline observed live; unauth 401; unit families)
+LEGACY_PRINCIPAL_NEW_HR_GRANT = ABSENT (vehicle census/apply bound
+dc702687 only; unrelated digest invariant e2e5bff9…/ea852c23…)
+DISPLAY_NAME_FALLBACK = NO (exact-ID admission guard deployed; observed)
+HR_TO_TARGET_CANARY = PASS; TARGET_CANONICAL_MAIN = PASS (single file)
+EXACTLY_ONCE_SESSION_DELIVERY = PASS (1 intent + 1 accepted)
+EXACTLY_ONCE_TARGET_RUN = PASS (single reconciliation turn; SEND_ATTEMPTS=1)
+SOURCE_CREDENTIAL_PROPAGATION = NO; SCHEDULER_MUTATION = NONE;
+AGENT_WAKE_USED = NO; WORKFLOW_TRANSITION = NONE
+AGENT_SESSION_SEND_REGRESSION = PASS (closure suites: broker 282/282, ASM
+integration 8/8, compose 11/11 at impl heads; production send itself PASS)
+SCHEDULER_REGRESSION = PASS (no scheduler surface touched; runtime healthy)
+RUNTIME_HEALTH = PASS (pid 17035 stable; ingress ok; legacy untouched)
+
+HR_DISPATCH_DELIVERY_PRODUCTION_READY = YES
+GOAL_STATUS = COMPLETE
+PRODUCTION_SLOT = RELEASED (handoff to REAL_AUTONOMOUS_WORKFLOW_LOOP_V1:
+auth 1.8.0 + runtime closure live; svc-workflow deploy e297ff1 next per its
+own packet; HR delivery seam unlocked for the final E2E)
+NEXT_GOAL = REAL_AUTONOMOUS_WORKFLOW_LOOP_V1
+
+ROLLBACK BOUNDARY (retained): auth = plist preimage restore + reload (1.7.0);
+runtime = app-preimage closure restore + kickstart; grants = receipt-guarded
+tombstone via the two vehicles' --rollback (only on failed-activation
+verification). Artifacts: deployment-artifacts/hr-dispatch-delivery-v1/.
+FOLLOW_UP_DEBT: ingress auth surface provisioning (separate goal); /version
+SCHEMA_VERSION display constant (svc); first canary lesson (stale fixture
+UUIDs in agent workspaces — the E2E goal should use fresh census UUIDs).
