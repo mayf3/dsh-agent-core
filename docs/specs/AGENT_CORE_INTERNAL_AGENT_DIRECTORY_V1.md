@@ -12,6 +12,7 @@ governed_by: [AGENT_CORE_PRODUCT_ARCHITECTURE_V1]
 external_authorities:
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_INTERNAL_IDENTITY_DIRECTORY_V1
+    revision: e8ae1949ef330bd44b0e0d185053b39e18cab3f3
     relation: depends_on
 supersedes:
   - AGENT_CORE_WORKFLOW_CANONICAL_ADMISSION_V1
@@ -128,7 +129,12 @@ authority.
 Rejected: keeping the dedicated single-caller admission route (Owner-superseded);
 authenticating the mobile /v1/agents projection (changes its accepted Gate-1 contract);
 local registry copies; a new generic identity service; fuzzy/display-name lookup;
-anonymous existence probing. STATUS=proposed; IMPLEMENTATION_ALLOWED_NOW=NO;
+anonymous existence probing. Acceptance obligation: the acceptance transaction must atomically flip the predecessor
+AGENT_CORE_WORKFLOW_CANONICAL_ADMISSION_V1 to superseded_by this Spec's accepted head in
+the same docs-only change, and pin this Spec's exact reviewed head into any consuming
+authority's external_authorities revision field.
+
+STATUS=proposed; IMPLEMENTATION_ALLOWED_NOW=NO;
 PRODUCTION_READY=NO. Requires independent semantic review and exact-head Owner
 acceptance before implementation continues under it. The superseded parent's pinned
 caller objects and audience workflow-agent-admission are retired by this document.
