@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1
-status: accepted
+status: superseded
 date: 2026-09-03
 amendment: 2026-09-05 fleet-92 + CLOSURE_REFREEZE_V2 (Owner APPROVE_MINIMAL_ACTIVATION_SPEC_AMENDMENT_DIRECTION; supersedes stale proposed head dc22db8)
 accepted_by: mayf3
@@ -13,7 +13,7 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2
 governed_by:
   - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2

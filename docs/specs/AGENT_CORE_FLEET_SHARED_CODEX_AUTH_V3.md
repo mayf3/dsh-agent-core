@@ -1,23 +1,23 @@
 ---
-spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
-status: superseded
+spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
+status: accepted
 accepted_by: mayf3
-accepted_date: 2026-09-03
-accepted_reviewed_head: d6550a5b1998cb16866cb6e4261a925a98c502a2
-review_verdict: PASS
+accepted_date: 2026-09-05
+accepted_reviewed_head: 161e2ff6594c1df514518c34a2de6cfd28d55820
+review_verdict: ACCEPT
 review_blocker_count: 0
-normative_body_change: NONE
-date: 2026-09-01
-type: implementation-spec (complete standalone emergency-bootstrap successor; docs only this round)
+normative_body_change: TRUST_DOMAIN_REALIGNMENT_ONLY
+date: 2026-09-05
+type: implementation-spec (complete standalone whole-authority successor; docs only this round)
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 replaces_on_acceptance:
-  - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
+  - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
 supersedes:
-  - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-superseded_by: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
+  - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+superseded_by: null
 governed_by:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
   - SCHEDULER_TIMEOUT_OUTCOME_V2
@@ -25,35 +25,100 @@ governed_by:
 external_authorities:
   - repository: Yan-Zero/dsh-codex
     authority_id: DSH_CODEX_RELEASE_V1
-    revision: c35d7a41d16cdf6d202cdb1db4108b32cbafaa0e
+    revision: 75d98d5b10bb926d53108e49019668c1bde2a9eb
     relation: interoperates_with
 scope:
-  - fleet-wide canonical OpenAI Codex OAuth credential topology for every Luna-enabled production Agent
-  - dsh-codex 0.2.3-line explicit credentialFile and durable refresh-intent contracts
-  - Agent Core Luna route/profile wiring and shared-store fail-loud admission
-  - Permission Model A for the canonical credential domain
-  - one-time LEGACY_CONVERGED_BOOTSTRAP for the named P0 recovery transaction
-  - unchanged ordered-route safety policy carried forward from the V2 authority set
+  - trust-domain realignment of the fleet-wide canonical OpenAI Codex OAuth credential topology to the actual unified production backend (yanfenma domain, control plane on 127.0.0.1:8787, 88-agent registry)
+  - carries forward the entire V2 protocol unchanged (dsh-codex 0.2.3-line explicit credentialFile, durable refresh-intent, same-filename writer lock, fail-loud admission, Permission Model adapted same-uid)
+  - one-time CTR-SCA-017 bootstrap branch NOT selected for this domain (LEGACY_CONVERGED_BOOTSTRAP_SELECTED = NO); normal canonical Owner reauth is the activation credential-acquisition mode
 owners:
-  - repository-maintainers
+  - mayf3
 ---
 
-# AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+# AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
 
-> `TASK_NAME = 共享 执行` · `ROUND = EMERGENCY_BOOTSTRAP_AMENDMENT` · **docs only**。
-> 本轮不修改产品代码、production 配置、OAuth、credential、模型路由或进程。
->
-> `CTR-SCA-014` 的 zero-proven-generation 分支原本只允许 canonical Owner reauth；本轮增加
-> `LEGACY_CONVERGED_BOOTSTRAP` 会改变已接受的 migration/failure meaning，因此不能原地改写
-> accepted stable ID。按 `SPEC_GOVERNANCE_V0` §9.2，本文件是 V1 的 complete standalone
-> whole-authority successor。除该一次性 bootstrap、它的 first-refresh failure semantics 与
-> 对应 fixtures 外，V1 的 shared OAuth topology、route、Permission Model A 和 runtime contracts
-> 保持不变。proposal 阶段不修改 V1 lifecycle；仅在独立 focused Review PASS 后，由 Owner 在
-> docs-only acceptance transaction 原子写入 reciprocal backlink，merge 到 `main` 后才生效。
+> `TASK_NAME = 共享域对齐 执行` · `ROUND = WHOLE_AUTHORITY_SUCCESSOR` · **docs only**。
+> 本文件是 `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2`（accepted，PR #150；amended by ACTIVATION_V1
+> fleet-92 closure）的 complete standalone whole-authority successor。除 trust-domain
+> realignment（§0 坐标冻结 + CTR-SCA-010 same-uid Permission Model）与 CTR-SCA-017 bootstrap
+> 分支显式弃选（LEGACY_CONVERGED_BOOTSTRAP_SELECTED = NO）外，V2 accepted normative body
+> 逐条 carry forward，语义不变（OAuth 协议、refresh 算法、route-chain、intent 域、fail-closed
+> 语义全部不变）。proposal 阶段不修改 V2 lifecycle；独立 focused Review PASS 后，由 Owner 在
+> docs-only acceptance transaction 原子写入 reciprocal backlink 并 merge 到 `main` 后生效。
+
+## 0. Trust-domain realignment（the only semantic delta）
+
+### 0.1 Mechanical observation（frozen 2026-09-05, fresh at activation gate）
+
+```text
+ACTUAL_PRODUCTION_BACKEND = yanfenma-domain unified control plane
+  Product API = 127.0.0.1:8787 (loopback; bound by the formal production control plane)
+  Feishu channel + 89 production bindings + 88-agent registry + Agent Homes + main Session
+  authority + model execution path = same control plane (mechanically proven SAME_BACKEND)
+CONTROL_PLANE_IDENTITY_AT_FREEZE = pid 18234, uid 502, gid 20 (staff), started 2026-09-05T09:40:10,
+  argv = node /Users/yanfenma/workspace/project/production-dsh-agent-core/scripts/production-runtime.mjs --root /Users/yanfenma/.agent-core
+  (pid is a scene coordinate only, NOT the persistent authority identity; the persistent identity
+  is: the yanfenma-domain control plane that binds 127.0.0.1:8787 and owns /Users/yanfenma/.agent-core)
+CHILD_IDENTITY = same uid 502 (control plane spawns children under its own uid; no setuid seam in
+  this domain; 88 Agent Homes are drwx------ yanfenma:staff)
+ACTUAL_PRODUCTION_ROOT = /Users/yanfenma/.agent-core
+ACTUAL_REGISTRY = /Users/yanfenma/.agent-core/agents.json, FLEET_COUNT = 88 (fresh-verified)
+ACTUAL_HOMES_COUNT = 88 (fresh-verified)
+PERMISSION_IDENTITY = control plane and children share uid 502; NO separate child uid exists
+```
+
+### 0.2 Realigned frozen coordinates
+
+```text
+FLEET_SHARED_CODEX_AUTH = YES
+CANONICAL_CREDENTIAL_PATH =
+  /Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+PROVIDER = openai-codex
+LUNA_MODEL = gpt-5.6-luna
+DSH_CODEX_COMPATIBILITY_LINE = 0.2.3
+PER_AGENT_RUNTIME_OAUTH_STORE = FORBIDDEN
+REMOTE_REFRESH_CALL_MAX_PER_GENERATION = 1
+PRODUCTION_APPLY_AUTHORITY = NONE
+CANONICAL_DOMAIN_OWNER = yanfenma (uid 502, group staff 20)
+CANONICAL_DIRECTORY_MODE = 0700
+CANONICAL_FILES_MODE = 0600
+GROUP_WORLD_ACCESS = NONE
+SAME_UID_TRUST_MODEL = control plane and Luna children share uid 502; the writer lock (flock on the
+  canonical filename) and the atomic-replacement protocol are the only concurrency authorities;
+  filesystem ownership does not separate principals, so it MUST NOT be presented as a security
+  boundary between control plane and children
+THIRD_UID_ACCESS = any uid other than 502 MUST be denied by ordinary POSIX bits (no group/world
+  access anywhere under shared-credentials); no ACL extension is required or authorized
+LEGACY_CONVERGED_BOOTSTRAP_SELECTED = NO
+CREDENTIAL_ACQUISITION_MODE = ONE_CANONICAL_OWNER_REAUTH (CTR-SCA-009, one login directly into the
+  canonical store)
+```
+
+### 0.3 Why realigned (evidence summary)
+
+The accepted `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` froze its coordinates against the authsvc
+domain (91→92 fleet, launchd runtime, per-home 92-store converged snapshot). Fresh mechanical
+observation shows the ACTUAL unified production backend is the yanfenma-domain control plane:
+different root, different registry (88), different deployment checkout, and control-plane/children
+share uid 502 (no uid505/uid502 split exists). V2's authsvc coordinates do not hold in this domain;
+carrying V2 forward verbatim would freeze wrong paths and an inapplicable Permission Model. This
+successor keeps every protocol contract byte-identical in meaning and realigns only: (a) the
+canonical credential path and its owning identity, (b) the Permission Model for a same-uid domain,
+(c) the credential-acquisition mode for this domain's activation (Owner reauth; no converged-snapshot
+bootstrap — no full byte-equal 88/88 legacy candidate set exists here: stock/ceo never had per-home
+OAuth copies), and (d) the external dsh-codex interop pin is advanced from the V2-era revision
+`c35d7a41d16cdf6d202cdb1db4108b32cbafaa0e` to `75d98d5b10bb926d53108e49019668c1bde2a9eb` — the
+0.2.3-line revision that carries the accepted credentialFile interface (same pin as
+ACTIVATION_V1/PR #176 implementation; no protocol change, compatibility line remains 0.2.3). The prior authsvc activation remains governed by
+`AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1` for that domain; nothing in this Spec touches
+the authsvc domain.
 
 ## 1. Goal
 
-91 个 production Agent 位于同一生产信任域，并共用一个 ChatGPT Codex subscription。
+
+本域的 production Agent（fresh-verified 88 个，§0.1）位于同一生产信任域，并共用一个 ChatGPT Codex
+subscription。（V2 原文的历史语境是 authsvc 域 91 个；本 successor 只继承协议语义与拓扑要求，
+fleet 基数按 §0.1 的 fresh mechanical observation 冻结。）
 只要一个进程成功刷新 rotating refresh token，其他 per-Agent writable 副本立即成为旧副本；
 后续 refresh 会得到 `refresh_token_reused`。目标是把所有启用 Luna 的 Agent 收敛到一个
 canonical writable credential domain，使一个 credential generation 最多发生一次 remote
@@ -62,7 +127,7 @@ refresh，并对不可判定的 refresh 结果 fail closed。
 ```text
 FLEET_SHARED_CODEX_AUTH = YES
 CANONICAL_CREDENTIAL_PATH =
-  /Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+  /Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
 PROVIDER = openai-codex
 LUNA_MODEL = gpt-5.6-luna
 DSH_CODEX_COMPATIBILITY_LINE = 0.2.3
@@ -107,40 +172,51 @@ writer lock、同一个 atomic replacement 和同一个 refresh-intent 状态机
 SPEC_GOVERNANCE_MODE = AUTHOR
 CHANGE_CLASS = NON_MECHANICAL
 PREFLIGHT_MODE = SUPERSEDE
-PRIMARY_CURRENT_POLICY = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-CURRENT_IMPLEMENTATION_AUTHORITY = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-CURRENT_ACTIVATION_AUTHORITY = NONE
+PRIMARY_CURRENT_POLICY = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+CURRENT_IMPLEMENTATION_AUTHORITY = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+CURRENT_ACTIVATION_AUTHORITY = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1 (authsvc domain only)
 REPLACEMENT_FORM = COMPLETE_STANDALONE_WHOLE_AUTHORITY
 PARTIAL_SUPERSESSION = NONE
 ```
 
-accepted V1 拥有 shared OAuth topology、migration candidate 规则和 implementation scope。
-本轮允许 provenance 不完整的 converged snapshot 进入 canonical 会改变 V1 的 migration 和
-failure meaning；按治理协议，不能以 partial amendment 与 V1 并行 accepted。
+accepted V2 owns the shared OAuth topology, migration candidate rules and implementation scope.
+This successor realigns its production trust-domain coordinates to the actual unified backend
+(§0); the protocol semantics are carried forward unchanged. The activation domain mismatch
+(authsvc/92 vs yanfenma/88) is the documented reason for the realignment; no converged-snapshot
+provenance is claimed for this domain (bootstrap branch NOT selected, CTR-SCA-017).
 
-proposal 阶段：
+Proposal stage:
 
 ```text
 NEW.status = proposed
-NEW.supersedes = [AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1] # intended transition only
-OLD_V1.status = accepted
-OLD_V1.superseded_by = null
+NEW.supersedes = [AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2] # intended transition only
+OLD_V2.status = accepted
+OLD_V2.superseded_by = null
 IMPLEMENTATION_ALLOWED_FROM_THIS_PROPOSAL = NO
 ```
 
-future acceptance transaction 必须原子完成：
+Future acceptance transaction MUST atomically complete:
 
 ```text
 NEW.status = accepted
-NEW.supersedes = [AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1]
-OLD_V1.status = superseded
-OLD_V1.superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+NEW.supersedes = [AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2]
+OLD_V2.status = superseded
+OLD_V2.superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
 docs/specs/README.md = lifecycle mirrors updated
 ```
 
-任何缺 edge、mixed authority、未绑定 reviewed commit/final head/acceptance actor/time 的事务
-全部 abort。`dsh-codex` 是外部 repository；本 Spec 冻结 Agent Core 的 interoperability
-requirement，但其代码变更必须在该 repository 获得独立 accepted authority 与 exact commit。
+Any transaction missing an edge, mixing authorities, or lacking the reviewed commit / final head /
+acceptance actor / acceptance time MUST abort. `dsh-codex` is an external repository; this Spec
+freezes Agent Core's interoperability requirement, but its code changes require separate accepted
+authority in that repository.
+
+（V2 的原 §3 曾针对 V1→V2 的 supersession 写有同构的 proposal/acceptance 事务块；该事务已在
+PR #150 原子完成，V1 已是 superseded，不再是任何 pending transition 的对象。本 successor 的
+proposal/acceptance 事务以上面的 V2→V3 块为准，此处不再重复。历史原文见 V2 accepted head
+`d6550a5b1998cb16866cb6e4261a925a98c502a2` 的 §3。）
+
+`dsh-codex` 是外部 repository；本 Spec 冻结 Agent Core 的 interoperability requirement，但其代码
+变更必须在该 repository 获得独立 accepted authority 与 exact commit。
 
 ## 4. Current State
 
@@ -148,7 +224,7 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
 
 - Subject: production Agent Luna credential topology
 - As of artifact: Owner incident report, 2026-08-31
-- Environment: `/Users/authsvc/.agent-core/homes/<AGENT_ID>`
+- Environment: `/Users/authsvc/.agent-core/homes/<AGENT_ID>` (prior authsvc domain; historical evidence retained verbatim)
 - Projection: each enabled process resolves `$DSH_HOME/.openai-codex-auth.json`; HR rotated the
   shared subscription token while CEO retained an old writable copy and failed with
   `refresh_token_reused`.
@@ -172,11 +248,15 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
   remote rotation but before local write leaves old credential plus orphan lock.
 - Basis: `OBS-SCA-006`, `OBS-SCA-007`, `CLM-SCA-003`, `EVD-SCA-003`
 
-### STATE-SCA-004 — Canonical production domain is not provisioned
+### STATE-SCA-004 — Canonical production domain is not provisioned (prior authsvc domain; historical evidence retained verbatim)
 
-- Subject: canonical credential directory and file
+- Subject: canonical credential directory and file in the PRIOR authsvc domain
+  (`/Users/authsvc/.agent-core/shared-credentials`); carried forward verbatim as V2 historical
+  evidence — this V3's own domain observation is fresh and lives in §0.1/§0.3 and in
+  AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 §4 (CANONICAL_DOMAIN = ABSENT for
+  `/Users/yanfenma/.agent-core/shared-credentials`, observed 2026-09-05)
 - As of observation: 2026-08-31T06:57:00+08:00
-- Environment: production filesystem, metadata-only check
+- Environment: production filesystem (authsvc domain), metadata-only check
 - Projection: `/Users/authsvc/.agent-core/shared-credentials` and descendants are absent.
 - Basis: `OBS-SCA-008`, `EVD-SCA-004`
 
@@ -274,15 +354,18 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
   succeeded.
 - Provenance: authoring-round isolated execution transcript
 
-### OBS-SCA-008 — Canonical path is absent before this Spec
+### OBS-SCA-008 — Canonical path is absent before this Spec (prior authsvc domain; historical evidence)
 
-- Subject: `/Users/authsvc/.agent-core/shared-credentials/openai-codex`
+- Subject: `/Users/authsvc/.agent-core/shared-credentials/openai-codex` (authsvc domain; the V2
+  original observation, retained verbatim. This V3's own yanfenma-domain freshness evidence lives
+  in §0.1 and in AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 §4: canonical absent,
+  observed 2026-09-05.)
 - Commit/artifact: production filesystem metadata
-- Environment: production host
+- Environment: production host (authsvc domain)
 - Observed at: 2026-08-31T06:57:00+08:00
 - Method: metadata-only existence check; credential contents not read
 - Result: canonical directory and canonical OAuth file do not exist.
-- Provenance: authoring-round read-only preflight
+- Provenance: authoring-round read-only preflight (V2 round, authsvc domain)
 
 ### OBS-SCA-009 — Current Agent Core hardcodes per-home credential semantics
 
@@ -406,7 +489,8 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
 - Source observations: `OBS-SCA-008`
 - Target: `STATE-SCA-004`
 - Relation: SUPPORTS
-- Bound coordinates: production host, exact canonical path, 2026-08-31T06:57:00+08:00
+- Bound coordinates: production host (authsvc domain), exact canonical path
+  (`/Users/authsvc/.agent-core/shared-credentials`), 2026-08-31T06:57:00+08:00 — historical V2-round evidence
 - Strength/sufficiency: direct metadata observation
 - Limitations: time-indexed; future deployment may create the path
 - Provenance: authoring-round read-only preflight
@@ -459,10 +543,15 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
 ### DEC-SCA-003 — Permission Model A remains the only permission model
 
 - Decision owner: repository Owner `mayf3`
-- Decision: preserve authsvc-owned roots/Homes with inherited exact ACL and private POSIX modes;
-  canonical refresh access is granted to uid502 only through exact ACL capabilities.
-- Rejected alternatives: `ALT-SCA-004`
-- Reason: no group/world widening and no shared-group redesign are needed.
+- Decision: realigned to the actual unified production backend's same-uid domain
+  (`CONTROL_PLANE_IDENTITY`/`CHILD_IDENTITY` both uid 502, §0.1): preserve yanfenma-owned roots/Homes
+  with private POSIX modes (`/Users/yanfenma/.agent-core` = 0700, Agent Homes = 0700); canonical
+  refresh access is held by uid 502 as the single domain principal — the canonical-filename writer
+  lock and the atomic-replacement protocol are the concurrency authority, NOT filesystem ownership
+  separation. No ACL grant list is needed because no second principal exists in this domain.
+- Rejected alternatives: `ALT-SCA-004`; replicating the authsvc uid505/uid502 split-ACL model into
+  this domain (inapplicable: no separate control-plane uid exists here).
+- Reason: no group/world widening, no shared-group redesign, no new privilege identity.
 - Owner decision remaining: NONE
 
 ### DEC-SCA-004 — Unknown refresh outcome requires one canonical reauth
@@ -505,7 +594,7 @@ requirement，但其代码变更必须在该 repository 获得独立 accepted au
 Production shared mode MUST use exactly:
 
 ```text
-/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
 ```
 
 Every Luna-enabled process MUST resolve `OpenAICodexCredentialStore.filename` to those exact bytes
@@ -534,7 +623,7 @@ format is authorized.
 
 ### CTR-SCA-003 — Agent Core route/profile wiring
 
-The deployment-owned route catalog MUST contain one canonical Luna descriptor, not 91 credential
+The deployment-owned route catalog MUST contain one canonical Luna descriptor, not per-agent credential
 definitions. Its subscription entry MUST carry `credentialFile` with the exact canonical path.
 The successor config schema MUST reject duplicate/unknown keys and MUST preserve route order semantics;
 version `3` is required so an old loader fails loud rather than accepting changed meaning.
@@ -600,7 +689,7 @@ The intent path is fixed:
 
 ```text
 REFRESH_INTENT_PATH =
-  /Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json.refresh-intent.json
+  /Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json.refresh-intent.json
 ```
 
 Before remote dispatch and while holding the canonical lock, the process MUST durably create one exact
@@ -617,8 +706,8 @@ document:
 
 `generationId` is the non-secret `lstat` device/inode identity of the current canonical credential
 before creating the replacement inode. It MUST NOT contain or derive from an access token, refresh
-token, token hash or credential digest. The intent MUST be mode `0600`, inherit the same exact ACL
-domain, be written with no partial-reader window, and be fsynced together with the parent directory
+token, token hash or credential digest. The intent MUST be mode `0600`, live in the same canonical
+directory domain (same-uid trust model, §0.2), be written with no partial-reader window, and be fsynced together with the parent directory
 before network dispatch. An existing intent MUST never be overwritten by an automatic refresh.
 
 ### CTR-SCA-008 — Crash and outcome-unknown recovery
@@ -654,34 +743,39 @@ OLD_REFRESH_TOKEN_REUSE = FORBIDDEN
 ```
 
 Control-plane incident deduplication MUST produce at most one Owner-facing reauth request per
-`generationId`; it MUST NOT open 91 OAuth flows or instruct individual Agents to log in. Recovery is:
+`generationId`; it MUST NOT open one OAuth flow per Agent or instruct individual Agents to log in. Recovery is:
 quiesce all Luna refresh-capable children, prove/remove orphan lock if present, perform one interactive
 login directly into the canonical store, validate metadata without printing credential content, clear
 the matching intent/incident marker, then restart through the separately authorized activation plan.
 
 ### CTR-SCA-010 — Permission Model A
 
-The following existing model remains normative:
+Realigned to the same-uid unified backend domain (§0.2). The authsvc split-identity model
+(control plane uid505 vs Harness child uid502) does NOT exist in this domain and MUST NOT be
+replicated here:
 
 ```text
-homes root       = authsvc:authsvc 0755 + frozen inheritable ACL
-workspaces root  = authsvc:authsvc 0755 + frozen inheritable ACL
-Agent Home       = authsvc:authsvc 0700 + inherited ACL
+production root  = yanfenma (uid 502, group staff): /Users/yanfenma/.agent-core 0700
+Agent Home       = yanfenma:staff 0700 (all 88; unchanged)
+canonical dir    = yanfenma:staff 0700
 sensitive files  = POSIX 0600; group/world bits 0
-Harness child    = uid502
-Control plane    = authsvc uid505
+Luna child       = uid 502 (same as control plane)
+Control plane    = uid 502 (same as child)
 ```
 
-The canonical `openai-codex` directory MUST be authsvc-owned, mode `0700`, with exact inheritable ACLs.
-uid502 MUST have directory search, read, write, add-file, rename and delete-child capabilities required
-for lock creation and same-directory atomic replacement. authsvc's directory-owner rights are the
-control-plane boundary; when a replacement inode is owned by uid502, authsvc access to that inode MUST
-come only from the inherited exact control-plane read/list/search/recovery ACL, never group/world bits.
-The canonical OAuth, lock, temp and intent files MUST be `0600` with group/world bits zero and inherited
-exact ACLs. A third unrelated uid MUST be denied. No existing Agent Home mode/owner/ACL may change.
+The canonical `openai-codex` directory MUST be yanfenma-owned, mode `0700`. Because control plane
+and Luna children share uid 502, ordinary POSIX bits already grant both principals exactly the
+capabilities required for lock creation, same-directory temp creation and atomic replacement —
+and deny every other uid. The security invariants V2 protected via split-identity ACLs are
+preserved here by: (a) group/world bits zero on the directory and every file (third-uid denial),
+(b) 0600 on the canonical OAuth, lock, temp and intent files, (c) the canonical-filename writer
+lock as the sole refresh-serialization authority, and (d) the durable refresh-intent domain as the
+sole crash-outcome authority. Filesystem ownership MUST NOT be claimed as a control-plane/child
+trust boundary in this domain. No existing Agent Home mode/owner may change.
 
-ACL conformance MUST cover fresh create, temp+rename, crash leftovers and replacement inode ownership;
-checking only the preexisting canonical inode is insufficient.
+Conformance MUST cover fresh create, temp+rename, crash leftovers and replacement inode ownership;
+checking only the preexisting canonical inode is insufficient. A third unrelated uid MUST be denied
+(verified by ordinary permission bits; no ACL machinery is authorized in this domain).
 
 ### CTR-SCA-011 — Secret and observability boundary
 
@@ -742,8 +836,8 @@ unmodified npm artifact. No later dsh-codex feature/version may enter incident r
 ### CTR-SCA-014 — Migration candidate, activation and rollback
 
 Implementation completion does not grant production apply. A later controlled activation authority
-MUST first establish and durably record both preconditions before inspecting any of the 91 legacy
-stores:
+MUST first establish and durably record both preconditions before inspecting any legacy
+store in this domain:
 
 ```text
 LUNA_DISPATCH_QUIESCED = YES
@@ -775,7 +869,7 @@ AUTHORITATIVE_STORE = <the sole proven generation's legacy store>
 
 The following are forbidden selection evidence and MUST NOT rank, prefer or break a tie between
 candidates: `mtime`, `ctime`, `expiresAt`, file size, recent Agent use, access-token callability or any
-other manual inference. Migration MUST NOT probe-refresh, retry an old token or try the 91 refresh
+other manual inference. Migration MUST NOT probe-refresh, retry an old token or try legacy refresh
 tokens in sequence.
 
 Except for the exact `LEGACY_CONVERGED_BOOTSTRAP` branch in `CTR-SCA-017`, zero proven generations,
@@ -795,7 +889,7 @@ Outside the named P0 bootstrap transaction, the only allowed recovery from that 
 OpenAI Codex login/reauth written directly to:
 
 ```text
-/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
 ```
 
 It MUST NOT first write an Agent Home and copy from there. For the named P0 bootstrap transaction,
@@ -804,17 +898,21 @@ It MUST NOT first write an Agent Home and copy from there. For the named P0 boot
 
 1. inventory and establish both quiesce preconditions and the durable fence;
 2. inspect all legacy candidates using only the provenance rule above;
-3. create/verify the canonical Model A directory and ACL domain;
+3. create/verify the canonical directory under the domain Permission Model (§0.2 same-uid model);
 4. either atomically write the sole proven legacy credential once, execute the exact
    `LEGACY_CONVERGED_BOOTSTRAP` copy, or—only outside the named P0 transaction—perform exactly one direct
    canonical Owner reauth when reuse is not allowed;
 5. configure the single Luna route descriptor with canonical `credentialFile`;
 6. prove all per-home OAuth paths have zero runtime opens and zero refresh writers;
 7. controlled restart under pinned clean Harness identity;
-8. CEO canary, then HR, Podcast and Shopping canaries;
+8. canaries over THIS domain's Luna-enabled agent set (the roster is frozen by the current
+   activation authority — AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 CTR-ACT2-005 orders
+   STOCK, CEO, then the CTO migration case; V2's authsvc roster CEO/HR/Podcast/Shopping does not
+   apply to this domain);
 9. prove provider/model/path and zero oc-go/GLM use for Luna-only canaries as applicable;
-10. retain the 91 old per-home files only as read-only forensic evidence, never as a runtime source,
-    refresh source or rollback credential.
+10. retain any legacy per-home OAuth files in this domain only as read-only forensic evidence
+    (this domain currently has exactly one legacy per-home copy, agt_cto-agent's), never as a runtime
+    source, refresh source or rollback credential.
 
 If shared mode fails before any remote refresh, rollback MAY restore the previous software/config only
 after quiescence. It MUST disable Luna rather than resume independent writable OAuth copies. If a pending
@@ -835,7 +933,16 @@ This proposed Spec and its PR MUST contain docs only. It MUST NOT modify product
 route configuration, package installation, process state or source code. Acceptance of this Spec may
 authorize future bounded implementation under `CTR-SCA-*`; production apply remains separately gated.
 
-### CTR-SCA-017 — LEGACY_CONVERGED_BOOTSTRAP
+### CTR-SCA-017 — LEGACY_CONVERGED_BOOTSTRAP (NOT SELECTED for this domain)
+
+`LEGACY_CONVERGED_BOOTSTRAP_SELECTED = NO` (§0.2): this domain has no complete byte-equal 88/88
+converged legacy candidate set (agt_stock_agent and agt_ceo-agent never had per-home OAuth copies),
+so the bootstrap branch below is carried forward from V2 with only the canonical path realigned, for historical compatibility and
+possible future separate authorization in some other domain, but it is NOT the selected
+credential-acquisition mode for this domain's activation. The selected mode is
+`ONE_CANONICAL_OWNER_REAUTH` (CTR-SCA-009/CTR-SCA-014 normal path). Retaining this text preserves
+V2 whole-authority carry-forward semantics; its gates bind fleet cardinality 91/92 only inside the
+named P0 transaction and have no effect in this domain.
 
 This Contract is a one-time exception for the named `TASK_NAME = 共享 执行` P0 recovery transaction.
 It authorizes no OAuth call and no production action by this authoring round. A later separately
@@ -884,7 +991,7 @@ Permission Model A and perform exactly one canonical commit:
 ```text
 SOURCE = any deterministic registry member already proved inside the 91/91 equality set
 OPERATION = COPY EXACT BYTES ONCE
-DESTINATION = /Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+DESTINATION = /Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
 CANONICAL_DIRECTORY_MODE = 0700
 CANONICAL_CREDENTIAL_MODE = 0600
 CANONICAL_COMMIT_COUNT = 1
@@ -917,7 +1024,7 @@ commit, not the copied credential's historical generation.
 
 Immediately after promotion and before any child restart, configuration and permissions MUST make the
 canonical path the only runtime store: every child receives the same exact `credentialFile`; every
-refresh uses the canonical filename lock and canonical refresh-intent domain; all 91 per-home stores
+refresh uses the canonical filename lock and canonical refresh-intent domain; all legacy per-home stores
 are read-only forensic evidence with zero runtime opens, zero refresh writers and zero fallback. A
 config switch, restart or canary is forbidden until those conditions are mechanically proven.
 
@@ -957,7 +1064,7 @@ named exception.
 - Required evidence: version-3 parser matrix, resolved plugin config for multiple Agents, negative child
   generation tests, zero per-home OAuth opens
 - Expected result: every Luna process resolves the same canonical filename; mismatch prevents admission
-- Failure condition: 91 hand-authored credential entries, per-home open, fallback path or stale child reuse
+- Failure condition: per-agent hand-authored credential entries, per-home open, fallback path or stale child reuse
 
 ### ACC-SCA-003 — Fifty-process simultaneous expiry
 
@@ -1024,14 +1131,14 @@ named exception.
 ### ACC-SCA-009 — Permission Model A
 
 - Contracts: `CTR-SCA-010`
-- Method: metadata/ACL inspection plus actual uid505, uid502 and unrelated-uid operations, including fresh
-  temp creation and rename over canonical file
-- Environment: isolated filesystem fixture matching production Model A; later production preflight
-- Required evidence: owner/group/mode/ACL before and after replace; operation results by uid
-- Expected result: authsvc access PASS, uid502 read and atomic replace PASS, third uid denied,
-  group/world bits zero, all Agent Homes unchanged
-- Failure condition: 0755 Agent Home workaround, group/world access, shared group, ACL inheritance loss or
-  replacement inode inaccessible to either required principal
+- Method: metadata inspection plus actual uid502 create/replace operations and an unrelated-uid
+  (third uid) denial probe, including fresh temp creation and rename over the canonical file
+- Environment: isolated filesystem fixture matching the same-uid domain model; later production preflight
+- Required evidence: owner/group/mode before and after replace; operation results by uid
+- Expected result: uid502 create/read/atomic-replace PASS, third uid denied, group/world bits zero,
+  all Agent Homes unchanged
+- Failure condition: 0755 Agent Home workaround, group/world access, ACL or permission widening,
+  or a replacement inode not owned by uid 502
 
 ### ACC-SCA-010 — Secret redaction and route regression
 
@@ -1333,38 +1440,37 @@ READY_FOR_INDEPENDENT_REVIEW = YES
 ## 14. Authoring output
 
 ```text
-TASK_NAME = 共享 执行
-ROUND = EMERGENCY_BOOTSTRAP_AMENDMENT
+TASK_NAME = 共享域对齐 执行
+ROUND = WHOLE_AUTHORITY_SUCCESSOR (trust-domain realignment)
 
 SPEC_GOVERNANCE_MODE = AUTHOR
-SPEC_ID = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+SPEC_ID = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
 SPEC_KIND = implementation
 STATUS = proposed
 AUTHORITY_LEVEL = governing_spec
 IMPLEMENTATION_AUTHORITY = contracts
 PRODUCTION_APPLY_AUTHORITY = none
-SUPERSEDES_ON_ACCEPTANCE = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-EXTERNAL_AUTHORITIES = Yan-Zero/dsh-codex@c35d7a41d16cdf6d202cdb1db4108b32cbafaa0e
+SUPERSEDES_ON_ACCEPTANCE = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
+EXTERNAL_AUTHORITIES = Yan-Zero/dsh-codex@75d98d5b10bb926d53108e49019668c1bde2a9eb
 
-FLEET_SHARED_CODEX_AUTH = YES
-CANONICAL_CREDENTIAL_PATH = /Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+SEMANTIC_DELTA = TRUST_DOMAIN_REALIGNMENT_ONLY
+REALIGNED_DOMAIN = yanfenma (uid 502) unified production backend (127.0.0.1:8787, 88-agent registry)
+CANONICAL_CREDENTIAL_PATH = /Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json
+CANONICAL_DIRECTORY_MODE = 0700 (yanfenma:staff)
+CANONICAL_FILES_MODE = 0600, GROUP_WORLD_ACCESS = NONE
+SAME_UID_TRUST_MODEL = YES (control plane and Luna children share uid 502; no split-identity ACL)
 PER_AGENT_OAUTH_RUNTIME_USE = FORBIDDEN
-GLOBAL_REFRESH_LOCK = REQUIRED
-
+GLOBAL_REFRESH_LOCK = REQUIRED (canonical filename lock)
 REFRESH_OUTCOME_UNKNOWN = FAIL_CLOSED_REAUTH_REQUIRED
 AUTO_RETRY_AFTER_UNCERTAIN_REFRESH = FORBIDDEN
-CRASH_AFTER_REMOTE_ROTATION_ACCEPTANCE = PASS_IF_FAIL_CLOSED_WITHOUT_TOKEN_REUSE
-LEGACY_CONVERGED_BOOTSTRAP = AUTHORIZED_ONLY_BY_CTR-SCA-017_GATES
-BOOTSTRAP_CLASSIFICATION = BOOTSTRAP_FROM_CONVERGED_SNAPSHOT
-BOOTSTRAP_AUTHORITATIVE_GENERATION_PROVEN = NO
-BOOTSTRAP_PRODUCTION_OAUTH = FORBIDDEN
-BOOTSTRAP_CANONICAL_REAUTH = FORBIDDEN
-BOOTSTRAP_FIRST_REFRESH_FAILURE = OPERATOR_BLOCKED
-BOOTSTRAP_EXCEPTION_ADDED = YES
-CTR_SCA_014_AMENDED = YES_VIA_V2_SUCCESSOR
-PRODUCTION_OAUTH_REQUIRED = NO
+LEGACY_CONVERGED_BOOTSTRAP_SELECTED = NO
+CREDENTIAL_ACQUISITION_MODE = ONE_CANONICAL_OWNER_REAUTH
+CARRIED_FORWARD_UNCHANGED = OAuth protocol, refresh algorithm, writer lock, lock-internal reread,
+  refresh-intent domain, atomic replacement, crash/outcome-unknown recovery, fail-loud admission,
+  route-policy neutrality, secret redaction, dsh-codex 0.2.3 compatibility line
+AUTHSVC_DOMAIN_IMPACT = NONE (authsvc activation authority remains AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1 for that domain)
 
-OPEN_OWNER_DECISIONS = NONE
+OPEN_OWNER_DECISIONS = NONE (beyond exact-head acceptance)
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 17
@@ -1372,30 +1478,11 @@ CONTRACTS_WITH_ACCEPTANCE = 17
 PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
 AUTHORING_READY_FOR_REVIEW = YES
-NEXT_TASK = 共享 审计
+NEXT_TASK = 共享域对齐 审计
 ```
 
-## 15. Acceptance Record（2026-09-03，共享 审计 · OWNER_ACCEPTANCE）
+## 15. Acceptance Record
 
-```text
-ACCEPTANCE_TRANSACTION = ONE_WHOLE_AUTHORITY_SUCCESSOR_LIFECYCLE_ONLY
-ACCEPTED_BY = mayf3
-ACCEPTED_REVIEWED_HEAD = d6550a5b1998cb16866cb6e4261a925a98c502a2
-REVIEW_VERDICT = PASS
-REVIEW_BLOCKER_COUNT = 0
-NORMATIVE_BODY_CHANGE = NONE
-SHARED_CODEX_AUTH_V2_ACCEPTED = YES
-LEGACY_CONVERGED_BOOTSTRAP_AUTHORIZED_BY = CTR-SCA-017 (one-time, named P0 transaction only)
-V1_SUPERSEDED = YES
-ATOMIC_TRANSACTION = PASS
-PR_MERGE = PR #150
-```
-
-本记录、本 authority frontmatter lifecycle flip、`AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` 的
-reciprocal `superseded_by` backlink 与 `docs/specs/README.md` lifecycle mirror 属于同一个
-acceptance commit。除这些 lifecycle / provenance metadata 与本记录外，reviewed head
-`d6550a5b1998cb16866cb6e4261a925a98c502a2` 的 normative body 逐字节保持；authority 仅在
-本 transaction 随 PR #150 merge into `main` 后生效。`production_apply_authority` 保持 none：
-canonical credential production migration、91 份 per-home OAuth 变更、fleet route mutation、
-GLM rollout 与 batch activation 全部仍需后续单独 activation/production-apply authority；
-`FLEET_PRODUCTION_APPLY = HOLD` per Owner ruling 2026-09-03。
+(to be written atomically at acceptance: OWNER exact-head acceptance of this V3 head,
+reciprocal `superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` backlink in
+`AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2`, and `docs/specs/README.md` lifecycle mirror update.)
