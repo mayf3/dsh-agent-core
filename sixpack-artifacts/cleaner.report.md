@@ -1,39 +1,38 @@
-# cleaner.report.md — dsh-trusted-ingress-align-2
+# Cleaner stage report — dsh-trusted-ingress-align-2 (CORRECTED REPLAY)
 
 Station: cleaner (cleanup_and_local_quality_checks)
-Terminal candidate at time of report: HEAD = 19ac71a (sixpack(coder)) on BASE = 16e14233fbac1ccbdc00598097380da659e1ecd2.
+Worktree: `sixpack-worktrees/dsh-trusted-ingress-align-2__cleaner` @ coder Head `44e471cbd8fbaf7ffffb2f98f8e1dee2698a5e68` (BASE `16e14233fbac1ccbdc00598097380da659e1ecd2`)
+Governing window: OWNER-MANDATE-2026-09-06-ALIGN2-CORRECTED-REPLAY-WINDOW.
 
-## What I checked
+## What this station did
 
-1. **Accepted TRUSTED_INGRESS alignment re-applied exactly as accepted (work item 1).**
-   `git diff dd100382a23509c67a35cf919e8cda07da1d43d0..HEAD -- packages/agent-router/test/feishu-regression.test.js` is **empty**: the test file on the terminal candidate is byte-identical to the accepted PR #177 head. Concretely:
-   - `ingressContext` deepEqual now includes the 6th field `feishuSenderOpenId: 'ou_test'`;
-   - input `text` embeds a decoy self-reported openId (`ou_decoy_id`) and the assertion proves the trusted context takes only the authenticated sender metadata;
-   - frozen names unchanged (`channelConversationId` = `feishu:oc_thread_conv:topic_exact`, `feishuChatId` = `oc_exact_chat`), `Object.isFrozen(trusted)` asserted;
-   - the no-parse assertion is kept (`conversationId != chatId` via `assert.notEqual` with the "must never be parsed or reused as chatId" message).
+Corrected-replay ownership: SPECIFIER reverted the test fix and deleted the QA automation bytes (`1b6c9fd`); CODER re-applied the accepted TRUSTED_INGRESS test alignment (`44e471c`). This station replayed normally afterwards and performed cleanup + local quality checks on the resulting candidate. No product bytes were modified: the only product-scoped change (the test file) is byte-frozen to the accepted candidate, so any "cleanup" would break the acceptance invariant. Station output is this report.
 
-2. **Observable behavior unchanged.** Mechanically: `git diff --name-only BASE..HEAD` product-tree delta is exactly `packages/agent-router/test/feishu-regression.test.js`; no `src/`, `docs/`, `package.json`, or `.github/` changes. Product behavior is unchanged by construction (test-only delta).
+## Mechanical checks (all run at this station, node v26.7.0)
 
-3. **Coverage bound to the output candidate.** `node --test packages/agent-router/test/feishu-regression.test.js` on the terminal candidate (node v26.7.0): **9/9 pass, 0 fail, exit 0**. Full agent-router suite via the repo's own glob convention (`node --test packages/agent-router/test/*.test.js packages/agent-router/test/*/*.test.js`): **310 tests, 309 pass, 0 fail, 1 skipped, exit 0** — zero failures, no new failures vs base. The single skip is the pre-existing, env-dependent `T3: real plugin boot under an untraversable parent TMPDIR` (deepseek-harness CLI not resolvable in dev env), untouched by this delta.
+1. Accepted-candidate byte identity: `git diff dd100382a23509c67a35cf919e8cda07da1d43d0 -- packages/agent-router/test/feishu-regression.test.js` is EMPTY; blob `git rev-parse HEAD:…feishu-regression.test.js` = `fcf899290b6241adc74346773f2c4c625c095223` = `dd100382:…` (accepted PR #177 candidate). The re-application is exactly as accepted — no drift.
+2. Scope bound to output candidate: `git diff --name-only BASE..HEAD` outside `sixpack-artifacts/` = exactly `packages/agent-router/test/feishu-regression.test.js`. Zero changed files under `src/`, `docs/`, `package.json`, `.github/`, `packages/agent-router/src/`. Worktree clean (`git status --porcelain` empty).
+3. Target test, canonical invocation: `node --test packages/agent-router/test/feishu-regression.test.js` → **9 tests / 9 pass / 0 fail**, exit 0.
+4. Full agent-router suite (glob form over all `*.test.js` under `packages/agent-router/test/` incl. `route-chain/`, `process-lifecycle/`): **310 tests / 309 pass / 0 fail / 1 skipped (pre-existing)**, exit 0. No new failures vs base. (Coder baseline evidence: with the test reverted to the specifier state the same invocation fails exactly 1 test — the stale 5-field expectation — so the alignment fixes exactly that and nothing else.)
+5. Structure read-through of the changed block (`feishu-regression.test.js:158-188`): single test, no duplication introduced, file conventions kept (9 top-level `test(` blocks, unchanged count), decoy open id documented in-comment, strict 6-field `deepEqual`, `Object.isFrozen` assertion kept, no-parse assertion kept (`trusted.feishuChatId != trusted.feishuConversationId`). Nothing to improve without breaking accepted bytes.
 
-4. **Local CRAP/DRY checks bound to the output candidate.** Mechanical scope (`git diff --name-only BASE..HEAD`) = 1 test file + 4 `sixpack-artifacts/*` files → test-only/artifacts scope. Governed verdict: CRAP / DRY / structure = **NOT_APPLICABLE** for the product surface (no product code in the changed-file set); this is derived from the real diff, never from working-tree cleanliness. If a non-test product file ever enters the diff, the QA script fails closed instead of fabricating a verdict (verified by reading the case-dispatch logic).
+## Local CRAP/DRY checks bound to the output candidate
 
-5. **Fail-closed QA script quality (local review only; executable QA automation is not my station).**
-   - `set -euo pipefail` present; check 1 gates on the real `node --test` exit code (captured via `if !`, never piped away).
-   - Real mechanical assertions for check 3: sorted **set-equality** between `qa.automation.json` declared checks and the script's evaluated checks; entrypoint is the bare filename `qa_required_checks.sh`, exists, and has the exec bit (git mode 100755).
-   - Node resolution: `SIX_PACK_NODE_PATH` override else `node` from PATH; resolved version printed; clear nonzero exit if unavailable. No `/tmp` literals anywhere in the script (grep-verified).
-   - The three canonical check names are declared verbatim in `qa.automation.json` (flat, entrypoint as bare filename) and match the script exactly.
-   - **Fail-closed negative probe executed locally (transient):** appended a deliberately failing test to the target file, re-ran `bash sixpack-artifacts/qa_required_checks.sh` → **exit 1** with `RESULT: end-to-end verification through the public user boundary = FAIL (real "node --test ..." exited nonzero)`. File then restored byte-exact (`git status` clean, `git diff` empty). Formal probe evidence belongs to the QA station.
+Governed **NOT_APPLICABLE**. Mechanical rationale: the real BASE..HEAD changed-file set outside station artifacts is exactly one test file (`packages/agent-router/test/feishu-regression.test.js`); CRAP/DRY metrics govern production code paths, and no production bytes changed in this candidate. Working-tree cleanliness was NOT used as CRAP/DRY evidence (cleanliness is not a quality metric).
 
-6. **`bash sixpack-artifacts/qa_required_checks.sh` on the terminal candidate: exit 0**, with all three canonical check lines present and evidence-backed: end-to-end = PASS (real node --test, tests=9 pass=9 fail=0); final CRAP/DRY = NOT_APPLICABLE (mechanical test-only scope, changed-file list printed); handoff and manifest consistency = PASS (real set-equality + exec-bit assertion).
+## Required checks (station contract)
 
-## What I changed
+- "observable behavior unchanged": PROVEN — product scope is test-only (check 2); full suite 0 failures (check 4); the changed file only strengthens assertions on already-implemented behavior (6-field contract pre-exists in BASE `packages/agent-router/src/ingress-delivery.js:110`).
+- "coverage plus local CRAP/DRY checks bound to output candidate": target 9/9 + suite 310/0-fail (coverage), CRAP/DRY governed NOT_APPLICABLE with the mechanical changed-file rationale above (bound to `git diff BASE..HEAD`, not to vibes).
 
-- `sixpack-artifacts/cleaner.report.md` (this report) — the only file. **No code change was needed:** the candidate at my station already carries the accepted alignment byte-exactly and a genuinely fail-closed check script; my review found no cleanup-level defect (no dead paths, no special cases added, assertions are exact `deepEqual` against a frozen object, decoy construction eliminates the "trust the prompt" failure mode by construction rather than by extra conditionals).
+## Changes made by this station
+
+- `sixpack-artifacts/cleaner.report.md` (this file, replacing the stale pre-correction report) — the only write. No code, spec, automation, or manifest bytes touched.
 
 ## Limitations
 
-- The task record's "240 tests" figure does not match the measured suite size under node v26.7.0 (310 tests via the repo's glob convention). The governing criterion — 0 failures, no new failures vs base — holds. Note: `node --test <directory>` (directory mode) fails on this node version/layout; the glob form above is the working invocation. The QA script itself targets the single test file and is unaffected.
-- The suite's one skipped test is pre-existing and environment-dependent (deepseek-harness missing); it predates BASE (BASE..HEAD touches no `src/`).
-- The negative probe was run transiently in my worktree and fully restored; durable probe evidence must come from the QA station's final run on the terminal tree.
-- `sixpack verify`, final QA receipts, and the automation-before-final-QA commit ordering are downstream-station (QA) and delivery-helper responsibilities, not mine.
+- `sixpack-artifacts/architect.report.md` and `sixpack-artifacts/hardender.report.md` still hold pre-correction-window content on disk; their stations refresh them when they replay after this station (cleaner -> architect -> hardender).
+- `sixpack-artifacts/qa.automation.json` and `sixpack-artifacts/qa_required_checks.sh` are absent by design (specifier deleted them; QA recreates them downstream). The DONE_WHEN item "no /tmp/node literal in qa_required_checks.sh" is not checkable at this head — it is QA-station evidence.
+- DONE_WHEN's "agent-router full suite 240 tests" is stale relative to this BASE; the canonical glob invocation measures 310 tests (309 pass / 1 pre-existing skip / 0 fail). Actuals reported.
+- The `send_notification` MCP tool is not in this station's toolset; pipeline notification is left to the delivery helper.
+- No git commit/push performed (delivery helper commits).
