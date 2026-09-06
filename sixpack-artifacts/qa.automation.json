@@ -1,0 +1,8 @@
+{
+  "entrypoints": ["qa_required_checks.sh"],
+  "checks": [
+    "end-to-end verification through the public user boundary",
+    "final CRAP/DRY checks on the terminal candidate",
+    "handoff and manifest consistency"
+  ]
+}
