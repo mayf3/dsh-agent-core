@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V2
-status: accepted
+status: superseded
 accepted_date: 2026-09-05
 accepted_by: mayf3
 accepted_reviewed_head: 092d9c16a4ec0f6e8f60468373b1560f7e846565
@@ -27,7 +27,7 @@ external_authorities:
     revision: 22e862af8e47050ae1bf9e7c5db7eb22a4d81ee7
     relation: constrained_by
 supersedes: [AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V1]
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V3
 owners: [repository-maintainers]
 ---
 
