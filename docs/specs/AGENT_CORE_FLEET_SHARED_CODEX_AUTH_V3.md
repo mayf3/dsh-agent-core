@@ -1,11 +1,11 @@
 ---
 spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
-status: proposed
-accepted_by: null
-accepted_date: null
-accepted_reviewed_head: null
-review_verdict: null
-review_blocker_count: null
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-09-05
+accepted_reviewed_head: 161e2ff6594c1df514518c34a2de6cfd28d55820
+review_verdict: ACCEPT
+review_blocker_count: 0
 normative_body_change: TRUST_DOMAIN_REALIGNMENT_ONLY
 date: 2026-09-05
 type: implementation-spec (complete standalone whole-authority successor; docs only this round)
