@@ -1,0 +1,129 @@
+{
+  "observed_at": "2026-09-06T23:42:16.952167+00:00",
+  "base": "75d25914fe2a114847c7ba0e25b463c2dda29c3d",
+  "host_arch": "arm64",
+  "host_os": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83",
+  "node_probe": {
+    "version": "v25.6.1",
+    "arch": "x64",
+    "execPath": "/usr/local/Cellar/node/25.6.1_1/bin/node"
+  },
+  "processes": [
+    {
+      "pid": 70038,
+      "role": "business-parent",
+      "method": "macOS sample one second, header only retained",
+      "sample_header": [
+        "Process:         node [70038]",
+        "Path:            /usr/local/Cellar/node/25.6.1_1/bin/node",
+        "Code Type:       X86-64 (translated)",
+        "Parent Process:  launchd [1]",
+        "Date/Time:       2026-09-07 07:40:37.734 +0800"
+      ]
+    },
+    {
+      "pid": 70388,
+      "role": "business-child",
+      "method": "macOS sample one second, header only retained",
+      "sample_header": [
+        "Process:         node [70388]",
+        "Path:            /usr/local/Cellar/node/25.6.1_1/bin/node",
+        "Code Type:       X86-64 (translated)",
+        "Parent Process:  node [70038]",
+        "Date/Time:       2026-09-07 07:40:39.102 +0800"
+      ]
+    },
+    {
+      "pid": 80170,
+      "role": "authsvc-child",
+      "method": "macOS sample one second, header only retained",
+      "sample_header": [
+        "Process:         node [80170]",
+        "Path:            /usr/local/libexec/agent-core/node-runtime/bin/node",
+        "Code Type:       X86-64 (translated)",
+        "Parent Process:  node [51361]",
+        "Date/Time:       2026-09-07 07:38:33.260 +0800"
+      ]
+    }
+  ],
+  "business_launch": {
+    "Label": "ai.agent-core.runtime",
+    "ProgramArguments": [
+      "/Users/yanfenma/.agent-core/control/agent-core-runtime-glm53-wrapper.zsh"
+    ],
+    "WorkingDirectory": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+    "UserName": null,
+    "KeepAlive": true,
+    "selected_env": {
+      "DSH_HARNESS_ROOT": "/Users/yanfenma/workspace/github/deepseek-harness/.worktree/luna-production-rc8-20260822-090003",
+      "DSH_AGENTS_HOME": null,
+      "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+      "DSH_AGENT_CHILD_UID": null,
+      "DSH_AGENT_CHILD_GID": null,
+      "DSH_AGENT_SPAWN_HELPER": null
+    },
+    "file_sha256": "2cc20ecf68c38b355e31382c7ce720ad0acd0012178a956729c07e46e8d9ddad"
+  },
+  "authsvc_launch": {
+    "Label": "ai.agent-core.runtime",
+    "ProgramArguments": [
+      "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+      "--root",
+      "/Users/authsvc/.agent-core",
+      "--catchup",
+      "0"
+    ],
+    "WorkingDirectory": "/usr/local/libexec/agent-core/app",
+    "UserName": "authsvc",
+    "KeepAlive": true,
+    "selected_env": {
+      "DSH_HARNESS_ROOT": "/usr/local/libexec/agent-core/harness",
+      "DSH_AGENTS_HOME": null,
+      "PATH": "/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+      "DSH_AGENT_CHILD_UID": "502",
+      "DSH_AGENT_CHILD_GID": "20",
+      "DSH_AGENT_SPAWN_HELPER": "/usr/local/libexec/dsh-agent-spawn-helper"
+    },
+    "file_sha256": "9019f07178c13b0caa0d0dacfdc952665ddc20b2ab42b9076e28dd089004566b"
+  },
+  "app_source": {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+    "head": "549dacea95f918416dc06a534a21d8e16be5ce83",
+    "wip_paths": [
+      " M packages/agent-provisioning/src/index.js",
+      " M packages/product-api/src/index.js",
+      " M packages/production-runtime/src/compose.js",
+      " M packages/production-runtime/src/model-overrides.js",
+      "?? packages/agent-provisioning/src/shared-codex.js",
+      "?? packages/agent-router/src/process/",
+      "?? packages/agent-router/src/route-chain-canary.js",
+      "?? packages/agent-router/src/route-chain.js",
+      "?? packages/product-api/src/scheduler-auth.js",
+      "?? packages/product-api/src/workflow-admission.js",
+      "?? packages/production-runtime/src/shared-codex-migration-executable.js",
+      "?? packages/production-runtime/src/shared-codex-migration.js",
+      "?? packages/production-runtime/src/txn-safety.js"
+    ],
+    "dirty_count": 13
+  },
+  "harness_source": {
+    "path": "/Users/yanfenma/workspace/github/deepseek-harness/.worktree/luna-production-rc8-20260822-090003",
+    "head": "514ab7b0029141b88c807704764d0d3e1eea1da4",
+    "wip_paths": [],
+    "dirty_count": 0
+  },
+  "health_probe": [
+    {
+      "url": "http://127.0.0.1:8787/health",
+      "status": 200,
+      "bytes": 46,
+      "body_sha256": "8404e793aacfa49cf19967af97dbb10f5355abf894920990326859cfde2f8be1"
+    },
+    {
+      "url": "http://127.0.0.1:8787/healthz",
+      "result": "HTTPError",
+      "status": 404
+    }
+  ]
+}

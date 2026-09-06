@@ -1,0 +1,24 @@
+{
+  "observed_at": "2026-09-06T23:42:55.693317+00:00",
+  "harness_root": "/Users/yanfenma/workspace/github/deepseek-harness/.worktree/luna-production-rc8-20260822-090003",
+  "harness_lock_sha256": "9b39d08ea018790358e9fa639dceb0ada7f4edfc578dd3f8d4c7073450cd2add",
+  "package": {
+    "name": "@deepseek-ai/dsh-root",
+    "version": "0.1.0-rc.8",
+    "packageManager": "pnpm@11.7.0"
+  },
+  "modules_store": {
+    "packageManager": "pnpm@11.7.0",
+    "storeDir": "/Users/yanfenma/Library/pnpm/store/v11",
+    "virtualStoreDir": ".pnpm"
+  },
+  "loader_probe": {
+    "returncode": 0,
+    "stdout": "{\"arch\":\"x64\",\"version\":\"v25.6.1\",\"loaderType\":\"object\",\"available\":true}\n",
+    "stderr": "",
+    "method": "Fresh x64 process only, require native addon and internal ESM loader, no model, no profile boot"
+  },
+  "wrapper_path": "/Users/yanfenma/.agent-core/control/agent-core-runtime-glm53-wrapper.zsh",
+  "wrapper_sha256": "2a4c711fe95036d6147f5be2d6a3595d9beadb8698438da77ee41de96c712150",
+  "production_rollback_generation": "NOT_FROZEN: source WIP and effective runtime bytes must be preserved, stage-first; existing backup directory names are not proof"
+}
