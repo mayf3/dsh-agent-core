@@ -1,9 +1,9 @@
 ---
-spec_id: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V3
-status: superseded
+spec_id: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V4
+status: accepted
 accepted_date: 2026-09-06
 accepted_by: mayf3
-accepted_reviewed_head: 177ef0ba828de7e9306b1c7e8d77778241be38a5
+accepted_reviewed_head: e92fd76ddc67db32ec210d7895476652c4b0ae0b
 independent_review_result: ACCEPT
 independent_review_blockers: NONE
 acceptance_delta_class: lifecycle_provenance_only
@@ -26,12 +26,16 @@ external_authorities:
     authority_id: SVC_WORKFLOW_VISIT_ACTIVATION_IMPL_V1
     revision: 22e862af8e47050ae1bf9e7c5db7eb22a4d81ee7
     relation: constrained_by
-supersedes: [AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V2]
-superseded_by: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V4
+  - repository: mayf3/svc-workflow
+    authority_id: SVC_WORKFLOW_DEFINITION_GRAPH_DIAGNOSTICS_V1
+    revision: 0d56d1e32b5bea5a65ef32706bc70449910866f0
+    relation: depends_on
+supersedes: [AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V3]
+superseded_by: null
 owners: [repository-maintainers]
 ---
 
-# AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V3
+# AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V4
 
 ## 1. Goal
 
@@ -41,30 +45,31 @@ of `workflow_definition_authoring` and all instance-execution semantics.
 
 ## 2. Scope and non-goals
 
-Whole-authority successor to V2. Retain its four operations, service models 1/2/3,
-exact full-graph bindings and trust contracts. Extend `replace_draft_graph` with a
-mutually exclusive simple-linear input compiled in a capability-specific handler.
-Add safe graph-validation diagnostics consumption. Clarify existing defaults.
+Whole-authority successor to V3. Retain all four operations, full/linear forms,
+canonical graph output, service models, diagnostics, identity and lifecycle contracts.
+The sole new permission is CTR-WDA-007's narrow authoring-only model presentation
+correction at the existing registry boundary. No generic presentation framework is added.
 No new tool/operation, graph model, validator, service endpoint, store, lifecycle,
 permission, routing framework, generic DSL, scheduler or execution change.
 
 ## 3. Authority and dependencies
 
-V2 DEC-002 limits Broker to shape validation and mapping; CTR-WDA-001/002 require
-full graph input and CTR-WDA-004 explicitly preserves opaque failures. These meanings
-change, so REUSE/additive AMEND cannot authorize Lane A/C. V3 is a complete successor.
-Parent AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1 DEC-011 still owns the
-separate authoring family with exactly the same four operations; it is unchanged.
-Product Architecture's manifest + handler seam is retained: the compiler is a pure
-capability handler, not a new business engine or dedicated credential adapter.
-Service canonical models and validator remain sole output/validation authority.
+V3 is accepted on dsh main at `600d4df9b50fa4b7ffc368020cf0a8840d37346e`.
+Its CTR-WDA-004/011 require actionable model-visible diagnostics and guidance, but
+CTR-WDA-007 expressly forbids registry changes. Actual model-facing evidence found
+that registry normalization drops the top description and output rendering drops
+safe error detail. Existing manifest/handler changes alone cannot restore the latter
+without misusing frozen error-code, status or request-id semantics. V4 changes only
+this load-bearing implementation boundary; it does not retroactively authorize the
+held implementation candidate. All other standing V3 Contracts remain unchanged.
 
-The service diagnostics dependency is the separately reviewed proposed
-`SVC_WORKFLOW_DEFINITION_GRAPH_DIAGNOSTICS_V1`; it must be accepted in service
-main before diagnostics implementation/integration. Candidate is the docs-only service commit with short SHA `7832339`;
-the full SHA is pinned in the cross-repository review record. Existing service product V6, architecture
-V0.4.0 and Visit Activation authority at `e297ff1f3913133058d97bb30bcf8f63b3e137f9`
-own graph/lifecycle/identity semantics. Proposed dependency is not active authority.
+Parent AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1 DEC-011 and Product
+Architecture retain ownership of the same authoring family and caller-bound seams.
+The compiler remains a pure capability handler; service canonical models/validator
+remain the sole business authority. The paired diagnostics authority is accepted on
+svc main `0d56d1e32b5bea5a65ef32706bc70449910866f0`, retaining reviewed semantic head
+`78323394c6c6d82a14657bdfd6589419fdbb6dff`. No svc semantic or implementation change
+is part of this successor.
 
 The exact retained endpoint bindings are:
 
@@ -107,12 +112,30 @@ apply authority or claim downstream implementation complete.
   case. EVD-WDA-102: OBS-103 and accepted CTR-VAI-011 support this mapping. No new
   graph semantics are needed. First work TASK is the conceptual start.
 
+- OBS-WDA-105: after controlled deployment of dsh main `600d4df9b50fa4b7ffc368020cf0a8840d37346e`
+  authoring files and svc `0d56d1e32b5bea5a65ef32706bc70449910866f0`, a normal Feishu
+  HR Agent request on 2026-09-06 emitted an actual tool header with authoring description
+  `undefined`. The service returned canonical `graph_validation_failed` 422; the model
+  output showed code/status/request-id but no rule correction. The model used legacy
+  full graph input and stopped. Definition/draft exist; no publication or instance.
+- OBS-WDA-106: exact base source `schema.js` validates but omits description from its
+  normalized manifest; `registry.js` interpolates the missing value and omits error.detail.
+  Independent review of held candidate `d2aabd7d34191585137bfeef4156381f1091ca6b`
+  found functional tests pass but CTR-WDA-007 prohibits its registry modification.
+- CLM-WDA-103 (SUPPORTED): a narrow registry presentation exception is required to
+  fulfill unchanged CTR-WDA-004/011 through the existing normal model-facing envelope.
+  EVD-WDA-103 binds OBS-105/106 to CTR-WDA-007 and this route. The committed
+  `docs/reports/WORKFLOW_AUTHORING_MODEL_PRESENTATION_V4.md` pins sanitized evidence,
+  source coordinates, methods, limitations and the held/no-merge disposition.
+
 ## 5. Execution route
 
 `SUPERSEDE / EXEC_PLAN / CONTROLLED`, docs-first. Owner attachment dispatch in
 Goal WORKFLOW_AUTHORING_USABILITY_PRODUCTION_V1 authorizes investigation, docs,
 independent review, bounded repair and subsequent delivery under accepted Contracts.
-No product implementation before exact-head acceptance and main integration.
+No further product repair, implementation integration or deployment may rely on V4
+before exact-head acceptance, lifecycle finalization and main integration. The held
+registry candidate is evidence only and has no merge/deployment authority.
 
 ## 6. Previously rejected alternatives
 
@@ -259,13 +282,28 @@ exclusion, and no auto retry. No production resource is used.
 ### CTR-WDA-007 — implementation boundary
 
 Product code is limited to the Workflow Authoring manifest, a dedicated pure
-linear compiler/handler module, minimal gateway handler wiring, and dedicated focused
-tests/integration scripts under existing structure limits. Gateway may select that
-capability handler using the existing caller-bound transport, only for this capability.
-No changes to registry, mapping, generic transport/sanitizer/relay algorithms, credential
-resolution, schemas of other capabilities, or svc-workflow implementation are authorized
-by this Spec. HTTP bindings for all existing full-graph calls remain byte-for-meaning
-unchanged. Do not grow over-limit legacy files or create a generic hook framework.
+linear compiler/handler module, minimal gateway handler wiring, dedicated focused
+tests/integration scripts, and the following narrow existing-registry presentation
+exception, all within existing structure limits. Gateway may select that capability
+handler using the existing caller-bound transport, only for this capability.
+
+Only for wire capability id AND tool name both `workflow_definition_authoring`, the
+existing registry may (a) retain the already type-validated raw authoring description
+in the model tool definition, and (b) append a nonempty safe bounded error.detail to
+normal model output for service-owned `graph_validation_failed` with HTTP 422, or
+locally rejected `invalid_arguments` on `replace_draft_graph` with no downstream
+HTTP status. Detail must pass the existing unchanged sanitizer and bounds. Preserve
+code, status and request-id meanings; never expose raw structured service details.
+Unknown/disabled principal errors, other server errors and all other capabilities'
+description/schema/success/error rendering remain unchanged. Do not change input
+schema, validation predicates, registration count or dispatch semantics through this
+exception. It is not a generic hook, error forwarding policy or registry redesign.
+
+No other registry changes, mapping changes, generic transport/sanitizer/relay algorithm
+changes, credential resolution changes, schemas of other capabilities, or svc-workflow
+implementation changes are authorized. Existing full-graph HTTP bindings remain
+byte-for-meaning unchanged. Do not grow over-limit legacy files or create a generic
+hook framework.
 
 ### CTR-WDA-008 — exact model-3 passthrough and compatibility
 
@@ -408,14 +446,22 @@ retry, leaked identity, accepted invalid graph or canonical bypass fails accepta
 
 ### ACC-WDA-011 — diagnostics and model guidance
 
-Contracts: CTR-WDA-004/008/011. Method: before/after catalog and handler capture plus
-actual service error through Broker sanitizer. Environment: isolated local composed stack.
+Contracts: CTR-WDA-004/007/008/010/011. Method: before/after catalog and handler capture,
+actual service error through Broker sanitizer AND the registered tool's output renderer.
+Environment: isolated local composed stack. Exercise real registration, relay/gateway,
+and model-facing rendering, not only the intermediate gateway result.
 Evidence: exact source/service/authority SHAs, schema semantic comparison excluding
 description text for Lane B, omission/1/2/3 wire assertions; representative entry, unknown
 transition target, primary relationship, cycle/connectivity and assignee-form failures.
 Expected: stable rule identity and static correction visible; invalid state not persisted;
 sensitive raw strings absent; no default/schema/auth change from descriptions. Fail on
 opaque guessing, sanitizer-erased identity, enum/default injection or exposed internals.
+Also require actual top-level model description to retain the accepted linear/model-3/
+publish guidance; graph422 output to retain safe named rule and correction; malformed
+linear output to identify a bounded local field/index without any credential/HTTP call.
+Negative discriminator: pristine V3 registry loses description/detail and must fail this
+presentation test. Compare an unrelated capability's description, error and success
+rendering byte-for-byte; any change outside the exact authoring exception fails.
 
 ## 11. Delivery and production acceptance
 
@@ -449,17 +495,18 @@ invalid graph accepted, mismatched version or unhealthy runtime. Remain INCOMPLE
 
 ## 12. Compatibility, rollback and authority lifecycle
 
-Existing full-graph four-operation callers remain compatible. Only new linear-form
-clients require V3 runtime. No database migration, model rewrite or execution change.
-Broker rollback restores prior capability/handler files; existing published versions
-and instances remain valid; linear form is temporarily unavailable. Service diagnostics
-rollback may return opaque errors but must never alter validator outcomes or data.
+Existing full-graph four-operation callers and the V3 linear compiler remain compatible.
+There is no database migration, graph/model rewrite or execution change. A V4 registry
+rollback restores its exact prior file, preserving all V3 authoring/service functionality;
+it can restore the known missing guidance/error text, so usability is then INCOMPLETE.
+Existing published versions and instances remain valid. Service diagnostics and its
+compatible receipt decoder remain unchanged by this registry-only operation.
 
-Proposed V3 does not retire V2. After independent exact-head semantic ACCEPT, Owner
-accepts the exact reviewed head. Then V3 becomes accepted and V2 superseded/backlinked
+Proposed V4 does not retire V3. After independent exact-head semantic ACCEPT, Owner
+accepts that exact reviewed head. Then V4 becomes accepted and V3 superseded/backlinked
 in one docs-only lifecycle transaction, with independent lifecycle recheck and main
-merge before implementation. V2 semantic body remains immutable. Proposed service
-spec must separately complete its acceptance transaction; no cross-repo partial claim.
+merge before implementation integration. V3 semantic body remains immutable. Already
+accepted svc authority stays active without another acceptance or service semantic head.
 
 ## 13. Authoring result
 
