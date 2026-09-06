@@ -43,6 +43,7 @@ import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
+import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createSelfServiceSchedulerAccess } from '../../scheduler/src/self-service.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
@@ -328,6 +329,7 @@ export async function composeProductionRuntime(options = {}) {
 
   const productApiCfg = opts.productApi ?? {}
   const productApi = applyProductApi(ctx, {
+    workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.WORKFLOW_ADMISSION_AUTH_JWKS_URL }),
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
