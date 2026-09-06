@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_CANONICAL_ADMISSION_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -15,7 +15,7 @@ external_authorities:
     revision: 2af21f87769af50b1c38abcd19655bb28c023e9a
     relation: depends_on
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_INTERNAL_AGENT_DIRECTORY_V1
 owners: [mayf3]
 accepted_by: mayf3
 accepted_date: 2026-09-06

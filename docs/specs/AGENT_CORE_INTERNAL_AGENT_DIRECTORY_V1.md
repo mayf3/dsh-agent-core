@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_INTERNAL_AGENT_DIRECTORY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -18,6 +18,11 @@ supersedes:
   - AGENT_CORE_WORKFLOW_CANONICAL_ADMISSION_V1
 superseded_by: null
 owners: [mayf3]
+accepted_by: mayf3
+accepted_date: 2026-09-06
+accepted_reviewed_spec_commit: 7f620ad87ebadc9571eaf527bc370f259dfd9cc6
+acceptance_review_verdict: PASS
+acceptance_record: docs/reports/INTERNAL_AGENT_DIRECTORY_ACCEPTANCE_V1.md
 ---
 
 # AGENT_CORE_INTERNAL_AGENT_DIRECTORY_V1
