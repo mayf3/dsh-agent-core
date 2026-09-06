@@ -1,6 +1,13 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V3
-status: proposed
+status: accepted
+accepted_date: 2026-09-06
+accepted_by: mayf3
+accepted_reviewed_head: 177ef0ba828de7e9306b1c7e8d77778241be38a5
+independent_review_result: ACCEPT
+independent_review_blockers: NONE
+acceptance_delta_class: lifecycle_provenance_only
+semantic_delta_from_reviewed_head: none
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
