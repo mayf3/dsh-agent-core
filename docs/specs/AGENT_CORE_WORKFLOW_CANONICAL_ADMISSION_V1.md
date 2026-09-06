@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_CANONICAL_ADMISSION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -17,6 +17,12 @@ external_authorities:
 supersedes: []
 superseded_by: null
 owners: [mayf3]
+accepted_by: mayf3
+accepted_date: 2026-09-06
+accepted_reviewed_spec_commit: bc88cc81477a38da5c52f9a8503413cf67f30ee2
+acceptance_review_verdict: PASS
+acceptance_record: docs/reports/WORKFLOW_CANONICAL_IDENTITY_AUTHORITY_ACCEPTANCE_V1.md
+owner_acceptance_attachment_sha256: 0899cec0aa54725fedc3f130a686fb6331728ac0f8bb09d3bfce5b8139cd822b
 ---
 
 # AGENT_CORE_WORKFLOW_CANONICAL_ADMISSION_V1
