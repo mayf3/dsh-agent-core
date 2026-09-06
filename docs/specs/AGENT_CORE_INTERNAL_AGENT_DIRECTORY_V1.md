@@ -12,7 +12,7 @@ governed_by: [AGENT_CORE_PRODUCT_ARCHITECTURE_V1]
 external_authorities:
   - repository: mayf3/auth-service
     authority_id: AUTH_SERVICE_INTERNAL_IDENTITY_DIRECTORY_V1
-    revision: e8ae1949ef330bd44b0e0d185053b39e18cab3f3
+    revision: f2b7d4c91ad657464816108062145ae95c21d686
     relation: depends_on
 supersedes:
   - AGENT_CORE_WORKFLOW_CANONICAL_ADMISSION_V1
