@@ -506,3 +506,27 @@ verification). Artifacts: deployment-artifacts/hr-dispatch-delivery-v1/.
 FOLLOW_UP_DEBT: ingress auth surface provisioning (separate goal); /version
 SCHEMA_VERSION display constant (svc); first canary lesson (stale fixture
 UUIDs in agent workspaces — the E2E goal should use fresh census UUIDs).
+
+## Post-COMPLETE addendum: RUN-2 composed workflow E2E (2026-09-06 08:5x +08)
+
+The final REAL_AUTONOMOUS_WORKFLOW_LOOP_V1 E2E ran with the delivery seam this
+Goal produced. Key architecture fact learned (delivered to the Loop goal):
+transition is server-side gated to the CURRENT node assignee exactly
+(transition_transaction.rs:203), and blog has no workflow grant — so the
+compliant E2E set the work node's FIXED assignee to the current HR business
+principal dc702687 (provisioning actor bc970ced remains the creator/DRAFT
+actor under its bounded admin authority; service-side gates passed as
+designed). Round 1's failure (transition 400/PrincipalNotAssignee when blog
+was the assignee) is itself the strongest possible negative proof of the
+assignee gate.
+
+RUN-2 receipts (all mechanical): global_instances finds the instance with
+exact eligibility {"classification":"ACTIONABLE_NOW"} + exact
+assigneePrincipalId=dc702687; resolve(fd58881a) = exact two-field envelope
+agt_blog-agent; agent_session_send replied with blog's verbatim marker echo
+"E2E-LOOP-RUN2-BOUNDED-WORK-DONE"; transition work->done executed exactly
+once by dc702687 (event chain: 1 INSTANCE_CREATED(bc970ced, 0->1) + 2
+ADVANCE(bc970ced start->work 1->2) + 3 ADVANCE(dc702687 work->done 2->3);
+receipts 6/6 COMPLETED 200; instance terminal at done); requery shows
+currentNodeKey=done stateVersion=3. No scheduler mutation, no agent_wake,
+no second ledger, no credential propagation.
