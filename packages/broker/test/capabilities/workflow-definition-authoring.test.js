@@ -193,6 +193,7 @@ test('every operation guides domainId resolution via workflow_my_domains (DOMAIN
     assert.ok(spec, `${op.name} exposes domainId`)
     assert.ok(spec.description.includes('workflow_my_domains'), `${op.name} names the canonical read surface`)
     assert.ok(spec.description.includes('DOMAIN_OWNER'), `${op.name} names the authoring role`)
+    assert.ok(spec.description.includes('caller_role'), `${op.name} uses the real wire field name caller_role (svc MyDomainItem serde snake_case), not callerRole`)
     assert.ok(op.arguments.required.includes('domainId'), `${op.name} still requires domainId`)
     assert.ok(op.http.pathParams.includes('domainId'), `${op.name} still threads domainId into the path`)
   }
