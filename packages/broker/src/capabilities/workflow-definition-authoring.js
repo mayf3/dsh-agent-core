@@ -87,7 +87,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
   id: 'workflow_definition_authoring',
   toolName: 'workflow_definition_authoring',
   name: 'Workflow Definition Authoring',
-  description: 'Create a workflow definition, create its draft version, replace the complete draft graph, or publish the version. svc-workflow remains authoritative for identity, Domain Owner authorization, graph validation and lifecycle.',
+  description: 'Create a workflow definition, create its draft version, replace the complete draft graph, or publish the version. svc-workflow remains authoritative for identity, Domain Owner authorization, graph validation and lifecycle. Resolve the domainId argument first via workflow_my_domains (choose a domain where callerRole is DOMAIN_OWNER).',
   requiredScopes: ['workflow.execute'],
   errors: [...baseErrors, ...authErrors, ...definitionAuthoringErrors],
   operations: [
@@ -97,7 +97,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       arguments: {
         additionalProperties: false,
         properties: {
-          domainId: { type: 'string' }, definitionKey: { type: 'string' }, displayName: { type: 'string' },
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where callerRole is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionKey: { type: 'string' }, displayName: { type: 'string' },
           description: { type: 'string' }, metadata: { type: 'json' },
         },
         required: ['domainId', 'definitionKey', 'displayName'],
@@ -111,7 +111,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       arguments: {
         additionalProperties: false,
         properties: {
-          domainId: { type: 'string' }, definitionId: { type: 'string' }, contextSchema: { type: 'json' },
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where callerRole is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, contextSchema: { type: 'json' },
           jsonSchemaDialect: { type: 'string' }, validatorVersion: { type: 'string' }, metadata: { type: 'json' },
           semanticModelVersion: { type: 'integer', enum: [1, 2, 3] },
         },
@@ -126,7 +126,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       arguments: {
         additionalProperties: false,
         properties: {
-          domainId: { type: 'string' }, definitionId: { type: 'string' }, definitionVersionId: { type: 'string' },
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where callerRole is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, definitionVersionId: { type: 'string' },
           contextSchema: { type: 'json' }, nodes: { type: 'array', items: definitionNodeItem },
           transitions: { type: 'array', items: definitionTransitionItem },
         },
@@ -140,7 +140,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       description: 'Publish a DRAFT version; expectedRevision is optional in the current service contract.',
       arguments: {
         additionalProperties: false,
-        properties: { domainId: { type: 'string' }, definitionId: { type: 'string' }, versionId: { type: 'string' }, expectedRevision: { type: 'string' } },
+        properties: { domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where callerRole is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, versionId: { type: 'string' }, expectedRevision: { type: 'string' } },
         required: ['domainId', 'definitionId', 'versionId'],
       },
       result: { type: 'json' }, errors: ['invalid_arguments'],

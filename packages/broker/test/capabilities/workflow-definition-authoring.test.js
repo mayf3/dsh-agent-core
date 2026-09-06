@@ -181,3 +181,26 @@ test('model 3 catalog and wire preserve exact supported numbers and omission; in
     assert.equal(op.arguments.properties?.semanticModelVersion, undefined)
   }
 })
+
+// RESUME_GOAL_FRESH_REGRESSION (2026-09-06): the normal agent-facing failure
+// "missing required property domainId" was a DOMAIN RESOLUTION gap, not a
+// binding gap — CTR-WDA-001 bindings are frozen and already expose domainId.
+// The model needs canonical guidance to resolve it. Pin that guidance.
+test('every operation guides domainId resolution via workflow_my_domains (DOMAIN_OWNER), bindings unchanged', () => {
+  const value = manifest()
+  for (const op of value.operations) {
+    const spec = op.arguments.properties.domainId
+    assert.ok(spec, `${op.name} exposes domainId`)
+    assert.ok(spec.description.includes('workflow_my_domains'), `${op.name} names the canonical read surface`)
+    assert.ok(spec.description.includes('DOMAIN_OWNER'), `${op.name} names the authoring role`)
+    assert.ok(op.arguments.required.includes('domainId'), `${op.name} still requires domainId`)
+    assert.ok(op.http.pathParams.includes('domainId'), `${op.name} still threads domainId into the path`)
+  }
+  // Generated model-facing catalog keeps the guidance visible to the model.
+  const { definition: catalog } = buildToolDefinition({ manifest: value, handlers: {} })
+  const param = catalog.parameters.domainId
+  assert.ok(param, 'flattened tool parameters expose domainId')
+  assert.ok(String(param.description).includes('workflow_my_domains'), 'flattened description keeps the guidance')
+  // Tool-level description points at the same resolution flow.
+  assert.ok(String(value.description).includes('workflow_my_domains'))
+})
