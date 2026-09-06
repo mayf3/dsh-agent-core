@@ -74,6 +74,19 @@ read. Offline JWKS verification retains the bounded revocation race already acce
 the scheduler surfaces; no Workflow-audience token, human token, provisioning identity,
 source IP or display-name allowlist satisfies this route.
 
+DIRECTORY_READ_ELIGIBLE_CALLERS = all ACTIVE authenticated canonical internal AGENT
+Principals and SERVICE Principals. The minimal canonical Agent directory read is a
+BASELINE INTERNAL DIRECTORY CAPABILITY: consumers MUST NOT create their own lookup
+Principal, lookup Client, consumer-specific directory audience, or consumer-specific
+directory Grant policy to obtain it; where the issuance law requires a grant, it
+represents ONE centrally governed baseline directory-read entitlement applied through
+the normal canonical identity provisioning/activation machinery, and no per-consumer
+directory grant decision is required (PER_CONSUMER_DIRECTORY_GRANT_DECISION_REQUIRED =
+NO). The retired Workflow-specific audience workflow-agent-admission, scope
+agent.definition.admission.read and dedicated Workflow admission identity (principal
+cedb954a-3d99-4e5a-b568-d312441bcc56, client svc-workflow-canonical-admission-v1)
+MUST NOT be provisioned or re-introduced.
+
 ### CTR-IAD-003 — Authoritative exact Agent observation
 
 Read the production runtime's authoritative Agent Definition snapshot synchronously and
