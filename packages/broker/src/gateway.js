@@ -33,6 +33,7 @@ import { buildTargetMap } from './targets.js'
 import { invoke, validateInvocation } from './mapping.js'
 import { loadCredentialFor } from './credential-store.js'
 import { validateSchedulerTrustedContext } from './scheduler-validation.js'
+import { prepareWorkflowDraft } from './capabilities/workflow-linear-authoring.js'
 
 /**
  * Create the in-process broker gateway.
@@ -226,6 +227,12 @@ export function createBrokerGateway({
       localArgs = validated.args
     }
 
+    if (manifest.id === 'workflow_definition_authoring' && operation === 'replace_draft_graph') {
+      const prepared = prepareWorkflowDraft(localArgs)
+      if (!prepared.ok) return prepared
+      localArgs = prepared.args
+    }
+
     let credential
     try {
       credential = loadCredentialFor(credentialsFile, agentId)
@@ -297,7 +304,7 @@ export function createBrokerGateway({
     // ── HTTP-bound capability: the existing generic authorized transport. ─
     const transport = transportFor(agentId)
     const handlers = createHttpHandlers(manifest, transport)
-    return invoke(manifest, handlers, { operation, args: call?.args ?? {} }, {
+    return invoke(manifest, handlers, { operation, args: localArgs }, {
       // The parent decides the caller; the local identity stub is unused by
       // the HTTP pipeline (identity travels in the credential, not here).
       resolvePrincipal: () => undefined,
