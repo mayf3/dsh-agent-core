@@ -63,3 +63,8 @@ Canary id（concrete）: `FORUM-MOD-CANARY-20260906-8QK4T`
 
 - **OWNER_ACTION_REQUIRED = NONE（本轮）**。生产 lane 空闲后按 §A→§B→§C 继续 SAME GOAL 无需再问；唯一 Owner 触点 = §B.2 的 CTR-FMG-016 apply 授权引用（accepted spec 自己规定的独立授权，非本 Goal 可自授）。
 - 无需裁决项：moderator 人选已 frozen（fresh active 复核）；V3 不实现；svc-forum 升级不在本 Goal；auth 重部署已因 1.8.0 现役而消失。
+
+## §E OWNER ACCEPTANCE + PRODUCTION HOLD（2026-09-06 lifecycle metadata；见 evidence 附件全文）
+
+- **OWNER_ACCEPTANCE = YES**：Owner exact-head 接受 auth PR #59 @ merged main `efc808b`（accepted head `fc2bf0c3eec037a0c3bf7fc82f0b87d0983f38a8`，SHA 机械核验吻合）；GOVERNANCE_SEQUENCE_DEVIATION=YES / PRODUCTION_SAFETY_INCIDENT=NO / PRODUCTION_MUTATION=NONE / ROLLBACK_REQUIRED=NO；不重写、不重生成已 accepted 内容。durable 记录：`docs/evidence/forum-moderation-resume-20260906/OWNER_ACCEPTANCE_HOLDBYOWNER_20260906.md`。
+- **PRODUCTION_APPLY = HOLD_BY_OWNER（本节覆盖 §D 中「slot 空闲即自动 resume」语句）**：slot 空闲单独**不构成** resume 条件；仅当 Owner 显式解除 HOLD 后 resume SAME GOAL，第一步 = fresh 只读 preflight（bundle identity / Grant+Audience 前置态 / dsh preimage / 生产 lock / runtime health / packet hash 有效性），随后按本 packet §A→§B→§C 与 CTR-FMG-016 执行。§A/§B/§C 制品内容保持 frozen 不变。
