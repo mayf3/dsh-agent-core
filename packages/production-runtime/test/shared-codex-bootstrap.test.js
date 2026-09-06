@@ -17,7 +17,7 @@ import {
 } from '../src/shared-codex-migration-executable.js'
 import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE } from '../src/model-overrides.js'
 
-const SHARED = '/Users/authsvc/.agent-core/agent-model-overrides.json'
+const SHARED = '/Users/yanfenma/.agent-core/agent-model-overrides.json'
 const FLEET = 92
 const OK = ['node', '-e', 'process.exit(0)']
 
@@ -72,11 +72,11 @@ function rig({ count = FLEET, receiptResult = 'PASS', phase = 'pre', withRoot = 
     commands: {
       quiesceLunaDispatch: OK, quiesceRefreshWriters: OK,
       grantControlPlaneAcl: OK,
-      probeUid502Read: OK, probeUid502AtomicReplace: OK, probeAuthsvcControlPlane: OK, probeThirdUidDenied: OK,
+      probeUid502Read: OK, probeUid502AtomicReplace: OK, probeCanonicalOwnerControlPlane: OK, probeThirdUidDenied: OK,
       installPinnedArtifact: ['node', '-e', stubReceipt],
       controlledRestart: OK, verifyFleetHealth: OK, rollbackRuntime: OK,
       verifyZeroPerHomeRuntimeOpens: OK,
-      canaries: { CEO: OK, HR: OK, Podcast: OK, Shopping: OK },
+      canaries: { STOCK: OK, CEO: OK, CTO: OK },
     },
   }
   const cleanup = () => rmSync(root, { recursive: true, force: true })

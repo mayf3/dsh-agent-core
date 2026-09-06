@@ -146,7 +146,7 @@ test('real executable bindings complete isolated production-like migrate and saf
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const rooted = (absolute) => join(root, absolute.slice(1))
   const provenancePath = '/control/provenance.json'
-  const sharedConfigPath = '/Users/authsvc/.agent-core/agent-model-overrides.json'
+  const sharedConfigPath = '/Users/yanfenma/.agent-core/agent-model-overrides.json'
   const artifactReceiptPath = '/control/artifact-receipt.json'
   const events = rooted('/control/events.jsonl')
   mkdirSync(rooted('/control'), { recursive: true })
@@ -176,12 +176,12 @@ test('real executable bindings complete isolated production-like migrate and saf
     grantControlPlaneAcl: command('grant-acl'),
     probeUid502Read: command('uid502-read', "fs.accessSync(process.env.AGENT_CORE_CANONICAL_CREDENTIAL,fs.constants.R_OK)"),
     probeUid502AtomicReplace: command('uid502-replace', "const p=process.env.AGENT_CORE_CANONICAL_CREDENTIAL,t=p+'.probe';fs.copyFileSync(p,t);fs.chmodSync(t,0o600);fs.renameSync(t,p)"),
-    probeAuthsvcControlPlane: command('authsvc-control'),
+    probeCanonicalOwnerControlPlane: command('canonical-owner-control'),
     probeThirdUidDenied: command('third-uid-denied', "if((fs.statSync(process.env.AGENT_CORE_CANONICAL_CREDENTIAL).mode&0o077)!==0)process.exit(9)"),
     installPinnedArtifact: command('install-artifact', `fs.writeFileSync(process.env.AGENT_CORE_ARTIFACT_RECEIPT,JSON.stringify(${JSON.stringify({ ...FLEET_SHARED_CODEX_ARTIFACT_PIN, sourceStamp: 'dsh-codex-source-stamp-v1' })}))`),
     verifyZeroPerHomeRuntimeOpens: command('zero-per-home-opens'),
     controlledRestart: command('restart'),
-    canaries: Object.fromEntries(['CEO', 'HR', 'Podcast', 'Shopping'].map((name) => [name, command(`canary-${name}`)])),
+    canaries: Object.fromEntries(['STOCK', 'CEO', 'CTO'].map((name) => [name, command(`canary-${name}`)])),
     verifyFleetHealth: command('fleet-health'),
     rollbackRuntime: command('rollback-retain-canonical'),
   }
@@ -201,9 +201,9 @@ test('real executable bindings complete isolated production-like migrate and saf
   const report = JSON.parse(migration.stdout)
   assert.equal(report.canonicalReauthCount, 1)
   assert.equal(readFileSync(events, 'utf8').split('\n').filter((line) => line === 'owner-reauth').length, 1)
-  assert.equal(readFileSync(events, 'utf8').includes('canary-CEO\ncanary-HR\ncanary-Podcast\ncanary-Shopping\nfleet-health'), true)
+  assert.equal(readFileSync(events, 'utf8').includes('canary-STOCK\ncanary-CEO\ncanary-CTO\nfleet-health'), true)
   assert.equal(readFileSync(rooted(sharedConfigPath), 'utf8').includes(CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE), true)
-  assert.deepEqual(JSON.parse(readFileSync(rooted('/Users/authsvc/.agent-core/control/shared-codex-migration-fence.json'), 'utf8')), {
+  assert.deepEqual(JSON.parse(readFileSync(rooted('/Users/yanfenma/.agent-core/control/shared-codex-migration-fence.json'), 'utf8')), {
     version: 1, lunaDispatchQuiesced: true, refreshWritersQuiesced: true,
   })
   assert.equal((statSync(report.canonicalCredential).mode & 0o077), 0)

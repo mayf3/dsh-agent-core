@@ -12,9 +12,13 @@ const PIN = Object.freeze({
   sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
   artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
 })
-const CANARIES = Object.freeze(['CEO', 'HR', 'Podcast', 'Shopping'])
-const SHARED_CONFIG_PATH = '/Users/authsvc/.agent-core/agent-model-overrides.json'
-const FENCE_PATH = '/Users/authsvc/.agent-core/control/shared-codex-migration-fence.json'
+// Domain constants realigned to the yanfenma unified production backend per
+// AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 CTR-ACT2-002 (the ONLY
+// implementation delta against the frozen authsvc-frame bytes, besides the
+// canonical-owner control-plane probe replacing the authsvc ACL probe).
+const CANARIES = Object.freeze(['STOCK', 'CEO', 'CTO'])
+const SHARED_CONFIG_PATH = '/Users/yanfenma/.agent-core/agent-model-overrides.json'
+const FENCE_PATH = '/Users/yanfenma/.agent-core/control/shared-codex-migration-fence.json'
 
 function migrationError(code, message) { return Object.assign(new Error(`shared-codex-migration: ${message}`), { code }) }
 function exactObject(actual, expected) {
@@ -51,7 +55,7 @@ function validateConfig(config, { allowProduction = false } = {}) {
   const bootstrap = resolveBootstrap(config)
   for (const name of [
     'quiesceLunaDispatch', 'quiesceRefreshWriters', ...(bootstrap ? [] : ['ownerReauthCanonical']), 'grantControlPlaneAcl',
-    'probeUid502Read', 'probeUid502AtomicReplace', 'probeAuthsvcControlPlane', 'probeThirdUidDenied',
+    'probeUid502Read', 'probeUid502AtomicReplace', 'probeCanonicalOwnerControlPlane', 'probeThirdUidDenied',
     'installPinnedArtifact', 'controlledRestart', 'verifyFleetHealth', 'rollbackRuntime',
     'verifyZeroPerHomeRuntimeOpens',
   ]) if (!Array.isArray(config.commands?.[name])) throw migrationError('SHARED_CODEX_BINDING_INVALID', `missing production binding ${name}`)
@@ -143,7 +147,7 @@ export function executeFleetSharedCodexMigration(config, options = {}) {
   validateCanonical(canonical)
   runCommand(config.commands.probeUid502Read, 'uid502 read gate', env)
   runCommand(config.commands.probeUid502AtomicReplace, 'uid502 atomic replace gate', env)
-  runCommand(config.commands.probeAuthsvcControlPlane, 'authsvc control-plane gate', env)
+  runCommand(config.commands.probeCanonicalOwnerControlPlane, 'canonical-owner control-plane gate', env)
   runCommand(config.commands.probeThirdUidDenied, 'third uid denied gate', env)
   switchFleetConfig(sharedConfig)
   runCommand(config.commands.verifyZeroPerHomeRuntimeOpens, 'verify zero per-home OAuth runtime opens', env)

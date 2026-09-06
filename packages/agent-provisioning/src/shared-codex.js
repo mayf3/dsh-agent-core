@@ -1,7 +1,7 @@
 import { lstatSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join } from 'node:path'
 
-export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
+export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
 const PATCH_BEGIN = '# BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1'
 const PATCH_END = '# END AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1'
 
