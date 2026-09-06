@@ -31,7 +31,7 @@ Freeze proposal and independently review the route, contracts, inherited invaria
 
 ## Phase 2 — Reuse accepted Authority, reconcile source and build
 
-Precondition: accepted authority ancestor of implementation base. Re-PREFLIGHT as REUSE / EXEC_PLAN / CONTROLLED in the same Goal; do not create another Goal. Freeze updated main and relevant contract hashes. Resolve all business WIP paths to source/accepted operations without reset/clean/stash/rebase of any live checkout. Preserve legitimate behavior, including P0 and shared Skill environment changes; stage a minimal exact merged closure rather than all latest main.
+Precondition: accepted authority ancestor of implementation base. Re-PREFLIGHT as REUSE / EXEC_PLAN / CONTROLLED in the same Goal; do not create another Goal. Freeze updated main and relevant contract hashes. Resolve all business WIP paths to source/accepted operations without reset/clean/stash/rebase of any live checkout. Preserve legitimate behavior, including P0 and shared Skill environment changes; stage the minimal exact frozen candidate for pre-merge audit; only the final production artifact requires merged-source ancestry. Never deploy all latest main merely because a change merged.
 
 Use exact Node v25.6.1 ARM artifact in a task-owned isolated build directory with its own pinned pnpm 11.7.0 distribution/store. Freeze package lock and effective Harness source 514ab7b0029141b88c807704764d0d3e1eea1da4, unless a reviewed required delta proves necessary. Read Harness architecture/package/local instructions before touching its source; obey its gates. Root development Harness HEAD/WIP is not the production source.
 
@@ -67,7 +67,7 @@ Run one normal production Agent request through an existing accepted surface, pr
 |---|---|---|
 | Host/business parent/real child baseline | runtime-census.json system sample headers | OBSERVED x64/Rosetta, not target |
 | Native installed bytes | business-native-inventory.json + secondary native-inventory.json | byte inventory complete for stated scopes; runtime edge classification pending |
-| Exact Node ARM feasibility | official checksum and executed isolated Node receipt | feasibility inspection in progress |
+| Exact Node ARM feasibility | official checksum and executed isolated Node receipt | PASS for exact Node only; Harness compatibility not yet tested |
 | Accepted new Authority | independent review + Owner exact-head acceptance + main ancestry | proposal only |
 | Source reconciliation | per-WIP disposition and sealed merged closure | not done |
 | Native source/test/loader/negative matrix | candidate exact-runtime receipts | not done |
