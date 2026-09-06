@@ -63,10 +63,19 @@ sudo bash docs/evidence/shared-skill-root-activation-v1-20260905/rollback-shared
 
 默认取最新 preimage，恢复 plist + bootout/bootstrap。
 
-## 6. BLOCKERS（apply 前必须清空）
+## 6. BLOCKERS（2026-09-06 fresh reconciliation 后）
 
-1. **NATIVE_PRIVILEGED_AUTH**：plist 写入与 system-domain bootout/bootstrap 需 root；本会话 `sudo -n` 不可用 → Owner 执行 §3。
-2. **PRODUCTION_MUTATION_SLOT**：WDA canary lane 仍持有并发槽（CANARY_RESULT.json absent）。Owner 在 slot 空闲时运行 §3 即同时解决两道门。
+1. **NATIVE_PRIVILEGED_AUTH（唯一剩余门）**：plist 写入与 system-domain bootout/bootstrap 需 root；本会话 `sudo -n` 不可用 → Owner 执行 §3。
+2. ~~PRODUCTION_MUTATION_SLOT~~：**已清空**（2026-09-06：WDA 全 Goal COMPLETE @ dsh 8386309/a62a611，slot 释放；本 Goal 为 P1 依 dispatch 取 slot；GLM/Luna、Forum 不得抢占）。
+
+## 6a. 2026-09-06 fresh census（增量）
+
+- 当前 main `600d4df`，fix head `114956bc` 仍为其祖先（CURRENT_SOURCE_HAS_FIX=YES，无 source delta）。
+- 生产 plist 未漂移（mtime Sep 1 06:13，2433 bytes）；staged diff 对当前 live plist 仍恰 +2 行 0 删改（HISTORICAL_CANDIDATE_STILL_APPLIES=YES）。
+- 生产 runtime pid 68793（system domain running）；`/health` 8790 ok:true、deliverReady:true。
+- `launchctl print` env 仍只有 `HOME => /Users/authsvc`（PRODUCTION_DSH_AGENTS_HOME=ABSENT）；`/Users/authsvc/.agents` 仍不存在。
+- canonical root `/Users/yanfenma/.agents/skills` 17 项在位。
+- **apply 脚本已补离线 `--selftest` 并 PASS**（bash 与 /bin/bash 3.2 双跑：success path + 幂等 abort + diff-gate 漂移捕获）；post-apply-verify 的 OLD_PID 已参数化（默认 68793）。
 
 ## 7. DO_NOT_BUILD → FOLLOW_UP_DEBT（未做，维持 dispatch 裁定）
 

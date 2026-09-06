@@ -1,5 +1,6 @@
-2add89a1742c18cab2852a11794c574e860fb9f34907c46f276b657e7365633b  ACTIVATION_PACKET.md
-4f63400d1c209aef3c7e1825f977a2807d28315f9ecd71a741f99a8e2103a42d  owner-apply-shared-skill-root-v1.sh
-0997e77b13b13c3d7cc694145930211e29e1c08529fb789c38ba6476760b2a0e  rollback-shared-skill-root-v1.sh
-31e48fec74642f1d8c66661effa785be4423752dc40c4ec8c05b08ef81e99406  ai.agent-core.runtime.plist.staged-new
-f6dc8d739123843f7cc2e410382f2d87bf07e846efa5b6ebad633e08f3f30227  staged-plist.diff
+0540c93c122c622608d3f93f3ae8511a56816c87a143e8ad42ffacd1cf8ff23c  docs/evidence/shared-skill-root-activation-v1-20260905/owner-apply-shared-skill-root-v1.sh
+13308ad658ad2e34de79df37fe39e257b43a20e2a89494671d35fdcdacbe9507  docs/evidence/shared-skill-root-activation-v1-20260905/post-apply-verify-shared-skill-root-v1.sh
+0997e77b13b13c3d7cc694145930211e29e1c08529fb789c38ba6476760b2a0e  docs/evidence/shared-skill-root-activation-v1-20260905/rollback-shared-skill-root-v1.sh
+31e48fec74642f1d8c66661effa785be4423752dc40c4ec8c05b08ef81e99406  docs/evidence/shared-skill-root-activation-v1-20260905/ai.agent-core.runtime.plist.staged-new
+f6dc8d739123843f7cc2e410382f2d87bf07e846efa5b6ebad633e08f3f30227  docs/evidence/shared-skill-root-activation-v1-20260905/staged-plist.diff
+b11e40095606708ce598669dc2bd17834de392af7e84de741099108726e7d527  docs/evidence/shared-skill-root-activation-v1-20260905/ACTIVATION_PACKET.md
