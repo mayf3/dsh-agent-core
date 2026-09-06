@@ -120,8 +120,8 @@ E2E or deployment. Those require executed observations at implementation/operati
 
 ## 8. Decisions
 
-- **DEC-001:** add exactly one capability/tool, `workflow_definition_authoring`,
-  with four operations, following ONE CAPABILITY → ONE TOOL / MULTI-OPERATION.
+- **DEC-001:** retain exactly one `workflow_definition_authoring` capability/tool
+  with exactly four operations, following ONE CAPABILITY → ONE TOOL / MULTI-OPERATION.
 - **DEC-002:** Broker performs shape validation, bounded linear compilation under CTR-WDA-010, and transport mapping;
   svc-workflow remains the sole business/security authority.
 - **DEC-003:** use current exact scope `workflow.execute`; no scope/Grant change.
@@ -147,11 +147,15 @@ create_draft_version:
   required [domainId, definitionId]; semanticModelVersion enum [1,2,3]
 replace_draft_graph:
   path [domainId, definitionId]
-  body [definitionVersionId, contextSchema?, nodes, transitions]
+  body allowed fields [definitionVersionId, contextSchema?, nodes?, transitions?,
+                       steps?, terminalOutcome?]
   required [domainId, definitionId, definitionVersionId]; then exactly one input form:
   full: nodes + transitions
   linear: steps + terminalOutcome
-  Linear input/output obligations are CTR-WDA-010.
+  additionalProperties=false; exactly-one-form and full-form compatibility are frozen
+  by CTR-WDA-010. The linear form is compiled into canonical nodes + transitions
+  before the existing service HTTP request; steps/terminalOutcome are input fields,
+  not additional service wire fields. Linear input/output obligations are CTR-WDA-010.
 publish_version:
   path [domainId, definitionId]
   body [versionId, expectedRevision?]
@@ -234,7 +238,7 @@ never turn a rejected graph into success or weaken canonical validation.
 
 `workflow_execute` remains exactly `create_instance|transition`;
 `workflow_transition` remains absent. Existing read tools and service wires are
-unchanged. The new capability registers exactly once.
+unchanged. The existing capability remains registered exactly once.
 
 ### CTR-WDA-006 — retained model-2 local proof
 
@@ -347,7 +351,7 @@ identity gap; do not invent a principal or request new permission silently.
 | ACC-WDA-002 | catalog proves exact nested full/linear schemas; legal graph expressible; service rejects invalid graph |
 | ACC-WDA-003 | identity/credential/key absent from schema/wire; trusted key behavior passes |
 | ACC-WDA-004 | operation fixtures prove current status/code preservation and fallback |
-| ACC-WDA-005 | inventory/regression proves existing surface unchanged and one new tool once |
+| ACC-WDA-005 | inventory/regression proves existing surface unchanged and existing tool registered once |
 | ACC-WDA-006 | disposable local five-call chain and negative/security assertions PASS |
 | ACC-WDA-007 | structure and exact diff-scope gates PASS |
 

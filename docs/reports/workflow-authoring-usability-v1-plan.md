@@ -87,4 +87,15 @@ silently interrupted or edited. Unrelated observations = FOLLOW_UP_DEBT.
 
 V3 OBS-WDA-101..104 pin source/main and deployed Broker manifest hash. Runtime file
 identity is not a claim of loaded process/catalog or production E2E. All production
-completion rows remain NOT_RUN. Independent semantic review is pending.
+completion rows remain NOT_RUN. Independent semantic review by `/root/semantic_review`
+completed with ACCEPT and an empty blocker union for dsh
+`922779764ce9a0de94e71e87a389501463d2d3ce` paired with svc
+`78323394c6c6d82a14657bdfd6589419fdbb6dff`; this recommendation was not Owner acceptance.
+
+Owner subsequently held the batch and required one bounded dsh repair: CTR-WDA-001
+must explicitly permit steps + terminalOutcome as the alternative input body form,
+retaining CTR-WDA-010 mutual exclusion, canonical wire expansion and full compatibility.
+The same round permits only existing-tool registration wording and this review-status
+correction. The svc candidate remains unchanged and held for batch acceptance.
+A fresh independent semantic re-audit of the repaired exact dsh head is required before
+requesting batch exact-head acceptance. Product implementation remains forbidden.
