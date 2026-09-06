@@ -93,3 +93,13 @@ The full required native-closure runtime classification, parent/child in-process
 ## Provenance
 
 Raw, sanitized receipts are under `../evidence/native-arm64-census-20260907/`. The one-second sample headers retain PID, executable, code type and timestamp; full samples are not published. Recorded source identities are observations, not claims that all live bytes equal git HEAD. All census results expire for mutation purposes at the next production preimage check.
+
+## Same-version Node feasibility and bounded checks
+
+Official `https://nodejs.org/dist/v25.6.1/SHASUMS256.txt` was retrieved directly on 2026-09-07; the downloaded darwin-arm64 tarball matches SHA256 `a80cb252d170a4730f78f5950cf19a46106f156e5886e5c1cc8c5602aea60243`. Extracted Node actually reports v25.6.1 / darwin / arm64, with native binary SHA256 `e5d8a01ccadd10e9988dfb03d371066ef06f7373e51f939d758fbb7aab7b3b21`; its linked libraries are system frameworks/libraries and the tar has no dylib entries. `node-feasibility.json` records the command environment, paths and time. This proves exact-version native Node availability/runnability, not full Harness compatibility or production readiness.
+
+Read-only WIP comparison expanded 13 porcelain entries into 14 leaf files: 7 match current base, 7 differ, of which 1 is absent in base. `production-wip-comparison.json` contains code-only hashes and filenames. This comparison does not accept a delta or license overwriting the live tree.
+
+Governance integrity passed. Targeted new-Spec metadata and 10/10 reverse Contract acceptance references passed for initial candidate `8fec005`. Full structure verifier returned one pre-existing `UNREGISTERED_LEGACY_DIRECTORY` at `packages/production-runtime/test` (22 children); base-versus-same-base reproduced it exactly. `structure-baseline-summary.json` preserves that limitation. Do not report global structure PASS; future code touching this surface must resolve applicable structure requirements without exceptions or unrelated cleanup.
+
+Independent initial semantic review of `8fec005` found no Blocker and one load-bearing sequencing gap: pre-merge audit candidates were not explicitly distinguished from merged production artifacts. The Author made the bounded proposed-Spec AMEND: exact frozen attributable unmerged candidates may be built solely for review, while final production artifacts/deployment require audited merged ancestry and post-merge identity comparison. No existing accepted authority or intended production requirement changed. A fresh affected-boundary review is required before Owner acceptance.
