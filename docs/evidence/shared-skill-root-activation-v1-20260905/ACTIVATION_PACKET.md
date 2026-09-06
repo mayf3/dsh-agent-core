@@ -1,9 +1,9 @@
 # SHARED_SKILL_ROOT_PRODUCTION_ACTIVATION_V1 — Production Activation Packet
 
-- DATE: 2026-09-05
-- GOAL_MODE: RESUME_GOAL / CURRENT_PHASE = FRESH_MAIN_INTEGRATION_CENSUS（已完成）
+- DATE: 2026-09-05（2026-09-06 Owner correction 更新相位）
+- GOAL_MODE: CONTINUE_SAME_GOAL / CURRENT_PHASE = **READY_FOR_PRODUCTION_SLOT**
 - GOAL_TERMINAL_BOUNDARY = PRODUCTION_READY
-- STATUS: census COMPLETE，activation artifact 就绪；**apply 被两道门阻塞**（见 BLOCKERS）
+- STATUS: packet 冻结待产；**PRODUCTION_APPLY = HOLD_BY_PRIORITY**（P1，排在活跃 P0 Workflow mainline 之后：WORKFLOW_AUTHORING_USABILITY_PRODUCTION_V1、WORKFLOW_ASSIGNEE_CANONICAL_IDENTITY_RECONCILIATION_V1）。不请求 sudo、不取 slot。
 
 ## 1. Census 结果（2026-09-05 fresh）
 
@@ -63,10 +63,9 @@ sudo bash docs/evidence/shared-skill-root-activation-v1-20260905/rollback-shared
 
 默认取最新 preimage，恢复 plist + bootout/bootstrap。
 
-## 6. BLOCKERS（2026-09-06 fresh reconciliation 后）
+## 6. BLOCKERS（2026-09-06 Owner correction 后）
 
-1. **NATIVE_PRIVILEGED_AUTH（唯一剩余门）**：plist 写入与 system-domain bootout/bootstrap 需 root；本会话 `sudo -n` 不可用 → Owner 执行 §3。
-2. ~~PRODUCTION_MUTATION_SLOT~~：**已清空**（2026-09-06：WDA 全 Goal COMPLETE @ dsh 8386309/a62a611，slot 释放；本 Goal 为 P1 依 dispatch 取 slot；GLM/Luna、Forum 不得抢占）。
+BLOCKERS = 0（无技术阻塞）。唯一门 = **PRODUCTION_PRIORITY**（P0 Workflow mainline 活跃：WORKFLOW_AUTHORING_USABILITY_PRODUCTION_V1、WORKFLOW_ASSIGNEE_CANONICAL_IDENTITY_RECONCILIATION_V1）。slot 释放后按 §3 同一冻结命令 apply；NATIVE_PRIVILEGED_AUTH 在届时仍是 Owner 执行（sudo）。
 
 ## 6a. 2026-09-06 fresh census（增量）
 
