@@ -61,6 +61,7 @@ import { manifests as okrManifests } from './capabilities/okr.js'
 import { agentDefinitionManifests } from './capabilities/agent-definition.js'
 import { schedulerManifests } from './capabilities/scheduler.js'
 import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
+import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'
@@ -91,6 +92,7 @@ export const DEFAULT_MANIFESTS = [
   ...agentDefinitionManifests,
   ...schedulerManifests,
   ...agentSessionMessagingManifests,
+  ...agentPrincipalResolutionManifests,
 ]
 
 /** Default auth-service token endpoint origin (deployment-local). */
@@ -281,6 +283,9 @@ export function apply(ctx, config = {}) {
         // generalization keeps the execute-time resolve-at-call contract
         // (sibling rows load concurrently; reading at APPLY time would race).
         ...(ctx.get('agentSessionMessagingAccess')?.handlers ?? {}),
+        // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1: fourth LOCAL
+        // provider (read-only exact Principal -> enabled agentId).
+        ...(ctx.get('agentPrincipalResolutionAccess')?.handlers ?? {}),
       }),
       log: (msg) => process.stderr.write(`${msg}\n`),
     })
