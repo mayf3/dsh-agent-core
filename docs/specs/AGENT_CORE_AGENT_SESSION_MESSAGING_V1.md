@@ -791,9 +791,12 @@ ANCHOR (new, trusted-channel-only):
 RECONCILE SURFACE (new, read-only):
   sibling LOCAL capability agent_session_send_reconcile, operation lookup,
   args = { invocationCorrelation }, requiredScopes = ['agent.session.send'].
-  Executed in the parent gateway against the SAME L1 audit chain. It MUST be excluded from every
-  model tool surface (infrastructure-only; registered for the child runtime relay, not for tools).
-  Read-only: zero Router delivery, zero Session mutation, bounded single exact-key lookup.
+  Executed in the parent gateway against the SAME L1 audit chain. It MUST NOT be presented as a
+  model tool: the manifest carries an `infrastructure: true` marker and the broker tool
+  presentation (index.js plugin apply — "manifests to register as tools", each mapping to ONE
+  tool) filters such manifests out of the model inventory, while the gateway keeps
+  validating/executing them over the trusted RPC channel. Read-only: zero Router delivery, zero
+  Session mutation, bounded single exact-key lookup.
 
 RELAY DUTY (mirrors SCHEDULER §5.2):
   At the two unknown capture points (transport loss; structurally unusable parent envelope), the child
@@ -977,7 +980,8 @@ AND no Feishu/Forum/Scheduler/Workflow delivery occurs
 - true unresolved ambiguity (restart between intent and outcome; unusable lookup) → reconcile UNKNOWN
   is final, no automatic replay of any kind fires (T10);
 - `invocationCorrelation` is absent from every model-visible schema surface (R2 closure intact) and is
-  persisted in intent + outcome rows; `agent_session_send_reconcile` appears in NO model tool list;
+  persisted in intent + outcome rows; `agent_session_send_reconcile` is filtered from the model tool
+  inventory via the `infrastructure: true` marker (still gateway-executable over the trusted channel);
 - the model-visible render carries the structured failure detail for declared failures (§5.2), and L1
   outcome `failed` rows persist `failureCode` (§5.2);
 - a real production `reply_unavailable` reproducer classifies mechanically as DELIVERED + <reason> via
@@ -1115,7 +1119,8 @@ DEPLOYMENT_REGRESSION = NO (live tree 2026-09-05 session-send chain == origin/ma
   hash-compared; evidence: docs/evidence/agent-session-send-reliability-v1-20260908)
 WIRE_BREAK = NONE (closed envelope vocabulary unchanged; anchor lives at the parent-RPC trusted
   boundary; reconcile surface is infrastructure-only)
-NEW_CAPABILITY = agent_session_send_reconcile (LOCAL, read-only, model-surface-excluded)
+NEW_CAPABILITY = agent_session_send_reconcile (LOCAL, read-only, `infrastructure: true` manifest
+  marker filtered from tool presentation, gateway-executable)
 GRANT_CHANGE = NONE (reuses agent.session.send; no new native/admin authorization)
 PRODUCTION_CHANGE = NONE (this amendment is docs-only; implementation follows acceptance;
   production apply remains HOLD_WHILE_P0_OWNS_SLOT per the owner goal)
