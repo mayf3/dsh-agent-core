@@ -30,7 +30,7 @@ const agentToken = delta => token(agentBase, delta)
 const serviceToken = delta => token(serviceBase, delta)
 function fixture(opts = {}) {
   let reads = 0
-  let snapshot = [{ id: 'agt_test-agent', disabled: false, name: 'PRIVATE_SENTINEL' }]
+  let snapshot = [{ id: 'agt_test-agent', disabled: false, name: 'PRIVATE_SENTINEL' }, { id: 'agt_stock_agent', disabled: false }]
   const handler = createWorkflowAdmissionHandler({
     jwksUrl: 'http://127.0.0.1/jwks', nowMs: () => now,
     fetchImpl: async () => ({ ok: true, json: async () => ({ keys: [jwk] }) }),
@@ -48,11 +48,15 @@ test('agent caller observes exactly {agentId, exists, enabled}, snapshot fresh p
   const f = fixture()
   const result = await f.handler(req(), url('/agt_test-agent'))
   assert.deepEqual(result, { status: 200, body: { agentId: 'agt_test-agent', exists: true, enabled: true } })
+  // Canonical grammar includes underscore IDs (agent-definition AGENT_ID_RE).
+  assert.deepEqual(await f.handler(req(), url('/agt_stock_agent')),
+    { status: 200, body: { agentId: 'agt_stock_agent', exists: true, enabled: true } })
+  f.set([{ id: 'agt_test-agent', disabled: false }, { id: 'agt_stock_agent', disabled: false }])  // reset to 2-row snapshots for the freshness counts below
   assert.equal(JSON.stringify(result).includes('PRIVATE_SENTINEL'), false)
   f.set([{ id: 'agt_test-agent', disabled: true }])
   assert.deepEqual(await f.handler(req(), url('/agt_test-agent')),
     { status: 200, body: { agentId: 'agt_test-agent', exists: true, enabled: false } })
-  assert.equal(f.reads(), 2)
+  assert.equal(f.reads(), 3)  // fresh snapshot per command: initial + underscore + disabled
 })
 
 test('service caller is equally directory-eligible; required scope is presence-checked', async () => {
