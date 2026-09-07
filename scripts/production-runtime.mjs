@@ -7,9 +7,15 @@
  * (scripts/production-runtime-launchd.mjs).
  */
 
-import { runProductionRuntime } from '../packages/production-runtime/src/entry.js'
+import { assertProductionArchitecture } from '../packages/production-runtime/src/native-arm64/admission.js'
 
-runProductionRuntime().catch((error) => {
+async function main() {
+  assertProductionArchitecture()
+  const { runProductionRuntime } = await import('../packages/production-runtime/src/entry.js')
+  return runProductionRuntime()
+}
+
+main().catch((error) => {
   process.stderr.write(`[production-runtime] FATAL ${error?.stack ?? error}\n`)
   process.exit(2)
 })

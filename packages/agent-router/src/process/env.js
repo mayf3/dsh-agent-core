@@ -111,6 +111,8 @@ export function agentEnv(home, extra = {}, omit = [], providerEnv = {}) {
   // no per-Agent config, model override, caller env param or omit list may
   // override or drop it. The Router parent's own process.env is untouched —
   // this only shapes the child's env object.
+  // A per-agent override cannot weaken the parent generation architecture binding.
+  if (process.env.DSH_RUNTIME_ARCH !== undefined) env.DSH_RUNTIME_ARCH = process.env.DSH_RUNTIME_ARCH
   env.TMPDIR = AGENT_CHILD_TMPDIR
   return env
 }

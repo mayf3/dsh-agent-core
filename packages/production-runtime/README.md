@@ -104,3 +104,15 @@ untouched by this package).
 - No second scheduler, broker, or auth.
 - No fake/recording Feishu seam: without credentials the channel stays OFF
   and delivery-requesting jobs are marked not-delivered (honest failure).
+
+## Native arm64 production generation
+
+An accepted native generation launches with `--native-arm64` and deployment-owned
+`DSH_RUNTIME_ARCH=arm64`. The thin launcher validates darwin/arm64 and exact Node
+v25.6.1 before loading the application graph. Missing/invalid expectation or a
+wrong runtime exits with `NATIVE_RUNTIME_REJECTED`; there is no x64 fallback.
+Unscoped development launches keep their existing behavior. The sealed launch
+packet must contain both bindings and verify them before switching production.
+The ready receipt records the native runtime identity; Router children retain
+its exact executable and architecture expectation. Explicit rollback selects
+preserved old-generation bytes rather than bypassing the ARM guard.
