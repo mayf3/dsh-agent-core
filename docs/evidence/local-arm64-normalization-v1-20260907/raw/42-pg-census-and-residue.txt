@@ -1,0 +1,39 @@
+== §5 closure coherence from raw/25 (site-packages .so samples) ==
+-- ARM python3.14 site-packages .so arch:
+  40 arm64
+-- Intel python3.14 site-packages .so arch:
+   5 arm64
+ 200 x86_64
+-- article-review-canary closure: node=x86_64 esbuild=x86_64 => coherent x64 (Rosetta note)
+
+== §8 PG migration census (read-only) ==
+-- server version:
+postgres (PostgreSQL) 16.14 (Homebrew)
+pg_control version number:            1300
+Catalog version number:               202307071
+Latest checkpoint location:           7/2330BE30
+Latest checkpoint's REDO location:    7/2330BDF8
+-- databases:
+-- roles:
+-- extensions (per non-template db):
+-- sockets:
+/tmp/.s.PGSQL.5432
+/tmp/.s.PGSQL.5432.lock
+/tmp/.s.PGSQL.55449
+/tmp/.s.PGSQL.55449.lock
+-- active clients:
+-- backup mechanisms:
+0 3 * * * bash /Users/yanfenma/workspace/openclaw-backup/backup-all.sh >> /Users/yanfenma/workspace/openclaw-backup/cron-backup.log 2>&1
+0 7 * * * /Users/yanfenma/workspace/project/scripts/backup-local-mac.sh >> /Users/yanfenma/workspace/project/backups/local-db-backup.log 2>&1
+zsh:21: no matches found: /Users/yanfenma/*.sql*
+
+== §9 temp cluster investigation ==
+-- listener + established:
+COMMAND    PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+postgres 22868 yanfenma    5u  IPv4 0x34e03034bb3dc267      0t0  TCP 127.0.0.1:55449 (LISTEN)
+-- connectable? dbs:
+psql: error: connection to server at "127.0.0.1", port 55449 failed: FATAL:  role "yanfenma" does not exist
+-- provenance search:
+/Users/yanfenma/workspace/project/dsh-agent-core/docs/evidence/local-arm64-normalization-v1-20260907/01_DEPENDENCY_GRAPH.md
+/Users/yanfenma/workspace/project/dsh-agent-core/docs/evidence/local-arm64-normalization-v1-20260907/02_CLASSIFICATION.md
+/Users/yanfenma/workspace/project/dsh-agent-core/docs/evidence/local-arm64-normalization-v1-20260907/00_CENSUS.md

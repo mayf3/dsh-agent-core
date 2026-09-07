@@ -1,0 +1,113 @@
+== BATCH-2A START Mon Sep  7 08:58:31 CST 2026 ==
+== TOOL=claude (cask) ==
+  PRE_RESOLVED = /usr/local/bin/claude
+  PRE_REALPATH = /usr/local/Caskroom/claude-code/2.1.17/claude
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native
+  POST_RESOLVED = /usr/local/bin/claude
+  NEW_REALPATH = /usr/local/Caskroom/claude-code/2.1.17/claude
+  NEW_ARCH = Mach-O 64-bit executable x86_64
+  VERSION = warn: CPU lacks AVX support, strange crashes may occur. Reinstall Bun or use *-baseline build:
+  FUNCTION = PASS
+  REAL_EXECUTED_ARCH = NOT-ARM64 — DO NOT COUNT AS MIGRATED
+  HARD_CODED_X64_REFERENCE = 0 files
+  ROLLBACK = Intel copy retained; revert via /opt/homebrew/bin/brew uninstall --cask claude (resolution returns to /usr/local)
+
+== TOOL=op (cask) ==
+  PRE_RESOLVED = /usr/local/bin/op
+  PRE_REALPATH = /usr/local/Caskroom/1password-cli/2.34.1/op
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native
+  retry with proxy env stripped
+  INSTALL=FAIL (see 37)
+== TOOL=gpg (formula) ==
+  PRE_RESOLVED = /usr/local/bin/gpg
+  PRE_REALPATH = /usr/local/Cellar/gnupg/2.5.19/bin/gpg
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native
+  POST_RESOLVED = /opt/homebrew/bin/gpg
+  NEW_REALPATH = /opt/homebrew/Cellar/gnupg/2.5.22/bin/gpg
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = gpg (GnuPG) 2.5.22
+  FUNCTION = FAIL
+  REAL_EXECUTED_ARCH = arm64 (resolution+binary verified)
+  HARD_CODED_X64_REFERENCE = 0 files
+  ROLLBACK = Intel copy retained; revert via /opt/homebrew/bin/brew uninstall  gpg (resolution returns to /usr/local)
+
+== TOOL=pandoc (formula) ==
+  PRE_RESOLVED = /usr/local/bin/pandoc
+  PRE_REALPATH = /usr/local/Cellar/pandoc/3.9.0.2/bin/pandoc
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native
+  POST_RESOLVED = /opt/homebrew/bin/pandoc
+  NEW_REALPATH = /opt/homebrew/Cellar/pandoc/3.11/bin/pandoc
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = pandoc 3.11
+  FUNCTION = PASS
+  REAL_EXECUTED_ARCH = arm64 (resolution+binary verified)
+  HARD_CODED_X64_REFERENCE = 0 files
+  ROLLBACK = Intel copy retained; revert via /opt/homebrew/bin/brew uninstall  pandoc (resolution returns to /usr/local)
+
+== BATCH-2A END Mon Sep  7 09:04:13 CST 2026 ==
+== BATCH-2A-FIX START Mon Sep  7 09:06:39 CST 2026 ==
+== UNDO wrong cask 'claude' (Claude Desktop.app, census raw/30 confirms absent pre-install) ==
+  uninstall claude (Desktop) = OK
+  /Applications/Claude.app removed — host restored
+
+== TOOL=claude (cask: claude-code) ==
+  PRE_RESOLVED = /usr/local/bin/claude (Mach-O 64-bit executable x86_64)
+  POST_RESOLVED = /opt/homebrew/bin/claude
+  NEW_REALPATH = /opt/homebrew/Caskroom/claude-code/2.1.236/claude
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = 2.1.236 (Claude Code)
+  FUNCTION = PASS
+  HARD_CODED_X64_REFERENCE = 0 files
+
+  POST_RESOLVED = /opt/homebrew/bin/op
+  NEW_REALPATH = /opt/homebrew/Caskroom/1password-cli/2.39.0/op
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = 2.39.0
+  FUNCTION = PASS
+  HARD_CODED_X64_REFERENCE = 2 files
+
+  FUNCTION(r2, standalone) = PASS
+
+CORRECTION (2026-09-07): op HARD_CODED_X64_REFERENCE=2 was a regex prefix false positive —
+the two hits are /usr/local/bin/openclaw inside com.openclaw.agent-node-502.plist(+.bak),
+matched by `bin/op` as a prefix of `bin/openclaw`. They reference the openclaw legacy job
+(Class A candidate per 02_CLASSIFICATION), NOT the op CLI. True op hardcoded count = 0.
+== BATCH-2B START Mon Sep  7 12:30:20 CST 2026 ==
+== TOOL=bun (official installer, aarch64) ==
+  PRE: Mach-O 64-bit executable x86_64 / 1.3.6
+  backup: ~/.bun/bin/bun.x64.bak-r2
+  POST: Mach-O 64-bit executable arm64
+  VERSION = 1.4.2
+  FUNCTION = PASS (bun -e eval)
+  REAL_EXECUTED_ARCH = arm64
+
+== TOOL=rustup/cargo (arm64 rustup-init + stable-aarch64 toolchain) ==
+  PRE: rustup=Mach-O 64-bit executable x86_64 default=error: unrecognized subcommand 'default-toolchain'
+
+  tip: a similar subcommand exists: 'active-toolchain'
+
+Usage: rustup[EXE] show [OPTIONS] [COMMAND]
+
+For more information, try '--help'.
+  rustup-init arch = Mach-O 64-bit executable arm64
+  POST rustup shim = Mach-O 64-bit executable arm64
+  rustc realpath = /Users/yanfenma/.cargo/bin/rustup
+  rustc arch = Mach-O 64-bit executable arm64
+  rustc host = host: aarch64-apple-darwin
+  cargo version = cargo 1.98.1 (797e8a9bc 2026-08-05)
+  FUNCTION = PASS (cargo build+run; produced binary is arm64)
+  REAL_EXECUTED_ARCH = arm64 (rustc host aarch64 + compiled artifact arm64)
+  HARD_CODED_X64_REFERENCE = 1 files
+  ROLLBACK = x86_64 toolchain retained in ~/.rustup; revert: rerun x86_64 rustup-init + rustup default stable-x86_64-apple-darwin
+== BATCH-2B END Mon Sep  7 12:30:48 CST 2026 ==
+CORRECTION (2026-09-07): rustup HARD_CODED_X64_REFERENCE=1 was a line-based regex false
+positive — the hit is dev.omdsh.dsh-lark.plist's own PATH EnvironmentVariables string
+(DSH product job, Class F, evidence-only) where /usr/local/bin appears before .cargo/bin
+on the same line. No rust/cargo Intel-path reference exists. True count = 0.
+BATCH-2 FINAL: claude 2.1.236 / op 2.39.0 / gpg 2.5.22 / pandoc 3.11 / bun 1.4.2 /
+rustup+stable-aarch64 (cargo 1.98.1) — all REAL_EXECUTED_ARCH=arm64, FUNCTION=PASS,
+ACCIDENTAL_X64_FALLBACK=NO, Intel copies retained.

@@ -1,0 +1,10 @@
+== POST-REMOVAL VERIFY Mon Sep  7 12:32:55 CST 2026 ==
+[[31mERROR[0m] - (starship::print): Under a 'dumb' terminal (TERM=dumb).
+DYLD=[]
+arm-node ok
+arm-py ok
+ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers
+intel-py ok
+openjdk version "25.0.1" 2025-10-21
+INTERACTIVE_ARM_TOOLS = PASS
+DYLD_INTEL_GLOBAL_INJECTION = ABSENT

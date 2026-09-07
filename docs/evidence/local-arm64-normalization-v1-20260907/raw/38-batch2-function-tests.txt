@@ -1,0 +1,5 @@
+warn: CPU lacks AVX support, strange crashes may occur. Reinstall Bun or use *-baseline build:
+  https://github.com/oven-sh/bun/releases/download/bun-v1.3.5/bun-darwin-x64-baseline.zip
+mkdir: "; gpg --batch --pinentry-mode loopback --passphrase '' --quick-gen-key armnorm@test.invalid default default never >/dev/null 2>&1 && echo hello | gpg --batch --yes --pinentry-mode loopback --passphrase '' --clearsign --local-user armnorm@test.invalid >/tmp/armnorm-sign.asc 2>/dev/null && gpg --verify /tmp/armnorm-sign.asc >/dev: No such file or directory
+/Users/yanfenma/workspace/project/dsh-agent-core/docs/evidence/local-arm64-normalization-v1-20260907/scripts/batch2a-devtools.sh: line 13: [:  -eq: unary operator expected
+gpg roundtrip: keygen+sign+verify OK

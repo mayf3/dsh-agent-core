@@ -1,0 +1,37 @@
+--- A: current interactive env (DYLD present) ---
+DYLD=/usr/local/opt/xz/lib:/usr/local/opt/zlib/lib:/usr/local/opt/libxml2/lib:
+--- A tool smoke under DYLD ---
+[[31mERROR[0m] - (starship::print): Under a 'dumb' terminal (TERM=dumb).
+1
+2
+git version 2.50.1 (Apple Git-155)
+ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers
+3
+4
+ffmpeg version 8.1.1 Copyright (c) 2000-2026 the FFmpeg developers
+openjdk version "25.0.1" 2025-10-21
+--- B: clean env (DYLD stripped) ---
+[[31mERROR[0m] - (starship::print): Under a 'dumb' terminal (TERM=dumb).
+1
+2
+git version 2.50.1 (Apple Git-155)
+ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers
+3
+4
+ffmpeg version 8.1.1 Copyright (c) 2000-2026 the FFmpeg developers
+openjdk version "25.0.1" 2025-10-21
+--- B2: TRUE clean env (zsh -f, no rc files, DYLD stripped, absolute paths) ---
+DYLD=[UNSET]
+arm-node 1
+arm-py 2
+ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers
+uv 0.12.10 (Homebrew 2026-09-04 aarch64-apple-darwin)
+cargo 1.98.1 (797e8a9bc 2026-08-05)
+intel-node 3
+intel-py 4
+ffmpeg version 8.1.1 Copyright (c) 2000-2026 the FFmpeg developers
+openjdk version "25.0.1" 2025-10-21
+psql (PostgreSQL) 16.14 (Homebrew)
+--- DYLD consumer search (who references these libs/env) ---
+/Users/yanfenma/.zshrc:124:export DYLD_LIBRARY_PATH=<redacted-paths>
+--- otool check: do intel binaries reference these dylibs via env-independent install_name/rpath? (sample) ---

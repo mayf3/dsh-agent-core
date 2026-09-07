@@ -1,0 +1,10 @@
+WRONG_ARCH_SO_COUNT = 0
+PACKAGES: {}
+UNMAPPED: 0
+PINS: []
+NOTE (2026-09-07): initial raw/25 sampling conflated universal binaries (x86_64+arm64)
+with arm64-only. Correct arm64-ONLY scan over full intel python3.14 site-packages tree
+= 0 wrong-arch modules. Active closures: ARM py 40/40 arm64 (coherent); intel py
+x64+universal (coherent); article-review-canary x64 node+x64 esbuild (coherent);
+agent-core F-family x64 (coherent, DSH-owned). MIXED_ARCH_ACTIVE_CLOSURES = 0.
+Detection rule for future rounds: wrong-arch = contains arm64 AND NOT contains x86_64.

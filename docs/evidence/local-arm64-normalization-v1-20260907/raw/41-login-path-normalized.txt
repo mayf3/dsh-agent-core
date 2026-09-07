@@ -1,0 +1,19 @@
+node       -> /opt/homebrew/bin/node
+npm        -> /opt/homebrew/bin/npm
+python3    -> /opt/homebrew/bin/python3
+pip3       -> /opt/homebrew/bin/pip3
+uv         -> /opt/homebrew/bin/uv
+wget       -> /opt/homebrew/bin/wget
+tmux       -> /opt/homebrew/bin/tmux
+cmake      -> /opt/homebrew/bin/cmake
+deno       -> /opt/homebrew/bin/deno
+claude     -> /opt/homebrew/bin/claude
+op         -> /opt/homebrew/bin/op
+gpg        -> /opt/homebrew/bin/gpg
+pandoc     -> /opt/homebrew/bin/pandoc
+brew       -> /opt/homebrew/bin/brew
+git        -> /usr/bin/git
+ffmpeg     -> /opt/homebrew/bin/ffmpeg
+tesseract  -> /opt/homebrew/bin/tesseract
+login node ok, arm64
+login py ok, arm64

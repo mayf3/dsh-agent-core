@@ -1,0 +1,63 @@
+== H1: PARSE_ERROR plists file-type inspection ==
+head: /Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist: Permission denied
+ai.openclaw.gateway.plist: cannot open: Permission denied | 
+head: /Library/LaunchDaemons/com.openclaw.forum-scheduler.plist: Permission denied
+com.openclaw.forum-scheduler.plist: cannot open: Permission denied | 
+head: /Library/LaunchDaemons/com.openclaw.gateway.plist: Permission denied
+com.openclaw.gateway.plist: cannot open: Permission denied | 
+head: /Library/LaunchDaemons/com.openclaw.host-exec-runner.plist: Permission denied
+com.openclaw.host-exec-runner.plist: cannot open: Permission denied | 
+head: /Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist: Permission denied
+com.openclaw.workflow-dispatcher.plist: cannot open: Permission denied | 
+
+== H2: svc-workflow source tree locate ==
+drwxr-xr-x@ 36 yanfenma  staff  1152 Sep  6 19:06 /Users/yanfenma/.local/services/svc-workflow
+drwxr-xr-x  33 yanfenma  staff  1056 Sep  3 05:24 /Users/yanfenma/workspace/project/svc-workflow
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 23 23:50 /Users/yanfenma/workspace/project/svc-workflow-admin-agent-investigation
+drwxr-xr-x  25 yanfenma  staff   800 Aug 20 21:56 /Users/yanfenma/workspace/project/svc-workflow-assistance-spec
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 24 07:53 /Users/yanfenma/workspace/project/svc-workflow-build-in-public-principal-successor-v1-spec
+drwxr-xr-x  25 yanfenma  staff   800 Aug 21 07:23 /Users/yanfenma/workspace/project/svc-workflow-cross-domain-audit-evidence
+drwxr-xr-x  25 yanfenma  staff   800 Aug 21 06:51 /Users/yanfenma/workspace/project/svc-workflow-cross-domain-closure-review
+drwxr-xr-x  25 yanfenma  staff   800 Aug 20 22:57 /Users/yanfenma/workspace/project/svc-workflow-cross-domain-closure-spec
+drwxr-xr-x  25 yanfenma  staff   800 Aug 21 07:59 /Users/yanfenma/workspace/project/svc-workflow-cross-domain-closure-withdrawal
+drwxr-xr-x  25 yanfenma  staff   800 Aug 20 22:39 /Users/yanfenma/workspace/project/svc-workflow-cross-domain-investigation
+drwxr-xr-x  25 yanfenma  staff   800 Aug 20 21:39 /Users/yanfenma/workspace/project/svc-workflow-gap-investigation
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 29 16:15 /Users/yanfenma/workspace/project/svc-workflow-global-overview
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 09:27 /Users/yanfenma/workspace/project/svc-workflow-global-permission-root-investigation
+drwxr-xr-x  25 yanfenma  staff   800 Aug 21 08:06 /Users/yanfenma/workspace/project/svc-workflow-global-scheduling-investigation
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 10:37 /Users/yanfenma/workspace/project/svc-workflow-identity-dedup-reference
+drwxr-xr-x@ 26 yanfenma  staff   832 Aug 22 17:09 /Users/yanfenma/workspace/project/svc-workflow-principal-successor-migration-v1-impl
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 22 16:42 /Users/yanfenma/workspace/project/svc-workflow-principal-successor-migration-v1-spec
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 22 17:24 /Users/yanfenma/workspace/project/svc-workflow-principal-successor-replay-spec-amendment
+drwxr-xr-x  25 yanfenma  staff   800 Aug 21 22:26 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 09:00 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-acceptance
+drwxr-xr-x  25 yanfenma  staff   800 Aug 21 23:32 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-amendment-1
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 06:00 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-amendment-2
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 09:18 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-main-verify
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 09:15 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-merge
+drwxr-xr-x  25 yanfenma  staff   800 Aug 21 22:53 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-review
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 05:37 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-review-2
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 08:24 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-review-3
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 22 16:10 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v2-successor-amendment
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 23 19:17 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v3
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 23 22:01 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v3-acceptance
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 23 22:59 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v3-final-head-review
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 23 23:21 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v3-merge
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 23 23:23 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v3-post-merge
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 23 21:08 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v3-review
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 24 08:31 /Users/yanfenma/workspace/project/svc-workflow-product-boundary-v4-build-in-public-successor
+drwxr-xr-x  25 yanfenma  staff   800 Aug 20 22:39 /Users/yanfenma/workspace/project/svc-workflow-recovery-investigation
+drwxr-xr-x  25 yanfenma  staff   800 Aug 22 09:41 /Users/yanfenma/workspace/project/svc-workflow-root-identity-reference
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 23 18:39 /Users/yanfenma/workspace/project/svc-workflow-single-user-investigation
+drwxr-xr-x@ 25 yanfenma  staff   800 Aug 28 22:41 /Users/yanfenma/workspace/project/svc-workflow-transition-evidence
+drwxr-xr-x@ 26 yanfenma  staff   832 Aug 25 08:20 /Users/yanfenma/workspace/project/svc-workflow-trusted-fleet-cutover-v1-spec
+/Users/yanfenma/.local/services/svc-workflow/svc-workflow.backup-20260801-113232
+/Users/yanfenma/.local/services/svc-workflow/svc-workflow.backup-20260808-183348
+/Users/yanfenma/.local/services/svc-workflow/svc-workflow.backup-20260808-182724
+/Users/yanfenma/.local/services/svc-workflow/.env.backup-pre-55432
+/Users/yanfenma/.local/services/svc-workflow/svc-workflow.pre-upgrade-20260805
+
+== H3: openjdk consumers ==
+/Users/yanfenma/.zshrc
+/Users/yanfenma/Library/LaunchAgents/dev.omdsh.dsh-lark.plist
+-- non-zshrc consumer scripts:

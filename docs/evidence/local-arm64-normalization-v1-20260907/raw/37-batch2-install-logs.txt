@@ -1,0 +1,222 @@
+==> Would install 1 cask:
+claude
+==> Fetching downloads for: claude
+✔︎ Cask claude (1.46388.4,50e62f90a2c85243eef42913398f7c8f1534abef)
+==> Installing Cask claude
+==> Moving App 'Claude.app' to '/Applications/Claude.app'
+🍺  claude was successfully installed!
+Warning: Cask 'op' is unavailable: No Cask with this name exists.
+==> Searching for similarly named casks...
+Error: Refusing to load cask openai/tools/openai from untrusted tap openai/tools.
+Run `brew trust --cask openai/tools/openai` or `brew trust openai/tools` to trust it.
+Warning: Cask 'op' is unavailable: No Cask with this name exists.
+==> Searching for similarly named casks...
+Error: Refusing to load cask openai/tools/openai from untrusted tap openai/tools.
+Run `brew trust --cask openai/tools/openai` or `brew trust openai/tools` to trust it.
+==> Downloading bottle manifests
+✔︎ Bottle Manifest gnupg (2.5.22)
+==> Would install 1 formula:
+gnupg
+==> Would install 11 dependencies for gnupg:
+libtasn1
+nettle
+p11-kit
+gnutls
+libgpg-error
+libassuan
+libgcrypt
+libksba
+libusb
+npth
+pinentry
+==> Fetching downloads for: gnupg
+✔︎ Bottle Manifest nettle (4.0)
+✔︎ Bottle Manifest libtasn1 (4.21.0)
+✔︎ Bottle Manifest gnutls (3.8.13_2)
+✔︎ Bottle Manifest libgpg-error (1.61)
+✔︎ Bottle Manifest npth (1.8)
+✔︎ Bottle Manifest libassuan (3.0.2)
+✔︎ Bottle Manifest libusb (1.0.30)
+✔︎ Bottle Manifest libgcrypt (1.12.3)
+✔︎ Bottle Manifest pinentry (1.3.3)
+✔︎ Bottle Manifest p11-kit (0.26.5)
+✔︎ Bottle Manifest libksba (1.8.1)
+✔︎ Bottle libtasn1 (4.21.0)
+✔︎ Bottle npth (1.8)
+✔︎ Bottle libksba (1.8.1)
+✔︎ Bottle pinentry (1.3.3)
+✔︎ Bottle libassuan (3.0.2)
+✔︎ Bottle libusb (1.0.30)
+✔︎ Bottle libgpg-error (1.61)
+✔︎ Bottle nettle (4.0)
+✔︎ Bottle p11-kit (0.26.5)
+✔︎ Bottle libgcrypt (1.12.3)
+✔︎ Bottle gnupg (2.5.22)
+✔︎ Bottle gnutls (3.8.13_2)
+==> Installing dependencies for gnupg: libtasn1, nettle, p11-kit, gnutls, libgpg-error, libassuan, libgcrypt, libksba, libusb, npth and pinentry
+==> Installing gnupg dependency: libtasn1
+==> Pouring libtasn1--4.21.0.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libtasn1/4.21.0: 64 files, 651.7KB
+==> Installing gnupg dependency: nettle
+==> Pouring nettle--4.0.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/nettle/4.0: 93 files, 2.7MB
+==> Installing gnupg dependency: p11-kit
+==> Pouring p11-kit--0.26.5.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/p11-kit/0.26.5: 33 files, 4.8MB
+==> Installing gnupg dependency: gnutls
+==> Pouring gnutls--3.8.13_2.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/gnutls/3.8.13_2: 1,289 files, 11MB
+==> Installing gnupg dependency: libgpg-error
+==> Pouring libgpg-error--1.61.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libgpg-error/1.61: 50 files, 1.8MB
+==> Installing gnupg dependency: libassuan
+==> Pouring libassuan--3.0.2.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libassuan/3.0.2: 18 files, 557.4KB
+==> Installing gnupg dependency: libgcrypt
+==> Pouring libgcrypt--1.12.3.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libgcrypt/1.12.3: 24 files, 4.1MB
+==> Installing gnupg dependency: libksba
+==> Pouring libksba--1.8.1.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libksba/1.8.1: 19 files, 536.8KB
+==> Installing gnupg dependency: libusb
+==> Pouring libusb--1.0.30.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libusb/1.0.30: 23 files, 622.3KB
+==> Installing gnupg dependency: npth
+==> Pouring npth--1.8.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/npth/1.8: 13 files, 153.4KB
+==> Installing gnupg dependency: pinentry
+==> Pouring pinentry--1.3.3.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/pinentry/1.3.3: 13 files, 439.3KB
+==> Installing gnupg
+==> Pouring gnupg--2.5.22.arm64_tahoe.bottle.tar.gz
+No matching processes belonging to you were found
+🍺  /opt/homebrew/Cellar/gnupg/2.5.22: 149 files, 15.9MB
+==> Downloading bottle manifests
+✔︎ Bottle Manifest pandoc (3.11)
+==> Would install 1 formula:
+pandoc
+==> Fetching downloads for: pandoc
+✔︎ Bottle pandoc (3.11)
+==> Pouring pandoc--3.11.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/pandoc/3.11: 11 files, 279.4MB
+==> Uninstalling Cask claude
+==> Backing up App 'Claude.app' to '/opt/homebrew/Caskroom/claude/1.46388.4,50e62f90a2c85243eef42913398f7c8f1534abef/Claude.app'
+==> Removing App '/Applications/Claude.app'
+==> Purging files for version 1.46388.4,50e62f90a2c85243eef42913398f7c8f1534abef of Cask claude
+==> Would install 1 cask:
+claude-code
+==> Fetching downloads for: claude-code
+Error: SIGTERM
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/synchronization/mutex_lockable_object.rb:53:in 'Thread::ConditionVariable#wait'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/synchronization/mutex_lockable_object.rb:53:in 'Concurrent::Synchronization::MutexLockableObject#ns_wait'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/synchronization/abstract_lockable_object.rb:44:in 'block in Concurrent::Synchronization::AbstractLockableObject#ns_wait_until'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/synchronization/abstract_lockable_object.rb:40:in 'Kernel#loop'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/synchronization/abstract_lockable_object.rb:40:in 'Concurrent::Synchronization::AbstractLockableObject#ns_wait_until'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/atomic/event.rb:87:in 'block in Concurrent::Event#wait'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/synchronization/mutex_lockable_object.rb:48:in 'block in Concurrent::Synchronization::MutexLockableObject#synchronize'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/synchronization/mutex_lockable_object.rb:48:in 'Thread::Mutex#synchronize'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/synchronization/mutex_lockable_object.rb:48:in 'Concurrent::Synchronization::MutexLockableObject#synchronize'
+/opt/homebrew/Library/Homebrew/vendor/bundle/ruby/4.0.0/gems/concurrent-ruby-1.3.8/lib/concurrent-ruby/concurrent/atomic/event.rb:84:in 'Concurrent::Event#wait'
+/opt/homebrew/Library/Homebrew/download_queue.rb:289:in 'Homebrew::DownloadQueue#fetch'
+/opt/homebrew/Library/Homebrew/cmd/install.rb:417:in 'Homebrew::Cmd::InstallCmd#run'
+/opt/homebrew/Library/Homebrew/brew.rb:143:in '<main>'
+Please report this issue:
+  https://docs.brew.sh/Troubleshooting
+==> Would install 1 cask:
+claude-code
+==> Fetching downloads for: claude-code
+✔︎ Cask claude-code (2.1.236)
+==> Installing Cask claude-code
+==> Linking Binary 'claude' to '/opt/homebrew/bin/claude'
+🍺  claude-code was successfully installed!
+==> Cleanup
+Removing: /Users/yanfenma/Library/Caches/Homebrew/Cask/claude--1.46388.4,50e62f90a2c85243eef42913398f7c8f1534abef.zip... (355.6MB)
+Disable this behaviour by setting `HOMEBREW_NO_INSTALL_CLEANUP=1`.
+Hide these hints with `HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).
+==> Would install 1 cask:
+1password-cli
+==> Fetching downloads for: 1password-cli
+✔︎ Cask 1password-cli (2.39.0)
+==> Installing Cask 1password-cli
+==> Linking Binary 'op' to '/opt/homebrew/bin/op'
+🍺  1password-cli was successfully installed!
+#=#=#                                                                          ##O#-#                                                                         ##O=#  #                                                                                                                                                  0.0%#                                                                          2.1%####                                                                       5.6%######                                                                     9.3%#########                                                                 12.8%###########                                                               16.6%##############                                                            20.5%#################                                                         24.2%###################                                                       27.6%######################                                                    31.5%#########################                                                 35.5%###########################                                               38.7%##############################                                            42.5%#################################                                         46.0%###################################                                       49.5%######################################                                    53.3%#########################################                                 57.1%###########################################                               61.1%##############################################                            64.7%#################################################                         68.2%###################################################                       71.9%######################################################                    75.7%#########################################################                 79.3%###########################################################               83.2%##############################################################            87.0%#################################################################         91.0%####################################################################      94.7%######################################################################    98.5%######################################################################## 100.0%
+bun was installed successfully to ~/.bun/bin/bun 
+Run 'bun --help' to get started
+warn: it looks like you have an existing rustup settings file at:
+warn: /Users/yanfenma/.rustup/settings.toml
+warn: rustup will install the default toolchain as specified in the settings file,
+warn: instead of the one inferred from the default host tuple.
+info: profile set to default
+info: default host tuple is aarch64-apple-darwin
+info: syncing channel updates for stable-aarch64-apple-darwin
+info: latest update on 2026-09-03 for version 1.98.1 (48a229cea 2026-09-01)
+info: downloading 6 components
+info: default toolchain set to stable-aarch64-apple-darwin
+
+  stable-aarch64-apple-darwin installed - rustc 1.98.1 (48a229cea 2026-09-01)
+
+
+Rust is installed now. Great!
+
+To get started you need Cargo's bin directory ($HOME/.cargo/bin) in your PATH
+environment variable. This has not been done automatically.
+
+To configure your current shell, you need to source
+the corresponding env file under $HOME/.cargo.
+
+Consider running the right command for your shell (note the leading DOT):
+. "$HOME/.cargo/env"           # For sh/ash/dash/pdksh/bash/zsh
+source "$HOME/.cargo/env.fish" # For fish
+source "$HOME/.cargo/env.tcsh" # For tcsh
+==> Downloading bottle manifests
+✔︎ Bottle Manifest postgresql@16 (16.15)
+==> Would install 1 formula:
+postgresql@16
+==> Would install 1 dependency for postgresql@16:
+krb5
+==> Fetching downloads for: postgresql@16
+✔︎ Bottle Manifest krb5 (1.22.2)
+✔︎ Bottle krb5 (1.22.2)
+✔︎ Bottle postgresql@16 (16.15)
+==> Installing postgresql@16 dependency: krb5
+==> Pouring krb5--1.22.2.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/krb5/1.22.2: 163 files, 5.2MB
+==> Installing postgresql@16
+==> Pouring postgresql@16--16.15.arm64_tahoe.bottle.tar.gz
+The files belonging to this database system will be owned by user "yanfenma".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "en_US.UTF-8".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+fixing permissions on existing directory /opt/homebrew/var/postgresql@16 ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default max_connections ... 100
+selecting default shared_buffers ... 128MB
+selecting default time zone ... Asia/Shanghai
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+
+Success. You can now start the database server using:
+
+    '/opt/homebrew/Cellar/postgresql@16/16.15/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@16' -l logfile start
+
+initdb: warning: enabling "trust" authentication for local connections
+initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+🍺  /opt/homebrew/Cellar/postgresql@16/16.15: 3,818 files, 72MB
+==> Caveats
+==> postgresql@16
+This formula has created a default database cluster with:
+  initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@16
+
+To restart postgresql@16 after an upgrade:
+  brew services restart postgresql@16
+Or, if you don't want/need a background service you can just run:
+  LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@16/bin/postgres -D /opt/homebrew/var/postgresql@16

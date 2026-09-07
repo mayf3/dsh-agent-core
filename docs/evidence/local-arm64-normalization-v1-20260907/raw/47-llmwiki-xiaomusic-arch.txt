@@ -1,0 +1,12 @@
+== llmwiki (com.llmwiki.local, pid 60350) interpreter chain ==
+#!/usr/bin/env bash
+set -euo pipefail
+
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python
+== xiaomusic (com.xiaomusic, pid 60337) interpreter chain ==
+  "ProgramArguments" => [
+    0 => "/bin/bash"
+    1 => "/Users/yanfenma/workspace/baby/xiaoai/run_xiaomusic.sh"
+    2 => "start"
+/usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python
+/usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python /usr/local/bin/xiaomusic --c

@@ -1,0 +1,30 @@
+== 5 wrong-arch .so in INTEL python3.14 site-packages ==
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/81d243bd2c585b0f4821__mypyc.cpython-312-darwin.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/orjson/orjson.cpython-314-darwin.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/bcrypt/_bcrypt.abi3.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/charset_normalizer/md.cpython-314-darwin.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/charset_normalizer/md__mypyc.cpython-314-darwin.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/nacl/_sodium.abi3.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/greenlet/_greenlet.cpython-314-darwin.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/greenlet/tests/_test_extension_cpp.cpython-314-darwin.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/greenlet/tests/_test_extension.cpython-314-darwin.so
+ARM64-INTEL-PY: /usr/local/lib/python3.14/site-packages/google/_upb/_message.abi3.so
+
+== §8 retry: PG connect unsuppressed ==
+Password for user yanfenma: 
+psql: error: connection to server on socket "/tmp/.s.PGSQL.5432" failed: fe_sendauth: no password supplied
+-- pg_hba (auth method):
+local   all   agent_dev    scram-sha-256
+host    all   agent_dev    127.0.0.1/32    scram-sha-256
+host    all   agent_dev    ::1/128         scram-sha-256
+local   all   postgres     scram-sha-256
+host    all   postgres     127.0.0.1/32    scram-sha-256
+host    all   postgres     ::1/128         scram-sha-256
+local   all   yanfenma     scram-sha-256
+host    all   yanfenma     127.0.0.1/32    scram-sha-256
+-- superuser candidates from data dir:
+810M
+-- backup script DB coverage:
+
+== §9 provenance: zsh_history hits for temp cluster ==
+0
