@@ -118,13 +118,17 @@ const DEFAULTS = {
  * Run-time reliability detection (§5.5) over the raw store document plus a
  * runtime-health snapshot supplied by the runner:
  *   { healthOk?: boolean, evidenceAgeMs?: number|null }
+ * and optionally the parsed desired-state manifest (per-job runPolicy grace).
  *
  * EXPECTED_RUN_MISSED: an enabled job whose derived nextRunAtMs is older than
  * the missed grace — the engine advances nextRunAtMs when a slot runs, so a
  * stale past timestamp means the expected execution did not happen.
  */
-export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {} } = {}) {
+export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, desired } = {}) {
   const o = { ...DEFAULTS, ...opts }
+  const graceByLogicalKey = new Map(
+    (desired?.jobs ?? []).map((entry) => [entry.logicalKey, entry.runPolicy?.graceMinutes]),
+  )
   const findings = []
   const jobs = Array.isArray(doc?.jobs) ? doc.jobs : []
   const occurrences = Array.isArray(doc?.occurrences) ? doc.occurrences : []
@@ -132,8 +136,12 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {} } 
     const base = { jobId: job.id, logicalKey: job.logicalKey, agentId: job.agentId }
     if (job.enabled === true) {
       const nextRunAtMs = job.state?.nextRunAtMs
-      const graceMs = (job.runPolicy?.graceMinutes ?? 30) * 60 * 1000
-      if (Number.isFinite(nextRunAtMs) && nowMs - nextRunAtMs > Math.max(graceMs, o.missedGraceMs)) {
+      // Explicit grace (manifest runPolicy, then store job) wins; the global
+      // default applies only when nothing is pinned — an Owner-tightened grace
+      // must not be silently floored back to 30 minutes.
+      const pinnedGraceMinutes = graceByLogicalKey.get(job.logicalKey) ?? job.runPolicy?.graceMinutes
+      const graceMs = pinnedGraceMinutes !== undefined ? pinnedGraceMinutes * 60 * 1000 : o.missedGraceMs
+      if (Number.isFinite(nextRunAtMs) && nowMs - nextRunAtMs > graceMs) {
         findings.push({
           class: 'EXPECTED_RUN_MISSED',
           ...base,
@@ -169,6 +177,33 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {} } 
 export function heartbeatStale(mtimeMs, nowMs, graceMs) {
   if (!Number.isFinite(mtimeMs)) return true
   return nowMs - mtimeMs > graceMs
+}
+
+/**
+ * §5.2/§5.6: consume the child relay's persisted reconciliation evidence —
+ * every recent STILL_UNKNOWN entry becomes an Owner-visible finding until its
+ * window passes (the relay cannot alert by itself: its channel to the parent
+ * is the thing that just failed). `entries` = parsed JSON lines of
+ * SCHEDULER_RECONCILIATION_EVIDENCE_FILE ({ts, operation, logicalKey?|jobId?,
+ * reason}); corrupt lines are skipped by the reader.
+ */
+export function evaluateReconciliationEvidence(entries, { nowMs, windowMs = 24 * 60 * 60 * 1000 } = {}) {
+  const findings = []
+  if (!Array.isArray(entries)) return findings
+  for (const entry of entries) {
+    if (entry === null || typeof entry !== 'object') continue
+    if (!Number.isFinite(entry.ts) || typeof entry.operation !== 'string') continue
+    if (nowMs - entry.ts > windowMs) continue
+    findings.push({
+      class: 'MUTATION_STILL_UNKNOWN',
+      operation: entry.operation,
+      ...(entry.logicalKey !== undefined ? { logicalKey: entry.logicalKey } : {}),
+      ...(entry.jobId !== undefined ? { jobId: entry.jobId } : {}),
+      reason: entry.reason,
+      evidenceAt: new Date(entry.ts).toISOString(),
+    })
+  }
+  return findings
 }
 
 /** Human-readable, secret-free Owner alert text for a batch of findings. */

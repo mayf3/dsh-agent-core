@@ -50,12 +50,14 @@ export function validateSchedulerArguments(operation, rawArgs, { nowMs = Date.no
   }
 
   // SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.1: the persisted logical key is
-  // the ONLY create idempotency anchor (never the display name).
+  // the ONLY create idempotency anchor (never the display name). It is ALSO a
+  // legitimate exact-match filter on list — the canonical read-back surface
+  // (§5.1.5) and the relay's lost-response reconcile both depend on it.
   if (operation === 'create' && !present(args, 'logical_key')) {
     violations.push('create requires logical_key (stable caller-provided logical identity)')
   }
-  if (present(args, 'logical_key') && operation !== 'create') {
-    violations.push('logical_key is only valid on create (reconcile reads use the list filters)')
+  if (present(args, 'logical_key') && !['create', 'list'].includes(operation)) {
+    violations.push('logical_key is only valid on create (and as a list read-back filter)')
   }
   if (present(args, 'expected_revision')) {
     const revision = args.expected_revision

@@ -346,3 +346,63 @@ test('child mask withholds scheduler mutation operations, keeps reads (TEST-1 pr
   )
   assert.equal(untouched[0].manifest.operations.length, schedulerManifest.operations.length)
 })
+
+test('gateway-level read-back: list {logical_key} passes the REAL validateInvocation and reconciles a lost create end to end (Blocker-1 regression guard)', async (t) => {
+  // The full child->gateway path: requestFn routes EVERY call through
+  // gateway.execute (trusted validation included) — create is lost, the
+  // reconcile read-back must SURVIVE the gateway's own closed-set validation.
+  const { store, trusted } = await selfServiceRig(t)
+  const { handlers } = createSelfServiceSchedulerAccess({ store })
+  const gateway = createBrokerGateway({
+    manifests: [schedulerManifest],
+    targets: [],
+    authServiceOrigin: 'http://127.0.0.1:1',
+    credentialsFile: await credentialStoreWith(t, { 'agt_a': { clientId: 'c', clientSecret: 's' } }),
+    localHandlerResolver: () => ({ scheduler: handlers.scheduler }),
+  })
+  const requestFn = async (call) => {
+    const envelope = await gateway.execute(call, trusted())
+    return { ok: true, result: envelope }
+  }
+  const lostThenList = async (call) => {
+    if (call.operation === 'create') throw new Error('response lost after commit')
+    return requestFn(call)
+  }
+  // The job WAS committed before the response was lost.
+  await handlers.scheduler.create({ ...CREATE_ARGS }, trusted())
+  const relayHandlers = createRelayHandlers(schedulerManifest, lostThenList)
+  const result = await relayHandlers.create('create', { ...CREATE_ARGS })
+  assert.equal(result.jobId !== undefined, true, JSON.stringify(result))
+  assert.equal(result.auditStatus, 'reconciled')
+  assert.equal(result.name, 'test-job')
+
+  // And the absent case reconciles to NOT_APPLIED through the same real path.
+  const absentHandlers = createRelayHandlers(schedulerManifest, async (call) => {
+    if (call.operation === 'create') throw new Error('lost before commit')
+    return requestFn(call)
+  })
+  const notApplied = await absentHandlers.create('create', { ...CREATE_ARGS, logical_key: 'owner:never-committed' })
+  assert.equal(notApplied.errorCode, 'mutation_not_applied')
+})
+
+test('STILL_UNKNOWN persists reconciliation evidence for the W1 watchdog (Blocker-3, §5.2/§5.6)', async (t) => {
+  const fsPromises = await import('node:fs/promises')
+  const dir = await fsPromises.mkdtemp(join(tmpdir(), 'scheduler-rel-ev-'))
+  t.after(() => fsPromises.rm(dir, { recursive: true, force: true }))
+  const evidenceFile = join(dir, 'reconciliation-evidence.jsonl')
+  process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE = evidenceFile
+  t.after(() => { delete process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE })
+
+  const { requestFn } = relayRig()
+  requestFn.next = async () => { throw new Error('channel down') }
+  const handlers = createRelayHandlers(schedulerManifest, requestFn)
+  const unknown = await handlers.create('create', { ...CREATE_ARGS })
+  assert.equal(unknown.errorCode, 'mutation_outcome_unknown')
+
+  const raw = await fsPromises.readFile(evidenceFile, 'utf8')
+  const entry = JSON.parse(raw.trim().split('\n')[0])
+  assert.equal(entry.operation, 'create')
+  assert.equal(entry.logicalKey, 'owner:test-job')
+  assert.match(entry.reason, /read-back transport failed/)
+  assert.ok(Number.isFinite(entry.ts), 'evidence carries a timestamp')
+})

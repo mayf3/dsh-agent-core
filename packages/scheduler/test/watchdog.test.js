@@ -5,6 +5,7 @@ import {
   parseDesiredState,
   evaluateDesiredState,
   evaluateRunHealth,
+  evaluateReconciliationEvidence,
   heartbeatStale,
   formatFindings,
 } from '../src/watchdog.js'
@@ -119,4 +120,32 @@ test('alert text carries coordinates and never message bodies', () => {
   assert.match(text, /JOB_MISSING/)
   assert.match(text, /owner:daily-summary-check/)
   assert.equal(text.includes('backfill'), false)
+})
+
+test('audit Blocker-3: reconciliation evidence entries become Owner-visible findings; stale entries silent', () => {
+  const recent = { ts: NOW - 60_000, operation: 'create', logicalKey: 'owner:daily-summary-check', reason: 'read-back transport failed' }
+  const fresh = evaluateReconciliationEvidence([recent], { nowMs: NOW })
+  assert.deepEqual(fresh.map((f) => f.class), ['MUTATION_STILL_UNKNOWN'])
+  assert.equal(fresh[0].logicalKey, 'owner:daily-summary-check')
+
+  const stale = evaluateReconciliationEvidence([{ ...recent, ts: NOW - 25 * 60 * 60 * 1000 }], { nowMs: NOW })
+  assert.deepEqual(stale, [])
+
+  const corrupt = evaluateReconciliationEvidence([null, 'junk', { ts: 'x' }], { nowMs: NOW })
+  assert.deepEqual(corrupt, [])
+})
+
+test('audit: desired-state runPolicy grace is plumbed into EXPECTED_RUN_MISSED', () => {
+  const tightDesired = parseDesiredState({
+    version: 1,
+    jobs: [{
+      logicalKey: 'owner:daily-summary-check',
+      expectedSchedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' },
+      runPolicy: { graceMinutes: 1 },
+    }],
+  })
+  const slightlyOverdue = { jobs: [liveJob({ state: { nextRunAtMs: NOW - 5 * 60 * 1000 } })], occurrences: [] }
+  assert.deepEqual(evaluateRunHealth(slightlyOverdue, { nowMs: NOW }), [], 'default 30m grace: silent')
+  const findings = evaluateRunHealth(slightlyOverdue, { nowMs: NOW, desired: tightDesired })
+  assert.deepEqual(findings.map((f) => f.class), ['EXPECTED_RUN_MISSED'], 'manifest grace 1m: detected')
 })

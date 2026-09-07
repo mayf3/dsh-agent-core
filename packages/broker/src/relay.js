@@ -139,11 +139,19 @@ function validSchedulerMutationResult(operation, result) {
  *                                      absent: NOT_APPLIED (mutation_not_applied)
  *   update/enable/disable (job_id +
  *     expected_revision)            -> revision moved past expected: APPLIED
- *                                      unchanged: NOT_APPLIED
+ *                                      unchanged/absent: NOT_APPLIED (a committed
+ *                                      update/toggle never removes the target, so
+ *                                      absence PROVES non-application; a retry then
+ *                                      fails loud as job_not_found — the dangerous
+ *                                      direction, a fabricated APPLIED, is never
+ *                                      produced here)
  *   remove (job_id)                 -> absent: APPLIED; still present: NOT_APPLIED
- *   anything unprovable (no identity, read-back failure, visibility
- *   ambiguity, projection mismatch) -> STILL_UNKNOWN with reconciliation
- *   evidence in the error detail (the watchdog alert surface).
+ *   anything unprovable (no identity, read-back failure, projection mismatch)
+ *                                   -> STILL_UNKNOWN with reconciliation evidence
+ *                                   in the error detail AND persisted to
+ *                                   SCHEDULER_RECONCILIATION_EVIDENCE_FILE (one
+ *                                   JSON line: ts/operation/identity/reason) for
+ *                                   the W1 watchdog alert surface (§5.2/§5.6).
  *
  * Known residual (documented, fail-loud): an `at` job with deleteAfterRun that
  * already executed deletes its definition, so its read-back is empty and the
@@ -152,12 +160,30 @@ function validSchedulerMutationResult(operation, result) {
  *
  * @returns {Promise<{ok:true, result:object}|{ok:false, error:{code:string, detail:string}}>}
  */
+import { appendFileSync } from 'node:fs'
+
+function persistReconciliationEvidence(entry) {
+  const file = process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE
+  if (file === undefined || file === '') return
+  try {
+    appendFileSync(file, `${JSON.stringify({ ts: Date.now(), ...entry })}\n`)
+  } catch { /* evidence is best-effort; the model still sees the detail */ }
+}
+
 async function reconcileAfterLostResponse(requestFn, operation, args) {
   const identity = args?.logical_key !== undefined
     ? { logicalKey: args.logical_key }
     : args?.job_id !== undefined ? { jobId: args.job_id } : {}
-  const evidence = (reason) => `scheduler mutation outcome STILL_UNKNOWN after canonical read-back: ${JSON.stringify({ state: 'STILL_UNKNOWN', operation, ...identity, reason })}`
-  const stillUnknown = (reason) => ({ ok: false, error: { code: 'mutation_outcome_unknown', detail: evidence(reason) } })
+  const evidence = (reason) => JSON.stringify({ state: 'STILL_UNKNOWN', operation, ...identity, reason })
+  const stillUnknown = (reason) => {
+    const detail = `scheduler mutation outcome STILL_UNKNOWN after canonical read-back: ${evidence(reason)}`
+    // §5.2/§5.6: STILL_UNKNOWN is never silent — the same evidence is persisted
+    // (fire-and-forget) for the W1 watchdog alert surface.
+    try {
+      persistReconciliationEvidence({ operation, ...identity, reason })
+    } catch { /* never let evidence persistence affect the answer */ }
+    return { ok: false, error: { code: 'mutation_outcome_unknown', detail } }
+  }
   const notApplied = () => ({
     ok: false,
     error: {

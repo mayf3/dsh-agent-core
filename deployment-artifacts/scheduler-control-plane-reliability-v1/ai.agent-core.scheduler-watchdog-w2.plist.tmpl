@@ -16,7 +16,8 @@
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><false/>
   <key>EnvironmentVariables</key><dict>
-    <key>SCHEDULER_WATCHDOG_STATE_DIR</key><string>/usr/local/var/scheduler-watchdog</string>
+    <!-- MUST equal W1's state dir (mutual heartbeat); root reads authsvc's dir. -->
+    <key>SCHEDULER_WATCHDOG_STATE_DIR</key><string>/Users/authsvc/.agent-core/control/scheduler-watchdog</string>
     <key>FEISHU_CREDS_PATH</key><string>/Users/authsvc/.dsh/feishu-creds.json</string>
     <key>SCHEDULER_WATCHDOG_ALERT_TO</key><string>__OWNER_CHAT_ID__</string>
     <key>SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS</key><string>1800000</string>
