@@ -38,6 +38,7 @@
  * <root>/control/runtime-evidence.jsonl.
  */
 
+import { assertProductionArchitecture } from './native-arm64/admission.js'
 import { resolveProductionLayout } from './paths.js'
 import { composeProductionRuntime } from './compose.js'
 
@@ -52,6 +53,7 @@ function argValue(args, name, fallback) {
  * @param {object} [processLike] - process stand-in (tests); default process.
  */
 export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process) {
+  const nativeIdentity = assertProductionArchitecture({ required: argv.includes('--native-arm64') })
   const root = argValue(argv, '--root', undefined)
   const layout = resolveProductionLayout(root)
   const tickMs = Number(argValue(argv, '--tick-ms', '500'))
@@ -70,6 +72,7 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
   await runtime.start()
   runtime.writeEvidence({
     kind: 'ready',
+    ...(nativeIdentity ? { nativeRuntime: nativeIdentity } : {}),
     pid: processLike.pid,
     root: layout.root,
     tickMs,
