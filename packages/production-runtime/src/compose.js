@@ -43,11 +43,17 @@ import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
+import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createSelfServiceSchedulerAccess } from '../../scheduler/src/self-service.js'
-import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
+import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
+import { mountSchedulerHistoryRuntime } from './scheduler-history-runtime.js'
+import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
+import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
+import { createAgentPrincipalResolutionAccess } from './agent-principal-resolution.js'
+import { createAgentSessionMessagingAudit } from './agent-session-messaging-audit.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
@@ -81,6 +87,11 @@ export function assertTargetProxyRuntime({ env = process.env, version = process.
     throw invalidProxyRuntime('NODE_RUNTIME_VERSION', 'runtime_version_mismatch')
   }
 }
+
+// The fleet shared-Codex migration functions live in their own module
+// (structure-only move; compose keeps the stable re-export surface for the
+// existing tests and the executable).
+export { runFleetSharedCodexAuthMigrationV1, selectAuthoritativeCodexGeneration } from './shared-codex-migration.js'
 
 /**
  * Compose the Production Runtime.
@@ -205,7 +216,7 @@ export async function composeProductionRuntime(options = {}) {
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
 
   // AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 (accepted) + IMPL_V1: deployment-
-  // owned static route chain config (agent-model-overrides.json version 2).
+  // owned static route chain config (agent-model-overrides.json version 3).
   // The composition validates it against the already-loaded Agent Definition
   // and re-reads it ONLY at each new process boundary (turn-start chain
   // snapshot) so target-only rollback needs neither a runtime restart nor a
@@ -298,14 +309,27 @@ export async function composeProductionRuntime(options = {}) {
   // and auth origin arrive via env from the supervision unit. Without a
   // credentials file every capability call fails closed
   // (credential_unavailable) — the gateway never fakes authorization.
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R12: the L0 pre-handler denial
+  // hook is scoped to exactly the agent_session_send capability; a failed
+  // denial append never changes the denial itself.
+  const agentSessionAudit = createAgentSessionMessagingAudit({
+    auditFile: join(layout.controlDir, 'agent-session-messaging-audit.jsonl'),
+  })
   const broker = applyBroker(ctx, {
     mode: 'gateway',
     credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
     authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
+    auditDenial: (info) => {
+      if (info?.capabilityId !== 'agent_session_send') return
+      if (agentSessionAudit.appendDenial(info) !== 'appended') {
+        log.error('[agent-session-messaging] L0 denial audit append failed')
+      }
+    },
   })
 
   const productApiCfg = opts.productApi ?? {}
   const productApi = applyProductApi(ctx, {
+    workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
@@ -318,33 +342,7 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
-  const rawInvoker = createRouterInvoker(router, { definition })
-  // Thin observability (evidence surface, not a framework): one line per
-  // invocation with the router process state — same pattern the resident used.
-  const invoker = async (request) => {
-    const started = Date.now()
-    const outcome = await rawInvoker(request)
-    const proc = router.registrySnapshot().find((p) => p.agentId === request.agentId)
-    writeEvidence({
-      kind: 'invocation',
-      pid: process.pid,
-      agentId: request.agentId,
-      sessionId: request.sessionId,
-      status: outcome.status,
-      summary: outcome.status === 'ok' ? (outcome.summary ?? null) : null,
-      error: outcome.status === 'ok' ? null : (outcome.error ?? null),
-      reconciliationHandle: outcome.reconciliationHandle ?? null,
-      deadlineAtWallMs: outcome.deadlineAtWallMs ?? null,
-      evidence: outcome.evidence ?? null,
-      durationMs: Date.now() - started,
-      routerProcessPid: proc?.pid ?? null,
-      routerProcessAlive: proc?.alive ?? null,
-    })
-    return outcome
-  }
-  // Preserve Scheduler V2's synchronous runnable-Agent admission gate through
-  // the observability wrapper; no job/store/deploy behavior is changed here.
-  invoker.assertRunnable = rawInvoker.assertRunnable
+  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence })
 
   // Admission observability remains a wrap around Router-owned delivery.
   wireNotificationIngressDeliveryEvidence(router, writeEvidence)
@@ -356,6 +354,17 @@ export async function composeProductionRuntime(options = {}) {
       }
 
   const store = new JobStore(layout.jobsStore, { runLogPath: layout.runsLog })
+
+  // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: structured execution history over
+  // its own directory (events.jsonl + monthly projections) and its own lock.
+  // It records facts at the engine's lifecycle boundaries and NEVER gates
+  // admission (R-H1); jobs.json / runs.jsonl authorities are untouched.
+  const history = await mountSchedulerHistoryRuntime({
+    ctx,
+    layout,
+    schedulerAuth: opts.schedulerAuth,
+    log,
+  })
 
   // AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1: the LOCAL (in-process) broker
   // capability seam over the SAME store — every mutation reuses the store's
@@ -385,10 +394,56 @@ export async function composeProductionRuntime(options = {}) {
     },
   }))
 
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3): the trusted LOCAL
+  // provider for agent_session_send. It reuses the Router's sole delivery
+  // and reconciliation seams — one send = one new Run/Turn in the target
+  // canonical main; the runtime derives source identity + exact source-turn
+  // correlation (never model args); the L1 intent/outcome append surface is
+  // the agentSessionAudit file with sanitized onAuditFailure signals.
+  ctx.provide('agentSessionMessagingAccess', createAgentSessionMessagingAccess({
+    router,
+    audit: agentSessionAudit,
+    onAuditFailure: ({ phase, requestId }) => {
+      log.error(`[agent-session-messaging] audit ${phase} append failed after requestId ${requestId ?? '(not-minted)'}`)
+    },
+  }))
+
+  // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
+  // LOCAL provider for the read-only agent_resolve_principal. Auth is the
+  // identity authority (exact UUID read; audience `agent-principal-resolution`
+  // × `auth.agent.resolve`); the local Agent Definition registry then proves
+  // exact deliverability. The token is acquired by the runtime for the
+  // ACTUAL caller through the same trusted credential seam as the gateway
+  // grant check and never reaches the model; the Auth origin is the fixed
+  // deployment configuration, never a tool argument.
+  ctx.provide('agentPrincipalResolutionAccess', createAgentPrincipalResolutionAccess({
+    definition,
+    authServiceOrigin: brokerAuthServiceOrigin,
+    acquireCallerToken: async ({ agentId }) => {
+      const credential = loadCredentialFor(brokerCredentialsFile, agentId)
+      if (credential === undefined) {
+        throw Object.assign(new Error('no credential bound'), { code: 'credential_unavailable' })
+      }
+      try {
+        return await requestAccessToken({
+          credential,
+          authServiceOrigin: brokerAuthServiceOrigin,
+          resource: 'agent-principal-resolution',
+          scope: 'auth.agent.resolve',
+        })
+      } catch (error) {
+        throw Object.assign(error instanceof Error ? error : new Error(String(error)), {
+          code: error?.errorCode ?? 'transport_failure',
+        })
+      }
+    },
+  }))
+
   const scheduler = new Scheduler({
     store,
     invoker,
     deliver,
+    history,
     tickMs,
     concurrency,
     log: {

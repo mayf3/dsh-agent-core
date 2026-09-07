@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-09-06T23:53:12.452525+00:00",
+  "source": "https://nodejs.org/dist/v25.6.1/node-v25.6.1-darwin-arm64.tar.gz",
+  "checksum_source": "https://nodejs.org/dist/v25.6.1/SHASUMS256.txt",
+  "expected_sha256": "a80cb252d170a4730f78f5950cf19a46106f156e5886e5c1cc8c5602aea60243",
+  "actual_sha256": "a80cb252d170a4730f78f5950cf19a46106f156e5886e5c1cc8c5602aea60243",
+  "node_sha256": "e5d8a01ccadd10e9988dfb03d371066ef06f7373e51f939d758fbb7aab7b3b21",
+  "file": "/Users/yanfenma/workspace/artifacts/dsh-native-arm64-runtime-v1/node/node-v25.6.1-darwin-arm64/bin/node: Mach-O 64-bit executable arm64",
+  "otool": "/Users/yanfenma/workspace/artifacts/dsh-native-arm64-runtime-v1/node/node-v25.6.1-darwin-arm64/bin/node:\n\t/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 3502.1.255)\n\t/System/Library/Frameworks/Security.framework/Versions/A/Security (compatibility version 1.0.0, current version 61439.120.27)\n\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1900.180.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)",
+  "node_probe": {
+    "version": "v25.6.1",
+    "arch": "arm64",
+    "platform": "darwin",
+    "execPath": "/Users/yanfenma/workspace/artifacts/dsh-native-arm64-runtime-v1/node/node-v25.6.1-darwin-arm64/bin/node"
+  },
+  "environment": {
+    "PATH": "/Users/yanfenma/workspace/artifacts/dsh-native-arm64-runtime-v1/node/node-v25.6.1-darwin-arm64/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "HOME": "/var/empty",
+    "TMPDIR": "/private/tmp"
+  },
+  "dylib_entries": 0,
+  "scope": "Official Node feasibility only, not Harness ARM build or production change."
+}

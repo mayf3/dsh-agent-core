@@ -29,12 +29,15 @@ export function mountNotificationIngressRuntime({ ctx, config, layout, env = pro
   })
 }
 
-/** Preserve Production Runtime evidence around Router-owned delivery. */
+/** Preserve Production Runtime evidence around Router-owned delivery.
+ *  AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R4: the trusted control-plane
+ *  arguments (messageOrigin) pass through UNCHANGED — evidence wraps, it
+ *  never rewrites the admission call. */
 export function wireNotificationIngressDeliveryEvidence(router, writeEvidence) {
   const deliverRouterOwned = router.deliver
-  router.deliver = async (req) => {
+  router.deliver = async (req, ...rest) => {
     try {
-      const result = await deliverRouterOwned.call(router, req)
+      const result = await deliverRouterOwned.call(router, req, ...rest)
       const proc = router.registrySnapshot().find((p) => p.agentId === req?.agentId)
       writeEvidence({
         kind: 'deliver',

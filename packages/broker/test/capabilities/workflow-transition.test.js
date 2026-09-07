@@ -8,7 +8,7 @@ import { json, mockTargets, startMockServer, startTokenServer, wire } from '../.
 
 // ─── Generic Idempotency-Key fixture (write shape, test-only capability) ───
 
-test('idempotency: generic IK mechanism works for a workflow-transition-shaped write', async () => {
+test('idempotency: generic IK mechanism works for a workflow-write-shaped capability', async () => {
   const tokenServer = await startTokenServer()
   const workflow = await startMockServer((req, res, entry) => {
     if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances/wf-1/transitions') {
@@ -18,9 +18,9 @@ test('idempotency: generic IK mechanism works for a workflow-transition-shaped w
   })
 
   const manifest = {
-    id: 'workflow_transition',
-    toolName: 'workflow_transition',
-    name: 'Workflow Transition',
+    id: 'workflow_execute_fixture',
+    toolName: 'workflow_execute_fixture',
+    name: 'Workflow Execute Fixture',
     description: 'Test fixture: generic Idempotency-Key mechanism on a real write shape.',
     requiredScopes: ['workflow.execute'],
     errors: [
@@ -68,7 +68,7 @@ test('idempotency: generic IK mechanism works for a workflow-transition-shaped w
   const res = await definition.execute({ operation: 'transition', workflowInstanceId: 'wf-1', action: 'approve' })
   assert.equal(res.ok, true)
   const ik = workflow.requests[0].headers['idempotency-key']
-  assert.ok(/^ik-workflow-transition-\d+-[a-z0-9]+$/.test(ik), `unexpected IK ${ik}`)
+  assert.ok(/^ik-workflow-execute-fixture-\d+-[a-z0-9]+$/.test(ik), `unexpected IK ${ik}`)
   assert.equal(res.result.ik, ik)
   // model-supplied IK in args is ignored (trusted-zone generation only)
   const res2 = await definition.execute({ operation: 'transition', workflowInstanceId: 'wf-1', action: 'approve', idempotencyKey: 'ik-mallory' })
@@ -79,36 +79,37 @@ test('idempotency: generic IK mechanism works for a workflow-transition-shaped w
   await workflow.close()
 })
 
-const transitionManifest = () => workflowManifests.find((manifest) => manifest.id === 'workflow_transition')
+const executeManifest = () => workflowManifests.find((manifest) => manifest.id === 'workflow_execute')
 
 const svcError = (res, status, code, message, requestId, details) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'x-request-id': requestId })
   res.end(JSON.stringify({ error: { code, message, details } }))
 }
 
-test('workflow_transition: manifest freezes the submit-only trusted write contract', () => {
-  const manifest = transitionManifest()
+test('workflow_execute: manifest freezes the unified two-operation write contract', () => {
+  const manifest = executeManifest()
   assert.ok(manifest)
   assert.equal(validateManifest(manifest).ok, true)
-  assert.equal(manifest.toolName, 'workflow_transition')
+  assert.equal(manifest.toolName, 'workflow_execute')
   assert.deepEqual(manifest.requiredScopes, ['workflow.execute'])
-  assert.equal(manifest.operations.length, 1)
+  // DEC-010: exactly two operations, single write entry, no workflow_transition.
+  assert.deepEqual(manifest.operations.map((op) => op.name), ['create_instance', 'transition'])
+  assert.ok(!workflowManifests.some((m) => m.id === 'workflow_transition' || m.toolName === 'workflow_transition'))
 
-  const operation = manifest.operations[0]
-  assert.equal(operation.name, 'submit')
-  assert.deepEqual(operation.arguments.required, [
+  const transition = manifest.operations[1]
+  assert.deepEqual(transition.arguments.required, [
     'workflowInstanceId',
     'transitionDefinitionId',
     'expectedWorkflowStateVersion',
   ])
-  assert.deepEqual(Object.keys(operation.arguments.properties), [
+  assert.deepEqual(Object.keys(transition.arguments.properties), [
     'workflowInstanceId',
     'transitionDefinitionId',
     'expectedWorkflowStateVersion',
     'submissionPayload',
   ])
-  assert.equal(operation.arguments.properties.expectedWorkflowStateVersion.minimum, 1)
-  assert.deepEqual(operation.http, {
+  assert.equal(transition.arguments.properties.expectedWorkflowStateVersion.minimum, 1)
+  assert.deepEqual(transition.http, {
     target: 'svc-workflow',
     method: 'POST',
     path: '/internal/v1/workflow-instances/{workflowInstanceId}/transitions',
@@ -117,15 +118,16 @@ test('workflow_transition: manifest freezes the submit-only trusted write contra
     idempotencyKey: true,
   })
 
-  const parameterNames = JSON.stringify(operation.arguments.properties).toLowerCase()
-  for (const forbidden of ['principalid', 'agentid', 'onbehalfof', 'assignee']) {
+  // No identity / trusted-seam field is model-facing in either operation.
+  const parameterNames = JSON.stringify(manifest.operations.map((op) => op.arguments.properties)).toLowerCase()
+  for (const forbidden of ['principalid', 'agentid', 'onbehalfof', '"assignee"']) {
     assert.ok(!parameterNames.includes(forbidden), `${forbidden} must not be model-facing`)
   }
   assert.match(manifest.description, /executable_for_actor: true.*advisory/s)
   assert.match(manifest.description, /advisory false\/stale values are never blocked locally/)
 })
 
-test('workflow_transition: authorized POST preserves body, scope, trusted IK and token-only actor', async () => {
+test('workflow_execute operation=transition: authorized POST preserves body, scope, trusted IK and token-only actor', async () => {
   const tokenServer = await startTokenServer()
   const workflow = await startMockServer((req, res, entry) => {
     if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances/wf-42/transitions') {
@@ -146,10 +148,10 @@ test('workflow_transition: authorized POST preserves body, scope, trusted IK and
     targets: mockTargets({ 'svc-workflow': workflow.origin }),
     authServiceOrigin: tokenServer.origin,
   })
-  const { definition } = wire(transitionManifest(), transport)
+  const { definition } = wire(executeManifest(), transport)
 
   const result = await definition.execute({
-    operation: 'submit',
+    operation: 'transition',
     workflowInstanceId: 'wf-42',
     transitionDefinitionId: 'transition-7',
     expectedWorkflowStateVersion: 7,
@@ -187,14 +189,14 @@ test('workflow_transition: authorized POST preserves body, scope, trusted IK and
     submissionPayload: { decision: 'approve' },
   })
   assert.equal(request.headers.authorization, 'Bearer tok-real')
-  assert.ok(/^ik-workflow-transition-\d+-[a-z0-9]+$/.test(request.headers['idempotency-key']))
+  assert.ok(/^ik-workflow-execute-\d+-[a-z0-9]+$/.test(request.headers['idempotency-key']))
   assert.notEqual(request.headers['idempotency-key'], 'ik-model-controlled')
 
   await tokenServer.close()
   await workflow.close()
 })
 
-test('workflow_transition: optional submissionPayload is omitted from the wire when absent', async () => {
+test('workflow_execute operation=transition: optional submissionPayload is omitted from the wire when absent', async () => {
   const tokenServer = await startTokenServer()
   const workflow = await startMockServer((req, res) => json(res, 200, { workflowInstanceId: 'wf-43' }))
   const transport = createHttpTransport({
@@ -202,10 +204,10 @@ test('workflow_transition: optional submissionPayload is omitted from the wire w
     targets: mockTargets({ 'svc-workflow': workflow.origin }),
     authServiceOrigin: tokenServer.origin,
   })
-  const { definition } = wire(transitionManifest(), transport)
+  const { definition } = wire(executeManifest(), transport)
 
   const result = await definition.execute({
-    operation: 'submit',
+    operation: 'transition',
     workflowInstanceId: 'wf-43',
     transitionDefinitionId: 'transition-8',
     expectedWorkflowStateVersion: 3,
@@ -220,7 +222,7 @@ test('workflow_transition: optional submissionPayload is omitted from the wire w
   await workflow.close()
 })
 
-test('workflow_transition: declared transition failures preserve the formal error envelope', async () => {
+test('workflow_execute operation=transition: declared transition failures preserve the formal error envelope', async () => {
   const tokenServer = await startTokenServer()
   const failures = {
     'transition-assignee': [403, 'principal_not_assignee', 'caller is not current assignee', 'req-transition-403'],
@@ -236,11 +238,11 @@ test('workflow_transition: declared transition failures preserve the formal erro
     targets: mockTargets({ 'svc-workflow': workflow.origin }),
     authServiceOrigin: tokenServer.origin,
   })
-  const { definition } = wire(transitionManifest(), transport)
+  const { definition } = wire(executeManifest(), transport)
 
   for (const [transitionDefinitionId, [status, code, message, requestId]] of Object.entries(failures)) {
     const result = await definition.execute({
-      operation: 'submit',
+      operation: 'transition',
       workflowInstanceId: 'wf-errors',
       transitionDefinitionId,
       expectedWorkflowStateVersion: 4,

@@ -50,9 +50,9 @@ export function validateArguments(argumentSchema, args) {
  * strings, surfaces the DECLARED error code a violation should report (e.g.
  * `invalid_pagination` for an out-of-range `limit`), when the violated
  * property schema carries `validationError`. Bounds checking (`minimum` /
- * `maximum`) runs Broker-side BEFORE any HTTP request is issued, so an
- * out-of-range page size fails fast locally instead of surfacing as a
- * generic downstream 4xx/422.
+ * `maximum`) and manifest-declared all-or-none co-presence groups run
+ * Broker-side BEFORE any handler or HTTP request, so an out-of-range page
+ * size or half-given cursor group fails fast locally.
  * @param {object} argumentSchema - { properties, required }.
  * @param {unknown} args - candidate arguments, however malformed.
  * @returns {{ violations: string[], code?: string }}
@@ -99,6 +99,11 @@ export function validateArgumentsDetailed(argumentSchema, args) {
       } else if (spec.type === 'string') {
         if (typeof val !== 'string') violations.push(`property "${label}" must be a string`)
         else if (typeof spec.minLength === 'number' && val.length < spec.minLength) violations.push(`property "${label}" must have length >= ${spec.minLength}`)
+        // `nonBlank: true` (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2
+        // CTR-FMC-006): reject empty / whitespace-only strings LOCALLY, before
+        // any token mint or business HTTP call — e.g. a resolve without an
+        // outcome summary never leaves the broker.
+        else if (spec.nonBlank === true && val.trim() === '') violations.push(`property "${label}" must be a non-blank string`)
       } else if (spec.type === 'boolean') {
         if (typeof val !== 'boolean') violations.push(`property "${label}" must be a boolean`)
       } else if (spec.type === 'object') {
@@ -112,6 +117,20 @@ export function validateArgumentsDetailed(argumentSchema, args) {
   }
 
   validateObject(argumentSchema, args)
+
+  // Generic root-level all-or-none groups. This runs in validateInvocation
+  // before a handler is selected or invoked, so a co-presence failure cannot
+  // reach credential lookup, token acquisition, or transport. No capability id
+  // or business field name is special-cased.
+  for (const group of argumentSchema.allOrNone ?? []) {
+    const present = group.properties.filter((name) => Object.hasOwn(args, name) && args[name] !== undefined)
+    if (present.length > 0 && present.length < group.properties.length) {
+      const missing = group.properties.filter((name) => !present.includes(name))
+      violations.push(`properties [${present.join(', ')}] require [${missing.join(', ')}] to be given together (all-or-none group)`)
+      if (code === undefined && typeof group.validationError === 'string') code = group.validationError
+    }
+  }
+
   return code === undefined ? { violations } : { violations, code }
 }
 

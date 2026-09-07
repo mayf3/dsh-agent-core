@@ -305,13 +305,16 @@ test('workflow_global_instances: manifest shape — schema-valid, GET-only, no i
   }
 })
 
-test('workflow_global_instances: generic tool — no per-agent wiring, no scheduler surface', () => {
+test('workflow_global_instances: generic tool — no per-agent wiring, no legacy scheduler bindings', () => {
   const manifest = findManifest()
   // ACC-009 (DEC-008): no agent/principal/session identity baked into the manifest.
-  assert.equal(/agt_|dispatcher|scheduler/i.test(JSON.stringify(manifest)), false)
-  // …and none in the capability module source, which stays free of scheduler bindings.
+  assert.equal(/agt_|dispatcher/i.test(JSON.stringify(manifest)), false)
+  // …and none in the capability module source. The GLOBAL_SCHEDULER_READ
+  // capability codes (AGENT_CORE_WORKFLOW_DISPATCH_INTENT_BROKER_V1) are the
+  // only lawful scheduler-facing strings here; per-agent wiring and the
+  // legacy scheduler bindings stay banned.
   const source = readFileSync(new URL('../../src/capabilities/workflow.js', import.meta.url), 'utf8')
-  assert.equal(/agt_|dispatcher|scheduler/i.test(source), false)
+  assert.equal(/agt_|dispatcher/i.test(source), false)
   assert.equal(source.includes('dc702687'), false)
   assert.equal(source.includes('bc970ced'), false)
 })

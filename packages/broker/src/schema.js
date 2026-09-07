@@ -183,6 +183,15 @@ export function validateManifest(input) {
           }
         }
       }
+      // Generic co-presence groups follow the same fail-closed discipline:
+      // their local validation code must be declared by the capability.
+      for (const [groupIndex, group] of (op.arguments?.allOrNone ?? []).entries()) {
+        if (group && typeof group.validationError === 'string') {
+          if (input.errors === undefined || !input.errors.some((e) => e && e.code === group.validationError)) {
+            errors.push(opPath + `.arguments.allOrNone[${groupIndex}].validationError references undeclared code "${group.validationError}"`)
+          }
+        }
+      }
       // optional generic HTTP binding (the authorized-HTTP transport contract;
       // see transport.js). When present, this operation is executed by the
       // generic transport instead of a process-internal handler. A LOCAL
@@ -235,6 +244,14 @@ export function validateManifest(input) {
                 properties: op.arguments.properties || {},
                 required: Array.isArray(op.arguments.required) ? op.arguments.required : [],
                 ...(op.arguments.additionalProperties === false ? { additionalProperties: false } : {}),
+                ...(Array.isArray(op.arguments.allOrNone)
+                  ? {
+                      allOrNone: op.arguments.allOrNone.map((group) => ({
+                        properties: [...group.properties],
+                        validationError: group.validationError,
+                      })),
+                    }
+                  : {}),
               },
         result: op.result === undefined ? { type: 'json' } : op.result,
         errors: [...opErrors],
@@ -314,6 +331,18 @@ function validatePropertiesSchema(value, at) {
           return `${at}.properties["${name}"].validationError requires minimum or maximum`
         }
       }
+      // `nonBlank: true` (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2
+      // CTR-FMC-006): a string-leaf-only flag; the mapping layer rejects
+      // missing/empty/whitespace-only values locally with invalid_arguments
+      // before any token mint or business HTTP call.
+      if (p.nonBlank !== undefined) {
+        if (p.nonBlank !== true && p.nonBlank !== false) {
+          return `${at}.properties["${name}"].nonBlank must be a boolean`
+        }
+        if (p.type !== 'string') {
+          return `${at}.properties["${name}"].nonBlank is only allowed on string leaves`
+        }
+      }
     }
   }
   const req = value.required
@@ -322,18 +351,48 @@ function validatePropertiesSchema(value, at) {
       return `${at}.required must be an array of property names`
     }
   }
+
+  // Root-level generic co-presence constraints. When any named property is
+  // supplied, all named properties must be supplied. The mapping layer applies
+  // these groups before a handler (and therefore before credential/token/HTTP
+  // work); this validator keeps the manifest metadata closed and canonical.
+  const groups = value.allOrNone
+  if (groups !== undefined) {
+    if (!Array.isArray(groups) || groups.length === 0) {
+      return `${at}.allOrNone must be a non-empty array of groups`
+    }
+    for (const [i, group] of groups.entries()) {
+      if (group === null || typeof group !== 'object' || Array.isArray(group)) {
+        return `${at}.allOrNone[${i}] must be an object`
+      }
+      if (!Array.isArray(group.properties) || group.properties.length < 2 || group.properties.some((name) => typeof name !== 'string' || name.length === 0)) {
+        return `${at}.allOrNone[${i}].properties must be an array of at least 2 property names`
+      }
+      const seen = new Set()
+      for (const name of group.properties) {
+        if (seen.has(name)) return `${at}.allOrNone[${i}].properties contains duplicate "${name}"`
+        seen.add(name)
+        if (props === undefined || !Object.hasOwn(props, name)) {
+          return `${at}.allOrNone[${i}] references undeclared property "${name}"`
+        }
+      }
+      if (typeof group.validationError !== 'string' || !/^[a-z][a-zA-Z0-9_]*$/.test(group.validationError)) {
+        return `${at}.allOrNone[${i}].validationError "${group.validationError}" must be a lowercase identifier`
+      }
+    }
+  }
   return null
 }
 
 /** HTTP methods the generic transport is willing to execute. */
-const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE'])
+const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 
 /**
  * Validate one operation's optional `http` binding block:
  *
  *   http: {
  *     target: 'svc-forum',                 // targetId from the targets registry (trusted config)
- *     method: 'GET',                       // GET | POST | PUT | DELETE (pinned, model cannot change)
+ *     method: 'GET',                       // GET | POST | PUT | DELETE | PATCH (pinned, model cannot change)
  *     path: '/api/threads/{threadId}',     // path template; {name} placeholders
  *     pathParams: ['threadId'],            // arg names bound to {placeholders} (exact match)
  *     query: ['page', 'limit'],            // arg names forwarded as query params

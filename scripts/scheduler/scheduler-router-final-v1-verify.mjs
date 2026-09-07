@@ -38,7 +38,7 @@
  *            DEFERRED_WITH_EVIDENCE.
  *
  * Usage:
- *   node scripts/scheduler-router-final-v1-verify.mjs
+ *   node scripts/scheduler/scheduler-router-final-v1-verify.mjs
  * Env:
  *   DSH_HARNESS_ROOT                 deepseek-harness checkout (auto-resolved)
  *   DSH_SRF_RUNTIME                  runtime root (default .demo/scheduler-router-final-v1/runtime)
@@ -54,14 +54,14 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { REPO, provisionAgentHome } from './demo-home.mjs'
-import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
-import { adoptAgents } from '../packages/agent-definition/src/config.js'
-import { apply as applyBootstrap } from '../packages/workspace-bootstrap/src/index.js'
-import { apply as applyRouter } from '../packages/agent-router/src/index.js'
-import { apply as applyFeishu } from '../packages/feishu-connector/src/index.js'
-import { Scheduler, JobStore } from '../packages/scheduler/src/index.js'
-import { createRouterInvoker, createFeishuDeliver } from '../packages/scheduler-router/src/index.js'
+import { REPO, provisionAgentHome } from '../demo-home.mjs'
+import { AgentDefinition } from '../../packages/agent-definition/src/definition.js'
+import { adoptAgents } from '../../packages/agent-definition/src/config.js'
+import { apply as applyBootstrap } from '../../packages/workspace-bootstrap/src/index.js'
+import { apply as applyRouter } from '../../packages/agent-router/src/index.js'
+import { apply as applyFeishu } from '../../packages/feishu-connector/src/index.js'
+import { Scheduler, JobStore } from '../../packages/scheduler/src/index.js'
+import { createRouterInvoker, createFeishuDeliver } from '../../packages/scheduler-router/src/index.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 

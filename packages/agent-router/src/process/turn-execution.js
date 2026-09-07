@@ -323,6 +323,9 @@ export const turnExecutionMethods = {
       // agentRpc carrier and never exposed as model tool arguments.
       turnExecutionId: execution.handle,
       ...(opts?.cwd === undefined ? {} : { cwd: opts.cwd }),
+      // R4 trusted source sidecar: generic sibling metadata, exact-allowlist
+      // validated upstream (deliver) and consumed by the session seam.
+      ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,

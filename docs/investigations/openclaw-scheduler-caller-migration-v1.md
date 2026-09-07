@@ -139,7 +139,7 @@ cron job，由 OpenClaw gateway 继续执行，与本任务验证互不干扰。
 
 ## 8. 验证设计（fixture / 安全测试目标）
 
-`scripts/scheduler-caller-migration-v1-verify.mjs`（本分支新增）：
+`scripts/scheduler/scheduler-caller-migration-v1-verify.mjs`（本分支新增）：
 
 - **隔离**：所有 cron 写入落临时 sandbox 的 `AGENTCORE_SCHEDULER_STORE`；
   `openclaw` 被 PATH stub 替换（记录调用 + exit 127）→ 任何残留调用既被检测又不

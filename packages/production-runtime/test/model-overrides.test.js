@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 
 import {
+  CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   CHATGPT_SUBSCRIPTION_V1,
   loadAgentModelOverrides,
   MAX_CONFIGURED_ROUTES,
@@ -22,7 +23,7 @@ const VALID_PROVIDER_ENV = Object.freeze({
 })
 
 /**
- * agent-model-overrides.json version 2 (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
+ * agent-model-overrides.json version 3 (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1
  * §2 + Amendment 1 A1.2/A1.4): routeCatalog + overrides.<agentId>.model.
  * {primary, fallbacks[]}. The fixture IS the frozen initial chain tuple:
  * glm53 = builtin (plugin/pluginVersion ABSENT), luna = subscription
@@ -42,11 +43,12 @@ const CATALOG = Object.freeze({
     model: 'gpt-5.6-luna',
     plugin: 'dsh-codex',
     pluginVersion: '0.2.3',
+    credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
     credentialReadiness: 'luna-oauth-home',
   },
 })
 const VALID = {
-  version: 2,
+  version: 3,
   routeCatalog: CATALOG,
   overrides: {
     [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna'] } },
@@ -59,7 +61,7 @@ test('the code constant carries ONLY pins and scope — no route tuple values (F
   assert.equal(CHATGPT_SUBSCRIPTION_V1.pluginVersion, '0.2.3')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.dshVersion, '0.1.0-rc.8')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.dshCommit, '514ab7b0029141b88c807704764d0d3e1eea1da4')
-  assert.equal(CHATGPT_SUBSCRIPTION_V1.credentialFile, '.openai-codex-auth.json')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
   assert.equal(CHATGPT_SUBSCRIPTION_V1.provider, undefined, 'provider must come from config only')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.model, undefined, 'model must come from config only')
   assert.equal(MAX_CONFIGURED_ROUTES, 4)
@@ -87,7 +89,7 @@ function invalid(file, source, extra = []) {
   }
 }
 
-test('missing file = global passthrough; valid v2 chain resolves primary-first with identities', (t) => {
+test('missing file = global passthrough; valid v3 chain resolves primary-first with identities', (t) => {
   const { file } = fixture(t)
   const missing = loadAgentModelOverrides(file, [TARGET, OTHER])
   assert.equal(missing.filePresent, false)
@@ -124,10 +126,10 @@ test('missing file = global passthrough; valid v2 chain resolves primary-first w
   assert.equal(again.chainId, chain.chainId)
 })
 
-test('version discipline: v1 files and version ≠ 2 fail loud (no auto conversion)', (t) => {
+test('version discipline: older files fail loud (no auto conversion)', (t) => {
   const { file } = fixture(t)
   invalid(file, { version: 1, overrides: { [TARGET]: { provider: 'x', model: 'y' } } })
-  invalid(file, { version: 3, routeCatalog: {}, overrides: {} })
+  invalid(file, { version: 2, routeCatalog: {}, overrides: {} })
 })
 
 test('malformed family: bad JSON, wrong shape, extra keys, deep duplicate keys fail loud', (t) => {
@@ -135,13 +137,13 @@ test('malformed family: bad JSON, wrong shape, extra keys, deep duplicate keys f
   invalid(file, '{not json')
   invalid(file, '[]')
   invalid(file, { ...VALID, extra: true })
-  invalid(file, { version: 2, routeCatalog: CATALOG })
-  invalid(file, { version: 2, routeCatalog: CATALOG, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna'] }, extra: 1 } } })
+  invalid(file, { version: 3, routeCatalog: CATALOG })
+  invalid(file, { version: 3, routeCatalog: CATALOG, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna'] }, extra: 1 } } })
   // Duplicate JSON key at the deepest level (providerEnv), before parse.
   const luna = JSON.stringify(CATALOG.luna)
-  invalid(file, `{"version":2,"routeCatalog":{"luna":${luna.slice(0, -1)},"credentialReadiness":"luna-oauth"},"overrides":{}}`)
+  invalid(file, `{"version":3,"routeCatalog":{"luna":${luna.slice(0, -1)},"credentialReadiness":"luna-oauth"},"overrides":{}}`)
   const override = JSON.stringify(VALID.overrides[TARGET])
-  invalid(file, `{"version":2,"routeCatalog":${JSON.stringify(CATALOG)},"overrides":{"${TARGET}":${override.slice(0, -1)},"fallbacks":["luna"]}}}`)
+  invalid(file, `{"version":3,"routeCatalog":${JSON.stringify(CATALOG)},"overrides":{"${TARGET}":${override.slice(0, -1)},"fallbacks":["luna"]}}}`)
 })
 
 test('reference integrity and dedup: unknown ref, repeated ref, canonical alias duplicates fail loud', (t) => {
@@ -160,7 +162,7 @@ test('reference integrity and dedup: unknown ref, repeated ref, canonical alias 
   assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
   // ACC-017: a builtin and a subscription route with the SAME provider/model
   // never collapse — routeKind participates in the canonical identity.
-  const crossKind = { ...CATALOG, glm53_sub: { ...CATALOG.glm53, routeKind: 'subscription', plugin: 'dsh-codex', pluginVersion: '0.2.3' } }
+  const crossKind = { ...CATALOG, glm53_sub: { ...CATALOG.glm53, routeKind: 'subscription', plugin: 'other-plugin', pluginVersion: '0.2.3' } }
   write(file, { ...VALID, routeCatalog: crossKind, overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['glm53_sub'] } } } })
   assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
 })
@@ -185,9 +187,11 @@ test('hard bound: chain length ≤ MAX_CONFIGURED_ROUTES = 4 (never 2)', (t) => 
   assert.deepEqual(strict.resolveChain(TARGET, GLOBAL).routes.map((route) => route.routeRef), ['luna'])
 })
 
-test('activation scope: unregistered or out-of-scope agentIds fail loud', (t) => {
+test('fleet activation accepts any registered Agent and rejects unregistered Agent ids', (t) => {
   const { file } = fixture(t)
-  invalid(file, { ...VALID, overrides: { [OTHER]: VALID.overrides[TARGET] } }, [[TARGET]])
+  write(file, { ...VALID, overrides: { [OTHER]: VALID.overrides[TARGET] } })
+  assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
+  invalid(file, { ...VALID, overrides: { agt_unregistered: VALID.overrides[TARGET] } })
   write(file, VALID)
   assert.throws(
     () => loadAgentModelOverrides(file, [OTHER]),
@@ -200,13 +204,27 @@ test('CTR-011 pin: a dsh-codex route with any other pluginVersion fails loud (no
   for (const pluginVersion of ['0.2.4', '^0.2.3', '0.2.2']) {
     invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, pluginVersion } } })
   }
-  // Non-dsh-codex plugins are not pinned by the code constant, but every
+  // A provider=openai-codex route cannot escape the canonical plugin/path by
+  // changing the plugin name.
   // subscription pluginVersion must still be an exact pin (A1.2: no ^/~
   // ranges — same grammar the provisioner enforces).
-  write(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, plugin: 'other-plugin', pluginVersion: '9.9.9' } } })
-  assert.doesNotThrow(() => loadAgentModelOverrides(file, [TARGET, OTHER]))
+  invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, plugin: 'other-plugin', pluginVersion: '9.9.9' } } })
   for (const pluginVersion of ['^9.9.9', '~9.9.0', '9.9.x', '9.x', '9.9.9 || 9.9.10', '9.9.9 - 9.9.10']) {
     invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, plugin: 'other-plugin', pluginVersion } } })
+  }
+})
+
+test('shared mode rejects missing, per-home, relative, and non-canonical credentialFile values', (t) => {
+  const { file } = fixture(t)
+  const { credentialFile, ...missing } = CATALOG.luna
+  invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: missing } })
+  for (const invalidCredentialFile of [
+    '.openai-codex-auth.json',
+    '/Users/authsvc/agent-home/.openai-codex-auth.json',
+    `${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}.copy`,
+    '',
+  ]) {
+    invalid(file, { ...VALID, routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, credentialFile: invalidCredentialFile } } })
   }
 })
 
@@ -253,9 +271,11 @@ test('ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConf
   assert.deepEqual(fallback.processConfig.subscription, {
     plugin: 'dsh-codex',
     pluginVersion: '0.2.3',
+    sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,
+    artifactSha256: CHATGPT_SUBSCRIPTION_V1.artifactSha256,
     dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
     dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
-    credentialFile: '.openai-codex-auth.json',
+    credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   })
 })
 
@@ -264,9 +284,9 @@ test('ACC-019 reuse-gate identity: builtin and subscription processes never shar
   // Same provider/model/env on both sides of the routeKind boundary.
   const catalog = {
     builtinRoute: { routeKind: 'builtin', provider: 'zai', model: 'glm-5.3', credentialReadiness: 'zai-api-key-home' },
-    subscriptionRoute: { routeKind: 'subscription', provider: 'zai', model: 'glm-5.3', plugin: 'dsh-codex', pluginVersion: '0.2.3', credentialReadiness: 'zai-api-key-home' },
+    subscriptionRoute: { routeKind: 'subscription', provider: 'zai', model: 'glm-5.3', plugin: 'other-plugin', pluginVersion: '0.2.3', credentialReadiness: 'zai-api-key-home' },
   }
-  write(file, { version: 2, routeCatalog: catalog, overrides: { [TARGET]: { model: { primary: 'builtinRoute', fallbacks: ['subscriptionRoute'] } } } })
+  write(file, { version: 3, routeCatalog: catalog, overrides: { [TARGET]: { model: { primary: 'builtinRoute', fallbacks: ['subscriptionRoute'] } } } })
   const [builtin, subscription] = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
   assert.notEqual(builtin.identity, subscription.identity)
   // The identity difference is exactly the plugin fields the subscription

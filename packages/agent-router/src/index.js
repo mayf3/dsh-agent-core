@@ -264,6 +264,7 @@ export function apply(ctx, config) {
     reconciliationStore,
     routeChain,
     resolveAgentRef: bindingResolution.resolveAgentRef,
+    resolveAgentById: (agentId) => agentDefinition.getAgent(agentId),
     resolveChannelConversation: bindingResolution.resolveChannelConversation,
     resolveEffectiveWorkspace: bindingResolution.resolveEffectiveWorkspace,
   })

@@ -31,11 +31,19 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Scheduler self-service authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | consult Spec frontmatter; V1 remains current until the atomic acceptance transaction merges | consult Spec frontmatter | whole successor carrying complete V1 authority plus exact `scheduler.admin` mutation-control / `scheduler.audit` history separation, fail-closed global definition listing, and bounded denial ownership lookup; production apply authority remains none |
+
 ## Governance transition
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
 |---|---|---|---|---|
-| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | accepted / current governance | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | accepted / current governance (v1.0.3, accepted 2026-09-05) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
 | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` | superseded | legacy governance | repository knowledge model | — |
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
@@ -67,7 +75,11 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` | accepted lifecycle in PR #123 / effective on merge into main | contracts (production apply remains none) | accepted complete standalone successor of the Parent/Impl/Activation V2 authority set: preserves ordered-route safety while replacing per-home/no-refresh Luna credentials with one Permission-Model-A canonical store, serialized refresh intent, fail-closed uncertain outcome, and one canonical Owner reauth |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` in PR #179 / remains effective on current main until merge | historical contracts only after successor merge | fleet-shared Codex authority whose trust-domain coordinates were frozen against the authsvc domain; protocol semantics carried forward verbatim into V3 |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` | accepted lifecycle in PR #179 / effective on merge into main | contracts (production apply remains none; activation executes under ACTIVATION_V2 gates) | accepted whole-authority successor of V2: trust-domain realignment ONLY — canonical store `/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json`, same-uid (502) permission model for the actual unified production backend (127.0.0.1:8787, 88-agent registry), LEGACY_CONVERGED_BOOTSTRAP not selected (ONE_CANONICAL_OWNER_REAUTH mode), all 17 protocol contracts carried forward |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` in PR #150 / remains effective on current main until merge | historical contracts only after successor merge | historical fleet-shared Codex authority; reciprocal backlink points to the converged-bootstrap successor |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2` | accepted lifecycle in PR #179 / effective on merge into main | activation/deployment authority (production apply separately gated: pre-apply audit + fresh gates + PRODUCTION_MUTATION_CONCURRENCY = 1) | accepted whole-authority successor of ACTIVATION_V1: activation moved to the yanfenma-domain unified backend (fresh preimage domain: checkout 549dace lineage, registry 88, config v2); bounded Luna enablement agt_stock_agent + agt_ceo-agent (+ CTO migration case); ONE_CANONICAL_OWNER_REAUTH; execution order aligned to the carried-forward runner |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2` in PR #179 / remains the authority for the authsvc domain's own future use | historical for the yanfenma domain; superseded as CURRENT production activation | authsvc/92-fleet activation authority; reciprocal backlink points to the domain-realigned successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | historical contracts only after successor merge | historical activation authority; reciprocal backlink points to the fleet-shared successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1` | superseded by Activation V2 in PR #103 / remains effective on current main until merge | historical contracts only after successor merge | historical activation authority; backlink = `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | historical contracts only after successor merge | historical implementation authority; reciprocal backlink points to the fleet-shared successor |
@@ -90,6 +102,13 @@ it names Parent/IMPL/Activation V2 in `supersedes`, and all three V2 authorities
 `superseded_by` backlink in the same acceptance commit. Until that commit merges `main`, the three V2
 authorities remain effective on current main；after merge, the fleet-shared authority is the sole current
 whole authority and production apply remains separately gated.
+PR #150 atomic acceptance lineage: `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` is accepted at reviewed
+head `d6550a5b1998cb16866cb6e4261a925a98c502a2` (PASS, 0 blockers, normative body change NONE)；
+it names V1 in `supersedes`, and V1 carries the reciprocal `superseded_by` backlink in the same
+acceptance commit. Until that commit merges `main`, V1 remains effective on current main；after
+merge, the V2 converged-bootstrap successor is the sole current whole authority and production
+apply remains separately gated under `FLEET_PRODUCTION_APPLY = HOLD`.
+
 
 The ordered-route-chain acceptance transaction (2026-08-25) is lifecycle-only
 relative to reviewed head `ee13cb224660416c9044203610b93cb8f13873bb`
@@ -182,3 +201,45 @@ V2 was accepted against independently reviewed head `8d2f591a5d2e9df78f39b5d40af
 with zero semantic delta (V2 §19). `production_apply_authority` stays `none`:
 code merge, bundle deployment, moderator-list configuration, runtime reload,
 Forum deployment, and Grant apply each remain separately authorized actions.
+
+## workflow-transition production recovery authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_TRANSITION_DIRECT_ROLLBACK_AMENDMENT_V1` | accepted (Draft PR) | none | narrow docs-only child amendment: removes `DEC-XOBS-001`/`CTR-XOBS-015` pre-seal root staging observation precondition for rollback-to-frozen-preimage only (basis: `SCHEME_AUDIT_R1` sha256 `4ff6defe…ebd74` + NEW_EVIDENCE); both parents (`…DEPLOYMENT_RECOVERY_V1`, `…ROOT_XATTR_OBSERVATION_V1`) stay accepted and byte-unchanged; no whole-Spec supersession, no scope expansion, no new observation authority |
+
+## workflow-execute unified deployment authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_EXECUTE_UNIFIED_DEPLOYMENT_V1` | accepted / current | contracts | unified `workflow_execute` 写工具的两文件生产部署授权：workflow.js + registry.js（DEC-010 cutover），两文件等面回滚、blob pins + preimage 分支 STOPPED 语义、post-deploy 证明面、dedicated disposable-fixture E2E、CTR-HD-006/009 机制按引用继承；执行成功即构成 transition hotfix 的 CTR-HD-011 retirement record |
+| `AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V1` | superseded | contracts | narrow child Authority：只允许一次 post-hoc root-owned supplement receipt publication；原零字节 receipt byte-preserved，原 tx/snapshot 缺失值保持 unknown；禁止 P1/P2、restart、rollback、E2E、Grant/credential 或其他 production mutation |
+| `AGENT_CORE_WORKFLOW_EXECUTE_RECEIPT_RECOVERY_V2` | accepted | contracts | V1 的 narrow whole-Spec successor：唯一 delta = publication 后才能观察的值（identity_after / publication outcome / production-ready conclusion）从 immutable supplement 本体移到独立 post-publication audit evidence（修复 FUTURE_FACT_CYCLE fail-closed）；§3/§4/§8 边界逐字继承，§6/§7/§9 仅含各自括注声明的 delta 编辑 |
+| `AGENT_CORE_WORKFLOW_EXECUTE_PRODUCTION_READY_RESOLUTION_V1` | accepted | contracts | V2 §9 composite 规则的 focused amendment：原事务历史值（original_transaction.*、owner_root_exit_zero_*，UNKNOWN_NOT_DURABLY_RECORDED by design）不阻断 composite 结论；仍阻断类 = catalog/E2E/recovery 自身 transcript exit-zero/recovery 时全部只读回查/publication audit；acceptance 后授权 docs-only resolution record（WORKFLOW_EXECUTE_PRODUCTION_READY 判定落盘） |
+
+## agent-session messaging production deployment authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |
+
+## HR dispatch delivery resolution authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1` | superseded (2026-09-05 by `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2` whole-Spec subject successor；reviewed head f3b11d7…) | contracts（生产 apply 另受 shared mutation slot + controlled runbook 约束，`production_apply_authority: conditional_controlled_operation`） | HR_DISPATCH_DELIVERY_READINESS_V1 Lane B：只读 capability `agent_resolve_principal`（exact AGENT Principal UUID → canonical enabled agentId；trusted-caller-only、fixed Auth origin/path、audience `agent-principal-resolution` × `auth.agent.resolve`、closed 两字段响应、全族 fail-closed 404/409/422/500/504→lowercase 映射）+ A2A Router ingress exact-ID admission guard（闭合 resolveAgentRef display-name fallback TOCTOU 错投族；不动 ASM 三字段 schema/授权/receipt/no-replay）；上游 = auth `AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V1` accepted @ b5eef6cd…（depends_on pin）；禁止 second identity source / display-name guessing / dispatcher / agent_wake；Lane C 组合 canary 另受 shared slot 释放条件约束 |
+| `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2` | accepted (reviewed head eedf469…, Owner batched exact-head acceptance 2026-09-05) | contracts（生产 apply 另受 shared mutation slot + controlled runbook 约束，`production_apply_authority: conditional_controlled_operation`） | V1 的 whole-Spec subject successor：唯一语义修正=canary/proof 主体 bc970ced…(legacy hr-agent) → dc702687…(agt_hr-agent) + legacy MUST NOT 条款（既有 stored-id 文法对 legacy 拼写本就 fail-closed）；subject-generic resolution 与 exact-ID admission 契约字节保留；上游 pin = auth `AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V2` @ 87beb77（auth main dde3967 可达，body 与 accepted auth V2 字节一致） |
+
+## Scheduler production state reconciliation authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_SCHEDULER_PRODUCTION_RECONCILIATION_V1` | accepted (PR #164, reviewed head dfa0f599…) | none（current-state adoption + continued-operation declaration only；implementation_authority=none；任何未来 maintenance mutation 需 NEW fresh authority） | 采纳并记录已在生产的 scheduler 10-file runtime face（generation 18f96e2）的 current state 与 canary/traceability 结果；§1 诚实记录 E1–E5 全部 EARLY_PRODUCTION_EXECUTION；THIS_AUTHORITY_DOES_NOT_RETROACTIVELY_AUTHORIZE_PAST_EXECUTION；不 ratify Lane B/agent_session_send |
+| `AGENT_CORE_SCHEDULER_RUNTIME_DEPLOYMENT_V1`（PR #159，未合并、从未生效） | HISTORICAL_ENGINEERING_INPUT / STALE_PROPOSED_CANDIDATE（非 authority predecessor，无 supersession 关系） | n/a | 历史工程输入：§3 十文件闭包与分析被 reconciliation spec 引用为事实记录；其冻结时序前置与实际执行路径已漂移 |
+
+## Mobile session history authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `MOBILE_SESSION_HISTORY_V1` | accepted (2026-09-07, Owner exact-head acceptance ACCEPT_PR145_AUTHORITIES_AND_RESUME_IMPLEMENTATION in PR #145 @ ccbb5dc…; reviewed head 18638aa…, NORMATIVE_BODY_DELTA = NONE) | contracts | Mobile 当前 Binding `activeAgent` 的 current canonical `main` trajectory 只读历史：logical-main 身份、deterministic current-main resolver、deterministic composite public message ID（HEADER_SUBSET + PREFIX_ANCHOR generation：append-stable、reset-provable）、stale-cursor 分页、冻结资源上限、confinement/隐私边界；与 sibling `PRODUCT_API_AUTHENTICATION_V1`（candidate `0d8f050` + PR #145 B1/B3 修复）按 trusted authContext / 唯一 Binding reader 边界拆分 |
+| `PRODUCT_API_AUTHENTICATION_V1` | accepted (2026-09-07, Owner exact-head acceptance ACCEPT_PR145_AUTHORITIES_AND_RESUME_IMPLEMENTATION in PR #145 @ ccbb5dc…; reviewed head 208f9a9…, NORMATIVE_BODY_DELTA = NONE) | contracts | Tailnet-local Mobile history 身份边界 Child（parent `AGENT_CORE_HARDENING_PROGRAM_V1`）：专用 history-only Tailnet listener（现有 Product API server 保持 loopback-only）、listener 上全请求 admission（selector≠main 由 History 400）、`tailcfg.StableNodeID` WhoIs 身份、配置 (StableID, surfaceId) pair、trustedAuthContext 唯一输出、`AUTH_LAYER_READS_BINDING = NO`、fail-closed 403/503 语义、restart-only config generation；public/non-Tailnet history 仍禁止 |

@@ -1,0 +1,119 @@
+{
+  "base": "75d25914fe2a114847c7ba0e25b463c2dda29c3d",
+  "production_root": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+  "method": "Read-only code bytes; directory WIP expanded to leaf files; hashes are code only, no credential files. Does not adjudicate authority or delete WIP.",
+  "files": [
+    {
+      "status": " M",
+      "path": "packages/agent-provisioning/src/index.js",
+      "live_sha256": "916caaf1af925cbeace84e4cff589f6454e0bb41fe6ad2d3a31ffeab16c5d5f3",
+      "base_path_present": true,
+      "base_sha256": "b0a0a2190d2c170634c483385a3db0e1658e8e0a2444c372c1357842fa11b57d",
+      "equals_current_base": false
+    },
+    {
+      "status": " M",
+      "path": "packages/product-api/src/index.js",
+      "live_sha256": "1437e2bf5f3e039fadc004ef6704dcdc84aa79dcd59b5b660dc12b84379dd864",
+      "base_path_present": true,
+      "base_sha256": "c824564e6072b99bb9e1e8b4037449b8b460e081e309f9357f2dc78d21d00371",
+      "equals_current_base": false
+    },
+    {
+      "status": " M",
+      "path": "packages/production-runtime/src/compose.js",
+      "live_sha256": "64dd7889d14b0ce94e5a4cc96792d2f30e88e97f7beac1c607006d27ec5c6ad0",
+      "base_path_present": true,
+      "base_sha256": "4944025f89850ed5bff1f85fdf5e9af1566fe99da1bee7f1f25744302c205527",
+      "equals_current_base": false
+    },
+    {
+      "status": " M",
+      "path": "packages/production-runtime/src/model-overrides.js",
+      "live_sha256": "9f2f68589c486a9540cf5684812f739a25ea87a413c32ce27c3a64d8321cd282",
+      "base_path_present": true,
+      "base_sha256": "f3733cf6d68a623182b1b4b4f021f3d5c2d073c9ed517dd7da5f5c9cddfe3bed",
+      "equals_current_base": false
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-provisioning/src/shared-codex.js",
+      "live_sha256": "cd4933b43a75fce851b5d05beb3b6e48497422ca4024e02a7e74d34204a75182",
+      "base_path_present": true,
+      "base_sha256": "038d92ae7cf27c11a5aac2e836f690009c50128217ac4f3509377a1bcb4f66ed",
+      "equals_current_base": false
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/process/provider-errors.js",
+      "live_sha256": "3e25f3269b39a0e253949c022d7845709a255d62d74fb2cb98750bc4766578b6",
+      "base_path_present": true,
+      "base_sha256": "3e25f3269b39a0e253949c022d7845709a255d62d74fb2cb98750bc4766578b6",
+      "equals_current_base": true
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/process/state-machine.js",
+      "live_sha256": "64cacdd42a65825fac8ad1ef06f9ed1dd9d4c37f8e49c7d15b7cc2153a28e598",
+      "base_path_present": true,
+      "base_sha256": "64cacdd42a65825fac8ad1ef06f9ed1dd9d4c37f8e49c7d15b7cc2153a28e598",
+      "equals_current_base": true
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/route-chain-canary.js",
+      "live_sha256": "ca228549abbbdfb4c7519641a8b5d6e08de7dca3ba5b72dac82f5ca562afc4b9",
+      "base_path_present": true,
+      "base_sha256": "ca228549abbbdfb4c7519641a8b5d6e08de7dca3ba5b72dac82f5ca562afc4b9",
+      "equals_current_base": true
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/route-chain.js",
+      "live_sha256": "b23eccd18b9f6a440d7075e1b16ae413221995cdc9f287a5701aff8bc725fe4e",
+      "base_path_present": true,
+      "base_sha256": "b23eccd18b9f6a440d7075e1b16ae413221995cdc9f287a5701aff8bc725fe4e",
+      "equals_current_base": true
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/src/scheduler-auth.js",
+      "live_sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e",
+      "base_path_present": true,
+      "base_sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e",
+      "equals_current_base": true
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/src/workflow-admission.js",
+      "live_sha256": "72b7e790732bfee8744342a70f59d92135ee16a131402bab440ea6f45f00ee1f",
+      "base_path_present": true,
+      "base_sha256": "72b7e790732bfee8744342a70f59d92135ee16a131402bab440ea6f45f00ee1f",
+      "equals_current_base": true
+    },
+    {
+      "status": "??",
+      "path": "packages/production-runtime/src/shared-codex-migration-executable.js",
+      "live_sha256": "937c6bd4a3addcfdad9313f20bc39a16fb2ca37f1ad805b6a035fe0fbd46cc72",
+      "base_path_present": true,
+      "base_sha256": "d97d6d2cb02f6d11d99989e110cf28d1745612b5a6c0670c02b9a86c498b581a",
+      "equals_current_base": false
+    },
+    {
+      "status": "??",
+      "path": "packages/production-runtime/src/shared-codex-migration.js",
+      "live_sha256": "b2e111fbdfe53ea850938d20a61be9dfaafd7bc50f9798e48e940914b54a67ab",
+      "base_path_present": true,
+      "base_sha256": "b2e111fbdfe53ea850938d20a61be9dfaafd7bc50f9798e48e940914b54a67ab",
+      "equals_current_base": true
+    },
+    {
+      "status": "??",
+      "path": "packages/production-runtime/src/txn-safety.js",
+      "live_sha256": "e213f048b897516eed57a232603488aeff9350e27b0437d73024b1db2b77d329",
+      "base_path_present": false,
+      "base_sha256": null,
+      "equals_current_base": false
+    }
+  ]
+}

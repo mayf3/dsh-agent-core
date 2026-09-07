@@ -54,6 +54,14 @@
       "split_followup": "split into per-behavior test files (describe/it blocks grouped by contract) before next major edit"
     },
     {
+      "path": "packages/broker/src/capabilities/workflow.js",
+      "approved_max_lines": 601,
+      "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at structure-guardrails baseline (601 physical lines at integration base a0ce485483bbc82623d3df4f91cf6d4bc2297470); registered when AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V1 added minimal import/manifests-inventory wiring after extracting the workflow_definition_authoring manifest into workflow-definition-authoring.js; grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
+      "approved_by": "mayf3",
+      "expires_at": "2027-08-22",
+      "split_followup": "extract cohesive responsibilities into focused modules behind the package index before next major edit"
+    },
+    {
       "path": "packages/broker/src/transport.js",
       "approved_max_lines": 580,
       "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (580 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",

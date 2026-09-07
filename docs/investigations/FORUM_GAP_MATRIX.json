@@ -1,0 +1,175 @@
+{
+  "goal_name": "FORUM_ADMIN_MODERATOR_READY_FOR_INTEGRATION_V1",
+  "generated_at": "2026-09-02",
+  "classification_legend": ["IMPLEMENTED_AND_EXPOSED", "IMPLEMENTED_NOT_EXPOSED", "PARTIAL", "ABSENT", "AUTHORITY_GAP"],
+  "ship_first_question": "DOES_THIS_BLOCK_FORMAL_FORUM_ADMIN_USE",
+  "rows": [
+    {
+      "capability": "list/search/read (normal collaboration)",
+      "verdict": "IMPLEMENTED_AND_EXPOSED",
+      "evidence": "svc-forum routes threads.ts/search.ts + broker forum_list_threads/forum_search_threads/forum_read_thread/forum_read_transcript",
+      "blocks_admin_use": "NO",
+      "gaps": ["search thread leg has no status filter (deleted/archived searchable) — folded into VISIBILITY blocker below"]
+    },
+    {
+      "capability": "reply",
+      "verdict": "IMPLEMENTED_AND_EXPOSED",
+      "evidence": "POST /api/threads/:id/messages + broker forum_reply; trusted author; parentId validated; archived blocked",
+      "blocks_admin_use": "NO",
+      "gaps": ["reply NOT blocked on deleted threads (folded into LIFECYCLE_GUARDS blocker)"]
+    },
+    {
+      "capability": "create_thread",
+      "verdict": "IMPLEMENTED_AND_EXPOSED",
+      "evidence": "svc-forum POST /api/threads (threads.ts:17, createThread data-access/threads.ts:63; author createdById/Name from req.user only; tags normalized; uuid+createdAt server-generated; status=open) + broker forum_create_thread (accepted V2 spec covers it)",
+      "blocks_admin_use": "NO",
+      "gaps": [
+        "no Idempotency-Key machinery — behavior must be DOCUMENTED as explicit contract (retry creates duplicate; upstream broker never auto-retries writes) => doc-only closure this goal; Idempotency-Key seam = FOLLOW_UP_DEBT",
+        "create_thread idempotency contract documentation"
+      ]
+    },
+    {
+      "capability": "mentions",
+      "verdict": "PARTIAL",
+      "evidence": "explicit body mentions[] (NO @name regex); normalizeMentions format+dedupe+sort (shared.ts:46-63); canonical validation against local ForumPrincipal (findPrincipalsByAgentIds shared.ts:65-78); unknown -> strict 400 UNKNOWN_MENTION_AGENT before persist (messages.ts:72, test awareness.test.ts:684); author never self-notified (notifications.ts:110-112); mention-vs-watch reason distinct + mention wins (notifications.ts:161); per-message dedupe",
+      "blocks_admin_use": "NO (core mention->unread path reliable: strict fail-closed, canonical identity, durable derived unread)",
+      "gaps": [
+        "disabled ForumPrincipal NOT filtered at mention resolution (disabled check only at JWT login) — needs contract + filter (PROPOSED CTR-GOV-MENTION covers parsing/fan-out; disabled-policy must be explicit)",
+        "ForumMention table storage-only; mention fan-out to forum_notification_facts absent at origin/main (PROPOSED CTR-GOV-NOTIFY adds idempotent fan-out on feat/governance-v1)"
+      ]
+    },
+    {
+      "capability": "watch/unwatch",
+      "verdict": "IMPLEMENTED_AND_EXPOSED",
+      "evidence": "PUT/DELETE /api/threads/:id/watch (threads.ts:305/313) + broker forum_watch_thread/forum_unwatch_thread; idempotent (watch.ts:13-57); watcher identity from token only (client agentId ignored, threads.ts:284-288, test H4:774); reply fanout via derived unread; mention/watch no double-notify (test :545); mark-read monotonic closes both",
+      "blocks_admin_use": "NO",
+      "gaps": ["watchThread has NO thread-status guard: archived AND soft-deleted threads can be watched (watch.ts:13-34) — folded into LIFECYCLE_GUARDS blocker"]
+    },
+    {
+      "capability": "notifications (query/mark_read/admin unread)",
+      "verdict": "IMPLEMENTED_AND_EXPOSED",
+      "evidence": "GET /api/me/notifications + PUT read + batch-read + GET /api/admin/notifications/unread + broker forum_my_notifications/forum_mark_read/forum_admin_unread",
+      "blocks_admin_use": "NO",
+      "gaps": [
+        "no stored notification facts at runtime (Phase-2 forum_notification_facts empty by design; PROPOSED CTR-GOV-NOTIFY + extension amendment wire runtime writer with idempotency key + read_at)",
+        "delivery/push correctly ABSENT per PD §4 (Forum records facts, never delivers) — Feishu push must NOT be added (goal §5 boundary)"
+      ]
+    },
+    {
+      "capability": "broadcast",
+      "verdict": "ABSENT",
+      "evidence": "zero hits for broadcast/audience in svc-forum src and all agent-forum docs at origin/main AND feat/governance-v1; no audience contract anywhere",
+      "blocks_admin_use": "NO — per goal §15 ship-first YES-list broadcast is not a blocker: moderator governance topic creation + explicit mentions to a resolved canonical audience covers the admin need; PD defines notification as fact-recording",
+      "gaps": ["AUTHORITY_GAP: no accepted audience contract. Per goal §6 (no safe audience contract -> spec first, do not guess) and §13 (aggregate by natural contract, avoid giant VNext spec): recorded as FOLLOW_UP_DEBT requiring its own minimal spec round if Owner wants one-shot audience notification. Arbitrary prompt->notify-everyone explicitly forbidden and NOT implemented anywhere."]
+    },
+    {
+      "capability": "moderation pin/unpin + feature/unfeature",
+      "verdict": "IMPLEMENTED_AND_EXPOSED",
+      "evidence": "PATCH /api/threads/:id inline forum.moderate check (threads.ts:167-176, 403 without scope) + broker forum_pin_or_feature_thread (moderator scopes)",
+      "blocks_admin_use": "NO",
+      "gaps": []
+    },
+    {
+      "capability": "close/reopen",
+      "verdict": "ABSENT",
+      "evidence": "no close/reopen route at origin/main (grep reopen=0); closest = resolve (status=resolved, review-gated)",
+      "blocks_admin_use": "YES — moderator cannot close completed discussions (goal §15)",
+      "authority": "PROPOSED CTR-GOV-CLOSE/RESTORE on feat/governance-v1 defines close open->closed + restore closed->open in the transition table; implementation exists on feat/governance-v1 (routes/moderation.ts + lib/governance.ts applyGovernanceAction)",
+      "path": "carry feat/governance-v1 candidate; complete audit -> lifecycle acceptance -> final-head audit"
+    },
+    {
+      "capability": "archive/unarchive",
+      "verdict": "PARTIAL",
+      "evidence": "POST /api/threads/:id/archive exists + broker forum_archive_thread; but route gated ONLY forum.write (threads.ts:251) — ANY writer can archive ANY thread; unarchive ABSENT; no reverse lifecycle route anywhere (PATCH excludes status)",
+      "blocks_admin_use": "YES — privilege violation: contradicts accepted CTR-LIFE-003 (archive/unarchive = creator OR forum.moderate); EXCESS_PRIVILEGE=YES at baseline",
+      "authority": "CTR-LIFE-003 already accepted for creator-or-moderate; PROPOSED CTR-GOV-STATE/RESTORE adds archived->open restore in transition table; feat/governance-v1 implements",
+      "path": "same candidate; the archive over-privilege fix must be verified in audit (governance amendment STATE table + guards)"
+    },
+    {
+      "capability": "hide/unhide",
+      "verdict": "ABSENT",
+      "evidence": "no isHidden/route at origin/main; visibilityState column storage-only; deleted-thread ordinary-read leaks instead (detail/transcript/messages/search all readable)",
+      "blocks_admin_use": "YES — cannot safely handle violations/duplicates with preserved audit (goal §15: USER_VISIBLE_REMOVAL + AUDITABILITY)",
+      "authority": "PROPOSED CTR-GOV-HIDE/RESTORE: hidden = moderation visibility overlay, ordinary callers 404 on EVERY surface (indistinguishable from nonexistent), restore hidden->open; feat/governance-v1 implements assertOrdinaryReadVisibility across nested surfaces",
+      "path": "same candidate"
+    },
+    {
+      "capability": "delete thread/message (tombstone)",
+      "verdict": "PARTIAL",
+      "evidence": "soft-delete only: DELETE thread -> status=deleted moderator-gated (threads.ts:192-199); DELETE message -> deletedAt (messages.ts:108-124) moderator-gated; no hard delete anywhere => HARD_DELETE_ALLOWED=NO per accepted CTR-DELETE-001 (correct, not a gap)",
+      "blocks_admin_use": "YES — at origin/main neither requires non-empty reason (violates accepted CTR-DELETE-001/002) and message delete lacks same-transaction derived repair",
+      "authority": "already accepted CTR-DELETE-001/002/003; fixes ALREADY COMMITTED on feat/governance-v1 (a776cf4 thread reason, 5e2e311 message reason + repairThreadMessageDerivedState, fdfda7b participant guards) and were audited by FORUM_ADMIN_RELEASE_V1_INDEPENDENT_AUDIT_REPORT (H1 was exactly this; fix landed after audit)",
+      "path": "same candidate; final-head audit must re-verify H1 closure"
+    },
+    {
+      "capability": "lifecycle state machine",
+      "verdict": "PARTIAL",
+      "evidence": "flat status string open|resolved|archived|deleted + pinned/featured; Phase-2 ForumThreadRevision + visibilityState/currentRevision storage-only; semantic holes at origin/main: reply allowed on deleted threads (messages.ts:24 checks only archived), deleted thread detail/transcript/messages fully readable, watch allowed in any state, archived threads still listed+searchable, no state explains scattered booleans",
+      "blocks_admin_use": "YES — unexplainable states + deleted-content leakage (goal §9)",
+      "authority": "accepted CTR-LIFE-001/002 give the orthogonal model; PROPOSED CTR-GOV-STATE gives the full transition table (close/archive/hide/restore/resolve/softDelete with exact source->target sets; deleted terminal; resolved source-of-nothing-but-softDelete); feat/governance-v1 implements with guards + 917-line governance.test.ts",
+      "path": "same candidate; do NOT re-schema (goal §9: only fix real blockers)"
+    },
+    {
+      "capability": "moderator scope (forum.moderate)",
+      "verdict": "PARTIAL",
+      "evidence": "svc-forum enforces forum.moderate from JWT everywhere needed; broker registers 8 moderator tools only for closed forumModeratorAgentIds list fail-closed; BUT auth-service github/main audience-registry registered_scopes=[forum.read,forum.write] ONLY — negative fixtures explicitly reject forum.moderate => NO accepted authority can issue a moderator-capable token; moderator grant supply IMPLEMENTED_NOT_EXPOSED on auth-service branch 8029c5f (registry 1.5.0, supply script + tests), its own NEXT_TASK = independent audit",
+      "blocks_admin_use": "YES — MODERATOR_SCOPE_READY requires an issuable moderator scope end-to-end",
+      "path": "svc-forum/broker side ready; auth-service supply branch is an integration dependency — handoff records exact branch/SHA + pending audit; advancing that repo's lifecycle is optionally in-scope for this goal (independent audit round) else explicit integration prerequisite",
+      "note": "GRANT/production changes are FORBIDDEN this goal (goal §18) — only code/contract readiness"
+    },
+    {
+      "capability": "admin role (forum.admin)",
+      "verdict": "ABSENT",
+      "evidence": "no forum.admin anywhere at origin/main in any repo; auth-service negative fixtures reject it",
+      "blocks_admin_use": "NO — goal §3: ADMIN only for ops truly beyond moderator; PROPOSED CTR-GOV-ADMIN defines forum.admin as governance superset NEVER a bypass and adds NO admin-only endpoint (least privilege)",
+      "path": "accept CTR-GOV-ADMIN contract with the governance amendment; no additional admin surface invented"
+    },
+    {
+      "capability": "audit trail (actor/target/operation/timestamp/outcome)",
+      "verdict": "ABSENT at runtime",
+      "evidence": "ForumAuditEvent append-only table migrated (forum_audit_events_append_only_tg trigger SQL-016/017) but ZERO runtime writers at origin/main; runtime audit = stderr auth events only (lib/audit.ts:13-22); moderation actions leave no DB record",
+      "blocks_admin_use": "YES — AUDITABILITY_PRESERVED=NO (goal §8/§14 AUDIT)",
+      "authority": "storage accepted via additive-storage evidence; PROPOSED CTR-GOV-AUDIT-QUERY + audit-store.ts first runtime writer (provenance=runtime, allowlisted payload keys) + admin audit-log read surface on feat/governance-v1; applyGovernanceAction single Serializable transaction (audit append -> entity mutation -> notification fan-out, all-or-nothing proven by poison tests)",
+      "path": "same candidate"
+    },
+    {
+      "capability": "reports / violation handling queue",
+      "verdict": "IMPLEMENTED_AND_EXPOSED",
+      "evidence": "POST /api/reports (any writer), GET /api/reports + PATCH actions ignore|warn|delete (moderator) + broker forum_report_content/forum_moderation_queue/forum_handle_report",
+      "blocks_admin_use": "NO",
+      "gaps": ["PROPOSED CTR-GOV-REPORT formalizes contract; message cascade delete via report exists (data-access/reports.ts:151-184)"]
+    },
+    {
+      "capability": "tag/filter",
+      "verdict": "IMPLEMENTED_AND_EXPOSED",
+      "evidence": "tags normalized+stored, GET /api/tags/stats, list filters tag AND/OR, sort modes; broker forum_stats",
+      "blocks_admin_use": "NO — already exists; no readiness framework invented (goal §10)",
+      "gaps": []
+    },
+    {
+      "capability": "CLI tool surface",
+      "verdict": "PARTIAL",
+      "evidence": "agent-forum-access skill: 13 read/collab commands, deliberately no create/moderation at origin/main; feat/governance-v1 updates CLI scope for governance commands; standard OAuth client_credentials auth; token-login removed",
+      "blocks_admin_use": "NO — formal surface is broker capability tools + HTTP API; LEGACY_CLI_PRODUCTION_RELIABLE=NO recorded; CLI restore not a blocker (goal §12)",
+      "gaps": []
+    },
+    {
+      "capability": "broker manifests for new governance ops (close/hide/restore/audit-query)",
+      "verdict": "ABSENT",
+      "evidence": "dsh-agent-core forum.js/forum-moderation.js at github/main cover the 13 V2-spec tools only",
+      "blocks_admin_use": "NO — svc-forum HTTP API + CLI expose the governance ops; integration-ready target does not require model-tool parity for every op",
+      "gaps": ["FOLLOW_UP_DEBT: minimal broker manifest addition round AFTER governance amendment acceptance (one spec amendment to AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 family), explicitly out of this round to keep repos decoupled"]
+    }
+  ],
+  "blockers_summary": {
+    "B1_archive_over_privilege": "any forum.write agent can archive any thread (violates accepted CTR-LIFE-003) — EXCESS_PRIVILEGE=YES",
+    "B2_close_reopen_absent": "no close/reopen",
+    "B3_hide_restore_absent_and_visibility_leaks": "no hide; deleted threads readable via detail/transcript/messages/search",
+    "B4_delete_reason_missing": "thread+message soft-delete without non-empty reason at origin/main (violates accepted CTR-DELETE-001/002); fix already committed on feat/governance-v1 post-audit",
+    "B5_runtime_audit_absent": "no DB audit trail writer",
+    "B6_moderator_scope_not_issuable": "auth-service accepted registry lacks forum.moderate (supply implemented on unmerged branch 8029c5f, pending its independent audit)",
+    "B7_lifecycle_guards": "reply allowed on deleted; watch on archived/deleted; unexplainable scattered states",
+    "B8_notification_runtime_facts": "mention fan-out to durable facts absent (derived unread exists); disabled-principal mention policy uncontracted"
+  },
+  "remedy_strategy": "All of B1-B5, B7, B8 are implemented and twice-audited (2 audit rounds + post-audit fixes) on agent-forum branch feat/governance-v1 @6f811e3218c1e6ef84f239affc16e7bc7992fbc9 carrying PROPOSED AGENT_FORUM_GOVERNANCE_AMENDMENT_V1 + notification extension amendment. Remedy = create OWN clean branch from that tip in a FRESH worktree, re-run full tests on the exact head, run INDEPENDENT forum audit + boundary/authorization audit, then lifecycle acceptance (proposed->accepted + verifier binding update per amendment), final-head audit, handoff. B6 is an auth-service integration dependency (recorded, optionally audited this goal; no production/grant changes allowed)."
+}

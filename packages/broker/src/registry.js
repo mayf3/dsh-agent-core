@@ -21,6 +21,7 @@
  */
 
 import { assertValidManifest, invoke } from './mapping.js'
+import { sanitizeErrorDetail } from './error-detail-sanitizer.js'
 
 const MODEL_ANNOTATIONS = ['description', 'title', 'default', 'examples']
 
@@ -67,6 +68,11 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
   const manifest = assertValidManifest(rawManifest)
   const resolvePrincipal = deps.resolvePrincipal
   const wireId = manifest.id
+  const isWorkflowAuthoring = wireId === 'workflow_definition_authoring'
+    && manifest.toolName === 'workflow_definition_authoring'
+  // Validation checks raw description's type but its normalized result omits
+  // that text. Restore only V3 authoring guidance; other tools retain their text.
+  const description = isWorkflowAuthoring ? rawManifest.description : manifest.description
 
   // Model-facing parameter schema in `defineTool` format (per-property map
   // with `required: true`). Existing manifests default to `operation`; an
@@ -93,6 +99,21 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
       const opReq = Array.isArray(op.arguments.required) && op.arguments.required.includes(name)
       requiredEverywhere[name] = (requiredEverywhere[name] ?? true) && opReq
     }
+  }
+  // CTR-011 (workflow_execute unified write tool): "required everywhere" means
+  // EVERY operation declares the property AND requires it. The collection loop
+  // above only ANDs across operations that declare a property, so an argument
+  // required by just one operation of a multi-operation manifest (declared by
+  // none of the others) would be lifted to a tool-level requirement and the
+  // coarse host schema would demand create args for transition calls and vice
+  // versa. Recompute over all operations; per-operation strictness stays in
+  // mapping.js.
+  for (const name of Object.keys(requiredEverywhere)) {
+    requiredEverywhere[name] = manifest.operations.every((op) =>
+      Object.hasOwn(op.arguments.properties, name)
+      && Array.isArray(op.arguments.required)
+      && op.arguments.required.includes(name)
+    )
   }
   for (const [name, allRequire] of Object.entries(requiredEverywhere)) {
     if (allRequire && !parameters[name].required) parameters[name].required = true
@@ -132,12 +153,17 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
   // Downstream error rendering: the model-visible failure line carries the
   // precise diagnostics (upstream HTTP status + downstream x-request-id),
   // never a bare flattened `http_4xx`.
-  const renderError = (error) => {
+  const renderError = (error, operation) => {
     const parts = []
     if (typeof error?.status === 'number') parts.push(`status=${error.status}`)
     if (typeof error?.requestId === 'string' && error.requestId.length > 0) parts.push(`request_id=${error.requestId}`)
     const suffix = parts.length > 0 ? ` (${parts.join(', ')})` : ''
-    return `${error?.code ?? 'unknown_error'}${suffix}`
+    const authoringDiagnostic = isWorkflowAuthoring && (
+      (error?.code === 'graph_validation_failed' && error.status === 422)
+      || (error?.code === 'invalid_arguments' && error.status === undefined && operation === 'replace_draft_graph'))
+    const detail = authoringDiagnostic && typeof error.detail === 'string' && error.detail.length > 0
+      ? `: ${sanitizeErrorDetail(error.detail)}` : ''
+    return `${error?.code ?? 'unknown_error'}${suffix}${detail}`
   }
 
   return {
@@ -145,7 +171,7 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
     definition: {
       name: manifest.toolName,
       description:
-        `Agent Core capability \`${wireId}\`: ${manifest.description} ` +
+        `Agent Core capability \`${wireId}\`: ${description} ` +
         `Supported operations: ${manifest.operations.map((o) => o.name).join(', ')}.`,
       parameters,
       output: {
@@ -153,7 +179,7 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
         render: (args, value) =>
           value && value.ok === true
             ? [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) = ${JSON.stringify(value.result)} (ok: true)` }]
-            : [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) failed: ${renderError(value?.error)}` }],
+            : [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) failed: ${renderError(value?.error, args[selector])}` }],
       },
       async execute(args) {
         // Dispatch consumes the selector; handlers receive only business args.

@@ -1,0 +1,40 @@
+{
+  "summary": {
+    "result": "STRUCTURE_VIOLATION",
+    "exitCode": 1,
+    "rulesVersion": "CODE_STRUCTURE_GUARDRAILS_V1",
+    "base": "75d25914fe2a114847c7ba0e25b463c2dda29c3d",
+    "head": "75d25914fe2a114847c7ba0e25b463c2dda29c3d",
+    "checks": [
+      "FILE_LINE_LIMIT",
+      "DIRECTORY_CHILD_LIMIT",
+      "DIRECTORY_DEPTH_LIMIT",
+      "EXCEPTION_REGISTRY",
+      "NO_NEW_LEGACY_VIOLATION"
+    ],
+    "inScopeFiles": 331,
+    "violations": 1,
+    "warnings": 45,
+    "registryFiles": 18,
+    "registryDirectories": 2
+  },
+  "violations": [
+    {
+      "check": "DIRECTORY_CHILD_LIMIT",
+      "severity": "VIOLATION",
+      "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+      "path": "packages/production-runtime/test",
+      "physicalLines": null,
+      "directChildren": 22,
+      "depth": 1,
+      "classification": "directory",
+      "baselineValue": 22,
+      "headValue": 22,
+      "exception": null,
+      "detail": null
+    }
+  ],
+  "candidate_initial_head": "8fec00508241bf6e3841092e78c9afbfa5bb9604",
+  "candidate_had_same_violation": true,
+  "scope": "Existing baseline directory violation; not a global structure PASS. Docs-only candidate does not touch handwritten source."
+}

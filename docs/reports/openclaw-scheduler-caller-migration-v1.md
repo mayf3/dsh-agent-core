@@ -33,7 +33,7 @@ cron 写面，逐调用点迁移到 Agent Core Scheduler（`agentcore-cron` CLI 
 
 ## 2. 验证证据（fixture / 安全测试目标，未触碰生产写面）
 
-驱动：`scripts/scheduler-caller-migration-v1-verify.mjs`（本分支）。
+驱动：`scripts/scheduler/scheduler-caller-migration-v1-verify.mjs`（本分支）。
 隔离手段：所有 cron 写入 → 临时 sandbox store；`openclaw` → 记录型 stub（任何
 残留调用都会被记录并失败）；生产 `~/.openclaw/cron/jobs.json` 只读（md5 +
 stock-agent 清单前后对比）。另做了一次生产 store 路径 add→rm 全周期（结束后
@@ -115,4 +115,4 @@ capability 治理事实（enabledAgentIds / capabilities / tools.alsoAllow）的
 - 部署侧（不在 git，报告与调查文档内记录）：三个 daemon 脚本迁移、
   `/usr/local/bin/agentcore-cron` 符号链接、`~/.agent-core/scheduler` + ACL。
 - 本分支：`docs/investigations/openclaw-scheduler-caller-migration-v1.md`、
-  本报告、`scripts/scheduler-caller-migration-v1-verify.mjs`（7/7 gates PASS）。
+  本报告、`scripts/scheduler/scheduler-caller-migration-v1-verify.mjs`（7/7 gates PASS）。
