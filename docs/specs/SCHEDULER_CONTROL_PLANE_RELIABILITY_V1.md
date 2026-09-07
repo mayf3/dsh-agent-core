@@ -1,7 +1,12 @@
 ---
 spec_id: SCHEDULER_CONTROL_PLANE_RELIABILITY_V1
-status: proposed
+status: accepted
 date: 2026-09-07
+accepted_date: 2026-09-07
+accepted_reviewed_head: 0b0176a
+independent_spec_review: SCHEDULER_CONTROL_PLANE_RELIABILITY_V1_SPEC_REVIEW_R1
+independent_spec_review_result: PASS (REVISE→fixed; 3 blockers resolved r1, mechanical claims re-verified against main)
+required_fixes: NONE (r1 fixes applied: dual unknown capture points §5.2; RUN_STUCK ledger-only §5.5; discovery-request seam §5.3)
 type: implementation-spec (behavior + invariants; implementation in bounded follow-up PRs under this spec)
 scope:
   - Scheduler mutation identity (logical job key) and idempotent create/update/delete semantics
@@ -101,7 +106,9 @@ AUTHORITATIVE_RUNTIME 的 live app 树内 CLI（installer subset 是唯一 canon
 
 4.4 CLI 与 broker 的 mutation 语义一致性是**验收门**：
 `CLI_MUTATION_SEMANTICS_MATCH_BROKER = PASS`（测试 §7-16/17 证明两个入口 resolve 到同一
-op 实现与同一 logical-key 行为）。
+op 实现与同一 logical-key 行为）。现状是 CLI `add`/`update` 直写 store（绕过 control.js op），
+**实现轮必须把 CLI 改造为经由同一 control.js op 面**——该改造是 SB4 闭环的一部分，不是可选。
+mask 粒度 = scheduler 单 tool 内的 **operation 级**（read 类不因 mutation 未就绪而隐藏）。
 
 ## 5. Requirements
 
@@ -150,15 +157,27 @@ DUPLICATE_CREATE_AFTER_RESPONSE_LOSS           = MECHANICALLY_PREVENTED（唯一
                                                  双入口同语义，重试即使发生也收敛为 ALREADY_APPLIED）
 ```
 
+**unknown 的两个捕获点（都必须收敛，缺一即违规）**：
+- **child relay（真实传输丢失窗口）**：`relay.js` transport catch 分类 unknown 后，**不得**
+  把 raw `mutation_outcome_unknown` 作为模型可见终态——同通道按 mutation identity 发起只读
+  read-back（create=logical_key；update/delete=job_id+expectedRevision）：命中→APPLIED（附
+  真实 jobId）；未命中→NOT_APPLIED；read-back 也失败→**STILL_UNKNOWN** 结构化结果（附
+  reconciliation evidence 字段：identity/requestId/时间/错误层），该 evidence 由 W1（§5.6）
+  告警面消费——STILL_UNKNOWN 不静默。
+- **parent gateway/self-service**：利用 store 错误自带的 `mutationOutcome`
+  （committed|not_committed）与 `committedDoc`，unknown 捕获后自动 read-back 收敛后再应答。
+
 CLI 面：exit 0 ⇔ APPLIED、exit≠0 ⇔ NOT_APPLIED（store 原子 rename 保证）；CLI 增加
-`reconcile --logical-key <k>`（只读 read-back）。broker 面：unknown 捕获后由 self-service
-层自动执行上述 reconcile 再应答（对 Agent 透明）。
+`lookup --logical-key <k>`（只读 read-back；命名避开既有 occurrence 级 `reconcile` 子命令
+C-029）。
 
 ### 5.3 R4 — Capability readiness gate（SB1）
 
-1. readiness 由 **parent** 单方判定：`CAPABILITY_READY`（§3）。判定结果经既有 child↔parent
-   rpc 通道下发（availability mask 挂在既有会话建立/能力发现应答上，零新框架）；child broker
-   plugin 注册 tool 前按 mask 过滤 ⇒ 未就绪 runtime 中 scheduler mutation tool **不呈现**。
+1. readiness 由 **parent** 单方判定：`CAPABILITY_READY`（§3）。main 上 child↔parent 仅存在
+   per-call rpc（`agent-core/broker`）+ child 静态注册（app-tree 字节）——因此 mask 的载体 =
+   在**既有 rpc 通道上新增一个只读 capability-discovery 请求**（parent 返回 per-capability、
+   per-operation 的 availability），child broker plugin **注册 tool 之前**拉取并按 mask 过滤
+   ⇒ 未就绪 runtime 中 scheduler mutation tool **不呈现**。零新框架（复用既有通道与注册路径）。
 2. mask 不可达/漂移的兜底：调用在 **mutation transport 之前**失败，返回显式
    `capability_unavailable`（deterministic、Agent 可理解；≠ credential_unavailable 的身份层，
    ≠ mutation_outcome_unknown）。禁止落入通用 ambiguous 渲染。
@@ -189,16 +208,19 @@ CLI 面：exit 0 ⇔ APPLIED、exit≠0 ⇔ NOT_APPLIED（store 原子 rename �
 ### 5.5 R6 — Run reliability 检测（SB3b）
 
 基于 occurrence/run ledger（D-007）+ runs.jsonl + runtime 健康面，至少覆盖：
-`EXPECTED_RUN_MISSED（nominal 过 grace 无 run）/ RUN_FAILED / RUN_STUCK（runningAtMs>2h 或
-started 无 finished）/ CONSECUTIVE_FAILURE / SCHEDULER_RUNTIME_UNHEALTHY（launchd state、
-GET 127.0.0.1:8790/health、control/runtime-evidence.jsonl 心跳三取其证）`。
+`EXPECTED_RUN_MISSED（nominal 过 grace 无 run）/ RUN_FAILED / RUN_STUCK（**仅以 ledger 为准**：
+run started 无 finished 超阈值，或执行时长超过 `payload.timeoutSeconds`——V2 state 白名单无
+`runningAtMs`，V1 2h stuck 路径已移除[ACC-030]，不得引用）/ CONSECUTIVE_FAILURE /
+SCHEDULER_RUNTIME_UNHEALTHY（launchd state、GET 127.0.0.1:8790/health、
+control/runtime-evidence.jsonl 心跳三取其证）`。
 
 ### 5.6 R7 — Watchdog W1 + Owner alerting（SB3c）
 
 1. W1 = launchd **system 域**定时任务（authsvc，独立 label，StartInterval≤300s）。
 2. 评估 §5.4/§5.5 全部检测类 + `credential_unavailable`（W1 自身 credential/readiness 探测）。
 3. 告警通道：Feishu `im.message.create` 直连 API（复用既有 feishu 凭据文件，只读；不复制、
-   不落日志字节）；发送失败 → 落盘 alert 文件 + 非零退出码（launchd 可见）。
+   不落日志字节；凭据文件清单在 production packet 时点冻结确认）；发送失败 → 落盘 alert
+   文件 + 非零退出码（launchd 可见）。
 4. 每轮追加 watchdog-evidence.jsonl（判定、告警结果、desired-state manifest sha256）。
 
 ### 5.7 SB5 — Watchdog 自身失败必须主动可发现
