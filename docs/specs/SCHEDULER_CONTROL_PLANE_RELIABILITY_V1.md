@@ -7,6 +7,11 @@ accepted_reviewed_head: 0b0176a
 independent_spec_review: SCHEDULER_CONTROL_PLANE_RELIABILITY_V1_SPEC_REVIEW_R1
 independent_spec_review_result: PASS (REVISE→fixed; 3 blockers resolved r1, mechanical claims re-verified against main)
 required_fixes: NONE (r1 fixes applied: dual unknown capture points §5.2; RUN_STUCK ledger-only §5.5; discovery-request seam §5.3)
+amendments:
+  - AMENDMENT_1 (2026-09-08, status: accepted pending review record): §5.3.1 mask carrier wording converged to the
+    implemented two-layer mechanism (registration-time env mask + per-call parent gate + discovery op as authority
+    surface). Semantic invariant unchanged: CAN_WRONG_RUNTIME_APPEAR_MUTATION_READY = NO; §5.3.2 fallback remains
+    the deterministic enforcement; credential-copy prohibition untouched.
 type: implementation-spec (behavior + invariants; implementation in bounded follow-up PRs under this spec)
 scope:
   - Scheduler mutation identity (logical job key) and idempotent create/update/delete semantics
@@ -173,11 +178,18 @@ C-029）。
 
 ### 5.3 R4 — Capability readiness gate（SB1）
 
-1. readiness 由 **parent** 单方判定：`CAPABILITY_READY`（§3）。main 上 child↔parent 仅存在
-   per-call rpc（`agent-core/broker`）+ child 静态注册（app-tree 字节）——因此 mask 的载体 =
-   在**既有 rpc 通道上新增一个只读 capability-discovery 请求**（parent 返回 per-capability、
-   per-operation 的 availability），child broker plugin **注册 tool 之前**拉取并按 mask 过滤
-   ⇒ 未就绪 runtime 中 scheduler mutation tool **不呈现**。零新框架（复用既有通道与注册路径）。
+1. **（AMENDMENT_1 修订）** readiness 由 **parent** 单方判定：`CAPABILITY_READY`（§3）。
+   实现层的 mask 载体为**两层**（child broker plugin 的 `apply()` 是同步注册，"注册前经 rpc 拉取
+   availability"机械上不存在，故按 §5.3.2 兜底语义收敛措辞——语义不变量零变化）：
+   - **注册时静态 mask（fail-before-tool-exposure）**：child 进程 env 无 credential provider
+     （`AGENT_CORE_CREDENTIALS_FILE` 缺失——即 incident 的确切失败签名）⇒ scheduler mutation
+     operations 在注册时即从 model-facing tool 中扣除（operation 级粒度，reads 保留）；
+   - **parent 每调用门（live authority，恒在）**：child↔parent 既有 rpc 通道上的**只读
+     capability-discovery 请求**（`broker.availability`，返回 per-capability/per-operation 布尔，
+     绝不含 credential 物质）+ scheduler mutation 每调用先于 validation/grant/handler/store 的
+     `capability_unavailable` 门——env-present-but-unbound 的 runtime 同样被确定性拦截。
+   ⇒ 未就绪 runtime 中 scheduler mutation **或不在呈现面、或先于 transport 确定性失败**；
+   `CAN_WRONG_RUNTIME_APPEAR_MUTATION_READY = NO` 不变。零新框架（复用既有通道与注册路径）。
 2. mask 不可达/漂移的兜底：调用在 **mutation transport 之前**失败，返回显式
    `capability_unavailable`（deterministic、Agent 可理解；≠ credential_unavailable 的身份层，
    ≠ mutation_outcome_unknown）。禁止落入通用 ambiguous 渲染。
