@@ -116,3 +116,7 @@ packet must contain both bindings and verify them before switching production.
 The ready receipt records the native runtime identity; Router children retain
 its exact executable and architecture expectation. Explicit rollback selects
 preserved old-generation bytes rather than bypassing the ARM guard.
+
+Selected native generations set `NARB_DISABLE_NATIVE_CACHE=1` before application
+imports. Children inherit this binding so native addons load from sealed package
+bytes rather than a mutable external cache.

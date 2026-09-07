@@ -112,7 +112,10 @@ export function agentEnv(home, extra = {}, omit = [], providerEnv = {}) {
   // override or drop it. The Router parent's own process.env is untouched —
   // this only shapes the child's env object.
   // A per-agent override cannot weaken the parent generation architecture binding.
-  if (process.env.DSH_RUNTIME_ARCH !== undefined) env.DSH_RUNTIME_ARCH = process.env.DSH_RUNTIME_ARCH
+  if (process.env.DSH_RUNTIME_ARCH !== undefined) {
+    env.DSH_RUNTIME_ARCH = process.env.DSH_RUNTIME_ARCH
+    env.NARB_DISABLE_NATIVE_CACHE = '1'
+  }
   env.TMPDIR = AGENT_CHILD_TMPDIR
   return env
 }

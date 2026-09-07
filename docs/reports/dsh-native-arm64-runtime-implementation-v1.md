@@ -15,7 +15,8 @@ application code. Its sealed launch must supply `--native-arm64` and
 `DSH_RUNTIME_ARCH=arm64`; wrong platform/architecture or any Node version other
 than v25.6.1 fails. Current-main entry also enforces admission. Current-main
 Router retains the exact parent executable and prevents agent-local overrides
-from dropping its architecture expectation. Existing explicit x64 recovery
+from dropping its architecture expectation or sealed native-cache policy.
+Admission sets NARB_DISABLE_NATIVE_CACHE=1 before application imports. Existing explicit x64 recovery
 uses preserved pre-migration launch/code, not an ARM-generation bypass.
 
 Deployment is not whole-main replacement. `stageApplication` copies the live
@@ -82,8 +83,9 @@ Raw receipts stay outside Git; no receipt-of-receipt commits are required.
 - EVD-ARM-IMPL-008: affected main suite: 487 tests, 484 pass, 1 fail, 2 skip
   (`affected-tests-clean-env.log`). The one failure is the existing
   feishuSenderOpenId expectation at the unchanged base, independently executed
-  in `dsh-native-arm64-baseline-test-v1` (`baseline-feishu-test.log`). It is
-  FOLLOW_UP_DEBT, not an architecture test pass. Initial dependency/proxy-env
+  in `dsh-native-arm64-baseline-test-v1` (`baseline-feishu-test.log`). Its expected sidecar was mechanically corrected to include the already-emitted
+  feishuSenderOpenId; no product code changed for that baseline test. The final
+  complete suite receipt is affected-tests-final-source.log. Initial dependency/proxy-env
   setup failures are retained in earlier logs and do not count as passing evidence.
 - EVD-ARM-IMPL-009: historical arm64-broken tree and clean candidate both
   contain the same ARM loader binding, but the historical incident paired
@@ -103,3 +105,26 @@ context. No Rosetta repair or capability-token rotation belongs to this change;
 no token bytes are read or disclosed for that handoff. P0 retains production
 mutation priority. The interim target is READY_FOR_PRODUCTION_APPLY; it does
 not change the original production-complete terminal boundary.
+
+Additional executed candidate evidence: Harness affected suites (loader, boot,
+terminal/subprocess and type loader) pass 343 tests across 18 files, 4 skipped;
+see harness-affected-tests.log. Three separate live-source consumer stages
+(business, trusted, scheduler) pass real parent/child/session/tool/health and
+clean shutdown under sealed-probes/*-parent-*/result.json. The existing native
+spawn helper executes the frozen 502/20 child identity using the ARM Node
+(native-helper-result.json); this does not claim a privileged production apply.
+Actual loader negative fixtures remove the required ARM binding and substitute
+an actual x64 addon: both fail; positive loads successfully
+(sealed-probes/native-loader-negative-result.json).
+
+Live-source tests retained in the deployment preimage have eight stale
+model-overrides V1 expectations against legally deployed V3 source. All eight
+also fail without the ARM overlay (live-baseline-tests.log); they are not
+rewritten into production. Main candidate uses its current matching model/runtime
+suites. Pre-existing baseline-only timing failures are recorded, not hidden.
+
+Profile fallback links are runtime-maintained by the existing Harness
+healProfilesModuleFallback before profile import; an isolated copy of a live
+264-link farm was successfully healed. No live profile or credential was changed.
+Actual profile-directory census and closure receipts remain in the local
+production-profile-package-census.json / production-profile-links.json files.

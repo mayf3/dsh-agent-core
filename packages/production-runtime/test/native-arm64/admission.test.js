@@ -15,6 +15,7 @@ test('normal native generation requires exact Node, architecture and explicit ex
   assert.deepEqual(assertProductionArchitecture({ required: true, env, runtime: native }), {
     platform: 'darwin', arch: 'arm64', nodeVersion: 'v25.6.1', execPath: '/stage/node', pid: 7, rosettaTranslated: false,
   })
+  assert.equal(env.NARB_DISABLE_NATIVE_CACHE, '1')
   for (const value of [undefined, '', 'x64', 'ARM64', 'arm64 ']) {
     assert.throws(() => assertProductionArchitecture({ required: true, env: { DSH_RUNTIME_ARCH: value }, runtime: native }), /expected_arch_missing_or_invalid/)
   }
