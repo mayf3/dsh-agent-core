@@ -235,6 +235,12 @@ export function apply(ctx, config = {}) {
         json(res, 200, { ok: true, service: 'agent-core-product-api' })
         return
       }
+      const admission = await config.workflowAdmission?.(req, url)
+      if (admission) {
+        res.setHeader('Cache-Control', 'no-store')
+        json(res, admission.status, admission.body)
+        return
+      }
       if (req.method === 'GET' && url.pathname === '/v1/binding') {
         json(res, 200, getBinding(url.searchParams))
         return

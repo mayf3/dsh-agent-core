@@ -82,32 +82,33 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         : undefined
       const gateway = getBrokerGateway()
       if (gateway === undefined || typeof gateway.execute !== 'function') {
-        return {
-          ok: true,
-          result: { ok: false, error: { code: 'invalid_arguments', detail: 'broker gateway unavailable in the control plane' } },
-        }
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'broker gateway unavailable in the control plane' } }
       }
       log.log(`[broker] execute as agent ${agentId} (capability ${params?.capabilityId})`)
-      // Transport envelope {ok:true, result:<invoke shape>}: the child's
-      // relay unwraps it; failures stay STRUCTURED (the parent-RPC failure
-      // channel only carries a message string, so the business envelope is
-      // always delivered inside the success envelope).
-      return {
-        ok: true,
-        result: await gateway.execute(
-          { capabilityId: params?.capabilityId, operation: params?.operation, args: params?.args },
-          {
-            agentId, // ACTUAL identity — decided here, never from params
-            // Re-verify the Router-owned process/generation/execution binding
-            // at RPC receipt; stale/cleared/replaced contexts become absent and
-            // Scheduler fails before any credential or store access.
-            ingressContext: boundIngressContext,
-            // R3 exact source-turn correlation for the messaging capability —
-            // proven against the execution map above, absent when stale.
-            sourceTurnExecutionId: provenSourceTurnExecutionId(proc, rpcMeta),
-          },
-        ),
-      }
+      // Return the gateway's INVOKE-SHAPED envelope ({ok:true,result} |
+      // {ok:false,error}) VERBATIM. The transport envelope is built for us by
+      // the wire: rpc-channel carries this value as rpc.response
+      // params.result and the child-side RPC server resolves
+      // {ok:true, result: params.result} — exactly the TWO layers the
+      // child's broker relay unwraps (relay.js header contract: the
+      // model-visible result is byte-identical to direct execution).
+      // Wrapping it here as well would double-wrap on the child side and
+      // break the relay's exact-shape unwrap — the production defect behind
+      // every scheduler create returning mutation_outcome_unknown while the
+      // store had committed (reads only leaked an extra {ok,result} layer).
+      return gateway.execute(
+        { capabilityId: params?.capabilityId, operation: params?.operation, args: params?.args },
+        {
+          agentId, // ACTUAL identity — decided here, never from params
+          // Re-verify the Router-owned process/generation/execution binding
+          // at RPC receipt; stale/cleared/replaced contexts become absent and
+          // Scheduler fails before any credential or store access.
+          ingressContext: boundIngressContext,
+          // R3 exact source-turn correlation for the messaging capability —
+          // proven against the execution map above, absent when stale.
+          sourceTurnExecutionId: provenSourceTurnExecutionId(proc, rpcMeta),
+        },
+      )
     }
     if (method !== SWITCH_RPC_METHOD) {
       throw new Error(`agent-router: unknown parent-RPC method ${method}`)

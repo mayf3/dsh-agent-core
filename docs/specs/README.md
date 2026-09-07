@@ -41,7 +41,9 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
 |---|---|---|---|---|
-| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | accepted / current governance | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | accepted / current governance (v1.0.3, accepted 2026-09-05) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
 | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` | superseded | legacy governance | repository knowledge model | — |
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
@@ -73,8 +75,11 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` | accepted lifecycle in PR #150 / effective on merge into main | contracts (production apply remains none; FLEET_PRODUCTION_APPLY = HOLD per Owner 2026-09-03) | accepted complete standalone emergency-bootstrap successor of V1: everything in V1 preserved, plus one-time LEGACY_CONVERGED_BOOTSTRAP (CTR-SCA-017) allowing a quiesced 91/91 byte-equal snapshot to seed the canonical store without OAuth/reauth, classified BOOTSTRAP_FROM_CONVERGED_SNAPSHOT and never AUTHORITATIVE_GENERATION_PROVEN |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` in PR #179 / remains effective on current main until merge | historical contracts only after successor merge | fleet-shared Codex authority whose trust-domain coordinates were frozen against the authsvc domain; protocol semantics carried forward verbatim into V3 |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` | accepted lifecycle in PR #179 / effective on merge into main | contracts (production apply remains none; activation executes under ACTIVATION_V2 gates) | accepted whole-authority successor of V2: trust-domain realignment ONLY — canonical store `/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json`, same-uid (502) permission model for the actual unified production backend (127.0.0.1:8787, 88-agent registry), LEGACY_CONVERGED_BOOTSTRAP not selected (ONE_CANONICAL_OWNER_REAUTH mode), all 17 protocol contracts carried forward |
 | `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` in PR #150 / remains effective on current main until merge | historical contracts only after successor merge | historical fleet-shared Codex authority; reciprocal backlink points to the converged-bootstrap successor |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2` | accepted lifecycle in PR #179 / effective on merge into main | activation/deployment authority (production apply separately gated: pre-apply audit + fresh gates + PRODUCTION_MUTATION_CONCURRENCY = 1) | accepted whole-authority successor of ACTIVATION_V1: activation moved to the yanfenma-domain unified backend (fresh preimage domain: checkout 549dace lineage, registry 88, config v2); bounded Luna enablement agt_stock_agent + agt_ceo-agent (+ CTO migration case); ONE_CANONICAL_OWNER_REAUTH; execution order aligned to the carried-forward runner |
+| `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2` in PR #179 / remains the authority for the authsvc domain's own future use | historical for the yanfenma domain; superseded as CURRENT production activation | authsvc/92-fleet activation authority; reciprocal backlink points to the domain-realigned successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | historical contracts only after successor merge | historical activation authority; reciprocal backlink points to the fleet-shared successor |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V1` | superseded by Activation V2 in PR #103 / remains effective on current main until merge | historical contracts only after successor merge | historical activation authority; backlink = `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2` |
 | `AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` in PR #123 / remains effective on current main until merge | historical contracts only after successor merge | historical implementation authority; reciprocal backlink points to the fleet-shared successor |
@@ -217,6 +222,20 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |
+
+## HR dispatch delivery resolution authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1` | superseded (2026-09-05 by `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2` whole-Spec subject successor；reviewed head f3b11d7…) | contracts（生产 apply 另受 shared mutation slot + controlled runbook 约束，`production_apply_authority: conditional_controlled_operation`） | HR_DISPATCH_DELIVERY_READINESS_V1 Lane B：只读 capability `agent_resolve_principal`（exact AGENT Principal UUID → canonical enabled agentId；trusted-caller-only、fixed Auth origin/path、audience `agent-principal-resolution` × `auth.agent.resolve`、closed 两字段响应、全族 fail-closed 404/409/422/500/504→lowercase 映射）+ A2A Router ingress exact-ID admission guard（闭合 resolveAgentRef display-name fallback TOCTOU 错投族；不动 ASM 三字段 schema/授权/receipt/no-replay）；上游 = auth `AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V1` accepted @ b5eef6cd…（depends_on pin）；禁止 second identity source / display-name guessing / dispatcher / agent_wake；Lane C 组合 canary 另受 shared slot 释放条件约束 |
+| `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2` | accepted (reviewed head eedf469…, Owner batched exact-head acceptance 2026-09-05) | contracts（生产 apply 另受 shared mutation slot + controlled runbook 约束，`production_apply_authority: conditional_controlled_operation`） | V1 的 whole-Spec subject successor：唯一语义修正=canary/proof 主体 bc970ced…(legacy hr-agent) → dc702687…(agt_hr-agent) + legacy MUST NOT 条款（既有 stored-id 文法对 legacy 拼写本就 fail-closed）；subject-generic resolution 与 exact-ID admission 契约字节保留；上游 pin = auth `AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V2` @ 87beb77（auth main dde3967 可达，body 与 accepted auth V2 字节一致） |
+
+## Scheduler production state reconciliation authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_SCHEDULER_PRODUCTION_RECONCILIATION_V1` | accepted (PR #164, reviewed head dfa0f599…) | none（current-state adoption + continued-operation declaration only；implementation_authority=none；任何未来 maintenance mutation 需 NEW fresh authority） | 采纳并记录已在生产的 scheduler 10-file runtime face（generation 18f96e2）的 current state 与 canary/traceability 结果；§1 诚实记录 E1–E5 全部 EARLY_PRODUCTION_EXECUTION；THIS_AUTHORITY_DOES_NOT_RETROACTIVELY_AUTHORIZE_PAST_EXECUTION；不 ratify Lane B/agent_session_send |
+| `AGENT_CORE_SCHEDULER_RUNTIME_DEPLOYMENT_V1`（PR #159，未合并、从未生效） | HISTORICAL_ENGINEERING_INPUT / STALE_PROPOSED_CANDIDATE（非 authority predecessor，无 supersession 关系） | n/a | 历史工程输入：§3 十文件闭包与分析被 reconciliation spec 引用为事实记录；其冻结时序前置与实际执行路径已漂移 |
 
 ## Mobile session history authority
 

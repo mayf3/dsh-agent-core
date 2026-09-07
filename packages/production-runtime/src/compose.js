@@ -43,6 +43,7 @@ import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
+import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createSelfServiceSchedulerAccess } from '../../scheduler/src/self-service.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
@@ -51,6 +52,7 @@ import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
+import { createAgentPrincipalResolutionAccess } from './agent-principal-resolution.js'
 import { createAgentSessionMessagingAudit } from './agent-session-messaging-audit.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
@@ -327,6 +329,7 @@ export async function composeProductionRuntime(options = {}) {
 
   const productApiCfg = opts.productApi ?? {}
   const productApi = applyProductApi(ctx, {
+    workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
@@ -402,6 +405,37 @@ export async function composeProductionRuntime(options = {}) {
     audit: agentSessionAudit,
     onAuditFailure: ({ phase, requestId }) => {
       log.error(`[agent-session-messaging] audit ${phase} append failed after requestId ${requestId ?? '(not-minted)'}`)
+    },
+  }))
+
+  // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
+  // LOCAL provider for the read-only agent_resolve_principal. Auth is the
+  // identity authority (exact UUID read; audience `agent-principal-resolution`
+  // × `auth.agent.resolve`); the local Agent Definition registry then proves
+  // exact deliverability. The token is acquired by the runtime for the
+  // ACTUAL caller through the same trusted credential seam as the gateway
+  // grant check and never reaches the model; the Auth origin is the fixed
+  // deployment configuration, never a tool argument.
+  ctx.provide('agentPrincipalResolutionAccess', createAgentPrincipalResolutionAccess({
+    definition,
+    authServiceOrigin: brokerAuthServiceOrigin,
+    acquireCallerToken: async ({ agentId }) => {
+      const credential = loadCredentialFor(brokerCredentialsFile, agentId)
+      if (credential === undefined) {
+        throw Object.assign(new Error('no credential bound'), { code: 'credential_unavailable' })
+      }
+      try {
+        return await requestAccessToken({
+          credential,
+          authServiceOrigin: brokerAuthServiceOrigin,
+          resource: 'agent-principal-resolution',
+          scope: 'auth.agent.resolve',
+        })
+      } catch (error) {
+        throw Object.assign(error instanceof Error ? error : new Error(String(error)), {
+          code: error?.errorCode ?? 'transport_failure',
+        })
+      }
     },
   }))
 

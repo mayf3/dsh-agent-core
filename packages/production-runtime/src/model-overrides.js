@@ -34,8 +34,10 @@ import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
  * Config-independent pins and scope (parent CTR-011 / CTR-IMPL-009
  * carry-forward). Route tuple VALUES never come from here — only exact
  * dsh-codex/Harness source identity and the canonical credential path do.
+ * Canonical path realigned to the yanfenma unified production backend
+ * (AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 CTR-ACT2-002).
  */
-export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
+export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
 
 export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
   targetAgentId: 'agt_cto-agent',

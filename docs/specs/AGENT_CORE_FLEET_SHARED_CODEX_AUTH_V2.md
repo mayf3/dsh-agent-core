@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
-status: accepted
+status: superseded
 accepted_by: mayf3
 accepted_date: 2026-09-03
 accepted_reviewed_head: d6550a5b1998cb16866cb6e4261a925a98c502a2
@@ -17,7 +17,7 @@ replaces_on_acceptance:
   - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
 supersedes:
   - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-superseded_by: null
+superseded_by: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
 governed_by:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
   - SCHEDULER_TIMEOUT_OUTCOME_V2

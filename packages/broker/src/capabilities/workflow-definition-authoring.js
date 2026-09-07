@@ -1,5 +1,5 @@
 /**
- * @agent-core/broker — Workflow Definition Authoring capability manifest (V1).
+ * @agent-core/broker — Workflow Definition Authoring capability manifest (V3).
  *
  * Mechanical extraction from capabilities/workflow.js (structure-gate
  * UNREGISTERED_LEGACY_TOUCHED fix under CODE_STRUCTURE_GUARDRAILS_V1): the
@@ -8,12 +8,13 @@
  * manifests-inventory wiring. The shared svc-workflow base/auth error rows
  * moved with it as the single source; workflow.js imports them back.
  *
- * Contract: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V1 (accepted
- * 5dc83e44). ONE tool, FOUR operations: create_definition,
+ * Contract: AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V3 (accepted).
+ * ONE existing tool, FOUR operations: create_definition,
  * create_draft_version, replace_draft_graph, publish_version. svc-workflow
  * stays authoritative for identity, Domain Owner authorization, graph
  * validation and lifecycle; the transport trusted seam supplies the
- * Idempotency-Key; the model can never pass principal/credential fields.
+ * Idempotency-Key; the model cannot override caller identity or credentials.
+ * Linear steps carry only canonical work-assignment Principal references.
  */
 
 import { withTransportErrors } from '../transport.js'
@@ -43,6 +44,7 @@ const definitionAuthoringErrors = [
   { code: 'revision_conflict', description: 'Expected revision is stale (HTTP 409).' },
   { code: 'idempotency_conflict', description: 'Idempotency key was reused for a different request (HTTP 409).' },
   { code: 'size_limit_exceeded', description: 'Request body exceeds the service limit (HTTP 413).' },
+  { code: 'graph_validation_failed', description: 'Canonical graph rejected (HTTP 422). Read the safe rule name and correction in detail; correct that rule before retrying.' },
   { code: 'invalid_semantic_model_version', description: 'Semantic model version is not supported (HTTP 422).' },
   { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
   { code: 'internal_consistency_error', description: 'Downstream validation/consistency failure (HTTP 500).' },
@@ -87,7 +89,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
   id: 'workflow_definition_authoring',
   toolName: 'workflow_definition_authoring',
   name: 'Workflow Definition Authoring',
-  description: 'Create a workflow definition, create its draft version, replace the complete draft graph, or publish the version. svc-workflow remains authoritative for identity, Domain Owner authorization, graph validation and lifecycle.',
+  description: 'Create a workflow definition, create its draft version, replace the draft using simple ordered steps or a complete graph, then publish the version. For a common linear workflow, create the draft explicitly with semanticModelVersion=3 and replace it with steps + terminalOutcome; the service validates the generated graph. Publish separately and instantiate the exact published version through workflow_execute. svc-workflow remains authoritative for identity, Domain Owner authorization, graph validation and lifecycle. Resolve the domainId argument first via workflow_my_domains (choose a domain where caller_role is DOMAIN_OWNER).',
   requiredScopes: ['workflow.execute'],
   errors: [...baseErrors, ...authErrors, ...definitionAuthoringErrors],
   operations: [
@@ -97,7 +99,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       arguments: {
         additionalProperties: false,
         properties: {
-          domainId: { type: 'string' }, definitionKey: { type: 'string' }, displayName: { type: 'string' },
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionKey: { type: 'string' }, displayName: { type: 'string' },
           description: { type: 'string' }, metadata: { type: 'json' },
         },
         required: ['domainId', 'definitionKey', 'displayName'],
@@ -111,9 +113,9 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       arguments: {
         additionalProperties: false,
         properties: {
-          domainId: { type: 'string' }, definitionId: { type: 'string' }, contextSchema: { type: 'json' },
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, contextSchema: { type: 'json' },
           jsonSchemaDialect: { type: 'string' }, validatorVersion: { type: 'string' }, metadata: { type: 'json' },
-          semanticModelVersion: { type: 'integer', enum: [1, 2] },
+          semanticModelVersion: { type: 'integer', enum: [1, 2, 3], description: 'Omitted means Legacy (1); 2 is Minimal; 3 is Visit Activation. These are semantic choices, not quality or newness rankings. Use explicit 3 for linear steps + terminalOutcome authoring; omission is forwarded unchanged to preserve the service default.' },
         },
         required: ['domainId', 'definitionId'],
       },
@@ -122,15 +124,25 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
     },
     {
       name: 'replace_draft_graph',
-      description: 'Atomically replace the complete graph of a DRAFT version.',
+      description: 'Atomically replace a DRAFT graph using exactly one form: full nodes + transitions, OR linear steps + terminalOutcome on a model-3 draft. Linear supports 1..32 ordered work steps with exact Principal UUID assignments discovered canonically, not display-name routing. Do not supply graph identifiers or transitions for linear input. Branches, loops and custom effects use the existing full form. Success means the service canonical validator accepted the graph; publish separately. On rejection, correct the named rule in the error detail.',
       arguments: {
         additionalProperties: false,
         properties: {
-          domainId: { type: 'string' }, definitionId: { type: 'string' }, definitionVersionId: { type: 'string' },
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, definitionVersionId: { type: 'string' },
           contextSchema: { type: 'json' }, nodes: { type: 'array', items: definitionNodeItem },
           transitions: { type: 'array', items: definitionTransitionItem },
+          steps: { type: 'array', description: 'Linear form only: 1..32 ordered work steps. Requires terminalOutcome; excludes nodes and transitions.', items: {
+            type: 'object', additionalProperties: false,
+            properties: {
+              displayName: { type: 'string', description: 'Nonblank step name, 1..200 Unicode characters.' },
+              assigneePrincipalId: { type: 'string', description: 'Exact canonical assignee Principal UUID from existing identity discovery; never an Agent display name or caller identity override.' },
+              instructions: { type: 'string', description: 'Nonblank task instructions, 1..4000 Unicode characters, preserved verbatim.' },
+            },
+            required: ['displayName', 'assigneePrincipalId', 'instructions'],
+          } },
+          terminalOutcome: { type: 'string', description: 'Linear form only: nonblank terminal outcome name, 1..200 Unicode characters. Requires steps.' },
         },
-        required: ['domainId', 'definitionId', 'definitionVersionId', 'nodes', 'transitions'],
+        required: ['domainId', 'definitionId', 'definitionVersionId'],
       },
       result: { type: 'json' }, errors: ['invalid_arguments'],
       http: { target: 'svc-workflow', method: 'PUT', path: '/internal/v1/domains/{domainId}/definitions/{definitionId}/draft', pathParams: ['domainId', 'definitionId'], body: ['definitionVersionId', 'contextSchema', 'nodes', 'transitions'], idempotencyKey: true },
@@ -140,7 +152,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       description: 'Publish a DRAFT version; expectedRevision is optional in the current service contract.',
       arguments: {
         additionalProperties: false,
-        properties: { domainId: { type: 'string' }, definitionId: { type: 'string' }, versionId: { type: 'string' }, expectedRevision: { type: 'string' } },
+        properties: { domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, versionId: { type: 'string' }, expectedRevision: { type: 'string' } },
         required: ['domainId', 'definitionId', 'versionId'],
       },
       result: { type: 'json' }, errors: ['invalid_arguments'],

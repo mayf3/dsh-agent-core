@@ -149,3 +149,59 @@ test('disposable local chain publishes a version then workflow_execute creates f
   ])
   await token.close(); await svc.close()
 })
+
+
+test('model 3 catalog and wire preserve exact supported numbers and omission; invalid models do not write', async (t) => {
+  const { definition: catalog } = buildToolDefinition({ manifest: manifest(), handlers: {} })
+  assert.deepEqual(catalog.parameters.semanticModelVersion.enum, [1, 2, 3])
+  const token = await startTokenServer()
+  t.after(() => token.close())
+  const svc = await startMockServer((_req, res) => json(res, 201, { definitionVersionId: 'v' }))
+  t.after(() => svc.close())
+  const transport = createHttpTransport({ credentialProvider: { getCredential: async () => ({ clientId: 'c', clientSecret: 's' }) }, targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin })
+  const author = wire(manifest(), transport).definition
+  const base = { operation: 'create_draft_version', domainId: 'd', definitionId: 'x' }
+  for (const semanticModelVersion of [0, 4, '3', null, 1.5]) {
+    const result = await author.execute({ ...base, semanticModelVersion })
+    assert.equal(result.ok, false)
+    assert.equal(result.error.code, 'invalid_arguments')
+  }
+  assert.equal(svc.requests.length, 0)
+  assert.equal(token.requests.length, 0)
+  for (const semanticModelVersion of [1, 2, 3]) {
+    assert.equal((await author.execute({ ...base, semanticModelVersion })).ok, true)
+    assert.deepEqual(svc.requests.at(-1).body, { semanticModelVersion })
+  }
+  assert.equal((await author.execute(base)).ok, true)
+  assert.equal(svc.requests.at(-1).body, undefined)
+  assert.equal(svc.requests.length, 4)
+  assert.ok(svc.requests.every((r) => r.method === 'POST' && r.pathname === '/internal/v1/domains/d/definitions/x/versions'))
+  assert.equal(new Set(svc.requests.map((r) => r.headers['idempotency-key'])).size, 4)
+  for (const op of manifest().operations.filter((op) => op.name !== 'create_draft_version')) {
+    assert.equal(op.arguments.properties?.semanticModelVersion, undefined)
+  }
+})
+
+// RESUME_GOAL_FRESH_REGRESSION (2026-09-06): the normal agent-facing failure
+// "missing required property domainId" was a DOMAIN RESOLUTION gap, not a
+// binding gap — CTR-WDA-001 bindings are frozen and already expose domainId.
+// The model needs canonical guidance to resolve it. Pin that guidance.
+test('every operation guides domainId resolution via workflow_my_domains (DOMAIN_OWNER), bindings unchanged', () => {
+  const value = manifest()
+  for (const op of value.operations) {
+    const spec = op.arguments.properties.domainId
+    assert.ok(spec, `${op.name} exposes domainId`)
+    assert.ok(spec.description.includes('workflow_my_domains'), `${op.name} names the canonical read surface`)
+    assert.ok(spec.description.includes('DOMAIN_OWNER'), `${op.name} names the authoring role`)
+    assert.ok(spec.description.includes('caller_role'), `${op.name} uses the real wire field name caller_role (svc MyDomainItem serde snake_case), not callerRole`)
+    assert.ok(op.arguments.required.includes('domainId'), `${op.name} still requires domainId`)
+    assert.ok(op.http.pathParams.includes('domainId'), `${op.name} still threads domainId into the path`)
+  }
+  // Generated model-facing catalog keeps the guidance visible to the model.
+  const { definition: catalog } = buildToolDefinition({ manifest: value, handlers: {} })
+  const param = catalog.parameters.domainId
+  assert.ok(param, 'flattened tool parameters expose domainId')
+  assert.ok(String(param.description).includes('workflow_my_domains'), 'flattened description keeps the guidance')
+  // Tool-level description points at the same resolution flow.
+  assert.ok(String(value.description).includes('workflow_my_domains'))
+})

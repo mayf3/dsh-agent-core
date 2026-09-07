@@ -1,0 +1,215 @@
+{
+  "observed_at": "2026-09-06T23:41:50.476269+00:00",
+  "roots": {
+    "business-harness": "/Users/yanfenma/workspace/github/deepseek-harness/.worktree/luna-production-rc8-20260822-090003",
+    "business-app": "/Users/yanfenma/workspace/project/production-dsh-agent-core"
+  },
+  "method": "Mach-O magic inspection of regular files, no symlink traversal, excludes git/worktree/cache/env. App scans packages,scripts,profile-production,node_modules. Node and bundled dylibs inspected separately. Dependencies outside these roots require closure reconciliation. Presence does not prove required runtime loading.",
+  "native_files": [
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@img+sharp-libvips-darwin-x64@1.3.2/node_modules/@img/sharp-libvips-darwin-x64/lib/libvips-cpp.8.18.3.dylib",
+      "architectures": "x86_64",
+      "sha256": "48f6294a40b86fc2edb2d1629ade909efecbf07cc06678b299a79b750594e499"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@rolldown+binding-darwin-x64@1.0.3/node_modules/@rolldown/binding-darwin-x64/rolldown-binding.darwin-x64.node",
+      "architectures": "x86_64",
+      "sha256": "5adb94efddb2b4cee125fee2285d60d6e1942b23dba122776b574a83ee66610d"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@oxc-parser+binding-darwin-x64@0.133.0/node_modules/@oxc-parser/binding-darwin-x64/parser.darwin-x64.node",
+      "architectures": "x86_64",
+      "sha256": "d77d6fb4a5a36897e58db70694b700eba4b0d774a500cac528de1db9613cc1ff"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@esbuild+darwin-x64@0.21.5/node_modules/@esbuild/darwin-x64/bin/esbuild",
+      "architectures": "x86_64",
+      "sha256": "c50b052b009c7f310191d14056bcd4deefe423400212207acd8b4544ef1c0a4f"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@vscode+ripgrep-darwin-x64@1.18.0/node_modules/@vscode/ripgrep-darwin-x64/bin/rg",
+      "architectures": "x86_64",
+      "sha256": "f999495980a5e6f1e7d26461ef5768b4013a62df610ed7d77a8b2de247a5b228"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/fsevents@2.3.3/node_modules/fsevents/fsevents.node",
+      "architectures": "x86_64 arm64",
+      "sha256": "40f2f51199e4f5fc46fa6b985fb3461bb63e6cd86c62bfa9bcee45ed4438d5fb"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@rolldown+binding-darwin-x64@1.1.1/node_modules/@rolldown/binding-darwin-x64/rolldown-binding.darwin-x64.node",
+      "architectures": "x86_64",
+      "sha256": "448e87b1d5da12d224c548585a48ba48f5e70542a4415b4cdbab98c2825d7ccc"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/fsevents@2.3.2/node_modules/fsevents/fsevents.node",
+      "architectures": "x86_64 arm64",
+      "sha256": "8e6e4ac89bec65903c90bc6ed7f17f45ecb2464d56fe4bf203620f75b6224292"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-darwin-x64@0.3.220/node_modules/@anthropic-ai/claude-agent-sdk-darwin-x64/claude",
+      "architectures": "x86_64",
+      "sha256": "dca7be0aa7d3d924836d440e0c6d8e3d47ef3c8e61fa5809b54b9017170ce2f3"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/esbuild@0.21.5/node_modules/esbuild/bin/esbuild",
+      "architectures": "x86_64",
+      "sha256": "c50b052b009c7f310191d14056bcd4deefe423400212207acd8b4544ef1c0a4f"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/lefthook-darwin-x64@2.1.9/node_modules/lefthook-darwin-x64/bin/lefthook",
+      "architectures": "x86_64",
+      "sha256": "a34f6e51676ea2b18166b684c22596b035993acf675723f17dd5bc20395fb135"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/esbuild@0.25.12/node_modules/esbuild/bin/esbuild",
+      "architectures": "x86_64",
+      "sha256": "bd09e65a6a1a903c40269d3a4ae23ffc6139f691703728c1faf25f62e48baa40"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@esbuild+darwin-x64@0.25.12/node_modules/@esbuild/darwin-x64/bin/esbuild",
+      "architectures": "x86_64",
+      "sha256": "bd09e65a6a1a903c40269d3a4ae23ffc6139f691703728c1faf25f62e48baa40"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@esbuild+darwin-x64@0.28.1/node_modules/@esbuild/darwin-x64/bin/esbuild",
+      "architectures": "x86_64",
+      "sha256": "dd53ccf32f9b5b3ab30d41388ef1fc8f81c44ca57ee7a32a7364a1753308d009"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/bin/esbuild",
+      "architectures": "x86_64",
+      "sha256": "dd53ccf32f9b5b3ab30d41388ef1fc8f81c44ca57ee7a32a7364a1753308d009"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/jscpd-darwin-x64@5.0.12/node_modules/jscpd-darwin-x64/bin/jscpd",
+      "architectures": "x86_64",
+      "sha256": "2e10986237e0ae0ff7de6d649b0ac84928e952884232af66293833092cb236a6"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/node-addon-require-builtin-darwin-x64@0.1.4/node_modules/node-addon-require-builtin-darwin-x64/prebuilt/darwin-x64-napi-v9.node",
+      "architectures": "x86_64",
+      "sha256": "b3ce08baf9f5efc723b367ca177bf365237feeb06eafe86c73b0f7f6ce030262"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@oxlint-tsgolint+darwin-x64@7.0.2001/node_modules/@oxlint-tsgolint/darwin-x64/tsgolint",
+      "architectures": "x86_64",
+      "sha256": "053bdd44121e83a13adedee7895bf92632eeaee0fb705b2deb62c51f529df005"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@img+sharp-darwin-x64@0.35.3/node_modules/@img/sharp-darwin-x64/lib/sharp-darwin-x64-0.35.3.node",
+      "architectures": "x86_64",
+      "sha256": "d3e0be8e1019e3418b3a6724bc40e203a5fe52ca0c3fde0aec4c603ae9c3fd2e"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@koromix+koffi-darwin-x64@3.1.1/node_modules/@koromix/koffi-darwin-x64/darwin_x64/koffi.node",
+      "architectures": "x86_64",
+      "sha256": "9124ac1608ce17157d793fbbd860f468dfe9e68e863a193f2563b482cd2ff086"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@rollup+rollup-darwin-x64@4.62.2/node_modules/@rollup/rollup-darwin-x64/rollup.darwin-x64.node",
+      "architectures": "x86_64",
+      "sha256": "7b51e3a06c6805eefa9c76b814c08240f005a4f24c873dff2e160b438c83d4a0"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/node-pty@1.2.0-beta.15_patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0/node_modules/node-pty/prebuilds/darwin-x64/pty.node",
+      "architectures": "x86_64",
+      "sha256": "811f4a357e260fc0e520c250a3de5990483761d82afd635effbdf4b793b8a0e9"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/node-pty@1.2.0-beta.15_patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0/node_modules/node-pty/prebuilds/darwin-x64/spawn-helper",
+      "architectures": "x86_64",
+      "sha256": "a3bed36ae3ed83b2ac2fce475bd578c51f5b536041f0b2dfe116987f565e9758"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/node-pty@1.2.0-beta.15_patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0/node_modules/node-pty/prebuilds/darwin-arm64/pty.node",
+      "architectures": "arm64",
+      "sha256": "0aae85518beb134a666f8e415f78bf528b2e9d40b47498af97433dc459661366"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/node-pty@1.2.0-beta.15_patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0/node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper",
+      "architectures": "arm64",
+      "sha256": "08bc83a084651d095645010d34783f94b9af443614747e953e66d6578027e999"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@openai+codex@0.147.0-darwin-x64/node_modules/@openai/codex/vendor/x86_64-apple-darwin/codex-path/rg",
+      "architectures": "x86_64",
+      "sha256": "1a49284bea601c2f084c62a834f859d6b1bc23a37dbd98b6f8da0b10b2b35037"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@openai+codex@0.147.0-darwin-x64/node_modules/@openai/codex/vendor/x86_64-apple-darwin/bin/codex",
+      "architectures": "x86_64",
+      "sha256": "8080a42da4cef9c4216dace512f29acfe2e526aeeec2a0ce450e5a2b18b84d8a"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@openai+codex@0.147.0-darwin-x64/node_modules/@openai/codex/vendor/x86_64-apple-darwin/bin/codex-code-mode-host",
+      "architectures": "x86_64",
+      "sha256": "2a52ebc47c255e6b7284f674453030981a38ae7ba09467b998b2c2ebbb595259"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@openai+codex@0.147.0-darwin-x64/node_modules/@openai/codex/vendor/x86_64-apple-darwin/codex-resources/zsh/bin/zsh",
+      "architectures": "x86_64",
+      "sha256": "f44aad35ea74894fd381790c4b5c31decbb9961df1dc356f4442252b036f6df5"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@oxc-resolver+binding-darwin-x64@11.20.0/node_modules/@oxc-resolver/binding-darwin-x64/resolver.darwin-x64.node",
+      "architectures": "x86_64",
+      "sha256": "c04fb9c4370f591348010ec36a206ac94a2a04c8c38470a64b2a3ceab94c194f"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/lightningcss-darwin-x64@1.32.0/node_modules/lightningcss-darwin-x64/lightningcss.darwin-x64.node",
+      "architectures": "x86_64",
+      "sha256": "9928d84d5274207b3c3cf7364ec96f2e9bc06d7016a47dbb1a241cd0346d6b35"
+    },
+    {
+      "component": "business-harness",
+      "path": "node_modules/.pnpm/@oxlint+binding-darwin-x64@1.76.0/node_modules/@oxlint/binding-darwin-x64/oxlint.darwin-x64.node",
+      "architectures": "x86_64",
+      "sha256": "f080f4db868d58143401bfe8d47bb7f76196c89ab713512d09954bfade8359f8"
+    },
+    {
+      "component": "business-node",
+      "path": "/usr/local/Cellar/node/25.6.1_1/bin/node",
+      "architectures": "x86_64",
+      "sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b"
+    },
+    {
+      "component": "business-node",
+      "path": "/usr/local/Cellar/node/25.6.1_1/lib/libnode.141.dylib",
+      "architectures": "x86_64",
+      "sha256": "19e1d979cf93722bdaac4f7a0dca58b42f48d9bc4eacd3ba536b2ea2d0c3d13e"
+    }
+  ],
+  "errors": []
+}

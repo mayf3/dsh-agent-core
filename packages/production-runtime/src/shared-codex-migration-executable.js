@@ -12,9 +12,13 @@ const PIN = Object.freeze({
   sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
   artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
 })
-const CANARIES = Object.freeze(['CEO', 'HR', 'Podcast', 'Shopping'])
-const SHARED_CONFIG_PATH = '/Users/authsvc/.agent-core/agent-model-overrides.json'
-const FENCE_PATH = '/Users/authsvc/.agent-core/control/shared-codex-migration-fence.json'
+// Domain constants realigned to the yanfenma unified production backend per
+// AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 CTR-ACT2-002 (the ONLY
+// implementation delta against the frozen authsvc-frame bytes, besides the
+// canonical-owner control-plane probe replacing the authsvc ACL probe).
+const CANARIES = Object.freeze(['STOCK', 'CEO', 'CTO'])
+const SHARED_CONFIG_PATH = '/Users/yanfenma/.agent-core/agent-model-overrides.json'
+const FENCE_PATH = '/Users/yanfenma/.agent-core/control/shared-codex-migration-fence.json'
 
 function migrationError(code, message) { return Object.assign(new Error(`shared-codex-migration: ${message}`), { code }) }
 function exactObject(actual, expected) {
@@ -45,13 +49,44 @@ function validateConfig(config, { allowProduction = false } = {}) {
   if (config.canonicalCredentialPath !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE) throw migrationError('SHARED_CODEX_PATH_INVALID', 'canonical credential path is not the accepted path')
   if (config.sharedConfigPath !== SHARED_CONFIG_PATH) throw migrationError('SHARED_CODEX_PATH_INVALID', 'fleet config path is not the production model-overrides authority')
   if (!exactObject(config.artifact, PIN)) throw migrationError('SHARED_CODEX_ARTIFACT_MISMATCH', 'artifact pin differs from accepted identity')
+  // CTR-ACT-005: bootstrap candidate class exempts the ownerReauthCanonical
+  // binding (Owner reauth is FORBIDDEN for this incident) and fail-closes on
+  // its presence; every other binding requirement is unchanged.
+  const bootstrap = resolveBootstrap(config)
   for (const name of [
-    'quiesceLunaDispatch', 'quiesceRefreshWriters', 'ownerReauthCanonical', 'grantControlPlaneAcl',
-    'probeUid502Read', 'probeUid502AtomicReplace', 'probeAuthsvcControlPlane', 'probeThirdUidDenied',
+    'quiesceLunaDispatch', 'quiesceRefreshWriters', ...(bootstrap ? [] : ['ownerReauthCanonical']), 'grantControlPlaneAcl',
+    'probeUid502Read', 'probeUid502AtomicReplace', 'probeCanonicalOwnerControlPlane', 'probeThirdUidDenied',
     'installPinnedArtifact', 'controlledRestart', 'verifyFleetHealth', 'rollbackRuntime',
     'verifyZeroPerHomeRuntimeOpens',
   ]) if (!Array.isArray(config.commands?.[name])) throw migrationError('SHARED_CODEX_BINDING_INVALID', `missing production binding ${name}`)
+  if (bootstrap && config.commands?.ownerReauthCanonical !== undefined) throw migrationError('SHARED_CODEX_REAUTH_FORBIDDEN', 'bootstrap mode forbids an ownerReauthCanonical binding (Owner reauth is forbidden for this incident)')
   for (const canary of CANARIES) if (!Array.isArray(config.commands?.canaries?.[canary])) throw migrationError('SHARED_CODEX_BINDING_INVALID', `missing canary binding ${canary}`)
+}
+
+const EXPECTED_FLEET = 92
+
+/** CTR-ACT-005: the only accepted candidate class; absent = legacy mode. */
+function resolveBootstrap(config) {
+  if (config?.candidateClass === undefined) return false
+  if (config.candidateClass !== 'BOOTSTRAP_FROM_CONVERGED_SNAPSHOT') throw migrationError('SHARED_CODEX_CONFIG_INVALID', `candidateClass must be BOOTSTRAP_FROM_CONVERGED_SNAPSHOT (got ${JSON.stringify(config.candidateClass)})`)
+  return true
+}
+
+/**
+ * CTR-ACT-005 bootstrap selection: a passing CTR-SCA-017 pre ten-gate receipt
+ * for this root is the only credential-acquisition authority. Selection is
+ * forced (bootstrapStore member of the receipt equality set; reuse allowed;
+ * no reauth). Fleet cardinality must be exactly 92 — 91+unknown, disabled or
+ * orphan identities are fail-closed.
+ */
+function bootstrapSelection(config, root) {
+  let receipt
+  try { receipt = JSON.parse(readFileSync(rooted(root, config.bootstrapGateReceiptPath), 'utf8')) } catch (cause) { throw migrationError('SHARED_CODEX_GATE_RECEIPT_INVALID', `ten-gate receipt unreadable: ${cause.message}`) }
+  if (receipt?.gate !== 'CTR_SCA_017_TEN_GATE' || receipt?.phase !== 'pre' || receipt?.result !== 'PASS' || receipt?.root !== root) throw migrationError('SHARED_CODEX_GATE_RECEIPT_INVALID', 'bootstrap requires a passing CTR-SCA-017 pre ten-gate receipt produced for this root')
+  if (receipt.inventory_count !== EXPECTED_FLEET) throw migrationError('SHARED_CODEX_FLEET_CARDINALITY_INVALID', `authoritative fleet must be exactly ${EXPECTED_FLEET} for this one-time transaction (got ${JSON.stringify(receipt.inventory_count)}); unresolved/extra/missing members are fail-closed`)
+  if (typeof config.bootstrapStore !== 'string' || config.bootstrapStore === '' || !isAbsolute(config.bootstrapStore)) throw migrationError('SHARED_CODEX_BOOTSTRAP_STORE_INVALID', 'bootstrapStore must be an absolute production credential path')
+  if (!Array.isArray(receipt.inventory_paths) || !receipt.inventory_paths.includes(config.bootstrapStore)) throw migrationError('SHARED_CODEX_BOOTSTRAP_STORE_INVALID', 'bootstrapStore must be a member of the receipt equality set')
+  return Object.freeze({ legacyCredentialReuseAllowed: true, authoritativeStore: config.bootstrapStore, bootstrap: true, canonicalReauthRequired: false })
 }
 function validateCanonical(file) {
   if (!existsSync(file) || !statSync(file).isFile()) throw migrationError('SHARED_CODEX_CREDENTIAL_MISSING', 'canonical Owner credential was not established directly')
@@ -95,7 +130,9 @@ export function executeFleetSharedCodexMigration(config, options = {}) {
   runCommand(config.commands.quiesceRefreshWriters, 'quiesce refresh writers', env)
   atomicJson(fence, { version: 1, lunaDispatchQuiesced: true, refreshWritersQuiesced: true }, 0o600)
   const inventory = JSON.parse(readFileSync(provenance, 'utf8'))
-  const selection = selectAuthoritativeCodexGeneration({ ...inventory, lunaDispatchQuiesced: true, refreshWritersQuiesced: true })
+  const selection = resolveBootstrap(config)
+    ? bootstrapSelection(config, config.root)
+    : selectAuthoritativeCodexGeneration({ ...inventory, lunaDispatchQuiesced: true, refreshWritersQuiesced: true })
   mkdirSync(dirname(canonical), { recursive: true, mode: 0o700 }); chmodSync(dirname(canonical), 0o700)
   runCommand(config.commands.grantControlPlaneAcl, 'grant Model A control-plane ACL', env)
   let canonicalReauthCount = 0
@@ -110,7 +147,7 @@ export function executeFleetSharedCodexMigration(config, options = {}) {
   validateCanonical(canonical)
   runCommand(config.commands.probeUid502Read, 'uid502 read gate', env)
   runCommand(config.commands.probeUid502AtomicReplace, 'uid502 atomic replace gate', env)
-  runCommand(config.commands.probeAuthsvcControlPlane, 'authsvc control-plane gate', env)
+  runCommand(config.commands.probeCanonicalOwnerControlPlane, 'canonical-owner control-plane gate', env)
   runCommand(config.commands.probeThirdUidDenied, 'third uid denied gate', env)
   switchFleetConfig(sharedConfig)
   runCommand(config.commands.verifyZeroPerHomeRuntimeOpens, 'verify zero per-home OAuth runtime opens', env)
