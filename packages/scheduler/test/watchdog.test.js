@@ -6,6 +6,7 @@ import {
   evaluateDesiredState,
   evaluateRunHealth,
   evaluateReconciliationEvidence,
+  evaluateCredentialProvider,
   heartbeatStale,
   formatFindings,
 } from '../src/watchdog.js'
@@ -148,4 +149,15 @@ test('audit: desired-state runPolicy grace is plumbed into EXPECTED_RUN_MISSED',
   assert.deepEqual(evaluateRunHealth(slightlyOverdue, { nowMs: NOW }), [], 'default 30m grace: silent')
   const findings = evaluateRunHealth(slightlyOverdue, { nowMs: NOW, desired: tightDesired })
   assert.deepEqual(findings.map((f) => f.class), ['EXPECTED_RUN_MISSED'], 'manifest grace 1m: detected')
+})
+
+test('audit FOLLOW_UP closure: credential provider degraded is Owner-visible (§5.6 self-probe)', () => {
+  assert.deepEqual(evaluateCredentialProvider(undefined), [])
+  assert.deepEqual(evaluateCredentialProvider({ exists: true, bytes: 1024 }), [])
+  const missing = evaluateCredentialProvider({ exists: false }, { path: '/x/agent-credentials.json' })
+  assert.deepEqual(missing.map((f) => f.class), ['CREDENTIAL_PROVIDER_DEGRADED'])
+  assert.match(missing[0].reason, /missing/)
+  const empty = evaluateCredentialProvider({ exists: true, bytes: 0 }, { path: '/x/agent-credentials.json' })
+  assert.deepEqual(empty.map((f) => f.class), ['CREDENTIAL_PROVIDER_DEGRADED'])
+  assert.match(empty[0].reason, /empty/)
 })
