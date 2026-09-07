@@ -38,12 +38,24 @@ const DRY_RUN = process.argv.includes('--dry-run')
 const STORE = process.env.SCHEDULER_WATCHDOG_STORE
   ?? (ROLE === 'w1' ? '/Users/authsvc/.agent-core/scheduler/jobs.json' : undefined)
 const DESIRED_STATE = process.env.SCHEDULER_DESIRED_STATE ?? '/usr/local/libexec/agent-core/config/scheduler-desired-state.json'
-const STATE_DIR = process.env.SCHEDULER_WATCHDOG_STATE_DIR
-  ?? (ROLE === 'w1' ? '/Users/authsvc/.agent-core/control/scheduler-watchdog' : '/usr/local/var/scheduler-watchdog')
+// HEARTBEAT/evidence dir MUST BE SHARED BY BOTH ROLES (audit blocker: split
+// dirs make the mutual check fire permanently). W2 runs as root and can read
+// authsvc's control dir; W1 (authsvc) reads the root-written w2 heartbeat
+// (mode 0644). One dir, two failure domains — different uid/label/period.
+const SHARED_STATE_DIR = process.env.SCHEDULER_WATCHDOG_STATE_DIR
+  ?? '/Users/authsvc/.agent-core/control/scheduler-watchdog'
+const STATE_DIR = SHARED_STATE_DIR
 const HEALTH_URL = process.env.SCHEDULER_HEALTH_URL ?? 'http://127.0.0.1:8790/health'
 const FEISHU_CREDS = process.env.FEISHU_CREDS_PATH ?? (ROLE === 'w1' ? '/Users/authsvc/.dsh/feishu-creds.json' : undefined)
 const ALERT_TO = process.env.SCHEDULER_WATCHDOG_ALERT_TO ?? ''
-const HEARTBEAT_GRACE_MS = Number(process.env.SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS ?? 20 * 60 * 1000)
+// Per-direction grace: each side allows 3x the PEER's launchd period.
+const HEARTBEAT_GRACE_MS = Number(process.env.SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS
+  ?? (ROLE === 'w1' ? 45 * 60 * 1000 : 30 * 60 * 1000))
+// Reconciliation evidence (§5.2/§5.6): written by the CHILD relay (uid 502),
+// read by W1. Defaults to the shared provisioning dir — the production packet
+// provisions it writable by the child uid and readable by authsvc.
+const RECONCILIATION_EVIDENCE = process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE
+  ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl'
 const W1_HEARTBEAT = join(STATE_DIR, 'w1.heartbeat')
 const W2_HEARTBEAT = join(STATE_DIR, 'w2.heartbeat')
 const EVIDENCE_LOG = join(STATE_DIR, 'scheduler-watchdog-evidence.jsonl')
@@ -137,7 +149,8 @@ function evidenceAgeMs(nowMs) {
 
 async function runW1(nowMs) {
   const { readFileSync: readRaw } = await import('node:fs')
-  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, formatFindings } =
+  const { createHash } = await import('node:crypto')
+  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, evaluateReconciliationEvidence, formatFindings } =
     await import('../packages/scheduler/src/watchdog.js')
   const findings = []
   // Desired-state vs live state (raw file read — no engine, no migration side effects).
@@ -147,16 +160,30 @@ async function runW1(nowMs) {
   } catch (error) {
     findings.push({ class: 'SCHEDULER_RUNTIME_UNHEALTHY', reason: `canonical store unreadable: ${String(error?.message ?? error).slice(0, 120)}` })
   }
+  let desired
+  let desiredSha256 = null
   try {
-    const desired = parseDesiredState(JSON.parse(readRaw(DESIRED_STATE, 'utf8')))
+    const manifestBytes = readRaw(DESIRED_STATE, 'utf8')
+    desiredSha256 = `sha256:${createHash('sha256').update(manifestBytes).digest('hex')}`
+    desired = parseDesiredState(JSON.parse(manifestBytes))
     findings.push(...evaluateDesiredState(doc, desired))
   } catch (error) {
     findings.push({ class: 'SCHEDULER_RUNTIME_UNHEALTHY', reason: `desired-state manifest unreadable/invalid: ${String(error?.message ?? error).slice(0, 120)}` })
   }
   findings.push(...evaluateRunHealth(doc, {
     nowMs,
+    desired,
     runtimeHealth: { ...(await probeRuntimeHealth()), evidenceAgeMs: evidenceAgeMs(nowMs) },
   }))
+  // §5.2/§5.6: child-relay STILL_UNKNOWN evidence is Owner-visible from here.
+  try {
+    const entries = existsSync(RECONCILIATION_EVIDENCE)
+      ? readRaw(RECONCILIATION_EVIDENCE, 'utf8').split('\n').filter(Boolean).map((line) => {
+        try { return JSON.parse(line) } catch { return null }
+      }).filter(Boolean)
+      : []
+    findings.push(...evaluateReconciliationEvidence(entries, { nowMs }))
+  } catch { /* evidence file unreadable is not itself a scheduler failure */ }
   // Mutual liveness: W1 watches W2 (W2 watching W1 lives in runW2). The age
   // is compared directly — missing (null) or beyond grace both mean stale.
   const w2Age = readHeartbeatAgeMs(W2_HEARTBEAT, nowMs)
@@ -165,9 +192,13 @@ async function runW1(nowMs) {
   }
 
   touchHeartbeat('w1', nowMs)
-  writeEvidence({ kind: 'w1_run', findingCount: findings.length, classes: findings.map((f) => f.class) })
-  if (findings.length === 0) return 'ok'
-  return deliverOrPark(formatFindings(findings, { role: 'W1', nowMs }))
+  if (findings.length === 0) {
+    writeEvidence({ kind: 'w1_run', findingCount: 0, desiredStateSha256: desiredSha256 })
+    return 'ok'
+  }
+  const alertOutcome = await deliverOrPark(formatFindings(findings, { role: 'W1', nowMs }))
+  writeEvidence({ kind: 'w1_run', findingCount: findings.length, classes: findings.map((f) => f.class), alertOutcome, desiredStateSha256: desiredSha256 })
+  return alertOutcome
 }
 
 async function runW2(nowMs) {
