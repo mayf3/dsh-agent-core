@@ -12,7 +12,7 @@
   "license": "UNLICENSED",
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=3",
-    "@deepseek-ai/dsh-tools": ">=0",
+    "@deepseek-ai/dsh-tools": ">=0.1.0-rc",
     "@deepseek-ai/schemastery": ">=0"
   }
 }
