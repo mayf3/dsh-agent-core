@@ -52,6 +52,7 @@ async function rig(t, { adminAgents = new Set(), auditAgents = new Set(), auditF
 function createAtArgs(overrides = {}) {
   return {
     name: '提醒',
+    logical_key: 'self-test:提醒',
     schedule_kind: 'at',
     at: '15m',
     message: 'SECRET-MESSAGE',
@@ -111,7 +112,7 @@ test('create returns the exact 11-field committed projection and resolves only t
 test('all seven actions use capability id scheduler and ordinary self actions make zero grant requests', async (t) => {
   const { call, store, grantCalls } = await rig(t)
   const created = await call('create', {
-    name: 'self', schedule_kind: 'every', every_ms: 60_000, message: 'm',
+    name: 'self', logical_key: 'self-test:self', schedule_kind: 'every', every_ms: 60_000, message: 'm',
   })
   const jobId = created.result.jobId
   const everyJob = (await store.loadDoc({ force: true })).jobs.find((job) => job.id === jobId)
@@ -196,8 +197,8 @@ test('explicit target/destination are admin-only even when values equal self/cur
 
 test('V2 proof matrix: foreign control is admin-gated, foreign history is audit-gated, self stays zero-Auth', async (t) => {
   const { call, grantCalls, dir } = await rig(t, { adminAgents: new Set(['agt_admin']), auditAgents: new Set(['agt_admin']) })
-  const a = await call('create', { name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
-  const b = await call('create', { name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
+  const a = await call('create', { name: 'a', logical_key: 'self-test:a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
+  const b = await call('create', { name: 'b', logical_key: 'self-test:b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
   assert.deepEqual(grantCalls, [], 'self create performs zero Auth token requests')
   const listA = await call('list', {}, trusted('agt_a'))
   assert.deepEqual(listA.result.jobs.map((job) => job.id), [a.result.jobId])
@@ -232,7 +233,7 @@ test('V2 proof matrix: foreign control is admin-gated, foreign history is audit-
 
 test('foreign update/enable/disable/remove each request exactly (scheduler, scheduler.admin) once; self update stays zero-Auth', async (t) => {
   const { call, grantCalls } = await rig(t, { adminAgents: new Set(['agt_admin']) })
-  const owned = await call('create', { name: 'owned', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' }, trusted('agt_plain'))
+  const owned = await call('create', { logical_key: 'ss-merged:owned', name: 'owned', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' }, trusted('agt_plain'))
   const jobId = owned.result.jobId
   const foreignUpdate = await call('update', { job_id: jobId, name: 'renamed by admin' }, trusted('agt_admin'))
   assert.equal(foreignUpdate.ok, true)
@@ -248,7 +249,7 @@ test('foreign update/enable/disable/remove each request exactly (scheduler, sche
       `foreign ${action} = exactly one (scheduler, scheduler.admin) request`)
   }
 
-  const own = await call('create', { name: 'own', schedule_kind: 'every', every_ms: 1000, message: 'm' }, trusted('agt_admin'))
+  const own = await call('create', { logical_key: 'ss-merged:own', name: 'own', schedule_kind: 'every', every_ms: 1000, message: 'm' }, trusted('agt_admin'))
   grantCalls.length = 0
   const selfUpdate = await call('update', { job_id: own.result.jobId, name: 'self rename' }, trusted('agt_admin'))
   assert.equal(selfUpdate.ok, true)
@@ -257,8 +258,8 @@ test('foreign update/enable/disable/remove each request exactly (scheduler, sche
 
 test('runs(all_agents=true) needs exactly (scheduler, scheduler.audit); admin alone reveals no history; audit alone mutates nothing', async (t) => {
   const { call, grantCalls } = await rig(t, { adminAgents: new Set(['agt_admin']) })
-  await call('create', { name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
-  const b = await call('create', { name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
+  await call('create', { logical_key: 'ss-merged:a', name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
+  const b = await call('create', { logical_key: 'ss-merged:b', name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
 
   const adminGlobalRuns = await call('runs', { all_agents: true }, trusted('agt_admin'))
   assert.equal(adminGlobalRuns.ok, false)
@@ -273,8 +274,8 @@ test('runs(all_agents=true) needs exactly (scheduler, scheduler.audit); admin al
   assert.equal(JSON.stringify(adminForeignRuns).includes('occurrences'), false, 'no history disclosure on admin-only denial')
 
   const auditRig = await rig(t, { auditAgents: new Set(['agt_audit']) })
-  const createdA = await auditRig.call('create', { name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
-  const createdB = await auditRig.call('create', { name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
+  const createdA = await auditRig.call('create', { logical_key: 'ss-merged:a', name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'a' }, trusted('agt_a'))
+  const createdB = await auditRig.call('create', { logical_key: 'ss-merged:b', name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
   assert.deepEqual(auditRig.grantCalls, [])
   const globalRuns = await auditRig.call('runs', { all_agents: true }, trusted('agt_audit'))
   assert.equal(globalRuns.ok, true)
@@ -295,8 +296,8 @@ test('list(all_agents=true) is denied before any store read with zero Auth reque
     adminAgents: new Set(['agt_admin', 'agt_both']),
     auditAgents: new Set(['agt_audit', 'agt_both']),
   })
-  const a = await call('create', { name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' }, trusted('agt_a'))
-  const b = await call('create', { name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
+  const a = await call('create', { logical_key: 'ss-merged:a', name: 'a', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' }, trusted('agt_a'))
+  const b = await call('create', { logical_key: 'ss-merged:b', name: 'b', schedule_kind: 'every', every_ms: 1000, message: 'b' }, trusted('agt_b'))
   assert.deepEqual(grantCalls, [])
   const readsBefore = storeReads()
 
@@ -337,7 +338,7 @@ test('auth denial/error/uncertainty fails closed with exactly one proof attempt 
     })
     const call = (action, args, context = trusted()) => access.handlers.scheduler[action](args, context)
 
-    const selfCreate = await call('create', { name: 'owned', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' })
+    const selfCreate = await call('create', { logical_key: 'ss-merged:owned', name: 'owned', schedule_kind: 'every', every_ms: 1000, message: 'SECRET-MESSAGE' })
     assert.equal(selfCreate.ok, true)
     assert.deepEqual(attempts, [], `self create performs zero Auth requests even when the seam would ${mode}`)
 
@@ -364,7 +365,7 @@ test('auth denial/error/uncertainty fails closed with exactly one proof attempt 
 test('update uses updateJobOp semantics, preserves omitted fields, and returns committed normalized evidence', async (t) => {
   const { call, store } = await rig(t)
   const created = await call('create', {
-    name: 'daily', schedule_kind: 'cron', cron_expr: '5 9 * * 1-5', timezone: 'Asia/Shanghai',
+    name: 'daily', logical_key: 'self-test:daily', schedule_kind: 'cron', cron_expr: '5 9 * * 1-5', timezone: 'Asia/Shanghai',
     message: 'old', timeout: 30, light_context: true, model: 'm1', auto_retry: true,
   })
   const before = (await store.loadDoc({ force: true })).jobs[0]
@@ -396,7 +397,7 @@ test('update uses updateJobOp semantics, preserves omitted fields, and returns c
 test('fenced enabled update commits with nextRunAt null and does not clear or replay the fence', async (t) => {
   const { call, store } = await rig(t)
   const created = await call('create', {
-    name: 'fenced', schedule_kind: 'every', every_ms: 60_000, message: 'm',
+    name: 'fenced', logical_key: 'self-test:fenced', schedule_kind: 'every', every_ms: 60_000, message: 'm',
   })
   const jobId = created.result.jobId
   await store.mutateDoc((doc) => {
@@ -423,7 +424,7 @@ test('fenced enabled update commits with nextRunAt null and does not clear or re
 
 test('ownership is rechecked inside the locked control mutation (TOCTOU fails closed)', async (t) => {
   const { call, store, grantCalls } = await rig(t)
-  const created = await call('create', { name: 'owned', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  const created = await call('create', { name: 'owned', logical_key: 'self-test:k1', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
   const jobId = created.result.jobId
   const originalLoad = store.loadDoc.bind(store)
   let swapped = false
@@ -447,7 +448,7 @@ test('ownership is rechecked inside the locked control mutation (TOCTOU fails cl
 test('locked update preserves concurrently changed omitted fields and audits the exact preimage', async (t) => {
   const { call, store, dir } = await rig(t)
   const created = await call('create', {
-    name: 'merge', schedule_kind: 'every', every_ms: 60_000, message: 'old', timeout: 30,
+    name: 'merge', logical_key: 'self-test:merge', schedule_kind: 'every', every_ms: 60_000, message: 'old', timeout: 30,
   })
   const jobId = created.result.jobId
   const originalLoad = store.loadDoc.bind(store)
@@ -481,7 +482,7 @@ test('live post-rename fault returns known committed projection and attempts one
   let auditAttempts = 0
   store._syncDir = async () => { syncCalls += 1; throw new Error('injected directory sync failure after rename') }
   store.appendRunEvent = async () => { auditAttempts += 1; return { ok: true } }
-  const out = await call('create', { name: 'durable', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  const out = await call('create', { name: 'durable', logical_key: 'self-test:k2', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
   assert.equal(out.ok, true)
   assertExactCommittedResult(out.result)
   assert.equal(out.result.auditStatus, 'appended')
@@ -494,14 +495,14 @@ test('live post-rename fault returns known committed projection and attempts one
 test('pre-commit failure is known clean; uncertain commit failure is outcome-unknown with zero retry', async (t) => {
   const first = await rig(t)
   first.store.beforeCommit = async () => { throw new Error('before commit') }
-  const clean = await first.call('create', { name: 'clean-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  const clean = await first.call('create', { name: 'clean-fail', logical_key: 'self-test:k3', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
   assert.equal(clean.ok, false)
   assert.equal(clean.error.code, 'internal_error')
   assert.equal((await first.store.loadDoc({ force: true })).jobs.length, 0)
 
   const scopedReadFailure = await rig(t)
   const scopedJob = await scopedReadFailure.call('create', {
-    name: 'scoped-read', schedule_kind: 'every', every_ms: 60_000, message: 'm',
+    name: 'scoped-read', logical_key: 'self-test:scoped-read', schedule_kind: 'every', every_ms: 60_000, message: 'm',
   })
   scopedReadFailure.store.loadDoc = async () => { throw new Error('injected authorization snapshot failure') }
   const scopedKnown = await scopedReadFailure.call('update', { job_id: scopedJob.result.jobId, name: 'never' })
@@ -510,20 +511,20 @@ test('pre-commit failure is known clean; uncertain commit failure is outcome-unk
 
   const readFailure = await rig(t)
   readFailure.store._loadDocForMutation = async () => { throw new Error('injected pre-write load failure') }
-  const known = await readFailure.call('create', { name: 'read-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  const known = await readFailure.call('create', { name: 'read-fail', logical_key: 'self-test:k4', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
   assert.equal(known.ok, false)
   assert.equal(known.error.code, 'internal_error')
 
   const lockFailure = await rig(t)
   lockFailure.store._withLock = async () => { throw new Error('injected lock acquisition failure') }
-  const noLock = await lockFailure.call('create', { name: 'lock-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  const noLock = await lockFailure.call('create', { name: 'lock-fail', logical_key: 'self-test:k5', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
   assert.equal(noLock.ok, false)
   assert.equal(noLock.error.code, 'internal_error')
 
   const renameFailure = await rig(t)
   renameFailure.store.beforeCommit = async () => { await mkdir(renameFailure.store.filePath) }
   const noRename = await renameFailure.call('create', {
-    name: 'rename-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm',
+    name: 'rename-fail', logical_key: 'self-test:rename-fail', schedule_kind: 'every', every_ms: 60_000, message: 'm',
   })
   assert.equal(noRename.ok, false)
   assert.equal(noRename.error.code, 'internal_error', 'a rejected commit-point rename proves no mutation')
@@ -534,7 +535,7 @@ test('pre-commit failure is known clean; uncertain commit failure is outcome-unk
     attempts += 1
     throw Object.assign(new Error('rename outcome unavailable'), { mutationOutcome: 'unknown' })
   }
-  const unknown = await second.call('create', { name: 'unknown', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
+  const unknown = await second.call('create', { name: 'unknown', logical_key: 'self-test:k6', schedule_kind: 'every', every_ms: 60_000, message: 'm' })
   assert.equal(unknown.ok, false)
   assert.equal(unknown.error.code, 'mutation_outcome_unknown')
   assert.equal(attempts, 1)
@@ -556,7 +557,7 @@ test('audit append failure returns known committed result, logs sanitized coordi
 
 test('mutation audit is one sanitized append per committed mutation', async (t) => {
   const { call, dir } = await rig(t)
-  const created = await call('create', { name: 'x', schedule_kind: 'every', every_ms: 1000, message: 'TOP-SECRET' })
+  const created = await call('create', { name: 'x', logical_key: 'self-test:k7', schedule_kind: 'every', every_ms: 1000, message: 'TOP-SECRET' })
   await call('update', { job_id: created.result.jobId, name: 'y' })
   await call('disable', { job_id: created.result.jobId })
   await call('enable', { job_id: created.result.jobId })
@@ -570,7 +571,7 @@ test('mutation audit is one sanitized append per committed mutation', async (t) 
 
 test('remove retains occurrence authority but ordinary self runs becomes not-found post-delete', async (t) => {
   const { call, store } = await rig(t)
-  const created = await call('create', { name: 'x', schedule_kind: 'every', every_ms: 1000, message: 'm' })
+  const created = await call('create', { name: 'x', logical_key: 'self-test:k8', schedule_kind: 'every', every_ms: 1000, message: 'm' })
   const jobId = created.result.jobId
   await store.mutateDoc((doc) => {
     const job = doc.jobs.find((candidate) => candidate.id === jobId)
@@ -602,7 +603,7 @@ test('past one-shot create/update fail before control mutation', async (t) => {
   assert.equal(badCreate.ok, false)
   assert.equal((await store.loadDoc({ force: true })).jobs.length, 0)
 
-  const created = await call('create', { name: 'x', schedule_kind: 'every', every_ms: 1000, message: 'm' })
+  const created = await call('create', { name: 'x', logical_key: 'self-test:k9', schedule_kind: 'every', every_ms: 1000, message: 'm' })
   const before = (await store.loadDoc({ force: true })).jobs[0]
   const badUpdate = await call('update', {
     job_id: created.result.jobId, schedule_kind: 'at', at: '2020-01-01T00:00:00Z',

@@ -33,12 +33,12 @@ const routerGatewayContext = (ingressOverrides = {}, rootOverrides = {}) => {
 }
 
 const validCalls = {
-  create: { action: 'create', name: 'daily', schedule_kind: 'every', every_ms: 60_000, message: 'work' },
+  create: { action: 'create', name: 'daily', logical_key: 'owner:daily', schedule_kind: 'every', every_ms: 60_000, message: 'work' },
   list: { action: 'list' },
   runs: { action: 'runs', job_id: 'job-1', limit: 5 },
-  update: { action: 'update', job_id: 'job-1', message: 'new work' },
-  enable: { action: 'enable', job_id: 'job-1' },
-  disable: { action: 'disable', job_id: 'job-1' },
+  update: { action: 'update', job_id: 'job-1', expected_revision: { schedule_revision: 1, updated_at_ms: 2 }, message: 'new work' },
+  enable: { action: 'enable', job_id: 'job-1', expected_revision: { schedule_revision: 1, updated_at_ms: 2 } },
+  disable: { action: 'disable', job_id: 'job-1', expected_revision: { schedule_revision: 1, updated_at_ms: 2 } },
   remove: { action: 'remove', job_id: 'job-1' },
 }
 
@@ -117,26 +117,71 @@ test('all seven valid actions relay locally and action is removed from business 
   assert.deepEqual(calls.map((call) => call.operation), ACTIONS)
   assert.equal(calls.every((call) => call.capabilityId === 'scheduler'), true)
   assert.equal(calls.every((call) => !Object.hasOwn(call.args, 'action')), true)
-  assert.deepEqual(calls[0].args, { name: 'daily', schedule_kind: 'every', every_ms: 60_000, message: 'work' })
+  assert.deepEqual(calls[0].args, { name: 'daily', logical_key: 'owner:daily', schedule_kind: 'every', every_ms: 60_000, message: 'work' })
 })
 
-test('mutation relay loss is outcome-unknown with zero automatic retry', async () => {
-  let attempts = 0
-  const definition = schedulerDefinition(async () => {
-    attempts += 1
+test('mutation relay loss reconciles by identity: unprovable stays unknown, proven-absent is NOT_APPLIED, zero auto-RETRY', async () => {
+  // (a) everything lost (mutation AND read-back): STILL_UNKNOWN with evidence,
+  // and each action attempts the mutation EXACTLY ONCE — reconcile reads, never re-sends.
+  let mutationAttempts = 0
+  let readBackAttempts = 0
+  const allLost = schedulerDefinition(async (call) => {
+    if (call.operation === 'list') {
+      readBackAttempts += 1
+      throw new Error('read-back channel lost')
+    }
+    mutationAttempts += 1
     throw new Error('response channel lost after possible commit')
   })
   for (const action of ['create', 'update', 'enable', 'disable', 'remove']) {
-    const out = await definition.execute(validCalls[action])
+    const out = await allLost.execute(validCalls[action])
     assert.equal(out.ok, false)
     assert.equal(out.error.code, 'mutation_outcome_unknown')
+    assert.match(out.error.detail, /STILL_UNKNOWN/)
   }
-  assert.equal(attempts, 5)
-  const read = await definition.execute(validCalls.list)
+  assert.equal(mutationAttempts, 5, 'each mutation attempted exactly once — blind retry stays forbidden')
+  assert.equal(readBackAttempts, 5, 'every lost mutation gets exactly one reconcile read-back')
+
+  const read = await allLost.execute(validCalls.list)
   assert.equal(read.ok, false)
   assert.equal(read.error.code, 'invalid_arguments')
-  assert.equal(attempts, 6)
+  assert.equal(mutationAttempts, 5)
 
+  // (b) unshaped parent envelopes + read-back proves ABSENT -> mutation_not_applied.
+  const absent = schedulerDefinition(async (call) => {
+    if (call.operation === 'list') return { ok: true, result: { ok: true, result: { jobs: [] } } }
+    return { ok: true, result: {} } // unshaped "success" envelope
+  })
+  for (const action of ['create', 'update', 'enable', 'disable', 'remove']) {
+    const out = await absent.execute(validCalls[action])
+    if (action === 'remove') {
+      // Absence of the target IS the remove goal state — APPLIED is sound
+      // (the caller must have seen the job to request its removal).
+      assert.equal(out.ok, true, action)
+      assert.equal(out.result.removed, true, action)
+      continue
+    }
+    assert.equal(out.ok, false, action)
+    assert.equal(out.error.code, 'mutation_not_applied', action)
+  }
+
+  // (c) read-back proves the CREATE committed -> the existing job's committed result.
+  const committedJob = {
+    id: 'job-1', name: 'daily', logicalKey: 'owner:daily', agentId: 'agt_a', enabled: true,
+    scheduleRevision: 1, schedule: { kind: 'every', everyMs: 60_000 }, payload: { kind: 'agentTurn' },
+    delivery: { mode: 'none' }, deleteAfterRun: false, nextRunAtMs: Date.parse('2030-01-01T00:00:00.000Z'),
+  }
+  const applied = schedulerDefinition(async (call) => {
+    if (call.operation === 'list') return { ok: true, result: { ok: true, result: { jobs: [committedJob] } } }
+    throw new Error('response lost after commit')
+  })
+  const reconciled = await applied.execute(validCalls.create)
+  assert.deepEqual(reconciled, {
+    ok: true,
+    result: { ...schedulerResult('create'), auditStatus: 'reconciled' },
+  })
+
+  // (d) unshaped/malformed parent envelopes with an UNPROVABLE read-back stay unknown.
   const { auditStatus: _auditStatus, ...missingAudit } = schedulerResult('create')
   const malformedEvery = { ...schedulerResult('create'), normalizedSchedule: { kind: 'every', everyMs: 0 } }
   const malformedAt = {
@@ -159,10 +204,18 @@ test('mutation relay loss is outcome-unknown with zero automatic retry', async (
     { ok: true, result: { ok: false, error: { code: 'internal_error' }, extra: true } },
     { ok: true, result: { ok: false, error: { code: 'internal_error' } }, extra: true },
   ]) {
-    const resolvedLoss = schedulerDefinition(async () => lostEnvelope)
+    let reads = 0
+    const resolvedLoss = schedulerDefinition(async (call) => {
+      if (call.operation === 'list') {
+        reads += 1
+        throw new Error('read-back unavailable')
+      }
+      return lostEnvelope
+    })
     const out = await resolvedLoss.execute(validCalls.create)
     assert.equal(out.ok, false)
     assert.equal(out.error.code, 'mutation_outcome_unknown')
+    assert.equal(reads, 1, 'reconcile read-back attempted for every unshaped envelope')
   }
 
   const cronResult = {
@@ -170,9 +223,10 @@ test('mutation relay loss is outcome-unknown with zero automatic retry', async (
     normalizedSchedule: { kind: 'cron', expr: '0 * * * *', timezone: 'UTC' },
     timezone: 'UTC',
   }
-  const validCron = schedulerDefinition(async () => ({
-    ok: true, result: { ok: true, result: cronResult },
-  }))
+  const validCron = schedulerDefinition(async (call) => {
+    if (call.operation === 'list') return { ok: true, result: { ok: true, result: { jobs: [] } } }
+    return { ok: true, result: { ok: true, result: cronResult } }
+  })
   assert.deepEqual(await validCron.execute(validCalls.create), { ok: true, result: cronResult })
 })
 
@@ -184,7 +238,9 @@ test('closed action validation rejects unknown, cross-action, nested, and identi
   })
   const invalid = [
     { action: 'list', surprise: true },
-    { action: 'list', job_id: 'cross-action' },
+    { action: 'list', message: 'cross-action' },
+    { ...validCalls.create, logical_key: undefined },
+    { action: 'list', logical_key: 'read-filter-is-valid', expected_revision: { schedule_revision: 1, updated_at_ms: 1 } },
     { ...validCalls.create, destination: { channel: 'feishu', to: 'chat:x', extra: 'nested' }, delivery_mode: 'announce' },
     { ...validCalls.create, callerAgentId: 'agt_forged' },
     { ...validCalls.create, caller_agent_id: 'agt_forged' },
@@ -287,7 +343,7 @@ test('gateway maps unified actions and flattens Router ingress context for local
     capabilityId: 'scheduler',
     operation: 'create',
     args: {
-      name: ' room reminder ', schedule_kind: 'every', every_ms: 60_000, message: ' ping ',
+      name: ' room reminder ', logical_key: 'owner:room-reminder', schedule_kind: 'every', every_ms: 60_000, message: ' ping ',
       delivery_mode: 'announce', delivery_target: 'current_conversation',
     },
   }, routerGatewayContext())
@@ -295,7 +351,7 @@ test('gateway maps unified actions and flattens Router ingress context for local
   assert.equal(out.ok, true)
   assert.deepEqual(out.result, { jobId: 'job-1', deliveryTarget: 'current_conversation', chatId: 'oc_exact_chat' })
   assert.deepEqual(seen[0].args, {
-    name: 'room reminder', schedule_kind: 'every', every_ms: 60_000, message: 'ping',
+    name: 'room reminder', logical_key: 'owner:room-reminder', schedule_kind: 'every', every_ms: 60_000, message: 'ping',
     delivery_mode: 'announce', delivery_target: 'current_conversation',
   })
   assert.equal(seen[0].frozen, true)

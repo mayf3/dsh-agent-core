@@ -149,6 +149,10 @@ async function runDue(ctx, advanceMs, { concurrent = false } = {}) {
 
 const createArgs = (overrides = {}) => ({
   name: 'cross-agent job',
+  // SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.1: create REQUIRES a stable
+  // logical key; deriving it from the override set keeps distinct desired
+  // jobs distinct and makes exact replays idempotent.
+  logical_key: `cross-agent:${JSON.stringify(overrides ?? {})}`,
   schedule_kind: 'at',
   at: '1m',
   message: 'cross-agent scheduled hello',

@@ -31,6 +31,21 @@ const properties = {
   timeout: { type: 'integer', minimum: 1, description: 'Per-occurrence timeout in seconds.' },
   light_context: { type: 'boolean', description: 'Use light context for occurrence turns.' },
   model: nonEmptyString('Optional model override.'),
+  logical_key: nonEmptyString(
+    'Stable caller-provided logical identity for the job (create only). Persisted and unique; '
+    + 're-creating with the same key and the same definition answers the existing job instead of duplicating it; '
+    + 're-creating with the same key and a different definition fails closed (logical_key_conflict).',
+  ),
+  expected_revision: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['schedule_revision', 'updated_at_ms'],
+    properties: {
+      schedule_revision: { type: 'integer', minimum: 1, description: 'scheduleRevision observed before mutating.' },
+      updated_at_ms: { type: 'integer', minimum: 1, description: 'updatedAtMs observed before mutating.' },
+    },
+    description: 'Compare-before-write guard: refuse (stale_target_conflict, zero write) when the live job moved past the observed revision.',
+  },
   delivery_mode: { type: 'string', enum: ['announce', 'none', 'silent'], description: 'Complete delivery mode replacement.' },
   delivery_target: { type: 'string', enum: ['current_conversation'], description: 'Resolve the active trusted Feishu conversation.' },
   destination,
@@ -59,10 +74,14 @@ const baseErrors = [
   { code: 'invalid_arguments', description: 'Arguments do not satisfy the selected action schema.' },
   { code: 'unsupported_operation', description: 'The requested action is not supported.' },
   { code: 'credential_unavailable', description: 'No trusted caller credential is bound.' },
+  { code: 'capability_unavailable', description: 'Scheduler mutation is not ready on this runtime (credential provider unconfigured or caller unbound); the mutation never reached the Scheduler.' },
   { code: 'access_denied', description: 'The caller is not authorized for the requested target.' },
   { code: 'job_not_found', description: 'No visible job has the requested id.' },
   { code: 'validation_error', description: 'The Scheduler rejected the normalized definition.' },
-  { code: 'mutation_outcome_unknown', description: 'The mutation may have committed; inspect before any manual retry.' },
+  { code: 'logical_key_conflict', description: 'The logical key is already bound to a job with a different desired definition; no write was performed.' },
+  { code: 'stale_target_conflict', description: 'The job moved past the expected revision; re-read and re-apply. No write was performed.' },
+  { code: 'mutation_not_applied', description: 'Canonical read-back proved the mutation never committed; a retry with the SAME logical identity is safe.' },
+  { code: 'mutation_outcome_unknown', description: 'The mutation may have committed and read-back could not prove the state; do not retry blindly — the watchdog will alert.' },
   { code: 'internal_error', description: 'The local Scheduler handler failed.' },
 ]
 
@@ -86,13 +105,13 @@ export const schedulerManifest = {
   local: { resource: 'scheduler' },
   errors: baseErrors,
   operations: [
-    operation('create', 'Create one scheduled job.', args(mutationNames, ['name', 'schedule_kind', 'message']), ['invalid_arguments', 'access_denied', 'validation_error']),
-    operation('list', 'List visible job definitions.', args(['all_agents']), ['invalid_arguments', 'access_denied']),
+    operation('create', 'Create one scheduled job.', args([...mutationNames, 'logical_key'], ['name', 'schedule_kind', 'message', 'logical_key']), ['invalid_arguments', 'access_denied', 'validation_error', 'logical_key_conflict', 'capability_unavailable', 'mutation_not_applied']),
+    operation('list', 'List visible job definitions.', args(['all_agents', 'logical_key', 'job_id']), ['invalid_arguments', 'access_denied']),
     operation('runs', 'Read visible occurrence evidence.', args(['job_id', 'limit', 'all_agents']), ['invalid_arguments', 'access_denied', 'job_not_found']),
-    operation('update', 'Replace selected mutable fields on one job.', args(['job_id', ...mutationNames], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found', 'validation_error']),
-    operation('enable', 'Enable one job for future slots.', args(['job_id'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found']),
-    operation('disable', 'Disable future occurrence minting for one job.', args(['job_id'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found']),
-    operation('remove', 'Remove one definition while retaining occurrence evidence.', args(['job_id'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found']),
+    operation('update', 'Replace selected mutable fields on one job.', args(['job_id', 'expected_revision', ...mutationNames], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found', 'validation_error', 'stale_target_conflict', 'capability_unavailable', 'mutation_not_applied']),
+    operation('enable', 'Enable one job for future slots.', args(['job_id', 'expected_revision'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found', 'stale_target_conflict', 'capability_unavailable', 'mutation_not_applied']),
+    operation('disable', 'Disable future occurrence minting for one job.', args(['job_id', 'expected_revision'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found', 'stale_target_conflict', 'capability_unavailable', 'mutation_not_applied']),
+    operation('remove', 'Remove one definition while retaining occurrence evidence.', args(['job_id', 'expected_revision'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found', 'stale_target_conflict', 'capability_unavailable', 'mutation_not_applied']),
   ],
 }
 

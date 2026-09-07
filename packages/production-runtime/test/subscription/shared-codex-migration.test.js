@@ -9,11 +9,11 @@ import { fileURLToPath } from 'node:url'
 import {
   runFleetSharedCodexAuthMigrationV1,
   selectAuthoritativeCodexGeneration,
-} from '../src/compose.js'
+} from '../../src/compose.js'
 import {
   FLEET_SHARED_CODEX_ARTIFACT_PIN,
-} from '../src/shared-codex-migration-executable.js'
-import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE } from '../src/model-overrides.js'
+} from '../../src/shared-codex-migration-executable.js'
+import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE } from '../../src/model-overrides.js'
 
 const ENVIRONMENT = Object.freeze({ lunaDispatchQuiesced: true, refreshWritersQuiesced: true })
 const ACCOUNT = 'expected-account-identity'
@@ -195,7 +195,7 @@ test('real executable bindings complete isolated production-like migrate and saf
   }
   const configFile = join(root, 'migration-config.json')
   writeFileSync(configFile, JSON.stringify(config))
-  const cli = fileURLToPath(new URL('../src/shared-codex-migration-cli.js', import.meta.url))
+  const cli = fileURLToPath(new URL('../../src/shared-codex-migration-cli.js', import.meta.url))
   const migration = spawnSync(process.execPath, [cli, 'migrate', configFile], { encoding: 'utf8' })
   assert.equal(migration.status, 0, migration.stderr)
   const report = JSON.parse(migration.stdout)
