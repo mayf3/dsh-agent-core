@@ -23,6 +23,12 @@ Apply sequence (summary — the RUNBOOK is normative):
    uid-502 child relay can append STILL_UNKNOWN evidence and W1 (authsvc) can read it;
    set SCHEDULER_RECONCILIATION_EVIDENCE_FILE in the runtime plist env to
    /usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl.
+   Provisioning order note: pre-create the shared watchdog state dir AS authsvc BEFORE first
+   W1/W2 load (both templates RunAtLoad) — if root creates it first, W1 cannot write its
+   heartbeat and dies repeatedly (fail-noisy: W2 alerts, never silent, but avoid it).
+   The evidence-channel dir permission (0777 placeholder above) MUST be tightened at packet
+   round to a dedicated group (child uid + authsvc) — world-writable allows forged evidence
+   lines (alert-content spam only; no secret exposure).
 4. Install W1/W2 launchd jobs from these templates; verify mutual heartbeats; fire TEST-G/H.
 5. Post-verify: §6 eight CAN_* questions via the §7 test evidence; rollback = per-step
    preimages (plist unload, CLI symlink restore, manifest removal) — each reversible.
