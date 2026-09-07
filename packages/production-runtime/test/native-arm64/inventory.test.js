@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, copyFileSync, writeFileSync, symlinkSync, rmSync, realpathSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, copyFileSync, writeFileSync, symlinkSync, rmSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
 import { inspectNativeClosure } from '../../src/native-arm64/inventory.js'
@@ -44,5 +44,15 @@ test('missing native binding and escaped closure cannot pass', t => {
 test('unknown native contents reject rather than infer architecture from name', t => {
   const root = fixture(t)
   writeFileSync(join(root, 'darwin-arm64.node'), 'not a native binding')
+  rejected(root, 'UNKNOWN_NATIVE_FILE')
+})
+test('foreign node-pty path cannot hide unknown or unproven native contents', t => {
+  const root = fixture(t)
+  const directory = join(root, 'node-pty/prebuilds/linux-x64')
+  mkdirSync(directory, { recursive: true })
+  const binding = join(directory, 'pty.node')
+  writeFileSync(binding, 'not a native binding')
+  rejected(root, 'UNKNOWN_NATIVE_FILE')
+  writeFileSync(binding, Buffer.from('7f454c4602010100', 'hex'))
   rejected(root, 'UNKNOWN_NATIVE_FILE')
 })

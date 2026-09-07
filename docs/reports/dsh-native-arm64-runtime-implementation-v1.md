@@ -128,3 +128,13 @@ healProfilesModuleFallback before profile import; an isolated copy of a live
 264-link farm was successfully healed. No live profile or credential was changed.
 Actual profile-directory census and closure receipts remain in the local
 production-profile-package-census.json / production-profile-links.json files.
+
+## Bounded implementation audit repair
+
+The fresh independent Phase 3 reviewer froze `[ARM-IMPL-001, ARM-IMPL-002]` against source `09e0e045dfb42cd4b127cc8107e43f9c6e1d1910` and manifest SHA256 `a6410bc4e6dfe3c04d5c19f3fab6c2e845ba50d7d90cd572aec1500061f39c11`. The external receipt is `implementation-audit-initial.json` under the artifact root recorded above.
+
+ARM-IMPL-001: inventory now enumerates every `.node`, validates ELF/PE headers for retained foreign payload, and binds non-selection to the exact node-pty selector hash plus executed ARM addon/PTY receipt. Arbitrary contents in an old pathname exception reject. Direct frozen-file enumeration corrects the review's count: six foreign ELF/PE `.node` files, twenty regular `.node` files overall; the prior inventory omitted those six. The discriminating test passes, as do the existing inventory tests.
+
+ARM-IMPL-002: a full actual profile-bundle census found 95 dsh-codex profiles and two deployed byte variants, preserved without rewriting either version. Both are now included in `native-arm64-candidate-v1/profile-plugins`, with per-profile source/hash mapping and a fresh dependency farm resolving entirely to sealed Harness bytes. Both exact plugin variants independently passed native import and real isolated parent/child session, memory_search, 48-tool registration, health 200 and clean child exit 0. The local mock LLM is the only request destination; no real OAuth credentials are used. Receipts: `sealed-probes/plugin-import-result.json`, `business-parent-1788788924422/result.json`, `business-parent-1788788955141/result.json`.
+
+This is one bounded union repair. The one fresh affected-boundary re-audit and final merged ancestry remain required before merge/production artifact readiness. Production transaction preparation, P0 slot and normal production Agent E2E remain downstream gates. No new normative Authority or production mutation is introduced.
