@@ -350,6 +350,15 @@ export function createRelayHandlers(manifest, requestFn) {
       const structuredParentFailure = uncertainMutation
         ? validSchedulerFailure(parent, manifest)
         : validDeclaredFailure(parent, manifest)
+      // §5.2 second capture point, answer leg: when the PARENT itself
+      // classifies the outcome as unknown (post-commit handler fault —
+      // gateway 'mutation_outcome_unknown'), the caller still cannot tell
+      // applied from not-applied, so the same identity read-back must run.
+      // A raw unknown is terminal only when reconcile cannot prove anything.
+      const parentSaysUnknown = uncertainMutation
+        && parent?.ok === false
+        && parent?.error?.code === 'mutation_outcome_unknown'
+      if (parentSaysUnknown) return reconcileUnknown()
       if (uncertainMutation && !structuredParentSuccess && !structuredParentFailure) {
         return reconcileUnknown()
       }
