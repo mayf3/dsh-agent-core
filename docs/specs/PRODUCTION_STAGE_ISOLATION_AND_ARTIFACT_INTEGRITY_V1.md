@@ -1,7 +1,22 @@
 ---
 spec_id: PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1
-status: proposed
+status: accepted
 date: 2026-09-08
+accepted_date: 2026-09-08
+accepted_reviewed_head: 6d74a9b
+independent_spec_review: PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1_SPEC_REVIEW_R1
+independent_spec_review_result: PASS (ACCEPT at 6d74a9b; 15/15 mandatory questions PASS; SHIP_BLOCKERS=NONE; 3 non-blocking mechanical concerns absorbed as AMENDMENT_1; core question CANDIDATE_BYTES_AFTER_SEAL_CANNOT_SILENTLY_CHANGE judged closed; cross-references to census + SB4 spot-verified real)
+required_fixes: NONE (AMENDMENT_1 pins rollback capture moment, runner meta-integrity, per-surface isolation gate semantics — semantic invariants unchanged)
+amendments:
+  - AMENDMENT_1 (2026-09-08, docs-only clarification, semantic invariants unchanged): (A1.1) rollback population moment pinned —
+    EXPECTED_PREIMAGE_HASH is DECLARED at prepare time from the live target state (ABSENT sentinel if unreadable); rollback/
+    bytes are CAPTUREED at apply time only after gate-3 verifies live == declaration, then rollback/ gets its own MANIFEST.sha256;
+    exactly one capture moment (apply), removing the §5 "at seal time vs during preimage check" ambiguity. (A1.2) runner
+    meta-integrity — seal.json records the runner's own sha256; apply refuses if the executing runner bytes differ from
+    seal.json; the apply receipt records the runner hash. (A1.3) §10 per-surface *_ISOLATION = PASS semantics defined —
+    the surface's candidate-preparation entry point routes through the generation contract, demonstrated by per-surface
+    fixture E2E in the required failure-test suite + migration runbook published; CURRENT_LIVE_RUNTIME_PROVENANCE
+    (FU-1/FU-2) is explicitly outside gate scope.
 type: implementation-spec (staging isolation + artifact integrity seam; implementation in bounded follow-up PRs under this spec)
 scope:
   - Candidate generation model (ONE GOAL / ONE CANDIDATE GENERATION, unique GENERATION_ID)
