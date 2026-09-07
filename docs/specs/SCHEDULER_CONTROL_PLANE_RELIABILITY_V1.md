@@ -8,10 +8,15 @@ independent_spec_review: SCHEDULER_CONTROL_PLANE_RELIABILITY_V1_SPEC_REVIEW_R1
 independent_spec_review_result: PASS (REVISE→fixed; 3 blockers resolved r1, mechanical claims re-verified against main)
 required_fixes: NONE (r1 fixes applied: dual unknown capture points §5.2; RUN_STUCK ledger-only §5.5; discovery-request seam §5.3)
 amendments:
-  - AMENDMENT_1 (2026-09-08, status: accepted pending review record): §5.3.1 mask carrier wording converged to the
+  - AMENDMENT_1 (2026-09-08, status: accepted, semantic delta NONE): §5.3.1 mask carrier wording converged to the
     implemented two-layer mechanism (registration-time env mask + per-call parent gate + discovery op as authority
     surface). Semantic invariant unchanged: CAN_WRONG_RUNTIME_APPEAR_MUTATION_READY = NO; §5.3.2 fallback remains
     the deterministic enforcement; credential-copy prohibition untouched.
+    Review record: AMENDMENT_1_REVIEW = ACCEPT/BLOCKERS=[] (independent read-only review @ 3ea8dc2 content:
+    invariant re-verified against implementation — env mask registration-time + per-call parent gate before
+    validation/handler/store + discovery op booleans-only; apply() synchronous and un-awaited confirmed;
+    docs-only single-file delta confirmed; GOVERNING_SPEC process confirmed — separate amendment branch,
+    no implementation PR touched the governing spec).
 type: implementation-spec (behavior + invariants; implementation in bounded follow-up PRs under this spec)
 scope:
   - Scheduler mutation identity (logical job key) and idempotent create/update/delete semantics
