@@ -54,6 +54,12 @@ const HEARTBEAT_GRACE_MS = Number(process.env.SCHEDULER_WATCHDOG_HEARTBEAT_GRACE
 // Reconciliation evidence (§5.2/§5.6): written by the CHILD relay (uid 502),
 // read by W1. Defaults to the shared provisioning dir — the production packet
 // provisions it writable by the child uid and readable by authsvc.
+// §5.6 credential self-probe: W1 watches the mutation credential file's
+// presence (never its bytes) — its absence makes every scheduler mutation
+// capability_unavailable, which is exactly the silent-failure class this
+// goal exists to prevent.
+const CREDENTIAL_FILE = process.env.SCHEDULER_CREDENTIALS_FILE
+  ?? '/usr/local/libexec/agent-core/config/agent-credentials.json'
 const RECONCILIATION_EVIDENCE = process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE
   ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl'
 const W1_HEARTBEAT = join(STATE_DIR, 'w1.heartbeat')
@@ -150,7 +156,7 @@ function evidenceAgeMs(nowMs) {
 async function runW1(nowMs) {
   const { readFileSync: readRaw } = await import('node:fs')
   const { createHash } = await import('node:crypto')
-  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, evaluateReconciliationEvidence, formatFindings } =
+  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, evaluateReconciliationEvidence, evaluateCredentialProvider, formatFindings } =
     await import('../packages/scheduler/src/watchdog.js')
   const findings = []
   // Desired-state vs live state (raw file read — no engine, no migration side effects).
@@ -184,6 +190,13 @@ async function runW1(nowMs) {
       : []
     findings.push(...evaluateReconciliationEvidence(entries, { nowMs }))
   } catch { /* evidence file unreadable is not itself a scheduler failure */ }
+  // §5.6 credential self-probe (existence + non-empty only; zero byte reads).
+  try {
+    const st = statSync(CREDENTIAL_FILE)
+    findings.push(...evaluateCredentialProvider({ exists: true, bytes: st.size }, { path: CREDENTIAL_FILE }))
+  } catch {
+    findings.push(...evaluateCredentialProvider({ exists: false }, { path: CREDENTIAL_FILE }))
+  }
   // Mutual liveness: W1 watches W2 (W2 watching W1 lives in runW2). The age
   // is compared directly — missing (null) or beyond grace both mean stale.
   const w2Age = readHeartbeatAgeMs(W2_HEARTBEAT, nowMs)
