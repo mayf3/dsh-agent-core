@@ -14,8 +14,8 @@ import { join, dirname } from 'node:path'
 import {
   executeFleetSharedCodexMigration,
   FLEET_SHARED_CODEX_ARTIFACT_PIN,
-} from '../src/shared-codex-migration-executable.js'
-import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE } from '../src/model-overrides.js'
+} from '../../src/shared-codex-migration-executable.js'
+import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE } from '../../src/model-overrides.js'
 
 const SHARED = '/Users/yanfenma/.agent-core/agent-model-overrides.json'
 const FLEET = 92
