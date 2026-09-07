@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync } from 'node:fs'
+import { existsSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
@@ -57,7 +57,7 @@ test('CLI add anchors every schedules for runtime eligibility', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'scheduler-cli-every-'))
   const file = join(dir, 'jobs.json')
   const result = run([
-    'add', '--agent', 'agent-a', '--name', 'every', '--every-ms', '1000',
+    'add', '--agent', 'agent-a', '--name', 'every', '--logical-key', 'cli-test:every', '--every-ms', '1000',
     '--message', 'tick', '--no-deliver', '--json', '--store', file,
   ])
   assert.equal(result.status, 0, result.stderr)
@@ -124,4 +124,47 @@ test('CLI update merges omitted payload fields from locked-current definition', 
   assert.equal(final.payload.message, 'cli-message')
   assert.equal(final.payload.timeoutSeconds, 99)
   assert.equal(final.payload.model, 'concurrent-model')
+})
+
+test('CLI_MUTATION_SEMANTICS_MATCH_BROKER: CLI add replays converge to already-applied singleton; conflict fails closed', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'scheduler-cli-idem-'))
+  const file = join(dir, 'jobs.json')
+  const base = [
+    'add', '--agent', 'agent-a', '--name', 'idem', '--logical-key', 'cli-test:idem',
+    '--cron', '0 22 * * *', '--tz', 'Asia/Shanghai', '--message', 'work',
+    '--no-deliver', '--json', '--store', file,
+  ]
+  const first = run(base)
+  assert.equal(first.status, 0, first.stderr)
+  // Replay WITHOUT --json so the human-readable already-applied line is asserted.
+  const replay = run(base.filter((flag) => flag !== '--json'))
+  assert.equal(replay.status, 0, replay.stderr)
+  assert.match(replay.stdout, /already applied/)
+  const doc = await new JobStore(file).loadDoc({ force: true })
+  assert.equal(doc.jobs.length, 1, 'singleton preserved across identical retries')
+
+  const msgIdx = base.indexOf('--message')
+  const withoutMessage = [...base.slice(0, msgIdx), ...base.slice(msgIdx + 2, base.indexOf('--json'))]
+  const conflicting = run([...withoutMessage, '--message', 'DIFFERENT'])
+  assert.equal(conflicting.status, 1)
+  assert.match(conflicting.stderr, /DIFFERENT definition/)
+  const after = await new JobStore(file).loadDoc({ force: true })
+  assert.equal(after.jobs.length, 1, 'conflict writes nothing')
+})
+
+test('CLI store guard: wrong-$HOME resolution fails loud when AGENTCORE_EXPECTED_STORE is frozen (TEST-10/CLI_STORE_TARGET)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'scheduler-cli-guard-'))
+  const file = join(dir, 'jobs.json')
+  const result = spawnSync(process.execPath, [
+    cli, 'add', '--agent', 'agent-a', '--name', 'guarded', '--logical-key', 'cli-test:guarded',
+    '--every-ms', '1000', '--message', 'tick', '--no-deliver',
+  ], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, AGENTCORE_EXPECTED_STORE: '/Users/authsvc/.agent-core/scheduler/jobs.json' },
+  })
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /non-canonical scheduler store/)
+  assert.match(result.stderr, /--store explicitly/)
+  assert.equal(existsSync(file), false, 'no store was created by the refused mutation')
 })

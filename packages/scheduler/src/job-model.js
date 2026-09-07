@@ -24,6 +24,10 @@
  *   {
  *     id: string,                      // stable id (uuid)
  *     name: string,
+ *     logicalKey?: string,             // caller-provided stable logical identity
+ *                                     // (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.1:
+ *                                     //  persisted idempotency/reconcile anchor; unique
+ *                                     //  across live jobs; NEVER the display name)
  *     agentId: string,                 // REQUIRED
  *     enabled: boolean,
  *     scheduleRevision: number,        // definition revision (occurrences bind it)
@@ -127,6 +131,15 @@ export function normalizeJob(input, { nowMs = Date.now(), id, createdAtMs = nowM
   if (job.revisionActivatedAtMs === undefined) job.revisionActivatedAtMs = job.createdAtMs
 
   if (typeof input.description === 'string' && input.description.trim()) job.description = input.description.trim()
+  // Stable logical identity (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.1):
+  // optional at the model level, REQUIRED by the agent/operator create
+  // surfaces; uniqueness is enforced inside the mutation authority, never by
+  // name matching.
+  if (input.logicalKey !== undefined) {
+    const logicalKey = normalizeOptionalText(input.logicalKey, 'logicalKey')
+    if (logicalKey === undefined) throw new TypeError('job.logicalKey must be a non-empty string')
+    job.logicalKey = logicalKey
+  }
   if (input.migrationRestoreBlocked !== undefined && input.migrationRestoreBlocked !== true) {
     throw new TypeError('job.migrationRestoreBlocked may only be true while the restore gate is closed')
   }

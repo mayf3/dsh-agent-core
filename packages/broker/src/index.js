@@ -47,7 +47,7 @@ import z from '@deepseek-ai/schemastery'
 import { registerCapabilities } from './registry.js'
 import { createIdentityResolver } from './identity.js'
 import { targets as defaultTargets, buildTargetMap } from './targets.js'
-import { BROKER_RPC_METHOD, createRelayHandlers } from './relay.js'
+import { BROKER_RPC_METHOD, SCHEDULER_MUTATIONS, createRelayHandlers } from './relay.js'
 import { createBrokerGateway } from './gateway.js'
 import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
@@ -141,6 +141,12 @@ const handlersByCapability = {
 }
 
 /**
+ * §5.3 fail-before-tool-exposure mask — implemented in ./readiness.js
+ * (dependency-free so the registration path and tests share one module).
+ */
+export { withSchedulerMutationMask } from './readiness.js'
+
+/**
  * Register every configured capability manifest as a model-facing tool.
  * Identity is resolved only through the internal `resolvePrincipal` interface
  * and the credential seam; model arguments are never a principal source.
@@ -232,7 +238,16 @@ export function apply(ctx, config = {}) {
     }
   })
 
-  registerCapabilities(ctx, defineTool, capabilities)
+  // SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.3: hide scheduler mutation
+  // operations when this runtime has no credential provider configured.
+  const registeredCapabilities = withSchedulerMutationMask(capabilities, {
+    credentialProviderConfigured:
+      typeof process.env.AGENT_CORE_CREDENTIALS_FILE === 'string'
+      && process.env.AGENT_CORE_CREDENTIALS_FILE.trim() !== '',
+    log: (msg) => process.stderr.write(`${msg}\n`),
+  })
+
+  registerCapabilities(ctx, defineTool, registeredCapabilities)
 
   // Acceptance fixture (self-assert proof): registered only when explicitly
   // configured (BROKER_FIXTURE_SELF_ASSERT=1 in acceptance runtimes).

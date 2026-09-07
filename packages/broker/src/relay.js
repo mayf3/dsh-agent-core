@@ -38,7 +38,11 @@
  */
 export const BROKER_RPC_METHOD = 'agent-core/broker'
 
-const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove'])
+/** Scheduler mutation operations subject to the outcome state machine
+ *  (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.2). Exported for the child-side
+ *  readiness mask (index.js): the same set is withheld from tool registration
+ *  when this runtime has no credential provider configured. */
+export const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove'])
 const COMMITTED_FIELDS = [
   'auditStatus', 'autoRetry', 'deleteAfterRun', 'enabled',
   'exactPersistedDeliveryDestination', 'jobId', 'name', 'nextRunAt',
@@ -53,7 +57,7 @@ function exactKeys(value, expected) {
 }
 
 function validAuditStatus(value) {
-  return value === 'appended' || value === 'append_failed'
+  return value === 'appended' || value === 'append_failed' || value === 'reconciled'
 }
 
 function nonEmpty(value) {
@@ -126,6 +130,113 @@ function validSchedulerMutationResult(operation, result) {
 }
 
 /**
+ * Canonical read-back + synthetic committed result after a lost mutation
+ * response (outcome state machine §5.2). The child relay is one of the TWO
+ * unknown capture points: a raw `mutation_outcome_unknown` must NEVER reach
+ * the model as a terminal state when the identity allows a read-back.
+ *
+ *   create   (logical_key)          -> found+matches: APPLIED (synthetic result)
+ *                                      absent: NOT_APPLIED (mutation_not_applied)
+ *   update/enable/disable (job_id +
+ *     expected_revision)            -> revision moved past expected: APPLIED
+ *                                      unchanged: NOT_APPLIED
+ *   remove (job_id)                 -> absent: APPLIED; still present: NOT_APPLIED
+ *   anything unprovable (no identity, read-back failure, visibility
+ *   ambiguity, projection mismatch) -> STILL_UNKNOWN with reconciliation
+ *   evidence in the error detail (the watchdog alert surface).
+ *
+ * Known residual (documented, fail-loud): an `at` job with deleteAfterRun that
+ * already executed deletes its definition, so its read-back is empty and the
+ * reconcile reports NOT_APPLIED; the blind retry then fails LOUD (past `at` is
+ * rejected) — a duplicate is still impossible (logical-key uniqueness).
+ *
+ * @returns {Promise<{ok:true, result:object}|{ok:false, error:{code:string, detail:string}}>}
+ */
+async function reconcileAfterLostResponse(requestFn, operation, args) {
+  const identity = args?.logical_key !== undefined
+    ? { logicalKey: args.logical_key }
+    : args?.job_id !== undefined ? { jobId: args.job_id } : {}
+  const evidence = (reason) => `scheduler mutation outcome STILL_UNKNOWN after canonical read-back: ${JSON.stringify({ state: 'STILL_UNKNOWN', operation, ...identity, reason })}`
+  const stillUnknown = (reason) => ({ ok: false, error: { code: 'mutation_outcome_unknown', detail: evidence(reason) } })
+  const notApplied = () => ({
+    ok: false,
+    error: {
+      code: 'mutation_not_applied',
+      detail: 'canonical read-back proved the mutation never committed; a retry with the SAME logical identity is safe',
+    },
+  })
+  const isoOrNull = (ms) => (Number.isFinite(ms) ? new Date(ms).toISOString() : null)
+  const committedFromJob = (job) => {
+    const schedule = job.schedule ?? {}
+    return {
+      jobId: job.id,
+      name: job.name,
+      enabled: job.enabled,
+      normalizedSchedule: schedule.kind === 'cron'
+        ? { kind: 'cron', expr: schedule.expr, timezone: schedule.tz }
+        : schedule.kind === 'at' ? { kind: 'at', at: schedule.at } : { kind: 'every', everyMs: schedule.everyMs },
+      timezone: schedule.kind === 'cron' ? schedule.tz : null,
+      nextRunAt: isoOrNull(job.nextRunAtMs),
+      targetAgentId: job.agentId,
+      exactPersistedDeliveryDestination: job.delivery?.mode === 'announce'
+        ? { channel: job.delivery.channel, to: job.delivery.to }
+        : null,
+      autoRetry: job.retry?.auto === true,
+      deleteAfterRun: job.deleteAfterRun === true,
+      auditStatus: 'reconciled',
+    }
+  }
+  const toggledFromJob = (job) => ({
+    jobId: job.id,
+    enabled: job.enabled,
+    nextRunAt: isoOrNull(job.nextRunAtMs),
+    auditStatus: 'reconciled',
+  })
+
+  // Read-back goes over the SAME trusted channel as the mutation, as the SAME
+  // caller — list is visibility-scoped, so "absent" for a job_id target can
+  // also mean invisible (kept as STILL_UNKNOWN; only remove treats absence as
+  // applied, because the caller must have seen the job to request removal).
+  let readBack
+  try {
+    const listArgs = args?.logical_key !== undefined
+      ? { logical_key: args.logical_key }
+      : { job_id: args?.job_id }
+    const envelope = await requestFn({ capabilityId: 'scheduler', operation: 'list', args: listArgs })
+    const structured = exactKeys(envelope, ['ok', 'result']) && envelope.ok === true
+    readBack = structured && envelope.result?.ok === true ? envelope.result.result : undefined
+  } catch {
+    return stillUnknown('read-back transport failed')
+  }
+  if (readBack === undefined || !Array.isArray(readBack.jobs)) return stillUnknown('read-back response unusable')
+  const [job] = readBack.jobs
+
+  if (operation === 'create') {
+    if (job === undefined) return notApplied()
+    // Shallow sanity: the committed create must at least carry the requested
+    // display name; anything else means the key is bound to a foreign shape.
+    if (args?.name !== undefined && job.name !== args.name) return stillUnknown('logical key bound to a different definition')
+    return { ok: true, result: committedFromJob(job) }
+  }
+  if (operation === 'remove') {
+    if (job === undefined) return { ok: true, result: { removed: true, jobId: args.job_id, auditStatus: 'reconciled' } }
+    return notApplied()
+  }
+  // update / enable / disable: deterministic with a compare anchor. Absence in
+  // the caller-visible store PROVES non-application (a committed update/toggle
+  // never removes the target); a retry then fails loud as job_not_found. The
+  // dangerous direction — a fabricated APPLIED — is never produced here.
+  if (args?.expected_revision === undefined) {
+    return stillUnknown('no expected_revision anchor for a deterministic read-back')
+  }
+  if (job === undefined) return notApplied()
+  const movedPast = job.scheduleRevision !== args.expected_revision.schedule_revision
+    || job.updatedAtMs !== args.expected_revision.updated_at_ms
+  if (!movedPast) return notApplied()
+  return { ok: true, result: operation === 'update' ? committedFromJob(job) : toggledFromJob(job) }
+}
+
+/**
  * Build per-operation relay handlers for one HTTP capability manifest.
  *
  * Each handler forwards the call to the parent and UNWRAPS the parent's wire
@@ -155,6 +266,16 @@ export function createRelayHandlers(manifest, requestFn) {
     if (!op.http && !isLocalManifest) continue
     handlers[op.name] = async (_operation, args) => {
       const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
+      // §5.2 outcome state machine: a lost response is NEVER a terminal raw
+      // unknown — reconcile by stable identity first (APPLIED / NOT_APPLIED /
+      // STILL_UNKNOWN-with-evidence). Errors from the reconcile themselves
+      // fall through to the raw unknown envelope below.
+      const reconcileUnknown = uncertainMutation
+        ? () => reconcileAfterLostResponse(requestFn, op.name, args).then((r) => {
+            if (r.ok === true) return r.result
+            return { errorCode: r.error.code, detail: r.error.detail }
+          })
+        : undefined
       let envelope
       try {
         // Transport envelope from the parent RPC: { ok: true, result: <invoke> }.
@@ -164,11 +285,10 @@ export function createRelayHandlers(manifest, requestFn) {
           args,
         })
       } catch (err) {
+        if (reconcileUnknown !== undefined) return reconcileUnknown()
         return {
-          errorCode: uncertainMutation ? 'mutation_outcome_unknown' : 'invalid_arguments',
-          detail: uncertainMutation
-            ? 'scheduler mutation response was lost; inspect current state before any manual retry'
-            : `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
+          errorCode: 'invalid_arguments',
+          detail: `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
         }
       }
       const structuredTransport = exactKeys(envelope, ['ok', 'result']) && envelope.ok === true
@@ -179,10 +299,7 @@ export function createRelayHandlers(manifest, requestFn) {
         ? validSchedulerFailure(parent, manifest)
         : parent?.ok === false && parent.error !== null && typeof parent.error === 'object'
       if (uncertainMutation && !structuredParentSuccess && !structuredParentFailure) {
-        return {
-          errorCode: 'mutation_outcome_unknown',
-          detail: 'scheduler mutation response was lost; inspect current state before any manual retry',
-        }
+        return reconcileUnknown()
       }
       if (parent && parent.ok === true) {
         // Unwrap: child-side invoke re-wraps as { ok: true, result }.
