@@ -129,6 +129,24 @@ function validSchedulerMutationResult(operation, result) {
     && validAuditStatus(result.auditStatus)
 }
 
+function validSessionSendResult(result) {
+  if (result?.status === 'accepted' || result?.status === 'timeout') {
+    return exactKeys(result, ['status'])
+  }
+  return result?.status === 'replied'
+    && exactKeys(result, ['reply', 'status'])
+    && typeof result.reply === 'string'
+    && result.reply.length > 0
+}
+
+function validDeclaredFailure(parent, manifest) {
+  return parent?.ok === false
+    && parent.error !== null
+    && typeof parent.error === 'object'
+    && typeof parent.error.code === 'string'
+    && manifest.errors.some((candidate) => candidate.code === parent.error.code)
+}
+
 /**
  * Canonical read-back + synthetic committed result after a lost mutation
  * response (outcome state machine §5.2). The child relay is one of the TWO
@@ -292,10 +310,16 @@ export function createRelayHandlers(manifest, requestFn) {
     if (!op.http && !isLocalManifest) continue
     handlers[op.name] = async (_operation, args) => {
       const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
-      // §5.2 outcome state machine: a lost response is NEVER a terminal raw
-      // unknown — reconcile by stable identity first (APPLIED / NOT_APPLIED /
-      // STILL_UNKNOWN-with-evidence). Errors from the reconcile themselves
-      // fall through to the raw unknown envelope below.
+      const uncertainSessionSend = manifest.id === 'agent_session_send' && op.name === 'send'
+      const ambiguousError = {
+        errorCode: 'outcome_unknown',
+        detail: 'parent_rpc_ambiguous: agent session send response was lost; do not retry automatically',
+      }
+      // §5.2 outcome state machine (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1): a
+      // lost scheduler-mutation response is NEVER a terminal raw unknown —
+      // reconcile by stable identity first (APPLIED / NOT_APPLIED /
+      // STILL_UNKNOWN-with-evidence). agent_session_send (outside this spec's
+      // scope) keeps the pre-existing ambiguous envelope verbatim.
       const reconcileUnknown = uncertainMutation
         ? () => reconcileAfterLostResponse(requestFn, op.name, args).then((r) => {
             if (r.ok === true) return r.result
@@ -312,6 +336,7 @@ export function createRelayHandlers(manifest, requestFn) {
         })
       } catch (err) {
         if (reconcileUnknown !== undefined) return reconcileUnknown()
+        if (uncertainSessionSend) return ambiguousError
         return {
           errorCode: 'invalid_arguments',
           detail: `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -321,11 +346,15 @@ export function createRelayHandlers(manifest, requestFn) {
       const parent = structuredTransport ? envelope.result : undefined
       const structuredParentSuccess = parent?.ok === true
         && (!uncertainMutation || validSchedulerMutationResult(op.name, parent.result))
+        && (!uncertainSessionSend || validSessionSendResult(parent.result))
       const structuredParentFailure = uncertainMutation
         ? validSchedulerFailure(parent, manifest)
-        : parent?.ok === false && parent.error !== null && typeof parent.error === 'object'
+        : validDeclaredFailure(parent, manifest)
       if (uncertainMutation && !structuredParentSuccess && !structuredParentFailure) {
         return reconcileUnknown()
+      }
+      if (uncertainSessionSend && !structuredParentSuccess && !structuredParentFailure) {
+        return ambiguousError
       }
       if (parent && parent.ok === true) {
         // Unwrap: child-side invoke re-wraps as { ok: true, result }.

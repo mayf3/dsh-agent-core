@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
-status: accepted
+status: superseded
 accepted_by: mayf3
 accepted_at: 2026-08-28
 accepted_reviewed_head: eca5baaeab778ad8c6ba8fcfaf9c96ad12f2f965
@@ -26,7 +26,7 @@ external_authorities:
     revision: d529bd3c28ece3967149ad793794f8dac2020276
     relation: constrained_by
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
 owners:
   - repository-maintainers
 ---

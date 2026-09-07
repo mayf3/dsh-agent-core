@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1
-status: accepted
+status: superseded
 accepted_by: mayf3
 accepted_date: 2026-08-31
 accepted_reviewed_head: b9c0cd7140e2d265486103664d361724eec0d65f
@@ -21,7 +21,7 @@ supersedes:
   - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V2
   - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2
   - AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_ACTIVATION_V2
-superseded_by: null
+superseded_by: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2
 governed_by:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
   - SCHEDULER_TIMEOUT_OUTCOME_V2

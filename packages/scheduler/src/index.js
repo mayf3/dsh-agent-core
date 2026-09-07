@@ -42,3 +42,8 @@ export {
   createJobOp, updateJobOp, enableJobOp, disableJobOp, deleteJobOp,
   submitOneShotOp, reconcileOccurrence,
 } from './control.js'
+export {
+  HistoryStore, HISTORY_STORE_VERSION, deriveStatusView, deriveErrorCode,
+  buildRunRecord, applyRunFilters, HISTORY_OUTCOMES, STATUS_VIEW_VOCABULARY,
+  ERROR_CODES, RESULT_ERROR_CODES, RESULT_STATUSES,
+} from './history.js'

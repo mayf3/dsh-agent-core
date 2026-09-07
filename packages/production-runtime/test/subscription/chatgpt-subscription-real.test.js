@@ -7,11 +7,11 @@ import { tmpdir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
 import { test } from 'node:test'
 
-import { REPO } from '../../agent-provisioning/src/index.js'
-import { writeAgentDefinition } from '../../agent-definition/src/config.js'
-import { composeProductionRuntime } from '../src/compose.js'
-import { CHATGPT_SUBSCRIPTION_V1 } from '../src/model-overrides.js'
-import { resolveProductionLayout } from '../src/paths.js'
+import { REPO } from '../../../agent-provisioning/src/index.js'
+import { writeAgentDefinition } from '../../../agent-definition/src/config.js'
+import { composeProductionRuntime } from '../../src/compose.js'
+import { CHATGPT_SUBSCRIPTION_V1 } from '../../src/model-overrides.js'
+import { resolveProductionLayout } from '../../src/paths.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
 const OTHER = 'agt_real_seam_other'

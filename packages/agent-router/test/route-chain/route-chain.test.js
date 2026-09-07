@@ -383,12 +383,16 @@ test('invalid config at snapshot time fails loud with zero attempts and a truthf
   assert.equal(final.configInvalid, true)
 })
 
-test('canonicalRouteIdentity: five-field reuse tuple with ABSENT providerEnv normalization', () => {
+test('canonicalRouteIdentity: credentialFile is part of reuse identity and is canonically resolved', () => {
   const base = { provider: 'p', model: 'm', subscription: { plugin: 'pl', pluginVersion: '0.2.3' } }
   const withEnv = { ...base, providerEnv: { HTTP_PROXY: 'http://a:1', HTTPS_PROXY: 'http://a:1', NO_PROXY: 'x', NODE_USE_ENV_PROXY: '1' } }
   assert.equal(canonicalRouteIdentity(base), canonicalRouteIdentity({ ...base }))
   assert.notEqual(canonicalRouteIdentity(base), canonicalRouteIdentity(withEnv))
   assert.notEqual(canonicalRouteIdentity(base), canonicalRouteIdentity({ ...base, model: 'm2' }))
   assert.notEqual(canonicalRouteIdentity(base), canonicalRouteIdentity({ ...base, subscription: { plugin: 'pl', pluginVersion: '0.2.4' } }))
+  const perHome = { ...base, subscription: { ...base.subscription, credentialFile: '/tmp/agent/.openai-codex-auth.json' } }
+  const canonical = { ...base, subscription: { ...base.subscription, credentialFile: '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json' } }
+  assert.notEqual(canonicalRouteIdentity(perHome), canonicalRouteIdentity(canonical))
+  assert.equal(canonicalRouteIdentity(canonical), canonicalRouteIdentity({ ...canonical, subscription: { ...canonical.subscription, credentialFile: '/Users/authsvc/.agent-core/shared-credentials/openai-codex/../openai-codex/.openai-codex-auth.json' } }))
   assert.ok(canonicalRouteIdentity(base).includes('ABSENT'))
 })

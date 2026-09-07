@@ -22,105 +22,22 @@
  */
 
 import assert from 'node:assert/strict'
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { mkdtemp } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { composeProductionRuntime, PRODUCTION_AGENT_PROFILE } from '../src/compose.js'
-import { resolveProductionLayout } from '../src/paths.js'
-import { NOTIFICATION_RESOURCE } from '../../notification-ingress/src/auth.js'
-
-const AGT_ID = 'agt_production-runtime-test'
-const FORUM = { clientId: 'client-forum-abc', clientSecret: 'forum-secret-111' }
-const WORKFLOW = { clientId: 'client-workflow-xyz', clientSecret: 'workflow-secret-222' }
-const basic = (clientId, clientSecret) => 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
-
-/** Operator auth config for the production layout (0600 in a 0700 dir). */
-function writeNotificationAuthConfig(layout) {
-  mkdirSync(layout.notificationDir, { recursive: true })
-  chmodSync(layout.notificationDir, 0o700)
-  writeFileSync(layout.notificationAuthConfig, `${JSON.stringify({
-    authServiceOrigin: 'https://auth.example.com',
-    audience: NOTIFICATION_RESOURCE,
-    allowlist: { 'svc-forum': FORUM.clientId, 'svc-workflow': WORKFLOW.clientId },
-  }, null, 2)}\n`)
-  chmodSync(layout.notificationAuthConfig, 0o600)
-}
-
-/** Stub auth-service token endpoint (test seam through compose). */
-const okTokenFetch = () => async () => ({ ok: true, status: 200, json: async () => ({ access_token: 'tok' }) })
-
-let pidSeq = 4000
-
-/** Fake per-agent process (router + scheduler-router contract). */
-class FakeProc {
-  constructor({ agentId, log }) {
-    this.agentId = agentId
-    this.pid = ++pidSeq
-    this.log = log
-    this.home = `/tmp/prt-home-${agentId}`
-    this.workspace = `/tmp/prt-ws-${agentId}`
-    this.profile = 'fake-profile'
-    this.creations = []
-    this.exit = undefined
-    this.exitResolve = undefined
-    this.exitPromise = new Promise((resolve) => { this.exitResolve = resolve })
-    this.onRpcRequest = undefined
-    this.deliveries = []
-    this.turns = []
-  }
-
-  spawn() {}
-
-  async ready() { return 1 }
-
-  async deliver(sessionId, text) {
-    this.deliveries.push({ sessionId, text })
-    return {
-      accepted: true, sessionId, messageId: `msg-${this.deliveries.length}`,
-      reconciliationHandle: `turn:deliver-${this.deliveries.length}`, evidence: { promptReceipt: 'accepted' },
-    }
-  }
-
-  async turn(sessionId, text) {
-    this.turns.push({ sessionId, text })
-    return {
-      reply: `TURNED:${text}`, ms: 1, promptMs: 1, messageId: `m${this.turns.length}`,
-      reconciliationHandle: `turn:scheduled-${this.turns.length}`, evidence: { terminationEvidence: 'exact_terminal_then_idle' },
-    }
-  }
-
-  async shutdown() {
-    if (this.exit === undefined) {
-      this.exit = { code: 0, signal: null }
-      this.exitResolve?.(this.exit)
-    }
-    return this.exit
-  }
-
-  kill() {
-    this.exit = { code: 9, signal: 'SIGKILL' }
-    this.exitResolve?.({ code: 9, signal: 'SIGKILL' })
-  }
-}
-
-/** Seed a tmp production root: layout + one default agent definition. */
-async function seedRuntime(t, { agents = [[AGT_ID, 'Production Test Agent']] } = {}) {
-  const root = await mkdtemp(join(tmpdir(), 'prt-compose-'))
-  t.after(() => rmSync(root, { recursive: true, force: true }))
-  const layout = resolveProductionLayout(root)
-  mkdirSync(join(root, 'scheduler'), { recursive: true })
-  await writeAgentDefinition(layout.agentsConfig, {
-    defaultAgentId: agents[0]?.[0] ?? null,
-    agents: agents.map(([id, name]) => ({ id, name })),
-  })
-  return { root, layout }
-}
-
-const silentLog = { log() {}, warn() {}, error() {} }
+import {
+  AGT_ID,
+  FORUM,
+  WORKFLOW,
+  FakeProc,
+  basic,
+  okTokenFetch,
+  seedRuntime,
+  silentLog,
+  writeNotificationAuthConfig,
+} from './compose-fixture.js'
 
 test('composition provides the full existing service graph over the production layout', async (t) => {
   const { root, layout } = await seedRuntime(t)
@@ -388,4 +305,124 @@ test('C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths —
   })
   assert.equal(closed.status, 503)
   assert.equal((await closed.json()).error.code, 'AUTH_NOT_CONFIGURED')
+})
+
+// ── AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: history wiring + result ingestion ──
+
+test('C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services', async (t) => {
+  const { root, layout } = await seedRuntime(t)
+  assert.equal(layout.historyDir, join(root, 'scheduler', 'history'), 'layout exposes scheduler/history')
+  const spawned = []
+  // A fake agent whose turn reply carries a ```scheduler-result block — the
+  // full R4 path: compose wrapper ingestion -> outcome.result -> scheduler ->
+  // history RunRecord.
+  class ResultProc extends FakeProc {
+    async turn(sessionId, text) {
+      const base = await super.turn(sessionId, text)
+      const block = JSON.stringify({ final_status: 'PASS', counters: { pages_scanned: 4 } })
+      return { ...base, reply: `${base.reply}\n\`\`\`scheduler-result\n${block}\n\`\`\`` }
+    }
+  }
+  const runtime = await composeProductionRuntime({
+    layout,
+    productApi: { enabled: false, port: 0 },
+    notificationIngress: { enabled: false, host: '127.0.0.1', port: 0 },
+    processFactory: (opts) => { const p = new ResultProc(opts); spawned.push(p); return p },
+    log: silentLog,
+    tickMs: 50,
+  })
+  t.after(() => runtime.stop())
+  const history = runtime.ctx.get('schedulerHistory')
+  assert.ok(history, 'schedulerHistory service provided')
+  assert.equal(history.dir, layout.historyDir)
+  assert.equal(runtime.scheduler.history, history, 'scheduler constructed with deps.history')
+  // Without SCHEDULER_AUTH_JWKS_URL the token verifier is null -> the API gate 401s (fail-closed).
+  assert.equal(runtime.ctx.get('schedulerTokenVerifier'), null)
+
+  const { normalizeJob } = await import('../../scheduler/src/job-model.js')
+  const job = normalizeJob({
+    name: 'Hist',
+    agentId: AGT_ID,
+    schedule: { kind: 'at', at: new Date(Date.now() + 100).toISOString() },
+    payload: { message: 'hello' },
+    delivery: { mode: 'none' },
+  })
+  await runtime.store.mutate((jobs) => {
+    jobs.push(job)
+    return { value: job }
+  })
+  await runtime.start()
+  const deadline = Date.now() + 10_000
+  let runs = []
+  while (Date.now() < deadline) {
+    runs = history.queryRuns({ jobId: job.id }).runs
+    if (runs.length > 0 && runs[0].outcome === 'succeeded') break
+    await new Promise((r) => setTimeout(r, 100))
+  }
+  assert.equal(runs.length, 1)
+  assert.equal(runs[0].status_view, 'success')
+  assert.equal(runs[0].result_recorded, true, 'structured result ingested through the trusted wrapper')
+  assert.equal(runs[0].result_status, 'PASS')
+  assert.equal(runs[0].result.counters.pages_scanned, 4)
+  assert.equal(runs[0].error_message, null)
+  assert.equal(history.getJobSnapshot(runs[0].run_id).name, 'Hist')
+})
+
+test('C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null', async (t) => {
+  const { layout } = await seedRuntime(t)
+  const runtime = await composeProductionRuntime({
+    layout,
+    productApi: { enabled: false, port: 0 },
+    notificationIngress: { enabled: false, host: '127.0.0.1', port: 0 },
+    schedulerAuth: { jwksUrl: 'http://127.0.0.1:1/.well-known/jwks.json', issuer: 'iss', audience: 'scheduler' },
+    processFactory: (opts) => new FakeProc(opts),
+    log: silentLog,
+  })
+  t.after(() => runtime.stop())
+  const verifier = runtime.ctx.get('schedulerTokenVerifier')
+  assert.ok(verifier, 'verifier constructed when jwksUrl configured')
+  assert.equal(typeof verifier.verify, 'function')
+})
+
+test('C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks', async (t) => {
+  const { ingestSchedulerResult } = await import('../src/scheduler-result.js')
+  const block = (obj) => 'text before\n```scheduler-result\n' + JSON.stringify(obj) + '\n```\ntrailer'
+
+  // no block → nothing
+  assert.deepEqual(ingestSchedulerResult('plain reply, no block'), {})
+  assert.deepEqual(ingestSchedulerResult(undefined), {})
+
+  // valid block (LAST one wins) → result
+  const valid = ingestSchedulerResult(block({ final_status: 'PASS', counters: { pages_scanned: 3 } })
+    + '\n' + block({ final_status: 'FAIL', counters: { pages_scanned: 9 }, notes: 'final word' }))
+  assert.equal(valid.result.final_status, 'FAIL', 'the last scheduler-result block is authoritative')
+  assert.equal(valid.result.counters.pages_scanned, 9)
+  assert.equal(valid.result_error_code, undefined)
+
+  // wake_sent entries carried for the R9 J1 join face
+  const wake = ingestSchedulerResult(block({
+    final_status: 'PARTIAL',
+    counters: { skipped: 1 },
+    wake_sent: [{ target_agent_id: 'agt_b', workflow_instance_id: 'wi', request_id: 'wdhr1:wi:agt_b', session_id: 's' }],
+  }))
+  assert.equal(wake.result.wake_sent.length, 1)
+
+  // UNPARSEABLE
+  const bad = ingestSchedulerResult('```scheduler-result\n{not json\n```')
+  assert.equal(bad.result, undefined)
+  assert.equal(bad.result_error_code, 'UNPARSEABLE')
+
+  // OVERSIZE (>16KB)
+  const big = ingestSchedulerResult('```scheduler-result\n' + JSON.stringify({ final_status: 'PASS', counters: { blob: 'x'.repeat(17 * 1024) } }) + '\n```')
+  assert.equal(big.result_error_code, 'OVERSIZE')
+
+  // INVALID_SCHEMA: bad final_status / non-integer counter / nested counter / secret-shaped key / bad notes
+  assert.equal(ingestSchedulerResult(block({ counters: {} })).result_error_code, 'INVALID_SCHEMA')
+  assert.equal(ingestSchedulerResult(block({ final_status: 'Meh', counters: {} })).result_error_code, 'INVALID_SCHEMA')
+  assert.equal(ingestSchedulerResult(block({ final_status: 'PASS', counters: { a: 1.5 } })).result_error_code, 'INVALID_SCHEMA')
+  assert.equal(ingestSchedulerResult(block({ final_status: 'PASS', counters: { a: { nested: 1 } } })).result_error_code, 'INVALID_SCHEMA')
+  assert.equal(ingestSchedulerResult(block({ final_status: 'PASS', counters: {}, api_key: 'nope' })).result_error_code, 'INVALID_SCHEMA')
+  assert.equal(ingestSchedulerResult(block({ final_status: 'PASS', counters: {}, notes: 'x'.repeat(501) })).result_error_code, 'INVALID_SCHEMA')
+  const malformedWake = ingestSchedulerResult(block({ final_status: 'PASS', counters: {}, wake_sent: [{ target_agent_id: 'agt_b' }] }))
+  assert.equal(malformedWake.result_error_code, 'INVALID_SCHEMA')
 })
