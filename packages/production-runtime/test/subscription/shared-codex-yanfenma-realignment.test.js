@@ -21,16 +21,16 @@ import { join, dirname } from 'node:path'
 import {
   executeFleetSharedCodexMigration,
   FLEET_SHARED_CODEX_ARTIFACT_PIN,
-} from '../src/shared-codex-migration-executable.js'
+} from '../../src/shared-codex-migration-executable.js'
 import {
   CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   loadAgentModelOverrides,
-} from '../src/model-overrides.js'
+} from '../../src/model-overrides.js'
 import {
   CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE as PROVISIONING_CANONICAL,
   assertOAuthCredentialBoundary,
   persistOpenAICodexCredentialFile,
-} from '../../agent-provisioning/src/shared-codex.js'
+} from '../../../agent-provisioning/src/shared-codex.js'
 
 const YANFENMA_CANONICAL = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
 const AUTHSVC_CANONICAL = '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
