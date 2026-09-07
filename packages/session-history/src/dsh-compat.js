@@ -9,11 +9,11 @@
  *   decoder materializes one record's expansion eagerly, so the pre-scan is
  *   the CTR-SH-003-sanctioned wrapper).
  * - `projectKey` / `encodeSegment` are a verbatim transcription of
- *   `@deepseek-ai/dsh-session-persistence-jsonl@0.1.0-rc.8 src/format.ts` (the
- *   locator encoding of the deployed revision; that package's public entry
- *   exports only its service class and pulls the native zstd binding, which
- *   the plaintext-only read path must never load). Golden tests pin the
- *   transcription against real on-disk project directories.
+ *   `@deepseek-ai/dsh-session-persistence-jsonl@0.1.0-rc.8` `src/format.ts` (the
+ *   locator encoding of the deployed revision; the pinned tarball's public
+ *   entry does not export these helpers and the package drags the native zstd
+ *   binding, which the plaintext-only read path must never load). Golden tests
+ *   pin the transcription against real on-disk project directories.
  */
 
 import { createHash } from 'node:crypto'
