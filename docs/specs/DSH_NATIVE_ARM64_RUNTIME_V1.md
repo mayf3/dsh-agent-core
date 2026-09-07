@@ -1,6 +1,11 @@
 ---
 spec_id: DSH_NATIVE_ARM64_RUNTIME_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_at: 2026-09-07T00:45:47Z
+accepted_reviewed_head: bf71d20f33f82dcdba2eea18ebe799e740d88175
+accepted_normative_body_sha256: 491252147beb59bbf56c7018db47452e47929442235066f4ab52b36894fe8f5f
+acceptance_basis: explicit Owner exact-head acceptance in DSH_NATIVE_ARM64_RUNTIME_MIGRATION_V1
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
