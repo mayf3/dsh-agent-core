@@ -1,0 +1,113 @@
+# app | executable | arch
+Alacritty.app | alacritty | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Alacritty.app/Contents/MacOS/alacritty (for ar
+/Applications/Alacritty.app/Contents/MacOS/alacritty (for ar
+AltTab.app | AltTab | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/AltTab.app/Contents/MacOS/AltTab (for architec
+/Applications/AltTab.app/Contents/MacOS/AltTab (for architec
+Android Studio.app | studio | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Android Studio.app/Contents/MacOS/studio (for 
+/Applications/Android Studio.app/Contents/MacOS/studio (for 
+Arduino IDE.app | Arduino IDE | Mach-O 64-bit executable x86_64
+BaiduNetdisk_mac.app | BaiduNetdisk_mac | Mach-O 64-bit executable x86_64
+BambuStudio.app | BambuStudio | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/BambuStudio.app/Contents/MacOS/BambuStudio (fo
+/Applications/BambuStudio.app/Contents/MacOS/BambuStudio (fo
+Blender.app | Blender | Mach-O 64-bit executable arm64
+Brave Browser.app | Brave Browser | Mach-O 64-bit executable arm64
+CH34xVCPDriver.app | CH34xVCPDriver | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/CH34xVCPDriver.app/Contents/MacOS/CH34xVCPDriv
+/Applications/CH34xVCPDriver.app/Contents/MacOS/CH34xVCPDriv
+ChatGPT.app | ChatGPT | Mach-O 64-bit executable arm64
+ClashX Pro.app | ClashX Pro | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/ClashX Pro.app/Contents/MacOS/ClashX Pro (for 
+/Applications/ClashX Pro.app/Contents/MacOS/ClashX Pro (for 
+DingTalk.app | DingTalk | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/DingTalk.app/Contents/MacOS/DingTalk (for arch
+/Applications/DingTalk.app/Contents/MacOS/DingTalk (for arch
+Docker.app | com.docker.backend | Mach-O 64-bit executable arm64
+Doubao.app | Doubao | Mach-O 64-bit executable arm64
+GIPHY CAPTURE.app | GIPHY CAPTURE | Mach-O 64-bit executable x86_64
+Godot.app | Godot | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Godot.app/Contents/MacOS/Godot (for architectu
+/Applications/Godot.app/Contents/MacOS/Godot (for architectu
+Google Chrome.app | Google Chrome | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+Insta360 Studio.app | studio-main | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Insta360 Studio.app/Contents/MacOS/studio-main
+/Applications/Insta360 Studio.app/Contents/MacOS/studio-main
+JustStream.app | JustStream | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/JustStream.app/Contents/MacOS/JustStream (for 
+/Applications/JustStream.app/Contents/MacOS/JustStream (for 
+Lark.app | Feishu | Mach-O 64-bit executable arm64
+LibreOffice.app | soffice | Mach-O 64-bit executable arm64
+LocalSend.app | LocalSend | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/LocalSend.app/Contents/MacOS/LocalSend (for ar
+/Applications/LocalSend.app/Contents/MacOS/LocalSend (for ar
+Microsoft Excel.app | Microsoft Excel | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Microsoft Excel.app/Contents/MacOS/Microsoft E
+/Applications/Microsoft Excel.app/Contents/MacOS/Microsoft E
+Microsoft OneNote.app | Microsoft OneNote | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Microsoft OneNote.app/Contents/MacOS/Microsoft
+/Applications/Microsoft OneNote.app/Contents/MacOS/Microsoft
+Microsoft Outlook.app | Microsoft Outlook | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Microsoft Outlook.app/Contents/MacOS/Microsoft
+/Applications/Microsoft Outlook.app/Contents/MacOS/Microsoft
+Microsoft PowerPoint.app | Microsoft PowerPoint | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Microsoft PowerPoint.app/Contents/MacOS/Micros
+/Applications/Microsoft PowerPoint.app/Contents/MacOS/Micros
+Microsoft Word.app | Microsoft Word | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Microsoft Word.app/Contents/MacOS/Microsoft Wo
+/Applications/Microsoft Word.app/Contents/MacOS/Microsoft Wo
+Numbers.app | Numbers | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Numbers.app/Contents/MacOS/Numbers (for archit
+/Applications/Numbers.app/Contents/MacOS/Numbers (for archit
+Obsidian.app | Obsidian | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Obsidian.app/Contents/MacOS/Obsidian (for arch
+/Applications/Obsidian.app/Contents/MacOS/Obsidian (for arch
+OneDrive.app | OneDrive | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/OneDrive.app/Contents/MacOS/OneDrive (for arch
+/Applications/OneDrive.app/Contents/MacOS/OneDrive (for arch
+OpenMTP.app | OpenMTP | Mach-O 64-bit executable arm64
+PDF Reader Pro Lite.app | PDF Reader Pro Lite | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/PDF Reader Pro Lite.app/Contents/MacOS/PDF Rea
+/Applications/PDF Reader Pro Lite.app/Contents/MacOS/PDF Rea
+PixelStyle Photo Editor.app | PixelStyle Photo Editor | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/PixelStyle Photo Editor.app/Contents/MacOS/Pix
+/Applications/PixelStyle Photo Editor.app/Contents/MacOS/Pix
+Pocket Casts.app | Pocket Casts | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Pocket Casts.app/Contents/MacOS/Pocket Casts (
+/Applications/Pocket Casts.app/Contents/MacOS/Pocket Casts (
+QwenWorkCN.app | QwenWorkCN | Mach-O 64-bit executable arm64
+RadianceKit.app | RadianceKit | Mach-O 64-bit executable arm64
+Safari.app | Safari | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/Safari.app/Contents/MacOS/Safari (for architec
+/Applications/Safari.app/Contents/MacOS/Safari (for architec
+TUCSender.app | TUCSender | Mach-O 64-bit executable x86_64
+TencentDocs.app | TencentDocs | Mach-O 64-bit executable x86_64
+TencentMeeting.app | TencentMeeting | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/TencentMeeting.app/Contents/MacOS/TencentMeeti
+/Applications/TencentMeeting.app/Contents/MacOS/TencentMeeti
+The Unarchiver.app | The Unarchiver | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/The Unarchiver.app/Contents/MacOS/The Unarchiv
+/Applications/The Unarchiver.app/Contents/MacOS/The Unarchiv
+Unity Hub.app | Unity Hub | Mach-O 64-bit executable x86_64
+VideoFusion-macOS.app | VideoFusion-macOS | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/VideoFusion-macOS.app/Contents/MacOS/VideoFusi
+/Applications/VideoFusion-macOS.app/Contents/MacOS/VideoFusi
+Voicebox.app | voicebox | Mach-O 64-bit executable arm64
+WeChat.app | WeChat | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/WeChat.app/Contents/MacOS/WeChat (for architec
+/Applications/WeChat.app/Contents/MacOS/WeChat (for architec
+WorkBuddy.app | Electron | Mach-O 64-bit executable arm64
+ZCode.app | ZCode | Mach-O 64-bit executable arm64
+iKuuuVPN.app | iKuuuVPN | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/iKuuuVPN.app/Contents/MacOS/iKuuuVPN (for arch
+/Applications/iKuuuVPN.app/Contents/MacOS/iKuuuVPN (for arch
+iOAPrinterHelper.app | iOAPrinterHelper | Mach-O 64-bit executable x86_64
+wechatwebdevtools.app | wechatwebdevtools | Mach-O 64-bit executable arm64
+企业微信.app | 企业微信 | Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/Applications/企业微信.app/Contents/MacOS/企业微信 (for architecture
+/Applications/企业微信.app/Contents/MacOS/企业微信 (for architecture
+DSH.app | Electron | Mach-O 64-bit executable arm64

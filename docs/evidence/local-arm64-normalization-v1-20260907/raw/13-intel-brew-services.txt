@@ -1,0 +1,7 @@
+Name          Status User     File
+cloudflared   none                     
+postgresql@16 started         yanfenma ~/Library/LaunchAgents/homebrew.mxcl.postgresql@16.plist
+syncthing     started         yanfenma ~/Library/LaunchAgents/homebrew.mxcl.syncthing.plist
+tailscale     error  1        yanfenma ~/Library/LaunchAgents/homebrew.mxcl.tailscale.plist
+unbound       none                     
+zellij        none                     

@@ -1,0 +1,217 @@
+# /opt/homebrew/bin entries that are NOT arm64-native
+accelerate | /opt/homebrew/bin/accelerate | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+accelerate-config | /opt/homebrew/bin/accelerate-config | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+accelerate-estimate-memory | /opt/homebrew/bin/accelerate-estimate-memory | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+accelerate-launch | /opt/homebrew/bin/accelerate-launch | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+accelerate-merge-weights | /opt/homebrew/bin/accelerate-merge-weights | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+adf2hdf | /opt/homebrew/Cellar/cgns/4.5.2/bin/adf2hdf | POSIX shell script text executable, ASCII text
+alembic | /opt/homebrew/bin/alembic | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+apptainer.lima | /opt/homebrew/Cellar/lima/2.1.4/bin/apptainer.lima | POSIX shell script text executable, ASCII text
+autopoint | /opt/homebrew/Cellar/gettext/1.0/bin/autopoint | POSIX shell script text executable, ASCII text
+benchmark_app | /opt/homebrew/Cellar/openvino/2026.2.1_1/libexec/bin/benchmark_app | a /opt/homebrew/Cellar/openvino/2026.2.1_1/libexec/bin/python script text execut
+bisect-create | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/bisect-create | POSIX shell script text executable, ASCII text
+blender | /opt/homebrew/Caskroom/blender/5.2.0/.homebrew-command-wrappers/blender | Bourne-Again shell script text executable, ASCII text
+brew | /opt/homebrew/bin/brew | Bourne-Again shell script text executable, ASCII text
+c_rehash | /opt/homebrew/Cellar/openssl@3/3.6.3/bin/c_rehash | Perl script text executable
+cairo-trace | /opt/homebrew/Cellar/cairo/1.18.4/bin/cairo-trace | POSIX shell script text executable, ASCII text
+cffi-gen-src | /opt/homebrew/bin/cffi-gen-src | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+cgal_create_CMakeLists | /opt/homebrew/Cellar/cgal/6.2/bin/cgal_create_CMakeLists | Bourne-Again shell script text executable, ASCII text
+cgal_create_cmake_script | /opt/homebrew/Cellar/cgal/6.2/bin/cgal_create_cmake_script | Bourne-Again shell script text executable, ASCII text
+cgnsupdate | /opt/homebrew/Cellar/cgns/4.5.2/bin/cgnsupdate | POSIX shell script text executable, ASCII text
+check_arm_indent.sh | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/check_arm_indent.sh | POSIX shell script text executable, ASCII text
+clean-diff | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/clean-diff | POSIX shell script text executable, ISO-8859 text
+compare-cvelists.sh | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/compare-cvelists.sh | Bourne-Again shell script text executable, ASCII text
+ct2-fairseq-converter | /opt/homebrew/bin/ct2-fairseq-converter | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+ct2-marian-converter | /opt/homebrew/bin/ct2-marian-converter | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+ct2-openai-gpt2-converter | /opt/homebrew/bin/ct2-openai-gpt2-converter | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+ct2-opennmt-py-converter | /opt/homebrew/bin/ct2-opennmt-py-converter | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+ct2-opennmt-tf-converter | /opt/homebrew/bin/ct2-opennmt-tf-converter | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+ct2-opus-mt-converter | /opt/homebrew/bin/ct2-opus-mt-converter | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+ct2-transformers-converter | /opt/homebrew/bin/ct2-transformers-converter | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+curl-cffi | /opt/homebrew/bin/curl-cffi | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+ddgs | /opt/homebrew/bin/ddgs | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+diffusers-cli | /opt/homebrew/bin/diffusers-cli | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+docker.lima | /opt/homebrew/Cellar/lima/2.1.4/bin/docker.lima | POSIX shell script text executable, ASCII text
+dotenv | /opt/homebrew/bin/dotenv | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+dumppdf.py | /opt/homebrew/bin/dumppdf.py | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+dvd2concat | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/dvd2concat | Perl script text executable
+edge-playback | /opt/homebrew/bin/edge-playback | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+edge-tts | /opt/homebrew/bin/edge-tts | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+encodec | /opt/homebrew/bin/encodec | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+f2py | /opt/homebrew/bin/f2py | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+fabric | /opt/homebrew/bin/fabric | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+fastapi | /opt/homebrew/bin/fastapi | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+fonttools | /opt/homebrew/bin/fonttools | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+freetype-config | /opt/homebrew/Cellar/freetype/2.14.3/bin/freetype-config | POSIX shell script text executable, ASCII text
+gdbus-codegen | /opt/homebrew/Cellar/glib/2.88.2/bin/gdbus-codegen | Python script text executable, ASCII text
+gen-rc | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/gen-rc | POSIX shell script text executable, ASCII text
+general_assembly.pl | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/general_assembly.pl | Perl script text executable
+gettext.sh | /opt/homebrew/Cellar/gettext/1.0/bin/gettext.sh | POSIX shell script text executable, ASCII text
+gettextize | /opt/homebrew/Cellar/gettext/1.0/bin/gettextize | POSIX shell script text executable, ASCII text
+gflags_completions.sh | /opt/homebrew/Cellar/gflags/2.3.0/bin/gflags_completions.sh | Bourne-Again shell script text executable, ASCII text
+glib-genmarshal | /opt/homebrew/Cellar/glib/2.88.2/bin/glib-genmarshal | Python script text executable, ASCII text
+glib-gettextize | /opt/homebrew/Cellar/glib/2.88.2/bin/glib-gettextize | POSIX shell script text executable, ASCII text
+glib-mkenums | /opt/homebrew/Cellar/glib/2.88.2/bin/glib-mkenums | Python script text executable, ASCII text
+google-oauthlib-tool | /opt/homebrew/bin/google-oauthlib-tool | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+gtester-report | /opt/homebrew/Cellar/glib/2.88.2/bin/gtester-report | Python script text executable, ASCII text
+h5c++ | /opt/homebrew/Cellar/hdf5/2.1.1/bin/h5c++ | POSIX shell script text executable, ASCII text
+h5cc | /opt/homebrew/Cellar/hdf5/2.1.1/bin/h5cc | POSIX shell script text executable, ASCII text
+h5fc | /opt/homebrew/Cellar/hdf5/2.1.1/bin/h5fc | POSIX shell script text executable, ASCII text
+hdf2adf | /opt/homebrew/Cellar/cgns/4.5.2/bin/hdf2adf | POSIX shell script text executable, ASCII text
+hf | /opt/homebrew/bin/hf | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+httpx | /opt/homebrew/bin/httpx | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+huggingface-cli | /opt/homebrew/bin/huggingface-cli | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+hwloc-compress-dir | /opt/homebrew/Cellar/hwloc/2.14.0/bin/hwloc-compress-dir | POSIX shell script text executable, Unicode text, UTF-8 text
+idle3 | /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/bin/idle3.14 | a /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3
+idle3.13 | /opt/homebrew/Cellar/python@3.13/3.13.14_1/Frameworks/Python.framework/Versions/3.13/bin/idle3.13 | a /opt/homebrew/Cellar/python@3.13/3.13.14_1/Frameworks/Python.framework/Version
+idle3.14 | /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/bin/idle3.14 | a /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3
+idna | /opt/homebrew/bin/idna | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+imageio_download_bin | /opt/homebrew/bin/imageio_download_bin | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+imageio_remove_bin | /opt/homebrew/bin/imageio_remove_bin | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+indent_arm_assembly.pl | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/indent_arm_assembly.pl | Perl script text executable
+isympy | /opt/homebrew/bin/isympy | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+jsonschema | /opt/homebrew/bin/jsonschema | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+kubectl.lima | /opt/homebrew/Cellar/lima/2.1.4/bin/kubectl.lima | POSIX shell script text executable, ASCII text
+libpng-config | /opt/homebrew/Cellar/libpng/1.6.58/bin/libpng16-config | POSIX shell script text executable, ASCII text
+libpng16-config | /opt/homebrew/Cellar/libpng/1.6.58/bin/libpng16-config | POSIX shell script text executable, ASCII text
+lima | /opt/homebrew/Cellar/lima/2.1.4/bin/lima | POSIX shell script text executable, ASCII text
+loudnorm.rb | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/loudnorm.rb | Ruby script text executable, ASCII text
+lsm2bin | /opt/homebrew/bin/lsm2bin | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+lzcmp | /opt/homebrew/Cellar/xz/5.8.3/bin/xzdiff | POSIX shell script text executable, ASCII text
+lzdiff | /opt/homebrew/Cellar/xz/5.8.3/bin/xzdiff | POSIX shell script text executable, ASCII text
+lzegrep | /opt/homebrew/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+lzfgrep | /opt/homebrew/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+lzgrep | /opt/homebrew/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+lzless | /opt/homebrew/Cellar/xz/5.8.3/bin/xzless | POSIX shell script text executable, ASCII text
+lzmore | /opt/homebrew/Cellar/xz/5.8.3/bin/xzmore | POSIX shell script text executable, ASCII text
+make_chlayout_test | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/make_chlayout_test | Perl script text executable
+mako-render | /opt/homebrew/bin/mako-render | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+markdown-it | /opt/homebrew/bin/markdown-it | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+markdown_py | /opt/homebrew/bin/markdown_py | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+merge-all-source-plugins | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/merge-all-source-plugins | POSIX shell script text executable, ASCII text
+miniaudio-documentation | /opt/homebrew/bin/miniaudio-documentation | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+missing_codec_desc | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/missing_codec_desc | POSIX shell script text executable, ASCII text
+mlx.distributed_config | /opt/homebrew/Cellar/mlx/0.32.0/bin/mlx.distributed_config | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+mlx.launch | /opt/homebrew/Cellar/mlx/0.32.0/bin/mlx.launch | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+mlx_audio.convert | /opt/homebrew/bin/mlx_audio.convert | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_audio.server | /opt/homebrew/bin/mlx_audio.server | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_audio.sts.generate | /opt/homebrew/bin/mlx_audio.sts.generate | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_audio.stt.generate | /opt/homebrew/bin/mlx_audio.stt.generate | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_audio.tts.generate | /opt/homebrew/bin/mlx_audio.tts.generate | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm | /opt/homebrew/bin/mlx_lm | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.awq | /opt/homebrew/bin/mlx_lm.awq | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.benchmark | /opt/homebrew/bin/mlx_lm.benchmark | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.cache_prompt | /opt/homebrew/bin/mlx_lm.cache_prompt | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.chat | /opt/homebrew/bin/mlx_lm.chat | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.convert | /opt/homebrew/bin/mlx_lm.convert | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.dwq | /opt/homebrew/bin/mlx_lm.dwq | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.dynamic_quant | /opt/homebrew/bin/mlx_lm.dynamic_quant | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.evaluate | /opt/homebrew/bin/mlx_lm.evaluate | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.fuse | /opt/homebrew/bin/mlx_lm.fuse | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.generate | /opt/homebrew/bin/mlx_lm.generate | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.gptq | /opt/homebrew/bin/mlx_lm.gptq | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.lora | /opt/homebrew/bin/mlx_lm.lora | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.manage | /opt/homebrew/bin/mlx_lm.manage | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.perplexity | /opt/homebrew/bin/mlx_lm.perplexity | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.server | /opt/homebrew/bin/mlx_lm.server | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.share | /opt/homebrew/bin/mlx_lm.share | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_lm.upload | /opt/homebrew/bin/mlx_lm.upload | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_vlm.chat | /opt/homebrew/bin/mlx_vlm.chat | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_vlm.chat_ui | /opt/homebrew/bin/mlx_vlm.chat_ui | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_vlm.convert | /opt/homebrew/bin/mlx_vlm.convert | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_vlm.generate | /opt/homebrew/bin/mlx_vlm.generate | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_vlm.server | /opt/homebrew/bin/mlx_vlm.server | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+mlx_whisper | /opt/homebrew/bin/mlx_whisper | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+modelscope | /opt/homebrew/bin/modelscope | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+ms | /opt/homebrew/bin/ms | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+murge | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/murge | POSIX shell script text executable, ASCII text
+nc-config | /opt/homebrew/Cellar/netcdf/4.10.1/bin/nc-config | POSIX shell script text executable, ASCII text
+nerdctl.lima | /opt/homebrew/Cellar/lima/2.1.4/bin/nerdctl.lima | POSIX shell script text executable, ASCII text
+normalize.py | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/normalize.py | Python script text executable, ASCII text
+normalizer | /opt/homebrew/bin/normalizer | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+npm | /opt/homebrew/lib/node_modules/npm/bin/npm-cli.js | a /usr/bin/env node script text executable, ASCII text
+npx | /opt/homebrew/lib/node_modules/npm/bin/npx-cli.js | a /usr/bin/env node script text executable, ASCII text
+numba | /opt/homebrew/bin/numba | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+numpy-config | /opt/homebrew/bin/numpy-config | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+onnxruntime_test | /opt/homebrew/bin/onnxruntime_test | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+optuna | /opt/homebrew/bin/optuna | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+ovc | /opt/homebrew/Cellar/openvino/2026.2.1_1/libexec/bin/ovc | a /opt/homebrew/Cellar/openvino/2026.2.1_1/libexec/bin/python script text execut
+patcheck | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/patcheck | POSIX shell script text executable, ASCII text, with very long lines (482)
+pcre2-config | /opt/homebrew/Cellar/pcre2/10.47_1/bin/pcre2-config | POSIX shell script text executable, ASCII text
+pdf2txt.py | /opt/homebrew/bin/pdf2txt.py | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pdfplumber | /opt/homebrew/bin/pdfplumber | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pip3 | /opt/homebrew/Cellar/python@3.14/3.14.7/bin/pip3 | a /opt/homebrew/Cellar/python@3.14/3.14.7/bin/python3.14 script text executable,
+pip3.13 | /opt/homebrew/Cellar/python@3.13/3.13.14_1/bin/pip3.13 | a /opt/homebrew/Cellar/python@3.13/3.13.14_1/bin/python3.13 script text executab
+pip3.14 | /opt/homebrew/Cellar/python@3.14/3.14.7/bin/pip3.14 | a /opt/homebrew/Cellar/python@3.14/3.14.7/bin/python3.14 script text executable,
+playwright | /opt/homebrew/bin/playwright | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+plotframes | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/plotframes | Perl script text executable
+pn | /opt/homebrew/lib/node_modules/pnpm/bin/pnpm.mjs | a /usr/bin/env node script text executable, ASCII text
+pnpm | /opt/homebrew/lib/node_modules/pnpm/bin/pnpm.mjs | a /usr/bin/env node script text executable, ASCII text
+pnpx | /opt/homebrew/lib/node_modules/pnpm/bin/pnpx.mjs | a /usr/bin/env node script text executable, ASCII text
+pnx | /opt/homebrew/lib/node_modules/pnpm/bin/pnpx.mjs | a /usr/bin/env node script text executable, ASCII text
+po-fetch | /opt/homebrew/Cellar/gettext/1.0/bin/po-fetch | POSIX shell script text executable, ASCII text
+podman.lima | /opt/homebrew/Cellar/lima/2.1.4/bin/podman.lima | POSIX shell script text executable, ASCII text
+pwiz | /opt/homebrew/bin/pwiz | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pyannote-audio | /opt/homebrew/bin/pyannote-audio | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pyannote-database | /opt/homebrew/bin/pyannote-database | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pyannote-metrics | /opt/homebrew/bin/pyannote-metrics | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pyannote-pipeline | /opt/homebrew/bin/pyannote-pipeline | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pyav | /opt/homebrew/bin/pyav | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pydoc3 | /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/bin/pydoc3.14 | a /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3
+pydoc3.13 | /opt/homebrew/Cellar/python@3.13/3.13.14_1/Frameworks/Python.framework/Versions/3.13/bin/pydoc3.13 | a /opt/homebrew/Cellar/python@3.13/3.13.14_1/Frameworks/Python.framework/Version
+pydoc3.14 | /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/bin/pydoc3.14 | a /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3
+pyftmerge | /opt/homebrew/bin/pyftmerge | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+pyftsubset | /opt/homebrew/bin/pyftsubset | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+pygmentize | /opt/homebrew/bin/pygmentize | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pymupdf | /opt/homebrew/bin/pymupdf | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+pypdfium2 | /opt/homebrew/bin/pypdfium2 | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+python3-config | /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/bin/python3.14-config | a /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3
+python3.13-config | /opt/homebrew/Cellar/python@3.13/3.13.14_1/Frameworks/Python.framework/Versions/3.13/bin/python3.13-config | a /opt/homebrew/Cellar/python@3.13/3.13.14_1/Frameworks/Python.framework/Version
+python3.14-config | /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/bin/python3.14-config | a /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3
+qt-cmake | /opt/homebrew/Cellar/qtbase/6.11.1/bin/qt-cmake | POSIX shell script text executable, ASCII text
+qt-cmake-create | /opt/homebrew/Cellar/qtbase/6.11.1/bin/qt-cmake-create | POSIX shell script text executable, ASCII text
+qt-configure-module | /opt/homebrew/Cellar/qtbase/6.11.1/bin/qt-configure-module | POSIX shell script text executable, ASCII text
+read_zbar | /opt/homebrew/bin/read_zbar | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+read_zbar.py | /opt/homebrew/bin/read_zbar.py | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+sample | /opt/homebrew/bin/sample | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+sdl2-config | /opt/homebrew/Cellar/sdl2-compat/2.32.70/bin/sdl2-config | POSIX shell script text executable, ASCII text
+senddoc | /Applications/LibreOffice.app/Contents/Resources/senddoc | POSIX shell script text executable, ASCII text
+setup_vars_opencv5.sh | /opt/homebrew/Cellar/opencv/5.0.0/bin/setup_vars_opencv5.sh | Bourne-Again shell script text executable, ASCII text
+socat-broker.sh | /opt/homebrew/Cellar/socat/1.8.1.3/bin/socat-broker.sh | Bourne-Again shell script text executable, ASCII text
+socat-chain.sh | /opt/homebrew/Cellar/socat/1.8.1.3/bin/socat-chain.sh | Bourne-Again shell script text executable, ASCII text
+socat-mux.sh | /opt/homebrew/Cellar/socat/1.8.1.3/bin/socat-mux.sh | Bourne-Again shell script text executable, ASCII text
+soffice | /opt/homebrew/Caskroom/libreoffice/26.2.5/soffice.wrapper.sh | POSIX shell script text executable, ASCII text
+source2c | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/source2c | POSIX shell script text executable, ASCII text
+tabulate | /opt/homebrew/bin/tabulate | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+target_dec_fate.sh | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/target_dec_fate.sh | POSIX shell script text executable, ASCII text
+tiff2fsspec | /opt/homebrew/bin/tiff2fsspec | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+tiffcomment | /opt/homebrew/bin/tiffcomment | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+tifffile | /opt/homebrew/bin/tifffile | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+tiny-agents | /opt/homebrew/bin/tiny-agents | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+torchfrtrace | /opt/homebrew/bin/torchfrtrace | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+torchrun | /opt/homebrew/bin/torchrun | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+tqdm | /opt/homebrew/bin/tqdm | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+transformers | /opt/homebrew/bin/transformers | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+ttx | /opt/homebrew/bin/ttx | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+tunnel-client | /opt/homebrew/Cellar/tunnel-client/0.0.11/bin/tunnel-client | Bourne-Again shell script text executable, ASCII text
+typer | /opt/homebrew/bin/typer | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+unoinfo | /Applications/LibreOffice.app/Contents/Resources/unoinfo | POSIX shell script text executable, ASCII text
+unwrap-diff | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/unwrap-diff | POSIX shell script text executable, ASCII text
+uvicorn | /opt/homebrew/bin/uvicorn | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+vba_extract.py | /opt/homebrew/bin/vba_extract.py | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+websockets | /opt/homebrew/bin/websockets | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+wheel3 | /opt/homebrew/Cellar/python@3.14/3.14.7/bin/wheel3.14 | a /opt/homebrew/Cellar/python@3.14/3.14.7/bin/python3.14 script text executable,
+wheel3.13 | /opt/homebrew/Cellar/python@3.13/3.13.14_1/bin/wheel3.13 | a /opt/homebrew/Cellar/python@3.13/3.13.14_1/bin/python3.13 script text executab
+wheel3.14 | /opt/homebrew/Cellar/python@3.14/3.14.7/bin/wheel3.14 | a /opt/homebrew/Cellar/python@3.14/3.14.7/bin/python3.14 script text executable,
+whisper | /opt/homebrew/bin/whisper | a /opt/homebrew/opt/python@3.13/bin/python3.13 script text executable, ASCII tex
+wsdump | /opt/homebrew/bin/wsdump | a /opt/homebrew/opt/python@3.14/bin/python3.14 script text executable, ASCII tex
+xzcmp | /opt/homebrew/Cellar/xz/5.8.3/bin/xzdiff | POSIX shell script text executable, ASCII text
+xzdiff | /opt/homebrew/Cellar/xz/5.8.3/bin/xzdiff | POSIX shell script text executable, ASCII text
+xzegrep | /opt/homebrew/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+xzfgrep | /opt/homebrew/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+xzgrep | /opt/homebrew/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+xzless | /opt/homebrew/Cellar/xz/5.8.3/bin/xzless | POSIX shell script text executable, ASCII text
+xzmore | /opt/homebrew/Cellar/xz/5.8.3/bin/xzmore | POSIX shell script text executable, ASCII text
+zmqshell.py | /opt/homebrew/Cellar/ffmpeg/8.1.2_1/bin/zmqshell.py | Python script text executable, ASCII text
+zstdgrep | /opt/homebrew/Cellar/zstd/1.5.7_1/bin/zstdgrep | POSIX shell script text executable, ASCII text
+zstdless | /opt/homebrew/Cellar/zstd/1.5.7_1/bin/zstdless | POSIX shell script text executable, ASCII text

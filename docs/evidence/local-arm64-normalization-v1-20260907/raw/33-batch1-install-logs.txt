@@ -1,0 +1,127 @@
+==> Downloading bottle manifests
+✔︎ Bottle Manifest uv (0.12.10)
+==> Would install 1 formula:
+uv
+==> Fetching downloads for: uv
+✔︎ Bottle uv (0.12.10)
+==> Pouring uv--0.12.10.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/uv/0.12.10: 17 files, 44.2MB
+==> Caveats
+zsh completions have been installed to:
+  /opt/homebrew/share/zsh/site-functions
+==> Downloading bottle manifests
+✔︎ Bottle Manifest wget (1.25.0)
+==> Would install 1 formula:
+wget
+==> Would install 2 dependencies for wget:
+libidn2
+libpsl
+==> Would upgrade 1 dependency for wget:
+openssl@3
+==> Fetching downloads for: wget
+✔︎ Bottle Manifest libidn2 (2.3.8)
+✔︎ Bottle Manifest libpsl (0.23.3)
+✔︎ Bottle Manifest openssl@3 (3.6.4)
+✔︎ Bottle libpsl (0.23.3)
+✔︎ Bottle libidn2 (2.3.8)
+✔︎ Bottle wget (1.25.0)
+✔︎ Bottle openssl@3 (3.6.4)
+==> Installing dependencies for wget: libidn2 and libpsl
+==> Installing wget dependency: libidn2
+==> Pouring libidn2--2.3.8.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libidn2/2.3.8: 80 files, 908.5KB
+==> Installing wget dependency: libpsl
+==> Pouring libpsl--0.23.3.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libpsl/0.23.3: 18 files, 286.4KB
+==> Installing wget
+==> Pouring wget--1.25.0.arm64_tahoe.bottle.2.tar.gz
+🍺  /opt/homebrew/Cellar/wget/1.25.0: 92 files, 4.7MB
+==> Downloading bottle manifests
+✔︎ Bottle Manifest tmux (3.7c)
+==> Would install 1 formula:
+tmux
+==> Would install 4 dependencies for tmux:
+libevent
+ncurses
+utf8proc
+jemalloc
+==> Would upgrade 1 dependency for tmux:
+openssl@3
+==> Fetching downloads for: tmux
+✔︎ Bottle openssl@3 (3.6.4)
+✔︎ Bottle Manifest libevent (2.1.13)
+✔︎ Bottle Manifest ncurses (6.6)
+✔︎ Bottle Manifest utf8proc (2.11.3)
+✔︎ Bottle Manifest jemalloc (5.3.1)
+✔︎ Bottle utf8proc (2.11.3)
+✔︎ Bottle tmux (3.7c)
+✔︎ Bottle libevent (2.1.13)
+✔︎ Bottle jemalloc (5.3.1)
+✔︎ Bottle ncurses (6.6)
+==> Installing dependencies for tmux: openssl@3, libevent, ncurses, utf8proc and jemalloc
+==> Upgrading tmux dependency: openssl@3
+==> Pouring openssl@3--3.6.4.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openssl@3/3.6.4: 7,639 files, 37.7MB
+==> Installing tmux dependency: libevent
+==> Pouring libevent--2.1.13.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libevent/2.1.13: 58 files, 2.3MB
+==> Installing tmux dependency: ncurses
+==> Pouring ncurses--6.6.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/ncurses/6.6: 4,086 files, 10.3MB
+==> Installing tmux dependency: utf8proc
+==> Pouring utf8proc--2.11.3.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/utf8proc/2.11.3: 15 files, 456.7KB
+==> Installing tmux dependency: jemalloc
+==> Pouring jemalloc--5.3.1.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/jemalloc/5.3.1: 17 files, 3MB
+==> Installing tmux
+==> Pouring tmux--3.7c.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/tmux/3.7c: 9 files, 1.4MB
+==> Caveats
+==> tmux
+Example configuration has been installed to:
+  /opt/homebrew/opt/tmux/share/tmux
+==> Downloading bottle manifests
+✔︎ Bottle Manifest starship (1.26.0)
+==> Would install 1 formula:
+starship
+==> Fetching downloads for: starship
+✔︎ Bottle starship (1.26.0)
+==> Pouring starship--1.26.0.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/starship/1.26.0: 12 files, 9.4MB
+==> Caveats
+zsh completions have been installed to:
+  /opt/homebrew/share/zsh/site-functions
+==> Downloading bottle manifests
+✔︎ Bottle Manifest cmake (4.4.3)
+==> Fetching downloads for: cmake
+==> Would install 1 formula:
+cmake
+✔︎ Bottle cmake (4.4.3)
+==> Pouring cmake--4.4.3.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/cmake/4.4.3: 4,159 files, 67.2MB
+==> Caveats
+Emacs Lisp files have been installed to:
+  /opt/homebrew/share/emacs/site-lisp/cmake
+==> cmake
+To install the CMake documentation, run:
+  brew install cmake-docs
+==> Downloading bottle manifests
+✔︎ Bottle Manifest deno (2.9.6)
+==> Would install 1 formula:
+deno
+==> Would upgrade 1 dependency for deno:
+little-cms2
+==> Fetching downloads for: deno
+✔︎ Bottle Manifest little-cms2 (2.19.1)
+✔︎ Bottle little-cms2 (2.19.1)
+✔︎ Bottle deno (2.9.6)
+==> Upgrading deno dependency: little-cms2
+==> Pouring little-cms2--2.19.1.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/little-cms2/2.19.1: 23 files, 1.4MB
+==> Installing deno
+==> Pouring deno--2.9.6.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/deno/2.9.6: 12 files, 125MB
+==> Caveats
+zsh completions have been installed to:
+  /opt/homebrew/share/zsh/site-functions

@@ -1,0 +1,5 @@
+alt-tab 11.4.3
+blender 5.2.0
+flameshot 14.0.0,14.0
+godot 4.7.1
+libreoffice 26.2.5

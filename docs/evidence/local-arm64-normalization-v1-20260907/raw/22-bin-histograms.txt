@@ -1,0 +1,39 @@
+## histograms
+-- /usr/local/bin arch histogram:
+ 572 x86_64
+ 116 a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+  92 a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+  62 sh-script
+  34 a /usr/bin/env node script text executable, ASCII text
+  33 a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+  24 a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+  18 
+  12 arm64
+   9 universal
+   8 python-script
+   7 bash-script
+   7 a /usr/bin/env node script text executable, Unicode text, UTF-8 text
+   6 a /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14
+   6 Perl script text executable
+   4 a /usr/local/Cellar/python@3.14/3.14.5/bin/python3.14 script text executable, AS
+   4 a /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12
+   4 a /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.1
+   4 a /usr/bin/env node script text executable, Unicode text, UTF-8 text, with very 
+   3 a /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13
+   2 a /usr/local/Cellar/python@3.13/3.13.3/bin/python3.13 script text executable, AS
+   2 a /usr/bin/perl5.34 script text executable, ASCII text
+   2 a /usr/bin/env node script text executable, ASCII text, with very long lines (46
+   1 file-arch
+   1 directory
+   1 a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text, 
+   1 a /usr/local/opt/node/bin/node script text executable, ASCII text, with very lon
+   1 a /usr/local/Cellar/openai-whisper/20250625_3/libexec/bin/python script text exe
+   1 a /usr/bin/env node script text executable, ASCII text, with very long lines (65
+   1 a /usr/bin/env node script text executable, ASCII text, with very long lines (33
+   1 a /usr/bin/env node script text executable, ASCII text, with very long lines (32
+   1 Unicode text, UTF-8 text
+   1 Ruby script text executable, ASCII text
+   1 Paul Falstad's zsh script text executable, ASCII text
+   1 Objective-C source text, ASCII text
+-- /opt/homebrew/bin arch histogram:
+total=684 arm64=468 other=216

@@ -1,0 +1,74 @@
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist :: /Users/yanfenma/.agent-core/control/agent-core-runtime-glm53-wrapper.zsh :: Paul Falstad's zsh script text executable, ASCII text
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.scheduler-v2.plist :: /usr/local/libexec/agent-core/node-runtime/bin/node :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist :: PARSE_ERROR
+/Users/yanfenma/Library/LaunchAgents/com.agent-core.capability-host.plist :: /Users/yanfenma/workspace/project/agent-core/tools/capability-host/target/release/capability-host :: not-absolute-or-missing
+/Users/yanfenma/Library/LaunchAgents/com.agent-core.coding-harness.plist :: /Users/yanfenma/workspace/project/agent-core/tools/coding-harness/target/release/coding-harness :: not-absolute-or-missing
+/Users/yanfenma/Library/LaunchAgents/com.agent-core.feishu-connector.plist :: /Users/yanfenma/workspace/project/agent-core/node_modules/.bin/tsx :: a /usr/bin/env node script text executable, ASCII text, with very long lines (30170)
+/Users/yanfenma/Library/LaunchAgents/com.agent-core.kernel.plist :: /Users/yanfenma/workspace/project/agent-core/target/release/agent-core-kernel :: not-absolute-or-missing
+/Users/yanfenma/Library/LaunchAgents/com.article-review-canary.plist :: /usr/local/bin/node :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/com.auth-service.plist :: /usr/local/bin/node :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/com.brave.cdp.plist :: /Applications/Brave Browser.app/Contents/MacOS/Brave Browser :: Mach-O 64-bit executable arm64
+/Users/yanfenma/Library/LaunchAgents/com.deepseek-harness.mobile-proxy.plist :: /opt/homebrew/bin/node :: Mach-O 64-bit executable arm64
+/Users/yanfenma/Library/LaunchAgents/com.dsh.web.plist :: /bin/bash :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]
+/bin/bash (for architecture x86_64):	Mach-O 64-bit executable x86_64
+/bi
+/Users/yanfenma/Library/LaunchAgents/com.google.GoogleUpdater.wake.plist :: /Users/yanfenma/Library/Application Support/Google/GoogleUpdater/Current/GoogleUpdater.app/Contents/MacOS/GoogleUpdater :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]
+/Users/yanfenma/Library/Application Support/Google/GoogleUpdater/Current/GoogleUpdater.app/Contents/MacOS
+/Users/yanfenma/Library/LaunchAgents/com.google.keystone.agent.plist :: NO_PROGRAM
+/Users/yanfenma/Library/LaunchAgents/com.google.keystone.xpcservice.plist :: NO_PROGRAM
+/Users/yanfenma/Library/LaunchAgents/com.irbridge.plist :: /usr/local/bin/python3 :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/com.llmwiki.local.plist :: /Users/yanfenma/workspace/project/llm-wiki/scripts/serve-web.sh :: Bourne-Again shell script text executable, ASCII text
+/Users/yanfenma/Library/LaunchAgents/com.mayf3.sixpack-watchdog.plist :: /bin/bash :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]
+/bin/bash (for architecture x86_64):	Mach-O 64-bit executable x86_64
+/bi
+/Users/yanfenma/Library/LaunchAgents/com.openclaw.agent-node-502.plist :: /usr/local/bin/openclaw :: a /usr/bin/env node script text executable, ASCII text
+/Users/yanfenma/Library/LaunchAgents/com.openclaw.auto-repair.plist :: /usr/local/openclaw-monitors/auto-repair-daemon.sh :: Bourne-Again shell script text executable, Unicode text, UTF-8 text
+/Users/yanfenma/Library/LaunchAgents/com.openclaw.control-api.plist :: /usr/local/bin/node :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/com.opencode.serve.plist :: /Users/yanfenma/.opencode/bin/opencode :: Mach-O 64-bit executable arm64
+/Users/yanfenma/Library/LaunchAgents/com.opencode.server.plist :: /Users/yanfenma/.opencode/bin/opencode :: Mach-O 64-bit executable arm64
+/Users/yanfenma/Library/LaunchAgents/com.svc-workflow-monitor.plist :: /Users/yanfenma/.local/services/svc-workflow/monitor/check.sh :: Paul Falstad's zsh script text executable, ASCII text
+/Users/yanfenma/Library/LaunchAgents/com.svc-workflow.plist :: /Users/yanfenma/.local/services/svc-workflow/svc-workflow :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/com.videobridge.plist :: /usr/local/bin/python3 :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/com.xiaomusic.plist :: /bin/bash :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]
+/bin/bash (for architecture x86_64):	Mach-O 64-bit executable x86_64
+/bi
+/Users/yanfenma/Library/LaunchAgents/dev.omdsh.dsh-lark.plist :: /usr/local/bin/dsh :: a /usr/bin/env node script text executable, Unicode text, UTF-8 text, with very long lines (834)
+/Users/yanfenma/Library/LaunchAgents/dev.omdsh.dsh.desktop.plist :: /usr/bin/open :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]
+/usr/bin/open (for architecture x86_64):	Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.ollama.plist :: /opt/homebrew/opt/ollama/bin/ollama :: Mach-O 64-bit executable arm64
+/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.postgresql@16.plist :: /usr/local/opt/postgresql@16/bin/postgres :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.syncthing.plist :: /usr/local/opt/syncthing/bin/syncthing :: Mach-O 64-bit executable x86_64
+/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.tailscale.plist :: /usr/local/opt/tailscale/bin/tailscaled :: Mach-O 64-bit executable x86_64
+/Library/LaunchAgents/com.adobe.AdobeCreativeCloud.plist :: /Applications/Utilities/Adobe Creative Cloud/ACC/Creative Cloud.app/Contents/MacOS/Creative Cloud :: Mach-O 64-bit executable x86_64
+/Library/LaunchAgents/com.adobe.ccxprocess.plist :: /Applications/Utilities/Adobe Creative Cloud Experience/CCXProcess/CCXProcess.app/Contents/MacOS/CCXProcess :: Mach-O 64-bit executable x86_64
+/Library/LaunchAgents/com.microsoft.OneDriveStandaloneUpdater.plist :: /Applications/OneDrive.app/Contents/StandaloneUpdater.app/Contents/MacOS/OneDriveStandaloneUpdater :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]
+/Applications/OneDrive.app/Contents/StandaloneUpdater.app/Contents/MacOS/OneDriveStandaloneUpdater (for a
+/Library/LaunchAgents/com.microsoft.SyncReporter.plist :: /Applications/OneDrive.app/Contents/SyncReporter.app/Contents/MacOS/SyncReporter :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]
+/Applications/OneDrive.app/Contents/SyncReporter.app/Contents/MacOS/SyncRe
+/Library/LaunchAgents/com.microsoft.update.agent.plist :: /Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/Microsoft Update Assistant.app/Contents/MacOS/Microsoft Update Assistant :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]
+/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/Microsoft Update As
+/Library/LaunchAgents/com.sogou.SogouServices.plist :: /Library/Input Methods/SogouInput.app/Contents/SogouServices :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]
+/Library/Input Methods/SogouInput.app/Contents/SogouServices (for architecture x86_64):	Mach-O 64-bit exe
+/Library/LaunchAgents/com.sogou.SogouTaskManager.plist :: /Library/Input Methods/SogouInput.app/Contents/SogouTaskManager.app/Contents/MacOS/SogouTaskManager :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]
+/Library/Input Methods/SogouInput.app/Contents/SogouTaskManager.app/Contents/MacOS/SogouTaskManager (for 
+/Library/LaunchDaemons/ai.agent-core.runtime.plist :: /usr/local/libexec/agent-core/node-runtime/bin/node :: Mach-O 64-bit executable x86_64
+/Library/LaunchDaemons/com.adobe.acc.installer.v2.plist :: /Library/PrivilegedHelperTools/com.adobe.acc.installer.v2 :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]
+/Library/PrivilegedHelperTools/com.adobe.acc.installer.v2 (for architectur
+/Library/LaunchDaemons/com.auth-service.plist :: /usr/local/bin/node :: Mach-O 64-bit executable x86_64
+/Library/LaunchDaemons/com.docker.socket.plist :: /Library/PrivilegedHelperTools/com.docker.socket :: cannot open: Permission denied
+/Library/LaunchDaemons/com.docker.vmnetd.plist :: /Library/PrivilegedHelperTools/com.docker.vmnetd :: Mach-O 64-bit executable x86_64
+/Library/LaunchDaemons/com.microsoft.OneDriveStandaloneUpdaterDaemon.plist :: /Applications/OneDrive.app/Contents/StandaloneUpdaterDaemon.xpc/Contents/MacOS/StandaloneUpdaterDaemon :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]
+/Applications/OneDrive.app/Contents/StandaloneUpdaterDaemon.xpc/Contents/M
+/Library/LaunchDaemons/com.microsoft.OneDriveUpdaterDaemon.plist :: /Applications/OneDrive.app/Contents/OneDriveUpdaterDaemon.xpc/Contents/MacOS/OneDriveUpdaterDaemon :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]
+/Applications/OneDrive.app/Contents/OneDriveUpdaterDaemon.xpc/Contents/Mac
+/Library/LaunchDaemons/com.microsoft.autoupdate.helper.plist :: /Library/PrivilegedHelperTools/com.microsoft.autoupdate.helper :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]
+/Library/PrivilegedHelperTools/com.microsoft.autoupdate.helper (for archit
+/Library/LaunchDaemons/com.microsoft.office.licensingV2.helper.plist :: /Library/PrivilegedHelperTools/com.microsoft.office.licensingV2.helper :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]
+/Library/PrivilegedHelperTools/com.microsoft.office.licensingV2.helper (fo
+/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist :: PARSE_ERROR
+/Library/LaunchDaemons/com.openclaw.gateway.plist :: PARSE_ERROR
+/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist :: PARSE_ERROR
+/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist :: PARSE_ERROR
+/Library/LaunchDaemons/com.tailscale.tailscaled.plist :: /usr/local/bin/tailscaled :: Mach-O 64-bit executable x86_64
+/Library/LaunchDaemons/com.west2online.ClashXPro.ProxyConfigHelper.plist :: /Library/PrivilegedHelperTools/com.west2online.ClashXPro.ProxyConfigHelper :: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]
+/Library/PrivilegedHelperTools/com.west2online.ClashXPro.ProxyConfigHelper

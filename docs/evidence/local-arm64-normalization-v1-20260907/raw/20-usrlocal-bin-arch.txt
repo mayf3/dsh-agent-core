@@ -1,0 +1,1043 @@
+# name | realpath | file-arch
+2to3-3.11 | /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/2to3-3.11 | a /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.1
+2to3-3.12 | /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12/bin/2to3-3.12 | a /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12
+MoltenVKShaderConverter | /usr/local/Cellar/molten-vk/1.4.1/bin/MoltenVKShaderConverter | Mach-O 64-bit executable x86_64
+R | /usr/local/Cellar/r/4.4.3_1/bin/R | POSIX shell script text executable, ASCII text
+RemoteUpdateManager | /usr/local/bin/RemoteUpdateManager | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/usr/local/bin/RemoteUpdateManager (for architecture x86_64):	Mach-O 64-bit exec
+/usr/local/bin/RemoteUpdateManager (for architecture arm64):	Mach-O 64-bit execu
+Rscript | /usr/local/Cellar/r/4.4.3_1/bin/Rscript | Mach-O 64-bit executable x86_64
+SvtAv1EncApp | /usr/local/Cellar/svt-av1/4.1.0/bin/SvtAv1EncApp | Mach-O 64-bit executable x86_64
+__pycache__ | /usr/local/bin/__pycache__ | directory
+accelerate | /usr/local/bin/accelerate | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+accelerate-config | /usr/local/bin/accelerate-config | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+accelerate-estimate-memory | /usr/local/bin/accelerate-estimate-memory | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+accelerate-launch | /usr/local/bin/accelerate-launch | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+accelerate-merge-weights | /usr/local/bin/accelerate-merge-weights | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+adaparse | /usr/local/Cellar/ada-url/3.4.3/bin/adaparse | Mach-O 64-bit executable x86_64
+adb | /usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/adb | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/adb (for archit
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/adb (for archit
+addbuiltin | /usr/local/Cellar/nss/3.123.1/bin/addbuiltin | Mach-O 64-bit executable x86_64
+adig | /usr/local/Cellar/c-ares/1.34.6/bin/adig | Mach-O 64-bit executable x86_64
+agent-browser | /usr/local/lib/node_modules/agent-browser/bin/agent-browser-darwin-x64 | Mach-O 64-bit executable x86_64
+agent-browser-mcp | /usr/local/lib/node_modules/agent-browser-mcp/dist/index.js | a /usr/bin/env node script text executable, ASCII text
+agentcore-cron | /Users/yanfenma/workspace/project/dsh-agent-core/scripts/agentcore-cron.mjs | a /usr/bin/env node script text executable, Unicode text, UTF-8 text
+ahost | /usr/local/Cellar/c-ares/1.34.6/bin/ahost | Mach-O 64-bit executable x86_64
+alembic | /usr/local/bin/alembic | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+aliyun | /usr/local/Cellar/aliyun-cli/3.3.14/bin/aliyun | Mach-O 64-bit executable x86_64
+ambiguous_words | /usr/local/Cellar/tesseract/5.5.2/bin/ambiguous_words | Mach-O 64-bit executable x86_64
+apptainer.lima | /usr/local/Cellar/lima/2.1.4/bin/apptainer.lima | POSIX shell script text executable, ASCII text
+archon | /usr/local/bin/archon | Mach-O 64-bit executable x86_64
+arduino-cli | /usr/local/Cellar/arduino-cli/1.4.0/bin/arduino-cli | Mach-O 64-bit executable x86_64
+arxiv-mcp-server | /usr/local/lib/node_modules/arxiv-mcp-server/bin/arxiv-mcp-server.js | a /usr/bin/env node script text executable, ASCII text
+asn1Coding | /usr/local/Cellar/libtasn1/4.21.0/bin/asn1Coding | Mach-O 64-bit executable x86_64
+asn1Decoding | /usr/local/Cellar/libtasn1/4.21.0/bin/asn1Decoding | Mach-O 64-bit executable x86_64
+asn1Parser | /usr/local/Cellar/libtasn1/4.21.0/bin/asn1Parser | Mach-O 64-bit executable x86_64
+atob | /usr/local/Cellar/nss/3.123.1/bin/atob | Mach-O 64-bit executable x86_64
+autopoint | /usr/local/Cellar/gettext/1.0/bin/autopoint | POSIX shell script text executable, ASCII text
+aviocat | /usr/local/Cellar/ffmpeg/8.1.1/bin/aviocat | Mach-O 64-bit executable x86_64
+b2sum | /usr/local/Cellar/coreutils/9.10/bin/gb2sum | Mach-O 64-bit executable x86_64
+baddbdir | /usr/local/Cellar/nss/3.123.1/bin/baddbdir | Mach-O 64-bit executable x86_64
+bambu-camera | /usr/local/bin/bambu-camera | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+bambu-cli | /usr/local/lib/node_modules/bambu-cli/bin/cli.js | a /usr/bin/env node script text executable, ASCII text
+bambu-monitor | /usr/local/bin/bambu-monitor | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+bambu-query | /usr/local/bin/bambu-query | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+base32 | /usr/local/Cellar/coreutils/9.10/bin/gbase32 | Mach-O 64-bit executable x86_64
+basenc | /usr/local/Cellar/coreutils/9.10/bin/gbasenc | Mach-O 64-bit executable x86_64
+bd_info | /usr/local/Cellar/libbluray/1.4.1/bin/bd_info | Mach-O 64-bit executable x86_64
+bd_list_titles | /usr/local/Cellar/libbluray/1.4.1/bin/bd_list_titles | Mach-O 64-bit executable x86_64
+bd_splice | /usr/local/Cellar/libbluray/1.4.1/bin/bd_splice | Mach-O 64-bit executable x86_64
+bisect-create | /usr/local/Cellar/ffmpeg/8.1.1/bin/bisect-create | POSIX shell script text executable, ASCII text
+bltest | /usr/local/Cellar/nss/3.123.1/bin/bltest | Mach-O 64-bit executable x86_64
+bomtool | /usr/local/Cellar/pkgconf/2.5.1/bin/bomtool | Mach-O 64-bit executable x86_64
+bq | /usr/local/share/google-cloud-sdk/bin/bq | POSIX shell script text executable, ASCII text
+brew | /usr/local/Homebrew/bin/brew | Bourne-Again shell script text executable, ASCII text
+brotli | /usr/local/Cellar/brotli/1.2.0/bin/brotli | Mach-O 64-bit executable x86_64
+browser-use-mcp | /usr/local/lib/node_modules/browser-use-mcp/index.js | a /usr/bin/env node script text executable, ASCII text
+bt-run.py | /usr/local/bin/bt-run.py | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text, 
+btoa | /usr/local/Cellar/nss/3.123.1/bin/btoa | Mach-O 64-bit executable x86_64
+btrun | /usr/local/bin/btrun | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+bubblewrap | /usr/local/lib/node_modules/@bubblewrap/cli/bin/bubblewrap.js | a /usr/bin/env node script text executable, ASCII text
+bw | /usr/local/Cellar/bitwarden-cli/2026.1.0/libexec/lib/node_modules/@bitwarden/cli/build/bw.js | a /usr/local/opt/node/bin/node script text executable, ASCII text, with very lon
+c++-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/c++-15 | Mach-O 64-bit executable x86_64
+c_rehash | /usr/local/Cellar/openssl@3/3.6.2/bin/c_rehash | Perl script text executable
+cairo-trace | /usr/local/Cellar/cairo/1.18.4/bin/cairo-trace | POSIX shell script text executable, ASCII text
+cairosvg | /usr/local/bin/cairosvg | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+cbc | /usr/local/lib/node_modules/@tencent-ai/codebuddy-code/bin/codebuddy | a /usr/bin/env node script text executable, Unicode text, UTF-8 text
+cbc-prewarm | /usr/local/lib/node_modules/@tencent-ai/codebuddy-code/bin/cbc-prewarm | a /usr/bin/env node script text executable, Unicode text, UTF-8 text
+cbor2 | /usr/local/bin/cbor2 | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ccmake | /usr/local/Cellar/cmake/4.3.1/bin/ccmake | Mach-O 64-bit executable x86_64
+certutil | /usr/local/Cellar/nss/3.123.1/bin/certutil | Mach-O 64-bit executable x86_64
+chardetect | /usr/local/bin/chardetect | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+check_arm_indent.sh | /usr/local/Cellar/ffmpeg/8.1.1/bin/check_arm_indent.sh | POSIX shell script text executable, ASCII text
+chktest | /usr/local/Cellar/nss/3.123.1/bin/chktest | Mach-O 64-bit executable x86_64
+chrome-devtools-mcp | /usr/local/lib/node_modules/chrome-devtools-mcp/build/src/index.js | a /usr/bin/env node script text executable, ASCII text
+cjpeg | /usr/local/Cellar/jpeg-turbo/3.1.4.1/bin/cjpeg | Mach-O 64-bit executable x86_64
+classifier_tester | /usr/local/Cellar/tesseract/5.5.2/bin/classifier_tester | Mach-O 64-bit executable x86_64
+claude | /usr/local/Caskroom/claude-code/2.1.17/claude | Mach-O 64-bit executable x86_64
+claude_bak | /usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js | a /usr/bin/env node script text executable, Unicode text, UTF-8 text, with very 
+clawdbot | /usr/local/lib/node_modules/clawdbot/dist/entry.js | a /usr/bin/env node script text executable, ASCII text
+clawdhub | /usr/local/lib/node_modules/clawhub/bin/clawdhub.js | a /usr/bin/env node script text executable, ASCII text
+clawhub | /usr/local/lib/node_modules/clawhub/bin/clawdhub.js | a /usr/bin/env node script text executable, ASCII text
+clean-diff | /usr/local/Cellar/ffmpeg/8.1.1/bin/clean-diff | POSIX shell script text executable, ISO-8859 text
+cloudflared | /usr/local/Cellar/cloudflared/2025.11.1/bin/cloudflared | Mach-O 64-bit executable x86_64
+clusterdb | /usr/local/Cellar/postgresql@16/16.14/bin/clusterdb | Mach-O 64-bit executable x86_64
+cmake | /usr/local/Cellar/cmake/4.3.1/bin/cmake | Mach-O 64-bit executable x86_64
+cmsutil | /usr/local/Cellar/nss/3.123.1/bin/cmsutil | Mach-O 64-bit executable x86_64
+cntraining | /usr/local/Cellar/tesseract/5.5.2/bin/cntraining | Mach-O 64-bit executable x86_64
+codebuddy | /usr/local/lib/node_modules/@tencent-ai/codebuddy-code/bin/codebuddy | a /usr/bin/env node script text executable, Unicode text, UTF-8 text
+codex | /usr/local/Caskroom/codex/0.133.0/codex-x86_64-apple-darwin | Mach-O 64-bit executable x86_64
+colab-mcp | /usr/local/bin/colab-mcp | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+colab-mcp-cli | /usr/local/bin/colab-mcp-cli | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+coloredlogs | /usr/local/bin/coloredlogs | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+combine_lang_model | /usr/local/Cellar/tesseract/5.5.2/bin/combine_lang_model | Mach-O 64-bit executable x86_64
+combine_tessdata | /usr/local/Cellar/tesseract/5.5.2/bin/combine_tessdata | Mach-O 64-bit executable x86_64
+compare-cvelists.sh | /usr/local/Cellar/ffmpeg/8.1.1/bin/compare-cvelists.sh | Bourne-Again shell script text executable, ASCII text
+convert-caffe2-to-onnx | /usr/local/bin/convert-caffe2-to-onnx | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+convert-onnx-to-caffe2 | /usr/local/bin/convert-onnx-to-caffe2 | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+convertfilestopdf | /usr/local/Cellar/leptonica/1.87.0/bin/convertfilestopdf | Mach-O 64-bit executable x86_64
+convertfilestops | /usr/local/Cellar/leptonica/1.87.0/bin/convertfilestops | Mach-O 64-bit executable x86_64
+convertformat | /usr/local/Cellar/leptonica/1.87.0/bin/convertformat | Mach-O 64-bit executable x86_64
+convertsegfilestopdf | /usr/local/Cellar/leptonica/1.87.0/bin/convertsegfilestopdf | Mach-O 64-bit executable x86_64
+convertsegfilestops | /usr/local/Cellar/leptonica/1.87.0/bin/convertsegfilestops | Mach-O 64-bit executable x86_64
+converttopdf | /usr/local/Cellar/leptonica/1.87.0/bin/converttopdf | Mach-O 64-bit executable x86_64
+converttops | /usr/local/Cellar/leptonica/1.87.0/bin/converttops | Mach-O 64-bit executable x86_64
+corepack | /usr/local/lib/node_modules/corepack/dist/corepack.js | a /usr/bin/env node script text executable, ASCII text
+cpack | /usr/local/Cellar/cmake/4.3.1/bin/cpack | Mach-O 64-bit executable x86_64
+cpp-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/cpp-15 | Mach-O 64-bit executable x86_64
+createdb | /usr/local/Cellar/postgresql@16/16.14/bin/createdb | Mach-O 64-bit executable x86_64
+createuser | /usr/local/Cellar/postgresql@16/16.14/bin/createuser | Mach-O 64-bit executable x86_64
+cred | /usr/local/bin/cred | Bourne-Again shell script text executable, ASCII text
+crlutil | /usr/local/Cellar/nss/3.123.1/bin/crlutil | Mach-O 64-bit executable x86_64
+crmftest | /usr/local/Cellar/nss/3.123.1/bin/crmftest | Mach-O 64-bit executable x86_64
+crypto_bench | /usr/local/Cellar/ffmpeg/8.1.1/bin/crypto_bench | Mach-O 64-bit executable x86_64
+csv2rdf | /usr/local/bin/csv2rdf | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+csvw2datasette | /usr/local/bin/csvw2datasette | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+csvw2json | /usr/local/bin/csvw2json | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+csvw2markdown | /usr/local/bin/csvw2markdown | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+csvw2sqlite | /usr/local/bin/csvw2sqlite | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+csvwdescribe | /usr/local/bin/csvwdescribe | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+csvwvalidate | /usr/local/bin/csvwvalidate | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+ct2-fairseq-converter | /usr/local/bin/ct2-fairseq-converter | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ct2-marian-converter | /usr/local/bin/ct2-marian-converter | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ct2-openai-gpt2-converter | /usr/local/bin/ct2-openai-gpt2-converter | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ct2-opennmt-py-converter | /usr/local/bin/ct2-opennmt-py-converter | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ct2-opennmt-tf-converter | /usr/local/bin/ct2-opennmt-tf-converter | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ct2-opus-mt-converter | /usr/local/bin/ct2-opus-mt-converter | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ct2-transformers-converter | /usr/local/bin/ct2-transformers-converter | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ctest | /usr/local/Cellar/cmake/4.3.1/bin/ctest | Mach-O 64-bit executable x86_64
+curl-cffi | /usr/local/bin/curl-cffi | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+cwebp | /usr/local/Cellar/webp/1.6.0/bin/cwebp | Mach-O 64-bit executable x86_64
+cws2fws | /usr/local/Cellar/ffmpeg/8.1.1/bin/cws2fws | Mach-O 64-bit executable x86_64
+cygdb | /usr/local/bin/cygdb | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+cython | /usr/local/bin/cython | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+cythonize | /usr/local/bin/cythonize | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+danetool | /usr/local/Cellar/gnutls/3.8.13/bin/danetool | Mach-O 64-bit executable x86_64
+dart | /usr/local/share/flutter/bin/dart | Bourne-Again shell script text executable, ASCII text
+dashscope | /usr/local/bin/dashscope | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+datasets-cli | /usr/local/bin/datasets-cli | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+dav1d | /usr/local/Cellar/dav1d/1.5.3/bin/dav1d | Mach-O 64-bit executable x86_64
+dawg2wordlist | /usr/local/Cellar/tesseract/5.5.2/bin/dawg2wordlist | Mach-O 64-bit executable x86_64
+dbtest | /usr/local/Cellar/nss/3.123.1/bin/dbtest | Mach-O 64-bit executable x86_64
+dbtool | /usr/local/Cellar/nss/3.123.1/bin/dbtool | Mach-O 64-bit executable x86_64
+ddgs | /usr/local/bin/ddgs | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+debugpy | /usr/local/bin/debugpy | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+deep-filter-py | /usr/local/bin/deep-filter-py | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+deepFilter | /usr/local/bin/deepFilter | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+deno | /usr/local/Cellar/deno/2.8.0/bin/deno | Mach-O 64-bit executable x86_64
+derdump | /usr/local/Cellar/nss/3.123.1/bin/derdump | Mach-O 64-bit executable x86_64
+dertimetest | /usr/local/Cellar/nss/3.123.1/bin/dertimetest | Mach-O 64-bit executable x86_64
+diffusers-cli | /usr/local/bin/diffusers-cli | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+digest | /usr/local/Cellar/nss/3.123.1/bin/digest | Mach-O 64-bit executable x86_64
+dirmngr | /usr/local/Cellar/gnupg/2.5.19/bin/dirmngr | Mach-O 64-bit executable x86_64
+dirmngr-client | /usr/local/Cellar/gnupg/2.5.19/bin/dirmngr-client | Mach-O 64-bit executable x86_64
+distro | /usr/local/bin/distro | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+djpeg | /usr/local/Cellar/jpeg-turbo/3.1.4.1/bin/djpeg | Mach-O 64-bit executable x86_64
+docker | /Applications/Docker.app/Contents/Resources/bin/docker | Mach-O 64-bit executable arm64
+docker-compose | /Applications/Docker.app/Contents/Resources/cli-plugins/docker-compose | Mach-O 64-bit executable arm64
+docker-credential-desktop | /Applications/Docker.app/Contents/Resources/bin/docker-credential-desktop | Mach-O 64-bit executable arm64
+docker-credential-gcloud | /usr/local/share/google-cloud-sdk/bin/docker-credential-gcloud | POSIX shell script text executable, ASCII text
+docker-credential-osxkeychain | /Applications/Docker.app/Contents/Resources/bin/docker-credential-osxkeychain | Mach-O 64-bit executable arm64
+docker.lima | /usr/local/Cellar/lima/2.1.4/bin/docker.lima | POSIX shell script text executable, ASCII text
+dotenv | /usr/local/bin/dotenv | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+dropdb | /usr/local/Cellar/postgresql@16/16.14/bin/dropdb | Mach-O 64-bit executable x86_64
+dropuser | /usr/local/Cellar/postgresql@16/16.14/bin/dropuser | Mach-O 64-bit executable x86_64
+dsh | /usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js | a /usr/bin/env node script text executable, Unicode text, UTF-8 text, with very 
+dukpy | /usr/local/bin/dukpy | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+dukpy-install | /usr/local/bin/dukpy-install | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+dumppdf.py | /usr/local/bin/dumppdf.py | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+dumpsexp | /usr/local/Cellar/libgcrypt/1.12.2/bin/dumpsexp | Mach-O 64-bit executable x86_64
+dvd2concat | /usr/local/Cellar/ffmpeg/8.1.1/bin/dvd2concat | Perl script text executable
+dwebp | /usr/local/Cellar/webp/1.6.0/bin/dwebp | Mach-O 64-bit executable x86_64
+dx | /usr/local/Cellar/deno/2.8.0/bin/deno | Mach-O 64-bit executable x86_64
+eas | /usr/local/lib/node_modules/eas-cli/bin/run | a /usr/bin/env node script text executable, ASCII text
+ecperf | /usr/local/Cellar/nss/3.123.1/bin/ecperf | Mach-O 64-bit executable x86_64
+ecpg | /usr/local/Cellar/postgresql@16/16.14/bin/ecpg | Mach-O 64-bit executable x86_64
+edge-playback | /usr/local/bin/edge-playback | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+edge-tts | /usr/local/bin/edge-tts | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+enc_recon_frame_test | /usr/local/Cellar/ffmpeg/8.1.1/bin/enc_recon_frame_test | Mach-O 64-bit executable x86_64
+encodec | /usr/local/bin/encodec | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+encodeinttest | /usr/local/Cellar/nss/3.123.1/bin/encodeinttest | Mach-O 64-bit executable x86_64
+enum_options | /usr/local/Cellar/ffmpeg/8.1.1/bin/enum_options | Mach-O 64-bit executable x86_64
+envsubst | /usr/local/Cellar/gettext/1.0/bin/envsubst | Mach-O 64-bit executable x86_64
+etc1tool | /usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/etc1tool | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/etc1tool (for a
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/etc1tool (for a
+event_rpcgen.py | /usr/local/Cellar/libevent/2.1.12_1/bin/event_rpcgen.py | Python script text executable, ASCII text
+exa-mcp-server | /usr/local/lib/node_modules/exa-mcp-server/.smithery/stdio/index.cjs | a /usr/bin/env node script text executable, ASCII text, with very long lines (65
+f2py | /usr/local/bin/f2py | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+fabric | /usr/local/bin/fabric | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+factor | /usr/local/Cellar/coreutils/9.10/bin/gfactor | Mach-O 64-bit executable x86_64
+fairseq-eval-lm | /usr/local/bin/fairseq-eval-lm | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+fairseq-generate | /usr/local/bin/fairseq-generate | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+fairseq-hydra-train | /usr/local/bin/fairseq-hydra-train | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+fairseq-interactive | /usr/local/bin/fairseq-interactive | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+fairseq-preprocess | /usr/local/bin/fairseq-preprocess | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+fairseq-score | /usr/local/bin/fairseq-score | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+fairseq-train | /usr/local/bin/fairseq-train | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+fairseq-validate | /usr/local/bin/fairseq-validate | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+fastapi | /usr/local/bin/fastapi | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+fastboot | /usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/fastboot | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/fastboot (for a
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/fastboot (for a
+fastmcp | /usr/local/bin/fastmcp | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+fax2ps | /usr/local/Cellar/libtiff/4.7.1_1/bin/fax2ps | Mach-O 64-bit executable x86_64
+fax2tiff | /usr/local/Cellar/libtiff/4.7.1_1/bin/fax2tiff | Mach-O 64-bit executable x86_64
+fbectest | /usr/local/Cellar/nss/3.123.1/bin/fbectest | Mach-O 64-bit executable x86_64
+fc-cache | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-cache | Mach-O 64-bit executable x86_64
+fc-cat | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-cat | Mach-O 64-bit executable x86_64
+fc-conflist | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-conflist | Mach-O 64-bit executable x86_64
+fc-genconf | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-genconf | Mach-O 64-bit executable x86_64
+fc-list | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-list | Mach-O 64-bit executable x86_64
+fc-match | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-match | Mach-O 64-bit executable x86_64
+fc-pattern | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-pattern | Mach-O 64-bit executable x86_64
+fc-query | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-query | Mach-O 64-bit executable x86_64
+fc-scan | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-scan | Mach-O 64-bit executable x86_64
+fc-validate | /usr/local/Cellar/fontconfig/2.18.1/bin/fc-validate | Mach-O 64-bit executable x86_64
+ffescape | /usr/local/Cellar/ffmpeg/8.1.1/bin/ffescape | Mach-O 64-bit executable x86_64
+ffeval | /usr/local/Cellar/ffmpeg/8.1.1/bin/ffeval | Mach-O 64-bit executable x86_64
+ffhash | /usr/local/Cellar/ffmpeg/8.1.1/bin/ffhash | Mach-O 64-bit executable x86_64
+ffmpeg | /usr/local/Cellar/ffmpeg/8.1.1/bin/ffmpeg | Mach-O 64-bit executable x86_64
+ffplay | /usr/local/Cellar/ffmpeg/8.1.1/bin/ffplay | Mach-O 64-bit executable x86_64
+ffprobe | /usr/local/Cellar/ffmpeg/8.1.1/bin/ffprobe | Mach-O 64-bit executable x86_64
+fileinfo | /usr/local/Cellar/leptonica/1.87.0/bin/fileinfo | Mach-O 64-bit executable x86_64
+fipstest | /usr/local/Cellar/nss/3.123.1/bin/fipstest | Mach-O 64-bit executable x86_64
+firecrawl | /usr/local/lib/node_modules/firecrawl-cli/dist/index.js | a /usr/bin/env node script text executable, Unicode text, UTF-8 text, with very 
+firecrawl-mcp | /usr/local/lib/node_modules/firecrawl-mcp/dist/index.js | a /usr/bin/env node script text executable, ASCII text
+fish | /usr/local/Cellar/fish/3.7.1/bin/fish | Mach-O 64-bit executable x86_64
+fish_indent | /usr/local/Cellar/fish/3.7.1/bin/fish_indent | Mach-O 64-bit executable x86_64
+fish_key_reader | /usr/local/Cellar/fish/3.7.1/bin/fish_key_reader | Mach-O 64-bit executable x86_64
+flac | /usr/local/Cellar/flac/1.5.0/bin/flac | Mach-O 64-bit executable x86_64
+flask | /usr/local/bin/flask | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+flutter | /usr/local/share/flutter/bin/flutter | Bourne-Again shell script text executable, ASCII text
+flyai | /usr/local/lib/node_modules/@fly-ai/flyai-cli/dist/flyai-bundle.cjs | a /usr/bin/env node script text executable, Unicode text, UTF-8 text, with very 
+fonttools | /usr/local/bin/fonttools | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+fourcc2pixfmt | /usr/local/Cellar/ffmpeg/8.1.1/bin/fourcc2pixfmt | Mach-O 64-bit executable x86_64
+fpcalc | /usr/local/Cellar/chromaprint/1.6.0/bin/fpcalc | Mach-O 64-bit executable x86_64
+freetype-config | /usr/local/Cellar/freetype/2.14.3/bin/freetype-config | POSIX shell script text executable, ASCII text
+fribidi | /usr/local/Cellar/fribidi/1.0.16/bin/fribidi | Mach-O 64-bit executable x86_64
+ftfy | /usr/local/bin/ftfy | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+funasr | /usr/local/bin/funasr | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+funasr-export | /usr/local/bin/funasr-export | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+funasr-hydra | /usr/local/bin/funasr-hydra | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+funasr-jsonl2scp | /usr/local/bin/funasr-jsonl2scp | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+funasr-scp2jsonl | /usr/local/bin/funasr-scp2jsonl | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+funasr-sensevoice2jsonl | /usr/local/bin/funasr-sensevoice2jsonl | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+funasr-server | /usr/local/bin/funasr-server | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+funasr-train | /usr/local/bin/funasr-train | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+funasr-train-ds | /usr/local/bin/funasr-train-ds | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+g++-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/g++-15 | Mach-O 64-bit executable x86_64
+g[ | /usr/local/Cellar/coreutils/9.10/bin/g[ | Mach-O 64-bit executable x86_64
+gb2sum | /usr/local/Cellar/coreutils/9.10/bin/gb2sum | Mach-O 64-bit executable x86_64
+gbase32 | /usr/local/Cellar/coreutils/9.10/bin/gbase32 | Mach-O 64-bit executable x86_64
+gbase64 | /usr/local/Cellar/coreutils/9.10/bin/gbase64 | Mach-O 64-bit executable x86_64
+gbasename | /usr/local/Cellar/coreutils/9.10/bin/gbasename | Mach-O 64-bit executable x86_64
+gbasenc | /usr/local/Cellar/coreutils/9.10/bin/gbasenc | Mach-O 64-bit executable x86_64
+gcat | /usr/local/Cellar/coreutils/9.10/bin/gcat | Mach-O 64-bit executable x86_64
+gcc-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/gcc-15 | Mach-O 64-bit executable x86_64
+gcc-ar-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/gcc-ar-15 | Mach-O 64-bit executable x86_64
+gcc-nm-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/gcc-nm-15 | Mach-O 64-bit executable x86_64
+gcc-ranlib-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/gcc-ranlib-15 | Mach-O 64-bit executable x86_64
+gchgrp | /usr/local/Cellar/coreutils/9.10/bin/gchgrp | Mach-O 64-bit executable x86_64
+gchmod | /usr/local/Cellar/coreutils/9.10/bin/gchmod | Mach-O 64-bit executable x86_64
+gchown | /usr/local/Cellar/coreutils/9.10/bin/gchown | Mach-O 64-bit executable x86_64
+gchroot | /usr/local/Cellar/coreutils/9.10/bin/gchroot | Mach-O 64-bit executable x86_64
+gcksum | /usr/local/Cellar/coreutils/9.10/bin/gcksum | Mach-O 64-bit executable x86_64
+gcloud | /usr/local/share/google-cloud-sdk/bin/gcloud | POSIX shell script text executable, ASCII text
+gcomm | /usr/local/Cellar/coreutils/9.10/bin/gcomm | Mach-O 64-bit executable x86_64
+gcov-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/gcov-15 | Mach-O 64-bit executable x86_64
+gcov-dump-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/gcov-dump-15 | Mach-O 64-bit executable x86_64
+gcov-tool-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/gcov-tool-15 | Mach-O 64-bit executable x86_64
+gcp | /usr/local/Cellar/coreutils/9.10/bin/gcp | Mach-O 64-bit executable x86_64
+gcsplit | /usr/local/Cellar/coreutils/9.10/bin/gcsplit | Mach-O 64-bit executable x86_64
+gcut | /usr/local/Cellar/coreutils/9.10/bin/gcut | Mach-O 64-bit executable x86_64
+gdate | /usr/local/Cellar/coreutils/9.10/bin/gdate | Mach-O 64-bit executable x86_64
+gdbus | /usr/local/Cellar/glib/2.88.2/bin/gdbus | Mach-O 64-bit executable x86_64
+gdbus-codegen | /usr/local/Cellar/glib/2.88.2/bin/gdbus-codegen | Python script text executable, ASCII text
+gdd | /usr/local/Cellar/coreutils/9.10/bin/gdd | Mach-O 64-bit executable x86_64
+gdf | /usr/local/Cellar/coreutils/9.10/bin/gdf | Mach-O 64-bit executable x86_64
+gdir | /usr/local/Cellar/coreutils/9.10/bin/gdir | Mach-O 64-bit executable x86_64
+gdircolors | /usr/local/Cellar/coreutils/9.10/bin/gdircolors | Mach-O 64-bit executable x86_64
+gdirname | /usr/local/Cellar/coreutils/9.10/bin/gdirname | Mach-O 64-bit executable x86_64
+gdu | /usr/local/Cellar/coreutils/9.10/bin/gdu | Mach-O 64-bit executable x86_64
+gecho | /usr/local/Cellar/coreutils/9.10/bin/gecho | Mach-O 64-bit executable x86_64
+gemini | /usr/local/lib/node_modules/@google/gemini-cli/dist/index.js | a /usr/bin/env node script text executable, ASCII text
+gen-rc | /usr/local/Cellar/ffmpeg/8.1.1/bin/gen-rc | POSIX shell script text executable, ASCII text
+general_assembly.pl | /usr/local/Cellar/ffmpeg/8.1.1/bin/general_assembly.pl | Perl script text executable
+gengal | /Applications/LibreOffice.app/Contents/MacOS/gengal | Mach-O 64-bit executable arm64
+genv | /usr/local/Cellar/coreutils/9.10/bin/genv | Mach-O 64-bit executable x86_64
+get_gprof | /usr/local/bin/get_gprof | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+get_objgraph | /usr/local/bin/get_objgraph | Objective-C source text, ASCII text
+gettext | /usr/local/Cellar/gettext/1.0/bin/gettext | Mach-O 64-bit executable x86_64
+gettext.sh | /usr/local/Cellar/gettext/1.0/bin/gettext.sh | POSIX shell script text executable, ASCII text
+gettextize | /usr/local/Cellar/gettext/1.0/bin/gettextize | POSIX shell script text executable, ASCII text
+gexpand | /usr/local/Cellar/coreutils/9.10/bin/gexpand | Mach-O 64-bit executable x86_64
+gexpr | /usr/local/Cellar/coreutils/9.10/bin/gexpr | Mach-O 64-bit executable x86_64
+gfactor | /usr/local/Cellar/coreutils/9.10/bin/gfactor | Mach-O 64-bit executable x86_64
+gfalse | /usr/local/Cellar/coreutils/9.10/bin/gfalse | Mach-O 64-bit executable x86_64
+gfmt | /usr/local/Cellar/coreutils/9.10/bin/gfmt | Mach-O 64-bit executable x86_64
+gfold | /usr/local/Cellar/coreutils/9.10/bin/gfold | Mach-O 64-bit executable x86_64
+gfortran | /usr/local/Cellar/gcc/15.2.0_1/bin/gfortran-15 | Mach-O 64-bit executable x86_64
+gfortran-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/gfortran-15 | Mach-O 64-bit executable x86_64
+ggroups | /usr/local/Cellar/coreutils/9.10/bin/ggroups | Mach-O 64-bit executable x86_64
+ghead | /usr/local/Cellar/coreutils/9.10/bin/ghead | Mach-O 64-bit executable x86_64
+ghostid | /usr/local/Cellar/coreutils/9.10/bin/ghostid | Mach-O 64-bit executable x86_64
+gi-compile-repository | /usr/local/Cellar/glib/2.88.2/bin/gi-compile-repository | Mach-O 64-bit executable x86_64
+gi-decompile-typelib | /usr/local/Cellar/glib/2.88.2/bin/gi-decompile-typelib | Mach-O 64-bit executable x86_64
+gi-inspect-typelib | /usr/local/Cellar/glib/2.88.2/bin/gi-inspect-typelib | Mach-O 64-bit executable x86_64
+gid | /usr/local/Cellar/coreutils/9.10/bin/gid | Mach-O 64-bit executable x86_64
+gif2webp | /usr/local/Cellar/webp/1.6.0/bin/gif2webp | Mach-O 64-bit executable x86_64
+gifbuild | /usr/local/Cellar/giflib/6.1.3/bin/gifbuild | Mach-O 64-bit executable x86_64
+gifclrmp | /usr/local/Cellar/giflib/6.1.3/bin/gifclrmp | Mach-O 64-bit executable x86_64
+giffix | /usr/local/Cellar/giflib/6.1.3/bin/giffix | Mach-O 64-bit executable x86_64
+giftext | /usr/local/Cellar/giflib/6.1.3/bin/giftext | Mach-O 64-bit executable x86_64
+giftool | /usr/local/Cellar/giflib/6.1.3/bin/giftool | Mach-O 64-bit executable x86_64
+ginstall | /usr/local/Cellar/coreutils/9.10/bin/ginstall | Mach-O 64-bit executable x86_64
+gio | /usr/local/Cellar/glib/2.88.2/bin/gio | Mach-O 64-bit executable x86_64
+gio-querymodules | /usr/local/Cellar/glib/2.88.2/bin/gio-querymodules | Mach-O 64-bit executable x86_64
+git-credential-gcloud | /usr/local/share/google-cloud-sdk/bin/git-credential-gcloud.sh | POSIX shell script text executable, ASCII text
+git-filter-repo | /usr/local/bin/git-filter-repo | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+gitleaks | /usr/local/Cellar/gitleaks/8.30.1/bin/gitleaks | Mach-O 64-bit executable x86_64
+gjoin | /usr/local/Cellar/coreutils/9.10/bin/gjoin | Mach-O 64-bit executable x86_64
+glib-compile-resources | /usr/local/Cellar/glib/2.88.2/bin/glib-compile-resources | Mach-O 64-bit executable x86_64
+glib-compile-schemas | /usr/local/Cellar/glib/2.88.2/bin/glib-compile-schemas | Mach-O 64-bit executable x86_64
+glib-genmarshal | /usr/local/Cellar/glib/2.88.2/bin/glib-genmarshal | Python script text executable, ASCII text
+glib-gettextize | /usr/local/Cellar/glib/2.88.2/bin/glib-gettextize | POSIX shell script text executable, ASCII text
+glib-mkenums | /usr/local/Cellar/glib/2.88.2/bin/glib-mkenums | Python script text executable, ASCII text
+glink | /usr/local/Cellar/coreutils/9.10/bin/glink | Mach-O 64-bit executable x86_64
+gln | /usr/local/Cellar/coreutils/9.10/bin/gln | Mach-O 64-bit executable x86_64
+glogname | /usr/local/Cellar/coreutils/9.10/bin/glogname | Mach-O 64-bit executable x86_64
+gls | /usr/local/Cellar/coreutils/9.10/bin/gls | Mach-O 64-bit executable x86_64
+glslc | /usr/local/Cellar/shaderc/2026.2/bin/glslc | Mach-O 64-bit executable x86_64
+gmd5sum | /usr/local/Cellar/coreutils/9.10/bin/gmd5sum | Mach-O 64-bit executable x86_64
+gmkdir | /usr/local/Cellar/coreutils/9.10/bin/gmkdir | Mach-O 64-bit executable x86_64
+gmkfifo | /usr/local/Cellar/coreutils/9.10/bin/gmkfifo | Mach-O 64-bit executable x86_64
+gmknod | /usr/local/Cellar/coreutils/9.10/bin/gmknod | Mach-O 64-bit executable x86_64
+gmktemp | /usr/local/Cellar/coreutils/9.10/bin/gmktemp | Mach-O 64-bit executable x86_64
+gmv | /usr/local/Cellar/coreutils/9.10/bin/gmv | Mach-O 64-bit executable x86_64
+gnice | /usr/local/Cellar/coreutils/9.10/bin/gnice | Mach-O 64-bit executable x86_64
+gnl | /usr/local/Cellar/coreutils/9.10/bin/gnl | Mach-O 64-bit executable x86_64
+gnohup | /usr/local/Cellar/coreutils/9.10/bin/gnohup | Mach-O 64-bit executable x86_64
+gnproc | /usr/local/Cellar/coreutils/9.10/bin/gnproc | Mach-O 64-bit executable x86_64
+gnumfmt | /usr/local/Cellar/coreutils/9.10/bin/gnumfmt | Mach-O 64-bit executable x86_64
+gnupg-key-manage | /usr/local/Cellar/gpgme/2.0.1/bin/gnupg-key-manage | Mach-O 64-bit executable x86_64
+gnutls-certtool | /usr/local/Cellar/gnutls/3.8.13/bin/gnutls-certtool | Mach-O 64-bit executable x86_64
+gnutls-cli | /usr/local/Cellar/gnutls/3.8.13/bin/gnutls-cli | Mach-O 64-bit executable x86_64
+gnutls-cli-debug | /usr/local/Cellar/gnutls/3.8.13/bin/gnutls-cli-debug | Mach-O 64-bit executable x86_64
+gnutls-serv | /usr/local/Cellar/gnutls/3.8.13/bin/gnutls-serv | Mach-O 64-bit executable x86_64
+gobject-query | /usr/local/Cellar/glib/2.88.2/bin/gobject-query | Mach-O 64-bit executable x86_64
+god | /usr/local/Cellar/coreutils/9.10/bin/god | Mach-O 64-bit executable x86_64
+google | /usr/local/bin/google | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+google-oauthlib-tool | /usr/local/bin/google-oauthlib-tool | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+gpaste | /usr/local/Cellar/coreutils/9.10/bin/gpaste | Mach-O 64-bit executable x86_64
+gpathchk | /usr/local/Cellar/coreutils/9.10/bin/gpathchk | Mach-O 64-bit executable x86_64
+gpg | /usr/local/Cellar/gnupg/2.5.19/bin/gpg | Mach-O 64-bit executable x86_64
+gpg-agent | /usr/local/Cellar/gnupg/2.5.19/bin/gpg-agent | Mach-O 64-bit executable x86_64
+gpg-authcode-sign.sh | /usr/local/Cellar/gnupg/2.5.19/bin/gpg-authcode-sign.sh | POSIX shell script text executable, ASCII text
+gpg-card | /usr/local/Cellar/gnupg/2.5.19/bin/gpg-card | Mach-O 64-bit executable x86_64
+gpg-connect-agent | /usr/local/Cellar/gnupg/2.5.19/bin/gpg-connect-agent | Mach-O 64-bit executable x86_64
+gpg-error | /usr/local/Cellar/libgpg-error/1.61/bin/gpg-error | Mach-O 64-bit executable x86_64
+gpg-error-config | /usr/local/Cellar/libgpg-error/1.61/bin/gpg-error-config | POSIX shell script text executable, ASCII text
+gpg-mail-tube | /usr/local/Cellar/gnupg/2.5.19/bin/gpg-mail-tube | Mach-O 64-bit executable x86_64
+gpg-wks-client | /usr/local/Cellar/gnupg/2.5.19/bin/gpg-wks-client | Mach-O 64-bit executable x86_64
+gpg-wks-server | /usr/local/Cellar/gnupg/2.5.19/bin/gpg-wks-server | Mach-O 64-bit executable x86_64
+gpgconf | /usr/local/Cellar/gnupg/2.5.19/bin/gpgconf | Mach-O 64-bit executable x86_64
+gpgme-config | /usr/local/Cellar/gpgme/2.0.1/bin/gpgme-config | POSIX shell script text executable, ASCII text
+gpgme-json | /usr/local/Cellar/gpgme/2.0.1/bin/gpgme-json | Mach-O 64-bit executable x86_64
+gpgme-tool | /usr/local/Cellar/gpgme/2.0.1/bin/gpgme-tool | Mach-O 64-bit executable x86_64
+gpgparsemail | /usr/local/Cellar/gnupg/2.5.19/bin/gpgparsemail | Mach-O 64-bit executable x86_64
+gpgrt-config | /usr/local/Cellar/libgpg-error/1.61/bin/gpgrt-config | POSIX shell script text executable, ASCII text
+gpgscm | /usr/local/Cellar/gnupg/2.5.19/bin/gpgscm | Mach-O 64-bit executable x86_64
+gpgsm | /usr/local/Cellar/gnupg/2.5.19/bin/gpgsm | Mach-O 64-bit executable x86_64
+gpgsplit | /usr/local/Cellar/gnupg/2.5.19/bin/gpgsplit | Mach-O 64-bit executable x86_64
+gpgtar | /usr/local/Cellar/gnupg/2.5.19/bin/gpgtar | Mach-O 64-bit executable x86_64
+gpgv | /usr/local/Cellar/gnupg/2.5.19/bin/gpgv | Mach-O 64-bit executable x86_64
+gpinky | /usr/local/Cellar/coreutils/9.10/bin/gpinky | Mach-O 64-bit executable x86_64
+gpr | /usr/local/Cellar/coreutils/9.10/bin/gpr | Mach-O 64-bit executable x86_64
+gprintenv | /usr/local/Cellar/coreutils/9.10/bin/gprintenv | Mach-O 64-bit executable x86_64
+gprintf | /usr/local/Cellar/coreutils/9.10/bin/gprintf | Mach-O 64-bit executable x86_64
+gptx | /usr/local/Cellar/coreutils/9.10/bin/gptx | Mach-O 64-bit executable x86_64
+gpwd | /usr/local/Cellar/coreutils/9.10/bin/gpwd | Mach-O 64-bit executable x86_64
+gr2fonttest | /usr/local/Cellar/graphite2/1.3.15/bin/gr2fonttest | Mach-O 64-bit executable x86_64
+gradio | /usr/local/bin/gradio | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+gradle | /usr/local/Cellar/gradle/9.2.0/bin/gradle | Bourne-Again shell script text executable, ASCII text
+graph2dot | /usr/local/Cellar/ffmpeg/8.1.1/bin/graph2dot | Mach-O 64-bit executable x86_64
+greadlink | /usr/local/Cellar/coreutils/9.10/bin/greadlink | Mach-O 64-bit executable x86_64
+grealpath | /usr/local/Cellar/coreutils/9.10/bin/grealpath | Mach-O 64-bit executable x86_64
+gresource | /usr/local/Cellar/glib/2.88.2/bin/gresource | Mach-O 64-bit executable x86_64
+grm | /usr/local/Cellar/coreutils/9.10/bin/grm | Mach-O 64-bit executable x86_64
+grmdir | /usr/local/Cellar/coreutils/9.10/bin/grmdir | Mach-O 64-bit executable x86_64
+gseq | /usr/local/Cellar/coreutils/9.10/bin/gseq | Mach-O 64-bit executable x86_64
+gsettings | /usr/local/Cellar/glib/2.88.2/bin/gsettings | Mach-O 64-bit executable x86_64
+gsha1sum | /usr/local/Cellar/coreutils/9.10/bin/gsha1sum | Mach-O 64-bit executable x86_64
+gsha224sum | /usr/local/Cellar/coreutils/9.10/bin/gsha224sum | Mach-O 64-bit executable x86_64
+gsha256sum | /usr/local/Cellar/coreutils/9.10/bin/gsha256sum | Mach-O 64-bit executable x86_64
+gsha384sum | /usr/local/Cellar/coreutils/9.10/bin/gsha384sum | Mach-O 64-bit executable x86_64
+gsha512sum | /usr/local/Cellar/coreutils/9.10/bin/gsha512sum | Mach-O 64-bit executable x86_64
+gshred | /usr/local/Cellar/coreutils/9.10/bin/gshred | Mach-O 64-bit executable x86_64
+gshuf | /usr/local/Cellar/coreutils/9.10/bin/gshuf | Mach-O 64-bit executable x86_64
+gsleep | /usr/local/Cellar/coreutils/9.10/bin/gsleep | Mach-O 64-bit executable x86_64
+gsort | /usr/local/Cellar/coreutils/9.10/bin/gsort | Mach-O 64-bit executable x86_64
+gsplit | /usr/local/Cellar/coreutils/9.10/bin/gsplit | Mach-O 64-bit executable x86_64
+gstat | /usr/local/Cellar/coreutils/9.10/bin/gstat | Mach-O 64-bit executable x86_64
+gstdbuf | /usr/local/Cellar/coreutils/9.10/bin/gstdbuf | Mach-O 64-bit executable x86_64
+gstty | /usr/local/Cellar/coreutils/9.10/bin/gstty | Mach-O 64-bit executable x86_64
+gsum | /usr/local/Cellar/coreutils/9.10/bin/gsum | Mach-O 64-bit executable x86_64
+gsutil | /usr/local/share/google-cloud-sdk/bin/gsutil | POSIX shell script text executable, ASCII text
+gsync | /usr/local/Cellar/coreutils/9.10/bin/gsync | Mach-O 64-bit executable x86_64
+gtac | /usr/local/Cellar/coreutils/9.10/bin/gtac | Mach-O 64-bit executable x86_64
+gtail | /usr/local/Cellar/coreutils/9.10/bin/gtail | Mach-O 64-bit executable x86_64
+gtee | /usr/local/Cellar/coreutils/9.10/bin/gtee | Mach-O 64-bit executable x86_64
+gtest | /usr/local/Cellar/coreutils/9.10/bin/gtest | Mach-O 64-bit executable x86_64
+gtester | /usr/local/Cellar/glib/2.88.2/bin/gtester | Mach-O 64-bit executable x86_64
+gtester-report | /usr/local/Cellar/glib/2.88.2/bin/gtester-report | Python script text executable, ASCII text
+gtimeout | /usr/local/Cellar/coreutils/9.10/bin/gtimeout | Mach-O 64-bit executable x86_64
+gtouch | /usr/local/Cellar/coreutils/9.10/bin/gtouch | Mach-O 64-bit executable x86_64
+gtr | /usr/local/Cellar/coreutils/9.10/bin/gtr | Mach-O 64-bit executable x86_64
+gtrue | /usr/local/Cellar/coreutils/9.10/bin/gtrue | Mach-O 64-bit executable x86_64
+gtruncate | /usr/local/Cellar/coreutils/9.10/bin/gtruncate | Mach-O 64-bit executable x86_64
+gtsort | /usr/local/Cellar/coreutils/9.10/bin/gtsort | Mach-O 64-bit executable x86_64
+gtty | /usr/local/Cellar/coreutils/9.10/bin/gtty | Mach-O 64-bit executable x86_64
+guname | /usr/local/Cellar/coreutils/9.10/bin/guname | Mach-O 64-bit executable x86_64
+gunexpand | /usr/local/Cellar/coreutils/9.10/bin/gunexpand | Mach-O 64-bit executable x86_64
+guniq | /usr/local/Cellar/coreutils/9.10/bin/guniq | Mach-O 64-bit executable x86_64
+gunlink | /usr/local/Cellar/coreutils/9.10/bin/gunlink | Mach-O 64-bit executable x86_64
+gusers | /usr/local/Cellar/coreutils/9.10/bin/gusers | Mach-O 64-bit executable x86_64
+gvdir | /usr/local/Cellar/coreutils/9.10/bin/gvdir | Mach-O 64-bit executable x86_64
+gwc | /usr/local/Cellar/coreutils/9.10/bin/gwc | Mach-O 64-bit executable x86_64
+gwho | /usr/local/Cellar/coreutils/9.10/bin/gwho | Mach-O 64-bit executable x86_64
+gwhoami | /usr/local/Cellar/coreutils/9.10/bin/gwhoami | Mach-O 64-bit executable x86_64
+gyes | /usr/local/Cellar/coreutils/9.10/bin/gyes | Mach-O 64-bit executable x86_64
+happy | /usr/local/lib/node_modules/happy-coder/bin/happy.mjs | a /usr/bin/env node script text executable, ASCII text
+happy-mcp | /usr/local/lib/node_modules/happy-coder/bin/happy-mcp.mjs | a /usr/bin/env node script text executable, ASCII text
+hb-info | /usr/local/Cellar/harfbuzz/14.2.1/bin/hb-info | Mach-O 64-bit executable x86_64
+hb-raster | /usr/local/Cellar/harfbuzz/14.2.1/bin/hb-raster | Mach-O 64-bit executable x86_64
+hb-shape | /usr/local/Cellar/harfbuzz/14.2.1/bin/hb-shape | Mach-O 64-bit executable x86_64
+hb-subset | /usr/local/Cellar/harfbuzz/14.2.1/bin/hb-subset | Mach-O 64-bit executable x86_64
+hb-vector | /usr/local/Cellar/harfbuzz/14.2.1/bin/hb-vector | Mach-O 64-bit executable x86_64
+hb-view | /usr/local/Cellar/harfbuzz/14.2.1/bin/hb-view | Mach-O 64-bit executable x86_64
+hf | /usr/local/bin/hf | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+hf-gradio | /usr/local/bin/hf-gradio | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+hmac256 | /usr/local/Cellar/libgcrypt/1.12.2/bin/hmac256 | Mach-O 64-bit executable x86_64
+hostid | /usr/local/Cellar/coreutils/9.10/bin/ghostid | Mach-O 64-bit executable x86_64
+hprof-conv | /usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/hprof-conv | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/hprof-conv (for
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/hprof-conv (for
+httpserv | /usr/local/Cellar/nss/3.123.1/bin/httpserv | Mach-O 64-bit executable x86_64
+httpx | /usr/local/bin/httpx | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+huggingface-cli | /usr/local/bin/huggingface-cli | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+humanfriendly | /usr/local/bin/humanfriendly | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+idle3 | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/idle3.14 | a /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14
+idle3.11 | /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/idle3.11 | a /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.1
+idle3.12 | /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12/bin/idle3.12 | a /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12
+idle3.13 | /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/bin/idle3.13 | a /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13
+idle3.14 | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/idle3.14 | a /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14
+idn2 | /usr/local/Cellar/libidn2/2.3.8/bin/idn2 | Mach-O 64-bit executable x86_64
+imagetops | /usr/local/Cellar/leptonica/1.87.0/bin/imagetops | Mach-O 64-bit executable x86_64
+img2webp | /usr/local/Cellar/webp/1.6.0/bin/img2webp | Mach-O 64-bit executable x86_64
+indent_arm_assembly.pl | /usr/local/Cellar/ffmpeg/8.1.1/bin/indent_arm_assembly.pl | Perl script text executable
+initdb | /usr/local/Cellar/postgresql@16/16.14/bin/initdb | Mach-O 64-bit executable x86_64
+inv | /usr/local/bin/inv | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+invoke | /usr/local/bin/invoke | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+ipython | /usr/local/bin/ipython | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+ipython3 | /usr/local/bin/ipython3 | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+ismindex | /usr/local/Cellar/ffmpeg/8.1.1/bin/ismindex | Mach-O 64-bit executable x86_64
+isympy | /usr/local/bin/isympy | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+jlpm | /usr/local/bin/jlpm | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jp.py | /usr/local/bin/jp.py | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+jpegtran | /usr/local/Cellar/jpeg-turbo/3.1.4.1/bin/jpegtran | Mach-O 64-bit executable x86_64
+jpgicc | /usr/local/Cellar/little-cms2/2.19/bin/jpgicc | Mach-O 64-bit executable x86_64
+json_repair | /usr/local/bin/json_repair | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+jsonl2scp | /usr/local/bin/jsonl2scp | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+jsonpointer | /usr/local/bin/jsonpointer | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jsonschema | /usr/local/bin/jsonschema | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+jupyter | /usr/local/bin/jupyter | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+jupyter-console | /usr/local/bin/jupyter-console | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-dejavu | /usr/local/bin/jupyter-dejavu | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-events | /usr/local/bin/jupyter-events | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-execute | /usr/local/bin/jupyter-execute | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-kernel | /usr/local/bin/jupyter-kernel | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-kernelspec | /usr/local/bin/jupyter-kernelspec | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-lab | /usr/local/bin/jupyter-lab | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-labextension | /usr/local/bin/jupyter-labextension | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-labhub | /usr/local/bin/jupyter-labhub | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-migrate | /usr/local/bin/jupyter-migrate | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+jupyter-nbconvert | /usr/local/bin/jupyter-nbconvert | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-notebook | /usr/local/bin/jupyter-notebook | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-run | /usr/local/bin/jupyter-run | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-server | /usr/local/bin/jupyter-server | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+jupyter-troubleshoot | /usr/local/bin/jupyter-troubleshoot | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+jupyter-trust | /usr/local/bin/jupyter-trust | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+kaggle | /usr/local/bin/kaggle | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+kbxutil | /usr/local/Cellar/gnupg/2.5.19/bin/kbxutil | Mach-O 64-bit executable x86_64
+keyring | /usr/local/bin/keyring | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+ksba-config | /usr/local/Cellar/libksba/1.7.0/bin/ksba-config | POSIX shell script text executable, ASCII text
+kubectl | /Applications/Docker.app/Contents/Resources/bin/kubectl | Mach-O 64-bit executable arm64
+kubectl.docker | /Applications/Docker.app/Contents/Resources/bin/kubectl | Mach-O 64-bit executable arm64
+kubectl.lima | /usr/local/Cellar/lima/2.1.4/bin/kubectl.lima | POSIX shell script text executable, ASCII text
+lame | /usr/local/Cellar/lame/3.100/bin/lame | Mach-O 64-bit executable x86_64
+lark-cli | /usr/local/lib/node_modules/@larksuite/cli/scripts/run.js | a /usr/bin/env node script text executable, ASCII text
+latest-science-mcp | /usr/local/lib/node_modules/@futurelab-studio/latest-science-mcp/dist/server.js | a /usr/bin/env node script text executable, Unicode text, UTF-8 text
+libassuan-config | /usr/local/Cellar/libassuan/3.0.2/bin/libassuan-config | POSIX shell script text executable, ASCII text
+libgcrypt-config | /usr/local/Cellar/libgcrypt/1.12.2/bin/libgcrypt-config | POSIX shell script text executable, ASCII text
+libpng-config | /usr/local/Cellar/libpng/1.6.58/bin/libpng16-config | POSIX shell script text executable, ASCII text
+libpng16-config | /usr/local/Cellar/libpng/1.6.58/bin/libpng16-config | POSIX shell script text executable, ASCII text
+lima | /usr/local/Cellar/lima/2.1.4/bin/lima | POSIX shell script text executable, ASCII text
+limactl | /usr/local/Cellar/lima/2.1.4/bin/limactl | Mach-O 64-bit executable x86_64
+linkicc | /usr/local/Cellar/little-cms2/2.19/bin/linkicc | Mach-O 64-bit executable x86_64
+listsuites | /usr/local/Cellar/nss/3.123.1/bin/listsuites | Mach-O 64-bit executable x86_64
+litellm | /usr/local/bin/litellm | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+litellm-proxy | /usr/local/bin/litellm-proxy | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+loudnorm.rb | /usr/local/Cellar/ffmpeg/8.1.1/bin/loudnorm.rb | Ruby script text executable, ASCII text
+lsar | /usr/local/Cellar/unar/1.10.8_5/bin/lsar | Mach-O 64-bit executable x86_64
+lstmeval | /usr/local/Cellar/tesseract/5.5.2/bin/lstmeval | Mach-O 64-bit executable x86_64
+lstmtraining | /usr/local/Cellar/tesseract/5.5.2/bin/lstmtraining | Mach-O 64-bit executable x86_64
+lt | /usr/local/lib/node_modules/localtunnel/bin/lt.js | a /usr/bin/env node script text executable, ASCII text
+lto-dump-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/lto-dump-15 | Mach-O 64-bit executable x86_64
+luajit | /usr/local/Cellar/luajit/2.1.1774896198/bin/luajit-2.1.1774896198 | Mach-O 64-bit executable x86_64
+luajit-2.1.1774896198 | /usr/local/Cellar/luajit/2.1.1774896198/bin/luajit-2.1.1774896198 | Mach-O 64-bit executable x86_64
+lz4 | /usr/local/Cellar/lz4/1.10.0/bin/lz4 | Mach-O 64-bit executable x86_64
+lz4c | /usr/local/Cellar/lz4/1.10.0/bin/lz4 | Mach-O 64-bit executable x86_64
+lz4cat | /usr/local/Cellar/lz4/1.10.0/bin/lz4 | Mach-O 64-bit executable x86_64
+lzcat | /usr/local/Cellar/xz/5.8.3/bin/xz | Mach-O 64-bit executable x86_64
+lzcmp | /usr/local/Cellar/xz/5.8.3/bin/xzdiff | POSIX shell script text executable, ASCII text
+lzdiff | /usr/local/Cellar/xz/5.8.3/bin/xzdiff | POSIX shell script text executable, ASCII text
+lzegrep | /usr/local/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+lzfgrep | /usr/local/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+lzgrep | /usr/local/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+lzless | /usr/local/Cellar/xz/5.8.3/bin/xzless | POSIX shell script text executable, ASCII text
+lzma | /usr/local/Cellar/xz/5.8.3/bin/xz | Mach-O 64-bit executable x86_64
+lzmadec | /usr/local/Cellar/xz/5.8.3/bin/lzmadec | Mach-O 64-bit executable x86_64
+lzmainfo | /usr/local/Cellar/xz/5.8.3/bin/lzmainfo | Mach-O 64-bit executable x86_64
+lzmore | /usr/local/Cellar/xz/5.8.3/bin/xzmore | POSIX shell script text executable, ASCII text
+magika | /usr/local/bin/magika | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+magika-python-client | /usr/local/bin/magika-python-client | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+mail-code | /usr/local/bin/mail-code | Bourne-Again shell script text executable, Unicode text, UTF-8 text
+make_chlayout_test | /usr/local/Cellar/ffmpeg/8.1.1/bin/make_chlayout_test | Perl script text executable
+make_f2fs | /usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/make_f2fs | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/make_f2fs (for 
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/make_f2fs (for 
+make_f2fs_casefold | /usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/make_f2fs_casefold | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/make_f2fs_casef
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/make_f2fs_casef
+makepqg | /usr/local/Cellar/nss/3.123.1/bin/makepqg | Mach-O 64-bit executable x86_64
+mako-render | /usr/local/bin/mako-render | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+mammoth | /usr/local/bin/mammoth | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+mangle | /usr/local/Cellar/nss/3.123.1/bin/mangle | Mach-O 64-bit executable x86_64
+markdown-it | /usr/local/bin/markdown-it | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+markdown_py | /usr/local/bin/markdown_py | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+markdownify | /usr/local/bin/markdownify | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+markitdown | /usr/local/bin/markitdown | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+mcp | /usr/local/bin/mcp | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+mcp-server-brave-search | /usr/local/lib/node_modules/@modelcontextprotocol/server-brave-search/dist/index.js | a /usr/bin/env node script text executable, ASCII text
+mcp-server-chart | /usr/local/lib/node_modules/@antv/mcp-server-chart/build/index.js | a /usr/bin/env node script text executable, ASCII text
+md5sum | /usr/local/Cellar/coreutils/9.10/bin/gmd5sum | Mach-O 64-bit executable x86_64
+merge-all-source-plugins | /usr/local/Cellar/ffmpeg/8.1.1/bin/merge-all-source-plugins | POSIX shell script text executable, ASCII text
+merge_unicharsets | /usr/local/Cellar/tesseract/5.5.2/bin/merge_unicharsets | Mach-O 64-bit executable x86_64
+metaflac | /usr/local/Cellar/flac/1.5.0/bin/metaflac | Mach-O 64-bit executable x86_64
+mftraining | /usr/local/Cellar/tesseract/5.5.2/bin/mftraining | Mach-O 64-bit executable x86_64
+micli | /usr/local/bin/micli | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+micli.py | /usr/local/bin/micli.py | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mid3cp | /usr/local/bin/mid3cp | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mid3iconv | /usr/local/bin/mid3iconv | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mid3v2 | /usr/local/bin/mid3v2 | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+missing_codec_desc | /usr/local/Cellar/ffmpeg/8.1.1/bin/missing_codec_desc | POSIX shell script text executable, ASCII text
+mke2fs | /usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/mke2fs | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/mke2fs (for arc
+/usr/local/Caskroom/android-platform-tools/36.0.2/platform-tools/mke2fs (for arc
+mlx_vlm.chat | /usr/local/bin/mlx_vlm.chat | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mlx_vlm.chat_ui | /usr/local/bin/mlx_vlm.chat_ui | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mlx_vlm.convert | /usr/local/bin/mlx_vlm.convert | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mlx_vlm.generate | /usr/local/bin/mlx_vlm.generate | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mlx_vlm.server | /usr/local/bin/mlx_vlm.server | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+modal | /usr/local/bin/modal | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+modelscope | /usr/local/bin/modelscope | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+modutil | /usr/local/Cellar/nss/3.123.1/bin/modutil | Mach-O 64-bit executable x86_64
+moggsplit | /usr/local/bin/moggsplit | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mpg123 | /usr/local/Cellar/mpg123/1.33.5/bin/mpg123 | Mach-O 64-bit executable x86_64
+mpg123-id3dump | /usr/local/Cellar/mpg123/1.33.5/bin/mpg123-id3dump | Mach-O 64-bit executable x86_64
+mpg123-strip | /usr/local/Cellar/mpg123/1.33.5/bin/mpg123-strip | Mach-O 64-bit executable x86_64
+mpicalc | /usr/local/Cellar/libgcrypt/1.12.2/bin/mpicalc | Mach-O 64-bit executable x86_64
+mpv | /usr/local/Cellar/mpv/0.41.0_4/bin/mpv | Mach-O 64-bit executable x86_64
+ms | /usr/local/bin/ms | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+msgattrib | /usr/local/Cellar/gettext/1.0/bin/msgattrib | Mach-O 64-bit executable x86_64
+msgcat | /usr/local/Cellar/gettext/1.0/bin/msgcat | Mach-O 64-bit executable x86_64
+msgcmp | /usr/local/Cellar/gettext/1.0/bin/msgcmp | Mach-O 64-bit executable x86_64
+msgcomm | /usr/local/Cellar/gettext/1.0/bin/msgcomm | Mach-O 64-bit executable x86_64
+msgconv | /usr/local/Cellar/gettext/1.0/bin/msgconv | Mach-O 64-bit executable x86_64
+msgen | /usr/local/Cellar/gettext/1.0/bin/msgen | Mach-O 64-bit executable x86_64
+msgexec | /usr/local/Cellar/gettext/1.0/bin/msgexec | Mach-O 64-bit executable x86_64
+msgfilter | /usr/local/Cellar/gettext/1.0/bin/msgfilter | Mach-O 64-bit executable x86_64
+msgfmt | /usr/local/Cellar/gettext/1.0/bin/msgfmt | Mach-O 64-bit executable x86_64
+msggrep | /usr/local/Cellar/gettext/1.0/bin/msggrep | Mach-O 64-bit executable x86_64
+msginit | /usr/local/Cellar/gettext/1.0/bin/msginit | Mach-O 64-bit executable x86_64
+msgmerge | /usr/local/Cellar/gettext/1.0/bin/msgmerge | Mach-O 64-bit executable x86_64
+msgpre | /usr/local/Cellar/gettext/1.0/bin/msgpre | Mach-O 64-bit executable x86_64
+msgunfmt | /usr/local/Cellar/gettext/1.0/bin/msgunfmt | Mach-O 64-bit executable x86_64
+msguniq | /usr/local/Cellar/gettext/1.0/bin/msguniq | Mach-O 64-bit executable x86_64
+mujs | /usr/local/Cellar/mujs/1.3.9/bin/mujs | Mach-O 64-bit executable x86_64
+mujs-pp | /usr/local/Cellar/mujs/1.3.9/bin/mujs-pp | Mach-O 64-bit executable x86_64
+multica | /usr/local/Cellar/multica/0.1.27/bin/multica | Mach-O 64-bit executable x86_64
+multinit | /usr/local/Cellar/nss/3.123.1/bin/multinit | Mach-O 64-bit executable x86_64
+murge | /usr/local/Cellar/ffmpeg/8.1.1/bin/murge | POSIX shell script text executable, ASCII text
+mutagen-inspect | /usr/local/bin/mutagen-inspect | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+mutagen-pony | /usr/local/bin/mutagen-pony | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+n8n | /usr/local/lib/node_modules/n8n/bin/n8n | a /usr/bin/env node script text executable, ASCII text
+n8n-mcp | /usr/local/lib/node_modules/n8n-mcp/dist/mcp/index.js | a /usr/bin/env node script text executable, ASCII text
+nerdctl.lima | /usr/local/Cellar/lima/2.1.4/bin/nerdctl.lima | POSIX shell script text executable, ASCII text
+nettle-hash | /usr/local/Cellar/nettle/3.10.2/bin/nettle-hash | Mach-O 64-bit executable x86_64
+nettle-lfib-stream | /usr/local/Cellar/nettle/3.10.2/bin/nettle-lfib-stream | Mach-O 64-bit executable x86_64
+nettle-pbkdf2 | /usr/local/Cellar/nettle/3.10.2/bin/nettle-pbkdf2 | Mach-O 64-bit executable x86_64
+nextonic | /usr/local/Cellar/tectonic/0.16.9/bin/tectonic | Mach-O 64-bit executable x86_64
+ngettext | /usr/local/Cellar/gettext/1.0/bin/ngettext | Mach-O 64-bit executable x86_64
+ngrok | /usr/local/Caskroom/ngrok/3.37.1/ngrok | Mach-O 64-bit executable x86_64
+nikto | /usr/local/Cellar/nikto/2.6.0/bin/nikto | a /usr/bin/perl5.34 script text executable, ASCII text
+nltk | /usr/local/bin/nltk | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+node | /usr/local/Cellar/node/25.6.1_1/bin/node | Mach-O 64-bit executable x86_64
+nonspr10 | /usr/local/Cellar/nss/3.123.1/bin/nonspr10 | Mach-O 64-bit executable x86_64
+normalize.py | /usr/local/Cellar/ffmpeg/8.1.1/bin/normalize.py | Python script text executable, ASCII text
+normalizer | /usr/local/bin/normalizer | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+notebooklm-mcp | /usr/local/lib/node_modules/@roomi-fields/notebooklm-mcp/dist/index.js | a /usr/bin/env node script text executable, Unicode text, UTF-8 text
+notebooklm-mcp-proxy | /usr/local/lib/node_modules/@roomi-fields/notebooklm-mcp/dist/stdio-http-proxy.js | a /usr/bin/env node script text executable, Unicode text, UTF-8 text
+npm | /usr/local/lib/node_modules/npm/bin/npm-cli.js | a /usr/bin/env node script text executable, ASCII text
+nproc | /usr/local/Cellar/coreutils/9.10/bin/gnproc | Mach-O 64-bit executable x86_64
+npx | /usr/local/lib/node_modules/npm/bin/npx-cli.js | a /usr/bin/env node script text executable, ASCII text
+nspr-config | /usr/local/Cellar/nspr/4.39/bin/nspr-config | POSIX shell script text executable, ASCII text
+nss-config | /usr/local/Cellar/nss/3.123.1/bin/nss-config | POSIX shell script text executable, ASCII text
+nss-policy-check | /usr/local/Cellar/nss/3.123.1/bin/nss-policy-check | Mach-O 64-bit executable x86_64
+nssdefaults | /usr/local/Cellar/nss/3.123.1/bin/nssdefaults | Mach-O 64-bit executable x86_64
+numfmt | /usr/local/Cellar/coreutils/9.10/bin/gnumfmt | Mach-O 64-bit executable x86_64
+ocspclnt | /usr/local/Cellar/nss/3.123.1/bin/ocspclnt | Mach-O 64-bit executable x86_64
+ocspresp | /usr/local/Cellar/nss/3.123.1/bin/ocspresp | Mach-O 64-bit executable x86_64
+ocsptool | /usr/local/Cellar/gnutls/3.8.13/bin/ocsptool | Mach-O 64-bit executable x86_64
+oid2name | /usr/local/Cellar/postgresql@16/16.14/bin/oid2name | Mach-O 64-bit executable x86_64
+oidcalc | /usr/local/Cellar/nss/3.123.1/bin/oidcalc | Mach-O 64-bit executable x86_64
+onnxruntime_test | /usr/local/bin/onnxruntime_test | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+op | /usr/local/Caskroom/1password-cli/2.34.1/op | Mach-O 64-bit executable x86_64
+openai | /usr/local/bin/openai | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+openapi | /usr/local/lib/node_modules/@redocly/cli/bin/cli.js | a /usr/bin/env node script text executable, ASCII text
+openclaw | /usr/local/lib/node_modules/openclaw/openclaw.mjs | a /usr/bin/env node script text executable, ASCII text
+openclaw2 | /usr/local/bin/openclaw2 | Paul Falstad's zsh script text executable, ASCII text
+opencode | /usr/local/lib/node_modules/opencode-ai/bin/opencode | a /usr/bin/env node script text executable, ASCII text
+openspec | /usr/local/lib/node_modules/@fission-ai/openspec/bin/openspec.js | a /usr/bin/env node script text executable, ASCII text
+openssl | /usr/local/Cellar/openssl@3/3.6.2/bin/openssl | Mach-O 64-bit executable x86_64
+openviking | /usr/local/bin/openviking | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+openviking-server | /usr/local/bin/openviking-server | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+opj_compress | /usr/local/Cellar/openjpeg/2.5.4/bin/opj_compress | Mach-O 64-bit executable x86_64
+opj_decompress | /usr/local/Cellar/openjpeg/2.5.4/bin/opj_decompress | Mach-O 64-bit executable x86_64
+opj_dump | /usr/local/Cellar/openjpeg/2.5.4/bin/opj_dump | Mach-O 64-bit executable x86_64
+optuna | /usr/local/bin/optuna | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+out123 | /usr/local/Cellar/mpg123/1.33.5/bin/out123 | Mach-O 64-bit executable x86_64
+ov | /usr/local/bin/ov | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+p11-kit | /usr/local/Cellar/p11-kit/0.26.2/bin/p11-kit | Mach-O 64-bit executable x86_64
+p11tool | /usr/local/Cellar/gnutls/3.8.13/bin/p11tool | Mach-O 64-bit executable x86_64
+p7content | /usr/local/Cellar/nss/3.123.1/bin/p7content | Mach-O 64-bit executable x86_64
+p7env | /usr/local/Cellar/nss/3.123.1/bin/p7env | Mach-O 64-bit executable x86_64
+p7sign | /usr/local/Cellar/nss/3.123.1/bin/p7sign | Mach-O 64-bit executable x86_64
+p7verify | /usr/local/Cellar/nss/3.123.1/bin/p7verify | Mach-O 64-bit executable x86_64
+pal2rgb | /usr/local/Cellar/libtiff/4.7.1_1/bin/pal2rgb | Mach-O 64-bit executable x86_64
+pandoc | /usr/local/Cellar/pandoc/3.9.0.2/bin/pandoc | Mach-O 64-bit executable x86_64
+pango-list | /usr/local/Cellar/pango/1.58.0/bin/pango-list | Mach-O 64-bit executable x86_64
+pango-segmentation | /usr/local/Cellar/pango/1.58.0/bin/pango-segmentation | Mach-O 64-bit executable x86_64
+pango-view | /usr/local/Cellar/pango/1.58.0/bin/pango-view | Mach-O 64-bit executable x86_64
+patcheck | /usr/local/Cellar/ffmpeg/8.1.1/bin/patcheck | POSIX shell script text executable, ASCII text, with very long lines (482)
+patchright | /usr/local/bin/patchright | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pcre2-config | /usr/local/Cellar/pcre2/10.47_1/bin/pcre2-config | POSIX shell script text executable, ASCII text
+pcre2grep | /usr/local/Cellar/pcre2/10.47_1/bin/pcre2grep | Mach-O 64-bit executable x86_64
+pcre2test | /usr/local/Cellar/pcre2/10.47_1/bin/pcre2test | Mach-O 64-bit executable x86_64
+pdf2txt.py | /usr/local/bin/pdf2txt.py | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pdfattach | /usr/local/Cellar/poppler/26.04.0/bin/pdfattach | Mach-O 64-bit executable x86_64
+pdfdetach | /usr/local/Cellar/poppler/26.04.0/bin/pdfdetach | Mach-O 64-bit executable x86_64
+pdffonts | /usr/local/Cellar/poppler/26.04.0/bin/pdffonts | Mach-O 64-bit executable x86_64
+pdfimages | /usr/local/Cellar/poppler/26.04.0/bin/pdfimages | Mach-O 64-bit executable x86_64
+pdfinfo | /usr/local/Cellar/poppler/26.04.0/bin/pdfinfo | Mach-O 64-bit executable x86_64
+pdfplumber | /usr/local/bin/pdfplumber | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pdfseparate | /usr/local/Cellar/poppler/26.04.0/bin/pdfseparate | Mach-O 64-bit executable x86_64
+pdfsig | /usr/local/Cellar/poppler/26.04.0/bin/pdfsig | Mach-O 64-bit executable x86_64
+pdftocairo | /usr/local/Cellar/poppler/26.04.0/bin/pdftocairo | Mach-O 64-bit executable x86_64
+pdftohtml | /usr/local/Cellar/poppler/26.04.0/bin/pdftohtml | Mach-O 64-bit executable x86_64
+pdftoppm | /usr/local/Cellar/poppler/26.04.0/bin/pdftoppm | Mach-O 64-bit executable x86_64
+pdftops | /usr/local/Cellar/poppler/26.04.0/bin/pdftops | Mach-O 64-bit executable x86_64
+pdftotext | /usr/local/Cellar/poppler/26.04.0/bin/pdftotext | Mach-O 64-bit executable x86_64
+pdfunite | /usr/local/Cellar/poppler/26.04.0/bin/pdfunite | Mach-O 64-bit executable x86_64
+pg_amcheck | /usr/local/Cellar/postgresql@16/16.14/bin/pg_amcheck | Mach-O 64-bit executable x86_64
+pg_archivecleanup | /usr/local/Cellar/postgresql@16/16.14/bin/pg_archivecleanup | Mach-O 64-bit executable x86_64
+pg_basebackup | /usr/local/Cellar/postgresql@16/16.14/bin/pg_basebackup | Mach-O 64-bit executable x86_64
+pg_checksums | /usr/local/Cellar/postgresql@16/16.14/bin/pg_checksums | Mach-O 64-bit executable x86_64
+pg_config | /usr/local/Cellar/postgresql@16/16.14/bin/pg_config | Mach-O 64-bit executable x86_64
+pg_controldata | /usr/local/Cellar/postgresql@16/16.14/bin/pg_controldata | Mach-O 64-bit executable x86_64
+pg_ctl | /usr/local/Cellar/postgresql@16/16.14/bin/pg_ctl | Mach-O 64-bit executable x86_64
+pg_dump | /usr/local/Cellar/postgresql@16/16.14/bin/pg_dump | Mach-O 64-bit executable x86_64
+pg_dumpall | /usr/local/Cellar/postgresql@16/16.14/bin/pg_dumpall | Mach-O 64-bit executable x86_64
+pg_isready | /usr/local/Cellar/postgresql@16/16.14/bin/pg_isready | Mach-O 64-bit executable x86_64
+pg_receivewal | /usr/local/Cellar/postgresql@16/16.14/bin/pg_receivewal | Mach-O 64-bit executable x86_64
+pg_recvlogical | /usr/local/Cellar/postgresql@16/16.14/bin/pg_recvlogical | Mach-O 64-bit executable x86_64
+pg_resetwal | /usr/local/Cellar/postgresql@16/16.14/bin/pg_resetwal | Mach-O 64-bit executable x86_64
+pg_restore | /usr/local/Cellar/postgresql@16/16.14/bin/pg_restore | Mach-O 64-bit executable x86_64
+pg_rewind | /usr/local/Cellar/postgresql@16/16.14/bin/pg_rewind | Mach-O 64-bit executable x86_64
+pg_test_fsync | /usr/local/Cellar/postgresql@16/16.14/bin/pg_test_fsync | Mach-O 64-bit executable x86_64
+pg_test_timing | /usr/local/Cellar/postgresql@16/16.14/bin/pg_test_timing | Mach-O 64-bit executable x86_64
+pg_upgrade | /usr/local/Cellar/postgresql@16/16.14/bin/pg_upgrade | Mach-O 64-bit executable x86_64
+pg_verifybackup | /usr/local/Cellar/postgresql@16/16.14/bin/pg_verifybackup | Mach-O 64-bit executable x86_64
+pg_waldump | /usr/local/Cellar/postgresql@16/16.14/bin/pg_waldump | Mach-O 64-bit executable x86_64
+pgbench | /usr/local/Cellar/postgresql@16/16.14/bin/pgbench | Mach-O 64-bit executable x86_64
+phonemize | /usr/local/bin/phonemize | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pinentry | /usr/local/Cellar/pinentry/1.3.2/bin/pinentry-curses | Mach-O 64-bit executable x86_64
+pinentry-curses | /usr/local/Cellar/pinentry/1.3.2/bin/pinentry-curses | Mach-O 64-bit executable x86_64
+pinentry-tty | /usr/local/Cellar/pinentry/1.3.2/bin/pinentry-tty | Mach-O 64-bit executable x86_64
+pinky | /usr/local/Cellar/coreutils/9.10/bin/gpinky | Mach-O 64-bit executable x86_64
+pip | /usr/local/bin/pip | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pip3 | /usr/local/Cellar/python@3.14/3.14.5/bin/pip3 | a /usr/local/Cellar/python@3.14/3.14.5/bin/python3.14 script text executable, AS
+pip3.11 | /usr/local/Cellar/python@3.11/3.11.15/bin/pip3.11 | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+pip3.12 | /usr/local/bin/pip3.12 | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pip3.13 | /usr/local/Cellar/python@3.13/3.13.3/bin/pip3.13 | a /usr/local/Cellar/python@3.13/3.13.3/bin/python3.13 script text executable, AS
+pip3.14 | /usr/local/Cellar/python@3.14/3.14.5/bin/pip3.14 | a /usr/local/Cellar/python@3.14/3.14.5/bin/python3.14 script text executable, AS
+pk11ectest | /usr/local/Cellar/nss/3.123.1/bin/pk11ectest | Mach-O 64-bit executable x86_64
+pk11gcmtest | /usr/local/Cellar/nss/3.123.1/bin/pk11gcmtest | Mach-O 64-bit executable x86_64
+pk11importtest | /usr/local/Cellar/nss/3.123.1/bin/pk11importtest | Mach-O 64-bit executable x86_64
+pk11mode | /usr/local/Cellar/nss/3.123.1/bin/pk11mode | Mach-O 64-bit executable x86_64
+pk12util | /usr/local/Cellar/nss/3.123.1/bin/pk12util | Mach-O 64-bit executable x86_64
+pk1sign | /usr/local/Cellar/nss/3.123.1/bin/pk1sign | Mach-O 64-bit executable x86_64
+pkcs1-conv | /usr/local/Cellar/nettle/3.10.2/bin/pkcs1-conv | Mach-O 64-bit executable x86_64
+pkg-config | /usr/local/Cellar/pkgconf/2.5.1/bin/pkgconf | Mach-O 64-bit executable x86_64
+pkgconf | /usr/local/Cellar/pkgconf/2.5.1/bin/pkgconf | Mach-O 64-bit executable x86_64
+pkix-errcodes | /usr/local/Cellar/nss/3.123.1/bin/pkix-errcodes | Mach-O 64-bit executable x86_64
+pktdumper | /usr/local/Cellar/ffmpeg/8.1.1/bin/pktdumper | Mach-O 64-bit executable x86_64
+playwright | /usr/local/bin/playwright | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+plotframes | /usr/local/Cellar/ffmpeg/8.1.1/bin/plotframes | Perl script text executable
+plotly_get_chrome | /usr/local/bin/plotly_get_chrome | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+png-fix-itxt | /usr/local/Cellar/libpng/1.6.58/bin/png-fix-itxt | Mach-O 64-bit executable x86_64
+pngfix | /usr/local/Cellar/libpng/1.6.58/bin/pngfix | Mach-O 64-bit executable x86_64
+pnpm | /usr/local/lib/node_modules/corepack/dist/pnpm.js | a /usr/bin/env node script text executable, ASCII text
+pnpx | /usr/local/lib/node_modules/corepack/dist/pnpx.js | a /usr/bin/env node script text executable, ASCII text
+po-fetch | /usr/local/Cellar/gettext/1.0/bin/po-fetch | POSIX shell script text executable, ASCII text
+podman.lima | /usr/local/Cellar/lima/2.1.4/bin/podman.lima | POSIX shell script text executable, ASCII text
+postgres | /usr/local/Cellar/postgresql@16/16.14/bin/postgres | Mach-O 64-bit executable x86_64
+pp | /usr/local/Cellar/nss/3.123.1/bin/pp | Mach-O 64-bit executable x86_64
+ppm2tiff | /usr/local/Cellar/libtiff/4.7.1_1/bin/ppm2tiff | Mach-O 64-bit executable x86_64
+printf_gettext | /usr/local/Cellar/gettext/1.0/bin/printf_gettext | Mach-O 64-bit executable x86_64
+printf_ngettext | /usr/local/Cellar/gettext/1.0/bin/printf_ngettext | Mach-O 64-bit executable x86_64
+probetest | /usr/local/Cellar/ffmpeg/8.1.1/bin/probetest | Mach-O 64-bit executable x86_64
+protoc | /usr/local/Cellar/protobuf/34.0/bin/protoc-34.0.0 | Mach-O 64-bit executable x86_64
+protoc-34.0.0 | /usr/local/Cellar/protobuf/34.0/bin/protoc-34.0.0 | Mach-O 64-bit executable x86_64
+protoc-gen-grpclib_python | /usr/local/bin/protoc-gen-grpclib_python | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+protoc-gen-python_grpc | /usr/local/bin/protoc-gen-python_grpc | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+protoc-gen-upb | /usr/local/Cellar/protobuf/34.0/bin/protoc-gen-upb-34.0.0 | Mach-O 64-bit executable x86_64
+protoc-gen-upb-34.0.0 | /usr/local/Cellar/protobuf/34.0/bin/protoc-gen-upb-34.0.0 | Mach-O 64-bit executable x86_64
+protoc-gen-upb_minitable | /usr/local/Cellar/protobuf/34.0/bin/protoc-gen-upb_minitable-34.0.0 | Mach-O 64-bit executable x86_64
+protoc-gen-upb_minitable-34.0.0 | /usr/local/Cellar/protobuf/34.0/bin/protoc-gen-upb_minitable-34.0.0 | Mach-O 64-bit executable x86_64
+protoc-gen-upbdefs | /usr/local/Cellar/protobuf/34.0/bin/protoc-gen-upbdefs-34.0.0 | Mach-O 64-bit executable x86_64
+protoc-gen-upbdefs-34.0.0 | /usr/local/Cellar/protobuf/34.0/bin/protoc-gen-upbdefs-34.0.0 | Mach-O 64-bit executable x86_64
+psicc | /usr/local/Cellar/little-cms2/2.19/bin/psicc | Mach-O 64-bit executable x86_64
+psktool | /usr/local/Cellar/gnutls/3.8.13/bin/psktool | Mach-O 64-bit executable x86_64
+psql | /usr/local/Cellar/postgresql@16/16.14/bin/psql | Mach-O 64-bit executable x86_64
+ptx | /usr/local/Cellar/coreutils/9.10/bin/gptx | Mach-O 64-bit executable x86_64
+puremagic | /usr/local/bin/puremagic | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pwdecrypt | /usr/local/Cellar/nss/3.123.1/bin/pwdecrypt | Mach-O 64-bit executable x86_64
+py.test | /usr/local/bin/py.test | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pyannote-audio-eval | /usr/local/bin/pyannote-audio-eval | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyannote-audio-train | /usr/local/bin/pyannote-audio-train | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyannote-database | /usr/local/bin/pyannote-database | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyannote-metrics | /usr/local/bin/pyannote-metrics | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyannote-pipeline | /usr/local/bin/pyannote-pipeline | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyav | /usr/local/bin/pyav | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pybabel | /usr/local/bin/pybabel | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pycookiecheat | /usr/local/bin/pycookiecheat | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pydoc3 | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/pydoc3.14 | a /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14
+pydoc3.11 | /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/pydoc3.11 | a /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.1
+pydoc3.12 | /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12/bin/pydoc3.12 | a /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12
+pydoc3.13 | /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/bin/pydoc3.13 | a /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13
+pydoc3.14 | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/pydoc3.14 | a /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14
+pyftmerge | /usr/local/bin/pyftmerge | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyftsubset | /usr/local/bin/pyftsubset | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pygmentize | /usr/local/bin/pygmentize | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+pygrun | /usr/local/bin/pygrun | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pyjson5 | /usr/local/bin/pyjson5 | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+pypdfium2 | /usr/local/bin/pypdfium2 | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pyproject-build | /usr/local/bin/pyproject-build | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pysemver | /usr/local/bin/pysemver | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-android-deploy | /usr/local/bin/pyside6-android-deploy | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-assistant | /usr/local/bin/pyside6-assistant | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-balsam | /usr/local/bin/pyside6-balsam | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-balsamui | /usr/local/bin/pyside6-balsamui | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-deploy | /usr/local/bin/pyside6-deploy | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-designer | /usr/local/bin/pyside6-designer | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-genpyi | /usr/local/bin/pyside6-genpyi | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-linguist | /usr/local/bin/pyside6-linguist | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-lrelease | /usr/local/bin/pyside6-lrelease | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-lupdate | /usr/local/bin/pyside6-lupdate | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-metaobjectdump | /usr/local/bin/pyside6-metaobjectdump | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-project | /usr/local/bin/pyside6-project | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qml | /usr/local/bin/pyside6-qml | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qmlcachegen | /usr/local/bin/pyside6-qmlcachegen | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qmlformat | /usr/local/bin/pyside6-qmlformat | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qmlimportscanner | /usr/local/bin/pyside6-qmlimportscanner | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qmllint | /usr/local/bin/pyside6-qmllint | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qmlls | /usr/local/bin/pyside6-qmlls | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qmltyperegistrar | /usr/local/bin/pyside6-qmltyperegistrar | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qsb | /usr/local/bin/pyside6-qsb | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-qtpy2cpp | /usr/local/bin/pyside6-qtpy2cpp | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-rcc | /usr/local/bin/pyside6-rcc | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-svgtoqml | /usr/local/bin/pyside6-svgtoqml | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pyside6-uic | /usr/local/bin/pyside6-uic | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+pytesseract | /usr/local/bin/pytesseract | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+pytest | /usr/local/bin/pytest | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+python3 | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14 | Mach-O 64-bit executable x86_64
+python3-config | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14-config | a /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14
+python3.11 | /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11 | Mach-O 64-bit executable x86_64
+python3.11-config | /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11-config | a /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.1
+python3.12 | /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12/bin/python3.12 | Mach-O 64-bit executable x86_64
+python3.12-config | /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12/bin/python3.12-config | a /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12
+python3.13 | /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/bin/python3.13 | Mach-O 64-bit executable x86_64
+python3.13-config | /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/bin/python3.13-config | a /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13
+python3.14 | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14 | Mach-O 64-bit executable x86_64
+python3.14-config | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14-config | a /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14
+pzstd | /usr/local/Cellar/zstd/1.5.7_1/bin/pzstd | Mach-O 64-bit executable x86_64
+qdarkstyle | /usr/local/bin/qdarkstyle | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+qdarkstyle.example | /usr/local/bin/qdarkstyle.example | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+qdarkstyle.utils | /usr/local/bin/qdarkstyle.utils | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+qr | /usr/local/bin/qr | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+qt-faststart | /usr/local/Cellar/ffmpeg/8.1.1/bin/qt-faststart | Mach-O 64-bit executable x86_64
+qtpy | /usr/local/bin/qtpy | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+qwen | /usr/local/lib/node_modules/@qwen-code/qwen-code/cli.js | a /usr/bin/env node script text executable, ASCII text, with very long lines (32
+raw2tiff | /usr/local/Cellar/libtiff/4.7.1_1/bin/raw2tiff | Mach-O 64-bit executable x86_64
+rdf2dot | /usr/local/bin/rdf2dot | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+rdfgraphisomorphism | /usr/local/bin/rdfgraphisomorphism | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+rdfpipe | /usr/local/bin/rdfpipe | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+rdfs2dot | /usr/local/bin/rdfs2dot | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+rdjpgcom | /usr/local/Cellar/jpeg-turbo/3.1.4.1/bin/rdjpgcom | Mach-O 64-bit executable x86_64
+readabilipy | /usr/local/bin/readabilipy | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+recode-sr-latin | /usr/local/Cellar/gettext/1.0/bin/recode-sr-latin | Mach-O 64-bit executable x86_64
+redocly | /usr/local/lib/node_modules/@redocly/cli/bin/cli.js | a /usr/bin/env node script text executable, ASCII text
+regview | /Applications/LibreOffice.app/Contents/MacOS/regview | Mach-O 64-bit executable arm64
+reindexdb | /usr/local/Cellar/postgresql@16/16.14/bin/reindexdb | Mach-O 64-bit executable x86_64
+remtest | /usr/local/Cellar/nss/3.123.1/bin/remtest | Mach-O 64-bit executable x86_64
+replay.pl | /usr/local/Cellar/nikto/2.6.0/bin/replay.pl | a /usr/bin/perl5.34 script text executable, ASCII text
+rsaperf | /usr/local/Cellar/nss/3.123.1/bin/rsaperf | Mach-O 64-bit executable x86_64
+rsapoptst | /usr/local/Cellar/nss/3.123.1/bin/rsapoptst | Mach-O 64-bit executable x86_64
+rtmpdump | /usr/local/Cellar/rtmpdump/2.4-20151223_3/bin/rtmpdump | Mach-O 64-bit executable x86_64
+rtmpgw | /usr/local/Cellar/rtmpdump/2.4-20151223_3/bin/rtmpgw | Mach-O 64-bit executable x86_64
+rtmpsrv | /usr/local/Cellar/rtmpdump/2.4-20151223_3/bin/rtmpsrv | Mach-O 64-bit executable x86_64
+rtmpsuck | /usr/local/Cellar/rtmpdump/2.4-20151223_3/bin/rtmpsuck | Mach-O 64-bit executable x86_64
+rubberband | /usr/local/Cellar/rubberband/4.0.0/bin/rubberband | Mach-O 64-bit executable x86_64
+rubberband-r3 | /usr/local/Cellar/rubberband/4.0.0/bin/rubberband-r3 | Mach-O 64-bit executable x86_64
+ruff | /usr/local/bin/ruff | Mach-O 64-bit executable x86_64
+run-many | /usr/local/bin/run-many | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+runxlrd.py | /usr/local/bin/runxlrd.py | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+sacrebleu | /usr/local/bin/sacrebleu | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+scale_slice_test | /usr/local/Cellar/ffmpeg/8.1.1/bin/scale_slice_test | Mach-O 64-bit executable x86_64
+scp2jsonl | /usr/local/bin/scp2jsonl | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+scrapling | /usr/local/bin/scrapling | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+sdbthreadtst | /usr/local/Cellar/nss/3.123.1/bin/sdbthreadtst | Mach-O 64-bit executable x86_64
+sdl2-config | /usr/local/Cellar/sdl2/2.32.10/bin/sdl2-config | POSIX shell script text executable, ASCII text, with very long lines (391)
+sdrtest | /usr/local/Cellar/nss/3.123.1/bin/sdrtest | Mach-O 64-bit executable x86_64
+secmodtest | /usr/local/Cellar/nss/3.123.1/bin/secmodtest | Mach-O 64-bit executable x86_64
+seek_print | /usr/local/Cellar/ffmpeg/8.1.1/bin/seek_print | Mach-O 64-bit executable x86_64
+segments | /usr/local/bin/segments | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+selfserv | /usr/local/Cellar/nss/3.123.1/bin/selfserv | Mach-O 64-bit executable x86_64
+send2trash | /usr/local/bin/send2trash | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+senddoc | /Applications/LibreOffice.app/Contents/Resources/senddoc | POSIX shell script text executable, ASCII text
+sensevoice2jsonl | /usr/local/bin/sensevoice2jsonl | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+set_unicharset_properties | /usr/local/Cellar/tesseract/5.5.2/bin/set_unicharset_properties | Mach-O 64-bit executable x86_64
+sexp-conv | /usr/local/Cellar/nettle/3.10.2/bin/sexp-conv | Mach-O 64-bit executable x86_64
+sha1sum | /usr/local/Cellar/coreutils/9.10/bin/gsha1sum | Mach-O 64-bit executable x86_64
+sha224sum | /usr/local/Cellar/coreutils/9.10/bin/gsha224sum | Mach-O 64-bit executable x86_64
+sha256sum | /usr/local/Cellar/coreutils/9.10/bin/gsha256sum | Mach-O 64-bit executable x86_64
+sha384sum | /usr/local/Cellar/coreutils/9.10/bin/gsha384sum | Mach-O 64-bit executable x86_64
+sha512sum | /usr/local/Cellar/coreutils/9.10/bin/gsha512sum | Mach-O 64-bit executable x86_64
+shapeclustering | /usr/local/Cellar/tesseract/5.5.2/bin/shapeclustering | Mach-O 64-bit executable x86_64
+shellcheck | /usr/local/Cellar/shellcheck/0.11.0/bin/shellcheck | Mach-O 64-bit executable x86_64
+shlibsign | /usr/local/Cellar/nss/3.123.1/bin/shlibsign | Mach-O 64-bit executable x86_64
+shred | /usr/local/Cellar/coreutils/9.10/bin/gshred | Mach-O 64-bit executable x86_64
+shuf | /usr/local/Cellar/coreutils/9.10/bin/gshuf | Mach-O 64-bit executable x86_64
+sidxindex | /usr/local/Cellar/ffmpeg/8.1.1/bin/sidxindex | Mach-O 64-bit executable x86_64
+signtool | /usr/local/Cellar/nss/3.123.1/bin/signtool | Mach-O 64-bit executable x86_64
+signver | /usr/local/Cellar/nss/3.123.1/bin/signver | Mach-O 64-bit executable x86_64
+slide-add-voice | /usr/local/bin/slide-add-voice | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+slide-check-fonts | /usr/local/bin/slide-check-fonts | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+slide-delete-notes | /usr/local/bin/slide-delete-notes | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+slide-manual-transition | /usr/local/bin/slide-manual-transition | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+slide-video-formatter | /usr/local/bin/slide-video-formatter | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+slugify | /usr/local/bin/slugify | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+sndfile-cmp | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-cmp | Mach-O 64-bit executable x86_64
+sndfile-concat | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-concat | Mach-O 64-bit executable x86_64
+sndfile-convert | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-convert | Mach-O 64-bit executable x86_64
+sndfile-deinterleave | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-deinterleave | Mach-O 64-bit executable x86_64
+sndfile-info | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-info | Mach-O 64-bit executable x86_64
+sndfile-interleave | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-interleave | Mach-O 64-bit executable x86_64
+sndfile-metadata-get | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-metadata-get | Mach-O 64-bit executable x86_64
+sndfile-metadata-set | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-metadata-set | Mach-O 64-bit executable x86_64
+sndfile-play | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-play | Mach-O 64-bit executable x86_64
+sndfile-salvage | /usr/local/Cellar/libsndfile/1.2.2_1/bin/sndfile-salvage | Mach-O 64-bit executable x86_64
+soffice | /usr/local/Caskroom/libreoffice/26.2.3/soffice.wrapper.sh | POSIX shell script text executable, ASCII text
+source2c | /usr/local/Cellar/ffmpeg/8.1.1/bin/source2c | POSIX shell script text executable, ASCII text
+sparqlquery | /usr/local/bin/sparqlquery | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+spit | /usr/local/Cellar/gettext/1.0/bin/spit | Python script text executable, Unicode text, UTF-8 text
+sprc | /usr/local/bin/sprc | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+sshtunnel | /usr/local/bin/sshtunnel | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+ssltap | /usr/local/Cellar/nss/3.123.1/bin/ssltap | Mach-O 64-bit executable x86_64
+starship | /usr/local/Cellar/starship/1.24.2/bin/starship | Mach-O 64-bit executable x86_64
+stdbuf | /usr/local/Cellar/coreutils/9.10/bin/gstdbuf | Mach-O 64-bit executable x86_64
+stl | /usr/local/bin/stl | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+stl2ascii | /usr/local/bin/stl2ascii | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+stl2bin | /usr/local/bin/stl2bin | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+streamlit | /usr/local/bin/streamlit | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+strsclnt | /usr/local/Cellar/nss/3.123.1/bin/strsclnt | Mach-O 64-bit executable x86_64
+studio | /Applications/Android Studio.app/Contents/MacOS/studio | Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x
+/Applications/Android Studio.app/Contents/MacOS/studio (for architecture x86_64)
+/Applications/Android Studio.app/Contents/MacOS/studio (for architecture arm64):
+symkeyutil | /usr/local/Cellar/nss/3.123.1/bin/symkeyutil | Mach-O 64-bit executable x86_64
+syncthing | /usr/local/Cellar/syncthing/2.0.14/bin/syncthing | Mach-O 64-bit executable x86_64
+tabulate | /usr/local/bin/tabulate | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+tac | /usr/local/Cellar/coreutils/9.10/bin/gtac | Mach-O 64-bit executable x86_64
+tailscale | /usr/local/Cellar/tailscale/1.94.2/bin/tailscale | Mach-O 64-bit executable x86_64
+tailscaled | /usr/local/Cellar/tailscale/1.94.2/bin/tailscaled | Mach-O 64-bit executable x86_64
+target_dec_fate.sh | /usr/local/Cellar/ffmpeg/8.1.1/bin/target_dec_fate.sh | POSIX shell script text executable, ASCII text
+tavily-mcp | /usr/local/lib/node_modules/tavily-mcp/build/index.js | a /usr/bin/env node script text executable, ASCII text, with very long lines (33
+tectonic | /usr/local/Cellar/tectonic/0.16.9/bin/tectonic | Mach-O 64-bit executable x86_64
+tesseract | /usr/local/Cellar/tesseract/5.5.2/bin/tesseract | Mach-O 64-bit executable x86_64
+text2image | /usr/local/Cellar/tesseract/5.5.2/bin/text2image | Mach-O 64-bit executable x86_64
+tiff2bw | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiff2bw | Mach-O 64-bit executable x86_64
+tiff2pdf | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiff2pdf | Mach-O 64-bit executable x86_64
+tiff2ps | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiff2ps | Mach-O 64-bit executable x86_64
+tiff2rgba | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiff2rgba | Mach-O 64-bit executable x86_64
+tiffcmp | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffcmp | Mach-O 64-bit executable x86_64
+tiffcp | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffcp | Mach-O 64-bit executable x86_64
+tiffcrop | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffcrop | Mach-O 64-bit executable x86_64
+tiffdither | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffdither | Mach-O 64-bit executable x86_64
+tiffdump | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffdump | Mach-O 64-bit executable x86_64
+tiffinfo | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffinfo | Mach-O 64-bit executable x86_64
+tiffmedian | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffmedian | Mach-O 64-bit executable x86_64
+tiffset | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffset | Mach-O 64-bit executable x86_64
+tiffsplit | /usr/local/Cellar/libtiff/4.7.1_1/bin/tiffsplit | Mach-O 64-bit executable x86_64
+tificc | /usr/local/Cellar/little-cms2/2.19/bin/tificc | Mach-O 64-bit executable x86_64
+timeout | /usr/local/Cellar/coreutils/9.10/bin/gtimeout | Mach-O 64-bit executable x86_64
+tiny-agents | /usr/local/bin/tiny-agents | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+tjbench | /usr/local/Cellar/jpeg-turbo/3.1.4.1/bin/tjbench | Mach-O 64-bit executable x86_64
+tmux | /usr/local/Cellar/tmux/3.6a/bin/tmux | Mach-O 64-bit executable x86_64
+torchrun | /usr/local/bin/torchrun | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+tqdm | /usr/local/bin/tqdm | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+transformers | /usr/local/bin/transformers | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+transformers-cli | /usr/local/bin/transformers-cli | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+transicc | /usr/local/Cellar/little-cms2/2.19/bin/transicc | Mach-O 64-bit executable x86_64
+translate-server | /usr/local/lib/node_modules/translate-server/dist/index.js | Unicode text, UTF-8 text
+trasher | /usr/local/Cellar/ffmpeg/8.1.1/bin/trasher | Mach-O 64-bit executable x86_64
+trietool | /usr/local/Cellar/libdatrie/0.2.14/bin/trietool | Mach-O 64-bit executable x86_64
+trietool-0.2 | /usr/local/Cellar/libdatrie/0.2.14/bin/trietool | Mach-O 64-bit executable x86_64
+trimesh | /usr/local/bin/trimesh | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+trust | /usr/local/Cellar/p11-kit/0.26.2/bin/trust | Mach-O 64-bit executable x86_64
+tstclnt | /usr/local/Cellar/nss/3.123.1/bin/tstclnt | Mach-O 64-bit executable x86_64
+ttx | /usr/local/bin/ttx | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+typer | /usr/local/bin/typer | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+uchardet | /usr/local/Cellar/uchardet/0.0.8/bin/uchardet | Mach-O 64-bit executable x86_64
+udunits2 | /usr/local/Cellar/udunits/2.2.28/bin/udunits2 | Mach-O 64-bit executable x86_64
+unar | /usr/local/Cellar/unar/1.10.8_5/bin/unar | Mach-O 64-bit executable x86_64
+uncoded_frame | /usr/local/Cellar/ffmpeg/8.1.1/bin/uncoded_frame | Mach-O 64-bit executable x86_64
+undill | /usr/local/bin/undill | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+unicharset_extractor | /usr/local/Cellar/tesseract/5.5.2/bin/unicharset_extractor | Mach-O 64-bit executable x86_64
+unlz4 | /usr/local/Cellar/lz4/1.10.0/bin/lz4 | Mach-O 64-bit executable x86_64
+unlzma | /usr/local/Cellar/xz/5.8.3/bin/xz | Mach-O 64-bit executable x86_64
+uno | /Applications/LibreOffice.app/Contents/MacOS/uno | Mach-O 64-bit executable arm64
+unoinfo | /Applications/LibreOffice.app/Contents/Resources/unoinfo | POSIX shell script text executable, ASCII text
+unopkg | /Applications/LibreOffice.app/Contents/MacOS/unopkg | Mach-O 64-bit executable arm64
+unwrap-diff | /usr/local/Cellar/ffmpeg/8.1.1/bin/unwrap-diff | POSIX shell script text executable, ASCII text
+unxz | /usr/local/Cellar/xz/5.8.3/bin/xz | Mach-O 64-bit executable x86_64
+unzstd | /usr/local/Cellar/zstd/1.5.7_1/bin/zstd | Mach-O 64-bit executable x86_64
+update-tld-names | /usr/local/bin/update-tld-names | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+upload_theme | /usr/local/bin/upload_theme | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+uri-encode | /Applications/LibreOffice.app/Contents/MacOS/uri-encode | Mach-O 64-bit executable arm64
+uv | /usr/local/bin/uv | Mach-O 64-bit executable x86_64
+uvicorn | /usr/local/bin/uvicorn | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+uvx | /usr/local/bin/uvx | Mach-O 64-bit executable x86_64
+vacuumdb | /usr/local/Cellar/postgresql@16/16.14/bin/vacuumdb | Mach-O 64-bit executable x86_64
+vacuumlo | /usr/local/Cellar/postgresql@16/16.14/bin/vacuumlo | Mach-O 64-bit executable x86_64
+validation | /usr/local/Cellar/nss/3.123.1/bin/validation | Mach-O 64-bit executable x86_64
+vba_extract.py | /usr/local/bin/vba_extract.py | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+vc | /usr/local/lib/node_modules/vercel/dist/vc.js | a /usr/bin/env node script text executable, ASCII text
+venc_data_dump | /usr/local/Cellar/ffmpeg/8.1.1/bin/venc_data_dump | Mach-O 64-bit executable x86_64
+vercel | /usr/local/lib/node_modules/vercel/dist/vc.js | a /usr/bin/env node script text executable, ASCII text
+vfychain | /usr/local/Cellar/nss/3.123.1/bin/vfychain | Mach-O 64-bit executable x86_64
+vfyserv | /usr/local/Cellar/nss/3.123.1/bin/vfyserv | Mach-O 64-bit executable x86_64
+vikingbot | /usr/local/bin/vikingbot | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+vmaf | /usr/local/Cellar/libvmaf/3.1.0/bin/vmaf | Mach-O 64-bit executable x86_64
+voxcpm | /usr/local/bin/voxcpm | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+vspipe | /usr/local/Cellar/vapoursynth/73/bin/vspipe | Mach-O 64-bit executable x86_64
+vwebp | /usr/local/Cellar/webp/1.6.0/bin/vwebp | Mach-O 64-bit executable x86_64
+watchfiles | /usr/local/bin/watchfiles | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+watchgnupg | /usr/local/Cellar/gnupg/2.5.19/bin/watchgnupg | Mach-O 64-bit executable x86_64
+watchmedo | /usr/local/bin/watchmedo | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+webpinfo | /usr/local/Cellar/webp/1.6.0/bin/webpinfo | Mach-O 64-bit executable x86_64
+webpmux | /usr/local/Cellar/webp/1.6.0/bin/webpmux | Mach-O 64-bit executable x86_64
+websockets | /usr/local/bin/websockets | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+wget | /usr/local/Cellar/wget/1.25.0/bin/wget | Mach-O 64-bit executable x86_64
+wheel | /usr/local/bin/wheel | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+wheel3 | /usr/local/Cellar/python@3.14/3.14.5/bin/wheel3.14 | a /usr/local/Cellar/python@3.14/3.14.5/bin/python3.14 script text executable, AS
+wheel3.11 | /usr/local/Cellar/python@3.11/3.11.15/bin/wheel3.11 | a /usr/local/opt/python@3.11/bin/python3.11 script text executable, ASCII text
+wheel3.12 | /usr/local/Cellar/python@3.12/3.12.9/bin/wheel3.12 | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+wheel3.13 | /usr/local/Cellar/python@3.13/3.13.3/bin/wheel3.13 | a /usr/local/Cellar/python@3.13/3.13.3/bin/python3.13 script text executable, AS
+wheel3.14 | /usr/local/Cellar/python@3.14/3.14.5/bin/wheel3.14 | a /usr/local/Cellar/python@3.14/3.14.5/bin/python3.14 script text executable, AS
+whisper | /usr/local/Cellar/openai-whisper/20250625_3/libexec/bin/whisper | a /usr/local/Cellar/openai-whisper/20250625_3/libexec/bin/python script text exe
+whisperx | /usr/local/bin/whisperx | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+wordlist2dawg | /usr/local/Cellar/tesseract/5.5.2/bin/wordlist2dawg | Mach-O 64-bit executable x86_64
+world | /usr/local/bin/world | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+wrangler | /usr/local/lib/node_modules/wrangler/bin/wrangler.js | a /usr/bin/env node script text executable, ASCII text, with very long lines (46
+wrangler2 | /usr/local/lib/node_modules/wrangler/bin/wrangler.js | a /usr/bin/env node script text executable, ASCII text, with very long lines (46
+wrjpgcom | /usr/local/Cellar/jpeg-turbo/3.1.4.1/bin/wrjpgcom | Mach-O 64-bit executable x86_64
+wsdump | /usr/local/bin/wsdump | a /usr/local/opt/python@3.12/bin/python3.12 script text executable, ASCII text
+x264 | /usr/local/Cellar/x264/r3222/bin/x264 | Mach-O 64-bit executable x86_64
+x265 | /usr/local/Cellar/x265/4.2/bin/x265 | Mach-O 64-bit executable x86_64
+x86_64-apple-darwin25-c++-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/x86_64-apple-darwin25-c++-15 | Mach-O 64-bit executable x86_64
+x86_64-apple-darwin25-g++-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/x86_64-apple-darwin25-g++-15 | Mach-O 64-bit executable x86_64
+x86_64-apple-darwin25-gcc-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/x86_64-apple-darwin25-gcc-15 | Mach-O 64-bit executable x86_64
+x86_64-apple-darwin25-gcc-ar-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/x86_64-apple-darwin25-gcc-ar-15 | Mach-O 64-bit executable x86_64
+x86_64-apple-darwin25-gcc-nm-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/x86_64-apple-darwin25-gcc-nm-15 | Mach-O 64-bit executable x86_64
+x86_64-apple-darwin25-gcc-ranlib-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/x86_64-apple-darwin25-gcc-ranlib-15 | Mach-O 64-bit executable x86_64
+x86_64-apple-darwin25-gfortran-15 | /usr/local/Cellar/gcc/15.2.0_1/bin/x86_64-apple-darwin25-gfortran-15 | Mach-O 64-bit executable x86_64
+xgettext | /usr/local/Cellar/gettext/1.0/bin/xgettext | Mach-O 64-bit executable x86_64
+xiaomusic | /usr/local/bin/xiaomusic | a /usr/local/opt/python@3.13/bin/python3.13 script text executable, ASCII text
+xpdfimport | /Applications/LibreOffice.app/Contents/MacOS/xpdfimport | Mach-O 64-bit executable arm64
+xtractprotos | /usr/local/Cellar/leptonica/1.87.0/bin/xtractprotos | Mach-O 64-bit executable x86_64
+xz | /usr/local/Cellar/xz/5.8.3/bin/xz | Mach-O 64-bit executable x86_64
+xzcat | /usr/local/Cellar/xz/5.8.3/bin/xz | Mach-O 64-bit executable x86_64
+xzcmp | /usr/local/Cellar/xz/5.8.3/bin/xzdiff | POSIX shell script text executable, ASCII text
+xzdec | /usr/local/Cellar/xz/5.8.3/bin/xzdec | Mach-O 64-bit executable x86_64
+xzdiff | /usr/local/Cellar/xz/5.8.3/bin/xzdiff | POSIX shell script text executable, ASCII text
+xzegrep | /usr/local/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+xzfgrep | /usr/local/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+xzgrep | /usr/local/Cellar/xz/5.8.3/bin/xzgrep | POSIX shell script text executable, ASCII text
+xzless | /usr/local/Cellar/xz/5.8.3/bin/xzless | POSIX shell script text executable, ASCII text
+xzmore | /usr/local/Cellar/xz/5.8.3/bin/xzmore | POSIX shell script text executable, ASCII text
+yarn | /usr/local/lib/node_modules/corepack/dist/yarn.js | a /usr/bin/env node script text executable, ASCII text
+yarnpkg | /usr/local/lib/node_modules/corepack/dist/yarnpkg.js | a /usr/bin/env node script text executable, ASCII text
+yat2m | /usr/local/Cellar/libgpg-error/1.61/bin/yat2m | Mach-O 64-bit executable x86_64
+you-get | /usr/local/bin/you-get | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+youtube_transcript_api | /usr/local/bin/youtube_transcript_api | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+yt-dlp | /usr/local/bin/yt-dlp | a /usr/local/opt/python@3.14/bin/python3.14 script text executable, ASCII text
+zellij | /usr/local/Cellar/zellij/0.43.1/bin/zellij | Mach-O 64-bit executable x86_64
+zmqshell.py | /usr/local/Cellar/ffmpeg/8.1.1/bin/zmqshell.py | Python script text executable, ASCII text
+zstd | /usr/local/Cellar/zstd/1.5.7_1/bin/zstd | Mach-O 64-bit executable x86_64
+zstdcat | /usr/local/Cellar/zstd/1.5.7_1/bin/zstd | Mach-O 64-bit executable x86_64
+zstdgrep | /usr/local/Cellar/zstd/1.5.7_1/bin/zstdgrep | POSIX shell script text executable, ASCII text
+zstdless | /usr/local/Cellar/zstd/1.5.7_1/bin/zstdless | POSIX shell script text executable, ASCII text
+zstdmt | /usr/local/Cellar/zstd/1.5.7_1/bin/zstd | Mach-O 64-bit executable x86_64

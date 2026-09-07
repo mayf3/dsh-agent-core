@@ -1,0 +1,15 @@
+1password-cli 2.34.1
+android-platform-tools 36.0.2
+android-studio 2025.2.3.9
+arduino-ide 2.3.7
+brave-browser 1.88.138.0
+claude-code 2.1.17
+codex 0.133.0
+flutter 3.38.7
+gcloud-cli 565.0.0
+libreoffice 26.2.3
+ngrok 3.37.1
+obsidian 1.11.5
+openscad 2021.01
+universal-media-server 15.3.0
+wechatwebdevtools 2.01.2510290

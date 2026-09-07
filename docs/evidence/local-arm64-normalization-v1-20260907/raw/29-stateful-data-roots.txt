@@ -1,0 +1,21 @@
+## postgres data dirs
+-rw-r--r--   1 yanfenma  admin  42287665 Sep  7 07:24 /usr/local/var/log/postgresql@16.log
+drwx------  32 yanfenma  admin      1024 Sep  7 06:52 /usr/local/var/postgresql@16
+/usr/local/var/postgresql@16 PG_VERSION=16  postmaster.pid=PRESENT
+## mysql/mariadb/redis/memcached data
+## syncthing config presence (metadata only)
+total 56
+drwx------    9 yanfenma  staff   288 Sep  7 06:52 .
+drwx------+ 153 yanfenma  staff  4896 Aug 30 07:42 ..
+-rw-r--r--    1 yanfenma  staff   623 Feb 26  2026 cert.pem
+-rw-------    1 yanfenma  staff  9115 Feb 26  2026 config.xml
+-rw-r--r--    1 yanfenma  staff   717 Feb 26  2026 https-cert.pem
+-rw-------    1 yanfenma  staff   227 Feb 26  2026 https-key.pem
+drwx------    8 yanfenma  staff   256 Sep  7 06:52 index-v2
+-rw-------    1 yanfenma  staff   119 Feb 26  2026 key.pem
+-rw-------    1 yanfenma  staff     0 Sep  7 06:52 syncthing.lock
+config.xml sha256=c73937911f942f351eebd50b9c8fd21f745d785e0d9c3dd1cccf137741543c6e size=9115
+## tailscale state presence
+## docker data
+drwxr-xr-x  15 yanfenma  staff  480 Sep  7 06:55 /Users/yanfenma/.docker
+drwxr-xr-x@  8 yanfenma  staff  256 Jul 11 16:00 /Users/yanfenma/Library/Containers/com.docker.docker

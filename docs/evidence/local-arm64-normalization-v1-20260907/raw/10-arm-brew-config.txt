@@ -1,0 +1,21 @@
+HOMEBREW_VERSION: 6.0.22
+ORIGIN: https://github.com/Homebrew/brew
+HEAD: 08e85c4e42f5d8f1ea17c36cb59cf61c2ccb26c3
+Last commit: 2 days ago
+Branch: stable
+Core tap: N/A
+Core cask tap: N/A
+HOMEBREW_PREFIX: /opt/homebrew
+all_proxy: http://127.0.0.1:7890
+http_proxy: http://127.0.0.1:7890
+https_proxy: http://127.0.0.1:7890
+no_proxy: localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,*.local,api.z.ai,api.deepseek.com,open.feishu.cn,mcp.feishu.cn
+Homebrew Ruby: 4.0.6 => /opt/homebrew/Library/Homebrew/vendor/portable-ruby/4.0.6/bin/ruby
+CPU: 15-core 64-bit arm_sotra
+Clang: 17.0.0 build 1700
+Git: 2.50.1 => /Library/Developer/CommandLineTools/usr/bin/git
+Curl: 8.7.1 => /usr/bin/curl
+macOS: 26.6.2-arm64
+CLT: 26.3
+Xcode: N/A
+Rosetta 2: false

@@ -1,0 +1,116 @@
+## node binaries
+/opt/homebrew/bin/node :: Mach-O 64-bit executable arm64
+/usr/local/bin/node :: Mach-O 64-bit executable x86_64
+/usr/local/opt/node.js/bin/node :: Mach-O 64-bit executable x86_64
+/usr/local/opt/node/bin/node :: Mach-O 64-bit executable x86_64
+/usr/local/opt/node@23/bin/node :: Mach-O 64-bit executable x86_64
+/usr/local/opt/node@25/bin/node :: Mach-O 64-bit executable x86_64
+/usr/local/opt/nodejs/bin/node :: Mach-O 64-bit executable x86_64
+## ARM brew global node_modules *.node
+/opt/homebrew/lib/node_modules/pnpm/dist/node_modules/@reflink/reflink-darwin-arm64/reflink.darwin-arm64.node :: arm64,
+/opt/homebrew/lib/node_modules/pnpm/dist/node_modules/@reflink/reflink-win32-x64-msvc/reflink.win32-x64-msvc.node :: 
+/opt/homebrew/lib/node_modules/pnpm/dist/node_modules/@reflink/reflink-darwin-x64/reflink.darwin-x64.node :: x86_64,
+/opt/homebrew/lib/node_modules/pnpm/dist/node_modules/@reflink/reflink-win32-arm64-msvc/reflink.win32-arm64-msvc.node :: 
+## Intel brew global node_modules *.node
+/usr/local/lib/node_modules/@anthropic-ai/claude-code/node_modules/@img/sharp-darwin-x64/lib/sharp-darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-darwin/ripgrep.node :: x86_64,
+/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/ripgrep.node :: arm64,
+/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-win32/ripgrep.node :: 
+/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/ripgrep.node :: 
+/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-linux/ripgrep.node :: 
+/usr/local/lib/node_modules/@tencent-ai/codebuddy-code/node_modules/@lydell/node-pty-darwin-x64/prebuilds/darwin-x64/pty.node :: x86_64,
+/usr/local/lib/node_modules/@tencent-ai/codebuddy-code/vendor/shim/native/darwin-x64/brokered-sandbox-native.node :: x86_64,
+/usr/local/lib/node_modules/@tencent-ai/codebuddy-code/vendor/shim/native/darwin-arm64/brokered-sandbox-native.node :: arm64,
+/usr/local/lib/node_modules/@tencent-ai/codebuddy-code/vendor/ripgrep/x64-darwin/ripgrep.node :: x86_64,
+/usr/local/lib/node_modules/@tencent-ai/codebuddy-code/vendor/ripgrep/arm64-darwin/ripgrep.node :: arm64,
+/usr/local/lib/node_modules/@tencent-ai/codebuddy-code/vendor/ripgrep/x64-win32/ripgrep.node :: 
+/usr/local/lib/node_modules/@tencent-ai/codebuddy-code/vendor/ripgrep/x64-linux/ripgrep.node :: 
+/usr/local/lib/node_modules/@tencent-ai/codebuddy-code/vendor/ripgrep/arm64-linux/ripgrep.node :: 
+/usr/local/lib/node_modules/vercel/node_modules/@rolldown/binding-darwin-x64/rolldown-binding.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/vercel/node_modules/@vercel/cervel/node_modules/@rolldown/binding-darwin-x64/rolldown-binding.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/clawdbot/node_modules/@reflink/reflink-darwin-x64/reflink.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/clawdbot/node_modules/@lydell/node-pty-darwin-x64/prebuilds/darwin-x64/pty.node :: x86_64,
+/usr/local/lib/node_modules/clawdbot/node_modules/@mariozechner/clipboard-darwin-universal/clipboard.darwin-universal.node :: arm64,x86_64,
+/usr/local/lib/node_modules/clawdbot/node_modules/@mariozechner/clipboard-darwin-x64/clipboard.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/clawdbot/node_modules/@napi-rs/canvas-darwin-x64/skia.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/clawdbot/node_modules/@img/sharp-darwin-x64/lib/sharp-darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/clawdbot/node_modules/@node-llama-cpp/mac-arm64-metal/bins/mac-arm64-metal/llama-addon.node :: arm64,
+/usr/local/lib/node_modules/clawdbot/node_modules/@node-llama-cpp/mac-x64/bins/mac-x64/llama-addon.node :: x86_64,
+/usr/local/lib/node_modules/openclaw/node_modules/@lydell/node-pty-darwin-x64/prebuilds/darwin-x64/pty.node :: x86_64,
+/usr/local/lib/node_modules/openclaw/node_modules/@mariozechner/clipboard-darwin-universal/clipboard.darwin-universal.node :: arm64,x86_64,
+/usr/local/lib/node_modules/openclaw/node_modules/@mariozechner/clipboard-darwin-x64/clipboard.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/linux_ia32/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/darwin_x64/koffi.node :: x86_64,
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/musl_arm64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/freebsd_ia32/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/linux_riscv64d/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/linux_armhf/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/win32_ia32/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/openbsd_ia32/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/win32_arm64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/openbsd_x64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/win32_x64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/linux_arm64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/linux_loong64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/freebsd_x64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/linux_x64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/freebsd_arm64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/musl_x64/koffi.node :: 
+/usr/local/lib/node_modules/openclaw/node_modules/koffi/build/koffi/darwin_arm64/koffi.node :: arm64,
+/usr/local/lib/node_modules/openclaw/node_modules/@napi-rs/canvas-darwin-x64/skia.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/openclaw/node_modules/@img/sharp-darwin-x64/lib/sharp-darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/openclaw/node_modules/@snazzah/davey-darwin-x64/davey.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/wrangler/node_modules/@img/sharp-darwin-x64/lib/sharp-darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/pnpm/dist/reflink.darwin-arm64-2HJ4WGO6.node :: arm64,
+/usr/local/lib/node_modules/pnpm/dist/reflink.darwin-x64-3G3H6IW4.node :: x86_64,
+/usr/local/lib/node_modules/pnpm/dist/reflink.win32-x64-msvc-J2TZHRQI.node :: 
+/usr/local/lib/node_modules/pnpm/dist/reflink.win32-arm64-msvc-Q6BARPPB.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-darwin-arm64-108.node :: arm64,
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-darwin-x64-127.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-x64-musl-137.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-arm64-musl-115.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-x64-glibc-137.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-win32-x64-137.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-arm64-glibc-137.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-darwin-x64-137.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-x64-musl-127.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-arm64-musl-108.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-arm64-glibc-127.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-win32-x64-127.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-darwin-arm64-115.node :: arm64,
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-x64-glibc-127.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-x64-glibc-108.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-darwin-x64-115.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-win32-x64-108.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-arm64-glibc-108.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-arm64-musl-127.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-darwin-arm64-137.node :: arm64,
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-x64-musl-108.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-x64-musl-115.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-win32-x64-115.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-arm64-glibc-115.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-darwin-x64-108.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-darwin-arm64-127.node :: arm64,
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-arm64-musl-137.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/lib/stack-trace-linux-x64-glibc-115.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/@sentry-internal/node-native-stacktrace/build/Release/stack-trace.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/ssh2/lib/protocol/crypto/build/Release/sshcrypto.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/cpu-features/build/Release/cpufeatures.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/@napi-rs/canvas-darwin-x64/skia.darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/sqlite3/build/Release/node_sqlite3.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/@msgpackr-extract/msgpackr-extract-darwin-x64/node.napi.glibc.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/@parcel/watcher-darwin-x64/watcher.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/ssh2-sftp-client/node_modules/ssh2/lib/protocol/crypto/build/Release/sshcrypto.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/oracledb/build/Release/oracledb-6.9.0-darwin-x64.node :: x86_64,
+/usr/local/lib/node_modules/n8n/node_modules/oracledb/build/Release/oracledb-6.9.0-linux-arm64.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/oracledb/build/Release/oracledb-6.9.0-linux-x64.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/oracledb/build/Release/oracledb-6.9.0-win32-x64.node :: 
+/usr/local/lib/node_modules/n8n/node_modules/oracledb/build/Release/oracledb-6.9.0-darwin-arm64.node :: arm64,
+/usr/local/lib/node_modules/@qwen-code/qwen-code/node_modules/node-pty/prebuilds/win32-arm64/pty.node :: 
+/usr/local/lib/node_modules/@qwen-code/qwen-code/node_modules/node-pty/prebuilds/win32-arm64/conpty.node :: 
+/usr/local/lib/node_modules/@qwen-code/qwen-code/node_modules/node-pty/prebuilds/win32-arm64/conpty_console_list.node :: 
+/usr/local/lib/node_modules/@qwen-code/qwen-code/node_modules/node-pty/prebuilds/darwin-x64/pty.node :: x86_64,
+/usr/local/lib/node_modules/@qwen-code/qwen-code/node_modules/node-pty/prebuilds/win32-x64/pty.node :: 
+/usr/local/lib/node_modules/@qwen-code/qwen-code/node_modules/node-pty/prebuilds/win32-x64/conpty.node :: 
+## ~/.npm-global / ~/.pnpm-store presence
+drwxr-xr-x  6 yanfenma  staff  192 Sep  7 07:50 /Users/yanfenma/Library/pnpm

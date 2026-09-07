@@ -1,0 +1,95 @@
+
+===== LISTEN_TCP =====
+COMMAND     PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node       3704 yanfenma   12u  IPv4 0xf43b51f85c59a28f      0t0  TCP *:8788 (LISTEN)
+adb        6136 yanfenma    8u  IPv4 0x8730a212ceada2f2      0t0  TCP 127.0.0.1:5037 (LISTEN)
+node      16754 yanfenma   15u  IPv4 0x2d4805a5cde6b292      0t0  TCP 127.0.0.1:3080 (LISTEN)
+postgres  22868 yanfenma    5u  IPv4 0x34e03034bb3dc267      0t0  TCP 127.0.0.1:55449 (LISTEN)
+Python    33419 yanfenma    3u  IPv4 0x8179dd57ed3e1d44      0t0  TCP 127.0.0.1:8765 (LISTEN)
+node      47514 yanfenma   15u  IPv4 0xdadf94cc2d1fdb8e      0t0  TCP 127.0.0.1:3092 (LISTEN)
+ControlCe 59861 yanfenma   11u  IPv4 0x9768995dbf193a2f      0t0  TCP *:7000 (LISTEN)
+ControlCe 59861 yanfenma   12u  IPv6 0xf85b83aa44616ebc      0t0  TCP *:7000 (LISTEN)
+ControlCe 59861 yanfenma   13u  IPv4 0x566a2287d6f72962      0t0  TCP *:5000 (LISTEN)
+ControlCe 59861 yanfenma   14u  IPv6 0xaa5e0a201272db08      0t0  TCP *:5000 (LISTEN)
+rapportd  59879 yanfenma   10u  IPv4  0x2618a6e8ce2d46f      0t0  TCP *:57072 (LISTEN)
+rapportd  59879 yanfenma   11u  IPv6 0xcc744e56efa2b901      0t0  TCP *:57072 (LISTEN)
+Google    59956 yanfenma  103u  IPv4 0x1bdb8b073509258c      0t0  TCP 127.0.0.1:57787 (LISTEN)
+iKuuuVPN  59988 yanfenma   13u  IPv4 0xfa6cd9f174f886e1      0t0  TCP 127.0.0.1:39876 (LISTEN)
+svc-workf 60331 yanfenma   12u  IPv4 0xadf052bc26253e94      0t0  TCP 127.0.0.1:8989 (LISTEN)
+Brave\x20 60335 yanfenma   59u  IPv4 0x94494707efd9350d      0t0  TCP 127.0.0.1:9222 (LISTEN)
+Python    60337 yanfenma   15u  IPv4 0x754620d07a9d515a      0t0  TCP *:8090 (LISTEN)
+Python    60337 yanfenma   17u  IPv6 0x3b66615b736c7f34      0t0  TCP *:8090 (LISTEN)
+node      60339 yanfenma   12u  IPv4 0xe4cced2ac243de66      0t0  TCP 127.0.0.1:8795 (LISTEN)
+node      60346 yanfenma   14u  IPv4 0x3462a552452a4a75      0t0  TCP 127.0.0.1:3082 (LISTEN)
+ollama    60349 yanfenma    3u  IPv4 0xc01521aebe9a688d      0t0  TCP 127.0.0.1:11434 (LISTEN)
+Python    60350 yanfenma    4u  IPv4  0x194ddd1d0b24bb1      0t0  TCP 127.0.0.1:8000 (LISTEN)
+Python    60355 yanfenma    3u  IPv4  0x823a9c19e34a97d      0t0  TCP *:8092 (LISTEN)
+postgres  60358 yanfenma    7u  IPv6 0xec0b7241aa7a0a29      0t0  TCP [::1]:5432 (LISTEN)
+postgres  60358 yanfenma    8u  IPv4 0xc4ea0f02dcfbd18b      0t0  TCP 127.0.0.1:5432 (LISTEN)
+Python    60359 yanfenma    4u  IPv4 0xb86cf09bc68d9687      0t0  TCP *:8091 (LISTEN)
+iKuuuVPNC 60419 yanfenma   12u  IPv6 0x85fcef9eb19841b4      0t0  TCP *:1053 (LISTEN)
+iKuuuVPNC 60419 yanfenma   13u  IPv6 0x9d347800754c9816      0t0  TCP *:7891 (LISTEN)
+iKuuuVPNC 60419 yanfenma   18u  IPv4 0x26bca4f33f9b6376      0t0  TCP 127.0.0.1:7890 (LISTEN)
+node      60435 yanfenma   22u  IPv6 0xe92726ef661a8be5      0t0  TCP *:17231 (LISTEN)
+syncthing 60436 yanfenma   14u  IPv6 0xc1ffbcc453080e73      0t0  TCP *:22000 (LISTEN)
+syncthing 60436 yanfenma   23u  IPv4 0x26e8f5ee5eb92d5b      0t0  TCP 127.0.0.1:8384 (LISTEN)
+node      60463 yanfenma   15u  IPv4 0x9a5bcaac250c1dd8      0t0  TCP 127.0.0.1:3093 (LISTEN)
+node      63320 yanfenma   12u  IPv4 0x29253551ef3fcfd4      0t0  TCP *:8787 (LISTEN)
+node      67596 yanfenma   12u  IPv4 0x34ef6c9054cae680      0t0  TCP 127.0.0.1:63554 (LISTEN)
+node      67777 yanfenma   12u  IPv4 0x8e8e7639683c637b      0t0  TCP 127.0.0.1:63565 (LISTEN)
+node      70038 yanfenma   12u  IPv4 0x58a74e7b24d42044      0t0  TCP 127.0.0.1:8787 (LISTEN)
+node      70038 yanfenma   13u  IPv4 0xa53cee6303e065be      0t0  TCP 127.0.0.1:8791 (LISTEN)
+pca-workb 85474 yanfenma   12u  IPv4 0xc808dd0ffbaacdb4      0t0  TCP 127.0.0.1:7781 (LISTEN)
+Python    93126 yanfenma    3u  IPv4 0xe027650116aeaaf6      0t0  TCP 127.0.0.1:18930 (LISTEN)
+
+===== UDP_HEAD50 =====
+COMMAND     PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+adb        6136 yanfenma    9u  IPv4 0xe3c8a6efa116c4e6      0t0  UDP *:5353
+adb        6136 yanfenma   10u  IPv6 0xd2bef59e2395d03e      0t0  UDP *:5353
+adb        6136 yanfenma   11u  IPv6 0xb86e5b91d9a9f591      0t0  UDP *:5353
+identitys 59913 yanfenma   13u  IPv4 0x8636ca3436d7f46c      0t0  UDP *:*
+identitys 59913 yanfenma   18u  IPv4 0xa09ff9445bb544ea      0t0  UDP *:*
+identitys 59913 yanfenma   23u  IPv4 0xdac0dbcd7720e685      0t0  UDP *:*
+replicato 59931 yanfenma    8u  IPv6 0xca87ae47441af3c3      0t0  UDP *:56437
+sharingd  59942 yanfenma    4u  IPv4 0x7c42a543371756a8      0t0  UDP *:*
+sharingd  59942 yanfenma   16u  IPv6 0x8ae9acfc65ebd2a9      0t0  UDP *:61908
+WeChat    59986 yanfenma   25u  IPv4 0xd0c4e49b9bd0cb88      0t0  UDP *:*
+Google    60019 yanfenma   81u  IPv4 0xc946733b2c67ea09      0t0  UDP *:5353
+Google    60019 yanfenma   82u  IPv6 0xbbc727c5f60ce52f      0t0  UDP *:5353
+Google    60019 yanfenma   83u  IPv6 0xbc66bdfd45b1c749      0t0  UDP *:5353
+Google    60019 yanfenma   84u  IPv6 0x1e6e69979b246554      0t0  UDP *:5353
+Google    60019 yanfenma   85u  IPv4 0x74ad23d5b5527ac5      0t0  UDP *:5353
+Google    60019 yanfenma   86u  IPv6 0x3f2d39e7b455619c      0t0  UDP *:5353
+Google    60019 yanfenma   87u  IPv6 0x8be32561d504df12      0t0  UDP *:5353
+Google    60019 yanfenma   88u  IPv6 0x5c2b15ded1fea730      0t0  UDP *:5353
+Google    60019 yanfenma   89u  IPv6 0x5764cbea03f8e6f6      0t0  UDP *:5353
+Google    60019 yanfenma   90u  IPv6 0x28da8c1c8fdcf05a      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   32u  IPv4 0x77a42b778787eb92      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   33u  IPv6 0x9bf6a4a5aba1788b      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   35u  IPv6 0xd0e48b562bf8488e      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   36u  IPv6 0xb402027c84686a36      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   37u  IPv4 0x92e409a92ae5ea78      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   38u  IPv6 0x77eae8662fdefde0      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   39u  IPv6 0x9a663dcb76700bbf      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   40u  IPv6 0x15db5a028c5d9e81      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   41u  IPv6 0x1786717e9eaabcee      0t0  UDP *:5353
+ZCode\x20 60083 yanfenma   42u  IPv6 0xe6d0f4c3a6ccf398      0t0  UDP *:5353
+iKuuuVPNC 60419 yanfenma   10u  IPv6 0xf1b2cc4b62b226cf      0t0  UDP *:1053
+iKuuuVPNC 60419 yanfenma   19u  IPv4 0x6b536302a09c94ee      0t0  UDP 127.0.0.1:7890
+syncthing 60436 yanfenma   13u  IPv6 0xd6606afe5bbe9496      0t0  UDP *:22000
+syncthing 60436 yanfenma   18u  IPv6 0x7c6494588df07c0c      0t0  UDP *:21027
+syncthing 60436 yanfenma   19u  IPv6 0x367d8e0ae051f116      0t0  UDP *:49224
+syncthing 60436 yanfenma   20u  IPv4 0x6e47bfd5d35403a1      0t0  UDP *:21027
+syncthing 60436 yanfenma   21u  IPv4 0x9df0af7c6ab17167      0t0  UDP *:58415
+eapolclie 61706 yanfenma    3u  IPv4 0x60c9c3e83553e829      0t0  UDP *:*
+Codex\x20 80592 yanfenma   59u  IPv4 0x18709fbdda779ed7      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   60u  IPv6 0xeb6ef08db582d8e6      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   61u  IPv6 0x42af68399258e14f      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   62u  IPv6 0x14befd5cc51c72d3      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   63u  IPv4 0x9072ac8fc911f031      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   64u  IPv6 0xacb97a3dab81e3d1      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   65u  IPv6  0xd62b497548b5200      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   66u  IPv6 0x8a79782e33bfbd9c      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   67u  IPv6 0x8a38e2a5b9c43221      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   68u  IPv6 0xb63faa24b2198cda      0t0  UDP *:5353
+Codex\x20 80592 yanfenma   69u  IPv4 0xa26730fabe647765      0t0  UDP 10.13.159.231:62560

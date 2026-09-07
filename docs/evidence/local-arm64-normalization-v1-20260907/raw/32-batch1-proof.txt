@@ -1,0 +1,90 @@
+== BATCH-1 START Mon Sep  7 08:04:03 CST 2026 ==
+== TOOL=uv ==
+  PATH_RESOLUTION(pre) = /usr/local/bin/uv
+  OLD_REALPATH = /usr/local/bin/uv
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native via /opt/homebrew/bin/brew
+  PATH_RESOLUTION(post) = /opt/homebrew/bin/uv
+  NEW_REALPATH = /opt/homebrew/Cellar/uv/0.12.10/bin/uv
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = uv 0.12.10 (Homebrew 2026-09-04 aarch64-apple-darwin)
+  NEW_COMMAND_FUNCTION = PASS
+  HARD_CODED_X64_REFERENCE check = 0 files
+
+== TOOL=wget ==
+  PATH_RESOLUTION(pre) = /usr/local/bin/wget
+  OLD_REALPATH = /usr/local/Cellar/wget/1.25.0/bin/wget
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native via /opt/homebrew/bin/brew
+  PATH_RESOLUTION(post) = /opt/homebrew/bin/wget
+  NEW_REALPATH = /opt/homebrew/Cellar/wget/1.25.0/bin/wget
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = GNU Wget 1.25.0 built on darwin25.4.0.
+== TOOL=wget (function proof only) ==
+  NEW_COMMAND_FUNCTION = FAIL (see 34)
+
+== BATCH-1 CONTINUATION Mon Sep  7 08:05:44 CST 2026 ==
+== TOOL=tmux ==
+  PATH_RESOLUTION(pre) = /usr/local/bin/tmux
+  OLD_REALPATH = /usr/local/Cellar/tmux/3.6a/bin/tmux
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native via /opt/homebrew/bin/brew
+  PATH_RESOLUTION(post) = /opt/homebrew/bin/tmux
+  NEW_REALPATH = /opt/homebrew/Cellar/tmux/3.7c/bin/tmux
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = tmux: unknown option -- -
+  NEW_COMMAND_FUNCTION = PASS
+
+== TOOL=starship ==
+  PATH_RESOLUTION(pre) = /usr/local/bin/starship
+  OLD_REALPATH = /usr/local/Cellar/starship/1.24.2/bin/starship
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native via /opt/homebrew/bin/brew
+  PATH_RESOLUTION(post) = /opt/homebrew/bin/starship
+  NEW_REALPATH = /opt/homebrew/Cellar/starship/1.26.0/bin/starship
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = starship 1.26.0
+  NEW_COMMAND_FUNCTION = PASS
+
+== TOOL=cmake ==
+  PATH_RESOLUTION(pre) = /usr/local/bin/cmake
+  OLD_REALPATH = /usr/local/Cellar/cmake/4.3.1/bin/cmake
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native via /opt/homebrew/bin/brew
+  PATH_RESOLUTION(post) = /opt/homebrew/bin/cmake
+  NEW_REALPATH = /opt/homebrew/Cellar/cmake/4.4.3/bin/cmake
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = cmake version 4.4.3
+  NEW_COMMAND_FUNCTION = PASS
+
+== TOOL=deno ==
+  PATH_RESOLUTION(pre) = /usr/local/bin/deno
+  OLD_REALPATH = /usr/local/Cellar/deno/2.8.0/bin/deno
+  OLD_ARCH = Mach-O 64-bit executable x86_64
+  -- installing ARM-native via /opt/homebrew/bin/brew
+  PATH_RESOLUTION(post) = /opt/homebrew/bin/deno
+  NEW_REALPATH = /opt/homebrew/Cellar/deno/2.9.6/bin/deno
+  NEW_ARCH = Mach-O 64-bit executable arm64
+  VERSION = deno 2.9.6 (stable, release, aarch64-apple-darwin)
+  NEW_COMMAND_FUNCTION = PASS
+
+== BATCH-1 CONTINUATION END Mon Sep  7 08:06:40 CST 2026 ==
+== TOOL=wget (corrected function test r2, Mon Sep  7 08:07:04 CST 2026) ==
+  roundtrip http GET via ARM wget 1.25.0 (arm64): PASS
+  wget -V head: GNU Wget 1.25.0 built on darwin25.4.0.
+  tmux -V (arm64): tmux 3.7c
+== REPAIR PASS (post-audit r1, Mon Sep  7 08:19:08 CST 2026) ==
+-- starship corrected function test (new CLI syntax)
+starship 1.26.0
+  NEW_COMMAND_FUNCTION(r2, starship preset -l) = PASS
+    bracketed-segments
+    catppuccin-powerline
+    gruvbox-rainbow
+-- HARD_CODED_X64_REFERENCE per-tool check (all six, repair-pass completion)
+  uv = 0 files
+  wget = 0 files
+  tmux = 0 files
+  starship = 0 files
+  cmake = 0 files
+  deno = 0 files
+-- tmux kill-server note: raw/02 pre-batch shows zero tmux processes; no user session existed; batch1-continue.sh recorded as-is (evidence of what ran); future batches drop kill-server.

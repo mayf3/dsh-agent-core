@@ -1,0 +1,58 @@
+## launchd plists referencing /usr/local or arch -x86_64
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist.bak-glm53-human-retry-20260820T212000
+/Users/yanfenma/Library/LaunchAgents/com.agent-core.capability-host.plist
+/Users/yanfenma/Library/LaunchAgents/com.openclaw.control-api.plist
+/Users/yanfenma/Library/LaunchAgents/com.auth-service.plist
+/Users/yanfenma/Library/LaunchAgents/com.openclaw.agent-node-502.plist.bak-home-restore-20260811
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist.bak-glm53-human-retry-20260820T211500
+/Users/yanfenma/Library/LaunchAgents/com.openclaw.agent-node-502.plist
+/Users/yanfenma/Library/LaunchAgents/dev.omdsh.dsh-lark.plist
+/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.syncthing.plist
+/Users/yanfenma/Library/LaunchAgents/com.article-review-canary.plist
+/Users/yanfenma/Library/LaunchAgents/com.opencode.server.plist
+/Users/yanfenma/Library/LaunchAgents/com.agent-core.feishu-connector.plist
+/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist.bak.20260606-211639
+/Users/yanfenma/Library/LaunchAgents/com.irbridge.plist
+/Users/yanfenma/Library/LaunchAgents/com.xiaomusic.plist
+/Users/yanfenma/Library/LaunchAgents/com.agent-core.coding-harness.plist
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist.bak-glm53-global-primary-20260820T213500
+/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.second.plist.disabled
+/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.tailscale.plist
+/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist.bak.20260606-212058
+/Users/yanfenma/Library/LaunchAgents/com.videobridge.plist
+/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist.bak.qa-canary-20260805-085121
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist.bak-feishu-recovery-v1-20260905
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.scheduler-v2.plist
+/Users/yanfenma/Library/LaunchAgents/com.openclaw.auto-repair.plist
+/Users/yanfenma/Library/LaunchAgents/com.agent-core.kernel.plist
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist.bak-luna-alignment-20260822
+/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist.bak-quota-mitigation-20260820T230645
+/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.postgresql@16.plist
+/Library/LaunchDaemons/com.auth-service.plist
+/Library/LaunchDaemons/ai.agent-core.runtime.plist.bak-feishu-cutover-20260822-151621
+/Library/LaunchDaemons/com.auth-service.plist.bak-dualpass-20260822-094638
+/Library/LaunchDaemons/ai.agent-core.runtime.plist.bak-dualpass-20260822-095101
+/Library/LaunchDaemons/ai.agent-core.runtime.plist.bak-feishu-cutover-20260822-151649
+/Library/LaunchDaemons/ai.agent-core.runtime.plist
+/Library/LaunchDaemons/com.tailscale.tailscaled.plist
+## matching lines (redacted pass in separate file)
+-- /Users/yanfenma/.zshenv (sha256 e6bcaf69d781811912bb548a6ea04fe11d5138c5d2076dfe21f96b7d437dde0b, 8 lines)
+2:export OPENCLAW_CONFIG_PATH=/Users/yanfenma/.openclaw-cli/cli-config.json
+-- /Users/yanfenma/.zprofile (sha256 0bd0e3d425d829eeb3bb935f2b84ed90cf3b38df30649800cbdf8615358105c0, 9 lines)
+3:export PATH="/Users/yanfenma/.local/bin:$PATH"
+-- /Users/yanfenma/.zshrc (sha256 a6d861be3e5b53bf68c45e4604951c859dc2b65131856897f16d380ab417f94c, 209 lines)
+9:# export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+95:# export MANPATH="/usr/local/man:$MANPATH"
+124:export DYLD_LIBRARY_PATH="/usr/local/opt/xz/lib:/usr/local/opt/zlib/lib:/usr/local/opt/libxml2/lib:$DYLD_LIBRARY_PATH"
+125:export PATH="/usr/local/opt/openjdk/bin:$PATH"
+126:export PATH="/usr/local/opt/openjdk/bin:$PATH"
+140:export PATH=/Users/yanfenma/.opencode/bin:$PATH
+154:export PATH="$BUN_INSTALL/bin:$PATH"
+160:  *) export PATH="$PNPM_HOME:$PATH" ;;
+170:    export PATH="$HOME/.local/bin:$PATH"
+190:export PATH="$HOME/bin:$PATH"
+204:export PATH="/opt/homebrew/bin:$PATH"
+-- /Users/yanfenma/.profile (sha256 867c9cdcf03965933afab6bd6298a03e4ec76507e454a57ecd185df092966070, 2 lines)
+-- /Users/yanfenma/.bashrc (sha256 ce33656c4148c8859f3e316ae839df6eb78899c4b3dbd558bc4315c473362d06, 23 lines)
+## IDE settings

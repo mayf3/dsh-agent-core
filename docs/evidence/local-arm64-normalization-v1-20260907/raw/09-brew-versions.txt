@@ -1,0 +1,13 @@
+
+===== ARM_BREW_VERSION =====
+Homebrew 6.0.22
+
+===== ARM_BREW_PREFIX =====
+/opt/homebrew
+
+===== INTEL_BREW_VERSION =====
+Homebrew 6.0.18
+Homebrew/homebrew-cask (git revision 5b90e281d4; last commit 2026-08-17)
+
+===== INTEL_BREW_PREFIX =====
+/usr/local

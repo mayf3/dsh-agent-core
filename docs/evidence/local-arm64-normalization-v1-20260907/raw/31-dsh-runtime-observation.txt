@@ -1,0 +1,70 @@
+## node-family processes from census (reference 02-processes.txt)
+  836     1 root             /usr/local/bin/tailscaled
+ 3704     1 yanfenma         /opt/homebrew/Cellar/node/26.7.0/bin/node
+11072     1 yanfenma         /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+16737     1 yanfenma         node
+16753 16737 yanfenma         node
+16754 16753 yanfenma         /opt/homebrew/Cellar/node/26.7.0/bin/node
+16929     1 authsvc          /usr/local/bin/node
+22868     1 yanfenma         /usr/local/Cellar/postgresql@16/16.14/bin/postgres
+22870 22868 yanfenma         postgres: checkpointer 
+22871 22868 yanfenma         postgres: background writer 
+22873 22868 yanfenma         postgres: walwriter 
+22874 22868 yanfenma         postgres: autovacuum launcher 
+22880 22868 yanfenma         postgres: logical replication launcher 
+24037     1 yanfenma         /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+28546     1 yanfenma         /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+33419     1 yanfenma         /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python
+45811     1 yanfenma         /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+47514     1 yanfenma         node
+51361     1 authsvc          /usr/local/libexec/agent-core/node-runtime/bin/node
+59961     1 yanfenma         /Users/yanfenma/Applications/DSH.app/Contents/MacOS/Electron
+60075     1 yanfenma         /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+60117 59961 yanfenma         /Users/yanfenma/Applications/DSH.app/Contents/Frameworks/Electron Helper.app/Contents/MacOS/Electron Helper
+60118 59961 yanfenma         /Users/yanfenma/Applications/DSH.app/Contents/Frameworks/Electron Helper.app/Contents/MacOS/Electron Helper
+60123 59961 yanfenma         /Users/yanfenma/Applications/DSH.app/Contents/Frameworks/Electron Helper (Renderer).app/Contents/MacOS/Electron Helper (Renderer)
+60337     1 yanfenma         /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python
+60339     1 yanfenma         /usr/local/libexec/agent-core/node-runtime/bin/node
+60341     1 yanfenma         node
+60346     1 yanfenma         /opt/homebrew/bin/node
+60350     1 yanfenma         /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python
+60352     1 yanfenma         /usr/local/bin/node
+60355     1 yanfenma         /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python
+60358     1 yanfenma         /usr/local/opt/postgresql@16/bin/postgres
+60359     1 yanfenma         /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python
+60360     1 yanfenma         /usr/local/opt/syncthing/bin/syncthing
+60435 60352 yanfenma         /usr/local/Cellar/node/25.6.1_1/bin/node
+60436 60360 yanfenma         /usr/local/opt/syncthing/bin/syncthing
+60442 60358 yanfenma         postgres: checkpointer 
+60443 60358 yanfenma         postgres: background writer 
+60463     1 yanfenma         node
+60498 60435 yanfenma         /Users/yanfenma/workspace/deploy/article-review-canary/node_modules/@esbuild/darwin-x64/bin/esbuild
+60510 60358 yanfenma         postgres: walwriter 
+60511 60358 yanfenma         postgres: autovacuum launcher 
+60512 60358 yanfenma         postgres: logical replication launcher 
+60711 60596 yanfenma         zcode-node-repl-mcp
+60948 60177 yanfenma         zcode-node-repl-mcp
+61283 61080 yanfenma         zcode-node-repl-mcp
+61332 61156 yanfenma         zcode-node-repl-mcp
+61591 60178 yanfenma         zcode-node-repl-mcp
+62852     1 yanfenma         /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+63320     1 yanfenma         /opt/homebrew/bin/node
+67596     1 yanfenma         /opt/homebrew/bin/node
+67777     1 yanfenma         /opt/homebrew/bin/node
+70038     1 yanfenma         /usr/local/bin/node
+70388 70038 yanfenma         /usr/local/Cellar/node/25.6.1_1/bin/node
+76627 60358 yanfenma         postgres: svc_wf svc_workflow_dogfood_clean ::1(65195) idle
+77865 60358 yanfenma         postgres: svc_wf svc_workflow_dogfood_clean ::1(65346) idle
+80170 51361 yanfenma         /usr/local/libexec/agent-core/node-runtime/bin/node
+80218 51361 yanfenma         /usr/local/libexec/agent-core/node-runtime/bin/node
+80936 80611 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+81630 80611 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+81631 80611 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+81634 81630 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+86288 80611 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+86289 80611 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+86290 80611 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+86291 80611 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+86292 86289 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+86324 80611 yanfenma         /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+93126     1 yanfenma         /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python

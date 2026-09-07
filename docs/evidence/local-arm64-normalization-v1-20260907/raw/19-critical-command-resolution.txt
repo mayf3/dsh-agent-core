@@ -1,0 +1,138 @@
+# per-command: name | whence-type | resolved | realpath | file-arch
+node | node: command | /usr/local/bin/node | /usr/local/Cellar/node/25.6.1_1/bin/node | Mach-O 64-bit executable x86_64
+npm | npm: command | /usr/local/bin/npm | /usr/local/lib/node_modules/npm/bin/npm-cli.js | a /usr/bin/env node script text executable, ASCII text
+npx | npx: command | /usr/local/bin/npx | /usr/local/lib/node_modules/npm/bin/npx-cli.js | a /usr/bin/env node script text executable, ASCII text
+yarn | yarn: command | /usr/local/bin/yarn | /usr/local/lib/node_modules/corepack/dist/yarn.js | a /usr/bin/env node script text executable, ASCII text
+pnpm | pnpm: command | /usr/local/bin/pnpm | /usr/local/lib/node_modules/corepack/dist/pnpm.js | a /usr/bin/env node script text executable, ASCII text
+python3 | python3: command | /usr/local/bin/python3 | /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14 | Mach-O 64-bit executable x86_64
+python | python: none | NONE | - | -
+python3.9 | python3.9: none | NONE | - | -
+python3.10 | python3.10: none | NONE | - | -
+python3.11 | python3.11: command | /usr/local/bin/python3.11 | /usr/local/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11 | Mach-O 64-bit executable x86_64
+python3.12 | python3.12: command | /usr/local/bin/python3.12 | /usr/local/Cellar/python@3.12/3.12.9/Frameworks/Python.framework/Versions/3.12/bin/python3.12 | Mach-O 64-bit executable x86_64
+python3.13 | python3.13: command | /usr/local/bin/python3.13 | /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/bin/python3.13 | Mach-O 64-bit executable x86_64
+pip3 | pip3: command | /usr/local/bin/pip3 | /usr/local/Cellar/python@3.14/3.14.5/bin/pip3 | a /usr/local/Cellar/python@3.14/3.14.5/bin/python3.14 script text executable, ASCII text
+pipx | pipx: none | NONE | - | -
+uv | uv: command | /usr/local/bin/uv | /usr/local/bin/uv | Mach-O 64-bit executable x86_64
+uvx | uvx: command | /usr/local/bin/uvx | /usr/local/bin/uvx | Mach-O 64-bit executable x86_64
+git | git: command | /usr/bin/git | /usr/bin/git | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/git (for architecture x86_64):	Mach-O 64-bit execut
+/usr/bin/git (for architecture arm64e):	Mach-O 64-bit execut
+gh | gh: command | /opt/homebrew/bin/gh | /opt/homebrew/Cellar/gh/2.100.0/bin/gh | Mach-O 64-bit executable arm64
+glab | glab: none | NONE | - | -
+wget | wget: command | /usr/local/bin/wget | /usr/local/Cellar/wget/1.25.0/bin/wget | Mach-O 64-bit executable x86_64
+curl | curl: command | /usr/bin/curl | /usr/bin/curl | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/curl (for architecture x86_64):	Mach-O 64-bit execu
+/usr/bin/curl (for architecture arm64e):	Mach-O 64-bit execu
+tmux | tmux: command | /usr/local/bin/tmux | /usr/local/Cellar/tmux/3.6a/bin/tmux | Mach-O 64-bit executable x86_64
+deno | deno: command | /usr/local/bin/deno | /usr/local/Cellar/deno/2.8.0/bin/deno | Mach-O 64-bit executable x86_64
+bun | bun: command | /Users/yanfenma/.bun/bin/bun | /Users/yanfenma/.bun/bin/bun | Mach-O 64-bit executable x86_64
+starship | starship: command | /usr/local/bin/starship | /usr/local/Cellar/starship/1.24.2/bin/starship | Mach-O 64-bit executable x86_64
+cmake | cmake: command | /usr/local/bin/cmake | /usr/local/Cellar/cmake/4.3.1/bin/cmake | Mach-O 64-bit executable x86_64
+ninja | ninja: none | NONE | - | -
+make | make: command | /usr/bin/make | /usr/bin/make | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/make (for architecture x86_64):	Mach-O 64-bit execu
+/usr/bin/make (for architecture arm64e):	Mach-O 64-bit execu
+gcc | gcc: command | /usr/bin/gcc | /usr/bin/gcc | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/gcc (for architecture x86_64):	Mach-O 64-bit execut
+/usr/bin/gcc (for architecture arm64e):	Mach-O 64-bit execut
+g++ | g++: command | /usr/bin/g++ | /usr/bin/g++ | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/g++ (for architecture x86_64):	Mach-O 64-bit execut
+/usr/bin/g++ (for architecture arm64e):	Mach-O 64-bit execut
+clang | clang: command | /usr/bin/clang | /usr/bin/clang | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/clang (for architecture x86_64):	Mach-O 64-bit exec
+/usr/bin/clang (for architecture arm64e):	Mach-O 64-bit exec
+clang++ | clang++: command | /usr/bin/clang++ | /usr/bin/clang++ | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/clang++ (for architecture x86_64):	Mach-O 64-bit ex
+/usr/bin/clang++ (for architecture arm64e):	Mach-O 64-bit ex
+psql | psql: command | /usr/local/bin/psql | /usr/local/Cellar/postgresql@16/16.14/bin/psql | Mach-O 64-bit executable x86_64
+pg_ctl | pg_ctl: command | /usr/local/bin/pg_ctl | /usr/local/Cellar/postgresql@16/16.14/bin/pg_ctl | Mach-O 64-bit executable x86_64
+pg_dump | pg_dump: command | /usr/local/bin/pg_dump | /usr/local/Cellar/postgresql@16/16.14/bin/pg_dump | Mach-O 64-bit executable x86_64
+redis-server | redis-server: none | NONE | - | -
+redis-cli | redis-cli: none | NONE | - | -
+nginx | nginx: none | NONE | - | -
+syncthing | syncthing: command | /usr/local/bin/syncthing | /usr/local/Cellar/syncthing/2.0.14/bin/syncthing | Mach-O 64-bit executable x86_64
+tailscale | tailscale: command | /usr/local/bin/tailscale | /usr/local/Cellar/tailscale/1.94.2/bin/tailscale | Mach-O 64-bit executable x86_64
+tailscaled | tailscaled: command | /usr/local/bin/tailscaled | /usr/local/Cellar/tailscale/1.94.2/bin/tailscaled | Mach-O 64-bit executable x86_64
+cloudflared | cloudflared: command | /usr/local/bin/cloudflared | /usr/local/Cellar/cloudflared/2025.11.1/bin/cloudflared | Mach-O 64-bit executable x86_64
+ngrok | ngrok: command | /usr/local/bin/ngrok | /usr/local/Caskroom/ngrok/3.37.1/ngrok | Mach-O 64-bit executable x86_64
+docker | docker: command | /usr/local/bin/docker | /Applications/Docker.app/Contents/Resources/bin/docker | Mach-O 64-bit executable arm64
+ffmpeg | ffmpeg: command | /usr/local/bin/ffmpeg | /usr/local/Cellar/ffmpeg/8.1.1/bin/ffmpeg | Mach-O 64-bit executable x86_64
+ffprobe | ffprobe: command | /usr/local/bin/ffprobe | /usr/local/Cellar/ffmpeg/8.1.1/bin/ffprobe | Mach-O 64-bit executable x86_64
+pandoc | pandoc: command | /usr/local/bin/pandoc | /usr/local/Cellar/pandoc/3.9.0.2/bin/pandoc | Mach-O 64-bit executable x86_64
+tesseract | tesseract: command | /usr/local/bin/tesseract | /usr/local/Cellar/tesseract/5.5.2/bin/tesseract | Mach-O 64-bit executable x86_64
+jq | jq: command | /usr/bin/jq | /usr/bin/jq | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/jq (for architecture x86_64):	Mach-O 64-bit executa
+/usr/bin/jq (for architecture arm64e):	Mach-O 64-bit executa
+yq | yq: none | NONE | - | -
+fzf | fzf: none | NONE | - | -
+rg | rg: command | /Applications/ZCode.app/Contents/Resources/tools/ripgrep/rg | /Applications/ZCode.app/Contents/Resources/tools/ripgrep/rg | Mach-O 64-bit executable arm64
+fd | fd: none | NONE | - | -
+bat | bat: none | NONE | - | -
+eza | eza: none | NONE | - | -
+exa | exa: none | NONE | - | -
+htop | htop: none | NONE | - | -
+sqlite3 | sqlite3: command | /usr/bin/sqlite3 | /usr/bin/sqlite3 | universal(would-run:arm64) Mach-O universal binary with 3 architectures: [x86_64:Mach-O
+/usr/bin/sqlite3 (for architecture x86_64):	Mach-O 64-bit ex
+/usr/bin/sqlite3 (for architecture x86_64h):	Mach-O 64-bit e
+/usr/bin/sqlite3 (for architecture arm64e):	Mach-O 64-bit ex
+mysql | mysql: none | NONE | - | -
+mongod | mongod: none | NONE | - | -
+ssh | ssh: command | /usr/bin/ssh | /usr/bin/ssh | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/ssh (for architecture x86_64):	Mach-O 64-bit execut
+/usr/bin/ssh (for architecture arm64e):	Mach-O 64-bit execut
+gpg | gpg: command | /usr/local/bin/gpg | /usr/local/Cellar/gnupg/2.5.19/bin/gpg | Mach-O 64-bit executable x86_64
+op | op: command | /usr/local/bin/op | /usr/local/Caskroom/1password-cli/2.34.1/op | Mach-O 64-bit executable x86_64
+age | age: none | NONE | - | -
+brew | brew: command | /usr/local/bin/brew | /usr/local/Homebrew/bin/brew | Bourne-Again shell script text executable, ASCII text
+arch | arch: command | /usr/bin/arch | /usr/bin/arch | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/arch (for architecture x86_64):	Mach-O 64-bit execu
+/usr/bin/arch (for architecture arm64e):	Mach-O 64-bit execu
+zoxide | zoxide: none | NONE | - | -
+atuin | atuin: none | NONE | - | -
+claude | claude: command | /usr/local/bin/claude | /usr/local/Caskroom/claude-code/2.1.17/claude | Mach-O 64-bit executable x86_64
+codex | codex: command | /Users/yanfenma/.local/bin/codex | /Users/yanfenma/.codex/packages/standalone/releases/0.144.4-aarch64-apple-darwin/bin/codex | Mach-O 64-bit executable arm64
+go | go: none | NONE | - | -
+rustc | rustc: command | /Users/yanfenma/.cargo/bin/rustc | /Users/yanfenma/.cargo/bin/rustup | Mach-O 64-bit executable x86_64
+cargo | cargo: command | /Users/yanfenma/.cargo/bin/cargo | /Users/yanfenma/.cargo/bin/rustup | Mach-O 64-bit executable x86_64
+ruby | ruby: command | /usr/bin/ruby | /usr/bin/ruby | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/ruby (for architecture x86_64):	Mach-O 64-bit execu
+/usr/bin/ruby (for architecture arm64e):	Mach-O 64-bit execu
+gem | gem: command | /usr/bin/gem | /usr/bin/gem | a /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/bin/ruby script text executab
+php | php: none | NONE | - | -
+composer | composer: none | NONE | - | -
+perl | perl: command | /usr/bin/perl | /usr/bin/perl | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/perl (for architecture x86_64):	Mach-O 64-bit execu
+/usr/bin/perl (for architecture arm64e):	Mach-O 64-bit execu
+java | java: command | /usr/bin/java | /usr/bin/java | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/java (for architecture x86_64):	Mach-O 64-bit execu
+/usr/bin/java (for architecture arm64e):	Mach-O 64-bit execu
+javac | javac: command | /usr/bin/javac | /usr/bin/javac | universal(would-run:arm64) Mach-O universal binary with 2 architectures: [x86_64:Mach-O
+/usr/bin/javac (for architecture x86_64):	Mach-O 64-bit exec
+/usr/bin/javac (for architecture arm64e):	Mach-O 64-bit exec
+mvn | mvn: none | NONE | - | -
+gradle | gradle: command | /usr/local/bin/gradle | /usr/local/Cellar/gradle/9.2.0/bin/gradle | Bourne-Again shell script text executable, ASCII text
+ant | ant: none | NONE | - | -
+dotnet | dotnet: none | NONE | - | -
+R | R: command | /usr/local/bin/R | /usr/local/Cellar/r/4.4.3_1/bin/R | POSIX shell script text executable, ASCII text
+Rscript | Rscript: command | /usr/local/bin/Rscript | /usr/local/Cellar/r/4.4.3_1/bin/Rscript | Mach-O 64-bit executable x86_64
+latex | latex: none | NONE | - | -
+pdflatex | pdflatex: none | NONE | - | -
+openssl | openssl: command | /usr/local/bin/openssl | /usr/local/Cellar/openssl@3/3.6.2/bin/openssl | Mach-O 64-bit executable x86_64
+sshpass | sshpass: none | NONE | - | -
+mosquitto_sub | mosquitto_sub: none | NONE | - | -
+tor | tor: none | NONE | - | -
+aria2c | aria2c: command | /opt/homebrew/bin/aria2c | /opt/homebrew/Cellar/aria2/1.37.0_2/bin/aria2c | Mach-O 64-bit executable arm64
+axel | axel: none | NONE | - | -
+htop | htop: none | NONE | - | -
+btop | btop: none | NONE | - | -
+ncdu | ncdu: none | NONE | - | -
+duf | duf: none | NONE | - | -
+lazygit | lazygit: none | NONE | - | -
+delta | delta: none | NONE | - | -
+batcat | batcat: none | NONE | - | -
+exiftool | exiftool: none | NONE | - | -
+imagemagick | imagemagick: none | NONE | - | -
+convert | convert: none | NONE | - | -
+magick | magick: none | NONE | - | -
+sox | sox: none | NONE | - | -

@@ -1,0 +1,576 @@
+## /usr/local top-level
+total 0
+drwxr-xr-x    16 root      wheel    512 Aug 30 01:16 .
+drwxr-xr-x@   11 root      wheel    352 Aug 13 10:51 ..
+drwxrwxr-x    17 yanfenma  admin    544 Jul  8 07:46 Caskroom
+drwxrwxr-x   179 yanfenma  admin   5728 Aug 21 23:25 Cellar
+drwxrwxr-x     7 yanfenma  admin    224 May 25 10:20 Frameworks
+drwxr-xr-x    30 yanfenma  admin    960 Aug 11 12:26 Homebrew
+drwxrwxr-x  1026 yanfenma  admin  32832 Sep  7 06:58 bin
+drwxrwxr-x    17 yanfenma  admin    544 May 25 10:20 etc
+drwxrwxr-x   361 yanfenma  admin  11552 Jul  1 07:58 include
+drwxrwxr-x   957 yanfenma  admin  30624 Jul 21 07:41 lib
+drwxr-xr-x    32 root      wheel   1024 Aug 28 07:34 libexec
+drwxr-xr-x    16 yanfenma  wheel    512 Aug  9 08:24 openclaw-monitors
+drwxrwxr-x   220 yanfenma  admin   7040 Aug 21 23:25 opt
+drwxrwxr-x    10 yanfenma  admin    320 May  8 07:30 sbin
+drwxrwxr-x    54 yanfenma  admin   1728 Jul 18 17:39 share
+drwxrwxr-x     9 yanfenma  admin    288 Jul 21 07:47 var
+## /usr/local/Cellar
+total 0
+drwxrwxr-x  179 yanfenma  admin  5728 Aug 21 23:25 .
+drwxr-xr-x   16 root      wheel   512 Aug 30 01:16 ..
+drwx------    3 yanfenma  admin    96 Mar 16 12:29 abseil
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 ada-url
+drwx------    3 yanfenma  admin    96 May  9 19:05 aliyun-cli
+drwxr-xr-x    3 yanfenma  admin    96 Jan 18  2026 arduino-cli
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 bitwarden-cli
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 brotli
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 c-ares
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 ca-certificates
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 13  2025 cairo
+drwxr-xr-x    3 yanfenma  admin    96 Jun 26 07:07 certifi
+drwx------    3 yanfenma  admin    96 Apr 11 16:03 chromaprint
+drwxr-xr-x    3 yanfenma  admin    96 Nov 15  2025 cloudflared
+drwx------    3 yanfenma  admin    96 Apr 13 23:08 cmake
+drwxr-xr-x    3 yanfenma  admin    96 Mar  9  2026 coreutils
+drwxr-xr-x@   3 yanfenma  admin    96 Mar 18  2025 curl
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 dav1d
+drwxr-xr-x    3 yanfenma  admin    96 Jun 26 07:07 deno
+drwxr-xr-x@   3 yanfenma  admin    96 Feb  4  2025 docker
+drwxr-xr-x@   3 yanfenma  admin    96 Feb  4  2025 docker-completion
+drwx------    3 yanfenma  admin    96 Mar 16 12:29 eigen
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 26 07:07 ffmpeg
+drwxr-xr-x@   3 yanfenma  admin    96 Feb  4  2025 fish
+drwx------    3 yanfenma  admin    96 May 25 10:19 flac
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 fmt
+drwxr-xr-x    4 yanfenma  admin   128 Jul  1 07:57 fontconfig
+drwxr-xr-x    3 yanfenma  admin    96 Jun 20 21:17 freetype
+drwx------    3 yanfenma  admin    96 May 25 10:18 fribidi
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 gcc
+drwxr-xr-x    3 yanfenma  admin    96 Apr 26 16:28 gettext
+drwxr-xr-x    3 yanfenma  admin    96 Feb 26  2026 gh
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 giflib
+drwxr-xr-x    3 yanfenma  admin    96 Aug 21 23:25 gitleaks
+drwxr-xr-x    4 yanfenma  admin   128 Jul  1 07:58 glib
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 gmp
+drwx------    3 yanfenma  admin    96 May  8 07:30 gnupg
+drwx------    3 yanfenma  admin    96 May  8 07:30 gnutls
+drwx------    3 yanfenma  admin    96 May  8 07:30 gpgme
+drwx------    3 yanfenma  admin    96 May  8 07:30 gpgmepp
+drwxr-xr-x    3 yanfenma  admin    96 Nov 15  2025 gradle
+drwxr-xr-x    3 yanfenma  admin    96 Nov 15  2025 gradle-completion
+drwxr-xr-x@   4 yanfenma  admin   128 Jul  1 07:58 graphite2
+drwxr-xr-x    4 yanfenma  admin   128 Jul  1 07:58 harfbuzz
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 hdrhistogram_c
+drwxr-xr-x@   3 yanfenma  admin    96 Mar 18  2025 icu4c@77
+drwxr-xr-x    3 yanfenma  admin    96 Jun 20 21:17 icu4c@78
+drwxr-xr-x@   3 yanfenma  admin    96 Mar  1  2025 isl
+drwxr-xr-x@   3 yanfenma  admin    96 Mar 18  2025 jpeg
+drwxr-xr-x    3 yanfenma  admin    96 Jun 20 21:17 jpeg-turbo
+drwxr-xr-x@   3 yanfenma  admin    96 May 18 08:54 krb5
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 lame
+drwxr-xr-x@   3 yanfenma  admin    96 Mar 18  2025 lapack
+drwx------    3 yanfenma  admin    96 Jul  1 07:57 leptonica
+drwx------    3 yanfenma  admin    96 May 25 10:18 libarchive
+drwx------    3 yanfenma  admin    96 May 25 10:18 libass
+drwx------    3 yanfenma  admin    96 May  8 07:30 libassuan
+drwx------    3 yanfenma  admin    96 May 25 10:18 libb2
+drwx------    3 yanfenma  admin    96 May 25 10:18 libbluray
+drwx------    3 yanfenma  admin    96 Jul  1 07:57 libdatrie
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 libevent
+drwx------    3 yanfenma  admin    96 May  8 07:30 libgcrypt
+drwx------    3 yanfenma  admin    96 May  8 07:30 libgpg-error
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 libidn2
+drwx------    3 yanfenma  admin    96 May  8 07:30 libksba
+drwxr-xr-x@   3 yanfenma  admin    96 Mar  1  2025 libmpc
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 libnghttp2
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 libnghttp3
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 libngtcp2
+drwx------    3 yanfenma  admin    96 May 25 10:19 libogg
+drwxr-xr-x    3 yanfenma  admin    96 Jun 26 07:07 libomp
+drwx------    3 yanfenma  admin    96 May 25 10:18 libplacebo
+drwxr-xr-x    3 yanfenma  admin    96 Jun 20 21:17 libpng
+drwx------    3 yanfenma  admin    96 May 25 10:19 libsamplerate
+drwx------    3 yanfenma  admin    96 May 25 10:19 libsndfile
+drwxr-xr-x@   3 yanfenma  admin    96 Mar 18  2025 libssh2
+drwx------    3 yanfenma  admin    96 May  8 07:29 libtasn1
+drwx------    3 yanfenma  admin    96 Jul  1 07:57 libthai
+drwxr-xr-x    3 yanfenma  admin    96 Apr 26 16:28 libtiff
+drwx------    3 yanfenma  admin    96 May 25 10:18 libudfread
+drwx------    3 yanfenma  admin    96 May 25 10:18 libunibreak
+drwxr-xr-x    3 yanfenma  admin    96 Apr 26 16:28 libunistring
+drwx------    3 yanfenma  admin    96 May  8 07:30 libusb
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 libuv
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 libvmaf
+drwx------    3 yanfenma  admin    96 May 25 10:19 libvorbis
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 libvpx
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 libx11
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 libxau
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 libxcb
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 libxdmcp
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 libxext
+drwxr-xr-x    3 yanfenma  admin    96 Apr 14  2025 libxml2
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 libxrender
+drwxr-xr-x    3 yanfenma  admin    96 Feb 26  2026 libyaml
+drwxr-xr-x@   3 yanfenma  admin    96 Jul 18 17:39 lima
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 little-cms2
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 llhttp
+drwx------    3 yanfenma  admin    96 Mar 16 12:28 llvm@20
+drwx------    3 yanfenma  admin    96 May 25 10:18 luajit
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 lz4
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 12  2025 lzo
+drwx------    3 yanfenma  admin    96 May 25 10:20 molten-vk
+drwxr-xr-x@   3 yanfenma  admin    96 Feb  7  2026 mpdecimal
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 mpfr
+drwx------    3 yanfenma  admin    96 May 25 10:19 mpg123
+drwx------    3 yanfenma  admin    96 May 25 10:20 mpv
+drwx------    3 yanfenma  admin    96 May 25 10:18 mujs
+drwx------    3 yanfenma  admin    96 Apr 13 13:35 multica
+drwxr-xr-x@   3 yanfenma  admin    96 Feb  4  2025 ncurses
+drwx------    3 yanfenma  admin    96 May  8 07:29 nettle
+drwx------    3 yanfenma  admin    96 May 11 13:44 nikto
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 26 07:07 node
+drwx------    3 yanfenma  admin    96 May  8 07:30 npth
+drwx------    3 yanfenma  admin    96 May  8 07:30 nspr
+drwx------    3 yanfenma  admin    96 May  8 07:31 nss
+drwx------    3 yanfenma  admin    96 Mar 16 12:30 numpy
+drwx------    3 yanfenma  admin    96 Mar 16 12:30 onnx
+drwx------    3 yanfenma  admin    96 Mar 16 12:31 openai-whisper
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 26 07:07 openblas
+drwxr-xr-x    3 yanfenma  admin    96 Nov  2  2025 openjdk
+drwx------    3 yanfenma  admin    96 May  9 13:33 openjdk@17
+drwx------    3 yanfenma  admin    96 May  8 07:31 openjpeg
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 openssl@3
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 opus
+drwx------    3 yanfenma  admin    96 May  8 07:29 p11-kit
+drwx------    3 yanfenma  admin    96 Apr  7 12:54 pandoc
+drwx------    3 yanfenma  admin    96 Jul  1 07:58 pango
+drwxr-xr-x    3 yanfenma  admin    96 Apr 26 16:28 pcre2
+drwx------    3 yanfenma  admin    96 May  8 07:30 pinentry
+drwxr-xr-x    3 yanfenma  admin    96 Nov  2  2025 pixman
+drwxr-xr-x    3 yanfenma  admin    96 Feb 27  2026 pkgconf
+drwx------    3 yanfenma  admin    96 May  8 07:31 poppler
+drwxr-xr-x@   3 yanfenma  admin    96 May 18 08:54 postgresql@16
+drwx------    3 yanfenma  admin    96 Mar 16 12:30 protobuf
+drwx------    3 yanfenma  admin    96 Apr  2 19:22 python@3.11
+drwxr-xr-x@   3 yanfenma  admin    96 Feb 13  2025 python@3.12
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 13  2025 python@3.13
+drwxr-xr-x    3 yanfenma  admin    96 Jun 26 07:07 python@3.14
+drwx------    3 yanfenma  admin    96 Mar 16 12:30 pytorch
+drwxr-xr-x    3 yanfenma  admin    96 Apr 14  2025 r
+drwxr-xr-x@   3 yanfenma  admin    96 Feb  7  2026 readline
+drwxr-xr-x@   3 yanfenma  admin    96 Mar 18  2025 rtmpdump
+drwx------    3 yanfenma  admin    96 May 25 10:19 rubberband
+drwxr-xr-x    3 yanfenma  admin    96 Feb 26  2026 ruby
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 sdl2
+drwx------    3 yanfenma  admin    96 May 25 10:18 shaderc
+drwxr-xr-x    3 yanfenma  admin    96 Jun 28 21:09 shellcheck
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 simdjson
+drwx------    3 yanfenma  admin    96 Mar 16 12:30 sleef
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 26 07:07 sqlite
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 starship
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 svt-av1
+drwxr-xr-x    3 yanfenma  admin    96 Feb 26  2026 syncthing
+drwxr-xr-x    3 yanfenma  admin    96 Feb 26  2026 tailscale
+drwxr-xr-x    3 yanfenma  admin    96 Apr 14  2025 tcl-tk@8
+drwx------    3 yanfenma  admin    96 May 11 13:34 tectonic
+drwx------    3 yanfenma  admin    96 Jul  1 07:58 tesseract
+drwxr-xr-x    3 yanfenma  admin    96 Jan  7  2026 tmux
+drwx------    3 yanfenma  admin    96 May 25 10:19 uchardet
+drwxr-xr-x@   3 yanfenma  admin    96 Mar 18  2025 udunits
+drwxr-xr-x@   3 yanfenma  admin    96 Mar  9  2025 unar
+drwx------    3 yanfenma  admin    96 May  8 07:29 unbound
+drwxr-xr-x    3 yanfenma  admin    96 Jan  7  2026 utf8proc
+drwxr-xr-x    3 yanfenma  admin    96 Feb 25  2026 uvwasi
+drwx------    3 yanfenma  admin    96 May 25 10:19 vapoursynth
+drwx------    3 yanfenma  admin    96 May 25 10:18 vulkan-headers
+drwx------    3 yanfenma  admin    96 May 25 10:18 vulkan-loader
+drwx------    3 yanfenma  admin    96 Jul  1 07:57 webp
+drwxr-xr-x@   3 yanfenma  admin    96 Feb  4  2025 wget
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 x264
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 x265
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 xorgproto
+drwxr-xr-x@   3 yanfenma  admin    96 Jun 20 21:17 xz
+drwxr-xr-x    3 yanfenma  admin    96 Jun 26 07:07 yt-dlp
+drwxr-xr-x    3 yanfenma  admin    96 Jan 11  2026 zellij
+drwx------    3 yanfenma  admin    96 May 25 10:19 zimg
+drwxr-xr-x@   3 yanfenma  admin    96 Mar 18  2025 zlib
+drwxr-xr-x@   3 yanfenma  admin    96 Apr 26 16:28 zstd
+## /usr/local/opt
+total 0
+drwxrwxr-x  220 yanfenma  admin  7040 Aug 21 23:25 .
+drwxr-xr-x   16 root      wheel   512 Aug 30 01:16 ..
+lrwx------    1 yanfenma  admin    27 Mar 16 12:29 abseil -> ../Cellar/abseil/20260107.1
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 ada-url -> ../Cellar/ada-url/3.4.3
+lrwx------    1 yanfenma  admin    27 May  9 19:05 aliyun-cli -> ../Cellar/aliyun-cli/3.3.14
+lrwxr-xr-x    1 yanfenma  admin    27 Jan 18  2026 arduino-cli -> ../Cellar/arduino-cli/1.4.0
+lrwxr-xr-x    1 yanfenma  admin    32 Feb 25  2026 bitwarden-cli -> ../Cellar/bitwarden-cli/2026.1.0
+lrwxr-xr-x    1 yanfenma  admin    22 Feb 25  2026 brotli -> ../Cellar/brotli/1.2.0
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 c-ares -> ../Cellar/c-ares/1.34.6
+lrwx------    1 yanfenma  admin    36 May 18 08:53 ca-certificates -> ../Cellar/ca-certificates/2026-05-14
+lrwxr-xr-x@   1 yanfenma  admin    22 Mar 18  2025 cairo -> ../Cellar/cairo/1.18.4
+lrwx------    1 yanfenma  admin    27 May 25 10:19 certifi -> ../Cellar/certifi/2026.5.20
+lrwx------    1 yanfenma  admin    27 Apr 11 16:03 chromaprint -> ../Cellar/chromaprint/1.6.0
+lrwxr-xr-x    1 yanfenma  admin    31 Nov 15  2025 cloudflared -> ../Cellar/cloudflared/2025.11.1
+lrwx------    1 yanfenma  admin    21 Apr 13 23:08 cmake -> ../Cellar/cmake/4.3.1
+lrwxr-xr-x    1 yanfenma  admin    24 Mar  9  2026 coreutils -> ../Cellar/coreutils/9.10
+lrwxr-xr-x@   1 yanfenma  admin    21 Mar 18  2025 curl -> ../Cellar/curl/8.12.1
+lrwx------    1 yanfenma  admin    21 Mar 16 12:28 dav1d -> ../Cellar/dav1d/1.5.3
+lrwx------    1 yanfenma  admin    20 May 25 10:20 deno -> ../Cellar/deno/2.8.0
+lrwxr-xr-x@   1 yanfenma  admin    23 Feb  4  2025 docker -> ../Cellar/docker/27.5.1
+lrwxr-xr-x@   1 yanfenma  admin    34 Feb  4  2025 docker-completion -> ../Cellar/docker-completion/27.5.1
+lrwx------    1 yanfenma  admin    21 Mar 16 12:29 eigen -> ../Cellar/eigen/5.0.1
+lrwx------    1 yanfenma  admin    21 Mar 16 12:29 eigen@5 -> ../Cellar/eigen/5.0.1
+lrwx------    1 yanfenma  admin    22 May 25 10:18 ffmpeg -> ../Cellar/ffmpeg/8.1.1
+lrwx------    1 yanfenma  admin    22 May 25 10:18 ffmpeg@7 -> ../Cellar/ffmpeg/8.1.1
+lrwx------    1 yanfenma  admin    22 May 25 10:18 ffmpeg@8 -> ../Cellar/ffmpeg/8.1.1
+lrwxr-xr-x@   1 yanfenma  admin    20 Feb  4  2025 fish -> ../Cellar/fish/3.7.1
+lrwxr-xr-x@   1 yanfenma  admin    20 Feb  4  2025 fishfish -> ../Cellar/fish/3.7.1
+lrwx------    1 yanfenma  admin    20 May 25 10:19 flac -> ../Cellar/flac/1.5.0
+lrwxr-xr-x    1 yanfenma  admin    20 Feb 25  2026 fmt -> ../Cellar/fmt/12.1.0
+lrwx------    1 yanfenma  admin    27 Jul  1 07:57 fontconfig -> ../Cellar/fontconfig/2.18.1
+lrwx------    1 yanfenma  admin    25 May  8 07:28 freetype -> ../Cellar/freetype/2.14.3
+lrwx------    1 yanfenma  admin    25 May  8 07:28 freetype2 -> ../Cellar/freetype/2.14.3
+lrwx------    1 yanfenma  admin    24 May 25 10:18 fribidi -> ../Cellar/fribidi/1.0.16
+lrwx------    1 yanfenma  admin    22 Mar 16 12:29 gcc -> ../Cellar/gcc/15.2.0_1
+lrwx------    1 yanfenma  admin    22 Mar 16 12:29 gcc@14 -> ../Cellar/gcc/15.2.0_1
+lrwx------    1 yanfenma  admin    22 Mar 16 12:29 gcc@15 -> ../Cellar/gcc/15.2.0_1
+lrwxr-xr-x    1 yanfenma  admin    21 Mar 22 16:38 gettext -> ../Cellar/gettext/1.0
+lrwx------    1 yanfenma  admin    22 Mar 16 12:29 gfortran -> ../Cellar/gcc/15.2.0_1
+lrwxr-xr-x    1 yanfenma  admin    19 Feb 26  2026 gh -> ../Cellar/gh/2.87.3
+lrwx------    1 yanfenma  admin    22 May  9 13:33 giflib -> ../Cellar/giflib/6.1.3
+lrwxr-xr-x    1 yanfenma  admin    25 Aug 21 23:25 gitleaks -> ../Cellar/gitleaks/8.30.1
+lrwx------    1 yanfenma  admin    21 Jul  1 07:58 glib -> ../Cellar/glib/2.88.2
+lrwxr-xr-x@   1 yanfenma  admin    19 Feb 12  2025 gmp -> ../Cellar/gmp/6.3.0
+lrwx------    1 yanfenma  admin    22 May  8 07:30 gnupg -> ../Cellar/gnupg/2.5.19
+lrwx------    1 yanfenma  admin    22 May  8 07:30 gnupg@2.5 -> ../Cellar/gnupg/2.5.19
+lrwx------    1 yanfenma  admin    23 May  8 07:30 gnutls -> ../Cellar/gnutls/3.8.13
+lrwx------    1 yanfenma  admin    22 May  8 07:30 gpg -> ../Cellar/gnupg/2.5.19
+lrwx------    1 yanfenma  admin    22 May  8 07:30 gpg2 -> ../Cellar/gnupg/2.5.19
+lrwx------    1 yanfenma  admin    21 May  8 07:30 gpgme -> ../Cellar/gpgme/2.0.1
+lrwx------    1 yanfenma  admin    23 May  8 07:30 gpgmepp -> ../Cellar/gpgmepp/2.0.0
+lrwxr-xr-x    1 yanfenma  admin    22 Nov 15  2025 gradle -> ../Cellar/gradle/9.2.0
+lrwxr-xr-x    1 yanfenma  admin    33 Nov 15  2025 gradle-completion -> ../Cellar/gradle-completion/9.2.0
+lrwxr-xr-x    1 yanfenma  admin    22 Nov 15  2025 gradle@9 -> ../Cellar/gradle/9.2.0
+lrwx------    1 yanfenma  admin    26 Jul  1 07:58 graphite2 -> ../Cellar/graphite2/1.3.15
+lrwx------    1 yanfenma  admin    25 Jul  1 07:58 harfbuzz -> ../Cellar/harfbuzz/14.2.1
+lrwxr-xr-x    1 yanfenma  admin    31 Feb 25  2026 hdrhistogram_c -> ../Cellar/hdrhistogram_c/0.11.9
+lrwx------    1 yanfenma  admin    23 May  9 13:33 icu4c -> ../Cellar/icu4c@78/78.3
+lrwxr-xr-x@   1 yanfenma  admin    23 Mar 18  2025 icu4c@77 -> ../Cellar/icu4c@77/77.1
+lrwx------    1 yanfenma  admin    23 May  9 13:33 icu4c@78 -> ../Cellar/icu4c@78/78.3
+lrwxr-xr-x@   1 yanfenma  admin    18 Mar  1  2025 isl -> ../Cellar/isl/0.27
+lrwxr-xr-x@   1 yanfenma  admin    18 Mar  1  2025 isl@0.27 -> ../Cellar/isl/0.27
+lrwxr-xr-x    1 yanfenma  admin    24 Nov  2  2025 java -> ../Cellar/openjdk/25.0.1
+lrwxr-xr-x@   1 yanfenma  admin    17 Mar 18  2025 jpeg -> ../Cellar/jpeg/9f
+lrwx------    1 yanfenma  admin    28 May  8 07:30 jpeg-turbo -> ../Cellar/jpeg-turbo/3.1.4.1
+lrwxr-xr-x@   1 yanfenma  admin    21 May 18 08:54 krb5 -> ../Cellar/krb5/1.22.2
+lrwxr-xr-x@   1 yanfenma  admin    20 Feb 12  2025 lame -> ../Cellar/lame/3.100
+lrwxr-xr-x@   1 yanfenma  admin    23 Mar 18  2025 lapack -> ../Cellar/lapack/3.12.1
+lrwx------    1 yanfenma  admin    26 May 25 10:19 lcms2 -> ../Cellar/little-cms2/2.19
+lrwx------    1 yanfenma  admin    26 Jul  1 07:57 leptonica -> ../Cellar/leptonica/1.87.0
+lrwx------    1 yanfenma  admin    26 May 25 10:18 libarchive -> ../Cellar/libarchive/3.8.7
+lrwx------    1 yanfenma  admin    25 May 25 10:18 libass -> ../Cellar/libass/0.17.4_1
+lrwx------    1 yanfenma  admin    25 May  8 07:30 libassuan -> ../Cellar/libassuan/3.0.2
+lrwx------    1 yanfenma  admin    25 May  8 07:30 libassuan@3 -> ../Cellar/libassuan/3.0.2
+lrwx------    1 yanfenma  admin    22 May 25 10:18 libb2 -> ../Cellar/libb2/0.98.1
+lrwx------    1 yanfenma  admin    25 May 25 10:18 libbluray -> ../Cellar/libbluray/1.4.1
+lrwx------    1 yanfenma  admin    26 Jul  1 07:57 libdatrie -> ../Cellar/libdatrie/0.2.14
+lrwxr-xr-x@   1 yanfenma  admin    27 Feb 12  2025 libevent -> ../Cellar/libevent/2.1.12_1
+lrwx------    1 yanfenma  admin    26 May  8 07:30 libgcrypt -> ../Cellar/libgcrypt/1.12.2
+lrwx------    1 yanfenma  admin    27 May  8 07:30 libgpg-error -> ../Cellar/libgpg-error/1.61
+lrwx------    1 yanfenma  admin    23 May  8 07:29 libidn2 -> ../Cellar/libidn2/2.3.8
+lrwxr-xr-x@   1 yanfenma  admin    17 Mar 18  2025 libjpeg -> ../Cellar/jpeg/9f
+lrwx------    1 yanfenma  admin    28 May  8 07:30 libjpeg-turbo -> ../Cellar/jpeg-turbo/3.1.4.1
+lrwxr-xr-x@   1 yanfenma  admin    17 Mar 18  2025 libjpg -> ../Cellar/jpeg/9f
+lrwx------    1 yanfenma  admin    23 May  8 07:30 libksba -> ../Cellar/libksba/1.7.0
+lrwxr-xr-x@   1 yanfenma  admin    22 Mar  1  2025 libmpc -> ../Cellar/libmpc/1.3.1
+lrwxr-xr-x    1 yanfenma  admin    25 Jan 20  2026 libmpdec -> ../Cellar/mpdecimal/4.0.1
+lrwx------    1 yanfenma  admin    23 May  8 07:29 libnettle -> ../Cellar/nettle/3.10.2
+lrwx------    1 yanfenma  admin    27 May  8 07:29 libnghttp2 -> ../Cellar/libnghttp2/1.69.0
+lrwxr-xr-x    1 yanfenma  admin    27 Feb 25  2026 libnghttp3 -> ../Cellar/libnghttp3/1.15.0
+lrwxr-xr-x    1 yanfenma  admin    26 Feb 25  2026 libngtcp2 -> ../Cellar/libngtcp2/1.20.0
+lrwx------    1 yanfenma  admin    22 May 25 10:19 libogg -> ../Cellar/libogg/1.3.6
+lrwx------    1 yanfenma  admin    23 Mar 16 12:29 libomp -> ../Cellar/libomp/22.1.1
+lrwx------    1 yanfenma  admin    28 May 25 10:18 libplacebo -> ../Cellar/libplacebo/7.360.1
+lrwx------    1 yanfenma  admin    23 May  8 07:28 libpng -> ../Cellar/libpng/1.6.58
+lrwx------    1 yanfenma  admin    29 May 25 10:19 libsamplerate -> ../Cellar/libsamplerate/0.2.2
+lrwx------    1 yanfenma  admin    28 May 25 10:19 libsndfile -> ../Cellar/libsndfile/1.2.2_1
+lrwxr-xr-x@   1 yanfenma  admin    24 Mar 18  2025 libssh2 -> ../Cellar/libssh2/1.11.1
+lrwx------    1 yanfenma  admin    25 May  8 07:29 libtasn -> ../Cellar/libtasn1/4.21.0
+lrwx------    1 yanfenma  admin    25 May  8 07:29 libtasn1 -> ../Cellar/libtasn1/4.21.0
+lrwx------    1 yanfenma  admin    24 Jul  1 07:57 libthai -> ../Cellar/libthai/0.1.30
+lrwxr-xr-x    1 yanfenma  admin    25 Mar 22 16:38 libtiff -> ../Cellar/libtiff/4.7.1_1
+lrwx------    1 yanfenma  admin    26 May 25 10:18 libudfread -> ../Cellar/libudfread/1.2.0
+lrwx------    1 yanfenma  admin    25 May 25 10:18 libunibreak -> ../Cellar/libunibreak/7.0
+lrwxr-xr-x    1 yanfenma  admin    28 Mar 22 16:38 libunistring -> ../Cellar/libunistring/1.4.2
+lrwx------    1 yanfenma  admin    23 May  8 07:30 libusb -> ../Cellar/libusb/1.0.29
+lrwx------    1 yanfenma  admin    22 Mar 16 12:30 libuv -> ../Cellar/libuv/1.52.1
+lrwx------    1 yanfenma  admin    23 May 25 10:17 libvmaf -> ../Cellar/libvmaf/3.1.0
+lrwx------    1 yanfenma  admin    25 May 25 10:19 libvorbis -> ../Cellar/libvorbis/1.3.7
+lrwx------    1 yanfenma  admin    23 Mar 16 12:28 libvpx -> ../Cellar/libvpx/1.16.0
+lrwx------    1 yanfenma  admin    23 May  8 07:28 libx11 -> ../Cellar/libx11/1.8.13
+lrwxr-xr-x@   1 yanfenma  admin    23 Feb 12  2025 libxau -> ../Cellar/libxau/1.0.12
+lrwxr-xr-x@   1 yanfenma  admin    23 Feb 12  2025 libxcb -> ../Cellar/libxcb/1.17.0
+lrwxr-xr-x@   1 yanfenma  admin    24 Feb 12  2025 libxdmcp -> ../Cellar/libxdmcp/1.1.5
+lrwx------    1 yanfenma  admin    23 May  8 07:29 libxext -> ../Cellar/libxext/1.3.7
+lrwxr-xr-x    1 yanfenma  admin    24 Apr 14  2025 libxml2 -> ../Cellar/libxml2/2.13.7
+lrwxr-xr-x@   1 yanfenma  admin    27 Feb 12  2025 libxrender -> ../Cellar/libxrender/0.9.12
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 26  2026 libyaml -> ../Cellar/libyaml/0.2.5
+lrwxr-xr-x@   1 yanfenma  admin    20 Jul 18 17:39 lima -> ../Cellar/lima/2.1.4
+lrwx------    1 yanfenma  admin    26 May 25 10:19 little-cms2 -> ../Cellar/little-cms2/2.19
+lrwxr-xr-x    1 yanfenma  admin    22 Feb 25  2026 llhttp -> ../Cellar/llhttp/9.3.1
+lrwx------    1 yanfenma  admin    24 Mar 16 12:28 llvm@20 -> ../Cellar/llvm@20/20.1.8
+lrwx------    1 yanfenma  admin    31 May 25 10:18 luajit -> ../Cellar/luajit/2.1.1774896198
+lrwxr-xr-x@   1 yanfenma  admin    20 Feb 12  2025 lz4 -> ../Cellar/lz4/1.10.0
+lrwxr-xr-x@   1 yanfenma  admin    18 Feb 12  2025 lzo -> ../Cellar/lzo/2.10
+lrwx------    1 yanfenma  admin    25 May 25 10:20 molten-vk -> ../Cellar/molten-vk/1.4.1
+lrwxr-xr-x    1 yanfenma  admin    25 Jan 20  2026 mpdecimal -> ../Cellar/mpdecimal/4.0.1
+lrwx------    1 yanfenma  admin    20 Mar 16 12:29 mpfr -> ../Cellar/mpfr/4.2.2
+lrwx------    1 yanfenma  admin    23 May 25 10:19 mpg123 -> ../Cellar/mpg123/1.33.5
+lrwx------    1 yanfenma  admin    22 May 25 10:20 mpv -> ../Cellar/mpv/0.41.0_4
+lrwx------    1 yanfenma  admin    20 May 25 10:19 mujs -> ../Cellar/mujs/1.3.9
+lrwx------    1 yanfenma  admin    24 Apr 13 13:35 multica -> ../Cellar/multica/0.1.27
+lrwxr-xr-x@   1 yanfenma  admin    21 Feb  4  2025 ncurses -> ../Cellar/ncurses/6.5
+lrwx------    1 yanfenma  admin    23 May  8 07:29 nettle -> ../Cellar/nettle/3.10.2
+lrwx------    1 yanfenma  admin    21 May 11 13:44 nikto -> ../Cellar/nikto/2.6.0
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 node -> ../Cellar/node/25.6.1_1
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 node.js -> ../Cellar/node/25.6.1_1
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 node@23 -> ../Cellar/node/25.6.1_1
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 node@25 -> ../Cellar/node/25.6.1_1
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 nodejs -> ../Cellar/node/25.6.1_1
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 npm -> ../Cellar/node/25.6.1_1
+lrwx------    1 yanfenma  admin    18 May  8 07:30 npth -> ../Cellar/npth/1.8
+lrwx------    1 yanfenma  admin    19 May  8 07:30 nspr -> ../Cellar/nspr/4.39
+lrwx------    1 yanfenma  admin    21 May  8 07:31 nss -> ../Cellar/nss/3.123.1
+lrwx------    1 yanfenma  admin    21 Mar 16 12:30 numpy -> ../Cellar/numpy/2.4.3
+lrwx------    1 yanfenma  admin    23 Mar 16 12:30 onnx -> ../Cellar/onnx/1.20.1_4
+lrwx------    1 yanfenma  admin    35 Mar 16 12:31 openai-whisper -> ../Cellar/openai-whisper/20250625_3
+lrwx------    1 yanfenma  admin    27 Mar 16 12:30 openblas -> ../Cellar/openblas/0.3.31_1
+lrwxr-xr-x    1 yanfenma  admin    24 Nov  2  2025 openjdk -> ../Cellar/openjdk/25.0.1
+lrwx------    1 yanfenma  admin    28 May  9 13:33 openjdk@17 -> ../Cellar/openjdk@17/17.0.19
+lrwxr-xr-x    1 yanfenma  admin    24 Nov  2  2025 openjdk@25 -> ../Cellar/openjdk/25.0.1
+lrwx------    1 yanfenma  admin    24 May  8 07:31 openjpeg -> ../Cellar/openjpeg/2.5.4
+lrwx------    1 yanfenma  admin    25 May  8 07:29 openssl -> ../Cellar/openssl@3/3.6.2
+lrwx------    1 yanfenma  admin    25 May  8 07:29 openssl@3 -> ../Cellar/openssl@3/3.6.2
+lrwx------    1 yanfenma  admin    25 May  8 07:29 openssl@3.4 -> ../Cellar/openssl@3/3.6.2
+lrwx------    1 yanfenma  admin    25 May  8 07:29 openssl@3.6 -> ../Cellar/openssl@3/3.6.2
+lrwx------    1 yanfenma  admin    20 Mar 16 12:28 opus -> ../Cellar/opus/1.6.1
+lrwx------    1 yanfenma  admin    24 May  8 07:29 p11-kit -> ../Cellar/p11-kit/0.26.2
+lrwx------    1 yanfenma  admin    24 Apr  7 12:54 pandoc -> ../Cellar/pandoc/3.9.0.2
+lrwx------    1 yanfenma  admin    22 Jul  1 07:58 pango -> ../Cellar/pango/1.58.0
+lrwxr-xr-x    1 yanfenma  admin    23 Mar 22 16:38 pcre2 -> ../Cellar/pcre2/10.47_1
+lrwx------    1 yanfenma  admin    24 May  8 07:30 pinentry -> ../Cellar/pinentry/1.3.2
+lrwxr-xr-x    1 yanfenma  admin    23 Nov  2  2025 pixman -> ../Cellar/pixman/0.46.4
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 27  2026 pkg-config -> ../Cellar/pkgconf/2.5.1
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 27  2026 pkgconf -> ../Cellar/pkgconf/2.5.1
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 27  2026 pkgconfig -> ../Cellar/pkgconf/2.5.1
+lrwx------    1 yanfenma  admin    25 May  8 07:31 poppler -> ../Cellar/poppler/26.04.0
+lrwxr-xr-x@   1 yanfenma  admin    29 May 18 08:54 postgresql@16 -> ../Cellar/postgresql@16/16.14
+lrwx------    1 yanfenma  admin    23 Mar 16 12:30 protobuf -> ../Cellar/protobuf/34.0
+lrwx------    1 yanfenma  admin    23 Mar 16 12:30 protobuf@34 -> ../Cellar/protobuf/34.0
+lrwx------    1 yanfenma  admin    28 May 25 10:19 python -> ../Cellar/python@3.14/3.14.5
+lrwx------    1 yanfenma  admin    28 May 25 10:19 python3 -> ../Cellar/python@3.14/3.14.5
+lrwx------    1 yanfenma  admin    28 May 25 10:19 python@3 -> ../Cellar/python@3.14/3.14.5
+lrwx------    1 yanfenma  admin    29 Apr  2 19:22 python@3.11 -> ../Cellar/python@3.11/3.11.15
+lrwxr-xr-x@   1 yanfenma  admin    28 Feb 13  2025 python@3.12 -> ../Cellar/python@3.12/3.12.9
+lrwxr-xr-x@   1 yanfenma  admin    28 Apr 13  2025 python@3.13 -> ../Cellar/python@3.13/3.13.3
+lrwx------    1 yanfenma  admin    28 May 25 10:19 python@3.14 -> ../Cellar/python@3.14/3.14.5
+lrwx------    1 yanfenma  admin    26 Mar 16 12:31 pytorch -> ../Cellar/pytorch/2.10.0_1
+lrwxr-xr-x    1 yanfenma  admin    22 Feb 25  2026 pzstd -> ../Cellar/zstd/1.5.7_1
+lrwxr-xr-x    1 yanfenma  admin    19 Apr 14  2025 r -> ../Cellar/r/4.4.3_1
+lrwxr-xr-x    1 yanfenma  admin    24 Jan 20  2026 readline -> ../Cellar/readline/8.3.3
+lrwxr-xr-x@   1 yanfenma  admin    33 Mar 18  2025 rtmpdump -> ../Cellar/rtmpdump/2.4-20151223_3
+lrwx------    1 yanfenma  admin    26 May 25 10:19 rubberband -> ../Cellar/rubberband/4.0.0
+lrwxr-xr-x    1 yanfenma  admin    20 Feb 26  2026 ruby -> ../Cellar/ruby/4.0.1
+lrwxr-xr-x    1 yanfenma  admin    20 Feb 26  2026 ruby@4 -> ../Cellar/ruby/4.0.1
+lrwx------    1 yanfenma  admin    22 Mar 16 12:28 sdl2 -> ../Cellar/sdl2/2.32.10
+lrwx------    1 yanfenma  admin    24 May 25 10:18 shaderc -> ../Cellar/shaderc/2026.2
+lrwxr-xr-x    1 yanfenma  admin    27 Jun 28 21:09 shellcheck -> ../Cellar/shellcheck/0.11.0
+lrwxr-xr-x    1 yanfenma  admin    24 Feb 25  2026 simdjson -> ../Cellar/simdjson/4.3.0
+lrwx------    1 yanfenma  admin    21 Mar 16 12:30 sleef -> ../Cellar/sleef/3.9.0
+lrwx------    1 yanfenma  admin    23 May 25 10:19 sqlite -> ../Cellar/sqlite/3.53.1
+lrwx------    1 yanfenma  admin    23 May 25 10:19 sqlite3 -> ../Cellar/sqlite/3.53.1
+lrwxr-xr-x    1 yanfenma  admin    25 Feb 25  2026 starship -> ../Cellar/starship/1.24.2
+lrwx------    1 yanfenma  admin    23 May 25 10:17 svt-av1 -> ../Cellar/svt-av1/4.1.0
+lrwxr-xr-x    1 yanfenma  admin    26 Feb 26  2026 syncthing -> ../Cellar/syncthing/2.0.14
+lrwxr-xr-x    1 yanfenma  admin    26 Feb 26  2026 tailscale -> ../Cellar/tailscale/1.94.2
+lrwxr-xr-x    1 yanfenma  admin    25 Apr 14  2025 tcl-tk@8 -> ../Cellar/tcl-tk@8/8.6.16
+lrwx------    1 yanfenma  admin    25 May 11 13:34 tectonic -> ../Cellar/tectonic/0.16.9
+lrwx------    1 yanfenma  admin    25 Jul  1 07:58 tesseract -> ../Cellar/tesseract/5.5.2
+lrwxr-xr-x    1 yanfenma  admin    19 Jan  7  2026 tmux -> ../Cellar/tmux/3.6a
+lrwx------    1 yanfenma  admin    24 May 25 10:19 uchardet -> ../Cellar/uchardet/0.0.8
+lrwxr-xr-x@   1 yanfenma  admin    24 Mar 18  2025 udunits -> ../Cellar/udunits/2.2.28
+lrwxr-xr-x@   1 yanfenma  admin    23 Mar  9  2025 unar -> ../Cellar/unar/1.10.8_5
+lrwx------    1 yanfenma  admin    24 May  8 07:29 unbound -> ../Cellar/unbound/1.25.0
+lrwxr-xr-x    1 yanfenma  admin    25 Jan  7  2026 utf8proc -> ../Cellar/utf8proc/2.11.3
+lrwxr-xr-x    1 yanfenma  admin    23 Feb 25  2026 uvwasi -> ../Cellar/uvwasi/0.0.23
+lrwx------    1 yanfenma  admin    24 May 25 10:19 vapoursynth -> ../Cellar/vapoursynth/73
+lrwx------    1 yanfenma  admin    34 May 25 10:18 vulkan-headers -> ../Cellar/vulkan-headers/1.4.350.0
+lrwx------    1 yanfenma  admin    33 May 25 10:18 vulkan-loader -> ../Cellar/vulkan-loader/1.4.350.0
+lrwx------    1 yanfenma  admin    20 Jul  1 07:57 webp -> ../Cellar/webp/1.6.0
+lrwxr-xr-x@   1 yanfenma  admin    21 Feb  4  2025 wget -> ../Cellar/wget/1.25.0
+lrwx------    1 yanfenma  admin    20 Mar 16 12:28 x264 -> ../Cellar/x264/r3222
+lrwx------    1 yanfenma  admin    18 May 25 10:18 x265 -> ../Cellar/x265/4.2
+lrwx------    1 yanfenma  admin    26 May  8 07:28 xorgproto -> ../Cellar/xorgproto/2025.1
+lrwx------    1 yanfenma  admin    18 May  8 07:30 xz -> ../Cellar/xz/5.8.3
+lrwx------    1 yanfenma  admin    28 May 25 10:20 yt-dlp -> ../Cellar/yt-dlp/2026.3.17_2
+lrwxr-xr-x    1 yanfenma  admin    23 Jan 11  2026 zellij -> ../Cellar/zellij/0.43.1
+lrwx------    1 yanfenma  admin    20 May 25 10:19 zimg -> ../Cellar/zimg/3.0.6
+lrwxr-xr-x@   1 yanfenma  admin    20 Mar 18  2025 zlib -> ../Cellar/zlib/1.3.1
+lrwxr-xr-x    1 yanfenma  admin    22 Feb 25  2026 zstd -> ../Cellar/zstd/1.5.7_1
+## /opt/homebrew/Cellar
+abseil
+ada-url
+aom
+aria2
+boost
+brotli
+c-ares
+ca-certificates
+cairo
+ceres-solver
+cgal
+cgns
+colmap
+dav1d
+dbus
+double-conversion
+eigen
+faiss
+ffmpeg
+flann
+fmt
+fontconfig
+freetype
+fribidi
+gcc
+gettext
+gflags
+ggml
+gh
+giflib
+gitleaks
+glew
+glib
+glog
+gmp
+graphite2
+harfbuzz
+hdf5
+hdrhistogram_c
+highway
+hwloc
+icu4c@78
+imath
+isl
+jpeg-turbo
+jpeg-xl
+json-c
+jsoncpp
+lame
+leptonica
+libaec
+libarchive
+libb2
+libdatrie
+libde265
+libdeflate
+libffi
+libharu
+libheif
+libmpc
+libnghttp2
+libnghttp3
+libngtcp2
+libogg
+libomp
+libpng
+libraw
+libssh2
+libthai
+libtiff
+libunistring
+libuv
+libvmaf
+libvorbis
+libvpx
+libx11
+libxau
+libxcb
+libxdmcp
+libxext
+libxrender
+lima
+little-cms2
+llama.cpp
+llhttp
+lz4
+lzo
+md4c
+merve
+metis
+minizip-ng
+mlx
+mlx-c
+mpdecimal
+mpfr
+mpg123
+nbytes
+netcdf
+nlohmann-json
+node
+numpy
+ollama
+onnx
+onnxruntime
+openblas
+opencolorio
+opencv
+openexr
+openimageio
+openjpeg
+openjph
+openssl@3
+openvino
+opus
+pango
+pcre2
+pixman
+pkgconf
+poselib
+proj
+protobuf
+pugixml
+pystring
+python@3.13
+python@3.14
+qtbase
+qtdeclarative
+qtsvg
+re2
+readline
+sdl2-compat
+sdl3
+simdjson
+simdutf
+snappy
+socat
+sqlite
+suite-sparse
+svt-av1
+tbb
+tesseract
+theora
+tunnel-client
+utf8cpp
+uvwasi
+vtk
+webp
+x264
+x265
+xorgproto
+xz
+yaml-cpp
+zlib-ng-compat
+zstd

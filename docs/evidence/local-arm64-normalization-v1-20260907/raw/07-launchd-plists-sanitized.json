@@ -1,0 +1,934 @@
+[
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "DSH_AGENT_MODEL": "deepseek-v4-flash",
+    "DSH_AGENT_PROVIDER": "oc-go",
+    "DSH_AGENT_TURN_TIMEOUT": "900000",
+    "DSH_HARNESS_ROOT": "/Users/yanfenma/workspace/github/deepseek-harness/.worktree/luna-production-rc8-20260822-090003",
+    "HOME": "/Users/yanfenma",
+    "NOTIFICATION_INGRESS_PORT": "8791",
+    "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+   },
+   "KeepAlive": true,
+   "Label": "ai.agent-core.runtime",
+   "ProgramArguments": [
+    "/Users/yanfenma/.agent-core/control/agent-core-runtime-glm53-wrapper.zsh"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/Users/yanfenma/.agent-core/logs/runtime.err.log",
+   "StandardOutPath": "/Users/yanfenma/.agent-core/logs/runtime.log",
+   "ThrottleInterval": 10,
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/production-dsh-agent-core"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/ai.agent-core.scheduler-v2.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "DSH_AGENT_MODEL": "deepseek-v4-flash",
+    "DSH_AGENT_PROVIDER": "oc-go",
+    "DSH_AGENT_TURN_TIMEOUT": "900000",
+    "DSH_HARNESS_ROOT": "/usr/local/libexec/agent-core/harness",
+    "HOME": "/Users/yanfenma",
+    "NOTIFICATION_INGRESS_HOST": "127.0.0.1",
+    "NOTIFICATION_INGRESS_PORT": "8795",
+    "PATH": "/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "PRODUCT_API_ENABLED": "0"
+   },
+   "KeepAlive": true,
+   "Label": "ai.agent-core.scheduler-v2",
+   "ProgramArguments": [
+    "/usr/local/libexec/agent-core/node-runtime/bin/node",
+    "/Users/yanfenma/workspace/project/dsh-agent-core-main/scripts/production-runtime.mjs",
+    "--root",
+    "/Users/yanfenma/.agent-core-scheduler-v2",
+    "--catchup",
+    "0"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/Users/yanfenma/.agent-core-scheduler-v2/logs/runtime.err.log",
+   "StandardOutPath": "/Users/yanfenma/.agent-core-scheduler-v2/logs/runtime.log",
+   "ThrottleInterval": 10,
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/dsh-agent-core-main"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist",
+  "error": "[Errno 13] Permission denied: '/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist'"
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.capability-host.plist",
+  "content": {
+   "Label": "com.agent-core.capability-host",
+   "ProgramArguments": [
+    "/Users/yanfenma/workspace/project/agent-core/tools/capability-host/target/release/capability-host"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/agent-core",
+   "StandardOutPath": "/Users/yanfenma/workspace/project/agent-core/logs/capability-host.stdout.log",
+   "StandardErrorPath": "/Users/yanfenma/workspace/project/agent-core/logs/capability-host.stderr.log",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "ThrottleInterval": 5,
+   "EnvironmentVariables": {
+    "CAPABILITY_HOST_LISTEN_ADDR": "127.0.0.1:7300",
+    "CAPABILITY_HOST_ARTIFACT_ROOT": "/Users/yanfenma/.agent-core/harness-artifacts",
+    "CAPABILITY_HOST_EXEC_TIMEOUT_MS": "30000",
+    "CAPABILITY_HOST_MAX_STDOUT_BYTES": "65536",
+    "CAPABILITY_HOST_MAX_STDERR_BYTES": "65536",
+    "PATH": "/usr/local/bin:/usr/bin:/bin"
+   }
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.coding-harness.plist",
+  "content": {
+   "Label": "com.agent-core.coding-harness",
+   "ProgramArguments": [
+    "/Users/yanfenma/workspace/project/agent-core/tools/coding-harness/target/release/coding-harness",
+    "--listen",
+    "127.0.0.1:7200"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/agent-core",
+   "StandardOutPath": "/Users/yanfenma/workspace/project/agent-core/logs/coding-harness.stdout.log",
+   "StandardErrorPath": "/Users/yanfenma/workspace/project/agent-core/logs/coding-harness.stderr.log",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "ThrottleInterval": 5,
+   "EnvironmentVariables": {
+    "CODING_CONFIG": "{\"workspaces\":{\"calculator-harness\":{\"root\":\"/Users/yanfenma/workspace/agent-workspaces/calculator-harness\",\"read\":true,\"write\":true,\"exec\":true,\"opencode\":true,\"network\":true,\"shell\":false}}}",
+    "KERNEL_API_URL": "http://127.0.0.1:4130",
+    "CAPABILITY_SUBMIT_TOKEN": "REDACTED",
+    "HARNESS_ARTIFACT_ROOT": "/Users/yanfenma/.agent-core/harness-artifacts",
+    "PATH": "/Users/yanfenma/.cargo/bin:/Users/yanfenma/.opencode/bin:/usr/local/bin:/usr/bin:/bin"
+   }
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.feishu-connector.plist",
+  "content": {
+   "Label": "com.agent-core.feishu-connector",
+   "ProgramArguments": [
+    "/Users/yanfenma/workspace/project/agent-core/node_modules/.bin/tsx",
+    "connectors/feishu/src/index.ts"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/agent-core",
+   "StandardOutPath": "/Users/yanfenma/workspace/project/agent-core/logs/feishu-connector.log",
+   "StandardErrorPath": "/Users/yanfenma/workspace/project/agent-core/logs/feishu-connector.err.log",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "ThrottleInterval": 5,
+   "EnvironmentVariables": {
+    "AGENT_CORE_KERNEL_DECISION_API_URL": "http://127.0.0.1:4130",
+    "AGENT_CORE_KERNEL_DECISION_TOKEN": "REDACTED",
+    "AGENT_CORE_FEISHU_OWNER_OPEN_ID": "REDACTED_OUID",
+    "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+   }
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.kernel.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "AGENT_CORE_CAPABILITY_DECISION_TOKEN": "REDACTED",
+    "AGENT_CORE_CAPABILITY_SUBMIT_TOKEN": "REDACTED",
+    "AGENT_CORE_FEISHU_CODING_OWNER_ID": "REDACTED_OUID",
+    "AGENT_CORE_CONNECTOR_EXECUTE_URL": "http://127.0.0.1:4131/v1/execute",
+    "AGENT_CORE_HARNESS_ARTIFACT_ROOT": "/Users/yanfenma/.agent-core/harness-artifacts",
+    "AGENT_CORE_MAX_TOOL_ROUNDS": "64",
+    "PATH": "/usr/local/bin:/usr/bin:/bin"
+   },
+   "KeepAlive": true,
+   "Label": "com.agent-core.kernel",
+   "ProgramArguments": [
+    "/Users/yanfenma/workspace/project/agent-core/target/release/agent-core-kernel",
+    "serve"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/Users/yanfenma/workspace/project/agent-core/logs/kernel.err.log",
+   "StandardOutPath": "/Users/yanfenma/workspace/project/agent-core/logs/kernel.log",
+   "ThrottleInterval": 5,
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/agent-core"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.article-review-canary.plist",
+  "content": {
+   "Label": "com.article-review-canary",
+   "ProgramArguments": [
+    "/usr/local/bin/node",
+    "/Users/yanfenma/workspace/deploy/article-review-canary/node_modules/tsx/dist/cli.mjs",
+    "/Users/yanfenma/workspace/deploy/article-review-canary/src/server/index.ts"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/workspace/deploy/article-review-canary",
+   "EnvironmentVariables": {
+    "PORT": "17231",
+    "DB_PATH": "/Users/yanfenma/workspace/runtime/article-review-canary/articles.db",
+    "ARTICLES_PATH": "/Users/yanfenma/workspace/runtime/article-review-canary/projects",
+    "NODE_ENV": "production"
+   },
+   "RunAtLoad": true,
+   "KeepAlive": {
+    "SuccessfulExit": false,
+    "Crashed": true
+   },
+   "ThrottleInterval": 5,
+   "StandardOutPath": "/Users/yanfenma/Library/Logs/article-review-canary/stdout.log",
+   "StandardErrorPath": "/Users/yanfenma/Library/Logs/article-review-canary/stderr.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.auth-service.plist",
+  "content": {
+   "Label": "com.auth-service",
+   "ProgramArguments": [
+    "/usr/local/bin/node",
+    "/Users/yanfenma/workspace/project/auth-service/dist/src/server.js"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/auth-service",
+   "KeepAlive": true,
+   "RunAtLoad": true,
+   "StandardOutPath": "/Users/yanfenma/Library/Logs/auth-service/stdout.log",
+   "StandardErrorPath": "/Users/yanfenma/Library/Logs/auth-service/stderr.log",
+   "ThrottleInterval": 5
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.brave.cdp.plist",
+  "content": {
+   "Label": "com.brave.cdp",
+   "ProgramArguments": [
+    "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+    "--remote-debugging-port=9222",
+    "--remote-allow-origins=*",
+    "--no-first-run",
+    "--disable-features=TranslateUI"
+   ],
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "StandardOutPath": "/tmp/brave-cdp-stdout.log",
+   "StandardErrorPath": "/tmp/brave-cdp-stderr.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.deepseek-harness.mobile-proxy.plist",
+  "content": {
+   "Label": "com.deepseek-harness.mobile-proxy",
+   "ProgramArguments": [
+    "/opt/homebrew/bin/node",
+    "/Users/yanfenma/.dsh/mobile-proxy/dsh-mobile-proxy.mjs"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/.dsh/mobile-proxy",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "ThrottleInterval": 5,
+   "StandardOutPath": "/Users/yanfenma/.dsh/logs/mobile-proxy.log",
+   "StandardErrorPath": "/Users/yanfenma/.dsh/logs/mobile-proxy.error.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.dsh.web.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "ALL_PROXY": "http://127.0.0.1:7890",
+    "DSH_REMOTE_GATEWAY": "http://127.0.0.1:8788",
+    "DSH_REMOTE_GATEWAY_PORT": "8788",
+    "HOME": "/Users/yanfenma",
+    "HTTPS_PROXY": "http://127.0.0.1:7890",
+    "HTTP_PROXY": "http://127.0.0.1:7890",
+    "NODE_USE_ENV_PROXY": "1",
+    "NO_PROXY": "localhost,open.feishu.cn,mcp.feishu.cn,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,*.local"
+   },
+   "KeepAlive": {
+    "SuccessfulExit": false
+   },
+   "Label": "com.dsh.web",
+   "ProcessType": "Background",
+   "ProgramArguments": [
+    "/bin/bash",
+    "/Users/yanfenma/dsh-remote-deploy/dsh-web-launchd.sh"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/Users/yanfenma/.dsh/logs/dsh-web.err.log",
+   "StandardOutPath": "/Users/yanfenma/.dsh/logs/dsh-web.out.log",
+   "WorkingDirectory": "/Users/yanfenma/workspace/github/deepseek-harness"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.google.GoogleUpdater.wake.plist",
+  "content": {
+   "AbandonProcessGroup": true,
+   "AssociatedBundleIdentifiers": [
+    "com.google.GoogleUpdater"
+   ],
+   "Label": "com.google.GoogleUpdater.wake",
+   "LimitLoadToSessionType": "Aqua",
+   "ProgramArguments": [
+    "/Users/yanfenma/Library/Application Support/Google/GoogleUpdater/Current/GoogleUpdater.app/Contents/MacOS/GoogleUpdater",
+    "--wake-all",
+    "--enable-logging",
+    "--vmodule=*/components/update_client/*=2,*/chrome/enterprise_companion/*=2,*/chrome/updater/*=2"
+   ],
+   "StartInterval": 3600
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.google.keystone.agent.plist",
+  "content": {}
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.google.keystone.xpcservice.plist",
+  "content": {}
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.irbridge.plist",
+  "content": {
+   "Label": "com.irbridge",
+   "ProgramArguments": [
+    "/usr/local/bin/python3",
+    "/Users/yanfenma/.openclaw/groups/workspace-REDACTED_OCID/smart-home/scripts/ir_bridge.py",
+    "start"
+   ],
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "StandardOutPath": "/tmp/ir_bridge.stdout.log",
+   "StandardErrorPath": "/tmp/ir_bridge.stderr.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.llmwiki.local.plist",
+  "content": {
+   "Label": "com.llmwiki.local",
+   "ProgramArguments": [
+    "/Users/yanfenma/workspace/project/llm-wiki/scripts/serve-web.sh"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/llm-wiki",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "StandardOutPath": "/Users/yanfenma/workspace/project/llm-wiki/logs/llmwiki.out.log",
+   "StandardErrorPath": "/Users/yanfenma/workspace/project/llm-wiki/logs/llmwiki.err.log",
+   "EnvironmentVariables": {
+    "LLM_WIKI_HOST": "127.0.0.1",
+    "LLM_WIKI_PORT": "8000"
+   }
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.sixpack-watchdog.plist",
+  "content": {
+   "Label": "com.mayf3.sixpack-watchdog",
+   "ProgramArguments": [
+    "/bin/bash",
+    "/Users/yanfenma/workspace/project/sixpack-forge/nightly-1/bin/watchdog-wrapper.sh"
+   ],
+   "StartInterval": 600,
+   "RunAtLoad": false,
+   "StandardOutPath": "/tmp/sixpack-watchdog.log",
+   "StandardErrorPath": "/tmp/sixpack-watchdog.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.openclaw.agent-node-502.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "OPENCLAW_AGENT_HOME": "/Users/yanfenma",
+    "OPENCLAW_CONFIG_PATH": "/Users/yanfenma/.openclaw-node-502/openclaw.json",
+    "OPENCLAW_STATE_DIR": "/Users/yanfenma/.openclaw-node-502",
+    "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+   },
+   "KeepAlive": true,
+   "Label": "com.openclaw.agent-node-502",
+   "ProgramArguments": [
+    "/usr/local/bin/openclaw",
+    "node",
+    "run",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18789",
+    "--display-name",
+    "agent-node-502"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/Users/yanfenma/.openclaw-node-502/node-stderr.log",
+   "StandardOutPath": "/Users/yanfenma/.openclaw-node-502/node-stdout.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.openclaw.auto-repair.plist",
+  "content": {
+   "Label": "com.openclaw.auto-repair",
+   "Comment": "OpenClaw Gateway Monitor (Auto-start)",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "ThrottleInterval": 60,
+   "ProgramArguments": [
+    "/usr/local/openclaw-monitors/auto-repair-daemon.sh"
+   ],
+   "StandardOutPath": "/usr/local/openclaw-monitors/logs/monitor-stdout.log",
+   "StandardErrorPath": "/usr/local/openclaw-monitors/logs/monitor-stderr.log",
+   "WorkingDirectory": "/usr/local/openclaw-monitors",
+   "EnvironmentVariables": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin",
+    "OPENCLAW_GATEWAY_PORT": "18789",
+    "HOME": "/Users/yanfenma"
+   }
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.openclaw.control-api.plist",
+  "content": {
+   "Label": "com.openclaw.control-api",
+   "Comment": "OpenClaw Gateway Control API Server (Auto-start)",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "ProgramArguments": [
+    "/usr/local/bin/node",
+    "/usr/local/openclaw-monitors/gateway-control-api.js"
+   ],
+   "StandardOutPath": "/usr/local/openclaw-monitors/logs/api-stdout.log",
+   "StandardErrorPath": "/usr/local/openclaw-monitors/logs/api-stderr.log",
+   "WorkingDirectory": "/usr/local/openclaw-monitors",
+   "EnvironmentVariables": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "NODE_ENV": "production",
+    "HOME": "/Users/yanfenma"
+   }
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.opencode.serve.plist",
+  "content": {
+   "Label": "com.opencode.serve",
+   "Comment": "opencode serve on port 4097",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "ProgramArguments": [
+    "/Users/yanfenma/.opencode/bin/opencode",
+    "serve",
+    "--port",
+    "4097"
+   ],
+   "StandardOutPath": "/tmp/opencode-serve.log",
+   "StandardErrorPath": "/tmp/opencode-serve-error.log",
+   "WorkingDirectory": "/Users/yanfenma"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.opencode.server.plist",
+  "content": {
+   "Label": "com.opencode.server",
+   "ProgramArguments": [
+    "/Users/yanfenma/.opencode/bin/opencode",
+    "serve"
+   ],
+   "EnvironmentVariables": {
+    "PATH": "/Users/yanfenma/.opencode/bin:/Users/yanfenma/.bun/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
+    "HOME": "/Users/yanfenma",
+    "USER": "yanfenma"
+   },
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "StandardOutPath": "/Users/yanfenma/.opencode-server.log",
+   "StandardErrorPath": "/Users/yanfenma/.opencode-server.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.svc-workflow-monitor.plist",
+  "content": {
+   "Label": "com.svc-workflow-monitor",
+   "ProgramArguments": [
+    "/Users/yanfenma/.local/services/svc-workflow/monitor/check.sh"
+   ],
+   "StartInterval": 60,
+   "RunAtLoad": true,
+   "KeepAlive": {
+    "SuccessfulExit": false
+   },
+   "StandardOutPath": "/Users/yanfenma/Library/Logs/svc-workflow/monitor-stdout.log",
+   "StandardErrorPath": "/Users/yanfenma/Library/Logs/svc-workflow/monitor-stderr.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.svc-workflow.plist",
+  "content": {
+   "Label": "com.svc-workflow",
+   "ProgramArguments": [
+    "/Users/yanfenma/.local/services/svc-workflow/svc-workflow"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/.local/services/svc-workflow",
+   "EnvironmentVariables": {
+    "RUST_LOG": "info"
+   },
+   "RunAtLoad": true,
+   "KeepAlive": {
+    "SuccessfulExit": false,
+    "Crashed": true
+   },
+   "ThrottleInterval": 5,
+   "StandardOutPath": "/Users/yanfenma/Library/Logs/svc-workflow/stdout.log",
+   "StandardErrorPath": "/Users/yanfenma/Library/Logs/svc-workflow/stderr.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.videobridge.plist",
+  "content": {
+   "Label": "com.videobridge",
+   "ProgramArguments": [
+    "/usr/local/bin/python3",
+    "/Users/yanfenma/.openclaw/groups/workspace-REDACTED_OCID/smart-home/scripts/video_bridge.py",
+    "start"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/.openclaw/groups/workspace-REDACTED_OCID/smart-home/scripts",
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "EnvironmentVariables": {
+    "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+   },
+   "StandardOutPath": "/tmp/video_bridge.log",
+   "StandardErrorPath": "/tmp/video_bridge.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/com.xiaomusic.plist",
+  "content": {
+   "Label": "com.xiaomusic",
+   "ProgramArguments": [
+    "/bin/bash",
+    "/Users/yanfenma/workspace/baby/xiaoai/run_xiaomusic.sh",
+    "start"
+   ],
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "StandardOutPath": "/Users/yanfenma/workspace/baby/xiaoai/logs/launchd_stdout.log",
+   "StandardErrorPath": "/Users/yanfenma/workspace/baby/xiaoai/logs/launchd_stderr.log",
+   "WorkingDirectory": "/Users/yanfenma/workspace/baby/xiaoai",
+   "EnvironmentVariables": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "HOME": "/Users/yanfenma"
+   }
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/dev.omdsh.dsh-lark.plist",
+  "content": {
+   "Label": "dev.omdsh.dsh-lark",
+   "ProgramArguments": [
+    "/usr/local/bin/dsh",
+    "--profile",
+    "lark-pilot"
+   ],
+   "WorkingDirectory": "/Users/yanfenma/dsh-lark-pilot/workspace",
+   "EnvironmentVariables": {
+    "PATH": "/usr/local/bin:/usr/local/Cellar/node/25.6.1_1/bin:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/usr/local/opt/openjdk/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep",
+    "DSH_HOME": "/Users/yanfenma/dsh-lark-pilot/dsh-home"
+   },
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "StandardOutPath": "/Users/yanfenma/.dsh-lark-channel.log",
+   "StandardErrorPath": "/Users/yanfenma/.dsh-lark-channel.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/dev.omdsh.dsh.desktop.plist",
+  "content": {
+   "Label": "dev.omdsh.dsh.desktop",
+   "ProgramArguments": [
+    "/usr/bin/open",
+    "/Users/yanfenma/Applications/DSH.app"
+   ],
+   "RunAtLoad": true,
+   "ProcessType": "Interactive"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.ollama.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "OLLAMA_FLASH_ATTENTION": "1",
+    "OLLAMA_KV_CACHE_TYPE": "q8_0"
+   },
+   "KeepAlive": true,
+   "Label": "homebrew.mxcl.ollama",
+   "LimitLoadToSessionType": [
+    "Aqua",
+    "Background",
+    "LoginWindow",
+    "StandardIO",
+    "System"
+   ],
+   "ProgramArguments": [
+    "/opt/homebrew/opt/ollama/bin/ollama",
+    "serve"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/opt/homebrew/var/log/ollama.log",
+   "StandardOutPath": "/opt/homebrew/var/log/ollama.log",
+   "WorkingDirectory": "/opt/homebrew/var"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.postgresql@16.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "LC_ALL": "en_US.UTF-8"
+   },
+   "KeepAlive": true,
+   "Label": "homebrew.mxcl.postgresql@16",
+   "LimitLoadToSessionType": [
+    "Aqua",
+    "Background",
+    "LoginWindow",
+    "StandardIO",
+    "System"
+   ],
+   "ProgramArguments": [
+    "/usr/local/opt/postgresql@16/bin/postgres",
+    "-D",
+    "/usr/local/var/postgresql@16"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/usr/local/var/log/postgresql@16.log",
+   "StandardOutPath": "/usr/local/var/log/postgresql@16.log",
+   "WorkingDirectory": "/usr/local"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.syncthing.plist",
+  "content": {
+   "KeepAlive": true,
+   "Label": "homebrew.mxcl.syncthing",
+   "LimitLoadToSessionType": [
+    "Aqua",
+    "Background",
+    "LoginWindow",
+    "StandardIO",
+    "System"
+   ],
+   "ProgramArguments": [
+    "/usr/local/opt/syncthing/bin/syncthing",
+    "--no-browser",
+    "--no-restart"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/usr/local/var/log/syncthing.log",
+   "StandardOutPath": "/usr/local/var/log/syncthing.log"
+  }
+ },
+ {
+  "path": "/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.tailscale.plist",
+  "content": {
+   "KeepAlive": true,
+   "Label": "homebrew.mxcl.tailscale",
+   "LimitLoadToSessionType": [
+    "Aqua",
+    "Background",
+    "LoginWindow",
+    "StandardIO",
+    "System"
+   ],
+   "ProgramArguments": [
+    "/usr/local/opt/tailscale/bin/tailscaled"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/usr/local/var/log/tailscaled.log",
+   "StandardOutPath": "/usr/local/var/log/tailscaled.log"
+  }
+ },
+ {
+  "path": "/Library/LaunchAgents/com.adobe.AdobeCreativeCloud.plist",
+  "content": {
+   "Label": "com.adobe.AdobeCreativeCloud",
+   "Program": "/Applications/Utilities/Adobe Creative Cloud/ACC/Creative Cloud.app/Contents/MacOS/Creative Cloud",
+   "ProgramArguments": [
+    "/Applications/Utilities/Adobe Creative Cloud/ACC/Creative Cloud.app/Contents/MacOS/Creative Cloud",
+    "--showwindow=false",
+    "--onOSstartup=true"
+   ],
+   "RunAtLoad": true
+  }
+ },
+ {
+  "path": "/Library/LaunchAgents/com.adobe.ccxprocess.plist",
+  "content": {
+   "Label": "com.adobe.ccxprocess",
+   "ProgramArguments": [
+    "/Applications/Utilities/Adobe Creative Cloud Experience/CCXProcess/CCXProcess.app/Contents/MacOS/CCXProcess",
+    "--openAtBoot"
+   ],
+   "RunAtLoad": true
+  }
+ },
+ {
+  "path": "/Library/LaunchAgents/com.microsoft.OneDriveStandaloneUpdater.plist",
+  "content": {
+   "Label": "com.microsoft.OneDriveStandaloneUpdater",
+   "Program": "/Applications/OneDrive.app/Contents/StandaloneUpdater.app/Contents/MacOS/OneDriveStandaloneUpdater",
+   "ProgramArguments": [],
+   "RunAtLoad": true,
+   "StartInterval": 86400
+  }
+ },
+ {
+  "path": "/Library/LaunchAgents/com.microsoft.SyncReporter.plist",
+  "content": {
+   "Label": "com.microsoft.SyncReporter",
+   "Program": "/Applications/OneDrive.app/Contents/SyncReporter.app/Contents/MacOS/SyncReporter",
+   "ProgramArguments": [],
+   "RunAtLoad": false,
+   "StartCalendarInterval": [
+    {
+     "Hour": 12,
+     "Minute": 28
+    }
+   ]
+  }
+ },
+ {
+  "path": "/Library/LaunchAgents/com.microsoft.update.agent.plist",
+  "content": {
+   "ProgramArguments": [
+    "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/Microsoft Update Assistant.app/Contents/MacOS/Microsoft Update Assistant",
+    "--launchByAgent"
+   ],
+   "StartInterval": 7200,
+   "Label": "com.microsoft.update.agent",
+   "Disabled": false,
+   "RunAtLoad": true,
+   "MachServices": {
+    "com.microsoft.update.xpc": true
+   }
+  }
+ },
+ {
+  "path": "/Library/LaunchAgents/com.sogou.SogouServices.plist",
+  "content": {
+   "Label": "com.sogou.SogouServices",
+   "OnDemand": true,
+   "Program": "/Library/Input Methods/SogouInput.app/Contents/SogouServices",
+   "StartInterval": 3
+  }
+ },
+ {
+  "path": "/Library/LaunchAgents/com.sogou.SogouTaskManager.plist",
+  "content": {
+   "Label": "com.sogou.SogouTaskManager",
+   "MachServices": {
+    "com.sogou.SogouTaskManager": true
+   },
+   "Program": "/Library/Input Methods/SogouInput.app/Contents/SogouTaskManager.app/Contents/MacOS/SogouTaskManager"
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "AGENT_CORE_CREDENTIALS_FILE": "/usr...REDACTED...",
+    "BROKER_AUTH_ORIGIN": "http://127.0.0.1:4001",
+    "DSH_AGENT_CHILD_GID": "20",
+    "DSH_AGENT_CHILD_UID": "502",
+    "DSH_AGENT_MODEL": "deepseek-v4-flash",
+    "DSH_AGENT_PROVIDER": "oc-go",
+    "DSH_AGENT_SPAWN_HELPER": "/usr/local/libexec/dsh-agent-spawn-helper",
+    "DSH_AGENT_TURN_TIMEOUT": "900000",
+    "DSH_HARNESS_ROOT": "/usr/local/libexec/agent-core/harness",
+    "FEISHU_AUTO_MENTION_TRIGGER_SENDER": "false",
+    "FEISHU_CREDS_PATH": "/Users/authsvc/.dsh/feishu-creds.json",
+    "FEISHU_PROCESSING_REACTION_ENABLED": "true",
+    "FEISHU_REPLY_RENDER_MODE": "card",
+    "FEISHU_REQUIRE_MENTION_IN_GROUP": "false",
+    "HOME": "/Users/authsvc",
+    "NOTIFICATION_INGRESS_ENABLED": "1",
+    "PATH": "/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "PRODUCT_API_ENABLED": "0"
+   },
+   "GroupName": "authsvc",
+   "KeepAlive": true,
+   "Label": "ai.agent-core.runtime",
+   "ProgramArguments": [
+    "/usr/local/libexec/agent-core/node-runtime/bin/node",
+    "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+    "--root",
+    "/Users/authsvc/.agent-core",
+    "--catchup",
+    "0"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/Users/authsvc/.agent-core/logs/runtime.err.log",
+   "StandardOutPath": "/Users/authsvc/.agent-core/logs/runtime.log",
+   "ThrottleInterval": 10,
+   "UserName": "authsvc",
+   "WorkingDirectory": "/usr/local/libexec/agent-core/app"
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.adobe.acc.installer.v2.plist",
+  "content": {
+   "Label": "com.adobe.acc.installer.v2",
+   "MachServices": {
+    "com.adobe.acc.installer.v2": true
+   },
+   "Program": "/Library/PrivilegedHelperTools/com.adobe.acc.installer.v2",
+   "ProgramArguments": [
+    "/Library/PrivilegedHelperTools/com.adobe.acc.installer.v2"
+   ]
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.auth-service.plist",
+  "content": {
+   "EnvironmentVariables": {
+    "HOME": "/Users/yanfenma",
+    "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+   },
+   "GroupName": "authsvc",
+   "KeepAlive": true,
+   "Label": "com.auth-service",
+   "ProgramArguments": [
+    "/usr/local/bin/node",
+    "/Users/yanfenma/workspace/project/production-auth-service-REDACTED_LONG_HEX/dist/src/server.js"
+   ],
+   "RunAtLoad": true,
+   "StandardErrorPath": "/Users/yanfenma/.openclaw/logs/auth-service.stderr.log",
+   "StandardOutPath": "/Users/yanfenma/.openclaw/logs/auth-service.stdout.log",
+   "ThrottleInterval": 5,
+   "UserName": "authsvc",
+   "WorkingDirectory": "/Users/yanfenma/workspace/project/production-auth-service-REDACTED_LONG_HEX"
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.docker.socket.plist",
+  "content": {
+   "KeepAlive": false,
+   "Label": "com.docker.socket",
+   "ProcessType": "Background",
+   "Program": "/Library/PrivilegedHelperTools/com.docker.socket",
+   "ProgramArguments": [
+    "/Library/PrivilegedHelperTools/com.docker.socket",
+    "yanfenma"
+   ],
+   "RunAtLoad": true,
+   "Version": "0"
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.docker.vmnetd.plist",
+  "content": {
+   "Label": "com.docker.vmnetd",
+   "Program": "/Library/PrivilegedHelperTools/com.docker.vmnetd",
+   "ProgramArguments": [
+    "/Library/PrivilegedHelperTools/com.docker.vmnetd"
+   ],
+   "RunAtLoad": true,
+   "Sockets": {
+    "Listener": {
+     "SockPathMode": 438,
+     "SockPathName": "/var/run/com.docker.vmnetd.sock"
+    }
+   },
+   "Version": "77"
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.microsoft.OneDriveStandaloneUpdaterDaemon.plist",
+  "content": {
+   "Label": "com.microsoft.OneDriveStandaloneUpdaterDaemon",
+   "MachServices": {
+    "com.microsoft.OneDriveStandaloneUpdaterDaemon": true
+   },
+   "Program": "/Applications/OneDrive.app/Contents/StandaloneUpdaterDaemon.xpc/Contents/MacOS/StandaloneUpdaterDaemon",
+   "ProgramArguments": [],
+   "StandardErrorPath": "/Library/Logs/Microsoft/OneDrive/OneDriveStandaloneUpdaterDaemon.log",
+   "StandardOutPath": "/Library/Logs/Microsoft/OneDrive/OneDriveStandaloneUpdaterDaemon.log"
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.microsoft.OneDriveUpdaterDaemon.plist",
+  "content": {
+   "Label": "com.microsoft.OneDriveUpdaterDaemon",
+   "MachServices": {
+    "com.microsoft.OneDriveUpdaterDaemon": true
+   },
+   "Program": "/Applications/OneDrive.app/Contents/OneDriveUpdaterDaemon.xpc/Contents/MacOS/OneDriveUpdaterDaemon",
+   "ProgramArguments": [],
+   "StandardErrorPath": "/Library/Logs/Microsoft/OneDrive/OneDriveUpdaterDaemon.log",
+   "StandardOutPath": "/Library/Logs/Microsoft/OneDrive/OneDriveUpdaterDaemon.log"
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.microsoft.autoupdate.helper.plist",
+  "content": {
+   "Label": "com.microsoft.autoupdate.helper",
+   "Program": "/Library/PrivilegedHelperTools/com.microsoft.autoupdate.helper",
+   "MachServices": {
+    "com.microsoft.autoupdate.helper.cleanup": true,
+    "com.microsoft.autoupdate.helper.logging": true,
+    "com.microsoft.autoupdate.helper.clone": true,
+    "com.microsoft.autoupdate.helper.install": true,
+    "com.microsoft.autoupdate.helper.pref": true
+   }
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.microsoft.office.licensingV2.helper.plist",
+  "content": {
+   "Label": "com.microsoft.office.licensingV2.helper",
+   "MachServices": {
+    "com.microsoft.office.licensingV2.helper.port": true
+   },
+   "Program": "/Library/PrivilegedHelperTools/com.microsoft.office.licensingV2.helper",
+   "ProgramArguments": [
+    "/Library/PrivilegedHelperTools/com.microsoft.office.licensingV2.helper"
+   ]
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist",
+  "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist'"
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.openclaw.gateway.plist",
+  "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.gateway.plist'"
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist",
+  "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist'"
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist",
+  "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist'"
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.tailscale.tailscaled.plist",
+  "content": {
+   "Label": "com.tailscale.tailscaled",
+   "ProgramArguments": [
+    "/usr/local/bin/tailscaled",
+    "--socket=/var/run/tailscaled.sock",
+    "--verbose",
+    "1"
+   ],
+   "RunAtLoad": true,
+   "KeepAlive": true,
+   "StandardOutPath": "/var/log/tailscaled.log",
+   "StandardErrorPath": "/var/log/tailscaled.err",
+   "ProcessType": "Interactive",
+   "ThrottleInterval": 10
+  }
+ },
+ {
+  "path": "/Library/LaunchDaemons/com.west2online.ClashXPro.ProxyConfigHelper.plist",
+  "content": {
+   "AssociatedBundleIdentifiers": "com.west2online.ClashXPro",
+   "Label": "com.west2online.ClashXPro.ProxyConfigHelper",
+   "MachServices": {
+    "com.west2online.ClashXPro.ProxyConfigHelper": true
+   },
+   "Program": "/Library/PrivilegedHelperTools/com.west2online.ClashXPro.ProxyConfigHelper",
+   "ProgramArguments": [
+    "/Library/PrivilegedHelperTools/com.west2online.ClashXPro.ProxyConfigHelper"
+   ]
+  }
+ }
+]

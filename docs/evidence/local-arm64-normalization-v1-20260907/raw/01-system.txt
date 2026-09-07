@@ -1,0 +1,72 @@
+
+===== DATE =====
+Mon Sep  7 07:48:22 CST 2026
+
+===== UNAME_M =====
+arm64
+
+===== UNAME_A =====
+Darwin MacBook-Pro.local 25.6.0 Darwin Kernel Version 25.6.0: Fri Jul 31 19:19:08 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T6050 arm64
+
+===== SW_VERS =====
+ProductName:		macOS
+ProductVersion:		26.6.2
+BuildVersion:		25G83
+
+===== CPU_BRAND =====
+Apple M5 Pro
+
+===== HW_MACHINE =====
+arm64
+
+===== HW_OPTIONAL_ARM64 =====
+1
+
+===== ROSETTA_OAHD_PROCESS =====
+89085 oahd
+
+===== ROSETTA_INSTALL_DIR =====
+total 8
+drwxr-xr-x  3 root  wheel  96 Aug 30 01:16 .
+drwxr-xr-x  3 root  wheel  96 Aug 30 01:15 ..
+-rw-r--r--  1 root  wheel  64 Aug  1 09:50 rosetta
+
+===== ROSETTA_EXEC_TEST =====
+x86_64-exec OK (Rosetta functional)
+
+===== ID =====
+uid=502(yanfenma) gid=20(staff) groups=20(staff),599(oc-canary),12(everyone),61(localaccounts),79(_appserverusr),80(admin),81(_appserveradm),98(_lpadmin),33(_appstore),100(_lpoperator),204(_developer),250(_analyticsusers),395(com.apple.access_ftp),398(com.apple.access_screensharing),399(com.apple.access_ssh),400(com.apple.access_remote_ae)
+
+===== THIS_SHELL_PATH =====
+/Users/yanfenma/.qoder/entry:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/usr/local/opt/openjdk/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep
+
+===== LOGIN_ZSH_PATH =====
+/Users/yanfenma/.qoder/entry:/Users/yanfenma/.local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/usr/local/opt/openjdk/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep
+
+===== ETC_PATHS =====
+/usr/local/bin
+/System/Cryptexes/App/usr/bin
+/usr/bin
+/bin
+/usr/sbin
+/sbin
+
+===== ETC_PATHS_D =====
+total 16
+drwxr-xr-x   5 root  wheel   160 Aug 30 01:15 .
+drwxr-xr-x  82 root  wheel  2624 Aug 30 01:16 ..
+-rw-r--r--   1 root  wheel   224 Aug 13 10:51 10-cryptex
+-rw-r--r--   1 root  wheel    20 Aug 13 10:51 10-pmk-global
+-rw-r--r--   1 root  wheel    18 Jul 11 15:15 homebrew
+-- /etc/paths.d/10-cryptex
+/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin
+/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin
+/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin
+-- /etc/paths.d/10-pmk-global
+/pkg/env/global/bin
+-- /etc/paths.d/homebrew
+/opt/homebrew/bin
+
+===== HW_NCPU_MEMSIZE =====
+15
+51539607552

@@ -1,0 +1,933 @@
+  PID  PPID USER             STAT  %CPU %MEM STARTED                      COMM
+    1     0 root             Ss     0.7  0.1 Sun Aug 30 01:09:19 2026     /sbin/launchd
+  534     1 root             Ss     0.5  0.1 Sun Aug 30 01:16:46 2026     /usr/libexec/logd
+  536     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/UserEventAgent
+  538     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+  539     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoted
+  542     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/sbin/systemstats
+  546     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/configd
+  548     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/CoreServices/powerd.bundle/powerd
+  549     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/IOMFB_bics_daemon
+  553     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/remoted
+  557     1 _corespeechd     Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/PrivateFrameworks/CoreSpeech.framework/corespeechd_system
+  559     1 root             Ss     0.0  0.1 Sun Aug 30 01:16:46 2026     /usr/libexec/watchdogd
+  563     1 root             Ss     0.0  0.1 Sun Aug 30 01:16:46 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds
+  565     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/kernelmanagerd
+  566     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/diskarbitrationd
+  571     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/sbin/syslogd
+  573     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/thermalmonitord
+  574     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/PrivateFrameworks/CoreDuetContext.framework/Resources/contextstored
+  575     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/xprotectd
+  576     1 root             Ss     0.4  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/opendirectoryd
+  577     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/PrivateFrameworks/ApplePushService.framework/apsd
+  578     1 root             Ss     0.0  0.2 Sun Aug 30 01:16:46 2026     /System/Library/CoreServices/launchservicesd
+  579     1 _timed           Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/timed
+  580     1 _usbmuxd         Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/Resources/usbmuxd
+  581     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/sbin/securityd
+  584     1 _locationd       Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/locationd
+  587     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     autofsd
+  588     1 root             Ss     0.0  0.1 Sun Aug 30 01:16:46 2026     /usr/libexec/dasd
+  589     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/corerepaird
+  591     1 _distnote        Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/sbin/distnoted
+  595     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/CoreServices/logind
+  596     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/PrivateFrameworks/GenerationalStorage.framework/Versions/A/Support/revisiond
+  597     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/sbin/KernelEventAgent
+  601     1 root             Ss     0.0  0.1 Sun Aug 30 01:16:46 2026     /usr/sbin/bluetoothd
+  602     1 root             Ss     0.3  0.0 Sun Aug 30 01:16:46 2026     /usr/sbin/notifyd
+  604     1 root             Ss     0.1  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/corebrightnessd
+  605     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /usr/libexec/AirPlayXPCHelper
+  606     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:46 2026     /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/com.apple.cmio.registerassistantservice
+  610     1 root             Ss     0.2  0.0 Sun Aug 30 01:16:47 2026     /System/Library/PrivateFrameworks/TCC.framework/Support/tccd
+  611     1 root             Ss     0.1  0.0 Sun Aug 30 01:16:47 2026     /usr/sbin/cfprefsd
+  616     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /System/Library/CoreServices/coreservicesd
+  617     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/runningboardd
+  618     1 _trustd          Ss     3.3  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/trustd
+  620     1 _coreaudiod      Ss     0.0  0.1 Sun Aug 30 01:16:47 2026     /usr/sbin/coreaudiod
+  621     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /System/Library/CoreServices/TimeMachine/backupd-helper
+  624     1 _mdnsresponder   Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/sbin/mDNSResponder
+  626     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/apfsd
+  627     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/lsd
+  628     1 _analyticsd      Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsd
+  629     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/nehelper
+  631     1 _nsurlsessiond   Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/nsurlsessiond
+  633     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/biometrickitd
+  635     1 root             Ss     0.0  0.1 Sun Aug 30 01:16:47 2026     /usr/libexec/airportd
+  638     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/eligibilityd
+  641     1 _coreaudiod      S      0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/sbin/distnoted
+  645     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /System/Library/Frameworks/Security.framework/Versions/A/XPCServices/authd.xpc/Contents/MacOS/authd
+  652     1 _coreaudiod      Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     Core Audio Driver (ParrotAudioPlugin.driver)
+  653     1 _windowserver    S      0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/sbin/distnoted
+  655     1 _audiomxd        Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/audiomxd
+  656     1 root             S      0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/sbin/distnoted
+  664     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /usr/libexec/audioclocksyncd
+  667     1 _biome           Ss     0.0  0.0 Sun Aug 30 01:16:47 2026     /System/Library/PrivateFrameworks/BiomeStreams.framework/Support/biomed
+  669     1 _cmiodalassistants S      0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/sbin/distnoted
+  671     1 _modelmanagerd   Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/libexec/modelmanagerd
+  682     1 _networkd        Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/libexec/symptomsd
+  684     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/libexec/ApplicationFirewall/socketfilterfw
+  685     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/libexec/audioanalyticsd
+  686     1 root             Ss     2.6  0.9 Sun Aug 30 01:16:48 2026     /usr/libexec/syspolicyd
+  688     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /System/Library/Frameworks/Security.framework/Versions/A/XPCServices/com.apple.CodeSigningHelper.xpc/Contents/MacOS/com.apple.CodeSigningHelper
+  689     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/sbin/WirelessRadioManagerd
+  695     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /System/Library/CoreServices/TimeMachine/backupd
+  696     1 _cmiodalassistants Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/libexec/com.apple.cmio.videodriverkithostextension.systemextension/Contents/MacOS/com.apple.cmio.videodriverkithostextension
+  702     1 _cmiodalassistants Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/libexec/cameracaptured
+  708     1 _cmiodalassistants Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/UVCAssistant.systemextension/Contents/MacOS/UVCAssistant
+  709     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/sbin/mDNSResponderHelper
+  713     1 _audiomxd        S      0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/sbin/distnoted
+  714     1 _driverkit       Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /System/Library/DriverExtensions/com.apple.DriverKit-IOUserDockChannelSerial.dext/com.apple.DriverKit-IOUserDockChannelSerial
+  718     1 _driverkit       Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /System/Library/DriverExtensions/com.apple.AppleUserHIDDrivers.dext/com.apple.AppleUserHIDDrivers
+  719     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /System/Library/CoreServices/Software Update.app/Contents/Resources/suhelperd
+  720     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:48 2026     /usr/sbin/cron
+  746     1 _softwareupdate  S      0.0  0.0 Sun Aug 30 01:16:49 2026     /usr/sbin/distnoted
+  748     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:49 2026     /usr/libexec/rtcreportingd
+  756     1 _driverkit       Ss     0.4  0.1 Sun Aug 30 01:16:49 2026     /System/Library/DriverExtensions/AppleCentauriAlpha.dext/AppleCentauriAlpha
+  757     1 _driverkit       Ss     0.0  0.0 Sun Aug 30 01:16:49 2026     /System/Library/DriverExtensions/AppleCentauriControl.dext/AppleCentauriControl
+  758     1 _driverkit       Ss     0.0  0.0 Sun Aug 30 01:16:49 2026     /System/Library/DriverExtensions/AppleCentauriBeta.dext/AppleCentauriBeta
+  763     1 _accessoryupdater S      0.0  0.0 Sun Aug 30 01:16:50 2026     /usr/sbin/distnoted
+  773     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:51 2026     /usr/libexec/sysmond
+  774   542 root             S      0.0  0.0 Sun Aug 30 01:16:51 2026     /usr/sbin/systemstats
+  776     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:51 2026     /usr/libexec/searchpartyd
+  811     1 _locationd       S      0.0  0.0 Sun Aug 30 01:16:54 2026     /usr/sbin/distnoted
+  836     1 root             Ss     0.0  0.1 Sun Aug 30 01:16:54 2026     /usr/local/bin/tailscaled
+  837     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:54 2026     /Library/PrivilegedHelperTools/com.docker.vmnetd
+  838     1 _appleevents     Ss     0.0  0.0 Sun Aug 30 01:16:54 2026     /System/Library/CoreServices/appleeventsd
+  840     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:54 2026     /usr/libexec/taskgated
+  853     1 _nsurlsessiond   S      0.0  0.0 Sun Aug 30 01:16:55 2026     /usr/sbin/distnoted
+  864     1 root             Ss     0.3  0.0 Sun Aug 30 01:16:55 2026     /System/Library/PrivateFrameworks/Ecosystem.framework/Support/ecosystemd
+  867     1 _mds_stores      Ss     0.0  2.7 Sun Aug 30 01:16:55 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds_stores
+  921     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:56 2026     /usr/libexec/gamepolicyd
+  953     1 root             Ss     0.0  0.0 Sun Aug 30 01:16:58 2026     /System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd
+  954     1 yanfenma         S      0.0  0.0 Sun Aug 30 01:16:58 2026     /usr/sbin/distnoted
+  958     1 _spotlight       S      0.0  0.0 Sun Aug 30 01:16:59 2026     /usr/sbin/distnoted
+  961     1 yanfenma         S      0.0  0.0 Sun Aug 30 01:16:59 2026     /usr/libexec/secd
+  962     1 yanfenma         S      0.2  0.0 Sun Aug 30 01:16:59 2026     /usr/sbin/cfprefsd
+  975     1 yanfenma         S      0.0  0.0 Sun Aug 30 01:17:00 2026     /usr/libexec/containermanagerd
+  976     1 yanfenma         S      0.0  0.0 Sun Aug 30 01:17:00 2026     /usr/libexec/lsd
+  991     1 yanfenma         S      0.0  0.0 Sun Aug 30 01:17:00 2026     /usr/libexec/trustd
+ 1003     1 yanfenma         S      0.0  0.0 Sun Aug 30 01:17:00 2026     /System/Library/PrivateFrameworks/SystemMigrationNetwork.framework/Resources/migrationhelper
+ 1036     1 _applepay        S      0.0  0.0 Sun Aug 30 01:17:01 2026     /usr/sbin/distnoted
+ 1054     1 _ctkd            Ss     0.0  0.0 Sun Aug 30 01:17:01 2026     /System/Library/Frameworks/CryptoTokenKit.framework/ctkd
+ 1059     1 yanfenma         S      0.0  0.0 Sun Aug 30 01:17:01 2026     /System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd
+ 1064     1 root             Ss     0.0  0.0 Sun Aug 30 01:17:01 2026     /usr/sbin/filecoordinationd
+ 1067     1 _nearbyd         Ss     0.0  0.0 Sun Aug 30 01:17:01 2026     /usr/libexec/nearbyd
+ 1068     1 _gamecontrollerd S      0.0  0.0 Sun Aug 30 01:17:01 2026     /usr/sbin/distnoted
+ 1070     1 _driverkit       Ss     0.0  0.0 Sun Aug 30 01:17:01 2026     /System/Library/DriverExtensions/IOUserBluetoothSerialDriver.dext/IOUserBluetoothSerialDriver
+ 1123     1 _appinstalld     S      0.0  0.0 Sun Aug 30 01:17:04 2026     /usr/sbin/distnoted
+ 1151     1 _appleevents     S      0.0  0.0 Sun Aug 30 01:17:07 2026     /usr/sbin/distnoted
+ 1193     1 _securityagent   S      0.0  0.0 Sun Aug 30 01:17:09 2026     /usr/sbin/distnoted
+ 1209     1 yanfenma         SN     0.0  0.0 Sun Aug 30 01:17:13 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdbulkimport
+ 1238     1 root             Ss     0.0  0.0 Sun Aug 30 01:17:14 2026     /System/Library/CoreServices/CrashReporterSupportHelper
+ 1400     1 root             Ss     0.0  0.0 Sun Aug 30 01:17:18 2026     automountd
+ 1412     1 root             Ss     0.0  0.0 Sun Aug 30 01:17:19 2026     /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 1449     1 root             Ss     0.0  0.0 Sun Aug 30 01:17:20 2026     /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/CVMServer
+ 1464     1 root             Ss     0.0  0.0 Sun Aug 30 01:17:21 2026     /System/Library/CoreServices/SubmitDiagInfo
+ 1518     1 _installcoordinationd S      0.0  0.0 Sun Aug 30 01:17:23 2026     /usr/sbin/distnoted
+ 1540     1 _fpsd            Ss     0.0  0.0 Sun Aug 30 01:17:25 2026     /System/Library/PrivateFrameworks/CoreFP.framework/Versions/A/fairplayd
+ 2039     1 root             Ss     0.0  0.0 Sun Aug 30 01:17:47 2026     /usr/libexec/wifivelocityd
+ 2113     1 _accessoryupdater S      0.0  0.0 Fri Sep  4 21:44:32 2026     /System/Library/PrivateFrameworks/GeoServices.framework/Versions/A/XPCServices/com.apple.geod.xpc/Contents/MacOS/com.apple.geod
+ 2114     1 _accessoryupdater S      0.0  0.0 Fri Sep  4 21:44:32 2026     /usr/libexec/secinitd
+ 2123     1 _accessoryupdater S      0.0  0.0 Fri Sep  4 21:44:32 2026     /usr/libexec/trustd
+ 3016     1 _rmd             S      0.0  0.0 Sun Aug 30 01:18:55 2026     /usr/sbin/distnoted
+ 3413     1 oc-canary-runtime S      0.0  0.0 Sun Aug 30 01:19:32 2026     /usr/sbin/distnoted
+ 3416     1 oc-canary-runtime S      0.0  0.0 Sun Aug 30 01:19:32 2026     /usr/libexec/lsd
+ 3504     1 authsvc          S      0.0  0.0 Sun Aug 30 01:19:35 2026     /usr/sbin/distnoted
+ 3505     1 authsvc          S      0.0  0.0 Sun Aug 30 01:19:35 2026     /usr/libexec/lsd
+ 3704     1 yanfenma         Ss     0.0  0.1 Sun Aug 30 01:19:57 2026     /opt/homebrew/Cellar/node/26.7.0/bin/node
+ 5847     1 oc-canary-runtime SN     0.0  0.0 Sun Aug 30 01:25:16 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdbulkimport
+ 6136     1 yanfenma         Ss     0.0  0.0 Fri Sep  4 21:51:25 2026     adb
+ 7013     1 _accessoryupdater Ss     0.0  0.0 Sun Sep  6 10:49:10 2026     /usr/libexec/uarpassetmanagerd
+ 7016     1 _accessoryupdater Ss     0.0  0.0 Sun Sep  6 10:49:11 2026     /System/Library/PrivateFrameworks/UARPAssetManager.framework/XPCServices/UARPAssetManagerServiceMobileAsset.xpc/Contents/MacOS/UARPAssetManagerServiceMobileAsset
+ 7023     1 _appinstalld     S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7025     1 _securityagent   S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7026     1 root             Ss     0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/libexec/symptomsd-diag
+ 7034     1 _softwareupdate  S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7036     1 _cmiodalassistants S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7037     1 _locationd       S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7038     1 _rmd             S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7039     1 _nsurlsessiond   S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7041     1 _applepay        S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7055     1 _audiomxd        S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7057     1 _installcoordinationd S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7058     1 _neuralengine    S      0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/sbin/cfprefsd
+ 7059     1 _neuralengine    Ss     0.0  0.0 Sun Sep  6 10:49:11 2026     /usr/libexec/aneuserd
+ 7081     1 root             Ss     0.0  0.0 Sun Sep  6 10:49:13 2026     /System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANEStorageMaintainer.xpc/Contents/MacOS/ANEStorageMaintainer
+ 7082     1 _neuralengine    Ss     0.0  0.0 Sun Sep  6 10:49:13 2026     /System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANEStorageMaintainer.xpc/Contents/MacOS/ANEStorageMaintainer
+ 7131     1 root             Ss     0.0  0.0 Sun Sep  6 10:49:29 2026     /Library/Apple/System/Library/CoreServices/XProtect.app/Contents/MacOS/XProtect
+ 7133     1 root             Ss     0.0  0.0 Sun Sep  6 10:49:29 2026     /usr/libexec/ASPCarryLog
+ 7135     1 authsvc          SN     0.0  0.0 Sun Aug 30 01:26:24 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdbulkimport
+ 7904     1 _diagnosticservicesd Ss     0.0  0.0 Mon Sep  7 06:18:55 2026     /System/Library/CoreServices/diagnosticservicesd
+ 8241     1 root             Ss     0.0  0.0 Sun Sep  6 10:54:18 2026     /usr/libexec/powerexperienced
+ 8332     1 root             Ss     0.0  0.1 Sun Sep  6 10:54:43 2026     /usr/libexec/PerfPowerServices
+10885     1 root             Ss     0.0  0.0 Fri Sep  4 08:52:18 2026     /System/Library/PrivateFrameworks/CacheDelete.framework/deleted_helper
+10886     1 root             Ss     0.0  0.0 Fri Sep  4 08:52:18 2026     /usr/libexec/triald_system
+10887     1 _assetcache      Ss     0.0  0.0 Fri Sep  4 08:52:18 2026     /usr/libexec/AssetCache/AssetCache
+10888     1 root             Ss     0.0  0.0 Fri Sep  4 08:52:18 2026     /System/Library/PrivateFrameworks/PackageKit.framework/Resources/installd
+10889     1 root             Ss     0.0  0.0 Fri Sep  4 08:52:18 2026     /System/Library/PrivateFrameworks/PackageKit.framework/Resources/system_installd
+10890     1 root             Ss     0.0  0.0 Fri Sep  4 08:52:18 2026     /System/Library/PrivateFrameworks/CloudKitDaemon.framework/Support/cloudd
+10939     1 root             Ss     0.0  0.0 Fri Sep  4 08:52:18 2026     /usr/libexec/usermanagerd
+11072     1 yanfenma         S      0.0  0.0 Mon Aug 31 22:10:00 2026     /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+11420     1 root             Ss     0.0  0.0 Fri Sep  4 08:53:21 2026     /usr/libexec/mobileactivationd
+11422     1 root             Ss     0.0  0.0 Fri Sep  4 08:53:21 2026     /usr/libexec/smd
+11512     1 root             Ss     0.0  0.1 Fri Sep  4 08:53:36 2026     /usr/sbin/spindump
+12610     1 root             Ss     0.0  0.0 Fri Sep  4 08:56:15 2026     /System/Library/PrivateFrameworks/AppSSO.framework/Support/AppSSODaemon
+12818     1 root             Ss     0.0  0.0 Fri Sep  4 08:56:51 2026     /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+12819     1 root             Ss     0.0  0.0 Fri Sep  4 08:56:51 2026     /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XProtectBridgeService.xpc/Contents/MacOS/XProtectBridgeService
+13887     1 _reportsystemmemory Ss     0.0  0.0 Fri Sep  4 22:05:20 2026     /System/Library/CoreServices/ReportSystemMemory
+16737     1 yanfenma         Ss     0.0  0.1 Sun Sep  6 23:16:09 2026     node
+16753 16737 yanfenma         S      0.0  0.1 Sun Sep  6 23:16:09 2026     node
+16754 16753 yanfenma         S      0.0  0.6 Sun Sep  6 23:16:09 2026     /opt/homebrew/Cellar/node/26.7.0/bin/node
+16929     1 authsvc          Ss     0.0  0.1 Sun Sep  6 07:41:59 2026     /usr/local/bin/node
+19230     1 root             Ss     0.0  0.0 Sun Sep  6 23:19:21 2026     /Library/Apple/System/Library/CoreServices/XProtect.app/Contents/XPCServices/XProtectPluginService.xpc/Contents/MacOS/XProtectPluginService
+22868     1 yanfenma         Ss     0.0  0.0 Sun Sep  6 18:28:14 2026     /usr/local/Cellar/postgresql@16/16.14/bin/postgres
+22870 22868 yanfenma         Ss     0.0  0.0 Sun Sep  6 18:28:14 2026     postgres: checkpointer 
+22871 22868 yanfenma         Ss     0.0  0.0 Sun Sep  6 18:28:14 2026     postgres: background writer 
+22873 22868 yanfenma         Ss     0.0  0.0 Sun Sep  6 18:28:14 2026     postgres: walwriter 
+22874 22868 yanfenma         Ss     0.0  0.0 Sun Sep  6 18:28:14 2026     postgres: autovacuum launcher 
+22880 22868 yanfenma         Ss     0.0  0.0 Sun Sep  6 18:28:14 2026     postgres: logical replication launcher 
+23651     1 _corespeechd     S      0.0  0.0 Tue Sep  1 21:12:45 2026     /usr/sbin/distnoted
+24037     1 yanfenma         S      0.0  0.0 Sat Sep  5 07:14:31 2026     /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+24209     1 root             Ss     0.0  0.0 Sun Sep  6 08:02:11 2026     /usr/libexec/historicalaudiod
+25087     1 _gamecontrollerd Ss     0.0  0.0 Sun Sep  6 08:03:59 2026     /usr/libexec/gamecontrollerd
+25934     1 root             Ss     0.0  0.0 Sun Sep  6 08:06:22 2026     /System/Library/CryptoTokenKit/com.apple.ifdreader.slotd/Contents/MacOS/com.apple.ifdreader
+26759     1 _fpsd            Ss     0.0  0.0 Thu Sep  3 11:07:11 2026     /System/Library/PrivateFrameworks/CoreADI.framework/adid
+26767     1 root             Ss     0.0  0.0 Sun Sep  6 08:07:41 2026     /System/Library/PrivateFrameworks/SystemStatusServer.framework/Support/systemstatusd
+27028     1 root             Ss     0.0  0.0 Sun Sep  6 08:08:32 2026     /System/Library/Frameworks/GSS.framework/Helpers/GSSCred
+27142     1 root             Ss     0.0  0.0 Fri Sep  4 09:54:34 2026     /usr/libexec/mmaintenanced
+27505     1 root             Ss     0.0  0.2 Fri Sep  4 05:39:21 2026     /usr/libexec/mobileassetd
+27650     1 _accessoryupdater S      0.0  0.0 Fri Sep  4 05:39:55 2026     /usr/sbin/cfprefsd
+28337     1 root             Ss     0.0  0.0 Fri Sep  4 05:43:29 2026     /System/Library/CoreServices/osanalyticshelper
+28546     1 yanfenma         S      0.0  0.0 Wed Sep  2 22:26:10 2026     /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+28746     1 yanfenma         S      0.0  0.0 Sun Sep  6 08:12:33 2026     /System/Library/Frameworks/MediaAccessibility.framework/Versions/A/XPCServices/com.apple.accessibility.mediaaccessibilityd.xpc/Contents/MacOS/com.apple.accessibility.mediaaccessibilityd
+29243     1 root             Ss     0.0  0.0 Sun Sep  6 08:13:44 2026     /usr/libexec/storagekitd
+29245     1 root             Ss     0.0  0.0 Sun Sep  6 08:13:44 2026     /usr/libexec/fskitd
+29246     1 root             Ss     0.0  0.0 Sun Sep  6 08:13:44 2026     /usr/libexec/containermanagerd_system
+31069     1 root             Ss     0.0  0.0 Mon Sep  7 06:35:08 2026     /usr/libexec/applekeystored
+31630     1 root             Ss     0.0  0.0 Fri Sep  4 06:00:01 2026     /System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Resources/backgroundtaskmanagementd
+33329     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:09 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/remotemanagementd
+33343     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:09 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/SecuritySubscriber.xpc/Contents/MacOS/SecuritySubscriber
+33344     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:09 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/InteractiveLegacyProfilesSubscriber.xpc/Contents/MacOS/InteractiveLegacyProfilesSubscriber
+33349     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:09 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ScreenSharingSubscriber.xpc/Contents/MacOS/ScreenSharingSubscriber
+33350     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:09 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/LegacyProfilesSubscriber.xpc/Contents/MacOS/LegacyProfilesSubscriber
+33352     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:09 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/PasscodeSettingsSubscriber.xpc/Contents/MacOS/PasscodeSettingsSubscriber
+33353     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:09 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/DiskManagementSubscriber.xpc/Contents/MacOS/DiskManagementSubscriber
+33354     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:10 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ManagedPreferencesSubscriber.xpc/Contents/MacOS/ManagedPreferencesSubscriber
+33355     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:10 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/SoftwareUpdateSubscriber.xpc/Contents/MacOS/SoftwareUpdateSubscriber
+33356     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:10 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/MigrationSubscriber.xpc/Contents/MacOS/MigrationSubscriber
+33357     1 root             Ss     0.0  0.0 Mon Sep  7 01:51:10 2026     /System/Library/PrivateFrameworks/SystemMigration.framework/Resources/systemmigrationd
+33358     1 root             Ss     0.0  0.0 Mon Sep  7 01:51:10 2026     /System/Library/CoreServices/iconservicesagent
+33359     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:10 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ManagedAppsSubscriber.xpc/Contents/MacOS/ManagedAppsSubscriber
+33360     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:10 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ManagementTestSubscriber.xpc/Contents/MacOS/ManagementTestSubscriber
+33361     1 _rmd             Ss     0.0  0.0 Mon Sep  7 01:51:10 2026     /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/ManagedConfigurationFilesSubscriber.xpc/Contents/MacOS/ManagedConfigurationFilesSubscriber
+33419     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:19:00 2026     /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python
+33550     1 root             Ss     0.0  0.0 Fri Sep  4 18:52:33 2026     /System/Library/PrivateFrameworks/MobileAssetDaemon.framework/Versions/A/XPCServices/com.apple.MobileAsset.DownloadService.Builtin.xpc/Contents/MacOS/com.apple.MobileAsset.DownloadService.Builtin
+34215     1 yanfenma         S      0.0  0.0 Thu Sep  3 11:34:59 2026     /System/Library/Frameworks/CryptoTokenKit.framework/ctkd
+34527     1 root             Ss     0.0  0.0 Thu Sep  3 11:36:49 2026     /usr/libexec/wifip2pd
+34893     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+34896     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+34899     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+34902     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+34905     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+34908     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+34911     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+34914     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+34918     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+34920     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+34921     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+34923     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+34925     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+34926     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+34936 34911 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34937 34905 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34938 34893 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34939 34896 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34940 34902 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34941 34902 yanfenma         SN     0.0  0.2 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34942 34905 yanfenma         SN     0.0  0.2 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34943 34893 yanfenma         SN     0.0  0.2 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34944 34908 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34945 34896 yanfenma         SN     0.0  0.2 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34946 34908 yanfenma         SN     0.0  0.2 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34947 34911 yanfenma         SN     0.0  0.2 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34948 34899 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34949 34899 yanfenma         SN     0.0  0.2 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34950 34893 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34951 34911 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34953 34902 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34955 34896 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34957 34905 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34959 34908 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+34961 34899 yanfenma         SN     0.0  0.1 Sat Sep  5 07:21:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+35103     1 root             Ss     0.0  0.0 Fri Sep  4 06:17:43 2026     /usr/libexec/coreduetd
+36592     1 root             Ss     0.0  0.0 Sun Aug 30 14:41:47 2026     /usr/libexec/inboxupdaterd
+36879     1 yanfenma         S      0.0  0.0 Fri Sep  4 10:47:28 2026     /System/Library/PrivateFrameworks/IMDPersistence.framework/XPCServices/IMDPersistenceAgent.xpc/Contents/MacOS/IMDPersistenceAgent
+37049     1 root             Ss     0.0  0.0 Fri Sep  4 10:48:25 2026     /usr/libexec/nesessionmanager
+37050     1 root             Ss     0.0  0.0 Fri Sep  4 10:48:25 2026     /System/Library/Frameworks/SystemExtensions.framework/Versions/A/Helpers/sysextd
+38410     1 root             Ss     0.0  0.0 Sat Sep  5 05:45:35 2026     /System/Library/PrivateFrameworks/ModelCatalogRuntime.framework/Versions/A/modelcatalogd
+38446     1 root             Ss     0.0  0.0 Fri Sep  4 06:35:26 2026     /System/Library/CoreServices/liquiddetectiond.app/liquiddetectiond
+38638     1 yanfenma         S      0.0  0.0 Sat Sep  5 07:22:15 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.64/Helpers/browser_crashpad_handler
+38644     1 yanfenma         S      0.0  0.0 Sat Sep  5 07:22:15 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.64/Helpers/browser_crashpad_handler
+38910     1 root             Ss     0.0  0.0 Fri Sep  4 06:37:57 2026     /usr/libexec/ospredictiond
+38932     1 _applepay        Ss     0.0  0.0 Fri Sep  4 06:38:03 2026     /usr/libexec/nfcd
+38935     1 root             Ss     0.0  0.0 Sat Sep  5 07:22:18 2026     /usr/libexec/findmydeviced
+39017     1 root             Ss     0.0  0.1 Fri Sep  4 06:38:34 2026     /usr/libexec/aned
+39112     1 root             Ss     0.0  0.0 Fri Sep  4 06:39:06 2026     /usr/libexec/online-auth-agent
+39187     1 root             Ss     0.0  0.0 Fri Sep  4 06:39:31 2026     /usr/libexec/centaurid
+39192     1 yanfenma         S      0.0  0.0 Fri Sep  4 06:39:31 2026     /usr/libexec/pkd
+39205     1 yanfenma         S      0.0  0.0 Fri Sep  4 06:39:32 2026     /System/Library/PrivateFrameworks/GeoServices.framework/Versions/A/XPCServices/com.apple.geod.xpc/Contents/MacOS/com.apple.geod
+39208     1 yanfenma         S      0.0  0.0 Fri Sep  4 06:39:32 2026     /usr/libexec/secinitd
+39210     1 _cmiodalassistants S      0.0  0.0 Fri Sep  4 06:39:32 2026     /System/Library/PrivateFrameworks/GeoServices.framework/Versions/A/XPCServices/com.apple.geod.xpc/Contents/MacOS/com.apple.geod
+39211     1 _locationd       S      0.0  0.0 Fri Sep  4 06:39:32 2026     /System/Library/PrivateFrameworks/GeoServices.framework/Versions/A/XPCServices/com.apple.geod.xpc/Contents/MacOS/com.apple.geod
+39435     1 root             Ss     0.0  0.0 Fri Sep  4 06:40:38 2026     /usr/libexec/keybagd
+39703     1 root             Ss     0.0  0.0 Sun Sep  6 05:43:47 2026     /System/Library/PrivateFrameworks/FindMyDevice.framework/XPCServices/FindMyDeviceSharedConfigurationXPCService.xpc/Contents/MacOS/FindMyDeviceSharedConfigurationXPCService
+39711     1 root             Ss     0.0  0.0 Sun Sep  6 05:43:47 2026     /System/Library/PrivateFrameworks/AuthKit.framework/Versions/A/Support/akd
+39813     1 yanfenma         SN     0.0  0.3 Mon Aug 31 22:39:02 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+39816     1 yanfenma         SN     0.0  0.0 Mon Aug 31 22:39:02 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/chrome_crashpad_handler
+39820 39813 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:02 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39821 39813 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:02 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39822 39813 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:02 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39889     1 yanfenma         S      0.0  0.1 Fri Sep  4 06:43:04 2026     /System/Library/Frameworks/Contacts.framework/Support/contactsd
+39953     1 yanfenma         SN     0.0  0.3 Mon Aug 31 22:39:22 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+39956     1 yanfenma         SN     0.0  0.3 Mon Aug 31 22:39:22 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+39960     1 yanfenma         SN     0.0  0.0 Mon Aug 31 22:39:22 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/chrome_crashpad_handler
+39961     1 yanfenma         SN     0.0  0.0 Mon Aug 31 22:39:22 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/chrome_crashpad_handler
+39964 39956 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:23 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39965 39953 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:23 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39966 39956 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:23 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39967 39953 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:23 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39968 39953 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:23 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39970 39956 yanfenma         SN     0.0  0.1 Mon Aug 31 22:39:23 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/151.0.7922.175/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+39974     1 root             Ss     0.0  0.0 Fri Sep  4 06:43:33 2026     /usr/libexec/PowerUIAgent
+39976     1 _softwareupdate  Ss     0.0  0.0 Fri Sep  4 06:43:33 2026     /System/Library/CoreServices/Software Update.app/Contents/Resources/softwareupdated
+39990     1 yanfenma         S      0.0  0.0 Fri Sep  4 06:43:33 2026     /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/XPCServices/com.apple.hiservices-xpcservice.xpc/Contents/MacOS/com.apple.hiservices-xpcservice
+40004     1 root             Ss     0.0  0.0 Fri Sep  4 06:43:35 2026     /System/Library/PrivateFrameworks/AppleCredentialManager.framework/AppleCredentialManagerDaemon
+40052     1 root             Ss     0.0  0.0 Fri Sep  4 06:43:42 2026     /usr/libexec/sandboxd
+40103     1 yanfenma         S      0.0  0.0 Fri Sep  4 06:43:44 2026     /System/Library/PrivateFrameworks/WorkflowKit.framework/XPCServices/ShortcutsViewService.xpc/Contents/MacOS/ShortcutsViewService
+40220     1 _iconservices    Ss     0.0  0.0 Fri Sep  4 06:44:01 2026     /System/Library/CoreServices/iconservicesd
+40361     1 root             Ss     0.0  0.0 Fri Sep  4 06:44:05 2026     /usr/libexec/logd_helper
+41808     1 root             Ss     0.0  0.0 Thu Sep  3 12:03:47 2026     /usr/libexec/securityd_system
+41810     1 root             Ss     0.0  0.0 Fri Sep  4 11:14:18 2026     /System/Library/PrivateFrameworks/CoreSymbolication.framework/coresymbolicationd
+41913     1 root             Ss     0.0  0.0 Fri Sep  4 06:47:44 2026     /usr/libexec/amfid
+41967     1 _accessoryupdater Ss     0.0  0.0 Fri Sep  4 06:47:55 2026     /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/Support/accessoryupdaterd
+42286     1 root             Ss     0.0  0.0 Fri Sep  4 11:16:54 2026     /usr/libexec/countryd
+42362     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+42365     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+42369     1 yanfenma         SN     0.0  0.3 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+42378     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+42379     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+42380     1 yanfenma         SN     0.0  0.0 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+42398 42369 yanfenma         SN     0.0  0.1 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42399 42365 yanfenma         SN     0.0  0.1 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42400 42362 yanfenma         SN     0.0  0.1 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42401 42369 yanfenma         SN     0.0  0.2 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42402 42362 yanfenma         SN     0.0  0.2 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42403 42365 yanfenma         SN     0.0  0.2 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42404 42369 yanfenma         SN     0.0  0.1 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42407 42362 yanfenma         SN     0.0  0.1 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42409 42365 yanfenma         SN     0.0  0.1 Sat Sep  5 07:23:16 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+42457     1 root             Ss     0.0  0.0 Fri Sep  4 11:17:53 2026     /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+42840     1 root             Ss    32.2  0.1 Fri Sep  4 06:50:13 2026     /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XprotectService.xpc/Contents/MacOS/XprotectService
+45178     1 root             Ss     0.0  0.0 Fri Sep  4 11:32:50 2026     /System/Library/Frameworks/ManagedAppDistribution.framework/Support/managedappdistributiond
+45187     1 root             Ss     0.0  0.0 Fri Sep  4 06:52:55 2026     /usr/libexec/seputil
+45811     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:31:01 2026     /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+45903     1 _applepay        Ss     0.0  0.0 Fri Sep  4 06:54:14 2026     /usr/libexec/seld
+46371     1 _neuralengine    S      0.0  0.0 Sun Aug 30 16:41:29 2026     /usr/sbin/distnoted
+47048     1 root             Ss     0.0  0.0 Sun Sep  6 18:44:02 2026     /usr/libexec/betaenrollmentd
+47514     1 yanfenma         SN     0.1  0.2 Sun Sep  6 12:04:11 2026     node
+48415     1 yanfenma         S      0.0  0.0 Fri Sep  4 11:49:14 2026     /System/Library/Frameworks/Security.framework/Versions/A/XPCServices/TrustedPeersHelper.xpc/Contents/MacOS/TrustedPeersHelper
+48631     1 root             Ss     0.1  0.0 Sun Sep  6 20:21:02 2026     /System/Library/PrivateFrameworks/EcosystemAnalytics.framework/Support/ecosystemanalyticsd
+50282     1 root             Ss     0.0  0.0 Sun Sep  6 08:22:56 2026     /usr/sbin/systemsoundserverd
+50284     1 root             Ss     0.0  0.0 Sun Sep  6 08:22:56 2026     /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar
+50288     1 root             Ss     0.0  0.0 Sun Sep  6 08:22:56 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+50854     1 root             S      0.0  0.0 Sat Sep  5 07:26:18 2026     /System/Library/PrivateFrameworks/Categories.framework/Versions/A/XPCServices/CategoriesService.xpc/Contents/MacOS/CategoriesService
+51361     1 authsvc          Ss     1.3  0.3 Sun Sep  6 20:25:24 2026     /usr/local/libexec/agent-core/node-runtime/bin/node
+52483     1 yanfenma         S      0.0  0.0 Sat Sep  5 07:30:51 2026     /System/Library/PrivateFrameworks/CloudPhotoServices.framework/Versions/A/XPCServices/com.apple.CloudPhotosConfiguration.xpc/Contents/MacOS/com.apple.CloudPhotosConfiguration
+59205     1 _windowserver    Ss    33.7  0.5 Mon Sep  7 06:51:00 2026     /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+59325     1 _accessoryupdater Ss     0.0  0.0 Mon Sep  7 06:51:00 2026     /usr/libexec/uarpd
+59326     1 yanfenma         Ss     0.0  0.3 Mon Sep  7 06:51:00 2026     /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow
+59357     1 _cmiodalassistants S      0.0  0.0 Fri Sep  4 12:39:32 2026     /usr/libexec/trustd
+59358     1 _locationd       S      0.0  0.0 Fri Sep  4 12:39:32 2026     /usr/libexec/trustd
+59460     1 root             Ss     0.0  0.0 Mon Sep  7 06:51:01 2026     /usr/libexec/secinitd
+59762     1 root             Ss     0.0  0.0 Mon Sep  7 06:51:02 2026     /usr/libexec/colorsync.displayservices
+59763     1 root             Ss     0.0  0.0 Mon Sep  7 06:51:02 2026     /System/Library/Frameworks/ColorSync.framework/Versions/A/XPCServices/com.apple.ColorSyncXPCAgent.xpc/Contents/MacOS/com.apple.ColorSyncXPCAgent
+59829     1 root             S      0.0  0.0 Mon Sep  7 06:51:43 2026     /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/XPCServices/com.apple.hiservices-xpcservice.xpc/Contents/MacOS/com.apple.hiservices-xpcservice
+59834     1 root             Ss     0.0  0.0 Mon Sep  7 06:51:43 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+59858     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /usr/libexec/UserEventAgent
+59860     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/audioaccessoryd
+59861     1 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/ControlCenter.app/Contents/MacOS/ControlCenter
+59862     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/CoreDuetContext.framework/Resources/ContextStoreAgent
+59863     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/CoreServicesUIAgent.app/Contents/MacOS/CoreServicesUIAgent
+59864     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/CloudServices.framework/Helpers/com.apple.sbd
+59865     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /usr/sbin/universalaccessd
+59866     1 yanfenma         S      0.0  0.4 Mon Sep  7 06:52:25 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/corespotlightd
+59867     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /usr/libexec/knowledge-agent
+59868     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /usr/libexec/ContinuityCaptureAgent
+59869     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /usr/libexec/pboard
+59870     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/TCC.framework/Support/tccd
+59871     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/BiomeStreams.framework/Support/BiomeAgent
+59872     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/Frameworks/InputMethodKit.framework/Resources/imklaunchagent
+59873     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /usr/libexec/linkd
+59874     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/Input Methods/PressAndHold.app/Contents/PlugIns/PAH_Extension.appex/Contents/MacOS/PAH_Extension
+59875     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/Frameworks/CoreTelephony.framework/Support/CommCenter
+59876     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/APFSUserAgent
+59877     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /usr/libexec/nsurlsessiond
+59878     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /usr/libexec/mobilerepaird
+59879     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /usr/libexec/rapportd
+59881     1 yanfenma         S      0.0  1.0 Mon Sep  7 06:52:25 2026     /Library/Input Methods/WeType.app/Contents/MacOS/WeType
+59882     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /usr/libexec/routined
+59883     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /usr/sbin/usernoted
+59884     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/AccessibilitySupport.framework/Versions/A/Resources/AccessibilityVisualsAgent.app/Contents/MacOS/AccessibilityVisualsAgent
+59885     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/VoiceShortcuts.framework/Versions/A/Support/siriactionsd
+59886     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/CoreLocationAgent.app/Contents/MacOS/CoreLocationAgent
+59888     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/CoreSuggestions.framework/Versions/A/Support/suggestd
+59889     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/SocialLayer.framework/sociallayerd.app/Contents/MacOS/sociallayerd
+59890     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/CalendarDaemon.framework/Support/calaccessd
+59891     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/iCloudDriveCore.framework/Versions/A/Support/bird
+59892     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/TelephonyUtilities.framework/callservicesd
+59893     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/iconservicesagent
+59895     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/FileProvider.framework/Support/fileproviderd
+59896     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /usr/libexec/intelligentroutingd
+59897     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/UserNotificationsCore.framework/Support/usernotificationsd
+59899     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/talagentd
+59900     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/WindowManager.app/Contents/MacOS/WindowManager
+59901     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/MobileTimer.framework/Executables/mobiletimerd
+59902     1 yanfenma         S      0.0  0.3 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/Problem Reporter.app/Contents/MacOS/Problem Reporter
+59903     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /usr/libexec/replayd
+59904     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar
+59905     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/login.framework/Versions/A/XPCServices/LoginUserService.xpc/Contents/MacOS/LoginUserService
+59906     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/CloudKitDaemon.framework/Support/cloudd
+59907     1 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/ChronoCore.framework/Support/chronod
+59908     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/CoreServices/sharedfilelistd
+59909     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/Frameworks/Accounts.framework/Versions/A/Support/accountsd
+59910     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/DoNotDisturbServer.framework/Support/donotdisturbd
+59911     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/CommunicationTrust.framework/Support/communicationtrustd
+59912     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:25 2026     /System/Library/Frameworks/ApplicationServices.framework/Frameworks/ATS.framework/Support/fontd
+59913     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:25 2026     /System/Library/PrivateFrameworks/IDS.framework/identityservicesd.app/Contents/MacOS/identityservicesd
+59914     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/SyncedDefaults.framework/Support/syncdefaultsd
+59915     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/IMCore.framework/imagent.app/Contents/MacOS/imagent
+59916     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/CoreServices/AccessibilityUIServer.app/Contents/MacOS/AccessibilityUIServer
+59917     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /usr/libexec/assessmentagent
+59919     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATS.framework/Versions/A/Support/fontworker
+59920     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/CoreServices/WiFiAgent.app/Contents/MacOS/WiFiAgent
+59921     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/CommunicationsFilter.framework/CMFSyncAgent
+59922     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/CloudSubscriptionFeatures.framework/FeatureAccessAgent
+59923     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /usr/libexec/findmylocateagent
+59924     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/CacheDelete.framework/deleted
+59925     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/IntlPreferences.framework/Support/localizationswitcherd
+59926     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /usr/libexec/studentd
+59927     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/SessionCore.framework/Support/liveactivitiesd
+59928     1 root             Ss     0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/PowerLog.framework/Versions/A/XPCServices/PerfPowerTelemetryClientRegistrationService.xpc/Contents/MacOS/PerfPowerTelemetryClientRegistrationService
+59929     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /usr/libexec/transparencyd
+59931     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/ReplicatorCore.framework/Support/replicatord
+59932     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /usr/libexec/spotlightknowledged.updater
+59933     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/ViewBridge.framework/Versions/A/XPCServices/ViewBridgeAuxiliary.xpc/Contents/MacOS/ViewBridgeAuxiliary
+59934     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/WebPrivacy.framework/webprivacyd
+59935     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc/Contents/MacOS/com.apple.WebKit.GPU
+59936     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.Networking.xpc/Contents/MacOS/com.apple.WebKit.Networking
+59937     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /usr/libexec/inputanalyticsd
+59939     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/CoreServices/UIKitSystem.app/Contents/MacOS/UIKitSystem
+59940     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /usr/libexec/milod
+59942     1 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:26 2026     /usr/libexec/sharingd
+59943     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /usr/libexec/neagent
+59944     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+59945     1 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:26 2026     /usr/libexec/duetexpertd
+59946     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /usr/libexec/networkserviceproxy
+59947     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/Journal.app/Contents/PlugIns/JournalWidgets.appex/Contents/MacOS/JournalWidgets
+59948     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/iCloudDriveService.framework/XPCServices/ContainerMetadataExtractor.xpc/Contents/MacOS/ContainerMetadataExtractor
+59949     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/Clock.app/Contents/PlugIns/WorldClockWidget.appex/Contents/MacOS/WorldClockWidget
+59950     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/Journal.app/Contents/PlugIns/JournalWidgetsSecure.appex/Contents/MacOS/JournalWidgetsSecure
+59951     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/Home.app/Contents/PlugIns/HomeWidget.appex/Contents/MacOS/HomeWidget
+59952     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Support/BackgroundTaskManagementAgent.app/Contents/MacOS/BackgroundTaskManagementAgent
+59953     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/Podcasts.app/Contents/PlugIns/PodcastsWidget.appex/Contents/MacOS/PodcastsWidget
+59954     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/StatusKit.framework/StatusKitAgent
+59955     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/CoreFollowUp.framework/Versions/A/Support/followupd
+59956     1 yanfenma         S      0.0  0.9 Mon Sep  7 06:52:26 2026     /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+59957     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/ScreenTimeCore.framework/Versions/A/ScreenTimeAgent
+59959     1 yanfenma         S      0.2  1.0 Mon Sep  7 06:52:26 2026     ZCode
+59961     1 yanfenma         S      0.0  0.5 Mon Sep  7 06:52:26 2026     /Users/yanfenma/Applications/DSH.app/Contents/MacOS/Electron
+59962     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /usr/libexec/frauddefensed
+59963     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+59964     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/FindMy.app/Contents/PlugIns/FindMyWidgetPeople.appex/Contents/MacOS/FindMyWidgetPeople
+59966     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/MobileTimer.framework/PlugIns/MobileTimerIntents.appex/Contents/MacOS/MobileTimerIntents
+59967     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Applications/VoiceMemos.app/Contents/PlugIns/RecordWidgetExtension.appex/Contents/MacOS/RecordWidgetExtension
+59968     1 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:26 2026     /Applications/Alacritty.app/Contents/MacOS/alacritty
+59969     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Cryptexes/App/usr/libexec/SafariBookmarksSyncAgent
+59970     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/WeatherDaemon.framework/weatherd
+59971     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /usr/libexec/triald
+59972     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/SiriInference.framework/Versions/A/siriinferenced
+59973     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/CoreServices/diagnostics_agent
+59974     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/ContinuousDialogManagerService.framework/assistant_cdmd
+59975     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/LockdownMode.framework/Versions/A/XPCServices/lockdownmoded
+59976     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/UsageTracking.framework/Versions/A/UsageTrackingAgent
+59977     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/AuthKit.framework/Versions/A/Support/akd
+59978     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsagent
+59979     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/CoreServices/Batteries.app/Contents/PlugIns/BatteriesAvocadoWidgetExtension.appex/Contents/MacOS/BatteriesAvocadoWidgetExtension
+59980     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /usr/libexec/feedbackd
+59981     1 yanfenma         S      0.0  0.3 Mon Sep  7 06:52:26 2026     /System/Applications/System Settings.app/Contents/MacOS/System Settings
+59982     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/Stocks.app/Contents/PlugIns/StocksWidget.appex/Contents/MacOS/StocksWidget
+59983     1 yanfenma         S      0.5  0.9 Mon Sep  7 06:52:26 2026     /Applications/Lark.app/Contents/MacOS/Feishu
+59984     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/CoreServices/Screen Time.app/Contents/PlugIns/ScreenTimeWidgetExtension.appex/Contents/MacOS/ScreenTimeWidgetExtension
+59985     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:26 2026     /System/Library/Frameworks/ManagedSettings.framework/Versions/A/ManagedSettingsAgent
+59986     1 yanfenma         S      0.0  0.5 Mon Sep  7 06:52:26 2026     /Applications/WeChat.app/Contents/MacOS/WeChat
+59987     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/Weather.app/Contents/PlugIns/WeatherWidget.appex/Contents/MacOS/WeatherWidget
+59988     1 yanfenma         S      1.4  0.4 Mon Sep  7 06:52:26 2026     /Applications/iKuuuVPN.app/Contents/MacOS/iKuuuVPN
+59989     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/TextEdit.app/Contents/MacOS/TextEdit
+59991     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Library/CoreServices/Dock.app/Contents/MacOS/Dock
+59992     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:26 2026     /System/Applications/Home.app/Contents/PlugIns/HomeEnergyWidgetsExtension.appex/Contents/MacOS/HomeEnergyWidgetsExtension
+59993     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Library/CoreServices/SystemUIServer.app/Contents/MacOS/SystemUIServer
+59994     1 yanfenma         S      0.3  0.2 Mon Sep  7 06:52:27 2026     /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
+59995     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Applications/FindMy.app/Contents/PlugIns/FindMyWidgetItems.appex/Contents/MacOS/FindMyWidgetItems
+59996     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Library/PrivateFrameworks/HomeKitDaemon.framework/Support/homed
+59999     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/XPCServices/csnameddatad.xpc/Contents/MacOS/csnameddatad
+60000     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /usr/libexec/dmd
+60001     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Library/Frameworks/QuickLookThumbnailing.framework/Support/com.apple.quicklook.ThumbnailsAgent
+60002     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/Frameworks/QuickLookUI.framework/Versions/A/XPCServices/QuickLookUIService.xpc/Contents/MacOS/QuickLookUIService
+60003     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Library/CoreServices/WallpaperAgent.app/Contents/MacOS/WallpaperAgent
+60004     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /usr/libexec/swtransparencyd
+60005     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Applications/VoiceMemos.app/Contents/PlugIns/VoiceMemosSettingsWidgetExtension.appex/Contents/MacOS/VoiceMemosSettingsWidgetExtension
+60007     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/PrivateFrameworks/AMPDevices.framework/Versions/A/Support/AMPDeviceDiscoveryAgent
+60009     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/chrome_crashpad_handler
+60011     1 root             Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /usr/libexec/wallpaperexportd
+60012     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/CoreServices/pbs
+60013     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+60015     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Library/ExtensionKit/Extensions/WallpaperImageExtension.appex/Contents/MacOS/WallpaperImageExtension
+60016     1 root             Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /Library/Apple/System/Library/PrivateFrameworks/DeviceInterface.framework/Support/deviceinterfaced
+60017     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Applications/Photos.app/Contents/PlugIns/PhotosReliveWidget.appex/Contents/MacOS/PhotosReliveWidget
+60018 59956 yanfenma         S      0.0  0.4 Mon Sep  7 06:52:27 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+60019 59956 yanfenma         S      0.0  0.3 Mon Sep  7 06:52:27 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+60020     1 root             Ss     0.0  0.1 Mon Sep  7 06:52:27 2026     /usr/libexec/kernelmanager_helper
+60021 59956 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:27 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+60024     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/ExtensionKit/Extensions/WallpaperAerialsExtension.appex/Contents/MacOS/WallpaperAerialsExtension
+60025     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Applications/Reminders.app/Contents/PlugIns/RemindersWidgetExtension.appex/Contents/MacOS/RemindersWidgetExtension
+60026     1 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:27 2026     /System/Library/CoreServices/NotificationCenter.app/Contents/MacOS/NotificationCenter
+60027     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Applications/Weather.app/Contents/PlugIns/WeatherIntents.appex/Contents/MacOS/WeatherIntents
+60028 59956 yanfenma         S      0.0  0.4 Mon Sep  7 06:52:27 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+60029     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/PrivateFrameworks/iCloudNotification.framework/iCloudNotificationAgent
+60032     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+60033     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/PrivateFrameworks/CloudDocs.framework/PlugIns/com.apple.CloudDocs.iCloudDriveFileProvider.appex/Contents/MacOS/com.apple.CloudDocs.iCloudDriveFileProvider
+60034     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Applications/Shortcuts.app/Contents/PlugIns/ShortcutsWidgetExtension.appex/Contents/MacOS/ShortcutsWidgetExtension
+60035     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+60036     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/Contents/Extensions/SafariWidgetExtension.appex/Contents/MacOS/SafariWidgetExtension
+60037     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:27 2026     /usr/libexec/searchpartyuseragent
+60038     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/PrivateFrameworks/UserActivity.framework/Agents/useractivityd
+60039     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Library/CoreServices/Dock.app/Contents/XPCServices/com.apple.dock.external.extra.arm64.xpc/Contents/MacOS/com.apple.dock.external.extra.arm64
+60040     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/CoreServices/Dock.app/Contents/XPCServices/com.apple.dock.extra.xpc/Contents/MacOS/com.apple.dock.extra
+60041     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /System/Library/PrivateFrameworks/FamilyCircle.framework/Versions/A/Resources/familycircled
+60042     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:27 2026     /usr/libexec/appleaccountd
+60044     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:27 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+60045     1 yanfenma         S      0.0  0.4 Mon Sep  7 06:52:27 2026     /System/Library/CoreServices/Spotlight.app/Contents/MacOS/Spotlight
+60046     1 yanfenma         Ss     0.0  0.2 Mon Sep  7 06:52:27 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+60047     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Applications/Calendar.app/Contents/PlugIns/CalendarWidgetExtension.appex/Contents/MacOS/CalendarWidgetExtension
+60048     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/CoreParsec.framework/parsecd
+60049     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/WiFiPolicy.framework/XPCServices/WiFiCloudAssetsXPCService.xpc/Contents/MacOS/WiFiCloudAssetsXPCService
+60050     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/JetCore.framework/Support/jetpackassetd
+60054     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Applications/Tips.app/Contents/PlugIns/TipsWidgetExtension.appex/Contents/MacOS/TipsWidgetExtension
+60056     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+60057     1 yanfenma         S      0.0  1.7 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/MediaAnalysis.framework/Versions/A/mediaanalysisd
+60058     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/OnDeviceStorage.framework/Support/amsondevicestoraged
+60059     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/Frameworks/StoreKit.framework/Support/storekitagent
+60060     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/TextInputUIMacHelper.framework/Versions/A/XPCServices/CursorUIViewService.xpc/Contents/MacOS/CursorUIViewService
+60062     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/CoreServices/PeopleViewService.app/Contents/PlugIns/PeopleWidget_macOSExtension.appex/Contents/MacOS/PeopleWidget_macOSExtension
+60063     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/iTunesCloud.framework/Support/itunescloudd
+60064     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Applications/Notes.app/Contents/PlugIns/com.apple.Notes.WidgetExtension.appex/Contents/MacOS/com.apple.Notes.WidgetExtension
+60074     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper
+60075     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /Applications/ZCode.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+60078     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Cryptexes/App/usr/libexec/SafariLaunchAgent
+60079 59959 yanfenma         S      1.3  0.3 Mon Sep  7 06:52:28 2026     /Applications/ZCode.app/Contents/Frameworks/ZCode Helper.app/Contents/MacOS/ZCode Helper
+60083 59959 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:28 2026     /Applications/ZCode.app/Contents/Frameworks/ZCode Helper.app/Contents/MacOS/ZCode Helper
+60085     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /usr/libexec/swcd
+60087     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/TelephonyUtilities.framework/XPCServices/com.apple.FaceTime.FTConversationService.xpc/Contents/MacOS/com.apple.FaceTime.FTConversationService
+60089     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/SiriTTSService.framework/sirittsd
+60090     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/Frameworks/Speech.framework/Versions/A/XPCServices/localspeechrecognition.xpc/Contents/MacOS/localspeechrecognition
+60093     1 oc-canary-runtime S      0.0  0.0 Mon Sep  7 06:52:28 2026     /usr/libexec/pkd
+60094     1 authsvc          S      0.0  0.0 Mon Sep  7 06:52:28 2026     /usr/libexec/pkd
+60095     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /usr/libexec/avconferenced
+60096     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:28 2026     /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoteagent
+60100     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/PrivateFrameworks/EmailDaemon.framework/Versions/A/maild
+60101     1 oc-canary-runtime S      0.0  0.0 Mon Sep  7 06:52:29 2026     /usr/libexec/containermanagerd
+60102     1 authsvc          S      0.0  0.0 Mon Sep  7 06:52:29 2026     /usr/libexec/containermanagerd
+60105     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/AudioConverterService.xpc/Contents/MacOS/AudioConverterService
+60106     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/AudioConverterHardenedService.xpc/Contents/MacOS/AudioConverterHardenedService
+60107     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60108     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60109     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60113     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:29 2026     /System/Library/PrivateFrameworks/AppleMediaServices.framework/Resources/amsaccountsd
+60115     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/CoreServices/Screen Time.app/Contents/PlugIns/ScreenTimeWidgetIntentsExtension.appex/Contents/MacOS/ScreenTimeWidgetIntentsExtension
+60117 59961 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:29 2026     /Users/yanfenma/Applications/DSH.app/Contents/Frameworks/Electron Helper.app/Contents/MacOS/Electron Helper
+60118 59961 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:29 2026     /Users/yanfenma/Applications/DSH.app/Contents/Frameworks/Electron Helper.app/Contents/MacOS/Electron Helper
+60119 59959 yanfenma         S      0.0  0.4 Mon Sep  7 06:52:29 2026     /Applications/ZCode.app/Contents/Frameworks/ZCode Helper.app/Contents/MacOS/ZCode Helper
+60123 59961 yanfenma         S      0.0  0.6 Mon Sep  7 06:52:29 2026     /Users/yanfenma/Applications/DSH.app/Contents/Frameworks/Electron Helper (Renderer).app/Contents/MacOS/Electron Helper (Renderer)
+60125     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/CoreServices/appplaceholdersyncd
+60128     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+60129     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:29 2026     /usr/libexec/GamePolicyAgent
+60130     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/CoreServices/ScopedBookmarkAgent
+60131     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:29 2026     /usr/libexec/spindump_agent
+60132     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+60133     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:29 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+60135     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/PrivateFrameworks/TrialServer.framework/Versions/A/XPCServices/TrialArchivingService.xpc/Contents/MacOS/TrialArchivingService
+60136     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+60137     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+60138     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+60139     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:30 2026     /System/Applications/System Settings.app/Contents/PlugIns/GeneralSettings.appex/Contents/MacOS/GeneralSettings
+60140     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:30 2026     /System/Library/PrivateFrameworks/PhotoLibraryServices.framework/Versions/A/Support/photolibraryd
+60141     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/PrivateFrameworks/CloudTelemetry.framework/Versions/A/XPCServices/CloudTelemetryService.xpc/Contents/MacOS/CloudTelemetryService
+60142     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/PrivateFrameworks/CoreCDP.framework/Versions/A/Resources/cdpd
+60143     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+60145     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:30 2026     /usr/libexec/gamecontrolleragentd
+60147     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:30 2026     /System/Library/PrivateFrameworks/PhotoAnalysis.framework/Versions/A/Support/photoanalysisd
+60148 59959 yanfenma         S     31.1  2.0 Mon Sep  7 06:52:30 2026     /Applications/ZCode.app/Contents/Frameworks/ZCode Helper (Renderer).app/Contents/MacOS/ZCode Helper (Renderer)
+60149     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/PrivateFrameworks/AssetCacheServices.framework/Versions/A/XPCServices/AssetCacheLocatorService.xpc/Contents/MacOS/AssetCacheLocatorService
+60157     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+60158     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:30 2026     /System/Library/PrivateFrameworks/AppleMediaServicesUI.framework/amsengagementd
+60163 59983 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:31 2026     /Applications/Lark.app/Contents/Frameworks/Lark Framework.framework/Versions/143.0.7499.203/Helpers/Lark Helper.app/Contents/MacOS/Lark Helper
+60164     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:31 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+60166     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:31 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+60168     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:31 2026     /Applications/WeChat.app/Contents/Frameworks/crashpad_handler
+60171 59959 yanfenma         S      0.7  0.6 Mon Sep  7 06:52:31 2026     zcode-host-local-1
+60173     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:31 2026     /System/Library/PrivateFrameworks/CommerceKit.framework/Versions/A/Resources/commerce
+60175     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:31 2026     /System/Library/ExtensionKit/Extensions/AppleIDSettings.appex/Contents/MacOS/AppleIDSettings
+60176 60171 yanfenma         Ss     0.0  0.6 Mon Sep  7 06:52:31 2026     zcode-cli
+60177 60171 yanfenma         Ss     0.0  0.8 Mon Sep  7 06:52:31 2026     zcode-cli
+60178 60171 yanfenma         Ss     1.8  1.1 Mon Sep  7 06:52:31 2026     zcode-cli
+60180     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:31 2026     /System/Library/ExtensionKit/Extensions/VPN.appex/Contents/MacOS/VPN
+60181     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:31 2026     /System/Library/ExtensionKit/Extensions/FamilySettings.appex/Contents/MacOS/FamilySettings
+60182     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:32 2026     /System/Library/ExtensionKit/Extensions/FollowUpSettingsExtension.appex/Contents/MacOS/FollowUpSettingsExtension
+60188     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:32 2026     /System/Library/ExtensionKit/Extensions/HeadphoneSettingsExtension.appex/Contents/MacOS/HeadphoneSettingsExtension
+60195     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:32 2026     /System/Library/ExtensionKit/Extensions/ClassroomSettings.appex/Contents/MacOS/ClassroomSettings
+60196     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:32 2026     /System/Library/PrivateFrameworks/CoreThreadCommissionerService.framework/CoreThreadCommissionerServiced
+60197     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:32 2026     /System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper
+60198     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:32 2026     /System/Library/PrivateFrameworks/AssistantServices.framework/Versions/A/Support/assistantd
+60210     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:32 2026     /System/Library/PrivateFrameworks/DataAccess.framework/Support/dataaccessd
+60244     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:32 2026     /System/Library/Frameworks/ClassKit.framework/Versions/A/progressd
+60245     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:32 2026     /usr/libexec/siriknowledged
+60248     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:32 2026     /System/Library/CoreServices/ReportCrash
+60249 59983 yanfenma         S      0.6  0.3 Mon Sep  7 06:52:32 2026     /Applications/Lark.app/Contents/Frameworks/Lark Framework.framework/Versions/143.0.7499.203/Helpers/Lark Helper (GPU).app/Contents/MacOS/Lark Helper (GPU)
+60250     1 oc-canary-runtime S      0.0  0.0 Mon Sep  7 06:52:32 2026     /usr/libexec/trustd
+60251     1 authsvc          S      0.0  0.0 Mon Sep  7 06:52:32 2026     /usr/libexec/trustd
+60252     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:32 2026     /System/Library/PrivateFrameworks/GenerativeExperiencesRuntime.framework/Versions/A/generativeexperiencesd
+60253     1 root             Ss     0.0  0.0 Mon Sep  7 06:52:32 2026     /usr/libexec/trustdFileHelper
+60254 59983 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:32 2026     /Applications/Lark.app/Contents/Frameworks/Lark Framework.framework/Versions/143.0.7499.203/Helpers/Lark Helper.app/Contents/MacOS/Lark Helper
+60256     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:32 2026     /usr/libexec/findmydevice-user-agent
+60264 59983 yanfenma         S      0.1  0.6 Mon Sep  7 06:52:33 2026     /Applications/Lark.app/Contents/Frameworks/Lark Framework.framework/Versions/143.0.7499.203/Helpers/Lark Helper.app/Contents/MacOS/Lark Helper
+60275 59983 yanfenma         S      0.0  0.7 Mon Sep  7 06:52:33 2026     /Applications/Lark.app/Contents/Frameworks/Lark Framework.framework/Versions/143.0.7499.203/Helpers/Lark Helper.app/Contents/MacOS/Lark Helper
+60276     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:33 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60278     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:33 2026     /System/Library/Frameworks/Contacts.framework/Support/postersyncd
+60279     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:33 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60291     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:33 2026     /System/Library/PrivateFrameworks/CoreRecents.framework/Versions/A/Support/recentsd
+60306     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:33 2026     /System/Library/PrivateFrameworks/AXAssetLoader.framework/Support/axassetsd
+60309 59983 yanfenma         S      2.0  1.1 Mon Sep  7 06:52:34 2026     /Applications/Lark.app/Contents/Frameworks/Lark Framework.framework/Versions/143.0.7499.203/Helpers/Lark Helper (Renderer).app/Contents/MacOS/Lark Helper (Renderer)
+60310 59983 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:34 2026     /Applications/Lark.app/Contents/Frameworks/Lark Framework.framework/Versions/143.0.7499.203/Helpers/Lark Helper (Renderer).app/Contents/MacOS/Lark Helper (Renderer)
+60311     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:34 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60313     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:34 2026     /System/iOSSupport/System/Library/ExtensionKit/Extensions/MauiAUSP.appex/Contents/MacOS/MauiAUSP
+60314     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:34 2026     /System/Library/PrivateFrameworks/MacinTalk.framework/PlugIns/WardaSynthesizer.appex/Contents/MacOS/WardaSynthesizer
+60315     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:34 2026     /System/iOSSupport/System/Library/ExtensionKit/Extensions/KonaSynthesizer.appex/Contents/MacOS/KonaSynthesizer
+60316     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:34 2026     /System/iOSSupport/System/Library/ExtensionKit/Extensions/SiriAUSP.appex/Contents/MacOS/SiriAUSP
+60317     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:34 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60318     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:34 2026     /System/Library/PrivateFrameworks/DeviceCheckInternal.framework/devicecheckd
+60319     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:34 2026     /System/Library/PrivateFrameworks/MacinTalk.framework/PlugIns/MacinTalkAUSP.appex/Contents/MacOS/MacinTalkAUSP
+60320     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:34 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60321     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:34 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60322     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:34 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/AUCrashHandlerService.xpc/Contents/MacOS/AUCrashHandlerService
+60323     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:34 2026     /System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService
+60324     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:34 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60325 59986 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:35 2026     /Applications/WeChat.app/Contents/MacOS/WeChatAppEx.app/Contents/MacOS/WeChatAppEx
+60326     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     cloudphotod
+60327 60325 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:35 2026     /Applications/WeChat.app/Contents/MacOS/WeChatAppEx.app/Contents/Frameworks/WeChatAppEx Framework.framework/Versions/C/Helpers/WeChatAppEx Helper.app/Contents/MacOS/WeChatAppEx Helper
+60328 60325 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:35 2026     /Applications/WeChat.app/Contents/MacOS/WeChatAppEx.app/Contents/Frameworks/WeChatAppEx Framework.framework/Versions/C/Helpers/WeChatAppEx Helper.app/Contents/MacOS/WeChatAppEx Helper
+60329     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /System/Library/PrivateFrameworks/HearingCore.framework/heard
+60330     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /System/Library/PrivateFrameworks/CoreSpeech.framework/corespeechd
+60331     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /Users/yanfenma/.local/services/svc-workflow/svc-workflow
+60335     1 yanfenma         S      0.0  0.6 Mon Sep  7 06:52:35 2026     /Applications/Brave Browser.app/Contents/MacOS/Brave Browser
+60337     1 yanfenma         S      1.0  0.2 Mon Sep  7 06:52:35 2026     /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python
+60339     1 yanfenma         S      0.1  0.3 Mon Sep  7 06:52:35 2026     /usr/local/libexec/agent-core/node-runtime/bin/node
+60341     1 yanfenma         S      0.0  0.4 Mon Sep  7 06:52:35 2026     node
+60344     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /System/Library/Image Capture/Support/icdd
+60346     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /opt/homebrew/bin/node
+60349     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /opt/homebrew/opt/ollama/bin/ollama
+60350     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python
+60352     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /usr/local/bin/node
+60353     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /System/Library/PrivateFrameworks/AskPermission.framework/Versions/A/Resources/askpermissiond
+60355     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python
+60357     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /System/Library/CoreServices/AirPlayUIAgent.app/Contents/MacOS/AirPlayUIAgent
+60358     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /usr/local/opt/postgresql@16/bin/postgres
+60359     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /usr/local/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python
+60360     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /usr/local/opt/syncthing/bin/syncthing
+60363     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /System/Library/CoreServices/TextInputMenuAgent.app/Contents/MacOS/TextInputMenuAgent
+60367     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:35 2026     /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+60370     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /System/Library/PrivateFrameworks/SoftwareUpdate.framework/Resources/SoftwareUpdateNotificationManager.app/Contents/MacOS/SoftwareUpdateNotificationManager
+60371     1 root             Ss     0.0  0.0 Mon Sep  7 06:52:35 2026     /System/Library/PrivateFrameworks/FindMyMac.framework/Resources/FindMyMacd
+60373     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:35 2026     /System/Library/CoreServices/TextInputSwitcher.app/Contents/MacOS/TextInputSwitcher
+60375     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:35 2026     /System/Library/Frameworks/Speech.framework/Versions/A/XPCServices/localspeechrecognition.xpc/Contents/MacOS/localspeechrecognition
+60376     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:35 2026     /System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper
+60398     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:36 2026     /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+60399 59983 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:36 2026     /Applications/Lark.app/Contents/Frameworks/Lark Framework.framework/Versions/143.0.7499.203/Helpers/Lark Helper.app/Contents/MacOS/Lark Helper
+60400     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:36 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60403     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:37 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60415     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:52:37 2026     /System/Library/Services/AppleSpell.service/Contents/MacOS/AppleSpell
+60416     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:37 2026     /usr/libexec/naturallanguaged
+60418     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:37 2026     /usr/libexec/keyboardservicesd
+60419 59988 yanfenma         S      0.2  0.1 Mon Sep  7 06:52:37 2026     /Applications/iKuuuVPN.app/Contents/MacOS/iKuuuVPNCore
+60431     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:38 2026     /System/Library/PrivateFrameworks/IntelligencePlatformCompute.framework/Versions/A/XPCServices/IntelligencePlatformComputeService.xpc/Contents/MacOS/IntelligencePlatformComputeService
+60433     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:38 2026     /System/Library/PrivateFrameworks/IntelligenceFlowContextRuntime.framework/Versions/A/intelligencecontextd
+60435 60352 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:38 2026     /usr/local/Cellar/node/25.6.1_1/bin/node
+60436 60360 yanfenma         SN     0.0  0.1 Mon Sep  7 06:52:38 2026     /usr/local/opt/syncthing/bin/syncthing
+60440     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:38 2026     /System/Library/PrivateFrameworks/GeoServices.framework/geodMachServiceBridge
+60442 60358 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:38 2026     postgres: checkpointer 
+60443 60358 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:38 2026     postgres: background writer 
+60463     1 yanfenma         SN     0.2  0.1 Sat Sep  5 00:42:31 2026     node
+60495     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:39 2026     /System/Library/PrivateFrameworks/IMTransferServices.framework/IMTransferAgent.app/Contents/MacOS/IMTransferAgent
+60498 60435 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:39 2026     /Users/yanfenma/workspace/deploy/article-review-canary/node_modules/@esbuild/darwin-x64/bin/esbuild
+60499     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:39 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+60509     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:41 2026     /System/Library/Frameworks/FinanceKit.framework/financed
+60510 60358 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:41 2026     postgres: walwriter 
+60511 60358 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:41 2026     postgres: autovacuum launcher 
+60512 60358 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:41 2026     postgres: logical replication launcher 
+60515     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:42 2026     /System/Library/PrivateFrameworks/TextToSpeechVoiceBankingSupport.framework/Support/voicebankingd
+60516     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:42 2026     /System/Library/PrivateFrameworks/ModelCatalogRuntime.framework/Versions/A/ModelCatalogAgent
+60517     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:42 2026     /System/Library/PrivateFrameworks/StocksKit.framework/XPCServices/StocksKitService.xpc/Contents/MacOS/StocksKitService
+60521     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:42 2026     /Library/Apple/System/Library/CoreServices/XProtect.app/Contents/XPCServices/XProtectPluginService.xpc/Contents/MacOS/XProtectPluginService
+60523     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:43 2026     /usr/libexec/MTLAssetUpgraderD
+60524     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:43 2026     /System/Library/Frameworks/MediaExtension.framework/Versions/A/Helpers/MENotificationAgent
+60525     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:43 2026     /System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService
+60527     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:43 2026     /Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/152.1.94.121/Helpers/chrome_crashpad_handler
+60529 60335 yanfenma         S      0.0  0.3 Mon Sep  7 06:52:43 2026     /Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/152.1.94.121/Helpers/Brave Browser Helper.app/Contents/MacOS/Brave Browser Helper
+60530 60335 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:43 2026     /Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/152.1.94.121/Helpers/Brave Browser Helper.app/Contents/MacOS/Brave Browser Helper
+60531 60335 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:43 2026     /Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/152.1.94.121/Helpers/Brave Browser Helper.app/Contents/MacOS/Brave Browser Helper
+60533 60335 yanfenma         S      0.0  0.2 Mon Sep  7 06:52:44 2026     /Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/152.1.94.121/Helpers/Brave Browser Helper (Renderer).app/Contents/MacOS/Brave Browser Helper (Renderer)
+60534 60335 yanfenma         S      0.0  0.4 Mon Sep  7 06:52:44 2026     /Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/152.1.94.121/Helpers/Brave Browser Helper (Renderer).app/Contents/MacOS/Brave Browser Helper (Renderer)
+60535     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:44 2026     /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/XPCServices/SpeechSynthesisServerXPC.xpc/Contents/MacOS/SpeechSynthesisServerXPC
+60537     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:44 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+60538     1 yanfenma         Ss     0.0  0.2 Mon Sep  7 06:52:44 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+60564     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:52:46 2026     /System/Library/CoreServices/Dock.app/Contents/XPCServices/DockHelper.xpc/Contents/MacOS/DockHelper
+60569     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:47 2026     /System/Library/PrivateFrameworks/NewDeviceOutreach.framework/ndoagent
+60570     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:47 2026     /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+60571     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:47 2026     /System/Applications/Calendar.app/Contents/Extensions/CalendarIntentsExtension.appex/Contents/MacOS/CalendarIntentsExtension
+60572     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:47 2026     /System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/Contents/Extensions/SafariLinkExtension.appex/Contents/MacOS/SafariLinkExtension
+60573     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:47 2026     /System/Applications/Messages.app/Contents/Extensions/MessagesActionExtension.appex/Contents/MacOS/MessagesActionExtension
+60574     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:52:47 2026     /System/Library/PrivateFrameworks/SiriSuggestionsSupport.framework/Versions/A/XPCServices/SiriSuggestionsBookkeepingService.xpc/Contents/MacOS/SiriSuggestionsBookkeepingService
+60596 60171 yanfenma         Ss     0.0  0.8 Mon Sep  7 06:52:50 2026     zcode-cli
+60665     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:52 2026     /System/Library/PrivateFrameworks/HomeKitEvents.framework/Support/homeeventsd
+60667     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:53 2026     /usr/libexec/adprivacyd
+60668     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:53 2026     /usr/libexec/diagnosticextensionsd
+60672     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:52:53 2026     /usr/libexec/promotedcontentd
+60673     1 _fpsd            Ss     0.0  0.0 Mon Sep  7 06:52:53 2026     /usr/libexec/fairplaydeviceidentityd
+60711 60596 yanfenma         S      0.0  0.6 Mon Sep  7 06:52:57 2026     zcode-node-repl-mcp
+60766     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:03 2026     /System/Library/PrivateFrameworks/SiriAnalytics.framework/Versions/A/XPCServices/SAExtensionOrchestrator.xpc/Contents/MacOS/SAExtensionOrchestrator
+60767     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:03 2026     /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+60768     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:03 2026     /System/Library/ExtensionKit/Extensions/GMSSELFIngestor.appex/Contents/MacOS/GMSSELFIngestor
+60769     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:04 2026     /System/Library/ExtensionKit/Extensions/IFTelemetrySELFIngestor.appex/Contents/MacOS/IFTelemetrySELFIngestor
+60770     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:04 2026     /System/Library/ExtensionKit/Extensions/IFTranscriptSELFIngestor.appex/Contents/MacOS/IFTranscriptSELFIngestor
+60771     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:04 2026     /System/Library/ExtensionKit/Extensions/BiomeSELFIngestor.appex/Contents/MacOS/BiomeSELFIngestor
+60912     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:10 2026     /System/Library/PrivateFrameworks/ProtectedCloudStorage.framework/Helpers/ProtectedCloudKeySyncing
+60948 60177 yanfenma         S      0.0  0.6 Mon Sep  7 06:53:13 2026     zcode-node-repl-mcp
+61080 60171 yanfenma         Ss     0.0  1.1 Mon Sep  7 06:53:22 2026     zcode-cli
+61156 60171 yanfenma         Ss     0.0  0.9 Mon Sep  7 06:53:23 2026     zcode-cli
+61195     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:24 2026     /usr/libexec/filevaultd
+61196     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:24 2026     /System/Library/PrivateFrameworks/BusinessChatService.framework/businessservicesd
+61197     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:25 2026     /System/Cryptexes/App/usr/libexec/AuthenticationServicesAgent
+61198     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:25 2026     /usr/libexec/backgroundassets.user
+61199     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:25 2026     /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/Versions/A/XPCServices/MessagesBlastDoorService.xpc/Contents/MacOS/MessagesBlastDoorService
+61249     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:26 2026     /System/Library/Frameworks/CoreSpotlight.framework/spotlightknowledged
+61250     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:26 2026     /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/XPCServices/SpeechSynthesisServerXPC.xpc/Contents/MacOS/SpeechSynthesisServerXPC
+61251     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:26 2026     /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/Support/fudHelperAgent
+61283 61080 yanfenma         S      0.0  0.6 Mon Sep  7 06:53:28 2026     zcode-node-repl-mcp
+61285     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:28 2026     /System/Library/PrivateFrameworks/Synapse.framework/Support/contentlinkingd
+61286 59956 yanfenma         S      0.0  1.1 Mon Sep  7 06:53:28 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+61290 59956 yanfenma         S      0.0  1.6 Mon Sep  7 06:53:28 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+61291 59956 yanfenma         S      0.0  1.4 Mon Sep  7 06:53:28 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+61301     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:29 2026     /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+61332 61156 yanfenma         S      0.0  0.6 Mon Sep  7 06:53:30 2026     zcode-node-repl-mcp
+61347     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:53:34 2026     /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/XPCServices/SpeechSynthesisServerXPC.xpc/Contents/MacOS/SpeechSynthesisServerXPC
+61450     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:53:41 2026     /usr/libexec/tipsd
+61591 60178 yanfenma         S      0.0  0.3 Mon Sep  7 06:53:49 2026     zcode-node-repl-mcp
+61706   546 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:54:04 2026     /System/Library/SystemConfiguration/EAPOLController.bundle/Contents/Resources/eapolclient
+61709     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:54:04 2026     /System/Library/PrivateFrameworks/AppSSO.framework/Support/AppSSOAgent.app/Contents/MacOS/AppSSOAgent
+61746 59956 yanfenma         S      0.0  0.5 Mon Sep  7 06:54:06 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+61771 59956 yanfenma         S      0.0  0.5 Mon Sep  7 06:54:08 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+61779     1 _netbios         SNs    0.0  0.0 Mon Sep  7 06:54:09 2026     /usr/sbin/netbiosd
+61783 59956 yanfenma         S      0.0  0.4 Mon Sep  7 06:54:10 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+61784 59956 yanfenma         S      0.0  0.9 Mon Sep  7 06:54:10 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+61813 59956 yanfenma         S      0.0  0.1 Mon Sep  7 06:54:12 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+61814 59956 yanfenma         S      0.0  0.2 Mon Sep  7 06:54:12 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+61858     1 root             Ss     0.0  0.0 Sun Sep  6 08:49:04 2026     /System/Library/Frameworks/Security.framework/authtrampoline
+61893 59956 yanfenma         S      0.0  0.6 Mon Sep  7 06:54:12 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62018 59956 yanfenma         S      0.0  0.5 Mon Sep  7 06:54:18 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62019 59956 yanfenma         S      0.0  0.3 Mon Sep  7 06:54:19 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62022 59956 yanfenma         S      0.0  0.4 Mon Sep  7 06:54:19 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62034 60171 yanfenma         Ss     0.0  0.5 Mon Sep  7 06:54:19 2026     zcode-cli
+62098 59956 yanfenma         S      0.0  0.4 Mon Sep  7 06:54:22 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62103 59956 yanfenma         S      0.0  0.5 Mon Sep  7 06:54:23 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62160     1 yanfenma         S      0.0  0.1 Mon Sep  7 06:54:26 2026     /System/Library/PrivateFrameworks/AppStoreDaemon.framework/Support/appstoreagent
+62161     1 _installcoordinationd Ss     0.0  0.0 Mon Sep  7 06:54:26 2026     /System/Library/PrivateFrameworks/InstallCoordination.framework/Support/installcoordinationd
+62162     1 root             Ss     0.0  0.0 Mon Sep  7 06:54:26 2026     /System/Library/PrivateFrameworks/AppStoreDaemon.framework/Versions/A/XPCServices/com.apple.AppStoreDaemon.StorePrivilegedODRService.xpc/Contents/MacOS/com.apple.AppStoreDaemon.StorePrivilegedODRService
+62220 59956 yanfenma         S      0.0  0.2 Mon Sep  7 06:54:29 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62287     1 _accessoryupdater Ss     0.0  0.0 Fri Sep  4 07:41:31 2026     /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/UARPUpdaterServiceUSBPD.xpc/Contents/MacOS/UARPUpdaterServiceUSBPD
+62293 59956 yanfenma         S      0.0  0.3 Mon Sep  7 06:54:33 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62294 59956 yanfenma         S      0.0  0.9 Mon Sep  7 06:54:33 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62295 59956 yanfenma         S      0.0  0.3 Mon Sep  7 06:54:33 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62508     1 root             Ss     0.0  0.0 Fri Sep  4 21:13:24 2026     /usr/libexec/findmybeaconingd
+62523     1 _captiveagent    Ss     0.0  0.0 Fri Sep  4 21:13:25 2026     /usr/libexec/captiveagent
+62627 59956 yanfenma         S      0.0  0.5 Mon Sep  7 06:55:02 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62658 59956 yanfenma         S      0.0  0.7 Mon Sep  7 06:55:07 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62674 59956 yanfenma         S      0.0  0.2 Mon Sep  7 06:55:10 2026     /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.76/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)
+62688     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:55:16 2026     /System/Library/PrivateFrameworks/SafariSafeBrowsing.framework/com.apple.Safari.SafeBrowsing.Service
+62801     1 yanfenma         S      0.0  0.2 Mon Sep  7 06:55:48 2026     /Applications/Docker.app/Contents/MacOS/com.docker.backend
+62804 62801 yanfenma         S      0.0  0.4 Mon Sep  7 06:55:48 2026     /Applications/Docker.app/Contents/MacOS/com.docker.backend
+62808 62801 yanfenma         S      0.0  0.2 Mon Sep  7 06:55:48 2026     /Applications/Docker.app/Contents/MacOS/com.docker.backend
+62830 62808 yanfenma         S      0.0  0.1 Mon Sep  7 06:55:49 2026     /Applications/Docker.app/Contents/MacOS/com.docker.build
+62834 62808 yanfenma         S      0.0  0.4 Mon Sep  7 06:55:49 2026     /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/MacOS/Docker Desktop
+62852     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:55:51 2026     /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler
+62856 62834 yanfenma         S      0.0  0.2 Mon Sep  7 06:55:51 2026     /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Frameworks/Docker Desktop Helper.app/Contents/MacOS/Docker Desktop Helper
+62857 62834 yanfenma         S      0.0  0.1 Mon Sep  7 06:55:51 2026     /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Frameworks/Docker Desktop Helper.app/Contents/MacOS/Docker Desktop Helper
+62863 62834 yanfenma         S      0.1  0.4 Mon Sep  7 06:55:51 2026     /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Frameworks/Docker Desktop Helper (Renderer).app/Contents/MacOS/Docker Desktop Helper (Renderer)
+62897     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:55:53 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+63320     1 yanfenma         SN     0.0  0.1 Mon Sep  7 06:57:18 2026     /opt/homebrew/bin/node
+63387     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:57:30 2026     /usr/libexec/mlhostd
+63388     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:57:30 2026     /usr/libexec/betaenrollmentagent
+63389     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:57:30 2026     /System/Cryptexes/App/usr/libexec/PasswordBreachAgent
+63391     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:57:30 2026     /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+63621     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 06:58:05 2026     /System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper
+63896     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:58:16 2026     /System/Library/PrivateFrameworks/AppPredictionFoundation.framework/Versions/A/XPCServices/AppPredictionIntentsHelperService.xpc/Contents/MacOS/AppPredictionIntentsHelperService
+64426     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:59:05 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+64427     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:59:05 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+64428     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:59:05 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+64429     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:59:05 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+64430     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:59:05 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+64431     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 06:59:05 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+65643     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:03:15 2026     /System/iOSSupport/System/Library/PrivateFrameworks/HomeEnergyDaemon.framework/Support/homeenergyd
+66682     1 root             Ss     0.0  0.0 Fri Sep  4 13:17:05 2026     /usr/libexec/griddatad
+66693     1 root             Ss     0.0  0.0 Fri Sep  4 13:17:05 2026     /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XProtectUpdateService.xpc/Contents/MacOS/XProtectUpdateService
+66698     1 root             Ss     0.0  0.0 Fri Sep  4 13:17:07 2026     /usr/libexec/dprivacyd
+66705     1 _assetcache      Ss     0.0  0.0 Fri Sep  4 13:17:07 2026     /System/Library/PrivateFrameworks/AssetCacheServices.framework/Versions/A/XPCServices/AssetCacheLocatorService.xpc/Contents/MacOS/AssetCacheLocatorService
+66724     1 root             S      0.0  0.0 Fri Sep  4 13:17:13 2026     /System/Library/PrivateFrameworks/ContextKit.framework/Versions/A/XPCServices/ContextService.xpc/Contents/MacOS/ContextService
+66909     1 yanfenma         S      0.0  0.0 Fri Sep  4 13:17:56 2026     /System/Library/PrivateFrameworks/PodcastServices.framework/XPCServices/PodcastContentService.xpc/Contents/MacOS/PodcastContentService
+66910     1 yanfenma         S      0.0  0.0 Fri Sep  4 13:17:56 2026     /System/Library/PrivateFrameworks/BookKit.framework/Versions/A/XPCServices/com.apple.BKAgentService.xpc/Contents/MacOS/com.apple.BKAgentService
+67066     1 root             Ss     0.0  0.0 Sun Sep  6 12:22:50 2026     /System/Library/PrivateFrameworks/Noticeboard.framework/Versions/A/Resources/nbstated
+67366     1 root             Ss     0.0  0.0 Sun Sep  6 12:23:03 2026     /System/Library/PrivateFrameworks/CoreAccessories.framework/Support/accessoryd
+67367     1 _coreaudiod      Ss     0.0  0.0 Sun Sep  6 12:23:03 2026     /System/Library/Frameworks/CoreAudio.framework/Versions/A/XPCServices/com.apple.audio.DriverHelper.xpc/Contents/MacOS/com.apple.audio.DriverHelper
+67368     1 _hidd            Ss     0.0  0.0 Sun Sep  6 12:23:03 2026     /usr/libexec/hidd
+67369     1 _coreaudiod      Ss     0.0  0.0 Sun Sep  6 12:23:03 2026     /System/Library/Audio/Plug-Ins/usbaudio.bundle/Contents/MacOS/usbaudiod
+67371     1 root             Ss     0.0  0.0 Sun Sep  6 12:23:03 2026     /usr/libexec/dirhelper
+67596     1 yanfenma         SN     0.0  0.1 Mon Sep  7 07:08:36 2026     /opt/homebrew/bin/node
+67777     1 yanfenma         SN     0.0  0.1 Mon Sep  7 07:08:43 2026     /opt/homebrew/bin/node
+70038     1 yanfenma         S      0.0  0.3 Mon Sep  7 07:10:29 2026     /usr/local/bin/node
+70388 70038 yanfenma         S      0.0  0.4 Mon Sep  7 07:10:53 2026     /usr/local/Cellar/node/25.6.1_1/bin/node
+70666     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:11:44 2026     /usr/libexec/dprivacyd
+70668     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:11:44 2026     /usr/libexec/ciphermld
+70698     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:11:45 2026     /usr/libexec/metrickitd
+70723     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:11:51 2026     /usr/libexec/mlruntimed
+72914     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:15:37 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+72918     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:15:37 2026     /Applications/WeChat.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer
+72920     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:15:37 2026     /Applications/WeChat.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate
+72921     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:15:37 2026     /Users/yanfenma/Library/Caches/com.tencent.xinWeChat/org.sparkle-project.Sparkle/Launcher/RJ2xjzEEg/Updater.app/Contents/MacOS/Updater
+73022     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:15:52 2026     /System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/XPCServices/extensionkitservice.xpc/Contents/MacOS/extensionkitservice
+73023     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:15:52 2026     /System/Library/ExtensionKit/Extensions/com.apple.fskit.msdos.appex/Contents/MacOS/com.apple.fskit.msdos
+73024     1 root             Ss     0.0  0.0 Mon Sep  7 07:15:52 2026     /usr/libexec/fskit_helper
+73102     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:16:07 2026     /System/Library/PrivateFrameworks/KerberosHelper/Helpers/DiskUnmountWatcher
+73370     1 root             Ss     0.0  0.0 Mon Sep  7 07:16:52 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+73371     1 root             Ss     0.0  0.0 Mon Sep  7 07:16:52 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+73374     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:16:52 2026     /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+73551     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 07:17:36 2026     /System/Library/PrivateFrameworks/MediaAnalysisAccess.framework/Versions/A/XPCServices/mediaanalysisd-access.xpc/Contents/MacOS/mediaanalysisd-access
+73974     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:18:08 2026     /usr/libexec/proactiveeventtrackerd
+76627 60358 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:23:39 2026     postgres: svc_wf svc_workflow_dogfood_clean ::1(65195) idle
+77771     1 root             Ss     0.0  0.0 Sun Sep  6 09:55:23 2026     /System/Library/PrivateFrameworks/CoreKDL.framework/Support/corekdld
+77865 60358 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:24:39 2026     postgres: svc_wf svc_workflow_dogfood_clean ::1(65346) idle
+78750     1 root             Ss     0.0  0.0 Sun Sep  6 13:03:57 2026     /usr/libexec/colorsyncd
+79443     1 root             Ss     0.0  0.0 Fri Sep  4 14:16:10 2026     /usr/libexec/wifianalyticsd
+80058     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:29:03 2026     /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+80073     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 07:29:08 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+80074     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:29:08 2026     /System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService
+80158     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 07:29:30 2026     /System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper
+80170 51361 yanfenma         S      0.1  0.5 Mon Sep  7 07:29:34 2026     /usr/local/libexec/agent-core/node-runtime/bin/node
+80218 51361 yanfenma         S      0.1  0.5 Mon Sep  7 07:29:43 2026     /usr/local/libexec/agent-core/node-runtime/bin/node
+80573     1 yanfenma         S      0.1  1.3 Mon Sep  7 07:30:20 2026     /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+80577     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:30:21 2026     /usr/libexec/biomesyncd
+80586     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:30:22 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/browser_crashpad_handler
+80588     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:30:22 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/browser_crashpad_handler
+80591 80573 yanfenma         S      0.5  0.4 Mon Sep  7 07:30:22 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+80592 80573 yanfenma         S      0.0  0.3 Mon Sep  7 07:30:22 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+80593 80573 yanfenma         S      0.0  0.2 Mon Sep  7 07:30:22 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+80607 80573 yanfenma         S      0.0  0.1 Mon Sep  7 07:30:22 2026     /Applications/ChatGPT.app/Contents/Resources/native/bare-modifier-monitor
+80611 80573 yanfenma         S      0.0  0.5 Mon Sep  7 07:30:22 2026     /Applications/ChatGPT.app/Contents/Resources/codex
+80623 80573 yanfenma         S      0.0  1.0 Mon Sep  7 07:30:23 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+80624 80573 yanfenma         S      0.7  1.3 Mon Sep  7 07:30:23 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+80865 80573 yanfenma         S      0.0  0.2 Mon Sep  7 07:30:28 2026     /Users/yanfenma/.codex/computer-use/Codex Computer Use.app/Contents/MacOS/SkyComputerUseService
+80936 80611 yanfenma         S      0.0  0.2 Mon Sep  7 07:30:28 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+81506 80573 yanfenma         S      0.0  0.9 Mon Sep  7 07:30:33 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+81630 80611 yanfenma         S      0.0  0.1 Mon Sep  7 07:30:34 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+81631 80611 yanfenma         S      0.0  0.0 Mon Sep  7 07:30:34 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+81634 81630 yanfenma         S      0.0  0.0 Mon Sep  7 07:30:35 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+81984 80573 yanfenma         S      0.0  0.2 Mon Sep  7 07:30:38 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+82676     1 yanfenma         Ss     0.0  0.1 Mon Sep  7 07:30:45 2026     /System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper
+82703     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:30:54 2026     /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+83500     1 root             Ss     0.0  0.0 Sun Sep  6 13:17:22 2026     /usr/libexec/assetsubscriptiond
+83503     1 root             Ss     0.0  0.0 Sun Sep  6 13:17:23 2026     /usr/libexec/tzd
+83505     1 yanfenma         S      0.0  0.0 Sun Sep  6 13:17:23 2026     /System/Library/PrivateFrameworks/Categories.framework/Versions/A/XPCServices/CategoriesService.xpc/Contents/MacOS/CategoriesService
+83508     1 yanfenma         S      0.0  0.0 Sun Sep  6 13:17:26 2026     /System/Library/PrivateFrameworks/ContextKit.framework/Versions/A/XPCServices/ContextService.xpc/Contents/MacOS/ContextService
+83518     1 _accessoryupdater Ss     0.0  0.0 Sun Sep  6 13:17:28 2026     /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/UARPUpdaterServiceDisplay.xpc/Contents/MacOS/UARPUpdaterServiceDisplay
+83519     1 _accessoryupdater Ss     0.0  0.0 Sun Sep  6 13:17:28 2026     /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/UARPUpdaterServiceLegacyAudio.xpc/Contents/MacOS/UARPUpdaterServiceLegacyAudio
+83526     1 _gamecontrollerd S      0.0  0.0 Sun Sep  6 13:17:30 2026     /System/Library/PrivateFrameworks/GameControllerFoundation.framework/Versions/A/XPCServices/GameControllerConfigService.xpc/Contents/MacOS/GameControllerConfigService
+83527     1 root             Ss     0.0  0.0 Sun Sep  6 13:17:30 2026     /usr/libexec/sysdiagnosed
+83530     1 _accessoryupdater Ss     0.0  0.0 Sun Sep  6 13:17:30 2026     /System/Library/PrivateFrameworks/MobileAccessoryUpdater.framework/XPCServices/EAUpdaterService.xpc/Contents/MacOS/EAUpdaterService
+84261 80573 yanfenma         S      0.0  0.2 Mon Sep  7 07:33:22 2026     /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+85474     1 yanfenma         SN     0.0  0.0 Mon Sep  7 07:34:31 2026     ./target/release/pca-workbench
+86288 80611 yanfenma         S      0.0  0.2 Mon Sep  7 07:35:42 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+86289 80611 yanfenma         S      0.0  0.1 Mon Sep  7 07:35:42 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+86290 80611 yanfenma         S      0.0  0.1 Mon Sep  7 07:35:42 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node
+86291 80611 yanfenma         S      0.0  0.0 Mon Sep  7 07:35:42 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+86292 86289 yanfenma         S      0.0  0.0 Mon Sep  7 07:35:42 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+86324 80611 yanfenma         S      0.0  0.0 Mon Sep  7 07:35:50 2026     /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+86862 80611 yanfenma         S      0.0  0.1 Mon Sep  7 07:36:01 2026     /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+87569 59959 yanfenma         S      0.0  0.1 Mon Sep  7 07:37:53 2026     /Applications/ZCode.app/Contents/Frameworks/ZCode Helper.app/Contents/MacOS/ZCode Helper
+87570     1 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:37:53 2026     /System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper
+88918     1 root             Ss     0.0  0.0 Mon Sep  7 06:14:13 2026     /System/Library/PrivateFrameworks/SystemAdministration.framework/XPCServices/writeconfig.xpc/Contents/MacOS/writeconfig
+89085     1 _oahd            Ss     0.0  0.0 Mon Sep  7 07:41:10 2026     /usr/libexec/rosetta/oahd
+90447     1 yanfenma         S      0.0  0.0 Mon Sep  7 06:17:02 2026     /usr/libexec/fskit_agent
+90472     1 root             Ss     0.0  0.0 Mon Sep  7 06:17:04 2026     /System/Library/Frameworks/NetFS.framework/Versions/A/XPCServices/PlugInLibraryService.xpc/Contents/MacOS/PlugInLibraryService
+91802 59959 yanfenma         S      0.0  0.2 Mon Sep  7 07:43:51 2026     /Applications/ZCode.app/Contents/Frameworks/ZCode Helper (Renderer).app/Contents/MacOS/ZCode Helper (Renderer)
+92853     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:46:06 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93069 60178 yanfenma         Ss     0.0  0.0 Mon Sep  7 07:47:24 2026     /bin/zsh
+93071 93069 yanfenma         S      0.0  0.0 Mon Sep  7 07:47:24 2026     zsh
+93072 93069 yanfenma         S      0.0  0.0 Mon Sep  7 07:47:24 2026     tail
+93126     1 yanfenma         S      0.0  0.0 Sun Sep  6 02:20:44 2026     /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python
+93132     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:25 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93277     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:30 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93278     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:30 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93286     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:30 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93289     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:30 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93290     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:30 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93294     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:30 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93321     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:31 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93322     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:31 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93329 93071 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:31 2026     osascript
+93330     1 yanfenma         S      0.0  0.2 Mon Sep  7 07:47:31 2026     /System/Library/Frameworks/Security.framework/Versions/A/MachServices/SecurityAgent.bundle/Contents/MacOS/SecurityAgent
+93397     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93398     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93399     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93401     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93404     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93416     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93666     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93667     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93668     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93669     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93670     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93672     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93673     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93674     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93675     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93676     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93677     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93678     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93679     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93680     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93681     1 yanfenma         S      0.0  0.0 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93682     1 yanfenma         S      0.0  0.1 Mon Sep  7 07:47:41 2026     /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared
+93692     1 root             Ss     0.0  0.0 Sun Sep  6 23:59:44 2026     /usr/libexec/microstackshot
+93749     1 root             Ss     0.0  0.0 Mon Sep  7 00:00:00 2026     aslmanager
+93792 60178 yanfenma         Ss     0.1  0.0 Mon Sep  7 07:48:21 2026     /bin/zsh
+93795 93792 yanfenma         S      3.0  0.0 Mon Sep  7 07:48:21 2026     /bin/bash
+93817 93795 root             R      0.0  0.0 Mon Sep  7 07:48:22 2026     ps
+99714     1 root             Ss     0.0  0.0 Mon Sep  7 06:30:11 2026     /System/Library/CoreServices/ReportCrash
+60150 59968 root             Ss     0.0  0.0 Mon Sep  7 06:52:30 2026     /usr/bin/login
+60151 60150 yanfenma         S+     0.0  0.0 Mon Sep  7 06:52:30 2026     -zsh
