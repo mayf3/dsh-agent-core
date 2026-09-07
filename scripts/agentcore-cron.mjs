@@ -4,24 +4,30 @@
  *
  * Control surface (D-007 §12.2 PRESERVE + C-032):
  *
- *   add        create a job           (openclaw cron add)
+ *   add        create a job           (openclaw cron add; --logical-key REQUIRED —
+ *                                     SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.1:
+ *                                     same key + same definition = already-applied
+ *                                     no-op, same key + different definition = conflict)
  *   list       list jobs + fence state (openclaw cron list)
  *   runs       occurrence/run evidence (openclaw cron runs --id <id> --limit N)
  *   rm         delete a job           (openclaw cron rm <id>)
  *   enable     enable a job           (openclaw cron enable <id>)
  *   disable    disable a job          (openclaw cron disable <id>)
+ *   update     patch mutable fields   (schedule/payload semantic changes bump
+ *                                     scheduleRevision — future slots only)
+ *   lookup     read-back by --logical-key (canonical reconcile read; exact match)
  *   reconcile  resolve an unresolved outcome_unknown occurrence (C-029)
+ *
+ * MUTATION STORE GUARD (§4.3): every mutation echoes the resolved store path
+ * and FAILS LOUD when AGENTCORE_EXPECTED_STORE is configured and the default
+ * ($HOME-derived) resolution misses it — a wrong-$HOME caller can never
+ * silently write a non-production store (explicit --store remains the only
+ * override).
  *
  * CONTROL-ONLY: this CLI never instantiates the scheduler engine and can
  * never execute a job or run startup catch-up. Every write goes through the
- * store's locked read-modify-write (single mutation authority), re-reading
- * the LATEST document under the cross-process lock.
- *
- * `runs` shows the OCCURRENCE dimension (occurrenceId / runId / state incl.
- * outcome_unknown / kind / nominal / admitted / started / ended /
- * deliveryStatus / lateSettlement / fence) — not just job-level status.
- * `reconcile` is the explicit operator command: identity comes from the
- * trusted control context (effective OS user), never from request input.
+ * SAME control ops the broker self-service surface uses (single mutation
+ * semantics — §4.1), under the store's cross-process lock.
  *
  * Store: default $HOME/.agent-core/scheduler/jobs.json, override with
  * AGENTCORE_SCHEDULER_STORE or --store <path>.
@@ -30,21 +36,68 @@
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { JobStore } from '../packages/scheduler/src/store.js'
-import { normalizeJob, toPublicJob } from '../packages/scheduler/src/job-model.js'
+import { toPublicJob } from '../packages/scheduler/src/job-model.js'
 import { computeNextRunAtMs, parseAtToMs } from '../packages/scheduler/src/schedule.js'
 import { deriveJobStateSummary } from '../packages/scheduler/src/eligibility.js'
-import { disableJobOp, enableJobOp, updateJobOp, reconcileOccurrence } from '../packages/scheduler/src/control.js'
+import {
+  disableJobOp,
+  enableJobOp,
+  updateJobOp,
+  deleteJobOp,
+  createOrReconcileJobOp,
+  findJobByLogicalKey,
+  reconcileOccurrence,
+} from '../packages/scheduler/src/control.js'
 
-const USAGE = `usage: agentcore-cron <add|list|runs|rm|enable|disable|update|reconcile> [flags] [--json] [--store <path>]
-  add --deliver --channel <channel> --to <destination> [--best-effort]   (explicit delivery target)
-  update <id> [--name --message --timeout-seconds --model --light-context --cron/--at/--every-ms/--tz --deliver/--no-deliver ...]
+const USAGE = `usage: agentcore-cron <add|list|runs|rm|enable|disable|update|lookup|reconcile> [flags] [--json] [--store <path>]
+  add --agent <id> --name <n> --logical-key <owner:key> (--at <t>|--cron <expr> --tz <tz>|--every-ms <n>) --message <text> [--deliver --channel <c> --to <dest>|--no-deliver] [...]
+  update <id> [--expected-schedule-revision <n> --expected-updated-at <ms>] [...flags]
+  enable|disable|rm <id> [--expected-schedule-revision <n> --expected-updated-at <ms>]
+  lookup --logical-key <key>
   reconcile <occurrenceId> --run-id <runId> --to succeeded|failed --note <evidence>`
+
+const MUTATION_COMMANDS = new Set(['add', 'rm', 'enable', 'disable', 'update'])
 
 function storePathFromArgs(args) {
   const idx = args.indexOf('--store')
   if (idx >= 0 && args[idx + 1]) return args[idx + 1]
   if (process.env.AGENTCORE_SCHEDULER_STORE) return process.env.AGENTCORE_SCHEDULER_STORE
   return join(homedir(), '.agent-core', 'scheduler', 'jobs.json')
+}
+
+/** §4.3 mutation store guard: echo the resolved store on every mutation and
+ *  fail LOUD on a silent wrong-$HOME resolution when the deployment freezes
+ *  the canonical expectation (AGENTCORE_EXPECTED_STORE). Explicit --store /
+ *  AGENTCORE_SCHEDULER_STORE stay conscious overrides. */
+function guardMutationStore(command, args) {
+  if (!MUTATION_COMMANDS.has(command)) return
+  const resolved = storePathFromArgs(args)
+  const expected = process.env.AGENTCORE_EXPECTED_STORE
+  const explicit = args.includes('--store') || process.env.AGENTCORE_SCHEDULER_STORE !== undefined
+  if (expected !== undefined && !explicit && resolved !== expected) {
+    throw new Error(
+      `refusing to mutate a non-canonical scheduler store: ${resolved} (deployment expects ${expected}); `
+      + `pass --store explicitly if you really mean a different store`,
+    )
+  }
+  process.stderr.write(`[agentcore-cron] ${command} -> store ${resolved}\n`)
+}
+
+/** §5.1.4 compare-before-write anchor from the operator CLI. */
+function expectedRevisionFromFlags(args) {
+  const rev = flagValue(args, '--expected-schedule-revision')
+  const updatedAt = flagValue(args, '--expected-updated-at')
+  if (rev === undefined && updatedAt === undefined) return undefined
+  if (rev === undefined || updatedAt === undefined) {
+    throw new Error('--expected-schedule-revision and --expected-updated-at must be given together')
+  }
+  const scheduleRevision = Number(rev)
+  const updatedAtMs = Number(updatedAt)
+  if (!Number.isSafeInteger(scheduleRevision) || scheduleRevision < 1
+    || !Number.isSafeInteger(updatedAtMs) || updatedAtMs < 1) {
+    throw new Error('expected revision flags must be positive integers')
+  }
+  return { scheduleRevision, updatedAtMs }
 }
 
 function flagValue(args, name) {
@@ -65,12 +118,14 @@ function parseAtFlag(raw) {
 async function cmdAdd(args) {
   const agent = flagValue(args, '--agent')
   const name = flagValue(args, '--name')
+  const logicalKey = flagValue(args, '--logical-key')
   const at = flagValue(args, '--at')
   const cronExpr = flagValue(args, '--cron')
   const everyMs = flagValue(args, '--every-ms')
   const message = flagValue(args, '--message')
   if (!agent) throw new Error('--agent is required')
   if (!name) throw new Error('--name is required')
+  if (!logicalKey) throw new Error('--logical-key is required (stable logical identity; re-running with the same key and definition is an idempotent no-op)')
   if (!message) throw new Error('--message is required')
   const kinds = [at, cronExpr, everyMs].filter(Boolean).length
   if (kinds !== 1) throw new Error('exactly one of --at | --cron | --every-ms is required')
@@ -96,25 +151,41 @@ async function cmdAdd(args) {
   }
 
   const store = new JobStore(storePathFromArgs(args))
-  const job = normalizeJob({
-    name,
-    agentId: agent,
-    schedule,
-    payload,
-    ...(hasFlag(args, '--auto-retry') ? { retry: { auto: true } } : {}),
-    delivery: resolveDeliveryFlags(args, 'add'),
-    deleteAfterRun: hasFlag(args, '--delete-after-run') || schedule.kind === 'at',
-  }, { nowMs: addNowMs })
-  const { value: created } = await store.mutate((jobs) => {
-    jobs.push(job)
-    return { value: job }
-  })
-  const publicJob = toPublicJob(created)
+  let reconciled
+  try {
+    reconciled = await createOrReconcileJobOp(store, {
+      name,
+      agentId: agent,
+      logicalKey,
+      schedule,
+      payload,
+      ...(hasFlag(args, '--auto-retry') ? { retry: { auto: true } } : {}),
+      delivery: resolveDeliveryFlags(args, 'add'),
+      deleteAfterRun: hasFlag(args, '--delete-after-run') || schedule.kind === 'at',
+    }, { nowMs: addNowMs })
+  } catch (error) {
+    if (error?.code === 'LOGICAL_KEY_CONFLICT') {
+      throw new Error(
+        `logical key ${logicalKey} is already bound to job ${error.existingJobId} with a DIFFERENT definition `
+        + `(differing: ${Array.isArray(error.differingFields) ? error.differingFields.join(', ') : 'unknown'}); `
+        + `resolve with update/rm — no write was performed`,
+      )
+    }
+    throw error
+  }
+  const publicJob = reconciled.job
+  if (reconciled.outcome === 'already_applied') {
+    if (hasFlag(args, '--json')) process.stdout.write(`${JSON.stringify(publicJob, null, 2)}\n`)
+    else {
+      process.stdout.write(`already applied: job ${publicJob.id} (${publicJob.name}) already carries logical key ${logicalKey} with an identical definition — no second job created\n`)
+    }
+    return publicJob.id
+  }
   if (hasFlag(args, '--json')) {
     process.stdout.write(`${JSON.stringify(publicJob, null, 2)}\n`)
   } else {
     const next = publicJob.nextRunAtMs
-      ?? computeNextRunAtMs(job.schedule, Date.now(), { jobId: job.id, fallbackAnchorMs: job.createdAtMs })
+      ?? computeNextRunAtMs(publicJob.schedule, Date.now(), { jobId: publicJob.id, fallbackAnchorMs: publicJob.createdAtMs })
     process.stdout.write(`created job ${publicJob.id} (${publicJob.name}) for agent ${publicJob.agentId}, next occurrence ${next !== undefined ? new Date(next).toISOString() : '(none)'}\n`)
   }
   return publicJob.id
@@ -194,10 +265,15 @@ async function cmdUpdate(args) {
 
   // updateJobOp already returns the public projection. Partial schedule and
   // payload changes are constructed from the exact definition under its lock.
+  // --expected-* flags add the §5.1.4 compare-before-write anchor: a stale
+  // operator snapshot is rejected (STALE_TARGET_CONFLICT, zero write).
   const updateNowMs = Date.now()
-  const publicJob = await updateJobOp(store, id, patch, {
-    nowMs: updateNowMs,
-    buildPatch: (lockedCurrent, basePatch) => {
+  let publicJob
+  try {
+    publicJob = await updateJobOp(store, id, patch, {
+      nowMs: updateNowMs,
+      expectedRevision: expectedRevisionFromFlags(args),
+      buildPatch: (lockedCurrent, basePatch) => {
       const effective = { ...basePatch }
       if (kindCount === 1) {
         effective.schedule = at
@@ -221,7 +297,13 @@ async function cmdUpdate(args) {
       }
       return effective
     },
-  })
+    })
+  } catch (error) {
+    if (error?.code === 'STALE_TARGET_CONFLICT') {
+      throw new Error(`stale target: ${error.message} — re-read with list and re-apply; no write was performed`)
+    }
+    throw error
+  }
   if (hasFlag(args, '--json')) {
     process.stdout.write(`${JSON.stringify(publicJob, null, 2)}\n`)
   } else {
@@ -286,11 +368,14 @@ async function cmdRm(args) {
   const id = args.find((a) => !a.startsWith('--'))
   if (!id) throw new Error('job id is required')
   const store = new JobStore(storePathFromArgs(args))
-  await store.mutateDoc((doc) => {
-    const idx = doc.jobs.findIndex((j) => j.id === id)
-    if (idx < 0) throw new Error(`unknown job id: ${id}`)
-    doc.jobs.splice(idx, 1) // definition only — occurrence/run evidence persists
-  })
+  try {
+    await deleteJobOp(store, id, { expectedRevision: expectedRevisionFromFlags(args) })
+  } catch (error) {
+    if (error?.code === 'STALE_TARGET_CONFLICT') {
+      throw new Error(`stale target: ${error.message} — re-read with list and re-apply; no write was performed`)
+    }
+    throw error
+  }
   process.stdout.write(`deleted job ${id}\n`)
 }
 
@@ -298,10 +383,41 @@ async function cmdToggle(args, enabled) {
   const id = args.find((a) => !a.startsWith('--'))
   if (!id) throw new Error('job id is required')
   const store = new JobStore(storePathFromArgs(args))
-  const job = enabled
-    ? await enableJobOp(store, id, { nowMs: Date.now() })
-    : await disableJobOp(store, id, { nowMs: Date.now() })
+  let job
+  try {
+    job = enabled
+      ? await enableJobOp(store, id, { nowMs: Date.now(), expectedRevision: expectedRevisionFromFlags(args) })
+      : await disableJobOp(store, id, { nowMs: Date.now(), expectedRevision: expectedRevisionFromFlags(args) })
+  } catch (error) {
+    if (error?.code === 'STALE_TARGET_CONFLICT') {
+      throw new Error(`stale target: ${error.message} — re-read with list and re-apply; no write was performed`)
+    }
+    throw error
+  }
   process.stdout.write(`${enabled ? 'enabled' : 'disabled'} job ${job.id} (${job.name})\n`)
+}
+
+/**
+ * Canonical read-back by logical identity (§5.1.5): exact key match only —
+ * no fuzzy or name-based inference. The operator reconcile read.
+ */
+async function cmdLookup(args) {
+  const key = flagValue(args, '--logical-key')
+  if (!key) throw new Error('--logical-key is required')
+  const store = new JobStore(storePathFromArgs(args))
+  const job = await findJobByLogicalKey(store, key)
+  if (job === undefined) {
+    process.stdout.write(`no job with logical key ${key}\n`)
+    return
+  }
+  if (hasFlag(args, '--json')) {
+    process.stdout.write(`${JSON.stringify(job, null, 2)}\n`)
+  } else {
+    process.stdout.write(
+      `${job.id}\t${job.enabled ? 'enabled ' : 'disabled'}\t${job.agentId}\t${JSON.stringify(job.schedule)}\t${job.name}\n`
+      + `next occurrence: ${job.nextRunAtMs !== undefined ? new Date(job.nextRunAtMs).toISOString() : '(none)'}\n`,
+    )
+  }
 }
 
 /**
@@ -341,6 +457,7 @@ const COMMANDS = {
   enable: (a) => cmdToggle(a, true),
   disable: (a) => cmdToggle(a, false),
   update: cmdUpdate,
+  lookup: cmdLookup,
   reconcile: cmdReconcile,
 }
 
@@ -352,6 +469,7 @@ async function main() {
     process.exit(2)
   }
   try {
+    guardMutationStore(command, argv.slice(1))
     await COMMANDS[command](argv.slice(1))
   } catch (error) {
     process.stderr.write(`[agentcore-cron] ${command} failed: ${error?.message ?? error}\n`)

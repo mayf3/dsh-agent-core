@@ -49,6 +49,27 @@ export function validateSchedulerArguments(operation, rawArgs, { nowMs = Date.no
     violations.push('update requires at least one mutable property besides job_id')
   }
 
+  // SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.1: the persisted logical key is
+  // the ONLY create idempotency anchor (never the display name).
+  if (operation === 'create' && !present(args, 'logical_key')) {
+    violations.push('create requires logical_key (stable caller-provided logical identity)')
+  }
+  if (present(args, 'logical_key') && operation !== 'create') {
+    violations.push('logical_key is only valid on create (reconcile reads use the list filters)')
+  }
+  if (present(args, 'expected_revision')) {
+    const revision = args.expected_revision
+    const shapeOk = revision !== null && typeof revision === 'object' && !Array.isArray(revision)
+      && Number.isSafeInteger(revision.schedule_revision) && revision.schedule_revision >= 1
+      && Number.isSafeInteger(revision.updated_at_ms) && revision.updated_at_ms >= 1
+    if (!shapeOk) {
+      violations.push('expected_revision must be {schedule_revision: integer >= 1, updated_at_ms: integer >= 1}')
+    }
+    if (!['update', 'enable', 'disable', 'remove'].includes(operation)) {
+      violations.push('expected_revision is only valid on update/enable/disable/remove')
+    }
+  }
+
   const hasScheduleKind = present(args, 'schedule_kind')
   if (!hasScheduleKind && presentAny(args, SCHEDULE_LEAVES)) {
     violations.push('schedule leaves require schedule_kind')
