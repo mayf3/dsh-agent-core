@@ -173,6 +173,22 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
   return findings
 }
 
+/**
+ * §5.6 credential-provider self-probe (audit FOLLOW_UP closure): the
+ * credential file is the input to EVERY scheduler mutation (its absence makes
+ * all mutations capability_unavailable), so W1 watches it directly — exists
+ * and non-empty. Never reads or logs bytes.
+ */
+export function evaluateCredentialProvider(probe, { path } = {}) {
+  if (probe === undefined) return []
+  const ok = probe.exists === true && probe.bytes !== undefined && probe.bytes > 0
+  if (ok) return []
+  const reason = probe.exists === false
+    ? `credential provider file missing${path ? ` (${path})` : ''}`
+    : `credential provider file empty${path ? ` (${path})` : ''}`
+  return [{ class: 'CREDENTIAL_PROVIDER_DEGRADED', reason }]
+}
+
 /** W1↔W2 mutual liveness (§5.7): heartbeat freshness is the only signal. */
 export function heartbeatStale(mtimeMs, nowMs, graceMs) {
   if (!Number.isFinite(mtimeMs)) return true
