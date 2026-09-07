@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "_comment": "EXAMPLE ONLY. The production manifest is Owner-frozen at preflight (spec §5.4): stored OUTSIDE the store dir at /usr/local/libexec/agent-core/config/scheduler-desired-state.json, joined by persisted logicalKey, never by name. logicalKey backfill for legacy jobs happens once in the production packet.",
+  "jobs": [
+    {
+      "logicalKey": "owner:daily-summary-check",
+      "expectedEnabled": true,
+      "expectedSchedule": { "kind": "cron", "expr": "0 22 * * *", "tz": "Asia/Shanghai" },
+      "expectedAgentId": "agt_daily-thought-agent",
+      "runPolicy": { "graceMinutes": 30, "maxConsecutiveFailures": 2 }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- TEMPLATE — install is SLOT-GATED (production packet; spec §8). System domain, authsvc. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>ai.agent-core.scheduler-watchdog-w1</string>
+  <key>UserName</key><string>authsvc</string>
+  <key>ProgramArguments</key><array>
+    <string>/usr/local/libexec/agent-core/node-runtime/bin/node</string>
+    <string>/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs</string>
+    <string>--role</string><string>w1</string>
+  </array>
+  <key>StartInterval</key><integer>300</integer>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><false/>
+  <key>EnvironmentVariables</key><dict>
+    <key>SCHEDULER_WATCHDOG_STORE</key><string>/Users/authsvc/.agent-core/scheduler/jobs.json</string>
+    <key>SCHEDULER_DESIRED_STATE</key><string>/usr/local/libexec/agent-core/config/scheduler-desired-state.json</string>
+    <key>SCHEDULER_HEALTH_URL</key><string>http://127.0.0.1:8790/health</string>
+    <key>FEISHU_CREDS_PATH</key><string>/Users/authsvc/.dsh/feishu-creds.json</string>
+    <key>SCHEDULER_WATCHDOG_ALERT_TO</key><string>__OWNER_CHAT_ID__</string>
+    <key>SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS</key><string>1200000</string>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/authsvc/.agent-core/logs/scheduler-watchdog-w1.log</string>
+  <key>StandardErrorPath</key><string>/Users/authsvc/.agent-core/logs/scheduler-watchdog-w1.err.log</string>
+</dict>
+</plist>
