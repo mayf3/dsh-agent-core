@@ -1,0 +1,76 @@
+
+── CASE 1: C: receipt committed + reply deadline expires
+   caller sees : {"status":"timeout"}
+   dimensions  : {"delivery":"DELIVERED","reply":"TIMEOUT"}
+   audit outcome row: {"result":"timeout","handle":"h-PROBE-1"}; deliveries=1
+
+── CASE 2: D: receipt committed + target Run failed
+   caller sees : {"code":"target_run_failed","detail":"the exact target Run settled as failed; retained text is never returned as success"}
+   dimensions  : {"delivery":"DELIVERED","reply":"(from code taxonomy)"}
+   deliveries=1
+
+── CASE 3: E: receipt committed + completed with no output
+   caller sees : {"code":"reply_unavailable","detail":"reply unavailable (no_output)"}
+   dimensions  : {"delivery":"DELIVERED","reply":"(from code taxonomy)"}
+   deliveries=1
+
+── CASE 4: F: receipt committed + truncated output
+   caller sees : {"code":"reply_unavailable","detail":"reply unavailable (truncated)"}
+   dimensions  : {"delivery":"DELIVERED","reply":"(from code taxonomy)"}
+   deliveries=1
+
+── CASE 5: evidence-loss: read state='evicted' (post-receipt)
+   caller sees : {"code":"reply_unavailable","detail":"reply unavailable (evicted)"}
+   dimensions  : {"delivery":"DELIVERED","reply":"(from code taxonomy)"}
+   deliveries=1 (receipt WAS proven before the wait)
+
+── CASE 6: evidence-loss: read state='restart_lost' (post-receipt)
+   caller sees : {"code":"reply_unavailable","detail":"reply unavailable (restart_lost)"}
+   dimensions  : {"delivery":"DELIVERED","reply":"(from code taxonomy)"}
+   deliveries=1 (receipt WAS proven before the wait)
+
+── CASE 7: B: provable pre-receipt rejection (not_admitted envelope)
+   caller sees : {"code":"not_admitted","detail":"target admission provably rejected; zero prompt bytes written"}
+   dimensions  : {"delivery":"NOT_DELIVERED","reply":"NOT_WAITED"}
+   zero prompt bytes written (envelope contract)
+
+── CASE 8: G1: unproven admission rejection (deliver throws generic)
+   caller sees : {"code":"outcome_unknown","detail":"send admission outcome unproven; nothing was replayed"}
+   dimensions  : {"delivery":"UNKNOWN","reply":"UNKNOWN"}
+   audit outcome row: {"result":"failed"} — read-back surface TODAY: none
+
+── CASE 9: A: receipt committed + parent RPC response lost (relay catch)
+   caller sees : {"errorCode":"outcome_unknown","detail":"parent_rpc_ambiguous: agent session send response was lost; do not retry automatically"}
+   dimensions  : {"delivery":"UNKNOWN (truth: DELIVERED)","reply":"UNKNOWN"}
+   parent truth {"status":"accepted"} — NO read-back is attempted by the relay (scheduler mutations reconcile; session send keeps the ambiguous envelope verbatim)
+
+── CASE 10: G2: parent response structurally unusable (ambiguous leg)
+   caller sees : {"errorCode":"outcome_unknown","detail":"parent_rpc_ambiguous: agent session send response was lost; do not retry automatically"}
+   dimensions  : {"delivery":"UNKNOWN","reply":"UNKNOWN"}
+   relay has no requestId anchor to reconcile with (the runtime-minted requestId never reaches the child on the loss path)
+
+── CASE 11: T9: duplicate RPC envelope suppression
+   caller sees : n/a
+   dimensions  : {"delivery":"n/a","reply":"n/a"}
+   one handler invocation ⇒ 1 deliver() (exactly-once per invocation holds); replayed relay invocations each reach the parent as a NEW send (dedup anchor: none model-visible — requestId is runtime-minted per call, replay dedup relies on NO_AUTOMATIC_RETRY)
+
+── CASE 12: T13: target-owned identity + provenance sidecar
+   caller sees : n/a
+   dimensions  : {"delivery":"n/a","reply":"n/a"}
+   messageOrigin={"kind":"inter_agent","sourceAgentId":"agt_a-source","correlation":"src-turn-42"}; args carry no identity fields (requestId,agentId,sessionMode,message)
+
+════════════════════════════════════════════════════════════
+REPLY_UNAVAILABLE_CREATED_AT (mechanical):
+  ONLY inside send() AFTER router.deliver() returned
+  receipt.accepted === true, during reply-wait settlement
+  (agent-session-reply-wait.js mapFinalAssistantOutputToOutcome).
+  Reasons: truncated | no_output | evicted | restart_lost | never_existed.
+  NEVER in receipt_only mode; NEVER pre-receipt; NOT on deadline (that
+  is the SUCCESS envelope {status:"timeout"}).
+AT_THAT_POINT: INBOX_RECEIPT_EXISTS=YES (proven), TARGET_RUN_EXISTS=YES,
+  TARGET_RUN_ID_KNOWN=YES (audit outcome row carries reconciliationHandle),
+  TARGET_RUN_STATUS=terminal-or-evidence-lost, FINAL_OUTPUT_STATUS=<reason>,
+  PARENT_RPC_STATUS=irrelevant (created parent-side, passed through as a
+  declared failure; a lost PASS-BACK would be outcome_unknown instead),
+  DELIVERY_CAN_BE_RECONCILED=YES — delivery is already PROVEN; only the
+  caller-visible expression and the outcome_unknown read-back are missing.
