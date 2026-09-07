@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- TEMPLATE — SB5 second observer. ROOT (deliberately different uid/label from W1:
+     W1's death must not take W2 down). Only job: check W1 heartbeat freshness and
+     alert. Install is SLOT-GATED (production packet; spec §8). -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>ai.agent-core.scheduler-watchdog-w2</string>
+  <key>UserName</key><string>root</string>
+  <key>ProgramArguments</key><array>
+    <string>/usr/local/libexec/agent-core/node-runtime/bin/node</string>
+    <string>/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs</string>
+    <string>--role</string><string>w2</string>
+  </array>
+  <key>StartInterval</key><integer>900</integer>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><false/>
+  <key>EnvironmentVariables</key><dict>
+    <!-- MUST equal W1's state dir (mutual heartbeat); root reads authsvc's dir. -->
+    <key>SCHEDULER_WATCHDOG_STATE_DIR</key><string>/Users/authsvc/.agent-core/control/scheduler-watchdog</string>
+    <key>FEISHU_CREDS_PATH</key><string>/Users/authsvc/.dsh/feishu-creds.json</string>
+    <key>SCHEDULER_WATCHDOG_ALERT_TO</key><string>__OWNER_CHAT_ID__</string>
+    <key>SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS</key><string>1800000</string>
+  </dict>
+  <key>StandardOutPath</key><string>/usr/local/var/scheduler-watchdog/w2.log</string>
+  <key>StandardErrorPath</key><string>/usr/local/var/scheduler-watchdog/w2.err.log</string>
+</dict>
+</plist>

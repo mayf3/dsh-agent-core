@@ -10,7 +10,7 @@
 import { createHash } from 'node:crypto'
 
 import {
-  createJobOp,
+  createOrReconcileJobOp,
   updateJobOp,
   enableJobOp,
   disableJobOp,
@@ -25,8 +25,22 @@ export const SELF_SERVICE_ERROR_CODES = {
   ACCESS_DENIED: 'access_denied',
   JOB_NOT_FOUND: 'job_not_found',
   VALIDATION_ERROR: 'validation_error',
+  LOGICAL_KEY_CONFLICT: 'logical_key_conflict',
+  STALE_TARGET_CONFLICT: 'stale_target_conflict',
   MUTATION_OUTCOME_UNKNOWN: 'mutation_outcome_unknown',
   INTERNAL_ERROR: 'internal_error',
+}
+
+/** Expected-revision wire shape -> op guard input (§5.1.4 compare-before-write). */
+function expectedRevisionFromArgs(args) {
+  if (args.expected_revision === undefined) return undefined
+  const raw = args.expected_revision
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)
+    || !Number.isSafeInteger(raw.schedule_revision) || raw.schedule_revision < 1
+    || !Number.isSafeInteger(raw.updated_at_ms) || raw.updated_at_ms < 1) {
+    throw new TypeError('expected_revision must be {schedule_revision: integer >= 1, updated_at_ms: integer >= 1}')
+  }
+  return { scheduleRevision: raw.schedule_revision, updatedAtMs: raw.updated_at_ms }
 }
 
 // AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2 (CTR-AUTH-002): the exact R8
@@ -200,6 +214,15 @@ function mutationFailure(error) {
   if (error?.code === 'SELF_SERVICE_ACCESS_DENIED') {
     return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, 'job is not visible to the trusted caller')
   }
+  if (error?.code === 'LOGICAL_KEY_CONFLICT') {
+    return err(
+      SELF_SERVICE_ERROR_CODES.LOGICAL_KEY_CONFLICT,
+      `logical key already bound to job ${error.existingJobId} with a different desired definition (differing: ${Array.isArray(error.differingFields) ? error.differingFields.join(', ') : 'unknown'})`,
+    )
+  }
+  if (error?.code === 'STALE_TARGET_CONFLICT') {
+    return err(SELF_SERVICE_ERROR_CODES.STALE_TARGET_CONFLICT, 'target job state moved past the expected revision; re-read and re-apply — zero write performed')
+  }
   if (error instanceof TypeError || error?.code === 'RESTORE_GATE_CLOSED') return validationFailure(error)
   if (error?.mutationOutcome === 'not_committed') {
     return err(SELF_SERVICE_ERROR_CODES.INTERNAL_ERROR, 'scheduler mutation failed before commit')
@@ -260,7 +283,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
     }
   }
 
-  async function appendAudit(operation, { jobId, operatorAgentId, targetAgentId, before, after, nowMs }) {
+  async function appendAudit(operation, { jobId, operatorAgentId, targetAgentId, before, after, nowMs, alreadyApplied }) {
     let status
     try {
       status = await store.appendRunEvent({
@@ -270,6 +293,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         jobId,
         operatorAgentId,
         targetAgentId,
+        ...(alreadyApplied === true ? { alreadyApplied } : {}),
         ...(before !== undefined ? { beforeDigest: before } : {}),
         ...(after !== undefined ? { afterDigest: after } : {}),
       })
@@ -309,6 +333,13 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
       async create(args, context) {
         const caller = contextOrError(context, 'scheduler.create')
         if (typeof caller !== 'string') return caller
+        // Logical identity is REQUIRED on the agent-facing create surface
+        // (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.1): it is the persisted
+        // idempotency/reconcile anchor — name is never a basis.
+        const logicalKey = nonEmpty(args.logical_key)
+        if (logicalKey === undefined) {
+          return err(SELF_SERVICE_ERROR_CODES.INVALID_ARGUMENTS, 'create requires logical_key (stable caller-provided logical identity)')
+        }
         let adminPromise
         const requireAdmin = () => (adminPromise ??= adminAuthorized(caller))
         if ((args.target_agent_id !== undefined || args.destination !== undefined) && !(await requireAdmin())) {
@@ -325,20 +356,28 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
           return validationFailure(error)
         }
         let created
+        let alreadyApplied = false
         try {
-          created = await createJobOp(store, {
+          const reconciled = await createOrReconcileJobOp(store, {
             name: args.name,
             agentId: targetAgentId,
             enabled: true,
+            logicalKey,
             schedule,
             payload: payloadForCreate(args),
             delivery,
             ...(args.delete_after_run !== undefined ? { deleteAfterRun: args.delete_after_run } : {}),
             ...(args.auto_retry === true ? { retry: { auto: true } } : {}),
           }, { nowMs })
+          created = reconciled.job
+          alreadyApplied = reconciled.outcome === 'already_applied'
         } catch (error) {
           if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
-            created = toPublicJob(error.committedValue)
+            // Post-commit fault: the store hands back the exact committed
+            // mutateDoc value — createOrReconcileJobOp wraps { job, alreadyApplied }.
+            const committed = error.committedValue
+            created = toPublicJob(committed?.job ?? committed)
+            alreadyApplied = committed?.alreadyApplied === true
           } else {
             return mutationFailure(error)
           }
@@ -349,7 +388,12 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
           targetAgentId: created.agentId,
           after: definitionDigest(created),
           nowMs,
+          ...(alreadyApplied ? { alreadyApplied } : {}),
         })
+        // The committed-result shape is an exact wire contract (relay strict
+        // validation): an already-applied create answers with the EXISTING
+        // job's committed projection — the outcome distinction lives in the
+        // audit event, never as an extra result field.
         return { ok: true, result: committedResult(created, auditStatus) }
       },
 
@@ -364,8 +408,13 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
           return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, 'all_agents job-definition list is unavailable: no accepted global job-definition-read scope')
         }
         const doc = await store.loadDoc({ force: true })
-        const jobs = doc.jobs
-          .filter((job) => job.agentId === caller)
+        let visible = doc.jobs.filter((job) => job.agentId === caller)
+        // Exact-match read filters (canonical read-back §5.1.5): logical_key is
+        // the reconcile anchor; job_id supports targeted read-back after a
+        // lost mutation response. No fuzzy/name matching — ever.
+        if (args.logical_key !== undefined) visible = visible.filter((job) => job.logicalKey === args.logical_key)
+        if (args.job_id !== undefined) visible = visible.filter((job) => job.id === args.job_id)
+        const jobs = visible
           .map((job) => ({ ...publicJobWithoutMessage(job), fenced: doc.fences[job.id] !== undefined }))
         return { ok: true, result: { jobs } }
       },
@@ -411,6 +460,12 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
           return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, 'scheduler.manage:any grant required for explicit target or destination')
         }
         const nowMs = Date.now()
+        let expectedRevision
+        try {
+          expectedRevision = expectedRevisionFromArgs(args)
+        } catch (error) {
+          return validationFailure(error)
+        }
         const patch = {}
         if (args.name !== undefined) patch.name = args.name
         if (args.target_agent_id !== undefined) patch.agentId = args.target_agent_id
@@ -427,6 +482,7 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         try {
           updated = await updateJobOp(store, args.job_id, patch, {
             nowMs,
+            expectedRevision,
             assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
             buildPatch: (current, basePatch) => {
               const effective = { ...basePatch }
@@ -468,9 +524,16 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         const scoped = await loadScopedJob(args.job_id, caller, () => (adminPromise ??= adminAuthorized(caller)))
         if (scoped.error !== undefined) return scoped.error
         const nowMs = Date.now()
+        let expectedRevision
+        try {
+          expectedRevision = expectedRevisionFromArgs(args)
+        } catch (error) {
+          return validationFailure(error)
+        }
         let lockedBefore
         try {
           await deleteJobOp(store, args.job_id, {
+            expectedRevision,
             assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
           })
         } catch (error) {
@@ -495,11 +558,18 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
     const scoped = await loadScopedJob(args.job_id, caller, () => (adminPromise ??= adminAuthorized(caller)))
     if (scoped.error !== undefined) return scoped.error
     const nowMs = Date.now()
+    let expectedRevision
+    try {
+      expectedRevision = expectedRevisionFromArgs(args)
+    } catch (error) {
+      return validationFailure(error)
+    }
     let lockedBefore
     let updated
     try {
       updated = await controlOp(store, args.job_id, {
         nowMs,
+        expectedRevision,
         assertJob: ownershipGuard(caller, scoped.allowAny, (current) => { lockedBefore = current }),
       })
     } catch (error) {

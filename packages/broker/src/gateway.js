@@ -126,6 +126,38 @@ export function createBrokerGateway({
     'feishuConversationId', 'feishuMessageId',
   ]
 
+  /**
+   * Per-caller scheduler mutation readiness (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1
+   * §5.3): the parent is the SINGLE readiness authority. Read per call (the
+   * credential store is re-read anyway) so a rotation/entry fix takes effect
+   * without restart. Never returns or logs credential bytes.
+   */
+  function schedulerMutationReady(agentId) {
+    if (credentialsFile === undefined || credentialsFile === '') return false
+    try {
+      return loadCredentialFor(credentialsFile, agentId) !== undefined
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Read-only capability-discovery answer (§5.3.1 seam): one new op on the
+   * EXISTING `agent-core/broker` rpc method. Booleans only — never credential
+   * material, never store contents. Requires the caller agentId (the Router
+   * always supplies it); anything else fails closed as unsupported.
+   */
+  function availabilitySnapshot(agentId) {
+    const schedulerReady = schedulerMutationReady(agentId)
+    const schedulerOps = {}
+    for (const op of ['create', 'update', 'enable', 'disable', 'remove']) schedulerOps[op] = schedulerReady
+    return {
+      availabilityVersion: 1,
+      credentialsFileConfigured: credentialsFile !== undefined && credentialsFile !== '',
+      capabilities: { scheduler: { ready: schedulerReady, operations: schedulerOps } },
+    }
+  }
+
   /** Flatten only Router-owned, allowlisted active-ingress leaves. */
   function schedulerTrustedContext(context, agentId) {
     const ingress = context?.ingressContext
@@ -181,9 +213,25 @@ export function createBrokerGateway({
    */
   async function execute(call, context = {}) {
     const agentId = context?.agentId
+    // ── reserved read-only discovery op (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1
+    //    §5.3.1): answers BEFORE any credential gate so a not-ready runtime can
+    //    be discovered by children; requires only the trusted caller identity.
+    if (call?.capabilityId === 'broker' && call?.operation === 'availability') {
+      if (typeof agentId !== 'string' || agentId === '') {
+        return { ok: false, error: { code: 'unsupported_operation', detail: 'availability requires the trusted caller agentId' } }
+      }
+      return { ok: true, result: availabilitySnapshot(agentId) }
+    }
     const manifest = byCapability.get(call?.capabilityId)
     if (manifest === undefined) {
       return { ok: false, error: { code: 'unsupported_operation', detail: `capability not served by the gateway: ${call?.capabilityId}` } }
+    }
+    // ── scheduler mutation readiness gate (§5.3): fail BEFORE validation,
+    //    grant, handler, or store access with a deterministic, Agent-understandable
+    //    reason — a not-ready runtime never presents mutations as usable.
+    if (manifest.id === 'scheduler' && schedulerMutations.has(call?.operation) && !schedulerMutationReady(agentId)) {
+      log(`[broker-gateway] agent ${agentId}: scheduler mutation ${call?.operation} withheld (capability not ready)`)
+      return { ok: false, error: { code: 'capability_unavailable', detail: 'scheduler mutation is not ready on this runtime (credential provider unconfigured or caller unbound)' } }
     }
     const isLocal = manifest.local !== undefined
     const operation = call?.operation
