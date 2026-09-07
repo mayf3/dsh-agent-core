@@ -1,6 +1,19 @@
 ---
 spec_id: MOBILE_SESSION_HISTORY_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_at: 2026-09-07T13:39:00Z
+accepted_reviewed_head: 18638aab9461cbd00664778f3626377e5d1cd703
+accepted_normative_body_sha256: 29b756e132b6f3d3786acc2547e1b58d8b86bfd574005c746c1904f495fea06b
+acceptance_basis: >-
+  Explicit Owner exact-head acceptance ACCEPT_PR145_AUTHORITIES_AND_RESUME_IMPLEMENTATION
+  (2026-09-07) of both audited specs at PR #145 head ccbb5dc93ca6c6a9a3e262a90c61daac88864a94;
+  this spec byte-identical to independently FINAL_HEAD_RECHECKed head 18638aa
+  (audit chain ef8fe85 -> d602dc0 -> 208f9a9 -> d5e97bc -> 18638aa, READY_FOR_OWNER_ACCEPTANCE
+  = YES). Lifecycle-only transaction: NORMATIVE_BODY_DELTA = NONE.
+  accepted_normative_body_sha256 = SHA-256 of blob bytes after the closing frontmatter
+  '---' line at accepted_reviewed_head; equality at the acceptance head proves
+  NORMATIVE_BODY_DELTA = NONE.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts

@@ -1,6 +1,18 @@
 ---
 spec_id: PRODUCT_API_AUTHENTICATION_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_at: 2026-09-07T13:39:00Z
+accepted_reviewed_head: 208f9a9f75fa13faadf3e9deff2aab84039011c4
+accepted_normative_body_sha256: 8db1ecdbd693c744c8121c50a0d7b8c8f00eefae7d2e79681a086804cd8aadf2
+acceptance_basis: >-
+  Explicit Owner exact-head acceptance ACCEPT_PR145_AUTHORITIES_AND_RESUME_IMPLEMENTATION
+  (2026-09-07) of both audited specs at PR #145 head ccbb5dc93ca6c6a9a3e262a90c61daac88864a94;
+  this spec byte-identical to independently PASS-audited head 208f9a9 (blockers 1-5 +
+  cross-spec 12 closed; BLOCKERS = NONE / READY_FOR_INTEGRATION YES). Lifecycle-only
+  transaction: NORMATIVE_BODY_DELTA = NONE. accepted_normative_body_sha256 = SHA-256 of
+  blob bytes after the closing frontmatter '---' line at accepted_reviewed_head; equality
+  at the acceptance head proves NORMATIVE_BODY_DELTA = NONE.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
