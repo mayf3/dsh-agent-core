@@ -1,0 +1,9 @@
+== BATCH-3a FINAL verify Mon Sep  7 21:18:54 CST 2026 ==
+-- interactive:
+/opt/homebrew/opt/openjdk/bin/java
+openjdk version "26.0.2.1" 2026-08-18
+Launcher JVM:  26.0.2.1 (Homebrew 26.0.2.1)
+-- login:
+/opt/homebrew/opt/openjdk/bin/java
+openjdk version "26.0.2.1" 2026-08-18
+Mach-O 64-bit executable arm64

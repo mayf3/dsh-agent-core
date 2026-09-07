@@ -1,0 +1,31 @@
+== BATCH-3b: ngrok ARM cask Mon Sep  7 21:19:09 CST 2026 ==
+  resolved: /opt/homebrew/bin/ngrok
+  arch: Mach-O 64-bit executable arm64
+  version: ngrok version 3.39.11
+
+== dormant-candidate usage evidence (read-only) ==
+EXISTS: /Users/yanfenma/.R (mtime Mar  8 09:04:07 2025)
+absent: /Users/yanfenma/.Rhistory
+EXISTS: /Users/yanfenma/.cache/whisper (mtime Aug 13 23:50:28 2026)
+EXISTS: /Users/yanfenma/.cloudflared (mtime Nov 15 10:54:56 2025)
+absent: /Users/yanfenma/.config/cloudflared
+EXISTS: /Users/yanfenma/.gradle (mtime Aug 22 13:18:19 2026)
+absent: /Users/yanfenma/.ngrok2
+absent: /Users/yanfenma/.vercel
+EXISTS: /Users/yanfenma/.n8n (mtime Jan 11 08:02:34 2026)
+absent: /Users/yanfenma/.config/qwen
+EXISTS: /Users/yanfenma/.codebuddy (mtime Jul 16 08:18:16 2026)
+absent: /Users/yanfenma/.firecrawl
+EXISTS: /Users/yanfenma/.flyai (mtime Apr  2 22:31:40 2026)
+EXISTS: /Users/yanfenma/.clawdbot (mtime Feb  2 22:04:25 2026)
+-- R library last-write:
+total 0
+drwxr-xr-x  12 yanfenma  admin  384 Apr 14  2025 rlist
+drwxr-xr-x  16 yanfenma  admin  512 Apr 14  2025 XML
+-- npm-global family: which have config/state touched in last 30d:
+== whisper ARM final verify Mon Sep  7 21:40:50 CST 2026 ==
+  resolved: /opt/homebrew/bin/whisper
+  link-target arch: a /opt/homebrew/Cellar/openai-whisper/20250625_6/libexec/bin
+  shebang: #!/opt/homebrew/Cellar/openai-whisper/20250625_6/libexec/bin/python
+  interpreter arch: Mach-O 64-bit executable arm64
+  help smoke: usage: whisper [-h] [--model MODEL] [--model_dir MODEL_DIR] [--device DEVICE]

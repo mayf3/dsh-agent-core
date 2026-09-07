@@ -220,3 +220,2039 @@ To restart postgresql@16 after an upgrade:
   brew services restart postgresql@16
 Or, if you don't want/need a background service you can just run:
   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@16/bin/postgres -D /opt/homebrew/var/postgresql@16
+==> Downloading bottle manifests
+✔︎ Bottle Manifest openjdk (26.0.2.1)
+==> Would install 1 formula:
+openjdk
+==> Would upgrade 4 dependencies for openjdk:
+fontconfig
+pcre2
+glib
+harfbuzz
+==> Fetching downloads for: openjdk
+✔︎ Bottle Manifest pcre2 (10.48)
+✔︎ Bottle Manifest glib (2.88.3)
+✔︎ Bottle Manifest harfbuzz (14.4.0)
+✔︎ Bottle Manifest fontconfig (2.18.3)
+✔︎ Bottle fontconfig (2.18.3)
+✔︎ Bottle pcre2 (10.48)
+✔︎ Bottle harfbuzz (14.4.0)
+✔︎ Bottle glib (2.88.3)
+✔︎ Bottle openjdk (26.0.2.1)
+==> Installing dependencies for openjdk: fontconfig, glib and harfbuzz
+==> Upgrading openjdk dependency: fontconfig
+==> Pouring fontconfig--2.18.3.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/fontconfig/2.18.3: 102 files, 1.9MB
+==> Upgrading openjdk dependency: glib
+==> Pouring glib--2.88.3.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/glib/2.88.3: 501 files, 39.6MB
+==> Upgrading openjdk dependency: harfbuzz
+==> Pouring harfbuzz--14.4.0.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/harfbuzz/14.4.0: 96 files, 13.5MB
+==> Installing openjdk
+==> Pouring openjdk--26.0.2.1.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openjdk/26.0.2.1: 549 files, 397.6MB
+==> Caveats
+==> openjdk
+For the system Java wrappers to find this JDK, symlink it with
+  sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+
+openjdk is keg-only, which means it was not symlinked into /opt/homebrew,
+because macOS provides similar software and installing this software in
+parallel can cause all kinds of trouble.
+
+If you need to have openjdk first in your PATH, run:
+  echo 'export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"' >> ~/.zshrc
+
+For compilers to find openjdk you may need to set:
+  export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
+==> Would install 1 cask:
+ngrok
+==> Fetching downloads for: ngrok
+✔︎ Cask ngrok (3.39.11,dy27whJwwmb,a)
+==> Installing Cask ngrok
+==> Linking Binary 'ngrok' to '/opt/homebrew/bin/ngrok'
+🍺  ngrok was successfully installed!
+==> Caveats
+==> ngrok
+To install shell completions, add this to your profile:
+  if command -v ngrok &>/dev/null; then
+    eval "$(ngrok completion)"
+  fi
+==> Downloading bottle manifests
+✔︎ Bottle Manifest openai-whisper (20250625_6)
+==> Would install 1 formula:
+openai-whisper
+==> Would install 6 dependencies for openai-whisper:
+certifi
+llvm@22
+libyaml
+pybind11
+sleef
+pytorch
+==> Would upgrade 13 dependencies for openai-whisper:
+mpg123
+libvpx
+sdl3
+sdl2-compat
+x265
+ffmpeg
+abseil
+gcc
+libomp
+openblas
+numpy
+protobuf
+onnx
+==> Fetching downloads for: openai-whisper
+✔︎ Bottle Manifest certifi (2026.7.22)
+✔︎ Bottle Manifest mpg123 (1.33.7)
+✔︎ Bottle Manifest libvpx (1.17.0)
+✔︎ Bottle Manifest x265 (4.3)
+✔︎ Bottle Manifest llvm@22 (22.1.8)
+✔︎ Bottle Manifest libyaml (0.2.5)
+✔︎ Bottle Manifest gcc (16.2.0)
+✔︎ Bottle Manifest libomp (23.1.0)
+✔︎ Bottle Manifest openblas (0.3.34)
+✔︎ Bottle Manifest protobuf (36.1)
+✔︎ Bottle certifi (2026.7.22)
+✔︎ Bottle Manifest sdl2-compat (2.32.72)
+✔︎ Bottle Manifest sdl3 (3.4.16)
+✔︎ Bottle Manifest numpy (2.5.2)
+✔︎ Bottle Manifest abseil (20260817.0)
+✔︎ Bottle Manifest ffmpeg (9.0.1_1)
+✔︎ Bottle Manifest pybind11 (3.1.0)
+✔︎ Bottle libyaml (0.2.5)
+✔︎ Bottle Manifest onnx (1.22.0_4)
+✔︎ Bottle Manifest sleef (3.9.0)
+✔︎ Bottle Manifest pytorch (2.14.0)
+✔︎ Bottle pybind11 (3.1.0)
+✔︎ Bottle mpg123 (1.33.7)
+✔︎ Bottle libomp (23.1.0)
+✔︎ Bottle sdl2-compat (2.32.72)
+✔︎ Bottle sleef (3.9.0)
+✔︎ Bottle sdl3 (3.4.16)
+✔︎ Bottle onnx (1.22.0_4)
+✔︎ Bottle libvpx (1.17.0)
+✔︎ Bottle protobuf (36.1)
+✔︎ Bottle abseil (20260817.0)
+✔︎ Bottle openai-whisper (20250625_6)
+✔︎ Bottle numpy (2.5.2)
+✔︎ Bottle openblas (0.3.34)
+✔︎ Bottle x265 (4.3)
+✔︎ Bottle ffmpeg (9.0.1_1)
+✔︎ Bottle pytorch (2.14.0)
+✔︎ Bottle llvm@22 (22.1.8)
+✘ Bottle gcc (16.2.0)
+Error: Failed to download resource "gcc"
+Download failed: https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:add0ca0614da1d0047af8a71be683be40957096851f4c98ccd89e95b0c4f4fde
+curl: (18) Transferred a partial file
+==> Installing dependencies for openai-whisper: certifi, mpg123, sdl3, ffmpeg, llvm@22, abseil, libyaml, openblas, numpy, protobuf, onnx, pybind11, sleef and pytorch
+==> Installing openai-whisper dependency: certifi
+Error: The `brew link` step did not complete successfully
+==> Pouring certifi--2026.7.22.all.bottle.tar.gz
+The formula built, but is not symlinked into /opt/homebrew
+Could not symlink lib/python3.13/site-packages/certifi/__init__.py
+Target /opt/homebrew/lib/python3.13/site-packages/certifi/__init__.py
+already exists. You may want to remove it:
+  rm '/opt/homebrew/lib/python3.13/site-packages/certifi/__init__.py'
+
+To force the link and overwrite all conflicting files:
+  brew link --overwrite certifi
+
+To list all files that would be deleted:
+  brew link --overwrite certifi --dry-run
+
+Possible conflicting files are:
+/opt/homebrew/lib/python3.13/site-packages/certifi/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/certifi/__main__.py
+/opt/homebrew/lib/python3.13/site-packages/certifi/cacert.pem
+/opt/homebrew/lib/python3.13/site-packages/certifi/core.py
+/opt/homebrew/lib/python3.13/site-packages/certifi/py.typed
+/opt/homebrew/lib/python3.14/site-packages/certifi/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/certifi/__main__.py
+/opt/homebrew/lib/python3.14/site-packages/certifi/cacert.pem
+/opt/homebrew/lib/python3.14/site-packages/certifi/core.py
+/opt/homebrew/lib/python3.14/site-packages/certifi/py.typed
+/opt/homebrew/lib/python3.14/site-packages/certifi/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/certifi/tests/test_certify.py
+/opt/homebrew/lib/python3.14/site-packages/certifi-2026.7.22.dist-info/INSTALLER
+/opt/homebrew/lib/python3.14/site-packages/certifi-2026.7.22.dist-info/METADATA
+/opt/homebrew/lib/python3.14/site-packages/certifi-2026.7.22.dist-info/WHEEL
+/opt/homebrew/lib/python3.14/site-packages/certifi-2026.7.22.dist-info/licenses/LICENSE
+/opt/homebrew/lib/python3.14/site-packages/certifi-2026.7.22.dist-info/top_level.txt
+==> Summary
+🍺  /opt/homebrew/Cellar/certifi/2026.7.22: 44 files, 21.9KB
+==> Upgrading openai-whisper dependency: mpg123
+==> Pouring mpg123--1.33.7.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/mpg123/1.33.7: 34 files, 1.9MB
+==> Upgrading openai-whisper dependency: sdl3
+==> Pouring sdl3--3.4.16.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/sdl3/3.4.16: 103 files, 6.3MB
+==> Upgrading openai-whisper dependency: ffmpeg
+==> Upgrading ffmpeg dependency: x265
+==> Pouring x265--4.3.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/x265/4.3: 12 files, 17.3MB
+==> Installing ffmpeg
+==> Pouring ffmpeg--9.0.1_1.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/ffmpeg/9.0.1_1: 290 files, 53.8MB
+==> Installing openai-whisper dependency: llvm@22
+==> Pouring llvm@22--22.1.8.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/llvm@22/22.1.8: 9,059 files, 1.6GB
+==> Upgrading openai-whisper dependency: abseil
+==> Pouring abseil--20260817.0.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/abseil/20260817.0: 832 files, 11.8MB
+==> Installing openai-whisper dependency: libyaml
+==> Pouring libyaml--0.2.5.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libyaml/0.2.5: 11 files, 342.0KB
+==> Upgrading openai-whisper dependency: openblas
+==> Pouring openblas--0.3.34.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openblas/0.3.34: 30 files, 40.4MB
+==> Upgrading openai-whisper dependency: numpy
+Error: The `brew link` step did not complete successfully
+==> Pouring numpy--2.5.2.arm64_tahoe.bottle.tar.gz
+The formula built, but is not symlinked into /opt/homebrew
+Could not symlink bin/f2py
+Target /opt/homebrew/bin/f2py
+already exists. You may want to remove it:
+  rm '/opt/homebrew/bin/f2py'
+
+To force the link and overwrite all conflicting files:
+  brew link --overwrite numpy
+
+To list all files that would be deleted:
+  brew link --overwrite numpy --dry-run
+
+Possible conflicting files are:
+/opt/homebrew/bin/f2py
+/opt/homebrew/bin/numpy-config
+/opt/homebrew/lib/python3.13/site-packages/numpy/__config__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/__config__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/__init__.cython-30.pxd
+/opt/homebrew/lib/python3.13/site-packages/numpy/__init__.pxd
+/opt/homebrew/lib/python3.13/site-packages/numpy/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_array_api_info.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_array_api_info.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_configtool.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_configtool.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_add_newdocs.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_add_newdocs.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_add_newdocs_scalars.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_add_newdocs_scalars.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_asarray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_asarray.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_dtype.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_dtype.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_dtype_ctypes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_dtype_ctypes.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_exceptions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_exceptions.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_internal.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_internal.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_methods.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_methods.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_multiarray_tests.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_multiarray_umath.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_operand_flag_tests.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_rational_tests.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_simd.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_simd.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_string_helpers.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_string_helpers.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_struct_ufunc_tests.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_type_aliases.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_type_aliases.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_ufunc_config.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_ufunc_config.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_umath_tests.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/_umath_tests.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/arrayprint.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/arrayprint.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/cversions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/defchararray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/defchararray.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/einsumfunc.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/einsumfunc.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/fromnumeric.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/fromnumeric.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/function_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/function_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/getlimits.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/getlimits.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/__multiarray_api.c
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/__multiarray_api.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/__ufunc_api.c
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/__ufunc_api.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/_neighborhood_iterator_imp.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/_numpyconfig.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/_public_dtype_api_table.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/arrayobject.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/arrayscalars.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/dtype_api.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/halffloat.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/ndarrayobject.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/ndarraytypes.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_2_compat.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_2_complexcompat.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_3kcompat.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_common.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_cpu.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_endian.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_math.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_no_deprecated_api.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/npy_os.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/numpyconfig.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/random/LICENSE.txt
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/random/bitgen.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/random/distributions.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/random/libdivide.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/ufuncobject.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/include/numpy/utils.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/lib/libnpymath.a
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/lib/pkgconfig/numpy.pc
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/memmap.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/memmap.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/multiarray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/multiarray.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/numeric.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/numeric.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/numerictypes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/numerictypes.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/overrides.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/overrides.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/printoptions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/printoptions.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/records.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/records.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/shape_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/shape_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/strings.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/strings.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/_locales.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/_natype.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/astype_copy.pkl
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/generate_umath_validation_data.cpp
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/recarray_from_file.fits
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-README.txt
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-arccos.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-arccosh.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-arcsin.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-arcsinh.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-arctan.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-arctanh.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-cbrt.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-cos.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-cosh.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-exp.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-exp2.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-expm1.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-log.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-log10.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-log1p.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-log2.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-sin.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-sinh.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-tan.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/data/umath-validation-set-tanh.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/examples/cython/checks.pyx
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/examples/cython/meson.build
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/examples/cython/setup.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/examples/limited_api/meson.build
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/examples/limited_api/setup.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test__exceptions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_abc.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_api.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_argparse.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_array_api_info.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_array_coercion.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_array_interface.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_arraymethod.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_arrayobject.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_arrayprint.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_casting_floatingpoint_errors.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_casting_unittests.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_conversion_utils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_cpu_dispatcher.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_cpu_features.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_custom_dtypes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_cython.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_datetime.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_defchararray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_deprecations.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_dlpack.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_dtype.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_einsum.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_errstate.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_extint128.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_finfo.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_function_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_getlimits.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_half.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_hashtable.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_indexerrors.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_indexing.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_item_selection.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_limited_api.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_longdouble.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_mem_overlap.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_mem_policy.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_memmap.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_multiarray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_multiprocessing.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_multithreading.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_nditer.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_nep50_promotions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_numeric.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_numerictypes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_overrides.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_print.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_protocols.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_records.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_regression.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_scalar_ctors.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_scalar_methods.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_scalarbuffer.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_scalarinherit.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_scalarmath.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_scalarprint.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_shape_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_simd.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_simd_module.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_stringdtype.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_strings.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_ufunc.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_umath.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_umath_accuracy.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_umath_complex.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/tests/test_unicode.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/umath.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_core/umath.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_distributor_init.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_distributor_init.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_expired_attrs_2_0.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_expired_attrs_2_0.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_globals.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_globals.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pyinstaller/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pyinstaller/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pyinstaller/hook-numpy.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pyinstaller/hook-numpy.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pyinstaller/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pyinstaller/tests/pyinstaller-smoke.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pyinstaller/tests/test_pyinstaller.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pytesttester.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_pytesttester.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_add_docstring.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_array_like.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_char_codes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_dtype_like.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_extended_precision.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_nbit.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_nbit_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_nbit_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_nested_sequence.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_scalars.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_shape.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_ufunc.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_typing/_ufunc.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_utils/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_utils/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_utils/_inspect.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_utils/_inspect.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/_utils/_pep440.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/_utils/_pep440.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/char/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/char/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/conftest.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/_dtype.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/_dtype.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/_dtype_ctypes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/_dtype_ctypes.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/_internal.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/_multiarray_umath.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/_utils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/arrayprint.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/defchararray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/einsumfunc.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/fromnumeric.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/function_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/getlimits.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/multiarray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/numeric.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/numerictypes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/overrides.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/overrides.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/records.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/shape_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/core/umath.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ctypeslib/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ctypeslib/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/ctypeslib/_ctypeslib.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ctypeslib/_ctypeslib.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/doc/ufuncs.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/dtypes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/dtypes.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/exceptions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/exceptions.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/__main__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/__version__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/__version__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_backends/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_backends/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_backends/_backend.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_backends/_backend.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_backends/_meson.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_backends/_meson.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_backends/meson.build.template
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_isocbind.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_isocbind.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_src_pyf.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/_src_pyf.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/auxfuncs.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/auxfuncs.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/capi_maps.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/capi_maps.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/cb_rules.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/cb_rules.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/cfuncs.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/cfuncs.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/common_rules.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/common_rules.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/crackfortran.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/crackfortran.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/diagnose.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/diagnose.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/f2py2e.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/f2py2e.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/f90mod_rules.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/f90mod_rules.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/func2subr.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/func2subr.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/rules.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/rules.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/setup.cfg
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/src/fortranobject.c
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/src/fortranobject.h
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/symbolic.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/symbolic.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/abstract_interface/foo.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/abstract_interface/gh18403_mod.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/array_from_pyobj/wrapmodule.c
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/assumed_shape/.f2py_f2cmap
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/assumed_shape/foo_free.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/assumed_shape/foo_mod.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/assumed_shape/foo_use.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/assumed_shape/precision.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/block_docstring/foo.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/callback/foo.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/callback/gh17797.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/callback/gh18335.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/callback/gh25211.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/callback/gh25211.pyf
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/callback/gh26681.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/cli/gh_22819.pyf
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/cli/hi77.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/cli/hiworld.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/common/block.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/common/gh19161.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/accesstype.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/common_with_division.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/data_common.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/data_multiplier.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/data_stmts.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/data_with_comments.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/foo_deps.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh15035.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh17859.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh22648.pyf
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh23533.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh23598.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh23598Warn.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh23879.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh27697.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/gh2848.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/operators.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/privatemod.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/publicmod.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/pubprivmod.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/crackfortran/unicode_comment.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/f2cmap/.f2py_f2cmap
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/f2cmap/isoFortranEnvMap.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/isocintrin/isoCtests.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/kind/foo.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/mixed/foo.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/mixed/foo_fixed.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/mixed/foo_free.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/modules/gh25337/data.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/modules/gh25337/use_data.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/modules/gh26920/two_mods_with_no_public_entities.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/modules/gh26920/two_mods_with_one_public_routine.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/modules/module_data_docstring.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/modules/use_modules.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/negative_bounds/issue_20853.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/parameter/constant_array.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/parameter/constant_both.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/parameter/constant_compound.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/parameter/constant_integer.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/parameter/constant_non_compound.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/parameter/constant_real.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/quoted_character/foo.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/AB.inc
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/assignOnlyModule.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/datonly.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/f77comments.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/f77fixedform.f95
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/f90continuation.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/incfile.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/inout.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/lower_f2py_fortran.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/regression/mod_derived_types.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_character/foo77.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_character/foo90.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_complex/foo77.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_complex/foo90.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_integer/foo77.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_integer/foo90.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_logical/foo77.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_logical/foo90.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_real/foo77.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/return_real/foo90.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/routines/funcfortranname.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/routines/funcfortranname.pyf
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/routines/subrout.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/routines/subrout.pyf
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/size/foo.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/char.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/fixed_string.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/gh24008.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/gh24662.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/gh25286.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/gh25286.pyf
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/gh25286_bc.pyf
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/scalar_string.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/string/string.f
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/src/value_attrspec/gh21665.f90
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_abstract_interface.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_array_from_pyobj.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_assumed_shape.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_block_docstring.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_callback.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_capi_maps.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_character.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_common.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_crackfortran.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_data.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_docs.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_f2cmap.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_f2py2e.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_isoc.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_kind.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_mixed.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_modules.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_parameter.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_pyf_src.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_quoted_character.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_regression.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_return_character.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_return_complex.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_return_integer.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_return_logical.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_return_real.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_routines.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_semicolon_split.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_size.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_string.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_symbolic.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/test_value_attrspec.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/tests/util.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/use_rules.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/f2py/use_rules.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/_helper.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/_helper.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/_pocketfft.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/_pocketfft.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/_pocketfft_umath.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/tests/test_helper.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/fft/tests/test_pocketfft.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_array_utils_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_array_utils_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_arraypad_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_arraypad_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_arraysetops_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_arraysetops_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_arrayterator_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_arrayterator_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_datasource.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_datasource.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_format_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_format_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_function_base_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_function_base_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_histograms_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_histograms_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_index_tricks_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_index_tricks_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_iotools.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_iotools.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_nanfunctions_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_nanfunctions_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_npyio_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_npyio_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_polynomial_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_polynomial_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_scimath_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_scimath_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_shape_base_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_shape_base_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_stride_tricks_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_stride_tricks_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_twodim_base_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_twodim_base_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_type_check_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_type_check_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_ufunclike_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_ufunclike_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_user_array_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_user_array_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_utils_impl.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_utils_impl.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_version.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/_version.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/array_utils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/array_utils.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/format.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/format.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/introspect.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/introspect.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/mixins.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/mixins.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/npyio.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/npyio.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/recfunctions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/recfunctions.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/scimath.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/scimath.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/stride_tricks.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/stride_tricks.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/data/py2-np0-objarr.npy
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/data/py2-objarr.npy
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/data/py2-objarr.npz
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/data/py3-objarr.npy
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/data/py3-objarr.npz
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/data/python3.npy
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/data/win64python2.npy
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test__datasource.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test__iotools.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test__version.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_array_utils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_arraypad.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_arraysetops.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_arrayterator.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_format.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_function_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_histograms.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_index_tricks.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_io.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_loadtxt.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_mixins.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_nanfunctions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_packbits.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_polynomial.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_recfunctions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_regression.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_shape_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_stride_tricks.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_twodim_base.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_type_check.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_ufunclike.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/tests/test_utils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/user_array.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/lib/user_array.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/_linalg.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/_linalg.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/_umath_linalg.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/_umath_linalg.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/lapack_lite.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/lapack_lite.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/tests/test_deprecations.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/tests/test_linalg.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/linalg/tests/test_regression.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/API_CHANGES.txt
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/LICENSE
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/README.rst
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/core.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/core.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/extras.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/extras.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/mrecords.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/mrecords.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/test_arrayobject.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/test_core.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/test_deprecations.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/test_extras.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/test_mrecords.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/test_old_ma.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/test_regression.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/tests/test_subclassing.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/testutils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/ma/testutils.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/matlib.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matlib.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/defmatrix.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/defmatrix.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/tests/test_defmatrix.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/tests/test_interaction.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/tests/test_masked_matrix.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/tests/test_matrix_linalg.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/tests/test_multiarray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/tests/test_numeric.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/matrixlib/tests/test_regression.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/_polybase.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/_polybase.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/_polytypes.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/chebyshev.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/chebyshev.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/hermite.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/hermite.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/hermite_e.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/hermite_e.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/laguerre.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/laguerre.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/legendre.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/legendre.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/polynomial.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/polynomial.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/polyutils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/polyutils.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_chebyshev.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_classes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_hermite.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_hermite_e.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_laguerre.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_legendre.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_polynomial.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_polyutils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_printing.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/polynomial/tests/test_symbol.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/py.typed
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/LICENSE.md
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/__init__.pxd
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_bounded_integers.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_bounded_integers.pxd
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_bounded_integers.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_common.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_common.pxd
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_common.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_examples/cffi/extending.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_examples/cffi/parse.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_examples/cython/extending.pyx
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_examples/cython/extending_distributions.pyx
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_examples/cython/meson.build
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_examples/numba/extending.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_examples/numba/extending_distributions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_generator.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_generator.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_mt19937.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_mt19937.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_pcg64.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_pcg64.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_philox.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_philox.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_pickle.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_pickle.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_sfc64.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/_sfc64.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/bit_generator.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/bit_generator.pxd
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/bit_generator.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/c_distributions.pxd
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/lib/libnpyrandom.a
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/mtrand.cpython-313-darwin.so
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/mtrand.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/generator_pcg64_np121.pkl.gz
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/generator_pcg64_np126.pkl.gz
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/mt19937-testset-1.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/mt19937-testset-2.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/pcg64-testset-1.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/pcg64-testset-2.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/pcg64dxsm-testset-1.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/pcg64dxsm-testset-2.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/philox-testset-1.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/philox-testset-2.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/sfc64-testset-1.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/sfc64-testset-2.csv
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/data/sfc64_np126.pkl.gz
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_direct.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_extending.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_generator_mt19937.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_generator_mt19937_regressions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_random.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_randomstate.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_randomstate_regression.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_regression.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_seed_sequence.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/random/tests/test_smoke.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/rec/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/rec/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/strings/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/strings/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/_private/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/_private/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/_private/extbuild.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/_private/extbuild.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/_private/utils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/_private/utils.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/overrides.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/overrides.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/print_coercion_tables.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/print_coercion_tables.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/testing/tests/test_utils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test__all__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_configtool.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_ctypeslib.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_lazyloading.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_matlib.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_numpy_config.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_numpy_version.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_public_api.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_reloading.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_scripts.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/tests/test_warnings.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/__init__.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/mypy_plugin.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/__init__.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/arithmetic.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/array_constructors.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/array_like.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/array_pad.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/arrayprint.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/arrayterator.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/bitwise_ops.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/char.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/chararray.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/comparisons.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/constants.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/datasource.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/dtype.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/einsumfunc.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/flatiter.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/fromnumeric.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/histograms.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/index_tricks.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/lib_function_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/lib_polynomial.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/lib_utils.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/lib_version.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/linalg.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/ma.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/memmap.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/modules.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/multiarray.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/ndarray.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/ndarray_misc.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/nditer.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/nested_sequence.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/npyio.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/numerictypes.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/random.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/rec.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/scalars.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/shape.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/shape_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/stride_tricks.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/strings.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/testing.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/twodim_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/type_check.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/ufunc_config.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/ufunclike.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/ufuncs.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/fail/warnings_and_errors.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/misc/extended_precision.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/mypy.ini
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/arithmetic.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/array_constructors.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/array_like.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/arrayprint.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/arrayterator.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/bitwise_ops.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/comparisons.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/dtype.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/einsumfunc.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/flatiter.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/fromnumeric.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/index_tricks.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/lib_user_array.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/lib_utils.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/lib_version.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/literal.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/ma.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/mod.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/modules.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/multiarray.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/ndarray_conversion.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/ndarray_misc.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/ndarray_shape_manipulation.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/nditer.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/numeric.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/numerictypes.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/random.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/recfunctions.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/scalars.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/shape.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/simple.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/ufunc_config.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/ufunclike.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/ufuncs.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/pass/warnings_and_errors.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/arithmetic.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/array_api_info.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/array_constructors.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/arraypad.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/arrayprint.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/arraysetops.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/arrayterator.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/bitwise_ops.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/char.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/chararray.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/comparisons.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/constants.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ctypeslib.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/datasource.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/dtype.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/einsumfunc.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/emath.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/fft.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/flatiter.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/fromnumeric.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/getlimits.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/histograms.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/index_tricks.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/lib_function_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/lib_polynomial.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/lib_utils.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/lib_version.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/linalg.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ma.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/matrix.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/memmap.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/mod.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/modules.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/multiarray.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/nbit_base_example.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ndarray_assignability.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ndarray_conversion.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ndarray_misc.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ndarray_shape_manipulation.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/nditer.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/nested_sequence.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/npyio.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/numeric.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/numerictypes.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/polynomial_polybase.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/polynomial_polyutils.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/polynomial_series.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/random.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/rec.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/scalars.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/shape.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/shape_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/stride_tricks.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/strings.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/testing.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/twodim_base.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/type_check.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ufunc_config.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ufunclike.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/ufuncs.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/data/reveal/warnings_and_errors.pyi
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/test_isfile.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/test_runtime.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/typing/tests/test_typing.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/version.py
+/opt/homebrew/lib/python3.13/site-packages/numpy/version.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/__config__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/__config__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd
+/opt/homebrew/lib/python3.14/site-packages/numpy/__init__.pxd
+/opt/homebrew/lib/python3.14/site-packages/numpy/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_array_api_info.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_array_api_info.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_configtool.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_configtool.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_add_newdocs.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_add_newdocs.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_add_newdocs_scalars.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_add_newdocs_scalars.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_asarray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_asarray.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_dtype.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_dtype.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_dtype_ctypes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_dtype_ctypes.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_exceptions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_exceptions.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_internal.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_internal.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_methods.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_methods.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_multiarray_tests.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_multiarray_umath.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_operand_flag_tests.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_rational_tests.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_simd.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_simd.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_string_helpers.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_string_helpers.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_struct_ufunc_tests.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_type_aliases.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_type_aliases.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_ufunc_config.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_ufunc_config.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_umath_tests.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_umath_tests.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/arrayprint.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/arrayprint.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/cversions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/defchararray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/defchararray.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/einsumfunc.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/einsumfunc.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/fromnumeric.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/fromnumeric.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/function_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/function_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/getlimits.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/getlimits.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/__multiarray_api.c
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/__multiarray_api.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/__ufunc_api.c
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/__ufunc_api.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/_neighborhood_iterator_imp.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/_numpyconfig.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/_public_dtype_api_table.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/arrayobject.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/arrayscalars.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/dtype_api.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/halffloat.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/ndarrayobject.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/ndarraytypes.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_2_compat.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_2_complexcompat.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_3kcompat.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_common.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_cpu.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_endian.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_math.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_no_deprecated_api.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/npy_os.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/numpyconfig.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/random/LICENSE.txt
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/random/bitgen.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/random/distributions.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/random/libdivide.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/ufuncobject.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/include/numpy/utils.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/lib/libnpymath.a
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/lib/pkgconfig/numpy.pc
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/memmap.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/memmap.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/multiarray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/multiarray.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/numeric.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/numeric.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/numerictypes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/numerictypes.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/overrides.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/overrides.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/printoptions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/printoptions.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/records.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/records.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/shape_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/shape_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/strings.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/strings.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/_locales.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/_natype.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/astype_copy.pkl
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/generate_umath_validation_data.cpp
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/recarray_from_file.fits
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-README.txt
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-arccos.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-arccosh.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-arcsin.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-arcsinh.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-arctan.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-arctanh.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-cbrt.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-cos.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-cosh.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-exp.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-exp2.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-expm1.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-log.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-log10.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-log1p.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-log2.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-sin.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-sinh.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-tan.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/data/umath-validation-set-tanh.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/examples/cython/checks.pyx
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/examples/cython/meson.build
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/examples/cython/setup.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/examples/limited_api/meson.build
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/examples/limited_api/setup.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test__exceptions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_abc.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_api.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_argparse.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_array_api_info.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_array_coercion.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_array_interface.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_arraymethod.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_arrayobject.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_arrayprint.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_casting_floatingpoint_errors.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_casting_unittests.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_conversion_utils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_cpu_dispatcher.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_cpu_features.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_custom_dtypes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_cython.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_datetime.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_defchararray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_deprecations.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_dlpack.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_dtype.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_einsum.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_errstate.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_extint128.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_finfo.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_function_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_getlimits.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_half.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_hashtable.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_indexerrors.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_indexing.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_item_selection.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_limited_api.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_longdouble.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_mem_overlap.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_mem_policy.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_memmap.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_multiarray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_multiprocessing.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_multithreading.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_nditer.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_nep50_promotions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_numeric.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_numerictypes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_overrides.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_print.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_protocols.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_records.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_regression.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_scalar_ctors.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_scalar_methods.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_scalarbuffer.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_scalarinherit.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_scalarmath.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_scalarprint.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_shape_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_simd.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_simd_module.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_stringdtype.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_strings.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_ufunc.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_umath.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_umath_accuracy.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_umath_complex.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/tests/test_unicode.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/umath.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/umath.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_distributor_init.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_distributor_init.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_expired_attrs_2_0.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_expired_attrs_2_0.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_globals.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_globals.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pyinstaller/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pyinstaller/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pyinstaller/hook-numpy.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pyinstaller/hook-numpy.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pyinstaller/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pyinstaller/tests/pyinstaller-smoke.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pyinstaller/tests/test_pyinstaller.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pytesttester.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_pytesttester.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_add_docstring.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_array_like.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_char_codes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_dtype_like.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_extended_precision.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_nbit.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_nbit_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_nbit_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_nested_sequence.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_scalars.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_shape.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_ufunc.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_typing/_ufunc.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_utils/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_utils/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_utils/_inspect.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_utils/_inspect.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/_utils/_pep440.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/_utils/_pep440.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/char/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/char/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/conftest.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/_dtype.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/_dtype.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/_dtype_ctypes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/_dtype_ctypes.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/_internal.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/_multiarray_umath.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/_utils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/arrayprint.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/defchararray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/einsumfunc.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/fromnumeric.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/function_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/getlimits.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/multiarray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/numeric.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/numerictypes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/overrides.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/overrides.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/records.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/shape_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/core/umath.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ctypeslib/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ctypeslib/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/ctypeslib/_ctypeslib.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ctypeslib/_ctypeslib.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/doc/ufuncs.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/dtypes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/dtypes.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/exceptions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/exceptions.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/__main__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/__version__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/__version__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_backends/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_backends/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_backends/_backend.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_backends/_backend.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_backends/_meson.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_backends/_meson.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_backends/meson.build.template
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_isocbind.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_isocbind.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_src_pyf.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/_src_pyf.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/auxfuncs.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/auxfuncs.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/capi_maps.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/capi_maps.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/cb_rules.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/cb_rules.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/cfuncs.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/cfuncs.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/common_rules.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/common_rules.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/crackfortran.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/crackfortran.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/diagnose.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/diagnose.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/f2py2e.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/f2py2e.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/f90mod_rules.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/f90mod_rules.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/func2subr.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/func2subr.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/rules.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/rules.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/setup.cfg
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/src/fortranobject.c
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/src/fortranobject.h
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/symbolic.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/symbolic.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/abstract_interface/foo.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/abstract_interface/gh18403_mod.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/array_from_pyobj/wrapmodule.c
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/assumed_shape/.f2py_f2cmap
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/assumed_shape/foo_free.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/assumed_shape/foo_mod.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/assumed_shape/foo_use.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/assumed_shape/precision.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/block_docstring/foo.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/callback/foo.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/callback/gh17797.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/callback/gh18335.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/callback/gh25211.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/callback/gh25211.pyf
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/callback/gh26681.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/cli/gh_22819.pyf
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/cli/hi77.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/cli/hiworld.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/common/block.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/common/gh19161.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/accesstype.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/common_with_division.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/data_common.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/data_multiplier.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/data_stmts.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/data_with_comments.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/foo_deps.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh15035.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh17859.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh22648.pyf
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh23533.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh23598.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh23598Warn.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh23879.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh27697.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/gh2848.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/operators.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/privatemod.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/publicmod.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/pubprivmod.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/crackfortran/unicode_comment.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/f2cmap/.f2py_f2cmap
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/f2cmap/isoFortranEnvMap.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/isocintrin/isoCtests.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/kind/foo.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/mixed/foo.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/mixed/foo_fixed.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/mixed/foo_free.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/modules/gh25337/data.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/modules/gh25337/use_data.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/modules/gh26920/two_mods_with_no_public_entities.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/modules/gh26920/two_mods_with_one_public_routine.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/modules/module_data_docstring.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/modules/use_modules.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/negative_bounds/issue_20853.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/parameter/constant_array.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/parameter/constant_both.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/parameter/constant_compound.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/parameter/constant_integer.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/parameter/constant_non_compound.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/parameter/constant_real.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/quoted_character/foo.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/AB.inc
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/assignOnlyModule.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/datonly.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/f77comments.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/f77fixedform.f95
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/f90continuation.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/incfile.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/inout.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/lower_f2py_fortran.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/regression/mod_derived_types.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_character/foo77.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_character/foo90.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_complex/foo77.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_complex/foo90.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_integer/foo77.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_integer/foo90.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_logical/foo77.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_logical/foo90.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_real/foo77.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/return_real/foo90.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/routines/funcfortranname.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/routines/funcfortranname.pyf
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/routines/subrout.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/routines/subrout.pyf
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/size/foo.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/char.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/fixed_string.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/gh24008.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/gh24662.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/gh25286.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/gh25286.pyf
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/gh25286_bc.pyf
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/scalar_string.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/string/string.f
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/src/value_attrspec/gh21665.f90
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_abstract_interface.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_array_from_pyobj.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_assumed_shape.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_block_docstring.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_callback.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_capi_maps.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_character.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_common.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_crackfortran.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_data.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_docs.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_f2cmap.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_f2py2e.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_isoc.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_kind.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_mixed.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_modules.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_parameter.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_pyf_src.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_quoted_character.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_regression.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_return_character.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_return_complex.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_return_integer.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_return_logical.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_return_real.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_routines.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_semicolon_split.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_size.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_string.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_symbolic.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/test_value_attrspec.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/tests/util.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/use_rules.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/f2py/use_rules.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/_helper.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/_helper.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/_pocketfft.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/_pocketfft.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/_pocketfft_umath.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/tests/test_helper.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/fft/tests/test_pocketfft.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_array_utils_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_array_utils_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_arraypad_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_arraypad_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_arraysetops_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_arraysetops_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_arrayterator_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_arrayterator_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_datasource.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_datasource.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_format_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_format_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_function_base_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_function_base_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_histograms_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_histograms_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_index_tricks_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_index_tricks_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_iotools.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_iotools.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_nanfunctions_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_nanfunctions_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_npyio_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_npyio_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_polynomial_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_polynomial_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_scimath_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_scimath_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_shape_base_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_shape_base_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_stride_tricks_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_stride_tricks_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_twodim_base_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_twodim_base_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_type_check_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_type_check_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_ufunclike_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_ufunclike_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_user_array_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_user_array_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_utils_impl.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_utils_impl.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_version.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_version.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/array_utils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/array_utils.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/format.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/format.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/introspect.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/introspect.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/mixins.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/mixins.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/npyio.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/npyio.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/recfunctions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/recfunctions.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/scimath.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/scimath.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/stride_tricks.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/stride_tricks.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/data/py2-np0-objarr.npy
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/data/py2-objarr.npy
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/data/py2-objarr.npz
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/data/py3-objarr.npy
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/data/py3-objarr.npz
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/data/python3.npy
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/data/win64python2.npy
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test__datasource.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test__iotools.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test__version.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_array_utils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_arraypad.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_arraysetops.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_arrayterator.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_format.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_function_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_histograms.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_index_tricks.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_io.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_loadtxt.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_mixins.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_nanfunctions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_packbits.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_polynomial.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_recfunctions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_regression.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_shape_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_stride_tricks.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_twodim_base.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_type_check.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_ufunclike.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/tests/test_utils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/user_array.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/lib/user_array.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/_linalg.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/_linalg.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/_umath_linalg.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/_umath_linalg.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/lapack_lite.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/lapack_lite.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/tests/test_deprecations.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/tests/test_linalg.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/linalg/tests/test_regression.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/API_CHANGES.txt
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/LICENSE
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/README.rst
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/core.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/core.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/extras.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/extras.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/mrecords.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/mrecords.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/test_arrayobject.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/test_core.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/test_deprecations.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/test_extras.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/test_mrecords.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/test_old_ma.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/test_regression.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/tests/test_subclassing.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/testutils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/ma/testutils.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/matlib.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matlib.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/defmatrix.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/defmatrix.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/tests/test_defmatrix.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/tests/test_interaction.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/tests/test_masked_matrix.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/tests/test_matrix_linalg.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/tests/test_multiarray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/tests/test_numeric.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/matrixlib/tests/test_regression.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/_polybase.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/_polybase.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/_polytypes.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/chebyshev.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/chebyshev.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/hermite.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/hermite.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/hermite_e.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/hermite_e.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/laguerre.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/laguerre.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/legendre.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/legendre.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/polynomial.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/polynomial.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/polyutils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/polyutils.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_chebyshev.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_classes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_hermite.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_hermite_e.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_laguerre.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_legendre.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_polynomial.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_polyutils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_printing.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/polynomial/tests/test_symbol.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/py.typed
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/LICENSE.md
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/__init__.pxd
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_bounded_integers.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_bounded_integers.pxd
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_bounded_integers.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_common.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_common.pxd
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_common.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_examples/cffi/extending.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_examples/cffi/parse.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_examples/cython/extending.pyx
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_examples/cython/extending_distributions.pyx
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_examples/cython/meson.build
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_examples/numba/extending.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_examples/numba/extending_distributions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_generator.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_generator.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_mt19937.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_mt19937.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_pcg64.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_pcg64.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_philox.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_philox.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_pickle.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_pickle.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_sfc64.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/_sfc64.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/bit_generator.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/bit_generator.pxd
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/bit_generator.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/c_distributions.pxd
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/lib/libnpyrandom.a
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/mtrand.cpython-314-darwin.so
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/mtrand.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/generator_pcg64_np121.pkl.gz
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/generator_pcg64_np126.pkl.gz
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/mt19937-testset-1.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/mt19937-testset-2.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/pcg64-testset-1.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/pcg64-testset-2.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/pcg64dxsm-testset-1.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/pcg64dxsm-testset-2.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/philox-testset-1.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/philox-testset-2.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/sfc64-testset-1.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/sfc64-testset-2.csv
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/data/sfc64_np126.pkl.gz
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_direct.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_extending.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_generator_mt19937.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_generator_mt19937_regressions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_random.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_randomstate.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_randomstate_regression.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_regression.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_seed_sequence.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/random/tests/test_smoke.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/rec/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/rec/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/strings/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/strings/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/_private/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/_private/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/_private/extbuild.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/_private/extbuild.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/_private/utils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/_private/utils.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/overrides.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/overrides.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/print_coercion_tables.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/print_coercion_tables.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/testing/tests/test_utils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test__all__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_configtool.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_ctypeslib.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_lazyloading.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_matlib.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_numpy_config.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_numpy_version.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_public_api.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_reloading.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_scripts.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/tests/test_warnings.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/__init__.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/mypy_plugin.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/__init__.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/arithmetic.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/array_constructors.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/array_like.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/array_pad.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/arrayprint.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/arrayterator.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/bitwise_ops.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/char.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/chararray.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/comparisons.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/constants.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/datasource.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/dtype.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/einsumfunc.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/flatiter.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/fromnumeric.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/histograms.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/index_tricks.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/lib_function_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/lib_polynomial.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/lib_utils.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/lib_version.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/linalg.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/ma.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/memmap.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/modules.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/multiarray.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/ndarray.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/ndarray_misc.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/nditer.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/nested_sequence.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/npyio.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/numerictypes.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/random.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/rec.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/scalars.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/shape.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/shape_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/stride_tricks.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/strings.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/testing.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/twodim_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/type_check.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/ufunc_config.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/ufunclike.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/ufuncs.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/fail/warnings_and_errors.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/misc/extended_precision.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/mypy.ini
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/arithmetic.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/array_constructors.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/array_like.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/arrayprint.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/arrayterator.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/bitwise_ops.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/comparisons.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/dtype.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/einsumfunc.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/flatiter.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/fromnumeric.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/index_tricks.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/lib_user_array.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/lib_utils.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/lib_version.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/literal.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/ma.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/mod.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/modules.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/multiarray.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/ndarray_conversion.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/ndarray_misc.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/ndarray_shape_manipulation.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/nditer.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/numeric.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/numerictypes.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/random.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/recfunctions.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/scalars.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/shape.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/simple.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/ufunc_config.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/ufunclike.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/ufuncs.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/pass/warnings_and_errors.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/arithmetic.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/array_api_info.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/array_constructors.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/arraypad.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/arrayprint.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/arraysetops.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/arrayterator.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/bitwise_ops.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/char.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/chararray.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/comparisons.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/constants.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ctypeslib.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/datasource.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/dtype.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/einsumfunc.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/emath.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/fft.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/flatiter.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/fromnumeric.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/getlimits.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/histograms.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/index_tricks.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/lib_function_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/lib_polynomial.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/lib_utils.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/lib_version.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/linalg.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ma.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/matrix.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/memmap.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/mod.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/modules.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/multiarray.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/nbit_base_example.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ndarray_assignability.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ndarray_conversion.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ndarray_misc.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ndarray_shape_manipulation.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/nditer.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/nested_sequence.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/npyio.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/numeric.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/numerictypes.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/polynomial_polybase.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/polynomial_polyutils.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/polynomial_series.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/random.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/rec.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/scalars.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/shape.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/shape_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/stride_tricks.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/strings.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/testing.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/twodim_base.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/type_check.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ufunc_config.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ufunclike.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/ufuncs.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/data/reveal/warnings_and_errors.pyi
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/test_isfile.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/test_runtime.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/typing/tests/test_typing.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/version.py
+/opt/homebrew/lib/python3.14/site-packages/numpy/version.pyi
+==> Summary
+🍺  /opt/homebrew/Cellar/numpy/2.5.2: 1,855 files, 39.1MB
+==> Upgrading openai-whisper dependency: protobuf
+==> Pouring protobuf--36.1.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/protobuf/36.1: 387 files, 17.8MB
+==> Upgrading openai-whisper dependency: onnx
+==> Pouring onnx--1.22.0_4.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/onnx/1.22.0_4: 117 files, 6.6MB
+==> Installing openai-whisper dependency: pybind11
+==> Pouring pybind11--3.1.0.all.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/pybind11/3.1.0: 96 files, 1.2MB
+==> Installing openai-whisper dependency: sleef
+==> Pouring sleef--3.9.0.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/sleef/3.9.0: 20 files, 4.0MB
+==> Installing openai-whisper dependency: pytorch
+==> Installing dependencies for pytorch: gcc and libomp
+==> Upgrading pytorch dependency: gcc
+==> Pouring gcc--16.2.0.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/gcc/16.2.0: 1,705 files, 500.6MB
+==> Upgrading pytorch dependency: libomp
+==> Pouring libomp--23.1.0.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libomp/23.1.0: 11 files, 1.8MB
+==> Installing pytorch
+Error: The `brew link` step did not complete successfully
+==> Pouring pytorch--2.14.0.arm64_tahoe.bottle.tar.gz
+The formula built, but is not symlinked into /opt/homebrew
+Could not symlink bin/torchfrtrace
+Target /opt/homebrew/bin/torchfrtrace
+already exists. You may want to remove it:
+  rm '/opt/homebrew/bin/torchfrtrace'
+
+To force the link and overwrite all conflicting files:
+  brew link --overwrite pytorch
+
+To list all files that would be deleted:
+  brew link --overwrite pytorch --dry-run
+
+Possible conflicting files are:
+/opt/homebrew/bin/torchfrtrace
+/opt/homebrew/bin/torchrun
+==> Summary
+🍺  /opt/homebrew/Cellar/pytorch/2.14.0: 15,567 files, 531.4MB
+==> Installing openai-whisper
+Error: The `brew link` step did not complete successfully
+==> Pouring openai-whisper--20250625_6.arm64_tahoe.bottle.tar.gz
+The formula built, but is not symlinked into /opt/homebrew
+Could not symlink bin/whisper
+Target /opt/homebrew/bin/whisper
+already exists. You may want to remove it:
+  rm '/opt/homebrew/bin/whisper'
+
+To force the link and overwrite all conflicting files:
+  brew link --overwrite openai-whisper
+
+To list all files that would be deleted:
+  brew link --overwrite openai-whisper --dry-run
+
+Possible conflicting files are:
+/opt/homebrew/bin/whisper
+==> Summary
+🍺  /opt/homebrew/Cellar/openai-whisper/20250625_6: 1,998 files, 39.6MB
+==> Caveats
+==> openai-whisper
+The following openai-whisper executables are shadowed by other commands earlier in your PATH:
+  whisper (shadowed by /opt/homebrew/bin/whisper)
+Running these by name will not invoke the version provided by Homebrew.
+Disable this behaviour by setting `HOMEBREW_NO_PATH_SHADOW_CHECK=1`.
+Hide these hints with `HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).

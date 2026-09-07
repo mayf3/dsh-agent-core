@@ -1,0 +1,38 @@
+== PHASE 6 retirement gates — mechanical measurement Mon Sep  7 21:21:29 CST 2026 ==
+-- G1 ACTIVE_BREW_SERVICES_X64:
+   started: postgresql@16
+   started: syncthing
+   count=2
+-- G2 CRITICAL_CLI_RESOLUTION_TO_INTEL (login shell, critical set):
+   intel_resolutions=0
+-- G3 LAUNCHD_REQUIRED_INTEL_PATHS (plists whose program/args live under /usr/local):
+   ai.agent-core.runtime.plist
+   ai.agent-core.runtime.plist
+   ai.agent-core.scheduler-v2.plist
+   com.agent-core.capability-host.plist
+   com.agent-core.coding-harness.plist
+   com.agent-core.feishu-connector.plist
+   com.agent-core.kernel.plist
+   com.article-review-canary.plist
+   com.auth-service.plist
+   com.auth-service.plist
+   com.irbridge.plist
+   com.openclaw.agent-node-502.plist
+   com.openclaw.auto-repair.plist
+   com.openclaw.control-api.plist
+   com.opencode.server.plist
+   com.tailscale.tailscaled.plist
+   com.videobridge.plist
+   com.xiaomusic.plist
+   dev.omdsh.dsh-lark.plist
+   homebrew.mxcl.postgresql@16.plist
+   homebrew.mxcl.syncthing.plist
+   count=21
+-- G4 ACTIVE_SCRIPT_REQUIRED_INTEL_PATHS (scripts referenced by loaded launchd jobs containing /usr/local):
+   serve-web.sh: 0 intel refs
+   run_xiaomusic.sh: 2 intel refs
+   check.sh: 0 intel refs
+   health-check.sh: 0 intel refs
+-- G5 STATEFUL_DATA_DEPENDENCY_ON_INTEL_CELLAR:
+   postgresql@16 data root under /usr/local/var: YES
+   syncthing data root under Cellar: NO (~/Library/Application Support/Syncthing)
