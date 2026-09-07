@@ -21,7 +21,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { cpSync, linkSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 
 import { createSessionHistoryService } from '../src/index.js'
@@ -538,6 +538,23 @@ test('T16 session not found / confinement fail-closed', async () => {
   linkSyncCompat(outside, hardlink.artifactPath)
   const hardlinkService = buildService({ fixture: hardlink })
   await assert.rejects(hardlinkService.listMessages({ authContext, agentId: 'agt_test' }), (e) => e.code === 'INTERNAL_ERROR')
+
+  // BLOCKER-UNION regression (audit blocker 1 / ACC-SH-M (b)(c)): intermediate
+  // components BELOW the Session root — the projectKey dir and the native
+  // `main` dir — replaced by symlinks to another agent's artifact must fail
+  // closed (cross-agent transcript escape was mechanically demonstrated).
+  for (const swapped of ['main', projectKey(join('x', 'y')) + '']) {
+    const mid = fixture({ records: [headerLine(), line(userMessage({ seq: 0, id: 'u1', text: 'mine' }))] })
+    const otherAgent = fixture({ agentId: 'agt_other', records: [headerLine(), line(userMessage({ seq: 0, id: 'u1', text: 'AGENT-B-TRANSCRIPT' }))] })
+    const componentDir = swapped === 'main'
+      ? join(mid.homeDir, 'sessions', projectKey(mid.workspaceDir), 'main')
+      : join(mid.homeDir, 'sessions', projectKey(mid.workspaceDir))
+    rmSync(componentDir, { recursive: true })
+    symlinkSync(swapped === 'main' ? dirname(otherAgent.artifactPath) : dirname(dirname(otherAgent.artifactPath)), componentDir)
+    const midService = buildService({ fixture: mid })
+    await assert.rejects(midService.listMessages({ authContext, agentId: 'agt_test' }), (e) => e.code === 'INTERNAL_ERROR')
+    void otherAgent
+  }
 
   // Session root configured outside the Agent Home → fail-closed INTERNAL_ERROR.
   const outsideRoot = fixture({ records: [headerLine(), line(userMessage({ seq: 0, id: 'u1', text: 'x' }))] })
