@@ -10,7 +10,8 @@ import { createJwksTokenVerifier } from './scheduler-auth.js'
 const PREFIX = '/v1/directory/agents'
 const AUDIENCE = 'agent-directory'
 const SCOPE = 'agent.directory.read'
-const validId = id => typeof id === 'string' && id.length <= 128 && /^agt_[a-z0-9-]+$/.test(id)
+// Canonical Agent-ID grammar per agent-definition AGENT_ID_RE (includes _ and uppercase).
+const validId = id => typeof id === 'string' && id.length <= 128 && /^agt_[A-Za-z0-9_-]+$/.test(id)
 const failure = (status, error) => ({ status, body: { error } })
 
 /** Production-only exact observation; the existing verifier owns JWT semantics. */
