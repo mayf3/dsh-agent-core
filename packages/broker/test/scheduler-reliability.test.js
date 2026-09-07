@@ -406,3 +406,54 @@ test('STILL_UNKNOWN persists reconciliation evidence for the W1 watchdog (Blocke
   assert.match(entry.reason, /read-back transport failed/)
   assert.ok(Number.isFinite(entry.ts), 'evidence carries a timestamp')
 })
+
+test('parent-classified mutation_outcome_unknown (post-commit handler fault) also reconciles — never a terminal raw unknown (§5.2 answer leg)', async (t) => {
+  const committedJob = {
+    id: 'job-7', name: 'test-job', logicalKey: 'owner:test-job', agentId: 'agt_a', enabled: true,
+    scheduleRevision: 1, schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' },
+    payload: { kind: 'agentTurn' }, delivery: { mode: 'none' }, deleteAfterRun: false,
+    nextRunAtMs: Date.now() + 60_000,
+  }
+  const parentUnknown = async () => ({
+    ok: true,
+    result: { ok: false, error: { code: 'mutation_outcome_unknown', detail: 'scheduler mutation outcome is unknown; inspect current state before any manual retry' } },
+  })
+
+  // (a) read-back proves commit -> APPLIED
+  const applied = relayRig()
+  applied.requestFn.next = async (call) => {
+    if (call.operation === 'list') return { ok: true, result: { ok: true, result: { jobs: [committedJob] } } }
+    return parentUnknown()
+  }
+  const handlersA = createRelayHandlers(schedulerManifest, applied.requestFn)
+  const ok = await handlersA.create('create', { ...CREATE_ARGS })
+  assert.equal(ok.jobId, 'job-7')
+  assert.equal(ok.auditStatus, 'reconciled')
+
+  // (b) read-back proves absence -> NOT_APPLIED (retry-safe with same identity)
+  const absent = relayRig()
+  absent.requestFn.next = async (call) => {
+    if (call.operation === 'list') return { ok: true, result: { ok: true, result: { jobs: [] } } }
+    return parentUnknown()
+  }
+  const handlersB = createRelayHandlers(schedulerManifest, absent.requestFn)
+  const notApplied = await handlersB.create('create', { ...CREATE_ARGS })
+  assert.equal(notApplied.errorCode, 'mutation_not_applied')
+
+  // (c) read-back also fails -> STILL_UNKNOWN with evidence persisted
+  const fsPromises = await import('node:fs/promises')
+  const dir = await fsPromises.mkdtemp(join(tmpdir(), 'scheduler-rel-ev2-'))
+  t.after(() => fsPromises.rm(dir, { recursive: true, force: true }))
+  const evidenceFile = join(dir, 'reconciliation-evidence.jsonl')
+  process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE = evidenceFile
+  t.after(() => { delete process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE })
+  const dark = relayRig()
+  dark.requestFn.next = async () => { throw new Error('channel down') }
+  const handlersC = createRelayHandlers(schedulerManifest, dark.requestFn)
+  const unknown = await handlersC.create('create', { ...CREATE_ARGS })
+  assert.equal(unknown.errorCode, 'mutation_outcome_unknown')
+  const raw = await fsPromises.readFile(evidenceFile, 'utf8')
+  const entry = JSON.parse(raw.trim().split('\n').at(-1))
+  assert.equal(entry.logicalKey, 'owner:test-job')
+  assert.ok(Number.isFinite(entry.ts))
+})
