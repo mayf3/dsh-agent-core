@@ -100,7 +100,7 @@ PARALLEL_BOUNDARY (they are live listeners 8091/8092/8090).
 
 | GATE | MEASURED VALUE | MET? |
 |---|---|---|
-| ACTIVE_BREW_SERVICES_X64 | 2 (postgresql@16, syncthing) — tailscale user svc retired r2 | NO |
+| ACTIVE_BREW_SERVICES_X64 | 2 of 3 started services (postgresql@16, syncthing; third = ollama, arm64, outside gate) — tailscale user svc retired r2 | NO |
 | CRITICAL_CLI_RESOLUTION_TO_INTEL | 0 (login shell, 30-command critical set) | YES |
 | LAUNCHD_REQUIRED_INTEL_PATHS | 21 active plists reference /usr/local — breakdown: F/P0-owned (agent-core family ×6, dsh-lark, canary, authsvc ×2), C-class packets (irbridge/videobridge/xiaomusic), legacy (openclaw ×3), system daemon (tailscaled), stateful (postgres/syncthing), opencode.server (path only — binary is arm64) | NO |
 | ACTIVE_SCRIPT_REQUIRED_INTEL_PATHS | 1 script (run_xiaomusic.sh, 2 refs — part of xiaomusic C packet); serve-web/check/health-check = 0 | YES* (*xiaomusic packet covers it) |
@@ -115,3 +115,17 @@ PARALLEL_BOUNDARY (they are live listeners 8091/8092/8090).
 - Terminal boundary (COMPLETE_WHEN) still pending on: D4/D6/D8-D10 cutovers (slot),
   DSH F-family (other Goal), openclaw legacy retirement (owner-goal caution), GUI apps
   (FOLLOW_UP_DEBT by design). Goal continues at next legal lane.
+
+## r3 focused audit (ONE fresh independent read-only subagent, 2026-09-07 21:5x)
+
+VERDICT = ACCEPT, BLOCKERS = []
+Checklist 1–8 all PASS (live re-verification of java/gradle/ngrok/whisper resolution,
+dormant mtimes, production non-mutation, PG hazard, gate re-measurement, secret scan,
+manifest 68/68 self-consistent).
+Concern dispositions:
+- C1: /Library/LaunchDaemons/com.auth-service.plist mtime Sep 7 17:07 (root) — outside
+  r3's window (21:16+); this Goal holds no sudo and performed no such mutation.
+  Attribution: P0-slot deployment activity (authsvc system domain is F/P0-owned).
+  Recorded as external observation; P0 Goal's own trail is authoritative.
+- C2: G1 clarified — 3 brew services started total, of which 2 are x64 (postgresql@16,
+  syncthing); ollama is arm64 (correctly outside the X64-only gate).
