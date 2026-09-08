@@ -44,7 +44,12 @@ const EVIDENCE_NOTE = 'operator reconcile: run interrupted and unresumable (runt
 export function freezeView(rawDoc, { jobId, occurrenceId }) {
   const doc = typeof rawDoc === 'string' ? JSON.parse(rawDoc) : rawDoc
   const job = (doc.jobs ?? []).find((candidate) => candidate.id === jobId) ?? null
-  const occurrence = (doc.occurrences ?? []).find((candidate) => candidate.occurrenceId === occurrenceId) ?? null
+  // occurrence ids are stored with the 'occ:' prefix; callers may pass the
+  // bare hash — resolve exact first, then canonical-suffix.
+  const occurrence = (doc.occurrences ?? []).find((candidate) =>
+    candidate.occurrenceId === occurrenceId
+    || candidate.occurrenceId === `occ:${occurrenceId}`
+    || candidate.occurrenceId?.endsWith(`:${occurrenceId}`)) ?? null
   const runsForJob = (doc.occurrences ?? []).filter((candidate) => candidate.jobId === jobId)
     .map((candidate) => ({ occurrenceId: candidate.occurrenceId, runId: candidate.runId, state: candidate.state, startedAt: candidate.startedAt ?? null, endedAt: candidate.endedAt ?? null, executionOutcome: candidate.executionOutcome ?? null, lateSettlement: candidate.lateSettlement ?? null }))
   return {
@@ -105,6 +110,10 @@ async function selftest() {
     const view = freezeView(JSON.parse(JSON.stringify(doc)), { jobId: job.id, occurrenceId: occurrence.occurrenceId })
     ok(view.job && view.job.enabled === false && view.job.name === '校园文档盘点重试', 'freeze job projection')
     ok(view.occurrence && view.occurrence.state === 'outcome_unknown' && view.occurrence.endedAt === null, 'freeze occurrence projection (unresolved unknown, not ended)')
+    // production regression guard: bare-hash ids resolve to the canonical
+    // 'occ:<hash>' stored form (the 2026-09-09 NOT_FOUND misfire)
+    const bare = freezeView(JSON.parse(JSON.stringify(doc)), { jobId: job.id, occurrenceId: occurrence.occurrenceId.replace(/^occ:/, '') })
+    ok(bare.occurrence?.occurrenceId === occurrence.occurrenceId, 'bare-hash occurrence id resolves')
     ok(JSON.stringify(view).includes('seed') === false, 'message body absent')
 
     // reconcile refusals (zero mutation)
@@ -189,7 +198,8 @@ if (RECONCILE || DISPOSITION) {
   const before = freezeView(raw, { jobId: JOB ?? '', occurrenceId: OCC })
   if (before.occurrence === null) { process.stderr.write('[occurrence] unknown occurrence — NO MUTATION\n'); process.exit(1) }
   if (before.occurrence.runId !== RUN_ID) { process.stderr.write(`[occurrence] runId mismatch (ledger has ${before.occurrence.runId}) — NO MUTATION\n`); process.exit(1) }
-  const result = await reconcile(store, { occurrenceId: OCC, runId: DISPOSITION ? RUN_ID_EFFECTIVE : RUN_ID })
+  const canonicalOccurrenceId = before.occurrence?.occurrenceId ?? OCC
+  const result = await reconcile(store, { occurrenceId: canonicalOccurrenceId, runId: DISPOSITION ? RUN_ID_EFFECTIVE : RUN_ID })
   const after = freezeView(await store.loadDoc({ force: true }).then((doc) => JSON.stringify(doc)), { jobId: JOB ?? result.record.jobId, occurrenceId: OCC })
   process.stdout.write(`EXACT_OCCURRENCE_RECONCILED = ${after.occurrence?.state === 'failed' && after.occurrence?.lateSettlement ? 'PASS' : 'CHECK'}\n`)
   process.stdout.write(`NEW_OCCURRENCE_CREATED = ${(after.runsForJob || []).filter((r) => r.occurrenceId !== OCC).length === 0 && (JSON.parse(raw).occurrences ?? []).length === (after.runsForJob || []).length ? 'NO' : 'VERIFY'}\n`)
