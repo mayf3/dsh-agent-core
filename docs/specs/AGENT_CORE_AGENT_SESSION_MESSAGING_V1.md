@@ -15,6 +15,15 @@ amendment_ref: r4 = AMENDMENT_1 (owner goal AGENT_SESSION_SEND_RELIABILITY_V1; d
   extends the R12 evidence shape (failureCode + invocationCorrelation fields on L1 rows) and §5.3
   adds exactly one child-synthesized caller-visible reconciled envelope)
 amendment_status: proposed
+amendment_independent_review: r1 REVISE (3 blockers, all mechanical) -> blocker union fixed once
+  @ 725b252 -> re-audit ACCEPT (blockers NONE; 3 cosmetic notes absorbed in the follow-up commit,
+  zero semantic delta). Reviewer mechanically re-verified against the real implementation:
+  production-runtime agent-session-messaging/reply-wait/audit, broker relay/gateway/registry/schema/
+  index, agent-router parent-rpc-relay + reconciliation.
+amendment_reviewed_head: 725b252
+amendment_acceptance_path: owner merge of this docs-only branch flips amendment_status to accepted;
+  implementation of §5.1-§5.3 is authorized only AFTER that acceptance (separate implementation
+  branch; GOVERNING_SPEC_UNMODIFIED applies to it)
 amendment_goal: AGENT_SESSION_SEND_RELIABILITY_V1
 accepted_date: 2026-09-02
 accepted_by: mayf3
@@ -730,8 +739,9 @@ error path automatically retries a message whose admission may have occurred.
 ### 5.1 AMENDMENT_1 — two-dimension result model (normative mapping)
 
 The capability MUST let a caller answer two independent questions mechanically, without inference from
-one to the other: `WAS_MESSAGE_DELIVERED` and `DID_TARGET_REPLY`. The closed §5 envelope vocabulary is
-NOT extended; the two dimensions are defined by this normative, total mapping over it. Implementations
+one to the other: `WAS_MESSAGE_DELIVERED` and `DID_TARGET_REPLY`. The closed §5 parent-answered
+envelope vocabulary is NOT extended (the single §5.3 child-synthesized `reconciled` exception is
+scoped there); the two dimensions are defined by this normative, total mapping over it. Implementations
 and callers MUST treat this table as the delivery/reply semantics of every code:
 
 ```text
@@ -853,7 +863,7 @@ CASE CONTRACT (goal AGENT_SESSION_SEND_RELIABILITY_V1):
   E receipt + completed, no output     -> DELIVERED + NO_OUTPUT.
   F truncated output                   -> DELIVERED + TRUNCATED.
   G receipt unprovable                 -> UNKNOWN via §5.1/§5.3; bounded reconciliation as above;
-                                          STILL_UNKNOWN => NO_AUTOMATIC_RETRY, evidence retained
+                                          UNKNOWN is final => NO_AUTOMATIC_RETRY, evidence retained
                                           (L1 rows + reconcile conversion are the evidence chain).
 ```
 
@@ -1011,7 +1021,7 @@ AND no Feishu/Forum/Scheduler/Workflow delivery occurs
   (CASES D–F; T4–T6);
 - duplicate RPC replay of the SAME invocation → exactly one inbox receipt and one target Run; the
   replay is answered without a second Router delivery (T9);
-- true unresolved ambiguity (intent row expired by rotation within the retention window; unusable
+- true unresolved ambiguity (intent row expired out of the rotating retention window; unusable
   lookup) → reconcile UNKNOWN is final, no automatic replay of any kind fires (T10); a control-plane
   restart does NOT by itself destroy evidence (file-backed L1 rows are read across restarts);
 - `invocationCorrelation` is absent from every model-visible schema surface (R2 closure intact) and is
