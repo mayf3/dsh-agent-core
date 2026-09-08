@@ -519,6 +519,73 @@ test('AMENDMENT_1 §5.3: the file-backed L1 chain is readable across a control-p
   rmSync(dir, { recursive: true, force: true })
 })
 
+// --------------------------------------- AMENDMENT_2 §5.1a: T_PROCESS_EXIT
+
+test('T_PROCESS_EXIT_1: process-exit rejection at the admission boundary stays unproven (UNKNOWN, never fabricated NOT_DELIVERED)', async () => {
+  // Router doctrine C-004/C-017: a pending stdin write at process exit cannot
+  // prove zero bytes — mapDeliverError's default row applies (unmarked).
+  const exited = buildAccess({ router: fakeRouter({ deliverImpl: async () => { const e = new Error('RPC session/prompt rejected: AGENT_PROCESS_EXITED'); e.code = 'AGENT_PROCESS_EXITED'; throw e } }) })
+  const envelope = await exited.access.handlers.agent_session_send.send(
+    { targetAgentId: TARGET, message: 'x', timeoutSeconds: 0 },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF, invocationCorrelation: 'anchor-12345678' },
+  )
+  assert.equal(envelope.error.code, 'outcome_unknown')
+  assert.equal(envelope.error.detail.includes('AGENT_PROCESS_EXITED'), false, 'reason rides evidence surfaces, not the closed code')
+  const [row] = auditRows(exited.file).filter((r) => r.phase === 'outcome')
+  assert.equal(row.failureCode, 'outcome_unknown')
+  assert.equal(row.failureReason, undefined, 'pre-receipt admission-unproven is UNMARKED — no post_receipt, no fabricated phase')
+  // §5.3 reconcile of that row: STILL_UNKNOWN — the duplicate-licensing
+  // NOT_DELIVERED is never produced from an unproven admission.
+  const lookup = exited.access.handlers.agent_session_send_reconcile.lookup(
+    { invocationCorrelation: 'anchor-12345678' },
+    { callerAgentId: CALLER },
+  )
+  assert.deepEqual(lookup.result.outcome, { result: 'failed', failureCode: 'outcome_unknown' })
+})
+
+test('T_PROCESS_EXIT_2: receipt proven then target process exits mid-turn -> post-receipt outcome_unknown is DELIVERED + UNKNOWN (reason visible)', async () => {
+  // Mid-turn death: the Run terminates without outcome AFTER the inbox receipt.
+  const died = buildAccess({ router: fakeRouter({ states: { 'turn:1': { state: 'available', truncated: false, terminalState: 'terminated_without_outcome' } } }) })
+  const envelope = await died.access.handlers.agent_session_send.send(
+    { targetAgentId: TARGET, message: 'x', timeoutSeconds: 5 },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF, invocationCorrelation: 'anchor-12345678' },
+  )
+  assert.equal(envelope.error.code, 'outcome_unknown')
+  assert.match(envelope.error.detail, /after a proven inbox receipt \(delivery was proven\)/, 'the canonical post-receipt marker is model-visible')
+  const [row] = auditRows(died.file).filter((r) => r.phase === 'outcome')
+  assert.equal(row.failureCode, 'outcome_unknown')
+  assert.equal(row.failureReason, 'post_receipt')
+  // §5.3 reconcile converts the row: DELIVERED + UNKNOWN — the caller never
+  // has to guess, and a resend would be a policy violation, not a guess.
+  const lookup = died.access.handlers.agent_session_send_reconcile.lookup(
+    { invocationCorrelation: 'anchor-12345678' },
+    { callerAgentId: CALLER },
+  )
+  assert.deepEqual(lookup.result.outcome, { result: 'failed', failureCode: 'outcome_unknown', failureReason: 'post_receipt' })
+  // late_failed death instead -> the unchanged R8 mapping keeps TARGET_FAILED.
+  const failed = buildAccess({ router: fakeRouter({ states: { 'turn:1': { state: 'no_output', terminalState: 'late_failed' } } }) })
+  const failedEnvelope = await failed.access.handlers.agent_session_send.send(
+    { targetAgentId: TARGET, message: 'x', timeoutSeconds: 5 },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF },
+  )
+  assert.equal(failedEnvelope.error.code, 'target_run_failed')
+})
+
+test('T_PROCESS_EXIT_3: receipt/process-exit boundary ambiguity reconciles without blind replay', async () => {
+  // The §5.3 lost-response path over a post_receipt row settles DELIVERED;
+  // over an unproven row stays UNKNOWN — both final, no replay.
+  const anchor = 'anchor-12345678'
+  const proven = buildAccess({ router: fakeRouter() })
+  proven.surface.appendIntent({ sourceAgentId: CALLER, targetAgentId: TARGET, requestId: 'req-a', correlation: PROOF, timeoutMode: 'wait_reply', invocationCorrelation: anchor })
+  proven.surface.appendOutcome({ sourceAgentId: CALLER, targetAgentId: TARGET, requestId: 'req-a', correlation: PROOF, timeoutMode: 'wait_reply', result: 'failed', invocationCorrelation: anchor, failureCode: 'outcome_unknown', failureReason: 'post_receipt' })
+  const provenLookup = proven.access.handlers.agent_session_send_reconcile.lookup({ invocationCorrelation: anchor }, { callerAgentId: CALLER })
+  assert.deepEqual(provenLookup.result.outcome, { result: 'failed', failureCode: 'outcome_unknown', failureReason: 'post_receipt' })
+  const unproven = buildAccess({ router: fakeRouter() })
+  unproven.surface.appendIntent({ sourceAgentId: CALLER, targetAgentId: TARGET, requestId: 'req-b', correlation: PROOF, timeoutMode: 'wait_reply', invocationCorrelation: anchor })
+  const unprovenLookup = unproven.access.handlers.agent_session_send_reconcile.lookup({ invocationCorrelation: anchor }, { callerAgentId: CALLER })
+  assert.deepEqual(unprovenLookup.result.outcome, null, 'intent without outcome -> UNKNOWN (STILL_UNKNOWN terminal, NO_BLIND_REPLAY)')
+})
+
 test('AMENDMENT_1 §5.3: the provider serves the infrastructure reconcile capability alongside send', () => {
   const { access } = buildAccess({ router: fakeRouter() })
   assert.equal(typeof access.handlers.agent_session_send.send, 'function')

@@ -252,8 +252,12 @@ export function createAgentSessionMessagingAccess({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', reconciliationHandle: null, startedAtWallMs,
         invocationCorrelation: anchor, failureCode: 'outcome_unknown',
+        // AMENDMENT_2 §5.1/§5.2: delivery was PROVEN in this invocation — the
+        // post_receipt marker makes the phase surface-decidable (render
+        // detail + L1 row), never a fabricated delivery dimension.
+        failureReason: 'post_receipt',
       }) !== 'appended') auditFailed(requestId, 'outcome')
-      return { ok: false, error: { code: 'outcome_unknown', detail: 'message delivered but the reconciliation handle is unavailable; outcome unknown' } }
+      return { ok: false, error: { code: 'outcome_unknown', detail: 'the exact target Run outcome is unknown after a proven inbox receipt (delivery was proven); reconciliation handle unavailable' } }
     }
     const deadlineWallMs = now() + timeoutSeconds * 1000
     const waited = await waitForFinalAssistantReply(handle, deadlineWallMs)
@@ -276,23 +280,32 @@ export function createAgentSessionMessagingAccess({
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: true, result: { status: 'replied', reply: outcome.reply } }
     }
+    // AMENDMENT_2 §5.1: past this gate the receipt was PROVEN — an
+    // outcome_unknown here is the post-receipt phase (e.g. the target process
+    // exited mid-turn and the Run terminated without outcome), so the row and
+    // the render carry the post_receipt marker: DELIVERED + UNKNOWN, never a
+    // fabricated TARGET_FAILED and never invisible delivery.
+    const postReceiptUnknown = outcome.kind === 'outcome_unknown'
     const failureEnvelope = outcome.kind === 'target_run_failed'
       ? { code: 'target_run_failed', detail: 'the exact target Run settled as failed; retained text is never returned as success' }
       : outcome.kind === 'not_admitted'
         ? { code: 'not_admitted', detail: 'the exact target Run settled as not admitted' }
         : outcome.kind === 'reply_unavailable'
           ? { code: 'reply_unavailable', detail: `reply unavailable (${outcome.reason})` }
-          : { code: 'outcome_unknown', detail: 'the exact target Run terminated without a proven outcome' }
+          : postReceiptUnknown
+            ? { code: 'outcome_unknown', detail: 'the exact target Run terminated without a proven outcome after a proven inbox receipt (delivery was proven)' }
+            : { code: 'outcome_unknown', detail: 'the exact target Run terminated without a proven outcome' }
     if (audit.appendOutcome({
       sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
       result: 'failed', reconciliationHandle: handle, startedAtWallMs,
       invocationCorrelation: anchor,
       failureCode: failureEnvelope.code,
-      // §5.2: the structured reason travels with the row — today it exists
-      // only in the model-visible detail and is unrecoverable from evidence.
+      // §5.2: the structured reason travels with the row — the per-reason
+      // delivery history stays recoverable from evidence.
       ...(outcome.kind === 'reply_unavailable' && typeof outcome.reason === 'string'
         ? { failureReason: outcome.reason }
         : {}),
+      ...(postReceiptUnknown ? { failureReason: 'post_receipt' } : {}),
     }) !== 'appended') auditFailed(requestId, 'outcome')
     return { ok: false, error: failureEnvelope }
   }
