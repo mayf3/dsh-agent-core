@@ -4,3 +4,6 @@ package-lock.json
 .DS_Store
 .demo/
 *.tgz
+
+# PRODUCT_API_VOICE_TRANSCRIPTION_V1: ASR model assets never enter Git.
+.agent-core/models/
