@@ -405,9 +405,18 @@ if (MODE === 'selftest') {
   const store = new JobStore(join(fx, 'jobs.json'), { runLogPath: join(fx, 'runs.jsonl') })
   const { createJobOp } = await import('../packages/scheduler/src/control.js')
   const daily = await createJobOp(store, { name: '每日摘要检查', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_fixture' } })
+  // replicate the REAL ambiguity the guard caught: a second enabled job of the
+  // same agent with the SAME cron/tz — the frozen-identity predicate must
+  // still match exactly one.
+  await createJobOp(store, { name: '每日随想总结-DeepSeek（滚动7日补偿）', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'none' } })
   const hr = await createJobOp(store, { name: 'HR auto dispatch', agentId: 'agt_hr-agent', schedule: { kind: 'every', everyMs: 3_600_000 }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'none' } })
   // hr gets the frozen id prefix via direct doc patch (fixture-only)
-  await store.mutateDoc((d) => { const target = d.jobs.find((j) => j.id === hr.id); target.id = 'b115cb96-fixture'; target.state = {} })
+  await store.mutateDoc((d) => {
+    const hrTarget = d.jobs.find((j) => j.id === hr.id)
+    hrTarget.id = 'b115cb96-fixture'
+    hrTarget.state = {}
+    d.jobs.find((j) => j.id === daily.id).id = 'fa13b0ea-fixture'
+  })
   await createJobOp(store, { name: 'decoy daily', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '30 5 * * *', tz: 'UTC' }, payload: { kind: 'agentTurn', message: 'decoy' }, delivery: { mode: 'none' } })
   // fake live root with OLD bytes for two targets + a live-only file
   const liveRoot = join(fx, 'live-root')
