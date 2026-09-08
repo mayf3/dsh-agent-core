@@ -150,7 +150,8 @@ export function createWorkflowExecutionEngine({
     if (typeof delivered.reconciliationHandle === 'string') {
       try { result = getTurnReconciliation(delivered.reconciliationHandle) } catch { result = undefined }
     }
-    if ((result === undefined || ['evicted', 'restart_lost'].includes(result?.state)) && typeof resolveCallerCorrelation === 'function') {
+    if ((result === undefined || ['evicted', 'restart_lost', 'never_existed'].includes(result?.state))
+      && typeof resolveCallerCorrelation === 'function') {
       try {
         const correlated = resolveCallerCorrelation({ requestId: delivered.requestId })
         if (correlated?.state !== undefined && correlated.state !== 'never_existed') result = correlated
@@ -221,8 +222,9 @@ export function createWorkflowExecutionEngine({
     }
     const admissions = []
     const skipped = []
+    let newAttempts = 0
     for (const raw of due.items ?? []) {
-      if (admissions.length >= maxAdmissions) break
+      if (newAttempts >= maxAdmissions) break
       const normalized = normalizeDueIntent(raw)
       if (!normalized.ok) {
         skipped.push({ reason: normalized.reason })
@@ -230,10 +232,15 @@ export function createWorkflowExecutionEngine({
         continue
       }
       try {
-        admissions.push(await admitDueIntent(normalized.intent))
+        const result = await admitDueIntent(normalized.intent)
+        admissions.push(result)
+        // only NEW attempts consume the bound; already_attempted replays are
+        // free so stale due intents ahead of the page never starve newer ones
+        if (result.action !== 'already_attempted') newAttempts += 1
       } catch (error) {
         log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
         admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })
+        newAttempts += 1
       }
     }
     return { ok: true, reconciled, admissions, skipped }
@@ -246,7 +253,10 @@ export function createWorkflowExecutionEngine({
     if (ticking) return
     ticking = true
     try {
-      await pollOnce()
+      const result = await pollOnce()
+      if (!result.ok) {
+        log.warn?.(`workflow-execution: poll pass failed at ${result.phase} (${result.code}) — will retry next tick`)
+      }
     } catch (error) {
       log.error?.(`workflow-execution: poll tick failed: ${error?.message ?? error}`)
     } finally {
