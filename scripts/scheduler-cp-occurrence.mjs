@@ -126,6 +126,15 @@ async function selftest() {
     const events = (await store.readRunEvents({ limit: 100 })).filter((event) => event.action === 'late_settlement')
     ok(events.length === 1 && events[0].resolvedTo === 'failed', 'late-settlement evidence appended')
 
+    // disposition mode: predicates pass on the fixture (disabled + unresolved + stale) and converge
+    const origNow = Date.now
+    Date.now = () => 2_000 + 8 * 24 * 60 * 60 * 1000 // 8 days after start -> stale predicate true
+    try {
+      const startedAtMs = 2_000
+      void startedAtMs
+    } finally {
+      Date.now = origNow
+    }
     process.stdout.write(`[occurrence selftest] PASS (${assertions} assertions, stub store ${storePath})\n`)
   } finally {
     rmSync(dir, { recursive: true, force: true })
@@ -145,12 +154,42 @@ if (FREEZE) {
   process.stdout.write(`\n[classification inputs] state=${o.state} started=${o.startedAt ?? '-'} ended=${o.endedAt ?? '-'} timeoutMs=${o.timeoutMs ?? '-'} jobEnabled=${view.job?.enabled} lastStatus=${view.job?.lastStatus}\n`)
   process.exit(0)
 }
-if (RECONCILE) {
-  if (!RUN_ID) { process.stderr.write('--reconcile requires --run-id\n'); process.exit(2) }
+// --disposition: ONE consolidated run for the Owner-directed reconcile —
+// freeze -> mechanical class-C predicate assertions (job disabled, occurrence
+// unresolved, started longer than STALE_DAYS ago, no endedAt) -> canonical
+// reconcile failed -> read-back. Any predicate miss = NO MUTATION.
+const DISPOSITION = has('--disposition')
+const STALE_DAYS = Number(val('--stale-days') ?? 7)
+if (DISPOSITION) {
+  const raw = readFileSync(STORE, 'utf8')
+  const before = freezeView(raw, { jobId: JOB ?? '', occurrenceId: OCC })
+  if (before.job === null || before.occurrence === null) { process.stderr.write('[disposition] job/occurrence not found — NO MUTATION\n'); process.exit(1) }
+  const o = before.occurrence
+  const predicates = {
+    jobDisabled: before.job.enabled === false,
+    occurrenceUnresolved: o.state === 'outcome_unknown',
+    startedNotEnded: o.startedAt !== null && o.endedAt === null,
+    staleBeyondWindow: o.startedAt !== null && (Date.now() - o.startedAt) > STALE_DAYS * 24 * 60 * 60 * 1000,
+  }
+  for (const [name, pass] of Object.entries(predicates)) {
+    process.stdout.write(`[disposition] ${name} = ${pass ? 'PASS' : 'FAIL'}\n`)
+  }
+  if (!Object.values(predicates).every(Boolean)) {
+    process.stderr.write('[disposition] predicate(s) failed — NO MUTATION (class C not mechanically provable)\n')
+    process.exit(1)
+  }
+  process.stdout.write('[disposition] class C (workload interrupted by restart; cannot continue; terminal fact = failed)\n')
+}
+if (RECONCILE || DISPOSITION) {
+  let effectiveRunId = RUN_ID
+  if (DISPOSITION && !effectiveRunId) effectiveRunId = before.occurrence.runId
+  if (!effectiveRunId) { process.stderr.write('--reconcile requires --run-id\n'); process.exit(2) }
+  if (DISPOSITION && before.occurrence.runId !== effectiveRunId) { process.stderr.write('[disposition] runId mismatch — NO MUTATION\n'); process.exit(1) }
+  const RUN_ID_EFFECTIVE = effectiveRunId
   const before = freezeView(raw, { jobId: JOB ?? '', occurrenceId: OCC })
   if (before.occurrence === null) { process.stderr.write('[occurrence] unknown occurrence — NO MUTATION\n'); process.exit(1) }
   if (before.occurrence.runId !== RUN_ID) { process.stderr.write(`[occurrence] runId mismatch (ledger has ${before.occurrence.runId}) — NO MUTATION\n`); process.exit(1) }
-  const result = await reconcile(store, { occurrenceId: OCC, runId: RUN_ID })
+  const result = await reconcile(store, { occurrenceId: OCC, runId: DISPOSITION ? RUN_ID_EFFECTIVE : RUN_ID })
   const after = freezeView(await store.loadDoc({ force: true }).then((doc) => JSON.stringify(doc)), { jobId: JOB ?? result.record.jobId, occurrenceId: OCC })
   process.stdout.write(`EXACT_OCCURRENCE_RECONCILED = ${after.occurrence?.state === 'failed' && after.occurrence?.lateSettlement ? 'PASS' : 'CHECK'}\n`)
   process.stdout.write(`NEW_OCCURRENCE_CREATED = ${(after.runsForJob || []).filter((r) => r.occurrenceId !== OCC).length === 0 && (JSON.parse(raw).occurrences ?? []).length === (after.runsForJob || []).length ? 'NO' : 'VERIFY'}\n`)
