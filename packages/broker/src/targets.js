@@ -10,6 +10,7 @@
  *   svc-workflow → http://127.0.0.1:8989, audience `svc-workflow`
  *   svc-forum    → http://127.0.0.1:3460, audience `svc-forum`
  *   svc-okr      → http://127.0.0.1:3459, audience `svc-okr`
+ *   life-workbench → http://127.0.0.1:7781, audience `life-workbench`
  *
  * The model can never influence origin/audience: a manifest's `http.target`
  * references a targetId, and the transport resolves it through this registry
@@ -23,6 +24,7 @@ export const targets = [
   { targetId: 'svc-forum', allowedOrigin: 'http://127.0.0.1:3460', audience: 'svc-forum' },
   { targetId: 'svc-workflow', allowedOrigin: 'http://127.0.0.1:8989', audience: 'svc-workflow' },
   { targetId: 'svc-okr', allowedOrigin: 'http://127.0.0.1:3459', audience: 'svc-okr' },
+  { targetId: 'life-workbench', allowedOrigin: 'http://127.0.0.1:7781', audience: 'life-workbench' },
 ]
 
 /**
