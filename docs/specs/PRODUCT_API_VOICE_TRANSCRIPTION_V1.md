@@ -1,6 +1,21 @@
 ---
 spec_id: PRODUCT_API_VOICE_TRANSCRIPTION_V1
 status: proposed
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: contracts
+scope:
+  - product-api voice transcription route contract
+  - self-hosted ASR execution and engine pin
+  - audio validation ceilings and deterministic failure mapping
+  - zero raw-audio persistence and log hygiene
+governed_by:
+  - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
+external_authorities: []
+supersedes: []
+superseded_by: null
+owners:
+  - mayf3
 date: 2026-09-08
 ---
 
@@ -100,32 +115,58 @@ ownership split in MOBILE_AGENT_PRESENCE_RUNTIME_V1 DEC-RUN-006).
 
 ### DEC-VT-003 — Self-hosted ASR execution
 
-ASR execution is self-hosted behind this route. PRIMARY engine candidate:
+ASR execution is self-hosted behind this route. ENGINE_SELECTED =
 Paraformer-zh via sherpa-onnx (model `sherpa-onnx-paraformer-zh-2024-03-09`,
-int8); FALLBACK evidence only: whisper.cpp. All published figures (model size
-~230 MB, RTF 0.2–0.6, CPU <2 s per 5 s utterance) are INVESTIGATION_ESTIMATE
-and MUST NOT be recorded as runtime Observations until measured on the
-intended backend execution host. Engine runs fully in memory; deterministic
-failure (error return per request; no retry loop). Third-party cloud ASR is
-forbidden; changing engines later that would send audio to any third-party
-service requires a new Owner/privacy gate.
+int8); whisper.cpp is FALLBACK_ONLY (replacement evidence, not V1 scope).
+The engine runs fully in memory; deterministic failure (error return per
+request; no retry loop). Third-party cloud ASR is forbidden; changing
+engines later in a way that would send audio to any third-party service
+requires a new Owner/privacy gate.
 
-### DEC-VT-004 — Engine smoke gate before deadline freeze
+```text
+ENGINE_PIN
+  RUNTIME      = sherpa-onnx v1.13.7 (prebuilt osx-arm64, onnxruntime 1.17.1)
+  MODEL ASSET  = sherpa-onnx-paraformer-zh-2024-03-09/model.int8.onnx
+                 sha256 90bc03034ae1bef9575f8cc798cd1519c8be8aa9e8b458a033e32017ff4d584c
+  TOKENS ASSET = tokens.txt
+                 sha256 6c0e3b35cece259829e6cb5b8d90d13db88f61ea3a2953d11898e4b2bfd7a2e2
+  CONFIG       = num_threads=2, greedy_search
+STOP_ENGINE_RESEARCH = YES (no further engine comparison, benchmarking, or tuning)
+```
 
-Before freezing the exact service deadline and resource numbers, ONE bounded
-smoke on the intended backend execution host (no production mutation, fixed
-Chinese fixtures: short utterance, ~5 s utterance, near-maximum-duration
-utterance) MUST record: MODEL_LOAD, TRANSCRIPTION, TEXT_NONEMPTY,
-WARM_LATENCY_MS, PEAK_RSS. These are EXECUTED_OBSERVATION values. If
-Paraformer is sufficient: ENGINE_SELECTED = Paraformer-zh via sherpa-onnx;
-STOP_ENGINE_RESEARCH = YES (whisper.cpp remains fallback evidence only).
+### DEC-VT-004 — Engine smoke EXECUTED_OBSERVATION (deadline evidence)
+
+ONE bounded smoke was executed (2026-09-08) on the intended backend execution
+host — the owner production backend host that runs the Product API — in an
+isolated scratch sandbox: NO_PRODUCTION_MUTATION=YES, RAW_AUDIO_PERSISTENCE=
+NONE, TEMP_AUDIO_FILE=NONE (verified zero residual audio/temp artifacts after
+the run). Fixtures were synthetic Chinese utterances (mono 16 kHz PCM16 WAV):
+A short 1.865 s, B ~5 s 5.849 s, C near-maximum 13.033 s (within the 15 s /
+512 KB ceilings). Primary engine only; whisper.cpp not exercised (not needed).
+
+```text
+MODEL_LOAD             = PASS (0.69–0.80 s across runs)
+TRANSCRIPTION          = PASS (3/3 fixtures)
+TEXT_NONEMPTY          = YES (3/3)
+WARM_LATENCY_MS_SHORT  = 88   (1.865 s fixture)
+WARM_LATENCY_MS_5S     = 245  (5.849 s fixture)
+WARM_LATENCY_MS_NEAR_MAX = 540 (13.033 s fixture; repeat spread ≤ ±5 ms)
+PEAK_RSS_MB            = 721.4 (max resident set size)
+near-max RTF           = 0.041
+```
+
+Sufficiency per the stop rule: reliable load, non-empty Chinese text,
+bounded resource use, stable worst-case latency → ENGINE_SELECTED frozen as
+in DEC-VT-003.
 
 ### DEC-VT-005 — Deterministic deadline and failure mapping
 
 ```text
-SERVICE DEADLINE = frozen after DEC-VT-004 smoke (EXECUTED_OBSERVATION warm
-                   latency + fixed margin); a provisional bound of 8 s MUST
-                   NOT be treated as final until then
+SERVICE DEADLINE = 1500 ms (frozen from DEC-VT-004 EXECUTED_OBSERVATION:
+                   measured near-max warm decode 540 ms + fixed execution
+                   margin 960 ms covering the full-ceiling projection
+                   ≈620 ms at 15 s, thread/CPU contention, and host
+                   variance; not derived from published RTF estimates)
 DEADLINE EXCEEDED → 504 (and in-process cancellation; no orphan work)
 ENGINE UNAVAILABLE → 503
 VALIDATION FAILURES → 400 / 413 / 415 per DEC-VT-002
@@ -154,8 +195,9 @@ acceptance.
 
 ### ACC-VT-002 — Implementation conformance
 
-Route live behind the existing gateway auth with: EXECUTED_OBSERVATION smoke
-recorded (DEC-VT-004); deterministic 400/413/415/503/504 mapping exercised by
+Route live behind the existing gateway auth executing the ENGINE_PIN
+configuration (DEC-VT-003) under the frozen SERVICE DEADLINE (DEC-VT-005);
+deterministic 400/413/415/503/504 mapping exercised by
 tests; zero-persistence verified (no temp files, log allowlist audit);
 /v1/message regression untouched; history listener untouched; NO_MODEL_OR_
 AGENT_SPAWN verified.
@@ -171,6 +213,6 @@ PRIVACY_BOUNDARY_IDENTICAL — all YES required; no third shared Spec.
 ## 7. Open questions
 
 ```text
-SERVICE_DEADLINE_VALUE = pending DEC-VT-004 EXECUTED_OBSERVATION smoke
-ENGINE_PIN = Paraformer-zh via sherpa-onnx pending the same smoke
+None. SERVICE_DEADLINE_VALUE and ENGINE_PIN are frozen (DEC-VT-003,
+DEC-VT-004, DEC-VT-005).
 ```
