@@ -33,7 +33,9 @@
 import { existsSync, readFileSync, writeFileSync, statSync, mkdirSync, appendFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const ROLE = (process.argv[process.argv.indexOf('--role') + 1] ?? process.env.SCHEDULER_WATCHDOG_ROLE ?? 'w1').toLowerCase()
+const DELIVER_TEST = process.argv.includes('--deliver-test')
+const roleArg = process.argv[process.argv.indexOf('--role') + 1]
+const ROLE = (DELIVER_TEST ? 'w1' : (roleArg && !roleArg.startsWith('--') ? roleArg : (process.env.SCHEDULER_WATCHDOG_ROLE ?? 'w1'))).toLowerCase()
 const DRY_RUN = process.argv.includes('--dry-run')
 const STORE = process.env.SCHEDULER_WATCHDOG_STORE
   ?? (ROLE === 'w1' ? '/Users/authsvc/.agent-core/scheduler/jobs.json' : undefined)
@@ -105,21 +107,32 @@ async function feishuAlert(text) {
   }
   if (!FEISHU_CREDS || !ALERT_TO) throw new Error('feishu alert channel not configured (FEISHU_CREDS_PATH / SCHEDULER_WATCHDOG_ALERT_TO)')
   const creds = JSON.parse(readFileSync(FEISHU_CREDS, 'utf8'))
-  const tokenRes = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ app_id: creds.appId ?? creds.app_id, app_secret: creds.appSecret ?? creds.app_secret }),
-  })
-  const token = await tokenRes.json()
-  if (!token.tenant_access_token) throw new Error(`feishu token request failed: ${token.code ?? '?'}`)
-  const sendRes = await fetch('https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${token.tenant_access_token}` },
-    body: JSON.stringify({ receive_id: ALERT_TO, msg_type: 'text', content: JSON.stringify({ text }) }),
-  })
-  const sent = await sendRes.json()
-  if (sent.code !== 0) throw new Error(`feishu send failed: ${sent.code} ${sent.msg ?? ''}`)
-  return true
+  // 3 attempts with backoff: transient network blips must not lose an alert
+  // (the park-file fallback remains for total delivery failure).
+  let lastError
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const tokenRes = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ app_id: creds.appId ?? creds.app_id, app_secret: creds.appSecret ?? creds.app_secret }),
+      })
+      const token = await tokenRes.json()
+      if (!token.tenant_access_token) throw new Error(`feishu token request failed: ${token.code ?? '?'}`)
+      const sendRes = await fetch('https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${token.tenant_access_token}` },
+        body: JSON.stringify({ receive_id: ALERT_TO, msg_type: 'text', content: JSON.stringify({ text }) }),
+      })
+      const sent = await sendRes.json()
+      if (sent.code !== 0) throw new Error(`feishu send failed: ${sent.code} ${sent.msg ?? ''}`)
+      return true
+    } catch (error) {
+      lastError = error
+      if (attempt < 3) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000 * attempt)
+    }
+  }
+  throw lastError
 }
 
 async function deliverOrPark(text) {
@@ -249,7 +262,16 @@ async function runW2(nowMs) {
   ))
 }
 
+if (DELIVER_TEST) {
+  ;(async () => {
+    try { await feishuAlert(`Scheduler watchdog delivery test @ ${new Date().toISOString()} — W1/W2 alerting live.`); process.stdout.write('[deliver-test] SENT\n'); process.exit(0) }
+    catch (e) { process.stderr.write(`[deliver-test] FAILED: ${String(e?.message ?? e).slice(0, 200)}\n`); process.exit(1) }
+  })()
+} else {
 const nowMs = Date.now()
 const outcome = ROLE === 'w1' ? await runW1(nowMs) : await runW2(nowMs)
+process.stdout.write(`[scheduler-watchdog ${ROLE}] ${outcome}\n`)
+if (outcome === 'delivery_failed') process.exit(1)
+}
 process.stdout.write(`[scheduler-watchdog ${ROLE}] ${outcome}\n`)
 if (outcome === 'delivery_failed') process.exit(1)
