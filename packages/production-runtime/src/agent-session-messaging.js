@@ -233,8 +233,10 @@ export function createAgentSessionMessagingAccess({
         invocationCorrelation: anchor, failureCode: mapped.code,
         // §5.1a PROCESS_EXIT_REASON_VISIBLE: the Router-side reason code
         // (e.g. AGENT_PROCESS_EXITED) is preserved on the row — reason only.
-        ...(mapped.detail.includes('(reason:') && typeof error?.code === 'string'
-          ? { failureSource: error.code }
+        // Gated on the closed CODE (not the detail text), bounded like
+        // exitReason.
+        ...(mapped.code === 'outcome_unknown' && typeof error?.code === 'string' && error.code.length > 0
+          ? { failureSource: error.code.slice(0, 128) }
           : {}),
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: false, error: mapped }
