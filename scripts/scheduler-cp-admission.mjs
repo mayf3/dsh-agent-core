@@ -54,7 +54,7 @@ import { JobStore } from '../packages/scheduler/src/store.js'
 import { updateJobOp } from '../packages/scheduler/src/control.js'
 import {
   matchCriticalJobs, buildDesiredState, buildBackfillMapping, classifyCensus,
-  computeOperatorClosure, planOverlay, inDeploymentScope,
+  computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
 } from './lib/admission-lib.mjs'
 
 const args = process.argv.slice(2)
@@ -107,7 +107,13 @@ const CTX = MODE === 'selftest'
       kickstart: (label) => execFileSync('launchctl', ['kickstart', '-k', label], { stdio: ['ignore', 'pipe', 'pipe'] }),
       bootstrap: (plist, label) => execFileSync('launchctl', ['bootstrap', 'system', plist], { stdio: ['ignore', 'pipe', 'pipe'] }),
       chown: (path, uid, gid) => execFileSync('chown', [`${uid}:${gid}`, path]),
-      asAuthsvc: (cmd, argv) => execFileSync('sudo', ['-u', 'authsvc', 'env', '-i', `HOME=/Users/authsvc`, `AGENTCORE_EXPECTED_STORE=/Users/authsvc/.agent-core/scheduler/jobs.json`, cmd, ...argv], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
+      // env -i strips PATH and the CLI shebang is '#!/usr/bin/env node' —
+      // pass the pinned runtime's bin dir explicitly so node resolves.
+      asAuthsvc: (cmd, argv) => execFileSync('sudo', ['-u', 'authsvc', 'env', '-i',
+        'HOME=/Users/authsvc',
+        'PATH=/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin',
+        'AGENTCORE_EXPECTED_STORE=/Users/authsvc/.agent-core/scheduler/jobs.json',
+        cmd, ...argv], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
     }
 
 const receipts = { mode: MODE, sourceSha: SOURCE_SHA, phases: {}, startedAt: new Date().toISOString() }
@@ -176,25 +182,31 @@ function listLiveFiles(root, prefix = '') {
   return out
 }
 function overlay() {
-  // target universe = db93649 files under packages/ + scripts/
-  const targetList = git(['ls-tree', '-r', '--name-only', SOURCE_SHA, 'packages/', 'scripts/'], { encoding: 'utf8' }).split('\n').filter(Boolean).filter(inDeploymentScope)
-  const liveFiles = listLiveFiles(CTX.liveRoot)
-  // content sha256 (NOT git blob sha) — the overlay compares staged bytes to
-  // live bytes in one hash domain; bytes are cached for the write pass.
-  const targetBytes = new Map(targetList.map((path) => [path, git(['show', `${SOURCE_SHA}:${path}`], { stdio: ['ignore', 'pipe', 'pipe'] })]))
-  const targetHashes = new Map([...targetBytes.entries()].map(([path, bytes]) => [path, sha256(bytes)]))
-  const shaOfLive = (path) => {
+  const seedList = execFileSync('git', ['-C', REPO_ROOT, 'ls-tree', '-r', '--name-only', SOURCE_SHA, 'packages/broker/', 'packages/scheduler/'], { encoding: 'utf8' }).split('\n').filter(Boolean).filter((path) => inOverlayUniverse(path))
+  const liveRootFiles = listLiveFiles(CTX.liveRoot)
+  const liveSha = (path) => {
     const p = join(CTX.liveRoot, path)
     return existsSync(p) ? sha256(readFileSync(p)) : undefined
   }
-  const plan = planOverlay(targetHashes, liveFiles, shaOfLive)
+  const narrowed = narrowOverlayUniverse({
+    seedPaths: seedList,
+    readTarget: (path) => execFileSync('git', ['-C', REPO_ROOT, 'show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }),
+    liveHas: (path) => liveRootFiles.has(path),
+    liveShaOf: liveSha,
+  })
+  if (narrowed.refuse) phase('overlay', false, `NARROW CLOSURE REFUSED: ${narrowed.refuse} — NO MUTATION (widen CONSCIOUSLY with the model-overrides lesson in mind)`)
+  const plan = { update: [], add: [] }
+  for (const [path, bytes] of [...narrowed.overlay.entries()]) {
+    const sha = sha256(bytes)
+    if (!liveRootFiles.has(path)) plan.add.push({ path, sha })
+    else if (liveSha(path) !== sha) plan.update.push({ path, sha })
+  }
   const all = [...plan.update.map((entry) => ({ ...entry, kind: 'update' })), ...plan.add.map((entry) => ({ ...entry, kind: 'add' }))]
   if (MODE === 'plan') {
     process.stdout.write(`[overlay plan] update=${plan.update.length} add=${plan.add.length}\n${all.map((e) => `  ${e.kind} ${e.path}`).join('\n')}\n`)
     phase('overlay', true, `planned update=${plan.update.length} add=${plan.add.length} (plan mode)`)
     return
   }
-  // preimage tar
   const preimage = join(CTX.artifactsDir, 'rollback', 'overlay-preimage.tar.gz')
   mkdirSync(dirname(preimage), { recursive: true })
   const changedExisting = all.filter((e) => e.kind === 'update').map((e) => e.path)
@@ -202,9 +214,9 @@ function overlay() {
     execFileSync('tar', ['-czf', preimage, '-C', CTX.liveRoot, ...changedExisting])
   }
   for (const entry of all) {
-    const bytes = targetBytes.get(entry.path)
+    const bytes = Buffer.from(narrowed.overlay.get(entry.path), 'utf8')
     const target = join(CTX.liveRoot, entry.path)
-    if (sha256(bytes) !== entry.sha) throw new Error(`git-show bytes != blob sha for ${entry.path}`)
+    if (sha256(bytes) !== entry.sha) throw new Error(`staged bytes != plan sha for ${entry.path}`)
     mkdirSync(dirname(target), { recursive: true })
     const st = existsSync(target) ? statSync(target) : undefined
     const tmp = `${target}.incoming-${process.pid}`
@@ -217,7 +229,7 @@ function overlay() {
     }
     execFileSync('mv', [tmp, target])
   }
-  phase('overlay', true, `${all.length} files (update=${plan.update.length} add=${plan.add.length}); preimage=${changedExisting.length} files -> ${preimage}`)
+  phase('overlay', true, `NARROW closure: ${all.length} files (update=${plan.update.length} add=${plan.add.length}); preimage=${changedExisting.length} files -> ${preimage}; production-runtime/** untouched`)
 }
 
 // ── plist env + one kickstart ────────────────────────────────────────────────
@@ -420,7 +432,7 @@ if (MODE === 'selftest') {
   await createJobOp(store, { name: 'decoy daily', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '30 5 * * *', tz: 'UTC' }, payload: { kind: 'agentTurn', message: 'decoy' }, delivery: { mode: 'none' } })
   // fake live root with OLD bytes for two targets + a live-only file
   const liveRoot = join(fx, 'live-root')
-  for (const p of ['packages/broker/src/gateway.js', 'packages/scheduler/src/control.js', 'scripts/agentcore-cron.mjs']) {
+  for (const p of ['packages/broker/src/gateway.js', 'packages/scheduler/src/control.js', 'scripts/agentcore-cron.mjs', 'packages/agent-definition/src/definition.js', 'packages/agent-definition/src/index.js']) {
     mkdirSync(dirname(join(liveRoot, p)), { recursive: true })
     writeFileSync(join(liveRoot, p), `// OLD live bytes\n`)
   }
