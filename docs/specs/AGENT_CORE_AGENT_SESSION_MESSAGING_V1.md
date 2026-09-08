@@ -11,7 +11,9 @@ revision_date: 2026-09-08
 amendment_ref: r4 = AMENDMENT_1 (owner goal AGENT_SESSION_SEND_RELIABILITY_V1; docs-only:
   §5.1 two-dimension result model, §5.2 failure-code visibility, §5.3 bounded outcome
   reconciliation with child-minted invocationCorrelation anchor + agent_session_send_reconcile
-  discovery capability; accepted semantics of §0-§4/§6 unchanged)
+  discovery capability; accepted semantics of §0-§4/§6 unchanged, except that §5.2 additively
+  extends the R12 evidence shape (failureCode + invocationCorrelation fields on L1 rows) and §5.3
+  adds exactly one child-synthesized caller-visible reconciled envelope)
 amendment_status: proposed
 amendment_goal: AGENT_SESSION_SEND_RELIABILITY_V1
 accepted_date: 2026-09-02
@@ -53,8 +55,9 @@ owners:
 change_log:
   - revision: r4 (AMENDMENT_1)
     date: 2026-09-08
-    kind: docs-only semantic amendment (owner goal AGENT_SESSION_SEND_RELIABILITY_V1); no change
-      to §0-§4/§6 accepted semantics; adds §5.1-§5.3 and §7 reliability cases
+    kind: docs-only semantic amendment (owner goal AGENT_SESSION_SEND_RELIABILITY_V1); §0-§4/§6
+      accepted semantics unchanged (§5.2 additively extends the R12 evidence shape; §5.3 adds one
+      child-synthesized reconciled envelope); adds §5.1-§5.3 and §7 reliability cases
     evidence_base: docs/evidence/agent-session-send-reliability-v1-20260908 (branch
       docs/agent-session-send-reliability-v1-evidence @ 24e28ae; live tree
       /usr/local/libexec/agent-core/app 2026-09-05 vs origin/main 1cde3cc hash-comparison;
@@ -755,7 +758,16 @@ internal_error (pre-delivery emission)     -> NOT_DELIVERED + NOT_WAITED   (audi
 internal_error (post-receipt malformed
                receipt)                    -> DELIVERED   + UNKNOWN        (canonical detail marker:
                                                                               "after a proven inbox acceptance")
+internal_error (gateway catch-all, detail
+               "local capability failed
+               before commit")             -> UNKNOWN     + UNKNOWN        (unproven handler progress: the
+                                                                              handler may have thrown pre- or
+                                                                              post-receipt — never classified)
 ```
+
+The `not_admitted` row is proven for pre-receipt emissions; a post-receipt `not_admitted` from the wait
+settlement is mechanically unreachable today (every `settleDirect('not_admitted')` is a pre-write
+zero-byte rejection) and is defensive-only.
 
 `reply_unavailable` is by construction **post-receipt-only**: it is created exclusively after
 `receipt.accepted === true`, at reply-wait settlement (`R8` closed mapping), and therefore always means
@@ -787,6 +799,9 @@ ANCHOR (new, trusted-channel-only):
   invocationCorrelation = opaque child-minted id minted by the calling runtime for EXACTLY ONE
   agent_session_send RPC invocation; carried at the parent-RPC trusted boundary (like rpcMeta, never
   a model-visible argument — R2 untouched); persisted verbatim in the L1 intent and outcome rows.
+  Spoof-resistance: the lookup is bound to the GATEWAY-DERIVED caller (sourceAgentId from the trusted
+  context, never from arguments) — a caller can only ever reconcile its own sends; the anchor
+  correlates rows, it confers no identity.
 
 RECONCILE SURFACE (new, read-only):
   sibling LOCAL capability agent_session_send_reconcile, operation lookup,
@@ -795,24 +810,39 @@ RECONCILE SURFACE (new, read-only):
   model tool: the manifest carries an `infrastructure: true` marker and the broker tool
   presentation (index.js plugin apply — "manifests to register as tools", each mapping to ONE
   tool) filters such manifests out of the model inventory, while the gateway keeps
-  validating/executing them over the trusted RPC channel. Read-only: zero Router delivery, zero
-  Session mutation, bounded single exact-key lookup.
+  validating/executing them over the trusted RPC channel (apply() and the gateway receive the RAW
+  manifests, so the filter sees the marker; caveat: validateManifest's allowlist rebuild drops
+  unknown top-level keys, so any future path that round-trips manifests through it BEFORE apply()
+  would silently lose the marker — the one-line schema copy for `infrastructure` is then required).
+  Read-only: zero Router delivery, zero Session mutation, bounded single exact-key lookup.
 
 RELAY DUTY (mirrors SCHEDULER §5.2):
   At the two unknown capture points (transport loss; structurally unusable parent envelope), the child
-  relay issues EXACTLY ONE lookup over the same channel as the SAME caller, then converts:
+  relay issues EXACTLY ONE lookup over the same channel as the SAME caller, then converts.
+  Envelope scoping: §5.1's closed vocabulary remains untouched; AMENDMENT_1 adds EXACTLY ONE new
+  caller-visible result shape, the `reconciled` envelope below, and it is CHILD-SYNTHESIZED ONLY —
+  the parent can never return it (a `reconciled` result in a parent envelope fails
+  validSessionSendResult and degrades to the ambiguous error, as today), and the two capture points
+  are the only sites that produce it:
     intent + outcome(accepted)          -> {status:'reconciled', delivery:'DELIVERED',   replyStatus:'NOT_WAITED'}
     intent + outcome(replied)           -> {status:'reconciled', delivery:'DELIVERED',   replyStatus:'REPLIED',
                                             replyTextAvailable:false}                   # text never persisted
     intent + outcome(timeout)           -> {status:'reconciled', delivery:'DELIVERED',   replyStatus:'TIMEOUT'}
     intent + outcome(failed)            -> delivery/replyStatus per §5.1 from the persisted failureCode
     intent present, outcome absent      -> {status:'reconciled', delivery:'UNKNOWN',     replyStatus:'UNKNOWN'}
-    no intent row                       -> {status:'reconciled', delivery:'NOT_DELIVERED', replyStatus:'NOT_WAITED'}
+    intent row absent WITHIN RETAINED
+    EVIDENCE (live .jsonl + rotated .1) -> {status:'reconciled', delivery:'NOT_DELIVERED', replyStatus:'NOT_WAITED'}
                                            # intent append strictly precedes delivery, so absence proves
-                                           # the send never entered the handler
-  Lookup restart-honesty: the L1 chain is in-memory; after a control-plane restart the lookup answers
-  UNKNOWN (evidence gone) — durable persistence remains a §6 non-goal. A STILL_UNKNOWN answer is
-  final for that invocation: NO_AUTOMATIC_RETRY; the caller may only issue a NEW explicit send.
+                                           # the send never entered the handler — but ONLY while the
+                                           # retention window provably covers the invocation window
+  Lookup persistence honesty: the L1 chain is FILE-BACKED (rotating JSONL inside the control dir:
+  live file + one-deep `.1` at the 8 MiB cap) and SURVIVES control-plane restarts — the lookup MUST
+  read both files; refusing surviving evidence would be dishonest. Rotation is the only evidence
+  loss: an intent row expired by rotation MUST NOT be reported NOT_DELIVERED (that is the dangerous
+  direction — it licenses a duplicate send); an expired anchor resolves to UNKNOWN. NOT_DELIVERED
+  therefore requires provable retention coverage of the invocation window. Durable persistence
+  BEYOND the rotating evidence window remains a §6 non-goal. UNKNOWN is final for that invocation:
+  NO_AUTOMATIC_RETRY; the caller may only issue a NEW explicit send.
 
 CASE CONTRACT (goal AGENT_SESSION_SEND_RELIABILITY_V1):
   A receipt committed + response lost  -> reconcile DELIVERED, target inbox count 1, Run count 1,
@@ -963,6 +993,10 @@ AND no Feishu/Forum/Scheduler/Workflow delivery occurs
 
 ### AMENDMENT_1 mandatory cases (goal AGENT_SESSION_SEND_RELIABILITY_V1)
 
+> Naming note: "CASE A–G" and "T1–T14" below are the OWNER GOAL's enumerations
+> (AGENT_SESSION_SEND_RELIABILITY_V1 REQUIRED TESTS / OUTCOME RECONCILIATION), deliberately distinct
+> from the r3 §7 scenarios "Case A–I" above.
+
 - §5.1 mapping is mechanically exercised for every envelope: each caller-visible code/shape resolves to
   the normative DELIVERY_STATUS × REPLY_STATUS pair by a total test (T1–T6, T11–T14 analogues);
 - receipt committed + parent response deliberately dropped → single reconcile lookup converts to
@@ -977,8 +1011,9 @@ AND no Feishu/Forum/Scheduler/Workflow delivery occurs
   (CASES D–F; T4–T6);
 - duplicate RPC replay of the SAME invocation → exactly one inbox receipt and one target Run; the
   replay is answered without a second Router delivery (T9);
-- true unresolved ambiguity (restart between intent and outcome; unusable lookup) → reconcile UNKNOWN
-  is final, no automatic replay of any kind fires (T10);
+- true unresolved ambiguity (intent row expired by rotation within the retention window; unusable
+  lookup) → reconcile UNKNOWN is final, no automatic replay of any kind fires (T10); a control-plane
+  restart does NOT by itself destroy evidence (file-backed L1 rows are read across restarts);
 - `invocationCorrelation` is absent from every model-visible schema surface (R2 closure intact) and is
   persisted in intent + outcome rows; `agent_session_send_reconcile` is filtered from the model tool
   inventory via the `infrastructure: true` marker (still gateway-executable over the trusted channel);
@@ -1117,8 +1152,13 @@ AMENDMENT_1_CLASSIFICATION =
     mirrors the SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.2 state machine with a session-send anchor
 DEPLOYMENT_REGRESSION = NO (live tree 2026-09-05 session-send chain == origin/main 1cde3cc,
   hash-compared; evidence: docs/evidence/agent-session-send-reliability-v1-20260908)
-WIRE_BREAK = NONE (closed envelope vocabulary unchanged; anchor lives at the parent-RPC trusted
-  boundary; reconcile surface is infrastructure-only)
+WIRE_BREAK = NONE at the parent-answered surface (the closed §5 vocabulary every normal send response
+  uses is unchanged; the anchor lives at the parent-RPC trusted boundary; reconcile surface is
+  infrastructure-only). EXACTLY ONE new child-synthesized caller-visible shape is added by §5.3 (the
+  `reconciled` envelope at the two unknown capture points) — see §5.3 Envelope scoping.
+DEPLOYMENT_AUTHORITY_NOTE = implementing §5.3 after acceptance requires a fresh authority round under
+  AGENT_SESSION_SEND_STANDALONE_DEPLOYMENT_AUTHORITY_V1 (its AUTHORIZED_RELEASE_SOURCE is frozen);
+  this amendment changes no production bytes and grants no deployment authority.
 NEW_CAPABILITY = agent_session_send_reconcile (LOCAL, read-only, `infrastructure: true` manifest
   marker filtered from tool presentation, gateway-executable)
 GRANT_CHANGE = NONE (reuses agent.session.send; no new native/admin authorization)
@@ -1141,4 +1181,7 @@ AMENDMENT_1 review must specifically decide:
    bounded retry of the lookup itself on transient lookup failure;
 4. whether `replyTextAvailable:false` (reply text never persisted) is the honest terminal for a lost
    `replied` response, or whether callers require a follow-up read surface (V1 answer: no — non-goal);
-5. restart-honesty: UNKNOWN after control-plane restart is accepted as final for V1.
+5. rotation-honesty: the L1 chain is file-backed and survives restarts (lookup MUST read live + `.1`);
+   the accepted terminal is that an anchor expired by ROTATION resolves to UNKNOWN (never
+   NOT_DELIVERED — the duplicate-licensing direction), i.e. durable persistence beyond the rotating
+   evidence window stays a §6 non-goal while surviving evidence is always read.
