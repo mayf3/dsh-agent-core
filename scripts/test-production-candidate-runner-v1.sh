@@ -145,6 +145,8 @@ else
 fi
 expect_ok "T8 seal A" "$NODE" "$RUNNER" seal --gen "$GEN8A"
 expect_ok "T8 seal B" "$NODE" "$RUNNER" seal --gen "$GEN8B"
+[ "$(cat "$GEN8A/candidate/bin/tool")" = "$V1_BYTES" ] && ok "T8 cross-hash: A holds SHA1 bytes" || bad "T8 A content contaminated"
+[ "$(cat "$GEN8B/candidate/bin/tool")" = 'console.log("app v2")' ] && ok "T8 cross-hash: B holds SHA2 bytes" || bad "T8 B content contaminated"
 
 echo "=== T10: secret-class bytes refused (NO_SECRET_EXPOSURE) ==="
 printf 'TOKEN=supersecret' > "$SRC/lib/.env"
@@ -177,6 +179,18 @@ GEN13="$(prep "$TMP/s13.json")"
 "$NODE" "$RUNNER" seal --gen "$GEN13" >/dev/null 2>&1
 expect_fail "T13 apply refuses symlinked target" "$NODE" "$RUNNER" apply --gen "$GEN13" --live-root "$LIVE"
 [ "$(cat "$LIVE/real/tool")" = "REAL" ] && ok "T13 symlink target bytes untouched" || bad "T13 wrote through symlink"
+
+echo "=== T14: apply-with-closure E2E — installed closure modes normalized (audit r1 concern 1) ==="
+CLOSURE2_JSON=",\"targets\":[{\"sourcePath\":\"app.js\",\"targetPath\":\"/bin/c14tool\",\"why\":\"t14\"}],\"dependencyClosure\":{\"sourcePath\":\"$SRC/lib\",\"installPath\":\"/opt/lib14\"}"
+mkspec "$TMP/s14.json" FIX-N "$SHA1" git-show "$CLOSURE2_JSON"
+GEN14="$(prep "$TMP/s14.json")"
+"$NODE" "$RUNNER" seal --gen "$GEN14" >/dev/null 2>&1
+expect_ok "T14 apply with closure" "$NODE" "$RUNNER" apply --gen "$GEN14" --live-root "$LIVE"
+[ "$(cat "$LIVE/opt/lib14/helper.js")" = 'export const helperV1 = 1' ] && ok "T14 closure bytes installed" || bad "T14 closure bytes wrong"
+[ "$(fh "$LIVE/bin/c14tool")" = "$(fh "$GEN14/candidate/bin/c14tool")" ] && ok "T14 target postimage matches" || bad "T14 target mismatch"
+CLOS_MODE="$(stat -f '%Lp' "$LIVE/opt/lib14/helper.js")"
+[ "$CLOS_MODE" = "644" ] && ok "T14 installed closure mode normalized (0644, no sealed-bit leak)" || bad "T14 closure mode leaked: $CLOS_MODE"
+"$NODE" "$RUNNER" rollback-restore --gen "$GEN14" --live-root "$LIVE" >/dev/null 2>&1
 
 echo ""
 echo "=== SUMMARY ==="

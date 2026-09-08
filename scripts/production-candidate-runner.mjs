@@ -105,8 +105,10 @@ function copyTree(src, dest) {
 
 function secretScan(relPath) {
   const base = path.basename(relPath).toLowerCase();
-  return base === '.env' || base.startsWith('.env.') || /\.(pem|key)$/.test(base) ||
-    /credential|secret/.test(base);
+  return base === '.env' || base.startsWith('.env.') ||
+    /\.(pem|key|p12|pfx|jks|keystore)$/.test(base) ||
+    /^(id_rsa|id_ed25519|id_ecdsa)/.test(base) ||
+    /credential|secret|password|passwd/.test(base);
 }
 
 // ---------------------------------------------------------------------------
@@ -432,6 +434,19 @@ function cmdVerify(argv) {
   const genDir = path.resolve(requireArg(argv, '--gen'));
   const manifest = loadManifest(genDir);
   const problems = [...verifySealedSet(genDir, manifest), ...registryVerify(genDir)];
+  // seal.json cross-check (audit r1 concern): genId + manifestSha256 must match reality
+  const sealPath = path.join(genDir, 'seal.json');
+  if (fs.existsSync(sealPath)) {
+    try {
+      const seal = JSON.parse(fs.readFileSync(sealPath, 'utf8'));
+      if (seal.genId !== manifest.GENERATION_ID) problems.push(`seal.json genId mismatch: ${seal.genId}`);
+      if (seal.manifestSha256 !== sha256(fs.readFileSync(path.join(genDir, 'manifest.toml')))) {
+        problems.push('seal.json manifestSha256 mismatch (manifest.toml drifted post-seal or seal.json tampered)');
+      }
+    } catch (e) {
+      problems.push(`seal.json unreadable: ${e.message}`);
+    }
+  }
   if (problems.length) {
     console.error(`VERIFY DRIFT ${manifest.GENERATION_ID}:`);
     for (const p of problems) console.error(`  - ${p}`);
@@ -482,7 +497,9 @@ function cmdApply(argv) {
   const rollbackDir = path.join(genDir, 'rollback');
   if (fs.existsSync(rollbackDir)) die('refusing re-apply: rollback/ already exists (apply is once per generation)');
 
-  // A1.1: capture preimage NOW (the one capture moment), then freeze rollback/
+  // A1.1: capture preimage NOW (the one capture moment), then freeze rollback/.
+  // Re-assert the preimage at the capture moment (TOCTOU close): a change landing
+  // between gate3 and capture must fail the apply, not be absorbed into rollback.
   fs.mkdirSync(rollbackDir, { recursive: true });
   const rbLines = [];
   for (const t of manifest.targets) {
@@ -492,6 +509,11 @@ function cmdApply(argv) {
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     let content;
     try { content = fs.readFileSync(lp); } catch { content = Buffer.from(ABSENT); }
+    let actual = ABSENT;
+    try { actual = sha256(fs.readFileSync(lp)); } catch { /* ABSENT */ }
+    if (actual !== t.EXPECTED_PREIMAGE_HASH) {
+      die(`gate3b TOCTOU_PREIMAGE_DRIFT ${t.targetPath}: live changed between preimage gate and rollback capture`);
+    }
     fs.writeFileSync(dest, content);
     rbLines.push(`${sha256(content)}  ${rel}`);
   }
@@ -508,7 +530,14 @@ function cmdApply(argv) {
     fs.chmodSync(lp, parseInt(t.MODE || '0644', 8) || 0o644);
   }
   if (closureRel) {
-    copyTree(path.join(genDir, 'candidate', closureRel), livePathFor('/' + closureRel, liveRoot));
+    const installDir = livePathFor('/' + closureRel, liveRoot);
+    copyTree(path.join(genDir, 'candidate', closureRel), installDir);
+    // normalize modes on the INSTALLED closure: sealed defense-in-depth bits
+    // (0444/0555) must not leak onto live files; exec preserved as 0755.
+    for (const rel of walkFiles(installDir)) {
+      const f = path.join(installDir, rel);
+      fs.chmodSync(f, (fs.statSync(f).mode & 0o111) ? 0o755 : 0o644);
+    }
   }
 
   // postimage verify
