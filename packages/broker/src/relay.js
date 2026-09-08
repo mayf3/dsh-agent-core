@@ -175,9 +175,17 @@ function reconcileFailedOutcome(failureCode, failureReason) {
     // carries failureReason 'post_receipt' from the single emission site.
     return { delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }
   }
+  if (failureCode === 'outcome_unknown' && failureReason === 'post_receipt') {
+    // AMENDMENT_2 §5.1/§5.3: post-receipt outcome_unknown is the DELIVERED
+    // phase (receipt proven in-invocation; reply unknowable — e.g. the target
+    // process died mid-turn). Same evidence-loss doctrine as
+    // reply_unavailable(evicted|restart_lost).
+    return { delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }
+  }
   if (PRE_RECEIPT_FAILURE_CODES.has(failureCode)) return { delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' }
-  // internal_error (unmarked = unproven handler progress) / outcome_unknown /
-  // unrecognized — never classified.
+  // internal_error (unmarked = unproven handler progress) / outcome_unknown
+  // (unmarked = pre-receipt admission unproven) / unrecognized — never
+  // classified.
   return { delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
 }
 

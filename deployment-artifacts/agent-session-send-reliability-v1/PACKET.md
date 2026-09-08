@@ -3,7 +3,7 @@
 - date: 2026-09-08
 - frozen candidate head: `1d70571b9b94af0d337b2ef2e9f86560b822587d` (branch `impl/agent-session-send-reliability-v1`)
 - base: main `db93649` (AMENDMENT_1 accepted via PR #202, merge 8994aa5)
-- authority: AGENT_CORE_AGENT_SESSION_MESSAGING_V1 accepted r3 + **AMENDMENT_1 accepted r4** (independent spec review chain recorded in frontmatter; independent implementation audit r1: **ACCEPT / blockers NONE**, 5 actionable non-blocking notes absorbed in 1d70571)
+- authority: AGENT_CORE_AGENT_SESSION_MESSAGING_V1 accepted r3 + **AMENDMENT_1 accepted r4** (PR #202 @8994aa5) + **AMENDMENT_2 accepted r5** (PR #212 @f4ebfee — AGENT_PROCESS_EXITED unified matrix + outcome_unknown phase split; independent review chain in frontmatter; independent implementation audit r1 ACCEPT/NONE + AMENDMENT_2 delta audit)
 - GOVERNING_SPEC_UNMODIFIED: PASS (`git diff db93649..1d70571 -- docs/specs/` is empty)
 
 ## ⚠ HOLD — PRODUCTION_APPLY = HOLD_WHILE_P0_OWNS_SLOT
@@ -34,7 +34,8 @@ apply §D → post-verify §E.
    (transport throw; malformed/undeclared parent envelope), then the closed conversion:
    DELIVERED per outcome row (replied ⇒ `replyTextAvailable:false`), NOT_DELIVERED only under
    proven retention coverage, UNKNOWN final ⇒ NO_AUTOMATIC_RETRY. The send is NEVER replayed.
-6. **Pre-existing defects fixed (A/B-proven on base, on the session-send critical path)** —
+6. **§5.1a/§5.2/§5.3 AMENDMENT_2 (AGENT_PROCESS_EXITED corpus)** — post-receipt outcome_unknown rows carry the `post_receipt` marker + canonical proven-receipt render detail (DELIVERED + UNKNOWN); pre-receipt admission-unproven stays unmarked UNKNOWN (the Router's C-004/C-017 boundary doctrine consumed — NOT_DELIVERED never fabricated at the process boundary); §5.3 conversion row outcome_unknown+post_receipt ⇒ DELIVERED + UNKNOWN; AGENT_PROCESS_EXITED is a reason, never a delivery status.
+7. **Pre-existing defects fixed (A/B-proven on base, on the session-send critical path)** —
    broker child-mode apply crashed with ReferenceError (`withSchedulerMutationMask` was
    re-exported but never imported into module scope): EVERY source-main child tool
    registration was dead; agent-router seam tests still asserted pre-§5.2-hardening scheduler

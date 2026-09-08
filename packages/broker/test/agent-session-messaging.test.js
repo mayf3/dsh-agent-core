@@ -200,6 +200,8 @@ test('AMENDMENT_1 §5.3: reconciled conversions for every outcome row class', as
       { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }],
     [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'outcome_unknown' }, oldestRetainedIntentTs: 1 },
       { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'outcome_unknown', failureReason: 'post_receipt' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }],
     [{ invocationCorrelationFound: true, outcome: null, oldestRetainedIntentTs: 1 },
       { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }],
   ]
