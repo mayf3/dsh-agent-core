@@ -51,6 +51,7 @@
 import { createServer } from 'node:http'
 import z from '@deepseek-ai/schemastery'
 import { handleSchedulerRequest } from './scheduler-routes.js'
+import { createVoiceTranscriptionHandler } from './voice-transcription.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'product-api'
@@ -228,6 +229,10 @@ export function apply(ctx, config = {}) {
     }
   }
 
+  // PRODUCT_API_VOICE_TRANSCRIPTION_V1: ONE additive route with its own
+  // long-lived in-process ASR engine (loaded once; see voice-transcription.js).
+  const voiceTranscription = createVoiceTranscriptionHandler()
+
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
     try {
@@ -265,6 +270,10 @@ export function apply(ctx, config = {}) {
       if (req.method === 'POST' && url.pathname === '/v1/message') {
         const result = await sendMessage(await readBody(req))
         json(res, 200, result)
+        return
+      }
+      if (req.method === 'POST' && url.pathname === '/v1/voice/transcription') {
+        await voiceTranscription.handle(req, res)
         return
       }
       if (url.pathname === '/scheduler' || url.pathname.startsWith('/scheduler/')) {
@@ -321,6 +330,7 @@ export function apply(ctx, config = {}) {
   })
 
   ctx.effect(() => () => {
+    voiceTranscription.dispose()
     server.closeAllConnections()
     server.close()
   })
