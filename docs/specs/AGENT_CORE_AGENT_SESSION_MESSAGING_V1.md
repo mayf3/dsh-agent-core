@@ -20,7 +20,16 @@ amendment_ref: r4 = AMENDMENT_1 (owner goal AGENT_SESSION_SEND_RELIABILITY_V1; d
   extends the R12 evidence shape (failureCode + invocationCorrelation fields on L1 rows) and §5.3
   adds exactly one child-synthesized caller-visible reconciled envelope)
 amendment_status: accepted
-amendment2_status: proposed
+amendment2_status: accepted
+amendment2_accepted_date: 2026-09-09
+amendment2_accepted_reviewed_head: 1411c48
+amendment2_acceptance_authority_basis: >-
+  owner goal directive 2026-09-09 pre-ruled the exact semantics (AGENT_PROCESS_EXITED is a
+  reason, never a delivery status; CASE A/B/C required; delivery must be mechanically visible
+  post-receipt) and ordered this goal's lifecycle including implementation; autonomous chain:
+  independent review r1 REVISE (1 blocker) -> fix 0a2891d -> re-audit REVISE (2 one-line
+  residuals) -> fix 1411c48 -> final verification ACCEPT blockers NONE; docs-only,
+  WIRE_BREAK/GRANT_CHANGE/PRODUCTION_CHANGE = NONE
 amendment_accepted_date: 2026-09-08
 amendment_accepted_by: mayf3
 amendment_accepted_merge: 8994aa587ed9328540e793c77128210a9abac8e3 (PR #202, normal merge path;
