@@ -17,6 +17,10 @@ amendments:
     the surface's candidate-preparation entry point routes through the generation contract, demonstrated by per-surface
     fixture E2E in the required failure-test suite + migration runbook published; CURRENT_LIVE_RUNTIME_PROVENANCE
     (FU-1/FU-2) is explicitly outside gate scope.
+  - AMENDMENT_2 (2026-09-08, docs-only, OWNER RULING on readiness semantics — supersedes A1.3 as a gate-value basis):
+    A1.3's demonstration semantics may NOT be used to record future adoption as current PASS. §10 per-surface gates are
+    two-valued (IMPLEMENTED_NOT_ADOPTED | ADOPTED_PASS); ADOPTED_PASS requires real production-path mechanical evidence
+    (7 items, §12). GOAL_LEVEL READY_FOR_PRODUCTION_APPLY = NO until all four surfaces are ADOPTED_PASS. See §12.
 type: implementation-spec (staging isolation + artifact integrity seam; implementation in bounded follow-up PRs under this spec)
 scope:
   - Candidate generation model (ONE GOAL / ONE CANDIDATE GENERATION, unique GENERATION_ID)
@@ -30,7 +34,7 @@ references:
   - docs/specs/SCHEDULER_CONTROL_PLANE_RELIABILITY_V1.md (SB4 operator-CLI byte pinning — reused, NOT duplicated; CLI artifact gates defer to SB4 where they overlap)
   - docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md (artifact authority model, preflight form)
   - imported incidents (goal brief 2026-09-08): auth stage pollution during slot wait; P9 auth stage bundle with another Goal's 1.11.0 uncommitted changes
-owner_rulings: goal brief 2026-09-08 (invariants, apply contract, 8 required failure tests absorbed in §2/§5/§6; anti-churn constraint absorbed in §7)
+owner_rulings: goal brief 2026-09-08 (invariants, apply contract, 8 required failure tests absorbed in §2/§5/§6; anti-churn constraint absorbed in §7); readiness-semantics ruling 2026-09-08 (AMENDMENT_2: A1.3 may not mark future adoption as current PASS — per-surface gates two-valued, goal-level READY_FOR_PRODUCTION_APPLY = NO until all four surfaces ADOPTED_PASS)
 implementation_authority: none until status: accepted
 ---
 
@@ -204,3 +208,60 @@ Plus: minimal migration runbook published for existing production Goals (each ad
 ## 11. Scope boundaries
 
 No production migration/apply in this goal (slot-gated behind P0). No CI/CD platform, no repo restructuring, no change to `PRODUCTION_MUTATION_CONCURRENCY = 1`, no reopening of closed goals (SCHEDULER tool surface PR #167 stays closed; SB4 authority unchanged). Out of scope: retrofitting historical artifacts, changing store semantics, auth forum-supply pending items.
+
+## 12. AMENDMENT_2 (2026-09-08, docs-only, OWNER RULING on readiness semantics)
+
+Owner ruling: A1.3's demonstration semantics may NOT be used to record future adoption as current PASS. The §10 per-surface gates are hereby two-valued:
+
+```
+<SURFACE>_STAGE_ISOLATION = IMPLEMENTED_NOT_ADOPTED | ADOPTED_PASS
+```
+
+**ADOPTED_PASS requires real production-path mechanical evidence, per surface:**
+
+1. live/apply entrypoint consumes a sealed generation
+2. fresh candidate seal verified at apply
+3. fresh production preimage verified at apply
+4. no rebuild/install/patch at apply
+5. drift causes FAILED_NO_MUTATION
+6. resulting production bytes read back to expected hash
+7. receipt written
+
+Fixture E2E / runbook / code availability do NOT constitute adopted production proof.
+
+**Current values (2026-09-08):**
+
+```
+AUTH_STAGE_ISOLATION                  = IMPLEMENTED_NOT_ADOPTED
+SVC_WORKFLOW_STAGE_ISOLATION          = IMPLEMENTED_NOT_ADOPTED
+DSH_STAGE_ISOLATION                   = IMPLEMENTED_NOT_ADOPTED
+SCHEDULER_OPERATOR_ARTIFACT_ISOLATION = IMPLEMENTED_NOT_ADOPTED
+  SCHEDULER_OPERATOR_GENERATION_SEALED    = PASS  (…--37d6763--x86_64--g1; receipts: suite r3 47-assertion PASS + audit r1 PASS + delta re-audit r2 PASS)
+  SCHEDULER_OPERATOR_PRODUCTION_ISOLATION = NOT_YET (/usr/local/bin/agentcore-cron still → mutable dev worktree until the receipted cutover)
+```
+
+**Readiness tokens allowed NOW (framework level):**
+
+```
+FRAMEWORK_IMPLEMENTATION_READY                = YES
+GENERATION_RUNNER_TESTED                      = PASS
+FAILURE_INJECTION_SUITE                       = PASS
+RUNBOOK_READY                                 = YES
+ISOLATION_FRAMEWORK_READY_FOR_PRODUCTION_APPLY = YES
+SCHEDULER_OPERATOR_READY_FOR_PRODUCTION_APPLY  = YES (the cutover is the pending apply)
+```
+
+**GOAL_LEVEL:** `READY_FOR_PRODUCTION_APPLY = NO` under the honest §10 reading (all four surfaces ADOPTED_PASS required). A1.3 is re-scoped as FRAMEWORK-demonstration semantics only; it is not a basis for per-surface gate values.
+
+**Status & resume protocol:**
+
+```
+GOAL_STATUS             = BLOCKED_BY_DEPENDENCY
+CURRENT_PHASE           = READY_FRAMEWORK_WAITING_FOR_REAL_ADOPTION
+NEXT_EXECUTABLE_ACTION  = NONE_UNTIL_P0_PRODUCTION_SLOT_RELEASED
+BLOCKING_DEPENDENCIES   = (1) P0 WORKFLOW_ASSIGNEE_CANONICAL_IDENTITY_RECONCILIATION_V1 production mutation slot
+                          (2) each component's next authorized production adoption window
+OWNER_ACTION_REQUIRED   = NONE
+```
+
+RESUME SAME GOAL after P0 slot release: fresh preflight → scheduler sealed-generation cutover (runbook §4) → production read-back + receipt → SCHEDULER = ADOPTED_PASS. auth / svc-workflow / dsh adopt the frozen-generation contract at their next authorized production deployment and are marked ADOPTED_PASS after real apply success. Goal terminal readiness/complete is declared only when the accepted §10 terminal semantics are satisfied in full. No audits / investigations / tests are to be run to keep the goal ACTIVE while blocked.
