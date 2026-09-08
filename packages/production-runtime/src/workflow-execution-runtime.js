@@ -8,7 +8,10 @@
  *   due feed          broker gateway `workflow_dispatch_intents.list`
  *                     (the poller Principal holds the GLOBAL_SCHEDULER_READ
  *                     binding server-side; the gateway does token+HTTP —
- *                     no second HTTP client, no new scope handling)
+ *                     no second HTTP client, no new scope handling). The
+ *                     engine sweeps pages via the svc-workflow keyset
+ *                     continuation (afterNextEligibleAt +
+ *                     afterDispatchIntentId) until a short page.
  *   assignee mapping  `agentPrincipalResolutionAccess` (AGENT_CORE_EXACT_
  *                     PRINCIPAL_AGENT_RESOLUTION_V1 — auth-service authority
  *                     + local definition deliverability, invoked trusted and
@@ -62,10 +65,16 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     ledger,
     log,
     ...(config.maxAdmissionsPerPoll === undefined ? {} : { config: { maxAdmissionsPerPoll: config.maxAdmissionsPerPoll } }),
-    listDueIntents: async () => {
+    fetchDuePage: async ({ afterNextEligibleAt, afterDispatchIntentId } = {}) => {
       if (!enabled) return { ok: false, code: 'poller_unconfigured', detail: `set ${WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV} to enable the due-feed poller` }
+      // Keyset continuation (CTR-WAE-001b): the engine only ever supplies
+      // BOTH-or-NEITHER cursor params, and the strings are the EXACT
+      // previously returned values (never reformatted).
+      const args = { limit: DUE_FEED_LIMIT }
+      if (afterNextEligibleAt !== undefined) args.afterNextEligibleAt = afterNextEligibleAt
+      if (afterDispatchIntentId !== undefined) args.afterDispatchIntentId = afterDispatchIntentId
       const res = await gateway.execute(
-        { capabilityId: 'workflow_dispatch_intents', operation: 'list', args: { limit: DUE_FEED_LIMIT } },
+        { capabilityId: 'workflow_dispatch_intents', operation: 'list', args },
         { agentId: pollerAgentId },
       )
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'dispatch_intents_failed', detail: res.error?.detail }

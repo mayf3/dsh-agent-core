@@ -38,6 +38,8 @@ function dueIntent(overrides = {}) {
 
 function makeDeps({
   dueItems = [dueIntent()],
+  duePages = undefined, // array of page arrays; overrides dueItems
+  dueErrorOnPage = 1,
   dueError = undefined,
   resolve = () => ({ ok: true, agentId: AGENT }),
   deliver = () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:handle-1' }),
@@ -47,15 +49,20 @@ function makeDeps({
 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'wfe-engine-'))
   const ledger = new ExecutionLedger({ dir })
-  const calls = { delivers: [], resolves: [], detailReads: [], instructions: [] }
+  const calls = { delivers: [], resolves: [], detailReads: [], instructions: [], dueRequests: [] }
   // Mid-test re-pointable seams (tests reassign fixture.turnState etc. to
   // advance time without rebuilding the engine).
   const mutable = { turnState, detailBody }
   const engine = createWorkflowExecutionEngine({
     ledger,
     log: { log: () => {}, warn: () => {}, error: () => {} },
-    listDueIntents: async () => {
-      if (dueError !== undefined) return { ok: false, ...dueError }
+    fetchDuePage: async (req) => {
+      calls.dueRequests.push(req)
+      if (dueError !== undefined && calls.dueRequests.length >= dueErrorOnPage) return { ok: false, ...dueError }
+      if (duePages !== undefined) {
+        const idx = calls.dueRequests.length - 1
+        return { ok: true, items: duePages[idx] ?? [] }
+      }
       return { ok: true, items: typeof dueItems === 'function' ? dueItems() : dueItems }
     },
     resolvePrincipalToAgent: async (principalId) => {
@@ -263,7 +270,7 @@ test('restart: a fresh engine over the same ledger reconciles via the requestId 
     const engine = createWorkflowExecutionEngine({
       ledger: new ExecutionLedger({ dir: first.dir }),
       log: { log: () => {}, error: () => {} },
-      listDueIntents: async () => ({ ok: true, items: [dueIntent()] }),
+      fetchDuePage: async () => ({ ok: true, items: [dueIntent()] }),
       resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
       deliverRun: async () => { throw new Error('restart engine must never deliver again') },
       getTurnReconciliation: () => ({ state: 'never_existed' }),
@@ -331,7 +338,7 @@ test('maxAdmissionsPerPoll bounds a burst; excess due intents stay due (no admis
     try {
       const bounded = createWorkflowExecutionEngine({
         ledger: new ExecutionLedger({ dir }),
-        listDueIntents: async () => ({ ok: true, items }),
+        fetchDuePage: async () => ({ ok: true, items }),
         resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
         deliverRun: async () => ({ ok: true, sessionId: 'main' }),
         getTurnReconciliation: () => ({ state: 'pending' }),
