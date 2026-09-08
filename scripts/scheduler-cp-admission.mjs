@@ -76,12 +76,15 @@ const REPO = (() => {
   return relative('', here) === here ? here : here // absolute by construction
 })()
 const REPO_ROOT = join(dirname(new URL(import.meta.url).pathname), '..')
+// root runs git against a yanfenma-owned repo -> dubious-ownership refusal;
+// every git call goes through this wrapper with the repo explicitly trusted.
+const git = (argv, opts = {}) => execFileSync('git', ['-c', `safe.directory=${REPO_ROOT}`, '-C', REPO_ROOT, ...argv], { maxBuffer: 32 * 1024 * 1024, ...opts })
 
 const CTX = MODE === 'selftest'
   ? {
       liveRoot: '', storePath: '', artifacts: '', binSymlink: '', launchctl: '', ownerChat: '', launchdDir: '',
-      gitShow: (sha, path) => execFileSync('git', ['-C', REPO_ROOT, 'show', `${sha}:${path}`], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] }),
-      gitHash: (sha, path) => execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
+      gitShow: (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
+      gitHash: (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
       kickstart: (label) => CTX.launchctlShim('kickstart', label),
       bootstrap: (plist, label) => CTX.launchctlShim('bootstrap', `${plist} ${label}`),
       chown: () => true, // fixture dirs already owned by the runner
@@ -99,8 +102,8 @@ const CTX = MODE === 'selftest'
       binSymlink: '/usr/local/bin/agentcore-cron',
       launchctl: 'launchctl',
       ownerChat: process.env.SCHEDULER_WATCHDOG_ALERT_TO ?? '',
-      gitShow: (sha, path) => execFileSync('git', ['-C', REPO_ROOT, 'show', `${sha}:${path}`], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] }),
-      gitHash: (sha, path) => execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
+      gitShow: (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
+      gitHash: (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
       kickstart: (label) => execFileSync('launchctl', ['kickstart', '-k', label], { stdio: ['ignore', 'pipe', 'pipe'] }),
       bootstrap: (plist, label) => execFileSync('launchctl', ['bootstrap', 'system', plist], { stdio: ['ignore', 'pipe', 'pipe'] }),
       chown: (path, uid, gid) => execFileSync('chown', [`${uid}:${gid}`, path]),
@@ -174,11 +177,11 @@ function listLiveFiles(root, prefix = '') {
 }
 function overlay() {
   // target universe = db93649 files under packages/ + scripts/
-  const targetList = execFileSync('git', ['-C', REPO_ROOT, 'ls-tree', '-r', '--name-only', SOURCE_SHA, 'packages/', 'scripts/'], { encoding: 'utf8' }).split('\n').filter(Boolean).filter(inDeploymentScope)
+  const targetList = git(['ls-tree', '-r', '--name-only', SOURCE_SHA, 'packages/', 'scripts/'], { encoding: 'utf8' }).split('\n').filter(Boolean).filter(inDeploymentScope)
   const liveFiles = listLiveFiles(CTX.liveRoot)
   // content sha256 (NOT git blob sha) — the overlay compares staged bytes to
   // live bytes in one hash domain; bytes are cached for the write pass.
-  const targetBytes = new Map(targetList.map((path) => [path, execFileSync('git', ['-C', REPO_ROOT, 'show', `${SOURCE_SHA}:${path}`], { maxBuffer: 32 * 1024 * 1024 })]))
+  const targetBytes = new Map(targetList.map((path) => [path, git(['show', `${SOURCE_SHA}:${path}`], { stdio: ['ignore', 'pipe', 'pipe'] })]))
   const targetHashes = new Map([...targetBytes.entries()].map(([path, bytes]) => [path, sha256(bytes)]))
   const shaOfLive = (path) => {
     const p = join(CTX.liveRoot, path)
@@ -266,7 +269,7 @@ function operatorGeneration() {
     const closure = computeOperatorClosure('scripts/agentcore-cron.mjs', (path) => CTX.gitShow(SOURCE_SHA, path))
     for (const path of Object.keys(closure)) {
       if (closure[path] === 'UNRESOLVABLE') throw new Error(`operator closure unresolvable at ${path}`)
-      const bytes = execFileSync('git', ['-C', REPO_ROOT, 'show', `${SOURCE_SHA}:${path}`], { maxBuffer: 32 * 1024 * 1024 })
+      const bytes = git(['show', `${SOURCE_SHA}:${path}`], { stdio: ['ignore', 'pipe', 'pipe'] })
       // the seed lands under its OPERATOR name (bin/agentcore-cron, no .mjs)
       const rel = path === 'scripts/agentcore-cron.mjs' ? 'bin/agentcore-cron' : path
       const target = join(genDir, 'candidate/usr/local', rel.startsWith('bin/') ? rel : rel.replace(/^packages\//, 'packages/'))
@@ -435,8 +438,8 @@ if (MODE === 'selftest') {
   CTX.kickstart = (label) => CTX.launchctlShim('kickstart', label)
   CTX.bootstrap = (plist, label) => CTX.launchctlShim('bootstrap', plist)
   const REPO_ROOT2 = REPO_ROOT
-  CTX.gitShow = (sha, path) => execFileSync('git', ['-C', REPO_ROOT2, 'show', `${sha}:${path}`], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 })
-  CTX.gitHash = (sha, path) => execFileSync('git', ['-C', REPO_ROOT2, 'rev-parse', `${sha}:${path}`], { encoding: 'utf8' }).trim()
+  CTX.gitShow = (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8' })
+  CTX.gitHash = (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8' }).trim()
   await main()
   // selftest assertions
   const ok = (cond, label) => { if (!cond) { process.stderr.write(`[selftest FAIL] ${label}\n`); process.exit(1) } }
