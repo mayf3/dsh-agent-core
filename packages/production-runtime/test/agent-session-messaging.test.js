@@ -529,11 +529,12 @@ test('T_PROCESS_EXIT_1: process-exit rejection at the admission boundary stays u
     { targetAgentId: TARGET, message: 'x', timeoutSeconds: 0 },
     { callerAgentId: CALLER, sourceTurnExecutionId: PROOF, invocationCorrelation: 'anchor-12345678' },
   )
-  assert.equal(envelope.error.code, 'outcome_unknown')
-  assert.equal(envelope.error.detail.includes('AGENT_PROCESS_EXITED'), false, 'reason rides evidence surfaces, not the closed code')
+  assert.equal(envelope.error.code, 'outcome_unknown', 'the closed code never becomes a delivery dimension')
+  assert.match(envelope.error.detail, /\(reason: AGENT_PROCESS_EXITED\)/, 'PROCESS_EXIT_REASON_VISIBLE: the reason rides the render detail')
   const [row] = auditRows(exited.file).filter((r) => r.phase === 'outcome')
   assert.equal(row.failureCode, 'outcome_unknown')
   assert.equal(row.failureReason, undefined, 'pre-receipt admission-unproven is UNMARKED — no post_receipt, no fabricated phase')
+  assert.equal(row.failureSource, 'AGENT_PROCESS_EXITED', 'the Router-side reason code is preserved on the row (reason only)')
   // §5.3 reconcile of that row: STILL_UNKNOWN — the duplicate-licensing
   // NOT_DELIVERED is never produced from an unproven admission.
   const lookup = exited.access.handlers.agent_session_send_reconcile.lookup(
@@ -545,16 +546,25 @@ test('T_PROCESS_EXIT_1: process-exit rejection at the admission boundary stays u
 
 test('T_PROCESS_EXIT_2: receipt proven then target process exits mid-turn -> post-receipt outcome_unknown is DELIVERED + UNKNOWN (reason visible)', async () => {
   // Mid-turn death: the Run terminates without outcome AFTER the inbox receipt.
-  const died = buildAccess({ router: fakeRouter({ states: { 'turn:1': { state: 'available', truncated: false, terminalState: 'terminated_without_outcome' } } }) })
+  // The exit reason is read from the reconciliation SETTLED SNAPSHOT (R9.5),
+  // never from event payloads.
+  const router = fakeRouter({ states: { 'turn:1': { state: 'available', truncated: false, terminalState: 'terminated_without_outcome' } } })
+  router.getTurnReconciliation = (handle) => ({
+    state: 'settled',
+    snapshot: { handle, terminationEvidence: 'child_real_exit', errorClass: 'AGENT_PROCESS_EXITED', initialSource: 'process_unavailable' },
+  })
+  const died = buildAccess({ router })
   const envelope = await died.access.handlers.agent_session_send.send(
     { targetAgentId: TARGET, message: 'x', timeoutSeconds: 5 },
     { callerAgentId: CALLER, sourceTurnExecutionId: PROOF, invocationCorrelation: 'anchor-12345678' },
   )
   assert.equal(envelope.error.code, 'outcome_unknown')
-  assert.match(envelope.error.detail, /after a proven inbox receipt \(delivery was proven\)/, 'the canonical post-receipt marker is model-visible')
+  assert.match(envelope.error.detail, /after a proven inbox receipt \(delivery was proven; exit reason: child_real_exit\)/, 'the canonical marker AND the exit reason are model-visible')
+  assert.equal(router.deliveries.length, 1, 'delivery count 1 (CANDIDATE_PROOF T2 row)')
   const [row] = auditRows(died.file).filter((r) => r.phase === 'outcome')
   assert.equal(row.failureCode, 'outcome_unknown')
   assert.equal(row.failureReason, 'post_receipt')
+  assert.equal(row.exitReason, 'child_real_exit', 'the settled-snapshot reason is preserved on the row (reason only)')
   // §5.3 reconcile converts the row: DELIVERED + UNKNOWN — the caller never
   // has to guess, and a resend would be a policy violation, not a guess.
   const lookup = died.access.handlers.agent_session_send_reconcile.lookup(
