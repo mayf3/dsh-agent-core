@@ -229,39 +229,57 @@ Owner ruling: A1.3's demonstration semantics may NOT be used to record future ad
 
 Fixture E2E / runbook / code availability do NOT constitute adopted production proof.
 
-**Current values (2026-09-08):**
+**Current values (2026-09-08, updated post-cutover — AMENDMENT_2 §12 status flip for SCHEDULER only):**
 
 ```
 AUTH_STAGE_ISOLATION                  = IMPLEMENTED_NOT_ADOPTED
 SVC_WORKFLOW_STAGE_ISOLATION          = IMPLEMENTED_NOT_ADOPTED
 DSH_STAGE_ISOLATION                   = IMPLEMENTED_NOT_ADOPTED
-SCHEDULER_OPERATOR_ARTIFACT_ISOLATION = IMPLEMENTED_NOT_ADOPTED
-  SCHEDULER_OPERATOR_GENERATION_SEALED    = PASS  (…--37d6763--x86_64--g1; receipts: suite r3 47-assertion PASS + audit r1 PASS + delta re-audit r2 PASS)
-  SCHEDULER_OPERATOR_PRODUCTION_ISOLATION = NOT_YET (/usr/local/bin/agentcore-cron still → mutable dev worktree until the receipted cutover)
+SCHEDULER_OPERATOR_ARTIFACT_ISOLATION = ADOPTED_PASS
+  evidence (7-item, real production path, 2026-09-08):
+    1. live/apply entrypoint consumes sealed generation — /usr/local/bin/agentcore-cron →
+       ~/workspace/artifacts/production-candidates/…--e9e5009--g1/candidate/usr/local/bin/agentcore-cron (atomic rename swap)
+    2. fresh candidate seal verified — runner verify OK pre-swap (seal set + manifest↔seal + seal.json cross-check + receipts)
+    3. fresh production preimage verified — link-resolved bytes hash == EXPECTED_PREIMAGE_HASH 24ce44e7… at preflight AND
+       at the apply moment (race re-check)
+    4. no rebuild/install/patch — mutation was the link rename only; sealed generation untouched (verify OK post-swap)
+    5. drift → FAILED_NO_MUTATION — demonstrated live: attempt 1 (37d6763--g1, closure NONE) failed functional smoke →
+       rolled back, never repaired in place, superseded by new generation e9e5009--g1 with full ESM closure
+    6. production read-back == expected hash — shasum of link-resolved operator == CANDIDATE_HASH 24ce44e7… post-swap
+    7. receipt written — cutover-rollback.json + cutover-receipt.json on the generation; evidence copies committed
+       (docs/evidence/production-candidate-g1-scheduler-cli-20260908/active-e9e5009-g1/)
+  notes: functional smoke = --help usage + list --json end-to-end in sandboxed HOME through the production link;
+  --help exits 2 by CLI design (byte-identical pre/post); canonical store seam present in sealed bytes
+  ($HOME/.agent-core default, AGENTCORE_SCHEDULER_STORE/--store override); live authsvc-context store smoke not
+  executable without sudo — recorded as note, byte-identity carries behavior equivalence
 ```
 
-**Readiness tokens allowed NOW (framework level):**
+**Readiness tokens (2026-09-08 post-cutover):**
 
 ```
-FRAMEWORK_IMPLEMENTATION_READY                = YES
-GENERATION_RUNNER_TESTED                      = PASS
-FAILURE_INJECTION_SUITE                       = PASS
-RUNBOOK_READY                                 = YES
+FRAMEWORK_IMPLEMENTATION_READY                 = YES
+GENERATION_RUNNER_TESTED                       = PASS
+FAILURE_INJECTION_SUITE                        = PASS
+RUNBOOK_READY                                  = YES
 ISOLATION_FRAMEWORK_READY_FOR_PRODUCTION_APPLY = YES
-SCHEDULER_OPERATOR_READY_FOR_PRODUCTION_APPLY  = YES (the cutover is the pending apply)
+SCHEDULER_OPERATOR_READY_FOR_PRODUCTION_APPLY  = YES → EXECUTED (ADOPTED_PASS above)
+SCHEDULER_OPERATOR_PRODUCTION_ISOLATION        = ISOLATED (production link no longer points at any dev worktree)
 ```
 
-**GOAL_LEVEL:** `READY_FOR_PRODUCTION_APPLY = NO` under the honest §10 reading (all four surfaces ADOPTED_PASS required). A1.3 is re-scoped as FRAMEWORK-demonstration semantics only; it is not a basis for per-surface gate values.
+**GOAL_LEVEL:** `READY_FOR_PRODUCTION_APPLY = NO` — three surfaces remain IMPLEMENTED_NOT_ADOPTED. Goal terminal readiness/complete only when all four §10 gates are ADOPTED_PASS.
 
-**Status & resume protocol:**
+**Status & resume protocol (post-cutover aggregate):**
 
 ```
 GOAL_STATUS             = BLOCKED_BY_DEPENDENCY
-CURRENT_PHASE           = READY_FRAMEWORK_WAITING_FOR_REAL_ADOPTION
-NEXT_EXECUTABLE_ACTION  = NONE_UNTIL_P0_PRODUCTION_SLOT_RELEASED
-BLOCKING_DEPENDENCIES   = (1) P0 WORKFLOW_ASSIGNEE_CANONICAL_IDENTITY_RECONCILIATION_V1 production mutation slot
-                          (2) each component's next authorized production adoption window
+CURRENT_PHASE           = WAITING_FOR_REMAINING_REAL_ADOPTIONS
+PRODUCTION_MUTATION_SLOT = RELEASED (scheduler cutover complete; concurrency=1 ownerless again)
+NEXT_EXECUTABLE_ACTION  = NONE_UNTIL_NEXT_AUTHORIZED_ADOPTION_WINDOW (auth / svc-workflow / dsh — their next
+                          authorized production deployment adopts the frozen-generation contract per runbook §§1-3)
+BLOCKING_DEPENDENCIES   = (1) auth-service next authorized deployment window
+                          (2) svc-workflow next authorized deployment window
+                          (3) dsh-agent-core next authorized deployment window (incl. any targeted redeploy)
 OWNER_ACTION_REQUIRED   = NONE
+No polling. No audits / investigations / tests to keep the goal ACTIVE while blocked. RESUME SAME GOAL per-surface
+at each window: fresh preflight → prepare/seal/smoke → receipted apply → post-proof → that surface = ADOPTED_PASS.
 ```
-
-RESUME SAME GOAL after P0 slot release: fresh preflight → scheduler sealed-generation cutover (runbook §4) → production read-back + receipt → SCHEDULER = ADOPTED_PASS. auth / svc-workflow / dsh adopt the frozen-generation contract at their next authorized production deployment and are marked ADOPTED_PASS after real apply success. Goal terminal readiness/complete is declared only when the accepted §10 terminal semantics are satisfied in full. No audits / investigations / tests are to be run to keep the goal ACTIVE while blocked.

@@ -49,16 +49,26 @@ Today: installer ships whatever worktree bytes invoke it; partial "双文件" re
 
 ## 4. Scheduler operator CLI (SB4 packaging; ACTIVE GENERATION FROZEN)
 
-Active sealed generation (2026-09-08, refrozen after runner r2 hardening — new-generation discipline):
+Active sealed generation (2026-09-08 — **CUTOVER DONE**, SCHEDULER_OPERATOR_ARTIFACT_ISOLATION = ADOPTED_PASS):
 
 ```
-~/workspace/artifacts/production-candidates/PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1--dsh-agent-core--37d6763--x86_64--g1   ← ACTIVE
-  SOURCE_SHA 37d6763 (git-show; commit-tree bytes) · target /usr/local/bin/agentcore-cron
-  CANDIDATE_HASH == EXPECTED_PREIMAGE_HASH = 24ce44e7… (live symlink currently serves the same bytes)
-  runner pin 90f82a68… · receipts: test = failure-test suite r3 (47 assertions PASS), audit = r1 PASS + delta re-audit r2 PASS
-superseded (retained, unappliable by gate0 design — runner bytes advanced):
-  …--c11ac01--x86_64--g1 (runner pin c6f735b6)  ·  …--9c1e981--x86_64--g1 (runner pin 93816810)
+~/workspace/artifacts/production-candidates/PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1--dsh-agent-core--e9e5009--g1   ← ACTIVE, PRODUCTION
+  SOURCE_SHA e9e5009 (git-show) · target /usr/local/bin/agentcore-cron (symlink INTO this sealed generation, atomic rename swap)
+  candidate = operator CLI + FULL ESM closure (packages/scheduler/src/{store,job-model,schedule}.js from commit tree
+              + croner@10.0.1 at candidate/usr/local/packages/scheduler/node_modules — ESM resolves imports from the
+              module REAL path, so the closure must mirror repo-relative layout + node_modules ancestor levels)
+  CANDIDATE_HASH == production operator bytes = 24ce44e7… · runner pin 90f82a68…
+  receipts: suite r3 (47 assertions) + audit r1/r2 + cutover-rollback.json + cutover-receipt.json (9-item post-proof)
+superseded (retained):
+  …--37d6763--g1  cutover ATTEMPT 1 — FAILED functional smoke (single-file candidate, no ESM closure →
+                  ERR_MODULE_NOT_FOUND); rolled back same hour; never adopted. cutover-failed-receipt.json on the generation.
+  …--c11ac01--g1 (audited) · …--9c1e981--g1 (first freeze)
 ```
+
+**MANDATORY pre-cutover step (added after attempt 1):** before ANY link swap, smoke the candidate from INSIDE the
+generation — `node <gen>/candidate/<target> --help` and at least one real read-only op (e.g. `list --json` with an
+isolated `HOME=`). A link whose target only LOOKS right is not a pass; ESM module resolution and dependency closure
+defects surface only by execution. `--help` exits 2 by this CLI's design — judge by output, not exit code.
 
 Cutover (slot-gated, coordinates with SB4 `CLI_BYTES_MATCH_EXPECTED` / `CLI_STORE_TARGET`):
 
