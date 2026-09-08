@@ -31,11 +31,8 @@
  * byte_count, duration_ms, latency_ms.
  */
 
-import { createHash } from 'node:crypto'
-import { createReadStream } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { Worker } from 'node:worker_threads'
 
 /** Route + frozen wire constants (DEC-VT-001, DEC-VT-002). */
@@ -142,18 +139,6 @@ function reply(res, status, body) {
 
 function errorBody(error) {
   return { error: { code: error?.code ?? 'INTERNAL_ERROR', message: error?.message ?? 'internal error' } }
-}
-
-/** sha256 of a file, streamed (the model asset is ~230 MB). */
-async function sha256File(path) {
-  const hash = createHash('sha256')
-  await new Promise((resolve, reject) => {
-    const stream = createReadStream(path)
-    stream.on('data', (chunk) => hash.update(chunk))
-    stream.on('end', resolve)
-    stream.on('error', reject)
-  })
-  return hash.digest('hex')
 }
 
 /**
@@ -301,7 +286,7 @@ class VoiceEngine {
 
 /**
  * Create the route handler + engine for the product-api server.
- * @param log - index.js logger ({ log, error }); only allowlisted fields.
+ * Logs via process.stderr with EXACTLY the allowlisted fields.
  */
 export function createVoiceTranscriptionHandler() {
   const engine = new VoiceEngine()
