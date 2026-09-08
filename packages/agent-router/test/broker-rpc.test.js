@@ -318,25 +318,45 @@ test('seam: a committed scheduler create reaches the model as the exact 11-field
   assert.equal(calls.length, 1, 'one relay hop — zero automatic retry')
 })
 
-test('seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)', async () => {
-  const calls = []
+test('seam: a gateway THROW resolves through the §5.2 state machine — mutation never re-issued, read-back decides', async () => {
+  // SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.2 (PR #198 hardening): the lost
+  // create triggers EXACTLY ONE same-channel list read-back; the mutation
+  // itself is never re-issued. With the read-back transport also dark, the
+  // terminal is STILL_UNKNOWN-with-evidence.
+  const creates = []
+  const lists = []
   const relay = schedulerSeamDefinition(async (call) => {
-    calls.push(call)
+    if (call.operation === 'list') {
+      lists.push(call)
+      throw new Error('read-back transport dark')
+    }
+    creates.push(call)
     throw new Error('response channel lost after possible commit')
   })
   const out = await relay.create({}, { name: 'daily', schedule_kind: 'every', every_ms: 60_000, message: 'work' })
   assert.equal(out.errorCode, 'mutation_outcome_unknown')
-  assert.match(out.detail, /response was lost/)
-  assert.equal(calls.length, 1, 'no automatic retry of an outcome-unknown mutation')
+  assert.match(out.detail, /STILL_UNKNOWN/)
+  assert.equal(creates.length, 1, 'no automatic retry of an outcome-unknown mutation')
+  assert.equal(lists.length, 1, 'exactly one canonical read-back')
 })
 
-test('seam: a structured gateway failure passes through declared codes verbatim at the correct depth', async () => {
-  const relay = schedulerSeamDefinition(async () => ({
-    ok: false, error: { code: 'mutation_outcome_unknown', detail: 'scheduler mutation outcome is unknown; inspect current state before any manual retry' },
-  }))
+test('seam: a parent-answered mutation_outcome_unknown reconciles through the answer leg (§5.2 hardening)', async () => {
+  // The raw parent unknown no longer passes through verbatim: the same
+  // identity read-back runs and a committed job answers as the synthetic
+  // committed result with auditStatus 'reconciled'.
+  const relay = schedulerSeamDefinition(async (call) => {
+    if (call.operation === 'list') {
+      // The read-back sees the STORE shape (id, nextRunAtMs, …) —
+      // committedFromJob projects it into the committed wire fields.
+      return { ok: true, result: { jobs: [{ id: 'job-1', name: 'daily', enabled: true, schedule: { kind: 'every', everyMs: 60_000 }, nextRunAtMs: 1893456000000, agentId: 'agt_a', delivery: {}, retry: { auto: false }, deleteAfterRun: false }] } }
+    }
+    return {
+      ok: false, error: { code: 'mutation_outcome_unknown', detail: 'scheduler mutation outcome is unknown; inspect current state before any manual retry' },
+    }
+  })
   const out = await relay.create({}, { name: 'daily', schedule_kind: 'every', every_ms: 60_000, message: 'work' })
-  assert.equal(out.errorCode, 'mutation_outcome_unknown')
-  assert.match(out.detail, /outcome is unknown/)
+  assert.equal(out.auditStatus, 'reconciled')
+  assert.equal(out.jobId, 'job-1')
 })
 
 // Same seam, same fix, cross-goal consumer (ASM): agent_session_send results
@@ -357,13 +377,22 @@ test('seam: agent_session_send accepted/replied/timeout survive the corrected de
     assert.deepEqual(out, business, `wire result for ${business.status}`)
   }
 
-  const calls = []
+  // AMENDMENT_1 §5.3: the transport-loss leg issues EXACTLY ONE read-only
+  // reconcile lookup; the send itself is never replayed. With the lookup
+  // transport also dark, the honest ambiguous envelope stays terminal.
+  const sends = []
+  const lookups = []
   const relay = createRelayHandlers(agentSessionMessagingManifest, async (call) => {
-    calls.push(call)
+    if (call.capabilityId === 'agent_session_send_reconcile') {
+      lookups.push(call)
+      throw new Error('reconcile lookup channel dark')
+    }
+    sends.push(call)
     throw new Error('parent RPC channel died mid-send')
   })
   const out = await relay.send({}, { targetAgentId: 'agt_b-target', message: 'hi', timeoutSeconds: 1 })
   assert.equal(out.errorCode, 'outcome_unknown')
   assert.match(out.detail, /do not retry automatically/)
-  assert.equal(calls.length, 1, 'zero automatic retry')
+  assert.equal(sends.length, 1, 'zero automatic retry of the send')
+  assert.equal(lookups.length, 1, 'exactly one reconcile lookup at the capture point')
 })

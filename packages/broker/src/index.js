@@ -61,6 +61,7 @@ import { manifests as okrManifests } from './capabilities/okr.js'
 import { agentDefinitionManifests } from './capabilities/agent-definition.js'
 import { schedulerManifests } from './capabilities/scheduler.js'
 import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
+import { manifests as agentSessionReconcileManifests } from './capabilities/agent-session-reconcile.js'
 import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
@@ -92,6 +93,11 @@ export const DEFAULT_MANIFESTS = [
   ...agentDefinitionManifests,
   ...schedulerManifests,
   ...agentSessionMessagingManifests,
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 §5.3 (AMENDMENT_1): the read-only
+  // reconcile lookup carries `infrastructure: true` — the gateway retains it
+  // for trusted-channel execution; the child apply below filters it out of
+  // the MODEL tool inventory (never presented as a tool).
+  ...agentSessionReconcileManifests,
   ...agentPrincipalResolutionManifests,
 ]
 
@@ -216,7 +222,12 @@ export function resolveForumModeratorRegistration(config = {}, env = process.env
 /**
  * §5.3 fail-before-tool-exposure mask — implemented in ./readiness.js
  * (dependency-free so the registration path and tests share one module).
+ * A re-export alone never binds the name in THIS module's scope: the
+ * child-mode apply() below calls it directly, so the real import is
+ * required (found by the AMENDMENT_1 §5.3 child-inventory test — child-mode
+ * apply crashed with a ReferenceError before any tool registered).
  */
+import { withSchedulerMutationMask } from './readiness.js'
 export { withSchedulerMutationMask } from './readiness.js'
 
 /**
@@ -318,7 +329,19 @@ export function apply(ctx, config = {}) {
     return agentRpc.request(BROKER_RPC_METHOD, call)
   }
 
-  const capabilities = manifests.map((manifest) => {
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 §5.3 (AMENDMENT_1): infrastructure
+  // manifests (`infrastructure: true` — agent_session_send_reconcile) are
+  // gateway-executable over the trusted channel but are NEVER model tools:
+  // filtered out of the child registration inventory before tool building.
+  // The marker survives validateManifest's allowlist rebuild (schema copy),
+  // so filtering on the raw manifest here and on a validated one agree.
+  const modelManifests = manifests.filter((manifest) => manifest?.infrastructure !== true)
+  const infrastructureSkipped = manifests.length - modelManifests.length
+  if (infrastructureSkipped > 0) {
+    process.stderr.write(`[broker] infrastructure capabilities excluded from the model tool inventory: ${infrastructureSkipped}\n`)
+  }
+
+  const capabilities = modelManifests.map((manifest) => {
     const id = manifest && typeof manifest.id === 'string' ? manifest.id : ''
     const hasHttp = Array.isArray(manifest.operations) && manifest.operations.some((o) => o && o.http)
     // LOCAL capabilities (agent.definition.*) also RELAY to the trusted

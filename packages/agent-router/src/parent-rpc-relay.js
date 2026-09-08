@@ -107,6 +107,19 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
           // R3 exact source-turn correlation for the messaging capability —
           // proven against the execution map above, absent when stale.
           sourceTurnExecutionId: provenSourceTurnExecutionId(proc, rpcMeta),
+          // AMENDMENT_1 §5.3 trusted boundary: the child relay's opaque
+          // reconciliation anchor + its issue time. The anchor only
+          // CORRELATES the gateway-caller's own L1 rows at lookup time —
+          // identity is never derived from it; both fields are type-checked
+          // and absent when malformed.
+          ...(typeof params?.invocationCorrelation === 'string'
+            && params.invocationCorrelation.length > 0
+            && params.invocationCorrelation.length <= 128
+            ? { invocationCorrelation: params.invocationCorrelation }
+            : {}),
+          ...(Number.isFinite(params?.invocationIssuedAtWallMs)
+            ? { invocationIssuedAtWallMs: params.invocationIssuedAtWallMs }
+            : {}),
         },
       )
     }
