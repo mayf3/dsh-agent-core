@@ -80,21 +80,22 @@ export function computeOperatorClosure(seed, readSource) {
 
 /**
  * Match the two directive-named critical jobs in a canonical census
- * (RUNBOOK §3.2 + Owner directive). Exact predicates — never name guessing:
- *   daily-summary : agentId=agt_daily-thought-agent AND enabled AND
- *                   schedule.kind=cron AND schedule.expr='0 22 * * *' AND tz Asia/Shanghai
- *   hr-dispatch   : job id starts with 'b115cb96' (frozen from the recovery
- *                   ledger SEM/PAYLOAD-digest enable receipt)
+ * (RUNBOOK §3.2 + Owner directive). AMENDMENT (post-census, evidence-based):
+ * the live store holds TWO enabled agt_daily-thought-agent cron jobs at
+ * 0 22 * * * Asia/Shanghai (fa13b0ea '每日摘要检查-滚动7天 raw/distilled 补生成'
+ * and 579c54a4 '每日随想总结-DeepSeek'), so the attribute predicate is
+ * ambiguous by reality. Both criticals are therefore anchored on the FROZEN
+ * recovery-ledger identities (exact id prefixes — the admission guard's
+ * FAILED_NO_MUTATION on ambiguity is what surfaced this):
+ *   daily-summary : id startsWith 'fa13b0ea' (DAILY_RAW_DISTILLED_SUMMARY_
+ *                   RECOVERY_V1 terminal receipt job; rev1, raw/distilled semantics)
+ *   hr-dispatch   : id startsWith 'b115cb96' (WORKFLOW_GLOBAL_READ_RECOVERY
+ *                   Lane-A restore receipt; SEM/PAYLOAD digest frozen)
  * Returns { daily, hr } each = {match:'unique'|'none'|'ambiguous', jobs:[…]}.
  */
 export function matchCriticalJobs(jobs) {
   const list = Array.isArray(jobs) ? jobs : []
-  const daily = list.filter((job) =>
-    job.agentId === 'agt_daily-thought-agent'
-    && job.enabled === true
-    && job.schedule?.kind === 'cron'
-    && job.schedule?.expr === '0 22 * * *'
-    && (job.schedule?.tz ?? '') === 'Asia/Shanghai')
+  const daily = list.filter((job) => typeof job.id === 'string' && job.id.startsWith('fa13b0ea'))
   const hr = list.filter((job) => typeof job.id === 'string' && job.id.startsWith('b115cb96'))
   const wrap = (matches) => ({ match: matches.length === 1 ? 'unique' : matches.length === 0 ? 'none' : 'ambiguous', jobs: matches })
   return { daily: wrap(daily), hr: wrap(hr) }
