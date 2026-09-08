@@ -6,8 +6,13 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 date: 2026-08-31
-revision: r4
-revision_date: 2026-09-08
+revision: r5
+revision_date: 2026-09-09
+amendment2_ref: r5 = AMENDMENT_2 (owner goal AGENT_SESSION_SEND_RELIABILITY_V1, real incident
+  corpus agt_soul-questioner-agent gen2 'RPC session/prompt rejected: AGENT_PROCESS_EXITED';
+  docs-only: §5.1 outcome_unknown phase split + AGENT_PROCESS_EXITED matrix rows, §5.2
+  post_receipt reason marker, §5.3 conversion row, §7 T_PROCESS_EXIT cases; accepted r4
+  semantics otherwise unchanged)
 amendment_ref: r4 = AMENDMENT_1 (owner goal AGENT_SESSION_SEND_RELIABILITY_V1; docs-only:
   §5.1 two-dimension result model, §5.2 failure-code visibility, §5.3 bounded outcome
   reconciliation with child-minted invocationCorrelation anchor + agent_session_send_reconcile
@@ -15,6 +20,7 @@ amendment_ref: r4 = AMENDMENT_1 (owner goal AGENT_SESSION_SEND_RELIABILITY_V1; d
   extends the R12 evidence shape (failureCode + invocationCorrelation fields on L1 rows) and §5.3
   adds exactly one child-synthesized caller-visible reconciled envelope)
 amendment_status: accepted
+amendment2_status: proposed
 amendment_accepted_date: 2026-09-08
 amendment_accepted_by: mayf3
 amendment_accepted_merge: 8994aa587ed9328540e793c77128210a9abac8e3 (PR #202, normal merge path;
@@ -56,6 +62,7 @@ scope:
   - "AMENDMENT_1: two-dimension DELIVERY/REPLY result model over the closed taxonomy"
   - "AMENDMENT_1: structured failure-code visibility in model render and L1 outcome rows"
   - "AMENDMENT_1: bounded outcome reconciliation (agent_session_send_reconcile discovery capability + invocationCorrelation anchor)"
+  - "AMENDMENT_2: outcome_unknown phase split (post-receipt = DELIVERED + UNKNOWN) and AGENT_PROCESS_EXITED matrix rows (Router admission doctrine respected; reason visible, never a delivery dimension)"
 supersedes: []
 superseded_by: null
 related_specs:
@@ -768,7 +775,19 @@ self_send_not_supported | invalid_arguments|
 credential_unavailable | credential_invalid|
 access_denied | transport_failure |
 unsupported_operation                      -> NOT_DELIVERED + NOT_WAITED   (pre-handler / pre-delivery)
-outcome_unknown                            -> UNKNOWN     + UNKNOWN        (§5.3 reconciliation applies)
+outcome_unknown (pre-receipt admission
+               unproven)                   -> UNKNOWN     + UNKNOWN        (§5.3 reconciliation applies;
+                                                                            AMENDMENT_2: includes process-boundary
+                                                                            rejections — see the rows below)
+outcome_unknown (post-receipt: receipt
+               proven in the SAME invocation,
+               exact Run later terminated
+               without outcome — incl. target
+               process death)             -> DELIVERED   + UNKNOWN        (AMENDMENT_2 phase split; canonical
+                                                                            markers: render detail "after a proven
+                                                                            inbox receipt" + audit failureReason
+                                                                            'post_receipt'; same evidence-loss
+                                                                            doctrine as evicted/restart_lost)
 internal_error (pre-delivery emission)     -> NOT_DELIVERED + NOT_WAITED   (audit intent append failure;
                                                                               Router delivery count is zero)
 internal_error (post-receipt malformed
@@ -791,6 +810,40 @@ zero-byte rejection) and is defensive-only.
 `target_run_failed`, or any reply-side state as evidence of non-delivery; `NO_AUTOMATIC_REPLAY` and
 `NO_AUTOMATIC_RETRY` remain binding.
 
+### 5.1a AMENDMENT_2 — AGENT_PROCESS_EXITED rows (unified delivery matrix)
+
+Real incident corpus (owner goal AGENT_SESSION_SEND_RELIABILITY_V1, 2026-09-09):
+`agt_soul-questioner-agent` generation 2 — `RPC session/prompt rejected: AGENT_PROCESS_EXITED`.
+`AGENT_PROCESS_EXITED` is a process/runtime failure REASON; it MUST NEVER itself be a delivery
+status. The delivery dimension is decided per the Router's OWN settled admission doctrine
+(C-004/C-017: a write at the process/stdin boundary — in-flight at exit, or to an already-exited
+process — cannot PROVE zero bytes; only a STRUCTURED rejection proves non-entry):
+
+```text
+structured pre-receipt rejection (SESSION_WORKSPACE_MISMATCH, proven_zero_byte_rejection, …)
+                                           -> NOT_DELIVERED + NOT_WAITED   (not_admitted family; unchanged)
+AGENT_PROCESS_EXITED at the admission boundary (in-flight at exit / process already dead)
+                                           -> UNKNOWN     + UNKNOWN        (admission unproven by Router
+                                                                            doctrine; §5.3 reconcile;
+                                                                            STILL_UNKNOWN => NO_BLIND_REPLAY —
+                                                                            fabricating NOT_DELIVERED here is
+                                                                            the duplicate-licensing direction)
+inbox receipt proven, target process exits mid-turn
+    late settlement = late_failed          -> DELIVERED   + TARGET_FAILED  (target_run_failed; unchanged)
+    late settlement = terminated_without_
+    outcome (typical death) or no settle   -> DELIVERED   + UNKNOWN        (post-receipt outcome_unknown row;
+                                                                            reason visible — PROCESS_EXIT_REASON_
+                                                                            VISIBLE — but never as delivery)
+```
+
+Unified matrix (normative): `reply_unavailable(<reason>) -> DELIVERED + reply failure`;
+`target_run_failed (post-receipt) -> DELIVERED + TARGET_FAILED`; `AGENT_PROCESS_EXITED before/at
+receipt -> UNKNOWN -> reconcile` (NOT_DELIVERED only via §5.3 when the L1 chain proves non-entry);
+`AGENT_PROCESS_EXITED after receipt -> DELIVERED + UNKNOWN` (late_failed ⇒ DELIVERED +
+TARGET_FAILED); `transport/parent-response ambiguity -> UNKNOWN -> reconcile`. A caller never
+infers delivery from an error string: every row above is decidable from the closed code + the
+§5.2 canonical markers.
+
 ### 5.2 AMENDMENT_1 — structured failure-code visibility
 
 Two visibility requirements so the §5.1 mapping is decidable from surfaces, not from code reading:
@@ -804,6 +857,11 @@ Two visibility requirements so the §5.1 mapping is decidable from surfaces, not
    intent/outcome rows MUST persist the §5.3 `invocationCorrelation`. Without this, the per-reason
    delivery history is unrecoverable from evidence (finding E2 of the phase-1 investigation: today's
    `result:'failed'` bundles all reply-side failures and no persisted surface records the reason).
+   AMENDMENT_2: a post-receipt `outcome_unknown` row MUST persist `failureReason: 'post_receipt'`
+   (mirroring the internal_error split) so the §5.1 phase split and the §5.3 conversion are
+   surface-decidable; a process-exit reason (`AGENT_PROCESS_EXITED` / router unknown source) rides
+   the row and the render detail as REASON ONLY — never as a delivery dimension
+   (PROCESS_EXIT_REASON_VISIBLE).
 
 ### 5.3 AMENDMENT_1 — bounded outcome reconciliation (CASE A–G)
 
@@ -845,6 +903,8 @@ RELAY DUTY (mirrors SCHEDULER §5.2):
                                             replyTextAvailable:false}                   # text never persisted
     intent + outcome(timeout)           -> {status:'reconciled', delivery:'DELIVERED',   replyStatus:'TIMEOUT'}
     intent + outcome(failed)            -> delivery/replyStatus per §5.1 from the persisted failureCode
+                                           (+failureReason; AMENDMENT_2: failureCode outcome_unknown
+                                           with failureReason 'post_receipt' => DELIVERED + UNKNOWN)
     intent present, outcome absent      -> {status:'reconciled', delivery:'UNKNOWN',     replyStatus:'UNKNOWN'}
     intent row absent WITHIN RETAINED
     EVIDENCE (live .jsonl + rotated .1) -> {status:'reconciled', delivery:'NOT_DELIVERED', replyStatus:'NOT_WAITED'}
@@ -1038,6 +1098,24 @@ AND no Feishu/Forum/Scheduler/Workflow delivery occurs
 - a real production `reply_unavailable` reproducer classifies mechanically as DELIVERED + <reason> via
   §5.1 without any caller-side inference (T14).
 
+### AMENDMENT_2 mandatory cases (real incident corpus: AGENT_PROCESS_EXITED)
+
+- T_PROCESS_EXIT_1: target process dead/dead-dying at the admission boundary → the Router's
+  admission-unproven classification yields `outcome_unknown` (UNKNOWN + UNKNOWN), delivery count
+  provably not claimable either way by the caller, §5.3 reconcile runs read-only, and STILL_UNKNOWN
+  ⇒ NO_BLIND_REPLAY; a STRUCTURED proven rejection in the same seam still returns not_admitted
+  (NOT_DELIVERED, delivery count 0, Run count 0);
+- T_PROCESS_EXIT_2: inbox receipt committed → target process exits before the final reply → the
+  post-receipt row applies: render detail marks delivery proven ('after a proven inbox receipt'),
+  audit row carries failureCode outcome_unknown + failureReason 'post_receipt', §5.3 lookup converts
+  to `{status:'reconciled', delivery:'DELIVERED', replyStatus:'UNKNOWN'}`, delivery count 1,
+  NO_AUTO_RETRY holds; a late_failed settlement instead yields target_run_failed (DELIVERED +
+  TARGET_FAILED);
+- T_PROCESS_EXIT_3: ambiguity at the receipt/process-exit boundary → UNKNOWN → bounded reconcile →
+  deterministic where the evidence allows, STILL_UNKNOWN otherwise, NO_BLIND_REPLAY;
+- PROCESS_EXIT_REASON_VISIBLE: the process-exit reason is preserved in the model-visible render
+  detail AND the L1 row, and is never presented as a delivery status.
+
 ## 8. Predicted implementation scope — not authorized
 
 After this Spec is independently accepted (the governing Decision alignment already exists as accepted
@@ -1201,3 +1279,41 @@ AMENDMENT_1 review must specifically decide:
    the accepted terminal is that an anchor expired by ROTATION resolves to UNKNOWN (never
    NOT_DELIVERED — the duplicate-licensing direction), i.e. durable persistence beyond the rotating
    evidence window stays a §6 non-goal while surviving evidence is always read.
+
+
+## 12. AMENDMENT_2 record (r5, PROPOSED — AGENT_SESSION_SEND_RELIABILITY_V1, AGENT_PROCESS_EXITED corpus)
+
+```text
+AMENDMENT_2_TRIGGER = real production incident agt_soul-questioner-agent gen2
+  ('RPC session/prompt rejected: AGENT_PROCESS_EXITED'); owner directive adds it to this goal's
+  failure corpus with required CASE A/B/C semantics
+SEMANTIC_DELTA =
+  1. §5.1 outcome_unknown row split by phase: post-receipt (receipt proven in-invocation)
+     -> DELIVERED + UNKNOWN (was unconditionally UNKNOWN + UNKNOWN — the accepted r4 mapping
+     conflated proven-delivery unknowns with unproven admissions; independent-implementation-audit
+     r1 had recorded the conflation as conservative-acceptable; the incident corpus proves it
+     hides a PROVEN delivery fact from the caller, which the owner directive forbids)
+  2. §5.1a AGENT_PROCESS_EXITED rows: process-boundary rejections follow the Router's settled
+     admission doctrine (C-004/C-017 — stdin in-flight writes cannot prove zero bytes), so
+     NOT_DELIVERED is NEVER fabricated at that boundary; structured proven rejections keep
+     not_admitted; post-receipt death rides the post-receipt row (late_failed keeps
+     target_run_failed naturally)
+  3. §5.2 failureReason 'post_receipt' marker on post-receipt outcome_unknown rows + render detail
+     'after a proven inbox receipt' (mirrors the accepted internal_error split pattern)
+  4. §5.3 conversion: outcome_unknown + post_receipt => DELIVERED + UNKNOWN
+  5. §7 T_PROCESS_EXIT_1/2/3 + PROCESS_EXIT_REASON_VISIBLE
+BOUNDARY = process lifecycle root cause / restart / canonical-main recovery belong to
+  AGENT_PROCESS_EXITED_RECOVERY_V1 — this amendment only consumes its mechanical evidence classes
+WIRE_BREAK = NONE (codes unchanged; phase split is marker-decidable per §5.2)
+GRANT_CHANGE = NONE; PRODUCTION_CHANGE = NONE
+READY_FOR_INDEPENDENT_REVIEW = YES
+```
+
+AMENDMENT_2 review must specifically decide:
+
+1. whether the post-receipt DELIVERED + UNKNOWN classification is honest (vs fabricating
+   TARGET_FAILED for a store that does not claim a Run failure);
+2. whether the Router C-004/C-017 boundary doctrine is correctly consumed (no Router change
+   implied) and NOT_DELIVERED is never fabricated at the process boundary;
+3. whether the post_receipt marker pattern is surface-decidable enough for the caller;
+4. whether late_completed/late_failed settlements still route through the unchanged R8 mapping.
