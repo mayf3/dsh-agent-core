@@ -75,6 +75,17 @@ related_decisions:
 owners:
   - repository-maintainers
 change_log:
+  - revision: r5 (AMENDMENT_2)
+    date: 2026-09-09
+    kind: docs-only semantic amendment (owner goal AGENT_SESSION_SEND_RELIABILITY_V1); trigger
+      corpus = real incident agt_soul-questioner-agent gen2 ('RPC session/prompt rejected:
+      AGENT_PROCESS_EXITED'); adds §5.1a and the §5.1 outcome_unknown phase split, §5.2
+      post_receipt marker, §5.3 conversion row, §7 T_PROCESS_EXIT cases, §12 record
+    semantic_delta: the five §12 SEMANTIC_DELTA items (post-receipt outcome_unknown ->
+      DELIVERED + UNKNOWN via markers; AGENT_PROCESS_EXITED classified per the Router's settled
+      C-004/C-017 admission doctrine — reason visible, never a delivery dimension; structured
+      proven rejections keep not_admitted)
+    wire_break: NONE; grant_change: NONE; production_change: NONE
   - revision: r4 (AMENDMENT_1)
     date: 2026-09-08
     kind: docs-only semantic amendment (owner goal AGENT_SESSION_SEND_RELIABILITY_V1); §0-§4/§6
@@ -107,7 +118,7 @@ change_log:
 
 # AGENT_CORE_AGENT_SESSION_MESSAGING_V1
 
-> 状态：**accepted r3 + r4 AMENDMENT_1 PROPOSED（2026-09-08，owner goal
+> 状态：**accepted r4（AMENDMENT_1 已接受，PR #202 @8994aa5）+ r5 AMENDMENT_2 PROPOSED（2026-09-09，owner goal
 > AGENT_SESSION_SEND_RELIABILITY_V1）**。r3 的 accepted 语义（§0-§4/§6，2026-09-02 lifecycle
 > acceptance finalize）不变；r4 只新增 §5.1（两维结果模型的 normative 映射）、§5.2（failure-code
 > 可见性：模型渲染 + L1 outcome 行持久化）、§5.3（bounded outcome reconciliation：child-minted
@@ -820,8 +831,10 @@ status. The delivery dimension is decided per the Router's OWN settled admission
 process — cannot PROVE zero bytes; only a STRUCTURED rejection proves non-entry):
 
 ```text
-structured pre-receipt rejection (SESSION_WORKSPACE_MISMATCH, proven_zero_byte_rejection, …)
-                                           -> NOT_DELIVERED + NOT_WAITED   (not_admitted family; unchanged)
+structured pre-receipt rejection (SESSION_WORKSPACE_MISMATCH, proven_zero_byte_rejection,
+AGNot_FOUND / AGENT_DISABLED, …)           -> NOT_DELIVERED + NOT_WAITED   (proven-zero-byte family:
+                                                                            not_admitted / target_not_found /
+                                                                            target_disabled; unchanged)
 AGENT_PROCESS_EXITED at the admission boundary (in-flight at exit / process already dead)
                                            -> UNKNOWN     + UNKNOWN        (admission unproven by Router
                                                                             doctrine; §5.3 reconcile;
@@ -831,10 +844,20 @@ AGENT_PROCESS_EXITED at the admission boundary (in-flight at exit / process alre
 inbox receipt proven, target process exits mid-turn
     late settlement = late_failed          -> DELIVERED   + TARGET_FAILED  (target_run_failed; unchanged)
     late settlement = terminated_without_
-    outcome (typical death) or no settle   -> DELIVERED   + UNKNOWN        (post-receipt outcome_unknown row;
+    outcome (typical death), or the
+    missing-handle / defective-terminal
+    branches                               -> DELIVERED   + UNKNOWN        (post-receipt outcome_unknown row;
                                                                             reason visible — PROCESS_EXIT_REASON_
-                                                                            VISIBLE — but never as delivery)
+                                                                            VISIBLE — but never as delivery;
+                                                                            a wait that merely EXPIRES on a
+                                                                            still-pending Run stays {status:'timeout'}
+                                                                            = DELIVERED + TIMEOUT per §5.1)
 ```
+
+Exit-race note: when the child's `settleLate` wins before the pending-RPC rejection surfaces,
+the capability seam may observe the exit as a plain declared-failure carrier — the §5.1
+classification above is envelope-independent (the capability's default row catches both shapes
+as unproven admission).
 
 Unified matrix (normative): `reply_unavailable(<reason>) -> DELIVERED + reply failure`;
 `target_run_failed (post-receipt) -> DELIVERED + TARGET_FAILED`; `AGENT_PROCESS_EXITED before/at
@@ -861,7 +884,10 @@ Two visibility requirements so the §5.1 mapping is decidable from surfaces, not
    (mirroring the internal_error split) so the §5.1 phase split and the §5.3 conversion are
    surface-decidable; a process-exit reason (`AGENT_PROCESS_EXITED` / router unknown source) rides
    the row and the render detail as REASON ONLY — never as a delivery dimension
-   (PROCESS_EXIT_REASON_VISIBLE).
+   (PROCESS_EXIT_REASON_VISIBLE). The mechanical reason source is the reconciliation record's
+   settled snapshot (`terminationEvidence` / `errorClass`, reachable via `getTurnReconciliation`)
+   — `readFinalAssistantOutput` exposes only `terminalState`; implementers must read the
+   authoritative snapshot, never map from event payloads (R9.5).
 
 ### 5.3 AMENDMENT_1 — bounded outcome reconciliation (CASE A–G)
 
@@ -1235,7 +1261,7 @@ READY_FOR_INDEPENDENT_REVIEW = YES
 NEXT_TASK = 会话 审计
 ```
 
-## 11. AMENDMENT_1 record (r4, PROPOSED — AGENT_SESSION_SEND_RELIABILITY_V1)
+## 11. AMENDMENT_1 record (r4 — ACCEPTED via PR #202 @ 8994aa5; AGENT_SESSION_SEND_RELIABILITY_V1)
 
 ```text
 AMENDMENT_1_GOAL = AGENT_SESSION_SEND_RELIABILITY_V1
