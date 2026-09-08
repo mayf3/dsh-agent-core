@@ -23,10 +23,14 @@
 //   it is covered by receipts.sha256 (append-only registry; verify recomputes and
 //   flags tampered or unreferenced entries). TEST/AUDIT receipts are registered
 //   after seal without touching the sealed manifest.
-// - Source bytes are ALWAYS extracted via `git show <sha>:<path>` from the declared
-//   SOURCE_SHA (immutable commit-tree bytes). sourceMode=worktree additionally
-//   requires the checkout to be clean at that exact HEAD; sourceMode=git-show
-//   tolerates worktree dirt by construction.
+// - Source bytes are extracted via `git show <sha>:<path>` from the declared
+//   SOURCE_SHA (immutable commit-tree bytes) for git targets. A target may instead
+//   declare `fromPath` (disk file — built artifact such as a compiled binary or
+//   dist/ output): bytes are copied from disk at prepare time, and the build
+//   receipt + SOURCE_SHA still pin the provenance (build tools run in PREPARE,
+//   never in APPLY). sourceMode=worktree additionally requires the checkout to
+//   be clean at that exact HEAD; sourceMode=git-show tolerates worktree dirt
+//   by construction for git targets.
 // - Target paths are mirrored under candidate/ with the leading "/" stripped.
 //   Absolute target paths resolve against --live-root for fixtures/tests.
 // - Apply is once per generation: a second apply refuses (rollback/ exists).
@@ -319,21 +323,28 @@ function cmdPrepare(argv) {
   const liveRoot = spec.liveRoot ? path.resolve(spec.liveRoot) : null;
   const targets = [];
   for (const t of spec.targets) {
-    for (const k of ['sourcePath', 'targetPath', 'why']) if (!t[k]) die(`target missing ${k}: ${JSON.stringify(t)}`);
+    for (const k of ['targetPath', 'why']) if (!t[k]) die(`target missing ${k}: ${JSON.stringify(t)}`);
+    if (!t.sourcePath && !t.fromPath) die(`target needs sourcePath or fromPath: ${JSON.stringify(t)}`);
     if (secretScan(t.targetPath)) die(`refusing secret-class target: ${t.targetPath}`);
-    const bytes = git(repo, ['show', `${fullSha}:${t.sourcePath}`], { buffer: true });
+    let bytes, mode = '0644';
+    if (t.fromPath) {
+      const fp = path.resolve(t.fromPath);
+      bytes = fs.readFileSync(fp);
+      mode = (fs.statSync(fp).mode & 0o111) ? '0755' : '0644';
+    } else {
+      bytes = git(repo, ['show', `${fullSha}:${t.sourcePath}`], { buffer: true });
+      try {
+        if (git(repo, ['ls-tree', fullSha, t.sourcePath]).trim().split(/\s+/)[0] === '100755') mode = '0755';
+      } catch { /* mode probe best-effort */ }
+    }
     const rel = sanitizeTarget(t.targetPath);
     const abs = path.join(genDir, 'candidate', rel);
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, bytes);
+    if (mode === '0755') fs.chmodSync(abs, 0o755);
     let preimage = ABSENT;
     try { preimage = sha256(fs.readFileSync(livePathFor(t.targetPath, liveRoot))); } catch { /* ABSENT */ }
     const hash = sha256(bytes);
-    let mode = '0644';
-    try {
-      const treeMode = git(repo, ['ls-tree', fullSha, t.sourcePath]).trim().split(/\s+/)[0];
-      if (treeMode === '100755') { mode = '0755'; fs.chmodSync(abs, 0o755); }
-    } catch { /* mode probe best-effort */ }
     targets.push({ targetPath: t.targetPath, SOURCE_HASH: hash, CANDIDATE_HASH: hash,
       EXPECTED_PREIMAGE_HASH: preimage, EXPECTED_POSTIMAGE_HASH: hash, MODE: mode, WHY_REQUIRED: t.why });
   }
@@ -449,6 +460,11 @@ function cmdApply(argv) {
   // gate 3 — production preimage, fresh (expected declared at prepare [A1.1])
   for (const t of manifest.targets) {
     const lp = livePathFor(t.targetPath, liveRoot);
+    let lst;
+    try { lst = fs.lstatSync(lp); } catch { /* ABSENT */ }
+    if (lst && lst.isSymbolicLink()) {
+      die(`gate3 TARGET_IS_SYMLINK ${t.targetPath} — preimage was declared through the link; refusing to write through it (cutover must replace the link with sealed bytes explicitly, e.g. ln -sfn into the sealed generation, and be receipted)`);
+    }
     let actual = ABSENT;
     try { actual = sha256(fs.readFileSync(lp)); } catch { /* ABSENT */ }
     if (actual !== t.EXPECTED_PREIMAGE_HASH) {
