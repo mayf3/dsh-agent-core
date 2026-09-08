@@ -351,6 +351,10 @@ stripped; pre-existing baseline failures documented, not caused.
 
 ## 5. Acceptance-unlocks resumption (mechanical; runs only after this Spec is accepted and merged)
 
+At acceptance/merge time, the accepted
+`AGENT_CORE_AGENT_SESSION_MESSAGING_V1.md` R4 gains a reciprocal amended-by
+backlink (this candidate does not modify the accepted spec file itself).
+
 1. Replay/port the frozen commits (b1f0bf9, 0806c71) onto the accepted-Spec
    base; NO redesign, NO V1 expansion.
 2. Implement §CTR-WAE-001b consumer continuation + its tests (incl. the
