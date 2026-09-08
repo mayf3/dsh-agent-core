@@ -232,3 +232,63 @@ export function formatFindings(findings, { role = 'W1', nowMs = Date.now() } = {
   })
   return `Scheduler watchdog ${role} alert @ ${new Date(nowMs).toISOString()}\n${lines.join('\n')}`
 }
+
+/**
+ * Owner-notification dedupe state machine (alert-storm hardening, 2026-09-09):
+ * one unresolved finding fingerprint notifies ONCE, then suppresses exact
+ * duplicates for bounded reminders only; recovery notifies once; a new
+ * occurrence is a new fingerprint. Monitoring evidence is NEVER deduped —
+ * every watchdog evaluation is still recorded by the caller.
+ *
+ * Fingerprint: findingType + jobId + occurrenceId (either id may be absent —
+ * the fingerprint is the stable join of whatever ids the finding carries).
+ */
+export function findingFingerprint(finding) {
+  return ['RUN_STUCK', 'RUN_FAILED', 'EXPECTED_RUN_MISSED', 'CONSECUTIVE_FAILURE']
+    .includes(finding.class)
+    ? `${finding.class}|${finding.jobId ?? '-'}|${finding.occurrenceId ?? finding.runId ?? '-'}`
+    : `${finding.class}|${finding.logicalKey ?? finding.jobId ?? '-'}`
+}
+
+/**
+ * Transition the alert state for one batch of findings.
+ * @param {Record<string, {firstSeenAt:number,lastSeenAt:number,lastNotifiedAt?:number,
+ *   notifiedCount:number,severity:string,detail:string}>} state persisted by the caller
+ * @param {Array<object>} findings current findings (same shapes the detectors emit)
+ * @param {object} opts { nowMs, reminderIntervalMs = 60*60*1000 }
+ * @returns {{notifications: Array<{fingerprint,kind:'new'|'reminder'|'severity'|'recovered',finding}>,
+ *   state: (same shape as `state`), recovered: string[]}}
+ */
+export function updateAlertState(state, findings, { nowMs = Date.now(), reminderIntervalMs = 60 * 60 * 1000 } = {}) {
+  const next = { ...state }
+  const notifications = []
+  const seen = new Set()
+  for (const finding of findings ?? []) {
+    const fp = findingFingerprint(finding)
+    seen.add(fp)
+    const prior = next[fp]
+    if (prior === undefined) {
+      next[fp] = { firstSeenAt: nowMs, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: 1, severity: finding.class, detail: finding.reason ?? finding.detail ?? '' }
+      notifications.push({ fingerprint: fp, kind: 'new', finding })
+      continue
+    }
+    const materialChange = prior.severity !== finding.class
+    const dueReminder = nowMs - (prior.lastNotifiedAt ?? prior.firstSeenAt) >= reminderIntervalMs
+    if (materialChange) {
+      next[fp] = { ...prior, lastSeenAt: nowMs, notifiedCount: prior.notifiedCount + 1, severity: finding.class }
+      notifications.push({ fingerprint: fp, kind: 'severity', finding })
+    } else if (dueReminder) {
+      next[fp] = { ...prior, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: prior.notifiedCount + 1 }
+      notifications.push({ fingerprint: fp, kind: 'reminder', finding })
+    } else {
+      next[fp] = { ...prior, lastSeenAt: nowMs }
+    }
+  }
+  // Recovery: fingerprints previously ACTIVE whose finding is now absent.
+  const recovered = Object.keys(next).filter((fp) => !seen.has(fp))
+  for (const fp of recovered) {
+    notifications.push({ fingerprint: fp, kind: 'recovered', finding: { class: next[fp].severity } })
+    delete next[fp]
+  }
+  return { notifications, state: next, recovered }
+}

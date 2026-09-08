@@ -69,12 +69,15 @@ try {
   gate('G5-broker-symbols-load-child-apply', true, out.trim())
 } catch (e) { gate('G5-broker-symbols-load-child-apply', false, String(e).slice(0, 200)) }
 
-// BROKER_SHARED_BYTES vs this repo's main copy (EXPECTED_FIXED_HASH seam)
+// BROKER_SHARED_BYTES vs the EXPECTED FIXED HASH (the production-proven
+// incident repair bytes) — NOT main head, whose broker bytes legitimately move
+// with other goals' deployments; the expected hash advances only via a
+// recorded production overlay/admission.
+const EXPECTED_INDEX_SHA = process.env.BROKER_EXPECTED_INDEX_SHA
+  ?? '0720757b1e59056adb372b3bc1739b37dc13cbef9c42cb98f96a16cbf1d9aa7c'
 try {
   const liveSha = execFileSync('shasum', ['-a', '256', join(LIVE, 'packages/broker/src/index.js')], { encoding: 'utf8' }).split(/\s+/)[0]
-  const repoSha = execFileSync('git', ['-C', REPO, 'show', 'github/main:packages/broker/src/index.js'], { maxBuffer: 4 * 1024 * 1024 })
-  const repoShaHex = execFileSync('shasum', ['-a', '256'], { input: repoSha, encoding: 'utf8' }).split(/\s+/)[0]
-  gate('BROKER_SHARED_BYTES', liveSha === repoShaHex, `live=${liveSha.slice(0, 12)}… expected(main)=${repoShaHex.slice(0, 12)}…`)
+  gate('BROKER_SHARED_BYTES', liveSha === EXPECTED_INDEX_SHA, `live=${liveSha.slice(0, 12)}… expected=${EXPECTED_INDEX_SHA.slice(0, 12)}…`)
 } catch (e) { gate('BROKER_SHARED_BYTES', false, String(e).slice(0, 120)) }
 
 if (PRIV) {
