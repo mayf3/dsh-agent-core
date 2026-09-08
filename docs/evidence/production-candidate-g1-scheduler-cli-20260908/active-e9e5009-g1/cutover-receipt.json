@@ -1,0 +1,12 @@
+{
+  "generationId": "PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1--dsh-agent-core--e9e5009--x86_64--g1",
+  "cutoverAt": "2026-09-08T09:44:18Z",
+  "mutation": "/usr/local/bin/agentcore-cron: dev-worktree symlink -> sealed generation link (atomic rename)",
+  "previousLink": "/Users/yanfenma/workspace/project/dsh-agent-core/scripts/agentcore-cron.mjs",
+  "newLink": "/Users/yanfenma/workspace/artifacts/production-candidates/PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1--dsh-agent-core--e9e5009--x86_64--g1/candidate/usr/local/bin/agentcore-cron",
+  "productionOperatorSha256": "24ce44e7586f9a1a04ea1491408db94ffa7379daf011f0abde20edbbcc4d86e9",
+  "gates": {"activeGeneration": "FOUND", "generationSeal": "MATCH", "runnerPin": "MATCH", "candidateBytes": "MATCH", "dependencyClosure": "MATCH", "currentProductionLink": "EXPECTED_PREIMAGE", "rollbackPreimage": "FROZEN"},
+  "postProof": {"productionOperatorTarget": "SEALED_GENERATION", "noLongerPointsToDevWorktree": "PASS", "cliBytesMatchExpected": "PASS", "functionalSmoke": "PASS (--help usage + list --json end-to-end in sandboxed HOME; --help exits 2 by CLI design, byte-identical pre/post)", "canonicalStoreTarget": "PASS (seam in sealed bytes; byte-identical behavior; authsvc-context live smoke unavailable without sudo — recorded as note)", "runnerSealVerify": "PASS", "productionReadbackHash": "EXPECTED", "rollbackArtifact": "VALID"},
+  "attemptHistory": "attempt 1 (37d6763--g1, closure NONE) FAILED functional smoke — ESM relative imports need packages/scheduler/src + croner; rolled back same hour; new generation with full closure built and smoked PRE-cutover",
+  "performedBy": "PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1 resume REAL_ADOPTION/SCHEDULER_OPERATOR (P0 slot released; PRODUCTION_MUTATION_CONCURRENCY=1)"
+}

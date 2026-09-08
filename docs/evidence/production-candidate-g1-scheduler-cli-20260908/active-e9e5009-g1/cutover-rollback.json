@@ -1,0 +1,10 @@
+{
+  "generationId": "PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1--dsh-agent-core--e9e5009--x86_64--g1",
+  "mutation": "/usr/local/bin/agentcore-cron link cutover (dev-worktree symlink -> sealed generation with ESM closure)",
+  "previousLink": "/Users/yanfenma/workspace/project/dsh-agent-core/scripts/agentcore-cron.mjs",
+  "previousResolvedBytesSha256": "24ce44e7586f9a1a04ea1491408db94ffa7379daf011f0abde20edbbcc4d86e9",
+  "candidateBytesSha256": "24ce44e7586f9a1a04ea1491408db94ffa7379daf011f0abde20edbbcc4d86e9",
+  "frozenAt": "2026-09-08T09:43:43Z",
+  "rollbackProcedure": "ln -sfn /Users/yanfenma/workspace/project/dsh-agent-core/scripts/agentcore-cron.mjs /usr/local/bin/agentcore-cron  # bytes identical 24ce44e7…; prior attempt (37d6763--g1, no closure) failed functional smoke and was rolled back — see cutover-failed-receipt.json there",
+  "performedBy": "PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1 resume REAL_ADOPTION/SCHEDULER_OPERATOR"
+}
