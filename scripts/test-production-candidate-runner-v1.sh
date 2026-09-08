@@ -158,6 +158,26 @@ GEN11="$(prep "$TMP/s11.json")"
 "$NODE" "$RUNNER" seal --gen "$GEN11" >/dev/null 2>&1
 expect_fail "T11 apply via mutated runner refuses at gate0" "$NODE" "$TMP/tampered-runner.mjs" apply --gen "$GEN11" --live-root "$LIVE"
 
+echo "=== T12: built-artifact source (fromPath disk bytes) → sealed like git bytes ==="
+printf '#!/bin/sh\necho built-binary-v1\n' > "$TMP/built-tool" && chmod 755 "$TMP/built-tool"
+printf '{\n "goalName":"FIX-L","sourceRepo":"%s","sourceSha":"%s","arch":"x86_64","sourceMode":"git-show","liveRoot":"%s","targets":[{"fromPath":"%s","targetPath":"/bin/built","why":"build output candidate"}]\n}\n' \
+  "$SRC" "$SHA1" "$LIVE" "$TMP/built-tool" > "$TMP/s12.json"
+GEN12="$(prep "$TMP/s12.json")"
+"$NODE" "$RUNNER" seal --gen "$GEN12" >/dev/null 2>&1
+expect_ok "T12 verify sealed built artifact" "$NODE" "$RUNNER" verify --gen "$GEN12"
+printf '#!/bin/sh\necho REBUILT\n' > "$TMP/built-tool"
+expect_ok "T12 disk source rebuilt after seal → candidate unchanged" "$NODE" "$RUNNER" verify --gen "$GEN12"
+grep -q 'built-binary-v1' "$GEN12/candidate/bin/built" && ok "T12 candidate holds seal-time bytes" || bad "T12 candidate drifted with disk source"
+
+echo "=== T13: symlinked live target → apply refuses to write through the link ==="
+mkdir -p "$LIVE/real" && printf 'REAL' > "$LIVE/real/tool" && ln -sfn real/tool "$LIVE/bin/linked"
+printf '{\n "goalName":"FIX-M","sourceRepo":"%s","sourceSha":"%s","arch":"x86_64","sourceMode":"git-show","liveRoot":"%s","targets":[{"sourcePath":"app.js","targetPath":"/bin/linked","why":"symlink guard"}]\n}\n' \
+  "$SRC" "$SHA1" "$LIVE" > "$TMP/s13.json"
+GEN13="$(prep "$TMP/s13.json")"
+"$NODE" "$RUNNER" seal --gen "$GEN13" >/dev/null 2>&1
+expect_fail "T13 apply refuses symlinked target" "$NODE" "$RUNNER" apply --gen "$GEN13" --live-root "$LIVE"
+[ "$(cat "$LIVE/real/tool")" = "REAL" ] && ok "T13 symlink target bytes untouched" || bad "T13 wrote through symlink"
+
 echo ""
 echo "=== SUMMARY ==="
 echo "TMPDIR=$TMP"
