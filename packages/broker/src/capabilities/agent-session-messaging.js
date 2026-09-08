@@ -64,6 +64,11 @@ export const agentSessionMessagingManifest = {
   name: 'Agent Session Messaging',
   description: 'Send one private message to another Agent\'s canonical main Session. Each send creates exactly one new Run/Turn in the target main — never a new Session. timeoutSeconds=0 returns after the real inbox receipt; timeoutSeconds>0 waits for at most that many seconds for this exact Run\'s one aggregated final assistant reply. Source identity and correlation are derived by the trusted runtime; no automatic replay, no automatic reply, no active-run steering, no external delivery.',
   local: { resource: 'agent-session-messaging' },
+  // AMENDMENT_1 §5.2: the model-visible render for this capability's declared
+  // failures MUST carry the structured detail (e.g. `reply_unavailable
+  // (truncated)`) — the reason is what makes the §5.1 delivery/reply mapping
+  // decidable from the surface. Render text only; envelopes stay closed.
+  renderErrorDetail: true,
   requiredScopes: ['agent.session.send'],
   errors: errorTable,
   operations: [

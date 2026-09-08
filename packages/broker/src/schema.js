@@ -282,6 +282,26 @@ export function validateManifest(input) {
     manifest.toolName = manifest.id.replace(/\./g, '_')
   }
 
+  // ---- infrastructure / renderErrorDetail (AMENDMENT_1 markers) ----
+  // Copy-only: both flags must SURVIVE the allowlist rebuild so the raw and
+  // validated manifest shapes stay in lockstep (§5.3 caveat — a silent drop
+  // here would re-expose agent_session_send_reconcile as a model tool or
+  // silently disable the structured render detail).
+  if (input.infrastructure !== undefined) {
+    if (input.infrastructure !== true) {
+      errors.push(path('infrastructure') + ' may only be true when declared')
+    } else {
+      manifest.infrastructure = true
+    }
+  }
+  if (input.renderErrorDetail !== undefined) {
+    if (input.renderErrorDetail !== true) {
+      errors.push(path('renderErrorDetail') + ' may only be true when declared')
+    } else {
+      manifest.renderErrorDetail = true
+    }
+  }
+
   if (errors.length > 0) {
     return { ok: false, errors }
   }

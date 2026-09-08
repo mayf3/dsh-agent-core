@@ -31,6 +31,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { AGENT_SESSION_SEND_CAPABILITY_ID } from '../../broker/src/capabilities/agent-session-messaging.js'
+import { AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID as RECONCILE_CAPABILITY_ID } from '../../broker/src/capabilities/agent-session-reconcile.js'
 import { createFinalReplyWaiter, mapFinalAssistantOutputToOutcome } from './agent-session-reply-wait.js'
 
 const TARGET_AGENT_ID_RE = /^agt_[a-z0-9-]+$/
@@ -88,11 +89,41 @@ function mapDeliverError(error) {
       ? { code: 'queue_capacity_exceeded', detail: 'target bounded queue rejected the admission; zero prompt bytes written' }
       : { code: 'not_admitted', detail: 'target admission provably rejected; zero prompt bytes written' }
   }
-  if (error?.envelope === 'outcome_unknown') return { code: 'outcome_unknown', detail: 'send admission could not be proven; outcome unknown' }
+  // AMENDMENT_2 §5.1a PROCESS_EXIT_REASON_VISIBLE: the process-exit reason
+  // (e.g. AGENT_PROCESS_EXITED) rides the DETAIL as REASON ONLY — the closed
+  // code stays outcome_unknown and never becomes a delivery dimension.
+  if (error?.envelope === 'outcome_unknown') {
+    return {
+      code: 'outcome_unknown',
+      ...(typeof error?.code === 'string' && error.code.length > 0
+        ? { detail: `send admission could not be proven; outcome unknown (reason: ${error.code})` }
+        : { detail: 'send admission could not be proven; outcome unknown' }),
+    }
+  }
+  // AMENDMENT_2 §5.1a acceptance corpus (agt_soul-questioner-agent gen2 —
+  // frozen facts: PROCESS_EXIT_BEFORE_SESSION_RPC_READY=YES,
+  // INBOX_RECEIPT_EXISTS=NO, TARGET_RUN_EXISTS=NO): a BARE AGENT_PROCESS_EXITED
+  // carrier (no envelope/status) is an initialize/startup death from ready() —
+  // the process never became READY, so no prompt write existed: proven zero
+  // bytes -> NOT_DELIVERED (same shape doctrine as the Router's bare-from-ready
+  // PROVEN_NO_ADMISSION carriers). Envelope-carrying exit shapes (in-flight
+  // write death -> outcome_unknown; exit-race -> failed) stay unproven UNKNOWN.
+  if (error?.code === 'AGENT_PROCESS_EXITED'
+    && error?.envelope === undefined && error?.status === undefined) {
+    return {
+      code: 'not_admitted',
+      detail: 'target process exited before the session RPC was ready; no prompt write existed (reason: AGENT_PROCESS_EXITED)',
+    }
+  }
   if (error?.proven === 'zero_byte' || error?.code === 'SESSION_WORKSPACE_MISMATCH') {
     return { code: 'not_admitted', detail: 'target admission provably rejected before any prompt byte' }
   }
-  return { code: 'outcome_unknown', detail: 'send admission outcome unproven; nothing was replayed' }
+  return {
+    code: 'outcome_unknown',
+    ...(typeof error?.code === 'string' && error.code.length > 0
+      ? { detail: `send admission outcome unproven; nothing was replayed (reason: ${error.code})` }
+      : { detail: 'send admission outcome unproven; nothing was replayed' }),
+  }
 }
 
 /**
@@ -123,8 +154,9 @@ export function createAgentSessionMessagingAccess({
     throw new TypeError('agent-session-messaging: router with deliver/readFinalAssistantOutput/onTurnReconciled is required')
   }
   if (audit === undefined || typeof audit.appendIntent !== 'function'
-    || typeof audit.appendOutcome !== 'function' || typeof audit.appendDenial !== 'function') {
-    throw new TypeError('agent-session-messaging: audit surface is required')
+    || typeof audit.appendOutcome !== 'function' || typeof audit.appendDenial !== 'function'
+    || typeof audit.findInvocation !== 'function') {
+    throw new TypeError('agent-session-messaging: audit surface (append*/findInvocation) is required')
   }
   const waitForFinalAssistantReply = createFinalReplyWaiter({
     read: (handle) => router.readFinalAssistantOutput(handle),
@@ -178,9 +210,19 @@ export function createAgentSessionMessagingAccess({
     const timeoutMode = timeoutSeconds === 0 ? 'receipt_only' : 'wait_reply'
     const requestId = generateRequestId()
     const startedAtWallMs = now()
+    // AMENDMENT_1 §5.3: the child relay's opaque logical-send anchor, minted
+    // per RPC invocation at the trusted boundary and persisted verbatim in
+    // the L1 rows. Optional (absent on legacy direct calls — rows simply
+    // omit it); never accepted from model args.
+    const anchor = typeof context?.invocationCorrelation === 'string'
+      && context.invocationCorrelation.length >= 8
+      && context.invocationCorrelation.length <= 128
+      && /^[\x21-\x7e]+$/.test(context.invocationCorrelation)
+      ? context.invocationCorrelation
+      : undefined
 
     // ── R12: L1 intent BEFORE Router delivery; failure = zero deliveries ──
-    if (audit.appendIntent({ sourceAgentId, targetAgentId, requestId, correlation, timeoutMode }) !== 'appended') {
+    if (audit.appendIntent({ sourceAgentId, targetAgentId, requestId, correlation, timeoutMode, invocationCorrelation: anchor }) !== 'appended') {
       auditFailed(requestId, 'intent')
       return { ok: false, error: { code: 'internal_error', detail: 'audit intent append failed; nothing was delivered' } }
     }
@@ -203,6 +245,13 @@ export function createAgentSessionMessagingAccess({
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', startedAtWallMs,
+        invocationCorrelation: anchor, failureCode: mapped.code,
+        // §5.1a PROCESS_EXIT_REASON_VISIBLE: the Router-side reason code is
+        // preserved on EVERY deliver-throw row where it differs from the
+        // surfaced closed code — reason only, bounded.
+        ...(typeof error?.code === 'string' && error.code.length > 0 && error.code !== mapped.code
+          ? { failureSource: error.code.slice(0, 128) }
+          : {}),
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: false, error: mapped }
     }
@@ -212,6 +261,10 @@ export function createAgentSessionMessagingAccess({
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', startedAtWallMs,
+        invocationCorrelation: anchor, failureCode: 'internal_error',
+        // §5.1 post-receipt marker: the canonical detail proves delivery; the
+        // row-level reason lets the §5.3 conversion resolve DELIVERED + UNKNOWN.
+        failureReason: 'post_receipt',
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: false, error: { code: 'internal_error', detail: 'delivery receipt was malformed after a proven inbox acceptance' } }
     }
@@ -221,6 +274,7 @@ export function createAgentSessionMessagingAccess({
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'accepted', reconciliationHandle: receipt.reconciliationHandle, startedAtWallMs,
+        invocationCorrelation: anchor,
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: true, result: { status: 'accepted' } }
     }
@@ -233,8 +287,13 @@ export function createAgentSessionMessagingAccess({
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', reconciliationHandle: null, startedAtWallMs,
+        invocationCorrelation: anchor, failureCode: 'outcome_unknown',
+        // AMENDMENT_2 §5.1/§5.2: delivery was PROVEN in this invocation — the
+        // post_receipt marker makes the phase surface-decidable (render
+        // detail + L1 row), never a fabricated delivery dimension.
+        failureReason: 'post_receipt',
       }) !== 'appended') auditFailed(requestId, 'outcome')
-      return { ok: false, error: { code: 'outcome_unknown', detail: 'message delivered but the reconciliation handle is unavailable; outcome unknown' } }
+      return { ok: false, error: { code: 'outcome_unknown', detail: 'the exact target Run outcome is unknown after a proven inbox receipt (delivery was proven); reconciliation handle unavailable' } }
     }
     const deadlineWallMs = now() + timeoutSeconds * 1000
     const waited = await waitForFinalAssistantReply(handle, deadlineWallMs)
@@ -244,6 +303,7 @@ export function createAgentSessionMessagingAccess({
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'timeout', reconciliationHandle: handle, startedAtWallMs,
+        invocationCorrelation: anchor,
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: true, result: { status: 'timeout' } }
     }
@@ -252,8 +312,27 @@ export function createAgentSessionMessagingAccess({
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'replied', reconciliationHandle: handle, startedAtWallMs,
+        invocationCorrelation: anchor,
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: true, result: { status: 'replied', reply: outcome.reply } }
+    }
+    // AMENDMENT_2 §5.1: past this gate the receipt was PROVEN — an
+    // outcome_unknown here is the post-receipt phase (e.g. the target process
+    // exited mid-turn and the Run terminated without outcome), so the row and
+    // the render carry the post_receipt marker: DELIVERED + UNKNOWN, never a
+    // fabricated TARGET_FAILED and never invisible delivery.
+    const postReceiptUnknown = outcome.kind === 'outcome_unknown'
+    // §5.1a PROCESS_EXIT_REASON_VISIBLE: the exit reason comes from the
+    // reconciliation SETTLED SNAPSHOT (terminationEvidence / errorClass /
+    // initialSource) — read authoritatively, never from event payloads (R9.5).
+    let exitReason
+    if (postReceiptUnknown && typeof router.getTurnReconciliation === 'function') {
+      try {
+        const reconciliation = router.getTurnReconciliation(handle)
+        const snapshot = reconciliation?.snapshot
+        const raw = snapshot?.terminationEvidence ?? snapshot?.errorClass ?? snapshot?.initialSource
+        if (typeof raw === 'string' && raw.length > 0) exitReason = raw.slice(0, 128)
+      } catch { /* the reason surface is best-effort; the phase marker stands */ }
     }
     const failureEnvelope = outcome.kind === 'target_run_failed'
       ? { code: 'target_run_failed', detail: 'the exact target Run settled as failed; retained text is never returned as success' }
@@ -261,18 +340,69 @@ export function createAgentSessionMessagingAccess({
         ? { code: 'not_admitted', detail: 'the exact target Run settled as not admitted' }
         : outcome.kind === 'reply_unavailable'
           ? { code: 'reply_unavailable', detail: `reply unavailable (${outcome.reason})` }
-          : { code: 'outcome_unknown', detail: 'the exact target Run terminated without a proven outcome' }
+          : postReceiptUnknown
+            ? {
+                code: 'outcome_unknown',
+                detail: exitReason === undefined
+                  ? 'the exact target Run terminated without a proven outcome after a proven inbox receipt (delivery was proven)'
+                  : `the exact target Run terminated without a proven outcome after a proven inbox receipt (delivery was proven; exit reason: ${exitReason})`,
+              }
+            : { code: 'outcome_unknown', detail: 'the exact target Run terminated without a proven outcome' }
     if (audit.appendOutcome({
       sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
       result: 'failed', reconciliationHandle: handle, startedAtWallMs,
+      invocationCorrelation: anchor,
+      failureCode: failureEnvelope.code,
+      // §5.2: the structured reason travels with the row — the per-reason
+      // delivery history stays recoverable from evidence.
+      ...(outcome.kind === 'reply_unavailable' && typeof outcome.reason === 'string'
+        ? { failureReason: outcome.reason }
+        : {}),
+      ...(postReceiptUnknown ? { failureReason: 'post_receipt' } : {}),
+      ...(postReceiptUnknown && exitReason !== undefined ? { exitReason } : {}),
     }) !== 'appended') auditFailed(requestId, 'outcome')
     return { ok: false, error: failureEnvelope }
+  }
+
+  /**
+   * The `agent_session_send_reconcile.lookup` operation handler
+   * (AMENDMENT_1 §5.3): READ-ONLY evidence lookup bound to the GATEWAY-
+   * derived caller. Infrastructure-only — never a model tool. Zero Router
+   * delivery, zero Session mutation, one bounded exact-key scan over the
+   * file-backed L1 chain (live + `.1` rotation).
+   */
+  function lookup(rawArgs, context) {
+    const sourceAgentId = context?.callerAgentId
+    if (typeof sourceAgentId !== 'string' || !TRUSTED_SOURCE_AGENT_ID_RE.test(sourceAgentId)) {
+      return { ok: false, error: { code: 'internal_error', detail: 'trusted caller identity missing from the gateway context' } }
+    }
+    const anchor = rawArgs?.invocationCorrelation
+    if (typeof anchor !== 'string' || anchor.length < 8 || anchor.length > 128 || !/^[\x21-\x7e]+$/.test(anchor)) {
+      return { ok: false, error: { code: 'invalid_arguments', detail: 'invocationCorrelation must be an opaque 8..128-char printable string' } }
+    }
+    const found = audit.findInvocation({ sourceAgentId, invocationCorrelation: anchor })
+    // Spoof-resistance (§5.3): rows are matched against the gateway-derived
+    // sourceAgentId ONLY — a caller can never read another agent's rows, and
+    // the anchor correlates, it never confers identity.
+    return {
+      ok: true,
+      result: {
+        invocationCorrelationFound: found.intentFound,
+        outcome: found.outcome,
+        oldestRetainedIntentTs: found.oldestRetainedIntentTs,
+      },
+    }
   }
 
   // Provider shape: handlers keyed by CAPABILITY ID then operation name —
   // the exact contract the broker execute-time resolver closure merges
   // (same shape as selfServiceSchedulerAccess.handlers).
-  return { handlers: { [AGENT_SESSION_SEND_CAPABILITY_ID]: { send } } }
+  return {
+    handlers: {
+      [AGENT_SESSION_SEND_CAPABILITY_ID]: { send },
+      [RECONCILE_CAPABILITY_ID]: { lookup },
+    },
+  }
 }
 
 export { mapFinalAssistantOutputToOutcome }

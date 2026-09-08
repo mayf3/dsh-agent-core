@@ -24,6 +24,8 @@ import { createRelayHandlers, BROKER_RPC_METHOD } from '../src/relay.js'
 import { createBrokerGateway } from '../src/gateway.js'
 import { apply as applyBroker, DEFAULT_MANIFESTS } from '../src/index.js'
 import { agentSessionMessagingManifest } from '../src/capabilities/agent-session-messaging.js'
+import { agentSessionReconcileManifest } from '../src/capabilities/agent-session-reconcile.js'
+import { buildToolDefinition } from '../src/registry.js'
 
 const SECTION_5_CODES = [
   'invalid_arguments', 'credential_unavailable', 'credential_invalid', 'access_denied',
@@ -106,9 +108,15 @@ test('LOCAL relay preserves structured parent failures through the child invoke 
 
 test('LOCAL relay maps a rejected or malformed parent response to parent_rpc_ambiguous without retry', async () => {
   for (const response of ['throw', 'missing-envelope', 'malformed-success', 'undeclared-failure']) {
-    let calls = 0
-    const handlers = createRelayHandlers(agentSessionMessagingManifest, async () => {
-      calls += 1
+    const legs = []
+    const handlers = createRelayHandlers(agentSessionMessagingManifest, async (rpcCall) => {
+      legs.push(rpcCall)
+      // AMENDMENT_1 §5.3: at the two unknown capture points the relay issues
+      // EXACTLY ONE reconcile lookup; when the lookup is ITSELF unusable the
+      // honest ambiguous envelope is the terminal (never a replay).
+      if (rpcCall.capabilityId === 'agent_session_send_reconcile') {
+        throw new Error('lookup transport failed')
+      }
       if (response === 'throw') throw new Error('response lost after possible delivery')
       if (response === 'malformed-success') return { ok: true, result: { ok: true, result: undefined } }
       if (response === 'undeclared-failure') return { ok: true, result: { ok: false, error: { code: 'mystery' } } }
@@ -117,8 +125,171 @@ test('LOCAL relay maps a rejected or malformed parent response to parent_rpc_amb
     const failure = await handlers.send({}, { targetAgentId: 'agt_target', message: 'x', timeoutSeconds: 0 })
     assert.equal(failure.errorCode, 'outcome_unknown', response)
     assert.match(failure.detail, /parent_rpc_ambiguous/, response)
-    assert.equal(calls, 1, `${response}: relay never replays an ambiguous send`)
+    const sendLegs = legs.filter((c) => c.capabilityId === 'agent_session_send')
+    const lookupLegs = legs.filter((c) => c.capabilityId === 'agent_session_send_reconcile')
+    assert.equal(sendLegs.length, 1, `${response}: relay never replays an ambiguous send`)
+    assert.equal(lookupLegs.length, 1, `${response}: exactly one reconcile lookup per capture point`)
   }
+})
+
+test('AMENDMENT_1 §5.3: the send RPC carries the child-minted invocationCorrelation anchor', async () => {
+  let seen
+  const handlers = createRelayHandlers(agentSessionMessagingManifest, async (rpcCall) => {
+    seen = rpcCall
+    return { ok: true, result: { ok: true, result: { status: 'accepted' } } }
+  })
+  await handlers.send({}, { targetAgentId: 'agt_b-target', message: 'hi', timeoutSeconds: 0 })
+  assert.equal(typeof seen.invocationCorrelation, 'string')
+  assert.ok(seen.invocationCorrelation.length >= 8 && seen.invocationCorrelation.length <= 128)
+})
+
+/** Build relay handlers whose send leg is lost and whose lookup leg answers `lookupResult`. */
+function lostSendRelay(lookupImpl) {
+  const legs = []
+  const handlers = createRelayHandlers(agentSessionMessagingManifest, async (rpcCall) => {
+    legs.push(rpcCall)
+    if (rpcCall.capabilityId === 'agent_session_send_reconcile') return lookupImpl(rpcCall)
+    throw new Error('response lost after the parent committed')
+  })
+  return { handlers, legs }
+}
+
+async function runLostSend(lookupResult) {
+  const { handlers, legs } = lostSendRelay(() => ({
+    ok: true,
+    result: { ok: true, result: { retentionIntegrity: 'clean', ...lookupResult } },
+  }))
+  const wire = await handlers.send({}, { targetAgentId: 'agt_b-target', message: 'x', timeoutSeconds: 30 })
+  return { wire, legs }
+}
+
+test('AMENDMENT_1 §5.3 CASE A: receipt committed + response lost -> reconcile DELIVERED, zero redelivery', async () => {
+  const { wire, legs } = await runLostSend({
+    invocationCorrelationFound: true,
+    outcome: { result: 'accepted' },
+    oldestRetainedIntentTs: 1,
+  })
+  assert.deepEqual(wire, { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'NOT_WAITED' })
+  const sendLegs = legs.filter((c) => c.capabilityId === 'agent_session_send')
+  const lookupLegs = legs.filter((c) => c.capabilityId === 'agent_session_send_reconcile')
+  assert.equal(sendLegs.length, 1, 'the send executed exactly once')
+  assert.equal(lookupLegs.length, 1, 'exactly one read-only lookup')
+  assert.equal(lookupLegs[0].args.invocationCorrelation, sendLegs[0].invocationCorrelation, 'same anchor')
+  assert.equal(typeof sendLegs[0].invocationCorrelation, 'string', 'the send RPC carried the anchor')
+})
+
+test('AMENDMENT_1 §5.3: reconciled conversions for every outcome row class', async () => {
+  const cases = [
+    [{ invocationCorrelationFound: true, outcome: { result: 'replied' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'REPLIED', replyTextAvailable: false }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'timeout' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'TIMEOUT' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'reply_unavailable', failureReason: 'truncated' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'TRUNCATED' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'reply_unavailable', failureReason: 'no_output' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'NO_OUTPUT' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'reply_unavailable', failureReason: 'restart_lost' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'target_run_failed' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'TARGET_FAILED' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'not_admitted' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'internal_error' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'internal_error', failureReason: 'post_receipt' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'outcome_unknown' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'outcome_unknown', failureReason: 'post_receipt' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }],
+    [{ invocationCorrelationFound: true, outcome: null, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }],
+  ]
+  for (const [lookupResult, expected] of cases) {
+    const { wire } = await runLostSend(lookupResult)
+    assert.deepEqual(wire, expected, JSON.stringify(lookupResult))
+  }
+})
+
+test('AMENDMENT_1 §5.3 CASE B + rotation honesty: absence is NOT_DELIVERED only under proven coverage', async () => {
+  // Retention window covers the invocation -> provable non-entry.
+  const covered = await runLostSend({ invocationCorrelationFound: false, outcome: null, oldestRetainedIntentTs: 1000 })
+  assert.deepEqual(covered.wire, { status: 'reconciled', delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' })
+  // Anchor expired by rotation (oldest retained row AFTER the issue time)
+  // -> UNKNOWN; the duplicate-licensing NOT_DELIVERED is never produced.
+  const expired = await runLostSend({ invocationCorrelationFound: false, outcome: null, oldestRetainedIntentTs: Date.now() + 1000 })
+  assert.deepEqual(expired.wire, { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' })
+  // No coverage anchor at all -> UNKNOWN.
+  const unbounded = await runLostSend({ invocationCorrelationFound: false, outcome: null, oldestRetainedIntentTs: null })
+  assert.deepEqual(unbounded.wire, { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' })
+  // Corrupt retained evidence (a skipped line could be THIS invocation's
+  // intent row) -> coverage unprovable -> UNKNOWN, never NOT_DELIVERED.
+  const corrupt = await runLostSend({ invocationCorrelationFound: false, outcome: null, oldestRetainedIntentTs: 1000, retentionIntegrity: 'corrupt' })
+  assert.deepEqual(corrupt.wire, { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' })
+})
+
+test('AMENDMENT_1 §5.3: a parent-answered reconciled result is not a valid send success (child-synthesized only)', async () => {
+  const legs = []
+  const handlers = createRelayHandlers(agentSessionMessagingManifest, async (rpcCall) => {
+    legs.push(rpcCall)
+    if (rpcCall.capabilityId === 'agent_session_send_reconcile') {
+      return { ok: true, result: { ok: true, result: { invocationCorrelationFound: true, outcome: { result: 'accepted' }, oldestRetainedIntentTs: 1 } } }
+    }
+    // A parent must never answer `reconciled` — validSessionSendResult rejects it.
+    return { ok: true, result: { ok: true, result: { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'NOT_WAITED' } } }
+  })
+  const wire = await handlers.send({}, { targetAgentId: 'agt_b-target', message: 'x', timeoutSeconds: 0 })
+  assert.deepEqual(wire, { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'NOT_WAITED' })
+  assert.equal(legs.filter((c) => c.capabilityId === 'agent_session_send_reconcile').length, 1,
+    'the parent-answered reconciled degraded to the ambiguous leg and was reconciled read-only')
+})
+
+test('AMENDMENT_1 §5.2: renderErrorDetail renders the sanitized structured failure reason', () => {
+  const { definition } = buildToolDefinition({
+    manifest: agentSessionMessagingManifest,
+    handlers: { send: async () => ({ ok: false, error: { code: 'reply_unavailable', detail: 'reply unavailable (no_output)' } }) },
+    deps: { resolvePrincipal: () => ({}) },
+  })
+  const rendered = definition.output.render(
+    { operation: 'send', targetAgentId: 'agt_b-target', message: 'x', timeoutSeconds: 30 },
+    { ok: false, error: { code: 'reply_unavailable', detail: 'reply unavailable (no_output)' } },
+  )
+  assert.match(rendered[0].text, /failed: reply_unavailable: reply unavailable \(no_output\)/,
+    'the model-visible text carries the structured reason (§5.1 decidability)')
+  // Without the marker, the render stays code-only (the historical shape).
+  const bare = { ...agentSessionMessagingManifest, renderErrorDetail: undefined }
+  const { definition: bareDefinition } = buildToolDefinition({
+    manifest: bare,
+    handlers: { send: async () => ({ ok: false, error: { code: 'reply_unavailable', detail: 'reply unavailable (no_output)' } }) },
+    deps: { resolvePrincipal: () => ({}) },
+  })
+  const bareRendered = bareDefinition.output.render(
+    { operation: 'send', targetAgentId: 'agt_b-target', message: 'x', timeoutSeconds: 30 },
+    { ok: false, error: { code: 'reply_unavailable', detail: 'reply unavailable (no_output)' } },
+  )
+  assert.doesNotMatch(bareRendered[0].text, /no_output/, 'opt-in only: no marker, no detail')
+})
+
+test('AMENDMENT_1 §5.3: the reconcile manifest validates and carries infrastructure:true', () => {
+  const validated = validateManifest(agentSessionReconcileManifest)
+  assert.equal(validated.ok, true, validated.errors?.join('; '))
+  assert.equal(validated.manifest.infrastructure, true, 'the marker survives the allowlist rebuild')
+  assert.equal(validated.manifest.local.resource, 'agent-session-messaging-reconcile')
+})
+
+test('AMENDMENT_1 §5.3: infrastructure manifests are excluded from the child model tool inventory', () => {
+  const registered = []
+  const ctx = fakeCtx(new Map())
+  ctx.tools = { register: (definition) => registered.push(definition) }
+  const config = {
+    mode: 'child',
+    targets: undefined,
+  }
+  applyBroker(ctx, config)
+  const names = registered.map((d) => d?.definition?.name ?? d?.name)
+  assert.ok(names.includes('agent_session_send'), 'the send tool is still presented to the model')
+  assert.ok(!names.includes('agent_session_send_reconcile'), 'the infrastructure lookup is NEVER a model tool')
+  assert.ok(!names.includes(undefined), 'every registered capability builds a named definition')
 })
 
 test('BROKER_RPC_METHOD stays in lockstep between relay and router', () => {

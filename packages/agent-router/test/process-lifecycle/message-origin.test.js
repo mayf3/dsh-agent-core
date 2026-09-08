@@ -172,6 +172,21 @@ test('R3: a deliver-originated source Run proves its turnExecutionId via the exe
   assert.equal(gatewayCalls[0].ctx.ingressContext, undefined, 'deliver sources have no activeIngressContext')
 })
 
+test('AMENDMENT_1 §5.3: the relay anchor reaches the gateway trusted context (correlates, never identity)', async () => {
+  const { handler, gatewayCalls } = relayFixture({ executions: new Map([['turn:src', unsettledExecution()]]) })
+  await handler(BROKER_RPC_METHOD, { capabilityId: 'agent_session_send', operation: 'send', args: {}, invocationCorrelation: 'anchor-12345678' }, { turnExecutionId: 'turn:src' })
+  assert.equal(gatewayCalls[0].ctx.invocationCorrelation, 'anchor-12345678')
+  // Malformed / absent anchors are absent from the context — never fabricated,
+  // and identity (agentId/callerAgentId) stays gateway-derived regardless.
+  await handler(BROKER_RPC_METHOD, { capabilityId: 'agent_session_send', operation: 'send', args: {}, invocationCorrelation: 'bad anchor\n' }, { turnExecutionId: 'turn:src' })
+  assert.equal('invocationCorrelation' in gatewayCalls[1].ctx, false)
+  await handler(BROKER_RPC_METHOD, { capabilityId: 'agent_session_send', operation: 'send', args: {}, invocationCorrelation: 'short' }, { turnExecutionId: 'turn:src' })
+  assert.equal('invocationCorrelation' in gatewayCalls[2].ctx, false)
+  await handler(BROKER_RPC_METHOD, { capabilityId: 'agent_session_send', operation: 'send', args: {} }, { turnExecutionId: 'turn:src' })
+  assert.equal('invocationCorrelation' in gatewayCalls[3].ctx, false)
+  assert.equal(gatewayCalls[3].ctx.agentId, 'agt_a-caller')
+})
+
 test('R3: a settled or unknown turnExecutionId proves nothing (absent leaf)', async () => {
   const { handler, gatewayCalls } = relayFixture({
     executions: new Map([['turn:done', { settled: true }]]),
