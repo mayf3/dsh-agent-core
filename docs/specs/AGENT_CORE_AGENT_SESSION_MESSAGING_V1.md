@@ -125,8 +125,9 @@ change_log:
 > invocationCorrelation 锚 + agent_session_send_reconcile 只读 discovery capability）与 §7
 > AMENDMENT_1 验收用例。证据基线：`docs/evidence/agent-session-send-reliability-v1-20260908`
 > （live 树与 origin/main 字节比对 + 12 例判别性 failure injection）。r3 独立审计绑定
-> `eaa3e3d9754a608946165841408d01035a6e1b25`（PR #138）**PASS**；AMENDMENT_1 须独立评审通过后
-> 方可 accepted，接受前 §5.1-§5.3 不授予实现权限。
+> `eaa3e3d9754a608946165841408d01035a6e1b25`（PR #138）**PASS**；AMENDMENT_1 已于 2026-09-08 经独立评审
+> PASS 后 accepted（PR #202 @8994aa5），§5.1-§5.3 实现授权已在独立 impl 分支进行；r5 新增的
+> §5.1a/§5.2-AMENDMENT_2 部分仍为 PROPOSED，接受前不授予实现权限。
 
 > 状态：**accepted r3（2026-09-02 lifecycle acceptance finalize）**。独立审计绑定
 > `eaa3e3d9754a608946165841408d01035a6e1b25`（branch `prep/session-spec-revision-v1` / PR #138）：
@@ -832,7 +833,7 @@ process — cannot PROVE zero bytes; only a STRUCTURED rejection proves non-entr
 
 ```text
 structured pre-receipt rejection (SESSION_WORKSPACE_MISMATCH, proven_zero_byte_rejection,
-AGNot_FOUND / AGENT_DISABLED, …)           -> NOT_DELIVERED + NOT_WAITED   (proven-zero-byte family:
+AGENT_NOT_FOUND / AGENT_DISABLED, …)           -> NOT_DELIVERED + NOT_WAITED   (proven-zero-byte family:
                                                                             not_admitted / target_not_found /
                                                                             target_disabled; unchanged)
 AGENT_PROCESS_EXITED at the admission boundary (in-flight at exit / process already dead)
