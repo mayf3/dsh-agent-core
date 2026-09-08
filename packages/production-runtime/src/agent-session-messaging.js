@@ -100,6 +100,21 @@ function mapDeliverError(error) {
         : { detail: 'send admission could not be proven; outcome unknown' }),
     }
   }
+  // AMENDMENT_2 §5.1a acceptance corpus (agt_soul-questioner-agent gen2 —
+  // frozen facts: PROCESS_EXIT_BEFORE_SESSION_RPC_READY=YES,
+  // INBOX_RECEIPT_EXISTS=NO, TARGET_RUN_EXISTS=NO): a BARE AGENT_PROCESS_EXITED
+  // carrier (no envelope/status) is an initialize/startup death from ready() —
+  // the process never became READY, so no prompt write existed: proven zero
+  // bytes -> NOT_DELIVERED (same shape doctrine as the Router's bare-from-ready
+  // PROVEN_NO_ADMISSION carriers). Envelope-carrying exit shapes (in-flight
+  // write death -> outcome_unknown; exit-race -> failed) stay unproven UNKNOWN.
+  if (error?.code === 'AGENT_PROCESS_EXITED'
+    && error?.envelope === undefined && error?.status === undefined) {
+    return {
+      code: 'not_admitted',
+      detail: 'target process exited before the session RPC was ready; no prompt write existed (reason: AGENT_PROCESS_EXITED)',
+    }
+  }
   if (error?.proven === 'zero_byte' || error?.code === 'SESSION_WORKSPACE_MISMATCH') {
     return { code: 'not_admitted', detail: 'target admission provably rejected before any prompt byte' }
   }
@@ -231,11 +246,10 @@ export function createAgentSessionMessagingAccess({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', startedAtWallMs,
         invocationCorrelation: anchor, failureCode: mapped.code,
-        // §5.1a PROCESS_EXIT_REASON_VISIBLE: the Router-side reason code
-        // (e.g. AGENT_PROCESS_EXITED) is preserved on the row — reason only.
-        // Gated on the closed CODE (not the detail text), bounded like
-        // exitReason.
-        ...(mapped.code === 'outcome_unknown' && typeof error?.code === 'string' && error.code.length > 0
+        // §5.1a PROCESS_EXIT_REASON_VISIBLE: the Router-side reason code is
+        // preserved on EVERY deliver-throw row where it differs from the
+        // surfaced closed code — reason only, bounded.
+        ...(typeof error?.code === 'string' && error.code.length > 0 && error.code !== mapped.code
           ? { failureSource: error.code.slice(0, 128) }
           : {}),
       }) !== 'appended') auditFailed(requestId, 'outcome')

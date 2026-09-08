@@ -523,8 +523,16 @@ test('AMENDMENT_1 §5.3: the file-backed L1 chain is readable across a control-p
 
 test('T_PROCESS_EXIT_1: process-exit rejection at the admission boundary stays unproven (UNKNOWN, never fabricated NOT_DELIVERED)', async () => {
   // Router doctrine C-004/C-017: a pending stdin write at process exit cannot
-  // prove zero bytes — mapDeliverError's default row applies (unmarked).
-  const exited = buildAccess({ router: fakeRouter({ deliverImpl: async () => { const e = new Error('RPC session/prompt rejected: AGENT_PROCESS_EXITED'); e.code = 'AGENT_PROCESS_EXITED'; throw e } }) })
+  // prove zero bytes. The faithful in-flight shape carries the turn-execution
+  // rewrite (status/envelope outcome_unknown — turn-execution.js admissionUnproven),
+  // so the row stays UNMARKED outcome_unknown.
+  const exited = buildAccess({ router: fakeRouter({ deliverImpl: async () => {
+    const e = new Error('RPC session/prompt rejected: AGENT_PROCESS_EXITED')
+    e.code = 'AGENT_PROCESS_EXITED'
+    e.status = 'outcome_unknown'
+    e.envelope = 'outcome_unknown'
+    throw e
+  } }) })
   const envelope = await exited.access.handlers.agent_session_send.send(
     { targetAgentId: TARGET, message: 'x', timeoutSeconds: 0 },
     { callerAgentId: CALLER, sourceTurnExecutionId: PROOF, invocationCorrelation: 'anchor-12345678' },
@@ -579,6 +587,41 @@ test('T_PROCESS_EXIT_2: receipt proven then target process exits mid-turn -> pos
     { callerAgentId: CALLER, sourceTurnExecutionId: PROOF },
   )
   assert.equal(failedEnvelope.error.code, 'target_run_failed')
+})
+
+test('T_PROCESS_EXIT_4 (real acceptance case, AGENT_PROCESS_EXITED_RECOVERY_V1 frozen facts): startup death before session RPC ready -> NOT_DELIVERED, delivery count 0, Run count 0', async () => {
+  // agt_soul-questioner-agent gen2 frozen facts: PROCESS_EXIT_BEFORE_SESSION_
+  // RPC_READY=YES / INBOX_RECEIPT_EXISTS=NO / TARGET_RUN_EXISTS=NO /
+  // ORIGINAL_DELIVERY_STATUS=NOT_DELIVERED / REPLY_STATUS=NOT_STARTED. The
+  // bare carrier (no envelope/status) is the initialize/startup death shape —
+  // the process never became READY, so no prompt write existed: proven zero
+  // bytes -> NOT_DELIVERED, directly caller-visible (no journal forensics).
+  const router = fakeRouter({ deliverImpl: async () => {
+    const e = new Error('initialize failed for agent agt_soul-questioner-agent: child exited (1)')
+    e.code = 'AGENT_PROCESS_EXITED'
+    throw e
+  } })
+  const exited = buildAccess({ router })
+  const envelope = await exited.access.handlers.agent_session_send.send(
+    { targetAgentId: TARGET, message: 'x', timeoutSeconds: 0 },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF, invocationCorrelation: 'anchor-12345678' },
+  )
+  assert.equal(envelope.error.code, 'not_admitted')
+  assert.match(envelope.error.detail, /before the session RPC was ready/)
+  assert.match(envelope.error.detail, /\(reason: AGENT_PROCESS_EXITED\)/, 'PROCESS_EXIT_REASON_VISIBLE')
+  const [row] = auditRows(exited.file).filter((r) => r.phase === 'outcome')
+  assert.equal(row.failureCode, 'not_admitted')
+  assert.equal(row.failureSource, 'AGENT_PROCESS_EXITED')
+  assert.equal(row.failureReason, undefined, 'not a post-receipt row')
+  // §5.3 reconcile of that row: NOT_DELIVERED / NOT_WAITED — deterministic.
+  const lookup = exited.access.handlers.agent_session_send_reconcile.lookup(
+    { invocationCorrelation: 'anchor-12345678' },
+    { callerAgentId: CALLER },
+  )
+  assert.deepEqual(lookup.result.outcome, { result: 'failed', failureCode: 'not_admitted' })
+  // The delivery count is 0: nothing was admitted (fakeRouter records only
+  // successful admissions; the rejected startup never reached a prompt write).
+  assert.equal(router.deliveries.length, 0)
 })
 
 test('T_PROCESS_EXIT_3: receipt/process-exit boundary ambiguity reconciles without blind replay', async () => {

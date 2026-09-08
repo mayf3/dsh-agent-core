@@ -35,7 +35,8 @@ apply §D → post-verify §E.
    DELIVERED per outcome row (replied ⇒ `replyTextAvailable:false`), NOT_DELIVERED only under
    proven retention coverage, UNKNOWN final ⇒ NO_AUTOMATIC_RETRY. The send is NEVER replayed.
 6. **§5.1a/§5.2/§5.3 AMENDMENT_2 (AGENT_PROCESS_EXITED corpus)** — post-receipt outcome_unknown rows carry the `post_receipt` marker + canonical proven-receipt render detail (DELIVERED + UNKNOWN); pre-receipt admission-unproven stays unmarked UNKNOWN (the Router's C-004/C-017 boundary doctrine consumed — NOT_DELIVERED never fabricated at the process boundary); §5.3 conversion row outcome_unknown+post_receipt ⇒ DELIVERED + UNKNOWN; AGENT_PROCESS_EXITED is a reason, never a delivery status.
-7. **Pre-existing defects fixed (A/B-proven on base, on the session-send critical path)** —
+7. **§5.1a real acceptance case (AGENT_PROCESS_EXITED_RECOVERY_V1 frozen facts)** — a BARE AGENT_PROCESS_EXITED carrier (initialize/startup death: process never READY, no prompt write existed) maps to not_admitted ⇒ NOT_DELIVERED, directly caller-visible with the reason preserved; envelope-carrying boundary shapes stay unproven UNKNOWN (Router C-004/C-017 doctrine consumed, never modified).
+8. **Pre-existing defects fixed (A/B-proven on base, on the session-send critical path)** —
    broker child-mode apply crashed with ReferenceError (`withSchedulerMutationMask` was
    re-exported but never imported into module scope): EVERY source-main child tool
    registration was dead; agent-router seam tests still asserted pre-§5.2-hardening scheduler
