@@ -161,7 +161,13 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
     const authoringDiagnostic = isWorkflowAuthoring && (
       (error?.code === 'graph_validation_failed' && error.status === 422)
       || (error?.code === 'invalid_arguments' && error.status === undefined && operation === 'replace_draft_graph'))
-    const detail = authoringDiagnostic && typeof error.detail === 'string' && error.detail.length > 0
+    // AMENDMENT_1 §5.2: an opted-in manifest (renderErrorDetail: true) renders
+    // the sanitized structured detail for EVERY declared failure — the reason
+    // (reply_unavailable (truncated) / outcome_unknown (parent_rpc_ambiguous))
+    // is what makes the §5.1 delivery/reply mapping decidable from the
+    // model-visible surface. Envelopes stay closed; this is render text.
+    const detail = (authoringDiagnostic || manifest.renderErrorDetail === true)
+      && typeof error.detail === 'string' && error.detail.length > 0
       ? `: ${sanitizeErrorDetail(error.detail)}` : ''
     return `${error?.code ?? 'unknown_error'}${suffix}${detail}`
   }

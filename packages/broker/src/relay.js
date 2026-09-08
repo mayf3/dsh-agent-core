@@ -147,6 +147,66 @@ function validDeclaredFailure(parent, manifest) {
     && manifest.errors.some((candidate) => candidate.code === parent.error.code)
 }
 
+// ── AMENDMENT_1 §5.3: bounded outcome reconciliation for agent_session_send ──
+
+/**
+ * Closed §5.1 conversion of ONE reconciled L1 outcome row. `failureCode`
+ * (and `failureReason` for reply_unavailable) are persisted by the trusted
+ * handler (§5.2); anything outside the proven sets resolves UNKNOWN — the
+ * fabricated-DELIVERED and duplicate-licensing NOT_DELIVERED directions are
+ * never produced.
+ */
+const REPLY_SIDE_FAILURE_CODES = new Set(['reply_unavailable', 'target_run_failed'])
+const PRE_RECEIPT_FAILURE_CODES = new Set([
+  'not_admitted', 'queue_capacity_exceeded', 'target_not_found', 'target_disabled',
+])
+
+function reconcileFailedOutcome(failureCode, failureReason) {
+  if (failureCode === 'reply_unavailable') {
+    const replyStatus = failureReason === 'truncated'
+      ? 'TRUNCATED'
+      : failureReason === 'no_output' ? 'NO_OUTPUT' : 'UNKNOWN'
+    return { delivery: 'DELIVERED', replyStatus }
+  }
+  if (failureCode === 'target_run_failed') return { delivery: 'DELIVERED', replyStatus: 'TARGET_FAILED' }
+  if (PRE_RECEIPT_FAILURE_CODES.has(failureCode)) return { delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' }
+  // internal_error / outcome_unknown / unrecognized — unproven handler progress.
+  return { delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
+}
+
+/**
+ * Closed §5.3 conversion of ONE agent_session_send_reconcile lookup answer
+ * into the child-synthesized `reconciled` envelope. `issuedAtWallMs` is the
+ * child-minted invocation time: a missing intent row converts NOT_DELIVERED
+ * ONLY when the retained-evidence window provably covers the invocation
+ * (oldest retained intent row at/before the issue time) — a rotation-expired
+ * anchor resolves UNKNOWN, never the duplicate-licensing NOT_DELIVERED.
+ */
+function convertSessionSendLookup(lookup, issuedAtWallMs) {
+  if (lookup.invocationCorrelationFound !== true) {
+    const covered = Number.isFinite(lookup.oldestRetainedIntentTs)
+      && Number.isFinite(issuedAtWallMs)
+      && issuedAtWallMs >= lookup.oldestRetainedIntentTs
+    return covered
+      ? { status: 'reconciled', delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' }
+      : { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
+  }
+  const outcome = lookup.outcome
+  if (outcome === null || outcome === undefined) {
+    return { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
+  }
+  if (outcome.result === 'accepted') return { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'NOT_WAITED' }
+  if (outcome.result === 'replied') {
+    return { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'REPLIED', replyTextAvailable: false }
+  }
+  if (outcome.result === 'timeout') return { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'TIMEOUT' }
+  if (outcome.result === 'failed') {
+    const mapped = reconcileFailedOutcome(outcome.failureCode, outcome.failureReason)
+    return { status: 'reconciled', delivery: mapped.delivery, replyStatus: mapped.replyStatus }
+  }
+  return { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
+}
+
 /**
  * Canonical read-back + synthetic committed result after a lost mutation
  * response (outcome state machine §5.2). The child relay is one of the TWO
@@ -179,6 +239,9 @@ function validDeclaredFailure(parent, manifest) {
  * @returns {Promise<{ok:true, result:object}|{ok:false, error:{code:string, detail:string}}>}
  */
 import { appendFileSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
+
+import { AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID } from './capabilities/agent-session-reconcile.js'
 
 function persistReconciliationEvidence(entry) {
   const file = process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE
@@ -315,11 +378,41 @@ export function createRelayHandlers(manifest, requestFn) {
         errorCode: 'outcome_unknown',
         detail: 'parent_rpc_ambiguous: agent session send response was lost; do not retry automatically',
       }
+      // AMENDMENT_1 §5.3 anchor: minted by THIS runtime for EXACTLY ONE send
+      // RPC invocation; rides the trusted parent-RPC boundary (never a
+      // model-visible argument — R2 untouched) and is persisted in the L1
+      // intent/outcome rows so a lost response can be reconciled read-only.
+      const sessionSendAnchor = uncertainSessionSend
+        ? { invocationCorrelation: randomUUID(), issuedAtWallMs: Date.now() }
+        : undefined
+      // §5.3: EXACTLY ONE lookup at each unknown capture point, then the
+      // closed conversion. The send itself is NEVER replayed; a lookup that
+      // is itself unusable degrades to the honest ambiguous envelope.
+      const reconcileSessionSend = async () => {
+        try {
+          const lookupEnvelope = await requestFn({
+            capabilityId: AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID,
+            operation: 'lookup',
+            args: { invocationCorrelation: sessionSendAnchor.invocationCorrelation },
+            // Trusted-boundary field (like rpcMeta): the invocation issue time
+            // that bounds the retention-coverage proof for NOT_DELIVERED.
+            invocationIssuedAtWallMs: sessionSendAnchor.issuedAtWallMs,
+          })
+          const structured = exactKeys(lookupEnvelope, ['ok', 'result']) && lookupEnvelope.ok === true
+          const parent = structured ? lookupEnvelope.result : undefined
+          if (parent?.ok !== true || parent?.result === null || typeof parent?.result !== 'object') {
+            return ambiguousError
+          }
+          return convertSessionSendLookup(parent.result, sessionSendAnchor.issuedAtWallMs)
+        } catch {
+          return ambiguousError
+        }
+      }
       // §5.2 outcome state machine (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1): a
       // lost scheduler-mutation response is NEVER a terminal raw unknown —
       // reconcile by stable identity first (APPLIED / NOT_APPLIED /
-      // STILL_UNKNOWN-with-evidence). agent_session_send (outside this spec's
-      // scope) keeps the pre-existing ambiguous envelope verbatim.
+      // STILL_UNKNOWN-with-evidence). agent_session_send reconciles through
+      // its OWN §5.3 anchor lookup (AMENDMENT_1), never through a replay.
       const reconcileUnknown = uncertainMutation
         ? () => reconcileAfterLostResponse(requestFn, op.name, args).then((r) => {
             if (r.ok === true) return r.result
@@ -333,10 +426,11 @@ export function createRelayHandlers(manifest, requestFn) {
           capabilityId: manifest.id,
           operation: op.name,
           args,
+          ...(sessionSendAnchor === undefined ? {} : { invocationCorrelation: sessionSendAnchor.invocationCorrelation }),
         })
       } catch (err) {
         if (reconcileUnknown !== undefined) return reconcileUnknown()
-        if (uncertainSessionSend) return ambiguousError
+        if (uncertainSessionSend) return reconcileSessionSend()
         return {
           errorCode: 'invalid_arguments',
           detail: `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -363,7 +457,7 @@ export function createRelayHandlers(manifest, requestFn) {
         return reconcileUnknown()
       }
       if (uncertainSessionSend && !structuredParentSuccess && !structuredParentFailure) {
-        return ambiguousError
+        return reconcileSessionSend()
       }
       if (parent && parent.ok === true) {
         // Unwrap: child-side invoke re-wraps as { ok: true, result }.

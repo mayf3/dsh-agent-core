@@ -232,6 +232,7 @@ test('R12: an intent append failure returns internal_error with ZERO Router deli
       appendIntent: () => 'append_failed',
       appendOutcome: () => 'appended',
       appendDenial: () => 'appended',
+      findInvocation: () => ({ intentFound: false, outcome: null, oldestRetainedIntentTs: null }),
     },
     onAuditFailure: (info) => failures.push(info),
   })
@@ -253,6 +254,7 @@ test('R12: an outcome append failure after the receipt preserves the proven acce
       appendIntent: () => 'appended',
       appendOutcome: () => 'append_failed',
       appendDenial: () => 'appended',
+      findInvocation: () => ({ intentFound: false, outcome: null, oldestRetainedIntentTs: null }),
     },
     onAuditFailure: (info) => failures.push(info),
   })
@@ -397,4 +399,97 @@ test('wait mode without a reconciliation handle returns honest outcome_unknown',
 test('the provider requires the full Router reconciliation seam', () => {
   assert.throws(() => createAgentSessionMessagingAccess({ router: {}, audit: createAgentSessionMessagingAudit({ auditFile: '/tmp/x.jsonl' }) }), TypeError)
   assert.throws(() => createAgentSessionMessagingAccess({ router: fakeRouter(), audit: undefined }), TypeError)
+})
+
+// ------------------------------------------------- AMENDMENT_1 §5.2 / §5.3
+
+test('AMENDMENT_1 §5.2: send persists the invocationCorrelation anchor in intent + outcome rows', async () => {
+  const router = fakeRouter()
+  const { access, file } = buildAccess({ router })
+  const envelope = await access.handlers.agent_session_send.send(
+    { targetAgentId: TARGET, message: 'x', timeoutSeconds: 0 },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF, invocationCorrelation: 'anchor-12345678' },
+  )
+  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted' } })
+  const rows = auditRows(file)
+  assert.equal(rows.filter((r) => r.invocationCorrelation === 'anchor-12345678').length, 2, 'intent + outcome both carry the anchor')
+  // Legacy context without an anchor: rows simply omit the field.
+  const { access: access2, file: file2 } = buildAccess({ router: fakeRouter() })
+  await access2.handlers.agent_session_send.send(VALID_ARGS, { callerAgentId: CALLER, sourceTurnExecutionId: PROOF })
+  assert.ok(auditRows(file2).every((r) => r.invocationCorrelation === undefined), 'no fabricated anchor')
+})
+
+test('AMENDMENT_1 §5.2: failed outcomes persist failureCode (+failureReason for reply_unavailable)', async () => {
+  // Pre-receipt rejection → the mapped deliver-error code.
+  const rejected = buildAccess({ router: fakeRouter({ deliverImpl: async () => { const e = new Error('x'); e.envelope = 'not_admitted'; throw e } }) })
+  await rejected.access.handlers.agent_session_send.send(VALID_ARGS, { callerAgentId: CALLER, sourceTurnExecutionId: PROOF })
+  const [rejectedRow] = auditRows(rejected.file).filter((r) => r.phase === 'outcome')
+  assert.equal(rejectedRow.failureCode, 'not_admitted')
+  // Post-receipt reply failure → the failure envelope code + the structured reason.
+  const replied = buildAccess({
+    router: fakeRouter({ states: { 'turn:1': { state: 'no_output', terminalState: 'completed' } } }),
+  })
+  const envelope = await replied.access.handlers.agent_session_send.send(
+    { targetAgentId: TARGET, message: 'x', timeoutSeconds: 5 },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF },
+  )
+  assert.equal(envelope.error.code, 'reply_unavailable')
+  const [repliedRow] = auditRows(replied.file).filter((r) => r.phase === 'outcome')
+  assert.equal(repliedRow.failureCode, 'reply_unavailable')
+  assert.equal(repliedRow.failureReason, 'no_output')
+  // Unproven admission failure → outcome_unknown.
+  const unproven = buildAccess({ router: fakeRouter({ deliverImpl: async () => { throw new Error('boom') } }) })
+  await unproven.access.handlers.agent_session_send.send(VALID_ARGS, { callerAgentId: CALLER, sourceTurnExecutionId: PROOF })
+  const [unprovenRow] = auditRows(unproven.file).filter((r) => r.phase === 'outcome')
+  assert.equal(unprovenRow.failureCode, 'outcome_unknown')
+})
+
+test('AMENDMENT_1 §5.3: lookup resolves rows by the gateway-caller-bound anchor', async () => {
+  const { access, surface, file } = buildAccess({ router: fakeRouter() })
+  surface.appendIntent({ sourceAgentId: CALLER, targetAgentId: TARGET, requestId: 'req-a', correlation: PROOF, timeoutMode: 'wait_reply', invocationCorrelation: 'anchor-12345678' })
+  surface.appendOutcome({ sourceAgentId: CALLER, targetAgentId: TARGET, requestId: 'req-a', correlation: PROOF, timeoutMode: 'wait_reply', result: 'accepted', invocationCorrelation: 'anchor-12345678' })
+  // An unrelated agent's row with the SAME anchor must not resolve (the rows
+  // are matched against the GATEWAY-DERIVED caller — spoof-resistance).
+  surface.appendIntent({ sourceAgentId: 'agt_evil-9', targetAgentId: TARGET, requestId: 'req-b', correlation: 'turn:9', timeoutMode: 'wait_reply', invocationCorrelation: 'anchor-12345678' })
+  const envelope = access.handlers.agent_session_send_reconcile.lookup(
+    { invocationCorrelation: 'anchor-12345678' },
+    { callerAgentId: CALLER },
+  )
+  assert.equal(envelope.ok, true)
+  assert.equal(envelope.result.invocationCorrelationFound, true)
+  assert.deepEqual(envelope.result.outcome, { result: 'accepted' })
+  assert.equal(typeof envelope.result.oldestRetainedIntentTs, 'number', 'the retention-coverage anchor is reported')
+  assert.ok(existsSync(file))
+})
+
+test('AMENDMENT_1 §5.3: a foreign caller with the same anchor finds nothing', async () => {
+  const { access, surface } = buildAccess({ router: fakeRouter() })
+  surface.appendIntent({ sourceAgentId: CALLER, targetAgentId: TARGET, requestId: 'req-a', correlation: PROOF, timeoutMode: 'wait_reply', invocationCorrelation: 'anchor-12345678' })
+  const envelope = access.handlers.agent_session_send_reconcile.lookup(
+    { invocationCorrelation: 'anchor-12345678' },
+    { callerAgentId: 'agt_other-agent' },
+  )
+  assert.equal(envelope.result.invocationCorrelationFound, false, 'a foreign caller never reads another agent\'s rows')
+  assert.equal(envelope.result.outcome, null)
+  // The coverage anchor is a file-wide property (the retained evidence
+  // window), independent of who is asking.
+  assert.equal(typeof envelope.result.oldestRetainedIntentTs, 'number')
+})
+
+test('AMENDMENT_1 §5.3: lookup validates the anchor argument contract', () => {
+  const { access } = buildAccess({ router: fakeRouter() })
+  for (const bad of [undefined, null, '', 'short', `${'a'.repeat(129)}`, 'bad\nanchor']) {
+    const envelope = access.handlers.agent_session_send_reconcile.lookup(
+      { invocationCorrelation: bad },
+      { callerAgentId: CALLER },
+    )
+    assert.equal(envelope.ok, false, String(bad))
+    assert.equal(envelope.error.code, 'invalid_arguments')
+  }
+})
+
+test('AMENDMENT_1 §5.3: the provider serves the infrastructure reconcile capability alongside send', () => {
+  const { access } = buildAccess({ router: fakeRouter() })
+  assert.equal(typeof access.handlers.agent_session_send.send, 'function')
+  assert.equal(typeof access.handlers.agent_session_send_reconcile.lookup, 'function')
 })
