@@ -34,16 +34,19 @@ Fresh stamp runs: pinned node v25.6.1 + proxy-free env, worktree at `aa3f63c`.
 
 Real incident corpus: `agt_soul-questioner-agent` gen2 — `RPC session/prompt rejected: AGENT_PROCESS_EXITED`.
 `AGENT_PROCESS_EXITED` is a REASON, never a delivery status (PROCESS_EXIT_REASON_VISIBLE = PASS:
-reason rides render detail + L1 rows; delivery is never read from it).
+the Router-side reason code rides the render detail (`(reason: AGENT_PROCESS_EXITED)`) and the L1
+`failureSource`; the post-receipt exit reason rides the render detail (`exit reason: ...`) and the
+L1 `exitReason`, read from the reconciliation settled snapshot (terminationEvidence/errorClass
+via getTurnReconciliation, R9.5) — delivery is never read from any reason).
 
 | Unified matrix row | Verdict | Mechanical evidence |
 |---|---|---|
 | reply_unavailable(<reason>) → DELIVERED + reply failure | **PASS** (unchanged) | §5.1 post-receipt-only construction; probe cases 3–6 |
 | target_run_failed after receipt → DELIVERED + TARGET_FAILED | **PASS** | R8 mapping (late_failed → target_run_failed); conversion-table row (DELIVERED/TARGET_FAILED); T_PROCESS_EXIT_2 late_failed variant |
-| AGENT_PROCESS_EXITED before/at receipt (Router C-004/C-017 boundary doctrine: stdin in-flight writes cannot prove zero bytes) | **PASS as UNKNOWN → reconcile** | T_PROCESS_EXIT_1: error outcome_unknown UNMARKED (no fabricated phase), L1 row failureCode outcome_unknown without post_receipt, reconcile of that row ⇒ UNKNOWN (NOT_DELIVERED never fabricated); structured proven rejections keep not_admitted (NOT_DELIVERED) |
-| AGENT_PROCESS_EXITED after receipt (mid-turn death, terminated_without_outcome) | **PASS as DELIVERED + UNKNOWN** | T_PROCESS_EXIT_2: canonical render marker 'after a proven inbox receipt (delivery was proven)', L1 row failureReason 'post_receipt', §5.3 lookup converts DELIVERED + UNKNOWN; delivery count 1, NO_AUTO_RETRY |
+| AGENT_PROCESS_EXITED before/at receipt (Router C-004/C-017 boundary doctrine: stdin in-flight writes cannot prove zero bytes) | **PASS as UNKNOWN → reconcile** | T_PROCESS_EXIT_1: error outcome_unknown UNMARKED with the reason visible as `(reason: AGENT_PROCESS_EXITED)` + L1 failureSource (no fabricated phase), reconcile of that row ⇒ UNKNOWN (NOT_DELIVERED never fabricated); structured proven rejections keep not_admitted (NOT_DELIVERED) |
+| AGENT_PROCESS_EXITED after receipt (mid-turn death, terminated_without_outcome) | **PASS as DELIVERED + UNKNOWN** | T_PROCESS_EXIT_2: canonical marker + `exit reason: child_real_exit` from the settled snapshot, L1 row failureReason 'post_receipt' + exitReason; delivery count 1 asserted, §5.3 lookup converts DELIVERED + UNKNOWN; delivery count 1, NO_AUTO_RETRY |
 | transport/parent-response ambiguity → UNKNOWN → reconcile | **PASS** | probe CASE A (reconciled DELIVERED) + CASE G2 (explicit UNKNOWN terminal) |
-| TRUE_UNCERTAINTY → STILL_UNKNOWN + NO_BLIND_REPLAY | **PASS** | T_PROCESS_EXIT_3: intent-without-outcome ⇒ outcome null (STILL_UNKNOWN terminal); unmarked outcome_unknown ⇒ UNKNOWN; NO_BLIND_REPLAY asserted at every capture point |
+| TRUE_UNCERTAINTY → STILL_UNKNOWN + NO_BLIND_REPLAY | **PASS** | T_PROCESS_EXIT_3: intent-without-outcome ⇒ outcome null (STILL_UNKNOWN terminal); unmarked outcome_unknown ⇒ UNKNOWN; replay suppression is STRUCTURAL (the relay never re-issues a send — per-leg count tests) |
 | AGENT_PROCESS_EXITED_DELIVERY_STATUS_UNAMBIGUOUS | **PASS** | every process-exit shape resolves to exactly one §5.1 row (unmarked pre-receipt = UNKNOWN; post_receipt = DELIVERED + UNKNOWN; late_failed = DELIVERED + TARGET_FAILED; structured = NOT_DELIVERED) — conversion table + T_PROCESS_EXIT_1/2/3 |
 | OUTCOME_UNKNOWN_RECONCILIATION | **PASS** | §5.3 lookup + conversion (probe CASE A; broker table); STILL_UNKNOWN explicit and final |
 

@@ -110,7 +110,7 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
    * the structured failure class — today's bare `result:'failed'` bundles
    * all reply-side failures and no persisted surface records the reason.
    */
-  function appendOutcome({ sourceAgentId, targetAgentId, requestId, correlation, timeoutMode, result, reconciliationHandle, startedAtWallMs, invocationCorrelation, failureCode, failureReason }) {
+  function appendOutcome({ sourceAgentId, targetAgentId, requestId, correlation, timeoutMode, result, reconciliationHandle, startedAtWallMs, invocationCorrelation, failureCode, failureReason, failureSource, exitReason }) {
     return append({
       kind: 'agent_session_send',
       phase: 'outcome',
@@ -125,6 +125,11 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
       result,
       ...(typeof failureCode === 'string' && failureCode.length > 0 ? { failureCode } : {}),
       ...(typeof failureReason === 'string' && failureReason.length > 0 ? { failureReason } : {}),
+      // AMENDMENT_2 §5.1a/§5.2 PROCESS_EXIT_REASON_VISIBLE: the process-exit
+      // REASON rides the row SEPARATELY from the phase marker (failureReason)
+      // and from failureCode — reason is never a delivery dimension.
+      ...(typeof failureSource === 'string' && failureSource.length > 0 ? { failureSource } : {}),
+      ...(typeof exitReason === 'string' && exitReason.length > 0 ? { exitReason } : {}),
       ...(reconciliationHandle === undefined ? {} : { reconciliationHandle }),
       ...(startedAtWallMs === undefined ? {} : { startedAtWallMs }),
       durationMs: Math.max(0, now() - (startedAtWallMs ?? now())),

@@ -89,11 +89,26 @@ function mapDeliverError(error) {
       ? { code: 'queue_capacity_exceeded', detail: 'target bounded queue rejected the admission; zero prompt bytes written' }
       : { code: 'not_admitted', detail: 'target admission provably rejected; zero prompt bytes written' }
   }
-  if (error?.envelope === 'outcome_unknown') return { code: 'outcome_unknown', detail: 'send admission could not be proven; outcome unknown' }
+  // AMENDMENT_2 §5.1a PROCESS_EXIT_REASON_VISIBLE: the process-exit reason
+  // (e.g. AGENT_PROCESS_EXITED) rides the DETAIL as REASON ONLY — the closed
+  // code stays outcome_unknown and never becomes a delivery dimension.
+  if (error?.envelope === 'outcome_unknown') {
+    return {
+      code: 'outcome_unknown',
+      ...(typeof error?.code === 'string' && error.code.length > 0
+        ? { detail: `send admission could not be proven; outcome unknown (reason: ${error.code})` }
+        : { detail: 'send admission could not be proven; outcome unknown' }),
+    }
+  }
   if (error?.proven === 'zero_byte' || error?.code === 'SESSION_WORKSPACE_MISMATCH') {
     return { code: 'not_admitted', detail: 'target admission provably rejected before any prompt byte' }
   }
-  return { code: 'outcome_unknown', detail: 'send admission outcome unproven; nothing was replayed' }
+  return {
+    code: 'outcome_unknown',
+    ...(typeof error?.code === 'string' && error.code.length > 0
+      ? { detail: `send admission outcome unproven; nothing was replayed (reason: ${error.code})` }
+      : { detail: 'send admission outcome unproven; nothing was replayed' }),
+  }
 }
 
 /**
@@ -216,6 +231,11 @@ export function createAgentSessionMessagingAccess({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', startedAtWallMs,
         invocationCorrelation: anchor, failureCode: mapped.code,
+        // §5.1a PROCESS_EXIT_REASON_VISIBLE: the Router-side reason code
+        // (e.g. AGENT_PROCESS_EXITED) is preserved on the row — reason only.
+        ...(mapped.detail.includes('(reason:') && typeof error?.code === 'string'
+          ? { failureSource: error.code }
+          : {}),
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: false, error: mapped }
     }
@@ -286,6 +306,18 @@ export function createAgentSessionMessagingAccess({
     // the render carry the post_receipt marker: DELIVERED + UNKNOWN, never a
     // fabricated TARGET_FAILED and never invisible delivery.
     const postReceiptUnknown = outcome.kind === 'outcome_unknown'
+    // §5.1a PROCESS_EXIT_REASON_VISIBLE: the exit reason comes from the
+    // reconciliation SETTLED SNAPSHOT (terminationEvidence / errorClass /
+    // initialSource) — read authoritatively, never from event payloads (R9.5).
+    let exitReason
+    if (postReceiptUnknown && typeof router.getTurnReconciliation === 'function') {
+      try {
+        const reconciliation = router.getTurnReconciliation(handle)
+        const snapshot = reconciliation?.snapshot
+        const raw = snapshot?.terminationEvidence ?? snapshot?.errorClass ?? snapshot?.initialSource
+        if (typeof raw === 'string' && raw.length > 0) exitReason = raw.slice(0, 128)
+      } catch { /* the reason surface is best-effort; the phase marker stands */ }
+    }
     const failureEnvelope = outcome.kind === 'target_run_failed'
       ? { code: 'target_run_failed', detail: 'the exact target Run settled as failed; retained text is never returned as success' }
       : outcome.kind === 'not_admitted'
@@ -293,7 +325,12 @@ export function createAgentSessionMessagingAccess({
         : outcome.kind === 'reply_unavailable'
           ? { code: 'reply_unavailable', detail: `reply unavailable (${outcome.reason})` }
           : postReceiptUnknown
-            ? { code: 'outcome_unknown', detail: 'the exact target Run terminated without a proven outcome after a proven inbox receipt (delivery was proven)' }
+            ? {
+                code: 'outcome_unknown',
+                detail: exitReason === undefined
+                  ? 'the exact target Run terminated without a proven outcome after a proven inbox receipt (delivery was proven)'
+                  : `the exact target Run terminated without a proven outcome after a proven inbox receipt (delivery was proven; exit reason: ${exitReason})`,
+              }
             : { code: 'outcome_unknown', detail: 'the exact target Run terminated without a proven outcome' }
     if (audit.appendOutcome({
       sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
@@ -306,6 +343,7 @@ export function createAgentSessionMessagingAccess({
         ? { failureReason: outcome.reason }
         : {}),
       ...(postReceiptUnknown ? { failureReason: 'post_receipt' } : {}),
+      ...(postReceiptUnknown && exitReason !== undefined ? { exitReason } : {}),
     }) !== 'appended') auditFailed(requestId, 'outcome')
     return { ok: false, error: failureEnvelope }
   }
