@@ -200,3 +200,84 @@ export function inDeploymentScope(repoPath) {
   if (repoPath.endsWith('.md')) return false
   return true
 }
+
+/**
+ * 2026-09-09 fleet-boot regression audit: `export { X } from 'm'` does NOT
+ * bind X locally — if the module body also CALLS X, that call is a
+ * ReferenceError at runtime (killed every agent child in child mode while the
+ * parent gateway branch stayed healthy). Returns re-exported names lacking a
+ * local import/declaration. Pure.
+ */
+export function reExportsWithoutLocalBinding(source) {
+  const missing = []
+  const reExport = /export\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/g
+  let m
+  while ((m = reExport.exec(source)) !== null) {
+    const names = m[1].split(',').map((part) => part.trim().split(/\s+as\s+/).pop()).filter(Boolean)
+    for (const name of names) {
+      const localImport = new RegExp(`import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*['"]${m[2].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`).test(source)
+      const localDecl = new RegExp(`\\b(?:function|const|let|var|class)\\s+${name}\\b`).test(source)
+      if (!localImport && !localDecl) missing.push({ name, from: m[2] })
+    }
+  }
+  return missing
+}
+
+/** NARROW overlay universe (2026-09-09 boot-failure amendment): ONLY the two
+ *  packages the reliability candidate owns (broker + scheduler) plus the
+ *  watchdog script. packages/production-runtime/** is EXCLUDED BY NAME —
+ *  main's model-overrides.js demands the v3 host config whose migration
+ *  belongs to ANOTHER goal (Model Fleet, HOLD); overlaying it crash-looped the
+ *  engine (rolled back via preimages). Test trees and markdown excluded. Pure. */
+export function inOverlayUniverse(repoPath) {
+  if (repoPath === 'scripts/scheduler-watchdog.mjs') return true
+  if (!repoPath.startsWith('packages/')) return false
+  if (repoPath.startsWith('packages/production-runtime/')) return false
+  if (repoPath.includes('/test/') || repoPath.endsWith('.test.js')) return false
+  if (repoPath.endsWith('.md')) return false
+  return repoPath.startsWith('packages/broker/') || repoPath.startsWith('packages/scheduler/')
+}
+
+/**
+ * Fixpoint narrow overlay: seed = differing/absent universe files; grow ONLY
+ * through relative imports resolving inside the universe and differing from
+ * live. Universe-external imports are tolerated when live serves them (the
+ * boot smoke is the backstop); unresolvable everywhere -> {refuse}. Pure.
+ */
+export function narrowOverlayUniverse({ seedPaths, readTarget, liveHas, liveShaOf }) {
+  const overlay = new Map()
+  const queue = [...seedPaths]
+  while (queue.length > 0) {
+    const path = queue.shift()
+    if (overlay.has(path)) continue
+    let bytes
+    try { bytes = readTarget(path) } catch { return { refuse: `target missing: ${path}` } }
+    overlay.set(path, bytes)
+    const dir = path.split('/').slice(0, -1).join('/')
+    for (const spec of relativeImports(String(bytes))) {
+      if (!spec.startsWith('.')) continue
+      let resolved = null
+      for (const candidate of resolveRelative(dir, spec)) {
+        try { readTarget(candidate); resolved = candidate; break } catch { /* next shape */ }
+      }
+      if (resolved === null) {
+        if (liveHas(resolveRelative(dir, spec)[0])) continue
+        return { refuse: `import '${spec}' of ${path} resolves nowhere in target or live` }
+      }
+      if (!inOverlayUniverse(resolved)) {
+        if (liveHas(resolved)) continue
+        return { refuse: `import '${spec}' of ${path} reaches excluded tree ${resolved} AND live does not serve it` }
+      }
+      if (liveShaOf(resolved) !== sha256Text(String(bytes))) queue.push(resolved)
+    }
+  }
+  return { overlay }
+}
+
+function sha256Text(text) {
+  // fixpoint-growth hash only (positional); the orchestrator recomputes the
+  // real sha256 for the write pass.
+  let h = 0
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0
+  return `${h}:${text.length}`
+}
