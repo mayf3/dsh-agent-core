@@ -92,3 +92,37 @@ __MERGE_SHA__            = <source merge commit —— merge 后回填>
 
 不直写 jobs.json（一切经 control ops/锁）；不跑 catch-up；不建第二 credential 路径（不给用户域
 runtime 复制凭据）；不修改 occurrence/run 语义；SECRET_OUTPUT=NO；P0 未释放不得执行 §3 任何步骤。
+
+---
+
+## §7 EXECUTED RECORD (2026-09-08, PRODUCTION_ADOPTION complete)
+
+Admission executed via scripts/scheduler-cp-admission.mjs (PR #204/#205/#207/#208, terminal receipt:
+/Users/yanfenma/workspace/artifacts/production-candidates/SCHEDULER_CONTROL_PLANE_RELIABILITY_V1-admission/terminal-receipt.json).
+
+Deviations from the frozen template (all recorded, none silent):
+1. §3.5 executed as a NEW SEALED OPERATOR GENERATION
+   (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1--dsh-agent-core--db93649--x86_64--g1, full ESM closure +
+   vendored croner, atomic flip, cutover receipt) — the operator surface moved to the stage-isolation
+   sealed-generation system after this RUNBOOK froze; generation flip is mechanically stronger than the
+   planned symlink repoint. First apply crashed the engine via the full-diff overlay
+   (model-overrides v3-strict vs host v1 config — Model Fleet migration dependency, NOT this goal's
+   authority); RUNBOOK §4 preimage rollback RESTORED SERVICE (evidence: boot-failure-runtime-err.tail),
+   then the overlay universe was narrowed to packages/broker/** ∪ packages/scheduler/** ∪ the watchdog
+   script with a fail-closed import-closure check (2026-09-09 amendment).
+2. Critical predicates anchored on FROZEN RECOVERY-LEDGER ID PREFIXES after the guard's
+   FAILED_NO_MUTATION on ambiguity: daily=fa13b0ea…, hr=b115cb96… (the store holds two same-agent
+   same-cron enabled jobs; attribute matching retired as ambiguous-by-reality). The guard refusing
+   WAS the design working.
+3. §3.1 backfill executed for the two criticals only (audited, revision-invariant asserted, store
+   ownership restored to authsvc after the root-run write).
+4. Owner inputs consumed: alert chat DERIVED from the critical daily job's persisted delivery.to
+   (directive A — no Owner ask); critical inventory = the directive-named two as CRITICAL_PRODUCTION
+   with the full 23-job census classified (NORMAL 13 / DISABLED_INTENTIONAL 4 / none UNKNOWN —
+   full table in the admission commit PR #207); ONE consolidated sudo gate total.
+
+Post-adoption state: overlay 0-diff (converged), health ok, operator bytes 98a2a031… == sealed,
+W1/W2 installed and scheduled (mutual heartbeat), evidence channel provisioned.
+POST-TERMINAL NATURAL VERIFICATION (non-blocking): first W1/W2 fire (≤15m from install) and the
+22:00 daily job run through the monitored pipeline tonight — healthy silence is the success signal;
+any real failure now fires the live alert path (Feishu direct → Owner chat; park-file fallback).
