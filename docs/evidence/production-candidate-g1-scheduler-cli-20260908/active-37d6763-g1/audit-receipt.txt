@@ -1,0 +1,22 @@
+# PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1 — implementation audit receipts
+
+## Independent implementation audit r1 (at e37c668)
+AUDIT_VERDICT = PASS
+SHIP_BLOCKERS = NONE
+SPEC_COMPLIANCE = PASS
+PRODUCTION_BOUNDARY_PRESERVED = YES
+suite observed by auditor: 41/41 PASS
+mechanical concerns: closure-install mode leak (fixed r2), manifest receipt backfill (accepted: registry-indexed),
+seal.json outside sealed set (fixed r2 cross-check), TOCTOU gate3→rollback capture (fixed r2 gate3b),
+secret scan filename-based (widened r2), T8 cross-hash missing (added r2), ABSENT sentinel edge (cosmetic, accepted)
+
+## Delta re-audit r2 (of 37d6763 concern-union fix)
+DELTA_REAUDIT_VERDICT = PASS
+BLOCKERS = NONE
+all four r1 fixes verified real (seal.json cross-check proven by sandbox tamper → VERIFY DRIFT exit 1, zero writes)
+suite re-run by auditor: 47/47 PASS (offline)
+active generation 37d6763--g1 verify OK, runner pin 90f82a68, r3 test receipt registry-clean
+prior generations (c11ac01--g1, 9c1e981--g1) byte-untouched, both VERIFY OK
+production boundary preserved: /usr/local/bin/agentcore-cron still original dev-worktree symlink, no cutover
+residuals accepted: missing-seal.json passes verify (apply still fails loudly), gate3b partial rollback/ dir is
+conservative (refuses re-apply of that generation), T14 rollback-restore unasserted cleanup, ABSENT sentinel cosmetic

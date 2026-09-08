@@ -49,14 +49,15 @@ Today: installer ships whatever worktree bytes invoke it; partial "双文件" re
 
 ## 4. Scheduler operator CLI (SB4 packaging; ACTIVE GENERATION FROZEN)
 
-Active sealed generation (2026-09-08):
+Active sealed generation (2026-09-08, refrozen after runner r2 hardening — new-generation discipline):
 
 ```
-~/workspace/artifacts/production-candidates/PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1--dsh-agent-core--c11ac01--x86_64--g1
-  SOURCE_SHA c11ac01 (git-show; commit-tree bytes) · target /usr/local/bin/agentcore-cron
+~/workspace/artifacts/production-candidates/PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1--dsh-agent-core--37d6763--x86_64--g1   ← ACTIVE
+  SOURCE_SHA 37d6763 (git-show; commit-tree bytes) · target /usr/local/bin/agentcore-cron
   CANDIDATE_HASH == EXPECTED_PREIMAGE_HASH = 24ce44e7… (live symlink currently serves the same bytes)
-  runner pin c6f735b6… · test receipt: failure-test suite r2 (41 assertions PASS)
-  superseded: …--9c1e981--x86_64--g1 (sealed with earlier runner bytes; cannot apply by design — gate0)
+  runner pin 90f82a68… · receipts: test = failure-test suite r3 (47 assertions PASS), audit = r1 PASS + delta re-audit r2 PASS
+superseded (retained, unappliable by gate0 design — runner bytes advanced):
+  …--c11ac01--x86_64--g1 (runner pin c6f735b6)  ·  …--9c1e981--x86_64--g1 (runner pin 93816810)
 ```
 
 Cutover (slot-gated, coordinates with SB4 `CLI_BYTES_MATCH_EXPECTED` / `CLI_STORE_TARGET`):
