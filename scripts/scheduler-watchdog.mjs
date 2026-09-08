@@ -35,7 +35,8 @@ import { join } from 'node:path'
 
 const DELIVER_TEST = process.argv.includes('--deliver-test')
 const roleArg = process.argv[process.argv.indexOf('--role') + 1]
-const ROLE = (DELIVER_TEST ? 'w1' : (roleArg && !roleArg.startsWith('--') ? roleArg : (process.env.SCHEDULER_WATCHDOG_ROLE ?? 'w1'))).toLowerCase()
+const roleArgValid = ['w1', 'w2'].includes((roleArg ?? '').toLowerCase())
+const ROLE = (roleArgValid ? roleArg : (process.env.SCHEDULER_WATCHDOG_ROLE ?? (DELIVER_TEST ? 'w1' : 'w1'))).toLowerCase()
 const DRY_RUN = process.argv.includes('--dry-run')
 const STORE = process.env.SCHEDULER_WATCHDOG_STORE
   ?? (ROLE === 'w1' ? '/Users/authsvc/.agent-core/scheduler/jobs.json' : undefined)
