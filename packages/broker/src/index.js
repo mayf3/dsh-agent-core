@@ -62,6 +62,7 @@ import { agentDefinitionManifests } from './capabilities/agent-definition.js'
 import { schedulerManifests } from './capabilities/scheduler.js'
 import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
 import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
+import { withSchedulerMutationMask } from './readiness.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'

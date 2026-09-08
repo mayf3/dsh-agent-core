@@ -60,6 +60,9 @@ const HEARTBEAT_GRACE_MS = Number(process.env.SCHEDULER_WATCHDOG_HEARTBEAT_GRACE
 // goal exists to prevent.
 const CREDENTIAL_FILE = process.env.SCHEDULER_CREDENTIALS_FILE
   ?? '/usr/local/libexec/agent-core/config/agent-credentials.json'
+const ALERT_STATE_FILE = process.env.SCHEDULER_WATCHDOG_ALERT_STATE
+  ?? join(STATE_DIR, 'alert-state.json')
+const ALERT_REMINDER_MS = Number(process.env.SCHEDULER_WATCHDOG_REMINDER_MS ?? 60 * 60 * 1000)
 const RECONCILIATION_EVIDENCE = process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE
   ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl'
 const W1_HEARTBEAT = join(STATE_DIR, 'w1.heartbeat')
@@ -156,7 +159,7 @@ function evidenceAgeMs(nowMs) {
 async function runW1(nowMs) {
   const { readFileSync: readRaw } = await import('node:fs')
   const { createHash } = await import('node:crypto')
-  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, evaluateReconciliationEvidence, evaluateCredentialProvider, formatFindings } =
+  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, evaluateReconciliationEvidence, evaluateCredentialProvider, updateAlertState, formatFindings } =
     await import('../packages/scheduler/src/watchdog.js')
   const findings = []
   // Desired-state vs live state (raw file read — no engine, no migration side effects).
@@ -204,13 +207,32 @@ async function runW1(nowMs) {
     findings.push({ class: 'SCHEDULER_WATCHDOG_W2_FAILURE', reason: `W2 heartbeat stale or missing (ageMs=${w2Age === null ? 'missing' : w2Age})` })
   }
 
+  // ── alert-storm hardening: dedupe Owner notifications by fingerprint; every
+  // evaluation is still receipted in the evidence log below.
+  let alertState = {}
+  try {
+    alertState = JSON.parse(readFileSync(ALERT_STATE_FILE, 'utf8'))
+  } catch { /* first run or unparsable -> fresh */ }
+  const transition = updateAlertState(alertState, findings, { nowMs, reminderIntervalMs: ALERT_REMINDER_MS })
   touchHeartbeat('w1', nowMs)
-  if (findings.length === 0) {
-    writeEvidence({ kind: 'w1_run', findingCount: 0, desiredStateSha256: desiredSha256 })
-    return 'ok'
+  writeEvidence({
+    kind: 'w1_run', findingCount: findings.length, classes: findings.map((f) => f.class),
+    notifications: transition.notifications.map((n) => ({ fingerprint: n.fingerprint, kind: n.kind })),
+    desiredStateSha256: desiredSha256,
+  })
+  if (transition.notifications.length === 0) return 'suppressed_or_healthy'
+  const render = (n) => {
+    const f = n.finding
+    const coordinates = [f.logicalKey, f.jobId, f.runId, f.occurrenceId].filter(Boolean).join(' ')
+    const body = f.detail ?? f.reason ?? ''
+    if (n.kind === 'recovered') return `- RECOVERED [${n.fingerprint}] the earlier ${f.class} is no longer present`
+    return `- ${n.kind === 'new' ? 'NEW' : n.kind === 'reminder' ? 'REMINDER (bounded)' : 'UPDATED'} ${f.class}${coordinates ? ` [${coordinates}]` : ''} ${body}`
   }
-  const alertOutcome = await deliverOrPark(formatFindings(findings, { role: 'W1', nowMs }))
-  writeEvidence({ kind: 'w1_run', findingCount: findings.length, classes: findings.map((f) => f.class), alertOutcome, desiredStateSha256: desiredSha256 })
+  const text = `Scheduler watchdog W1 ${transition.notifications.length} notification(s) @ ${new Date(nowMs).toISOString()}\n${transition.notifications.map(render).join('\n')}`
+  const alertOutcome = await deliverOrPark(text)
+  mkdirSync(STATE_DIR, { recursive: true })
+  writeFileSync(ALERT_STATE_FILE, `${JSON.stringify(transition.state, null, 2)}\n`)
+  writeEvidence({ kind: 'w1_alerts_delivered', count: transition.notifications.length, alertOutcome })
   return alertOutcome
 }
 
