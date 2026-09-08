@@ -164,11 +164,38 @@ export function createSessionSeam({ ctx, settings }) {
    * sibling metadata. Absent sidecar keeps the historical `source:
    * {kind:'user'}`; a malformed sidecar is a trusted-protocol violation and
    * rejects the prompt before any message is created.
+   *
+   * WORKFLOW_AGENT_EXECUTION_V1 adds exactly ONE second trusted shape: the
+   * runtime-owned workflow execution provenance (ids validated, never model
+   * input). It stamps the session message source like inter_agent does, so
+   * the Run's session journal carries the machine association.
    */
   function validateMessageOrigin(messageOrigin) {
     if (messageOrigin === undefined) return { kind: 'user' }
     if (messageOrigin === null || typeof messageOrigin !== 'object' || Array.isArray(messageOrigin)) {
       throw new TypeError('demo-server: messageOrigin must be an object when present')
+    }
+    if (messageOrigin.kind === 'workflow_execution') {
+      const workflowKeys = Object.keys(messageOrigin)
+      if (workflowKeys.length !== 4
+        || !workflowKeys.includes('workflowInstanceId') || !workflowKeys.includes('nodeVisitId') || !workflowKeys.includes('attemptId')) {
+        throw new TypeError('demo-server: workflow_execution messageOrigin must be exactly { kind, workflowInstanceId, nodeVisitId, attemptId }')
+      }
+      for (const field of ['workflowInstanceId', 'nodeVisitId']) {
+        if (typeof messageOrigin[field] !== 'string'
+          || !/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(messageOrigin[field])) {
+          throw new TypeError(`demo-server: messageOrigin.${field} must be a UUID string`)
+        }
+      }
+      if (typeof messageOrigin.attemptId !== 'string' || !/^wfeat-[0-9a-f]{24}$/.test(messageOrigin.attemptId)) {
+        throw new TypeError('demo-server: messageOrigin.attemptId must be a wfeat-* ledger attempt id')
+      }
+      return {
+        kind: 'workflow_execution',
+        workflowInstanceId: messageOrigin.workflowInstanceId,
+        nodeVisitId: messageOrigin.nodeVisitId,
+        attemptId: messageOrigin.attemptId,
+      }
     }
     const keys = Object.keys(messageOrigin)
     if (keys.length !== 3
@@ -176,7 +203,7 @@ export function createSessionSeam({ ctx, settings }) {
       throw new TypeError('demo-server: messageOrigin must be exactly { kind, sourceAgentId, correlation }')
     }
     if (messageOrigin.kind !== 'inter_agent') {
-      throw new TypeError('demo-server: messageOrigin.kind must be "inter_agent"')
+      throw new TypeError('demo-server: messageOrigin.kind must be "inter_agent" or "workflow_execution"')
     }
     if (typeof messageOrigin.sourceAgentId !== 'string' || !/^agt_[A-Za-z0-9_-]+$/.test(messageOrigin.sourceAgentId)) {
       throw new TypeError('demo-server: messageOrigin.sourceAgentId must be an exact agt_* id')
