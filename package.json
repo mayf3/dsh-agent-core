@@ -22,6 +22,7 @@
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.1",
     "@larksuiteoapi/node-sdk": "^1.73.0",
-    "croner": "^10.0.1"
+    "croner": "^10.0.1",
+    "sherpa-onnx-node": "1.13.7"
   }
 }
