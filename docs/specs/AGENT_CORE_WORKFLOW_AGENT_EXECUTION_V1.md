@@ -19,6 +19,12 @@ revision_note: >-
   architecture and frozen implementation candidate are carried unchanged
   except where this Spec says otherwise.
 supersedes: []
+amends:
+  - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted R4 trusted message-origin
+    sidecar: extends the exact source-kind enumeration from ONE kind
+    (`inter_agent`) to TWO (`+ workflow_execution`); no other R4 semantic —
+    exact-allowlist, freeze, fail-loud rejection, control-plane-only — is
+    changed. See CTR-WAE-004.)
 external:
   - svc-workflow SVC_WORKFLOW_DISPATCH_INTENT_KEYSET_CONTINUATION_V1 (candidate,
     same closure round; amends CTR-VAI-009 of accepted
@@ -103,7 +109,7 @@ ruled by the Owner:
 | Concern | Frozen seam |
 |---|---|
 | due feed | broker capability `workflow_dispatch_intents` op `list` (limit 1..100 + keyset continuation §CTR-WAE-001b; svc-workflow GLOBAL_SCHEDULER_READ binding enforced server-side) |
-| assignee mapping | `agentPrincipalResolutionAccess` (`AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1`): auth-service exact UUID read + local definition deliverability |
+| assignee mapping | `agentPrincipalResolutionAccess` (`AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2`, which supersedes V1 and retains CTR-EPAR-005): auth-service exact UUID read + local definition deliverability |
 | Run admission | `router.deliver({requestId, agentId, sessionMode:'main', message}, {messageOrigin})` — AGENT ROUTER DELIVERY V0 |
 | run outcome | Router reconciliation store: `getTurnReconciliation` / `resolveCallerCorrelation` (handle first, exact requestId correlation as restart fallback) |
 | settle probe | broker capability `workflow_instance_detail` op `read`, executed AS THE TARGET AGENT |
@@ -130,8 +136,8 @@ The feed is a single ordered window (`(nextEligibleAt, dispatchIntentId)`,
 limit ≤ 100) with no server-side state; if more than one window of due
 intents exists and every intent in the first window already has an attempt,
 intents beyond the first window are INVISIBLE — a confirmed starvation that
-violates work-discovery completeness. Minimal closure (authorized by the
-goal's continuation exception + Owner B2 ruling):
+violates work-discovery completeness. Minimal closure (scoped by the goal's
+continuation exception; required by Owner ruling B2, 2026-09-09):
 
 - The external svc-workflow contract adds optional keyset continuation
   parameters `afterNextEligibleAt` + `afterDispatchIntentId` (both-or-neither;
@@ -153,10 +159,14 @@ goal's continuation exception + Owner B2 ruling):
 - Deployment order: svc-workflow with the accepted keyset continuation
   deploys BEFORE the dsh poller is enabled in that environment. No
   consumer-side feature flag.
-- Concurrent wake safety: wake moves eligibility to server-now, i.e. LATER
-  in the sweep order (never earlier), so a moved intent is re-seen on the
-  next sweep; within a sweep the keyset is stable. (Svc-side CTR restated as
-  consumer-visible guarantee.)
+- Consumer-visible feed safety (restated from the external CTR-DKC-004):
+  an already-RETURNED due row's key never moves backward (wake is a durable
+  no-op on due rows); mid-sweep entries (woken deferred intents, brand-new
+  activations) land at/after the cursor EXCEPT long-transaction timestamp
+  skew and exact-timestamp ties, which stay due and are caught by the next
+  sweep; each sweep restarts cursorless and, with continuation, is
+  exhaustive — and the one-attempt fence (CTR-WAE-002) dedupes any repeated
+  observation anyway.
 
 ### CTR-WAE-002 — the one-attempt fence
 
@@ -191,10 +201,21 @@ messageOrigin = { kind: 'workflow_execution', workflowInstanceId: <uuid>,
 
 exact-allowlisted, frozen, malformed-rejected in BOTH the Router
 (`ingress-delivery.js`) and the session seam (`session-seam.js`); the
-exact-id admission gate (AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1
+exact-id admission gate (AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2
 CTR-EPAR-005 TOCTOU family) applies to it. Unknown origin kinds stay
 rejected. The session journal stamps the message `source` verbatim — this is
 the runtime-owned workflow provenance on the Run; it is NEVER model input.
+
+AMENDMENT DECLARATION (vs accepted AGENT_CORE_AGENT_SESSION_MESSAGING_V1):
+this contract extends R4's frozen source-kind enumeration from one trusted
+kind (`inter_agent`) to two (`workflow_execution`). Nothing else about the
+R4 sidecar changes: exact-allowlist, Object.freeze detach, fail-loud
+malformed rejection, control-plane-only provenance. On R4's genericity rule
+("the Router must not learn Workflow/Forum/Feishu/Scheduler semantics"):
+the Router's treatment of `workflow_execution` is SHAPE VALIDATION ONLY
+(UUID / `wfeat-` grammar checks) — no workflow-aware routing, admission, or
+retry decision is derived from the sidecar; routing stays keyed on the exact
+Agent Definition id exactly as before.
 The instruction text carries the exact coordinates and the special semantics
 (acknowledgments are not facts; the transition receipt is the only commitment;
 version-conflict allows exactly one re-read+retry; blocked work goes to the
@@ -204,7 +225,8 @@ existing Assistance surface, never a fabricated submission).
 
 Append-only `workflow-execution/attempts.jsonl` + `attempts.lock`
 (OwnerLock). Event kinds: `attempt_planned`, `run_delivered`
-(`{agentId, requestId, sessionId, reconciliationHandle?}`), `delivery_failed`
+(`{agentId, requestId, sessionId, reconciliationHandle?, messageId?}`),
+`delivery_failed`
 (terminal NEEDS_REVIEW), `reconciled` (terminal verdict). Replay tolerates a
 torn tail; terminal attempts REFUSE further appends fail-loud (a late writer
 would mean someone is trying to re-run a settled/reviewed NodeVisit). The
