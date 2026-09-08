@@ -62,6 +62,7 @@ import { agentDefinitionManifests } from './capabilities/agent-definition.js'
 import { schedulerManifests } from './capabilities/scheduler.js'
 import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
 import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
+import { lifeWorkbenchManifests } from './capabilities/life-workbench.mjs'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'
@@ -79,7 +80,10 @@ export const inject = ['tools']
  * AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 CTR-FMC-002: create/watch/
  * unwatch/report/stats for every Agent child). The Forum MODERATOR pack (×8)
  * is deliberately NOT here: it is appended per-mode in apply() under the
- * closed-list gate (CTR-FMC-004). All HTTP capabilities fail CLOSED at
+ * closed-list gate (CTR-FMC-004). The Life Workbench pack (×2 — workbench_read
+ * / workbench_propose per LIFE_WORKBENCH_AUDIENCE_CCR_V1; authorization is
+ * issuance-side via the life-workbench MachineAccessGrant baseline) IS here.
+ * All HTTP capabilities fail CLOSED at
  * execution time without a credential from the seam; registration itself
  * never requires one.
  */
@@ -93,6 +97,7 @@ export const DEFAULT_MANIFESTS = [
   ...schedulerManifests,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,
+  ...lifeWorkbenchManifests,
 ]
 
 /** Default auth-service token endpoint origin (deployment-local). */
