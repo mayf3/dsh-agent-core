@@ -266,7 +266,12 @@ function runtimeRestart(alertTo) {
     } catch { /* retry */ }
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000)
   }
-  phase('runtime', true, `plist env ${dirty ? 'patched' : 'already present'}; kickstart; health=${healthy ? 'ok' : 'TIMEOUT'}${alertTo && !CTX.ownerChat ? `; alertTo derived from critical daily job (${alertTo})` : ''}`)
+  if (!healthy) {
+    // HEALTH-TIMEOUT IS A FAILURE (2026-09-09 lesson: recording ok and
+    // continuing let the engine crash-loop invisibly through later phases).
+    phase('runtime', false, 'health TIMEOUT after kickstart — RUN ROLLBACK NOW: sudo node scripts/scheduler-cp-rollback.mjs (preimages are in place)')
+  }
+  phase('runtime', true, `plist env ${dirty ? 'patched' : 'already present'}; kickstart; health=ok${alertTo && !CTX.ownerChat ? `; alertTo derived from critical daily job (${alertTo})` : ''}`)
   return { healthy }
 }
 
