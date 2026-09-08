@@ -222,6 +222,11 @@ export function resolveForumModeratorRegistration(config = {}, env = process.env
  * §5.3 fail-before-tool-exposure mask — implemented in ./readiness.js
  * (dependency-free so the registration path and tests share one module).
  */
+// LOCAL BINDING REQUIRED (2026-09-09 fleet boot regression): a bare
+// `export { X } from` does NOT bind X in this module — apply() calls it in
+// child mode, and the missing binding was a ReferenceError that killed every
+// agent child before JSON-RPC startup (AGENT_PROCESS_EXITED fleet-wide).
+import { withSchedulerMutationMask } from './readiness.js'
 export { withSchedulerMutationMask } from './readiness.js'
 
 /**
