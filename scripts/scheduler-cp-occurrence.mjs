@@ -174,35 +174,50 @@ if (DISPOSITION) {
   const before = freezeView(raw, { jobId: JOB ?? '', occurrenceId: OCC })
   if (before.job === null || before.occurrence === null) { process.stderr.write('[disposition] job/occurrence not found — NO MUTATION\n'); process.exit(1) }
   const o = before.occurrence
+  // Staleness is EVIDENCE-BASED: an at-job's execution window IS its
+  // scheduled instant (+timeout) — if that instant is >48h past, the run is
+  // definitively dead regardless of heuristics. Started-based 7d stays as the
+  // fallback for cron/every jobs.
+  const schedule = before.job.schedule ?? {}
+  const atInstantPast = schedule.kind === 'at'
+    && Number.isFinite(Date.parse(schedule.at))
+    && (Date.now() - Date.parse(schedule.at)) > 48 * 60 * 60 * 1000
+  const startedStale = o.startedAt !== null && (Date.now() - o.startedAt) > STALE_DAYS * 24 * 60 * 60 * 1000
   const predicates = {
     jobDisabled: before.job.enabled === false,
     occurrenceUnresolved: o.state === 'outcome_unknown',
     startedNotEnded: o.startedAt !== null && o.endedAt === null,
-    staleBeyondWindow: o.startedAt !== null && (Date.now() - o.startedAt) > STALE_DAYS * 24 * 60 * 60 * 1000,
+    staleBeyondWindow: atInstantPast || startedStale,
   }
+  void STALE_DAYS
   for (const [name, pass] of Object.entries(predicates)) {
     process.stdout.write(`[disposition] ${name} = ${pass ? 'PASS' : 'FAIL'}\n`)
   }
+  process.stdout.write(`[disposition] staleness proof = ${atInstantPast ? `at instant ${schedule.at} past >48h` : `started ${Math.round((Date.now() - o.startedAt) / 3600000)}h ago`}\n`)
   if (!Object.values(predicates).every(Boolean)) {
     process.stderr.write('[disposition] predicate(s) failed — NO MUTATION (class C not mechanically provable)\n')
     process.exit(1)
   }
   process.stdout.write('[disposition] class C (workload interrupted by restart; cannot continue; terminal fact = failed)\n')
+  globalThis.__dispositionRunId = before.occurrence.runId
 }
 if (RECONCILE || DISPOSITION) {
   let effectiveRunId = RUN_ID
-  if (DISPOSITION && !effectiveRunId) effectiveRunId = before.occurrence.runId
+  if (DISPOSITION && !effectiveRunId) effectiveRunId = globalThis.__dispositionRunId
   if (!effectiveRunId) { process.stderr.write('--reconcile requires --run-id\n'); process.exit(2) }
-  if (DISPOSITION && before.occurrence.runId !== effectiveRunId) { process.stderr.write('[disposition] runId mismatch — NO MUTATION\n'); process.exit(1) }
   const RUN_ID_EFFECTIVE = effectiveRunId
   const before = freezeView(raw, { jobId: JOB ?? '', occurrenceId: OCC })
   if (before.occurrence === null) { process.stderr.write('[occurrence] unknown occurrence — NO MUTATION\n'); process.exit(1) }
-  if (before.occurrence.runId !== RUN_ID) { process.stderr.write(`[occurrence] runId mismatch (ledger has ${before.occurrence.runId}) — NO MUTATION\n`); process.exit(1) }
+  if (before.occurrence.runId !== RUN_ID_EFFECTIVE) { process.stderr.write(`[occurrence] runId mismatch (ledger has ${before.occurrence.runId}) — NO MUTATION\n`); process.exit(1) }
   const canonicalOccurrenceId = before.occurrence?.occurrenceId ?? OCC
   const result = await reconcile(store, { occurrenceId: canonicalOccurrenceId, runId: DISPOSITION ? RUN_ID_EFFECTIVE : RUN_ID })
   const after = freezeView(await store.loadDoc({ force: true }).then((doc) => JSON.stringify(doc)), { jobId: JOB ?? result.record.jobId, occurrenceId: OCC })
   process.stdout.write(`EXACT_OCCURRENCE_RECONCILED = ${after.occurrence?.state === 'failed' && after.occurrence?.lateSettlement ? 'PASS' : 'CHECK'}\n`)
-  process.stdout.write(`NEW_OCCURRENCE_CREATED = ${(after.runsForJob || []).filter((r) => r.occurrenceId !== OCC).length === 0 && (JSON.parse(raw).occurrences ?? []).length === (after.runsForJob || []).length ? 'NO' : 'VERIFY'}\n`)
+  const beforeCount = (JSON.parse(raw).occurrences ?? []).length
+  const afterDoc = JSON.parse(readFileSync(STORE, 'utf8'))
+  const afterCount = (afterDoc.occurrences ?? []).length
+  const newOccurrences = afterCount - beforeCount
+  process.stdout.write(`NEW_OCCURRENCE_CREATED = ${newOccurrences === 0 ? 'NO' : `YES(${newOccurrences})`}\n`)
   process.stdout.write(`BLIND_RETRY = NO (canonical reconcile; no re-execution, no re-creation)\n`)
   process.stdout.write(`fence released = ${result.fenceRemaining === false}\nidentity = ${result.identity.username} (${result.identity.provenance})\nevidence = ${result.evidenceStatus.ok ? 'appended' : 'APPEND FAILED'}\n`)
   process.exit(0)
