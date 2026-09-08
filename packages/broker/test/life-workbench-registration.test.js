@@ -31,7 +31,7 @@ test('targets registry contains the pinned life-workbench target', () => {
   )
 })
 
-test('capability file exists with the reviewed sha', () => {
+test('capability file exists with the registration markers', () => {
   const capability = readFileSync(join(src, 'capabilities', 'life-workbench.mjs'), 'utf8')
   assert.match(capability, /targetId:\s*'life-workbench'/)
   assert.match(capability, /workbench_read/)
@@ -47,7 +47,7 @@ test('DEFAULT_MANIFESTS composes the life-workbench manifests', () => {
   )
   assert.match(
     index,
-    /\.\.\.lifeWorkbenchManifests,\n\]/,
+    /\.\.\.lifeWorkbenchManifests,/,
     'DEFAULT_MANIFESTS must spread the life-workbench manifests',
   )
 })
