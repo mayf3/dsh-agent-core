@@ -488,6 +488,37 @@ test('AMENDMENT_1 §5.3: lookup validates the anchor argument contract', () => {
   }
 })
 
+test('AMENDMENT_1 §5.1/§5.2: the post-receipt malformed receipt row carries the post_receipt reason', async () => {
+  const malformed = buildAccess({ router: fakeRouter({ deliverImpl: async () => ({ accepted: false }) }) })
+  const envelope = await malformed.access.handlers.agent_session_send.send(
+    VALID_ARGS,
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF },
+  )
+  assert.equal(envelope.error.code, 'internal_error')
+  assert.match(envelope.error.detail, /after a proven inbox acceptance/)
+  const [row] = auditRows(malformed.file).filter((r) => r.phase === 'outcome')
+  assert.equal(row.failureCode, 'internal_error')
+  assert.equal(row.failureReason, 'post_receipt')
+})
+
+test('AMENDMENT_1 §5.3: the file-backed L1 chain is readable across a control-plane restart', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'asm-restart-'))
+  const file = join(dir, 'audit.jsonl')
+  const before = buildAccess({ router: fakeRouter(), auditFile: file })
+  await before.access.handlers.agent_session_send.send(
+    { targetAgentId: TARGET, message: 'x', timeoutSeconds: 0 },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF, invocationCorrelation: 'anchor-12345678' },
+  )
+  // A "restart": a FRESH audit surface + provider over the SAME file.
+  const after = buildAccess({ router: fakeRouter(), auditFile: file })
+  const envelope = after.access.handlers.agent_session_send_reconcile.lookup(
+    { invocationCorrelation: 'anchor-12345678' },
+    { callerAgentId: CALLER },
+  )
+  assert.equal(envelope.result.invocationCorrelationFound, true, 'rows survive the restart (rotation is the only loss)')
+  rmSync(dir, { recursive: true, force: true })
+})
+
 test('AMENDMENT_1 §5.3: the provider serves the infrastructure reconcile capability alongside send', () => {
   const { access } = buildAccess({ router: fakeRouter() })
   assert.equal(typeof access.handlers.agent_session_send.send, 'function')

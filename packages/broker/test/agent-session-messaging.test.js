@@ -157,7 +157,7 @@ function lostSendRelay(lookupImpl) {
 async function runLostSend(lookupResult) {
   const { handlers, legs } = lostSendRelay(() => ({
     ok: true,
-    result: { ok: true, result: lookupResult },
+    result: { ok: true, result: { retentionIntegrity: 'clean', ...lookupResult } },
   }))
   const wire = await handlers.send({}, { targetAgentId: 'agt_b-target', message: 'x', timeoutSeconds: 30 })
   return { wire, legs }
@@ -174,8 +174,8 @@ test('AMENDMENT_1 §5.3 CASE A: receipt committed + response lost -> reconcile D
   const lookupLegs = legs.filter((c) => c.capabilityId === 'agent_session_send_reconcile')
   assert.equal(sendLegs.length, 1, 'the send executed exactly once')
   assert.equal(lookupLegs.length, 1, 'exactly one read-only lookup')
-  assert.equal(typeof lookupLegs[0].invocationIssuedAtWallMs, 'number', 'lookup carries the issue time')
   assert.equal(lookupLegs[0].args.invocationCorrelation, sendLegs[0].invocationCorrelation, 'same anchor')
+  assert.equal(typeof sendLegs[0].invocationCorrelation, 'string', 'the send RPC carried the anchor')
 })
 
 test('AMENDMENT_1 §5.3: reconciled conversions for every outcome row class', async () => {
@@ -195,6 +195,10 @@ test('AMENDMENT_1 §5.3: reconciled conversions for every outcome row class', as
     [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'not_admitted' }, oldestRetainedIntentTs: 1 },
       { status: 'reconciled', delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' }],
     [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'internal_error' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'internal_error', failureReason: 'post_receipt' }, oldestRetainedIntentTs: 1 },
+      { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }],
+    [{ invocationCorrelationFound: true, outcome: { result: 'failed', failureCode: 'outcome_unknown' }, oldestRetainedIntentTs: 1 },
       { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }],
     [{ invocationCorrelationFound: true, outcome: null, oldestRetainedIntentTs: 1 },
       { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }],
@@ -216,6 +220,10 @@ test('AMENDMENT_1 §5.3 CASE B + rotation honesty: absence is NOT_DELIVERED only
   // No coverage anchor at all -> UNKNOWN.
   const unbounded = await runLostSend({ invocationCorrelationFound: false, outcome: null, oldestRetainedIntentTs: null })
   assert.deepEqual(unbounded.wire, { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' })
+  // Corrupt retained evidence (a skipped line could be THIS invocation's
+  // intent row) -> coverage unprovable -> UNKNOWN, never NOT_DELIVERED.
+  const corrupt = await runLostSend({ invocationCorrelationFound: false, outcome: null, oldestRetainedIntentTs: 1000, retentionIntegrity: 'corrupt' })
+  assert.deepEqual(corrupt.wire, { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' })
 })
 
 test('AMENDMENT_1 §5.3: a parent-answered reconciled result is not a valid send success (child-synthesized only)', async () => {

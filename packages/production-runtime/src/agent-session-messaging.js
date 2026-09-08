@@ -226,6 +226,9 @@ export function createAgentSessionMessagingAccess({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', startedAtWallMs,
         invocationCorrelation: anchor, failureCode: 'internal_error',
+        // §5.1 post-receipt marker: the canonical detail proves delivery; the
+        // row-level reason lets the §5.3 conversion resolve DELIVERED + UNKNOWN.
+        failureReason: 'post_receipt',
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: false, error: { code: 'internal_error', detail: 'delivery receipt was malformed after a proven inbox acceptance' } }
     }

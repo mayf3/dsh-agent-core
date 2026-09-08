@@ -164,6 +164,7 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
     let intent = null
     let outcome = null
     let oldestRetainedIntentTs = null
+    let retentionIntegrity = 'clean'
     for (const file of files) {
       let text = ''
       try {
@@ -177,7 +178,12 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
         try {
           row = JSON.parse(line)
         } catch {
-          continue // corrupt line — evidence quality degrades honestly, never throws
+          // Corrupt retained evidence weakens the "provable retention
+          // coverage" bar (§5.3): a skipped line could be THIS invocation's
+          // intent row, so absence must never license NOT_DELIVERED. Report
+          // the degradation; the relay resolves UNKNOWN instead.
+          retentionIntegrity = 'corrupt'
+          continue
         }
         if (row?.kind !== 'agent_session_send') continue
         if (row.phase === 'intent' && typeof row.ts === 'number') {
@@ -198,6 +204,7 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
             ...(outcome.failureReason === undefined ? {} : { failureReason: outcome.failureReason }),
           },
       oldestRetainedIntentTs,
+      retentionIntegrity,
     }
   }
 
