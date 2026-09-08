@@ -489,6 +489,14 @@ export const workflowDispatchIntentsManifest = withTransportErrors({
             validationError: 'invalid_pagination',
             description: 'Maximum records returned, 1-100 (server default 50).',
           },
+          afterNextEligibleAt: {
+            type: 'string',
+            description: 'Keyset continuation cursor (DISPATCH_INTENT_KEYSET_CONTINUATION_V1): the EXACT nextEligibleAt string of the last record already consumed. Both-or-neither with afterDispatchIntentId.',
+          },
+          afterDispatchIntentId: {
+            type: 'string',
+            description: 'Keyset continuation cursor: the EXACT dispatchIntentId of the last record already consumed. Both-or-neither with afterNextEligibleAt.',
+          },
         },
         required: [],
       },
@@ -498,7 +506,7 @@ export const workflowDispatchIntentsManifest = withTransportErrors({
         target: 'svc-workflow',
         method: 'GET',
         path: '/internal/v1/dispatch-intents',
-        query: ['limit'],
+        query: ['limit', 'afterNextEligibleAt', 'afterDispatchIntentId'],
       },
     },
   ],

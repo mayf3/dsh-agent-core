@@ -7,7 +7,8 @@
  *
  *   poll once:
  *     1. reconcile ACTIVE attempts (SETTLED / stays ACTIVE / NEEDS_REVIEW)
- *     2. list due DISPATCH_INTENTs (broker `workflow_dispatch_intents.list`)
+ *     2. sweep the due DISPATCH_INTENT feed to exhaustion via keyset
+ *        continuation (no page cap; CTR-WAE-001b)
  *     3. per due intent: beginAttemptIfAbsent (the one-attempt fence)
  *        -> resolve canonical assignee (`agent_resolve_principal` authority)
  *        -> router.deliver the execution Run with the trusted
@@ -31,10 +32,18 @@ import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt } from './judgm
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
 
+/** svc-workflow's hard page cap (1..100); a FULL page means "keep sweeping". */
+export const DUE_PAGE_LIMIT = 100
+
 /**
  * @param {object} deps
  * @param {object} deps.ledger - ExecutionLedger.
- * @param {() => Promise<{ok:true, items:unknown[]}|{ok:false, code:string, detail?:string}>} deps.listDueIntents
+ * @param {({limit:number, afterNextEligibleAt?:string, afterDispatchIntentId?:string}) =>
+ *   Promise<{ok:true, items:unknown[]}|{ok:false, code:string, detail?:string}>} deps.fetchDuePage
+ *   - ONE page of the due feed in its stable (nextEligibleAt, dispatchIntentId)
+ *     order; a page with fewer items than `limit` means exhaustion. Both-or-
+ *     neither cursor propagation is this engine's job (it only ever sends
+ *     the exact strings it received).
  * @param {(principalId: string) => Promise<{ok:true, agentId:string}|{ok:false, code:string, detail?:string}>} deps.resolvePrincipalToAgent
  * @param {(req: {requestId:string, agentId:string, message:string, messageOrigin:object}) =>
  *   Promise<{ok:true, sessionId:string, reconciliationHandle?:string, messageId?:string}|{ok:false, code:string, detail?:string}>} deps.deliverRun
@@ -48,7 +57,7 @@ export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
  */
 export function createWorkflowExecutionEngine({
   ledger,
-  listDueIntents,
+  fetchDuePage,
   resolvePrincipalToAgent,
   deliverRun,
   getTurnReconciliation,
@@ -59,7 +68,7 @@ export function createWorkflowExecutionEngine({
   clock = () => Date.now(),
   config = {},
 }) {
-  for (const [name, fn] of Object.entries({ ledger, listDueIntents, resolvePrincipalToAgent, deliverRun, getTurnReconciliation, readInstanceDetail })) {
+  for (const [name, fn] of Object.entries({ ledger, fetchDuePage, resolvePrincipalToAgent, deliverRun, getTurnReconciliation, readInstanceDetail })) {
     if (fn === undefined) throw new TypeError(`workflow-execution: engine dep ${name} is required`)
   }
   const maxAdmissions = config.maxAdmissionsPerPoll ?? DEFAULT_MAX_ADMISSIONS_PER_POLL
@@ -216,34 +225,71 @@ export function createWorkflowExecutionEngine({
    */
   async function pollOnce() {
     const reconciled = await reconcileOnce()
-    const due = await listDueIntents()
-    if (!due.ok) {
-      return { ok: false, phase: 'list_due_intents', code: due.code, reconciled, admissions: [] }
-    }
     const admissions = []
     const skipped = []
+    let pages = 0
     let newAttempts = 0
-    for (const raw of due.items ?? []) {
-      if (newAttempts >= maxAdmissions) break
-      const normalized = normalizeDueIntent(raw)
-      if (!normalized.ok) {
-        skipped.push({ reason: normalized.reason })
-        log.warn?.(`workflow-execution: skipped malformed due record (${normalized.reason})`)
-        continue
+    let boundReached = false
+    let boundSkipped = 0
+    let cursor
+    while (true) {
+      const page = await fetchDuePage({
+        limit: DUE_PAGE_LIMIT,
+        ...(cursor?.afterNextEligibleAt === undefined ? {} : { afterNextEligibleAt: cursor.afterNextEligibleAt }),
+        ...(cursor?.afterDispatchIntentId === undefined ? {} : { afterDispatchIntentId: cursor.afterDispatchIntentId }),
+      })
+      if (!page.ok) {
+        return { ok: false, phase: 'list_due_intents', code: page.code, reconciled, admissions, skipped, pages }
       }
-      try {
-        const result = await admitDueIntent(normalized.intent)
-        admissions.push(result)
-        // only NEW attempts consume the bound; already_attempted replays are
-        // free so stale due intents ahead of the page never starve newer ones
-        if (result.action !== 'already_attempted') newAttempts += 1
-      } catch (error) {
-        log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
-        admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })
-        newAttempts += 1
+      pages += 1
+      const items = Array.isArray(page.items) ? page.items : []
+      const exhausted = items.length < DUE_PAGE_LIMIT
+      for (const raw of items) {
+        const normalized = normalizeDueIntent(raw)
+        if (!normalized.ok) {
+          skipped.push({ reason: normalized.reason })
+          log.warn?.(`workflow-execution: skipped malformed due record (${normalized.reason})`)
+          continue
+        }
+        if (newAttempts >= maxAdmissions) {
+          boundReached = true
+          boundSkipped += 1
+          continue
+        }
+        try {
+          const result = await admitDueIntent(normalized.intent)
+          admissions.push(result)
+          if (result.action !== 'already_attempted') newAttempts += 1
+        } catch (error) {
+          log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
+          admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })
+          newAttempts += 1
+        }
       }
+      if (exhausted) break
+      const last = items[items.length - 1]
+      if (last === null || typeof last !== 'object'
+        || typeof last.nextEligibleAt !== 'string' || last.nextEligibleAt === ''
+        || typeof last.dispatchIntentId !== 'string' || last.dispatchIntentId === '') {
+        log.error?.('workflow-execution: due-feed cursor protocol violation (full page without a well-formed last record) — sweep stopped')
+        return { ok: false, phase: 'due_feed_cursor', code: 'cursor_protocol_violation', reconciled, admissions, skipped, pages }
+      }
+      const nextCursor = {
+        afterNextEligibleAt: last.nextEligibleAt,
+        afterDispatchIntentId: last.dispatchIntentId,
+      }
+      if (cursor !== undefined
+        && nextCursor.afterNextEligibleAt === cursor.afterNextEligibleAt
+        && nextCursor.afterDispatchIntentId === cursor.afterDispatchIntentId) {
+        log.error?.('workflow-execution: due-feed cursor did not advance (identical full page repeated) — sweep stopped loud; is the svc-workflow keyset continuation deployed?')
+        return { ok: false, phase: 'due_feed_cursor', code: 'cursor_not_advancing', reconciled, admissions, skipped, pages }
+      }
+      cursor = nextCursor
     }
-    return { ok: true, reconciled, admissions, skipped }
+    if (boundReached) {
+      log.warn?.(`workflow-execution: admission bound (${maxAdmissions}) reached; ${boundSkipped} due intents left unadmitted — they stay due and are re-discovered next sweep`)
+    }
+    return { ok: true, reconciled, admissions, skipped, pages }
   }
 
   // ── interval runner (mirrors the scheduler's single-flight tick) ────────
