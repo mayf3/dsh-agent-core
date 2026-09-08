@@ -1,6 +1,24 @@
 ---
 spec_id: PRODUCT_API_VOICE_TRANSCRIPTION_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_at: 2026-09-08T14:10:47Z
+accepted_reviewed_head: 67553c20a1a72760f053edb47a770c3ac09fbc58
+accepted_normative_body_sha256: f57eaea8321c3d41bcee68a2e2ac8f5747419c6fde537c426b5a7bdd8a91bbbf
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_basis: >-
+  Explicit Owner exact-head acceptance ACCEPT_BOTH_CHILD_AUTHORITIES (2026-09-08,
+  Master Goal MOBILE_AGENT_PRESENCE_V1, one ruling covering both child authorities:
+  ACCEPT_PRODUCT_API_VOICE_TRANSCRIPTION_V1 = YES and
+  ACCEPT_MOBILE_AGENT_PRESENCE_RUNTIME_V1 = YES; no Product semantic modification
+  authorized) of this spec at reviewed semantic head 67553c2 (independent REVIEW
+  PASS, BLOCKER_UNION = [], DEC-VT-004 engine smoke EXECUTED_OBSERVATION recorded,
+  ENGINE_PIN / SERVICE DEADLINE frozen, CROSS_SPEC_COMPATIBILITY 8/8 PASS vs the
+  mobile sibling). Lifecycle-only transaction: NORMATIVE_BODY_DELTA = NONE.
+  accepted_normative_body_sha256 = SHA-256 of blob bytes after the closing
+  frontmatter delimiter line at accepted_reviewed_head; equality at the
+  acceptance head proves NORMATIVE_BODY_DELTA = NONE.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
