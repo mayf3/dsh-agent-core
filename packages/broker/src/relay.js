@@ -169,8 +169,15 @@ function reconcileFailedOutcome(failureCode, failureReason) {
     return { delivery: 'DELIVERED', replyStatus }
   }
   if (failureCode === 'target_run_failed') return { delivery: 'DELIVERED', replyStatus: 'TARGET_FAILED' }
+  if (failureCode === 'internal_error' && failureReason === 'post_receipt') {
+    // §5.1: the post-receipt malformed-receipt emission is DELIVERED + UNKNOWN
+    // (canonical detail marker "after a proven inbox acceptance"); the row
+    // carries failureReason 'post_receipt' from the single emission site.
+    return { delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }
+  }
   if (PRE_RECEIPT_FAILURE_CODES.has(failureCode)) return { delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' }
-  // internal_error / outcome_unknown / unrecognized — unproven handler progress.
+  // internal_error (unmarked = unproven handler progress) / outcome_unknown /
+  // unrecognized — never classified.
   return { delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
 }
 
@@ -184,7 +191,12 @@ function reconcileFailedOutcome(failureCode, failureReason) {
  */
 function convertSessionSendLookup(lookup, issuedAtWallMs) {
   if (lookup.invocationCorrelationFound !== true) {
-    const covered = Number.isFinite(lookup.oldestRetainedIntentTs)
+    // NOT_DELIVERED requires provable retention coverage AND clean retained
+    // evidence: a corrupt line in the window could be THIS invocation's
+    // intent row, so degraded integrity resolves UNKNOWN — never the
+    // duplicate-licensing NOT_DELIVERED direction (§5.3).
+    const covered = lookup.retentionIntegrity === 'clean'
+      && Number.isFinite(lookup.oldestRetainedIntentTs)
       && Number.isFinite(issuedAtWallMs)
       && issuedAtWallMs >= lookup.oldestRetainedIntentTs
     return covered
@@ -394,9 +406,6 @@ export function createRelayHandlers(manifest, requestFn) {
             capabilityId: AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID,
             operation: 'lookup',
             args: { invocationCorrelation: sessionSendAnchor.invocationCorrelation },
-            // Trusted-boundary field (like rpcMeta): the invocation issue time
-            // that bounds the retention-coverage proof for NOT_DELIVERED.
-            invocationIssuedAtWallMs: sessionSendAnchor.issuedAtWallMs,
           })
           const structured = exactKeys(lookupEnvelope, ['ok', 'result']) && lookupEnvelope.ok === true
           const parent = structured ? lookupEnvelope.result : undefined
