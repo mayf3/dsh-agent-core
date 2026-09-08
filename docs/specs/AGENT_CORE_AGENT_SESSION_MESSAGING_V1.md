@@ -14,7 +14,13 @@ amendment_ref: r4 = AMENDMENT_1 (owner goal AGENT_SESSION_SEND_RELIABILITY_V1; d
   discovery capability; accepted semantics of §0-§4/§6 unchanged, except that §5.2 additively
   extends the R12 evidence shape (failureCode + invocationCorrelation fields on L1 rows) and §5.3
   adds exactly one child-synthesized caller-visible reconciled envelope)
-amendment_status: proposed
+amendment_status: accepted
+amendment_accepted_date: 2026-09-08
+amendment_accepted_by: mayf3
+amendment_accepted_merge: 8994aa587ed9328540e793c77128210a9abac8e3 (PR #202, normal merge path;
+  Owner ruling AMENDMENT_1_ACCEPTED 2026-09-08 — six-point acceptance incl.
+  REPLY_UNAVAILABLE_MEANS_DELIVERED=YES as accepted historical fact; implementation now authorized
+  on a separate branch under GOVERNING_SPEC_UNMODIFIED)
 amendment_independent_review: r1 REVISE (3 blockers, all mechanical) -> blocker union fixed once
   @ 725b252 -> re-audit ACCEPT (blockers NONE; 3 cosmetic notes absorbed in the follow-up commit,
   zero semantic delta). Reviewer mechanically re-verified against the real implementation:
