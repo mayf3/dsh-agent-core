@@ -55,6 +55,7 @@ import { updateJobOp } from '../packages/scheduler/src/control.js'
 import {
   matchCriticalJobs, buildDesiredState, buildBackfillMapping, classifyCensus,
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
+  reExportsWithoutLocalBinding,
 } from './lib/admission-lib.mjs'
 
 const args = process.argv.slice(2)
@@ -97,6 +98,7 @@ const CTX = MODE === 'selftest'
       artifactsDir: '/Users/yanfenma/workspace/artifacts/production-candidates/SCHEDULER_CONTROL_PLANE_RELIABILITY_V1-admission',
       desiredPath: '/usr/local/libexec/agent-core/config/scheduler-desired-state.json',
       launchdDir: '/Library/LaunchDaemons',
+      runtimeNode: '/usr/local/libexec/agent-core/node-runtime/bin/node',
       watchdogStateDir: '/Users/authsvc/.agent-core/control/scheduler-watchdog',
       evidenceFile: '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl',
       binSymlink: '/usr/local/bin/agentcore-cron',
@@ -230,6 +232,38 @@ function overlay() {
     execFileSync('mv', [tmp, target])
   }
   phase('overlay', true, `NARROW closure: ${all.length} files (update=${plan.update.length} add=${plan.add.length}); preimage=${changedExisting.length} files -> ${preimage}; production-runtime/** untouched`)
+}
+
+// ── broker boot rehearsal (2026-09-09 fleet-killer gate) ────────────────────
+/**
+ * Child-mode apply() rehearsal on the JUST-STAGED bytes, against the LIVE app
+ * tree (whose node_modules resolves @deepseek-ai/*), BEFORE any kickstart:
+ * module load + apply(stub ctx, {mode:'child'}) — exactly the path whose
+ * ReferenceError killed every agent child while the parent stayed healthy.
+ */
+function brokerBootRehearsal() {
+  const staged = readFileSync(join(CTX.liveRoot, 'packages/broker/src/index.js'), 'utf8')
+  if (MODE === 'selftest') {
+    // Fixture mode lacks @deepseek-ai/* modules: degrade to the parse audit
+    // that still catches the fleet-killer class (re-export-without-binding
+    // called by apply). The real mode executes child-mode apply on the live
+    // tree, where the module graph fully resolves.
+    const missing = reExportsWithoutLocalBinding(staged)
+    phase('broker-rehearsal', missing.length === 0, missing.length === 0
+      ? 'staged broker index: all re-exported symbols locally bound (parse-audit shim)'
+      : `WOULD REFUSE BOOT: ${JSON.stringify(missing)}`)
+    return
+  }
+  const indexUrl = `file://${join(CTX.liveRoot, 'packages/broker/src/index.js')}`
+  const script = `
+    const index = await import(${JSON.stringify(indexUrl)})
+    const registered = []
+    const ctx = { tools: { register: () => registered.push(1) }, get: () => undefined }
+    index.apply(ctx, { mode: 'child', manifests: [] })
+    process.stdout.write('child-mode apply ok (staged bytes)')
+  `
+  const out = execFileSync(CTX.runtimeNode, ['-e', script], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+  phase('broker-rehearsal', true, out.trim())
 }
 
 // ── plist env + one kickstart ────────────────────────────────────────────────
@@ -406,6 +440,7 @@ async function main() {
   }
   const { alertTo } = await backfillAndFreeze(doc, matched)
   overlay()
+  brokerBootRehearsal()
   runtimeRestart(alertTo)
   operatorGeneration()
   watchdogInstall(alertTo)
@@ -454,6 +489,7 @@ if (MODE === 'selftest') {
   Object.assign(CTX, {
     liveRoot, storePath: join(fx, 'jobs.json'),
     artifacts: fx, artifactsDir: fx, launchdDir: join(fx, 'LaunchDaemons'), watchdogStateDir: join(fx, 'watchdog-state'), evidenceFile: join(fx, 'evidence', 'reconciliation-evidence.jsonl'),
+    runtimeNode: process.execPath,
     desiredPath: join(fx, 'desired-state.json'),
     binSymlink: join(binDir, 'agentcore-cron-link'),
     launchctlShim: (op, rest) => execFileSync(process.execPath, [shim, op, rest], { env: { ...process.env, SHIM_LOG: join(fx, 'launchctl-calls.log') } }),
