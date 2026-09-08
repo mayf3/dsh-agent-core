@@ -1,0 +1,53 @@
+=== fixture setup (offline) ===
+  src=/tmp/pcr-v1-test-2hynXZ/src-repo SHA1=92e5ac9 SHA2=6abc291 live=/tmp/pcr-v1-test-2hynXZ/live
+=== T1: candidate sealed then one byte flipped → pre-apply FAIL, zero writes (spec §8.1) ===
+  PASS: T1 prepare
+  PASS: T1 seal
+  PASS: T1 verify sealed
+  PASS: T1 verify after byte-flip
+  PASS: T1 apply after byte-flip
+  PASS: T1 live bytes untouched (zero-write)
+=== T2: source checkout advances after seal → frozen candidate unchanged (spec §8.2) ===
+  PASS: T2 verify after source advanced to SHA2
+  PASS: T2 candidate bytes == SHA1 blob
+=== T3: another Goal mutates the shared dev checkout → candidate unchanged (spec §8.3) ===
+  PASS: T3 verify with dirty shared checkout
+  PASS: T3 candidate bytes immune to checkout pollution
+  PASS: T3 worktree-mode prepare refuses dirty checkout
+=== T4: dependency closure file drift → FAIL (spec §8.4) ===
+  PASS: T4 verify sealed with closure
+  PASS: T4 verify after closure drift
+=== T6: failed-apply path → frozen rollback preimage usable (spec §8.6) ===
+  PASS: T6 apply (happy)
+  PASS: T6 live == candidate bytes after apply
+  PASS: T6 apply receipt written
+  PASS: T6 second apply refuses
+  PASS: T6 rollback-restore
+  PASS: T6 live restored to exact frozen preimage
+  PASS: T6 rollback separately sealed
+=== T9: apply receipt + runner pin + test receipt registration ===
+  PASS: T9 apply
+  PASS: T9 receipt records runner sha (A1.2)
+  PASS: T9 register test receipt
+  PASS: T9 verify with receipts
+=== T5: production preimage drift → FAILED_NO_MUTATION (spec §8.5) ===
+  PASS: T5 apply refuses on preimage drift
+  PASS: T5 zero-write on refusal
+=== T7: candidate change requires new generation; old stays audit-valid (spec §8.7) ===
+  PASS: T7 old generation tamper is DETECTED (audit-valid = drift surfaced)
+  PASS: T7 corrected candidate = new generation g2
+  PASS: T7 g1/g2 are disjoint generation dirs
+  PASS: T7 g1 seal untouched by g2 creation
+=== T8: two Goals prepare concurrently → no shared writable candidate bytes (spec §8.8) ===
+  PASS: T8 both concurrent prepares succeeded
+  PASS: T8 disjoint generation dirs, no shared bytes
+  PASS: T8 seal A
+  PASS: T8 seal B
+=== T10: secret-class bytes refused (NO_SECRET_EXPOSURE) ===
+  PASS: T10 prepare refuses secret-class closure content
+=== T11: runner meta-integrity — mutated runner cannot apply (AMENDMENT_1 A1.2) ===
+  PASS: T11 apply via mutated runner refuses at gate0
+
+=== SUMMARY ===
+TMPDIR=/tmp/pcr-v1-test-2hynXZ
+ALL TESTS PASS: 36 assertions passed, 0 failed

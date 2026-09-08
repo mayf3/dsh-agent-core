@@ -1,0 +1,23 @@
+GOAL_NAME = "PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1"
+GENERATION_ID = "PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1--dsh-agent-core--c11ac01--x86_64--g1"
+SOURCE_REPO = "/Users/yanfenma/workspace/project/dsh-agent-core"
+SOURCE_SHA = "c11ac018d2a01b95f6465f19f78fd56a21966786"
+SOURCE_TREE_STATE = "commit-tree at SOURCE_SHA (git-show extraction; worktree state irrelevant by construction)"
+BUILD_TOOLCHAIN = "node v26.7.0 on darwin/arm64"
+RUNTIME_ARCH = "x86_64"
+SOURCE_MODE = "git-show"
+SECRET_SCAN_POLICY = "refuse-at-seal (.env, .env.*, *.pem, *.key, *credential*, *secret*)"
+DEPENDENCY_CLOSURE_DIGEST = "NONE"
+DEPENDENCY_CLOSURE_SOURCE = "NONE"
+BUILD_RECEIPT = "receipts/build-receipt.txt"
+TEST_RECEIPT = "pending: register via receipt command (registry receipts.sha256)"
+AUDIT_RECEIPT = "pending: register via receipt command (registry receipts.sha256)"
+TARGET_PATHS = ["/usr/local/bin/agentcore-cron"]
+
+[targets."/usr/local/bin/agentcore-cron"]
+SOURCE_HASH = "24ce44e7586f9a1a04ea1491408db94ffa7379daf011f0abde20edbbcc4d86e9"
+CANDIDATE_HASH = "24ce44e7586f9a1a04ea1491408db94ffa7379daf011f0abde20edbbcc4d86e9"
+EXPECTED_PREIMAGE_HASH = "24ce44e7586f9a1a04ea1491408db94ffa7379daf011f0abde20edbbcc4d86e9"
+EXPECTED_POSTIMAGE_HASH = "24ce44e7586f9a1a04ea1491408db94ffa7379daf011f0abde20edbbcc4d86e9"
+MODE = "0755"
+WHY_REQUIRED = "scheduler operator CLI artifact — SB4 (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1) pinning packaging; retires the symlink-to-dev-worktree production integrity violation at slot-gated cutover"
