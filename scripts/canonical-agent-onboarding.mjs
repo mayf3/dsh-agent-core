@@ -25,7 +25,8 @@
 // performs NO scheme downgrade and holds NO transport adapter — until the
 // parent authority resolves the provisioning transport (amendment / explicit
 // prerequisite resolution), identity provisioning fails closed at the transport
-// boundary. That is the honest state: AUTH_TRANSPORT_RESOLUTION_REQUIRED.
+// boundary (manifesting as the library's https-origin gate / transport failure):
+// the honest state is AUTH_TRANSPORT_RESOLUTION_REQUIRED (spec §5).
 //
 // Usage:
 //   sudo node scripts/canonical-agent-onboarding.mjs onboard \
@@ -128,12 +129,10 @@ function resolveStoreOwner(storeFile, uidFlag, gidFlag) {
   }
   if (uidFlag !== undefined) return { ownerUid: Number(uidFlag), ownerGid: Number(gidFlag) }
   // Default: the live store's own trusted owner (post-migration: authsvc).
-  for (const path of [storeFile, `${storeFile}.tmp-probe`]) {
-    try {
-      const stat = statSync(path)
-      return { ownerUid: stat.uid, ownerGid: stat.gid }
-    } catch { /* try next */ }
-  }
+  try {
+    const stat = statSync(storeFile)
+    return { ownerUid: stat.uid, ownerGid: stat.gid }
+  } catch { /* fall through to the zone directory */ }
   try {
     const stat = statSync(storeFile.replace(/[/][^/]+$/, ''))
     return { ownerUid: stat.uid, ownerGid: stat.gid }

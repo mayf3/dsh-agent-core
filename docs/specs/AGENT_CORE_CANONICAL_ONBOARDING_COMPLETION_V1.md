@@ -87,7 +87,8 @@ shell、不是新 identity engine、不是 runtime hook、不是 Workbench helpe
   `existing_credential_resolution_required`）原样保留；entrypoint 仅把该特定
   code 分类为「身份已存在 → 存活性确认」：用 store 内既有 credential 做一次
   verification mint（200 或 400 invalid_scope = 存活；401 = fail-loud
-  credential_invalid，不自动 rotate——恢复走 canonical rotation seam）。
+  （invalid_client 多因：inactive client/principal 或 secret 失效；动作不变——零写、
+  零 rotation，恢复走 canonical rotation seam）。
   重跑幂等：不建第二个 Principal/Client/credential。
 - STEP 3 Baseline entitlements：调用 auth-service standing reconciliation
   vehicle 的既有特权执行面（approvalRef 固定的 `apply-baseline-grants` +
