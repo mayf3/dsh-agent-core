@@ -10,8 +10,22 @@ import { createHttpTransport } from '../../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
 
 const executeManifest = () => workflowManifests.find((manifest) => manifest.id === 'workflow_execute')
+// Read-ONLY tools (scope set exactly workflow.read). The coordinator
+// control-plane family (AGENT_CORE_WORKFLOW_COORDINATOR_CONTROL_PLANE_BROKER_V1)
+// carries the union scope set and is asserted separately in its own homes.
 const readManifestIds = () =>
-  workflowManifests.filter((m) => m.requiredScopes.includes('workflow.read')).map((m) => m.id)
+  workflowManifests
+    .filter((m) => m.requiredScopes.length === 1 && m.requiredScopes[0] === 'workflow.read')
+    .map((m) => m.id)
+// Non-instance-execution write-capable families (separate capability
+// families, each with its own governing Spec).
+const nonInstanceExecutionWriteFamilies = [
+  'workflow_definition_authoring',
+  'workflow_wake_dispatch_intent',
+  'workflow_domain_admin',
+  'workflow_domain_members',
+  'workflow_domain_binding_reconcile',
+]
 
 const svcError = (res, status, code, message, requestId) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'x-request-id': requestId })
@@ -29,13 +43,18 @@ test('workflow_execute is the only instance-execution write tool; workflow_trans
   const writes = workflowManifests.filter((m) =>
     m.operations.some((op) => op.http && m.requiredScopes.includes('workflow.execute'))
   )
+  // Array order follows the manifests export (the control-plane family
+  // sits directly after workflow_execute in capabilities/workflow.js).
   assert.deepEqual(writes.map((m) => m.id), [
     'workflow_execute',
+    'workflow_domain_admin',
+    'workflow_domain_members',
+    'workflow_domain_binding_reconcile',
     'workflow_definition_authoring',
     'workflow_wake_dispatch_intent',
   ])
   assert.deepEqual(
-    writes.filter((m) => m.id !== 'workflow_definition_authoring' && m.id !== 'workflow_wake_dispatch_intent').map((m) => m.id),
+    writes.filter((m) => !nonInstanceExecutionWriteFamilies.includes(m.id)).map((m) => m.id),
     ['workflow_execute'],
   )
   assert.ok(!workflowManifests.some((m) => m.id === 'workflow_transition'))
@@ -321,7 +340,7 @@ test('CTR-011: the real defineTool host accepts workflow_execute; coarse require
     .filter(([, spec]) => spec.required === true)
     .map(([name]) => name)
   assert.deepEqual(requiredToolArgs, ['operation'])
-  assert.deepEqual(definition.parameters.operation.enum, ['create_instance', 'transition'])
+  assert.deepEqual(definition.parameters.operation.enum, ['create_instance', 'transition', 'cancel_instance', 'archive_instance'])
 
   // Both operations execute through the real host with strictly their own args.
   const created = await tool.execute({ operation: 'create_instance', domainId: 'd', definitionVersionId: 'v', contextPayload: {}, metadata: null })
@@ -331,6 +350,139 @@ test('CTR-011: the real defineTool host accepts workflow_execute; coarse require
   assert.equal(workflow.requests.length, 2)
   assert.equal(workflow.requests[0].pathname, '/internal/v1/workflow-instances')
   assert.equal(workflow.requests[1].pathname, '/internal/v1/workflow-instances/wf-h/transitions')
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+// ─── cancel_instance / archive_instance (§25 focused amendment, CTR-011/012) ─
+
+test('workflow_execute: cancel_instance + archive_instance freeze the deployed svc-workflow bindings', () => {
+  const manifest = executeManifest()
+  assert.equal(validateManifest(manifest).ok, true)
+  // ACC-011 a1: operations union is exactly four; one discriminator.
+  assert.deepEqual(manifest.operations.map((op) => op.name), [
+    'create_instance',
+    'transition',
+    'cancel_instance',
+    'archive_instance',
+  ])
+
+  const cancel = manifest.operations.find((op) => op.name === 'cancel_instance')
+  assert.deepEqual(Object.keys(cancel.arguments.properties), ['workflowInstanceId', 'reason'])
+  assert.deepEqual(cancel.arguments.required, ['workflowInstanceId', 'reason'])
+  assert.deepEqual(cancel.http, {
+    target: 'svc-workflow',
+    method: 'POST',
+    path: '/internal/v1/workflow-instances/{workflowInstanceId}/cancel',
+    pathParams: ['workflowInstanceId'],
+    body: ['reason'],
+    idempotencyKey: true,
+  })
+
+  const archive = manifest.operations.find((op) => op.name === 'archive_instance')
+  assert.deepEqual(Object.keys(archive.arguments.properties), ['workflowInstanceId', 'reason'])
+  assert.deepEqual(archive.arguments.required, ['workflowInstanceId', 'reason'])
+  assert.deepEqual(archive.http, {
+    target: 'svc-workflow',
+    method: 'POST',
+    path: '/internal/v1/workflow-instances/{workflowInstanceId}/archive',
+    pathParams: ['workflowInstanceId'],
+    body: ['reason'],
+    idempotencyKey: true,
+  })
+
+  // ACC-011 a3: the seven net-new declarer codes are present with the
+  // frozen svc error.rs semantics.
+  const codes = new Set(manifest.errors.map((e) => e.code))
+  for (const code of [
+    'not_domain_owner',
+    'already_cancelled',
+    'instance_archived',
+    'invalid_reason',
+    'instance_not_terminal',
+    'already_archived',
+    'active_activation_exists',
+  ]) {
+    assert.ok(codes.has(code), `declarer table must contain ${code}`)
+  }
+
+  // ACC-011 a2: no identity/authorization seam fields are model-facing.
+  for (const op of manifest.operations) {
+    for (const field of ['actorPrincipalId', 'domainId', 'idempotencyKey', 'expectedWorkflowStateVersion']) {
+      if (op.name === 'cancel_instance' || op.name === 'archive_instance') {
+        assert.equal(field in op.arguments.properties, false, `${op.name} must not expose ${field}`)
+      }
+    }
+  }
+})
+
+test('workflow_execute operation=cancel_instance: posts reason to the cancel path with trusted IK; outcome forwarded', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances/wf-ccp-1/cancel') {
+      return json(res, 200, {
+        workflow_instance_id: 'wf-ccp-1',
+        workflow_state_version: 2,
+        event_sequence: 3,
+        replayed: false,
+      })
+    }
+    json(res, 404, { error: { code: 'instance_not_found', message: 'missing' } })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  const res = await definition.execute({
+    operation: 'cancel_instance',
+    workflowInstanceId: 'wf-ccp-1',
+    reason: 'confirmed canary cleanup',
+  })
+  assert.equal(res.ok, true)
+  assert.equal(res.result.workflow_instance_id, 'wf-ccp-1')
+
+  assert.equal(tokenServer.requests[0].body.scope, 'workflow.execute')
+  const request = workflow.requests[0]
+  assert.equal(request.method, 'POST')
+  assert.equal(request.pathname, '/internal/v1/workflow-instances/wf-ccp-1/cancel')
+  assert.deepEqual(request.body, { reason: 'confirmed canary cleanup' })
+  assert.ok(/^ik-workflow-execute-\d+-[a-z0-9]+$/.test(request.headers['idempotency-key']))
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('workflow_execute operation=archive_instance: 409 lifecycle fail-closed code preserved verbatim', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances/wf-ccp-2/archive') {
+      return json(res, 409, { error: { code: 'instance_not_terminal', message: 'instance is not in a terminal state' } })
+    }
+    json(res, 404, { error: { code: 'instance_not_found', message: 'missing' } })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  const res = await definition.execute({
+    operation: 'archive_instance',
+    workflowInstanceId: 'wf-ccp-2',
+    reason: 'cleanup archive',
+  })
+  assert.equal(res.ok, false)
+  assert.equal(res.error.code, 'instance_not_terminal')
+
+  const request = workflow.requests[0]
+  assert.equal(request.method, 'POST')
+  assert.equal(request.pathname, '/internal/v1/workflow-instances/wf-ccp-2/archive')
+  assert.deepEqual(request.body, { reason: 'cleanup archive' })
 
   await tokenServer.close()
   await workflow.close()

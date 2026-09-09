@@ -13,7 +13,7 @@ import { manifests as okrManifests } from '../../src/capabilities/okr.js'
 
 test('schema: all 18 shipped manifests validate', () => {
   const all = [...forumManifests, ...workflowManifests, ...okrManifests]
-  assert.equal(all.length, 18)
+  assert.equal(all.length, 21)
   for (const manifest of all) {
     const res = validateManifest(manifest)
     assert.equal(res.ok, true, `${manifest.id}: ${res.errors?.join('; ')}`)
@@ -24,7 +24,7 @@ test('schema: all 18 shipped manifests validate', () => {
       if (!op.http) continue
       assert.ok(targets.some((t) => t.targetId === op.http.target), `${manifest.id}: unknown target`)
       assert.ok(manifest.requiredScopes.length > 0, `${manifest.id}: missing requiredScopes`)
-      assert.ok(['GET', 'POST', 'PUT', 'DELETE'].includes(op.http.method), `${manifest.id}: bad method`)
+      assert.ok(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(op.http.method), `${manifest.id}: bad method`)
     }
   }
 })
