@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "error": {
+    "code": "not_domain_owner",
+    "status": 403,
+    "detail": "caller is not a domain owner",
+    "requestId": "1fbd6651-8174-4eff-b9e2-c54b10b85eb5"
+  }
+}

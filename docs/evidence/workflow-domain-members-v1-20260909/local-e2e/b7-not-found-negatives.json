@@ -1,0 +1,29 @@
+{
+  "unknownDomain": {
+    "ok": false,
+    "error": {
+      "code": "not_domain_owner",
+      "status": 403,
+      "detail": "caller is not a domain owner",
+      "requestId": "2ad198dc-574d-4976-bb49-3884bda0608d"
+    }
+  },
+  "unknownPrincipal": {
+    "ok": false,
+    "error": {
+      "code": "principal_not_registered",
+      "status": 404,
+      "detail": "principal has not completed self-projection",
+      "requestId": "0abc22af-87c1-4e4b-996d-98ca3d78f549"
+    }
+  },
+  "removeMissing": {
+    "ok": false,
+    "error": {
+      "code": "member_not_found",
+      "status": 404,
+      "detail": "member binding not found",
+      "requestId": "004e6697-21f7-4786-aae9-9947cbde8193"
+    }
+  }
+}

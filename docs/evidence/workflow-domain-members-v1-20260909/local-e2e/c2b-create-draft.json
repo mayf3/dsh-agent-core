@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "result": {
+    "createdAt": "2026-09-09T13:35:25.821634Z",
+    "definitionVersionId": "ffe21ebe-1710-429e-a2df-41fc1cbda95b",
+    "versionNumber": 1,
+    "versionStatus": "DRAFT",
+    "workflowDefinitionId": "748eb7cd-af35-4c2b-bb2c-9d99fa5cfebc"
+  }
+}

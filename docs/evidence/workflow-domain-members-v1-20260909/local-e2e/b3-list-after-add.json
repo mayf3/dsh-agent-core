@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "binding_created_at": "2026-09-09T13:35:25.740653Z",
+        "display_name": "龙虾合伙人(E2E)",
+        "principal_id": "25a6789f-0000-4000-8000-00000000ce01",
+        "principal_type": "AGENT",
+        "role": "DOMAIN_MEMBER"
+      }
+    ],
+    "next_cursor": null
+  }
+}

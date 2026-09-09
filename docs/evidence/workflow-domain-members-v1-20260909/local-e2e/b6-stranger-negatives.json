@@ -1,0 +1,29 @@
+{
+  "list": {
+    "ok": false,
+    "error": {
+      "code": "not_domain_owner",
+      "status": 403,
+      "detail": "caller is not a domain owner",
+      "requestId": "fa3fd617-a5a3-433c-853e-02e800f80df2"
+    }
+  },
+  "add": {
+    "ok": false,
+    "error": {
+      "code": "not_domain_owner",
+      "status": 403,
+      "detail": "caller is not a domain owner",
+      "requestId": "bb289f7a-3982-416e-a63c-15363c653535"
+    }
+  },
+  "del": {
+    "ok": false,
+    "error": {
+      "code": "not_domain_owner",
+      "status": 403,
+      "detail": "caller is not a domain owner",
+      "requestId": "8854a63c-b3d3-4a95-92ed-5713ea83f24a"
+    }
+  }
+}

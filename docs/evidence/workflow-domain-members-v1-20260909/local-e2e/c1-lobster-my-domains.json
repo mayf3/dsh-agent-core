@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "binding_created_at": "2026-09-09T13:35:25.740653Z",
+        "caller_role": "DOMAIN_MEMBER",
+        "display_name": "Workflow Todo Dogfood (E2E)",
+        "domain_id": "10000000-0000-4000-8000-000000000100",
+        "domain_key": "wfdm-e2e-dogfood"
+      }
+    ]
+  }
+}

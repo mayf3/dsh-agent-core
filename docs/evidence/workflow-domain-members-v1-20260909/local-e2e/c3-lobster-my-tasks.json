@@ -1,0 +1,84 @@
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "detail": {
+          "instance": {
+            "workflow_instance_id": "05f82b06-1a06-4494-8e1e-14e5a7721954",
+            "domain_id": "10000000-0000-4000-8000-000000000100",
+            "definition_version_id": "ffe21ebe-1710-429e-a2df-41fc1cbda95b",
+            "definition_version_status": "PUBLISHED",
+            "created_by_principal_id": "b21ddb23-0000-4000-8000-00000000eff1",
+            "workflow_state_version": 1,
+            "external_reference": null,
+            "external_url": null,
+            "metadata": null,
+            "created_at": "2026-09-09T13:35:25.849570Z",
+            "domain_enabled": true,
+            "is_terminal": false,
+            "current_node": {
+              "node_id": "fef998dc-42bd-4bed-b04d-8d0da8d5af85",
+              "node_key": "task",
+              "display_name": "龙虾任务",
+              "node_type": "NORMAL"
+            }
+          },
+          "current_context_revision_id": "b1503a77-1bca-4b96-85f1-a561cf362670",
+          "current_node_visit_id": "304649d5-24cd-40f3-963b-0ae387bd2890",
+          "current_context": {
+            "context_revision_id": "b1503a77-1bca-4b96-85f1-a561cf362670",
+            "workflow_instance_id": "05f82b06-1a06-4494-8e1e-14e5a7721954",
+            "revision_number": 1,
+            "previous_revision_id": null,
+            "payload": {},
+            "payload_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "created_by_principal_id": "b21ddb23-0000-4000-8000-00000000eff1",
+            "created_at": "2026-09-09T13:35:25.849570Z"
+          },
+          "current_visit": {
+            "node_visit_id": "304649d5-24cd-40f3-963b-0ae387bd2890",
+            "workflow_instance_id": "05f82b06-1a06-4494-8e1e-14e5a7721954",
+            "node": {
+              "node_id": "fef998dc-42bd-4bed-b04d-8d0da8d5af85",
+              "node_key": "task",
+              "display_name": "龙虾任务",
+              "node_type": "NORMAL"
+            },
+            "visit_number": 1,
+            "assignee_principal_id": "25a6789f-0000-4000-8000-00000000ce01",
+            "assignee_canonical_agent_id": null,
+            "entered_by_transition_id": null,
+            "instructions": null,
+            "created_at": "2026-09-09T13:35:25.849570Z",
+            "eligibility": {
+              "classification": "ACTIONABLE_NOW"
+            }
+          },
+          "outgoing_transitions": [
+            {
+              "transition_id": "1d667a1c-674a-4f03-aef6-6b62910062da",
+              "transition_key": "finish",
+              "display_name": "完成",
+              "transition_effect": "ADVANCE",
+              "target_node": {
+                "node_id": "80f95085-d97f-4cb4-bf66-2cfe1912937c",
+                "node_key": "done",
+                "display_name": "完成",
+                "node_type": "TERMINAL"
+              },
+              "submission_schema": null,
+              "executable_for_actor": false,
+              "blocked_reason": "ADVANCE_NOT_PRIMARY"
+            }
+          ]
+        },
+        "upstream_submissions": [],
+        "return_feedback_events": [],
+        "submissions_truncated": false,
+        "return_events_truncated": false
+      }
+    ],
+    "next_cursor": null
+  }
+}

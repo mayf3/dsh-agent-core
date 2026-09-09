@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "result": {
+    "workflowInstanceId": "05f82b06-1a06-4494-8e1e-14e5a7721954",
+    "workflowStateVersion": 1,
+    "currentContextRevisionId": "b1503a77-1bca-4b96-85f1-a561cf362670",
+    "currentNodeVisitId": "304649d5-24cd-40f3-963b-0ae387bd2890",
+    "eventSequence": 1
+  }
+}

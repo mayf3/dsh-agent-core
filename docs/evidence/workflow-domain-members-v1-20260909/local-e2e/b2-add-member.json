@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "result": {
+    "domainId": "10000000-0000-4000-8000-000000000100",
+    "principalId": "25a6789f-0000-4000-8000-00000000ce01",
+    "role": "DOMAIN_MEMBER"
+  }
+}
