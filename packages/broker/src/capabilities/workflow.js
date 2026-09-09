@@ -40,15 +40,6 @@
  * and transition legality, and the transport's trusted `idempotencyKey` seam
  * generates the model-inaccessible Idempotency-Key for both write operations.
  *
- * Downstream error preservation: each manifest DECLARES the svc-workflow
- * read-side error codes its endpoints can produce (evidence: svc-workflow
- * src/http/error.rs `from_query` WorkflowQueryError mapping + auth-layer
- * `unauthenticated`/`forbidden` + worklist cursor parsing `invalid_cursor`).
- * The transport extracts the service `code` from the error envelope
- * {"error":{"code","message"}}; the mapping layer resolves it against THIS
- * table, so a missing projection surfaces as `principal_not_found` (with
- * status + sanitized detail + x-request-id) instead of a generic `http_4xx`.
- *
  * Broker-side pagination validation: workflow_my_tasks declares
  * `limit ∈ [1, 20]` (minimum/maximum + validationError). Out-of-range values
  * fail fast in the mapping layer with `invalid_pagination` BEFORE any token
