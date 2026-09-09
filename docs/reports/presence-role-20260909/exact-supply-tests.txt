@@ -1,0 +1,10 @@
+✔ directory discovery exposes useful text and permits list without a guessed id (1.0105ms)
+✔ get still requires a real id and unsupported operation stays rejected (0.150167ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42.11875

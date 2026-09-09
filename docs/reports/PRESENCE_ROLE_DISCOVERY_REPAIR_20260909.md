@@ -101,3 +101,15 @@ Supply tools comparison:14 capability definitions inspected; only
 agent.definition.read differs, other13 byte-equivalent serialized definitions.
 Structure failures are pre-existing unchanged scheduler/src21 and scripts50;
 full structure gate is not claimed PASS. No new candidate structure violation.
+
+## Executed bounded apply
+
+Fresh gate09:33:59 local (exact time in attached live-apply-receipt):9 parent
+admissions =9 acquisitions =9 completions,zero other work; matching PID/home/
+parent,complete session terminal tails,unchanged final log inode/hash/offset.
+Five preimage/source/postimage checks passed;16 unrelated WIP files unchanged.
+One CEO-child SIGTERM issued and actual exit verified. Existing control-plane
+parent stayed alive;local Product API directory returned88;all5 postimages matched.
+No control-plane,gateway,scheduler or ASR restart. Exact private rollback retained.
+Actual refreshed model header, role list and Binding/phone E2E remain pending;
+file apply and successful synthetic tests are not those proofs.
