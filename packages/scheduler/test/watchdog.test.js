@@ -98,12 +98,18 @@ test('TEST-8 store half: failed run / stuck run / consecutive failures detected'
   assert.deepEqual(classes, ['CONSECUTIVE_FAILURE', 'RUN_FAILED', 'RUN_STUCK'])
 })
 
-test('SCHEDULER_RUNTIME_UNHEALTHY from health probe and evidence staleness (TEST-H store half)', () => {
+test('SCHEDULER_RUNTIME_UNHEALTHY from health probe (TEST-H store half); evidence staleness is not a finding', () => {
   const findings = evaluateRunHealth({ jobs: [], occurrences: [] }, {
     nowMs: NOW,
-    runtimeHealth: { healthOk: false, evidenceAgeMs: null },
+    runtimeHealth: { healthOk: false },
   })
-  assert.equal(findings.filter((f) => f.class === 'SCHEDULER_RUNTIME_UNHEALTHY').length, 2)
+  assert.equal(findings.filter((f) => f.class === 'SCHEDULER_RUNTIME_UNHEALTHY').length, 1)
+  // evidence-heartbeat staleness was deliberately removed: the evidence log
+  // only gains entries on activity, so quiet nights would trip it forever.
+  assert.equal(evaluateRunHealth({ jobs: [], occurrences: [] }, {
+    nowMs: NOW,
+    runtimeHealth: { evidenceAgeMs: null },
+  }).length, 0)
 })
 
 test('TEST-G: W2 heartbeat staleness is the W1-death signal; fresh heartbeat silent', () => {

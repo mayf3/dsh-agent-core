@@ -167,9 +167,11 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
   if (runtimeHealth.healthOk === false) {
     findings.push({ class: 'SCHEDULER_RUNTIME_UNHEALTHY', reason: runtimeHealth.reason ?? 'health endpoint not ok' })
   }
-  if (runtimeHealth.evidenceAgeMs === null || (Number.isFinite(runtimeHealth.evidenceAgeMs) && runtimeHealth.evidenceAgeMs > o.evidenceFreshMs)) {
-    findings.push({ class: 'SCHEDULER_RUNTIME_UNHEALTHY', reason: 'runtime evidence heartbeat stale' })
-  }
+  // evidence-heartbeat staleness is deliberately NOT a finding (2026-09-09:
+  // the evidence log only gains entries on activity, so quiet nights trip it
+  // forever — flapping NEW/RECOVERED every cycle). Runtime liveness is
+  // authoritatively carried by the health probe above.
+  void o.evidenceFreshMs
   return findings
 }
 
@@ -259,36 +261,62 @@ export function findingFingerprint(finding) {
  * @returns {{notifications: Array<{fingerprint,kind:'new'|'reminder'|'severity'|'recovered',finding}>,
  *   state: (same shape as `state`), recovered: string[]}}
  */
-export function updateAlertState(state, findings, { nowMs = Date.now(), reminderIntervalMs = 60 * 60 * 1000 } = {}) {
-  const next = { ...state }
+export function updateAlertState(state, findings, { nowMs = Date.now(), reminderIntervalMs = 60 * 60 * 1000, recoveryCooldownMs = 6 * 60 * 60 * 1000 } = {}) {
+  // legacy flat states (pre-anti-flap) are treated as the active namespace
+  const legacy = state && !state.active && (state.RUN_STUCK !== undefined || state.SCHEDULER_RUNTIME_UNHEALTHY !== undefined || Object.keys(state).some((k) => !k.startsWith('__')))
+  const active = legacy ? { ...state } : { ...(state?.active ?? {}) }
+  const retired = { ...(state?.retired ?? {}) }
+  const next = { active, retired }
   const notifications = []
   const seen = new Set()
   for (const finding of findings ?? []) {
     const fp = findingFingerprint(finding)
     seen.add(fp)
-    const prior = next[fp]
+    const prior = next.active[fp]
+    const retiredAt = retired[fp]
+    if (prior === undefined && retiredAt !== undefined && nowMs - retiredAt < recoveryCooldownMs) {
+      // anti-flap: this fingerprint recovered moments ago and is back — the
+      // condition is FLAPPING, not recovered+new. Resume silently (no Owner
+      // notification); the evidence log still carries every evaluation.
+      delete retired[fp]
+      next.active[fp] = { firstSeenAt: nowMs, lastSeenAt: nowMs, notifiedCount: 0, severity: finding.class, detail: finding.reason ?? finding.detail ?? '' }
+      continue
+    }
     if (prior === undefined) {
-      next[fp] = { firstSeenAt: nowMs, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: 1, severity: finding.class, detail: finding.reason ?? finding.detail ?? '' }
+      delete retired[fp]
+      next.active[fp] = { firstSeenAt: nowMs, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: 1, severity: finding.class, detail: finding.reason ?? finding.detail ?? '' }
       notifications.push({ fingerprint: fp, kind: 'new', finding })
       continue
     }
     const materialChange = prior.severity !== finding.class
     const dueReminder = nowMs - (prior.lastNotifiedAt ?? prior.firstSeenAt) >= reminderIntervalMs
     if (materialChange) {
-      next[fp] = { ...prior, lastSeenAt: nowMs, notifiedCount: prior.notifiedCount + 1, severity: finding.class }
+      next.active[fp] = { ...prior, lastSeenAt: nowMs, notifiedCount: prior.notifiedCount + 1, severity: finding.class }
       notifications.push({ fingerprint: fp, kind: 'severity', finding })
     } else if (dueReminder) {
-      next[fp] = { ...prior, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: prior.notifiedCount + 1 }
+      next.active[fp] = { ...prior, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: prior.notifiedCount + 1 }
       notifications.push({ fingerprint: fp, kind: 'reminder', finding })
     } else {
-      next[fp] = { ...prior, lastSeenAt: nowMs }
+      next.active[fp] = { ...prior, lastSeenAt: nowMs }
     }
   }
   // Recovery: fingerprints previously ACTIVE whose finding is now absent.
-  const recovered = Object.keys(next).filter((fp) => !seen.has(fp))
+  // Only entries with notifiedCount > 0 fire a recovery notification — a
+  // silently-resumed entry (notifiedCount=0) disappears without one. After
+  // recovery the fp is held in `retired` for the cooldown so a re-appearing
+  // intermittent finding resumes SILENTLY, and only a genuinely fresh episode
+  // after the cooldown notifies as new again.
+  const recovered = Object.keys(active).filter((fp) => !seen.has(fp))
   for (const fp of recovered) {
-    notifications.push({ fingerprint: fp, kind: 'recovered', finding: { class: next[fp].severity } })
-    delete next[fp]
+    const entry = active[fp]
+    if (entry.notifiedCount > 0) {
+      notifications.push({ fingerprint: fp, kind: 'recovered', finding: { class: entry.severity } })
+    }
+    retired[fp] = nowMs
+    delete active[fp]
   }
-  return { notifications, state: next, recovered }
+  for (const [fp, at] of Object.entries(retired)) {
+    if (nowMs - at >= recoveryCooldownMs) delete retired[fp]
+  }
+  return { notifications, state: { active, retired }, recovered }
 }
