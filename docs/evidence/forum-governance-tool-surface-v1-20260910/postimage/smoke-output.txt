@@ -1,0 +1,6 @@
+forum manifests in DEFAULT_MANIFESTS: 15
+["forum_create_thread","forum_list_threads","forum_mark_read","forum_my_notifications","forum_notification_read","forum_notifications","forum_notifications_read","forum_read_thread","forum_read_transcript","forum_reply","forum_report_content","forum_search_threads","forum_stats","forum_unwatch_thread","forum_watch_thread"]
+forum_notifications ops: ["list"] params: operation,type,unread,threadId,page,limit
+forum_notification_read ops: ["read"] params: operation,id
+forum_notifications_read ops: ["read_batch"] params: operation,ids
+SMOKE OK: 15 normal forum manifests validate + wire; reply.mentions present
