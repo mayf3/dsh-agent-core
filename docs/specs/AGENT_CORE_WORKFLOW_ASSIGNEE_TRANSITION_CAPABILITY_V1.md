@@ -1288,12 +1288,20 @@ DEC-010/DEC-011 的「单一写工具」authority 语义由本 amendment **继�
   `not_domain_owner`，SAFE 方向）。
 - Lifecycle legality（服务端权威，逐字不变）：仅 active/non-terminal 可
   cancel。Broker 不复制、不预判 lifecycle。
-- Error 表（新增声明，全部实测于 svc error.rs `from_cancel`）：
-  `instance_not_found`(404)、`not_domain_owner`(403)、
-  `already_cancelled`(409)、`instance_archived`(409)、
-  `invalid_reason`(422)、`idempotency_conflict`(409)、
-  `command_still_processing`(425)；叠加既有
-  baseErrors/authErrors/queryErrors。无新码、无双码过渡。
+- Error 表（逐码对拍 svc error.rs `from_cancel` 全 14 变体；标注
+  NEW = 本次加入 manifest error 表，SHARED = transition 家族既有声明）：
+  `instance_not_found`(404, SHARED)、`current_visit_not_found`(404,
+  SHARED)、`not_domain_owner`(403, NEW)、`source_node_terminal`(409,
+  SHARED)、`already_cancelled`(409, NEW)、`instance_archived`(409, NEW)、
+  `workflow_state_version_conflict`(409, SHARED)、`invalid_reason`(422,
+  NEW)、`idempotency_conflict`(409, SHARED)、`command_still_processing`
+  (425, SHARED)；叠加既有 baseErrors/authErrors/queryErrors
+  （`principal_not_found`/`principal_disabled`/
+  `internal_consistency_error`/`service_unavailable` 由共享表覆盖）。
+  净新增声明码恰 7 个（两 family 去重：`not_domain_owner`、
+  `already_cancelled`、`instance_archived`、`invalid_reason`、
+  `instance_not_terminal`、`already_archived`、`active_activation_exists`），
+  全部实测于 svc，无新码发明、无双码过渡。
 
 ### CTR-012 — archive_instance contract
 
@@ -1303,11 +1311,14 @@ DEC-010/DEC-011 的「单一写工具」authority 语义由本 amendment **继�
   （已部署 @ 4bbbbe9；response 形状同 cancel 族）。
 - Lifecycle legality：仅 terminal/cancelled 可 archive；coordinator 权限
   **不**绕过 lifecycle（`instance_not_terminal` 409）。
-- Error 表（新增声明，svc error.rs `from_archive`）：
-  `instance_not_found`(404)、`not_domain_owner`(403)、
-  `instance_not_terminal`(409)、`already_archived`(409)、
-  `active_activation_exists`(409)、`invalid_reason`(422)、
-  `idempotency_conflict`(409)、`command_still_processing`(425)。
+- Error 表（逐码对拍 svc error.rs `from_archive` 全 14 变体）：
+  `instance_not_found`(404, SHARED)、`not_domain_owner`(403, NEW)、
+  `instance_not_terminal`(409, NEW)、`already_archived`(409, NEW)、
+  `active_activation_exists`(409, NEW)、
+  `workflow_state_version_conflict`(409, SHARED)、`invalid_reason`(422,
+  NEW)、`idempotency_conflict`(409, SHARED)、
+  `command_still_processing`(425, SHARED)；principal/一致性/存储四码由
+  共享表覆盖（同 CTR-011）。
 
 ### CTR-013 — cleanup discipline（model-facing 描述合同）
 
