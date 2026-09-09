@@ -1,0 +1,52 @@
+[broker] forum moderator pack: 0 tools (agent "agt_plain-agent" is not in the closed moderator list)
+[broker] scheduler mutation operations withheld: no credential provider configured in this runtime (fail-before-exposure)
+[broker] forum moderator pack: 0 tools (forumModeratorAgentIds not configured)
+[broker] scheduler mutation operations withheld: no credential provider configured in this runtime (fail-before-exposure)
+[broker] forum moderator pack: 8 tools (moderator tools registered for "agt_course-community-agent-2")
+[broker] scheduler mutation operations withheld: no credential provider configured in this runtime (fail-before-exposure)
+[broker] forum moderator pack: 0 tools (invalid forumModeratorAgentIds entry "dup" (must be exact agt_* strings))
+[broker] scheduler mutation operations withheld: no credential provider configured in this runtime (fail-before-exposure)
+[broker] gateway mode: 33 http capabilities ready, 5 local capabilities ready
+[broker-gateway] credential store error for agent undefined: broker: credentials store not found: /nonexistent-test-store.json
+✔ schema: valid calculator manifest passes and is canonicalized (1.047042ms)
+✔ schema: rejects non-object input (1.735333ms)
+✔ schema: rejects missing operations (0.180583ms)
+✔ schema: rejects invalid error-code table (0.095333ms)
+✔ schema: rejects invalid parameter schema (0.057458ms)
+✔ V0 regression: multiply(6,7) = 42 through the mapping layer (0.259875ms)
+✔ mapping: invalid_arguments for non-numeric operands (0.081083ms)
+✔ mapping: divide_by_zero maps correctly (0.06125ms)
+✔ mapping: unsupported_operation for unknown operation (0.05025ms)
+✔ mapping: declared arithmetic results for all four operations (0.124084ms)
+✔ mapping: unknown error code fails closed to a declared code (0.065625ms)
+✔ resolveCode: unknown code downgraded to fallback (0.0425ms)
+✔ validateArguments: property/required enforcement (0.057875ms)
+✔ registration: tool name / description / parameter schema conform for calculator (0.218083ms)
+✔ identity: tool parameter schema has NO principal field (0.115667ms)
+✔ identity: model-supplied principalId in args is ignored (0.050125ms)
+✔ identity: identity is only obtained via resolvePrincipal (injected and called) (0.06275ms)
+✔ identity: resolvePrincipal placeholder reads env, falls back to injected (0.03775ms)
+✔ manifest-driven genericity: a different manifest registers a different tool (0.055167ms)
+✔ manifest-driven genericity: echo executes through the same pipeline (0.038792ms)
+✔ buildToolDefinition exposes capabilityId constant (0.042ms)
+✔ CTR-FMC-004: exact moderator id + valid closed list registers 8 tools (0.207959ms)
+✔ CTR-FMC-004: non-member agent registers ZERO moderator tools (0.05675ms)
+✔ CTR-FMC-004: missing/absent DSH_AGENT_ID registers ZERO moderator tools (0.033541ms)
+✔ CTR-FMC-004: malformed config fails closed with ZERO moderator tools (0.049167ms)
+✔ CTR-FMC-002: DEFAULT_MANIFESTS gains the five normal tools and NO moderator tools (0.036958ms)
+✔ apply() child mode: normal agent registers the 5 normal tools, ZERO moderator tools (config present) (4.641083ms)
+✔ apply() child mode: normal pack works with NO moderator config at all (fast path) (2.231083ms)
+✔ apply() child mode: exact moderator registers all 8 moderator tools (1.942416ms)
+✔ apply() child mode: malformed moderator config fails closed without breaking normal tools (1.387166ms)
+✔ apply() gateway mode: moderator manifests retained for trusted relay execution (0.671041ms)
+✔ writer-only moderator call reaches Credential/Auth once and never business HTTP (8.044292ms)
+✔ directory discovery exposes useful text and permits list without a guessed id (1.246375ms)
+✔ get still requires a real id and unsupported operation stays rejected (0.161042ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 90.703708

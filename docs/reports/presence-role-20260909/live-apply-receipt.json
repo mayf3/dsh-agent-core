@@ -1,0 +1,23 @@
+{
+  "status": "APPLIED_CHILD_EXIT_VERIFIED",
+  "signal_sent": true,
+  "directory_count": 88,
+  "parent_unchanged": true,
+  "postimages_verified": true,
+  "wip_unchanged": 16,
+  "rollback_available": true,
+  "gate": {
+    "time": "2026-09-09T09:33:36.868352",
+    "admissions": 9,
+    "acquisitions": 9,
+    "completions": 9,
+    "other": 0,
+    "log_begin_line": 56234,
+    "log_end_line": 56286,
+    "log_inode": 40500639,
+    "log_size": 2315374,
+    "log_sha": "c3bd9290b4e9e0b66fdcc1bc67034e983832406bd2a460eedfeb8bc77a7847df"
+  },
+  "child_sessions_terminal": true,
+  "post_state_e2e": "PENDING"
+}
