@@ -202,10 +202,15 @@ export class ExecutionLedger {
     // later append would concatenate onto it. Seal that boundary under the
     // mutation lock before permitting another event.
     if (repairTornTail && !endsWithNewline && lines.at(-1) !== '') {
+      let completeTail = false
       try {
         JSON.parse(lines.at(-1))
-        this.#appendAndSync('\n')
+        completeTail = true
       } catch { /* a corrupt tail was already truncated above */ }
+      // Keep durable-I/O failures outside the parse-only catch: if sealing
+      // fails, the locked mutation must abort before it can concatenate a new
+      // event onto the unterminated record.
+      if (completeTail) this.#appendAndSync('\n')
     }
     this.loaded = true
   }

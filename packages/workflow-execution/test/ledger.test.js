@@ -178,6 +178,28 @@ test('torn tail: repair under lock preserves the next fence across another resta
   }
 })
 
+test('complete tail without newline is sealed before the next durable append', async () => {
+  const fixture = tempLedger()
+  try {
+    const { ledger, dir } = fixture
+    await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    const { readFileSync, writeFileSync } = await import('node:fs')
+    const completeRecordWithoutNewline = readFileSync(ledger.eventsFile, 'utf8').trimEnd()
+    writeFileSync(ledger.eventsFile, completeRecordWithoutNewline)
+
+    const revived = new ExecutionLedger({ dir })
+    const second = await revived.beginAttemptIfAbsent({ dispatchIntentId: INTENT_2, nodeVisitId: VISIT_2, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.equal(second.created, true)
+
+    const bytes = readFileSync(ledger.eventsFile, 'utf8')
+    assert.equal(bytes.endsWith('\n'), true)
+    assert.equal(bytes.trimEnd().split('\n').length, 2)
+    assert.doesNotThrow(() => bytes.trimEnd().split('\n').forEach((line) => JSON.parse(line)))
+  } finally {
+    cleanup(fixture)
+  }
+})
+
 test('records for unknown NodeVisits fail loud (never fabricate linkage)', async () => {
   const fixture = tempLedger()
   try {
