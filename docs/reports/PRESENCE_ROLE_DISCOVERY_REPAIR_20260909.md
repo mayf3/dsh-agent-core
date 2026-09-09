@@ -48,7 +48,8 @@ Actor: Owner-authorized Codex /root in existing local production environment.
 Validity: one compare-and-apply attempt after independent exact supply review.
 Before apply, require all five preimages unchanged, runtime parent PID alive,
 current CEO child bound via existing DSH_AGENT_ID + home and parent relation,
-no in-flight/queued turn in that child's complete session event tails, and no
+no unmatched parent admissions/acquisitions/completions across all dispatch sources,
+terminal child session tails, and no
 serialization hold on this operation. Record package import realpaths to prove
 these supplied modules are used. Abort on mismatch or ambiguous pending work.
 Back up exactly five files privately (0600), atomically replace each with the
@@ -75,3 +76,28 @@ refresh; no fleet-wide restart is performed.
 Executed local evidence: candidate broker focused suite 34/34; exact older-live
 supply directory list/get test 2/2; syntax checks pass. These do not establish
 production or phone success. Independent review and live apply pending.
+
+## Independent review and parent-side gate closure
+
+Independent reviewer /root/presence_review accepted implementation73e7223 and
+exact supply5/5 (reverse patch reconstructs all5 preimages); independently ran
+supply2/2. Initial operational B2 correctly rejected child-only queue evidence.
+The revised prerequisite uses existing COMPLETE current-child-lifetime parent
+log coverage. onIngress admission is logged before ensureRunning/turn enqueue;
+existing-process acquisition always logs reuse; scheduler and delivery also call
+ensureRunning; parent reply is after the queued turn settles. Require matched
+route admissions = ready + reuses = parent replies, zero other deliveries or
+errors for this target; any unexplained acquisition, rotation, missing beginning,
+new activity, nonterminal child event or changed PID aborts/re-censuses. Preserve
+terminal child-tail evidence as well. Recheck log inode/size/hash and PID identity
+immediately before exactly one SIGTERM; no replay. Reviewer confirmed this
+source-verified existing route closes B2 once fresh receipt passes. No HMR or
+new admission mechanism is used. Native migration remains out of scope.
+
+Current snapshot09:30:11 local:8 admissions,1 ready+7 reuses,8 completions,
+zero delivery accepts/errors; this snapshot MUST be refreshed at actual apply.
+Exact parent-side source hashes are attached in parent-gate-source-hashes.json.
+Supply tools comparison:14 capability definitions inspected; only
+agent.definition.read differs, other13 byte-equivalent serialized definitions.
+Structure failures are pre-existing unchanged scheduler/src21 and scripts50;
+full structure gate is not claimed PASS. No new candidate structure violation.
