@@ -166,7 +166,7 @@ test('liveness confirm on rerun with a dead stored credential fails loud (no sec
   state.verification = { status: 401, oauthError: 'invalid_client' }
   await assert.rejects(
     runCanonicalOnboarding(deps, input),
-    (error) => error instanceof CanonicalOnboardingError && error.code === 'CREDENTIAL_INVALID',
+    (error) => error instanceof CanonicalOnboardingError && error.code === 'CREDENTIAL_LIVENESS_REJECTED',
   )
   assert.equal(state.calls.filter((c) => c === 'client').length, 1) // no second client ever
 })

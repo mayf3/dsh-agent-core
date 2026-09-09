@@ -99,11 +99,19 @@ async function ensureIdentity(deps, { agentId, authorityFile, storeFile, storeWr
   const store = await deps.readCredentialStoreDocument(storeFile, storeWriteOwner)
   const stored = classifyStoreEntry(store, agentId)
   if (stored === 'absent') fail('IDENTITY_STATE_LOST', 'store entry vanished between classification and ensure', { agentId })
-  const verification = await deps.buildAuthClient().verifyCredential({
-    credential: { clientId: stored.clientId, clientSecret: stored.clientSecret },
-    resource: 'svc-forum',
-    scope: 'forum.read',
-  })
+  let verification
+  try {
+    verification = await deps.buildAuthClient().verifyCredential({
+      credential: { clientId: stored.clientId, clientSecret: stored.clientSecret },
+      resource: 'svc-forum',
+      scope: 'forum.read',
+    })
+  } catch (error) {
+    fail('CREDENTIAL_LIVENESS_INCONCLUSIVE', `liveness mint did not produce a classifiable result: ${error?.message ?? String(error)}`, {
+      agentId,
+      cause: error?.code ?? 'liveness_transport_error',
+    })
+  }
   const classification = classifyVerificationResult(verification, {
     mode: 'v1',
     validDeployedAudience: true,
@@ -112,8 +120,17 @@ async function ensureIdentity(deps, { agentId, authorityFile, storeFile, storeWr
   if (classification.kind === 'credential_valid') {
     return { state: 'IDENTITY_READY', action: 'already_ready', clientId: stored.clientId }
   }
-  if (classification.kind === 'credential_invalid') {
-    fail('CREDENTIAL_INVALID', 'stored credential failed liveness mint (401) — recovery is the canonical rotation seam, not a second identity', { agentId, clientId: stored.clientId })
+  if (verification?.status === 401) {
+    // Deployed v1 invalid_client is multi-cause (client/principal inactive
+    // before the secret check, or the secret itself); the action is invariant:
+    // fail loud, zero writes, zero rotation — recovery is the canonical
+    // rotation seam, never a second identity.
+    fail('CREDENTIAL_LIVENESS_REJECTED', 'stored credential liveness mint rejected (401 multi-cause)', {
+      agentId,
+      clientId: stored.clientId,
+      httpStatus: verification.status,
+      oauthError: verification.oauthError ?? null,
+    })
   }
   fail('CREDENTIAL_LIVENESS_INCONCLUSIVE', 'stored credential liveness mint inconclusive', { agentId, classification })
 }
@@ -135,7 +152,6 @@ async function reconcileBaseline(deps, { agentId }) {
     state: 'ONBOARDING_READY',
     createdAgents,
     noopCount,
-    containsTarget: createdAgents.includes(agentId),
     targetWasNew: createdAgents.includes(agentId),
   }
 }
@@ -144,8 +160,9 @@ async function reconcileBaseline(deps, { agentId }) {
  * @param {object} deps injected production faces
  *   - ensureAgentCredential: the ACCEPTED implementation (verbatim)
  *   - readCredentialStoreDocument: accepted store reader
- *   - buildAuthClient(): accepted createAuthProvisioningClient(...) with
- *       loopback transport adapter and (c) management-token provider
+ *   - buildAuthClient(): accepted createAuthProvisioningClient(...) with the
+ *       (c) management-token provider; NO transport adapter — the origin is
+ *       passed verbatim (spec §5: fail-closed until transport resolution)
  *   - runBaseline(): the standing privileged reconciliation invocation
  * @param {object} input { agentId, name, description, authorityFile, storeFile, storeWriteOwner, preimageDir }
  */
