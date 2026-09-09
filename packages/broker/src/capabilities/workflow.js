@@ -575,6 +575,145 @@ export const workflowWakeDispatchIntentManifest = withTransportErrors({
   ],
 })
 
+/**
+ * AGENT_CORE_WORKFLOW_DOMAIN_MEMBERS_BROKER_V1 — read/write DOMAIN_OWNER
+ * member-management capability (operation=list|add|remove), projecting the
+ * svc-workflow /internal/v1/domains/{domainId}/members[/...] endpoint family.
+ *
+ * Authorization is SERVER-SIDE end to end: svc-workflow enforces the exact
+ * scope per endpoint (list → workflow.read; add/remove → workflow.execute),
+ * the direct-token gate, and the DOMAIN_OWNER check inside the business
+ * transaction. The token is minted with the UNION of both scopes; an agent
+ * lacking either grant fails closed at mint (authorization_denied). The
+ * broker never replicates the role logic, never queries membership, and
+ * never derives a principalId from an agent name — target principalId must
+ * come from formal identity discovery (canonical UUID only).
+ *
+ * Role grammar: `role` is optional (absent ⇒ server default DOMAIN_MEMBER).
+ * role=DOMAIN_OWNER is forwarded verbatim and REJECTED by svc-workflow with
+ * 403 `domain_owner_delegation_forbidden` under the frozen single-owner
+ * invariant (idx_drb_single_owner; owner replacement stays on the
+ * GLOBAL_WORKFLOW_COORDINATOR /owner contract) — the broker must not (and
+ * does not) intercept, reinterpret, or relax this; the delegation delta is
+ * parked in svc-workflow SVC_WORKFLOW_DOMAIN_OWNER_DELEGATION_V1.
+ *
+ * Logical duplicates: a NEW logical add of an already-enabled DOMAIN_MEMBER
+ * returns 409 `already_member` (upstream CTR-DMC-003 — never a silent
+ * upsert success). Transport replays reuse the trusted Idempotency-Key and
+ * return the stored original outcome. `principal_is_owner` (adding the
+ * domain owner as member) and `idempotency_conflict` (same key, different
+ * request incl. different role) are preserved as-is.
+ */
+const memberListLimitProperty = {
+  type: 'integer',
+  minimum: 1,
+  maximum: 100,
+  validationError: 'invalid_pagination',
+  description: 'Page size, 1-100 (server default when omitted).',
+}
+
+export const workflowDomainMembersManifest = withTransportErrors({
+  id: 'workflow_domain_members',
+  toolName: 'workflow_domain_members',
+  name: 'Workflow Domain Members',
+  description:
+    'Agent Core capability `workflow_domain_members` (svc-workflow): manage the members of ONE workflow domain you own. ' +
+    'operation="list" returns the current enabled DOMAIN_MEMBER bindings (canonical principalId, display name, role, binding metadata; DOMAIN_OWNER-only, enforced server-side). ' +
+    'operation="add" grants membership to a target principal — pass the canonical principalId from formal identity discovery, NEVER a display name; role defaults to DOMAIN_MEMBER (role=DOMAIN_OWNER is rejected server-side under the single-owner invariant). ' +
+    'operation="remove" disables the target DOMAIN_MEMBER binding (owner bindings are never touched). ' +
+    'add and remove are idempotent commands: a repeated logical add returns already_member; the same transport command replays its original outcome. ' +
+    'Returns {ok: true, result: <page|binding>} on success.',
+  requiredScopes: ['workflow.read', 'workflow.execute'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    ...paginationErrors,
+    { code: 'not_domain_owner', description: 'Caller is not an enabled DOMAIN_OWNER of the domain (HTTP 403).' },
+    { code: 'direct_token_required', description: 'Only direct access tokens may manage domain members (HTTP 403).' },
+    { code: 'domain_owner_delegation_forbidden', description: 'role=DOMAIN_OWNER was requested; owner grant is reserved to the GLOBAL_WORKFLOW_COORDINATOR contract (HTTP 403, frozen single-owner invariant).' },
+    { code: 'domain_not_found', description: 'Domain does not exist or is disabled (HTTP 404).' },
+    { code: 'principal_not_registered', description: 'Target principal has not completed self-projection (HTTP 404).' },
+    { code: 'member_not_found', description: 'No enabled DOMAIN_MEMBER binding to remove (HTTP 404).' },
+    { code: 'already_member', description: 'Target already holds an enabled DOMAIN_MEMBER binding and this was a NEW logical command (HTTP 409; no duplicate binding, no role change).' },
+    { code: 'principal_is_owner', description: 'Target is a DOMAIN_OWNER and cannot be added as a member (HTTP 409).' },
+    { code: 'idempotency_conflict', description: 'Idempotency-Key was reused with a different request, including a different role (HTTP 409).' },
+    { code: 'command_still_processing', description: 'A previous command with this Idempotency-Key is still processing (HTTP 425).' },
+    { code: 'invalid_input', description: 'Malformed add-member request body (unknown role string or unknown field) (HTTP 400).' },
+  ],
+  operations: [
+    {
+      name: 'list',
+      description: 'List the enabled DOMAIN_MEMBER bindings of the given domainId (UUID). Optional: limit (1-100); beforeCreatedAt + beforeId (all-or-none cursor pair copied verbatim from next_cursor).',
+      arguments: {
+        properties: {
+          domainId: { type: 'string', description: 'Workflow domain id (UUID) whose members to enumerate.' },
+          limit: memberListLimitProperty,
+          beforeCreatedAt: { type: 'string', description: 'Cursor: next_cursor.created_at from the previous page (RFC 3339, forwarded verbatim). Must be paired with beforeId.' },
+          beforeId: { type: 'string', description: 'Cursor: next_cursor.id from the previous page (UUID, forwarded verbatim). Must be paired with beforeCreatedAt.' },
+        },
+        required: ['domainId'],
+        allOrNone: [{ properties: ['beforeCreatedAt', 'beforeId'], validationError: 'invalid_cursor' }],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments', 'invalid_pagination', 'invalid_cursor'],
+      http: {
+        target: 'svc-workflow',
+        method: 'GET',
+        path: '/internal/v1/domains/{domainId}/members',
+        pathParams: ['domainId'],
+        query: ['limit', 'beforeCreatedAt', 'beforeId'],
+      },
+    },
+    {
+      name: 'add',
+      description: 'Add one principal to the domain. Required: domainId, principalId (canonical UUID from formal identity discovery). Optional: role (DOMAIN_MEMBER default | DOMAIN_OWNER — the latter is rejected server-side with domain_owner_delegation_forbidden under the frozen single-owner invariant).',
+      arguments: {
+        properties: {
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID); caller must be its enabled DOMAIN_OWNER.' },
+          principalId: { type: 'string', description: 'Target canonical principal UUID (from formal identity discovery; never a display name).' },
+          role: {
+            type: 'string',
+            enum: ['DOMAIN_MEMBER', 'DOMAIN_OWNER'],
+            description: 'Role to grant; omitted = DOMAIN_MEMBER. DOMAIN_OWNER is a forbidden request under the single-owner invariant (server returns domain_owner_delegation_forbidden).',
+          },
+        },
+        required: ['domainId', 'principalId'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'PUT',
+        path: '/internal/v1/domains/{domainId}/members/{principalId}',
+        pathParams: ['domainId', 'principalId'],
+        body: ['role'],
+        idempotencyKey: true,
+      },
+    },
+    {
+      name: 'remove',
+      description: 'Remove one principal from the domain (disables exactly the enabled DOMAIN_MEMBER binding; DOMAIN_OWNER bindings are never touched). Required: domainId, principalId.',
+      arguments: {
+        properties: {
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID); caller must be its enabled DOMAIN_OWNER.' },
+          principalId: { type: 'string', description: 'Target canonical principal UUID.' },
+        },
+        required: ['domainId', 'principalId'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'DELETE',
+        path: '/internal/v1/domains/{domainId}/members/{principalId}',
+        pathParams: ['domainId', 'principalId'],
+        idempotencyKey: true,
+      },
+    },
+  ],
+})
+
 /** Workflow manifests: instance execution and Definition Authoring are distinct write families. */
 export const manifests = [
   workflowMyTasksManifest,
@@ -587,4 +726,5 @@ export const manifests = [
   workflowDefinitionAuthoringManifest,
   workflowDispatchIntentsManifest,
   workflowWakeDispatchIntentManifest,
+  workflowDomainMembersManifest,
 ]
