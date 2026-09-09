@@ -245,9 +245,15 @@ export function collect({ storePath, runsPath, evidencePath, alertStatePath, sta
       const inflight = nonTerminal.filter((r) => r.state === 'admitted' || r.state === 'running')
       lines.push(`job ${job.id.slice(0, 8)} (${job.name ?? '?'}): enabled=${job.enabled} retryAuto=${job.retry?.auto === true} occurrences=${mine.length} unknownBlockers=${unknowns.length} trueInflight=${inflight.length}`)
       for (const r of [...unknowns, ...inflight]) {
+        // Provably dead = the turn deadline passed (startedAt+timeoutMs), OR —
+        // production records may lack a finite timeoutMs — the record already
+        // SETTLED (finite endedAt) more than 1h ago: a settled record is
+        // definitionally not in-flight, and its late-evidence window is over.
+        const now = report.probeNowMs ?? Date.now()
         const deadlineMs = Number.isFinite(r.startedAt) && Number.isFinite(r.timeoutMs) ? r.startedAt + r.timeoutMs : null
-        const deadlineProof = deadlineMs !== null && deadlineMs < (report.probeNowMs ?? Date.now())
-        lines.push(`  ${r.occurrenceId} state=${r.state} kind=${r.kind ?? '?'} started=${iso(r.startedAt)} ended=${r.endedAt ? iso(r.endedAt) : '-'} deadlineProof=${deadlineProof ? 'YES (provably dead)' : 'NO'}`)
+        const settledOverGrace = Number.isFinite(r.endedAt) && now - r.endedAt > 60 * 60 * 1000
+        const deadlineProof = (deadlineMs !== null && deadlineMs < now) || settledOverGrace
+        lines.push(`  ${r.occurrenceId} runId=${r.runId ?? '-'} state=${r.state} kind=${r.kind ?? '?'} started=${iso(r.startedAt)} ended=${r.endedAt ? iso(r.endedAt) : '-'} deadlineProof=${deadlineProof ? 'YES (provably dead)' : 'NO'}`)
       }
     }
     add('ADMISSION_BLOCKERS', lines)
