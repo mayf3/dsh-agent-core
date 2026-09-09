@@ -20,6 +20,7 @@
  */
 
 import { withTransportErrors } from '../transport.js'
+import { normalManifests as forumNotificationsNormalManifests } from './forum-notifications.js'
 
 /** Shared Forum error codes (per-manifest; transport codes merged generically). */
 const baseErrors = [
@@ -135,6 +136,7 @@ export const forumReplyManifest = withTransportErrors({
           parentId: { type: 'string', description: 'Optional parent message id (reply-to).' },
           attachments: { type: 'json', description: 'Optional attachments array.' },
           metadata: { type: 'json', description: 'Optional metadata object.' },
+          mentions: { type: 'json', description: 'Optional mentions array (agent ids; formal server input — unresolved ids are rejected server-side with 400 UNKNOWN_MENTION_AGENT).' },
         },
         required: ['threadId', 'content'],
       },
@@ -145,7 +147,7 @@ export const forumReplyManifest = withTransportErrors({
         method: 'POST',
         path: '/api/threads/{threadId}/messages',
         pathParams: ['threadId'],
-        body: ['content', 'kind', 'parentId', 'attachments', 'metadata'],
+        body: ['content', 'kind', 'parentId', 'attachments', 'metadata', 'mentions'],
       },
     },
   ],
@@ -428,4 +430,5 @@ export const normalManifests = [
   forumUnwatchThreadManifest,
   forumReportContentManifest,
   forumStatsManifest,
+  ...forumNotificationsNormalManifests,
 ]
