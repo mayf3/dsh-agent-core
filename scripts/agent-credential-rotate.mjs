@@ -71,16 +71,22 @@ function requireAgentId() {
 async function readDbStateViaPsql({ dbUrl, clientId }) {
   // The seam's READ face: one row, values stay channel-owned where possible.
   // The hash column value is required for the scrypt single-generation gate.
+  // The client id travels as a psql variable (:'client_id') fed via STDIN —
+  // psql does NOT interpolate variables in -c strings, and $1 parameters do
+  // not exist in simple queries (both verified against psql 16); stdin
+  // interpolation safely quotes the literal (injection-safe).
   const { execFile } = await import('node:child_process')
-  const sql = 'SELECT client_id, secret_hash FROM machine_clients WHERE client_id = $1'
+  const sql = "SELECT client_id, secret_hash FROM machine_clients WHERE client_id = :'client_id';"
   const stdout = await new Promise((resolvePromise, rejectPromise) => {
-    execFile('psql', [dbUrl, '-At', '-F', '|', '-c', sql, '-v', '1', clientId], (error, stdout, stderr) => {
+    const child = execFile('psql', [dbUrl, '-At', '-F', '|', '-v', `client_id=${clientId}`], (error, stdout, stderr) => {
       if (error !== null) {
         rejectPromise(Object.assign(new Error(`psql read failed: ${String(stderr).slice(0, 160)}`), { code: 'db_read_failed' }))
         return
       }
       resolvePromise(stdout)
     })
+    child.stdin.write(`${sql}\n`)
+    child.stdin.end()
   })
   const line = stdout.trim().split('\n').find((l) => l !== '')
   if (line === undefined) {
@@ -104,21 +110,26 @@ async function cmdRotate() {
   const mintVerify = authServiceOrigin === undefined
     ? undefined
     : async ({ clientId: c, clientSecret }) => {
-        // In-process secret delivery (Part H): never argv/env. --noproxy kept
-        // from the verified bdcred shape.
-        const { execFile } = await import('node:child_process')
-        const body = `grant_type=client_credentials&resource=svc-workflow&scope=workflow.read`
+        // Part H red line: the credential NEVER leaves this process — the
+        // Authorization header is constructed in memory and handed to the
+        // in-process fetch (Node >= 18 global; undici ignores proxy env by
+        // default, preserving the verified bdcred --noproxy semantics).
+        const body = 'grant_type=client_credentials&resource=svc-workflow&scope=workflow.read'
         const auth = Buffer.from(`${c}:${clientSecret}`).toString('base64')
-        const code = await new Promise((resolvePromise) => {
-          execFile('curl', ['-sS', '--noproxy', '*', '-o', '/dev/null', '-w', '%{http_code}',
-            '--max-time', '8', '-X', 'POST', `${authServiceOrigin}/oauth/token`,
-            '-H', `authorization: Basic ${auth}`, '-H', 'content-type: application/x-www-form-urlencoded',
-            '--data-binary', body], (error, stdout) => {
-            if (error !== null) { resolvePromise('transport_unreachable'); return }
-            resolvePromise(String(stdout).trim())
+        try {
+          const response = await fetch(`${authServiceOrigin}/oauth/token`, {
+            method: 'POST',
+            headers: {
+              authorization: `Basic ${auth}`,
+              'content-type': 'application/x-www-form-urlencoded',
+            },
+            body,
+            signal: AbortSignal.timeout(8_000),
           })
-        })
-        return { ok: code === '200', status: code }
+          return { ok: response.status === 200, status: response.status }
+        } catch {
+          return { ok: false, status: 'transport_unreachable' }
+        }
       }
 
   try {
@@ -154,7 +165,8 @@ async function cmdGate() {
   const { readCredentialStoreDocument } = await import('../packages/agent-credential-provisioning/src/store-writer.js')
   const doc = await readCredentialStoreDocument(storeFile)
   const storeSecret = doc.credentials?.[agentId]?.clientSecret
-  const gate = evaluateSeamGate({ dbSecretHash: db.secretHash, storeSecret, receipts: [] })
+  const ledger = new RotationReceiptLedger(val('--receipts') ?? `${storeFile}.rotation-receipts.jsonl`)
+  const gate = evaluateSeamGate({ dbSecretHash: db.secretHash, storeSecret, receipts: ledger.list() })
   process.stdout.write(`GATE_${gate.ok ? 'PASS' : `REFUSED_${gate.code}`}\n`)
   if (!gate.ok) process.exit(21)
 }
