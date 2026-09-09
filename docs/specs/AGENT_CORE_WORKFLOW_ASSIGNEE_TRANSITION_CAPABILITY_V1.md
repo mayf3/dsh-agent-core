@@ -110,6 +110,21 @@ owners:
 > exact reviewed head `6aadb57f887e91c41dbfeb35fd505ba8deb6ec73` 的独立审阅
 > PASS 后由 Owner mayf3 接受；acceptance record 见 §24。
 
+> **PROPOSED FOCUSED AMENDMENT 2026-09-09（governance cleanup write-family，
+> 本轮）。** 按 Owner Goal Directive `WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`
+> （2026-09-09）§7，`workflow_execute` 的 operation 集从
+> `create_instance|transition` 扩展为
+> `create_instance|transition|cancel_instance|archive_instance`——仍只有一个
+> instance-execution 写工具、仍只有一个 discriminator `operation`，不新增
+> `workflow_cancel` / `workflow_archive` / `workflow_cleanup_execute` 等任何
+> 平行工具。cancel/archive 的 wire 端点、生命周期合法性、幂等与 receipt
+> 机制全部复用 svc-workflow **已部署**的既有端点（服务端业务语义零变化）；
+> 服务端授权谓词的 coordinator 放宽由 svc 侧 amendment
+> `SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`（proposed）治理。Broker 侧
+> model 输入仅 `workflowInstanceId` + `reason`，identity 与 Idempotency-Key
+> 仍为 trusted seam。详见 §25；本段尚未受理，需绑定 exact reviewed head 的
+> 独立审阅 PASS 后由 Owner mayf3 接受。
+
 ## 1. Goal
 
 让**当前节点的 exact assignee** 能够通过正式 Broker 工具提交合法
@@ -1225,3 +1240,149 @@ PRODUCTION_APPLY_AUTHORITY = none
   production apply authority remains none.
 - The separately accepted `AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V1` is the
   only implementation authority for the new Definition Authoring family.
+
+## 25. Focused amendment (2026-09-09, governance cleanup write-family — PROPOSED)
+
+Owner Goal Directive `WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`（2026-09-09）§7
+要求：若 `workflow_execute` 仍是唯一 Workflow write tool，则不得另起
+`workflow_cancel` / `workflow_archive` / `workflow_cleanup` 平行工具，而应
+正式扩展 operation 集。本节即该最小 focused amendment。**本节状态 =
+proposed**：独立语义 review PASS + Owner mayf3 exact-head acceptance 前不具
+实现许可；acceptance 时在 §26 记录 reviewed head 与 verdict，且 frontmatter
+零变化（本 amendment 不翻转本 Spec 任何 lifecycle 字段）。
+
+### DEC-012 — write-family union extension (one tool, four operations)
+
+`workflow_execute` 仍是唯一 instance-execution 写工具；operation 集恰为：
+
+```text
+create_instance | transition | cancel_instance | archive_instance
+```
+
+不新增任何 manifest / toolName；`workflow_transition` 不复活；discriminator
+仍为 `operation`；既有 `create_instance` / `transition` 合同（wire、CAS、
+error 表、identity seam、幂等、no-automatic-retry）逐字不变。
+DEC-010/DEC-011 的「单一写工具」authority 语义由本 amendment **继承并收窄
+解释**为「单一工具、封闭 operation 集」，不视为失效，故无需 whole successor。
+
+### CTR-011 — cancel_instance contract
+
+- Model inputs（恰二，无可选）：`workflowInstanceId`（UUID）、`reason`
+  （string，服务端 `invalid_reason` 校验）。
+- 禁止暴露（trusted seam，与既有写面同纪律）：`actorPrincipalId`、
+  `domainId` 或任何授权依据字段、`Idempotency-Key`、run-as、expected owner、
+  expectedWorkflowStateVersion（服务端事务内以 row lock 原子判定）。
+- Wire：`POST /internal/v1/workflow-instances/{workflowInstanceId}/cancel`
+  （svc-workflow 已部署 @ github/main 4bbbbe9；request body
+  `{reason}` camelCase deny_unknown_fields；response
+  `{workflowInstanceId, workflowStateVersion, eventSequence, replayed}`）。
+- Identity：只经 credential seam（`workflow.execute` scope 照旧）；
+  Idempotency-Key 由 transport trusted seam 生成（`http.idempotencyKey`
+  flag 既有机制），model 不可达；no broker-side automatic retry（DEC-004
+  继承）。
+- Server-side authorization（svc 权威，非 Broker 复制）：
+  `DOMAIN_OWNER(instance.domain) OR GLOBAL_WORKFLOW_COORDINATOR`——
+  外部权威 = `SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`（svc-workflow，
+  本 amendment authoring 时 status=proposed；acceptance 前 dsh 实现不部署，
+  部署后若 svc 放宽未上线，coordinator 调用 fail closed 收
+  `not_domain_owner`，SAFE 方向）。
+- Lifecycle legality（服务端权威，逐字不变）：仅 active/non-terminal 可
+  cancel。Broker 不复制、不预判 lifecycle。
+- Error 表（新增声明，全部实测于 svc error.rs `from_cancel`）：
+  `instance_not_found`(404)、`not_domain_owner`(403)、
+  `already_cancelled`(409)、`instance_archived`(409)、
+  `invalid_reason`(422)、`idempotency_conflict`(409)、
+  `command_still_processing`(425)；叠加既有
+  baseErrors/authErrors/queryErrors。无新码、无双码过渡。
+
+### CTR-012 — archive_instance contract
+
+- Model inputs（恰二）：`workflowInstanceId`、`reason`。trusted seam 禁止
+  面与 CTR-011 相同。
+- Wire：`POST /internal/v1/workflow-instances/{workflowInstanceId}/archive`
+  （已部署 @ 4bbbbe9；response 形状同 cancel 族）。
+- Lifecycle legality：仅 terminal/cancelled 可 archive；coordinator 权限
+  **不**绕过 lifecycle（`instance_not_terminal` 409）。
+- Error 表（新增声明，svc error.rs `from_archive`）：
+  `instance_not_found`(404)、`not_domain_owner`(403)、
+  `instance_not_terminal`(409)、`already_archived`(409)、
+  `active_activation_exists`(409)、`invalid_reason`(422)、
+  `idempotency_conflict`(409)、`command_still_processing`(425)。
+
+### CTR-013 — cleanup discipline（model-facing 描述合同）
+
+`workflow_execute` 的 manifest description 与 `cancel_instance` /
+`archive_instance` operation description 冻结以下编排纪律（advisory——
+真正权威在服务端）：
+
+```text
+active/non-terminal -> cancel_instance -> read-back verify -> archive_instance
+already cancelled    -> archive_instance
+already terminal     -> archive_instance
+already archived     -> no-op（幂等；勿重复调用）
+禁止 operation=transition 代替 cancel；禁止猜 transitionKey；
+无 delete；清理 = cancel + archive + 退出 active surface，非物理删除。
+```
+
+### CTR-014 — implementation closure and inventory
+
+- 实现闭包恰两文件：`packages/broker/src/capabilities/workflow.js`
+  （`workflowExecuteManifest` 增两 operation + error 表扩展）与 dedicated
+  test home `packages/broker/test/capabilities/workflow-execute.test.js`
+  （新增 cancel/archive fixture 用例）。
+- Aggregate inventory 计数 **18 → 18（不变）**：本 amendment 不新增
+  manifest，`manifest-inventory.test.js` 零改动（decomposition DEC-003
+  纪律：计数调整需 governing Spec 显式授权，本节显式授权值为「不变」）。
+
+### OBS-010 — downstream state (fresh read-back 2026-09-09)
+
+svc-workflow github/main 4bbbbe9：cancel/archive 端点已部署于生产路径，
+`workflow_command_receipts` + attempt/security audits 三表机制在用，
+`compute_cancel_request_hash` / `compute_archive_request_hash`（JCS
+envelope v1）在用；HTTP 层 gate = `workflow.execute` scope；application 层
+gate 现为 DOMAIN_OWNER-only（coordinator 放宽 = svc amendment，见 CTR-011）。
+
+### ACC-011（本 amendment 验收增量）
+
+- a1：`workflow_execute` operations 枚举恰四项；`workflow_transition`
+  仍不存在；inventory 仍 18。
+- a2：cancel_instance/archive_instance 的 model schema 恰含两个必需参数；
+  schema 层出现 actorPrincipalId/domainId/idempotencyKey 任意字段即 FAIL。
+- a3：error 表逐码对拍 svc `from_cancel`/`from_archive`（含 HTTP status）。
+- a4：coordinator 身份调用在 svc 放宽部署后返回 200/replayed 语义，
+  DOMAIN_MEMBER 身份 fail-closed `not_domain_owner`（负面）。
+- a5：transition 不能作用于 cleanup 语义（无 cancel 类效果）——既有
+  transition 用例回归全绿。
+
+### ALT-010 — rejected alternatives
+
+- 新增独立 `workflow_cancel` / `workflow_archive` / `workflow_cleanup_execute`
+  工具 — **rejected**：违反单一写工具 authority（DEC-010/011），且 Owner
+  directive §7 明文禁止并存。
+- Broker 侧复制 DOMAIN_OWNER/COORDINATOR 判定或 lifecycle 预判 —
+  **rejected**：授权与 lifecycle 唯一权威在 svc-workflow 服务端。
+- 暴露 `expectedWorkflowStateVersion` / `Idempotency-Key` 给 model —
+  **rejected**：trusted seam 纪律（§21 既有合同同款）。
+
+### AMENDMENT_STATUS
+
+```text
+AMENDMENT_STATUS = proposed
+WORKFLOW_EXECUTE_OPERATIONS = create_instance|transition|cancel_instance|archive_instance
+NEW_MANIFESTS = 0
+INVENTORY_COUNT = UNCHANGED (18)
+NEW_ERROR_CODES = 0 (declarer table extension only)
+SVC_ENDPOINTS_CHANGED_BY_THIS_AMENDMENT = NONE
+PRODUCTION_APPLY_AUTHORITY = none
+INDEPENDENT_REVIEW = REQUIRED_BEFORE_ACCEPTANCE
+```
+
+## 26. Amendment acceptance record (2026-09-09, governance cleanup write-family — PENDING)
+
+- Reviewed semantic head = `<PENDING independent review>`；independent
+  re-review = `<PENDING>`; ship blockers = `<PENDING>`.
+- Owner mayf3 acceptance = `<PENDING>`.
+- Upon acceptance: this record is finalized lifecycle-only; §25 semantics
+  unchanged; frontmatter unchanged; `workflow_execute` operations become
+  exactly the four-operation union; production apply authority remains none.
+
