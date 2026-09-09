@@ -439,13 +439,6 @@ export async function composeProductionRuntime(options = {}) {
       }
     },
   }))
-
-  // WORKFLOW_AGENT_EXECUTION_V1: the thin Workflow execution engine — due
-  // DISPATCH_INTENTs -> one ledgered attempt per NodeVisit -> the canonical
-  // assignee's Run (router.deliver with trusted workflow_execution
-  // provenance) -> reconcile against the authoritative workflow state.
-  // Fail-closed by configuration: without a poller agent id it mounts
-  // disabled (evidence-only ledger) and start() logs the honest line.
   const workflowExecution = mountWorkflowExecutionRuntime({
     ctx,
     layout,
@@ -494,14 +487,10 @@ export async function composeProductionRuntime(options = {}) {
     scheduler,
     workflowExecution,
     writeEvidence,
-    /** Start the resident scheduler loop (mtime tick + startup catch-up),
-     *  then the Workflow execution poll loop (no-op when unconfigured). */
     start: async () => {
       await scheduler.start({ autoStart: true, catchup })
       workflowExecution.start()
     },
-    /** Graceful stop: engines first, then every plugin disposer (the
-     *  Router's disposer shuts down all owned agent processes). */
     stop: async () => {
       workflowExecution.stop()
       await scheduler.stop()
