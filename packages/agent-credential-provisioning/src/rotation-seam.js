@@ -90,15 +90,6 @@ export function hashMachineSecret(secret, saltHex = randomBytes(16).toString('he
   return `${saltHex}:${hash}`
 }
 
-export function verifyMachineSecretFormat(secretHash) {
-  if (typeof secretHash !== 'string') return false
-  const [salt, hash] = secretHash.split(':')
-  if (!salt || !hash) return false
-  const expected = scryptSync('probe', salt, 64, { N: 16384, r: 8, p: 1 })
-  const actual = Buffer.from(hash, 'hex')
-  return expected.length === actual.length && timingSafeEqual(expected, actual)
-}
-
 // ── receipt ledger (append-only JSONL, fingerprints only) ────────────────
 
 export class RotationReceiptLedger {
@@ -332,12 +323,15 @@ export async function executeRotation({
   }
 
   // ── APPLY: store swap (preimage backup → atomic 0600 write) ────────────
+  // Backup and replacement share ONE lock hold; the bounded-recovery restore
+  // re-acquires the same lock so it can never race a concurrent seam holder.
   const backupFile = `${storeFile}.preimage-${plan.operationId}.bak`
   try {
-    copyFileSync(storeFile, backupFile)
-    try { statSync(backupFile) } catch (error) { throw new Error(`rotation-seam: preimage backup missing after copy: ${error.message}`) }
-    await withCredentialStoreLock(storeFile, storeWriteOptions, (lock) =>
-      replaceCredentialForAgent(storeFile, agentId, { clientId, clientSecret: newSecret }, { lock, ...storeWriteOptions }))
+    await withCredentialStoreLock(storeFile, storeWriteOptions, async (lock) => {
+      copyFileSync(storeFile, backupFile)
+      try { statSync(backupFile) } catch (error) { throw new Error(`rotation-seam: preimage backup missing after copy: ${error.message}`) }
+      await replaceCredentialForAgent(storeFile, agentId, { clientId, clientSecret: newSecret }, { lock, ...storeWriteOptions })
+    })
   } catch (swapError) {
     // Bounded recovery: restore the preimage store bytes; roll the DB back
     // through the same privileged channel; receipt records the path taken.
@@ -355,7 +349,9 @@ export async function executeRotation({
     }
     if (rollbackError === undefined) {
       try {
-        renameSync(backupFile, storeFile) // atomic restore of the preimage store
+        await withCredentialStoreLock(storeFile, storeWriteOptions, () => {
+          renameSync(backupFile, storeFile) // atomic restore of the preimage store
+        })
       } catch (restoreError) {
         rollbackError = restoreError
       }
@@ -376,7 +372,7 @@ export async function executeRotation({
       kind: 'rotation', ...plan,
       outcome: ROTATION_OUTCOMES.SPLIT_STATE_OPEN,
       reason: `store swap failed AND rollback incomplete — recovery available: preimage backup ${backupFile}; ${String(rollbackError?.message ?? rollbackError).slice(0, 160)}`,
-      recovery: { backupFile, available: true },
+      recovery: { backupFile, available: existsSync(backupFile) },
       atMs: Date.now(),
     })
     const split = new Error(`rotation-seam: SPLIT_STATE_OPEN — DB carries the new generation while the store could not be swapped; recovery artifacts recorded (${receipt.operationId})`)
