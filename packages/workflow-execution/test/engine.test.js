@@ -170,6 +170,58 @@ test('duplicate triggers (re-poll, second intent, HR double-fire) never create a
   }
 })
 
+test('cross-process reconcile cannot terminalize another poller during planned-to-delivered admission', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-engine-race-'))
+  let releaseResolution
+  let resolutionEntered
+  const entered = new Promise((resolve) => { resolutionEntered = resolve })
+  const release = new Promise((resolve) => { releaseResolution = resolve })
+  const common = {
+    fetchDuePage: async () => ({ ok: true, items: [] }),
+    deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:race' }),
+    getTurnReconciliation: () => ({ state: 'never_existed' }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } }),
+    log: { log: () => {}, warn: () => {}, error: () => {} },
+  }
+  const admitting = createWorkflowExecutionEngine({
+    ...common,
+    ledger: new ExecutionLedger({ dir }),
+    resolvePrincipalToAgent: async () => {
+      resolutionEntered()
+      await release
+      return { ok: true, agentId: AGENT }
+    },
+  })
+  const reconciling = createWorkflowExecutionEngine({
+    ...common,
+    ledger: new ExecutionLedger({ dir }),
+    resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
+  })
+  try {
+    const admission = admitting.admitDueIntent(dueIntent())
+    await entered
+    const reconciliation = reconciling.reconcileOnce()
+    let reconciledEarly = false
+    void reconciliation.finally(() => { reconciledEarly = true })
+    await new Promise((resolve) => setTimeout(resolve, 75))
+    assert.equal(reconciledEarly, false, 'the reconciler waits on the live admission owner')
+
+    releaseResolution()
+    const [admitted, reconciled] = await Promise.all([admission, reconciliation])
+    assert.equal(admitted.action, 'admitted')
+    assert.deepEqual(reconciled.needsReview, [])
+    assert.equal(reconciled.running, 1, 'fresh compare-and-set observes the delivered phase')
+
+    const restarted = new ExecutionLedger({ dir })
+    assert.equal(restarted.get(VISIT).state, 'ACTIVE')
+    assert.equal(restarted.get(VISIT).phase, 'run_delivered')
+    assert.equal(restarted.get(VISIT).delivered.reconciliationHandle, 'turn:race')
+  } finally {
+    releaseResolution?.()
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 test('NEGATIVE (goal-required): run completed, model replied 完成了, visit still current => NEEDS_REVIEW, not silent, not rerun', async () => {
   const fixture = makeDeps({
     turnState: () => 'settled',

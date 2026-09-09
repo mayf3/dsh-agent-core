@@ -98,12 +98,12 @@ test('full lifecycle: planned -> delivered -> reconciled SETTLED; terminal attem
     assert.equal(delivered.delivered.agentId, 'agt_target-agent')
     assert.equal(delivered.delivered.requestId, attemptIdFor(VISIT))
 
-    await ledger.recordReconciled({ nodeVisitId: VISIT, verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'node_visit_no_longer_current' })
+    await ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'node_visit_no_longer_current' })
     assert.equal(ledger.get(VISIT).state, 'SETTLED')
     assert.deepEqual(ledger.listActive(), [])
 
     await assert.rejects(
-      () => ledger.recordReconciled({ nodeVisitId: VISIT, verdict: 'NEEDS_REVIEW', judgment: 'x', reason: 'late writer' }),
+      () => ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'reconciled', verdict: 'NEEDS_REVIEW', judgment: 'x', reason: 'late writer' }),
       /terminal/,
       'late writers on settled visits must fail loud, never be absorbed',
     )
@@ -122,7 +122,7 @@ test('reconciled verdict ACTIVE is not a ledger event (only terminal verdicts la
     const { ledger } = fixture
     await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
     await assert.rejects(
-      () => ledger.recordReconciled({ nodeVisitId: VISIT, verdict: 'ACTIVE', judgment: 'run_running', reason: 'x' }),
+      () => ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'planned', verdict: 'ACTIVE', judgment: 'run_running', reason: 'x' }),
       TypeError,
     )
   } finally {

@@ -282,12 +282,20 @@ export class ExecutionLedger {
    * one. This is what makes duplicate pollers / re-polls / HR + scheduler
    * double triggers safe on the DSH side.
    *
-   * @returns {Promise<{created:true, attempt:object}
+   * When `complete` is supplied, retain the same cross-process OwnerLock
+   * through resolve/delivery and append exactly one completion event before
+   * releasing it. Omitting `complete` preserves the ledger-only primitive
+   * used by focused lifecycle tests and recovery tooling.
+   *
+   * @returns {Promise<{created:true, attempt:object, completion?:object}
    *   | {created:false, attempt:object, cause:'already_attempted'}>}
    */
-  async beginAttemptIfAbsent({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }) {
+  async beginAttemptIfAbsent({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }, complete) {
     validateIntentIds({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId })
-    return this.mutate(() => {
+    if (complete !== undefined && typeof complete !== 'function') {
+      throw new TypeError('workflow-execution: admission completion callback must be a function when provided')
+    }
+    return this.mutate(async () => {
       const existing = this.#attempt(nodeVisitId)
       if (existing !== undefined) {
         return { created: false, attempt: { ...existing }, cause: 'already_attempted' }
@@ -303,13 +311,59 @@ export class ExecutionLedger {
       }
       this.#appendEvent(event)
       this.#applyEvent(event)
-      return { created: true, attempt: { ...this.#attempt(nodeVisitId) } }
+      if (complete === undefined) return { created: true, attempt: { ...this.#attempt(nodeVisitId) } }
+      const completion = await complete({ ...this.#attempt(nodeVisitId) })
+      if (completion?.kind === 'run_delivered') {
+        this.#recordRunDelivered(nodeVisitId, completion)
+      } else if (completion?.kind === 'delivery_failed') {
+        this.#recordDeliveryFailed(nodeVisitId, completion.reason)
+      } else {
+        throw new TypeError('workflow-execution: admission callback must return run_delivered or delivery_failed')
+      }
+      return { created: true, attempt: { ...this.#attempt(nodeVisitId) }, completion }
     })
   }
 
   /** Record a successful Run admission (NodeVisit → Attempt → Run linkage). */
   async recordRunDelivered({ nodeVisitId, agentId, requestId, sessionId, reconciliationHandle, messageId }) {
-    return this.mutate(() => this.#recordForActive(nodeVisitId, (event) => {
+    return this.mutate(() => this.#recordRunDelivered(nodeVisitId, { agentId, requestId, sessionId, reconciliationHandle, messageId }))
+  }
+
+  /** Record a failed (or never-verifiably-started) delivery: NEEDS_REVIEW. */
+  async recordDeliveryFailed({ nodeVisitId, reason }) {
+    return this.mutate(() => this.#recordDeliveryFailed(nodeVisitId, reason))
+  }
+
+  /** Record the terminal reconcile verdict for an ACTIVE attempt. */
+  async recordReconciled({ nodeVisitId, expectedPhase, verdict, judgment, reason }) {
+    if (verdict !== 'SETTLED' && verdict !== 'NEEDS_REVIEW') {
+      throw new TypeError(`workflow-execution: reconciled verdict must be SETTLED | NEEDS_REVIEW (got ${JSON.stringify(verdict)})`)
+    }
+    if (typeof expectedPhase !== 'string' || expectedPhase === '') throw new TypeError('workflow-execution: reconciled expectedPhase is required')
+    if (typeof judgment !== 'string' || judgment === '') throw new TypeError('workflow-execution: reconciled judgment is required')
+    if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: reconciled reason is required')
+    return this.mutate(() => {
+      const current = this.#attempt(nodeVisitId)
+      if (current === undefined) {
+        throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — beginAttemptIfAbsent first`)
+      }
+      if (current.state !== 'ACTIVE') this.#terminalGuard(current, { kind: 'reconciled', nodeVisitId })
+      if (current.phase !== expectedPhase) {
+        return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
+      }
+      const record = this.#recordForActive(nodeVisitId, (event) => {
+        event.kind = 'reconciled'
+        event.verdict = verdict
+        event.judgment = judgment
+        event.reason = reason
+        return event
+      })
+      return { committed: true, ...record }
+    })
+  }
+
+  #recordRunDelivered(nodeVisitId, { agentId, requestId, sessionId, reconciliationHandle, messageId }) {
+    return this.#recordForActive(nodeVisitId, (event) => {
       event.kind = 'run_delivered'
       event.agentId = agentId
       event.requestId = requestId
@@ -317,33 +371,16 @@ export class ExecutionLedger {
       if (reconciliationHandle !== undefined) event.reconciliationHandle = reconciliationHandle
       if (messageId !== undefined) event.messageId = messageId
       return event
-    }))
+    })
   }
 
-  /** Record a failed (or never-verifiably-started) delivery: NEEDS_REVIEW. */
-  async recordDeliveryFailed({ nodeVisitId, reason }) {
+  #recordDeliveryFailed(nodeVisitId, reason) {
     if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: delivery_failed reason is required')
-    return this.mutate(() => this.#recordForActive(nodeVisitId, (event) => {
+    return this.#recordForActive(nodeVisitId, (event) => {
       event.kind = 'delivery_failed'
       event.reason = reason
       return event
-    }))
-  }
-
-  /** Record the terminal reconcile verdict for an ACTIVE attempt. */
-  async recordReconciled({ nodeVisitId, verdict, judgment, reason }) {
-    if (verdict !== 'SETTLED' && verdict !== 'NEEDS_REVIEW') {
-      throw new TypeError(`workflow-execution: reconciled verdict must be SETTLED | NEEDS_REVIEW (got ${JSON.stringify(verdict)})`)
-    }
-    if (typeof judgment !== 'string' || judgment === '') throw new TypeError('workflow-execution: reconciled judgment is required')
-    if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: reconciled reason is required')
-    return this.mutate(() => this.#recordForActive(nodeVisitId, (event) => {
-      event.kind = 'reconciled'
-      event.verdict = verdict
-      event.judgment = judgment
-      event.reason = reason
-      return event
-    }))
+    })
   }
 
   #recordForActive(nodeVisitId, build) {
