@@ -34,7 +34,13 @@ status: accepted
 > `NEEDS(e)` 诚实门控），directive-alignment union（census 精确谓词
 > `updated_at > created_at AND rotated_at IS NULL` + 九问应答账本）+
 > governing investigation 文件随 PR #223 入库（@ `d3d1363`）→
-> AMENDMENT_7 = accepted**）
+> AMENDMENT_7 = accepted**）·
+> Amendment 8（CONTROLLED_LOOPBACK_HTTP_PROVISIONING_EXCEPTION，provisioning
+> transport 的受控 loopback HTTP 例外）：2026-09-09，base = origin/main（含
+> accepted Amendment 7）· Owner ruling = CONTINUE_SAME_GOAL union
+> DECISION_2_PROVISIONING_TRANSPORT = **OPTION_B**（2026-09-09 交付），
+> 同时裁定 OPTION_A（既有 HTTPS seam）不存在——生产 auth-service 无 TLS 面；
+> independent bounded review = PASS（0 SHIP_BLOCKER）→ **AMENDMENT_8 = accepted**
 > 仓库：`mayf3/dsh-agent-core`
 > 角色：Credential Provisioning Spec Agent
 >
@@ -396,6 +402,68 @@ proof/test safety，并与 Amendment 6 的 PHASE_A/PHASE_B 分段完全组合。
    | Q7 | CAN_PROOF_ROTATE_RANDOM_BUSINESS_AGENT | **NO** | I.5 / L4-T11 |
    | Q8 | CAN_DB_STORE_SPLIT_FAIL_SILENTLY | **NO** | I.4 readback 门 + 继承 split state 门 / L4-T9 |
    | Q9 | CAN_SECRET_CHANGE_EXIST_WITHOUT_ROTATION_RECEIPT | **NO** | I.3 receipt 排他 + I.4 继承门 / L4-T8/T9/T10 |
+
+---
+
+## Amendment 8 摘要（2026-09-09，CONTROLLED_LOOPBACK_HTTP_PROVISIONING_EXCEPTION，base origin/main @ 36697a4）
+
+Owner 裁决（CONTINUE_SAME_GOAL union，DECISION_2 = OPTION_B）：provisioning
+management transport 的 "HTTPS only" 安全契约新增一个**极窄受控例外**。本修订
+是对父 authority 安全契约的真实变更（非 child 实现内的静默 adapter 降级——
+child 中的任何 adapter/降级仍被禁止）。
+
+### A8.1 例外定义（唯一定点）
+
+`createAuthProvisioningClient` 的 origin 校验在既有 HTTPS 要求之外，接受且仅
+接受**一个**额外 origin 字符串（逐字节相等，无解析宽松化）：
+
+```text
+http://127.0.0.1:4001     # scheme=http · host=literal 127.0.0.1 · port=4001（deployed auth-service 端口）
+```
+
+禁止 hostname substitution：`localhost`、任何 DNS 名、`127.0.0.2`、任何其他
+端口/主机均不被该例外覆盖（字符串相等校验天然排除）。任何其他非 HTTPS origin
+照旧 fail-loud `AUTH_CONFIGURATION_ERROR`。
+
+### A8.2 机械边界条件（全部满足才可用；任一不满足 ⇒ fail-closed）
+
+```text
+C1  auth-service 机械验证只监听 loopback（operator context 以 lsof 等机械
+    手段验证 :4001 的 LISTEN 地址；若为 0.0.0.0/*/external interface ⇒
+    FAIL_CLOSED——当前生产为 *.4001 wildcard，故例外在部署侧 rebind 前保持
+    FAIL_CLOSED，activation 属 auth-service 生产包步骤，不在本轮执行）
+C2  caller 必须是 accepted trusted control-plane / provisioning operator
+    context（root seam operator CLI + root-only 0600 provisioner secret）；
+    model child / 任意 Agent 不得持有 provisioner secret
+C3  禁止 hostname substitution（A8.1 字符串相等保证）
+C4  禁止 redirect（management POST 与 verification mint 的 fetch 一律
+    redirect: 'error'）
+C5  target 必须 exact pinned origin；caller 不得任意提供 URL（A8.1）
+C6  provisioner secret / management token / one-time client secret：
+    不进 argv / env / stdout / logs / world-user-readable temp（Part H 不变）
+C7  one-time client secret 自 HTTP response body 只进 process memory，
+    随即写入 accepted 0600 trusted store（路径不变）
+C8  例外仅限同机 provisioning management path；任何非 loopback / remote path
+    仍要求 HTTPS（不变）
+C9  条件不满足 ⇒ fail-closed（AUTH_CONFIGURATION_ERROR /
+    AUTH_TRANSPORT_RESOLUTION_REQUIRED 家族），不自动 fallback
+```
+
+### A8.3 最小代码支持与机械测试
+
+- `normalizeOrigin`：在 HTTPS 分支外增加且仅增加 A8.1 的单字符串例外分支；
+- management POST 与 verification mint 的 fetch 增加 `redirect: 'error'`（C4）；
+- `auth-client.test.js` 新增机械测试：pinned 例外 origin 被接受；
+  `http://127.0.0.1:4002` / `http://localhost:4001` / `http://127.0.0.2:4001` /
+  其他 http origin 一律拒绝；两类 fetch 的 init 均含 `redirect: 'error'`。
+
+### A8.4 不变项
+
+Part C.4 deterministic external_ref、Part D/D.7 状态机、D.5 mint 解释表、
+Part G store 契约、Part H 秘密红线、Phase A fail-loud 全部不变。本修订不建
+TLS subsystem、不建 proxy framework、不建 IAM layer；不改 auth-service 部署
+（C1 的 rebind 属 auth-service 生产包步骤）。执行者不得在 child spec /
+child implementation 中自行覆盖或再解释本边界。
 
 ---
 
