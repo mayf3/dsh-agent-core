@@ -119,9 +119,11 @@ delta，合起来构成 directive 的完整 Agent 面。
   resolve → send，本 Spec 不建新传输）。
 - 错误信封治理：`AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1`
   （accepted；declare-then-resolve 纪律，§9 CTR-004）。
-- 部署顺序（§12）：svc backend → role grant → dsh broker → HR audience
-  grant → runtime read-back。本 Spec 的实现 merge 不早于 svc 权威
-  acceptance；生产部署另受 P0 slot 纪律约束。
+- 部署顺序（§12）：svc backend → coordinator role grant（bootstrap
+  provisioning，svc §11 五门）→ dsh broker → audience/scope 核验（owner +
+  coordinator，B6）→ runtime read-back（coordinator + owner 五项）。本
+  Spec 的实现 merge 不早于 svc 权威 acceptance；生产部署另受 P0 slot
+  纪律约束。
 
 ## 4. Current State（dsh census, fresh read-back @ origin/main 232bc2d）
 
