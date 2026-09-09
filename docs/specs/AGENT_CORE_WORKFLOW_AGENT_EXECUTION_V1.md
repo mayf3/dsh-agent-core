@@ -32,10 +32,12 @@ external:
     Spec's CTR-WAE-001b consumes)
 implementation_basis: >-
   This Spec is the implementation-authority candidate for
-  WORKFLOW_AGENT_EXECUTION_V1. Per AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1, merge /
-  implementation authority is an ACCEPTED Spec only; the Owner goal directive
-  ordered the goal but does not itself constitute product implementation
-  authority. A frozen implementation candidate exists out-of-band (see §0.1)
+  WORKFLOW_AGENT_EXECUTION_V1. Per the repository's current Development
+  Grammar V1 (`.agents/README.md`, governing authority
+  `AGENT_DEVELOPMENT_GOVERNANCE_V1`) and repository-local governance
+  (`.agents/local/README.md`), merge / implementation authority is an
+  ACCEPTED Spec only; the Owner goal directive ordered the goal but does not
+  itself constitute product implementation authority. A frozen implementation candidate exists out-of-band (see §0.1)
   and NOTHING from it enters any base until this Spec is accepted.
 frozen_candidate:
   branch: implementation/workflow-agent-execution-v1
@@ -149,9 +151,15 @@ continuation exception; required by Owner ruling B2, 2026-09-09):
 - Exhaustion is "short page"; the API adds NO page/count/offset/totalPages
   anywhere (that is an svc-side CTR, restated here as a consumer-side
   constraint: the consumer never sends or expects such fields).
-- Per-sweep page budget (default 100 pages) bounds a pathologically growing
-  feed; hitting the budget logs loudly. The admission bound still counts
-  only NEW attempts per sweep; already-attempted replays are free.
+- The sweep has NO finite page cap: it pages until a SHORT page
+  (exhaustion) or a per-request error (logged loud; the normal tick retries
+  the next sweep). The keyset strictly advances, so any static or
+  slower-growing due set terminates the sweep; a feed growing faster than
+  page reads is not a real V1 scenario and is observable as a
+  never-completing sweep (the single-flight tick guard prevents overlapping
+  sweeps). NO persistent cursor, NO queue, NO lease — the non-goals stand.
+  The admission bound still counts only NEW attempts per sweep;
+  already-attempted replays are free.
 - Starvation invariant (mechanically testable, REQUIRED): with > 100 due
   intents where the first 100 already have attempts, the sweep still
   discovers intents 101+ (consumer-side stub test; the svc side proves the
@@ -339,8 +347,10 @@ Required by r2 (B2 + convergence):
   attempted ⇒ the sweep still discovers intents 101+ (mechanical proof of
   §CTR-WAE-001b's invariant).
 - Continuation unit tests: full-page cursor handoff (cursor = EXACT last-item
-  strings), short-page termination, page-budget loud stop, both-or-neither
-  cursor propagation.
+  strings), short-page termination, NO finite page cap (a stub feed with more
+  full pages than any historical bound, e.g. >100, is still consumed to
+  exhaustion), both-or-neither cursor propagation, per-request-error loud
+  stop.
 - svc-workflow side (external spec): keyset endpoint tests incl. tie-break
   at equal `nextEligibleAt`, 422 on half-cursor, first-window-occupied
   second-window-visible proof.
