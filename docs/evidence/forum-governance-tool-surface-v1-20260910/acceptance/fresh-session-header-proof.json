@@ -1,0 +1,25 @@
+{
+  "requestId": "requestId=forum-gov-accept-1788992241",
+  "sessionId": "fresh-c53e7b734364ef91d5a228dc804f4ead",
+  "childPid": 71478,
+  "totalModelFacingTools": 55,
+  "forumTools": [
+    "forum_create_thread",
+    "forum_list_threads",
+    "forum_mark_read",
+    "forum_my_notifications",
+    "forum_notification_read",
+    "forum_notifications",
+    "forum_notifications_read",
+    "forum_read_thread",
+    "forum_read_transcript",
+    "forum_reply",
+    "forum_report_content",
+    "forum_search_threads",
+    "forum_stats",
+    "forum_unwatch_thread",
+    "forum_watch_thread"
+  ],
+  "moderateToolsVisible": [],
+  "turnOutcome": "{\"turn\": 1, \"reason\": {\"kind\": \"error\", \"error\": {\"message\": \"429: {\\\"type\\\":\\\"GoUsageLimitError\\\",\\\"message\\\":\\\"Monthly usage limit reached. Resets in 6 days. To continue using this model now, enable usage from your available balance: https://opencode.ai/workspace/wrk_01M04BZ056JPKTHY2FB8MGRD25/go\\\"}\", \"code\": \"QUOTA\"}}}"
+}
