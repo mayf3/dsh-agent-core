@@ -200,11 +200,18 @@ delta，合起来构成 directive 的完整 Agent 面。
 - DEC-DCP-006（reconcile 输入冻结）— plan/apply 暴露恰
   `{domainId, role, fromPrincipalId, toPrincipalId, reason}`；apply 叠加
   trusted Idempotency-Key；plan 无幂等键（纯只读）。
-- DEC-DCP-007（expose ≠ grant）— 本 Spec 只交付 manifest 能力；哪个
-  audience/ principal 能看到这些工具由 auth-service 侧 grant 决定
-  （directive §14 的 runtime read-back 在部署阶段验收）。V1 grant 面：
-  coordinator（HR）；DOMAIN_OWNER 的 members 工具 exposure 为潜在后续
-  grant 变更，非代码变更。
+- DEC-DCP-007（OWNER + COORDINATOR 双 capability，B6 冻结）— 本 Spec 的
+  `workflow_domain_members` 是 **Domain Owner 自治能力 + Coordinator 治理
+  能力的并集**，不是「coordinator 替代 owner」，也不是「只给 HR 新能力」：
+  owner 管 own domain（授权 = svc 端 `DOMAIN_OWNER OR COORDINATOR` 门），
+  coordinator 跨域治理。Broker manifest 是 fleet-visible 注册
+  （DEFAULT_MANIFESTS 全量暴露给已接入 audience，工具可见性由
+  registry/manifest 决定，reach 由 caller token scope + svc 服务端 role
+  门决定）——因此 DOMAIN_OWNER 的 tool visibility 无需新 grant 机制；
+  V1 必须做真实 runtime acceptance（ACC-DCP-006 五项 owner read-back）：
+  当前 scope 模型已满足（owner 持 workflow.read/execute + svc 门）则出
+  read-back 证据，否则最小 audience/grant rollout **纳入本 V1 范围，不得
+  defer**。coordinator（HR）的新工具可见性同理在部署后 read-back。
 - DEC-DCP-008（cleanup routing 复用）— 跨域治理编排（discover →
   classify → owner lookup → resolve → dispatch → verify）由
   既有工具组合完成（global_instances + 本 Spec get_owner +
@@ -220,10 +227,18 @@ list       GET   /internal/v1/domains                      workflow.read
            query: limit, beforeCreatedAt, beforeId (paired)
 get        GET   /internal/v1/domains/{domainId}           workflow.read
 create     POST  /internal/v1/domains                      workflow.execute
-           body: {domainKey, displayName}（Idempotency-Key，trusted）
-           注：svc ProvisionDomainRequest 现契约要求的 domainId 等字段
-           按 svc 权威原文沿用（若其 acceptance 收窄为服务端生成，
-           本 operation 入参随其 repin 对齐——语义权威在 svc）
+           body（B4 冻结，与当前 svc ProvisionDomainRequest 精确一致，
+           serde camelCase；Idempotency-Key，trusted）：
+             domainId     UUID     required（新建资源 ID——这是新 Domain
+                                   的资源标识，不是 principal identity，
+                                   不受「禁止猜 canonical principal UUID」
+                                   规则约束）
+             domainKey    string   required
+             displayName  string|null  optional
+             enabled      boolean  required
+           注：V1 保持「caller 提供新建 domainId」的现行正式 contract，
+           不顺手改为服务端生成；若未来要 server-generated domainId，
+           另做小型 contract amendment，本轮不夹带。
 update     PATCH /internal/v1/domains/{domainId}           workflow.execute
            body: {displayName}（Idempotency-Key，trusted）
 get_owner  GET   /internal/v1/domains/{domainId}/owner     workflow.read
@@ -242,9 +257,26 @@ ownerDisplayName/ownerEnabled）；Broker 原样转发，不投影、不裁剪�
 list   GET    /internal/v1/domains/{domainId}/members                  workflow.read
        query: limit, beforeCreatedAt, beforeId (paired)
 add    PUT    /internal/v1/domains/{domainId}/members/{principalId}    workflow.execute
-       （Idempotency-Key，trusted；重复 add 稳定成功语义 = 服务端）
+       （Idempotency-Key，trusted）
+       响应（B2 冻结，svc CTR-CP-006 镜像；Broker 原样保留 outcome）：
+         首次逻辑添加        -> {domainId, principalId, role:"DOMAIN_MEMBER",
+                                 outcome:"added"}
+         同一 key replay     -> 原 completed receipt 的原 response
+                                 （outcome="added"；零第二次 mutation/
+                                 business audit——receipt/attempt audit
+                                 照常记录）
+         新 key + 已是成员   -> {…, outcome:"already_member"}
+                                 （DB_BINDING_MUTATION=NO、零第二条
+                                 member_added audit = svc 侧义务；
+                                 Broker 义务 = outcome 原样透传，
+                                 不翻译不裁剪不重试）
+       transport replay（同 key）与 logical duplicate（新 key）是两件事，
+       Broker 一律只转发服务端响应，不自行合成任何 outcome。
 remove DELETE /internal/v1/domains/{domainId}/members/{principalId}    workflow.execute
        （Idempotency-Key，trusted；只移除 DOMAIN_MEMBER）
+       响应：{domainId, principalId, role:"DOMAIN_MEMBER", enabled:false}；
+       目标 binding 不存在 -> 404 member_not_found（svc 现状，
+       OBS-CP-002b 镜像）。
 ```
 
 ### CTR-DCP-003 — workflow_domain_binding_reconcile wire
@@ -252,9 +284,12 @@ remove DELETE /internal/v1/domains/{domainId}/members/{principalId}    workflow.
 ```text
 plan   POST /internal/v1/domains/{domainId}/binding-reconcile/plan   workflow.read
        body: {role, fromPrincipalId, toPrincipalId, reason}
-       （纯只读；返回 sourceBindingExists/sourceEnabled/
-        targetPrincipalExists/targetPrincipalEnabled/
-        targetHasEnabledBinding/singleOwnerInvariantOk/plan/blockers[]）
+       （纯只读；返回 sourcePrincipalExists/sourcePrincipalEnabled/
+        sourceBindingExists/sourceBindingEnabled/targetPrincipalExists/
+        targetPrincipalEnabled/targetHasEnabledBinding/
+        singleOwnerInvariantOk/plan/blockers[]；source principal disabled
+        仅体现为 sourcePrincipalEnabled=false，不构成 blocker——
+        svc DEC-CP-007 镜像）
 apply  POST /internal/v1/domains/{domainId}/binding-reconcile/apply  workflow.execute
        body 同 plan（Idempotency-Key，trusted）
        （返回 {outcome: applied|already_applied|noop, ...}；
@@ -275,13 +310,20 @@ domain family:    domain_not_found, domain_disabled, invalid_input,
                   idempotency_conflict, command_still_processing,
                   domain_owner_missing(get_owner)
 members family:   domain_not_found, principal_not_registered,
-                  principal_disabled, principal_is_owner, not_domain_owner,
+                  principal_projection_conflict, member_not_found(remove,
+                  目标 binding 不存在), principal_is_owner,
+                  not_domain_owner, direct_token_required,
                   global_coordinator_required, idempotency_conflict,
                   command_still_processing, invalid_cursor
+                  （principal_disabled/internal_consistency_error/
+                  service_unavailable 由共享 queryErrors 覆盖；
+                  本 family = svc DomainMembershipError 12 变体 + HTTP 层
+                  direct_token_required 的完整对拍，B3）
 reconcile family: domain_not_found, identity_not_found, binding_conflict,
-                  not_domain_owner, global_coordinator_required,
-                  invalid_input, idempotency_conflict,
-                  command_still_processing
+                  principal_disabled(仅 target), not_domain_owner,
+                  global_coordinator_required, invalid_input,
+                  idempotency_conflict, command_still_processing
+                  （svc DEC-CP-007 镜像：from disabled 非错误）
 ```
 
 最终逐码清单以 svc 权威 acceptance 版 error.rs 为准做机械对拍
@@ -304,11 +346,26 @@ reconcile family: domain_not_found, identity_not_found, binding_conflict,
   CTR-DCP-001..003；cursor 只成对转发；未声明 query 名不转发（transport
   白名单现状回归）。
 - ACC-DCP-005 — 负面：无 scope/role 的 caller 在服务端 fail-closed 的码
-  被信封原样保留（`not_domain_owner` / `global_coordinator_required`），
-  Broker 不吞不改。
-- ACC-DCP-006 — 部署后（§12 顺序走完）HR runtime 真实 read-back：
-  工具可见可调（directive §14「不能只把代码 merge」）；该验收在部署轮
-  出收据，不在本 docs PR。
+  被信封原样保留（`not_domain_owner` / `global_coordinator_required` /
+  `member_not_found`），Broker 不吞不改。
+- ACC-DCP-005b — member 面 fixture 验收（B3）至少覆盖：
+  remove existing → success；remove missing → `member_not_found`；
+  non-owner → `not_domain_owner`/`forbidden`（per frozen svc contract）；
+  coordinator cross-domain remove → success。
+- ACC-DCP-005c — member add 三态（B2 镜像，svc CTR-CP-006）：首次
+  outcome=added；同 key replay 原 response；新 key + 已存在成员
+  outcome=already_member 原样透传（Broker 不合成、不重试、不翻译）。
+- ACC-DCP-006 — 部署后（§12 顺序走完）真实 runtime read-back（directive
+  §14「不能只把代码 merge」；B6 冻结的 V1 owner+coordinator 双面）：
+  coordinator 侧：工具可见可调、list/get/update/get_owner/set_owner
+  read-after-write；
+  **owner 侧五项（全 PASS 才算 V1 验收通过）**：
+  `REAL_DOMAIN_OWNER_TOOL_VISIBLE=YES`；
+  `REAL_DOMAIN_OWNER_LIST_OWN_DOMAIN=PASS`；
+  `REAL_DOMAIN_OWNER_ADD_MEMBER=PASS`（outcome 契约生效）；
+  `REAL_DOMAIN_OWNER_REMOVE_MEMBER=PASS`；
+  `REAL_DOMAIN_OWNER_OTHER_DOMAIN=FORBIDDEN`。
+  该验收在部署轮出收据，不在本 docs PR。
 
 ## 11. Alternatives and disposition
 
@@ -328,8 +385,11 @@ reconcile family: domain_not_found, identity_not_found, binding_conflict,
 
 - 顺序：① svc 权威 acceptance+实现部署 → ② role grant（coordinator→HR，
   separately owner-authorized）→ ③ 本 Spec acceptance+实现 merge →
-  ④ broker 部署（P0 slot 纪律）→ ⑤ HR audience grant 更新 →
-  ⑥ runtime read-back 收据 → ⑦ dogfood（directive §16/§17/§18）。
+  ④ broker 部署（P0 slot 纪律）→ ⑤ audience/scope 核验（B6：owner 与
+  coordinator 的 scope 模型核验——若现有 workflow.read/execute grant 已
+  覆盖则零变更，否则纳入本 V1 的最小 audience/grant rollout）→
+  ⑥ runtime read-back 收据（coordinator + owner 五项，ACC-DCP-006）→
+  ⑦ dogfood（directive §16/§17/§18）。
 - 兼容：纯增量三 manifest；既有工具/transport/mapping 零语义变化；
   rollback = broker 部署回滚（新工具消失，无数据遗留——Broker 无状态）。
 - svc 未部署新端点期间，本能力不可部署（对未知路径的调用只会产生
@@ -337,11 +397,12 @@ reconcile family: domain_not_found, identity_not_found, binding_conflict,
 
 ## 13. Open questions
 
-- DOMAIN_OWNER 对 `workflow_domain_members` 的 grant exposure（DEC-DCP-007）
-  ——等真实 owner 自治需求出现。
-- `workflow_domain_admin.create` 入参形状随 svc acceptance 收窄
-  （服务端生成 domainId 与否）——repin 时对齐。
 - reconcile 批量 plan——无需求不做（svc §13 同源）。
+
+（前两轮版本中「DOMAIN_OWNER members exposure 延后」与「create 入参形状
+acceptance 再定」两项 open question 已分别被 Owner review B6/B4 关闭：
+exposure 属 V1 runtime acceptance（DEC-DCP-007/ACC-DCP-006）；create
+schema 已按现行 ProvisionDomainRequest 精确冻结（CTR-DCP-001）。）
 
 ## 14. What this PR changes
 
