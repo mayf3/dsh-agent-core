@@ -13,6 +13,9 @@
  *     scheduler being monitored cannot hide its own watchdog's death.
  */
 
+import { latestTerminalOccurrence } from './eligibility.js'
+import { computeNextRunAtMs, MIN_REFIRE_GAP_MS } from './schedule.js'
+
 /** Parse + validate the desired-state manifest (schema §5.4.2). Throws TypeError. */
 export function parseDesiredState(raw) {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
@@ -122,7 +125,20 @@ const DEFAULTS = {
  *
  * EXPECTED_RUN_MISSED: an enabled job whose derived nextRunAtMs is older than
  * the missed grace — the engine advances nextRunAtMs when a slot runs, so a
- * stale past timestamp means the expected execution did not happen.
+ * stale past timestamp means the expected execution did not happen. When
+ * nextRunAtMs is UNDEFINED the job is admission-blocked by a settled
+ * outcome_unknown (deriveJobStateSummary drops the projection exactly then),
+ * so the expected slot is re-derived from schedule + ledger instead of going
+ * blind (2026-09-09 HR dispatcher incident: two dispatchers silent for a day
+ * with zero findings).
+ *
+ * ADMISSION_BLOCKED_UNKNOWN: an enabled job carrying an outcome_unknown
+ * occurrence is silently skipped FOREVER — isTerminalRecord counts only
+ * succeeded|failed, so the settled-but-unreconciled record is treated as
+ * in-flight by _tickOnce/reserveOccurrence (no event, no log, no recovery).
+ * This finding is the Owner-actionable "reconcile to release the fence"
+ * signal; it clears (with one RECOVERED) once the record reaches a terminal
+ * state.
  */
 export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, desired } = {}) {
   const o = { ...DEFAULTS, ...opts }
@@ -132,6 +148,7 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
   const findings = []
   const jobs = Array.isArray(doc?.jobs) ? doc.jobs : []
   const occurrences = Array.isArray(doc?.occurrences) ? doc.occurrences : []
+  const enabledJobIds = new Set(jobs.filter((job) => job.enabled === true).map((job) => job.id))
   for (const job of jobs) {
     const base = { jobId: job.id, logicalKey: job.logicalKey, agentId: job.agentId }
     if (job.enabled === true) {
@@ -148,6 +165,17 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
           dueAt: new Date(nextRunAtMs).toISOString(),
           overdueMs: nowMs - nextRunAtMs,
         })
+      } else if (!Number.isFinite(nextRunAtMs)) {
+        const derivedDueAtMs = deriveExpectedSlotMs(job, occurrences)
+        if (derivedDueAtMs !== undefined && nowMs - derivedDueAtMs > graceMs) {
+          findings.push({
+            class: 'EXPECTED_RUN_MISSED',
+            ...base,
+            dueAt: new Date(derivedDueAtMs).toISOString(),
+            overdueMs: nowMs - derivedDueAtMs,
+            derivedUnderAdmissionBlock: true,
+          })
+        }
       }
     }
     const consecutiveErrors = job.state?.consecutiveErrors
@@ -170,6 +198,21 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
       && nowMs - record.startedAt > (record.timeoutMs ?? o.stuckThresholdMs)) {
       findings.push({ class: 'RUN_STUCK', jobId: record.jobId, runId: record.runId, startedAt: new Date(record.startedAt).toISOString() })
     }
+    // The admission fence itself: any outcome_unknown record holds the job's
+    // whole admission path hostage regardless of its lateSettlement bookkeeping
+    // (release happens when the record becomes terminal, not when the note is
+    // written) — but only an ENABLED job turns that into an incident; a
+    // disabled one is already covered by JOB_DISABLED.
+    if (record.state === 'outcome_unknown' && enabledJobIds.has(record.jobId)) {
+      findings.push({
+        class: 'ADMISSION_BLOCKED_UNKNOWN',
+        jobId: record.jobId,
+        runId: record.runId,
+        occurrenceId: record.occurrenceId,
+        blockedSince: new Date(record.endedAt ?? record.startedAt ?? nowMs).toISOString(),
+        detail: 'settled outcome_unknown is treated as in-flight by admission; reconcile the occurrence to release the fence',
+      })
+    }
   }
   if (runtimeHealth.healthOk === false) {
     findings.push({ class: 'SCHEDULER_RUNTIME_UNHEALTHY', reason: runtimeHealth.reason ?? 'health endpoint not ok' })
@@ -180,6 +223,24 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
   // authoritatively carried by the health probe above.
   void o.evidenceFreshMs
   return findings
+}
+
+/**
+ * The slot an enabled-but-admission-blocked job WOULD have run: the first
+ * nominal slot strictly after the same lower bound the engine's own
+ * projection uses (latest terminal end + refire gap, or the activation
+ * boundary for never-ran schedules). Schedule-derived — no nextRunAtMs
+ * cache involved. `undefined` = nothing derivable (e.g. a past `at` slot,
+ * whose staleness is the engine's own catch-up policy, not a missed run).
+ */
+function deriveExpectedSlotMs(job, occurrences) {
+  const terminal = latestTerminalOccurrence(occurrences, job.id)
+  const activationBoundary = Number.isFinite(job.revisionActivatedAtMs) ? job.revisionActivatedAtMs : job.createdAtMs
+  const ref = terminal
+    ? Math.max((terminal.endedAt ?? terminal.admittedAt) + MIN_REFIRE_GAP_MS, activationBoundary)
+    : activationBoundary
+  if (!Number.isFinite(ref)) return undefined
+  return computeNextRunAtMs(job.schedule, ref, { jobId: job.id, fallbackAnchorMs: job.createdAtMs })
 }
 
 /**
@@ -253,7 +314,7 @@ export function formatFindings(findings, { role = 'W1', nowMs = Date.now() } = {
  * the fingerprint is the stable join of whatever ids the finding carries).
  */
 export function findingFingerprint(finding) {
-  return ['RUN_STUCK', 'RUN_FAILED', 'EXPECTED_RUN_MISSED', 'CONSECUTIVE_FAILURE']
+  return ['RUN_STUCK', 'RUN_FAILED', 'EXPECTED_RUN_MISSED', 'CONSECUTIVE_FAILURE', 'ADMISSION_BLOCKED_UNKNOWN']
     .includes(finding.class)
     ? `${finding.class}|${finding.jobId ?? '-'}|${finding.occurrenceId ?? finding.runId ?? '-'}`
     : `${finding.class}|${finding.logicalKey ?? finding.jobId ?? '-'}`
