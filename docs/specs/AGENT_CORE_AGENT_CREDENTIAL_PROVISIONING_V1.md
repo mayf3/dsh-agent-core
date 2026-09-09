@@ -19,7 +19,16 @@ status: accepted
 > Amendment 6 acceptance finalize：2026-08-20——independent review
 > `AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1_AMENDMENT_6_SPEC_REVIEW`
 > = PASS（reviewed HEAD `5d12851`，REQUIRED_FIXES = NONE，
-> READY_FOR_ACCEPTANCE_FINALIZE = YES），Amendment 6 = accepted
+> READY_FOR_ACCEPTANCE_FINALIZE = YES），Amendment 6 = accepted ·
+> Amendment 7（Incident hardening：rotation seam 排他 + proof/test safety）：
+> 2026-09-09，base = origin/main（含已接受的 Amendment 6 @ `d83a2ff`）·
+> Owner ruling = goal directive `AGENT_CREDENTIAL_DRIFT_BOOT_HOOK_ROOT_
+> CAUSE_V1`（SPEC/AUTHORITY 阶段）；evidence =
+> `docs/investigations/AGENT_CREDENTIAL_DRIFT_BOOT_HOOK_ROOT_CAUSE_V1.md`
+> （本修订曾以 "Amendment 6" 起草于落后本地树（base `5cfb610`），发现与
+> origin/main 已接受的 Amendment 6 编号冲突后重编号为 Amendment 7 并重放到
+> main 基线；independent semantic review REVISE → blocker union 8 项一次
+> 修复 → delta re-review ACCEPT，2 non-blocker 已落）
 > 仓库：`mayf3/dsh-agent-core`
 > 角色：Credential Provisioning Spec Agent
 >
@@ -311,6 +320,58 @@ Executability 按 Phase 重算（D.7.4）；PR #17 的授权范围冻结（D.7.5
 清单逐条维持（D.7.6）。本轮 SPEC ONLY——不实现、不 merge、不改 PR #17 代码；
 本 Amendment 经独立 review、accepted 并进入 PR #17 的 implementation base
 之前，PR #17 不得以本 Amendment 为依据修改（D.7.5）。
+
+---
+
+## Amendment 7 摘要（2026-09-09，Incident hardening，base origin/main @ d83a2ff）
+
+触发：真实事故 root cause 已机械证明并经 Owner 接受（goal
+`AGENT_CREDENTIAL_DRIFT_BOOT_HOOK_ROOT_CAUSE_V1`，evidence =
+`docs/investigations/AGENT_CREDENTIAL_DRIFT_BOOT_HOOK_ROOT_CAUSE_V1.md`）。
+2026-09-07T12:41:37Z，某 goal 的 P4 proof 脚本（p4-final.sh / p4-rotate.mjs）
+以裸 Prisma `machineClient.update({ data: { secretHash } })` 对活跃业务 Agent
+（agt_book-deconstructor-agent）的生产 MachineClient 执行缝外轮换：
+`SECRET_HASH_CHANGED = YES` / `ROTATED_AT_ADVANCED = NO` /
+`CANONICAL_ROTATION_AUDIT = NO` / `CENTRAL_CREDENTIAL_STORE_UPDATED = NO`。
+runtime boot 与 agent spawn 均机械排除（`RUNTIME_BOOT_CAUSED_DRIFT = NO` /
+`NORMAL_AGENT_SPAWN_CAUSED_DRIFT = NO`；boot 时间吻合纯属巧合）。
+
+本 amendment 只硬化，不重设计：**不建第二套 credential lifecycle authority**，
+在既有 Part I rotation 语义之上补齐显式 rotation 契约、机制级排他强制与
+proof/test safety，并与 Amendment 6 的 PHASE_A/PHASE_B 分段完全组合。全部为
+零代码 docs 修订（本 Spec 单文件）：
+
+1. **Part I（硬化）**：新增 I.1 CREATE/ENSURE/ROTATE 三操作分类与三条
+   NO-rotation 不变量；I.2 rotation seam 排他性——机制级要求
+   `DIRECT_APP_ROLE_SECRET_UPDATE = IMPOSSIBLE`（仅 rotated_at 同步规则
+   **不足以**作为修复），新外部前置 **(e)**；I.3 canonical rotation
+   operation contract（ROTATION_OPERATION_ID / PREIMAGE / DB+store 一致 /
+   双 verify / receipt）；I.4 bounded rotation transaction（PLAN→APPLY→
+   VERIFY→RECEIPT + 部分失败恢复 + 继承 split state 门），把事故修复中已
+   验证有效的 bdcred 模式产品化为**唯一支持的 operator rotation seam**；
+   I.5 proof/test safety 硬规则
+   （`PRODUCTION_PROOF_MAY_ROTATE_ARBITRARY_BUSINESS_AGENT = NO`）。
+   **配套注记（与 Amendment 6 组合）**：PHASE_A 的 entry-exists → fail-loud
+   行为本就与 I.1 一致；对 PHASE_B 的 State E/G 恢复轮换，自本 amendment 起
+   冻结为**独立显式 operator ROTATE**（经 I.3 契约 / I.4 seam），不是 ensure
+   的内联组成部分——State E/G 判定树形状不变，变的是 rotation 的执行者与
+   契约（见 Part D 的 Amendment 7 注记与 L1-7 重标）。
+2. **E.4（新增前置 (e)）**：`SECRET_MUTATION_ENFORCEMENT_SEAM`——secret
+   material 列级防直写 + 专用特权 rotation 通道，机制由 auth-service 仓库
+   按其自身治理选择（`AUTH_CHANGE_REQUIRED = EXTERNAL_ONLY` 不变）。
+3. **Security boundaries（追加两行）**：operator/raw-SQL 直写既有 secret
+   material 禁止；production proof 轮换任意业务 Agent 禁止。
+4. **Acceptance Criteria（新增 L4 层）**：T1–T12 credential-integrity 验收
+   （boot/spawn/ensure 零轮换、直写被拒、canonical rotate 全契约、部分失败
+   恢复、幂等重放、p4 形态 fail-before-mutation、fixture proof）。
+5. **Runtime/Boot 边界重申（不重设计）**：boot / spawn / broker 对 credential
+   只读 + fail-closed 的已证明行为原样冻结；`ensureAgentCredential` 对已存在
+   credential 绝不 rotate（PHASE_A fail-loud 与之一致）。
+6. **Fleet census 结论接受**：`AFFECTED_PRINCIPAL_COUNT = 1` /
+   `BOOK_DECONSTRUCTOR_ISOLATED = YES`（代理 census，incident conclusion）；
+   完整 DB metadata census 不是本 amendment 的 drafting/implementation
+   blocker，仅在 production preflight 需要时执行一次合并的 bounded
+   read-only gate（metadata only，无 secret values）。
 
 ---
 
@@ -774,6 +835,16 @@ tooling（与 `production-agent-provision.mjs` root seam 同类），幂等、�
 > entry **absent** 才进入（(c) 就绪后的）S1/S2 clean bootstrap（Phase A）；
 > entry **exists** 的 D/E/F/G 分类与处置全部属于 Phase B。D.7 的顺序与行为
 > 约束对本 Spec 的任何实现轮均有效，优先于本节的 STEP 排列表述。
+>
+> **Amendment 7 注记（rotation 执行者冻结；与 Amendment 6 组合）**：
+> `ensureAgentCredential` **绝不 rotate**。PHASE_A 的 entry-exists →
+> fail-loud `existing_credential_resolution_required`（D.7.1/D.7.2）与之一致；
+> 对 PHASE_B 的 State E（store entry 缺失而 Auth client 存在）与 State G
+> （secret 失效）恢复，其 secret mutation 自 Amendment 7 起冻结为**独立的
+> 显式 operator ROTATE**——经 Part I.3 契约与 I.4 seam 执行（前置 (e)
+> 未就绪时 fail-loud 降级），**不是 ensure 调用的内联组成部分**。State E/G
+> 的判定条件与「SAME clientId、禁建第二 client」约束不变；L1-7 的验收据此
+> 重标（见 Acceptance Criteria）。
 
 ```text
 ensureAgentCredential(agentId):
@@ -1117,6 +1188,24 @@ EXTERNAL_AUTH_DEPENDENCY =
       owner 的 machine principal 且业务 audience 可用）——**本 Spec 不决定 Auth
       实现方案，Agent Core 不得用 designated admin / fake owner 绕过**。
       Provisioner 自身（svc-auth / service profile）不受 (d) 影响。
+  (e) SECRET_MUTATION_ENFORCEMENT_SEAM（Amendment 7，依据 goal
+      AGENT_CREDENTIAL_DRIFT_BOOT_HOOK_ROOT_CAUSE_V1 ruling）：机制级保证
+      `DIRECT_APP_ROLE_SECRET_UPDATE = IMPOSSIBLE` 与
+      `SECRET_HASH_CHANGE_WITHOUT_ROTATION_AUDIT = IMPOSSIBLE`（Part I.2）——
+      普通 application/operator DB identity 对 machine_clients 的
+      secret_hash / rotated_at 列无直接 UPDATE 特权，secret material 只能经
+      专用特权 rotation 通道（原子产生 hash 替换 + rotated_at 前移 + rotation
+      audit）。机制方案由 auth-service 仓库按其自身治理选择与落地（列级权限
+      分离 + 特权 rotation 函数为参考实现，不强制实现形式）；本 Spec 只冻结
+      可机械验证的性质。就绪前：I.4 operator rotation seam 不得宣称排他性，
+      其余 fail-loud 降级行为不变。与 (b) 的区分：(b) = in-process ensure/
+      recovery 所需的 HTTPS rotation 面；(e) = DB/工具层的 secret mutation
+      强制与 operator 特权通道。二者独立计数，互不替代。**（Amendment 7
+      组合边界）**：recovery rotation 既已改为经 I.4 operator seam（APPLY 走
+      I.2 特权通道，secret 走 memory/fd/受保护配置），该路径的排他性只门控于
+      **(e)**（verify 段另需 (c)/(d)，见 L4-T8/T12）；(b) 仅在/一旦使用
+      in-process HTTPS rotation seam 时才成为该 seam 的前置——不得对 (b) 与
+      (e) 重复计数。
 (a) 与 (c) 的区分（禁止重复计数）：二者可能都使用 MachineAccessGrant 机制，
     但主体、audience、scope、生命周期不同——(a) 的主体是**被 provision 的
     Agent client**（业务 audience svc-forum/svc-workflow…，业务 scope），(c) 的
@@ -1125,9 +1214,10 @@ EXTERNAL_AUTH_DEPENDENCY =
 AUTH_CHANGE_REQUIRED = EXTERNAL_ONLY
   —— 以上是外部依赖声明，不代表本 Spec 自动授权去改 auth-service；
      Agent Core 仓库/spec 不携带任何 auth-service 代码修改。
-在 (a)/(b)/(c)/(d) 任一未就绪时，依赖它的实现路径必须 fail-loud
-`external_prerequisite_missing`（结构化错误，指明 (a)/(b)/(c)/(d)），不得降级、
-不得绕行（禁 legacy create / CLI stdout / 直连 DB / **绑定 admin 或 fake
+在 (a)/(b)/(c)/(d)/(e) 任一未就绪时，依赖它的实现路径必须 fail-loud
+`external_prerequisite_missing`（结构化错误，指明 (a)/(b)/(c)/(d)/(e)），不得降级、
+不得绕行（禁 legacy create / CLI stdout / **绕开受控 (e)/I.2 通道的直连 DB
+裸读写** / **绑定 admin 或 fake
 human owner**）。当前部署 v1 下 (d) 未就绪时观察到的 401 agent_profile_invalid
 按 (d) 证据归类（D.5 Amendment 3 补充），不触发状态 G。
 ```
@@ -1256,7 +1346,7 @@ env/argv 交付；store 及交付文件 505-owned 0600；Router/工具可执行�
 
 ---
 
-## Part I — Rotation 语义（Amendment 1）
+## Part I — Rotation 语义（Amendment 1；Amendment 7 硬化）
 
 当前 Auth rotation 事实（源码核实，A.4 S4）：
 
@@ -1282,6 +1372,152 @@ rotate existing client（SAME clientId —— 由 deterministic ensure/external_
 - 外部依赖：HTTPS rotation seam 当前缺失（Part E.4(b)）；在其就绪前，状态 E/G 的
   恢复路径与运维 rotation 只能停留在「外部 prerequisite 未满足」的 fail-loud 报告，
   **不得**退回 CLI-stdout 方式取 secret。
+- **（Amendment 7，组合 Amendment 6 分段冻结）**任何需要 secret mutation 的
+  恢复/运维轮换是一次 **ROTATE**（I.3 契约、I.4 seam），由 operator 显式执行，
+  **不是 ensure 的内联副作用**（Part D Amendment 7 注记；PHASE_A fail-loud
+  与之一致）；前置（(e)；in-process 面另计 (b)）未就绪时维持 fail-loud 降级。
+
+### I.1 CREATE / ENSURE / ROTATE 三操作分类（Amendment 7 冻结）
+
+credential lifecycle 只有三种合法操作，任何实现/脚本/runbook 必须能把自己的
+行为归入其一；无法归类的 credential 变更即违约：
+
+```text
+CREATE   credential 不存在 → 创建一次（新 clientId、新行；secret 只随创建交付一次）
+ENSURE   credential 已存在 → NOOP / 返回既有 metadata（不重写 store、不改 secret、
+         不建重复行；Phase A 实现对「store 有条目」与「Auth client 存在而无
+         store 条目」均为更强 fail-loud existing_credential_resolution_required）
+ROTATE   唯一允许修改既有 secret material 的操作 → 必须显式授权（I.2/I.3），
+         必须留下 rotation lineage / receipt（I.3）
+```
+
+由此冻结三条 NO-rotation 不变量（与已证明的生产行为一致，本轮仅显式化）：
+
+```text
+NORMAL_BOOT_ROTATES_CREDENTIAL      = NO
+NORMAL_SPAWN_ROTATES_CREDENTIAL     = NO
+ENSURE_EXISTING_ROTATES_CREDENTIAL  = NO
+SECRET_CHANGE_REQUIRES_EXPLICIT_ROTATION = YES
+```
+
+> 归因注记（Amendment 7）：2026-09-07 事故的写手不属于以上任何一类——它是绕过
+> lifecycle 的裸写。I.2 的机制级排他就是把「第四类」变为不可能，而不是仅靠
+> 本分类的约定力。
+
+### I.2 Rotation seam 排他性与机制级强制（Amendment 7 冻结）
+
+- **仅有「secret_hash 变化 ⇒ rotated_at 必须同步变化」规则不足以作为修复**：
+  它只挡住本次事故的具体裸写形态；另一支 raw SQL / Prisma 脚本完全可以同时写
+  `secret_hash + rotated_at`，继续绕过 canonical authorization、audit、中央
+  store 与 receipt。因此排他性必须落在**机制层**，不落在提醒层。
+- 冻结要求（存储层可机械验证）：
+
+```text
+DIRECT_APP_ROLE_SECRET_UPDATE = IMPOSSIBLE
+    普通 production application / operator 的 DB identity 不得能直接 UPDATE
+    既有 MachineClient 的 secret material（secret_hash / rotated_at 列）。
+SECRET_HASH_CHANGE_WITHOUT_ROTATION_AUDIT = IMPOSSIBLE
+    secret material 的任何变更必须经由唯一 rotation seam 发生，该 seam 原子地
+    同时产生 rotated_at 前移与 rotation audit/receipt（I.3）。
+```
+
+- **参考机制（auth-service 仓库按其自身治理落地，本 Spec 不携带 Auth 代码）**：
+  列级权限分离——应用/operator 角色对 `machine_clients` 的 `secret_hash`/
+  `rotated_at` 列无 UPDATE 特权；secret material 只能经由一个专用特权
+  rotation 函数/过程变更（函数体原子完成 hash 替换 + rotated_at 前移 +
+  rotation audit 行写入），并以 BEFORE UPDATE trigger（hash 变而 rotated_at
+  未前移 → EXCEPTION）作为纵深防御。**不为本实现形式强制 stored procedure**；
+  任何机械等价方案均可，**但判据是同时满足上述两条冻结性质**
+  （`DIRECT_APP_ROLE_SECRET_UPDATE = IMPOSSIBLE` **且**
+  `SECRET_HASH_CHANGE_WITHOUT_ROTATION_AUDIT = IMPOSSIBLE`）——只挡住直写
+  却允许某角色无审计地同写 hash+rotated_at 的方案不构成等价。
+  该机制就绪与否 = 外部前置 **(e)**（E.4）。
+- **(e) 未就绪时**：I.4 的 operator rotation seam 不得上线宣称排他性；既有
+  fail-loud 降级行为不变；不得以「操作员纪律」替代机制强制。
+
+### I.3 Canonical rotation operation contract（Amendment 7 冻结）
+
+一次合法 rotation 是一个**明确的、可收据化的 operation**：
+
+```text
+ROTATION_OPERATION_ID = stable / receipted（重放同一 operation id ⇒ 幂等确定性
+                        结果，不产生第二次 secret 变更）
+AUTHORIZATION         = PASS（显式 rotation authority，非 ensure/proof 副作用）
+TARGET_CLIENT         = exact（精确到唯一 clientId；禁止按 agentId 模糊匹配多行）
+PREIMAGE_GENERATION   = MATCH（执行时回读 live hash 指纹 == 冻结 preimage；
+                        不匹配 = 零变更中止）
+DB_SECRET_HASH        = new
+ROTATED_AT            = advanced
+UPDATED_AT            = advanced
+ROTATION_AUDIT        = written
+CENTRAL_CREDENTIAL_STORE = contains matching new credential generation
+                           （与 DB 同一 generation，I.4 bounded transaction 保证）
+MINT_VERIFY           = PASS
+REAL_AUTH_CALL_VERIFY = PASS（真实业务调用链验证，非仅 token 端点）
+RECEIPT               = written（含 operation id、preimage/postimage 指纹、
+                        双 verify 结果、时间锚；不含 secret bytes）
+```
+
+secret bytes 边界沿用 Part H 冻结清单并扩展到 rotation 语境：secret 只允许存在于
+trusted rotation process memory 与 protected credential store；**不得进入** chat、
+logs、Git、receipt、model-visible text（receipt 只记指纹/长度/generation 标识）。
+
+### I.4 Bounded rotation transaction（Amendment 7 冻结）
+
+DB 与本机 credential store 不是同一事务域，不假设天然 ACID。每次 rotation 必须
+是四段 bounded transaction：
+
+```text
+PLAN   → 冻结 target（exact clientId）、preimage（live hash 指纹）、
+         new generation；生成 ROTATION_OPERATION_ID
+APPLY  → 经 I.2 seam 变更 DB（hash+rotated_at+updated_at+audit 原子）；
+         store 按 Part G validate-preserve-atomic 换装（preimage 备份保留）
+VERIFY → post-hash/readback（store 读回 == DB generation）+ MINT_VERIFY +
+         REAL_AUTH_CALL_VERIFY
+RECEIPT→ 写 I.3 receipt（含失败路径收据）
+```
+
+- **部分失败必须可检测且可恢复**：`ROTATION_PARTIAL_FAILURE =
+  DETECTABLE_AND_RECOVERABLE`。若 DB 已轮换而 store install 失败：冻结 preimage
+  与合法 rollback/recovery path 必须存在，**不得**留下 `DB_NEW_SECRET +
+  STORE_OLD_SECRET` 的长期 split state（检测面 = readback 指纹比对；恢复 =
+  按 preimage 回滚 DB 或重放 store install，二者择一并记入 receipt）。
+- **继承 split state 门（crash-window 覆盖，Amendment 7）**：检测不得只存在于
+  单次运行的 VERIFY 段——进程在 APPLY 与 VERIFY/RECEIPT 之间死亡会留下无
+  receipt 的跨域分歧。因此 seam 的每次接触（PLAN 起始、以及任何 store 写之前）
+  必须**先** readback 比对 store 与 DB 的 generation 指纹：发现 mismatch、或
+  DB 侧存在无 receipt 对应的更新 generation ⇒ **fail-loud 拒绝继续 mutate**，
+  直至完成显式 reconciliation（回滚或补收据）。由此，被中断的 rotation 在
+  下一次 seam 接触时必然可检测。
+- **不引入 distributed transaction framework**。把 2026-09-08 事故修复中已
+  验证有效的 bdcred 模式——preimage 冻结、store 原子换装备份、post-hash
+  readback、mint + 真实调用双验证、rollback receipt——**产品化**为唯一支持的
+  operator rotation seam（Scope-3 的「最小 helper」即指此物）；ad-hoc 直写
+  脚本形态（p4-rotate 式）不再是被允许的替代路径。
+- **产品化合规修正（Part H 红线）**：bdcred 原型的 mint 步骤用
+  `curl -u client:secret` 把 secret 暴露在进程 argv（`ps` 可见）——产品化
+  helper **必须**消除该暴露（secret 经内存/fd/受保护配置交付给 HTTP 客户端，
+  禁止 argv/env/stdout/stderr/log），否则不得作为 I.4 seam 上线。原型的其余
+  步骤（store 0600 原子换装、指纹化日志、`--noproxy`）为已验证可保留形态。
+
+### I.5 Proof / test safety（Amendment 7 冻结）
+
+事故的第二根因：proof 脚本把真实业务 Agent 当作可破坏的 "unused agent"。
+
+```text
+PRODUCTION_PROOF_MAY_ROTATE_ARBITRARY_BUSINESS_AGENT = NO
+```
+
+- 需要 credential mutation 的 proof/test **必须**使用 dedicated fixture
+  principal / MachineClient 或专门 disposable canary identity。
+- **禁止**以下列任一推断为由宣称生产 credential 可破坏：「看起来没人用」、
+  「名字像测试」、「当前没有 session/流量」。
+- 确需对真实业务 credential 做破坏性 rotation：必须满足 explicit production
+  authority、exact target、preimage、rollback、store synchronization、
+  post-verify 全套（I.3/I.4），**不得**作为普通 proof 的隐藏副作用。
+- 既有违规面处置：p4-final.sh 的破坏性 rotation 段必须在 implementation 阶段
+  **删除或改写为 fixture-only + fail-closed guard**，使其不能再次对任意
+  production business client 运行（L4-T11 验收）。
 
 ---
 
@@ -1315,6 +1551,10 @@ OpenClaw credential fallback                 —— 禁止
 human Feishu credential 复用为 Agent credential —— 禁止
 Kernel credential store                      —— 禁止（KERNEL_CHANGE = NONE）
 secret 经 env / argv / stdout / log / child  —— 禁止（Part H 冻结清单）
+operator/raw-SQL/裸 ORM 直写既有 secret material（secret_hash / rotated_at）
+                                             —— 禁止（Amendment 7，Part I.2）
+production proof 轮换任意业务 Agent 的生产 credential
+                                             —— 禁止（Amendment 7，Part I.5）
 ```
 
 child Agent **尽量不能读取 raw Broker credential**（冻结目标：与 V2 验收一致的
@@ -1356,7 +1596,9 @@ Policy Engine / Kernel
    transport/gateway 测试。**禁止** Broker 创建 credential / auto-grant / IAM
    orchestration / Policy Engine。
 3. **Rotation / revocation runbook 或最小 helper**（Part I / Part J 语义；store 更新
-   走 Part G，secret 走 Part H）。
+   走 Part G，secret 走 Part H）。（Amendment 7：rotation helper 按 I.4
+   产品化为唯一支持的 operator rotation seam，遵守 I.3 契约；其排他性宣称
+   NEEDS(e)。proof/test 面按 I.5 与 L4-T11/T12 收敛。）
 4. **Acceptance driver 的扩展面**：为未来 canary 提供可复现的验收路径（Acceptance
    Criteria 分层）。
 
@@ -1438,14 +1680,15 @@ Amendment 1 的「L1 不依赖任何外部工作、必须全绿」表述**——
 每项验收显式标注当前可达性；外部前置未就绪时对应路径必须 fail-loud
 `external_prerequisite_missing`（该 fail-loud 行为本身**是**可验收项）。
 
-**可达性图例（Amendment 4 更新）**：
+**可达性图例（Amendment 4 更新，Amendment 7 增补）**：
 `NOW` = 纯 in-repo，实现后即可执行；`NEEDS(c)` = 需 bootstrap provisioner
 credential 就绪（E.4(c) =
 BOOTSTRAP_PROVISIONER_CREDENTIAL_READINESS_NOT_ESTABLISHED——operator
 out-of-band 供给并完成可用性验证后才算就绪；deployed v1 下 RS256 svc-auth
 mint 无 mode 障碍）；
 `+(b)` = 另需 HTTPS rotation seam；`+(a)` = 另需业务 grant 供给 seam；
-`+(d)` = 另需 Auth 支持无 human owner 的 Agent/machine identity。
+`+(d)` = 另需 Auth 支持无 human owner 的 Agent/machine identity；
+`+(e)` = 另需 secret-mutation enforcement seam（E.4(e)，Amendment 7）。
 **路径注记（Amendment 4）**：当前部署 = v1（CURRENT_DEPLOYED_ISSUANCE_PATH =
 v1/direct），(d) 因此是**现实**阻塞（ownerless agent 在 v1 token mint 的
 profile validation 即被挡）。legacy 分支仅为 hypothetical compatibility
@@ -1476,20 +1719,23 @@ Phase B 分段交付）；Phase A 专项测试 PA1–PA5 见 L1 之后。
    Amendment 4 注：attempt 本身只需 (c)；当前部署 v1 下 (d) 未就绪时结果
    **确定性地**为 401 agent_profile_invalid（(d) 证据，D.5），secret 有效性
    证明因此 NEEDS(c)+(d)——legacy 宽容仅为 hypothetical，不作依据。
-7. `NEEDS(c)+(b)+(d)` **Missing-store recovery（状态 E）**：手工删除目标 store
-   entry、保留 Auth client → ensure → **recover SAME client**（clientId 不变）→
-   rotate secret → store 恢复 → verification mint 通过 → **no duplicate
-   client**。（Amendment 4：recovery 的收尾 verification mint 在当前部署 v1 下
-   仍会先被 (d) 的 agent_profile_invalid 挡住 ⇒ 没有 (d) 不能宣称 recovery
-   验收通过。）
-   在 (b)/(d) 就绪前：该路径必须 fail-loud / 如实归类
-   `external_prerequisite_missing(b|d)` 且 Auth/store 无任何变更（此降级行为
+7. `NEEDS(c)+(b)+(d)+(e)` **Missing-store recovery（状态 E；Amendment 7 重标）**：
+   手工删除目标 store entry、保留 Auth client → ensure →
+   **fail-loud `existing_credential_resolution_required` 且 Auth/store 零变更**
+   （该 fail-loud 段 `NOW` 可验收；Part D Amendment 7 注记）→
+   由 operator 经 I.4 seam 对 SAME client 显式 ROTATE（clientId 不变，禁建新
+   client）→ store 恢复 → verification mint 通过 → **no duplicate client**。
+   （Amendment 4 注继续成立：recovery 的收尾 verification mint 在当前部署 v1
+   下仍会先被 (d) 的 agent_profile_invalid 挡住 ⇒ 没有 (d) 不能宣称 recovery
+   验收通过。Amendment 7 注：rotation 段另需 (e)。）
+   在 (b)/(d)/(e) 就绪前：该路径必须 fail-loud / 如实归类
+   `external_prerequisite_missing(b|d|e)` 且 Auth/store 无任何变更（此降级行为
    `NOW` 可验收）。
 8. `NOW` **状态 A 负例**：不存在的 agentId → STRUCTURED_REJECT；Auth 侧与 store
    均无新建行（无 orphan Auth identity）——纯工具侧行为，不触 Auth。
 9. `NOW` **store 保护负例**：预置 malformed store → ensure FAIL LOUD 且文件内容
    不变（MUST NOT overwrite）——纯工具侧行为。
-10. `NOW` **外部前置降级负例**：(a)/(b)/(c)/(d) 任一未就绪时，依赖路径
+10. `NOW` **外部前置降级负例**：(a)/(b)/(c)/(d)/(e) 任一未就绪时，依赖路径
     fail-loud `external_prerequisite_missing` 且不产生部分副作用（无 Auth
     调用、无 store 写入；状态 A/G 类纯本地分支除外）；v1 路径 (d) 未就绪时
     观察到的 401 agent_profile_invalid 必须归类为 (d) 证据（不 rotate、
@@ -1540,9 +1786,55 @@ Phase B 分段交付）；Phase A 专项测试 PA1–PA5 见 L1 之后。
     在 (a)/(d) 就绪前：不得以任何替代手段（见下）伪造绿；svc-forum 已有的
     RS256/JWKS 验证面**不是**前置（已就绪，不得重复列为 prerequisite）。
 
+**L4 — Credential integrity / rotation seam（Amendment 7，T1–T12）：**
+
+13. `NOW` **T1 boot NOOP**：existing credential → normal runtime boot →
+    secret hash/generation 逐字节不变（boot 路径零 credential 写——broker
+    gateway 只装配 per-call 只读 seam；以 boot 前后 store 指纹断言）。
+14. `NOW` **T2 spawn NOOP**：existing credential → Agent spawn（agent-provisioning
+    home 供给全链）→ secret hash/generation 不变（child 零 credential 写）。
+15. `NOW` **T3 ensure-existing NOOP / fail-loud**：ensure 对已存在 credential
+    → NOOP 或 fail-loud `existing_credential_resolution_required`（Part I.1；
+    Phase A 的 fail-loud 即此形态），两条路径下 secret hash 均不变。
+16. `NOW` **T4 concurrent ensure**：并发/交错 ensure → singleton（同一
+    principal + 同一 clientId），零 rotation、零重复行。
+17. `NEEDS(e)` **T5 直写拒绝**：以普通 production app/operator DB identity
+    执行 raw SQL / 裸 ORM UPDATE 既有 client 的 secret_hash → REJECTED，
+    零 secret mutation。
+18. `NEEDS(e)` **T6 hash-only 拒绝**：仅改 secretHash（p4-rotate 形态）→
+    REJECTED。
+19. `NEEDS(e)` **T7 hash+rotated_at 缝外拒绝**：raw 写同时改 secretHash +
+    rotatedAt（绕 audit/store/receipt）→ REJECTED（列级特权，非仅 trigger）。
+20. `NEEDS(e)+(c)+(d)`（mutation 力学段仅需 `(e)`；verify 段——MINT_VERIFY /
+    REAL_AUTH_CALL_VERIFY——另需 `(c)`，且 ownerless agent-profile 的 v1 mint
+    先受 (d) profile validation 门控（D.5），跨业务 audience 时另需 `(a)`；
+    若以 service-profile fixture 承载 verify 段则 (d)/(a) 不适用——两种承载
+    二选一，验收时声明）**T8 canonical rotate 全契约**：
+    显式 rotate（I.3 operation）→ secret generation 恰变更一次、rotated_at
+    前移、updated_at 前移、rotation audit 存在、receipt 存在、store 同
+    generation、MINT_VERIFY + REAL_AUTH_CALL_VERIFY = PASS。
+21. `NOW`（helper 单元/沙箱，fixture store + stub DB）/ `NEEDS(e)`（端到端）
+    **T9 部分失败恢复**：store install 失败注入 → bounded rollback/recovery
+    生效 → 无 DB_NEW_SECRET + STORE_OLD_SECRET split state，receipt 记录
+    失败路径；含 I.4 继承 split state 门（无 receipt 的 DB 前移 → 下一 seam
+    接触 fail-loud）。
+22. `NOW`（helper 单元/沙箱，fixture store + stub DB 的 operation-id 重放）/
+    `NEEDS(e)`（端到端）**T10 幂等重放**：同一 ROTATION_OPERATION_ID 重放 →
+    确定性幂等结果，无第二次 secret 变更。
+23. `NOW` **T11 p4 形态 fail-before-mutation**：对普通业务 Agent 执行
+    p4-final 式 proof 轮换 → 在任何 mutation 前 fail-closed
+    （PRODUCTION_PROOF_MAY_ROTATE_ARBITRARY_BUSINESS_AGENT = NO 的守卫断言）。
+24. `NOW`（fixture principal 的 mutation 段）/ `NEEDS(c)+(d)`（真实 mint 链；
+    ownerless fixture 沿用 D.5 归因；以 service-profile fixture 承载则
+    (d) 不适用——验收时声明）**T12 fixture proof PASS**：dedicated fixture
+    principal / disposable canary identity 上的 proof rotation 全链 PASS
+    （I.5 正向路径）。
+
 **不接受**（任何层、任何前置状态下）：fake credential、mock-only Broker、
 manual bearer、OpenClaw fallback、legacy machine-admin create 兜底、CLI stdout
-取 secret、直连 auth DB。
+取 secret、绕开受控 (e)/I.2 通道的直连 auth DB 裸读写（含 receipt 缺失的
+generation 前移）、缝外 secret material 直写（含 proof/test 脚本对业务
+Agent 的破坏性 rotation——Amendment 7）。
 
 ## Risks
 
@@ -1601,6 +1893,14 @@ manual bearer、OpenClaw fallback、legacy machine-admin create 兜底、CLI std
   不 disposition**）。
 - 治理：`docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md`（Spec 生命周期：
   proposed → accepted；本 Spec 当前 `status: accepted`）。
+- **（Amendment 7）事故取证（PASS）**：
+  `docs/investigations/AGENT_CREDENTIAL_DRIFT_BOOT_HOOK_ROOT_CAUSE_V1.md`
+  （root cause = p4-final.sh/p4-rotate.mjs 2026-09-07T12:41:37Z 缝外裸 Prisma
+  rotate：hash 变 / rotated_at 不变 / 零审计 / store 不同步；
+  `RUNTIME_BOOT_CAUSED_DRIFT = NO`；`AFFECTED_PRINCIPAL_COUNT = 1`；
+  `BOOK_DECONSTRUCTOR_ISOLATED = YES`）。修复收据：
+  `~/workspace/deployment-artifacts/workflow-directory/bdcred-20260908.sh` +
+  `E2E_FINAL_VERIFICATION_20260908.md`（I.4 产品化对象的已验证原型）。
 - Phase 分段证据（Amendment 6）：`AGENT_FORUM_WORKFLOW_CREDENTIAL_RECOVERY_
   PREFLIGHT`（OBSERVED_AT 2026-08-20T06:47+0800，owner 交付 preflight；
   production Agent count = 88，88/88 = clean-bootstrap candidate，
@@ -1778,5 +2078,40 @@ SPEC_STATUS = accepted（2026-08-19 初版 acceptance finalize；2026-08-20
     Amendment 6 acceptance finalize——independent review PASS @ reviewed HEAD
     5d12851，REQUIRED_FIXES = NONE，Amendment 6 分段交付冻结生效；待 merge
     进入 PR #17 implementation base）
+本轮 = SPEC ONLY：IMPLEMENTATION_PERFORMED = NO · MERGE_PERFORMED = NO
+```
+
+### Final Output 追记（Amendment 7 — Incident hardening，2026-09-09）
+
+上节 Final Output 反映 Amendment 6 时的状态；Amendment 7 的增量以本轮摘要与
+正文为准，镜像如下：
+
+```text
+AMENDMENT_7_SCOPE = incident hardening（docs-only，零代码、零 Auth 仓库变更）
+    I.1 CREATE/ENSURE/ROTATE 三操作 + 三条 NO-rotation 不变量
+    I.2 rotation seam 排他（机制级 DIRECT_APP_ROLE_SECRET_UPDATE = IMPOSSIBLE；
+        仅 rotated_at 同步规则明确不足）
+    I.3 canonical rotation operation contract（12 字段 + secret bytes 边界）
+    I.4 bounded rotation transaction + 继承 split state 门 + bdcred 模式产品化
+        （含 Part H 合规修正：产品化必须消除原型的 argv secret 暴露）
+    I.5 proof/test safety（PRODUCTION_PROOF_MAY_ROTATE_ARBITRARY_BUSINESS_AGENT = NO）
+    E.4(e) SECRET_MUTATION_ENFORCEMENT_SEAM（AUTH_CHANGE_REQUIRED = EXTERNAL_ONLY 不变）
+    D Amendment 7 注记（ensure 绝不 rotate；PHASE_B 的 State E/G 恢复轮换 =
+        独立 operator ROTATE 经 I.4 seam；与 Amendment 6 分段组合）
+    L4 验收层（AC 13–24，T1–T12）；L1-7 重标
+    Security boundaries +2 禁止行；不接受清单扩 2 项
+COMPOSITION_WITH_AMENDMENT_6 = PHASE_A fail-loud 行为不变且与 I.1 一致；
+    State E/G 判定树形状不变，仅 rotation 执行者/契约改变；不新增 Phase 授权
+    （实现许可边界仍由 D.7.5 冻结）
+NEW_EXTERNAL_PREREQUISITE = (e)（与 (a)/(b)/(c)/(d) 独立计数；(b)/(e) 边界已注记）
+UNCHANGED_FROZEN_ITEMS（Amendment 7 零改动）=
+    Owner Ruling (d) 语义 · external_ref · S1/S2 · 状态机 A–G 判定树形状 ·
+    D.7 分段冻结（D.7.1–D.7.6）· trusted-store G1–G8 · Part H 冻结清单 ·
+    Part J revocation · Broker collateral = YES_MINIMAL ·
+    Router/Runtime/Kernel = NONE
+AMENDMENT_7_REVIEW_TRAIL = independent semantic review r1 REVISE（3 blocker
+    + 5 non-blocker）→ blocker union 一次修复 → delta re-review ACCEPT
+    （2 non-blocker 已落：L1-10 枚举扩 (e)、(b)/(e) 边界注记）
+SPEC_STATUS = accepted（Amendment 7 为 accepted Spec 的事故硬化 amendment）
 本轮 = SPEC ONLY：IMPLEMENTATION_PERFORMED = NO · MERGE_PERFORMED = NO
 ```
