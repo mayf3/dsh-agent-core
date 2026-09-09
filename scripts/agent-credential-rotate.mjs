@@ -30,6 +30,7 @@ import { homedir, tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { mkdtempSync, rmSync } from 'node:fs'
 
+import { createPsqlPrivilegedChannel } from '../packages/agent-credential-provisioning/src/privileged-channel-psql.js'
 import {
   assertFixtureRotationTarget,
   evaluateSeamGate,
@@ -107,7 +108,7 @@ async function cmdRotate() {
   if (clientId === undefined) die('--client-id <mc_*> is required (exact target — no name resolution)')
   if (dbUrl === undefined) die('--db-url <postgres://...> is required for the seam read face')
 
-  const mintVerify = authServiceOrigin === undefined
+  const mintToken = authServiceOrigin === undefined
     ? undefined
     : async ({ clientId: c, clientSecret }) => {
         // Part H red line: the credential NEVER leaves this process — the
@@ -126,11 +127,46 @@ async function cmdRotate() {
             body,
             signal: AbortSignal.timeout(8_000),
           })
-          return { ok: response.status === 200, status: response.status }
+          const parsed = await response.json().catch(() => ({}))
+          return {
+            ok: response.status === 200,
+            status: response.status,
+            token: typeof parsed.access_token === 'string' ? parsed.access_token : undefined,
+          }
         } catch {
           return { ok: false, status: 'transport_unreachable' }
         }
       }
+  const mintVerify = mintToken === undefined
+    ? undefined
+    : async ({ clientId: c, clientSecret }) => {
+        const mint = await mintToken({ clientId: c, clientSecret })
+        return { ok: mint.ok, status: mint.status }
+      }
+  const realAuthCallVerify = val('--real-call-url') === undefined || mintToken === undefined
+    ? undefined
+    : async ({ clientId: c, clientSecret }) => {
+        // REAL_AUTH_CALL_VERIFY: a real business-surface call carrying the
+        // freshly minted token — an endpoint that answers 2xx only for an
+        // authenticated+authorized caller (fail-closed otherwise).
+        const mint = await mintToken({ clientId: c, clientSecret })
+        if (!mint.ok || typeof mint.token !== 'string') return { ok: false, detail: `mint ${mint.status}` }
+        try {
+          const response = await fetch(val('--real-call-url'), {
+            headers: { authorization: `Bearer ${mint.token}`, accept: 'application/json' },
+            signal: AbortSignal.timeout(8_000),
+          })
+          return { ok: response.status >= 200 && response.status < 300, detail: `status ${response.status}` }
+        } catch (error) {
+          return { ok: false, detail: String(error?.message ?? error).slice(0, 120) }
+        }
+      }
+
+  // Production (e) privileged channel (auth-service Amendment A §11 seam):
+  // wired automatically when a database URL is present; without the applied
+  // seam migration the channel errors and the transaction aborts with zero
+  // mutation (fail-closed).
+  const channel = createPsqlPrivilegedChannel({ databaseUrl: dbUrl })
 
   try {
     const result = await executeRotation({
@@ -139,8 +175,11 @@ async function cmdRotate() {
       storeFile,
       receiptsFile,
       operationId,
-      readDbState: () => readDbStateViaPsql({ dbUrl, clientId }),
+      readDbState: () => channel.readDbState({ clientId }),
+      applyDbRotation: channel.applyDbRotation,
+      rollbackDbRotation: channel.rollbackDbRotation,
       ...(mintVerify === undefined ? {} : { mintVerify }),
+      ...(realAuthCallVerify === undefined ? {} : { realAuthCallVerify }),
       log: { log: (m) => process.stdout.write(`${m}\n`) },
     })
     process.stdout.write(`ROTATION_${result.outcome} operation=${result.receipt.operationId} agent=${agentId} receipt=${receiptsFile}\n`)
@@ -262,6 +301,6 @@ switch (command) {
   case 'receipts': await cmdReceipts(); break
   case 'selftest': cmdSelftest(); break
   default:
-    process.stdout.write(`usage: agent-credential-rotate.mjs <rotate|gate|receipts|selftest> [--agent <agt_*>] [--client-id <mc_*>] [--store <path>] [--receipts <path>] [--db-url <url>] [--auth-origin <url>] [--operation-id <id>]\n`)
+    process.stdout.write(`usage: agent-credential-rotate.mjs <rotate|gate|receipts|selftest> [--agent <agt_*>] [--client-id <mc_*>] [--store <path>] [--receipts <path>] [--db-url <url>] [--auth-origin <url>] [--real-call-url <url>] [--operation-id <id>]\n`)
     process.exit(command === undefined ? 0 : 2)
 }
