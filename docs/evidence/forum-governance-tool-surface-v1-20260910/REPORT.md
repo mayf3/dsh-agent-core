@@ -73,9 +73,54 @@ curl -s --noproxy '*' -X POST http://127.0.0.1:8791/v1/deliver \
 另受 auth scope supply Owner 门约束 —— V2 packet §B/§C
 deployment-artifacts/forum-moderation-broker-v2/OWNER_PACKET.md。）
 
-## E. 终态
+## E. OWNER ACCEPTANCE / TERMINAL RECORD（2026-09-10，Owner 裁定）
 
-- 工具面（tool face）部署 + 新会话注册面证明 = 完成。
-- 执行面验收 = WAITING_FOR_OWNER（模型配额；恢复后重放 §D 单条命令即可）。
-- 无 Auth DB / Forum DB / scope / grant / broadcast 变更；生产 svc-forum、
-  auth、其他 goal 的 WIP 与 incident overlay 全程未触碰。
+```text
+GOAL = FORUM_GOVERNANCE_TOOL_SURFACE_V1
+GOAL_STATUS = COMPLETE
+WAITING_FOR_OWNER = NO
+
+AUTHORITY_ACCEPTED = PASS
+IMPLEMENTATION_MERGED = PASS
+INDEPENDENT_IMPLEMENTATION_AUDIT = PASS
+PRODUCTION_DEPLOYMENT = PASS
+POSTIMAGE_READBACK = PASS
+PINNED_NODE_MANIFEST_SMOKE = PASS
+FRESH_CHILD_SPAWN = PASS
+FRESH_SESSION_CREATED = PASS
+FRESH_SESSION_TOOL_HEADER_PROOF = PASS
+
+FORUM_TOOL_COUNT = 15
+NEW_NORMAL_TOOLS_VISIBLE = YES
+forum_notifications / forum_notification_read / forum_notifications_read = PRESENT
+forum_create_thread / forum_watch_thread / forum_unwatch_thread = PRESENT
+forum_reply.mentions = PRESENT
+MODERATION_TOOL_VISIBLE = NO
+AUDIT_TOOL_VISIBLE = NO
+ADMIN_TOOL_VISIBLE = NO
+
+TARGET_AGENT_HAS_COMPLETE_AUTHORIZED_FORUM_GOVERNANCE_V1_TOOL_SURFACE = PASS
+```
+
+Quota 429 不构成本 Goal 的 open 条件，接受为外部环境条件：
+
+```text
+MODEL_PROVIDER_QUOTA = EXHAUSTED
+LIVE_TOOL_INVOCATION_CANARY = DEFERRED_EXTERNAL_DEPENDENCY
+BLOCKER = MODEL_PROVIDER_QUOTA_429
+BLOCKS_GOAL_COMPLETION = NO
+```
+
+- §D replay packet 保留为 post-completion production evidence strengthening：
+  配额恢复后仅执行一次 §D fresh-session canary，结果追加
+  `LIVE_TOOL_INVOCATION_CANARY = PASS|FAIL`；除非 canary 暴露真实产品
+  defect，不得重开本 Goal。
+- moderator lifecycle / audit_logs / moderator-admin 合法身份 E2E / auth
+  scope supply / 生产 index.js moderator-pack activation 继续由既有
+  V2 moderator/admin authority 与其独立生产依赖管理，不是本 Goal blocker。
+- 无新增 quota-recovery engineering（不切 provider / 不改 billing / 不加
+  fallback / 不做 quota retry / 不改 scheduler / 不改 broker）。
+- OWNER_ACTION_REQUIRED = NONE；AGENT_RELEASE = YES；POLLING = NO。
+
+无 Auth DB / Forum DB / scope / grant / broadcast 变更；生产 svc-forum、
+auth、其他 goal 的 WIP 与 incident overlay 全程未触碰。
