@@ -1,7 +1,8 @@
 // canonical-onboarding-lib.mjs — CANONICAL_ONBOARDING_COMPLETION_V1 state
 // machine (dependency-injected; the operator CLI wires the production faces).
 //
-// approvalRef: OWNER-CANONICAL-ONBOARDING-20260909-01
+// proposed approvalRef label (NOT an owner authorization until accepted):
+//   OWNER-CANONICAL-ONBOARDING-20260909-01 — see spec §0 AUTHORITY STATUS
 // Authorizing directive: owner CONTINUE_SAME_GOAL ruling (2026-09-09) —
 // IDENTITY_LIFECYCLE_OWNER = mayf3/dsh-agent-core; identity provisioning MUST
 // reuse the accepted ensureAgentCredential verbatim (no parallel onboarding);
