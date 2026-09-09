@@ -244,7 +244,6 @@ export function validateManifest(input) {
                 properties: op.arguments.properties || {},
                 required: Array.isArray(op.arguments.required) ? op.arguments.required : [],
                 ...(op.arguments.additionalProperties === false ? { additionalProperties: false } : {}),
-                ...(op.arguments.structuralDiagnostics === true ? { structuralDiagnostics: true } : {}),
                 ...(Array.isArray(op.arguments.allOrNone)
                   ? {
                       allOrNone: op.arguments.allOrNone.map((group) => ({
@@ -351,13 +350,6 @@ function validatePropertiesSchema(value, at) {
     if (!Array.isArray(req) || req.some((r) => typeof r !== 'string')) {
       return `${at}.required must be an array of property names`
     }
-  }
-
-  // R6 (ERROR_PRESERVATION AMENDMENT_1): manifest metadata only — never a
-  // model-visible argument property. Fail-closed: only the explicit `true`
-  // opt-in is accepted, so a typo can never silently toggle diagnostics.
-  if (value.structuralDiagnostics !== undefined && value.structuralDiagnostics !== true) {
-    return `${at}.structuralDiagnostics may only be true when declared`
   }
 
   // Root-level generic co-presence constraints. When any named property is
