@@ -172,9 +172,17 @@ export function validateInvocation(manifest, call) {
   const structural = validateArgumentsDetailed(op.arguments, args)
   if (structural.violations.length > 0) {
     const resolved = resolveCode(manifest, structural.code ?? FALLBACK_ERRORS.invalid_arguments, FALLBACK_ERRORS.invalid_arguments)
+    // R6 (ERROR_PRESERVATION AMENDMENT_1): manifests may opt in per operation
+    // via `arguments.structuralDiagnostics === true`. Without a declared
+    // `validationError` leaf the violations would otherwise be discarded and
+    // the model could not tell an unknown property from a missing one; the
+    // detail is broker-authored (property paths), capped like the R3 bound.
+    const reportViolations = structural.code !== undefined || op.arguments.structuralDiagnostics === true
     return {
       ok: false,
-      error: structural.code === undefined ? resolved : { ...resolved, detail: structural.violations.join('; ') },
+      error: reportViolations
+        ? { ...resolved, detail: structural.violations.join('; ').slice(0, 500) }
+        : resolved,
     }
   }
   if (scheduler && scheduler.violations.length > 0) {
