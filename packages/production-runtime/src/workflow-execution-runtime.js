@@ -95,6 +95,16 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
           ...(receipt.reconciliationHandle === undefined ? {} : { reconciliationHandle: receipt.reconciliationHandle }),
         }
       } catch (error) {
+        // Router outcome_unknown means prompt admission is unproven, not
+        // proven absent. Its durable reconciliation handle is the only safe
+        // way to observe the possibly-running Run; preserve that linkage and
+        // let CTR-WAE-006 settle it. WAE always addresses canonical `main`,
+        // so the session coordinate remains known even when the receipt was
+        // lost. No replay is attempted.
+        if ((error?.envelope === 'outcome_unknown' || error?.status === 'outcome_unknown')
+          && typeof error?.reconciliationHandle === 'string' && error.reconciliationHandle !== '') {
+          return { ok: true, sessionId: 'main', reconciliationHandle: error.reconciliationHandle }
+        }
         return { ok: false, code: error?.code ?? 'delivery_failed', detail: String(error?.message ?? error).slice(0, 200) }
       }
     },

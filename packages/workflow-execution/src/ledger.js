@@ -41,7 +41,7 @@
 
 import { createHash } from 'node:crypto'
 import { mkdirSync, appendFileSync, existsSync, statSync, openSync, readSync, closeSync, fsyncSync, truncateSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { OwnerLock } from '../../scheduler/src/lock.js'
 
@@ -92,18 +92,31 @@ export class ExecutionLedger {
     if (io.appendFileSync !== undefined && typeof io.appendFileSync !== 'function') {
       throw new TypeError('workflow-execution: io.appendFileSync must be a function when provided')
     }
+    if (io.syncDirectorySync !== undefined && typeof io.syncDirectorySync !== 'function') {
+      throw new TypeError('workflow-execution: io.syncDirectorySync must be a function when provided')
+    }
     this.dir = dir
     this.eventsFile = join(dir, LEDGER_EVENTS_FILE)
     this.clock = clock
     this.log = log
     this.appendFileSync = io.appendFileSync ?? appendFileSync
+    this.syncDirectorySync = io.syncDirectorySync ?? ((path) => {
+      const fd = openSync(path, 'r')
+      try { fsyncSync(fd) } finally { closeSync(fd) }
+    })
     this.lock = new OwnerLock(join(dir, LEDGER_LOCK_FILE), {
       onEvidence: (event) => { this.log.warn?.(`workflow-execution ledger lock: ${JSON.stringify(event)}`) },
     })
     this.attempts = new Map() // nodeVisitId -> attempt projection
     this.loaded = false
+    this.eventFilePublicationPending = false
     this._queue = Promise.resolve()
     mkdirSync(dir, { recursive: true })
+    // Re-confirm on every construction, not only on observed creation: after
+    // a prior fsync failure the path may still be visible in page cache even
+    // though its directory entry was never durably published.
+    this.syncDirectorySync(dirname(dir))
+    if (existsSync(this.eventsFile)) this.syncDirectorySync(this.dir)
   }
 
   /** One projection record derived from the event stream. */
@@ -247,9 +260,17 @@ export class ExecutionLedger {
   }
 
   #appendAndSync(value) {
+    const createsEventFile = !existsSync(this.eventsFile)
     this.appendFileSync(this.eventsFile, value)
     const fd = openSync(this.eventsFile, 'r+')
     try { fsyncSync(fd) } finally { closeSync(fd) }
+    // File fsync does not durably publish a newly-created directory entry.
+    // The first fence is committed only after its parent directory is synced.
+    if (createsEventFile) {
+      this.eventFilePublicationPending = true
+      this.syncDirectorySync(this.dir)
+      this.eventFilePublicationPending = false
+    }
   }
 
   #appendEvent(event) {
@@ -266,6 +287,10 @@ export class ExecutionLedger {
    */
   async mutate(fn) {
     const run = this._queue.then(() => this.lock.runExclusive(() => {
+      if (this.eventFilePublicationPending) {
+        this.syncDirectorySync(this.dir)
+        this.eventFilePublicationPending = false
+      }
       this.load({ repairTornTail: true })
       return fn()
     }))
@@ -408,6 +433,13 @@ export class ExecutionLedger {
   listActive() {
     if (!this.loaded) this.load()
     return [...this.attempts.values()].filter((a) => a.state === 'ACTIVE').map((a) => ({ ...a }))
+  }
+
+  /** Cross-process-fresh ACTIVE snapshot for one reconciliation pass. */
+  async listActiveFresh() {
+    return this.mutate(() => [...this.attempts.values()]
+      .filter((attempt) => attempt.state === 'ACTIVE')
+      .map((attempt) => ({ ...attempt })))
   }
 
   snapshot() {

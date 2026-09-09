@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
 
@@ -236,6 +236,62 @@ test('newline seal I/O failure aborts the locked mutation before event append', 
     assert.doesNotThrow(() => repaired.trimEnd().split('\n').forEach((line) => JSON.parse(line)))
   } finally {
     cleanup(fixture)
+  }
+})
+
+test('first fence syncs the ledger directory and fails loud when publication durability is unavailable', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-ledger-dir-sync-'))
+  const syncPaths = []
+  let failLedgerDirectorySync = true
+  const ledger = new ExecutionLedger({
+    dir,
+    io: {
+      syncDirectorySync: (path) => {
+        syncPaths.push(path)
+        if (path === dir && failLedgerDirectorySync) {
+          failLedgerDirectorySync = false
+          throw Object.assign(new Error('injected directory fsync failure'), { code: 'EIO' })
+        }
+      },
+    },
+  })
+  try {
+    await assert.rejects(
+      () => ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER }),
+      /injected directory fsync failure/,
+      'the first fence is not reported committed without durable directory publication',
+    )
+    assert.deepEqual(syncPaths, [dirname(dir), dir])
+
+    const sameProcessDuplicate = await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.equal(sameProcessDuplicate.created, false)
+    assert.deepEqual(syncPaths, [dirname(dir), dir, dir], 'the next mutation re-confirms a failed event-file publication')
+
+    // The bytes written before the injected failure remain a fence. A fresh
+    // replay must block a second attempt rather than append a duplicate.
+    const restarted = new ExecutionLedger({ dir })
+    const duplicate = await restarted.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.equal(duplicate.created, false)
+    assert.equal(duplicate.cause, 'already_attempted')
+    assert.equal(restarted.snapshot().length, 1)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('new ledger directory is published before the first event-file directory entry', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'wfe-ledger-directory-order-'))
+  const dir = join(root, 'workflow-execution')
+  const syncPaths = []
+  try {
+    const ledger = new ExecutionLedger({
+      dir,
+      io: { syncDirectorySync: (path) => { syncPaths.push(path) } },
+    })
+    await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.deepEqual(syncPaths, [root, dir])
+  } finally {
+    rmSync(root, { recursive: true, force: true })
   }
 })
 
