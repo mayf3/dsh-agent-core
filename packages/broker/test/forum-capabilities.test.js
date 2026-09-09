@@ -99,7 +99,7 @@ async function captureChannels(definition, input) {
 }
 // ═══ AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 (accepted) ═════════════════
 //
-// Second-batch Forum capability tests: the 5-tool normal pack, the 8-tool
+// Second-batch Forum capability tests: the 8-tool normal pack, the 8-tool
 // moderator pack (exact three-scope contract), local fail-fast validation
 // (nonBlank / closed enums), soft-delete-only bindings, admin unread scope,
 // and the seven first-batch Forum tools' zero-regression projection.
@@ -120,9 +120,9 @@ const TOOL_CHANNEL_FIXTURES = [
   ['forum_admin_unread', 'unread', {}],
 ]
 
-// ─── Schema: all 13 second-batch manifests validate; PATCH is allowed ───────
-test('schema: all 13 second-batch Forum manifests validate (5 normal + 8 moderator)', () => {
-  assert.equal(forumNormalManifests.length, 5)
+// ─── Schema: all 16 second-batch manifests validate; PATCH is allowed ───────
+test('schema: all 16 second-batch Forum manifests validate (8 normal + 8 moderator)', () => {
+  assert.equal(forumNormalManifests.length, 8)
   assert.equal(forumModeratorManifests.length, 8)
   for (const manifest of [...forumNormalManifests, ...forumModeratorManifests]) {
     const res = validateManifest(manifest)
@@ -138,8 +138,8 @@ test('CTR-FMC-002/003: exact tool ids and exact scope arrays', () => {
   assert.deepEqual(
     [...forumNormalManifests.map((m) => m.id), ...forumModeratorManifests.map((m) => m.id)].sort(),
     [
-      'forum_create_thread', 'forum_watch_thread', 'forum_unwatch_thread', 'forum_report_content', 'forum_stats',
-      'forum_pin_or_feature_thread', 'forum_delete_thread', 'forum_delete_message', 'forum_resolve_thread',
+      'forum_create_thread', 'forum_watch_thread', 'forum_unwatch_thread', 'forum_report_content', 'forum_stats', 'forum_notifications',
+      'forum_notification_read', 'forum_notifications_read', 'forum_pin_or_feature_thread', 'forum_delete_thread', 'forum_delete_message', 'forum_resolve_thread',
       'forum_archive_thread', 'forum_moderation_queue', 'forum_handle_report', 'forum_admin_unread',
     ].sort(),
   )
