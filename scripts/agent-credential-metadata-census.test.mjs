@@ -61,6 +61,16 @@ test('B2 precedence table (pure classification)', () => {
     classifyAgent({ ...base, driftPredicate: true, knownHistorical: false }),
     'ACTIVE_DRIFT', 'precedence 5',
   )
+  // precedence 3: a receipt whose rotation never advanced rotated_at is a
+  // current hard inconsistency → ACTIVE_DRIFT (B2 ③, reviewer MC4 note made normative)
+  assert.equal(
+    classifyAgent({ ...base, receiptConsistent: true, rotatedAt: '-' }),
+    'ACTIVE_DRIFT', 'precedence 3',
+  )
+  assert.equal(
+    classifyAgent({ ...base, receiptConsistent: true, rotatedAt: '2026-09-09T00:00:00Z' }),
+    'OK_ROTATED',
+  )
   // ACTIVE evidence outranks the allowlist even when combined with it:
   assert.equal(
     classifyAgent({ ...base, driftPredicate: true, knownHistorical: true, receiptConsistent: false }),
