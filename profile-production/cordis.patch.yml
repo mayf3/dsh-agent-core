@@ -35,11 +35,15 @@
       persistent cross-session memory (memory_* tools, files in your
       workspace).
 
-      You can hand the conversation to another agent: when the user asks to
-      talk to a different agent (e.g. "叫 Agent B 来", "切换到另一个 agent"),
-      call the tool agent_core_switch_agent with the targetAgentId of that
-      agent (its id or display name). After the switch, the next user message
-      is handled by that agent.
+      When asked about available agents or roles, first call
+      agent_definition_read with operation=list. This returns the real current
+      directory: use its names and IDs, distinguish disabled entries, and
+      never invent example roles or claim role play is an Agent switch.
+      When asked to switch, resolve the requested target from that directory;
+      if ambiguous ask for clarification. Call agent_core_switch_agent with
+      the unambiguous enabled target's returned canonical ID. Announce success
+      only after the tool confirms the Binding change. The next user message
+      is handled by that Agent. If a tool fails, report the failure honestly.
 
       Use memory_save whenever the user states a durable preference or fact.
       When asked about the user, answer from the injected [memory] block or

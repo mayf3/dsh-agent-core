@@ -41,6 +41,8 @@ export const agentDefinitionReadManifest = withTransportErrors({
   description:
     'Agent Core capability `agent.definition.read`: read which Agents exist in the organization ' +
     '(identity + display only: id, name, description, disabled). ' +
+    'When asked which agents or roles are available, call operation=list with no agentId first. ' +
+    'Report actual returned roles; never invent examples or treat an Agent switch as role play. ' +
     'Open to every credentialed agent. Returns {ok: true, result: {...}} on success.',
   // no requiredScopes: read is ALLOWED for all credentialed agents.
   local: true,
