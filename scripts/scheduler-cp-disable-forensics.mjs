@@ -59,7 +59,15 @@ const EVENT_FIELDS = {
   turn_start: ['ts', 'occurrenceId', 'runId'],
   router_admission: ['ts', 'phase', 'occurrenceId', 'runId', 'error'],
   late_settlement: ['ts', 'occurrenceId', 'runId', 'resolvedTo', 'basis', 'operatorIdentity'],
+  import_write: ['ts', 'action', 'jobId', 'file'],
+  store_upgrade: ['ts', 'action', 'upgradedAtMs'],
+  lock_recovery: ['ts', 'action'],
+  lock_unverifiable: ['ts', 'action'],
 }
+// Whole-document rewrite / anomaly class — always in scope regardless of jobId,
+// because a dropped `enabled` field (clobber) also trips JOB_DISABLED with no
+// disable actor at all.
+const ALWAYS_ACTIONS = new Set(['self_service_mutation', 'import_write', 'store_upgrade', 'lock_recovery', 'lock_unverifiable'])
 
 export function collect({ storePath, runsPath, evidencePath, alertStatePath, logsDir, sinceMs, jobPrefix }) {
   const report = { sinceMs, jobPrefix, sections: [] }
@@ -76,7 +84,7 @@ export function collect({ storePath, runsPath, evidencePath, alertStatePath, log
       flipTs = Number.isFinite(job.updatedAtMs) ? job.updatedAtMs : null
       add('JOB_RECORD', [
         `id=${job.id} logicalKey=${job.logicalKey ?? '(none)'} name=${job.name ?? '(none)'}`,
-        `enabled=${job.enabled} updatedAtMs=${job.updatedAtMs} (${iso(job.updatedAtMs)}) scheduleRevision=${job.scheduleRevision}`,
+        `enabled=${job.enabled} enabledFieldPresent=${Object.prototype.hasOwnProperty.call(job, 'enabled')} updatedAtMs=${job.updatedAtMs} (${iso(job.updatedAtMs)}) scheduleRevision=${job.scheduleRevision}`,
         `schedule=${JSON.stringify(job.schedule)} agentId=${job.agentId}`,
         `retry=${JSON.stringify(job.retry ?? null)} deleteAfterRun=${job.deleteAfterRun ?? false} migrationRestoreBlocked=${job.migrationRestoreBlocked ?? false}`,
         `state=${JSON.stringify(job.state ?? {})}`,
@@ -90,7 +98,7 @@ export function collect({ storePath, runsPath, evidencePath, alertStatePath, log
   const disableEvents = events.filter((e) => e.action === 'self_service_mutation' && e.operation === 'disable'
     && typeof e.jobId === 'string' && e.jobId.startsWith(jobPrefix))
   const rendered = events
-    .filter((e) => (typeof e.jobId === 'string' && e.jobId.startsWith(jobPrefix)) || e.action === 'self_service_mutation')
+    .filter((e) => (typeof e.jobId === 'string' && e.jobId.startsWith(jobPrefix)) || ALWAYS_ACTIONS.has(e.action))
     .sort((a, b) => a.ts - b.ts)
     .slice(-120)
     .map((e) => JSON.stringify(pick(e, EVENT_FIELDS[e.action] ?? ['ts', 'action', 'jobId'])))
@@ -203,6 +211,7 @@ function selftest() {
     { ts: T(28), action: 'outcome', occurrenceId: 'occ:x', runId: 'run:x', state: 'failed', executionOutcome: 'failed', deliveryStatus: 'delivered', reason: 'svc_503_dispatch_refused', jobId: 'b115cb96-8a4f-49be-9baa-519223022b59', secret: 'TOPSECRET' },
     { ts: T(1), action: 'self_service_mutation', operation: 'disable', jobId: 'b115cb96-8a4f-49be-9baa-519223022b59', operatorAgentId: 'agt_hr-agent', targetAgentId: 'agt_hr-agent', secret: 'TOPSECRET' },
     { ts: T(1), action: 'outcome', occurrenceId: 'occ:otherjob', runId: 'run:o', state: 'succeeded', jobId: 'fa13b0ea' },
+    { ts: T(2), action: 'lock_recovery', file: 'jobs.json', secret: 'TOPSECRET' },
   ]
   writeFileSync(join(storeDir, 'runs.jsonl'), `${events.map((e) => JSON.stringify(e)).join('\n')}\n`)
   writeFileSync(join(ctlDir, 'scheduler-watchdog-evidence.jsonl'), `${[
@@ -234,12 +243,14 @@ function selftest() {
     ['foreign job event excluded', !text.includes('occ:otherjob')],
     ['log match rendered', text.includes('disable via self-service')],
     ['log secret not rendered', !text.includes('SECRET=TOPSECRET')],
+    ['whole-doc anomaly event in scope', text.includes('lock_recovery')],
+    ['enabledFieldPresent rendered', text.includes('enabledFieldPresent=true')],
   ]
   let failed = 0
   for (const [name, ok] of checks) { process.stdout.write(`  ${ok ? 'PASS' : 'FAIL'} ${name}\n`); if (!ok) failed++ }
   rmSync(root, { recursive: true, force: true })
   if (failed > 0) { process.stderr.write(`SELFTEST FAILED: ${failed}\n`); process.exit(1) }
-  process.stdout.write('SELFTEST PASS (11 assertions)\n')
+  process.stdout.write(`SELFTEST PASS (${checks.length} assertions)\n`)
 }
 
 if (process.argv.includes('--selftest')) { selftest(); process.exit(0) }
