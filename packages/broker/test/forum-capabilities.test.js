@@ -110,6 +110,8 @@ import {
 import { moderatorManifests as forumModeratorManifests } from '../src/capabilities/forum-moderation.js'
 
 const MODERATOR_SCOPES = ['forum.read', 'forum.write', 'forum.moderate']
+// Token-request wire string: the transport ASCII-sorts the scope set.
+const MODERATOR_SCOPE_STRING = [...MODERATOR_SCOPES].sort().join(' ')
 const TOOL_CHANNEL_FIXTURES = [
   ['forum_create_thread', 'create', { title: 'fixture' }], ['forum_watch_thread', 'watch', { threadId: 't-1' }],
   ['forum_unwatch_thread', 'unwatch', { threadId: 't-1' }], ['forum_report_content', 'report', { targetType: 'thread', targetId: 't-1', reason: 'spam' }],
@@ -313,7 +315,7 @@ test('moderator pack: pin/feature via PATCH with only the selected flag', async 
   assert.deepEqual(patches[1].body, { featured: false })
   assert.equal(patches[0].headers.authorization, 'Bearer tok-real')
   // exact three-scope token request
-  const mod = tokenServer.requests.find((r) => r.body.scope === MODERATOR_SCOPES.join(' '))
+  const mod = tokenServer.requests.find((r) => r.body.scope === MODERATOR_SCOPE_STRING)
   assert.equal(mod.body.resource, 'svc-forum')
 
   await tokenServer.close()
@@ -494,7 +496,7 @@ test('CTR-FMC-005: admin unread uses exactly the moderator scopes', async () => 
   assert.equal(req.query.reason, 'mention')
   assert.equal(req.query.since, '2026-08-28T00:00:00Z')
   assert.equal(req.query.agentId, 'agt_other-agent')
-  assert.ok(tokenServer.requests.every((r) => r.body.scope === MODERATOR_SCOPES.join(' ')))
+  assert.ok(tokenServer.requests.every((r) => r.body.scope === MODERATOR_SCOPE_STRING))
   await tokenServer.close()
   await forum.close()
 })
