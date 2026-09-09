@@ -156,7 +156,14 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
     }
   }
   for (const record of occurrences) {
-    if (record.executionOutcome === 'failed' && Number.isFinite(record.endedAt) && nowMs - record.endedAt <= o.failedWindowMs) {
+    // An operator-reconciled failure is a dispositioned fact, not an open
+    // incident (2026-09-09: reconciled occ 6c4cccaf… kept emitting bounded
+    // REMINDERs for its whole 24h window after disposition). Suppression is
+    // scoped to basis=operator-reconcile — the run-event ledger carries the
+    // late_settlement evidence, and the finding vanishing from the next
+    // evaluation flips an ACTIVE alert to one final RECOVERED.
+    const operatorReconciled = record.lateSettlement?.basis === 'operator-reconcile'
+    if (!operatorReconciled && record.executionOutcome === 'failed' && Number.isFinite(record.endedAt) && nowMs - record.endedAt <= o.failedWindowMs) {
       findings.push({ class: 'RUN_FAILED', jobId: record.jobId, runId: record.runId, endedAt: new Date(record.endedAt).toISOString() })
     }
     if (Number.isFinite(record.startedAt) && !Number.isFinite(record.endedAt)
