@@ -124,6 +124,19 @@ owners:
 > model 输入仅 `workflowInstanceId` + `reason`，identity 与 Idempotency-Key
 > 仍为 trusted seam。详见 §25；本段尚未受理，需绑定 exact reviewed head 的
 > 独立审阅 PASS 后由 Owner mayf3 接受。
+>
+> **ACCEPTED（2026-09-09，Owner EXACT-HEAD ACCEPTANCE，lifecycle-only
+> transaction）。** Owner mayf3 绑定 exact reviewed semantic head
+> `0f437975303d4b6407a90f488fe67b12fccbf833`（reviewed base
+> `5a5395246e7cbd7412101167d8a99042c15db1aa`），SHIP_BLOCKERS = 0，
+> INDEPENDENT_REVIEW = PASS / SEMANTIC_DELTA_AFTER_FINAL_REVIEW = NONE。
+> 本 acceptance 仅填写 §26 acceptance record 并翻转 §25 AMENDMENT_STATUS
+> 生命周期字段；§25 全部合同 bytes（DEC-012/CTR-011..014/OBS-010/ACC-011/
+> ALT-010）逐字节不变；frontmatter 零变化（本 Spec 原有 accepted lifecycle
+> 不受影响）。svc 上游权威 `SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1` 已于
+> 同一 Owner receipt 下 accepted 并 merge（svc-workflow main `dd235dc`，
+> acceptance commit `beaaf32`）——此为 Lane 2 允许的 metadata/reference
+> repin，不改本 amendment 任何语义。
 
 ## 1. Goal
 
@@ -1283,9 +1296,10 @@ DEC-010/DEC-011 的「单一写工具」authority 语义由本 amendment **继�
 - Server-side authorization（svc 权威，非 Broker 复制）：
   `DOMAIN_OWNER(instance.domain) OR GLOBAL_WORKFLOW_COORDINATOR`——
   外部权威 = `SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`（svc-workflow，
-  本 amendment authoring 时 status=proposed；acceptance 前 dsh 实现不部署，
-  部署后若 svc 放宽未上线，coordinator 调用 fail closed 收
-  `not_domain_owner`，SAFE 方向）。
+  本 amendment authoring 时 status=proposed；**acceptance repin
+  2026-09-09：已 accepted 并 merge，svc-workflow main `dd235dc`**——仅
+  authority metadata repin，谓词语义不变。部署后若 svc 放宽未上线，
+  coordinator 调用 fail closed 收 `not_domain_owner`，SAFE 方向）。
 - Lifecycle legality（服务端权威，逐字不变）：仅 active/non-terminal 可
   cancel。Broker 不复制、不预判 lifecycle。
 - Error 表（逐码对拍 svc error.rs `from_cancel` 全 14 变体；标注
@@ -1380,7 +1394,7 @@ gate 现为 DOMAIN_OWNER-only（coordinator 放宽 = svc amendment，见 CTR-011
 ### AMENDMENT_STATUS
 
 ```text
-AMENDMENT_STATUS = proposed
+AMENDMENT_STATUS = accepted (2026-09-09, Owner EXACT-HEAD ACCEPTANCE @ 0f437975303d4b6407a90f488fe67b12fccbf833)
 WORKFLOW_EXECUTE_OPERATIONS = create_instance|transition|cancel_instance|archive_instance
 NEW_MANIFESTS = 0
 INVENTORY_COUNT = UNCHANGED (18)
@@ -1391,15 +1405,23 @@ BROKER_DECLARER_TABLE_NET_NEW_CODES = 7
    each dictated verbatim from svc error.rs from_cancel/from_archive)
 SVC_ENDPOINTS_CHANGED_BY_THIS_AMENDMENT = NONE
 PRODUCTION_APPLY_AUTHORITY = none
-INDEPENDENT_REVIEW = REQUIRED_BEFORE_ACCEPTANCE
+INDEPENDENT_REVIEW = PASS (r2 fresh review on final heads; SEMANTIC_DELTA_AFTER_FINAL_REVIEW = NONE)
 ```
 
 ## 26. Amendment acceptance record (2026-09-09, governance cleanup write-family — PENDING)
 
-- Reviewed semantic head = `<PENDING independent review>`；independent
-  re-review = `<PENDING>`; ship blockers = `<PENDING>`.
-- Owner mayf3 acceptance = `<PENDING>`.
-- Upon acceptance: this record is finalized lifecycle-only; §25 semantics
-  unchanged; frontmatter unchanged; `workflow_execute` operations become
-  exactly the four-operation union; production apply authority remains none.
+- Reviewed semantic head = `0f437975303d4b6407a90f488fe67b12fccbf833`
+  (reviewed base `5a5395246e7cbd7412101167d8a99042c15db1aa`);
+  independent fresh review (r2, on the final heads) = **PASS**;
+  ship blockers = **NONE**; SEMANTIC_DELTA_AFTER_FINAL_REVIEW = NONE.
+- Owner mayf3 EXACT-HEAD ACCEPTANCE = **YES** (2026-09-09, receipt:
+  ACCEPT_DSH_229_HEAD = 0f437975303d4b6407a90f488fe67b12fccbf833).
+- This record is finalized lifecycle-only: §25 semantics unchanged byte
+  for byte; frontmatter unchanged; `workflow_execute` operations are
+  exactly the four-operation union; production apply authority remains
+  none. Svc upstream authority `SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`
+  accepted main revision = `dd235dc` (metadata repin recorded in the
+  §25 CTR-011 / header note). Implementation may now begin per §25
+  CTR-014 closure; deployment remains governed by the sibling broker
+  Spec acceptance order and P0 slot discipline.
 
