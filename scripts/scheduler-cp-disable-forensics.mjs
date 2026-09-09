@@ -229,6 +229,30 @@ export function collect({ storePath, runsPath, evidencePath, alertStatePath, sta
     add('DESIRED_STATE', [`mode=${(st.mode & 0o777).toString(8)} uid=${st.uid} jobs=${(doc.jobs ?? []).length} frozenAt=${doc._frozenAt ?? '(none)'}`])
   } catch (e) { add('DESIRED_STATE', [`UNREADABLE: ${e.message}`]) }
 
+  // 12. Admission blockers — outcome_unknown records are treated as in-flight
+  // by _tickOnce/reserveOccurrence (isTerminalRecord = succeeded|failed ONLY),
+  // so one unreconciled unknown silently stops ALL future admissions for the
+  // job. List them per tracked job with deadline-proof for reconciliation.
+  try {
+    const doc = JSON.parse(readFileSync(storePath, 'utf8'))
+    const lines = []
+    for (const job of doc.jobs ?? []) {
+      if (!jobPrefix.startsWith(job.id.slice(0, 8)) && job.logicalKey !== 'agt_hr-agent:hr-workflow-auto-dispatch'
+        && job.id !== '34b90173-690a-47b9-85ce-79f02aff25a3') continue
+      const mine = (doc.occurrences ?? []).filter((r) => r.jobId === job.id)
+      const nonTerminal = mine.filter((r) => !['succeeded', 'failed'].includes(r.state))
+      const unknowns = nonTerminal.filter((r) => r.state === 'outcome_unknown' && !r.lateSettlement)
+      const inflight = nonTerminal.filter((r) => r.state === 'admitted' || r.state === 'running')
+      lines.push(`job ${job.id.slice(0, 8)} (${job.name ?? '?'}): enabled=${job.enabled} retryAuto=${job.retry?.auto === true} occurrences=${mine.length} unknownBlockers=${unknowns.length} trueInflight=${inflight.length}`)
+      for (const r of [...unknowns, ...inflight]) {
+        const deadlineMs = Number.isFinite(r.startedAt) && Number.isFinite(r.timeoutMs) ? r.startedAt + r.timeoutMs : null
+        const deadlineProof = deadlineMs !== null && deadlineMs < (report.probeNowMs ?? Date.now())
+        lines.push(`  ${r.occurrenceId} state=${r.state} kind=${r.kind ?? '?'} started=${iso(r.startedAt)} ended=${r.endedAt ? iso(r.endedAt) : '-'} deadlineProof=${deadlineProof ? 'YES (provably dead)' : 'NO'}`)
+      }
+    }
+    add('ADMISSION_BLOCKERS', lines)
+  } catch (e) { add('ADMISSION_BLOCKERS', [`UNREADABLE: ${e.message}`]) }
+
   return report
 }
 
@@ -263,10 +287,14 @@ function selftest() {
   const T = (min) => T_FLIP - min * 60 * 1000
   writeFileSync(join(storeDir, 'jobs.json'), `${JSON.stringify({
     version: 2,
-    jobs: [{ id: 'b115cb96-8a4f-49be-9baa-519223022b59', logicalKey: 'agt_hr-agent:hr-workflow-auto-dispatch', name: 'HR dispatch', enabled: false, updatedAtMs: T_FLIP, scheduleRevision: 3, schedule: { kind: 'every', everyMs: 1800000 }, agentId: 'agt_hr-agent', state: { consecutiveErrors: 1, lastStatus: 'outcome_unknown' } },
+    jobs: [{ id: 'b115cb96-8a4f-49be-9baa-519223022b59', logicalKey: 'agt_hr-agent:hr-workflow-auto-dispatch', name: 'HR dispatch', enabled: false, updatedAtMs: T_FLIP, scheduleRevision: 3, schedule: { kind: 'every', everyMs: 1800000 }, agentId: 'agt_hr-agent', retry: { auto: true }, state: { consecutiveErrors: 1, lastStatus: 'outcome_unknown' } },
       { id: '34b90173-aaaa', logicalKey: 'agt_hr-agent:secondary', name: 'HR secondary', enabled: true, updatedAtMs: T_FLIP - 4975, schedule: { kind: 'cron', expr: '0 9 * * *', tz: 'Asia/Shanghai' }, agentId: 'agt_hr-agent', state: {} },
       { id: 'fa13b0ea', logicalKey: 'agt_daily-thought-agent:daily-raw-distilled-summary-check', enabled: true, updatedAtMs: 1, schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, agentId: 'agt_daily-thought-agent', state: {} }],
-    occurrences: [], fences: {},
+    occurrences: [
+      { occurrenceId: 'occ:unknown1', jobId: 'b115cb96-8a4f-49be-9baa-519223022b59', state: 'outcome_unknown', kind: 'retry', startedAt: T(40), timeoutMs: 900000, secret: 'TOPSECRET' },
+      { occurrenceId: 'occ:reconciled', jobId: 'b115cb96-8a4f-49be-9baa-519223022b59', state: 'failed', lateSettlement: { basis: 'operator-reconcile' }, startedAt: T(60), endedAt: T(50) },
+      { occurrenceId: 'occ:ok', jobId: '34b90173-aaaa', state: 'succeeded', startedAt: T(30), endedAt: T(29) },
+    ], fences: {},
   }, null, 2)}\n`)
   writeFileSync(`${join(storeDir, 'jobs.json')}.upgrade-v2.json`, `${JSON.stringify({ jobMutationSeen: true, upgradedAtMs: 1 })}\n`)
   const events = [
@@ -321,6 +349,8 @@ function selftest() {
     ['secondary job rendered', text.includes('34b90173-aaaa')],
     ['w1 stdout tail rendered', text.includes('[scheduler-watchdog w1] feishu_sent')],
     ['desired-state readability rendered', text.includes('frozenAt=2026-09-08T12:49:58.745Z')],
+    ['unknown blocker listed with deadline proof', text.includes('occ:unknown1') && text.includes('deadlineProof=YES')],
+    ['reconciled record not a blocker', !text.includes('occ:reconciled state=') || text.includes('unknownBlockers=1')],
   ]
   let failed = 0
   for (const [name, ok] of checks) { process.stdout.write(`  ${ok ? 'PASS' : 'FAIL'} ${name}\n`); if (!ok) failed++ }
