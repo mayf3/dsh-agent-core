@@ -127,6 +127,11 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       description: 'Atomically replace a DRAFT graph using exactly one form: full nodes + transitions, OR linear steps + terminalOutcome on a model-3 draft. Linear supports 1..32 ordered work steps with exact Principal UUID assignments discovered canonically, not display-name routing. Do not supply graph identifiers or transitions for linear input. Branches, loops and custom effects use the existing full form. Success means the service canonical validator accepted the graph; publish separately. On rejection, correct the named rule in the error detail.',
       arguments: {
         additionalProperties: false,
+        // ERROR_PRESERVATION AMENDMENT_1 R6: structural rejections on this
+        // operation must reach the model with the violated property paths
+        // (CTR-WDA-007(b) detail rendering); scope stays exactly the (b)
+        // surface — no other operation opts in.
+        structuralDiagnostics: true,
         properties: {
           domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, definitionVersionId: { type: 'string' },
           contextSchema: { type: 'json' }, nodes: { type: 'array', items: definitionNodeItem },
