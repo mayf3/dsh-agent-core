@@ -179,7 +179,7 @@ test('cross-process reconcile cannot terminalize another poller during planned-t
   const common = {
     fetchDuePage: async () => ({ ok: true, items: [] }),
     deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:race' }),
-    getTurnReconciliation: () => ({ state: 'never_existed' }),
+    getTurnReconciliation: () => ({ state: 'pending' }),
     readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } }),
     log: { log: () => {}, warn: () => {}, error: () => {} },
   }
@@ -218,6 +218,39 @@ test('cross-process reconcile cannot terminalize another poller during planned-t
     assert.equal(restarted.get(VISIT).delivered.reconciliationHandle, 'turn:race')
   } finally {
     releaseResolution?.()
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('cross-process failover refreshes a stale empty projection before reconciliation', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-engine-failover-'))
+  const staleLedger = new ExecutionLedger({ dir })
+  const writerLedger = new ExecutionLedger({ dir })
+  const engine = createWorkflowExecutionEngine({
+    ledger: staleLedger,
+    fetchDuePage: async () => ({ ok: true, items: [] }),
+    resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
+    deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:failover' }),
+    getTurnReconciliation: () => ({ state: 'settled' }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT_NEXT } } }),
+    log: { log: () => {}, warn: () => {}, error: () => {} },
+  })
+  try {
+    assert.deepEqual(staleLedger.listActive(), [], 'poller B caches the pre-admission empty projection')
+    await writerLedger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    await writerLedger.recordRunDelivered({
+      nodeVisitId: VISIT,
+      agentId: AGENT,
+      requestId: attemptIdFor(VISIT),
+      sessionId: 'main',
+      reconciliationHandle: 'turn:failover',
+    })
+
+    const reconciled = await engine.reconcileOnce()
+    assert.equal(reconciled.examined, 1)
+    assert.deepEqual(reconciled.settled, [VISIT])
+    assert.equal(staleLedger.get(VISIT).state, 'SETTLED')
+  } finally {
     rmSync(dir, { recursive: true, force: true })
   }
 })

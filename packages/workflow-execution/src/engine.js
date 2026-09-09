@@ -175,7 +175,9 @@ export function createWorkflowExecutionEngine({
    */
   async function reconcileOnce() {
     const summary = { examined: 0, settled: [], needsReview: [], running: 0 }
-    for (const attempt of ledger.listActive()) {
+    // Cross-process failover must not reconcile a cached projection. Refresh
+    // under the ledger's existing OwnerLock before enumerating this pass.
+    for (const attempt of await ledger.listActiveFresh()) {
       summary.examined += 1
       try {
         const turnState = queryTurnState(attempt)
