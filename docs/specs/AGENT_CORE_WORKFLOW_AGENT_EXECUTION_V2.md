@@ -6,27 +6,19 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 date: 2026-09-10
-revision: r3
+revision: r4
 revision_date: 2026-09-10
 revision_note: >-
-  r3 = independent review r2 blocker-union closure (3 ship blockers,
-  records on PR #236 conversation): (1) restructured as a WHOLE-AUTHORITY
-  successor — V1's full contract set is carried forward in this document
-  (carried sections marked), supersedes replaces partial amendment, the
-  ASM R4 source-kind extension and the external svc keyset-continuation
-  consumption are inherited unchanged; (2) CTR-WAE-013 now defines a
-  single ENTRY-STATE DISPATCH with exact outcomes (no-op on terminal
-  replays preserving V1 terminal append-refusal; RECOVERY_INAPPLICABLE
-  no-append when delivery-domain evidence exists, owned by unchanged V1
-  reconcile; recovery_refused + terminal only for world-drift on an
-  eligible-shaped attempt), plus dispatch-table tests; (3) lifecycle
-  ordering unified to the Owner §13 sequence everywhere (controlled
-  deployment -> identity repair through its own authority -> per-subject
-  recovery). r2 had already closed the r1 PROVEN_ZERO window (durable
-  pre-invocation delivery_started write-ahead on EVERY admission path;
-  Router correlation query demoted to secondary one-directional gate) and
-  the r1 taxonomy misquote; the r2 review explicitly confirmed both
-  closed with no remaining invoked-yet-recoverable window.
+  r4 = independent review r3 blocker-union closure (2 narrow ship
+  blockers, records on PR #236 conversation; r3 had confirmed the r2
+  lifecycle-order blocker CLOSED and carriage fidelity faithful): (1)
+  §8.6 acceptance transaction now adds BOTH reciprocal backlinks — V1
+  superseded-by AND the ASM R4 amended-by backlink identifying this Spec
+  as current carrier (V1 §5's outstanding obligation inherited, no
+  one-way authority edge); (2) CTR-WAE-013 E4 delivery-domain evidence
+  family extended with attributable reconciliation handle / messageId /
+  session linkage (requestId, attemptId, or nodeVisitId) in Router or
+  session seams, covered in the ENTRY-DISPATCH test row.
 supersedes:
   - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V1 (accepted @ main f14d625, PR
     #219): WHOLE-AUTHORITY successor transaction. When this document is
@@ -604,7 +596,7 @@ first match wins):**
 | E1 | no/empty authorityRef | refuse the call | none |
 | E2 | no attempt exists for the nodeVisitId | `NO_OP_NO_ATTEMPT` | none |
 | E3 | attempt is TERMINAL (SETTLED, or NEEDS_REVIEW of any cause incl. prior `recovery_refused`) | `NO_OP_TERMINAL` | none — the V1 terminal append-refusal is preserved; a replayed recovery command can never un-terminal or re-append |
-| E4 | attempt non-terminal but delivery-domain evidence exists: any `delivery_started` / `run_delivered` / `delivery_rejected` / reconciled outcome-unknown handle in the ledger, OR the fresh Router correlation query answers anything other than "no record ever existed" (pending/settled/evicted/restart_lost), OR the store is unreachable | `RECOVERY_INAPPLICABLE:<evidence-class>` | none from the recovery operation — recovery simply does not apply; the attempt remains owned by the UNCHANGED V1 machinery (reconcile lands the V1 verdict: `delivery_unverified`, `run_running`, `run_outcome_unknown`, `settle_check_unavailable`, …). Appending a refusal here would mislabel a delivery-domain attempt as a failed recovery |
+| E4 | attempt non-terminal but delivery-domain evidence exists: any `delivery_started` / `run_delivered` / `delivery_rejected` / reconciled outcome-unknown handle in the ledger, OR the fresh Router correlation query answers anything other than "no record ever existed" (pending/settled/evicted/restart_lost), OR the store is unreachable, OR any reconciliation handle, messageId, or session linkage attributable to this attempt (by requestId, attemptId, or nodeVisitId) exists in the Router or session seams | `RECOVERY_INAPPLICABLE:<evidence-class>` | none from the recovery operation — recovery simply does not apply; the attempt remains owned by the UNCHANGED V1 machinery (reconcile lands the V1 verdict: `delivery_unverified`, `run_running`, `run_outcome_unknown`, `settle_check_unavailable`, …). Appending a refusal here would mislabel a delivery-domain attempt as a failed recovery |
 | E5 | attempt is eligible-shaped (phase planned/RESOLUTION_BLOCKED with `resolve_failed` evidence per CTR-WAE-011, no delivery-domain evidence, store never-existed) BUT the world has drifted: instance gone, NodeVisit no longer current (`nodeVisitId` exact-compare), `assigneePrincipalId` changed, or a business transition past the visit is observed | `RECOVERY_REFUSED:<which>` | append `recovery_refused {authorityRef, which}` ⇒ attempt lands terminal NEEDS_REVIEW — it can never validly execute, so the human path is correct |
 | E6 | eligible-shaped and world intact | PROCEED | append `recovery_authorized {authorityRef}` (durable) → re-run resolution exactly per CTR-WAE-003 (fresh reads; no cache): failure ⇒ append fresh `resolution_blocked` with the new code, attempt stays blocked, ZERO side effects; success ⇒ append `delivery_started` (durable, BEFORE any deliver call) ⇒ invoke delivery exactly per CTR-WAE-004 — ONE Run, same attemptId, `requestId = attemptId`, unchanged sidecar ⇒ `run_delivered` and unchanged V1 events on success, `delivery_failed{reason:"delivery_rejected:<code>"}` (terminal, V1 semantics) on synchronous rejection |
 
@@ -743,9 +735,12 @@ successor, each mechanically asserted in
 - ENTRY-DISPATCH TABLE: E1 no-authorityRef refuses with zero appends; E2
   no-attempt no-ops; E3 terminal no-ops with zero appends (asserting the
   V1 terminal append-refusal survives); E4 delivery-domain evidence (each
-  class) yields `RECOVERY_INAPPLICABLE` with zero appends and the
-  unchanged reconcile verdict; E5 world drift yields `recovery_refused`
-  append + terminal NEEDS_REVIEW with the exact `<which>`.
+  class — ledger events, non-never-existed/unreachable Router store
+  answers, AND attributable handle/messageId/session linkage in
+  Router/session seams) yields `RECOVERY_INAPPLICABLE` with zero appends
+  and the unchanged reconcile verdict; E5 world drift yields
+  `recovery_refused` append + terminal NEEDS_REVIEW with the exact
+  `<which>`.
 - Blocked-attempt reconcile exemption: RESOLUTION_BLOCKED never takes the
   `delivery_unverified` NEEDS_REVIEW verdict; `delivery_started` attempts
   still do.
@@ -808,12 +803,17 @@ zero Runs — designed behavior (§4).
 4. Exact successor head returned to the Owner.
 5. Owner exact-head acceptance (THE gate; this document's `proposed`
    status carries no authority until then).
-6. Merge successor authority. At merge, the accepted V1 file gains a
-   reciprocal superseded-by backlink pointing at this Spec (this
-   candidate does not modify the accepted V1 file itself — the backlink
-   is the acceptance-time transaction, mirroring V1's own ASM R4
-   backlink obligation); the inherited ASM R4 amendment relationship
-   continues to hold unchanged via CTR-WAE-004.
+6. Merge successor authority. At merge, the acceptance transaction adds
+   BOTH reciprocal backlinks: (a) the accepted V1 file gains a
+   superseded-by backlink pointing at this Spec, and (b) the accepted
+   AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R4 gains its reciprocal
+   amended-by backlink identifying THIS Spec as the current carrier of
+   the two-source-kind enumeration — carrying out V1 §5's outstanding
+   ASM backlink obligation, which this succession inherits and must not
+   drop (a one-way authority edge is not a closed succession). This
+   candidate does not modify either accepted file itself — the backlinks
+   are the acceptance-time transaction; the inherited ASM R4 amendment
+   relationship continues to hold unchanged via CTR-WAE-004.
 7. Rebase/port the frozen PR #224 implementation onto the accepted base.
 8. Implement ONLY the accepted recovery delta (CTR-WAE-011/012/013).
 9. Focused + regression + §6 crash/concurrency/dispatch matrix.
