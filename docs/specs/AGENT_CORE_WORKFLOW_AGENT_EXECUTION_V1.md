@@ -1,11 +1,21 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 date: 2026-09-09
+accepted_date: 2026-09-09
+acceptance_authority_basis: >-
+  Owner exact-head acceptance (PR mayf3/dsh-agent-core#219, ACCEPT=YES at
+  2f1329b69fea2601fa539bbba269f6ca341cafbb, second gate after the first
+  REVISE round closed B-O1 + the governance-citation mechanical item); prior
+  chain: independent semantic review REVISE -> fix -> delta re-review
+  ACCEPT_READY. This commit is the lifecycle transaction only: the accepted
+  contract text is byte-identical to the accepted head except this
+  frontmatter.
+accepted_reviewed_head: 2f1329b69fea2601fa539bbba269f6ca341cafbb
 revision: r2
 revision_date: 2026-09-09
 revision_note: >-
