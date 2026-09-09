@@ -1,9 +1,22 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_COORDINATOR_CONTROL_PLANE_BROKER_V1
-status: proposed
+status: accepted
+accepted_date: 2026-09-09
+accepted_by: mayf3
+accepted_reviewed_head: ad3e246d3cdb60a1c0d9ebeec9babf54ad3e5fe4
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner EXACT-HEAD ACCEPTANCE = YES (mayf3, 2026-09-09) binding this exact
+  semantic head ad3e246d3cdb60a1c0d9ebeec9babf54ad3e5fe4 (reviewed base
+  5a5395246e7cbd7412101167d8a99042c15db1aa) with SHIP_BLOCKERS = 0 and
+  INDEPENDENT_REVIEW = PASS / SEMANTIC_DELTA_AFTER_FINAL_REVIEW = NONE.
+  Acceptance transaction is lifecycle/authority metadata only: every §1-§14
+  contract byte below the frontmatter is preserved. Production deployment
+  remains P0-slot-gated (production_apply_authority: none).
+acceptance_record: docs/reports/AGENT_CORE_WORKFLOW_COORDINATOR_CONTROL_PLANE_BROKER_V1_ACCEPTANCE_V1.md
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 scope:
   - mayf3/dsh-agent-core
@@ -17,13 +30,16 @@ governed_by:
 external_authorities:
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1
-    revision: proposed@github/main-4bbbbe9-line (pin finalized at acceptance)
+    revision: dd235dc (accepted main merge, mayf3/svc-workflow, 2026-09-09;
+      acceptance lifecycle commit beaaf32 on reviewed head 5b0038ba)
     relation: depends_on
     note: upstream wire/authorization authority（domain list/get/update、
       get owner、binding reconcile、member/cancel/archive coordinator
-      放宽）；本 Spec authoring 时 status=proposed，acceptance 时 repin
-      其 accepted main head——同 GLOBAL_INSTANCES_CAPABILITY_V2 对
-      SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 的 pin 纪律
+      放宽）。Lane-3-sanctioned authority-metadata repin：authoring 时
+      status=proposed，acceptance 时已 repin 到实际 accepted main
+      revision dd235dc——仅 metadata，wire/schema/permission semantics
+      零变化（同 GLOBAL_INSTANCES_CAPABILITY_V2 对
+      SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 的 pin 纪律）
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1
     revision: f900586fe198b3a1e1a069fe8ccc3690a481612a
@@ -42,6 +58,20 @@ product_direction: WORKFLOW_COORDINATOR_CONTROL_PLANE_V1 (Owner goal directive, 
 
 # AGENT_CORE_WORKFLOW_COORDINATOR_CONTROL_PLANE_BROKER_V1
 
+> **ACCEPTED（2026-09-09，Owner EXACT-HEAD ACCEPTANCE，lifecycle-only
+> transaction）。** Owner mayf3 绑定 exact reviewed semantic head
+> `ad3e246d3cdb60a1c0d9ebeec9babf54ad3e5fe4`（reviewed base
+> `5a5395246e7cbd7412101167d8a99042c15db1aa`），SHIP_BLOCKERS = 0，
+> INDEPENDENT_REVIEW = PASS / SEMANTIC_DELTA_AFTER_FINAL_REVIEW = NONE。
+> 本 acceptance 仅变更 lifecycle/authority metadata（frontmatter 翻转 +
+> 外部权威 repin 到 svc accepted main `dd235dc`）；§1-§14 全部合同 bytes
+> 逐字不变。§4 census 标签 "fresh read-back @ origin/main 232bc2d" 为
+> authoring-time 历史 evidence label（Owner 裁定 SHIP_BLOCKER=NO，本事务
+> 不触碰）。`production_apply_authority` 保持 none——部署仍受 P0 slot
+> 纪律门控。
+>
+> 以下为 authoring 轮原文（历史记录）：
+>
 > **STATUS = proposed（docs-only Draft PR）。** 本轮只提交 docs-only Draft
 > PR：不实现、不接受、不 merge、不部署、不改任何 grant。
 > `implementation_authority: none`、`production_apply_authority: none`。
@@ -106,8 +136,8 @@ delta，合起来构成 directive 的完整 Agent 面。
 ## 3. Authority and dependencies
 
 - 上游 wire/授权权威：`SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`
-  （proposed→acceptance repin；其 CTR-CP-002 wire contract 与 CTR-CP-003
-  error table 是本 Spec 的逐字输入）。
+  （**accepted，svc main `dd235dc`**——acceptance repin；其 CTR-CP-002
+  wire contract 与 CTR-CP-003 error table 是本 Spec 的逐字输入）。
 - 姊妹写面：`AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1` §25
   （proposed amendment；governed_by 关系）。
 - 既有只读面：`AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2`
