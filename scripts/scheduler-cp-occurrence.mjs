@@ -39,6 +39,26 @@ const FREEZE = has('--freeze')
 const RECONCILE = has('--reconcile')
 
 const EVIDENCE_NOTE = 'operator reconcile: run interrupted and unresumable (runtime restarted since start; bounded at-job window long elapsed; job disabled — no re-execution, terminal fact = failed)'
+const NOTE_OVERRIDE = val('--note')
+
+/**
+ * Settled-unknown unblocking predicate (2026-09-09 HR dispatcher incident):
+ * an outcome_unknown WITHOUT lateSettlement permanently blocks all future
+ * admissions for the job (_tickOnce/reserveOccurrence treat it as in-flight),
+ * so reconciling it is the unblocking action. Mechanically safe when the
+ * record has already SETTLED (finite endedAt) — it is definitionally not
+ * in-flight — and late evidence never arrived.
+ */
+export function isUnresolvedUnknown(record) {
+  return record !== null && record.state === 'outcome_unknown' && record.lateSettlement === null
+    && Number.isFinite(record.endedAt)
+}
+
+/** Auto-derive the runId from the store record itself (single source of truth). */
+export function deriveRunIdFromView(view) {
+  if (!isUnresolvedUnknown(view.occurrence)) return null
+  return view.occurrence.runId ?? null
+}
 
 /** Read-only freeze of everything the A–E classification needs. Pure-ish (fs read only). */
 export function freezeView(rawDoc, { jobId, occurrenceId }) {
@@ -72,9 +92,9 @@ export function freezeView(rawDoc, { jobId, occurrenceId }) {
   }
 }
 
-async function reconcile(store, { occurrenceId, runId }) {
+async function reconcile(store, { occurrenceId, runId, note }) {
   const result = await reconcileOccurrence(store, {
-    occurrenceId, runId, resolvedTo: 'failed', evidenceNote: EVIDENCE_NOTE,
+    occurrenceId, runId, resolvedTo: 'failed', evidenceNote: note ?? EVIDENCE_NOTE,
   })
   return result
 }
@@ -116,6 +136,16 @@ async function selftest() {
     ok(bare.occurrence?.occurrenceId === occurrence.occurrenceId, 'bare-hash occurrence id resolves')
     ok(JSON.stringify(view).includes('seed') === false, 'message body absent')
 
+    // settled-unknown unblocking predicate (2026-09-09 HR dispatcher incident):
+    // a SETTLED outcome_unknown (finite endedAt, no lateSettlement) qualifies
+    // for bare --reconcile with auto-derived runId; unended/swept ones do not.
+    ok(isUnresolvedUnknown(view.occurrence) === false, 'unended unknown is NOT the settled-unblocking shape')
+    const settledUnknown = { ...view.occurrence, endedAt: 9_000 }
+    ok(isUnresolvedUnknown(settledUnknown) === true, 'settled unknown qualifies')
+    ok(isUnresolvedUnknown({ ...settledUnknown, lateSettlement: { basis: 'operator-reconcile' } }) === false, 'already-reconciled record does not qualify')
+    ok(deriveRunIdFromView({ occurrence: settledUnknown }) === settledUnknown.runId, 'runId auto-derives from the store record')
+    ok(deriveRunIdFromView({ occurrence: view.occurrence }) === null, 'unended unknown refuses auto-derive')
+
     // reconcile refusals (zero mutation)
     let refused = 0
     try { await reconcile(store, { occurrenceId: occurrence.occurrenceId, runId: 'run:mismatch' }) } catch { refused += 1 }
@@ -151,7 +181,7 @@ async function selftest() {
 }
 
 if (SELFTEST) { await selftest(); process.exit(0) }
-if (!OCC) { process.stderr.write('usage: scheduler-cp-occurrence --freeze --job <id> --occurrence <id> | --reconcile --occurrence <id> --run-id <runId> [--store <path>] | --selftest\n'); process.exit(2) }
+if (!OCC) { process.stderr.write('usage: scheduler-cp-occurrence --freeze --job <id> --occurrence <id> | --reconcile --occurrence <id> [--run-id <runId>] [--note <text>] [--store <path>] | --selftest\n'); process.exit(2) }
 
 const store = new JobStore(STORE, { runLogPath: join(STORE, '..', 'runs.jsonl') })
 const raw = readFileSync(STORE, 'utf8')
@@ -204,13 +234,24 @@ if (DISPOSITION) {
 if (RECONCILE || DISPOSITION) {
   let effectiveRunId = RUN_ID
   if (DISPOSITION && !effectiveRunId) effectiveRunId = globalThis.__dispositionRunId
-  if (!effectiveRunId) { process.stderr.write('--reconcile requires --run-id\n'); process.exit(2) }
-  const RUN_ID_EFFECTIVE = effectiveRunId
   const before = freezeView(raw, { jobId: JOB ?? '', occurrenceId: OCC })
   if (before.occurrence === null) { process.stderr.write('[occurrence] unknown occurrence — NO MUTATION\n'); process.exit(1) }
+  // Settled-unknown unblocking path: bare --reconcile WITHOUT --run-id derives
+  // the runId from the store record itself and refuses anything but an
+  // unresolved outcome_unknown (zero mutation otherwise).
+  if (RECONCILE && !effectiveRunId) {
+    effectiveRunId = deriveRunIdFromView(before)
+    if (!effectiveRunId) {
+      process.stderr.write('[reconcile] record is not a settled unresolved outcome_unknown (state/lateSettlement/endedAt gate) — NO MUTATION\n')
+      process.exit(1)
+    }
+    process.stdout.write(`[reconcile] runId auto-derived from store record = ${effectiveRunId}\n`)
+  }
+  if (!effectiveRunId) { process.stderr.write('--reconcile requires --run-id\n'); process.exit(2) }
+  const RUN_ID_EFFECTIVE = effectiveRunId
   if (before.occurrence.runId !== RUN_ID_EFFECTIVE) { process.stderr.write(`[occurrence] runId mismatch (ledger has ${before.occurrence.runId}) — NO MUTATION\n`); process.exit(1) }
   const canonicalOccurrenceId = before.occurrence?.occurrenceId ?? OCC
-  const result = await reconcile(store, { occurrenceId: canonicalOccurrenceId, runId: DISPOSITION ? RUN_ID_EFFECTIVE : RUN_ID })
+  const result = await reconcile(store, { occurrenceId: canonicalOccurrenceId, runId: DISPOSITION ? RUN_ID_EFFECTIVE : RUN_ID, note: NOTE_OVERRIDE })
   const after = freezeView(await store.loadDoc({ force: true }).then((doc) => JSON.stringify(doc)), { jobId: JOB ?? result.record.jobId, occurrenceId: OCC })
   process.stdout.write(`EXACT_OCCURRENCE_RECONCILED = ${after.occurrence?.state === 'failed' && after.occurrence?.lateSettlement ? 'PASS' : 'CHECK'}\n`)
   const beforeCount = (JSON.parse(raw).occurrences ?? []).length
