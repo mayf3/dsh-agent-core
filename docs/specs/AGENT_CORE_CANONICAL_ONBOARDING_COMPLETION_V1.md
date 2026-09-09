@@ -1,12 +1,13 @@
 ---
 spec_id: AGENT_CORE_CANONICAL_ONBOARDING_COMPLETION_V1
-status: authorized-implementation
+status: proposed-candidate
 spec_kind: bounded_child_supply_spec
-authority_level: governing_child_spec
-implementation_authority: this_spec
-production_apply_authority: conditional_controlled_operation
-authorizing_directive: OWNER RULING "Life Workbench Baseline Access 纳入正式 Agent 生命周期 — CONTINUE_SAME_GOAL" (2026-09-09)：IDENTITY_LIFECYCLE_OWNER=mayf3/dsh-agent-core；PRIMARY_IDENTITY_AUTHORITY=AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1；PREFLIGHT 判定按本文件 §2
-approval_ref: OWNER-CANONICAL-ONBOARDING-20260909-01
+authority_level: governing_child_spec_pending_acceptance
+implementation_authority: none_until_accepted
+production_apply_authority: none
+proposed_approval_ref_label: OWNER-CANONICAL-ONBOARDING-20260909-01
+proposed_approval_ref_label_note: "LABEL PROPOSAL ONLY — 生效需 Owner 显式接受；在此之前本 ref 不构成任何 Owner authorization"
+authorizing_context: OWNER CONTINUE_SAME_GOAL ruling（2026-09-09）：IDENTITY_LIFECYCLE_OWNER=mayf3/dsh-agent-core；PRIMARY_IDENTITY_AUTHORITY=AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1；PREFLIGHT 判定按本文件 §2；PRODUCTION_OPERATION_AUTHORIZED=NO
 date: 2026-09-09
 governed_by:
   - AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1 (accepted；identity 语义唯一权威，冻结项全部继承)
@@ -24,6 +25,21 @@ owners: [mayf3]
 ---
 
 # AGENT_CORE_CANONICAL_ONBOARDING_COMPLETION_V1
+
+## 0. AUTHORITY STATUS（三分，owner ruling 2026-09-09 固定）
+
+```text
+SPEC_STATUS                     = PROPOSED_CANDIDATE（待独立评审 + Owner acceptance）
+IMPLEMENTATION_STATUS           = COMPLETE_CANDIDATE（PR #234；candidate 架构方向已被 Owner 接受，
+                                  非 production 基线）
+PRODUCTION_OPERATION_AUTHORIZED = NO
+proposed_approval_ref_label     = OWNER-CANONICAL-ONBOARDING-20260909-01（仅为 label 提案，
+                                  Owner 接受前不构成任何 authorization；实现 Agent 不得自行生成或
+                                  宣称有效 approvalRef）
+```
+
+Owner acceptance 前禁止：production migration、真实 canary 创建、credential-store
+mutation、任何 production onboarding execution。
 
 ## 1. 目标链（CANONICAL_ONBOARDING_TARGET，owner 冻结）
 
@@ -66,13 +82,13 @@ shell、不是新 identity engine、不是 runtime hook、不是 Workbench helpe
   `{id,name,description}`；已存在 disabled → fail-loud（不静默 re-enable）；
   已存在 enabled → noop。写前 preimage 备份。
 - STEP 2 Identity：**逐字调用** `ensureAgentCredential`（注入生产 faces：
-  definitions 文件、trusted store、createAuthProvisioningClient + loopback
-  transport adapter、prerequisites `{c,d}`、Part G ownerUid/ownerGid）。
-  库的 fail-loud（含 `existing_credential_resolution_required`）原样保留；
-  entrypoint 仅把该特定 code 分类为「身份已存在 → 存活性确认」：用 store 内
-  既有 credential 做一次 verification mint（200 或 400 invalid_scope = 存活；
-  401 = fail-loud credential_invalid，不自动 rotate）。重跑幂等：不建第二个
-  Principal/Client/credential。
+  definitions 文件、trusted store、createAuthProvisioningClient、prerequisites
+  `{c,d}`、Part G ownerUid/ownerGid）。库的 fail-loud（含
+  `existing_credential_resolution_required`）原样保留；entrypoint 仅把该特定
+  code 分类为「身份已存在 → 存活性确认」：用 store 内既有 credential 做一次
+  verification mint（200 或 400 invalid_scope = 存活；401 = fail-loud
+  credential_invalid，不自动 rotate——恢复走 canonical rotation seam）。
+  重跑幂等：不建第二个 Principal/Client/credential。
 - STEP 3 Baseline entitlements：调用 auth-service standing reconciliation
   vehicle 的既有特权执行面（approvalRef 固定的 `apply-baseline-grants` +
   `verify-baseline-grants`）；fleet 场景期望 = 既有全体 NOOP、新合格 Agent 恰一
@@ -81,32 +97,68 @@ shell、不是新 identity engine、不是 runtime hook、不是 Workbench helpe
 - 输出：状态机 JSON（无 secret；Part H 红线继承：provisioner secret 与新 client
   secret 只经文件读入/HTTPS body → 内存 → 0600 store）。
 
-## 4. 生产 trusted store zone（Part G 在部署现实的落地）
+## 4. Trusted store zone（独立治理包——不随本 PR 执行）
 
-accepted store-writer 冻结要求 store 父目录 0700 且属主为 trusted CP（无选项
-活口）；当前部署把 store 放在共享安装 config 目录（0755 root:wheel，文件
-0600 authsvc）。本 spec 以**语义不变的部署迁移**闭合冲突：
+**MIGRATION_REQUIRED_FOR_CANONICAL_ONBOARDING = YES**：accepted store-writer
+冻结要求 store 父目录 0700 且属主为 trusted CP（无选项活口）；生产 store 现存
+于共享安装 config 目录（0755 root:wheel，文件 0600 authsvc）。identical 语义
+的 accepted 实现无法对现状落写 ⇒ 迁移是 canonical onboarding 的必要前置。
+
+但它同时是 **fleet-wide credential infrastructure change**，因此按 owner
+ruling 拆为独立治理包，不作为本 implementation 的 incidental step：
 
 ```text
-/usr/local/libexec/agent-core/credential-store/        # 0700 authsvc:authsvc（Part G 私区）
-/usr/local/libexec/agent-core/credential-store/agent-credentials.json   # 0600 authsvc:authsvc（真实文件）
-/usr/local/libexec/agent-core/config/agent-credentials.json → 相对符号链接指向真实文件
+governing parent authority = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1 Part G
+                             （trusted-zone 语义来源；本包零语义变更）
+exact pre-state            = pinned 路径为普通文件 0600 authsvc(505:601)，
+                             父目录 0755 root:wheel
+exact post-state           = /usr/local/libexec/agent-core/credential-store/ 0700 505:601
+                             …/credential-store/agent-credentials.json 0600 505:601（真实文件）
+                             旧 pinned 路径 = 相对符号链接 ../credential-store/agent-credentials.json
+consumer compatibility     = broker gateway：readFileSync 跟随符号链接、per-call
+                             重读（源码核实）；plist 绑定不变；executor
+                             shasum/-f 检查跟随符号链接；provisioning/rotation
+                             库 lstat 拒 symlink ⇒ 一律使用真实路径（迁移后
+                             面向真实路径的调用面不变，含 rotation 的 .bak
+                             preimage 落在同私区）
+rollback                   = preimage（bytes+sha256）还原 + 移除符号链接
+failure behavior           = 任何一步失败即停，文件已入私区则以 preimage 回滚；
+                             拒绝在非一致状态上"顺手修复"
+fleet blast radius         = 全体 88 Agent 的 credential 解析路径（经符号链接
+                             透传）；需 bounded independent review PASS 后
+                             单独进入 Owner acceptance / production package
+candidate artifact         = 归档于 deployment-artifacts/canonical-onboarding-v1/
+                             migration-candidate/（未执行；不属本 PR change set）
 ```
 
-- 一次性迁移（迁移脚本，root 单次）：preimage 备份 → 建私区 → 原子移动真实
-  文件（属主/模式保持）→ pinned 路径原子替换为相对符号链接 → 双面验证
-  （broker 读路径 read-through + 库 preflightTrustedCredentialDirectory）。
-- 零代码/零重启影响：broker 消费面 `readFileSync` 跟随符号链接（per-call 重读
-  语义不变）；plist `AGENT_CORE_CREDENTIALS_FILE` 与既有 executor 路径绑定不变。
-- provisioning 库始终使用真实路径（符号链接仅服务既有消费面）。
+**不得先迁生产 store 再证明。**
 
-## 5. 库接触面兼容（wiring 暴露的机械错位，非语义变更）
+## 5. 传输契约（HTTPS——parent authority 待决前置；代码零静默降级）
 
-accepted 库从未与生产 seam 接触过；首次接线暴露一处 wire 字段错位：S2 响应的
-one-time secret 字段，部署路由返回 `secret`，库读取 `client_secret ?? clientSecret`。
-本 spec 授权**一行兼容扩展**（`?? client?.secret`）+ 对应测试；状态机、
-external_ref、store 契约、fail-closed 语义零改动。loopback HTTP 由 entrypoint
-注入 fetch adapter（scheme 重写）解决，库字节不动（HTTPS origin 契约保持）。
+parent authority（AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1 Part A.4/H）冻结：
+provisioner management 调用与 one-time client secret 的唯一合法路径是
+**auth-service HTTPS response body → 进程内存 → 0600 store**；库的
+`normalizeOrigin` 恒等拒绝非 HTTPS origin。生产现实：auth-service 部署为
+loopback `http://127.0.0.1:4001`（与 BROKER_AUTH_ORIGIN 同一信任域；2026-08-23
+fleet 身份批次即经该 loopback seam 创建）。
+
+处置（owner ruling 阻塞 3）：
+
+- **本 implementation 不携带任何 transport adapter**：CLI 原样传递所配 origin；
+  在 parent authority 解析之前，库对 http origin fail-loud
+  `AUTH_CONFIGURATION_ERROR`，对 https origin 的调用因服务无 TLS 而
+  fail-closed——即 **IDENTITY 步骤在传输决议前不可执行**，这是诚实的
+  fail-closed，不是可用的旁路。
+- 解析路径二选一（需经语义 review + Owner acceptance，作为 parent authority
+  amendment / explicit prerequisite resolution）：
+  - **A**：使用真正满足 parent contract 的现有 HTTPS/provisioning seam
+    （当前生产不存在 TLS 面）；
+  - **B（提案）**：把受控 loopback HTTP 显式接受为本部署的 provisioning
+    transport（与全体 deployed machine 流量——broker token minting——同一
+    信任域、同一 listen 面），作为 parent authority 的显式 prerequisite
+    resolution。
+- 库一行 wire-field 兼容（S2 one-time secret 的 `secret` 字段）维持 §5 原判定：
+  机械接线修正，非语义变更。
 
 ## 6. 边界（禁止，owner 冻结继承）
 
