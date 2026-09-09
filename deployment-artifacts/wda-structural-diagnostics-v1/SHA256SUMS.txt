@@ -1,0 +1,15 @@
+# TARGET (branch agent/wda-structural-diagnostics-v1 @ c572c9f; == post-merge main bytes, re-verified post-merge)
+targets/packages/broker/src/mapping.js  c171a809abbebbdeafb2c99a17451008d025149b3f542386bce9aba4fcd75edf
+targets/packages/broker/src/schema.js  83d462594c47435567869d0c22062f6d760658d75c1dd0d6ded6120f627d5d8f
+targets/packages/broker/src/capabilities/workflow-definition-authoring.js  2bb05413777a67f5948d8a2829cec8a8b29e969344610388fdbbe30eaaac0f87
+# LIVE PREIMAGE (captured 2026-09-09T05:52:47Z; drift gate baseline)
+preimages/mapping.js  d4df035f4113c275715b72c0e89ab7353ae60fa73303b3761f257875f1d74b86
+preimages/schema.js  5cf36f52156891fbf850572bc46b577e0904dde14c78a483a16a32cab468a994
+preimages/capabilities/workflow-definition-authoring.js  f1bb082f6aaea73552441d4978a9e48b9573d9895a011773a4d98cad6b0f963b
+# UNTOUCHED GUARD (must not change during install)
+live:index.js  158f7cff5ef4773f48f22a91875012ee5b58e56e1efb4199460e6b9b798cf1b5
+live:relay.js  4c06ec96918250c1b59e61fdb09e91543782880efe45586a3d4edf2814ce5033
+live:transport.js  9454a6aef4adbe3c202aad1a24355a4ad6947ce1c5f848baf45b61c6063a7445
+live:registry.js  31d94430bdd821d23e7795c3ccf31f0c9137ca4fe2ece40c4675c5f89830d133
+live:gateway.js  03d65e0022c1ac5e855492a6d9782e5a20bae71bbd5202882b82868ba7fa3550
+live:capabilities/workflow.js  cfea06cd9ae979803a8e7f89f5784af1b6734d40428a60a752cebcc8b95d5e21
