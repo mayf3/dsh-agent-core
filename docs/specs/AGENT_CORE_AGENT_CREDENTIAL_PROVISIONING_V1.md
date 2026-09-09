@@ -371,7 +371,25 @@ proof/test safety，并与 Amendment 6 的 PHASE_A/PHASE_B 分段完全组合。
    `BOOK_DECONSTRUCTOR_ISOLATED = YES`（代理 census，incident conclusion）；
    完整 DB metadata census 不是本 amendment 的 drafting/implementation
    blocker，仅在 production preflight 需要时执行一次合并的 bounded
-   read-only gate（metadata only，无 secret values）。
+   read-only gate（metadata only，无 secret values）。该 census 的精确
+   谓词：`updated_at > created_at AND rotated_at IS NULL`（任一命中行即
+   为无 receipt 的缝外 drift 疑似，须以 I.3 receipt 账本反核对账；任何
+   执行不得读取 secret bytes/hash 列值）。
+7. **Amendment 7 acceptance question ledger（review 逐条作答的冻结基准）**：
+   下列九问的 Spec 冻结答案与 enforcement 指针——review 逐条独立作答时，
+   任何 `YES / UNPROVEN` 即本 amendment REVISE：
+
+   | # | Question | Frozen answer | Enforced by |
+   |---|---|---|---|
+   | Q1 | CAN_BOOT_ROTATE_SECRET | **NO** | I.1 / L4-T1 |
+   | Q2 | CAN_SPAWN_ROTATE_SECRET | **NO** | I.1 / L4-T2 |
+   | Q3 | CAN_ENSURE_ROTATE_SECRET | **NO** | I.1 / L4-T3/T4 |
+   | Q4 | CAN_NORMAL_APP_DIRECT_UPDATE_SECRET | **NO** | I.2 `(e)` 列级特权 / L4-T5/T6 |
+   | Q5 | CAN_OPERATOR_SCRIPT_DIRECT_UPDATE_SECRET | **NO** | I.2 / L4-T5/T7 |
+   | Q6 | CAN_FAKE_ROTATION_BY_UPDATING_HASH_AND_TIMESTAMP | **NO** | I.2 + I.3 receipt 排他 / L4-T7 |
+   | Q7 | CAN_PROOF_ROTATE_RANDOM_BUSINESS_AGENT | **NO** | I.5 / L4-T11 |
+   | Q8 | CAN_DB_STORE_SPLIT_FAIL_SILENTLY | **NO** | I.4 readback 门 + 继承 split state 门 / L4-T9 |
+   | Q9 | CAN_SECRET_CHANGE_EXIST_WITHOUT_ROTATION_RECEIPT | **NO** | I.3 receipt 排他 + I.4 继承门 / L4-T8/T9/T10 |
 
 ---
 
