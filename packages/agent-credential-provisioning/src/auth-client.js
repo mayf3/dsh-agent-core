@@ -8,7 +8,20 @@ function safeError(code, message, fields = {}) {
   return Object.assign(new Error(message), { code, ...fields })
 }
 
+// AMENDMENT_8 (CONTROLLED_LOOPBACK_HTTP_PROVISIONING_EXCEPTION): the single
+// non-HTTPS origin the parent authority accepts — byte-exact pinned string
+// (scheme http, literal host 127.0.0.1, exact deployed port 4001). No DNS,
+// no hostname substitution, no other port: string equality is the whole gate.
+// Mechanical boundary conditions C1/C2 (loopback-only listen, trusted operator
+// context) are enforced by the operator entrypoint before this client is built;
+// any unmet condition fails closed there (spec Amendment 8, A8.2).
+const CONTROLLED_LOOPBACK_HTTP_ORIGIN = 'http://127.0.0.1:4001'
+
 function normalizeOrigin(authServiceOrigin) {
+  if (authServiceOrigin === CONTROLLED_LOOPBACK_HTTP_ORIGIN) {
+    return CONTROLLED_LOOPBACK_HTTP_ORIGIN
+  }
+
   let url
   try {
     url = new URL(authServiceOrigin)
@@ -58,6 +71,7 @@ export function createAuthProvisioningClient({
           Accept: 'application/json',
         },
         body: JSON.stringify(body),
+        redirect: 'error', // Amendment 8 C4: no redirects
         signal: AbortSignal.timeout(timeoutMs),
       })
     } catch {
@@ -105,6 +119,7 @@ export function createAuthProvisioningClient({
             Accept: 'application/json',
           },
           body: new URLSearchParams({ grant_type: 'client_credentials', resource, scope }).toString(),
+          redirect: 'error', // Amendment 8 C4: no redirects
           signal: AbortSignal.timeout(timeoutMs),
         })
       } catch {
