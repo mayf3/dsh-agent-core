@@ -4,7 +4,7 @@ status: accepted
 date: 2026-08-25
 accepted_date: 2026-08-27
 amendments:
-  - AMENDMENT_1 (2026-09-09, structural-diagnostics manifest opt-in; status PROPOSED_PENDING_OWNER_ACCEPTANCE — 见文末 AMENDMENT_1 节)
+  - AMENDMENT_1 (2026-09-09, structural-diagnostics manifest opt-in; status ACCEPTED — Owner decision AMENDMENT_1_ACCEPTED, 见文末 AMENDMENT_1 节)
 type: implementation-spec (error preservation + pagination validation; implementation exists as WIP, authority pending this Spec's acceptance)
 scope:
   - Broker generic HTTP transport downstream error preservation (service code / status / sanitized detail / x-request-id)
@@ -168,10 +168,22 @@ projection → 404 + 该码）。
 
 ## AMENDMENT_1（2026-09-09）— structural-diagnostics manifest opt-in
 
-> **AMENDMENT_STATUS = PROPOSED_PENDING_OWNER_ACCEPTANCE**（docs-only；
-> Owner exact-head acceptance 是其唯一生效路径；生效前不授予任何实现合并
-> 权限）。生产触发证据与端到端 contract trace 见
-> `docs/investigations/WDA_AUTHORING_STRUCTURAL_DIAGNOSTICS_ROOT_CAUSE_V1.md`。
+> **AMENDMENT_STATUS = ACCEPTED（2026-09-09，Owner decision token
+> `AMENDMENT_1_ACCEPTED`，docs-only lifecycle acceptance transaction——本
+> commit 仅镜像状态与 provenance，R6/A1 语义正文零改动）。**
+>
+> ACCEPTANCE_PROVENANCE：
+> ```text
+> AUTHORITY_ACCEPTED        = YES
+> AUTHORITY_ACCEPTED_COMMIT = 2a3a107（PR #225 docs commit，Owner 所见 exact head）
+> IMPLEMENTATION_COMMIT     = 09d9eb3（与 authority 同分支 stacked）
+> IMPLEMENTATION_ACCEPTED   = ONLY_AFTER_INDEPENDENT_IMPLEMENTATION_AUDIT
+>                             （独立 Reviewer 审 exact implementation head 09d9eb3；
+>                              audit ACCEPT/BLOCKERS=[] 才继续 merge/integration；
+>                              Owner acceptance 不构成 implementation 已审计）
+> EXACT_HISTORICAL_INVOCATION_PAYLOAD = NOT_RECOVERED（caller transcript 未取；
+>                             生产 E2E 关闭该剩余不确定性；不为取 transcript 请求 sudo）
+> ```
 
 ### A1.0 触发证据（已实证，read-only）
 
