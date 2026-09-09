@@ -86,14 +86,20 @@ const svcError = (res, status, code, message, requestId, details) => {
   res.end(JSON.stringify({ error: { code, message, details } }))
 }
 
-test('workflow_execute: manifest freezes the unified two-operation write contract', () => {
+test('workflow_execute: manifest freezes the unified four-operation write contract (§25 amendment)', () => {
   const manifest = executeManifest()
   assert.ok(manifest)
   assert.equal(validateManifest(manifest).ok, true)
   assert.equal(manifest.toolName, 'workflow_execute')
   assert.deepEqual(manifest.requiredScopes, ['workflow.execute'])
-  // DEC-010: exactly two operations, single write entry, no workflow_transition.
-  assert.deepEqual(manifest.operations.map((op) => op.name), ['create_instance', 'transition'])
+  // DEC-010 as amended by §25 (governance cleanup write-family): exactly four
+  // operations, single instance-execution write entry, no workflow_transition.
+  assert.deepEqual(manifest.operations.map((op) => op.name), [
+    'create_instance',
+    'transition',
+    'cancel_instance',
+    'archive_instance',
+  ])
   assert.ok(!workflowManifests.some((m) => m.id === 'workflow_transition' || m.toolName === 'workflow_transition'))
 
   const transition = manifest.operations[1]
