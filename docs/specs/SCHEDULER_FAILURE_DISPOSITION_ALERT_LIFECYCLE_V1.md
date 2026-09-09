@@ -1,9 +1,11 @@
 ---
 spec_id: SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1
 status: proposed
-spec_kind: semantic-authority (docs-only candidate; no implementation authorized)
+spec_kind: invariant
+authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
+superseded_by: null
 date: 2026-09-10
 owners:
   - repository-maintainers
@@ -22,8 +24,11 @@ owner_drafting_mandate: >
 
 # SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1
 
-> **状态**：`proposed`（DRAFT）。本 Spec 只回答一个语义问题并冻结其答案；
-> acceptance（`accepted`）是进入任何实现 PR 的前置条件。
+> **状态**：`proposed`（DRAFT，docs-only 候选；零实现授权）。本 Spec 只回答一个语义问题
+> 并冻结其答案；acceptance（`accepted`）是进入任何实现 PR 的前置条件。
+> 分类说明：`spec_kind: invariant`（本 Spec 冻结的是告警生命周期的长期语义不变式，
+> 不携带任何 implementation contract；实现若被授权，将是独立的后续 PR，受本 Spec 的
+> §4/§5 边界约束）。
 
 ## 1. The one semantic question
 
