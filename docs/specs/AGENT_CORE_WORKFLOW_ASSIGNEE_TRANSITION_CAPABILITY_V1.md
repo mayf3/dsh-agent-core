@@ -1311,7 +1311,9 @@ DEC-010/DEC-011 的「单一写工具」authority 语义由本 amendment **继�
   （已部署 @ 4bbbbe9；response 形状同 cancel 族）。
 - Lifecycle legality：仅 terminal/cancelled 可 archive；coordinator 权限
   **不**绕过 lifecycle（`instance_not_terminal` 409）。
-- Error 表（逐码对拍 svc error.rs `from_archive` 全 14 变体）：
+- Error 表（逐码对拍 svc error.rs `from_archive` 全 **13** 变体——
+  archive 枚举无 `current_visit_not_found`/`source_node_terminal`，二者为
+  cancel-only；M1 机械计数修正）：
   `instance_not_found`(404, SHARED)、`not_domain_owner`(403, NEW)、
   `instance_not_terminal`(409, NEW)、`already_archived`(409, NEW)、
   `active_activation_exists`(409, NEW)、
