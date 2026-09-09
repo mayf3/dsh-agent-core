@@ -3,6 +3,8 @@ spec_id: AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1
 status: accepted
 date: 2026-08-25
 accepted_date: 2026-08-27
+amendments:
+  - AMENDMENT_1 (2026-09-09, structural-diagnostics manifest opt-in; status ACCEPTED — Owner decision AMENDMENT_1_ACCEPTED, 见文末 AMENDMENT_1 节)
 type: implementation-spec (error preservation + pagination validation; implementation exists as WIP, authority pending this Spec's acceptance)
 scope:
   - Broker generic HTTP transport downstream error preservation (service code / status / sanitized detail / x-request-id)
@@ -161,3 +163,130 @@ projection → 404 + 该码）。
   （origin/main 已有独立改动）。
 - `docs/reports/broker-transport-v1.md` 保持 descriptive 历史记录；其错误
   映射行为描述自本 Spec accepted 起视为被取代。
+
+---
+
+## AMENDMENT_1（2026-09-09）— structural-diagnostics manifest opt-in
+
+> **AMENDMENT_STATUS = ACCEPTED（2026-09-09，Owner decision token
+> `AMENDMENT_1_ACCEPTED`，docs-only lifecycle acceptance transaction——本
+> commit 仅镜像状态与 provenance，R6/A1 语义正文零改动）。**
+>
+> ACCEPTANCE_PROVENANCE：
+> ```text
+> AUTHORITY_ACCEPTED        = YES
+> AUTHORITY_ACCEPTED_COMMIT = 2a3a107（PR #225 docs commit，Owner 所见 exact head）
+> IMPLEMENTATION_COMMIT     = 09d9eb3（与 authority 同分支 stacked）
+> IMPLEMENTATION_ACCEPTED   = ONLY_AFTER_INDEPENDENT_IMPLEMENTATION_AUDIT
+>                             （独立 Reviewer 审 exact implementation head 09d9eb3；
+>                              audit ACCEPT/BLOCKERS=[] 才继续 merge/integration；
+>                              Owner acceptance 不构成 implementation 已审计）
+> EXACT_HISTORICAL_INVOCATION_PAYLOAD = NOT_RECOVERED（caller transcript 未取；
+>                             生产 E2E 关闭该剩余不确定性；不为取 transcript 请求 sudo）
+> ```
+
+### A1.0 触发证据（已实证，read-only）
+
+- 生产 `workflow_definition_authoring.replace_draft_graph`（draft
+  `2cba2687-073a-420e-a49c-ab271d1583aa`，model 3）的多次真实调用全部在
+  Broker 内部以**裸 `invalid_arguments`**（无 detail）拒绝；svc-workflow
+  访问日志中该 definition **零** `PUT /draft` 记录（拒绝发生在任何下游
+  HTTP 之前）。
+- 离线复现（live 字节 == main ac6f727，`/usr/local/libexec/agent-core/app`
+  树逐文件 diff 相等）证明：structural 违规（unknown property /
+  missing required / 标量类型错误）在 `mapping.js` `validateInvocation`
+  中走 `structural.code === undefined` 分支，violations 字符串被丢弃，
+  error envelope 仅剩 `{ code: 'invalid_arguments' }`；
+  `registry.js` CTR-WDA-007(b) 渲染端因此**无从渲染** detail。
+- 与 accepted `AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V4`
+  CTR-WDA-007(b) 的 mandate（对 replace_draft_graph 本地
+  `invalid_arguments` 附 nonempty safe bounded detail）存在实现缺口。
+  V4 的 CTR-WDA-007 产品代码边界（manifest + linear compiler + gateway
+  wiring + registry 呈现例外）**不覆盖** `mapping.js`，而缺陷恰在
+  mapping 层 → 需要本修正案授权。
+
+### A1.1 新增 ruling R6 — manifest-declarable structural diagnostics
+
+沿 R4 的 manifest 声明式元数据模式，新增一个 optional arguments 级
+manifest 元数据字段：
+
+```
+structuralDiagnostics: true   // 只允许在 operation arguments 根声明；
+                              // 缺省 = false（行为与今天逐字节一致）
+```
+
+- 当某 operation 的 `arguments.structuralDiagnostics === true` 且
+  structural violations 存在且无 `validationError` 声明码解析时，
+  `mapping.js` `validateInvocation` 返回的 error envelope 附着
+  `detail = violations.join('; ')`，**硬上限 500 字符**（超长截断，
+  与 R3 截断纪律一致）。
+- `detail` 内容仅为 Broker 自产的违规字符串（property path +
+  违规原因），不含任何凭据/身份/下游 body；R3 整信封脱敏红线照常
+  适用于该字段。
+- 有 `validationError` 声明码的越界类（R4 既有路径）行为不变
+  （已附 detail）。
+- **模型可见参数 schema 零变化**：`structuralDiagnostics` 是 manifest
+  元数据，不是 argument property；`properties` / `required` /
+  `additionalProperties` / 嵌套 `items` 形状逐字节不变（CTR-WDA-002
+  冻结面不受影响）。
+- **未声明该字段的 capability 信封字节不变**（R5 非回归强化：
+  calculator/V0、Forum、Scheduler 等全部 capability 的 structural
+  失败 envelope 仍为裸 `{ code }`，现有 deepEqual pin 全部保持）。
+- 渲染端零改动：`registry.js` 既有 CTR-WDA-007(b) 授权路径
+  （authoring + replace_draft_graph + 本地 invalid_arguments）本就
+  渲染 `error.detail`；本修正案只是让 detail 真正到达该路径。
+  其他 capability 的模型可见文本不变（render 不读未授权场景的
+  detail）。
+- 无 per-business-system 分支：机制 100% 由 manifest 数据驱动
+  （R5 通用性纪律保持；`mapping.js` / `schema.js` 不出现任何
+  capability id 判断）。
+
+### A1.2 授权的实现闭包（本修正案生效后）
+
+```
+packages/broker/src/mapping.js            （R6 detail 附着，≤8 行）
+packages/broker/src/schema.js             （structuralDiagnostics 校验 + canonical 保留）
+packages/broker/src/capabilities/workflow-definition-authoring.js
+                                          （replace_draft_graph arguments 声明 structuralDiagnostics: true）
+packages/broker/test/capabilities/workflow-authoring-structural-diagnostics.test.js
+                                          （focused 新增）
+```
+
+`AMENDMENT_1_ADDED_FILE_COUNT = 4`（在原 §2 九文件 closure 之外的
+增量；原 closure 中 transport/registry/relay/workflow.js 本修正案
+**零触碰**）。
+
+说明：`workflow-definition-authoring.js` 的 manifest 数据改动由
+accepted `AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V4` CTR-WDA-007
+产品代码白名单（"the Workflow Authoring manifest"）授权；
+`mapping.js` / `schema.js` 由本 Spec（含本修正案）授权。
+
+### A1.3 验收（AMENDMENT_1 focused ACs）
+
+- SD-1：replace_draft_graph 带 unknown root property（如 `graph` 包装）
+  → envelope `{ code: 'invalid_arguments', detail: 'unknown property
+  "graph"' }`；registry 渲染文本含该 detail。
+- SD-2：缺 required（如 `definitionVersionId`）→ detail 命名该属性。
+- SD-3：replace_draft_graph 带 `semanticModelVersion`（属于
+  create_draft_version 的参数误带到 replace）→ detail
+  `unknown property "semanticModelVersion"`。
+- SD-4：未 opt-in 的 operation（同 manifest 的 create_definition 等）
+  同类违规 → envelope 仍为裸 `{ code: 'invalid_arguments' }`
+  （无 detail）。
+- SD-5：calculator/V0 既有 deepEqual envelope pin 全部不变
+  （`test/broker.test.js` 原样通过）。
+- SD-6：schema.js 校验 fail-closed——`structuralDiagnostics: false`
+  或非布尔 → manifest 校验失败；canonical 输出仅在 true 时保留该键。
+- SD-7：detail 500 字符硬上限（病理深路径违规被截断，无异常抛出）。
+- SD-8：broker 包全套件相对 pristine main 基线的通过集不变
+  （基线 4 个 index.js 相关 pre-existing 失败如实记录，非本修正案
+  引入；其余 345 PASS 保持）。
+
+### A1.4 边界与不授权项
+
+- `production_apply_authority = none`（沿用本 Spec；部署需独立授权）。
+- 不改任何 validation predicate（违规判定逻辑零变化；只有违规的
+  **呈现**从丢弃变为附着）。
+- 不改模型可见 schema / 注册计数 / dispatch 语义 / credential seam。
+- 不引入通用 error 转发策略或 registry redesign（渲染端零改动）。
+- svc-workflow 零改动（WORKFLOW_DB_CHANGE = NONE 延续）。
