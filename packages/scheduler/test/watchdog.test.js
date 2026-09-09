@@ -98,6 +98,22 @@ test('TEST-8 store half: failed run / stuck run / consecutive failures detected'
   assert.deepEqual(classes, ['CONSECUTIVE_FAILURE', 'RUN_FAILED', 'RUN_STUCK'])
 })
 
+test('TEST-8b: operator-reconciled failure is not an open RUN_FAILED (2026-09-09 reminder loop)', () => {
+  const reconciledOcc = { runId: 'run:a', jobId: 'job-1', executionOutcome: 'failed', startedAt: NOW - 5_000, endedAt: NOW - 4_000, lateSettlement: { basis: 'operator-reconcile', resolvedTo: 'failed' } }
+  const silenced = evaluateRunHealth(
+    { jobs: [liveJob({ state: { nextRunAtMs: NOW + 60_000 } })], occurrences: [reconciledOcc] },
+    { nowMs: NOW },
+  )
+  assert.deepEqual(silenced, [])
+
+  // Suppression is scoped to operator disposition: any other basis still alerts.
+  const otherBasis = evaluateRunHealth(
+    { jobs: [liveJob({ state: { nextRunAtMs: NOW + 60_000 } })], occurrences: [{ ...reconciledOcc, lateSettlement: { basis: 'engine-retry' } }] },
+    { nowMs: NOW },
+  )
+  assert.deepEqual(otherBasis.map((f) => f.class), ['RUN_FAILED'])
+})
+
 test('SCHEDULER_RUNTIME_UNHEALTHY from health probe (TEST-H store half); evidence staleness is not a finding', () => {
   const findings = evaluateRunHealth({ jobs: [], occurrences: [] }, {
     nowMs: NOW,
