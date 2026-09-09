@@ -28,7 +28,13 @@ status: accepted
 > （本修订曾以 "Amendment 6" 起草于落后本地树（base `5cfb610`），发现与
 > origin/main 已接受的 Amendment 6 编号冲突后重编号为 Amendment 7 并重放到
 > main 基线；independent semantic review REVISE → blocker union 8 项一次
-> 修复 → delta re-review ACCEPT，2 non-blocker 已落）
+> 修复 → delta re-review ACCEPT，2 non-blocker 已落；
+> **acceptance-finalize：2026-09-09——goal directive 九问复核 review =
+> ACCEPT_READY（九问逐条 NO/proven，零 YES/UNPROVEN；Q4/Q5/Q6 以
+> `NEEDS(e)` 诚实门控），directive-alignment union（census 精确谓词
+> `updated_at > created_at AND rotated_at IS NULL` + 九问应答账本）+
+> governing investigation 文件随 PR #223 入库（@ `d3d1363`）→
+> AMENDMENT_7 = accepted**）
 > 仓库：`mayf3/dsh-agent-core`
 > 角色：Credential Provisioning Spec Agent
 >
