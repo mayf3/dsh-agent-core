@@ -1,0 +1,62 @@
+--- before/packages/broker/src/registry.js
++++ after/packages/broker/src/registry.js
+@@ -38,0 +39 @@
++  const isDirectoryRead = wireId === 'agent.definition.read'
+@@ -63,0 +65,8 @@
++    }
++  }
++  // Accepted main's all-operation rule, backported only for directory read.
++  if (isDirectoryRead) {
++    for (const name of Object.keys(requiredEverywhere)) {
++      requiredEverywhere[name] = manifest.operations.every(op =>
++        Object.hasOwn(op.arguments.properties, name)
++        && op.arguments.required.includes(name))
+@@ -103 +112 @@
+-        `Agent Core capability \`${wireId}\`: ${manifest.description} ` +
++        `Agent Core capability \`${wireId}\`: ${isDirectoryRead ? rawManifest.description : manifest.description} ` +
+--- before/packages/broker/src/capabilities/agent-definition.js
++++ after/packages/broker/src/capabilities/agent-definition.js
+@@ -43,0 +44,2 @@
++    'When asked which agents or roles are available, call operation=list with no agentId first. ' +
++    'Report actual returned roles; never invent examples or treat an Agent switch as role play. ' +
+--- before/packages/agent-switch/src/index.js
++++ after/packages/agent-switch/src/index.js
+@@ -93 +93,3 @@
+-      'targetAgentId is the target Agent\'s id or display name. The next message in this conversation goes to that Agent.',
++      'First query agent_definition_read(operation=list) to find the real target; do not invent roles or IDs. ' +
++      'Use the returned canonical id of the unambiguous enabled target, and ask the user when ambiguous. ' +
++      'Only report a successful switch after this tool succeeds. The next message in this conversation goes to that Agent.',
+--- before/profile-production/cordis.patch.yml
++++ after/profile-production/cordis.patch.yml
+@@ -38,5 +38,9 @@
+-      You can hand the conversation to another agent: when the user asks to
+-      talk to a different agent (e.g. "叫 Agent B 来", "切换到另一个 agent"),
+-      call the tool agent_core_switch_agent with the targetAgentId of that
+-      agent (its id or display name). After the switch, the next user message
+-      is handled by that agent.
++      When asked about available agents or roles, first call
++      agent_definition_read with operation=list. This returns the real current
++      directory: use its names and IDs, distinguish disabled entries, and
++      never invent example roles or claim role play is an Agent switch.
++      When asked to switch, resolve the requested target from that directory;
++      if ambiguous ask for clarification. Call agent_core_switch_agent with
++      the unambiguous enabled target's returned canonical ID. Announce success
++      only after the tool confirms the Binding change. The next user message
++      is handled by that Agent. If a tool fails, report the failure honestly.
+--- before/ceo-profile
++++ after/ceo-profile
+@@ -38,5 +38,9 @@
+-      You can hand the conversation to another agent: when the user asks to
+-      talk to a different agent (e.g. "叫 Agent B 来", "切换到另一个 agent"),
+-      call the tool agent_core_switch_agent with the targetAgentId of that
+-      agent (its id or display name). After the switch, the next user message
+-      is handled by that agent.
++      When asked about available agents or roles, first call
++      agent_definition_read with operation=list. This returns the real current
++      directory: use its names and IDs, distinguish disabled entries, and
++      never invent example roles or claim role play is an Agent switch.
++      When asked to switch, resolve the requested target from that directory;
++      if ambiguous ask for clarification. Call agent_core_switch_agent with
++      the unambiguous enabled target's returned canonical ID. Announce success
++      only after the tool confirms the Binding change. The next user message
++      is handled by that Agent. If a tool fails, report the failure honestly.

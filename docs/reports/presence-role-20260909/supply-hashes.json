@@ -1,0 +1,22 @@
+{
+  "packages/broker/src/registry.js": {
+    "before": "ca6c482b794a377cfb60335b0825f393ee99a580045e684a4bd31ec87cc7e6ae",
+    "after": "fee1c2515bb37e4285332e09154c25565e267de3255b708f564af8b5b1a01e9e"
+  },
+  "packages/broker/src/capabilities/agent-definition.js": {
+    "before": "6a0566d0c7ef4135094087f92115076a1e6ec47f4cf67825b6e2eb90175e41c8",
+    "after": "7dca39bebacc344a72dc57742134ab103365b63182f12a6d90b1eb0753b04284"
+  },
+  "packages/agent-switch/src/index.js": {
+    "before": "477001788bc06d66c47fd9f786fc5cf163f671c9cc138123f56e8f9e93764c5c",
+    "after": "0569fecc335dfb8068f999e1fb58a8d56a5732c5545cc6860bb0b72c99d29107"
+  },
+  "profile-production/cordis.patch.yml": {
+    "before": "fa6259d57afae8fbb61c516746b2c108ac6d8ec81c31c190cb4ec68d1af8fda3",
+    "after": "1eb164e5c43f3471d44798d0941c3e5adf19e41adbf276d88818586e6ab65fa5"
+  },
+  "ceo-profile": {
+    "before": "e9ef178ad1bf7bb913233ae4603463a0417ce76c0e754845ab21b93ee2e3e482",
+    "after": "b788adeee20486d1629e313cbb5a886561bee487af1c58a6b33f33a7dde730e4"
+  }
+}

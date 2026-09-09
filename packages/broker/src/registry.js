@@ -72,7 +72,8 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
     && manifest.toolName === 'workflow_definition_authoring'
   // Validation checks raw description's type but its normalized result omits
   // that text. Restore only V3 authoring guidance; other tools retain their text.
-  const description = isWorkflowAuthoring ? rawManifest.description : manifest.description
+  const description = isWorkflowAuthoring || wireId === 'agent.definition.read'
+    ? rawManifest.description : manifest.description
 
   // Model-facing parameter schema in `defineTool` format (per-property map
   // with `required: true`). Existing manifests default to `operation`; an
