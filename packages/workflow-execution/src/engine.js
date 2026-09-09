@@ -96,58 +96,47 @@ export function createWorkflowExecutionEngine({
       nodeVisitId: rawIntent.nodeVisitId,
       workflowInstanceId: rawIntent.workflowInstanceId,
       ownerPrincipalId: rawIntent.ownerPrincipalId,
+    }, async (attempt) => {
+      try {
+        const resolved = await resolvePrincipalToAgent(rawIntent.ownerPrincipalId)
+        if (!resolved.ok) return { kind: 'delivery_failed', reason: `resolve_failed:${resolved.code}` }
+        const requestId = attempt.attemptId
+        const message = buildInstruction({
+          workflowInstanceId: attempt.workflowInstanceId,
+          nodeVisitId: attempt.nodeVisitId,
+          dispatchIntentId: attempt.dispatchIntentId,
+          attemptId: attempt.attemptId,
+        })
+        const delivery = await deliverRun({
+          requestId,
+          agentId: resolved.agentId,
+          message,
+          messageOrigin: provenanceFor(attempt),
+        })
+        if (!delivery.ok) return { kind: 'delivery_failed', reason: `delivery_rejected:${delivery.code}` }
+        return {
+          kind: 'run_delivered',
+          agentId: resolved.agentId,
+          requestId,
+          sessionId: delivery.sessionId,
+          reconciliationHandle: delivery.reconciliationHandle,
+          messageId: delivery.messageId,
+        }
+      } catch (error) {
+        return {
+          kind: 'delivery_failed',
+          reason: `engine_error:${error?.code ?? error?.name ?? 'Error'}:${String(error?.message ?? error).slice(0, 160)}`,
+        }
+      }
     })
     if (!attemptResult.created) {
       return { action: 'already_attempted', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
     }
     const attempt = attemptResult.attempt
-    try {
-      const resolved = await resolvePrincipalToAgent(rawIntent.ownerPrincipalId)
-      if (!resolved.ok) {
-        const record = await ledger.recordDeliveryFailed({ nodeVisitId: attempt.nodeVisitId, reason: `resolve_failed:${resolved.code}` })
-        return { action: 'needs_review', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, reason: record.attempt.reason }
-      }
-      // requestId IS the deterministic attempt id: the Router's caller-
-      // correlation index stays restorable across restarts, and a redelivery
-      // of the same attempt would be mechanically visible (V1 never does one).
-      const requestId = attempt.attemptId
-      const message = buildInstruction({
-        workflowInstanceId: attempt.workflowInstanceId,
-        nodeVisitId: attempt.nodeVisitId,
-        dispatchIntentId: attempt.dispatchIntentId,
-        attemptId: attempt.attemptId,
-      })
-      const delivery = await deliverRun({
-        requestId,
-        agentId: resolved.agentId,
-        message,
-        messageOrigin: provenanceFor(attempt),
-      })
-      if (!delivery.ok) {
-        const record = await ledger.recordDeliveryFailed({ nodeVisitId: attempt.nodeVisitId, reason: `delivery_rejected:${delivery.code}` })
-        return { action: 'needs_review', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, reason: record.attempt.reason }
-      }
-      const record = await ledger.recordRunDelivered({
-        nodeVisitId: attempt.nodeVisitId,
-        agentId: resolved.agentId,
-        requestId,
-        sessionId: delivery.sessionId,
-        reconciliationHandle: delivery.reconciliationHandle,
-        messageId: delivery.messageId,
-      })
-      return { action: 'admitted', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, agentId: resolved.agentId, sessionId: record.attempt.delivered?.sessionId }
-    } catch (error) {
-      // Unexpected engine/seam failure AFTER the fence: the attempt exists, so
-      // a re-throw would lose it and a retry would violate the no-second-run
-      // rule. Honest terminal review, with the error preserved in the reason.
-      const reason = `engine_error:${error?.code ?? error?.name ?? 'Error'}:${String(error?.message ?? error).slice(0, 160)}`
-      try {
-        await ledger.recordDeliveryFailed({ nodeVisitId: attempt.nodeVisitId, reason })
-      } catch (recordError) {
-        log.error?.(`workflow-execution: failed to record delivery failure for ${attempt.nodeVisitId}: ${recordError?.message ?? recordError}`)
-      }
-      return { action: 'needs_review', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, reason }
+    if (attemptResult.completion.kind === 'delivery_failed') {
+      return { action: 'needs_review', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, reason: attempt.reason }
     }
+    return { action: 'admitted', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, agentId: attempt.delivered.agentId, sessionId: attempt.delivered.sessionId }
   }
 
   /** Turn reconciliation state for a delivered attempt (handle first, then
@@ -203,12 +192,17 @@ export function createWorkflowExecutionEngine({
           summary.running += 1
           continue
         }
-        await ledger.recordReconciled({
+        const recorded = await ledger.recordReconciled({
           nodeVisitId: attempt.nodeVisitId,
+          expectedPhase: attempt.phase,
           verdict: finalVerdict.state,
           judgment: finalVerdict.judgment,
           reason: finalVerdict.reason,
         })
+        if (!recorded.committed) {
+          if (recorded.attempt.state === 'ACTIVE') summary.running += 1
+          continue
+        }
         if (finalVerdict.state === 'SETTLED') summary.settled.push(attempt.nodeVisitId)
         else summary.needsReview.push(attempt.nodeVisitId)
       } catch (error) {
