@@ -4,6 +4,7 @@
 #   --selftest   offline full rehearsal against a scratch copy (no production paths)
 #   --precheck   read-only production drift gate + untouched-guard baseline
 #   --install    sudo: preimage backup -> install 3 files -> readback -> in-place node smoke
+#   --apply      sudo: --install, then controlled kickstart + fresh-pid health poll (ONE command)
 #   --rollback   sudo: restore preimages -> readback
 # bash 3.2 compatible; PATH pinned; all production paths absolute.
 set -u
@@ -17,8 +18,8 @@ HASH="shasum -a 256"
 
 # mode is only selftest-safe before install; install/rollback/precheck touch production.
 MODE="${1:-}"
-if [ "$MODE" != "--selftest" ] && [ "$MODE" != "--precheck" ] && [ "$MODE" != "--install" ] && [ "$MODE" != "--rollback" ]; then
-  echo "usage: $0 --selftest|--precheck|--install|--rollback" >&2; exit 64
+if [ "$MODE" != "--selftest" ] && [ "$MODE" != "--precheck" ] && [ "$MODE" != "--install" ] && [ "$MODE" != "--apply" ] && [ "$MODE" != "--rollback" ]; then
+  echo "usage: $0 --selftest|--precheck|--install|--apply|--rollback" >&2; exit 64
 fi
 
 FILES="mapping.js schema.js capabilities/workflow-definition-authoring.js"
@@ -98,7 +99,7 @@ if [ "$MODE" = "--selftest" ]; then
 fi
 
 # ---- production modes below ----
-if [ "$MODE" = "--install" ] || [ "$MODE" = "--rollback" ]; then
+if [ "$MODE" = "--install" ] || [ "$MODE" = "--apply" ] || [ "$MODE" = "--rollback" ]; then
   [ "$(id -u)" = "0" ] || { echo "$MODE requires root (run: sudo bash $0 $MODE)" >&2; exit 77; }
 fi
 
@@ -173,4 +174,26 @@ echo "[$MODE] in-place functional smoke on staged production bytes (separate pro
 pass "staged bytes smoke"
 
 echo "INSTALL = PASS"
-echo "NEXT (Owner): sudo launchctl kickstart -k system/ai.agent-core.runtime"
+
+if [ "$MODE" = "--apply" ]; then
+  OLD_PID="$(launchctl print system/ai.agent-core.runtime 2>/dev/null | awk '/^\tpid = /{print $3; exit}')"
+  echo "[$MODE] controlled restart: kickstart system/ai.agent-core.runtime (old pid=${OLD_PID:-unknown})"
+  launchctl kickstart -k system/ai.agent-core.runtime || fail "kickstart"
+  NEW_PID=""
+  STATE=""
+  for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+    sleep 2
+    NEW_PID="$(launchctl print system/ai.agent-core.runtime 2>/dev/null | awk '/^\tpid = /{print $3; exit}')"
+    STATE="$(launchctl print system/ai.agent-core.runtime 2>/dev/null | awk '/^\tstate = /{print $3; exit}')"
+    if [ -n "$NEW_PID" ] && [ "$NEW_PID" != "$OLD_PID" ] && [ "$STATE" = "running" ]; then break; fi
+  done
+  if [ -n "$NEW_PID" ] && [ "$NEW_PID" != "$OLD_PID" ] && [ "$STATE" = "running" ]; then
+    pass "runtime restarted: old pid=${OLD_PID:-unknown} -> new pid=$NEW_PID state=running"
+    echo "APPLY = PASS (3-file closure installed, runtime restarted healthy)"
+    echo "NEXT: send the PACKET.md E2E prompt to the build-in-public feishu group"
+  else
+    fail "runtime did not reach running state with a fresh pid (new=${NEW_PID:-none} state=${STATE:-unknown})"
+  fi
+else
+  echo "NEXT (Owner): sudo bash $0 --apply"
+fi
