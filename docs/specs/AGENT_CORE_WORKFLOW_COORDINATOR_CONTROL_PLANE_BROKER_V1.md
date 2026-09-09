@@ -241,7 +241,7 @@ ownerDisplayName/ownerEnabled）；Broker 原样转发，不投影、不裁剪�
 ```text
 list   GET    /internal/v1/domains/{domainId}/members                  workflow.read
        query: limit, beforeCreatedAt, beforeId (paired)
-add    POST   /internal/v1/domains/{domainId}/members/{principalId}    workflow.execute
+add    PUT    /internal/v1/domains/{domainId}/members/{principalId}    workflow.execute
        （Idempotency-Key，trusted；重复 add 稳定成功语义 = 服务端）
 remove DELETE /internal/v1/domains/{domainId}/members/{principalId}    workflow.execute
        （Idempotency-Key，trusted；只移除 DOMAIN_MEMBER）
