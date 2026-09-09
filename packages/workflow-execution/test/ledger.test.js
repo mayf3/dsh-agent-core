@@ -200,6 +200,38 @@ test('complete tail without newline is sealed before the next durable append', a
   }
 })
 
+test('newline seal I/O failure aborts the locked mutation before event append', async () => {
+  const fixture = tempLedger()
+  try {
+    const { ledger, dir } = fixture
+    await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    const { chmodSync, readFileSync, writeFileSync } = await import('node:fs')
+    writeFileSync(ledger.eventsFile, readFileSync(ledger.eventsFile, 'utf8').trimEnd())
+    chmodSync(ledger.eventsFile, 0o444)
+
+    const revived = new ExecutionLedger({ dir })
+    await assert.rejects(
+      () => revived.beginAttemptIfAbsent({ dispatchIntentId: INTENT_2, nodeVisitId: VISIT_2, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER }),
+      /EACCES|EPERM|permission denied/i,
+      'a failed newline seal must abort before the requested event append',
+    )
+    assert.equal(readFileSync(ledger.eventsFile, 'utf8').trimEnd().split('\n').length, 1)
+
+    chmodSync(ledger.eventsFile, 0o644)
+    const retry = await revived.beginAttemptIfAbsent({ dispatchIntentId: INTENT_2, nodeVisitId: VISIT_2, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.equal(retry.created, true, 'the queue remains usable after the fail-loud I/O error')
+    const repaired = readFileSync(ledger.eventsFile, 'utf8')
+    assert.equal(repaired.trimEnd().split('\n').length, 2)
+    assert.doesNotThrow(() => repaired.trimEnd().split('\n').forEach((line) => JSON.parse(line)))
+  } finally {
+    try {
+      const { chmodSync } = await import('node:fs')
+      chmodSync(fixture.ledger.eventsFile, 0o644)
+    } catch { /* the fixture may already be absent */ }
+    cleanup(fixture)
+  }
+})
+
 test('records for unknown NodeVisits fail loud (never fabricate linkage)', async () => {
   const fixture = tempLedger()
   try {
