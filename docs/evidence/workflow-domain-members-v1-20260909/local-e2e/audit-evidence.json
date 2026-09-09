@@ -1,0 +1,66 @@
+[
+    {
+        "action": "member_added",
+        "details": {
+            "result": "success",
+            "domainId": "10000000-0000-4000-8000-000000000100",
+            "operation": "member_added",
+            "requestId": "22ad6993-4b32-4a08-a0ff-c5d349a7eb5b",
+            "targetRole": "DOMAIN_MEMBER",
+            "actorPrincipalId": "b21ddb23-0000-4000-8000-00000000eff1",
+            "targetPrincipalId": "25a6789f-0000-4000-8000-00000000ce01"
+        },
+        "created_at": "2026-09-09T13:35:25.740653+00:00",
+        "resource_id": "10000000-0000-4000-8000-000000000100/25a6789f-0000-4000-8000-00000000ce01",
+        "principal_id": "b21ddb23-0000-4000-8000-00000000eff1",
+        "resource_type": "DOMAIN_MEMBERSHIP"
+    },
+    {
+        "action": "DEFINITION_CREATE",
+        "details": {
+            "result": "success",
+            "operation": "DEFINITION_CREATE",
+            "actorPrincipalId": "b21ddb23-0000-4000-8000-00000000eff1"
+        },
+        "created_at": "2026-09-09T13:35:25.781315+00:00",
+        "resource_id": "00000000-0000-0000-0000-000000000000/b21ddb23-0000-4000-8000-00000000eff1",
+        "principal_id": "b21ddb23-0000-4000-8000-00000000eff1",
+        "resource_type": "DOMAIN_MEMBERSHIP"
+    },
+    {
+        "action": "DEFINITION_CREATE_DRAFT",
+        "details": {
+            "result": "success",
+            "operation": "DEFINITION_CREATE_DRAFT",
+            "actorPrincipalId": "b21ddb23-0000-4000-8000-00000000eff1"
+        },
+        "created_at": "2026-09-09T13:35:25.816363+00:00",
+        "resource_id": "00000000-0000-0000-0000-000000000000/b21ddb23-0000-4000-8000-00000000eff1",
+        "principal_id": "b21ddb23-0000-4000-8000-00000000eff1",
+        "resource_type": "DOMAIN_MEMBERSHIP"
+    },
+    {
+        "action": "DEFINITION_REPLACE_DRAFT",
+        "details": {
+            "result": "success",
+            "operation": "DEFINITION_REPLACE_DRAFT",
+            "actorPrincipalId": "b21ddb23-0000-4000-8000-00000000eff1"
+        },
+        "created_at": "2026-09-09T13:35:25.826926+00:00",
+        "resource_id": "00000000-0000-0000-0000-000000000000/b21ddb23-0000-4000-8000-00000000eff1",
+        "principal_id": "b21ddb23-0000-4000-8000-00000000eff1",
+        "resource_type": "DOMAIN_MEMBERSHIP"
+    },
+    {
+        "action": "DEFINITION_PUBLISH",
+        "details": {
+            "result": "success",
+            "operation": "DEFINITION_PUBLISH",
+            "actorPrincipalId": "b21ddb23-0000-4000-8000-00000000eff1"
+        },
+        "created_at": "2026-09-09T13:35:25.837026+00:00",
+        "resource_id": "00000000-0000-0000-0000-000000000000/b21ddb23-0000-4000-8000-00000000eff1",
+        "principal_id": "b21ddb23-0000-4000-8000-00000000eff1",
+        "resource_type": "DOMAIN_MEMBERSHIP"
+    }
+]

@@ -11,9 +11,9 @@ import { manifests as okrManifests } from '../../src/capabilities/okr.js'
 // (15 first-batch + the 2 VISIT_ACTIVATION_V1 activation-model tools from
 // AGENT_CORE_WORKFLOW_DISPATCH_INTENT_BROKER_V1: due poll + wake.)
 
-test('schema: all 18 shipped manifests validate', () => {
+test('schema: all 19 shipped manifests validate', () => {
   const all = [...forumManifests, ...workflowManifests, ...okrManifests]
-  assert.equal(all.length, 18)
+  assert.equal(all.length, 19)
   for (const manifest of all) {
     const res = validateManifest(manifest)
     assert.equal(res.ok, true, `${manifest.id}: ${res.errors?.join('; ')}`)

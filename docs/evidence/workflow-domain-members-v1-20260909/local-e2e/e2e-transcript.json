@@ -1,0 +1,112 @@
+{
+  "domainId": "10000000-0000-4000-8000-000000000100",
+  "owner": "b21ddb23-0000-4000-8000-00000000eff1",
+  "lobster": "25a6789f-0000-4000-8000-00000000ce01",
+  "stranger": "99999999-0000-4000-8000-00000000bad9",
+  "results": [
+    {
+      "step": "B1 list baseline ok",
+      "ok": true,
+      "detail": {
+        "count": 0
+      }
+    },
+    {
+      "step": "B2 add lobster ⇒ DOMAIN_MEMBER",
+      "ok": true,
+      "detail": {
+        "domainId": "10000000-0000-4000-8000-000000000100",
+        "principalId": "25a6789f-0000-4000-8000-00000000ce01",
+        "role": "DOMAIN_MEMBER"
+      }
+    },
+    {
+      "step": "B3 lobster listed exactly once",
+      "ok": true,
+      "detail": {
+        "hits": 1
+      }
+    },
+    {
+      "step": "B4 duplicate add ⇒ already_member",
+      "ok": true,
+      "detail": {
+        "code": "already_member",
+        "status": 409,
+        "detail": "principal already holds an enabled DOMAIN_MEMBER binding for this domain",
+        "requestId": "0330b829-ad6f-4655-af47-3987f6f15f66"
+      }
+    },
+    {
+      "step": "B5 role=DOMAIN_OWNER ⇒ domain_owner_delegation_forbidden",
+      "ok": true,
+      "detail": {
+        "code": "domain_owner_delegation_forbidden",
+        "status": 403,
+        "detail": "a domain owner cannot grant DOMAIN_OWNER; owner replacement is reserved to the <OPAQUE_REDACTED> contract",
+        "requestId": "a461fa7c-092a-483a-a9ae-e3fc6cb9f24e"
+      }
+    },
+    {
+      "step": "B6 stranger list/add/remove ⇒ not_domain_owner",
+      "ok": true,
+      "detail": {
+        "list": "not_domain_owner",
+        "add": "not_domain_owner",
+        "del": "not_domain_owner"
+      }
+    },
+    {
+      "step": "B7 not_found family: unknown principal ⇒ principal_not_registered; remove missing binding ⇒ member_not_found; unknown domain ⇒ owner-check-first (not_domain_owner)",
+      "ok": true,
+      "detail": {
+        "unknownDomain": "not_domain_owner",
+        "unknownPrincipal": "principal_not_registered",
+        "removeMissing": "member_not_found"
+      }
+    },
+    {
+      "step": "B8 lobster (member, not owner) add ⇒ not_domain_owner",
+      "ok": true,
+      "detail": {
+        "code": "not_domain_owner",
+        "status": 403,
+        "detail": "caller is not a domain owner",
+        "requestId": "1fbd6651-8174-4eff-b9e2-c54b10b85eb5"
+      }
+    },
+    {
+      "step": "C1 lobster my_domains sees dogfood domain as DOMAIN_MEMBER",
+      "ok": true,
+      "detail": {
+        "binding_created_at": "2026-09-09T13:35:25.740653Z",
+        "caller_role": "DOMAIN_MEMBER",
+        "display_name": "Workflow Todo Dogfood (E2E)",
+        "domain_id": "10000000-0000-4000-8000-000000000100",
+        "domain_key": "wfdm-e2e-dogfood"
+      }
+    },
+    {
+      "step": "C2 owner authored/published/created instance for lobster",
+      "ok": true,
+      "detail": {
+        "instanceId": "05f82b06-1a06-4494-8e1e-14e5a7721954"
+      }
+    },
+    {
+      "step": "C3 lobster workflow_my_tasks contains the instance",
+      "ok": true,
+      "detail": {
+        "found": true
+      }
+    },
+    {
+      "step": "C4 lobster workflow_instance_detail ⇒ readable (full visibility), current visit assignee = lobster",
+      "ok": true,
+      "detail": {
+        "assignee": "25a6789f-0000-4000-8000-00000000ce01",
+        "visibility": "full"
+      }
+    }
+  ]
+}

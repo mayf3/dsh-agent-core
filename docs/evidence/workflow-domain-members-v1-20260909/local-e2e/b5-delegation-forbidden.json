@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "error": {
+    "code": "domain_owner_delegation_forbidden",
+    "status": 403,
+    "detail": "a domain owner cannot grant DOMAIN_OWNER; owner replacement is reserved to the <OPAQUE_REDACTED> contract",
+    "requestId": "a461fa7c-092a-483a-a9ae-e3fc6cb9f24e"
+  }
+}

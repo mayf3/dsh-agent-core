@@ -26,8 +26,13 @@ test('workflow_execute is the only instance-execution write tool; workflow_trans
   // eligibility command, not a workflow-state write: it never touches
   // workflowStateVersion downstream semantics of transitions and creates no
   // Visit/Submission. workflow_transition remains absent from the tool face.
-  const writes = workflowManifests.filter((m) =>
-    m.operations.some((op) => op.http && m.requiredScopes.includes('workflow.execute'))
+  // PURE_WRITE = every declared scope is workflow.execute; the mixed-scope
+  // member-management tool (workflow_domain_members, workflow.read +
+  // workflow.execute) is a control-plane capability whose mutations are
+  // membership grants, not workflow-state writes, so DEC-010 does not
+  // classify it here.
+  const writes = workflowManifests.filter(
+    (m) => m.operations.some((op) => op.http) && m.requiredScopes.every((s) => s === 'workflow.execute')
   )
   assert.deepEqual(writes.map((m) => m.id), [
     'workflow_execute',
@@ -40,7 +45,9 @@ test('workflow_execute is the only instance-execution write tool; workflow_trans
   )
   assert.ok(!workflowManifests.some((m) => m.id === 'workflow_transition'))
   assert.ok(!workflowManifests.some((m) => m.toolName === 'workflow_transition'))
-  // 6 compat read tools + the due-intent read (activation model) + 1 write.
+  // 7 compat read tools + the due-intent read (activation model) + the
+  // mixed-scope member-management control plane (workflow_domain_members,
+  // AGENT_CORE_WORKFLOW_DOMAIN_MEMBERS_BROKER_V1).
   assert.deepEqual(readManifestIds(), [
     'workflow_my_tasks',
     'workflow_instance_detail',
@@ -49,10 +56,17 @@ test('workflow_execute is the only instance-execution write tool; workflow_trans
     'workflow_domain_instances',
     'workflow_global_instances',
     'workflow_dispatch_intents',
+    'workflow_domain_members',
   ])
   for (const id of readManifestIds()) {
     const manifest = workflowManifests.find((m) => m.id === id)
-    assert.deepEqual(manifest.requiredScopes, ['workflow.read'])
+    if (id === 'workflow_domain_members') {
+      // list → workflow.read, add/remove → workflow.execute; each endpoint's
+      // exact scope is enforced server-side by svc-workflow.
+      assert.deepEqual(manifest.requiredScopes, ['workflow.read', 'workflow.execute'])
+    } else {
+      assert.deepEqual(manifest.requiredScopes, ['workflow.read'])
+    }
     assert.equal(validateManifest(manifest).ok, true)
   }
 })

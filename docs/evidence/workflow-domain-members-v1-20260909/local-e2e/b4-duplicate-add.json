@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "error": {
+    "code": "already_member",
+    "status": 409,
+    "detail": "principal already holds an enabled DOMAIN_MEMBER binding for this domain",
+    "requestId": "0330b829-ad6f-4655-af47-3987f6f15f66"
+  }
+}

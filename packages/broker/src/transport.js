@@ -572,7 +572,10 @@ export function createHttpTransport(opts = {}) {
       return { errorCode: 'credential_unavailable', detail: 'identity seam returned a malformed credential' }
     }
 
-    const scope = (manifest.requiredScopes || []).join(' ')
+    // Scopes are an unordered SET; ASCII-sorting keeps multi-scope
+    // capabilities deterministic and matches the auth-service/svc-workflow
+    // token-scope grammar (space-separated, ASCII ascending).
+    const scope = [...(manifest.requiredScopes || [])].sort().join(' ')
 
     let binding
     try {
