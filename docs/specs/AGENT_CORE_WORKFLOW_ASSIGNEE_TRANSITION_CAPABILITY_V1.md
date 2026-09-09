@@ -1384,7 +1384,11 @@ AMENDMENT_STATUS = proposed
 WORKFLOW_EXECUTE_OPERATIONS = create_instance|transition|cancel_instance|archive_instance
 NEW_MANIFESTS = 0
 INVENTORY_COUNT = UNCHANGED (18)
-NEW_ERROR_CODES = 0 (declarer table extension only)
+NEW_ERROR_CODES(SVC_SIDE) = 0
+BROKER_DECLARER_TABLE_NET_NEW_CODES = 7
+  (not_domain_owner, already_cancelled, instance_archived, invalid_reason,
+   instance_not_terminal, already_archived, active_activation_exists —
+   each dictated verbatim from svc error.rs from_cancel/from_archive)
 SVC_ENDPOINTS_CHANGED_BY_THIS_AMENDMENT = NONE
 PRODUCTION_APPLY_AUTHORITY = none
 INDEPENDENT_REVIEW = REQUIRED_BEFORE_ACCEPTANCE
