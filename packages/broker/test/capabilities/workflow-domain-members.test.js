@@ -89,7 +89,7 @@ test('list: path + camelCase cursor query mapping + union-scope token', async ()
   assert.equal(res.result.items[0].principalId, TARGET)
 
   assert.equal(tokenServer.requests[0].body.resource, 'svc-workflow')
-  assert.equal(tokenServer.requests[0].body.scope, 'workflow.read workflow.execute')
+  assert.equal(tokenServer.requests[0].body.scope, 'workflow.execute workflow.read') // ASCII-sorted scope set
   const bizReq = workflow.requests[0]
   assert.equal(bizReq.pathname, `/internal/v1/domains/${DOMAIN}/members`)
   assert.deepEqual(bizReq.query, {
