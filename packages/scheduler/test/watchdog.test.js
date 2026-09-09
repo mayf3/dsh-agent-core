@@ -99,20 +99,22 @@ test('TEST-8 store half: failed run / stuck run / consecutive failures detected'
   assert.deepEqual(classes, ['CONSECUTIVE_FAILURE', 'RUN_FAILED', 'RUN_STUCK'])
 })
 
-test('TEST-8b: operator-reconciled failure is not an open RUN_FAILED (2026-09-09 reminder loop)', () => {
+test('TEST-8b: terminal failed stays RUN_FAILED-detectable regardless of lateSettlement basis (suppression withdrawn 2026-09-10 — Owner ruling NOT_AUTHORIZED_YET)', () => {
   const reconciledOcc = { runId: 'run:a', jobId: 'job-1', executionOutcome: 'failed', startedAt: NOW - 5_000, endedAt: NOW - 4_000, lateSettlement: { basis: 'operator-reconcile', resolvedTo: 'failed' } }
-  const silenced = evaluateRunHealth(
+  // Accepted spec §5.5/§6 semantics: the failure FACT is detectable no matter
+  // what disposition bookkeeping the record carries. Silence for dispositioned
+  // failures must come from an accepted alert-LIFECYCLE authority, not here.
+  const findings = evaluateRunHealth(
     { jobs: [liveJob({ state: { nextRunAtMs: NOW + 60_000 } })], occurrences: [reconciledOcc] },
     { nowMs: NOW },
   )
-  assert.deepEqual(silenced, [])
+  assert.deepEqual(findings.map((f) => f.class), ['RUN_FAILED'])
 
-  // Suppression is scoped to operator disposition: any other basis still alerts.
-  const otherBasis = evaluateRunHealth(
-    { jobs: [liveJob({ state: { nextRunAtMs: NOW + 60_000 } })], occurrences: [{ ...reconciledOcc, lateSettlement: { basis: 'engine-retry' } }] },
+  const plainFailed = evaluateRunHealth(
+    { jobs: [liveJob({ state: { nextRunAtMs: NOW + 60_000 } })], occurrences: [{ ...reconciledOcc, lateSettlement: undefined }] },
     { nowMs: NOW },
   )
-  assert.deepEqual(otherBasis.map((f) => f.class), ['RUN_FAILED'])
+  assert.deepEqual(plainFailed.map((f) => f.class), ['RUN_FAILED'])
 })
 
 test('TEST-9: settled outcome_unknown admission block -> ADMISSION_BLOCKED_UNKNOWN per occurrence (2026-09-09 W1 structural blindness)', () => {
@@ -136,7 +138,9 @@ test('TEST-9: settled outcome_unknown admission block -> ADMISSION_BLOCKED_UNKNO
   )
   assert.equal(noted.filter((f) => f.class === 'ADMISSION_BLOCKED_UNKNOWN').length, 1, 'note is not release')
 
-  // Terminal + operator-reconciled = fence released: admission and RUN_FAILED both silent.
+  // Terminal + operator-reconciled = fence released: the admission finding is
+  // gone; the failure FACT stays detectable as RUN_FAILED (accepted §5.5 —
+  // silence for dispositioned failures needs its own alert-lifecycle authority).
   const released = evaluateRunHealth(
     {
       jobs: [liveJob({ state: { nextRunAtMs: NOW + 60_000 } })],
@@ -144,7 +148,8 @@ test('TEST-9: settled outcome_unknown admission block -> ADMISSION_BLOCKED_UNKNO
     },
     { nowMs: NOW },
   )
-  assert.deepEqual(released, [])
+  assert.equal(released.filter((f) => f.class === 'ADMISSION_BLOCKED_UNKNOWN').length, 0, 'fence released')
+  assert.deepEqual(released.map((f) => f.class), ['RUN_FAILED'], 'fact layer stays detectable')
 
   // A disabled job's unknown is JOB_DISABLED territory — no second alert class.
   const disabled = evaluateRunHealth(
