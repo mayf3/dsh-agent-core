@@ -20,7 +20,7 @@ LIVE_BASELINE          = SHA256SUMS.txt（preimages/* + guard 六文件，
                          captured 2026-09-09T05:52Z，--precheck 已 PASS 零漂移）
 ```
 
-## Owner 步骤（密码一次注意力原则：先 dry 后真）
+## Owner 步骤（单命令；一次密码）
 
 ```bash
 # 0) selftest（离线，只写 /tmp）——必须先绿
@@ -29,16 +29,16 @@ bash <PACKET_DIR>/run-wda-structural-diagnostics-v1.sh --selftest
 # 1) 只读预检（无需 sudo）
 bash <PACKET_DIR>/run-wda-structural-diagnostics-v1.sh --precheck
 
-# 2) 安装（sudo；自动 preimage 备份 + 逐文件 readback + 装后 in-place smoke）
-sudo bash <PACKET_DIR>/run-wda-structural-diagnostics-v1.sh --install
-
-# 3) 重启 runtime（同一 kickstart seam）
-sudo launchctl kickstart -k system/ai.agent-core.runtime
+# 2) 一条命令完成全部：drift 门 → preimage 备份 → 装 3 文件 → readback →
+#    guard 复核（热修线 index.js 不动）→ 装后 in-place smoke →
+#    controlled kickstart → 新 pid/running 健康轮询 → APPLY = PASS
+sudo bash <PACKET_DIR>/run-wda-structural-diagnostics-v1.sh --apply
 ```
 
 `<PACKET_DIR>` = 本 packet 在 checkout 内的绝对路径
-（deployment-artifacts/wda-structural-diagnostics-v1）。--install 任一步 FAIL
-即停：勿重跑，把输出发回（preimage 备份在 packet 目录 `*.install-backup`）。
+（deployment-artifacts/wda-structural-diagnostics-v1）。`--apply` 任一步 FAIL
+即停（含 kickstart 后 30s 内未达 fresh-pid running）：勿重跑，把输出发回
+（preimage 备份在 packet 目录 `*.install-backup`；如需立即回滚见下）。
 
 ## 回滚
 
