@@ -85,13 +85,18 @@ export class ExecutionLedger {
    * @param {string} opts.dir - persistent directory (layout.workflowExecutionDir).
    * @param {Function} [opts.clock] - () => ms epoch (tests).
    * @param {object} [opts.log] - { log?, warn?, error? } (optional).
+   * @param {object} [opts.io] - injectable durable-I/O seams (tests).
    */
-  constructor({ dir, clock = () => Date.now(), log = {} }) {
+  constructor({ dir, clock = () => Date.now(), log = {}, io = {} }) {
     if (typeof dir !== 'string' || dir === '') throw new TypeError('workflow-execution: ledger dir is required')
+    if (io.appendFileSync !== undefined && typeof io.appendFileSync !== 'function') {
+      throw new TypeError('workflow-execution: io.appendFileSync must be a function when provided')
+    }
     this.dir = dir
     this.eventsFile = join(dir, LEDGER_EVENTS_FILE)
     this.clock = clock
     this.log = log
+    this.appendFileSync = io.appendFileSync ?? appendFileSync
     this.lock = new OwnerLock(join(dir, LEDGER_LOCK_FILE), {
       onEvidence: (event) => { this.log.warn?.(`workflow-execution ledger lock: ${JSON.stringify(event)}`) },
     })
@@ -242,7 +247,7 @@ export class ExecutionLedger {
   }
 
   #appendAndSync(value) {
-    appendFileSync(this.eventsFile, value)
+    this.appendFileSync(this.eventsFile, value)
     const fd = openSync(this.eventsFile, 'r+')
     try { fsyncSync(fd) } finally { closeSync(fd) }
   }
