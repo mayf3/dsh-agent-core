@@ -194,18 +194,34 @@ WIRING                  = dsh PR #231（feature/credential-seam-wiring-v1）
 
 ## 9. Fleet metadata census（STEP 7 —— 唯一 bounded Owner native read-only gate）
 
-`scripts/agent-credential-metadata-census.mjs`（selftest 3/3；metadata-only：
-无 secret bytes——hash 仅进程内 scrypt 配对验证 + 12-hex 指纹）。Owner 单命令：
+`scripts/agent-credential-metadata-census.mjs`（STEP 7 fix 后 selftest 11/11 +
+gated real-DB smoke；metadata-only：无 secret bytes——hash 仅进程内 scrypt 配对
+验证 + 12-hex 指纹）。Owner 单命令（DSN 不回显；脚本将密码剥离出 argv——仅经
+子进程 PGPASSWORD env 传递，`-d` 收到 passwordless DSN，selftest 断言）：
 
 ```bash
-DATABASE_URL=<auth DATABASE_URL> sudo -u authsvc /usr/local/bin/node \
-  /Users/yanfenma/workspace/project/dsh-agent-core/scripts/agent-credential-metadata-census.mjs \
+sudo -u authsvc env DATABASE_URL="$(grep -E '^DATABASE_URL=' \
+  /Users/yanfenma/workspace/project/auth-service/.env 2>/dev/null | head -1 | cut -d= -f2-)" \
+  /usr/local/bin/node /Users/yanfenma/workspace/project/dsh-agent-core/scripts/agent-credential-metadata-census.mjs \
   --store /usr/local/libexec/agent-core/config/agent-credentials.json --out /tmp/cred-census.json
 ```
 
-谓词 = spec 冻结的 `updated_at > created_at AND rotated_at IS NULL`；分类
-KNOWN_HISTORICAL_INCIDENT / ACTIVE_DRIFT / LEGACY_INCOMPLETE_METADATA / OTHER；
-`FLEET_METADATA_CENSUS=PASS` ⇔ ACTIVE_DRIFT=0。
+谓词 = spec 冻结的 `updated_at > created_at AND rotated_at IS NULL`，**由
+PostgreSQL authoritative 求值**（drift_predicate boolean；JS 零重算、零
+tolerance——sub-second drift 可检出）。分类优先级（B2）：ACTIVE 证据（receipt
+失配 / store 失配）恒优先于 historical allowlist；整个 store 读/解析失败 →
+`CENSUS_INCOMPLETE` + exit 22 + `CENSUS_EXECUTION_COMPLETE=NO`（永不读成
+"无 drift"）。判定：`FLEET_METADATA_CENSUS=PASS ⇔ ACTIVE_DRIFT=0 AND
+CENSUS_EXECUTION_COMPLETE=YES`。
+
+Required-closure 证据（全绿）：CENSUS_SELFTEST 11/11 ·
+EXACT_SUBSECOND_DRIFT_TEST=PASS（真 PG 1ms delta fixture）·
+KNOWN_HISTORICAL_PLUS_STORE_MISMATCH=ACTIVE_DRIFT ·
+STORE_READ/PARSE_FAILURE_FAILS_LOUD=PASS（CLI exit 22）·
+REAL_POSTGRES_READ_ONLY_SMOKE=PASS（隔离容器；DB_MUTATION_COUNT=ZERO——
+counts + machine_clients 内容 md5 前后一致）。测试文件
+`scripts/agent-credential-metadata-census.test.mjs`（offline 部分随
+`node --test`；real-DB smoke 以 TEST_ROTATION_DATABASE_URL 门控指向隔离库）。
 
 ## 10. ROLLBACK（冻结）
 
