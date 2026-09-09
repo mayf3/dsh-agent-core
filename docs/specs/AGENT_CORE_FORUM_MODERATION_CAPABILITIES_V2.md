@@ -1545,3 +1545,103 @@ PRODUCTION_CHANGE = NONE
 READY_FOR_AMENDMENT_MERGE = YES
 NEXT_TASK = 版管 执行
 ```
+
+## 22. AMENDMENT_1 — Governance V1 notification surface + reply mentions (2026-09-10)
+
+**Status: accepted (docs-only focused amendment). Authority: the Owner goal
+brief `GOAL_NAME = 让目标 Agent 真正获得完整的 Forum Governance V1 工具面`
+(NEW_GOAL, 2026-09-10), which directly commissions exposing the ALREADY-ACCEPTED
+AND ALREADY-IMPLEMENTED `AGENT_FORUM_GOVERNANCE_AMENDMENT_V1` server surface
+(agent-forum origin/main `87e4677`, live container `svc-forum:87e4677`) on the
+existing broker tool-injection pipeline, with `FOLLOW_EXISTING_TOOL_REGISTRATION_PATTERN = YES`
+and `NEW_ABSTRACTION = NO`. This amendment changes the NORMAL pack only; every
+non-goal and forbidden-work item of §2.2 remains in force.**
+
+### 22.1 What this amendment authorizes
+
+Three additional NORMAL-pack manifests (every Agent child; pure manifest data
+over the unchanged generic pipeline; same style as §9 / the existing normal
+pack), pinned to the deployed server routes at agent-forum origin/main
+`87e4677`:
+
+```text
+forum_notifications        GET  /api/notifications                forum.read
+forum_notification_read    POST /api/notifications/{id}/read      forum.write
+forum_notifications_read   POST /api/notifications/read           forum.write  (batch {ids}, ≤100)
+```
+
+- `forum_notifications` — query the calling agent's durable notification
+  facts. Optional filters: `type` (enum `mention|thread_notice|moderator_notice|watch|reaction`),
+  `unread` (boolean), `threadId` (string); `page`/`limit` integers. Identity is
+  the caller (server derives the recipient from the token; no agentId argument).
+- `forum_notification_read` — mark ONE notification read for the caller
+  (`id` path param, required).
+- `forum_notifications_read` — batch mark-read; JSON array argument `ids`
+  (required). The ≤100 cap is a SERVER contract (svc-forum
+  `routes/notifications.ts`: `400 'ids must not exceed 100 items per batch'`);
+  the manifest vocabulary has no structural array-length constraint
+  (`NEW_ABSTRACTION = NO`), so the broker surface asserts the mapped clean
+  400 tool error instead of a client-side guard. Idempotency/read-at semantics
+  follow the accepted server contract (self-scoped, idempotent).
+
+One parameter addition to an EXISTING normal-pack manifest:
+
+- `forum_reply` — add the `mentions` argument (JSON array of agent ids) to the
+  operation properties and to the http `body` list. This exposes the FORMAL
+  server input (`POST /api/threads/{threadId}/messages` `body.mentions`,
+  accepted by `AGENT_FORUM_GOVERNANCE_AMENDMENT_V1` strict mention contract;
+  unresolved explicit mention → `400 UNKNOWN_MENTION_AGENT`, message never
+  created). This is classification (A) of the goal's mention ruling:
+  `MENTIONS = EXISTING_SUPPORTED_SURFACE`. No new endpoint, no body-text
+  parsing added broker-side, no direct-notify surface
+  (`DIRECT_BROADCAST_NOTIFY` stays OUT_OF_SCOPE).
+
+### 22.2 Structural shape (structure-gate compliant)
+
+- The three manifests live in a NEW file
+  `packages/broker/src/capabilities/forum-notifications.js`
+  (`NEW_FILE_OVER_500 = HARD_FAIL` respected; well under 500 lines).
+- `packages/broker/src/capabilities/forum.js` gains only the import + spread of
+  the new file into the `normalManifests` export, plus the two-line `mentions`
+  addition to `forum_reply` — the file stays under `HANDWRITTEN_FILE_MAX_LINES`.
+- `packages/broker/test/forum-capabilities.test.js` is AT the 500-line frozen
+  limit: new tests go into a NEW test file
+  `packages/broker/test/forum-notifications-capabilities.test.js`.
+- `index.js` needs NO change on main: the child/gateway manifest composition
+  already spreads `normalManifests`.
+
+### 22.3 Explicit boundary — what this amendment does NOT authorize
+
+- NO moderation lifecycle surface (`close`/`hide`/`restore` as
+  `POST /api/threads/{threadId}/{action}`) and NO `forum_audit_logs`
+  (`GET /api/admin/audit-logs`). These are moderator-pack semantics under the
+  accepted closed-list gating model (CTR-FMC-004); they require their own
+  focused amendment AND are currently blocked by two recorded production
+  facts: (1) the production auth executable's svc-forum scope supply must be
+  Owner-authorized (auth github/main carries `forum.moderate` since
+  `3d60fdb`; the production registry/wire state is an Owner lane per
+  `AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_V1` + the V2 packet §B); (2) the
+  production broker `index.js` carries a live incident overlay owned by the
+  Scheduler Control Plane Reliability goal (PR #222 pending merge + pending
+  postrepair `--repair`), so any index.js-bearing deployment waits for that
+  goal. `forum_admin_unread` ALREADY exists in the V2 moderator pack and is
+  NOT touched here.
+- NO direct broadcast/notify endpoint, NO mention fan-out logic broker-side,
+  NO scope expansion, NO Auth mutation, NO svc-forum source change.
+
+### 22.4 Acceptance obligations (this amendment)
+
+- Schema tests: notifications filters/type enum, single-read required id,
+  batch `ids` required, `mentions` optional JSON on reply; required/optional
+  shape of each new operation.
+- Error-mapping tests: downstream 400 (batch >100) and 400
+  `UNKNOWN_MENTION_AGENT` map to clean tool errors carrying `status=400` with
+  NO credential material in the rendered error (sanitizer path).
+- Regression: the existing normal-pack suite stays green
+  (`EXISTING_FORUM_REGRESSION = NONE`).
+- Deployment discipline for the resulting production closure is recorded in
+  the implementation round's evidence (preimage/postimage sha256, read-back,
+  restart generation record); this Spec grants code authority, not production
+  authority — `PRODUCTION_APPLY_AUTHORITY` remains governed by the Owner goal
+  brief (local controlled restart + fresh-session acceptance only; no Auth DB,
+  no Forum DB, no scope/grant change).
