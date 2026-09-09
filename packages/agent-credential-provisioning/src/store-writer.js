@@ -386,6 +386,36 @@ export async function withCredentialStoreLock(storeFile, options = {}, operation
   }
 }
 
+/** Replace exactly one existing entry in place, preserving every other byte. */
+function serializeWithReplacedCredential(current, agentId, credential) {
+  const replacement = `${JSON.stringify(agentId)}:${JSON.stringify({
+    clientId: credential.clientId,
+    clientSecret: credential.clientSecret,
+  })}`
+  const raw = current.raw
+  let index = current.credentialsSpan.start + 1
+  const end = current.credentialsSpan.end - 1
+  while (index < end) {
+    index = skipWhitespace(raw, index)
+    const ch = raw[index]
+    if (ch === undefined || ch === '}') break
+    if (ch === ',') { index += 1; continue }
+    if (ch !== '"') throw storeError('credential provisioning: internal JSON scan failed')
+    const keyStart = index
+    index = scanString(raw, index)
+    const key = JSON.parse(raw.slice(keyStart, index))
+    index = skipWhitespace(raw, index)
+    if (raw[index] !== ':') throw storeError('credential provisioning: internal JSON scan failed')
+    index = skipWhitespace(raw, index + 1)
+    const valueStart = index
+    index = scanValue(raw, index)
+    if (key === agentId) {
+      return raw.slice(0, keyStart) + replacement + raw.slice(index)
+    }
+  }
+  throw storeError(`credential provisioning: target credential entry does not exist for ${agentId}`)
+}
+
 function serializeWithAddedCredential(current, agentId, credential) {
   const entry = `${JSON.stringify(agentId)}:${JSON.stringify({
     clientId: credential.clientId,
@@ -431,6 +461,21 @@ function assertExactTempStat(stat, tempFile, owner, expectedSize) {
 
 /** Add exactly one absent target entry while preserving every pre-existing byte. */
 export async function writeCredentialForAgent(storeFile, agentId, credential, options = {}) {
+  return trustedCredentialStoreWrite(storeFile, agentId, credential, options, 'add')
+}
+
+/**
+ * AMENDMENT_7 rotation seam write face: replace an EXISTING credential entry
+ * in place under the same trusted-store discipline as
+ * writeCredentialForAgent (lock, metadata assertions, temp + fsync + atomic
+ * rename, every other byte preserved). Refuses when the entry is ABSENT —
+ * rotation never fabricates an identity.
+ */
+export async function replaceCredentialForAgent(storeFile, agentId, credential, options = {}) {
+  return trustedCredentialStoreWrite(storeFile, agentId, credential, options, 'replace')
+}
+
+async function trustedCredentialStoreWrite(storeFile, agentId, credential, options, writeMode) {
   if (typeof agentId !== 'string' || agentId === '' || normalizeCredential(credential) === undefined) {
     throw storeError('credential provisioning: target agent and credential must be valid')
   }
@@ -442,10 +487,15 @@ export async function writeCredentialForAgent(storeFile, agentId, credential, op
     const current = await readTrustedStore(storeFile, owner, {
       expectedDirectoryIdentity: directoryIdentity,
     })
-    if (current.credentials[agentId] !== undefined) {
+    if (writeMode === 'add' && current.credentials[agentId] !== undefined) {
       throw storeError(`credential provisioning: target credential entry already exists for ${agentId}`)
     }
-    const serialized = serializeWithAddedCredential(current, agentId, credential)
+    if (writeMode === 'replace' && current.credentials[agentId] === undefined) {
+      throw storeError(`credential provisioning: target credential entry does not exist for ${agentId}`)
+    }
+    const serialized = writeMode === 'add'
+      ? serializeWithAddedCredential(current, agentId, credential)
+      : serializeWithReplacedCredential(current, agentId, credential)
     const directory = dirname(storeFile)
     const fileSystem = options.fileSystem ?? defaultFileSystem
     const tempFile = `${storeFile}.tmp-${process.pid}-${randomUUID()}`
