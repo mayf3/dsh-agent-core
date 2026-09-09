@@ -28,7 +28,10 @@ const PROD = {
   runsPath: '/Users/authsvc/.agent-core/scheduler/runs.jsonl',
   evidencePath: '/Users/authsvc/.agent-core/control/scheduler-watchdog/scheduler-watchdog-evidence.jsonl',
   alertStatePath: '/Users/authsvc/.agent-core/control/scheduler-watchdog/alert-state.json',
+  stateDir: '/Users/authsvc/.agent-core/control/scheduler-watchdog',
   logsDir: '/Users/authsvc/.agent-core/logs',
+  desiredPath: '/usr/local/libexec/agent-core/config/scheduler-desired-state.json',
+  secondaryJobPrefix: process.env.FORENSICS_SECONDARY_JOB ?? '34b90173',
 }
 const SINCE_ISO = process.env.FORENSICS_SINCE ?? '2026-09-09T00:00:00Z'
 const JOB_PREFIX = process.env.FORENSICS_JOB_PREFIX ?? 'b115cb96'
@@ -69,7 +72,7 @@ const EVENT_FIELDS = {
 // disable actor at all.
 const ALWAYS_ACTIONS = new Set(['self_service_mutation', 'import_write', 'store_upgrade', 'lock_recovery', 'lock_unverifiable'])
 
-export function collect({ storePath, runsPath, evidencePath, alertStatePath, logsDir, sinceMs, jobPrefix }) {
+export function collect({ storePath, runsPath, evidencePath, alertStatePath, stateDir, logsDir, desiredPath, secondaryJobPrefix, sinceMs, jobPrefix }) {
   const report = { sinceMs, jobPrefix, sections: [] }
   const add = (title, lines) => report.sections.push({ title, lines })
 
@@ -122,6 +125,37 @@ export function collect({ storePath, runsPath, evidencePath, alertStatePath, log
   report.w1FirstDetectionTs = w1Detections.length ? JSON.parse(w1Detections[0]).ts : null
   add('W1_DETECTIONS', w1Detections.length ? w1Detections : ['(none in window)'])
 
+  // 4b. Fleet minting census — occurrence_reserved since window start grouped by
+  // jobId. An enabled periodic job with zero reservations while the runtime is
+  // up = engine not admitting (fleet-wide vs job-local discrimination).
+  const reserved = parseJsonl(runsPath)
+    .filter((e) => e.action === 'occurrence_reserved' && Number.isFinite(e.ts) && e.ts >= sinceMs)
+  const byJob = new Map()
+  for (const e of reserved) {
+    const key = typeof e.jobId === 'string' ? e.jobId.slice(0, 8) : '(no jobId)'
+    const cur = byJob.get(key) ?? { count: 0, last: 0 }
+    cur.count += 1
+    cur.last = Math.max(cur.last, e.ts)
+    byJob.set(key, cur)
+  }
+  report.mintCensus = [...byJob.entries()].map(([job, v]) => ({ job, ...v })).sort((a, b) => b.count - a.count)
+  add('FLEET_MINT_CENSUS_SINCE_WINDOW', report.mintCensus.length
+    ? report.mintCensus.map((m) => `  ${m.job}: ${m.count} reserved, last ${iso(m.last)}`)
+    : ['  ZERO occurrence_reserved fleet-wide since window start — engine not admitting at all'])
+
+  // 4c. Secondary job (mutated seconds before the disable)
+  if (secondaryJobPrefix) {
+    try {
+      const doc = JSON.parse(readFileSync(storePath, 'utf8'))
+      const job = (doc.jobs ?? []).find((j) => typeof j.id === 'string' && j.id.startsWith(secondaryJobPrefix))
+      add('SECONDARY_JOB', job
+        ? [`id=${job.id} logicalKey=${job.logicalKey ?? '(none)'} name=${job.name ?? '(none)'}`,
+           `enabled=${job.enabled} agentId=${job.agentId} schedule=${JSON.stringify(job.schedule)}`,
+           `updatedAtMs=${job.updatedAtMs} (${iso(job.updatedAtMs)}) state=${JSON.stringify(job.state ?? {})}`]
+        : [`NO JOB matching prefix ${secondaryJobPrefix}`])
+    } catch (e) { add('SECONDARY_JOB', [`UNREADABLE: ${e.message}`]) }
+  }
+
   // 5. alert-state fingerprint entry
   try {
     const st = JSON.parse(readFileSync(alertStatePath, 'utf8'))
@@ -165,6 +199,36 @@ export function collect({ storePath, runsPath, evidencePath, alertStatePath, log
   } catch { /* logs dir unreadable — tolerated */ }
   add('LOG_MATCHES', logLines.length ? logLines : ['(no job-id matches readable)'])
 
+  // 8. State-dir ownership census — authsvc W1 cannot append to root-owned
+  // files (appendFileSync failure is silently ignored by the runner), so a
+  // root-owned evidence/alert-state file makes W1's bookkeeping invisible.
+  try {
+    const entries = readdirSync(stateDir).map((name) => {
+      const st = statSync(join(stateDir, name))
+      return `  ${name} uid=${st.uid} gid=${st.gid} mode=${(st.mode & 0o777).toString(8)} mtime=${st.mtime.toISOString()}`
+    })
+    add('STATE_DIR_CENSUS', entries.length ? entries : ['(empty)'])
+  } catch (e) { add('STATE_DIR_CENSUS', [`UNREADABLE: ${e.message}`]) }
+
+  // 9. Full alert-state (small) — exact fingerprints the live W1 last persisted.
+  try { add('ALERT_STATE_FULL', readFileSync(alertStatePath, 'utf8').split('\n').map((l) => `  ${l}`).filter((l) => l.trim())) } catch (e) { add('ALERT_STATE_FULL', [`UNREADABLE: ${e.message}`]) }
+
+  // 10. W1 stdout/stderr tails — per-cycle outcome lines + crash stacks.
+  for (const [label, name] of [['W1_STDOUT_TAIL', 'scheduler-watchdog-w1.log'], ['W1_STDERR_TAIL', 'scheduler-watchdog-w1.err.log']]) {
+    try {
+      const lines = readFileSync(join(logsDir, name), 'utf8').split('\n').filter(Boolean).slice(-25)
+      add(label, lines.map((l) => `  ${trunc(l)}`))
+    } catch (e) { add(label, [`UNREADABLE: ${e.message}`]) }
+  }
+
+  // 11. Desired-state manifest readability (authsvc must read it or
+  // JOB_DISABLED/drift findings silently never fire).
+  try {
+    const st = statSync(desiredPath)
+    const doc = JSON.parse(readFileSync(desiredPath, 'utf8'))
+    add('DESIRED_STATE', [`mode=${(st.mode & 0o777).toString(8)} uid=${st.uid} jobs=${(doc.jobs ?? []).length} frozenAt=${doc._frozenAt ?? '(none)'}`])
+  } catch (e) { add('DESIRED_STATE', [`UNREADABLE: ${e.message}`]) }
+
   return report
 }
 
@@ -200,6 +264,7 @@ function selftest() {
   writeFileSync(join(storeDir, 'jobs.json'), `${JSON.stringify({
     version: 2,
     jobs: [{ id: 'b115cb96-8a4f-49be-9baa-519223022b59', logicalKey: 'agt_hr-agent:hr-workflow-auto-dispatch', name: 'HR dispatch', enabled: false, updatedAtMs: T_FLIP, scheduleRevision: 3, schedule: { kind: 'every', everyMs: 1800000 }, agentId: 'agt_hr-agent', state: { consecutiveErrors: 1, lastStatus: 'outcome_unknown' } },
+      { id: '34b90173-aaaa', logicalKey: 'agt_hr-agent:secondary', name: 'HR secondary', enabled: true, updatedAtMs: T_FLIP - 4975, schedule: { kind: 'cron', expr: '0 9 * * *', tz: 'Asia/Shanghai' }, agentId: 'agt_hr-agent', state: {} },
       { id: 'fa13b0ea', logicalKey: 'agt_daily-thought-agent:daily-raw-distilled-summary-check', enabled: true, updatedAtMs: 1, schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, agentId: 'agt_daily-thought-agent', state: {} }],
     occurrences: [], fences: {},
   }, null, 2)}\n`)
@@ -209,6 +274,7 @@ function selftest() {
     { ts: T(30), action: 'turn_start', occurrenceId: 'occ:x', runId: 'run:x', secret: 'TOPSECRET' },
     { ts: T(29), action: 'occurrence_reserved', occurrenceId: 'occ:x', runId: 'run:x', jobId: 'b115cb96-8a4f-49be-9baa-519223022b59', kind: 'scheduled' },
     { ts: T(28), action: 'outcome', occurrenceId: 'occ:x', runId: 'run:x', state: 'failed', executionOutcome: 'failed', deliveryStatus: 'delivered', reason: 'svc_503_dispatch_refused', jobId: 'b115cb96-8a4f-49be-9baa-519223022b59', secret: 'TOPSECRET' },
+    { ts: T(20), action: 'occurrence_reserved', occurrenceId: 'occ:d1', runId: 'run:d1', jobId: 'fa13b0ea-daily', kind: 'scheduled' },
     { ts: T(1), action: 'self_service_mutation', operation: 'disable', jobId: 'b115cb96-8a4f-49be-9baa-519223022b59', operatorAgentId: 'agt_hr-agent', targetAgentId: 'agt_hr-agent', secret: 'TOPSECRET' },
     { ts: T(1), action: 'outcome', occurrenceId: 'occ:otherjob', runId: 'run:o', state: 'succeeded', jobId: 'fa13b0ea' },
     { ts: T(2), action: 'lock_recovery', file: 'jobs.json', secret: 'TOPSECRET' },
@@ -220,13 +286,19 @@ function selftest() {
   ].map((e) => JSON.stringify(e)).join('\n')}\n`)
   writeFileSync(join(ctlDir, 'alert-state.json'), `${JSON.stringify({ active: { 'JOB_DISABLED|b115cb96-8a4f': { firstSeenAt: T_FLIP + 5 * 60 * 1000, notifiedCount: 1 } }, retired: {} }, null, 2)}\n`)
   writeFileSync(join(logsDir, 'runtime.log'), `noise\n2026-09-09T09:59Z b115cb96 disable via self-service by agt_hr-agent SECRET=TOPSECRET\nnoise\n`)
+  writeFileSync(join(logsDir, 'scheduler-watchdog-w1.log'), `[scheduler-watchdog w1] suppressed_or_healthy\n[scheduler-watchdog w1] feishu_sent\n`)
+  writeFileSync(join(logsDir, 'scheduler-watchdog-w1.err.log'), `ReferenceError: outcome is not defined\n`)
+  writeFileSync(join(root, 'desired-state.json'), `${JSON.stringify({ version: 1, jobs: [{ logicalKey: 'agt_hr-agent:hr-workflow-auto-dispatch', expectedEnabled: true }], _frozenAt: '2026-09-08T12:49:58.745Z' })}\n`)
 
   const report = collect({
     storePath: join(storeDir, 'jobs.json'),
     runsPath: join(storeDir, 'runs.jsonl'),
     evidencePath: join(ctlDir, 'scheduler-watchdog-evidence.jsonl'),
     alertStatePath: join(ctlDir, 'alert-state.json'),
+    stateDir: ctlDir,
     logsDir,
+    desiredPath: join(root, 'desired-state.json'),
+    secondaryJobPrefix: '34b90173',
     sinceMs: Date.parse('2026-09-09T00:00:00Z'),
     jobPrefix: 'b115cb96',
   })
@@ -245,6 +317,10 @@ function selftest() {
     ['log secret not rendered', !text.includes('SECRET=TOPSECRET')],
     ['whole-doc anomaly event in scope', text.includes('lock_recovery')],
     ['enabledFieldPresent rendered', text.includes('enabledFieldPresent=true')],
+    ['fleet mint census counts both jobs', text.includes('fa13b0ea: 1 reserved') && text.includes('b115cb96: 1 reserved')],
+    ['secondary job rendered', text.includes('34b90173-aaaa')],
+    ['w1 stdout tail rendered', text.includes('[scheduler-watchdog w1] feishu_sent')],
+    ['desired-state readability rendered', text.includes('frozenAt=2026-09-08T12:49:58.745Z')],
   ]
   let failed = 0
   for (const [name, ok] of checks) { process.stdout.write(`  ${ok ? 'PASS' : 'FAIL'} ${name}\n`); if (!ok) failed++ }
@@ -259,7 +335,10 @@ const report = collect({
   runsPath: PROD.runsPath,
   evidencePath: PROD.evidencePath,
   alertStatePath: PROD.alertStatePath,
+  stateDir: PROD.stateDir,
   logsDir: PROD.logsDir,
+  desiredPath: PROD.desiredPath,
+  secondaryJobPrefix: PROD.secondaryJobPrefix,
   sinceMs: Date.parse(SINCE_ISO),
   jobPrefix: JOB_PREFIX,
 })
