@@ -152,15 +152,27 @@ test('restart replay: a fresh ledger over the same dir restores the exact projec
   }
 })
 
-test('torn tail: a partially written last line is skipped, complete facts still replay', async () => {
+test('torn tail: repair under lock preserves the next fence across another restart', async () => {
   const fixture = tempLedger()
   try {
     const { ledger, dir } = fixture
     await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
-    const { appendFileSync } = await import('node:fs')
+    const { appendFileSync, readFileSync } = await import('node:fs')
     appendFileSync(ledger.eventsFile, '{"kind":"attempt_planned","nodeVis') // torn tail
+
     const revived = new ExecutionLedger({ dir })
     assert.equal(revived.snapshot().length, 1)
+    const second = await revived.beginAttemptIfAbsent({ dispatchIntentId: INTENT_2, nodeVisitId: VISIT_2, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.equal(second.created, true, 'mutation truncates the ignored tail before appending')
+
+    const bytes = readFileSync(ledger.eventsFile, 'utf8')
+    assert.equal(bytes.endsWith('\n'), true)
+    assert.doesNotThrow(() => bytes.trimEnd().split('\n').forEach((line) => JSON.parse(line)))
+
+    const restartedAgain = new ExecutionLedger({ dir })
+    assert.equal(restartedAgain.snapshot().length, 2)
+    const duplicate = await restartedAgain.beginAttemptIfAbsent({ dispatchIntentId: INTENT_2, nodeVisitId: VISIT_2, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.equal(duplicate.created, false, 'the post-tail fence survives restart')
   } finally {
     cleanup(fixture)
   }
