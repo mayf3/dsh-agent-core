@@ -40,7 +40,7 @@
  */
 
 import { createHash } from 'node:crypto'
-import { mkdirSync, appendFileSync, existsSync, statSync, openSync, readSync, closeSync, fsyncSync } from 'node:fs'
+import { mkdirSync, appendFileSync, existsSync, statSync, openSync, readSync, closeSync, fsyncSync, truncateSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { OwnerLock } from '../../scheduler/src/lock.js'
@@ -171,35 +171,48 @@ export class ExecutionLedger {
     )
   }
 
-  /**
-   * Replay the append-only event file into the in-memory projection. Tolerates
-   * a torn tail (crash between append and fsync) by skipping the trailing
-   * corrupt line — an append event is a fact only when its JSON line is whole.
-   */
-  load() {
+  /** Replay the append-only event file. Read-only callers may ignore one torn
+   * tail; the mutation path repairs it under OwnerLock before any append. */
+  load({ repairTornTail = false } = {}) {
     this.attempts = new Map()
     if (!existsSync(this.eventsFile)) {
       this.loaded = true
       return
     }
-    const raw = this.#readAllLines()
-    for (const line of raw) {
+    const raw = this.#readAllBytes()
+    const endsWithNewline = raw.length === 0 || raw[raw.length - 1] === 0x0a
+    const lines = raw.toString('utf8').split('\n')
+    for (const [index, line] of lines.entries()) {
       if (line === '') continue
       let event
       try {
         event = JSON.parse(line)
-      } catch {
+      } catch (error) {
+        const isTornTail = !endsWithNewline && index === lines.length - 1
+        if (!isTornTail) {
+          throw new Error(`workflow-execution: corrupt ledger record at line ${index + 1}`, { cause: error })
+        }
         this.log.warn?.('workflow-execution: skipped torn tail line in attempts.jsonl')
+        if (repairTornTail) this.#truncateTornTail(raw)
         continue
       }
       this.#applyEvent(event)
     }
+    // A complete JSON object without its newline is still replayable, but a
+    // later append would concatenate onto it. Seal that boundary under the
+    // mutation lock before permitting another event.
+    if (repairTornTail && !endsWithNewline && lines.at(-1) !== '') {
+      try {
+        JSON.parse(lines.at(-1))
+        this.#appendAndSync('\n')
+      } catch { /* a corrupt tail was already truncated above */ }
+    }
     this.loaded = true
   }
 
-  #readAllLines() {
+  #readAllBytes() {
     const size = statSync(this.eventsFile).size
-    if (size === 0) return []
+    if (size === 0) return Buffer.alloc(0)
     const fd = openSync(this.eventsFile, 'r')
     try {
       const buffer = Buffer.alloc(size)
@@ -209,18 +222,30 @@ export class ExecutionLedger {
         if (read <= 0) break
         offset += read
       }
-      return buffer.toString('utf8', 0, offset).split('\n')
+      return buffer.subarray(0, offset)
     } finally {
       closeSync(fd)
     }
   }
 
-  #appendEvent(event) {
-    appendFileSync(this.eventsFile, `${JSON.stringify(event)}\n`)
-    // The event is a durable fact only once its bytes hit the disk (same
-    // append + fsync discipline as the scheduler history store's 'r+' sync).
+  #truncateTornTail(raw) {
+    const lastNewline = raw.lastIndexOf(0x0a)
+    truncateSync(this.eventsFile, lastNewline < 0 ? 0 : lastNewline + 1)
     const fd = openSync(this.eventsFile, 'r+')
     try { fsyncSync(fd) } finally { closeSync(fd) }
+    this.log.warn?.('workflow-execution: truncated torn ledger tail before append')
+  }
+
+  #appendAndSync(value) {
+    appendFileSync(this.eventsFile, value)
+    const fd = openSync(this.eventsFile, 'r+')
+    try { fsyncSync(fd) } finally { closeSync(fd) }
+  }
+
+  #appendEvent(event) {
+    // The event is a durable fact only once its bytes hit the disk (same
+    // append + fsync discipline as the scheduler history store's 'r+' sync).
+    this.#appendAndSync(`${JSON.stringify(event)}\n`)
   }
 
   /**
@@ -231,7 +256,7 @@ export class ExecutionLedger {
    */
   async mutate(fn) {
     const run = this._queue.then(() => this.lock.runExclusive(() => {
-      this.load()
+      this.load({ repairTornTail: true })
       return fn()
     }))
     // Keep the chain alive on unexpected failures: the failing caller gets the
