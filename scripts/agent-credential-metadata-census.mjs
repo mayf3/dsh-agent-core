@@ -60,8 +60,9 @@ export function connectionArgsFor(databaseUrl) {
   try {
     url = new URL(databaseUrl)
   } catch {
-    // not parseable as a URL: pass through untouched (e.g. a bare socket DSN)
-    return { argvUrl: databaseUrl, env: {}, passwordInArgv: false }
+    // Fail closed: a non-URL DSN (e.g. keyword=value form) could embed a
+    // password that this function cannot strip from argv.
+    throw new Error('census: DATABASE_URL must be a URL-form DSN (postgres://user:pass@host/db) so the password can be kept out of psql argv')
   }
   const password = url.password ? decodeURIComponent(url.password) : ''
   if (password === '') return { argvUrl: databaseUrl, env: {}, passwordInArgv: false }
@@ -77,9 +78,10 @@ export function connectionArgsFor(databaseUrl) {
 
 /** B2: frozen classification precedence. ACTIVE evidence first; the historical
  *  allowlist can only explain a currently-consistent, known, repaired anomaly. */
-export function classifyAgent({ driftPredicate, receiptConsistent, storePairing, knownHistorical }) {
+export function classifyAgent({ driftPredicate, receiptConsistent, rotatedAt, storePairing, knownHistorical }) {
   if (receiptConsistent === false) return 'ACTIVE_DRIFT'                    // precedence 1
   if (storePairing === 'MISMATCH') return 'ACTIVE_DRIFT'                    // precedence 2
+  if (receiptConsistent === true && rotatedAt === '-') return 'ACTIVE_DRIFT' // precedence 3: receipt exists but rotated_at never advanced = current hard inconsistency
   if (driftPredicate === true) {
     return knownHistorical ? 'KNOWN_HISTORICAL_INCIDENT' : 'ACTIVE_DRIFT'   // precedence 4/5
   }
@@ -152,6 +154,7 @@ export function censusFromRows(agentRows, receiptRows, storeDoc) {
     const classification = classifyAgent({
       driftPredicate: row.drift_predicate === true,
       receiptConsistent,
+      rotatedAt: row.rotated_at,
       storePairing,
       knownHistorical: KNOWN_HISTORICAL_CLIENT_IDS.has(row.client_id),
     })
@@ -187,7 +190,7 @@ function psqlRows(connection, sqlFragment, psqlPath) {
   const sql = `SELECT coalesce(row_to_json(r)::text,'null') FROM ( ${sqlFragment} ) r;`
   const childEnv = { ...process.env, ...env }
   const stdout = execFileSync(psqlPath, [argvUrl, '-At', '-v', 'ON_ERROR_STOP=1'], {
-    input: `${sql};\n`,
+    input: `${sql}\n`,
     encoding: 'utf8',
     env: childEnv,
   })
@@ -346,7 +349,9 @@ export function selftest() {
 function invokedAsMain() {
   if (process.argv[1] === undefined) return false
   try {
-    return fileURLToPath(import.meta.url) === (process.argv[1].startsWith('/') ? process.argv[1] : nodePath.resolve(process.cwd(), process.argv[1]))
+    const { realpathSync } = nodeFs
+    const invoked = process.argv[1].startsWith('/') ? process.argv[1] : nodePath.resolve(process.cwd(), process.argv[1])
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(invoked)
   } catch {
     return false
   }
