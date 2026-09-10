@@ -1722,7 +1722,7 @@ SHIP_BLOCKERS = 0？
 ### B7a. Exact-head re-review 附加机械证明（本轮 MECHANICAL_REVISE 后的一次 re-review 必答）
 
 ```text
-AUTHORIZED_CHANGED_PATHS_EXACT = YES（diff 恰为五授权路径，无更多）
+AUTHORIZED_CHANGED_PATHS_EXACT = YES（diff 恰为 B2 冻结的 TOTAL_AUTHORIZED_CHANGED_PATHS 集合，无更多）
 PRODUCT_TEST_PATHS = 4
 GOVERNANCE_REGISTRY_PATHS = 1
 TOTAL_AUTHORIZED_PATHS = 5
@@ -2009,7 +2009,7 @@ SHIP_BLOCKERS = 0
 ```text
 proposed → independent semantic review（C6 十三项必答）→ Owner exact-head
 acceptance → mechanical acceptance transaction（仅 lifecycle/provenance）→ merge
-→ IMPLEMENTATION_CONTINUATION 解除：结构 repair 在五授权路径上执行
+→ IMPLEMENTATION_CONTINUATION 解除：结构 repair 在 C2 冻结授权路径集合上执行
 （DRAFT while review running；B5 硬门 + 扩展 merge 纪律全检）。
 acceptance 前 IMPLEMENTATION_CONTINUATION = HOLD；PR #256 保持 DRAFT（WIP
 evidence，REVIEW/MERGE HOLD）。
