@@ -1,0 +1,12 @@
+{
+  "totalRows": 114,
+  "mutationCommands": 98,
+  "byFamily": {
+    "M6_BINDING_RECONCILE": 7,
+    "M6_SET_OWNER": 2,
+    "M1_TEST_CANCEL": 12,
+    "M2_DEFINITION_REPAIR": 75,
+    "M2A_TEST_DEF_ARCHIVE": 2
+  },
+  "note": "read-only rows (M6_READBACK, reconcile plan) are verification steps, NOT production mutations"
+}

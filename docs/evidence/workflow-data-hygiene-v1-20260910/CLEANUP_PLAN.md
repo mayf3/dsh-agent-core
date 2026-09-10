@@ -1,27 +1,99 @@
 # WORKFLOW_DATA_HYGIENE_V1 — CLEANUP_PLAN (EXACT SET, FROZEN)
 
-- **Status**: FROZEN for audit · r1 (2026-09-10). Production execution is **NOT authorized by this document** — sequencing gate §5 applies.
+- **Status**: FROZEN for audit · **r2 (2026-09-10, Owner REVISE ruling — B1/B2/B3 applied)**. INDEPENDENT_AUDIT r1 = SUPERSEDED_BY_NEW_REVIEW_EVIDENCE. Production execution is **NOT authorized by this document** — sequencing gate §5 AND the per-family HOLD gates (§M1/§M6) apply.
 - **Inputs**: `CLASSIFICATION_LEDGER.md` r2 (frozen), `census-raw/` TSVs + sha256 manifest.
 - **Mutation discipline**: `PRODUCTION_MUTATION_CONCURRENCY=1`; `READ_BEFORE_WRITE=REQUIRED` per row (re-read the row immediately before mutating; membership drift ⇒ STOP_ON_NEW_EVIDENCE, recompute affected rows only); `WRITE_SET_MUST_EQUAL_AUDITED_SET=YES`; preimage/postimage of every row frozen to `census-raw/execution/{pre,post}/` at execution time.
 - **No DELETE anywhere in this plan.** Every mutation is a governance-state transition that preserves the row and its history.
 
-## Counts
+## Counts (r2 — logical subjects vs command-level mutations are DISTINCT dimensions)
 
 ```text
-M1_TEST_CLEANUP_WRITE_COUNT            = 12   (instance cancels; 0 deletes)
-M2_EFFECTIVE_DEFINITION_REPAIR_COUNT   = 25   (canonical successor versions; 1 def partially IDENTITY_REPAIR_REQUIRED)
-M2A_TEST_DEFINITION_ARCHIVE_COUNT      = 2    (test defs inside business domains)
-M3_NODEVISIT_DISPOSITION_COUNT         = 6    (ledger dispositions; 0 DB mutations)
-M4_HUMAN_MUTATION_COUNT                = 0
-M5_TEST_IDENTITY_REPAIR_COUNT          = 0
-M6_DOMAIN_OWNER_BINDING_MUTATION_COUNT = 9    (4 rebinds + 3 dead-owner repairs + 2 grants)
+TOTAL_LOGICAL_CLEANUP_SUBJECTS         = 48
+  M1 subjects = 12   (test-instance cancels; 0 deletes)
+  M2 subjects = 25   (effective-definition repairs; 1 def partially IDENTITY_REPAIR_REQUIRED)
+  M2A subjects = 2   (test defs inside business domains)
+  M3 subjects = 6    (ledger dispositions; 0 DB mutations)
+  M4 subjects = 0
+  M5 subjects = 0
+  M6 subjects = 9    (4 canonical-twin rebinds + 3 dead-owner repairs + 2 grants)
 
-TOTAL_PRODUCTION_WRITE_SET             = 48
+TOTAL_PRODUCTION_MUTATION_COMMANDS     = 98   (mechanically derived — see EXECUTION_COMMAND_LEDGER)
+  M1  = 12  x 1 cancel command                        = 12
+  M2  = 25  x 3 authoring commands (fresh census:     = 75
+        create_draft_version -> replace_draft_graph -> publish_version)
+  M2A = 2   x 1 definition archive command            =  2
+  M6  = 7 x reconcile-apply + 2 x set_owner           =  9
+  (read-only steps — reconcile plan, get_owner read-backs, cancel/verify reads —
+   are verification steps and are NOT counted as production mutation commands;
+   the ledger carries 114 rows total = 98 mutation + 16 read-only)
 ```
+
+EXECUTION_COMMAND_LEDGER = `execution-command-ledger.tsv` (generated, mechanical) +
+`build-execution-command-ledger.mjs` (deterministic derivation from census TSVs) +
+`execution-command-summary.json`. Every command row freezes: subject_id / sequence_no /
+operation (fresh source-census command names — broker manifest
+`workflow_definition_authoring` 4 ops + svc endpoints; NOT guessed) / endpoint / method /
+authority_ref / server_side_role / expected_preimage / idempotency_anchor (fresh
+Idempotency-Key per command, trusted seam) / success_receipt / expected_postimage /
+next_step_admission_condition.
+
+`WRITE_SET_MUST_EQUAL_AUDITED_SET` (r2 definition) means: (a) the LOGICAL SUBJECT SET is
+unchanged versus this audited plan, AND (b) the executed COMMAND SEQUENCE exactly matches
+this audited EXECUTION_COMMAND_LEDGER (no extra commands, no reordered dependencies, no
+substituted operations).
 
 ## §M6 — Domain-owner binding repairs (9 rows, run FIRST — M1/M2 depend on them)
 
-Executor: auth-service domain-role administration channel with `workflow.admin` scope (agt_hr-agent credential `mc_4Ud_…` is provisioned with workflow.admin). **AUTHORITY_GAP = NO**: this is the same governance that executed the 2026-08-25 fleet cutover (6 business domains + game-dev already canonical) and the d5b3aeb2 bip-domain owner takeover. Not identity authority, not DB superuser — binding administration only.
+**r2 AUTHORITY RE-MAP (Owner ruling B1).** Authority-layer map, frozen:
+
+```text
+Principal UUID -> canonical Agent mapping   = auth-service authority
+Workflow Domain / DOMAIN_OWNER / DOMAIN_MEMBER bindings
+                                            = svc-workflow authority
+```
+
+§M6 mutations are **Workflow-Domain binding governance** and therefore map to the
+**accepted `SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`** (svc main `dd235dc`, deployed
+live @ gitSha `6dc1027`) and its Broker surfaces — NOT to auth-service, NOT to
+`workflow.admin` scope (that scope is not the Domain-role authority owner), NOT to direct
+DB writes. Narrowest atomic path chosen per row:
+
+- **M6-1..M6-7** (a disabled/stale/dead-owner enabled binding EXISTS):
+  `workflow_domain_binding_reconcile(operation=plan -> operation=apply, role=DOMAIN_OWNER)`
+  — the reconcile-apply is the narrowest path that ATOMICALLY disables the old binding and
+  establishes the canonical one inside one transaction behind an exact-preimage
+  re-assertion (409 `binding_conflict`, zero mutation on drift). Source principal
+  `enabled` is NOT required (accepted DEC-CP-007) — the dead-owner rows (M6-5..7,
+  principal NOT_FOUND in auth directory but FK-present in svc `principals`) are exactly
+  the repairable input this contract was built for.
+- **M6-8..M6-9** (NO binding row at all — reconcile preimage impossible):
+  `workflow_domain_admin(operation=set_owner)` — the narrow establishing path.
+
+Per-row frozen execution fields (full expansion in EXECUTION_COMMAND_LEDGER):
+
+| # | domain (provenance) | broker operation(s) | svc endpoint | actor | server-side role requirement | idempotency | preimage assertion | receipt/audit | post-readback |
+|---|---|---|---|---|---|---|---|---|---|
+| M6-1 | adc-v2-dogfood (**canonical twin repair**: legacy cto `3e2439d2` → canonical `agt_cto-agent` `4e5a4578`; NOT an HR takeover) | binding_reconcile plan→apply (role=DOMAIN_OWNER) | POST `/internal/v1/domains/{domainId}/binding-reconcile/{plan,apply}` | GLOBAL_WORKFLOW_COORDINATOR = dc702687 (agt_hr-agent) | GLOBAL_WORKFLOW_COORDINATOR (server-side binding check; accepted CTR-CP-001/DEC-CP-008) | fresh Idempotency-Key on apply; plan is read-only/none | in-tx: binding `ab05acde…` enabled=TRUE role=DOMAIN_OWNER principal=`3e2439d2` | receipt command_type=`domain.binding_reconcile` + audit `binding_reconciled` (authorityBasis=GLOBAL_WORKFLOW_COORDINATOR, rationale=CANONICAL_TWIN_REPAIR) | GET owner → exactly one enabled owner `4e5a4578` |
+| M6-2..4 | canary-wda-v1-… test domains (**canonical twin repair**: `bc970ced` → `dc702687` agt_hr-agent, same lineage) | same as M6-1 | same | same | same | same | bindings `1f4a85a6…`/`0110a71a…`/`942b2680…` per binding-rows-for-plan.tsv | same | GET owner → `dc702687` |
+| M6-5..7 | assistance-* test domains (**operational owner for cleanup**: dead owner NOT_FOUND in auth, FK-present in svc) | same as M6-1 | same | same | same | same | bindings `91fa0c02…`/`bf509296…`/`7b59a044…` enabled=TRUE (dead principals) | same (rationale=OPERATIONAL_OWNER_TEST_DOMAIN) | GET owner → `dc702687` |
+| M6-8..9 | canary-e2e-… / auth-v1-e2e-readonly test domains (no binding row) | workflow_domain_admin set_owner | PUT `/internal/v1/domains/{domainId}/owner` | same | same | fresh Idempotency-Key | census: zero DOMAIN_OWNER rows exist | receipt (admin/coordinator receipt machinery) + audit | GET owner → `dc702687` |
+
+**Test-domain / ownerless HR-as-operational-owner rationale (per row, provenance frozen):**
+M6-2..M6-4 domain keys match the census TEST_DOMAIN_RE (`canary-wda-v1-*`); M6-5..7 match
+`^assistance-`; M6-8..9 match `canary-e2e-*` / `auth-v1-e2e-readonly`. Every one is a
+test/probe domain; HR operational ownership exists solely to unlock §M1/§M2A cleanup in
+that domain and carries no business-domain authority.
+
+**GATE:**
+
+```text
+M6_PRODUCTION_MUTATION = HOLD
+  until LIVE_COORDINATOR_CONTROL_PLANE_READY = YES
+  (= coordinator bootstrap grant completed AND broker control-plane surface deployed)
+```
+
+Rollback per row: re-apply prior binding state through the same coordinator authority
+(binding rows are never deleted; old rows persist with enabled=false as history).
 
 | # | domain (domain_id) | subject (binding_id) | current_state | exact_mutation | new principal (canonical) |
 |---|---|---|---|---|---|
@@ -62,7 +134,35 @@ The 26 TERMINAL test instances: **NO MUTATION — history preserved** (Owner rul
 
 ## §M2 — Effective-definition repairs (25 rows) + test-def archives (2 rows)
 
-Exact mutation per def: via WDA authoring authority (domain owner creates successor DRAFT version with canonical fixed principals substituted per the mechanical twin map, then publishes; publish retires the stale PUBLISHED version from future materialization — historical versions remain immutable). Executor per def = that domain's canonical enabled DOMAIN_OWNER (adc defs authorized by 4e5a4578 **after M6-1**). Authority: definition governance = DOMAIN_OWNER, idempotent+audited (`src/application/definition_governance/`); **AUTHORITY_GAP = NO**. Rollback = prior versions are immutable and intact; a bad successor version is itself retired via the same authoring authority. why_real_business_is_not_deleted: versioned repair is additive; no row of any version is modified or deleted.
+**r2 command sequence (B2 — fresh source census, command names NOT guessed).** Each of the
+25 subjects expands to exactly THREE production mutation commands on the WDA authoring
+surface (broker manifest `workflow_definition_authoring`, svc endpoints live):
+
+```text
+1. workflow_definition_authoring(operation=create_draft_version)
+   POST /internal/v1/domains/{domainId}/definitions/{definitionId}/versions
+2. workflow_definition_authoring(operation=replace_draft_graph)
+   PUT  /internal/v1/domains/{domainId}/definitions/{definitionId}/draft
+3. workflow_definition_authoring(operation=publish_version)
+   POST /internal/v1/domains/{domainId}/definitions/{definitionId}/publish
+```
+
+25 subjects × 3 commands = 75. Executor per def = that domain's canonical enabled
+DOMAIN_OWNER (adc defs authorized by `4e5a4578` **after M6-1**). Authority: definition
+governance = DOMAIN_OWNER, idempotent+audited (`src/application/definition_governance/`);
+**AUTHORITY_GAP = NO**. Rollback = prior versions are immutable and intact; a bad successor
+version is itself retired via the same authoring authority.
+why_real_business_is_not_deleted: versioned repair is additive; no row of any version is
+modified or deleted.
+
+**Special admission override (recorded honestly, unchanged from r1):**
+`agent_self_task_v1` partner_check/partner_accept nodes point at `b6b033c4` (anomalous
+agent_id=self-UUID; **no mechanical twin**). Its 3-command sequence is
+**ADMISSION-GATED**: cmd-2 (replace_draft_graph) may not substitute those two nodes
+without an identity-authority confirmation (candidate `25a6789f`/`agt_ceo-agent` — NOT
+guessed, NOT decided by this plan). Until that ruling the sequence blocks at cmd-2 and the
+subject stays in its current state. Its mechanical nodes (`95eab282`→`b21ddb23` twin)
+repair normally.
 
 Per-def effective versions and stale-node counts: `census-raw/effective-published-versions.tsv` + `census-raw/definition-classification.tsv` (25 defs: adc-backend/frontend/game/miniapp/mobile-dev-v1, project-insight-review-v1, bip_article_pipeline_v1/v2, bip_gpt6_podcast_v1_202609, blog_write_review_v1, content_pipeline_v1, podcast_script_v1, biz-explore-v1, biz-publish-v1, game_dev_flow_v1, agent-onboarding-v1, agent-role-upgrade-v1, journal-submission, journal_final_delivery, journal_section_production, research_ideation, audio-to-knowledge, video-to-knowledge, wiki-compile-review-publish, agent_self_task_v1).
 
@@ -100,16 +200,43 @@ G2: WORKFLOW_ASSIGNEE_ADMISSION_GUARD_V1 (separate Goal) reaches a production ga
 
 Rationale (Owner ruling): avoid cleaning legacy residue while the authoring path still mints new stale assignments. G2 not being ready does NOT block this Goal's source/authority/audit work — it gates only the G1 production mutation.
 
-## Audit answer contract
+## Audit answer contract (r2 — B3 wording, supersedes r1 assertion set)
+
+The r1 claim `ZERO_REAL_BUSINESS_MUTATION_TARGETS` is **REVOKED** — M2/M6 legitimately
+touch real-business governance state. The r2 assertions are enumerated per surface:
 
 ```text
-REAL_BUSINESS_DELETE_RISK            = NO  (no DELETE exists in the plan; cancels touch only
-                                            TEST-class rows with mechanical provenance)
+REAL_BUSINESS_INSTANCE_CANCEL_TARGETS        = 0
+REAL_BUSINESS_INSTANCE_ARCHIVE_TARGETS       = 0
+REAL_BUSINESS_INSTANCE_DELETE_TARGETS        = 0   (no DELETE exists anywhere)
+
+REAL_BUSINESS_DEFINITION_REPAIR_TARGETS      = the exact audited M2 set only
+                                               (25 BUSINESS_STALE_FIXED_CONFIG defs,
+                                               mechanically enumerated from
+                                               definition-classification.tsv)
+
+REAL_BUSINESS_DOMAIN_BINDING_REPAIR_TARGETS  = the exact audited M6 business rows only
+                                               (M6-1 adc-v2-dogfood canonical twin repair;
+                                                M6-2..4 canary-wda canonical twin repairs)
+
+REAL_BUSINESS_GOVERNANCE_REPAIR_IS_NON_DESTRUCTIVE                                  = YES
+HISTORICAL_DEFINITION_VERSION_REWRITE                                               = NO
+HISTORICAL_NODEVISIT_REWRITE                                                        = NO
+DOMAIN_OWNER_REPLACEMENT_MATCHES_CANONICAL_SUCCESSOR_OR_EXPLICIT_OPERATIONAL_OWNER  = YES
+  (M6-1..M6-4 = canonical successor/twin repairs — M6-1 is the adc-v2-dogfood legacy-cto
+   -> canonical agt_cto-agent owner repair, NOT an HR takeover; M6-5..M6-9 = explicit
+   operational-owner establishment on test/ownerless domains, each with frozen
+   test-domain provenance and cleanup-only rationale)
+```
+
+Unchanged invariants:
+
+```text
 IDENTITY_AUTHORITY_BYPASS            = NO  (all principal mappings = auth twin map / registered
                                             successor lines; b6b033c4 left to identity authority)
 HISTORICAL_ASSIGNEE_REWRITE          = NO  (no node_visit mutation anywhere)
 TEST_CLASSIFICATION_SUPPORTED        = YES (every M1 row carries mechanical signals, zero
                                             title-string classifications)
 HUMAN_REQUIRED_CLASSIFICATION_SUPPORTED = YES (ledger §7)
-SHIP_BLOCKERS                        = to be set by INDEPENDENT_AUDIT
+SHIP_BLOCKERS                        = set by INDEPENDENT_AUDIT r2
 ```
