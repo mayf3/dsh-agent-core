@@ -187,11 +187,25 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
     // RUN_FAILED is unconditional over the failure FACT (Owner ruling 2026-09-10:
     // lateSettlement-based suppression was NOT_AUTHORIZED_YET — the accepted spec
     // §5.5/§6 requires a terminal failed occurrence to stay detectable. Silencing
-    // dispositioned failures belongs to an explicit alert-LIFECYCLE authority
-    // (SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1, docs-only candidate) —
+    // dispositioned failures belongs to the alert LIFECYCLE (updateAlertState),
     // never to basis sniffing inside this detector).
     if (record.executionOutcome === 'failed' && Number.isFinite(record.endedAt) && nowMs - record.endedAt <= o.failedWindowMs) {
-      findings.push({ class: 'RUN_FAILED', jobId: record.jobId, runId: record.runId, endedAt: new Date(record.endedAt).toISOString() })
+      findings.push({
+        class: 'RUN_FAILED',
+        jobId: record.jobId,
+        runId: record.runId,
+        endedAt: new Date(record.endedAt).toISOString(),
+        // Passive enrichment only — the emission above has NO basis branch. A
+        // formal operator disposition record (lateSettlement.basis=operator-reconcile,
+        // written by the existing occurrence disposition/reconcile tooling) rides
+        // along so the alert LIFECYCLE can acknowledge/close an already-notified
+        // incident exactly once (accepted SCHEDULER_FAILURE_DISPOSITION_ALERT_
+        // LIFECYCLE_V1 §3.5/§4: detectors report facts; the lifecycle consumes
+        // dispositions).
+        ...(record.lateSettlement?.basis === 'operator-reconcile'
+          ? { disposition: { basis: 'operator-reconcile', resolvedTo: record.lateSettlement.resolvedTo ?? null, resolvedAt: record.lateSettlement.resolvedAt ?? null } }
+          : {}),
+      })
     }
     if (Number.isFinite(record.startedAt) && !Number.isFinite(record.endedAt)
       && nowMs - record.startedAt > (record.timeoutMs ?? o.stuckThresholdMs)) {
@@ -325,7 +339,7 @@ export function findingFingerprint(finding) {
  *   notifiedCount:number,severity:string,detail:string}>} state persisted by the caller
  * @param {Array<object>} findings current findings (same shapes the detectors emit)
  * @param {object} opts { nowMs, reminderIntervalMs = 60*60*1000 }
- * @returns {{notifications: Array<{fingerprint,kind:'new'|'reminder'|'severity'|'recovered',finding}>,
+ * @returns {{notifications: Array<{fingerprint,kind:'new'|'reminder'|'severity'|'recovered'|'acknowledged',finding}>,
  *   state: (same shape as `state`), recovered: string[]}}
  */
 export function updateAlertState(state, findings, { nowMs = Date.now(), reminderIntervalMs = 60 * 60 * 1000, recoveryCooldownMs = 6 * 60 * 60 * 1000 } = {}) {
@@ -333,12 +347,30 @@ export function updateAlertState(state, findings, { nowMs = Date.now(), reminder
   const legacy = state && !state.active && (state.RUN_STUCK !== undefined || state.SCHEDULER_RUNTIME_UNHEALTHY !== undefined || Object.keys(state).some((k) => !k.startsWith('__')))
   const active = legacy ? { ...state } : { ...(state?.active ?? {}) }
   const retired = { ...(state?.retired ?? {}) }
-  const next = { active, retired }
+  // ALERT LIFECYCLE (accepted SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1 §4):
+  // a formal operator disposition (basis=operator-reconcile, produced by the
+  // existing occurrence disposition/reconcile tooling — no new mutation surface)
+  // closes the INCIDENT for one exact fingerprint with exactly ONE acknowledged
+  // notification; the fingerprint is then held in `acknowledged` so the durable
+  // failure FACT (still detected unconditionally every cycle, still receipted in
+  // the evidence log) can never re-open it — no reminders, no re-NEW, and NO
+  // second closure when the finding finally ages out of the failed-window. A
+  // genuinely NEW occurrence is a new fingerprint and alerts normally.
+  // The DETECTOR never sees any of this: zero basis branches there.
+  const acknowledged = { ...(state?.acknowledged ?? {}) }
+  const next = { active, retired, acknowledged }
   const notifications = []
   const seen = new Set()
   for (const finding of findings ?? []) {
     const fp = findingFingerprint(finding)
     seen.add(fp)
+    const acked = next.acknowledged[fp]
+    if (acked !== undefined) {
+      // Incident already closed by a formal disposition: the fact keeps being
+      // detected (that is the durable FACT layer), but stays Owner-silent.
+      next.acknowledged[fp] = { ...acked, lastSeenAt: nowMs }
+      continue
+    }
     const prior = next.active[fp]
     const retiredAt = retired[fp]
     if (prior === undefined && retiredAt !== undefined && nowMs - retiredAt < recoveryCooldownMs) {
@@ -353,6 +385,26 @@ export function updateAlertState(state, findings, { nowMs = Date.now(), reminder
       delete retired[fp]
       next.active[fp] = { firstSeenAt: nowMs, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: 1, severity: finding.class, detail: finding.reason ?? finding.detail ?? '' }
       notifications.push({ fingerprint: fp, kind: 'new', finding })
+      continue
+    }
+    // Formal operator disposition on a LIVE incident: close it. Exactly one
+    // acknowledged notification when the incident had actually notified the
+    // Owner; a silently-resumed entry (notifiedCount=0, anti-flap) closes
+    // without one. Either way the fingerprint leaves `active` for good.
+    if (finding.disposition?.basis === 'operator-reconcile') {
+      delete next.active[fp]
+      next.acknowledged[fp] = {
+        acknowledgedAt: nowMs,
+        basis: finding.disposition.basis,
+        resolvedTo: finding.disposition.resolvedTo ?? null,
+        firstSeenAt: prior.firstSeenAt,
+        notifiedCount: prior.notifiedCount,
+        severity: prior.severity,
+        lastSeenAt: nowMs,
+      }
+      if (prior.notifiedCount > 0) {
+        notifications.push({ fingerprint: fp, kind: 'acknowledged', finding })
+      }
       continue
     }
     const materialChange = prior.severity !== finding.class
@@ -372,7 +424,9 @@ export function updateAlertState(state, findings, { nowMs = Date.now(), reminder
   // silently-resumed entry (notifiedCount=0) disappears without one. After
   // recovery the fp is held in `retired` for the cooldown so a re-appearing
   // intermittent finding resumes SILENTLY, and only a genuinely fresh episode
-  // after the cooldown notifies as new again.
+  // after the cooldown notifies as new again. ACKNOWLEDGED fingerprints are
+  // deliberately NOT in `active`: their closure was already delivered exactly
+  // once, so their eventual disappearance is silent garbage-collection.
   const recovered = Object.keys(active).filter((fp) => !seen.has(fp))
   for (const fp of recovered) {
     const entry = active[fp]
@@ -382,8 +436,11 @@ export function updateAlertState(state, findings, { nowMs = Date.now(), reminder
     retired[fp] = nowMs
     delete active[fp]
   }
+  for (const fp of Object.keys(next.acknowledged)) {
+    if (!seen.has(fp)) delete next.acknowledged[fp]
+  }
   for (const [fp, at] of Object.entries(retired)) {
     if (nowMs - at >= recoveryCooldownMs) delete retired[fp]
   }
-  return { notifications, state: { active, retired }, recovered }
+  return { notifications, state: { active, retired, acknowledged }, recovered }
 }
