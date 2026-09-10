@@ -56,6 +56,7 @@ function pick(obj, keys) {
 
 const EVENT_FIELDS = {
   self_service_mutation: ['ts', 'operation', 'jobId', 'operatorAgentId', 'targetAgentId', 'alreadyApplied', 'beforeDigest', 'afterDigest'],
+  self_service_denied: ['ts', 'operation', 'jobId', 'operatorAgentId', 'reason'],
   outcome: ['ts', 'occurrenceId', 'runId', 'state', 'executionOutcome', 'deliveryStatus', 'reason', 'jobId'],
   delivery: ['ts', 'occurrenceId', 'runId', 'deliveryStatus'],
   occurrence_reserved: ['ts', 'occurrenceId', 'runId', 'jobId', 'kind'],
