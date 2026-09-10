@@ -1,12 +1,20 @@
 {
-  "totalRows": 114,
-  "mutationCommands": 98,
+  "totalRows": 98,
+  "mutationCommands": 83,
   "byFamily": {
-    "M6_BINDING_RECONCILE": 7,
-    "M6_SET_OWNER": 2,
-    "M1_TEST_CANCEL": 12,
-    "M2_DEFINITION_REPAIR": 75,
-    "M2A_TEST_DEF_ARCHIVE": 2
+    "M1A_TEST_CANCEL": 8,
+    "M2A_TEST_DEF_ARCHIVE": 2,
+    "M2_DEFINITION_REPAIR": 72,
+    "M6_BINDING_RECONCILE": 1
   },
-  "note": "read-only rows (M6_READBACK, reconcile plan) are verification steps, NOT production mutations"
+  "CLEANUP_TARGET_SUBJECTS": 48,
+  "DISPOSITION_ONLY_SUBJECTS": 6,
+  "TOTAL_TRACKED_HYGIENE_SUBJECTS": 54,
+  "READY_MUTATION_SUBJECTS": 25,
+  "DEPENDENCY_GATED_SUBJECTS": 11,
+  "NO_MUTATION_SUBJECTS": 12,
+  "TOTAL_READY_MUTATION_COMMANDS": 73,
+  "TOTAL_GATED_MUTATION_COMMANDS": 10,
+  "FINAL_TOTAL_MUTATION_COMMANDS": "UNRESOLVED — M1B (4 subjects) disposition + M2B (1 subject) identity resolution pending; frozen only when every subject has an exact legal sequence",
+  "note": "read-only rows (M6_READBACK, reconcile plan) are verification steps, NOT production mutations; NO_MUTATION_DISPOSITION rows are disposition records with zero commands"
 }

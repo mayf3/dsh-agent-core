@@ -1,31 +1,34 @@
 # WORKFLOW_DATA_HYGIENE_V1 — CLEANUP_PLAN (EXACT SET, FROZEN)
 
-- **Status**: FROZEN for audit · **r2 (2026-09-10, Owner REVISE ruling — B1/B2/B3 applied)**. INDEPENDENT_AUDIT r1 = SUPERSEDED_BY_NEW_REVIEW_EVIDENCE. Production execution is **NOT authorized by this document** — sequencing gate §5 AND the per-family HOLD gates (§M1/§M6) apply.
+- **Status**: FROZEN for audit · **r3 (2026-09-11, Owner REVISE_ON_NEW_EVIDENCE ruling — blocker union B1–B7 applied)**. INDEPENDENT_AUDIT r1/r2 = SUPERSEDED_BY_NEW_MECHANICAL_EVIDENCE (r2 asserted `all 12 M1 endpoints are /cancel = PASS` + `COMMAND_LEDGER_COMPLETE = PASS` + `SHIP_BLOCKERS = 0`, disproven by the B1/B3 source censuses below). CLEANUP_PLAN r2 @ `6936306` = REVISE (superseded in place). Production execution is **NOT authorized by this document** — sequencing gate §5 AND the per-family HOLD gates (§M1/§M6) apply.
 - **Inputs**: `CLASSIFICATION_LEDGER.md` r2 (frozen), `census-raw/` TSVs + sha256 manifest.
 - **Mutation discipline**: `PRODUCTION_MUTATION_CONCURRENCY=1`; `READ_BEFORE_WRITE=REQUIRED` per row (re-read the row immediately before mutating; membership drift ⇒ STOP_ON_NEW_EVIDENCE, recompute affected rows only); `WRITE_SET_MUST_EQUAL_AUDITED_SET=YES`; preimage/postimage of every row frozen to `census-raw/execution/{pre,post}/` at execution time.
 - **No DELETE anywhere in this plan.** Every mutation is a governance-state transition that preserves the row and its history.
 
 ## Counts (r2 — logical subjects vs command-level mutations are DISTINCT dimensions)
 
-```text
-TOTAL_LOGICAL_CLEANUP_SUBJECTS         = 48
-  M1 subjects = 12   (test-instance cancels; 0 deletes)
-  M2 subjects = 25   (effective-definition repairs; 1 def partially IDENTITY_REPAIR_REQUIRED)
-  M2A subjects = 2   (test defs inside business domains)
-  M3 subjects = 6    (ledger dispositions; 0 DB mutations)
-  M4 subjects = 0
-  M5 subjects = 0
-  M6 subjects = 9    (4 canonical-twin rebinds + 3 dead-owner repairs + 2 grants)
+r2's `TOTAL_LOGICAL_CLEANUP_SUBJECTS = 48` prose MIXED cleanup targets with
+disposition-only rows and is revoked (Owner B4). Frozen distinct metrics (B4):
 
-TOTAL_PRODUCTION_MUTATION_COMMANDS     = 98   (mechanically derived — see EXECUTION_COMMAND_LEDGER)
-  M1  = 12  x 1 cancel command                        = 12
-  M2  = 25  x 3 authoring commands (fresh census:     = 75
-        create_draft_version -> replace_draft_graph -> publish_version)
-  M2A = 2   x 1 definition archive command            =  2
-  M6  = 7 x reconcile-apply + 2 x set_owner           =  9
-  (read-only steps — reconcile plan, get_owner read-backs, cancel/verify reads —
-   are verification steps and are NOT counted as production mutation commands;
-   the ledger carries 114 rows total = 98 mutation + 16 read-only)
+```text
+CLEANUP_TARGET_SUBJECTS               = 48   (M1 12 + M2 25 + M2A 2 + M6 9)
+DISPOSITION_ONLY_SUBJECTS             = 6    (M3 ledger dispositions; 0 DB mutations)
+TOTAL_TRACKED_HYGIENE_SUBJECTS        = 54
+(M4/M5 remain zero-mutation classes; no artificial subject rows.)
+
+TOTAL_PRODUCTION_MUTATION_COMMANDS = 98 (r2) is REVOKED (Owner B2: four of the twelve
+M1 cancels are mechanically inapplicable — see §M1B). Per-subject disposition after the
+B1/B3/B5 blocker union (B6; mechanically derived — see EXECUTION_COMMAND_LEDGER r3):
+
+  READY_MUTATION_SUBJECTS       = 25  (M2 24 canonical repairs + M2A-1)
+  DEPENDENCY_GATED_SUBJECTS     = 11  (M1A 8 + M6-1 + M2A-2 + M2B 1)
+  NO_MUTATION_SUBJECTS          = 12  (M1B 4 + M6-2..9 8)
+  TOTAL_READY_MUTATION_COMMANDS  = 73  (M2 24x3 + M2A-1 1)
+  TOTAL_GATED_MUTATION_COMMANDS  = 10  (M1A 8x1 + M6-1 apply + M2A-2 1)
+  FINAL_TOTAL_MUTATION_COMMANDS  = UNRESOLVED — frozen only when every subject has an
+                                   exact legal sequence (M1B 4 + M2B 1 pending)
+  (read-only steps — reconcile plan, get_owner read-backs — are verification, NOT
+   mutation commands; ledger r3 = 98 rows total = 83 mutation + 15 disposition/read-only)
 ```
 
 EXECUTION_COMMAND_LEDGER = `execution-command-ledger.tsv` (generated, mechanical) +
@@ -42,7 +45,36 @@ unchanged versus this audited plan, AND (b) the executed COMMAND SEQUENCE exactl
 this audited EXECUTION_COMMAND_LEDGER (no extra commands, no reordered dependencies, no
 substituted operations).
 
-## §M6 — Domain-owner binding repairs (9 rows, run FIRST — M1/M2 depend on them)
+## §M6 — Domain-owner binding repairs (r3: 9 rows → 1 retained + 8 REMOVED)
+
+**r3 MINIMALITY RULING (Owner B5) — applied.** The accepted
+`SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1` authorizes cross-domain cancel/archive
+(`DOMAIN_OWNER OR GLOBAL_WORKFLOW_COORDINATOR`, spec §5.5/W1/W2). Mechanical census
+(2026-09-11): the **deployed** svc generation (`6dc1027`) does NOT yet implement that
+widening — `src/application/workflow_instance/cancel.rs` remains DOMAIN_OWNER-only — so the
+r2 rationale "take ownership solely to unlock M1 cancel/archive" does NOT survive as an
+immediate mutation: M1A cancels become DEPENDENCY_GATED on the W1/W2 widening deployment
+(coordinator goal's own production deployment), and the takeover rows are REMOVED:
+
+```text
+M6-1  RETAINED — business-domain canonical CTO repair (adc-v2-dogfood):
+      independently justified governance repair, not an M1 unlock
+      (M2A-2 archive depends on it; dependency recorded).
+M6-2..4  REMOVE_FROM_PLAN — unlock-only for M1-6..8 in canary-wda-v1-* test
+      domains; those domains hold no other governed state after M1 cleanup
+      (disposable residue); no accepted operation requires DOMAIN_OWNER there.
+M6-5..7  REMOVE_FROM_PLAN — unlock-only for M1-1..4 in assistance-* test domains
+      (dead-owner bindings); coordinator W1 covers the cancels once deployed;
+      dead-owner binding rows persist untouched as history (DEC-CP-007 repairable
+      input for any future authority).
+M6-8..9  REMOVE_FROM_PLAN — ownerless e2e domains whose ONLY hygiene rows are the
+      M1B dangling instances (no reachable mutation surface exists at any
+      ownership level — see §M1B census); ownership grants nothing executable.
+```
+
+M6 subjects M6-2..9 remain TRACKED (they stay inside CLEANUP_TARGET_SUBJECTS = 48) as
+NO_MUTATION_DISPOSITION rows in the r3 ledger with per-row removal reasons. M6-1 rows in the
+ledger = plan (read-only) + apply (the single retained M6 mutation command) + read-back.
 
 **r2 AUTHORITY RE-MAP (Owner ruling B1).** Authority-layer map, frozen:
 
@@ -109,9 +141,55 @@ Rollback per row: re-apply prior binding state through the same coordinator auth
 
 Every row: preimage = frozen `census-raw/binding-rows-for-plan.tsv`; postimage = exactly one enabled DOMAIN_OWNER per domain, canonical principal, old binding `enabled=false` preserved as history. Rollback = re-apply prior binding state via the same workflow.admin authority (binding rows are never deleted). `canary-wda-v1-1788582639` deliberately untouched (its 3 test instances are TERMINAL history → preserve; no unlock needed).
 
-## §M1 — Test-instance cancels (12 rows)
+## §M1 — Test instances (r3: split into M1A 8 ordinary cancels + M1B 4 dangling, Owner B1)
 
-Exact mutation: `POST /internal/v1/workflow-instances/{id}/cancel` with reason string `WORKFLOW_DATA_HYGIENE_V1 M1 TEST_OR_FIXTURE residue removal (census 2026-09-10)`, executed by dc702687 (`agt_hr-agent`, DOMAIN_OWNER of each domain after §M6). Authority: svc-workflow cancel = DOMAIN_OWNER-of-domain + `workflow.execute` scope (`src/application/workflow_instance/cancel.rs` — "Only DOMAIN_OWNER may cancel instances in their domain"). Execution precondition: `AUTH_V1_CANARY_WRITE_ENABLED=true` (canary_write_guard is a global write gate — verify once before the batch).
+**M1A — ordinary supported cancel (8 rows, M1-1..8; all NON_TERMINAL_CURRENT with a current
+NodeVisit — cancel precondition met).**
+
+Exact mutation: `POST /internal/v1/workflow-instances/{id}/cancel` with reason string
+`WORKFLOW_DATA_HYGIENE_V1 M1 TEST_OR_FIXTURE residue removal (census 2026-09-10)`, executed
+by dc702687 (`agt_hr-agent`) under the accepted coordinator widening
+(`DOMAIN_OWNER OR GLOBAL_WORKFLOW_COORDINATOR`, SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1
+§5.5/W1). Execution preconditions: the W1/W2 widening DEPLOYED in the live svc generation
+(currently NOT deployed — `6dc1027` cancel.rs is DOMAIN_OWNER-only; source census
+2026-09-11) ⇒ **M1A rows are DEPENDENCY_GATED**, and `AUTH_V1_CANARY_WRITE_ENABLED=true`
+(verify once before the batch).
+
+**M1B — NON_TERMINAL_DANGLING rows (4: M1-9..12) — Owner B1 narrow census outcome.**
+
+Mechanical facts (census rows + svc source `src/domain/workflow_instance/errors.rs`):
+`current_node_visit_id = NULL`, lifecycle = NON_TERMINAL_DANGLING, TEST_OR_FIXTURE fixture
+provenance proven (test_domain / test_creator / synthetic_instance_id signals). Therefore:
+
+```text
+NORMAL_CANCEL  = INAPPLICABLE (cancel requires a current NodeVisit
+               => CancelWorkflowInstanceError::CurrentVisitNotFound)
+NORMAL_ARCHIVE = INAPPLICABLE (archive requires cancelled or terminal
+               => ArchiveWorkflowInstanceError::InstanceNotTerminal)
+DIRECT_DB_EDIT      = FORBIDDEN
+FAKE_CURRENT_VISIT  = FORBIDDEN
+FAKE_TRANSITION     = FORBIDDEN
+```
+
+Narrow existing-authority/surface census for exactly these four rows (svc-workflow source,
+HTTP router `src/http/mod.rs`, 45 routes, full enumeration): the ONLY reachable
+instance-mutation surfaces are `/cancel` and `/archive` (both inapplicable above);
+`admin_recovery` (`rebuild_projection`, `admin_emergency_override`) and `admin_repair`
+(`repair_context` plan/apply) application-layer functions exist in
+`src/application/workflow_instance/` but have **NO HTTP route** (not reachable by any
+caller; not an existing surface). No instance delete endpoint exists.
+
+```text
+CENSUS_OUTCOME = NARROW_ONE_TIME_AUTHORITY_REQUIRED
+(documented zero-mutation alternative: EXPLICIT_PRESERVE_QUARANTINE — leave the four
+ test-fixture rows quarantined in place as documented residue; the choice between a
+ narrow one-time authority and explicit preserve-quarantine is a separate future
+ Owner gate and MUST NOT be assumed by this plan)
+M1B_MUTATION_SEQUENCE   = UNRESOLVED
+M1B_PRODUCTION_MUTATION = HOLD
+```
+
+M1A rows:
 
 All 12 rows: classification = TEST_OR_FIXTURE with mechanical provenance signals (ledger); current_state preimage = census row (cancelled=false, archived_at=null, current visit per TSV); expected postimage = cancelled=true, cancel_reason as above, cancelled_by=dc702687, exactly one CANCEL event appended, all payload/context/visit history preserved. Rollback = none applicable — cancel preserves the row and history, so a disputed cancel is re-examined from evidence, not reversed by mutation; the REAL_BUSINESS risk gate is the audit's `REAL_BUSINESS_FALSE_POSITIVE_CHECK` plus per-row read-before-write re-verification of the classification signals.
 
@@ -132,10 +210,36 @@ All 12 rows: classification = TEST_OR_FIXTURE with mechanical provenance signals
 
 The 26 TERMINAL test instances: **NO MUTATION — history preserved** (Owner ruling M1). `6ea453e2` (AMBIGUOUS): **EXCLUDED from write-set**.
 
-## §M2 — Effective-definition repairs (25 rows) + test-def archives (2 rows)
+## §M2 — Effective-definition repairs (r3: 24 READY + 1 identity-blocked) + test-def archives (2 rows)
 
-**r2 command sequence (B2 — fresh source census, command names NOT guessed).** Each of the
-25 subjects expands to exactly THREE production mutation commands on the WDA authoring
+**r3 split (Owner B3).** The 25 subjects become:
+
+```text
+M2A_CANONICAL_DEFINITION_REPAIRS    = 24  (READY — 3 authoring commands each)
+M2B_AGENT_SELF_TASK_IDENTITY_BLOCKED = 1  (agent_self_task_v1, workflow-todo-dogfood,
+                                          def 50c7fad7-…)
+```
+
+**M2B identity disposition (existing identity authority answer, captured read-only in
+`census-raw/auth-resolution-all-principals-20260910.tsv`):** the fixed-principal partner
+nodes reference `b6b033c4-90ba-40aa-a338-304da442cab7` (龙虾合伙人) — an ACTIVE machine
+principal whose authority resolution carries **NO canonical Agent mapping** (the previously
+floated candidate `25a6789f` / `agt_ceo-agent` is NOT the authority). This is the
+RETURNS_NO_PROVEN_SUCCESSOR branch of the Owner ruling:
+
+```text
+IDENTITY_MAPPING_GUESS = FORBIDDEN
+M2B_SEQUENCE_START = HOLD (before command 1 — no dangling successor DRAFT may be created)
+M2B executable commands in this ledger = 0 (subject row = DEPENDENCY_GATED record)
+```
+
+M2B is deferred to the normal provisioning authority: only when that authority establishes
+a canonical Agent identity for `b6b033c4` (or an Owner-ruled successor) may this one
+subject's graph/postimage and command ledger be regenerated mechanically. No generic
+identity-repair framework is opened by this plan.
+
+**Command sequence (B2 — fresh source census, command names NOT guessed).** Each of the
+24 READY subjects expands to exactly THREE production mutation commands on the WDA authoring
 surface (broker manifest `workflow_definition_authoring`, svc endpoints live):
 
 ```text
@@ -239,4 +343,42 @@ TEST_CLASSIFICATION_SUPPORTED        = YES (every M1 row carries mechanical sign
                                             title-string classifications)
 HUMAN_REQUIRED_CLASSIFICATION_SUPPORTED = YES (ledger §7)
 SHIP_BLOCKERS                        = set by INDEPENDENT_AUDIT r2
+```
+
+## §r3 — Blocker-union closure record (Owner REVISE_ON_NEW_EVIDENCE 2026-09-11)
+
+```text
+B1  M1 split            = DONE (M1A 8 ordinary cancels / M1B 4 dangling; census outcome
+                          NARROW_ONE_TIME_AUTHORITY_REQUIRED, alternative
+                          EXPLICIT_PRESERVE_QUARANTINE; M1B_MUTATION_SEQUENCE = UNRESOLVED;
+                          M1B_PRODUCTION_MUTATION = HOLD; DIRECT_DB_EDIT / FAKE_CURRENT_VISIT /
+                          FAKE_TRANSITION = FORBIDDEN)
+B2  98-command total    = REVOKED (r3 ledger: 73 READY + 10 GATED; FINAL total stays
+                          UNRESOLVED until M1B/M2B dispositions land)
+B3  M2B identity        = HOLD recorded (RETURNS_NO_PROVEN_SUCCESSOR branch;
+                          IDENTITY_MAPPING_GUESS = FORBIDDEN; 0 executable commands;
+                          deferred to the normal provisioning authority)
+B4  count semantics     = FROZEN (CLEANUP_TARGET_SUBJECTS = 48; DISPOSITION_ONLY = 6;
+                          TOTAL_TRACKED_HYGIENE_SUBJECTS = 54; no mixed summation)
+B5  M6 minimality       = M6-1 RETAINED (business-domain canonical CTO repair);
+                          M6-2..9 REMOVE_FROM_PLAN with per-row recorded reasons
+                          (unlock-only / no-executable-cleanup; deployed svc cancel/archive
+                          is DOMAIN_OWNER-only at 6dc1027 — the accepted coordinator W1/W2
+                          widening is the dependency, not the takeover)
+B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 98 rows = 73 READY mutation
+                          + 10 GATED mutation + 15 read-only/disposition records; every row
+                          carries mutation_class = READY | DEPENDENCY_GATED |
+                          NO_MUTATION_DISPOSITION; builder updated mechanically)
+B7  audit r3            = PENDING — runs only after this r3 revision passes the Owner
+                          exact-head gate (the blocker union above is closed in the plan;
+                          the audit validates the closure)
+```
+
+```text
+GOAL_STATUS = ACTIVE
+DEPENDENCY_WAIT = NO
+PRODUCTION_APPLY_ALLOWED = NO
+DURABLE_GUARD / M1B MUTATION = HOLD
+NEXT = Owner exact-head acceptance of this r3 revision → ONE independent audit r3
+       (required proofs per Owner B7) → only then true dependency wait
 ```
