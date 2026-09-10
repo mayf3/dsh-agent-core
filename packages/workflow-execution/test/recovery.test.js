@@ -349,17 +349,20 @@ test('Identity NOT yet repaired: recovery re-blocks with zero Runs (designed int
   try {
     await seedBlocked(fx.engine)
     // identity stays UNREPAIRED here — that is the case under test
-    const sizeBefore = fx.eventsBytes()
+    const blockedBefore = fx.ledger.get(VISIT).blockedCount ?? 0
     const result = await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: AUTHORITY })
     assert.equal(result.outcome, 'STILL_BLOCKED:agent_mapping_missing')
     assert.equal(fx.calls.delivers.length, 0, 'zero Runs while identity is unrepaired')
     assert.equal(fx.ledger.get(VISIT).state, 'ACTIVE')
     assert.equal(fx.ledger.get(VISIT).phase, 'resolution_blocked')
-    // CTR-WAE-012 ordering: the verification read appends NOTHING — no
-    // authorization may precede a refusal, and no resolution fact may be
-    // minted without its authorization. The attempt is left exactly as it
-    // was; only the caller-visible outcome is different.
-    assert.equal(fx.eventsBytes(), sizeBefore, 'zero ledger facts on the verification-failure path')
+    assert.equal(fx.ledger.get(VISIT).blockedCount, blockedBefore + 1, 'a fresh blocked fact is appended')
+    // Accepted CTR-WAE-012: EVERY resolution-phase failure appends the fresh
+    // resolution_blocked fact (no authorization precedent required — it is
+    // not a refusal); the authorization NEVER precedes this path, so the
+    // refusal-path constraint holds trivially.
+    const raw = readFileSync(fx.eventsFile(), 'utf8')
+    assert.ok(raw.lastIndexOf('"kind":"resolution_blocked"') > -1, 'the fresh blocked fact is durable')
+    assert.equal(raw.includes('"kind":"recovery_authorized"'), false, 'no authorization exists on the identity-unrepaired path')
   } finally {
     fx.cleanup()
   }
