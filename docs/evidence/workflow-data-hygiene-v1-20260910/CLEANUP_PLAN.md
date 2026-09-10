@@ -8,10 +8,9 @@
 ## 0. Logical subjects vs commands (B6)
 
 ```text
-TOTAL_LOGICAL_CLEANUP_SUBJECTS      = 48
-  = M1A 8 + M1B 4 (HOLD) + M2 25 + M2A 2 + M3 6 (0 mutation) + M6 9
-EXECUTABLE_LOGICAL_SUBJECTS_TODAY   = 21   (M2: 19 actor-ready defs + M2A-1 + … see §4/§5 admission table; M1A/M6/M2A-2 admission-gated)
-HELD_LOGICAL_SUBJECTS               = 27   (M1B 4 = M1B_WRITE_SET=HOLD; M6 9 = M6_AUTHORITY_GAP=YES; M1A 8 = gated on M6; M2 6 adc defs gated on M6-1)
+TOTAL_LOGICAL_CLEANUP_SUBJECTS      = 48   (mutation-bearing subjects: M1A 8 + M1B 4 + M2 25 + M2A 2 + M6 9; M3's 6 dispositions are 0-mutation and excluded from this count)
+EXECUTABLE_LOGICAL_SUBJECTS_TODAY   = 20   (M2: 19 actor-ready defs + M2A-1; all per §4/§5 admission tables)
+HELD_LOGICAL_SUBJECTS               = 28   (M1B 4 = HOLD; M6 9 = M6_AUTHORITY_GAP=YES; M1A 8 = gated on M6; M2 6 adc defs + M2A-2 1 = gated on M6-1)
 
 TOTAL_PRODUCTION_MUTATION_COMMANDS  = 94 or 101  (mechanically derived, NOT 48)
   = M1A 8 cancels
@@ -41,7 +40,7 @@ M6_MUTATION_SURFACE (both exist in deployed svc source):
 
 | fact | value |
 |---|---|
-| principals holding `workflow.admin` grants | bc970ced `hr-agent` (LEGACY naked-name, FAIL), 097f197d `thesis-advisor-agent` (LEGACY, FAIL), 858b5fe2 `svc-dogfood-user` (test identity), 9c740a57 `svc-okr-e2e` (test identity) |
+| principals holding `workflow.admin` grants (per frozen TSV, authoritative) | bc970ced `hr-agent` (LEGACY naked-name, FAIL) and 9c740a57 `svc-okr-e2e` (test identity) — 097f197d/858b5fe2 hold workflow.read/execute only |
 | canonical principals' svc-workflow grants | dc702687/`agt_hr-agent`, 4e5a4578/`agt_cto-agent`, b21ddb23/`agt_efficiency-agent`, 208f91e9/`agt_game-producer-agent`, 8402d851, 72ff7ee1, d5b3aeb2, 9ddbb1c7: `workflow.read + workflow.execute` only — **no canonical principal holds workflow.admin** |
 | enabled `GLOBAL_WORKFLOW_COORDINATOR` bindings (svc) | 0a9eccd0, 5ccddbaa, cada669b, ce295072 = **principal NOT FOUND in auth** (dead bindings); bc970ced = legacy; **dc702687 NOT granted** |
 | `LIVE_COORDINATOR_CONTROL_PLANE_READY` | **NO** (surface deployed in svc; no canonical actor holds the role; WCC goal B1 Owner grant packet pending) |
