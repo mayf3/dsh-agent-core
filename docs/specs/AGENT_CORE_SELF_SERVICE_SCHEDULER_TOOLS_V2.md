@@ -1790,10 +1790,15 @@ IMPORT/CALL-SITE CENSUS（history 家族，宽度收缩的承载面）：
     index.js(49)、history-storage.js(143)、history.js(451, 自身)
   test importer：scheduler-history.test.js(134)、history-durability.test.js(107)、
     history.test.js(484)
-  ⇒ 全部 <= 500；路径改写为纯机械（./history* → ./history/history* 及
-    ../src/history* → ../src/history/history*），不触碰任何 >500 文件。
+  包外 importer：scripts/agentcore-cron.mjs(516, post-baseline 不可
+    grandfather)、packages/product-api/test/scheduler-api.test.js(366)
+  ⇒ 全部 <= 500（除 agentcore-cron.mjs 516——经 src/history.js 兼容 barrel
+    零触碰处置，见 C2/C2a）。
   occurrence 家族（15 importers）因改写面过大被否决；store/ 因 importer 面过
-  大被否决。history/ 为最小宽度解（src 根 -5 +1）。
+  大被否决。history/ 迁入 = 四模块（history-model/history-projection/
+  history-sink/history-storage）；src/history.js 与 src/self-service.js 同为
+  原位兼容 barrel（REMOVED=NO）。src 根 = 21 − 4 + 2 = 19 ≤ 20（与 C2/
+  FINAL_IMMEDIATE_CHILD_COUNT 一致）。
 ```
 
 ### C1. AMENDMENT_2 closure 不可行的精确算术（MECHANICAL_LINE_ARITHMETIC 输入）
@@ -1920,8 +1925,10 @@ UNTOUCHED（双 barrel 保证零触碰）：compose.js（恰 500）、cross-agen
   history.test.js（../src/history.js barrel 路径不变）、
   scripts/agentcore-cron.mjs（516，post-baseline 不可 grandfather——
   src/history.js barrel 使其零触碰）、product-api/test/scheduler-api.test.js
-UNDECLARED_IMPORT_REWRITE = 0（(i)+(ii) 即完整闭包；C0 census 已含
-  agentcore-cron.mjs 与 product-api 测试两处 history.js importer 的零触碰处置）
+UNDECLARED_IMPORT_REWRITE = 0（(i)+(ii) 即完整闭包；agentcore-cron.mjs 与
+  product-api 测试两处 history.js importer 的零触碰处置冻结于 frontmatter
+  acceptance 记录与本节（src/history.js 兼容 barrel），C2a 表为迁入文件内部
+  census）
 ```
 
 TEST_MOVE_MAP（迁入 test/self-service/critical-job-guard.test.js 的簇，断言
