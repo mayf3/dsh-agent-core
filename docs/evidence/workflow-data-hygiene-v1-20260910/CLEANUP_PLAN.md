@@ -226,7 +226,7 @@ All 12 rows: classification = TEST_OR_FIXTURE with mechanical provenance signals
 
 The 26 TERMINAL test instances: **NO MUTATION — history preserved** (Owner ruling M1). `6ea453e2` (AMBIGUOUS): **EXCLUDED from write-set**.
 
-## §M2 — Effective-definition repairs (r3: 24 READY + 1 identity-blocked) + test-def archives (2 rows)
+## §M2 — Effective-definition repairs (r3: 23 READY + 2 identity-blocked) + test-def archives (2 rows)
 
 **r3 split (Owner B3).** The 25 subjects become:
 
@@ -258,7 +258,7 @@ subject's graph/postimage and command ledger be regenerated mechanically. No gen
 identity-repair framework is opened by this plan.
 
 **Command sequence (B2 — fresh source census, command names NOT guessed).** Each of the
-24 READY subjects expands to exactly THREE production mutation commands on the WDA authoring
+23 READY subjects expand to exactly THREE production mutation commands on the WDA authoring
 surface (broker manifest `workflow_definition_authoring`, svc endpoints live):
 
 ```text
@@ -270,7 +270,7 @@ surface (broker manifest `workflow_definition_authoring`, svc endpoints live):
    POST /internal/v1/domains/{domainId}/definitions/{definitionId}/publish
 ```
 
-24 READY subjects × 3 commands = 72 (+ M2B agent_self_task_v1 DEPENDENCY_GATED with ZERO commands — sequence HOLD before command 1). Executor per def = that domain's canonical enabled
+23 READY subjects × 3 commands = 69 (+ M2B agent_self_task_v1 DEPENDENCY_GATED with ZERO commands — sequence HOLD before command 1). Executor per def = that domain's canonical enabled
 DOMAIN_OWNER (adc defs authorized by `4e5a4578` **after M6-1**). Authority: definition
 governance = DOMAIN_OWNER, idempotent+audited (`src/application/definition_governance/`);
 **AUTHORITY_GAP = NO**. Rollback = prior versions are immutable and intact; a bad successor
@@ -294,7 +294,7 @@ Special sub-row (r3): `agent_self_task_v1` partner_check/partner_accept nodes po
 the auth exact-resolution authority returns NO canonical mapping (RETURNS_NO_PROVEN_SUCCESSOR
 branch), so the subject is DEPENDENCY_GATED with ZERO commands until the normal provisioning
 authority establishes the identity. The def's mechanical nodes (95eab282→b21ddb23 twin)
-belong to the 24 READY repairs.
+belong to the 23 READY repairs.
 
 | # | definition | domain | exact_mutation |
 |---|---|---|---|
