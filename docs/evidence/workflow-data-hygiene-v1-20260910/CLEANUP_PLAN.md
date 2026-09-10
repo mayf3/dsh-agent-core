@@ -377,7 +377,7 @@ B1  M1 split            = DONE (M1A 8 ordinary cancels / M1B 4 dangling; census 
                           EXPLICIT_PRESERVE_QUARANTINE; M1B_MUTATION_SEQUENCE = UNRESOLVED;
                           M1B_PRODUCTION_MUTATION = HOLD; DIRECT_DB_EDIT / FAKE_CURRENT_VISIT /
                           FAKE_TRANSITION = FORBIDDEN)
-B2  98-command total    = REVOKED (r3 ledger: 73 READY + 10 GATED; FINAL total stays
+B2  98-command total    = REVOKED (r3 ledger: 70 READY + 10 GATED; FINAL total stays
                           UNRESOLVED until M1B/M2B dispositions land)
 B3  M2B identity        = HOLD recorded (RETURNS_NO_PROVEN_SUCCESSOR branch;
                           IDENTITY_MAPPING_GUESS = FORBIDDEN; 0 executable commands;
@@ -391,7 +391,7 @@ B5  M6 minimality       = M6-1 RETAINED (business-domain canonical CTO repair);
                           (cancel_transaction.rs:280-293); the outstanding dependency is the
                           GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap — the
                           takeover, not the grant, is what B5 removes)
-B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 98 rows = 70 READY mutation + 10 GATED mutation + 15 read-only/disposition records; every row
+B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 96 rows = 70 READY mutation + 10 GATED mutation + 16 read-only/disposition records; every row
                           carries mutation_class = READY | DEPENDENCY_GATED |
                           NO_MUTATION_DISPOSITION; builder updated mechanically)
 B7  audit r3            = PENDING — runs only after this r3 revision passes the Owner
