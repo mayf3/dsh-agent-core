@@ -1193,7 +1193,8 @@ deployment, or production action.
   Auth request/store read/content or owner disclosure on that path, ordinary cross-Agent
   visibility/mutation/success audit, a test
   that treats permitted whole-document load/validation itself as forbidden, authorization
-  consumption beyond existence/`job.agentId`, any
+  consumption beyond existence/`job.agentId` (AMENDMENT_2 conformance: plus the accepted
+  AMENDMENT_1 A2/A3 disable/remove-path `job.logicalKey` classification consumption), any
   external-proof pre-success occurrence/history projection/query/filter/return or decision use,
   `scheduler.manage:any`/`scheduler.manage-any` wire request, alias/normalization/multiple
   spelling/fallback, wrong or multiple proof requests, tool-asserted authority, authority or
