@@ -27,7 +27,8 @@ B1/B3/B5 blocker union (B6; mechanically derived — see EXECUTION_COMMAND_LEDGE
   TOTAL_GATED_MUTATION_COMMANDS  = 10  (M1A 8x1 + M6-1 apply + M2A-2 1; identity-blocked
                                         subjects carry ZERO commands — HOLD before cmd 1)
   FINAL_TOTAL_MUTATION_COMMANDS  = UNRESOLVED — frozen only when every subject has an
-                                   exact legal sequence (M1B 4 + M2B 1 pending)
+                                   exact legal sequence (M1B 4 + the 2 identity-blocked
+                                   M2 subjects pending)
   (read-only steps — reconcile plan, get_owner read-backs — are verification, NOT
    mutation commands; ledger r3 = 96 rows total = 80 mutation + 16 read-only/disposition)
 ```
@@ -252,9 +253,10 @@ M2B_SEQUENCE_START = HOLD (before command 1 — no dangling successor DRAFT may 
 M2B executable commands in this ledger = 0 (subject row = DEPENDENCY_GATED record)
 ```
 
-M2B is deferred to the normal provisioning authority: only when that authority establishes
-a canonical Agent identity for `b6b033c4` (or an Owner-ruled successor) may this one
-subject's graph/postimage and command ledger be regenerated mechanically. No generic
+BOTH identity-blocked subjects (agent_self_task_v1 AND agent-role-upgrade-v1) are deferred
+to the normal provisioning authority: only when that authority establishes a canonical
+Agent identity for `b6b033c4` (or an Owner-ruled successor) may their graph/postimage and
+command ledgers be regenerated mechanically. No generic
 identity-repair framework is opened by this plan.
 
 **Command sequence (B2 — fresh source census, command names NOT guessed).** Each of the

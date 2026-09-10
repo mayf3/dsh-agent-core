@@ -6,8 +6,9 @@
 //       InstanceNotTerminal; admin_recovery/admin_repair application functions have NO HTTP
 //       route) => NO_MUTATION_DISPOSITION pending NARROW_ONE_TIME_AUTHORITY vs
 //       EXPLICIT_PRESERVE_QUARANTINE (M1B_MUTATION_SEQUENCE = UNRESOLVED, HOLD).
-//   B3: M2 split — M2A_CANONICAL = 24 subjects x 3 authoring commands (READY);
-//       M2B agent_self_task_v1 = IDENTITY_BLOCKED (auth exact-resolution census: principal
+//   B3: M2 split — M2A_CANONICAL = 23 subjects x 3 authoring commands (READY);
+//       M2B identity-blocked subjects = agent_self_task_v1 AND agent-role-upgrade-v1 (auth
+//       exact-resolution census: principal
 //       b6b033c4-90ba-40aa-a338-304da442cab7 "龙虾合伙人" active with NO canonical Agent
 //       mapping => RETURNS_NO_PROVEN_SUCCESSOR; IDENTITY_MAPPING_GUESS = FORBIDDEN)
 //       => DEPENDENCY_GATED, sequence NOT started (ZERO commands).
@@ -109,7 +110,7 @@ for (const [sid, iid, dom] of m1b) {
     `census row: ${iid} in ${dom} — NON_TERMINAL_DANGLING, current_node_visit_id=NULL, TEST_OR_FIXTURE provenance proven (test_domain/test_creator/synthetic_instance_id signals)`)
 }
 
-// ---- M2: 24 READY canonical repairs + M2B identity-blocked (B3)
+// ---- M2: 23 READY canonical repairs + 2 IDENTITY_BLOCKED subjects (B3 + audit r4)
 const defs = readFileSync(join(RAW, 'definition-classification.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t'))
 const pubv = readFileSync(join(RAW, 'effective-published-versions.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t')) // HEADERLESS: row 0 is data, not a header
 const publishedVersionId = new Map(pubv.map(r => [r[1], r[2]]))
