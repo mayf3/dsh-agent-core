@@ -369,6 +369,33 @@ test('PA2: absent store entry + (c)=true runs exactly S1, S2, one store write, a
   assert.deepEqual(auth.state.verifiedCredential, persisted.credentials[AGENT_ID])
 })
 
+test('deployed seam wire shape: one-time secret carried as `secret` is accepted (CANONICAL_ONBOARDING_COMPLETION_V1 §5)', async (t) => {
+  const paths = await files(t)
+  const auth = fakeAuthority()
+  // The deployed idempotent seam (routes/idempotent.ts) returns the one-time
+  // secret as `secret`; accept it alongside the frozen `client_secret` shape.
+  const deployedShape = { ...auth }
+  deployedShape.ensureClient = async (body) => {
+    const response = await auth.ensureClient(body)
+    if (response.created === true && response.client_secret !== undefined) {
+      return { ...response, secret: response.client_secret, client_secret: undefined }
+    }
+    return response
+  }
+  const writes = storeWriteCounter()
+  const result = await ensureAgentCredential({
+    agentId: AGENT_ID, agentDefinitionFile: paths.definitionFile,
+    credentialsFile: paths.credentialsFile, auth: deployedShape, prerequisites: { c: true },
+    storeWriteOptions: writes.options,
+  })
+  assert.equal(result.outcome, 'provisioned')
+  assert.equal(result.clientId, 'mc_fixed')
+  const persisted = JSON.parse(await readFile(paths.credentialsFile, 'utf8'))
+  assert.equal(persisted.credentials[AGENT_ID].clientId, 'mc_fixed')
+  assert.equal(persisted.credentials[AGENT_ID].clientSecret, auth.state.secret)
+  assert.deepEqual(auth.state.verifiedCredential, persisted.credentials[AGENT_ID])
+})
+
 test('persisted reread object is the verification mint source', async (t) => {
   const paths = await files(t)
   const auth = fakeAuthority()
