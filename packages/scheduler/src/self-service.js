@@ -8,6 +8,7 @@
  */
 
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 
 import {
   createOrReconcileJobOp,
@@ -29,6 +30,14 @@ export const SELF_SERVICE_ERROR_CODES = {
   STALE_TARGET_CONFLICT: 'stale_target_conflict',
   MUTATION_OUTCOME_UNKNOWN: 'mutation_outcome_unknown',
   INTERNAL_ERROR: 'internal_error',
+}
+
+// AMENDMENT_1 — CRITICAL_JOB_SELF_DISABLE_GUARD (accepted authority, PR #249):
+// stable denial reason codes for the two fail-closed classes. Denials carry
+// ZERO job/definition content and perform ZERO store mutation.
+export const CRITICAL_GUARD_REASONS = {
+  SELF_DISABLE: 'critical_job_self_disable',
+  INVENTORY_UNAVAILABLE: 'critical_inventory_unavailable',
 }
 
 /** Expected-revision wire shape -> op guard input (§5.1.4 compare-before-write). */
@@ -246,6 +255,49 @@ function ownershipGuard(callerAgentId, allowAny, captureCurrent) {
 }
 
 /**
+ * AMENDMENT_1 — CRITICAL_JOB_SELF_DISABLE_GUARD (accepted, PR #249): parse the
+ * critical desired-state inventory (the reliability authority's frozen §5.4
+ * manifest). Returns the Set of critical logicalKeys, or throws on any
+ * unreadable/invalid/unsupported-version input (caller maps that to the
+ * fail-closed `critical_inventory_unavailable` class). Read-only; no caching —
+ * the inventory is consulted fresh at mutation time.
+ */
+export function parseCriticalInventory(raw) {
+  const parsed = JSON.parse(raw)
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new TypeError('critical inventory must be an object')
+  }
+  if (parsed.version !== 1) throw new TypeError(`unsupported critical inventory version: ${String(parsed.version)}`)
+  if (!Array.isArray(parsed.jobs)) throw new TypeError('critical inventory jobs must be an array')
+  const logicalKeys = new Set()
+  for (const entry of parsed.jobs) {
+    if (entry === null || typeof entry !== 'object' || typeof entry.logicalKey !== 'string' || entry.logicalKey.trim() === '') {
+      throw new TypeError('critical inventory job entry requires a non-empty logicalKey')
+    }
+    logicalKeys.add(entry.logicalKey)
+  }
+  return logicalKeys
+}
+
+/**
+ * Pure guard decision (AMENDMENT_1): `null` = not blocked; otherwise the stable
+ * denial reason. Only the SELF path (no manage:any proof) ever reaches this.
+ * Identity is EXACTLY the job's persisted logicalKey against the inventory —
+ * never name/substring/prompt. `inventory.state`:
+ *   'unconfigured' → guard inert (no inventory provisioned in this deployment)
+ *   'unavailable'  → configured but unreadable/invalid → FAIL_CLOSED for
+ *                    disable/remove (critical_inventory_unavailable)
+ *   'ok'           → exact match ⇒ critical_job_self_disable; absent ⇒ null
+ */
+export function evaluateCriticalJobGuard({ operation, logicalKey, inventory }) {
+  if (operation !== 'disable' && operation !== 'remove') return null
+  if (inventory.state === 'unconfigured') return null
+  if (inventory.state === 'unavailable') return CRITICAL_GUARD_REASONS.INVENTORY_UNAVAILABLE
+  if (inventory.logicalKeys.has(logicalKey)) return CRITICAL_GUARD_REASONS.SELF_DISABLE
+  return null
+}
+
+/**
  * @param {object} opts
  * @param {import('./store.js').JobStore} opts.store
  * @param {(agentId:string, scope:'scheduler.admin'|'scheduler.audit', resource:'scheduler')=>Promise<boolean>} [opts.assertGrant]
@@ -255,9 +307,52 @@ function ownershipGuard(callerAgentId, allowAny, captureCurrent) {
  *     (runs(all_agents=true)/foreign history). Local colon-form labels are
  *     never requested.
  * @param {(event:{operation:string,jobId:string})=>void} [opts.onAuditFailure]
+ * @param {string} [opts.criticalInventoryPath]
+ *     AMENDMENT_1 critical inventory source (read-only, re-read at every
+ *     guarded mutation; never cached as authority). Unset ⇒ the guard is
+ *     inert in this deployment (no critical inventory provisioned). Production
+ *     provisiones SCHEDULER_DESIRED_STATE (same file the §5.4 watchdog reads).
  */
-export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFailure = () => {} }) {
+export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFailure = () => {}, criticalInventoryPath = process.env.SCHEDULER_DESIRED_STATE }) {
   if (store === undefined || store === null) throw new TypeError('self-service: store is required')
+
+  /**
+   * Mutation-time critical-inventory read (AMENDMENT_1 A3): fresh, read-only,
+   * zero caching. unconfigured ⇒ guard inert; any read/parse/version failure
+   * on a CONFIGURED source ⇒ 'unavailable' (fail-closed, never fail-open).
+   */
+  function loadCriticalInventory() {
+    if (criticalInventoryPath === undefined) return { state: 'unconfigured' }
+    try {
+      return { state: 'ok', logicalKeys: parseCriticalInventory(readFileSync(criticalInventoryPath, 'utf8')) }
+    } catch {
+      return { state: 'unavailable' }
+    }
+  }
+
+  /**
+   * T9 durable denial attribution (AMENDMENT_1): sanitized evidence-only event
+   * on the EXISTING run-event ledger channel — whitelisted fields, zero
+   * payload/credential bytes; best-effort exactly like mutation audit.
+   */
+  async function appendDenialAudit(operation, { jobId, operatorAgentId, reason }) {
+    let status
+    try {
+      status = await store.appendRunEvent({
+        ts: Date.now(),
+        action: 'self_service_denied',
+        operation,
+        jobId,
+        operatorAgentId,
+        reason,
+      })
+    } catch {
+      status = { ok: false }
+    }
+    if (status?.ok === true) return 'appended'
+    try { onAuditFailure({ operation, jobId }) } catch {}
+    return 'append_failed'
+  }
 
   /** Admin proof: exact (scheduler, scheduler.admin) — establishes local scheduler.manage:any only. */
   async function adminAuthorized(callerAgentId) {
@@ -523,6 +618,16 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         let adminPromise
         const scoped = await loadScopedJob(args.job_id, caller, () => (adminPromise ??= adminAuthorized(caller)))
         if (scoped.error !== undefined) return scoped.error
+        // AMENDMENT_1 guard (SELF path only — allowAny proves scheduler.manage:any,
+        // which keeps full remove authority; CRITICAL != IMMUTABLE). Zero store
+        // mutation on denial; sanitized denial evidence per T9.
+        if (!scoped.allowAny) {
+          const reason = evaluateCriticalJobGuard({ operation: 'remove', logicalKey: scoped.job.logicalKey, inventory: loadCriticalInventory() })
+          if (reason !== null) {
+            const auditStatus = await appendDenialAudit('remove', { jobId: scoped.job.id, operatorAgentId: caller, reason })
+            return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, `${reason}: critical jobs cannot be removed via self-service (zero mutation performed; evidence: ${auditStatus})`)
+          }
+        }
         const nowMs = Date.now()
         let expectedRevision
         try {
@@ -557,6 +662,17 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
     let adminPromise
     const scoped = await loadScopedJob(args.job_id, caller, () => (adminPromise ??= adminAuthorized(caller)))
     if (scoped.error !== undefined) return scoped.error
+    // AMENDMENT_1 guard: disable (SELF path only — allowAny proves
+    // scheduler.manage:any, which keeps full disable authority over critical
+    // jobs; CRITICAL != IMMUTABLE, operator emergency stop preserved). Enable is
+    // NOT guarded. Zero store mutation on denial; sanitized denial evidence (T9).
+    if (operation === 'disable' && !scoped.allowAny) {
+      const reason = evaluateCriticalJobGuard({ operation, logicalKey: scoped.job.logicalKey, inventory: loadCriticalInventory() })
+      if (reason !== null) {
+        const auditStatus = await appendDenialAudit(operation, { jobId: scoped.job.id, operatorAgentId: caller, reason })
+        return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, `${reason}: critical jobs cannot be disabled via self-service (zero mutation performed; evidence: ${auditStatus})`)
+      }
+    }
     const nowMs = Date.now()
     let expectedRevision
     try {
