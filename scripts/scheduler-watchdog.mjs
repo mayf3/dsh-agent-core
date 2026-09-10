@@ -239,7 +239,10 @@ async function runW1(nowMs) {
     const f = n.finding
     const coordinates = [f.logicalKey, f.jobId, f.runId, f.occurrenceId].filter(Boolean).join(' ')
     const body = f.detail ?? f.reason ?? ''
-    if (n.kind === 'recovered') return `- RECOVERED [${n.fingerprint}] the earlier ${f.class} is no longer present`
+    // ✅ prefix + Chinese gloss: a recovery confirmation must be distinguishable
+    // from an alert at a glance (2026-09-09: the plain RECOVERED line was twice
+    // misread as a new failure by the Owner).
+    if (n.kind === 'recovered') return `- ✅ RECOVERED (已恢复，无需处理) [${n.fingerprint}] the earlier ${f.class} is no longer present`
     return `- ${n.kind === 'new' ? 'NEW' : n.kind === 'reminder' ? 'REMINDER (bounded)' : 'UPDATED'} ${f.class}${coordinates ? ` [${coordinates}]` : ''} ${body}`
   }
   const text = `Scheduler watchdog W1 ${transition.notifications.length} notification(s) @ ${new Date(nowMs).toISOString()}\n${transition.notifications.map(render).join('\n')}`
@@ -274,5 +277,3 @@ const outcome = ROLE === 'w1' ? await runW1(nowMs) : await runW2(nowMs)
 process.stdout.write(`[scheduler-watchdog ${ROLE}] ${outcome}\n`)
 if (outcome === 'delivery_failed') process.exit(1)
 }
-process.stdout.write(`[scheduler-watchdog ${ROLE}] ${outcome}\n`)
-if (outcome === 'delivery_failed') process.exit(1)
