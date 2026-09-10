@@ -12,8 +12,7 @@
  * discipline — one mutation authority + append-only event log):
  *
  *   <dir>/attempts.jsonl   append-only events (append + fsync, never throws)
- *   <dir>/attempts.lock    OwnerLock artifact (SIGKILL-safe, reused from the
- *                          scheduler package — cross-process pollers serialize)
+ *   <dir>/attempts.lock    OwnerLock artifact (SIGKILL-safe; cross-process)
  *
  * The EVENT VOCABULARY and the replay projection live in ledger-events.js
  * (pure, unit-testable): attempt_planned, delivery_started (the V2 write-ahead
@@ -462,15 +461,28 @@ export class ExecutionLedger {
    *  from its append: the whole dispatch is single-flight. */
   async mutateWithRecord(nodeVisitId, fn) {
     return this.mutate(async () => {
-      const record = {
-        recoveryAuthorized: (authorityRef) => this.#recordRecoveryAuthorized(nodeVisitId, authorityRef),
-        resolutionBlocked: (code) => this.#recordResolutionBlocked(nodeVisitId, code),
-        deliveryStarted: () => this.#recordDeliveryStarted(nodeVisitId),
-        recoveryRefused: (authorityRef, refused) => this.#recordRecoveryRefused(nodeVisitId, authorityRef, refused),
-        runDelivered: (fields) => this.#recordRunDelivered(nodeVisitId, fields),
-        deliveryFailed: (reason) => this.#recordDeliveryFailed(nodeVisitId, reason),
+      // The record seam is SCOPE-BOUND: the appenders die with the locked
+      // callback (revoked in `finally`), so a captured closure can never
+      // append after the OwnerLock/FIFO boundary — every post-callback call
+      // fails loud instead of bypassing the serialization.
+      let closed = false
+      const guard = (call) => (...args) => {
+        if (closed) throw new Error('workflow-execution: recovery mutation seam is closed (lock released)')
+        return call(...args)
       }
-      return fn(record, () => this.#attempt(nodeVisitId))
+      const record = {
+        recoveryAuthorized: guard((authorityRef) => this.#recordRecoveryAuthorized(nodeVisitId, authorityRef)),
+        resolutionBlocked: guard((code) => this.#recordResolutionBlocked(nodeVisitId, code)),
+        deliveryStarted: guard(() => this.#recordDeliveryStarted(nodeVisitId)),
+        recoveryRefused: guard((authorityRef, refused) => this.#recordRecoveryRefused(nodeVisitId, authorityRef, refused)),
+        runDelivered: guard((fields) => this.#recordRunDelivered(nodeVisitId, fields)),
+        deliveryFailed: guard((reason) => this.#recordDeliveryFailed(nodeVisitId, reason)),
+      }
+      try {
+        return await fn(record, () => this.#attempt(nodeVisitId))
+      } finally {
+        closed = true
+      }
     })
   }
 
