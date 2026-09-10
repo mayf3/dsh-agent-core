@@ -170,12 +170,14 @@
     {
       "path": "packages/scheduler/src",
       "approved_max_children": 22,
-      "reason": "AMENDMENT_2 structure closure (AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2, accepted exact head 6b5a41f); legacy directory over DIRECTORY_MAX_CHILDREN(20) at baseline; 21 immediate children + authorized NEW critical-job-guard.js = 22"
+      "reason": "AMENDMENT_2 structure closure (AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2, accepted exact head 6b5a41f); legacy directory over DIRECTORY_MAX_CHILDREN(20) at baseline; 21 immediate children + authorized NEW critical-job-guard.js = 22",
+      "approved_by": "mayf3"
     },
     {
       "path": "packages/scheduler/test",
       "approved_max_children": 21,
-      "reason": "AMENDMENT_2 structure closure (AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2, accepted exact head 6b5a41f); legacy directory over DIRECTORY_MAX_CHILDREN(20) at baseline; 21 immediate children (critical-self-disable-guard.test.js RENAMED_TO critical-job-guard.test.js — no net growth)"
+      "reason": "AMENDMENT_2 structure closure (AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2, accepted exact head 6b5a41f); legacy directory over DIRECTORY_MAX_CHILDREN(20) at baseline; 21 immediate children (critical-self-disable-guard.test.js RENAMED_TO critical-job-guard.test.js — no net growth)",
+      "approved_by": "mayf3"
     }
   ]
 }
