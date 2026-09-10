@@ -61,7 +61,9 @@ amendment_authoring_authority_basis: >-
 > AMENDMENT_1 (CTR-AUTH-004) adds exactly one scoped exception: the ordinary self `disable`
 > decision may additionally consume the requested job's persisted `job.logicalKey` for the
 > critical classification — never disclosed, never used for any other decision, zero Auth
-> requests.
+> requests. Its implementation touches exactly three files (`self-service.js` modified,
+> NEW `desired-state.js`, NEW `desired-state.test.js`) — six files cumulative with V2's
+> four-file authorization delta (see CTR-AUTH-003/ACC-AUTH-002).
 
 ## 1. Goal
 
@@ -541,7 +543,7 @@ scope exists. This is normative denial, not a missing implementation or a new sc
 ### DEC-009 — Permit whole-document validation but consume only existence and owner (AMENDMENT_1: + persisted logicalKey, ordinary self-disable classification only)
 
 - Decision owner: repository owner `mayf3` / repository maintainers
-- Decision: authorization may call the existing JobStore whole-document load/validation over `{jobs, occurrences, fences}`, but may consume only whether the requested job exists and that job's `job.agentId`. If those fields show that an external proof is required, then before exact proof succeeds the authorization path may not project, query, filter, return, disclose, or use occurrence/history as authorization input. Denial performs no mutation or success audit and returns no persisted content. Authorized self history behavior remains unchanged and makes zero Auth requests.
+- Decision: authorization may call the existing JobStore whole-document load/validation over `{jobs, occurrences, fences}`, but may consume only whether the requested job exists, that job's `job.agentId`, and — AMENDMENT_1, ordinary self-disable classification only — the requested job's persisted `job.logicalKey` (CTR-AUTH-004). If those fields show that an external proof is required, then before exact proof succeeds the authorization path may not project, query, filter, return, disclose, or use occurrence/history as authorization input. Denial performs no mutation or success audit and returns no persisted content. Authorized self history behavior remains unchanged and makes zero Auth requests.
 - Rejected alternative: forbid the existing whole-document validation, consume occurrence/history during authorization, or expose the inspected foreign definition.
 - Reason: the current JobStore validates one whole document and ownership is persisted in its job definition; permitting that mechanism does not grant occurrence/history visibility or decision authority.
 
@@ -1202,7 +1204,7 @@ head and return `FINAL_HEAD_RECHECK=PASS`. The recheck MUST prove all of:
 
 Any failure, ambiguity, main/base drift, or post-recheck byte change invalidates the gate and
 requires a new exact-head recheck. Only the exact head that passed may merge. That merge MUST
-precede the V2 four-file delta implementation PR (AMENDMENT_1's guard delta is a separate accepted-authority implementation with its own two-file closure). The implementation PR MUST NOT modify either
+precede the V2 four-file delta implementation PR (AMENDMENT_1's guard delta is a separate accepted-authority implementation touching exactly three files: `self-service.js` modified, NEW `desired-state.js`, NEW `desired-state.test.js` — six files cumulative with V2's four). The implementation PR MUST NOT modify either
 governing Spec. Acceptance authorizes no auth-service, Grant, credential, registry/database,
 deployment, or production action.
 
@@ -1247,7 +1249,9 @@ deployment, or production action.
 - Required evidence: store before/after, handler results, and per-action Auth token-request
   call records for create/list/runs/update/enable/disable/remove self/admin/audit/negative cases;
   instrumented JobStore/read ledger proving whole-document load/validation and an
-  authorization-consumption ledger limited to job existence plus `job.agentId`; occurrence/
+  authorization-consumption ledger limited to job existence plus `job.agentId` (AMENDMENT_1:
+  plus the requested job's persisted `job.logicalKey` on the ordinary self-disable
+  classification path only, per CTR-AUTH-004); occurrence/
   history projection/query/filter/return ledger; mutation/audit ledger
 - Expected result: every ordinary self action has Auth request count exactly zero; each foreign
   explicit target/destination create/update and foreign update/enable/disable/remove requests
@@ -1272,7 +1276,8 @@ the CTR-AUTH-004 critical classification, per its frozen rules); on every extern
   Auth request/store read/content or owner disclosure on that path, ordinary cross-Agent
   visibility/mutation/success audit, a test
   that treats permitted whole-document load/validation itself as forbidden, authorization
-  consumption beyond existence/`job.agentId`, any
+  consumption beyond existence/`job.agentId` (plus the CTR-AUTH-004 disable-path
+  `job.logicalKey` classification consumption), any
   external-proof pre-success occurrence/history projection/query/filter/return or decision use,
   `scheduler.manage:any`/`scheduler.manage-any` wire request, alias/normalization/multiple
   spelling/fallback, wrong or multiple proof requests, tool-asserted authority, authority or
@@ -1423,7 +1428,8 @@ OPENCLAW_STORE_UNCHANGED = YES
    the new desired-state.js + desired-state.test.js — see CTR-AUTH-003/ACC-AUTH-002)
    named by `CTR-AUTH-003`; production composition source and `packages/scheduler/src/store.js`
    remain unchanged. Continue using existing whole-document JobStore load/validation, while
-   authorization consumes only requested-job existence and `job.agentId`; every external-proof
+   authorization consumes only requested-job existence and `job.agentId` (AMENDMENT_1: plus
+   the CTR-AUTH-004 disable-path `job.logicalKey` classification consumption); every external-proof
    branch performs no pre-proof occurrence/history projection/query/filter/return or decision
    use, while authorized self list/history retain zero-Auth behavior. Cross-Agent mutation,
    control, and explicit destination rows use only `scheduler.admin`; global/foreign history
