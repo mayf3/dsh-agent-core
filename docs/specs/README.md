@@ -234,7 +234,7 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1` | proposed (PR #242, draft; reviewed head cb88804…; semantic review PASS 6/6 criteria, B1 frontmatter fix closed) | none（docs-only 候选；acceptance 前零实现/零生产授权） | 冻结单一语义：正式 operator disposition 可关闭 incident/alert layer（同一 occurrence 恰一条 closure 通知，不再重复 reminder），永不改写 fact layer（failure fact durable、零 ledger mutation、detector 零 basis 分支）；是 PR #222 已撤销的 operator-reconciled RUN_FAILED suppression（Owner 2026-09-10 ruling：NOT_AUTHORIZED_YET）的唯一合法替代 authority 路径 |
+| `SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1` | accepted (PR #242, reviewed head cb88804…; Owner ACCEPT_WITH_SPLIT 2026-09-10; semantic review PASS 6/6, B1 closed pre-acceptance) | none（语义 authority only；acknowledgment/closure 的任何实现 = 本 Spec 下独立后续 PR，永不回流 PR #222） | 冻结单一语义：正式 operator disposition 可关闭 incident/alert layer（同一 occurrence 恰一条 closure 通知，不再重复 reminder），永不改写 fact layer（failure fact durable、零 ledger mutation、detector 零 basis 分支）；是 PR #222 已撤销的 operator-reconciled RUN_FAILED suppression（Owner 2026-09-10 ruling：NOT_AUTHORIZED_YET）的唯一合法替代 authority 路径 |
 
 ## Scheduler production state reconciliation authority
 
