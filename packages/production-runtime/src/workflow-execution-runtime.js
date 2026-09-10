@@ -1,6 +1,6 @@
 /**
  * @agent-core/production-runtime/src/workflow-execution-runtime.js — the
- * production wiring for WORKFLOW_AGENT_EXECUTION_V1 (mount + start/stop).
+ * production wiring for WORKFLOW_AGENT_EXECUTION_V2 (whole-authority successor of V1; mount + start/stop + the ONE control-plane recovery pass-through).
  *
  * This file owns ONLY the real-I/O seam injection; every semantic lives in
  * packages/workflow-execution (engine/ledger/judgment) and the reused seams:
@@ -19,7 +19,7 @@
  *   Run admission     router.deliver({requestId, agentId, sessionMode:'main',
  *                     message}, {messageOrigin}) — the ONE admission seam,
  *                     with the trusted `workflow_execution` provenance
- *                     sidecar (WORKFLOW_AGENT_EXECUTION_V1 Router shape)
+ *                     sidecar (WORKFLOW_AGENT_EXECUTION_V2 (inherited from V1) Router shape)
  *   run outcome       router.getTurnReconciliation / resolveCallerCorrelation
  *                     (the Router reconciliation store; never reply text)
  *   settle probe      broker gateway `workflow_instance_detail.read` AS THE

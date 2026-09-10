@@ -453,6 +453,27 @@ export class ExecutionLedger {
     return [...this.attempts.values()].filter((a) => a.state === 'ACTIVE').map((a) => ({ ...a }))
   }
 
+  /** V2 CTR-WAE-013: run ONE controlled-recovery dispatch ATOMICALLY — fresh
+   *  replay under the lock, held across the whole entry-state dispatch (the
+   *  same discipline as the admission completion callback). `record` exposes
+   *  the locked-mutation appenders (pre-checked private paths — NO nested
+   *  mutate, which would deadlock the FIFO chain), and `getAttempt` reads the
+   *  live projection, so an interleaved caller can never split an E-check
+   *  from its append: the whole dispatch is single-flight. */
+  async mutateWithRecord(nodeVisitId, fn) {
+    return this.mutate(async () => {
+      const record = {
+        recoveryAuthorized: (authorityRef) => this.#recordRecoveryAuthorized(nodeVisitId, authorityRef),
+        resolutionBlocked: (code) => this.#recordResolutionBlocked(nodeVisitId, code),
+        deliveryStarted: () => this.#recordDeliveryStarted(nodeVisitId),
+        recoveryRefused: (authorityRef, refused) => this.#recordRecoveryRefused(nodeVisitId, authorityRef, refused),
+        runDelivered: (fields) => this.#recordRunDelivered(nodeVisitId, fields),
+        deliveryFailed: (reason) => this.#recordDeliveryFailed(nodeVisitId, reason),
+      }
+      return fn(record, () => this.#attempt(nodeVisitId))
+    })
+  }
+
   /** Cross-process-fresh ACTIVE snapshot for one reconciliation pass. */
   async listActiveFresh() {
     return this.mutate(() => [...this.attempts.values()]

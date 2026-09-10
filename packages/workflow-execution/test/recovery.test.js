@@ -114,7 +114,7 @@ test('A: resolve fail → zero Run → identity repaired → explicit recovery �
   }
 })
 
-test('B: replaying the recovery command after completion → NO_OP_TERMINAL, zero appends', async () => {
+test('B: replaying the recovery command after completion → RECOVERY_INAPPLICABLE (delivery domain), zero appends', async () => {
   const fx = makeFixture({ resolveOk: false })
   try {
     await seedBlocked(fx.engine)
@@ -149,6 +149,8 @@ test('C: two concurrent recovery invocations → one recovery owner, at most one
     assert.ok(outcomes.includes('RECOVERED_RUN_ADMITTED'))
     assert.equal(fx.calls.delivers.length, 1, 'the loser never prepares a second delivery')
     const raw = readFileSync(fx.eventsFile(), 'utf8')
+    assert.equal(raw.split('"kind":"recovery_authorized"').length - 1, 1,
+      'atomic single-flight: the serialized loser never appends its own authorization')
     assert.equal(raw.split('"kind":"delivery_started"').length - 1, 1, 'at most one delivery_started')
     assert.equal(raw.split('"kind":"run_delivered"').length - 1, 1)
   } finally {
@@ -354,6 +356,12 @@ test('Identity NOT yet repaired: recovery re-blocks with zero Runs (designed int
     assert.equal(fx.ledger.get(VISIT).state, 'ACTIVE')
     assert.equal(fx.ledger.get(VISIT).phase, 'resolution_blocked')
     assert.equal(fx.ledger.get(VISIT).blockedCount, blockedBefore + 1, 'a fresh blocked fact is appended')
+    // Ordering contract: the authorization is recorded BEFORE the re-resolution
+    // fact it authorizes (recovery_authorized precedes the fresh blocked event).
+    const raw = readFileSync(fx.eventsFile(), 'utf8')
+    assert.ok(raw.lastIndexOf('"kind":"recovery_authorized"') > -1
+      && raw.lastIndexOf('"kind":"recovery_authorized"') < raw.lastIndexOf('"kind":"resolution_blocked"'),
+      'authorization strictly precedes the re-resolution it authorized')
   } finally {
     fx.cleanup()
   }
@@ -369,6 +377,33 @@ test('Ledger discipline: at-most-one delivery_started (second = corrupt fail-lou
   } finally {
     fx.cleanup()
   }
+})
+
+test('E4: contradictory attributable evidence (never_existed + handle) refuses', async () => {
+  const fx = makeFixture({ resolveOk: false, correlation: () => ({ state: 'never_existed', handle: 'turn:ghost' }) })
+  try {
+    await seedBlocked(fx.engine)
+    const result = await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: AUTHORITY })
+    assert.equal(result.outcome, 'RECOVERY_INAPPLICABLE')
+    assert.equal(result.evidenceClass, 'attributable_delivery_evidence')
+    assert.equal(fx.calls.delivers.length, 0)
+  } finally { fx.cleanup() }
+})
+
+test('E5: visit-current but assignee drifted on the wire → refused (exact compare)', async () => {
+  const fx = makeFixture({
+    resolveOk: false,
+    detail: () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT, current_visit: { assignee_principal_id: 'eeee2f0a-3f19-4a7e-9a3f-5d1c2b0a9eee' } } } }),
+  })
+  try {
+    await seedBlocked(fx.engine)
+    fx.state.resolveOk = true
+    const result = await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: AUTHORITY })
+    assert.equal(result.outcome, 'RECOVERY_REFUSED')
+    assert.equal(result.refused, 'assignee_no_longer_current:eeee2f0a-3f19-4a7e-9a3f-5d1c2b0a9eee')
+    assert.equal(fx.calls.delivers.length, 0)
+    assert.equal(fx.ledger.get(VISIT).state, 'NEEDS_REVIEW')
+  } finally { fx.cleanup() }
 })
 
 test('Surface discipline: recovery is engine/runtime-component surface only — no broker capability exposes it', async () => {
