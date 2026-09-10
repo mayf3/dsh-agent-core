@@ -59,6 +59,16 @@ amendments:
     match (DISABLE_OPERATOR_AGENT_ID=agt_hr-agent AND DISABLE_SOURCE=self_service_mutation)
     is recorded ONLY in incident evidence as CURRENT_RECURRENCE_MATCHES_STRUCTURAL_GAP=YES.
     Implementation = separate follow-up PR (authorized post-merge), gated by T1–T10 + T2a/T3a.
+  - AMENDMENT_2 (2026-09-10, status: proposed, SEMANTIC_PRODUCT_DELTA = NONE):
+    AMENDMENT_1_CONFORMANCE_RECONCILIATION - docs-only conformance pass carrying the
+    already-accepted AMENDMENT_1 semantics (accepted exact head ba4c0a8) through the
+    inherited V2 clauses that still state the pre-amendment consumption/closure limits.
+    Changes NO product semantics: disable AND remove stay guarded, `critical_inventory_unavailable`
+    stays the distinct inventory-failure reason, operator/elevated carve-outs and the
+    READ_ONLY watchdog stand untouched, no provenance assumed. Feasibility census result:
+    NEW_IMPLEMENTATION_FILES = 0 (the guard fits inside the existing CTR-AUTH-003 closure
+    files). See the AMENDMENT_2 section at the end of this file. Guard implementation
+    remains a separate authorized follow-up PR (HOLD until this reconciliation is accepted).
 owners:
   - mayf3
   - repository-maintainers
@@ -73,7 +83,11 @@ owners:
 > product semantic delta is the exact external Scheduler proof mapping and the minimum
 > whole-document JobStore load/validation needed to select self versus required external
 > authorization;
-> authorization may consume only job existence and `job.agentId` from that loaded document.
+> authorization may consume only job existence and `job.agentId` from that loaded document
+> (AMENDMENT_2 conformance with accepted AMENDMENT_1: the ordinary self-service
+> `disable`/`remove` critical classification additionally consumes the requested job's
+> persisted `job.logicalKey` - exactly per the accepted AMENDMENT_1 A2/A3, never disclosed,
+> never used for any other decision, zero Auth requests).
 
 ## 1. Goal
 
@@ -94,7 +108,7 @@ never supplies, guesses, or derives the chat identifier.
 
 V2 carries forward the complete accepted V1 product authority, including the original
 candidate `4595ed3` provenance, and replaces V1 only through the future atomic transaction in
-`CTR-GOV-001`. While proposed, V2 authorizes no implementation. Its exact four-file semantic
+`CTR-GOV-001`. While proposed, V2 authorizes no implementation. Its exact four-file semantic (V2-original; accepted AMENDMENT_1's guard is implemented INSIDE these existing closure files - AMENDMENT_2 feasibility census: NEW_IMPLEMENTATION_FILES = 0, see the AMENDMENT_2 section)
 delta may be published only after accepted V2 is present in `main`.
 The mapping deliberately tightens V1 at one least-privilege edge: `list(all_agents=true)`
 remains schema-compatible but unavailable because no accepted global job-definition-read
@@ -312,7 +326,7 @@ scope exists. This is normative denial, not a missing implementation or a new sc
 - Environment: isolated dsh-agent-core source worktree
 - Observed at: `2026-09-02T21:23:05Z`
 - Method: inspect `MANAGE_ANY_SCOPE`, `SCHEDULER_RESOURCE`, `adminAuthorized`, and `loadScopedJob`
-- Result: `assertGrant` receives `(callerAgentId, 'scheduler.manage:any', 'scheduler')`; existing job operations call JobStore whole-document load/validation over `{jobs, occurrences, fences}`, then use job existence and `job.agentId` to decide whether admin proof is required
+- Result: `assertGrant` receives `(callerAgentId, 'scheduler.manage:any', 'scheduler')`; existing job operations call JobStore whole-document load/validation over `{jobs, occurrences, fences}`, then use job existence and `job.agentId` to decide whether admin proof is required (AMENDMENT_2 conformance: the self-service `disable`/`remove` branches additionally consume the requested job's persisted `job.logicalKey` for the accepted AMENDMENT_1 critical classification - exactly that decision, never disclosed)
 - Provenance: exact source blob and commit named above
 
 ### OBS-008 — Auth-service grammar rejects colon but does not select Scheduler semantics
@@ -456,7 +470,7 @@ scope exists. This is normative denial, not a missing implementation or a new sc
 - Target: `CLM-005`
 - Relation: SUPPORTS
 - Bound coordinates: dsh-agent-core source blob `4a236fed3b201ac8c4de59d86cbbc414beee4ba7`, observed `2026-09-02T21:23:05Z`
-- Strength/sufficiency: strong for showing existing JobStore whole-document load/validation precedes consumption of job existence and `job.agentId` to select the self/admin branch
+- Strength/sufficiency: strong for showing existing JobStore whole-document load/validation precedes consumption of job existence and `job.agentId` to select the self/admin branch (AMENDMENT_2 conformance: the accepted AMENDMENT_1 disable/remove critical-classification consumption is covered by its T1-T10 + T2a/T3a test surface)
 - Limitations: source inspection does not prove future prohibition on occurrence/history projection/query/filter/return or future non-disclosure/no-success-audit behavior
 - Provenance: exact source inspection in `OBS-007`
 
@@ -550,10 +564,10 @@ scope exists. This is normative denial, not a missing implementation or a new sc
 - Reason: preserve V1 local semantics while conforming to accepted Run History R8; grammar
   constrains syntax but does not create domain authority.
 
-### DEC-009 — Permit whole-document validation but consume only existence and owner
+### DEC-009 — Permit whole-document validation but consume only existence and owner (AMENDMENT_2 conformance: + persisted logicalKey on the self-service disable/remove critical classification paths only, per accepted AMENDMENT_1)
 
 - Decision owner: repository owner `mayf3` / repository maintainers
-- Decision: authorization may call the existing JobStore whole-document load/validation over `{jobs, occurrences, fences}`, but may consume only whether the requested job exists and that job's `job.agentId`. If those fields show that an external proof is required, then before exact proof succeeds the authorization path may not project, query, filter, return, disclose, or use occurrence/history as authorization input. Denial performs no mutation or success audit and returns no persisted content. Authorized self history behavior remains unchanged and makes zero Auth requests.
+- Decision: authorization may call the existing JobStore whole-document load/validation over `{jobs, occurrences, fences}`, but may consume only whether the requested job exists, that job's `job.agentId`, and - per accepted AMENDMENT_1 (conformed by AMENDMENT_2) - the requested job's persisted `job.logicalKey` on the self-service `disable`/`remove` critical classification paths only. If those fields show that an external proof is required, then before exact proof succeeds the authorization path may not project, query, filter, return, disclose, or use occurrence/history as authorization input. Denial performs no mutation or success audit and returns no persisted content. Authorized self history behavior remains unchanged and makes zero Auth requests.
 - Rejected alternative: forbid the existing whole-document validation, consume occurrence/history during authorization, or expose the inspected foreign definition.
 - Reason: the current JobStore validates one whole document and ownership is persisted in its job definition; permitting that mechanism does not grant occurrence/history visibility or decision authority.
 
@@ -781,7 +795,9 @@ back after failure. Auth denial, unavailable audience, missing Grant, token fail
 response, wrong-only scope, both wrong spellings, or uncertainty MUST deny the operation
 without disclosure, mutation, or success audit. The whole-document load/validation permitted
 by `CTR-AUTH-001` remains allowed, but the decision may consume only job existence and
-`job.agentId`; on every external-proof branch occurrence/history remain forbidden as
+`job.agentId` (AMENDMENT_2 conformance: plus, per accepted AMENDMENT_1, the requested job's
+persisted `job.logicalKey` on the self-service `disable`/`remove` critical classification
+paths only); on every external-proof branch occurrence/history remain forbidden as
 authorization input or pre-proof output. A successful proof MUST NOT propagate the token,
 credential, Grant, caller authority, source-Agent identity, or authorization fields into the
 job, occurrence, run, session, execution request, or target workspace.
@@ -809,7 +825,7 @@ all other product files MUST remain unchanged. Local messages and policy asserti
 the colon-form labels; only `assertGrant` and its resulting token requests use exact R8 wire
 scopes `scheduler.admin` or `scheduler.audit` according to `CTR-AUTH-002`.
 `list(all_agents=true)` makes no `assertGrant` or token request.
-If implementation requires a fifth file or production composition source change, work MUST
+If implementation requires a fifth file or production composition source change, work MUST (V2-original rule, unchanged. AMENDMENT_2 conformance: the accepted AMENDMENT_1 guard needs NO additional file - its manifest reader/classifier is an internal pure function of `self-service.js` with injected path/read seams, tested inside `self-service.test.js`; NEW_IMPLEMENTATION_FILES = 0. See the AMENDMENT_2 section.)
 stop for new/amended accepted authority rather than expand this closure.
 
 ### CTR-MUT-001 — Existing control operations only
@@ -1107,7 +1123,7 @@ head and return `FINAL_HEAD_RECHECK=PASS`. The recheck MUST prove all of:
 
 Any failure, ambiguity, main/base drift, or post-recheck byte change invalidates the gate and
 requires a new exact-head recheck. Only the exact head that passed may merge. That merge MUST
-precede the four-file delta implementation PR. The implementation PR MUST NOT modify either
+precede the four-file delta implementation PR. The implementation PR MUST NOT modify either (AMENDMENT_2 conformance: the accepted AMENDMENT_1 guard implementation is likewise a separate PR, contained INSIDE the same existing closure files - NEW_IMPLEMENTATION_FILES = 0.)
 governing Spec. Acceptance authorizes no auth-service, Grant, credential, registry/database,
 deployment, or production action.
 
@@ -1152,7 +1168,9 @@ deployment, or production action.
 - Required evidence: store before/after, handler results, and per-action Auth token-request
   call records for create/list/runs/update/enable/disable/remove self/admin/audit/negative cases;
   instrumented JobStore/read ledger proving whole-document load/validation and an
-  authorization-consumption ledger limited to job existence plus `job.agentId`; occurrence/
+  authorization-consumption ledger limited to job existence plus `job.agentId` (AMENDMENT_2
+  conformance: additionally, per accepted AMENDMENT_1, the requested job's persisted
+  `job.logicalKey` on the self-service disable/remove critical classification paths only); occurrence/
   history projection/query/filter/return ledger; mutation/audit ledger
 - Expected result: every ordinary self action has Auth request count exactly zero; each foreign
   explicit target/destination create/update and foreign update/enable/disable/remove requests
@@ -1165,7 +1183,7 @@ deployment, or production action.
   same access-denied result with no persisted content or owner identity when the caller has
   admin, audit, both, neither, or local manage-any; authorization for existing-job operations
   may load/validate `{jobs, occurrences, fences}`
-  but consumes only requested-job existence and `job.agentId`; on every external-proof branch,
+  but consumes only requested-job existence and `job.agentId`; on every external-proof branch, (AMENDMENT_2 conformance: plus the accepted AMENDMENT_1 disable/remove-path `job.logicalKey` classification consumption, exactly per its frozen rules)
   before proof it performs zero occurrence/history projection/query/filter/return and does
   not use them as decision input; authorized self history remains unchanged with zero Auth;
   denial returns no persisted content and makes no mutation/success audit; production admin
@@ -1182,20 +1200,20 @@ deployment, or production action.
   credential propagation, or claim of production admin/audit availability without
   accepted/deployed external authority
 
-### ACC-AUTH-002 — Exact four-file delta and composed proof
+### ACC-AUTH-002 — Exact four-file delta and composed proof (AMENDMENT_2 conformance: the accepted AMENDMENT_1 guard adds NO new file - it is implemented inside `self-service.js` with tests inside `self-service.test.js`; NEW_IMPLEMENTATION_FILES = 0. Guard acceptance coverage = the AMENDMENT_1 T1-T10 + T2a/T3a surface.)
 
 - Contracts: `CTR-AUTH-003`
 - Method: accepted-base-to-head diff census plus focused Scheduler tests and composed production-runtime cross-agent history test with local OAuth capture
 - Environment: isolated implementation worktree under repository-pinned Node with proxy variables unset; disposable stores; no production service
 - Required evidence: exact changed-file list, executed commands/results, captured OAuth body and count, execution payload authority-key scan, and HistoryStore queries
-- Expected result: only the four named files change; production compose source is unchanged;
+- Expected result: only the four named files change; production compose source is unchanged; (AMENDMENT_2 conformance: the AMENDMENT_1 guard implementation likewise changes only the existing closure files - `self-service.js` and `self-service.test.js`; no new file)
   captured OAuth bodies use `scheduler.admin` for cross-Agent mutation/control/destination and
   `scheduler.audit` only for global/foreign history; local labels remain colon-form; admin and
   audit are mutually non-implying; `list(all_agents=true)` produces no OAuth request and is
   denied before store read even with admin, audit, or both; target identity, no source Grant/credential/authority
   propagation, exactly once/no replay, and linked job/occurrence/run/session/target/
   correlation/parent/terminal truth remain proved
-- Failure condition: fifth file, production compose source edit, wrong/alternate/combined
+- Failure condition: fifth file, production compose source edit, wrong/alternate/combined (AMENDMENT_2 conformance: for the AMENDMENT_1 guard, a NEW file would equally be a failure - NEW_IMPLEMENTATION_FILES = 0)
   scope, `scheduler.manage:any` or `scheduler.manage-any` wire value, alias/normalization/
   retry/fallback, admin/audit implication, any authorized/data-bearing global definition list,
   authority leakage, replay, identity mismatch, or
@@ -1271,7 +1289,7 @@ OPENCLAW_STORE_UNCHANGED = YES
 - Contracts: `CTR-GOV-001`
 - Method: after explicit Owner authority, inspect authorized-actor provenance, the prepared lifecycle-only commit, independent review of that commit's exact head, base/main comparison, git/PR ancestry, and prohibited-effect audit
 - Environment: GitHub repository
-- Required evidence: reviewed proposed V2 head and normative-body digest; explicit Owner instruction; authorized actor identity; prepared atomic docs commit/head; byte/field diff mapped one-to-one to all 11 allowlist items; non-allowlisted V2 byte comparison; V1 accepted-preimage comparison; exact new frontmatter/footer/banner values and reviewer identity/outcome; current-main authority diff; independent reviewer result containing `FINAL_HEAD_RECHECK=PASS` and behavioral `SEMANTIC_DELTA=NONE`; merge commit; later separate four-file implementation ancestry; zero-effect evidence
+- Required evidence: reviewed proposed V2 head and normative-body digest; explicit Owner instruction; authorized actor identity; prepared atomic docs commit/head; byte/field diff mapped one-to-one to all 11 allowlist items; non-allowlisted V2 byte comparison; V1 accepted-preimage comparison; exact new frontmatter/footer/banner values and reviewer identity/outcome; current-main authority diff; independent reviewer result containing `FINAL_HEAD_RECHECK=PASS` and behavioral `SEMANTIC_DELTA=NONE`; merge commit; later separate four-file implementation ancestry; zero-effect evidence (AMENDMENT_2 conformance: the AMENDMENT_1 guard implementation ancestry is analogous and also contained in the existing closure files)
 - Expected result: V1 remains current/unchanged while V2 is proposed; the authorized actor then prepares exactly one lifecycle commit whose changes are all and only the exhaustive allowlist; every non-allowlisted V2 normative byte and the V1 normative body are identical; every new value matches Owner authority, accepted/contracts frontmatter, and review provenance; `SEMANTIC_DELTA=NONE` confirms no Contract/behavior change while permitting the listed lifecycle/provenance synchronization; base/main have no authority drift; only the unchanged exact head with final recheck PASS merges; production authority stays none
 - Failure condition: current-round V1 lifecycle edit; preparation without explicit Owner authority or by an unauthorized actor; missing or extra allowlist delta; non-allowlisted V2 normative drift; V1 body or frontmatter drift beyond `status`/`superseded_by`; inconsistent lifecycle/provenance value; missing/failed/stale `FINAL_HEAD_RECHECK`; Contract/behavior semantic delta; base/main authority drift; post-recheck head change; README change in the transaction; merge before PASS; implementation before accepted V2 reaches main; Spec edit in implementation; or any auth/Grant/credential/registry/database/deploy effect
 
@@ -1315,10 +1333,12 @@ OPENCLAW_STORE_UNCHANGED = YES
    behavioral `SEMANTIC_DELTA=NONE`, and no base/main authority drift. Only that unchanged
    passing head may merge and become active in `main`.
 3. Rebase/port the original candidate product and tests onto that accepted main as required
-   by the unchanged V1 authority. Implement the V2 proof delta only in the exact four files
+   by the unchanged V1 authority. Implement the V2 proof delta only in the exact four files (AMENDMENT_2 conformance: the AMENDMENT_1 guard is likewise implemented only inside the existing closure files)
    named by `CTR-AUTH-003`; production composition source and `packages/scheduler/src/store.js`
    remain unchanged. Continue using existing whole-document JobStore load/validation, while
-   authorization consumes only requested-job existence and `job.agentId`; every external-proof
+   authorization consumes only requested-job existence and `job.agentId` (AMENDMENT_2
+   conformance: plus the accepted AMENDMENT_1 disable/remove-path `job.logicalKey`
+   classification consumption); every external-proof
    branch performs no pre-proof occurrence/history projection/query/filter/return or decision
    use, while authorized self list/history retain zero-Auth behavior. Cross-Agent mutation,
    control, and explicit destination rows use only `scheduler.admin`; global/foreign history
@@ -1333,7 +1353,7 @@ OPENCLAW_STORE_UNCHANGED = YES
    it MUST NOT delete Jobs/occurrences, mutate Scheduler core, touch OpenClaw store, or restart
    Gateway. A canary Job may be removed only through the unified tool/control operation.
 7. No historical OpenClaw job import or compatibility fallback is part of this migration.
-8. V2 proof-delta rollback restores the exact four-file accepted preimage and MUST NOT add
+8. V2 proof-delta rollback restores the exact four-file accepted preimage and MUST NOT add (AMENDMENT_2 conformance: the AMENDMENT_1 guard rollback analogously stays within the existing closure files)
    a manage-any wire alias, normalization, alternate spelling, scope implication, or dual-scope
    fallback. Auth registration rollback, Grant revocation, and runtime
    rollback remain separate Owner-authorized operations; local rollback MUST NOT claim those
@@ -1516,3 +1536,79 @@ STANDING_BEHAVIOR_UNCHANGED_PRE_ACCEPTANCE = YES？
   本 Amendment 关闭的是**已经成立的产品权限缺口**；在本次 provenance 确认前，
   不得声称其必然关闭本次事故根因。现场处置（forensics/reconcile/enable）由既有
   authority 与 operator 流程承载，不在本 Amendment 范围内。
+
+---
+
+## AMENDMENT_2 — AMENDMENT_1_CONFORMANCE_RECONCILIATION (2026-09-10, status: proposed)
+
+> **状态**：`proposed`。**SEMANTIC_PRODUCT_DELTA = NONE**。本 Amendment 不回答任何新的产品
+> 语义问题、不改变任何已 accepted 的行为——它唯一的工作是把 accepted AMENDMENT_1
+> （accepted exact head `ba4c0a8`）已经冻结的语义（self-service `disable`/`remove`
+> critical classification 的 `job.logicalKey` 消费）贯穿到 inherited V2 正文中仍保留
+> pre-amendment 措辞的条款，使 authority 文本自洽。独立语义审查必须逐条证明（见文末）。
+
+### B1. Reconciliation inventory（本 Amendment 的全部 delta）
+
+对本文件内以下 inherited clauses 追加 conformance 资格说明（每处均指向 accepted
+AMENDMENT_1 A2/A3，均为「disable/remove 分类路径、仅此而已」的限定，不放宽任何
+external-proof、occurrence/history、disclosure 或 audit 规则）：
+
+```text
+intro blockquote consumption invariant
+CTR-GOV-001 four-file semantic note
+assertGrant Result line (ACC-AUTH-001 backing)
+assertGrant Strength/sufficiency line
+DEC-009 heading + Decision body
+CTR-AUTH-002 tail consumption sentence
+CTR-AUTH-003 fifth-file rule (scoped as V2-original; AMENDMENT_1 needs no new file)
+migration clause (four-file implementation PR)
+ACC-AUTH-001 required-evidence row
+ACC-AUTH-001 consumption criterion
+ACC-AUTH-002 heading / Expected result / Failure condition
+lifecycle evidence clause (four-file implementation ancestry)
+lifecycle implementation instruction (exact four files + consumption sentence)
+lifecycle rollback clause (four-file preimage)
+```
+
+### B2. Implementation-closure feasibility census（AMENDMENT_2 唯一的新结论）
+
+问题：accepted AMENDMENT_1 的 guard 能否在 **现有 CTR-AUTH-003 已授权文件内** 实现而无需
+新产品文件？
+
+**结论：可以。`NEW_IMPLEMENTATION_FILES = 0`。**
+
+- manifest 读取 + `version` 校验 + exact-`logicalKey` 分类是一个纯函数，作为
+  `packages/scheduler/src/self-service.js` 的内部实现（module-scope classifier + 经由既有
+  `opts` 注入的 manifest path/read seam 供测试注入），在 self `disable`/`remove` 分支的
+  ownership 判定之后、任何 store mutation 之前执行；
+- 分类所需输入 = manifest 文件（deployment-owned 只读）+ 既有已允许的 JobStore 消费字段
+  （existence/`job.agentId`）+ 该 job 的 persisted `logicalKey`（AMENDMENT_1 已授权）；
+- 测试落在既有的 `packages/scheduler/test/self-service.test.js`（T1–T10 + T2a/T3a），
+  不需要新测试文件；
+- 因此 CTR-AUTH-003 的既有闭包**原样成立**（不扩清单、不加文件）；若实现过程中发现
+  客观不可行（无法在 `self-service.js` 内干净容纳），实现 PR 必须 STOP 并回报，由新的
+  accepted authority 扩闭包——不得就地扩。
+
+### B3. Conformance guards（本 Amendment 明确禁止的事项）
+
+```text
+DISABLE_ONLY_REWRITE     = FORBIDDEN（disable+remove 双 guard 是 accepted 语义）
+REMOVE_UNGUARDED         = FORBIDDEN（remove bypass 已被 accepted AMENDMENT_1 封死）
+DENIAL_CODE_COLLAPSE     = FORBIDDEN（critical 目标拒绝 与 critical_inventory_unavailable
+                           是两个不同的 failure 语义，不得合并）
+PROVENANCE_ASSUMPTION    = FORBIDDEN（2026-09-10 recurrence 保持 UNKNOWN_PENDING_FORENSICS；
+                           confirmed match 只记录于 incident evidence）
+WATCHDOG_AUTO_REPAIR     = FORBIDDEN（watchdog 保持 READ_ONLY；无 auto-enable/repair）
+```
+
+### B4. Independent review 必答（全 YES 才可回呈 Owner exact-head gate）
+
+```text
+ACCEPTED_AMENDMENT_1_PRODUCT_SEMANTICS_PRESERVED = YES？
+REMOVE_GUARD_PRESERVED                          = YES？
+UNAVAILABLE_FAILURE_SEMANTICS_PRESERVED         = YES？
+LOGICALKEY_CONSUMPTION_CONFLICT_CLOSED          = YES？（全部 inherited 限制条款已限定）
+IMPLEMENTATION_CLOSURE_CONFLICT_CLOSED          = YES？（NEW_IMPLEMENTATION_FILES = 0 全文一致）
+NEW_PRODUCT_SEMANTIC                            = NO？
+SHIP_BLOCKERS                                   = 0？
+```
