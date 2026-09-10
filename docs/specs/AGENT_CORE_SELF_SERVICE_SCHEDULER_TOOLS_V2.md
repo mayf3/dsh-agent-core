@@ -39,11 +39,16 @@ amendments:
     self disable/remove classification MAY additionally consume the job's
     persisted logicalKey (AMENDMENT_1 guard) — no additional job fields, no
     occurrence/history authority, no disclosure, no new Auth request. (B)
-    CTR-AUTH-003 exact implementation file list is extended to authorize the
-    guard-module split (critical-job-guard.js + critical-job-guard.test.js
-    NEW; self-service.js / self-service.test.js shrink to <= the 500-line
-    structure baseline) and the legacy-directory registrations in
-    .agents/structure-registry.json needed for verify-code-structure. (C) The
+    CTR-AUTH-003 exact implementation closure is re-frozen as
+    TOTAL_AUTHORIZED_CHANGED_PATHS = 5 — PRODUCT_AND_TEST_FILES = 4
+    (critical-job-guard.js NEW; self-service.js shrunk <= 500;
+    critical-job-guard.test.js RENAMED_TO from
+    critical-self-disable-guard.test.js; self-service.test.js shrunk <= 500)
+    + GOVERNANCE_REGISTRY_FILES = 1 (.agents/structure-registry.json,
+    ROLE = GOVERNANCE_ONLY_STRUCTURE_REGISTRATION, PRODUCT_SEMANTIC_AUTHORITY
+    = NONE) with the legacy-directory registrations needed for
+    verify-code-structure (src approved_max_children = 22;
+    test approved_max_children = 21 — TEST_FILE_RENAME = YES). (C) The
     scheduler-cp-disable-forensics.mjs self_service_denied whitelist line is
     recorded under its SEPARATE authority basis
     (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 read-only forensics tooling) and
@@ -1568,24 +1573,51 @@ authorization 输入或 pre-proof 输出；denial 仍零内容泄露；self 操�
 Auth request count 仍为 **zero**（logicalKey 来自已加载的 store 文档，不是
 Auth 查询）；`manage:any`/`audit` 外部证明行零改动。
 
-### B2. Implementation closure — 四文件 exact list（closure of FILE_CLOSURE_CONFLICT）
+### B2. Implementation closure — TOTAL_AUTHORIZED_CHANGED_PATHS = 5（closure of FILE_CLOSURE_CONFLICT）
 
-先做最小结构设计（成员清单如下），据此冻结 exact implementation file list，
-取代 CTR-AUTH-003 的 four-file closure 对**本 guard 面**的适用：
+先做最小结构设计（成员清单如下），据此冻结**本 repair 的 exact changed-path
+closure**。两个不同概念不得混淆：
+
+```text
+PRODUCT_AND_TEST_FILES   = 4   （产品/测试 artifact；AMENDMENT_1 guard 面的实现与测试）
+GOVERNANCE_REGISTRY_FILES = 1   （纯结构登记，GOVERNANCE_ONLY_STRUCTURE_REGISTRATION；
+                                 PRODUCT_SEMANTIC_AUTHORITY = NONE）
+TOTAL_AUTHORIZED_CHANGED_PATHS = 5
+```
+
+Exact authorized paths（**全 diff 即此五路径，不得更多**）：
+
+```text
+1. packages/scheduler/src/critical-job-guard.js          PRODUCT（NEW guard module）
+2. packages/scheduler/src/self-service.js                PRODUCT（收缩 ≤500）
+3. packages/scheduler/test/critical-job-guard.test.js    PRODUCT/TEST（RENAMED_TO，见下）
+4. packages/scheduler/test/self-service.test.js          PRODUCT/TEST（收缩 ≤500）
+5. .agents/structure-registry.json                       GOVERNANCE_ONLY_STRUCTURE_REGISTRATION
+```
+
+PRODUCT_AND_TEST_FILES 成员（mechanical split design）：
 
 | 文件 | 状态 | 结构上限 | 成员（mechanical split design） |
 |---|---|---|---|
 | `packages/scheduler/src/critical-job-guard.js` | **NEW** | ≤400 行（warning 线内） | `CRITICAL_GUARD_REASONS` / `DEFAULT_CRITICAL_INVENTORY_PATH` / `parseCriticalInventory` / `evaluateCriticalJobGuard` / `createCriticalJobGuard({store, criticalInventoryPath, readInventoryFile, onAuditFailure})` → `{ guardFor(operation, allowAny, captureCurrent)→assertFn, appendDenialAudit }`（guard + inventory load + denial evidence + locked-current assert 组合，AMENDMENT_1 的 authorization & evidence seam） |
 | `packages/scheduler/src/self-service.js` | 收缩 | ≤500（structure baseline） | 移除上述成员（改为 import）；保留 schema/handler/projection/mutation-failure 面 |
-| `packages/scheduler/test/critical-job-guard.test.js` | **NEW**（由 `critical-self-disable-guard.test.js` 更名并补 R 面） | ≤500 | guard/inventory/TOCTOU（R1–R10）+ T 面测试 |
+| `packages/scheduler/test/critical-job-guard.test.js` | **RENAMED_TO** | ≤500 | `OLD_PATH = packages/scheduler/test/critical-self-disable-guard.test.js`；`DISPOSITION = RENAMED_TO packages/scheduler/test/critical-job-guard.test.js`——同一测试 artifact 的结构迁移（并补 R 面），不是新增第五个 product/test artifact |
 | `packages/scheduler/test/self-service.test.js` | 收缩 | ≤500 | 移除 guard 专属测试（文件由 620 行收缩；rig 注入 fixture inventory 保留） |
 
-- 两个 NEW 文件加入后 `packages/scheduler/src` 与 `packages/scheduler/test`
-  各为 22 immediate children——**授权在 repair PR 中同步登记**
-  `.agents/structure-registry.json` 的 `directories` 两条 legacy 条目
-  （`approved_max_children: 22`，reason = "AMENDMENT_2 structure closure;
-  legacy directory over DIRECTORY_MAX_CHILDREN(20) at baseline"），与 scripts/
-  的既有登记先例同型。
+GOVERNANCE_REGISTRY_FILES 登记授权（repair PR 中同步执行；registry 修改
+**不得扩任何产品语义**）：
+
+```text
+packages/scheduler/src：21 + NEW critical-job-guard.js = 22
+  → registry directories 条目 approved_max_children = 22
+packages/scheduler/test：21 − 1（OLD_PATH 删除）+ 1（RENAMED_TO 加入）= 21
+  → registry directories 条目 approved_max_children = 21
+  （TEST_FILE_RENAME = YES；TEST_DIRECTORY_FINAL_CHILDREN = 21；
+   不为两目录统一填 22）
+reason = "AMENDMENT_2 structure closure; legacy directory over
+DIRECTORY_MAX_CHILDREN(20) at baseline"
+```
+
 - 两个 legacy 收缩文件落地后 ≤500 ⇒ 自动退出 over-max 集合，无需 files 注册。
 - 冻结的 split 原则：guard 逻辑隔离、guard 测试隔离、不为"少改一个文件"
   把 legacy 文件压成难维护的一团。
@@ -1595,8 +1627,9 @@ Auth 查询）；`manage:any`/`audit` 外部证明行零改动。
 `scripts/scheduler-cp-disable-forensics.mjs` 的 `self_service_denied`
 EVENT_FIELDS 白名单一行**不属于**本产品 implementation closure。其 authority
 basis 单独记录为：**SCHEDULER_CONTROL_PLANE_RELIABILITY_V1**（accepted；该
-只读 disable-forensics 工具由该 goal 的实现链 PR #222 交付并迭代——commits
-94135d0/afc8c46/14efa85/fc5f53a——新证据类的渲染白名单属同一工具的取证面
+只读 disable-forensics 工具由该 goal 的实现链 **PR #222** 交付并迭代——
+PR 分支 commits 94135d0/afc8c46/14efa85/fc5f53a，mainline 等价
+6339f15/10dac1c/315031b/911767a——新证据类的渲染白名单属同一工具的取证面
 维护）。AMENDMENT_2 不吸收、不扩产品 authority。
 
 ### B4. 冻结不变式（AMENDMENT_2 不得改变的行为）
@@ -1653,6 +1686,21 @@ SHIP_BLOCKERS = 0？
 
 任一 = NO/UNPROVEN ⇒ AMENDMENT = REVISE。
 
+### B7a. Exact-head re-review 附加机械证明（本轮 MECHANICAL_REVISE 后的一次 re-review 必答）
+
+```text
+AUTHORIZED_CHANGED_PATHS_EXACT = YES（diff 恰为五授权路径，无更多）
+PRODUCT_TEST_PATHS = 4
+GOVERNANCE_REGISTRY_PATHS = 1
+TOTAL_AUTHORIZED_PATHS = 5
+SRC_CHILDREN_FINAL = 22
+TEST_CHILDREN_FINAL = 21
+REGISTRY_DOES_NOT_OVERAUTHORIZE_TEST_DIR = YES（test 登记 21 非 22）
+OLD_GUARD_TEST_RENAMED_NOT_DUPLICATED = YES
+PRODUCT_SEMANTIC_DELTA = NONE
+SHIP_BLOCKERS = 0
+```
+
 ### B8. Lifecycle
 
 ```text
@@ -1661,4 +1709,4 @@ proposed → independent semantic review → Owner exact-head acceptance
 → IMPLEMENTATION_REFACTOR 解除：独立结构 repair PR（DRAFT while review running）
 ```
 
-acceptance 前IMPLEMENTATION_REFACTOR = HOLD。
+acceptance 前 IMPLEMENTATION_REFACTOR = HOLD。
