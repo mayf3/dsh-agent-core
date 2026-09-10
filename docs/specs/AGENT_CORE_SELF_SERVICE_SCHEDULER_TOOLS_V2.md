@@ -70,7 +70,8 @@ amendments:
     STRUCTURAL_EXTRACTION_REQUIRED = YES - the accepted guard's implementation is extracted
     into a new minimal internal module (`packages/scheduler/src/critical-job-guard.js`)
     because the previously touched/growing legacy files cannot host it within repository
-    structure conformance (VERIFY_CODE_STRUCTURE), together with the minimal mechanical
+    structure conformance (the AMENDMENT_2 CANDIDATE-DELTA GATE - see below), together with
+    the minimal mechanical
     `.agents/structure-registry.json` repair (scheduler src/test directory caps +
     self-service.js/self-service.test.js grandfather entries at measured pre-guard
     baselines). See the AMENDMENT_2 section at the end of this file. Guard implementation remains a separate authorized follow-up PR (HOLD
@@ -840,10 +841,10 @@ REQUIRES a minimal structural extraction - the manifest reader/classifier and th
 disable/remove decision move to a NEW internal module `packages/scheduler/src/critical-job-guard.js`
 (pure classifier/manifest seam only; no JobStore/control/dispatch/general auth), tested inside
 `critical-self-disable-guard.test.js`. Goals: `self-service.js` returns to at most its
-pre-guard structural baseline, or at minimum VERIFY_CODE_STRUCTURE = PASS;
+pre-guard structural baseline, or at minimum the AMENDMENT_2 CANDIDATE-DELTA GATE (below);
 `self-service.test.js` does not grow relative to its applicable legacy baseline.
 
-STRUCTURE_REGISTRY_REPAIR (prerequisite for VERIFY_CODE_STRUCTURE = PASS): `packages/scheduler/src`
+STRUCTURE_REGISTRY_REPAIR (prerequisite for the AMENDMENT_2 CANDIDATE-DELTA GATE): `packages/scheduler/src`
 (21 children at main) and `packages/scheduler/test` (21 children) are unregistered legacy
 directories over the child cap, and `self-service.js` (604 pre-guard lines) /
 `self-service.test.js` (614 pre-guard lines) are legacy files over the file ceiling — none
@@ -855,12 +856,17 @@ include the minimal mechanical registry repair: `directories[]` entries for
 614) at their measured pre-guard baselines - ceilings, not growth allowances, per the
 EXCEPTION_REGISTRY mechanism of CODE_STRUCTURE_GUARDRAILS_V1. This registry repair is
 mechanical, carries zero product semantics, and is the accepted rule-compliant mechanism that
-makes VERIFY_CODE_STRUCTURE = PASS attainable.
+makes the AMENDMENT_2 CANDIDATE-DELTA GATE attainable.
 
-Gate semantics (the repository's accepted operational reading, per the PR #246 precedent):
-VERIFY_CODE_STRUCTURE = PASS means ZERO CANDIDATE-CAUSED violations against the review base —
-pre-existing base violations are recorded as documented debt, not repaired by unrelated
-changes. The directories[] entries above are what legalize the extraction's +1 child in
+GATE DEFINITION (frozen; separately named so the binding verifier rule is preserved
+verbatim): CODE_STRUCTURE_GUARDRAILS_V1 defines VERIFY_CODE_STRUCTURE PASS exclusively as
+exit 0 with zero reported violations - that literal result remains UNATTAINABLE while the
+pre-existing `DIRECTORY_OVER_CEILING` violation of `scripts/` (59 > 40, older base debt)
+stands, and this Amendment does NOT redefine it. The guard implementation PR's binding gate
+is the separately named AMENDMENT_2 CANDIDATE-DELTA GATE: the verifier runs and reports
+(exit 1 / STRUCTURE_VIOLATION, honestly preserved) with EXACTLY the pre-existing base
+violations - ZERO CANDIDATE-CAUSED violations against the review base; pre-existing base
+violations are recorded as documented debt, not repaired by unrelated changes. The directories[] entries above are what legalize the extraction's +1 child in
 `packages/scheduler/src`; the legacy-file rule is MUST-NOT-GROW against the review base
 (satisfied: the extraction REDUCES `self-service.js` from 755 toward its 604-line pre-guard
 baseline), and the `files[]` grandfather entries record those measured baselines as
@@ -1630,7 +1636,8 @@ PRODUCT_SEMANTIC_DELTA        = NONE（原因 = repository structure conformance
 ```text
 packages/scheduler/src/self-service.js                       （existing；回退至不大于
                                                                pre-guard structural baseline，
-                                                               或至少 VERIFY_CODE_STRUCTURE = PASS）
+                                                               或至少满足 AMENDMENT_2
+                                                               CANDIDATE-DELTA GATE）
 packages/scheduler/test/self-service.test.js                 （existing；相对 legacy baseline
                                                                不得增长）
 packages/scheduler/test/critical-self-disable-guard.test.js  （existing；T1–T10 + T2a/T3a 之家；
