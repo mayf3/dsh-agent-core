@@ -34,7 +34,8 @@ amendments:
   - AMENDMENT_3 (2026-09-10, status: proposed, semantic delta NONE, code-structure
     guardrails delta NONE — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION): the
     AMENDMENT_2 exact file closure is mechanically infeasible (frozen member
-    extraction floors self-service.js at 639 > 500; the two test files total 990
+    extraction lands self-service.js at 639 > 500 (#256 measured; 755 − 147 =
+    608 is the deduction floor); the two test files total 990
     lines against 2×500 with harness coupling; the authorized scheduler
     directory registry entries are forbidden by CODE_STRUCTURE_GUARDRAILS_V1
     §6/§7 — post-baseline files/directories cannot be grandfathered, and the
@@ -1796,7 +1797,8 @@ IMPORT/CALL-SITE CENSUS（history 家族，宽度收缩的承载面）：
 
 ```text
 self-service.js = 755；冻结成员清单移动量 = 147（critical-job-guard.js 实测）
-755 − 147 = 608 > 500（且 608 仍需扣除 access 自身必要 glue）
+755 − 147 = 608 > 500（608 为纯扣减下限；#256 分支实测 639 含 access glue 与
+  保留的 schema/projection 面调整）
 进一步移动非冻结成员（wire-proof 24 + appendAudit 22 + expectedRevision 22 +
   validationFailure 10 + mutationFailure 26 + definitionDigest 13 + err/nonEmpty/
   trustedCaller 22 ≈ 139）→ ~470-500 临界，但扩成员 = 偏离 AMENDMENT_2 冻结清单
@@ -1809,9 +1811,9 @@ tests：620 + 370 = 990 vs 2×500 = 1000 ⇒ 名义余量 10 行，而 harness �
 
 ### C2. NEW_EXACT_AUTHORIZED_PATHS（取代 AMENDMENT_2 B2 的 exact file closure）
 
-OLD_AUTHORIZED_PATHS（被取代）：AMENDMENT_2 B2 表所列 4+1 路径（其中 registry
-条目按 B5 撤销；self-service.js/self-service.test.js 的 ≤500 目标按 C1 由本
-Amendment 的物理拆分实现）。
+OLD_AUTHORIZED_PATHS（被取代）：AMENDMENT_2 B2 表所列 TOTAL_AUTHORIZED_CHANGED_
+PATHS = 5 记账（其中 registry 条目按 B5 撤销；self-service.js/self-service.test.js
+的 ≤500 目标按 C1 由本 Amendment 的物理拆分实现）。
 
 RENAMES：
 ```text
@@ -1829,17 +1831,21 @@ packages/scheduler/src/self-service/schema.js       （expectedRevision/schedule
 packages/scheduler/src/self-service/projections.js  （digest/public/occurrence/
   normalized/committed 投影，≤150）
 packages/scheduler/src/history/                     （history.js / history-model.js /
-  history-projection.js / history-sink.js / history-storage.js 五文件整体迁入，
-  内容字节不变，仅相对 import 改写；每文件 ≤500 维持现状）
+  history-projection.js / history-sink.js / history-storage.js 五文件迁入；
+  HISTORY_LOGIC_SEMANTICS = BYTE/SEMANTICALLY UNCHANGED EXCEPT exact relative
+  import-specifier rewrites required by directory relocation（完整 outbound
+  import census 与改写映射见 C2a）；每文件 ≤500 维持现状）
 packages/scheduler/test/self-service/harness.js     （共享 trusted/rig fixture，
   ≤120）
 ```
 
-REMOVED_PATHS：
+DISPOSITIONS：
 ```text
-packages/scheduler/src/self-service.js               （内容拆入 self-service/
-  子目录；原路径保留 ≤60 行兼容 barrel——BARREL_MAX_LINES=60/REEXPORTS=20 合规）
-packages/scheduler/test/critical-self-disable-guard.test.js （= RENAMED_TO 上述）
+packages/scheduler/src/self-service.js
+  DISPOSITION = REWRITTEN_IN_PLACE_TO_COMPAT_BARREL（REMOVED = NO；FINAL_LINES ≤ 60，
+  BARREL_MAX_LINES=60/REEXPORTS=20 合规）
+packages/scheduler/test/critical-self-disable-guard.test.js
+  DISPOSITION = RENAMED_TO packages/scheduler/test/self-service/critical-job-guard.test.js
 ```
 
 FINAL_LINE_COUNT_BUDGET_PER_FILE（预算上限；实现实测不得超）：
@@ -1859,26 +1865,54 @@ test/self-service/harness.js              ≤ 120
 
 FINAL_IMMEDIATE_CHILD_COUNT：
 ```text
-src 根 = 21 − self-service.js − 5×history + self-service/ + history/ = 18 ≤ 20
-test 根 = 21 − self-service.test.js − critical-self-disable-guard.test.js
-          + self-service/ = 20 ≤ 20
-src/self-service/ 子目录 children = 6；test/self-service/ = 3（均 ≤20）
+src 根 = 21 − 5×history(迁入 history/) + 1×history/ 目录
+            + 1×self-service/ 目录 + 0（self-service.js barrel 原位保留）
+        = 21 − 5 + 1 + 1 = 18 ≤ 20
+test 根 = 21 − 2×(RENAME 一减一增) + 1×self-service/ 目录 = 20 ≤ 20
+src/self-service/ 子目录 immediate children = 5（index/access/schema/
+  projections/critical-job-guard）；test/self-service/ = 3（均 ≤20）
 ```
 
-IMPORT_REWRITE_SURFACE（exact，全部为纯路径改写）：
+C2a. 迁入文件的 outbound import census（五文件全量，逐条分类）：
+
+| 迁入文件 | 相对导入 | 分类 | 迁入后 specifier |
+|---|---|---|---|
+| history.js | `./lock.js` | ROOT_SIBLING | `../lock.js` |
+| history.js | `./history-model.js`（×2 处） | HISTORY_FAMILY_INTERNAL | `./history-model.js`（不变） |
+| history.js | `./history-projection.js` | HISTORY_FAMILY_INTERNAL | 不变 |
+| history.js | `./history-storage.js` | HISTORY_FAMILY_INTERNAL | 不变 |
+| history-projection.js | `./occurrence-model.js` | ROOT_SIBLING | `../occurrence-model.js` |
+| history-projection.js | `./history-model.js` | HISTORY_FAMILY_INTERNAL | 不变 |
+| history-storage.js | `./history-model.js` | HISTORY_FAMILY_INTERNAL | 不变 |
+| history-storage.js | `./history-projection.js` | HISTORY_FAMILY_INTERNAL | 不变 |
+| history-model.js / history-sink.js | （无相对导入） | — | 无改写 |
+
 ```text
-src：index.js、occurrence.js（./history* → ./history/history*）；
-  self-service 子目录内部互引（./schema.js 等）
-test：self-service.test.js 与 critical-job-guard.test.js（../src/self-service.js
-  → ../../src/self-service.js 兼容 barrel 或 ../index.js；harness 共享导入）；
-  scheduler-history.test.js、history-durability.test.js、history.test.js
-  （../src/history* → ../src/history/history*）
+ROOT_SIBLING_REWRITES = 恰 2 处（history.js→../lock.js、
+  history-projection.js→../occurrence-model.js）；其余全为
+  HISTORY_FAMILY_INTERNAL（同目录共迁，路径不变）。
+HISTORY_LOGIC_SEMANTICS = BYTE/SEMANTICALLY UNCHANGED EXCEPT 上表 exact
+  relative import-specifier rewrites；history 五文件禁止任何 functional code edit。
+```
+
+IMPORT_REWRITE_SURFACE（exact，两类合计，全部为纯路径改写）：
+
+```text
+(i) 迁入文件内部的 ROOT_SIBLING 改写：恰 2 处（C2a 表）
+(ii) 外部 importer 的路径改写：
+  src：index.js、occurrence.js（./history* → ./history/history*）；
+    self-service 子目录内部互引（./schema.js 等）
+  test：self-service.test.js 与 critical-job-guard.test.js（../src/self-service.js
+    → ../../src/self-service.js 兼容 barrel 或 ../index.js；harness 共享导入）；
+    scheduler-history.test.js、history-durability.test.js、history.test.js
+    （../src/history* → ../src/history/history*）
 UNTOUCHED（shim 保证零触碰）：compose.js、cross-agent.test.js、
   scheduler-reliability.test.js
+UNDECLARED_IMPORT_REWRITE = 0（(i)+(ii) 即完整闭包）
 ```
 
 TEST_MOVE_MAP（迁入 test/self-service/critical-job-guard.test.js 的簇，断言
-一删不减，仅 harness 改绑）：
+一删不减，仅 harness 改绑；TEST_MOVE_SOURCE_LINES = 147，为审查实测精确值）：
 ```text
 'ownership is rechecked inside the locked control mutation (TOCTOU fails closed)'
 'locked update preserves concurrently changed omitted fields and audits the
@@ -1890,8 +1924,35 @@ TEST_MOVE_MAP（迁入 test/self-service/critical-job-guard.test.js 的簇，断
 'audit append failure returns known committed result, logs sanitized
  coordinates, and does not retry'
 'mutation audit is one sanitized append per committed mutation'
-（合计 ≈186 源行；self-service.test.js = 620 − 186 − 结构调整 ≈ 420-460 ≤500；
-  critical-job-guard.test.js = 370 + 186×适配 ≈ 480-500 ≤500）
+（六簇合计 = 147 源行，self-service.test.js 行 431-577 区间实测）
+```
+
+TEST_LINE_ALLOCATION（exact budget proof；行数贡献为机械 census 实测值）：
+
+```text
+SOURCE_TEST_LINES_MOVED = 147
+
+HELPERS_MOVED_TO_HARNESS（迁入 test/self-service/harness.js，自
+  self-service.test.js 与 critical-job-guard.test.js 吸收去重）：
+  trusted                     = 15
+  rig                         = 31
+  createAtArgs                = 13
+  storedDefinitionDigest      = 5
+  assertExactCommittedResult  = 16
+  inventoryFile（自 critical-job-guard.test.js 吸收） = 9
+  criticalManifest（自 critical-job-guard.test.js 吸收） = 2
+  imports/小节注释             ≈ 8
+  HARNESS 合计 ≈ 99 ≤ HARNESS_FINAL_BUDGET(120) ✓
+
+预算法不等式（MAX_AUTHORIZED_GLUE = 6 行/文件 = import 与改绑行）：
+  self-service.test.js：
+    620 − 147（迁出簇） − 80（helpers 迁出） + 2（glue） = 395 ≤ 500 ✓
+  critical-job-guard.test.js：
+    370 + 147（迁入簇） − 15（本地 trusted 被 harness 去重吸收）
+      − 11（inventoryFile/criticalManifest 迁入 harness） + 6（glue） = 497 ≤ 500 ✓
+  harness.js：≈ 99 ≤ 120 ✓
+  断言一删不减：两不等式均在「迁入簇 147 行逐字保留（仅 rig/trusted 调用改绑
+  到共享 harness）」前提下成立；无需发明新测试簇、无需删除断言。
 ```
 
 ### C3. 兼容 barrel（UNTOUCHED 承诺的机制）
@@ -1917,8 +1978,8 @@ STRUCTURE_GATE = PASS ⇔
   (a) 触碰/新增/更名路径全部 ≤ 各自 B2 预算（上表）；
   (b) verify-code-structure 违规集合相对 BASE_MAIN 的 delta：scheduler src/test
       两目录类清除（根宽 18/20 无需登记），无任何新增类；
-      存量 scripts/ 超限（53 > 注册 40）= BASE_MAIN 已登记债务、不在触碰面内，
-      out of scope（与 AMENDMENT_2 B6(c) 同一裁定）；
+      存量 scripts/ 超限（实测 59 > 注册 40）= BASE_MAIN 已登记债务、不在触碰
+      面内，out of scope（与 AMENDMENT_2 B6(c) 同一裁定）；
   (c) registry：零 scheduler 相关条目、零无关归一化（\u00a7 类转义保持原样）。
 ```
 
