@@ -29,6 +29,11 @@ revision_note: >-
   architecture and frozen implementation candidate are carried unchanged
   except where this Spec says otherwise.
 supersedes: []
+superseded_by: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2 (accepted 2026-09-10, PR
+  mayf3/dsh-agent-core#236 at 11023c6fd112f48e2d1de84f6a27048f8049df6c;
+  whole-authority successor — this Spec remains accepted history and proof
+  provenance but is no longer current authority; mechanical pointer only,
+  no semantic change to the accepted bytes)
 amends:
   - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted R4 trusted message-origin
     sidecar: extends the exact source-kind enumeration from ONE kind
