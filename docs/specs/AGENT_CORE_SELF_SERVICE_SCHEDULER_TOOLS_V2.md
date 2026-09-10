@@ -1830,13 +1830,17 @@ packages/scheduler/src/self-service/schema.js       （expectedRevision/schedule
   payload/delivery/mutation-failure，≤250）
 packages/scheduler/src/self-service/projections.js  （digest/public/occurrence/
   normalized/committed 投影，≤150）
-packages/scheduler/src/history/                     （history.js / history-model.js /
-  history-projection.js / history-sink.js / history-storage.js 五文件迁入；
-  HISTORY_LOGIC_SEMANTICS = BYTE/SEMANTICALLY UNCHANGED EXCEPT exact relative
-  import-specifier rewrites required by directory relocation（完整 outbound
-  import census 与改写映射见 C2a）；每文件 ≤500 维持现状）
-packages/scheduler/test/self-service/harness.js     （共享 trusted/rig fixture，
-  ≤120）
+packages/scheduler/src/history/                     （history-model.js /
+  history-projection.js / history-sink.js / history-storage.js / history.js
+  五模块迁入——history.js 内容体迁为 history/history.js，原路径 src/history.js
+  原位改写为 ≤60 行兼容 barrel（REWRITTEN_IN_PLACE，REMOVED=NO），使
+  agentcore-cron.mjs（516，post-baseline 不可 grandfather）与
+  product-api/test/scheduler-api.test.js 零触碰；
+  HISTORY_LOGIC_SEMANTICS = BYTE/SEMANTICALLY UNCHANGED EXACT except relative
+  import-specifier rewrites（完整 outbound import census 与改写映射见 C2a）；
+  每文件 ≤500 维持现状）
+packages/scheduler/test/self-service/harness.js     （共享 trusted/双 rig
+  fixture，≤150）
 ```
 
 DISPOSITIONS：
@@ -1860,14 +1864,16 @@ src/self-service.js（compat barrel）      ≤ 60（BARREL 规则）
 src/history/*（5 文件，verbatim 迁移）     = 现状 451/202/208/143/31
 test/self-service/self-service.test.js    ≤ 500
 test/self-service/critical-job-guard.test.js ≤ 500
-test/self-service/harness.js              ≤ 120
+test/self-service/harness.js              ≤ 150
 ```
 
 FINAL_IMMEDIATE_CHILD_COUNT：
 ```text
-src 根 = 21 − 5×history(迁入 history/) + 1×history/ 目录
-            + 1×self-service/ 目录 + 0（self-service.js barrel 原位保留）
-        = 21 − 5 + 1 + 1 = 18 ≤ 20
+src 根 = 21 − 4×history 模块(迁入 history/：history-model/history-projection/
+            history-sink/history-storage) + 1×history/ 目录
+            + 1×self-service/ 目录 + 0（src/history.js 与 src/self-service.js
+              双 barrel 均原位保留）
+        = 21 − 4 + 2 = 19 ≤ 20
 test 根 = 21 − 2×(RENAME 一减一增) + 1×self-service/ 目录 = 20 ≤ 20
 src/self-service/ 子目录 immediate children = 5（index/access/schema/
   projections/critical-job-guard）；test/self-service/ = 3（均 ≤20）
@@ -1877,11 +1883,11 @@ C2a. 迁入文件的 outbound import census（五文件全量，逐条分类）�
 
 | 迁入文件 | 相对导入 | 分类 | 迁入后 specifier |
 |---|---|---|---|
-| history.js | `./lock.js` | ROOT_SIBLING | `../lock.js` |
+| history/history.js（原 src/history.js 迁入） | `./lock.js` | ROOT_SIBLING | `../lock.js` |
 | history.js | `./history-model.js`（×2 处） | HISTORY_FAMILY_INTERNAL | `./history-model.js`（不变） |
 | history.js | `./history-projection.js` | HISTORY_FAMILY_INTERNAL | 不变 |
 | history.js | `./history-storage.js` | HISTORY_FAMILY_INTERNAL | 不变 |
-| history-projection.js | `./occurrence-model.js` | ROOT_SIBLING | `../occurrence-model.js` |
+| history/history-projection.js（迁入） | `./occurrence-model.js` | ROOT_SIBLING | `../occurrence-model.js` |
 | history-projection.js | `./history-model.js` | HISTORY_FAMILY_INTERNAL | 不变 |
 | history-storage.js | `./history-model.js` | HISTORY_FAMILY_INTERNAL | 不变 |
 | history-storage.js | `./history-projection.js` | HISTORY_FAMILY_INTERNAL | 不变 |
@@ -1900,15 +1906,19 @@ IMPORT_REWRITE_SURFACE（exact，两类合计，全部为纯路径改写）：
 ```text
 (i) 迁入文件内部的 ROOT_SIBLING 改写：恰 2 处（C2a 表）
 (ii) 外部 importer 的路径改写：
-  src：index.js、occurrence.js（./history* → ./history/history*）；
+  src：occurrence.js（./history-sink.js → ./history/history-sink.js；
+    ≤499 保持）；
     self-service 子目录内部互引（./schema.js 等）
   test：self-service.test.js 与 critical-job-guard.test.js（../src/self-service.js
-    → ../../src/self-service.js 兼容 barrel 或 ../index.js；harness 共享导入）；
-    scheduler-history.test.js、history-durability.test.js、history.test.js
-    （../src/history* → ../src/history/history*）
-UNTOUCHED（shim 保证零触碰）：compose.js、cross-agent.test.js、
-  scheduler-reliability.test.js
-UNDECLARED_IMPORT_REWRITE = 0（(i)+(ii) 即完整闭包）
+    → ../../src/self-service.js 兼容 barrel 或 ../index.js；harness 共享导入）
+UNTOUCHED（双 barrel 保证零触碰）：compose.js（恰 500）、cross-agent.test.js
+  （522）、scheduler-reliability.test.js（459）、index.js（./history.js barrel
+  路径不变）、scheduler-history.test.js、history-durability.test.js、
+  history.test.js（../src/history.js barrel 路径不变）、
+  scripts/agentcore-cron.mjs（516，post-baseline 不可 grandfather——
+  src/history.js barrel 使其零触碰）、product-api/test/scheduler-api.test.js
+UNDECLARED_IMPORT_REWRITE = 0（(i)+(ii) 即完整闭包；C0 census 已含
+  agentcore-cron.mjs 与 product-api 测试两处 history.js importer 的零触碰处置）
 ```
 
 TEST_MOVE_MAP（迁入 test/self-service/critical-job-guard.test.js 的簇，断言
@@ -1932,25 +1942,26 @@ TEST_LINE_ALLOCATION（exact budget proof；行数贡献为机械 census 实测�
 ```text
 SOURCE_TEST_LINES_MOVED = 147
 
-HELPERS_MOVED_TO_HARNESS（迁入 test/self-service/harness.js，自
-  self-service.test.js 与 critical-job-guard.test.js 吸收去重）：
-  trusted                     = 15
-  rig                         = 31
+HELPERS_MOVED_TO_HARNESS（迁入 test/self-service/harness.js，自两测试文件
+  吸收去重；行贡献为机械 census 实测）：
+  trusted（unified superset：self-service 版 15 行为基准，guard 版 9 行被吸收）= 15
+  rig（self-service 变体）      = 31
+  rig（critical-guard 变体，签名不同，双变体并存） = 28
   createAtArgs                = 13
   storedDefinitionDigest      = 5
   assertExactCommittedResult  = 16
   inventoryFile（自 critical-job-guard.test.js 吸收） = 9
   criticalManifest（自 critical-job-guard.test.js 吸收） = 2
   imports/小节注释             ≈ 8
-  HARNESS 合计 ≈ 99 ≤ HARNESS_FINAL_BUDGET(120) ✓
+  HARNESS 合计 ≈ 127 ≤ HARNESS_FINAL_BUDGET(150) ✓
 
 预算法不等式（MAX_AUTHORIZED_GLUE = 6 行/文件 = import 与改绑行）：
   self-service.test.js：
-    620 − 147（迁出簇） − 80（helpers 迁出） + 2（glue） = 395 ≤ 500 ✓
+    620 − 147（迁出簇） − 80（helpers 迁出：15+31+13+5+16） + 2（glue） = 395 ≤ 500 ✓
   critical-job-guard.test.js：
-    370 + 147（迁入簇） − 15（本地 trusted 被 harness 去重吸收）
-      − 11（inventoryFile/criticalManifest 迁入 harness） + 6（glue） = 497 ≤ 500 ✓
-  harness.js：≈ 99 ≤ 120 ✓
+    370 − 48（本地 helpers 被吸收：rig 28 + trusted 9 + inventoryFile 9
+      + criticalManifest 2） + 147（迁入簇） + 6（glue） = 475 ≤ 500 ✓
+  harness.js：≈ 127 ≤ 150 ✓
   断言一删不减：两不等式均在「迁入簇 147 行逐字保留（仅 rig/trusted 调用改绑
   到共享 harness）」前提下成立；无需发明新测试簇、无需删除断言。
 ```
