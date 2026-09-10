@@ -262,15 +262,20 @@ modified or deleted.
 **Special admission override (recorded honestly, unchanged from r1):**
 `agent_self_task_v1` partner_check/partner_accept nodes point at `b6b033c4` (anomalous
 agent_id=self-UUID; **no mechanical twin**). Its 3-command sequence is
-**ADMISSION-GATED**: cmd-2 (replace_draft_graph) may not substitute those two nodes
-without an identity-authority confirmation (candidate `25a6789f`/`agt_ceo-agent` — NOT
-guessed, NOT decided by this plan). Until that ruling the sequence blocks at cmd-2 and the
-subject stays in its current state. Its mechanical nodes (`95eab282`→`b21ddb23` twin)
-repair normally.
+**ADMISSION-GATED (r3 — superseding the r2 wording)**: the agent_self_task_v1 subject has NO
+executable commands in the r3 ledger. Per Owner B3 the whole authoring sequence HOLDS
+**before command 1** — no draft is created, so there is no cmd-2 to block. Identity
+disposition: auth exact-resolution returns NO canonical Agent mapping for b6b033c4
+(RETURNS_NO_PROVEN_SUCCESSOR); IDENTITY_MAPPING_GUESS = FORBIDDEN; deferred to the normal
+provisioning authority.
 
-Per-def effective versions and stale-node counts: `census-raw/effective-published-versions.tsv` + `census-raw/definition-classification.tsv` (25 defs: adc-backend/frontend/game/miniapp/mobile-dev-v1, project-insight-review-v1, bip_article_pipeline_v1/v2, bip_gpt6_podcast_v1_202609, blog_write_review_v1, content_pipeline_v1, podcast_script_v1, biz-explore-v1, biz-publish-v1, game_dev_flow_v1, agent-onboarding-v1, agent-role-upgrade-v1, journal-submission, journal_final_delivery, journal_section_production, research_ideation, audio-to-knowledge, video-to-knowledge, wiki-compile-review-publish, agent_self_task_v1).
-
-Special sub-row (recorded honestly): `agent_self_task_v1` partner_check/partner_accept nodes point at `b6b033c4` (anomalous agent_id=self-UUID; **no mechanical twin**). Those two nodes = **IDENTITY_REPAIR_REQUIRED** (candidate 25a6789f/`agt_ceo-agent` requires identity-authority confirmation — NOT guessed). The def's mechanical nodes (95eab282→b21ddb23 twin) repair normally.
+Special sub-row (r3): `agent_self_task_v1` partner_check/partner_accept nodes point at
+`b6b033c4` (anomalous agent_id=self-UUID; **no mechanical twin**). Both nodes =
+**IDENTITY_REPAIR_REQUIRED** — but the successor identity is NOT guessed and NOT chosen here:
+the auth exact-resolution authority returns NO canonical mapping (RETURNS_NO_PROVEN_SUCCESSOR
+branch), so the subject is DEPENDENCY_GATED with ZERO commands until the normal provisioning
+authority establishes the identity. The def's mechanical nodes (95eab282→b21ddb23 twin)
+belong to the 24 READY repairs.
 
 | # | definition | domain | exact_mutation |
 |---|---|---|---|

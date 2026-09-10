@@ -109,6 +109,8 @@ for (const [sid, iid, dom] of m1b) {
 
 // ---- M2: 24 READY canonical repairs + M2B identity-blocked (B3)
 const defs = readFileSync(join(RAW, 'definition-classification.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t'))
+const pubv = readFileSync(join(RAW, 'effective-published-versions.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t'))
+const publishedVersionId = new Map(pubv.slice(1).map(r => [`${r[0]}\u0000${r[1]}`, r[2]]))
 const dh = defs[0]
 const m2defs = defs.slice(1).filter(r => r[dh.indexOf('class')] === 'BUSINESS_STALE_FIXED_CONFIG')
   .map(r => [r[dh.indexOf('definition_key')], r[dh.indexOf('domain')], r[dh.indexOf('definition_id')]])
@@ -127,9 +129,9 @@ for (const [dkey, dom, defid] of m2defs) {
   cmd(cls, reason, sid, 1, 'M2_DEFINITION_REPAIR', 'workflow_definition_authoring(operation=create_draft_version)',
       `POST /internal/v1/domains/${dom}/definitions/${defid}/versions`, 'POST',
       'DOMAIN_OWNER(domain) — svc definition governance (WDA authoring surface)', 'DOMAIN_OWNER (server-side)',
-      'effective-published-versions.tsv: current PUBLISHED version carries stale fixed-principal config (ledger r2)',
+      `effective-published-versions.tsv: ${dom}/${dkey} PUBLISHED version ${publishedVersionId.get(`${dom}\u0000${defid}`) || '<id per census>'} carries the stale fixed-principal config (classification ledger r2; substitution set = mechanical twin map, per-node values frozen in the draft request body)`,
       'G2 admission gate (§5)',
-      'new DRAFT version exists (semantic model preserved per source definition)')
+      `DRAFT created for ${dom}/${dkey} def ${defid}; semantic model preserved per source PUBLISHED graph ${publishedVersionId.get(`${dom}\u0000${defid}`) || ''}`)
   cmd(cls, reason, sid, 2, 'M2_DEFINITION_REPAIR', 'workflow_definition_authoring(operation=replace_draft_graph)',
       `PUT /internal/v1/domains/${dom}/definitions/${defid}/draft`, 'PUT',
       'DOMAIN_OWNER(domain) — svc definition governance', 'DOMAIN_OWNER (server-side)',
@@ -141,7 +143,7 @@ for (const [dkey, dom, defid] of m2defs) {
       'DOMAIN_OWNER(domain) — svc definition governance', 'DOMAIN_OWNER (server-side)',
       `${sid}-2 validated draft`,
       `${sid}-2 success receipt`,
-      'new version PUBLISHED (retires stale PUBLISHED from future materialization; historical versions immutable)')
+      `new version PUBLISHED for ${dom}/${dkey} def ${defid} (version id per publish receipt; supersedes and retires PUBLISHED ${publishedVersionId.get(`${dom}\u0000${defid}`) || ''} from future materialization; historical versions immutable)`)
 }
 
 // ---- M2A: 2 definition archives
@@ -177,6 +179,8 @@ for (const r of out) {
 }
 const subjectClasses = {}
 for (const cls of Object.values(subjectClass)) subjectClasses[cls] = (subjectClasses[cls] || 0) + 1
+const m1aIds = new Set(m1a.map(([sid]) => sid))
+const unresolvedSubjects = Object.keys(subjectClass).filter(sid => (/^M1-/.test(sid) && !m1aIds.has(sid)) || sid === 'M2::agent_self_task_v1')
 const summary = {
   totalRows: out.length,
   mutationCommands: mutationCommands.length,
@@ -189,7 +193,8 @@ const summary = {
   NO_MUTATION_SUBJECTS: subjectClasses.NO_MUTATION_DISPOSITION || 0,
   TOTAL_READY_MUTATION_COMMANDS: ready.length,
   TOTAL_GATED_MUTATION_COMMANDS: gated.length,
-  FINAL_TOTAL_MUTATION_COMMANDS: 'UNRESOLVED — M1B (4 subjects) disposition + M2B (1 subject) identity resolution pending; frozen only when every subject has an exact legal sequence',
+  UNRESOLVED_SUBJECTS: unresolvedSubjects,
+  FINAL_TOTAL_MUTATION_COMMANDS: unresolvedSubjects.length === 0 ? ready.length + gated.length : `UNRESOLVED (${unresolvedSubjects.length} subjects pending exact legal sequence: ${unresolvedSubjects.join(', ')})`,
   note: 'read-only rows (M6_READBACK, reconcile plan) are verification steps, NOT production mutations; NO_MUTATION_DISPOSITION rows are disposition records with zero commands'
 }
 writeFileSync(join(DIR, 'execution-command-summary.json'), JSON.stringify(summary, null, 2) + '\n')
