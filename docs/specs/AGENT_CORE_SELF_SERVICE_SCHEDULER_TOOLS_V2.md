@@ -41,8 +41,9 @@ amendments:
     semantics, the critical-identity contract (read-only consumption of
     scheduler-desired-state.json; NO name/substring/prompt classification; NO new authoritative
     jobs.json fields), the separation from the reliability spec's readiness child-mask, and the
-    required failure injections T1–T10. Review record: pending independent semantic review;
-    IMPLEMENTATION_BEFORE_ACCEPTANCE = NO.
+    required failure injections T1–T10. Review record: independent semantic review
+    **PASS / BLOCKERS=NONE** (round 1 REVISE→fixed; reviewed head
+    caa2328470803b2960990328da2d01995d9f2370); IMPLEMENTATION_BEFORE_ACCEPTANCE = NO.
 owners:
   - mayf3
   - repository-maintainers
@@ -1463,7 +1464,7 @@ critical desired-state inventory：
 | T6 | operator CLI disable critical job | **允许**（紧急停止保留） |
 | T7 | `scheduler.manage:any`（exact admin proof）disable critical job | **允许**（既有语义保持） |
 | T8 | missing/ambiguous critical classification（清单缺失/损坏/版本不符） | 按 A3 FAIL_CLOSED |
-| T9 | 被拒 mutation 落 durable attribution/evidence（who/which job/reason），零 payload/credential 泄露 | 经既有 sanitized audit seam 承载（拒绝归因 ≠ 违反 job/definition 状态的 ZERO store mutation，同 CTR-AUDIT-001 的「拒绝审计」先例）；具体通道形态在实现 acceptance 时冻结 |
+| T9 | 被拒 mutation 落 durable attribution/evidence（who/which job/reason），零 payload/credential 泄露 | 遵循既有 sanitized audit discipline（拒绝归因 ≠ 违反 job/definition 状态的 ZERO store mutation）；具体通道形态在实现 acceptance 时冻结 |
 | T10 | enable/list/runs 全量回归 | 零回归 |
 
 ### A5. Acceptance criteria（independent semantic review 必答）
@@ -1489,7 +1490,13 @@ STANDING_BEHAVIOR_UNCHANGED_PRE_ACCEPTANCE = YES？
   落位，不新造平行 Scheduler authority。
 - SCHEDULER_CONTROL_PLANE_RELIABILITY_V1（accepted）：critical inventory 的冻结出处
   （§5.4 desired-state）与 §5.3 readiness child-mask（其 AMENDMENT_1，正交保留）。
-- 背景：2026-09-09/10 agt_hr-agent 三次经工具面 disable 自有 critical 派发器
-  （b115cb96）的复发序列——本 Amendment 是 Owner 认定的 durable 产品缺口闭包；
-  现场处置（forensics/reconcile/enable）由既有 authority 与 operator 流程承载，
-  不在本 Amendment 范围内。
+- 背景：历史已存在 Agent 经 self-service 工具面停用其 critical Scheduler job 的
+  **已证实复发实例**（2026-09-09：b115cb96 critical 派发器被其属主 Agent 经工具面
+  disable，disable 事件带 before/afterDigest 署名取证）；2026-09-10 当前 recurrence
+  的 actor/source 仍 **UNKNOWN_PENDING_FORENSICS**，待 Owner read-only disable
+  forensics 定性（若定性为 `DISABLE_OPERATOR_AGENT_ID=agt_hr-agent` 且
+  `DISABLE_SOURCE=self_service_mutation`，该结论记录于 **incident evidence**，记作
+  `CURRENT_RECURRENCE_MATCHES_STRUCTURAL_GAP = YES`，不冻结进本产品 authority）。
+  本 Amendment 关闭的是**已经成立的产品权限缺口**；在本次 provenance 确认前，
+  不得声称其必然关闭本次事故根因。现场处置（forensics/reconcile/enable）由既有
+  authority 与 operator 流程承载，不在本 Amendment 范围内。
