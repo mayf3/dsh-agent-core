@@ -53,6 +53,7 @@ import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
 import { createAgentPrincipalResolutionAccess } from './agent-principal-resolution.js'
+import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
 import { createAgentSessionMessagingAudit } from './agent-session-messaging-audit.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
@@ -438,6 +439,13 @@ export async function composeProductionRuntime(options = {}) {
       }
     },
   }))
+  const workflowExecution = mountWorkflowExecutionRuntime({
+    ctx,
+    layout,
+    router,
+    log,
+    ...(opts.workflowExecution === undefined ? {} : { config: opts.workflowExecution }),
+  })
 
   const scheduler = new Scheduler({
     store,
@@ -477,12 +485,14 @@ export async function composeProductionRuntime(options = {}) {
     notificationIngress,
     store,
     scheduler,
+    workflowExecution,
     writeEvidence,
-    /** Start the resident scheduler loop (mtime tick + startup catch-up). */
-    start: () => scheduler.start({ autoStart: true, catchup }),
-    /** Graceful stop: engine first, then every plugin disposer (the Router's
-     *  disposer shuts down all owned agent processes). */
+    start: async () => {
+      await scheduler.start({ autoStart: true, catchup })
+      workflowExecution.start()
+    },
     stop: async () => {
+      workflowExecution.stop()
       await scheduler.stop()
       await ctx.disposeAll()
     },
