@@ -1,8 +1,18 @@
 # WORKFLOW_ASSIGNEE_ADMISSION_GUARD_TEST_CLASSIFICATION_DESIGN_V1
 
-MINIMAL_DESIGN r2 (evidence/design authority — NOT implementation authority; becomes
+MINIMAL_DESIGN r3 (evidence/design authority — NOT implementation authority; becomes
 narrow authority candidate(s) only after independent design review PASS and
 Owner-sanctioned acceptance).
+
+```text
+DESIGN_REVIEW_RECORD =
+  round 1 = REVISE / 2 load-bearing gaps (G1 seed-script ingress; G2 read-side
+            authority map) — fixed in this revision
+  round 2 = PASS / LOAD_BEARING_GAPS = 0 (2026-09-11, independent reviewer; seed-script
+            inertness + whole-tree writer enumeration + read-surface map mechanically
+            re-verified; residual notes 4/6 absorbed at candidate authoring:
+            openapi required-vs-optional deployment-transition choice and this
+            header/§7 wording, both now settled)
 
 ```text
 GOAL = WORKFLOW_ASSIGNEE_ADMISSION_GUARD_V1 · LANE_TEST_CLASSIFICATION
@@ -201,7 +211,7 @@ tool surface would not close.
 ## 7. Candidate routing (B7)
 
 ```text
-MINIMAL_DESIGN r2 = this document (dsh evidence branch, exact commits referenced)
+MINIMAL_DESIGN r3 = this document (dsh evidence branch, exact commits referenced)
 NEXT GATE = independent review OF THIS DESIGN (MINIMAL_DESIGN_REVIEW must be PASS
   with LOAD_BEARING_GAPS = 0)
 THEN = author docs-first authority candidate(s) on a CLEAN svc-workflow branch cut
@@ -236,7 +246,7 @@ T5m seed/import regression: rows produced by scripts/canary/seed_canary_test_dat
     and the legacy-import path read BUSINESS and produce zero due-feed entries
 ```
 
-## 9. Completion-condition block (Owner's checklist, r2 values)
+## 9. Completion-condition block (Owner's checklist, r3 values)
 
 ```text
 AUTHORITATIVE_OBJECT = INSTANCE                    ENUM = BUSINESS | NON_BUSINESS_TEST
