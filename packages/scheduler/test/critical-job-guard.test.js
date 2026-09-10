@@ -5,13 +5,13 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 
 import { JobStore } from '../src/store.js'
+import { createSelfServiceSchedulerAccess } from '../src/self-service.js'
 import {
-  createSelfServiceSchedulerAccess,
   parseCriticalInventory,
   evaluateCriticalJobGuard,
   CRITICAL_GUARD_REASONS,
   DEFAULT_CRITICAL_INVENTORY_PATH,
-} from '../src/self-service.js'
+} from '../src/critical-job-guard.js'
 
 function trusted(agentId = 'agt_a', overrides = {}) {
   return {

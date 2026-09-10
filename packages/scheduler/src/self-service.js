@@ -8,7 +8,6 @@
  */
 
 import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
 
 import {
   createOrReconcileJobOp,
@@ -17,6 +16,7 @@ import {
   disableJobOp,
   deleteJobOp,
 } from './control.js'
+import { createCriticalJobGuard } from './critical-job-guard.js'
 import { toPublicJob, cloneJob } from './job-model.js'
 import { canonicalJSON } from './occurrence-model.js'
 import { parseAtToMs } from './schedule.js'
@@ -31,22 +31,6 @@ export const SELF_SERVICE_ERROR_CODES = {
   MUTATION_OUTCOME_UNKNOWN: 'mutation_outcome_unknown',
   INTERNAL_ERROR: 'internal_error',
 }
-
-// AMENDMENT_1 — CRITICAL_JOB_SELF_DISABLE_GUARD (accepted authority, PR #249):
-// stable denial reason codes for the two fail-closed classes. Denials carry
-// ZERO job/definition content and perform ZERO store mutation.
-export const CRITICAL_GUARD_REASONS = {
-  SELF_DISABLE: 'critical_job_self_disable',
-  INVENTORY_UNAVAILABLE: 'critical_inventory_unavailable',
-}
-
-/**
- * AMENDMENT_1 (Owner B1 repair, 2026-09-10): the production default critical
- * inventory is FIXED at the accepted path — an absent/unreadable manifest is
- * `critical_inventory_unavailable` (FAIL_CLOSED), never "guard disabled".
- * There is no unconfigured/inert product state; tests inject an explicit path.
- */
-export const DEFAULT_CRITICAL_INVENTORY_PATH = '/usr/local/libexec/agent-core/config/scheduler-desired-state.json'
 
 /** Expected-revision wire shape -> op guard input (§5.1.4 compare-before-write). */
 function expectedRevisionFromArgs(args) {
@@ -263,78 +247,6 @@ function ownershipGuard(callerAgentId, allowAny, captureCurrent) {
 }
 
 /**
- * AMENDMENT_1 (Owner B2 repair, 2026-09-10): the critical classification runs
- * INSIDE the mutation serialization boundary — the assertJob seam is invoked
- * by the control ops with the LOCKED, re-read-latest job, so the logicalKey
- * used for the decision is exactly the job version being mutated (no
- * unlocked-snapshot TOCTOU; expected_revision is irrelevant to this
- * invariant). Ownership first, then (SELF path only) the guard; a denial
- * throws BEFORE any write (mutateDoc leaves disk untouched), with the stable
- * reason carried on the error for the caller's evidence append.
- */
-function criticalMutationGuard(operation, callerAgentId, allowAny, captureCurrent, inventory) {
-  const ownership = ownershipGuard(callerAgentId, allowAny, captureCurrent)
-  return (current) => {
-    ownership(current)
-    if (!allowAny) {
-      const reason = evaluateCriticalJobGuard({ operation, logicalKey: current.logicalKey, inventory })
-      if (reason !== null) {
-        throw Object.assign(new Error(`${reason}: critical jobs cannot be ${operation === 'remove' ? 'removed' : 'disabled'} via self-service`), {
-          code: 'CRITICAL_SELF_MUTATION_DENIED',
-          reason,
-          guardOperation: operation,
-        })
-      }
-    }
-  }
-}
-
-/**
- * AMENDMENT_1 — CRITICAL_JOB_SELF_DISABLE_GUARD (accepted, PR #249): parse the
- * critical desired-state inventory (the reliability authority's frozen §5.4
- * manifest). Returns the Set of critical logicalKeys, or throws on any
- * unreadable/invalid/unsupported-version input (caller maps that to the
- * fail-closed `critical_inventory_unavailable` class). Read-only; no caching —
- * the inventory is consulted fresh at mutation time.
- */
-export function parseCriticalInventory(raw) {
-  const parsed = JSON.parse(raw)
-  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new TypeError('critical inventory must be an object')
-  }
-  if (parsed.version !== 1) throw new TypeError(`unsupported critical inventory version: ${String(parsed.version)}`)
-  if (!Array.isArray(parsed.jobs)) throw new TypeError('critical inventory jobs must be an array')
-  const logicalKeys = new Set()
-  for (const entry of parsed.jobs) {
-    if (entry === null || typeof entry !== 'object' || typeof entry.logicalKey !== 'string' || entry.logicalKey.trim() === '') {
-      throw new TypeError('critical inventory job entry requires a non-empty logicalKey')
-    }
-    logicalKeys.add(entry.logicalKey)
-  }
-  return logicalKeys
-}
-
-/**
- * Pure guard decision (AMENDMENT_1, B1 repair): `null` = not blocked;
- * otherwise the stable denial reason. Only the SELF path (no manage:any
- * proof) ever reaches this. Identity is EXACTLY the job's persisted
- * logicalKey against the inventory — never name/substring/prompt.
- * `inventory.state`:
- *   'unavailable' → configured source unreadable/invalid/unsupported version
- *                   → FAIL_CLOSED for disable/remove
- *                     (critical_inventory_unavailable)
- *   'ok'          → exact match ⇒ critical_job_self_disable; absent ⇒ null
- * There is NO inert/unconfigured state: the inventory defaults to the fixed
- * production path and always classifies.
- */
-export function evaluateCriticalJobGuard({ operation, logicalKey, inventory }) {
-  if (operation !== 'disable' && operation !== 'remove') return null
-  if (inventory.state === 'unavailable') return CRITICAL_GUARD_REASONS.INVENTORY_UNAVAILABLE
-  if (inventory.logicalKeys.has(logicalKey)) return CRITICAL_GUARD_REASONS.SELF_DISABLE
-  return null
-}
-
-/**
  * @param {object} opts
  * @param {import('./store.js').JobStore} opts.store
  * @param {(agentId:string, scope:'scheduler.admin'|'scheduler.audit', resource:'scheduler')=>Promise<boolean>} [opts.assertGrant]
@@ -353,45 +265,13 @@ export function evaluateCriticalJobGuard({ operation, logicalKey, inventory }) {
  * @param {(path:string)=>string} [opts.readInventoryFile]
  *     Test seam for the inventory read; production default is readFileSync.
  */
-export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFailure = () => {}, criticalInventoryPath = process.env.SCHEDULER_DESIRED_STATE ?? DEFAULT_CRITICAL_INVENTORY_PATH, readInventoryFile = (p) => readFileSync(p, 'utf8') }) {
+export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFailure = () => {}, criticalInventoryPath = process.env.SCHEDULER_DESIRED_STATE, readInventoryFile = undefined }) {
   if (store === undefined || store === null) throw new TypeError('self-service: store is required')
 
-  /**
-   * Mutation-time critical-inventory read (AMENDMENT_1 A3): fresh, read-only,
-   * zero caching; ANY read/parse/version failure ⇒ 'unavailable' (fail-closed,
-   * never fail-open — Owner B1: there is no inert state).
-   */
-  function loadCriticalInventory() {
-    try {
-      return { state: 'ok', logicalKeys: parseCriticalInventory(readInventoryFile(criticalInventoryPath)) }
-    } catch {
-      return { state: 'unavailable' }
-    }
-  }
-
-  /**
-   * T9 durable denial attribution (AMENDMENT_1): sanitized evidence-only event
-   * on the EXISTING run-event ledger channel — whitelisted fields, zero
-   * payload/credential bytes; best-effort exactly like mutation audit.
-   */
-  async function appendDenialAudit(operation, { jobId, operatorAgentId, reason }) {
-    let status
-    try {
-      status = await store.appendRunEvent({
-        ts: Date.now(),
-        action: 'self_service_denied',
-        operation,
-        jobId,
-        operatorAgentId,
-        reason,
-      })
-    } catch {
-      status = { ok: false }
-    }
-    if (status?.ok === true) return 'appended'
-    try { onAuditFailure({ operation, jobId }) } catch {}
-    return 'append_failed'
-  }
+  // AMENDMENT_1 guard seam (authorization & evidence) lives in
+  // critical-job-guard.js (AMENDMENT_2 structure closure): mutation-time
+  // inventory classification + locked-current assert + denial evidence.
+  const guard = createCriticalJobGuard({ store, criticalInventoryPath, readInventoryFile, onAuditFailure })
 
   /** Admin proof: exact (scheduler, scheduler.admin) — establishes local scheduler.manage:any only. */
   async function adminAuthorized(callerAgentId) {
@@ -657,10 +537,9 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         let adminPromise
         const scoped = await loadScopedJob(args.job_id, caller, () => (adminPromise ??= adminAuthorized(caller)))
         if (scoped.error !== undefined) return scoped.error
-        // AMENDMENT_1: classification runs on the LOCKED current job inside
-        // criticalMutationGuard (SELF path only — allowAny proves
-        // scheduler.manage:any, CRITICAL != IMMUTABLE). Denial audit in catch.
-        const inventory = loadCriticalInventory()
+        // AMENDMENT_1: classification runs on the LOCKED current job via the
+        // guard seam (SELF path only — allowAny proves scheduler.manage:any,
+        // CRITICAL != IMMUTABLE). Denial audit in catch.
         const nowMs = Date.now()
         let expectedRevision
         try {
@@ -672,11 +551,14 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
         try {
           await deleteJobOp(store, args.job_id, {
             expectedRevision,
-            assertJob: criticalMutationGuard('remove', caller, scoped.allowAny, (current) => { lockedBefore = current }, inventory),
+            assertJob: (current) => {
+              ownershipGuard(caller, scoped.allowAny, (c) => { lockedBefore = c })(current)
+              guard.guardFor('remove', scoped.allowAny)(current)
+            },
           })
         } catch (error) {
           if (error?.code === 'CRITICAL_SELF_MUTATION_DENIED') {
-            const auditStatus = await appendDenialAudit('remove', { jobId: scoped.job.id, operatorAgentId: caller, reason: error.reason })
+            const auditStatus = await guard.appendDenialAudit('remove', { jobId: scoped.job.id, operatorAgentId: caller, reason: error.reason })
             return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, `${error.reason}: critical jobs cannot be removed via self-service (zero mutation performed; evidence: ${auditStatus})`)
           }
           if (error?.mutationOutcome !== 'committed') return mutationFailure(error)
@@ -699,11 +581,10 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
     let adminPromise
     const scoped = await loadScopedJob(args.job_id, caller, () => (adminPromise ??= adminAuthorized(caller)))
     if (scoped.error !== undefined) return scoped.error
-    // AMENDMENT_1: classification runs on the LOCKED current job inside
-    // criticalMutationGuard (disable only; enable is NOT guarded; SELF path
-    // only — allowAny proves scheduler.manage:any, CRITICAL != IMMUTABLE).
+    // AMENDMENT_1: classification runs on the LOCKED current job via the
+    // guard seam (disable only; enable is NOT guarded; SELF path only —
+    // allowAny proves scheduler.manage:any, CRITICAL != IMMUTABLE).
     // Denial audit in catch.
-    const inventory = operation === 'disable' ? loadCriticalInventory() : undefined
     const nowMs = Date.now()
     let expectedRevision
     try {
@@ -717,11 +598,14 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
       updated = await controlOp(store, args.job_id, {
         nowMs,
         expectedRevision,
-        assertJob: criticalMutationGuard(operation, caller, scoped.allowAny, (current) => { lockedBefore = current }, inventory),
+        assertJob: (current) => {
+          ownershipGuard(caller, scoped.allowAny, (c) => { lockedBefore = c })(current)
+          guard.guardFor(operation, scoped.allowAny)(current)
+        },
       })
     } catch (error) {
       if (error?.code === 'CRITICAL_SELF_MUTATION_DENIED') {
-        const auditStatus = await appendDenialAudit(operation, { jobId: args.job_id, operatorAgentId: caller, reason: error.reason })
+        const auditStatus = await guard.appendDenialAudit(operation, { jobId: args.job_id, operatorAgentId: caller, reason: error.reason })
         return err(SELF_SERVICE_ERROR_CODES.ACCESS_DENIED, `${error.reason}: critical jobs cannot be disabled via self-service (zero mutation performed; evidence: ${auditStatus})`)
       }
       if (error?.mutationOutcome === 'committed' && error.committedValue !== undefined) {
