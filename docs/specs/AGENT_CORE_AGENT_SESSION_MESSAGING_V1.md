@@ -20,6 +20,13 @@ amendment_ref: r4 = AMENDMENT_1 (owner goal AGENT_SESSION_SEND_RELIABILITY_V1; d
   extends the R12 evidence shape (failureCode + invocationCorrelation fields on L1 rows) and §5.3
   adds exactly one child-synthesized caller-visible reconciled envelope)
 amendment_status: accepted
+amended_by: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2 (accepted 2026-09-10, PR
+  mayf3/dsh-agent-core#236 at 11023c6fd112f48e2d1de84f6a27048f8049df6c —
+  current carrier of the R4 trusted message-origin extension that extends
+  the exact source-kind enumeration from ONE kind (`inter_agent`) to TWO
+  (`+ workflow_execution`) via its CTR-WAE-004; no other R4 semantic
+  changed; mechanical pointer only, no semantic change to the accepted
+  bytes)
 amendment2_status: accepted
 amendment2_accepted_date: 2026-09-09
 amendment2_accepted_reviewed_head: 1411c48
