@@ -7,10 +7,12 @@
  * FROZEN ORDERING (CTR-WAE-012/013): the recovery_authorized append happens
  * ONLY after EVERY fresh precondition passes (E1–E5) and strictly before the
  * execution re-resolution — it NEVER precedes a refusal. The E5 world
- * verification uses a resolution READ (zero appends, zero side effects): a
- * verification failure (identity still unrepaired) leaves the attempt exactly
- * as it was — STILL_BLOCKED, zero ledger facts — never an unauthorized
- * blocked fact, never an authorization on a refusal path.
+ * verification uses a resolution READ (no side effects): its failure
+ * (identity still unrepaired) appends the fresh resolution_blocked fact the
+ * accepted CTR-WAE-012 mandates for EVERY resolution-phase failure — with NO
+ * recovery_authorized precedent (resolution_blocked is not a refusal) — and
+ * ZERO Runs; the only post-authorization resolution_blocked is the E6
+ * identity-flap execution failure, which follows its own authorization.
  */
 
 import { judgeSettleFromDetail } from './judgment.js'
