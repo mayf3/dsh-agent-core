@@ -65,7 +65,7 @@ cmd('DEPENDENCY_GATED', 'read-back of M6-1-2',
 
 // M6-2..9: OWNER TAKEOVER REMOVED (B5) — zero-mutation disposition records with per-row reasons
 const m6removed = [
-  ['M6-2','canary-wda-v1-1788583811','UNLOCK_ONLY: sole purpose was DOMAIN_OWNER for M1-6 cancel; M1A cancels are DEPENDENCY_GATED on the coordinator W1/W2 widening instead; post-cleanup the domain holds no governed state (disposable residue)'],
+  ['M6-2','canary-wda-v1-1788583811','UNLOCK_ONLY: sole purpose was DOMAIN_OWNER for M1-6 cancel; M1A cancels are DEPENDENCY_GATED on the GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap instead (the W1/W2 widening itself is already implemented+deployed at 6dc1027); post-cleanup the domain holds no governed state (disposable residue)'],
   ['M6-3','canary-wda-v1-1788583998','UNLOCK_ONLY: same as M6-2 (M1-7); domain = disposable residue post-cleanup'],
   ['M6-4','canary-wda-v1-1788584903','UNLOCK_ONLY: same as M6-2 (M1-8); domain = disposable residue post-cleanup'],
   ['M6-5','assistance-5148b565-…','UNLOCK_ONLY: dead-owner binding; sole purpose was DOMAIN_OWNER for M1-3/M1-4 cancel — the coordinator role (five-gate bootstrap) covers that cancel directly; dead-owner rows persist enabled=false-capable as DEC-CP-007 repairable input for any future authority'],
@@ -79,7 +79,7 @@ for (const [sid, dom, reason] of m6removed) {
     `census: ${dom} — takeover operation removed from plan; binding/domain rows untouched and preserved as history`)
 }
 
-// ---- M1A: 8 ordinary cancels — DEPENDENCY_GATED on coordinator W1/W2 widening
+// ---- M1A: 8 ordinary cancels — DEPENDENCY_GATED on the GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap
 const m1a = [
   ['M1-1','8507658d-b5ab-44bc-83f0-afc97b5fd56c'],['M1-2','6671fdb5-eb42-4044-b2e5-4a284c657f91'],
   ['M1-3','f5de0535-e448-4cdf-b5ab-9d94843e97cb'],['M1-4','0ce9924d-6f9f-4b30-a838-04644a06d396'],
