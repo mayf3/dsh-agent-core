@@ -58,7 +58,7 @@ r1 wording errors corrected here: “217 REAL_BUSINESS（含 277 TERMINAL）” 
 
 ```text
 ACTIVE_AGENT_ASSIGNEE_UNRESOLVABLE = 0
-  semantics: DISPATCH_ELIGITIVE row with FAIL assignee — strict dispatch projection.
+  semantics: DISPATCH_ELIGIBLE row with FAIL assignee — strict dispatch projection.
   No dispatch-eligible row has an unresolvable assignee: all 14 NON_TERMINAL_CURRENT FAIL rows
   are fail-closed (zero activations, mechanically verified).
   Supporting disposition set (NOT silent): NON_TERMINAL_STALE_ASSIGNEE_TOTAL = 6
@@ -127,8 +127,13 @@ Root-cause finding retained: **adc-v2-dogfood enabled DOMAIN_OWNER binding = leg
 
 ## 10. Provenance-rule compliance
 
-- `6ea453e2` ("Credential separation canary test"): title-only signal, no stronger provenance → CLASSIFICATION=AMBIGUOUS, **MUTATION_WRITE_SET=EXCLUDED**. Not re-heuristicked in r2.
+- `6ea453e2` ("Credential separation canary test"): title-only signal, no stronger provenance → CLASSIFICATION=AMBIGUOUS, **MUTATION_WRITE_SET=EXCLUDED**. Not re-heuristicked in r2. Label note: the frozen TSV carries the builder's nearest exclusive class `HUMAN_REQUIRED` (the mechanical vocabulary has no AMBIGUOUS class); AMBIGUOUS is the governing overlay for this row, and write-set exclusion holds under either label (HUMAN_REQUIRED ⇒ M4=0 mutations regardless).
 - `3025174e` (wiki real-compile-review): stronger evidence (real draft file path under key-level scan exclusion) → REAL_BUSINESS=PRESERVE. Not re-heuristicked in r2.
+
+## 10a. FOLLOW_UP_DEBT (registered, not in write-set)
+
+- `canary-wda-v1-1788582639` still has an enabled legacy DOMAIN_OWNER binding (`4602e257…`, bc970ced) — same defect class as M6-2..M6-4; untouched here because its 3 test instances are all TERMINAL history (no unlock needed). Sweep in a follow-up binding-repair pass.
+- 61 HUMAN_REQUIRED rows carry historical legacy creators (`stale_creator_on_open_node` provenance signal, mostly TERMINAL history); non-load-bearing — the 23 NON_TERMINAL human visits all resolve canonical (§7).
 
 ## 11. FROZEN INPUTS
 
