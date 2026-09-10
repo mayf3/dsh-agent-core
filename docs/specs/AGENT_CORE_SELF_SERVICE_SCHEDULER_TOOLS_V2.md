@@ -31,8 +31,14 @@ supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
 superseded_by: null
 amendments:
-  - AMENDMENT_2 (2026-09-10, status: proposed, semantic delta NONE —
-    AMENDMENT_1_IMPLEMENTATION_CONFORMANCE_AND_STRUCTURE_CLOSURE): closes the
+  - AMENDMENT_2 (2026-09-10, status: accepted, semantic delta NONE —
+    AMENDMENT_1_IMPLEMENTATION_CONFORMANCE_AND_STRUCTURE_CLOSURE;
+    ACCEPTANCE: Owner exact-head 2026-09-10, accepted_by = mayf3,
+    accepted_exact_semantic_head = 6b5a41f721c80a25c8ce0019c263f0c5ad585dd1,
+    review_verdict = PASS (independent semantic review + exact-head re-review,
+    B7a ten mechanical proofs), SHIP_BLOCKERS = 0,
+    implementation authority ACTIVATED for the frozen structure repair only,
+    PRODUCTION_APPLY = NO): closes the
     mechanical authority debt created by accepted AMENDMENT_1 against the
     inherited body. (A) CTR-AUTH-001/002 "existence + job.agentId only"
     consumption clauses gain exactly ONE enumerated narrow exception: ordinary
@@ -1545,9 +1551,11 @@ STANDING_BEHAVIOR_UNCHANGED_PRE_ACCEPTANCE = YES？
 
 ---
 
-## AMENDMENT_2 — AMENDMENT_1_IMPLEMENTATION_CONFORMANCE_AND_STRUCTURE_CLOSURE (2026-09-10, status: proposed)
+## AMENDMENT_2 — AMENDMENT_1_IMPLEMENTATION_CONFORMANCE_AND_STRUCTURE_CLOSURE (2026-09-10, status: accepted)
 
-> **状态**：`proposed`（docs-only；PRODUCT_SEMANTIC_DELTA = NONE）。
+> **状态**：`accepted`（2026-09-10，Owner EXACT-HEAD ACCEPTANCE：accepted_exact_semantic_head =
+> 6b5a41f721c80a25c8ce0019c263f0c5ad585dd1；PRODUCT_SEMANTIC_DELTA = NONE；SHIP_BLOCKERS = 0）。
+> 实现授权已激活（仅限 B2 冻结的结构 repair，独立 PR，B5 硬门全检）；PRODUCTION_APPLY = NO。
 > 起因：AMENDMENT_1（critical self-disable guard）的已接受产品语义要求消费
 > persisted job.logicalKey 并在 self-service 面落 guard，而 inherited V2 正文
 > 仍保留 (i) "authorization 只消费 job existence + job.agentId"（CTR-AUTH-001/002）
@@ -1704,9 +1712,8 @@ SHIP_BLOCKERS = 0
 ### B8. Lifecycle
 
 ```text
-proposed → independent semantic review → Owner exact-head acceptance
-→ mechanical acceptance transaction（仅 lifecycle/provenance）→ merge
-→ IMPLEMENTATION_REFACTOR 解除：独立结构 repair PR（DRAFT while review running）
+accepted（Owner exact-head 2026-09-10 @ 6b5a41f）→ IMPLEMENTATION_REFACTOR 解除：
+独立结构 repair PR（DRAFT while review running；B5 硬门全检后才 ready/merge）
 ```
 
 acceptance 前 IMPLEMENTATION_REFACTOR = HOLD。
