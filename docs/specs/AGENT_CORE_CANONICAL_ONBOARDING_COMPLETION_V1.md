@@ -150,15 +150,16 @@ fleet 身份批次即经该 loopback seam 创建）。
   `AUTH_CONFIGURATION_ERROR`，对 https origin 的调用因服务无 TLS 而
   fail-closed——即 **IDENTITY 步骤在传输决议前不可执行**，这是诚实的
   fail-closed，不是可用的旁路。
-- 解析路径二选一（需经语义 review + Owner acceptance，作为 parent authority
-  amendment / explicit prerequisite resolution）：
-  - **A**：使用真正满足 parent contract 的现有 HTTPS/provisioning seam
-    （当前生产不存在 TLS 面）；
-  - **B（提案）**：把受控 loopback HTTP 显式接受为本部署的 provisioning
-    transport（与全体 deployed machine 流量——broker token minting——同一
-    信任域、同一 listen 面），作为 parent authority 的显式 prerequisite
-    resolution。
-- 库一行 wire-field 兼容（S2 one-time secret 的 `secret` 字段）维持 §5 原判定：
+- **决议（Owner union DECISION_2 = OPTION_B，2026-09-09）**：parent authority
+  AMENDMENT_8（CONTROLLED_LOOPBACK_HTTP_PROVISIONING_EXCEPTION）已按裁决合入
+  main（PR #244，amendment commit `dbbaeac`）：库接受且仅接受逐字节 pinned
+  origin `http://127.0.0.1:4001`，管理 POST 与 verification mint 一律
+  `redirect: 'error'`；child 侧零 adapter。AMENDMENT_8 C1（loopback-only
+  LISTEN）由本 entrypoint 机械执行：生产现绑 `*.4001` wildcard ⇒ C1
+  FAIL_CLOSED，onboarding 在 auth-service 生产包 rebind 127.0.0.1 前不可执行
+  （live 实证：非 root 即 AUTH_TRANSPORT_RESOLUTION_REQUIRED；wildcard 行
+  命中即拒）。
+- 库一行 wire-field 兼容（S2 one-time secret 的 `secret` 字段）维持原判定：
   机械接线修正，非语义变更。
 
 ## 6. 边界（禁止，owner 冻结继承）

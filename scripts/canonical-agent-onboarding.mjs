@@ -28,6 +28,40 @@
 // boundary (manifesting as the library's https-origin gate / transport failure):
 // the honest state is AUTH_TRANSPORT_RESOLUTION_REQUIRED (spec §5).
 //
+// C1 gate (AMENDMENT_8 A8.2): :4001 must LISTEN on loopback ONLY. A wildcard
+// (0.0.0.0/*) or external binding fails the onboarding closed until the
+// auth-service deployment rebinds (production-package step, not executed by
+// this CLI).
+function assertLoopbackBinding() {
+  const known = ['lsof', '/usr/sbin/lsof', '/usr/bin/lsof']
+  let out
+  let last
+  for (const lsof of known) {
+    try {
+      out = execFileSync(lsof, ['-nP', '-iTCP:4001', '-sTCP:LISTEN'], { encoding: 'utf8', timeout: 15000 })
+      last = undefined
+      break
+    } catch (error) {
+      last = error
+      if (error?.code !== 'ENOENT') break
+    }
+  }
+  if (out === undefined) {
+    die('AUTH_TRANSPORT_RESOLUTION_REQUIRED', { message: `loopback binding proof unavailable (lsof failed: ${String(last?.message ?? last).slice(0, 120)})` })
+  }
+  const listenLines = out.split('\n').filter((line) => /LISTEN/.test(line) && !/COMMAND/.test(line))
+  if (listenLines.length === 0) {
+    die('AUTH_TRANSPORT_RESOLUTION_REQUIRED', { message: 'no LISTEN socket on :4001 — auth-service unreachable' })
+  }
+  const wildcard = listenLines.filter((line) => /\*\.4001|\*:4001/.test(line))
+  if (wildcard.length > 0) {
+    die('AUTH_TRANSPORT_RESOLUTION_REQUIRED', {
+      message: 'auth-service listens on a non-loopback (wildcard/external) address — AMENDMENT_8 C1 FAIL_CLOSED until the deployment rebinds 127.0.0.1',
+      listeners: listenLines.map((line) => line.trim().slice(0, 80)),
+    })
+  }
+}
+
 // Usage:
 //   sudo node scripts/canonical-agent-onboarding.mjs onboard \
 //     --agent <agt_*> --name <display> [--description <d>] \
@@ -45,15 +79,18 @@ import { readFileSync, statSync } from 'node:fs'
 
 import {
   createAuthProvisioningClient,
+  ensureAgentCredential,
   readCredentialStoreDocument,
 } from '../packages/agent-credential-provisioning/src/index.js'
 import { classifyOnboardingState, runCanonicalOnboarding } from './canonical-onboarding-lib.mjs'
 
 // Provisioning transport (spec §5): the origin string satisfies the accepted
 // library's HTTPS contract; the deployed service has no TLS face yet, so calls
-// fail closed until the parent authority resolves the transport. There is no
-// adapter and no http fallback by design.
-const AUTH_ORIGIN = 'https://127.0.0.1:4001'
+// adapter and no http fallback by design. RESOLVED: parent AMENDMENT_8
+// (CONTROLLED_LOOPBACK_HTTP_PROVISIONING_EXCEPTION, PR #244) accepts exactly
+// this pinned loopback origin; this CLI additionally enforces the C1
+// mechanical gate (loopback-only LISTEN) before any onboarding mutation.
+const AUTH_ORIGIN = 'http://127.0.0.1:4001'
 const PROVISIONER_SECRET_FILE = '/Users/yanfenma/.openclaw/credentials/broker-provisioning-v2-secret'
 const BASELINE_EXECUTOR = '/usr/local/libexec/lw-pilot-executor'
 const BASELINE_REF = 'OWNER-LIFE-WORKBENCH-BASELINE-20260908-01' // standing entitlement ref (pre-existing, not per-agent)
@@ -177,6 +214,7 @@ async function main() {
     return
   }
 
+  assertLoopbackBinding()
   try {
     const result = await runCanonicalOnboarding(deps, input)
     emit({ ok: true, mode, proposed_approval_ref_label: 'OWNER-CANONICAL-ONBOARDING-20260909-01', production_operation_authorized: false, ...result })
