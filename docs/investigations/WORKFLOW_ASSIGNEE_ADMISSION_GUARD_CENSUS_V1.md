@@ -23,6 +23,119 @@ METHOD = mechanical source census (4 parallel read-only passes) + governing-spec
 
 ---
 
+## 0. R2 — MECHANICAL_REVISE (Owner census ruling 2026-09-11)
+
+CENSUS_CORE_DISCOVERY = ACCEPTED · CENSUS_FINAL_CLASSIFICATION = MECHANICAL_REVISE.
+Three r1 Gate-A claims are RETRACTED; root cause recorded; fresh repins frozen.
+
+Retracted (r1 §2.4/§3.3/§6/§7):
+
+```text
+GATE_A_AUTHORITY_GAP = YES        → RETRACTED
+GATE_A_IMPLEMENTATION_GAP = YES   → RETRACTED
+PUBLISH_UNIQUE_TOCTOU = YES       → RETRACTED
+"two narrow authority candidates" → RETRACTED (exactly one possible: TEST_OR_CANARY)
+```
+
+Root cause (mechanical): the Definition-side census pass executed on the STALE local
+svc main (88ff814) and its findings were carried forward without re-verification on
+the true authority base github/main. The github/main delta pass covered
+dispatch/activation/successor seams but was never re-pointed at the definition
+publish path. Current-main evidence (all re-verified 2026-09-11 on dd235dc):
+
+```text
+GATE_A_AUTHORITY = SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V2 / CTR-CIR-003
+GATE_A_SOURCE_IMPLEMENTATION = PRESENT
+GATE_A_PRODUCTION_ADOPTION = UNVERIFIED
+```
+
+Mechanical proof of PRESENT (dd235dc):
+- `src/application/definition/lifecycle/publish.rs:29-43,110-171` — `admission` is the
+  CTR-CIR-003 gate; `collect_definition_publish_identity_literals` (every FIXED_PRINCIPAL
+  id + every identity literal in context-schema defaults/enums/examples for
+  INSTANCE_INPUT_PRINCIPAL keys) → `admission.admit(...)` BEFORE the publishing
+  transaction → `admission.check_commit_budget()`; dormant mode =
+  `AdmissionGate::disabled()` preserves pre-admission behavior.
+- `src/store/postgres/definition_repository/lifecycle_transactions.rs:143-171` —
+  statement deadline bound to the remaining admission budget (the 5 s
+  admission-through-commit bound), budget re-checked before commit, no-op dormant;
+  then FOR UPDATE + DRAFT verify + re-read + digest recompute; a graph drift after
+  admission fails the digest consistency check, so no un-admitted literal can commit.
+- `tests/32_definition_publish_admission.rs` (+ `tests/31_admission_wiring.rs`): 
+  PUBLISH_ADMITS_EVERY_IDENTITY_LITERAL (directory sees exactly the two distinct
+  principals) · PUBLISH_REJECTED_FAILS_CLOSED_ZERO_DELTA (HTTP **422 admission_rejected**,
+  version stays DRAFT, receipt rolls back, same idempotency key retryable) ·
+  PUBLISH_INVALID_SCHEMA_LITERAL_FAILS_VALIDATION (422 graph_validation_failed
+  INSTANCE_INPUT_LITERAL_NOT_UUID, zero directory traffic — validation precedes
+  admission) · PUBLISH_DORMANT_WHEN_DISABLED. The r1 "opaque 404 / 500 mapping
+  anomaly" notes describe 88ff814, NOT current main.
+
+TOCTOU correction: remote directory observations open BEFORE the publishing
+transaction BY DESIGN — that is the existing CTR-CIR-003 conformance seam; the in-tx
+digest/precondition fence + commit-budget re-check close the window. Remote identity
+calls are NOT forced inside the locked DB transaction, and this Goal will not move them there.
+
+Fresh repins (Owner ruling §7):
+
+```text
+SVC_CURRENT_MAIN = dd235dc (re-fetched 2026-09-11; still tip; dd235dc confirmed)
+DHS_CURRENT_MAIN = b1fb7c0 (dsh origin/main tip; 4d36c45 = historical WAE merge base —
+  packages/workflow-execution, product-api workflow-admission.js, WAE V2 + EAPR V2 specs
+  are byte-identical 4d36c45→b1fb7c0, verified via empty git diff; cite b1fb7c0 going forward)
+EVIDENCE_COMMIT = 8dc489e — REMOTE_BRANCH_VISIBLE = YES
+  (github/goal/workflow-assignee-admission-guard-v1 pushed; remote tip 58c3305,
+  8dc489e reachable beneath it; the tip carries one WORKFLOW_DATA_HYGIENE_V1 audit
+  commit from a separate lane that had landed on the same local branch — left intact)
+```
+
+TEST_OR_CANARY exact absence — SEALED on current main: `git grep -i
+"work_class|workClass|execution_class|executionClass|business_class|is_test|isTest|is_canary"`
+over dd235dc src/+migrations/ = zero hits (combined with r1 Q8: WorkEligibility has
+exactly two variants with BLOCKED-state invention forbidden; activation_kind is
+principal-type-derived, not business/test-derived).
+
+Frozen terminal classification (Owner ruling §8):
+
+```text
+GATE_A_NEW_AUTHORITY_REQUIRED = NO
+GATE_A_NEW_IMPLEMENTATION_REQUIRED = NO
+GATE_A_PRODUCTION_ADOPTION_REQUIRED = YES
+GATE_B_NEW_AUTHORITY_REQUIRED = NO
+GATE_B_NEW_IMPLEMENTATION_REQUIRED = NO
+GATE_B_PRODUCTION_ADOPTION_REQUIRED = YES
+GATE_C_NEW_AUTHORITY_REQUIRED = NO
+TEST_OR_CANARY_NEW_SEMANTIC = YES only after final exact absence/concept census (absence now sealed)
+CROSS_DOMAIN_DETAIL_WIDENING = NO
+NEW_IDENTITY_AUTHORITY = NO
+NEW_RETRY_ENGINE = NO
+```
+
+Lane structure (SAME Goal, no sub-goals):
+
+```text
+LANE_IDENTITY_ADMISSION = EXISTING_AUTHORITY_ADOPTION
+  (A+B adoption proofs: deploy/current-binary verification → enable existing admission →
+   controlled negative/positive tests; required proof = invalid/stale publish → 422/zero
+   publish · invalid/stale create → zero instance/visit · invalid/stale transition target
+   → zero next visit · valid canonical workflow → unchanged success;
+   WORKFLOW_ADMISSION_ENABLED effective · directory dependencies reachable · canonical
+   SERVICE identity/grants correct · failure fail-closed · zero runtime fact on rejection;
+   does NOT wait for the work-class candidate)
+LANE_DISPATCH = EXISTING_WAE_ADOPTION (consume WAE V2 production readiness/adoption
+  evidence; no second dispatch gate, no second retry/recovery protocol)
+LANE_TEST_CLASSIFICATION = MINIMAL_DESIGN → narrow authority candidate
+  (see WORKFLOW_ASSIGNEE_ADMISSION_GUARD_TEST_CLASSIFICATION_DESIGN_V1)
+```
+
+Readiness signals published for WORKFLOW_DATA_HYGIENE_V1 (updated as lanes close):
+
+```text
+IDENTITY_ADMISSION_READY = NO   (source+authority present; production adoption unverified)
+TEST_CLASSIFICATION_READY  = NO (classification does not exist yet)
+```
+
+---
+
 ## 1. Authority map (what is ALREADY accepted — reuse first)
 
 | Authority | Repo / status | What it freezes that this Goal needs |
@@ -61,6 +174,12 @@ Legend: RES = canonical resolution call; TX = transaction boundary; RACE = expos
 - RES: **NONE at draft save** — `fixed_principal_id` never checked against `principals` here. TX: own repo tx (graph_write.rs:28-143, FOR UPDATE + DRAFT re-verify). RACE: owner/domain checks pre-tx only (admitted in-code comment draft_graph.rs:34-37); no assignee check to race. FAIL: GraphValidationFailed surfaces as **500 internal_consistency_error** on the governance path (governance mod.rs:122-126 → error.rs:404-406) — mapping anomaly, not a validation hole. RUN: impossible.
 
 ### 2.4 Definition publish/enable
+> R2 RETRACTION: this subsection describes **88ff814 (stale main)**, not the current
+> authority. On dd235dc the publish path DOES run the CTR-CIR-003 admission gate over
+> every identity literal before the tx, with an in-tx budget/digest fence and
+> `422 admission_rejected` fail-closed zero-delta semantics — see §0. Kept verbatim
+> below only as the stale-base audit trail.
+
 - Flow: handler definitions.rs:344-378 → publish.rs:25-125 → atomic_publish_inner (lifecycle_transactions.rs:148-301; FOR UPDATE, DRAFT re-verify, domain+owner+digest+expectedRevision all IN-tx, single UPDATE to PUBLISHED, commit).
 - Validation: full graph+schema re-validation (:66-84); **the ONLY assignee check is `validate_fixed_principals` (publish.rs:87 → validation.rs:62-96): FIXED_PRINCIPAL nodes only, local `principals` table existence+enabled, executed PRE-TX (outside the atomic publish tx)**. WORKFLOW_CREATOR / DOMAIN_OWNER / INSTANCE_INPUT_PRINCIPAL nodes get NO check at publish. **No principal_type='AGENT' filter anywhere in any definition assignee path** (grep principal_type|PrincipalType::Agent across src: only JWT/auth + provisioning) — any enabled HUMAN or SERVICE principal is accepted as a FIXED_PRINCIPAL assignee at publish. **No canonical resolution call** (svc's only outbound HTTP is JWKS + the dormant CIR admission client; publish does not use the latter).
 - RACE: **YES** — existence/enabled checked pre-tx can flip before the PUBLISHED commit. FAIL: FixedPrincipalInvalid → **404 definition_not_found** (governance mod.rs:109-115) — error-semantics anomaly. RUN: afterwards any PUBLISHED version is instantiable (definition_lookup.rs:74-78); DEPRECATED still allows transitions; REVOKED blocks new transitions only.
@@ -103,6 +222,12 @@ Local facts prove the gate belongs exactly where it already is: the successor vi
 WAE V2 semantics (resolution_blocked / ZERO Runs / no auto-retry / authorityRef-gated recovery) are implemented at dsh main 4d36c45 and are exactly the Goal's Gate C. Production apply is separately gated (WAE V2 §7: svc keyset build deployed first, poller prerequisites, PRODUCTION_MUTATION slot) and owned by the WAE deployment lane — this Goal must not duplicate that authority. Residual for THIS Goal: the production E2E rows of the terminal boundary ride that same adoption window.
 
 ### 3.3 Gate A (Definition publish admission) — REAL GAP, requires narrow authority
+
+> **R2: SUPERSEDED by §0 — Gate A authority (CTR-CIR-003) and source implementation
+> (publish.rs / lifecycle_transactions.rs / tests/31+32, all on dd235dc) are PRESENT;
+> only production adoption remains. The narrow-authority-candidate conclusion below is
+> RETRACTED and applies to nothing.**
+
 Q8 cross-check result: **no accepted spec freezes publish-time canonical identity admission for ordinary authoring publish.**
 - Today (§2.4): only FIXED_PRINCIPAL is checked, local-table only, pre-tx (TOCTOU), with no AGENT-type constraint and anomaly error mapping (404 for a bad assignee; 500 for graph validation).
 - CTR-CIR-003 freezes the admission PATTERN and applies it to corrected-source publish inside the reconciliation scope; WDA V4 pins svc as validation owner and forbids a principal-enumeration oracle; VISIT_ACTIVATION + CIR admission cover everything downstream of publish.
@@ -134,7 +259,9 @@ HR-safe today (no new authority needed to READ): workflow_global_instances / dom
 ## 6. Three-gate freeze (PHASE OUTPUT)
 
 ```text
-GATE A (Definition publish admission) = NARROW_AUTHORITY_CANDIDATE_REQUIRED
+GATE A (Definition publish admission) = R2: AUTHORITY+IMPLEMENTATION PRESENT (CTR-CIR-003
+  @ dd235dc, dormant-by-default) — only PRODUCTION ADOPTION required; see §0.
+  [r1 text below RETRACTED, kept for audit trail]
   seam = existing atomic_publish_inner publish transaction (dd235dc lifecycle_transactions.rs:148-301)
   shape = CTR-CIR-003 admission pattern, in-tx, every distinct Agent Principal,
           AGENT-typed owner check, fail ⇒ publish denied / zero delta
@@ -163,6 +290,12 @@ NO_NEW_AUTHORITY_PLANES = confirmed feasible: gates consume the accepted directo
 ```
 
 ## 7. Consequences for the lifecycle
+
+> R2: superseded by §0 — one lane pair is pure adoption (identity admission: A+B),
+> one lane is WAE adoption reuse (dispatch), and exactly one possible new semantic
+> (TEST_OR_CANARY) proceeds MINIMAL_DESIGN → candidate only if absence remains proven
+> (absence now sealed on current main). The r1 "two narrow authority candidates" line
+> below is RETRACTED.
 
 ```text
 AUTHORITY_AND_WRITE_PATH_CENSUS = COMPLETE (this document)
