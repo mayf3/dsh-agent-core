@@ -1414,7 +1414,8 @@ ordinary owner Agent
   即：Owner/operator 紧急停止能力必须保留。
 - 除 disable 外，critical job 对其 owner Agent 的其余 self 操作（create/list/runs/
   update/enable）语义不变；remove 对 critical job 同受本 guard 约束（disable 的
-  变体绕过 = remove-then-recreate 也在禁止之列，见 A4/R4）。
+  变体绕过 = remove-then-recreate 同被禁止）；guard 与 A3(b) 的 fail-closed
+  措辞对 disable/remove 统一适用，remove 覆盖由 A4 测试面（T2a/T3a）断言。
 - 不改变 occurrence、retry、run、watchdog、alert 的任何语义；不回流、不重开
   PR #222 / #242 / #248。
 
@@ -1443,10 +1444,10 @@ critical desired-state inventory：
   manifest（流程要求，非机械缺陷）；未经 operator 登记的新 critical job 在登记前
   不受本 guard 保护（诚实边界，watchdog 的 §5.4 检查同此边界）；
   (b) **unreadable/invalid ⇒ FAIL_CLOSED**：mutation 时清单不可读/不可解析/版本
-  不符 ⇒ 该次 self-service disable **拒绝**（stable denial reason
+  不符 ⇒ 该次 self-service disable/remove **拒绝**（stable denial reason
   `critical_inventory_unavailable`），因为不可验证的 critical 分类不得放行任何
-  self-service disable；operator CLI 路径不受影响（紧急停止保留）。此为 A3 的
-  定义性裁定，交由 independent semantic review 裁决。
+  self-service disable/remove；operator CLI 路径不受影响（紧急停止保留）。此为
+  A3 的定义性裁定，交由 independent semantic review 裁决。
 
 ### A4. Required failure injections（acceptance 后实现的最低测试面，源自 Owner 冻结清单）
 
@@ -1454,13 +1455,15 @@ critical desired-state inventory：
 |---|------|------|
 | T1 | self-owned **non-critical** job disable | 行为与现行 accepted V2 完全一致（不变） |
 | T2 | self-owned **critical** job disable | denied + **zero store mutation** |
+| T2a | self-owned **critical** job remove（bypass 变体） | denied + **zero store mutation**；remove-then-recreate 路径同被阻断 |
 | T3 | replay 被拒的 disable | 仍 denied + zero mutation（幂等拒绝） |
+| T3a | replay 被拒的 critical remove | 仍 denied + zero mutation（幂等拒绝） |
 | T4 | 经替代 job 标识（id 前缀/别名/大小写等）规避 | 无法绕过——identity 仅认 persisted logicalKey 精确匹配 |
 | T5 | foreign Agent disable（任意 job） | 既有 ownership 规则拒绝不变 |
 | T6 | operator CLI disable critical job | **允许**（紧急停止保留） |
 | T7 | `scheduler.manage:any`（exact admin proof）disable critical job | **允许**（既有语义保持） |
 | T8 | missing/ambiguous critical classification（清单缺失/损坏/版本不符） | 按 A3 FAIL_CLOSED |
-| T9 | 被拒 mutation 落 durable attribution/evidence（who/which job/reason），零 payload/credential 泄露 | 既有 denial-audit 纪律同型 |
+| T9 | 被拒 mutation 落 durable attribution/evidence（who/which job/reason），零 payload/credential 泄露 | 经既有 sanitized audit seam 承载（拒绝归因 ≠ 违反 job/definition 状态的 ZERO store mutation，同 CTR-AUDIT-001 的「拒绝审计」先例）；具体通道形态在实现 acceptance 时冻结 |
 | T10 | enable/list/runs 全量回归 | 零回归 |
 
 ### A5. Acceptance criteria（independent semantic review 必答）
