@@ -30,6 +30,19 @@ external_authorities:
 supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
 superseded_by: null
+amendments:
+  - AMENDMENT_1 (2026-09-10, status: proposed, semantic delta ADDITIVE-AUTHORIZATION-CONSTRAINT):
+    CRITICAL_JOB_SELF_DISABLE_GUARD — a critical Scheduler job (per the frozen desired-state
+    critical inventory, matched by stable logicalKey) MUST NOT be disable-able by its ordinary
+    owner Agent through the model-facing self-service tool face; such disable attempts
+    FAIL_CLOSED with ZERO store mutation. CRITICAL != IMMUTABLE: operator CLI and
+    scheduler.manage:any paths keep full disable authority (Owner/operator emergency stop
+    preserved). See the AMENDMENT_1 section at the end of this file for the complete frozen
+    semantics, the critical-identity contract (read-only consumption of
+    scheduler-desired-state.json; NO name/substring/prompt classification; NO new authoritative
+    jobs.json fields), the separation from the reliability spec's readiness child-mask, and the
+    required failure injections T1–T10. Review record: pending independent semantic review;
+    IMPLEMENTATION_BEFORE_ACCEPTANCE = NO.
 owners:
   - mayf3
   - repository-maintainers
@@ -1363,3 +1376,117 @@ INDEPENDENT_REVIEW = PASS
 READY_TO_MARK_ACCEPTED = YES
 ACCEPTED_REVIEWED_HEAD = efdd754f0db0b9e7041757ca83246d5695cf83f4
 ```
+
+---
+
+## AMENDMENT_1 — CRITICAL_JOB_SELF_DISABLE_GUARD (2026-09-10, status: proposed)
+
+> **状态**：`proposed`（DRAFT_MINIMAL_CRITICAL_JOB_SELF_DISABLE_AUTHORITY = YES，Owner ruling
+> 2026-09-10；IMPLEMENTATION_BEFORE_ACCEPTANCE = NO；PRODUCTION_APPLY = NO）。
+> 本 Amendment 只回答一个语义问题并冻结其答案；acceptance 是任何实现 PR 的前置条件。
+
+### A1. The one semantic question
+
+> 一个被 Owner 明确纳入 critical desired-state inventory 的 Scheduler job，拥有该 job 的
+> 普通 Agent 是否可以通过 model-facing self-service Scheduler tool 把它 disable？
+
+**Owner 产品答案（冻结）**：**NO**。
+
+### A2. Frozen minimal semantics
+
+```text
+ordinary owner Agent
++ scheduler.manage:self
++ critical job（per critical inventory, exact identity）
++ action=disable
+→ FAIL_CLOSED（stable denial, no content disclosure）
+→ ZERO STORE MUTATION
+```
+
+- 本 guard 是 **authorization 约束**，不是 readiness/mask 语义：它与
+  SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 AMENDMENT_1（readiness child-mask——错误/未就绪
+  runtime 不得使 mutation capability 显得可用）正交且保持分离；两者最终可在同一次
+  Scheduler production closure 部署，但 authority 与测试分别可审计。
+- **CRITICAL != IMMUTABLE**：以下路径的 disable 权限保持完全不变——
+  1. operator CLI（canonical `agentcore-cron disable`，Owner/生产控制面）；
+  2. 持 exact `(resource='scheduler', scope='scheduler.admin')` 的
+     `scheduler.manage:any` 外部证明路径（CTR-AUTH-002 矩阵既有行）。
+  即：Owner/operator 紧急停止能力必须保留。
+- 除 disable 外，critical job 对其 owner Agent 的其余 self 操作（create/list/runs/
+  update/enable）语义不变；remove 对 critical job 同受本 guard 约束（disable 的
+  变体绕过 = remove-then-recreate 也在禁止之列，见 A4/R4）。
+- 不改变 occurrence、retry、run、watchdog、alert 的任何语义；不回流、不重开
+  PR #222 / #242 / #248。
+
+### A3. Critical identity contract（F：禁止按 name 猜）
+
+判定一个 job 是否 critical，**唯一授权源** = 现有 reliability authority 已冻结的
+critical desired-state inventory：
+
+- 文件：`/usr/local/libexec/agent-core/config/scheduler-desired-state.json`
+  （`version: 1`，由 SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.4 冻结的
+  as-found 基线；2026-09-10 机械 census：`0644 root:wheel` world-readable、
+  `_frozenAt: 2026-09-08T12:49:58.745Z`、恰 2 条 critical jobs，均以稳定
+  `logicalKey` 键定——`agt_daily-thought-agent:daily-raw-distilled-summary-check`
+  与 `agt_hr-agent:hr-workflow-auto-dispatch`）。
+- **匹配规则**：目标 job 的 persisted `logicalKey`（store 内 §5.1 唯一标识）与
+  inventory 中任一 `logicalKey` **精确相等** ⇒ critical。**禁止** job.name、
+  display name、substring、agent prompt 或任何启发式分类。
+- **absent ⇒ not critical**：不在 inventory 中的 job，其 self-service disable
+  行为与现行 accepted V2 完全一致（T1）。
+- **read-only**：mutation-time 消费只读该文件，零写入、零缓存权威化；
+  **NO new authoritative fields in jobs.json**——critical 分类不落 store。
+- **机械 census 结论**：该 inventory **适合作 mutation-time authorization source**
+  （stable logicalKey 精确身份 / world-readable 于 runtime 用户 / schema 冻结 /
+  与 watchdog desired-state 检查同源——单一只读真相源）。已识别的 gap 如实记录：
+  (a) inventory 为 **frozen as-found 基线**——新增 critical job 需 operator 更新该
+  manifest（流程要求，非机械缺陷）；未经 operator 登记的新 critical job 在登记前
+  不受本 guard 保护（诚实边界，watchdog 的 §5.4 检查同此边界）；
+  (b) **unreadable/invalid ⇒ FAIL_CLOSED**：mutation 时清单不可读/不可解析/版本
+  不符 ⇒ 该次 self-service disable **拒绝**（stable denial reason
+  `critical_inventory_unavailable`），因为不可验证的 critical 分类不得放行任何
+  self-service disable；operator CLI 路径不受影响（紧急停止保留）。此为 A3 的
+  定义性裁定，交由 independent semantic review 裁决。
+
+### A4. Required failure injections（acceptance 后实现的最低测试面，源自 Owner 冻结清单）
+
+| # | 注入 | 断言 |
+|---|------|------|
+| T1 | self-owned **non-critical** job disable | 行为与现行 accepted V2 完全一致（不变） |
+| T2 | self-owned **critical** job disable | denied + **zero store mutation** |
+| T3 | replay 被拒的 disable | 仍 denied + zero mutation（幂等拒绝） |
+| T4 | 经替代 job 标识（id 前缀/别名/大小写等）规避 | 无法绕过——identity 仅认 persisted logicalKey 精确匹配 |
+| T5 | foreign Agent disable（任意 job） | 既有 ownership 规则拒绝不变 |
+| T6 | operator CLI disable critical job | **允许**（紧急停止保留） |
+| T7 | `scheduler.manage:any`（exact admin proof）disable critical job | **允许**（既有语义保持） |
+| T8 | missing/ambiguous critical classification（清单缺失/损坏/版本不符） | 按 A3 FAIL_CLOSED |
+| T9 | 被拒 mutation 落 durable attribution/evidence（who/which job/reason），零 payload/credential 泄露 | 既有 denial-audit 纪律同型 |
+| T10 | enable/list/runs 全量回归 | 零回归 |
+
+### A5. Acceptance criteria（independent semantic review 必答）
+
+```text
+ONE_SEMANTIC_QUESTION_ANSWERED     = YES？（A1 冻结答案 = NO）
+CRITICAL_NEVER_IMMUTABLE           = YES？（A2 operator/manage:any 两路保留）
+IDENTITY_BY_EXACT_LOGICAL_KEY_ONLY = YES？（A3 零 name 猜测）
+INVENTORY_READ_ONLY_NO_STORE_FIELD = YES？（零 jobs.json 新权威字段）
+FAIL_CLOSED_ON_UNVERIFIABLE        = YES？（A3(b) 定义裁定成立）
+CHILD_MASK_SEPARATION_PRESERVED    = YES？（A2 与 readiness mask 正交分治）
+T1-T10_COVER_MINIMAL_TEST_SURFACE  = YES？
+NO_OTHER_SEMANTICS_TOUCHED         = YES？（occurrence/retry/run/watchdog/alert 零触碰）
+STANDING_BEHAVIOR_UNCHANGED_PRE_ACCEPTANCE = YES？
+```
+
+任一 = NO/UNPROVEN ⇒ AMENDMENT = REVISE。
+
+### A6. 与既有 artifact 的关系
+
+- 本文件（AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2，accepted）：唯一 authority home
+  ——被改变的是 **self-service mutation authorization**，故以本 spec 的 AMENDMENT
+  落位，不新造平行 Scheduler authority。
+- SCHEDULER_CONTROL_PLANE_RELIABILITY_V1（accepted）：critical inventory 的冻结出处
+  （§5.4 desired-state）与 §5.3 readiness child-mask（其 AMENDMENT_1，正交保留）。
+- 背景：2026-09-09/10 agt_hr-agent 三次经工具面 disable 自有 critical 派发器
+  （b115cb96）的复发序列——本 Amendment 是 Owner 认定的 durable 产品缺口闭包；
+  现场处置（forensics/reconcile/enable）由既有 authority 与 operator 流程承载，
+  不在本 Amendment 范围内。
