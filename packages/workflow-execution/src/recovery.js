@@ -139,13 +139,18 @@ export function createRecoveryOperation({
           || correlation.sessionId !== undefined || correlation.reconciliationHandle !== undefined) {
           return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass: 'attributable_delivery_evidence', nodeVisitId, attemptId: attempt.attemptId }
         }
-        // E5 verification pass — a resolution READ first (zero appends, zero
-        // side effects; the read is NOT the execution re-resolution). While
-        // identity is unrepaired this leaves the attempt EXACTLY as it was:
-        // STILL_BLOCKED with ZERO ledger facts — never an unauthorized blocked
-        // fact, never an authorization before a refusal.
+        // E5 verification pass — a resolution READ first (the read is NOT the
+        // execution re-resolution). A verification failure (identity still
+        // unrepaired) appends the fresh resolution_blocked fact the accepted
+        // CTR-WAE-012 mandates for EVERY resolution-phase failure ("appended
+        // when the resolution phase fails"), with NO recovery_authorized
+        // precedent (authorization never precedes this path, and
+        // resolution_blocked is not a refusal — the 012 refusal-path
+        // constraint stays intact). The attempt stays blocked with ZERO Runs:
+        // the designed interim behavior while identity is unrepaired.
         const verified = await resolvePrincipalToAgent(attempt.ownerPrincipalId)
         if (!verified.ok) {
+          await record.resolutionBlocked(verified.code)
           return { outcome: `STILL_BLOCKED:${verified.code}`, nodeVisitId, attemptId: attempt.attemptId }
         }
         // E5 — world verification IN THE RESOLVED AGENT'S CONTEXT (the only
