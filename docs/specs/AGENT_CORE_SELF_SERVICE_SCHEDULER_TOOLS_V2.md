@@ -31,7 +31,7 @@ supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
 superseded_by: null
 amendments:
-  - AMENDMENT_1 (2026-09-10, status: proposed, semantic delta ADDITIVE-AUTHORIZATION-CONSTRAINT):
+  - AMENDMENT_1 (2026-09-10, status: accepted, semantic delta ADDITIVE-AUTHORIZATION-CONSTRAINT):
     CRITICAL_JOB_SELF_DISABLE_GUARD — a critical Scheduler job (per the frozen desired-state
     critical inventory, matched by stable logicalKey) MUST NOT be disable-able by its ordinary
     owner Agent through the model-facing self-service tool face; such disable attempts
@@ -44,6 +44,21 @@ amendments:
     required failure injections T1–T10. Review record: independent semantic review
     **PASS / BLOCKERS=NONE** (round 1 REVISE→fixed; reviewed head
     caa2328470803b2960990328da2d01995d9f2370); IMPLEMENTATION_BEFORE_ACCEPTANCE = NO.
+    ACCEPTANCE (Owner exact-head, 2026-09-10): accepted_by = Owner (mayf3);
+    accepted_exact_head = ba4c0a8c340f1fe098c239b64bee132061d5f755;
+    SEMANTIC_SHIP_BLOCKERS = 0; targeted_exact_head_recheck = PASS (BLOCKERS=[]);
+    frozen: ordinary owner Agent + scheduler.manage:self + critical target (exact persisted
+    logicalKey match against scheduler-desired-state.json) + disable OR remove → FAIL_CLOSED
+    / ZERO STORE MUTATION; inventory absent ⇒ non-critical unchanged; inventory
+    unreadable/invalid/unsupported version ⇒ self-service disable/remove FAIL_CLOSED
+    (critical_inventory_unavailable, zero store mutation); CRITICAL != IMMUTABLE (operator CLI
+    and authorized scheduler.manage:any/scheduler.admin paths untouched); separation frozen:
+    CRITICAL_SELF_DISABLE_GUARD != READINESS_CHILD_MASK != WATCHDOG_AUTO_REPAIR — no watchdog
+    auto-enable/repair authority is created by this Amendment; provenance discipline: the
+    2026-09-10 recurrence stays UNKNOWN_PENDING_FORENSICS in product authority, a confirmed
+    match (DISABLE_OPERATOR_AGENT_ID=agt_hr-agent AND DISABLE_SOURCE=self_service_mutation)
+    is recorded ONLY in incident evidence as CURRENT_RECURRENCE_MATCHES_STRUCTURAL_GAP=YES.
+    Implementation = separate follow-up PR (authorized post-merge), gated by T1–T10 + T2a/T3a.
 owners:
   - mayf3
   - repository-maintainers
@@ -1380,11 +1395,12 @@ ACCEPTED_REVIEWED_HEAD = efdd754f0db0b9e7041757ca83246d5695cf83f4
 
 ---
 
-## AMENDMENT_1 — CRITICAL_JOB_SELF_DISABLE_GUARD (2026-09-10, status: proposed)
+## AMENDMENT_1 — CRITICAL_JOB_SELF_DISABLE_GUARD (2026-09-10, status: accepted)
 
-> **状态**：`proposed`（DRAFT_MINIMAL_CRITICAL_JOB_SELF_DISABLE_AUTHORITY = YES，Owner ruling
-> 2026-09-10；IMPLEMENTATION_BEFORE_ACCEPTANCE = NO；PRODUCTION_APPLY = NO）。
-> 本 Amendment 只回答一个语义问题并冻结其答案；acceptance 是任何实现 PR 的前置条件。
+> **状态**：`accepted`（2026-09-10，Owner EXACT-HEAD ACCEPTANCE：accepted_exact_head =
+> ba4c0a8c340f1fe098c239b64bee132061d5f755；SEMANTIC_SHIP_BLOCKERS = 0；semantic review PASS
+> + targeted exact-head recheck PASS）。本 Amendment 只回答一个语义问题并冻结其答案；
+> 实现为 merge 后的独立授权 PR（T1–T10 + T2a/T3a 门控）；PRODUCTION_APPLY = NO。
 
 ### A1. The one semantic question
 
