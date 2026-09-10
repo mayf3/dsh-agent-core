@@ -177,6 +177,11 @@ export function createIngressDelivery({
    * the object is frozen (detach) before it travels, malformed metadata is
    * rejected fail-loud, and unknown control fields never forward. Callers
    * that omit the sidecar keep the historical `source:{kind:'user'}`.
+   *
+   * WORKFLOW_AGENT_EXECUTION_V1 adds exactly ONE second trusted shape — the
+   * runtime-owned workflow execution provenance produced by the workflow-
+   * execution engine (workflowInstanceId/nodeVisitId/attemptId are UUIDs /
+   * ledger-minted ids, never caller claims). Any other kind stays rejected.
    */
   function validateMessageOrigin(controlOpts) {
     if (controlOpts === undefined || controlOpts === null) return undefined
@@ -193,13 +198,34 @@ export function createIngressDelivery({
     if (origin === null || typeof origin !== 'object' || Array.isArray(origin)) {
       throw new TypeError('agent-router: messageOrigin must be an object')
     }
+    if (origin.kind === 'workflow_execution') {
+      const keys = Object.keys(origin)
+      if (keys.length !== 4
+        || !keys.includes('workflowInstanceId') || !keys.includes('nodeVisitId') || !keys.includes('attemptId')) {
+        throw new TypeError('agent-router: workflow_execution messageOrigin must be exactly { kind, workflowInstanceId, nodeVisitId, attemptId }')
+      }
+      for (const field of ['workflowInstanceId', 'nodeVisitId']) {
+        if (typeof origin[field] !== 'string' || !/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(origin[field])) {
+          throw new TypeError(`agent-router: messageOrigin.${field} must be a UUID string`)
+        }
+      }
+      if (typeof origin.attemptId !== 'string' || !/^wfeat-[0-9a-f]{24}$/.test(origin.attemptId)) {
+        throw new TypeError('agent-router: messageOrigin.attemptId must be a wfeat-* ledger attempt id')
+      }
+      return Object.freeze({
+        kind: 'workflow_execution',
+        workflowInstanceId: origin.workflowInstanceId,
+        nodeVisitId: origin.nodeVisitId,
+        attemptId: origin.attemptId,
+      })
+    }
     const originKeys = Object.keys(origin)
     if (originKeys.length !== 3
       || !originKeys.includes('kind') || !originKeys.includes('sourceAgentId') || !originKeys.includes('correlation')) {
       throw new TypeError('agent-router: messageOrigin must be exactly { kind, sourceAgentId, correlation }')
     }
     if (origin.kind !== 'inter_agent') {
-      throw new TypeError('agent-router: messageOrigin.kind must be "inter_agent"')
+      throw new TypeError('agent-router: messageOrigin.kind must be "inter_agent" or "workflow_execution"')
     }
     if (typeof origin.sourceAgentId !== 'string' || !/^agt_[A-Za-z0-9_-]+$/.test(origin.sourceAgentId)) {
       throw new TypeError('agent-router: messageOrigin.sourceAgentId must be an exact agt_* id')
@@ -276,15 +302,16 @@ export function createIngressDelivery({
       throw new TypeError('agent-router: deliver agentId must be a non-empty string')
     }
     let agent
-    if (messageOrigin?.kind === 'inter_agent') {
-      // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 CTR-EPAR-005: A2A
-      // message-origin admission resolves the target by EXACT Agent
-      // Definition id only — the display-name fallback of resolveAgentRef
-      // must never pick a different Agent whose name matches a previously
-      // valid id (TOCTOU wrong-target family). Missing -> AGENT_NOT_FOUND,
-      // disabled -> AGENT_DISABLED, both before any prompt byte (the codes
-      // are the existing §5 delivery taxonomy the ASM provider maps). One
-      // synchronous exact lookup: no await between read and enabled check.
+    if (messageOrigin?.kind === 'inter_agent' || messageOrigin?.kind === 'workflow_execution') {
+      // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 CTR-EPAR-005: A2A and
+      // WORKFLOW_AGENT_EXECUTION_V1 message-origin admission resolve the
+      // target by EXACT Agent Definition id only — the display-name fallback
+      // of resolveAgentRef must never pick a different Agent whose name
+      // matches a previously valid id (TOCTOU wrong-target family). Missing
+      // -> AGENT_NOT_FOUND, disabled -> AGENT_DISABLED, both before any
+      // prompt byte (the codes are the existing §5 delivery taxonomy the ASM
+      // provider maps). One synchronous exact lookup: no await between read
+      // and enabled check.
       try {
         agent = resolveAgentById(agentRef)
       } catch {
