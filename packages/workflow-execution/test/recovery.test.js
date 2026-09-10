@@ -349,19 +349,17 @@ test('Identity NOT yet repaired: recovery re-blocks with zero Runs (designed int
   try {
     await seedBlocked(fx.engine)
     // identity stays UNREPAIRED here — that is the case under test
-    const blockedBefore = fx.ledger.get(VISIT).blockedCount ?? 0
+    const sizeBefore = fx.eventsBytes()
     const result = await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: AUTHORITY })
     assert.equal(result.outcome, 'STILL_BLOCKED:agent_mapping_missing')
     assert.equal(fx.calls.delivers.length, 0, 'zero Runs while identity is unrepaired')
     assert.equal(fx.ledger.get(VISIT).state, 'ACTIVE')
     assert.equal(fx.ledger.get(VISIT).phase, 'resolution_blocked')
-    assert.equal(fx.ledger.get(VISIT).blockedCount, blockedBefore + 1, 'a fresh blocked fact is appended')
-    // Ordering contract: the authorization is recorded BEFORE the re-resolution
-    // fact it authorizes (recovery_authorized precedes the fresh blocked event).
-    const raw = readFileSync(fx.eventsFile(), 'utf8')
-    assert.ok(raw.lastIndexOf('"kind":"recovery_authorized"') > -1
-      && raw.lastIndexOf('"kind":"recovery_authorized"') < raw.lastIndexOf('"kind":"resolution_blocked"'),
-      'authorization strictly precedes the re-resolution it authorized')
+    // CTR-WAE-012 ordering: the verification read appends NOTHING — no
+    // authorization may precede a refusal, and no resolution fact may be
+    // minted without its authorization. The attempt is left exactly as it
+    // was; only the caller-visible outcome is different.
+    assert.equal(fx.eventsBytes(), sizeBefore, 'zero ledger facts on the verification-failure path')
   } finally {
     fx.cleanup()
   }
@@ -404,6 +402,26 @@ test('E5: visit-current but assignee drifted on the wire → refused (exact comp
     assert.equal(fx.calls.delivers.length, 0)
     assert.equal(fx.ledger.get(VISIT).state, 'NEEDS_REVIEW')
   } finally { fx.cleanup() }
+})
+
+test('Ledger discipline: the mutation record seam is scope-bound — post-callback append fails loud', async () => {
+  const fx = makeFixture()
+  try {
+    await fx.ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    await fx.ledger.recordResolutionBlocked({ nodeVisitId: VISIT, code: 'agent_mapping_missing' })
+    let escaped
+    await fx.ledger.mutateWithRecord(VISIT, async (record) => {
+      escaped = record
+      return 'done'
+    })
+    assert.throws(
+      () => escaped.recoveryAuthorized(AUTHORITY),
+      /recovery mutation seam is closed/,
+      'a captured record closure must never append after the lock boundary',
+    )
+  } finally {
+    fx.cleanup()
+  }
 })
 
 test('Surface discipline: recovery is engine/runtime-component surface only — no broker capability exposes it', async () => {
