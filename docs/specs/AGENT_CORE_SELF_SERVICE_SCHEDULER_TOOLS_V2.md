@@ -31,6 +31,30 @@ supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
 superseded_by: null
 amendments:
+  - AMENDMENT_3 (2026-09-10, status: proposed, semantic delta NONE, code-structure
+    guardrails delta NONE — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION): the
+    AMENDMENT_2 exact file closure is mechanically infeasible (frozen member
+    extraction floors self-service.js at 639 > 500; the two test files total 990
+    lines against 2×500 with harness coupling; the authorized scheduler
+    directory registry entries are forbidden by CODE_STRUCTURE_GUARDRAILS_V1
+    §6/§7 — post-baseline files/directories cannot be grandfathered, and the
+    binding baseline record is LEGACY_DIRECTORY_OVER_20 = scripts/ only).
+    AMENDMENT_3 replaces the infeasible closure with the minimum cohesive
+    PHYSICAL split proven by a mechanical import/call-site census:
+    packages/scheduler/src/self-service/ subdirectory (index/access/schema/
+    projections/critical-job-guard, all <= 500, root width -1), history family
+    (5 files) grouped into packages/scheduler/src/history/ (root width -5+1 =>
+    src root 18 <= 20; NO registry exceptions), test/packages/scheduler/test/
+    self-service/ subdirectory (self-service.test.js split <= 500 +
+    critical-job-guard.test.js renamed-and-absorbing <= 500 + shared harness.js;
+    test root 20 <= 20; NO registry exceptions), and a <=60-line compatibility
+    barrel at src/self-service.js so compose.js (exactly 500) and
+    cross-agent.test.js (522, post-baseline, ungrandfatherable) remain
+    UNTOUCHED. ZERO registry changes; every touched file <= 500; no assertion
+    deletion; B1/B2 repaired behaviors frozen. See the AMENDMENT_3 section at
+    the end of this file (census tables, exact path set, line budgets,
+    STRUCTURE_GATE definition). Review record: pending independent semantic
+    review.
   - AMENDMENT_2 (2026-09-10, status: accepted, semantic delta NONE —
     AMENDMENT_1_IMPLEMENTATION_CONFORMANCE_AND_STRUCTURE_CLOSURE;
     ACCEPTANCE: Owner exact-head 2026-09-10, accepted_by = mayf3,
@@ -1717,3 +1741,214 @@ accepted（Owner exact-head 2026-09-10 @ 6b5a41f）→ IMPLEMENTATION_REFACTOR �
 ```
 
 acceptance 前 IMPLEMENTATION_REFACTOR = HOLD。
+
+---
+
+## AMENDMENT_3 — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION (2026-09-10, status: proposed)
+
+> **状态**：`proposed`（docs-only；PRODUCT_SEMANTIC_DELTA = NONE；
+> CODE_STRUCTURE_GUARDRAILS_V1 delta = NONE）。本 Amendment 取代 AMENDMENT_2 B2
+> 的 exact file closure（该 closure 被机械证明不可行，见 C1）并移除对被禁止的
+> scheduler registry 例外的依赖；其余 AMENDMENT_2 内容（B1 consumption 例外、
+> B3 forensics 分立、B4 冻结不变式）原样有效。
+
+### C0. 机械 census（byte/line 级，2026-09-10 实测 @ origin/main b1fb7c0）
+
+```text
+CURRENT_LINES:
+  packages/scheduler/src/self-service.js               = 755
+  packages/scheduler/test/self-service.test.js         = 620
+  packages/scheduler/test/critical-self-disable-guard.test.js = 370
+  packages/scheduler/src immediate children            = 21 （> 20，未登记且
+                                                          CODE_STRUCTURE_GUARDRAILS_V1
+                                                          §6/§7 禁止 post-baseline 登记）
+  packages/scheduler/test immediate children           = 21 （> 20，同上）
+
+REGISTRY 基线事实（.agents/structure-registry.json，baseline_commit d506f81）：
+  LEGACY_DIRECTORY_OVER_20 = scripts/ only；
+  self-service.js 在 baseline 不存在（0 lines）⇒ POST_BASELINE_FILE_GRANDFATHERED = NO；
+  scheduler/src、scheduler/test 在 baseline 均 <= 20 ⇒ POST_BASELINE_DIRECTORY_
+  GRANDFATHERED = NO。AMENDMENT_2 授权的 src=22/test=21 registry 条目违反
+  §6/§7，由本 Amendment 撤销（B5），最终实现不得依赖任何 scheduler registry 例外。
+
+IMPORT/CALL-SITE CENSUS（谁 import src/self-service.js）：
+  packages/production-runtime/src/compose.js        = 500（恰在上限，触碰即险）
+  packages/scheduler/test/cross-agent.test.js       = 522（post-baseline、
+                                                       未登记、不可 grandfather ⇒
+                                                       任何触碰即违规 ⇒ 必须零触碰）
+  packages/broker/test/scheduler-reliability.test.js = 459
+  packages/scheduler/test/self-service.test.js       = 620（本 Amendment 内拆分/迁移）
+  packages/scheduler/test/critical-job-guard.test.js = 370（本 Amendment 内更名/迁移）
+  ⇒ 兼容 shim（B2）使前三个 importer 零触碰。
+
+IMPORT/CALL-SITE CENSUS（history 家族，宽度收缩的承载面）：
+  src 内部 importer：occurrence.js(499)、history-projection.js(208)、
+    index.js(49)、history-storage.js(143)、history.js(451, 自身)
+  test importer：scheduler-history.test.js(134)、history-durability.test.js(107)、
+    history.test.js(484)
+  ⇒ 全部 <= 500；路径改写为纯机械（./history* → ./history/history* 及
+    ../src/history* → ../src/history/history*），不触碰任何 >500 文件。
+  occurrence 家族（15 importers）因改写面过大被否决；store/ 因 importer 面过
+  大被否决。history/ 为最小宽度解（src 根 -5 +1）。
+```
+
+### C1. AMENDMENT_2 closure 不可行的精确算术（MECHANICAL_LINE_ARITHMETIC 输入）
+
+```text
+self-service.js = 755；冻结成员清单移动量 = 147（critical-job-guard.js 实测）
+755 − 147 = 608 > 500（且 608 仍需扣除 access 自身必要 glue）
+进一步移动非冻结成员（wire-proof 24 + appendAudit 22 + expectedRevision 22 +
+  validationFailure 10 + mutationFailure 26 + definitionDigest 13 + err/nonEmpty/
+  trustedCaller 22 ≈ 139）→ ~470-500 临界，但扩成员 = 偏离 AMENDMENT_2 冻结清单
+  （Owner 已拒绝该路径的临场自扩）
+tests：620 + 370 = 990 vs 2×500 = 1000 ⇒ 名义余量 10 行，而 harness 耦合
+  （被迁移测试依赖 self-service rig/trusted）使任何整簇迁移都需要 glue ≥15 行
+  ⇒ 双 ≤500 不可同时成立（#256 实测：拆分后 self-service.test.js 仍 620，
+  critical-job-guard.test.js 370）
+```
+
+### C2. NEW_EXACT_AUTHORIZED_PATHS（取代 AMENDMENT_2 B2 的 exact file closure）
+
+OLD_AUTHORIZED_PATHS（被取代）：AMENDMENT_2 B2 表所列 4+1 路径（其中 registry
+条目按 B5 撤销；self-service.js/self-service.test.js 的 ≤500 目标按 C1 由本
+Amendment 的物理拆分实现）。
+
+RENAMES：
+```text
+packages/scheduler/test/critical-self-disable-guard.test.js
+  → packages/scheduler/test/self-service/critical-job-guard.test.js
+```
+
+NEW_FILES：
+```text
+packages/scheduler/src/self-service/index.js        （公共面 barrel，≤30）
+packages/scheduler/src/self-service/access.js       （factory+handlers+wire
+  proofs+mutation audit+ownership 组合，≤500）
+packages/scheduler/src/self-service/schema.js       （expectedRevision/schedule/
+  payload/delivery/mutation-failure，≤250）
+packages/scheduler/src/self-service/projections.js  （digest/public/occurrence/
+  normalized/committed 投影，≤150）
+packages/scheduler/src/history/                     （history.js / history-model.js /
+  history-projection.js / history-sink.js / history-storage.js 五文件整体迁入，
+  内容字节不变，仅相对 import 改写；每文件 ≤500 维持现状）
+packages/scheduler/test/self-service/harness.js     （共享 trusted/rig fixture，
+  ≤120）
+```
+
+REMOVED_PATHS：
+```text
+packages/scheduler/src/self-service.js               （内容拆入 self-service/
+  子目录；原路径保留 ≤60 行兼容 barrel——BARREL_MAX_LINES=60/REEXPORTS=20 合规）
+packages/scheduler/test/critical-self-disable-guard.test.js （= RENAMED_TO 上述）
+```
+
+FINAL_LINE_COUNT_BUDGET_PER_FILE（预算上限；实现实测不得超）：
+
+```text
+src/self-service/index.js                 ≤ 30
+src/self-service/access.js                ≤ 500
+src/self-service/schema.js                ≤ 250
+src/self-service/projections.js           ≤ 150
+src/self-service/critical-job-guard.js    ≤ 400（实测 147）
+src/self-service.js（compat barrel）      ≤ 60（BARREL 规则）
+src/history/*（5 文件，verbatim 迁移）     = 现状 451/202/208/143/31
+test/self-service/self-service.test.js    ≤ 500
+test/self-service/critical-job-guard.test.js ≤ 500
+test/self-service/harness.js              ≤ 120
+```
+
+FINAL_IMMEDIATE_CHILD_COUNT：
+```text
+src 根 = 21 − self-service.js − 5×history + self-service/ + history/ = 18 ≤ 20
+test 根 = 21 − self-service.test.js − critical-self-disable-guard.test.js
+          + self-service/ = 20 ≤ 20
+src/self-service/ 子目录 children = 6；test/self-service/ = 3（均 ≤20）
+```
+
+IMPORT_REWRITE_SURFACE（exact，全部为纯路径改写）：
+```text
+src：index.js、occurrence.js（./history* → ./history/history*）；
+  self-service 子目录内部互引（./schema.js 等）
+test：self-service.test.js 与 critical-job-guard.test.js（../src/self-service.js
+  → ../../src/self-service.js 兼容 barrel 或 ../index.js；harness 共享导入）；
+  scheduler-history.test.js、history-durability.test.js、history.test.js
+  （../src/history* → ../src/history/history*）
+UNTOUCHED（shim 保证零触碰）：compose.js、cross-agent.test.js、
+  scheduler-reliability.test.js
+```
+
+TEST_MOVE_MAP（迁入 test/self-service/critical-job-guard.test.js 的簇，断言
+一删不减，仅 harness 改绑）：
+```text
+'ownership is rechecked inside the locked control mutation (TOCTOU fails closed)'
+'locked update preserves concurrently changed omitted fields and audits the
+ exact preimage'
+'live post-rename fault returns known committed projection and attempts one
+ audit append'
+'pre-commit failure is known clean; uncertain commit failure is outcome-unknown
+ with zero retry'
+'audit append failure returns known committed result, logs sanitized
+ coordinates, and does not retry'
+'mutation audit is one sanitized append per committed mutation'
+（合计 ≈186 源行；self-service.test.js = 620 − 186 − 结构调整 ≈ 420-460 ≤500；
+  critical-job-guard.test.js = 370 + 186×适配 ≈ 480-500 ≤500）
+```
+
+### C3. 兼容 barrel（UNTOUCHED 承诺的机制）
+
+`src/self-service.js` 保留为 ≤60 行 barrel（`export { createSelfServiceSchedulerAccess }
+from './self-service/index.js'` 及现被外部引用的具名导出）。compose.js（恰 500）、
+cross-agent.test.js（522，post-baseline 不可 grandfather）、scheduler-reliability
+.test.js（459）因此**零触碰**。barrel 为 B2 表的 `src/self-service.js` 行
+（≤60，BARREL 规则合规），不承载任何逻辑。
+
+### C4. 行为冻结（与 AMENDMENT_2 B4 同一清单，逐字有效）
+
+固定默认 inventory 路径 / unavailable ⇒ fail-closed / locked-current 分类 /
+不恢复 unconfigured-inert 与锁外分类 / WATCHDOG_AUTO_REPAIR=NO / 零新 mutation
+面 / guard 内聚（critical-job-guard.js 仅承载 AMENDMENT_1 授权的 guard 责任，
+不吸收非 guard 成员）/ 断言一删不减（TEST_MOVE_MAP 仅改绑定）/ B1/B2 repaired
+behaviors 全保持 / PRODUCTION_APPLY = NO。
+
+### C5. STRUCTURE_GATE = PASS（机械定义，取代 AMENDMENT_2 B6）
+
+```text
+STRUCTURE_GATE = PASS ⇔
+  (a) 触碰/新增/更名路径全部 ≤ 各自 B2 预算（上表）；
+  (b) verify-code-structure 违规集合相对 BASE_MAIN 的 delta：scheduler src/test
+      两目录类清除（根宽 18/20 无需登记），无任何新增类；
+      存量 scripts/ 超限（53 > 注册 40）= BASE_MAIN 已登记债务、不在触碰面内，
+      out of scope（与 AMENDMENT_2 B6(c) 同一裁定）；
+  (c) registry：零 scheduler 相关条目、零无关归一化（\u00a7 类转义保持原样）。
+```
+
+### C6. Acceptance criteria（independent review 必答）
+
+```text
+PRODUCT_SEMANTIC_DELTA = NONE
+CODE_STRUCTURE_GUARDRAILS_V1_PRESERVED = YES
+POST_BASELINE_FILE_GRANDFATHERED = NO
+POST_BASELINE_DIRECTORY_GRANDFATHERED = NO
+ALL_NEW_FILES_LE_500 = YES
+ALL_TOUCHED_FILES_LE_500 = YES
+SRC_IMMEDIATE_CHILDREN_LE_20 = YES（实测 18）
+TEST_IMMEDIATE_CHILDREN_LE_20 = YES（实测 20）
+CRITICAL_GUARD_COHESION_PRESERVED = YES
+TEST_ASSERTION_COVERAGE_REDUCED = NO
+EXACT_PATH_CLOSURE = YES
+MECHANICAL_LINE_ARITHMETIC = CLOSED
+NEW_PRODUCT_AUTHORITY = NO
+SHIP_BLOCKERS = 0
+```
+
+任一 = NO/UNPROVEN ⇒ AMENDMENT = REVISE。
+
+### C7. Lifecycle
+
+```text
+proposed → independent semantic review（C6 十三项必答）→ Owner exact-head
+acceptance → mechanical acceptance transaction（仅 lifecycle/provenance）→ merge
+→ IMPLEMENTATION_CONTINUATION 解除：结构 repair 在五授权路径上执行
+（DRAFT while review running；B5 硬门 + 扩展 merge 纪律全检）。
+acceptance 前 IMPLEMENTATION_CONTINUATION = HOLD；PR #256 保持 DRAFT（WIP
+evidence，REVIEW/MERGE HOLD）。
