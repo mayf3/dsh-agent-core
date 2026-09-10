@@ -243,6 +243,10 @@ async function runW1(nowMs) {
     // from an alert at a glance (2026-09-09: the plain RECOVERED line was twice
     // misread as a new failure by the Owner).
     if (n.kind === 'recovered') return `- ✅ RECOVERED (已恢复，无需处理) [${n.fingerprint}] the earlier ${f.class} is no longer present`
+    // ALERT LIFECYCLE (SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1): a formal
+    // operator disposition closed this exact incident — exactly-once closure note;
+    // the failure fact stays durable in the evidence log.
+    if (n.kind === 'acknowledged') return `- ✅ ACKNOWLEDGED (已处置，无需处理) [${n.fingerprint}] the earlier ${f.class} has a formal operator disposition (basis=operator-reconcile) — this incident is closed; the failure fact remains in the evidence log`
     return `- ${n.kind === 'new' ? 'NEW' : n.kind === 'reminder' ? 'REMINDER (bounded)' : 'UPDATED'} ${f.class}${coordinates ? ` [${coordinates}]` : ''} ${body}`
   }
   const text = `Scheduler watchdog W1 ${transition.notifications.length} notification(s) @ ${new Date(nowMs).toISOString()}\n${transition.notifications.map(render).join('\n')}`
