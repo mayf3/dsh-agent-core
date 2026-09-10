@@ -1,0 +1,15 @@
+{
+  "name": "@agent-core/workflow-execution",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WORKFLOW_AGENT_EXECUTION_V1 — thin infrastructure that consumes due svc-workflow DISPATCH_INTENTs, creates exactly one execution attempt per NodeVisit, starts the canonical assignee's Agent Run with runtime-owned workflow provenance, and reconciles the attempt against the authoritative workflow state (SETTLED / ACTIVE / NEEDS_REVIEW). Not a workflow engine and not a task platform: business consistency stays with svc-workflow's state version / idempotency / transactions.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

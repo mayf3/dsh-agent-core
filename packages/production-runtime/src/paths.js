@@ -37,6 +37,9 @@
  *     scheduler/history/                # structured execution history
  *                                       #   (AGENT_CORE_SCHEDULER_RUN_HISTORY_V1:
  *                                       #   events.jsonl + monthly projections)
+ *     workflow-execution/               # Workflow execution ledger
+ *                                       #   (WORKFLOW_AGENT_EXECUTION_V1:
+ *                                       #   attempts.jsonl + attempts.lock)
  *     workspaces/<agentId>/             # per-agent workspace (persona /
  *                                       #   AGENTS.md authority)
  *     homes/<agentId>/                  # per-agent DSH_HOME (settings,
@@ -64,7 +67,8 @@ export function defaultProductionRoot() {
  * @param {string} [rootInput] - absolute root; defaults to $PRODUCTION_RUNTIME_ROOT
  *   then ~/.agent-core. Relative inputs are resolved against cwd.
  * @returns {{root:string, agentsConfig:string, agentModelOverrides:string, bindingsStore:string,
- *   jobsStore:string, runsLog:string, historyDir:string, workspacesRoot:string, homesRoot:string,
+ *   jobsStore:string, runsLog:string, historyDir:string, workflowExecutionDir:string,
+ *   workspacesRoot:string, homesRoot:string,
  *   controlDir:string, evidenceLog:string, logsDir:string,
  *   notificationDir:string, notificationAuthConfig:string,
  *   notificationIdempotencyStore:string, notificationEvidence:string}}
@@ -92,6 +96,7 @@ export function resolveProductionLayout(rootInput) {
     jobsStore: join(root, 'scheduler', 'jobs.json'),
     runsLog: join(root, 'scheduler', 'runs.jsonl'),
     historyDir: join(root, 'scheduler', 'history'),
+    workflowExecutionDir: join(root, 'workflow-execution'),
     workspacesRoot: join(root, 'workspaces'),
     homesRoot: join(root, 'homes'),
     controlDir: join(root, 'control'),
