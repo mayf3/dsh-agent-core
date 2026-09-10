@@ -157,7 +157,7 @@ Rollback per row: re-apply prior binding state through the same coordinator auth
 | M6-8 | canary-e2e-1784457448 (`ed99dcba-…`) | — (no binding row) | **no DOMAIN_OWNER at all** | grant canonical operational owner | dc702687 (`agt_hr-agent`) |
 | M6-9 | auth-v1-e2e-readonly (`e2000000-…`) | — (no binding row) | **no DOMAIN_OWNER at all** | grant canonical operational owner | dc702687 (`agt_hr-agent`) |
 
-M6-1 (the only retained binding-repair target): preimage = frozen `census-raw/binding-rows-for-plan.tsv`; postimage = exactly one enabled DOMAIN_OWNER for adc-v2-dogfood, canonical principal `4e5a4578`, old binding `enabled=false` preserved as history. REAL_BUSINESS_DOMAIN_BINDING_REPAIR_TARGETS = **M6-1 only**. Rollback = re-apply prior binding state via the same workflow.admin authority (binding rows are never deleted). `canary-wda-v1-1788582639` deliberately untouched (its 3 test instances are TERMINAL history → preserve; no unlock needed).
+M6-1 (the only retained binding-repair target): preimage = frozen `census-raw/binding-rows-for-plan.tsv`; postimage = exactly one enabled DOMAIN_OWNER for adc-v2-dogfood, canonical principal `4e5a4578`, old binding `enabled=false` preserved as history. REAL_BUSINESS_DOMAIN_BINDING_REPAIR_TARGETS = **M6-1 only**. Rollback = re-apply prior binding state via the same accepted coordinator authority (GLOBAL_WORKFLOW_COORDINATOR surface; binding rows are never deleted; NO legacy workflow.admin credential fallback). `canary-wda-v1-1788582639` deliberately untouched (its 3 test instances are TERMINAL history → preserve; no unlock needed).
 
 ## §M1 — Test instances (r3: split into M1A 8 ordinary cancels + M1B 4 dangling, Owner B1)
 
@@ -363,9 +363,9 @@ REAL_BUSINESS_DEFINITION_REPAIR_TARGETS      = the exact audited M2 set only
                                                mechanically enumerated from
                                                definition-classification.tsv)
 
-REAL_BUSINESS_DOMAIN_BINDING_REPAIR_TARGETS  = the exact audited M6 business rows only
-                                               (M6-1 adc-v2-dogfood canonical twin repair;
-                                                M6-2..4 canary-wda canonical twin repairs)
+REAL_BUSINESS_DOMAIN_BINDING_REPAIR_TARGETS  = **M6-1 only** (adc-v2-dogfood canonical
+                                               twin repair; M6-2..9 = REMOVE_FROM_PLAN /
+                                               NO_MUTATION_DISPOSITION — no repair targets)
 
 REAL_BUSINESS_GOVERNANCE_REPAIR_IS_NON_DESTRUCTIVE                                  = YES
 HISTORICAL_DEFINITION_VERSION_REWRITE                                               = NO
