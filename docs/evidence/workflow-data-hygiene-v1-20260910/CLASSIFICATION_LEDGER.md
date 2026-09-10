@@ -135,6 +135,25 @@ Root-cause finding retained: **adc-v2-dogfood enabled DOMAIN_OWNER binding = leg
 - `canary-wda-v1-1788582639` still has an enabled legacy DOMAIN_OWNER binding (`4602e257…`, bc970ced) — same defect class as M6-2..M6-4; untouched here because its 3 test instances are all TERMINAL history (no unlock needed). Sweep in a follow-up binding-repair pass.
 - 61 HUMAN_REQUIRED rows carry historical legacy creators (`stale_creator_on_open_node` provenance signal, mostly TERMINAL history); non-load-bearing — the 23 NON_TERMINAL human visits all resolve canonical (§7).
 
+## 10b. B-round authority amendments (Owner REVISE 2026-09-10; evidence: census-raw/workflow-admin-holders-census.tsv, svc-global-role-bindings.tsv, canonical-actor-workflow-grants.tsv)
+
+```text
+M6_STATE_OWNER = SVC_WORKFLOW; AUTH_SERVICE_ROLE = identity authority + JWT/token issuer only.
+M1_CURRENT_EXECUTABLE_PATH = DOMAIN_OWNER_ONLY
+M1_ACCEPTED_COORDINATOR_PATH = EXISTS_BUT_NOT_YET_LIVE (accepted coordinator authority contains
+  cross-domain cancel/archive; svc coordinator surface today = create_domain + set_domain_owner)
+LIVE_COORDINATOR_CONTROL_PLANE_READY = NO — enabled GLOBAL_WORKFLOW_COORDINATOR bindings exist
+  only for principals NOT FOUND in auth (0a9eccd0/5ccddbaa/cada669b/ce295072 = dead) + legacy
+  bc970ced; dc702687 (canonical agt_hr-agent) is NOT granted (WCC B1 Owner packet pending).
+workflow.admin holders = legacy (bc970ced, 097f197d) and test identities (svc-dogfood-user,
+  svc-okr-e2e) ONLY; canonical principals hold workflow.read + workflow.execute on svc-workflow.
+⇒ M6_AUTHORITY_GAP = YES (canonical-actor binding-repair authority); legacy/test credentials
+  must NOT be used for M6 (LEGACY_CREDENTIAL_USED_BY_CONVENIENCE = FORBIDDEN).
+⇒ M1B (4 NON_TERMINAL_DANGLING fixtures): cancel INAPPLICABLE (cancel_transaction.rs:308 NULL
+  current visit), archive INAPPLICABLE (terminal-only), no disposition surface exists;
+  AUTHORITY_GAP = DANGLING_TEST_FIXTURE_DISPOSITION_ONLY; M1B_WRITE_SET = HOLD.
+```
+
 ## 11. FROZEN INPUTS
 
 `census-raw/` (TSV/JSON + builder, sha256 in `MANIFEST.sha256`): live-instances-census (338), instance/definition/principal-classification, ledger-summary, effective-published-versions (26), binding-rows-for-plan (9 domains), domains-inventory (36), successor-lines (4), auth-resolution (62), auth-all-machine-principals (208), legacy-twin-map, domain-bindings-business, assistance-case-map, live-test-marked-instances, fixed/stale principal configs.

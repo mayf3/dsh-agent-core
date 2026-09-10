@@ -1,0 +1,8 @@
+mc_4Ud_9wGR1mwQM9W7s7foX8qp	bc970ced-710f-4479-9ff0-e295a1c59424	hr-agent	active	svc-workflow	{workflow.admin,workflow.execute,workflow.read}
+mc_FdRIJ5THMv1V4tGAC3PPqL83	bc970ced-710f-4479-9ff0-e295a1c59424	hr-agent	active	svc-workflow	{workflow.admin,workflow.execute,workflow.read}
+mc_pvv0AsW5MZbN37BZ7J0M-iFH	858b5fe2-7a81-43ba-9049-c33e7dc8349a	svc-dogfood-user	active	svc-workflow	{workflow.execute}
+mc_dPqkMw6q9yVtHXOFTi5sqmsQ	858b5fe2-7a81-43ba-9049-c33e7dc8349a	svc-dogfood-user	active	svc-workflow	{workflow.execute}
+mc_10nlNsdVSirFpEbLHq-xqoVb	858b5fe2-7a81-43ba-9049-c33e7dc8349a	svc-dogfood-user	active	svc-workflow	{workflow.execute}
+mc_7ARCMHoeHo--cmzxJorG0XIA	9c740a57-0b89-4a8b-8aea-ce2a65e92cbb	svc-okr-e2e	active	svc-okr	{okr.read,okr.write}
+mc_7ARCMHoeHo--cmzxJorG0XIA	9c740a57-0b89-4a8b-8aea-ce2a65e92cbb	svc-okr-e2e	active	svc-workflow	{workflow.admin,workflow.execute,workflow.read}
+mc_EaVH0rV78uXbZwANl6rKjzeI	097f197d-dc71-4107-8db2-f2bdc8eb7ec5	thesis-advisor-agent	active	svc-workflow	{workflow.read,workflow.execute}
