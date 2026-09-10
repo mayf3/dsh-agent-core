@@ -232,7 +232,7 @@ The 26 TERMINAL test instances: **NO MUTATION — history preserved** (Owner rul
 
 ```text
 M2_CANONICAL_DEFINITION_REPAIRS     = 23  (READY — 3 authoring commands each)
-M2_IDENTITY_BLOCKED                 = 2  (agent_self_task_v1 AND agent-role-upgrade-v1 —
+M2_IDENTITY_BLOCKED                 = 2  (audit-r4-adopted; both DEPENDENCY_GATED, ZERO commands)  (agent_self_task_v1 AND agent-role-upgrade-v1 —
     audit r4 finding adopted: the latter's effective PUBLISHED graph also carries
     unresolved fixed-principal b6b033c4 nodes at ceo_approve/ceo_verify with no mechanical
     twin; both subjects are DEPENDENCY_GATED with ZERO commands, HOLD before command 1,
@@ -391,8 +391,7 @@ B5  M6 minimality       = M6-1 RETAINED (business-domain canonical CTO repair);
                           (cancel_transaction.rs:280-293); the outstanding dependency is the
                           GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap — the
                           takeover, not the grant, is what B5 removes)
-B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 98 rows = 73 READY mutation
-                          + 10 GATED mutation + 15 read-only/disposition records; every row
+B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 98 rows = 70 READY mutation + 10 GATED mutation + 15 read-only/disposition records; every row
                           carries mutation_class = READY | DEPENDENCY_GATED |
                           NO_MUTATION_DISPOSITION; builder updated mechanically)
 B7  audit r3            = PENDING — runs only after this r3 revision passes the Owner

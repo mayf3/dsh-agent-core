@@ -20,8 +20,9 @@
     "M1-10",
     "M1-11",
     "M1-12",
+    "M2::agent-role-upgrade-v1",
     "M2::agent_self_task_v1"
   ],
-  "FINAL_TOTAL_MUTATION_COMMANDS": "UNRESOLVED (5 subjects pending exact legal sequence: M1-9, M1-10, M1-11, M1-12, M2::agent_self_task_v1)",
+  "FINAL_TOTAL_MUTATION_COMMANDS": "UNRESOLVED (6 subjects pending exact legal sequence: M1-9, M1-10, M1-11, M1-12, M2::agent-role-upgrade-v1, M2::agent_self_task_v1)",
   "note": "read-only rows (M6_READBACK, reconcile plan) are verification steps, NOT production mutations; NO_MUTATION_DISPOSITION rows are disposition records with zero commands"
 }

@@ -185,8 +185,13 @@ for (const r of out) {
 }
 const subjectClasses = {}
 for (const cls of Object.values(subjectClass)) subjectClasses[cls] = (subjectClasses[cls] || 0) + 1
+const cmdCount = {}
+for (const r of out) if (!r.operation.startsWith('none (disposition record')) cmdCount[r.subject_id] = (cmdCount[r.subject_id] || 0) + 1
 const m1aIds = new Set(m1a.map(([sid]) => sid))
-const unresolvedSubjects = Object.keys(subjectClass).filter(sid => (/^M1-/.test(sid) && !m1aIds.has(sid)) || sid === 'M2::agent_self_task_v1')
+const unresolvedSubjects = Object.keys(subjectClass).filter(sid =>
+  cmdCount[sid] === undefined && (
+    (/^M1-/.test(sid) && !m1aIds.has(sid)) ||
+    subjectClass[sid] === 'DEPENDENCY_GATED'))
 const summary = {
   totalRows: out.length,
   mutationCommands: mutationCommands.length,
