@@ -31,6 +31,27 @@ supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
 superseded_by: null
 amendments:
+  - AMENDMENT_2 (2026-09-10, status: proposed, semantic delta NONE —
+    AMENDMENT_1_IMPLEMENTATION_CONFORMANCE_AND_STRUCTURE_CLOSURE): closes the
+    mechanical authority debt created by accepted AMENDMENT_1 against the
+    inherited body. (A) CTR-AUTH-001/002 "existence + job.agentId only"
+    consumption clauses gain exactly ONE enumerated narrow exception: ordinary
+    self disable/remove classification MAY additionally consume the job's
+    persisted logicalKey (AMENDMENT_1 guard) — no additional job fields, no
+    occurrence/history authority, no disclosure, no new Auth request. (B)
+    CTR-AUTH-003 exact implementation file list is extended to authorize the
+    guard-module split (critical-job-guard.js + critical-job-guard.test.js
+    NEW; self-service.js / self-service.test.js shrink to <= the 500-line
+    structure baseline) and the legacy-directory registrations in
+    .agents/structure-registry.json needed for verify-code-structure. (C) The
+    scheduler-cp-disable-forensics.mjs self_service_denied whitelist line is
+    recorded under its SEPARATE authority basis
+    (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 read-only forensics tooling) and
+    is NOT part of this product implementation closure. PRODUCT_SEMANTIC_DELTA
+    = NONE; B1/B2 repaired behaviors (fixed default inventory path,
+    unavailable=>fail-closed, locked-current classification) are frozen and
+    MUST NOT change. See the AMENDMENT_2 section at the end of this file.
+    Review record: pending independent semantic review.
   - AMENDMENT_1 (2026-09-10, status: accepted, semantic delta ADDITIVE-AUTHORIZATION-CONSTRAINT):
     CRITICAL_JOB_SELF_DISABLE_GUARD — a critical Scheduler job (per the frozen desired-state
     critical inventory, matched by stable logicalKey) MUST NOT be disable-able by its ordinary
@@ -1516,3 +1537,128 @@ STANDING_BEHAVIOR_UNCHANGED_PRE_ACCEPTANCE = YES？
   本 Amendment 关闭的是**已经成立的产品权限缺口**；在本次 provenance 确认前，
   不得声称其必然关闭本次事故根因。现场处置（forensics/reconcile/enable）由既有
   authority 与 operator 流程承载，不在本 Amendment 范围内。
+
+---
+
+## AMENDMENT_2 — AMENDMENT_1_IMPLEMENTATION_CONFORMANCE_AND_STRUCTURE_CLOSURE (2026-09-10, status: proposed)
+
+> **状态**：`proposed`（docs-only；PRODUCT_SEMANTIC_DELTA = NONE）。
+> 起因：AMENDMENT_1（critical self-disable guard）的已接受产品语义要求消费
+> persisted job.logicalKey 并在 self-service 面落 guard，而 inherited V2 正文
+> 仍保留 (i) "authorization 只消费 job existence + job.agentId"（CTR-AUTH-001/002）
+> 与 (ii) CTR-AUTH-003 exact four-file implementation closure（第五文件 ⇒ STOP）。
+> 同时 #251/#253 的实现使 oversized legacy self-service.js / self-service.test.js
+> 继续增长，触发 repository structure verifier（CODE_STRUCTURE_GUARDRAILS_V1）
+> 的 UNREGISTERED_LEGACY_TOUCHED。本 Amendment 只关闭这组机械一致性债务；
+> 不改变任何产品语义（A1–A6 of AMENDMENT_1 与 B1/B2 repaired behaviors 全部冻结）。
+
+### B1. Authorization consumption — 唯一窄例外（closure of LOGICALKEY_CONSUMPTION_CONFLICT）
+
+在 CTR-AUTH-001/002 的 "the decision may consume only job existence and
+`job.agentId`" 之上，**加入且仅加入**以下枚举例外：
+
+```text
+ordinary self disable/remove classification
+MAY additionally consume the job's persisted job.logicalKey
+（AMENDMENT_1 critical guard 的唯一判定输入）
+```
+
+除此以外一律不变：NO additional job fields；occurrence/history 仍禁止作为
+authorization 输入或 pre-proof 输出；denial 仍零内容泄露；self 操作的
+Auth request count 仍为 **zero**（logicalKey 来自已加载的 store 文档，不是
+Auth 查询）；`manage:any`/`audit` 外部证明行零改动。
+
+### B2. Implementation closure — 四文件 exact list（closure of FILE_CLOSURE_CONFLICT）
+
+先做最小结构设计（成员清单如下），据此冻结 exact implementation file list，
+取代 CTR-AUTH-003 的 four-file closure 对**本 guard 面**的适用：
+
+| 文件 | 状态 | 结构上限 | 成员（mechanical split design） |
+|---|---|---|---|
+| `packages/scheduler/src/critical-job-guard.js` | **NEW** | ≤400 行（warning 线内） | `CRITICAL_GUARD_REASONS` / `DEFAULT_CRITICAL_INVENTORY_PATH` / `parseCriticalInventory` / `evaluateCriticalJobGuard` / `createCriticalJobGuard({store, criticalInventoryPath, readInventoryFile, onAuditFailure})` → `{ guardFor(operation, allowAny, captureCurrent)→assertFn, appendDenialAudit }`（guard + inventory load + denial evidence + locked-current assert 组合，AMENDMENT_1 的 authorization & evidence seam） |
+| `packages/scheduler/src/self-service.js` | 收缩 | ≤500（structure baseline） | 移除上述成员（改为 import）；保留 schema/handler/projection/mutation-failure 面 |
+| `packages/scheduler/test/critical-job-guard.test.js` | **NEW**（由 `critical-self-disable-guard.test.js` 更名并补 R 面） | ≤500 | guard/inventory/TOCTOU（R1–R10）+ T 面测试 |
+| `packages/scheduler/test/self-service.test.js` | 收缩 | ≤500 | 移除 guard 专属测试（文件由 620 行收缩；rig 注入 fixture inventory 保留） |
+
+- 两个 NEW 文件加入后 `packages/scheduler/src` 与 `packages/scheduler/test`
+  各为 22 immediate children——**授权在 repair PR 中同步登记**
+  `.agents/structure-registry.json` 的 `directories` 两条 legacy 条目
+  （`approved_max_children: 22`，reason = "AMENDMENT_2 structure closure;
+  legacy directory over DIRECTORY_MAX_CHILDREN(20) at baseline"），与 scripts/
+  的既有登记先例同型。
+- 两个 legacy 收缩文件落地后 ≤500 ⇒ 自动退出 over-max 集合，无需 files 注册。
+- 冻结的 split 原则：guard 逻辑隔离、guard 测试隔离、不为"少改一个文件"
+  把 legacy 文件压成难维护的一团。
+
+### B3. forensics delta 分立（FORENSICS_AUTHORITY_NOT_SMUGGLED）
+
+`scripts/scheduler-cp-disable-forensics.mjs` 的 `self_service_denied`
+EVENT_FIELDS 白名单一行**不属于**本产品 implementation closure。其 authority
+basis 单独记录为：**SCHEDULER_CONTROL_PLANE_RELIABILITY_V1**（accepted；该
+只读 disable-forensics 工具由该 goal 的实现链 PR #222 交付并迭代——commits
+94135d0/afc8c46/14efa85/fc5f53a——新证据类的渲染白名单属同一工具的取证面
+维护）。AMENDMENT_2 不吸收、不扩产品 authority。
+
+### B4. 冻结不变式（AMENDMENT_2 不得改变的行为）
+
+```text
+DEFAULT_CRITICAL_INVENTORY_PATH = /usr/local/libexec/agent-core/config/scheduler-desired-state.json
+missing / unreadable / malformed / unsupported ⇒ critical_inventory_unavailable ⇒ self disable/remove denied
+critical decision logicalKey == locked current job logicalKey == job version actually mutated
+不恢复 unconfigured ⇒ inert；不恢复锁外 classification
+watchdog 零触碰；NEW_MUTATION_SURFACE = NO；PRODUCTION_APPLY = NO
+```
+
+### B5. Acceptance 后的实现 repair 硬门（结构 repair PR 的 merge 前检查）
+
+```text
+focused behavioral tests（含 R1–R10 与 TOCTOU old-bug proof）
+scheduler full suite
+forensics selftest（经 B3 授权的范围内）
+verify-code-structure：STRUCTURE_GATE = PASS（定义见 B6）
+git diff --check
+merge 前 fresh check：CODE_REVIEW = COMPLETED / SECURITY_REVIEW = COMPLETED /
+  INLINE_UNRESOLVED_P1_PLUS = 0 / INDEPENDENT_AUDIT = PASS /
+  STRUCTURE_GATE = PASS / TESTS = PASS / HEAD_UNCHANGED_SINCE_REVIEW = YES
+```
+
+### B6. STRUCTURE_GATE = PASS 的精确定义
+
+`verify-code-structure` 对全仓为 repo 级扫描，而 **BASE_MAIN 自身即存在
+与本 Goal 无关的存量违规**（`scripts/` 目录 53 children 超其注册上限 40；
+scheduler 两目录在登记前为 UNREGISTERED_LEGACY_DIRECTORY）。因此冻结：
+
+```text
+STRUCTURE_GATE = PASS ⇔
+  (a) repair PR 触碰的任何路径不产生 FILE/TOUCHED 类违规
+      （四个 closure 文件全部 ≤ 各自上限）；
+  (b) 违规集合相对 BASE_MAIN 的 delta 为空
+      （不新增任何类；经 B2 登记的 scheduler 两目录违规清除）；
+  (c) 存量 scripts/ 目录超限为已登记 repo 债务、不在本 Goal 触碰面内，
+      明确 out of scope。
+```
+
+### B7. Acceptance criteria（independent semantic review 必答）
+
+```text
+PRODUCT_SEMANTIC_DELTA = NONE？
+AMENDMENT_1_BEHAVIOR_PRESERVED = YES？（B4 全项冻结）
+LOGICALKEY_CONSUMPTION_CONFLICT_CLOSED = YES？（B1 例外唯一且窄）
+FILE_CLOSURE_CONFLICT_CLOSED = YES？（B2 清单冻结 + registry 授权）
+STRUCTURE_SPLIT_AUTHORIZED = YES？（成员清单可机械执行）
+FORENSICS_AUTHORITY_NOT_SMUGGLED = YES？（B3 分立记录）
+STRUCTURE_GATE_DEFINITION_MECHANICAL = YES？（B6 可判定）
+SHIP_BLOCKERS = 0？
+```
+
+任一 = NO/UNPROVEN ⇒ AMENDMENT = REVISE。
+
+### B8. Lifecycle
+
+```text
+proposed → independent semantic review → Owner exact-head acceptance
+→ mechanical acceptance transaction（仅 lifecycle/provenance）→ merge
+→ IMPLEMENTATION_REFACTOR 解除：独立结构 repair PR（DRAFT while review running）
+```
+
+acceptance 前IMPLEMENTATION_REFACTOR = HOLD。
