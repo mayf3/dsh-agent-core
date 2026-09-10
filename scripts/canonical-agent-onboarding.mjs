@@ -20,13 +20,9 @@
 //   - there is deliberately NO database interface: no DSN ever reaches this
 //     process (the secret-in-argv class of interfaces is excluded by design).
 //
-// Transport (spec §5, parent-authority prerequisite): the accepted library
-// freezes HTTPS origins; the deployed auth-service is loopback http. This CLI
-// performs NO scheme downgrade and holds NO transport adapter — until the
-// parent authority resolves the provisioning transport (amendment / explicit
-// prerequisite resolution), identity provisioning fails closed at the transport
-// boundary (manifesting as the library's https-origin gate / transport failure):
-// the honest state is AUTH_TRANSPORT_RESOLUTION_REQUIRED (spec §5).
+// Transport (spec §5, RESOLVED by parent AMENDMENT_8 / PR #244): the pinned
+// loopback origin http://127.0.0.1:4001 is the one AMENDMENT_8 exception; this
+// CLI holds NO adapter (the library enforces the pinned string parent-side).
 //
 // C1 gate (AMENDMENT_8 A8.2): :4001 must LISTEN on loopback ONLY. A wildcard
 // (0.0.0.0/*) or external binding fails the onboarding closed until the
@@ -53,11 +49,20 @@ function assertLoopbackBinding() {
   if (listenLines.length === 0) {
     die('AUTH_TRANSPORT_RESOLUTION_REQUIRED', { message: 'no LISTEN socket on :4001 — auth-service unreachable' })
   }
-  const wildcard = listenLines.filter((line) => /\*\.4001|\*:4001/.test(line))
-  if (wildcard.length > 0) {
+  const listenAddrs = listenLines.map((line) => {
+    const m = line.match(/TCP\s+(\S+)/)
+    return m?.[1] ?? ''
+  })
+  if (listenAddrs.length === 0) {
+    die('AUTH_TRANSPORT_RESOLUTION_REQUIRED', { message: 'no LISTEN socket on :4001 — auth-service unreachable' })
+  }
+  // C1 allowlist: loopback-only LISTEN (the wildcard forms *.4001 / *:4001 and
+  // any external unicast address all fail — strictly fail-closed).
+  const nonLoopback = listenAddrs.filter((addr) => addr !== '127.0.0.1:4001' && addr !== '[::1]:4001')
+  if (nonLoopback.length > 0) {
     die('AUTH_TRANSPORT_RESOLUTION_REQUIRED', {
-      message: 'auth-service listens on a non-loopback (wildcard/external) address — AMENDMENT_8 C1 FAIL_CLOSED until the deployment rebinds 127.0.0.1',
-      listeners: listenLines.map((line) => line.trim().slice(0, 80)),
+      message: 'auth-service LISTEN set is not loopback-only — AMENDMENT_8 C1 FAIL_CLOSED until the deployment binds 127.0.0.1',
+      listeners: nonLoopback,
     })
   }
 }
@@ -121,7 +126,7 @@ function buildProductionAuthClient({ provisionerClientId, provisionerSecretFile 
   const secret = readFileSync(provisionerSecretFile, 'utf8').trim()
   let cachedToken
   return createAuthProvisioningClient({
-    authServiceOrigin: AUTH_ORIGIN, // https contract face; fail-closed until transport resolution (spec §5)
+    authServiceOrigin: AUTH_ORIGIN, // AMENDMENT_8 pinned loopback origin (C1 gate enforced before use)
     getManagementAccessToken: async () => {
       if (cachedToken !== undefined) return cachedToken
       const basic = Buffer.from(`${provisionerClientId}:${secret}`).toString('base64')

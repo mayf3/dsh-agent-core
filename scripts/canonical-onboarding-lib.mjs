@@ -162,7 +162,7 @@ async function reconcileBaseline(deps, { agentId }) {
  *   - readCredentialStoreDocument: accepted store reader
  *   - buildAuthClient(): accepted createAuthProvisioningClient(...) with the
  *       (c) management-token provider; NO transport adapter — the origin is
- *       passed verbatim (spec §5: fail-closed until transport resolution)
+ *       the AMENDMENT_8 pinned loopback origin, passed verbatim (spec §5)
  *   - runBaseline(): the standing privileged reconciliation invocation
  * @param {object} input { agentId, name, description, authorityFile, storeFile, storeWriteOwner, preimageDir }
  */
