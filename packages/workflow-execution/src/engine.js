@@ -1,19 +1,26 @@
 /**
  * @agent-core/workflow-execution/src/engine.js — the execution engine
- * (WORKFLOW_AGENT_EXECUTION_V1).
+ * (WORKFLOW_AGENT_EXECUTION_V2; whole-authority successor of V1).
  *
  * One thin deterministic loop over the EXISTING seams (nothing here is a
  * second anything):
  *
  *   poll once:
- *     1. reconcile ACTIVE attempts (SETTLED / stays ACTIVE / NEEDS_REVIEW)
+ *     1. reconcile ACTIVE attempts (SETTLED / stays ACTIVE / NEEDS_REVIEW;
+ *        RESOLUTION_BLOCKED attempts are exempt — CTR-WAE-011)
  *     2. sweep the due DISPATCH_INTENT feed to exhaustion via keyset
  *        continuation (no page cap; CTR-WAE-001b)
  *     3. per due intent: beginAttemptIfAbsent (the one-attempt fence)
- *        -> resolve canonical assignee (`agent_resolve_principal` authority)
+ *        -> resolve canonical assignee (`agent_resolve_principal` authority;
+ *           failure lands the recoverable-blocked live phase, CTR-WAE-011)
+ *        -> durable delivery_started WRITE-AHEAD record (CTR-WAE-012/013)
  *        -> router.deliver the execution Run with the trusted
  *           `workflow_execution` messageOrigin sidecar
  *        -> record the NodeVisit -> Attempt -> Run linkage
+ *
+ * plus the ONE controlled recovery operation (CTR-WAE-013 recoverAttempt):
+ * explicit, authorityRef-gated, control-plane-only — no retry engine, no
+ * timer, no model-facing surface, never invoked by the poller or reconcile.
  *
  * Optimistic + conservative per the goal: re-reading and re-polling are
  * always safe (idempotent reads); DSH never schedules a second attempt for
@@ -86,9 +93,13 @@ export function createWorkflowExecutionEngine({
   }
 
   /**
-   * Admit at most one execution Run for one due intent. Every terminal
-   * failure after the attempt fence lands as NEEDS_REVIEW (delivery_failed) —
-   * never a silent drop, never an automatic second run, never an agent swap.
+   * Admit at most one execution Run for one due intent. V2 ordering
+   * (CTR-WAE-012/013): resolution failure lands the recoverable-blocked live
+   * phase (resolution_blocked — ZERO Runs); on success the durable
+   * delivery_started write-ahead record is appended BEFORE router.deliver is
+   * invoked (no invocation-to-record crash window); every post-invocation
+   * failure class stays terminal NEEDS_REVIEW — never a silent drop, never an
+   * automatic second run, never an agent swap.
    */
   async function admitDueIntent(rawIntent) {
     const attemptResult = await ledger.beginAttemptIfAbsent({
@@ -96,10 +107,10 @@ export function createWorkflowExecutionEngine({
       nodeVisitId: rawIntent.nodeVisitId,
       workflowInstanceId: rawIntent.workflowInstanceId,
       ownerPrincipalId: rawIntent.ownerPrincipalId,
-    }, async (attempt) => {
+    }, async (attempt, { recordDeliveryStarted }) => {
       try {
         const resolved = await resolvePrincipalToAgent(rawIntent.ownerPrincipalId)
-        if (!resolved.ok) return { kind: 'delivery_failed', reason: `resolve_failed:${resolved.code}` }
+        if (!resolved.ok) return { kind: 'resolution_blocked', code: resolved.code }
         const requestId = attempt.attemptId
         const message = buildInstruction({
           workflowInstanceId: attempt.workflowInstanceId,
@@ -107,6 +118,9 @@ export function createWorkflowExecutionEngine({
           dispatchIntentId: attempt.dispatchIntentId,
           attemptId: attempt.attemptId,
         })
+        // THE write-ahead fence: durable before ANY router.deliver call, so a
+        // crash after the invocation can never look like "never invoked".
+        recordDeliveryStarted()
         const delivery = await deliverRun({
           requestId,
           agentId: resolved.agentId,
@@ -135,6 +149,9 @@ export function createWorkflowExecutionEngine({
     const attempt = attemptResult.attempt
     if (attemptResult.completion.kind === 'delivery_failed') {
       return { action: 'needs_review', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, reason: attempt.reason }
+    }
+    if (attemptResult.completion.kind === 'resolution_blocked') {
+      return { action: 'blocked', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, code: attempt.blockedCode }
     }
     return { action: 'admitted', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, agentId: attempt.delivered.agentId, sessionId: attempt.delivered.sessionId }
   }
@@ -171,13 +188,20 @@ export function createWorkflowExecutionEngine({
   /**
    * Deterministic reconcile over every ACTIVE attempt. Reads are idempotent
    * and repeatable; only a terminal verdict mutates the ledger.
-   * @returns {Promise<{examined:number, settled:string[], needsReview:string[], running:number}>}
+   * V2 CTR-WAE-011 exemption: RESOLUTION_BLOCKED attempts are skipped — they
+   * have no Run linkage BY CONSTRUCTION, so the `delivery_unverified` row
+   * must never fire on them (it would silently re-create the V1 terminality).
+   * @returns {Promise<{examined:number, settled:string[], needsReview:string[], running:number, blocked:number}>}
    */
   async function reconcileOnce() {
-    const summary = { examined: 0, settled: [], needsReview: [], running: 0 }
+    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0 }
     // Cross-process failover must not reconcile a cached projection. Refresh
     // under the ledger's existing OwnerLock before enumerating this pass.
     for (const attempt of await ledger.listActiveFresh()) {
+      if (attempt.phase === 'resolution_blocked') {
+        summary.blocked += 1
+        continue
+      }
       summary.examined += 1
       try {
         const turnState = queryTurnState(attempt)
@@ -288,6 +312,143 @@ export function createWorkflowExecutionEngine({
     return { ok: true, reconciled, admissions, skipped, pages }
   }
 
+  /**
+   * THE ONE controlled recovery operation (V2 CTR-WAE-013): explicit,
+   * authorityRef-gated, control-plane-only continuation of a provably
+   * pre-admission blocked attempt. NO retry engine lives here — no timer, no
+   * queue, no watcher, no poller/reconcile invocation, no model-facing
+   * surface; between explicit authorized calls a blocked attempt simply
+   * waits (loudly visible in reconcile summary.blocked).
+   *
+   * Entry-state dispatch (frozen; first match wins):
+   *   E1 no/empty authorityRef → refuse the call, zero ledger effect.
+   *   E2 no attempt for the nodeVisitId → NO_OP_NO_ATTEMPT.
+   *   E3 attempt terminal → NO_OP_TERMINAL, zero appends (the V1 terminal
+   *      append-refusal is preserved; a replayed recovery can never
+   *      un-terminal or re-append).
+   *   E4 delivery-domain evidence (delivery_started/run_delivered/
+   *      delivery_failed/reconciled phases), a Router correlation answer
+   *      other than exactly "never_existed" (or the query unavailable), or a
+   *      non-blocked shape → RECOVERY_INAPPLICABLE:<class>, zero appends —
+   *      the UNCHANGED V1 machinery owns the attempt. This gate is
+   *      one-directional: it may only refuse, never override the ledger.
+   *   E5 eligible-shaped but the world drifted / cannot be verified →
+   *      recovery_refused appended → terminal NEEDS_REVIEW (the human path).
+   *   E6 eligible + world intact → recovery_authorized → fresh re-resolution
+   *      (fail: fresh resolution_blocked, STILL_BLOCKED, ZERO side effects)
+   *      → durable delivery_started write-ahead → ONE Run (same attemptId,
+   *      requestId = attemptId) → RECOVERED_RUN_ADMITTED | DELIVERY_REJECTED.
+   *
+   * Single-flight: the ledger's FIFO chain + cross-process OwnerLock
+   * serialize concurrent callers, and the projection guards make any
+   * interleaving fail loud BEFORE a second delivery can be prepared — at
+   * most one Run exists, ever.
+   */
+  async function recoverAttempt({ nodeVisitId, authorityRef }) {
+    if (typeof authorityRef !== 'string' || authorityRef === '') {
+      return { outcome: 'REFUSED_CALL', reason: 'authorityRef is required for every recovery invocation (CTR-WAE-013)' }
+    }
+    try {
+      const attempt = ledger.get(nodeVisitId)
+      if (attempt === undefined) return { outcome: 'NO_OP_NO_ATTEMPT', nodeVisitId }
+      if (attempt.state !== 'ACTIVE') return { outcome: 'NO_OP_TERMINAL', nodeVisitId, attemptId: attempt.attemptId }
+      // E4 — ledger-side shape + delivery-domain evidence.
+      if (attempt.phase !== 'resolution_blocked') {
+        const evidenceClass = attempt.phase === 'planned'
+          ? 'not_pre_admission_blocked'
+          : `delivery_domain:${attempt.phase}`
+        return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass, nodeVisitId, attemptId: attempt.attemptId }
+      }
+      // E4 — fresh Router correlation for requestId = attemptId: the only
+      // passing answer is exactly never_existed. Evicted/restart_lost/pending/
+      // settled/unreadable all refuse (outcome-unknown is never zero).
+      if (typeof resolveCallerCorrelation !== 'function') {
+        return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass: 'router_correlation_unavailable', nodeVisitId, attemptId: attempt.attemptId }
+      }
+      let correlation
+      try {
+        correlation = resolveCallerCorrelation({ requestId: attempt.attemptId })
+      } catch (error) {
+        return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass: 'router_correlation_error', nodeVisitId, attemptId: attempt.attemptId }
+      }
+      if (correlation?.state !== 'never_existed') {
+        return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass: `router_correlation:${correlation?.state ?? 'unavailable'}`, nodeVisitId, attemptId: attempt.attemptId }
+      }
+      // E5 verification reads (zero side effects): a fresh resolution first —
+      // until identity is repaired through its own authority this simply
+      // re-blocks the attempt with ZERO Runs (the designed interim behavior).
+      const preResolved = await resolvePrincipalToAgent(attempt.ownerPrincipalId)
+      if (!preResolved.ok) {
+        await ledger.recordResolutionBlocked({ nodeVisitId, code: preResolved.code })
+        return { outcome: `STILL_BLOCKED:${preResolved.code}`, nodeVisitId, attemptId: attempt.attemptId }
+      }
+      const probe = await readInstanceDetail({ agentId: preResolved.agentId, workflowInstanceId: attempt.workflowInstanceId })
+      const settle = probe.ok ? judgeSettleFromDetail({ body: probe.body, nodeVisitId }) : undefined
+      if (settle === undefined || settle.kind === 'unavailable') {
+        const refused = probe.ok ? 'instance_state_unavailable' : `instance_state_unavailable:${probe.code}`
+        await ledger.recordRecoveryRefused({ nodeVisitId, authorityRef, refused })
+        return { outcome: 'RECOVERY_REFUSED', refused, nodeVisitId, attemptId: attempt.attemptId }
+      }
+      if (settle.kind === 'settled') {
+        // World drift: instance gone past our visit / assignee no longer
+        // current. The attempt can never validly execute — terminal.
+        await ledger.recordRecoveryRefused({ nodeVisitId, authorityRef, refused: settle.reason })
+        return { outcome: 'RECOVERY_REFUSED', refused: settle.reason, nodeVisitId, attemptId: attempt.attemptId }
+      }
+      // E6 — fresh preconditions all passed: authorize, re-resolve fresh
+      // (never cached), write-ahead, admit at most ONE Run.
+      await ledger.recordRecoveryAuthorized({ nodeVisitId, authorityRef })
+      const resolved = await resolvePrincipalToAgent(attempt.ownerPrincipalId)
+      if (!resolved.ok) {
+        await ledger.recordResolutionBlocked({ nodeVisitId, code: resolved.code })
+        return { outcome: `STILL_BLOCKED:${resolved.code}`, nodeVisitId, attemptId: attempt.attemptId }
+      }
+      const requestId = attempt.attemptId
+      const message = buildInstruction({
+        workflowInstanceId: attempt.workflowInstanceId,
+        nodeVisitId: attempt.nodeVisitId,
+        dispatchIntentId: attempt.dispatchIntentId,
+        attemptId: attempt.attemptId,
+      })
+      // THE write-ahead fence — same discipline as the normal admission path.
+      await ledger.recordDeliveryStarted({ nodeVisitId })
+      const delivery = await deliverRun({
+        requestId,
+        agentId: resolved.agentId,
+        message,
+        messageOrigin: provenanceFor(attempt),
+      })
+      if (!delivery.ok) {
+        await ledger.recordDeliveryFailed({ nodeVisitId, reason: `delivery_rejected:${delivery.code}` })
+        return { outcome: `DELIVERY_REJECTED:${delivery.code}`, nodeVisitId, attemptId: attempt.attemptId }
+      }
+      await ledger.recordRunDelivered({
+        nodeVisitId,
+        agentId: resolved.agentId,
+        requestId,
+        sessionId: delivery.sessionId,
+        reconciliationHandle: delivery.reconciliationHandle,
+        messageId: delivery.messageId,
+      })
+      return {
+        outcome: 'RECOVERED_RUN_ADMITTED',
+        nodeVisitId,
+        attemptId: attempt.attemptId,
+        agentId: resolved.agentId,
+        sessionId: delivery.sessionId,
+      }
+    } catch (error) {
+      // A projection guard fired (e.g. the attempt entered the delivery domain
+      // under a concurrent recovery): fail closed without a second delivery.
+      return {
+        outcome: 'RECOVERY_INAPPLICABLE',
+        evidenceClass: 'attempt_changed',
+        detail: String(error?.message ?? error).slice(0, 200),
+        nodeVisitId,
+      }
+    }
+  }
+
   // ── interval runner (mirrors the scheduler's single-flight tick) ────────
   let timer
   let ticking = false
@@ -310,6 +471,9 @@ export function createWorkflowExecutionEngine({
     pollOnce,
     reconcileOnce,
     admitDueIntent,
+    /** THE ONE controlled recovery operation (CTR-WAE-013; control-plane
+     *  only — never a model tool, never timer/poller/reconcile driven). */
+    recoverAttempt,
     /** Arm the interval loop (+ one immediate reconcile catch-up). */
     start({ intervalMs = DEFAULT_POLL_INTERVAL_MS, catchup = true } = {}) {
       if (timer !== undefined) return

@@ -76,6 +76,20 @@ test('Router outcome_unknown preserves its reconciliation handle as active Run l
     })
     assert.equal(duplicate.action, 'already_attempted')
     assert.equal(deliveries, 1, 'outcome_unknown is never replayed')
+
+    // V2 CTR-WAE-013: the runtime component exposes the ONE controlled
+    // recovery as a control-plane METHOD (authorityRef-gated inside the
+    // engine) — and a replayed/foreign recovery against the admitted attempt
+    // is delivery-domain evidence: RECOVERY_INAPPLICABLE, zero appends, zero
+    // second delivery.
+    assert.equal(typeof runtime.recoverAttempt, 'function')
+    const sizeBefore = (await import('node:fs')).statSync(join(root, 'workflow-execution', 'attempts.jsonl')).size
+    const replay = await runtime.recoverAttempt({ nodeVisitId: VISIT, authorityRef: 'TEST_AUTH_REF' })
+    assert.equal(replay.outcome, 'RECOVERY_INAPPLICABLE')
+    assert.equal(replay.evidenceClass, 'delivery_domain:run_delivered')
+    const sizeAfter = (await import('node:fs')).statSync(join(root, 'workflow-execution', 'attempts.jsonl')).size
+    assert.equal(sizeAfter, sizeBefore, 'zero recovery append')
+    assert.equal(deliveries, 1, 'never a second delivery')
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
