@@ -109,8 +109,8 @@ for (const [sid, iid, dom] of m1b) {
 
 // ---- M2: 24 READY canonical repairs + M2B identity-blocked (B3)
 const defs = readFileSync(join(RAW, 'definition-classification.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t'))
-const pubv = readFileSync(join(RAW, 'effective-published-versions.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t'))
-const publishedVersionId = new Map(pubv.slice(1).map(r => [`${r[0]}\u0000${r[1]}`, r[2]]))
+const pubv = readFileSync(join(RAW, 'effective-published-versions.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t')) // HEADERLESS: row 0 is data, not a header
+const publishedVersionId = new Map(pubv.map(r => [r[1], r[2]]))
 const dh = defs[0]
 const m2defs = defs.slice(1).filter(r => r[dh.indexOf('class')] === 'BUSINESS_STALE_FIXED_CONFIG')
   .map(r => [r[dh.indexOf('definition_key')], r[dh.indexOf('domain')], r[dh.indexOf('definition_id')]])
@@ -129,9 +129,9 @@ for (const [dkey, dom, defid] of m2defs) {
   cmd(cls, reason, sid, 1, 'M2_DEFINITION_REPAIR', 'workflow_definition_authoring(operation=create_draft_version)',
       `POST /internal/v1/domains/${dom}/definitions/${defid}/versions`, 'POST',
       'DOMAIN_OWNER(domain) — svc definition governance (WDA authoring surface)', 'DOMAIN_OWNER (server-side)',
-      `effective-published-versions.tsv: ${dom}/${dkey} PUBLISHED version ${publishedVersionId.get(`${dom}\u0000${defid}`) || '<id per census>'} carries the stale fixed-principal config (classification ledger r2; substitution set = mechanical twin map, per-node values frozen in the draft request body)`,
+      `effective-published-versions.tsv: ${dom}/${dkey} PUBLISHED version ${publishedVersionId.get(defid) || '<id per census>'} carries the stale fixed-principal config (classification ledger r2; substitution set = mechanical twin map, per-node values frozen in the draft request body)`,
       'G2 admission gate (§5)',
-      `DRAFT created for ${dom}/${dkey} def ${defid}; semantic model preserved per source PUBLISHED graph ${publishedVersionId.get(`${dom}\u0000${defid}`) || ''}`)
+      `DRAFT created for ${dom}/${dkey} def ${defid}; semantic model preserved per source PUBLISHED graph ${publishedVersionId.get(defid) || ''}`)
   cmd(cls, reason, sid, 2, 'M2_DEFINITION_REPAIR', 'workflow_definition_authoring(operation=replace_draft_graph)',
       `PUT /internal/v1/domains/${dom}/definitions/${defid}/draft`, 'PUT',
       'DOMAIN_OWNER(domain) — svc definition governance', 'DOMAIN_OWNER (server-side)',
@@ -143,7 +143,7 @@ for (const [dkey, dom, defid] of m2defs) {
       'DOMAIN_OWNER(domain) — svc definition governance', 'DOMAIN_OWNER (server-side)',
       `${sid}-2 validated draft`,
       `${sid}-2 success receipt`,
-      `new version PUBLISHED for ${dom}/${dkey} def ${defid} (version id per publish receipt; supersedes and retires PUBLISHED ${publishedVersionId.get(`${dom}\u0000${defid}`) || ''} from future materialization; historical versions immutable)`)
+      `new version PUBLISHED for ${dom}/${dkey} def ${defid} (version id per publish receipt; supersedes and retires PUBLISHED ${publishedVersionId.get(defid) || ''} from future materialization; historical versions immutable)`)
 }
 
 // ---- M2A: 2 definition archives

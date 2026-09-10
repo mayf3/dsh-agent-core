@@ -48,13 +48,15 @@ substituted operations).
 ## §M6 — Domain-owner binding repairs (r3: 9 rows → 1 retained + 8 REMOVED)
 
 **r3 MINIMALITY RULING (Owner B5) — applied.** The accepted
-`SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1` authorizes cross-domain cancel/archive
-(`DOMAIN_OWNER OR GLOBAL_WORKFLOW_COORDINATOR`, spec §5.5/W1/W2). Mechanical census
-(2026-09-11): the **deployed** svc generation (`6dc1027`) does NOT yet implement that
-widening — `src/application/workflow_instance/cancel.rs` remains DOMAIN_OWNER-only — so the
-r2 rationale "take ownership solely to unlock M1 cancel/archive" does NOT survive as an
-immediate mutation: M1A cancels become DEPENDENCY_GATED on the W1/W2 widening deployment
-(coordinator goal's own production deployment), and the takeover rows are REMOVED:
+`SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1` authorizes cross-domain cancel/archive AND that
+authorization is **already implemented and deployed** at `6dc1027`: the cancel/archive
+transactions gate on `DOMAIN_OWNER of the instance's domain OR enabled
+GLOBAL_WORKFLOW_COORDINATOR` (CTR-CP-001 W-widening,
+`cancel_transaction.rs:280-293`, source-verified 2026-09-11). What is NOT yet in place is
+the `GLOBAL_WORKFLOW_COORDINATOR` role GRANT itself (five-gate bootstrap: 4/5 gates passed;
+Owner authorization packet outstanding). Therefore the r2 rationale "take ownership solely
+to unlock M1 cancel/archive" does NOT survive: once the grant completes, the coordinator
+cancels cross-domain directly, and the takeover rows are REMOVED:
 
 ```text
 M6-1  RETAINED — business-domain canonical CTO repair (adc-v2-dogfood):
@@ -127,6 +129,12 @@ M6_PRODUCTION_MUTATION = HOLD
 Rollback per row: re-apply prior binding state through the same coordinator authority
 (binding rows are never deleted; old rows persist with enabled=false as history).
 
+> **r3 STATUS MARKER**: this table is retained as the r2 CENSUS RECORD. Per the B5
+> minimality ruling, rows M6-2..9 are **REMOVE_FROM_PLAN** — no mutation is authorized for
+> them; only M6-1 proceeds (DEPENDENCY_GATED on the coordinator grant bootstrap; its ledger
+> rows are the only M6 mutation commands). M6-2..9 are zero-command
+> NO_MUTATION_DISPOSITION records in the r3 ledger.
+
 | # | domain (domain_id) | subject (binding_id) | current_state | exact_mutation | new principal (canonical) |
 |---|---|---|---|---|---|
 | M6-1 | adc-v2-dogfood (`22222222-…-0100`) | `ab05acde-524f-40b4-a904-eb8882db791b` | enabled DOMAIN_OWNER = 3e2439d2 (cto-agent, legacy; twin proven; successor line registered) | disable legacy binding, grant DOMAIN_OWNER to canonical twin | 4e5a4578-0645-4133-bd35-b80e453dfee9 (`agt_cto-agent`, active) |
@@ -148,22 +156,28 @@ NodeVisit — cancel precondition met).**
 
 Exact mutation: `POST /internal/v1/workflow-instances/{id}/cancel` with reason string
 `WORKFLOW_DATA_HYGIENE_V1 M1 TEST_OR_FIXTURE residue removal (census 2026-09-10)`, executed
-by dc702687 (`agt_hr-agent`) under the accepted coordinator widening
-(`DOMAIN_OWNER OR GLOBAL_WORKFLOW_COORDINATOR`, SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1
-§5.5/W1). Execution preconditions: the W1/W2 widening DEPLOYED in the live svc generation
-(currently NOT deployed — `6dc1027` cancel.rs is DOMAIN_OWNER-only; source census
-2026-09-11) ⇒ **M1A rows are DEPENDENCY_GATED**, and `AUTH_V1_CANARY_WRITE_ENABLED=true`
-(verify once before the batch).
+by dc702687 (`agt_hr-agent`) under the accepted coordinator widening — which IS
+implemented and deployed at `6dc1027`: the cancel transaction's governance-write role check
+is `DOMAIN_OWNER of the instance's domain OR enabled GLOBAL_WORKFLOW_COORDINATOR`
+(`cancel_transaction.rs:280-293`, CTR-CP-001 W-widening; source-verified 2026-09-11).
+Execution preconditions: the `GLOBAL_WORKFLOW_COORDINATOR` five-gate grant bootstrap
+completed (4/5 gates passed per the coordinator goal record; the Owner authorization packet
+is outstanding) ⇒ **M1A rows are DEPENDENCY_GATED**, and
+`AUTH_V1_CANARY_WRITE_ENABLED=true` (verify once before the batch).
 
 **M1B — NON_TERMINAL_DANGLING rows (4: M1-9..12) — Owner B1 narrow census outcome.**
 
 Mechanical facts (census rows + svc source `src/domain/workflow_instance/errors.rs`):
 `current_node_visit_id = NULL`, lifecycle = NON_TERMINAL_DANGLING, TEST_OR_FIXTURE fixture
-provenance proven (test_domain / test_creator / synthetic_instance_id signals). Therefore:
+provenance proven (test_domain / test_creator / synthetic_instance_id signals). Therefore
+(at the deployed generation `6dc1027`, verified in
+`src/store/postgres/workflow_instance_repository/cancel_transaction.rs:318`):
 
 ```text
-NORMAL_CANCEL  = INAPPLICABLE (cancel requires a current NodeVisit
-               => CancelWorkflowInstanceError::CurrentVisitNotFound)
+NORMAL_CANCEL  = INAPPLICABLE (cancel requires a current NodeVisit;
+               a NULL current visit fails with
+               CancelWorkflowInstanceError::InternalConsistency(
+                 "instance has no current node visit"))
 NORMAL_ARCHIVE = INAPPLICABLE (archive requires cancelled or terminal
                => ArchiveWorkflowInstanceError::InstanceNotTerminal)
 DIRECT_DB_EDIT      = FORBIDDEN
@@ -171,9 +185,10 @@ FAKE_CURRENT_VISIT  = FORBIDDEN
 FAKE_TRANSITION     = FORBIDDEN
 ```
 
-Narrow existing-authority/surface census for exactly these four rows (svc-workflow source,
-HTTP router `src/http/mod.rs`, 45 routes, full enumeration): the ONLY reachable
-instance-mutation surfaces are `/cancel` and `/archive` (both inapplicable above);
+Narrow existing-authority/surface census for exactly these four rows (svc-workflow source at the deployed generation `6dc1027`,
+HTTP router `src/http/mod.rs`, 50 `.route()` registrations, full enumeration): the ONLY
+reachable instance-mutation surfaces are `/cancel` and `/archive` (both inapplicable
+above);
 `admin_recovery` (`rebuild_projection`, `admin_emergency_override`) and `admin_repair`
 (`repair_context` plan/apply) application-layer functions exist in
 `src/application/workflow_instance/` but have **NO HTTP route** (not reachable by any
