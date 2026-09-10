@@ -29,7 +29,7 @@ B1/B3/B5 blocker union (B6; mechanically derived — see EXECUTION_COMMAND_LEDGE
   FINAL_TOTAL_MUTATION_COMMANDS  = UNRESOLVED — frozen only when every subject has an
                                    exact legal sequence (M1B 4 + M2B 1 pending)
   (read-only steps — reconcile plan, get_owner read-backs — are verification, NOT
-   mutation commands; ledger r3 = 98 rows total = 83 mutation + 15 disposition/read-only)
+   mutation commands; ledger r3 = 96 rows total = 80 mutation + 16 read-only/disposition)
 ```
 
 EXECUTION_COMMAND_LEDGER = `execution-command-ledger.tsv` (generated, mechanical) +
