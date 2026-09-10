@@ -12,10 +12,12 @@
 //       mapping => RETURNS_NO_PROVEN_SUCCESSOR; IDENTITY_MAPPING_GUESS = FORBIDDEN)
 //       => DEPENDENCY_GATED, sequence NOT started (ZERO commands).
 //   B5: M6 minimality — M6-1 retained (business-domain canonical CTO repair, independently
-//       justified); M6-2..9 OWNER TAKEOVER REMOVED (deployed svc cancel/archive is
-//       implemented+deployed at 6dc1027 (cancel_transaction.rs:280-293 W-widening: DOMAIN_OWNER OR enabled GLOBAL_WORKFLOW_COORDINATOR); the outstanding dependency is the
-//       W1/W2 widening to `DOMAIN_OWNER OR GLOBAL_WORKFLOW_COORDINATOR` is not yet deployed,
-//       so M1A cancels are DEPENDENCY_GATED on that deployment; per-row removal reasons below).
+//       justified); M6-2..9 OWNER TAKEOVER REMOVED — the W-widening (DOMAIN_OWNER OR enabled
+//       GLOBAL_WORKFLOW_COORDINATOR) is already implemented+deployed at 6dc1027
+//       (cancel_transaction.rs:280-293), so cross-domain cancel/archive needs only the
+//       GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap (4/5 gates passed, Owner
+//       packet outstanding); M1A cancels are DEPENDENCY_GATED on that grant; per-row
+//       removal reasons below).
 // B6: every row carries mutation_class = READY | DEPENDENCY_GATED | NO_MUTATION_DISPOSITION.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -66,7 +68,7 @@ const m6removed = [
   ['M6-2','canary-wda-v1-1788583811','UNLOCK_ONLY: sole purpose was DOMAIN_OWNER for M1-6 cancel; M1A cancels are DEPENDENCY_GATED on the coordinator W1/W2 widening instead; post-cleanup the domain holds no governed state (disposable residue)'],
   ['M6-3','canary-wda-v1-1788583998','UNLOCK_ONLY: same as M6-2 (M1-7); domain = disposable residue post-cleanup'],
   ['M6-4','canary-wda-v1-1788584903','UNLOCK_ONLY: same as M6-2 (M1-8); domain = disposable residue post-cleanup'],
-  ['M6-5','assistance-5148b565-…','UNLOCK_ONLY: dead-owner binding; sole purpose was DOMAIN_OWNER for M1-3/M1-4 cancel — coordinator W1 cancel covers it once deployed; dead-owner rows persist enabled=false-capable as DEC-CP-007 repairable input for any future authority'],
+  ['M6-5','assistance-5148b565-…','UNLOCK_ONLY: dead-owner binding; sole purpose was DOMAIN_OWNER for M1-3/M1-4 cancel — the coordinator role (five-gate bootstrap) covers that cancel directly; dead-owner rows persist enabled=false-capable as DEC-CP-007 repairable input for any future authority'],
   ['M6-6','assistance-74a028b0-…','UNLOCK_ONLY: same as M6-5 (M1-5)'],
   ['M6-7','assistance-1853d6d7-…','UNLOCK_ONLY: same as M6-5 (M1-1/M1-2)'],
   ['M6-8','canary-e2e-1784457448','NO_EXECUTABLE_CLEANUP: ownerless e2e domain whose only hygiene rows are M1-9/M1-10 (NON_TERMINAL_DANGLING — no reachable mutation surface exists at any ownership level; see B1 census)'],
@@ -88,9 +90,9 @@ for (const [sid, iid] of m1a) {
   cmd('DEPENDENCY_GATED', GATE_WIDENING, sid, 1, 'M1A_TEST_CANCEL', 'workflow_execute(operation=cancel_instance)',
       `POST /internal/v1/workflow-instances/${iid}/cancel`, 'POST',
       'SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1 (accepted W1 widening) — GLOBAL_WORKFLOW_COORDINATOR cross-domain cancel',
-      'GLOBAL_WORKFLOW_COORDINATOR (server-side, once W1/W2 deployed)',
+      'GLOBAL_WORKFLOW_COORDINATOR (server-side; role grant via the five-gate bootstrap)',
       `census row: ${iid} cancelled=false archived_at=null current_node_visit present; class=TEST_OR_FIXTURE with mechanical signals`,
-      'coordinator W1/W2 cancel widening DEPLOYED in the live svc generation AND AUTH_V1_CANARY_WRITE_ENABLED=true AND G2 admission gate (§5)',
+      'GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap COMPLETED (coordinator goal record) AND AUTH_V1_CANARY_WRITE_ENABLED=true AND G2 admission gate (§5)',
       'cancelled=true; exactly one CANCEL event; history/context/visits preserved; exits status=active surface')
 }
 

@@ -66,7 +66,7 @@ M6-2..4  REMOVE_FROM_PLAN — unlock-only for M1-6..8 in canary-wda-v1-* test
       domains; those domains hold no other governed state after M1 cleanup
       (disposable residue); no accepted operation requires DOMAIN_OWNER there.
 M6-5..7  REMOVE_FROM_PLAN — unlock-only for M1-1..4 in assistance-* test domains
-      (dead-owner bindings); coordinator W1 covers the cancels once deployed;
+      (dead-owner bindings); the coordinator role — five-gate grant bootstrap — covers those cancels directly;
       dead-owner binding rows persist untouched as history (DEC-CP-007 repairable
       input for any future authority).
 M6-8..9  REMOVE_FROM_PLAN — ownerless e2e domains whose ONLY hygiene rows are the
