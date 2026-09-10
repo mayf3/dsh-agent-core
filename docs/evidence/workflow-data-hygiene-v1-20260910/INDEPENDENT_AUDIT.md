@@ -1,5 +1,10 @@
 # WORKFLOW_DATA_HYGIENE_V1 / WORKFLOW_COORDINATOR_CONTROL_PLANE_V1 — INDEPENDENT_AUDIT r1
 
+> **STATUS: SUPERSEDED** (FINAL_MECHANICAL_CONVERGENCE ruling). This file is a historical
+> record only — it is NOT the current authoritative verdict. Later convergence reviews are
+> INPUT_TO_CURRENT_HEAD; `FINAL_CURRENT_HEAD_AUDIT = PENDING`.
+
+
 - **Audited heads**: `cfc1762` (census freeze) → `2cf55b7` (r2 LEDGER_METRIC_SEMANTICS + AUTHORITY_MAP M1–M6 + CLEANUP_PLAN exact set). Inputs: `CLASSIFICATION_LEDGER.md` r2, `CLEANUP_PLAN.md` r1 (FROZEN for audit), `census-raw/*` (sha256 manifest), builder `build-classification-ledger.mjs`.
 - **Audit mode**: mechanical, read-only, zero production access. Reproducibility: builder re-run over `census-raw/` reproduces byte-identical outputs (sha256 stable across runs).
 - **Verdict: PASS — 10/10 checks, 0 blockers.**

@@ -30,7 +30,8 @@ B1/B3/B5 blocker union (B6; mechanically derived — see EXECUTION_COMMAND_LEDGE
                                    exact legal sequence (M1B 4 + the 2 identity-blocked
                                    M2 subjects pending)
   (read-only steps — reconcile plan, get_owner read-backs — are verification, NOT
-   mutation commands; ledger r3 = 96 rows total = 80 mutation + 16 read-only/disposition)
+   mutation commands; ledger r3 = 96 rows total = 80 mutation commands + 16
+   read-only/disposition records)
 ```
 
 EXECUTION_COMMAND_LEDGER = `execution-command-ledger.tsv` (generated, mechanical) +
@@ -92,7 +93,8 @@ Workflow Domain / DOMAIN_OWNER / DOMAIN_MEMBER bindings
 **accepted `SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1`** (svc main `dd235dc`, deployed
 live @ gitSha `6dc1027`) and its Broker surfaces — NOT to auth-service, NOT to
 `workflow.admin` scope (that scope is not the Domain-role authority owner), NOT to direct
-DB writes. Narrowest atomic path chosen per row:
+DB writes. Narrowest atomic path chosen per row (r3: operative for **M6-1 only**; the M6-2..9
+projections below are retained solely inside the labelled historical block):
 
 - **M6-1..M6-7** (a disabled/stale/dead-owner enabled binding EXISTS):
   `workflow_domain_binding_reconcile(operation=plan -> operation=apply, role=DOMAIN_OWNER)`
@@ -105,6 +107,12 @@ DB writes. Narrowest atomic path chosen per row:
 - **M6-8..M6-9** (NO binding row at all — reconcile preimage impossible):
   `workflow_domain_admin(operation=set_owner)` — the narrow establishing path.
 
+> **HISTORICAL_R2_CENSUS_RECORD_ONLY · NON_EXECUTABLE · SUPERSEDED_BY_R3**
+> The following r2 table is the census record of the B-round design. The M6-1 row remains
+> the operative execution spec (retained canonical CTO owner repair). The M6-2..9 rows are
+> **REMOVE_FROM_PLAN / NO_MUTATION_DISPOSITION** — they are NOT intended binding repair
+> targets; no command exists for them and none may be derived from this table.
+
 Per-row frozen execution fields (full expansion in EXECUTION_COMMAND_LEDGER):
 
 | # | domain (provenance) | broker operation(s) | svc endpoint | actor | server-side role requirement | idempotency | preimage assertion | receipt/audit | post-readback |
@@ -114,7 +122,7 @@ Per-row frozen execution fields (full expansion in EXECUTION_COMMAND_LEDGER):
 | M6-5..7 | assistance-* test domains (**operational owner for cleanup**: dead owner NOT_FOUND in auth, FK-present in svc) | same as M6-1 | same | same | same | same | bindings `91fa0c02…`/`bf509296…`/`7b59a044…` enabled=TRUE (dead principals) | same (rationale=OPERATIONAL_OWNER_TEST_DOMAIN) | GET owner → `dc702687` |
 | M6-8..9 | canary-e2e-… / auth-v1-e2e-readonly test domains (no binding row) | workflow_domain_admin set_owner | PUT `/internal/v1/domains/{domainId}/owner` | same | same | fresh Idempotency-Key | census: zero DOMAIN_OWNER rows exist | receipt (admin/coordinator receipt machinery) + audit | GET owner → `dc702687` |
 
-**Test-domain / ownerless HR-as-operational-owner rationale (per row, provenance frozen):**
+**Test-domain / ownerless HR-as-operational-owner rationale (per row, provenance frozen) — HISTORICAL_R2_CENSUS_RECORD_ONLY / NON_EXECUTABLE / SUPERSEDED_BY_R3:**
 M6-2..M6-4 domain keys match the census TEST_DOMAIN_RE (`canary-wda-v1-*`); M6-5..7 match
 `^assistance-`; M6-8..9 match `canary-e2e-*` / `auth-v1-e2e-readonly`. Every one is a
 test/probe domain; HR operational ownership exists solely to unlock §M1/§M2A cleanup in
@@ -149,7 +157,7 @@ Rollback per row: re-apply prior binding state through the same coordinator auth
 | M6-8 | canary-e2e-1784457448 (`ed99dcba-…`) | — (no binding row) | **no DOMAIN_OWNER at all** | grant canonical operational owner | dc702687 (`agt_hr-agent`) |
 | M6-9 | auth-v1-e2e-readonly (`e2000000-…`) | — (no binding row) | **no DOMAIN_OWNER at all** | grant canonical operational owner | dc702687 (`agt_hr-agent`) |
 
-Every row: preimage = frozen `census-raw/binding-rows-for-plan.tsv`; postimage = exactly one enabled DOMAIN_OWNER per domain, canonical principal, old binding `enabled=false` preserved as history. Rollback = re-apply prior binding state via the same workflow.admin authority (binding rows are never deleted). `canary-wda-v1-1788582639` deliberately untouched (its 3 test instances are TERMINAL history → preserve; no unlock needed).
+M6-1 (the only retained binding-repair target): preimage = frozen `census-raw/binding-rows-for-plan.tsv`; postimage = exactly one enabled DOMAIN_OWNER for adc-v2-dogfood, canonical principal `4e5a4578`, old binding `enabled=false` preserved as history. REAL_BUSINESS_DOMAIN_BINDING_REPAIR_TARGETS = **M6-1 only**. Rollback = re-apply prior binding state via the same workflow.admin authority (binding rows are never deleted). `canary-wda-v1-1788582639` deliberately untouched (its 3 test instances are TERMINAL history → preserve; no unlock needed).
 
 ## §M1 — Test instances (r3: split into M1A 8 ordinary cancels + M1B 4 dangling, Owner B1)
 
@@ -208,7 +216,17 @@ M1B_PRODUCTION_MUTATION = HOLD
 
 M1A rows:
 
-All 12 rows: classification = TEST_OR_FIXTURE with mechanical provenance signals (ledger); current_state preimage = census row (cancelled=false, archived_at=null, current visit per TSV); expected postimage = cancelled=true, cancel_reason as above, cancelled_by=dc702687, exactly one CANCEL event appended, all payload/context/visit history preserved. Rollback = none applicable — cancel preserves the row and history, so a disputed cancel is re-examined from evidence, not reversed by mutation; the REAL_BUSINESS risk gate is the audit's `REAL_BUSINESS_FALSE_POSITIVE_CHECK` plus per-row read-before-write re-verification of the classification signals.
+**M1A rows (M1-1..8 only):** classification = TEST_OR_FIXTURE with mechanical provenance
+signals (ledger); current_state preimage = census row (cancelled=false, archived_at=null,
+current visit per TSV); **expected postimage = cancelled=true + exactly one CANCEL event**,
+cancel_reason as above, cancelled_by=dc702687, all payload/context/visit history preserved.
+Rollback = none applicable — cancel preserves the row and history; the REAL_BUSINESS risk
+gate is the audit's `REAL_BUSINESS_FALSE_POSITIVE_CHECK` plus per-row read-before-write
+re-verification of the classification signals.
+
+**M1B rows (M1-9..12):** **expected postimage = CURRENT STATE UNCHANGED; mutation commands
+= 0; disposition = HOLD** (see the M1B census outcome above). No ordinary cancel/archive
+instruction applies to these rows.
 
 | # | instance | domain | lifecycle |
 |---|---|---|---|
@@ -368,7 +386,10 @@ HISTORICAL_ASSIGNEE_REWRITE          = NO  (no node_visit mutation anywhere)
 TEST_CLASSIFICATION_SUPPORTED        = YES (every M1 row carries mechanical signals, zero
                                             title-string classifications)
 HUMAN_REQUIRED_CLASSIFICATION_SUPPORTED = YES (ledger §7)
-SHIP_BLOCKERS                        = set by INDEPENDENT_AUDIT r2
+SHIP_BLOCKERS                        = PENDING — FINAL_CURRENT_HEAD_AUDIT not yet run
+                                            (INDEPENDENT_AUDIT_R1 = SUPERSEDED;
+                                             INDEPENDENT_AUDIT_R2 = SUPERSEDED;
+                                             later convergence reviews = INPUT_TO_CURRENT_HEAD)
 ```
 
 ## §r3 — Blocker-union closure record (Owner REVISE_ON_NEW_EVIDENCE 2026-09-11)
@@ -379,7 +400,8 @@ B1  M1 split            = DONE (M1A 8 ordinary cancels / M1B 4 dangling; census 
                           EXPLICIT_PRESERVE_QUARANTINE; M1B_MUTATION_SEQUENCE = UNRESOLVED;
                           M1B_PRODUCTION_MUTATION = HOLD; DIRECT_DB_EDIT / FAKE_CURRENT_VISIT /
                           FAKE_TRANSITION = FORBIDDEN)
-B2  98-command total    = REVOKED (r3 ledger: 70 READY + 10 GATED; FINAL total stays
+B2  98-command total    = REVOKED (r3 ledger: 70 READY + 10 GATED mutation commands;
+                          FINAL total stays
                           UNRESOLVED until M1B/M2B dispositions land)
 B3  M2B identity        = HOLD recorded (RETURNS_NO_PROVEN_SUCCESSOR branch;
                           IDENTITY_MAPPING_GUESS = FORBIDDEN; 0 executable commands;
@@ -393,7 +415,20 @@ B5  M6 minimality       = M6-1 RETAINED (business-domain canonical CTO repair);
                           (cancel_transaction.rs:280-293); the outstanding dependency is the
                           GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap — the
                           takeover, not the grant, is what B5 removes)
-B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 96 rows = 70 READY mutation + 10 GATED mutation + 16 read-only/disposition records; every row
+
+M6 authority terminology (frozen; replaces the r2 "M6_AUTHORITY_GAP" framing):
+  M6_PRODUCT_AUTHORITY               = CLOSED (the accepted coordinator contract plus the
+                                       deployed W-widening at 6dc1027 already authorize
+                                       the operation)
+  M6_IMPLEMENTATION                  = DEPLOYED (svc 6dc1027: cancel widening
+                                       cancel_transaction.rs:280-293 + binding_reconcile /
+                                       set_owner surfaces)
+  M6_CANONICAL_EXECUTION_ACTOR_READY = NO
+  M6_BLOCKER                         = GLOBAL_WORKFLOW_COORDINATOR_GRANT_PENDING
+                                       (execution/adoption readiness — NOT missing
+                                       product authority; no legacy workflow.admin
+                                       credential fallback)
+B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 96 rows = 80 mutation commands (70 READY + 10 GATED) + 16 read-only/disposition records; every row
                           carries mutation_class = READY | DEPENDENCY_GATED |
                           NO_MUTATION_DISPOSITION; builder updated mechanically)
 B7  audit r3            = PENDING — runs only after this r3 revision passes the Owner

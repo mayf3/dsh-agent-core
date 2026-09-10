@@ -1,5 +1,10 @@
 # WORKFLOW_DATA_HYGIENE_V1 — INDEPENDENT_AUDIT r2 (ONE audit per Owner REVISE ruling)
 
+> **STATUS: SUPERSEDED** (FINAL_MECHANICAL_CONVERGENCE ruling). This file is a historical
+> record only — it is NOT the current authoritative verdict. Later convergence reviews are
+> INPUT_TO_CURRENT_HEAD; `FINAL_CURRENT_HEAD_AUDIT = PENDING`.
+
+
 - **Audited**: `CLEANUP_PLAN.md` **r2** (B1 authority re-map + B2 command ledger + B3 assertion rewrite), `execution-command-ledger.tsv` + `build-execution-command-ledger.mjs` + `execution-command-summary.json` (mechanical derivation), `CLASSIFICATION_LEDGER.md` r2, `census-raw/*`.
 - **Supersedes**: INDEPENDENT_AUDIT r1 = SUPERSEDED_BY_NEW_REVIEW_EVIDENCE (Owner ruling; its `ZERO_REAL_BUSINESS_MUTATION_TARGETS` claim was wrong-layer and is revoked in plan r2 §Audit-contract).
 - **Method**: mechanical, read-only; 19 checks over the revised artifacts; command names cross-checked against a fresh source census (broker manifest `workflow_definition_authoring` = create_definition | create_draft_version | replace_draft_graph | publish_version; svc endpoints verbatim) — nothing guessed.
