@@ -1,12 +1,28 @@
 ---
 spec_id: SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1
-status: proposed
+status: accepted
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
 superseded_by: null
 date: 2026-09-10
+accepted_date: 2026-09-10
+accepted_reviewed_head: cb888040475ddf4af916a80d4c666de7afeabf35
+independent_spec_review: SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1_SPEC_REVIEW_R1
+independent_spec_review_result: PASS (6/6 §7 criteria YES; single blocker B1 = mechanical
+  frontmatter conformance, fixed exactly as prescribed and re-verified at cb88804 with
+  §1–§8 zero semantic delta; BLOCKERS=NONE)
+required_fixes: NONE (B1 closed pre-acceptance)
+owner_acceptance: >
+  Owner ruling 2026-09-10 Part B — VERDICT = ACCEPT_WITH_SPLIT; OWNER_SEMANTIC_ACCEPTANCE = YES
+  (reviewed semantic head cb88804; current tip c8a90ef confirmed README-wording-only,
+  SPEC_SEMANTIC_DELTA = NONE). Frozen: FACT layer permanent & unrewritable; ALERT layer
+  acknowledge/close via formal operator disposition with exactly one closure notification;
+  new occurrence = new fingerprint = alerts normally; DETECTOR_BASIS_BRANCH /
+  EXECUTION_OUTCOME_REWRITE / AUDIT_LEDGER_REWRITE / NEW_MUTATION_SURFACE = FORBIDDEN.
+  This authority never flows back into PR #222 (its RUN_FAILED detector stays unconditional);
+  any acknowledgment/closure implementation is a SEPARATE follow-up under THIS spec.
 owners:
   - repository-maintainers
 governed_by:
@@ -16,19 +32,14 @@ amends_upon_acceptance:
     alerting — via that spec's own amendment mechanism, NOT by editing it here)
 supersedes: []
 external_authorities: []
-owner_drafting_mandate: >
-  Owner ruling 2026-09-10 (PR #222 authority-conflict round):
-  DRAFT_MINIMAL_DISPOSITION_ALERT_AUTHORITY = YES. 本文件是 docs-only 候选；
-  acceptance 前不改变任何 runtime/detector 行为。
 ---
 
 # SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1
 
-> **状态**：`proposed`（DRAFT，docs-only 候选；零实现授权）。本 Spec 只回答一个语义问题
-> 并冻结其答案；acceptance（`accepted`）是进入任何实现 PR 的前置条件。
-> 分类说明：`spec_kind: invariant`（本 Spec 冻结的是告警生命周期的长期语义不变式，
-> 不携带任何 implementation contract；实现若被授权，将是独立的后续 PR，受本 Spec 的
-> §4/§5 边界约束）。
+> **状态**：`accepted`（2026-09-10，Owner ruling ACCEPT_WITH_SPLIT Part B；
+> independent semantic review PASS 6/6 @ reviewed head cb88804）。冻结语义见 §1–§3。
+> 实现授权仍为 none——acknowledgment/closure lifecycle 的任何实现是本 Spec 下的
+> **独立后续 PR**，且永不回流 PR #222（其 RUN_FAILED detector 保持无条件）。
 
 ## 1. The one semantic question
 
