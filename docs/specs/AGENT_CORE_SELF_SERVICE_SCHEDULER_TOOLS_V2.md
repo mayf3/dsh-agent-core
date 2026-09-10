@@ -1255,7 +1255,7 @@ deployment, or production action.
   denied before store read even with admin, audit, or both; target identity, no source Grant/credential/authority
   propagation, exactly once/no replay, and linked job/occurrence/run/session/target/
   correlation/parent/terminal truth remain proved
-- Failure condition: fifth file, production compose source edit, wrong/alternate/combined (AMENDMENT_2 conformance: files BEYOND the authorized closure above remain a failure - only `critical-job-guard.js` is the authorized NEW file)
+- Failure condition (AMENDMENT_2 conformance): for the V2-original delta, a fifth file; for the AMENDMENT_1 guard, ANY changed path outside its authorized closure (`self-service.js`, `critical-job-guard.js`, `self-service.test.js`, `critical-self-disable-guard.test.js`, `.agents/structure-registry.json` - a sixth path fails), production compose source edit, wrong/alternate/combined
   scope, `scheduler.manage:any` or `scheduler.manage-any` wire value, alias/normalization/
   retry/fallback, admin/audit implication, any authorized/data-bearing global definition list,
   authority leakage, replay, identity mismatch, or
