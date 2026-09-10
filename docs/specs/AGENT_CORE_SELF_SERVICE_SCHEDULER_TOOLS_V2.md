@@ -33,6 +33,19 @@ superseded_by: null
 owners:
   - mayf3
   - repository-maintainers
+amendment_status: proposed
+amendment_ref: >-
+  r6 = AMENDMENT_1 CRITICAL_JOB_SELF_DISABLE_GUARD (Owner authoring authority
+  DRAFT_MINIMAL_CRITICAL_JOB_SELF_DISABLE_AUTHORITY = APPROVED 2026-09-10, SAME
+  Scheduler reliability Goal, no new Goal; docs-only: new CTR-AUTH-004 plus the
+  scoped CTR-AUTH-001/002/003 deltas and the acceptance tests it carries;
+  accepted V2 semantics otherwise unchanged; PROVENANCE_NEUTRAL — attributes no
+  specific incident and assumes no actor/source; implementation
+  HOLD_UNTIL_ACCEPTED; PRODUCTION_APPLY = NO)
+amendment_authoring_authority_basis: >-
+  Owner ruling 2026-09-10: authoring authority only — independent semantic
+  review runs before the Owner exact-head acceptance gate, which is the only
+  path to amendment acceptance; implementation is forbidden until acceptance.
 ---
 
 # AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
@@ -705,7 +718,10 @@ that document only (a) whether the requested job exists and (b) that job's `job.
 If those permitted fields show the requested job is foreign and external proof is required,
 then before exact proof succeeds the authorization path MUST NOT project, query, filter,
 return, or disclose occurrence/history, and MUST NOT use occurrence/history as authorization
-input. Authorized self `runs` behavior remains unchanged and makes zero Auth requests.
+input. AMENDMENT_1 (CTR-AUTH-004) extends the permitted disable-path consumption by exactly
+one mechanical field: on a self `disable` decision the authorization path MAY additionally
+consume the requested job's persisted `job.logicalKey` (exact stored string, never returned
+to the model, never used for any non-disable decision, never disclosed in any result). Authorized self `runs` behavior remains unchanged and makes zero Auth requests.
 Whole-document parsing/validation is permitted but grants no visibility. Denial MUST return
 no persisted job/definition/occurrence/history/message/owner content or other public result
 and MUST perform no mutation or success audit.
@@ -724,6 +740,10 @@ foreign update/enable/disable/remove      (scheduler, scheduler.admin)         s
 list(all_agents=true)                     NONE; stable fail-closed             unavailable
 runs(all_agents=true) or foreign runs     (scheduler, scheduler.audit)         history visibility only
 self create/list/runs/update/control      none; Auth request count = zero      read:self / manage:self
+self disable of a critical logicalKey     NONE — DENIED before any store       zero mutation, no
+(CTR-AUTH-004; exact logicalKey match     read past the classification,         success audit; stable
+against the deployment desired-state      zero Auth requests                    sanitized denial code
+manifest, expectedEnabled = true)
 ```
 
 Thus exact `(resource='scheduler', scope='scheduler.admin')` is the only external proof for
@@ -775,6 +795,12 @@ files only in this closed list:
 3. `packages/scheduler/test/cross-agent.test.js`;
 4. `packages/production-runtime/test/compose-cross-agent-history.test.js`.
 
+AMENDMENT_1 extends the closure by exactly two files for the CTR-AUTH-004 guard: the pure
+manifest reader/classifier `packages/scheduler/src/desired-state.js` (injectable path +
+injectable read seam for tests) and its focused test
+`packages/scheduler/test/desired-state.test.js`. If implementation needs a seventh file or a
+production composition source change, work MUST stop for new/amended accepted authority.
+
 The production-runtime entry is test-only. `packages/production-runtime/src/compose.js` and
 all other product files MUST remain unchanged. Local messages and policy assertions MUST keep
 the colon-form labels; only `assertGrant` and its resulting token requests use exact R8 wire
@@ -782,6 +808,98 @@ scopes `scheduler.admin` or `scheduler.audit` according to `CTR-AUTH-002`.
 `list(all_agents=true)` makes no `assertGrant` or token request.
 If implementation requires a fifth file or production composition source change, work MUST
 stop for new/amended accepted authority rather than expand this closure.
+
+### CTR-AUTH-004 — critical-job self-disable guard (AMENDMENT_1)
+
+An ordinary owner Agent — the self path: requested `job.agentId` equals the trusted caller,
+local authorization `scheduler.manage:self`, zero Auth requests — MUST be DENIED when it
+attempts `action=disable` on a job whose classification is CRITICAL. The denial happens
+BEFORE any store mutation and before any mutation-evidence append:
+
+```text
+ordinary owner Agent
++ scheduler.manage:self (self path, zero Auth)
++ action = disable
++ target exact logicalKey is CRITICAL (expectedEnabled = true)
+→ DENY (stable sanitized denial code critical_job_self_disable_denied)
+→ ZERO STORE MUTATION
+→ NO success audit (V2 denial semantics unchanged)
+```
+
+**CRITICAL classification (frozen; the ONLY inputs).** The sole classification source is the
+deployment-owned desired-state manifest at
+`/usr/local/libexec/agent-core/config/scheduler-desired-state.json` (ownership, read-only
+consumption, and failure-surface separation exactly per SCHEDULER_CONTROL_PLANE_RELIABILITY_V1
+§5.4: different file/directory/ownership from the canonical store; never copied into the
+store directory; never written back). A job is CRITICAL iff the manifest contains at least
+one entry whose `logicalKey` equals the requested job's persisted `logicalKey` by EXACT
+string equality (no case folding, no trimming, no normalization) AND that entry's
+`expectedEnabled` is the boolean `true`. FORBIDDEN as classification inputs: `job.name`,
+display name, substring/fuzzy match, prompt text, agent display identity, schedule shape,
+or any model-supplied field.
+
+**Fail-closed (disable only).** If the manifest is unreadable, missing, malformed JSON, or
+the classification is otherwise UNDECIDABLE for the requested job, the ordinary self
+`disable` MUST be denied with the same stable sanitized denial code — never guessed to be
+non-critical — with ZERO store mutation. ONLY the `disable` action is gated: `create`,
+`list`, `runs`, `update`, `enable`, and `remove` MUST NOT read the manifest and MUST keep
+their exact V2 behavior (an unreadable manifest must not degrade `list`, `runs`, or
+`enable`). `enable` of a CRITICAL job stays allowed (self-enable of a required control loop
+is always safe: it only restores the manifest's desired state).
+
+**Elevation preserved.** The guard gates ONLY the ordinary self path. The existing elevated
+semantics stand unchanged: the operator CLI (`scripts/agentcore-cron`, outside the model
+tool surface) MAY disable a CRITICAL job for emergency stop, and an exact external
+`(scheduler, scheduler.admin)` proof establishing local `scheduler.manage:any` keeps its
+V2 foreign-disable semantics. `CRITICAL_JOB != IMMUTABLE_JOB` — the product statement is
+exactly: an ordinary model-facing owner cannot turn off its own required control-loop job.
+
+**Mechanics.** The manifest is read fresh per `disable` invocation (no cache, no watch, no
+background reload), from the deployment-pinned path only (never from model arguments); the
+reader is pure and injectable for tests. The guard runs inside the existing self-service
+access layer (`packages/scheduler/src/self-service.js`) on the disable branch, before
+`disableJobOp` and before any audit append. Zero Auth requests are added (classification is
+entirely local). The denial result carries no job/definition/occurrence/history/owner
+content — only the stable sanitized denial code; V2's denial rules (no mutation, no success
+audit, no disclosure) apply verbatim.
+
+**Provenance neutrality and non-goals.** This amendment attributes NO specific disable
+incident and assumes NO actor or source; it closes a structural authorization gap of a
+repeatedly-proven risk class (an owner Agent can currently disable its own required
+control-loop job), and incident attribution remains the separate forensics channel's
+outcome. Explicit non-goals: NO watchdog behavior change of any kind — the Scheduler
+watchdog stays READ_ONLY per SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 and NO
+auto-enable/auto-repair reaction to JOB_DISABLED is introduced; NO new mutation surface, NO
+new store file, NO occurrence/fence/retry/late-settlement semantic change, NO new wire
+scope or Auth request, NO change to operator CLI.
+
+### CTR-AUTH-005 — amendment acceptance tests (all REQUIRED; a happy-path-only suite is a REVISE)
+
+```text
+T1 non-critical self-owned disable    → allowed, behavior unchanged
+T2 critical self-owned disable        → denied, ZERO mutation, sanitized stable denial code
+T3 classification = exact persisted logicalKey + expectedEnabled === true only;
+   name/display/substring/prompt/agent-display inputs MUST NOT match (negative proofs)
+T4 manifest missing / unreadable / malformed → self disable FAIL_CLOSED, ZERO mutation;
+   list / runs / enable verified unaffected in the same failing-manifest fixture
+T5 foreign job disable without elevation → existing ownership denial unchanged
+T6 operator CLI critical disable       → allowed (existing path, outside the tool surface)
+T7 elevated foreign disable via exact scheduler.admin → existing V2 semantics preserved
+T8 enable of a critical job (self)     → allowed
+T9 denied-disable replay/concurrency   → repeated and concurrent denied attempts leave
+                                         the store byte-identical (zero mutation)
+T10 watchdog JOB_DISABLED detection/alert behavior unchanged (read-only; no auto-repair)
+```
+
+Mechanical proofs required with the suite:
+
+```text
+NEW_MUTATION_SURFACE       = NO  (no new store file/writer; disableJobOp stays the only disable path)
+WATCHDOG_AUTO_REPAIR       = NO  (watchdog code paths untouched; still READ_ONLY)
+OCCURRENCE_SEMANTICS_CHANGE = NO
+RETRY_SEMANTICS_CHANGE     = NO
+AUTH_REQUESTS_ON_GUARD     = 0   (classification is local-only)
+```
 
 ### CTR-MUT-001 — Existing control operations only
 
