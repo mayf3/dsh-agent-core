@@ -1565,6 +1565,7 @@ CTR-AUTH-003 fifth-file rule (scoped as V2-original; AMENDMENT_1 needs no new fi
 migration clause (four-file implementation PR)
 ACC-AUTH-001 required-evidence row
 ACC-AUTH-001 consumption criterion
+ACC-AUTH-001 failure-condition row
 ACC-AUTH-002 heading / Expected result / Failure condition
 lifecycle evidence clause (four-file implementation ancestry)
 lifecycle implementation instruction (exact four files + consumption sentence)
