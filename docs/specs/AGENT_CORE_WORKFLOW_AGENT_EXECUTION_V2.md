@@ -1,6 +1,20 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2
-status: proposed
+status: accepted
+accepted_date: 2026-09-10
+acceptance_authority_basis: >-
+  Owner exact-head acceptance (PR mayf3/dsh-agent-core#236,
+  OWNER_EXACT_HEAD_ACCEPTANCE = YES at
+  11023c6fd112f48e2d1de84f6a27048f8049df6c, fourth independent review
+  round PASS / 0 SEMANTIC_SHIP_BLOCKERS; authoring authority
+  DRAFT_MINIMAL_SUCCESSOR_AUTHORITY = APPROVED 2026-09-10). This commit
+  is the acceptance lifecycle transaction only: the accepted contract
+  body is byte-identical to the accepted head except this frontmatter;
+  the reciprocal backlinks in the superseded/inherited accepted
+  authorities (AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V1,
+  AGENT_CORE_AGENT_SESSION_MESSAGING_V1) are recorded in the same
+  transaction per §8.6.
+accepted_reviewed_head: 11023c6fd112f48e2d1de84f6a27048f8049df6c
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
