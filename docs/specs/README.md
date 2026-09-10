@@ -230,6 +230,12 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1` | superseded (2026-09-05 by `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2` whole-Spec subject successor；reviewed head f3b11d7…) | contracts（生产 apply 另受 shared mutation slot + controlled runbook 约束，`production_apply_authority: conditional_controlled_operation`） | HR_DISPATCH_DELIVERY_READINESS_V1 Lane B：只读 capability `agent_resolve_principal`（exact AGENT Principal UUID → canonical enabled agentId；trusted-caller-only、fixed Auth origin/path、audience `agent-principal-resolution` × `auth.agent.resolve`、closed 两字段响应、全族 fail-closed 404/409/422/500/504→lowercase 映射）+ A2A Router ingress exact-ID admission guard（闭合 resolveAgentRef display-name fallback TOCTOU 错投族；不动 ASM 三字段 schema/授权/receipt/no-replay）；上游 = auth `AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V1` accepted @ b5eef6cd…（depends_on pin）；禁止 second identity source / display-name guessing / dispatcher / agent_wake；Lane C 组合 canary 另受 shared slot 释放条件约束 |
 | `AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2` | accepted (reviewed head eedf469…, Owner batched exact-head acceptance 2026-09-05) | contracts（生产 apply 另受 shared mutation slot + controlled runbook 约束，`production_apply_authority: conditional_controlled_operation`） | V1 的 whole-Spec subject successor：唯一语义修正=canary/proof 主体 bc970ced…(legacy hr-agent) → dc702687…(agt_hr-agent) + legacy MUST NOT 条款（既有 stored-id 文法对 legacy 拼写本就 fail-closed）；subject-generic resolution 与 exact-ID admission 契约字节保留；上游 pin = auth `AUTH_SERVICE_EXACT_AGENT_PRINCIPAL_RESOLUTION_V2` @ 87beb77（auth main dde3967 可达，body 与 accepted auth V2 字节一致） |
 
+## Scheduler control-plane reliability alert authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1` | accepted (PR #242, reviewed head cb88804…; Owner ACCEPT_WITH_SPLIT 2026-09-10; semantic review PASS 6/6, B1 closed pre-acceptance) | none（语义 authority only；acknowledgment/closure 的任何实现 = 本 Spec 下独立后续 PR，永不回流 PR #222） | 冻结单一语义：正式 operator disposition 可关闭 incident/alert layer（同一 occurrence 恰一条 closure 通知，不再重复 reminder），永不改写 fact layer（failure fact durable、零 ledger mutation、detector 零 basis 分支）；是 PR #222 已撤销的 operator-reconciled RUN_FAILED suppression（Owner 2026-09-10 ruling：NOT_AUTHORIZED_YET）的唯一合法替代 authority 路径 |
+
 ## Scheduler production state reconciliation authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
