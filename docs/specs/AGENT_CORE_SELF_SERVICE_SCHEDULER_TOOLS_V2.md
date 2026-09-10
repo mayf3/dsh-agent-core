@@ -778,8 +778,10 @@ back after failure. Auth denial, unavailable audience, missing Grant, token fail
 response, wrong-only scope, both wrong spellings, or uncertainty MUST deny the operation
 without disclosure, mutation, or success audit. The whole-document load/validation permitted
 by `CTR-AUTH-001` remains allowed, but the decision may consume only job existence and
-`job.agentId`; on every external-proof branch occurrence/history remain forbidden as
-authorization input or pre-proof output. A successful proof MUST NOT propagate the token,
+`job.agentId` (AMENDMENT_1: the ordinary self `disable` branch additionally consumes the
+requested job's persisted `job.logicalKey` for the CTR-AUTH-004 critical classification,
+exactly per its frozen rules); on every external-proof branch occurrence/history remain
+forbidden as authorization input or pre-proof output. A successful proof MUST NOT propagate the token,
 credential, Grant, caller authority, source-Agent identity, or authorization fields into the
 job, occurrence, run, session, execution request, or target workspace.
 
@@ -1292,11 +1294,13 @@ self disable branch) + NEW `desired-state.js` (pure reader/classifier) + NEW
 acceptance coverage of CTR-AUTH-004/005 is the T1–T10 matrix + mechanical proofs they carry
 (new focused tests live in `self-service.test.js` / `desired-state.test.js`).
 
-- Contracts: `CTR-AUTH-003`
+- Contracts: `CTR-AUTH-003` (AMENDMENT_1 adds `CTR-AUTH-004`/`CTR-AUTH-005`: the guard delta touches exactly three files — `self-service.js` modified, NEW `desired-state.js`, NEW `desired-state.test.js` — six cumulative with V2's four)
 - Method: accepted-base-to-head diff census plus focused Scheduler tests and composed production-runtime cross-agent history test with local OAuth capture
 - Environment: isolated implementation worktree under repository-pinned Node with proxy variables unset; disposable stores; no production service
 - Required evidence: exact changed-file list, executed commands/results, captured OAuth body and count, execution payload authority-key scan, and HistoryStore queries
-- Expected result: only the four named files change; production compose source is unchanged;
+- Expected result (AMENDMENT_1 cumulative census): only the four V2 files plus the guard
+  delta's three files change (`self-service.js` modified, `desired-state.js` and
+  `desired-state.test.js` new); production compose source is unchanged;
   captured OAuth bodies use `scheduler.admin` for cross-Agent mutation/control/destination and
   `scheduler.audit` only for global/foreign history; local labels remain colon-form; admin and
   audit are mutually non-implying; `list(all_agents=true)` produces no OAuth request and is
