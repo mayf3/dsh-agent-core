@@ -79,9 +79,22 @@ dangling BLOCKED/duplicate BLOCKED/CASE A/CASE B/无 receipt 回滚 BLOCKED/
   不触 auth DB）。
 - auth-service rebind loopback（AMENDMENT_8 C1）属独立生产步骤，与本包无关。
 
-## 7. 执行门
+## 7. 执行门与生产 runbook（独立评审 non-blocking 项已吸收）
 
 union acceptance（exact digest/head）之前：不执行 --apply/--rollback 于生产
-路径；生产执行序列（届时）：`--status` → `--apply` → `--status` +
-`inspect-runtime` 回执 → 88-Agent 抽样 mint 验证。回滚序列：`--rollback`
-（CASE 判定自动）。
+路径。生产执行序列（届时）：
+
+1. `--status`（FRESH 断言）→ `--apply` → `--status`（MIGRATED 断言）+
+   executor `inspect-runtime` 回执 → 88-Agent 抽样 mint 验证。
+2. **writer repoint（必做显式步）**：apply 后 provisioning/rotation 一律面向
+   真实权威路径 `credential-store/agent-credentials.json`
+   （rotation CLI `--store` / 对应 env）；面向 pinned 符号链接的写面会在
+   store-writer lstat 门 fail-closed（设计如此）。
+3. **遗留 .bak 处置**：`config/agent-credentials.json.bak-bdcred-20260908T130637`
+   迁移后仍留在 root 属主的链接父目录——生产包收尾时归档出该目录（0600
+   secret material 不留在共享 config 面）。
+4. 回滚序列：`--rollback`（CASE A/B 自动判定；**wedge window**：若崩溃于
+   CASE 回滚的 rename 与 zone unlink 之间 → DUPLICATE_FILES 态，两份均为
+   当前 generation 字节，机械 reconciliation = 核对 sha 相等后删除 zone 副本）。
+5. 回顾记录：独立评审 PASS / SHIP_BLOCKERS = NONE（M1–M10，fixture 10/10；
+   non-blocking 9 项，1/2/6 已吸收为上列 runbook 步，其余为记录性说明）。
