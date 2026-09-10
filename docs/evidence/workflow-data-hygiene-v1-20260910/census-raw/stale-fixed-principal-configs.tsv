@@ -1,0 +1,358 @@
+adc-backend-dev-v1	1	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	1	PUBLISHED	dev_self_check	NORMAL	39938395-a46c-46e8-b558-849de147f877			agent-dev-engineer	active
+adc-backend-dev-v1	1	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	1	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-backend-dev-v1	1	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-backend-dev-v1	1	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-backend-dev-v1	1	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-backend-dev-v1	1	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	1	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-backend-dev-v1	2	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-backend-dev-v1	2	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-backend-dev-v1	2	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	2	PUBLISHED	dev_self_check	NORMAL	39938395-a46c-46e8-b558-849de147f877			agent-dev-engineer	active
+adc-backend-dev-v1	2	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	2	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-backend-dev-v1	2	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-backend-dev-v1	2	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-backend-dev-v1	2	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-backend-dev-v1	2	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	2	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-backend-dev-v1	3	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-backend-dev-v1	3	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-backend-dev-v1	3	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	3	PUBLISHED	dev_self_check	NORMAL	39938395-a46c-46e8-b558-849de147f877			agent-dev-engineer	active
+adc-backend-dev-v1	3	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	3	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-backend-dev-v1	3	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-backend-dev-v1	3	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-backend-dev-v1	3	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-backend-dev-v1	3	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	3	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-backend-dev-v1	5	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-backend-dev-v1	5	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-backend-dev-v1	5	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	5	PUBLISHED	dev_self_check	NORMAL	39938395-a46c-46e8-b558-849de147f877			agent-dev-engineer	active
+adc-backend-dev-v1	5	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	5	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-backend-dev-v1	5	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-backend-dev-v1	5	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-backend-dev-v1	5	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-backend-dev-v1	5	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-backend-dev-v1	5	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-frontend-dev-v1	1	DEPRECATED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	1	DEPRECATED	dev_self_check	NORMAL	1680fd97-e4c4-42df-9ce6-ba46c9dc31e2			devtools-agent	active
+adc-frontend-dev-v1	1	DEPRECATED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	1	DEPRECATED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-frontend-dev-v1	1	DEPRECATED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-frontend-dev-v1	1	DEPRECATED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-frontend-dev-v1	1	DEPRECATED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-frontend-dev-v1	1	DEPRECATED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	1	DEPRECATED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-frontend-dev-v1	2	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-frontend-dev-v1	2	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-frontend-dev-v1	2	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	2	PUBLISHED	dev_self_check	NORMAL	1680fd97-e4c4-42df-9ce6-ba46c9dc31e2			devtools-agent	active
+adc-frontend-dev-v1	2	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	2	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-frontend-dev-v1	2	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-frontend-dev-v1	2	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-frontend-dev-v1	2	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-frontend-dev-v1	2	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	2	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-frontend-dev-v1	3	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-frontend-dev-v1	3	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-frontend-dev-v1	3	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	3	PUBLISHED	dev_self_check	NORMAL	1680fd97-e4c4-42df-9ce6-ba46c9dc31e2			devtools-agent	active
+adc-frontend-dev-v1	3	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	3	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-frontend-dev-v1	3	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-frontend-dev-v1	3	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-frontend-dev-v1	3	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-frontend-dev-v1	3	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	3	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-frontend-dev-v1	4	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-frontend-dev-v1	4	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-frontend-dev-v1	4	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	4	PUBLISHED	dev_self_check	NORMAL	1680fd97-e4c4-42df-9ce6-ba46c9dc31e2			devtools-agent	active
+adc-frontend-dev-v1	4	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	4	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-frontend-dev-v1	4	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-frontend-dev-v1	4	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-frontend-dev-v1	4	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-frontend-dev-v1	4	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-frontend-dev-v1	4	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-game-dev-v1	1	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	1	PUBLISHED	dev_self_check	NORMAL	913dbd48-2311-4a10-9620-54c8b3e1c61a			game-dev-agent	active
+adc-game-dev-v1	1	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	1	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-game-dev-v1	1	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-game-dev-v1	1	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-game-dev-v1	1	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-game-dev-v1	1	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	1	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-game-dev-v1	2	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-game-dev-v1	2	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-game-dev-v1	2	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	2	PUBLISHED	dev_self_check	NORMAL	913dbd48-2311-4a10-9620-54c8b3e1c61a			game-dev-agent	active
+adc-game-dev-v1	2	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	2	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-game-dev-v1	2	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-game-dev-v1	2	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-game-dev-v1	2	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-game-dev-v1	2	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	2	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-game-dev-v1	3	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-game-dev-v1	3	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-game-dev-v1	3	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	3	PUBLISHED	dev_self_check	NORMAL	913dbd48-2311-4a10-9620-54c8b3e1c61a			game-dev-agent	active
+adc-game-dev-v1	3	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	3	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-game-dev-v1	3	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-game-dev-v1	3	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-game-dev-v1	3	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-game-dev-v1	3	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	3	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-game-dev-v1	4	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-game-dev-v1	4	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-game-dev-v1	4	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	4	PUBLISHED	dev_self_check	NORMAL	913dbd48-2311-4a10-9620-54c8b3e1c61a			game-dev-agent	active
+adc-game-dev-v1	4	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	4	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-game-dev-v1	4	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-game-dev-v1	4	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-game-dev-v1	4	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-game-dev-v1	4	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-game-dev-v1	4	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-miniapp-dev-v1	1	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	1	PUBLISHED	dev_self_check	NORMAL	fe836dbd-896f-40f0-a74f-9c273d5ac233			miniapp-game-engineer	active
+adc-miniapp-dev-v1	1	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	1	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-miniapp-dev-v1	1	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-miniapp-dev-v1	1	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-miniapp-dev-v1	1	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-miniapp-dev-v1	1	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	1	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-miniapp-dev-v1	2	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-miniapp-dev-v1	2	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-miniapp-dev-v1	2	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	2	PUBLISHED	dev_self_check	NORMAL	fe836dbd-896f-40f0-a74f-9c273d5ac233			miniapp-game-engineer	active
+adc-miniapp-dev-v1	2	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	2	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-miniapp-dev-v1	2	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-miniapp-dev-v1	2	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-miniapp-dev-v1	2	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-miniapp-dev-v1	2	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	2	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-miniapp-dev-v1	3	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-miniapp-dev-v1	3	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-miniapp-dev-v1	3	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	3	PUBLISHED	dev_self_check	NORMAL	fe836dbd-896f-40f0-a74f-9c273d5ac233			miniapp-game-engineer	active
+adc-miniapp-dev-v1	3	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	3	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-miniapp-dev-v1	3	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-miniapp-dev-v1	3	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-miniapp-dev-v1	3	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-miniapp-dev-v1	3	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	3	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-miniapp-dev-v1	4	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-miniapp-dev-v1	4	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-miniapp-dev-v1	4	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	4	PUBLISHED	dev_self_check	NORMAL	fe836dbd-896f-40f0-a74f-9c273d5ac233			miniapp-game-engineer	active
+adc-miniapp-dev-v1	4	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	4	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-miniapp-dev-v1	4	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-miniapp-dev-v1	4	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-miniapp-dev-v1	4	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-miniapp-dev-v1	4	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-miniapp-dev-v1	4	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-mobile-dev-v1	1	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	1	PUBLISHED	dev_self_check	NORMAL	50042be0-57ef-4f37-a8d0-d936eddf24d1			mobile-app-engineer	active
+adc-mobile-dev-v1	1	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	1	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-mobile-dev-v1	1	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-mobile-dev-v1	1	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-mobile-dev-v1	1	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-mobile-dev-v1	1	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	1	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-mobile-dev-v1	2	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-mobile-dev-v1	2	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-mobile-dev-v1	2	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	2	PUBLISHED	dev_self_check	NORMAL	50042be0-57ef-4f37-a8d0-d936eddf24d1			mobile-app-engineer	active
+adc-mobile-dev-v1	2	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	2	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-mobile-dev-v1	2	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-mobile-dev-v1	2	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-mobile-dev-v1	2	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-mobile-dev-v1	2	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	2	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-mobile-dev-v1	3	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-mobile-dev-v1	3	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-mobile-dev-v1	3	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	3	PUBLISHED	dev_self_check	NORMAL	50042be0-57ef-4f37-a8d0-d936eddf24d1			mobile-app-engineer	active
+adc-mobile-dev-v1	3	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	3	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-mobile-dev-v1	3	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-mobile-dev-v1	3	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-mobile-dev-v1	3	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-mobile-dev-v1	3	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	3	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+adc-mobile-dev-v1	4	PUBLISHED	arch_design	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-mobile-dev-v1	4	PUBLISHED	arch_review	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+adc-mobile-dev-v1	4	PUBLISHED	deploying	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	4	PUBLISHED	dev_self_check	NORMAL	50042be0-57ef-4f37-a8d0-d936eddf24d1			mobile-app-engineer	active
+adc-mobile-dev-v1	4	PUBLISHED	merge_to_main	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	4	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+adc-mobile-dev-v1	4	PUBLISHED	qa_pre_release	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-mobile-dev-v1	4	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+adc-mobile-dev-v1	4	PUBLISHED	security_review	NORMAL	af8708f0-eb99-409b-87c9-7c7ee596b967			security-agent	active
+adc-mobile-dev-v1	4	PUBLISHED	test_env_deploy	NORMAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72			itops-agent	active
+adc-mobile-dev-v1	4	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+agent_self_task_v1	1	DEPRECATED	efficiency_accept	NORMAL	10000000-0000-0000-0000-000000000020				NOT_FOUND
+agent_self_task_v1	1	DEPRECATED	efficiency_check	NORMAL	10000000-0000-0000-0000-000000000020				NOT_FOUND
+agent_self_task_v1	1	DEPRECATED	partner_accept	NORMAL	10000000-0000-0000-0000-000000000030				NOT_FOUND
+agent_self_task_v1	1	DEPRECATED	partner_check	NORMAL	10000000-0000-0000-0000-000000000030				NOT_FOUND
+agent_self_task_v1	2	PUBLISHED	efficiency_accept	NORMAL	95eab282-22c7-46a2-8580-abfef4942cdc			efficiency-manager	active
+agent_self_task_v1	2	PUBLISHED	efficiency_check	NORMAL	95eab282-22c7-46a2-8580-abfef4942cdc			efficiency-manager	active
+agent_self_task_v1	2	PUBLISHED	partner_accept	NORMAL	b6b033c4-90ba-40aa-a338-304da442cab7			b6b033c4-90ba-40aa-a338-304da442cab7	active
+agent_self_task_v1	2	PUBLISHED	partner_check	NORMAL	b6b033c4-90ba-40aa-a338-304da442cab7			b6b033c4-90ba-40aa-a338-304da442cab7	active
+agent-content-to-actions-v1-0906	1	DRAFT	blog_prepare	NORMAL	fd58881a-fdba-4ef2-9a80-b733671f24f1			agt_blog-agent	active
+agent-content-to-actions-v1-0906	1	DRAFT	efficiency_actions	NORMAL	b21ddb23-42f6-47c4-a27f-bc44950e554c			agt_efficiency-agent	active
+agent-content-to-actions-v1-0906	2	PUBLISHED	step_1	TASK	fd58881a-fdba-4ef2-9a80-b733671f24f1			agt_blog-agent	active
+agent-content-to-actions-v1-0906	2	PUBLISHED	step_2	TASK	b21ddb23-42f6-47c4-a27f-bc44950e554c			agt_efficiency-agent	active
+agent-onboarding-v1	1	PUBLISHED	avatar	NORMAL	87b760da-14b3-46d1-b529-9350ad95d2c0			image-gen-agent	active
+agent-onboarding-v1	1	PUBLISHED	ceo_approve	NORMAL	26b2be56-353f-406c-9865-bff91149b4fb			ceo-agent	active
+agent-onboarding-v1	1	PUBLISHED	ceo_verify	NORMAL	26b2be56-353f-406c-9865-bff91149b4fb			ceo-agent	active
+agent-onboarding-v1	1	PUBLISHED	finalize	NORMAL	bc970ced-710f-4479-9ff0-e295a1c59424	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766	hr-agent	active
+agent-onboarding-v1	1	PUBLISHED	hr_eval	NORMAL	bc970ced-710f-4479-9ff0-e295a1c59424	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766	hr-agent	active
+agent-onboarding-v1	1	PUBLISHED	onboard	NORMAL	bc970ced-710f-4479-9ff0-e295a1c59424	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766	hr-agent	active
+agent-role-upgrade-v1	1	PUBLISHED	ceo_approve	NORMAL	26b2be56-353f-406c-9865-bff91149b4fb			ceo-agent	active
+agent-role-upgrade-v1	1	PUBLISHED	ceo_verify	NORMAL	26b2be56-353f-406c-9865-bff91149b4fb			ceo-agent	active
+agent-role-upgrade-v1	1	PUBLISHED	execute	NORMAL	bc970ced-710f-4479-9ff0-e295a1c59424	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766	hr-agent	active
+agent-role-upgrade-v1	1	PUBLISHED	hr_eval	NORMAL	bc970ced-710f-4479-9ff0-e295a1c59424	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766	hr-agent	active
+agent-role-upgrade-v1	2	PUBLISHED	ceo_approve	NORMAL	b6b033c4-90ba-40aa-a338-304da442cab7			b6b033c4-90ba-40aa-a338-304da442cab7	active
+agent-role-upgrade-v1	2	PUBLISHED	ceo_verify	NORMAL	b6b033c4-90ba-40aa-a338-304da442cab7			b6b033c4-90ba-40aa-a338-304da442cab7	active
+agent-role-upgrade-v1	2	PUBLISHED	execute	NORMAL	bc970ced-710f-4479-9ff0-e295a1c59424	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766	hr-agent	active
+agent-role-upgrade-v1	2	PUBLISHED	hr_eval	NORMAL	bc970ced-710f-4479-9ff0-e295a1c59424	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766	hr-agent	active
+audio-to-knowledge	1	PUBLISHED	compile-knowledge	NORMAL	87047adb-2931-400b-b5f0-c384cba37b8d			knowledge-curator-agent	active
+audio-to-knowledge	1	PUBLISHED	edit-script	NORMAL	66efbc9f-c618-47ba-b9da-0668cf5c7301			transcript-editor-agent	active
+audio-to-knowledge	1	PUBLISHED	ingest-knowledge	NORMAL	87047adb-2931-400b-b5f0-c384cba37b8d			knowledge-curator-agent	active
+audio-to-knowledge	1	PUBLISHED	review-knowledge	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+audio-to-knowledge	1	PUBLISHED	transcribe	NORMAL	32f44973-4aca-4b3f-9668-65bde6e5c234			voice-tech-agent	active
+audio-to-knowledge	1	PUBLISHED	verify-ingest	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+auth_v1_feishu_e2e_v1_1784457448	1	PUBLISHED	review	NORMAL	0623ba1a-45b5-4d98-8570-30feb279262e			0623ba1a-45b5-4d98-8570-30feb279262e	active
+auth-v1-e2e-readonly-def	1	PUBLISHED	review	NORMAL	0623ba1a-45b5-4d98-8570-30feb279262e			0623ba1a-45b5-4d98-8570-30feb279262e	active
+bip_article_pipeline_v1	10	PUBLISHED	reader_test	NORMAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81			reader-simulator-agent	active
+bip_article_pipeline_v1	11	PUBLISHED	reader_test	NORMAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81			reader-simulator-agent	active
+bip_article_pipeline_v1	12	PUBLISHED	reader_test	NORMAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81			reader-simulator-agent	active
+bip_article_pipeline_v2	2	PUBLISHED	reader_test	NORMAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81			reader-simulator-agent	active
+bip_gpt6_podcast_v1_202609	1	PUBLISHED	step_1	TASK	61819256-07e1-4bd0-adea-e93e51243fa1	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d	writing-style-analyst-agent	active
+bip_gpt6_podcast_v1_202609	1	PUBLISHED	step_2	TASK	61819256-07e1-4bd0-adea-e93e51243fa1	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d	writing-style-analyst-agent	active
+bip_gpt6_podcast_v1_202609	1	PUBLISHED	step_3	TASK	61819256-07e1-4bd0-adea-e93e51243fa1	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d	writing-style-analyst-agent	active
+bip_gpt6_podcast_v1_202609	2	PUBLISHED	step_1	TASK	9e3adced-575f-4fb2-b351-f7698b59127d			agt_writing-style-analyst-agent	active
+bip_gpt6_podcast_v1_202609	2	PUBLISHED	step_2	TASK	9e3adced-575f-4fb2-b351-f7698b59127d			agt_writing-style-analyst-agent	active
+bip_gpt6_podcast_v1_202609	2	PUBLISHED	step_3	TASK	9e3adced-575f-4fb2-b351-f7698b59127d			agt_writing-style-analyst-agent	active
+bip_gpt6_podcast_v2_202609	1	PUBLISHED	step_1	TASK	d5b3aeb2-e754-49a9-9914-b963521c0985			agt_build-in-public-agent	active
+bip_gpt6_podcast_v2_202609	1	PUBLISHED	step_2	TASK	d5b3aeb2-e754-49a9-9914-b963521c0985			agt_build-in-public-agent	active
+bip_gpt6_podcast_v2_202609	1	PUBLISHED	step_3	TASK	d5b3aeb2-e754-49a9-9914-b963521c0985			agt_build-in-public-agent	active
+biz-explore-v1	1	PUBLISHED	biz_review	NORMAL	fedef046-3289-4b0c-83c1-f7681373dce0			biz-reviewer	active
+biz-explore-v1	1	PUBLISHED	demand_confirm	NORMAL	0c6a8e58-3275-4d40-a099-811832523cc4			needs-radar-agent	active
+biz-explore-v1	1	PUBLISHED	plan_draft	NORMAL	fe2bfbbb-229f-483d-aaa1-42ae14b79a49			biz-explorer	active
+biz-explore-v1	1	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+biz-explore-v1	1	PUBLISHED	research	NORMAL	935d0d15-3bd5-489b-a5ba-d577257c2638			search-expert-agent	active
+biz-explore-v1	1	PUBLISHED	tech_review	NORMAL	3e2439d2-fb54-44f5-afee-77aa17c40d22	agt_cto-agent	4e5a4578-0645-4133-bd35-b80e453dfee9	cto-agent	active
+biz-publish-v1	1	PUBLISHED	content_pack	NORMAL	bb9d8f48-7962-4321-8fb1-554bb428c159			build-in-public-agent	active
+biz-publish-v1	1	PUBLISHED	human_approve	NORMAL	fe2bfbbb-229f-483d-aaa1-42ae14b79a49			biz-explorer	active
+biz-publish-v1	1	PUBLISHED	market_feedback	NORMAL	fe2bfbbb-229f-483d-aaa1-42ae14b79a49			biz-explorer	active
+biz-publish-v1	1	PUBLISHED	publish	NORMAL	fe2bfbbb-229f-483d-aaa1-42ae14b79a49			biz-explorer	active
+blog_write_review_v1	1	PUBLISHED	review	NORMAL	61819256-07e1-4bd0-adea-e93e51243fa1	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d	writing-style-analyst-agent	active
+blog_write_review_v1	1	PUBLISHED	writing	NORMAL	81c7fc7e-c696-4b47-bfd6-f12a9ecb68a6			blog-agent	active
+blog_write_review_v1	2	PUBLISHED	reader_test	NORMAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81			reader-simulator-agent	active
+content_pipeline_v1	1	PUBLISHED	in_review	NORMAL	61819256-07e1-4bd0-adea-e93e51243fa1	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d	writing-style-analyst-agent	active
+content_pipeline_v1	1	PUBLISHED	pending_approval	NORMAL	bb9d8f48-7962-4321-8fb1-554bb428c159			build-in-public-agent	active
+content_pipeline_v1	1	PUBLISHED	publishing	NORMAL	d2bec623-56ba-46cb-a217-933cfe63a243			article-publisher-agent	active
+game_dev_flow_v1	1	PUBLISHED	art_prod	NORMAL	87b760da-14b3-46d1-b529-9350ad95d2c0			image-gen-agent	active
+game_dev_flow_v1	1	PUBLISHED	audio_prod	NORMAL	32f44973-4aca-4b3f-9668-65bde6e5c234			voice-tech-agent	active
+game_dev_flow_v1	1	PUBLISHED	design	NORMAL	4af8d4e7-8eae-4904-a142-b3f3d8f0b959			game-designer-agent	active
+game_dev_flow_v1	1	PUBLISHED	dev_integration	NORMAL	fe836dbd-896f-40f0-a74f-9c273d5ac233			miniapp-game-engineer	active
+game_dev_flow_v1	1	PUBLISHED	product_check	NORMAL	968bff25-17f5-4e72-8bb9-5e2238b4bbbc			product-designer	active
+game_dev_flow_v1	1	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	1	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+game_dev_flow_v1	2	PUBLISHED	art_prod	NORMAL	87b760da-14b3-46d1-b529-9350ad95d2c0			image-gen-agent	active
+game_dev_flow_v1	2	PUBLISHED	art_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	2	PUBLISHED	audio_prod	NORMAL	32f44973-4aca-4b3f-9668-65bde6e5c234			voice-tech-agent	active
+game_dev_flow_v1	2	PUBLISHED	audio_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	2	PUBLISHED	design	NORMAL	4af8d4e7-8eae-4904-a142-b3f3d8f0b959			game-designer-agent	active
+game_dev_flow_v1	2	PUBLISHED	dev_integration	NORMAL	fe836dbd-896f-40f0-a74f-9c273d5ac233			miniapp-game-engineer	active
+game_dev_flow_v1	2	PUBLISHED	dev_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	2	PUBLISHED	product_check	NORMAL	968bff25-17f5-4e72-8bb9-5e2238b4bbbc			product-designer	active
+game_dev_flow_v1	2	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	2	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+game_dev_flow_v1	3	PUBLISHED	art_prod	NORMAL	87b760da-14b3-46d1-b529-9350ad95d2c0			image-gen-agent	active
+game_dev_flow_v1	3	PUBLISHED	art_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	3	PUBLISHED	audio_prod	NORMAL	32f44973-4aca-4b3f-9668-65bde6e5c234			voice-tech-agent	active
+game_dev_flow_v1	3	PUBLISHED	audio_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	3	PUBLISHED	design	NORMAL	4af8d4e7-8eae-4904-a142-b3f3d8f0b959			game-designer-agent	active
+game_dev_flow_v1	3	PUBLISHED	dev_integration	NORMAL	fe836dbd-896f-40f0-a74f-9c273d5ac233			miniapp-game-engineer	active
+game_dev_flow_v1	3	PUBLISHED	dev_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	3	PUBLISHED	product_check	NORMAL	968bff25-17f5-4e72-8bb9-5e2238b4bbbc			product-designer	active
+game_dev_flow_v1	3	PUBLISHED	qa_review	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+game_dev_flow_v1	3	PUBLISHED	testing	NORMAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8			test-engineer	active
+hr-e2e-loop-v1-1788653637	3	DRAFT	work	NORMAL	fd58881a-fdba-4ef2-9a80-b733671f24f1			agt_blog-agent	active
+hr-e2e-loop-v1-1788653637	4	PUBLISHED	work	NORMAL	fd58881a-fdba-4ef2-9a80-b733671f24f1			agt_blog-agent	active
+hr-e2e-loop-v1-1788653637	5	PUBLISHED	work	NORMAL	fd58881a-fdba-4ef2-9a80-b733671f24f1			agt_blog-agent	active
+hr-e2e-loop-v1-1788653637	6	PUBLISHED	work	NORMAL	dc702687-6515-4a2a-91ae-e572a9bbd766			agt_hr-agent	active
+hr-e2e-loop-v1-1788653637	7	PUBLISHED	work	NORMAL	fd58881a-fdba-4ef2-9a80-b733671f24f1			agt_blog-agent	active
+idea_pool_v1	2	DEPRECATED	tier1_review	NORMAL	95eab282-22c7-46a2-8580-abfef4942cdc			efficiency-manager	active
+idea_pool_v1	2	DEPRECATED	tier2_review	NORMAL	10000000-0000-0000-0000-000000000030				NOT_FOUND
+journal_final_delivery	1	PUBLISHED	advisor_review	NORMAL	097f197d-dc71-4107-8db2-f2bdc8eb7ec5			thesis-advisor-agent	active
+journal_final_delivery	1	PUBLISHED	final_check	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+journal_final_delivery	1	PUBLISHED	full_review	NORMAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0			paper-reviewer-agent	active
+journal_final_delivery	1	PUBLISHED	full_revise	NORMAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04			psychology-agent	active
+journal_final_delivery	1	PUBLISHED	language_polish	NORMAL	61819256-07e1-4bd0-adea-e93e51243fa1	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d	writing-style-analyst-agent	active
+journal_final_delivery	1	PUBLISHED	submit	NORMAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04			psychology-agent	active
+journal_section_production	1	PUBLISHED	section_finalize	NORMAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04			psychology-agent	active
+journal_section_production	1	PUBLISHED	section_review	NORMAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0			paper-reviewer-agent	active
+journal_section_production	1	PUBLISHED	translate	NORMAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04			psychology-agent	active
+journal_section_production	2	PUBLISHED	section_review	NORMAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0			paper-reviewer-agent	active
+journal_section_production	3	PUBLISHED	section_finalize	NORMAL	097f197d-dc71-4107-8db2-f2bdc8eb7ec5			thesis-advisor-agent	active
+journal_section_production	3	PUBLISHED	section_review	NORMAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0			paper-reviewer-agent	active
+journal_section_production	3	PUBLISHED	translate	NORMAL	097f197d-dc71-4107-8db2-f2bdc8eb7ec5			thesis-advisor-agent	active
+journal-submission	1	PUBLISHED	advisor_review	NORMAL	097f197d-dc71-4107-8db2-f2bdc8eb7ec5			thesis-advisor-agent	active
+journal-submission	1	PUBLISHED	final_check	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+journal-submission	1	PUBLISHED	review	NORMAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0			paper-reviewer-agent	active
+journal-submission	1	PUBLISHED	revise	NORMAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04			psychology-agent	active
+journal-submission	1	PUBLISHED	submit	NORMAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04			psychology-agent	active
+podcast_script_v1	1	PUBLISHED	audience_test	NORMAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81			reader-simulator-agent	active
+project-insight-review-v1	1	PUBLISHED	arch_analysis	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+project-insight-review-v1	1	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+project-insight-review-v1	2	PUBLISHED	arch_analysis	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+project-insight-review-v1	2	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+project-insight-review-v1	3	PUBLISHED	arch_analysis	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+project-insight-review-v1	3	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+project-insight-review-v1	3	PUBLISHED	verify	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+project-insight-review-v1	4	PUBLISHED	arch_analysis	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+project-insight-review-v1	4	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+project-insight-review-v1	4	PUBLISHED	verify	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+project-insight-review-v1	5	PUBLISHED	arch_analysis	NORMAL	4684680a-60c4-487b-b362-de7a3367fed2	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f	arch-reviewer	active
+project-insight-review-v1	5	PUBLISHED	pm_review	NORMAL	e4215c47-de83-455b-9e12-53edc983cf76			product-manager	active
+project-insight-review-v1	5	PUBLISHED	verify	NORMAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3			qa-reviewer	active
+research_ideation	1	PUBLISHED	gap_analysis	NORMAL	1e0bebef-4150-4a24-ad42-aaccded084a2			research-agent	active
+smoke-test-def	1	PUBLISHED	review	NORMAL	e5efd1a7-d0aa-4c06-9b9a-1b669dce1f94				NOT_FOUND
+video-to-knowledge	1	PUBLISHED	publish_review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+video-to-knowledge	1	PUBLISHED	review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+video-to-knowledge	2	PUBLISHED	audio_analysis	NORMAL	66efbc9f-c618-47ba-b9da-0668cf5c7301			transcript-editor-agent	active
+video-to-knowledge	2	PUBLISHED	audio_review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+video-to-knowledge	2	PUBLISHED	publish_review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+video-to-knowledge	2	PUBLISHED	review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+video-to-knowledge	2	PUBLISHED	video_review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+video-to-knowledge	3	PUBLISHED	audio_analysis	NORMAL	32f44973-4aca-4b3f-9668-65bde6e5c234			voice-tech-agent	active
+video-to-knowledge	3	PUBLISHED	audio_review	NORMAL	66efbc9f-c618-47ba-b9da-0668cf5c7301			transcript-editor-agent	active
+video-to-knowledge	3	PUBLISHED	publish_review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+video-to-knowledge	3	PUBLISHED	review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+video-to-knowledge	3	PUBLISHED	video_analysis	NORMAL	e272c87d-8093-40e3-b285-6bacd9c74c9f			video-model-expert	active
+video-to-knowledge	3	PUBLISHED	video_review	NORMAL	66efbc9f-c618-47ba-b9da-0668cf5c7301			transcript-editor-agent	active
+wiki-compile-review-publish	1	PUBLISHED	review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+wiki-compile-review-publish	2	PUBLISHED	publish	NORMAL	87047adb-2931-400b-b5f0-c384cba37b8d			knowledge-curator-agent	active
+wiki-compile-review-publish	2	PUBLISHED	publish_review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active
+wiki-compile-review-publish	2	PUBLISHED	review	NORMAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a			learning-expert	active

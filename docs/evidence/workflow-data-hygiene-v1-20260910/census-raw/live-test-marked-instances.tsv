@@ -1,0 +1,18 @@
+737d01d1-3bc4-4cfa-b9b5-515accd7a868	adc-v2-dogfood	project-insight-review-v1	TERMINAL	{"source": "canary-verify", "purpose": "verify v5 fixedItems+targetAvailable schema"}	
+b830a6e6-0a3e-4b65-a608-fe26674b9dc0	build-in-public-dogfood	bip_article_pipeline_v1	TERMINAL	{"note": "V5 实例：终审支持双退回（重审/直接改稿）。V19 稿件（canary://articles/9/versions/19）为当前基线。"}	
+3b737675-2893-4cbb-9dc7-dc7c224ef5c5	build-in-public-dogfood	single_platform_dist_v1	TERMINAL	{"mode": "deterministic-harness", "source": "broker-e2e-v1"}	
+eaf868b2-9804-42a1-b669-9673a8db9b9e	build-in-public-dogfood	single_platform_dist_v1	TERMINAL	{"mode": "deterministic-harness", "source": "broker-e2e-v1"}	
+9df27d6a-837c-4e65-a836-487a9d9fa34e	build-in-public-dogfood	single_platform_dist_v1	TERMINAL	{"mode": "deterministic-harness", "source": "broker-e2e-v1"}	
+47e4ebcc-2d4c-41d8-9c4b-a9003f0b230b	build-in-public-dogfood	single_platform_dist_v1	TERMINAL	{"source": "broker-e2e-v1"}	
+adea4ad4-ba6d-4920-991a-46a6b9cee341	canary-wda-prod-v1-1788668907	canary_wda_prod_v1_1788668907	TERMINAL	{"canary": "wda-prod-v1"}	
+3b44f839-0ce2-435c-9439-2a93f8029c49	canary-wda-prod-v1-1788668907	canary_wda_prod_v1_1788668907	TERMINAL	{"canary": "wda-prod-v1"}	
+28ab559b-e58e-4813-9d9b-9e2986942bb5	canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	TERMINAL	{"canary": "E2E-LOOP-1788655898"}	
+6394a91e-16cb-4ce5-8121-9f7c6ec5168f	canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	TERMINAL	{"canary": "E2E-LOOP-1788656586"}	
+c8ecee36-e459-43cb-8eff-37c94e869dbc	canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	TERMINAL	{"canary": "E2E-LOOP-1788654764"}	
+b056be61-912d-4e07-8abb-f413cec79a41	commercial-exploration-dogfood	content_idea_validation_v1	TERMINAL	{"e2e": "CANCEL_NEG"}	e2e-cancel-archive-CANCEL_NEG
+767d8e75-2a00-47cb-8ed8-46b0795b5a17	commercial-exploration-dogfood	content_idea_validation_v1	TERMINAL	{"e2e": "ARCHIVE_NEG"}	e2e-cancel-archive-ARCHIVE_NEG
+7c8ce2cc-1afb-49ed-b14c-f00758e438e8	hr-onboarding	visit_canary_648a6b90-ff57-4945-8c2d-12a1bcbd6ed4	TERMINAL	{"canary": "VISIT_ACTIVATION_DISPATCH_PRODUCTION_V1"}	
+3025174e-9e2c-412e-9fd7-04c0930100fa	knowledge-curation	wiki-compile-review-publish	TERMINAL	{"purpose": "real-compile-review", "draftFile": "wiki/draft/event-sourcing-cqrs-testing.md", "sourceInbox": "raw/inbox/2	wiki-draft-event-sourcing-cqrs-testing
+56257b57-e940-49b6-a329-b2fb1be416b9	workflow-todo-dogfood	personal_quick_item_v1	TERMINAL	{"test": true, "source": "efficiency-minimal-usage-check"}	efficiency-minimal-usage-check-child-20260909
+dbf46d4c-26bd-410a-b8fa-441758ec0658	workflow-todo-dogfood	personal_quick_item_v1	TERMINAL	{"source": "agt_efficiency-agent", "disposable": true}	wfexec-production-ready-canary-20260903-0742
+3591040e-343d-48d7-87bb-5e25fec60135	workflow-todo-dogfood	personal_quick_item_v1	TERMINAL	{"test": true, "type": "personal_todo", "source": "xiaomage"}	

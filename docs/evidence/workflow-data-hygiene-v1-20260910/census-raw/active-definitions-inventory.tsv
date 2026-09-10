@@ -1,0 +1,70 @@
+adc-v2-dogfood	d4677152-bc85-4043-a266-2ccabbc19247	adc-backend-dev-v1	后端研发流程 v1	2026-07-23	2026-07-23	14
+adc-v2-dogfood	f2defd07-c4e5-4eeb-a056-9066f30d5df5	adc-frontend-dev-v1	前端研发流程 v1	2026-07-23	2026-07-23	3
+adc-v2-dogfood	3548cf85-966c-4276-987b-01a36e7b742e	adc-game-dev-v1	游戏研发流程 v1	2026-07-23	2026-07-23	0
+adc-v2-dogfood	20e89372-c21b-4bab-b317-8d869d9bcb89	adc-miniapp-dev-v1	小程序研发流程 v1	2026-07-23	2026-07-23	0
+adc-v2-dogfood	012b308c-f5ca-471b-8a1e-5fc237a84a48	adc-mobile-dev-v1	移动端研发流程 v1	2026-07-23	2026-07-23	0
+adc-v2-dogfood	34414ebd-9b18-488f-8a7c-e553c34ecebd	project-insight-review-v1	项目梳理工作流 v1	2026-08-02	2026-08-02	6
+adc-v2-dogfood	f2143568-8814-4665-9b1f-77c4cd1eb8cd	test-workflow-v1	Test Workflow v1	2026-07-24	2026-07-24	1
+assistance-1853d6d7-d634-4e08-9521-510e43e21479	87689421-0b2b-4a3b-9c41-d1efd6308403	assistance-def-c882de64-9c72-4e71-ab2f-70c4263291a0	Assistance Test	2026-08-14	2026-08-14	2
+assistance-5148b565-34b8-4443-801e-81f58dcf3b62	07d98fd7-3132-4407-b114-422e19a06d8e	assistance-def-4525b9e1-aef1-4c8e-a5c6-ba6e4c9458ab	Assistance Test	2026-08-14	2026-08-14	2
+assistance-74a028b0-b522-4ffa-8239-043088964819	80ce89c3-2ca5-402b-8edb-41e2c56f9096	assistance-def-dd87e30b-e555-4dfe-9e80-4f0cf69aa97b	Assistance Test	2026-08-13	2026-08-13	3
+assistance-c1c84cd2-2f0f-424f-ba90-0c1a3995a9e5	d22c673d-c45d-49bd-b1a9-e3f9894ba297	assistance-def-a10f515f-1952-444d-a658-cb5ea3e4f9fc	Assistance Test	2026-08-13	2026-08-13	1
+auth-v1-e2e-domain-v2	0a57703b-516d-4633-b909-cf36bac5edff	auth_v1_feishu_e2e_v2	Auth V1 Feishu E2E v2	2026-07-19	2026-07-19	0
+auth-v1-e2e-domain-v2	e87390c6-7c5b-4d66-b0e8-c65da843443b	auth_v1_feishu_e2e_v3	Auth V1 Feishu E2E v3	2026-07-19	2026-07-19	0
+auth-v1-e2e-readonly	e3000000-0000-4000-8000-00000000e001	auth-v1-e2e-readonly-def	Auth V1 E2E Read-Only	2026-07-19	2026-07-19	2
+build-in-public-dogfood	ae5fc17f-0a8c-403e-8d05-9dec3f01193d	bip_article_pipeline_v1	BiP文章生产V1	2026-07-27	2026-07-27	8
+build-in-public-dogfood	7e71802b-8b3a-48db-84b1-17669333f81d	bip_article_pipeline_v2	BiP 文章生产工作流 V2	2026-08-14	2026-08-14	1
+build-in-public-dogfood	c95cf647-6c83-42ed-87df-3d6b411f1bc4	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	2026-09-09	2026-09-09	2
+build-in-public-dogfood	d21b91fb-b873-4fec-a916-af79d8961ef5	bip_gpt6_podcast_v2_202609	GPT-6 世界模型播客制作 v2	2026-09-10	2026-09-10	1
+build-in-public-dogfood	ee0f01e7-f229-48ac-bdbb-23a04fce241a	bip_multiplex_v1	多路分发决策V1	2026-07-28	2026-07-28	0
+build-in-public-dogfood	30f313ee-d936-4c46-849e-a3cce7871bce	bip_podcast_v1	播客内容管线V1	2026-07-28	2026-07-28	0
+build-in-public-dogfood	6e4dd322-2836-41a0-b61a-4f2e9aa8acf8	bip_short_video_v1	短视频内容管线V1	2026-07-28	2026-07-28	0
+build-in-public-dogfood	7db5420e-97cd-483d-8a27-4febcde5df46	bip_social_clips_v1	社交切片管线V1	2026-07-28	2026-07-28	0
+build-in-public-dogfood	e0aafb4a-5a94-4e32-a045-84f4a712a419	bip_xiaohongshu_v1	小红书内容管线V1	2026-07-28	2026-07-28	0
+build-in-public-dogfood	7d69824f-d700-41e3-aa98-f50ef67c6e35	blog_write_review_v1	博客写审发	2026-07-23	2026-07-23	0
+build-in-public-dogfood	f89fa341-5330-49dc-a62f-6d9bcb338534	content_pipeline_v1	内容管线工作流	2026-07-24	2026-07-24	0
+build-in-public-dogfood	669f0c32-4e29-43b3-b219-a908673c8457	overseas_dist_v1	海外平台发布	2026-08-08	2026-08-08	0
+build-in-public-dogfood	a59e4b96-0bd7-45e2-9b58-d077acf5693c	podcast_platform_dist_v1	播客单平台分发	2026-08-08	2026-08-08	0
+build-in-public-dogfood	f1a3fd57-6eb0-4757-8674-733841d96da4	podcast_script_v1	播客稿工作流	2026-08-08	2026-08-08	2
+build-in-public-dogfood	d1c6a8c2-52cb-4b1c-8dd8-311f453fa91a	single_platform_dist_v1	单平台发布	2026-08-08	2026-08-08	25
+canary-e2e-1784457448	ab10824e-9950-43a9-8069-949e1ac5f40a	auth_v1_feishu_e2e_v1_1784457448	Auth V1 Feishu E2E	2026-07-19	2026-07-19	2
+canary-wda-prod-v1-1788666602	255862f9-0695-45d1-bb43-541e20fb4760	canary_wda_prod_v1_1788666602	WDA PROD V1 canary definition (disposable)	2026-09-06	2026-09-06	0
+canary-wda-prod-v1-1788666888	79a19d94-743a-4306-bfe9-52175b80e1df	canary_wda_prod_v1_1788666888	WDA PROD V1 canary definition (disposable)	2026-09-06	2026-09-06	0
+canary-wda-prod-v1-1788668907	c6552b9d-0437-43d2-b056-d40329b213ab	canary_wda_prod_v1_1788668907	WDA PROD V1 canary definition (disposable)	2026-09-06	2026-09-06	2
+canary-wda-prod-v1-1788668907	fa6a22c8-0276-42a0-a6bb-df1d5bc32926	negfix_ctrl_1788679612615	WDA regression-fix negative-proof control (disposable)	2026-09-06	2026-09-06	0
+canary-wda-prod-v1-1788668907	fbca5174-c89c-4c4b-a56d-7098862759d7	negfix_ctrl_1788680751242	WDA regression-fix negative-proof control (disposable)	2026-09-06	2026-09-06	0
+canary-wda-v1-1788578473	d3159a3b-af61-4990-b0a9-850266e3616c	canary_dbg_full_1788582382	WDA v1 canary definition	2026-09-05	2026-09-05	0
+canary-wda-v1-1788578473	cad31606-b6d4-42fc-a8f5-c574cd27c2ed	canary_dbg_min_1788582382	WDA v1 canary	2026-09-05	2026-09-05	0
+canary-wda-v1-1788578473	c08bd3a5-e610-4344-9a16-c73f4ec1533b	canary_dbg_nodesc_1788582382	WDA v1 canary definition	2026-09-05	2026-09-05	0
+canary-wda-v1-1788578473	151af1fc-bd46-4c52-84f3-616f7ffe4edb	canary_dbg_nometa_1788582382	WDA v1 canary definition	2026-09-05	2026-09-05	0
+canary-wda-v1-1788582639	f580098d-2a74-4b67-9120-c960384676c5	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	2026-09-06	2026-09-06	3
+canary-wda-v1-1788582639	82e60a1c-a43a-40d5-9639-e5429535eeab	hr-e2e-loop-v1-1788653713	HR E2E loop canary 1788653713	2026-09-06	2026-09-06	0
+canary-wda-v1-1788583685	a7ca0bef-a7e3-4c28-a69c-fe0e8b8ee8a3	canary_wda_canary-wda-v1-1788583685	WDA v1 canary definition	2026-09-05	2026-09-05	0
+canary-wda-v1-1788583811	913ba47f-200b-4aa0-a066-5b36d12766c9	canary_wda_canary-wda-v1-1788583811	WDA v1 canary definition	2026-09-05	2026-09-05	1
+canary-wda-v1-1788583998	0a05ee9b-a132-4984-8aa3-e18f26b8bf4e	canary_wda_canary-wda-v1-1788583998	WDA v1 canary definition	2026-09-05	2026-09-05	1
+canary-wda-v1-1788584903	775d3866-4faf-4216-ae60-787f51e86ee2	canary_wda_canary-wda-v1-1788584903	WDA v1 canary definition	2026-09-05	2026-09-05	1
+commercial-exploration-dogfood	86570504-1ab9-4ad2-8d83-7f526900c920	biz-explore-v1	商业化探索 v1（只产出商业计划书）	2026-08-08	2026-08-08	2
+commercial-exploration-dogfood	8a9e7c74-53e4-4d89-b0c2-69b520106969	biz-publish-v1	发布执行 v1（人工审批门）	2026-08-08	2026-08-08	0
+commercial-exploration-dogfood	e08370a0-99ff-468d-b54f-65db58ea9e7c	content_idea_validation_v1	Content Idea Validation	2026-07-23	2026-07-23	2
+coord-e2e-hr-001	a4bdc370-c8fd-4850-8143-7537eb06fa3c	coord-e2e-def-001	Coord E2E Definition	2026-08-11	2026-08-11	0
+game-dev	6acebe99-cc3b-4cb1-b6b3-befdba6f371c	game_dev_flow_v1	游戏研发流程 v1	2026-08-03	2026-08-03	0
+hr-onboarding	2df082da-5136-4993-9e1c-9ac93357dda5	agent-content-to-actions-v1-0906	Agent 内容到行动建议流程	2026-09-06	2026-09-06	1
+hr-onboarding	f873d899-7106-4970-96a7-4ad51cfbd232	agent-onboarding-v1	新员工入职	2026-08-08	2026-08-08	0
+hr-onboarding	25ac212c-09bc-4d03-ba71-145147e5b058	agent-role-upgrade-v1	角色定义升级	2026-08-08	2026-08-08	1
+hr-onboarding	e81c3787-dec2-4349-be89-e4f76714ab18	dual-agent-content-prep-v1-0906	双 Agent 内容准备流程	2026-09-06	2026-09-06	1
+hr-onboarding	ae479397-dd60-44a1-b326-c2b96416f6db	retrospective-action	复盘整改验收流程	2026-08-13	2026-08-13	9
+hr-onboarding	de53678d-98cb-4bac-a2f1-3d49f48b8b96	user-verification-independent-work-v1	user-verification 独立工作流验证	2026-09-06	2026-09-06	0
+hr-onboarding	34710e50-7164-4c17-b50a-6096862cfedc	visit_canary_648a6b90-ff57-4945-8c2d-12a1bcbd6ed4	Disposable Visit Activation production canary	2026-09-05	2026-09-05	1
+hr-onboarding	788a0725-1f0f-4e21-aa09-2c5aa1ebd274	wda_regression_fix_v1_0906	wda_regression_fix_v1_0906	2026-09-06	2026-09-06	1
+journal-submission	cba25a64-6fc3-415a-8111-c286736ae711	journal_final_delivery	质检交付工作流	2026-08-07	2026-08-07	1
+journal-submission	79bf7fd0-8676-4d2a-b1a1-c54ec69c5e18	journal_section_production	章节生产工作流	2026-08-07	2026-08-07	28
+journal-submission	53f2fbaf-ac48-433e-b297-97abcaa96421	journal-submission	论文投稿工作流	2026-08-06	2026-08-06	0
+journal-submission	e7d081f8-f576-4685-bd63-c921a7921bab	research_ideation	研究选题工作流	2026-08-08	2026-08-08	1
+knowledge-curation	d54a1453-b9a0-4cd4-a6b1-ff9aa4cd1e81	audio-to-knowledge	音频转知识流水线	2026-08-05	2026-08-05	0
+knowledge-curation	ed939b91-e75a-4e1d-a8ae-a3807f65011b	video-to-knowledge	视频转知识流水线	2026-08-08	2026-08-08	2
+knowledge-curation	ffec36b9-ba09-4f81-9926-e9f57233ba3f	wiki-compile-review-publish	Wiki 编译-审核-发布	2026-08-02	2026-08-02	108
+obo-conformance-domain	d0000000-0000-4000-8000-00000000d100	obo-conformance-def	OBO Conformance Def	2026-07-20	2026-07-20	0
+smoke-test-d76e45e7	a0000000-0000-0000-0000-000000000001	smoke-test-def	Smoke Test Definition	2026-07-18	2026-07-18	0
+workflow-todo-dogfood	50c7fad7-d740-4b8f-8ac1-c7f46f92fe95	agent_self_task_v1	Agent Self Task	2026-07-17	2026-07-17	8
+workflow-todo-dogfood	86f4346c-31ed-4170-a022-894ad0611327	idea_pool_v1	Idea Pool	2026-08-01	2026-08-01	3
+workflow-todo-dogfood	2063afa4-85ae-48db-90d4-47042ba6ab31	personal_quick_item_v1	Personal Quick Item	2026-07-17	2026-07-17	86

@@ -1,0 +1,30 @@
+{
+  "M": {
+    "liveInstances": 338,
+    "realBusiness": 217,
+    "humanRequired": 77,
+    "humanRequiredStaleCreator": 61,
+    "humanRequiredDraftStuck": 0,
+    "testOrFixture": 38,
+    "testNonTerminal": 8,
+    "staleUniqueSuccessor": 6,
+    "staleUnresolved": 0,
+    "terminalTotal": 277
+  },
+  "METRICS": {
+    "ACTIVE_AGENT_ASSIGNEE_UNRESOLVABLE": 6,
+    "ACTIVE_TEST_OR_FIXTURE_BUSINESS_INSTANCES": 38,
+    "AGENT_TASK_WITHOUT_CANONICAL_ACTIVE_AGENT_CONFIG_DEFS": 25,
+    "HUMAN_TASK_MISCLASSIFIED_AS_AGENT": 0,
+    "REAL_BUSINESS_INSTANCE_DELETED_BY_CLEANUP": 0,
+    "HISTORICAL_AUDIT_CHAIN_BROKEN": 0
+  },
+  "defs": {
+    "byClass": {
+      "BUSINESS_STALE_FIXED_CONFIG": 25,
+      "TEST_DEFINITION_IN_BUSINESS_DOMAIN": 2,
+      "TEST_DEFINITION": 26,
+      "BUSINESS_CLEAN": 17
+    }
+  }
+}

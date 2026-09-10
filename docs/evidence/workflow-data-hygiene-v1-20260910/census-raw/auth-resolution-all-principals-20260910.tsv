@@ -1,0 +1,62 @@
+10000000-0000-0000-0000-000000000020		NOT_FOUND	
+73ebfa8f-a433-48fe-a64c-da65438dd589		NOT_FOUND	
+10000000-0000-0000-0000-000000000101		NOT_FOUND	
+10000000-0000-0000-0000-000000000010		NOT_FOUND	
+10000000-0000-0000-0000-000000000030		NOT_FOUND	
+e43f9801-0549-4e78-a6c0-9d9f68a38ac1		NOT_FOUND	
+12f26d3b-5aef-4666-9056-70cd024a36e7		NOT_FOUND	
+e5efd1a7-d0aa-4c06-9b9a-1b669dce1f94		NOT_FOUND	
+771546ea-ef7c-4e4e-a369-4295d40f5823		NOT_FOUND	
+bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb		NOT_FOUND	
+0623ba1a-45b5-4d98-8570-30feb279262e	0623ba1a-45b5-4d98-8570-30feb279262e	active	Auth Canary
+9a0b17f9-573f-4b0a-8421-a527bb0f87c1	agent-a-e2e	active	Agent A E2E Test
+39938395-a46c-46e8-b558-849de147f877	agent-dev-engineer	active	后端开发工程师
+8b44befd-934e-48cd-afac-31ed981fb732	agt_article-publisher-agent	active	文章发布管家
+fd58881a-fdba-4ef2-9a80-b733671f24f1	agt_blog-agent	active	博客写作
+4b25917d-93df-496f-8715-afc9d734abc3	agt_book-deconstructor-agent	active	拆书专家
+d5b3aeb2-e754-49a9-9914-b963521c0985	agt_build-in-public-agent	active	Build in Public 主理人
+271876c1-5bc9-4902-855d-68bf5c99eccb	agt_content-ops-agent	active	内容运营专家
+b21ddb23-42f6-47c4-a27f-bc44950e554c	agt_efficiency-agent	active	效率管家
+dc702687-6515-4a2a-91ae-e572a9bbd766	agt_hr-agent	active	HR助手
+04dd2c02-502e-4a1e-bc21-7719ab42d718	agt_itops-agent	active	IT运维助手
+8402d851-5bae-475c-bdb2-6fa1522803cf	agt_knowledge-curator-agent	active	知识管家
+033ea97d-296b-4cd1-a92a-eb638f42d49f	agt_test-engineer	active	测试工程师
+9e3adced-575f-4fb2-b351-f7698b59127d	agt_writing-style-analyst-agent	active	文风分析师
+4684680a-60c4-487b-b362-de7a3367fed2	arch-reviewer	active	系统架构审查员
+d2bec623-56ba-46cb-a217-933cfe63a243	article-publisher-agent	active	文章发布管家
+b6b033c4-90ba-40aa-a338-304da442cab7	b6b033c4-90ba-40aa-a338-304da442cab7	active	龙虾合伙人
+fe2bfbbb-229f-483d-aaa1-42ae14b79a49	biz-explorer	active	商业化探索
+fedef046-3289-4b0c-83c1-f7681373dce0	biz-reviewer	active	商业模式评审官
+81c7fc7e-c696-4b47-bfd6-f12a9ecb68a6	blog-agent	active	博客写作
+bb9d8f48-7962-4321-8fb1-554bb428c159	build-in-public-agent	active	Build in Public 主理人
+01bba696-8474-4337-b598-e13155f3d4a3	canary-e2e-cf1adf8f-svc-workflow-canary	active	SVC Workflow Auth V1 Canary Agent
+26b2be56-353f-406c-9865-bff91149b4fb	ceo-agent	active	龙虾合伙人 (ceo-agent)
+132ab857-35ab-408b-b909-bc0b1deab55b	course-community-agent-2	active	论坛版主
+3e2439d2-fb54-44f5-afee-77aa17c40d22	cto-agent	active	技术研发总监
+1680fd97-e4c4-42df-9ce6-ba46c9dc31e2	devtools-agent	active	Web前端开发工程师
+95eab282-22c7-46a2-8580-abfef4942cdc	efficiency-manager	active	效率管家
+4af8d4e7-8eae-4904-a142-b3f3d8f0b959	game-designer-agent	active	游戏策划师
+913dbd48-2311-4a10-9620-54c8b3e1c61a	game-dev-agent	active	宝宝游戏开发师
+bc970ced-710f-4479-9ff0-e295a1c59424	hr-agent	active	HR助手
+87b760da-14b3-46d1-b529-9350ad95d2c0	image-gen-agent	active	图像生成专家
+eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	itops-agent	active	IT运维助手
+87047adb-2931-400b-b5f0-c384cba37b8d	knowledge-curator-agent	active	知识管家
+6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	learning-expert	active	学习专家
+fe836dbd-896f-40f0-a74f-9c273d5ac233	miniapp-game-engineer	active	小程序开发工程师
+50042be0-57ef-4f37-a8d0-d936eddf24d1	mobile-app-engineer	active	手机应用开发工程师
+0c6a8e58-3275-4d40-a099-811832523cc4	needs-radar-agent	active	需求研究员
+1338fd22-3bed-4f1d-91a9-ae85e90ad7f0	paper-reviewer-agent	active	学术论文审稿专家
+968bff25-17f5-4e72-8bb9-5e2238b4bbbc	product-designer	active	产品设计师
+e4215c47-de83-455b-9e12-53edc983cf76	product-manager	active	产品经理
+0477c74b-cb51-47ce-a2ee-5e359b1d7f04	psychology-agent	active	心理学研究
+d1ffc337-6ecf-494a-89ce-53b16a95dee3	qa-reviewer	active	质量审查专员
+ecdb0a53-d79c-4c7e-9b66-5e9436500e81	reader-simulator-agent	active	读者模仿者
+1e0bebef-4150-4a24-ad42-aaccded084a2	research-agent	active	深度研究员
+935d0d15-3bd5-489b-a5ba-d577257c2638	search-expert-agent	active	搜索专家
+af8708f0-eb99-409b-87c9-7c7ee596b967	security-agent	active	安全卫士
+93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	test-engineer	active	测试工程师
+097f197d-dc71-4107-8db2-f2bdc8eb7ec5	thesis-advisor-agent	active	论文导师
+66efbc9f-c618-47ba-b9da-0668cf5c7301	transcript-editor-agent	active	文稿校审师
+e272c87d-8093-40e3-b285-6bacd9c74c9f	video-model-expert	active	
+32f44973-4aca-4b3f-9668-65bde6e5c234	voice-tech-agent	active	语音技术专家
+61819256-07e1-4bd0-adea-e93e51243fa1	writing-style-analyst-agent	active	文风分析师

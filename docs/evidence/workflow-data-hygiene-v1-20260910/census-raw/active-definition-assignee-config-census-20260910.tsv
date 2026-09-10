@@ -1,0 +1,772 @@
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	39938395-a46c-46e8-b558-849de147f877	agent-39938395	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	5	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	4	DRAFT	1									
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	39938395-a46c-46e8-b558-849de147f877	agent-39938395	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	3	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	39938395-a46c-46e8-b558-849de147f877	agent-39938395	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	2	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	arch_design	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	39938395-a46c-46e8-b558-849de147f877	agent-39938395	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	arch_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-backend-dev-v1	后端研发流程 v1	f	1	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	1680fd97-e4c4-42df-9ce6-ba46c9dc31e2	agent-1680fd97	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	4	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	1680fd97-e4c4-42df-9ce6-ba46c9dc31e2	agent-1680fd97	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	3	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	1680fd97-e4c4-42df-9ce6-ba46c9dc31e2	agent-1680fd97	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	2	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	arch_design	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	1680fd97-e4c4-42df-9ce6-ba46c9dc31e2	agent-1680fd97	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	arch_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-frontend-dev-v1	前端研发流程 v1	f	1	DEPRECATED	1	done	TERMINAL							
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	913dbd48-2311-4a10-9620-54c8b3e1c61a	agent-913dbd48	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	4	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	913dbd48-2311-4a10-9620-54c8b3e1c61a	agent-913dbd48	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	3	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	913dbd48-2311-4a10-9620-54c8b3e1c61a	agent-913dbd48	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	2	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	arch_design	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	913dbd48-2311-4a10-9620-54c8b3e1c61a	agent-913dbd48	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	arch_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-game-dev-v1	游戏研发流程 v1	f	1	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	fe836dbd-896f-40f0-a74f-9c273d5ac233	agent-fe836dbd	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	4	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	fe836dbd-896f-40f0-a74f-9c273d5ac233	agent-fe836dbd	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	3	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	fe836dbd-896f-40f0-a74f-9c273d5ac233	agent-fe836dbd	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	2	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	arch_design	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	fe836dbd-896f-40f0-a74f-9c273d5ac233	agent-fe836dbd	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	arch_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-miniapp-dev-v1	小程序研发流程 v1	f	1	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	50042be0-57ef-4f37-a8d0-d936eddf24d1	agent-50042be0	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	4	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	50042be0-57ef-4f37-a8d0-d936eddf24d1	agent-50042be0	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	3	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	arch_design	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	50042be0-57ef-4f37-a8d0-d936eddf24d1	agent-50042be0	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	arch_review	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	2	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	arch_design	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	dev_self_check	NORMAL	FIXED_PRINCIPAL	50042be0-57ef-4f37-a8d0-d936eddf24d1	agent-50042be0	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	arch_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	test_env_deploy	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	security_review	NORMAL	FIXED_PRINCIPAL	af8708f0-eb99-409b-87c9-7c7ee596b967	agent-af8708f0	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	qa_pre_release	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	merge_to_main	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	deploying	NORMAL	FIXED_PRINCIPAL	eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	agent-eee90beb	t			
+adc-v2-dogfood	adc-mobile-dev-v1	移动端研发流程 v1	f	1	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	5	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	5	PUBLISHED	1	arch_analysis	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	5	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	5	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	5	PUBLISHED	1	publish	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	5	PUBLISHED	1	verify	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	5	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	4	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	4	PUBLISHED	1	arch_analysis	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	4	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	4	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	4	PUBLISHED	1	publish	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	4	PUBLISHED	1	verify	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	4	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	3	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	3	PUBLISHED	1	arch_analysis	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	3	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	3	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	3	PUBLISHED	1	publish	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	3	PUBLISHED	1	verify	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	3	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	2	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	2	PUBLISHED	1	arch_analysis	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	2	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	2	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	2	PUBLISHED	1	publish	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	2	PUBLISHED	1	verify	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	2	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	1	PUBLISHED	1	arch_analysis	NORMAL	FIXED_PRINCIPAL	4684680a-60c4-487b-b362-de7a3367fed2	agent-4684680a	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_arch-reviewer	9df952bc-237e-4dc9-845f-cd52776bf25f
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	1	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	1	PUBLISHED	1	cto_review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	1	PUBLISHED	1	publish	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	project-insight-review-v1	项目梳理工作流 v1	f	1	PUBLISHED	1	done	TERMINAL							
+adc-v2-dogfood	test-workflow-v1	Test Workflow v1	f	1	DEPRECATED	1	_draft	DRAFT	WORKFLOW_CREATOR						
+adc-v2-dogfood	test-workflow-v1	Test Workflow v1	f	1	DEPRECATED	1	review	NORMAL	DOMAIN_OWNER						
+adc-v2-dogfood	test-workflow-v1	Test Workflow v1	f	1	DEPRECATED	1	end	TERMINAL							
+assistance-1853d6d7-d634-4e08-9521-510e43e21479	assistance-def-c882de64-9c72-4e71-ab2f-70c4263291a0	Assistance Test	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+assistance-1853d6d7-d634-4e08-9521-510e43e21479	assistance-def-c882de64-9c72-4e71-ab2f-70c4263291a0	Assistance Test	f	1	PUBLISHED	1	done	TERMINAL							
+assistance-5148b565-34b8-4443-801e-81f58dcf3b62	assistance-def-4525b9e1-aef1-4c8e-a5c6-ba6e4c9458ab	Assistance Test	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+assistance-5148b565-34b8-4443-801e-81f58dcf3b62	assistance-def-4525b9e1-aef1-4c8e-a5c6-ba6e4c9458ab	Assistance Test	f	1	PUBLISHED	1	done	TERMINAL							
+assistance-74a028b0-b522-4ffa-8239-043088964819	assistance-def-dd87e30b-e555-4dfe-9e80-4f0cf69aa97b	Assistance Test	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+assistance-74a028b0-b522-4ffa-8239-043088964819	assistance-def-dd87e30b-e555-4dfe-9e80-4f0cf69aa97b	Assistance Test	f	1	PUBLISHED	1	done	TERMINAL							
+assistance-c1c84cd2-2f0f-424f-ba90-0c1a3995a9e5	assistance-def-a10f515f-1952-444d-a658-cb5ea3e4f9fc	Assistance Test	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+assistance-c1c84cd2-2f0f-424f-ba90-0c1a3995a9e5	assistance-def-a10f515f-1952-444d-a658-cb5ea3e4f9fc	Assistance Test	f	1	PUBLISHED	1	done	TERMINAL							
+auth-v1-e2e-domain-v2	auth_v1_feishu_e2e_v2	Auth V1 Feishu E2E v2	f	1	DRAFT	1									
+auth-v1-e2e-domain-v2	auth_v1_feishu_e2e_v3	Auth V1 Feishu E2E v3	f	1	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+auth-v1-e2e-domain-v2	auth_v1_feishu_e2e_v3	Auth V1 Feishu E2E v3	f	1	PUBLISHED	1	review	NORMAL	WORKFLOW_CREATOR						
+auth-v1-e2e-domain-v2	auth_v1_feishu_e2e_v3	Auth V1 Feishu E2E v3	f	1	PUBLISHED	1	done	TERMINAL							
+auth-v1-e2e-readonly	auth-v1-e2e-readonly-def	Auth V1 E2E Read-Only	f	1	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	0623ba1a-45b5-4d98-8570-30feb279262e	Auth Canary	t			
+auth-v1-e2e-readonly	auth-v1-e2e-readonly-def	Auth V1 E2E Read-Only	f	1	PUBLISHED	1	done	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	13	DRAFT	1									
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	reader_test	NORMAL	FIXED_PRINCIPAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81	读者模仿者	t			
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	distribution	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	verification	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	12	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	reader_test	NORMAL	FIXED_PRINCIPAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81	读者模仿者	t			
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	11	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	reader_test	NORMAL	FIXED_PRINCIPAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81	读者模仿者	t			
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	10	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	9	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	8	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	7	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	6	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	6	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	6	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	6	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	6	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	6	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	6	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	5	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	5	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	5	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	5	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	5	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	5	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	5	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	4	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	4	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	4	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	4	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	4	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	4	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	4	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	3	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	3	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	3	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	3	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	3	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	3	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	3	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	2	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	2	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	2	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	2	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	2	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	2	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	2	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	1	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	1	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	1	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	1	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	1	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	1	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v1	BiP文章生产V1	f	1	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	reader_test	NORMAL	FIXED_PRINCIPAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81	读者模仿者	t			
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	security_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	verification	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	distribution	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	2	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	bip_article_pipeline_v2	BiP 文章生产工作流 V2	f	1	DRAFT	1									
+build-in-public-dogfood	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	f	2	PUBLISHED	3	step_1	TASK	FIXED_PRINCIPAL	9e3adced-575f-4fb2-b351-f7698b59127d	文风分析师	t			
+build-in-public-dogfood	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	f	2	PUBLISHED	3	step_2	TASK	FIXED_PRINCIPAL	9e3adced-575f-4fb2-b351-f7698b59127d	文风分析师	t			
+build-in-public-dogfood	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	f	2	PUBLISHED	3	step_3	TASK	FIXED_PRINCIPAL	9e3adced-575f-4fb2-b351-f7698b59127d	文风分析师	t			
+build-in-public-dogfood	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	f	2	PUBLISHED	3	done	TERMINAL							
+build-in-public-dogfood	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	f	1	PUBLISHED	3	step_1	TASK	FIXED_PRINCIPAL	61819256-07e1-4bd0-adea-e93e51243fa1	文风分析师	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d
+build-in-public-dogfood	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	f	1	PUBLISHED	3	step_2	TASK	FIXED_PRINCIPAL	61819256-07e1-4bd0-adea-e93e51243fa1	文风分析师	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d
+build-in-public-dogfood	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	f	1	PUBLISHED	3	step_3	TASK	FIXED_PRINCIPAL	61819256-07e1-4bd0-adea-e93e51243fa1	文风分析师	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d
+build-in-public-dogfood	bip_gpt6_podcast_v1_202609	GPT-6 世界模型播客制作	f	1	PUBLISHED	3	done	TERMINAL							
+build-in-public-dogfood	bip_gpt6_podcast_v2_202609	GPT-6 世界模型播客制作 v2	f	1	PUBLISHED	3	step_1	TASK	FIXED_PRINCIPAL	d5b3aeb2-e754-49a9-9914-b963521c0985	agent-d5b3aeb2	t			
+build-in-public-dogfood	bip_gpt6_podcast_v2_202609	GPT-6 世界模型播客制作 v2	f	1	PUBLISHED	3	step_2	TASK	FIXED_PRINCIPAL	d5b3aeb2-e754-49a9-9914-b963521c0985	agent-d5b3aeb2	t			
+build-in-public-dogfood	bip_gpt6_podcast_v2_202609	GPT-6 世界模型播客制作 v2	f	1	PUBLISHED	3	step_3	TASK	FIXED_PRINCIPAL	d5b3aeb2-e754-49a9-9914-b963521c0985	agent-d5b3aeb2	t			
+build-in-public-dogfood	bip_gpt6_podcast_v2_202609	GPT-6 世界模型播客制作 v2	f	1	PUBLISHED	3	done	TERMINAL							
+build-in-public-dogfood	bip_multiplex_v1	多路分发决策V1	f												
+build-in-public-dogfood	bip_podcast_v1	播客内容管线V1	f												
+build-in-public-dogfood	bip_short_video_v1	短视频内容管线V1	f												
+build-in-public-dogfood	bip_social_clips_v1	社交切片管线V1	f												
+build-in-public-dogfood	bip_xiaohongshu_v1	小红书内容管线V1	f	1	DRAFT	1									
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	reader_test	NORMAL	FIXED_PRINCIPAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81	读者模仿者	t			
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	published	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	2	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	1	PUBLISHED	1	propose	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	1	PUBLISHED	1	writing	NORMAL	FIXED_PRINCIPAL	81c7fc7e-c696-4b47-bfd6-f12a9ecb68a6	auth-service-81c7fc7e	t			
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	1	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	61819256-07e1-4bd0-adea-e93e51243fa1	文风分析师	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d
+build-in-public-dogfood	blog_write_review_v1	博客写审发	f	1	PUBLISHED	1	published	TERMINAL							
+build-in-public-dogfood	content_pipeline_v1	内容管线工作流	f	2	DRAFT	1									
+build-in-public-dogfood	content_pipeline_v1	内容管线工作流	f	1	PUBLISHED	1	writing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	content_pipeline_v1	内容管线工作流	f	1	PUBLISHED	1	in_review	NORMAL	FIXED_PRINCIPAL	61819256-07e1-4bd0-adea-e93e51243fa1	文风分析师	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d
+build-in-public-dogfood	content_pipeline_v1	内容管线工作流	f	1	PUBLISHED	1	pending_approval	NORMAL	FIXED_PRINCIPAL	bb9d8f48-7962-4321-8fb1-554bb428c159	agent-bb9d8f48	t			
+build-in-public-dogfood	content_pipeline_v1	内容管线工作流	f	1	PUBLISHED	1	publishing	NORMAL	FIXED_PRINCIPAL	d2bec623-56ba-46cb-a217-933cfe63a243	agent-d2bec623	t			
+build-in-public-dogfood	content_pipeline_v1	内容管线工作流	f	1	PUBLISHED	1	published	TERMINAL							
+build-in-public-dogfood	content_pipeline_v1	内容管线工作流	f	1	PUBLISHED	1	cancelled	TERMINAL							
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	2	PUBLISHED	1	translating	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	2	PUBLISHED	1	translation_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	2	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	2	PUBLISHED	1	verify	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	2	PUBLISHED	1	done	TERMINAL							
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	1	PUBLISHED	1	translating	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	1	PUBLISHED	1	translation_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	1	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	1	PUBLISHED	1	verify	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	overseas_dist_v1	海外平台发布	f	1	PUBLISHED	1	done	TERMINAL							
+build-in-public-dogfood	podcast_platform_dist_v1	播客单平台分发	f	2	PUBLISHED	1	dispatch	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	podcast_platform_dist_v1	播客单平台分发	f	2	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_platform_dist_v1	播客单平台分发	f	2	PUBLISHED	1	verify	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_platform_dist_v1	播客单平台分发	f	2	PUBLISHED	1	done	TERMINAL							
+build-in-public-dogfood	podcast_platform_dist_v1	播客单平台分发	f	1	PUBLISHED	1	dispatch	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	podcast_platform_dist_v1	播客单平台分发	f	1	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_platform_dist_v1	播客单平台分发	f	1	PUBLISHED	1	verify	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_platform_dist_v1	播客单平台分发	f	1	PUBLISHED	1	done	TERMINAL							
+build-in-public-dogfood	podcast_script_v1	播客稿工作流	f	1	PUBLISHED	1	sourcing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	podcast_script_v1	播客稿工作流	f	1	PUBLISHED	1	outlining	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_script_v1	播客稿工作流	f	1	PUBLISHED	1	outline_review	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_script_v1	播客稿工作流	f	1	PUBLISHED	1	authoring	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_script_v1	播客稿工作流	f	1	PUBLISHED	1	reviewing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_script_v1	播客稿工作流	f	1	PUBLISHED	1	audience_test	NORMAL	FIXED_PRINCIPAL	ecdb0a53-d79c-4c7e-9b66-5e9436500e81	读者模仿者	t			
+build-in-public-dogfood	podcast_script_v1	播客稿工作流	f	1	PUBLISHED	1	approval	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	podcast_script_v1	播客稿工作流	f	1	PUBLISHED	1	completed	TERMINAL							
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	4	PUBLISHED	1	dispatch	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	4	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	4	PUBLISHED	1	verify	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	4	PUBLISHED	1	done	TERMINAL							
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	3	PUBLISHED	1	dispatch	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	3	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	3	PUBLISHED	1	verify	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	3	PUBLISHED	1	done	TERMINAL							
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	2	PUBLISHED	1	publishing	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	2	PUBLISHED	1	verify	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	2	PUBLISHED	1	done	TERMINAL							
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	1	PUBLISHED	1	publishing	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	1	PUBLISHED	1	verify	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+build-in-public-dogfood	single_platform_dist_v1	单平台发布	f	1	PUBLISHED	1	done	TERMINAL							
+canary-e2e-1784457448	auth_v1_feishu_e2e_v1_1784457448	Auth V1 Feishu E2E	f	1	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	0623ba1a-45b5-4d98-8570-30feb279262e	Auth Canary	t			
+canary-e2e-1784457448	auth_v1_feishu_e2e_v1_1784457448	Auth V1 Feishu E2E	f	1	PUBLISHED	1	done	TERMINAL							
+canary-wda-prod-v1-1788666602	canary_wda_prod_v1_1788666602	WDA PROD V1 canary definition (disposable)	f	1	DRAFT	1									
+canary-wda-prod-v1-1788666888	canary_wda_prod_v1_1788666888	WDA PROD V1 canary definition (disposable)	f	1	DRAFT	1									
+canary-wda-prod-v1-1788668907	canary_wda_prod_v1_1788668907	WDA PROD V1 canary definition (disposable)	f	1	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-prod-v1-1788668907	canary_wda_prod_v1_1788668907	WDA PROD V1 canary definition (disposable)	f	1	PUBLISHED	1	do	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+canary-wda-prod-v1-1788668907	canary_wda_prod_v1_1788668907	WDA PROD V1 canary definition (disposable)	f	1	PUBLISHED	1	done	TERMINAL							
+canary-wda-prod-v1-1788668907	negfix_ctrl_1788679612615	WDA regression-fix negative-proof control (disposable)	f												
+canary-wda-prod-v1-1788668907	negfix_ctrl_1788680751242	WDA regression-fix negative-proof control (disposable)	f												
+canary-wda-v1-1788578473	canary_dbg_full_1788582382	WDA v1 canary definition	f												
+canary-wda-v1-1788578473	canary_dbg_min_1788582382	WDA v1 canary	f												
+canary-wda-v1-1788578473	canary_dbg_nodesc_1788582382	WDA v1 canary definition	f												
+canary-wda-v1-1788578473	canary_dbg_nometa_1788582382	WDA v1 canary definition	f												
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	7	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	7	PUBLISHED	1	work	NORMAL	FIXED_PRINCIPAL	fd58881a-fdba-4ef2-9a80-b733671f24f1	博客写作	t			
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	7	PUBLISHED	1	done	TERMINAL							
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	6	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	6	PUBLISHED	1	work	NORMAL	FIXED_PRINCIPAL	dc702687-6515-4a2a-91ae-e572a9bbd766	HR助手	t			
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	6	PUBLISHED	1	done	TERMINAL							
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	5	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	5	PUBLISHED	1	work	NORMAL	FIXED_PRINCIPAL	fd58881a-fdba-4ef2-9a80-b733671f24f1	博客写作	t			
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	5	PUBLISHED	1	done	TERMINAL							
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	4	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	4	PUBLISHED	1	work	NORMAL	FIXED_PRINCIPAL	fd58881a-fdba-4ef2-9a80-b733671f24f1	博客写作	t			
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	4	PUBLISHED	1	done	TERMINAL							
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	3	DRAFT	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	3	DRAFT	1	work	NORMAL	FIXED_PRINCIPAL	fd58881a-fdba-4ef2-9a80-b733671f24f1	博客写作	t			
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	3	DRAFT	1	done	TERMINAL							
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	2	DRAFT	1									
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653637	HR E2E loop canary 1788653637	f	1	DRAFT	1									
+canary-wda-v1-1788582639	hr-e2e-loop-v1-1788653713	HR E2E loop canary 1788653713	f												
+canary-wda-v1-1788583685	canary_wda_canary-wda-v1-1788583685	WDA v1 canary definition	f	1	DRAFT	1									
+canary-wda-v1-1788583811	canary_wda_canary-wda-v1-1788583811	WDA v1 canary definition	f	1	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-v1-1788583811	canary_wda_canary-wda-v1-1788583811	WDA v1 canary definition	f	1	PUBLISHED	1	done	TERMINAL							
+canary-wda-v1-1788583998	canary_wda_canary-wda-v1-1788583998	WDA v1 canary definition	f	1	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-v1-1788583998	canary_wda_canary-wda-v1-1788583998	WDA v1 canary definition	f	1	PUBLISHED	1	done	TERMINAL							
+canary-wda-v1-1788584903	canary_wda_canary-wda-v1-1788584903	WDA v1 canary definition	f	1	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+canary-wda-v1-1788584903	canary_wda_canary-wda-v1-1788584903	WDA v1 canary definition	f	1	PUBLISHED	1	done	TERMINAL							
+commercial-exploration-dogfood	biz-explore-v1	商业化探索 v1（只产出商业计划书）	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+commercial-exploration-dogfood	biz-explore-v1	商业化探索 v1（只产出商业计划书）	f	1	PUBLISHED	1	demand_confirm	NORMAL	FIXED_PRINCIPAL	0c6a8e58-3275-4d40-a099-811832523cc4	agent-0c6a8e58	t			
+commercial-exploration-dogfood	biz-explore-v1	商业化探索 v1（只产出商业计划书）	f	1	PUBLISHED	1	research	NORMAL	FIXED_PRINCIPAL	935d0d15-3bd5-489b-a5ba-d577257c2638	agent-935d0d15	t			
+commercial-exploration-dogfood	biz-explore-v1	商业化探索 v1（只产出商业计划书）	f	1	PUBLISHED	1	plan_draft	NORMAL	FIXED_PRINCIPAL	fe2bfbbb-229f-483d-aaa1-42ae14b79a49	agent-fe2bfbbb	t			
+commercial-exploration-dogfood	biz-explore-v1	商业化探索 v1（只产出商业计划书）	f	1	PUBLISHED	1	tech_review	NORMAL	FIXED_PRINCIPAL	3e2439d2-fb54-44f5-afee-77aa17c40d22	agent-3e2439d2	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_cto-agent	4e5a4578-0645-4133-bd35-b80e453dfee9
+commercial-exploration-dogfood	biz-explore-v1	商业化探索 v1（只产出商业计划书）	f	1	PUBLISHED	1	pm_review	NORMAL	FIXED_PRINCIPAL	e4215c47-de83-455b-9e12-53edc983cf76	agent-e4215c47	t			
+commercial-exploration-dogfood	biz-explore-v1	商业化探索 v1（只产出商业计划书）	f	1	PUBLISHED	1	biz_review	NORMAL	FIXED_PRINCIPAL	fedef046-3289-4b0c-83c1-f7681373dce0	商业模式评审官	t			
+commercial-exploration-dogfood	biz-explore-v1	商业化探索 v1（只产出商业计划书）	f	1	PUBLISHED	1	done	TERMINAL							
+commercial-exploration-dogfood	biz-publish-v1	发布执行 v1（人工审批门）	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+commercial-exploration-dogfood	biz-publish-v1	发布执行 v1（人工审批门）	f	1	PUBLISHED	1	content_pack	NORMAL	FIXED_PRINCIPAL	bb9d8f48-7962-4321-8fb1-554bb428c159	agent-bb9d8f48	t			
+commercial-exploration-dogfood	biz-publish-v1	发布执行 v1（人工审批门）	f	1	PUBLISHED	1	human_approve	NORMAL	FIXED_PRINCIPAL	fe2bfbbb-229f-483d-aaa1-42ae14b79a49	agent-fe2bfbbb	t			
+commercial-exploration-dogfood	biz-publish-v1	发布执行 v1（人工审批门）	f	1	PUBLISHED	1	publish	NORMAL	FIXED_PRINCIPAL	fe2bfbbb-229f-483d-aaa1-42ae14b79a49	agent-fe2bfbbb	t			
+commercial-exploration-dogfood	biz-publish-v1	发布执行 v1（人工审批门）	f	1	PUBLISHED	1	market_feedback	NORMAL	FIXED_PRINCIPAL	fe2bfbbb-229f-483d-aaa1-42ae14b79a49	agent-fe2bfbbb	t			
+commercial-exploration-dogfood	biz-publish-v1	发布执行 v1（人工审批门）	f	1	PUBLISHED	1	done	TERMINAL							
+commercial-exploration-dogfood	content_idea_validation_v1	Content Idea Validation	f	1	PUBLISHED	1	idea_draft	DRAFT	WORKFLOW_CREATOR						
+commercial-exploration-dogfood	content_idea_validation_v1	Content Idea Validation	f	1	PUBLISHED	1	review	NORMAL	WORKFLOW_CREATOR						
+commercial-exploration-dogfood	content_idea_validation_v1	Content Idea Validation	f	1	PUBLISHED	1	published	TERMINAL							
+commercial-exploration-dogfood	content_idea_validation_v1	Content Idea Validation	f	1	PUBLISHED	1	archived	TERMINAL							
+coord-e2e-hr-001	coord-e2e-def-001	Coord E2E Definition	f	1	DRAFT	1									
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	design	NORMAL	FIXED_PRINCIPAL	4af8d4e7-8eae-4904-a142-b3f3d8f0b959	auth-service-4af8d4e7	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	art_prod	NORMAL	FIXED_PRINCIPAL	87b760da-14b3-46d1-b529-9350ad95d2c0	agent-87b760da	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	art_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	audio_prod	NORMAL	FIXED_PRINCIPAL	32f44973-4aca-4b3f-9668-65bde6e5c234	agent-32f44973	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	audio_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	dev_integration	NORMAL	FIXED_PRINCIPAL	fe836dbd-896f-40f0-a74f-9c273d5ac233	agent-fe836dbd	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	dev_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	product_check	NORMAL	FIXED_PRINCIPAL	968bff25-17f5-4e72-8bb9-5e2238b4bbbc	agent-968bff25	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	3	PUBLISHED	1	completed	TERMINAL							
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	design	NORMAL	FIXED_PRINCIPAL	4af8d4e7-8eae-4904-a142-b3f3d8f0b959	auth-service-4af8d4e7	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	art_prod	NORMAL	FIXED_PRINCIPAL	87b760da-14b3-46d1-b529-9350ad95d2c0	agent-87b760da	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	art_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	audio_prod	NORMAL	FIXED_PRINCIPAL	32f44973-4aca-4b3f-9668-65bde6e5c234	agent-32f44973	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	audio_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	dev_integration	NORMAL	FIXED_PRINCIPAL	fe836dbd-896f-40f0-a74f-9c273d5ac233	agent-fe836dbd	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	dev_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	product_check	NORMAL	FIXED_PRINCIPAL	968bff25-17f5-4e72-8bb9-5e2238b4bbbc	agent-968bff25	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	2	PUBLISHED	1	completed	TERMINAL							
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	design	NORMAL	FIXED_PRINCIPAL	4af8d4e7-8eae-4904-a142-b3f3d8f0b959	auth-service-4af8d4e7	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	art_prod	NORMAL	FIXED_PRINCIPAL	87b760da-14b3-46d1-b529-9350ad95d2c0	agent-87b760da	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	audio_prod	NORMAL	FIXED_PRINCIPAL	32f44973-4aca-4b3f-9668-65bde6e5c234	agent-32f44973	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	dev_integration	NORMAL	FIXED_PRINCIPAL	fe836dbd-896f-40f0-a74f-9c273d5ac233	agent-fe836dbd	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	testing	NORMAL	FIXED_PRINCIPAL	93c7cade-4f0a-47aa-bb6e-7d31a3a147f8	agent-93c7cade	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	qa_review	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	product_check	NORMAL	FIXED_PRINCIPAL	968bff25-17f5-4e72-8bb9-5e2238b4bbbc	agent-968bff25	t			
+game-dev	game_dev_flow_v1	游戏研发流程 v1	f	1	PUBLISHED	1	completed	TERMINAL							
+hr-onboarding	agent-content-to-actions-v1-0906	Agent 内容到行动建议流程	f	2	PUBLISHED	3	step_1	TASK	FIXED_PRINCIPAL	fd58881a-fdba-4ef2-9a80-b733671f24f1	博客写作	t			
+hr-onboarding	agent-content-to-actions-v1-0906	Agent 内容到行动建议流程	f	2	PUBLISHED	3	step_2	TASK	FIXED_PRINCIPAL	b21ddb23-42f6-47c4-a27f-bc44950e554c	效率管家	t			
+hr-onboarding	agent-content-to-actions-v1-0906	Agent 内容到行动建议流程	f	2	PUBLISHED	3	done	TERMINAL							
+hr-onboarding	agent-content-to-actions-v1-0906	Agent 内容到行动建议流程	f	1	DRAFT	1	start	DRAFT	WORKFLOW_CREATOR						
+hr-onboarding	agent-content-to-actions-v1-0906	Agent 内容到行动建议流程	f	1	DRAFT	1	blog_prepare	NORMAL	FIXED_PRINCIPAL	fd58881a-fdba-4ef2-9a80-b733671f24f1	博客写作	t			
+hr-onboarding	agent-content-to-actions-v1-0906	Agent 内容到行动建议流程	f	1	DRAFT	1	efficiency_actions	NORMAL	FIXED_PRINCIPAL	b21ddb23-42f6-47c4-a27f-bc44950e554c	效率管家	t			
+hr-onboarding	agent-content-to-actions-v1-0906	Agent 内容到行动建议流程	f	1	DRAFT	1	done	TERMINAL							
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	submit	DRAFT	WORKFLOW_CREATOR						
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	hr_eval	NORMAL	FIXED_PRINCIPAL	bc970ced-710f-4479-9ff0-e295a1c59424	agent-bc970ced	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	ceo_approve	NORMAL	FIXED_PRINCIPAL	26b2be56-353f-406c-9865-bff91149b4fb	ceo-agent	t			
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	onboard	NORMAL	FIXED_PRINCIPAL	bc970ced-710f-4479-9ff0-e295a1c59424	agent-bc970ced	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	ceo_verify	NORMAL	FIXED_PRINCIPAL	26b2be56-353f-406c-9865-bff91149b4fb	ceo-agent	t			
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	avatar	NORMAL	FIXED_PRINCIPAL	87b760da-14b3-46d1-b529-9350ad95d2c0	agent-87b760da	t			
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	finalize	NORMAL	FIXED_PRINCIPAL	bc970ced-710f-4479-9ff0-e295a1c59424	agent-bc970ced	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	accept	NORMAL	WORKFLOW_CREATOR						
+hr-onboarding	agent-onboarding-v1	新员工入职	f	1	PUBLISHED	1	done	TERMINAL							
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	2	PUBLISHED	1	submit	DRAFT	WORKFLOW_CREATOR						
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	2	PUBLISHED	1	hr_eval	NORMAL	FIXED_PRINCIPAL	bc970ced-710f-4479-9ff0-e295a1c59424	agent-bc970ced	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	2	PUBLISHED	1	ceo_approve	NORMAL	FIXED_PRINCIPAL	b6b033c4-90ba-40aa-a338-304da442cab7	agent-b6b033c4	t			
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	2	PUBLISHED	1	execute	NORMAL	FIXED_PRINCIPAL	bc970ced-710f-4479-9ff0-e295a1c59424	agent-bc970ced	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	2	PUBLISHED	1	ceo_verify	NORMAL	FIXED_PRINCIPAL	b6b033c4-90ba-40aa-a338-304da442cab7	agent-b6b033c4	t			
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	2	PUBLISHED	1	accept	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	2	PUBLISHED	1	done	TERMINAL							
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	1	PUBLISHED	1	submit	DRAFT	WORKFLOW_CREATOR						
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	1	PUBLISHED	1	hr_eval	NORMAL	FIXED_PRINCIPAL	bc970ced-710f-4479-9ff0-e295a1c59424	agent-bc970ced	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	1	PUBLISHED	1	ceo_approve	NORMAL	FIXED_PRINCIPAL	26b2be56-353f-406c-9865-bff91149b4fb	ceo-agent	t			
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	1	PUBLISHED	1	execute	NORMAL	FIXED_PRINCIPAL	bc970ced-710f-4479-9ff0-e295a1c59424	agent-bc970ced	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_hr-agent	dc702687-6515-4a2a-91ae-e572a9bbd766
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	1	PUBLISHED	1	ceo_verify	NORMAL	FIXED_PRINCIPAL	26b2be56-353f-406c-9865-bff91149b4fb	ceo-agent	t			
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	1	PUBLISHED	1	accept	NORMAL	WORKFLOW_CREATOR						
+hr-onboarding	agent-role-upgrade-v1	角色定义升级	f	1	PUBLISHED	1	done	TERMINAL							
+hr-onboarding	dual-agent-content-prep-v1-0906	双 Agent 内容准备流程	f	1	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+hr-onboarding	dual-agent-content-prep-v1-0906	双 Agent 内容准备流程	f	1	PUBLISHED	1	work_a	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+hr-onboarding	dual-agent-content-prep-v1-0906	双 Agent 内容准备流程	f	1	PUBLISHED	1	work_b	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+hr-onboarding	dual-agent-content-prep-v1-0906	双 Agent 内容准备流程	f	1	PUBLISHED	1	done	TERMINAL							
+hr-onboarding	retrospective-action	复盘整改验收流程	f	1	PUBLISHED	1	initiate	DRAFT	WORKFLOW_CREATOR						
+hr-onboarding	retrospective-action	复盘整改验收流程	f	1	PUBLISHED	1	assign	NORMAL	DOMAIN_OWNER						
+hr-onboarding	retrospective-action	复盘整改验收流程	f	1	PUBLISHED	1	execute	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+hr-onboarding	retrospective-action	复盘整改验收流程	f	1	PUBLISHED	1	tech_verify	NORMAL	DOMAIN_OWNER						
+hr-onboarding	retrospective-action	复盘整改验收流程	f	1	PUBLISHED	1	final_verify	NORMAL	WORKFLOW_CREATOR						
+hr-onboarding	retrospective-action	复盘整改验收流程	f	1	PUBLISHED	1	done	TERMINAL							
+hr-onboarding	user-verification-independent-work-v1	user-verification 独立工作流验证	f												
+hr-onboarding	visit_canary_648a6b90-ff57-4945-8c2d-12a1bcbd6ed4	Disposable Visit Activation production canary	f	1	PUBLISHED	3	work	TASK	WORKFLOW_CREATOR						
+hr-onboarding	visit_canary_648a6b90-ff57-4945-8c2d-12a1bcbd6ed4	Disposable Visit Activation production canary	f	1	PUBLISHED	3	done	TERMINAL							
+hr-onboarding	wda_regression_fix_v1_0906	wda_regression_fix_v1_0906	f	3	PUBLISHED	1	start	DRAFT	WORKFLOW_CREATOR						
+hr-onboarding	wda_regression_fix_v1_0906	wda_regression_fix_v1_0906	f	3	PUBLISHED	1	done	TERMINAL							
+hr-onboarding	wda_regression_fix_v1_0906	wda_regression_fix_v1_0906	f	2	DRAFT	3									
+hr-onboarding	wda_regression_fix_v1_0906	wda_regression_fix_v1_0906	f	1	DRAFT	3									
+journal-submission	journal_final_delivery	质检交付工作流	f	1	PUBLISHED	1	full_draft	DRAFT	WORKFLOW_CREATOR						
+journal-submission	journal_final_delivery	质检交付工作流	f	1	PUBLISHED	1	full_review	NORMAL	FIXED_PRINCIPAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0	agent-1338fd22	t			
+journal-submission	journal_final_delivery	质检交付工作流	f	1	PUBLISHED	1	full_revise	NORMAL	FIXED_PRINCIPAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04	agent-0477c74b	t			
+journal-submission	journal_final_delivery	质检交付工作流	f	1	PUBLISHED	1	language_polish	NORMAL	FIXED_PRINCIPAL	61819256-07e1-4bd0-adea-e93e51243fa1	文风分析师	t	STALE_PRINCIPAL_WITH_UNIQUE_REPAIR	agt_writing-style-analyst-agent	9e3adced-575f-4fb2-b351-f7698b59127d
+journal-submission	journal_final_delivery	质检交付工作流	f	1	PUBLISHED	1	final_check	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+journal-submission	journal_final_delivery	质检交付工作流	f	1	PUBLISHED	1	advisor_review	NORMAL	FIXED_PRINCIPAL	097f197d-dc71-4107-8db2-f2bdc8eb7ec5	auth-service-097f197d	t			
+journal-submission	journal_final_delivery	质检交付工作流	f	1	PUBLISHED	1	submit	NORMAL	FIXED_PRINCIPAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04	agent-0477c74b	t			
+journal-submission	journal_final_delivery	质检交付工作流	f	1	PUBLISHED	1	done	TERMINAL							
+journal-submission	journal_section_production	章节生产工作流	f	3	PUBLISHED	1	terminology_setup	DRAFT	WORKFLOW_CREATOR						
+journal-submission	journal_section_production	章节生产工作流	f	3	PUBLISHED	1	translate	NORMAL	FIXED_PRINCIPAL	097f197d-dc71-4107-8db2-f2bdc8eb7ec5	auth-service-097f197d	t			
+journal-submission	journal_section_production	章节生产工作流	f	3	PUBLISHED	1	section_review	NORMAL	FIXED_PRINCIPAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0	agent-1338fd22	t			
+journal-submission	journal_section_production	章节生产工作流	f	3	PUBLISHED	1	section_finalize	NORMAL	FIXED_PRINCIPAL	097f197d-dc71-4107-8db2-f2bdc8eb7ec5	auth-service-097f197d	t			
+journal-submission	journal_section_production	章节生产工作流	f	3	PUBLISHED	1	done	TERMINAL							
+journal-submission	journal_section_production	章节生产工作流	f	2	PUBLISHED	1	terminology_setup	DRAFT	WORKFLOW_CREATOR						
+journal-submission	journal_section_production	章节生产工作流	f	2	PUBLISHED	1	translate	NORMAL	WORKFLOW_CREATOR						
+journal-submission	journal_section_production	章节生产工作流	f	2	PUBLISHED	1	section_review	NORMAL	FIXED_PRINCIPAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0	agent-1338fd22	t			
+journal-submission	journal_section_production	章节生产工作流	f	2	PUBLISHED	1	section_finalize	NORMAL	WORKFLOW_CREATOR						
+journal-submission	journal_section_production	章节生产工作流	f	2	PUBLISHED	1	done	TERMINAL							
+journal-submission	journal_section_production	章节生产工作流	f	1	PUBLISHED	1	terminology_setup	DRAFT	WORKFLOW_CREATOR						
+journal-submission	journal_section_production	章节生产工作流	f	1	PUBLISHED	1	translate	NORMAL	FIXED_PRINCIPAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04	agent-0477c74b	t			
+journal-submission	journal_section_production	章节生产工作流	f	1	PUBLISHED	1	section_review	NORMAL	FIXED_PRINCIPAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0	agent-1338fd22	t			
+journal-submission	journal_section_production	章节生产工作流	f	1	PUBLISHED	1	section_finalize	NORMAL	FIXED_PRINCIPAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04	agent-0477c74b	t			
+journal-submission	journal_section_production	章节生产工作流	f	1	PUBLISHED	1	done	TERMINAL							
+journal-submission	journal-submission	论文投稿工作流	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+journal-submission	journal-submission	论文投稿工作流	f	1	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	1338fd22-3bed-4f1d-91a9-ae85e90ad7f0	agent-1338fd22	t			
+journal-submission	journal-submission	论文投稿工作流	f	1	PUBLISHED	1	revise	NORMAL	FIXED_PRINCIPAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04	agent-0477c74b	t			
+journal-submission	journal-submission	论文投稿工作流	f	1	PUBLISHED	1	final_check	NORMAL	FIXED_PRINCIPAL	d1ffc337-6ecf-494a-89ce-53b16a95dee3	agent-d1ffc337	t			
+journal-submission	journal-submission	论文投稿工作流	f	1	PUBLISHED	1	advisor_review	NORMAL	FIXED_PRINCIPAL	097f197d-dc71-4107-8db2-f2bdc8eb7ec5	auth-service-097f197d	t			
+journal-submission	journal-submission	论文投稿工作流	f	1	PUBLISHED	1	submit	NORMAL	FIXED_PRINCIPAL	0477c74b-cb51-47ce-a2ee-5e359b1d7f04	agent-0477c74b	t			
+journal-submission	journal-submission	论文投稿工作流	f	1	PUBLISHED	1	done	TERMINAL							
+journal-submission	research_ideation	研究选题工作流	f	1	PUBLISHED	1	literature_scan	DRAFT	WORKFLOW_CREATOR						
+journal-submission	research_ideation	研究选题工作流	f	1	PUBLISHED	1	gap_analysis	NORMAL	FIXED_PRINCIPAL	1e0bebef-4150-4a24-ad42-aaccded084a2	agent-1e0bebef	t			
+journal-submission	research_ideation	研究选题工作流	f	1	PUBLISHED	1	feasibility_check	NORMAL	WORKFLOW_CREATOR						
+journal-submission	research_ideation	研究选题工作流	f	1	PUBLISHED	1	topic_selection	NORMAL	WORKFLOW_CREATOR						
+journal-submission	research_ideation	研究选题工作流	f	1	PUBLISHED	1	done	TERMINAL							
+knowledge-curation	audio-to-knowledge	音频转知识流水线	f	1	PUBLISHED	1	initiate	DRAFT	WORKFLOW_CREATOR						
+knowledge-curation	audio-to-knowledge	音频转知识流水线	f	1	PUBLISHED	1	transcribe	NORMAL	FIXED_PRINCIPAL	32f44973-4aca-4b3f-9668-65bde6e5c234	agent-32f44973	t			
+knowledge-curation	audio-to-knowledge	音频转知识流水线	f	1	PUBLISHED	1	edit-script	NORMAL	FIXED_PRINCIPAL	66efbc9f-c618-47ba-b9da-0668cf5c7301	agent-66efbc9f	t			
+knowledge-curation	audio-to-knowledge	音频转知识流水线	f	1	PUBLISHED	1	compile-knowledge	NORMAL	FIXED_PRINCIPAL	87047adb-2931-400b-b5f0-c384cba37b8d	agent-87047adb	t			
+knowledge-curation	audio-to-knowledge	音频转知识流水线	f	1	PUBLISHED	1	review-knowledge	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	audio-to-knowledge	音频转知识流水线	f	1	PUBLISHED	1	ingest-knowledge	NORMAL	FIXED_PRINCIPAL	87047adb-2931-400b-b5f0-c384cba37b8d	agent-87047adb	t			
+knowledge-curation	audio-to-knowledge	音频转知识流水线	f	1	PUBLISHED	1	verify-ingest	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	audio-to-knowledge	音频转知识流水线	f	1	PUBLISHED	1	completed	TERMINAL							
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	video_analysis	NORMAL	FIXED_PRINCIPAL	e272c87d-8093-40e3-b285-6bacd9c74c9f	agent-e272c87d	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	video_review	NORMAL	FIXED_PRINCIPAL	66efbc9f-c618-47ba-b9da-0668cf5c7301	agent-66efbc9f	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	audio_analysis	NORMAL	FIXED_PRINCIPAL	32f44973-4aca-4b3f-9668-65bde6e5c234	agent-32f44973	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	audio_review	NORMAL	FIXED_PRINCIPAL	66efbc9f-c618-47ba-b9da-0668cf5c7301	agent-66efbc9f	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	compile	NORMAL	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	publish	NORMAL	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	publish_review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	3	PUBLISHED	1	completed	TERMINAL							
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	video_analysis	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	video_review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	audio_analysis	NORMAL	FIXED_PRINCIPAL	66efbc9f-c618-47ba-b9da-0668cf5c7301	agent-66efbc9f	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	audio_review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	compile	NORMAL	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	publish	NORMAL	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	publish_review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	2	PUBLISHED	1	completed	TERMINAL							
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	1	PUBLISHED	1	video_analysis	NORMAL	INSTANCE_INPUT_PRINCIPAL						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	1	PUBLISHED	1	compile	NORMAL	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	1	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	1	PUBLISHED	1	publish	NORMAL	WORKFLOW_CREATOR						
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	1	PUBLISHED	1	publish_review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	video-to-knowledge	视频转知识流水线	f	1	PUBLISHED	1	completed	TERMINAL							
+knowledge-curation	wiki-compile-review-publish	Wiki 编译-审核-发布	f	2	PUBLISHED	1	compile	DRAFT	WORKFLOW_CREATOR						
+knowledge-curation	wiki-compile-review-publish	Wiki 编译-审核-发布	f	2	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	wiki-compile-review-publish	Wiki 编译-审核-发布	f	2	PUBLISHED	1	publish	NORMAL	FIXED_PRINCIPAL	87047adb-2931-400b-b5f0-c384cba37b8d	agent-87047adb	t			
+knowledge-curation	wiki-compile-review-publish	Wiki 编译-审核-发布	f	2	PUBLISHED	1	publish_review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	wiki-compile-review-publish	Wiki 编译-审核-发布	f	2	PUBLISHED	1	completed	TERMINAL							
+knowledge-curation	wiki-compile-review-publish	Wiki 编译-审核-发布	f	1	PUBLISHED	1	compile	DRAFT	WORKFLOW_CREATOR						
+knowledge-curation	wiki-compile-review-publish	Wiki 编译-审核-发布	f	1	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	6ccdae57-0a2c-4a2e-b3e4-e3f4ec1edf2a	agent-6ccdae57	t			
+knowledge-curation	wiki-compile-review-publish	Wiki 编译-审核-发布	f	1	PUBLISHED	1	publish	TERMINAL							
+obo-conformance-domain	obo-conformance-def	OBO Conformance Def	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+obo-conformance-domain	obo-conformance-def	OBO Conformance Def	f	1	PUBLISHED	1	done	TERMINAL							
+smoke-test-d76e45e7	smoke-test-def	Smoke Test Definition	f	1	PUBLISHED	1	draft	DRAFT	WORKFLOW_CREATOR						
+smoke-test-d76e45e7	smoke-test-def	Smoke Test Definition	f	1	PUBLISHED	1	review	NORMAL	FIXED_PRINCIPAL	e5efd1a7-d0aa-4c06-9b9a-1b669dce1f94	smoke-test-e5efd1a7	t			
+smoke-test-d76e45e7	smoke-test-def	Smoke Test Definition	f	1	PUBLISHED	1	done	TERMINAL							
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	5	DRAFT	1									
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	4	DRAFT	1									
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	3	DRAFT	1									
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	2	PUBLISHED	1	propose	DRAFT	WORKFLOW_CREATOR						
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	2	PUBLISHED	1	efficiency_check	NORMAL	FIXED_PRINCIPAL	95eab282-22c7-46a2-8580-abfef4942cdc	Auth V1 Efficiency Manager	t			
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	2	PUBLISHED	1	partner_check	NORMAL	FIXED_PRINCIPAL	b6b033c4-90ba-40aa-a338-304da442cab7	agent-b6b033c4	t			
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	2	PUBLISHED	1	execute	NORMAL	WORKFLOW_CREATOR						
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	2	PUBLISHED	1	efficiency_accept	NORMAL	FIXED_PRINCIPAL	95eab282-22c7-46a2-8580-abfef4942cdc	Auth V1 Efficiency Manager	t			
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	2	PUBLISHED	1	partner_accept	NORMAL	FIXED_PRINCIPAL	b6b033c4-90ba-40aa-a338-304da442cab7	agent-b6b033c4	t			
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	2	PUBLISHED	1	completed	TERMINAL							
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	1	DEPRECATED	1	propose	DRAFT	WORKFLOW_CREATOR						
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	1	DEPRECATED	1	efficiency_check	NORMAL	FIXED_PRINCIPAL	10000000-0000-0000-0000-000000000020	Dogfood Efficiency Manager	t			
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	1	DEPRECATED	1	partner_check	NORMAL	FIXED_PRINCIPAL	10000000-0000-0000-0000-000000000030	Dogfood Lobster Partner	t			
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	1	DEPRECATED	1	execute	NORMAL	WORKFLOW_CREATOR						
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	1	DEPRECATED	1	efficiency_accept	NORMAL	FIXED_PRINCIPAL	10000000-0000-0000-0000-000000000020	Dogfood Efficiency Manager	t			
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	1	DEPRECATED	1	partner_accept	NORMAL	FIXED_PRINCIPAL	10000000-0000-0000-0000-000000000030	Dogfood Lobster Partner	t			
+workflow-todo-dogfood	agent_self_task_v1	Agent Self Task	f	1	DEPRECATED	1	completed	TERMINAL							
+workflow-todo-dogfood	idea_pool_v1	Idea Pool	f	2	DEPRECATED	1	submitted	DRAFT	WORKFLOW_CREATOR						
+workflow-todo-dogfood	idea_pool_v1	Idea Pool	f	2	DEPRECATED	1	tier1_review	NORMAL	FIXED_PRINCIPAL	95eab282-22c7-46a2-8580-abfef4942cdc	Auth V1 Efficiency Manager	t			
+workflow-todo-dogfood	idea_pool_v1	Idea Pool	f	2	DEPRECATED	1	tier2_review	NORMAL	FIXED_PRINCIPAL	10000000-0000-0000-0000-000000000030	Dogfood Lobster Partner	t			
+workflow-todo-dogfood	idea_pool_v1	Idea Pool	f	2	DEPRECATED	1	decision	NORMAL	DOMAIN_OWNER						
+workflow-todo-dogfood	idea_pool_v1	Idea Pool	f	2	DEPRECATED	1	promoted	TERMINAL							
+workflow-todo-dogfood	idea_pool_v1	Idea Pool	f	2	DEPRECATED	1	held	TERMINAL							
+workflow-todo-dogfood	idea_pool_v1	Idea Pool	f	2	DEPRECATED	1	dropped	TERMINAL							
+workflow-todo-dogfood	personal_quick_item_v1	Personal Quick Item	f	1	PUBLISHED	1	open	DRAFT	WORKFLOW_CREATOR						
+workflow-todo-dogfood	personal_quick_item_v1	Personal Quick Item	f	1	PUBLISHED	1	completed	TERMINAL							
+workflow-todo-dogfood	personal_quick_item_v1	Personal Quick Item	f	1	PUBLISHED	1	cancelled	TERMINAL							
