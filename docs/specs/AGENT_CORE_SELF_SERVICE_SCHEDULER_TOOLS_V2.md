@@ -66,9 +66,13 @@ amendments:
     Changes NO product semantics: disable AND remove stay guarded, `critical_inventory_unavailable`
     stays the distinct inventory-failure reason, operator/elevated carve-outs and the
     READ_ONLY watchdog stand untouched, no provenance assumed. Feasibility census result:
-    NEW_IMPLEMENTATION_FILES = 0 (the guard fits inside the existing CTR-AUTH-003 closure
-    files). See the AMENDMENT_2 section at the end of this file. Guard implementation
-    remains a separate authorized follow-up PR (HOLD until this reconciliation is accepted).
+    Implementation-conformance revision (r2, on merged #251/#253 mechanical evidence):
+    STRUCTURAL_EXTRACTION_REQUIRED = YES - the accepted guard's implementation is extracted
+    into a new minimal internal module (`packages/scheduler/src/critical-job-guard.js`)
+    because the previously touched/growing legacy files cannot host it within repository
+    structure conformance (VERIFY_CODE_STRUCTURE). See the AMENDMENT_2 section at the end
+    of this file. Guard implementation remains a separate authorized follow-up PR (HOLD
+    until this reconciliation is accepted).
 owners:
   - mayf3
   - repository-maintainers
@@ -108,7 +112,7 @@ never supplies, guesses, or derives the chat identifier.
 
 V2 carries forward the complete accepted V1 product authority, including the original
 candidate `4595ed3` provenance, and replaces V1 only through the future atomic transaction in
-`CTR-GOV-001`. While proposed, V2 authorizes no implementation. Its exact four-file semantic (V2-original; accepted AMENDMENT_1's guard is implemented INSIDE these existing closure files - AMENDMENT_2 feasibility census: NEW_IMPLEMENTATION_FILES = 0, see the AMENDMENT_2 section)
+`CTR-GOV-001`. While proposed, V2 authorizes no implementation. Its exact four-file semantic (V2-original; accepted AMENDMENT_1's guard requires a minimal structural extraction - new internal module `critical-job-guard.js`, AMENDMENT_2 STRUCTURAL_EXTRACTION_REQUIRED = YES, see the AMENDMENT_2 section)
 delta may be published only after accepted V2 is present in `main`.
 The mapping deliberately tightens V1 at one least-privilege edge: `list(all_agents=true)`
 remains schema-compatible but unavailable because no accepted global job-definition-read
@@ -825,7 +829,17 @@ all other product files MUST remain unchanged. Local messages and policy asserti
 the colon-form labels; only `assertGrant` and its resulting token requests use exact R8 wire
 scopes `scheduler.admin` or `scheduler.audit` according to `CTR-AUTH-002`.
 `list(all_agents=true)` makes no `assertGrant` or token request.
-If implementation requires a fifth file or production composition source change, work MUST (V2-original rule, unchanged. AMENDMENT_2 conformance: the accepted AMENDMENT_1 guard needs NO additional file - its manifest reader/classifier is an internal pure function of `self-service.js` with injected path/read seams, tested inside `self-service.test.js`; NEW_IMPLEMENTATION_FILES = 0. See the AMENDMENT_2 section.)
+If implementation requires a fifth file beyond the closure below (with
+`critical-job-guard.js` counted as authorized by AMENDMENT_2), work MUST stop for
+new/amended accepted authority rather than expand this closure.
+
+AMENDMENT_2 revision (STRUCTURAL_EXTRACTION_REQUIRED = YES): the accepted AMENDMENT_1 guard
+REQUIRES a minimal structural extraction - the manifest reader/classifier and the critical
+disable/remove decision move to a NEW internal module `packages/scheduler/src/critical-job-guard.js`
+(pure classifier/manifest seam only; no JobStore/control/dispatch/general auth), tested inside
+`critical-self-disable-guard.test.js`. Goals: `self-service.js` returns to at most its
+pre-guard structural baseline, or at minimum VERIFY_CODE_STRUCTURE = PASS;
+`self-service.test.js` does not grow relative to its applicable legacy baseline.
 stop for new/amended accepted authority rather than expand this closure.
 
 ### CTR-MUT-001 — Existing control operations only
@@ -1123,7 +1137,7 @@ head and return `FINAL_HEAD_RECHECK=PASS`. The recheck MUST prove all of:
 
 Any failure, ambiguity, main/base drift, or post-recheck byte change invalidates the gate and
 requires a new exact-head recheck. Only the exact head that passed may merge. That merge MUST
-precede the four-file delta implementation PR. The implementation PR MUST NOT modify either (AMENDMENT_2 conformance: the accepted AMENDMENT_1 guard implementation is likewise a separate PR, contained INSIDE the same existing closure files - NEW_IMPLEMENTATION_FILES = 0.)
+precede the four-file delta implementation PR. The implementation PR MUST NOT modify either (AMENDMENT_2 conformance: the accepted AMENDMENT_1 guard implementation is likewise a separate PR, including its AMENDMENT_2-authorized structural extraction into `critical-job-guard.js`.)
 governing Spec. Acceptance authorizes no auth-service, Grant, credential, registry/database,
 deployment, or production action.
 
@@ -1201,20 +1215,20 @@ deployment, or production action.
   credential propagation, or claim of production admin/audit availability without
   accepted/deployed external authority
 
-### ACC-AUTH-002 — Exact four-file delta and composed proof (AMENDMENT_2 conformance: the accepted AMENDMENT_1 guard adds NO new file - it is implemented inside `self-service.js` with tests inside `self-service.test.js`; NEW_IMPLEMENTATION_FILES = 0. Guard acceptance coverage = the AMENDMENT_1 T1-T10 + T2a/T3a surface.)
+### ACC-AUTH-002 — Exact four-file delta and composed proof (AMENDMENT_2 conformance: the guard's authorized closure = `self-service.js` + `self-service.test.js` + `critical-self-disable-guard.test.js` + NEW `critical-job-guard.js` (STRUCTURAL_EXTRACTION_REQUIRED = YES). Guard acceptance coverage = the AMENDMENT_1 T1-T10 + T2a/T3a surface.)
 
 - Contracts: `CTR-AUTH-003`
 - Method: accepted-base-to-head diff census plus focused Scheduler tests and composed production-runtime cross-agent history test with local OAuth capture
 - Environment: isolated implementation worktree under repository-pinned Node with proxy variables unset; disposable stores; no production service
 - Required evidence: exact changed-file list, executed commands/results, captured OAuth body and count, execution payload authority-key scan, and HistoryStore queries
-- Expected result: only the four named files change; production compose source is unchanged; (AMENDMENT_2 conformance: the AMENDMENT_1 guard implementation likewise changes only the existing closure files - `self-service.js` and `self-service.test.js`; no new file)
+- Expected result: only the four named files change; production compose source is unchanged; (AMENDMENT_2 conformance: the guard delta changes the existing closure files plus the AMENDMENT_2-authorized NEW `critical-job-guard.js`)
   captured OAuth bodies use `scheduler.admin` for cross-Agent mutation/control/destination and
   `scheduler.audit` only for global/foreign history; local labels remain colon-form; admin and
   audit are mutually non-implying; `list(all_agents=true)` produces no OAuth request and is
   denied before store read even with admin, audit, or both; target identity, no source Grant/credential/authority
   propagation, exactly once/no replay, and linked job/occurrence/run/session/target/
   correlation/parent/terminal truth remain proved
-- Failure condition: fifth file, production compose source edit, wrong/alternate/combined (AMENDMENT_2 conformance: for the AMENDMENT_1 guard, a NEW file would equally be a failure - NEW_IMPLEMENTATION_FILES = 0)
+- Failure condition: fifth file, production compose source edit, wrong/alternate/combined (AMENDMENT_2 conformance: files BEYOND the authorized closure above remain a failure - only `critical-job-guard.js` is the authorized NEW file)
   scope, `scheduler.manage:any` or `scheduler.manage-any` wire value, alias/normalization/
   retry/fallback, admin/audit implication, any authorized/data-bearing global definition list,
   authority leakage, replay, identity mismatch, or
@@ -1572,24 +1586,70 @@ lifecycle implementation instruction (exact four files + consumption sentence)
 lifecycle rollback clause (four-file preimage)
 ```
 
-### B2. Implementation-closure feasibility census（AMENDMENT_2 唯一的新结论）
+### B2. Implementation closure（r2 修订：撤销 r1 的 zero-file census；结构提取授权）
 
-问题：accepted AMENDMENT_1 的 guard 能否在 **现有 CTR-AUTH-003 已授权文件内** 实现而无需
-新产品文件？
+r1 的 feasibility census（NEW_IMPLEMENTATION_FILES = 0）被 merged #251/#253 的机械事实
+推翻：`self-service.js` 与 `self-service.test.js` 属 oversized legacy touched/growing，
+在其内继续承载 guard 会触发 STRUCTURE_VIOLATION。因此：
 
-**结论：可以。`NEW_IMPLEMENTATION_FILES = 0`。**
+```text
+STRUCTURAL_EXTRACTION_REQUIRED = YES
+PRODUCT_SEMANTIC_DELTA        = NONE（原因 = repository structure conformance，非新产品设计）
+```
 
-- manifest 读取 + `version` 校验 + exact-`logicalKey` 分类是一个纯函数，作为
-  `packages/scheduler/src/self-service.js` 的内部实现（module-scope classifier + 经由既有
-  `opts` 注入的 manifest path/read seam 供测试注入），在 self `disable`/`remove` 分支的
-  ownership 判定之后、任何 store mutation 之前执行；
-- 分类所需输入 = manifest 文件（deployment-owned 只读）+ 既有已允许的 JobStore 消费字段
-  （existence/`job.agentId`）+ 该 job 的 persisted `logicalKey`（AMENDMENT_1 已授权）；
-- 测试落在既有的 `packages/scheduler/test/self-service.test.js`（T1–T10 + T2a/T3a），
-  不需要新测试文件；
-- 因此 CTR-AUTH-003 的既有闭包**原样成立**（不扩清单、不加文件）；若实现过程中发现
-  客观不可行（无法在 `self-service.js` 内干净容纳），实现 PR 必须 STOP 并回报，由新的
-  accepted authority 扩闭包——不得就地扩。
+**新的最小 implementation closure（机械 census current main 后冻结；AMENDMENT_1 已真实
+存在的实现路径全部承认）**：
+
+```text
+packages/scheduler/src/self-service.js                       （existing；回退至不大于
+                                                               pre-guard structural baseline，
+                                                               或至少 VERIFY_CODE_STRUCTURE = PASS）
+packages/scheduler/test/self-service.test.js                 （existing；相对 legacy baseline
+                                                               不得增长）
+packages/scheduler/test/critical-self-disable-guard.test.js  （existing；T1–T10 + T2a/T3a 之家；
+                                                               复用它，不新建第二个 focused
+                                                               test file）
+packages/scheduler/src/critical-job-guard.js                 NEW（结构门要求的最小新 product
+                                                               module；名称可按仓库命名规范调整）
+```
+
+`critical-job-guard.js` 的语义边界**仅限**：fixed desired-state path；manifest
+read/parse/version validation；exact logicalKey critical classification；
+`critical_inventory_unavailable`；critical self disable/remove decision。
+**不得**把 JobStore/control/dispatch/general auth 搬入。
+
+**B1/B2 修复语义保留（structure extraction 不得破坏）**：
+
+```text
+DEFAULT_CRITICAL_INVENTORY_PATH =
+  /usr/local/libexec/agent-core/config/scheduler-desired-state.json
+missing/unreadable/malformed/unsupported
+→ critical_inventory_unavailable
+→ disable/remove FAIL_CLOSED
+```
+
+```text
+CRITICAL_CLASSIFICATION_JOB_VERSION
+== LOCKED_CURRENT_JOB_VERSION
+== JOB_VERSION_ACTUALLY_MUTATED
+TOCTOU_CLOSED = MUST_REMAIN_TRUE（禁止重新引入锁外 authoritative classification）
+```
+
+### B2a. Forensics path authority mapping（单独归因；不偷偷扩权）
+
+#251 对 `scripts/scheduler-cp-disable-forensics.mjs` 的 delta = +1 行：把实现按 AMENDMENT_1
+T9 冻结的 sanitized denial 通道所产生的新事件（`self_service_denied`）加入该只读取证工具的
+`EVENT_FIELDS` 读取白名单（evidence 消费侧，非 product mutation 面）。
+
+```text
+FORENSICS_DELTA_AUTHORITY = EXISTING_RELIABILITY/INCIDENT_AUTHORITY
+BASIS = SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 的 incident/forensics evidence 通道
+        + accepted AMENDMENT_1 A4/T9（denial attribution 经既有 sanitized audit seam，
+        通道形态在实现 acceptance 时冻结——#251 即该 acceptance）
+→ EXCLUDED from AMENDMENT_1 product implementation closure（scripts/ 证据工具，
+  不是 self-service product authority）
+CONFORMANCE_DEBT = NONE
+```
 
 ### B3. Conformance guards（本 Amendment 明确禁止的事项）
 
@@ -1610,7 +1670,10 @@ ACCEPTED_AMENDMENT_1_PRODUCT_SEMANTICS_PRESERVED = YES？
 REMOVE_GUARD_PRESERVED                          = YES？
 UNAVAILABLE_FAILURE_SEMANTICS_PRESERVED         = YES？
 LOGICALKEY_CONSUMPTION_CONFLICT_CLOSED          = YES？（全部 inherited 限制条款已限定）
-IMPLEMENTATION_CLOSURE_CONFLICT_CLOSED          = YES？（NEW_IMPLEMENTATION_FILES = 0 全文一致）
+IMPLEMENTATION_CLOSURE_CONFLICT_CLOSED          = YES？（structural-extraction closure 全文一致）
+STRUCTURE_EXTRACTION_AUTHORIZED                 = YES？
+STRUCTURE_GUARD_CAN_PASS                        = YES？（含 self-service.js 行数目标）
+FORENSICS_AUTHORITY_NOT_SMUGGLED                = YES？（B2a 映射成立且已排除）
 NEW_PRODUCT_SEMANTIC                            = NO？
 SHIP_BLOCKERS                                   = 0？
 ```
