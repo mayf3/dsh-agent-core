@@ -39,6 +39,51 @@ const FREEZE = has('--freeze')
 const RECONCILE = has('--reconcile')
 
 const EVIDENCE_NOTE = 'operator reconcile: run interrupted and unresumable (runtime restarted since start; bounded at-job window long elapsed; job disabled — no re-execution, terminal fact = failed)'
+const NOTE_OVERRIDE = val('--note')
+
+/**
+ * Settled-unknown unblocking predicate (2026-09-09 HR dispatcher incident):
+ * an outcome_unknown WITHOUT lateSettlement permanently blocks all future
+ * admissions for the job (_tickOnce/reserveOccurrence treat it as in-flight),
+ * so reconciling it is the unblocking action. Mechanically safe when the
+ * record has already SETTLED (finite endedAt) — it is definitionally not
+ * in-flight — and late evidence never arrived.
+ */
+export function isUnresolvedUnknown(record) {
+  return record !== null && record.state === 'outcome_unknown' && record.lateSettlement === null
+    && Number.isFinite(record.endedAt)
+}
+
+/** Auto-derive the runId from the store record itself (single source of truth). */
+export function deriveRunIdFromView(view) {
+  if (!isUnresolvedUnknown(view.occurrence)) return null
+  return view.occurrence.runId ?? null
+}
+
+/**
+ * Single authority for which runId a reconcile may use — the 2026-09-09
+ * sudo round was wasted by a wiring bug (derived value computed but the
+ * ORIGINAL flag variable passed to reconcileOccurrence), so the whole
+ * resolution now lives in ONE tested function and the CLI passes its result
+ * verbatim. Precedence: explicit flag (validated against the record) >
+ * settled-unknown auto-derive (bare mode) > disposition predicates' record
+ * runId (disposition mode).
+ */
+export function resolveReconcileRunId({ flagRunId, view, mode }) {
+  if (view.occurrence === null) return { refuse: '[occurrence] unknown occurrence — NO MUTATION' }
+  if (flagRunId) {
+    if (view.occurrence.runId !== flagRunId) {
+      return { refuse: `[occurrence] runId mismatch (ledger has ${view.occurrence.runId}) — NO MUTATION` }
+    }
+    return { runId: flagRunId }
+  }
+  if (mode === 'disposition') return { runId: view.occurrence.runId }
+  const derived = deriveRunIdFromView(view)
+  if (!derived) {
+    return { refuse: '[reconcile] record is not a settled unresolved outcome_unknown (state/lateSettlement/endedAt gate) — NO MUTATION' }
+  }
+  return { runId: derived, derived: true }
+}
 
 /** Read-only freeze of everything the A–E classification needs. Pure-ish (fs read only). */
 export function freezeView(rawDoc, { jobId, occurrenceId }) {
@@ -72,9 +117,9 @@ export function freezeView(rawDoc, { jobId, occurrenceId }) {
   }
 }
 
-async function reconcile(store, { occurrenceId, runId }) {
+async function reconcile(store, { occurrenceId, runId, note }) {
   const result = await reconcileOccurrence(store, {
-    occurrenceId, runId, resolvedTo: 'failed', evidenceNote: EVIDENCE_NOTE,
+    occurrenceId, runId, resolvedTo: 'failed', evidenceNote: note ?? EVIDENCE_NOTE,
   })
   return result
 }
@@ -116,6 +161,27 @@ async function selftest() {
     ok(bare.occurrence?.occurrenceId === occurrence.occurrenceId, 'bare-hash occurrence id resolves')
     ok(JSON.stringify(view).includes('seed') === false, 'message body absent')
 
+    // settled-unknown unblocking predicate (2026-09-09 HR dispatcher incident):
+    // a SETTLED outcome_unknown (finite endedAt, no lateSettlement) qualifies
+    // for bare --reconcile with auto-derived runId; unended/swept ones do not.
+    ok(isUnresolvedUnknown(view.occurrence) === false, 'unended unknown is NOT the settled-unblocking shape')
+    const settledUnknown = { ...view.occurrence, endedAt: 9_000 }
+    ok(isUnresolvedUnknown(settledUnknown) === true, 'settled unknown qualifies')
+    ok(isUnresolvedUnknown({ ...settledUnknown, lateSettlement: { basis: 'operator-reconcile' } }) === false, 'already-reconciled record does not qualify')
+    ok(deriveRunIdFromView({ occurrence: settledUnknown }) === settledUnknown.runId, 'runId auto-derives from the store record')
+    ok(deriveRunIdFromView({ occurrence: view.occurrence }) === null, 'unended unknown refuses auto-derive')
+
+    // resolveReconcileRunId: the ONE function whose result the CLI passes to
+    // reconcileOccurrence verbatim (the 2026-09-09 wasted-sudo wiring bug class)
+    ok(resolveReconcileRunId({ flagRunId: undefined, view: { occurrence: null }, mode: 'bare' }).refuse !== undefined, 'missing record refuses')
+    ok(resolveReconcileRunId({ flagRunId: settledUnknown.runId, view: { occurrence: settledUnknown }, mode: 'bare' }).runId === settledUnknown.runId, 'explicit matching flag passes through')
+    ok(resolveReconcileRunId({ flagRunId: 'run:other', view: { occurrence: settledUnknown }, mode: 'bare' }).refuse !== undefined, 'explicit mismatching flag refuses')
+    const bareResolved = resolveReconcileRunId({ flagRunId: undefined, view: { occurrence: settledUnknown }, mode: 'bare' })
+    ok(bareResolved.runId === settledUnknown.runId && bareResolved.derived === true, 'bare mode derives from settled unknown')
+    ok(resolveReconcileRunId({ flagRunId: undefined, view: { occurrence: view.occurrence }, mode: 'bare' }).refuse !== undefined, 'bare mode refuses unended unknown')
+    ok(resolveReconcileRunId({ flagRunId: undefined, view: { occurrence: { ...settledUnknown, lateSettlement: { basis: 'operator-reconcile' } } }, mode: 'bare' }).refuse !== undefined, 'bare mode refuses already-reconciled record')
+    ok(resolveReconcileRunId({ flagRunId: undefined, view: { occurrence: settledUnknown }, mode: 'disposition' }).runId === settledUnknown.runId, 'disposition mode uses the record runId')
+
     // reconcile refusals (zero mutation)
     let refused = 0
     try { await reconcile(store, { occurrenceId: occurrence.occurrenceId, runId: 'run:mismatch' }) } catch { refused += 1 }
@@ -151,7 +217,7 @@ async function selftest() {
 }
 
 if (SELFTEST) { await selftest(); process.exit(0) }
-if (!OCC) { process.stderr.write('usage: scheduler-cp-occurrence --freeze --job <id> --occurrence <id> | --reconcile --occurrence <id> --run-id <runId> [--store <path>] | --selftest\n'); process.exit(2) }
+if (!OCC) { process.stderr.write('usage: scheduler-cp-occurrence --freeze --job <id> --occurrence <id> | --reconcile --occurrence <id> [--run-id <runId>] [--note <text>] [--store <path>] | --selftest\n'); process.exit(2) }
 
 const store = new JobStore(STORE, { runLogPath: join(STORE, '..', 'runs.jsonl') })
 const raw = readFileSync(STORE, 'utf8')
@@ -199,18 +265,15 @@ if (DISPOSITION) {
     process.exit(1)
   }
   process.stdout.write('[disposition] class C (workload interrupted by restart; cannot continue; terminal fact = failed)\n')
-  globalThis.__dispositionRunId = before.occurrence.runId
 }
 if (RECONCILE || DISPOSITION) {
-  let effectiveRunId = RUN_ID
-  if (DISPOSITION && !effectiveRunId) effectiveRunId = globalThis.__dispositionRunId
-  if (!effectiveRunId) { process.stderr.write('--reconcile requires --run-id\n'); process.exit(2) }
-  const RUN_ID_EFFECTIVE = effectiveRunId
   const before = freezeView(raw, { jobId: JOB ?? '', occurrenceId: OCC })
-  if (before.occurrence === null) { process.stderr.write('[occurrence] unknown occurrence — NO MUTATION\n'); process.exit(1) }
-  if (before.occurrence.runId !== RUN_ID_EFFECTIVE) { process.stderr.write(`[occurrence] runId mismatch (ledger has ${before.occurrence.runId}) — NO MUTATION\n`); process.exit(1) }
+  const resolution = resolveReconcileRunId({ flagRunId: RUN_ID, view: before, mode: DISPOSITION ? 'disposition' : 'bare' })
+  if (resolution.refuse) { process.stderr.write(`${resolution.refuse}\n`); process.exit(1) }
+  if (resolution.derived) process.stdout.write(`[reconcile] runId auto-derived from store record = ${resolution.runId}\n`)
+  const RUN_ID_EFFECTIVE = resolution.runId
   const canonicalOccurrenceId = before.occurrence?.occurrenceId ?? OCC
-  const result = await reconcile(store, { occurrenceId: canonicalOccurrenceId, runId: DISPOSITION ? RUN_ID_EFFECTIVE : RUN_ID })
+  const result = await reconcile(store, { occurrenceId: canonicalOccurrenceId, runId: RUN_ID_EFFECTIVE, note: NOTE_OVERRIDE })
   const after = freezeView(await store.loadDoc({ force: true }).then((doc) => JSON.stringify(doc)), { jobId: JOB ?? result.record.jobId, occurrenceId: OCC })
   process.stdout.write(`EXACT_OCCURRENCE_RECONCILED = ${after.occurrence?.state === 'failed' && after.occurrence?.lateSettlement ? 'PASS' : 'CHECK'}\n`)
   const beforeCount = (JSON.parse(raw).occurrences ?? []).length
