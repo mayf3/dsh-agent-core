@@ -2,7 +2,7 @@
 // WORKFLOW_DATA_HYGIENE_V1 r3 — EXECUTION_COMMAND_LEDGER builder (mechanical derivation, READ-ONLY).
 // r3 (Owner REVISE_ON_NEW_EVIDENCE B1–B7 applied). Changes vs r2:
 //   B1: M1 split — M1A = 8 ordinary cancels (NON_TERMINAL_CURRENT, cancel precondition met);
-//       M1B = 4 NON_TERMINAL_DANGLING rows (cancel => CurrentVisitNotFound, archive =>
+//       M1B = 4 NON_TERMINAL_DANGLING rows (NULL current visit => InternalConsistency('instance has no current node visit') at 6dc1027 cancel_transaction.rs:318; archive =>
 //       InstanceNotTerminal; admin_recovery/admin_repair application functions have NO HTTP
 //       route) => NO_MUTATION_DISPOSITION pending NARROW_ONE_TIME_AUTHORITY vs
 //       EXPLICIT_PRESERVE_QUARANTINE (M1B_MUTATION_SEQUENCE = UNRESOLVED, HOLD).
@@ -13,7 +13,7 @@
 //       => DEPENDENCY_GATED, sequence NOT started (ZERO commands).
 //   B5: M6 minimality — M6-1 retained (business-domain canonical CTO repair, independently
 //       justified); M6-2..9 OWNER TAKEOVER REMOVED (deployed svc cancel/archive is
-//       DOMAIN_OWNER-only at 6dc1027; the accepted SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1
+//       implemented+deployed at 6dc1027 (cancel_transaction.rs:280-293 W-widening: DOMAIN_OWNER OR enabled GLOBAL_WORKFLOW_COORDINATOR); the outstanding dependency is the
 //       W1/W2 widening to `DOMAIN_OWNER OR GLOBAL_WORKFLOW_COORDINATOR` is not yet deployed,
 //       so M1A cancels are DEPENDENCY_GATED on that deployment; per-row removal reasons below).
 // B6: every row carries mutation_class = READY | DEPENDENCY_GATED | NO_MUTATION_DISPOSITION.
@@ -37,7 +37,7 @@ const disposition = (subject, command_family, class_reason, detail, mutation_cla
              expected_preimage: detail, idempotency_anchor: '-',
              success_receipt: '-', expected_postimage: 'row unchanged; quarantined as documented test residue until a future authority decides', next_step_admission_condition: '-' })
 
-const GATE_WIDENING = 'DEPENDENCY_GATED: coordinator W1/W2 cancel widening (DOMAIN_OWNER OR GLOBAL_WORKFLOW_COORDINATOR, accepted SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1 §5.5) not yet deployed — deployed 6dc1027 cancel.rs is DOMAIN_OWNER-only (source census)'
+const GATE_WIDENING = 'DEPENDENCY_GATED: GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap outstanding (4/5 gates passed, Owner packet outstanding) — the W-widening itself is implemented+deployed at 6dc1027 (cancel_transaction.rs:280-293: DOMAIN_OWNER OR enabled GLOBAL_WORKFLOW_COORDINATOR)'
 
 // ---- M6: only M6-1 retained (B5). M6-2..9 removed — disposition records.
 cmd('DEPENDENCY_GATED', 'LIVE_COORDINATOR_CONTROL_PLANE_READY = bootstrap grant packet outstanding (4/5 gates passed per coordinator goal record)',
@@ -103,7 +103,7 @@ const m1b = [
 ]
 for (const [sid, iid, dom] of m1b) {
   disposition(sid, 'M1B_DANGLING_DISPOSITION',
-    'NARROW_ONE_TIME_AUTHORITY_REQUIRED (census 2026-09-11: cancel => CurrentVisitNotFound [current_node_visit_id NULL]; archive => InstanceNotTerminal; admin_recovery/admin_repair application functions have NO HTTP route; direct DB edit FORBIDDEN). Alternative: EXPLICIT_PRESERVE_QUARANTINE. M1B_MUTATION_SEQUENCE = UNRESOLVED; M1B_PRODUCTION_MUTATION = HOLD',
+    'NARROW_ONE_TIME_AUTHORITY_REQUIRED (census 2026-09-11, taxonomy at 6dc1027: a NULL current visit fails cancel with InternalConsistency("instance has no current node visit") [cancel_transaction.rs:318]; archive => InstanceNotTerminal; admin_recovery/admin_repair application functions have NO HTTP route; direct DB edit FORBIDDEN). Alternative: EXPLICIT_PRESERVE_QUARANTINE. M1B_MUTATION_SEQUENCE = UNRESOLVED; M1B_PRODUCTION_MUTATION = HOLD',
     `census row: ${iid} in ${dom} — NON_TERMINAL_DANGLING, current_node_visit_id=NULL, TEST_OR_FIXTURE provenance proven (test_domain/test_creator/synthetic_instance_id signals)`)
 }
 

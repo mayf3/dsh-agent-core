@@ -266,7 +266,7 @@ surface (broker manifest `workflow_definition_authoring`, svc endpoints live):
    POST /internal/v1/domains/{domainId}/definitions/{definitionId}/publish
 ```
 
-25 subjects × 3 commands = 75. Executor per def = that domain's canonical enabled
+24 READY subjects × 3 commands = 72 (+ M2B agent_self_task_v1 DEPENDENCY_GATED with ZERO commands — sequence HOLD before command 1). Executor per def = that domain's canonical enabled
 DOMAIN_OWNER (adc defs authorized by `4e5a4578` **after M6-1**). Authority: definition
 governance = DOMAIN_OWNER, idempotent+audited (`src/application/definition_governance/`);
 **AUTHORITY_GAP = NO**. Rollback = prior versions are immutable and intact; a bad successor
@@ -383,8 +383,10 @@ B4  count semantics     = FROZEN (CLEANUP_TARGET_SUBJECTS = 48; DISPOSITION_ONLY
 B5  M6 minimality       = M6-1 RETAINED (business-domain canonical CTO repair);
                           M6-2..9 REMOVE_FROM_PLAN with per-row recorded reasons
                           (unlock-only / no-executable-cleanup; deployed svc cancel/archive
-                          is DOMAIN_OWNER-only at 6dc1027 — the accepted coordinator W1/W2
-                          widening is the dependency, not the takeover)
+                          widening IS implemented+deployed at 6dc1027
+                          (cancel_transaction.rs:280-293); the outstanding dependency is the
+                          GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap — the
+                          takeover, not the grant, is what B5 removes)
 B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 98 rows = 73 READY mutation
                           + 10 GATED mutation + 15 read-only/disposition records; every row
                           carries mutation_class = READY | DEPENDENCY_GATED |
