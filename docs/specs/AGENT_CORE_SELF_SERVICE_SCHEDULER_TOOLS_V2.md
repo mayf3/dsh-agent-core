@@ -44,8 +44,11 @@ amendments:
     PHYSICAL split proven by a mechanical import/call-site census:
     packages/scheduler/src/self-service/ subdirectory (index/access/schema/
     projections/critical-job-guard, all <= 500, root width -1), history family
-    (5 files) grouped into packages/scheduler/src/history/ (root width -5+1 =>
-    src root 18 <= 20; NO registry exceptions), test/packages/scheduler/test/
+    grouped into packages/scheduler/src/history/ (four modules move in;
+    src/history.js REWRITTEN IN PLACE as a <=60-line compat barrel so
+    scripts/agentcore-cron.mjs (516, post-baseline, ungrandfatherable) and
+    product-api/test/scheduler-api.test.js stay UNTOUCHED; src root width
+    = 21 - 4 + 2 = 19 <= 20; NO registry exceptions), test/packages/scheduler/test/
     self-service/ subdirectory (self-service.test.js split <= 500 +
     critical-job-guard.test.js renamed-and-absorbing <= 500 + shared harness.js;
     test root 20 <= 20; NO registry exceptions), and a <=60-line compatibility
@@ -1988,7 +1991,7 @@ behaviors 全保持 / PRODUCTION_APPLY = NO。
 STRUCTURE_GATE = PASS ⇔
   (a) 触碰/新增/更名路径全部 ≤ 各自 B2 预算（上表）；
   (b) verify-code-structure 违规集合相对 BASE_MAIN 的 delta：scheduler src/test
-      两目录类清除（根宽 18/20 无需登记），无任何新增类；
+      两目录类清除（根宽 19/20 无需登记），无任何新增类；
       存量 scripts/ 超限（实测 59 > 注册 40）= BASE_MAIN 已登记债务、不在触碰
       面内，out of scope（与 AMENDMENT_2 B6(c) 同一裁定）；
   (c) registry：零 scheduler 相关条目、零无关归一化（\u00a7 类转义保持原样）。
@@ -2003,7 +2006,8 @@ POST_BASELINE_FILE_GRANDFATHERED = NO
 POST_BASELINE_DIRECTORY_GRANDFATHERED = NO
 ALL_NEW_FILES_LE_500 = YES
 ALL_TOUCHED_FILES_LE_500 = YES
-SRC_IMMEDIATE_CHILDREN_LE_20 = YES（实测 18）
+SRC_IMMEDIATE_CHILDREN_LE_20 = YES（实测 19；+1 = src/history.js 兼容 barrel
+  原位保留，见 C2/B5）
 TEST_IMMEDIATE_CHILDREN_LE_20 = YES（实测 20）
 CRITICAL_GUARD_COHESION_PRESERVED = YES
 TEST_ASSERTION_COVERAGE_REDUCED = NO
