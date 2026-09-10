@@ -29,7 +29,10 @@ B1/B3/B5 blocker union (B6; mechanically derived — see EXECUTION_COMMAND_LEDGE
   FINAL_TOTAL_MUTATION_COMMANDS  = UNRESOLVED — frozen only when every subject has an
                                    exact legal sequence (M1B 4 + M2B 1 pending)
   (read-only steps — reconcile plan, get_owner read-backs — are verification, NOT
-   mutation commands; ledger r3 = 98 rows total = 83 mutation + 15 disposition/read-only)
+   mutation commands; ledger r3 = 96 rows total = 80 mutation + 16 disposition/read-only
+   [HISTORICAL_R2_CENSUS_RECORD_ONLY / NON_EXECUTABLE / SUPERSEDED_BY_R3 — the r2-era
+   "98 rows = 83+15" arithmetic above is superseded; current mechanical authority =
+   execution-command-summary.json: totalRows=96, mutationCommands=80])
 ```
 
 EXECUTION_COMMAND_LEDGER = `execution-command-ledger.tsv` (generated, mechanical) +
@@ -328,7 +331,7 @@ G2: WORKFLOW_ASSIGNEE_ADMISSION_GUARD_V1 (separate Goal) reaches a production ga
 
 Rationale (Owner ruling): avoid cleaning legacy residue while the authoring path still mints new stale assignments. G2 not being ready does NOT block this Goal's source/authority/audit work — it gates only the G1 production mutation.
 
-## Audit answer contract (r2 — B3 wording, supersedes r1 assertion set)
+## Audit answer contract (r2 — B3 wording; **[HISTORICAL_R2_CENSUS_RECORD_ONLY / NON_EXECUTABLE / SUPERSEDED_BY_R3 — r3 §M6 minimality (M6-2..9 REMOVE_FROM_PLAN) supersedes the r2 binding-repair target enumeration below; current canonical assertion = REAL_BUSINESS_DOMAIN_BINDING_REPAIR_TARGETS = M6-1 only]**)
 
 The r1 claim `ZERO_REAL_BUSINESS_MUTATION_TARGETS` is **REVOKED** — M2/M6 legitimately
 touch real-business governance state. The r2 assertions are enumerated per surface:
@@ -351,10 +354,10 @@ REAL_BUSINESS_GOVERNANCE_REPAIR_IS_NON_DESTRUCTIVE                              
 HISTORICAL_DEFINITION_VERSION_REWRITE                                               = NO
 HISTORICAL_NODEVISIT_REWRITE                                                        = NO
 DOMAIN_OWNER_REPLACEMENT_MATCHES_CANONICAL_SUCCESSOR_OR_EXPLICIT_OPERATIONAL_OWNER  = YES
-  (M6-1..M6-4 = canonical successor/twin repairs — M6-1 is the adc-v2-dogfood legacy-cto
-   -> canonical agt_cto-agent owner repair, NOT an HR takeover; M6-5..M6-9 = explicit
-   operational-owner establishment on test/ownerless domains, each with frozen
-   test-domain provenance and cleanup-only rationale)
+  (r2 wording preserved verbatim as HISTORICAL_R2_CENSUS_RECORD_ONLY / NON_EXECUTABLE /
+   SUPERSEDED_BY_R3; r3 canonical: M6-1 = the adc-v2-dogfood legacy-cto -> canonical
+   agt_cto-agent owner repair, NOT an HR takeover, is the SOLE retained binding mutation;
+   M6-2..M6-9 = NO_MUTATION_DISPOSITION / REMOVE_FROM_PLAN)
 ```
 
 Unchanged invariants:
@@ -377,7 +380,7 @@ B1  M1 split            = DONE (M1A 8 ordinary cancels / M1B 4 dangling; census 
                           EXPLICIT_PRESERVE_QUARANTINE; M1B_MUTATION_SEQUENCE = UNRESOLVED;
                           M1B_PRODUCTION_MUTATION = HOLD; DIRECT_DB_EDIT / FAKE_CURRENT_VISIT /
                           FAKE_TRANSITION = FORBIDDEN)
-B2  98-command total    = REVOKED (r3 ledger: 73 READY + 10 GATED; FINAL total stays
+B2  98-command total    = REVOKED (r3 ledger: 70 READY + 10 GATED; FINAL total stays
                           UNRESOLVED until M1B/M2B dispositions land)
 B3  M2B identity        = HOLD recorded (RETURNS_NO_PROVEN_SUCCESSOR branch;
                           IDENTITY_MAPPING_GUESS = FORBIDDEN; 0 executable commands;
@@ -391,7 +394,7 @@ B5  M6 minimality       = M6-1 RETAINED (business-domain canonical CTO repair);
                           (cancel_transaction.rs:280-293); the outstanding dependency is the
                           GLOBAL_WORKFLOW_COORDINATOR five-gate grant bootstrap — the
                           takeover, not the grant, is what B5 removes)
-B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 98 rows = 70 READY mutation + 10 GATED mutation + 15 read-only/disposition records; every row
+B6  ledger regenerated  = DONE (execution-command-ledger.tsv r3: 96 rows = 70 READY mutation + 10 GATED mutation + 16 read-only/disposition records; every row
                           carries mutation_class = READY | DEPENDENCY_GATED |
                           NO_MUTATION_DISPOSITION; builder updated mechanically)
 B7  audit r3            = PENDING — runs only after this r3 revision passes the Owner

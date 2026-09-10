@@ -1,5 +1,7 @@
 # WORKFLOW_DATA_HYGIENE_V1 / WORKFLOW_COORDINATOR_CONTROL_PLANE_V1 — INDEPENDENT_AUDIT r1
 
+<!-- HISTORICAL_R2_CENSUS_RECORD_ONLY / NON_EXECUTABLE / SUPERSEDED_BY_R3 — this r1 audit verdict is superseded by the convergence audit rounds and the FINAL exact-head audit (INDEPENDENT_AUDIT_FINAL.md). Do not consume any mutation wording herein. -->
+
 - **Audited heads**: `cfc1762` (census freeze) → `2cf55b7` (r2 LEDGER_METRIC_SEMANTICS + AUTHORITY_MAP M1–M6 + CLEANUP_PLAN exact set). Inputs: `CLASSIFICATION_LEDGER.md` r2, `CLEANUP_PLAN.md` r1 (FROZEN for audit), `census-raw/*` (sha256 manifest), builder `build-classification-ledger.mjs`.
 - **Audit mode**: mechanical, read-only, zero production access. Reproducibility: builder re-run over `census-raw/` reproduces byte-identical outputs (sha256 stable across runs).
 - **Verdict: PASS — 10/10 checks, 0 blockers.**

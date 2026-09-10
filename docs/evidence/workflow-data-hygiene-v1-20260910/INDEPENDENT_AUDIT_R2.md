@@ -1,7 +1,11 @@
 # WORKFLOW_DATA_HYGIENE_V1 — INDEPENDENT_AUDIT r2 (ONE audit per Owner REVISE ruling)
 
 - **Audited**: `CLEANUP_PLAN.md` **r2** (B1 authority re-map + B2 command ledger + B3 assertion rewrite), `execution-command-ledger.tsv` + `build-execution-command-ledger.mjs` + `execution-command-summary.json` (mechanical derivation), `CLASSIFICATION_LEDGER.md` r2, `census-raw/*`.
-- **Supersedes**: INDEPENDENT_AUDIT r1 = SUPERSEDED_BY_NEW_REVIEW_EVIDENCE (Owner ruling; its `ZERO_REAL_BUSINESS_MUTATION_TARGETS` claim was wrong-layer and is revoked in plan r2 §Audit-contract).
+<!-- HISTORICAL_R2_CENSUS_RECORD_ONLY / NON_EXECUTABLE / SUPERSEDED_BY_R3 — this r2 audit
+     verdict is superseded by the convergence audit rounds and the FINAL exact-head audit
+     (INDEPENDENT_AUDIT_FINAL.md). Its 98-command / M6-1..4 binding-repair-target wording is
+     historical; do not consume any mutation wording herein. -->
+- **Supersedes**: INDEPENDENT_AUDIT r1 = SUPERSEDED_BY_NEW_REVIEW_EVIDENCE (Owner ruling; its `ZERO_REAL_BUSINESS_MUTATION_TARGETS` claim was wrong-layer and is revoked in plan r2 §Audit-contract). This document is in turn **SUPERSEDED_BY_R3**.
 - **Method**: mechanical, read-only; 19 checks over the revised artifacts; command names cross-checked against a fresh source census (broker manifest `workflow_definition_authoring` = create_definition | create_draft_version | replace_draft_graph | publish_version; svc endpoints verbatim) — nothing guessed.
 - **VERDICT: PASS — 19/19 checks, SHIP_BLOCKERS = 0.**
 
