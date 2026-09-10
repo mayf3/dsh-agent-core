@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdir, mkdtemp, rm, readFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -28,11 +28,17 @@ async function rig(t, { adminAgents = new Set(), auditAgents = new Set(), auditF
   const dir = await mkdtemp(join(tmpdir(), 'scheduler-self-service-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const store = new JobStore(join(dir, 'jobs.json'), { runLogPath: join(dir, 'runs.jsonl') })
+  // AMENDMENT_1 guard provisioning: these tests own NO critical jobs, so they
+  // pin an EMPTY critical inventory — hermetic on any host (without this, the
+  // fixed production default path decides, which is host-dependent).
+  const criticalInventoryPath = join(dir, 'desired-state.json')
+  await writeFile(criticalInventoryPath, JSON.stringify({ version: 1, jobs: [] }))
   const grantCalls = []
   const auditErrors = []
   if (auditFailure) store.appendRunEvent = async () => ({ ok: false, error: 'injected' })
   const access = createSelfServiceSchedulerAccess({
     store,
+    criticalInventoryPath,
     assertGrant: async (agentId, scope, resource) => {
       grantCalls.push({ agentId, scope, resource })
       // Independent exact proofs: an admin grant never satisfies the audit
