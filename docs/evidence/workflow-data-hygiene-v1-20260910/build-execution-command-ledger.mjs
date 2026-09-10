@@ -118,9 +118,13 @@ const m2defs = defs.slice(1).filter(r => r[dh.indexOf('class')] === 'BUSINESS_ST
   .map(r => [r[dh.indexOf('definition_key')], r[dh.indexOf('domain')], r[dh.indexOf('definition_id')]])
 for (const [dkey, dom, defid] of m2defs) {
   const sid = `M2::${dkey}`
-  const cls = dkey === 'agent_self_task_v1' ? 'DEPENDENCY_GATED' : 'READY'
-  const reason = dkey === 'agent_self_task_v1'
-    ? 'M2B IDENTITY_BLOCKED: auth exact-resolution census returns NO canonical Agent mapping for fixed-principal b6b033c4-90ba-40aa-a338-304da442cab7 (龙虾合伙人, active) => RETURNS_NO_PROVEN_SUCCESSOR; IDENTITY_MAPPING_GUESS = FORBIDDEN; M2B_SEQUENCE_START = HOLD before command 1 (deferred to the normal provisioning authority that may later establish this principal\'s Agent identity)'
+  // audit r4 finding (adopted): agent-role-upgrade-v1 ALSO carries unresolved b6b033c4
+  // nodes (ceo_approve/ceo_verify) — the same no-proven-successor identity dependency as
+  // agent_self_task_v1, so it is identity-blocked too (no mechanical twin exists).
+  const identityBlocked = dkey === 'agent_self_task_v1' || dkey === 'agent-role-upgrade-v1'
+  const cls = identityBlocked ? 'DEPENDENCY_GATED' : 'READY'
+  const reason = identityBlocked
+    ? 'IDENTITY_BLOCKED (audit r4 adopted): the effective PUBLISHED graph contains unresolved fixed-principal b6b033c4-90ba-40aa-a338-304da442cab7 (龙虾合伙人, active) nodes with NO mechanical twin — the auth exact-resolution census returns NO canonical Agent mapping => RETURNS_NO_PROVEN_SUCCESSOR; IDENTITY_MAPPING_GUESS = FORBIDDEN; sequence HOLD before command 1 (deferred to the normal provisioning authority that may later establish this principal\'s Agent identity)'
     : 'READY'
   if (cls === 'DEPENDENCY_GATED') {
     disposition(sid, 'M2B_IDENTITY_BLOCKED', reason,

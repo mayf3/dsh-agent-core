@@ -20,11 +20,12 @@ TOTAL_PRODUCTION_MUTATION_COMMANDS = 98 (r2) is REVOKED (Owner B2: four of the t
 M1 cancels are mechanically inapplicable — see §M1B). Per-subject disposition after the
 B1/B3/B5 blocker union (B6; mechanically derived — see EXECUTION_COMMAND_LEDGER r3):
 
-  READY_MUTATION_SUBJECTS       = 25  (M2 24 canonical repairs + M2A-1)
-  DEPENDENCY_GATED_SUBJECTS     = 11  (M1A 8 + M6-1 + M2A-2 + M2B 1)
+  READY_MUTATION_SUBJECTS       = 24  (M2 23 canonical repairs + M2A-1)
+  DEPENDENCY_GATED_SUBJECTS     = 12  (M1A 8 + M6-1 + M2A-2 + M2 identity-blocked 2)
   NO_MUTATION_SUBJECTS          = 12  (M1B 4 + M6-2..9 8)
-  TOTAL_READY_MUTATION_COMMANDS  = 73  (M2 24x3 + M2A-1 1)
-  TOTAL_GATED_MUTATION_COMMANDS  = 10  (M1A 8x1 + M6-1 apply + M2A-2 1)
+  TOTAL_READY_MUTATION_COMMANDS  = 70  (M2 23x3 + M2A-1 1)
+  TOTAL_GATED_MUTATION_COMMANDS  = 10  (M1A 8x1 + M6-1 apply + M2A-2 1; identity-blocked
+                                        subjects carry ZERO commands — HOLD before cmd 1)
   FINAL_TOTAL_MUTATION_COMMANDS  = UNRESOLVED — frozen only when every subject has an
                                    exact legal sequence (M1B 4 + M2B 1 pending)
   (read-only steps — reconcile plan, get_owner read-backs — are verification, NOT
@@ -230,9 +231,12 @@ The 26 TERMINAL test instances: **NO MUTATION — history preserved** (Owner rul
 **r3 split (Owner B3).** The 25 subjects become:
 
 ```text
-M2A_CANONICAL_DEFINITION_REPAIRS    = 24  (READY — 3 authoring commands each)
-M2B_AGENT_SELF_TASK_IDENTITY_BLOCKED = 1  (agent_self_task_v1, workflow-todo-dogfood,
-                                          def 50c7fad7-…)
+M2_CANONICAL_DEFINITION_REPAIRS     = 23  (READY — 3 authoring commands each)
+M2_IDENTITY_BLOCKED                 = 2  (agent_self_task_v1 AND agent-role-upgrade-v1 —
+    audit r4 finding adopted: the latter's effective PUBLISHED graph also carries
+    unresolved fixed-principal b6b033c4 nodes at ceo_approve/ceo_verify with no mechanical
+    twin; both subjects are DEPENDENCY_GATED with ZERO commands, HOLD before command 1,
+    deferred to the normal provisioning authority; no generic identity-repair framework)
 ```
 
 **M2B identity disposition (existing identity authority answer, captured read-only in
