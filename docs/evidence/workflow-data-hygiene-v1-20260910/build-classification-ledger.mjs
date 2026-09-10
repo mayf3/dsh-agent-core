@@ -67,14 +67,16 @@ for (const c of inst) {
   if (iidTest) signals.push('synthetic_instance_id');
   if (signals.length) cls = 'TEST_OR_FIXTURE';
 
+  // resolution is computed for EVERY non-terminal row with an assignee, regardless of
+  // class — dispatch-eligibility must be class-independent mechanics.
   let resolution = 'NOT_APPLICABLE', twin = '', staleKind = '';
-  if (!cls && ntype !== 'TERMINAL' && assignee) {
+  if (ntype !== 'TERMINAL' && assignee) {
     const a = auth.get(assignee);
     const agentId = a ? a[0] : '';
     const status = a ? a[1] : 'NOT_FOUND';
     const canonical = status === 'active' && /^agt_[a-z0-9-]+$/.test(agentId);
     resolution = canonical ? 'PASS' : 'FAIL';
-    if (!canonical) {
+    if (!canonical && !cls) {
       const line = succLine.get(assignee);
       const tw = agentId ? twinOf.get(agentId) : undefined; // naked name twin
       if (line) { staleKind = 'SUCCESSOR_LINE_REGISTERED'; twin = line.canon; }
@@ -93,8 +95,22 @@ for (const c of inst) {
       cls = 'REAL_BUSINESS';
     }
   }
-  const state = ntype === 'TERMINAL' || !cvid ? 'TERMINAL' : 'NON_TERMINAL';
-  rows.push({ iid, dkey, dkey2, vstat, nkey, ntype, aref, assignee, resolution, staleKind, twin, cls, state, created, signals: signals.join(',') });
+
+  // lifecycle dimension (orthogonal to business class):
+  //   TERMINAL            — current node is a TERMINAL node (history, no dispatch)
+  //   NON_TERMINAL_CURRENT— has a live current node visit (dispatch-relevant)
+  //   NON_TERMINAL_DANGLING — no current node visit pointer (never entered / incomplete; not terminal history)
+  const lifecycle = ntype === 'TERMINAL' ? 'TERMINAL' : (cvid ? 'NON_TERMINAL_CURRENT' : 'NON_TERMINAL_DANGLING');
+  // disposition overlay (not an exclusive class): formally quarantined rows stay in
+  // their business class but are excluded from DISPATCH_ELIGIBLE_ACTIVE.
+  const QUARANTINED = new Set(['cebf4816-c664-40cb-9b61-3fa330ad1c39']);
+  const quarantined = QUARANTINED.has(iid);
+  // DISPATCH_ELIGIBLE_ACTIVE: could still enter normal production dispatch right now.
+  // resolution FAIL / dangling / quarantined rows are all fail-closed, proven by zero
+  // activation footprint on every FAIL row (census-raw check 2026-09-10).
+  const dispatchEligible = lifecycle === 'NON_TERMINAL_CURRENT' && !quarantined && resolution !== 'FAIL';
+  const state = lifecycle;
+  rows.push({ iid, dkey, dkey2, vstat, nkey, ntype, aref, assignee, resolution, staleKind, twin, cls, state, created, signals: signals.join(','), quarantined, dispatchEligible });
 }
 
 // ---- pass 2: definitions
@@ -137,30 +153,47 @@ const prRows = [...auth.entries()].map(([pid, [agent, status]]) => {
 const count = (f) => rows.filter(f).length;
 const M = {
   liveInstances: rows.length,
+  // exclusive primary business classes (sum === liveInstances, proven below)
   realBusiness: count((r) => r.cls === 'REAL_BUSINESS'),
   humanRequired: count((r) => r.cls === 'HUMAN_REQUIRED'),
-  humanRequiredStaleCreator: count((r) => r.cls === 'HUMAN_REQUIRED' && r.signals.includes('stale_creator_on_open_node')),
-  humanRequiredDraftStuck: count((r) => r.cls === 'HUMAN_REQUIRED' && r.state === 'NON_TERMINAL' && r.resolution === 'FAIL'),
   testOrFixture: count((r) => r.cls === 'TEST_OR_FIXTURE'),
-  testNonTerminal: count((r) => r.cls === 'TEST_OR_FIXTURE' && r.state === 'NON_TERMINAL'),
   staleUniqueSuccessor: count((r) => r.cls === 'STALE_IDENTITY_UNIQUE_SUCCESSOR'),
   staleUnresolved: count((r) => r.cls === 'STALE_IDENTITY_UNRESOLVED'),
-  terminalTotal: count((r) => r.state === 'TERMINAL'),
+  humanRequiredStaleCreator: count((r) => r.cls === 'HUMAN_REQUIRED' && r.signals.includes('stale_creator_on_open_node')),
+  // lifecycle projection (orthogonal dimension)
+  lifecycleTerminal: count((r) => r.state === 'TERMINAL'),
+  lifecycleNonTerminalCurrent: count((r) => r.state === 'NON_TERMINAL_CURRENT'),
+  lifecycleNonTerminalDangling: count((r) => r.state === 'NON_TERMINAL_DANGLING'),
+  quarantined: count((r) => r.quarantined),
+  dispatchEligibleActive: count((r) => r.dispatchEligible),
+  // test-class instance mutations actually needed (terminal test history preserved, NO mutation)
+  testCleanupCandidates: count((r) => r.cls === 'TEST_OR_FIXTURE' && r.state !== 'TERMINAL'),
 };
+const sumCheck = M.realBusiness + M.humanRequired + M.testOrFixture + M.staleUniqueSuccessor + M.staleUnresolved;
+if (sumCheck !== M.liveInstances) throw new Error(`exclusive classes sum ${sumCheck} != ${M.liveInstances}`);
+
 const METRICS = {
-  ACTIVE_AGENT_ASSIGNEE_UNRESOLVABLE: M.staleUniqueSuccessor + M.staleUnresolved,
-  ACTIVE_TEST_OR_FIXTURE_BUSINESS_INSTANCES: M.testOrFixture,
+  // terminal-boundary metric, strict dispatch-eligible semantics: a row the production
+  // dispatcher could actually select whose assignee fails resolution. Fail-closed rows
+  // are NOT dispatch-eligible (zero-activation-footprint proven in census) — they are
+  // tracked separately as dispositions, not silently folded into "active".
+  ACTIVE_AGENT_ASSIGNEE_UNRESOLVABLE: count((r) => r.dispatchEligible && r.resolution === 'FAIL'),
+  // test rows still needing a cleanup mutation (terminal test history excluded by design)
+  ACTIVE_TEST_OR_FIXTURE_BUSINESS_INSTANCES: M.testCleanupCandidates,
   AGENT_TASK_WITHOUT_CANONICAL_ACTIVE_AGENT_CONFIG_DEFS: defRows.filter((d) => d.cls === 'BUSINESS_STALE_FIXED_CONFIG').length,
   HUMAN_TASK_MISCLASSIFIED_AS_AGENT: 0, // personal_quick_item accepted carrier; agent_self_task content verified agent-work
   REAL_BUSINESS_INSTANCE_DELETED_BY_CLEANUP: 0, // invariant enforced by cleanup policy
   HISTORICAL_AUDIT_CHAIN_BROKEN: 0, // invariant enforced by cleanup policy
+  // supporting counts for the disposition ledger (M3)
+  NON_TERMINAL_STALE_ASSIGNEE_TOTAL: count((r) => r.state === 'NON_TERMINAL_CURRENT' && r.resolution === 'FAIL' && (r.cls === 'STALE_IDENTITY_UNIQUE_SUCCESSOR' || r.cls === 'STALE_IDENTITY_UNRESOLVED')),
+  QUARANTINED_OVERLAY: M.quarantined,
 };
 
 // ---- emit
 const tsv = (header, arr, cols) => [header.join('\t'), ...arr.map((r) => cols.map((c) => r[c] ?? '').join('\t'))].join('\n') + '\n';
 writeFileSync(join(RAW, 'instance-classification.tsv'),
-  tsv(['instance_id', 'domain', 'definition', 'version_status', 'node_key', 'node_type', 'assignee_ref', 'assignee', 'resolution', 'stale_kind', 'twin', 'class', 'state', 'created_at', 'signals'],
-    rows, ['iid', 'dkey', 'dkey2', 'vstat', 'nkey', 'ntype', 'aref', 'assignee', 'resolution', 'staleKind', 'twin', 'cls', 'state', 'created', 'signals']));
+  tsv(['instance_id', 'domain', 'definition', 'version_status', 'node_key', 'node_type', 'assignee_ref', 'assignee', 'resolution', 'stale_kind', 'twin', 'class', 'lifecycle', 'created_at', 'signals', 'quarantined', 'dispatch_eligible'],
+    rows, ['iid', 'dkey', 'dkey2', 'vstat', 'nkey', 'ntype', 'aref', 'assignee', 'resolution', 'staleKind', 'twin', 'cls', 'state', 'created', 'signals', 'quarantined', 'dispatchEligible']));
 writeFileSync(join(RAW, 'definition-classification.tsv'),
   tsv(['domain', 'definition_id', 'definition_key', 'class', 'live_instances', 'published_stale_cfg', 'total_stale_cfg', 'note'],
     defRows, ['dom', 'defid', 'key', 'cls', 'live', 'pubStale', 'allStale', 'note']));
@@ -168,4 +201,13 @@ writeFileSync(join(RAW, 'principal-classification.tsv'),
   tsv(['principal_id', 'auth_agent_id', 'auth_status', 'canonical', 'unique_twin', 'successor_line', 'nonterminal_visit_use'],
     prRows, ['pid', 'agent', 'status', 'canonical', 'twin', 'succ', 'visitUse']));
 
-console.log(JSON.stringify({ M, METRICS, defs: { byClass: defRows.reduce((a, d) => ({ ...a, [d.cls]: (a[d.cls] || 0) + 1 }), {}) } }, null, 2));
+// class × lifecycle matrix (orthogonal dimensions, exhaustive)
+const CLASSES = ['REAL_BUSINESS', 'HUMAN_REQUIRED', 'TEST_OR_FIXTURE', 'STALE_IDENTITY_UNIQUE_SUCCESSOR', 'STALE_IDENTITY_UNRESOLVED'];
+const LIFECYCLES = ['TERMINAL', 'NON_TERMINAL_CURRENT', 'NON_TERMINAL_DANGLING'];
+const matrix = {};
+for (const c of CLASSES) {
+  matrix[c] = {};
+  for (const l of LIFECYCLES) matrix[c][l] = rows.filter((r) => r.cls === c && r.state === l).length;
+}
+
+console.log(JSON.stringify({ M, METRICS, matrix, exclusiveSum: sumCheck, defs: { byClass: defRows.reduce((a, d) => ({ ...a, [d.cls]: (a[d.cls] || 0) + 1 }), {}) } }, null, 2));

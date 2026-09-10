@@ -1,94 +1,135 @@
 # WORKFLOW_DATA_HYGIENE_V1 — PRODUCTION_CENSUS_AND_CLASSIFICATION_LEDGER
 
-- **Status**: FROZEN (census phase deliverable; read-only; zero production mutation)
-- **Census taken**: 2026-09-10 22:1x–23:0x (+08), production svc-workflow DB `svc_workflow_dogfood_clean` (read-only queries as `svc_wf`), auth authority DB `agent_dev_center` (read-only as `auth_ro`)
-- **Live snapshot basis**: every instance with `cancelled=false AND archived_at IS NULL` at census time (338 rows)
-- **Determinism**: classification produced by `build-classification-ledger.mjs` from the frozen TSVs; re-run byte-identical (verified). Input hashes: `census-raw/MANIFEST.sha256`.
-- **Sanitization**: IDs, counts, classes, agent_ids only. No credentials, no payloads, no personal data.
+- **Status**: FROZEN · r2 (r2 = MECHANICAL_LEDGER_FIX per Owner ruling 2026-09-10: lifecycle and business classification are now two orthogonal dimensions; facts unchanged, wording/metrics regenerated deterministically)
+- **Census taken**: 2026-09-10 22:1x–23:0x (+08), production svc-workflow DB `svc_workflow_dogfood_clean` (read-only as `svc_wf`), auth authority DB `agent_dev_center` (read-only as `auth_ro`)
+- **LIVE_ROW basis**: every instance with `cancelled=false AND archived_at IS NULL` at census time = **338**
+- **Determinism**: `build-classification-ledger.mjs` over frozen TSVs; re-run byte-identical; hashes in `census-raw/MANIFEST.sha256`
+- **Sanitization**: IDs / counts / classes / agent_ids only
 
-## Resolution semantics (`agent_resolve_principal`)
+## Vocabulary (frozen)
 
-Mechanical check substituted per EXISTING_COORDINATES (Principal→canonical Agent authority = auth-service):
-
+```text
+LIVE_ROW               = DB-present instance row, cancelled=false AND archived_at=null (any lifecycle state)
+NON_TERMINAL           = not yet in terminal lifecycle state (= NON_TERMINAL_CURRENT ∪ NON_TERMINAL_DANGLING)
+NON_TERMINAL_CURRENT   = has a live current node visit (dispatch-relevant)
+NON_TERMINAL_DANGLING  = no current node visit pointer (never entered / incomplete; NOT terminal history)
+DISPATCH_ELIGIBLE_ACTIVE = NON_TERMINAL_CURRENT ∧ ¬QUARANTINED ∧ agent_resolve_principal(current assignee)=PASS
+                         (FAIL rows are fail-closed: zero activation footprint mechanically verified 2026-09-10)
+QUARANTINED            = non-terminal but explicitly barred from dispatch/recovery unless a future
+                         authority changes the disposition (overlay flag, NOT an exclusive class)
 ```
+
+## 1. Exclusive primary business classes (mutually exclusive, summing)
+
+| Class | Rows |
+|---|---|
+| REAL_BUSINESS | 217 |
+| HUMAN_REQUIRED | 77 |
+| TEST_OR_FIXTURE | 38 |
+| STALE_IDENTITY_UNIQUE_SUCCESSOR | 6 |
+| STALE_IDENTITY_UNRESOLVED | 0 |
+| **SUM (mechanically asserted by builder)** | **338 = LIVE_ROWS** ✓ |
+
+## 2. Lifecycle projection (orthogonal dimension)
+
+| Lifecycle | Rows |
+|---|---|
+| TERMINAL | 273 |
+| NON_TERMINAL_CURRENT | 61 |
+| NON_TERMINAL_DANGLING | 4 |
+| **SUM** | **338** ✓ |
+| QUARANTINED (overlay ⊂ NON_TERMINAL_CURRENT) | 1 (cebf4816, DO_NOT_RECOVER per WDA recovery goal ruling) |
+| DISPATCH_ELIGIBLE_ACTIVE | 47 |
+
+## 3. Class × lifecycle matrix (exhaustive cross-check)
+
+| Class | TERMINAL | NON_TERMINAL_CURRENT | NON_TERMINAL_DANGLING | Σ |
+|---|---|---|---|---|
+| REAL_BUSINESS | 193 | 24 | 0 | 217 |
+| HUMAN_REQUIRED | 54 | 23 | 0 | 77 |
+| TEST_OR_FIXTURE | 26 | 8 | 4 | 38 |
+| STALE_IDENTITY_UNIQUE_SUCCESSOR | 0 | 6 | 0 | 6 |
+| STALE_IDENTITY_UNRESOLVED | 0 | 0 | 0 | 0 |
+| **Σ** | **273** | **61** | **4** | **338** |
+
+r1 wording errors corrected here: “217 REAL_BUSINESS（含 277 TERMINAL）” was a dimension conflation (277 was the all-class terminal count incl. 4 dangling rows mislabeled); the 4 canary-e2e/auth-e2e no-visit fixture rows are NON_TERMINAL_DANGLING (each has 1 dangling visit, no current pointer, zero event chain — not terminal history).
+
+## 4. Frozen boundary metrics
+
+```text
+ACTIVE_AGENT_ASSIGNEE_UNRESOLVABLE = 0
+  semantics: DISPATCH_ELIGITIVE row with FAIL assignee — strict dispatch projection.
+  No dispatch-eligible row has an unresolvable assignee: all 14 NON_TERMINAL_CURRENT FAIL rows
+  are fail-closed (zero activations, mechanically verified).
+  Supporting disposition set (NOT silent): NON_TERMINAL_STALE_ASSIGNEE_TOTAL = 6
+    = 5 business blocked (RECOVER_VIA_WAE_V2 dispositions, CLEANUP_PLAN §M3)
+    + 1 QUARANTINED (cebf4816, QUARANTINE_DO_NOT_RECOVER — never counted as normal active-dispatch)
+  Terminal condition: metric stays 0 AND all 6 dispositions remain explicitly frozen.
+
+ACTIVE_TEST_OR_FIXTURE_BUSINESS_INSTANCES = 12
+  = 8 NON_TERMINAL_CURRENT (5 assistance DRAFT + 3 canary-wda DRAFT)
+  + 4 NON_TERMINAL_DANGLING (canary-e2e ×2, auth-v1-e2e-readonly ×2)
+  The 26 TERMINAL test rows are history → PRESERVE, NO MUTATION by default (Owner ruling M1).
+  All 12 have zero activation footprint (mechanically verified 2026-09-10).
+
+AGENT_TASK_WITHOUT_CANONICAL_ACTIVE_AGENT (future-config surface) = 25 defs + 1 domain-owner binding
+HUMAN_TASK_MISCLASSIFIED_AS_AGENT = 0
+REAL_BUSINESS_INSTANCE_DELETED_BY_CLEANUP = 0 (invariant, enforced by plan design)
+HISTORICAL_AUDIT_CHAIN_BROKEN = 0 (invariant, enforced by plan design)
+```
+
+## 5. Resolution semantics (`agent_resolve_principal`)
+
+```text
 PASS    := machine_principals.status='active' AND agent_id ~ ^agt_[a-z0-9-]+$
-FAIL    := otherwise (NOT_FOUND | legacy naked-name agent_id | disabled)
-SUCCESSOR_LINE := svc workflow_identity_successor_lines row (identity_repair_v1 registrations, 2026-09-07/08)
-UNIQUE_TWIN    := exactly one active auth principal with agent_id = 'agt_' + legacy_name
+FAIL    := otherwise (NOT_FOUND | legacy naked-name | disabled | anomalous agent_id)
+SUCCESSOR_LINE := svc workflow_identity_successor_lines row (4 rows, identity_repair_v1 2026-09-07/08, audited)
+UNIQUE_TWIN    := exactly one active auth principal with agent_id = 'agt_' + legacy_name (87/117 legacy; 0 ambiguous; 30 NO_TWIN all test/synthetic/service identities)
 ```
 
-## Boundary metrics at census (pre-cleanup)
+## 6. The 6 NON_TERMINAL stale-assignee rows (disposition set, CLEANUP_PLAN §M3)
 
-| Metric | Value | Composition |
-|---|---|---|
-| ACTIVE_AGENT_ASSIGNEE_UNRESOLVABLE | **6** | all `STALE_IDENTITY_UNIQUE_SUCCESSOR` (4 successor-line-registered principals) |
-| ACTIVE_TEST_OR_FIXTURE_BUSINESS_INSTANCES | **38** | 30 TERMINAL + 8 NON_TERMINAL |
-| AGENT_TASK_WITHOUT_CANONICAL_ACTIVE_AGENT (future config) | **25 defs** + 1 domain-owner binding (adc-v2-dogfood) | PUBLISHED configs with FAIL fixed principals |
-| HUMAN_TASK_MISCLASSIFIED_AS_AGENT | **0** | personal_quick_item_v1 = accepted human-work carrier (no agent execution node; work outside workflow); agent_self_task content spot-checked = agent work |
-| REAL_BUSINESS_INSTANCE_DELETED_BY_CLEANUP | 0 (invariant) | enforced by cleanup policy |
-| HISTORICAL_AUDIT_CHAIN_BROKEN | 0 (invariant) | enforced by cleanup policy |
-
-## Instance classification (338 live)
-
-| Class | Count | Notes |
-|---|---|---|
-| REAL_BUSINESS | 217 | incl. 273-4 = mostly TERMINAL completed history (277 total TERMINAL across classes) |
-| HUMAN_REQUIRED | 77 | personal_quick_item_v1 instances; **61 created by legacy `efficiency-manager` (95eab282)** — historical-creator provenance only; **all 19 NON_TERMINAL (DRAFT) visits already carry canonical assignee b21ddb23 (`agt_efficiency-agent`)** → identity-healthy, waiting on human, not stuck |
-| TEST_OR_FIXTURE | 38 | every row carries mechanical provenance signal (test domain / test definition / key-level metadata marker / test-creator principal / synthetic instance id). 30 TERMINAL, 8 NON_TERMINAL (5 assistance DRAFT + 3 canary-wda DRAFT) |
-| STALE_IDENTITY_UNIQUE_SUCCESSOR | 6 | see below |
-| STALE_IDENTITY_UNRESOLVED | 0 | in non-test active set |
-
-### The 6 stale-identity business instances (WAE-lane / blocked visits)
-
-| instance | domain | definition | current node | assignee (auth agent_id) | successor line |
+| instance | domain | current node | assignee (auth agent_id) | successor | disposition (frozen) |
 |---|---|---|---|---|---|
-| cebf4816 | build-in-public-dogfood | bip_gpt6_podcast_v1_202609 | step_1/TASK | 61819256 (writing-style-analyst-agent) | →9e3adced REGISTERED; already QUARANTINED+DO_NOT_RECOVER by WDA recovery goal |
-| 5709a28e | build-in-public-dogfood | bip_article_pipeline_v1 | reviewing/NORMAL | 61819256 (writing-style-analyst-agent) | →9e3adced REGISTERED; WAE Subject B |
-| 8816acaf | journal-submission | journal_final_delivery | language_polish/NORMAL (FIXED_PRINCIPAL) | 61819256 (writing-style-analyst-agent) | →9e3adced REGISTERED |
-| e683189a | hr-onboarding | retrospective-action | final_verify/NORMAL (WORKFLOW_CREATOR) | 3e2439d2 (cto-agent) | →4e5a4578 REGISTERED; frozen as prior-goal evidence |
-| 64d4b779, 99d369f6 | adc-v2-dogfood | project-insight-review-v1 | publish/NORMAL (DOMAIN_OWNER) | 3e2439d2 (cto-agent) | →4e5a4578 REGISTERED; **root cause = adc-v2-dogfood enabled DOMAIN_OWNER binding still legacy (see below)** |
+| cebf4816 | build-in-public-dogfood | step_1/TASK | 61819256 (writing-style-analyst-agent) | 9e3adced ✓reg | **QUARANTINE_DO_NOT_RECOVER** (carried from WDA recovery goal; not counted as normal active-dispatch) |
+| e683189a | hr-onboarding | final_verify/NORMAL | 3e2439d2 (cto-agent) | 4e5a4578 ✓reg | **QUARANTINE_DO_NOT_RECOVER** (frozen evidence, workflow-assignee-identity goal) |
+| 5709a28e | build-in-public-dogfood | reviewing/NORMAL | 61819256 (writing-style-analyst-agent) | 9e3adced ✓reg | **RECOVER_VIA_WAE_V2** (WAE Subject B, that goal owns execution) |
+| 8816acaf | journal-submission | language_polish/NORMAL | 61819256 (writing-style-analyst-agent) | 9e3adced ✓reg | **RECOVER_VIA_WAE_V2** (business, historical blocked visit) |
+| 64d4b779 | adc-v2-dogfood | publish/NORMAL | 3e2439d2 (cto-agent) | 4e5a4578 ✓reg | **RECOVER_VIA_WAE_V2** (root cause = M6 binding; future visits fixed by M6) |
+| 99d369f6 | adc-v2-dogfood | publish/NORMAL | 3e2439d2 (cto-agent) | 4e5a4578 ✓reg | **RECOVER_VIA_WAE_V2** (same) |
 
-These remain **explicitly blocked, fail-closed on dispatch** (resolution FAIL ⇒ not silently dispatchable). Recovery path = accepted WAE V2 controlled recovery (owned by WORKFLOW_AGENT_EXECUTION goal for Subjects A/B); adc×2 additionally need the owner-binding fix for future visits.
+No `node_visit.assignee_principal_id` is ever SQL-rewritten (FORBIDDEN). Dispositions are ledger facts; recovery executions belong to the accepted WAE V2 authority.
 
-### Root-cause finding: adc-v2-dogfood domain owner binding
+## 7. HUMAN_REQUIRED confirmation (M4 basis)
 
-The 2026-08-25 fleet cutover migrated enabled DOMAIN_OWNER bindings of the other 6 business domains to canonical `agt_` principals, but **adc-v2-dogfood's enabled DOMAIN_OWNER is still 3e2439d2 (cto-agent, legacy)**. Unique canonical twin 4e5a4578 (`agt_cto-agent`, active). This is the mechanical cause of the 2 stale adc visits.
+- `personal_quick_item_v1` = open(DRAFT, WORKFLOW_CREATOR) → completed/cancelled(TERMINAL). **No agent execution node exists** — the work happens outside the workflow; the instance is the human-work tracking shell. This is the system's accepted HUMAN_REQUIRED carrier.
+- All 23 NON_TERMINAL human DRAFT visits already carry canonical assignee b21ddb23 (`agt_efficiency-agent`) — WORKFLOW_CREATOR resolution rebound post-cutover. Identity-healthy; the items wait on the human, which is their design.
+- Canonical efficiency-agent's existence ≠ authorization to perform purchasing/payment/real-name/medical actions for the human; no routing grants that. MUTATION_REQUIRED = NO for all 77.
+- Permanent admission schema = separate Goal `WORKFLOW_ASSIGNEE_ADMISSION_GUARD_V1` (not ours).
 
-### Identity registry state
+## 8. Identity registry state (M5 basis)
 
-- Successor lines registered: 4 (61819256→9e3adced, 3e2439d2→4e5a4578, bc970ced→dc702687, 4684680a→9df952bc)
-- Auth-wide legacy naked-name principals: 117; **87 have UNIQUE active `agt_` twin**, 30 NO_TWIN (test/synthetic/service identities), 0 AMBIGUOUS
-- Principals vanished from auth (NOT_FOUND) appearing in live data: confined to assistance-* instances (12f26d3b, 73ebfa8f, e43f9801, 771546ea — all TEST class), synthetic fixture ids (10000000-*, bbbbbbbb-*), and one smoke-test definition fixed principal (e5efd1a7). **None in the business active set.**
-- Goal-named stale candidates coverage: 61819256 ✓registered-successor; 3e2439d2 ✓registered; 097f197d/fe2bfbbb/d2bec623/6ccdae57/d1ffc337 = legacy active with unique twins (config-level surfaces only, no live business visit); e43f9801 = NOT_FOUND, appears only in TEST-class assistance instances.
+- Principals vanished from auth (NOT_FOUND): confined to TEST-class rows (assistance instances 12f26d3b/73ebfa8f/e43f9801/771546ea; synthetic fixture ids 10000000-*/bbbbbbbb-*; smoke-test def principal e5efd1a7). **BUSINESS_ACTIVE_CONTAMINATION = 0** → IDENTITY_REPAIR = NO for all of them; they exit with M1 test cleanup. No formal identity is manufactured for test garbage.
+- Exception recorded: `b6b033c4` (龙虾合伙人, agent_id=self-UUID anomaly) — FAIL, **no mechanical twin**; appears in `agent_self_task_v1` PUBLISHED config (partner_check/partner_accept). Candidate successor 25a6789f (`agt_ceo-agent`) exists but the mapping is not mechanically provable from the twin rule → the two partner nodes are sub-rows of M2 marked **IDENTITY_REPAIR_REQUIRED** (identity-authority confirmation needed; no guessing).
 
-## Definition classification (70 non-archived)
+## 9. Definition classification (70 non-archived; M2 basis)
 
-| Class | Count | Notes |
-|---|---|---|
-| BUSINESS_CLEAN | 17 | no stale fixed principals in any version |
-| BUSINESS_STALE_FIXED_CONFIG | 25 | PUBLISHED configs referencing legacy principals (twin exists for all observed); spans adc-* ×5, project-insight-review, bip family ×6, journal family ×4, biz ×2, knowledge ×3, hr ×2, agent_self_task, game_dev_flow (duplicate of adc-game-dev, 0 instances) |
-| TEST_DEFINITION | 26 | inside test domains (canary_wda_*, assistance-def-*, auth e2e defs, hr-e2e-loop, smoke-test-def…) |
-| TEST_DEFINITION_IN_BUSINESS_DOMAIN | 2 | `visit_canary_648a6b90` (hr-onboarding, PUBLISHED), `test-workflow-v1` (adc-v2-dogfood, DEPRECATED) |
+| Class | Count |
+|---|---|
+| BUSINESS_CLEAN | 17 |
+| BUSINESS_STALE_FIXED_CONFIG (PUBLISHED effective version carries legacy/anomalous fixed principals) | 25 |
+| TEST_DEFINITION (inside test domains) | 26 |
+| TEST_DEFINITION_IN_BUSINESS_DOMAIN (visit_canary_648a6b90 PUBLISHED in hr-onboarding; test-workflow-v1 DEPRECATED in adc-v2-dogfood) | 2 |
 
-Domains: 7 business (knowledge-curation 110 / workflow-todo-dogfood 97 / build-in-public-dogfood 39 / journal-submission 30 / adc-v2-dogfood 24 / hr-onboarding 14 / commercial-exploration-dogfood 4 live), 13 enabled test/e2e domains, 11 disabled test domains, 2 near-empty ambiguous (`game-dev` 1 dup def 0 instances, `okr-dogfood` 0/0).
+Historical immutable versions are NEVER rewritten; repair = canonical successor version → publish → stale version retires from future materialization (versioned/immutable by design). Per-def effective versions: `census-raw/effective-published-versions.tsv`.
 
-## Provenance-rule compliance
+Root-cause finding retained: **adc-v2-dogfood enabled DOMAIN_OWNER binding = legacy 3e2439d2** (fleet-cutover miss; the other 6 business domains + game-dev are canonical). Unique twin 4e5a4578 active → M6 repair unambiguous.
 
-- Test classification never from title strings: the only title-signal row (`6ea453e2` "Credential separation canary test", no stronger provenance) is **flagged AMBIGUOUS for the plan/audit**, not classified TEST mechanically.
-- Regex false-positive exclusion demonstrated: `3025174e` (wiki real-compile-review, business) matched only inside a draft-file path substring → correctly REAL_BUSINESS under key-level marker rules.
+## 10. Provenance-rule compliance
 
-## Authority map (first cut, for AUTHORITY_GAP_RESOLUTION)
+- `6ea453e2` ("Credential separation canary test"): title-only signal, no stronger provenance → CLASSIFICATION=AMBIGUOUS, **MUTATION_WRITE_SET=EXCLUDED**. Not re-heuristicked in r2.
+- `3025174e` (wiki real-compile-review): stronger evidence (real draft file path under key-level scan exclusion) → REAL_BUSINESS=PRESERVE. Not re-heuristicked in r2.
 
-| Mutation class | Existing authority (first cut) | Gap? |
-|---|---|---|
-| M1 cancel/archive 38 test instances out of active projection | instance cancel/archive surfaces exercised by e2e (CANCEL_NEG/ARCHIVE_NEG paths); DATABASE_CLEANUP_POLICY bounded transaction as fallback with preimage/postimage | TBD at plan freeze (cross-domain coordinator role scope to verify) |
-| M2 adc-v2-dogfood DOMAIN_OWNER rebind →4e5a4578 | auth-service domain-role administration (accepted provisioning channel) | none expected |
-| M3 repair 25 defs' PUBLISHED stale FIXED_PRINCIPAL | WDA definition authoring (per-domain owner, new version publish) | none mechanically; execution volume |
-| M4 register successor lines for twins used by M3 defs | identity_repair_v1 accepted path (4 existing registrations) | none expected |
-| M5 recover/hold 6 stale business visits | WAE V2 controlled recovery (accepted); Subjects A/B owned by WORKFLOW_AGENT_EXECUTION goal (slot-gated) | none; boundary permits explicit IDENTITY_REPAIR_REQUIRED/WAE-lane hold |
-| M6 archive 2 test defs in business domains; disable/archive test domains | WDA archive path (domain owner); domain governance | TBD at plan freeze |
+## 11. FROZEN INPUTS
 
-## FROZEN INPUTS
-
-`census-raw/` (16 TSV/JSON + script, sha256 in `census-raw/MANIFEST.sha256`):
-live-instances-census (338), active-definition-assignee-config (772), active-definitions-inventory (70), fixed-principal-configs-all, stale-fixed-principal-configs, domains-inventory (36), successor-lines (4), auth-resolution-all-principals (62), auth-all-machine-principals (208), legacy-twin-map, domain-bindings-business, assistance-case-map (12), live-test-marked-instances (18), instance/definition/principal-classification (ledger outputs), ledger-summary.json.
+`census-raw/` (TSV/JSON + builder, sha256 in `MANIFEST.sha256`): live-instances-census (338), instance/definition/principal-classification, ledger-summary, effective-published-versions (26), binding-rows-for-plan (9 domains), domains-inventory (36), successor-lines (4), auth-resolution (62), auth-all-machine-principals (208), legacy-twin-map, domain-bindings-business, assistance-case-map, live-test-marked-instances, fixed/stale principal configs.

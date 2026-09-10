@@ -1,28 +1,28 @@
 principal_id	auth_agent_id	auth_status	canonical	unique_twin	successor_line	nonterminal_visit_use
 10000000-0000-0000-0000-000000000020	(none)	NOT_FOUND	false			0
-73ebfa8f-a433-48fe-a64c-da65438dd589	(none)	NOT_FOUND	false			1
+73ebfa8f-a433-48fe-a64c-da65438dd589	(none)	NOT_FOUND	false			0
 10000000-0000-0000-0000-000000000101	(none)	NOT_FOUND	false			0
 10000000-0000-0000-0000-000000000010	(none)	NOT_FOUND	false			0
 10000000-0000-0000-0000-000000000030	(none)	NOT_FOUND	false			0
-e43f9801-0549-4e78-a6c0-9d9f68a38ac1	(none)	NOT_FOUND	false			2
-12f26d3b-5aef-4666-9056-70cd024a36e7	(none)	NOT_FOUND	false			2
+e43f9801-0549-4e78-a6c0-9d9f68a38ac1	(none)	NOT_FOUND	false			0
+12f26d3b-5aef-4666-9056-70cd024a36e7	(none)	NOT_FOUND	false			0
 e5efd1a7-d0aa-4c06-9b9a-1b669dce1f94	(none)	NOT_FOUND	false			0
 771546ea-ef7c-4e4e-a369-4295d40f5823	(none)	NOT_FOUND	false			0
 bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb	(none)	NOT_FOUND	false			0
 0623ba1a-45b5-4d98-8570-30feb279262e	0623ba1a-45b5-4d98-8570-30feb279262e	active	false			0
 9a0b17f9-573f-4b0a-8421-a527bb0f87c1	agent-a-e2e	active	false			0
 39938395-a46c-46e8-b558-849de147f877	agent-dev-engineer	active	false	1e716670-f3b0-44fd-a9da-9ed46fc65789:active		0
-8b44befd-934e-48cd-afac-31ed981fb732	agt_article-publisher-agent	active	true			4
+8b44befd-934e-48cd-afac-31ed981fb732	agt_article-publisher-agent	active	true			0
 fd58881a-fdba-4ef2-9a80-b733671f24f1	agt_blog-agent	active	true			0
 4b25917d-93df-496f-8715-afc9d734abc3	agt_book-deconstructor-agent	active	true			0
 d5b3aeb2-e754-49a9-9914-b963521c0985	agt_build-in-public-agent	active	true			0
-271876c1-5bc9-4902-855d-68bf5c99eccb	agt_content-ops-agent	active	true			1
-b21ddb23-42f6-47c4-a27f-bc44950e554c	agt_efficiency-agent	active	true			28
+271876c1-5bc9-4902-855d-68bf5c99eccb	agt_content-ops-agent	active	true			0
+b21ddb23-42f6-47c4-a27f-bc44950e554c	agt_efficiency-agent	active	true			0
 dc702687-6515-4a2a-91ae-e572a9bbd766	agt_hr-agent	active	true			0
-04dd2c02-502e-4a1e-bc21-7719ab42d718	agt_itops-agent	active	true			5
-8402d851-5bae-475c-bdb2-6fa1522803cf	agt_knowledge-curator-agent	active	true			7
-033ea97d-296b-4cd1-a92a-eb638f42d49f	agt_test-engineer	active	true			1
-9e3adced-575f-4fb2-b351-f7698b59127d	agt_writing-style-analyst-agent	active	true			1
+04dd2c02-502e-4a1e-bc21-7719ab42d718	agt_itops-agent	active	true			0
+8402d851-5bae-475c-bdb2-6fa1522803cf	agt_knowledge-curator-agent	active	true			0
+033ea97d-296b-4cd1-a92a-eb638f42d49f	agt_test-engineer	active	true			0
+9e3adced-575f-4fb2-b351-f7698b59127d	agt_writing-style-analyst-agent	active	true			0
 4684680a-60c4-487b-b362-de7a3367fed2	arch-reviewer	active	false	9df952bc-237e-4dc9-845f-cd52776bf25f:active	agt_arch-reviewer	0
 d2bec623-56ba-46cb-a217-933cfe63a243	article-publisher-agent	active	false	8b44befd-934e-48cd-afac-31ed981fb732:active		0
 b6b033c4-90ba-40aa-a338-304da442cab7	b6b033c4-90ba-40aa-a338-304da442cab7	active	false			0
@@ -33,12 +33,12 @@ bb9d8f48-7962-4321-8fb1-554bb428c159	build-in-public-agent	active	false	d5b3aeb2
 01bba696-8474-4337-b598-e13155f3d4a3	canary-e2e-cf1adf8f-svc-workflow-canary	active	false			0
 26b2be56-353f-406c-9865-bff91149b4fb	ceo-agent	active	false	25a6789f-daa5-4600-a764-b0209b9c8e19:active		0
 132ab857-35ab-408b-b909-bc0b1deab55b	course-community-agent-2	active	false	9f7cf4c5-7b2c-4239-9993-d9b2a2e0df56:active		0
-3e2439d2-fb54-44f5-afee-77aa17c40d22	cto-agent	active	false	4e5a4578-0645-4133-bd35-b80e453dfee9:active	agt_cto-agent	3
+3e2439d2-fb54-44f5-afee-77aa17c40d22	cto-agent	active	false	4e5a4578-0645-4133-bd35-b80e453dfee9:active	agt_cto-agent	0
 1680fd97-e4c4-42df-9ce6-ba46c9dc31e2	devtools-agent	active	false	7dadf79c-0144-4212-9695-535d854c88dc:active		0
 95eab282-22c7-46a2-8580-abfef4942cdc	efficiency-manager	active	false			0
 4af8d4e7-8eae-4904-a142-b3f3d8f0b959	game-designer-agent	active	false	4f16b012-4bc9-45ae-ab9d-6418f9a01fd4:active		0
 913dbd48-2311-4a10-9620-54c8b3e1c61a	game-dev-agent	active	false	6d184076-6037-4d29-96bc-b0196bab5056:active		0
-bc970ced-710f-4479-9ff0-e295a1c59424	hr-agent	active	false	dc702687-6515-4a2a-91ae-e572a9bbd766:active	agt_hr-agent	3
+bc970ced-710f-4479-9ff0-e295a1c59424	hr-agent	active	false	dc702687-6515-4a2a-91ae-e572a9bbd766:active	agt_hr-agent	0
 87b760da-14b3-46d1-b529-9350ad95d2c0	image-gen-agent	active	false	bebd919a-9da5-46a0-a0de-57625066ddab:active		0
 eee90beb-dfcc-49dd-9dbb-fa6b3db73a72	itops-agent	active	false	04dd2c02-502e-4a1e-bc21-7719ab42d718:active		0
 87047adb-2931-400b-b5f0-c384cba37b8d	knowledge-curator-agent	active	false	8402d851-5bae-475c-bdb2-6fa1522803cf:active		0
@@ -60,4 +60,4 @@ af8708f0-eb99-409b-87c9-7c7ee596b967	security-agent	active	false	e15a185f-e82d-4
 66efbc9f-c618-47ba-b9da-0668cf5c7301	transcript-editor-agent	active	false	79e4a43b-002b-4a03-90ca-82ee4724c287:active		0
 e272c87d-8093-40e3-b285-6bacd9c74c9f	video-model-expert	active	false	08c18ba3-c594-43b1-9493-6b3e22b6bbbe:active		0
 32f44973-4aca-4b3f-9668-65bde6e5c234	voice-tech-agent	active	false	90aac9b8-c1a4-496c-aed7-fe42c08023eb:active		0
-61819256-07e1-4bd0-adea-e93e51243fa1	writing-style-analyst-agent	active	false	9e3adced-575f-4fb2-b351-f7698b59127d:active	agt_writing-style-analyst-agent	3
+61819256-07e1-4bd0-adea-e93e51243fa1	writing-style-analyst-agent	active	false	9e3adced-575f-4fb2-b351-f7698b59127d:active	agt_writing-style-analyst-agent	0

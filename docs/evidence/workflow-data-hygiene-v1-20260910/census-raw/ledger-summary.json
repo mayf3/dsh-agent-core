@@ -3,22 +3,55 @@
     "liveInstances": 338,
     "realBusiness": 217,
     "humanRequired": 77,
-    "humanRequiredStaleCreator": 61,
-    "humanRequiredDraftStuck": 0,
     "testOrFixture": 38,
-    "testNonTerminal": 8,
     "staleUniqueSuccessor": 6,
     "staleUnresolved": 0,
-    "terminalTotal": 277
+    "humanRequiredStaleCreator": 61,
+    "lifecycleTerminal": 273,
+    "lifecycleNonTerminalCurrent": 61,
+    "lifecycleNonTerminalDangling": 4,
+    "quarantined": 1,
+    "dispatchEligibleActive": 47,
+    "testCleanupCandidates": 12
   },
   "METRICS": {
-    "ACTIVE_AGENT_ASSIGNEE_UNRESOLVABLE": 6,
-    "ACTIVE_TEST_OR_FIXTURE_BUSINESS_INSTANCES": 38,
+    "ACTIVE_AGENT_ASSIGNEE_UNRESOLVABLE": 0,
+    "ACTIVE_TEST_OR_FIXTURE_BUSINESS_INSTANCES": 12,
     "AGENT_TASK_WITHOUT_CANONICAL_ACTIVE_AGENT_CONFIG_DEFS": 25,
     "HUMAN_TASK_MISCLASSIFIED_AS_AGENT": 0,
     "REAL_BUSINESS_INSTANCE_DELETED_BY_CLEANUP": 0,
-    "HISTORICAL_AUDIT_CHAIN_BROKEN": 0
+    "HISTORICAL_AUDIT_CHAIN_BROKEN": 0,
+    "NON_TERMINAL_STALE_ASSIGNEE_TOTAL": 6,
+    "QUARANTINED_OVERLAY": 1
   },
+  "matrix": {
+    "REAL_BUSINESS": {
+      "TERMINAL": 193,
+      "NON_TERMINAL_CURRENT": 24,
+      "NON_TERMINAL_DANGLING": 0
+    },
+    "HUMAN_REQUIRED": {
+      "TERMINAL": 54,
+      "NON_TERMINAL_CURRENT": 23,
+      "NON_TERMINAL_DANGLING": 0
+    },
+    "TEST_OR_FIXTURE": {
+      "TERMINAL": 26,
+      "NON_TERMINAL_CURRENT": 8,
+      "NON_TERMINAL_DANGLING": 4
+    },
+    "STALE_IDENTITY_UNIQUE_SUCCESSOR": {
+      "TERMINAL": 0,
+      "NON_TERMINAL_CURRENT": 6,
+      "NON_TERMINAL_DANGLING": 0
+    },
+    "STALE_IDENTITY_UNRESOLVED": {
+      "TERMINAL": 0,
+      "NON_TERMINAL_CURRENT": 0,
+      "NON_TERMINAL_DANGLING": 0
+    }
+  },
+  "exclusiveSum": 338,
   "defs": {
     "byClass": {
       "BUSINESS_STALE_FIXED_CONFIG": 25,
