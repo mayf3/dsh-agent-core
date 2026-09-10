@@ -314,20 +314,27 @@ test('settle probe fails (credential/read error) => NEEDS_REVIEW settle_check_un
   }
 })
 
-test('assignee unresolvable => NEEDS_REVIEW with zero Runs, and it stays needs-review on re-polls', async () => {
+test('assignee unresolvable => recoverable-blocked (ACTIVE/resolution_blocked) with zero Runs, fence holds on re-polls (V2 CTR-WAE-011)', async () => {
   const fixture = makeDeps({
     resolve: () => ({ ok: false, code: 'agent_mapping_missing' }),
   })
   try {
     const { engine, ledger, calls } = fixture
     const pass = await engine.pollOnce()
-    assert.equal(pass.admissions[0].action, 'needs_review')
+    assert.equal(pass.admissions[0].action, 'blocked')
+    assert.equal(pass.admissions[0].code, 'agent_mapping_missing')
     assert.equal(calls.delivers.length, 0, 'never deliver without the canonical mapping')
-    assert.equal(ledger.get(VISIT).state, 'NEEDS_REVIEW')
-    assert.match(ledger.get(VISIT).reason, /resolve_failed:agent_mapping_missing/)
+    assert.equal(ledger.get(VISIT).state, 'ACTIVE')
+    assert.equal(ledger.get(VISIT).phase, 'resolution_blocked')
+    assert.equal(ledger.get(VISIT).blockedCode, 'agent_mapping_missing')
     const next = await engine.pollOnce()
     assert.equal(next.admissions[0].action, 'already_attempted')
     assert.equal(calls.delivers.length, 0)
+    // The reconcile exemption: the blocked attempt is never judged
+    // delivery_unverified (it has no Run linkage BY CONSTRUCTION).
+    const reconciled = await engine.reconcileOnce()
+    assert.equal(reconciled.blocked, 1)
+    assert.equal(ledger.get(VISIT).state, 'ACTIVE')
   } finally {
     fixture.cleanup()
   }

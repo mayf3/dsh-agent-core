@@ -127,6 +127,15 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     ledger,
     pollerAgentId,
     enabled,
+    /**
+     * THE ONE controlled recovery operation (V2 CTR-WAE-013), surfaced as a
+     * runtime-component method ONLY: the control plane (Owner/operator seam)
+     * may call it with an explicit authorityRef. It is deliberately NOT a
+     * broker capability/tool manifest, NOT reachable from any Agent tool
+     * surface, and NOT invoked by the poller, reconcile, or any timer —
+     * there is no scheduling semantics around it at all.
+     */
+    recoverAttempt: (args) => engine.recoverAttempt(args),
     /** Start the poll loop (no-op, honestly logged, when unconfigured). */
     start({ intervalMs } = {}) {
       if (!enabled) {

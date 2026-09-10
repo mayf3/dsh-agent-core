@@ -1,12 +1,12 @@
 /**
- * @agent-core/workflow-execution/src/ledger.js — the execution ledger
- * (WORKFLOW_AGENT_EXECUTION_V1).
+ * @agent-core/workflow-execution/src/ledger.js — the execution ledger store
+ * (WORKFLOW_AGENT_EXECUTION_V2; whole-authority successor of V1).
  *
- * Minimal append-only evidence + projection for NodeVisit → Attempt → Run
- * linkage. It records facts; it is NEVER an authority over workflow business
- * state (svc-workflow's state version / idempotency / transactions stay the
- * only business authority) and it is not a scheduler: there are no leases,
- * no retries and no heartbeat here.
+ * Minimal append-only evidence + mutation machinery for NodeVisit → Attempt
+ * → Run linkage. It records facts; it is NEVER an authority over workflow
+ * business state (svc-workflow's state version / idempotency / transactions
+ * stay the only business authority) and it is not a scheduler: no leases, no
+ * retries, no heartbeat.
  *
  * Store shape (per production layout dir, mirrors the scheduler store
  * discipline — one mutation authority + append-only event log):
@@ -15,28 +15,18 @@
  *   <dir>/attempts.lock    OwnerLock artifact (SIGKILL-safe, reused from the
  *                          scheduler package — cross-process pollers serialize)
  *
- * Event kinds and the projection they build:
+ * The EVENT VOCABULARY and the replay projection live in ledger-events.js
+ * (pure, unit-testable): attempt_planned, delivery_started (the V2 write-ahead
+ * fence), resolution_blocked (the V2 recoverable-blocked live phase),
+ * recovery_authorized / recovery_refused (the V2 controlled-recovery
+ * lifecycle), run_delivered, delivery_failed (post-invocation classes stay
+ * terminal; HISTORICAL resolve_failed:* reprojects bytes-unchanged to the
+ * blocked phase per CTR-WAE-011), reconciled.
  *
- *   attempt_planned    { attemptId, nodeVisitId, dispatchIntentId,
- *                        workflowInstanceId, ownerPrincipalId }
- *                      -> state ACTIVE phase planned. This append IS the
- *                      atomic one-attempt-per-NodeVisit fence: the id is
- *                      deterministic from nodeVisitId, and beginAttemptIfAbsent
- *                      is the only way to mint one.
- *   run_delivered      { attemptId, agentId, requestId, sessionId,
- *                        reconciliationHandle?, messageId? }
- *                      -> state ACTIVE phase run_delivered (the Run linkage).
- *   delivery_failed    { attemptId, reason }
- *                      -> terminal NEEDS_REVIEW (delivery never succeeded;
- *                      no automatic retry, no agent reassignment in V1).
- *   reconciled         { attemptId, verdict: SETTLED|NEEDS_REVIEW, judgment,
- *                        reason }
- *                      -> terminal (settled business fact or run-ended-without-
- *                      submission). ACTIVE attempts never append this.
- *
- * Terminal attempts reject further appends fail-loud: V1 has no automatic
- * second execution, so a late writer would mean a caller is trying to re-run
- * a settled/reviewed NodeVisit — that must be visible, never absorbed.
+ * All mutations go through mutate(): in-process FIFO chain → cross-process
+ * OwnerLock → read-latest/replay → apply → append+fsync. Terminal attempts
+ * reject further appends fail-loud: a late writer would mean someone is
+ * trying to re-run a settled/reviewed NodeVisit — visible, never absorbed.
  */
 
 import { createHash } from 'node:crypto'
@@ -44,6 +34,8 @@ import { mkdirSync, appendFileSync, existsSync, statSync, openSync, readSync, cl
 import { dirname, join } from 'node:path'
 
 import { OwnerLock } from '../../scheduler/src/lock.js'
+
+import { applyLedgerEvent, buildDeliveryStartedEvent, buildRecoveryAuthorizedEvent, buildRecoveryRefusedEvent, buildResolutionBlockedEvent, terminalRefusal } from './ledger-events.js'
 
 export const LEDGER_EVENTS_FILE = 'attempts.jsonl'
 export const LEDGER_LOCK_FILE = 'attempts.lock'
@@ -125,70 +117,11 @@ export class ExecutionLedger {
   }
 
   #applyEvent(event) {
-    const nodeVisitId = event.nodeVisitId.toLowerCase()
-    const current = this.attempts.get(nodeVisitId)
-    switch (event.kind) {
-      case 'attempt_planned':
-        if (current !== undefined) {
-          // beginAttemptIfAbsent guards this; a replayed file can only hit it
-          // if the same nodeVisitId was planned twice — impossible by
-          // construction (deterministic id + existence check under lock).
-          throw new Error(`workflow-execution: corrupt ledger — attempt_planned twice for nodeVisit ${nodeVisitId}`)
-        }
-        this.attempts.set(nodeVisitId, {
-          attemptId: event.attemptId,
-          nodeVisitId,
-          dispatchIntentId: event.dispatchIntentId.toLowerCase(),
-          workflowInstanceId: event.workflowInstanceId.toLowerCase(),
-          ownerPrincipalId: event.ownerPrincipalId.toLowerCase(),
-          state: 'ACTIVE',
-          phase: 'planned',
-          reason: undefined,
-          createdAtMs: event.atMs,
-          delivered: undefined,
-        })
-        return
-      case 'run_delivered':
-        if (current?.state !== 'ACTIVE') this.#terminalGuard(current, event)
-        current.state = 'ACTIVE'
-        current.phase = 'run_delivered'
-        current.delivered = {
-          agentId: event.agentId,
-          requestId: event.requestId,
-          sessionId: event.sessionId,
-          reconciliationHandle: event.reconciliationHandle,
-          messageId: event.messageId,
-          atMs: event.atMs,
-        }
-        return
-      case 'delivery_failed':
-        if (current?.state !== 'ACTIVE') this.#terminalGuard(current, event)
-        current.state = 'NEEDS_REVIEW'
-        current.phase = 'delivery_failed'
-        current.reason = event.reason
-        return
-      case 'reconciled':
-        if (current?.state !== 'ACTIVE') this.#terminalGuard(current, event)
-        if (event.verdict === 'ACTIVE') {
-          throw new Error('workflow-execution: reconciled events must be terminal (SETTLED | NEEDS_REVIEW)')
-        }
-        current.state = event.verdict
-        current.phase = 'reconciled'
-        current.judgment = event.judgment
-        current.reason = event.reason
-        return
-      default:
-        throw new Error(`workflow-execution: unknown ledger event kind ${JSON.stringify(event?.kind)}`)
-    }
+    applyLedgerEvent(this.attempts, event)
   }
-
   #terminalGuard(current, event) {
-    throw new Error(
-      `workflow-execution: refusing ${event.kind} for nodeVisit ${event.nodeVisitId} — attempt is terminal `
-      + `(state=${current?.state}, phase=${current?.phase}); V1 never re-runs a settled/reviewed NodeVisit`,
-    )
+    terminalRefusal(current, event)
   }
-
   /** Replay the append-only event file. Read-only callers may ignore one torn
    * tail; the mutation path repairs it under OwnerLock before any append. */
   load({ repairTornTail = false } = {}) {
@@ -337,13 +270,21 @@ export class ExecutionLedger {
       this.#appendEvent(event)
       this.#applyEvent(event)
       if (complete === undefined) return { created: true, attempt: { ...this.#attempt(nodeVisitId) } }
-      const completion = await complete({ ...this.#attempt(nodeVisitId) })
+      // V2 CTR-WAE-013: the completion callback gets a write-ahead seam so it
+      // can durably append delivery_started BEFORE invoking router.deliver,
+      // inside this same locked mutation. There is no invocation-to-record
+      // crash window: any delivery attempt must first leave this trace.
+      const completion = await complete({ ...this.#attempt(nodeVisitId) }, {
+        recordDeliveryStarted: () => { this.#recordDeliveryStarted(nodeVisitId) },
+      })
       if (completion?.kind === 'run_delivered') {
         this.#recordRunDelivered(nodeVisitId, completion)
       } else if (completion?.kind === 'delivery_failed') {
         this.#recordDeliveryFailed(nodeVisitId, completion.reason)
+      } else if (completion?.kind === 'resolution_blocked') {
+        this.#recordResolutionBlocked(nodeVisitId, completion.code)
       } else {
-        throw new TypeError('workflow-execution: admission callback must return run_delivered or delivery_failed')
+        throw new TypeError('workflow-execution: admission callback must return run_delivered, delivery_failed or resolution_blocked')
       }
       return { created: true, attempt: { ...this.#attempt(nodeVisitId) }, completion }
     })
@@ -354,9 +295,49 @@ export class ExecutionLedger {
     return this.mutate(() => this.#recordRunDelivered(nodeVisitId, { agentId, requestId, sessionId, reconciliationHandle, messageId }))
   }
 
-  /** Record a failed (or never-verifiably-started) delivery: NEEDS_REVIEW. */
+  /** Record a failed (or never-verifiably-started) delivery: NEEDS_REVIEW.
+   *  V2: NEW-path resolution failures must use recordResolutionBlocked — a
+   *  fresh `resolve_failed:` reason here would silently re-create the V1
+   *  conflation this successor removed, so it fails loud. */
   async recordDeliveryFailed({ nodeVisitId, reason }) {
+    if (typeof reason === 'string' && reason.startsWith('resolve_failed:')) {
+      throw new TypeError('workflow-execution: delivery_failed cannot carry a resolve_failed: reason (V2) — use recordResolutionBlocked')
+    }
     return this.mutate(() => this.#recordDeliveryFailed(nodeVisitId, reason))
+  }
+
+  /** V2 CTR-WAE-012: durable WRITE-AHEAD INTENT before any router.deliver
+   *  invocation. Allowed from the pre-delivery phases only; at-most-one is
+   *  enforced by the projection (second = corrupt fail-loud). */
+  async recordDeliveryStarted({ nodeVisitId }) {
+    return this.mutate(() => this.#recordDeliveryStarted(nodeVisitId))
+  }
+
+  /** V2 CTR-WAE-011: the recoverable-blocked live phase for a resolution-
+   *  phase failure (zero delivery side effect by construction). */
+  async recordResolutionBlocked({ nodeVisitId, code }) {
+    return this.mutate(() => this.#recordResolutionBlocked(nodeVisitId, code))
+  }
+
+  /** V2 CTR-WAE-013: record the governance authorization for ONE controlled
+   *  recovery (only writer: the recovery operation, after its preconditions). */
+  async recordRecoveryAuthorized({ nodeVisitId, authorityRef }) {
+    if (typeof authorityRef !== 'string' || authorityRef === '') {
+      throw new TypeError('workflow-execution: authorityRef is required')
+    }
+    return this.mutate(() => this.#recordRecoveryAuthorized(nodeVisitId, authorityRef))
+  }
+
+  /** V2 CTR-WAE-013 E5: world drift discovered on an eligible-shaped attempt
+   *  — refusal is terminal NEEDS_REVIEW (the human path), zero admission. */
+  async recordRecoveryRefused({ nodeVisitId, authorityRef, refused }) {
+    if (typeof authorityRef !== 'string' || authorityRef === '') {
+      throw new TypeError('workflow-execution: authorityRef is required')
+    }
+    if (typeof refused !== 'string' || refused === '') {
+      throw new TypeError('workflow-execution: refused is required')
+    }
+    return this.mutate(() => this.#recordRecoveryRefused(nodeVisitId, authorityRef, refused))
   }
 
   /** Record the terminal reconcile verdict for an ACTIVE attempt. */
@@ -401,11 +382,48 @@ export class ExecutionLedger {
 
   #recordDeliveryFailed(nodeVisitId, reason) {
     if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: delivery_failed reason is required')
+    if (reason.startsWith('resolve_failed:')) {
+      throw new TypeError('workflow-execution: delivery_failed cannot carry a resolve_failed: reason (V2) — use recordResolutionBlocked')
+    }
     return this.#recordForActive(nodeVisitId, (event) => {
       event.kind = 'delivery_failed'
       event.reason = reason
       return event
     })
+  }
+
+  // V2: recovery-lifecycle records PRE-CHECK the projection BEFORE the
+  // durable append (the builders carry the guards). Pre-check + append +
+  // apply run inside ONE locked mutation, so the check is atomic with the
+  // write; checking only post-append (replay) would let an interleaved
+  // caller corrupt the file.
+  #precheckActive(nodeVisitId, kind) {
+    const current = this.#attempt(nodeVisitId)
+    if (current === undefined) {
+      throw new Error(`workflow-execution: no attempt exists for nodeVisit ${String(nodeVisitId).toLowerCase()} — beginAttemptIfAbsent first`)
+    }
+    if (current.state !== 'ACTIVE') this.#terminalGuard(current, { kind, nodeVisitId })
+    return current
+  }
+
+  #recordDeliveryStarted(nodeVisitId) {
+    const patch = buildDeliveryStartedEvent(this.#precheckActive(nodeVisitId, 'delivery_started'), nodeVisitId)
+    return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
+  }
+
+  #recordResolutionBlocked(nodeVisitId, code) {
+    const patch = buildResolutionBlockedEvent(this.#precheckActive(nodeVisitId, 'resolution_blocked'), nodeVisitId, code)
+    return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
+  }
+
+  #recordRecoveryAuthorized(nodeVisitId, authorityRef) {
+    const patch = buildRecoveryAuthorizedEvent(this.#precheckActive(nodeVisitId, 'recovery_authorized'), nodeVisitId, authorityRef)
+    return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
+  }
+
+  #recordRecoveryRefused(nodeVisitId, authorityRef, refused) {
+    const patch = buildRecoveryRefusedEvent(this.#precheckActive(nodeVisitId, 'recovery_refused'), nodeVisitId, authorityRef, refused)
+    return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
   }
 
   #recordForActive(nodeVisitId, build) {

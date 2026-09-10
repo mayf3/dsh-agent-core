@@ -137,13 +137,22 @@ test('restart replay: a fresh ledger over the same dir restores the exact projec
     await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
     await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: 'agt_target-agent', requestId: 'r1', sessionId: 'main', reconciliationHandle: 'turn:h1' })
     await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT_2, nodeVisitId: VISIT_2, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
-    await ledger.recordDeliveryFailed({ nodeVisitId: VISIT_2, reason: 'resolve_failed:principal_not_found' })
+    // Seed a HISTORICAL V1-era event as raw bytes, exactly as the V1 binary
+    // would have left it on disk (the V2 write guard refuses new-path
+    // resolve_failed deliveries — this is replayed history, not a new fact).
+    appendFileSync(ledger.eventsFile, `${JSON.stringify({ kind: 'delivery_failed', attemptId: attemptIdFor(VISIT_2), nodeVisitId: VISIT_2, reason: 'resolve_failed:principal_not_found', atMs: 1002 })}\n`)
 
     const revived = new ExecutionLedger({ dir })
     assert.equal(revived.get(VISIT).state, 'ACTIVE')
     assert.equal(revived.get(VISIT).delivered.reconciliationHandle, 'turn:h1')
-    assert.equal(revived.get(VISIT_2).state, 'NEEDS_REVIEW')
-    assert.equal(revived.listActive().length, 1)
+    // V2 CTR-WAE-011 (projection-only reclassification): the HISTORICAL
+    // V1-era delivery_failed{resolve_failed:*} event on disk is unchanged;
+    // its projected state mapping is now the recoverable-blocked live phase.
+    assert.equal(revived.get(VISIT_2).state, 'ACTIVE')
+    assert.equal(revived.get(VISIT_2).phase, 'resolution_blocked')
+    assert.equal(revived.get(VISIT_2).blockedCode, 'principal_not_found')
+    assert.equal(revived.get(VISIT_2).historicalBlocked, true)
+    assert.equal(revived.listActive().length, 2)
 
     const again = await revived.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
     assert.equal(again.created, false, 'restart does not un-block the one-attempt fence')
