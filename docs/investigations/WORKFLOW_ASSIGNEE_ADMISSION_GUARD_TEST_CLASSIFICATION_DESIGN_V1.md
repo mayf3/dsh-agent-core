@@ -6,7 +6,9 @@ Owner-sanctioned acceptance).
 
 ```text
 GOAL = WORKFLOW_ASSIGNEE_ADMISSION_GUARD_V1 · LANE_TEST_CLASSIFICATION
-REVISION = r2 (Owner REVISE ruling 2026-09-11: B1–B7 applied; r1 superseded in full)
+REVISION = r3 (r2 = Owner REVISE ruling B1–B7 applied; r3 = independent design review
+  round-1 fixes: G1 seed-script ingress row + whole-tree scope restatement, G2 read-side
+  authority map corrected to the real frozen surfaces, 403 placement frozen, T5k–m added)
 BASES = svc-workflow github/main dd235dc (fresh repin 2026-09-11) · dsh github/main b1fb7c0
 ABSENCE_PRECONDITION = SEALED (census r2 §0: zero class markers in src/+migrations on
   dd235dc; WorkEligibility = {ACTIONABLE_NOW, WAITING_FOR_TIME} only; activation_kind
@@ -63,7 +65,11 @@ ORDINARY CALLER CONTRACT =
   executionClass absent or BUSINESS → normal create (unchanged)
   executionClass = NON_BUSINESS_TEST without DOMAIN_OWNER → denied
   (403 not_domain_owner error family — exact wire code frozen in the candidate;
-  403 preferred over 422 because the failure is authorization, not payload shape)
+  403 preferred over 422 because the failure is authorization, not payload shape;
+  PLACEMENT FROZEN: in-tx deterministic failure class on the receipt-first create
+  path — byte-identical retry replays the stored 403, changed body → idempotency
+  conflict, fresh key → fresh attempt, mirroring the established cancel
+  NotDomainOwner semantics)
 NEW_ROLE = NO · NEW_GRANT = NO · canary env guard NOT reused as authority
   (it is a deployment-global write gate, verified canary_guard.rs:25-40 — it
   classifies nothing and is orthogonal)
@@ -76,21 +82,25 @@ cancelling the same class of work.
 
 ## 3. B2 — SUPPORTED_TEST_CANARY_INGRESS_CENSUS (EXHAUSTIVE)
 
-Mechanical basis: the ONLY writers of `workflow_instances` on dd235dc are (grep
-`INSERT INTO workflow_instances`): the HTTP create transaction (create_transaction.rs)
-and the legacy-import transaction (legacy_import_repository/transaction.rs). Every
-ecosystem producer — broker `workflow_execute.create_instance` (model surface, skills,
-harnesses), direct HTTP harnesses/conformance tests — funnels through the single HTTP
-endpoint; there is no other create surface.
+Mechanical basis (r3, whole-tree): `INSERT INTO workflow_instances` writers on
+dd235dc = **src/-scoped two** (HTTP create transaction create_transaction.rs:373;
+legacy import transaction legacy_import_repository/transaction.rs:85) **plus one
+whole-tree script writer** (`scripts/canary/seed_canary_test_data.sql:75,151`, direct
+SQL canary seeding) — found by independent review; test fixtures also insert directly
+and are out of production scope. Every ecosystem producer — broker
+`workflow_execute.create_instance` (model surface, skills, harnesses), direct HTTP
+harnesses/conformance tests — funnels through the single HTTP endpoint.
 
 | Ingress | Produces test/canary work? | Classification (B2 taxonomy) |
 |---|---|---|
 | 1. `POST /internal/v1/workflow-instances` (broker model surface, skills, direct authorized callers, conformance/canary harnesses) | YES — this is where any supported test/canary instance would be born | **AUTHORIZED_TEST_CREATOR_MUST_EXPLICITLY_MARK** — a DOMAIN_OWNER-authorized creator marks NON_BUSINESS_TEST explicitly; unmarked ⇒ BUSINESS |
-| 2. Legacy import (library-only; WORKFLOW_MIGRATION SERVICE binding; derived assignee must equal node resolution) | NO — imports pre-existing business snapshots | **OUT_OF_SCOPE_LEGACY_PRODUCER_WITH_EXPLICIT_DISPOSITION** — out of scope, creates BUSINESS, legacy garbage rows are WORKFLOW_DATA_HYGIENE_V1 property |
-| 3. SERVER-FORCES classification | — | **UNUSED**: no current accepted mechanism can force class at create (canary guard verified to be an env-global write gate, not a per-request classifier). Kept in the taxonomy for completeness only |
+| 2. Legacy import (library-only; WORKFLOW_MIGRATION SERVICE binding; derived assignee must equal node resolution) | NO — imports pre-existing business snapshots | **OUT_OF_SCOPE_LEGACY_PRODUCER_WITH_EXPLICIT_DISPOSITION** — out of scope, creates BUSINESS; structurally feed-absent (never writes workflow_activations, CTR-VAI-012 semantics); legacy garbage rows are WORKFLOW_DATA_HYGIENE_V1 property |
+| 3. `scripts/canary/seed_canary_test_data.sql` (direct-SQL canary seeding; "Canary Test Domain" / canary-review-def / FIXED_PRINCIPAL visits) | YES (historical seeding) | **OUT_OF_SCOPE_LEGACY_PRODUCER_WITH_EXPLICIT_DISPOSITION** — mints NO workflow_activations rows ⇒ dispatch-inert by construction (due feed requires an active DISPATCH_INTENT activation); disposition: candidate adds a guard test asserting seed-produced rows read BUSINESS with zero feed presence, and any future reuse/extension of the script MUST stamp NON_BUSINESS_TEST in its INSERT (one-line default override, recorded in the candidate) |
+| 4. SERVER-FORCES classification | — | **UNUSED**: no current accepted mechanism can force class at create (canary guard verified to be an env-global write gate, not a per-request classifier). Kept in the taxonomy for completeness only |
 
 ```text
-SUPPORTED_TEST_CANARY_INGRESS_SET = {1} (exhaustive for supported producers)
+SUPPORTED_TEST_CANARY_INGRESS_SET = {1} for supported producers (+ {3} dispositioned
+  as out-of-scope/inert) — exhaustive at whole-tree scope
 UNMARKED_SUPPORTED_TEST_INGRESS = 0 by construction once the candidate lands:
   every supported producer of test/canary work must ride ingress 1 and either mark
   (governed) or create BUSINESS work (which the dispatcher treats as business — the
@@ -123,14 +133,39 @@ PRESERVED VERBATIM (frozen delta boundary):
 ONLY feed delta = NON_BUSINESS_TEST excluded from the normal business due set
 ```
 
-T11 closure (B5): `executionClass` is added, class-only, to the already-authorized
+T11 closure (B5, r3): `executionClass` is added, class-only, to the already-authorized
 domain/global instance safe summaries so HR can positively classify
-DISPATCHABLE / HUMAN / TEST_OR_CANARY / TERMINAL per the Goal's HR_DISPATCH_BOUNDARY:
+DISPATCHABLE / HUMAN / TEST_OR_CANARY / TERMINAL per the Goal's HR_DISPATCH_BOUNDARY.
+The read-side affected-authority map (r3, corrected by independent review — the r2 map
+wrongly targeted a nonexistent READER_V1 field-list section):
 
 ```text
-AFFECTED (read side) = SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 (summary projection,
-  exact field-list section amended in the same candidate) + the dsh-side broker
-  capability family for field passthrough (companion delta, §6)
+REAL FROZEN READ SURFACES (all enter the candidate's authority census):
+ 1. contracts/workflow-http/v1/openapi.yaml:1397 DomainInstanceSummary —
+    additionalProperties:false + explicit required list; governed by
+    contracts/workflow-http/v1/compatibility.md (strict_backward_compatible),
+    changelog.md, and conformance fixtures/digests. executionClass is an ADDITIVE
+    OPTIONAL response field (wire-backward-compatible); the amendment = update the
+    schema + changelog + conformance fixtures. EXPLICIT PRECEDENT RULING: the accepted
+    WORK_ELIGIBILITY_PROJECTION_V1 added `eligibility` (and successor enrichment added
+    current_assignee_canonical_agent_id) WITHOUT touching the openapi contract — the
+    candidate BREAKS that silence precedent deliberately: it amends the contract in
+    the same transaction instead of leaving it stale.
+ 2. SVC_WORKFLOW_PRODUCT_BOUNDARY_V7 (accepted) — exclusivity clause on the
+    Page<DomainInstanceSummary> family (only the exact opt-in pair + closed non-sensitive
+    codes authorized; generic blockedFlag/blockedReasonCode unauthorized) and the
+    CANONICAL_SCHEDULER_SUBJECT pin (= ACTIVE DISPATCH_INTENT feed, not
+    Page<DomainInstanceSummary>, not a computed dispatchable flag). Reconciliation
+    frozen in the candidate: executionClass is a STORED CLASSIFICATION stamped at
+    create — not a computed dispatchable flag, not a blocked-state code, not a second
+    scheduler subject; the due feed remains the CANONICAL_SCHEDULER_SUBJECT and the
+    class narrows that feed, not the summaries' role.
+ 3. SVC_WORKFLOW_WORK_ELIGIBILITY_PROJECTION_V1 §3 — cited as the amend-by precedent
+    for the struct closure (DomainInstanceSummary is the shared struct for domain+global
+    lists; eligibility was added there).
+ 4. SVC_WORKFLOW_GLOBAL_WORKFLOW_READER_V1 — NON-INTERFERENCE note only: it freezes
+    role matrix/gate/wire errors, NOT a field list; the class addition touches none of
+    its §3-§5 semantics (READER holders see the class like any other summary field).
 NO private detail, no cross-domain widening, no new read authority:
   the class is a Workflow-DB-owned fact on a summary the caller is already
   authorized to see
@@ -171,7 +206,7 @@ NEXT GATE = independent review OF THIS DESIGN (MINIMAL_DESIGN_REVIEW must be PAS
   with LOAD_BEARING_GAPS = 0)
 THEN = author docs-first authority candidate(s) on a CLEAN svc-workflow branch cut
   from github/main dd235dc: the class spec (marking authority §2 + data model §5 +
-  feed amendments §4 + summary amendment §4 + T5a–f/T11 test matrix) with the broker
+  feed amendments §4 + read-side amendments §4 + §8 matrix T5a–m) with the broker
   companion delta as its declared dsh-side counterpart. Exact-head acceptance route
   unchanged. dsh evidence branch stays investigation-only.
 ```
@@ -191,6 +226,14 @@ T5h marked instance fully visible/executable via its assignee worklist (targeted
 T5i HR-safe summaries expose executionClass; a READER (no scheduler role) still sees class
 T5j keyset sweep unchanged on a class-mixed window: cursor walk returns the identical
     BUSINESS row sequence as before the candidate (ordering/continuation preservation proof)
+T5k cross-domain negative: DOMAIN_OWNER of domain A attempts to mark an instance in
+    domain B → denied per frozen error family, zero instance fact (the domain binding
+    is the load-bearing scope of the authority)
+T5l broker end-to-end: create_instance absent executionClass → BUSINESS; DOMAIN_OWNER
+    + NON_BUSINESS_TEST → NON_BUSINESS_TEST; non-owner + NON_BUSINESS_TEST → 403
+    preserved through the broker per AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1
+T5m seed/import regression: rows produced by scripts/canary/seed_canary_test_data.sql
+    and the legacy-import path read BUSINESS and produce zero due-feed entries
 ```
 
 ## 9. Completion-condition block (Owner's checklist, r2 values)
@@ -199,12 +242,16 @@ T5j keyset sweep unchanged on a class-mixed window: cursor walk returns the iden
 AUTHORITATIVE_OBJECT = INSTANCE                    ENUM = BUSINESS | NON_BUSINESS_TEST
 WHO_CAN_MARK_NON_BUSINESS_TEST = EXACT (enabled DOMAIN_OWNER of the target domain, in-tx)
 WHO_CANNOT_MARK = EXACT (§2 — incl. WORKFLOW_ADMIN and GLOBAL_WORKFLOW_COORDINATOR)
-SUPPORTED_TEST_CANARY_INGRESS_SET = EXHAUSTIVE ({HTTP create}; §3)
+SUPPORTED_TEST_CANARY_INGRESS_SET = EXHAUSTIVE (whole-tree: {HTTP create} for supported
+  producers + {seed script} dispositioned out-of-scope/inert + {legacy import} NO; §3)
 UNMARKED_SUPPORTED_TEST_INGRESS = 0 (structural once candidate lands)
 GENERIC_BUSINESS_CREATE_DEFAULT = BUSINESS         CLASS_IMMUTABLE = YES
 BUSINESS_FEED_EXCLUSION = EXACT (one due-set conjunct; §4)
 AFFECTED_FEED_AUTHORITY_ROUTE = CLOSED (amend CTR-VAI-009 + CTR-DKC-002 in-candidate)
-HR_SAFE_CLASSIFICATION_REQUIREMENT = CLOSED (executionClass in domain/global safe summaries)
+HR_SAFE_CLASSIFICATION_REQUIREMENT = CLOSED (executionClass in domain/global safe
+  summaries; amendment targets = openapi DomainInstanceSummary + changelog/conformance
+  + PRODUCT_BOUNDARY_V7 reconciliation + WORK_ELIGIBILITY §3 closure citation;
+  READER_V1 non-interference — §4)
 BROKER_COMPANION_CLOSURE = DECIDED (REQUIRED=YES; §6)
 ZERO_SEPARATE_BACKFILL = YES    HISTORICAL_RECLASSIFICATION = NO (hygiene owns legacy)
 NEW_IDENTITY_AUTHORITY = NO     NEW_RETRY_ENGINE = NO     NAME_HEURISTIC = NO
