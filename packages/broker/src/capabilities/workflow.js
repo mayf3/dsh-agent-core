@@ -194,7 +194,9 @@ export const workflowMyDomainsManifest = withTransportErrors({
  * (others get workflow_instance_not_found_or_not_visible, which also covers a
  * nonexistent domain). The summary projection passes through untouched
  * (items: workflow_instance_id / title / is_terminal / current_node /
- * current_assignee_principal_id / created_at / updated_at, + next_cursor).
+ * current_assignee_principal_id / execution_class / created_at / updated_at,
+ * + next_cursor; execution_class is the SVC_WORKFLOW_WORK_EXECUTION_CLASS_V1
+ * class passed through verbatim — never renamed, filtered, or derived).
  *
  * PAGINATION_V2 exposes the optional composite keyset cursor pair
  * beforeCreatedAt + beforeId. A generic manifest allOrNone group rejects either
@@ -362,6 +364,7 @@ export const workflowExecuteManifest = withTransportErrors({
     { code: 'definition_version_not_found', description: 'Workflow definition version not found (HTTP 404).' },
     { code: 'version_not_published', description: 'Workflow definition version is not PUBLISHED (HTTP 409).' },
     { code: 'context_validation_failed', description: 'contextPayload failed the entry node context schema (HTTP 422).' },
+    { code: 'invalid_input', description: 'Request payload failed validation, e.g. an unknown executionClass value (HTTP 422; AGENT_CORE_WORKFLOW_EXECUTION_CLASS_BROKER_V1).' },
     // transition family (CTR-005, migrated verbatim from workflow_transition).
     { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
     { code: 'current_visit_not_found', description: 'Current node visit not found (HTTP 404).' },
@@ -392,7 +395,7 @@ export const workflowExecuteManifest = withTransportErrors({
     {
       name: 'create_instance',
       description:
-        'Create one workflow instance. Required: domainId, definitionVersionId (a PUBLISHED definition version), contextPayload (must satisfy the entry node context schema), metadata (JSON; pass null when empty). Optional: externalReference (<=512 chars), externalUrl.',
+        'Create one workflow instance. Required: domainId, definitionVersionId (a PUBLISHED definition version), contextPayload (must satisfy the entry node context schema), metadata (JSON; pass null when empty). Optional: externalReference (<=512 chars), externalUrl, executionClass (BUSINESS | NON_BUSINESS_TEST; absent = BUSINESS. NON_BUSINESS_TEST marks explicit test/canary work, which the normal BUSINESS dispatch due feed never returns — marking requires DOMAIN_OWNER of the target domain server-side; others get not_domain_owner).',
       arguments: {
         properties: {
           domainId: { type: 'string', description: 'Target workflow domain id (UUID); caller must be an active member.' },
@@ -401,6 +404,7 @@ export const workflowExecuteManifest = withTransportErrors({
           metadata: { type: 'json', description: 'Arbitrary metadata JSON (<=64 KiB); pass null when there is none.' },
           externalReference: { type: 'string', description: 'Optional external reference string (<=512 chars).' },
           externalUrl: { type: 'string', description: 'Optional external URL.' },
+          executionClass: { type: 'string', enum: ['BUSINESS', 'NON_BUSINESS_TEST'], description: 'Optional work execution class (SVC_WORKFLOW_WORK_EXECUTION_CLASS_V1 / AGENT_CORE_WORKFLOW_EXECUTION_CLASS_BROKER_V1). Absent = BUSINESS; the mapped svc body then OMITS this key entirely. NON_BUSINESS_TEST = explicit test/canary work, excluded from the normal BUSINESS dispatch due feed; requires DOMAIN_OWNER of the target domain (server-enforced).' },
         },
         required: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata'],
       },
@@ -410,7 +414,7 @@ export const workflowExecuteManifest = withTransportErrors({
         target: 'svc-workflow',
         method: 'POST',
         path: '/internal/v1/workflow-instances',
-        body: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata', 'externalReference', 'externalUrl'],
+        body: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata', 'externalReference', 'externalUrl', 'executionClass'],
         idempotencyKey: true,
       },
     },

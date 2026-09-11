@@ -60,6 +60,7 @@ test('workflow_domain_instances: GET with camelCase domainId query mapping + wor
             definition_key: 'requirement_review',
             created_by_principal_id: '0f1e2d3c-0000-4000-8000-0000000000c3',
             current_assignee_principal_id: '7a8b9c0d-0000-4000-8000-0000000000d4',
+            execution_class: 'BUSINESS',
             current_node: { node_id: '2b3c4d5e-0000-4000-8000-0000000000e5', node_key: 'review', display_name: '评审', node_type: 'human' },
             is_terminal: false,
             title: '调度 正式部署方案修订',
