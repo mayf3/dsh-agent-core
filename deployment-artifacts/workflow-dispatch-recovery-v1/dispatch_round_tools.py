@@ -246,7 +246,9 @@ def backlog_list(path, limit=50):
                     rows.append(json.loads(s))
                 except ValueError:
                     rows.append({"malformed": True})
-    return {"entries": len(rows), "recent": rows[-int(limit):]}
+    ids = sorted({r["dispatchIntentId"] for r in rows
+                  if isinstance(r, dict) and isinstance(r.get("dispatchIntentId"), str)})
+    return {"entries": len(rows), "recent": rows[-int(limit):], "intentIds": ids}
 
 
 # ── decision (pure; deliberately classifier-free) ─────────────────────────────
