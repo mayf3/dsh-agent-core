@@ -465,7 +465,7 @@ def main(argv):
                                      flag("--reason") or "identity_blocked"), ensure_ascii=False))
     elif cmd == "backlog-list":
         raw_limit = flag("--limit")
-        print(json.dumps(backlog_list(flag("--file"), int(raw_limit) if raw_limit else 100000), ensure_ascii=False))
+        print(json.dumps(backlog_list(flag("--file"), int(raw_limit) if raw_limit else 50), ensure_ascii=False))
     elif cmd == "decide":
         print(json.dumps(decide(json.load(sys.stdin)), ensure_ascii=False))
     else:
