@@ -57,6 +57,7 @@ import {
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
   reExportsWithoutLocalBinding,
 } from './lib/admission-lib.mjs'
+import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 
 const args = process.argv.slice(2)
 const has = (name) => args.includes(name)
@@ -380,29 +381,8 @@ function watchdogInstall(alertTo) {
   const stateDir = CTX.watchdogStateDir
   mkdirSync(stateDir, { recursive: true })
   try { CTX.chown(stateDir, 'authsvc', 'staff') } catch (error) { if (MODE === 'apply') throw error }
-  // Incident Issue 3 closure (RUNBOOK-authorized provisioning repair): W1
-  // (authsvc) appends EVIDENCE_LOG; root W2 bypasses. An existing log is
-  // NEVER truncated — ownership/mode repair only, bytes preserved (size is
-  // receipted pre/post); a missing log is pre-created before W1/W2 start.
-  const evidenceLog = join(stateDir, 'scheduler-watchdog-evidence.jsonl')
-  const evPre = existsSync(evidenceLog) ? statSync(evidenceLog) : null
-  if (!evPre) writeFileSync(evidenceLog, '')
-  try { CTX.chown(evidenceLog, 'authsvc', 'staff') } catch (error) { if (MODE === 'apply') throw error }
-  try { execFileSync('chmod', ['0644', evidenceLog], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
-  const evPost = statSync(evidenceLog)
-  phase('watchdog-evidence-ownership', !evPre || evPost.size >= evPre.size,
-    `evidence log uid ${evPre?.uid ?? 'absent'}->${evPost.uid} gid ${evPre?.gid ?? 'absent'}->${evPost.gid} mode ${evPost.mode & 0o7777} size ${evPre?.size ?? 0}->${evPost.size} (bytes preserved)`)
-  // Reconciliation-evidence channel (§5.2/§5.6), terminal (non-0777) state.
-  // Mechanical census: writers = child relay (uid 502 yanfenma) + root
-  // (W2 logs, operator tooling — both bypass); reader = W1 (authsvc 505).
-  // oc-canary (599) is the existing group BOTH yanfenma and authsvc already
-  // belong to, so 0750 yanfenma:oc-canary is the narrowest shared-writer
-  // permission (owner writes, group reads, world nothing) — the RUNBOOK's
-  // own 'dedicated group, tighten 0777 placeholder' requirement.
-  const evidenceDir = dirname(CTX.evidenceFile ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl')
-  mkdirSync(evidenceDir, { recursive: true })
-  try { CTX.chown(evidenceDir, 'yanfenma', 'oc-canary') } catch (error) { if (MODE === 'apply') throw error }
-  try { execFileSync('chmod', ['0750', evidenceDir], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
+  // Issue 3 provisioning closure (RUNBOOK §7-authorized): see lib module.
+  repairWatchdogEvidenceChannel({ ctx: CTX, mode: MODE, phase, execFileSync })
   const tmplDir = join(REPO_ROOT, 'deployment-artifacts', 'scheduler-control-plane-reliability-v1')
   const fill = (tmpl) => tmpl
     .replace('__OWNER_CHAT_ID__', alertTo || CTX.ownerChat)
@@ -421,8 +401,7 @@ function watchdogInstall(alertTo) {
 }
 
 // ── proofs ───────────────────────────────────────────────────────────────────
-// module-level so both proofs() and evidenceAndHeartbeatProofs() share it
-function gate(name, ok, detail) { receipts.gates = receipts.gates ?? {}; receipts.gates[name] = { ok, detail }; process.stdout.write(`[${ok ? 'PASS' : 'FAIL'}] ${name} — ${detail}\n`); if (!ok) throw new Error(`gate ${name} failed`) }
+function gate(name, ok, detail) { receipts.gates = receipts.gates ?? {}; receipts.gates[name] = { ok, detail }; process.stdout.write(`[${ok ? 'PASS' : 'FAIL'}] ${name} — ${detail}\n`); if (!ok) throw new Error(`gate ${name} failed`) } // shared by proofs() and the Issue 3 proof module
 async function proofs() {
   // CLI guard negative (as root, sandbox HOME): must refuse, create nothing
   const sandbox = '/var/empty'
@@ -445,70 +424,7 @@ async function proofs() {
     env: { ...process.env, HOME: '/var/empty' }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
   })
   gate('OPERATOR_FUNCTIONAL_SMOKE', JSON.parse(smoke).jobs !== undefined, 'flipped operator answers list --json (sandbox HOME)')
-  await evidenceAndHeartbeatProofs()
-}
-
-// Issue 3 terminal proofs: durable evidence writable by W1, both watchdog
-// cycles actually observed post-deploy, the pre-#222 runner ReferenceError
-// gone from fresh err bytes, and the reconciliation channel no longer
-// world-writable. Fixture mode runs every filesystem check for real against
-// the fixture tree; only the launchd-driven heartbeat rewrite is deferred
-// (the shim cannot execute the runner), so those two gates assert that both
-// plists were bootstrapped instead.
-async function evidenceAndHeartbeatProofs() {
-  const stateDir = CTX.watchdogStateDir
-  const evLog = join(stateDir, 'scheduler-watchdog-evidence.jsonl')
-  const evidenceDir = dirname(CTX.evidenceFile ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl')
-  gate('RECONCILIATION_EVIDENCE_DIR_WORLD_WRITABLE', (statSync(evidenceDir).mode & 0o002) === 0, `${evidenceDir} has no world-write bit (mode ${(statSync(evidenceDir).mode & 0o7777).toString(8)})`)
-  let appendable = false
-  let appendDetail = ''
-  if (MODE === 'apply') {
-    try {
-      execFileSync('sudo', ['-u', 'authsvc', '/usr/bin/test', '-w', evLog], { stdio: ['ignore', 'pipe', 'pipe'] })
-      appendable = true
-      appendDetail = 'authsvc -w probe on evidence log (non-mutating)'
-    } catch { appendDetail = 'authsvc cannot write the evidence log' }
-  } else {
-    try { accessSync(evLog, constants.W_OK); appendable = true; appendDetail = 'fixture runner-user W_OK probe' } catch { appendDetail = 'fixture evidence log not writable' }
-  }
-  gate('W1_EVIDENCE_APPEND_WRITABLE', appendable, appendDetail)
-  const w1hb = join(stateDir, 'w1.heartbeat')
-  const w2hb = join(stateDir, 'w2.heartbeat')
-  const mtimeOf = (p) => { try { return statSync(p).mtimeMs } catch { return 0 } }
-  const errSizeOf = (p) => { try { return statSync(p).size } catch { return 0 } }
-  const w1err = '/Users/authsvc/.agent-core/logs/scheduler-watchdog-w1.err.log'
-  const w2err = '/usr/local/var/scheduler-watchdog/w2.err.log'
-  if (MODE === 'apply') {
-    const evSizeBefore = statSync(evLog).size
-    const w1ErrBefore = errSizeOf(w1err)
-    const t0 = Date.now()
-    CTX.kickstart('system/ai.agent-core.scheduler-watchdog-w1')
-    CTX.kickstart('system/ai.agent-core.scheduler-watchdog-w2')
-    // One bounded wait for both heartbeats to be rewritten by real cycles.
-    let w1Fresh = false
-    let w2Fresh = false
-    for (let waited = 0; waited < 120_000 && !(w1Fresh && w2Fresh); waited += 5000) {
-      await new Promise((r) => setTimeout(r, 5000))
-      w1Fresh = mtimeOf(w1hb) > t0
-      w2Fresh = mtimeOf(w2hb) > t0
-    }
-    gate('W1_HEARTBEAT_FRESH', w1Fresh, `w1.heartbeat rewritten post-kickstart (kicked ${new Date(t0).toISOString()})`)
-    gate('W1_NEW_EVIDENCE_OBSERVED', w1Fresh, `new W1 cycle observed via heartbeat; evidence-log size delta=${statSync(evLog).size - evSizeBefore}B (findings-only appends)`)
-    const freshErrBytes = (path, beforeSize) => {
-      try { return readFileSync(path, 'utf8').slice(beforeSize) } catch { return '' }
-    }
-    const w1FreshErr = freshErrBytes(w1err, w1ErrBefore)
-    gate('W1_REFERENCEERROR_OUTCOME', !/outcome is not defined/.test(w1FreshErr), `no "outcome is not defined" in ${w1err} bytes since kickstart (${w1FreshErr.length}B fresh)`)
-    gate('W2_HEARTBEAT_FRESH', w2Fresh, `w2.heartbeat rewritten post-kickstart (kicked ${new Date(t0).toISOString()})`)
-  } else {
-    // Fixture: launchd is shimmed, so no real cycle can rewrite heartbeats.
-    // The selftest tail asserts both plists were bootstrapped; the dir-mode
-    // and appendability gates above ran for real against the fixture tree.
-    gate('W1_HEARTBEAT_FRESH', true, 'fixture: launchd deferred; plist bootstrap asserted in selftest tail')
-    gate('W1_NEW_EVIDENCE_OBSERVED', true, 'fixture: launchd deferred; cycle observation via plist bootstrap')
-    gate('W1_REFERENCEERROR_OUTCOME', true, 'fixture: no runner err bytes to inspect')
-    gate('W2_HEARTBEAT_FRESH', true, 'fixture: launchd deferred; plist bootstrap asserted in selftest tail')
-  }
+  await assertEvidenceAndHeartbeatProofs({ ctx: CTX, mode: MODE, gate, execFileSync, kickstart: (label) => CTX.kickstart(label) })
 }
 
 async function main() {
