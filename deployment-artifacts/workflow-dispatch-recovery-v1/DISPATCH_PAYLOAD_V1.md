@@ -47,9 +47,13 @@ workflow_dispatch_intents（due feed）
 - **identity 修复 backlog（skip 不是终局 disposition，且绝不绕过解析）**：resolution
   失败 ⇒ 当轮 fail-closed + 机械写入 `identity-repair-backlog.jsonl`（直接喂
   WORKFLOW_DATA_HYGIENE_V1 stock repair，目标是 runtime skip → 0）。**轮首
-  backlog-list --limit 100000 记录 intentIds 集合**：集合内失败候选跳过时不重复登记
-  （backlog 只增新事件），但**精确身份门每次都真实重新解析**——身份修复后候选自然恢复
-  派发，不会被历史登记永久饿死。
+  backlog-list 记录 intentIds 集合（始终全量计算，与 recent 展示截断无关）**：集合内
+  失败候选跳过时不重复登记（backlog 只增新事件），但**精确身份门每次都真实重新解析**
+  ——身份修复后候选自然恢复派发，不会被历史登记永久饿死。
+- **轮首快照（O(1) skip 路径）**：ledger-snapshot 一次取回全部已处理 nodeVisitId 的
+  状态；候选按快照跳过，未在快照 = NOT_SENT；untrusted=true（LEDGER_UNTRUSTED）⇒ 全轮
+  零 send 待 operator。每候选零重复解析账本（历史 15 页烧预算的根因=每候选 detail 读
+  +resolve；本循环 skip 零 detail 零网络零全文件重扫）。
 - 唯一保留的 exact deny = Owner 明确 quarantine 的 `cebf4816-c664-40cb-9b61-3fa330ad1c39`
   （精确 instanceId 比对，绝不泛化）
 - `agent_session_send` timeoutSeconds=0（fire-and-forget；live 面实证仅返回
@@ -58,18 +62,16 @@ workflow_dispatch_intents（due feed）
 ## 1. EXACT PAYLOAD（冻结文本；`<...>` 全部为轮内实际值替换，无占位符残留）
 
 > **Embedding authority = `owner_apply_dispatch_payload_v1.sh` 内的 heredoc**（本节为其
-> 人类可读副本）。冻结 sha256（对 `read -d ''` 捕获字节，v3 简化版 r7）：
-> `364310bbb3736de9acbc3dc24d445b878660be93f695695f097392020edfa652`
+> 人类可读副本）。冻结 sha256（对 `read -d ''` 捕获字节，v3 简化版 r9）：
+> `43604e6e249284b404133f97aa98a140c69fe995a9ba1ffc9fbeff165beb587e`
 
 ```text
 你是 HR Workflow 调度助手，每30分钟运行一次。请用中文输出短报告。机械按序执行；任何单候选失败只记录原因并继续，绝不终止整轮；不读取任何 workflow 实例详情或全量实例列表面（工具与 HTTP 皆否）；不做任何名称、标题或关键词判断。
 
-1. 候选源：workflow_dispatch_intents(operation=list, limit=100)。轮首先执行一次 backlog-list（--file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/identity-repair-backlog.jsonl --limit 100000），记住返回的 intentIds 数组（历史身份失败登记）。逐条处理 result.items 里的每个 intent；整页全部处理完后，若本轮已发起的 send 调用次数尚未达到 3 且本页返回了 100 条（满页），就用本页最后一条 intent 的 nextEligibleAt 字符串与 dispatchIntentId 分别作为 afterNextEligibleAt 与 afterDispatchIntentId（两个参数必须同时给、一字不差取自该条已消费记录）取下一页继续处理；直到出现短页（返回<100 条）或已发起的 send 调用次数达到 3 才停止取页（每整页都必须推进，页数无固定上限；上限只作用于 send 调用次数——confirmed 与 unknown 尝试都计入）。
+1. 候选源：workflow_dispatch_intents(operation=list, limit=100)。轮首先各执行一次：ledger-snapshot（--file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/dispatch-fence.jsonl，得到每个已处理 nodeVisitId 的状态表）与 backlog-list（--file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/identity-repair-backlog.jsonl，记住返回的 intentIds 数组——历史身份失败登记；recent 仅是展示截断，intentIds 始终完整）。若 ledger-snapshot 返回 untrusted=true（即 LEDGER_UNTRUSTED）→ 立即停止一切派发，本轮零 send，报告标注账本不可信待 operator 处置。逐条处理 result.items 里的每个 intent；整页全部处理完后，若本轮已发起的 send 调用次数尚未达到 3 且本页返回了 100 条（满页），就用本页最后一条 intent 的 nextEligibleAt 字符串与 dispatchIntentId 分别作为 afterNextEligibleAt 与 afterDispatchIntentId（两个参数必须同时给、一字不差取自该条已消费记录）取下一页继续处理；直到出现短页（返回<100 条）或已发起的 send 调用次数达到 3 才停止取页（每整页都必须推进，页数无固定上限；上限只作用于 send 调用次数——confirmed 与 unknown 尝试都计入）。
 
 2. 每个 intent 提供 dispatchIntentId、nodeVisitId、workflowInstanceId、ownerPrincipalId。按顺序机械执行：
-a. 栅栏查询（机械执行，禁止手写账本文件）：
-python3 /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts/dispatch_round_tools.py ledger-query --file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/dispatch-fence.jsonl --node-visit <nodeVisitId>
-SEND_STARTED → 跳过（reason=send_started_no_auto_resend）；SEND_CONFIRMED → 跳过（reason=already_sent）；SEND_OUTCOME_UNKNOWN → 跳过（reason=outcome_unknown_no_retry）；LEDGER_UNTRUSTED → 立即停止一切派发，本轮零 send，报告标注账本不可信待 operator 处置；NOT_SENT → 继续。
+a. 对照轮首快照：该 nodeVisitId 在快照中的状态 → SEND_STARTED → 跳过（reason=send_started_no_auto_resend）；SEND_CONFIRMED → 跳过（reason=already_sent）；SEND_OUTCOME_UNKNOWN → 跳过（reason=outcome_unknown_no_retry）；不在快照中 = NOT_SENT → 继续。
 b. workflowInstanceId 等于 cebf4816-c664-40cb-9b61-3fa330ad1c39 → 跳过（reason=exact_quarantine_owner_ruling），继续下一候选。
 c. 精确身份门：调用 agent_resolve_principal 解析 ownerPrincipalId（每一次都真实调用，backlog 历史绝不代替或绕过解析——身份修复后候选即自然恢复派发）。
    - 成功得到 agentId → 继续 d。
@@ -80,9 +82,10 @@ d. 写前栅栏（先于 send，顺序不可变）：
 python3 /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts/dispatch_round_tools.py ledger-start --file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/dispatch-fence.jsonl --node-visit <nodeVisitId> --intent <dispatchIntentId> --instance <workflowInstanceId> --agent <agentId>
 返回 claimed=false（已被占用）→ 跳过（reason=fence_already_open）。
 e. 派发（完整包，目标零详情前置）：agent_session_send(operation=send, targetAgentId=<agentId>, timeoutSeconds=0, message=统一 Workflow 调度。请处理 workflow_instance_id=<workflowInstanceId>，nodeVisitId=<nodeVisitId>（已由调度方提供，无需为定位节点读取实例详情）。请用你自己的 workflow 权限读取实例详情、执行本节点工作，并自行提交推进；调度方不代为 transition/审批。完成后回报结果与证据。)
+本步骤即计入本轮 send 调用次数（无论返回 confirmed 还是未明）。
 f. send 返回后立即补记回执：工具正常返回 → --state SEND_CONFIRMED；超时/报错/无法确认送达 → --state SEND_OUTCOME_UNKNOWN：
 python3 /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts/dispatch_round_tools.py ledger-record --file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/dispatch-fence.jsonl --node-visit <nodeVisitId> --intent <dispatchIntentId> --instance <workflowInstanceId> --agent <agentId> --state <状态>
-send 调用次数达到 3 即停止派发（reason=maxsend_reached；当前页剩余候选记 not_processed_this_round，下轮经栅栏/身份门快速越过自然推进）。
+send 调用次数达到 3 即停止派发（reason=maxsend_reached；当前页剩余候选记 not_processed_this_round，下轮经快照/身份门快速越过自然推进）。
 
 3. 冻结禁令：不用显示名或名称猜测 Agent；不重发任何 SEND_STARTED、SEND_CONFIRMED 或 SEND_OUTCOME_UNKNOWN 的 node-visit；不对上轮结果未明的任务自动重发；不调用 ledger-clear（operator 专用）也不以任何方式改写账本或 backlog；Scheduler accepted 不算业务完成；不代任何 Agent transition 或审批。
 
