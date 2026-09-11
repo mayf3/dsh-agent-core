@@ -31,8 +31,14 @@ supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
 superseded_by: null
 amendments:
-  - AMENDMENT_3 (2026-09-10, status: proposed, semantic delta NONE, code-structure
-    guardrails delta NONE — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION): the
+  - AMENDMENT_3 (2026-09-11, status: accepted, semantic delta NONE, code-structure
+    guardrails delta NONE — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION;
+    ACCEPTANCE: Owner exact-head 2026-09-11, accepted_by = mayf3,
+    accepted_reviewed_head = a85b22b6128ce61917772306f717b8457d5fdb4c,
+    independent_review_result = PASS (exact-head re-review after C0 sync;
+    blockers = 0), owner_exact_head_acceptance = YES, SHIP_BLOCKERS = 0,
+    implementation continuation ACTIVATED for the frozen structure repair only
+    (B5 hard gates), PRODUCTION_APPLY = NO): the
     AMENDMENT_2 exact file closure is mechanically infeasible (frozen member
     extraction lands self-service.js at 639 > 500 (#256 measured; 755 − 147 =
     608 is the deduction floor); the two test files total 990
@@ -1748,10 +1754,13 @@ acceptance 前 IMPLEMENTATION_REFACTOR = HOLD。
 
 ---
 
-## AMENDMENT_3 — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION (2026-09-10, status: proposed)
+## AMENDMENT_3 — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION (2026-09-10, status: accepted 2026-09-11)
 
-> **状态**：`proposed`（docs-only；PRODUCT_SEMANTIC_DELTA = NONE；
-> CODE_STRUCTURE_GUARDRAILS_V1 delta = NONE）。本 Amendment 取代 AMENDMENT_2 B2
+> **状态**：`accepted`（2026-09-11，Owner EXACT-HEAD ACCEPTANCE：
+> accepted_reviewed_head = a85b22b6128ce61917772306f717b8457d5fdb4c；
+> INDEPENDENT_EXACT_HEAD_REVIEW = PASS；SHIP_BLOCKERS = 0）。
+> 实现延续已激活（仅限 C2 冻结的结构 repair，独立 PR，B5 硬门全检）；
+> PRODUCTION_APPLY = NO。本 Amendment 取代 AMENDMENT_2 B2
 > 的 exact file closure（该 closure 被机械证明不可行，见 C1）并移除对被禁止的
 > scheduler registry 例外的依赖；其余 AMENDMENT_2 内容（B1 consumption 例外、
 > B3 forensics 分立、B4 冻结不变式）原样有效。
@@ -2029,9 +2038,7 @@ SHIP_BLOCKERS = 0
 ### C7. Lifecycle
 
 ```text
-proposed → independent semantic review（C6 十三项必答）→ Owner exact-head
-acceptance → mechanical acceptance transaction（仅 lifecycle/provenance）→ merge
-→ IMPLEMENTATION_CONTINUATION 解除：结构 repair 在 C2 冻结授权路径集合上执行
-（DRAFT while review running；B5 硬门 + 扩展 merge 纪律全检）。
-acceptance 前 IMPLEMENTATION_CONTINUATION = HOLD；PR #256 保持 DRAFT（WIP
-evidence，REVIEW/MERGE HOLD）。
+accepted（Owner exact-head 2026-09-11 @ a85b22b）→ IMPLEMENTATION_CONTINUATION
+解除：结构 repair 在 C2 冻结授权路径上执行（独立 PR，DRAFT while review
+running；B5 硬门 + 扩展 merge 纪律全检）。
+PR #256 保持 DRAFT（WIP evidence，REVIEW/MERGE HOLD）。
