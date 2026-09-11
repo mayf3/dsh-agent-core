@@ -419,7 +419,10 @@ function proofs() {
   const listing = CTX.asAuthsvc('/usr/local/bin/agentcore-cron', ['list', '--json'])
   const jobs = JSON.parse(listing).jobs
   gate('CANONICAL_READ_BACK', Array.isArray(jobs), `canonical store visible through authsvc identity: ${jobs.length} job(s)`)
-  gate('CREDENTIAL_PROVIDER', existsSync('/usr/local/libexec/agent-core/config/agent-credentials.json'), 'credential provider file present (existence only)')
+  // fixture mode resolves the existence-only check against the fixture copy:
+  // the production path sits under the authsvc 0700 credential-store, which an
+  // unprivileged --selftest must never need to traverse.
+  gate('CREDENTIAL_PROVIDER', existsSync(CTX.credentialsProviderPath ?? '/usr/local/libexec/agent-core/config/agent-credentials.json'), 'credential provider file present (existence only)')
   const smoke = execFileSync(CTX.binSymlink, ['list', '--json', '--store', join(dirname(CTX.storePath), 'operator-smoke.json')], {
     env: { ...process.env, HOME: '/var/empty' }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
   })
@@ -499,6 +502,10 @@ if (MODE === 'selftest') {
   })
   CTX.kickstart = (label) => CTX.launchctlShim('kickstart', label)
   CTX.bootstrap = (plist, label) => CTX.launchctlShim('bootstrap', plist)
+  // fixture credential provider for the existence-only CREDENTIAL_PROVIDER gate
+  mkdirSync(join(fx, 'config'), { recursive: true })
+  writeFileSync(join(fx, 'config', 'agent-credentials.json'), '{}\n')
+  CTX.credentialsProviderPath = join(fx, 'config', 'agent-credentials.json')
   const REPO_ROOT2 = REPO_ROOT
   CTX.gitShow = (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8' })
   CTX.gitHash = (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8' }).trim()
