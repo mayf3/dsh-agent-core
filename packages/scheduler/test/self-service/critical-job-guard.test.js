@@ -465,4 +465,3 @@ test('mutation audit is one sanitized append per committed mutation', async (t) 
   assert.equal(events.every((event) => event.operatorAgentId === 'agt_a' && event.targetAgentId === 'agt_a'), true)
   assert.equal(JSON.stringify(events).includes('TOP-SECRET'), false)
 })
-

@@ -80,4 +80,3 @@ export function committedResult(job, auditStatus) {
     auditStatus,
   }
 }
-
