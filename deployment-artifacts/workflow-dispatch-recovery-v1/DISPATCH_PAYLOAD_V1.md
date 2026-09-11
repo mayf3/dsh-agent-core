@@ -35,14 +35,18 @@ workflow_dispatch_intents（due feed）
     当轮零 send + 拒绝写入——corruption 永远不可能导致 duplicate dispatch
   - `ledger-clear` = **operator-only**（euid 0 强制；model-facing HR turn 结构性无法
     解除自己的 fence）
+- **有界性与整页推进（CTR-WAE-001b 对齐；keyset 由最后一条派生）**：due feed 的
+  continuation 是 keyset 对（`afterNextEligibleAt` + `afterDispatchIntentId`，必须成对，
+  取值一字不差来自本页最后一条已消费记录——DISPATCH_INTENT_KEYSET_CONTINUATION_V1），
+  响应**没有** cursor 字段。整页（100 条）处理完后只要 send<3 就用上述 keyset 取下一页，
+  **直到短页或 maxsend=3**——页数无固定上限，上限只作用于新派发（每个整页都推进，深层
+  候选不被第一窗口稳态饿死）。skip 路径是本地文件账本 O(1) 查询（历史 15 页烧预算的根因
+  =每候选 detail 读+resolve；本循环 skip 零 detail 零网络）。
 - **identity 修复 backlog（skip 不是终局 disposition）**：resolution 失败 ⇒ 当轮
   fail-closed + 机械写入 `identity-repair-backlog.jsonl`（直接喂
-  WORKFLOW_DATA_HYGIENE_V1 stock repair，目标是 runtime skip → 0）。**轮首 backlog-list
-  建立已登记集合，集合内候选 skip 不重复登记**——backlog 只增新事件，不随轮数膨胀。
-- **有界性与整页推进（CTR-WAE-001b 对齐）**：处理完每个整页后，只要 send<3 且有 cursor
-  就取下一页，**直到短页或 maxsend=3**——页数无固定上限，上限只作用于新派发（每个整页
-  都推进，深层候选不被第一窗口稳态饿死）。skip 路径是本地文件账本 O(1) 查询（历史
-  15 页烧预算的根因=每候选 detail 读+resolve；本循环 skip 零 detail 零网络）。
+  WORKFLOW_DATA_HYGIENE_V1 stock repair，目标是 runtime skip → 0）。**轮首
+  backlog-list --limit 100000 建立已登记集合，集合内候选 skip 不重复登记**——backlog
+  只增新事件，不随轮数膨胀。
 - 唯一保留的 exact deny = Owner 明确 quarantine 的 `cebf4816-c664-40cb-9b61-3fa330ad1c39`
   （精确 instanceId 比对，绝不泛化）
 - `agent_session_send` timeoutSeconds=0（fire-and-forget；live 面实证仅返回
@@ -51,13 +55,13 @@ workflow_dispatch_intents（due feed）
 ## 1. EXACT PAYLOAD（冻结文本；`<...>` 全部为轮内实际值替换，无占位符残留）
 
 > **Embedding authority = `owner_apply_dispatch_payload_v1.sh` 内的 heredoc**（本节为其
-> 人类可读副本）。冻结 sha256（对 heredoc 精确字节，v3 简化版 r2）：
-> `f7db3330bf6420b2ab3a17c9f5d9a1e0c5a43cf793c19a10ce75a70310a30109`
+> 人类可读副本）。冻结 sha256（对 `read -d ''` 捕获字节，v3 简化版 r4）：
+> `e8c87fa738357f0bdb26845abb2b5dcd73aa70d061df6af19136a9cd1bfee74a`
 
 ```text
 你是 HR Workflow 调度助手，每30分钟运行一次。请用中文输出短报告。机械按序执行；任何单候选失败只记录原因并继续，绝不终止整轮；不读取任何 workflow 实例详情或全量实例列表面（工具与 HTTP 皆否）；不做任何名称、标题或关键词判断。
 
-1. 候选源：workflow_dispatch_intents(operation=list, limit=100)。轮首先执行一次 backlog-list（--file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/identity-repair-backlog.jsonl），记住其中已登记的 dispatchIntentId 集合。逐条处理当前页的每个 intent；整页全部处理完后，若本轮 send 数尚未达到 3 且返回包含 cursor，就用 cursor 取下一页继续，直到出现短页（返回数量<100）或本轮 send 数达到 3 才停止取页（每整页都必须推进，页数无固定上限；新派发的上限只有 maxsend=3）。
+1. 候选源：workflow_dispatch_intents(operation=list, limit=100)。轮首先执行一次 backlog-list（--file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/identity-repair-backlog.jsonl --limit 100000），记住其中已登记的 dispatchIntentId 集合。逐条处理返回 result.items 里的每个 intent；整页全部处理完后，若本轮 send 数尚未达到 3 且本页返回了 100 条（满页），就用本页最后一条 intent 的 nextEligibleAt 字符串与 dispatchIntentId 分别作为 afterNextEligibleAt 与 afterDispatchIntentId（两个参数必须同时给、一字不差取自该条已消费记录）取下一页，继续处理；直到出现短页（返回<100 条）或本轮 send 数达到 3 才停止取页（每整页都必须推进，页数无固定上限；新派发的上限只有 maxsend=3）。
 
 2. 每个 intent 提供 dispatchIntentId、nodeVisitId、workflowInstanceId、ownerPrincipalId。按顺序机械执行：
 a. 栅栏查询（机械执行，禁止手写账本文件）：
@@ -134,11 +138,12 @@ Owner 的 `--apply` 单条 sudo 动作（PRODUCTION_MUTATION_CONCURRENCY=ONE 排
   目标属主必须 root、sha256 必须 equals `EXPECTED_CLI_SHA256`
   （=`scripts/agentcore-cron.mjs` @35a5b6a = `98a2a031…`；scheduler lane 换代改变 CLI
   字节时必须显式 re-pin，永不 auto-trust）。--plan 打印 resolve 链与双 digest 作证据。
-- **no-follow / no-pre-existing-chown（codex P1 修复）**：对 `$WS`、`$WS/scripts`、
-  `$WS/memory`、receipts 目录、目标文件全部先做 symlink 拒绝；**预存在目录永不 chown**
-  （必须已是 yanfenma 属主，否则 abort）；预存在文件属主仅接受 yanfenma（no-op）或
-  root（前次 root run 残留 = 事故家族已知修复），第三方属主 abort；仅 chown 本次新建
-  的目录与部署的文件。
+- **叶子安装 = 私有 temp + 原子 rename（codex P1 修复：check-then-chown race 消除）**：
+  tools、ledger、backlog、preimage、receipt 一律 mktemp（O_EXCL、不可预测名）由 root
+  新建、在私有名上完成 chown/chmod，再 `mv -f` rename 落位——rename 原子**替换**目标位
+  上的任何旧内容（含预植 symlink），全程不 follow；root 对预存在文件仅做只读
+  stat/shasum。已存在的 regular yanfenma/root 属主账本文件是 live append-only 面，保持
+  不动（本 packet 永不重写其内容）；预存在目录永不 chown（必须已是 yanfenma 属主）。
 - **receipt 叶子防 symlink（codex P1 修复）**：preimage 与 apply-receipt 一律
   `mktemp`（O_EXCL、不可预测名）创建后 `mv -f` rename 落位——rename 原子**替换**
   预植叶子 symlink，绝不 follow 打开。

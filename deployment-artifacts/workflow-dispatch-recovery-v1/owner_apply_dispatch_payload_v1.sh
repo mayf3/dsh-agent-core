@@ -46,7 +46,7 @@ JQ=/usr/bin/jq; SHASUM=/usr/bin/shasum; STAT=/usr/bin/stat; INSTALL=/usr/bin/ins
 read -r -d '' NEW_PAYLOAD <<'PAYLOAD_EOF' || true
 你是 HR Workflow 调度助手，每30分钟运行一次。请用中文输出短报告。机械按序执行；任何单候选失败只记录原因并继续，绝不终止整轮；不读取任何 workflow 实例详情或全量实例列表面（工具与 HTTP 皆否）；不做任何名称、标题或关键词判断。
 
-1. 候选源：workflow_dispatch_intents(operation=list, limit=100)。轮首先执行一次 backlog-list（--file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/identity-repair-backlog.jsonl），记住其中已登记的 dispatchIntentId 集合。逐条处理当前页的每个 intent；整页全部处理完后，若本轮 send 数尚未达到 3 且返回包含 cursor，就用 cursor 取下一页继续，直到出现短页（返回数量<100）或本轮 send 数达到 3 才停止取页（每整页都必须推进，页数无固定上限；新派发的上限只有 maxsend=3）。
+1. 候选源：workflow_dispatch_intents(operation=list, limit=100)。轮首先执行一次 backlog-list（--file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/identity-repair-backlog.jsonl --limit 100000），记住其中已登记的 dispatchIntentId 集合。逐条处理返回 result.items 里的每个 intent；整页全部处理完后，若本轮 send 数尚未达到 3 且本页返回了 100 条（满页），就用本页最后一条 intent 的 nextEligibleAt 字符串与 dispatchIntentId 分别作为 afterNextEligibleAt 与 afterDispatchIntentId（两个参数必须同时给、一字不差取自该条已消费记录）取下一页，继续处理；直到出现短页（返回<100 条）或本轮 send 数达到 3 才停止取页（每整页都必须推进，页数无固定上限；新派发的上限只有 maxsend=3）。
 
 2. 每个 intent 提供 dispatchIntentId、nodeVisitId、workflowInstanceId、ownerPrincipalId。按顺序机械执行：
 a. 栅栏查询（机械执行，禁止手写账本文件）：
@@ -180,18 +180,22 @@ printf '[apply] preimage captured: %s (sha256=%s)\n' "$PREIMAGE" "$LIVE_DIGEST"
 # digest-checked; ownership MUST return to yanfenma — root-owned workspace
 # files break the HR turn).
 #
-# No-follow / no-pre-existing-chown discipline: every component is checked for
-# symlink substitution BEFORE any root write or chown; pre-existing directories
-# are NEVER chowned (they must already be yanfenma-owned); pre-existing files
-# owned by a third party abort the apply. (Single-admin workspace; checks and
-# writes run back-to-back in this root shell.)
+# Leaf-install discipline (codex P1, check-then-chown race eliminated for the
+# realistic accident classes): $WS is yanfenma-writable by design, so no
+# pre-check can make pathname chown/redirect safe against an ACTIVE hostile
+# race (single-principal workspace — see DISPATCH_PAYLOAD_V1.md §0 trust
+# boundary). Every leaf this packet installs is therefore created fresh by
+# root via mktemp (O_EXCL, unpredictable private name), chown/chmod'd while
+# still private, and moved into place with rename — rename atomically
+# REPLACES whatever occupied the destination (stale/planted symlink included)
+# and never follows it. Root's only operations on pre-existing files are
+# read-only stat/shasum.
 [ -d "$WS" ] || die "HR workspace missing: $WS"
 [ -L "$WS" ] && die "refusing symlink at workspace root: $WS"
-WS_UID="$("$STAT" -f %u "$WS")"
 for d in "$WS/scripts" "$WS/memory"; do
   [ -L "$d" ] && die "refusing symlink at workspace path: $d"
   if [ -e "$d" ] && [ ! -d "$d" ]; then die "not a directory: $d"; fi
-  if [ -d "$d" ] && [ "$("$STAT" -f %u "$d")" != "$WS_UID" ]; then
+  if [ -d "$d" ] && [ "$("$STAT" -f %u "$d")" != "$("$STAT" -f %u "$WS")" ]; then
     die "pre-existing directory not yanfenma-owned (refusing to chown it): $d"
   fi
 done
@@ -200,22 +204,36 @@ NEW_MEMORY=0; [ -d "$WS/memory" ] || NEW_MEMORY=1
 mkdir -p "$WS/scripts" "$WS/memory"
 [ "$NEW_SCRIPTS" = 1 ] && chown yanfenma:staff "$WS/scripts"
 [ "$NEW_MEMORY" = 1 ] && chown yanfenma:staff "$WS/memory"
-for f in "$TOOLS_DST" "$LEDGER" "$BACKLOG"; do
-  [ -L "$f" ] && die "refusing symlink at target file: $f"
-  if [ -e "$f" ]; then
-    OWN="$("$STAT" -f %u "$f")"
-    { [ "$OWN" = "$WS_UID" ] || [ "$OWN" = 0 ]; } \
-      || die "pre-existing file owned by a third party (not touching it): $f"
+
+TOOLS_TMP="$(mktemp "$WS/scripts/.dispatch_round_tools.XXXXXXXX")"
+"$INSTALL" -m 0755 "$TOOLS_SRC" "$TOOLS_TMP"
+chown yanfenma:staff "$TOOLS_TMP"
+chmod 0755 "$TOOLS_TMP"
+mv -f "$TOOLS_TMP" "$TOOLS_DST"
+
+# ledger/backlog: an existing REGULAR yanfenma/root-owned file is the live
+# append-only surface — kept untouched (never rewritten by this packet).
+# Anything else (missing, planted symlink) is atomically replaced by a fresh
+# yanfenma-owned empty leaf via the same private-temp + rename path.
+install_leaf() {
+  leaf="$1"
+  if [ -f "$leaf" ] && [ ! -L "$leaf" ]; then
+    OWN="$("$STAT" -f %u "$leaf")"
+    { [ "$OWN" = "$("$STAT" -f %u "$WS")" ] || [ "$OWN" = 0 ]; } \
+      || die "pre-existing file owned by a third party (not touching it): $leaf"
+    return 0
   fi
-done
-"$INSTALL" -m 0755 "$TOOLS_SRC" "$TOOLS_DST"
-chown yanfenma:staff "$TOOLS_DST"
-if [ ! -e "$LEDGER" ]; then : > "$LEDGER"; fi
-if [ ! -e "$BACKLOG" ]; then : > "$BACKLOG"; fi
-chown yanfenma:staff "$LEDGER" "$BACKLOG"
+  TMPLEAF="$(mktemp "$WS/memory/.dispatch-leaf.XXXXXXXX")"
+  chown yanfenma:staff "$TMPLEAF"
+  chmod 0644 "$TMPLEAF"
+  mv -f "$TMPLEAF" "$leaf"
+}
+install_leaf "$LEDGER"
+install_leaf "$BACKLOG"
+
 [ "$("$SHASUM" -a 256 < "$TOOLS_DST" | awk '{print $1}')" = "$("$SHASUM" -a 256 < "$TOOLS_SRC" | awk '{print $1}')" ] \
   || die "tools deploy digest mismatch"
-printf '[apply] tools deployed + ledger/backlog ready (yanfenma-owned)\n'
+printf '[apply] tools deployed + ledger/backlog ready (yanfenma-owned, rename-installed)\n'
 
 # CAS compare-before-write payload update via the PINNED production operator seam.
 # The CLI requires BOTH revision fields together (expectedRevisionFromFlags).
