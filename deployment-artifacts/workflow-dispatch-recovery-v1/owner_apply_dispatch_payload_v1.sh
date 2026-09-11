@@ -174,6 +174,7 @@ PREIMAGE_TMP="$(mktemp "$RECEIPT_DIR/payload-preimage.XXXXXXXX")"
 printf '%s' "$LIVE_MSG" > "$PREIMAGE_TMP" || { rm -f "$PREIMAGE_TMP"; die "preimage write failed (rollback safety requires it)"; }
 PREIMAGE="$RECEIPT_DIR/payload-preimage-$(date -u +%Y%m%dT%H%M%SZ).txt"
 mv -f "$PREIMAGE_TMP" "$PREIMAGE" || { rm -f "$PREIMAGE_TMP"; die "preimage rename failed (rollback safety requires it)"; }
+chmod 0644 "$PREIMAGE"  # the printed rollback replays it as authsvc — it must be readable
 printf '[apply] preimage captured: %s (sha256=%s)\n' "$PREIMAGE" "$LIVE_DIGEST"
 
 # Deploy the dispatcher mechanics into the HR workspace (idempotent,
@@ -217,6 +218,11 @@ mv -f "$TOOLS_TMP" "$TOOLS_DST"
 # yanfenma-owned empty leaf via the same private-temp + rename path.
 install_leaf() {
   leaf="$1"
+  if [ -d "$leaf" ]; then
+    # also catches a symlink planted to a directory (-d follows): mv would
+    # move INTO it instead of replacing it
+    die "refusing directory at ledger/backlog path: $leaf"
+  fi
   if [ -f "$leaf" ] && [ ! -L "$leaf" ]; then
     OWN="$("$STAT" -f %u "$leaf")"
     if [ "$OWN" = "$("$STAT" -f %u "$WS")" ]; then
@@ -224,15 +230,25 @@ install_leaf() {
     fi
     if [ "$OWN" = 0 ]; then
       # prior-run root-owned residue: the HR turn could never append to it.
-      # Repair content-preservingly: copy bytes to a private leaf, fix
-      # ownership there, rename over (no pathname chown, no follow, bytes
-      # preserved; safe because a root-owned 0644 file has no concurrent
-      # yanfenma writer).
-      TMPLEAF="$(mktemp "$WS/memory/.dispatch-leaf.XXXXXXXX")"
-      cat "$leaf" > "$TMPLEAF" || { rm -f "$TMPLEAF"; die "ledger repair copy failed: $leaf"; }
-      chown yanfenma:staff "$TMPLEAF"
-      chmod 0644 "$TMPLEAF"
-      mv -f "$TMPLEAF" "$leaf" || { rm -f "$TMPLEAF"; die "ledger repair rename failed: $leaf"; }
+      # Repair through a no-follow descriptor (content untouched, nothing
+      # copied, zero check-then-open window): open O_RDONLY|O_NOFOLLOW,
+      # fstat-verify a root-owned regular file, fchown/fchmod on the
+      # descriptor only.
+      python3 - "$leaf" <<'PYLEAF' || die "root-owned ledger repair failed: $leaf"
+import grp, os, pwd, stat, sys
+leaf = sys.argv[1]
+uid = pwd.getpwnam("yanfenma").pw_uid
+gid = grp.getgrnam("staff").gr_gid
+fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW)
+try:
+    st = os.fstat(fd)
+    if not stat.S_ISREG(st.st_mode) or st.st_uid != 0:
+        raise SystemExit("no-follow guard: %s is not a root-owned regular file" % leaf)
+    os.fchown(fd, uid, gid)
+    os.fchmod(fd, 0o644)
+finally:
+    os.close(fd)
+PYLEAF
       return 0
     fi
     die "pre-existing file owned by a third party (not touching it): $leaf"
@@ -270,7 +286,8 @@ cat > "$RECEIPT_TMP" <<EOF || { rm -f "$RECEIPT_TMP"; die "receipt write failed"
 {"jobId":"$JOB_ID","oldPayloadSha256":"$LIVE_DIGEST","newPayloadSha256":"$NEW_DIGEST","preimage":"$PREIMAGE","casScheduleRevision":"$LIVE_SCHEDULE_REV","casUpdatedAtMs":"$LIVE_UPDATED_AT","appliedAt":"$(date -u +%FT%TZ)"}
 EOF
 RECEIPT="$RECEIPT_DIR/apply-receipt-$(date -u +%Y%m%dT%H%M%SZ).json"
-mv -f "$RECEIPT_TMP" "$RECEIPT"
+mv -f "$RECEIPT_TMP" "$RECEIPT" || { rm -f "$RECEIPT_TMP"; die "receipt rename failed"; }
+chmod 0644 "$RECEIPT"
 printf '[apply] RECEIPT written: %s. Rollback command:\n' "$RECEIPT"
 printf '  sudo -u authsvc %s %s update %s --expected-schedule-revision %s --expected-updated-at %s --message "$(%s < %s)" --store %s --json\n' \
   "$NODE_BIN" "$CLI" "$JOB_ID" "$("$JQ" -r .scheduleRevision <<<"$DOC2")" "$("$JQ" -r .updatedAtMs <<<"$DOC2")" cat "$PREIMAGE" "$STORE"
