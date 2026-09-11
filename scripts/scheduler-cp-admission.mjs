@@ -46,7 +46,7 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
-  readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, statSync, readdirSync,
+  readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, statSync, readdirSync, accessSync, constants,
 } from 'node:fs'
 import { join, dirname, relative } from 'node:path'
 import { homedir, userInfo } from 'node:os'
@@ -57,6 +57,7 @@ import {
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
   reExportsWithoutLocalBinding,
 } from './lib/admission-lib.mjs'
+import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 
 const args = process.argv.slice(2)
 const has = (name) => args.includes(name)
@@ -380,12 +381,8 @@ function watchdogInstall(alertTo) {
   const stateDir = CTX.watchdogStateDir
   mkdirSync(stateDir, { recursive: true })
   try { CTX.chown(stateDir, 'authsvc', 'staff') } catch (error) { if (MODE === 'apply') throw error }
-  // reconciliation-evidence channel (§5.2/§5.6): writable by the uid-502 child
-  // relay, readable by W1 (authsvc). 0777 is the RUNBOOK placeholder — the
-  // packet note requires tightening to a dedicated group afterwards.
-  const evidenceDir = dirname(CTX.evidenceFile ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl')
-  mkdirSync(evidenceDir, { recursive: true })
-  try { execFileSync('chmod', ['0777', evidenceDir], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
+  // Issue 3 provisioning closure (RUNBOOK §7-authorized): see lib module.
+  repairWatchdogEvidenceChannel({ ctx: CTX, mode: MODE, phase, execFileSync })
   const tmplDir = join(REPO_ROOT, 'deployment-artifacts', 'scheduler-control-plane-reliability-v1')
   const fill = (tmpl) => tmpl
     .replace('__OWNER_CHAT_ID__', alertTo || CTX.ownerChat)
@@ -404,7 +401,8 @@ function watchdogInstall(alertTo) {
 }
 
 // ── proofs ───────────────────────────────────────────────────────────────────
-function proofs() {
+function gate(name, ok, detail) { receipts.gates = receipts.gates ?? {}; receipts.gates[name] = { ok, detail }; process.stdout.write(`[${ok ? 'PASS' : 'FAIL'}] ${name} — ${detail}\n`); if (!ok) throw new Error(`gate ${name} failed`) } // shared by proofs() and the Issue 3 proof module
+async function proofs() {
   // CLI guard negative (as root, sandbox HOME): must refuse, create nothing
   const sandbox = '/var/empty'
   let guardRefused = false
@@ -414,7 +412,6 @@ function proofs() {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
     })
   } catch { guardRefused = true }
-  const gate = (name, ok, detail) => { receipts.gates = receipts.gates ?? {}; receipts.gates[name] = { ok, detail }; process.stdout.write(`[${ok ? 'PASS' : 'FAIL'}] ${name} — ${detail}\n`); if (!ok) throw new Error(`gate ${name} failed`) }
   gate('CLI_STORE_GUARD_NEGATIVE', guardRefused, 'non-canonical default resolution refused, nothing created')
   const listing = CTX.asAuthsvc('/usr/local/bin/agentcore-cron', ['list', '--json'])
   const jobs = JSON.parse(listing).jobs
@@ -427,6 +424,7 @@ function proofs() {
     env: { ...process.env, HOME: '/var/empty' }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
   })
   gate('OPERATOR_FUNCTIONAL_SMOKE', JSON.parse(smoke).jobs !== undefined, 'flipped operator answers list --json (sandbox HOME)')
+  await assertEvidenceAndHeartbeatProofs({ ctx: CTX, mode: MODE, gate, execFileSync, kickstart: (label) => CTX.kickstart(label) })
 }
 
 async function main() {
@@ -447,7 +445,7 @@ async function main() {
   runtimeRestart(alertTo)
   operatorGeneration()
   watchdogInstall(alertTo)
-  proofs()
+  await proofs()
   writeFileSync(join(CTX.artifactsDir, 'terminal-receipt.json'), `${JSON.stringify({ ...receipts, finishedAt: new Date().toISOString() }, null, 2)}\n`)
   process.stdout.write(`[admission] TERMINAL RECEIPT written: ${join(CTX.artifactsDir, 'terminal-receipt.json')}\n`)
 }
@@ -525,6 +523,8 @@ if (MODE === 'selftest') {
   ok(runtimePlist.includes('AGENTCORE_EXPECTED_STORE') && runtimePlist.includes('SCHEDULER_RECONCILIATION_EVIDENCE_FILE'), 'runtime plist env additions landed')
   ok(existsSync(join(fx, 'LaunchDaemons', 'ai.agent-core.scheduler-watchdog-w1.plist')), 'W1 plist written')
   ok(existsSync(join(fx, 'watchdog-state')), 'shared watchdog state dir created (fixture)')
+  ok(existsSync(join(fx, 'watchdog-state', 'scheduler-watchdog-evidence.jsonl')), 'W1 evidence log pre-created in shared state dir')
+  ok((statSync(join(fx, 'evidence')).mode & 0o002) === 0, 'reconciliation evidence dir NOT world-writable (0777 placeholder retired)')
   ok(!existsSync(join(liveRoot, 'packages/live-only-legacy.js')) === false, 'live-only file preserved (no deletions)')
   const newCli = readFileSync(join(binDir, 'agentcore-cron-link'), 'utf8')
   ok(newCli.includes('logical') || newCli.length > 1000, 'operator link now serves candidate bytes')
