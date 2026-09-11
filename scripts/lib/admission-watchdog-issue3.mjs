@@ -125,11 +125,23 @@ export async function assertEvidenceAndHeartbeatProofs({ ctx, mode, gate, execFi
   let appendable = false
   let appendDetail = ''
   if (mode === 'apply') {
+    // env sanitized exactly like CTX.asAuthsvc (env -i + pinned HOME/PATH)
     try {
-      execFileSync('sudo', ['-u', 'authsvc', '/usr/bin/test', '-w', evidenceLog], { stdio: ['ignore', 'pipe', 'pipe'] })
+      execFileSync('sudo', ['-u', 'authsvc', 'env', '-i',
+        'HOME=/Users/authsvc',
+        'PATH=/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin',
+        '/usr/bin/test', '-w', evidenceLog], { stdio: ['ignore', 'pipe', 'pipe'] })
       appendable = true
       appendDetail = 'authsvc -w probe on evidence log (non-mutating)'
-    } catch { appendDetail = 'authsvc cannot write the evidence log' }
+    } catch (error) {
+      let st
+      try {
+        const fs = statSync(evidenceLog)
+        st = `file uid=${fs.uid} gid=${fs.gid} mode=${(fs.mode & 0o7777).toString(8)} nlink=${fs.nlink}`
+      } catch (e) { st = 'file stat failed: ' + e.code }
+      const errText = (error.stderr && error.stderr.length) ? String(error.stderr).trim() : String(error.message || error)
+      appendDetail = `probe failed [${st}]: ${errText.slice(0, 200)}`
+    }
   } else {
     try { accessSync(evidenceLog, constants.W_OK); appendable = true; appendDetail = 'fixture runner-user W_OK probe' } catch { appendDetail = 'fixture evidence log not writable' }
   }
