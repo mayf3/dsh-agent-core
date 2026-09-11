@@ -1,14 +1,20 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CLASS_BROKER_V1
 title: Workflow execution-class broker companion (create_instance executionClass passthrough + summary field)
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 date: 2026-09-11
 type: implementation-spec (one optional model-facing argument + its transport mapping + summary passthrough documentation; zero authority logic in the broker)
 repo: mayf3/dsh-agent-core
 base_head: be5a331 (github/main, re-fetched 2026-09-11)
-implementation_authority: none
+accepted_date: 2026-09-11
+accepted_by: mayf3
+accepted_reviewed_head: 4b041da163b0424bcb3d1519fbb5c04dc1d29ab1
+independent_review: ACCEPT
+independent_review_record: pullrequestreview-5174049564
+independent_review_blockers: 0
+implementation_authority: contracts
 production_apply_authority: none
 governed_by:
   - AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1 (§21/§25 — the unified
@@ -30,6 +36,16 @@ owners:
 ---
 
 # AGENT_CORE_WORKFLOW_EXECUTION_CLASS_BROKER_V1 — broker companion for the work execution class
+
+> **ACCEPTED (2026-09-11, Owner exact-head acceptance).** Owner decision ACCEPT EXACT
+> HEAD = YES at `4b041da163b0424bcb3d1519fbb5c04dc1d29ab1` (base
+> `be5a331653e0e61396c8af84a441c63bbf579bfb`, HEAD_UNCHANGED_SINCE_REVIEW = YES,
+> BASE_DRIFT = NO); final independent exact-head review = ACCEPT / SHIP_BLOCKERS = 0
+> (record: pullrequestreview-5174049564). `implementation_authority: none ->
+> contracts`; `production_apply_authority` stays **none**. This acceptance
+> transaction is lifecycle/provenance only — every §1–§7 semantic byte below is
+> preserved verbatim from the accepted head. The four review advisories remain
+> FOLLOW_UP_DEBT (not absorbed).
 
 ## 1. Goal
 
