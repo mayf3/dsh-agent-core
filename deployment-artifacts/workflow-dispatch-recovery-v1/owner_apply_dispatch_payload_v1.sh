@@ -230,18 +230,46 @@ printf '[apply] preimage captured: %s (sha256=%s)\n' "$PREIMAGE" "$LIVE_DIGEST"
 # read-only stat/shasum.
 [ -d "$WS" ] || die "HR workspace missing: $WS"
 [ -L "$WS" ] && die "refusing symlink at workspace root: $WS"
-for d in "$WS/scripts" "$WS/memory"; do
-  [ -L "$d" ] && die "refusing symlink at workspace path: $d"
-  if [ -e "$d" ] && [ ! -d "$d" ]; then die "not a directory: $d"; fi
-  if [ -d "$d" ] && [ "$("$STAT" -f %u "$d")" != "$("$STAT" -f %u "$WS")" ]; then
-    die "pre-existing directory not yanfenma-owned (refusing to chown it): $d"
-  fi
-done
-NEW_SCRIPTS=0; [ -d "$WS/scripts" ] || NEW_SCRIPTS=1
-NEW_MEMORY=0; [ -d "$WS/memory" ] || NEW_MEMORY=1
-mkdir -p "$WS/scripts" "$WS/memory"
-[ "$NEW_SCRIPTS" = 1 ] && chown yanfenma:staff "$WS/scripts"
-[ "$NEW_MEMORY" = 1 ] && chown yanfenma:staff "$WS/memory"
+# Directory creation + ownership through no-follow descriptors (codex P1:
+# yanfenma owns $WS and can swap a freshly-created directory for a symlink
+# between mkdir and a pathname chown — root would follow it onto an
+# attacker-chosen target). mkdir → O_DIRECTORY|O_NOFOLLOW open → fstat →
+# fchown on the descriptor; a planted link is unlinked (unlink never follows)
+# and the create-verify-chown cycle retried, bounded.
+python3 - "$WS/scripts" "$WS/memory" <<'PYDIR' || die "workspace directory setup failed"
+import grp, os, pwd, stat, sys, errno
+u = pwd.getpwnam("yanfenma").pw_uid
+g = grp.getgrnam("staff").gr_gid
+for d in sys.argv[1:3]:
+    for attempt in range(4):
+        try:
+            os.mkdir(d)
+        except FileExistsError:
+            pass
+        try:
+            fd = os.open(d, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        except OSError as e:
+            if e.errno in (errno.ELOOP, errno.ENOTDIR, errno.ENOENT):
+                try:
+                    if os.path.islink(d):
+                        os.unlink(d)
+                except OSError:
+                    pass
+                continue
+            raise
+        try:
+            st = os.fstat(fd)
+            if not stat.S_ISDIR(st.st_mode):
+                raise SystemExit("not a directory: %s" % d)
+            if st.st_uid not in (0, u):
+                raise SystemExit("pre-existing directory owned by a third party (not touching it): %s" % d)
+            os.fchown(fd, u, g)
+            break
+        finally:
+            os.close(fd)
+    else:
+        raise SystemExit("unable to secure directory (planted link kept reappearing): %s" % d)
+PYDIR
 
 PUBLISH_DATA="$(cat "$TOOLS_SRC")" publish_file "$TOOLS_DST" 0755
 
