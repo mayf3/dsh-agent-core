@@ -55,12 +55,20 @@ function repairOwnershipNoFollow({ mode, execFileSync, path, kind, uidSpec, gidS
     if (kind === 'directory' ? !st.isDirectory() : !st.isFile()) {
       throw new Error(`no-follow ownership guard: ${path} is not a regular ${kind}`)
     }
+    // Identity resolution is a deployment-environment invariant: it must
+    // succeed in EVERY mode (fatal otherwise — selftest included), so a bad
+    // group/user spec can never ship unnoticed to the root --apply (ROUND 1
+    // lesson: `id -g staff` treats the GROUP as a user and fails; groups are
+    // resolved through the grp database instead).
+    const uid = Number(execFileSync('id', ['-u', uidSpec], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim())
+    const gid = Number(execFileSync('python3', ['-c', 'import grp,sys;print(grp.getgrnam(sys.argv[1]).gr_gid)', gidSpec], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim())
     try {
-      const uid = Number(execFileSync('id', ['-u', uidSpec], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim())
-      const gid = Number(execFileSync('id', ['-g', gidSpec], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim())
       fchownSync(fd, uid, gid)
       fchmodSync(fd, fileMode)
-    } catch (error) { if (mode === 'apply') throw error }
+    } catch (error) {
+      // unprivileged modes swallow only the expected EPERM on fchown/fchmod
+      if (mode === 'apply' || error.code !== 'EPERM') throw error
+    }
     return fstatSync(fd)
   } finally { closeSync(fd) }
 }
