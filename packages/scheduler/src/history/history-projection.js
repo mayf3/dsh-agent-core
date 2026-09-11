@@ -2,7 +2,7 @@
 
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { deriveNativeSessionId } from './occurrence-model.js'
+import { deriveNativeSessionId } from '../occurrence-model.js'
 import {
   HISTORY_OUTCOMES,
   HISTORY_STORE_VERSION,
