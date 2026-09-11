@@ -42,7 +42,7 @@ import tempfile
 import time
 import uuid
 
-VALID_STATES = ("NOT_SENT", "SEND_CONFIRMED", "SEND_OUTCOME_UNKNOWN")
+VALID_STATES = ("NOT_SENT", "SEND_STARTED", "SEND_CONFIRMED", "SEND_OUTCOME_UNKNOWN", "LEDGER_UNTRUSTED")
 # Owner-ruling exact quarantine entry (the ONLY deny entry; never generalized).
 EXACT_DENY_INSTANCES = ("cebf4816-c664-40cb-9b61-3fa330ad1c39",)
 
@@ -56,58 +56,108 @@ def _is_uuid(v):
 
 
 # ── ledger ────────────────────────────────────────────────────────────────────
+#
+# Corruption contract (Owner ruling 2026-09-11): a ledger that cannot be
+# faithfully parsed is UNTRUSTED, and untrusted can NEVER restore a candidate
+# to NOT_SENT — corruption must never be able to cause a duplicate dispatch.
+# Any non-blank line that fails JSON parsing or schema validation
+# (dispatchIntentId present; state in the four real states) marks the whole
+# ledger LEDGER_UNTRUSTED; the dispatch turn then sends ZERO this round and
+# ledger-record refuses further automatic writes.
 
-def ledger_query(path, intent_id):
-    latest = None
+def _parse_ledger(path):
+    """Returns (latest_by_intent, corrupt_line_count)."""
+    latest = {}
+    corrupt = 0
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as fh:
             for line in fh:
-                line = line.strip()
-                if not line:
+                stripped = line.strip()
+                if not stripped:
                     continue
                 try:
-                    rec = json.loads(line)
+                    rec = json.loads(stripped)
                 except ValueError:
-                    continue  # malformed line never crashes the round
-                if rec.get("dispatchIntentId") == intent_id:
-                    latest = rec
-    if latest is None:
+                    corrupt += 1
+                    continue
+                if (not isinstance(rec, dict)
+                        or not isinstance(rec.get("dispatchIntentId"), str)
+                        or rec.get("state") not in VALID_STATES[:4]):
+                    corrupt += 1
+                    continue
+                latest[rec["dispatchIntentId"]] = rec
+    return latest, corrupt
+
+
+def _append_durable(path, rec):
+    """Append one JSONL record with flush + fsync (the fence must survive a
+    process crash between write and send)."""
+    os.makedirs(os.path.dirname(os.path.abspath(path)) or ".", exist_ok=True)
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec, ensure_ascii=False, sort_keys=True) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
+
+
+def ledger_query(path, intent_id):
+    latest, corrupt = _parse_ledger(path)
+    if corrupt:
+        return {"dispatchIntentId": intent_id, "state": "LEDGER_UNTRUSTED",
+                "corruptLines": corrupt}
+    rec = latest.get(intent_id)
+    if rec is None:
         return {"dispatchIntentId": intent_id, "state": "NOT_SENT"}
-    return {"dispatchIntentId": intent_id, "state": latest.get("state", "NOT_SENT"),
-            "targetAgentId": latest.get("targetAgentId"), "ts": latest.get("ts")}
+    return {"dispatchIntentId": intent_id, "state": rec.get("state", "NOT_SENT"),
+            "targetAgentId": rec.get("targetAgentId"), "ts": rec.get("ts")}
 
 
 def ledger_record(path, intent_id, instance_id, node_visit_id, agent_id, state, note=""):
-    if state not in ("SEND_CONFIRMED", "SEND_OUTCOME_UNKNOWN"):
-        raise SystemExit("ledger-record: state must be SEND_CONFIRMED or SEND_OUTCOME_UNKNOWN")
+    """Append a state transition. SEND_STARTED arrives via ledger-start (the
+    write-ahead fence BEFORE the send); SEND_CONFIRMED / SEND_OUTCOME_UNKNOWN
+    arrive after the send attempt. Refuses writes onto an untrusted ledger
+    (fail closed) and enforces transition sanity."""
+    if state not in ("SEND_STARTED", "SEND_CONFIRMED", "SEND_OUTCOME_UNKNOWN"):
+        raise SystemExit("ledger-record: state must be SEND_STARTED, SEND_CONFIRMED or SEND_OUTCOME_UNKNOWN")
     for name, v in (("intent", intent_id), ("instance", instance_id), ("node-visit", node_visit_id)):
         if not _is_uuid(v):
             raise SystemExit(f"ledger-record: --{name} must be a UUID (got {v!r})")
-    current = ledger_query(path, intent_id)
-    if current["state"] == state:
+    latest, corrupt = _parse_ledger(path)
+    if corrupt:
+        raise SystemExit("ledger-record: LEDGER_UNTRUSTED — refusing automatic writes onto an untrusted ledger (zero-send; operator disposition required)")
+    current = (latest.get(intent_id) or {}).get("state", "NOT_SENT")
+    if current == state:
         return {"recorded": False, "reason": "idempotent_noop", "state": state}
-    if current["state"] == "SEND_CONFIRMED":
+    if current == "SEND_CONFIRMED":
         return {"recorded": False, "reason": "confirmed_is_terminal_for_this_intent", "state": "SEND_CONFIRMED"}
-    os.makedirs(os.path.dirname(os.path.abspath(path)) or ".", exist_ok=True)
+    if current == "SEND_OUTCOME_UNKNOWN" and state in ("SEND_STARTED", "SEND_OUTCOME_UNKNOWN"):
+        return {"recorded": False, "reason": "unknown_never_retried_no_refence", "state": "SEND_OUTCOME_UNKNOWN"}
+    if current == "SEND_STARTED" and state == "SEND_STARTED":
+        return {"recorded": False, "reason": "fence_already_open", "state": "SEND_STARTED"}
     rec = {"dispatchIntentId": intent_id, "workflowInstanceId": instance_id,
            "nodeVisitId": node_visit_id, "targetAgentId": agent_id, "state": state,
            "ts": int(time.time() * 1000)}
     if note:
         rec["note"] = note
-    with open(path, "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(rec, ensure_ascii=False, sort_keys=True) + "\n")
+    _append_durable(path, rec)
     return {"recorded": True, "state": state}
 
 
-def ledger_clear(path, intent_id, reason):
+def ledger_clear(path, intent_id, reason, euid=None):
+    """Operator-only explicit disposition. A model-facing HR turn must NEVER be
+    able to lift the fence itself: the call is denied unless running with
+    effective uid 0 (the Owner sudo context)."""
+    if euid is None:
+        euid = os.geteuid()
+    if euid != 0:
+        return {"recorded": False, "denied": True,
+                "reason": f"operator_only: ledger-clear requires euid 0 (got {euid}); the dispatch turn cannot lift its own fence"}
     if not reason:
         raise SystemExit("ledger-clear: --reason is required (explicit operator disposition)")
     if ledger_query(path, intent_id)["state"] == "NOT_SENT":
         return {"recorded": False, "reason": "not_sent_already"}
     rec = {"dispatchIntentId": intent_id, "state": "NOT_SENT",
            "ts": int(time.time() * 1000), "clearedBecause": reason}
-    with open(path, "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(rec, ensure_ascii=False, sort_keys=True) + "\n")
+    _append_durable(path, rec)
     return {"recorded": True, "state": "NOT_SENT"}
 
 
@@ -140,10 +190,17 @@ def decide(c):
     resolution ('OK:<agentId>'|'FAIL:<code>'|None)
     sentInstancesThisRound ([instanceId,...])"""
     ledger_state = c.get("ledgerState") or "NOT_SENT"
+    if ledger_state == "LEDGER_UNTRUSTED":
+        return {"action": "SKIP", "reason": "ledger_untrusted_fail_closed_zero_send"}
     if ledger_state == "SEND_CONFIRMED":
         return {"action": "SKIP", "reason": "already_sent_send_confirmed"}
     if ledger_state == "SEND_OUTCOME_UNKNOWN":
         return {"action": "SKIP", "reason": "outcome_unknown_no_retry"}
+    if ledger_state == "SEND_STARTED":
+        # The write-ahead fence is open and no durable outcome followed: we
+        # cannot PROVE whether the send happened. Treat as outcome-unknown —
+        # human disposition over blind retry.
+        return {"action": "SKIP", "reason": "send_started_no_auto_resend"}
     if c.get("instanceId") in EXACT_DENY_INSTANCES:
         return {"action": "SKIP", "reason": "exact_quarantine_owner_ruling"}
     if c.get("instanceId") in (c.get("sentInstancesThisRound") or []):
@@ -278,15 +335,50 @@ def selftest():
                           ledger_state=ledger_query(ledger, cand(30)["intentId"])["state"]))
         check("N3", dN3["action"] == "SKIP" and dN3["reason"] == "already_sent_send_confirmed")
 
-        # ledger mechanics: idempotency + summary + clear
+        # N4: durable SEND_STARTED -> crash before OR after the send -> next tick zero resend
+        ledger_record(ledger, cand(50)["intentId"], INST(50), cand(50)["nodeVisitId"],
+                      "agt_example-agent", "SEND_STARTED")
+        st50 = ledger_query(ledger, cand(50)["intentId"])["state"]
+        dN4a = decide(cand(50, INST(50), ledger_state=st50))  # crash BEFORE send
+        # crash AFTER accepted send, before the outcome mark: same durable state
+        dN4b = decide(cand(50, INST(50), ledger_state=st50))
+        check("N4", st50 == "SEND_STARTED"
+              and dN4a["action"] == "SKIP" and dN4a["reason"] == "send_started_no_auto_resend"
+              and dN4b["action"] == "SKIP")
+
+        # N5: malformed/torn ledger record -> fail closed -> zero send
+        corrupt = _mk(tmp, "memory", "corrupt-receipts.jsonl")
+        with open(corrupt, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"dispatchIntentId": cand(60)["intentId"],
+                                 "state": "SEND_CONFIRMED"}, sort_keys=True) + "\n")
+            fh.write('{"dispatchIntentId": "30000000-0000-0000-0000-0000000000')  # torn line
+        qN5 = ledger_query(corrupt, cand(60)["intentId"])
+        dN5 = decide(cand(60, INST(60), ledger_state=qN5["state"]))
+        record_refused = False
+        try:
+            ledger_record(corrupt, cand(61)["intentId"], INST(61), cand(61)["nodeVisitId"],
+                          "agt_example-agent", "SEND_STARTED")
+        except SystemExit:
+            record_refused = True
+        check("N5", qN5["state"] == "LEDGER_UNTRUSTED"
+              and dN5["action"] == "SKIP" and dN5["reason"] == "ledger_untrusted_fail_closed_zero_send"
+              and record_refused)
+
+        # N6: non-operator ledger-clear -> denied -> fence unchanged
+        rN6 = ledger_clear(ledger, cand(50)["intentId"], "model-facing turn tries to lift fence",
+                           euid=os.geteuid())  # real dispatcher-turn uid (non-root)
+        fence_after = ledger_query(ledger, cand(50)["intentId"])["state"]
+        rN6op = ledger_clear(ledger, cand(40)["intentId"], "operator: verified safe", euid=0)
+        check("N6", rN6.get("denied") is True and fence_after == "SEND_STARTED"
+              and rN6op.get("recorded") is True)
+
+        # ledger mechanics: idempotency + summary + clear (operator path)
         again = ledger_record(ledger, cand(2)["intentId"], INST(2), cand(2)["nodeVisitId"],
                               "agt_example-agent", "SEND_CONFIRMED")
         summ = ledger_summary(ledger)
-        cleared = ledger_clear(ledger, cand(40)["intentId"], "operator: verified safe")
         check("LEDGER", again["recorded"] is False
               and summ["byState"]["SEND_CONFIRMED"] >= 4
-              and ledger_query(ledger, cand(40)["intentId"])["state"] == "NOT_SENT"
-              and cleared["recorded"] is True)
+              and ledger_query(ledger, cand(40)["intentId"])["state"] == "NOT_SENT")
 
     failed = [r for r in results if not r[1]]
     for name, ok, detail in results:
@@ -306,6 +398,10 @@ def main(argv):
 
     if cmd == "ledger-query":
         print(json.dumps(ledger_query(flag("--file"), flag("--intent")), ensure_ascii=False))
+    elif cmd == "ledger-start":
+        # WRITE-AHEAD SEND FENCE: durable append + fsync BEFORE agent_session_send.
+        print(json.dumps(ledger_record(flag("--file"), flag("--intent"), flag("--instance"),
+                                       flag("--node-visit"), flag("--agent"), "SEND_STARTED"), ensure_ascii=False))
     elif cmd == "ledger-record":
         print(json.dumps(ledger_record(flag("--file"), flag("--intent"), flag("--instance"),
                                        flag("--node-visit"), flag("--agent"), flag("--state"),

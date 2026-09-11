@@ -34,15 +34,18 @@ read -r -d '' NEW_PAYLOAD <<'PAYLOAD_EOF' || true
 2. 对每个候选依次执行（派发成功数达到 3 即停止派发，其余记 reason=maxsend_reached）：
 a. 查账本（机械执行，禁止手写账本文件）：
 python3 /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts/dispatch_round_tools.py ledger-query --file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/dispatch-receipts.jsonl --intent <dispatchIntentId>
-状态为 SEND_CONFIRMED → 跳过（reason=already_sent）；SEND_OUTCOME_UNKNOWN → 跳过（reason=outcome_unknown_no_retry）；继续下一候选。
+SEND_CONFIRMED → 跳过（reason=already_sent）；SEND_OUTCOME_UNKNOWN → 跳过（reason=outcome_unknown_no_retry）；SEND_STARTED → 跳过（reason=send_started_no_auto_resend，无法证明 send 是否发生，按 outcome 未明处理）；LEDGER_UNTRUSTED → 立即停止一切派发，本轮零 send，报告标注账本不可信待 operator 处置；其余继续下一候选。
 b. workflowInstanceId 等于 cebf4816-c664-40cb-9b61-3fa330ad1c39 → 跳过（reason=exact_quarantine_owner_ruling），继续下一候选。
 c. 取分类字段：调用 workflow_global_instances(operation=list, lifecycle=active, assigneePrincipalId=<ownerPrincipalId>, limit=20)，在结果中找 workflowInstanceId 对应行：找不到 → 跳过（reason=summary_row_missing）；execution_class 缺席 → 跳过（reason=class_unavailable_fail_closed）；NON_BUSINESS_TEST → 跳过（reason=non_business_test）；BUSINESS → 继续 d。
 d. 精确身份门：调用 agent_resolve_principal 解析 ownerPrincipalId：失败/歧义/disabled → 跳过（reason=identity_blocked_错误码），继续下一候选；成功得到 agentId。
-e. 派发（消息为完整包，目标零详情前置）：agent_session_send(operation=send, targetAgentId=<agentId>, timeoutSeconds=600, message=统一 Workflow 调度。请处理 workflow_instance_id=<workflowInstanceId>，nodeVisitId=<nodeVisitId>（已由调度方提供，无需为定位节点读取实例详情）。请用你自己的 workflow 权限读取实例详情、执行本节点工作，并自行提交推进；调度方不代为 transition/审批。完成后回报结果与证据。)
-f. 每次 send 尝试后立即记账（机械执行）：工具返回 ok 或 accepted → --state SEND_CONFIRMED；超时/报错/无法确认送达 → --state SEND_OUTCOME_UNKNOWN：
+e. 派发与记账（写前栅栏，顺序不可变，f2 绝不得先于 f1）：
+f1. send 之前先落 durable 栅栏（append+fsync）：
+python3 /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts/dispatch_round_tools.py ledger-start --file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/dispatch-receipts.jsonl --intent <dispatchIntentId> --instance <workflowInstanceId> --node-visit <nodeVisitId> --agent <agentId>
+f2. 然后才调用 agent_session_send(operation=send, targetAgentId=<agentId>, timeoutSeconds=600, message=统一 Workflow 调度。请处理 workflow_instance_id=<workflowInstanceId>，nodeVisitId=<nodeVisitId>（已由调度方提供，无需为定位节点读取实例详情）。请用你自己的 workflow 权限读取实例详情、执行本节点工作，并自行提交推进；调度方不代为 transition/审批。完成后回报结果与证据。)
+f3. send 返回后立即补记：ok 或 accepted → --state SEND_CONFIRMED；超时/报错/无法确认送达 → --state SEND_OUTCOME_UNKNOWN：
 python3 /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts/dispatch_round_tools.py ledger-record --file /Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/memory/dispatch-receipts.jsonl --intent <dispatchIntentId> --instance <workflowInstanceId> --node-visit <nodeVisitId> --agent <agentId> --state <状态>
 
-3. 冻结禁令：不用显示名或名称猜测 Agent；不重发任何 SEND_CONFIRMED 或 SEND_OUTCOME_UNKNOWN 的 intent；不对上轮结果未明的任务自动重发；Scheduler accepted 不算业务完成；不代任何 Agent transition 或审批。
+3. 冻结禁令：不用显示名或名称猜测 Agent；不重发任何 SEND_STARTED、SEND_CONFIRMED 或 SEND_OUTCOME_UNKNOWN 的 intent；不对上轮结果未明的任务自动重发；不调用 ledger-clear（operator 专用）也不以任何方式改写账本；Scheduler accepted 不算业务完成；不代任何 Agent transition 或审批。
 
 4. 报告（中文短报告）：本轮 due 候选数；逐候选一行 disposition（sent 或 skip+reason）；实际派发数；账本新增条目数；下一步条件。
 PAYLOAD_EOF
@@ -65,6 +68,10 @@ if [ "$MODE" = "--selftest" ]; then
   ok "payload embedded, sha256=$NEW_DIGEST"
   printf '%s' "$NEW_PAYLOAD" | grep -q 'workflow_dispatch_intents' || die "candidate source missing"
   printf '%s' "$NEW_PAYLOAD" | grep -q 'nodeVisitId=<nodeVisitId>' || die "packet completeness missing"
+  printf '%s' "$NEW_PAYLOAD" | grep -q 'ledger-start' || die "write-ahead fence step missing"
+  printf '%s' "$NEW_PAYLOAD" | grep -q 'LEDGER_UNTRUSTED' || die "corruption fail-closed clause missing"
+  printf '%s' "$NEW_PAYLOAD" | grep -q 'send_started_no_auto_resend' || die "fence no-resend clause missing"
+  printf '%s' "$NEW_PAYLOAD" | grep -q '不调用 ledger-clear' || die "operator-only ledger clause missing"
   if printf '%s' "$NEW_PAYLOAD" | grep -q 'workflow_instance_detail'; then
     # the ONLY permitted occurrence is the prohibition clause
     [ "$(printf '%s' "$NEW_PAYLOAD" | grep -c 'workflow_instance_detail')" = 1 ] || die "detail references beyond prohibition"
