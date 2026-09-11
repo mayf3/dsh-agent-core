@@ -333,6 +333,8 @@ try:
         st = os.fstat(fd)
         if not stat.S_ISREG(st.st_mode) or st.st_uid != 0:
             raise SystemExit("no-follow guard: not a root-owned regular file")
+        if st.st_nlink != 1:
+            raise SystemExit("hard-link guard: nlink=%d — refusing to chown a linked inode (a planted hard link to a root-owned file would transfer it to the dispatcher account)" % st.st_nlink)
         u = pwd.getpwnam("yanfenma").pw_uid
         g = grp.getgrnam("staff").gr_gid
         os.fchown(fd, u, g)
