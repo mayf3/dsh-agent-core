@@ -35,7 +35,14 @@ function requirePrerequisite(prerequisites, prerequisite) {
 }
 
 function entityId(value, kind) {
-  const id = value?.id ?? value?.[`${kind}_id`] ?? value?.[`${kind}Id`]
+  // MachineClient carries TWO ids on the deployed wire shape: `id` is the DB
+  // row UUID while `client_id`/`clientId` is the OAuth public id (mc_*) that
+  // Basic auth, token mint, and the credential store must carry — credential
+  // identity is the public id, never the row id. Principal has only its row
+  // id (it is the principal_id consumed downstream), so its order is unchanged.
+  const id = kind === 'client'
+    ? (value?.client_id ?? value?.clientId ?? value?.id)
+    : (value?.id ?? value?.[`${kind}_id`] ?? value?.[`${kind}Id`])
   if (typeof id !== 'string' || id === '') fail('auth_malformed_response', `Auth ${kind} ensure response has no id`)
   return id
 }
