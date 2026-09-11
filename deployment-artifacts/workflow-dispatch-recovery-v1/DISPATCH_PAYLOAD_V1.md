@@ -186,3 +186,10 @@ rule change（Owner 裁量），已记 FOLLOW_UP_DEBT。
   STALE_UNIQUE_SUCCESSOR 修复走 PHASE 4 权威路径。
 - Scheduler production slot（PRODUCTION_MUTATION_CONCURRENCY=ONE）；packet apply 的
   slot 排序归 Owner 裁定。
+- **census 执行纪律（codex P1：stage 后运行）**：census.sql 属用户可写 checkout——被
+  妥协的进程可在其中植入 `\!` meta-command（read_only 只约束服务端事务，不约束客户端
+  meta-command）。Owner 执行序列（digest pinned
+  `ebe3b1f0a26adbfb062a5d28e27c6a8bca6cab40aab72a6ea175203d612e6d09`）：
+  1. `shasum -a 256 docs/evidence/workflow-dispatch-recovery-v1-20260911/census.sql`（比对 pinned）
+  2. `sudo install -o postgres -g postgres -m 0400 docs/evidence/workflow-dispatch-recovery-v1-20260911/census.sql /var/tmp/census-r1.sql`
+  3. `sudo -u postgres psql -d svc_workflow_dogfood_clean -tA -f /var/tmp/census-r1.sql`
