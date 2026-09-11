@@ -17,7 +17,7 @@ import {
   retryChainLength,
   ONE_SHOT_RETRY_BACKOFF_MS,
 } from './eligibility.js'
-import { writeTerminalToHistory, writeToHistory } from './history-sink.js'
+import { writeTerminalToHistory, writeToHistory } from './history/history-sink.js'
 
 export const AGENT_TURN_SAFETY_TIMEOUT_MS = 3600 * 1000
 export const TIMEOUT_ERROR_TEXT = 'cron: job execution timed out'
