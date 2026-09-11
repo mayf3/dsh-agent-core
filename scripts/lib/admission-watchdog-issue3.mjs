@@ -12,11 +12,58 @@
  * group，收紧 0777 占位）'; §5.2 writer census: child relay (uid 502)
  * writes, W1 (authsvc) reads, root bypasses.
  */
-import { readFileSync, writeFileSync, existsSync, statSync, accessSync, constants, mkdirSync } from 'node:fs'
+import { readFileSync, existsSync, statSync, accessSync, constants, mkdirSync,
+         openSync, closeSync, fstatSync, fchownSync, fchmodSync, symlinkSync, rmSync, mkdtempSync } from 'node:fs'
 import { join, dirname } from 'node:path'
+import { tmpdir } from 'node:os'
 
 const W1_ERR_LOG = '/Users/authsvc/.agent-core/logs/scheduler-watchdog-w1.err.log'
 const W2_ERR_LOG = '/usr/local/var/scheduler-watchdog/w2.err.log'
+
+/**
+ * O_NOFOLLOW capability proof (every invocation, hermetic tmpdir): the
+ * fd-based ownership repair below is only safe if O_NOFOLLOW actually
+ * refuses a planted symlink on this platform. Cheap; no production contact.
+ */
+function assertNoFollowCapable() {
+  const probeDir = mkdtempSync(join(tmpdir(), 'agentcore-nofollow-probe-'))
+  try {
+    const link = join(probeDir, 'planted-link')
+    symlinkSync('/etc/hostname', link)
+    let refused = false
+    try { closeSync(openSync(link, constants.O_WRONLY | constants.O_NOFOLLOW)) } catch { refused = true }
+    if (!refused) throw new Error('O_NOFOLLOW not enforced on this platform; refusing symlink-adjacent ownership repair')
+  } finally { rmSync(probeDir, { recursive: true, force: true }) }
+}
+
+/**
+ * Codex P1 (PR #264): the watchdog state dir is authsvc-owned BY DESIGN, so
+ * an authsvc-context process can plant a symlink at any child path before a
+ * root --apply. Pathname chown/chmod/truncate would follow it onto a foreign
+ * inode (e.g. hand the root-executed W2 script to authsvc = root code exec).
+ * Every ownership mutation therefore happens on a descriptor opened with
+ * O_NOFOLLOW whose fstat inode type is verified first; existing bytes are
+ * never truncated (O_CREAT without O_TRUNC; the evidence log must grow).
+ */
+function repairOwnershipNoFollow({ mode, execFileSync, path, kind, uidSpec, gidSpec, fileMode }) {
+  let flags = constants.O_NOFOLLOW
+  if (kind === 'directory') flags |= constants.O_RDONLY | constants.O_DIRECTORY
+  else flags |= constants.O_WRONLY | constants.O_CREAT
+  const fd = openSync(path, flags, fileMode)
+  try {
+    const st = fstatSync(fd)
+    if (kind === 'directory' ? !st.isDirectory() : !st.isFile()) {
+      throw new Error(`no-follow ownership guard: ${path} is not a regular ${kind}`)
+    }
+    try {
+      const uid = Number(execFileSync('id', ['-u', uidSpec], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim())
+      const gid = Number(execFileSync('id', ['-g', gidSpec], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim())
+      fchownSync(fd, uid, gid)
+      fchmodSync(fd, fileMode)
+    } catch (error) { if (mode === 'apply') throw error }
+    return fstatSync(fd)
+  } finally { closeSync(fd) }
+}
 
 /**
  * Repair the W1 evidence log BEFORE W1/W2 start. An existing log is NEVER
@@ -27,24 +74,21 @@ const W2_ERR_LOG = '/usr/local/var/scheduler-watchdog/w2.err.log'
  * relay owner and the W1 reader already share; root bypasses; no world bits).
  */
 export function repairWatchdogEvidenceChannel({ ctx, mode, phase, execFileSync }) {
+  assertNoFollowCapable()
   const stateDir = ctx.watchdogStateDir
   const evidenceLog = join(stateDir, 'scheduler-watchdog-evidence.jsonl')
   const pre = existsSync(evidenceLog) ? statSync(evidenceLog) : null
-  if (!pre) writeFileSync(evidenceLog, '')
-  try { ctx.chown(evidenceLog, 'authsvc', 'staff') } catch (error) { if (mode === 'apply') throw error }
-  try { execFileSync('chmod', ['0644', evidenceLog], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (mode === 'apply') throw error }
-  const post = statSync(evidenceLog)
+  const post = repairOwnershipNoFollow({ mode, execFileSync, path: evidenceLog, kind: 'file', uidSpec: 'authsvc', gidSpec: 'staff', fileMode: 0o644 })
   const bytesPreserved = !pre || post.size >= pre.size
   phase('watchdog-evidence-ownership', bytesPreserved,
-    `evidence log uid ${pre?.uid ?? 'absent'}->${post.uid} gid ${pre?.gid ?? 'absent'}->${post.gid} mode ${(post.mode & 0o7777).toString(8)} size ${pre?.size ?? 0}->${post.size} (bytes preserved)`)
+    `evidence log uid ${pre?.uid ?? 'absent'}->${post.uid} gid ${pre?.gid ?? 'absent'}->${post.gid} mode ${(post.mode & 0o7777).toString(8)} size ${pre?.size ?? 0}->${post.size} (bytes preserved; O_NOFOLLOW fd-based ownership)`)
   if (!bytesPreserved) throw new Error('phase watchdog-evidence-ownership failed: evidence bytes lost')
 
   const evidenceDir = dirname(ctx.evidenceFile ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl')
   mkdirSync(evidenceDir, { recursive: true })
   const dirPre = statSync(evidenceDir).mode & 0o7777
-  try { ctx.chown(evidenceDir, 'yanfenma', 'oc-canary') } catch (error) { if (mode === 'apply') throw error }
-  try { execFileSync('chmod', ['0750', evidenceDir], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (mode === 'apply') throw error }
-  const dirPost = statSync(evidenceDir).mode & 0o7777
+  const dirPostSt = repairOwnershipNoFollow({ mode, execFileSync, path: evidenceDir, kind: 'directory', uidSpec: 'yanfenma', gidSpec: 'oc-canary', fileMode: 0o750 })
+  const dirPost = dirPostSt.mode & 0o7777
   phase('reconciliation-dir-tightening', (dirPost & 0o002) === 0, `reconciliation dir mode ${dirPost.toString(8)} (was ${dirPre.toString(8)}); 0777 placeholder retired`)
   if ((dirPost & 0o002) !== 0) throw new Error('phase reconciliation-dir-tightening failed: still world-writable')
   return { evidenceLog, evidenceDir }
