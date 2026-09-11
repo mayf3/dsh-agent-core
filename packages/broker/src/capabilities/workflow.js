@@ -187,7 +187,9 @@ export const workflowMyDomainsManifest = withTransportErrors({
  * (others get workflow_instance_not_found_or_not_visible, which also covers a
  * nonexistent domain). The summary projection passes through untouched
  * (items: workflow_instance_id / title / is_terminal / current_node /
- * current_assignee_principal_id / created_at / updated_at, + next_cursor).
+ * current_assignee_principal_id / execution_class / created_at / updated_at,
+ * + next_cursor; execution_class is the SVC_WORKFLOW_WORK_EXECUTION_CLASS_V1
+ * class passed through verbatim — never renamed, filtered, or derived).
  *
  * PAGINATION_V2 exposes the optional composite keyset cursor pair
  * beforeCreatedAt + beforeId. A generic manifest allOrNone group rejects either
@@ -276,6 +278,7 @@ export const workflowGlobalInstancesManifest = withTransportErrors({
   name: 'Workflow Global Instances',
   description:
     'Agent Core capability `workflow_global_instances` (svc-workflow): enumerate workflow-instance summaries across ALL domains (read-only; caller must hold GLOBAL_WORKFLOW_READER or GLOBAL_WORKFLOW_COORDINATOR — enforced server-side). ' +
+    'Summary items pass through verbatim, including execution_class (SVC_WORKFLOW_WORK_EXECUTION_CLASS_V1 class; BUSINESS, or NON_BUSINESS_TEST for explicit test/canary work — never renamed, filtered, or derived broker-side). ' +
     'Returns {ok: true, result: <global instance page>} on success.',
   requiredScopes: ['workflow.read'],
   errors: [

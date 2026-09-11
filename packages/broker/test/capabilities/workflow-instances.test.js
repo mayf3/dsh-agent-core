@@ -88,6 +88,9 @@ test('workflow_domain_instances: GET with camelCase domainId query mapping + wor
   assert.equal(res.result.items[0].workflow_instance_id, '9c7f3b0a-0000-4000-8000-0000000000a1')
   assert.equal(res.result.items[0].current_node.node_key, 'review')
   assert.equal(res.result.items[0].current_assignee_principal_id, '7a8b9c0d-0000-4000-8000-0000000000d4')
+  // ACC-WECB-003 (AGENT_CORE_WORKFLOW_EXECUTION_CLASS_BROKER_V1): the class
+  // passes through verbatim — present when svc sends it, never renamed.
+  assert.equal(res.result.items[0].execution_class, 'BUSINESS')
   assert.equal(res.result.items[0].updated_at, '2026-08-27T09:30:00Z')
 
   assert.equal(tokenServer.requests[0].body.resource, 'svc-workflow')
