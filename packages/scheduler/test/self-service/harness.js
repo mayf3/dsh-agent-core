@@ -1,9 +1,5 @@
-/**
- * Shared fixtures for the self-service / critical-job-guard test family
- * (AMENDMENT_3 structure closure — helpers moved verbatim from
- * self-service.test.js and critical-self-disable-guard.test.js; zero assertion
- * change).
- */
+// Shared fixtures for the self-service / critical-job-guard test family
+// (AMENDMENT_3 closure; helpers moved verbatim; zero assertion change).
 
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
@@ -14,7 +10,6 @@ import { join } from 'node:path'
 import { canonicalJSON } from '../../src/occurrence-model.js'
 import { JobStore } from '../../src/store.js'
 import { createSelfServiceSchedulerAccess } from '../../src/self-service.js'
-
 
 function trusted(agentId = 'agt_a', overrides = {}) {
   return {
@@ -96,7 +91,6 @@ function assertExactCommittedResult(result) {
   ].sort())
 }
 
-
 // Deterministic fixture manifest writer (hermetic — never the host file).
 function inventoryFile(t, content) {
   if (t === undefined) process.stderr.write('INV-DBG t undefined; caller:\n'+new Error().stack.split('\n').slice(1,4).join('\n')+'\n')
@@ -107,7 +101,6 @@ function inventoryFile(t, content) {
     return path
   })
 }
-
 
 async function guardRig(t, { inventoryPath, adminAgents = new Set() } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'critical-guard-store-'))
