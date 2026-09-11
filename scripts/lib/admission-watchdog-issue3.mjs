@@ -73,16 +73,6 @@ function repairOwnershipNoFollow({ mode, execFileSync, path, kind, uidSpec, gidS
   } finally { closeSync(fd) }
 }
 
-// The deployed W1/W2 plists (= the 35a5b6a template) set
-// SCHEDULER_WATCHDOG_STATE_DIR to authsvc's control dir, and the runner
-// derives ITS evidence log and heartbeats from that env. ctx.watchdogStateDir
-// (/usr/local/var/scheduler-watchdog) hosts only the W2 stdout logs and the
-// reconciliation channel — its scheduler-watchdog-evidence.jsonl is a Sep 8
-// legacy artifact of the pre-#264 generation and MUST NOT be mistaken for the
-// live file (ROUND 1 lesson: repairing/proving the wrong path).
-const REAL_W1_STATE_DIR = '/Users/authsvc/.agent-core/control/scheduler-watchdog'
-const w1StateDirFor = (mode, ctx) => (mode === 'selftest' ? ctx.watchdogStateDir : REAL_W1_STATE_DIR)
-
 /**
  * Repair the W1 evidence log BEFORE W1/W2 start. An existing log is NEVER
  * truncated — ownership/mode repair only, bytes preserved (size receipted
@@ -93,7 +83,7 @@ const w1StateDirFor = (mode, ctx) => (mode === 'selftest' ? ctx.watchdogStateDir
  */
 export function repairWatchdogEvidenceChannel({ ctx, mode, phase, execFileSync }) {
   assertNoFollowCapable()
-  const stateDir = w1StateDirFor(mode, ctx)
+  const stateDir = ctx.watchdogStateDir
   const evidenceLog = join(stateDir, 'scheduler-watchdog-evidence.jsonl')
   const pre = existsSync(evidenceLog) ? statSync(evidenceLog) : null
   const post = repairOwnershipNoFollow({ mode, execFileSync, path: evidenceLog, kind: 'file', uidSpec: 'authsvc', gidSpec: 'staff', fileMode: 0o644 })
@@ -125,7 +115,7 @@ export function repairWatchdogEvidenceChannel({ ctx, mode, phase, execFileSync }
  * selftest tail instead.
  */
 export async function assertEvidenceAndHeartbeatProofs({ ctx, mode, gate, execFileSync, kickstart }) {
-  const stateDir = w1StateDirFor(mode, ctx)
+  const stateDir = ctx.watchdogStateDir
   const { evidenceLog, evidenceDir } = {
     evidenceLog: join(stateDir, 'scheduler-watchdog-evidence.jsonl'),
     evidenceDir: dirname(ctx.evidenceFile ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl'),
@@ -135,12 +125,22 @@ export async function assertEvidenceAndHeartbeatProofs({ ctx, mode, gate, execFi
   let appendable = false
   let appendDetail = ''
   if (mode === 'apply') {
+    // env sanitized exactly like CTX.asAuthsvc (env -i + pinned HOME/PATH)
     try {
-      execFileSync('sudo', ['-u', 'authsvc', '/usr/bin/test', '-w', evidenceLog], { stdio: ['ignore', 'pipe', 'pipe'] })
+      execFileSync('sudo', ['-u', 'authsvc', 'env', '-i',
+        'HOME=/Users/authsvc',
+        'PATH=/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin',
+        '/usr/bin/test', '-w', evidenceLog], { stdio: ['ignore', 'pipe', 'pipe'] })
       appendable = true
       appendDetail = 'authsvc -w probe on evidence log (non-mutating)'
     } catch (error) {
-      appendDetail = 'authsvc -w probe failed: ' + String(error.stderr || error.message || error).slice(0, 200)
+      let st
+      try {
+        const fs = statSync(evidenceLog)
+        st = `file uid=${fs.uid} gid=${fs.gid} mode=${(fs.mode & 0o7777).toString(8)} nlink=${fs.nlink}`
+      } catch (e) { st = 'file stat failed: ' + e.code }
+      const errText = (error.stderr && error.stderr.length) ? String(error.stderr).trim() : String(error.message || error)
+      appendDetail = `probe failed [${st}]: ${errText.slice(0, 200)}`
     }
   } else {
     try { accessSync(evidenceLog, constants.W_OK); appendable = true; appendDetail = 'fixture runner-user W_OK probe' } catch { appendDetail = 'fixture evidence log not writable' }
