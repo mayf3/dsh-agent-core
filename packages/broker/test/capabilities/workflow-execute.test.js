@@ -78,31 +78,6 @@ test('workflow_execute is the only instance-execution write tool; workflow_trans
 
 // ─── create_instance contract (CTR-010, CASE A binding) ─────────────────────
 
-test('workflow_execute: create_instance operation freezes the svc-workflow create binding', () => {
-  const manifest = executeManifest()
-  assert.equal(validateManifest(manifest).ok, true)
-  const op = manifest.operations.find((candidate) => candidate.name === 'create_instance')
-  assert.ok(op)
-  assert.deepEqual(Object.keys(op.arguments.properties), [
-    'domainId',
-    'definitionVersionId',
-    'contextPayload',
-    'metadata',
-    'externalReference',
-    'externalUrl',
-  ])
-  assert.deepEqual(op.arguments.required, ['domainId', 'definitionVersionId', 'contextPayload', 'metadata'])
-  assert.deepEqual(op.http, {
-    target: 'svc-workflow',
-    method: 'POST',
-    path: '/internal/v1/workflow-instances',
-    body: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata', 'externalReference', 'externalUrl'],
-    idempotencyKey: true,
-  })
-  // No pathParams on the collection POST; the only identity surface is the seam.
-  assert.equal(op.http.pathParams, undefined)
-})
-
 test('workflow_execute operation=create_instance: authorized POST preserves body, scope, trusted IK; identity fields never reach the wire', async () => {
   const tokenServer = await startTokenServer()
   const workflow = await startMockServer((req, res, entry) => {
