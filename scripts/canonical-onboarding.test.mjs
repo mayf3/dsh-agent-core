@@ -170,3 +170,38 @@ test('liveness confirm on rerun with a dead stored credential fails loud (no sec
   )
   assert.equal(state.calls.filter((c) => c === 'client').length, 1) // no second client ever
 })
+
+test('explicit storeWriteOwner reaches the trusted store seam (propagation probe)', async (t) => {
+  const { deps, faces } = await fixtureFaces(t)
+  // A non-root writer cannot nominate a different trusted owner — this store
+  // writer rejection is the PROOF the explicit value travels the accepted path
+  // into trustedOwner; wiring that dropped storeWriteOwner would silently
+  // succeed under the process owner instead of failing here.
+  await assert.rejects(
+    runCanonicalOnboarding(deps, {
+      agentId: AGENT_ID, name: 'Canary', ...faces,
+      storeWriteOwner: { ownerUid: 12345, ownerGid: 12345 },
+    }),
+    (error) => /nominate a different trusted owner/.test(error?.message ?? ''),
+  )
+})
+
+test('explicit process-owned storeWriteOwner is the accepted write face', async (t) => {
+  const { deps, faces } = await fixtureFaces(t)
+  const result = await runCanonicalOnboarding(deps, {
+    agentId: AGENT_ID, name: 'LW Lifecycle Canary', description: 'canary', ...faces,
+    storeWriteOwner: { ownerUid: process.getuid(), ownerGid: process.getgid() },
+  })
+  assert.equal(result.finalState, 'ONBOARDING_READY')
+  assert.equal(result.identity.action, 'clean_bootstrap')
+})
+
+test('production onboard call site carries the resolved storeWriteOwner (CLI wiring regression)', async () => {
+  const source = await readFile(new URL('./canonical-agent-onboarding.mjs', import.meta.url), 'utf8')
+  // The resolved trusted store owner must reach BOTH faces of the CLI.
+  assert.match(source, /const classification = await classifyOnboardingState\(deps, \{ \.\.\.input, storeWriteOwner \}\)/)
+  assert.match(source, /await runCanonicalOnboarding\(\s*deps,\s*\{ \.\.\.input, storeWriteOwner \},\s*\)/)
+  // The owner-dropping bare form is the production defect class — banned.
+  assert.doesNotMatch(source, /runCanonicalOnboarding\(deps, input\)/)
+  assert.match(source, /const storeWriteOwner = resolveStoreOwner\(/)
+})
