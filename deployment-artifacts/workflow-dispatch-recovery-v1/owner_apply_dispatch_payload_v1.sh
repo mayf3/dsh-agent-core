@@ -171,9 +171,9 @@ LIVE_DIGEST="$(printf '%s' "$LIVE_MSG" | "$SHASUM" -a 256 | awk '{print $1}')"
 [ -L "$RECEIPT_DIR" ] && die "refusing symlink at receipt dir: $RECEIPT_DIR"
 mkdir -p "$RECEIPT_DIR"
 PREIMAGE_TMP="$(mktemp "$RECEIPT_DIR/payload-preimage.XXXXXXXX")"
-printf '%s' "$LIVE_MSG" > "$PREIMAGE_TMP"
+printf '%s' "$LIVE_MSG" > "$PREIMAGE_TMP" || { rm -f "$PREIMAGE_TMP"; die "preimage write failed (rollback safety requires it)"; }
 PREIMAGE="$RECEIPT_DIR/payload-preimage-$(date -u +%Y%m%dT%H%M%SZ).txt"
-mv -f "$PREIMAGE_TMP" "$PREIMAGE"
+mv -f "$PREIMAGE_TMP" "$PREIMAGE" || { rm -f "$PREIMAGE_TMP"; die "preimage rename failed (rollback safety requires it)"; }
 printf '[apply] preimage captured: %s (sha256=%s)\n' "$PREIMAGE" "$LIVE_DIGEST"
 
 # Deploy the dispatcher mechanics into the HR workspace (idempotent,
@@ -219,14 +219,28 @@ install_leaf() {
   leaf="$1"
   if [ -f "$leaf" ] && [ ! -L "$leaf" ]; then
     OWN="$("$STAT" -f %u "$leaf")"
-    { [ "$OWN" = "$("$STAT" -f %u "$WS")" ] || [ "$OWN" = 0 ]; } \
-      || die "pre-existing file owned by a third party (not touching it): $leaf"
-    return 0
+    if [ "$OWN" = "$("$STAT" -f %u "$WS")" ]; then
+      return 0
+    fi
+    if [ "$OWN" = 0 ]; then
+      # prior-run root-owned residue: the HR turn could never append to it.
+      # Repair content-preservingly: copy bytes to a private leaf, fix
+      # ownership there, rename over (no pathname chown, no follow, bytes
+      # preserved; safe because a root-owned 0644 file has no concurrent
+      # yanfenma writer).
+      TMPLEAF="$(mktemp "$WS/memory/.dispatch-leaf.XXXXXXXX")"
+      cat "$leaf" > "$TMPLEAF" || { rm -f "$TMPLEAF"; die "ledger repair copy failed: $leaf"; }
+      chown yanfenma:staff "$TMPLEAF"
+      chmod 0644 "$TMPLEAF"
+      mv -f "$TMPLEAF" "$leaf" || { rm -f "$TMPLEAF"; die "ledger repair rename failed: $leaf"; }
+      return 0
+    fi
+    die "pre-existing file owned by a third party (not touching it): $leaf"
   fi
   TMPLEAF="$(mktemp "$WS/memory/.dispatch-leaf.XXXXXXXX")"
   chown yanfenma:staff "$TMPLEAF"
   chmod 0644 "$TMPLEAF"
-  mv -f "$TMPLEAF" "$leaf"
+  mv -f "$TMPLEAF" "$leaf" || { rm -f "$TMPLEAF"; die "leaf rename failed: $leaf"; }
 }
 install_leaf "$LEDGER"
 install_leaf "$BACKLOG"
@@ -252,7 +266,7 @@ printf '[apply] enabled=%s schedule=%s (must be unchanged)\n' \
   "$("$JQ" -r .enabled <<<"$DOC2")" "$("$JQ" -c .schedule <<<"$DOC2")"
 
 RECEIPT_TMP="$(mktemp "$RECEIPT_DIR/apply-receipt.XXXXXXXX")"
-cat > "$RECEIPT_TMP" <<EOF
+cat > "$RECEIPT_TMP" <<EOF || { rm -f "$RECEIPT_TMP"; die "receipt write failed"; }
 {"jobId":"$JOB_ID","oldPayloadSha256":"$LIVE_DIGEST","newPayloadSha256":"$NEW_DIGEST","preimage":"$PREIMAGE","casScheduleRevision":"$LIVE_SCHEDULE_REV","casUpdatedAtMs":"$LIVE_UPDATED_AT","appliedAt":"$(date -u +%FT%TZ)"}
 EOF
 RECEIPT="$RECEIPT_DIR/apply-receipt-$(date -u +%Y%m%dT%H%M%SZ).json"
