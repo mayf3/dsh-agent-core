@@ -29,6 +29,7 @@ import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { assertOAuthCredentialBoundary, persistOpenAICodexCredentialFile } from './shared-codex.js'
 import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact } from './plugin-artifact.js'
+import { ensureSymlink } from './ensure-symlink.js'
 
 export { assertOAuthCredentialBoundary, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, persistOpenAICodexCredentialFile } from './shared-codex.js'
 
@@ -281,20 +282,6 @@ function exactObject(value, expected) {
   const expectedKeys = Object.keys(expected).sort()
   return keys.length === expectedKeys.length
     && keys.every((key, index) => key === expectedKeys[index] && value[key] === expected[key])
-}
-
-/** Create (or repair) one symlink; fails loud on a real file at the target. */
-function ensureSymlink(target, link) {
-  mkdirSync(dirname(link), { recursive: true })
-  try {
-    const stat = lstatSync(link)
-    const linked = stat.isSymbolicLink() ? readlinkSync(link) : undefined
-    if (linked !== undefined && resolve(dirname(link), linked) === resolve(target)) return
-    rmSync(link, { recursive: true, force: true })
-  } catch (error) {
-    if (error?.code !== 'ENOENT') throw error
-  }
-  symlinkSync(target, link)
 }
 
 /** Copy a file when the source exists; never overwrite an existing target. */
