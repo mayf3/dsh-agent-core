@@ -274,6 +274,7 @@ export async function composeProductionRuntime(options = {}) {
     defaultAgentId: defaultAgent.id,
     defaultSessionId: 'main',
     agentProfile,
+    expectedCredentialFile: canonicalCredentialFile,
     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),
     ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),
     resolveProcessConfig,

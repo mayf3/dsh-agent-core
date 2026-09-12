@@ -50,9 +50,10 @@ export function assertOAuthCredentialBoundary(_home, credentialFile, options = {
 }
 
 /** Persist the shared credential path in the copied per-Agent profile only. */
-export function persistOpenAICodexCredentialFile(profilePatchFile, credentialFile) {
-  if (!isAbsolute(credentialFile) || credentialFile !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE) {
-    throw error('credential_path_invalid', `shared credentialFile must be exactly ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
+export function persistOpenAICodexCredentialFile(profilePatchFile, credentialFile, options = {}) {
+  const expected = options.expectedCredentialFile ?? CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
+  if (!isAbsolute(credentialFile) || credentialFile !== expected) {
+    throw error('credential_path_invalid', `shared credentialFile must be exactly ${expected}`)
   }
   const current = readFileSync(profilePatchFile, 'utf8')
   const pattern = new RegExp(`\\n?${PATCH_BEGIN}[\\s\\S]*?${PATCH_END}\\n?`, 'gu')
