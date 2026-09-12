@@ -435,3 +435,30 @@ test('defaultRoute: unknown routeRef fails loud; non-string fails loud; unknown 
   writeFileSync(bad3, `${JSON.stringify({ version: 3, routeCatalog: CATALOG, overrides: {}, surprise: 1 })}\n`)
   assert.throws(() => loadAgentModelOverrides(bad3, [OTHER]), (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID')
 })
+
+test('canonical credentialFile is deployment-owned: an authsvc-declared trust domain rejects the yanfenma path', () => {
+  const AUTHSVC_CANONICAL = '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
+  const file = join(tmpdir(), `mo-authsvc-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(file, `${JSON.stringify({
+    version: 3,
+    defaultRoute: 'luna',
+    routeCatalog: {
+      luna: { ...CATALOG.luna, credentialFile: AUTHSVC_CANONICAL },
+    },
+    overrides: {},
+  })}\n`)
+  // Declared authsvc canonical: the authsvc-local route is VALID and default-applies.
+  const loaded = loadAgentModelOverrides(file, [OTHER], { canonicalCredentialFile: AUTHSVC_CANONICAL })
+  const chain = loaded.resolveChain(OTHER, GLOBAL)
+  assert.equal(chain.routes[0].processConfig.provider, 'openai-codex')
+  assert.equal(chain.routes[0].processConfig.subscription.credentialFile, AUTHSVC_CANONICAL)
+  // The yanfenma-domain path is NOT valid under that declaration — no cross-domain leak.
+  const leaked = join(tmpdir(), `mo-leak-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(leaked, `${JSON.stringify({
+    version: 3,
+    routeCatalog: { luna: CATALOG.luna },
+    overrides: {},
+  })}\n`)
+  assert.throws(() => loadAgentModelOverrides(leaked, [OTHER], { canonicalCredentialFile: AUTHSVC_CANONICAL }),
+    (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID')
+})

@@ -306,7 +306,13 @@ function makeChainRoute(routeRef, route) {
  *   resolve:(agentId:string, globalRoute:object)=>object,
  *   resolveChain:(agentId:string, globalRoute:object)=>object}}
  */
-export function loadAgentModelOverrides(file, registeredAgentIds) {
+export function loadAgentModelOverrides(file, registeredAgentIds, options = {}) {
+  // The ACTIVE trust domain owns the canonical credential path: production
+  // runtimes declare it from their own root (compose passes
+  // <root>/shared-credentials/openai-codex/.openai-codex-auth.json); the
+  // default keeps the documented yanfenma-domain value. Exact-pin validation
+  // is unchanged — one deployment-owned canonical path, never arbitrary.
+  const canonicalCredentialFile = options.canonicalCredentialFile ?? CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
   const filePresent = existsSync(file)
   let defaultRouteRef
   let defaultRoute
@@ -384,9 +390,9 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         || route.provider !== 'openai-codex'
         || route.plugin !== CHATGPT_SUBSCRIPTION_V1.plugin
         || route.pluginVersion !== CHATGPT_SUBSCRIPTION_V1.pluginVersion
-        || route.credentialFile !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
+        || route.credentialFile !== canonicalCredentialFile
       )) {
-        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@0.2.3 and credentialFile ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
+        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@0.2.3 and credentialFile ${canonicalCredentialFile}`)
       }
       const providerEnv = hasProviderEnv ? validateProviderEnv(route.providerEnv) : undefined
       const frozenRoute = Object.freeze({
