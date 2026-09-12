@@ -67,7 +67,10 @@ Workspace migration or production change, and `production_apply_authority` stays
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` | accepted / current | contracts | current AgentProcess lifecycle authority |
+| `AGENT_TURN_CALLER_WAIT_RECOVERY_V1` | proposed | none until accepted + merged; then contracts | bounded child authority candidate for caller-wait recovery, exact-turn cancel, safe SIGTERM gate, late-delivery suppression, parent receipts/control surface, detach guard, and durable TurnRecoveryStore; production apply remains none |
 | `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` | superseded | none | historical replaced authority |
+
+`AGENT_TURN_CALLER_WAIT_RECOVERY_V1` is a proposed additive child authority: it does not supersede V2 or change `outcome_unknown`/exact-fence safety. Its implementation authority is inactive until independent acceptance and merge into `main`; its authoring PR is docs-only and grants no production apply.
 
 `accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
 
