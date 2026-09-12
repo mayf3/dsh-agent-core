@@ -12,13 +12,14 @@
  */
 
 import assert from 'node:assert/strict'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { test } from 'node:test'
 
+import { ensureSymlink } from '../src/ensure-symlink.js'
 import {
   AGENT_PROFILE_DEFS,
   CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
@@ -394,4 +395,59 @@ test('stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatc
     ...requirement, dshCommit: STAMP_COMMIT,
   }, { harnessRoot, pluginInstaller: fakeInstall, artifactIdentity: ARTIFACT_IDENTITY })
   assert.equal(pinned.version, SUBSCRIPTION.pluginVersion)
+})
+
+test('ensureSymlink accepts realpath-equivalent links without rewriting (fleet EACCES class 2026-09-12)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ensure-symlink-'))
+  try {
+    const store = join(dir, 'store', 'real')
+    const aliasDir = join(dir, 'alias')
+    mkdirSync(store, { recursive: true })
+    symlinkSync(store, aliasDir) // alias -> the real pkg parent (a different spelling of it)
+    const target = join(store, 'pkg')
+    mkdirSync(target)
+    writeFileSync(join(target, 'marker.txt'), 'payload')
+
+    // equivalent spelling via the alias: raw string differs, realpath same
+    const equivalentLink = join(dir, 'alias-pkg')
+    symlinkSync(join(aliasDir, 'pkg'), equivalentLink) // pre-existing equivalent spelling
+    ensureSymlink(target, equivalentLink)
+    // THE assertion: the link was NOT rewritten to the canonical spelling —
+    // rewriting is what made provisioning EACCES inside homes it cannot write
+    assert.equal(readlinkSync(equivalentLink), join(aliasDir, 'pkg'))
+    assert.equal(realpathSync(equivalentLink), realpathSync(target))
+
+    // a genuinely different target IS replaced
+    const wrong = join(dir, 'wrong')
+    symlinkSync(dir, wrong)
+    ensureSymlink(target, wrong)
+    assert.equal(realpathSync(wrong), realpathSync(target))
+
+    // a real file at the link path fails loud
+    const realFile = join(dir, 'real-file')
+    writeFileSync(realFile, 'x')
+    assert.throws(() => ensureSymlink(target, realFile))
+
+    // a missing link is created
+    const fresh = join(dir, 'fresh', 'link')
+    ensureSymlink(target, fresh)
+    assert.equal(realpathSync(fresh), realpathSync(target))
+
+    // a dangling link is repaired (ENOENT = not equivalent)
+    const danglingDir = join(dir, 'dangling')
+    mkdirSync(danglingDir)
+    symlinkSync(join(dir, 'gone'), join(danglingDir, 'pkg'))
+    ensureSymlink(target, join(danglingDir, 'pkg'))
+    assert.equal(realpathSync(join(danglingDir, 'pkg')), realpathSync(target))
+
+    // structurally broken links (ELOOP cycles; ENOTDIR shapes are not even
+    // plantable) are also non-equivalence -> repaired, not fatal
+    const cycleDir = join(dir, 'cycle')
+    mkdirSync(cycleDir)
+    symlinkSync(join(cycleDir, 'self'), join(cycleDir, 'self'))
+    ensureSymlink(target, join(cycleDir, 'self'))
+    assert.equal(realpathSync(join(cycleDir, 'self')), realpathSync(target))
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 })
