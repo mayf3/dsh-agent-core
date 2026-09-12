@@ -1,0 +1,19 @@
+# PREFLIGHT git states 2026-08-30T14:32:26Z
+=== /Users/yanfenma/workspace/project/dsh-agent-core ===
+9a89b944ad173f2a44e54de50096087a48cc0ad0
+docs/lark-ux-phase1-v2-spec
+ M packages/broker/src/capabilities/workflow.js
+ M packages/broker/src/mapping.js
+ M packages/broker/src/registry.js
+github	https://github.com/mayf3/dsh-agent-core.git (fetch)
+github	https://github.com/mayf3/dsh-agent-core.git (push)
+=== /Users/yanfenma/workspace/project/dsh-agent-core-main ===
+a1347c20d84490f4a99eb9a27ba3bd3e71d552c5
+github	https://github.com/mayf3/dsh-agent-core.git (fetch)
+github	https://github.com/mayf3/dsh-agent-core.git (push)
+=== /private/tmp/wt-zhixue-exec ===
+9a89b944ad173f2a44e54de50096087a48cc0ad0
+zhixue-exec-20260830-records
+?? docs/evidence/agent-core-ocgo-hemostasis-20260830/
+github	https://github.com/mayf3/dsh-agent-core.git (fetch)
+github	https://github.com/mayf3/dsh-agent-core.git (push)

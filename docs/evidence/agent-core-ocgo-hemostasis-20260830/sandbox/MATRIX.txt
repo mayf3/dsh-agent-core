@@ -1,0 +1,8 @@
+# SANDBOX MATRIX (all scenarios re-run after fixes)
+2026-08-30T15:00:08Z
+S1 SUCCESS: exit 0; plist exactly 2 values flipped; V1-V4 pass; V2 env=zai/glm-5.3; straggler swept (fixed=1); backup created
+S2 IDEMPOTENT: exit 0 ALREADY_APPLIED; plist untouched (sha ee8d45c2...)
+S3 DRIFT-REFUSAL: exit 2 on overrides sha drift; plist unchanged (zero writes)
+S4 VERIFY-FAIL->ROLLBACK: exit 1 ROLLED_BACK cleanly; plist byte-restored 9019f071...; runtime oc-go
+S5 BOOTSTRAP-FAIL->ROLLBACK: exit 1 ROLLED_BACK cleanly; plist byte-restored 9019f071...
+FIXES FOUND BY SANDBOX: (1) ps eww arg-order bug on macOS (V2 + rollback env); (2) P1/P2 order for idempotent rerun; shim env-mirrors-plist-content
