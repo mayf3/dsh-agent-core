@@ -473,7 +473,9 @@ export function provisionAgentHome(home, workspace, options = {}) {
       harnessIdentity: options.harnessIdentity,
       harnessRoot: options.harnessRoot,
     })
-    persistOpenAICodexCredentialFile(join(profileDir, 'cordis.patch.yml'), subscription.credentialFile)
+    persistOpenAICodexCredentialFile(join(profileDir, 'cordis.patch.yml'), subscription.credentialFile, {
+      ...(options.expectedCredentialFile === undefined ? {} : { expectedCredentialFile: options.expectedCredentialFile }),
+    })
   }
 
   // Out-of-tree plugin resolution links for this profile's composition.
@@ -490,7 +492,9 @@ export function provisionAgentHome(home, workspace, options = {}) {
   if (options.subscription !== undefined) {
     const subscription = options.subscription
     const credentialBoundary = options.credentialBoundary ?? assertOAuthCredentialBoundary
-    credentialBoundary(home, subscription.credentialFile)
+    credentialBoundary(home, subscription.credentialFile, {
+      ...(options.expectedCredentialFile === undefined ? {} : { expectedCredentialFile: options.expectedCredentialFile }),
+    })
   }
 
   mkdirSync(workspace, { recursive: true })

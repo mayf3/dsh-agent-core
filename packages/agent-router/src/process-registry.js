@@ -330,6 +330,10 @@ export function createProcessRegistry({
       entry.startupFailureStage = 'provisionHome'
       provisionHome(home, workspace, {
         profile: cfg.agentProfile,
+        // Mechanical passthrough of the deployment-owned canonical credential
+        // path (compose derives it from the runtime root). The Router owns no
+        // trust-domain policy.
+        ...(cfg.expectedCredentialFile === undefined ? {} : { expectedCredentialFile: cfg.expectedCredentialFile }),
         ...(processConfig.subscription === undefined ? {} : { subscription: processConfig.subscription }),
       })
     } catch (cause) {
