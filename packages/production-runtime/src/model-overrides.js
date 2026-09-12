@@ -6,7 +6,8 @@
  * AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-001): the ONLY route
  * order authority. Schema:
  *
- *   { "version": 2,
+ *   { "version": 3,
+ *     "defaultRoute": "<routeRef>",                      // optional fleet default
  *     "routeCatalog": { "<routeRef>": { routeKind: builtin|subscription,
  *        provider, model, credentialReadiness, providerEnv?,
  *        plugin + pluginVersion (subscription ONLY — FORBIDDEN on builtin) } },
@@ -19,9 +20,10 @@
  * at load (duplicate JSON keys at any depth, unresolved/duplicate/alias
  * routeRefs, providerEnv grammar, pin mismatch, out-of-scope agentId);
  * config changes require a controlled restart — this module never watches
- * or writes the file. A missing file (or no entry for an agent) is the
- * rollback/legacy state: the global env route applies, byte-equivalent to
- * the pre-chain behavior.
+ * or writes the file. A missing entry for an agent resolves to
+ * defaultRoute (catalog machinery included) when configured; with no
+ * defaultRoute the global env route applies, byte-equivalent to the
+ * pre-chain behavior.
  */
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -306,6 +308,8 @@ function makeChainRoute(routeRef, route) {
  */
 export function loadAgentModelOverrides(file, registeredAgentIds) {
   const filePresent = existsSync(file)
+  let defaultRouteRef
+  let defaultRoute
   const mutableOverrides = new Map()
   if (filePresent) {
     let source
@@ -318,12 +322,21 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       if (cause?.code === 'AGENT_MODEL_OVERRIDE_INVALID') throw cause
       throw invalid(`cannot parse ${file}`, cause)
     }
-    if (!exactKeys(parsed, ['overrides', 'routeCatalog', 'version']) || parsed.version !== 3
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)
+        || parsed.version !== 3
         || parsed.routeCatalog === null || typeof parsed.routeCatalog !== 'object'
         || Array.isArray(parsed.routeCatalog)
         || parsed.overrides === null || typeof parsed.overrides !== 'object'
         || Array.isArray(parsed.overrides)) {
-      throw invalid(`${file} must be {"version":3,"routeCatalog":{...},"overrides":{...}} (older files are not converted)`)
+      throw invalid(`${file} must be {"version":3,"routeCatalog":{...},"overrides":{...},"defaultRoute"?: "<routeRef>"} (older files are not converted)`)
+    }
+    const unknownTopLevelKeys = Object.keys(parsed).filter((key) => !['overrides', 'routeCatalog', 'version', 'defaultRoute'].includes(key))
+    if (unknownTopLevelKeys.length > 0) {
+      throw invalid(`${file} has unknown top-level keys: ${JSON.stringify(unknownTopLevelKeys)}`)
+    }
+    if (Object.hasOwn(parsed, 'defaultRoute')
+        && (typeof parsed.defaultRoute !== 'string' || parsed.defaultRoute === '')) {
+      throw invalid(`${file}.defaultRoute must be a non-empty routeCatalog routeRef when present`)
     }
     // routeCatalog: routeRef -> frozen validated route + canonical dedup.
     const catalog = new Map()
@@ -392,6 +405,17 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       canonicalIdentities.set(canonical, routeRef)
       catalog.set(routeRef, frozenRoute)
     }
+    // Optional fleet-default route (owner ruling 2026-09-12: ordinary newly
+    // onboarded Agents reuse the canonical route without per-Agent pins).
+    // Full catalog machinery (subscription processConfig included); explicit
+    // per-Agent overrides still win; absent => legacy passthrough unchanged.
+    if (Object.hasOwn(parsed, 'defaultRoute')) {
+      if (!catalog.has(parsed.defaultRoute)) {
+        throw invalid(`${file}.defaultRoute references unknown routeCatalog entry ${JSON.stringify(parsed.defaultRoute)}`)
+      }
+      defaultRouteRef = parsed.defaultRoute
+      defaultRoute = catalog.get(defaultRouteRef)
+    }
     // overrides: exactly the activated scope, registered agents only.
     const registered = new Set(registeredAgentIds)
     for (const [agentId, entry] of Object.entries(parsed.overrides)) {
@@ -444,6 +468,16 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
     resolve(agentId, globalRoute) {
       const override = overrides[agentId]
       if (override === undefined) {
+        if (defaultRouteRef !== undefined) {
+          const route = defaultRoute
+          return Object.freeze({
+            provider: route.provider,
+            model: route.model,
+            ...(route.plugin === undefined ? {} : { plugin: route.plugin, pluginVersion: route.pluginVersion }),
+            ...(route.credentialFile === undefined ? {} : { credentialFile: route.credentialFile }),
+            ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),
+          })
+        }
         return Object.freeze({ provider: globalRoute.provider, model: globalRoute.model })
       }
       const route = override.routes[override.primary]
@@ -459,6 +493,15 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
     resolveChain(agentId, globalRoute) {
       const override = overrides[agentId]
       if (override === undefined) {
+        if (defaultRouteRef !== undefined) {
+          const route = makeChainRoute(defaultRouteRef, defaultRoute)
+          return Object.freeze({
+            agentId,
+            override: false,
+            chainId: chainIdFor(agentId, [route.identity]),
+            routes: Object.freeze([route]),
+          })
+        }
         const route = passthroughRoute(globalRoute)
         return Object.freeze({
           agentId,

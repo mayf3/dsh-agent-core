@@ -383,3 +383,55 @@ test('providerEnv URL, key and value failures are fail-loud without secret echo'
 // malformed-config respawn isolation) live in model-overrides-runtime.test.js
 // since the 500-line structure cap split — same suite glob, zero semantic
 // change.
+
+test('defaultRoute: an unpinned agent resolves the catalog route with full subscription machinery', () => {
+  const file = join(tmpdir(), `mo-default-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(file, `${JSON.stringify({
+    version: 3,
+    defaultRoute: 'luna',
+    routeCatalog: CATALOG,
+    overrides: { [TARGET]: { model: { primary: 'glm53', fallbacks: ['luna'] } } },
+  })}\n`)
+  const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
+  const chain = loaded.resolveChain(OTHER, GLOBAL)
+  assert.equal(chain.override, false)
+  assert.equal(chain.routes.length, 1)
+  assert.equal(chain.routes[0].routeRef, 'luna')
+  const processConfig = chain.routes[0].processConfig
+  assert.equal(processConfig.provider, 'openai-codex')
+  assert.equal(processConfig.model, 'gpt-5.6-luna')
+  assert.equal(processConfig.subscription.plugin, 'dsh-codex')
+  assert.equal(processConfig.subscription.credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+  // providerEnv is carried through when the catalog route defines it (the
+  // suite's luna fixture defines none — that face is covered by the
+  // providerEnv URL/key/value fail-loud family above).
+  const single = loaded.resolve(OTHER, GLOBAL)
+  assert.equal(single.provider, 'openai-codex')
+  assert.equal(single.model, 'gpt-5.6-luna')
+  assert.equal(single.credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+  // An explicitly pinned agent still wins over the fleet default.
+  const pinned = loaded.resolveChain(TARGET, GLOBAL)
+  assert.equal(pinned.routes[0].provider, 'zai')
+})
+
+test('defaultRoute absent: unpinned agent keeps the legacy global passthrough byte-equivalent', () => {
+  const file = join(tmpdir(), `mo-nodefault-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(file, `${JSON.stringify({ version: 3, routeCatalog: CATALOG, overrides: {} })}\n`)
+  const loaded = loadAgentModelOverrides(file, [OTHER])
+  const chain = loaded.resolveChain(OTHER, GLOBAL)
+  assert.equal(chain.override, false)
+  assert.deepEqual(chain.routes[0].processConfig, { provider: GLOBAL.provider, model: GLOBAL.model })
+})
+
+test('defaultRoute: unknown routeRef fails loud; non-string fails loud; unknown top-level key fails loud', () => {
+  const dir = tmpdir()
+  const bad1 = join(dir, `mo-bad1-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(bad1, `${JSON.stringify({ version: 3, defaultRoute: 'nope', routeCatalog: CATALOG, overrides: {} })}\n`)
+  assert.throws(() => loadAgentModelOverrides(bad1, [OTHER]), (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID')
+  const bad2 = join(dir, `mo-bad2-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(bad2, `${JSON.stringify({ version: 3, defaultRoute: 42, routeCatalog: CATALOG, overrides: {} })}\n`)
+  assert.throws(() => loadAgentModelOverrides(bad2, [OTHER]), (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID')
+  const bad3 = join(dir, `mo-bad3-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(bad3, `${JSON.stringify({ version: 3, routeCatalog: CATALOG, overrides: {}, surprise: 1 })}\n`)
+  assert.throws(() => loadAgentModelOverrides(bad3, [OTHER]), (error) => error.code === 'AGENT_MODEL_OVERRIDE_INVALID')
+})
