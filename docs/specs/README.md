@@ -71,6 +71,13 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 `accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
 
+## workflow Admin Agent identity authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1` | accepted / current（accepted head `bb0db28`；merge `91cab84` / PR #80） | contracts | single-subject identity bootstrap authority for `agt_workflow-admin-agent`（disabled staged identity；activation boundary 冻结归独立 activation authority） |
+| `AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_OPERATOR_V1` | proposed (Amendment Round 1; fresh full review required) | contracts (effective only on acceptance and merge) | deployment-prebound exact-attempt child authority for `workflow_admin_agent_bootstrap_v1` / `agt_workflow-admin-agent`: `TRIGGER_IS_NOT_AUTHORITY`; UDS is local transport only; peer UID and request body grant no authority; parent repository ledger remains authoritative; exact implementation/deployment/audit/window/execution tasks are separate |
+
 ## agt_cto-agent model-route authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
