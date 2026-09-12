@@ -229,8 +229,9 @@ export async function composeProductionRuntime(options = {}) {
   })
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
-  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
-  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+  const canonicalCredentialFile = join(layout.root, 'shared-credentials/openai-codex/.openai-codex-auth.json')
+  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, { canonicalCredentialFile })
+  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, { canonicalCredentialFile })
     .resolveChain(agentId, globalRoute)
   const resolveProcessConfig = (agentId) => {
     // Default route = the chain's primary (route[0]); the unified chain
