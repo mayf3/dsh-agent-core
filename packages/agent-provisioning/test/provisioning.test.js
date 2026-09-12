@@ -439,6 +439,14 @@ test('ensureSymlink accepts realpath-equivalent links without rewriting (fleet E
     symlinkSync(join(dir, 'gone'), join(danglingDir, 'pkg'))
     ensureSymlink(target, join(danglingDir, 'pkg'))
     assert.equal(realpathSync(join(danglingDir, 'pkg')), realpathSync(target))
+
+    // structurally broken links (ELOOP cycles; ENOTDIR shapes are not even
+    // plantable) are also non-equivalence -> repaired, not fatal
+    const cycleDir = join(dir, 'cycle')
+    mkdirSync(cycleDir)
+    symlinkSync(join(cycleDir, 'self'), join(cycleDir, 'self'))
+    ensureSymlink(target, join(cycleDir, 'self'))
+    assert.equal(realpathSync(join(cycleDir, 'self')), realpathSync(target))
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

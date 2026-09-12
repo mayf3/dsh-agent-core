@@ -24,7 +24,10 @@ export function ensureSymlink(target, link) {
     }
     if (resolve(dirname(link), linked) === resolve(target)) return
     try { if (realpathSync(link) === realpathSync(target)) return } catch (error) {
-      if (error?.code !== 'ENOENT') throw error // dangling link/target = repair
+      // structural resolution failures (ENOENT dangling, ENOTDIR through a
+      // file, ELOOP cycle) = non-equivalence -> repair; genuine access
+      // failures (EACCES) still fail loud
+      if (error?.code !== 'ENOENT' && error?.code !== 'ENOTDIR' && error?.code !== 'ELOOP') throw error
     }
     rmSync(link, { recursive: true, force: true })
   } catch (error) {
