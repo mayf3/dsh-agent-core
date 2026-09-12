@@ -130,7 +130,7 @@ export async function assertEvidenceAndHeartbeatProofs({ ctx, mode, gate, execFi
       execFileSync('sudo', ['-u', 'authsvc', 'env', '-i',
         'HOME=/Users/authsvc',
         'PATH=/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin',
-        '/usr/bin/test', '-w', evidenceLog], { stdio: ['ignore', 'pipe', 'pipe'] })
+        '/bin/test', '-w', evidenceLog], { stdio: ['ignore', 'pipe', 'pipe'] })  // macOS layout: test lives in /bin, not /usr/bin
       appendable = true
       appendDetail = 'authsvc -w probe on evidence log (non-mutating)'
     } catch (error) {
