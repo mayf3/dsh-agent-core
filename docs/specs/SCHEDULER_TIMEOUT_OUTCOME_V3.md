@@ -250,7 +250,8 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
     nativeSessionId?,
     lateSettlement?: {resolvedTo:succeeded|failed,resolvedAt,
                       basis:trusted-late-evidence|operator-reconcile,evidenceRef},
-    terminationSettlement?: {kind:terminated_without_outcome,requestId,evidenceKind,evidenceId,
+    terminationSettlement?: {kind:terminated_without_outcome,businessStateAtCommit:outcome_unknown,
+                             requestId,evidenceKind,evidenceId,
                              actorKind:self-agent|operator,actorId,actorProvenance,operationId,
                              fenceBefore,fenceAfter,scheduleDisposition,settledAt,committedAt},
     terminalEvidence?: {kind:pre-start-rejection|turn-terminal|late-settlement|
@@ -356,8 +357,9 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
 - `C-038 Store v3 exclusivity` — 首次 V3 write 前备份 V2；一旦 version=3 或任何 V3 evidence 存在，
   V2 reader/writer 必须 refuse。不得自动 downgrade；recovery 仅 V3-aware forward fix。
 - `C-039 Termination settlement schema` —
-  `terminationSettlement={kind:'terminated_without_outcome',requestId,evidenceKind,evidenceId,actorKind,
-  actorId,actorProvenance,operationId,fenceBefore,fenceAfter,scheduleDisposition,settledAt,committedAt}`。
+  `terminationSettlement={kind:'terminated_without_outcome',businessStateAtCommit:'outcome_unknown',
+  requestId,evidenceKind,evidenceId,actorKind,actorId,actorProvenance,operationId,fenceBefore,fenceAfter,
+  scheduleDisposition,settledAt,committedAt}`。
   每个字段由 trusted server context/evidence 产生；business state 保持 outcome_unknown，executionOutcome
   不写 succeeded/failed/cancelled。self path 的 `operationId` 固定为
   `op:hex16(sha256('self-terminate-reconcile',callerAgentId,occurrenceId,runId))`，actorKind=self-agent；
@@ -392,7 +394,10 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
   concurrent operator/business settlement first valid commit wins；若 termination-only 已提交后收到 trusted
   late business outcome，可追加 business settlement但不得改写/删除 termination history或触发 admission。
 - `C-046 Receipt and disclosure` — self receipt 从 C-039 已持久字段与 occurrence identity 原样投影，至少含 operationId、caller-derived agentId、jobId、occurrenceId、
-  runId、businessState、terminationKind、fenceBefore/After、scheduleDisposition、committedAt 与 evidenceRef；
+  runId、businessState、terminationKind、fenceBefore/After、scheduleDisposition、committedAt 与 evidenceRef。
+  canonical aliases 冻结为 `businessState=businessStateAtCommit`、`terminationKind=kind`、
+  `evidenceRef=evidenceId`；response-loss replay 永远读 settlement snapshot，不读可能已被 later business
+  settlement 改成 succeeded/failed 的 current occurrence.state；
   只返回 caller 自有 bounded metadata，不含 prompt、message body、token、credential、raw path、PID 或
   其他 Agent 信息。
 
@@ -484,7 +489,7 @@ caller-visible ownership scope = self only
 | C-043 | byte-hash store before/after every negative disposition | any authoritative byte changes |
 | C-044 | recurring clock advance + one-shot fixture | backlog/retry/new at/admission now |
 | C-045 | concurrent self/operator/late outcome + response loss | duplicate mutation/conflicting receipt/lost history |
-| C-046 | receipt/readback disclosure snapshot | secret/body/path/PID/foreign metadata |
+| C-046 | response loss 后先追加 late business outcome，再回读 receipt；断言与原 receipt byte-equivalent | receipt 随 current state 漂移或泄露 secret/body/path/PID/foreign metadata |
 
 最终 product acceptance 还必须完成 HR fresh Feishu inspect→reconcile→verify；旧 cdfd 只验证
 `restart_lost` negative case，不能作为 positive canary。
