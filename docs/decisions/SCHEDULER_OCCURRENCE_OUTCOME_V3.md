@@ -1,19 +1,26 @@
-# D-007: Scheduler Occurrence / Outcome / Session / Migration Current Decision V2
+# D-009: Scheduler Occurrence / Outcome / Session / Migration Current Decision V3
 
-- 状态: superseded-by-D-009（accepted 2026-08-20；superseded 2026-09-13；历史正文保留）
-- 日期: 2026-08-19
-- 类型: standalone replacement Decision（不是 D-005 amendment）
-- supersedes: D-005 / SCHEDULER_V1（`docs/decisions/SCHEDULER_V1.md`；acceptance 时正式激活，D-005 已同步标记 superseded）
-- superseded_by: D-009 / SCHEDULER_OCCURRENCE_OUTCOME_V3
-- Governing Spec: `docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md`（accepted）
-- Product dependency: D-006 `AGENT_WORKSPACE_SESSION_MODEL_V2.md`（accepted）
-- Evidence: `OPENCLAW_TO_AGENT_CORE_SCHEDULED_WORK_MIGRATION_AUDIT_V1 = PASS`
+- 状态: accepted（2026-09-13；Current Scheduler Authority）
+- 日期: 2026-09-13
+- 类型: standalone replacement Decision（不是 D-007 amendment）
+- supersedes: D-007 / SCHEDULER_OCCURRENCE_OUTCOME_V2（activated 2026-09-13）
+- Governing Program: `docs/specs/AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1.md`（accepted）
+- Future implementation Spec: `docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V3.md`（not yet authored）
+- Product dependency: D-008 `AGENT_WORKSPACE_SESSION_MODEL_V3.md`（accepted）
+- Evidence: `docs/investigations/AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1_CENSUS.md`
 - 本轮范围: Decision / Spec text only；无 implementation、production jobs、missed-run replay、Scheduler store mutation、deployment 或 merge。
-- Acceptance provenance: accepted_reviewed_head = 3776b1929a05d0e8c81a6cacde576b39a5151017；AGENT_CORE_HARDENING_PROGRAM_V1_PR11_AMENDMENT_FOCUSED_RE_REVIEW = PASS（REQUIRED_FIXES = NONE；VERDICT = READY_TO_ACCEPT_AND_MERGE_PR11_SPEC_SET）；accepted 2026-08-20。
+- Implementation authority: none; Decision acceptance does not authorize code or production apply.
+- Acceptance provenance: independently reviewed exact semantic candidate
+  `1b41d76fc445846d2a65b5641d10fece79a1d506` = PASS; blocker union empty; authorized Owner acceptance
+  transaction 2026-09-13.
 
-> **Authority rule:** D-005 在本 Decision accepted 前继续是 Current Authority。本文件为 proposed，不提前覆盖 D-005。接受时必须原子完成 `D-007 -> accepted`、`D-005 -> superseded-by-D-007`、双向 backlink 与 Decision index 更新。
+> **Authority transition:** 2026-09-13 acceptance transaction 已原子完成 `D-009 -> accepted/current`、
+> `D-007 -> superseded-by-D-009`、双向 backlink 与 Decision index 更新。D-005 继续保持其既有
+> `superseded-by-D-007` 历史状态，不重写历史。
 >
-> **Standalone completeness rule:** D-007 接受后，未来 Agent 只读 D-007 即可得到 Scheduler 的完整 Current Truth；不得要求读者再从 D-005、当前代码或旧迁移脚本中补齐 Job schema、调度计算、持久化、控制面或结果写回语义。
+> **Standalone completeness rule:** D-009 接受后，未来 Agent 只读 D-009 即可得到 Scheduler 的完整
+> Current Truth；不得要求读者再从 D-007、D-005、当前代码或旧迁移脚本中补齐 Job schema、调度
+> 计算、持久化、控制面或结果写回语义。
 
 ---
 
@@ -38,6 +45,14 @@ timeout without proven termination
 → execution fence
 → no automatic retry / no further same-job admission until resolved
 
+trusted exact termination without business outcome
+→ state remains outcome_unknown
+→ terminationSettlement = terminated_without_outcome
+→ old execution cannot continue
+→ execution fence released
+→ business side effect remains UNKNOWN
+→ no automatic retry; next future natural occurrence may be admitted
+
 ordinary proven failure
 → may create a NEW retry occurrence under explicit policy
 
@@ -50,31 +65,33 @@ OpenClaw migration
 
 ---
 
-## 1. 为什么必须取代 D-005，而不是 amendment
+## 1. 为什么必须取代 D-007，而不是 amendment
 
-D-005 已 accepted，并冻结了 Job 模型、调度计算、持久化、控制面、执行状态、retry、catch-up 与 Session 策略。新的 evidence 与 Owner rulings 改变的是整体 normative execution model，而不只是增加一个 timeout 注释：
+D-007 已 accepted，并冻结了 Job 模型、调度计算、持久化、控制面、执行状态、retry、catch-up、
+fence 与 Session 策略。新的 evidence 与 Owner rulings 改变的是 `outcome_unknown` 与 execution
+fence 的长期 normative meaning，而不只是增加一个 model-facing 工具：
 
 ```text
-execution identity: job-level -> occurrence-level
-timeout result: error -> outcome_unknown
-retry identity: same execution slot -> new occurrence
-session scope: per-job -> per-occurrence
-migration: legacy catch-up -> no catch-up
-execution ownership: runningAtMs -> durable occurrence reservation
+business outcome uncertainty: remains outcome_unknown
+execution-live risk: may become proven terminated independently
+fence projection: unknown-and-unproven -> active; unknown-but-terminated -> inactive
+reconciliation authority: operator outcome settlement + exact caller-owned termination-only settlement
+automatic retry: remains forbidden
 ```
 
-在 D-005 stable ID 下直接改写，会破坏 accepted Decision immutability，也会迫使未来 Agent 人工判断哪些旧句子仍有效。
+在 D-007 stable ID 下直接改写，会破坏 accepted Decision immutability，也会迫使未来 Agent 人工判断
+哪些旧句子仍有效。
 
 因此：
 
 ```text
-D005_DISPOSITION = SUPERSEDE
-D007_IS_COMPLETE_STANDALONE_CURRENT_DECISION = YES
-PARTIAL_MANUAL_MERGE_WITH_D005_REQUIRED = NO
-DIRECT_NORMATIVE_REWRITE_UNDER_D005 = FORBIDDEN
+D007_DISPOSITION = SUPERSEDE_ON_D009_ACCEPTANCE
+D009_IS_COMPLETE_STANDALONE_CURRENT_DECISION = YES
+PARTIAL_MANUAL_MERGE_WITH_D007_REQUIRED = NO
+DIRECT_NORMATIVE_REWRITE_UNDER_D007 = FORBIDDEN
 ```
 
-D-007 必须逐项重述或明确处置 D-005 的全部 normative clauses。某条旧语义只有三种合法 disposition：
+D-009 必须逐项重述或明确处置 D-007 的全部 normative clauses。某条旧语义只有三种合法 disposition：
 
 ```text
 PRESERVE
@@ -88,41 +105,41 @@ DEFER_TO_IMPLEMENTATION_DETAIL
 
 ## 2. Authority Transition
 
-### 2.1 Proposed 阶段
+### 2.1 Pre-acceptance state（historical）
 
 ```text
-D005_STATUS = accepted / Current Authority
-D007_STATUS = proposed / no implementation authority
+D007_STATUS = accepted / Current Scheduler Authority
+D009_STATUS = proposed / no implementation authority
 ```
 
-本 proposed Decision 不授权代码、迁移、生产 job 创建或 store 修改。
+该 proposed 阶段不授权代码、迁移、生产 job 创建或 store 修改。
 
-### 2.2 Acceptance transaction
+### 2.2 Acceptance transaction（completed 2026-09-13）
 
-独立 review PASS 后，由 authorized owner / maintainer 在同一次 docs-only transaction 中完成：
+独立 exact-head review PASS 后，由 authorized owner / maintainer 在同一次 docs-only transaction 中完成：
 
 ```text
-D007_STATUS: proposed -> accepted
-D005_STATUS: accepted -> superseded-by-D-007
-D005_REPLACED_BY = D-007
-D007_SUPERSEDES = D-005
-Decision index = D-007 current, D-005 superseded
+D009_STATUS: proposed -> accepted/current
+D007_STATUS: accepted/current -> superseded-by-D-009
+D007_REPLACED_BY = D-009
+D009_SUPERSEDES = D-007
+Decision index = D-009 current, D-007 superseded, D-005 historical state unchanged
 mutual backlinks = present
 ```
 
 不允许出现：
 
 ```text
-D-007 accepted
+D-009 accepted
 AND
-D-005 仍被标为 parallel accepted Current Authority
+D-007 仍被标为 parallel accepted Current Scheduler Authority
 ```
 
 ---
 
 ## 3. Job Definition Model（完整 Current Truth）
 
-Job 是长期 schedule definition，不是某一次执行，也不直接代表“正在运行”。D-007 接受后，Scheduler Job definition 的 normative 真子集为：
+Job 是长期 schedule definition，不是某一次执行，也不直接代表“正在运行”。D-009 接受后，Scheduler Job definition 的 normative 真子集为：
 
 ```text
 Job {
@@ -200,7 +217,7 @@ LEGACY_SESSION_KEY_FIELD = REPLACED
 NEW_JOB_SESSION_SELECTION_FIELDS = NONE
 ```
 
-旧定义中的这些字段只能作为 migration input 被报告；未来 importer 必须 strip，并按 D-006 统一执行 fresh non-main Session。含 `main` 或显式稳定 Session 意图的旧 Job 不得静默恢复，必须保持 disabled/blocked，直到 migration review确认其新语义。
+旧定义中的这些字段只能作为 migration input 被报告；未来 importer 必须 strip，并按 D-008 统一执行 fresh non-main Session。含 `main` 或显式稳定 Session 意图的旧 Job 不得静默恢复，必须保持 disabled/blocked，直到 migration review确认其新语义。
 
 ### 3.3 Legacy field normalization / rejection
 
@@ -356,7 +373,8 @@ Exact run 有可信 terminal success。
 
 ### outcome_unknown
 
-无法证明 exact run succeeded、failed 或 terminated。典型原因：
+无法证明 exact run succeeded 或 failed。它必须继续保存“业务结果未知”事实；execution 是否仍
+可能继续由独立的 termination settlement 表达。典型来源：
 
 - execution timeout；
 - process / pipe crash；
@@ -365,6 +383,23 @@ Exact run 有可信 terminal success。
 - cancel request sent，但没有 termination acknowledgment；
 - terminal callback 丢失；
 - 无法把 process exit精确归因到该 turn 的终止。
+
+`outcome_unknown` 有两个合法 execution-risk 子态：
+
+```text
+terminationSettlement absent
+→ old execution may still continue
+→ same-job execution fence active
+
+terminationSettlement.kind = terminated_without_outcome
+→ trusted evidence proves old execution cannot continue
+→ same-job execution fence inactive
+→ business outcome and side effects remain UNKNOWN
+```
+
+`terminationSettlement` 不是 `executionOutcome`，不得被投影为 succeeded、failed、cancelled、
+not_started 或 zero side effects。它至少绑定 exact `(jobId, occurrenceId, runId, requestId)`、trusted
+evidence source、evidence record identity、settled timestamp 与 caller/operation provenance。
 
 ### 6.1 State transitions
 
@@ -384,6 +419,8 @@ running
 
 outcome_unknown
   -> succeeded | failed   # trusted late settlement / reconciliation only
+  -> outcome_unknown + terminationSettlement=terminated_without_outcome
+                         # trusted exact termination proof; business outcome unchanged
   -> NEVER admitted again
 ```
 
@@ -394,6 +431,8 @@ outcome_unknown -> admitted
 runningAt stale -> clear -> re-admit same occurrence
 same occurrence -> second runId
 same occurrence -> second Router admission
+termination-only settlement -> succeeded | failed inference
+termination-only settlement -> retry of the old occurrence
 ```
 
 ---
@@ -429,7 +468,9 @@ not stale or otherwise blocked by migration policy
 - succeeded + `deleteAfterRun=true`：可删除 Job definition，但 occurrence evidence继续存在；
 - succeeded + keep：Job disabled；
 - ordinary failed：只有显式 retry policy允许时创建新的 retry occurrence；
-- outcome_unknown：Job fenced；
+- outcome_unknown 且 termination 未证明：Job fenced；
+- outcome_unknown 且 `terminated_without_outcome`：原 nominal occurrence 已耗尽且不得 re-admit；
+  definition 置为 disabled、保留全部 unknown/termination evidence，不删除、不创建 retry 或新的 at；
 - migration/restore 时已过去的 stale at = DO_NOT_IMPORT，不转成立即执行。
 
 ### 7.4 Every next occurrence
@@ -511,10 +552,24 @@ same job later occurrence admission = held
 
 该 Job 进入 execution fence，直到：
 
-- trusted late settlement / termination evidence resolve；或
-- authorized operator 做显式 reconciliation。
+- trusted late outcome settlement 把 occurrence 解析为 `succeeded|failed`；或
+- trusted exact termination evidence 追加 `terminated_without_outcome` settlement；或
+- authorized operator 做带可信 outcome/termination evidence 的显式 reconciliation。
 
 被 fence 期间产生的自然 schedule slots不自动积压补跑；解除 fence 后从下一个 future natural occurrence继续，除非新的 accepted policy 明确允许其他行为。
+
+Fence 是 execution-live 风险投影，不是 business-outcome 投影：
+
+```text
+FENCE_ACTIVE = EXISTS occurrence WHERE
+  state = outcome_unknown
+  AND lateSettlement absent
+  AND terminationSettlement absent
+```
+
+因此 `outcome_unknown + terminated_without_outcome` 保留未知历史但不继续阻止未来 natural
+occurrence。解除 fence 不创建 retry/catchup occurrence，不立即执行 job，也不改变旧 occurrence
+的 at-most-once identity。
 
 ### 8.4 Late settlement
 
@@ -524,9 +579,25 @@ same job later occurrence admission = held
 
 ```text
 outcome_unknown -> succeeded | failed
+outcome_unknown -> outcome_unknown + terminated_without_outcome
 ```
 
-但 timeout/unknown history仍须可审计。状态解析不是 retry。
+前者需要可信业务 outcome evidence；后者只需要可信 exact termination evidence。两者都必须追加
+历史且幂等，不能覆盖 timeout/unknown history。状态/termination 解析都不是 retry。若 termination-only
+之后迟到可信 outcome 到达，仍允许同一 occurrence 追加 outcome settlement 并转为
+`succeeded|failed`；不得重新激活旧 occurrence。
+
+### 8.5 Caller-owned termination-only reconciliation
+
+允许一个 Agent 通过 trusted Parent/Broker identity 对自己拥有的 exact job/occurrence/run 消费
+Router termination evidence。服务器必须从 caller 与 Scheduler occurrence 派生 request/correlation
+identity；模型不得提供 principal、agent、requestId、Router handle、PID、结果选择、evidence 文本、
+payload、retry 或 force。
+
+只有当前 runtime epoch 中 exact correlation 得到 `terminated_without_outcome`，且 job owner、
+occurrence、run、request、Router caller 全部一致、Scheduler 仍是无冲突的 fenced
+`outcome_unknown` 时，才允许原子追加 termination settlement 并重建 fence。`pending`、
+`restart_lost`、`evicted`、`never_existed`、mismatch、conflict 或 missing evidence 全部零写入。
 
 ---
 
@@ -549,13 +620,18 @@ retryOfOccurrenceId = previous occurrenceId
 - succeeded + `deleteAfterRun=true`：可删除 Job definition；occurrence evidence保留；
 - succeeded + keep：Job disabled；
 - ordinary failed：按显式 policy创建 retry occurrence，或 disabled；
-- outcome_unknown：不删除为成功，不按普通 failure retry；Job fenced。
+- outcome_unknown 且 termination 未证明：不删除为成功，不按普通 failure retry；Job fenced；
+- outcome_unknown 且 `terminated_without_outcome`：不删除、不自动 retry；旧业务结果仍未知；该
+  one-shot nominal occurrence 已耗尽，definition 在同一 authoritative reconciliation transaction
+  中置为 disabled，且不得创建新的 at occurrence。
 
 ### 9.2 Recurring completion
 
 - succeeded：按 §7安排下一 natural occurrence；
 - ordinary failed：按 §7.5 产生新的 recovery/retry occurrence；
-- outcome_unknown：fence same Job，后续 natural occurrence暂不 admission。
+- outcome_unknown 且 termination 未证明：fence same Job，后续 natural occurrence暂不 admission；
+- outcome_unknown 且 `terminated_without_outcome`：无 execution fence，后续只从下一个 future
+  natural occurrence 开始；不补 fenced 期间 slots、不自动 retry。
 
 ---
 
@@ -566,7 +642,7 @@ retryOfOccurrenceId = previous occurrenceId
 D-005 的精确 commitment继续成立：
 
 ```text
-jobs.json = { version, jobs }
+jobs.json = { version, jobs, occurrences, fences }
 write temp
 -> file fsync
 -> close
@@ -580,18 +656,33 @@ write temp
 - write失败不更新 caller RAM/cache；
 - 不引入 Redis、Kafka、distributed transaction、leader election或 K8s CronJob。
 
-D-007 不使用“atomic JSON or equivalent”来静默放宽 `jobs.json`。若未来要替换 Job definition store，必须有新的 accepted Decision。
+D-009 不使用“atomic JSON or equivalent”来静默放宽 `jobs.json`。若未来要替换 Job definition store，必须有新的 accepted Decision。
 
-### 10.2 Occurrence authority store — NEW, layout deferred explicitly
+### 10.2 Occurrence authority store — PRESERVE + EXTEND
 
-D-007 新增 durable occurrence authority。它必须持久保存 identity、payloadHash、state、timestamps、fence、late settlement 与 terminal evidence reference。
+D-009 保留 durable occurrence authority。它必须持久保存 identity、payloadHash、state、timestamps、
+fence、late settlement、termination settlement 与 terminal evidence reference。
 
-本 Decision**不冻结具体文件拆分**；implementation Spec必须在改代码前明确二选一并通过 review：
+现行 `SCHEDULER_TIMEOUT_OUTCOME_V2` 已选择扩展同一 versioned Scheduler state document。加入
+`terminationSettlement` 会改变 fence rebuild meaning，因此不是可由 v2 reader 安全忽略的 additive
+字段：V3 implementation Spec 必须完整重述该单一文档/单一 lock 布局，并冻结 store version
+`2 → 3` 的原子升级。不得借本次变化选择第二个 store 或 shadow reconciliation database。
 
-1. 扩展同一版本化 Scheduler state document，分开 `jobs` 与 `occurrences`；或
-2. 新增独立 versioned occurrence document/store。
+Compatibility / rollback invariant：
 
-无论选哪种：
+```text
+V2_READER_OR_WRITER_ON_VERSION_3 = FAIL_LOUD
+VERSION_3_UPGRADE = STOP_DRAIN + SINGLE_WRITER + LOCKED_LATEST_READ + ATOMIC_COMMIT
+VERSION_3_TERMINATION_SETTLEMENT_COMMITTED = DOWNGRADE_TO_V2_FORBIDDEN
+ROLLBACK_CODE_AFTER_V3_EVIDENCE = V3_AWARE_FORWARD_FIX_ONLY
+```
+
+部署 rollback 只有在 readback 证明尚未提交任何 version-3 document/evidence 时，才可恢复 v2
+代码；一旦任何 `terminationSettlement` 已提交，旧代码会丢失或重新 fence 该 authority，故不得降级。
+V3 implementation Spec 必须冻结 migration receipt、preimage、postimage、旧 reader/writer 拒绝测试、
+crash boundaries 与 forward-fix runbook；不得把未知 version 当空 store或自动 strip 新字段。
+
+继续要求：
 
 ```text
 same cross-process mutation authority
@@ -599,6 +690,8 @@ same re-read-latest discipline
 fsync + atomic commit
 fail loud
 occurrence state and Job definition cannot be torn into an unsafe admission view
+termination settlement and fence rebuild commit atomically
+version 3 unknown to old code fails loud rather than reinterpreting authority
 ```
 
 `runs.jsonl`不能作为唯一 occurrence authority。
@@ -662,6 +755,8 @@ reserve后、Router call前 crash：recovery保守标记 `outcome_unknown` / fen
 - invocation / model turn / delivery发生在 store lock之外；
 - start evidence到达后，按 `(occurrenceId, runId)` 在锁内把 latest occurrence从 admitted推进到 running；
 - terminal/unknown outcome也按 `(occurrenceId, runId)`写回 latest store；
+- termination-only reconciliation 也按 `(occurrenceId, runId)` compare-before-write，并在同一次
+  atomic commit 中追加 settlement、history 与重建 fence；
 - result不得只按旧 Job object或 `jobId`覆盖 whole-store snapshot；
 - concurrent Job update/disable/delete不得被 late completion回滚；
 - Job已删除时，occurrence terminal evidence仍必须持久，且不得复活 Job；
@@ -688,6 +783,7 @@ occurrence reserved
 Router admission attempted/accepted/unknown
 turn start evidence
 terminal/unknown outcome
+termination-only settlement or rejection blocker
 delivery outcome
 late settlement/reconcile
 ```
@@ -712,9 +808,14 @@ deleteJob
 listJobs
 getJob
 readRun/OccurrenceEvidence
+selfStatus
+selfReconcileTerminatedTurn
 ```
 
-精确 JavaScript module shape可以由 implementation Spec调整，但不得删除这些已接受的 operator/control semantics而不做新的 authority变更。
+前九项是既有 Scheduler domain/control semantics。后两项是 V3 新授权的 caller-scoped product
+semantics：`selfStatus` 只返回 trusted caller 自己的 bounded projection；
+`selfReconcileTerminatedTurn` 只消费 §8.5 的 exact trusted evidence。精确 JavaScript module shape
+由未来 implementation Spec 冻结。不得删除既有 operator/control semantics。
 
 ### 12.2 CLI surface — PRESERVE
 
@@ -736,6 +837,8 @@ CLI = control-only：
 - 不运行 startup catch-up；
 - write操作必须走同一 mutation protocol；
 - `runs`未来必须能展示 occurrenceId/runId/outcome_unknown与 fence evidence，而不是只展示 job-level status。
+- operator reconcile 继续保留；其 outcome settlement 与 caller-owned termination-only settlement
+  必须共用同一 Scheduler mutation/state/fence semantics。
 
 ### 12.3 Create / update rules
 
@@ -743,6 +846,7 @@ CLI = control-only：
 - update必须保留 stable jobId，并在 schedule/payload/target/retry语义变化时增加 scheduleRevision；
 - disable阻止未来 occurrence mint，但不删除已有 occurrence evidence；
 - enable只恢复未来 schedule eligibility，不清除 unknown fence、不补跑 migration history；
+- 只有 §8.4/§8.5 的 trusted settlement 可以改变 unknown 对应的 fence projection；
 - delete不删除 occurrence/run evidence；
 - control operation不得自己执行 Job。
 
@@ -758,11 +862,26 @@ model fallback
 
 它们不能作为 production restore gate已通过的依据。
 
+### 12.5 Caller-scoped self operations boundary
+
+Model-visible self operations may disclose only the trusted caller's canonical Agent identity, current runtime
+generation/health summary, owned Scheduler definitions, owned occurrences/fences, and exact Router
+reconciliation disposition needed to explain or repair those owned records. Subject identity is derived by the
+Parent trusted identity seam and is not an input field.
+
+The self surface may not return secrets, raw environment, arbitrary filesystem paths, foreign Agent/job/session
+data, payload/message bodies, credential material, or unrestricted process metadata. It may not mutate Auth,
+Grants, principals, other Agents, job payload/schedule semantics, business outcomes, or runtime processes.
+
+V3 does not authorize `trigger_once`, synchronous self runtime reload, cancellation, kill, raw store/fence
+mutation, run-as/OBO, or a second Scheduler authority. Existing `enable` does not clear a fence; existing
+`disable` does not settle an occurrence.
+
 ---
 
 ## 13. Runtime Restart Policy
 
-D-007 区分 Agent Core native runtime restart与 OpenClaw migration。
+D-009 区分 Agent Core native runtime restart与 OpenClaw migration。
 
 ### 13.1 Native Agent Core runtime restart
 
@@ -770,6 +889,10 @@ D-007 区分 Agent Core native runtime restart与 OpenClaw migration。
 
 - terminal → 不重放；
 - admitted/running且无 termination proof → `outcome_unknown` + Job fence；
+- restart 前未被持久消费的 process exit 或 Router in-memory handle 不自动升级为 termination proof；
+  若 exact handle 在新 epoch 不可解析，caller self reconcile 返回 `restart_lost`、零写入；
+- 只有已经进入 Scheduler authority 的 trusted termination settlement 可在 restart 后继续使 fence
+  保持 inactive；
 - same occurrence never re-admit。
 
 停机期间完全没有 occurrence record的 schedule slots：
@@ -792,7 +915,7 @@ MIGRATION_CATCH_UP_POLICY = NO_CATCH_UP
 
 ---
 
-## 14. Scheduled Session Model（D-006）
+## 14. Scheduled Session Model（D-008）
 
 ```text
 SCHEDULED_SESSION_SCOPE = PER_OCCURRENCE
@@ -820,7 +943,7 @@ agent:<agentId>:cron:<jobId>
 
 具体 native Session ID是 implementation detail；可由 occurrenceId派生或 mint，并写入 occurrence evidence。该记录不是 Session Mapping DB。
 
-Non-main trajectory不 merge回 main；跨 execution continuity来自 Workspace、MEMORY.md、files与显式结果，符合 D-006。
+Non-main trajectory不 merge回 main；跨 execution continuity来自 Workspace、MEMORY.md、files与显式结果，符合 D-008。
 
 ---
 
@@ -939,8 +1062,10 @@ DAEMON_JOBS = OUT_OF_SCHEDULER
 在以下全部完成前：
 
 ```text
-SCHEDULER_TIMEOUT_OUTCOME_V1 = accepted
-D-007 = accepted
+AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1 = accepted and merged
+D-009 = accepted
+SCHEDULER_TIMEOUT_OUTCOME_V3 = accepted and merged
+AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3 = accepted and merged
 Scheduler implementation review = PASS
 occurrence / idempotency / unknown fault tests = PASS
 migration prerequisites = PASS
@@ -961,11 +1086,37 @@ READY_TO_RESTORE_BEFORE_HARDENING = 0
 
 Spec / Decision review本身不创建 production jobs，也不授权 import。
 
+Product implementation may begin only after all three whole-authority successors required by the Program
+are accepted and merged. Production apply remains a separate serialized gate and additionally requires exact
+target/preimage/rollback, pinned artifact bytes, single-writer stop/drain where schema migration applies,
+durable mutation receipt/readback, health and invariant checks, and a fresh real current-epoch canary. Merge,
+unit tests, deployment, health, or a stale incident alone cannot satisfy the Feishu self-repair business gate.
+
 ---
 
-## 17. Complete D-005 Disposition Matrix
+## 17. Complete D-007 and inherited D-005 disposition
 
-| D-005 normative area | D-007 disposition | Complete Current Truth after D-007 acceptance |
+### 17.1 D-007 → D-009 semantic disposition
+
+| D-007 normative area | D-009 disposition | Complete Current Truth after D-009 acceptance |
+|---|---|---|
+| Job schema, scheduling, identity, reserve, at-most-once | PRESERVE + RESTATE | §§3–7 |
+| timeout without termination | PRESERVE | `outcome_unknown` + active same-job fence |
+| `outcome_unknown` means business result unknown | PRESERVE + CLARIFY | unknown remains unknown even after termination proof |
+| fence for every unresolved `outcome_unknown` | REPLACE | fence only while execution termination remains unproven (§8.3) |
+| late outcome settlement | PRESERVE | trusted evidence may resolve to `succeeded|failed` |
+| termination without outcome | NEW | append `terminated_without_outcome`; state remains unknown; fence releases |
+| operator reconcile | PRESERVE + EXTEND | operator and caller-self paths share one settlement authority |
+| caller-owned reconciliation | NEW, NARROW | exact trusted self ownership and current-epoch Router evidence only (§8.5) |
+| retry / future natural occurrence | PRESERVE + CLARIFY | no old occurrence retry; after termination-only, next future natural slot only |
+| occurrence/store atomicity | PRESERVE + EXTEND | termination settlement and fence rebuild commit atomically |
+| store compatibility / rollback | REPLACE + FREEZE | version 2→3; v2 reader/writer fail loud; no downgrade after V3 evidence |
+| scheduled Session | PRESERVE against D-008 | fresh non-main per occurrence, same Agent Workspace |
+| migration/no-catch-up/restore gates | PRESERVE | §§13–16 |
+
+### 17.2 Inherited D-005 disposition matrix
+
+| D-005 normative area | D-009 disposition | Complete Current Truth after D-009 acceptance |
 |---|---|---|
 | Job model = live-field true subset | PRESERVE + RESTATE | §3 完整列出 Job definition schema；execution state移到 occurrence |
 | legacy timeout normalization | PRESERVE + CLARIFY | timeoutSec/timeoutMs/runTimeoutMs -> payload.timeoutSeconds；非法值 fail/report |
@@ -980,11 +1131,11 @@ Spec / Decision review本身不创建 production jobs，也不授权 import。
 | one-shot 30s/60s/5m max 3 | PRESERVE AS OPTIONAL DEFAULT | ordinary proven failure、新 occurrence；非幂等默认 no auto retry |
 | recurring 30s/60s/5m/15m/60m | PRESERVE AS OPTIONAL DEFAULT | 同上 |
 | at success delete/disable | PRESERVE | occurrence evidence保留 |
-| exact jobs.json `{version,jobs}` | PRESERVE EXACT | §10.1；不以“or equivalent”放宽 |
+| exact jobs.json versioned Scheduler document | PRESERVE + EXTEND | §10.1；`jobs/occurrences/fences` 同一原子 authority，不以“or equivalent”放宽 |
 | temp write + fsync + rename | PRESERVE EXACT | §10.1 |
 | fail-loud store | PRESERVE | corrupt/unsupported不当空 store |
 | runs.jsonl append-only bounded 10MB | PRESERVE EXACT AS EVIDENCE | §10.3；非 occurrence authority |
-| occurrence ledger | NEW | §10.2；layout由 implementation Spec明确，语义/原子性已冻结 |
+| occurrence ledger | PRESERVE | §10.2；single versioned Scheduler document；V3 Spec只冻结 compatible schema upgrade |
 | cross-process lock + latest reread | PRESERVE | §11.1 |
 | RAM commit only after persist | PRESERVE | §11.1 |
 | tick single-flight | PRESERVE | instance pass不重叠；durable reserve处理跨重启/进程 |
@@ -1010,7 +1161,8 @@ Spec / Decision review本身不创建 production jobs，也不授权 import。
 | payload.model runtime correctness | DEFER_TO_PREREQUISITE | 字段可存，passthrough/fallback另行验收 |
 | channel:last delivery correctness | DEFER_TO_PREREQUISITE | 不作为本 hardening/restore proof |
 
-以上矩阵与正文共同构成 standalone Current Truth。接受后不需要读取 D-005来决定任何 retained/replaced clause；D-005只保留历史 rationale。
+以上两个矩阵与正文共同构成 standalone Current Truth。接受后不需要读取 D-007 或 D-005 来决定
+任何 retained/replaced clause；两者只保留历史 rationale。
 
 ---
 
@@ -1033,6 +1185,10 @@ fleet job import implementation
 - Session Mapping DB；
 - Router product special cases；
 - DSH Kernel changes。
+- self `trigger_once`；
+- model-facing runtime reload、process cancellation 或 kill；
+- cross-Agent operations、Auth/Grant mutation、run-as/OBO；
+- raw `jobs.json` / fence edits 或 shadow reconciliation store。
 
 ---
 
@@ -1044,14 +1200,17 @@ fleet job import implementation
 - 同一 occurrence不会二次进入 Router；
 - retry / natural next run有独立 identity；
 - crash后宁可 unknown，不冒险重复副作用；
-- scheduled sessions符合 D-006；
+- scheduled sessions符合 D-008；
+- trusted termination 可在不伪造业务 outcome 的前提下释放 execution fence；
+- caller 只能对自己的 exact current-epoch evidence 执行 termination-only reconciliation；
 - D-005全部 retained/replaced semantics可从一份 Current Decision读取；
 - OpenClaw migration不会突然补跑 94 次历史任务；
 - exact jobs.json、runs.jsonl、import guard与控制面承诺没有被静默丢失。
 
 ### Cost
 
-- outcome_unknown可能 fence一个 Job直到 evidence/operator reconcile；
+- outcome_unknown 且 termination 未证明时仍会 fence Job；
+- restart-lost/evicted evidence 不能 self reconcile，可能仍需 authorized operator 或新自然证据；
 - reserve-before-admission crash可能保守漏掉一次执行；
 - 需要 durable occurrence ledger与 schema change；
 - implementation Spec必须冻结 occurrence store layout；
@@ -1068,9 +1227,9 @@ over duplicated unknown external side effects
 
 ## 20. Acceptance Conditions
 
-D-007 可 accepted 的条件：
+D-009 可 accepted 的条件：
 
-1. `SCHEDULER_TIMEOUT_OUTCOME_V1` independent review PASS；
+1. accepted Program 的两个 Owner ruling 均为 YES；
 2. Job definition true subset已完整重述；
 3. legacy field normalize/drop/block规则已完整处置；
 4. due、cron/at/every next、refire gap与 ordinary backoff公式明确；
@@ -1081,27 +1240,29 @@ D-007 可 accepted 的条件：
 9. existing-store import guard与 in-flight strip/report disposition完整；
 10. timeout / failed / unknown类型清楚；
 11. occurrence identity与 at-most-once admission清楚；
-12. unknown execution fence清楚；
+12. unknown business outcome 与 execution termination/fence 分离清楚；
 13. retry = new occurrence；
 14. AbortSignal / termination分离；
-15. D-006 fresh Session per execution一致；
+15. D-008 fresh Session per scheduled execution一致；
 16. migration no-catch-up与 restore gate完整；
-17. §17 matrix覆盖 D-005全部 normative areas，无“其余自己拼旧文档”；
-18. acceptance transaction同时标记 D-005 superseded并更新 backlinks/index；
-19. 无 implementation、production jobs、store mutation或 Kernel change。
+17. §17 matrix覆盖 D-007 以及其继承的 D-005 全部 normative areas，无“其余自己拼旧文档”；
+18. self reconciliation 的正负 evidence matrix 完整，UNKNOWN 永远不等于 ZERO；
+19. store v2→v3、old-reader fail-loud、no-downgrade-after-evidence 与 forward-fix rollback 冻结；
+20. acceptance transaction同时标记 D-007 superseded并更新 backlinks/index，D-005 历史状态不变；
+21. 无 implementation、production jobs、store mutation或 Kernel change。
 
 ---
 
 ## 21. Final Decision Output（accepted）
 
 ```text
-DECISION_ID = D-007
+DECISION_ID = D-009
 DECISION_STATUS = accepted
-D007_IS_COMPLETE_STANDALONE_CURRENT_DECISION = YES
-PARTIAL_MANUAL_MERGE_WITH_D005_REQUIRED = NO
-SUPERSEDES = D-005（activated at acceptance 2026-08-20）
-CURRENT_AUTHORITY_BEFORE_ACCEPTANCE = D-005
-CURRENT_AUTHORITY_AFTER_ACCEPTANCE = D-007
+D009_IS_COMPLETE_STANDALONE_CURRENT_DECISION = YES
+PARTIAL_MANUAL_MERGE_WITH_D007_REQUIRED = NO
+SUPERSEDES_ON_ACCEPTANCE = D-007
+CURRENT_AUTHORITY_BEFORE_ACCEPTANCE = D-007
+CURRENT_AUTHORITY_AFTER_ACCEPTANCE = D-009
 
 JOB_MODEL = EXPLICIT_TRUE_SUBSET_IN_SECTION_3
 LEGACY_FIELD_DISPOSITION = EXPLICIT_NORMALIZE_DROP_OR_BLOCK
@@ -1109,6 +1270,10 @@ DUE_AND_NEXT_CALCULATION = EXPLICIT_IN_SECTION_7
 
 TIMEOUT_OUTCOME = outcome_unknown
 UNKNOWN_EXECUTION_FENCE = SAME_JOB_NO_FURTHER_ADMISSION_UNTIL_RESOLVED
+TERMINATION_ONLY_SETTLEMENT = outcome_unknown+terminated_without_outcome
+TERMINATION_ONLY_BUSINESS_OUTCOME = UNKNOWN
+TERMINATION_ONLY_FENCE = INACTIVE
+SELF_RECONCILIATION_SCOPE = TRUSTED_CALLER_OWNED_EXACT_CURRENT_EPOCH_ONLY
 SAME_OCCURRENCE_ADMISSION = AT_MOST_ONCE
 RETRY_IDENTITY = NEW_OCCURRENCE
 DURABLE_EXECUTION_STATES = admitted,running,succeeded,failed,outcome_unknown
@@ -1116,10 +1281,13 @@ DURABLE_EXECUTION_STATES = admitted,running,succeeded,failed,outcome_unknown
 JOB_DEFINITION_STORE = EXACT_VERSIONED_JOBS_JSON
 JOB_STORE_COMMIT = TEMP_WRITE_FSYNC_ATOMIC_RENAME
 RUN_EVIDENCE = APPEND_ONLY_BOUNDED_RUNS_JSONL_DEFAULT_10MB
-OCCURRENCE_AUTHORITY_STORE = DURABLE_VERSIONED_ATOMIC_LAYOUT_TO_BE_FROZEN_BY_IMPLEMENTATION_SPEC
+OCCURRENCE_AUTHORITY_STORE = SINGLE_VERSIONED_ATOMIC_SCHEDULER_DOCUMENT
+STORE_SCHEMA_UPGRADE = VERSION_2_TO_VERSION_3
+OLD_READER_WRITER_ON_V3 = FAIL_LOUD
+DOWNGRADE_AFTER_V3_EVIDENCE = FORBIDDEN
 LATEST_STATE_WRITEBACK_KEY = occurrenceId,runId
 
-DOMAIN_CONTROL_SURFACE = create,submitOneShot,update,enable,disable,delete,list,get,readEvidence
+DOMAIN_CONTROL_SURFACE = create,submitOneShot,update,enable,disable,delete,list,get,readEvidence,selfStatus,selfReconcileTerminatedTurn
 CLI_CONTROL_SURFACE = add,list,runs,rm,enable,disable
 CLI_EXECUTION = FORBIDDEN
 
@@ -1144,8 +1312,8 @@ PRODUCTION_STATE_CHANGE_THIS_ROUND = NONE
 SCHEDULER_STORE_CHANGE_THIS_ROUND = NONE
 MERGE = NO
 
-ACCEPTED_REVIEWED_HEAD = 3776b1929a05d0e8c81a6cacde576b39a5151017
-FOCUSED_RE_REVIEW = AGENT_CORE_HARDENING_PROGRAM_V1_PR11_AMENDMENT_FOCUSED_RE_REVIEW = PASS
-REQUIRED_FIXES = NONE
-VERDICT = READY_TO_ACCEPT_AND_MERGE_PR11_SPEC_SET
+INDEPENDENT_REVIEW = PASS@1b41d76fc445846d2a65b5641d10fece79a1d506
+READY_FOR_ACCEPTANCE = YES
+IMPLEMENTATION_AUTHORITY = NONE
+NEXT_ACTION = AUTHOR_SCHEDULER_TIMEOUT_OUTCOME_V3
 ```
