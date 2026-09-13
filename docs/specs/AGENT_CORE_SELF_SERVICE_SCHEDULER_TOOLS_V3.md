@@ -1,10 +1,12 @@
 ---
-spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
-status: superseded
+spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
+status: accepted
+date: 2026-09-13
+accepted_date: 2026-09-13
 accepted_by: mayf3
-accepted_at: 2026-09-03
-accepted_reviewed_head: efdd754f0db0b9e7041757ca83246d5695cf83f4
-acceptance_review_verdict: PASS
+accepted_reviewed_head: 23b2332f9c3b4a35511c63dec367f2e5d97c0bdc
+independent_review_result: PASS
+independent_review_blockers: []
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -14,12 +16,14 @@ scope:
   - scheduler
   - production-runtime
   - scheduler-skill
+  - self-ops
   - scripts/agentcore-cron
   - production-canary
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
-  - SCHEDULER_OCCURRENCE_OUTCOME_V2
-  - SCHEDULER_TIMEOUT_OUTCOME_V2
+  - AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1
+  - SCHEDULER_OCCURRENCE_OUTCOME_V3
+  - SCHEDULER_TIMEOUT_OUTCOME_V3
   - AGENT_CORE_SCHEDULER_RUN_HISTORY_V1
   - AGENT_TRUSTED_FLEET_CUTOVER_V1
 external_authorities:
@@ -28,8 +32,8 @@ external_authorities:
     revision: 05fcf4074fe15d7f29ce1ef0f68767fbbebd54de
     relation: constrained_by
 supersedes:
-  - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
-superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
+  - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
+superseded_by: null
 amendments:
   - AMENDMENT_3 (2026-09-11, status: accepted, semantic delta NONE, code-structure
     guardrails delta NONE — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION;
@@ -130,9 +134,270 @@ owners:
   - repository-maintainers
 ---
 
-# AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
+# AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
 
-> Superseded by `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3` on 2026-09-13；本文件保留为历史 authority。
+> **Accepted whole-Spec successor**（2026-09-13；independent review PASS at exact head
+> `23b2332f9c3b4a35511c63dec367f2e5d97c0bdc`）。本文件完整纳入 V2 全部正文与三个 accepted Amendments；
+> §V3 是对冲突 clause 的唯一精确 replacement，并新增独立 `self_ops` capability。
+> Acceptance 仅激活 contracts；production apply authority 仍为 none。
+
+## V3. Normative reading rule
+
+本文件自包含：下方既有 V2 正文与 Amendments 在 V3 中继续具有 normative force，除非被 §V3.1
+逐项列为 `REPLACED`。旧正文中的 V1→V2 acceptance、旧 commit/date、candidate/current-state、
+“V2”自称与 Final Output 是 historical provenance，不是 V3 lifecycle truth。不得用此规则隐式替换
+未枚举的产品语义；critical-job guard、locked-current authorization、admin/audit separation、closed
+schemas、mutation/audit/result、legacy retirement、hot reload、structure closure 全部保留。
+
+### V3.1 Exact replacement set
+
+```text
+REPLACED =
+  Appendix banner and all Goal functional/lifecycle paragraphs (replaced by §1 as edited for V3)
+  Scope non-goal "exposing reconcile to a model or ordinary Agent"
+    (only for new self_ops.reconcile_turn; scheduler action union remains unchanged)
+  DEC-001 / CTR-TOOL-001 "one model-visible tool" exclusivity
+  DEC-005 / CTR-OPS-001 operator-only reconcile exclusivity
+  entire DEC-010 V1-current/V2-proposed atomic acceptance decision
+    (replaced by V3.2 authority transaction and CTR-V3-GOV-001)
+  CTR-AUTH-003 and AMENDMENT_2/3 exact old implementation-path closure
+    (product behavior remains; path closure replaced by CTR-V3-IMPL-001)
+  CTR-MUT-001 final "occurrence/fence/retry unchanged" sentence
+    (replaced only by accepted Timeout V3 and CTR-V3-RECON-001; seven operation mapping preserved)
+  CTR-RESULT-002 post-delete immutable-owner rationale and D-007 reference
+    (replaced by Timeout V3 ownerAgentId plus CTR-V3-STATUS/RECON; inherited scheduler runs still denies deleted)
+  CTR-LEGACY-001 phrase "only scheduler tool"
+    (replaced by exactly scheduler + self_ops; every shell/OpenClaw/raw-store prohibition preserved)
+  entire CTR-GOV-001 V1-to-V2 lifecycle transaction
+  entire ACC-GOV-001 V1/V2 lifecycle transaction
+  ACC-TOOL-001 rows only for one-tool count; ACC-AUTH-002 rows only for old four-file closure
+  ACC-LEGACY-001 "only Scheduler tool path" expectation
+    (replaced by exactly scheduler+self_ops plus identical no-fallback assertions)
+  entire §12 Migration/compatibility/rollback (replaced by CTR-V3-GOV-001 and §V3.4)
+  entire §13 Final Output lifecycle/spec-id rows (replaced by §V3.5)
+
+PRESERVED = every other V2 clause and every Amendment product behavior/test
+  (AMENDMENT_2/3 old exact paths are replaced only because V3 adds new cohesive modules;
+   their <=500, <=20, zero-registry-exception and behavior-preservation rules remain)
+```
+
+若 implementation reviewer 发现未枚举冲突，必须停止并修订本 proposed Spec；不得自行选择优先级。
+
+## V3.2 Authority and decisions
+
+```text
+Program = AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1 (accepted/main)
+Scheduler Decision = D-009 (accepted/main)
+Scheduler implementation semantics = SCHEDULER_TIMEOUT_OUTCOME_V3 (accepted/main)
+Current tool authority until V3 acceptance = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
+Production apply authority = none
+```
+
+V3 acceptance 必须原子执行 V3 proposed→accepted、V2 accepted→superseded、双向 backlink 与 exact-head
+review record。产品实现必须等 V3 accepted+merged；production activation 另需 deployment authority。
+
+Decisions：existing `scheduler` manifest、7-action union、critical guard、admin/audit、mutation/evidence
+semantics 全部保持；不往 scheduler 塞 reconcile。新增且只新增一个 LOCAL `self_ops` manifest，actions
+exactly `status|reconcile_turn`。Parent trusted caller 是唯一 subject；self path zero Auth calls。
+`status` 是 bounded explanation；`reconcile_turn` 只能调用 Timeout V3 termination-only seam。
+`late_completed|late_failed` 在 self operation 中 zero-write，交给既有 authorized late-outcome path。
+trigger_once、runtime reload、kill/cancel、foreign/raw-store/Auth/Grant 继续不存在。
+
+## V3.3 Contracts
+
+### CTR-V3-TOOL-001 — Exact manifests and schemas
+
+Model-visible tools exactly 增加 `self_ops`；禁止注册 per-action aliases 或 `scheduler_reconcile`：
+
+```text
+scheduler  # inherited unchanged
+self_ops   # new LOCAL, infrastructure=true, selector=action
+```
+
+Inputs are closed (`additionalProperties=false`)：
+
+```json
+{"action":"status"}
+{"action":"reconcile_turn","job_id":"...","occurrence_id":"...","run_id":"..."}
+```
+
+第二种四字段 required/non-empty。明确禁止 principal_id、agent_id、target_agent_id、request_id、
+operation_id、router_handle、pid、outcome、result、evidence、note、payload、retry、force、chat/channel/
+destination。Unknown action/field/type 在任何 store/Router/Auth read 前返回 `invalid_arguments`。
+
+### CTR-V3-CTX-001 — Trusted self authorization
+
+Parent gateway 从实际 Router proc/turn context 注入 callerAgentId；child/model self-asserted identity
+无效。`status` 复用 local `scheduler.read:self`，`reconcile_turn` 复用 local
+`scheduler.manage:self`；两者 zero Auth requests，不 mint scope/Grant，不借 manage:any/admin/audit。
+Critical ordinary disable/remove guard 不阻止 termination settlement；one-shot atomic disable 是 canonical
+settlement disposition，不是 guard bypass。
+
+### CTR-V3-STATUS-001 — Bounded status projection
+
+```text
+{ok:true,result:{statusVersion:1,callerAgentId,
+ runtime:{generationId,health:healthy|degraded|unavailable},
+ scheduler:{ownedJobCount,activeFenceCount,unresolvedUnknownCount,
+  reconciliationCandidateCount,blockers:[{jobId,occurrenceId,runId,
+   businessState:outcome_unknown,fenceActive,routerDisposition,
+   selfReconcileEligible,blockerCode}],truncated}}}
+```
+
+`routerDisposition` closed enum = terminated_without_outcome|pending|restart_lost|evicted|never_existed|
+late_completed|late_failed|mismatch|conflict|unsupported。generationId 是 opaque generation token，不是 PID/
+path。只扫描 read-consistent caller-owned latest jobs (`job.agentId=caller`) 及 V3 owner-matched unresolved
+occurrences；legacy/deleted/retargeted/foreign 不披露。blockers 按 admittedAt descending 最多 20；counts 是
+全量 self-visible count，truncated 精确表示截断。Router request correlation server-side 派生，status
+zero write。不返回 name/schedule/payload/message/session/chat/timestamps/evidence text/token/credential/env/
+path/PID/foreign aggregate；细节继续用 scheduler list/runs。
+
+### CTR-V3-RECON-001 — Exact termination-only mutation
+
+Handler 只传 trusted caller 与三个 coordinates 到 Timeout V3 canonical operation。Operation 在同一
+Scheduler lock 内 re-read latest，并验证 job exists、job.id=occurrence.jobId、latest
+job.agentId=caller、V3 occurrence.ownerAgentId=caller、exact run/request/current epoch、unresolved unknown、
+无 conflicting settlement。Deleted/retargeted/legacy/foreign/missing 统一 opaque
+`not_found_or_not_owned`、zero write/no disclosure。
+
+唯一 positive disposition 是 exact current-epoch `terminated_without_outcome`。成功仅追加 Timeout V3
+terminationSettlement/history/immutable receipt；business state 仍 unknown；fence 由全 ledger rebuild。
+同 Job 有另一 unknown 时 fence 保持 active。Recurring 只等 strictly-future natural slot；one-shot 同
+commit disabled；无 backlog/retry/new-at/立即执行。
+
+### CTR-V3-RECON-002 — Result and negative matrix
+
+```text
+{ok:true,result:{disposition:reconciled_terminated_without_outcome,
+ operationId,callerAgentId,jobId,occurrenceId,runId,businessState:outcome_unknown,
+ terminationKind:terminated_without_outcome,fenceBefore,fenceAfter,
+ scheduleDisposition,committedAt,evidenceRef}}
+```
+
+相同 coordinates 重试从 persisted settlement 回 byte-equivalent receipt、zero write。Closed failures：
+
+```text
+invalid_arguments | capability_unavailable | not_found_or_not_owned | not_reconcilable
+termination_not_proven       # pending/restart_lost/evicted/never_existed/unsupported
+correlation_mismatch         # mismatch/conflict
+business_outcome_available   # late_completed/late_failed; self zero-write
+store_conflict | internal_error
+```
+
+除首次 positive commit 外，authoritative store byte-for-byte unchanged；不先写 in-progress。错误不披露
+foreign existence/current owner/requestId/handle/PID/business outcome detail/evidence body。
+
+### CTR-V3-IDEMP-001 — Response-loss and immutable readback
+
+operationId 不是 input；由 Timeout V3 trusted caller+occurrence+run 公式派生并存于 terminationSettlement。
+Commit 后 response loss，相同 coordinates 直接回读。即使之后 trusted business outcome 把 current state
+改成 succeeded/failed，receipt 仍从 businessStateAtCommit/fence/schedule/evidence snapshot byte-equivalent
+返回，不再 mutation。
+
+### CTR-V3-AVAIL-001 — Availability and fail closed
+
+Broker readiness 扩展 self_ops.status/reconcile_turn booleans。缺 Runtime provider、Scheduler V3 store、
+Router seam 或 trusted caller时 `capability_unavailable`。Self zero Auth，不能因 credential missing 隐藏
+read-only status。Tool registered/readiness true 都不等于 production ready。
+
+### CTR-V3-IMPL-001 — Implementation and structure closure
+
+Implementation 只可触及：Broker self_ops manifest/registration/relay tests；Scheduler V3 store/occurrence/
+fence/self-status/reconcile/tests；production-runtime trusted provider/readiness/tests；Scheduler Router现有
+exact query wiring/tests；minimum barrels与 scheduler skill guidance。不得改 Auth/Grant/credential model、
+Workflow domain、Feishu routing或 production jobs。所有 handwritten files≤500 lines、directories≤20；
+不得新增 registry exception。`compose.js` 当前 500 行，禁止直接增长；接线必须先 cohesive extraction，
+使 compose 净减并保持回归行为。实现 preflight 必须冻结 exact paths。
+
+### CTR-V3-INHERIT-001 — Exact inherited-clause replacements
+
+- Appendix `CTR-MUT-001` 的七个 scheduler operation mappings、single JobStore/lock、no direct writer 继续；
+  仅其“occurrence/fence/retry unchanged”改为：只允许 accepted Timeout V3 C001..C046 的 store v3、
+  termination settlement、fence rebuild 与 self reconciliation delta，其他 engine/delivery/session semantics
+  不变。
+- Appendix `CTR-RESULT-002` 的 scheduler self list/runs、admin/audit separation继续；V3-native occurrence
+  带 immutable ownerAgentId。Definition deleted 后 scheduler runs 仍 not-found；self_ops 也 opaque deny，
+  不从 retained evidence 推断 owner。Retarget 后 current/new owner均不能消费旧 owner occurrence。
+- Appendix `CTR-LEGACY-001` 改为 skill 只允许 `scheduler` 与 `self_ops` 两个正式 tool；所有 OpenClaw、
+  shell、CLI fallback、curl、direct-store、Gateway restart禁令逐字继续。
+- Appendix `ACC-LEGACY-001` 对应期望改为工具目录 exactly 含 scheduler+self_ops、无旧六工具、无
+  OpenClaw/shell/CLI/curl/direct-store/Gateway-restart fallback；fixture 缺任一正式 tool 都必须 fail loud。
+- Appendix `CTR-AUTH-003` / Amendment 2/3 的旧 exact four/five-file closure不再约束新 V3 delta；其已实现
+  behavior不得回退。V3 exact path set 必须由 implementation preflight 在 CTR-V3-IMPL-001 logical family
+  内冻结并通过 structure gate，不能借 V3 修改旧 unrelated files。
+
+### CTR-V3-MIG-001 — Source/store activation and rollback
+
+Existing job definitions、occurrences、history与 critical inventory保持；不 import、不 auto-enable、不补跑。
+Runtime rollout先 stop/drain/single-writer，再按 Timeout V3 upgrade V2 store→V3并 readback。若尚未提交
+version-3 document/evidence，可回 exact binary/store preimage；一旦 V3 document/evidence提交，旧 V2
+reader/runtime rollback forbidden，只能 V3-aware forward fix。Self_ops manifest可在保持 V3-aware Runtime
+的前提下 fail-closed隐藏，但不得删除/改写 settlement。Production deployment、Auth/Grant、job mutation、
+disabled-domain enable均不由本 Spec acceptance 授权。
+
+### CTR-V3-GOV-001 — Gates
+
+Independent exact-head review PASS 后才做 lifecycle/backlink-only acceptance。Implementation 必须从 merged
+accepted V3 base 开始，跑 inherited V2 suite/Amendments、Timeout V3 C001..C046与下列 acceptance；merge
+不等于 deployment。Production apply 需新 authority、preimage/rollback、single writer、store upgrade
+receipt/readback、health/invariants和fresh canary。
+
+## V3.4 Acceptance
+
+1. manifests exactly scheduler+self_ops；scheduler 7 actions/regressions unchanged。
+2. closed schemas reject forbidden fields before read；forged identity cannot change caller；self Auth calls=0。
+3. status only owned bounded max20/order/count/truncated；secret/foreign snapshot absent。
+4. exact current-epoch termination persists Timeout V3 settlement and immutable receipt。
+5. pending/restart_lost/evicted/never_existed/unsupported/mismatch/conflict/late_completed/late_failed 对应
+   closed failure且 store byte hash unchanged。
+6. own/foreign/deleted/retargeted/legacy/spoof matrix opaque deny/no disclosure。
+7. two unknowns settle one→fence remains；settle last→release；no backlog/retry。
+8. one-shot disable atomic；recurring future natural only。
+9. response-loss + later business outcome + retry → byte-equivalent receipt/no second mutation。
+10. critical ordinary disable/remove still denied；settlement-driven one-shot disable only in canonical commit。
+11. operator outcome/termination CLI semantics preserved and never exposed through either model tool。
+12. inherited V2 full suite、Amendments T1–T10/T2a/T3a、Timeout V3 suite、structure gate all PASS。
+13. Fresh HR Feishu E2E：status→identify own exact eligible run→reconcile_turn→receipt/status readback→new
+    natural canonical run/session/disposition。Old cdfd restart_lost only negative；disabled domains不 enable，
+    不用 trigger/reload/raw mutation。
+
+```text
+FORGED_IDENTITY
+FOREIGN_DELETED_RETARGETED_LEGACY
+MULTI_UNKNOWN_SETTLE_ONE
+PENDING_RESTART_LOST_EVICTED_NEVER_EXISTED
+LATE_COMPLETED_LATE_FAILED_SELF_ZERO_WRITE
+RESPONSE_LOSS_LATE_OUTCOME_RECEIPT_REPLAY
+ONE_SHOT_ATOMIC_DISABLE
+RECURRING_FUTURE_NATURAL_ONLY
+CRITICAL_GUARD_NON_BYPASS
+SECRET_DISCLOSURE_SNAPSHOT
+STORE_V3_OLD_READER_FAIL_LOUD
+```
+
+## V3.5 Final output
+
+```text
+SPEC_ID = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
+STATUS = accepted
+REPLACES_ON_ACCEPTANCE = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
+SCHEDULER_ACTIONS = create,list,runs,update,enable,disable,remove
+NEW_TOOL = self_ops(status,reconcile_turn)
+SELF_IDENTITY = TRUSTED_PARENT_DERIVED
+SELF_RECONCILE = TERMINATION_ONLY_EXACT_CURRENT_EPOCH
+BUSINESS_OUTCOME_SELECTION = FORBIDDEN
+TRIGGER_ONCE = EXCLUDED
+RUNTIME_RELOAD = EXCLUDED
+FOREIGN_ACCESS = FORBIDDEN
+PRODUCTION_APPLY_AUTHORITY = none
+IMPLEMENTATION_ALLOWED_NOW = AFTER_ACCEPTED_V3_MERGES_TO_MAIN
+INDEPENDENT_SPEC_REVIEW = PASS_AT_23b2332f9c3b4a35511c63dec367f2e5d97c0bdc
+```
+
+## Appendix A — Incorporated V2 authority text and accepted Amendments
+
+> Appendix A is normative under the V3 reading rule except the exact replacement set in §V3.1. Historical
+> lifecycle/current-state/commit labels remain provenance only and do not change V3's proposed status.
 
 > **Accepted whole-Spec successor.** V1 was superseded by V2 through the atomic lifecycle
 > transaction. Rejected child-proposal heads `be1d7f2695af62c7fc058dd65102747655c779a6`
@@ -145,12 +410,20 @@ owners:
 
 ## 1. Goal
 
-Expose one model-visible Agent Core Scheduler tool named `scheduler`. The tool gives an
-Agent a self-scoped control surface for its own Scheduler V2 definitions and occurrence
-evidence, while preserving the existing Scheduler engine, JobStore mutation authority,
-ownership, audit, occurrence, fence, retry, CLI, and operator-only reconcile semantics.
+保留一个 model-visible `scheduler` tool，使 Agent self-manage 自己的 Scheduler definitions/evidence；
+新增一个 LOCAL、model-visible `self_ops` tool，使同一 trusted caller 能：
 
-The tool supports exactly these actions:
+```text
+self_ops(action=status)
+self_ops(action=reconcile_turn, job_id, occurrence_id, run_id)
+```
+
+`status` 只读地解释 caller 自己的 runtime generation/health 与 owned job/occurrence/fence blocker；
+`reconcile_turn` 只消费 exact caller-owned current-epoch Router `terminated_without_outcome` evidence，
+调用 accepted Timeout V3 canonical mutation，保持 business outcome unknown，解除符合条件的 execution
+fence，并返回 immutable receipt。它不能让 caller 选择 outcome/evidence/identity/retry/force。
+
+既有 `scheduler` action union 保持 exactly：
 
 ```text
 create | list | runs | update | enable | disable | remove
@@ -160,10 +433,8 @@ For a Feishu ingress turn, `delivery_target=current_conversation` is resolved on
 Parent Runtime from trusted ingress context to the exact persisted destination. The model
 never supplies, guesses, or derives the chat identifier.
 
-V2 carries forward the complete accepted V1 product authority, including the original
-candidate `4595ed3` provenance, and replaces V1 only through the future atomic transaction in
-`CTR-GOV-001`. While proposed, V2 authorizes no implementation. Its exact four-file semantic
-delta may be published only after accepted V2 is present in `main`.
+V3 carries forward complete accepted V2 product authority与全部 Amendments；只增加上述 self_ops
+surface，并通过未来原子 transaction 替换 V2。While proposed, V3 authorizes no implementation。
 The mapping deliberately tightens V1 at one least-privilege edge: `list(all_agents=true)`
 remains schema-compatible but unavailable because no accepted global job-definition-read
 scope exists. This is normative denial, not a missing implementation or a new scope proposal.
@@ -182,18 +453,23 @@ scope exists. This is normative denial, not a missing implementation or a new sc
 - Scheduler-only skill guidance and fail-loud retirement of OpenClaw cron paths;
 - post-deployment JobStore/tick hot reload without restarting the active canary Runtime generation;
 - one production 15-minute one-shot canary after implementation deployment.
+- one additional Broker LOCAL capability with model-visible `toolName: self_ops`;
+- trusted caller-scoped `status` and exact termination-only `reconcile_turn`;
+- bounded self runtime/job/occurrence/fence/Router disposition readback without secret or foreign disclosure.
 
 ### Non-goals
 
 - changing Scheduler due-time, occurrence, fence, timeout, retry, catch-up, session, or
   delivery execution semantics;
 - introducing another Scheduler Runtime, another Feishu WebSocket, or another store;
-- exposing `reconcile` to a model or ordinary Agent;
+- exposing operator outcome `reconcileOccurrence` through `scheduler`, or allowing an Agent to select outcome;
 - importing historical OpenClaw jobs;
 - allowing a model to provide a caller identity or current chat identifier;
 - replacing the operator CLI or granting an Agent shell/store access;
 - manually editing any Scheduler store;
 - restarting OpenClaw Gateway or using it as an activation mechanism.
+- `trigger_once`, runtime reload, process kill/cancel, sudo/shell bridge, Auth/Grant mutation, run-as/OBO;
+- raw store/fence edits, foreign Agent reads/control, prompt/message body or secret disclosure.
 
 ## 3. Authority and dependencies
 
