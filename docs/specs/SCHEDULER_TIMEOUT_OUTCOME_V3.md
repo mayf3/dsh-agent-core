@@ -238,10 +238,11 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
 
   ```text
   OccurrenceRecord {
-    occurrenceId, jobId, ownerAgentId, scheduleRevision,
+    recordSchemaVersion: 2|3,
+    occurrenceId, jobId, ownerAgentId?, scheduleRevision,
     kind: natural|retry|catchup,
     nominalScheduledAt?, retryOfOccurrenceId?, catchUpOfNominalAt?,
-    runId, idempotencyKey, requestId, payloadHash,
+    runId, idempotencyKey, requestId?, payloadHash,
     state: admitted|running|succeeded|failed|outcome_unknown,
     admittedAt, executionDeadlineAtMs, startedAt?, endedAt?,
     executionOutcome?: succeeded|failed,
@@ -249,17 +250,22 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
     nativeSessionId?,
     lateSettlement?: {resolvedTo:succeeded|failed,resolvedAt,
                       basis:trusted-late-evidence|operator-reconcile,evidenceRef},
-    terminationSettlement?: {kind:terminated_without_outcome,requestId,evidenceKind,
-                             evidenceId,settledAt,reconciledByAgentId,operationId},
+    terminationSettlement?: {kind:terminated_without_outcome,requestId,evidenceKind,evidenceId,
+                             actorKind:self-agent|operator,actorId,actorProvenance,operationId,
+                             fenceBefore,fenceAfter,scheduleDisposition,settledAt,committedAt},
     terminalEvidence?: {kind:pre-start-rejection|turn-terminal|late-settlement|
                              operator-reconcile|termination-only,detailRef},
     history: [{at,from,to,reason}]
   }
   ```
 
-  history append-only；unknown→business terminal 必须同时留 lateSettlement；termination-only 必须同时留
-  terminationSettlement。authority 字段缺失/corrupt/unknown version 必须 fail-loud，不能沿用 corrupt-job
-  warn/drop 行为。
+  V3-native reserve 必须写 `recordSchemaVersion=3`、ownerAgentId 与 requestId，缺失即 fail-loud。
+  V2→V3 migration 只允许把既有 record 标记 `recordSchemaVersion=2`：其历史 authority 字段保持原值，
+  requestId 可在 validation/correlation 时按 V2 invariant 视为 `idempotencyKey`，但不得持久 backfill；
+  ownerAgentId 缺失不得从 current Job 猜测，因此 legacy record 永不符合 caller-self path，只能由 operator
+  或既有 automatic late-outcome seam 处置。其他 authority 字段缺失/corrupt/unknown version 必须
+  fail-loud，不能沿用 corrupt-job warn/drop 行为。history append-only；unknown→business terminal 必须同时
+  留 lateSettlement；termination-only 必须同时留 terminationSettlement。
 - `C-023 Deterministic IDs` — 使用无歧义 canonical encoding：
 
   ```text
@@ -304,7 +310,9 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
   `reconcileOccurrence(occurrenceId,runId,{resolvedTo:succeeded|failed,evidenceNote})` 仅接受 unresolved
   unknown；trusted operator 可写 lateSettlement/history 并在无其他 unresolved unknown 时清 fence。身份
   来自 effective OS user/authenticated principal，body 自报 identity 无效；不重放、不删 history、不自动
-  创建 retry。
+  创建 retry。保留并扩展 termination-evidence 形式：trusted operator 也可不选择 business outcome，
+  对 exact unknown 追加 `terminated_without_outcome`；business state 保持 unknown，使用 C-039 同一 schema，
+  `actorKind=operator`，actorId/provenance 与 operationId 均来自 trusted control context，请求 body 不能伪造。
 - `C-030 Legacy state` — runningAtMs/lastStatus/errors 等只是 derived projection，不能参与 admission、
   no-dup、ownership 或 termination；固定 2h clear-and-rerun 路径禁止。
 - `C-031 Session mint` — admission 为 occurrence mint fresh non-main Session 并仅作 evidence 记录；新
@@ -319,8 +327,9 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
   - `version:1` 或 bare array：stop/drain/single-writer 后在 lock 内读取 latest，创建不覆盖的
     generation-specific V1 backup，写 `{version:3,jobs,occurrences:[],fences:{}}`；逐 job report 并 strip
     `runningAtMs`/legacy execution state，绝不 fabrication occurrence 或 outcome，也不自动 enable/restore。
-  - `version:2`：同一流程创建 V2 backup；jobs、occurrences、history 原样保留，新增字段 absent，不伪造
-    termination；按 V3 rule 重建 fences 后 atomic commit。
+  - `version:2`：同一流程创建 V2 backup；jobs、occurrences 的既有 authority/history 原样保留，仅为每条
+    legacy occurrence 添加 `recordSchemaVersion=2` migration marker；ownerAgentId/requestId 保持 absent，
+    不伪造 termination；按 V3 rule 重建 fences 后 atomic commit。
   - restart recovery：terminal record 不重放；admitted/running 无 proof → unknown+fence；停机期完全无
     record 的 slot，每 Job 每 downtime 至多一个 catchup（最近 eligible missed slot），不得绕过 fence；
     OpenClaw migration 仍是 zero catchup。
@@ -347,12 +356,15 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
 - `C-038 Store v3 exclusivity` — 首次 V3 write 前备份 V2；一旦 version=3 或任何 V3 evidence 存在，
   V2 reader/writer 必须 refuse。不得自动 downgrade；recovery 仅 V3-aware forward fix。
 - `C-039 Termination settlement schema` —
-  `terminationSettlement={kind:'terminated_without_outcome',requestId,evidenceKind,evidenceId,settledAt,
-  reconciledByAgentId,operationId}`。每个字段由 trusted server context/evidence 产生；business state 保持
-  outcome_unknown，executionOutcome 不写 succeeded/failed/cancelled。`operationId` 固定为
-  `op:hex16(sha256('self-terminate-reconcile',callerAgentId,occurrenceId,runId))`，使用 C-023 同一无歧义
-  encoding；caller 不输入 nonce/operationId。settlement 自身就是 canonical receipt authority，不新增
-  `operations` collection；只要 occurrence 保留，receipt 就不得独立 eviction。
+  `terminationSettlement={kind:'terminated_without_outcome',requestId,evidenceKind,evidenceId,actorKind,
+  actorId,actorProvenance,operationId,fenceBefore,fenceAfter,scheduleDisposition,settledAt,committedAt}`。
+  每个字段由 trusted server context/evidence 产生；business state 保持 outcome_unknown，executionOutcome
+  不写 succeeded/failed/cancelled。self path 的 `operationId` 固定为
+  `op:hex16(sha256('self-terminate-reconcile',callerAgentId,occurrenceId,runId))`，actorKind=self-agent；
+  operator path 的 operationId 绑定 trusted control-context request identity，actorKind=operator；两者都不
+  接受 body nonce/identity/operationId。`fenceBefore/After`、`scheduleDisposition` 是 commit 时快照，
+  `settledAt=committedAt` 并冻结为同一 timestamp。settlement 自身就是 canonical receipt authority，不新增
+  operations collection；只要 occurrence 保留，receipt 不得独立 eviction。
 - `C-040 Exact Router correlation` — self reconcile 只消费 current runtime epoch 对 exact
   `(occurrenceId,runId,requestId)` 返回的 `terminated_without_outcome`。pending/restart_lost/evicted/
   never_existed/mismatch/conflict/unsupported 均不是 proof。`late_completed|late_failed` 是 trusted business
@@ -379,7 +391,7 @@ Contract ID 在 accepted 后不得重编号或复用。C-001..C-037 是 V2 contr
   不同 caller/coordinates 为 corruption/conflict、fail-loud。
   concurrent operator/business settlement first valid commit wins；若 termination-only 已提交后收到 trusted
   late business outcome，可追加 business settlement但不得改写/删除 termination history或触发 admission。
-- `C-046 Receipt and disclosure` — receipt 至少含 operationId、caller-derived agentId、jobId、occurrenceId、
+- `C-046 Receipt and disclosure` — self receipt 从 C-039 已持久字段与 occurrence identity 原样投影，至少含 operationId、caller-derived agentId、jobId、occurrenceId、
   runId、businessState、terminationKind、fenceBefore/After、scheduleDisposition、committedAt 与 evidenceRef；
   只返回 caller 自有 bounded metadata，不含 prompt、message body、token、credential、raw path、PID 或
   其他 Agent 信息。
@@ -448,14 +460,14 @@ caller-visible ownership scope = self only
 | C-019 | pre-gate production restore attempt refused | gate 前 production restore |
 | C-020 | static authority/backlink audit | 并行 current Decision/spec |
 | C-021 | concurrent writers + corrupt/unknown document | torn write/second authority/empty fallback |
-| C-022 | full record/schema round-trip incl termination field | corrupt authority 被 drop |
+| C-022 | V3-native required fields + V2 legacy marker/request alias/self-deny matrix | legacy 被猜 owner 或 corrupt 被 drop |
 | C-023 | restart determinism/collision/natural-catchup/retry-chain matrix | unstable ID/silent collision/bad predecessor |
 | C-024 | canonicalJSON vectors + same-key different-hash fault | mismatch 被接受 |
 | C-025 | persisted default/explicit deadline + restart | restart 延期或 default≠3600s |
 | C-026 | concurrent due+disable+fence under one lock | partial/double reserve |
 | C-027 | late result concurrent with update/delete/disable | overwrite mutation/revive job |
 | C-028 | delete projection then rebuild；two unknowns settle only one | result differs or fence prematurely clears |
-| C-029 | operator outcome reconcile + body identity spoof | untrusted identity/record erase/replay |
+| C-029 | operator outcome and termination-only reconcile + body identity spoof | untrusted identity/outcome fabrication/replay |
 | C-030 | delete derived state + 2h passage | admission depends on legacy state |
 | C-031 | legacy session fields ignored/stripped | admission reads stable session field |
 | C-032 | 9 domain ops + 6 CLI commands inventory/runtime test | missing op/CLI executes jobs |
@@ -465,7 +477,7 @@ caller-visible ownership scope = self only
 | C-036 | implementation PR authority/base/scope audit | missing prerequisite/mixed child scope |
 | C-037 | implementation CI attempts production mutation | create/enable/reconcile succeeds |
 | C-038 | V3 document opened by V2 reader/writer; post-commit rollback | old code accepts/downgrade succeeds |
-| C-039 | schema/derivation vectors and business-state readback | caller field accepted/outcome changed |
+| C-039 | full persisted receipt snapshot/derivation vectors and business-state readback | field missing/caller field accepted/outcome changed |
 | C-040 | exact current-epoch termination positive；all dispositions table | non-exact settles；late outcome self-writes |
 | C-041 | own/foreign/deleted/retargeted/spoof matrix | disclosure or non-current ownership mutation |
 | C-042 | crash before/after atomic commit incl one-shot | settlement/fence/disable torn |
@@ -492,6 +504,7 @@ LATE_COMPLETED_SELF_ZERO_WRITE
 LATE_FAILED_SELF_ZERO_WRITE
 CONCURRENT_SELF_RECONCILE
 CONCURRENT_OPERATOR_RECONCILE
+OPERATOR_TERMINATION_ONLY_SETTLEMENT
 TWO_UNRESOLVED_UNKNOWNS_SETTLE_ONE_FENCE_REMAINS
 LATE_BUSINESS_OUTCOME_AFTER_TERMINATION_SETTLEMENT
 RESPONSE_LOST_AFTER_COMMIT_IDEMPOTENT_RECEIPT
