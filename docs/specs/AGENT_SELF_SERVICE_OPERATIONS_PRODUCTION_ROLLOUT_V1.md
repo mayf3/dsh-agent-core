@@ -497,14 +497,21 @@ Workflow instance transition under this Spec. Active draining requires its own a
 ### ACC-ROL-004 — Runtime and security
 
 - Contracts: CTR-ROL-004, CTR-ROL-005, CTR-ROL-007.
-- Method: trusted binding readback, process/session/store lineage census, loaded-file hashes, catalog/status
-  calls, and closed negative security probes.
-- Environment: exact target runtime before/after the one authorized apply; probes use test-owned coordinates.
-- Required evidence: Feishu→connector→Runtime→store→HR chain, one PID/generation/writer, health, exact catalog,
-  server-derived caller, opaque foreign denials, and secret-output scan.
-- Expected result: HR's exact lineage exposes only the intended self surface with every forbidden bridge absent.
+- Method: two ordered phases under one acceptance item. The pre-apply gate performs trusted binding readback and
+  process/session/store lineage census. Only after ACC-ROL-006 has passed may the separately authorized apply
+  occur; the post-apply verification then performs loaded-file hash readback, catalog/status calls, and closed
+  negative security probes.
+- Environment: the pre-apply gate observes the exact target runtime without a production write. The post-apply
+  verification observes that same exact target only after ACC-ROL-006 passes and the one separately authorized
+  apply completes; probes use test-owned coordinates.
+- Required evidence: pre-apply, the exact Feishu→connector→Runtime→store→HR chain and sole-writer/drain facts;
+  post-apply, one new PID/generation/writer, health, exact loaded hashes and catalog, server-derived caller,
+  opaque foreign denials, and secret-output scan.
+- Expected result: before any live apply, target identity and serialization are proved and ACC-ROL-006 is fully
+  closed; after the authorized apply, HR's exact lineage exposes only the intended self surface with every
+  forbidden bridge absent.
 - Failure condition: inferred target, duplicate writer/tool, foreign disclosure, secret/path/PID/handle output,
-  identity input, raw mutation, run-as/OBO, kill, or Grant change.
+  identity input, raw mutation, run-as/OBO, kill, Grant change, or any live apply before ACC-ROL-006 passes.
 
 ### ACC-ROL-005 — HR business outcome
 
@@ -581,7 +588,13 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 The mandatory execution order is:
 
 ```text
-ACC-ROL-001..004 -> ACC-ROL-006 -> ACC-ROL-007 sample available -> ACC-ROL-005 HR consumes same sample
+ACC-ROL-001..003
+  -> ACC-ROL-004 pre-apply gate
+  -> ACC-ROL-006 full closed matrix PASS
+  -> separate exact Execution Mandate may authorize one live apply
+  -> ACC-ROL-004 post-apply verification
+  -> ACC-ROL-007 sample available
+  -> ACC-ROL-005 HR consumes same sample
 ```
 
 ### Contract-to-acceptance reverse mapping
