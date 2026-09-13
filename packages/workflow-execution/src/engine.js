@@ -243,8 +243,14 @@ export function createWorkflowExecutionEngine({
    * One engine pass: reconcile first (older attempts get the head start),
    * then consume the due feed up to the admission bound. Malformed feed
    * records are skipped loudly — never admitted, never silently dropped.
+   * Tracked as the engine's in-flight work so stop() can drain it.
    */
-  async function pollOnce() {
+  function pollOnce() {
+    const running = _pollOnceImpl()
+    inflight = running
+    return running.finally(() => { if (inflight === running) inflight = null })
+  }
+  async function _pollOnceImpl() {
     const reconciled = await reconcileOnce()
     const admissions = []
     const skipped = []
@@ -253,14 +259,19 @@ export function createWorkflowExecutionEngine({
     let boundReached = false
     let boundSkipped = 0
     let cursor
+    let drainedEarly = false
     while (true) {
+      if (stopped) {
+        drainedEarly = true
+        break
+      }
       const page = await fetchDuePage({
         limit: DUE_PAGE_LIMIT,
         ...(cursor?.afterNextEligibleAt === undefined ? {} : { afterNextEligibleAt: cursor.afterNextEligibleAt }),
         ...(cursor?.afterDispatchIntentId === undefined ? {} : { afterDispatchIntentId: cursor.afterDispatchIntentId }),
       })
       if (!page.ok) {
-        return { ok: false, phase: 'list_due_intents', code: page.code, reconciled, admissions, skipped, pages }
+        return { ok: false, phase: 'list_due_intents', code: page.code, reconciled, admissions, skipped, pages, drainedEarly }
       }
       pages += 1
       const items = Array.isArray(page.items) ? page.items : []
@@ -317,6 +328,8 @@ export function createWorkflowExecutionEngine({
   // ── interval runner (mirrors the scheduler's single-flight tick) ────────
   let timer
   let ticking = false
+  let stopped = false
+  let inflight = null
   async function tick() {
     if (ticking) return
     ticking = true
@@ -330,6 +343,11 @@ export function createWorkflowExecutionEngine({
     } finally {
       ticking = false
     }
+  }
+  function trackedTick() {
+    const running = tick()
+    inflight = running
+    return running.finally(() => { if (inflight === running) inflight = null })
   }
 
   // THE ONE controlled recovery operation (CTR-WAE-013; control-plane only —
@@ -354,7 +372,7 @@ export function createWorkflowExecutionEngine({
     start({ intervalMs = DEFAULT_POLL_INTERVAL_MS, catchup = true } = {}) {
       if (timer !== undefined) return
       if (catchup) void reconcileOnce().catch((error) => log.error?.(`workflow-execution: startup reconcile failed: ${error?.message ?? error}`))
-      timer = setInterval(() => { void tick() }, intervalMs)
+      timer = setInterval(() => { void trackedTick() }, intervalMs)
       timer.unref?.()
       log.log?.(`workflow-execution: poll loop armed (intervalMs=${intervalMs})`)
     },
@@ -363,6 +381,14 @@ export function createWorkflowExecutionEngine({
         clearInterval(timer)
         timer = undefined
       }
+      stopped = true
+      // Bounded drain (CTR — DSH_SHUTDOWN_CONTRACT): the in-flight pollOnce
+      // is awaited to completion and no further page is fetched; without an
+      // in-flight poll this resolves immediately. Callers that await stop()
+      // get a truthful "nothing is still running" result.
+      const draining = inflight
+      if (draining) return draining.catch(() => {})
+      return Promise.resolve()
     },
     snapshot: () => ledger.snapshot(),
   }

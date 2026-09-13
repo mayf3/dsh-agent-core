@@ -470,7 +470,11 @@ export async function composeProductionRuntime(options = {}) {
       workflowExecution.start()
     },
     stop: async () => {
-      workflowExecution.stop()
+      // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
+      // (in-flight poll finishes, no further page) BEFORE the scheduler and
+      // the owned contexts (Router processes) are torn down — a late poll can
+      // then never deliver into a disposed Router nor outlive the result.
+      await workflowExecution.stop()
       await scheduler.stop()
       await ctx.disposeAll()
     },
