@@ -1,7 +1,12 @@
 ---
 spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
-status: proposed
+status: accepted
 date: 2026-09-13
+accepted_date: 2026-09-13
+accepted_by: mayf3
+accepted_reviewed_head: 23b2332f9c3b4a35511c63dec367f2e5d97c0bdc
+independent_review_result: PASS
+independent_review_blockers: []
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -131,9 +136,10 @@ owners:
 
 # AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
 
-> **Proposed whole-Spec successor.** 本文件完整纳入 V2 全部正文与三个 accepted Amendments；
+> **Accepted whole-Spec successor**（2026-09-13；independent review PASS at exact head
+> `23b2332f9c3b4a35511c63dec367f2e5d97c0bdc`）。本文件完整纳入 V2 全部正文与三个 accepted Amendments；
 > §V3 是对冲突 clause 的唯一精确 replacement，并新增独立 `self_ops` capability。
-> Proposed V3 不授权实现、merge、deployment、production apply 或 incident repair。
+> Acceptance 仅激活 contracts；production apply authority 仍为 none。
 
 ## V3. Normative reading rule
 
@@ -373,7 +379,7 @@ STORE_V3_OLD_READER_FAIL_LOUD
 
 ```text
 SPEC_ID = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
-STATUS = proposed
+STATUS = accepted
 REPLACES_ON_ACCEPTANCE = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
 SCHEDULER_ACTIONS = create,list,runs,update,enable,disable,remove
 NEW_TOOL = self_ops(status,reconcile_turn)
@@ -384,8 +390,8 @@ TRIGGER_ONCE = EXCLUDED
 RUNTIME_RELOAD = EXCLUDED
 FOREIGN_ACCESS = FORBIDDEN
 PRODUCTION_APPLY_AUTHORITY = none
-IMPLEMENTATION_ALLOWED_NOW = NO
-READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+IMPLEMENTATION_ALLOWED_NOW = AFTER_ACCEPTED_V3_MERGES_TO_MAIN
+INDEPENDENT_SPEC_REVIEW = PASS_AT_23b2332f9c3b4a35511c63dec367f2e5d97c0bdc
 ```
 
 ## Appendix A — Incorporated V2 authority text and accepted Amendments
