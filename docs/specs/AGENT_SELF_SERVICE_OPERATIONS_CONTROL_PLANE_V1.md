@@ -1,7 +1,14 @@
 ---
 spec_id: AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1
-status: proposed
+status: accepted
 date: 2026-09-13
+accepted_date: 2026-09-13
+independent_program_review: AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1_PROGRAM_REVIEW
+independent_program_review_result: PASS
+reviewed_program_sha256: 18d5a23fa5e7b6d25eaf7a7e47373adc3b5bc6fa8bbbdadd66e36080f33d8858
+owner_rulings:
+  - ALLOW_CALLER_SCOPED_SELF_OPS_STATUS_DISCLOSURE=YES
+  - ALLOW_SELF_TERMINATION_ONLY_RECONCILIATION=YES
 spec_kind: program
 authority_level: governing_spec
 implementation_authority: none
@@ -29,25 +36,29 @@ owners:
 SPEC_GOVERNANCE_MODE = AUTHOR
 AUTHORITY_ACTION = NEW
 SPEC_ID = AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1
-STATUS = proposed
+STATUS = accepted
 IMPLEMENTATION_AUTHORITY = none
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
 EXTERNAL_AUTHORITIES = NONE
 PLAN_LEVEL = EXEC_PLAN
 ASSURANCE_LEVEL = CONTROLLED
 DOCS_FIRST_REQUIRED = YES
-OPEN_OWNER_DECISIONS = ALLOW_CALLER_SCOPED_SELF_OPS_STATUS_DISCLOSURE,
-                       ALLOW_SELF_TERMINATION_ONLY_RECONCILIATION
+OWNER_RULING = ALLOW_CALLER_SCOPED_SELF_OPS_STATUS_DISCLOSURE=YES,
+               ALLOW_SELF_TERMINATION_ONLY_RECONCILIATION=YES
+OWNER_RULING_SOURCE = Owner instruction in AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1 goal thread,
+                      2026-09-13 Asia/Shanghai
+OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE (child successors are future authorities, not this Program's TBD)
 PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 6
 CONTRACTS_WITH_ACCEPTANCE = 6
-AUTHORING_READY_FOR_REVIEW = YES (program route and Owner-decision framing only)
-READY_FOR_ACCEPTANCE = NO
-NEXT_ACTION = OWNER_DECISION
+AUTHORING_READY_FOR_REVIEW = YES
+INDEPENDENT_PROGRAM_REVIEW = PASS
+READY_FOR_ACCEPTANCE = YES
+NEXT_ACTION = AUTHOR_SCHEDULER_OCCURRENCE_OUTCOME_V3
 ```
 
-This proposed Program coordinates authority work only. It grants no product implementation or production
+This accepted Program coordinates authority work only. It grants no product implementation or production
 apply authority. It does not amend, refine, or override any accepted Decision or implementation Spec.
 
 ## 1. Goal
@@ -408,23 +419,21 @@ to future child authorities and do not constitute a normative TBD in this no-imp
 
 ## 13. Open questions and acceptance
 
-The next executable step crosses the explicit OWNER_ONLY boundary because it changes long-lived product and
-permission semantics. The Owner must decide both independent changes:
+The Owner decided both independent changes in the Goal thread on 2026-09-13 Asia/Shanghai:
 
 ```text
-ALLOW_CALLER_SCOPED_SELF_OPS_STATUS_DISCLOSURE = YES | NO
-ALLOW_SELF_TERMINATION_ONLY_RECONCILIATION = YES | NO
+ALLOW_CALLER_SCOPED_SELF_OPS_STATUS_DISCLOSURE = YES
+ALLOW_SELF_TERMINATION_ONLY_RECONCILIATION = YES
 ```
 
 The first decision covers model visibility of the bounded caller-scoped lifecycle/Scheduler status projection.
-The second covers exact caller-owned termination-only evidence consumption and fence release. `YES` on either
-authorizes only authoring and review of the corresponding clauses in the three whole-authority successors in
-DEC-SSO-001. It does not accept those future documents, authorize implementation, grant production apply,
+The second covers exact caller-owned termination-only evidence consumption and fence release. These rulings
+authorize only authoring and review of the corresponding clauses in the three whole-authority successors in
+DEC-SSO-001. They do not accept those future documents, authorize implementation, grant production apply,
 permit outcome selection, or authorize any excluded operation.
 
 ```text
-OPEN_OWNER_DECISIONS = ALLOW_CALLER_SCOPED_SELF_OPS_STATUS_DISCLOSURE,
-                       ALLOW_SELF_TERMINATION_ONLY_RECONCILIATION
+OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE (no current authority changed by this Program)
 PARTIAL_SUPERSESSION = NONE
