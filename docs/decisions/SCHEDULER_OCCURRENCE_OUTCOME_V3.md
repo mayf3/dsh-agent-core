@@ -1,19 +1,20 @@
 # D-009: Scheduler Occurrence / Outcome / Session / Migration Current Decision V3
 
-- 状态: proposed
+- 状态: accepted（2026-09-13；Current Scheduler Authority）
 - 日期: 2026-09-13
 - 类型: standalone replacement Decision（不是 D-007 amendment）
-- supersedes-on-acceptance: D-007 / SCHEDULER_OCCURRENCE_OUTCOME_V2
+- supersedes: D-007 / SCHEDULER_OCCURRENCE_OUTCOME_V2（activated 2026-09-13）
 - Governing Program: `docs/specs/AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1.md`（accepted）
 - Future implementation Spec: `docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V3.md`（not yet authored）
 - Product dependency: D-008 `AGENT_WORKSPACE_SESSION_MODEL_V3.md`（accepted）
 - Evidence: `docs/investigations/AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1_CENSUS.md`
 - 本轮范围: Decision / Spec text only；无 implementation、production jobs、missed-run replay、Scheduler store mutation、deployment 或 merge。
-- Implementation authority: none while proposed; acceptance changes Decision authority only and does not
-  authorize code or production apply.
+- Implementation authority: none; Decision acceptance does not authorize code or production apply.
+- Acceptance provenance: independently reviewed exact semantic candidate
+  `1b41d76fc445846d2a65b5641d10fece79a1d506` = PASS; blocker union empty; authorized Owner acceptance
+  transaction 2026-09-13.
 
-> **Authority rule:** D-007 在本 Decision accepted 前继续是 Current Scheduler Authority。本文件为
-> proposed，不提前覆盖 D-007。接受时必须原子完成 `D-009 -> accepted`、
+> **Authority transition:** 2026-09-13 acceptance transaction 已原子完成 `D-009 -> accepted/current`、
 > `D-007 -> superseded-by-D-009`、双向 backlink 与 Decision index 更新。D-005 继续保持其既有
 > `superseded-by-D-007` 历史状态，不重写历史。
 >
@@ -104,22 +105,22 @@ DEFER_TO_IMPLEMENTATION_DETAIL
 
 ## 2. Authority Transition
 
-### 2.1 Proposed 阶段
+### 2.1 Pre-acceptance state（historical）
 
 ```text
 D007_STATUS = accepted / Current Scheduler Authority
 D009_STATUS = proposed / no implementation authority
 ```
 
-本 proposed Decision 不授权代码、迁移、生产 job 创建或 store 修改。
+该 proposed 阶段不授权代码、迁移、生产 job 创建或 store 修改。
 
-### 2.2 Acceptance transaction
+### 2.2 Acceptance transaction（completed 2026-09-13）
 
-独立 review PASS 后，由 authorized owner / maintainer 在同一次 docs-only transaction 中完成：
+独立 exact-head review PASS 后，由 authorized owner / maintainer 在同一次 docs-only transaction 中完成：
 
 ```text
-D009_STATUS: proposed -> accepted
-D007_STATUS: accepted -> superseded-by-D-009
+D009_STATUS: proposed -> accepted/current
+D007_STATUS: accepted/current -> superseded-by-D-009
 D007_REPLACED_BY = D-009
 D009_SUPERSEDES = D-007
 Decision index = D-009 current, D-007 superseded, D-005 historical state unchanged
@@ -1252,11 +1253,11 @@ D-009 可 accepted 的条件：
 
 ---
 
-## 21. Proposed Decision Output
+## 21. Final Decision Output（accepted）
 
 ```text
 DECISION_ID = D-009
-DECISION_STATUS = proposed
+DECISION_STATUS = accepted
 D009_IS_COMPLETE_STANDALONE_CURRENT_DECISION = YES
 PARTIAL_MANUAL_MERGE_WITH_D007_REQUIRED = NO
 SUPERSEDES_ON_ACCEPTANCE = D-007
@@ -1311,8 +1312,8 @@ PRODUCTION_STATE_CHANGE_THIS_ROUND = NONE
 SCHEDULER_STORE_CHANGE_THIS_ROUND = NONE
 MERGE = NO
 
-INDEPENDENT_REVIEW = PENDING
-READY_FOR_ACCEPTANCE = NO
+INDEPENDENT_REVIEW = PASS@1b41d76fc445846d2a65b5641d10fece79a1d506
+READY_FOR_ACCEPTANCE = YES
 IMPLEMENTATION_AUTHORITY = NONE
-NEXT_ACTION = INDEPENDENT_EXACT_FINAL_HEAD_REVIEW
+NEXT_ACTION = AUTHOR_SCHEDULER_TIMEOUT_OUTCOME_V3
 ```

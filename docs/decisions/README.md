@@ -17,7 +17,7 @@
 
 ## D-009: Scheduler Occurrence / Outcome / Session / Migration Current Decision（V3）
 
-- 状态: proposed（不覆盖当前 D-007；无 implementation / production authority；全文见
+- 状态: accepted（2026-09-13；Current Scheduler Authority；无 implementation / production authority；全文见
   `docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md`）
 - 日期: 2026-09-13
 - 背景: D-007 将 `outcome_unknown` 与 same-job fence 绑定，但当前 Router 已能精确证明
@@ -30,8 +30,8 @@
   trigger_once、runtime reload、kill、run-as/OBO 或权限自增。
 - 替代方案: partial amendment D-007、termination=failed/succeeded、模型提供 Router handle/PID、
   title 猜 job、raw fence 删除、shadow Scheduler、self trigger/reload bridge——均拒绝。
-- 影响: 仅在独立 exact-final-head review PASS 和 authorized acceptance transaction 后，D-009 才
-  取代 D-007；D-005 历史状态不变。后续仍需 complete `SCHEDULER_TIMEOUT_OUTCOME_V3` 和
+- 影响: 独立 exact-final-head `1b41d76fc445846d2a65b5641d10fece79a1d506` review PASS 后，
+  authorized acceptance transaction 已完成；D-009 取代 D-007，D-005 历史状态不变。后续仍需 complete `SCHEDULER_TIMEOUT_OUTCOME_V3` 和
   `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3` accepted/merged 后才可实现。
 
 ## D-008: Agent / Workspace / Session / main 长期产品模型 Current Decision（V3）
@@ -55,9 +55,9 @@
   child Spec、代码、Grant、Scheduler、Workflow、部署或 production state；后续 `会话 执行`
   仍需形成独立 implementation-authorizing Spec。
 
-## D-007: Scheduler Occurrence / Outcome / Session / Migration Current Decision（V2）
+## D-007: Scheduler Occurrence / Outcome / Session / Migration Decision（V2，historical）
 
-- 状态: accepted（standalone Current Decision；Current Scheduler Authority；全文见
+- 状态: superseded-by-D-009（此前为 standalone Current Scheduler Authority；历史正文见
   `docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md`）
 - 日期: 2026-08-19（2026-08-20 accepted；supersedes D-005）
 - 背景: D-005 的 job-level execution model（timeout=ordinary error、runningAtMs

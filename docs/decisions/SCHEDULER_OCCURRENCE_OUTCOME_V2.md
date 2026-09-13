@@ -1,9 +1,10 @@
 # D-007: Scheduler Occurrence / Outcome / Session / Migration Current Decision V2
 
-- 状态: accepted（2026-08-20）
+- 状态: superseded-by-D-009（accepted 2026-08-20；superseded 2026-09-13；历史正文保留）
 - 日期: 2026-08-19
 - 类型: standalone replacement Decision（不是 D-005 amendment）
 - supersedes: D-005 / SCHEDULER_V1（`docs/decisions/SCHEDULER_V1.md`；acceptance 时正式激活，D-005 已同步标记 superseded）
+- superseded_by: D-009 / SCHEDULER_OCCURRENCE_OUTCOME_V3
 - Governing Spec: `docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md`（accepted）
 - Product dependency: D-006 `AGENT_WORKSPACE_SESSION_MODEL_V2.md`（accepted）
 - Evidence: `OPENCLAW_TO_AGENT_CORE_SCHEDULED_WORK_MIGRATION_AUDIT_V1 = PASS`
