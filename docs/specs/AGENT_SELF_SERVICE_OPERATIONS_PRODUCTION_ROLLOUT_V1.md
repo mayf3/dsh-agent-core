@@ -146,8 +146,9 @@ Owner-attributable accepted `AGENT_SELF_SERVICE_OPERATIONS_HR_DOGFOOD_EXECUTION_
 separate one-attempt mandate must pin the trusted HR caller, exact phrase, unchanged `CANARY_SAMPLE_ID`, exact
 owned non-critical job and occurrence coordinates, target host/runtime/connector/store binding, exact runtime
 epoch and deployed generation, locked-current critical-inventory digest, UTC `valid_from`/`expires_at`,
-at-most-once action bounds, abort conditions, and immutable receipts. Before the phrase and again through
-formal read-only tools immediately before each mutation, HR's mandate-bound procedure must fail closed unless
+at-most-once action bounds, abort conditions, and immutable receipts. Before sending the phrase, the
+mandate-bound executor must perform a read-only authoritative validity gate; after the phrase, HR must repeat
+the same gate through formal read-only tools immediately before each mutation. Both gates fail closed unless
 the window is live and every pinned environment, generation, epoch, target, ownership, and inventory coordinate
 remains exact. Expiry or any drift invalidates the mandate before mutation and permits no retry. This is an
 execution gate and adds no tool argument or product surface. It grants mutation authority only to HR through
@@ -562,8 +563,8 @@ Workflow instance transition under this Spec. Active draining requires its own a
   exact dogfood-mandate digest and Owner acceptance provenance, the ordering proof
   `sample_committed_at < mandate_created_at <= mandate_accepted_at < first_dogfood_action_at`, and zero
   external mechanical repair; exact target host/runtime/connector/store, runtime epoch, deployed generation,
-  locked-current critical-inventory digest, UTC validity window, and immutable pre-phrase plus pre-mutation
-  validity readback receipts.
+  locked-current critical-inventory digest, UTC validity window, an immutable executor-owned pre-phrase
+  read-only receipt, and immutable HR-owned pre-mutation read-only receipts.
 - Expected result:
 
 ```text
