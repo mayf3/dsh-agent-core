@@ -662,9 +662,24 @@ D-009 不使用“atomic JSON or equivalent”来静默放宽 `jobs.json`。若�
 D-009 保留 durable occurrence authority。它必须持久保存 identity、payloadHash、state、timestamps、
 fence、late settlement、termination settlement 与 terminal evidence reference。
 
-现行 `SCHEDULER_TIMEOUT_OUTCOME_V2` 已选择扩展同一 versioned Scheduler state document；V3
-implementation Spec 必须完整重述该单一文档/单一 lock 布局，并冻结 backward-compatible schema
-升级。不得借本次变化选择第二个 store 或 shadow reconciliation database。
+现行 `SCHEDULER_TIMEOUT_OUTCOME_V2` 已选择扩展同一 versioned Scheduler state document。加入
+`terminationSettlement` 会改变 fence rebuild meaning，因此不是可由 v2 reader 安全忽略的 additive
+字段：V3 implementation Spec 必须完整重述该单一文档/单一 lock 布局，并冻结 store version
+`2 → 3` 的原子升级。不得借本次变化选择第二个 store 或 shadow reconciliation database。
+
+Compatibility / rollback invariant：
+
+```text
+V2_READER_OR_WRITER_ON_VERSION_3 = FAIL_LOUD
+VERSION_3_UPGRADE = STOP_DRAIN + SINGLE_WRITER + LOCKED_LATEST_READ + ATOMIC_COMMIT
+VERSION_3_TERMINATION_SETTLEMENT_COMMITTED = DOWNGRADE_TO_V2_FORBIDDEN
+ROLLBACK_CODE_AFTER_V3_EVIDENCE = V3_AWARE_FORWARD_FIX_ONLY
+```
+
+部署 rollback 只有在 readback 证明尚未提交任何 version-3 document/evidence 时，才可恢复 v2
+代码；一旦任何 `terminationSettlement` 已提交，旧代码会丢失或重新 fence 该 authority，故不得降级。
+V3 implementation Spec 必须冻结 migration receipt、preimage、postimage、旧 reader/writer 拒绝测试、
+crash boundaries 与 forward-fix runbook；不得把未知 version 当空 store或自动 strip 新字段。
 
 继续要求：
 
@@ -675,6 +690,7 @@ fsync + atomic commit
 fail loud
 occurrence state and Job definition cannot be torn into an unsafe admission view
 termination settlement and fence rebuild commit atomically
+version 3 unknown to old code fails loud rather than reinterpreting authority
 ```
 
 `runs.jsonl`不能作为唯一 occurrence authority。
@@ -1085,6 +1101,7 @@ Spec / Decision review本身不创建 production jobs，也不授权 import。
 | caller-owned reconciliation | NEW, NARROW | exact trusted self ownership and current-epoch Router evidence only (§8.5) |
 | retry / future natural occurrence | PRESERVE + CLARIFY | no old occurrence retry; after termination-only, next future natural slot only |
 | occurrence/store atomicity | PRESERVE + EXTEND | termination settlement and fence rebuild commit atomically |
+| store compatibility / rollback | REPLACE + FREEZE | version 2→3; v2 reader/writer fail loud; no downgrade after V3 evidence |
 | scheduled Session | PRESERVE against D-008 | fresh non-main per occurrence, same Agent Workspace |
 | migration/no-catch-up/restore gates | PRESERVE | §§13–16 |
 
@@ -1221,8 +1238,9 @@ D-009 可 accepted 的条件：
 16. migration no-catch-up与 restore gate完整；
 17. §17 matrix覆盖 D-007 以及其继承的 D-005 全部 normative areas，无“其余自己拼旧文档”；
 18. self reconciliation 的正负 evidence matrix 完整，UNKNOWN 永远不等于 ZERO；
-19. acceptance transaction同时标记 D-007 superseded并更新 backlinks/index，D-005 历史状态不变；
-20. 无 implementation、production jobs、store mutation或 Kernel change。
+19. store v2→v3、old-reader fail-loud、no-downgrade-after-evidence 与 forward-fix rollback 冻结；
+20. acceptance transaction同时标记 D-007 superseded并更新 backlinks/index，D-005 历史状态不变；
+21. 无 implementation、production jobs、store mutation或 Kernel change。
 
 ---
 
@@ -1255,6 +1273,9 @@ JOB_DEFINITION_STORE = EXACT_VERSIONED_JOBS_JSON
 JOB_STORE_COMMIT = TEMP_WRITE_FSYNC_ATOMIC_RENAME
 RUN_EVIDENCE = APPEND_ONLY_BOUNDED_RUNS_JSONL_DEFAULT_10MB
 OCCURRENCE_AUTHORITY_STORE = SINGLE_VERSIONED_ATOMIC_SCHEDULER_DOCUMENT
+STORE_SCHEMA_UPGRADE = VERSION_2_TO_VERSION_3
+OLD_READER_WRITER_ON_V3 = FAIL_LOUD
+DOWNGRADE_AFTER_V3_EVIDENCE = FORBIDDEN
 LATEST_STATE_WRITEBACK_KEY = occurrenceId,runId
 
 DOMAIN_CONTROL_SURFACE = create,submitOneShot,update,enable,disable,delete,list,get,readEvidence,selfStatus,selfReconcileTerminatedTurn
