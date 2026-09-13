@@ -127,6 +127,103 @@ python3 .agents/tools/verify_governance.py --target .
 
 After adoption is active on `main`, use `--require-accepted` when verifying the authority branch.
 
+## Delivery convergence and proportional rollout
+
+These repository-local rules refine review and rollout behavior without weakening the vendored blocker classes, Product Authority precedence, or Controlled-operation gates. They never authorize merge, deployment, or mutation while a known binding Blocker remains open.
+
+### Recovery first when accepted mechanisms already exist
+
+For an active availability incident, if an existing accepted operator/admin mechanism can safely restore service without changing long-lived Product Contracts, restore the service first and keep the permanent redesign in a separate lane.
+
+```text
+SAFE_EXISTING_RECOVERY_PATH = prefer now
+LONG_TERM_REDESIGN = separate lane
+INCIDENT_RECOVERY_MUST_NOT_WAIT_FOR_OPTIONAL_GOVERNANCE_WORK = YES
+```
+
+This does not permit blind retry, destructive repair, privilege bypass, or reinterpretation of an unknown external side effect.
+
+### Release governance is not Product Authority
+
+A rollout, canary, dogfood, or one-operation safety concern remains a Controlled-operation concern unless it creates a genuinely load-bearing long-lived Product Contract.
+
+Do not invent persistent product state, a new durable protocol, or a new Product Spec solely to make a bounded release procedure easier to prove when an exact Execution Mandate / Controlled Runbook can contain the risk.
+
+If review proves that a long-lived Product Contract is genuinely missing, stop and re-PREFLIGHT through `AMEND`, `SUPERSEDE`, or `NEW`; do not smuggle that contract into a release document.
+
+```text
+RELEASE_GOVERNANCE_IS_NOT_PRODUCT_AUTHORITY = YES
+ONE_OPERATION_RISK_DEFAULT_HOME = mandate/runbook/receipt
+PERSISTENT_PRODUCT_PROTOCOL_FOR_RELEASE_ONLY = FORBIDDEN
+```
+
+### Freeze the review blocker union
+
+The first independent review of a candidate records the complete known ship-blocker set as `FROZEN_BLOCKER_UNION`.
+
+The normal repair cycle is:
+
+```text
+initial independent review
+-> freeze blocker union
+-> one blocker-union repair pass
+-> one exact-head re-audit
+```
+
+A re-audit may add a new ship blocker only when it is a valid blocker under the vendored grammar and has a concrete, reachable counterexample against the current affected surface. Reviewer preference, speculative hardening, hypothetical races without a reachable current counterexample, and optional robustness improvements are `FOLLOW_UP`, not reasons to restart the candidate indefinitely.
+
+A newly discovered concrete `SECURITY_OR_DATA_LOSS`, `FALSE_EVIDENCE`, `REQUIRED_GATE_FAILURE`, `CONTRACT_VIOLATION`, `REPOSITORY_INVARIANT_VIOLATION`, `CONCRETE_REGRESSION`, or `SCOPE_ESCALATION` remains blocking; this section never suppresses a real blocker.
+
+### Convergence guard
+
+A review/fix round is counted when a review produces a blocker that causes candidate semantics or rollout protocol to change and the candidate is then re-reviewed.
+
+After three such rounds without reaching the intended readiness boundary:
+
+```text
+GOAL_STATUS = PAUSED_CONVERGENCE_GUARD
+FOURTH_SEMANTIC_EXPANSION_IN_SAME_CANDIDATE = FORBIDDEN
+```
+
+The next action MUST be one of:
+
+1. shrink to a smaller independently useful live slice;
+2. split an optional/high-risk capability into a later Goal;
+3. re-PREFLIGHT a genuinely independent missing Product Contract;
+4. abandon the candidate.
+
+`PAUSED_CONVERGENCE_GUARD` does not waive an unresolved blocker and does not authorize shipping. It prevents an unbounded sequence of “review -> invent more protocol -> review again” inside one candidate.
+
+### Minimum live slice first
+
+When a merged capability is decomposable and the full rollout keeps expanding the proof surface, deploy the smallest independently useful low-risk slice first.
+
+Default order:
+
+```text
+read-only visibility/status
+-> one bounded exact mutation canary, if needed
+-> broader self-service mutations only after the earlier slice is live and proven
+```
+
+Optional dogfood, critical-job mutation, broad admin behavior, or unrelated compatibility work MUST NOT gate a read-only slice unless an accepted Product Contract explicitly requires atomic delivery.
+
+Each production slice keeps its own Controlled-operation gate, rollback/readback, and receipts.
+
+### Proportional re-review
+
+Intermediate re-audits review:
+
+- the frozen blocker closures;
+- semantics changed by the repair;
+- directly dependent Evidence/invariants invalidated by that repair.
+
+Do not rerun unrelated prior mechanisms merely because the candidate Head changed mechanically. The final Controlled production boundary still runs the complete applicable matrix required by accepted authority.
+
+### Stop discipline
+
+Once `DONE_WHEN` is met and no valid `EXPANSION_TRIGGER` fired, stop. Do not convert optional hardening discovered during review into mandatory same-Goal work.
+
 ## Local operating loop
 
 ```text
@@ -138,7 +235,9 @@ After adoption is active on `main`, use `--require-accepted` when verifying the 
 6. Authorized maintainer accepts the exact final head.
 7. Implement against the pinned Spec revision.
 8. Produce Contract-by-Contract conformance evidence.
-9. Report drift; never edit accepted authority to excuse code.
+9. Apply blocker-union freeze / convergence guard / minimum-live-slice rules when review or rollout starts expanding.
+10. Report drift; never edit accepted authority to excuse code.
+11. DONE_WHEN met without a valid EXPANSION_TRIGGER -> STOP.
 ```
 
 Local extensions may refine the vendored governance but may not silently weaken or contradict the pinned distribution. Updating the distribution requires a separate docs-only adoption/update review.
