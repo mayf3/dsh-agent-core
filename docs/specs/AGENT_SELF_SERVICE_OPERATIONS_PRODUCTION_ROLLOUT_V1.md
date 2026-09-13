@@ -144,10 +144,16 @@ on abort, preimage drift, unknown outcome, or window end.
 Only after ACC-ROL-007 has produced the exact `CANARY_SAMPLE_ID` and occurrence coordinates may an
 Owner-attributable accepted `AGENT_SELF_SERVICE_OPERATIONS_HR_DOGFOOD_EXECUTION_V1` mandate be created. That
 separate one-attempt mandate must pin the trusted HR caller, exact phrase, unchanged `CANARY_SAMPLE_ID`, exact
-owned non-critical job and occurrence coordinates, at-most-once action bounds, abort conditions, and
-immutable receipts. It grants mutation authority only to HR through the formal self-service tools; the
-deployment operator receives no dogfood mutation authority. HR dogfood remains a subsequent distinct evidence
-gate; neither implementation merge, apply, activation, nor canary availability implies dogfood PASS.
+owned non-critical job and occurrence coordinates, target host/runtime/connector/store binding, exact runtime
+epoch and deployed generation, locked-current critical-inventory digest, UTC `valid_from`/`expires_at`,
+at-most-once action bounds, abort conditions, and immutable receipts. Before the phrase and again through
+formal read-only tools immediately before each mutation, HR's mandate-bound procedure must fail closed unless
+the window is live and every pinned environment, generation, epoch, target, ownership, and inventory coordinate
+remains exact. Expiry or any drift invalidates the mandate before mutation and permits no retry. This is an
+execution gate and adds no tool argument or product surface. It grants mutation authority only to HR through
+the formal self-service tools; the deployment operator receives no dogfood mutation authority. HR dogfood
+remains a subsequent distinct evidence gate; neither implementation merge, apply, activation, nor canary
+availability implies dogfood PASS.
 
 ## 4. Current State
 
@@ -555,7 +561,9 @@ Workflow instance transition under this Spec. Active draining requires its own a
   session/disposition, exact mandate actor/target/attempt/abort binding, immutable apply-mandate expiry receipt,
   exact dogfood-mandate digest and Owner acceptance provenance, the ordering proof
   `sample_committed_at < mandate_created_at <= mandate_accepted_at < first_dogfood_action_at`, and zero
-  external mechanical repair.
+  external mechanical repair; exact target host/runtime/connector/store, runtime epoch, deployed generation,
+  locked-current critical-inventory digest, UTC validity window, and immutable pre-phrase plus pre-mutation
+  validity readback receipts.
 - Expected result:
 
 ```text
@@ -571,8 +579,9 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 
 - Failure condition: guessed identity, critical/ambiguous target, external operator repair, no exact receipt,
   no future-natural activity, a pre-created or pre-accepted dogfood mandate, missing apply-mandate expiry,
-  overlapping mandate validity, invalid timestamp/digest/provenance chain, or inference from
-  deployment/health/chat/local synthetic tests alone.
+  overlapping mandate validity, invalid timestamp/digest/provenance chain, expired/not-yet-valid window, any
+  runtime epoch/target generation/environment/ownership/inventory drift, a mutation without an immediately
+  preceding valid readback receipt, or inference from deployment/health/chat/local synthetic tests alone.
 
 ### ACC-ROL-006 — Closed V3 rollout matrix
 
