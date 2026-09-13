@@ -153,6 +153,23 @@ exit, may not be stale-reaped by time, and must block every authorized critical-
 explicit terminal release. Runtime/HR must have neither inventory nor lease write permission. An unbound
 inventory writer or unverifiable permission boundary is `STOP_OWNER_GATE`.
 
+The lease protocol is frozen as canonical JSON `version:1` bound to: `leaseId`, dogfood-mandate digest,
+generation id, target-binding digest, critical-inventory file identity/digest, creation UTC, and a root-only
+256-bit owner-token digest. `leaseId` is the SHA-256 of those non-token binding fields plus the owner-token
+digest. The raw owner token is stored separately with mode `0600`, never logged, returned, installed, or made
+model-visible. Creation uses same-filesystem temporary bytes plus an atomic no-replace publish and directory
+`fsync`; any existing, partial, malformed, or mismatched active lease fails closed and is never overwritten or
+time-reaped. A process crash before publication leaves no active lease but retains a fail-closed temporary or
+metadata-lock artifact that blocks creation until explicit recovery authority; a crash during/after publication
+leaves an existing record that blocks all writers under the same rule.
+
+Release is compare-and-release: under the same exclusive metadata-operation lock, the release vehicle must
+match the current lease bytes/digest, `leaseId`, mandate digest, generation id, and owner token, verify the exact
+terminal condition, durably publish a permanent per-lease tombstone, then remove the active record and `fsync`
+the directory. The metadata-operation lock is exclusive create-if-absent and itself has no time-based stale
+reap; a crash retains a fail-closed artifact. A stale, foreign, concurrent, or replayed creator/releaser can
+neither overwrite nor remove a current lease. A tombstoned mandate/generation/lease tuple cannot create again.
+
 The mandate-bound executor must create and verify that exclusive persistent lease before its pre-phrase gate.
 While the lease exists, the executor performs a read-only authoritative gate over the pinned
 host/runtime/connector/store, generation, epoch, inventory digest, file identity/permissions, and attempt-start
@@ -338,7 +355,7 @@ The frozen invocation grammar is:
 
 ```text
 node packages/production-runtime/src/scheduler/self-ops-production-release.js \
-  <prepare|seal|verify|apply|rollback-pre-v3|receipt> \
+  <prepare|seal|verify|apply|rollback-pre-v3|receipt|dogfood-lease-create|dogfood-lease-read|dogfood-lease-release> \
   --generation <absolute-generation-directory> \
   --repo <absolute-clean-source-root> \
   --live-root <absolute-live-root> \
@@ -347,8 +364,13 @@ node packages/production-runtime/src/scheduler/self-ops-production-release.js \
 
 `prepare|seal|verify` may target only an isolated generation/live copy. `apply|rollback-pre-v3|receipt` must
 fail closed unless the exact accepted Execution Mandate, root actor, target lock, manifest, preimage, and
-attempt window all match. No other subcommand, implicit default, environment-selected target, or interactive
-fallback exists.
+attempt window all match. The three `dogfood-lease-*` verbs are deployment-control-only and require the exact
+accepted post-canary dogfood mandate, root actor, sealed generation, pinned lease coordinate, and protocol above.
+`dogfood-lease-create` exclusively publishes and reads back the lease; `dogfood-lease-read` verifies exact
+current bytes/bindings and emits only a sanitized receipt; `dogfood-lease-release` performs the terminal
+compare-and-release. The exact Feishu phrase is an external mandate-bound action immediately after a successful
+`dogfood-lease-read` receipt; no CLI verb sends it implicitly. No other subcommand, implicit default,
+environment-selected target, or interactive fallback exists.
 
 ### CTR-ROL-002 — Candidate closure
 
@@ -599,7 +621,9 @@ Workflow instance transition under this Spec. Active draining requires its own a
   lease create/readback/terminal-release receipts, proof the lease survived injected executor exit, inventory
   file identity/digest/permissions, exhaustive authorized-writer lineage showing denial while the lease exists,
   and the disable receipt binding the locked-current job logicalKey to the lease-stable fresh inventory
-  snapshot.
+  snapshot; canonical lease bytes/digest/schema, root-only owner-token file mode and non-disclosure proof,
+  atomic no-replace/fsync publication, exact compare-and-release inputs, permanent tombstone, and explicit CLI
+  verb receipts.
 - Expected result:
 
 ```text
@@ -618,10 +642,12 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
   overlapping mandate validity, invalid timestamp/digest/provenance chain, phrase send outside the attempt-start
   window or not immediately serialized after its read-only gate, runtime timeout/unknown outcome, retry, any
   locked ownership/epoch/evidence guard denial or missing receipt, missing/mismatched or automatically reaped
-  lease, release without an exact terminal condition, an authorized inventory writer that bypasses the lease,
-  Runtime/HR inventory or lease write permission, file identity/digest drift while leased, any claim that the
-  inventory read itself shares the Scheduler store lock, any claim that HR read forbidden
-  host/path/PID/store/inventory data, or inference from deployment/health/chat/local synthetic tests alone.
+  lease, release without an exact terminal condition, overwrite-on-create, non-fsynced publication, missing or
+  reusable tombstone, stale/foreign/concurrent/replayed release success, owner-token disclosure, an authorized
+  inventory writer that bypasses the lease, Runtime/HR inventory or lease write permission, file
+  identity/digest drift while leased, any claim that the inventory read itself shares the Scheduler store lock,
+  any claim that HR read forbidden host/path/PID/store/inventory data, or inference from
+  deployment/health/chat/local synthetic tests alone.
 
 ### ACC-ROL-006 — Closed V3 rollout matrix
 
@@ -648,7 +674,7 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 | 9 | response loss | committed response loss followed by late outcome and receipt replay returns immutable committed receipt without duplicate write/audit |
 | 10 | one-shot | precommit fault is byte-zero-write; postcommit atomically records settlement, clears eligible fence, disables job, and returns exact receipt |
 | 11 | recurring | settlement preserves enabled definition and schedules strictly future-natural execution; no backlog replay or blind retry |
-| 12 | critical controls | exact locked-current `logicalKey`; protected/inventory-unavailable denial and replay are zero-write; alias bypass fails; persistent deployment/config lease survives executor death and freezes inventory identity/digest across the eager read and store-locked mutation while every authorized updater is blocked; inject executor exit after phrase, before inventory read, and between inventory read/store lock; automatic reap, premature release, unbound writer, permission ambiguity, or inventory drift fails; sanitized durable denial audit is exact-once; `manage:any` operator CLI/admin emergency path is preserved; non-critical owned target may self-disable |
+| 12 | critical controls | exact locked-current `logicalKey`; protected/inventory-unavailable denial and replay are zero-write; alias bypass fails; persistent deployment/config lease survives executor death and freezes inventory identity/digest across the eager read and store-locked mutation while every authorized updater is blocked; inject concurrent creators, stale/foreign/replayed release, executor exit after phrase, before inventory read, and between inventory read/store lock, plus crashes before/during/after no-replace publish and before/after tombstone/active-record removal; automatic reap, overwrite, premature release, token mismatch/disclosure, unbound writer, permission ambiguity, or inventory drift fails closed; sanitized durable denial audit is exact-once; `manage:any` operator CLI/admin emergency path is preserved; non-critical owned target may self-disable |
 | 13 | compatibility/regression | operator outcome/termination plus scheduler `list|runs|enable` and inherited seven-action semantics remain intact; actual pinned V2 reader and writer both reject V3 loudly with byte-zero-write |
 | 14 | closed result paths | provider absence returns `capability_unavailable`; lock contention returns `store_conflict`; injected unexpected failure returns sanitized `internal_error`; each is bounded, secret-free, and byte-zero-write |
 
