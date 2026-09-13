@@ -147,16 +147,29 @@ schemas、mutation/audit/result、legacy retirement、hot reload、structure clo
 
 ```text
 REPLACED =
-  title/banner and Goal lifecycle paragraphs
+  Appendix banner and all Goal functional/lifecycle paragraphs (replaced by §1 as edited for V3)
   Scope non-goal "exposing reconcile to a model or ordinary Agent"
     (only for new self_ops.reconcile_turn; scheduler action union remains unchanged)
   DEC-001 / CTR-TOOL-001 "one model-visible tool" exclusivity
   DEC-005 / CTR-OPS-001 operator-only reconcile exclusivity
-  CTR-GOV-001 V1-to-V2 lifecycle transaction
-  ACC-TOOL-001 / ACC-OPS/GOV rows only where they assert tool-count or reconcile exclusivity
-  §13 Final Output lifecycle/spec-id rows
+  CTR-AUTH-003 and AMENDMENT_2/3 exact old implementation-path closure
+    (product behavior remains; path closure replaced by CTR-V3-IMPL-001)
+  CTR-MUT-001 final "occurrence/fence/retry unchanged" sentence
+    (replaced only by accepted Timeout V3 and CTR-V3-RECON-001; seven operation mapping preserved)
+  CTR-RESULT-002 post-delete immutable-owner rationale and D-007 reference
+    (replaced by Timeout V3 ownerAgentId plus CTR-V3-STATUS/RECON; inherited scheduler runs still denies deleted)
+  CTR-LEGACY-001 phrase "only scheduler tool"
+    (replaced by exactly scheduler + self_ops; every shell/OpenClaw/raw-store prohibition preserved)
+  entire CTR-GOV-001 V1-to-V2 lifecycle transaction
+  entire ACC-GOV-001 V1/V2 lifecycle transaction
+  ACC-TOOL-001 / ACC-AUTH-002 / ACC-OPS rows only for one-tool, reconcile-exclusivity,
+    old four-file closure, or V1/V2 lifecycle assertions
+  entire §12 Migration/compatibility/rollback (replaced by CTR-V3-GOV-001 and §V3.4)
+  entire §13 Final Output lifecycle/spec-id rows (replaced by §V3.5)
 
-PRESERVED = every other V2 clause and AMENDMENT_1..3
+PRESERVED = every other V2 clause and every Amendment product behavior/test
+  (AMENDMENT_2/3 old exact paths are replaced only because V3 adds new cohesive modules;
+   their <=500, <=20, zero-registry-exception and behavior-preservation rules remain)
 ```
 
 若 implementation reviewer 发现未枚举冲突，必须停止并修订本 proposed Spec；不得自行选择优先级。
@@ -286,6 +299,30 @@ exact query wiring/tests；minimum barrels与 scheduler skill guidance。不得�
 Workflow domain、Feishu routing或 production jobs。所有 handwritten files≤500 lines、directories≤20；
 不得新增 registry exception。`compose.js` 当前 500 行，禁止直接增长；接线必须先 cohesive extraction，
 使 compose 净减并保持回归行为。实现 preflight 必须冻结 exact paths。
+
+### CTR-V3-INHERIT-001 — Exact inherited-clause replacements
+
+- Appendix `CTR-MUT-001` 的七个 scheduler operation mappings、single JobStore/lock、no direct writer 继续；
+  仅其“occurrence/fence/retry unchanged”改为：只允许 accepted Timeout V3 C001..C046 的 store v3、
+  termination settlement、fence rebuild 与 self reconciliation delta，其他 engine/delivery/session semantics
+  不变。
+- Appendix `CTR-RESULT-002` 的 scheduler self list/runs、admin/audit separation继续；V3-native occurrence
+  带 immutable ownerAgentId。Definition deleted 后 scheduler runs 仍 not-found；self_ops 也 opaque deny，
+  不从 retained evidence 推断 owner。Retarget 后 current/new owner均不能消费旧 owner occurrence。
+- Appendix `CTR-LEGACY-001` 改为 skill 只允许 `scheduler` 与 `self_ops` 两个正式 tool；所有 OpenClaw、
+  shell、CLI fallback、curl、direct-store、Gateway restart禁令逐字继续。
+- Appendix `CTR-AUTH-003` / Amendment 2/3 的旧 exact four/five-file closure不再约束新 V3 delta；其已实现
+  behavior不得回退。V3 exact path set 必须由 implementation preflight 在 CTR-V3-IMPL-001 logical family
+  内冻结并通过 structure gate，不能借 V3 修改旧 unrelated files。
+
+### CTR-V3-MIG-001 — Source/store activation and rollback
+
+Existing job definitions、occurrences、history与 critical inventory保持；不 import、不 auto-enable、不补跑。
+Runtime rollout先 stop/drain/single-writer，再按 Timeout V3 upgrade V2 store→V3并 readback。若尚未提交
+version-3 document/evidence，可回 exact binary/store preimage；一旦 V3 document/evidence提交，旧 V2
+reader/runtime rollback forbidden，只能 V3-aware forward fix。Self_ops manifest可在保持 V3-aware Runtime
+的前提下 fail-closed隐藏，但不得删除/改写 settlement。Production deployment、Auth/Grant、job mutation、
+disabled-domain enable均不由本 Spec acceptance 授权。
 
 ### CTR-V3-GOV-001 — Gates
 
