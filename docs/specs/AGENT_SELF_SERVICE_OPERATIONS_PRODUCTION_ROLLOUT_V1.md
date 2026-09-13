@@ -138,8 +138,8 @@ sealed manifest and rollback digests; exact current preimage vector; target host
 binding; actor; UTC window; `MAX_ATTEMPTS=1`; abort criteria; V3 rollback boundary; and the exact post-apply
 readback/canary sequence. It must also bind the admission-paused verification start and the separate
 post-verification activation step in ACC-ROL-004. Its `production_apply_authority: contracts` applies only to
-that one generation and expires after ACC-ROL-007 records the immutable canary sample, or immediately on abort,
-preimage drift, unknown outcome, or window end.
+that one generation and expires atomically when ACC-ROL-007 records the immutable canary sample, or immediately
+on abort, preimage drift, unknown outcome, or window end.
 
 Only after ACC-ROL-007 has produced the exact `CANARY_SAMPLE_ID` and occurrence coordinates may an
 Owner-attributable accepted `AGENT_SELF_SERVICE_OPERATIONS_HR_DOGFOOD_EXECUTION_V1` mandate be created. That
@@ -544,7 +544,7 @@ Workflow instance transition under this Spec. Active draining requires its own a
 
 ### ACC-ROL-005 — HR business outcome
 
-- Contracts: CTR-ROL-009.
+- Contracts: CTR-ROL-000, CTR-ROL-009.
 - Method: send the exact Feishu phrase once, observe HR's model-visible tool calls/report, then independently
   read authoritative Scheduler/Router post-state.
 - Environment: real production HR binding after ACC-ROL-001..004, ACC-ROL-006, and ACC-ROL-007 pass, while the
@@ -552,7 +552,10 @@ Workflow instance transition under this Spec. Active draining requires its own a
   `AVAILABLE_FOR_HR_SELF_RECONCILIATION` sample it pins from ACC-ROL-007.
 - Required evidence: exact logicalKey/non-critical proof, HR-owned status/list/disable/reconcile/readback,
   immutable receipt bound to the unchanged ACC-ROL-007 `CANARY_SAMPLE_ID`, future-natural run, new
-  session/disposition, exact mandate actor/target/attempt/abort binding, and zero external mechanical repair.
+  session/disposition, exact mandate actor/target/attempt/abort binding, immutable apply-mandate expiry receipt,
+  exact dogfood-mandate digest and Owner acceptance provenance, the ordering proof
+  `sample_committed_at < mandate_created_at <= mandate_accepted_at < first_dogfood_action_at`, and zero
+  external mechanical repair.
 - Expected result:
 
 ```text
@@ -567,7 +570,9 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 ```
 
 - Failure condition: guessed identity, critical/ambiguous target, external operator repair, no exact receipt,
-  no future-natural activity, or inference from deployment/health/chat/local synthetic tests alone.
+  no future-natural activity, a pre-created or pre-accepted dogfood mandate, missing apply-mandate expiry,
+  overlapping mandate validity, invalid timestamp/digest/provenance chain, or inference from
+  deployment/health/chat/local synthetic tests alone.
 
 ### ACC-ROL-006 — Closed V3 rollout matrix
 
@@ -608,12 +613,16 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 - Required evidence: effect-free payload proof; exact job/occurrence/run/request/turn and caller binding;
   `ATTEMPT_COUNT<=1`; bounded timeout; pre/post Scheduler and Router snapshots; process-collateral analysis;
   abort criteria; rollback/stop receipt; real Feishu visibility; preserved business outcome `unknown`; stable
-  `CANARY_SAMPLE_ID` passed unchanged to ACC-ROL-005.
+  `CANARY_SAMPLE_ID` passed unchanged to ACC-ROL-005; exact `sample_committed_at`; and an immutable receipt that
+  the apply mandate expired atomically at that sample commit before any dogfood mandate exists.
 - Expected result: one current-epoch `terminated_without_outcome` is safely
   `AVAILABLE_FOR_HR_SELF_RECONCILIATION`; no reconcile, fence clear, external business effect, retry, or
-  collateral turn has occurred. ACC-ROL-005 alone consumes that same sample and verifies its receipt.
+  collateral turn has occurred; the apply mandate is expired and no dogfood mutation authority yet exists.
+  ACC-ROL-005 alone consumes that same sample under its subsequently accepted dogfood mandate and verifies its
+  receipt.
 - Failure condition: stale/restart-lost/evicted/ambiguous evidence, effectful payload, second attempt, missing
-  coordinate/snapshot/collateral/receipt, operator mechanical repair, or business outcome assertion.
+  coordinate/snapshot/collateral/receipt, missing or non-atomic apply-mandate expiry, overlapping dogfood
+  authority, operator mechanical repair, or business outcome assertion.
 
 The mandatory execution order is:
 
@@ -633,7 +642,7 @@ ACC-ROL-001..003
 
 | Contract | Acceptance |
 |---|---|
-| CTR-ROL-000 | ACC-ROL-001 |
+| CTR-ROL-000 | ACC-ROL-001, ACC-ROL-005 |
 | CTR-ROL-001 | ACC-ROL-001, ACC-ROL-002 |
 | CTR-ROL-002 | ACC-ROL-002, ACC-ROL-006 |
 | CTR-ROL-003 | ACC-ROL-003 |
