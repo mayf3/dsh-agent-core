@@ -17,8 +17,8 @@ import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { composeProductionRuntime } from '../src/compose.js'
-import { FakeProc, seedRuntime, silentLog } from './compose-fixture.js'
+import { composeProductionRuntime } from '../../src/compose.js'
+import { FakeProc, seedRuntime, silentLog } from '../compose-fixture.js'
 
 test('cross-agent scheduler authorization flows one target-owned fresh Run into HistoryStore without source authority propagation or replay', async (t) => {
   const sourceAgentId = 'agt_history-source'
@@ -68,6 +68,7 @@ test('cross-agent scheduler authorization flows one target-owned fresh Run into 
   const dueAt = new Date(Date.now() + 250).toISOString()
   const created = await access.handlers.scheduler.create({
     name: 'composed cross-agent history',
+    logical_key: 'compose-cross-agent-history-v1',
     schedule_kind: 'at',
     at: dueAt,
     message: 'run once as the target',

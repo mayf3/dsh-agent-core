@@ -24,6 +24,7 @@
  */
 
 import { computeNextRunAtMs, computePreviousRunAtMs, parseAbsoluteTimeMs, MIN_REFIRE_GAP_MS } from './schedule.js'
+import { isUnresolvedUnknown } from './occurrence-model.js'
 
 /** One-shot retry backoff (default policy, D-007 §7.5 — explicit opt-in only). */
 export const ONE_SHOT_RETRY_BACKOFF_MS = [30 * 1000, 60 * 1000, 300 * 1000]
@@ -39,13 +40,18 @@ export function jobOccurrences(occurrences, jobId) {
 
 export function isTerminalRecord(record) {
   return record.state === 'succeeded' || record.state === 'failed'
+    || record.state === 'outcome_unknown' && record.terminationSettlement !== undefined
+}
+
+function operationalEndedAt(record) {
+  return record.terminationSettlement?.committedAt ?? record.endedAt ?? record.admittedAt
 }
 
 /** Latest terminal occurrence (by endedAt, falling back to admittedAt). */
 export function latestTerminalOccurrence(occurrences, jobId) {
   const terminal = jobOccurrences(occurrences, jobId).filter(isTerminalRecord)
   if (terminal.length === 0) return null
-  return terminal.reduce((a, b) => ((b.endedAt ?? b.admittedAt) >= (a.endedAt ?? a.admittedAt) ? b : a))
+  return terminal.reduce((a, b) => (operationalEndedAt(b) >= operationalEndedAt(a) ? b : a))
 }
 
 /** True while the job has an admitted/running occurrence (in-flight hold). */
@@ -110,7 +116,7 @@ function naturalLowerBoundMs(job, occurrences) {
   const terminal = latestTerminalOccurrence(occurrences, job.id)
   const activationBoundary = Number.isFinite(job.revisionActivatedAtMs) ? job.revisionActivatedAtMs : job.createdAtMs
   if (!terminal) return { boundary: activationBoundary, terminal: null }
-  return { boundary: Math.max((terminal.endedAt ?? terminal.admittedAt) + MIN_REFIRE_GAP_MS, activationBoundary), terminal }
+  return { boundary: Math.max(operationalEndedAt(terminal) + MIN_REFIRE_GAP_MS, activationBoundary), terminal }
 }
 
 /**
@@ -128,7 +134,7 @@ export function naturalCandidate({ job, occurrences, nowMs, atCatchupGraceMs = D
   }
   if (job.schedule.kind === 'every' && terminal) {
     const everyMs = Math.max(1, Math.floor(job.schedule.everyMs))
-    if (nowMs < (terminal.endedAt ?? terminal.admittedAt) + everyMs) {
+    if (nowMs < operationalEndedAt(terminal) + everyMs) {
       return { due: false, reason: 'every-terminal-hold (lastRun + everyMs)', nominal: slot }
     }
   }
@@ -171,7 +177,7 @@ export function computeNextRunAtMsV2({ job, occurrences, nowMs }) {
   if (!job.enabled) return undefined
   const terminal = latestTerminalOccurrence(occurrences, job.id)
   const activationBoundary = Number.isFinite(job.revisionActivatedAtMs) ? job.revisionActivatedAtMs : job.createdAtMs
-  const ref = Math.max(nowMs, terminal ? (terminal.endedAt ?? terminal.admittedAt) : 0, activationBoundary)
+  const ref = Math.max(nowMs, terminal ? operationalEndedAt(terminal) : 0, activationBoundary)
   let naturalNext
   if (job.schedule.kind === 'every') {
     const anchorNext = computeNextRunAtMs(job.schedule, nowMs, { fallbackAnchorMs: job.createdAtMs })
@@ -180,7 +186,7 @@ export function computeNextRunAtMsV2({ job, occurrences, nowMs }) {
     // D-005 compat rule (§7.4): lastRunAt + everyMs may serve as next.
     if (terminal) {
       const everyMs = Math.max(1, Math.floor(job.schedule.everyMs))
-      const compat = (terminal.endedAt ?? terminal.admittedAt) + everyMs
+      const compat = operationalEndedAt(terminal) + everyMs
       if (compat > nowMs) naturalNext = naturalNext !== undefined ? Math.max(naturalNext, compat) : compat
     }
   } else {
@@ -204,11 +210,11 @@ export function deriveJobStateSummary(job, occurrences, nowMs) {
   const mine = jobOccurrences(occurrences, job.id)
   const settled = mine
     .filter((record) => isTerminalRecord(record) || record.state === 'outcome_unknown')
-    .sort((a, b) => ((b.endedAt ?? b.admittedAt) - (a.endedAt ?? a.admittedAt)))
+    .sort((a, b) => operationalEndedAt(b) - operationalEndedAt(a))
   const summary = {}
   if (settled.length > 0) {
     const last = settled[0]
-    summary.lastRunAtMs = last.endedAt ?? last.admittedAt
+    summary.lastRunAtMs = operationalEndedAt(last)
     summary.lastRunStatus = last.state === 'outcome_unknown' ? 'outcome_unknown' : last.executionOutcome ?? last.state
     summary.lastStatus = summary.lastRunStatus
     if (last.startedAt !== undefined && last.endedAt !== undefined) summary.lastDurationMs = Math.max(0, last.endedAt - last.startedAt)
@@ -223,7 +229,7 @@ export function deriveJobStateSummary(job, occurrences, nowMs) {
     }
     summary.consecutiveErrors = consecutive
   }
-  const unresolvedUnknown = mine.some((r) => r.state === 'outcome_unknown' && r.lateSettlement === undefined)
+  const unresolvedUnknown = mine.some(isUnresolvedUnknown)
   summary.nextRunAtMs = unresolvedUnknown || !job.enabled ? undefined : computeNextRunAtMsV2({ job, occurrences: mine, nowMs })
   return summary
 }

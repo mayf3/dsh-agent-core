@@ -151,10 +151,20 @@ export function createBrokerGateway({
     const schedulerReady = schedulerMutationReady(agentId)
     const schedulerOps = {}
     for (const op of ['create', 'update', 'enable', 'disable', 'remove']) schedulerOps[op] = schedulerReady
+    const selfOpsHandlers = handlersForCall().self_ops ?? {}
+    const selfOpsReady = typeof agentId === 'string' && agentId !== ''
+      && typeof selfOpsHandlers.status === 'function'
+      && typeof selfOpsHandlers.reconcile_turn === 'function'
     return {
       availabilityVersion: 1,
       credentialsFileConfigured: credentialsFile !== undefined && credentialsFile !== '',
-      capabilities: { scheduler: { ready: schedulerReady, operations: schedulerOps } },
+      capabilities: {
+        scheduler: { ready: schedulerReady, operations: schedulerOps },
+        self_ops: {
+          ready: selfOpsReady,
+          operations: { status: selfOpsReady, reconcile_turn: selfOpsReady },
+        },
+      },
     }
   }
 
@@ -239,7 +249,9 @@ export function createBrokerGateway({
     const localHandler = isLocal ? localHandlerFor(localHandlersNow, manifest, operation) : undefined
     if (isLocal && (typeof operation !== 'string' || localHandler === undefined)) {
       noteDenial(manifest, operation, agentId, 'unsupported_operation')
-      return { ok: false, error: { code: 'unsupported_operation', detail: `operation not served by the gateway: ${manifest.id}.${operation}` } }
+      return manifest.id === 'self_ops'
+        ? { ok: false, error: { code: 'capability_unavailable', detail: 'self operations runtime provider unavailable' } }
+        : { ok: false, error: { code: 'unsupported_operation', detail: `operation not served by the gateway: ${manifest.id}.${operation}` } }
     }
     if (!Array.isArray(manifest.operations)) {
       return { ok: false, error: { code: 'unsupported_operation', detail: `capability has no operations: ${manifest.id}` } }
@@ -274,6 +286,14 @@ export function createBrokerGateway({
       }
       localArgs = validated.args
     }
+    if (manifest.id === 'self_ops') {
+      if (typeof agentId !== 'string' || agentId === '') {
+        return { ok: false, error: { code: 'capability_unavailable', detail: 'trusted caller unavailable' } }
+      }
+      const validated = validateInvocation(manifest, { operation, args: call?.args })
+      if (!validated.ok) return validated
+      localArgs = validated.args
+    }
 
     if (manifest.id === 'workflow_definition_authoring' && operation === 'replace_draft_graph') {
       const prepared = prepareWorkflowDraft(localArgs)
@@ -283,7 +303,7 @@ export function createBrokerGateway({
 
     let credential
     try {
-      credential = loadCredentialFor(credentialsFile, agentId)
+      credential = manifest.id === 'self_ops' ? undefined : loadCredentialFor(credentialsFile, agentId)
     } catch (error) {
       // A broken credential store must never crash the parent RPC; fail the
       // call closed with the store error detail (never the secret).
@@ -291,7 +311,7 @@ export function createBrokerGateway({
       if (isLocal) noteDenial(manifest, operation, agentId, 'credential_unavailable')
       return { ok: false, error: { code: 'credential_unavailable', detail: error?.message ?? 'credential store error' } }
     }
-    if (credential === undefined) {
+    if (credential === undefined && manifest.id !== 'self_ops') {
       log(`[broker-gateway] agent ${agentId}: no credential bound (fails closed)`)
       if (isLocal) noteDenial(manifest, operation, agentId, 'credential_unavailable')
       return { ok: false, error: { code: 'credential_unavailable', detail: `no MachineClient credential bound to agent ${agentId}` } }
