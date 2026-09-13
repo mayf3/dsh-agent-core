@@ -1,6 +1,6 @@
 ---
 spec_id: SCHEDULER_TIMEOUT_OUTCOME_V2
-status: accepted
+status: superseded
 date: 2026-08-22
 accepted_date: 2026-08-22
 accepted_by: mayf3
@@ -28,7 +28,7 @@ governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
 supersedes: [SCHEDULER_TIMEOUT_OUTCOME_V1]
-superseded_by: null
+superseded_by: SCHEDULER_TIMEOUT_OUTCOME_V3
 owners:
   - mayf3
 references:
@@ -44,6 +44,7 @@ references:
 # SCHEDULER_TIMEOUT_OUTCOME_V2 — occurrence authority store、timeout、termination 与迁移语义（whole-authority replacement）
 
 > 状态：**accepted**（2026-08-22 acceptance finalize；accepted_by = mayf3）。
+> 2026-09-13 起由 `SCHEDULER_TIMEOUT_OUTCOME_V3` 整体取代；本文件保留为历史 authority，正文不改写。
 > 本轮（authoring round）只提交 Spec 文本。
 > 不 implementation、不创建 production jobs、不补跑 missed runs、不修改 Scheduler store、不部署、不 accepted、不 merge。
 > 在本 Spec 合法 acceptance-finalize 之前，**current active authority 仍是 `SCHEDULER_TIMEOUT_OUTCOME_V1`（accepted）+ D-007（accepted）**；本文件不提前覆盖任何现有 authority。

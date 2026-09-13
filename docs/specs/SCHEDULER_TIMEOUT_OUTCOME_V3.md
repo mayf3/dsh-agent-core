@@ -1,7 +1,12 @@
 ---
 spec_id: SCHEDULER_TIMEOUT_OUTCOME_V3
-status: proposed
+status: accepted
 date: 2026-09-13
+accepted_date: 2026-09-13
+accepted_by: mayf3
+accepted_reviewed_spec_commit: ec19e3a82f8a87ebd3a39321575868e8bf648bbf
+independent_review_result: PASS
+independent_review_blockers: []
 type: implementation-spec (whole-authority replacement of SCHEDULER_TIMEOUT_OUTCOME_V2; docs only)
 spec_kind: implementation
 authority_level: governing_spec
@@ -31,16 +36,17 @@ references:
 
 # SCHEDULER_TIMEOUT_OUTCOME_V3
 
-> 状态：**proposed**。本轮只形成 Spec，不改产品代码、store 或 production。
-> 在合法 acceptance transaction 合入 main 前，current implementation authority 仍是
-> `SCHEDULER_TIMEOUT_OUTCOME_V2`；D-009 是 current Scheduler Decision authority。
+> 状态：**accepted**（2026-09-13；independent review PASS at exact head
+> `ec19e3a82f8a87ebd3a39321575868e8bf648bbf`）。
+> 本 acceptance transaction 只改变 lifecycle/backlink 并记录 review，不改产品代码、store 或 production。
+> 合入 main 后，本文件取代 V2；Tools V3 未 accepted+merged 前仍不得开始产品实现。
 
 ## 0. Authoring result
 
 ```text
 AUTHORING_INPUT = COMPLETE
 OWNER_DECISION_REQUIRED = NO
-READY_FOR_INDEPENDENT_REVIEW = YES
+READY_FOR_INDEPENDENT_REVIEW = PASS_COMPLETE
 IMPLEMENTATION_ALLOWED_NOW = NO
 ```
 
@@ -107,13 +113,14 @@ Visible tool authority = AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3 (required su
 独立 review PASS 后，authorized owner/maintainer 在同一 docs-only commit 中原子完成：
 
 ```text
-SCHEDULER_TIMEOUT_OUTCOME_V3: proposed -> accepted
-SCHEDULER_TIMEOUT_OUTCOME_V2: accepted -> superseded
+SCHEDULER_TIMEOUT_OUTCOME_V3: proposed -> accepted (completed 2026-09-13)
+SCHEDULER_TIMEOUT_OUTCOME_V2: accepted -> superseded (same transaction)
 SCHEDULER_TIMEOUT_OUTCOME_V2.superseded_by = SCHEDULER_TIMEOUT_OUTCOME_V3
 mutual backlinks = present
 ```
 
-本轮不提前修改 V2。不得出现 V2 与 V3 并行 current implementation authority。
+本 transaction 已原子修改 V2 backlink。PR 合入 main 前是 accepted candidate；不得出现 V2 与 V3
+并行 current implementation authority。
 
 ### 3.3 Implementation gate
 
@@ -553,7 +560,7 @@ identity、atomicity、zero-write、scope 或 disclosure 语义。
 
 ```text
 SPEC_ID = SCHEDULER_TIMEOUT_OUTCOME_V3
-SPEC_STATUS = proposed
+SPEC_STATUS = accepted
 REPLACES_ON_ACCEPTANCE = SCHEDULER_TIMEOUT_OUTCOME_V2
 SEMANTIC_DELTA_VS_V2 = TERMINATION_ONLY_SETTLEMENT_AND_SELF_RECONCILIATION_SEAM
 BUSINESS_OUTCOME_AFTER_TERMINATION_ONLY = outcome_unknown
@@ -567,5 +574,5 @@ MODEL_VISIBLE_SCHEMA_AUTHORITY = FUTURE_TOOLS_V3
 PRODUCT_CHANGE_THIS_ROUND = NONE
 PRODUCTION_CHANGE_THIS_ROUND = NONE
 IMPLEMENTATION_ALLOWED_NOW = NO
-READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
+INDEPENDENT_SPEC_REVIEW = PASS_AT_ec19e3a82f8a87ebd3a39321575868e8bf648bbf
 ```
