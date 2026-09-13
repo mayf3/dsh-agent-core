@@ -1061,8 +1061,10 @@ DAEMON_JOBS = OUT_OF_SCHEDULER
 在以下全部完成前：
 
 ```text
-SCHEDULER_TIMEOUT_OUTCOME_V3 = accepted and merged
+AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1 = accepted and merged
 D-009 = accepted
+SCHEDULER_TIMEOUT_OUTCOME_V3 = accepted and merged
+AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3 = accepted and merged
 Scheduler implementation review = PASS
 occurrence / idempotency / unknown fault tests = PASS
 migration prerequisites = PASS
@@ -1082,6 +1084,12 @@ READY_TO_RESTORE_BEFORE_HARDENING = 0
 ```
 
 Spec / Decision review本身不创建 production jobs，也不授权 import。
+
+Product implementation may begin only after all three whole-authority successors required by the Program
+are accepted and merged. Production apply remains a separate serialized gate and additionally requires exact
+target/preimage/rollback, pinned artifact bytes, single-writer stop/drain where schema migration applies,
+durable mutation receipt/readback, health and invariant checks, and a fresh real current-epoch canary. Merge,
+unit tests, deployment, health, or a stale incident alone cannot satisfy the Feishu self-repair business gate.
 
 ---
 
