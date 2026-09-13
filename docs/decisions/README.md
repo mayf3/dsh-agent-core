@@ -15,6 +15,25 @@
 
 已登记决策：
 
+## D-009: Scheduler Occurrence / Outcome / Session / Migration Current Decision（V3）
+
+- 状态: proposed（不覆盖当前 D-007；无 implementation / production authority；全文见
+  `docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md`）
+- 日期: 2026-09-13
+- 背景: D-007 将 `outcome_unknown` 与 same-job fence 绑定，但当前 Router 已能精确证明
+  `terminated_without_outcome`：旧 execution 不再继续，业务 outcome 与副作用仍未知。若继续保持
+  fence，Agent 无法安全恢复自己的未来 natural schedule；若映射为 failed/succeeded，则伪造业务结果。
+- 决策: 保留 D-007 全部 job/occurrence/at-most-once/retry/session/migration/store 语义，仅把
+  business-outcome uncertainty 与 execution termination 分开。可信 exact termination-only settlement
+  保持 occurrence=`outcome_unknown`、保存 UNKNOWN 业务事实、解除 execution fence，且不自动 retry；
+  允许 trusted-caller-scoped 的 exact self reconciliation，禁止模型选择结果、跨 Agent、raw store、
+  trigger_once、runtime reload、kill、run-as/OBO 或权限自增。
+- 替代方案: partial amendment D-007、termination=failed/succeeded、模型提供 Router handle/PID、
+  title 猜 job、raw fence 删除、shadow Scheduler、self trigger/reload bridge——均拒绝。
+- 影响: 仅在独立 exact-final-head review PASS 和 authorized acceptance transaction 后，D-009 才
+  取代 D-007；D-005 历史状态不变。后续仍需 complete `SCHEDULER_TIMEOUT_OUTCOME_V3` 和
+  `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3` accepted/merged 后才可实现。
+
 ## D-008: Agent / Workspace / Session / main 长期产品模型 Current Decision（V3）
 
 - 状态: accepted（2026-09-01；standalone Current Decision；Current Authority；
