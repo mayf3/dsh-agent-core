@@ -145,16 +145,22 @@ Only after ACC-ROL-007 has produced the exact `CANARY_SAMPLE_ID` and occurrence 
 Owner-attributable accepted `AGENT_SELF_SERVICE_OPERATIONS_HR_DOGFOOD_EXECUTION_V1` mandate be created. That
 separate one-attempt mandate must pin the trusted HR caller, exact phrase, unchanged `CANARY_SAMPLE_ID`, exact
 owned non-critical job and occurrence coordinates, target host/runtime/connector/store binding, exact runtime
-epoch and deployed generation, locked-current critical-inventory digest, UTC `valid_from`/`expires_at`,
-at-most-once action bounds, abort conditions, and immutable receipts. Before sending the phrase, the
-mandate-bound executor must perform a read-only authoritative validity gate; after the phrase, HR must repeat
-the same gate through formal read-only tools immediately before each mutation. Both gates fail closed unless
-the window is live and every pinned environment, generation, epoch, target, ownership, and inventory coordinate
-remains exact. Expiry or any drift invalidates the mandate before mutation and permits no retry. This is an
-execution gate and adds no tool argument or product surface. It grants mutation authority only to HR through
-the formal self-service tools; the deployment operator receives no dogfood mutation authority. HR dogfood
-remains a subsequent distinct evidence gate; neither implementation merge, apply, activation, nor canary
-availability implies dogfood PASS.
+epoch and deployed generation, locked-current critical-inventory digest, UTC `attempt_start_not_before` and
+`attempt_start_expires_at`, the existing runtime turn-timeout bound, at-most-once action bounds, abort
+conditions, and immutable receipts. Immediately before sending the phrase, the mandate-bound executor must
+perform a read-only authoritative gate over the pinned host/runtime/connector/store, generation, epoch,
+inventory digest, and attempt-start window, then send the phrase as the next serialized action. The phrase send
+starts the single bounded attempt and must occur inside that window; the existing runtime turn timeout bounds
+its duration, and any timeout/unknown outcome aborts it without retry.
+
+After the phrase, HR may verify only the fields exposed by the frozen formal read-only tools: trusted caller,
+opaque runtime generation, and caller-owned job/occurrence coordinates. The canonical locked mutation guards,
+not a model-visible mandate argument, must validate current ownership and critical inventory for disable and
+current ownership/epoch/evidence for reconcile. Any guard denial is zero-write and aborts the attempt without
+retry. This split is an execution gate and adds no tool argument or product surface. It grants mutation
+authority only to HR through the formal self-service tools; the deployment operator receives no dogfood
+mutation authority. HR dogfood remains a subsequent distinct evidence gate; neither implementation merge,
+apply, activation, nor canary availability implies dogfood PASS.
 
 ## 4. Current State
 
@@ -561,10 +567,14 @@ Workflow instance transition under this Spec. Active draining requires its own a
   immutable receipt bound to the unchanged ACC-ROL-007 `CANARY_SAMPLE_ID`, future-natural run, new
   session/disposition, exact mandate actor/target/attempt/abort binding, immutable apply-mandate expiry receipt,
   exact dogfood-mandate digest and Owner acceptance provenance, the ordering proof
-  `sample_committed_at < mandate_created_at <= mandate_accepted_at < first_dogfood_action_at`, and zero
-  external mechanical repair; exact target host/runtime/connector/store, runtime epoch, deployed generation,
-  locked-current critical-inventory digest, UTC validity window, an immutable executor-owned pre-phrase
-  read-only receipt, and immutable HR-owned pre-mutation read-only receipts.
+  `sample_committed_at < mandate_created_at <= mandate_accepted_at < prephrase_gate_at` and
+  `prephrase_gate_at < phrase_sent_at = attempt_started_at <= attempt_start_expires_at` plus
+  `attempt_start_not_before <= phrase_sent_at`, and zero external mechanical repair; exact target
+  host/runtime/connector/store, runtime epoch, deployed generation,
+  locked-current critical-inventory digest, UTC attempt-start window, existing runtime turn-timeout bound, an
+  immutable executor-owned pre-phrase environment/window receipt immediately followed by the phrase-send
+  receipt, HR-owned read-only receipts limited to trusted caller/opaque generation/owned coordinates, and
+  mutation receipts proving the canonical in-lock ownership/epoch/evidence/inventory guards executed.
 - Expected result:
 
 ```text
@@ -580,9 +590,10 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 
 - Failure condition: guessed identity, critical/ambiguous target, external operator repair, no exact receipt,
   no future-natural activity, a pre-created or pre-accepted dogfood mandate, missing apply-mandate expiry,
-  overlapping mandate validity, invalid timestamp/digest/provenance chain, expired/not-yet-valid window, any
-  runtime epoch/target generation/environment/ownership/inventory drift, a mutation without an immediately
-  preceding valid readback receipt, or inference from deployment/health/chat/local synthetic tests alone.
+  overlapping mandate validity, invalid timestamp/digest/provenance chain, phrase send outside the attempt-start
+  window or not immediately serialized after its read-only gate, runtime timeout/unknown outcome, retry, any
+  in-lock ownership/epoch/evidence/inventory guard denial or missing receipt, any claim that HR read forbidden
+  host/path/PID/store/inventory data, or inference from deployment/health/chat/local synthetic tests alone.
 
 ### ACC-ROL-006 — Closed V3 rollout matrix
 
