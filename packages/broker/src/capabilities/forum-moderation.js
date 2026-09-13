@@ -6,6 +6,7 @@
  */
 
 import { withTransportErrors } from '../transport.js'
+import { governanceModeratorManifests } from './forum-governance.js'
 
 const moderatorErrors = [
   { code: 'invalid_arguments', description: 'Arguments did not satisfy the operation schema.' },
@@ -286,4 +287,7 @@ export const moderatorManifests = [
   forumModerationQueueManifest,
   forumHandleReportManifest,
   forumAdminUnreadManifest,
+  // AMENDMENT_2 (Governance V1 lifecycle/audit surface — closed-list gated
+  // exactly like the eight V2 moderator manifests above).
+  ...governanceModeratorManifests,
 ]

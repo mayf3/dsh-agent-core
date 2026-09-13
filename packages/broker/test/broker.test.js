@@ -317,6 +317,8 @@ const MODERATOR_TOOL_NAMES = [
   'forum_pin_or_feature_thread', 'forum_delete_thread', 'forum_delete_message',
   'forum_resolve_thread', 'forum_archive_thread', 'forum_moderation_queue',
   'forum_handle_report', 'forum_admin_unread',
+  // AMENDMENT_2 — Governance V1 lifecycle/audit moderator surface
+  'forum_close_thread', 'forum_hide_thread', 'forum_restore_thread', 'forum_audit_logs',
 ]
 
 const withEnv = (env, fn) => {
@@ -331,12 +333,12 @@ const withEnv = (env, fn) => {
 
 // ─── CTR-FMC-004: closed-list registration resolution (pure matrix) ────────
 
-test('CTR-FMC-004: exact moderator id + valid closed list registers 8 tools', () => {
+test('CTR-FMC-004: exact moderator id + valid closed list registers 12 tools', () => {
   const { manifests, reason } = withEnv(
     { DSH_AGENT_ID: 'agt_course-community-agent-2' },
     () => resolveForumModeratorRegistration({ forumModeratorAgentIds: ['agt_course-community-agent-2'] }),
   )
-  assert.equal(manifests.length, 8)
+  assert.equal(manifests.length, 12)
   assert.deepEqual(manifests.map((m) => m.toolName).sort(), [...MODERATOR_TOOL_NAMES].sort())
   assert.match(reason, /registered for "agt_course-community-agent-2"/)
 })
@@ -426,7 +428,7 @@ test('apply() child mode: normal pack works with NO moderator config at all (fas
   for (const t of MODERATOR_TOOL_NAMES) assert.ok(!names.has(t))
 })
 
-test('apply() child mode: exact moderator registers all 8 moderator tools', () => {
+test('apply() child mode: exact moderator registers all 12 moderator tools', () => {
   const ctx = fakeCtx()
   withEnv({ DSH_AGENT_ID: 'agt_course-community-agent-2' }, () => {
     brokerApply(ctx, { mode: 'child', forumModeratorAgentIds: ['agt_course-community-agent-2'] })
