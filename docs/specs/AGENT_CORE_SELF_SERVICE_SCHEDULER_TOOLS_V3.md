@@ -152,6 +152,8 @@ REPLACED =
     (only for new self_ops.reconcile_turn; scheduler action union remains unchanged)
   DEC-001 / CTR-TOOL-001 "one model-visible tool" exclusivity
   DEC-005 / CTR-OPS-001 operator-only reconcile exclusivity
+  entire DEC-010 V1-current/V2-proposed atomic acceptance decision
+    (replaced by V3.2 authority transaction and CTR-V3-GOV-001)
   CTR-AUTH-003 and AMENDMENT_2/3 exact old implementation-path closure
     (product behavior remains; path closure replaced by CTR-V3-IMPL-001)
   CTR-MUT-001 final "occurrence/fence/retry unchanged" sentence
@@ -162,8 +164,9 @@ REPLACED =
     (replaced by exactly scheduler + self_ops; every shell/OpenClaw/raw-store prohibition preserved)
   entire CTR-GOV-001 V1-to-V2 lifecycle transaction
   entire ACC-GOV-001 V1/V2 lifecycle transaction
-  ACC-TOOL-001 / ACC-AUTH-002 / ACC-OPS rows only for one-tool, reconcile-exclusivity,
-    old four-file closure, or V1/V2 lifecycle assertions
+  ACC-TOOL-001 rows only for one-tool count; ACC-AUTH-002 rows only for old four-file closure
+  ACC-LEGACY-001 "only Scheduler tool path" expectation
+    (replaced by exactly scheduler+self_ops plus identical no-fallback assertions)
   entire §12 Migration/compatibility/rollback (replaced by CTR-V3-GOV-001 and §V3.4)
   entire §13 Final Output lifecycle/spec-id rows (replaced by §V3.5)
 
@@ -311,6 +314,8 @@ Workflow domain、Feishu routing或 production jobs。所有 handwritten files�
   不从 retained evidence 推断 owner。Retarget 后 current/new owner均不能消费旧 owner occurrence。
 - Appendix `CTR-LEGACY-001` 改为 skill 只允许 `scheduler` 与 `self_ops` 两个正式 tool；所有 OpenClaw、
   shell、CLI fallback、curl、direct-store、Gateway restart禁令逐字继续。
+- Appendix `ACC-LEGACY-001` 对应期望改为工具目录 exactly 含 scheduler+self_ops、无旧六工具、无
+  OpenClaw/shell/CLI/curl/direct-store/Gateway-restart fallback；fixture 缺任一正式 tool 都必须 fail loud。
 - Appendix `CTR-AUTH-003` / Amendment 2/3 的旧 exact four/five-file closure不再约束新 V3 delta；其已实现
   behavior不得回退。V3 exact path set 必须由 implementation preflight 在 CTR-V3-IMPL-001 logical family
   内冻结并通过 structure gate，不能借 V3 修改旧 unrelated files。
