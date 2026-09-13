@@ -136,9 +136,13 @@ mandate. That mandate must pin: this accepted Spec revision; release-vehicle and
 sealed manifest and rollback digests; exact current preimage vector; target host/runtime/store/connector/HR
 binding; actor; UTC window; `MAX_ATTEMPTS=1`; abort criteria; V3 rollback boundary; and the exact post-apply
 readback/canary sequence. It must also bind the admission-paused verification start and the separate
-post-verification activation step in ACC-ROL-004. Its `production_apply_authority: contracts` applies only to
-that one generation and expires on success, abort, preimage drift, unknown outcome, or window end. HR dogfood
-remains a subsequent distinct evidence gate; neither implementation merge nor apply implies dogfood PASS.
+post-verification activation step in ACC-ROL-004. The same mandate must define a distinct, subsequent HR-only
+dogfood phase that pins the trusted HR caller, exact phrase, unchanged `CANARY_SAMPLE_ID`, exact owned
+non-critical job and occurrence coordinates, at-most-once action bounds, abort conditions, and immutable
+receipts. The deployment operator receives no dogfood mutation authority. Its
+`production_apply_authority: contracts` applies only to that one generation and expires after the dogfood
+phase succeeds, or immediately on abort, preimage drift, unknown outcome, or window end. HR dogfood remains a
+subsequent distinct evidence gate; neither implementation merge, apply, nor activation implies dogfood PASS.
 
 ## 4. Current State
 
@@ -256,7 +260,8 @@ either PASS. Produces CTR-ROL-008 and CTR-ROL-009.
 The only permitted first acceptance transition and lifecycle-only provenance/projection allowlist are exactly
 those stated in §3. The transition authorizes only the exact implementation closure in CTR-ROL-001 and keeps
 production apply `none`. Production requires the separate exact one-attempt Execution Mandate described in
-§3; HR dogfood remains a later distinct evidence gate.
+§3. That mandate has independently gated apply/verification/activation and HR-only dogfood phases; HR dogfood
+remains a later distinct evidence gate and grants no mutation authority to the deployment operator.
 
 ### Contract group — frozen release construction
 
@@ -536,11 +541,12 @@ Workflow instance transition under this Spec. Active draining requires its own a
 - Contracts: CTR-ROL-009.
 - Method: send the exact Feishu phrase once, observe HR's model-visible tool calls/report, then independently
   read authoritative Scheduler/Router post-state.
-- Environment: real production HR binding after ACC-ROL-001..004 and ACC-ROL-006 pass, using the exact
+- Environment: real production HR binding after ACC-ROL-001..004 and ACC-ROL-006 pass, while the same exact
+  accepted Execution Mandate remains valid for its HR-only dogfood phase, using the exact
   `AVAILABLE_FOR_HR_SELF_RECONCILIATION` sample produced by ACC-ROL-007.
 - Required evidence: exact logicalKey/non-critical proof, HR-owned status/list/disable/reconcile/readback,
   immutable receipt bound to the unchanged ACC-ROL-007 `CANARY_SAMPLE_ID`, future-natural run, new
-  session/disposition, and zero external mechanical repair.
+  session/disposition, exact mandate actor/target/attempt/abort binding, and zero external mechanical repair.
 - Expected result:
 
 ```text
@@ -613,7 +619,8 @@ ACC-ROL-001..003
   -> ACC-ROL-004 post-apply verification with Scheduler admission mechanically disabled
   -> mandate-bound normal supervised activation and exact final readback
   -> ACC-ROL-007 sample available
-  -> ACC-ROL-005 HR consumes same sample
+  -> same exact mandate enters its HR-only dogfood phase
+  -> ACC-ROL-005 HR consumes the same sample within its at-most-once action bounds
 ```
 
 ### Contract-to-acceptance reverse mapping
