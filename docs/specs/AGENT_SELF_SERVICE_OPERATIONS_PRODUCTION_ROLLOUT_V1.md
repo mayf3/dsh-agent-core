@@ -147,20 +147,29 @@ separate one-attempt mandate must pin the trusted HR caller, exact phrase, uncha
 owned non-critical job and occurrence coordinates, target host/runtime/connector/store binding, exact runtime
 epoch and deployed generation, locked-current critical-inventory digest, UTC `attempt_start_not_before` and
 `attempt_start_expires_at`, the existing runtime turn-timeout bound, at-most-once action bounds, abort
-conditions, and immutable receipts. Immediately before sending the phrase, the mandate-bound executor must
-perform a read-only authoritative gate over the pinned host/runtime/connector/store, generation, epoch,
-inventory digest, and attempt-start window, then send the phrase as the next serialized action. The phrase send
-starts the single bounded attempt and must occur inside that window; the existing runtime turn timeout bounds
-its duration, and any timeout/unknown outcome aborts it without retry.
+conditions, and immutable receipts. It must also pin the existing deployment/config lock coordinate and prove
+that every authorized critical-inventory updater uses that lock and that the Runtime/HR principal has no
+inventory write permission. An unbound inventory writer or unverifiable permission boundary is
+`STOP_OWNER_GATE`.
+
+The mandate-bound executor must acquire that exclusive lock before its pre-phrase gate and hold it through the
+HR disable result or attempt abort. While holding it, the executor performs a read-only authoritative gate over
+the pinned host/runtime/connector/store, generation, epoch, inventory digest, file identity/permissions, and
+attempt-start window, then sends the phrase as the next serialized action. The phrase send starts the single
+bounded attempt and must occur inside that window; the existing runtime turn timeout bounds its duration, and
+any timeout/unknown outcome aborts it without retry. Lock loss aborts before any not-yet-started mutation.
 
 After the phrase, HR may verify only the fields exposed by the frozen formal read-only tools: trusted caller,
-opaque runtime generation, and caller-owned job/occurrence coordinates. The canonical locked mutation guards,
-not a model-visible mandate argument, must validate current ownership and critical inventory for disable and
-current ownership/epoch/evidence for reconcile. Any guard denial is zero-write and aborts the attempt without
-retry. This split is an execution gate and adds no tool argument or product surface. It grants mutation
-authority only to HR through the formal self-service tools; the deployment operator receives no dogfood
-mutation authority. HR dogfood remains a subsequent distinct evidence gate; neither implementation merge,
-apply, activation, nor canary availability implies dogfood PASS.
+opaque runtime generation, and caller-owned job/occurrence coordinates. For disable, the executor-held outer
+lock keeps the exact critical-inventory file immutable while the canonical Scheduler store lock re-reads the
+latest job and validates ownership plus that job's logicalKey against the stable fresh inventory snapshot. For
+reconcile, the canonical locked guard validates current ownership/epoch/evidence. This is the required nested
+atomicity proof; the Spec does not claim the inventory read itself occurs inside the Scheduler store lock. Any
+guard denial is zero-write and aborts the attempt without retry. This split is an execution gate and adds no
+tool argument or product surface. It grants mutation authority only to HR through the formal self-service
+tools; the deployment operator receives no dogfood mutation authority. HR dogfood remains a subsequent
+distinct evidence gate; neither implementation merge, apply, activation, nor canary availability implies
+dogfood PASS.
 
 ## 4. Current State
 
@@ -455,6 +464,13 @@ HR, not the deployment operator, must call its formal tools to:
 6. observe a future-natural canonical occurrence and new session or disposition activity;
 7. report the repair and any remaining exact blocker in Feishu.
 
+The dogfood disable may start only while the mandate-bound executor holds the existing exclusive
+deployment/config lock and has proved that every authorized critical-inventory updater is serialized by that
+same lock and that Runtime/HR cannot write the inventory. The outer lock freezes the exact inventory
+file/digest while the existing Scheduler store mutation lock re-reads the latest job, so the stable inventory
+snapshot and locked-current job logicalKey form one nested authorization proof. Missing writer coverage,
+permission ambiguity, lock loss, or inventory file/digest drift is `STOP_OWNER_GATE` with no HR mutation.
+
 The external coding/deployment Agent may inspect authoritative post-state but may not perform HR's mechanical
 repair. Because V1 excludes `trigger_once`, success uses a future-natural run.
 
@@ -574,7 +590,10 @@ Workflow instance transition under this Spec. Active draining requires its own a
   locked-current critical-inventory digest, UTC attempt-start window, existing runtime turn-timeout bound, an
   immutable executor-owned pre-phrase environment/window receipt immediately followed by the phrase-send
   receipt, HR-owned read-only receipts limited to trusted caller/opaque generation/owned coordinates, and
-  mutation receipts proving the canonical in-lock ownership/epoch/evidence/inventory guards executed.
+  mutation receipts proving the canonical locked ownership/epoch/evidence guards executed; exact outer-lock
+  acquisition/hold/release receipts, inventory file identity/digest/permissions, exhaustive authorized-writer
+  lineage showing the same lock, and the disable receipt binding the locked-current job logicalKey to the
+  outer-lock-stable fresh inventory snapshot.
 - Expected result:
 
 ```text
@@ -592,7 +611,9 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
   no future-natural activity, a pre-created or pre-accepted dogfood mandate, missing apply-mandate expiry,
   overlapping mandate validity, invalid timestamp/digest/provenance chain, phrase send outside the attempt-start
   window or not immediately serialized after its read-only gate, runtime timeout/unknown outcome, retry, any
-  in-lock ownership/epoch/evidence/inventory guard denial or missing receipt, any claim that HR read forbidden
+  locked ownership/epoch/evidence guard denial or missing receipt, missing/lost outer lock, an inventory writer
+  outside that lock, Runtime/HR inventory write permission, file identity/digest drift while locked, any claim
+  that the inventory read itself shares the Scheduler store lock, any claim that HR read forbidden
   host/path/PID/store/inventory data, or inference from deployment/health/chat/local synthetic tests alone.
 
 ### ACC-ROL-006 — Closed V3 rollout matrix
@@ -620,7 +641,7 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 | 9 | response loss | committed response loss followed by late outcome and receipt replay returns immutable committed receipt without duplicate write/audit |
 | 10 | one-shot | precommit fault is byte-zero-write; postcommit atomically records settlement, clears eligible fence, disables job, and returns exact receipt |
 | 11 | recurring | settlement preserves enabled definition and schedules strictly future-natural execution; no backlog replay or blind retry |
-| 12 | critical controls | exact locked-current `logicalKey`; protected/inventory-unavailable denial and replay are zero-write; alias bypass fails; sanitized durable denial audit is exact-once; `manage:any` operator CLI/admin emergency path is preserved; non-critical owned target may self-disable |
+| 12 | critical controls | exact locked-current `logicalKey`; protected/inventory-unavailable denial and replay are zero-write; alias bypass fails; outer deployment/config lock freezes inventory identity/digest across the eager read and store-locked mutation while every authorized updater is blocked; lock contention/loss, unbound writer, permission ambiguity, or inventory drift stops before self-disable; sanitized durable denial audit is exact-once; `manage:any` operator CLI/admin emergency path is preserved; non-critical owned target may self-disable |
 | 13 | compatibility/regression | operator outcome/termination plus scheduler `list|runs|enable` and inherited seven-action semantics remain intact; actual pinned V2 reader and writer both reject V3 loudly with byte-zero-write |
 | 14 | closed result paths | provider absence returns `capability_unavailable`; lock contention returns `store_conflict`; injected unexpected failure returns sanitized `internal_error`; each is bounded, secret-free, and byte-zero-write |
 
