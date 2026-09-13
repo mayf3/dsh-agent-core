@@ -274,7 +274,7 @@ test('SIGKILL_EXACT_LOCK_WINDOW_SEPARATE_PROCESS: engine A killed at the lock wi
   // Store integrity + single admission + no duplicate
   const verifier = new JobStore(file)
   const doc = await verifier.loadDoc({ force: true })
-  assert.equal(doc.version, 2, 'document intact and valid')
+  assert.equal(doc.version, 3, 'document intact and valid')
   const records = doc.occurrences.filter((record) => record.jobId === job.id)
   assert.equal(records.length, 1, 'exactly one occurrence record (duplicate admission = 0)')
   assert.equal(records[0].kind, 'catchup', 'native downtime catch-up occurrence')

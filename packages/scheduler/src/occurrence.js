@@ -402,7 +402,8 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
   try {
     const { doc } = await this.store.mutateDoc((latest) => {
       const current = findOccurrenceById(latest.occurrences, record.occurrenceId)
-      if (!current || current.runId !== record.runId || !isUnresolvedUnknown(current)) return {}
+      if (!current || current.runId !== record.runId
+        || current.state !== 'outcome_unknown' || current.lateSettlement !== undefined) return {}
       applyTransition(current, {
         to: resolvedTo,
         at: resolvedAt,
