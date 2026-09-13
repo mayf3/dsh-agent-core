@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
 
-const STORE_VERSION = 2
+const STORE_VERSION = 3
 const LEGACY_STATE_FIELDS = [
   'runningAtMs', 'lastRunAtMs', 'lastRunStatus', 'lastStatus', 'lastError',
   'lastDurationMs', 'lastDeliveryStatus', 'lastDelivered', 'consecutiveErrors', 'nextRunAtMs',
@@ -24,15 +24,18 @@ async function loadDocForMutation() {
   if (classified.status === 'empty') {
     return { doc: this._emptyDoc(), sourceStatus: 'empty', existed: false }
   }
-  if (classified.status === 'v2') {
-    return { doc: structuredClone(classified.doc), sourceStatus: 'v2', existed: true }
+  if (classified.status === 'v3') {
+    return { doc: structuredClone(classified.doc), sourceStatus: 'v3', existed: true }
   }
-  const backup = await this._writeV1Backup(classified.raw)
-  const { doc, report } = this._transformV1Doc(classified, backup)
+  const sourceVersion = classified.status === 'v2' ? 2 : 1
+  const backup = await this._writeGenerationBackup(classified.raw, sourceVersion)
+  const { doc, report } = sourceVersion === 2
+    ? this._transformV2Doc(classified, backup)
+    : this._transformV1Doc(classified, backup)
   await this._recordUpgradeSidecar(doc, backup)
   return {
     doc,
-    sourceStatus: 'v1',
+    sourceStatus: `v${sourceVersion}`,
     existed: true,
     upgrade: { report, backupFile: backup.file },
   }
@@ -97,9 +100,9 @@ function transformV1Doc(classified, backup) {
   return { doc: { version: STORE_VERSION, jobs, occurrences: [], fences: {} }, report }
 }
 
-async function writeV1Backup(raw) {
+async function writeGenerationBackup(raw, sourceVersion = 1) {
   await this._ensureDir()
-  const file = `${this.filePath}.v1.${this.clock()}-${process.pid}-${this._tmpSeq + 1}.bak`
+  const file = `${this.filePath}.v${sourceVersion}.${this.clock()}-${process.pid}-${this._tmpSeq + 1}.bak`
   try {
     const handle = await fs.open(file, 'wx')
     try {
@@ -115,6 +118,35 @@ async function writeV1Backup(raw) {
   return { file, digest: digestJSON(raw) }
 }
 
+function transformV2Doc(classified, backup) {
+  const upgradedAtMs = this.clock()
+  for (const record of classified.doc.occurrences) {
+    if (record.recordSchemaVersion !== undefined || record.ownerAgentId !== undefined
+      || record.requestId !== undefined || record.terminationSettlement !== undefined) {
+      throw new Error('scheduler store: V2-labeled document contains V3 authority evidence; refuse relabel/downgrade')
+    }
+  }
+  const occurrences = structuredClone(classified.doc.occurrences).map((record) => ({
+    ...record,
+    recordSchemaVersion: 2,
+  }))
+  return {
+    doc: {
+      version: STORE_VERSION,
+      jobs: structuredClone(classified.doc.jobs),
+      occurrences,
+      fences: structuredClone(classified.doc.fences),
+    },
+    report: {
+      upgradedAtMs,
+      fromVersion: 2,
+      backupFile: backup.file,
+      migratedOccurrences: occurrences.length,
+      fabricatedTerminationSettlements: 0,
+    },
+  }
+}
+
 async function recordUpgradeSidecar(doc, backup) {
   await this._writeSidecar({
     upgradedAtMs: this.clock(),
@@ -126,9 +158,9 @@ async function recordUpgradeSidecar(doc, backup) {
 }
 
 /** Monotonic guard: once any post-upgrade Job mutation is attempted, rollback stays refused. */
-async function markV2JobMutation() {
+async function markV3JobMutation() {
   const sidecar = await this._readUpgradeSidecar()
-  // Native-v2 stores have no v1 backup and are never eligible for rollback;
+  // Native-v3 stores have no prior-generation backup and are never eligible for rollback;
   // therefore they need no mutation sidecar.
   if (!sidecar) return
   if (sidecar.jobMutationSeen === true) return
@@ -175,9 +207,8 @@ async function listV1Backups() {
 
 async function checkRollbackToV1() {
   const classified = await this._readDocRaw()
-  if (classified.status !== 'v2') {
-    return { allowed: false, reason: `document is not v2 (status: ${classified.status})`, conditions: null }
-  }
+  if (classified.status === 'v3') return { allowed: false, reason: 'version 3 authority committed; downgrade forbidden', conditions: null }
+  if (classified.status !== 'v2') return { allowed: false, reason: `document is not v2 (status: ${classified.status})`, conditions: null }
   const sidecar = await this._readUpgradeSidecar()
   const unresolved = classified.doc.occurrences.filter(
     (record) => record.state === 'outcome_unknown' && record.lateSettlement === undefined,
@@ -263,9 +294,12 @@ export const storeMigrationMethods = {
   _loadDocForMutation: loadDocForMutation,
   ensureUpgraded,
   _transformV1Doc: transformV1Doc,
-  _writeV1Backup: writeV1Backup,
+  _writeV1Backup(raw) { return writeGenerationBackup.call(this, raw, 1) },
+  _writeGenerationBackup: writeGenerationBackup,
+  _transformV2Doc: transformV2Doc,
   _recordUpgradeSidecar: recordUpgradeSidecar,
-  _markV2JobMutation: markV2JobMutation,
+  _markV2JobMutation: markV3JobMutation,
+  _markV3JobMutation: markV3JobMutation,
   _writeSidecar: writeSidecar,
   _readUpgradeSidecar: readUpgradeSidecar,
   listV1Backups,

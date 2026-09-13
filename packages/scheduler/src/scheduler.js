@@ -59,7 +59,7 @@ export class Scheduler {
     // Facts only — never consulted by admission (spec R-H1).
     this.history = deps.history ?? null
 
-    this.doc = { version: 2, jobs: [], occurrences: [], fences: {} }
+    this.doc = { version: 3, jobs: [], occurrences: [], fences: {} }
     this._timer = null
     this._executing = false
     this._rerunPending = false

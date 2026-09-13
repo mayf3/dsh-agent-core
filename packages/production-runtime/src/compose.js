@@ -45,10 +45,10 @@ import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
 import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
-import { createSelfServiceSchedulerAccess } from '../../scheduler/src/self-service.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
-import { mountSchedulerHistoryRuntime } from './scheduler-history-runtime.js'
+import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
 import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
+import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
@@ -367,33 +367,11 @@ export async function composeProductionRuntime(options = {}) {
     log,
   })
 
-  // AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1: the LOCAL (in-process) broker
-  // capability seam over the SAME store — every mutation reuses the store's
-  // single mutation authority (the control ops the operator CLI uses). The
-  // manage:any grant is decided by the auth-service (the ONLY grant
-  // authority) through the broker credential store; a missing credential or
-  // a denied token = deny (fail closed, never an error surface).
+  // Shared trusted Broker configuration is also consumed by principal
+  // resolution below; neither value is ever accepted from model arguments.
   const brokerCredentialsFile = opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE
   const brokerAuthServiceOrigin = opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN
-  ctx.provide('selfServiceSchedulerAccess', createSelfServiceSchedulerAccess({
-    store,
-    assertGrant: async (agentId, scope, resource) => {
-      try {
-        const credential = loadCredentialFor(brokerCredentialsFile, agentId)
-        if (credential === undefined) return false
-        await requestAccessToken({ credential, authServiceOrigin: brokerAuthServiceOrigin, resource, scope })
-        return true
-      } catch {
-        return false
-      }
-    },
-    // A definition commit is authoritative even when the separate audit append
-    // fails. Emit only the sanitized operation/job coordinates; the message,
-    // destination, credentials, and digests never enter the Runtime log.
-    onAuditFailure: ({ operation, jobId }) => {
-      log.error(`[scheduler-self-service] audit append failed after committed ${operation} for job ${jobId}`)
-    },
-  }))
+  mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log })
 
   // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3): the trusted LOCAL
   // provider for agent_session_send. It reuses the Router's sole delivery
