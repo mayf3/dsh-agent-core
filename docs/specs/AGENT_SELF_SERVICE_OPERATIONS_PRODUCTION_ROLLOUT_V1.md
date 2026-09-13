@@ -135,9 +135,10 @@ Production apply then requires a separate accepted `AGENT_SELF_SERVICE_OPERATION
 mandate. That mandate must pin: this accepted Spec revision; release-vehicle and minimal-compose commits;
 sealed manifest and rollback digests; exact current preimage vector; target host/runtime/store/connector/HR
 binding; actor; UTC window; `MAX_ATTEMPTS=1`; abort criteria; V3 rollback boundary; and the exact post-apply
-readback/canary sequence. Its `production_apply_authority: contracts` applies only to that one generation and
-expires on success, abort, preimage drift, unknown outcome, or window end. HR dogfood remains a subsequent
-distinct evidence gate; neither implementation merge nor apply implies dogfood PASS.
+readback/canary sequence. It must also bind the admission-paused verification start and the separate
+post-verification activation step in ACC-ROL-004. Its `production_apply_authority: contracts` applies only to
+that one generation and expires on success, abort, preimage drift, unknown outcome, or window end. HR dogfood
+remains a subsequent distinct evidence gate; neither implementation merge nor apply implies dogfood PASS.
 
 ## 4. Current State
 
@@ -359,6 +360,16 @@ wait for `NO_ACTIVE_TURN` and `NO_IN_FLIGHT_MUTATION`, stop exactly the target r
 writer can mutate the same Scheduler store. Legacy or shadow runtimes must not be killed or repointed under
 this authority; a conflicting writer is `STOP_OWNER_GATE`.
 
+Admission must remain mechanically disabled throughout ACC-ROL-004 post-apply verification. The release
+vehicle must start a bounded verification process from the exact installed compose and target configuration by
+calling the existing Scheduler seam with `autoStart:false` and `catchup:false`; it must not call the resident
+entry's normal `runtime.start()`. This permits the mandatory lease/upgrade/recovery and trusted-interface
+checks without starting catch-up or the tick timer. The target supervisor remains stopped during this phase.
+Only a passing ACC-ROL-004 post-apply verification allows the same exact Execution Mandate to stop that
+verification process and activate the normal supervised runtime. Verification failure must stop the bounded
+process and leave the target supervisor stopped and admission disabled. No separate retry, implicit resume, or
+operator-selected start path is allowed.
+
 ### Contract group — V2/V3 migration and rollback
 
 ### CTR-ROL-006 — V2 to V3 boundary
@@ -499,19 +510,26 @@ Workflow instance transition under this Spec. Active draining requires its own a
 - Contracts: CTR-ROL-004, CTR-ROL-005, CTR-ROL-007.
 - Method: two ordered phases under one acceptance item. The pre-apply gate performs trusted binding readback and
   process/session/store lineage census. Only after ACC-ROL-006 has passed may the separately authorized apply
-  occur; the post-apply verification then performs loaded-file hash readback, catalog/status calls, and closed
-  negative security probes.
+  occur; the post-apply verification then uses the CTR-ROL-005 bounded admission-paused process to perform
+  loaded-file hash readback, catalog/status calls, and closed negative security probes. Only after those checks
+  pass may the mandate-bound normal supervised activation occur.
 - Environment: the pre-apply gate observes the exact target runtime without a production write. The post-apply
-  verification observes that same exact target only after ACC-ROL-006 passes and the one separately authorized
-  apply completes; probes use test-owned coordinates.
+  verification observes the exact installed target bytes, configuration, store, and trusted binding with
+  Scheduler catch-up and timer mechanically disabled, only after ACC-ROL-006 passes and the one separately
+  authorized apply completes; probes use test-owned coordinates. The target supervisor stays stopped until
+  this verification passes.
 - Required evidence: pre-apply, the exact Feishu→connector→Runtime→store→HR chain and sole-writer/drain facts;
-  post-apply, one new PID/generation/writer, health, exact loaded hashes and catalog, server-derived caller,
-  opaque foreign denials, and secret-output scan.
+  post-apply, the bounded verification PID/generation/writer, `autoStart:false`, `catchup:false`, no tick timer,
+  supervisor-stopped proof, health, exact loaded hashes and catalog, server-derived caller, opaque foreign
+  denials, secret-output scan, verification-process stop receipt, then one mandate-bound normal activation and
+  exact final PID/generation readback.
 - Expected result: before any live apply, target identity and serialization are proved and ACC-ROL-006 is fully
-  closed; after the authorized apply, HR's exact lineage exposes only the intended self surface with every
-  forbidden bridge absent.
+  closed; after the authorized apply, every security check passes while Scheduler admission remains disabled,
+  then and only then the normal supervised runtime activates and HR's exact lineage exposes only the intended
+  self surface with every forbidden bridge absent.
 - Failure condition: inferred target, duplicate writer/tool, foreign disclosure, secret/path/PID/handle output,
-  identity input, raw mutation, run-as/OBO, kill, Grant change, or any live apply before ACC-ROL-006 passes.
+  identity input, raw mutation, run-as/OBO, kill, Grant change, any live apply before ACC-ROL-006 passes, any
+  catch-up/timer admission before post-apply verification passes, or activation after a verification failure.
 
 ### ACC-ROL-005 — HR business outcome
 
@@ -592,7 +610,8 @@ ACC-ROL-001..003
   -> ACC-ROL-004 pre-apply gate
   -> ACC-ROL-006 full closed matrix PASS
   -> separate exact Execution Mandate may authorize one live apply
-  -> ACC-ROL-004 post-apply verification
+  -> ACC-ROL-004 post-apply verification with Scheduler admission mechanically disabled
+  -> mandate-bound normal supervised activation and exact final readback
   -> ACC-ROL-007 sample available
   -> ACC-ROL-005 HR consumes same sample
 ```
