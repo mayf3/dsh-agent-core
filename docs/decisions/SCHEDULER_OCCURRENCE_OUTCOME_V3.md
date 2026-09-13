@@ -467,7 +467,9 @@ not stale or otherwise blocked by migration policy
 - succeeded + `deleteAfterRun=true`：可删除 Job definition，但 occurrence evidence继续存在；
 - succeeded + keep：Job disabled；
 - ordinary failed：只有显式 retry policy允许时创建新的 retry occurrence；
-- outcome_unknown：Job fenced；
+- outcome_unknown 且 termination 未证明：Job fenced；
+- outcome_unknown 且 `terminated_without_outcome`：原 nominal occurrence 已耗尽且不得 re-admit；
+  definition 置为 disabled、保留全部 unknown/termination evidence，不删除、不创建 retry 或新的 at；
 - migration/restore 时已过去的 stale at = DO_NOT_IMPORT，不转成立即执行。
 
 ### 7.4 Every next occurrence
@@ -618,8 +620,9 @@ retryOfOccurrenceId = previous occurrenceId
 - succeeded + keep：Job disabled；
 - ordinary failed：按显式 policy创建 retry occurrence，或 disabled；
 - outcome_unknown 且 termination 未证明：不删除为成功，不按普通 failure retry；Job fenced；
-- outcome_unknown 且 `terminated_without_outcome`：不删除、不自动 retry；旧业务结果仍未知，Job 可从
-  下一个 future natural slot 恢复 eligibility。
+- outcome_unknown 且 `terminated_without_outcome`：不删除、不自动 retry；旧业务结果仍未知；该
+  one-shot nominal occurrence 已耗尽，definition 在同一 authoritative reconciliation transaction
+  中置为 disabled，且不得创建新的 at occurrence。
 
 ### 9.2 Recurring completion
 
@@ -792,7 +795,7 @@ selfStatus
 selfReconcileTerminatedTurn
 ```
 
-前八项是既有 Scheduler domain/control semantics。后两项是 V3 新授权的 caller-scoped product
+前九项是既有 Scheduler domain/control semantics。后两项是 V3 新授权的 caller-scoped product
 semantics：`selfStatus` 只返回 trusted caller 自己的 bounded projection；
 `selfReconcileTerminatedTurn` 只消费 §8.5 的 exact trusted evidence。精确 JavaScript module shape
 由未来 implementation Spec 冻结。不得删除既有 operator/control semantics。
