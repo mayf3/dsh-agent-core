@@ -121,9 +121,9 @@ const TOOL_CHANNEL_FIXTURES = [
 ]
 
 // ─── Schema: all 16 second-batch manifests validate; PATCH is allowed ───────
-test('schema: all 16 second-batch Forum manifests validate (8 normal + 8 moderator)', () => {
+test('schema: all 20 second-batch Forum manifests validate (8 normal + 12 moderator)', () => {
   assert.equal(forumNormalManifests.length, 8)
-  assert.equal(forumModeratorManifests.length, 8)
+  assert.equal(forumModeratorManifests.length, 12)
   for (const manifest of [...forumNormalManifests, ...forumModeratorManifests]) {
     const res = validateManifest(manifest)
     assert.equal(res.ok, true, `${manifest.id}: ${res.errors?.join('; ')}`)
@@ -141,6 +141,7 @@ test('CTR-FMC-002/003: exact tool ids and exact scope arrays', () => {
       'forum_create_thread', 'forum_watch_thread', 'forum_unwatch_thread', 'forum_report_content', 'forum_stats', 'forum_notifications',
       'forum_notification_read', 'forum_notifications_read', 'forum_pin_or_feature_thread', 'forum_delete_thread', 'forum_delete_message', 'forum_resolve_thread',
       'forum_archive_thread', 'forum_moderation_queue', 'forum_handle_report', 'forum_admin_unread',
+      'forum_close_thread', 'forum_hide_thread', 'forum_restore_thread', 'forum_audit_logs',
     ].sort(),
   )
   const byId = Object.fromEntries([...forumNormalManifests, ...forumModeratorManifests].map((m) => [m.id, m]))
