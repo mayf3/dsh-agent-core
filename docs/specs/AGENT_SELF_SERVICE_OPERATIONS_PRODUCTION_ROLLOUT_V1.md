@@ -167,24 +167,38 @@ closed and is never overwritten or time-reaped. A process crash before publicati
 retains a fail-closed temporary or metadata-lock artifact that blocks creation until explicit recovery authority;
 a crash during/after publication leaves an existing record that blocks all writers under the same rule.
 
+Before phrase authority exists, `dogfood-lease-claim` must, under the same exclusive metadata-operation lock,
+match the current lease bytes/digest, `leaseId`, `consumptionKey`, mandate digest, generation id, target binding,
+owner token, and current attempt-start window. It then atomically no-replace publishes and directory-`fsync`s
+one immutable canonical JSON `version:1` consumption record keyed by `consumptionKey`, binding those values and
+the claim UTC. Only the first successful claim emits a sanitized fresh-claim receipt. The claim is the durable
+attempt-start/mandate-consumption event: every later or concurrent claim fails closed, and replaying its receipt
+grants no phrase authority. A crash before claim publication retains a fail-closed temporary or metadata-lock
+artifact; a crash during or after publication leaves the permanent consumption record and consumes the attempt
+without retry.
+
 Release is compare-and-release: under the same exclusive metadata-operation lock, the release vehicle must
-match the current lease bytes/digest, `leaseId`, `consumptionKey`, mandate digest, generation id, and owner
-token, verify the exact terminal condition, durably publish the permanent consumption tombstone keyed by that
-`consumptionKey`, then remove the active record and `fsync` the directory. The metadata-operation lock is
-exclusive create-if-absent and itself has no time-based stale reap; a crash retains a fail-closed artifact. A
-stale, foreign, concurrent, or replayed creator/releaser can neither overwrite nor remove a current lease. Once
-the mandate/generation/target binding is tombstoned, no change of `leaseId`, creation UTC, or owner token may
-create another lease for that one-attempt authority.
+match the current lease and consumption-record bytes/digests and bindings plus the owner token, and verify the
+exact terminal condition before removing the active record and `fsync`ing the directory. The consumption record
+is the permanent tombstone and is never removed. If an unclaimed lease is explicitly terminally aborted before
+phrase authority, release must first durably publish the same permanent consumption record with an `aborted`
+disposition, then remove the active record; it may not preserve reusable authority. The metadata-operation lock
+is exclusive create-if-absent and itself has no time-based stale reap; a crash retains a fail-closed artifact. A
+stale, foreign, concurrent, or replayed creator/claimer/releaser can neither overwrite nor remove a current
+lease or consumption record. Once the mandate/generation/target binding is consumed, no change of `leaseId`,
+creation UTC, or owner token may create or claim another lease for that one-attempt authority.
 
 The mandate-bound executor must create and verify that exclusive persistent lease before its pre-phrase gate.
 While the lease exists, the executor performs a read-only authoritative gate over the pinned
 host/runtime/connector/store, generation, epoch, inventory digest, file identity/permissions, and attempt-start
-window, then sends the phrase as the next serialized action. The phrase send starts the single bounded attempt
-and must occur inside that window; the existing runtime turn timeout bounds its duration, and any
-timeout/unknown outcome aborts it without retry while retaining the lease. Executor or observer exit must not
-release the lease. Explicit release is allowed only after an exact HR disable committed/denied receipt, or
-after termination proof plus evidence that no disable mutation started; an unknown mutation outcome retains
-the lease and becomes an Owner gate.
+window, then atomically claims the lease. Only the same executor holding the fresh claim result may send the
+phrase as its immediately next serialized action; no other executor, subsequent claim, readback, or receipt
+replay is authorized to send. The durable claim starts and consumes the single bounded attempt, even if the
+phrase is never delivered, and must occur inside that window; the existing runtime turn timeout bounds its
+duration, and any timeout/unknown outcome aborts it without retry while retaining the lease. Executor or
+observer exit must not release the lease. Explicit release is allowed only after an exact HR disable
+committed/denied receipt, or after termination proof plus evidence that no disable mutation started; an unknown
+mutation outcome retains the lease and becomes an Owner gate.
 
 After the phrase, HR may verify only the fields exposed by the frozen formal read-only tools: trusted caller,
 opaque runtime generation, and caller-owned job/occurrence coordinates. For disable, the persistent outer lease
@@ -361,7 +375,7 @@ The frozen invocation grammar is:
 
 ```text
 node packages/production-runtime/src/scheduler/self-ops-production-release.js \
-  <prepare|seal|verify|apply|rollback-pre-v3|receipt|dogfood-lease-create|dogfood-lease-read|dogfood-lease-release> \
+  <prepare|seal|verify|apply|rollback-pre-v3|receipt|dogfood-lease-create|dogfood-lease-claim|dogfood-lease-release> \
   --generation <absolute-generation-directory> \
   --repo <absolute-clean-source-root> \
   --live-root <absolute-live-root> \
@@ -372,10 +386,12 @@ node packages/production-runtime/src/scheduler/self-ops-production-release.js \
 fail closed unless the exact accepted Execution Mandate, root actor, target lock, manifest, preimage, and
 attempt window all match. The three `dogfood-lease-*` verbs are deployment-control-only and require the exact
 accepted post-canary dogfood mandate, root actor, sealed generation, pinned lease coordinate, and protocol above.
-`dogfood-lease-create` exclusively publishes and reads back the lease; `dogfood-lease-read` verifies exact
-current bytes/bindings and emits only a sanitized receipt; `dogfood-lease-release` performs the terminal
-compare-and-release. The exact Feishu phrase is an external mandate-bound action immediately after a successful
-`dogfood-lease-read` receipt; no CLI verb sends it implicitly. No other subcommand, implicit default,
+`dogfood-lease-create` exclusively publishes and reads back the lease; `dogfood-lease-claim` performs the
+atomic first-and-only durable consumption claim and emits only its sanitized fresh-claim receipt;
+`dogfood-lease-release` performs the terminal compare-and-release while retaining the consumption record. The
+exact Feishu phrase is an external mandate-bound action available only to that same executor as the immediately
+next serialized action after a fresh `dogfood-lease-claim` result; no CLI verb sends it implicitly, and a claim
+receipt is not replayable authority. No other subcommand, implicit default,
 environment-selected target, or interactive fallback exists.
 
 ### CTR-ROL-002 — Candidate closure
@@ -617,20 +633,23 @@ Workflow instance transition under this Spec. Active draining requires its own a
   session/disposition, exact mandate actor/target/attempt/abort binding, immutable apply-mandate expiry receipt,
   exact dogfood-mandate digest and Owner acceptance provenance, the ordering proof
   `sample_committed_at < mandate_created_at <= mandate_accepted_at < prephrase_gate_at` and
-  `prephrase_gate_at < phrase_sent_at = attempt_started_at <= attempt_start_expires_at` plus
-  `attempt_start_not_before <= phrase_sent_at`, and zero external mechanical repair; exact target
+  `prephrase_gate_at < claim_committed_at = attempt_started_at <= phrase_sent_at <= attempt_start_expires_at`
+  plus `attempt_start_not_before <= claim_committed_at`, and zero external mechanical repair; exact target
   host/runtime/connector/store, runtime epoch, deployed generation,
   locked-current critical-inventory digest, UTC attempt-start window, existing runtime turn-timeout bound, an
-  immutable executor-owned pre-phrase environment/window receipt immediately followed by the phrase-send
-  receipt, HR-owned read-only receipts limited to trusted caller/opaque generation/owned coordinates, and
+  immutable executor-owned pre-phrase environment/window receipt immediately followed by the atomic fresh-claim
+  receipt and then the phrase-send receipt, HR-owned read-only receipts limited to trusted caller/opaque
+  generation/owned coordinates, and
   mutation receipts proving the canonical locked ownership/epoch/evidence guards executed; exact persistent
-  lease create/readback/terminal-release receipts, proof the lease survived injected executor exit, inventory
-  file identity/digest/permissions, exhaustive authorized-writer lineage showing denial while the lease exists,
+  lease create/claim/terminal-release receipts, proof the lease and permanent consumption record survived
+  injected executor exit, inventory file identity/digest/permissions, exhaustive authorized-writer lineage
+  showing denial while the lease exists,
   and the disable receipt binding the locked-current job logicalKey to the lease-stable fresh inventory
   snapshot; canonical lease bytes/digest/schema, root-only owner-token file mode and non-disclosure proof,
-  atomic no-replace/fsync publication, exact compare-and-release inputs, stable `consumptionKey`, permanent
-  consumption tombstone, creation refusal after consumption independent of lease/token/time entropy, and
-  explicit CLI verb receipts.
+  atomic no-replace/fsync publication, exact claim and compare-and-release inputs, stable `consumptionKey`,
+  first-claim-only receipt, permanent consumption tombstone from attempt start, refusal of concurrent or
+  replayed claims, creation refusal after consumption independent of lease/token/time entropy, and explicit CLI
+  verb receipts.
 - Expected result:
 
 ```text
@@ -647,11 +666,13 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 - Failure condition: guessed identity, critical/ambiguous target, external operator repair, no exact receipt,
   no future-natural activity, a pre-created or pre-accepted dogfood mandate, missing apply-mandate expiry,
   overlapping mandate validity, invalid timestamp/digest/provenance chain, phrase send outside the attempt-start
-  window or not immediately serialized after its read-only gate, runtime timeout/unknown outcome, retry, any
+  window or not immediately serialized after its durable fresh claim, runtime timeout/unknown outcome, retry,
+  any
   locked ownership/epoch/evidence guard denial or missing receipt, missing/mismatched or automatically reaped
   lease, release without an exact terminal condition, overwrite-on-create, non-fsynced publication, missing or
-  reusable or lease-entropy-dependent tombstone, post-consumption recreation, stale/foreign/concurrent/replayed
-  release success, owner-token disclosure, an authorized
+  reusable or lease-entropy-dependent tombstone, post-consumption recreation, a second/concurrent claim or
+  replayed claim receipt authorizing a send, non-durable attempt start, stale/foreign/concurrent/replayed claim
+  or release success, owner-token disclosure, an authorized
   inventory writer that bypasses the lease, Runtime/HR inventory or lease write permission, file
   identity/digest drift while leased, any claim that the inventory read itself shares the Scheduler store lock,
   any claim that HR read forbidden host/path/PID/store/inventory data, or inference from
@@ -682,7 +703,7 @@ FEISHU_AGENT_SELF_SERVICE_OPERATIONS_READY = YES
 | 9 | response loss | committed response loss followed by late outcome and receipt replay returns immutable committed receipt without duplicate write/audit |
 | 10 | one-shot | precommit fault is byte-zero-write; postcommit atomically records settlement, clears eligible fence, disables job, and returns exact receipt |
 | 11 | recurring | settlement preserves enabled definition and schedules strictly future-natural execution; no backlog replay or blind retry |
-| 12 | critical controls | exact locked-current `logicalKey`; protected/inventory-unavailable denial and replay are zero-write; alias bypass fails; persistent deployment/config lease survives executor death and freezes inventory identity/digest across the eager read and store-locked mutation while every authorized updater is blocked; inject concurrent creators, stale/foreign/replayed release, executor exit after phrase, before inventory read, and between inventory read/store lock, plus crashes before/during/after no-replace publish and before/after consumption-tombstone/active-record removal; after terminal release, retry creation for the same mandate/generation/target with changed creation UTC, owner token, and `leaseId` and require refusal by the stable `consumptionKey`; automatic reap, overwrite, premature release, token mismatch/disclosure, unbound writer, permission ambiguity, inventory drift, or post-consumption recreation fails closed; sanitized durable denial audit is exact-once; `manage:any` operator CLI/admin emergency path is preserved; non-critical owned target may self-disable |
+| 12 | critical controls | exact locked-current `logicalKey`; protected/inventory-unavailable denial and replay are zero-write; alias bypass fails; persistent deployment/config lease survives executor death and freezes inventory identity/digest across the eager read and store-locked mutation while every authorized updater is blocked; inject concurrent creators and claimers, stale/foreign/replayed claim/release, claim-receipt replay, executor exit before/after claim and after phrase, before inventory read, and between inventory read/store lock, plus crashes before/during/after lease and consumption-record no-replace publication and before/after active-record removal; prove at most one fresh claim and authorized phrase send, with crash-after-claim consuming the attempt; after terminal release, retry creation/claim for the same mandate/generation/target with changed creation UTC, owner token, and `leaseId` and require refusal by the stable `consumptionKey`; automatic reap, overwrite, premature release, token mismatch/disclosure, unbound writer, permission ambiguity, inventory drift, second send, or post-consumption recreation fails closed; sanitized durable denial audit is exact-once; `manage:any` operator CLI/admin emergency path is preserved; non-critical owned target may self-disable |
 | 13 | compatibility/regression | operator outcome/termination plus scheduler `list|runs|enable` and inherited seven-action semantics remain intact; actual pinned V2 reader and writer both reject V3 loudly with byte-zero-write |
 | 14 | closed result paths | provider absence returns `capability_unavailable`; lock contention returns `store_conflict`; injected unexpected failure returns sanitized `internal_error`; each is bounded, secret-free, and byte-zero-write |
 
