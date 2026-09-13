@@ -1,5 +1,5 @@
-import { HistoryStore } from '../../scheduler/src/index.js'
-import { createJwksTokenVerifier } from '../../product-api/src/scheduler-auth.js'
+import { HistoryStore } from '../../../scheduler/src/index.js'
+import { createJwksTokenVerifier } from '../../../product-api/src/scheduler-auth.js'
 
 /**
  * Wire the Scheduler history store and inbound token verifier into the shared

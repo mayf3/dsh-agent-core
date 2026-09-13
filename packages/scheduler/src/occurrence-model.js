@@ -1,7 +1,7 @@
 /**
- * @agent-core/scheduler — V2 occurrence model (SCHEDULER_TIMEOUT_OUTCOME_V2).
+ * @agent-core/scheduler — V3 occurrence model (SCHEDULER_TIMEOUT_OUTCOME_V3).
  *
- * Governing contracts (docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V2.md):
+ * Governing contracts (docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V3.md):
  *   C-022 occurrence record schema (authority fields, fail-loud validation)
  *   C-023 deterministic identity derivation + collision policy
  *   C-024 payloadHash (canonical JSON; delivery excluded)
@@ -24,8 +24,14 @@ export const EXECUTION_OUTCOMES = new Set(['succeeded', 'failed'])
 export const DELIVERY_STATUSES = new Set(['delivered', 'not-delivered', 'not-requested', 'unknown'])
 export const LATE_SETTLEMENT_BASES = new Set(['trusted-late-evidence', 'operator-reconcile'])
 export const TERMINAL_EVIDENCE_KINDS = new Set([
-  'pre-start-rejection', 'turn-terminal', 'late-settlement', 'operator-reconcile',
+  'pre-start-rejection', 'turn-terminal', 'late-settlement', 'operator-reconcile', 'termination-only',
 ])
+export const TERMINATION_EVIDENCE_KINDS = new Set([
+  'exact_terminal_then_idle', 'exact_queued_removal', 'child_real_exit', 'cancellation_ack',
+  'operator-trusted-evidence',
+])
+export const TERMINATION_ACTOR_KINDS = new Set(['self-agent', 'operator'])
+export const SCHEDULE_DISPOSITIONS = new Set(['recurring_future_natural_only', 'one_shot_disabled'])
 
 /**
  * §9.1 state machine. Key = from-state, value = Set of legal to-states.
@@ -49,7 +55,9 @@ export function isTerminalState(state) {
 }
 
 export function isUnresolvedUnknown(record) {
-  return record?.state === 'outcome_unknown' && record?.lateSettlement === undefined
+  return record?.state === 'outcome_unknown'
+    && record?.lateSettlement === undefined
+    && record?.terminationSettlement === undefined
 }
 
 /** Unambiguous encoding of the logical coordinates for hashing (length-prefixed parts). */
@@ -148,7 +156,7 @@ export function structuredCollisionError(existing, attempted) {
 
 /** Authority fields every persisted occurrence record must carry (C-022). */
 const REQUIRED_FIELDS = [
-  'occurrenceId', 'jobId', 'scheduleRevision', 'kind', 'runId', 'idempotencyKey',
+  'recordSchemaVersion', 'occurrenceId', 'jobId', 'scheduleRevision', 'kind', 'runId', 'idempotencyKey',
   'payloadHash', 'state', 'admittedAt', 'executionDeadlineAtMs', 'history',
 ]
 
@@ -168,6 +176,13 @@ export function validateOccurrenceRecord(record) {
   for (const field of REQUIRED_FIELDS) {
     if (record[field] === undefined) corrupt(`missing authority field '${field}'`)
   }
+  if (![2, 3].includes(record.recordSchemaVersion)) corrupt('recordSchemaVersion must be 2 or 3')
+  if (record.recordSchemaVersion === 3) {
+    if (typeof record.ownerAgentId !== 'string' || record.ownerAgentId === '') corrupt('V3 ownerAgentId required')
+    if (typeof record.requestId !== 'string' || record.requestId === '') corrupt('V3 requestId required')
+  } else if (record.ownerAgentId !== undefined || record.requestId !== undefined) {
+    corrupt('migrated V2 records must not fabricate ownerAgentId/requestId')
+  }
   if (typeof record.jobId !== 'string' || record.jobId === '') corrupt('jobId must be a non-empty string')
   if (!Number.isSafeInteger(record.scheduleRevision) || record.scheduleRevision < 1) corrupt('scheduleRevision must be a positive integer')
   if (!OCCURRENCE_KINDS.has(record.kind)) corrupt(`invalid kind '${record.kind}'`)
@@ -180,7 +195,8 @@ export function validateOccurrenceRecord(record) {
   const derivedId = deriveOccurrenceId(record)
   if (record.occurrenceId !== derivedId) corrupt(`occurrenceId does not match logical coordinates (expected ${derivedId})`)
   if (record.runId !== deriveRunId(record.occurrenceId)) corrupt('runId does not derive from occurrenceId')
-  if (record.idempotencyKey !== record.occurrenceId) corrupt('idempotencyKey must equal occurrenceId in V2')
+  if (record.idempotencyKey !== record.occurrenceId) corrupt('idempotencyKey must equal occurrenceId')
+  if (record.requestId !== undefined && record.requestId !== record.idempotencyKey) corrupt('requestId must equal idempotencyKey')
   if (typeof record.payloadHash !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(record.payloadHash)) corrupt('payloadHash must be sha256:<64 lowercase hex>')
   if (!Number.isFinite(record.admittedAt)) corrupt('admittedAt must be finite')
   if (!Number.isFinite(record.executionDeadlineAtMs) || record.executionDeadlineAtMs <= record.admittedAt) {
@@ -207,6 +223,7 @@ export function validateOccurrenceRecord(record) {
   let previous = null
   let previousAt = -Infinity
   let unknownResolutionEntry = null
+  let terminationAnnotationCount = 0
   for (const [index, entry] of record.history.entries()) {
     if (!entry || typeof entry !== 'object' || !Number.isFinite(entry.at)
       || typeof entry.to !== 'string' || typeof entry.reason !== 'string') corrupt(`malformed history entry ${index}`)
@@ -214,7 +231,12 @@ export function validateOccurrenceRecord(record) {
     if (entry.at < previousAt) corrupt(`history entry ${index} moves backward in time`)
     if (index === 0 && entry.at !== record.admittedAt) corrupt('history must begin at admittedAt')
     if (previous === null && entry.to !== 'admitted') corrupt('history must begin with admitted')
-    if (previous !== null && !canTransition(previous, entry.to)) corrupt(`history contains illegal ${previous} -> ${entry.to}`)
+    const terminationAnnotation = previous === 'outcome_unknown' && entry.to === 'outcome_unknown'
+      && record.terminationSettlement?.settledAt === entry.at
+    if (terminationAnnotation) terminationAnnotationCount += 1
+    if (previous !== null && !canTransition(previous, entry.to) && !terminationAnnotation) {
+      corrupt(`history contains illegal ${previous} -> ${entry.to}`)
+    }
     if (previous === 'outcome_unknown' && TERMINAL_STATES.has(entry.to)) unknownResolutionEntry = entry
     previous = entry.to
     previousAt = entry.at
@@ -238,6 +260,28 @@ export function validateOccurrenceRecord(record) {
       corrupt('invalid lateSettlement authority')
     }
   }
+  if (record.terminationSettlement !== undefined) {
+    const settlement = record.terminationSettlement
+    if (terminationAnnotationCount !== 1
+      || !(record.state === 'outcome_unknown' || (TERMINAL_STATES.has(record.state) && record.lateSettlement !== undefined))
+      || settlement?.kind !== 'terminated_without_outcome'
+      || settlement.businessStateAtCommit !== 'outcome_unknown'
+      || settlement.requestId !== (record.requestId ?? record.idempotencyKey)
+      || !TERMINATION_EVIDENCE_KINDS.has(settlement.evidenceKind)
+      || typeof settlement.evidenceId !== 'string' || settlement.evidenceId === ''
+      || !TERMINATION_ACTOR_KINDS.has(settlement.actorKind)
+      || typeof settlement.actorId !== 'string' || settlement.actorId === ''
+      || settlement.actorKind === 'self-agent' && settlement.actorId !== record.ownerAgentId
+      || typeof settlement.actorProvenance !== 'string' || settlement.actorProvenance === ''
+      || typeof settlement.operationId !== 'string' || !/^op:[0-9a-f]{16}$/.test(settlement.operationId)
+      || settlement.fenceBefore !== true || typeof settlement.fenceAfter !== 'boolean'
+      || !SCHEDULE_DISPOSITIONS.has(settlement.scheduleDisposition)
+      || !Number.isFinite(settlement.settledAt) || settlement.settledAt !== settlement.committedAt) {
+      corrupt('invalid terminationSettlement authority')
+    }
+  } else if (terminationAnnotationCount !== 0) {
+    corrupt('termination history annotation requires terminationSettlement authority')
+  }
   return record
 }
 
@@ -255,12 +299,15 @@ export function buildOccurrenceRecord({ job, kind, nominalScheduledAt, retryOfOc
     ? Math.floor(timeoutMs)
     : 3600_000 // AGENT_TURN_SAFETY_TIMEOUT_MS default (C-025)
   const record = {
+    recordSchemaVersion: 3,
     occurrenceId,
     jobId: job.id,
+    ownerAgentId: job.agentId,
     scheduleRevision: job.scheduleRevision,
     kind,
     runId: deriveRunId(occurrenceId),
     idempotencyKey: occurrenceId,
+    requestId: occurrenceId,
     payloadHash: computePayloadHash({ agentId: job.agentId, payload: job.payload }),
     state: 'admitted',
     admittedAt,

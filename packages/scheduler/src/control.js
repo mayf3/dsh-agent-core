@@ -11,6 +11,7 @@
  * occurrence ledger — never from legacy execution fields (C-030).
  */
 
+import { createHash } from 'node:crypto'
 import { userInfo } from 'node:os'
 import { cloneJob, normalizeJob, toPublicJob } from './job-model.js'
 import { parseAtToMs } from './schedule.js'
@@ -264,8 +265,8 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
   if (typeof runId !== 'string' || runId === '') {
     throw new TypeError('reconcileOccurrence: runId is required')
   }
-  if (resolvedTo !== 'succeeded' && resolvedTo !== 'failed') {
-    throw new TypeError('reconcileOccurrence: resolvedTo must be succeeded|failed')
+  if (!['succeeded', 'failed', 'terminated_without_outcome'].includes(resolvedTo)) {
+    throw new TypeError('reconcileOccurrence: resolvedTo must be succeeded|failed|terminated_without_outcome')
   }
   if (typeof evidenceNote !== 'string' || !evidenceNote.trim()) {
     throw new TypeError('reconcileOccurrence: evidenceNote is required')
@@ -278,6 +279,10 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
     uid: osUser.uid,
     gid: osUser.gid,
   }
+  const operatorActorId = `${identity.username}:${identity.uid}`
+  const operationId = `op:${createHash('sha256')
+    .update(`operator-terminate|${operatorActorId}|${occurrenceId}|${runId}`, 'utf8')
+    .digest('hex').slice(0, 16)}`
   const resolvedAt = nowMs
   const { doc, value } = await store.mutateDoc((latest) => {
     const record = findOccurrenceById(latest.occurrences, occurrenceId)
@@ -285,25 +290,61 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
     if (record.runId !== runId) {
       throw new Error(`runId mismatch: occurrence ${occurrenceId} belongs to ${record.runId}`)
     }
-    if (!isUnresolvedUnknown(record)) {
+    if (resolvedTo === 'terminated_without_outcome' && record.terminationSettlement !== undefined) {
+      return { value: { record, identity, fenceRemaining: latest.fences[record.jobId] !== undefined, alreadySettled: true } }
+    }
+    const businessUnknown = record.state === 'outcome_unknown' && record.lateSettlement === undefined
+    if (resolvedTo === 'terminated_without_outcome' ? !isUnresolvedUnknown(record) : !businessUnknown) {
       throw Object.assign(
         new Error(`occurrence ${occurrenceId} is ${record.state}${record.lateSettlement ? ' (already settled)' : ''} — only unresolved outcome_unknown may be reconciled`),
         { code: 'RECONCILE_NOT_UNKNOWN' },
       )
     }
-    applyTransition(record, {
-      to: resolvedTo,
-      at: resolvedAt,
-      reason: `operator reconcile: ${evidenceNote.trim()}`,
-      endedAt: resolvedAt,
-      executionOutcome: resolvedTo,
-      lateSettlement: {
-        resolvedTo, resolvedAt, basis: 'operator-reconcile',
-        evidenceRef: evidenceNote.trim(),
-      },
-      terminalEvidence: { kind: 'operator-reconcile', detailRef: evidenceNote.trim() },
-    })
+    if (resolvedTo === 'terminated_without_outcome') {
+      const job = latest.jobs.find((candidate) => candidate.id === record.jobId)
+      if (!job) throw new Error(`unknown job id: ${record.jobId}`)
+      const oneShot = job.schedule?.kind === 'at'
+      const evidenceId = `ev:${createHash('sha256').update(evidenceNote.trim(), 'utf8').digest('hex').slice(0, 16)}`
+      record.terminationSettlement = {
+        kind: 'terminated_without_outcome',
+        businessStateAtCommit: 'outcome_unknown',
+        requestId: record.requestId ?? record.idempotencyKey,
+        evidenceKind: 'operator-trusted-evidence',
+        evidenceId,
+        actorKind: 'operator',
+        actorId: operatorActorId,
+        actorProvenance: identity.provenance,
+        operationId,
+        fenceBefore: latest.fences[record.jobId] !== undefined,
+        fenceAfter: false,
+        scheduleDisposition: oneShot ? 'one_shot_disabled' : 'recurring_future_natural_only',
+        settledAt: resolvedAt,
+        committedAt: resolvedAt,
+      }
+      record.terminalEvidence = { kind: 'termination-only', detailRef: evidenceId }
+      record.history.push({
+        at: resolvedAt, from: 'outcome_unknown', to: 'outcome_unknown',
+        reason: 'operator trusted termination without business outcome',
+      })
+      if (oneShot) job.enabled = false
+    } else {
+      applyTransition(record, {
+        to: resolvedTo,
+        at: resolvedAt,
+        reason: `operator reconcile: ${evidenceNote.trim()}`,
+        endedAt: resolvedAt,
+        executionOutcome: resolvedTo,
+        lateSettlement: {
+          resolvedTo, resolvedAt, basis: 'operator-reconcile',
+          evidenceRef: evidenceNote.trim(),
+        },
+        terminalEvidence: { kind: 'operator-reconcile', detailRef: evidenceNote.trim() },
+      })
+    }
     latest.fences = rebuildFences(latest.occurrences)
+    if (record.terminationSettlement !== undefined) {
+      record.terminationSettlement.fenceAfter = latest.fences[record.jobId] !== undefined
+    }
     for (const job of latest.jobs) {
       job.state = deriveJobStateSummary(job, latest.occurrences, resolvedAt)
     }
@@ -315,13 +356,15 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
       if (resolvedJob.deleteAfterRun === true) latest.jobs.splice(resolvedJobIndex, 1)
       else resolvedJob.enabled = false
     }
-    return { value: { record, identity, fenceRemaining: latest.fences[record.jobId] !== undefined } }
+    return { value: { record, identity, fenceRemaining: latest.fences[record.jobId] !== undefined, alreadySettled: false } }
   })
-  const evidenceStatus = await store.appendRunEvent({
-    ts: resolvedAt, action: 'late_settlement', occurrenceId, runId: value.record.runId,
-    resolvedTo, basis: 'operator-reconcile', note: evidenceNote.trim(), operatorIdentity: value.identity,
-    jobId: value.record.jobId, fenceRemaining: value.fenceRemaining,
-  })
+  const evidenceStatus = value.alreadySettled
+    ? { ok: true, alreadyApplied: true }
+    : await store.appendRunEvent({
+        ts: resolvedAt, action: resolvedTo === 'terminated_without_outcome' ? 'termination_settlement' : 'late_settlement', occurrenceId, runId: value.record.runId,
+        resolvedTo, basis: 'operator-reconcile', note: evidenceNote.trim(), operatorIdentity: value.identity,
+        jobId: value.record.jobId, fenceRemaining: value.fenceRemaining,
+      })
   return {
     record: structuredClone(value.record),
     identity: value.identity,

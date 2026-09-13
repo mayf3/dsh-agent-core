@@ -77,7 +77,7 @@ test('ACC-001 one-shot deleteAfterRun: definition deleted, occurrence+run+snapsh
   const doc = await scheduler.store.loadDoc()
   assert.equal(doc.jobs.length, 0, 'definition removed from jobs[]')
   assert.equal(doc.occurrences.length, 1, 'authority ledger occurrences[] retained')
-  assert.equal(doc.version, 2)
+  assert.equal(doc.version, 3)
 
   const { runs } = history.queryRuns({ jobId: 'one-shot-1' })
   assert.equal(runs.length, 1)
@@ -475,7 +475,7 @@ test('history store coexistence: jobs.json document shape and runs.jsonl untouch
   await history.ensureLoaded()
 
   const doc = JSON.parse(readFileSync(join(dir, 'jobs.json'), 'utf8'))
-  assert.deepEqual(Object.keys(doc).sort(), ['fences', 'jobs', 'occurrences', 'version'], 'v2 doc shape EXACT (R-H2)')
+  assert.deepEqual(Object.keys(doc).sort(), ['fences', 'jobs', 'occurrences', 'version'], 'v3 doc shape EXACT (R-H2)')
   assert.ok(!('history' in doc), 'no history fields inside jobs.json')
   assert.ok(existsSync(join(dir, 'runs.jsonl')), 'runs.jsonl evidence log still present (R-H3)')
   const runsLog = readFileSync(join(dir, 'runs.jsonl'), 'utf8')

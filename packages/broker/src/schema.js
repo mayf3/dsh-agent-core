@@ -90,6 +90,12 @@ export function validateManifest(input) {
     manifest.selector = input.selector
   }
 
+  if (input.infrastructure !== undefined && typeof input.infrastructure !== 'boolean') {
+    errors.push(path('infrastructure') + ' must be a boolean')
+  } else if (input.infrastructure === true) {
+    manifest.infrastructure = true
+  }
+
   // ---- human-facing text ----
   if (input.name !== undefined && typeof input.name !== 'string') {
     errors.push(path('name') + ' must be a string')

@@ -12,6 +12,7 @@
     "./store": "./src/store.js",
     "./occurrence": "./src/occurrence-model.js",
     "./reconcile": "./src/reconcile.js",
+    "./self-ops": "./src/self-ops/index.js",
     "./package.json": "./package.json"
   },
   "scripts": {

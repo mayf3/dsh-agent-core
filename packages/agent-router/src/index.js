@@ -339,6 +339,10 @@ export function apply(ctx, config) {
     getTurnReconciliation: (handle) => reconciliationStore.getTurnReconciliation(handle),
     readFinalAssistantOutput: (handle) => reconciliationStore.readFinalAssistantOutput(handle),
     resolveCallerCorrelation: (triple) => reconciliationStore.resolveCallerCorrelation(triple),
+    reconciliationRuntimeStatus: () => ({
+      generationId: reconciliationStore.occupancy().runtimeEpoch,
+      health: 'healthy',
+    }),
     onTurnReconciled: (listener) => reconciliationStore.onTurnReconciled(listener),
     turnExecutionSnapshot: (turnExecutionId) => {
       const owner = registry.findOwningProcess(turnExecutionId)

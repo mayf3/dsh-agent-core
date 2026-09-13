@@ -60,6 +60,7 @@ import { manifests as workflowManifests } from './capabilities/workflow.js'
 import { manifests as okrManifests } from './capabilities/okr.js'
 import { agentDefinitionManifests } from './capabilities/agent-definition.js'
 import { schedulerManifests } from './capabilities/scheduler.js'
+import { selfOpsManifests } from './capabilities/self-ops.js'
 import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
 import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
 import { lifeWorkbenchManifests } from './capabilities/life-workbench.mjs'
@@ -95,6 +96,7 @@ export const DEFAULT_MANIFESTS = [
   ...okrManifests,
   ...agentDefinitionManifests,
   ...schedulerManifests,
+  ...selfOpsManifests,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,
   ...lifeWorkbenchManifests,
@@ -295,6 +297,7 @@ export function apply(ctx, config = {}) {
       localHandlerResolver: () => ({
         ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),
         ...(ctx.get('selfServiceSchedulerAccess')?.handlers ?? {}),
+        ...(ctx.get('selfOpsAccess')?.handlers ?? {}),
         // AGENT_CORE_AGENT_SESSION_MESSAGING_V1: third LOCAL provider — the
         // generalization keeps the execute-time resolve-at-call contract
         // (sibling rows load concurrently; reading at APPLY time would race).
