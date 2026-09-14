@@ -24,6 +24,7 @@ function validIncidentState() {
 }
 
 test('incident durability rejects invalid lifecycle, missing delivery, orphan and duplicate transition identities', () => {
+  assert.throws(() => validateIncidentState({ version: 1, incidents: [], outbox: [] }), /unsupported incident state/)
   const invalidLifecycle = validIncidentState()
   Object.values(invalidLifecycle.incidents)[0].lifecycle = 'BANANA'
   assert.throws(() => commitIncidentState('/not-reached', invalidLifecycle), /incoherent incident record/)
@@ -57,7 +58,23 @@ test('incident durability rejects invalid lifecycle, missing delivery, orphan an
   assert.throws(() => validateIncidentState(malformedClosure), /incoherent incident outbox/)
   const missingClosure = structuredClone(closed)
   delete missingClosure.outbox[Object.entries(missingClosure.outbox).find(([, intent]) => intent.transitionRevision === 2)[0]]
-  assert.throws(() => validateIncidentState(missingClosure), /lacks unique current outbox/)
+  assert.throws(() => validateIncidentState(missingClosure), /lifecycle history is incomplete/)
+
+  const future = validIncidentState()
+  const [root, record] = Object.entries(future.incidents)[0]
+  const futureIntent = { incident: { ...structuredClone(record), lifecycle: 'CLOSED_RECOVERED', transitionRevision: 2,
+    alertState: { ...record.alertState, lifecycle: 'CLOSED_RECOVERED' } }, incidentId: record.incidentId,
+    transitionRevision: 2, transitionKind: 'CLOSED_RECOVERED', routeClass: record.routeClass, producer: record.producer,
+    delivery: 'PENDING', payloadRevision: 2 }
+  futureIntent.notificationKey = notificationKey(futureIntent); future.outbox[futureIntent.notificationKey] = futureIntent
+  assert.throws(() => validateIncidentState(future), /incoherent incident outbox/)
+  assert.equal(future.incidents[root].transitionRevision, 1)
+
+  const forgedMigration = validIncidentState()
+  forgedMigration.migration = {}
+  delete forgedMigration.outbox[Object.keys(forgedMigration.outbox)[0]]
+  Object.values(forgedMigration.incidents)[0].alertState.delivery = 'DELIVERED'
+  assert.throws(() => validateIncidentState(forgedMigration), /incoherent incident migration/)
 })
 
 test('protected control tree rejects symlink and writable ancestors before any receipt write', async () => {

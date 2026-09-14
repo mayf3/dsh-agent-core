@@ -12,9 +12,14 @@ export function hasUnsupportedFileXattrs(path) {
     .filter(Boolean).some((name) => !PLATFORM_XATTRS.has(name))
 }
 
-function hasAnyFileXattrs(path) {
+export function hasAnyFileXattrs(path) {
   if (process.platform !== 'darwin') return false
   return execFileSync('/usr/bin/xattr', [path], { encoding: 'utf8' }).trim() !== ''
+}
+
+export function listFileXattrs(path) {
+  if (process.platform !== 'darwin') return []
+  return execFileSync('/usr/bin/xattr', [path], { encoding: 'utf8' }).trim().split('\n').filter(Boolean).sort()
 }
 
 export function assertProtectedAncestorMetadata({ directory, symlink, uid, mode, extendedAcl, extendedAttributes }, expectedUid) {

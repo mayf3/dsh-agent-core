@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { quiesceLaunchdServices } from './deployment-launchd.js'
-import { capturePlainFileMetadata } from './deployment-file-metadata.js'
-import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage } from './deployment-durable-file.js'
+import { capturePlainFileMetadata, listFileXattrs } from './deployment-file-metadata.js'
+import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage, verifyReceiptedPreimage } from './deployment-durable-file.js'
 
 export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   if (!/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)) {
@@ -17,10 +17,17 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   if (existsSync(preimage) && !readFileSync(plistPath).equals(readFileSync(preimage)) && !ctx.runtimePriorReceipt) {
     unlinkSync(preimage); syncDirectory(dirname(preimage))
   }
-  if (!existsSync(preimage)) {
+  if (!ctx.runtimePriorReceipt && !existsSync(preimage)) {
     durableCopyPreimage(plistPath, preimage, sourceMetadata, { crashAt: ctx.crashAt, onStage: ctx.onDurabilityStage })
   }
+  if (ctx.runtimePriorReceipt) {
+    if (ctx.runtimePriorReceipt.sourceSha !== sourceSha || ctx.runtimePriorReceipt.plistPath !== plistPath) throw new Error('runtime receipt generation mismatch')
+    verifyReceiptedPreimage({ path: preimage, expectedPath: ctx.runtimePriorReceipt.preimage,
+      expectedSha256: ctx.runtimePriorReceipt.preimageSha256, expectedMetadata: ctx.runtimePriorReceipt.preimageMetadata,
+      expectedXattrs: ctx.runtimePriorReceipt.preimageXattrs })
+  }
   const preimageMetadata = capturePlainFileMetadata(preimage)
+  const preimageXattrs = listFileXattrs(preimage)
   const preimageSha256 = createHash('sha256').update(readFileSync(preimage)).digest('hex')
   const currentSha256 = createHash('sha256').update(readFileSync(plistPath)).digest('hex')
   if (currentSha256 === preimageSha256) {
@@ -56,7 +63,7 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
     }
   }
   const expectedInstalledSha256 = createHash('sha256').update(plist).digest('hex')
-  ctx.runtimeReceipt?.({ status: 'INSTALLING', sourceSha, plistPath, preimage, preimageSha256, preimageMetadata, installedSha256: expectedInstalledSha256 })
+  ctx.runtimeReceipt?.({ status: 'INSTALLING', sourceSha, plistPath, preimage, preimageSha256, preimageMetadata, preimageXattrs, installedSha256: expectedInstalledSha256 })
   if (dirty) {
     atomicInstallDurableFile(plistPath, Buffer.from(plist), preimageMetadata, { crashAt: ctx.crashAt, onStage: ctx.onDurabilityStage })
   } else {
@@ -71,7 +78,7 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   quiesceLaunchdServices(['system/ai.agent-core.runtime'], ctx)
   ctx.bootstrap(plistPath, 'system/ai.agent-core.runtime')
   if (JSON.stringify(capturePlainFileMetadata(plistPath)) !== JSON.stringify(preimageMetadata)) throw new Error('runtime plist metadata readback mismatch')
-  ctx.runtimeReceipt?.({ status: 'INSTALLED', sourceSha, plistPath, preimage, preimageSha256, preimageMetadata, installedSha256 })
+  ctx.runtimeReceipt?.({ status: 'INSTALLED', sourceSha, plistPath, preimage, preimageSha256, preimageMetadata, preimageXattrs, installedSha256 })
   const deadline = Date.now() + 60_000
   let healthy = false
   while (Date.now() < deadline) {

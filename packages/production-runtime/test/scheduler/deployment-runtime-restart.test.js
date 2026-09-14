@@ -4,6 +4,7 @@ import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, writ
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 
 import { restartSchedulerProductionRuntime } from '../../src/scheduler/deployment-runtime-restart.js'
 
@@ -74,4 +75,25 @@ test('runtime restart rejects a same-byte preimage with different predecessor me
   }, phase: () => assert.fail('phase must not run'), sourceSha: '1'.repeat(40) }), /preimage metadata differs/)
   assert.deepEqual(receipts, [])
   assert.equal(statSync(plistPath).mode & 0o777, 0o644)
+})
+
+test('runtime replay rejects rollback preimage drift against the frozen receipt', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'scheduler-runtime-receipt-preimage-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const launchdDir = join(root, 'launchd'), artifactsDir = join(root, 'artifacts')
+  const plistPath = join(launchdDir, 'ai.agent-core.runtime.plist')
+  const preimage = join(artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
+  mkdirSync(launchdDir, { recursive: true }); mkdirSync(join(artifactsDir, 'rollback'), { recursive: true })
+  writeFileSync(plistPath, '<plist><dict><key>HOME</key><string>/Users/authsvc</string></dict></plist>\n')
+  writeFileSync(preimage, 'wrong rollback bytes'); chmodSync(plistPath, 0o600); chmodSync(preimage, 0o600)
+  if (process.platform === 'darwin') {
+    execFileSync('/usr/bin/xattr', ['-c', plistPath]); execFileSync('/usr/bin/xattr', ['-c', preimage])
+  }
+  const metadata = { uid: statSync(preimage).uid, gid: statSync(preimage).gid, mode: 0o644, acl: 'NONE', xattrs: 'NONE' }
+  assert.throws(() => restartSchedulerProductionRuntime({ ctx: {
+    launchdDir, artifactsDir, authsvcUid: 501, authsvcGid: 20,
+    runtimePriorReceipt: { sourceSha: '1'.repeat(40), plistPath, preimage, preimageSha256: '0'.repeat(64),
+      preimageMetadata: metadata, preimageXattrs: [], installedSha256: createHash('sha256').update(readFileSync(plistPath)).digest('hex') },
+    runtimeReceipt: () => assert.fail('replacement receipt must not be written'),
+  }, phase: () => assert.fail('phase must not run'), sourceSha: '1'.repeat(40) }), /preimage generation mismatch/)
 })
