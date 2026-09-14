@@ -11,7 +11,8 @@ import { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLega
 import { canonicalJSON } from '../../src/occurrence-model.js'
 import { ensureProtectedDirectoryTree } from '../../src/watchdog/private-state-io.js'
 import { compileIncidents } from '../../src/watchdog/incident-compiler.js'
-import { notificationKey, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
+import { bindNotificationDelivery, notificationKey, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
+import { providerIdempotencyKey, stableNotificationText } from '../../src/watchdog/delivery.js'
 
 const state = (revision) => ({ version: 1, revision, incidents: {}, outbox: {} })
 const sha = (value) => createHash('sha256').update(value).digest('hex')
@@ -75,6 +76,30 @@ test('incident durability rejects invalid lifecycle, missing delivery, orphan an
   delete forgedMigration.outbox[Object.keys(forgedMigration.outbox)[0]]
   Object.values(forgedMigration.incidents)[0].alertState.delivery = 'DELIVERED'
   assert.throws(() => validateIncidentState(forgedMigration), /incoherent incident migration/)
+
+  const shapedMigration = validIncidentState()
+  shapedMigration.migration = { legacySha256: 'a'.repeat(64), evidenceSha256: 'b'.repeat(64), factsSha256: 'c'.repeat(64) }
+  delete shapedMigration.outbox[Object.keys(shapedMigration.outbox)[0]]
+  Object.values(shapedMigration.incidents)[0].alertState.delivery = 'DELIVERED'
+  assert.throws(() => validateIncidentState(shapedMigration), /migration authority mismatch/)
+})
+
+test('incident durability binds persisted delivery to canonical routing authority', () => {
+  const malicious = validIncidentState()
+  const [key, intent] = Object.entries(malicious.outbox)[0]
+  intent.deliveryBinding = { producer: intent.producer, route: { channel: 'feishu', to: 'daily-thought-agent-group' },
+    payload: 'redirected', providerKey: 'not-derived', routeSource: 'canonicalOpsTarget', routingSha256: 'a'.repeat(64) }
+  intent.deliveryBindingAt = 'not-a-time'
+  assert.throws(() => validateIncidentState(malicious), /delivery binding/)
+
+  const unbound = validIncidentState()
+  const unboundKey = Object.keys(unbound.outbox)[0]
+  const bound = bindNotificationDelivery(unbound, unboundKey, {
+    producer: unbound.outbox[unboundKey].producer, route: { channel: 'feishu', to: 'scheduler-ops' },
+    routeSource: 'canonicalOpsTarget', routingSha256: 'b'.repeat(64),
+    payload: stableNotificationText(unbound.outbox[unboundKey]), providerKey: providerIdempotencyKey(unboundKey),
+  }, 2)
+  assert.equal(validateIncidentState(bound), bound)
 })
 
 test('protected control tree rejects symlink and writable ancestors before any receipt write', async () => {
@@ -180,6 +205,8 @@ test('T27 file migration freezes all sources, retains hash-addressed backups, an
   assert.equal(Object.values(result.state.incidents)[0].alertState.delivery, 'DELIVERED')
   assert.equal(loadIncidentState(incidentPath).hash, result.incidentSha256)
   assert.equal((await readFile(join(dir, 'migration-backups', `legacy-${sha(legacyBytes)}.json`))).toString(), legacyBytes.toString())
+  await writeFile(join(dir, 'migration-backups', `facts-${result.factsSha256}.json`), '[]tampered', { mode: 0o600 })
+  assert.throws(() => loadIncidentState(incidentPath), /migration backup generation mismatch/)
 })
 
 test('T27 source drift aborts before incident-state commit', async () => {

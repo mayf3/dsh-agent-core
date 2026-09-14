@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { dirname, join } from 'node:path'
 import { canonicalJSON } from '../occurrence-model.js'
 import { legacyFingerprint, migrateLegacyAlertState, notificationKey } from './incident-lifecycle.js'
+import { providerIdempotencyKey, stableNotificationText } from './delivery.js'
 import { atomicReplacePrivateFile, ensurePrivateDirectory, readPrivateFile, withPrivateLock } from './private-state-io.js'
 
 function hash(bytes) {
@@ -40,7 +41,22 @@ function hasValidMigration(value) {
   const keys = ['evidenceSha256', 'factsSha256', 'legacySha256']
   if (!isPlainRecord(value.migration) || Object.keys(value.migration).sort().join(',') !== keys.sort().join(',')
     || keys.some((key) => !SHA256.test(value.migration[key] ?? ''))) throw new TypeError('incoherent incident migration')
-  return true
+  return value.migration
+}
+
+function verifiedMigrationAuthority(path, migration, ownership) {
+  if (!migration) return undefined
+  const backupDir = join(dirname(path), 'migration-backups')
+  const sources = [
+    ['legacySha256', `legacy-${migration.legacySha256}.json`],
+    ['evidenceSha256', `evidence-${migration.evidenceSha256}.jsonl`],
+    ['factsSha256', `facts-${migration.factsSha256}.json`],
+  ]
+  for (const [field, name] of sources) {
+    const loaded = readPrivateFile(join(backupDir, name), ownership)
+    if (hash(loaded.bytes) !== migration[field]) throw new TypeError('incident migration backup generation mismatch')
+  }
+  return migration
 }
 
 function requireIncidentRecord(root, record) {
@@ -81,15 +97,32 @@ function validateOutbox(value) {
       || (embedded.episode === record.episode && intent.transitionRevision > record.transitionRevision)) {
       throw new TypeError(`incoherent incident outbox: ${key}`)
     }
+    const binding = intent.deliveryBinding
+    if (binding === undefined) {
+      if (intent.deliveryBindingAt !== undefined) throw new TypeError(`incoherent incident delivery binding: ${key}`)
+    } else {
+      const allowedSources = intent.routeClass === 'SCHEDULER_CONTROL_PLANE_INCIDENT' ? ['canonicalOpsTarget']
+        : intent.routeClass === 'JOB_FAILURE' ? ['jobFailureTargets', 'ownerTargets', 'canonicalOpsTarget'] : ['job.delivery']
+      if (!isPlainRecord(binding) || Object.keys(binding).sort().join(',') !== 'payload,producer,providerKey,route,routeSource,routingSha256'
+        || binding.producer !== intent.producer || !Number.isFinite(intent.deliveryBindingAt)
+        || binding.providerKey !== providerIdempotencyKey(key) || binding.payload !== stableNotificationText(intent)
+        || !allowedSources.includes(binding.routeSource) || !SHA256.test(binding.routingSha256 ?? '')
+        || !isPlainRecord(binding.route) || Object.keys(binding.route).sort().join(',') !== 'channel,to'
+        || binding.route.channel !== 'feishu' || typeof binding.route.to !== 'string' || binding.route.to.trim() === '') {
+        throw new TypeError(`incoherent incident delivery binding: ${key}`)
+      }
+    }
     identities.add(identity)
   }
 }
 
-export function validateIncidentState(value) {
+export function validateIncidentState(value, { migrationAuthority } = {}) {
   if (!isPlainRecord(value) || value.version !== 1 || !isPlainRecord(value.incidents) || !isPlainRecord(value.outbox)) {
     throw new TypeError('unsupported incident state')
   }
-  const migrated = hasValidMigration(value)
+  const migration = hasValidMigration(value)
+  const migrated = migration !== false
+  if (migrated && canonicalJSON(migration) !== canonicalJSON(migrationAuthority)) throw new TypeError('incident migration authority mismatch')
   validateOutbox(value)
   for (const [root, record] of Object.entries(value.incidents)) {
     requireIncidentRecord(root, record)
@@ -125,15 +158,20 @@ export function loadIncidentState(path, ownership = {}) {
   if (!loaded) return { state: { version: 1, incidents: {}, outbox: {} }, hash: null }
   const bytes = loaded.bytes
   let state
-  try { state = validateIncidentState(JSON.parse(bytes.toString('utf8'))) } catch (error) {
+  try {
+    const parsed = JSON.parse(bytes.toString('utf8'))
+    const migrationAuthority = verifiedMigrationAuthority(path, hasValidMigration(parsed), ownership)
+    state = validateIncidentState(parsed, { migrationAuthority })
+  } catch (error) {
     throw Object.assign(new TypeError(`corrupt incident state: ${error?.message ?? error}`), { cause: error })
   }
   return { state, hash: hash(bytes) }
 }
 
 export function commitIncidentState(path, state, { expectedHash, crashAt, expectedUid = process.getuid?.(), expectedGid = process.getgid?.() } = {}) {
-  validateIncidentState(state)
   const ownership = { expectedUid, expectedGid }
+  const migrationAuthority = verifiedMigrationAuthority(path, hasValidMigration(state), ownership)
+  validateIncidentState(state, { migrationAuthority })
   return withPrivateLock(path, ownership, () => {
     const current = loadIncidentState(path, { expectedUid, expectedGid })
     if (current.hash !== (expectedHash ?? null)) throw new Error('incident state generation mismatch')
@@ -198,6 +236,7 @@ export function migrateLegacyIncidentStateFiles({
   ensurePrivateDirectory(backupDir, { expectedUid, expectedGid })
   retainBackup(join(backupDir, `legacy-${legacy.sha256}.json`), legacy.bytes, ownership)
   retainBackup(join(backupDir, `evidence-${evidence.sha256}.jsonl`), evidence.bytes, ownership)
+  retainBackup(join(backupDir, `facts-${factsSha256}.json`), Buffer.from(canonicalJSON(findings ?? []), 'utf8'), ownership)
   const committed = commitIncidentState(incidentStatePath, state, { expectedHash: null, expectedUid, expectedGid })
   const readback = loadIncidentState(incidentStatePath, { expectedUid, expectedGid })
   if (readback.hash !== committed.hash) throw new Error('incident migration readback mismatch')

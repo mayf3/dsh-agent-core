@@ -10,6 +10,7 @@ import {
   routeReadback,
   resolveNotificationRoute,
   validateProtectedPathMetadata,
+  validateIncidentDeliveryBindings,
   validateRoutingManifest,
 } from '../../src/watchdog/routing.js'
 
@@ -29,6 +30,15 @@ test('T12 the three route classes resolve only through their accepted precedence
 
   const ownerOnly = { ...manifest, jobFailureTargets: {} }
   assert.equal(resolveNotificationRoute({ routeClass: ROUTE_CLASSES.JOB_FAILURE, job, manifest: ownerOnly }).route.to, 'owner-a')
+})
+
+test('persisted control-plane binding must match canonical ops target and routing generation', () => {
+  const intent = { notificationKey: 'a'.repeat(64), routeClass: ROUTE_CLASSES.SCHEDULER_CONTROL_PLANE_INCIDENT,
+    incident: {}, deliveryBinding: { route: target('ops'), routeSource: 'canonicalOpsTarget', routingSha256: 'b'.repeat(64) } }
+  const state = { outbox: { [intent.notificationKey]: intent } }
+  assert.equal(validateIncidentDeliveryBindings(state, { manifest, jobs: [], routingSha256: 'b'.repeat(64) }), true)
+  intent.deliveryBinding.route = target('daily-thought-agent-group')
+  assert.throws(() => validateIncidentDeliveryBindings(state, { manifest, jobs: [], routingSha256: 'b'.repeat(64) }), /routing authority mismatch/)
 })
 
 test('T30 protected manifest reader uses no-follow identity checks and returns secret-safe provenance', async () => {

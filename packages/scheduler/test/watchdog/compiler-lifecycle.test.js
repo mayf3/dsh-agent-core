@@ -11,6 +11,7 @@ import {
   notificationKey,
   updateIncidentState,
 } from '../../src/watchdog/incident-lifecycle.js'
+import { providerIdempotencyKey, stableNotificationText } from '../../src/watchdog/delivery.js'
 
 const T0 = Date.parse('2026-09-14T00:00:00Z')
 
@@ -120,11 +121,13 @@ test('T21 producer and first authorized delivery binding are immutable across re
   const key = opened.notifications[0].notificationKey
   assert.equal(opened.state.outbox[key].producer, 'w1')
   const bound = bindNotificationDelivery(opened.state, key, {
-    producer: 'w1', route: { channel: 'feishu', to: 'owner-a' }, payload: 'stable', providerKey: 'provider-key',
+    producer: 'w1', route: { channel: 'feishu', to: 'owner-a' }, routeSource: 'canonicalOpsTarget',
+    routingSha256: 'a'.repeat(64), payload: stableNotificationText(opened.state.outbox[key]), providerKey: providerIdempotencyKey(key),
   }, T0 + 1)
   assert.deepEqual(bound.outbox[key].deliveryBinding.route, { channel: 'feishu', to: 'owner-a' })
   assert.throws(() => bindNotificationDelivery(bound, key, {
-    producer: 'w2', route: { channel: 'feishu', to: 'ops' }, payload: 'changed', providerKey: 'provider-key',
+    producer: 'w2', route: { channel: 'feishu', to: 'ops' }, routeSource: 'canonicalOpsTarget',
+    routingSha256: 'b'.repeat(64), payload: 'changed', providerKey: providerIdempotencyKey(key),
   }), /binding conflict/)
 })
 

@@ -8,6 +8,7 @@ import { join } from 'node:path'
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../../packages/scheduler/src/watchdog/private-state-io.js'
 import { assertSuccessfulCanaryRun, publishVerifiedPostdeployReceipt } from '../../packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js'
 import { readProtectedPlainFile } from '../../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
+import { readProtectedRoutingManifest } from '../../packages/scheduler/src/watchdog/routing.js'
 
 const A = '/private/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1'
 const STORE = '/Users/authsvc/.agent-core/scheduler/jobs.json'
@@ -66,6 +67,12 @@ if (accepted) {
 
 const phaseReceipt = readControl('deployment-phase-receipt.json')
 const routingReceipt = JSON.parse(readProtectedPlainFile(ROUTING_RECEIPT, { boundary: '/', expectedUid: 0, expectedGid: authsvcGid, mode: 0o600 }).bytes.toString('utf8'))
+const protectedRouting = readProtectedRoutingManifest(process.env.SCHEDULER_ROUTING_MANIFEST ?? '/usr/local/libexec/agent-core/config/scheduler-routing.json', {
+  expectedUid: 0, allowedGids: [authsvcGid], maxMode: 0o640, parentBoundary: '/',
+})
+const migrationReceipt = readControl('incident-migration-receipt.json')
+const incidentMigrationAuthority = { legacySha256: migrationReceipt.legacySha256,
+  evidenceSha256: migrationReceipt.evidenceSha256, factsSha256: migrationReceipt.factsSha256 }
 let plan = readControl('postdeploy-canary-plan.json', true)
 if (!plan) {
   const now = Date.now()
@@ -118,7 +125,9 @@ const afterHealth = await health()
 const evidence = { phaseReceipt, routingReceipt, sourceSha, beforeHealth, afterHealth, beforeStore, afterStore,
   beforeStoreSha256: beforeEvidence.storeSha256, afterStoreSha256: afterStoreSnapshot.sha256,
   beforeIncidentState: beforeEvidence.incidentState, afterIncidentState: afterIncidentSnapshot.state,
-  beforeIncidentSha256: beforeEvidence.incidentSha256, afterIncidentSha256: afterIncidentSnapshot.sha256, canaryJobId, runReadback }
+  beforeIncidentSha256: beforeEvidence.incidentSha256, afterIncidentSha256: afterIncidentSnapshot.sha256,
+  incidentMigrationAuthority, routingManifest: protectedRouting.manifest,
+  routingManifestSha256: protectedRouting.readback.sha256, canaryJobId, runReadback }
 const receipt = publishVerifiedPostdeployReceipt(evidence, {
   writeReceipt: (valueToWrite) => writeControl('postdeploy-acceptance-receipt.json', valueToWrite),
   readReceipt: () => readControl('postdeploy-acceptance-receipt.json'),

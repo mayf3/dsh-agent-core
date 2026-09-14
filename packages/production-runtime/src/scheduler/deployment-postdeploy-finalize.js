@@ -4,6 +4,7 @@ import { canonicalJSON } from '../../../scheduler/src/occurrence-model.js'
 import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
 import { notificationKey, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
 import { validateIncidentState } from '../../../scheduler/src/watchdog/durable-state.js'
+import { validateIncidentDeliveryBindings } from '../../../scheduler/src/watchdog/routing.js'
 import { POSTDEPLOY_CANARY_MARKER } from './deployment-canary-control.js'
 
 const digest = (value) => createHash('sha256').update(typeof value === 'string' ? value : canonicalJSON(value)).digest('hex')
@@ -114,8 +115,8 @@ export function assertQuarantineIsolationAndDedupe(beforeHealth, afterHealth) {
   return { quarantinedCount: quarantined.length, rootIdentities: compiled.map((item) => item.rootIdentity), incidents: compiled }
 }
 
-export function assertIncidentDedupeFromDurableState({ incidentState, compiledIncidents, nowMs }) {
-  validateIncidentState(incidentState)
+export function assertIncidentDedupeFromDurableState({ incidentState, incidentMigrationAuthority, compiledIncidents, nowMs }) {
+  validateIncidentState(incidentState, { migrationAuthority: incidentMigrationAuthority })
   const roots = new Set(compiledIncidents.map((item) => item.rootIdentity))
   const proof = {}
   for (const expected of compiledIncidents) {
@@ -154,19 +155,23 @@ export function assertIncidentDedupeFromDurableState({ incidentState, compiledIn
 }
 
 export function verifyPostdeployEvidence({ phaseReceipt, routingReceipt, sourceSha, beforeHealth, afterHealth, beforeStore, afterStore,
-  beforeStoreSha256, afterStoreSha256, beforeIncidentState, afterIncidentState, beforeIncidentSha256, afterIncidentSha256, canaryJobId, runReadback }) {
+  beforeStoreSha256, afterStoreSha256, beforeIncidentState, afterIncidentState, beforeIncidentSha256, afterIncidentSha256,
+  incidentMigrationAuthority, routingManifest, routingManifestSha256, canaryJobId, runReadback }) {
   if (phaseReceipt?.sourceSha !== sourceSha || phaseReceipt?.acceptanceStatus !== 'PENDING_CANONICAL_HEALTH_AND_CANARY'
     || phaseReceipt.productionAccepted !== false || phaseReceipt.currentSixAuthorized !== false) throw new Error('postdeploy phase receipt is not the pending deployed generation')
   assertCanonicalPostdeployHealth(beforeHealth, sourceSha)
   assertCanonicalPostdeployHealth(afterHealth, sourceSha)
   if (routingReceipt?.status !== 'INSTALLED' || routingReceipt.candidateSha256 !== beforeHealth.provenance.routing
-    || routingReceipt.candidateSha256 !== afterHealth.provenance.routing) throw new Error('postdeploy routing generation is not bound to install receipt')
+    || routingReceipt.candidateSha256 !== afterHealth.provenance.routing
+    || routingReceipt.candidateSha256 !== routingManifestSha256) throw new Error('postdeploy routing generation is not bound to install receipt')
   if (beforeHealth.provenance.store !== beforeStoreSha256 || afterHealth.provenance.store !== afterStoreSha256) throw new Error('postdeploy API/store generation binding mismatch')
   if (beforeHealth.provenance.incidents !== beforeIncidentSha256 || afterHealth.provenance.incidents !== afterIncidentSha256) throw new Error('postdeploy API/incident generation binding mismatch')
   const occurrence = assertCanaryStoreDelta({ beforeStore, afterStore, beforeHealth, afterHealth, canaryJobId, runReadback, sourceSha })
   const isolation = assertQuarantineIsolationAndDedupe(beforeHealth, afterHealth)
-  const beforeIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: beforeIncidentState, compiledIncidents: isolation.incidents, nowMs: beforeHealth.generatedAt + 1 })
-  const afterIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: afterIncidentState, compiledIncidents: isolation.incidents, nowMs: afterHealth.generatedAt + 1 })
+  validateIncidentDeliveryBindings(beforeIncidentState, { manifest: routingManifest, jobs: beforeStore.jobs, routingSha256: routingManifestSha256 })
+  validateIncidentDeliveryBindings(afterIncidentState, { manifest: routingManifest, jobs: afterStore.jobs, routingSha256: routingManifestSha256 })
+  const beforeIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: beforeIncidentState, incidentMigrationAuthority, compiledIncidents: isolation.incidents, nowMs: beforeHealth.generatedAt + 1 })
+  const afterIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: afterIncidentState, incidentMigrationAuthority, compiledIncidents: isolation.incidents, nowMs: afterHealth.generatedAt + 1 })
   exact(beforeIncidentProof, afterIncidentProof, 'incident notification attempt surface')
   return {
     status: 'ACCEPTED', sourceSha, productionAccepted: true, currentSixAuthorized: false,

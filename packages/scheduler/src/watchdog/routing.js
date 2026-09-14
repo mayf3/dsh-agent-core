@@ -81,6 +81,22 @@ export function resolveNotificationRoute({ routeClass, job, manifest: rawManifes
   throw new TypeError(`unknown route class: ${routeClass}`)
 }
 
+export function validateIncidentDeliveryBindings(state, { manifest, jobs = [], routingSha256 }) {
+  if (!/^[0-9a-f]{64}$/.test(routingSha256 ?? '')) throw new TypeError('incident binding routing generation is unavailable')
+  const normalizedManifest = validateRoutingManifest(manifest)
+  for (const intent of Object.values(state?.outbox ?? {})) {
+    const binding = intent.deliveryBinding
+    if (!binding) continue
+    const job = jobs.find((candidate) => candidate.id === intent.incident?.jobId)
+    const decision = resolveNotificationRoute({ routeClass: intent.routeClass, job, manifest: normalizedManifest })
+    if (!decision.route || JSON.stringify(binding.route) !== JSON.stringify(decision.route)
+      || binding.routeSource !== decision.routeSource || binding.routingSha256 !== routingSha256) {
+      throw new TypeError(`incident delivery binding routing authority mismatch: ${intent.notificationKey}`)
+    }
+  }
+  return true
+}
+
 export function validateProtectedPathMetadata({ file, parents = [], expectedUid, allowedGids = [], maxMode }) {
   const fileUnsafe = file?.type !== 'file' || file.symlink === true || file.uid !== expectedUid
     || !allowedGids.includes(file.gid) || !Number.isInteger(file.mode) || (file.mode & ~maxMode) !== 0
