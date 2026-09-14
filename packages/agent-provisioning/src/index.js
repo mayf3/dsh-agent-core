@@ -27,7 +27,7 @@ import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { persistOpenAICodexCredentialFile } from './shared-codex.js'
+import { persistOpenAICodexCredentialFile, CANONICAL_DEFAULT_MODEL_ROUTE } from './shared-codex.js'
 import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
 
@@ -293,14 +293,19 @@ function copyOnce(source, target) {
   return true
 }
 
+// DEFAULT_MODEL_ROUTING_CONFIG_V1 §4: the fresh-home child-side default is
+// the canonical built-in Luna route (constant-composed, no route literal
+// here). The opencode-go provider REGISTRATION block stays — OpenCode Go
+// remains an explicit selectable route; registration is not selection. The
+// openai-codex provider self-registers via the dsh-codex plugin mount.
 const MINIMAL_SETTINGS = [
   'llm-pi-ai:',
   '  providers:',
   '    opencode-go:',
   '      apiKeyEnv: OPENCODE_GO_API_KEY',
   'agent-default-model:',
-  '  provider: opencode-go',
-  '  model: deepseek-v4-flash',
+  `  provider: ${CANONICAL_DEFAULT_MODEL_ROUTE.provider}`,
+  `  model: ${CANONICAL_DEFAULT_MODEL_ROUTE.model}`,
   '',
 ].join('\n')
 

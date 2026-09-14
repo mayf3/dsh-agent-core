@@ -29,6 +29,7 @@ import { createHash } from 'node:crypto'
 import { isIP } from 'node:net'
 
 import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 
 /**
  * Config-independent pins and scope (parent CTR-011 / CTR-IMPL-009
@@ -269,21 +270,7 @@ function makeChainRoute(routeRef, route) {
     // block; a builtin processConfig has NO subscription key, so the spawn
     // side's conditional expansion keeps it off the plugin/pin path entirely.
     ...(route.routeKind === 'subscription' ? {
-      subscription: Object.freeze({
-        plugin: route.plugin,
-        pluginVersion: route.pluginVersion,
-        sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,
-        artifactSha256: CHATGPT_SUBSCRIPTION_V1.artifactSha256,
-        dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
-        dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
-        ...(route.credentialFile === undefined ? {} : { credentialFile: route.credentialFile }),
-        ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
-          packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
-        }),
-        ...(process.env.DSH_CODEX_SOURCE_STAMP === undefined ? {} : {
-          sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP,
-        }),
-      }),
+      subscription: subscriptionProcessConfigBlock(route.plugin, route.pluginVersion, route.credentialFile),
     } : {}),
   })
   return Object.freeze({
@@ -292,6 +279,46 @@ function makeChainRoute(routeRef, route) {
     model: route.model,
     identity: canonicalRouteIdentity(processConfig),
     processConfig,
+  })
+}
+
+/** DEC-IMPL-011 subscription provisioning block, shared by routeCatalog
+ * entries and the built-in default route (DEFAULT_MODEL_ROUTING_CONFIG_V1). */
+function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile) {
+  return Object.freeze({
+    plugin,
+    pluginVersion,
+    sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,
+    artifactSha256: CHATGPT_SUBSCRIPTION_V1.artifactSha256,
+    dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
+    dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
+    ...(credentialFile === undefined ? {} : { credentialFile }),
+    ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
+      packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
+    }),
+    ...(process.env.DSH_CODEX_SOURCE_STAMP === undefined ? {} : {
+      sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP,
+    }),
+  })
+}
+
+/**
+ * The canonical built-in default global route (DEFAULT_MODEL_ROUTING_CONFIG_V1
+ * §2): GPT Luna as a COMPLETE subscription route — the same processConfig
+ * shape a routeCatalog subscription entry resolves to, so a zero-config Agent
+ * mounts the dsh-codex plugin + shared canonical credential exactly like an
+ * explicitly configured Luna Agent. A missing canonical credential or plugin
+ * artifact fails loud at provision; there is never a silent oc-go fallback.
+ */
+export function canonicalDefaultGlobalRoute() {
+  return Object.freeze({
+    provider: CANONICAL_DEFAULT_MODEL_ROUTE.provider,
+    model: CANONICAL_DEFAULT_MODEL_ROUTE.model,
+    subscription: subscriptionProcessConfigBlock(
+      CHATGPT_SUBSCRIPTION_V1.plugin,
+      CHATGPT_SUBSCRIPTION_V1.pluginVersion,
+      CHATGPT_SUBSCRIPTION_V1.credentialFile,
+    ),
   })
 }
 
@@ -427,7 +454,15 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
     provider: globalRoute.provider,
     model: globalRoute.model,
     identity: canonicalRouteIdentity(globalRoute),
-    processConfig: Object.freeze({ provider: globalRoute.provider, model: globalRoute.model }),
+    // DEFAULT_MODEL_ROUTING_CONFIG_V1: a composition-provided subscription
+    // (the built-in Luna default) rides the legacy passthrough so the
+    // zero-config spawn provisions like an explicitly configured route;
+    // absent (env/opts routes) keeps the historical two-field shape.
+    processConfig: Object.freeze({
+      provider: globalRoute.provider,
+      model: globalRoute.model,
+      ...(globalRoute.subscription === undefined ? {} : { subscription: globalRoute.subscription }),
+    }),
   })
 
   const chainIds = new Map()
@@ -444,7 +479,11 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
     resolve(agentId, globalRoute) {
       const override = overrides[agentId]
       if (override === undefined) {
-        return Object.freeze({ provider: globalRoute.provider, model: globalRoute.model })
+        return Object.freeze({
+          provider: globalRoute.provider,
+          model: globalRoute.model,
+          ...(globalRoute.subscription === undefined ? {} : { subscription: globalRoute.subscription }),
+        })
       }
       const route = override.routes[override.primary]
       return Object.freeze({

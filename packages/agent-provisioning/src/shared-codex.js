@@ -2,6 +2,22 @@ import { lstatSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join } from 'node:path'
 
 export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
+
+/**
+ * The ONE built-in default model route (DEFAULT_MODEL_ROUTING_CONFIG_V1 §2):
+ * GPT Luna, reusing the canonical identifiers already frozen across the
+ * subscription route family — this constant mints no new model identity.
+ * Every former hardcoded 'opencode-go'/'deepseek-v4-flash' fallback composes
+ * from here; OpenCode Go stays a valid explicit route, only no longer the
+ * implicit default.
+ */
+export const CANONICAL_DEFAULT_MODEL_ROUTE = Object.freeze({
+  provider: 'openai-codex',
+  model: 'gpt-5.6-luna',
+})
+
+export const CANONICAL_DEFAULT_MODEL_ROUTE_ID = `${CANONICAL_DEFAULT_MODEL_ROUTE.provider}/${CANONICAL_DEFAULT_MODEL_ROUTE.model}`
+
 const PATCH_BEGIN = '# BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1'
 const PATCH_END = '# END AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1'
 
