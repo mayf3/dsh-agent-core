@@ -45,7 +45,9 @@ test('reserved canary passes the real Scheduler admission and completes with zer
   await createRetainedPostdeployCanary(store, { sourceSha, at: new Date(1_001).toISOString(), nowMs: 1_000 })
   const scheduler = new Scheduler({ store, invoker: invoke, deliver: () => { calls.push('delivery'); assert.fail() }, nowMs: () => clock.now })
   await scheduler.start({ autoStart: false, catchup: false })
-  clock.now = 1_001; await scheduler.tick(); await scheduler.whenIdle(); await scheduler.load(); await scheduler.stop()
+  clock.now = 1_001
+  await scheduler.tick(); await scheduler.whenIdle(); await scheduler.load()
+  await scheduler.stop()
   const [run] = scheduler.listOccurrences()
   assert.equal(run.state, 'succeeded')
   assert.deepEqual(calls, [])
