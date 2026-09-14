@@ -1,9 +1,10 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { chmodSync, chownSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { quiesceLaunchdServices } from './deployment-launchd.js'
-import { capturePlainFileMetadata, clearGeneratedFileXattrs } from './deployment-file-metadata.js'
+import { capturePlainFileMetadata } from './deployment-file-metadata.js'
+import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage } from './deployment-durable-file.js'
 
 export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   if (!/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)) {
@@ -12,9 +13,19 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   const plistPath = join(ctx.launchdDir, 'ai.agent-core.runtime.plist')
   const preimage = join(ctx.artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
   mkdirSync(dirname(preimage), { recursive: true })
-  if (!existsSync(preimage)) { capturePlainFileMetadata(plistPath); execFileSync('cp', ['-p', plistPath, preimage]); clearGeneratedFileXattrs(preimage) }
+  if (!existsSync(preimage)) {
+    const metadata = capturePlainFileMetadata(plistPath)
+    durableCopyPreimage(plistPath, preimage, metadata, { crashAt: ctx.crashAt, onStage: ctx.onDurabilityStage })
+  }
   const preimageMetadata = capturePlainFileMetadata(preimage)
   const preimageSha256 = createHash('sha256').update(readFileSync(preimage)).digest('hex')
+  const currentSha256 = createHash('sha256').update(readFileSync(plistPath)).digest('hex')
+  if (currentSha256 === preimageSha256) verifyAndSyncPreimage(plistPath, preimage, preimageMetadata)
+  else {
+    const prior = ctx.runtimePriorReceipt
+    if (prior?.sourceSha !== sourceSha || prior?.installedSha256 !== currentSha256) throw new Error('runtime plist differs from both durable preimage and receipted generation')
+    syncFile(preimage); syncDirectory(dirname(preimage))
+  }
   let plist = readFileSync(plistPath, 'utf8')
   const envAdds = {
     AGENTCORE_EXPECTED_STORE: '/Users/authsvc/.agent-core/scheduler/jobs.json',
@@ -41,12 +52,9 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   const expectedInstalledSha256 = createHash('sha256').update(plist).digest('hex')
   ctx.runtimeReceipt?.({ status: 'INSTALLING', sourceSha, plistPath, preimage, preimageSha256, preimageMetadata, installedSha256: expectedInstalledSha256 })
   if (dirty) {
-    const tmp = `${plistPath}.incoming`
-    writeFileSync(tmp, plist)
-    clearGeneratedFileXattrs(tmp)
-    chmodSync(tmp, preimageMetadata.mode)
-    if (process.getuid?.() === 0) chownSync(tmp, preimageMetadata.uid, preimageMetadata.gid)
-    execFileSync('mv', [tmp, plistPath])
+    atomicInstallDurableFile(plistPath, Buffer.from(plist), preimageMetadata, { crashAt: ctx.crashAt, onStage: ctx.onDurabilityStage })
+  } else {
+    syncFile(plistPath); syncDirectory(dirname(plistPath))
   }
   const installed = readFileSync(plistPath, 'utf8')
   const installedSha256 = createHash('sha256').update(installed).digest('hex')

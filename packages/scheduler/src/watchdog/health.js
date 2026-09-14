@@ -191,6 +191,7 @@ export function projectSchedulerHealth(snapshot = {}) {
       runtime: snapshot.provenance?.runtime ?? null,
       store: snapshot.provenance?.store ?? null,
       routing: snapshot.provenance?.routing ?? null,
+      incidents: snapshot.provenance?.incidents ?? null,
     },
     censusError: complete ? null : (snapshot.censusError ?? authorityError?.message ?? 'source generation, provenance, or fence projection incomplete'),
     readbackAvailable: true, watchdogRunnable: true,
