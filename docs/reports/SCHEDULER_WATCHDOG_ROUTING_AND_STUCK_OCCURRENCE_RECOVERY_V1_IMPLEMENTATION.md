@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: 225e6f5ef0ae819aa3437c5d90c52cf4cda99935
-status: candidate_twelfth_exact_review_pending
+implementation_code_commit: 3245b2ef304e1b14ca4006fd883465b613afa8cc
+status: candidate_thirteenth_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`225e6f5ef0ae819aa3437c5d90c52cf4cda99935`, based on the accepted-Spec merge
+`3245b2ef304e1b14ca4006fd883465b613afa8cc`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -48,10 +48,10 @@ All Spec tests T01–T34 have explicit named coverage under
 Key results:
 
 ```text
-Scheduler/Product/Broker affected suite             847/847 PASS
-focused twelfth-review blocker matrix                 59/59 PASS
-focused Scheduler/deployment matrix                   51/51 PASS
-combined affected/deployment run                     898/898 PASS
+Scheduler/Product/Broker affected suite             848/848 PASS
+focused thirteenth-review blocker matrix              62/62 PASS
+focused Scheduler/deployment matrix                   53/53 PASS
+combined affected/deployment run                     901/901 PASS
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
 production admission fixture selftest           PASS twice, including resumable replay
@@ -206,6 +206,16 @@ returned `REVISE`. The twelfth candidate closes every executed counterexample:
 This exact packet is intentionally submitted to both independent reviewers for a twelfth exact-head
 review; the closure table is implementation evidence, not a self-issued PASS.
 
+The twelfth exact-head review of `bb88695d9884f7dd8faebc86f5e68e0ea4c0d783`
+returned `REVISE`. The thirteenth candidate closes its shared semantic/safety counterexample:
+
+| Twelfth-review blocker | Thirteenth-candidate exact closure |
+|---|---|
+| attempted or delivered intent could regress to `PENDING` and bypass provider readback | `PENDING` is structurally valid only without attempt/update evidence; the lifecycle API enforces an explicit transition graph with `DELIVERED` absorbing and no attempted-to-pending edge; durable commit compares the candidate to the exact loaded predecessor, preserves binding/binding-time/first-attempt immutably, requires non-regressing update time, and rejects even an evidence-erasing relabel; outbox selection independently fails closed on attempted `PENDING`; canonical health and postdeploy regressions reject the state before notification I/O |
+
+This exact packet is intentionally submitted to both independent reviewers for a thirteenth exact-head
+review; the closure table is implementation evidence, not a self-issued PASS.
+
 ## 4. Controlled production migration plan
 
 This is an execution plan, not evidence that production gates have passed.
@@ -272,5 +282,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = TWELFTH_EXACT_HEAD_PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = THIRTEENTH_EXACT_HEAD_PENDING
 ```
