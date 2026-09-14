@@ -182,6 +182,7 @@ async function seedRuntime(t, { authMode = 'grant', targetDisabled = false } = {
   t.after(() => new Promise((resolve) => server.close(resolve)))
   const spawned = []
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     log: silentLog,
     productApi: { enabled: false, port: 0 },
@@ -230,6 +231,11 @@ function gatewayCall(runtime, { agentId, sourceTurnExecutionId, args }) {
 
 const SEND = { targetAgentId: TARGET, message: 'coordination hello', timeoutSeconds: 0 }
 
+
+/** These suites pin the historical builtin env route: the wiring under
+ * test predates route variance; the zero-config Luna subscription default
+ * (DEFAULT_MODEL_ROUTING_CONFIG_V1) has its own dedicated suite. */
+const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
 test('Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact', async (t) => {
   const { runtime, spawned, auditFile } = await seedRuntime(t)
   const envelope = await gatewayCall(runtime, { agentId: SOURCE, sourceTurnExecutionId: PROOF, args: SEND })
@@ -326,6 +332,7 @@ test('Case F (F23): a grant-check transport outage is transport_failure, never a
   const spawned = []
   // Port 9 (discard) refuses fast → the auth transport fails BEFORE any handler.
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     log: silentLog,
     productApi: { enabled: false, port: 0 },

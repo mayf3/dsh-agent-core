@@ -96,11 +96,17 @@ async function seedRuntime(t, { mapAgentToImported = false, rawMap = undefined }
 
 const silentLog = { log() {}, warn() {}, error() {} }
 
+
+/** These suites pin the historical builtin env route: the wiring under
+ * test predates route variance; the zero-config Luna subscription default
+ * (DEFAULT_MODEL_ROUTING_CONFIG_V1) has its own dedicated suite. */
+const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
 test('wiring: the import map reaches workspace-bootstrap AND the spawned process (cwd base + env)', async (t) => {
   const { root, layout, imported } = await seedRuntime(t, { mapAgentToImported: true })
   const spawned = []
   const lines = []
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false, port: 0 },
@@ -134,6 +140,7 @@ test('absent primary-workspaces.json → behavior identical to today (default de
   const { root, layout } = await seedRuntime(t)
   const spawned = []
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false, port: 0 },
@@ -155,6 +162,7 @@ test('invalid import entry (relative path) → startup fails loud with PRIMARY_W
   const { layout } = await seedRuntime(t, { rawMap: { [AGT_ID]: 'relative/dir' } })
   await assert.rejects(
     () => composeProductionRuntime({
+      globalRoute: GLOBAL_ROUTE,
       layout,
       productApi: { enabled: false, port: 0 },
       notificationIngress: { enabled: false, port: 0 },
@@ -168,6 +176,7 @@ test('invalid import entry (missing directory) → startup fails loud', async (t
   const { layout } = await seedRuntime(t, { rawMap: { [AGT_ID]: '/nonexistent/import/target' } })
   await assert.rejects(
     () => composeProductionRuntime({
+      globalRoute: GLOBAL_ROUTE,
       layout,
       productApi: { enabled: false, port: 0 },
       notificationIngress: { enabled: false, port: 0 },
@@ -190,6 +199,7 @@ test('malformed primary-workspaces.json (bad JSON / non-object) → startup fail
   await writeFile(join(root, 'primary-workspaces.json'), '{not json', 'utf8')
   await assert.rejects(
     () => composeProductionRuntime({
+      globalRoute: GLOBAL_ROUTE,
       layout, productApi: { enabled: false, port: 0 }, notificationIngress: { enabled: false, port: 0 }, log: silentLog,
     }),
     (error) => error.code === 'PRIMARY_WORKSPACE_INVALID',
@@ -198,6 +208,7 @@ test('malformed primary-workspaces.json (bad JSON / non-object) → startup fail
   await writeFile(join(root, 'primary-workspaces.json'), '["array"]', 'utf8')
   await assert.rejects(
     () => composeProductionRuntime({
+      globalRoute: GLOBAL_ROUTE,
       layout, productApi: { enabled: false, port: 0 }, notificationIngress: { enabled: false, port: 0 }, log: silentLog,
     }),
     (error) => error.code === 'PRIMARY_WORKSPACE_INVALID',
@@ -208,6 +219,7 @@ test('I: the same static config file yields the identical primary across restart
   const { root, layout, imported } = await seedRuntime(t, { mapAgentToImported: true })
   const compose = async () => {
     const runtime = await composeProductionRuntime({
+      globalRoute: GLOBAL_ROUTE,
       layout,
       productApi: { enabled: false, port: 0 },
       notificationIngress: { enabled: false, port: 0 },

@@ -39,10 +39,16 @@ import {
   writeNotificationAuthConfig,
 } from './compose-fixture.js'
 
+
+/** These suites pin the historical builtin env route: the wiring under
+ * test predates route variance; the zero-config Luna subscription default
+ * (DEFAULT_MODEL_ROUTING_CONFIG_V1) has its own dedicated suite. */
+const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
 test('composition provides the full existing service graph over the production layout', async (t) => {
   const { root, layout } = await seedRuntime(t)
   const spawned = []
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: true, host: '127.0.0.1', port: 0 },
@@ -68,6 +74,7 @@ test('notification ingress delivers over the authenticated frozen contract into 
   writeNotificationAuthConfig(layout)
   const spawned = []
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: true, host: '127.0.0.1', port: 0, fetchImpl: okTokenFetch() },
@@ -128,6 +135,7 @@ test('scheduler engine consumes a job from the production store through the rout
   const { layout } = await seedRuntime(t)
   const spawned = []
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false, port: 0 },
@@ -170,6 +178,7 @@ test('scheduler engine consumes a job from the production store through the rout
 test('B15 production evidence preserves scheduled outcome_unknown reconciliation data', async (t) => {
   const { layout } = await seedRuntime(t)
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false, port: 0 },
@@ -212,6 +221,7 @@ test('B15 production evidence preserves scheduled outcome_unknown reconciliation
 test('graceful stop closes the HTTP surfaces and writes stopped-able state', async (t) => {
   const { layout } = await seedRuntime(t)
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: true, host: '127.0.0.1', port: 0 },
@@ -229,6 +239,7 @@ test('graceful stop closes the HTTP surfaces and writes stopped-able state', asy
 test('runtime state carries no demo artifacts anywhere', async (t) => {
   const { layout } = await seedRuntime(t)
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false, port: 0 },
@@ -260,6 +271,7 @@ test('C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths —
   const envBefore = { ...process.env }
   const { layout } = await seedRuntime(t)
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: true, host: '127.0.0.1', port: 0 },
@@ -324,6 +336,7 @@ test('C-HIST compose wires the HistoryStore over layout.historyDir into the sche
     }
   }
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false, host: '127.0.0.1', port: 0 },
@@ -371,6 +384,7 @@ test('C-HIST compose wires the HistoryStore over layout.historyDir into the sche
 test('C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null', async (t) => {
   const { layout } = await seedRuntime(t)
   const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false, host: '127.0.0.1', port: 0 },
