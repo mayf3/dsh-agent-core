@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_CORE_AGENT_SESSION_MESSAGING_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 date: 2026-09-14
 revision: r4
@@ -33,6 +33,21 @@ related_decisions:
   - AGENT_WORKSPACE_SESSION_MODEL_V3
 owners:
   - mayf3
+accepted_date: 2026-09-14
+accepted_by: mayf3
+accepted_reviewed_head: b9893400a98f627aa2ce6411e078d6ef03749288
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_authority_basis: >-
+  OWNER_DECISION=ACCEPT on 2026-09-14 accepted exact independently reviewed
+  HEAD b9893400a98f627aa2ce6411e078d6ef03749288 for autonomous bounded
+  implementation. This acceptance authorizes authority housekeeping,
+  implementation, focused tests, independent review, bounded repair, merge,
+  deployment preparation, and reversible production canary within the frozen
+  Session/Dispatch Traceability scope. It does not authorize product-semantic
+  expansion, credential/security-policy mutation, destructive production work,
+  dispatch ledger, retry engine, Scheduler redesign, full Session browsing, or
+  Workflow Execution redesign.
 authoring_authority_basis: >-
   Owner decision 2026-09-14 resumed DISPATCH_SESSION_TRACEABILITY_V0 and
   authorized the minimum authority-authoring and independent-review chain. This
