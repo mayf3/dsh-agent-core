@@ -23,12 +23,23 @@ export function buildIdempotentFeishuRequest(notificationKey, { receiveId, text 
   }
 }
 
-export function retryableOutboxIntents(state, { nowMs = Date.now(), ambiguousRetryWindowMs = FEISHU_SAFE_RETRY_WINDOW_MS } = {}) {
+export function retryableOutboxIntents(state, { producer } = {}) {
   return Object.values(state?.outbox ?? {}).filter((intent) => {
+    if (producer !== undefined && intent.producer !== producer) return false
     if (['PENDING', 'FAILED'].includes(intent.delivery)) return true
-    if (intent.delivery !== 'OUTCOME_UNKNOWN') return false
-    return Number.isFinite(intent.firstDeliveryAttemptAt) && nowMs - intent.firstDeliveryAttemptAt <= ambiguousRetryWindowMs
+    return intent.delivery === 'OUTCOME_UNKNOWN' && Number.isFinite(intent.firstDeliveryAttemptAt)
   })
+}
+
+export function feishuHistoryContainsNotification(items, notificationKey) {
+  const marker = `[notification-key:${notificationKey}]`
+  return (items ?? []).some((item) => typeof item?.body?.content === 'string' && item.body.content.includes(marker))
+}
+
+export function deliveryRecoveryAction(intent, { providerAccepted, readbackComplete }) {
+  if (intent?.delivery !== 'OUTCOME_UNKNOWN') return 'SEND'
+  if (readbackComplete !== true) return 'HOLD'
+  return providerAccepted === true ? 'MARK_DELIVERED' : 'SEND'
 }
 
 export function stableNotificationText(intent) {

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { chmod, mkdtemp, mkdir, writeFile } from 'node:fs/promises'
+import { chmod, mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -15,7 +15,7 @@ async function fixture() {
   await mkdir(join(root, 'scheduler'), { recursive: true })
   await mkdir(join(root, 'control', 'scheduler-watchdog'), { recursive: true })
   await chmod(join(root, 'control', 'scheduler-watchdog'), 0o700)
-  await writeFile(layout.jobsStore, JSON.stringify({ version: 3, jobs: [{ id: 'a', agentId: 'agt_a', logicalKey: 'a', enabled: true, schedule: { kind: 'every', everyMs: 1000 }, delivery: { mode: 'none' }, state: { nextRunAtMs: 2 } }], occurrences: [], fences: {} }))
+  await writeFile(layout.jobsStore, JSON.stringify({ version: 3, jobs: [{ id: 'a', name: 'a', agentId: 'agt_a', logicalKey: 'a', enabled: true, scheduleRevision: 1, createdAtMs: 0, updatedAtMs: 0, revisionActivatedAtMs: 0, schedule: { kind: 'every', everyMs: 1000 }, payload: { kind: 'agentTurn', message: 'fixture' }, delivery: { mode: 'none' }, state: { nextRunAtMs: 2 } }], occurrences: [], fences: {} }))
   await writeFile(layout.runsLog, '')
   await writeFile(layout.schedulerRoutingManifest, JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'ops' }, ownerTargets: { agt_a: { channel: 'feishu', to: 'owner-a' } }, jobFailureTargets: {} }), { mode: 0o600 })
   await writeFile(layout.schedulerIncidentState, JSON.stringify({ version: 1, incidents: {}, outbox: {} }), { mode: 0o600 })
@@ -28,7 +28,7 @@ test('T15/T29 runtime reads one generation-bound complete census', async () => {
   const { layout, routingSecurity, credentialStoreFile } = await fixture()
   const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA, nowMs: () => 1 })
   const health = await runtime.read()
-  assert.equal(health.complete, true)
+  assert.equal(health.complete, true, JSON.stringify(health))
   assert.equal(health.enabled, 1)
   assert.equal(health.healthy, 1)
   assert.equal(health.jobs[0].runtime, RUNTIME_SHA)
@@ -54,12 +54,10 @@ test('T29 arbitrary runtime provenance cannot produce complete=true', async () =
 
 test('T33 authority-invalid occurrence returns incomplete census, never false green', async () => {
   const { layout, routingSecurity, credentialStoreFile } = await fixture()
-  await writeFile(layout.jobsStore, JSON.stringify({
-    version: 3,
-    jobs: [{ id: 'a', agentId: 'agt_a', logicalKey: 'a', enabled: true, schedule: { kind: 'every', everyMs: 1000 }, state: { nextRunAtMs: 2 } }],
-    occurrences: [{ occurrenceId: 'fabricated', jobId: 'a', state: 'outcome_unknown' }],
-    fences: { a: { occurrenceId: 'fabricated' } },
-  }))
+  const document = JSON.parse(await readFile(layout.jobsStore, 'utf8'))
+  document.occurrences = [{ occurrenceId: 'fabricated', jobId: 'a', state: 'outcome_unknown' }]
+  document.fences = { a: { occurrenceId: 'fabricated' } }
+  await writeFile(layout.jobsStore, JSON.stringify(document))
   const health = await createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA }).read()
   assert.equal(health.complete, false)
   assert.equal(health.healthy, null)

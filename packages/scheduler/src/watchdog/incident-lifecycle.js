@@ -34,6 +34,7 @@ function transitionIntent(record, transitionKind, nowMs) {
     transitionRevision: record.transitionRevision,
     transitionKind,
     routeClass: record.routeClass,
+    producer: record.producer,
   }
   intent.notificationKey = notificationKey(intent)
   return intent
@@ -48,7 +49,9 @@ function persistIntent(state, notifications, intent) {
   notifications.push(intent)
 }
 
-export function updateIncidentState(inputState, currentIncidents, { nowMs = Date.now(), acknowledgments = new Set(), ownsIncident = () => true } = {}) {
+export function updateIncidentState(inputState, currentIncidents, {
+  nowMs = Date.now(), acknowledgments = new Set(), ownsIncident = () => true, producer = 'w1',
+} = {}) {
   const state = initialState(inputState)
   const notifications = []
   const seen = new Set()
@@ -59,7 +62,7 @@ export function updateIncidentState(inputState, currentIncidents, { nowMs = Date
     if (record?.lifecycle?.startsWith('CLOSED_')) {
       if (rootIdentity.startsWith('occurrence|')) continue
       record = {
-        ...structuredClone(input), episode: record.episode + 1,
+        ...structuredClone(input), producer, episode: record.episode + 1,
         incidentId: `${rootIdentity}|episode:${record.episode + 1}`,
         lifecycle: 'OPEN', transitionRevision: 0, firstSeenAt: nowMs, lastSeenAt: nowMs,
         alertState: { lifecycle: 'OPEN', delivery: 'PENDING', incidentKey: rootIdentity, lastTransitionAt: nowMs },
@@ -70,13 +73,14 @@ export function updateIncidentState(inputState, currentIncidents, { nowMs = Date
     }
     if (record === undefined) {
       record = {
-        ...structuredClone(input), episode: 1, incidentId: `${rootIdentity}|episode:1`,
+        ...structuredClone(input), producer, episode: 1, incidentId: `${rootIdentity}|episode:1`,
         lifecycle: 'OPEN', transitionRevision: 0, firstSeenAt: nowMs, lastSeenAt: nowMs,
         alertState: { lifecycle: 'OPEN', delivery: 'PENDING', incidentKey: rootIdentity, lastTransitionAt: nowMs },
       }
       state.incidents[rootIdentity] = record
       persistIntent(state, notifications, transitionIntent(record, 'OPEN', nowMs))
     } else {
+      record.producer ??= producer
       record.lastSeenAt = nowMs
       record.facts = structuredClone(input.facts)
       record.symptoms = structuredClone(input.symptoms)
@@ -94,6 +98,19 @@ export function updateIncidentState(inputState, currentIncidents, { nowMs = Date
     persistIntent(state, notifications, transitionIntent(record, 'CLOSED_RECOVERED', nowMs))
   }
   return { state, notifications }
+}
+
+export function bindNotificationDelivery(inputState, key, { producer, route, payload, providerKey }, nowMs = Date.now()) {
+  const state = initialState(inputState)
+  const intent = state.outbox[key]
+  if (!intent) throw new TypeError(`unknown notification key: ${key}`)
+  const binding = { producer, route: structuredClone(route), payload, providerKey }
+  if (intent.deliveryBinding !== undefined && canonicalJSON(intent.deliveryBinding) !== canonicalJSON(binding)) {
+    throw new Error('notification delivery binding conflict')
+  }
+  intent.deliveryBinding ??= binding
+  intent.deliveryBindingAt ??= nowMs
+  return state
 }
 
 export function markNotificationDelivery(inputState, key, delivery, nowMs = Date.now()) {
@@ -157,6 +174,7 @@ export function migrateLegacyAlertState(legacy, findings, {
     migrated.incidents[incident.rootIdentity] = record
     if (lifecycle === 'OPEN' && !delivered) {
       const intent = { incident: structuredClone(record), incidentId: record.incidentId, transitionRevision: 1, transitionKind: 'OPEN', routeClass: record.routeClass }
+      intent.producer = 'w1'
       const key = notificationKey(intent)
       migrated.outbox[key] = { ...intent, notificationKey: key, delivery: 'PENDING', payloadRevision: 1 }
     }
@@ -173,12 +191,12 @@ export function findingFingerprint(finding) {
  * Compatibility adapter over the accepted root-incident lifecycle. It intentionally ignores
  * reminder/cooldown options: unchanged state never emits a user notification.
  */
-export function updateAlertState(state, findings, { nowMs = Date.now(), ownsIncident } = {}) {
+export function updateAlertState(state, findings, { nowMs = Date.now(), ownsIncident, producer } = {}) {
   const compiled = compileIncidents(findings).incidents
   const acknowledgments = new Set(compiled
     .filter((incident) => incident.facts.some((fact) => fact.disposition?.basis === 'operator-reconcile'))
     .map((incident) => incident.rootIdentity))
-  const result = updateIncidentState(state, compiled, { nowMs, acknowledgments, ...(ownsIncident ? { ownsIncident } : {}) })
+  const result = updateIncidentState(state, compiled, { nowMs, acknowledgments, ...(ownsIncident ? { ownsIncident } : {}), ...(producer ? { producer } : {}) })
   return {
     state: result.state,
     notifications: result.notifications.map((intent) => ({

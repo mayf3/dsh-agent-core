@@ -84,12 +84,17 @@ export function withPrivateLock(path, ownership, operation) {
     let parsed
     try { parsed = JSON.parse(observed.bytes.toString('utf8')) } catch { parsed = null }
     if (ownerAlive(parsed?.pid) !== false) throw new Error('concurrent writer owns private state lock')
-    const current = readPrivateFile(lockPath, ownership)
-    if (current.stat.dev !== observed.stat.dev || current.stat.ino !== observed.stat.ino || !current.bytes.equals(observed.bytes)) {
-      throw new Error('private state lock changed during recovery')
-    }
-    unlinkSync(lockPath)
-    syncDirectory(dir)
+    const reapPath = `${lockPath}.reaped.${process.pid}.${randomUUID()}`
+    try {
+      renameSync(lockPath, reapPath)
+      syncDirectory(dir)
+      const current = readPrivateFile(reapPath, ownership)
+      if (current.stat.dev !== observed.stat.dev || current.stat.ino !== observed.stat.ino || !current.bytes.equals(observed.bytes)) {
+        throw new Error('private state lock changed during recovery')
+      }
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error
+    } finally { try { unlinkSync(reapPath); syncDirectory(dir) } catch { /* absent */ } }
     if (!publishLock(lockPath, serialized, ownership)) throw new Error('concurrent writer owns private state lock')
   }
   try { return operation() } finally {

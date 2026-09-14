@@ -1,0 +1,75 @@
+import { execFileSync } from 'node:child_process'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+
+import { createJobOp } from '../../packages/scheduler/src/control.js'
+import { JobStore } from '../../packages/scheduler/src/store.js'
+
+export async function runAdmissionSelftest({ ctx, main, git, sha256 }) {
+  const fx = mkdtempSync(join(tmpdir(), 'sched-cp-admission-'))
+  const store = new JobStore(join(fx, 'jobs.json'), { runLogPath: join(fx, 'runs.jsonl') })
+  const daily = await createJobOp(store, { name: '每日摘要检查', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_fixture' } })
+  await createJobOp(store, { name: '每日随想总结-DeepSeek（滚动7日补偿）', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'none' } })
+  const hr = await createJobOp(store, { name: 'HR auto dispatch', agentId: 'agt_hr-agent', schedule: { kind: 'every', everyMs: 3_600_000 }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'none' } })
+  await store.mutateDoc((doc) => {
+    const hrTarget = doc.jobs.find((job) => job.id === hr.id)
+    hrTarget.id = 'b115cb96-fixture'; hrTarget.state = {}
+    doc.jobs.find((job) => job.id === daily.id).id = 'fa13b0ea-fixture'
+  })
+  await createJobOp(store, { name: 'decoy daily', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '30 5 * * *', tz: 'UTC' }, payload: { kind: 'agentTurn', message: 'decoy' }, delivery: { mode: 'none' } })
+  const liveRoot = join(fx, 'live-root')
+  for (const path of ['packages/broker/src/gateway.js', 'packages/scheduler/src/control.js', 'packages/scheduler/src/watchdog.js', 'scripts/agentcore-cron.mjs', 'packages/agent-definition/src/definition.js', 'packages/agent-definition/src/index.js']) {
+    mkdirSync(dirname(join(liveRoot, path)), { recursive: true }); writeFileSync(join(liveRoot, path), '// OLD live bytes\n')
+  }
+  writeFileSync(join(liveRoot, 'packages/live-only-legacy.js'), '// live-only\n')
+  const shim = join(fx, 'launchctl-shim.mjs')
+  writeFileSync(shim, `import { appendFileSync } from 'node:fs'\nconst [op,...rest]=process.argv.slice(2)\nappendFileSync(process.env.SHIM_LOG,op+' '+rest.join(' ')+'\\n')\nif(op==='kickstart')process.stdout.write('{"ok":true}')\n`)
+  mkdirSync(join(fx, 'LaunchDaemons'), { recursive: true })
+  writeFileSync(join(fx, 'LaunchDaemons', 'ai.agent-core.runtime.plist'), '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>HOME</key><string>/Users/authsvc</string></dict></plist>\n')
+  const binDir = join(fx, 'bin'); mkdirSync(binDir, { recursive: true })
+  writeFileSync(join(binDir, 'agentcore-cron'), '// OLD sealed bytes\n')
+  execFileSync('ln', ['-s', join(binDir, 'agentcore-cron'), join(binDir, 'agentcore-cron-link')])
+  Object.assign(ctx, {
+    liveRoot, storePath: join(fx, 'jobs.json'), artifacts: fx, artifactsDir: fx,
+    launchdDir: join(fx, 'LaunchDaemons'), watchdogStateDir: join(fx, 'watchdog-state'),
+    evidenceFile: join(fx, 'evidence', 'reconciliation-evidence.jsonl'), runtimeNode: process.execPath,
+    desiredPath: join(fx, 'desired-state.json'), binSymlink: join(binDir, 'agentcore-cron-link'),
+    launchctlShim: (op, rest) => execFileSync(process.execPath, [shim, op, rest], { env: { ...process.env, SHIM_LOG: join(fx, 'launchctl-calls.log') } }),
+    chown: () => {},
+    asAuthsvc: () => JSON.stringify({ jobs: JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.map((job) => ({ id: job.id })) }),
+    routingManifest: join(fx, 'config', 'scheduler-routing.json'), authsvcUid: process.getuid(), authsvcGid: process.getgid(),
+    routingCandidateUid: process.getuid(), routingCandidateGid: process.getgid(),
+  })
+  ctx.kickstart = (label) => ctx.launchctlShim('kickstart', label)
+  ctx.bootout = (label) => ctx.launchctlShim('bootout', label)
+  ctx.bootstrap = (plist) => ctx.launchctlShim('bootstrap', plist)
+  mkdirSync(join(fx, 'config'), { recursive: true })
+  writeFileSync(join(fx, 'config', 'agent-credentials.json'), '{}\n')
+  writeFileSync(ctx.routingManifest, `${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
+  const routingCandidate = join(fx, 'routing-candidate.json')
+  const routingBytes = Buffer.from(`${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops-v1' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
+  writeFileSync(routingCandidate, routingBytes, { mode: 0o600 })
+  Object.assign(ctx, { routingCandidate, routingCandidateSha256: sha256(routingBytes), credentialsProviderPath: join(fx, 'config', 'agent-credentials.json') })
+  const legacyStateBytes = Buffer.from('{"active":{},"acknowledged":{},"retired":{}}\n')
+  const evidenceBytes = Buffer.alloc(0); const factsBytes = Buffer.from('[]\n')
+  const legacyStatePath = join(fx, 'legacy-alert-state.json'), legacyEvidencePath = join(fx, 'legacy-delivery-evidence.jsonl'), factsPath = join(fx, 'migration-facts.json')
+  writeFileSync(legacyStatePath, legacyStateBytes, { mode: 0o600 }); writeFileSync(legacyEvidencePath, evidenceBytes, { mode: 0o600 }); writeFileSync(factsPath, factsBytes, { mode: 0o600 })
+  ctx.migrationSources = { legacyStatePath, legacyStateSha256: sha256(legacyStateBytes), legacyEvidencePath, legacyEvidenceSha256: sha256(evidenceBytes), factsPath, factsFileSha256: sha256(factsBytes), factsSha256: sha256(Buffer.from('[]')) }
+  ctx.gitShow = (commit, path) => git(['show', `${commit}:${path}`], { encoding: 'utf8' })
+  ctx.gitHash = (commit, path) => git(['rev-parse', `${commit}:${path}`], { encoding: 'utf8' }).trim()
+  await main()
+  const ok = (condition, label) => { if (!condition) throw new Error(`selftest FAIL: ${label}`) }
+  const desired = JSON.parse(readFileSync(join(fx, 'desired-state.json'), 'utf8'))
+  ok(desired.jobs.length === 2 && desired.jobs.every((job) => job.expectedEnabled === true), 'desired criticals')
+  ok(JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.filter((job) => job.logicalKey !== undefined).length === 2, 'two jobs keyed')
+  const calls = readFileSync(join(fx, 'launchctl-calls.log'), 'utf8')
+  ok(calls.includes('kickstart') && calls.split('bootstrap').length - 1 === 3, 'runtime and watchdog launchd calls')
+  ok(readFileSync(join(fx, 'LaunchDaemons', 'ai.agent-core.runtime.plist'), 'utf8').includes('AGENTCORE_EXPECTED_STORE'), 'runtime env')
+  ok(existsSync(join(fx, 'watchdog-state', 'incidents.json')) && JSON.parse(readFileSync(join(fx, 'incident-migration-receipt.json'), 'utf8')).status === 'MIGRATED', 'incident migration')
+  ok(existsSync(join(fx, 'watchdog-state', 'scheduler-watchdog-evidence.jsonl')), 'watchdog evidence')
+  ok((statSync(join(fx, 'evidence')).mode & 0o002) === 0, 'evidence dir private')
+  ok(existsSync(join(liveRoot, 'packages/live-only-legacy.js')) && !existsSync(join(liveRoot, 'packages/scheduler/src/watchdog.js')), 'overlay deletion scope')
+  ok(readFileSync(join(binDir, 'agentcore-cron-link'), 'utf8').length > 1000, 'operator candidate')
+  process.stdout.write(`[admission selftest] PASS (fixture ${fx})\n`)
+}

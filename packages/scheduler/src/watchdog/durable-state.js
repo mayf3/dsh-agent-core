@@ -70,13 +70,17 @@ export function migrateLegacyIncidentStateFiles({
   expectedUid = process.getuid?.(), expectedGid = process.getgid?.(), beforeCommit,
 } = {}) {
   const initial = loadIncidentState(incidentStatePath, { expectedUid, expectedGid })
-  if (initial.hash !== null) throw new Error('incident state already exists; migration is one-time only')
   const ownership = { expectedUid, expectedGid }
   const legacy = readStableFile(legacyStatePath, ownership)
   const evidence = readStableFile(legacyEvidencePath, ownership)
   const factsSha256 = hash(Buffer.from(canonicalJSON(findings ?? []), 'utf8'))
   if (legacy.sha256 !== expectedLegacySha256 || evidence.sha256 !== expectedEvidenceSha256 || factsSha256 !== expectedFactsSha256) {
     throw new Error('migration frozen source generation mismatch')
+  }
+  const migration = { legacySha256: legacy.sha256, evidenceSha256: evidence.sha256, factsSha256 }
+  if (initial.hash !== null) {
+    if (canonicalJSON(initial.state.migration) !== canonicalJSON(migration)) throw new Error('incident state already exists with a different migration generation')
+    return { status: 'ALREADY_MIGRATED', state: initial.state, incidentSha256: initial.hash, ...migration }
   }
   let predecessor
   try { predecessor = JSON.parse(legacy.bytes.toString('utf8')) } catch (error) {
@@ -100,6 +104,7 @@ export function migrateLegacyIncidentStateFiles({
   const state = migrateLegacyAlertState(predecessor, findings, {
     deliveredFingerprints, failedFingerprints, legacyFacts: factsByFingerprint, nowMs,
   })
+  state.migration = migration
   beforeCommit?.()
   const legacyEnd = readStableFile(legacyStatePath, ownership)
   const evidenceEnd = readStableFile(legacyEvidencePath, ownership)
@@ -115,5 +120,5 @@ export function migrateLegacyIncidentStateFiles({
   const committed = commitIncidentState(incidentStatePath, state, { expectedHash: null, expectedUid, expectedGid })
   const readback = loadIncidentState(incidentStatePath, { expectedUid, expectedGid })
   if (readback.hash !== committed.hash) throw new Error('incident migration readback mismatch')
-  return { state: readback.state, incidentSha256: readback.hash, legacySha256: legacy.sha256, evidenceSha256: evidence.sha256, factsSha256 }
+  return { status: 'MIGRATED', state: readback.state, incidentSha256: readback.hash, ...migration }
 }
