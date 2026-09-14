@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: 2f1b9198ba5b9e541b06e9087870b370cbc55748
-status: candidate_eleventh_exact_review_pending
+implementation_code_commit: 225e6f5ef0ae819aa3437c5d90c52cf4cda99935
+status: candidate_twelfth_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`2f1b9198ba5b9e541b06e9087870b370cbc55748`, based on the accepted-Spec merge
+`225e6f5ef0ae819aa3437c5d90c52cf4cda99935`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -48,10 +48,10 @@ All Spec tests T01–T34 have explicit named coverage under
 Key results:
 
 ```text
-Scheduler/Product/Broker affected suite             868/868 PASS
-focused eleventh-review blocker matrix                49/49 PASS
-focused Scheduler/deployment matrix                 143/143 PASS
-wide Scheduler/Product/Broker/deployment run         698/699 PASS (one known environment failure)
+Scheduler/Product/Broker affected suite             847/847 PASS
+focused twelfth-review blocker matrix                 59/59 PASS
+focused Scheduler/deployment matrix                   51/51 PASS
+combined affected/deployment run                     898/898 PASS
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
 production admission fixture selftest           PASS twice, including resumable replay
@@ -194,7 +194,16 @@ returned `REVISE`. The eleventh candidate closes every executed counterexample:
 | valid-shaped but invented migration hashes waived the outbox | migration authority now requires exact protected legacy/evidence/canonical-facts backups and the root-controlled migration receipt; canonical health verifies backup generations, and postdeploy requires the receipt-bound authority before allowing any migration exception |
 | persisted delivery binding could redirect control-plane alerts | the binding schema is closed over producer, canonical stable payload, provider idempotency key, route, route source, routing SHA and finite timestamp; canonical health, postdeploy and every watchdog restart re-resolve against the exact protected routing generation, so a business-chat redirect fails closed with zero delivery |
 
-This exact packet is intentionally submitted to both independent reviewers for an eleventh exact-head
+The eleventh exact-head review of `eeadf7950d7cadbc42050f7874c4c552737c4f03`
+returned `REVISE`. The twelfth candidate closes every executed counterexample:
+
+| Eleventh-review blocker | Twelfth-candidate exact closure |
+|---|---|
+| delivery timestamps accepted negative, fractional, pre-transition or future values | durable state and lifecycle operations require monotonic safe-integer binding/attempt/update times at or after the incident transition; canonical health, postdeploy and watchdog compare every persisted delivery time to one trusted observation time and fail closed on future evidence |
+| attempted unknown/delivered intent could lack binding or attempt evidence | `OUTCOME_UNKNOWN` and `DELIVERED` require an immutable canonical binding plus durable first-attempt and update timestamps; a bound `FAILED` also requires attempt evidence; malformed attempted intents throw during outbox inspection instead of disappearing silently |
+| attempted unbound alert could be rebound to the current route | watchdog validates the complete persisted delivery authority before any route resolution, binding, provider readback or send; an invalid attempted state produces only local evidence and a failed tick, with zero external notification I/O |
+
+This exact packet is intentionally submitted to both independent reviewers for a twelfth exact-head
 review; the closure table is implementation evidence, not a self-issued PASS.
 
 ## 4. Controlled production migration plan
@@ -263,5 +272,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = ELEVENTH_EXACT_HEAD_PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = TWELFTH_EXACT_HEAD_PENDING
 ```
