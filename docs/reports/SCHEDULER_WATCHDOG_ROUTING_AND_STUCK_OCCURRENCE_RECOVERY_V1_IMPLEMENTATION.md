@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: 14117040621660ece05af8193bcef970ca165c7d
-status: candidate_revised_exact_review_pending
+implementation_code_commit: 87f41a9635770049f89d47ff938288077eead424
+status: candidate_third_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`14117040621660ece05af8193bcef970ca165c7d`, based on the accepted-Spec merge
+`87f41a9635770049f89d47ff938288077eead424`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -29,13 +29,13 @@ execution remains conditional on the gates in Spec §12.2–§12.4 and the Owner
 | root-cause incident | `incident-compiler.js` collapses paired unknown symptoms; `incident-lifecycle.js` owns exact root/episode state, closure and deterministic outbox keys |
 | durable no-repeat | owner-aware locked atomic incident state and durable outbox in `durable-state.js`; attempt-start is committed before provider I/O; unchanged state creates no new intent; acknowledgment and recovery are mutually exclusive |
 | route confinement | `routing.js` validates a closed deployment-owned manifest and resolves the three classes; control-plane incidents never inspect Job delivery or session/chat state |
-| fail-loud delivery | `delivery.js` preserves the full 64-hex logical notification key; Feishu receives its reversible 43-character base64url representation; ambiguous send remains `OUTCOME_UNKNOWN` before I/O and retry is bounded inside the provider dedupe window |
-| canonical health | `health.js`, production `health-runtime.js`, authenticated Product API `/scheduler/health`, self-ops, and W1 consume the same projector; exact occurrence/fence authority, sources and SHA/store provenance fail closed |
+| fail-loud delivery | `delivery.js` preserves the full 64-hex logical notification key and immutable producer/route/payload/provider binding; an ambiguous attempt remains `OUTCOME_UNKNOWN`; restart reads provider history and sends only after a complete readback proves the exact marker absent |
+| canonical health | `health.js`, production `health-runtime.js`, authenticated Product API `/scheduler/health`, self-ops, and W1 consume the same projector; version, complete Job schema, unique identities, exact occurrence/fence authority, sources and SHA/store provenance fail closed |
 | runtime readiness | production entry requires a complete canonical health snapshot before Scheduler admission starts; a Job-local block remains per-Job and does not become global startup failure |
 | executable convergence | W1/W2 producer ownership prevents peer false-recovery; formal protected routing installer and frozen legacy migration CLI are wired into the reviewed deployment/runner paths; old ambient-chat/old-state consumers remain absent |
 
-The admission script was mechanically reduced from a legacy over-limit file to 493 lines by moving
-the runtime-restart helper into the existing production-runtime scheduler module directory. The
+The admission script is exactly 500 lines after moving runtime restart, incident migration, and
+fixture orchestration into focused modules. The
 production compose file remains at its 503-line baseline through an equivalent focused extraction.
 No structure exception was added.
 
@@ -48,11 +48,12 @@ All Spec tests T01–T34 have explicit named coverage under
 Key results:
 
 ```text
-focused watchdog + Product API + runtime/self-ops 109/109 PASS
-full Scheduler suite                              295/295 PASS
+full Scheduler suite                              301/301 PASS
+Product API + broker health boundary                22/22 PASS
+focused production-runtime deployment/health        10/10 PASS
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
-production admission fixture selftest           PASS (exact 14117040621660ece05af8193bcef970ca165c7d)
+production admission fixture selftest           PASS twice, including resumable replay
 T34 executable path census                      PASS
 ```
 
@@ -89,20 +90,23 @@ Review must bind to one exact commit containing this packet and answer Spec R1�
 ### First independent review and closure
 
 Both independent reviewers bound their first review to `091cb3b7863713741fe36b7c5e13b28c95909ca2`
-and returned `REVISE`. The revised code commit closes their concrete counterexamples:
+and their second review to `a8ca511d44ca371390cdc978e34e027bda3f4b1c`; both rounds returned `REVISE`.
+The current code commit closes their concrete counterexamples:
 
 | First-review blocker | Revised exact closure |
 |---|---|
 | stale/conflicting evidence release | closed trusted-source set, exact epoch, bounded observation age, and termination/live plus business/live conflict quarantine |
 | W1/W2 false closure/reopen | producer-owned incident closure plus alternating-role regression |
-| crash-after-send duplicate | durable `OUTCOME_UNKNOWN` attempt-start before I/O; stable reversible provider key; no retry after safe window |
+| crash-after-send duplicate or crash-before-I/O silence | durable immutable binding; `OUTCOME_UNKNOWN` remains eligible; exact provider-history marker yields MARK_DELIVERED, proven absence yields SEND, incomplete readback yields HOLD |
 | false-green health | canonical occurrence validation, exact rebuilt fence equality, closed sources, exact SHA/store provenance, shared W1/self-ops projector |
 | caller-injected migration evidence | closed evidence JSONL parsed from frozen protected bytes; conflict/duplicate/drift fail before commit; formal migration CLI |
 | unsafe incident/sink persistence | no-follow owner/group/mode/ACL checks, owner-token dead-PID lock recovery, atomic replace, file and directory fsync |
-| incomplete routing/deployment closure | exact Goal diff plus transitive production closure, explicit hashed routing candidate atomic install, full runtime env replacement/readback |
+| incomplete routing/deployment closure | exact Goal diff including deletions, protected routing candidate coordinates, formal migration phase, runtime/W1/W2 bootout-bootstrap, first-predecessor receipts, generation-safe rollback and resumable replay selftest |
+| missing epoch / false-green malformed census | nonempty epoch is mandatory for every reconciliation decision; canonical health requires V3, full normalized Jobs, and unique jobId/logicalKey |
+| peer outbox claim / double stale-lock reaper | outbox retry is producer-filtered; stale locks move atomically to a unique quarantine name before replacement publication, with a two-process regression |
 
-The revised exact packet is intentionally submitted to both independent reviewers again; this table
-does not self-declare their second-review result.
+The revised exact packet is intentionally submitted to both independent reviewers for a third
+exact-head review; this table does not self-declare that review result.
 
 ## 4. Controlled production migration plan
 
@@ -170,5 +174,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = THIRD_EXACT_HEAD_PENDING
 ```
