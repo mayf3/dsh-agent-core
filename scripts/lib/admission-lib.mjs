@@ -228,6 +228,10 @@ export function reExportsWithoutLocalBinding(source) {
  * paired with stale dependency bytes. Tests/docs stay excluded. */
 export function inOverlayUniverse(repoPath) {
   if (SCRIPT_ALLOWLIST.has(repoPath)) return true
+  // This acceptance fixture is a static import of the production broker index
+  // and is registered only behind explicit config; its bytes remain required
+  // for module-load closure even though other fixture trees stay excluded.
+  if (repoPath === 'packages/broker/src/fixtures/self-assert.js') return true
   if (!repoPath.startsWith('packages/')) return false
   if (repoPath.includes('/test/') || repoPath.endsWith('.test.js')) return false
   if (repoPath.includes('/fixtures/')) return false
