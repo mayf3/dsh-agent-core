@@ -74,5 +74,11 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok((statSync(join(fx, 'evidence')).mode & 0o002) === 0, 'evidence dir private')
   ok(existsSync(join(liveRoot, 'packages/live-only-legacy.js')) && !existsSync(join(liveRoot, 'packages/scheduler/src/watchdog.js')), 'overlay deletion scope')
   ok(readFileSync(join(binDir, 'agentcore-cron-link'), 'utf8').length > 1000, 'operator candidate')
+  const overlayReceipt = readFileSync(join(fx, 'overlay-manifest.json'), 'utf8')
+  const operatorPredecessor = JSON.parse(readFileSync(join(fx, 'operator-cutover-receipt.json'), 'utf8')).previousSha256
+  await main()
+  ok(readFileSync(join(fx, 'overlay-manifest.json'), 'utf8') === overlayReceipt, 'overlay rerun retains predecessor manifest')
+  ok(JSON.parse(readFileSync(join(fx, 'operator-cutover-receipt.json'), 'utf8')).previousSha256 === operatorPredecessor, 'operator rerun retains predecessor')
+  ok(JSON.parse(readFileSync(join(fx, 'incident-migration-receipt.json'), 'utf8')).status === 'ALREADY_MIGRATED', 'migration rerun converges')
   process.stdout.write(`[admission selftest] PASS (fixture ${fx})\n`)
 }
