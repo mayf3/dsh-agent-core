@@ -27,7 +27,7 @@ import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { assertOAuthCredentialBoundary, persistOpenAICodexCredentialFile } from './shared-codex.js'
+import { persistOpenAICodexCredentialFile } from './shared-codex.js'
 import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
 
@@ -470,16 +470,16 @@ export function provisionAgentHome(home, workspace, options = {}) {
     ensureSymlink(join(REPO, relTarget), join(agentCoreFarm, pkg))
   }
 
-  // Accepted ChatGPT Subscription Provider V1: the composition decides
-  // whether THIS agent has an opt-in and hands the immutable requirement
-  // through the Router. This generic provisioning layer only performs the
-  // requested exact install/check inside this home; it never selects agents.
-  if (options.subscription !== undefined) {
-    const subscription = options.subscription
-    const credentialBoundary = options.credentialBoundary ?? assertOAuthCredentialBoundary
-    credentialBoundary(home, subscription.credentialFile)
-  }
-
+  // Credential boundary validation is CHILD-TIME (DEFAULT_MODEL_ROUTING_CONFIG_V1
+  // prerequisite + AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2
+  // third-uid-denied): provisioning runs as the runtime identity (e.g. authsvc
+  // uid505), which must never — and structurally cannot — touch the canonical
+  // secret under the uid502 owner's 0700 home. The parent's job here is the
+  // credentialFile REFERENCE written into the child profile patch above; the
+  // child's dsh-codex store reader enforces the real invariants after the
+  // privilege drop (assertOwnerOnly mode 0600 + strict document validation)
+  // and fails loud before any model call. assertOAuthCredentialBoundary stays
+  // exported (re-export below) for direct ops/unit use — never invoked here.
   mkdirSync(workspace, { recursive: true })
   return home
 }
