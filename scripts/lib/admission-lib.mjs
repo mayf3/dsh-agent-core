@@ -20,7 +20,9 @@ export function relativeImports(source) {
 /** Resolve a relative import against a repo-relative dir to a repo path with .js candidates. Pure. */
 export function resolveRelative(fromDir, spec) {
   const joined = normalize(joinPath(fromDir, spec))
-  const candidates = [joined, `${joined}.js`, joinPath(joined, 'index.js')]
+  const candidates = /\.(?:[cm]?js|json)$/.test(joined)
+    ? [joined]
+    : [joined, `${joined}.js`, joinPath(joined, 'index.js')]
   return candidates
 }
 
