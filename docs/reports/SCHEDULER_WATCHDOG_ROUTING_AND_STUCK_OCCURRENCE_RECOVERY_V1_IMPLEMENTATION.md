@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: 4ab159fb34a866296ce47cf738e78404cbb160c1
-status: candidate_fifth_exact_review_pending
+implementation_code_commit: b18463a58dfebb02db552d3df99292c4d8806bf2
+status: candidate_sixth_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`4ab159fb34a866296ce47cf738e78404cbb160c1`, based on the accepted-Spec merge
+`b18463a58dfebb02db552d3df99292c4d8806bf2`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -32,7 +32,7 @@ execution remains conditional on the gates in Spec §12.2–§12.4 and the Owner
 | fail-loud delivery | `delivery.js` preserves the full 64-hex logical notification key and immutable producer/route/payload/provider binding; an ambiguous attempt remains `OUTCOME_UNKNOWN`; restart reads provider history and sends only after a complete readback proves the exact marker absent |
 | canonical health | `health.js`, production `health-runtime.js`, authenticated Product API `/scheduler/health`, self-ops, and W1 consume the same projector; version, complete Job schema, unique identities, exact occurrence/fence authority, sources and SHA/store provenance fail closed |
 | runtime readiness | production entry requires a complete canonical health snapshot before Scheduler admission starts; a Job-local block remains per-Job and does not become global startup failure |
-| executable convergence | W1/W2 producer ownership prevents peer false-recovery; formal protected routing installer and frozen legacy migration CLI are wired into the reviewed deployment/runner paths; old ambient-chat/old-state consumers remain absent |
+| executable convergence | W1/W2 producer ownership prevents peer false-recovery; formal protected routing installer, frozen legacy migration CLI, and evidence-bound postdeploy finalizer are wired into reviewed executable paths; the finalizer uses authenticated canonical health plus one retained `delivery:none` canary through a closed Scheduler control op and cannot publish acceptance from caller booleans |
 
 The admission script is exactly 500 lines after moving runtime restart, incident migration, and
 fixture orchestration into focused modules. The
@@ -49,8 +49,8 @@ Key results:
 
 ```text
 full Scheduler suite                              310/310 PASS
-Product API + broker boundary                      106/106 PASS
-focused blocker/deployment/health matrix            110/110 PASS
+focused Product API + broker + deployment boundary   97/97 PASS
+focused fifth-review blocker matrix                   44/44 PASS
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
 production admission fixture selftest           PASS twice, including resumable replay
@@ -129,8 +129,23 @@ returned `REVISE`. The fifth candidate closes the executed counterexamples:
 | boundary stopped below root | routing target validation is fixed to `/`; unsafe ancestors above the deployment subtree reject before write |
 | premature terminal cutover claim | admission emits only `PENDING_CANONICAL_HEALTH_AND_CANARY`; a separate generation-bound gate can emit acceptance only after complete canonical counts/provenance, passive non-synthetic quarantine/dedupe replay, fresh disposable side-effect-free canary, unrelated-Job isolation and canary-only store delta |
 
-This exact packet is intentionally submitted to both independent reviewers for a fifth exact-head
-review; this table does not self-declare that review result.
+That fifth candidate was submitted to both independent reviewers at the packet commit above; its
+result is recorded next rather than inferred from the closure table.
+
+The fifth exact-head review of `01e2ab9a4bdfbe81022b42e01b78d3a72000db68`
+returned `REVISE`. The sixth candidate closes every executed counterexample:
+
+| Fifth-review blocker | Sixth-candidate exact closure |
+|---|---|
+| later success hid a durable failed occurrence | every terminal failed occurrence remains a canonical `RUN_FAILED` fact; a regression proves later success cannot suppress it |
+| runtime still active during early mutations | admission now freezes loaded state and positively quiesces W1, W2, and runtime before any store, code, config, routing, or incident-state mutation |
+| desired-state `INSTALLING` replay could substitute predecessor bytes | the candidate is frozen once in the protected control tree with file/directory fsync; replay reads that exact candidate and verifies the exact original preimage before install |
+| rollback changed predecessor metadata | runtime, watchdog, routing, and desired receipts bind uid/gid/mode plus absence of ACL/unsupported xattrs; restore reapplies and reads back exact bytes and metadata with file/directory fsync |
+| pure postdeploy helper trusted booleans and minted current-six authority | the pure gate is deleted; an executable root-controlled finalizer reads the pending deployment receipt, authenticated canonical health, exact API/store SHA binding, and one real retained side-effect-free canary created by a closed control op; it proves canary-only store delta, unchanged fences/quarantines, and passive incident replay before publishing an atomic receipt |
+| current-six authority was not identity-bound | the acceptance receipt sets `currentSixAuthorized=true` only for exactly six real quarantined roots and records their exact occurrence identities; any other cardinality leaves that gate false |
+
+This exact packet is intentionally submitted to both independent reviewers for a sixth exact-head
+review; the closure table is implementation evidence, not a self-issued PASS.
 
 ## 4. Controlled production migration plan
 
@@ -198,5 +213,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = FIFTH_EXACT_HEAD_PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = SIXTH_EXACT_HEAD_PENDING
 ```
