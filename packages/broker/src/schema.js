@@ -100,11 +100,24 @@ export function validateManifest(input) {
   } else if (input.renderErrorDetail === true) manifest.renderErrorDetail = true
 
   // ---- human-facing text ----
-  if (input.name !== undefined && typeof input.name !== 'string') {
-    errors.push(path('name') + ' must be a string')
+  // Both fields are validated AND canonicalized: the registry composes the
+  // model-visible tool description from `manifest.description`, so dropping
+  // it here rendered the literal string "undefined" into every broker tool's
+  // description and silently hid frozen operation guidance (CTR-013) from the
+  // model (WORKFLOW_DOMAIN_OWNER_ARCHIVE_CAPABILITY_REPAIR_V1 incident,
+  // 2026-09-14: model invoked archive_instance without the required `reason`
+  // because the guidance never reached it).
+  if (input.name !== undefined) {
+    if (typeof input.name !== 'string') {
+      errors.push(path('name') + ' must be a string')
+    } else {
+      manifest.name = input.name
+    }
   }
   if (typeof input.description !== 'string') {
     errors.push(path('description') + ' must be a string')
+  } else {
+    manifest.description = input.description
   }
 
   // ---- error-code table (capability level) ----
