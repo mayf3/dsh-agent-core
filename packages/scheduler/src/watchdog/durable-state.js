@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { dirname, join } from 'node:path'
 import { canonicalJSON } from '../occurrence-model.js'
-import { legacyFingerprint, migrateLegacyAlertState } from './incident-lifecycle.js'
+import { legacyFingerprint, migrateLegacyAlertState, notificationKey } from './incident-lifecycle.js'
 import { atomicReplacePrivateFile, ensurePrivateDirectory, readPrivateFile, withPrivateLock } from './private-state-io.js'
 
 function hash(bytes) {
@@ -35,6 +35,28 @@ function validateState(value) {
     || value.incidents === null || typeof value.incidents !== 'object'
     || value.outbox === null || typeof value.outbox !== 'object') {
     throw new TypeError('unsupported incident state')
+  }
+  for (const [root, record] of Object.entries(value.incidents)) {
+    if (record?.rootIdentity !== root || !Number.isSafeInteger(record.episode) || record.episode < 1
+      || record.incidentId !== `${root}|episode:${record.episode}` || !Number.isSafeInteger(record.transitionRevision)
+      || record.transitionRevision < 1 || record.alertState?.incidentKey !== root || record.alertState?.lifecycle !== record.lifecycle) {
+      throw new TypeError(`incoherent incident record: ${root}`)
+    }
+    if (record.lifecycle !== 'OPEN') continue
+    const entries = Object.entries(value.outbox).filter(([, intent]) => intent.incidentId === record.incidentId)
+    if (entries.length === 0) {
+      if (record.alertState.delivery !== 'DELIVERED' || value.migration === undefined) throw new TypeError(`open incident lacks outbox: ${root}`)
+      continue
+    }
+    if (entries.length !== 1) throw new TypeError(`open incident has duplicate outbox: ${root}`)
+    const [key, intent] = entries[0]
+    const compatibleDelivery = intent.delivery === record.alertState.delivery
+      || (value.migration !== undefined && record.alertState.delivery === 'FAILED' && intent.delivery === 'PENDING')
+    if (key !== notificationKey(intent) || intent.notificationKey !== key || intent.transitionKind !== 'OPEN'
+      || intent.transitionRevision !== record.transitionRevision || intent.routeClass !== record.routeClass
+      || intent.producer !== record.producer || intent.incident?.rootIdentity !== root || !compatibleDelivery) {
+      throw new TypeError(`incoherent incident outbox: ${root}`)
+    }
   }
   return value
 }

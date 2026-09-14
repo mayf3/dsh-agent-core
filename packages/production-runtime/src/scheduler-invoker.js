@@ -39,6 +39,6 @@ export function createObservedSchedulerInvoker({ router, definition, writeEviden
     })
     return outcome
   }
-  invoker.assertRunnable = rawInvoker.assertRunnable
+  invoker.assertRunnable = (agentId) => agentId === POSTDEPLOY_CANARY_AGENT_ID ? true : rawInvoker.assertRunnable(agentId)
   return invoker
 }

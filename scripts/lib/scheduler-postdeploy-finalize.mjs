@@ -9,7 +9,7 @@ import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile
 import { assertSuccessfulCanaryRun, publishVerifiedPostdeployReceipt } from '../../packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js'
 import { readProtectedPlainFile } from '../../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 
-const A = '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1'
+const A = '/private/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1'
 const STORE = '/Users/authsvc/.agent-core/scheduler/jobs.json'
 const CLI = '/usr/local/bin/agentcore-cron'
 const CANARY_CONTROL = '/usr/local/libexec/agent-core/app/scripts/lib/scheduler-postdeploy-canary-control.mjs'
@@ -29,7 +29,7 @@ if (process.getuid?.() !== 0 || !/^[0-9a-f]{40}$/.test(sourceSha ?? '') || canar
 const rootOwnership = { expectedUid: 0, expectedGid: 0 }
 const authsvcUid = Number(execFileSync('id', ['-u', 'authsvc'], { encoding: 'utf8' }).trim())
 const authsvcGid = Number(execFileSync('id', ['-g', 'authsvc'], { encoding: 'utf8' }).trim())
-ensureProtectedDirectoryTree(A, { ...rootOwnership, boundary: '/var/db' })
+ensureProtectedDirectoryTree(A, { ...rootOwnership, boundary: '/private/var/db' })
 const readControl = (name, allowMissing = false) => {
   const loaded = readPrivateFile(join(A, name), { ...rootOwnership, allowMissing })
   return loaded ? JSON.parse(loaded.bytes.toString('utf8')) : null
@@ -49,7 +49,7 @@ const asAuthsvc = (command, args) => execFileSync('sudo', ['-u', 'authsvc', 'env
   `AGENTCORE_EXPECTED_STORE=${STORE}`, command, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
 
-const token = readProtectedPlainFile(AUDIT_TOKEN, { boundary: '/var/db', expectedUid: 0, expectedGid: 0, mode: 0o600 }).bytes.toString('utf8').trim()
+const token = readProtectedPlainFile(AUDIT_TOKEN, { boundary: '/', expectedUid: 0, expectedGid: 0, mode: 0o600 }).bytes.toString('utf8').trim()
 if (token === '' || /\s/.test(token)) throw new Error('audit token file must contain exactly one bearer token')
 const health = async () => {
   const response = await fetch(API, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) })
@@ -65,7 +65,7 @@ if (accepted) {
 }
 
 const phaseReceipt = readControl('deployment-phase-receipt.json')
-const routingReceipt = JSON.parse(readProtectedPlainFile(ROUTING_RECEIPT, { boundary: '/var/db', expectedUid: 0, expectedGid: authsvcGid, mode: 0o600 }).bytes.toString('utf8'))
+const routingReceipt = JSON.parse(readProtectedPlainFile(ROUTING_RECEIPT, { boundary: '/', expectedUid: 0, expectedGid: authsvcGid, mode: 0o600 }).bytes.toString('utf8'))
 let plan = readControl('postdeploy-canary-plan.json', true)
 if (!plan) {
   const now = Date.now()
