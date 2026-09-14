@@ -19,13 +19,14 @@
  */
 import assert from 'node:assert/strict'
 import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
 import { AgentProcess } from '../src/process/agent-process.js'
 import { CHATGPT_SUBSCRIPTION_V1 } from '../../production-runtime/src/model-overrides.js'
-import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, provisionAgentHome } from '../../agent-provisioning/src/index.js'
+import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, cliBin, provisionAgentHome } from '../../agent-provisioning/src/index.js'
 
 const REAL_PLUGIN = '/Users/authsvc/.agent-core/homes/agt_hr-agent/profiles/node_modules/dsh-codex'
 const PROFILE = 'agent-core-production'
@@ -36,6 +37,10 @@ function gates(t) {
   if (!existsSync(REAL_PLUGIN)) { t.skip('real pinned dsh-codex install not available on this host'); return false }
   if (!existsSync(CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)) { t.skip('canonical credential store not present on this host'); return false }
   if (!existsSync(join(PINNED_HARNESS, 'apps', 'cli', 'lib', 'bin.js'))) { t.skip('pinned production harness not present (peer closing needs it)'); return false }
+  // The boot harness must actually run — a drifted/broken checkout would make
+  // the failure-path proofs vacuous (the child dies before credential work).
+  const probe = spawnSync(process.execPath, [cliBin(), '--help'], { timeout: 60_000, encoding: 'utf8' })
+  if (probe.status !== 0) { t.skip(`boot harness unusable (exit ${probe.status}): ${String(probe.stderr).slice(-200)}`); return false }
   try {
     readFileSync(CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
   } catch {
@@ -125,23 +130,26 @@ function boot(t, home, workspace) {
 
 /** The child must fail loud on the openai-codex route — never silently succeed. */
 async function assertFailsLoud(t, proc, expectedText) {
-  let failure
+  let failure = null
+  let succeeded = false
   try {
     await proc.ready(120_000)
-    try {
-      await proc.turn('main', 'health probe', {}, 45_000)
-      assert.fail('silent turn success — credential failure was not loud')
-    } catch (error) {
-      failure = error
-    }
+    await proc.turn('main', 'health probe', {}, 45_000)
+    succeeded = true
   } catch (error) {
     failure = error
   }
+  // Sentinel outside the catch: a silent success can never masquerade as a
+  // rejection (an assert.fail inside try/catch would be swallowed).
+  assert.equal(succeeded, false, 'silent success — the credential failure was not loud')
   assert.ok(failure, 'expected a loud failure')
-  assert.equal(proc.provider, 'openai-codex', 'route must stay on the explicit Luna provider (H: no oc-go fallback)')
+  assert.equal(proc.provider, 'openai-codex', 'constructor route must stay the explicit Luna provider')
   const haystack = `${failure.message ?? ''}\n${failure.code ?? ''}\n${proc.stderr}`
   if (expectedText !== undefined) {
-    assert.ok(haystack.includes(expectedText), `failure must surface ${JSON.stringify(expectedText)}; got:\n${haystack.slice(-800)}`)
+    assert.ok(
+      haystack.includes(expectedText),
+      `failure must surface ${JSON.stringify(expectedText)}; got:\n${haystack.slice(-800)}`,
+    )
   }
   return failure
 }
@@ -165,7 +173,10 @@ test('F: missing credential fails loud on the real chain — never a silent fall
   repointCredential(home, absent)
   assert.equal(existsSync(absent), false, 'fixture store must be absent')
   const proc = boot(t, home, workspace)
-  const failure = await assertFailsLoud(t, proc)
+  // ENOENT → provider unconfigured → the harness classifies it
+  // credential_missing ∈ FAIL_LOUD_PROVIDER_ERRORS (initialize fatal; a turn
+  // can never be served on another provider).
+  const failure = await assertFailsLoud(t, proc, 'credential_missing')
   assert.ok(
     !/reply|completed/i.test(String(failure.message ?? '')),
     'failure must not carry a successful reply shape',
