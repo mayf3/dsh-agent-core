@@ -1,10 +1,10 @@
 ---
 spec_id: AGENT_CORE_AGENT_SESSION_MESSAGING_V2_DEPLOYMENT_V1
-status: proposed
+status: accepted
 spec_kind: deployment
 authority_level: governing_spec
-implementation_authority: none
-production_apply_authority: none
+implementation_authority: contracts
+production_apply_authority: contracts
 date: 2026-09-14
 revision: r1
 scope:
@@ -26,19 +26,19 @@ authoring_authority_basis: >-
   authority authoring and independent review only. It does not authorize V2
   deployment, restart, Auth or Grant mutation, production inspection, Session
   mutation, credential access, or any other production effect.
-accepted_date: null
-accepted_by: null
-accepted_reviewed_head: null
-independent_review_result: null
-independent_review_blockers: null
+accepted_date: 2026-09-14
+accepted_by: mayf3
+accepted_reviewed_head: 447272491ca958921df846eb8776d4cdc9f24d78
+independent_review_result: PASS
+independent_review_blockers: NONE
 ---
 
 # AGENT_CORE_AGENT_SESSION_MESSAGING_V2_DEPLOYMENT_V1
 
-> **PROPOSED / NO EXECUTION AUTHORITY.** This document defines one bounded V2
-> release path. Until an independent exact-head review passes and Owner `mayf3`
-> explicitly accepts that exact head, it authorizes no artifact build, apply,
-> restart, Auth change, Grant change, canary, or production mutation.
+> **ACCEPTED / GATED EXECUTION AUTHORITY.** Owner `mayf3` accepted exact reviewed
+> head `447272491ca958921df846eb8776d4cdc9f24d78` on 2026-09-14; independent review
+> PASS with blockers NONE. Acceptance enables only the gated path in this
+> document and is not evidence that any gate passed or production changed.
 
 ## 1. Goal and closed scope
 
