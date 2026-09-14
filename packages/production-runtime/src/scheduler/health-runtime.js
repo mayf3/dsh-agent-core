@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 
-import { acquireConsistentHealthSnapshot, projectSchedulerHealth } from '../../../scheduler/src/watchdog/health.js'
+import { acquireConsistentHealthSnapshot, projectSchedulerHealth, validateCanonicalHealthAuthority } from '../../../scheduler/src/watchdog/health.js'
 import { loadIncidentState } from '../../../scheduler/src/watchdog/durable-state.js'
 import { ROUTE_CLASSES, readProtectedRoutingManifest, resolveNotificationRoute } from '../../../scheduler/src/watchdog/routing.js'
 import { loadCredentialsStore } from '../../../broker/src/credential-store.js'
@@ -38,7 +38,7 @@ function routeSource(source) {
 export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs = Date.now, routingSecurity, incidentOwnership, credentialStoreFile } = {}) {
   if (!layout) throw new TypeError('scheduler health runtime requires layout')
   const sources = [
-    { name: 'jobs', path: layout.jobsStore, capture: () => json(layout.jobsStore) },
+    { name: 'jobs', path: layout.jobsStore, capture: async () => validateCanonicalHealthAuthority(await json(layout.jobsStore)) },
     { name: 'history', path: layout.runsLog, capture: async () => parseRuns(await readFile(layout.runsLog, 'utf8')) },
     { name: 'routing', path: layout.schedulerRoutingManifest, capture: async () => readProtectedRoutingManifest(layout.schedulerRoutingManifest, routingSecurity).manifest },
     { name: 'incidents', path: layout.schedulerIncidentState, capture: async () => loadIncidentState(layout.schedulerIncidentState, incidentOwnership).state },
@@ -84,9 +84,11 @@ export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs 
         routes,
         incidents: captured.incidents?.incidents ?? {},
         provenance: {
-          canonicalPair: acquired.complete === true && typeof runtimeGeneration === 'string' && runtimeGeneration.length > 0,
+          canonicalPair: acquired.complete === true && /^[0-9a-f]{40}$/.test(runtimeGeneration ?? '')
+            && typeof layout.jobsStore === 'string' && layout.jobsStore.startsWith('/'),
           runtime: runtimeGeneration ?? null,
           store: acquired.generations?.find((item) => item.source === 'jobs')?.end ?? null,
+          storePath: layout.jobsStore,
         },
         generations: acquired.generations,
         censusError: acquired.censusError,
@@ -108,10 +110,8 @@ export function mountConfiguredSchedulerHealthRuntime({ ctx, layout, opts = {} }
     runtimeGeneration: opts.runtimeGeneration ?? process.env.AGENT_CORE_DEPLOYED_SHA,
     routingSecurity: opts.schedulerRoutingSecurity ?? {
       expectedUid: Number(process.env.SCHEDULER_ROUTING_OWNER_UID ?? 0),
-      allowedGids: [...new Set([
-        ...(typeof process.getgroups === 'function' ? process.getgroups() : []),
-        ...(Number.isInteger(Number(process.env.SCHEDULER_ROUTING_READER_GID)) ? [Number(process.env.SCHEDULER_ROUTING_READER_GID)] : []),
-      ])],
+      allowedGids: Number.isInteger(Number(process.env.SCHEDULER_ROUTING_READER_GID))
+        ? [Number(process.env.SCHEDULER_ROUTING_READER_GID)] : [],
       maxMode: 0o640,
     },
     incidentOwnership: opts.schedulerIncidentOwnership ?? {

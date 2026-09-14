@@ -5,23 +5,37 @@ export const RECONCILIATION_RESULTS = Object.freeze({
   QUARANTINED_UNKNOWN: 'QUARANTINED_UNKNOWN',
 })
 
-function exactTrusted(evidence, identity) {
+const TRUSTED_EVIDENCE_SOURCES = new Set(['router', 'router-current-readback', 'business-ledger', 'scheduler-runtime'])
+export const DEFAULT_RECONCILIATION_EVIDENCE_MAX_AGE_MS = 5 * 60 * 1000
+
+function exactTrusted(evidence, identity, { nowMs, maxEvidenceAgeMs }) {
   return evidence?.trusted === true
+    && evidence.fresh === true
+    && TRUSTED_EVIDENCE_SOURCES.has(evidence.source)
     && evidence.jobId === identity.jobId
     && evidence.occurrenceId === identity.occurrenceId
     && evidence.runId === identity.runId
+    && evidence.epoch === identity.epoch
     && Number.isFinite(evidence.observedAt)
+    && evidence.observedAt <= nowMs
+    && nowMs - evidence.observedAt <= maxEvidenceAgeMs
 }
 
 function quarantine(reason) {
   return { classification: RECONCILIATION_RESULTS.QUARANTINED_UNKNOWN, path: 'quarantine', releaseFence: false, zeroWrite: true, reason }
 }
 
-export function classifyReconciliationEvidence({ identity, businessOutcome, termination, live } = {}) {
+export function classifyReconciliationEvidence({ identity, businessOutcome, termination, live } = {}, {
+  nowMs = Date.now(), maxEvidenceAgeMs = DEFAULT_RECONCILIATION_EVIDENCE_MAX_AGE_MS,
+} = {}) {
   if (!identity?.jobId || !identity?.occurrenceId || !identity?.runId) return quarantine('identity incomplete')
   const supplied = [businessOutcome, termination, live].filter(Boolean)
-  if (supplied.some((evidence) => !exactTrusted(evidence, identity))) return quarantine('evidence identity, trust, or freshness provenance invalid')
-  if (businessOutcome && live?.live === true) return quarantine('trusted business outcome conflicts with live evidence')
+  if (!Number.isFinite(nowMs) || !Number.isFinite(maxEvidenceAgeMs) || maxEvidenceAgeMs < 0
+    || supplied.some((evidence) => !exactTrusted(evidence, identity, { nowMs, maxEvidenceAgeMs }))) {
+    return quarantine('evidence identity, trust, or freshness provenance invalid')
+  }
+  if ((businessOutcome && live?.live === true) || (termination?.terminated === true && live?.live === true)
+    || (businessOutcome && termination?.terminated === false)) return quarantine('trusted evidence conflicts across sources')
   if (businessOutcome) {
     if (!['succeeded', 'failed'].includes(businessOutcome.status)) return quarantine('unsupported business outcome')
     return {
@@ -40,8 +54,8 @@ export function classifyReconciliationEvidence({ identity, businessOutcome, term
   return quarantine('bounded evidence exhausted')
 }
 
-export async function dispatchReconciliation({ evidence, settleBusiness, settleTermination }) {
-  const result = classifyReconciliationEvidence(evidence)
+export async function dispatchReconciliation({ evidence, settleBusiness, settleTermination, nowMs, maxEvidenceAgeMs }) {
+  const result = classifyReconciliationEvidence(evidence, { nowMs, maxEvidenceAgeMs })
   if (result.path === 'business-outcome') {
     await settleBusiness?.({ identity: evidence.identity, classification: result.classification, evidence: evidence.businessOutcome })
   } else if (result.path === 'termination-only') {

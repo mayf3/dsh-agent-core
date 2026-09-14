@@ -334,7 +334,7 @@ export {
   acquireConsistentHealthSnapshot, filterHealthForPrincipal, projectSchedulerHealth,
 } from './health.js'
 export {
-  RECONCILIATION_RESULTS, classifyReconciliationEvidence,
+  DEFAULT_RECONCILIATION_EVIDENCE_MAX_AGE_MS, RECONCILIATION_RESULTS, classifyReconciliationEvidence,
   dispatchReconciliation, unresolvedFenceContributions,
 } from './reconciliation.js'
 export { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLegacyIncidentStateFiles } from './durable-state.js'

@@ -382,7 +382,7 @@ export async function composeProductionRuntime(options = {}) {
   const brokerCredentialsFile = opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE
   const brokerAuthServiceOrigin = opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN
   const workflowServiceOrigin = buildTargetMap(defaultBrokerTargets).get('svc-workflow')?.allowedOrigin
-  mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log })
+  mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log, healthProvider: () => schedulerHealth.read() })
   // AGENT_CORE_AGENT_SESSION_MESSAGING_V2 (accepted r4): the trusted LOCAL
   // provider for send plus caller-owned exact-turn inspection. Send reuses
   // the Router's sole delivery

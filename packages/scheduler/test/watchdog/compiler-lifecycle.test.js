@@ -96,6 +96,21 @@ test('T25 occurrence incidents never reopen; recurrent control-plane roots incre
   assert.equal(cp.notifications[0].incident.episode, 2)
 })
 
+test('T10 producer observation domains never close or reopen a peer incident', () => {
+  const [w1Incident] = compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents
+  const [w2Incident] = compileIncidents([{ class: 'SCHEDULER_WATCHDOG_FAILURE', subjectKind: 'watchdog', stableSubjectId: 'watchdog:w1' }]).incidents
+  const w1Owns = (record) => record.stableSubjectId !== 'watchdog:w1'
+  const w2Owns = (record) => record.stableSubjectId === 'watchdog:w1'
+  const first = updateIncidentState({}, [w1Incident], { nowMs: 1, ownsIncident: w1Owns })
+  const second = updateIncidentState(first.state, [w2Incident], { nowMs: 2, ownsIncident: w2Owns })
+  const third = updateIncidentState(second.state, [w1Incident], { nowMs: 3, ownsIncident: w1Owns })
+  assert.equal(second.state.incidents[w1Incident.rootIdentity].lifecycle, 'OPEN')
+  assert.equal(third.state.incidents[w2Incident.rootIdentity].lifecycle, 'OPEN')
+  assert.equal(third.state.incidents[w1Incident.rootIdentity].episode, 1)
+  assert.deepEqual(second.notifications.map((item) => item.transitionKind), ['OPEN'])
+  assert.deepEqual(third.notifications, [])
+})
+
 test('T27 legacy paired symptoms collapse without re-alert when any member has delivery proof', () => {
   const facts = unknownFacts('job-a', 'occ-a')
   const legacy = {

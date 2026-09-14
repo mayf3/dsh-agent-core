@@ -39,18 +39,19 @@ function snapshot(overrides = {}) {
 test('T15/T16 complete census is exclusive and exposes the canonical row contract', () => {
   const unknown = {
     occurrenceId: 'occ-b', jobId: 'b', runId: 'run-b', state: 'outcome_unknown',
-    startedAt: T0 - 30_000, endedAt: T0 - 20_000,
+    admittedAt: T0 - 40_000, startedAt: T0 - 30_000, endedAt: T0 - 20_000,
   }
-  const result = projectSchedulerHealth(snapshot({ occurrences: [unknown], fences: { b: ['occ-b'] } }))
+  const result = projectSchedulerHealth(snapshot({ occurrences: [unknown], fences: { b: { occurrenceId: 'occ-b', runId: 'run-b', activatedAtMs: T0 - 40_000, reason: 'outcome_unknown without termination proof (occurrence occ-b)' } } }))
   assert.equal(result.complete, true)
   assert.equal(result.enabled, 4)
   assert.deepEqual({ healthy: result.healthy, degraded: result.degraded, blocked: result.blocked, unknown: result.unknown }, { healthy: 1, degraded: 1, blocked: 2, unknown: 0 })
   assert.equal(result.healthy + result.degraded + result.blocked + result.unknown, result.enabled)
   const row = result.jobs.find((item) => item.jobId === 'b')
-  for (const field of ['lastExpectedAt', 'lastStartAt', 'lastFinishAt', 'lastSuccessAt', 'lastOutcome', 'currentOccurrence', 'currentBlocker', 'blockedAgeMs', 'credentialReadiness', 'nextExpectedAt', 'notificationRoute', 'runtime', 'store', 'blockedSince', 'lastReconciliationAt', 'lastKnownExecutionEvidence', 'fenceReason', 'alertState']) {
+  for (const field of ['health', 'lastExpectedAt', 'lastStartAt', 'lastFinishAt', 'lastSuccessAt', 'lastOutcome', 'currentOccurrence', 'currentBlocker', 'blockedAgeMs', 'credentialReadiness', 'nextExpectedAt', 'notificationRoute', 'runtime', 'store', 'blockedSince', 'lastReconciliationAt', 'lastKnownExecutionEvidence', 'fenceReason', 'alertState']) {
     assert.ok(Object.hasOwn(row, field), `row field ${field}`)
   }
   assert.equal(row.state, 'QUARANTINED_UNKNOWN')
+  assert.equal(row.health, 'BLOCKED')
   assert.equal(row.currentBlocker, 'OUTCOME_UNKNOWN')
   assert.deepEqual(row.currentOccurrence, { occurrenceId: 'occ-b', state: 'outcome_unknown' })
   assert.deepEqual(Object.keys(row.notificationRoute).sort(), ['class', 'source', 'status', 'targetRef'])
@@ -67,8 +68,8 @@ test('T18 missing credential blocks only its Job; invalid routing degrades only 
 })
 
 test('T19/T22 one quarantined Job leaves watchdog/readback and unrelated Jobs healthy', () => {
-  const occurrence = { occurrenceId: 'occ-a', jobId: 'a', state: 'outcome_unknown', endedAt: T0 - 10 }
-  const result = projectSchedulerHealth(snapshot({ occurrences: [occurrence], fences: { a: ['occ-a'] } }))
+  const occurrence = { occurrenceId: 'occ-a', jobId: 'a', runId: 'run-a', state: 'outcome_unknown', admittedAt: T0 - 10, endedAt: T0 - 5 }
+  const result = projectSchedulerHealth(snapshot({ occurrences: [occurrence], fences: { a: { occurrenceId: 'occ-a', runId: 'run-a', activatedAtMs: T0 - 10, reason: 'outcome_unknown without termination proof (occurrence occ-a)' } } }))
   assert.equal(result.jobs.filter((row) => row.state === 'QUARANTINED_UNKNOWN').length, 1)
   assert.equal(result.jobs.find((row) => row.jobId === 'b').classification, 'healthy')
   assert.equal(result.readbackAvailable, true)
@@ -108,6 +109,20 @@ test('T18 fence projection mismatch fails complete health closed', () => {
   const result = projectSchedulerHealth(snapshot({ fences: { a: { occurrenceId: 'missing' } } }))
   assert.equal(result.complete, false)
   assert.equal(result.unknown, 4)
+})
+
+test('T18 malformed or inexact fence values and invalid cron fail health closed/degraded', () => {
+  const occurrence = { occurrenceId: 'occ-a', jobId: 'a', runId: 'run-a', state: 'outcome_unknown', admittedAt: T0 - 10 }
+  const wrongFence = { a: { occurrenceId: 'occ-a', runId: 'wrong', activatedAtMs: T0 - 10, reason: 'wrong' } }
+  assert.equal(projectSchedulerHealth(snapshot({ occurrences: [occurrence], fences: wrongFence })).complete, false)
+  const invalidCron = projectSchedulerHealth(snapshot({ jobs: [{ ...job('a'), schedule: { kind: 'cron', expr: 'not cron', tz: 'Asia/Shanghai' } }] }))
+  assert.equal(invalidCron.jobs[0].health, 'DEGRADED')
+})
+
+test('T16 exact acknowledged alert lifecycle is preserved in health', () => {
+  const incidents = { root: { jobId: 'a', lifecycle: 'CLOSED_ACKNOWLEDGED', alertState: { lifecycle: 'CLOSED_ACKNOWLEDGED', delivery: 'DELIVERED', incidentKey: 'root', lastTransitionAt: 9 } } }
+  const result = projectSchedulerHealth(snapshot({ incidents }))
+  assert.equal(result.jobs[0].alertState.lifecycle, 'CLOSED_ACKNOWLEDGED')
 })
 
 test('T33 unreadable Job document returns null counts and empty rows', () => {

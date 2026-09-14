@@ -223,19 +223,16 @@ export function reExportsWithoutLocalBinding(source) {
   return missing
 }
 
-/** NARROW overlay universe (2026-09-09 boot-failure amendment): ONLY the two
- *  packages the reliability candidate owns (broker + scheduler) plus the
- *  watchdog script. packages/production-runtime/** is EXCLUDED BY NAME —
- *  main's model-overrides.js demands the v3 host config whose migration
- *  belongs to ANOTHER goal (Model Fleet, HOLD); overlaying it crash-looped the
- *  engine (rolled back via preimages). Test trees and markdown excluded. Pure. */
+/** Exact reviewed production closure universe. Seeds remain the goal diff;
+ * relative imports may cross package boundaries so a reviewed runtime is never
+ * paired with stale dependency bytes. Tests/docs stay excluded. */
 export function inOverlayUniverse(repoPath) {
-  if (repoPath === 'scripts/scheduler-watchdog.mjs') return true
+  if (SCRIPT_ALLOWLIST.has(repoPath)) return true
   if (!repoPath.startsWith('packages/')) return false
-  if (repoPath.startsWith('packages/production-runtime/')) return false
   if (repoPath.includes('/test/') || repoPath.endsWith('.test.js')) return false
+  if (repoPath.includes('/fixtures/')) return false
   if (repoPath.endsWith('.md')) return false
-  return repoPath.startsWith('packages/broker/') || repoPath.startsWith('packages/scheduler/')
+  return true
 }
 
 /**

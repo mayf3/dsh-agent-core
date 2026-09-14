@@ -8,11 +8,12 @@ import {
   unresolvedFenceContributions,
 } from '../../src/watchdog/reconciliation.js'
 
-const identity = { jobId: 'job-a', occurrenceId: 'occ-a', runId: 'run-a' }
-const exact = (value) => ({ trusted: true, ...identity, observedAt: 100, ...value })
+const identity = { jobId: 'job-a', occurrenceId: 'occ-a', runId: 'run-a', epoch: 'request-a' }
+const exact = (value) => ({ trusted: true, fresh: true, source: 'router', ...identity, observedAt: 100, ...value })
+const classify = (evidence) => classifyReconciliationEvidence(evidence, { nowMs: 100 })
 
 test('T05 age/timeout alone never proves failure or fence release', () => {
-  const result = classifyReconciliationEvidence({ identity, ageMs: 99_999_999, timedOut: true })
+  const result = classify({ identity, ageMs: 99_999_999, timedOut: true })
   assert.equal(result.classification, RECONCILIATION_RESULTS.QUARANTINED_UNKNOWN)
   assert.equal(result.releaseFence, false)
   assert.equal(result.zeroWrite, true)
@@ -20,7 +21,7 @@ test('T05 age/timeout alone never proves failure or fence release', () => {
 
 test('T06/T07 trusted exact business outcome wins success/failure and releases only its contribution', () => {
   for (const [status, classification] of [['succeeded', 'RECONCILED_SUCCESS'], ['failed', 'RECONCILED_FAILURE']]) {
-    const result = classifyReconciliationEvidence({ identity, businessOutcome: exact({ status }), termination: exact({ terminated: true }) })
+    const result = classify({ identity, businessOutcome: exact({ status }), termination: exact({ terminated: true }) })
     assert.equal(result.classification, classification)
     assert.equal(result.path, 'business-outcome')
     assert.equal(result.releaseFence, true)
@@ -28,7 +29,7 @@ test('T06/T07 trusted exact business outcome wins success/failure and releases o
 })
 
 test('T08 fresh exact live evidence retains the fence', () => {
-  const result = classifyReconciliationEvidence({ identity, live: exact({ live: true, fresh: true }) })
+  const result = classify({ identity, live: exact({ live: true, fresh: true }) })
   assert.equal(result.classification, RECONCILIATION_RESULTS.STILL_IN_FLIGHT)
   assert.equal(result.releaseFence, false)
 })
@@ -39,9 +40,16 @@ test('T09/T24 ambiguous stale conflicting or cross-occurrence evidence is quaran
     { identity, live: exact({ live: true, fresh: false }) },
     { identity, businessOutcome: { ...exact({ status: 'failed' }), occurrenceId: 'other' } },
     { identity, businessOutcome: exact({ status: 'failed' }), live: exact({ live: true, fresh: true }) },
+    { identity, businessOutcome: exact({ status: 'failed', fresh: false }) },
+    { identity, termination: exact({ terminated: true, fresh: false }) },
+    { identity, termination: exact({ terminated: true }), live: exact({ live: true }) },
+    { identity, termination: exact({ terminated: true, epoch: 'old-request' }) },
+    { identity, termination: exact({ terminated: true, observedAt: 94 }) },
+    { identity, termination: exact({ terminated: true, observedAt: 101 }) },
+    { identity, termination: exact({ terminated: true, source: 'caller-asserted' }) },
   ]
   for (const evidence of cases) {
-    const result = classifyReconciliationEvidence(evidence)
+    const result = classifyReconciliationEvidence(evidence, { nowMs: 100, maxEvidenceAgeMs: 5 })
     assert.equal(result.classification, RECONCILIATION_RESULTS.QUARANTINED_UNKNOWN)
     assert.equal(result.zeroWrite, true)
     assert.equal(result.releaseFence, false)
@@ -52,6 +60,7 @@ test('T20/T24 exact termination-only dispatches to existing settlement seam and 
   const calls = []
   const result = await dispatchReconciliation({
     evidence: { identity, termination: exact({ terminated: true }) },
+    nowMs: 100,
     settleBusiness: async () => calls.push('business'),
     settleTermination: async () => calls.push('termination'),
   })
@@ -69,7 +78,7 @@ test('T24 every ordered evidence path dispatches at most one seam', async () => 
     { identity },
   ]) {
     const calls = []
-    await dispatchReconciliation({ evidence, settleBusiness: async () => calls.push('business'), settleTermination: async () => calls.push('termination') })
+    await dispatchReconciliation({ evidence, nowMs: 100, settleBusiness: async () => calls.push('business'), settleTermination: async () => calls.push('termination') })
     assert.ok(calls.length <= 1)
   }
 })

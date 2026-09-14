@@ -48,7 +48,7 @@ function persistIntent(state, notifications, intent) {
   notifications.push(intent)
 }
 
-export function updateIncidentState(inputState, currentIncidents, { nowMs = Date.now(), acknowledgments = new Set() } = {}) {
+export function updateIncidentState(inputState, currentIncidents, { nowMs = Date.now(), acknowledgments = new Set(), ownsIncident = () => true } = {}) {
   const state = initialState(inputState)
   const notifications = []
   const seen = new Set()
@@ -88,7 +88,7 @@ export function updateIncidentState(inputState, currentIncidents, { nowMs = Date
     }
   }
   for (const [rootIdentity, record] of Object.entries(state.incidents)) {
-    if (record.lifecycle !== 'OPEN' || seen.has(rootIdentity)) continue
+    if (record.lifecycle !== 'OPEN' || seen.has(rootIdentity) || !ownsIncident(record)) continue
     record.lifecycle = 'CLOSED_RECOVERED'
     record.alertState.lifecycle = record.lifecycle
     persistIntent(state, notifications, transitionIntent(record, 'CLOSED_RECOVERED', nowMs))
@@ -109,7 +109,7 @@ export function markNotificationDelivery(inputState, key, delivery, nowMs = Date
   return state
 }
 
-function legacyFingerprint(fact) {
+export function legacyFingerprint(fact) {
   const occurrenceId = fact.occurrenceId ?? fact.runId ?? '-'
   return ['RUN_STUCK', 'RUN_FAILED', 'EXPECTED_RUN_MISSED', 'CONSECUTIVE_FAILURE', 'ADMISSION_BLOCKED_UNKNOWN'].includes(fact.class)
     ? `${fact.class}|${fact.jobId ?? '-'}|${occurrenceId}`
@@ -173,12 +173,12 @@ export function findingFingerprint(finding) {
  * Compatibility adapter over the accepted root-incident lifecycle. It intentionally ignores
  * reminder/cooldown options: unchanged state never emits a user notification.
  */
-export function updateAlertState(state, findings, { nowMs = Date.now() } = {}) {
+export function updateAlertState(state, findings, { nowMs = Date.now(), ownsIncident } = {}) {
   const compiled = compileIncidents(findings).incidents
   const acknowledgments = new Set(compiled
     .filter((incident) => incident.facts.some((fact) => fact.disposition?.basis === 'operator-reconcile'))
     .map((incident) => incident.rootIdentity))
-  const result = updateIncidentState(state, compiled, { nowMs, acknowledgments })
+  const result = updateIncidentState(state, compiled, { nowMs, acknowledgments, ...(ownsIncident ? { ownsIncident } : {}) })
   return {
     state: result.state,
     notifications: result.notifications.map((intent) => ({
