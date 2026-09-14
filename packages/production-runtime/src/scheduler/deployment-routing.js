@@ -9,17 +9,20 @@ import { dirname, isAbsolute, join, resolve } from 'node:path'
 import {
   ROUTE_CLASSES, resolveNotificationRoute, validateProtectedPathMetadata, validateRoutingManifest,
 } from '../../../scheduler/src/watchdog/routing.js'
+import { clearGeneratedFileXattrs, hasUnsupportedFileXattrs } from './deployment-file-metadata.js'
 
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex')
 
 function metadata(path) {
   const stat = lstatSync(path)
   let extendedAcl = false
+  let extendedAttributes = false
   if (process.platform === 'darwin') {
     const line = execFileSync('/bin/ls', ['-lde', path], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n')[0] ?? ''
     extendedAcl = /^\S+\+/.test(line)
+    extendedAttributes = hasUnsupportedFileXattrs(path)
   }
-  return { type: stat.isFile() ? 'file' : stat.isDirectory() ? 'directory' : 'other', symlink: stat.isSymbolicLink(), uid: stat.uid, gid: stat.gid, mode: stat.mode & 0o777, extendedAcl }
+  return { type: stat.isFile() ? 'file' : stat.isDirectory() ? 'directory' : 'other', symlink: stat.isSymbolicLink(), uid: stat.uid, gid: stat.gid, mode: stat.mode & 0o777, extendedAcl, extendedAttributes }
 }
 
 function protectedParents(path, boundary) {
@@ -64,7 +67,7 @@ function existingProtected(path, security) {
 function validatePrivateDirectory(path, expectedUid, expectedGid, boundary) {
   const value = metadata(path)
   if (value.type !== 'directory' || value.symlink || value.extendedAcl || value.uid !== expectedUid
-    || value.gid !== expectedGid || (value.mode & 0o077) !== 0
+    || value.gid !== expectedGid || value.extendedAttributes || (value.mode & 0o077) !== 0
     || protectedParents(path, boundary).some((parent) => parent.type !== 'directory' || parent.symlink || parent.extendedAcl || (parent.mode & 0o022) !== 0)) {
     throw new TypeError('unsafe routing rollback directory')
   }
@@ -110,8 +113,11 @@ export function installSchedulerRoutingManifest({
     }
     if (existing?.sha256 === candidate.sha256) return { ...receipt, status: 'ALREADY_INSTALLED' }
   } else {
-    receipt = { status: 'INSTALLING', candidateSha256: candidate.sha256, preimageSha256, enabledJobCount: jobs.filter((job) => job.enabled === true).length }
+    receipt = { status: 'INSTALLING', candidateSha256: candidate.sha256, preimageSha256,
+      preimageMetadata: existing ? { uid: existing.stat.uid, gid: existing.stat.gid, mode: existing.stat.mode & 0o777, acl: 'NONE', xattrs: 'NONE' } : null,
+      enabledJobCount: jobs.filter((job) => job.enabled === true).length }
     writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600, flag: 'wx' })
+    clearGeneratedFileXattrs(receiptPath)
     if (process.getuid?.() === 0) chownSync(receiptPath, expectedUid, expectedGid)
     const receiptFd = openSync(receiptPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
     try { fsyncSync(receiptFd) } finally { closeSync(receiptFd) }
@@ -119,6 +125,7 @@ export function installSchedulerRoutingManifest({
   }
   if (existing && !existsSync(preimage)) {
     writeFileSync(preimage, existing.bytes, { mode: 0o600, flag: 'wx' })
+    clearGeneratedFileXattrs(preimage)
     if (process.getuid?.() === 0) chownSync(preimage, expectedUid, expectedGid)
     const preFd = openSync(preimage, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
     try { fsyncSync(preFd) } finally { closeSync(preFd) }
@@ -128,6 +135,7 @@ export function installSchedulerRoutingManifest({
   const temp = `${targetPath}.incoming.${process.pid}`
   try {
     writeFileSync(temp, candidate.bytes, { mode: 0o600, flag: 'wx' })
+    clearGeneratedFileXattrs(temp)
     chmodSync(temp, 0o640)
     chownSync(temp, expectedUid, expectedGid)
     const fd = openSync(temp, constants.O_RDONLY)
@@ -144,6 +152,7 @@ export function installSchedulerRoutingManifest({
   receipt.status = 'INSTALLED'
   const receiptTemp = `${receiptPath}.incoming.${process.pid}`
   writeFileSync(receiptTemp, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600, flag: 'wx' })
+  clearGeneratedFileXattrs(receiptTemp)
   if (process.getuid?.() === 0) chownSync(receiptTemp, expectedUid, expectedGid)
   renameSync(receiptTemp, receiptPath); syncDirectory(preimageDir)
   return receipt

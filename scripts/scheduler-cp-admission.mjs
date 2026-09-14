@@ -6,7 +6,6 @@
  * watchdog install, and readback proofs. --selftest is fixture-only, --plan is
  * read-only, and --apply requires root.
  */
-
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
@@ -26,6 +25,7 @@ import { restartSchedulerProductionRuntime } from '../packages/production-runtim
 import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
 import { installSchedulerRoutingManifest } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
 import { installSchedulerDesiredState } from '../packages/production-runtime/src/scheduler/deployment-desired-state.js'
+import { capturePlainFileMetadata } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 import { runSchedulerIncidentMigration } from '../packages/production-runtime/src/scheduler/deployment-incident-migration.js'
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
 const args = process.argv.slice(2)
@@ -51,14 +51,12 @@ if (MODE === undefined || !/^[0-9a-f]{40}$/.test(SOURCE_SHA ?? '')) {
   process.stderr.write('usage: scheduler-cp-admission --selftest|--plan|--apply --source-sha <sha> --routing-manifest-source <path> --routing-manifest-sha256 <sha256> plus frozen migration source paths/hashes\n')
   process.exit(2)
 }
-
 const REPO = (() => {
   const here = dirname(new URL(import.meta.url).pathname)
   return relative('', here) === here ? here : here // absolute by construction
 })()
 const REPO_ROOT = join(dirname(new URL(import.meta.url).pathname), '..')
 const git = (argv, opts = {}) => execFileSync('git', ['-c', `safe.directory=${REPO_ROOT}`, '-C', REPO_ROOT, ...argv], { maxBuffer: 32 * 1024 * 1024, ...opts })
-
 const CTX = MODE === 'selftest'
   ? {
       liveRoot: '', storePath: '', artifacts: '', binSymlink: '', launchctl: '', routingManifest: '', launchdDir: '',
@@ -106,7 +104,6 @@ const CTX = MODE === 'selftest'
         'AGENTCORE_EXPECTED_STORE=/Users/authsvc/.agent-core/scheduler/jobs.json',
         cmd, ...argv], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
     }
-
 const receipts = { mode: MODE, sourceSha: SOURCE_SHA, phases: {}, startedAt: new Date().toISOString() }
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const controlOwnership = () => ({ expectedUid: CTX.controlUid, expectedGid: CTX.controlGid })
@@ -143,7 +140,6 @@ function criticalsOrAbort(doc) {
   phase('criticals', true, `daily=${matched.daily.jobs[0]?.id} hr=${matched.hr.jobs[0]?.id}`)
   return matched
 }
-
 async function backfillAndFreeze(doc, matched) {
   const store = new JobStore(CTX.storePath, { runLogPath: join(dirname(CTX.storePath), 'runs.jsonl') })
   const mapping = buildBackfillMapping(matched)
@@ -161,14 +157,15 @@ async function backfillAndFreeze(doc, matched) {
   phase('backfill', true, `${mapping.length} critical(s) keyed (idempotent); store ownership restored`)
   const desired = buildDesiredState(matched)
   const desiredReceipt = existsSync(join(CTX.artifactsDir, 'desired-state-install-receipt.json')) ? readControlReceipt('desired-state-install-receipt.json') : null
-  const desiredBytes = desiredReceipt ? readFileSync(CTX.desiredPath) : Buffer.from(`${JSON.stringify(desired, null, 2)}\n`)
-  if (desiredReceipt && JSON.stringify(JSON.parse(desiredBytes).jobs) !== JSON.stringify(desired.jobs)) throw new Error('desired-state semantic generation drift')
-  installSchedulerDesiredState({ bytes: desiredBytes, targetPath: CTX.desiredPath, preimagePath: join(CTX.artifactsDir, 'rollback', 'scheduler-desired-state.json.preimage'),
+  const desiredBytes = Buffer.from(`${JSON.stringify(desired, null, 2)}\n`)
+  ensureProtectedDirectoryTree(join(CTX.artifactsDir, 'candidates'), { ...controlOwnership(), boundary: CTX.controlBoundary })
+  ensureProtectedDirectoryTree(join(CTX.artifactsDir, 'rollback'), { ...controlOwnership(), boundary: CTX.controlBoundary })
+  installSchedulerDesiredState({ bytes: desiredBytes, expectedJobs: desired.jobs, targetPath: CTX.desiredPath,
+    candidatePath: join(CTX.artifactsDir, 'candidates', 'scheduler-desired-state.json'), preimagePath: join(CTX.artifactsDir, 'rollback', 'scheduler-desired-state.json.preimage'),
     receipt: desiredReceipt, writeReceipt: (value) => writeControlReceipt('desired-state-install-receipt.json', value), expectedUid: CTX.controlUid, expectedGid: CTX.controlGid })
   phase('desired-state', true, `${desired.jobs.length} critical(s) frozen at ${CTX.desiredPath}`)
   return { desired }
 }
-
 function listLiveFiles(root, prefix = '') {
   const out = new Set()
   for (const entry of readdirSync(join(root, prefix), { withFileTypes: true })) {
@@ -375,7 +372,10 @@ function watchdogInstall() {
       const preimage = join(CTX.artifactsDir, 'rollback', `${label}.plist.preimage`)
       mkdirSync(dirname(preimage), { recursive: true })
       if (existed && !existsSync(preimage)) execFileSync('cp', ['-p', path, preimage])
-      return { role, label, path, existed, installedSha256: sha256(Buffer.from(tmpl)), preimage, preimageSha256: existed ? sha256(readFileSync(path)) : null }
+      const before = existed ? capturePlainFileMetadata(path) : null
+      return { role, label, path, existed, installedSha256: sha256(Buffer.from(tmpl)), preimage,
+        preimageSha256: existed ? sha256(readFileSync(path)) : null,
+        preimageMetadata: before }
     })
     receipt = { status: 'INSTALLING', sourceSha: SOURCE_SHA, plists }
     writeControlReceipt('watchdog-install-receipt.json', receipt)
@@ -436,8 +436,8 @@ function quiesceWatchdogs() {
   if (!existsSync(statePath)) writeControlReceipt('service-state-preimage.json', { sourceSha: SOURCE_SHA,
     loaded: Object.fromEntries([...labels, 'system/ai.agent-core.runtime'].map((label) => [label, CTX.isLoaded(label)])) })
   else if (readControlReceipt('service-state-preimage.json').sourceSha !== SOURCE_SHA) throw new Error('service-state preimage generation mismatch')
-  quiesceLaunchdServices(labels, CTX)
-  phase('watchdog-quiesce', true, 'W1/W2 stopped before live code, routing, or incident-state mutation')
+  quiesceLaunchdServices([...labels, 'system/ai.agent-core.runtime'], CTX)
+  phase('watchdog-quiesce', true, 'W1/W2/runtime stopped before store, code, config, routing, or incident-state mutation')
 }
 
 function gate(name, ok, detail) { receipts.gates = receipts.gates ?? {}; receipts.gates[name] = { ok, detail }; process.stdout.write(`[${ok ? 'PASS' : 'FAIL'}] ${name} — ${detail}\n`); if (!ok) throw new Error(`gate ${name} failed`) } // shared by proofs() and the Issue 3 proof module
@@ -487,7 +487,7 @@ async function main() {
   watchdogInstall()
   await proofs()
   writeControlReceipt('deployment-phase-receipt.json', { ...receipts, finishedAt: new Date().toISOString(),
-    acceptanceStatus: 'PENDING_CANONICAL_HEALTH_AND_CANARY', requiredNextReceipt: 'postdeploy-acceptance-receipt.json' })
+    acceptanceStatus: 'PENDING_CANONICAL_HEALTH_AND_CANARY', productionAccepted: false, currentSixAuthorized: false })
   process.stdout.write(`[admission] DEPLOYMENT-ONLY RECEIPT written; canonical census/canary acceptance remains pending\n`)
 }
 

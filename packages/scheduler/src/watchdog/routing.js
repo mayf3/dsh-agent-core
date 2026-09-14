@@ -84,9 +84,9 @@ export function resolveNotificationRoute({ routeClass, job, manifest: rawManifes
 export function validateProtectedPathMetadata({ file, parents = [], expectedUid, allowedGids = [], maxMode }) {
   const fileUnsafe = file?.type !== 'file' || file.symlink === true || file.uid !== expectedUid
     || !allowedGids.includes(file.gid) || !Number.isInteger(file.mode) || (file.mode & ~maxMode) !== 0
-    || file.extendedAcl === true
+    || file.extendedAcl === true || file.extendedAttributes === true
   const parentUnsafe = parents.some((parent) => parent?.type !== 'directory' || parent.symlink === true
-    || !Number.isInteger(parent.mode) || (parent.mode & 0o022) !== 0 || parent.extendedAcl === true)
+    || !Number.isInteger(parent.mode) || (parent.mode & 0o022) !== 0 || parent.extendedAcl === true || parent.extendedAttributes === true)
   if (fileUnsafe || parentUnsafe) throw new TypeError('unsafe protected path metadata')
   return true
 }
@@ -101,6 +101,12 @@ function hasExtendedAcl(path) {
   }
 }
 
+function hasExtendedAttributes(path) {
+  if (process.platform !== 'darwin') return false
+  try { return execFileSync('/usr/bin/xattr', [path], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim().split('\n').filter(Boolean).some((name) => !['com.apple.provenance', 'com.apple.rootless'].includes(name)) }
+  catch { throw new TypeError('protected path xattr inspection failed') }
+}
+
 function metadata(path, expectedType) {
   const stat = lstatSync(path)
   return {
@@ -110,6 +116,7 @@ function metadata(path, expectedType) {
     gid: stat.gid,
     mode: stat.mode & 0o777,
     extendedAcl: hasExtendedAcl(path),
+    extendedAttributes: hasExtendedAttributes(path),
     expectedType,
     dev: stat.dev,
     ino: stat.ino,
