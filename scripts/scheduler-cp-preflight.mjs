@@ -167,7 +167,7 @@ for (const [id, p] of [['P4-user-store', join(homedir(), '.agent-core', 'schedul
 }
 
 // ── P5 live app payload presence (post-overlay must all exist) ──────────────
-for (const rel of ['packages/broker/src/capabilities/scheduler.js', 'packages/broker/src/readiness.js', 'packages/scheduler/src/watchdog.js', 'scripts/scheduler-watchdog.mjs', 'scripts/agentcore-cron.mjs']) {
+for (const rel of ['packages/broker/src/capabilities/scheduler.js', 'packages/broker/src/readiness.js', 'packages/scheduler/src/watchdog/index.js', 'scripts/scheduler-watchdog.mjs', 'scripts/agentcore-cron.mjs']) {
   const p = join(LIVE_ROOT, rel)
   add('P5-live-app', 'INFO', existsSync(p), `${rel}${existsSync(p) ? '' : ' (absent — expected before RUNBOOK §3.3 overlay)'}`)
 }

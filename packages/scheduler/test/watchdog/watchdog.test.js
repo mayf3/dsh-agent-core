@@ -10,7 +10,7 @@ import {
   heartbeatStale,
   formatFindings,
   findingFingerprint,
-} from '../src/watchdog.js'
+} from '../../src/watchdog/index.js'
 
 const NOW = Date.parse('2026-09-07T15:00:00.000Z')
 

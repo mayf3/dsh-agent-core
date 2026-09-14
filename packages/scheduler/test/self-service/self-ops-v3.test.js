@@ -12,7 +12,7 @@ import { reconcileOccurrence } from '../../src/control.js'
 
 const AGENT = 'agt_self'
 
-async function fixture(t, { kind = 'cron', unknowns = 1 } = {}) {
+async function fixture(t, { kind = 'cron', unknowns = 1, healthProvider } = {}) {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'scheduler-self-ops-v3-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   let now = 1_800_000_000_000
@@ -56,9 +56,26 @@ async function fixture(t, { kind = 'cron', unknowns = 1 } = {}) {
     resolveCallerCorrelation: ({ occurrenceId }) => router.get(occurrenceId) ?? { state: 'never_existed' },
     runtimeStatus: () => ({ generationId: 'gen-opaque', health: 'healthy' }),
     clock: () => now + 10_000,
+    healthProvider,
   })
   return { store, job, occurrences, router, access, file: path.join(dir, 'jobs.json'), tick: () => { now += 100 } }
 }
+
+test('status exposes the canonical health projector through the caller-owned read seam', async (t) => {
+  const healthProvider = async () => ({
+    complete: true, enabled: 2, healthy: 1, degraded: 0, blocked: 1, unknown: 0,
+    jobs: [
+      { jobId: 'job-own', agentId: AGENT, classification: 'blocked', state: 'QUARANTINED_UNKNOWN' },
+      { jobId: 'job-foreign', agentId: 'agt_foreign', classification: 'healthy', state: 'HEALTHY' },
+    ],
+  })
+  const fx = await fixture(t, { healthProvider })
+  const result = await fx.access.status(AGENT)
+  assert.equal(result.health.enabled, 1)
+  assert.equal(result.health.blocked, 1)
+  assert.equal(result.health.healthy, 0)
+  assert.deepEqual(result.health.jobs.map((row) => row.jobId), ['job-own'])
+})
 
 test('status is bounded, self-only and secret-free', async (t) => {
   const fx = await fixture(t, { unknowns: 22 })

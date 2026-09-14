@@ -49,6 +49,7 @@ import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
 import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
 import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
+import { createSchedulerRuntimeStarter, mountConfiguredSchedulerHealthRuntime } from './scheduler/health-runtime.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
@@ -351,7 +352,7 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
-  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence })
+  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence, runtimeGeneration: opts.runtimeGeneration ?? process.env.AGENT_CORE_DEPLOYED_SHA })
 
   // Admission observability remains a wrap around Router-owned delivery.
   wireNotificationIngressDeliveryEvidence(router, writeEvidence)
@@ -374,13 +375,14 @@ export async function composeProductionRuntime(options = {}) {
     schedulerAuth: opts.schedulerAuth,
     log,
   })
+  const schedulerHealth = mountConfiguredSchedulerHealthRuntime({ ctx, layout, opts })
 
   // Shared trusted Broker configuration is also consumed by principal
   // resolution below; neither value is ever accepted from model arguments.
   const brokerCredentialsFile = opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE
   const brokerAuthServiceOrigin = opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN
   const workflowServiceOrigin = buildTargetMap(defaultBrokerTargets).get('svc-workflow')?.allowedOrigin
-  mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log })
+  mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log, healthProvider: () => schedulerHealth.read() })
   // AGENT_CORE_AGENT_SESSION_MESSAGING_V2 (accepted r4): the trusted LOCAL
   // provider for send plus caller-owned exact-turn inspection. Send reuses
   // the Router's sole delivery
@@ -484,12 +486,10 @@ export async function composeProductionRuntime(options = {}) {
     notificationIngress,
     store,
     scheduler,
+    schedulerHealth,
     workflowExecution,
     writeEvidence,
-    start: async () => {
-      await scheduler.start({ autoStart: true, catchup })
-      workflowExecution.start()
-    },
+    start: createSchedulerRuntimeStarter({ schedulerHealth, scheduler, workflowExecution, catchup, readinessRequired: opts.schedulerReadinessRequired }),
     stop: async () => {
       // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
       // (in-flight poll finishes, no further page) BEFORE the scheduler and
