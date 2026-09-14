@@ -18,6 +18,7 @@
  *   timeoutMode = 'receipt_only' | 'wait_reply'
  *   result = accepted | replied | timeout | failed   (outcome only; 'denied'
  *     denials are L0 rows recorded by the gateway hook path)
+ *   sessionId / messageId (V2 proven-receipt outcomes only)
  *   reconciliationHandle (outcome only — internal evidence)
  *   startedAtWallMs / durationMs / ts
  *
@@ -99,11 +100,11 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
 
   /**
    * L1 outcome row — appended after a real receipt or a definitive
-   * pre-receipt failure. An append failure NEVER rewrites the proven
-   * business result; the caller surfaces the sanitized onAuditFailure
-   * signal instead.
+   * pre-receipt failure. The V2 caller requires the first coordinate-bearing
+   * receipt row before returning a normal success; later append degradation
+   * is surfaced through the sanitized onAuditFailure signal.
    */
-  function appendOutcome({ sourceAgentId, targetAgentId, requestId, correlation, timeoutMode, result, reconciliationHandle, startedAtWallMs }) {
+  function appendOutcome({ sourceAgentId, targetAgentId, requestId, correlation, timeoutMode, result, reconciliationHandle, startedAtWallMs, sessionId, messageId }) {
     return append({
       kind: 'agent_session_send',
       phase: 'outcome',
@@ -113,6 +114,8 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
       correlationHash: correlationHash(correlation),
       timeoutMode,
       result,
+      ...(sessionId === undefined ? {} : { sessionId }),
+      ...(messageId === undefined ? {} : { messageId }),
       ...(reconciliationHandle === undefined ? {} : { reconciliationHandle }),
       ...(startedAtWallMs === undefined ? {} : { startedAtWallMs }),
       durationMs: Math.max(0, now() - (startedAtWallMs ?? now())),

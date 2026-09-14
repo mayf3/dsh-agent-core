@@ -347,9 +347,9 @@ import { agentSessionMessagingManifest } from '../../broker/src/capabilities/age
 
 test('seam: agent_session_send accepted/replied/timeout survive the corrected depth; a gateway throw stays outcome_unknown with zero retry', async () => {
   const cases = [
-    { status: 'accepted' },
-    { status: 'timeout' },
-    { status: 'replied', reply: 'the target answered' },
+    { status: 'accepted', targetAgentId: 'agt_b-target', sessionId: 'main', messageId: 'msg-1' },
+    { status: 'timeout', targetAgentId: 'agt_b-target', sessionId: 'main', messageId: 'msg-1' },
+    { status: 'replied', reply: 'the target answered', targetAgentId: 'agt_b-target', sessionId: 'main', messageId: 'msg-1' },
   ]
   for (const business of cases) {
     const relay = createRelayHandlers(agentSessionMessagingManifest, async () => childResolved({ ok: true, result: business }))

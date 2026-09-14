@@ -7,7 +7,7 @@
  *   ChannelConversation -> Binding -> Agent + Session -> reply.
  * `deliver` is the frozen admission interface:
  *   deliver({ requestId, agentId, sessionMode: 'main'|'fresh', message })
- *     -> { accepted: true, sessionId }
+ *     -> { accepted: true, sessionId, messageId }
  * Both paths run the CLAUSE-PROC-BOUNDED rule 8 reconciliation-capacity
  * precheck BEFORE any spawn/write.
  */
@@ -240,7 +240,7 @@ export function createIngressDelivery({
    * AGENT ROUTER DELIVERY V0 — the frozen admission interface:
    *
    *   deliver({ requestId, agentId, sessionMode: 'main'|'fresh', message })
-   *     -> { accepted: true, sessionId }
+   *     -> { accepted: true, sessionId, messageId }
    *
    * AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R4 adds ONE optional trusted
    * control-plane argument: `deliver(req, { messageOrigin })` — the generic
@@ -408,6 +408,7 @@ export function createIngressDelivery({
     return {
       accepted: true,
       sessionId,
+      messageId: receipt.messageId,
       ...(receipt.status === undefined ? {} : { status: receipt.status }),
       ...(receipt.reconciliationHandle === undefined ? {} : { reconciliationHandle: receipt.reconciliationHandle }),
       ...(receipt.evidence === undefined ? {} : { evidence: receipt.evidence }),
