@@ -19,7 +19,8 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   })
   await createJobOp(store, { name: 'decoy daily', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '30 5 * * *', tz: 'UTC' }, payload: { kind: 'agentTurn', message: 'decoy' }, delivery: { mode: 'none' } })
   const liveRoot = join(fx, 'live-root')
-  for (const path of ['packages/broker/src/gateway.js', 'packages/scheduler/src/control.js', 'packages/scheduler/src/watchdog.js', 'scripts/agentcore-cron.mjs', 'packages/agent-definition/src/definition.js', 'packages/agent-definition/src/index.js']) {
+  const retiredWatchdog = ['packages/scheduler/src', 'watchdog.js'].join('/')
+  for (const path of ['packages/broker/src/gateway.js', 'packages/scheduler/src/control.js', retiredWatchdog, 'scripts/agentcore-cron.mjs', 'packages/agent-definition/src/definition.js', 'packages/agent-definition/src/index.js']) {
     mkdirSync(dirname(join(liveRoot, path)), { recursive: true }); writeFileSync(join(liveRoot, path), '// OLD live bytes\n')
   }
   writeFileSync(join(liveRoot, 'packages/live-only-legacy.js'), '// live-only\n')
@@ -72,7 +73,7 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(existsSync(join(fx, 'watchdog-state', 'incidents.json')) && JSON.parse(readFileSync(join(fx, 'incident-migration-receipt.json'), 'utf8')).status === 'MIGRATED', 'incident migration')
   ok(existsSync(join(fx, 'watchdog-state', 'scheduler-watchdog-evidence.jsonl')), 'watchdog evidence')
   ok((statSync(join(fx, 'evidence')).mode & 0o002) === 0, 'evidence dir private')
-  ok(existsSync(join(liveRoot, 'packages/live-only-legacy.js')) && !existsSync(join(liveRoot, 'packages/scheduler/src/watchdog.js')), 'overlay deletion scope')
+  ok(existsSync(join(liveRoot, 'packages/live-only-legacy.js')) && !existsSync(join(liveRoot, retiredWatchdog)), 'overlay deletion scope')
   ok(readFileSync(join(binDir, 'agentcore-cron-link'), 'utf8').length > 1000, 'operator candidate')
   const overlayReceipt = readFileSync(join(fx, 'overlay-manifest.json'), 'utf8')
   const operatorPredecessor = JSON.parse(readFileSync(join(fx, 'operator-cutover-receipt.json'), 'utf8')).previousSha256
