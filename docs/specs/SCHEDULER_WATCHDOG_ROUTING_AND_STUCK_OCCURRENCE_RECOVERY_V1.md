@@ -34,6 +34,7 @@ superseded_by: null
 references:
   - docs/investigations/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_ROOT_CAUSE.md
   - docs/investigations/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_DESIGN.md
+  - docs/reports/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_OWNER_DECISION.md
 ---
 
 # SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
@@ -95,8 +96,10 @@ authorization boundaries. `AGENT_CORE_SCHEDULER_RUN_HISTORY_V1` retains authenti
 semantics and is extended only by the health read contract below.
 
 `SCHEDULER_CONTROL_PLANE_RELIABILITY_V1` keeps pure detection, desired-state monitoring, W1/W2
-liveness and fail-loud alerting. Its single configured Owner destination is replaced by the route
-resolver in CTR-ROUTE; its detector facts are not removed.
+liveness, direct Feishu alerting, fail-loud park/nonzero behavior and Owner-visible proactive
+alerting. `CTR-ROUTE-001` is a new compatible destination-selection constraint: its canonical ops
+target MUST be an Owner-visible or Owner-delegated dedicated operations surface. It does not remove
+or weaken the predecessor's alert audience, channel, detectors or delivery-failure obligations.
 
 ### 3.2 Whole-Spec successor
 
@@ -191,7 +194,9 @@ These statements describe coordinates; they do not create runtime or product aut
 - Method: direct Owner ruling.
 - Result: recommended design and independent review are approved; production deployment/store
   mutation/fence release/current-six mutation remain explicitly unauthorized.
-- Provenance: task record; no secret-bearing runtime material.
+- Provenance:
+  `docs/reports/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_OWNER_DECISION.md`;
+  no secret-bearing runtime material.
 
 ## 6. Claims and assumptions
 
@@ -249,7 +254,7 @@ There are no `OPEN_ASSUMPTION` items that alter Contract meaning.
 - Bound coordinates: accepted D-009/Timeout V3 in the baseline plus Owner ruling 2026-09-14.
 - Strength/sufficiency: strong for the normative safe default.
 - Limitations: no classification of the six current occurrences is implied.
-- Provenance: root-cause investigation §3 and Owner decision.
+- Provenance: root-cause investigation §3 and the persisted Owner decision record in `OBS-005`.
 
 ### EVD-004 — Tool/route census supports the current evidence gap
 
@@ -310,8 +315,9 @@ INCIDENT                   = root-cause-oriented user/operator state compiled fr
 ROUTE_CLASS                = BUSINESS_OUTPUT | JOB_FAILURE | SCHEDULER_CONTROL_PLANE_INCIDENT
 SAME_JOB_FENCE             = admission fence keyed by exact jobId/occurrence authority
 QUARANTINED_UNKNOWN        = health/incident projection; not an execution outcome
-MATERIAL_TRANSITION        = open, Spec-defined severity escalation, reconciliation-state change,
-                             acknowledgment, closure/recovery, or new occurrenceId
+MATERIAL_TRANSITION        = open, separately authorized severity escalation,
+                             reconciliation-state change, acknowledgment closure,
+                             natural-recovery closure, or a new incident episode
 CANONICAL_OPS_TARGET       = deployment-owned dedicated Scheduler ops destination
 COMPLETE_CENSUS            = one classified row for every enabled Job from one consistent source snapshot
 ```
@@ -354,32 +360,50 @@ lastKnownExecutionEvidence fenceReason nextExpectedAt alertState
 while the fence remains. `lastKnownExecutionEvidence` MUST be structured, source-qualified,
 timestamped and secret-safe; missing evidence MUST be explicit. `alertState` MUST be structured as
 `{lifecycle, delivery, incidentKey, lastTransitionAt}` where lifecycle is
-`open|acknowledged|closed` and delivery is `pending|delivered|failed`; transport failure MUST NOT be
+`OPEN|CLOSED_ACKNOWLEDGED|CLOSED_RECOVERED` and delivery is
+`PENDING|DELIVERED|FAILED|OUTCOME_UNKNOWN`; transport failure MUST NOT be
 confused with lifecycle closure. The state is durable across watchdog/runtime restart and queryable
 without relying on chat delivery.
 
-### CTR-RECON-001 — Exact four-result reconciliation classifier
+### CTR-RECON-001 — Ordered settlement dispatch and exact four-result classifier
 
-The classifier MUST return exactly one result:
+Reconciliation MUST first validate exact identity, evidence provenance/freshness and cross-source
+coherence. Any identity mismatch or mutually conflicting trusted evidence is zero-write and enters
+`QUARANTINED_UNKNOWN`. Coherent evidence is dispatched in this exact order:
+
+1. trusted exact business outcome enters the four-result classifier as success or failure;
+2. otherwise, trusted exact current-epoch termination without business outcome is handled by the
+   existing V3 termination-only settlement seam and does not enter the classifier;
+3. otherwise, the remaining evidence enters the classifier for current liveness or quarantine.
+
+The classifier's input domain therefore excludes a validated termination-only disposition and it
+MUST return exactly one of these four results:
 
 1. `RECONCILED_SUCCESS`: trusted exact business success closes the occurrence as success and
-   releases the same-Job fence.
+   removes only this occurrence's fence contribution.
 2. `RECONCILED_FAILURE`: trusted exact business failure closes the occurrence as failure and
-   releases the fence; later scheduling/retry follows existing normal contracts.
+   removes only this occurrence's fence contribution; later scheduling/retry follows existing
+   normal contracts.
 3. `STILL_IN_FLIGHT`: trusted exact fresh execution evidence proves the occurrence remains live;
    keep the fence.
 4. `QUARANTINED_UNKNOWN`: bounded sources are exhausted without trusted proof of outcome,
    termination, or current liveness; preserve `outcome_unknown`, keep the same-Job fence, record
    durable health degradation, and open/update one deduplicated incident.
 
-Age/timeout MAY trigger classification or a Spec-defined severity escalation. It MUST NOT itself
+After any success, failure or termination-only settlement, the aggregate same-Job fence clears only
+when no other unresolved unknown occurrence for that exact Job retains a fence contribution. A
+second unresolved unknown MUST keep the Job fenced.
+
+Age/timeout MAY trigger classification. It MUST NOT itself
 prove failure, success, termination, or current execution. Conflicting, stale, cross-occurrence, or
 identity-incomplete evidence MUST NOT release a fence.
 
-The existing trusted exact-termination-only settlement remains valid and outside the four business
-classification results: it records `terminated_without_outcome`, leaves business outcome unknown,
-releases the exact same-Job fence only because continuation is impossible, never retries the old
-occurrence, and permits only the next future natural occurrence.
+The ordered termination-only branch records `terminated_without_outcome`, leaves business outcome
+unknown, removes only that occurrence's fence contribution because continuation is impossible,
+never retries the old occurrence, and permits the next future natural occurrence only if no other
+same-Job fence contribution remains. A late business outcome available at classification time wins
+the first branch; a trusted late business outcome arriving after termination settlement follows
+accepted V3 late-settlement semantics without replay.
 
 ### CTR-INCIDENT-001 — Root-cause compilation before lifecycle
 
@@ -402,10 +426,25 @@ No grouping by suffix, Job name, Agent, chat, or time window is permitted. A new
 new incident even for the same Job/root cause. Facts which do not share exact root-cause identity
 remain distinct incidents.
 
+Every incident has a closed canonical root identity:
+
+```text
+occurrence-bound = (rootCauseClass, jobId, occurrenceId)
+job-bound        = (rootCauseClass, jobId, jobRevision)
+control-plane    = (rootCauseClass, subjectKind, stableSubjectId)
+```
+
+`stableSubjectId` is a fixed configured/runtime identity such as `watchdog:w1`, `watchdog:w2`,
+`scheduler-runtime`, `canonical-store`, or `alert-routing`; tick timestamp and message text are
+forbidden identity inputs. One root identity initializes durable `episode=1` on first open and
+increments it only on `CLOSED_* -> OPEN`; `incidentId=(rootIdentity,episode)`. Repeated ticks in one episode cannot create
+a new incident. Occurrence-bound incidents never reopen after a terminal disposition; a later
+occurrence uses its new occurrenceId.
+
 ### CTR-ALERT-001 — Durable no-repeat lifecycle
 
-For one incident identity, first opening produces at most one logical user alert. With unchanged
-state and escalation level:
+For one incident identity, first opening MUST create exactly one durable logical notification intent
+when a valid authorized route exists. With unchanged state and escalation level:
 
 ```text
 REPEATED_USER_ALERT = NO
@@ -416,10 +455,31 @@ tick time, log offset, render text, or delivery-attempt count is not material. T
 elapsed-age severity threshold. A future severity threshold requires separately accepted,
 versioned Product Authority; crossing an authorized threshold may emit once per level.
 
-Transport may retry the same logical notification with a stable idempotency key. Such attempts MUST
-not create a new incident or user-visible duplicate. Delivery failure is durable in `alertState` and
-health. A formal disposition or natural recovery closes the incident with exactly one closure
-transition notification; it never changes detector facts, execution outcome, or audit history.
+Lifecycle is exact:
+
+```text
+OPEN -> CLOSED_ACKNOWLEDGED   # formal disposition; exactly one acknowledged transition intent
+OPEN -> CLOSED_RECOVERED      # fact naturally disappears; exactly one recovery transition intent
+```
+
+`CLOSED_ACKNOWLEDGED` consumes the closure: later disappearance is silent. There is never both an
+acknowledgment and recovery notification for one episode. A closed occurrence-bound incident cannot
+reopen; a recurrent non-occurrence root cause opens the next monotonic episode.
+
+Each material transition has deterministic
+`notificationKey=hex(sha256(UTF8(canonical-json-v1({incidentId,transitionRevision,
+transitionKind,routeClass}))))`; canonical JSON recursively sorts object keys, preserves array
+order and inserts no insignificant whitespace. Incident state and
+an outbox intent containing that key MUST commit atomically and durably before external I/O. Delivery
+MUST pass the same key to an adapter/downstream that proves idempotent acceptance. A crash or
+ambiguous response replays only the same key/payload; it MUST NOT mint a new transition, key, incident
+or user-visible duplicate. Definitive delivery failure is durable in `alertState` and health. If a
+valid route is unavailable, the intent remains durably failed/pending in the local ops sink and
+delivery fails loud; becoming valid is a material routing transition that retries the same logical
+opening intent, not a second opening.
+
+No adapter lacking demonstrable end-to-end idempotency may cross the production gate. The lifecycle
+never changes detector facts, execution outcome, fence state or audit history.
 
 ### CTR-ROUTE-001 — Three disjoint notification classes
 
@@ -427,7 +487,9 @@ transition notification; it never changes detector facts, execution outcome, or 
 2. `JOB_FAILURE` MUST resolve in order: explicit stable-`logicalKey` failure target, Job owner
    target, canonical Scheduler ops target. Falling to ops MUST set a durable per-Job
    `alertTargetMissing` health marker.
-3. `SCHEDULER_CONTROL_PLANE_INCIDENT` MUST use only the canonical Scheduler ops target.
+3. `SCHEDULER_CONTROL_PLANE_INCIDENT` MUST use only the canonical Scheduler ops target. That target
+   MUST be a dedicated Owner-visible or explicitly Owner-delegated operations surface; a durable
+   local sink supplements delivery failure but does not replace proactive Owner visibility.
 
 The versioned routing manifest is deployment-owned, outside the Job store, validated before use,
 and joined by exact stable `logicalKey`/owner identity. Owner identity for V1 is the Job's exact
@@ -452,6 +514,15 @@ The runtime layout resolves one absolute routing-manifest path; environment may 
 but MUST NOT supply an alternate destination or fallback. Secrets and target identifiers MUST NOT
 be committed or emitted unredacted in evidence.
 
+Production file controls are mandatory: the manifest MUST be a regular non-symlink file owned by
+the deployment authority, readable only by the exact W1/W2 runtime principals (maximum mode `0640`),
+and every parent directory MUST reject group/world writes. Incident/outbox authority, lock and local
+ops sink MUST be regular non-symlink files in a runtime-owned `0700` directory with maximum mode
+`0600`. Readers MUST use no-follow/open-then-fstat identity checks; writers MUST lock, write a same-
+filesystem temporary file, fsync file and directory, and atomically rename. Ownership, mode, file
+type, resolved path and content hash are read back without exposing target values. Any mismatch
+fails route/readiness closed and leaves watchdog/health diagnostic reads available.
+
 The resolver MUST NOT accept these as inputs or fallbacks:
 
 ```text
@@ -474,11 +545,27 @@ One pure health projector MUST be the semantic source for watchdog, startup read
 and scheduler read tools. It consumes one consistent snapshot of Job/occurrence/fence state,
 history, credentials, routing/incident state and runtime/store provenance.
 
+Snapshot acquisition MUST bind every independently mutable source to a stable generation token
+(authoritative document revision or content hash; append-only history may use its locked inode/size/
+tail-hash generation). One attempt reads all start tokens, captures and validates all sources, then
+re-reads all end tokens. It may return `complete=true` only when every required token is available,
+all start/end tokens match, and runtime/store provenance identifies one canonical pair. On drift it
+retries the entire acquisition at most two times; a third drift or a source without a trustworthy
+token returns `complete=false`, projects affected rows `UNKNOWN`, and fails startup readiness. It
+MUST NOT combine generations into a purported state or report `unknown=0` from a torn snapshot.
+Tokens/hashes stay internal or are secret-safe in the response.
+
 It MUST return:
 
 ```text
 enabled healthy degraded blocked unknown complete generatedAt
 ```
+
+If the canonical Job document is unreadable or lacks a trustworthy stable generation, it cannot
+enumerate the fleet: `complete=false`, the five counts are `null`, rows are empty, and a secret-safe
+`censusError` identifies the failed source. It MUST NOT report zeros. If the Job document is stable
+but another required source is incomplete, it still emits one row per enabled Job, marks affected
+rows `UNKNOWN`, and keeps integer counts.
 
 and one row per enabled Job containing at least:
 
@@ -498,7 +585,7 @@ invalid configuration, and `targetRef` is a stable secret-safe label rather than
 Primary `health` is exclusive: `BLOCKED` when admission is currently impossible because this Job
 has an active fence or required credential is unavailable; `DEGRADED` for a non-blocking schedule,
 route, recent run or runtime/store defect; `UNKNOWN` when required evidence is incomplete; otherwise
-`HEALTHY`. Summary counts MUST satisfy:
+`HEALTHY`. Whenever counts are integers, they MUST satisfy:
 
 ```text
 healthy + degraded + blocked + unknown = enabled
@@ -531,6 +618,25 @@ identity, notification idempotency, escalation level, reconciliation timestamp, 
 closure state. Corrupt/unsupported state fails loud and degrades health; it MUST NOT reset dedupe,
 release a fence, or disable unrelated Jobs.
 
+Cutover from the predecessor fingerprint state is a read-only-to-Scheduler, versioned incident-state
+migration under a frozen snapshot of old alert state, watchdog evidence and current compiled facts:
+
+1. map every legacy active/acknowledged/retired fingerprint to exactly one new canonical root
+   identity; the two unknown-occurrence symptoms map to one incident;
+2. use delivery evidence, never `notifiedCount` alone: any proven delivered member seeds the combined
+   opening as `DELIVERED` and MUST NOT re-alert; all members proven failed/parked seed one pending new
+   keyed intent; acknowledged maps to `CLOSED_ACKNOWLEDGED`; retired-without-current-fact maps to
+   `CLOSED_RECOVERED`;
+3. any zero/multiple identity match, missing/ambiguous delivery evidence, corrupt predecessor state,
+   or source-generation drift aborts cutover with old state byte-preserved and health/readiness
+   failed—no blanket delivered seed and no empty reset;
+4. write the new state atomically, retain a hash-addressed backup of predecessor state/evidence, then
+   read back every active incident/key/status before enabling new delivery.
+
+Migration MUST NOT change a Job, occurrence, fence, schedule, detector fact or delivery target. A
+crash before commit resumes old behavior; after commit, replay reads the new durable outbox and uses
+the same notification keys.
+
 ## 10. Acceptance
 
 ### 10.1 Required candidate test matrix
@@ -560,6 +666,28 @@ T19 health/watchdog remain readable/runnable with one quarantined Job
 T20 exact termination-only settlement -> old occurrence not replayed; next future natural slot only
 T21 notification transport retry uses stable idempotency key and creates no duplicate logical alert
 T22 disabled/unrelated Agent/Job does not inherit another Job's fence or incident
+T23 two unknowns on one Job; settling either by success/failure/termination removes only its
+    contribution and aggregate fence remains until the other settles
+T24 ordered evidence dispatch covers success, failure, termination-only, live, unknown and every
+    conflict; exactly one path wins and negative/conflict paths are zero-write
+T25 occurrence/job/control-plane identity is stable across ticks; only closed non-occurrence
+    recurrence increments episode
+T26 crash before/after intent commit, send acceptance and delivered commit -> same notificationKey,
+    payload and one downstream-visible message
+T27 populated legacy active/acknowledged/retired migration, paired-symptom collapse, delivered/
+    failed/ambiguous evidence and crash resume obey CTR-DURABILITY
+T28 malformed/truncated/unsupported incident state, torn atomic write and concurrent writer ->
+    fail loud, degraded health, preserved dedupe/fence and unrelated admission
+T29 mutation injected between start/capture/end token for every mutable health source -> bounded
+    full retry or complete=false; torn snapshot never returns unknown=0
+T30 routing/incident path symlink, owner/mode/type/parent-write mismatch -> fail closed with
+    secret-safe readback and no forbidden delivery
+T31 every new incident with valid route -> exactly one opening intent; invalid route -> durable
+    failed/pending intent, nonzero delivery outcome and visible health
+T32 acknowledgment closes exactly once and suppresses later recovery; natural recovery closes once
+    when no acknowledgment occurred
+T33 unreadable/untokened Job document -> complete=false, null counts, empty rows and censusError;
+    readable Jobs plus missing secondary source -> complete fleet rows with affected UNKNOWN
 ```
 
 Mandatory acceptance headline:
@@ -572,7 +700,8 @@ UNRELATED_JOB_ISOLATION   = PASS
 ### ACC-FENCE-001 — Same-Job isolation
 
 - Contracts: `CTR-FENCE-001`, `CTR-QUARANTINE-001`, `CTR-RECON-001`.
-- Method: unit/state-machine tests T02–T09, T19–T20 and injected restart/evidence failures.
+- Method: unit/state-machine tests T02–T09, T19–T20 and T23–T24 with injected
+  restart/evidence conflicts.
 - Environment: hermetic candidate test stores and fake runtimes; no production access.
 - Required evidence: exact implementation/spec heads, executed command/output, transition rows,
   store diffs proving only the target fence changes when authorized.
@@ -582,7 +711,8 @@ UNRELATED_JOB_ISOLATION   = PASS
 ### ACC-INCIDENT-001 — One root cause and no unchanged repeat
 
 - Contracts: `CTR-INCIDENT-001`, `CTR-ALERT-001`, `CTR-DURABILITY-001`.
-- Method: tests T01, T04, T10–T11 and T21 across repeated ticks and process restart.
+- Method: tests T01, T04, T10–T11, T21 and T25–T28/T31–T32 across repeated ticks,
+  migration, corruption, crash points and process restart.
 - Environment: hermetic clocks, incident store and delivery fake.
 - Required evidence: exact heads, executed output, incident keys/state revisions and delivery
   idempotency records.
@@ -593,7 +723,8 @@ UNRELATED_JOB_ISOLATION   = PASS
 ### ACC-ROUTE-001 — Route confinement and missing-target behavior
 
 - Contracts: `CTR-ROUTE-001`, `CTR-DURABILITY-001`.
-- Method: table/failure-injection tests T12–T14 and T21 over every precedence/fallback branch.
+- Method: table/failure-injection tests T12–T14, T21, T26 and T30–T31 over every
+  precedence/fallback, permission and transport-crash branch.
 - Environment: hermetic manifest and delivery fake with forbidden destinations instrumented.
 - Required evidence: executed output, normalized route decisions, zero calls to forbidden sinks,
   durable configuration/delivery state.
@@ -603,7 +734,7 @@ UNRELATED_JOB_ISOLATION   = PASS
 ### ACC-HEALTH-001 — Complete, access-controlled health/readiness
 
 - Contracts: `CTR-HEALTH-001`, `CTR-READY-001`, `CTR-QUARANTINE-001`.
-- Method: tests T15–T19 and T22 plus Product API auth-first integration tests.
+- Method: tests T15–T19, T22, T29–T30 and T33 plus Product API auth-first integration tests.
 - Environment: hermetic fleet snapshot, credential/routing/runtime/store fakes.
 - Required evidence: executed output, exact response schema, count equation, authorization call order,
   self/audit result comparison and failure projections.
@@ -647,21 +778,26 @@ census:
 
 ```text
 packages/scheduler/src/watchdog/
-packages/scheduler/src/watchdog.js
+packages/scheduler/src/watchdog.js -> packages/scheduler/src/watchdog/index.js (move; no retained root file)
 packages/scheduler/src/index.js
-packages/scheduler/test/watchdog/
+packages/scheduler/test/watchdog.test.js -> packages/scheduler/test/watchdog/watchdog.test.js
+packages/scheduler/test/watchdog-templates.test.js -> packages/scheduler/test/watchdog/templates.test.js
+packages/scheduler/test/watchdog/*.test.js
 packages/product-api/src/scheduler-health-routes.js
 packages/product-api/src/scheduler-routes.js
 packages/product-api/test/scheduler-health*.test.js
 scripts/scheduler-watchdog.mjs
-packages/production-runtime/src/scheduler-health-runtime.js
+packages/production-runtime/src/scheduler/health-runtime.js
 packages/production-runtime/src/paths.js
 minimal non-growing runtime wiring proven necessary by fresh census
 deployment templates/config schema for the external routing manifest
 ```
 
-The implementation MUST use focused modules, keep every new file within structure limits, add no
-structure-registry exception, and avoid growth of grandfathered files. Any new mutation operation,
+The move removes the existing root watchdog file before adding its directory; moving the two root
+watchdog tests likewise avoids net root-child growth. The existing production-runtime `scheduler/`
+directory is reused. The implementation MUST use focused modules, keep every new file within
+structure limits, add no structure-registry exception, and avoid growth of grandfathered files.
+Any new mutation operation,
 Job schema field, public scope, secret-bearing Git config, broad runtime refactor, or change to
 occurrence/retry semantics is an expansion trigger requiring re-preflight and authority review.
 
@@ -676,8 +812,10 @@ Required order:
 1. deploy verified code and deployment-owned route config without changing Job delivery,
    occurrences or fences;
 2. read back exact runtime/store/config provenance and complete enabled-job census;
-3. run one new disposable/read-only-safe canary, never one of the six unknown occurrences;
-4. prove route separation, incident dedupe, same-Job-only fence and unrelated-Job isolation;
+3. run one new disposable side-effect-free canary, never one of the six unknown occurrences;
+4. prove route/health and unrelated admission from the canary; prove dedupe and same-Job fence by
+   passive readback plus read-only replay of a frozen real quarantined snapshot—no synthetic
+   incident and no forced `outcome_unknown`;
 5. accept or roll back code/config atomically; preserve incident evidence and Job/occurrence store.
 
 Abort on drift, incomplete census, route leakage, duplicate incident, any unrelated admission impact,
@@ -698,7 +836,10 @@ occurrence, fence, run/session, side-effect, credential, route and runtime evide
 authenticated surfaces. Zero/multiple matches, stale target, unavailable authority, conflicting
 evidence, or changed live preimage aborts. Alert text and age are insufficient evidence.
 
-Any later mutation is sequential and separately receipted. One Owner-selected evidence-backed row
+For each row, first apply `CTR-RECON-001` evidence validation and ordered dispatch: coherent exact
+termination-only evidence goes to the preserved V3 settlement seam and does not enter the four-result
+classifier; every remaining row receives exactly one of the four results. Conflict is
+`QUARANTINED_UNKNOWN` and zero-write. Any later mutation is sequential and separately receipted. One Owner-selected evidence-backed row
 is canary; after exact post-state acceptance, remaining rows proceed one at a time. `QUARANTINED_UNKNOWN`
 rows remain fenced. Bulk clear, blind replay, manufactured failure, manual raw-store edits and
 automatic fence release are forbidden.
@@ -730,16 +871,16 @@ Both reviewers MUST bind answers to one exact commit and report blockers explici
 
 ```text
 R1 Does QUARANTINED_UNKNOWN preserve outcome uncertainty and the same-Job fence?
-R2 Is any age-, timeout-, ambiguity-, or route-based fence release possible?
+R2 Are age-, timeout-, ambiguity-, route-based and cross-occurrence fence releases impossible?
 R3 Is unrelated-Job/Agent/global admission isolation mechanically testable?
 R4 Are fact, incident, notification attempt and route layers non-conflated?
-R5 Can one occurrence/root cause create more than one logical incident or unchanged user alert?
-R6 Can any control-plane incident reach a business/current/session-derived fallback?
+R5 Is more than one logical incident or unchanged user alert impossible for one root cause episode?
+R6 Is every business/current/session-derived control-plane fallback mechanically impossible?
 R7 Is missing routing durable, visible and non-silent without stopping health/watchdog?
 R8 Is the health census complete, access-controlled, consistent and non-fabricating?
-R9 Are the four reconciliation results exclusive and evidence-based?
+R9 Are ordered termination dispatch and the four classifier results exhaustive, exclusive and evidence-based?
 R10 Are prior fact/detector/closure/audit invariants preserved by the successor?
-R11 Are production migration, rollback and current-six sequencing safe and unambiguous?
+R11 Are production migration, non-synthetic canary, rollback and current-six sequencing safe and unambiguous?
 R12 Does the proposed state authorize zero implementation/production mutation today?
 ```
 
