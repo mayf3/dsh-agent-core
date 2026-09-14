@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: b4e188c5efb92669c861b73cfc5b67b62ef70ef4
-status: candidate_complete_review_pending
+implementation_code_commit: 14117040621660ece05af8193bcef970ca165c7d
+status: candidate_revised_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`b4e188c5efb92669c861b73cfc5b67b62ef70ef4`, based on the accepted-Spec merge
+`14117040621660ece05af8193bcef970ca165c7d`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -27,14 +27,14 @@ execution remains conditional on the gates in Spec §12.2–§12.4 and the Owner
 |---|---|
 | same-Job quarantine | `watchdog/reconciliation.js` implements the ordered evidence classifier; existing V3 settlement seams remain the only mutation path; no age/timeout release branch exists |
 | root-cause incident | `incident-compiler.js` collapses paired unknown symptoms; `incident-lifecycle.js` owns exact root/episode state, closure and deterministic outbox keys |
-| durable no-repeat | owner-aware locked atomic incident state and durable outbox in `durable-state.js`; unchanged state creates no new intent; acknowledgment and recovery are mutually exclusive |
+| durable no-repeat | owner-aware locked atomic incident state and durable outbox in `durable-state.js`; attempt-start is committed before provider I/O; unchanged state creates no new intent; acknowledgment and recovery are mutually exclusive |
 | route confinement | `routing.js` validates a closed deployment-owned manifest and resolves the three classes; control-plane incidents never inspect Job delivery or session/chat state |
-| fail-loud delivery | `delivery.js` preserves the full 64-hex logical notification key; Feishu receives a deterministic 50-character provider coordinate and the full key remains in the payload marker; ambiguous send remains `OUTCOME_UNKNOWN` with bounded retry, never a new intent |
-| canonical health | `health.js`, production `health-runtime.js`, and authenticated Product API `/scheduler/health`; complete is generation-bound and fail-closed; self read and fleet audit are distinct |
+| fail-loud delivery | `delivery.js` preserves the full 64-hex logical notification key; Feishu receives its reversible 43-character base64url representation; ambiguous send remains `OUTCOME_UNKNOWN` before I/O and retry is bounded inside the provider dedupe window |
+| canonical health | `health.js`, production `health-runtime.js`, authenticated Product API `/scheduler/health`, self-ops, and W1 consume the same projector; exact occurrence/fence authority, sources and SHA/store provenance fail closed |
 | runtime readiness | production entry requires a complete canonical health snapshot before Scheduler admission starts; a Job-local block remains per-Job and does not become global startup failure |
-| executable convergence | root watchdog source and four root tests moved into focused directories; W1/W2 templates, runner, preflight, postrepair and legacy admission consumer no longer carry the ambient-chat/old-state path |
+| executable convergence | W1/W2 producer ownership prevents peer false-recovery; formal protected routing installer and frozen legacy migration CLI are wired into the reviewed deployment/runner paths; old ambient-chat/old-state consumers remain absent |
 
-The admission script was mechanically reduced from a legacy over-limit file to 500 lines by moving
+The admission script was mechanically reduced from a legacy over-limit file to 493 lines by moving
 the runtime-restart helper into the existing production-runtime scheduler module directory. The
 production compose file remains at its 503-line baseline through an equivalent focused extraction.
 No structure exception was added.
@@ -48,11 +48,11 @@ All Spec tests T01–T34 have explicit named coverage under
 Key results:
 
 ```text
-focused watchdog + Product API + health runtime  77/77 PASS
-full Scheduler suite                            287/287 PASS
+focused watchdog + Product API + runtime/self-ops 109/109 PASS
+full Scheduler suite                              295/295 PASS
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
-production admission fixture selftest           PASS
+production admission fixture selftest           PASS (exact 14117040621660ece05af8193bcef970ca165c7d)
 T34 executable path census                      PASS
 ```
 
@@ -61,7 +61,7 @@ because `@larksuite/channel` is absent and the host uses Node 26.7.0 rather than
 closure. The same environment failures were present at baseline; no failing stack points to a
 candidate Scheduler watchdog module. Focused candidate and Scheduler suites above are green.
 
-The structure verifier reports only the inherited `scripts/` direct-child ceiling violation already
+The structure verifier at exact code commit reports only the inherited `scripts/` direct-child ceiling violation already
 present when comparing base to itself. Candidate-introduced violations are zero: `compose.js` did
 not grow, `scheduler-cp-admission.mjs` is no longer an over-500 touched legacy file, every new source
 is below 500 lines, and no registry exception was introduced.
@@ -85,6 +85,24 @@ Review must bind to one exact commit containing this packet and answer Spec R1�
   an unreadable Job authority yields null counts and no fabricated rows.
 - W1/W2 share the exact incident-state authority with explicit owner/group coordinates while staying
   distinct failure domains.
+
+### First independent review and closure
+
+Both independent reviewers bound their first review to `091cb3b7863713741fe36b7c5e13b28c95909ca2`
+and returned `REVISE`. The revised code commit closes their concrete counterexamples:
+
+| First-review blocker | Revised exact closure |
+|---|---|
+| stale/conflicting evidence release | closed trusted-source set, exact epoch, bounded observation age, and termination/live plus business/live conflict quarantine |
+| W1/W2 false closure/reopen | producer-owned incident closure plus alternating-role regression |
+| crash-after-send duplicate | durable `OUTCOME_UNKNOWN` attempt-start before I/O; stable reversible provider key; no retry after safe window |
+| false-green health | canonical occurrence validation, exact rebuilt fence equality, closed sources, exact SHA/store provenance, shared W1/self-ops projector |
+| caller-injected migration evidence | closed evidence JSONL parsed from frozen protected bytes; conflict/duplicate/drift fail before commit; formal migration CLI |
+| unsafe incident/sink persistence | no-follow owner/group/mode/ACL checks, owner-token dead-PID lock recovery, atomic replace, file and directory fsync |
+| incomplete routing/deployment closure | exact Goal diff plus transitive production closure, explicit hashed routing candidate atomic install, full runtime env replacement/readback |
+
+The revised exact packet is intentionally submitted to both independent reviewers again; this table
+does not self-declare their second-review result.
 
 ## 4. Controlled production migration plan
 
