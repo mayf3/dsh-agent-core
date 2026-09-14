@@ -52,11 +52,10 @@ import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runti
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
-import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
 import { createAgentPrincipalResolutionAccess } from './identity/agent-principal-resolution.js'
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
-import { createAgentSessionMessagingAudit } from './agent-session-messaging-audit.js'
+import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
@@ -206,6 +205,7 @@ export async function composeProductionRuntime(options = {}) {
   }
 
   applyBootstrap(ctx, { workspaceRoot: layout.workspacesRoot, agentsHome: layout.homesRoot, primaryWorkspaces })
+  const workspaceBootstrap = ctx.get('workspaceBootstrap')
   const importedAgents = Object.keys(primaryWorkspaces)
   if (importedAgents.length > 0) {
     log.log(`primary workspace imports loaded from ${primaryWorkspacesPath}: ${importedAgents.map((id) => `${id} -> ${primaryWorkspaces[id]}`).join(', ')}`)
@@ -325,22 +325,15 @@ export async function composeProductionRuntime(options = {}) {
   // and auth origin arrive via env from the supervision unit. Without a
   // credentials file every capability call fails closed
   // (credential_unavailable) — the gateway never fakes authorization.
-  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R12: the L0 pre-handler denial
-  // hook is scoped to exactly the agent_session_send capability; a failed
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V2: L0 denial evidence is scoped to
+  // the send and independently granted exact-turn inspector only; a failed
   // denial append never changes the denial itself.
-  const agentSessionAudit = createAgentSessionMessagingAudit({
-    auditFile: join(layout.controlDir, 'agent-session-messaging-audit.jsonl'),
-  })
+  const agentSessionRuntime = createAgentSessionRuntime({ layout, definition, workspaceBootstrap, router, log })
   const broker = applyBroker(ctx, {
     mode: 'gateway',
     credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
     authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
-    auditDenial: (info) => {
-      if (info?.capabilityId !== 'agent_session_send') return
-      if (agentSessionAudit.appendDenial(info) !== 'appended') {
-        log.error('[agent-session-messaging] L0 denial audit append failed')
-      }
-    },
+    auditDenial: agentSessionRuntime.auditDenial,
   })
 
   const productApiCfg = opts.productApi ?? {}
@@ -388,19 +381,14 @@ export async function composeProductionRuntime(options = {}) {
   const brokerAuthServiceOrigin = opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN
   const workflowServiceOrigin = buildTargetMap(defaultBrokerTargets).get('svc-workflow')?.allowedOrigin
   mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log })
-  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3): the trusted LOCAL
-  // provider for agent_session_send. It reuses the Router's sole delivery
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V2 (accepted r4): the trusted LOCAL
+  // provider for send plus caller-owned exact-turn inspection. Send reuses
+  // the Router's sole delivery
   // and reconciliation seams — one send = one new Run/Turn in the target
   // canonical main; the runtime derives source identity + exact source-turn
   // correlation (never model args); the L1 intent/outcome append surface is
   // the agentSessionAudit file with sanitized onAuditFailure signals.
-  ctx.provide('agentSessionMessagingAccess', createAgentSessionMessagingAccess({
-    router,
-    audit: agentSessionAudit,
-    onAuditFailure: ({ phase, requestId }) => {
-      log.error(`[agent-session-messaging] audit ${phase} append failed after requestId ${requestId ?? '(not-minted)'}`)
-    },
-  }))
+  agentSessionRuntime.mount(ctx)
 
   // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
   // LOCAL provider for the read-only agent_resolve_principal. Auth is the
