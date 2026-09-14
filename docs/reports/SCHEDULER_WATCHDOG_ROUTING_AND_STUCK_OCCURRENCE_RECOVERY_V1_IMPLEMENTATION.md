@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: b1efea9249673111ce8849c1d1a8577fb79a10db
-status: candidate_eighth_exact_review_pending
+implementation_code_commit: f93415bdbbe85ad58c301790acd21ecbab05aca1
+status: candidate_ninth_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`b1efea9249673111ce8849c1d1a8577fb79a10db`, based on the accepted-Spec merge
+`f93415bdbbe85ad58c301790acd21ecbab05aca1`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -48,8 +48,9 @@ All Spec tests T01–T34 have explicit named coverage under
 Key results:
 
 ```text
-affected Scheduler + Router suite                  274/274 PASS
-focused eighth-review blocker matrix                115/115 PASS
+Scheduler/Product/Broker affected suite             866/866 PASS
+focused ninth-review blocker matrix                   40/40 PASS
+focused Scheduler/deployment matrix                 136/137 PASS (one known environment failure)
 wide Scheduler/Product/Broker/deployment run         698/699 PASS (one known environment failure)
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
@@ -167,7 +168,16 @@ returned `REVISE`. The eighth candidate closes every executed counterexample:
 | token walk stopped early and allowed platform xattrs | token and routing receipt use physical `/private/...` paths; the reader is fixed to `/`, rejects every symlink/writable/ACL ancestor and rejects every xattr including platform attributes |
 | final preimage could be partial after crash | runtime and both watchdog plists copy to a validated fixed temp, restore metadata, fsync, atomically rename and fsync the directory; abandoned temp and unreceipted partial legacy preimages rebuild, while a post-rename crash resumes by validating and syncing the complete final |
 
-This exact packet is intentionally submitted to both independent reviewers for an eighth exact-head
+The eighth exact-head review of `916bec1c3954b968ec4bb3d2fe44b8ef07faf09f`
+returned `REVISE`. The ninth candidate closes every executed counterexample:
+
+| Eighth-review blocker | Ninth-candidate exact closure |
+|---|---|
+| invalid incident lifecycle or absent delivery could pass | durable state now validates closed lifecycle/delivery enums, every record, every outbox intent, deterministic key, embedded transition snapshot, unique transition identity, orphan rejection and current open/closure binding; the postdeploy finalizer invokes the same validator before dedupe replay |
+| same-byte runtime preimage could carry wrong metadata | runtime replay now exact-compares the predecessor and preimage uid/gid/mode/ACL/xattr metadata before accepting same bytes; the counterexample rejects before any receipt or install |
+| quarantined occurrence counted as unrelated success | postdeploy acceptance rejects every appended occurrence for a fenced or before/after quarantined Job; the required proof occurrence must belong to a pre-existing Job classified healthy in both canonical snapshots |
+
+This exact packet is intentionally submitted to both independent reviewers for a ninth exact-head
 review; the closure table is implementation evidence, not a self-issued PASS.
 
 ## 4. Controlled production migration plan
@@ -236,5 +246,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = EIGHTH_EXACT_HEAD_PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = NINTH_EXACT_HEAD_PENDING
 ```
