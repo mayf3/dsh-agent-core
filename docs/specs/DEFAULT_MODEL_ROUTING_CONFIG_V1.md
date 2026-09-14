@@ -1,6 +1,21 @@
 ---
 spec_id: DEFAULT_MODEL_ROUTING_CONFIG_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-09-14
+accepted_reviewed_spec_commit: 90e423a357648d55dd1398741d3a148ed5c7f001
+acceptance_authority_basis: >-
+  Owner exact-head acceptance 2026-09-14 (PR #284 review thread): the exact
+  reviewed bytes at 90e423a are accepted; any later drift voids this
+  acceptance. Semantic direction was pre-authorized by the Owner directive of
+  the same date (configuration-driven default model routing with canonical
+  built-in default GPT Luna; OpenCode Go explicit-route only) plus the
+  standing Owner ruling 2026-09-10 (retire the oc-go plan; default Luna
+  fleet-wide). Independent proposed-Head review at the implementation stack
+  (a38077a) recorded VERDICT = ACCEPT / LOAD_BEARING_GAPS = 0 /
+  SPEC_COMPLIANCE = PASS. Per AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1 §2.3 this
+  finalization modifies lifecycle/acceptance metadata ONLY; substantive
+  content at 90e423a is unchanged.
 proposed_date: 2026-09-14
 proposed_by: agt_cto-agent (coding agent, DEFAULT_MODEL_ROUTING_CONFIG_V1 goal lane)
 semantic_direction_authority: >-
@@ -12,15 +27,11 @@ semantic_direction_authority: >-
   directive authorizes DIRECTION and authoring only — exact-bytes acceptance
   is the Owner's act at an exact reviewed head (G2: the accepted Spec must
   exist on the implementation PR base; same-PR self-governing is forbidden).
-  This PR packet therefore REQUESTS Owner exact-head acceptance; lifecycle
-  finalization (status: accepted + accepted_by/accepted_reviewed_spec_commit)
-  must be applied only by the Owner on the reviewed candidate head.
-acceptance_requested: OWNER_EXACT_HEAD_ACCEPTANCE
 date: 2026-09-14
 type: implementation-spec
 spec_kind: implementation
-authority_level: governing_spec_candidate
-implementation_authority: none (until accepted)
+authority_level: governing_spec
+implementation_authority: contracts
 production_apply_authority: none
 governed_by:
   - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
