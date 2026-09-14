@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path'
 import { createJobOp } from '../../packages/scheduler/src/control.js'
 import { JobStore } from '../../packages/scheduler/src/store.js'
 
-export async function runAdmissionSelftest({ ctx, main, git, sha256 }) {
+export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot }) {
   const fx = mkdtempSync(join(tmpdir(), 'sched-cp-admission-'))
   const store = new JobStore(join(fx, 'jobs.json'), { runLogPath: join(fx, 'runs.jsonl') })
   const daily = await createJobOp(store, { name: '每日摘要检查', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_fixture' } })
@@ -23,6 +23,9 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256 }) {
     mkdirSync(dirname(join(liveRoot, path)), { recursive: true }); writeFileSync(join(liveRoot, path), '// OLD live bytes\n')
   }
   writeFileSync(join(liveRoot, 'packages/live-only-legacy.js'), '// live-only\n')
+  const cronerTarget = join(liveRoot, 'packages/scheduler/node_modules/croner')
+  mkdirSync(dirname(cronerTarget), { recursive: true })
+  execFileSync('cp', ['-R', join(repoRoot, 'node_modules/croner'), cronerTarget])
   const shim = join(fx, 'launchctl-shim.mjs')
   writeFileSync(shim, `import { appendFileSync } from 'node:fs'\nconst [op,...rest]=process.argv.slice(2)\nappendFileSync(process.env.SHIM_LOG,op+' '+rest.join(' ')+'\\n')\nif(op==='kickstart')process.stdout.write('{"ok":true}')\n`)
   mkdirSync(join(fx, 'LaunchDaemons'), { recursive: true })
