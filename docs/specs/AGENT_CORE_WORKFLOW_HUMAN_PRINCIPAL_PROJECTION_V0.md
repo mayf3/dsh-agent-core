@@ -1,10 +1,18 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0
-status: proposed
+status: accepted
+accepted_date: 2026-09-14
+accepted_by: mayf3
+accepted_at: 2026-09-14T01:20:00Z
+accepted_reviewed_head: e8934d5c4cf5b5b3d301b6e65eb1aa5f1d6124f5
+accepted_reviewed_spec_sha256: a2a8bddae0df717800d337010f69f7929fd182fd1e56246845a4a003e4a4b4c7
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_verdict: ACCEPT_PROJECTION_IMPLEMENTATION_AUTHORITY
 date: 2026-09-14
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 scope:
   - mayf3/dsh-agent-core
@@ -30,9 +38,14 @@ owners:
 
 # AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0
 
-> **PROPOSED / DOCS ONLY.** This candidate changes no runtime, credential,
-> Principal, Workflow, deployment, or production state. Independent exact-head
-> review and Owner exact-head acceptance are required before implementation.
+> **ACCEPTED（2026-09-14，Owner exact-head acceptance）。** Owner `mayf3`
+> accepted independently reviewed semantic head
+> `e8934d5c4cf5b5b3d301b6e65eb1aa5f1d6124f5` with Spec SHA-256
+> `a2a8bddae0df717800d337010f69f7929fd182fd1e56246845a4a003e4a4b4c7`;
+> structure-only final re-audit = PASS / BLOCKERS = NONE. This lifecycle-only
+> transaction changes `status: proposed -> accepted` and
+> `implementation_authority: none -> contracts`; normative §§1-12 are
+> byte-preserved and `production_apply_authority: none` remains unchanged.
 
 ## 1. Problem
 
