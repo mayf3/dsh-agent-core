@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-const TEMPLATES = join(import.meta.dirname, '..', '..', '..', 'deployment-artifacts', 'scheduler-control-plane-reliability-v1')
+const TEMPLATES = join(import.meta.dirname, '..', '..', '..', '..', 'deployment-artifacts', 'scheduler-control-plane-reliability-v1')
 
 function plistValue(plist, key) {
   const match = plist.match(new RegExp(`<key>${key}</key>\\s*<string>([^<]+)</string>`))

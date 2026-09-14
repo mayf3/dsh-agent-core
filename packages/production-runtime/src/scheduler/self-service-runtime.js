@@ -5,7 +5,7 @@ import { createSelfOpsAccess } from '../../../scheduler/src/self-ops/index.js'
 import { loadCredentialFor } from '../../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../../broker/src/transport.js'
 
-export function mountSchedulerSelfServiceRuntime({ ctx, store, router, broker = {}, log }) {
+export function mountSchedulerSelfServiceRuntime({ ctx, store, router, broker = {}, log, healthProvider }) {
   const credentialsFile = broker.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE
   const authServiceOrigin = broker.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN
   ctx.provide('selfServiceSchedulerAccess', createSelfServiceSchedulerAccess({
@@ -31,6 +31,7 @@ export function mountSchedulerSelfServiceRuntime({ ctx, store, router, broker = 
     store,
     resolveCallerCorrelation: (coordinates) => router.resolveCallerCorrelation(coordinates),
     runtimeStatus: () => router.reconciliationRuntimeStatus(),
+    healthProvider,
     onAuditFailure: ({ operationId, jobId }) => {
       log.error(`[self-ops] audit append failed after committed ${operationId} for job ${jobId}`)
     },

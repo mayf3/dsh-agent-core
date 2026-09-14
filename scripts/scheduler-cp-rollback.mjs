@@ -1,57 +1,168 @@
 #!/usr/bin/env node
-/**
- * scheduler-cp-rollback — RUNBOOK §4 preimage restore (root, one sudo).
- * Order: capture failure evidence FIRST -> restore plist preimage -> restore
- * overlay preimage (25 updated files) -> flip operator back to the previous
- * sealed generation -> kickstart -> health wait -> verdict. Watchdogs stay
- * installed (they are the alerting surface, not part of the failure).
- */
+/** Generation-safe, phase-aware rollback. Incident evidence and occurrence/fence authority are preserved. */
 import { execFileSync } from 'node:child_process'
-import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { createHash } from 'node:crypto'
+import {
+  closeSync, constants, existsSync, fstatSync, fsyncSync, lstatSync, openSync, readFileSync, renameSync, rmSync, writeFileSync,
+} from 'node:fs'
+import { normalize, resolve, join } from 'node:path'
 
-const A = '/Users/yanfenma/workspace/artifacts/production-candidates/SCHEDULER_CONTROL_PLANE_RELIABILITY_V1-admission'
+import { ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
+import { buildSchedulerRollbackPlan, classifyRollbackGeneration } from '../packages/production-runtime/src/scheduler/deployment-rollback.js'
+import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
+import { capturePlainFileMetadata, clearGeneratedFileXattrs } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
+import { inOverlayUniverse } from './lib/admission-lib.mjs'
+
+const A = '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1'
 const LIVE = '/usr/local/libexec/agent-core/app'
-const say = (m) => process.stdout.write(`[rollback] ${m}\n`)
+const RUNTIME_PLIST = '/Library/LaunchDaemons/ai.agent-core.runtime.plist'
+const WATCHDOG_LABELS = ['ai.agent-core.scheduler-watchdog-w1', 'ai.agent-core.scheduler-watchdog-w2']
 const run = (cmd, argv, opts = {}) => execFileSync(cmd, argv, { stdio: ['ignore', 'pipe', 'pipe'], ...opts })
+const say = (message) => process.stdout.write(`[rollback] ${message}\n`)
+const digest = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const sha256 = (path) => digest(readFileSync(path))
+const controlOwnership = { expectedUid: 0, expectedGid: 0 }
 
-// 0. evidence capture (read-only) — the boot failure's own words
-try {
-  const err = run('tail', ['-80', '/Users/authsvc/.agent-core/logs/runtime.err.log'], { encoding: 'utf8' })
-  writeFileSync(join(A, 'boot-failure-runtime-err.tail'), err)
-  say(`failure evidence captured (${err.split('\n').length} lines) -> boot-failure-runtime-err.tail`)
-} catch (e) { say(`evidence capture failed (continuing): ${String(e).slice(0, 120)}`) }
-
-// 1. plist preimage restore
-const plistPre = join(A, 'rollback', 'ai.agent-core.runtime.plist.preimage')
-if (existsSync(plistPre)) {
-  copyFileSync(plistPre, '/Library/LaunchDaemons/ai.agent-core.runtime.plist')
-  say('plist preimage restored')
-} else say('WARN: plist preimage missing — plist NOT restored')
-
-// 2. overlay preimage restore (the 25 updated files' old bytes)
-const tar = join(A, 'rollback', 'overlay-preimage.tar.gz')
-if (existsSync(tar)) {
-  run('tar', ['-xzf', tar, '-C', LIVE])
-  say(`overlay preimage restored from ${tar}`)
-} else say('WARN: overlay preimage missing — app tree NOT restored')
-
-// 3. operator flip back to the previous sealed generation
-const receipt = JSON.parse(readFileSync('/Users/yanfenma/workspace/artifacts/production-candidates/SCHEDULER_CONTROL_PLANE_RELIABILITY_V1--dsh-agent-core--db93649--x86_64--g1/cutover-receipt.json', 'utf8'))
-const tmp = '/usr/local/bin/agentcore-cron.incoming-rollback'
-execFileSync('ln', ['-sfn', receipt.previousLink, tmp])
-execFileSync('mv', ['-f', tmp, '/usr/local/bin/agentcore-cron'])
-say(`operator flipped back -> ${receipt.previousLink} (sha ${receipt.previousSha256.slice(0, 12)}…)`)
-
-// 4. restart + health
-run('launchctl', ['kickstart', '-k', 'system/ai.agent-core.runtime'])
-let healthy = false
-for (let i = 0; i < 30; i++) {
+if (process.getuid?.() !== 0) throw new Error('rollback requires root')
+ensureProtectedDirectoryTree(A, { ...controlOwnership, boundary: '/var/db' })
+const readControl = (name, allowMissing = false) => {
+  ensureProtectedDirectoryTree(A, { ...controlOwnership, boundary: '/var/db' })
+  const loaded = readPrivateFile(join(A, name), { ...controlOwnership, allowMissing })
+  return loaded ? JSON.parse(loaded.bytes.toString('utf8')) : null
+}
+function frozenBytes(path) {
+  const before = lstatSync(path)
+  if (!before.isFile() || before.isSymbolicLink() || before.uid !== 0 || (before.mode & 0o022) !== 0) throw new Error(`unsafe rollback preimage: ${path}`)
+  const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
   try {
-    const res = JSON.parse(run('curl', ['-s', '-m', '3', 'http://127.0.0.1:8790/health'], { encoding: 'utf8' }))
-    if (res?.ok === true) { healthy = true; break }
-  } catch { /* retry */ }
+    const after = fstatSync(fd)
+    if (before.dev !== after.dev || before.ino !== after.ino) throw new Error(`rollback preimage changed: ${path}`)
+    return readFileSync(fd)
+  } finally { closeSync(fd) }
+}
+function restoreFile(preimage, target, expectedCurrentSha, preimageMetadata) {
+  if (!existsSync(target)) throw new Error(`rollback generation mismatch: ${target}`)
+  capturePlainFileMetadata(target)
+  if (sha256(target) !== expectedCurrentSha) throw new Error(`rollback generation mismatch: ${target}`)
+  if (!preimageMetadata || preimageMetadata.acl !== 'NONE' || preimageMetadata.xattrs !== 'NONE'
+    || !Number.isInteger(preimageMetadata.uid) || !Number.isInteger(preimageMetadata.gid) || !Number.isInteger(preimageMetadata.mode)) throw new Error('invalid rollback metadata authority')
+  const bytes = frozenBytes(preimage), temp = `${target}.rollback-${process.pid}`
+  writeFileSync(temp, bytes, { mode: preimageMetadata.mode, flag: 'wx' })
+  clearGeneratedFileXattrs(temp); run('chown', [`${preimageMetadata.uid}:${preimageMetadata.gid}`, temp])
+  const fd = openSync(temp, constants.O_RDONLY); try { fsyncSync(fd) } finally { closeSync(fd) }
+  renameSync(temp, target)
+  const parentFd = openSync(resolve(target, '..'), constants.O_RDONLY); try { fsyncSync(parentFd) } finally { closeSync(parentFd) }
+  if (sha256(target) !== digest(bytes) || JSON.stringify(capturePlainFileMetadata(target)) !== JSON.stringify(preimageMetadata)) throw new Error(`rollback readback mismatch: ${target}`)
+}
+function removeInstalledFile(path) {
+  capturePlainFileMetadata(path); rmSync(path)
+  const fd = openSync(resolve(path, '..'), constants.O_RDONLY); try { fsyncSync(fd) } finally { closeSync(fd) }
+  if (existsSync(path)) throw new Error(`rollback removal readback mismatch: ${path}`)
+}
+function safeLivePath(path) {
+  if (typeof path !== 'string' || normalize(path) !== path || path.startsWith('/') || path.includes('..') || !inOverlayUniverse(path)) throw new Error(`unsafe overlay receipt path: ${path}`)
+  const target = resolve(LIVE, path)
+  if (!target.startsWith(`${LIVE}/`)) throw new Error(`overlay path escaped live root: ${path}`)
+  return target
+}
+const launchd = createLaunchdAdapter()
+
+const progress = readControl('phase-progress-receipt.json')
+const serviceState = readControl('service-state-preimage.json', true)
+if (!serviceState) { say('no service-state preimage; no mutable phase crossed'); process.exit(0) }
+if (serviceState.sourceSha !== progress.sourceSha || serviceState.loaded === null || typeof serviceState.loaded !== 'object') throw new Error('invalid service-state preimage')
+const serviceLabels = [...WATCHDOG_LABELS.map((label) => `system/${label}`), 'system/ai.agent-core.runtime']
+if (Object.keys(serviceState.loaded).sort().join() !== [...serviceLabels].sort().join()
+  || serviceLabels.some((label) => typeof serviceState.loaded[label] !== 'boolean')) throw new Error('invalid service-state preimage')
+const runtimePreimage = join(A, 'rollback', 'ai.agent-core.runtime.plist.preimage')
+const runtimeReceipt = readControl('runtime-install-receipt.json', true)
+const watchdog = readControl('watchdog-install-receipt.json', true)
+const routingReceiptPath = join(A, 'rollback', 'routing-install-receipt.json')
+const desired = readControl('desired-state-install-receipt.json', true)
+const overlay = readControl('overlay-manifest.json', true)
+const operator = readControl('operator-cutover-receipt.json', true)
+const plan = buildSchedulerRollbackPlan({ progress, receipts: {
+  runtime: runtimeReceipt !== null, watchdog: watchdog !== null, routing: existsSync(routingReceiptPath), desired: desired !== null,
+  overlay: overlay !== null, operator: operator !== null,
+} })
+const planned = (action) => plan.actions.includes(action)
+quiesceLaunchdServices(serviceLabels, launchd)
+
+if (planned('RESTORE_RUNTIME')) {
+  const current = sha256(RUNTIME_PLIST)
+  if (classifyRollbackGeneration({ currentSha256: current, installedSha256: runtimeReceipt.installedSha256, preimageSha256: runtimeReceipt.preimageSha256 }) === 'RESTORE') {
+    restoreFile(runtimePreimage, RUNTIME_PLIST, runtimeReceipt.installedSha256, runtimeReceipt.preimageMetadata); say('runtime plist restored')
+  }
+}
+
+for (const item of planned('RESTORE_WATCHDOGS') ? watchdog.plists ?? [] : []) {
+  if (!WATCHDOG_LABELS.includes(item.label) || item.path !== `/Library/LaunchDaemons/${item.label}.plist`) throw new Error('unsafe watchdog receipt target')
+  if (item.preimage !== join(A, 'rollback', `${item.label}.plist.preimage`)) throw new Error('unsafe watchdog preimage coordinate')
+  const current = existsSync(item.path) ? sha256(item.path) : null
+  if (current === item.installedSha256) {
+    if (item.existed) restoreFile(item.preimage, item.path, item.installedSha256, item.preimageMetadata)
+    else removeInstalledFile(item.path)
+  } else if (current !== item.preimageSha256) throw new Error(`watchdog generation advanced: ${item.label}`)
+}
+
+if (planned('RESTORE_ROUTING')) {
+  const routing = JSON.parse(frozenBytes(routingReceiptPath).toString('utf8'))
+  const target = '/usr/local/libexec/agent-core/config/scheduler-routing.json'
+  const current = existsSync(target) ? sha256(target) : null
+  if (current === routing.candidateSha256) {
+    if (routing.preimageSha256 === null) removeInstalledFile(target)
+    else restoreFile(join(A, 'rollback', 'scheduler-routing.json.preimage'), target, routing.candidateSha256, routing.preimageMetadata)
+  } else if (current !== routing.preimageSha256) throw new Error('routing generation advanced')
+}
+
+if (planned('RESTORE_DESIRED_STATE')) {
+  if (desired.targetPath !== '/usr/local/libexec/agent-core/config/scheduler-desired-state.json'
+    || desired.preimagePath !== join(A, 'rollback', 'scheduler-desired-state.json.preimage')) throw new Error('unsafe desired-state receipt coordinate')
+  const current = existsSync(desired.targetPath) ? sha256(desired.targetPath) : null
+  if (current === desired.candidateSha256) {
+    if (desired.preimageSha256 === null) removeInstalledFile(desired.targetPath)
+    else restoreFile(desired.preimagePath, desired.targetPath, desired.candidateSha256, desired.preimageMetadata)
+  } else if (current !== desired.preimageSha256) throw new Error('desired-state generation advanced')
+}
+
+if (planned('RESTORE_OVERLAY')) {
+  if (overlay.base !== '68008e83142bdb637c4fa61c2a65db73c64b2eb1' || overlay.source !== progress.sourceSha || !Array.isArray(overlay.entries)) throw new Error('invalid overlay receipt')
+  for (const entry of overlay.entries) {
+    if (!['add', 'update', 'delete'].includes(entry.kind) || !/^[0-9a-f]{64}$/.test(entry.kind === 'delete' ? entry.preimageSha : entry.sha)) throw new Error('invalid overlay receipt entry')
+    const target = safeLivePath(entry.path), current = existsSync(target) ? sha256(target) : undefined
+    const allowed = entry.kind === 'add' ? [entry.sha, undefined] : entry.kind === 'update' ? [entry.sha, entry.preimageSha] : [undefined, entry.preimageSha]
+    if (!allowed.includes(current)) throw new Error(`overlay generation advanced: ${entry.path}`)
+    if (entry.kind === 'add' && current === entry.sha) rmSync(target)
+  }
+  const changed = overlay.entries.filter((entry) => entry.kind !== 'add')
+  if (changed.length) {
+    const archive = join(A, 'rollback', 'overlay-preimage.tar.gz')
+    const listed = run('tar', ['-tzf', archive], { encoding: 'utf8' }).trim().split('\n').filter(Boolean).map((path) => path.replace(/^\.\//, '')).sort()
+    const expected = changed.map((entry) => entry.path).sort()
+    if (JSON.stringify(listed) !== JSON.stringify(expected)) throw new Error('overlay rollback archive manifest mismatch')
+    run('tar', ['-xzf', archive, '-C', LIVE])
+    for (const entry of changed) if (sha256(safeLivePath(entry.path)) !== entry.preimageSha) throw new Error(`overlay preimage mismatch: ${entry.path}`)
+  }
+}
+
+if (planned('RESTORE_OPERATOR')) {
+  const current = sha256('/usr/local/bin/agentcore-cron')
+  if (current === operator.newSha256) {
+    if (!existsSync(operator.previousLink) || sha256(operator.previousLink) !== operator.previousSha256) throw new Error('operator predecessor unavailable')
+    const temp = `/usr/local/bin/agentcore-cron.rollback-${process.pid}`
+    run('ln', ['-s', operator.previousLink, temp]); renameSync(temp, '/usr/local/bin/agentcore-cron')
+  } else if (current !== operator.previousSha256) throw new Error('operator generation advanced')
+}
+
+if (serviceState.loaded['system/ai.agent-core.runtime'] === true) run('launchctl', ['bootstrap', 'system', RUNTIME_PLIST])
+for (const label of WATCHDOG_LABELS) {
+  const plist = `/Library/LaunchDaemons/${label}.plist`
+  if (serviceState.loaded[`system/${label}`] === true && existsSync(plist)) run('launchctl', ['bootstrap', 'system', plist])
+}
+let healthy = serviceState.loaded['system/ai.agent-core.runtime'] !== true
+for (let attempt = 0; attempt < 30; attempt += 1) {
+  try { if (JSON.parse(run('curl', ['-s', '-m', '3', 'http://127.0.0.1:8790/health'], { encoding: 'utf8' }))?.ok === true) { healthy = true; break } } catch { /* bounded retry */ }
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000)
 }
-say(`health=${healthy ? 'ok — SERVICE RESTORED' : 'STILL DOWN — escalate: check runtime.err.log'}`)
+say(`health=${healthy ? 'ok; restored process loaded after all disk preimages' : 'failed; preserve evidence and escalate'}`)
 process.exit(healthy ? 0 : 1)
