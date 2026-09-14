@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { canonicalJSON } from '../../../scheduler/src/occurrence-model.js'
 import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
 import { notificationKey, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
+import { validateIncidentState } from '../../../scheduler/src/watchdog/durable-state.js'
 import { POSTDEPLOY_CANARY_MARKER } from './deployment-canary-control.js'
 
 const digest = (value) => createHash('sha256').update(typeof value === 'string' ? value : canonicalJSON(value)).digest('hex')
@@ -48,7 +49,7 @@ export function assertSuccessfulCanaryRun(runReadback, canaryJobId, sourceSha) {
   return rows[0]
 }
 
-export function assertCanaryStoreDelta({ beforeStore, afterStore, canaryJobId, runReadback, sourceSha }) {
+export function assertCanaryStoreDelta({ beforeStore, afterStore, beforeHealth, afterHealth, canaryJobId, runReadback, sourceSha }) {
   if (!beforeStore || !afterStore || beforeStore.version !== 3 || afterStore.version !== 3) throw new Error('postdeploy store snapshots must be V3')
   if (beforeStore.jobs.some((job) => job.id === canaryJobId) || afterStore.jobs.some((job) => job.id === canaryJobId)) throw new Error('postdeploy canary Job was not disposable')
   const stableJob = ({ state: _state, ...value }) => value
@@ -58,8 +59,22 @@ export function assertCanaryStoreDelta({ beforeStore, afterStore, canaryJobId, r
   exact(beforeStore.occurrences, afterStore.occurrences.filter((row) => beforeIds.has(row.occurrenceId)), 'pre-existing occurrences')
   const appended = afterStore.occurrences.filter((row) => !beforeIds.has(row.occurrenceId))
   const canaries = appended.filter((row) => row.jobId === canaryJobId)
-  const unrelated = appended.filter((row) => row.jobId !== canaryJobId)
   const preexistingJobs = new Set(beforeStore.jobs.map((job) => job.id))
+  const healthByJob = (health) => new Map(health.jobs.map((row) => [row.jobId, row]))
+  const beforeRows = healthByJob(beforeHealth)
+  const afterRows = healthByJob(afterHealth)
+  const fencedJobs = new Set([
+    ...Object.entries(beforeStore.fences ?? {}).filter(([, ids]) => ids.length > 0).map(([jobId]) => jobId),
+    ...Object.entries(afterStore.fences ?? {}).filter(([, ids]) => ids.length > 0).map(([jobId]) => jobId),
+  ])
+  const quarantinedJobs = new Set([...preexistingJobs].filter((jobId) => beforeRows.get(jobId)?.state === 'QUARANTINED_UNKNOWN'
+    || afterRows.get(jobId)?.state === 'QUARANTINED_UNKNOWN'))
+  const forbiddenJobs = new Set([...fencedJobs, ...quarantinedJobs])
+  if (appended.some((row) => forbiddenJobs.has(row.jobId))) {
+    throw new Error('postdeploy store delta contains an occurrence for a fenced or quarantined Job')
+  }
+  const unrelated = appended.filter((row) => row.jobId !== canaryJobId && preexistingJobs.has(row.jobId)
+    && beforeRows.get(row.jobId)?.classification === 'healthy' && afterRows.get(row.jobId)?.classification === 'healthy')
   if (canaries.length !== 1 || unrelated.length < 1 || canaries[0].state !== 'succeeded'
     || canaries[0].executionOutcome !== 'succeeded' || !Number.isFinite(canaries[0].endedAt)
     || unrelated.some((row) => !preexistingJobs.has(row.jobId) || row.state !== 'succeeded'
@@ -99,6 +114,7 @@ export function assertQuarantineIsolationAndDedupe(beforeHealth, afterHealth) {
 }
 
 export function assertIncidentDedupeFromDurableState({ incidentState, compiledIncidents, nowMs }) {
+  validateIncidentState(incidentState)
   const roots = new Set(compiledIncidents.map((item) => item.rootIdentity))
   const proof = {}
   for (const expected of compiledIncidents) {
@@ -146,7 +162,7 @@ export function verifyPostdeployEvidence({ phaseReceipt, routingReceipt, sourceS
     || routingReceipt.candidateSha256 !== afterHealth.provenance.routing) throw new Error('postdeploy routing generation is not bound to install receipt')
   if (beforeHealth.provenance.store !== beforeStoreSha256 || afterHealth.provenance.store !== afterStoreSha256) throw new Error('postdeploy API/store generation binding mismatch')
   if (beforeHealth.provenance.incidents !== beforeIncidentSha256 || afterHealth.provenance.incidents !== afterIncidentSha256) throw new Error('postdeploy API/incident generation binding mismatch')
-  const occurrence = assertCanaryStoreDelta({ beforeStore, afterStore, canaryJobId, runReadback, sourceSha })
+  const occurrence = assertCanaryStoreDelta({ beforeStore, afterStore, beforeHealth, afterHealth, canaryJobId, runReadback, sourceSha })
   const isolation = assertQuarantineIsolationAndDedupe(beforeHealth, afterHealth)
   const beforeIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: beforeIncidentState, compiledIncidents: isolation.incidents, nowMs: beforeHealth.generatedAt + 1 })
   const afterIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: afterIncidentState, compiledIncidents: isolation.incidents, nowMs: afterHealth.generatedAt + 1 })

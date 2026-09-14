@@ -77,7 +77,12 @@ test('formal postdeploy evidence rejects route drift, synthetic incident state, 
   assert.throws(() => verifyPostdeployEvidence({ ...evidence(), beforeIncidentState: { version: 1, incidents: {}, outbox: {} } }), /lacks exact open root/)
   const missingOutbox = evidence(); missingOutbox.beforeIncidentState = structuredClone(missingOutbox.beforeIncidentState)
   missingOutbox.beforeIncidentState.outbox = {}
-  assert.throws(() => verifyPostdeployEvidence(missingOutbox), /lacks required outbox/)
+  assert.throws(() => verifyPostdeployEvidence(missingOutbox), /lacks current outbox/)
+  const missingDelivery = evidence(); missingDelivery.beforeIncidentState = structuredClone(missingDelivery.beforeIncidentState)
+  const missingRecord = Object.values(missingDelivery.beforeIncidentState.incidents)[0]
+  const missingIntent = Object.values(missingDelivery.beforeIncidentState.outbox)[0]
+  delete missingRecord.alertState.delivery; delete missingIntent.delivery
+  assert.throws(() => verifyPostdeployEvidence(missingDelivery), /incoherent incident/)
   const attempted = evidence(); attempted.afterIncidentState = structuredClone(attempted.afterIncidentState)
   const [outboxKey] = Object.keys(attempted.afterIncidentState.outbox)
   attempted.afterIncidentState.outbox[outboxKey].delivery = 'FAILED'
@@ -87,6 +92,10 @@ test('formal postdeploy evidence rejects route drift, synthetic incident state, 
   assert.throws(() => verifyPostdeployEvidence(unsafe), /zero-side-effect/)
   const noUnrelated = evidence(); noUnrelated.afterStore = { ...afterStore, occurrences: [occurrence, canaryOccurrence] }
   assert.throws(() => verifyPostdeployEvidence(noUnrelated), /one successful canary/)
+  const fenceBypass = evidence()
+  fenceBypass.afterStore = { ...afterStore, occurrences: [occurrence, canaryOccurrence,
+    { ...otherOccurrence, jobId: job.id, occurrenceId: 'occ-forbidden', runId: 'run-forbidden' }] }
+  assert.throws(() => verifyPostdeployEvidence(fenceBypass), /fenced or quarantined Job/)
   const regressed = evidence(); regressed.beforeHealth.jobs.push({ jobId: 'job-ok', classification: 'healthy', credentialReadiness: 'READY', currentBlocker: null, fenceReason: null, notificationRoute: { status: 'READY' } })
   regressed.afterHealth.jobs.push({ jobId: 'job-ok', classification: 'blocked', credentialReadiness: 'READY', currentBlocker: 'OUTCOME_UNKNOWN', fenceReason: 'new', notificationRoute: { status: 'READY' } })
   regressed.beforeHealth.enabled += 1; regressed.beforeHealth.healthy += 1

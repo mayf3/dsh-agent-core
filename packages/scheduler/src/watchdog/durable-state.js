@@ -30,29 +30,67 @@ function retainBackup(path, bytes, ownership) {
   atomicReplacePrivateFile(path, bytes, ownership)
 }
 
-function validateState(value) {
+const LIFECYCLES = new Set(['OPEN', 'CLOSED_ACKNOWLEDGED', 'CLOSED_RECOVERED'])
+const DELIVERIES = new Set(['PENDING', 'DELIVERED', 'FAILED', 'OUTCOME_UNKNOWN'])
+
+function requireIncidentRecord(root, record) {
+  if (record?.rootIdentity !== root || !LIFECYCLES.has(record.lifecycle)
+    || !Number.isSafeInteger(record.episode) || record.episode < 1
+    || record.incidentId !== `${root}|episode:${record.episode}` || !Number.isSafeInteger(record.transitionRevision)
+    || record.transitionRevision < 1 || record.alertState?.incidentKey !== root
+    || record.alertState?.lifecycle !== record.lifecycle || !DELIVERIES.has(record.alertState?.delivery)
+    || typeof record.rootCauseClass !== 'string' || record.rootCauseClass.length === 0
+    || !Array.isArray(record.facts) || !Array.isArray(record.symptoms)
+    || typeof record.routeClass !== 'string' || record.routeClass.length === 0
+    || typeof record.producer !== 'string' || record.producer.length === 0) {
+    throw new TypeError(`incoherent incident record: ${root}`)
+  }
+}
+
+function validateOutbox(value) {
+  const identities = new Set()
+  for (const [key, intent] of Object.entries(value.outbox)) {
+    const embedded = intent?.incident
+    const root = embedded?.rootIdentity
+    const record = value.incidents[root]
+    const identity = `${intent?.incidentId}|${intent?.transitionRevision}`
+    if (record) requireIncidentRecord(root, embedded)
+    if (!record || !LIFECYCLES.has(intent?.transitionKind) || !DELIVERIES.has(intent?.delivery)
+      || typeof intent.routeClass !== 'string' || intent.routeClass.length === 0
+      || typeof intent.producer !== 'string' || intent.producer.length === 0
+      || !Number.isSafeInteger(intent.transitionRevision) || intent.transitionRevision < 1
+      || intent.payloadRevision !== intent.transitionRevision || intent.notificationKey !== key
+      || key !== notificationKey(intent) || identities.has(identity)
+      || embedded.incidentId !== intent.incidentId || embedded.transitionRevision !== intent.transitionRevision
+      || embedded.lifecycle !== intent.transitionKind || embedded.routeClass !== intent.routeClass
+      || embedded.producer !== intent.producer
+      || intent.incidentId !== `${root}|episode:${embedded.episode}` || embedded.episode > record.episode) {
+      throw new TypeError(`incoherent incident outbox: ${key}`)
+    }
+    identities.add(identity)
+  }
+}
+
+export function validateIncidentState(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value) || value.version !== 1
     || value.incidents === null || typeof value.incidents !== 'object'
     || value.outbox === null || typeof value.outbox !== 'object') {
     throw new TypeError('unsupported incident state')
   }
+  validateOutbox(value)
   for (const [root, record] of Object.entries(value.incidents)) {
-    if (record?.rootIdentity !== root || !Number.isSafeInteger(record.episode) || record.episode < 1
-      || record.incidentId !== `${root}|episode:${record.episode}` || !Number.isSafeInteger(record.transitionRevision)
-      || record.transitionRevision < 1 || record.alertState?.incidentKey !== root || record.alertState?.lifecycle !== record.lifecycle) {
-      throw new TypeError(`incoherent incident record: ${root}`)
-    }
-    if (record.lifecycle !== 'OPEN') continue
+    requireIncidentRecord(root, record)
     const entries = Object.entries(value.outbox).filter(([, intent]) => intent.incidentId === record.incidentId)
     if (entries.length === 0) {
-      if (record.alertState.delivery !== 'DELIVERED' || value.migration === undefined) throw new TypeError(`open incident lacks outbox: ${root}`)
+      if (record.alertState.delivery !== 'DELIVERED' || value.migration === undefined) throw new TypeError(`incident lacks current outbox: ${root}`)
       continue
     }
-    if (entries.length !== 1) throw new TypeError(`open incident has duplicate outbox: ${root}`)
-    const [key, intent] = entries[0]
+    const current = entries.filter(([, intent]) => intent.transitionRevision === record.transitionRevision)
+    if (current.length !== 1) throw new TypeError(`incident lacks unique current outbox: ${root}`)
+    const [key, intent] = current[0]
     const compatibleDelivery = intent.delivery === record.alertState.delivery
       || (value.migration !== undefined && record.alertState.delivery === 'FAILED' && intent.delivery === 'PENDING')
-    if (key !== notificationKey(intent) || intent.notificationKey !== key || intent.transitionKind !== 'OPEN'
+    if (key !== notificationKey(intent) || intent.notificationKey !== key || intent.transitionKind !== record.lifecycle
       || intent.transitionRevision !== record.transitionRevision || intent.routeClass !== record.routeClass
       || intent.producer !== record.producer || intent.incident?.rootIdentity !== root || !compatibleDelivery) {
       throw new TypeError(`incoherent incident outbox: ${root}`)
@@ -66,14 +104,14 @@ export function loadIncidentState(path, ownership = {}) {
   if (!loaded) return { state: { version: 1, incidents: {}, outbox: {} }, hash: null }
   const bytes = loaded.bytes
   let state
-  try { state = validateState(JSON.parse(bytes.toString('utf8'))) } catch (error) {
+  try { state = validateIncidentState(JSON.parse(bytes.toString('utf8'))) } catch (error) {
     throw Object.assign(new TypeError(`corrupt incident state: ${error?.message ?? error}`), { cause: error })
   }
   return { state, hash: hash(bytes) }
 }
 
 export function commitIncidentState(path, state, { expectedHash, crashAt, expectedUid = process.getuid?.(), expectedGid = process.getgid?.() } = {}) {
-  validateState(state)
+  validateIncidentState(state)
   const ownership = { expectedUid, expectedGid }
   return withPrivateLock(path, ownership, () => {
     const current = loadIncidentState(path, { expectedUid, expectedGid })

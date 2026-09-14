@@ -41,6 +41,8 @@ function transitionIntent(record, transitionKind, nowMs) {
 }
 
 function persistIntent(state, notifications, intent) {
+  intent.incident.alertState.delivery = 'PENDING'
+  state.incidents[intent.incident.rootIdentity].alertState.delivery = 'PENDING'
   state.outbox[intent.notificationKey] ??= {
     ...intent,
     delivery: 'PENDING',

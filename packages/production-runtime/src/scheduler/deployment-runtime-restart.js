@@ -23,7 +23,10 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   const preimageMetadata = capturePlainFileMetadata(preimage)
   const preimageSha256 = createHash('sha256').update(readFileSync(preimage)).digest('hex')
   const currentSha256 = createHash('sha256').update(readFileSync(plistPath)).digest('hex')
-  if (currentSha256 === preimageSha256) verifyAndSyncPreimage(plistPath, preimage, preimageMetadata)
+  if (currentSha256 === preimageSha256) {
+    if (JSON.stringify(sourceMetadata) !== JSON.stringify(preimageMetadata)) throw new Error('runtime preimage metadata differs from predecessor')
+    verifyAndSyncPreimage(plistPath, preimage, sourceMetadata)
+  }
   else {
     const prior = ctx.runtimePriorReceipt
     if (prior?.sourceSha !== sourceSha || prior?.installedSha256 !== currentSha256) throw new Error('runtime plist differs from both durable preimage and receipted generation')
