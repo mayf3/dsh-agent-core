@@ -31,6 +31,12 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Workflow Human Principal projection authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0` | accepted 2026-09-14; reviewed semantic head `e8934d5...`; structure-only final re-audit PASS | contracts; production apply remains none | exact canonical Human UUID `8902db0d-429a-4e37-985c-f8b92d4b78fb` projection through the existing `workflow.admin` svc-workflow authority; trusted conditional POST plus mandatory fresh readback; no generic identity administration |
+
 ## Scheduler self-service authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
