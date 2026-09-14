@@ -50,14 +50,12 @@ if (MODE === undefined || !/^[0-9a-f]{40}$/.test(SOURCE_SHA ?? '')) {
   process.exit(2)
 }
 
-// ── context resolution (real vs fixture) ─────────────────────────────────────
 const REPO = (() => {
   const here = dirname(new URL(import.meta.url).pathname)
   return relative('', here) === here ? here : here // absolute by construction
 })()
 const REPO_ROOT = join(dirname(new URL(import.meta.url).pathname), '..')
-// root runs git against a yanfenma-owned repo -> dubious-ownership refusal;
-// every git call goes through this wrapper with the repo explicitly trusted.
+// Explicit safe.directory is required when root applies from the Owner-owned repo.
 const git = (argv, opts = {}) => execFileSync('git', ['-c', `safe.directory=${REPO_ROOT}`, '-C', REPO_ROOT, ...argv], { maxBuffer: 32 * 1024 * 1024, ...opts })
 
 const CTX = MODE === 'selftest'
@@ -118,7 +116,6 @@ function phase(name, ok, detail) {
 }
 const stripMessages = (jobs) => (jobs ?? []).map(({ payload, ...rest }) => ({ ...rest, payload: payload ? { ...payload, message: '<stripped>' } : payload }))
 
-// ── census + criticals ───────────────────────────────────────────────────────
 function readCensus() {
   const raw = readFileSync(CTX.storePath, 'utf8')
   const doc = JSON.parse(raw)
@@ -135,7 +132,6 @@ function criticalsOrAbort(doc) {
   return matched
 }
 
-// ── backfill + desired-state ─────────────────────────────────────────────────
 async function backfillAndFreeze(doc, matched) {
   const store = new JobStore(CTX.storePath, { runLogPath: join(dirname(CTX.storePath), 'runs.jsonl') })
   const mapping = buildBackfillMapping(matched)
@@ -195,25 +191,39 @@ function overlay() {
     if (!liveRootFiles.has(path)) plan.add.push({ path, sha })
     else if (liveSha(path) !== sha) plan.update.push({ path, sha })
   }
-  const writes = [...plan.update.map((entry) => ({ ...entry, kind: 'update', preimageSha: liveSha(entry.path) })), ...plan.add.map((entry) => ({ ...entry, kind: 'add' }))]
-  const deletes = deletePaths.filter((path) => liveRootFiles.has(path)).map((path) => ({ path, kind: 'delete', preimageSha: liveSha(path) }))
-  const all = [...writes, ...deletes]
+  let writes = [...plan.update.map((entry) => ({ ...entry, kind: 'update', preimageSha: liveSha(entry.path) })), ...plan.add.map((entry) => ({ ...entry, kind: 'add' }))]
+  let deletes = deletePaths.filter((path) => liveRootFiles.has(path)).map((path) => ({ path, kind: 'delete', preimageSha: liveSha(path) }))
+  let all = [...writes, ...deletes]
   if (MODE === 'plan') {
     process.stdout.write(`[overlay plan] update=${plan.update.length} add=${plan.add.length}\n${all.map((e) => `  ${e.kind} ${e.path}`).join('\n')}\n`)
     phase('overlay', true, `planned update=${plan.update.length} add=${plan.add.length} (plan mode)`)
     return
   }
   const preimage = join(CTX.artifactsDir, 'rollback', 'overlay-preimage.tar.gz')
+  const manifestPath = join(CTX.artifactsDir, 'overlay-manifest.json')
   mkdirSync(dirname(preimage), { recursive: true, mode: 0o700 })
   chmodSync(dirname(preimage), 0o700)
-  const changedExisting = all.filter((e) => e.kind === 'update' || e.kind === 'delete').map((e) => e.path)
-  if (changedExisting.length > 0) {
-    execFileSync('tar', ['-czf', preimage, '-C', CTX.liveRoot, ...changedExisting])
+  if (existsSync(manifestPath)) {
+    const prior = JSON.parse(readFileSync(manifestPath, 'utf8'))
+    if (prior.base !== GOAL_BASE_SHA || prior.source !== SOURCE_SHA || !Array.isArray(prior.entries)) throw new Error('overlay rerun generation mismatch')
+    all = prior.entries; writes = all.filter((entry) => entry.kind !== 'delete'); deletes = all.filter((entry) => entry.kind === 'delete')
+    for (const entry of all) {
+      const current = liveSha(entry.path)
+      const allowed = entry.kind === 'add' ? [undefined, entry.sha] : entry.kind === 'update' ? [entry.preimageSha, entry.sha] : [entry.preimageSha, undefined]
+      if (!allowed.includes(current) || (entry.kind !== 'delete' && sha256(narrowed.overlay.get(entry.path)) !== entry.sha)) throw new Error(`overlay rerun generation mismatch: ${entry.path}`)
+    }
+    const installed = all.every((entry) => entry.kind === 'delete' ? liveSha(entry.path) === undefined : liveSha(entry.path) === entry.sha)
+    if (installed) { phase('overlay', true, `EXACT GOAL closure already installed; predecessor manifest retained`); return }
+  } else {
+    const changed = all.filter((entry) => entry.kind !== 'add').map((entry) => entry.path)
+    if (changed.length > 0) execFileSync('tar', ['-czf', preimage, '-C', CTX.liveRoot, ...changed])
+    writeFileSync(manifestPath, `${JSON.stringify({ base: GOAL_BASE_SHA, source: SOURCE_SHA, entries: all }, null, 2)}\n`)
   }
   for (const entry of writes) {
     const bytes = Buffer.from(narrowed.overlay.get(entry.path), 'utf8')
     const target = join(CTX.liveRoot, entry.path)
     if (sha256(bytes) !== entry.sha) throw new Error(`staged bytes != plan sha for ${entry.path}`)
+    if (liveSha(entry.path) === entry.sha) continue
     mkdirSync(dirname(target), { recursive: true })
     const st = existsSync(target) ? statSync(target) : undefined
     const tmp = `${target}.incoming-${process.pid}`
@@ -226,9 +236,8 @@ function overlay() {
     }
     execFileSync('mv', [tmp, target])
   }
-  for (const entry of deletes) rmSync(join(CTX.liveRoot, entry.path))
-  writeFileSync(join(CTX.artifactsDir, 'overlay-manifest.json'), `${JSON.stringify({ base: GOAL_BASE_SHA, source: SOURCE_SHA, entries: all }, null, 2)}\n`)
-  phase('overlay', true, `EXACT GOAL closure: ${all.length} files (update=${plan.update.length} add=${plan.add.length}); preimage=${changedExisting.length} files -> ${preimage}; base=${GOAL_BASE_SHA.slice(0, 12)}`)
+  for (const entry of deletes) if (existsSync(join(CTX.liveRoot, entry.path))) rmSync(join(CTX.liveRoot, entry.path))
+  phase('overlay', true, `EXACT GOAL closure: ${all.length} files (update=${all.filter((entry) => entry.kind === 'update').length} add=${all.filter((entry) => entry.kind === 'add').length}); base=${GOAL_BASE_SHA.slice(0, 12)}`)
 }
 
 // ── broker boot rehearsal (2026-09-09 fleet-killer gate) ────────────────────
