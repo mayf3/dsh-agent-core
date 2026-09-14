@@ -1,7 +1,8 @@
 /**
  * @agent-core/production-runtime/src/agent-session-messaging.js — the
  * `agentSessionMessagingAccess` LOCAL capability provider for
- * agent_session_send (AGENT_CORE_AGENT_SESSION_MESSAGING_V1, accepted r3,
+ * agent_session_send / agent_session_turn_inspect
+ * (AGENT_CORE_AGENT_SESSION_MESSAGING_V2, accepted r4,
  * implementation_authority: contracts).
  *
  * Trusted seam: these handlers run IN-PROCESS in the control-plane broker
@@ -19,8 +20,9 @@
  *
  * Commit order is frozen (R12): authoritative validation → intent audit
  * append (failure = internal_error with ZERO Router deliveries) → ONE
- * agentRouter.deliver call → outcome audit append (a post-receipt append
- * failure never rewrites the proven business result).
+ * agentRouter.deliver call → coordinate-bearing outcome audit append. A
+ * first post-receipt coordinate append failure is reported honestly as
+ * DELIVERED + UNKNOWN and never causes redelivery.
  *
  * Closed behavior: no replay, no second Session, no ping-pong, no
  * active-run steering, no external delivery, no Binding touch, no target
@@ -30,7 +32,10 @@
 
 import { randomUUID } from 'node:crypto'
 
-import { AGENT_SESSION_SEND_CAPABILITY_ID } from '../../broker/src/capabilities/agent-session-messaging.js'
+import {
+  AGENT_SESSION_SEND_CAPABILITY_ID,
+  AGENT_SESSION_TURN_INSPECT_CAPABILITY_ID,
+} from '../../broker/src/capabilities/agent-session-messaging.js'
 import { createFinalReplyWaiter, mapFinalAssistantOutputToOutcome } from './agent-session-reply-wait.js'
 
 const TARGET_AGENT_ID_RE = /^agt_[a-z0-9-]+$/
@@ -116,6 +121,7 @@ export function createAgentSessionMessagingAccess({
   generateRequestId = () => randomUUID(),
   now = () => Date.now(),
   timer,
+  inspectTurn,
 }) {
   if (router === undefined || typeof router.deliver !== 'function'
     || typeof router.readFinalAssistantOutput !== 'function'
@@ -206,23 +212,38 @@ export function createAgentSessionMessagingAccess({
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: false, error: mapped }
     }
-    if (receipt === null || typeof receipt !== 'object' || receipt.accepted !== true) {
+    if (receipt === null || typeof receipt !== 'object' || receipt.accepted !== true
+      || typeof receipt.sessionId !== 'string' || receipt.sessionId === ''
+      || typeof receipt.messageId !== 'string' || receipt.messageId === '') {
       // Contract violation AFTER a proven delivery — the business result must
       // not be rewritten as a delivery failure.
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', startedAtWallMs,
       }) !== 'appended') auditFailed(requestId, 'outcome')
-      return { ok: false, error: { code: 'internal_error', detail: 'delivery receipt was malformed after a proven inbox acceptance' } }
+      return { ok: false, error: { code: 'outcome_unknown', detail: 'delivery was accepted but its trace coordinate is unavailable; outcome unknown' } }
+    }
+
+    const trace = {
+      targetAgentId,
+      sessionId: receipt.sessionId,
+      messageId: receipt.messageId,
+    }
+    // The first proven-receipt row makes the exact coordinate durable before
+    // any normal V2 success can settle. Losing this append is DELIVERED +
+    // UNKNOWN and never licenses replay.
+    if (audit.appendOutcome({
+      sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
+      result: 'accepted', reconciliationHandle: receipt.reconciliationHandle,
+      startedAtWallMs, sessionId: trace.sessionId, messageId: trace.messageId,
+    }) !== 'appended') {
+      auditFailed(requestId, 'outcome')
+      return { ok: false, error: { code: 'outcome_unknown', detail: 'message delivered but trace evidence could not be retained; outcome unknown' } }
     }
 
     // ── R7: receipt-only mode returns on the real inbox receipt ───────────
     if (timeoutMode === 'receipt_only') {
-      if (audit.appendOutcome({
-        sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
-        result: 'accepted', reconciliationHandle: receipt.reconciliationHandle, startedAtWallMs,
-      }) !== 'appended') auditFailed(requestId, 'outcome')
-      return { ok: true, result: { status: 'accepted' } }
+      return { ok: true, result: { status: 'accepted', ...trace } }
     }
 
     // ── R8: wait for THIS exact Run's one aggregated final reply ──────────
@@ -233,6 +254,7 @@ export function createAgentSessionMessagingAccess({
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'failed', reconciliationHandle: null, startedAtWallMs,
+        sessionId: trace.sessionId, messageId: trace.messageId,
       }) !== 'appended') auditFailed(requestId, 'outcome')
       return { ok: false, error: { code: 'outcome_unknown', detail: 'message delivered but the reconciliation handle is unavailable; outcome unknown' } }
     }
@@ -244,16 +266,18 @@ export function createAgentSessionMessagingAccess({
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'timeout', reconciliationHandle: handle, startedAtWallMs,
+        sessionId: trace.sessionId, messageId: trace.messageId,
       }) !== 'appended') auditFailed(requestId, 'outcome')
-      return { ok: true, result: { status: 'timeout' } }
+      return { ok: true, result: { status: 'timeout', ...trace } }
     }
     const outcome = waited.outcome
     if (outcome.kind === 'replied') {
       if (audit.appendOutcome({
         sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
         result: 'replied', reconciliationHandle: handle, startedAtWallMs,
+        sessionId: trace.sessionId, messageId: trace.messageId,
       }) !== 'appended') auditFailed(requestId, 'outcome')
-      return { ok: true, result: { status: 'replied', reply: outcome.reply } }
+      return { ok: true, result: { status: 'replied', reply: outcome.reply, ...trace } }
     }
     const failureEnvelope = outcome.kind === 'target_run_failed'
       ? { code: 'target_run_failed', detail: 'the exact target Run settled as failed; retained text is never returned as success' }
@@ -265,14 +289,29 @@ export function createAgentSessionMessagingAccess({
     if (audit.appendOutcome({
       sourceAgentId, targetAgentId, requestId, correlation, timeoutMode,
       result: 'failed', reconciliationHandle: handle, startedAtWallMs,
+      sessionId: trace.sessionId, messageId: trace.messageId,
     }) !== 'appended') auditFailed(requestId, 'outcome')
     return { ok: false, error: failureEnvelope }
+  }
+
+  async function inspect(rawArgs, context) {
+    if (typeof inspectTurn !== 'function') {
+      return { ok: false, error: { code: 'internal_error', detail: 'trusted turn inspection surface is unavailable' } }
+    }
+    try {
+      return await inspectTurn({ args: rawArgs, callerAgentId: context?.callerAgentId })
+    } catch {
+      return { ok: false, error: { code: 'internal_error', detail: 'trusted turn inspection failed closed' } }
+    }
   }
 
   // Provider shape: handlers keyed by CAPABILITY ID then operation name —
   // the exact contract the broker execute-time resolver closure merges
   // (same shape as selfServiceSchedulerAccess.handlers).
-  return { handlers: { [AGENT_SESSION_SEND_CAPABILITY_ID]: { send } } }
+  return { handlers: {
+    [AGENT_SESSION_SEND_CAPABILITY_ID]: { send },
+    [AGENT_SESSION_TURN_INSPECT_CAPABILITY_ID]: { inspect },
+  } }
 }
 
 export { mapFinalAssistantOutputToOutcome }

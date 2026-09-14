@@ -6,13 +6,13 @@
  *        timeout) BEFORE any side effect
  *   R3   trusted runtime identity + exact source-turn proof; self-send
  *        rejected before delivery
- *   R7   timeout=0 returns {status:'accepted'} on the real inbox receipt
+ *   R7   timeout=0 returns the existing trace coordinate on the real receipt
  *   R8   timeout>0 closed outcome mapping; timeout distinct from
  *        outcome_unknown / failed / no_output / truncated
  *   R10  exactly ONE deliver call — no replay
  *   R12  frozen audit commit order (intent BEFORE delivery; outcome after;
  *        intent append failure = zero deliveries; post-receipt outcome
- *        append failure preserves the proven business result)
+ *        first coordinate append failure becomes post-receipt unknown)
  */
 
 import assert from 'node:assert/strict'
@@ -27,6 +27,7 @@ import { createAgentSessionMessagingAudit } from '../src/agent-session-messaging
 const CALLER = 'agt_a-caller'
 const TARGET = 'agt_b-target'
 const PROOF = 'turn:1:a1:g1:s1'
+const TRACE = { targetAgentId: TARGET, sessionId: 'main', messageId: 'm1' }
 
 /** Manual clock + timer seams (deterministic, no sleeps). */
 function fakeClock(start = 10_000) {
@@ -159,7 +160,7 @@ test('R3/R4: a trusted legal opaque source id with underscores is preserved exac
     VALID_ARGS,
     { callerAgentId: sourceAgentId, sourceTurnExecutionId: PROOF },
   )
-  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted' } })
+  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted', ...TRACE } })
   assert.equal(router.deliveries[0].controlOpts.messageOrigin.sourceAgentId, sourceAgentId)
 })
 
@@ -167,7 +168,7 @@ test('R3/R4: one deliver carries the frozen inter_agent messageOrigin built from
   const router = fakeRouter()
   const { access } = buildAccess({ router })
   const envelope = await access.handlers.agent_session_send.send(VALID_ARGS, { callerAgentId: CALLER, sourceTurnExecutionId: PROOF })
-  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted' } })
+  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted', ...TRACE } })
   assert.equal(router.deliveries.length, 1)
   const { req, controlOpts } = router.deliveries[0]
   assert.equal(req.agentId, TARGET)
@@ -219,6 +220,10 @@ test('R12: intent row precedes delivery; outcome row follows the receipt', async
   assert.equal(rows[0].phase, 'intent')
   assert.equal(rows[1].phase, 'outcome')
   assert.equal(rows[1].result, 'accepted')
+  assert.deepEqual(
+    { targetAgentId: rows[1].targetAgentId, sessionId: rows[1].sessionId, messageId: rows[1].messageId },
+    TRACE,
+  )
   assert.equal(rows[1].timeoutMode, 'receipt_only')
   assert.ok(rows[1].durationMs !== undefined)
 })
@@ -244,7 +249,7 @@ test('R12: an intent append failure returns internal_error with ZERO Router deli
   assert.deepEqual(failures, [{ phase: 'intent', requestId: 'req-1' }])
 })
 
-test('R12: an outcome append failure after the receipt preserves the proven accepted result', async () => {
+test('R12: first coordinate append failure after receipt is honest outcome_unknown and never redelivers', async () => {
   const router = fakeRouter()
   const failures = []
   const { access } = buildAccess({
@@ -257,7 +262,32 @@ test('R12: an outcome append failure after the receipt preserves the proven acce
     onAuditFailure: (info) => failures.push(info),
   })
   const envelope = await access.handlers.agent_session_send.send(VALID_ARGS, { callerAgentId: CALLER, sourceTurnExecutionId: PROOF })
-  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted' } }, 'the proven business result stands')
+  assert.equal(envelope.error.code, 'outcome_unknown')
+  assert.equal(router.deliveries.length, 1, 'the delivered message is never replayed')
+  assert.deepEqual(failures, [{ phase: 'outcome', requestId: 'req-1' }])
+})
+
+test('R12: later wait-outcome audit degradation preserves the already-retained trace success', async () => {
+  const router = fakeRouter({ states: {
+    'turn:1': { state: 'available', text: 'done', truncated: false, originalBytes: 4, terminalState: 'completed' },
+  } })
+  const failures = []
+  let outcomes = 0
+  const { access } = buildAccess({
+    router,
+    audit: {
+      appendIntent: () => 'appended',
+      appendOutcome: () => (++outcomes === 1 ? 'appended' : 'append_failed'),
+      appendDenial: () => 'appended',
+    },
+    onAuditFailure: (info) => failures.push(info),
+  })
+  const envelope = await access.handlers.agent_session_send.send(
+    { ...VALID_ARGS, timeoutSeconds: 2 },
+    { callerAgentId: CALLER, sourceTurnExecutionId: PROOF },
+  )
+  assert.deepEqual(envelope, { ok: true, result: { status: 'replied', reply: 'done', ...TRACE } })
+  assert.equal(router.deliveries.length, 1)
   assert.deepEqual(failures, [{ phase: 'outcome', requestId: 'req-1' }])
 })
 
@@ -277,7 +307,7 @@ test('R8: the exact Run completing in time returns exactly one replied with the 
   router.setState('turn:1', { state: 'available', text: 'final answer', truncated: false, originalBytes: 12, terminalState: 'completed' })
   router.emitReconciled('turn:1')
   const envelope = await promise
-  assert.deepEqual(envelope, { ok: true, result: { status: 'replied', reply: 'final answer' } })
+  assert.deepEqual(envelope, { ok: true, result: { status: 'replied', reply: 'final answer', ...TRACE } })
   const rows = auditRows(file)
   assert.equal(rows.at(-1).result, 'replied')
   assert.equal(rows.at(-1).timeoutMode, 'wait_reply')
@@ -295,7 +325,7 @@ test('R8: reply-wait timeout returns {status:timeout} and never cancels or repla
   clock.advance(5001)
   clock.timer.fireDue()
   const envelope = await promise
-  assert.deepEqual(envelope, { ok: true, result: { status: 'timeout' } })
+  assert.deepEqual(envelope, { ok: true, result: { status: 'timeout', ...TRACE } })
   assert.equal(router.deliveries.length, 1, 'no replay after timeout')
   assert.equal(auditRows(file).at(-1).result, 'timeout')
 })
@@ -323,7 +353,7 @@ test('R8: the reply deadline starts AT the receipt (pre-receipt queue time exclu
   router.setState('turn:slow', { state: 'available', text: 'in time', truncated: false, originalBytes: 7, terminalState: 'completed' })
   router.emitReconciled('turn:slow')
   const envelope = await promise
-  assert.deepEqual(envelope, { ok: true, result: { status: 'replied', reply: 'in time' } },
+  assert.deepEqual(envelope, { ok: true, result: { status: 'replied', reply: 'in time', ...TRACE } },
     '4000ms of pre-receipt queue time did not consume the 3s reply deadline')
 })
 
@@ -377,11 +407,11 @@ test('deliver failures map to exact §5 classes and never retry', async () => {
   }
 })
 
-test('a malformed receipt after proven acceptance is internal_error, not a delivery failure', async () => {
+test('a malformed post-acceptance receipt is outcome_unknown, never not-delivered', async () => {
   const router = fakeRouter({ deliverImpl: async () => ({ accepted: false }) })
   const { access } = buildAccess({ router })
   const envelope = await access.handlers.agent_session_send.send(VALID_ARGS, { callerAgentId: CALLER, sourceTurnExecutionId: PROOF })
-  assert.equal(envelope.error.code, 'internal_error')
+  assert.equal(envelope.error.code, 'outcome_unknown')
 })
 
 test('wait mode without a reconciliation handle returns honest outcome_unknown', async () => {
@@ -392,6 +422,29 @@ test('wait mode without a reconciliation handle returns honest outcome_unknown',
     { callerAgentId: CALLER, sourceTurnExecutionId: PROOF },
   )
   assert.equal(envelope.error.code, 'outcome_unknown')
+})
+
+test('inspection handler forwards only args and the gateway-frozen caller to the read-only seam', async () => {
+  const seen = []
+  const { access } = buildAccess({
+    inspectTurn: undefined,
+  })
+  const wired = createAgentSessionMessagingAccess({
+    router: fakeRouter(),
+    audit: createAgentSessionMessagingAudit({ auditFile: join(mkdtempSync(join(tmpdir(), 'asm-inspect-')), 'audit.jsonl') }),
+    inspectTurn: async (input) => {
+      seen.push(input)
+      return { ok: false, error: { code: 'not_found_or_not_owned', detail: 'opaque' } }
+    },
+  })
+  assert.equal(typeof access.handlers.agent_session_turn_inspect.inspect, 'function')
+  const args = { targetAgentId: TARGET, sessionId: 'main', messageId: 'm1' }
+  const result = await wired.handlers.agent_session_turn_inspect.inspect(args, {
+    callerAgentId: CALLER,
+    sourceTurnExecutionId: 'ignored-for-read',
+  })
+  assert.deepEqual(result, { ok: false, error: { code: 'not_found_or_not_owned', detail: 'opaque' } })
+  assert.deepEqual(seen, [{ args, callerAgentId: CALLER }])
 })
 
 test('the provider requires the full Router reconciliation seam', () => {

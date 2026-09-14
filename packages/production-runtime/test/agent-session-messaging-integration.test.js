@@ -233,7 +233,13 @@ const SEND = { targetAgentId: TARGET, message: 'coordination hello', timeoutSeco
 test('Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact', async (t) => {
   const { runtime, spawned, auditFile } = await seedRuntime(t)
   const envelope = await gatewayCall(runtime, { agentId: SOURCE, sourceTurnExecutionId: PROOF, args: SEND })
-  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted' } })
+  assert.equal(envelope.ok, true)
+  assert.deepEqual(
+    { status: envelope.result.status, targetAgentId: envelope.result.targetAgentId, sessionId: envelope.result.sessionId },
+    { status: 'accepted', targetAgentId: TARGET, sessionId: 'main' },
+  )
+  assert.equal(typeof envelope.result.messageId, 'string')
+  assert.notEqual(envelope.result.messageId, '')
   const target = spawned.find((p) => p.agentId === TARGET)
   assert.notEqual(target, undefined, 'the target process was established')
   assert.equal(target.deliveries.length, 1)
@@ -254,7 +260,10 @@ test('Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned
   assert.equal(rows[0].sourceAgentId, SOURCE)
   assert.equal(rows[0].targetAgentId, TARGET)
   assert.equal(rows[1].result, 'accepted')
+  assert.equal(rows[1].sessionId, envelope.result.sessionId)
+  assert.equal(rows[1].messageId, envelope.result.messageId)
   assert.ok(rows[0].correlationHash !== PROOF, 'the audit carries a bounded correlation hash, never the raw id')
+
 })
 
 test('Case A: the existing main is reused — same process, two sends, two Runs', async (t) => {
@@ -265,8 +274,9 @@ test('Case A: the existing main is reused — same process, two sends, two Runs'
     sourceTurnExecutionId: 'turn:9:src:g1:s8',
     args: { ...SEND, message: 'second message' },
   })
-  assert.deepEqual(first.result, { status: 'accepted' })
-  assert.deepEqual(second.result, { status: 'accepted' })
+  assert.equal(first.result.status, 'accepted')
+  assert.equal(second.result.status, 'accepted')
+  assert.notEqual(first.result.messageId, second.result.messageId)
   const targetProcs = spawned.filter((p) => p.agentId === TARGET)
   assert.equal(targetProcs.length, 1, 'no second process for the same target main')
   assert.equal(targetProcs[0].deliveries.length, 2, 'two sends = two ordered Runs in one main')
@@ -284,8 +294,9 @@ test('Case B: concurrent first sends to an absent main share ONE startup generat
       args: { ...SEND, message: 'parallel hello' },
     }),
   ])
-  assert.deepEqual(first.result, { status: 'accepted' })
-  assert.deepEqual(second.result, { status: 'accepted' })
+  assert.equal(first.result.status, 'accepted')
+  assert.equal(second.result.status, 'accepted')
+  assert.notEqual(first.result.messageId, second.result.messageId)
   const targetProcs = spawned.filter((p) => p.agentId === TARGET)
   assert.equal(targetProcs.length, 1, 'exactly one B process startup generation')
   assert.equal(targetProcs[0].deliveries.length, 2, 'every accepted send is a distinct ordered Run')

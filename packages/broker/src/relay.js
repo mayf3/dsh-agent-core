@@ -130,11 +130,16 @@ function validSchedulerMutationResult(operation, result) {
 }
 
 function validSessionSendResult(result) {
+  const traceKeys = ['messageId', 'sessionId', 'status', 'targetAgentId']
+  const validTrace = nonEmpty(result?.targetAgentId)
+    && nonEmpty(result?.sessionId)
+    && nonEmpty(result?.messageId)
   if (result?.status === 'accepted' || result?.status === 'timeout') {
-    return exactKeys(result, ['status'])
+    return exactKeys(result, traceKeys) && validTrace
   }
   return result?.status === 'replied'
-    && exactKeys(result, ['reply', 'status'])
+    && exactKeys(result, ['messageId', 'reply', 'sessionId', 'status', 'targetAgentId'])
+    && validTrace
     && typeof result.reply === 'string'
     && result.reply.length > 0
 }

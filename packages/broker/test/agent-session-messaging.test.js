@@ -23,7 +23,12 @@ import { validateManifest } from '../src/schema.js'
 import { createRelayHandlers, BROKER_RPC_METHOD } from '../src/relay.js'
 import { createBrokerGateway } from '../src/gateway.js'
 import { apply as applyBroker, DEFAULT_MANIFESTS } from '../src/index.js'
-import { agentSessionMessagingManifest } from '../src/capabilities/agent-session-messaging.js'
+import {
+  agentSessionMessagingManifest,
+  agentSessionTurnInspectManifest,
+} from '../src/capabilities/agent-session-messaging.js'
+
+const TRACE = { targetAgentId: 'agt_b-target', sessionId: 'main', messageId: 'msg-1' }
 
 const SECTION_5_CODES = [
   'invalid_arguments', 'credential_unavailable', 'credential_invalid', 'access_denied',
@@ -78,6 +83,16 @@ test('the model-facing schema physically excludes every R2-forbidden field', () 
 test('DEFAULT_MANIFESTS registers agent_session_send exactly once', () => {
   const ids = DEFAULT_MANIFESTS.map((m) => m.id)
   assert.equal(ids.filter((id) => id === 'agent_session_send').length, 1)
+  assert.equal(ids.filter((id) => id === 'agent_session_turn_inspect').length, 1)
+})
+
+test('inspection is a separate read-only capability and grant', () => {
+  const validated = validateManifest(agentSessionTurnInspectManifest)
+  assert.equal(validated.ok, true, validated.errors?.join('; '))
+  assert.deepEqual(agentSessionTurnInspectManifest.requiredScopes, ['agent.session.inspect_own_dispatch'])
+  assert.equal(agentSessionTurnInspectManifest.local.resource, 'agent-session-messaging')
+  assert.deepEqual(agentSessionTurnInspectManifest.operations[0].arguments.required,
+    ['targetAgentId', 'sessionId', 'messageId'])
 })
 
 // ------------------------------------------------------- relay local path
@@ -86,7 +101,7 @@ test('LOCAL manifest operations get child relay handlers that unwrap the parent 
   const calls = []
   const requestFn = async (rpcCall) => {
     calls.push(rpcCall)
-    return { ok: true, result: { ok: true, result: { status: 'accepted' } } }
+    return { ok: true, result: { ok: true, result: { status: 'accepted', ...TRACE } } }
   }
   const handlers = createRelayHandlers(agentSessionMessagingManifest, requestFn)
   assert.equal(typeof handlers.send, 'function', 'the LOCAL operation must relay')
@@ -94,7 +109,7 @@ test('LOCAL manifest operations get child relay handlers that unwrap the parent 
   assert.equal(calls.length, 1)
   assert.equal(calls[0].capabilityId, 'agent_session_send')
   assert.equal(calls[0].operation, 'send')
-  assert.deepEqual(wire, { status: 'accepted' })
+  assert.deepEqual(wire, { status: 'accepted', ...TRACE })
 })
 
 test('LOCAL relay preserves structured parent failures through the child invoke mapping', async () => {
@@ -185,7 +200,7 @@ test('gateway: the resolver closure admits agentSessionMessagingAccess (F9) and 
         agent_session_send: {
           send: async (args, context) => {
             seen.push({ args, context })
-            return { ok: true, result: { status: 'accepted' } }
+            return { ok: true, result: { status: 'accepted', ...TRACE } }
           },
         },
       },
@@ -201,7 +216,7 @@ test('gateway: the resolver closure admits agentSessionMessagingAccess (F9) and 
     { capabilityId: 'agent_session_send', operation: 'send', args: { targetAgentId: 'agt_b', message: 'hi', timeoutSeconds: 0 } },
     { agentId: 'agt_a-caller' },
   )
-  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted' } })
+  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted', ...TRACE } })
   assert.equal(seen.length, 1)
   assert.equal(seen[0].context.agentId, 'agt_a-caller', 'trusted caller is the gateway caller')
   assert.equal(seen[0].context.callerAgentId, 'agt_a-caller')
@@ -244,6 +259,25 @@ test('gateway: a credential denial fires the L0 hook without changing the denial
   assert.equal(envelope.error.code, 'credential_unavailable')
   assert.equal(denials.length, 1)
   assert.equal(denials[0].code, 'credential_unavailable')
+})
+
+test('gateway: inspection grant denial happens before the read-only handler', async (t) => {
+  let inspections = 0
+  const services = new Map([
+    ['agentSessionMessagingAccess', { handlers: {
+      agent_session_turn_inspect: { inspect: async () => { inspections += 1; return { ok: true, result: {} } } },
+    } }],
+  ])
+  const ctx = fakeCtx(services)
+  const credentialsFile = tempCredentialStore({ agentIds: ['agt_a-caller'], t })
+  const authServiceOrigin = await stubAuthServer(t, 'deny')
+  const { gateway } = applyBroker(ctx, gatewayModeConfig({ credentialsFile, authServiceOrigin }))
+  const envelope = await gateway.execute(
+    { capabilityId: 'agent_session_turn_inspect', operation: 'inspect', args: TRACE },
+    { agentId: 'agt_a-caller' },
+  )
+  assert.equal(envelope.error.code, 'access_denied')
+  assert.equal(inspections, 0, 'denial performs zero audit or Session reads')
 })
 
 test('gateway: a broken audit sink never changes the denial outcome', async () => {
