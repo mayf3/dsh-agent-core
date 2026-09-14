@@ -23,7 +23,14 @@ import { validateManifest } from '../src/schema.js'
 import { createRelayHandlers, BROKER_RPC_METHOD } from '../src/relay.js'
 import { createBrokerGateway } from '../src/gateway.js'
 import { apply as applyBroker, DEFAULT_MANIFESTS } from '../src/index.js'
-import { agentSessionMessagingManifest } from '../src/capabilities/agent-session-messaging.js'
+import { buildToolDefinition } from '../src/registry.js'
+import {
+  agentSessionMessagingManifest,
+  agentSessionTurnInspectManifest,
+} from '../src/capabilities/agent-session-messaging.js'
+import { agentSessionReconcileManifest } from '../src/capabilities/agent-session-reconcile.js'
+
+const TRACE = { targetAgentId: 'agt_b-target', sessionId: 'main', messageId: 'msg-1' }
 
 const SECTION_5_CODES = [
   'invalid_arguments', 'credential_unavailable', 'credential_invalid', 'access_denied',
@@ -48,6 +55,7 @@ test('manifest grammar: valid LOCAL capability with the R1 identity block', () =
   assert.equal(manifest.selector, 'operation')
   assert.deepEqual(manifest.local, { resource: 'agent-session-messaging' })
   assert.deepEqual(manifest.requiredScopes, ['agent.session.send'])
+  assert.equal(manifest.renderErrorDetail, true)
   assert.equal(manifest.operations.length, 1)
   assert.equal(manifest.operations[0].name, 'send')
 })
@@ -78,6 +86,17 @@ test('the model-facing schema physically excludes every R2-forbidden field', () 
 test('DEFAULT_MANIFESTS registers agent_session_send exactly once', () => {
   const ids = DEFAULT_MANIFESTS.map((m) => m.id)
   assert.equal(ids.filter((id) => id === 'agent_session_send').length, 1)
+  assert.equal(ids.filter((id) => id === 'agent_session_turn_inspect').length, 1)
+  assert.equal(ids.filter((id) => id === 'agent_session_send_reconcile').length, 1)
+})
+
+test('inspection is a separate read-only capability and grant', () => {
+  const validated = validateManifest(agentSessionTurnInspectManifest)
+  assert.equal(validated.ok, true, validated.errors?.join('; '))
+  assert.deepEqual(agentSessionTurnInspectManifest.requiredScopes, ['agent.session.inspect_own_dispatch'])
+  assert.equal(agentSessionTurnInspectManifest.local.resource, 'agent-session-messaging')
+  assert.deepEqual(agentSessionTurnInspectManifest.operations[0].arguments.required,
+    ['targetAgentId', 'sessionId', 'messageId'])
 })
 
 // ------------------------------------------------------- relay local path
@@ -86,7 +105,7 @@ test('LOCAL manifest operations get child relay handlers that unwrap the parent 
   const calls = []
   const requestFn = async (rpcCall) => {
     calls.push(rpcCall)
-    return { ok: true, result: { ok: true, result: { status: 'accepted' } } }
+    return { ok: true, result: { ok: true, result: { status: 'accepted', ...TRACE } } }
   }
   const handlers = createRelayHandlers(agentSessionMessagingManifest, requestFn)
   assert.equal(typeof handlers.send, 'function', 'the LOCAL operation must relay')
@@ -94,7 +113,7 @@ test('LOCAL manifest operations get child relay handlers that unwrap the parent 
   assert.equal(calls.length, 1)
   assert.equal(calls[0].capabilityId, 'agent_session_send')
   assert.equal(calls[0].operation, 'send')
-  assert.deepEqual(wire, { status: 'accepted' })
+  assert.deepEqual(wire, { status: 'accepted', ...TRACE })
 })
 
 test('LOCAL relay preserves structured parent failures through the child invoke mapping', async () => {
@@ -104,11 +123,12 @@ test('LOCAL relay preserves structured parent failures through the child invoke 
   assert.equal(failure.errorCode, 'self_send_not_supported')
 })
 
-test('LOCAL relay maps a rejected or malformed parent response to parent_rpc_ambiguous without retry', async () => {
+test('LOCAL relay maps an unusable send+lookup response to parent_rpc_ambiguous without replay', async () => {
   for (const response of ['throw', 'missing-envelope', 'malformed-success', 'undeclared-failure']) {
-    let calls = 0
-    const handlers = createRelayHandlers(agentSessionMessagingManifest, async () => {
-      calls += 1
+    const calls = []
+    const handlers = createRelayHandlers(agentSessionMessagingManifest, async (call) => {
+      calls.push(call)
+      if (call.capabilityId === 'agent_session_send_reconcile') throw new Error('lookup unavailable')
       if (response === 'throw') throw new Error('response lost after possible delivery')
       if (response === 'malformed-success') return { ok: true, result: { ok: true, result: undefined } }
       if (response === 'undeclared-failure') return { ok: true, result: { ok: false, error: { code: 'mystery' } } }
@@ -117,8 +137,84 @@ test('LOCAL relay maps a rejected or malformed parent response to parent_rpc_amb
     const failure = await handlers.send({}, { targetAgentId: 'agt_target', message: 'x', timeoutSeconds: 0 })
     assert.equal(failure.errorCode, 'outcome_unknown', response)
     assert.match(failure.detail, /parent_rpc_ambiguous/, response)
-    assert.equal(calls, 1, `${response}: relay never replays an ambiguous send`)
+    assert.equal(calls.filter((call) => call.capabilityId === 'agent_session_send').length, 1, `${response}: no send replay`)
+    assert.equal(calls.filter((call) => call.capabilityId === 'agent_session_send_reconcile').length, 1, `${response}: one lookup`)
   }
+})
+
+function lostSendRelay(lookupResult, malformedParent = false) {
+  const calls = []
+  const handlers = createRelayHandlers(agentSessionMessagingManifest, async (call) => {
+    calls.push(call)
+    if (call.capabilityId === 'agent_session_send_reconcile') {
+      return { ok: true, result: { ok: true, result: lookupResult } }
+    }
+    if (malformedParent) return { ok: true, result: { ok: true, result: { status: 'reconciled' } } }
+    throw new Error('parent response lost after execution')
+  })
+  return { handlers, calls }
+}
+
+test('lost/unusable parent response reconciles once with the exact V2 trace and zero resend', async () => {
+  for (const result of ['accepted', 'replied', 'timeout']) {
+    for (const malformedParent of [false, true]) {
+      const outcome = { result, ...TRACE }
+      const { handlers, calls } = lostSendRelay({
+        invocationCorrelationFound: true,
+        outcome,
+        oldestRetainedIntentTs: 1,
+        retentionIntegrity: 'clean',
+      }, malformedParent)
+      const wire = await handlers.send({}, { targetAgentId: TRACE.targetAgentId, message: 'x', timeoutSeconds: 0 })
+      assert.deepEqual(wire, {
+        status: 'reconciled',
+        delivery: 'DELIVERED',
+        replyStatus: result === 'accepted' ? 'NOT_WAITED' : result === 'replied' ? 'REPLIED' : 'TIMEOUT',
+        ...(result === 'replied' ? { replyTextAvailable: false } : {}),
+        traceCoordinate: TRACE,
+      })
+      const sends = calls.filter((call) => call.capabilityId === 'agent_session_send')
+      const lookups = calls.filter((call) => call.capabilityId === 'agent_session_send_reconcile')
+      assert.equal(sends.length, 1)
+      assert.equal(lookups.length, 1)
+      assert.equal(lookups[0].args.invocationCorrelation, sends[0].invocationCorrelation)
+    }
+  }
+})
+
+test('legacy/unproven reconcile evidence returns the exact unavailable trace variant', async () => {
+  const cases = [
+    { invocationCorrelationFound: true, outcome: { result: 'accepted' }, oldestRetainedIntentTs: 1, retentionIntegrity: 'clean' },
+    { invocationCorrelationFound: false, outcome: null, oldestRetainedIntentTs: null, retentionIntegrity: 'clean' },
+  ]
+  for (const lookup of cases) {
+    const { handlers } = lostSendRelay(lookup)
+    const wire = await handlers.send({}, { targetAgentId: TRACE.targetAgentId, message: 'x', timeoutSeconds: 0 })
+    assert.equal(wire.status, 'reconciled')
+    assert.equal(wire.traceCoordinate, null)
+    assert.equal(wire.traceStatus, 'unavailable')
+  }
+})
+
+test('reconcile manifest is gateway-only infrastructure with the carried send grant', () => {
+  const validated = validateManifest(agentSessionReconcileManifest)
+  assert.equal(validated.ok, true, validated.errors?.join('; '))
+  assert.equal(validated.manifest.infrastructure, true)
+  assert.deepEqual(validated.manifest.requiredScopes, ['agent.session.send'])
+  assert.equal(validated.manifest.local.resource, 'agent-session-messaging')
+})
+
+test('session-send declared failure render preserves sanitized diagnostic detail', () => {
+  const { definition } = buildToolDefinition({
+    manifest: agentSessionMessagingManifest,
+    handlers: { send: async () => ({ ok: false, error: { code: 'reply_unavailable', detail: 'reply unavailable (no_output)' } }) },
+    deps: { resolvePrincipal: () => ({}) },
+  })
+  const rendered = definition.output.render({}, {
+    ok: false,
+    error: { code: 'reply_unavailable', detail: 'reply unavailable (no_output)' },
+  })
+  assert.match(rendered[0].text, /reply unavailable \(no_output\)/)
 })
 
 test('BROKER_RPC_METHOD stays in lockstep between relay and router', () => {
@@ -136,6 +232,19 @@ function fakeCtx(services) {
     provided,
   }
 }
+
+test('infrastructure reconcile remains gateway-executable but is absent from the model inventory', () => {
+  const names = []
+  const ctx = fakeCtx(new Map([['agentRpc', { request: async () => ({ ok: true, result: { ok: false, error: { code: 'outcome_unknown' } } }) }]]))
+  ctx.tools = { register: (definition) => names.push(definition.name) }
+  applyBroker(ctx, {
+    mode: 'child',
+    manifests: [agentSessionMessagingManifest, agentSessionTurnInspectManifest, agentSessionReconcileManifest],
+  })
+  assert.ok(names.includes('agent_session_send'))
+  assert.ok(names.includes('agent_session_turn_inspect'))
+  assert.ok(!names.includes('agent_session_send_reconcile'))
+})
 
 /** Temp 505-style credential store covering the caller (trusted seam shape). */
 function tempCredentialStore({ agentIds, t }) {
@@ -185,7 +294,7 @@ test('gateway: the resolver closure admits agentSessionMessagingAccess (F9) and 
         agent_session_send: {
           send: async (args, context) => {
             seen.push({ args, context })
-            return { ok: true, result: { status: 'accepted' } }
+            return { ok: true, result: { status: 'accepted', ...TRACE } }
           },
         },
       },
@@ -201,7 +310,7 @@ test('gateway: the resolver closure admits agentSessionMessagingAccess (F9) and 
     { capabilityId: 'agent_session_send', operation: 'send', args: { targetAgentId: 'agt_b', message: 'hi', timeoutSeconds: 0 } },
     { agentId: 'agt_a-caller' },
   )
-  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted' } })
+  assert.deepEqual(envelope, { ok: true, result: { status: 'accepted', ...TRACE } })
   assert.equal(seen.length, 1)
   assert.equal(seen[0].context.agentId, 'agt_a-caller', 'trusted caller is the gateway caller')
   assert.equal(seen[0].context.callerAgentId, 'agt_a-caller')
@@ -244,6 +353,25 @@ test('gateway: a credential denial fires the L0 hook without changing the denial
   assert.equal(envelope.error.code, 'credential_unavailable')
   assert.equal(denials.length, 1)
   assert.equal(denials[0].code, 'credential_unavailable')
+})
+
+test('gateway: inspection grant denial happens before the read-only handler', async (t) => {
+  let inspections = 0
+  const services = new Map([
+    ['agentSessionMessagingAccess', { handlers: {
+      agent_session_turn_inspect: { inspect: async () => { inspections += 1; return { ok: true, result: {} } } },
+    } }],
+  ])
+  const ctx = fakeCtx(services)
+  const credentialsFile = tempCredentialStore({ agentIds: ['agt_a-caller'], t })
+  const authServiceOrigin = await stubAuthServer(t, 'deny')
+  const { gateway } = applyBroker(ctx, gatewayModeConfig({ credentialsFile, authServiceOrigin }))
+  const envelope = await gateway.execute(
+    { capabilityId: 'agent_session_turn_inspect', operation: 'inspect', args: TRACE },
+    { agentId: 'agt_a-caller' },
+  )
+  assert.equal(envelope.error.code, 'access_denied')
+  assert.equal(inspections, 0, 'denial performs zero audit or Session reads')
 })
 
 test('gateway: a broken audit sink never changes the denial outcome', async () => {

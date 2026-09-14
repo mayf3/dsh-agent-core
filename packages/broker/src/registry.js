@@ -161,7 +161,8 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
     const authoringDiagnostic = isWorkflowAuthoring && (
       (error?.code === 'graph_validation_failed' && error.status === 422)
       || (error?.code === 'invalid_arguments' && error.status === undefined && operation === 'replace_draft_graph'))
-    const detail = authoringDiagnostic && typeof error.detail === 'string' && error.detail.length > 0
+    const detail = (authoringDiagnostic || manifest.renderErrorDetail === true)
+      && typeof error.detail === 'string' && error.detail.length > 0
       ? `: ${sanitizeErrorDetail(error.detail)}` : ''
     return `${error?.code ?? 'unknown_error'}${suffix}${detail}`
   }
@@ -223,5 +224,7 @@ export function registerCapability(capability, registry, define) {
  * @returns {Array<object>} registered ToolDefinitions.
  */
 export function registerCapabilities(ctx, defineTool, capabilities) {
-  return capabilities.map((c) => registerCapability(c, ctx.tools, (def) => defineTool(def)))
+  return capabilities
+    .filter((capability) => capability?.manifest?.infrastructure !== true)
+    .map((capability) => registerCapability(capability, ctx.tools, (def) => defineTool(def)))
 }
