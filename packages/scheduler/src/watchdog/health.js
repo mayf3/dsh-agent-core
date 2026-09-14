@@ -38,6 +38,38 @@ function fenceProjectionValid(snapshot) {
   try { return canonicalJSON(snapshot.fences) === canonicalJSON(rebuildFences(snapshot.occurrences ?? [])) } catch { return false }
 }
 
+function canonicalJobFindings(job, records, snapshot) {
+  const findings = []
+  const base = { jobId: job.id, logicalKey: job.logicalKey, agentId: job.agentId, jobRevision: job.scheduleRevision }
+  const unresolved = records.filter((item) => item.state === 'outcome_unknown' && item.terminationSettlement === undefined)
+  for (const record of records) {
+    if (record.executionOutcome === 'failed' && Number.isFinite(record.endedAt) && snapshot.generatedAt - record.endedAt <= 24 * 60 * 60 * 1000) {
+      findings.push({ class: 'RUN_FAILED', jobId: job.id, runId: record.runId, occurrenceId: record.occurrenceId, endedAt: new Date(record.endedAt).toISOString() })
+    }
+    if (Number.isFinite(record.startedAt) && !Number.isFinite(record.endedAt)
+      && snapshot.generatedAt - record.startedAt > (record.timeoutMs ?? 2 * 60 * 60 * 1000)) {
+      findings.push({ class: 'RUN_STUCK', jobId: job.id, runId: record.runId, occurrenceId: record.occurrenceId, startedAt: new Date(record.startedAt).toISOString() })
+    }
+    if (record.state === 'outcome_unknown' && record.terminationSettlement === undefined) findings.push({ class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: job.id, runId: record.runId, occurrenceId: record.occurrenceId })
+  }
+  if (Number.isFinite(job.state?.consecutiveErrors) && job.state.consecutiveErrors >= 2) {
+    findings.push({ class: 'CONSECUTIVE_FAILURE', ...base, consecutiveErrors: job.state.consecutiveErrors })
+  }
+  if (Number.isFinite(job.state?.nextRunAtMs) && snapshot.generatedAt - job.state.nextRunAtMs > 30 * 60 * 1000) {
+    const blocker = unresolved[0]
+    findings.push({ class: 'EXPECTED_RUN_MISSED', ...base, ...(blocker ? { occurrenceId: blocker.occurrenceId, runId: blocker.runId } : {}), dueAt: new Date(job.state.nextRunAtMs).toISOString() })
+  }
+  const historyFailure = (snapshot.history ?? []).find((row) => (row.job_id === job.id || row.jobId === job.id)
+    && ['ERROR', 'FAILED', 'DELIVERY_FAILED'].includes(row.status_view ?? row.status)
+    && typeof (row.occurrence_id ?? row.occurrenceId) === 'string' && typeof (row.run_id ?? row.runId) === 'string')
+  if (historyFailure && !findings.some((fact) => fact.class === 'RUN_FAILED')) findings.push({
+    class: 'RUN_FAILED', jobId: job.id,
+    occurrenceId: historyFailure.occurrence_id ?? historyFailure.occurrenceId,
+    runId: historyFailure.run_id ?? historyFailure.runId,
+  })
+  return findings
+}
+
 export function validateCanonicalHealthAuthority(snapshot) {
   if (!snapshot || typeof snapshot !== 'object' || snapshot.version !== 3 || !Array.isArray(snapshot.jobs)
     || !Array.isArray(snapshot.occurrences) || snapshot.fences === null
@@ -76,13 +108,14 @@ function projectRow(job, snapshot, complete) {
   const credentialReady = snapshot.credentials?.[job.agentId] === true
   const routeState = snapshot.routes?.[job.id] ?? snapshot.routes?.[job.logicalKey] ?? { ready: false }
   const routeHealthy = routeState.ready === true && (routeState.status === undefined || routeState.status === 'READY')
+  const findings = canonicalJobFindings(job, records, snapshot)
   let classification = 'healthy'
   let state = 'HEALTHY'
   if (!complete) {
     classification = 'unknown'; state = 'UNKNOWN'
   } else if (unresolved.length > 0 || !credentialReady) {
     classification = 'blocked'; state = unresolved.length > 0 ? 'QUARANTINED_UNKNOWN' : 'BLOCKED'
-  } else if (!routeHealthy || !scheduleReady(job, snapshot.generatedAt)) {
+  } else if (!routeHealthy || !scheduleReady(job, snapshot.generatedAt) || findings.length > 0 || snapshot.runtimeHealth?.healthOk === false) {
     classification = 'degraded'; state = 'DEGRADED'
   }
   const blockedSinceMs = unresolved.length
@@ -115,6 +148,7 @@ function projectRow(job, snapshot, complete) {
     fenceReason: unresolved.length ? 'unresolved outcome_unknown occurrence contribution' : null,
     alertState: alertForJob(snapshot.incidents, job.id),
     alertTargetMissing: !routeHealthy,
+    findings,
   }
 }
 
@@ -133,10 +167,14 @@ export function projectSchedulerHealth(snapshot = {}) {
   const complete = authorityError === null && generationsComplete(snapshot.generations)
     && snapshot.provenance?.canonicalPair === true && fenceProjectionValid(snapshot)
   const rows = jobs.map((job) => projectRow(job, snapshot, complete))
+  const findings = rows.flatMap((row) => row.findings ?? [])
+  if (snapshot.runtimeHealth?.healthOk === false) findings.push({
+    class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime', reason: snapshot.runtimeHealth.reason,
+  })
   const count = (kind) => rows.filter((row) => row.classification === kind).length
   return {
     enabled: rows.length, healthy: count('healthy'), degraded: count('degraded'), blocked: count('blocked'), unknown: count('unknown'),
-    complete, generatedAt: snapshot.generatedAt ?? Date.now(), jobs: rows,
+    complete, generatedAt: snapshot.generatedAt ?? Date.now(), jobs: rows, findings,
     censusError: complete ? null : (snapshot.censusError ?? authorityError?.message ?? 'source generation, provenance, or fence projection incomplete'),
     readbackAvailable: true, watchdogRunnable: true,
   }

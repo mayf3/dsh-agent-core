@@ -42,6 +42,20 @@ export function deliveryRecoveryAction(intent, { providerAccepted, readbackCompl
   return providerAccepted === true ? 'MARK_DELIVERED' : 'SEND'
 }
 
+export async function attemptNotificationDelivery(send) {
+  try { await send(); return 'DELIVERED' } catch (error) {
+    return error?.deliveryState === 'FAILED' ? 'FAILED' : 'OUTCOME_UNKNOWN'
+  }
+}
+
+export async function recoverNotificationDelivery(intent, { readback, send }) {
+  if (intent?.delivery !== 'OUTCOME_UNKNOWN') return attemptNotificationDelivery(send)
+  let providerAccepted
+  try { providerAccepted = await readback() } catch { return 'OUTCOME_UNKNOWN' }
+  const action = deliveryRecoveryAction(intent, { providerAccepted, readbackComplete: true })
+  return action === 'MARK_DELIVERED' ? 'DELIVERED' : attemptNotificationDelivery(send)
+}
+
 export function stableNotificationText(intent) {
   const label = intent.transitionKind === 'CLOSED_RECOVERED' ? 'RECOVERED'
     : intent.transitionKind === 'CLOSED_ACKNOWLEDGED' ? 'ACKNOWLEDGED' : 'NEW'

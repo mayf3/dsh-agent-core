@@ -27,7 +27,7 @@ test('routing deployment freezes explicit candidate and atomically preserves the
   const args = {
     candidatePath, expectedSha256: sha(candidate), targetPath, artifactsDir,
     jobs: [{ id: 'job-a', agentId: 'agent-a', logicalKey: 'daily', enabled: true }],
-    expectedUid: process.getuid(), expectedGid: process.getgid(), mode: 'apply',
+    expectedUid: process.getuid(), expectedGid: process.getgid(), targetBoundary: root, mode: 'apply',
   }
   const result = installSchedulerRoutingManifest(args)
   assert.equal(result.candidateSha256, sha(candidate))
@@ -50,7 +50,7 @@ test('routing deployment rejects missing canonical ops target before any write',
   await writeFile(candidatePath, bytes, { mode: 0o600 })
   assert.throws(() => installSchedulerRoutingManifest({
     candidatePath, expectedSha256: sha(bytes), targetPath: join(root, 'target.json'), artifactsDir: join(root, 'artifacts'),
-    jobs: [], expectedUid: process.getuid(), expectedGid: process.getgid(), mode: 'plan',
+    jobs: [], expectedUid: process.getuid(), expectedGid: process.getgid(), targetBoundary: root, mode: 'plan',
   }), /canonicalOpsTarget/)
 })
 
@@ -67,8 +67,42 @@ test('routing deployment rejects a target symlink before reading or replacing it
   await symlink(victimPath, targetPath)
   assert.throws(() => installSchedulerRoutingManifest({
     candidatePath, expectedSha256: sha(bytes), targetPath, artifactsDir: join(root, 'artifacts'), jobs: [],
-    expectedUid: process.getuid(), expectedGid: process.getgid(), mode: 'apply',
+    expectedUid: process.getuid(), expectedGid: process.getgid(), targetBoundary: root, mode: 'apply',
   }), /unsafe protected path metadata/)
   assert.equal((await lstat(targetPath)).isSymbolicLink(), true)
   assert.equal((await readFile(victimPath, 'utf8')), 'do-not-read-or-replace\n')
+})
+
+test('routing deployment rejects a symlink parent before creating an absent target', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'scheduler-routing-parent-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const candidatePath = join(root, 'candidate.json')
+  const realDir = join(root, 'real'), linkedDir = join(root, 'linked')
+  await mkdir(realDir); await symlink(realDir, linkedDir)
+  const targetPath = join(linkedDir, 'scheduler-routing.json')
+  const bytes = Buffer.from('{"version":1,"canonicalOpsTarget":{"channel":"feishu","to":"ops"},"ownerTargets":{},"jobFailureTargets":{}}\n')
+  await writeFile(candidatePath, bytes, { mode: 0o600 })
+  assert.throws(() => installSchedulerRoutingManifest({
+    candidatePath, expectedSha256: sha(bytes), targetPath, targetBoundary: root,
+    artifactsDir: join(root, 'artifacts'), jobs: [], expectedUid: process.getuid(), expectedGid: process.getgid(), mode: 'apply',
+  }), /unsafe routing target parent chain/)
+  assert.equal(await readFile(join(realDir, 'scheduler-routing.json')).catch((error) => error.code), 'ENOENT')
+})
+
+test('routing deployment rejects an unsafe grandparent before creating an absent target', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'scheduler-routing-grandparent-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const candidatePath = join(root, 'candidate.json')
+  const unsafe = join(root, 'unsafe'), privateParent = join(unsafe, 'private')
+  await mkdir(privateParent, { recursive: true }); await chmod(unsafe, 0o777); await chmod(privateParent, 0o700)
+  const targetPath = join(privateParent, 'scheduler-routing.json')
+  const bytes = Buffer.from('{"version":1,"canonicalOpsTarget":{"channel":"feishu","to":"ops"},"ownerTargets":{},"jobFailureTargets":{}}\n')
+  await writeFile(candidatePath, bytes, { mode: 0o600 })
+  assert.throws(() => installSchedulerRoutingManifest({
+    candidatePath, expectedSha256: sha(bytes), targetPath, targetBoundary: root,
+    artifactsDir: join(root, 'artifacts'), jobs: [], expectedUid: process.getuid(), expectedGid: process.getgid(), mode: 'apply',
+  }), /unsafe routing target parent chain/)
+  assert.equal(await readFile(targetPath).catch((error) => error.code), 'ENOENT')
 })

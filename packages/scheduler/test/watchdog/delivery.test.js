@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { buildIdempotentFeishuRequest, deliveryRecoveryAction, feishuHistoryContainsNotification, providerIdempotencyKey, retryableOutboxIntents, stableNotificationText } from '../../src/watchdog/delivery.js'
+import { attemptNotificationDelivery, buildIdempotentFeishuRequest, deliveryRecoveryAction, feishuHistoryContainsNotification, providerIdempotencyKey, recoverNotificationDelivery, retryableOutboxIntents, stableNotificationText } from '../../src/watchdog/delivery.js'
 import { compileIncidents } from '../../src/watchdog/incident-compiler.js'
 import { markNotificationDelivery, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
 
@@ -57,6 +57,28 @@ test('T26 crash recovery sends only after complete provider readback proves abse
   assert.equal(deliveryRecoveryAction(intent, { providerAccepted: false, readbackComplete: true }), 'SEND')
   assert.equal(deliveryRecoveryAction(intent, { providerAccepted: false, readbackComplete: false }), 'HOLD')
   assert.equal(deliveryRecoveryAction({ delivery: 'PENDING' }, { readbackComplete: false }), 'SEND')
+})
+
+test('T26 transport adapter separates definitive rejection from ambiguous post-send loss', async () => {
+  assert.equal(await attemptNotificationDelivery(async () => true), 'DELIVERED')
+  assert.equal(await attemptNotificationDelivery(async () => { throw Object.assign(new Error('rejected'), { deliveryState: 'FAILED' }) }), 'FAILED')
+  assert.equal(await attemptNotificationDelivery(async () => { throw new Error('connection lost after write') }), 'OUTCOME_UNKNOWN')
+})
+
+test('T26 recovered runner delivery reads back before any resend and preserves ambiguous outcomes', async () => {
+  const intent = { delivery: 'OUTCOME_UNKNOWN' }
+  let sends = 0
+  assert.equal(await recoverNotificationDelivery(intent, { readback: async () => true, send: async () => { sends += 1 } }), 'DELIVERED')
+  assert.equal(sends, 0)
+  assert.equal(await recoverNotificationDelivery(intent, { readback: async () => false, send: async () => { sends += 1 } }), 'DELIVERED')
+  assert.equal(sends, 1)
+  assert.equal(await recoverNotificationDelivery(intent, { readback: async () => { throw new Error('incomplete history') }, send: async () => { sends += 1 } }), 'OUTCOME_UNKNOWN')
+  assert.equal(sends, 1)
+  assert.equal(await recoverNotificationDelivery(intent, {
+    readback: async () => false,
+    send: async () => { sends += 1; throw Object.assign(new Error('rejected'), { deliveryState: 'FAILED' }) },
+  }), 'FAILED')
+  assert.equal(sends, 2)
 })
 
 test('T21 W2 cannot claim a W1 outbox intent', () => {

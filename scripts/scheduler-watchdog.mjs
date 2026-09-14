@@ -103,15 +103,17 @@ function writeEvidence(event) {
 }
 
 async function feishuToken() {
-  if (!FEISHU_CREDS) throw new Error('feishu credentials unavailable')
-  const creds = JSON.parse(readFileSync(FEISHU_CREDS, 'utf8'))
-  const tokenRes = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ app_id: creds.appId ?? creds.app_id, app_secret: creds.appSecret ?? creds.app_secret }),
-  })
-  const token = await tokenRes.json()
-  if (!token.tenant_access_token) throw new Error(`feishu token request failed: ${token.code ?? '?'}`)
-  return token.tenant_access_token
+  try {
+    if (!FEISHU_CREDS) throw new Error('feishu credentials unavailable')
+    const creds = JSON.parse(readFileSync(FEISHU_CREDS, 'utf8'))
+    const tokenRes = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ app_id: creds.appId ?? creds.app_id, app_secret: creds.appSecret ?? creds.app_secret }),
+    })
+    const token = await tokenRes.json()
+    if (!token.tenant_access_token) throw new Error(`feishu token request failed: ${token.code ?? '?'}`)
+    return token.tenant_access_token
+  } catch (error) { throw Object.assign(error, { deliveryState: 'FAILED' }) }
 }
 
 async function feishuAlert(text, { to, notificationKey }) {
@@ -119,7 +121,7 @@ async function feishuAlert(text, { to, notificationKey }) {
     process.stdout.write(`[watchdog dry-run] alert suppressed:\n${text}\n`)
     return true
   }
-  if (!FEISHU_CREDS || !to) throw new Error('feishu alert channel or authorized route not configured')
+  if (!FEISHU_CREDS || !to) throw Object.assign(new Error('feishu alert channel or authorized route not configured'), { deliveryState: 'FAILED' })
   // 3 attempts with backoff: transient network blips must not lose an alert
   // (the park-file fallback remains for total delivery failure).
   let lastError
@@ -134,7 +136,7 @@ async function feishuAlert(text, { to, notificationKey }) {
         body: JSON.stringify(request.body),
       })
       const sent = await sendRes.json()
-      if (sent.code !== 0) throw new Error(`feishu send failed: ${sent.code} ${sent.msg ?? ''}`)
+      if (sent.code !== 0) throw Object.assign(new Error(`feishu send failed: ${sent.code} ${sent.msg ?? ''}`), { deliveryState: 'FAILED' })
       return true
     } catch (error) {
       lastError = error
@@ -170,22 +172,24 @@ async function feishuDeliveryAccepted({ to, notificationKey, firstDeliveryAttemp
 }
 
 async function deliverOrPark(text, { route, notificationKey }) {
-  try {
-    await feishuAlert(text, { to: route?.to, notificationKey })
-    return 'feishu_sent'
-  } catch (error) {
+  const { attemptNotificationDelivery } = await import('../packages/scheduler/src/watchdog/delivery.js')
+  let capturedError
+  const delivery = await attemptNotificationDelivery(async () => {
+    try { await feishuAlert(text, { to: route?.to, notificationKey }) } catch (error) { capturedError = error; throw error }
+  })
+  if (delivery !== 'DELIVERED') {
     // Durable local Scheduler ops sink supplements fail-loud delivery. It is
     // never treated as a successful replacement route.
     try {
       const { appendPrivateJsonl } = await import('../packages/scheduler/src/watchdog/durable-state.js')
-      appendPrivateJsonl(LOCAL_OPS_SINK, { notificationKey, at: Date.now(), delivery: 'OUTCOME_UNKNOWN', error: String(error?.message ?? error).slice(0, 160) }, {
+      appendPrivateJsonl(LOCAL_OPS_SINK, { notificationKey, at: Date.now(), delivery, error: String(capturedError?.message ?? capturedError).slice(0, 160) }, {
         expectedUid: Number(process.env.SCHEDULER_INCIDENT_OWNER_UID ?? process.getuid?.()),
         expectedGid: Number(process.env.SCHEDULER_INCIDENT_OWNER_GID ?? process.getgid?.()),
       })
     } catch { /* ignore */ }
-    writeEvidence({ kind: 'alert_delivery_outcome_unknown', notificationKey, error: String(error?.message ?? error) })
-    return 'delivery_failed'
+    writeEvidence({ kind: delivery === 'FAILED' ? 'alert_delivery_failed' : 'alert_delivery_outcome_unknown', notificationKey, error: String(capturedError?.message ?? capturedError) })
   }
+  return delivery
 }
 
 async function probeRuntimeHealth() {
@@ -209,8 +213,8 @@ function evidenceAgeMs(nowMs) {
 
 async function processIncidentNotifications(findings, { nowMs, role, doc = { jobs: [] } }) {
   const {
-    bindNotificationDelivery, commitIncidentState, deliveryRecoveryAction, loadIncidentState, markNotificationDelivery, providerIdempotencyKey,
-    readProtectedRoutingManifest, resolveNotificationRoute, retryableOutboxIntents,
+    bindNotificationDelivery, commitIncidentState, loadIncidentState, markNotificationDelivery, providerIdempotencyKey,
+    readProtectedRoutingManifest, recoverNotificationDelivery, resolveNotificationRoute, retryableOutboxIntents,
     stableNotificationText, updateAlertState,
   } = await import('../packages/scheduler/src/watchdog/index.js')
   const incidentOwnership = {
@@ -256,7 +260,7 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
       continue
     }
     const text = intent.deliveryBinding?.payload ?? stableNotificationText(intent)
-    let delivered = 'delivery_failed'
+    let delivered = 'FAILED'
     if (routeDecision.route) {
       if (!intent.deliveryBinding) {
         currentState = bindNotificationDelivery(currentState, notification.notificationKey, {
@@ -266,32 +270,28 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
         persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
       }
       if (intent.delivery === 'OUTCOME_UNKNOWN') {
-        try {
-          const accepted = await feishuDeliveryAccepted({
+        delivered = await recoverNotificationDelivery(intent, {
+          readback: () => feishuDeliveryAccepted({
             to: routeDecision.route.to, notificationKey: notification.notificationKey,
             firstDeliveryAttemptAt: intent.firstDeliveryAttemptAt,
-          })
-          if (deliveryRecoveryAction(intent, { providerAccepted: accepted, readbackComplete: true }) === 'MARK_DELIVERED') {
-            currentState = markNotificationDelivery(currentState, notification.notificationKey, 'DELIVERED', Date.now())
-            persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
-            continue
-          }
-        } catch (error) {
-          writeEvidence({ kind: 'alert_delivery_readback_unknown', notificationKey: notification.notificationKey, error: String(error?.message ?? error) })
-          outcome = 'delivery_failed'
-          continue
-        }
+          }),
+          send: async () => {
+            const result = await deliverOrPark(text, { route: routeDecision.route, notificationKey: notification.notificationKey })
+            if (result !== 'DELIVERED') throw Object.assign(new Error(`delivery ${result.toLowerCase()}`), { deliveryState: result })
+          },
+        })
+        if (delivered === 'OUTCOME_UNKNOWN') writeEvidence({ kind: 'alert_delivery_readback_or_send_unknown', notificationKey: notification.notificationKey })
       } else {
         currentState = markNotificationDelivery(currentState, notification.notificationKey, 'OUTCOME_UNKNOWN', Date.now())
         persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
+        delivered = await deliverOrPark(text, { route: routeDecision.route, notificationKey: notification.notificationKey })
       }
-      delivered = await deliverOrPark(text, { route: routeDecision.route, notificationKey: notification.notificationKey })
-      currentState = markNotificationDelivery(currentState, notification.notificationKey, delivered === 'feishu_sent' ? 'DELIVERED' : 'OUTCOME_UNKNOWN', Date.now())
+      currentState = markNotificationDelivery(currentState, notification.notificationKey, delivered, Date.now())
     } else {
       currentState = markNotificationDelivery(currentState, notification.notificationKey, 'FAILED', Date.now())
     }
     persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
-    if (delivered !== 'feishu_sent') {
+    if (delivered !== 'DELIVERED') {
       outcome = 'delivery_failed'
       if (!routeDecision.route && intent.delivery !== 'FAILED') {
         try {
@@ -307,7 +307,7 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
 async function runW1(nowMs) {
   const { readFileSync: readRaw } = await import('node:fs')
   const { createHash } = await import('node:crypto')
-  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, evaluateReconciliationEvidence, evaluateCredentialProvider } =
+  const { parseDesiredState, evaluateDesiredState, evaluateReconciliationEvidence, evaluateCredentialProvider } =
     await import('../packages/scheduler/src/watchdog/index.js')
   const findings = []
   const candidateJobFindings = []
@@ -328,11 +328,7 @@ async function runW1(nowMs) {
   } catch (error) {
     findings.push({ class: 'SCHEDULER_RUNTIME_UNHEALTHY', reason: `desired-state manifest unreadable/invalid: ${String(error?.message ?? error).slice(0, 120)}` })
   }
-  candidateJobFindings.push(...evaluateRunHealth(doc, {
-    nowMs,
-    desired,
-    runtimeHealth: { ...(await probeRuntimeHealth()), evidenceAgeMs: evidenceAgeMs(nowMs) },
-  }))
+  const runtimeHealth = { ...(await probeRuntimeHealth()), evidenceAgeMs: evidenceAgeMs(nowMs) }
   try {
     const { createSchedulerHealthRuntime } = await import('../packages/production-runtime/src/scheduler/health-runtime.js')
     const schedulerRoot = dirname(STORE)
@@ -355,9 +351,10 @@ async function runW1(nowMs) {
         expectedGid: Number(process.env.SCHEDULER_INCIDENT_OWNER_GID ?? process.getgid?.()),
       },
       credentialStoreFile: CREDENTIAL_FILE,
+      runtimeHealth,
       nowMs: () => nowMs,
     }).read()
-    if (health.complete === true) findings.push(...candidateJobFindings)
+    if (health.complete === true) findings.push(...candidateJobFindings, ...(health.findings ?? []))
     else findings.push({ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-health',
       reason: `canonical Scheduler health incomplete: ${health.censusError ?? 'unknown source'}` })
   } catch (error) {

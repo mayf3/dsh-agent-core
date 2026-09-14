@@ -35,7 +35,7 @@ function routeSource(source) {
   })[source] ?? 'local_ops_sink'
 }
 
-export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs = Date.now, routingSecurity, incidentOwnership, credentialStoreFile } = {}) {
+export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs = Date.now, routingSecurity, incidentOwnership, credentialStoreFile, runtimeHealth } = {}) {
   if (!layout) throw new TypeError('scheduler health runtime requires layout')
   const sources = [
     { name: 'jobs', path: layout.jobsStore, capture: async () => validateCanonicalHealthAuthority(await json(layout.jobsStore)) },
@@ -81,6 +81,7 @@ export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs 
         occurrences: jobsDoc?.occurrences ?? [],
         fences: jobsDoc?.fences ?? {},
         history: captured.history ?? [],
+        runtimeHealth,
         credentials: captured.credentials ?? {},
         routes,
         incidents: captured.incidents?.incidents ?? {},

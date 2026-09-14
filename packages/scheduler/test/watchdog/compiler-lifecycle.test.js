@@ -5,6 +5,8 @@ import { compileIncidents, incidentRootIdentity } from '../../src/watchdog/incid
 import {
   migrateLegacyAlertState,
   bindNotificationDelivery,
+  findingFingerprint,
+  legacyFingerprint,
   markNotificationDelivery,
   notificationKey,
   updateIncidentState,
@@ -161,6 +163,20 @@ test('T27 acknowledged and retired legacy roots migrate closed without fabricati
   assert.equal(rows.find((row) => row.rootCauseClass === 'RUN_FAILED').lifecycle, 'CLOSED_ACKNOWLEDGED')
   assert.equal(rows.find((row) => row.rootCauseClass === 'SCHEDULER_RUNTIME_UNHEALTHY').lifecycle, 'CLOSED_RECOVERED')
   assert.deepEqual(migrated.outbox, {})
+})
+
+test('T27 migrated incidents retain the canonical producer for pending and recovery delivery', () => {
+  const fact = { class: 'SCHEDULER_WATCHDOG_FAILURE', subjectKind: 'watchdog', stableSubjectId: 'watchdog:w1' }
+  const fingerprint = legacyFingerprint(fact)
+  const pending = migrateLegacyAlertState({ active: { [fingerprint]: {} } }, [fact], {
+    failedFingerprints: new Set([fingerprint]), nowMs: 1,
+  })
+  assert.equal(Object.values(pending.outbox)[0].producer, 'w2')
+  const delivered = migrateLegacyAlertState({ active: { [fingerprint]: {} } }, [fact], {
+    deliveredFingerprints: new Set([fingerprint]), nowMs: 1,
+  })
+  const recovered = updateIncidentState(delivered, [], { nowMs: 2, producer: 'w2', ownsIncident: () => true })
+  assert.equal(recovered.notifications[0].producer, 'w2')
 })
 
 test('T27/T28 ambiguous delivery evidence and malformed state fail loud without empty reset', () => {
