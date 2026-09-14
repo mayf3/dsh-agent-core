@@ -484,7 +484,7 @@ async function main() {
 // Fixture-only orchestration is isolated so this production driver remains auditable.
 if (MODE === 'selftest') {
   const { runAdmissionSelftest } = await import('./lib/admission-selftest.mjs')
-  await runAdmissionSelftest({ ctx: CTX, main, git, sha256 })
+  await runAdmissionSelftest({ ctx: CTX, main, git, sha256, repoRoot: REPO_ROOT })
   process.exit(0)
 }
 
