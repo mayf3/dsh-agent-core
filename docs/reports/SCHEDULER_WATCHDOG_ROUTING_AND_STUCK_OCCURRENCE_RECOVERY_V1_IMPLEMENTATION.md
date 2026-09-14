@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: c5766faf8a795f6543041291964f323755c0d292
-status: candidate_tenth_exact_review_pending
+implementation_code_commit: 2f1b9198ba5b9e541b06e9087870b370cbc55748
+status: candidate_eleventh_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`c5766faf8a795f6543041291964f323755c0d292`, based on the accepted-Spec merge
+`2f1b9198ba5b9e541b06e9087870b370cbc55748`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -48,9 +48,9 @@ All Spec tests T01–T34 have explicit named coverage under
 Key results:
 
 ```text
-Scheduler/Product/Broker affected suite             866/866 PASS
-focused tenth-review blocker matrix                   50/50 PASS
-focused Scheduler/deployment matrix                 140/140 PASS
+Scheduler/Product/Broker affected suite             868/868 PASS
+focused eleventh-review blocker matrix                49/49 PASS
+focused Scheduler/deployment matrix                 143/143 PASS
 wide Scheduler/Product/Broker/deployment run         698/699 PASS (one known environment failure)
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
@@ -186,7 +186,15 @@ returned `REVISE`. The tenth candidate closes every executed counterexample:
 | runtime and W1/W2 receipt replay did not bind rollback preimages | shared no-follow verification binds the exact fixed path, bytes hash, uid/gid/mode, ACL and exact xattr-name set before sync/bootstrap or a replacement receipt; watchdog receipt roles, labels, target paths and both W1/W2 rollback generations are closed and exact |
 | advancing `overdueMs` broke a passive dedupe proof | postdeploy correlation excludes only the derived time-varying `overdueMs` field while retaining exact root, occurrence/run coordinates, due time, symptoms, episode, transition, deterministic outbox key and before/after attempt equality |
 
-This exact packet is intentionally submitted to both independent reviewers for a tenth exact-head
+The tenth exact-head review of `3ee18091c1f0bd57c870d3e60c96eabaedf3928b`
+returned `REVISE`. The eleventh candidate closes every executed counterexample:
+
+| Tenth-review blocker | Eleventh-candidate exact closure |
+|---|---|
+| valid-shaped but invented migration hashes waived the outbox | migration authority now requires exact protected legacy/evidence/canonical-facts backups and the root-controlled migration receipt; canonical health verifies backup generations, and postdeploy requires the receipt-bound authority before allowing any migration exception |
+| persisted delivery binding could redirect control-plane alerts | the binding schema is closed over producer, canonical stable payload, provider idempotency key, route, route source, routing SHA and finite timestamp; canonical health, postdeploy and every watchdog restart re-resolve against the exact protected routing generation, so a business-chat redirect fails closed with zero delivery |
+
+This exact packet is intentionally submitted to both independent reviewers for an eleventh exact-head
 review; the closure table is implementation evidence, not a self-issued PASS.
 
 ## 4. Controlled production migration plan
@@ -255,5 +263,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = TENTH_EXACT_HEAD_PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = ELEVENTH_EXACT_HEAD_PENDING
 ```
