@@ -121,6 +121,33 @@ test('incident durability binds persisted delivery to canonical routing authorit
   }
   assert.throws(() => markNotificationDelivery(validIncidentState(), Object.keys(validIncidentState().outbox)[0], 'OUTCOME_UNKNOWN', 2), /requires an immutable binding/)
   assert.throws(() => markNotificationDelivery(bound, unboundKey, 'OUTCOME_UNKNOWN', 1), /update time is invalid/)
+  const unknown = markNotificationDelivery(bound, unboundKey, 'OUTCOME_UNKNOWN', 3)
+  assert.throws(() => markNotificationDelivery(unknown, unboundKey, 'PENDING', 4), /invalid notification delivery transition/)
+  assert.throws(() => markNotificationDelivery(unknown, unboundKey, 'OUTCOME_UNKNOWN', 2), /update time is invalid/)
+  const regressed = structuredClone(unknown)
+  regressed.outbox[unboundKey].delivery = 'PENDING'
+  regressed.incidents[Object.keys(regressed.incidents)[0]].alertState.delivery = 'PENDING'
+  assert.throws(() => validateIncidentState(regressed), /delivery chronology/)
+})
+
+test('delivery commit compares exact predecessor and rejects evidence-erasing regression to PENDING', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-transition-'))
+  await chmod(dir, 0o700)
+  const path = join(dir, 'incidents.json')
+  const opened = validIncidentState()
+  const key = Object.keys(opened.outbox)[0]
+  let receipt = commitIncidentState(path, opened, { expectedHash: null })
+  const bound = bindNotificationDelivery(opened, key, { producer: opened.outbox[key].producer,
+    route: { channel: 'feishu', to: 'scheduler-ops' }, routeSource: 'canonicalOpsTarget',
+    routingSha256: 'b'.repeat(64), payload: stableNotificationText(opened.outbox[key]), providerKey: providerIdempotencyKey(key) }, 2)
+  receipt = commitIncidentState(path, bound, { expectedHash: receipt.hash })
+  const unknown = markNotificationDelivery(bound, key, 'OUTCOME_UNKNOWN', 3)
+  receipt = commitIncidentState(path, unknown, { expectedHash: receipt.hash })
+  const erased = structuredClone(unknown)
+  erased.outbox[key].delivery = 'PENDING'; delete erased.outbox[key].firstDeliveryAttemptAt; delete erased.outbox[key].deliveryUpdatedAt
+  erased.incidents[Object.keys(erased.incidents)[0]].alertState.delivery = 'PENDING'
+  assert.equal(validateIncidentState(erased), erased, 'standalone shape matches a legitimate bind-before-attempt state')
+  assert.throws(() => commitIncidentState(path, erased, { expectedHash: receipt.hash }), /invalid notification delivery transition/)
 })
 
 test('protected control tree rejects symlink and writable ancestors before any receipt write', async () => {

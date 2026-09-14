@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto'
 import { resolveProductionLayout } from '../../src/paths.js'
 import { assertSchedulerStartupReady, createSchedulerHealthRuntime } from '../../src/scheduler/health-runtime.js'
 import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
-import { bindNotificationDelivery, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
+import { bindNotificationDelivery, markNotificationDelivery, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
 import { providerIdempotencyKey, stableNotificationText } from '../../../scheduler/src/watchdog/delivery.js'
 
 const RUNTIME_SHA = '1234567890abcdef1234567890abcdef12345678'
@@ -87,6 +87,23 @@ test('persisted delivery binding from an impossible future makes canonical healt
   const health = await createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA, nowMs: () => 100 }).read()
   assert.equal(health.complete, false)
   assert.match(health.censusError, /binding time is invalid/)
+})
+
+test('persisted attempted intent relabeled PENDING makes canonical health incomplete before any delivery path', async () => {
+  const { layout, routingSecurity, credentialStoreFile } = await fixture()
+  const [incident] = compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents
+  const opened = updateIncidentState({}, [incident], { nowMs: 1 })
+  const key = Object.keys(opened.state.outbox)[0]
+  const routingSha256 = createHash('sha256').update(await readFile(layout.schedulerRoutingManifest)).digest('hex')
+  const bound = bindNotificationDelivery(opened.state, key, { producer: opened.state.outbox[key].producer,
+    route: { channel: 'feishu', to: 'ops' }, routeSource: 'canonicalOpsTarget', routingSha256,
+    payload: stableNotificationText(opened.state.outbox[key]), providerKey: providerIdempotencyKey(key) }, 2)
+  const regressed = markNotificationDelivery(bound, key, 'OUTCOME_UNKNOWN', 3)
+  regressed.outbox[key].delivery = 'PENDING'; regressed.incidents[incident.rootIdentity].alertState.delivery = 'PENDING'
+  await writeFile(layout.schedulerIncidentState, JSON.stringify(regressed), { mode: 0o600 })
+  const health = await createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA, nowMs: () => 4 }).read()
+  assert.equal(health.complete, false)
+  assert.match(health.censusError, /delivery chronology/)
 })
 
 test('T29 arbitrary runtime provenance cannot produce complete=true', async () => {

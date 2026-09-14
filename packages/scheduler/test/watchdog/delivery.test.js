@@ -100,4 +100,8 @@ test('T21 malformed attempted notification fails closed instead of disappearing 
   assert.throws(() => retryableOutboxIntents({ outbox: {
     malformed: { notificationKey: 'a'.repeat(64), producer: 'w1', delivery: 'OUTCOME_UNKNOWN' },
   } }), /requires immutable binding and firstDeliveryAttemptAt/)
+  assert.throws(() => retryableOutboxIntents({ outbox: {
+    regressed: { notificationKey: 'b'.repeat(64), producer: 'w1', delivery: 'PENDING',
+      deliveryBinding: {}, firstDeliveryAttemptAt: 2, deliveryUpdatedAt: 3 },
+  } }), /requires immutable binding and firstDeliveryAttemptAt/)
 })

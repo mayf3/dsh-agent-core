@@ -279,7 +279,9 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
           routeSource: routeDecision.routeSource, routingSha256,
           providerKey: providerIdempotencyKey(notification.notificationKey),
         }, nowMs)
-        persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
+        if (intent.delivery !== 'FAILED') {
+          persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
+        }
       }
       if (intent.delivery === 'OUTCOME_UNKNOWN') {
         delivered = await recoverNotificationDelivery(intent, {
