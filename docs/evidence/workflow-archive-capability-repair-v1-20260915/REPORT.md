@@ -109,3 +109,26 @@ readback：ARCHIVE_RESULT=PASS、archived_at != null、cancel 历史（cancelled
 raw DB archive=NO（全程只读 SELECT）；物理删除=无；recreate=无；fake transition=无；
 DOMAIN_OWNER 变更=无（22:58 的 owner replace 是本 incident 之前的独立授权操作）；
 coordinator authority 未扩；六条 cancellation 状态全保留。
+
+## 11. CANARY 结果（2026-09-15 05:07，Owner 飞书触发 agt_cto-agent 执行）
+
+- de9a45aa：svc receipt ARCHIVE_WORKFLOW_INSTANCE COMPLETED/200 @05:07:26
+  （principal 4e5a4578，replayed=false，state v10→v11 = 仅 archive 事件追加）；
+  DB readback：archived_at=2026-09-15 05:07:26，archive_reason=packet 原文，
+  cancelled_at/cancel_reason（09-14 23:12:38 原文）完整保留。
+- 25cefee7：COMPLETED/200 @05:07:38（v2→v3）；archived_at=05:07:38，cancel 历史
+  （08-05 08:47:00）保留。
+- 其余 4 条零触碰（archived_at 仍为 8 月原值）；域内零新实例。
+- 备注：CTO agent 回读"未见 archived_at"属合同正常——archive/cancel 响应信封按
+  CTR-012 为 {workflowInstanceId, workflowStateVersion, eventSequence, replayed}，
+  archived_at 在 detail 投影；DB 层已独立确证。
+
+## 12. DONE_WHEN 终态
+
+INVALID_ARGUMENTS_ROOT_CAUSE=KNOWN / SOURCE_ARCHIVE_SCHEMA=PASS /
+DEPLOYED_ARCHIVE_SCHEMA=PASS（manifest 面；registry.js 部署 drift 记债需 broker 刷新授权）/
+MODEL_VISIBLE_ARCHIVE_SCHEMA=PASS（修复分支 7a258ec；runtime 刷新前生产面仍旧缺陷）/
+ARCHIVE_REQUEST_MAPPING=PASS / ARCHIVE_ERROR_PROPAGATION=PASS（修复分支测试钉死）/
+CANARY_ARCHIVE=PASS / SIX_CANCELLED_INSTANCES: ARCHIVED=6/6 /
+OTHER_INSTANCE_MUTATION=0 / RAW_DB_WRITE=NO / BLOCKERS=NONE
+
