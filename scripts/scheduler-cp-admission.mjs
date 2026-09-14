@@ -58,6 +58,7 @@ import {
   reExportsWithoutLocalBinding,
 } from './lib/admission-lib.mjs'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
+import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
 
 const args = process.argv.slice(2)
 const has = (name) => args.includes(name)
@@ -84,7 +85,7 @@ const git = (argv, opts = {}) => execFileSync('git', ['-c', `safe.directory=${RE
 
 const CTX = MODE === 'selftest'
   ? {
-      liveRoot: '', storePath: '', artifacts: '', binSymlink: '', launchctl: '', ownerChat: '', launchdDir: '',
+      liveRoot: '', storePath: '', artifacts: '', binSymlink: '', launchctl: '', routingManifest: '', launchdDir: '',
       gitShow: (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
       gitHash: (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
       kickstart: (label) => CTX.launchctlShim('kickstart', label),
@@ -104,7 +105,7 @@ const CTX = MODE === 'selftest'
       evidenceFile: '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl',
       binSymlink: '/usr/local/bin/agentcore-cron',
       launchctl: 'launchctl',
-      ownerChat: process.env.SCHEDULER_WATCHDOG_ALERT_TO ?? '',
+      routingManifest: '/usr/local/libexec/agent-core/config/scheduler-routing.json',
       gitShow: (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
       gitHash: (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
       kickstart: (label) => execFileSync('launchctl', ['kickstart', '-k', label], { stdio: ['ignore', 'pipe', 'pipe'] }),
@@ -167,11 +168,7 @@ async function backfillAndFreeze(doc, matched) {
   mkdirSync(dirname(CTX.desiredPath), { recursive: true })
   writeFileSync(CTX.desiredPath, `${JSON.stringify(desired, null, 2)}\n`)
   phase('desired-state', true, `${desired.jobs.length} critical(s) frozen at ${CTX.desiredPath}`)
-  return { desired, alertTo: (() => {
-    const daily = matched.daily.jobs[0]
-    const to = daily?.delivery?.to
-    return typeof to === 'string' && to.startsWith('chat:') ? to.slice(5) : CTX.ownerChat
-  })() }
+  return { desired }
 }
 
 // ── source overlay ───────────────────────────────────────────────────────────
@@ -268,46 +265,8 @@ function brokerBootRehearsal() {
 }
 
 // ── plist env + one kickstart ────────────────────────────────────────────────
-function runtimeRestart(alertTo) {
-  const plistPath = join(CTX.launchdDir, 'ai.agent-core.runtime.plist')
-  const preimage = join(CTX.artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
-  mkdirSync(dirname(preimage), { recursive: true })
-  if (!existsSync(preimage)) execFileSync('cp', [plistPath, preimage])
-  let plist = readFileSync(plistPath, 'utf8')
-  const envAdds = {
-    AGENTCORE_EXPECTED_STORE: '/Users/authsvc/.agent-core/scheduler/jobs.json',
-    SCHEDULER_RECONCILIATION_EVIDENCE_FILE: '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl',
-  }
-  let dirty = false
-  for (const [key, v] of Object.entries(envAdds)) {
-    if (!plist.includes(`<key>${key}</key>`)) {
-      plist = plist.replace('<key>HOME</key>', `<key>${key}</key><string>${v}</string>\n\t\t<key>HOME</key>`)
-      dirty = true
-    }
-  }
-  if (dirty) {
-    const tmp = `${plistPath}.incoming`
-    writeFileSync(tmp, plist)
-    execFileSync('mv', [tmp, plistPath])
-  }
-  CTX.kickstart('system/ai.agent-core.runtime')
-  // health wait
-  const deadline = Date.now() + 60_000
-  let healthy = false
-  while (Date.now() < deadline) {
-    try {
-      const res = JSON.parse(execFileSync('curl', ['-s', '-m', '3', 'http://127.0.0.1:8790/health'], { encoding: 'utf8' }))
-      if (res?.ok === true) { healthy = true; break }
-    } catch { /* retry */ }
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000)
-  }
-  if (!healthy) {
-    // HEALTH-TIMEOUT IS A FAILURE (2026-09-09 lesson: recording ok and
-    // continuing let the engine crash-loop invisibly through later phases).
-    phase('runtime', false, 'health TIMEOUT after kickstart — RUN ROLLBACK NOW: sudo node scripts/scheduler-cp-rollback.mjs (preimages are in place)')
-  }
-  phase('runtime', true, `plist env ${dirty ? 'patched' : 'already present'}; kickstart; health=ok${alertTo && !CTX.ownerChat ? `; alertTo derived from critical daily job (${alertTo})` : ''}`)
-  return { healthy }
+function runtimeRestart() {
+  return restartSchedulerProductionRuntime({ ctx: CTX, phase })
 }
 
 // ── sealed operator generation ───────────────────────────────────────────────
@@ -377,15 +336,20 @@ function operatorGeneration() {
 }
 
 // ── watchdog install ─────────────────────────────────────────────────────────
-function watchdogInstall(alertTo) {
+function watchdogInstall() {
   const stateDir = CTX.watchdogStateDir
   mkdirSync(stateDir, { recursive: true })
   try { CTX.chown(stateDir, 'authsvc', 'staff') } catch (error) { if (MODE === 'apply') throw error }
   // Issue 3 provisioning closure (RUNBOOK §7-authorized): see lib module.
   repairWatchdogEvidenceChannel({ ctx: CTX, mode: MODE, phase, execFileSync })
   const tmplDir = join(REPO_ROOT, 'deployment-artifacts', 'scheduler-control-plane-reliability-v1')
+  if (!existsSync(CTX.routingManifest)) phase('watchdog', false, 'canonical Scheduler routing manifest missing; no business-chat fallback')
+  const incidentOwner = statSync(stateDir)
+  const runtimeReaderGid = incidentOwner.gid
+  if (!Number.isInteger(runtimeReaderGid)) phase('watchdog', false, 'unable to resolve exact authsvc reader gid')
   const fill = (tmpl) => tmpl
-    .replace('__OWNER_CHAT_ID__', alertTo || CTX.ownerChat)
+    .replaceAll('__AUTHSVC_UID__', String(incidentOwner.uid))
+    .replaceAll('__AUTHSVC_GID__', String(runtimeReaderGid))
   for (const [role, label] of [['w1', 'ai.agent-core.scheduler-watchdog-w1'], ['w2', 'ai.agent-core.scheduler-watchdog-w2']]) {
     const tmpl = fill(readFileSync(join(tmplDir, `ai.agent-core.scheduler-watchdog-${role}.plist.tmpl`), 'utf8'))
     const plist = join(CTX.launchdDir, `${label}.plist`)
@@ -439,12 +403,12 @@ async function main() {
     overlay() // plan mode prints only
     return
   }
-  const { alertTo } = await backfillAndFreeze(doc, matched)
+  await backfillAndFreeze(doc, matched)
   overlay()
   brokerBootRehearsal()
-  runtimeRestart(alertTo)
+  runtimeRestart()
   operatorGeneration()
-  watchdogInstall(alertTo)
+  watchdogInstall()
   await proofs()
   writeFileSync(join(CTX.artifactsDir, 'terminal-receipt.json'), `${JSON.stringify({ ...receipts, finishedAt: new Date().toISOString() }, null, 2)}\n`)
   process.stdout.write(`[admission] TERMINAL RECEIPT written: ${join(CTX.artifactsDir, 'terminal-receipt.json')}\n`)
@@ -496,13 +460,14 @@ if (MODE === 'selftest') {
     launchctlShim: (op, rest) => execFileSync(process.execPath, [shim, op, rest], { env: { ...process.env, SHIM_LOG: join(fx, 'launchctl-calls.log') } }),
     chown: () => {},
     asAuthsvc: () => JSON.stringify({ jobs: JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.map((j) => ({ id: j.id })) }),
-    ownerChat: '',
+    routingManifest: join(fx, 'config', 'scheduler-routing.json'),
   })
   CTX.kickstart = (label) => CTX.launchctlShim('kickstart', label)
   CTX.bootstrap = (plist, label) => CTX.launchctlShim('bootstrap', plist)
   // fixture credential provider for the existence-only CREDENTIAL_PROVIDER gate
   mkdirSync(join(fx, 'config'), { recursive: true })
   writeFileSync(join(fx, 'config', 'agent-credentials.json'), '{}\n')
+  writeFileSync(CTX.routingManifest, `${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
   CTX.credentialsProviderPath = join(fx, 'config', 'agent-credentials.json')
   const REPO_ROOT2 = REPO_ROOT
   CTX.gitShow = (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8' })

@@ -25,7 +25,7 @@
  * Config (env): SCHEDULER_WATCHDOG_ROLE (w1|w2), SCHEDULER_WATCHDOG_STORE,
  * SCHEDULER_DESIRED_STATE, SCHEDULER_WATCHDOG_STATE_DIR, SCHEDULER_HEALTH_URL,
  * FEISHU_CREDS_PATH, SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS,
- * SCHEDULER_WATCHDOG_ALERT_TO (chat id).
+ * SCHEDULER_ROUTING_MANIFEST (deployment-owned protected routing config).
  *
  * Usage: scheduler-watchdog.mjs [--role w1|w2] [--dry-run]
  */
@@ -50,7 +50,8 @@ const SHARED_STATE_DIR = process.env.SCHEDULER_WATCHDOG_STATE_DIR
 const STATE_DIR = SHARED_STATE_DIR
 const HEALTH_URL = process.env.SCHEDULER_HEALTH_URL ?? 'http://127.0.0.1:8790/health'
 const FEISHU_CREDS = process.env.FEISHU_CREDS_PATH ?? (ROLE === 'w1' ? '/Users/authsvc/.dsh/feishu-creds.json' : undefined)
-const ALERT_TO = process.env.SCHEDULER_WATCHDOG_ALERT_TO ?? ''
+const ROUTING_MANIFEST = process.env.SCHEDULER_ROUTING_MANIFEST
+  ?? '/usr/local/libexec/agent-core/config/scheduler-routing.json'
 // Per-direction grace: each side allows 3x the PEER's launchd period.
 const HEARTBEAT_GRACE_MS = Number(process.env.SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS
   ?? (ROLE === 'w1' ? 45 * 60 * 1000 : 30 * 60 * 1000))
@@ -63,15 +64,14 @@ const HEARTBEAT_GRACE_MS = Number(process.env.SCHEDULER_WATCHDOG_HEARTBEAT_GRACE
 // goal exists to prevent.
 const CREDENTIAL_FILE = process.env.SCHEDULER_CREDENTIALS_FILE
   ?? '/usr/local/libexec/agent-core/config/agent-credentials.json'
-const ALERT_STATE_FILE = process.env.SCHEDULER_WATCHDOG_ALERT_STATE
-  ?? join(STATE_DIR, 'alert-state.json')
-const ALERT_REMINDER_MS = Number(process.env.SCHEDULER_WATCHDOG_REMINDER_MS ?? 60 * 60 * 1000)
+const INCIDENT_STATE_FILE = process.env.SCHEDULER_INCIDENT_STATE
+  ?? join(STATE_DIR, 'incidents.json')
 const RECONCILIATION_EVIDENCE = process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE
   ?? '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl'
 const W1_HEARTBEAT = join(STATE_DIR, 'w1.heartbeat')
 const W2_HEARTBEAT = join(STATE_DIR, 'w2.heartbeat')
 const EVIDENCE_LOG = join(STATE_DIR, 'scheduler-watchdog-evidence.jsonl')
-const ALERT_FALLBACK = join(STATE_DIR, 'pending-alert.txt')
+const LOCAL_OPS_SINK = join(STATE_DIR, 'local-ops.jsonl')
 
 const usage = () => {
   process.stderr.write('usage: scheduler-watchdog.mjs --role w1|w2 [--dry-run]\n')
@@ -82,7 +82,7 @@ if (!['w1', 'w2'].includes(ROLE) || (ROLE === 'w1' && !STORE)) usage()
 function heartbeatPathFor(role) { return role === 'w1' ? W1_HEARTBEAT : W2_HEARTBEAT }
 
 function touchHeartbeat(role, nowMs) {
-  mkdirSync(STATE_DIR, { recursive: true })
+  mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 })
   writeFileSync(heartbeatPathFor(role), `${JSON.stringify({ role, ts: nowMs })}\n`)
 }
 
@@ -96,17 +96,17 @@ function readHeartbeatAgeMs(path, nowMs) {
 
 function writeEvidence(event) {
   try {
-    mkdirSync(STATE_DIR, { recursive: true })
+    mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 })
     appendFileSync(EVIDENCE_LOG, `${JSON.stringify({ ...event, ts: Date.now() })}\n`)
   } catch { /* evidence is best-effort; never crash the watchdog on its own log */ }
 }
 
-async function feishuAlert(text) {
+async function feishuAlert(text, { to, notificationKey }) {
   if (DRY_RUN) {
     process.stdout.write(`[watchdog dry-run] alert suppressed:\n${text}\n`)
     return true
   }
-  if (!FEISHU_CREDS || !ALERT_TO) throw new Error('feishu alert channel not configured (FEISHU_CREDS_PATH / SCHEDULER_WATCHDOG_ALERT_TO)')
+  if (!FEISHU_CREDS || !to) throw new Error('feishu alert channel or authorized route not configured')
   const creds = JSON.parse(readFileSync(FEISHU_CREDS, 'utf8'))
   // 3 attempts with backoff: transient network blips must not lose an alert
   // (the park-file fallback remains for total delivery failure).
@@ -120,10 +120,12 @@ async function feishuAlert(text) {
       })
       const token = await tokenRes.json()
       if (!token.tenant_access_token) throw new Error(`feishu token request failed: ${token.code ?? '?'}`)
-      const sendRes = await fetch('https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      const { buildIdempotentFeishuRequest } = await import('../packages/scheduler/src/watchdog/delivery.js')
+      const request = buildIdempotentFeishuRequest(notificationKey, { receiveId: to, text })
+      const sendRes = await fetch(request.url, {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${token.tenant_access_token}` },
-        body: JSON.stringify({ receive_id: ALERT_TO, msg_type: 'text', content: JSON.stringify({ text }) }),
+        body: JSON.stringify(request.body),
       })
       const sent = await sendRes.json()
       if (sent.code !== 0) throw new Error(`feishu send failed: ${sent.code} ${sent.msg ?? ''}`)
@@ -136,17 +138,21 @@ async function feishuAlert(text) {
   throw lastError
 }
 
-async function deliverOrPark(text) {
+async function deliverOrPark(text, { route, notificationKey }) {
   try {
-    await feishuAlert(text)
+    await feishuAlert(text, { to: route?.to, notificationKey })
     return 'feishu_sent'
   } catch (error) {
-    // Last resort: park the alert on disk and exit non-zero (launchd-visible).
+    // Durable local Scheduler ops sink supplements fail-loud delivery. It is
+    // never treated as a successful replacement route.
     try {
-      mkdirSync(STATE_DIR, { recursive: true })
-      writeFileSync(ALERT_FALLBACK, `${text}\n\n(delivery failure: ${error?.message ?? error})\n`)
+      const { appendPrivateJsonl } = await import('../packages/scheduler/src/watchdog/durable-state.js')
+      appendPrivateJsonl(LOCAL_OPS_SINK, { notificationKey, at: Date.now(), delivery: 'OUTCOME_UNKNOWN', error: String(error?.message ?? error).slice(0, 160) }, {
+        expectedUid: Number(process.env.SCHEDULER_INCIDENT_OWNER_UID ?? process.getuid?.()),
+        expectedGid: Number(process.env.SCHEDULER_INCIDENT_OWNER_GID ?? process.getgid?.()),
+      })
     } catch { /* ignore */ }
-    writeEvidence({ kind: 'alert_delivery_failed', error: String(error?.message ?? error) })
+    writeEvidence({ kind: 'alert_delivery_outcome_unknown', notificationKey, error: String(error?.message ?? error) })
     return 'delivery_failed'
   }
 }
@@ -170,11 +176,78 @@ function evidenceAgeMs(nowMs) {
   return nowMs - statSync(path).mtimeMs
 }
 
+async function processIncidentNotifications(findings, { nowMs, role, doc = { jobs: [] } }) {
+  const {
+    commitIncidentState, loadIncidentState, markNotificationDelivery,
+    readProtectedRoutingManifest, resolveNotificationRoute, retryableOutboxIntents,
+    stableNotificationText, updateAlertState,
+  } = await import('../packages/scheduler/src/watchdog/index.js')
+  const incidentOwnership = {
+    expectedUid: Number(process.env.SCHEDULER_INCIDENT_OWNER_UID ?? process.getuid?.()),
+    expectedGid: Number(process.env.SCHEDULER_INCIDENT_OWNER_GID ?? process.getgid?.()),
+  }
+  const loaded = loadIncidentState(INCIDENT_STATE_FILE, incidentOwnership)
+  const transition = updateAlertState(loaded.state, findings, { nowMs })
+  let persisted = commitIncidentState(INCIDENT_STATE_FILE, transition.state, { expectedHash: loaded.hash, ...incidentOwnership })
+  const retryable = retryableOutboxIntents(transition.state, { nowMs })
+  if (retryable.length === 0) return { outcome: 'suppressed_or_healthy', transition }
+  let outcome = 'feishu_sent'
+  let currentState = transition.state
+  for (const intent of retryable) {
+    const notification = {
+      fingerprint: intent.incident.rootIdentity,
+      kind: intent.transitionKind === 'OPEN' ? 'new'
+        : intent.transitionKind === 'CLOSED_ACKNOWLEDGED' ? 'acknowledged' : 'recovered',
+      finding: intent.incident.facts?.[0] ?? { class: intent.incident.rootCauseClass },
+      notificationKey: intent.notificationKey,
+      routeClass: intent.routeClass,
+    }
+    let manifest = null
+    try {
+      const configuredGid = Number(process.env.SCHEDULER_ROUTING_READER_GID)
+      const allowedGids = [...new Set([
+        ...(typeof process.getgroups === 'function' ? process.getgroups() : []),
+        ...(Number.isInteger(configuredGid) ? [configuredGid] : []),
+      ])]
+      manifest = readProtectedRoutingManifest(ROUTING_MANIFEST, {
+        expectedUid: Number(process.env.SCHEDULER_ROUTING_OWNER_UID ?? 0),
+        allowedGids,
+        maxMode: 0o640,
+      }).manifest
+    } catch (error) {
+      writeEvidence({ kind: 'routing_manifest_unavailable', error: String(error?.message ?? error) })
+    }
+    const job = doc.jobs?.find((candidate) => candidate.id === notification.finding?.jobId)
+    const routeDecision = resolveNotificationRoute({ routeClass: notification.routeClass, job, manifest })
+    if (!routeDecision.route && intent.delivery !== 'PENDING') {
+      outcome = 'delivery_failed'
+      continue
+    }
+    const text = stableNotificationText(intent)
+    const delivered = routeDecision.route
+      ? await deliverOrPark(text, { route: routeDecision.route, notificationKey: notification.notificationKey })
+      : 'delivery_failed'
+    const deliveryState = delivered === 'feishu_sent' ? 'DELIVERED' : (routeDecision.route ? 'OUTCOME_UNKNOWN' : 'FAILED')
+    currentState = markNotificationDelivery(currentState, notification.notificationKey, deliveryState, Date.now())
+    persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
+    if (delivered !== 'feishu_sent') {
+      outcome = 'delivery_failed'
+      if (!routeDecision.route && intent.delivery !== 'FAILED') {
+        try {
+          const { appendPrivateJsonl } = await import('../packages/scheduler/src/watchdog/durable-state.js')
+          appendPrivateJsonl(LOCAL_OPS_SINK, { notificationKey: notification.notificationKey, at: Date.now(), delivery: 'FAILED', reason: routeDecision.reason ?? 'canonical ops route unavailable' }, incidentOwnership)
+        } catch { /* the nonzero outcome remains authoritative */ }
+      }
+    }
+  }
+  return { outcome, transition }
+}
+
 async function runW1(nowMs) {
   const { readFileSync: readRaw } = await import('node:fs')
   const { createHash } = await import('node:crypto')
-  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, evaluateReconciliationEvidence, evaluateCredentialProvider, updateAlertState, formatFindings } =
-    await import('../packages/scheduler/src/watchdog.js')
+  const { parseDesiredState, evaluateDesiredState, evaluateRunHealth, evaluateReconciliationEvidence, evaluateCredentialProvider } =
+    await import('../packages/scheduler/src/watchdog/index.js')
   const findings = []
   // Desired-state vs live state (raw file read — no engine, no migration side effects).
   let doc = { jobs: [], occurrences: [] }
@@ -221,58 +294,45 @@ async function runW1(nowMs) {
     findings.push({ class: 'SCHEDULER_WATCHDOG_W2_FAILURE', reason: `W2 heartbeat stale or missing (ageMs=${w2Age === null ? 'missing' : w2Age})` })
   }
 
-  // ── alert-storm hardening: dedupe Owner notifications by fingerprint; every
-  // evaluation is still receipted in the evidence log below.
-  let alertState = {}
-  try {
-    alertState = JSON.parse(readFileSync(ALERT_STATE_FILE, 'utf8'))
-  } catch { /* first run or unparsable -> fresh */ }
-  const transition = updateAlertState(alertState, findings, { nowMs, reminderIntervalMs: ALERT_REMINDER_MS })
+  const processed = await processIncidentNotifications(findings, { nowMs, role: 'w1', doc })
   touchHeartbeat('w1', nowMs)
   writeEvidence({
     kind: 'w1_run', findingCount: findings.length, classes: findings.map((f) => f.class),
-    notifications: transition.notifications.map((n) => ({ fingerprint: n.fingerprint, kind: n.kind })),
+    notifications: processed.transition.notifications.map((n) => ({ rootIdentity: n.fingerprint, kind: n.kind, notificationKey: n.notificationKey })),
     desiredStateSha256: desiredSha256,
   })
-  if (transition.notifications.length === 0) return 'suppressed_or_healthy'
-  const render = (n) => {
-    const f = n.finding
-    const coordinates = [f.logicalKey, f.jobId, f.runId, f.occurrenceId].filter(Boolean).join(' ')
-    const body = f.detail ?? f.reason ?? ''
-    // ✅ prefix + Chinese gloss: a recovery confirmation must be distinguishable
-    // from an alert at a glance (2026-09-09: the plain RECOVERED line was twice
-    // misread as a new failure by the Owner).
-    if (n.kind === 'recovered') return `- ✅ RECOVERED (已恢复，无需处理) [${n.fingerprint}] the earlier ${f.class} is no longer present`
-    // ALERT LIFECYCLE (SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1): a formal
-    // operator disposition closed this exact incident — exactly-once closure note;
-    // the failure fact stays durable in the evidence log.
-    if (n.kind === 'acknowledged') return `- ✅ ACKNOWLEDGED (已处置，无需处理) [${n.fingerprint}] the earlier ${f.class} has a formal operator disposition (basis=operator-reconcile) — this incident is closed; the failure fact remains in the evidence log`
-    return `- ${n.kind === 'new' ? 'NEW' : n.kind === 'reminder' ? 'REMINDER (bounded)' : 'UPDATED'} ${f.class}${coordinates ? ` [${coordinates}]` : ''} ${body}`
-  }
-  const text = `Scheduler watchdog W1 ${transition.notifications.length} notification(s) @ ${new Date(nowMs).toISOString()}\n${transition.notifications.map(render).join('\n')}`
-  const alertOutcome = await deliverOrPark(text)
-  mkdirSync(STATE_DIR, { recursive: true })
-  writeFileSync(ALERT_STATE_FILE, `${JSON.stringify(transition.state, null, 2)}\n`)
-  writeEvidence({ kind: 'w1_alerts_delivered', count: transition.notifications.length, alertOutcome })
-  return alertOutcome
+  writeEvidence({ kind: 'w1_incident_delivery', count: processed.transition.notifications.length, outcome: processed.outcome })
+  return processed.outcome
 }
 
 async function runW2(nowMs) {
-  const { formatFindings } = await import('../packages/scheduler/src/watchdog.js')
   const age = readHeartbeatAgeMs(W1_HEARTBEAT, nowMs)
   const stale = age === null || age > HEARTBEAT_GRACE_MS
   touchHeartbeat('w2', nowMs)
   writeEvidence({ kind: 'w2_run', w1HeartbeatAgeMs: age, stale })
-  if (!stale) return 'ok'
-  return deliverOrPark(formatFindings(
-    [{ class: 'SCHEDULER_WATCHDOG_FAILURE', reason: `W1 heartbeat stale or missing (ageMs=${age === null ? 'missing' : age})` }],
-    { role: 'W2', nowMs },
-  ))
+  const findings = stale
+    ? [{ class: 'SCHEDULER_WATCHDOG_FAILURE', reason: `W1 heartbeat stale or missing (ageMs=${age === null ? 'missing' : age})`, subjectKind: 'watchdog', stableSubjectId: 'watchdog:w1' }]
+    : []
+  return (await processIncidentNotifications(findings, { nowMs, role: 'w2' })).outcome
 }
 
 if (DELIVER_TEST) {
   ;(async () => {
-    try { await feishuAlert(`Scheduler watchdog delivery test @ ${new Date().toISOString()} — W1/W2 alerting live.`); process.stdout.write('[deliver-test] SENT\n'); process.exit(0) }
+    try {
+      const { createHash } = await import('node:crypto')
+      const { readProtectedRoutingManifest, resolveNotificationRoute } = await import('../packages/scheduler/src/watchdog/index.js')
+      const configuredGid = Number(process.env.SCHEDULER_ROUTING_READER_GID)
+      const manifest = readProtectedRoutingManifest(ROUTING_MANIFEST, {
+        expectedUid: Number(process.env.SCHEDULER_ROUTING_OWNER_UID ?? 0),
+        allowedGids: [...new Set([...(process.getgroups?.() ?? []), ...(Number.isInteger(configuredGid) ? [configuredGid] : [])])],
+        maxMode: 0o640,
+      }).manifest
+      const decision = resolveNotificationRoute({ routeClass: 'SCHEDULER_CONTROL_PLANE_INCIDENT', manifest })
+      if (!decision.route) throw new Error('canonical Scheduler ops target unavailable')
+      const notificationKey = createHash('sha256').update(`delivery-test:${Date.now()}`).digest('hex')
+      await feishuAlert(`Scheduler watchdog delivery test @ ${new Date().toISOString()} — W1/W2 alerting live.`, { to: decision.route.to, notificationKey })
+      process.stdout.write('[deliver-test] SENT\n'); process.exit(0)
+    }
     catch (e) { process.stderr.write(`[deliver-test] FAILED: ${String(e?.message ?? e).slice(0, 200)}\n`); process.exit(1) }
   })()
 } else {

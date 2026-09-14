@@ -48,3 +48,10 @@ export {
   buildRunRecord, applyRunFilters, HISTORY_OUTCOMES, STATUS_VIEW_VOCABULARY,
   ERROR_CODES, RESULT_ERROR_CODES, RESULT_STATUSES,
 } from './history.js'
+export * from './watchdog/incident-compiler.js'
+export * from './watchdog/incident-lifecycle.js'
+export * from './watchdog/routing.js'
+export * from './watchdog/reconciliation.js'
+export * from './watchdog/health.js'
+export * from './watchdog/durable-state.js'
+export * from './watchdog/delivery.js'
