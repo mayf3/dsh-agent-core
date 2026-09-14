@@ -2,7 +2,10 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-export function restartSchedulerProductionRuntime({ ctx, phase }) {
+export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
+  if (!/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)) {
+    throw new TypeError('runtime restart requires exact deployed SHA and authsvc ownership coordinates')
+  }
   const plistPath = join(ctx.launchdDir, 'ai.agent-core.runtime.plist')
   const preimage = join(ctx.artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
   mkdirSync(dirname(preimage), { recursive: true })
@@ -13,10 +16,19 @@ export function restartSchedulerProductionRuntime({ ctx, phase }) {
     SCHEDULER_RECONCILIATION_EVIDENCE_FILE: '/usr/local/var/scheduler-watchdog/reconciliation-evidence.jsonl',
     SCHEDULER_ROUTING_MANIFEST: '/usr/local/libexec/agent-core/config/scheduler-routing.json',
     SCHEDULER_ROUTING_OWNER_UID: '0',
+    SCHEDULER_ROUTING_READER_GID: String(ctx.authsvcGid),
+    SCHEDULER_INCIDENT_OWNER_UID: String(ctx.authsvcUid),
+    SCHEDULER_INCIDENT_OWNER_GID: String(ctx.authsvcGid),
+    AGENT_CORE_DEPLOYED_SHA: sourceSha,
   }
   let dirty = false
   for (const [key, value] of Object.entries(envAdds)) {
-    if (!plist.includes(`<key>${key}</key>`)) {
+    const pair = new RegExp(`<key>${key}</key>\\s*<string>[^<]*</string>`)
+    const replacement = `<key>${key}</key><string>${value}</string>`
+    if (pair.test(plist)) {
+      const updated = plist.replace(pair, replacement)
+      if (updated !== plist) { plist = updated; dirty = true }
+    } else {
       plist = plist.replace('<key>HOME</key>', `<key>${key}</key><string>${value}</string>\n\t\t<key>HOME</key>`)
       dirty = true
     }
@@ -25,6 +37,10 @@ export function restartSchedulerProductionRuntime({ ctx, phase }) {
     const tmp = `${plistPath}.incoming`
     writeFileSync(tmp, plist)
     execFileSync('mv', [tmp, plistPath])
+  }
+  const installed = readFileSync(plistPath, 'utf8')
+  for (const [key, value] of Object.entries(envAdds)) {
+    if (!installed.includes(`<key>${key}</key><string>${value}</string>`)) throw new Error(`runtime plist readback mismatch for ${key}`)
   }
   ctx.kickstart('system/ai.agent-core.runtime')
   const deadline = Date.now() + 60_000
@@ -40,5 +56,5 @@ export function restartSchedulerProductionRuntime({ ctx, phase }) {
     phase('runtime', false, 'health TIMEOUT after kickstart — RUN ROLLBACK NOW: sudo node scripts/scheduler-cp-rollback.mjs (preimages are in place)')
   }
   phase('runtime', true, `plist env ${dirty ? 'patched' : 'already present'}; kickstart; health=ok`)
-  return { healthy }
+  return { healthy, deployedSha: sourceSha }
 }

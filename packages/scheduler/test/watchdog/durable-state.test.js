@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import { chmod, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -46,6 +47,19 @@ test('T28 unsafe mode, symlink and concurrent lock fail loud without resetting s
   assert.throws(() => commitIncidentState(path, state(2), { expectedHash: loadIncidentState(path).hash }), /concurrent writer/)
 })
 
+test('T28 only a well-formed lock whose exact PID is proven dead may be reaped', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-stale-lock-'))
+  await chmod(dir, 0o700)
+  const path = join(dir, 'incidents.json')
+  commitIncidentState(path, state(1), { expectedHash: null })
+  const expectedHash = loadIncidentState(path).hash
+  await writeFile(`${path}.lock`, `${JSON.stringify({ pid: 2147483647, token: 'dead-owner' })}\n`, { mode: 0o600 })
+  commitIncidentState(path, state(2), { expectedHash })
+  assert.equal(loadIncidentState(path).state.revision, 2)
+  await writeFile(`${path}.lock`, `${JSON.stringify({ pid: 'not-a-pid', token: 'unknown-owner' })}\n`, { mode: 0o600 })
+  assert.throws(() => commitIncidentState(path, state(3), { expectedHash: loadIncidentState(path).hash }), /concurrent writer/)
+})
+
 test('T27 file migration freezes all sources, retains hash-addressed backups, and reads back exact state', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-'))
   await chmod(dir, 0o700)
@@ -53,7 +67,7 @@ test('T27 file migration freezes all sources, retains hash-addressed backups, an
   const evidencePath = join(dir, 'evidence.jsonl')
   const incidentPath = join(dir, 'incidents.json')
   const legacyBytes = Buffer.from(`${JSON.stringify({ active: { 'ADMISSION_BLOCKED_UNKNOWN|job-a|occ-a': { firstSeenAt: 1 } } })}\n`)
-  const evidenceBytes = Buffer.from('{"delivery":"DELIVERED"}\n')
+  const evidenceBytes = Buffer.from(`${JSON.stringify({ fingerprint: 'ADMISSION_BLOCKED_UNKNOWN|job-a|occ-a', delivery: 'DELIVERED', fact: { class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: 'job-a', occurrenceId: 'occ-a' } })}\n`)
   await writeFile(legacyPath, legacyBytes, { mode: 0o600 })
   await writeFile(evidencePath, evidenceBytes, { mode: 0o600 })
   const findings = [{ class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: 'job-a', occurrenceId: 'occ-a' }]
@@ -65,7 +79,6 @@ test('T27 file migration freezes all sources, retains hash-addressed backups, an
     expectedLegacySha256: sha(legacyBytes),
     expectedEvidenceSha256: sha(evidenceBytes),
     expectedFactsSha256: sha(Buffer.from(canonicalJSON(findings))),
-    deliveredFingerprints: new Set(['ADMISSION_BLOCKED_UNKNOWN|job-a|occ-a']),
     nowMs: 2,
   })
   assert.equal(Object.keys(result.state.incidents).length, 1)
@@ -81,7 +94,7 @@ test('T27 source drift aborts before incident-state commit', async () => {
   const evidencePath = join(dir, 'evidence.jsonl')
   const incidentPath = join(dir, 'incidents.json')
   const legacyBytes = Buffer.from(`${JSON.stringify({ active: { 'RUN_FAILED|job-a|occ-a': {} } })}\n`)
-  const evidenceBytes = Buffer.from('proof\n')
+  const evidenceBytes = Buffer.from(`${JSON.stringify({ fingerprint: 'RUN_FAILED|job-a|occ-a', delivery: 'DELIVERED', fact: { class: 'RUN_FAILED', jobId: 'job-a', occurrenceId: 'occ-a' } })}\n`)
   await writeFile(legacyPath, legacyBytes, { mode: 0o600 })
   await writeFile(evidencePath, evidenceBytes, { mode: 0o600 })
   const findings = [{ class: 'RUN_FAILED', jobId: 'job-a', occurrenceId: 'occ-a' }]
@@ -89,9 +102,29 @@ test('T27 source drift aborts before incident-state commit', async () => {
     legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath, findings,
     expectedLegacySha256: sha(legacyBytes), expectedEvidenceSha256: sha(evidenceBytes),
     expectedFactsSha256: sha(Buffer.from(canonicalJSON(findings))),
-    deliveredFingerprints: new Set(['RUN_FAILED|job-a|occ-a']),
     beforeCommit: () => writeFileSync(evidencePath, 'changed\n', { mode: 0o600 }),
   }), /source generation drifted/)
+  assert.equal(loadIncidentState(incidentPath).hash, null)
+})
+
+test('T27 migration derives delivery only from frozen evidence and rejects contradictions', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-conflict-'))
+  await chmod(dir, 0o700)
+  const legacyPath = join(dir, 'legacy.json')
+  const evidencePath = join(dir, 'evidence.jsonl')
+  const incidentPath = join(dir, 'incidents.json')
+  const fingerprint = 'RUN_FAILED|job-a|occ-a'
+  const fact = { class: 'RUN_FAILED', jobId: 'job-a', occurrenceId: 'occ-a' }
+  const legacyBytes = Buffer.from(`${JSON.stringify({ active: { [fingerprint]: {} } })}\n`)
+  const evidenceBytes = Buffer.from(`${JSON.stringify({ fingerprint, delivery: 'DELIVERED', fact })}\n${JSON.stringify({ fingerprint, delivery: 'FAILED', fact })}\n`)
+  await writeFile(legacyPath, legacyBytes, { mode: 0o600 })
+  await writeFile(evidencePath, evidenceBytes, { mode: 0o600 })
+  assert.throws(() => migrateLegacyIncidentStateFiles({
+    legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
+    findings: [fact], expectedLegacySha256: sha(legacyBytes), expectedEvidenceSha256: sha(evidenceBytes),
+    expectedFactsSha256: sha(Buffer.from(canonicalJSON([fact]))),
+    deliveredFingerprints: new Set([fingerprint]),
+  }), /duplicate or conflicting migration evidence/)
   assert.equal(loadIncidentState(incidentPath).hash, null)
 })
 
@@ -108,4 +141,40 @@ test('T30 local ops sink is private, no-follow, locked, and append durable', asy
   await writeFile(`${path}.lock`, 'owned-by-peer', { mode: 0o600 })
   assert.throws(() => appendPrivateJsonl(path, { incident: 'c' }), /concurrent writer/)
   assert.equal(await readFile(`${path}.lock`, 'utf8'), 'owned-by-peer')
+})
+
+test('T27 formal migration entrypoint consumes only frozen protected source files', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-cli-'))
+  await chmod(dir, 0o700)
+  const legacyPath = join(dir, 'legacy.json')
+  const evidencePath = join(dir, 'evidence.jsonl')
+  const factsPath = join(dir, 'facts.json')
+  const incidentPath = join(dir, 'incidents.json')
+  const fact = { class: 'RUN_FAILED', jobId: 'job-a', occurrenceId: 'occ-a' }
+  const fingerprint = 'RUN_FAILED|job-a|occ-a'
+  const legacyBytes = Buffer.from(`${JSON.stringify({ active: { [fingerprint]: { firstSeenAt: 1 } } })}\n`)
+  const evidenceBytes = Buffer.from(`${JSON.stringify({ fingerprint, delivery: 'DELIVERED', fact })}\n`)
+  const factsBytes = Buffer.from(`${JSON.stringify([fact])}\n`)
+  await writeFile(legacyPath, legacyBytes, { mode: 0o600 })
+  await writeFile(evidencePath, evidenceBytes, { mode: 0o600 })
+  await writeFile(factsPath, factsBytes, { mode: 0o600 })
+  const script = new URL('../../../../scripts/scheduler-watchdog.mjs', import.meta.url)
+  const output = execFileSync(process.execPath, [script.pathname, '--migrate-incident-state'], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      SCHEDULER_INCIDENT_STATE: incidentPath,
+      SCHEDULER_MIGRATION_FACTS_FILE: factsPath,
+      SCHEDULER_MIGRATION_FACTS_FILE_SHA256: sha(factsBytes),
+      SCHEDULER_MIGRATION_FACTS_SHA256: sha(Buffer.from(canonicalJSON([fact]))),
+      SCHEDULER_LEGACY_ALERT_STATE: legacyPath,
+      SCHEDULER_LEGACY_ALERT_STATE_SHA256: sha(legacyBytes),
+      SCHEDULER_LEGACY_DELIVERY_EVIDENCE: evidencePath,
+      SCHEDULER_LEGACY_DELIVERY_EVIDENCE_SHA256: sha(evidenceBytes),
+      SCHEDULER_INCIDENT_OWNER_UID: String(process.getuid()),
+      SCHEDULER_INCIDENT_OWNER_GID: String(process.getgid()),
+    },
+  })
+  assert.equal(JSON.parse(output).status, 'MIGRATED')
+  assert.equal(Object.keys(loadIncidentState(incidentPath).state.incidents).length, 1)
 })

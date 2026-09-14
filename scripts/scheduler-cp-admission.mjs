@@ -1,46 +1,10 @@
 #!/usr/bin/env node
 /**
- * scheduler-cp-admission — the CONSOLIDATED production admission runner
- * (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1, RUNBOOK §3 as one bounded gate).
- *
- * One Owner sudo grant executes every accepted reliability mechanism in
- * RUNBOOK order, each phase idempotent and receipted:
- *
- *   census    privileged raw read of the canonical store (message bodies
- *             never leave the host; census dump strips payload.message)
- *   criticals match the two directive-named critical jobs (exact predicates —
- *             abort unless exactly one match each)
- *   backfill  logicalKey assignment via updateJobOp (audited, revision-
- *             invariant asserted) — reuses the shipped backfill logic inline
- *   desired   freeze desired-state AS FOUND for the two criticals
- *   overlay   source overlay to the live app tree: EVERY differing/absent
- *             file under packages/ + scripts/ staged from SOURCE_SHA via
- *             git-show (worktree state irrelevant), preimage tar first,
- *             atomic temp+rename per file, uid/gid/mode preserved,
- *             deletions never planned
- *   runtime   plist env additions (AGENTCORE_EXPECTED_STORE,
- *             SCHEDULER_RECONCILIATION_EVIDENCE_FILE) + ONE kickstart -k +
- *             health wait
- *   operator  build a NEW sealed operator generation from SOURCE_SHA (full
- *             ESM closure, seal.json/manifest/receipts mirroring the
- *             stage-isolation format) + atomic symlink flip + sandboxed
- *             functional smoke
- *   watchdog  pre-create shared state dir AS authsvc, install W1/W2 plists
- *             (system domain), verify heartbeats
- *   proofs    G-gate receipts: CLI guard negative, canonical read-back via
- *             authsvc identity, readiness negative via unbound runtime, then
- *             the terminal receipt JSON
- *
- * Modes:
- *   --selftest   FULL flow against synthetic fixtures (fake live root, stub
- *                store, launchctl shim) — NO sudo, NO production contact.
- *                Must pass before the tool is handed to the Owner.
- *   --plan       read-only: census+match+overlay plan printed, zero writes
- *                (privileged store read still needs the sudo context)
- *   --apply      the real gate. Refuses to run unless euid == 0.
- *
- * Rollback: every phase writes preimages under <artifacts>/rollback/ and the
- * RUNBOOK §4 table maps each to its reversal.
+ * Consolidated, receipted Scheduler control-plane admission runner.
+ * Phases: census, exact critical matching, backfill/desired-state freeze,
+ * exact-goal overlay, protected routing install, runtime/operator cutover,
+ * watchdog install, and readback proofs. --selftest is fixture-only, --plan is
+ * read-only, and --apply requires root. Rollback preimages live in artifacts.
  */
 
 import { execFileSync } from 'node:child_process'
@@ -59,6 +23,7 @@ import {
 } from './lib/admission-lib.mjs'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
+import { installSchedulerRoutingManifest } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
 
 const args = process.argv.slice(2)
 const has = (name) => args.includes(name)
@@ -67,9 +32,12 @@ const val = (name) => {
   return idx >= 0 && args[idx + 1] ? args[idx + 1] : undefined
 }
 const MODE = has('--selftest') ? 'selftest' : has('--plan') ? 'plan' : has('--apply') ? 'apply' : undefined
-const SOURCE_SHA = val('--source-sha') ?? 'db93649'
-if (MODE === undefined || !/^[0-9a-f]{7,40}$/.test(SOURCE_SHA)) {
-  process.stderr.write('usage: scheduler-cp-admission --selftest | --plan | --apply [--source-sha <sha>]\n')
+const SOURCE_SHA = val('--source-sha')
+const ROUTING_SOURCE = val('--routing-manifest-source')
+const ROUTING_SHA256 = val('--routing-manifest-sha256')
+const GOAL_BASE_SHA = '68008e83142bdb637c4fa61c2a65db73c64b2eb1'
+if (MODE === undefined || !/^[0-9a-f]{40}$/.test(SOURCE_SHA ?? '')) {
+  process.stderr.write('usage: scheduler-cp-admission --selftest | --plan | --apply [--source-sha <sha>] [--routing-manifest-source <absolute>] [--routing-manifest-sha256 <sha256>]\n')
   process.exit(2)
 }
 
@@ -106,6 +74,10 @@ const CTX = MODE === 'selftest'
       binSymlink: '/usr/local/bin/agentcore-cron',
       launchctl: 'launchctl',
       routingManifest: '/usr/local/libexec/agent-core/config/scheduler-routing.json',
+      routingCandidate: ROUTING_SOURCE,
+      routingCandidateSha256: ROUTING_SHA256,
+      authsvcUid: Number(execFileSync('id', ['-u', 'authsvc'], { encoding: 'utf8' }).trim()),
+      authsvcGid: Number(execFileSync('id', ['-g', 'authsvc'], { encoding: 'utf8' }).trim()),
       gitShow: (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
       gitHash: (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
       kickstart: (label) => execFileSync('launchctl', ['kickstart', '-k', label], { stdio: ['ignore', 'pipe', 'pipe'] }),
@@ -182,7 +154,7 @@ function listLiveFiles(root, prefix = '') {
   return out
 }
 function overlay() {
-  const seedList = execFileSync('git', ['-C', REPO_ROOT, 'ls-tree', '-r', '--name-only', SOURCE_SHA, 'packages/broker/', 'packages/scheduler/'], { encoding: 'utf8' }).split('\n').filter(Boolean).filter((path) => inOverlayUniverse(path))
+  const seedList = git(['diff', '--name-only', GOAL_BASE_SHA, SOURCE_SHA, '--', 'packages/', 'scripts/'], { encoding: 'utf8' }).split('\n').filter(Boolean).filter((path) => inOverlayUniverse(path))
   const liveRootFiles = listLiveFiles(CTX.liveRoot)
   const liveSha = (path) => {
     const p = join(CTX.liveRoot, path)
@@ -229,7 +201,7 @@ function overlay() {
     }
     execFileSync('mv', [tmp, target])
   }
-  phase('overlay', true, `NARROW closure: ${all.length} files (update=${plan.update.length} add=${plan.add.length}); preimage=${changedExisting.length} files -> ${preimage}; production-runtime/** untouched`)
+  phase('overlay', true, `EXACT GOAL closure: ${all.length} files (update=${plan.update.length} add=${plan.add.length}); preimage=${changedExisting.length} files -> ${preimage}; base=${GOAL_BASE_SHA.slice(0, 12)}`)
 }
 
 // ── broker boot rehearsal (2026-09-09 fleet-killer gate) ────────────────────
@@ -266,7 +238,7 @@ function brokerBootRehearsal() {
 
 // ── plist env + one kickstart ────────────────────────────────────────────────
 function runtimeRestart() {
-  return restartSchedulerProductionRuntime({ ctx: CTX, phase })
+  return restartSchedulerProductionRuntime({ ctx: CTX, phase, sourceSha: SOURCE_SHA })
 }
 
 // ── sealed operator generation ───────────────────────────────────────────────
@@ -364,6 +336,19 @@ function watchdogInstall() {
   phase('watchdog', true, 'W1/W2 installed (idempotent); state dir authsvc-owned pre-created')
 }
 
+function routingInstall(doc) {
+  if (!CTX.routingCandidate || !/^[0-9a-f]{64}$/.test(CTX.routingCandidateSha256 ?? '')) {
+    throw new Error('explicit routing candidate path and frozen sha256 are required')
+  }
+  const result = installSchedulerRoutingManifest({
+    candidatePath: CTX.routingCandidate, expectedSha256: CTX.routingCandidateSha256,
+    targetPath: CTX.routingManifest, jobs: doc.jobs, artifactsDir: CTX.artifactsDir,
+    expectedUid: MODE === 'selftest' ? process.getuid() : 0,
+    expectedGid: CTX.authsvcGid, mode: MODE === 'plan' ? 'plan' : 'apply',
+  })
+  phase('routing', true, `protected canonical routing generation ${result.candidateSha256.slice(0, 12)}; enabled jobs=${result.enabledJobCount}`)
+}
+
 // ── proofs ───────────────────────────────────────────────────────────────────
 function gate(name, ok, detail) { receipts.gates = receipts.gates ?? {}; receipts.gates[name] = { ok, detail }; process.stdout.write(`[${ok ? 'PASS' : 'FAIL'}] ${name} — ${detail}\n`); if (!ok) throw new Error(`gate ${name} failed`) } // shared by proofs() and the Issue 3 proof module
 async function proofs() {
@@ -401,10 +386,12 @@ async function main() {
   if (MODE === 'plan') {
     process.stdout.write(`${JSON.stringify({ matched: { daily: matched.daily.match, hr: matched.hr.match }, classification: classifyCensus(doc.jobs, matched) }, null, 2)}\n`)
     overlay() // plan mode prints only
+    routingInstall(doc)
     return
   }
   await backfillAndFreeze(doc, matched)
   overlay()
+  routingInstall(await new JobStore(CTX.storePath).loadDoc({ force: true }))
   brokerBootRehearsal()
   runtimeRestart()
   operatorGeneration()
@@ -461,6 +448,7 @@ if (MODE === 'selftest') {
     chown: () => {},
     asAuthsvc: () => JSON.stringify({ jobs: JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.map((j) => ({ id: j.id })) }),
     routingManifest: join(fx, 'config', 'scheduler-routing.json'),
+    authsvcUid: process.getuid(), authsvcGid: process.getgid(),
   })
   CTX.kickstart = (label) => CTX.launchctlShim('kickstart', label)
   CTX.bootstrap = (plist, label) => CTX.launchctlShim('bootstrap', plist)
@@ -468,6 +456,11 @@ if (MODE === 'selftest') {
   mkdirSync(join(fx, 'config'), { recursive: true })
   writeFileSync(join(fx, 'config', 'agent-credentials.json'), '{}\n')
   writeFileSync(CTX.routingManifest, `${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
+  const routingCandidate = join(fx, 'routing-candidate.json')
+  const routingCandidateBytes = Buffer.from(`${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops-v1' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
+  writeFileSync(routingCandidate, routingCandidateBytes, { mode: 0o600 })
+  CTX.routingCandidate = routingCandidate
+  CTX.routingCandidateSha256 = sha256(routingCandidateBytes)
   CTX.credentialsProviderPath = join(fx, 'config', 'agent-credentials.json')
   const REPO_ROOT2 = REPO_ROOT
   CTX.gitShow = (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8' })

@@ -1,3 +1,6 @@
+import { canonicalJSON, rebuildFences, validateOccurrenceRecord } from '../occurrence-model.js'
+import { computeNextRunAtMs } from '../schedule.js'
+
 function generationsComplete(generations) {
   return Array.isArray(generations) && generations.length > 0
     && generations.every((item) => item?.trusted === true && item.captured !== false && item.start != null && item.start === item.end)
@@ -20,24 +23,34 @@ function lastReconciliation(records) {
 
 function alertForJob(incidents, jobId) {
   const values = Object.values(incidents ?? {}).filter((incident) => incident.jobId === jobId)
-  const open = values.find((incident) => incident.lifecycle === 'OPEN')
-  return open?.alertState ?? { lifecycle: 'CLOSED_RECOVERED', delivery: 'DELIVERED', incidentKey: null, lastTransitionAt: null }
+  const current = values.sort((a, b) => (b.alertState?.lastTransitionAt ?? 0) - (a.alertState?.lastTransitionAt ?? 0))[0]
+  return current?.alertState ?? { lifecycle: 'CLOSED_RECOVERED', delivery: 'DELIVERED', incidentKey: null, lastTransitionAt: null }
 }
 
-function scheduleReady(schedule) {
-  if (schedule?.kind === 'cron') return typeof schedule.expr === 'string' && schedule.expr.trim() !== ''
-  if (schedule?.kind === 'at') return typeof schedule.at === 'string' && Number.isFinite(Date.parse(schedule.at))
-  if (schedule?.kind === 'every') return Number.isFinite(schedule.everyMs) && schedule.everyMs > 0
-  return false
+function scheduleReady(job, nowMs) {
+  try { return computeNextRunAtMs(job.schedule, nowMs, { jobId: job.id, fallbackAnchorMs: job.createdAtMs ?? nowMs }) !== undefined }
+  catch { return false }
 }
 
 function fenceProjectionValid(snapshot) {
   if (snapshot.fences === null || typeof snapshot.fences !== 'object' || Array.isArray(snapshot.fences)) return false
-  const expected = new Set((snapshot.occurrences ?? [])
-    .filter((item) => item.state === 'outcome_unknown' && item.terminationSettlement === undefined)
-    .map((item) => item.jobId))
-  const actual = new Set(Object.keys(snapshot.fences))
-  return expected.size === actual.size && [...expected].every((jobId) => actual.has(jobId))
+  try { return canonicalJSON(snapshot.fences) === canonicalJSON(rebuildFences(snapshot.occurrences ?? [])) } catch { return false }
+}
+
+export function validateCanonicalHealthAuthority(snapshot) {
+  if (!snapshot || typeof snapshot !== 'object' || !Array.isArray(snapshot.jobs)
+    || !Array.isArray(snapshot.occurrences) || snapshot.fences === null
+    || typeof snapshot.fences !== 'object' || Array.isArray(snapshot.fences)) {
+    throw new TypeError('canonical health authority document has an invalid shape')
+  }
+  const occurrenceIds = new Set()
+  for (const occurrence of snapshot.occurrences) {
+    validateOccurrenceRecord(occurrence)
+    if (occurrenceIds.has(occurrence.occurrenceId)) throw new TypeError('canonical health authority has duplicate occurrenceId')
+    occurrenceIds.add(occurrence.occurrenceId)
+  }
+  if (!fenceProjectionValid(snapshot)) throw new TypeError('canonical health authority fence projection mismatch')
+  return snapshot
 }
 
 function projectRow(job, snapshot, complete) {
@@ -53,7 +66,7 @@ function projectRow(job, snapshot, complete) {
     classification = 'unknown'; state = 'UNKNOWN'
   } else if (unresolved.length > 0 || !credentialReady) {
     classification = 'blocked'; state = unresolved.length > 0 ? 'QUARANTINED_UNKNOWN' : 'BLOCKED'
-  } else if (!routeHealthy || !scheduleReady(job.schedule)) {
+  } else if (!routeHealthy || !scheduleReady(job, snapshot.generatedAt)) {
     classification = 'degraded'; state = 'DEGRADED'
   }
   const blockedSinceMs = unresolved.length
@@ -61,7 +74,7 @@ function projectRow(job, snapshot, complete) {
     : null
   const lastReconciliationAt = lastReconciliation(records)
   return {
-    jobId: job.id, agentId: job.agentId, logicalKey: job.logicalKey, classification, state,
+    jobId: job.id, agentId: job.agentId, logicalKey: job.logicalKey, health: classification.toUpperCase(), classification, state,
     lastExpectedAt: job.state?.lastExpectedAtMs ?? latest(records, () => true, 'scheduledAt'),
     lastStartAt: latest(records, () => true, 'startedAt'),
     lastFinishAt: latest(records, () => true, 'endedAt'),
@@ -131,7 +144,9 @@ export async function acquireConsistentHealthSnapshot(sources, { maxAttempts = 3
   return {
     complete: false, attempts: maxAttempts, generations: lastGenerations,
     sources: Object.fromEntries(sources.flatMap((source, index) => lastCaptured[index]?.ok ? [[source.name, lastCaptured[index].value]] : [])),
-    censusError: 'source generations drifted or were unavailable',
+    censusError: lastCaptured.some((item) => item?.ok === false)
+      ? `health source unavailable: ${sources.flatMap((source, index) => lastCaptured[index]?.ok === false ? [`${source.name}: ${lastCaptured[index].error}`] : []).join('; ')}`
+      : 'source generations drifted or were unavailable',
   }
 }
 

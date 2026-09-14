@@ -7,6 +7,8 @@ import { join } from 'node:path'
 import { resolveProductionLayout } from '../../src/paths.js'
 import { assertSchedulerStartupReady, createSchedulerHealthRuntime } from '../../src/scheduler/health-runtime.js'
 
+const RUNTIME_SHA = '1234567890abcdef1234567890abcdef12345678'
+
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), 'scheduler-health-runtime-'))
   const layout = resolveProductionLayout(root)
@@ -24,22 +26,44 @@ async function fixture() {
 
 test('T15/T29 runtime reads one generation-bound complete census', async () => {
   const { layout, routingSecurity, credentialStoreFile } = await fixture()
-  const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: 'runtime-test', nowMs: () => 1 })
+  const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA, nowMs: () => 1 })
   const health = await runtime.read()
   assert.equal(health.complete, true)
   assert.equal(health.enabled, 1)
   assert.equal(health.healthy, 1)
-  assert.equal(health.jobs[0].runtime, 'runtime-test')
+  assert.equal(health.jobs[0].runtime, RUNTIME_SHA)
 })
 
 test('T33 a missing secondary source returns complete=false and UNKNOWN row, never false green', async () => {
   const { layout, routingSecurity, credentialStoreFile } = await fixture()
   await writeFile(layout.schedulerRoutingManifest, '')
-  const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: 'runtime-test', nowMs: () => 1 })
+  const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA, nowMs: () => 1 })
   const health = await runtime.read()
   assert.equal(health.complete, false)
   assert.equal(health.unknown, 1)
   assert.equal(health.healthy, 0)
+})
+
+test('T29 arbitrary runtime provenance cannot produce complete=true', async () => {
+  const { layout, routingSecurity, credentialStoreFile } = await fixture()
+  const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: 'unbound-label', nowMs: () => 1 })
+  const health = await runtime.read()
+  assert.equal(health.complete, false)
+  assert.equal(health.unknown, 1)
+})
+
+test('T33 authority-invalid occurrence returns incomplete census, never false green', async () => {
+  const { layout, routingSecurity, credentialStoreFile } = await fixture()
+  await writeFile(layout.jobsStore, JSON.stringify({
+    version: 3,
+    jobs: [{ id: 'a', agentId: 'agt_a', logicalKey: 'a', enabled: true, schedule: { kind: 'every', everyMs: 1000 }, state: { nextRunAtMs: 2 } }],
+    occurrences: [{ occurrenceId: 'fabricated', jobId: 'a', state: 'outcome_unknown' }],
+    fences: { a: { occurrenceId: 'fabricated' } },
+  }))
+  const health = await createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA }).read()
+  assert.equal(health.complete, false)
+  assert.equal(health.healthy, null)
+  assert.match(health.censusError, /occurrence.*missing authority field/)
 })
 
 test('production layout exposes dedicated route, incident and local sink paths', () => {

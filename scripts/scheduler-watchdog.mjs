@@ -27,13 +27,14 @@
  * FEISHU_CREDS_PATH, SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS,
  * SCHEDULER_ROUTING_MANIFEST (deployment-owned protected routing config).
  *
- * Usage: scheduler-watchdog.mjs [--role w1|w2] [--dry-run]
+ * Usage: scheduler-watchdog.mjs [--role w1|w2] [--dry-run] [--migrate-incident-state]
  */
 
 import { existsSync, readFileSync, writeFileSync, statSync, mkdirSync, appendFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 const DELIVER_TEST = process.argv.includes('--deliver-test')
+const MIGRATE_STATE = process.argv.includes('--migrate-incident-state')
 const roleArg = process.argv[process.argv.indexOf('--role') + 1]
 const roleArgValid = ['w1', 'w2'].includes((roleArg ?? '').toLowerCase())
 const ROLE = (roleArgValid ? roleArg : (process.env.SCHEDULER_WATCHDOG_ROLE ?? (DELIVER_TEST ? 'w1' : 'w1'))).toLowerCase()
@@ -187,7 +188,10 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
     expectedGid: Number(process.env.SCHEDULER_INCIDENT_OWNER_GID ?? process.getgid?.()),
   }
   const loaded = loadIncidentState(INCIDENT_STATE_FILE, incidentOwnership)
-  const transition = updateAlertState(loaded.state, findings, { nowMs })
+  const ownsIncident = role === 'w2'
+    ? (record) => record.stableSubjectId === 'watchdog:w1'
+    : (record) => record.stableSubjectId !== 'watchdog:w1'
+  const transition = updateAlertState(loaded.state, findings, { nowMs, ownsIncident })
   let persisted = commitIncidentState(INCIDENT_STATE_FILE, transition.state, { expectedHash: loaded.hash, ...incidentOwnership })
   const retryable = retryableOutboxIntents(transition.state, { nowMs })
   if (retryable.length === 0) return { outcome: 'suppressed_or_healthy', transition }
@@ -205,10 +209,7 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
     let manifest = null
     try {
       const configuredGid = Number(process.env.SCHEDULER_ROUTING_READER_GID)
-      const allowedGids = [...new Set([
-        ...(typeof process.getgroups === 'function' ? process.getgroups() : []),
-        ...(Number.isInteger(configuredGid) ? [configuredGid] : []),
-      ])]
+      const allowedGids = Number.isInteger(configuredGid) ? [configuredGid] : []
       manifest = readProtectedRoutingManifest(ROUTING_MANIFEST, {
         expectedUid: Number(process.env.SCHEDULER_ROUTING_OWNER_UID ?? 0),
         allowedGids,
@@ -224,11 +225,15 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
       continue
     }
     const text = stableNotificationText(intent)
-    const delivered = routeDecision.route
-      ? await deliverOrPark(text, { route: routeDecision.route, notificationKey: notification.notificationKey })
-      : 'delivery_failed'
-    const deliveryState = delivered === 'feishu_sent' ? 'DELIVERED' : (routeDecision.route ? 'OUTCOME_UNKNOWN' : 'FAILED')
-    currentState = markNotificationDelivery(currentState, notification.notificationKey, deliveryState, Date.now())
+    let delivered = 'delivery_failed'
+    if (routeDecision.route) {
+      currentState = markNotificationDelivery(currentState, notification.notificationKey, 'OUTCOME_UNKNOWN', Date.now())
+      persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
+      delivered = await deliverOrPark(text, { route: routeDecision.route, notificationKey: notification.notificationKey })
+      currentState = markNotificationDelivery(currentState, notification.notificationKey, delivered === 'feishu_sent' ? 'DELIVERED' : 'OUTCOME_UNKNOWN', Date.now())
+    } else {
+      currentState = markNotificationDelivery(currentState, notification.notificationKey, 'FAILED', Date.now())
+    }
     persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
     if (delivered !== 'feishu_sent') {
       outcome = 'delivery_failed'
@@ -271,6 +276,37 @@ async function runW1(nowMs) {
     desired,
     runtimeHealth: { ...(await probeRuntimeHealth()), evidenceAgeMs: evidenceAgeMs(nowMs) },
   }))
+  try {
+    const { createSchedulerHealthRuntime } = await import('../packages/production-runtime/src/scheduler/health-runtime.js')
+    const schedulerRoot = dirname(STORE)
+    const configuredGid = Number(process.env.SCHEDULER_ROUTING_READER_GID)
+    const health = await createSchedulerHealthRuntime({
+      layout: {
+        jobsStore: STORE,
+        runsLog: join(schedulerRoot, 'runs.jsonl'),
+        schedulerRoutingManifest: ROUTING_MANIFEST,
+        schedulerIncidentState: INCIDENT_STATE_FILE,
+      },
+      runtimeGeneration: process.env.AGENT_CORE_DEPLOYED_SHA,
+      routingSecurity: {
+        expectedUid: Number(process.env.SCHEDULER_ROUTING_OWNER_UID ?? 0),
+        allowedGids: Number.isInteger(configuredGid) ? [configuredGid] : [],
+        maxMode: 0o640,
+      },
+      incidentOwnership: {
+        expectedUid: Number(process.env.SCHEDULER_INCIDENT_OWNER_UID ?? process.getuid?.()),
+        expectedGid: Number(process.env.SCHEDULER_INCIDENT_OWNER_GID ?? process.getgid?.()),
+      },
+      credentialStoreFile: CREDENTIAL_FILE,
+      nowMs: () => nowMs,
+    }).read()
+    if (health.complete !== true) findings.push({
+      class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-health',
+      reason: `canonical Scheduler health incomplete: ${health.censusError ?? 'unknown source'}`,
+    })
+  } catch (error) {
+    findings.push({ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-health', reason: `canonical Scheduler health unavailable: ${String(error?.message ?? error).slice(0, 120)}` })
+  }
   // §5.2/§5.6: child-relay STILL_UNKNOWN evidence is Owner-visible from here.
   try {
     const entries = existsSync(RECONCILIATION_EVIDENCE)
@@ -316,7 +352,40 @@ async function runW2(nowMs) {
   return (await processIncidentNotifications(findings, { nowMs, role: 'w2' })).outcome
 }
 
-if (DELIVER_TEST) {
+if (MIGRATE_STATE) {
+  ;(async () => {
+    try {
+      const { createHash } = await import('node:crypto')
+      const { migrateLegacyIncidentStateFiles } = await import('../packages/scheduler/src/watchdog/index.js')
+      const { readPrivateFile } = await import('../packages/scheduler/src/watchdog/private-state-io.js')
+      const factsPath = process.env.SCHEDULER_MIGRATION_FACTS_FILE
+      const legacyStatePath = process.env.SCHEDULER_LEGACY_ALERT_STATE
+      const legacyEvidencePath = process.env.SCHEDULER_LEGACY_DELIVERY_EVIDENCE
+      if (!factsPath || !legacyStatePath || !legacyEvidencePath) throw new Error('migration source paths are required')
+      const expectedUid = Number(process.env.SCHEDULER_INCIDENT_OWNER_UID ?? process.getuid?.())
+      const expectedGid = Number(process.env.SCHEDULER_INCIDENT_OWNER_GID ?? process.getgid?.())
+      const factsBytes = readPrivateFile(factsPath, { expectedUid, expectedGid }).bytes
+      const factsFileSha256 = createHash('sha256').update(factsBytes).digest('hex')
+      if (factsFileSha256 !== process.env.SCHEDULER_MIGRATION_FACTS_FILE_SHA256) throw new Error('migration facts file generation mismatch')
+      const findings = JSON.parse(factsBytes.toString('utf8'))
+      if (!Array.isArray(findings)) throw new TypeError('migration facts must be a JSON array')
+      const result = migrateLegacyIncidentStateFiles({
+        legacyStatePath, legacyEvidencePath, incidentStatePath: INCIDENT_STATE_FILE, findings,
+        expectedLegacySha256: process.env.SCHEDULER_LEGACY_ALERT_STATE_SHA256,
+        expectedEvidenceSha256: process.env.SCHEDULER_LEGACY_DELIVERY_EVIDENCE_SHA256,
+        expectedFactsSha256: process.env.SCHEDULER_MIGRATION_FACTS_SHA256,
+        expectedUid, expectedGid,
+      })
+      process.stdout.write(`${JSON.stringify({
+        status: 'MIGRATED', incidentSha256: result.incidentSha256, legacySha256: result.legacySha256,
+        evidenceSha256: result.evidenceSha256, factsSha256: result.factsSha256, factsFileSha256,
+      })}\n`)
+    } catch (error) {
+      process.stderr.write(`[migration] FAILED: ${String(error?.message ?? error).slice(0, 240)}\n`)
+      process.exitCode = 1
+    }
+  })()
+} else if (DELIVER_TEST) {
   ;(async () => {
     try {
       const { createHash } = await import('node:crypto')
@@ -324,7 +393,7 @@ if (DELIVER_TEST) {
       const configuredGid = Number(process.env.SCHEDULER_ROUTING_READER_GID)
       const manifest = readProtectedRoutingManifest(ROUTING_MANIFEST, {
         expectedUid: Number(process.env.SCHEDULER_ROUTING_OWNER_UID ?? 0),
-        allowedGids: [...new Set([...(process.getgroups?.() ?? []), ...(Number.isInteger(configuredGid) ? [configuredGid] : [])])],
+        allowedGids: Number.isInteger(configuredGid) ? [configuredGid] : [],
         maxMode: 0o640,
       }).manifest
       const decision = resolveNotificationRoute({ routeClass: 'SCHEDULER_CONTROL_PLANE_INCIDENT', manifest })

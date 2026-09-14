@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto'
 
 import { isUnresolvedUnknown, rebuildFences } from '../occurrence-model.js'
 import { deriveJobStateSummary } from '../eligibility.js'
+import { classifyReconciliationEvidence } from '../watchdog/reconciliation.js'
+import { filterHealthForPrincipal } from '../watchdog/health.js'
 
 const ROUTER_DISPOSITIONS = new Set([
   'terminated_without_outcome', 'pending', 'restart_lost', 'evicted', 'never_existed',
@@ -105,6 +107,7 @@ export function createSelfOpsAccess({
   runtimeStatus = () => ({}),
   clock = () => Date.now(),
   onAuditFailure = () => {},
+  healthProvider,
 }) {
   if (!store || typeof resolveCallerCorrelation !== 'function') {
     throw new TypeError('self-ops: store and resolveCallerCorrelation are required')
@@ -138,6 +141,16 @@ export function createSelfOpsAccess({
         runId: record.runId,
         requestId: requestIdFor(record),
       }), record, callerAgentId)
+      const epoch = requestIdFor(record)
+      const identity = { jobId: record.jobId, occurrenceId: record.occurrenceId, runId: record.runId, epoch }
+      const reconciliationObservedAt = clock()
+      const exact = (value) => ({ trusted: true, fresh: true, source: 'router-current-readback', ...identity, observedAt: reconciliationObservedAt, ...value })
+      const evidence = classified.disposition === 'late_completed' ? { identity, businessOutcome: exact({ status: 'succeeded' }) }
+        : classified.disposition === 'late_failed' ? { identity, businessOutcome: exact({ status: 'failed' }) }
+          : classified.disposition === 'terminated_without_outcome' ? { identity, termination: exact({ terminated: true }) }
+            : classified.disposition === 'pending' ? { identity, live: exact({ live: true }) }
+              : { identity }
+      const reconciliation = classifyReconciliationEvidence(evidence, { nowMs: reconciliationObservedAt })
       rows.push({
         jobId: record.jobId,
         occurrenceId: record.occurrenceId,
@@ -150,10 +163,15 @@ export function createSelfOpsAccess({
         blockerCode: classified.disposition === 'terminated_without_outcome'
           ? 'safe_reconcile_available'
           : classified.disposition,
+        reconciliationState: reconciliation.classification ?? 'TERMINATION_ONLY_SETTLEMENT_AVAILABLE',
+        reconciliationObservedAt: evidence.businessOutcome?.observedAt ?? evidence.termination?.observedAt ?? evidence.live?.observedAt ?? null,
       })
     }
     const activeFenceCount = new Set(unknowns.filter(isUnresolvedUnknown).map((record) => record.jobId)).size
     const runtime = runtimeStatus()
+    const canonicalHealth = typeof healthProvider === 'function'
+      ? filterHealthForPrincipal(await healthProvider(), { agentId: callerAgentId, scopes: new Set(['scheduler.read']) })
+      : undefined
     return {
       statusVersion: 1,
       callerAgentId,
@@ -170,6 +188,7 @@ export function createSelfOpsAccess({
         blockers: rows.slice(0, 20),
         truncated: rows.length > 20,
       },
+      ...(canonicalHealth ? { health: canonicalHealth } : {}),
     }
   }
 
