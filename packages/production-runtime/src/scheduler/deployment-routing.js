@@ -30,7 +30,8 @@ function protectedParents(path, boundary) {
     parents.push(metadata(current))
     if (current === stop) return parents
     const next = dirname(current)
-    if (next === current || !current.startsWith(`${stop}/`)) throw new TypeError('protected routing path is outside boundary')
+    const inside = stop === '/' ? current.startsWith('/') : current.startsWith(`${stop}/`)
+    if (next === current || !inside) throw new TypeError('protected routing path is outside boundary')
     current = next
   }
 }
@@ -71,10 +72,15 @@ function validatePrivateDirectory(path, expectedUid, expectedGid, boundary) {
 
 export function installSchedulerRoutingManifest({
   candidatePath, expectedSha256, targetPath, jobs = [], artifactsDir,
-  expectedUid = 0, expectedGid, candidateUid = process.getuid?.(), candidateGid = process.getgid?.(), mode = 'apply',
+  expectedUid = 0, expectedGid, candidateUid = process.getuid?.(), candidateGid = process.getgid?.(), targetBoundary, mode = 'apply',
 } = {}) {
   if (!Number.isInteger(expectedUid) || !Number.isInteger(expectedGid)) throw new TypeError('routing ownership coordinates required')
   if (!isAbsolute(targetPath) || resolve(targetPath) !== targetPath) throw new TypeError('routing target path must be canonical and absolute')
+  if (!isAbsolute(targetBoundary) || resolve(targetBoundary) !== targetBoundary) throw new TypeError('trusted routing target boundary required')
+  const targetParents = protectedParents(targetPath, targetBoundary)
+  if (targetParents.some((parent) => parent.type !== 'directory' || parent.symlink || parent.extendedAcl || (parent.mode & 0o022) !== 0)) {
+    throw new TypeError('unsafe routing target parent chain')
+  }
   const candidate = frozenProtectedFile(candidatePath, expectedSha256, {
     expectedUid: candidateUid, expectedGid: candidateGid, maxMode: 0o600, parentBoundary: dirname(candidatePath),
   })
@@ -87,7 +93,7 @@ export function installSchedulerRoutingManifest({
   const preimage = join(preimageDir, 'scheduler-routing.json.preimage')
   const receiptPath = join(preimageDir, 'routing-install-receipt.json')
   const existing = existingProtected(targetPath, {
-    expectedUid, expectedGid, maxMode: 0o640, parentBoundary: dirname(targetPath),
+    expectedUid, expectedGid, maxMode: 0o640, parentBoundary: targetBoundary,
   })
   const preimageSha256 = existing?.sha256 ?? null
   if (mode !== 'apply') return { candidateSha256: candidate.sha256, preimageSha256, enabledJobCount: jobs.filter((job) => job.enabled === true).length }
@@ -130,7 +136,7 @@ export function installSchedulerRoutingManifest({
     syncDirectory(dirname(targetPath))
   } finally { try { unlinkSync(temp) } catch { /* renamed or absent */ } }
   const installed = frozenProtectedFile(targetPath, candidate.sha256, {
-    expectedUid, expectedGid, maxMode: 0o640, parentBoundary: dirname(targetPath),
+    expectedUid, expectedGid, maxMode: 0o640, parentBoundary: targetBoundary,
   })
   if (installed.stat.uid !== expectedUid || installed.stat.gid !== expectedGid || (installed.stat.mode & 0o777) !== 0o640) {
     throw new Error('routing manifest protected metadata readback mismatch')

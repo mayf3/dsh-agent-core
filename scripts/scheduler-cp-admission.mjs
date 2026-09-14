@@ -25,6 +25,7 @@ import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from 
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
 import { installSchedulerRoutingManifest } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
 import { runSchedulerIncidentMigration } from '../packages/production-runtime/src/scheduler/deployment-incident-migration.js'
+import { atomicReplacePrivateFile, ensurePrivateDirectory, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
 
 const args = process.argv.slice(2)
 const has = (name) => args.includes(name)
@@ -72,8 +73,9 @@ const CTX = MODE === 'selftest'
   : {
       liveRoot: '/usr/local/libexec/agent-core/app',
       storePath: '/Users/authsvc/.agent-core/scheduler/jobs.json',
-      artifacts: '/Users/yanfenma/workspace/artifacts/production-candidates',
-      artifactsDir: '/Users/yanfenma/workspace/artifacts/production-candidates/SCHEDULER_CONTROL_PLANE_RELIABILITY_V1-admission',
+      artifacts: '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1/generations',
+      artifactsDir: '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1',
+      controlUid: 0, controlGid: 0,
       desiredPath: '/usr/local/libexec/agent-core/config/scheduler-desired-state.json',
       launchdDir: '/Library/LaunchDaemons',
       runtimeNode: '/usr/local/libexec/agent-core/node-runtime/bin/node',
@@ -82,6 +84,7 @@ const CTX = MODE === 'selftest'
       binSymlink: '/usr/local/bin/agentcore-cron',
       launchctl: 'launchctl',
       routingManifest: '/usr/local/libexec/agent-core/config/scheduler-routing.json',
+      routingTargetBoundary: '/usr/local/libexec/agent-core',
       routingCandidate: ROUTING_SOURCE,
       routingCandidateSha256: ROUTING_SHA256,
       routingCandidateUid: ROUTING_CANDIDATE_UID,
@@ -105,11 +108,17 @@ const CTX = MODE === 'selftest'
 
 const receipts = { mode: MODE, sourceSha: SOURCE_SHA, phases: {}, startedAt: new Date().toISOString() }
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const controlOwnership = () => ({ expectedUid: CTX.controlUid, expectedGid: CTX.controlGid })
+function writeControlReceipt(name, value) {
+  atomicReplacePrivateFile(join(CTX.artifactsDir, name), Buffer.from(`${JSON.stringify(value, null, 2)}\n`), controlOwnership())
+}
+function readControlReceipt(name) {
+  return JSON.parse(readPrivateFile(join(CTX.artifactsDir, name), controlOwnership()).bytes.toString('utf8'))
+}
 function phase(name, ok, detail) {
   receipts.phases[name] = { ok, detail }
   if (MODE !== 'plan' && CTX.artifactsDir) {
-    mkdirSync(CTX.artifactsDir, { recursive: true })
-    writeFileSync(join(CTX.artifactsDir, 'phase-progress-receipt.json'), `${JSON.stringify({ ...receipts, updatedAt: new Date().toISOString() }, null, 2)}\n`)
+    writeControlReceipt('phase-progress-receipt.json', { ...receipts, updatedAt: new Date().toISOString() })
   }
   process.stdout.write(`[${ok === false ? 'FAIL' : 'ok'}] ${name} — ${detail}\n`)
   if (ok === false) throw new Error(`phase ${name} failed: ${detail}`)
@@ -156,7 +165,6 @@ async function backfillAndFreeze(doc, matched) {
   return { desired }
 }
 
-// ── source overlay ───────────────────────────────────────────────────────────
 function listLiveFiles(root, prefix = '') {
   const out = new Set()
   for (const entry of readdirSync(join(root, prefix), { withFileTypes: true })) {
@@ -204,7 +212,7 @@ function overlay() {
   mkdirSync(dirname(preimage), { recursive: true, mode: 0o700 })
   chmodSync(dirname(preimage), 0o700)
   if (existsSync(manifestPath)) {
-    const prior = JSON.parse(readFileSync(manifestPath, 'utf8'))
+    const prior = readControlReceipt('overlay-manifest.json')
     if (prior.base !== GOAL_BASE_SHA || prior.source !== SOURCE_SHA || !Array.isArray(prior.entries)) throw new Error('overlay rerun generation mismatch')
     all = prior.entries; writes = all.filter((entry) => entry.kind !== 'delete'); deletes = all.filter((entry) => entry.kind === 'delete')
     for (const entry of all) {
@@ -217,7 +225,7 @@ function overlay() {
   } else {
     const changed = all.filter((entry) => entry.kind !== 'add').map((entry) => entry.path)
     if (changed.length > 0) execFileSync('tar', ['-czf', preimage, '-C', CTX.liveRoot, ...changed])
-    writeFileSync(manifestPath, `${JSON.stringify({ base: GOAL_BASE_SHA, source: SOURCE_SHA, entries: all }, null, 2)}\n`)
+    writeControlReceipt('overlay-manifest.json', { base: GOAL_BASE_SHA, source: SOURCE_SHA, entries: all })
   }
   for (const entry of writes) {
     const bytes = Buffer.from(narrowed.overlay.get(entry.path), 'utf8')
@@ -240,20 +248,9 @@ function overlay() {
   phase('overlay', true, `EXACT GOAL closure: ${all.length} files (update=${all.filter((entry) => entry.kind === 'update').length} add=${all.filter((entry) => entry.kind === 'add').length}); base=${GOAL_BASE_SHA.slice(0, 12)}`)
 }
 
-// ── broker boot rehearsal (2026-09-09 fleet-killer gate) ────────────────────
-/**
- * Child-mode apply() rehearsal on the JUST-STAGED bytes, against the LIVE app
- * tree (whose node_modules resolves @deepseek-ai/*), BEFORE any kickstart:
- * module load + apply(stub ctx, {mode:'child'}) — exactly the path whose
- * ReferenceError killed every agent child while the parent stayed healthy.
- */
 function brokerBootRehearsal() {
   const staged = readFileSync(join(CTX.liveRoot, 'packages/broker/src/index.js'), 'utf8')
   if (MODE === 'selftest') {
-    // Fixture mode lacks @deepseek-ai/* modules: degrade to the parse audit
-    // that still catches the fleet-killer class (re-export-without-binding
-    // called by apply). The real mode executes child-mode apply on the live
-    // tree, where the module graph fully resolves.
     const missing = reExportsWithoutLocalBinding(staged)
     phase('broker-rehearsal', missing.length === 0, missing.length === 0
       ? 'staged broker index: all re-exported symbols locally bound (parse-audit shim)'
@@ -272,12 +269,10 @@ function brokerBootRehearsal() {
   phase('broker-rehearsal', true, out.trim())
 }
 
-// ── plist env + one kickstart ────────────────────────────────────────────────
 function runtimeRestart() {
   return restartSchedulerProductionRuntime({ ctx: CTX, phase, sourceSha: SOURCE_SHA })
 }
 
-// ── sealed operator generation ───────────────────────────────────────────────
 function operatorGeneration() {
   const short = SOURCE_SHA.slice(0, 7)
   const genId = `SCHEDULER_CONTROL_PLANE_RELIABILITY_V1--dsh-agent-core--${short}--x86_64--g1`
@@ -296,10 +291,7 @@ function operatorGeneration() {
       writeFileSync(target, bytes)
       try { execFileSync('chmod', ['0755', target], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
     }
-    // vendor the scheduler package's production deps (croner) INSIDE the
-    // closure package dir — bare imports resolve from the candidate's own
-    // node_modules walk-up, exactly like the previous generation
-    // (DEPENDENCY_CLOSURE / attempt-1 lesson: missing croner resolution).
+    // Vendor the scheduler package's production dependency inside the sealed closure.
     const cronerSrc = join(REPO_ROOT, 'node_modules', 'croner')
     const cronerDst = join(genDir, 'candidate/usr/local/packages/scheduler/node_modules/croner')
     rmSync(cronerDst, { recursive: true, force: true })
@@ -325,14 +317,13 @@ function operatorGeneration() {
       ``,
     ].join('\n'))
   }
-  // atomic flip with preimage proof
   const previous = execFileSync('readlink', ['-f', CTX.binSymlink], { encoding: 'utf8' }).trim()
   const previousSha = sha256(readFileSync(previous))
   const candidateSha = sha256(readFileSync(candidateCli))
   const durableReceipt = join(CTX.artifactsDir, 'operator-cutover-receipt.json')
   let cutoverReceipt
   if (existsSync(durableReceipt)) {
-    cutoverReceipt = JSON.parse(readFileSync(durableReceipt, 'utf8'))
+    cutoverReceipt = readControlReceipt('operator-cutover-receipt.json')
     if (cutoverReceipt.newSha256 !== candidateSha || ![candidateSha, cutoverReceipt.previousSha256].includes(previousSha)) throw new Error('operator rerun generation mismatch')
     if (previousSha === candidateSha) {
       phase('operator', true, `${genId} already installed; original predecessor receipt retained`)
@@ -345,7 +336,7 @@ function operatorGeneration() {
       newLink: candidateCli, newSha256: candidateSha,
       gates: { candidateBytes: 'MATCH', currentProductionLink: 'SEALED_GENERATION', cliBytesMatchExpected: 'PASS' },
     }
-    writeFileSync(durableReceipt, `${JSON.stringify(cutoverReceipt, null, 2)}\n`)
+    writeControlReceipt('operator-cutover-receipt.json', cutoverReceipt)
   }
   const tmpLink = `${CTX.binSymlink}.incoming-${process.pid}`
   execFileSync('ln', ['-sfn', candidateCli, tmpLink])
@@ -354,11 +345,10 @@ function operatorGeneration() {
   if (nowSha !== candidateSha) throw new Error('operator flip failed byte check')
   cutoverReceipt.status = 'INSTALLED'
   writeFileSync(join(genDir, 'cutover-receipt.json'), `${JSON.stringify(cutoverReceipt, null, 2)}\n`)
-  writeFileSync(durableReceipt, `${JSON.stringify(cutoverReceipt, null, 2)}\n`)
+  writeControlReceipt('operator-cutover-receipt.json', cutoverReceipt)
   phase('operator', true, `${genId} sealed; operator sha ${candidateSha.slice(0, 12)}… (was ${previousSha.slice(0, 12)}…); flip receipted`)
 }
 
-// ── watchdog install ─────────────────────────────────────────────────────────
 function watchdogInstall() {
   const stateDir = CTX.watchdogStateDir
   mkdirSync(stateDir, { recursive: true })
@@ -374,7 +364,7 @@ function watchdogInstall() {
     .replaceAll('__AUTHSVC_GID__', String(runtimeReaderGid))
     .replaceAll('__DEPLOYED_SHA__', SOURCE_SHA)
   const priorReceiptPath = join(CTX.artifactsDir, 'watchdog-install-receipt.json')
-  let receipt = existsSync(priorReceiptPath) ? JSON.parse(readFileSync(priorReceiptPath, 'utf8')) : null
+  let receipt = existsSync(priorReceiptPath) ? readControlReceipt('watchdog-install-receipt.json') : null
   if (!receipt) {
     const plists = [['w1', 'ai.agent-core.scheduler-watchdog-w1'], ['w2', 'ai.agent-core.scheduler-watchdog-w2']].map(([role, label]) => {
       const tmpl = fill(CTX.gitShow(SOURCE_SHA, `deployment-artifacts/scheduler-control-plane-reliability-v1/ai.agent-core.scheduler-watchdog-${role}.plist.tmpl`))
@@ -386,14 +376,14 @@ function watchdogInstall() {
       return { role, label, path, existed, installedSha256: sha256(Buffer.from(tmpl)), preimage, preimageSha256: existed ? sha256(readFileSync(path)) : null }
     })
     receipt = { status: 'INSTALLING', sourceSha: SOURCE_SHA, plists }
-    writeFileSync(priorReceiptPath, `${JSON.stringify(receipt, null, 2)}\n`)
+    writeControlReceipt('watchdog-install-receipt.json', receipt)
   }
   if (receipt.sourceSha !== SOURCE_SHA || receipt.plists?.length !== 2) throw new Error('watchdog rerun generation mismatch')
   for (const item of receipt.plists) {
     const tmpl = fill(CTX.gitShow(SOURCE_SHA, `deployment-artifacts/scheduler-control-plane-reliability-v1/ai.agent-core.scheduler-watchdog-${item.role}.plist.tmpl`))
     if (sha256(Buffer.from(tmpl)) !== item.installedSha256) throw new Error(`watchdog candidate generation mismatch: ${item.label}`)
     const currentSha = existsSync(item.path) ? sha256(readFileSync(item.path)) : null
-    if (currentSha === item.installedSha256) { CTX.kickstart(`system/${item.label}`); continue }
+    if (currentSha === item.installedSha256) { CTX.bootstrap(item.path, `system/${item.label}`); continue }
     if (currentSha !== item.preimageSha256) throw new Error(`watchdog rerun generation mismatch: ${item.label}`)
     const plist = item.path
     const tmp = `${plist}.incoming`
@@ -408,7 +398,7 @@ function watchdogInstall() {
     CTX.bootstrap(plist, `system/${item.label}`)
   }
   receipt.status = 'INSTALLED'
-  writeFileSync(priorReceiptPath, `${JSON.stringify(receipt, null, 2)}\n`)
+  writeControlReceipt('watchdog-install-receipt.json', receipt)
   phase('watchdog', true, 'W1/W2 installed (idempotent); state dir authsvc-owned pre-created')
 }
 
@@ -425,6 +415,7 @@ function routingInstall(doc) {
     expectedUid: MODE === 'selftest' ? process.getuid() : 0,
     expectedGid: CTX.authsvcGid, mode: MODE === 'plan' ? 'plan' : 'apply',
     candidateUid: CTX.routingCandidateUid, candidateGid: CTX.routingCandidateGid,
+    targetBoundary: CTX.routingTargetBoundary,
   })
   phase('routing', true, `protected canonical routing generation ${result.candidateSha256.slice(0, 12)}; enabled jobs=${result.enabledJobCount}`)
 }
@@ -433,8 +424,15 @@ function incidentMigration() {
   mkdirSync(CTX.watchdogStateDir, { recursive: true, mode: 0o700 })
   try { CTX.chown(CTX.watchdogStateDir, CTX.authsvcUid, CTX.authsvcGid) } catch (error) { if (MODE === 'apply') throw error }
   const receipt = runSchedulerIncidentMigration({ ctx: CTX, sources: CTX.migrationSources ?? MIGRATION_SOURCES })
-  writeFileSync(join(CTX.artifactsDir, 'incident-migration-receipt.json'), `${JSON.stringify(receipt, null, 2)}\n`)
+  writeControlReceipt('incident-migration-receipt.json', receipt)
   phase('incident-migration', true, `${receipt.status}; incident=${receipt.incidentSha256.slice(0, 12)}`)
+}
+
+function quiesceWatchdogs() {
+  for (const label of ['ai.agent-core.scheduler-watchdog-w1', 'ai.agent-core.scheduler-watchdog-w2']) {
+    CTX.bootout(`system/${label}`)
+  }
+  phase('watchdog-quiesce', true, 'W1/W2 stopped before live code, routing, or incident-state mutation')
 }
 
 // ── proofs ───────────────────────────────────────────────────────────────────
@@ -469,6 +467,7 @@ async function main() {
     process.stderr.write('[admission] --apply requires root (run under the single Owner sudo gate)\n')
     process.exit(2)
   }
+  if (MODE !== 'plan') ensurePrivateDirectory(CTX.artifactsDir, controlOwnership())
   const doc = readCensus()
   const matched = criticalsOrAbort(doc)
   if (MODE === 'plan') {
@@ -477,6 +476,7 @@ async function main() {
     routingInstall(doc)
     return
   }
+  quiesceWatchdogs()
   await backfillAndFreeze(doc, matched)
   overlay()
   routingInstall(await new JobStore(CTX.storePath).loadDoc({ force: true }))
@@ -486,7 +486,7 @@ async function main() {
   operatorGeneration()
   watchdogInstall()
   await proofs()
-  writeFileSync(join(CTX.artifactsDir, 'terminal-receipt.json'), `${JSON.stringify({ ...receipts, finishedAt: new Date().toISOString() }, null, 2)}\n`)
+  writeControlReceipt('terminal-receipt.json', { ...receipts, finishedAt: new Date().toISOString() })
   process.stdout.write(`[admission] TERMINAL RECEIPT written: ${join(CTX.artifactsDir, 'terminal-receipt.json')}\n`)
 }
 

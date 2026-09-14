@@ -166,15 +166,15 @@ export function migrateLegacyAlertState(legacy, findings, {
     const allFailed = memberFingerprints.every((fp) => failedFingerprints.has(fp))
     if (lifecycle === 'OPEN' && !delivered && !allFailed) throw new TypeError(`legacy delivery evidence ambiguous for ${incident.rootIdentity}`)
     const firstSeenAt = Math.min(...memberFingerprints.map((fp) => entries.get(fp).value?.firstSeenAt).filter(Number.isFinite), nowMs)
+    const producer = incident.stableSubjectId === 'watchdog:w1' ? 'w2' : 'w1'
     const record = {
       ...structuredClone(incident), episode: 1, incidentId: `${incident.rootIdentity}|episode:1`,
-      lifecycle, transitionRevision: 1, firstSeenAt, lastSeenAt: nowMs,
+      producer, lifecycle, transitionRevision: 1, firstSeenAt, lastSeenAt: nowMs,
       alertState: { lifecycle, delivery: lifecycle === 'OPEN' ? (delivered ? 'DELIVERED' : 'FAILED') : 'DELIVERED', incidentKey: incident.rootIdentity, lastTransitionAt: nowMs },
     }
     migrated.incidents[incident.rootIdentity] = record
     if (lifecycle === 'OPEN' && !delivered) {
-      const intent = { incident: structuredClone(record), incidentId: record.incidentId, transitionRevision: 1, transitionKind: 'OPEN', routeClass: record.routeClass }
-      intent.producer = 'w1'
+      const intent = { incident: structuredClone(record), incidentId: record.incidentId, transitionRevision: 1, transitionKind: 'OPEN', routeClass: record.routeClass, producer }
       const key = notificationKey(intent)
       migrated.outbox[key] = { ...intent, notificationKey: key, delivery: 'PENDING', payloadRevision: 1 }
     }

@@ -77,6 +77,30 @@ test('T18 missing credential blocks only its Job; invalid routing degrades only 
   assert.equal(invalidSchedule.complete, false)
 })
 
+test('T18 recent terminal failure is canonically degraded and exposes the W1 finding', () => {
+  const target = job('a')
+  const occurrence = buildOccurrenceRecord({ job: target, kind: 'natural', nominalScheduledAt: T0 - 1000, admittedAt: T0 - 900 })
+  applyTransition(occurrence, {
+    to: 'failed', at: T0 - 800, reason: 'rejected', endedAt: T0 - 800, executionOutcome: 'failed',
+    terminalEvidence: { kind: 'pre-start-rejection', detailRef: 'AGENT_DISABLED' },
+  })
+  const result = projectSchedulerHealth(snapshot({ jobs: [target], occurrences: [occurrence], fences: {} , credentials: { agt_a: true }, routes: { a: { ready: true } } }))
+  assert.equal(result.complete, true)
+  assert.equal(result.jobs[0].classification, 'degraded')
+  assert.deepEqual(result.jobs[0].findings.map((fact) => fact.class), ['RUN_FAILED'])
+})
+
+test('T18 runtime failure degrades every Job but emits one global canonical finding', () => {
+  const result = projectSchedulerHealth(snapshot({
+    credentials: { agt_a: true, agt_b: true, agt_c: true, agt_d: true },
+    routes: { a: { ready: true }, b: { ready: true }, c: { ready: true }, d: { ready: true } },
+    runtimeHealth: { healthOk: false, reason: 'probe failed' },
+  }))
+  assert.ok(result.jobs.every((row) => row.classification === 'degraded'))
+  assert.equal(result.findings.filter((fact) => fact.class === 'SCHEDULER_RUNTIME_UNHEALTHY').length, 1)
+  assert.equal(result.jobs.flatMap((row) => row.findings).filter((fact) => fact.class === 'SCHEDULER_RUNTIME_UNHEALTHY').length, 0)
+})
+
 test('T19/T22 one quarantined Job leaves watchdog/readback and unrelated Jobs healthy', () => {
   const occurrence = unknown('a', T0 - 10)
   const result = projectSchedulerHealth(snapshot({ occurrences: [occurrence], fences: rebuildFences([occurrence]) }))

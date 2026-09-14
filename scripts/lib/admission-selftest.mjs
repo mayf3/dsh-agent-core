@@ -36,13 +36,15 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   execFileSync('ln', ['-s', join(binDir, 'agentcore-cron'), join(binDir, 'agentcore-cron-link')])
   Object.assign(ctx, {
     liveRoot, storePath: join(fx, 'jobs.json'), artifacts: fx, artifactsDir: fx,
+    controlUid: process.getuid(), controlGid: process.getgid(),
     launchdDir: join(fx, 'LaunchDaemons'), watchdogStateDir: join(fx, 'watchdog-state'),
     evidenceFile: join(fx, 'evidence', 'reconciliation-evidence.jsonl'), runtimeNode: process.execPath,
     desiredPath: join(fx, 'desired-state.json'), binSymlink: join(binDir, 'agentcore-cron-link'),
     launchctlShim: (op, rest) => execFileSync(process.execPath, [shim, op, rest], { env: { ...process.env, SHIM_LOG: join(fx, 'launchctl-calls.log') } }),
     chown: () => {},
     asAuthsvc: () => JSON.stringify({ jobs: JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.map((job) => ({ id: job.id })) }),
-    routingManifest: join(fx, 'config', 'scheduler-routing.json'), authsvcUid: process.getuid(), authsvcGid: process.getgid(),
+    routingManifest: join(fx, 'config', 'scheduler-routing.json'), routingTargetBoundary: fx,
+    authsvcUid: process.getuid(), authsvcGid: process.getgid(),
     routingCandidateUid: process.getuid(), routingCandidateGid: process.getgid(),
   })
   ctx.kickstart = (label) => ctx.launchctlShim('kickstart', label)
@@ -69,6 +71,13 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.filter((job) => job.logicalKey !== undefined).length === 2, 'two jobs keyed')
   const calls = readFileSync(join(fx, 'launchctl-calls.log'), 'utf8')
   ok(calls.includes('bootout system/ai.agent-core.runtime') && calls.split('bootstrap').length - 1 === 3, 'runtime and watchdog launchd calls')
+  const callLines = calls.trim().split('\n')
+  ok(callLines[0] === 'bootout system/ai.agent-core.scheduler-watchdog-w1'
+    && callLines[1] === 'bootout system/ai.agent-core.scheduler-watchdog-w2', 'watchdogs quiesced before all mutable phases')
+  const phaseKeys = Object.keys(JSON.parse(readFileSync(join(fx, 'terminal-receipt.json'), 'utf8')).phases)
+  ok(phaseKeys.indexOf('watchdog-quiesce') < phaseKeys.indexOf('overlay')
+    && phaseKeys.indexOf('watchdog-quiesce') < phaseKeys.indexOf('routing')
+    && phaseKeys.indexOf('watchdog-quiesce') < phaseKeys.indexOf('incident-migration'), 'quiesce receipt precedes overlay, routing, and migration')
   ok(readFileSync(join(fx, 'LaunchDaemons', 'ai.agent-core.runtime.plist'), 'utf8').includes('AGENTCORE_EXPECTED_STORE'), 'runtime env')
   ok(existsSync(join(fx, 'watchdog-state', 'incidents.json')) && JSON.parse(readFileSync(join(fx, 'incident-migration-receipt.json'), 'utf8')).status === 'MIGRATED', 'incident migration')
   ok(existsSync(join(fx, 'watchdog-state', 'scheduler-watchdog-evidence.jsonl')), 'watchdog evidence')
