@@ -168,27 +168,39 @@ and command-bound, not claimed as readback-verifiable.
 
 ## 6. Exact implementation closure
 
-After acceptance, implementation may change exactly these seven paths:
+After acceptance, implementation may change exactly these nine logical paths
+(two are rename pairs):
 
 ```text
 A packages/broker/src/capabilities/workflow-human-principal-projection.js
 M packages/broker/src/index.js
 A packages/broker/test/capabilities/workflow-human-principal-projection.test.js
 M packages/broker/test/capabilities/manifest-inventory.test.js
-A packages/production-runtime/src/workflow-human-principal-projection.js
+R packages/production-runtime/src/agent-principal-resolution.js
+  -> packages/production-runtime/src/identity/agent-principal-resolution.js
+A packages/production-runtime/src/identity/workflow-human-principal-projection.js
 M packages/production-runtime/src/compose.js
-A packages/production-runtime/test/workflow-human-principal-projection.test.js
+R packages/production-runtime/test/agent-principal-resolution.test.js
+  -> packages/production-runtime/test/identity/agent-principal-resolution.test.js
+A packages/production-runtime/test/identity/workflow-human-principal-projection.test.js
 ```
 
 - Broker source owns only the exact LOCAL manifest/constants.
 - Broker index registers the manifest and adds the provider to the existing
   execute-time local handler resolver.
-- Production runtime source owns the exact validator and algorithm in §4.
+- `src/identity/` and `test/identity/` are cohesive identity/projection homes.
+  The existing Principal-resolution source and test move mechanically into
+  them; only relative imports change and all existing assertions remain.
+- Production runtime projection source owns the exact validator and algorithm
+  in §4.
 - Compose supplies only fixed deployed target/auth coordinates and an
   `acquireCallerToken(actual callerAgentId, workflow.admin)` seam using the
   existing credential store/token primitive.
 - Dedicated tests own capability and runtime algorithm evidence.
 - Aggregate manifest inventory changes exactly `21 -> 22`.
+- Each production-runtime root replaces one existing direct file with one
+  directory: `src` and `test` therefore remain exactly 20 direct children;
+  each new `identity/` directory contains exactly two files.
 - No changes to generic schema, mapping, gateway, relay, transport, credential
   store, targets, registry, release scripts, or legacy
   `packages/broker/src/capabilities/workflow.js`.
@@ -208,7 +220,7 @@ production_apply_authority: none  # unchanged
 It may also add only standard acceptance provenance fields/banner and the
 corresponding `docs/specs/README.md` lifecycle row. Normative §§1-12 bytes must
 remain unchanged. That acceptance head, once merged to main, authorizes only
-the seven-file implementation closure.
+the exact implementation closure in §6.
 
 Implementation merge, capability production deployment, and exact Principal
 projection are distinct gates. Production deployment requires exact artifact
@@ -267,8 +279,9 @@ not GET-verifiable.
 `CTR-WHPP-007` — Re-entry is state-based and result-state-idempotent. It does not
 misstate every POST as a literal storage no-op.
 
-`CTR-WHPP-008` — Implementation closure is exactly §6, inventory is 22, and no
-generic Broker or svc mechanism changes.
+`CTR-WHPP-008` — Implementation closure is exactly §6, inventory is 22, both
+production-runtime root child counts remain 20, both identity subdirectories
+contain two files, and no generic Broker or svc mechanism changes.
 
 `CTR-WHPP-009` — Deployment, projection, and exact-20 normalization remain
 serialized, separate operations.
@@ -294,7 +307,8 @@ implementation or production authority.
 - `ACC-WHPP-008`: mismatched/malformed/unavailable readback fails closed and
   never reports READY; response/error detail exposes no credential/token.
 - `ACC-WHPP-009`: focused tests, full Broker/runtime tests, structure verifier,
-  secret scan, exact-path diff, and Spec compliance PASS.
+  secret scan, exact-path/rename diff, and Spec compliance PASS. The moved
+  Principal-resolution tests remain behavior-identical.
 - `ACC-WHPP-010`: independent exact-head implementation review returns
   PASS/BLOCKERS=NONE before any merge/deploy.
 
@@ -333,7 +347,7 @@ The read-only Reviewer binds exact HEAD and Spec SHA-256 and verifies:
 3. mechanical preflight/conditional-write/readback algorithm;
 4. honest result-state idempotency and type-conflict receipt semantics;
 5. no generic admin/transport/identity/Grant expansion;
-6. exact seven paths and inventory delta;
+6. exact structure-safe paths/renames, direct-child counts, and inventory delta;
 7. deployment/projection/exact-20 separation;
 8. frozen lifecycle transaction and honest current `none` authorities.
 
