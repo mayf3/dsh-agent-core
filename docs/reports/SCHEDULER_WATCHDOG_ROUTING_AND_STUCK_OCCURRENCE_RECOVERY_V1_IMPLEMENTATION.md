@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: b18463a58dfebb02db552d3df99292c4d8806bf2
-status: candidate_sixth_exact_review_pending
+implementation_code_commit: 931416737af7ac23afb7d32eab3bed2effb5a63d
+status: candidate_seventh_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`b18463a58dfebb02db552d3df99292c4d8806bf2`, based on the accepted-Spec merge
+`931416737af7ac23afb7d32eab3bed2effb5a63d`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -48,9 +48,9 @@ All Spec tests T01–T34 have explicit named coverage under
 Key results:
 
 ```text
-full Scheduler suite                              310/310 PASS
-focused Product API + broker + deployment boundary   97/97 PASS
-focused fifth-review blocker matrix                   44/44 PASS
+affected Scheduler + Router suite                  274/274 PASS
+focused seventh-review blocker matrix                20/20 PASS
+wide Scheduler/Product/Broker/deployment run         698/699 PASS (one known environment failure)
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
 production admission fixture selftest           PASS twice, including resumable replay
@@ -142,9 +142,21 @@ returned `REVISE`. The sixth candidate closes every executed counterexample:
 | desired-state `INSTALLING` replay could substitute predecessor bytes | the candidate is frozen once in the protected control tree with file/directory fsync; replay reads that exact candidate and verifies the exact original preimage before install |
 | rollback changed predecessor metadata | runtime, watchdog, routing, and desired receipts bind uid/gid/mode plus absence of ACL/unsupported xattrs; restore reapplies and reads back exact bytes and metadata with file/directory fsync |
 | pure postdeploy helper trusted booleans and minted current-six authority | the pure gate is deleted; an executable root-controlled finalizer reads the pending deployment receipt, authenticated canonical health, exact API/store SHA binding, and one real retained side-effect-free canary created by a closed control op; it proves canary-only store delta, unchanged fences/quarantines, and passive incident replay before publishing an atomic receipt |
-| current-six authority was not identity-bound | the acceptance receipt sets `currentSixAuthorized=true` only for exactly six real quarantined roots and records their exact occurrence identities; any other cardinality leaves that gate false |
+| current-six authority was not identity-bound | the sixth candidate attempted a six-root binding; the sixth review correctly rejected cardinality as insufficient and the seventh candidate removes that authority mint entirely |
 
-This exact packet is intentionally submitted to both independent reviewers for a sixth exact-head
+The sixth exact-head review of `85af2d04b71451e546206baee48dae8d0a50a83a`
+returned `REVISE`. The seventh candidate closes every executed counterexample:
+
+| Sixth-review blocker | Seventh-candidate exact closure |
+|---|---|
+| cardinality-only current-six authority | postdeploy acceptance always leaves `currentSixAuthorized=false`; recovery remains gated on later exact Owner-suffix-to-full-identity resolution |
+| synthetic empty incident replay | finalizer protected-reads the real before/after `incidents.json`, binds both hashes to canonical health provenance, requires each exact open root, and proves zero notification on read-only replay |
+| prompt-only side-effect-free canary | a fixed generation-bound reserved identity executes as a Scheduler-native no-op that cannot reach Router, AgentProcess, tools, credentials or delivery; durable Run result and event evidence prove zero tool calls/external effects and exact deployed SHA |
+| token leaf-only validation | audit credential moved to one fixed control-tree path; canonical path, every ancestor, leaf no-follow identity, uid/gid/mode, ACL and xattrs are verified before the single fd read |
+| route generation and unrelated-Job isolation gaps | before/after canonical routing hashes must equal the protected routing install receipt; every pre-existing Job retains its admission surface without health regression, while regression coverage proves an unrelated healthy Job can complete normally during the canary |
+| runtime/watchdog plist durability gaps | the shared plist installer fsyncs rollback bytes and directory before any install receipt, fsyncs candidate before rename and target directory after rename, validates existing preimages/generations on replay, and has crash-frontier coverage |
+
+This exact packet is intentionally submitted to both independent reviewers for a seventh exact-head
 review; the closure table is implementation evidence, not a self-issued PASS.
 
 ## 4. Controlled production migration plan
@@ -213,5 +225,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = SIXTH_EXACT_HEAD_PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = SEVENTH_EXACT_HEAD_PENDING
 ```
