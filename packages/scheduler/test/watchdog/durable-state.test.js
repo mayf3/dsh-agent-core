@@ -3,15 +3,27 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { execFileSync, spawn } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
-import { chmod, mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLegacyIncidentStateFiles } from '../../src/watchdog/durable-state.js'
 import { canonicalJSON } from '../../src/occurrence-model.js'
+import { ensureProtectedDirectoryTree } from '../../src/watchdog/private-state-io.js'
 
 const state = (revision) => ({ version: 1, revision, incidents: {}, outbox: {} })
 const sha = (value) => createHash('sha256').update(value).digest('hex')
+
+test('protected control tree rejects symlink and writable ancestors before any receipt write', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'protected-control-tree-'))
+  await chmod(root, 0o700)
+  const real = join(root, 'real'), link = join(root, 'link')
+  await mkdir(real); await symlink(real, link)
+  assert.throws(() => ensureProtectedDirectoryTree(join(link, 'control'), { boundary: root }), /unsafe protected directory tree/)
+  const writable = join(root, 'writable'); await mkdir(writable); await chmod(writable, 0o777)
+  assert.throws(() => ensureProtectedDirectoryTree(join(writable, 'control'), { boundary: root }), /unsafe protected directory tree/)
+  await assert.rejects(readFile(join(real, 'control', 'receipt.json')), /ENOENT/)
+})
 
 test('T26 state/outbox commit is atomic and expected-hash guarded', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'incident-state-'))

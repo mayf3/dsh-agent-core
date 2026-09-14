@@ -1,6 +1,8 @@
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { quiesceLaunchdServices } from './deployment-launchd.js'
 
 export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   if (!/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)) {
@@ -10,6 +12,7 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   const preimage = join(ctx.artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
   mkdirSync(dirname(preimage), { recursive: true })
   if (!existsSync(preimage)) execFileSync('cp', [plistPath, preimage])
+  const preimageSha256 = createHash('sha256').update(readFileSync(preimage)).digest('hex')
   let plist = readFileSync(plistPath, 'utf8')
   const envAdds = {
     AGENTCORE_EXPECTED_STORE: '/Users/authsvc/.agent-core/scheduler/jobs.json',
@@ -33,17 +36,22 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
       dirty = true
     }
   }
+  const expectedInstalledSha256 = createHash('sha256').update(plist).digest('hex')
+  ctx.runtimeReceipt?.({ status: 'INSTALLING', sourceSha, plistPath, preimage, preimageSha256, installedSha256: expectedInstalledSha256 })
   if (dirty) {
     const tmp = `${plistPath}.incoming`
     writeFileSync(tmp, plist)
     execFileSync('mv', [tmp, plistPath])
   }
   const installed = readFileSync(plistPath, 'utf8')
+  const installedSha256 = createHash('sha256').update(installed).digest('hex')
+  if (installedSha256 !== expectedInstalledSha256) throw new Error('runtime plist generation changed during install')
   for (const [key, value] of Object.entries(envAdds)) {
     if (!installed.includes(`<key>${key}</key><string>${value}</string>`)) throw new Error(`runtime plist readback mismatch for ${key}`)
   }
-  ctx.bootout('system/ai.agent-core.runtime')
+  quiesceLaunchdServices(['system/ai.agent-core.runtime'], ctx)
   ctx.bootstrap(plistPath, 'system/ai.agent-core.runtime')
+  ctx.runtimeReceipt?.({ status: 'INSTALLED', sourceSha, plistPath, preimage, preimageSha256, installedSha256 })
   const deadline = Date.now() + 60_000
   let healthy = false
   while (Date.now() < deadline) {

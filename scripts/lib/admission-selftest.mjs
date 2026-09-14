@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -7,7 +7,7 @@ import { createJobOp } from '../../packages/scheduler/src/control.js'
 import { JobStore } from '../../packages/scheduler/src/store.js'
 
 export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot }) {
-  const fx = mkdtempSync(join(tmpdir(), 'sched-cp-admission-'))
+  const fx = realpathSync(mkdtempSync(join(tmpdir(), 'sched-cp-admission-')))
   const store = new JobStore(join(fx, 'jobs.json'), { runLogPath: join(fx, 'runs.jsonl') })
   const daily = await createJobOp(store, { name: '每日摘要检查', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_fixture' } })
   await createJobOp(store, { name: '每日随想总结-DeepSeek（滚动7日补偿）', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'none' } })
@@ -36,20 +36,22 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   execFileSync('ln', ['-s', join(binDir, 'agentcore-cron'), join(binDir, 'agentcore-cron-link')])
   Object.assign(ctx, {
     liveRoot, storePath: join(fx, 'jobs.json'), artifacts: fx, artifactsDir: fx,
-    controlUid: process.getuid(), controlGid: process.getgid(),
+    controlUid: process.getuid(), controlGid: process.getgid(), controlBoundary: fx,
     launchdDir: join(fx, 'LaunchDaemons'), watchdogStateDir: join(fx, 'watchdog-state'),
     evidenceFile: join(fx, 'evidence', 'reconciliation-evidence.jsonl'), runtimeNode: process.execPath,
     desiredPath: join(fx, 'desired-state.json'), binSymlink: join(binDir, 'agentcore-cron-link'),
     launchctlShim: (op, rest) => execFileSync(process.execPath, [shim, op, rest], { env: { ...process.env, SHIM_LOG: join(fx, 'launchctl-calls.log') } }),
     chown: () => {},
     asAuthsvc: () => JSON.stringify({ jobs: JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.map((job) => ({ id: job.id })) }),
-    routingManifest: join(fx, 'config', 'scheduler-routing.json'), routingTargetBoundary: fx,
+    routingManifest: join(fx, 'config', 'scheduler-routing.json'), routingTargetBoundary: '/',
     authsvcUid: process.getuid(), authsvcGid: process.getgid(),
     routingCandidateUid: process.getuid(), routingCandidateGid: process.getgid(),
   })
+  const loadedServices = new Set(['system/ai.agent-core.scheduler-watchdog-w1', 'system/ai.agent-core.scheduler-watchdog-w2', 'system/ai.agent-core.runtime'])
   ctx.kickstart = (label) => ctx.launchctlShim('kickstart', label)
-  ctx.bootout = (label) => ctx.launchctlShim('bootout', label)
-  ctx.bootstrap = (plist) => ctx.launchctlShim('bootstrap', plist)
+  ctx.bootout = (label) => { ctx.launchctlShim('bootout', label); loadedServices.delete(label) }
+  ctx.isLoaded = (label) => loadedServices.has(label)
+  ctx.bootstrap = (plist, label) => { ctx.launchctlShim('bootstrap', plist); loadedServices.add(label) }
   mkdirSync(join(fx, 'config'), { recursive: true })
   writeFileSync(join(fx, 'config', 'agent-credentials.json'), '{}\n')
   writeFileSync(ctx.routingManifest, `${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops' }, ownerTargets: {}, jobFailureTargets: {} })}\n`, { mode: 0o640 })
@@ -74,7 +76,9 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   const callLines = calls.trim().split('\n')
   ok(callLines[0] === 'bootout system/ai.agent-core.scheduler-watchdog-w1'
     && callLines[1] === 'bootout system/ai.agent-core.scheduler-watchdog-w2', 'watchdogs quiesced before all mutable phases')
-  const phaseKeys = Object.keys(JSON.parse(readFileSync(join(fx, 'terminal-receipt.json'), 'utf8')).phases)
+  const deploymentReceipt = JSON.parse(readFileSync(join(fx, 'deployment-phase-receipt.json'), 'utf8'))
+  const phaseKeys = Object.keys(deploymentReceipt.phases)
+  ok(deploymentReceipt.acceptanceStatus === 'PENDING_CANONICAL_HEALTH_AND_CANARY', 'deployment receipt cannot claim production acceptance')
   ok(phaseKeys.indexOf('watchdog-quiesce') < phaseKeys.indexOf('overlay')
     && phaseKeys.indexOf('watchdog-quiesce') < phaseKeys.indexOf('routing')
     && phaseKeys.indexOf('watchdog-quiesce') < phaseKeys.indexOf('incident-migration'), 'quiesce receipt precedes overlay, routing, and migration')

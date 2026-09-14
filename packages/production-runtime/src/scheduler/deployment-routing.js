@@ -76,7 +76,7 @@ export function installSchedulerRoutingManifest({
 } = {}) {
   if (!Number.isInteger(expectedUid) || !Number.isInteger(expectedGid)) throw new TypeError('routing ownership coordinates required')
   if (!isAbsolute(targetPath) || resolve(targetPath) !== targetPath) throw new TypeError('routing target path must be canonical and absolute')
-  if (!isAbsolute(targetBoundary) || resolve(targetBoundary) !== targetBoundary) throw new TypeError('trusted routing target boundary required')
+  if (targetBoundary !== '/') throw new TypeError('routing target boundary must cover every ancestor through root')
   const targetParents = protectedParents(targetPath, targetBoundary)
   if (targetParents.some((parent) => parent.type !== 'directory' || parent.symlink || parent.extendedAcl || (parent.mode & 0o022) !== 0)) {
     throw new TypeError('unsafe routing target parent chain')

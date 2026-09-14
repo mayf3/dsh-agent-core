@@ -4,7 +4,7 @@ import {
   chownSync, closeSync, constants, fchownSync, fstatSync, fsyncSync, linkSync, lstatSync,
   mkdirSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync,
 } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 
 function hasExtendedAcl(path) {
   if (process.platform !== 'darwin') return false
@@ -22,6 +22,34 @@ export function ensurePrivateDirectory(path, { expectedUid = process.getuid?.(),
     throw new TypeError('unsafe incident state directory')
   }
   return stat
+}
+
+function validateTreeDirectory(path, { expectedUid, expectedGid, privateLeaf = false }) {
+  const stat = lstatSync(path)
+  if (!stat.isDirectory() || stat.isSymbolicLink() || hasExtendedAcl(path) || (stat.mode & 0o022) !== 0
+    || (privateLeaf && (stat.mode & 0o077) !== 0)
+    || (Number.isInteger(expectedUid) && stat.uid !== expectedUid)
+    || (Number.isInteger(expectedGid) && stat.gid !== expectedGid)) throw new TypeError(`unsafe protected directory tree: ${path}`)
+  return stat
+}
+
+export function ensureProtectedDirectoryTree(path, { boundary, expectedUid = process.getuid?.(), expectedGid = process.getgid?.() } = {}) {
+  if (!isAbsolute(path) || resolve(path) !== path || !isAbsolute(boundary) || resolve(boundary) !== boundary) throw new TypeError('protected directory coordinates must be canonical and absolute')
+  const rel = relative(boundary, path)
+  if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw new TypeError('protected directory lies outside trusted boundary')
+  validateTreeDirectory(boundary, { expectedUid, expectedGid })
+  let current = boundary
+  const parts = rel === '' ? [] : rel.split(sep)
+  for (const [index, part] of parts.entries()) {
+    current = join(current, part)
+    try { lstatSync(current) } catch (error) {
+      if (error?.code !== 'ENOENT') throw error
+      mkdirSync(current, { mode: 0o700 })
+      if (process.getuid?.() === 0 && Number.isInteger(expectedUid) && Number.isInteger(expectedGid)) chownSync(current, expectedUid, expectedGid)
+    }
+    validateTreeDirectory(current, { expectedUid, expectedGid, privateLeaf: index === parts.length - 1 })
+  }
+  return validateTreeDirectory(path, { expectedUid, expectedGid, privateLeaf: true })
 }
 
 export function readPrivateFile(path, { expectedUid = process.getuid?.(), expectedGid = process.getgid?.(), allowMissing = false } = {}) {
