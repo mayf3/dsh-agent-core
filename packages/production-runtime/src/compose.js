@@ -51,8 +51,10 @@ import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
 import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
+import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
 import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
-import { createAgentPrincipalResolutionAccess } from './agent-principal-resolution.js'
+import { createAgentPrincipalResolutionAccess } from './identity/agent-principal-resolution.js'
+import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
 import { createAgentSessionMessagingAudit } from './agent-session-messaging-audit.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
@@ -371,8 +373,8 @@ export async function composeProductionRuntime(options = {}) {
   // resolution below; neither value is ever accepted from model arguments.
   const brokerCredentialsFile = opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE
   const brokerAuthServiceOrigin = opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN
+  const workflowServiceOrigin = buildTargetMap(defaultBrokerTargets).get('svc-workflow')?.allowedOrigin
   mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log })
-
   // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3): the trusted LOCAL
   // provider for agent_session_send. It reuses the Router's sole delivery
   // and reconciliation seams — one send = one new Run/Turn in the target
@@ -414,6 +416,24 @@ export async function composeProductionRuntime(options = {}) {
         throw Object.assign(error instanceof Error ? error : new Error(String(error)), {
           code: error?.errorCode ?? 'transport_failure',
         })
+      }
+    },
+  }))
+  ctx.provide('workflowHumanPrincipalProjectionAccess', createWorkflowHumanPrincipalProjectionAccess({
+    workflowOrigin: workflowServiceOrigin,
+    acquireCallerToken: async ({ agentId }) => {
+      const credential = loadCredentialFor(brokerCredentialsFile, agentId)
+      if (credential === undefined) throw Object.assign(new Error('no credential bound'), { code: 'credential_unavailable' })
+      try {
+        return await requestAccessToken({
+          credential,
+          authServiceOrigin: brokerAuthServiceOrigin,
+          resource: 'svc-workflow',
+          scope: 'workflow.admin',
+        })
+      } catch (error) {
+        throw Object.assign(error instanceof Error ? error : new Error(String(error)),
+          { code: error?.errorCode ?? 'transport_failure' })
       }
     },
   }))
