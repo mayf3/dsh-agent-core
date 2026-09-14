@@ -113,7 +113,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       arguments: {
         additionalProperties: false,
         properties: {
-          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, contextSchema: { type: 'json' },
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, contextSchema: { type: 'json', description: 'Context schema used by draft creation and replacement. On create, a supplied JSON value becomes the draft schema. On replace, omit to preserve the current schema, pass null to clear it, or pass JSON to replace it.' },
           jsonSchemaDialect: { type: 'string' }, validatorVersion: { type: 'string' }, metadata: { type: 'json' },
           semanticModelVersion: { type: 'integer', enum: [1, 2, 3], description: 'Omitted means Legacy (1); 2 is Minimal; 3 is Visit Activation. These are semantic choices, not quality or newness rankings. Use explicit 3 for linear steps + terminalOutcome authoring; omission is forwarded unchanged to preserve the service default.' },
         },
