@@ -46,7 +46,7 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256 }) {
   ctx.bootstrap = (plist) => ctx.launchctlShim('bootstrap', plist)
   mkdirSync(join(fx, 'config'), { recursive: true })
   writeFileSync(join(fx, 'config', 'agent-credentials.json'), '{}\n')
-  writeFileSync(ctx.routingManifest, `${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
+  writeFileSync(ctx.routingManifest, `${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops' }, ownerTargets: {}, jobFailureTargets: {} })}\n`, { mode: 0o640 })
   const routingCandidate = join(fx, 'routing-candidate.json')
   const routingBytes = Buffer.from(`${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops-v1' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
   writeFileSync(routingCandidate, routingBytes, { mode: 0o600 })
