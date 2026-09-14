@@ -22,17 +22,23 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   process.env.PATH = `${binDir}:${oldPath}`
   t.after(() => { process.env.PATH = oldPath })
   const phases = []
+  const receipts = []
+  let loaded = true
   const sha = '1234567890abcdef1234567890abcdef12345678'
   const result = restartSchedulerProductionRuntime({
     ctx: {
       launchdDir, artifactsDir, authsvcUid: 501, authsvcGid: 20,
-      bootout: (label) => phases.push(`bootout:${label}`),
-      bootstrap: (path, label) => phases.push(`bootstrap:${path}:${label}`),
+      isLoaded: () => loaded,
+      bootout: (label) => { phases.push(`bootout:${label}`); loaded = false },
+      bootstrap: (path, label) => { phases.push(`bootstrap:${path}:${label}`); loaded = true },
+      runtimeReceipt: (receipt) => receipts.push(receipt),
     },
     phase: (name, ok) => phases.push(`${name}:${ok}`), sourceSha: sha,
   })
   assert.equal(result.deployedSha, sha)
   assert.match(readFileSync(plistPath, 'utf8'), new RegExp(`<key>AGENT_CORE_DEPLOYED_SHA</key><string>${sha}</string>`))
+  assert.deepEqual(receipts.map((receipt) => receipt.status), ['INSTALLING', 'INSTALLED'])
+  assert.equal(receipts[0].installedSha256, receipts[1].installedSha256)
   assert.deepEqual(phases, [
     'bootout:system/ai.agent-core.runtime',
     `bootstrap:${plistPath}:system/ai.agent-core.runtime`,

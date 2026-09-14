@@ -1,5 +1,6 @@
 import { canonicalJSON, rebuildFences, validateOccurrenceRecord } from '../occurrence-model.js'
-import { computeNextRunAtMs } from '../schedule.js'
+import { latestTerminalOccurrence } from '../eligibility.js'
+import { computeNextRunAtMs, MIN_REFIRE_GAP_MS } from '../schedule.js'
 import { normalizeJob } from '../job-model.js'
 
 function generationsComplete(generations) {
@@ -43,11 +44,13 @@ function canonicalJobFindings(job, records, snapshot) {
   const base = { jobId: job.id, logicalKey: job.logicalKey, agentId: job.agentId, jobRevision: job.scheduleRevision }
   const unresolved = records.filter((item) => item.state === 'outcome_unknown' && item.terminationSettlement === undefined)
   for (const record of records) {
-    if (record.executionOutcome === 'failed' && Number.isFinite(record.endedAt) && snapshot.generatedAt - record.endedAt <= 24 * 60 * 60 * 1000) {
+    const laterSuccess = records.some((item) => (item.executionOutcome === 'succeeded' || item.state === 'succeeded')
+      && Number.isFinite(item.endedAt) && item.endedAt > record.endedAt)
+    if (record.executionOutcome === 'failed' && Number.isFinite(record.endedAt) && !laterSuccess) {
       findings.push({ class: 'RUN_FAILED', jobId: job.id, runId: record.runId, occurrenceId: record.occurrenceId, endedAt: new Date(record.endedAt).toISOString() })
     }
     if (Number.isFinite(record.startedAt) && !Number.isFinite(record.endedAt)
-      && snapshot.generatedAt - record.startedAt > (record.timeoutMs ?? 2 * 60 * 60 * 1000)) {
+      && Number.isFinite(record.executionDeadlineAtMs) && snapshot.generatedAt > record.executionDeadlineAtMs) {
       findings.push({ class: 'RUN_STUCK', jobId: job.id, runId: record.runId, occurrenceId: record.occurrenceId, startedAt: new Date(record.startedAt).toISOString() })
     }
     if (record.state === 'outcome_unknown' && record.terminationSettlement === undefined) findings.push({ class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: job.id, runId: record.runId, occurrenceId: record.occurrenceId })
@@ -55,18 +58,23 @@ function canonicalJobFindings(job, records, snapshot) {
   if (Number.isFinite(job.state?.consecutiveErrors) && job.state.consecutiveErrors >= 2) {
     findings.push({ class: 'CONSECUTIVE_FAILURE', ...base, consecutiveErrors: job.state.consecutiveErrors })
   }
-  if (Number.isFinite(job.state?.nextRunAtMs) && snapshot.generatedAt - job.state.nextRunAtMs > 30 * 60 * 1000) {
-    const blocker = unresolved[0]
-    findings.push({ class: 'EXPECTED_RUN_MISSED', ...base, ...(blocker ? { occurrenceId: blocker.occurrenceId, runId: blocker.runId } : {}), dueAt: new Date(job.state.nextRunAtMs).toISOString() })
+  const graceMs = (job.runPolicy?.graceMinutes ?? 30) * 60 * 1000
+  let expectedAt = job.state?.nextRunAtMs
+  if (!Number.isFinite(expectedAt)) {
+    const terminal = latestTerminalOccurrence(snapshot.occurrences ?? [], job.id)
+    const activation = Number.isFinite(job.revisionActivatedAtMs) ? job.revisionActivatedAtMs : job.createdAtMs
+    const reference = terminal ? Math.max((terminal.endedAt ?? terminal.admittedAt) + MIN_REFIRE_GAP_MS, activation) : activation
+    expectedAt = Number.isFinite(reference)
+      ? computeNextRunAtMs(job.schedule, reference, { jobId: job.id, fallbackAnchorMs: job.createdAtMs }) : undefined
   }
-  const historyFailure = (snapshot.history ?? []).find((row) => (row.job_id === job.id || row.jobId === job.id)
-    && ['ERROR', 'FAILED', 'DELIVERY_FAILED'].includes(row.status_view ?? row.status)
-    && typeof (row.occurrence_id ?? row.occurrenceId) === 'string' && typeof (row.run_id ?? row.runId) === 'string')
-  if (historyFailure && !findings.some((fact) => fact.class === 'RUN_FAILED')) findings.push({
-    class: 'RUN_FAILED', jobId: job.id,
-    occurrenceId: historyFailure.occurrence_id ?? historyFailure.occurrenceId,
-    runId: historyFailure.run_id ?? historyFailure.runId,
-  })
+  if (Number.isFinite(expectedAt) && snapshot.generatedAt - expectedAt > graceMs) {
+    const targets = unresolved.length ? unresolved : [null]
+    for (const blocker of targets) findings.push({
+      class: 'EXPECTED_RUN_MISSED', ...base,
+      ...(blocker ? { occurrenceId: blocker.occurrenceId, runId: blocker.runId, derivedUnderAdmissionBlock: true } : {}),
+      dueAt: new Date(expectedAt).toISOString(), overdueMs: snapshot.generatedAt - expectedAt,
+    })
+  }
   return findings
 }
 
@@ -175,6 +183,12 @@ export function projectSchedulerHealth(snapshot = {}) {
   return {
     enabled: rows.length, healthy: count('healthy'), degraded: count('degraded'), blocked: count('blocked'), unknown: count('unknown'),
     complete, generatedAt: snapshot.generatedAt ?? Date.now(), jobs: rows, findings,
+    provenance: {
+      canonicalPair: snapshot.provenance?.canonicalPair === true,
+      runtime: snapshot.provenance?.runtime ?? null,
+      store: snapshot.provenance?.store ?? null,
+      routing: snapshot.provenance?.routing ?? null,
+    },
     censusError: complete ? null : (snapshot.censusError ?? authorityError?.message ?? 'source generation, provenance, or fence projection incomplete'),
     readbackAvailable: true, watchdogRunnable: true,
   }
@@ -214,6 +228,8 @@ export function filterHealthForPrincipal(health, principal) {
     throw Object.assign(new Error('forbidden scheduler health read'), { status: 403, code: 'forbidden' })
   }
   const jobs = health.jobs.filter((row) => row.agentId === principal.agentId)
+  const visibleJobIds = new Set(jobs.map((row) => row.jobId))
+  const findings = (health.findings ?? []).filter((finding) => finding.subjectKind === 'runtime' || visibleJobIds.has(finding.jobId))
   const count = (kind) => jobs.filter((row) => row.classification === kind).length
-  return { ...structuredClone(health), enabled: jobs.length, healthy: count('healthy'), degraded: count('degraded'), blocked: count('blocked'), unknown: count('unknown'), jobs }
+  return { ...structuredClone(health), enabled: jobs.length, healthy: count('healthy'), degraded: count('degraded'), blocked: count('blocked'), unknown: count('unknown'), jobs, findings }
 }

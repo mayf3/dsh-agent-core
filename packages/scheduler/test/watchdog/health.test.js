@@ -7,6 +7,8 @@ import {
   projectSchedulerHealth,
 } from '../../src/watchdog/health.js'
 import { applyTransition, buildOccurrenceRecord, rebuildFences } from '../../src/occurrence-model.js'
+import { compileIncidents } from '../../src/watchdog/incident-compiler.js'
+import { updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
 
 const T0 = Date.parse('2026-09-14T00:00:00Z')
 
@@ -88,6 +90,41 @@ test('T18 recent terminal failure is canonically degraded and exposes the W1 fin
   assert.equal(result.complete, true)
   assert.equal(result.jobs[0].classification, 'degraded')
   assert.deepEqual(result.jobs[0].findings.map((fact) => fact.class), ['RUN_FAILED'])
+})
+
+test('T18 failure never recovers from age alone and a later success is evidence-based recovery', () => {
+  const target = job('a')
+  const failed = buildOccurrenceRecord({ job: target, kind: 'natural', nominalScheduledAt: T0 - 100_000_000, admittedAt: T0 - 100_000_000 })
+  applyTransition(failed, { to: 'failed', at: T0 - 99_999_000, reason: 'rejected', endedAt: T0 - 99_999_000, executionOutcome: 'failed', terminalEvidence: { kind: 'pre-start-rejection', detailRef: 'AGENT_DISABLED' } })
+  const base = { jobs: [target], occurrences: [failed], fences: {}, credentials: { agt_a: true }, routes: { a: { ready: true } } }
+  assert.deepEqual(projectSchedulerHealth(snapshot(base)).findings.map((fact) => fact.class), ['RUN_FAILED'])
+  const succeeded = buildOccurrenceRecord({ job: target, kind: 'natural', nominalScheduledAt: T0 - 1000, admittedAt: T0 - 1000 })
+  applyTransition(succeeded, { to: 'running', at: T0 - 900, reason: 'started', startedAt: T0 - 900 })
+  applyTransition(succeeded, { to: 'succeeded', at: T0 - 500, reason: 'completed', endedAt: T0 - 500, executionOutcome: 'succeeded' })
+  assert.equal(projectSchedulerHealth(snapshot({ ...base, occurrences: [failed, succeeded] })).findings.some((fact) => fact.class === 'RUN_FAILED'), false)
+})
+
+test('T18 executionDeadlineAtMs is the canonical stuck boundary', () => {
+  const target = job('a')
+  const running = buildOccurrenceRecord({ job: target, kind: 'natural', nominalScheduledAt: T0 - 90_000, admittedAt: T0 - 90_000, timeoutMs: 89_999 })
+  applyTransition(running, { to: 'running', at: T0 - 89_999, reason: 'started', startedAt: T0 - 89_999 })
+  const result = projectSchedulerHealth(snapshot({ jobs: [target], occurrences: [running], fences: {}, credentials: { agt_a: true }, routes: { a: { ready: true } } }))
+  assert.equal(result.jobs[0].classification, 'degraded')
+  assert.equal(result.findings.some((fact) => fact.class === 'RUN_STUCK'), true)
+})
+
+test('T10 canonical unknown projection compiles paired symptoms into one durable incident', () => {
+  const target = { ...job('a'), state: { nextRunAtMs: undefined } }
+  const occurrence = unknown('a', T0 - 3_700_000)
+  const health = projectSchedulerHealth(snapshot({ generatedAt: T0 + 31 * 60_000, jobs: [target], occurrences: [occurrence], fences: rebuildFences([occurrence]), credentials: { agt_a: true }, routes: { a: { ready: true } } }))
+  assert.deepEqual(health.findings.map((fact) => fact.class).sort(), ['ADMISSION_BLOCKED_UNKNOWN', 'EXPECTED_RUN_MISSED'])
+  assert.equal(health.findings.find((fact) => fact.class === 'EXPECTED_RUN_MISSED').derivedUnderAdmissionBlock, true)
+  const compiled = compileIncidents(health.findings)
+  assert.equal(compiled.incidents.length, 1)
+  const first = updateIncidentState({}, compiled.incidents, { nowMs: T0 })
+  const unchanged = updateIncidentState(first.state, compiled.incidents, { nowMs: T0 + 1000 })
+  assert.equal(first.notifications.length, 1)
+  assert.equal(unchanged.notifications.length, 0)
 })
 
 test('T18 runtime failure degrades every Job but emits one global canonical finding', () => {

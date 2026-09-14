@@ -7,8 +7,9 @@ import {
 } from 'node:fs'
 import { normalize, resolve, join } from 'node:path'
 
-import { ensurePrivateDirectory, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
-import { buildSchedulerRollbackPlan } from '../packages/production-runtime/src/scheduler/deployment-rollback.js'
+import { ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
+import { buildSchedulerRollbackPlan, classifyRollbackGeneration } from '../packages/production-runtime/src/scheduler/deployment-rollback.js'
+import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
 import { inOverlayUniverse } from './lib/admission-lib.mjs'
 
 const A = '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1'
@@ -22,8 +23,9 @@ const sha256 = (path) => digest(readFileSync(path))
 const controlOwnership = { expectedUid: 0, expectedGid: 0 }
 
 if (process.getuid?.() !== 0) throw new Error('rollback requires root')
-ensurePrivateDirectory(A, controlOwnership)
+ensureProtectedDirectoryTree(A, { ...controlOwnership, boundary: '/var/db' })
 const readControl = (name, allowMissing = false) => {
+  ensureProtectedDirectoryTree(A, { ...controlOwnership, boundary: '/var/db' })
   const loaded = readPrivateFile(join(A, name), { ...controlOwnership, allowMissing })
   return loaded ? JSON.parse(loaded.bytes.toString('utf8')) : null
 }
@@ -50,23 +52,34 @@ function safeLivePath(path) {
   if (!target.startsWith(`${LIVE}/`)) throw new Error(`overlay path escaped live root: ${path}`)
   return target
 }
-function bootout(label) { try { run('launchctl', ['bootout', `system/${label}`]) } catch { /* already stopped */ } }
+const launchd = createLaunchdAdapter()
 
 const progress = readControl('phase-progress-receipt.json')
+const serviceState = readControl('service-state-preimage.json', true)
+if (!serviceState) { say('no service-state preimage; no mutable phase crossed'); process.exit(0) }
+if (serviceState.sourceSha !== progress.sourceSha || serviceState.loaded === null || typeof serviceState.loaded !== 'object') throw new Error('invalid service-state preimage')
+const serviceLabels = [...WATCHDOG_LABELS.map((label) => `system/${label}`), 'system/ai.agent-core.runtime']
+if (Object.keys(serviceState.loaded).sort().join() !== [...serviceLabels].sort().join()
+  || serviceLabels.some((label) => typeof serviceState.loaded[label] !== 'boolean')) throw new Error('invalid service-state preimage')
 const runtimePreimage = join(A, 'rollback', 'ai.agent-core.runtime.plist.preimage')
+const runtimeReceipt = readControl('runtime-install-receipt.json', true)
 const watchdog = readControl('watchdog-install-receipt.json', true)
 const routingReceiptPath = join(A, 'rollback', 'routing-install-receipt.json')
+const desired = readControl('desired-state-install-receipt.json', true)
 const overlay = readControl('overlay-manifest.json', true)
 const operator = readControl('operator-cutover-receipt.json', true)
 const plan = buildSchedulerRollbackPlan({ progress, receipts: {
-  runtime: existsSync(runtimePreimage), watchdog: watchdog !== null, routing: existsSync(routingReceiptPath),
+  runtime: runtimeReceipt !== null, watchdog: watchdog !== null, routing: existsSync(routingReceiptPath), desired: desired !== null,
   overlay: overlay !== null, operator: operator !== null,
 } })
 const planned = (action) => plan.actions.includes(action)
-for (const label of [...WATCHDOG_LABELS, 'ai.agent-core.runtime']) bootout(label)
+quiesceLaunchdServices(serviceLabels, launchd)
 
-if (planned('RESTORE_RUNTIME') && readFileSync(RUNTIME_PLIST, 'utf8').includes(`<key>AGENT_CORE_DEPLOYED_SHA</key><string>${progress.sourceSha}</string>`)) {
-  restoreFile(runtimePreimage, RUNTIME_PLIST, sha256(RUNTIME_PLIST)); say('runtime plist restored')
+if (planned('RESTORE_RUNTIME')) {
+  const current = sha256(RUNTIME_PLIST)
+  if (classifyRollbackGeneration({ currentSha256: current, installedSha256: runtimeReceipt.installedSha256, preimageSha256: runtimeReceipt.preimageSha256 }) === 'RESTORE') {
+    restoreFile(runtimePreimage, RUNTIME_PLIST, runtimeReceipt.installedSha256); say('runtime plist restored')
+  }
 }
 
 for (const item of planned('RESTORE_WATCHDOGS') ? watchdog.plists ?? [] : []) {
@@ -87,6 +100,16 @@ if (planned('RESTORE_ROUTING')) {
     if (routing.preimageSha256 === null) rmSync(target)
     else restoreFile(join(A, 'rollback', 'scheduler-routing.json.preimage'), target, routing.candidateSha256)
   } else if (current !== routing.preimageSha256) throw new Error('routing generation advanced')
+}
+
+if (planned('RESTORE_DESIRED_STATE')) {
+  if (desired.targetPath !== '/usr/local/libexec/agent-core/config/scheduler-desired-state.json'
+    || desired.preimagePath !== join(A, 'rollback', 'scheduler-desired-state.json.preimage')) throw new Error('unsafe desired-state receipt coordinate')
+  const current = existsSync(desired.targetPath) ? sha256(desired.targetPath) : null
+  if (current === desired.candidateSha256) {
+    if (desired.preimageSha256 === null) rmSync(desired.targetPath)
+    else restoreFile(desired.preimagePath, desired.targetPath, desired.candidateSha256)
+  } else if (current !== desired.preimageSha256) throw new Error('desired-state generation advanced')
 }
 
 if (planned('RESTORE_OVERLAY')) {
@@ -118,12 +141,12 @@ if (planned('RESTORE_OPERATOR')) {
   } else if (current !== operator.previousSha256) throw new Error('operator generation advanced')
 }
 
-run('launchctl', ['bootstrap', 'system', RUNTIME_PLIST])
+if (serviceState.loaded['system/ai.agent-core.runtime'] === true) run('launchctl', ['bootstrap', 'system', RUNTIME_PLIST])
 for (const label of WATCHDOG_LABELS) {
   const plist = `/Library/LaunchDaemons/${label}.plist`
-  if (existsSync(plist)) run('launchctl', ['bootstrap', 'system', plist])
+  if (serviceState.loaded[`system/${label}`] === true && existsSync(plist)) run('launchctl', ['bootstrap', 'system', plist])
 }
-let healthy = false
+let healthy = serviceState.loaded['system/ai.agent-core.runtime'] !== true
 for (let attempt = 0; attempt < 30; attempt += 1) {
   try { if (JSON.parse(run('curl', ['-s', '-m', '3', 'http://127.0.0.1:8790/health'], { encoding: 'utf8' }))?.ok === true) { healthy = true; break } } catch { /* bounded retry */ }
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000)

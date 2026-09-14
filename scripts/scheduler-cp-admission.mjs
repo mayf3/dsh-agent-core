@@ -4,7 +4,7 @@
  * Phases: census, exact critical matching, backfill/desired-state freeze,
  * exact-goal overlay, protected routing install, runtime/operator cutover,
  * watchdog install, and readback proofs. --selftest is fixture-only, --plan is
- * read-only, and --apply requires root. Rollback preimages live in artifacts.
+ * read-only, and --apply requires root.
  */
 
 import { execFileSync } from 'node:child_process'
@@ -23,10 +23,11 @@ import {
 } from './lib/admission-lib.mjs'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
+import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
 import { installSchedulerRoutingManifest } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
+import { installSchedulerDesiredState } from '../packages/production-runtime/src/scheduler/deployment-desired-state.js'
 import { runSchedulerIncidentMigration } from '../packages/production-runtime/src/scheduler/deployment-incident-migration.js'
-import { atomicReplacePrivateFile, ensurePrivateDirectory, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
-
+import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
 const args = process.argv.slice(2)
 const has = (name) => args.includes(name)
 const val = (name) => {
@@ -56,7 +57,6 @@ const REPO = (() => {
   return relative('', here) === here ? here : here // absolute by construction
 })()
 const REPO_ROOT = join(dirname(new URL(import.meta.url).pathname), '..')
-// Explicit safe.directory is required when root applies from the Owner-owned repo.
 const git = (argv, opts = {}) => execFileSync('git', ['-c', `safe.directory=${REPO_ROOT}`, '-C', REPO_ROOT, ...argv], { maxBuffer: 32 * 1024 * 1024, ...opts })
 
 const CTX = MODE === 'selftest'
@@ -75,6 +75,7 @@ const CTX = MODE === 'selftest'
       storePath: '/Users/authsvc/.agent-core/scheduler/jobs.json',
       artifacts: '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1/generations',
       artifactsDir: '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1',
+      controlBoundary: '/var/db',
       controlUid: 0, controlGid: 0,
       desiredPath: '/usr/local/libexec/agent-core/config/scheduler-desired-state.json',
       launchdDir: '/Library/LaunchDaemons',
@@ -84,7 +85,7 @@ const CTX = MODE === 'selftest'
       binSymlink: '/usr/local/bin/agentcore-cron',
       launchctl: 'launchctl',
       routingManifest: '/usr/local/libexec/agent-core/config/scheduler-routing.json',
-      routingTargetBoundary: '/usr/local/libexec/agent-core',
+      routingTargetBoundary: '/',
       routingCandidate: ROUTING_SOURCE,
       routingCandidateSha256: ROUTING_SHA256,
       routingCandidateUid: ROUTING_CANDIDATE_UID,
@@ -94,7 +95,7 @@ const CTX = MODE === 'selftest'
       gitShow: (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
       gitHash: (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
       kickstart: (label) => execFileSync('launchctl', ['kickstart', '-k', label], { stdio: ['ignore', 'pipe', 'pipe'] }),
-      bootout: (label) => { try { execFileSync('launchctl', ['bootout', label], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch { /* not loaded */ } },
+      ...createLaunchdAdapter(),
       bootstrap: (plist, label) => execFileSync('launchctl', ['bootstrap', 'system', plist], { stdio: ['ignore', 'pipe', 'pipe'] }),
       chown: (path, uid, gid) => execFileSync('chown', [`${uid}:${gid}`, path]),
       // env -i strips PATH and the CLI shebang is '#!/usr/bin/env node' —
@@ -110,9 +111,11 @@ const receipts = { mode: MODE, sourceSha: SOURCE_SHA, phases: {}, startedAt: new
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const controlOwnership = () => ({ expectedUid: CTX.controlUid, expectedGid: CTX.controlGid })
 function writeControlReceipt(name, value) {
+  ensureProtectedDirectoryTree(CTX.artifactsDir, { ...controlOwnership(), boundary: CTX.controlBoundary })
   atomicReplacePrivateFile(join(CTX.artifactsDir, name), Buffer.from(`${JSON.stringify(value, null, 2)}\n`), controlOwnership())
 }
 function readControlReceipt(name) {
+  ensureProtectedDirectoryTree(CTX.artifactsDir, { ...controlOwnership(), boundary: CTX.controlBoundary })
   return JSON.parse(readPrivateFile(join(CTX.artifactsDir, name), controlOwnership()).bytes.toString('utf8'))
 }
 function phase(name, ok, detail) {
@@ -152,15 +155,16 @@ async function backfillAndFreeze(doc, matched) {
     if (updated.scheduleRevision !== before) throw new Error(`backfill bumped scheduleRevision on ${entry.jobId}`)
     await store.appendRunEvent({ ts: Date.now(), action: 'logical_key_backfill', jobId: entry.jobId, logicalKey: entry.logicalKey })
   }
-  // root-run safety: _writeAtomic renames a root-created tmp over the store —
-  // restore the authsvc ownership or the engine can never write again.
   if (mapping.length > 0 && userInfo().uid === 0) {
     CTX.chown(CTX.storePath, 'authsvc', 'staff')
   }
   phase('backfill', true, `${mapping.length} critical(s) keyed (idempotent); store ownership restored`)
   const desired = buildDesiredState(matched)
-  mkdirSync(dirname(CTX.desiredPath), { recursive: true })
-  writeFileSync(CTX.desiredPath, `${JSON.stringify(desired, null, 2)}\n`)
+  const desiredReceipt = existsSync(join(CTX.artifactsDir, 'desired-state-install-receipt.json')) ? readControlReceipt('desired-state-install-receipt.json') : null
+  const desiredBytes = desiredReceipt ? readFileSync(CTX.desiredPath) : Buffer.from(`${JSON.stringify(desired, null, 2)}\n`)
+  if (desiredReceipt && JSON.stringify(JSON.parse(desiredBytes).jobs) !== JSON.stringify(desired.jobs)) throw new Error('desired-state semantic generation drift')
+  installSchedulerDesiredState({ bytes: desiredBytes, targetPath: CTX.desiredPath, preimagePath: join(CTX.artifactsDir, 'rollback', 'scheduler-desired-state.json.preimage'),
+    receipt: desiredReceipt, writeReceipt: (value) => writeControlReceipt('desired-state-install-receipt.json', value), expectedUid: CTX.controlUid, expectedGid: CTX.controlGid })
   phase('desired-state', true, `${desired.jobs.length} critical(s) frozen at ${CTX.desiredPath}`)
   return { desired }
 }
@@ -270,7 +274,8 @@ function brokerBootRehearsal() {
 }
 
 function runtimeRestart() {
-  return restartSchedulerProductionRuntime({ ctx: CTX, phase, sourceSha: SOURCE_SHA })
+  const runtimeCtx = { ...CTX, runtimeReceipt: (receipt) => writeControlReceipt('runtime-install-receipt.json', receipt) }
+  return restartSchedulerProductionRuntime({ ctx: runtimeCtx, phase, sourceSha: SOURCE_SHA })
 }
 
 function operatorGeneration() {
@@ -284,19 +289,17 @@ function operatorGeneration() {
     for (const path of Object.keys(closure)) {
       if (closure[path] === 'UNRESOLVABLE') throw new Error(`operator closure unresolvable at ${path}`)
       const bytes = git(['show', `${SOURCE_SHA}:${path}`], { stdio: ['ignore', 'pipe', 'pipe'] })
-      // the seed lands under its OPERATOR name (bin/agentcore-cron, no .mjs)
       const rel = path === 'scripts/agentcore-cron.mjs' ? 'bin/agentcore-cron' : path
       const target = join(genDir, 'candidate/usr/local', rel.startsWith('bin/') ? rel : rel.replace(/^packages\//, 'packages/'))
       mkdirSync(dirname(target), { recursive: true })
       writeFileSync(target, bytes)
       try { execFileSync('chmod', ['0755', target], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
     }
-    // Vendor the scheduler package's production dependency inside the sealed closure.
     const cronerSrc = join(REPO_ROOT, 'node_modules', 'croner')
     const cronerDst = join(genDir, 'candidate/usr/local/packages/scheduler/node_modules/croner')
     rmSync(cronerDst, { recursive: true, force: true })
     mkdirSync(dirname(cronerDst), { recursive: true })
-    execFileSync('cp', ['-R', cronerSrc, cronerDst]) // dst absent -> clean dir copy (BSD cp '.' idiom is unreliable)
+    execFileSync('cp', ['-R', cronerSrc, cronerDst])
     try { execFileSync('chmod', ['0755', candidateCli], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
     const cliSha = sha256(readFileSync(candidateCli))
     writeFileSync(join(genDir, 'seal.json'), `${JSON.stringify({
@@ -353,7 +356,6 @@ function watchdogInstall() {
   const stateDir = CTX.watchdogStateDir
   mkdirSync(stateDir, { recursive: true })
   try { CTX.chown(stateDir, 'authsvc', 'staff') } catch (error) { if (MODE === 'apply') throw error }
-  // Issue 3 provisioning closure (RUNBOOK §7-authorized): see lib module.
   repairWatchdogEvidenceChannel({ ctx: CTX, mode: MODE, phase, execFileSync })
   if (!existsSync(CTX.routingManifest)) phase('watchdog', false, 'canonical Scheduler routing manifest missing; no business-chat fallback')
   const incidentOwner = statSync(stateDir)
@@ -429,16 +431,17 @@ function incidentMigration() {
 }
 
 function quiesceWatchdogs() {
-  for (const label of ['ai.agent-core.scheduler-watchdog-w1', 'ai.agent-core.scheduler-watchdog-w2']) {
-    CTX.bootout(`system/${label}`)
-  }
+  const labels = ['system/ai.agent-core.scheduler-watchdog-w1', 'system/ai.agent-core.scheduler-watchdog-w2']
+  const statePath = join(CTX.artifactsDir, 'service-state-preimage.json')
+  if (!existsSync(statePath)) writeControlReceipt('service-state-preimage.json', { sourceSha: SOURCE_SHA,
+    loaded: Object.fromEntries([...labels, 'system/ai.agent-core.runtime'].map((label) => [label, CTX.isLoaded(label)])) })
+  else if (readControlReceipt('service-state-preimage.json').sourceSha !== SOURCE_SHA) throw new Error('service-state preimage generation mismatch')
+  quiesceLaunchdServices(labels, CTX)
   phase('watchdog-quiesce', true, 'W1/W2 stopped before live code, routing, or incident-state mutation')
 }
 
-// ── proofs ───────────────────────────────────────────────────────────────────
 function gate(name, ok, detail) { receipts.gates = receipts.gates ?? {}; receipts.gates[name] = { ok, detail }; process.stdout.write(`[${ok ? 'PASS' : 'FAIL'}] ${name} — ${detail}\n`); if (!ok) throw new Error(`gate ${name} failed`) } // shared by proofs() and the Issue 3 proof module
 async function proofs() {
-  // CLI guard negative (as root, sandbox HOME): must refuse, create nothing
   const sandbox = '/var/empty'
   let guardRefused = false
   try {
@@ -451,9 +454,6 @@ async function proofs() {
   const listing = CTX.asAuthsvc('/usr/local/bin/agentcore-cron', ['list', '--json'])
   const jobs = JSON.parse(listing).jobs
   gate('CANONICAL_READ_BACK', Array.isArray(jobs), `canonical store visible through authsvc identity: ${jobs.length} job(s)`)
-  // fixture mode resolves the existence-only check against the fixture copy:
-  // the production path sits under the authsvc 0700 credential-store, which an
-  // unprivileged --selftest must never need to traverse.
   gate('CREDENTIAL_PROVIDER', existsSync(CTX.credentialsProviderPath ?? '/usr/local/libexec/agent-core/config/agent-credentials.json'), 'credential provider file present (existence only)')
   const smoke = execFileSync(CTX.binSymlink, ['list', '--json', '--store', join(dirname(CTX.storePath), 'operator-smoke.json')], {
     env: { ...process.env, HOME: '/var/empty' }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
@@ -467,7 +467,7 @@ async function main() {
     process.stderr.write('[admission] --apply requires root (run under the single Owner sudo gate)\n')
     process.exit(2)
   }
-  if (MODE !== 'plan') ensurePrivateDirectory(CTX.artifactsDir, controlOwnership())
+  if (MODE !== 'plan') ensureProtectedDirectoryTree(CTX.artifactsDir, { ...controlOwnership(), boundary: CTX.controlBoundary })
   const doc = readCensus()
   const matched = criticalsOrAbort(doc)
   if (MODE === 'plan') {
@@ -486,11 +486,11 @@ async function main() {
   operatorGeneration()
   watchdogInstall()
   await proofs()
-  writeControlReceipt('terminal-receipt.json', { ...receipts, finishedAt: new Date().toISOString() })
-  process.stdout.write(`[admission] TERMINAL RECEIPT written: ${join(CTX.artifactsDir, 'terminal-receipt.json')}\n`)
+  writeControlReceipt('deployment-phase-receipt.json', { ...receipts, finishedAt: new Date().toISOString(),
+    acceptanceStatus: 'PENDING_CANONICAL_HEALTH_AND_CANARY', requiredNextReceipt: 'postdeploy-acceptance-receipt.json' })
+  process.stdout.write(`[admission] DEPLOYMENT-ONLY RECEIPT written; canonical census/canary acceptance remains pending\n`)
 }
 
-// Fixture-only orchestration is isolated so this production driver remains auditable.
 if (MODE === 'selftest') {
   const { runAdmissionSelftest } = await import('./lib/admission-selftest.mjs')
   await runAdmissionSelftest({ ctx: CTX, main, git, sha256, repoRoot: REPO_ROOT })
