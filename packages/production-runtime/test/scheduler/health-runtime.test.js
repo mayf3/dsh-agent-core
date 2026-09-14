@@ -3,9 +3,13 @@ import assert from 'node:assert/strict'
 import { chmod, mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { createHash } from 'node:crypto'
 
 import { resolveProductionLayout } from '../../src/paths.js'
 import { assertSchedulerStartupReady, createSchedulerHealthRuntime } from '../../src/scheduler/health-runtime.js'
+import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
+import { bindNotificationDelivery, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
+import { providerIdempotencyKey, stableNotificationText } from '../../../scheduler/src/watchdog/delivery.js'
 
 const RUNTIME_SHA = '1234567890abcdef1234567890abcdef12345678'
 
@@ -53,6 +57,21 @@ test('semantic-corrupt open incident without outbox makes canonical health incom
   const health = await createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA }).read()
   assert.equal(health.complete, false)
   assert.equal(health.unknown, 1)
+})
+
+test('persisted control-plane binding to a non-canonical chat makes canonical health incomplete', async () => {
+  const { layout, routingSecurity, credentialStoreFile } = await fixture()
+  const [incident] = compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents
+  const opened = updateIncidentState({}, [incident], { nowMs: 1 })
+  const key = Object.keys(opened.state.outbox)[0]
+  const routingSha256 = createHash('sha256').update(await readFile(layout.schedulerRoutingManifest)).digest('hex')
+  const bound = bindNotificationDelivery(opened.state, key, { producer: opened.state.outbox[key].producer,
+    route: { channel: 'feishu', to: 'daily-thought-agent-group' }, routeSource: 'canonicalOpsTarget', routingSha256,
+    payload: stableNotificationText(opened.state.outbox[key]), providerKey: providerIdempotencyKey(key) }, 2)
+  await writeFile(layout.schedulerIncidentState, JSON.stringify(bound), { mode: 0o600 })
+  const health = await createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA }).read()
+  assert.equal(health.complete, false)
+  assert.match(health.censusError, /binding.*routing authority mismatch/)
 })
 
 test('T29 arbitrary runtime provenance cannot produce complete=true', async () => {

@@ -25,6 +25,7 @@ const health = (at) => ({ complete: true, unknown: 0, enabled: 2, healthy: 1, de
 const incidentState = () => updateIncidentState({}, compileIncidents(health(20).findings).incidents, { nowMs: 20 }).state
 const evidence = () => ({ phaseReceipt: { sourceSha: SOURCE, acceptanceStatus: 'PENDING_CANONICAL_HEALTH_AND_CANARY', productionAccepted: false, currentSixAuthorized: false },
   routingReceipt: { status: 'INSTALLED', candidateSha256: 'c'.repeat(64) }, sourceSha: SOURCE,
+  routingManifest: { version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'scheduler-ops' }, ownerTargets: {}, jobFailureTargets: {} }, routingManifestSha256: 'c'.repeat(64),
   beforeHealth: health(20), afterHealth: health(30), beforeStore, afterStore, canaryJobId: 'job-canary',
   beforeStoreSha256: 'b'.repeat(64), afterStoreSha256: 'b'.repeat(64),
   beforeIncidentState: incidentState(), afterIncidentState: incidentState(), beforeIncidentSha256: 'd'.repeat(64), afterIncidentSha256: 'd'.repeat(64),
@@ -83,6 +84,13 @@ test('formal postdeploy evidence rejects route drift, synthetic incident state, 
   const missingIntent = Object.values(missingDelivery.beforeIncidentState.outbox)[0]
   delete missingRecord.alertState.delivery; delete missingIntent.delivery
   assert.throws(() => verifyPostdeployEvidence(missingDelivery), /incoherent incident/)
+  const forgedMigration = evidence(); forgedMigration.beforeIncidentState = structuredClone(forgedMigration.beforeIncidentState)
+  forgedMigration.beforeIncidentState.migration = { legacySha256: 'a'.repeat(64), evidenceSha256: 'b'.repeat(64), factsSha256: 'c'.repeat(64) }
+  forgedMigration.incidentMigrationAuthority = { legacySha256: 'd'.repeat(64), evidenceSha256: 'e'.repeat(64), factsSha256: 'f'.repeat(64) }
+  const forgedKey = Object.keys(forgedMigration.beforeIncidentState.outbox)[0]
+  delete forgedMigration.beforeIncidentState.outbox[forgedKey]
+  Object.values(forgedMigration.beforeIncidentState.incidents)[0].alertState.delivery = 'DELIVERED'
+  assert.throws(() => verifyPostdeployEvidence(forgedMigration), /migration authority mismatch/)
   const attempted = evidence(); attempted.afterIncidentState = structuredClone(attempted.afterIncidentState)
   const [outboxKey] = Object.keys(attempted.afterIncidentState.outbox)
   attempted.afterIncidentState.outbox[outboxKey].delivery = 'FAILED'

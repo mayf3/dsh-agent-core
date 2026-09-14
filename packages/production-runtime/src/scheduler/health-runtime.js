@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 
 import { acquireConsistentHealthSnapshot, projectSchedulerHealth, validateCanonicalHealthAuthority } from '../../../scheduler/src/watchdog/health.js'
 import { loadIncidentState } from '../../../scheduler/src/watchdog/durable-state.js'
-import { ROUTE_CLASSES, readProtectedRoutingManifest, resolveNotificationRoute } from '../../../scheduler/src/watchdog/routing.js'
+import { ROUTE_CLASSES, readProtectedRoutingManifest, resolveNotificationRoute, validateIncidentDeliveryBindings } from '../../../scheduler/src/watchdog/routing.js'
 import { loadCredentialsStore } from '../../../broker/src/credential-store.js'
 
 function digest(bytes) {
@@ -64,6 +64,13 @@ export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs 
       const jobsGeneration = acquired.generations?.find((item) => item.source === 'jobs')
       const jobsDoc = jobsGeneration?.trusted === true && jobsGeneration.start === jobsGeneration.end ? captured.jobs : null
       const manifest = captured.routing
+      try {
+        validateIncidentDeliveryBindings(captured.incidents, { manifest, jobs: jobsDoc?.jobs,
+          routingSha256: acquired.generations?.find((item) => item.source === 'routing')?.end })
+      } catch (error) {
+        acquired.complete = false
+        acquired.censusError = `health incident binding unavailable: ${error?.message ?? error}`
+      }
       const routes = Object.fromEntries((jobsDoc?.jobs ?? []).map((job) => {
         const decision = resolveNotificationRoute({ routeClass: ROUTE_CLASSES.JOB_FAILURE, job, manifest })
         return [job.id, {

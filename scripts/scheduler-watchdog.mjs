@@ -240,20 +240,26 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
       notificationKey: intent.notificationKey,
       routeClass: intent.routeClass,
     }
-    let routeDecision = intent.deliveryBinding ? { route: intent.deliveryBinding.route } : null
-    if (!routeDecision) {
-      let manifest = null
-      try {
-        const configuredGid = Number(process.env.SCHEDULER_ROUTING_READER_GID)
-        const allowedGids = Number.isInteger(configuredGid) ? [configuredGid] : []
-        manifest = readProtectedRoutingManifest(ROUTING_MANIFEST, {
-          expectedUid: Number(process.env.SCHEDULER_ROUTING_OWNER_UID ?? 0), allowedGids, maxMode: 0o640,
-        }).manifest
-      } catch (error) {
-        writeEvidence({ kind: 'routing_manifest_unavailable', error: String(error?.message ?? error) })
-      }
-      const job = doc.jobs?.find((candidate) => candidate.id === notification.finding?.jobId)
-      routeDecision = resolveNotificationRoute({ routeClass: notification.routeClass, job, manifest })
+    let manifest = null
+    let routingSha256 = null
+    try {
+      const configuredGid = Number(process.env.SCHEDULER_ROUTING_READER_GID)
+      const allowedGids = Number.isInteger(configuredGid) ? [configuredGid] : []
+      const protectedRouting = readProtectedRoutingManifest(ROUTING_MANIFEST, {
+        expectedUid: Number(process.env.SCHEDULER_ROUTING_OWNER_UID ?? 0), allowedGids, maxMode: 0o640,
+      })
+      manifest = protectedRouting.manifest
+      routingSha256 = protectedRouting.readback.sha256
+    } catch (error) {
+      writeEvidence({ kind: 'routing_manifest_unavailable', error: String(error?.message ?? error) })
+    }
+    const job = doc.jobs?.find((candidate) => candidate.id === notification.finding?.jobId)
+    const routeDecision = resolveNotificationRoute({ routeClass: notification.routeClass, job, manifest })
+    if (intent.deliveryBinding && (JSON.stringify(intent.deliveryBinding.route) !== JSON.stringify(routeDecision.route)
+      || intent.deliveryBinding.routeSource !== routeDecision.routeSource || intent.deliveryBinding.routingSha256 !== routingSha256)) {
+      writeEvidence({ kind: 'delivery_binding_routing_generation_mismatch', notificationKey: notification.notificationKey })
+      outcome = 'delivery_failed'
+      continue
     }
     if (!routeDecision.route && intent.delivery !== 'PENDING') {
       outcome = 'delivery_failed'
@@ -265,6 +271,7 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
       if (!intent.deliveryBinding) {
         currentState = bindNotificationDelivery(currentState, notification.notificationKey, {
           producer: role, route: routeDecision.route, payload: text,
+          routeSource: routeDecision.routeSource, routingSha256,
           providerKey: providerIdempotencyKey(notification.notificationKey),
         }, Date.now())
         persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })

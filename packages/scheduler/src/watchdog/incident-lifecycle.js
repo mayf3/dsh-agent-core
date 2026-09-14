@@ -102,11 +102,11 @@ export function updateIncidentState(inputState, currentIncidents, {
   return { state, notifications }
 }
 
-export function bindNotificationDelivery(inputState, key, { producer, route, payload, providerKey }, nowMs = Date.now()) {
+export function bindNotificationDelivery(inputState, key, { producer, route, routeSource, routingSha256, payload, providerKey }, nowMs = Date.now()) {
   const state = initialState(inputState)
   const intent = state.outbox[key]
   if (!intent) throw new TypeError(`unknown notification key: ${key}`)
-  const binding = { producer, route: structuredClone(route), payload, providerKey }
+  const binding = { producer, route: structuredClone(route), routeSource, routingSha256, payload, providerKey }
   if (intent.deliveryBinding !== undefined && canonicalJSON(intent.deliveryBinding) !== canonicalJSON(binding)) {
     throw new Error('notification delivery binding conflict')
   }
