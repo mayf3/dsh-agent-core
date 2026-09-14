@@ -7,7 +7,7 @@ import { join } from 'node:path'
 
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../../packages/scheduler/src/watchdog/private-state-io.js'
 import { assertSuccessfulCanaryRun, publishVerifiedPostdeployReceipt } from '../../packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js'
-import { capturePlainFileMetadata } from '../../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
+import { readProtectedPlainFile } from '../../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 
 const A = '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1'
 const STORE = '/Users/authsvc/.agent-core/scheduler/jobs.json'
@@ -15,13 +15,15 @@ const CLI = '/usr/local/bin/agentcore-cron'
 const CANARY_CONTROL = '/usr/local/libexec/agent-core/app/scripts/lib/scheduler-postdeploy-canary-control.mjs'
 const RUNTIME_NODE = '/usr/local/libexec/agent-core/node-runtime/bin/node'
 const API = 'http://127.0.0.1:8787/scheduler/health'
+const AUDIT_TOKEN = join(A, 'credentials', 'scheduler-audit.token')
+const INCIDENTS = '/Users/authsvc/.agent-core/control/scheduler-watchdog/incidents.json'
+const ROUTING_RECEIPT = join(A, 'rollback', 'routing-install-receipt.json')
 const argv = process.argv.slice(2)
 const value = (name) => { const index = argv.indexOf(name); return index >= 0 ? argv[index + 1] : undefined }
 const sourceSha = value('--source-sha')
-const tokenFile = value('--audit-token-file')
 const canaryAgentId = value('--canary-agent-id')
-if (process.getuid?.() !== 0 || !/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !tokenFile?.startsWith('/') || !/^agt_[a-z0-9_-]+$/.test(canaryAgentId ?? '')) {
-  throw new Error('usage: sudo scheduler-postdeploy-finalize --source-sha <40hex> --audit-token-file <root-owned-0600-file> --canary-agent-id <exact agt_id>')
+if (process.getuid?.() !== 0 || !/^[0-9a-f]{40}$/.test(sourceSha ?? '') || canaryAgentId !== 'agt_scheduler-postdeploy-canary') {
+  throw new Error('usage: sudo scheduler-postdeploy-finalize --source-sha <40hex> --canary-agent-id agt_scheduler-postdeploy-canary')
 }
 
 const rootOwnership = { expectedUid: 0, expectedGid: 0 }
@@ -38,14 +40,16 @@ const readStoreSnapshot = () => {
   return { store: JSON.parse(bytes.toString('utf8')), sha256: createHash('sha256').update(bytes).digest('hex') }
 }
 const readStore = () => readStoreSnapshot().store
+const readIncidentSnapshot = () => {
+  const bytes = readPrivateFile(INCIDENTS, { expectedUid: authsvcUid, expectedGid: authsvcGid }).bytes
+  return { state: JSON.parse(bytes.toString('utf8')), sha256: createHash('sha256').update(bytes).digest('hex') }
+}
 const asAuthsvc = (command, args) => execFileSync('sudo', ['-u', 'authsvc', 'env', '-i',
   'HOME=/Users/authsvc', 'PATH=/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin',
   `AGENTCORE_EXPECTED_STORE=${STORE}`, command, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
 
-const tokenMetadata = capturePlainFileMetadata(tokenFile)
-if (tokenMetadata.uid !== 0 || tokenMetadata.gid !== 0 || tokenMetadata.mode !== 0o600) throw new Error('audit token file must be root:wheel 0600 without ACL or unsupported xattrs')
-const token = readPrivateFile(tokenFile, rootOwnership).bytes.toString('utf8').trim()
+const token = readProtectedPlainFile(AUDIT_TOKEN, { boundary: '/var/db', expectedUid: 0, expectedGid: 0, mode: 0o600 }).bytes.toString('utf8').trim()
 if (token === '' || /\s/.test(token)) throw new Error('audit token file must contain exactly one bearer token')
 const health = async () => {
   const response = await fetch(API, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) })
@@ -61,6 +65,7 @@ if (accepted) {
 }
 
 const phaseReceipt = readControl('deployment-phase-receipt.json')
+const routingReceipt = JSON.parse(readProtectedPlainFile(ROUTING_RECEIPT, { boundary: '/var/db', expectedUid: 0, expectedGid: authsvcGid, mode: 0o600 }).bytes.toString('utf8'))
 let plan = readControl('postdeploy-canary-plan.json', true)
 if (!plan) {
   const now = Date.now()
@@ -73,7 +78,9 @@ let beforeEvidence = readControl('postdeploy-before-evidence.json', true)
 if (!beforeEvidence) {
   const liveSnapshot = readStoreSnapshot(), live = liveSnapshot.store
   if (live.jobs.some((job) => job.logicalKey === plan.logicalKey)) throw new Error('canary exists without frozen before-evidence; preserve state and investigate')
-  beforeEvidence = { sourceSha, health: await health(), store: live, storeSha256: liveSnapshot.sha256 }
+  const incident = readIncidentSnapshot()
+  beforeEvidence = { sourceSha, health: await health(), store: live, storeSha256: liveSnapshot.sha256,
+    incidentState: incident.state, incidentSha256: incident.sha256 }
   writeControl('postdeploy-before-evidence.json', beforeEvidence)
 } else if (beforeEvidence.sourceSha !== sourceSha) throw new Error('postdeploy before-evidence generation mismatch')
 const beforeHealth = beforeEvidence.health
@@ -102,13 +109,16 @@ while (Date.now() < plan.notAfter) {
   runReadback = JSON.parse(asAuthsvc(CLI, ['runs', '--id', canaryJobId, '--limit', '10', '--json']))
 }
 const currentStore = readStore()
-assertSuccessfulCanaryRun(runReadback, canaryJobId)
+assertSuccessfulCanaryRun(runReadback, canaryJobId, sourceSha)
 const retained = currentStore.jobs.find((job) => job.id === canaryJobId)
 if (retained) asAuthsvc(CLI, ['rm', canaryJobId, '--expected-schedule-revision', String(retained.scheduleRevision), '--expected-updated-at', String(retained.updatedAtMs)])
 const afterStoreSnapshot = readStoreSnapshot(), afterStore = afterStoreSnapshot.store
+const afterIncidentSnapshot = readIncidentSnapshot()
 const afterHealth = await health()
-const evidence = { phaseReceipt, sourceSha, beforeHealth, afterHealth, beforeStore, afterStore,
-  beforeStoreSha256: beforeEvidence.storeSha256, afterStoreSha256: afterStoreSnapshot.sha256, canaryJobId, runReadback }
+const evidence = { phaseReceipt, routingReceipt, sourceSha, beforeHealth, afterHealth, beforeStore, afterStore,
+  beforeStoreSha256: beforeEvidence.storeSha256, afterStoreSha256: afterStoreSnapshot.sha256,
+  beforeIncidentState: beforeEvidence.incidentState, afterIncidentState: afterIncidentSnapshot.state,
+  beforeIncidentSha256: beforeEvidence.incidentSha256, afterIncidentSha256: afterIncidentSnapshot.sha256, canaryJobId, runReadback }
 const receipt = publishVerifiedPostdeployReceipt(evidence, {
   writeReceipt: (valueToWrite) => writeControl('postdeploy-acceptance-receipt.json', valueToWrite),
   readReceipt: () => readControl('postdeploy-acceptance-receipt.json'),

@@ -25,6 +25,7 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   process.env.PATH = `${binDir}:${oldPath}`
   t.after(() => { process.env.PATH = oldPath })
   const phases = []
+  const durability = []
   const receipts = []
   let loaded = true
   const sha = '1234567890abcdef1234567890abcdef12345678'
@@ -35,6 +36,7 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
       bootout: (label) => { phases.push(`bootout:${label}`); loaded = false },
       bootstrap: (path, label) => { phases.push(`bootstrap:${path}:${label}`); loaded = true },
       runtimeReceipt: (receipt) => receipts.push(receipt),
+      onDurabilityStage: (stage) => durability.push(stage),
     },
     phase: (name, ok) => phases.push(`${name}:${ok}`), sourceSha: sha,
   })
@@ -43,6 +45,7 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   assert.equal(statSync(plistPath).mode & 0o777, 0o600)
   assert.deepEqual(receipts.map((receipt) => receipt.status), ['INSTALLING', 'INSTALLED'])
   assert.equal(receipts[0].installedSha256, receipts[1].installedSha256)
+  assert.deepEqual(durability, ['preimage-file-synced', 'preimage-directory-synced', 'candidate-file-synced', 'candidate-renamed', 'target-directory-synced'])
   assert.deepEqual(phases, [
     'bootout:system/ai.agent-core.runtime',
     `bootstrap:${plistPath}:system/ai.agent-core.runtime`,

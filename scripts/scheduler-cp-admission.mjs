@@ -26,6 +26,7 @@ import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/produc
 import { installSchedulerRoutingManifest } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
 import { installSchedulerDesiredState } from '../packages/production-runtime/src/scheduler/deployment-desired-state.js'
 import { capturePlainFileMetadata } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
+import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile } from '../packages/production-runtime/src/scheduler/deployment-durable-file.js'
 import { runSchedulerIncidentMigration } from '../packages/production-runtime/src/scheduler/deployment-incident-migration.js'
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
 const args = process.argv.slice(2)
@@ -271,7 +272,8 @@ function brokerBootRehearsal() {
 }
 
 function runtimeRestart() {
-  const runtimeCtx = { ...CTX, runtimeReceipt: (receipt) => writeControlReceipt('runtime-install-receipt.json', receipt) }
+  const receiptPath = join(CTX.artifactsDir, 'runtime-install-receipt.json'); const runtimeCtx = { ...CTX, runtimePriorReceipt: existsSync(receiptPath) ? readControlReceipt('runtime-install-receipt.json') : null,
+    runtimeReceipt: (receipt) => writeControlReceipt('runtime-install-receipt.json', receipt) }
   return restartSchedulerProductionRuntime({ ctx: runtimeCtx, phase, sourceSha: SOURCE_SHA })
 }
 
@@ -371,11 +373,11 @@ function watchdogInstall() {
       const existed = existsSync(path)
       const preimage = join(CTX.artifactsDir, 'rollback', `${label}.plist.preimage`)
       mkdirSync(dirname(preimage), { recursive: true })
-      if (existed && !existsSync(preimage)) execFileSync('cp', ['-p', path, preimage])
-      const before = existed ? capturePlainFileMetadata(path) : null
+      const before = existed ? capturePlainFileMetadata(path) : null; if (existed && !existsSync(preimage)) durableCopyPreimage(path, preimage, before)
+      const rollbackMetadata = existed ? capturePlainFileMetadata(preimage) : null; const rollbackSha256 = existed ? sha256(readFileSync(preimage)) : null
+      if (existed && (sha256(readFileSync(path)) !== rollbackSha256 || JSON.stringify(before) !== JSON.stringify(rollbackMetadata))) throw new Error(`watchdog predecessor differs from durable rollback preimage: ${label}`)
       return { role, label, path, existed, installedSha256: sha256(Buffer.from(tmpl)), preimage,
-        preimageSha256: existed ? sha256(readFileSync(path)) : null,
-        preimageMetadata: before }
+        preimageSha256: rollbackSha256, preimageMetadata: rollbackMetadata }
     })
     receipt = { status: 'INSTALLING', sourceSha: SOURCE_SHA, plists }
     writeControlReceipt('watchdog-install-receipt.json', receipt)
@@ -385,16 +387,14 @@ function watchdogInstall() {
     const tmpl = fill(CTX.gitShow(SOURCE_SHA, `deployment-artifacts/scheduler-control-plane-reliability-v1/ai.agent-core.scheduler-watchdog-${item.role}.plist.tmpl`))
     if (sha256(Buffer.from(tmpl)) !== item.installedSha256) throw new Error(`watchdog candidate generation mismatch: ${item.label}`)
     const currentSha = existsSync(item.path) ? sha256(readFileSync(item.path)) : null
-    if (currentSha === item.installedSha256) { CTX.bootstrap(item.path, `system/${item.label}`); continue }
+    if (currentSha === item.installedSha256) { syncFile(item.path); syncDirectory(dirname(item.path)); CTX.bootstrap(item.path, `system/${item.label}`); continue }
     if (currentSha !== item.preimageSha256) throw new Error(`watchdog rerun generation mismatch: ${item.label}`)
     const plist = item.path
-    const tmp = `${plist}.incoming`
-    writeFileSync(tmp, tmpl)
-    execFileSync('mv', [tmp, plist])
-    try {
-      execFileSync('chown', ['root:wheel', plist], { stdio: ['ignore', 'pipe', 'pipe'] })
-      execFileSync('chmod', ['0644', plist], { stdio: ['ignore', 'pipe', 'pipe'] })
-    } catch (error) { if (MODE === 'apply') throw error }
+    atomicInstallDurableFile(plist, Buffer.from(tmpl), {
+      uid: MODE === 'selftest' ? process.getuid() : 0,
+      gid: MODE === 'selftest' ? process.getgid() : 0,
+      mode: 0o644,
+    })
     if (readFileSync(plist, 'utf8') !== tmpl) throw new Error(`watchdog plist readback mismatch: ${item.label}`)
     if (item.existed) CTX.bootout(`system/${item.label}`)
     CTX.bootstrap(plist, `system/${item.label}`)

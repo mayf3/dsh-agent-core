@@ -91,6 +91,7 @@ export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs 
           runtime: runtimeGeneration ?? null,
           store: acquired.generations?.find((item) => item.source === 'jobs')?.end ?? null,
           routing: acquired.generations?.find((item) => item.source === 'routing')?.end ?? null,
+          incidents: acquired.generations?.find((item) => item.source === 'incidents')?.end ?? null,
           storePath: layout.jobsStore,
         },
         generations: acquired.generations,

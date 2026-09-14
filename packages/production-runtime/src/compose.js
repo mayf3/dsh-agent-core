@@ -352,7 +352,7 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
-  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence })
+  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence, runtimeGeneration: opts.runtimeGeneration ?? process.env.AGENT_CORE_DEPLOYED_SHA })
 
   // Admission observability remains a wrap around Router-owned delivery.
   wireNotificationIngressDeliveryEvidence(router, writeEvidence)

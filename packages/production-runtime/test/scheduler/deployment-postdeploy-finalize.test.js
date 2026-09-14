@@ -2,6 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { publishVerifiedPostdeployReceipt, verifyPostdeployEvidence } from '../../src/scheduler/deployment-postdeploy-finalize.js'
+import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
+import { updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
+import { POSTDEPLOY_CANARY_MARKER } from '../../src/scheduler/deployment-canary-control.js'
 
 const SOURCE = 'a'.repeat(40)
 const occurrence = { occurrenceId: 'occ-old', runId: 'run-old', jobId: 'job-quarantined', kind: 'scheduled', state: 'outcome_unknown', executionOutcome: 'unknown', admittedAt: 1, startedAt: 2, endedAt: 3, nominalScheduledAt: 1, scheduleRevision: 1 }
@@ -11,15 +14,20 @@ const canaryOccurrence = { occurrenceId: 'occ-canary', runId: 'run-canary', jobI
 const afterStore = { ...beforeStore, occurrences: [...beforeStore.occurrences, canaryOccurrence] }
 const row = { jobId: job.id, state: 'QUARANTINED_UNKNOWN', currentOccurrence: { occurrenceId: 'occ-old', state: 'outcome_unknown' }, currentBlocker: 'OUTCOME_UNKNOWN', blockedSince: 3, fenceReason: 'unresolved outcome_unknown occurrence contribution' }
 const health = (at) => ({ complete: true, unknown: 0, enabled: 1, healthy: 0, degraded: 0, blocked: 1, generatedAt: at,
-  provenance: { canonicalPair: true, runtime: SOURCE, store: 'b'.repeat(64), routing: 'c'.repeat(64) }, jobs: [row],
+  provenance: { canonicalPair: true, runtime: SOURCE, store: 'b'.repeat(64), routing: 'c'.repeat(64), incidents: 'd'.repeat(64) }, jobs: [row],
   findings: [
     { class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: job.id, occurrenceId: 'occ-old', runId: 'run-old' },
     { class: 'EXPECTED_RUN_MISSED', jobId: job.id, occurrenceId: 'occ-old', runId: 'run-old', derivedUnderAdmissionBlock: true },
   ] })
-const evidence = () => ({ phaseReceipt: { sourceSha: SOURCE, acceptanceStatus: 'PENDING_CANONICAL_HEALTH_AND_CANARY', productionAccepted: false, currentSixAuthorized: false }, sourceSha: SOURCE,
+const incidentState = () => updateIncidentState({}, compileIncidents(health(20).findings).incidents, { nowMs: 20 }).state
+const evidence = () => ({ phaseReceipt: { sourceSha: SOURCE, acceptanceStatus: 'PENDING_CANONICAL_HEALTH_AND_CANARY', productionAccepted: false, currentSixAuthorized: false },
+  routingReceipt: { status: 'INSTALLED', candidateSha256: 'c'.repeat(64) }, sourceSha: SOURCE,
   beforeHealth: health(20), afterHealth: health(30), beforeStore, afterStore, canaryJobId: 'job-canary',
   beforeStoreSha256: 'b'.repeat(64), afterStoreSha256: 'b'.repeat(64),
-  runReadback: { occurrences: [canaryOccurrence] } })
+  beforeIncidentState: incidentState(), afterIncidentState: incidentState(), beforeIncidentSha256: 'd'.repeat(64), afterIncidentSha256: 'd'.repeat(64),
+  runReadback: { occurrences: [{ ...canaryOccurrence, result: { final_status: 'PASS', counters: { tool_calls: 0, external_effects: 0 }, notes: `SCHEDULER_NATIVE_NOOP:${SOURCE}` } }],
+    events: [{ occurrenceId: 'occ-canary', action: 'router_admission', phase: 'accepted',
+    evidence: { executionClass: 'SCHEDULER_NATIVE_NOOP', sourceSha: SOURCE, marker: POSTDEPLOY_CANARY_MARKER, toolCalls: 0, externalEffects: 0 } }] } })
 
 test('formal postdeploy evidence accepts exact health, one canary delta, quarantine isolation and dedupe', () => {
   const receipt = verifyPostdeployEvidence(evidence())
@@ -29,7 +37,7 @@ test('formal postdeploy evidence accepts exact health, one canary delta, quarant
   assert.equal(receipt.quarantine.quarantinedCount, 1)
 })
 
-test('current-six recovery authority is bound to the exact six quarantined occurrence identities', () => {
+test('cardinality never mints current-six recovery authority', () => {
   const jobs = Array.from({ length: 6 }, (_, index) => ({ ...job, id: `job-${index}`, logicalKey: `q-${index}` }))
   const occurrences = jobs.map((item, index) => ({ ...occurrence, jobId: item.id, occurrenceId: `occ-${index}`, runId: `run-${index}` }))
   const storeBefore = { version: 3, jobs, occurrences, fences: Object.fromEntries(occurrences.map((item) => [item.jobId, [item.occurrenceId]])) }
@@ -39,10 +47,13 @@ test('current-six recovery authority is bound to the exact six quarantined occur
     { class: 'EXPECTED_RUN_MISSED', jobId: item.jobId, occurrenceId: item.occurrenceId, runId: item.runId, derivedUnderAdmissionBlock: true },
   ])
   const healthSix = (at) => ({ ...health(at), enabled: 6, blocked: 6, jobs: rows, findings })
+  const sixIncidentState = updateIncidentState({}, compileIncidents(findings).incidents, { nowMs: 20 }).state
   const receipt = verifyPostdeployEvidence({ ...evidence(), beforeStore: storeBefore,
-    afterStore: { ...storeBefore, occurrences: [...occurrences, canaryOccurrence] }, beforeHealth: healthSix(20), afterHealth: healthSix(30) })
-  assert.equal(receipt.currentSixAuthorized, true)
-  assert.deepEqual(receipt.currentSixOccurrences, occurrences.map((item) => item.occurrenceId))
+    afterStore: { ...storeBefore, occurrences: [...occurrences, canaryOccurrence] }, beforeHealth: healthSix(20), afterHealth: healthSix(30),
+    beforeIncidentState: sixIncidentState, afterIncidentState: sixIncidentState })
+  assert.equal(receipt.currentSixAuthorized, false)
+  assert.equal(receipt.currentSixGate, 'PENDING_EXACT_OWNER_SUFFIX_RESOLUTION')
+  assert.deepEqual(receipt.currentSixOccurrences, [])
 })
 
 test('formal postdeploy evidence rejects fabricated generation and incomplete health', () => {
@@ -52,10 +63,36 @@ test('formal postdeploy evidence rejects fabricated generation and incomplete he
 
 test('formal postdeploy evidence rejects unexpected store mutation or duplicate incident roots', () => {
   const changed = structuredClone(afterStore); changed.jobs[0].enabled = false
-  assert.throws(() => verifyPostdeployEvidence({ ...evidence(), afterStore: changed }), /Jobs changed unexpectedly/)
+  assert.throws(() => verifyPostdeployEvidence({ ...evidence(), afterStore: changed }), /Job definitions changed unexpectedly/)
   const duplicated = health(30)
   duplicated.findings[1] = { ...duplicated.findings[1], derivedUnderAdmissionBlock: false, jobRevision: 1 }
   assert.throws(() => verifyPostdeployEvidence({ ...evidence(), afterHealth: duplicated }), /one-per-occurrence/)
+})
+
+test('formal postdeploy evidence rejects route drift, synthetic incident state, unsafe canary and unrelated Job regression', () => {
+  assert.throws(() => verifyPostdeployEvidence({ ...evidence(), routingReceipt: { status: 'INSTALLED', candidateSha256: 'e'.repeat(64) } }), /routing generation/)
+  assert.throws(() => verifyPostdeployEvidence({ ...evidence(), beforeIncidentState: { version: 1, incidents: {}, outbox: {} } }), /lacks exact open root/)
+  const unsafe = evidence(); unsafe.runReadback.occurrences[0].result.counters.external_effects = 1
+  assert.throws(() => verifyPostdeployEvidence(unsafe), /zero-side-effect/)
+  const regressed = evidence(); regressed.beforeHealth.jobs.push({ jobId: 'job-ok', classification: 'healthy', credentialReadiness: 'READY', currentBlocker: null, fenceReason: null, notificationRoute: { status: 'READY' } })
+  regressed.afterHealth.jobs.push({ jobId: 'job-ok', classification: 'blocked', credentialReadiness: 'READY', currentBlocker: 'OUTCOME_UNKNOWN', fenceReason: 'new', notificationRoute: { status: 'READY' } })
+  regressed.beforeHealth.enabled += 1; regressed.beforeHealth.healthy += 1
+  regressed.afterHealth.enabled += 1; regressed.afterHealth.blocked += 1
+  assert.throws(() => verifyPostdeployEvidence(regressed), /health regressed/)
+})
+
+test('one quarantined Job does not prevent an unrelated healthy Job from completing during canary', () => {
+  const other = { ...job, id: 'job-other', logicalKey: 'other', state: { nextRunAtMs: 100 } }
+  const otherRun = { ...canaryOccurrence, occurrenceId: 'occ-other', runId: 'run-other', jobId: other.id }
+  const proof = evidence()
+  proof.beforeStore = { ...beforeStore, jobs: [job, other] }
+  proof.afterStore = { ...afterStore, jobs: [job, { ...other, state: { nextRunAtMs: 200, lastOutcome: 'succeeded' } }],
+    occurrences: [...afterStore.occurrences, otherRun] }
+  const healthyRow = { jobId: other.id, state: 'HEALTHY', classification: 'healthy', credentialReadiness: 'READY',
+    currentBlocker: null, fenceReason: null, notificationRoute: { status: 'READY' } }
+  proof.beforeHealth = { ...proof.beforeHealth, enabled: 2, healthy: 1, jobs: [...proof.beforeHealth.jobs, healthyRow] }
+  proof.afterHealth = { ...proof.afterHealth, enabled: 2, healthy: 1, jobs: [...proof.afterHealth.jobs, healthyRow] }
+  assert.equal(verifyPostdeployEvidence(proof).status, 'ACCEPTED')
 })
 
 test('interrupted or non-exact receipt publication cannot return acceptance', () => {
