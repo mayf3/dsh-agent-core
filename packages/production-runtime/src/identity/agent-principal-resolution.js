@@ -36,7 +36,7 @@
 
 import {
   AGENT_PRINCIPAL_RESOLUTION_CAPABILITY_ID,
-} from '../../broker/src/capabilities/agent-principal-resolution.js'
+} from '../../../broker/src/capabilities/agent-principal-resolution.js'
 
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
 const AGENT_ID_RE = /^agt_[a-z0-9-]+$/
