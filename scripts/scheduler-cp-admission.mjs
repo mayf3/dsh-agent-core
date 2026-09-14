@@ -10,7 +10,7 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
-  readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, statSync, readdirSync, accessSync, constants,
+  readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, statSync, readdirSync, chmodSync,
 } from 'node:fs'
 import { join, dirname, relative } from 'node:path'
 import { homedir, userInfo } from 'node:os'
@@ -204,7 +204,8 @@ function overlay() {
     return
   }
   const preimage = join(CTX.artifactsDir, 'rollback', 'overlay-preimage.tar.gz')
-  mkdirSync(dirname(preimage), { recursive: true })
+  mkdirSync(dirname(preimage), { recursive: true, mode: 0o700 })
+  chmodSync(dirname(preimage), 0o700)
   const changedExisting = all.filter((e) => e.kind === 'update' || e.kind === 'delete').map((e) => e.path)
   if (changedExisting.length > 0) {
     execFileSync('tar', ['-czf', preimage, '-C', CTX.liveRoot, ...changedExisting])
