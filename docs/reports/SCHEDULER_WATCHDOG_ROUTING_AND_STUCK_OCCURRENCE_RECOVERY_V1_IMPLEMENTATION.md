@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: a57bb00dfa28f68ffb73e773663c060c6f45dad9
-status: candidate_fourth_exact_review_pending
+implementation_code_commit: 4ab159fb34a866296ce47cf738e78404cbb160c1
+status: candidate_fifth_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`a57bb00dfa28f68ffb73e773663c060c6f45dad9`, based on the accepted-Spec merge
+`4ab159fb34a866296ce47cf738e78404cbb160c1`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -48,9 +48,9 @@ All Spec tests T01–T34 have explicit named coverage under
 Key results:
 
 ```text
-full Scheduler suite                              306/306 PASS
+full Scheduler suite                              310/310 PASS
 Product API + broker boundary                      106/106 PASS
-focused blocker/deployment/health matrix             47/47 PASS
+focused blocker/deployment/health matrix            110/110 PASS
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
 production admission fixture selftest           PASS twice, including resumable replay
@@ -117,7 +117,19 @@ returned `REVISE`. The fourth candidate closes its exact blockers:
 | canonical health could false-green recent failure | the production health projector itself derives terminal failure/stuck/unknown/missed facts; W1 consumes only the projector findings; runtime failure is one global canonical finding while each otherwise-ready Job degrades |
 | user-writable deployment receipts and cutover race | control receipts, rollback preimages and sealed operator generations live under the root-only control directory; admission quiesces W1/W2 before backfill, overlay, routing or migration and asserts that ordering in the replay selftest |
 
-This exact packet is intentionally submitted to both independent reviewers for a fourth exact-head
+The fourth exact-head review of `63f887f3970c18e92e1c305490f1da073cfae59d`
+returned `REVISE`. The fifth candidate closes the executed counterexamples:
+
+| Fourth-review blocker | Fifth-candidate exact closure |
+|---|---|
+| age-only recovery, missed stuck deadline and missing paired symptom | terminal failure remains until later successful evidence; running uses canonical `executionDeadlineAtMs`; unknown admission derives the expected slot from schedule+ledger, occurrence-binds the missed fact, and projector-to-compiler-to-lifecycle proves one incident/no unchanged alert |
+| control receipt ancestor redirection | a protected-tree primitive walks each component from a pinned root-owned boundary, rejecting symlink/writable/ACL components before creation; control reads/writes revalidate the tree and tests prove zero writes for symlink/writable ancestors |
+| bootout error treated as success | shared launchd quiescence distinguishes exact not-loaded state, propagates other errors, and positively proves every service absent; prior loaded states are frozen once and rollback restores only those states |
+| incomplete rollback surfaces/generation checks | desired-state now has exact preimage/postimage receipt and restore action; runtime receipt freezes exact installed hash; unrelated advanced bytes fail closed; all disk restoration precedes a single service restart phase |
+| boundary stopped below root | routing target validation is fixed to `/`; unsafe ancestors above the deployment subtree reject before write |
+| premature terminal cutover claim | admission emits only `PENDING_CANONICAL_HEALTH_AND_CANARY`; a separate generation-bound gate can emit acceptance only after complete canonical counts/provenance, passive non-synthetic quarantine/dedupe replay, fresh disposable side-effect-free canary, unrelated-Job isolation and canary-only store delta |
+
+This exact packet is intentionally submitted to both independent reviewers for a fifth exact-head
 review; this table does not self-declare that review result.
 
 ## 4. Controlled production migration plan
@@ -186,5 +198,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = FOURTH_EXACT_HEAD_PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = FIFTH_EXACT_HEAD_PENDING
 ```
