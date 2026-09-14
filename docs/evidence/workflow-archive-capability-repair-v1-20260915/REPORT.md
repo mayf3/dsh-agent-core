@@ -132,3 +132,38 @@ ARCHIVE_REQUEST_MAPPING=PASS / ARCHIVE_ERROR_PROPAGATION=PASS（修复分支测�
 CANARY_ARCHIVE=PASS / SIX_CANCELLED_INSTANCES: ARCHIVED=6/6 /
 OTHER_INSTANCE_MUTATION=0 / RAW_DB_WRITE=NO / BLOCKERS=NONE
 
+
+## 13. 独立评审记录（双 subagent 并行，read-only，互不共享结论）
+
+CODE_REVIEW + SPEC_COMPLIANCE（agent_b0dc686a）：
+- SPEC_COMPLIANCE=**PASS**：CTR-011/012 模型入参恰二不变、frozen description 逐字节未改
+  （python 逐串比对）、CTR-013 纪律文本保留、a2 无违禁字段、inventory 22=22 与基线一致；
+  AMENDMENT_1 机制零改动（mapping.js 未动），SD-4/500-cap/sanitize 保持；
+  executable_for_actor 授权论证被裁定成立（CTR-008 frozen description + DEC-002
+  ADVISORY_ONLY + transport 白名单不转发）；identity 测试改写被裁定合规（无任何 accepted
+  条款要求静默忽略，命名拒绝为更强 fail-closed 且与 svc deny_unknown_fields 对齐）。
+- SPEC_GATE 初审=FAIL：2 个 NEW_LEGACY_VIOLATION_CROSSED_500（schema.js 497→510、
+  workflow-execute.test.js 464→686）→ round-2 机械修复（见 §14）。
+- 测试 A/B：分支 462/462 vs pristine main 455/455（+7 零回归）；agent-router、
+  production-runtime 失败集与 main 逐一 diff 完全一致（环境性 pre-existing）。
+
+SECURITY_REVIEW（agent_2845cc48）：**verdict=PASS，SECURITY_BLOCKERS=0**。
+S1 wire 白名单探针实测（executable_for_actor + mallory 字段不进 body）；
+S2 detail 仅含属性路径不含值、双层 sanitize+500 cap 实证；S3 无被误伤调用方；
+S4 六码逐码保留不塌缩；S5 校验先于 token/HTTP；S6 description 尾缀纯 trusted
+manifest 数据无注入面；S7 生产 DB 只读对账与报告逐条吻合（09-15 ARCHIVE receipts 恰 2、
+OTHER_INSTANCE_MUTATION=0）；S8 无授权 oracle/跨 principal 泄漏。
+非阻塞备注：renderArgs 回显 caller 自身参数值（main 既有行为）；renderErrorDetail
+门控机制系 main 435cc46 引入、无 Spec 命名（文档债，建议补注记）；mapping.js:244
+errorCode 误判为理论性既有问题。
+
+## 14. ROUND-2 机械修复（HEAD=7939c06）
+
+- schema.js：事故叙事注释 10 行→3 行，校验/canonical 行为不变，497→**498**（≤500）。
+- REPAIR §8 A–I 块整体迁至 packages/broker/test/workflow-execute-repair.test.js
+  （220 行，逐字未改；test/ 根 19→20 子项在 DIRECTORY_MAX_CHILDREN 内——
+  test/capabilities/ baseline 恰 20 子项，按 registry 有效性规则永远不可豁免，
+  故新文件不能落该目录）；workflow-execute.test.js 回落 483。
+- 复验：verify-code-structure --base aefb68e 违规集与 base 完全一致（仅 pre-existing
+  DIRECTORY_OVER_CEILING scripts）；broker 套件 462/462 PASS。
+- post-review src 语义增量 = 零（仅 schema.js 注释/等价重排 + 测试文件位置）。
