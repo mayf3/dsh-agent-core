@@ -1,0 +1,6 @@
+
+✖ failing tests:
+
+test at packages/scheduler/test/self-service:1:1
+✖ packages/scheduler/test/self-service (32.192416ms)
+  'test failed'
