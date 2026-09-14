@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { test } from 'node:test'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { performance } from 'node:perf_hooks'
 
 import {
   INSPECTION_AUDIT_MAX_BYTES,
@@ -14,10 +16,12 @@ import {
   inspectAgentSessionTurn,
   locateSessionArtifact,
   projectExactTurn,
+  redactInspectionText,
   scanAuditEligibility,
   sessionProjectKey,
   validateInspectArgs,
-} from '../src/agent-session-turn-inspection.js'
+} from '../../src/agent-session/turn-inspection.js'
+import { createAgentSessionMessagingAudit } from '../../src/agent-session/audit.js'
 
 const SOURCE = 'agt_Source_A'
 const FOREIGN = 'agt_Other_A'
@@ -25,6 +29,8 @@ const TARGET = 'agt_target-agent'
 const SESSION = 'main'
 const MESSAGE = 'm-owned'
 const WORKSPACE = '/srv/workspaces/target'
+const CHARACTERIZATION_FIXTURE = new URL('./fixtures/three-turn-workflow-read.session.jsonl', import.meta.url)
+const CHARACTERIZATION_FIXTURE_SHA = new URL('./fixtures/three-turn-workflow-read.session.sha256', import.meta.url)
 
 function auditRow(overrides = {}) {
   return {
@@ -127,6 +133,33 @@ test('audit eligibility scans .1 then live to EOF, groups one request, and makes
   assert.deepEqual(missing.trace, foreign.trace, 'same bounded stages and no early exit')
 })
 
+test('audit append preflights the serialized row and keeps live bytes at or below N', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'asm-audit-cap-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const probeFile = join(root, 'probe.jsonl')
+  const probe = createAgentSessionMessagingAudit({ auditFile: probeFile, now: () => 10, maxBytes: 4096 })
+  assert.equal(probe.appendDenial({ capabilityId: 'x', agentId: 'agt_a', code: 'denied' }), 'appended')
+  const rowBytes = statSync(probeFile).size
+
+  const exactFile = join(root, 'exact.jsonl')
+  writeFileSync(exactFile, Buffer.alloc(rowBytes, 0x20))
+  const exact = createAgentSessionMessagingAudit({ auditFile: exactFile, now: () => 10, maxBytes: rowBytes * 2 })
+  assert.equal(exact.appendDenial({ capabilityId: 'x', agentId: 'agt_a', code: 'denied' }), 'appended')
+  assert.equal(statSync(exactFile).size, rowBytes * 2, 'N bytes stays live without rotation')
+
+  const rotateFile = join(root, 'rotate.jsonl')
+  writeFileSync(rotateFile, Buffer.alloc(rowBytes + 1, 0x20))
+  const rotate = createAgentSessionMessagingAudit({ auditFile: rotateFile, now: () => 10, maxBytes: rowBytes * 2 })
+  assert.equal(rotate.appendDenial({ capabilityId: 'x', agentId: 'agt_a', code: 'denied' }), 'appended')
+  assert.equal(statSync(rotateFile).size, rowBytes, 'N+1 preimage rotates before append')
+  assert.equal(statSync(`${rotateFile}.1`).size, rowBytes + 1)
+
+  const tinyFile = join(root, 'tiny.jsonl')
+  const tiny = createAgentSessionMessagingAudit({ auditFile: tinyFile, now: () => 10, maxBytes: rowBytes - 1 })
+  assert.equal(tiny.appendDenial({ capabilityId: 'x', agentId: 'agt_a', code: 'denied' }), 'append_failed')
+  assert.equal(existsSync(tinyFile), false, 'one over-cap row writes zero bytes')
+})
+
 test('audit generations enforce the exact byte cap and ambiguous dispatch ownership fails closed', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'turn-audit-bound-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
@@ -186,7 +219,27 @@ test('accepted-not-started, running, failed, ambiguous and foreign durable prove
   assert.equal(failed.result.turnState, 'failed')
   const duplicate = [...sessionRecords(), sessionRecords()[2]]
   assert.equal(projectExactTurn({ records: duplicate, callerAgentId: SOURCE, targetAgentId: TARGET, sessionId: SESSION, messageId: MESSAGE, canonicalWorkspace: WORKSPACE }).error.code, 'trace_unresolvable')
+  const competingAnchor = sessionRecords()
+  competingAnchor[2].data.inserted.push({ id: 'm-competing', role: 'user', source: { kind: 'user' }, content: [{ type: 'text', text: 'other' }] })
+  assert.equal(projectExactTurn({ records: competingAnchor, callerAgentId: SOURCE, targetAgentId: TARGET, sessionId: SESSION, messageId: MESSAGE, canonicalWorkspace: WORKSPACE }).error.code, 'trace_unresolvable')
   assert.equal(projectExactTurn({ records: sessionRecords({ source: FOREIGN }), callerAgentId: SOURCE, targetAgentId: TARGET, sessionId: SESSION, messageId: MESSAGE, canonicalWorkspace: WORKSPACE }).error.code, 'not_found_or_not_owned')
+})
+
+test('messages, tool arguments/results and final response redact filesystem paths and environment', () => {
+  assert.equal(redactInspectionText('HOME=/Users/alice secret at /tmp/key.txt or ../key via $HOME'), 'HOME=[REDACTED] secret at [REDACTED] or [REDACTED] via [REDACTED]')
+  const records = sessionRecords()
+  records.find((record) => record.type === 'user/message').data.content = [{ type: 'text', text: 'read /Users/alice/input.txt with HOME=/Users/alice' }]
+  records.find((record) => record.seq === 6).data.arguments = JSON.stringify({ cwd: '/Users/alice/work', nested: { env: { TOKEN: 'not-visible' }, note: '/tmp/input' }, query: 'safe' })
+  const resultEvent = records.find((record) => record.type === 'tool/result')
+  resultEvent.data.message.content[0].content = [{ type: 'text', text: 'wrote /var/tmp/output and PATH=/usr/bin' }]
+  records.find((record) => record.seq === 9).data.message.content = [{ type: 'text', text: 'final file /private/tmp/result.txt' }]
+  const projected = projectExactTurn({ records, callerAgentId: SOURCE, targetAgentId: TARGET, sessionId: SESSION, messageId: MESSAGE, canonicalWorkspace: WORKSPACE })
+  assert.equal(projected.ok, true)
+  const raw = JSON.stringify(projected.result)
+  for (const forbidden of ['/Users/alice', '/tmp/input', '/var/tmp', '/usr/bin', '/private/tmp', 'not-visible']) assert.ok(!raw.includes(forbidden), forbidden)
+  assert.match(projected.result.toolCalls[0].argumentsJson, /"cwd":"\[REDACTED\]"/)
+  assert.match(projected.result.toolCalls[0].argumentsJson, /"env":"\[REDACTED\]"/)
+  assert.equal(projected.result.finalResponse, 'final file [REDACTED]')
 })
 
 test('full inspection reads both audit generations and exactly one selected artifact', (t) => {
@@ -198,6 +251,46 @@ test('full inspection reads both audit generations and exactly one selected arti
   assert.equal(counters.reads.filter((path) => path === artifact).length, 1)
 })
 
+test('ACC-ASM2-007 committed fixture resolves only the middle Workflow-read turn', (t) => {
+  const fixtureBytes = readFileSync(CHARACTERIZATION_FIXTURE)
+  const pinnedSha = readFileSync(CHARACTERIZATION_FIXTURE_SHA, 'utf8').trim().split(/\s+/)[0]
+  assert.equal(createHash('sha256').update(fixtureBytes).digest('hex'), pinnedSha)
+
+  const root = mkdtempSync(join(tmpdir(), 'asm2-characterization-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const auditFile = join(root, 'control', 'agent-session-messaging-audit.jsonl')
+  writeJsonl(auditFile, [auditRow({ messageId: 'm-fixture-owned', requestId: 'req-fixture' })])
+  const canonicalWorkspace = '/fixture/workspaces/agt_target-agent'
+  const home = join(root, 'homes', TARGET)
+  const artifact = locateSessionArtifact({ dshHome: home, canonicalWorkspace, sessionId: SESSION })
+  mkdirSync(dirname(artifact), { recursive: true })
+  writeFileSync(artifact, fixtureBytes)
+
+  const inspected = inspectAgentSessionTurn({
+    args: { targetAgentId: TARGET, sessionId: SESSION, messageId: 'm-fixture-owned' },
+    callerAgentId: SOURCE,
+    auditFile,
+    resolveTarget: (id) => ({ id }),
+    resolveDshHome: () => home,
+    resolveCanonicalWorkspace: () => canonicalWorkspace,
+  })
+  assert.equal(inspected.ok, true)
+  assert.equal(inspected.result.resolvedTurnId, 67)
+  assert.equal(inspected.result.turnState, 'completed')
+  assert.equal(inspected.result.startedAt, 1700000000011)
+  assert.equal(inspected.result.endedAt, 1700000000017)
+  assert.deepEqual(inspected.result.toolCalls.map(({ seq, callId, name }) => ({ seq, callId, name })), [
+    { seq: 9, callId: 'call-fixture-workflow-read', name: 'workflow_read' },
+  ])
+  assert.deepEqual(inspected.result.toolResults.map(({ seq, callId, isError }) => ({ seq, callId, isError })), [
+    { seq: 10, callId: 'call-fixture-workflow-read', isError: false },
+  ])
+  assert.equal(inspected.result.finalResponse, 'The Workflow was readable; no transition was issued in this fixture.')
+  const visible = JSON.stringify(inspected.result)
+  assert.ok(!visible.includes('ADJACENT_PREVIOUS_MARKER'))
+  assert.ok(!visible.includes('ADJACENT_NEXT_MARKER'))
+})
+
 test('missing/foreign audit coordinate performs no Session read and uses byte-identical error', (t) => {
   const missing = rig(t)
   const a = missing.inspect({ targetAgentId: TARGET, sessionId: SESSION, messageId: 'missing' })
@@ -206,6 +299,73 @@ test('missing/foreign audit coordinate performs no Session read and uses byte-id
   assert.deepEqual(a, b)
   assert.equal(missing.counters.reads.includes(missing.artifact), false)
   assert.equal(foreign.counters.reads.includes(foreign.artifact), false)
+})
+
+test('ACC-ASM2-004 negative coordinates have identical bounded work and coarse latency', (t) => {
+  const unsupported = { kind: 'workflow_execution', phase: 'outcome', sourceAgentId: SOURCE,
+    targetAgentId: TARGET, requestId: 'req-unsupported', result: 'accepted',
+    sessionId: SESSION, messageId: 'unsupported', ts: 11 }
+  const rows = Array.from({ length: 31 }, (_, index) => auditRow({
+    requestId: `noise-${index}`,
+    targetAgentId: 'agt_noise-agent',
+    messageId: `noise-${index}`,
+  })).concat(unsupported)
+  const split = Math.ceil(rows.length / 2)
+  const files = new Map([
+    ['/audit.1', Buffer.from(`${rows.slice(0, split).map(JSON.stringify).join('\n')}\n`)],
+    ['/audit', Buffer.from(`${rows.slice(split).map(JSON.stringify).join('\n')}\n`)],
+  ])
+  const cases = [
+    ['missing', { callerAgentId: SOURCE, targetAgentId: TARGET, sessionId: SESSION, messageId: 'missing' }],
+    ['foreign', { callerAgentId: FOREIGN, targetAgentId: TARGET, sessionId: SESSION, messageId: MESSAGE }],
+    ['wrong_session', { callerAgentId: SOURCE, targetAgentId: TARGET, sessionId: 'other', messageId: MESSAGE }],
+    ['unsupported', { callerAgentId: SOURCE, targetAgentId: TARGET, sessionId: SESSION, messageId: 'unsupported' }],
+  ]
+  function run(coordinate, trace) {
+    const io = {
+      existsSync(path) { trace?.push(['exists', path]); return files.has(path) },
+      statSync(path) { trace?.push(['stat', path, files.get(path).byteLength]); return { size: files.get(path).byteLength } },
+      readFileSync(path) {
+        const buffer = files.get(path)
+        trace?.push(['read', path, buffer.byteLength, buffer.toString('utf8').trim().split('\n').length])
+        return buffer
+      },
+    }
+    return scanAuditEligibility({ auditFile: '/audit', ...coordinate, io })
+  }
+  const traces = cases.map(([name, coordinate]) => {
+    const trace = []
+    assert.equal(run(coordinate, trace).status, 'not_found_or_not_owned', name)
+    return trace
+  })
+  for (const trace of traces.slice(1)) assert.deepEqual(trace, traces[0])
+  assert.deepEqual(traces[0].filter(([stage]) => stage === 'read').map((entry) => entry.slice(2)), [
+    [files.get('/audit.1').byteLength, split],
+    [files.get('/audit').byteLength, rows.length - split],
+  ])
+
+  const batch = 100
+  const samples = 31
+  for (let warm = 0; warm < batch; warm += 1) for (const [, coordinate] of cases) run(coordinate)
+  const elapsed = new Map(cases.map(([name]) => [name, []]))
+  for (let sample = 0; sample < samples; sample += 1) {
+    const ordered = sample % 2 === 0 ? cases : [...cases].reverse()
+    for (const [name, coordinate] of ordered) {
+      const started = performance.now()
+      for (let iteration = 0; iteration < batch; iteration += 1) run(coordinate)
+      elapsed.get(name).push(performance.now() - started)
+    }
+  }
+  const percentile = (values, fraction) => [...values].sort((a, b) => a - b)[Math.floor((values.length - 1) * fraction)]
+  const summary = Object.fromEntries(cases.map(([name]) => [name, {
+    p50Ms: percentile(elapsed.get(name), 0.50),
+    p95Ms: percentile(elapsed.get(name), 0.95),
+  }]))
+  t.diagnostic(`bounded negative-path timing ${JSON.stringify(summary)}`)
+  for (const metric of ['p50Ms', 'p95Ms']) {
+    const values = Object.values(summary).map((entry) => entry[metric])
+    assert.ok(Math.max(...values) <= Math.max(10, Math.min(...values) * 4), `${metric} diverged beyond the coarse characterization bound`)
+  }
 })
 
 test('Session resource bounds fail closed without partial results', (t) => {

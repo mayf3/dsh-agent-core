@@ -26,16 +26,20 @@ import { test } from 'node:test'
 import { createServer } from 'node:http'
 import { mkdtempSync, writeFileSync, readFileSync, existsSync, rmSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
-import { writeAgentDefinition } from '../../agent-definition/src/config.js'
-import { createParentRpcHandler, BROKER_RPC_METHOD } from '../../agent-router/src/parent-rpc-relay.js'
-import { agentSessionMessagingManifest } from '../../broker/src/capabilities/agent-session-messaging.js'
-import { invoke } from '../../broker/src/mapping.js'
-import { createRelayHandlers } from '../../broker/src/relay.js'
-import { createSessionSeam } from '../../demo-server/src/session-seam.js'
-import { composeProductionRuntime } from '../src/compose.js'
-import { resolveProductionLayout } from '../src/paths.js'
+import { writeAgentDefinition } from '../../../agent-definition/src/config.js'
+import { createParentRpcHandler, BROKER_RPC_METHOD } from '../../../agent-router/src/parent-rpc-relay.js'
+import {
+  agentSessionMessagingManifest,
+  agentSessionTurnInspectManifest,
+} from '../../../broker/src/capabilities/agent-session-messaging.js'
+import { invoke } from '../../../broker/src/mapping.js'
+import { createRelayHandlers } from '../../../broker/src/relay.js'
+import { createSessionSeam } from '../../../demo-server/src/session-seam.js'
+import { composeProductionRuntime } from '../../src/compose.js'
+import { locateSessionArtifact } from '../../src/agent-session/turn-inspection.js'
+import { resolveProductionLayout } from '../../src/paths.js'
 
 const SOURCE = 'agt_stock_agent'
 const TARGET = 'agt_a2a-target-agent'
@@ -139,10 +143,13 @@ class FakeProc {
 
 /** Stub auth-service: grant (200) / deny (403 insufficient_scope). */
 function stubAuthServer(mode) {
+  const requests = []
   const server = createServer((req, res) => {
     let body = ''
     req.on('data', (chunk) => { body += chunk })
     req.on('end', () => {
+      const params = new URLSearchParams(body)
+      requests.push({ resource: params.get('resource'), scope: params.get('scope') })
       res.setHeader('Content-Type', 'application/json')
       if (mode === 'deny') {
         res.statusCode = 403
@@ -154,7 +161,7 @@ function stubAuthServer(mode) {
     })
   })
   return new Promise((resolve) => {
-    server.listen(0, '127.0.0.1', () => resolve({ server, origin: `http://127.0.0.1:${server.address().port}` }))
+    server.listen(0, '127.0.0.1', () => resolve({ server, origin: `http://127.0.0.1:${server.address().port}`, requests }))
   })
 }
 
@@ -178,7 +185,7 @@ async function seedRuntime(t, { authMode = 'grant', targetDisabled = false } = {
       [TARGET]: { clientId: 'client-target', clientSecret: 'target-secret' },
     },
   }, null, 2)}\n`)
-  const { server, origin } = await stubAuthServer(authMode)
+  const { server, origin, requests: authRequests } = await stubAuthServer(authMode)
   t.after(() => new Promise((resolve) => server.close(resolve)))
   const spawned = []
   const runtime = await composeProductionRuntime({
@@ -195,10 +202,10 @@ async function seedRuntime(t, { authMode = 'grant', targetDisabled = false } = {
   })
   t.after(() => runtime.stop())
   const auditFile = join(layout.controlDir, 'agent-session-messaging-audit.jsonl')
-  return { runtime, spawned, auditFile, authOrigin: origin }
+  return { runtime, spawned, auditFile, authOrigin: origin, authRequests }
 }
 
-function gatewayCall(runtime, { agentId, sourceTurnExecutionId, args }) {
+function gatewayCall(runtime, { agentId, sourceTurnExecutionId, args, manifest = agentSessionMessagingManifest, operation = 'send' }) {
   const sourceProc = {
     agentId,
     processGeneration: 1,
@@ -213,7 +220,7 @@ function gatewayCall(runtime, { agentId, sourceTurnExecutionId, args }) {
     switchAgent: async () => ({}),
   })
   const relayHandlers = createRelayHandlers(
-    agentSessionMessagingManifest,
+    manifest,
     // The real RPC wire wraps the parent handler's business envelope.
     async (call) => ({
       ok: true,
@@ -221,11 +228,34 @@ function gatewayCall(runtime, { agentId, sourceTurnExecutionId, args }) {
     }),
   )
   return invoke(
-    agentSessionMessagingManifest,
+    manifest,
     relayHandlers,
-    { operation: 'send', args },
+    { operation, args },
     { resolvePrincipal: () => undefined },
   )
+}
+
+function writeInspectionArtifact({ runtime, layout, coordinate }) {
+  const workspaceBootstrap = runtime.ctx.get('workspaceBootstrap')
+  const canonicalWorkspace = workspaceBootstrap.resolveWorkspace(coordinate.targetAgentId)
+  const dshHome = workspaceBootstrap.resolveDshHome(coordinate.targetAgentId)
+  const artifact = locateSessionArtifact({ dshHome, canonicalWorkspace, sessionId: coordinate.sessionId })
+  const source = { kind: 'inter_agent', sourceAgentId: SOURCE, correlation: PROOF }
+  const records = [
+    { type: 'session', version: 1, id: coordinate.sessionId, createdAt: 1, cwd: canonicalWorkspace, delegationDepth: 0 },
+    { seq: 1, time: 1, type: 'assistant/message', data: { turn: 66, message: { content: [{ type: 'text', text: 'INTEGRATION_PREVIOUS_MARKER' }] } } },
+    { seq: 2, time: 2, type: 'agent/inbox/spliced', data: { inserted: [{ id: coordinate.messageId, role: 'user', source, content: [{ type: 'text', text: 'coordination hello' }] }] } },
+    { seq: 3, time: 3, type: 'turn/start', data: { turn: 67 } },
+    { seq: 4, time: 4, type: 'user/message', data: { id: coordinate.messageId, role: 'user', source, content: [{ type: 'text', text: 'coordination hello' }] } },
+    { seq: 5, time: 5, type: 'tool/call', data: { turn: 67, callId: 'call-integration-read', name: 'workflow_read', arguments: '{"operation":"detail"}' } },
+    { seq: 6, time: 6, type: 'tool/result', data: { turn: 67, message: { source: { kind: 'tool', callId: 'call-integration-read' }, content: [{ type: 'tool-result', toolCallId: 'call-integration-read', isError: false, content: [{ type: 'text', text: 'full visibility' }] }] } } },
+    { seq: 7, time: 7, type: 'assistant/message', data: { turn: 67, message: { content: [{ type: 'text', text: 'integration final response' }] } } },
+    { seq: 8, time: 8, type: 'turn/end', data: { turn: 67, reason: { kind: 'completed' } } },
+    { seq: 9, time: 9, type: 'assistant/message', data: { turn: 68, message: { content: [{ type: 'text', text: 'INTEGRATION_NEXT_MARKER' }] } } },
+  ]
+  mkdirSync(dirname(artifact), { recursive: true })
+  writeFileSync(artifact, `${records.map(JSON.stringify).join('\n')}\n`)
+  return { artifact, before: readFileSync(artifact) }
 }
 
 const SEND = { targetAgentId: TARGET, message: 'coordination hello', timeoutSeconds: 0 }
@@ -264,6 +294,48 @@ test('Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned
   assert.equal(rows[1].messageId, envelope.result.messageId)
   assert.ok(rows[0].correlationHash !== PROOF, 'the audit carries a bounded correlation hash, never the raw id')
 
+})
+
+test('ACC-ASM2-004/007: granted inspect crosses gateway, provider, audit and one exact artifact', async (t) => {
+  const { runtime, spawned, auditFile, authRequests } = await seedRuntime(t)
+  const sent = await gatewayCall(runtime, { agentId: SOURCE, sourceTurnExecutionId: PROOF, args: SEND })
+  assert.equal(sent.ok, true)
+  const coordinate = {
+    targetAgentId: sent.result.targetAgentId,
+    sessionId: sent.result.sessionId,
+    messageId: sent.result.messageId,
+  }
+  const target = spawned.find((proc) => proc.agentId === TARGET)
+  const countsBefore = { spawned: spawned.length, deliveries: target.deliveries.length, messages: target.sessionMessages.length }
+  const { artifact, before } = writeInspectionArtifact({ runtime, coordinate })
+  const auditBefore = readFileSync(auditFile)
+
+  const inspected = await gatewayCall(runtime, {
+    agentId: SOURCE,
+    sourceTurnExecutionId: PROOF,
+    manifest: agentSessionTurnInspectManifest,
+    operation: 'inspect',
+    args: coordinate,
+  })
+  assert.equal(inspected.ok, true)
+  assert.equal(inspected.result.resolvedTurnId, 67)
+  assert.equal(inspected.result.turnState, 'completed')
+  assert.deepEqual(inspected.result.toolCalls.map(({ callId, name }) => ({ callId, name })), [
+    { callId: 'call-integration-read', name: 'workflow_read' },
+  ])
+  assert.deepEqual(inspected.result.toolResults.map(({ callId, text, isError }) => ({ callId, text, isError })), [
+    { callId: 'call-integration-read', text: 'full visibility', isError: false },
+  ])
+  assert.equal(inspected.result.finalResponse, 'integration final response')
+  assert.ok(!JSON.stringify(inspected.result).includes('INTEGRATION_PREVIOUS_MARKER'))
+  assert.ok(!JSON.stringify(inspected.result).includes('INTEGRATION_NEXT_MARKER'))
+  assert.deepEqual(authRequests, [
+    { resource: 'agent-session-messaging', scope: 'agent.session.send' },
+    { resource: 'agent-session-messaging', scope: 'agent.session.inspect_own_dispatch' },
+  ])
+  assert.deepEqual({ spawned: spawned.length, deliveries: target.deliveries.length, messages: target.sessionMessages.length }, countsBefore)
+  assert.deepEqual(readFileSync(auditFile), auditBefore, 'successful inspection appends no audit or delivery state')
+  assert.deepEqual(readFileSync(artifact), before, 'successful inspection is read-only')
 })
 
 test('Case A: the existing main is reused — same process, two sends, two Runs', async (t) => {

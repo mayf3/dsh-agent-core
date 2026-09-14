@@ -4,7 +4,8 @@ import { closeSync, existsSync, openSync, readSync, statSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'node:path'
 import { TextDecoder } from 'node:util'
 
-import { redactSensitiveText } from '../../agent-router/src/process/provider-errors.js'
+import { canonicalArguments, redactInspectionText, toolResultText, visibleText } from './projection-redaction.js'
+export { redactInspectionText } from './projection-redaction.js'
 
 export const INSPECTION_AUDIT_MAX_BYTES = 8 * 1024 * 1024
 export const INSPECTION_SESSION_MAX_BYTES = 8 * 1024 * 1024
@@ -178,45 +179,6 @@ export function scanAuditEligibility({ auditFile, callerAgentId, targetAgentId, 
   return matchingRequests.size === 1 ? { status: 'eligible' } : { status: 'not_found_or_not_owned' }
 }
 
-function visibleText(content) {
-  if (!Array.isArray(content)) return ''
-  return redactSensitiveText(content
-    .filter((block) => block?.type === 'text' && typeof block.text === 'string')
-    .map((block) => block.text)
-    .join(''))
-}
-
-function toolResultText(content) {
-  if (!Array.isArray(content)) return ''
-  const out = []
-  for (const block of content) {
-    if (block?.type !== 'tool-result' || !Array.isArray(block.content)) continue
-    for (const part of block.content) {
-      if (part?.type === 'text' && typeof part.text === 'string') out.push(part.text)
-    }
-  }
-  return redactSensitiveText(out.join(''))
-}
-
-function canonicalValue(value) {
-  if (Array.isArray(value)) return value.map(canonicalValue)
-  if (value !== null && typeof value === 'object') {
-    const out = {}
-    for (const key of Object.keys(value).sort()) out[key] = canonicalValue(value[key])
-    return out
-  }
-  return value
-}
-
-function canonicalArguments(value) {
-  let parsed = value
-  if (typeof parsed === 'string') {
-    try { parsed = JSON.parse(parsed) } catch { return null }
-  }
-  if (parsed === undefined) return null
-  try { return redactSensitiveText(JSON.stringify(canonicalValue(parsed))) } catch { return null }
-}
-
 function safeSeq(record) {
   return Number.isSafeInteger(record?.seq) && record.seq >= 0 ? record.seq : null
 }
@@ -344,6 +306,7 @@ export function projectExactTurn({ records, callerAgentId, targetAgentId, sessio
   }
   if (spliceMatches.length !== 1) return unresolvable()
   const anchor = spliceMatches[0]
+  if (hasCompetingInsertion(anchor.record, messageId)) return unresolvable()
   if (anchor.message?.source?.kind !== 'inter_agent' || anchor.message.source.sourceAgentId !== callerAgentId) return notOwned()
 
   let start = null
@@ -407,8 +370,8 @@ export function projectExactTurn({ records, callerAgentId, targetAgentId, sessio
         || typeof event.data?.name !== 'string' || event.data.name === '') return unresolvable()
       toolCalls.push({
         seq,
-        callId: redactSensitiveText(event.data.callId),
-        name: redactSensitiveText(event.data.name),
+        callId: redactInspectionText(event.data.callId),
+        name: redactInspectionText(event.data.name),
         argumentsJson: canonicalArguments(event.data.arguments),
       })
     } else if (event.type === 'tool/result') {
@@ -417,12 +380,12 @@ export function projectExactTurn({ records, callerAgentId, targetAgentId, sessio
         : undefined
       const callId = resultBlock?.toolCallId ?? event.data?.message?.source?.callId
       if (typeof callId !== 'string' || callId === '' || typeof resultBlock?.isError !== 'boolean') return unresolvable()
-      toolResults.push({ seq, callId: redactSensitiveText(callId), text: toolResultText(event.data.message.content), isError: resultBlock.isError })
+      toolResults.push({ seq, callId: redactInspectionText(callId), text: toolResultText(event.data.message.content), isError: resultBlock.isError })
     } else if (event.type === 'turn/end') {
       endCount += 1
       endedAt = safeTime(event)
       if (endedAt === null || typeof event.data?.reason?.kind !== 'string' || event.data.reason.kind === '') return unresolvable()
-      stopReason = redactSensitiveText(event.data.reason.kind)
+      stopReason = redactInspectionText(event.data.reason.kind)
       // The exact projection ends at this native terminal boundary. Events
       // appended for later turns (or any corrupt late reuse of the turn
       // number) are outside this dispatch and are never inspected.
