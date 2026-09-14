@@ -229,7 +229,7 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |
-| `AGENT_CORE_AGENT_SESSION_MESSAGING_V2_DEPLOYMENT_V1` | proposed | none | accepted Session Messaging V2 的独立窄 production authority：可信 recovered V1 preimage 上仅移植 reviewed V2 14-path semantic delta，拒绝 full-main/full-blob 夹带；immutable release/rollback、Auth inspection scope + HR exact Grant prerequisites、fresh readiness/health、one-send + exact-turn read-only canary；不改 Session/message/history，不含 ledger/retry/Scheduler/Workflow 扩张 |
+| `AGENT_CORE_AGENT_SESSION_MESSAGING_V2_DEPLOYMENT_V1` | accepted (reviewed head 4472724…, Owner mayf3 2026-09-14) | contracts | accepted Session Messaging V2 的独立窄 production authority：可信 recovered V1 preimage 上仅移植 reviewed V2 14-path semantic delta，拒绝 full-main/full-blob 夹带；immutable release/rollback、Auth inspection scope + HR exact Grant prerequisites、fresh readiness/health、one-send + exact-turn read-only canary；不改 Session/message/history，不含 ledger/retry/Scheduler/Workflow 扩张 |
 
 ## HR dispatch delivery resolution authority
 
