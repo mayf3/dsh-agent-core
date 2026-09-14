@@ -52,3 +52,26 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
     'runtime:true',
   ])
 })
+
+test('runtime restart rejects a same-byte preimage with different predecessor metadata', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'scheduler-runtime-preimage-metadata-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const launchdDir = join(root, 'launchd')
+  const artifactsDir = join(root, 'artifacts')
+  const plistPath = join(launchdDir, 'ai.agent-core.runtime.plist')
+  const preimage = join(artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
+  mkdirSync(launchdDir, { recursive: true }); mkdirSync(join(artifactsDir, 'rollback'), { recursive: true })
+  const bytes = '<plist><dict><key>HOME</key><string>/Users/authsvc</string></dict></plist>\n'
+  writeFileSync(plistPath, bytes); writeFileSync(preimage, bytes)
+  chmodSync(plistPath, 0o644); chmodSync(preimage, 0o600)
+  if (process.platform === 'darwin') {
+    execFileSync('/usr/bin/xattr', ['-c', plistPath]); execFileSync('/usr/bin/xattr', ['-c', preimage])
+  }
+  const receipts = []
+  assert.throws(() => restartSchedulerProductionRuntime({ ctx: {
+    launchdDir, artifactsDir, authsvcUid: 501, authsvcGid: 20,
+    runtimeReceipt: (receipt) => receipts.push(receipt),
+  }, phase: () => assert.fail('phase must not run'), sourceSha: '1'.repeat(40) }), /preimage metadata differs/)
+  assert.deepEqual(receipts, [])
+  assert.equal(statSync(plistPath).mode & 0o777, 0o644)
+})

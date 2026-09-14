@@ -7,12 +7,58 @@ import { chmod, mkdir, mkdtemp, readFile, symlink, writeFile } from 'node:fs/pro
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLegacyIncidentStateFiles } from '../../src/watchdog/durable-state.js'
+import { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLegacyIncidentStateFiles, validateIncidentState } from '../../src/watchdog/durable-state.js'
 import { canonicalJSON } from '../../src/occurrence-model.js'
 import { ensureProtectedDirectoryTree } from '../../src/watchdog/private-state-io.js'
+import { compileIncidents } from '../../src/watchdog/incident-compiler.js'
+import { notificationKey, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
 
 const state = (revision) => ({ version: 1, revision, incidents: {}, outbox: {} })
 const sha = (value) => createHash('sha256').update(value).digest('hex')
+
+function validIncidentState() {
+  const incidents = compileIncidents([
+    { class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: 'job-a', occurrenceId: 'occ-a' },
+  ]).incidents
+  return updateIncidentState({}, incidents, { nowMs: 1 }).state
+}
+
+test('incident durability rejects invalid lifecycle, missing delivery, orphan and duplicate transition identities', () => {
+  const invalidLifecycle = validIncidentState()
+  Object.values(invalidLifecycle.incidents)[0].lifecycle = 'BANANA'
+  assert.throws(() => commitIncidentState('/not-reached', invalidLifecycle), /incoherent incident record/)
+
+  const missingDelivery = validIncidentState()
+  const missingRecord = Object.values(missingDelivery.incidents)[0]
+  const missingIntent = Object.values(missingDelivery.outbox)[0]
+  delete missingRecord.alertState.delivery
+  delete missingIntent.delivery
+  assert.throws(() => commitIncidentState('/not-reached', missingDelivery), /incoherent incident/)
+
+  const orphan = validIncidentState()
+  orphan.outbox[Object.keys(orphan.outbox)[0]].incident.rootIdentity = 'orphan'
+  assert.throws(() => commitIncidentState('/not-reached', orphan), /incoherent incident outbox/)
+
+  const duplicate = validIncidentState()
+  const [key, intent] = Object.entries(duplicate.outbox)[0]
+  const second = structuredClone(intent)
+  second.routeClass = `${second.routeClass}-other`
+  second.incident.routeClass = second.routeClass
+  second.notificationKey = notificationKey(second)
+  duplicate.outbox[second.notificationKey] = second
+  assert.notEqual(second.notificationKey, key)
+  assert.throws(() => commitIncidentState('/not-reached', duplicate), /incoherent incident outbox/)
+
+  const closed = updateIncidentState(validIncidentState(), [], { nowMs: 2 }).state
+  assert.equal(validateIncidentState(closed), closed)
+  const malformedClosure = structuredClone(closed)
+  const current = Object.values(malformedClosure.outbox).find((intent) => intent.transitionRevision === 2)
+  current.transitionKind = 'OPEN'
+  assert.throws(() => validateIncidentState(malformedClosure), /incoherent incident outbox/)
+  const missingClosure = structuredClone(closed)
+  delete missingClosure.outbox[Object.entries(missingClosure.outbox).find(([, intent]) => intent.transitionRevision === 2)[0]]
+  assert.throws(() => validateIncidentState(missingClosure), /lacks unique current outbox/)
+})
 
 test('protected control tree rejects symlink and writable ancestors before any receipt write', async () => {
   const root = await mkdtemp(join(tmpdir(), 'protected-control-tree-'))
