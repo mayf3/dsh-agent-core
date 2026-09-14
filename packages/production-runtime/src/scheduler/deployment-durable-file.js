@@ -1,6 +1,7 @@
-import { chmodSync, chownSync, closeSync, constants, copyFileSync, existsSync, fsyncSync, lstatSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, closeSync, constants, copyFileSync, existsSync, fstatSync, fsyncSync, lstatSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { dirname } from 'node:path'
-import { capturePlainFileMetadata, clearGeneratedFileXattrs } from './deployment-file-metadata.js'
+import { capturePlainFileMetadata, clearGeneratedFileXattrs, listFileXattrs } from './deployment-file-metadata.js'
 
 export function syncFile(path) {
   const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
@@ -43,6 +44,31 @@ export function verifyAndSyncPreimage(source, target, metadata, { onStage = () =
     || JSON.stringify(capturePlainFileMetadata(target)) !== JSON.stringify(metadata)) throw new Error('durable preimage differs from protected predecessor')
   syncFile(target); onStage('preimage-file-synced')
   syncDirectory(dirname(target)); onStage('preimage-directory-synced')
+}
+
+export function verifyReceiptedPreimage({ path, expectedPath, expectedSha256, expectedMetadata, expectedXattrs }) {
+  if (path !== expectedPath) throw new Error('receipted preimage path mismatch')
+  if (expectedSha256 === null) {
+    if (expectedMetadata !== null || expectedXattrs?.length !== 0 || existsSync(path)) throw new Error('unexpected preimage for absent predecessor')
+    return
+  }
+  if (!/^[0-9a-f]{64}$/.test(expectedSha256 ?? '') || !expectedMetadata || !Array.isArray(expectedXattrs) || !existsSync(path)) throw new Error('receipted preimage is missing or malformed')
+  const before = lstatSync(path)
+  const firstMetadata = capturePlainFileMetadata(path)
+  if (JSON.stringify(listFileXattrs(path)) !== JSON.stringify(expectedXattrs)) throw new Error('receipted preimage generation mismatch')
+  const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
+  try {
+    const opened = fstatSync(fd)
+    const bytes = readFileSync(fd)
+    const secondMetadata = capturePlainFileMetadata(path)
+    if (!opened.isFile() || before.dev !== opened.dev || before.ino !== opened.ino
+      || JSON.stringify(firstMetadata) !== JSON.stringify(expectedMetadata)
+      || JSON.stringify(secondMetadata) !== JSON.stringify(expectedMetadata)
+      || JSON.stringify(listFileXattrs(path)) !== JSON.stringify(expectedXattrs)
+      || createHash('sha256').update(bytes).digest('hex') !== expectedSha256) throw new Error('receipted preimage generation mismatch')
+    fsyncSync(fd)
+  } finally { closeSync(fd) }
+  syncDirectory(dirname(path))
 }
 
 export function atomicInstallDurableFile(target, bytes, metadata, { crashAt, onStage = () => {} } = {}) {

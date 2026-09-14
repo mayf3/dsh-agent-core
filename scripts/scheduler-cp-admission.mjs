@@ -25,9 +25,10 @@ import { restartSchedulerProductionRuntime } from '../packages/production-runtim
 import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
 import { installSchedulerRoutingManifest } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
 import { installSchedulerDesiredState } from '../packages/production-runtime/src/scheduler/deployment-desired-state.js'
-import { capturePlainFileMetadata } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
+import { capturePlainFileMetadata, listFileXattrs } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage } from '../packages/production-runtime/src/scheduler/deployment-durable-file.js'
 import { runSchedulerIncidentMigration } from '../packages/production-runtime/src/scheduler/deployment-incident-migration.js'
+import { verifyWatchdogReplayReceipt } from '../packages/production-runtime/src/scheduler/deployment-watchdog-replay.js'
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
 const args = process.argv.slice(2)
 const has = (name) => args.includes(name)
@@ -248,7 +249,6 @@ function overlay() {
   for (const entry of deletes) if (existsSync(join(CTX.liveRoot, entry.path))) rmSync(join(CTX.liveRoot, entry.path))
   phase('overlay', true, `EXACT GOAL closure: ${all.length} files (update=${all.filter((entry) => entry.kind === 'update').length} add=${all.filter((entry) => entry.kind === 'add').length}); base=${GOAL_BASE_SHA.slice(0, 12)}`)
 }
-
 function brokerBootRehearsal() {
   const staged = readFileSync(join(CTX.liveRoot, 'packages/broker/src/index.js'), 'utf8')
   if (MODE === 'selftest') {
@@ -373,16 +373,16 @@ function watchdogInstall() {
       const before = existed ? capturePlainFileMetadata(path) : null
       if (existed && existsSync(preimage) && !readFileSync(path).equals(readFileSync(preimage))) { rmSync(preimage); syncDirectory(dirname(preimage)) }
       if (existed && !existsSync(preimage)) durableCopyPreimage(path, preimage, before)
-      const rollbackMetadata = existed ? capturePlainFileMetadata(preimage) : null; const rollbackSha256 = existed ? sha256(readFileSync(preimage)) : null
+      const rollbackMetadata = existed ? capturePlainFileMetadata(preimage) : null; const rollbackSha256 = existed ? sha256(readFileSync(preimage)) : null; const rollbackXattrs = existed ? listFileXattrs(preimage) : []
       if (existed && (sha256(readFileSync(path)) !== rollbackSha256 || JSON.stringify(before) !== JSON.stringify(rollbackMetadata))) throw new Error(`watchdog predecessor differs from durable rollback preimage: ${label}`)
       if (existed) verifyAndSyncPreimage(path, preimage, rollbackMetadata)
       return { role, label, path, existed, installedSha256: sha256(Buffer.from(tmpl)), preimage,
-        preimageSha256: rollbackSha256, preimageMetadata: rollbackMetadata }
+        preimageSha256: rollbackSha256, preimageMetadata: rollbackMetadata, preimageXattrs: rollbackXattrs }
     })
     receipt = { status: 'INSTALLING', sourceSha: SOURCE_SHA, plists }
     writeControlReceipt('watchdog-install-receipt.json', receipt)
   }
-  if (receipt.sourceSha !== SOURCE_SHA || receipt.plists?.length !== 2) throw new Error('watchdog rerun generation mismatch')
+  verifyWatchdogReplayReceipt(receipt, { sourceSha: SOURCE_SHA, launchdDir: CTX.launchdDir, artifactsDir: CTX.artifactsDir })
   for (const item of receipt.plists) {
     const tmpl = fill(CTX.gitShow(SOURCE_SHA, `deployment-artifacts/scheduler-control-plane-reliability-v1/ai.agent-core.scheduler-watchdog-${item.role}.plist.tmpl`))
     if (sha256(Buffer.from(tmpl)) !== item.installedSha256) throw new Error(`watchdog candidate generation mismatch: ${item.label}`)

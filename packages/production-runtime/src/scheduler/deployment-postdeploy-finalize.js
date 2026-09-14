@@ -10,6 +10,7 @@ const digest = (value) => createHash('sha256').update(typeof value === 'string' 
 const exact = (left, right, label) => {
   if (canonicalJSON(left) !== canonicalJSON(right)) throw new Error(`postdeploy ${label} changed unexpectedly`)
 }
+const stableFact = ({ overdueMs: _overdueMs, ...fact }) => fact
 
 export function assertCanonicalPostdeployHealth(health, sourceSha) {
   if (health?.complete !== true || health.unknown !== 0) throw new Error('postdeploy canonical health is incomplete or unknown')
@@ -124,9 +125,9 @@ export function assertIncidentDedupeFromDurableState({ incidentState, compiledIn
       throw new Error(`durable incident state lacks exact open root: ${root}`)
     }
     exact({ rootIdentity: record.rootIdentity, rootCauseClass: record.rootCauseClass, routeClass: record.routeClass,
-      facts: record.facts, symptoms: record.symptoms },
+      facts: record.facts.map(stableFact), symptoms: record.symptoms },
     { rootIdentity: expected.rootIdentity, rootCauseClass: expected.rootCauseClass, routeClass: expected.routeClass,
-      facts: expected.facts, symptoms: expected.symptoms }, `durable incident payload ${root}`)
+      facts: expected.facts.map(stableFact), symptoms: expected.symptoms }, `durable incident payload ${root}`)
     if (!Number.isSafeInteger(record.episode) || record.episode < 1 || !Number.isSafeInteger(record.transitionRevision)
       || record.transitionRevision < 1 || record.incidentId !== `${root}|episode:${record.episode}`
       || record.alertState?.lifecycle !== 'OPEN' || record.alertState?.incidentKey !== root) throw new Error(`durable incident episode is incoherent: ${root}`)

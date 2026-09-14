@@ -109,6 +109,17 @@ test('one quarantined Job does not prevent an unrelated healthy Job from complet
   assert.equal(verifyPostdeployEvidence(proof).status, 'ACCEPTED')
 })
 
+test('passive dedupe proof tolerates advancing overdueMs without changing root or notification attempt', () => {
+  const proof = evidence()
+  const beforeExpected = proof.beforeHealth.findings.find((fact) => fact.class === 'EXPECTED_RUN_MISSED')
+  beforeExpected.dueAt = '2026-09-14T00:00:00.000Z'; beforeExpected.overdueMs = 10
+  proof.afterHealth = structuredClone(proof.beforeHealth); proof.afterHealth.generatedAt = 30
+  proof.afterHealth.findings.find((fact) => fact.class === 'EXPECTED_RUN_MISSED').overdueMs = 20
+  const durable = updateIncidentState({}, compileIncidents(proof.beforeHealth.findings).incidents, { nowMs: 20 }).state
+  proof.beforeIncidentState = durable; proof.afterIncidentState = structuredClone(durable)
+  assert.equal(verifyPostdeployEvidence(proof).status, 'ACCEPTED')
+})
+
 test('interrupted or non-exact receipt publication cannot return acceptance', () => {
   assert.throws(() => publishVerifiedPostdeployReceipt(evidence(), { writeReceipt: () => { throw new Error('interrupted') }, readReceipt: () => assert.fail() }), /interrupted/)
   assert.throws(() => publishVerifiedPostdeployReceipt(evidence(), { writeReceipt: () => {}, readReceipt: () => ({ status: 'PENDING' }) }), /publication\/readback mismatch/)

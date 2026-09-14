@@ -32,9 +32,19 @@ function retainBackup(path, bytes, ownership) {
 
 const LIFECYCLES = new Set(['OPEN', 'CLOSED_ACKNOWLEDGED', 'CLOSED_RECOVERED'])
 const DELIVERIES = new Set(['PENDING', 'DELIVERED', 'FAILED', 'OUTCOME_UNKNOWN'])
+const SHA256 = /^[0-9a-f]{64}$/
+const isPlainRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
+
+function hasValidMigration(value) {
+  if (value.migration === undefined) return false
+  const keys = ['evidenceSha256', 'factsSha256', 'legacySha256']
+  if (!isPlainRecord(value.migration) || Object.keys(value.migration).sort().join(',') !== keys.sort().join(',')
+    || keys.some((key) => !SHA256.test(value.migration[key] ?? ''))) throw new TypeError('incoherent incident migration')
+  return true
+}
 
 function requireIncidentRecord(root, record) {
-  if (record?.rootIdentity !== root || !LIFECYCLES.has(record.lifecycle)
+  if (!isPlainRecord(record) || !isPlainRecord(record.alertState) || record.rootIdentity !== root || !LIFECYCLES.has(record.lifecycle)
     || !Number.isSafeInteger(record.episode) || record.episode < 1
     || record.incidentId !== `${root}|episode:${record.episode}` || !Number.isSafeInteger(record.transitionRevision)
     || record.transitionRevision < 1 || record.alertState?.incidentKey !== root
@@ -54,8 +64,11 @@ function validateOutbox(value) {
     const root = embedded?.rootIdentity
     const record = value.incidents[root]
     const identity = `${intent?.incidentId}|${intent?.transitionRevision}`
-    if (record) requireIncidentRecord(root, embedded)
-    if (!record || !LIFECYCLES.has(intent?.transitionKind) || !DELIVERIES.has(intent?.delivery)
+    if (record && isPlainRecord(embedded)) requireIncidentRecord(root, embedded)
+    const expectedKind = intent?.transitionRevision === 1 ? 'OPEN'
+      : intent?.transitionRevision === 2 && intent?.transitionKind?.startsWith('CLOSED_') ? intent.transitionKind : null
+    if (!isPlainRecord(intent) || !isPlainRecord(embedded) || !record || expectedKind !== intent.transitionKind
+      || !DELIVERIES.has(intent.delivery)
       || typeof intent.routeClass !== 'string' || intent.routeClass.length === 0
       || typeof intent.producer !== 'string' || intent.producer.length === 0
       || !Number.isSafeInteger(intent.transitionRevision) || intent.transitionRevision < 1
@@ -64,7 +77,8 @@ function validateOutbox(value) {
       || embedded.incidentId !== intent.incidentId || embedded.transitionRevision !== intent.transitionRevision
       || embedded.lifecycle !== intent.transitionKind || embedded.routeClass !== intent.routeClass
       || embedded.producer !== intent.producer
-      || intent.incidentId !== `${root}|episode:${embedded.episode}` || embedded.episode > record.episode) {
+      || intent.incidentId !== `${root}|episode:${embedded.episode}` || embedded.episode > record.episode
+      || (embedded.episode === record.episode && intent.transitionRevision > record.transitionRevision)) {
       throw new TypeError(`incoherent incident outbox: ${key}`)
     }
     identities.add(identity)
@@ -72,24 +86,31 @@ function validateOutbox(value) {
 }
 
 export function validateIncidentState(value) {
-  if (value === null || typeof value !== 'object' || Array.isArray(value) || value.version !== 1
-    || value.incidents === null || typeof value.incidents !== 'object'
-    || value.outbox === null || typeof value.outbox !== 'object') {
+  if (!isPlainRecord(value) || value.version !== 1 || !isPlainRecord(value.incidents) || !isPlainRecord(value.outbox)) {
     throw new TypeError('unsupported incident state')
   }
+  const migrated = hasValidMigration(value)
   validateOutbox(value)
   for (const [root, record] of Object.entries(value.incidents)) {
     requireIncidentRecord(root, record)
+    if ((record.lifecycle === 'OPEN' && record.transitionRevision !== 1)
+      || (record.lifecycle !== 'OPEN' && record.transitionRevision !== 2 && !(migrated && record.transitionRevision === 1))) {
+      throw new TypeError(`incoherent incident lifecycle history: ${root}`)
+    }
     const entries = Object.entries(value.outbox).filter(([, intent]) => intent.incidentId === record.incidentId)
     if (entries.length === 0) {
-      if (record.alertState.delivery !== 'DELIVERED' || value.migration === undefined) throw new TypeError(`incident lacks current outbox: ${root}`)
+      if (record.alertState.delivery !== 'DELIVERED' || !migrated) throw new TypeError(`incident lacks current outbox: ${root}`)
       continue
+    }
+    const revisions = new Set(entries.map(([, intent]) => intent.transitionRevision))
+    if (!revisions.has(record.transitionRevision) || (!migrated && [...Array(record.transitionRevision)].some((_, index) => !revisions.has(index + 1)))) {
+      throw new TypeError(`incident lifecycle history is incomplete: ${root}`)
     }
     const current = entries.filter(([, intent]) => intent.transitionRevision === record.transitionRevision)
     if (current.length !== 1) throw new TypeError(`incident lacks unique current outbox: ${root}`)
     const [key, intent] = current[0]
     const compatibleDelivery = intent.delivery === record.alertState.delivery
-      || (value.migration !== undefined && record.alertState.delivery === 'FAILED' && intent.delivery === 'PENDING')
+      || (migrated && record.alertState.delivery === 'FAILED' && intent.delivery === 'PENDING')
     if (key !== notificationKey(intent) || intent.notificationKey !== key || intent.transitionKind !== record.lifecycle
       || intent.transitionRevision !== record.transitionRevision || intent.routeClass !== record.routeClass
       || intent.producer !== record.producer || intent.incident?.rootIdentity !== root || !compatibleDelivery) {
