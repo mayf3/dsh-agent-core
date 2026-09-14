@@ -1,15 +1,27 @@
 ---
 spec_id: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
-status: proposed
+status: accepted
 date: 2026-09-14
+accepted_date: 2026-09-14
+accepted_by: mayf3
+accepted_reviewed_head: a8c763067a9b461a75669036dfade96a023f8864
+acceptance_review_verdict: PASS
+acceptance_review_blockers: NONE
+acceptance_authority_basis: >-
+  Owner exact authority acceptance on 2026-09-14 bound this governing Spec at
+  a8c763067a9b461a75669036dfade96a023f8864 after independent semantic and safety
+  reviews both returned PASS with BLOCKERS=NONE. The Owner activated
+  implementation_authority=contracts and production/current-six authority only as
+  conditional_controlled_operation subject to the exact gates and sequencing in this Spec.
+acceptance_record: docs/reports/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_ACCEPTANCE.md
 spec_kind: implementation
 authority_level: governing_spec
 authority_action: SUPERSEDE
-implementation_authority: none
-production_apply_authority: none
+implementation_authority: contracts
+production_apply_authority: conditional_controlled_operation
 owner_direction: APPROVE_RECOMMENDED_DESIGN (2026-09-14)
-independent_spec_review: PASS by /root/spec_semantic_review at 63d59b52858ef1f8b41f26ff7a36443185fcd7d9; blockers none
-independent_safety_review: PASS by /root/spec_safety_review at 63d59b52858ef1f8b41f26ff7a36443185fcd7d9; blockers none
+independent_spec_review: PASS by /root/spec_semantic_review at a8c763067a9b461a75669036dfade96a023f8864; blockers none
+independent_safety_review: PASS by /root/spec_safety_review at a8c763067a9b461a75669036dfade96a023f8864; blockers none
 owners:
   - mayf3
   - repository-maintainers
@@ -35,6 +47,7 @@ references:
   - docs/investigations/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_ROOT_CAUSE.md
   - docs/investigations/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_DESIGN.md
   - docs/reports/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_OWNER_DECISION.md
+  - docs/reports/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_ACCEPTANCE.md
   - docs/reviews/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_REVIEWS.md
 ---
 
@@ -43,20 +56,21 @@ references:
 ## 0. Authority state
 
 ```text
-SPEC_STATUS                         = proposed
+SPEC_STATUS                         = accepted
 OWNER_DESIGN_DIRECTION_APPROVED     = YES
-READY_FOR_INDEPENDENT_REVIEW        = YES
-IMPLEMENTATION_ALLOWED              = NO
-PRODUCTION_DEPLOY_ALLOWED           = NO
-PRODUCTION_STORE_MUTATION_ALLOWED   = NO
-FENCE_RELEASE_ALLOWED               = NO
-CURRENT_SIX_RECONCILIATION_ALLOWED  = NO
+READY_FOR_INDEPENDENT_REVIEW        = COMPLETE
+IMPLEMENTATION_ALLOWED              = YES_WITHIN_CONTRACTS
+PRODUCTION_DEPLOY_ALLOWED           = CONDITIONAL_CONTROLLED_OPERATION
+PRODUCTION_STORE_MUTATION_ALLOWED   = ONLY_AFTER_IMPLEMENTATION_GATES_AND_CANARY_PASS
+FENCE_RELEASE_ALLOWED               = EVIDENCE_BASED_SEQUENTIAL_RECOVERY_ONLY
+CURRENT_SIX_RECONCILIATION_ALLOWED  = ONLY_AFTER_IMPLEMENTATION_GATES_AND_CANARY_PASS
 ```
 
-This Spec freezes the selected design for review. Acceptance, implementation, deployment, and
-production reconciliation are distinct gates. While proposed, it changes no standing runtime
-behavior. The Owner authorized completing this Spec, candidate implementation planning,
-test/design refinement and independent exact-head review only.
+This Spec is accepted at the exact reviewed head recorded above. Acceptance, implementation,
+deployment, and production reconciliation remain distinct gates. Implementation is authorized only
+within these Contracts. Production and current-six execution are conditional controlled operations
+and MUST follow the implementation, serialization, provenance, canary and sequential-readback gates
+in this Spec; acceptance alone performs no runtime or store mutation.
 
 ## 1. Goal
 
@@ -83,8 +97,8 @@ Out of scope and forbidden:
 - detector fact suppression or audit/history rewriting;
 - session/chat-derived notification fallback;
 - direct raw-store or ad-hoc shell mutation;
-- any current production deployment, route edit, fence release, or mutation of the six reported
-  occurrences.
+- any production deployment, route edit, fence release, or mutation of the six reported occurrences
+  before the accepted implementation, serialization, provenance, canary and sequential gates.
 
 ## 3. Authority and dependencies
 
@@ -136,8 +150,9 @@ NEW: unchanged state and unchanged escalation level emit no repeated user alert
 - `STATE-002` — Production notification configuration, complete enabled-Job census and current-six
   occurrence evidence are unverified in this task because no formal global Scheduler audit/read
   surface is exposed. Basis: `OBS-004`, `EVD-004`.
-- `STATE-003` — Current production mutation authority for this Goal is none. Basis: the Owner
-  mandate recorded in `OBS-005`.
+- `STATE-003` — Production and current-six mutation authority is conditional and gated; acceptance
+  itself performs no production mutation. Basis: the Owner mandate recorded in `OBS-005` and the
+  exact acceptance record.
 
 These statements describe coordinates; they do not create runtime or product authority.
 
@@ -194,8 +209,9 @@ These statements describe coordinates; they do not create runtime or product aut
 - Environment: this authoring task.
 - Observed at: 2026-09-14 Asia/Shanghai.
 - Method: direct Owner ruling.
-- Result: recommended design and independent review are approved; production deployment/store
-  mutation/fence release/current-six mutation remain explicitly unauthorized.
+- Result: the exact reviewed Spec is accepted; implementation authority is active, while production
+  deployment and current-six recovery are authorized only as conditional controlled operations
+  after the Spec's implementation, serialization, provenance, canary and sequential-readback gates.
 - Provenance:
   `docs/reports/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_OWNER_DECISION.md`;
   no secret-bearing runtime material.
@@ -814,10 +830,10 @@ Any new mutation operation,
 Job schema field, public scope, secret-bearing Git config, broad runtime refactor, or change to
 occurrence/retry semantics is an expansion trigger requiring re-preflight and authority review.
 
-### 12.2 Production migration and rollback contract (not currently authorized)
+### 12.2 Production migration and rollback contract (conditionally authorized after gates)
 
-Any future production execution requires a separate exact mandate and serialized mutation slot.
-The packet MUST bind candidate artifact hashes, integration base, live preimage, actor, canonical
+Production execution under the exact Owner mandate requires the implementation gates and serialized
+mutation slot. The packet MUST bind candidate artifact hashes, integration base, live preimage, actor, canonical
 runtime/store, routing-config preimage, incident-state preimage, aborts, rollback bytes and receipts.
 
 Required order:
@@ -835,7 +851,7 @@ Abort on drift, incomplete census, route leakage, duplicate incident, any unrela
 health/readback loss, unexpected Scheduler store delta, or lost rollback ability. Rollback MUST NOT
 release a fence, rewrite an occurrence, delete evidence, or retry work.
 
-### 12.3 Current-six recovery contract (not currently authorized)
+### 12.3 Current-six recovery contract (conditionally authorized after canary PASS)
 
 The six suffixes are evidence locators only, never mutation identities:
 
@@ -859,7 +875,7 @@ automatic fence release are forbidden.
 
 ### 12.4 Acceptance and implementation gates
 
-Before Owner Spec acceptance:
+Owner acceptance was bound to exact head `a8c763067a9b461a75669036dfade96a023f8864` after:
 
 ```text
 independent semantic/compatibility review exact HEAD = PASS
@@ -867,11 +883,11 @@ independent safety/failure-mode review exact HEAD     = PASS
 review blocker union                                 = NONE
 ```
 
-Acceptance MUST atomically record the exact reviewed head, change this Spec to accepted, activate
-`implementation_authority: contracts` only if the Owner explicitly grants it, and mark
-`SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1` superseded with mutual backlinks. Production
-apply authority remains none unless explicitly granted; candidate verification never implies
-production authorization.
+This acceptance transaction atomically records the exact reviewed head, changes this Spec to
+accepted, activates `implementation_authority: contracts`, records
+`production_apply_authority: conditional_controlled_operation`, and marks
+`SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1` superseded with mutual backlinks. Candidate
+verification alone still never satisfies the conditional production gates.
 
 Full product completion additionally requires candidate tests, independent implementation review,
 serialized production deployment receipts, a fresh complete health census, canary proof, and
