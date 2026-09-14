@@ -326,6 +326,9 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
         at: resolvedAt, from: 'outcome_unknown', to: 'outcome_unknown',
         reason: 'operator trusted termination without business outcome',
       })
+      // Same writer duty as the self-ops seam: the annotation is the final
+      // history entry, so endedAt tracks it.
+      record.endedAt = resolvedAt
       if (oneShot) job.enabled = false
     } else {
       applyTransition(record, {
