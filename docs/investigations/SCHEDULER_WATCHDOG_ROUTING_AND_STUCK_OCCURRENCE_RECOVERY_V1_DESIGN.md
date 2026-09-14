@@ -92,8 +92,8 @@ and health records `alertTargetMissing=true`. If the canonical target itself is 
 the incident is durably recorded in the local incident sink, delivery fails loud, and Scheduler
 health is degraded. It never falls back to a business chat.
 
-The canonical ops target remains Owner-visible (or explicitly Owner-delegated), preserving the
-accepted proactive-alert obligation. Production routing config is a root/deployer-owned regular
+The canonical ops target itself remains Owner-visible, preserving the accepted proactive-alert
+obligation; delegates may administer it but delegate-only visibility is invalid. Production routing config is a root/deployer-owned regular
 file readable only by W1/W2; incident/outbox state is runtime-owned under a `0700` directory with
 `0600` files. No-follow/open-then-fstat checks, non-writable parents, atomic rename and fsync are
 required; permission/type/path/hash readback exposes no raw destination.
@@ -239,8 +239,8 @@ diagnosis.
 
 ## 7. Candidate implementation shape
 
-Implementation is deliberately split into focused modules; `watchdog.js` remains detector-facing
-and is not expanded into a mixed I/O monolith.
+Implementation is deliberately split into focused modules; the detector moves to
+`watchdog/index.js` and is not expanded into a mixed I/O monolith.
 
 ```text
 packages/scheduler/src/watchdog/incident-compiler.js   pure fact -> incident compilation
@@ -250,18 +250,25 @@ packages/scheduler/src/watchdog/health.js              fleet/job projection
 packages/scheduler/src/watchdog/reconciliation.js      four-state evidence classifier
 packages/scheduler/src/watchdog/index.js               moved detector + focused exports
 packages/scheduler/src/index.js                        public exports
-packages/scheduler/test/watchdog/*.test.js             moved existing + focused contract tests
+packages/scheduler/test/watchdog/*.test.js             four moved existing + focused contract tests
 packages/product-api/src/scheduler-health-routes.js    health response adapter
 packages/product-api/src/scheduler-routes.js           authenticated dispatch integration
 scripts/scheduler-watchdog.mjs                         host I/O over the pure modules
+scripts/scheduler-cp-preflight.mjs                     relocated watchdog-path census
+scripts/scheduler-cp-postrepair.mjs                    relocated watchdog copy/readback path
 packages/production-runtime/src/scheduler/health-runtime.js  runtime/store/credential seams
 packages/production-runtime/src/paths.js               external config/state locations
 ```
 
 Because both Scheduler `src/` and `test/` are already at the 20-child cap, implementation replaces
-root `src/watchdog.js` with `src/watchdog/index.js`, moves both existing root watchdog tests into the
-new test directory, and updates exact imports. It does not retain both file and directory or add a
-net root child. The production runtime reuses its existing `src/scheduler/` directory.
+root `src/watchdog.js` with `src/watchdog/index.js`; it moves `watchdog.test.js`,
+`watchdog-templates.test.js`, `alert-dedupe.test.js`, and
+`disposition-alert-lifecycle.test.js` into the new test directory and updates exact imports. The
+host runner and both control-plane preflight/postrepair scripts are the complete executable path
+consumer census and move to the new source path. A static census test rejects any remaining
+executable reference to `packages/scheduler/src/watchdog.js` or `../src/watchdog.js`. The plan does
+not retain both file and directory or add a net root child. The production runtime reuses its
+existing `src/scheduler/` directory.
 
 Before implementation, the accepted Spec must be in the integration base and a fresh
 `DEVELOPMENT_PREFLIGHT` must freeze the exact changed-path closure. Any necessary change to the

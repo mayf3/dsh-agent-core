@@ -98,7 +98,8 @@ semantics and is extended only by the health read contract below.
 `SCHEDULER_CONTROL_PLANE_RELIABILITY_V1` keeps pure detection, desired-state monitoring, W1/W2
 liveness, direct Feishu alerting, fail-loud park/nonzero behavior and Owner-visible proactive
 alerting. `CTR-ROUTE-001` is a new compatible destination-selection constraint: its canonical ops
-target MUST be an Owner-visible or Owner-delegated dedicated operations surface. It does not remove
+target MUST itself remain Owner-visible. Delegates MAY administer that Owner-visible surface but
+delegate-only visibility is forbidden. This does not remove
 or weaken the predecessor's alert audience, channel, detectors or delivery-failure obligations.
 
 ### 3.2 Whole-Spec successor
@@ -488,7 +489,8 @@ never changes detector facts, execution outcome, fence state or audit history.
    target, canonical Scheduler ops target. Falling to ops MUST set a durable per-Job
    `alertTargetMissing` health marker.
 3. `SCHEDULER_CONTROL_PLANE_INCIDENT` MUST use only the canonical Scheduler ops target. That target
-   MUST be a dedicated Owner-visible or explicitly Owner-delegated operations surface; a durable
+   MUST be a dedicated surface directly visible to the Owner. Delegates MAY administer the same
+   Owner-visible surface, but a delegate-only destination is invalid. A durable
    local sink supplements delivery failure but does not replace proactive Owner visibility.
 
 The versioned routing manifest is deployment-owned, outside the Job store, validated before use,
@@ -680,14 +682,16 @@ T28 malformed/truncated/unsupported incident state, torn atomic write and concur
     fail loud, degraded health, preserved dedupe/fence and unrelated admission
 T29 mutation injected between start/capture/end token for every mutable health source -> bounded
     full retry or complete=false; torn snapshot never returns unknown=0
-T30 routing/incident path symlink, owner/mode/type/parent-write mismatch -> fail closed with
-    secret-safe readback and no forbidden delivery
+T30 routing/incident path symlink, owner/group/mode/type/parent-write/extended-ACL mismatch -> fail
+    closed with secret-safe readback and no forbidden delivery
 T31 every new incident with valid route -> exactly one opening intent; invalid route -> durable
     failed/pending intent, nonzero delivery outcome and visible health
 T32 acknowledgment closes exactly once and suppresses later recovery; natural recovery closes once
     when no acknowledgment occurred
 T33 unreadable/untokened Job document -> complete=false, null counts, empty rows and censusError;
     readable Jobs plus missing secondary source -> complete fleet rows with affected UNKNOWN
+T34 tracked executable path census after watchdog move -> zero old-path consumers; package and root
+    test globs execute every moved watchdog test; preflight/postrepair resolve the new path
 ```
 
 Mandatory acceptance headline:
@@ -746,7 +750,8 @@ UNRELATED_JOB_ISOLATION   = PASS
 
 - Contracts: every `CTR-*` in this Spec.
 - Method: exact-head independent semantic/compatibility and safety/failure-mode reviews, Spec syntax
-  and transition checks, plus candidate diff scope review before implementation.
+  and transition checks, plus candidate diff scope review and executable path census T34 before
+  implementation.
 - Environment: repository exact candidate/base heads; read-only production boundary.
 - Required evidence: reviewer identities/heads/verdicts/blockers, validation outputs, Owner acceptance
   record and atomic successor backlinks if accepted.
@@ -782,20 +787,27 @@ packages/scheduler/src/watchdog.js -> packages/scheduler/src/watchdog/index.js (
 packages/scheduler/src/index.js
 packages/scheduler/test/watchdog.test.js -> packages/scheduler/test/watchdog/watchdog.test.js
 packages/scheduler/test/watchdog-templates.test.js -> packages/scheduler/test/watchdog/templates.test.js
+packages/scheduler/test/alert-dedupe.test.js -> packages/scheduler/test/watchdog/alert-dedupe.test.js
+packages/scheduler/test/disposition-alert-lifecycle.test.js -> packages/scheduler/test/watchdog/disposition-alert-lifecycle.test.js
 packages/scheduler/test/watchdog/*.test.js
 packages/product-api/src/scheduler-health-routes.js
 packages/product-api/src/scheduler-routes.js
 packages/product-api/test/scheduler-health*.test.js
 scripts/scheduler-watchdog.mjs
+scripts/scheduler-cp-preflight.mjs
+scripts/scheduler-cp-postrepair.mjs
 packages/production-runtime/src/scheduler/health-runtime.js
 packages/production-runtime/src/paths.js
 minimal non-growing runtime wiring proven necessary by fresh census
 deployment templates/config schema for the external routing manifest
 ```
 
-The move removes the existing root watchdog file before adding its directory; moving the two root
-watchdog tests likewise avoids net root-child growth. The existing production-runtime `scheduler/`
-directory is reused. The implementation MUST use focused modules, keep every new file within
+The move removes the existing root watchdog file before adding its directory; moving all four root
+watchdog tests likewise avoids net root-child growth. The host runner, preflight and postrepair
+scripts MUST update their exact source-path references in the same candidate. A static tracked-file
+census MUST prove no executable consumer retains `packages/scheduler/src/watchdog.js` or
+`../src/watchdog.js`; docs/history references are excluded. The existing production-runtime
+`scheduler/` directory is reused. The implementation MUST use focused modules, keep every new file within
 structure limits, add no structure-registry exception, and avoid growth of grandfathered files.
 Any new mutation operation,
 Job schema field, public scope, secret-bearing Git config, broad runtime refactor, or change to
