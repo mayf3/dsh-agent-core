@@ -35,7 +35,7 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `CANONICAL_DEPLOY_OFFLINE_PNPM_RESOLUTION_V1` | proposed 2026-09-14; awaiting independent exact-head authority review and Owner acceptance | none; production apply none | narrow successor for deterministic local pnpm resolution, exact declared-version enforcement, selected-Node/architecture binding, offline-only preflight before any trusted-root mutation, and one later bounded G2 deploy/projection chain |
+| `CANONICAL_DEPLOY_OFFLINE_PNPM_RESOLUTION_V1` | accepted 2026-09-14; reviewed head `ba4ef46…`, Owner mayf3 | contracts; production apply controlled operation | narrow successor for deterministic local pnpm resolution, exact declared-version enforcement, selected-Node/architecture binding, offline-only preflight before any trusted-root mutation, and one later bounded G2 deploy/projection chain |
 
 ## Workflow Human Principal projection authority
 

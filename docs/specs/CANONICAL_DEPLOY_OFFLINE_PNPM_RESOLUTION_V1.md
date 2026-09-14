@@ -1,11 +1,11 @@
 ---
 spec_id: CANONICAL_DEPLOY_OFFLINE_PNPM_RESOLUTION_V1
-status: proposed
+status: accepted
 date: 2026-09-14
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
-production_apply_authority: none
+implementation_authority: contracts
+production_apply_authority: controlled_operation
 scope:
   - canonical trusted-control-plane offline pnpm launcher resolution
   - exact-version and selected-Node binding before production mutation
@@ -21,6 +21,11 @@ supersedes: []
 superseded_by: null
 owners:
   - mayf3
+accepted_date: 2026-09-14
+accepted_by: mayf3
+accepted_reviewed_head: ba4ef4631b037c39532104b555f4170849fa87da
+independent_review_result: PASS
+independent_review_blockers: NONE
 ---
 
 # Canonical Deploy Offline pnpm Resolution V1
