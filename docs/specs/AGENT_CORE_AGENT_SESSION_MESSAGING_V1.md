@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_AGENT_SESSION_MESSAGING_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -80,7 +80,14 @@ scope:
   - "AMENDMENT_1: bounded outcome reconciliation (agent_session_send_reconcile discovery capability + invocationCorrelation anchor)"
   - "AMENDMENT_2: outcome_unknown phase split (post-receipt = DELIVERED + UNKNOWN) and AGENT_PROCESS_EXITED matrix rows (Router admission doctrine respected; reason visible, never a delivery dimension)"
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_AGENT_SESSION_MESSAGING_V2
+superseded_date: 2026-09-14
+supersession_authority_basis: >-
+  Owner mayf3 accepted the whole-authority successor
+  AGENT_CORE_AGENT_SESSION_MESSAGING_V2 at independently reviewed HEAD
+  b9893400a98f627aa2ce6411e078d6ef03749288 on 2026-09-14. Historical
+  implementation_authority remains byte-for-byte `contracts`; superseded status
+  makes V1 inactive.
 related_specs:
   - AGENT_CORE_AGENT_WAKE_CAPABILITY_V1 (Draft PR #130; close as obsolete)
 governed_by:
