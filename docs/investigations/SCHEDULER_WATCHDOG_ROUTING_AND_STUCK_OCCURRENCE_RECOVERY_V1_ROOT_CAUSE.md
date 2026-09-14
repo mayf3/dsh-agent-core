@@ -258,4 +258,3 @@ separate baseline limitation; focused green suites cannot be used to claim repos
    production slot is free.
 6. Obtain a formal global read surface, run the fresh census, and reconcile the six only from
    exact trusted evidence.
-
