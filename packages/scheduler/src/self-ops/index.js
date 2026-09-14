@@ -255,6 +255,10 @@ export function createSelfOpsAccess({
         }
         lockedRecord.terminalEvidence = { kind: 'termination-only', detailRef: lockedRecord.terminationSettlement.evidenceId }
         lockedRecord.history.push({ at: now, from: 'outcome_unknown', to: 'outcome_unknown', reason: 'trusted exact termination without business outcome' })
+        // The annotation is the final history entry, so endedAt must move with
+        // it ("endedAt must match the final history transition") — the real
+        // engine writeback had set endedAt at unknown-classification time.
+        lockedRecord.endedAt = now
         if (oneShot) lockedJob.enabled = false
         latest.fences = rebuildFences(latest.occurrences)
         lockedRecord.terminationSettlement.fenceAfter = latest.fences[jobId] !== undefined
