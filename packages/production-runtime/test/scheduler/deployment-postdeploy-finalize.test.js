@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 
 import { publishVerifiedPostdeployReceipt, verifyPostdeployEvidence } from '../../src/scheduler/deployment-postdeploy-finalize.js'
 import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
-import { updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
+import { bindNotificationDelivery, markNotificationDelivery, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
+import { providerIdempotencyKey, stableNotificationText } from '../../../scheduler/src/watchdog/delivery.js'
 import { POSTDEPLOY_CANARY_MARKER } from '../../src/scheduler/deployment-canary-control.js'
 
 const SOURCE = 'a'.repeat(40)
@@ -63,6 +64,21 @@ test('cardinality never mints current-six recovery authority', () => {
 test('formal postdeploy evidence rejects fabricated generation and incomplete health', () => {
   assert.throws(() => verifyPostdeployEvidence({ ...evidence(), sourceSha: 'd'.repeat(40) }), /pending deployed generation/)
   assert.throws(() => verifyPostdeployEvidence({ ...evidence(), afterHealth: { ...health(30), complete: false } }), /incomplete or unknown/)
+})
+
+test('formal postdeploy rejects an attempted notification relabeled PENDING', () => {
+  const candidate = evidence()
+  const key = Object.keys(candidate.beforeIncidentState.outbox)[0]
+  const bound = bindNotificationDelivery(candidate.beforeIncidentState, key, {
+    producer: candidate.beforeIncidentState.outbox[key].producer, route: { channel: 'feishu', to: 'scheduler-ops' },
+    routeSource: 'canonicalOpsTarget', routingSha256: candidate.routingManifestSha256,
+    payload: stableNotificationText(candidate.beforeIncidentState.outbox[key]), providerKey: providerIdempotencyKey(key),
+  }, 20)
+  const regressed = markNotificationDelivery(bound, key, 'OUTCOME_UNKNOWN', 20)
+  regressed.outbox[key].delivery = 'PENDING'
+  regressed.incidents[regressed.outbox[key].incident.rootIdentity].alertState.delivery = 'PENDING'
+  candidate.beforeIncidentState = regressed
+  assert.throws(() => verifyPostdeployEvidence(candidate), /delivery chronology/)
 })
 
 test('formal postdeploy evidence rejects unexpected store mutation or duplicate incident roots', () => {

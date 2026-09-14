@@ -123,7 +123,15 @@ export function markNotificationDelivery(inputState, key, delivery, nowMs = Date
   const state = initialState(inputState)
   const intent = state.outbox[key]
   if (!intent) throw new TypeError(`unknown notification key: ${key}`)
-  const chronologyFloor = intent.firstDeliveryAttemptAt ?? intent.deliveryBindingAt ?? intent.incident.alertState.lastTransitionAt
+  const allowed = {
+    PENDING: new Set(['FAILED', 'OUTCOME_UNKNOWN']),
+    FAILED: new Set(['FAILED', 'OUTCOME_UNKNOWN']),
+    OUTCOME_UNKNOWN: new Set(['OUTCOME_UNKNOWN', 'FAILED', 'DELIVERED']),
+    DELIVERED: new Set(['DELIVERED']),
+  }
+  if (!allowed[intent.delivery]?.has(delivery)) throw new TypeError(`invalid notification delivery transition: ${intent.delivery} -> ${delivery}`)
+  const chronologyFloor = Math.max(intent.incident.alertState.lastTransitionAt,
+    intent.deliveryBindingAt ?? 0, intent.firstDeliveryAttemptAt ?? 0, intent.deliveryUpdatedAt ?? 0)
   if (!Number.isSafeInteger(nowMs) || nowMs < chronologyFloor) throw new TypeError('notification delivery update time is invalid')
   const attempted = ['OUTCOME_UNKNOWN', 'DELIVERED'].includes(delivery) || (delivery === 'FAILED' && intent.deliveryBinding !== undefined)
   if (attempted && intent.deliveryBinding === undefined) throw new TypeError('attempted notification delivery requires an immutable binding')

@@ -26,8 +26,11 @@ export function buildIdempotentFeishuRequest(notificationKey, { receiveId, text 
 export function retryableOutboxIntents(state, { producer } = {}) {
   return Object.values(state?.outbox ?? {}).filter((intent) => {
     if (producer !== undefined && intent.producer !== producer) return false
-    if (['OUTCOME_UNKNOWN', 'DELIVERED'].includes(intent.delivery)
-      && (!intent.deliveryBinding || !Number.isSafeInteger(intent.firstDeliveryAttemptAt))) {
+    const regressedPending = intent.delivery === 'PENDING'
+      && (intent.firstDeliveryAttemptAt !== undefined || intent.deliveryUpdatedAt !== undefined)
+    const attemptedWithoutEvidence = ['OUTCOME_UNKNOWN', 'DELIVERED'].includes(intent.delivery)
+      && (!intent.deliveryBinding || !Number.isSafeInteger(intent.firstDeliveryAttemptAt))
+    if (regressedPending || attemptedWithoutEvidence) {
       throw new TypeError('attempted notification intent requires immutable binding and firstDeliveryAttemptAt')
     }
     if (['PENDING', 'FAILED'].includes(intent.delivery)) return true

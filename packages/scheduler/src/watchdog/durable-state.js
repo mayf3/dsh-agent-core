@@ -115,7 +115,8 @@ function validateOutbox(value) {
     }
     const attempted = intent.firstDeliveryAttemptAt !== undefined
     const updated = intent.deliveryUpdatedAt !== undefined
-    if ((attempted && (!binding || !Number.isSafeInteger(intent.firstDeliveryAttemptAt)
+    if ((intent.delivery === 'PENDING' && (attempted || updated))
+      || (attempted && (!binding || !Number.isSafeInteger(intent.firstDeliveryAttemptAt)
       || intent.firstDeliveryAttemptAt < intent.deliveryBindingAt))
       || (updated && (!Number.isSafeInteger(intent.deliveryUpdatedAt)
         || intent.deliveryUpdatedAt < (attempted ? intent.firstDeliveryAttemptAt : embedded.alertState.lastTransitionAt)))
@@ -124,6 +125,28 @@ function validateOutbox(value) {
       throw new TypeError(`incoherent incident delivery chronology: ${key}`)
     }
     identities.add(identity)
+  }
+}
+
+function validateDeliveryCommitTransition(beforeState, afterState) {
+  const allowed = {
+    PENDING: new Set(['PENDING', 'FAILED', 'OUTCOME_UNKNOWN']),
+    FAILED: new Set(['FAILED', 'OUTCOME_UNKNOWN']),
+    OUTCOME_UNKNOWN: new Set(['OUTCOME_UNKNOWN', 'FAILED', 'DELIVERED']),
+    DELIVERED: new Set(['DELIVERED']),
+  }
+  for (const [key, before] of Object.entries(beforeState.outbox ?? {})) {
+    const after = afterState.outbox?.[key]
+    if (!after || !allowed[before.delivery]?.has(after.delivery)) throw new TypeError(`invalid notification delivery transition: ${key}`)
+    for (const field of ['deliveryBinding', 'deliveryBindingAt', 'firstDeliveryAttemptAt']) {
+      if (before[field] !== undefined && canonicalJSON(after[field]) !== canonicalJSON(before[field])) {
+        throw new TypeError(`notification delivery evidence is immutable: ${key}`)
+      }
+    }
+    if (before.deliveryUpdatedAt !== undefined
+      && (!Number.isSafeInteger(after.deliveryUpdatedAt) || after.deliveryUpdatedAt < before.deliveryUpdatedAt)) {
+      throw new TypeError(`notification delivery update time cannot regress: ${key}`)
+    }
   }
 }
 
@@ -186,6 +209,7 @@ export function commitIncidentState(path, state, { expectedHash, crashAt, expect
   return withPrivateLock(path, ownership, () => {
     const current = loadIncidentState(path, { expectedUid, expectedGid })
     if (current.hash !== (expectedHash ?? null)) throw new Error('incident state generation mismatch')
+    validateDeliveryCommitTransition(current.state, state)
     const bytes = Buffer.from(`${JSON.stringify(state, null, 2)}\n`, 'utf8')
     if (crashAt === 'before-rename') throw new Error('injected crash before rename')
     atomicReplacePrivateFile(path, bytes, ownership)
