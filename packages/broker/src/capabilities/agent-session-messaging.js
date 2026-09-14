@@ -25,6 +25,8 @@
  * (R3) and never read from tool arguments.
  */
 
+import { agentSessionReconcileManifest } from './agent-session-reconcile.js'
+
 const agentId = (description) => ({
   type: 'string',
   minLength: 5,
@@ -66,6 +68,7 @@ export const agentSessionMessagingManifest = {
   name: 'Agent Session Messaging',
   description: 'Send one private message to another Agent\'s canonical main Session. Each send creates exactly one new Run/Turn in the target main — never a new Session. timeoutSeconds=0 returns after the real inbox receipt; timeoutSeconds>0 waits for at most that many seconds for this exact Run\'s one aggregated final assistant reply. Source identity and correlation are derived by the trusted runtime; no automatic replay, no automatic reply, no active-run steering, no external delivery.',
   local: { resource: 'agent-session-messaging' },
+  renderErrorDetail: true,
   requiredScopes: ['agent.session.send'],
   errors: errorTable,
   operations: [
@@ -122,4 +125,8 @@ export const agentSessionTurnInspectManifest = {
   }],
 }
 
-export const manifests = [agentSessionMessagingManifest, agentSessionTurnInspectManifest]
+export const manifests = [
+  agentSessionMessagingManifest,
+  agentSessionReconcileManifest,
+  agentSessionTurnInspectManifest,
+]

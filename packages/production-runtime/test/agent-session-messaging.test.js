@@ -22,7 +22,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { createAgentSessionMessagingAccess, validateSendArgs } from '../src/agent-session-messaging.js'
-import { createAgentSessionMessagingAudit } from '../src/agent-session-messaging-audit.js'
+import { createAgentSessionMessagingAudit } from '../src/agent-session/audit.js'
 
 const CALLER = 'agt_a-caller'
 const TARGET = 'agt_b-target'
@@ -213,7 +213,11 @@ test('R12: intent row precedes delivery; outcome row follows the receipt', async
     router, audit: surface, now: clock.now, timer: clock.timer,
     generateRequestId: (() => { let n = 0; return () => `req-${++n}` })(),
   })
-  await access.handlers.agent_session_send.send(VALID_ARGS, { callerAgentId: CALLER, sourceTurnExecutionId: PROOF })
+  await access.handlers.agent_session_send.send(VALID_ARGS, {
+    callerAgentId: CALLER,
+    sourceTurnExecutionId: PROOF,
+    invocationCorrelation: 'invocation-order-1',
+  })
   assert.deepEqual(intentsAtDelivery, [1], 'the intent row is durable BEFORE Router delivery')
   const rows = auditRows(file)
   assert.equal(rows.length, 2)
@@ -225,6 +229,8 @@ test('R12: intent row precedes delivery; outcome row follows the receipt', async
     TRACE,
   )
   assert.equal(rows[1].timeoutMode, 'receipt_only')
+  assert.equal(rows[0].invocationCorrelation, 'invocation-order-1')
+  assert.equal(rows[1].invocationCorrelation, 'invocation-order-1')
   assert.ok(rows[1].durationMs !== undefined)
 })
 
@@ -445,6 +451,38 @@ test('inspection handler forwards only args and the gateway-frozen caller to the
   })
   assert.deepEqual(result, { ok: false, error: { code: 'not_found_or_not_owned', detail: 'opaque' } })
   assert.deepEqual(seen, [{ args, callerAgentId: CALLER }])
+})
+
+test('reconcile lookup is caller-bound, reads live + .1, and returns retained V2 coordinate evidence', () => {
+  const root = mkdtempSync(join(tmpdir(), 'asm-reconcile-'))
+  const file = join(root, 'audit.jsonl')
+  const audit = createAgentSessionMessagingAudit({ auditFile: file, maxBytes: 700, now: (() => { let n = 100; return () => ++n })() })
+  const row = {
+    sourceAgentId: CALLER,
+    targetAgentId: TARGET,
+    requestId: 'req-a',
+    correlation: PROOF,
+    invocationCorrelation: 'invocation-a',
+    timeoutMode: 'receipt_only',
+  }
+  assert.equal(audit.appendIntent(row), 'appended')
+  assert.equal(audit.appendOutcome({ ...row, result: 'accepted', sessionId: 'main', messageId: 'm1' }), 'appended')
+  assert.equal(audit.appendIntent({ ...row, requestId: 'req-b', invocationCorrelation: 'invocation-b' }), 'appended')
+  assert.equal(existsSync(`${file}.1`), true, 'the first invocation rotated to .1')
+
+  const access = createAgentSessionMessagingAccess({ router: fakeRouter(), audit })
+  const own = access.handlers.agent_session_send_reconcile.lookup(
+    { invocationCorrelation: 'invocation-a' },
+    { callerAgentId: CALLER },
+  )
+  assert.deepEqual(own.result.outcome, { result: 'accepted', ...TRACE })
+  assert.equal(own.result.invocationCorrelationFound, true)
+  const foreign = access.handlers.agent_session_send_reconcile.lookup(
+    { invocationCorrelation: 'invocation-a' },
+    { callerAgentId: 'agt_foreign-caller' },
+  )
+  assert.equal(foreign.result.invocationCorrelationFound, false, 'the anchor confers no identity')
+  rmSync(root, { recursive: true, force: true })
 })
 
 test('the provider requires the full Router reconciliation seam', () => {

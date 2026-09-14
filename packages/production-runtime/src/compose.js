@@ -52,12 +52,10 @@ import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runti
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
-import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
 import { createAgentPrincipalResolutionAccess } from './identity/agent-principal-resolution.js'
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
-import { createAgentSessionMessagingAudit } from './agent-session-messaging-audit.js'
-import { inspectAgentSessionTurn } from './agent-session-turn-inspection.js'
+import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
@@ -317,20 +315,12 @@ export async function composeProductionRuntime(options = {}) {
   // AGENT_CORE_AGENT_SESSION_MESSAGING_V2: L0 denial evidence is scoped to
   // the send and independently granted exact-turn inspector only; a failed
   // denial append never changes the denial itself.
-  const agentSessionAuditFile = join(layout.controlDir, 'agent-session-messaging-audit.jsonl')
-  const agentSessionAudit = createAgentSessionMessagingAudit({
-    auditFile: agentSessionAuditFile,
-  })
+  const agentSessionRuntime = createAgentSessionRuntime({ layout, definition, workspaceBootstrap, router, log })
   const broker = applyBroker(ctx, {
     mode: 'gateway',
     credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
     authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
-    auditDenial: (info) => {
-      if (!['agent_session_send', 'agent_session_turn_inspect'].includes(info?.capabilityId)) return
-      if (agentSessionAudit.appendDenial(info) !== 'appended') {
-        log.error('[agent-session-messaging] L0 denial audit append failed')
-      }
-    },
+    auditDenial: agentSessionRuntime.auditDenial,
   })
 
   const productApiCfg = opts.productApi ?? {}
@@ -385,21 +375,7 @@ export async function composeProductionRuntime(options = {}) {
   // canonical main; the runtime derives source identity + exact source-turn
   // correlation (never model args); the L1 intent/outcome append surface is
   // the agentSessionAudit file with sanitized onAuditFailure signals.
-  ctx.provide('agentSessionMessagingAccess', createAgentSessionMessagingAccess({
-    router,
-    audit: agentSessionAudit,
-    inspectTurn: ({ args, callerAgentId }) => inspectAgentSessionTurn({
-      args,
-      callerAgentId,
-      auditFile: agentSessionAuditFile,
-      resolveTarget: (agentId) => definition.getAgent(agentId),
-      resolveDshHome: (agentId) => workspaceBootstrap.resolveDshHome(agentId),
-      resolveCanonicalWorkspace: (agentId) => workspaceBootstrap.resolveWorkspace(agentId),
-    }),
-    onAuditFailure: ({ phase, requestId }) => {
-      log.error(`[agent-session-messaging] audit ${phase} append failed after requestId ${requestId ?? '(not-minted)'}`)
-    },
-  }))
+  agentSessionRuntime.mount(ctx)
 
   // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
   // LOCAL provider for the read-only agent_resolve_principal. Auth is the
