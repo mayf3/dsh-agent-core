@@ -81,11 +81,14 @@ export function resolveNotificationRoute({ routeClass, job, manifest: rawManifes
   throw new TypeError(`unknown route class: ${routeClass}`)
 }
 
-export function validateIncidentDeliveryBindings(state, { manifest, jobs = [], routingSha256 }) {
+export function validateIncidentDeliveryBindings(state, { manifest, jobs = [], routingSha256, nowMs }) {
   if (!/^[0-9a-f]{64}$/.test(routingSha256 ?? '')) throw new TypeError('incident binding routing generation is unavailable')
+  if (!Number.isSafeInteger(nowMs) || nowMs < 0) throw new TypeError('incident binding observation time is unavailable')
   const normalizedManifest = validateRoutingManifest(manifest)
   for (const intent of Object.values(state?.outbox ?? {})) {
     const binding = intent.deliveryBinding
+    const times = [intent.deliveryBindingAt, intent.firstDeliveryAttemptAt, intent.deliveryUpdatedAt].filter((value) => value !== undefined)
+    if (times.some((value) => !Number.isSafeInteger(value) || value > nowMs)) throw new TypeError(`incident delivery binding time is invalid: ${intent.notificationKey}`)
     if (!binding) continue
     const job = jobs.find((candidate) => candidate.id === intent.incident?.jobId)
     const decision = resolveNotificationRoute({ routeClass: intent.routeClass, job, manifest: normalizedManifest })

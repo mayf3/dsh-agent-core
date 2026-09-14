@@ -106,6 +106,9 @@ export function bindNotificationDelivery(inputState, key, { producer, route, rou
   const state = initialState(inputState)
   const intent = state.outbox[key]
   if (!intent) throw new TypeError(`unknown notification key: ${key}`)
+  if (!Number.isSafeInteger(nowMs) || nowMs < intent.incident.alertState.lastTransitionAt) {
+    throw new TypeError('notification delivery binding time is invalid')
+  }
   const binding = { producer, route: structuredClone(route), routeSource, routingSha256, payload, providerKey }
   if (intent.deliveryBinding !== undefined && canonicalJSON(intent.deliveryBinding) !== canonicalJSON(binding)) {
     throw new Error('notification delivery binding conflict')
@@ -120,9 +123,15 @@ export function markNotificationDelivery(inputState, key, delivery, nowMs = Date
   const state = initialState(inputState)
   const intent = state.outbox[key]
   if (!intent) throw new TypeError(`unknown notification key: ${key}`)
+  const chronologyFloor = intent.firstDeliveryAttemptAt ?? intent.deliveryBindingAt ?? intent.incident.alertState.lastTransitionAt
+  if (!Number.isSafeInteger(nowMs) || nowMs < chronologyFloor) throw new TypeError('notification delivery update time is invalid')
+  const attempted = ['OUTCOME_UNKNOWN', 'DELIVERED'].includes(delivery) || (delivery === 'FAILED' && intent.deliveryBinding !== undefined)
+  if (attempted && intent.deliveryBinding === undefined) throw new TypeError('attempted notification delivery requires an immutable binding')
+  if (['DELIVERED', 'FAILED'].includes(delivery) && intent.deliveryBinding !== undefined
+    && !Number.isSafeInteger(intent.firstDeliveryAttemptAt)) throw new TypeError('terminal notification delivery requires durable attempt evidence')
   intent.delivery = delivery
   intent.deliveryUpdatedAt = nowMs
-  if (delivery !== 'PENDING') intent.firstDeliveryAttemptAt ??= nowMs
+  if (delivery === 'OUTCOME_UNKNOWN') intent.firstDeliveryAttemptAt ??= nowMs
   const rootIdentity = intent.incident?.rootIdentity
   if (rootIdentity && state.incidents[rootIdentity]) state.incidents[rootIdentity].alertState.delivery = delivery
   return state

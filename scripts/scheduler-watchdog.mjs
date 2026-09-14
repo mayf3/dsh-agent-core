@@ -215,7 +215,7 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
   const {
     bindNotificationDelivery, commitIncidentState, loadIncidentState, markNotificationDelivery, providerIdempotencyKey,
     readProtectedRoutingManifest, recoverNotificationDelivery, resolveNotificationRoute, retryableOutboxIntents,
-    stableNotificationText, updateAlertState,
+    stableNotificationText, updateAlertState, validateIncidentDeliveryBindings,
   } = await import('../packages/scheduler/src/watchdog/index.js')
   const incidentOwnership = {
     expectedUid: Number(process.env.SCHEDULER_INCIDENT_OWNER_UID ?? process.getuid?.()),
@@ -254,6 +254,11 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
       writeEvidence({ kind: 'routing_manifest_unavailable', error: String(error?.message ?? error) })
     }
     const job = doc.jobs?.find((candidate) => candidate.id === notification.finding?.jobId)
+    try { validateIncidentDeliveryBindings(currentState, { manifest, jobs: doc.jobs, routingSha256, nowMs }) } catch (error) {
+      writeEvidence({ kind: 'delivery_binding_authority_invalid', notificationKey: notification.notificationKey, error: String(error?.message ?? error) })
+      outcome = 'delivery_failed'
+      continue
+    }
     const routeDecision = resolveNotificationRoute({ routeClass: notification.routeClass, job, manifest })
     if (intent.deliveryBinding && (JSON.stringify(intent.deliveryBinding.route) !== JSON.stringify(routeDecision.route)
       || intent.deliveryBinding.routeSource !== routeDecision.routeSource || intent.deliveryBinding.routingSha256 !== routingSha256)) {
@@ -273,7 +278,7 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
           producer: role, route: routeDecision.route, payload: text,
           routeSource: routeDecision.routeSource, routingSha256,
           providerKey: providerIdempotencyKey(notification.notificationKey),
-        }, Date.now())
+        }, nowMs)
         persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
       }
       if (intent.delivery === 'OUTCOME_UNKNOWN') {
@@ -289,13 +294,13 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
         })
         if (delivered === 'OUTCOME_UNKNOWN') writeEvidence({ kind: 'alert_delivery_readback_or_send_unknown', notificationKey: notification.notificationKey })
       } else {
-        currentState = markNotificationDelivery(currentState, notification.notificationKey, 'OUTCOME_UNKNOWN', Date.now())
+        currentState = markNotificationDelivery(currentState, notification.notificationKey, 'OUTCOME_UNKNOWN', nowMs)
         persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
         delivered = await deliverOrPark(text, { route: routeDecision.route, notificationKey: notification.notificationKey })
       }
-      currentState = markNotificationDelivery(currentState, notification.notificationKey, delivered, Date.now())
+      currentState = markNotificationDelivery(currentState, notification.notificationKey, delivered, nowMs)
     } else {
-      currentState = markNotificationDelivery(currentState, notification.notificationKey, 'FAILED', Date.now())
+      currentState = markNotificationDelivery(currentState, notification.notificationKey, 'FAILED', nowMs)
     }
     persisted = commitIncidentState(INCIDENT_STATE_FILE, currentState, { expectedHash: persisted.hash, ...incidentOwnership })
     if (delivered !== 'DELIVERED') {

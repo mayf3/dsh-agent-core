@@ -74,6 +74,21 @@ test('persisted control-plane binding to a non-canonical chat makes canonical he
   assert.match(health.censusError, /binding.*routing authority mismatch/)
 })
 
+test('persisted delivery binding from an impossible future makes canonical health incomplete', async () => {
+  const { layout, routingSecurity, credentialStoreFile } = await fixture()
+  const [incident] = compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents
+  const opened = updateIncidentState({}, [incident], { nowMs: 1 })
+  const key = Object.keys(opened.state.outbox)[0]
+  const routingSha256 = createHash('sha256').update(await readFile(layout.schedulerRoutingManifest)).digest('hex')
+  const bound = bindNotificationDelivery(opened.state, key, { producer: opened.state.outbox[key].producer,
+    route: { channel: 'feishu', to: 'ops' }, routeSource: 'canonicalOpsTarget', routingSha256,
+    payload: stableNotificationText(opened.state.outbox[key]), providerKey: providerIdempotencyKey(key) }, Number.MAX_SAFE_INTEGER)
+  await writeFile(layout.schedulerIncidentState, JSON.stringify(bound), { mode: 0o600 })
+  const health = await createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA, nowMs: () => 100 }).read()
+  assert.equal(health.complete, false)
+  assert.match(health.censusError, /binding time is invalid/)
+})
+
 test('T29 arbitrary runtime provenance cannot produce complete=true', async () => {
   const { layout, routingSecurity, credentialStoreFile } = await fixture()
   const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: 'unbound-label', nowMs: () => 1 })

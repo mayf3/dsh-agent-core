@@ -11,7 +11,7 @@ import { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLega
 import { canonicalJSON } from '../../src/occurrence-model.js'
 import { ensureProtectedDirectoryTree } from '../../src/watchdog/private-state-io.js'
 import { compileIncidents } from '../../src/watchdog/incident-compiler.js'
-import { bindNotificationDelivery, notificationKey, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
+import { bindNotificationDelivery, markNotificationDelivery, notificationKey, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
 import { providerIdempotencyKey, stableNotificationText } from '../../src/watchdog/delivery.js'
 
 const state = (revision) => ({ version: 1, revision, incidents: {}, outbox: {} })
@@ -100,6 +100,27 @@ test('incident durability binds persisted delivery to canonical routing authorit
     payload: stableNotificationText(unbound.outbox[unboundKey]), providerKey: providerIdempotencyKey(unboundKey),
   }, 2)
   assert.equal(validateIncidentState(bound), bound)
+  assert.throws(() => bindNotificationDelivery(unbound, unboundKey, {
+    producer: unbound.outbox[unboundKey].producer, route: { channel: 'feishu', to: 'scheduler-ops' },
+    routeSource: 'canonicalOpsTarget', routingSha256: 'b'.repeat(64),
+    payload: stableNotificationText(unbound.outbox[unboundKey]), providerKey: providerIdempotencyKey(unboundKey),
+  }, Number.MAX_SAFE_INTEGER + 1), /binding time is invalid/)
+  for (const invalidAt of [-1, 0, 1.5]) {
+    const invalid = structuredClone(bound); invalid.outbox[unboundKey].deliveryBindingAt = invalidAt
+    assert.throws(() => validateIncidentState(invalid), /delivery binding/)
+  }
+
+  for (const delivery of ['OUTCOME_UNKNOWN', 'DELIVERED']) {
+    const attemptedWithoutBinding = validIncidentState()
+    const attemptedKey = Object.keys(attemptedWithoutBinding.outbox)[0]
+    attemptedWithoutBinding.outbox[attemptedKey].delivery = delivery
+    attemptedWithoutBinding.outbox[attemptedKey].deliveryUpdatedAt = 3
+    attemptedWithoutBinding.outbox[attemptedKey].firstDeliveryAttemptAt = 2
+    attemptedWithoutBinding.incidents[Object.keys(attemptedWithoutBinding.incidents)[0]].alertState.delivery = delivery
+    assert.throws(() => validateIncidentState(attemptedWithoutBinding), /delivery chronology/)
+  }
+  assert.throws(() => markNotificationDelivery(validIncidentState(), Object.keys(validIncidentState().outbox)[0], 'OUTCOME_UNKNOWN', 2), /requires an immutable binding/)
+  assert.throws(() => markNotificationDelivery(bound, unboundKey, 'OUTCOME_UNKNOWN', 1), /update time is invalid/)
 })
 
 test('protected control tree rejects symlink and writable ancestors before any receipt write', async () => {

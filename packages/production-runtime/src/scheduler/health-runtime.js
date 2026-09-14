@@ -64,9 +64,10 @@ export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs 
       const jobsGeneration = acquired.generations?.find((item) => item.source === 'jobs')
       const jobsDoc = jobsGeneration?.trusted === true && jobsGeneration.start === jobsGeneration.end ? captured.jobs : null
       const manifest = captured.routing
+      const observedAt = nowMs()
       try {
         validateIncidentDeliveryBindings(captured.incidents, { manifest, jobs: jobsDoc?.jobs,
-          routingSha256: acquired.generations?.find((item) => item.source === 'routing')?.end })
+          routingSha256: acquired.generations?.find((item) => item.source === 'routing')?.end, nowMs: observedAt })
       } catch (error) {
         acquired.complete = false
         acquired.censusError = `health incident binding unavailable: ${error?.message ?? error}`
@@ -83,7 +84,7 @@ export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs 
       }))
       return projectSchedulerHealth({
         version: jobsDoc?.version,
-        generatedAt: nowMs(),
+        generatedAt: observedAt,
         jobs: jobsDoc?.jobs ?? null,
         occurrences: jobsDoc?.occurrences ?? [],
         fences: jobsDoc?.fences ?? {},

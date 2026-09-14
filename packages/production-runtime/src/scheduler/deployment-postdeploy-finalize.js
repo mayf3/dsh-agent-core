@@ -168,8 +168,10 @@ export function verifyPostdeployEvidence({ phaseReceipt, routingReceipt, sourceS
   if (beforeHealth.provenance.incidents !== beforeIncidentSha256 || afterHealth.provenance.incidents !== afterIncidentSha256) throw new Error('postdeploy API/incident generation binding mismatch')
   const occurrence = assertCanaryStoreDelta({ beforeStore, afterStore, beforeHealth, afterHealth, canaryJobId, runReadback, sourceSha })
   const isolation = assertQuarantineIsolationAndDedupe(beforeHealth, afterHealth)
-  validateIncidentDeliveryBindings(beforeIncidentState, { manifest: routingManifest, jobs: beforeStore.jobs, routingSha256: routingManifestSha256 })
-  validateIncidentDeliveryBindings(afterIncidentState, { manifest: routingManifest, jobs: afterStore.jobs, routingSha256: routingManifestSha256 })
+  validateIncidentDeliveryBindings(beforeIncidentState, { manifest: routingManifest, jobs: beforeStore.jobs,
+    routingSha256: routingManifestSha256, nowMs: beforeHealth.generatedAt })
+  validateIncidentDeliveryBindings(afterIncidentState, { manifest: routingManifest, jobs: afterStore.jobs,
+    routingSha256: routingManifestSha256, nowMs: afterHealth.generatedAt })
   const beforeIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: beforeIncidentState, incidentMigrationAuthority, compiledIncidents: isolation.incidents, nowMs: beforeHealth.generatedAt + 1 })
   const afterIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: afterIncidentState, incidentMigrationAuthority, compiledIncidents: isolation.incidents, nowMs: afterHealth.generatedAt + 1 })
   exact(beforeIncidentProof, afterIncidentProof, 'incident notification attempt surface')
