@@ -26,7 +26,7 @@ import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/produc
 import { installSchedulerRoutingManifest } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
 import { installSchedulerDesiredState } from '../packages/production-runtime/src/scheduler/deployment-desired-state.js'
 import { capturePlainFileMetadata } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
-import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile } from '../packages/production-runtime/src/scheduler/deployment-durable-file.js'
+import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage } from '../packages/production-runtime/src/scheduler/deployment-durable-file.js'
 import { runSchedulerIncidentMigration } from '../packages/production-runtime/src/scheduler/deployment-incident-migration.js'
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
 const args = process.argv.slice(2)
@@ -125,7 +125,6 @@ function phase(name, ok, detail) {
   if (ok === false) throw new Error(`phase ${name} failed: ${detail}`)
 }
 const stripMessages = (jobs) => (jobs ?? []).map(({ payload, ...rest }) => ({ ...rest, payload: payload ? { ...payload, message: '<stripped>' } : payload }))
-
 function readCensus() {
   const raw = readFileSync(CTX.storePath, 'utf8')
   const doc = JSON.parse(raw)
@@ -276,7 +275,6 @@ function runtimeRestart() {
     runtimeReceipt: (receipt) => writeControlReceipt('runtime-install-receipt.json', receipt) }
   return restartSchedulerProductionRuntime({ ctx: runtimeCtx, phase, sourceSha: SOURCE_SHA })
 }
-
 function operatorGeneration() {
   const short = SOURCE_SHA.slice(0, 7)
   const genId = `SCHEDULER_CONTROL_PLANE_RELIABILITY_V1--dsh-agent-core--${short}--x86_64--g1`
@@ -371,11 +369,13 @@ function watchdogInstall() {
       const tmpl = fill(CTX.gitShow(SOURCE_SHA, `deployment-artifacts/scheduler-control-plane-reliability-v1/ai.agent-core.scheduler-watchdog-${role}.plist.tmpl`))
       const path = join(CTX.launchdDir, `${label}.plist`)
       const existed = existsSync(path)
-      const preimage = join(CTX.artifactsDir, 'rollback', `${label}.plist.preimage`)
-      mkdirSync(dirname(preimage), { recursive: true })
-      const before = existed ? capturePlainFileMetadata(path) : null; if (existed && !existsSync(preimage)) durableCopyPreimage(path, preimage, before)
+      const preimage = join(CTX.artifactsDir, 'rollback', `${label}.plist.preimage`); mkdirSync(dirname(preimage), { recursive: true })
+      const before = existed ? capturePlainFileMetadata(path) : null
+      if (existed && existsSync(preimage) && !readFileSync(path).equals(readFileSync(preimage))) { rmSync(preimage); syncDirectory(dirname(preimage)) }
+      if (existed && !existsSync(preimage)) durableCopyPreimage(path, preimage, before)
       const rollbackMetadata = existed ? capturePlainFileMetadata(preimage) : null; const rollbackSha256 = existed ? sha256(readFileSync(preimage)) : null
       if (existed && (sha256(readFileSync(path)) !== rollbackSha256 || JSON.stringify(before) !== JSON.stringify(rollbackMetadata))) throw new Error(`watchdog predecessor differs from durable rollback preimage: ${label}`)
+      if (existed) verifyAndSyncPreimage(path, preimage, rollbackMetadata)
       return { role, label, path, existed, installedSha256: sha256(Buffer.from(tmpl)), preimage,
         preimageSha256: rollbackSha256, preimageMetadata: rollbackMetadata }
     })

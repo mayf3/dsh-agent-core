@@ -9,12 +9,15 @@ import { POSTDEPLOY_CANARY_MARKER } from '../../src/scheduler/deployment-canary-
 const SOURCE = 'a'.repeat(40)
 const occurrence = { occurrenceId: 'occ-old', runId: 'run-old', jobId: 'job-quarantined', kind: 'scheduled', state: 'outcome_unknown', executionOutcome: 'unknown', admittedAt: 1, startedAt: 2, endedAt: 3, nominalScheduledAt: 1, scheduleRevision: 1 }
 const job = { id: 'job-quarantined', agentId: 'agt-q', logicalKey: 'q', name: 'Q', enabled: true, scheduleRevision: 1, revisionActivatedAtMs: 1, createdAtMs: 1, updatedAtMs: 1, schedule: { kind: 'every', everyMs: 1000, anchorMs: 1 }, payload: { kind: 'agentTurn', message: 'q' }, delivery: { mode: 'none' }, state: {} }
-const beforeStore = { version: 3, jobs: [job], occurrences: [occurrence], fences: { 'job-quarantined': ['occ-old'] } }
+const otherJob = { ...job, id: 'job-other', logicalKey: 'other', agentId: 'agt-other' }
+const beforeStore = { version: 3, jobs: [job, otherJob], occurrences: [occurrence], fences: { 'job-quarantined': ['occ-old'] } }
 const canaryOccurrence = { occurrenceId: 'occ-canary', runId: 'run-canary', jobId: 'job-canary', kind: 'scheduled', state: 'succeeded', executionOutcome: 'succeeded', admittedAt: 10, startedAt: 11, endedAt: 12, nominalScheduledAt: 10, scheduleRevision: 1 }
-const afterStore = { ...beforeStore, occurrences: [...beforeStore.occurrences, canaryOccurrence] }
+const otherOccurrence = { ...canaryOccurrence, occurrenceId: 'occ-other', runId: 'run-other', jobId: otherJob.id }
+const afterStore = { ...beforeStore, occurrences: [...beforeStore.occurrences, canaryOccurrence, otherOccurrence] }
 const row = { jobId: job.id, state: 'QUARANTINED_UNKNOWN', currentOccurrence: { occurrenceId: 'occ-old', state: 'outcome_unknown' }, currentBlocker: 'OUTCOME_UNKNOWN', blockedSince: 3, fenceReason: 'unresolved outcome_unknown occurrence contribution' }
-const health = (at) => ({ complete: true, unknown: 0, enabled: 1, healthy: 0, degraded: 0, blocked: 1, generatedAt: at,
-  provenance: { canonicalPair: true, runtime: SOURCE, store: 'b'.repeat(64), routing: 'c'.repeat(64), incidents: 'd'.repeat(64) }, jobs: [row],
+const healthyRow = { jobId: otherJob.id, state: 'HEALTHY', classification: 'healthy', credentialReadiness: 'READY', currentBlocker: null, fenceReason: null, notificationRoute: { status: 'READY' } }
+const health = (at) => ({ complete: true, unknown: 0, enabled: 2, healthy: 1, degraded: 0, blocked: 1, generatedAt: at,
+  provenance: { canonicalPair: true, runtime: SOURCE, store: 'b'.repeat(64), routing: 'c'.repeat(64), incidents: 'd'.repeat(64) }, jobs: [row, healthyRow],
   findings: [
     { class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: job.id, occurrenceId: 'occ-old', runId: 'run-old' },
     { class: 'EXPECTED_RUN_MISSED', jobId: job.id, occurrenceId: 'occ-old', runId: 'run-old', derivedUnderAdmissionBlock: true },
@@ -40,16 +43,16 @@ test('formal postdeploy evidence accepts exact health, one canary delta, quarant
 test('cardinality never mints current-six recovery authority', () => {
   const jobs = Array.from({ length: 6 }, (_, index) => ({ ...job, id: `job-${index}`, logicalKey: `q-${index}` }))
   const occurrences = jobs.map((item, index) => ({ ...occurrence, jobId: item.id, occurrenceId: `occ-${index}`, runId: `run-${index}` }))
-  const storeBefore = { version: 3, jobs, occurrences, fences: Object.fromEntries(occurrences.map((item) => [item.jobId, [item.occurrenceId]])) }
+  const storeBefore = { version: 3, jobs: [...jobs, otherJob], occurrences, fences: Object.fromEntries(occurrences.map((item) => [item.jobId, [item.occurrenceId]])) }
   const rows = occurrences.map((item) => ({ ...row, jobId: item.jobId, currentOccurrence: { occurrenceId: item.occurrenceId, state: 'outcome_unknown' } }))
   const findings = occurrences.flatMap((item) => [
     { class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: item.jobId, occurrenceId: item.occurrenceId, runId: item.runId },
     { class: 'EXPECTED_RUN_MISSED', jobId: item.jobId, occurrenceId: item.occurrenceId, runId: item.runId, derivedUnderAdmissionBlock: true },
   ])
-  const healthSix = (at) => ({ ...health(at), enabled: 6, blocked: 6, jobs: rows, findings })
+  const healthSix = (at) => ({ ...health(at), enabled: 7, healthy: 1, blocked: 6, jobs: [...rows, healthyRow], findings })
   const sixIncidentState = updateIncidentState({}, compileIncidents(findings).incidents, { nowMs: 20 }).state
   const receipt = verifyPostdeployEvidence({ ...evidence(), beforeStore: storeBefore,
-    afterStore: { ...storeBefore, occurrences: [...occurrences, canaryOccurrence] }, beforeHealth: healthSix(20), afterHealth: healthSix(30),
+    afterStore: { ...storeBefore, occurrences: [...occurrences, canaryOccurrence, otherOccurrence] }, beforeHealth: healthSix(20), afterHealth: healthSix(30),
     beforeIncidentState: sixIncidentState, afterIncidentState: sixIncidentState })
   assert.equal(receipt.currentSixAuthorized, false)
   assert.equal(receipt.currentSixGate, 'PENDING_EXACT_OWNER_SUFFIX_RESOLUTION')
@@ -72,8 +75,18 @@ test('formal postdeploy evidence rejects unexpected store mutation or duplicate 
 test('formal postdeploy evidence rejects route drift, synthetic incident state, unsafe canary and unrelated Job regression', () => {
   assert.throws(() => verifyPostdeployEvidence({ ...evidence(), routingReceipt: { status: 'INSTALLED', candidateSha256: 'e'.repeat(64) } }), /routing generation/)
   assert.throws(() => verifyPostdeployEvidence({ ...evidence(), beforeIncidentState: { version: 1, incidents: {}, outbox: {} } }), /lacks exact open root/)
+  const missingOutbox = evidence(); missingOutbox.beforeIncidentState = structuredClone(missingOutbox.beforeIncidentState)
+  missingOutbox.beforeIncidentState.outbox = {}
+  assert.throws(() => verifyPostdeployEvidence(missingOutbox), /lacks required outbox/)
+  const attempted = evidence(); attempted.afterIncidentState = structuredClone(attempted.afterIncidentState)
+  const [outboxKey] = Object.keys(attempted.afterIncidentState.outbox)
+  attempted.afterIncidentState.outbox[outboxKey].delivery = 'FAILED'
+  attempted.afterIncidentState.incidents[Object.keys(attempted.afterIncidentState.incidents)[0]].alertState.delivery = 'FAILED'
+  assert.throws(() => verifyPostdeployEvidence(attempted), /notification attempt surface/)
   const unsafe = evidence(); unsafe.runReadback.occurrences[0].result.counters.external_effects = 1
   assert.throws(() => verifyPostdeployEvidence(unsafe), /zero-side-effect/)
+  const noUnrelated = evidence(); noUnrelated.afterStore = { ...afterStore, occurrences: [occurrence, canaryOccurrence] }
+  assert.throws(() => verifyPostdeployEvidence(noUnrelated), /one successful canary/)
   const regressed = evidence(); regressed.beforeHealth.jobs.push({ jobId: 'job-ok', classification: 'healthy', credentialReadiness: 'READY', currentBlocker: null, fenceReason: null, notificationRoute: { status: 'READY' } })
   regressed.afterHealth.jobs.push({ jobId: 'job-ok', classification: 'blocked', credentialReadiness: 'READY', currentBlocker: 'OUTCOME_UNKNOWN', fenceReason: 'new', notificationRoute: { status: 'READY' } })
   regressed.beforeHealth.enabled += 1; regressed.beforeHealth.healthy += 1
@@ -82,16 +95,8 @@ test('formal postdeploy evidence rejects route drift, synthetic incident state, 
 })
 
 test('one quarantined Job does not prevent an unrelated healthy Job from completing during canary', () => {
-  const other = { ...job, id: 'job-other', logicalKey: 'other', state: { nextRunAtMs: 100 } }
-  const otherRun = { ...canaryOccurrence, occurrenceId: 'occ-other', runId: 'run-other', jobId: other.id }
   const proof = evidence()
-  proof.beforeStore = { ...beforeStore, jobs: [job, other] }
-  proof.afterStore = { ...afterStore, jobs: [job, { ...other, state: { nextRunAtMs: 200, lastOutcome: 'succeeded' } }],
-    occurrences: [...afterStore.occurrences, otherRun] }
-  const healthyRow = { jobId: other.id, state: 'HEALTHY', classification: 'healthy', credentialReadiness: 'READY',
-    currentBlocker: null, fenceReason: null, notificationRoute: { status: 'READY' } }
-  proof.beforeHealth = { ...proof.beforeHealth, enabled: 2, healthy: 1, jobs: [...proof.beforeHealth.jobs, healthyRow] }
-  proof.afterHealth = { ...proof.afterHealth, enabled: 2, healthy: 1, jobs: [...proof.afterHealth.jobs, healthyRow] }
+  proof.afterStore = { ...afterStore, jobs: [job, { ...otherJob, state: { nextRunAtMs: 200, lastOutcome: 'succeeded' } }] }
   assert.equal(verifyPostdeployEvidence(proof).status, 'ACCEPTED')
 })
 

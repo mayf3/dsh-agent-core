@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { quiesceLaunchdServices } from './deployment-launchd.js'
 import { capturePlainFileMetadata } from './deployment-file-metadata.js'
@@ -13,9 +13,12 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   const plistPath = join(ctx.launchdDir, 'ai.agent-core.runtime.plist')
   const preimage = join(ctx.artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
   mkdirSync(dirname(preimage), { recursive: true })
+  const sourceMetadata = capturePlainFileMetadata(plistPath)
+  if (existsSync(preimage) && !readFileSync(plistPath).equals(readFileSync(preimage)) && !ctx.runtimePriorReceipt) {
+    unlinkSync(preimage); syncDirectory(dirname(preimage))
+  }
   if (!existsSync(preimage)) {
-    const metadata = capturePlainFileMetadata(plistPath)
-    durableCopyPreimage(plistPath, preimage, metadata, { crashAt: ctx.crashAt, onStage: ctx.onDurabilityStage })
+    durableCopyPreimage(plistPath, preimage, sourceMetadata, { crashAt: ctx.crashAt, onStage: ctx.onDurabilityStage })
   }
   const preimageMetadata = capturePlainFileMetadata(preimage)
   const preimageSha256 = createHash('sha256').update(readFileSync(preimage)).digest('hex')

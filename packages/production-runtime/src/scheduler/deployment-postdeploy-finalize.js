@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 
 import { canonicalJSON } from '../../../scheduler/src/occurrence-model.js'
 import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
-import { updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
+import { notificationKey, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
 import { POSTDEPLOY_CANARY_MARKER } from './deployment-canary-control.js'
 
 const digest = (value) => createHash('sha256').update(typeof value === 'string' ? value : canonicalJSON(value)).digest('hex')
@@ -60,7 +60,7 @@ export function assertCanaryStoreDelta({ beforeStore, afterStore, canaryJobId, r
   const canaries = appended.filter((row) => row.jobId === canaryJobId)
   const unrelated = appended.filter((row) => row.jobId !== canaryJobId)
   const preexistingJobs = new Set(beforeStore.jobs.map((job) => job.id))
-  if (canaries.length !== 1 || canaries[0].state !== 'succeeded'
+  if (canaries.length !== 1 || unrelated.length < 1 || canaries[0].state !== 'succeeded'
     || canaries[0].executionOutcome !== 'succeeded' || !Number.isFinite(canaries[0].endedAt)
     || unrelated.some((row) => !preexistingJobs.has(row.jobId) || row.state !== 'succeeded'
       || row.executionOutcome !== 'succeeded' || !Number.isFinite(row.endedAt))) {
@@ -95,21 +95,45 @@ export function assertQuarantineIsolationAndDedupe(beforeHealth, afterHealth) {
   if (compiled.length !== quarantined.length || compiled.some((incident) => incident.rootCauseClass !== 'RUN_STUCK_OUTCOME_UNKNOWN')) {
     throw new Error('postdeploy unknown root-cause incident compilation is not one-per-occurrence')
   }
-  return { quarantinedCount: quarantined.length, rootIdentities: compiled.map((item) => item.rootIdentity) }
+  return { quarantinedCount: quarantined.length, rootIdentities: compiled.map((item) => item.rootIdentity), incidents: compiled }
 }
 
-export function assertIncidentDedupeFromDurableState({ incidentState, compiledRoots, nowMs }) {
-  const roots = new Set(compiledRoots)
-  const compiled = []
-  for (const root of roots) {
+export function assertIncidentDedupeFromDurableState({ incidentState, compiledIncidents, nowMs }) {
+  const roots = new Set(compiledIncidents.map((item) => item.rootIdentity))
+  const proof = {}
+  for (const expected of compiledIncidents) {
+    const root = expected.rootIdentity
     const record = incidentState?.incidents?.[root]
     if (!record || record.lifecycle !== 'OPEN' || record.rootCauseClass !== 'RUN_STUCK_OUTCOME_UNKNOWN') {
       throw new Error(`durable incident state lacks exact open root: ${root}`)
     }
-    compiled.push(record)
+    exact({ rootIdentity: record.rootIdentity, rootCauseClass: record.rootCauseClass, routeClass: record.routeClass,
+      facts: record.facts, symptoms: record.symptoms },
+    { rootIdentity: expected.rootIdentity, rootCauseClass: expected.rootCauseClass, routeClass: expected.routeClass,
+      facts: expected.facts, symptoms: expected.symptoms }, `durable incident payload ${root}`)
+    if (!Number.isSafeInteger(record.episode) || record.episode < 1 || !Number.isSafeInteger(record.transitionRevision)
+      || record.transitionRevision < 1 || record.incidentId !== `${root}|episode:${record.episode}`
+      || record.alertState?.lifecycle !== 'OPEN' || record.alertState?.incidentKey !== root) throw new Error(`durable incident episode is incoherent: ${root}`)
+    const entries = Object.entries(incidentState.outbox ?? {}).filter(([, intent]) => intent.incidentId === record.incidentId)
+    if (entries.length === 0) {
+      if (record.alertState.delivery !== 'DELIVERED' || incidentState.migration === undefined) throw new Error(`durable incident lacks required outbox intent: ${root}`)
+    } else {
+      if (entries.length !== 1) throw new Error(`durable incident has duplicate outbox intents: ${root}`)
+      const [key, intent] = entries[0]
+      if (key !== notificationKey(intent) || intent.notificationKey !== key || intent.transitionKind !== 'OPEN'
+        || intent.transitionRevision !== record.transitionRevision || intent.routeClass !== record.routeClass
+        || intent.producer !== record.producer || intent.incident?.rootIdentity !== root
+        || (intent.delivery !== record.alertState.delivery
+          && !(incidentState.migration !== undefined && record.alertState.delivery === 'FAILED' && intent.delivery === 'PENDING'))) {
+        throw new Error(`durable incident outbox binding is incoherent: ${root}`)
+      }
+    }
+    proof[root] = { episode: record.episode, incidentId: record.incidentId, transitionRevision: record.transitionRevision,
+      alertState: record.alertState, outbox: entries }
   }
-  const replay = updateIncidentState(incidentState, compiled, { nowMs, ownsIncident: (record) => roots.has(record.rootIdentity) })
+  const replay = updateIncidentState(incidentState, compiledIncidents, { nowMs, ownsIncident: (record) => roots.has(record.rootIdentity) })
   if (replay.notifications.length !== 0) throw new Error('durable incident replay is not deduplicated')
+  return proof
 }
 
 export function verifyPostdeployEvidence({ phaseReceipt, routingReceipt, sourceSha, beforeHealth, afterHealth, beforeStore, afterStore,
@@ -124,8 +148,9 @@ export function verifyPostdeployEvidence({ phaseReceipt, routingReceipt, sourceS
   if (beforeHealth.provenance.incidents !== beforeIncidentSha256 || afterHealth.provenance.incidents !== afterIncidentSha256) throw new Error('postdeploy API/incident generation binding mismatch')
   const occurrence = assertCanaryStoreDelta({ beforeStore, afterStore, canaryJobId, runReadback, sourceSha })
   const isolation = assertQuarantineIsolationAndDedupe(beforeHealth, afterHealth)
-  assertIncidentDedupeFromDurableState({ incidentState: beforeIncidentState, compiledRoots: isolation.rootIdentities, nowMs: beforeHealth.generatedAt + 1 })
-  assertIncidentDedupeFromDurableState({ incidentState: afterIncidentState, compiledRoots: isolation.rootIdentities, nowMs: afterHealth.generatedAt + 1 })
+  const beforeIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: beforeIncidentState, compiledIncidents: isolation.incidents, nowMs: beforeHealth.generatedAt + 1 })
+  const afterIncidentProof = assertIncidentDedupeFromDurableState({ incidentState: afterIncidentState, compiledIncidents: isolation.incidents, nowMs: afterHealth.generatedAt + 1 })
+  exact(beforeIncidentProof, afterIncidentProof, 'incident notification attempt surface')
   return {
     status: 'ACCEPTED', sourceSha, productionAccepted: true, currentSixAuthorized: false,
     currentSixGate: 'PENDING_EXACT_OWNER_SUFFIX_RESOLUTION', currentSixOccurrences: [],

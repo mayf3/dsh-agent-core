@@ -1,4 +1,4 @@
-import { chmodSync, chownSync, closeSync, constants, copyFileSync, fsyncSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, closeSync, constants, copyFileSync, existsSync, fsyncSync, lstatSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { capturePlainFileMetadata, clearGeneratedFileXattrs } from './deployment-file-metadata.js'
 
@@ -19,11 +19,23 @@ function restoreMetadata(path, metadata) {
 }
 
 export function durableCopyPreimage(source, target, metadata, { crashAt, onStage = () => {} } = {}) {
-  copyFileSync(source, target, constants.COPYFILE_EXCL)
-  restoreMetadata(target, metadata)
-  syncFile(target); onStage('preimage-file-synced')
-  if (crashAt === 'after-preimage-file-fsync') throw new Error('injected crash after preimage file fsync')
-  syncDirectory(dirname(target)); onStage('preimage-directory-synced')
+  const temp = `${target}.incoming`
+  try {
+    if (existsSync(temp)) {
+      const abandoned = lstatSync(temp)
+      if (!abandoned.isFile() || abandoned.isSymbolicLink() || abandoned.uid !== metadata.uid || abandoned.gid !== metadata.gid) throw new Error('unsafe abandoned preimage candidate')
+      unlinkSync(temp); syncDirectory(dirname(temp)); onStage('abandoned-preimage-cleaned')
+    }
+    if (crashAt === 'before-preimage-copy') throw new Error('injected crash before preimage copy')
+    copyFileSync(source, temp, constants.COPYFILE_EXCL)
+    restoreMetadata(temp, metadata)
+    if (crashAt === 'during-preimage-copy') throw new Error('injected crash during preimage copy')
+    syncFile(temp); onStage('preimage-file-synced')
+    if (crashAt === 'after-preimage-file-fsync') throw new Error('injected crash after preimage file fsync')
+    renameSync(temp, target); onStage('preimage-renamed')
+    if (crashAt === 'after-preimage-rename') throw new Error('injected crash after preimage rename')
+    syncDirectory(dirname(target)); onStage('preimage-directory-synced')
+  } finally { try { unlinkSync(temp) } catch { /* renamed or absent */ } }
 }
 
 export function verifyAndSyncPreimage(source, target, metadata, { onStage = () => {} } = {}) {

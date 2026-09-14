@@ -45,7 +45,7 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   assert.equal(statSync(plistPath).mode & 0o777, 0o600)
   assert.deepEqual(receipts.map((receipt) => receipt.status), ['INSTALLING', 'INSTALLED'])
   assert.equal(receipts[0].installedSha256, receipts[1].installedSha256)
-  assert.deepEqual(durability, ['preimage-file-synced', 'preimage-directory-synced', 'candidate-file-synced', 'candidate-renamed', 'target-directory-synced'])
+  assert.deepEqual(durability, ['preimage-file-synced', 'preimage-renamed', 'preimage-directory-synced', 'candidate-file-synced', 'candidate-renamed', 'target-directory-synced'])
   assert.deepEqual(phases, [
     'bootout:system/ai.agent-core.runtime',
     `bootstrap:${plistPath}:system/ai.agent-core.runtime`,

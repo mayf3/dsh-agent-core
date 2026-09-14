@@ -44,6 +44,17 @@ test('T33 a missing secondary source returns complete=false and UNKNOWN row, nev
   assert.equal(health.healthy, 0)
 })
 
+test('semantic-corrupt open incident without outbox makes canonical health incomplete', async () => {
+  const { layout, routingSecurity, credentialStoreFile } = await fixture()
+  await writeFile(layout.schedulerIncidentState, JSON.stringify({ version: 1, incidents: {
+    root: { rootIdentity: 'root', rootCauseClass: 'RUN_STUCK_OUTCOME_UNKNOWN', incidentId: 'root|episode:1', episode: 1,
+      transitionRevision: 1, lifecycle: 'OPEN', alertState: { incidentKey: 'root', lifecycle: 'OPEN', delivery: 'PENDING' } },
+  }, outbox: {} }), { mode: 0o600 })
+  const health = await createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA }).read()
+  assert.equal(health.complete, false)
+  assert.equal(health.unknown, 1)
+})
+
 test('T29 arbitrary runtime provenance cannot produce complete=true', async () => {
   const { layout, routingSecurity, credentialStoreFile } = await fixture()
   const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: 'unbound-label', nowMs: () => 1 })
