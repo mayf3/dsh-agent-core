@@ -42,7 +42,8 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   for (const [key, value] of Object.entries(envAdds)) {
     if (!installed.includes(`<key>${key}</key><string>${value}</string>`)) throw new Error(`runtime plist readback mismatch for ${key}`)
   }
-  ctx.kickstart('system/ai.agent-core.runtime')
+  ctx.bootout('system/ai.agent-core.runtime')
+  ctx.bootstrap(plistPath, 'system/ai.agent-core.runtime')
   const deadline = Date.now() + 60_000
   let healthy = false
   while (Date.now() < deadline) {
@@ -55,6 +56,6 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   if (!healthy) {
     phase('runtime', false, 'health TIMEOUT after kickstart — RUN ROLLBACK NOW: sudo node scripts/scheduler-cp-rollback.mjs (preimages are in place)')
   }
-  phase('runtime', true, `plist env ${dirty ? 'patched' : 'already present'}; kickstart; health=ok`)
+  phase('runtime', true, `plist env ${dirty ? 'patched' : 'already present'}; bootout/bootstrap; health=ok`)
   return { healthy, deployedSha: sourceSha }
 }

@@ -26,8 +26,14 @@ test('T31 valid route creates one opening intent; invalid route remains durable,
   const failed = markNotificationDelivery(opened.state, key, 'FAILED', 2)
   assert.equal(failed.outbox[key].delivery, 'FAILED')
   const health = projectSchedulerHealth({
+    version: 3,
     generatedAt: 2,
-    jobs: [{ id: 'job-a', agentId: 'agt-a', logicalKey: 'a', enabled: true, schedule: { kind: 'every', everyMs: 1 }, state: {} }],
+    jobs: [{
+      id: 'job-a', name: 'job a', agentId: 'agt-a', logicalKey: 'a', enabled: true,
+      scheduleRevision: 1, schedule: { kind: 'every', everyMs: 1 },
+      payload: { kind: 'agentTurn', message: 'run' }, delivery: { mode: 'none' },
+      createdAtMs: 0, updatedAtMs: 0, revisionActivatedAtMs: 0, state: {},
+    }],
     occurrences: [], fences: {}, credentials: { 'agt-a': true }, routes: { 'job-a': { ready: false, source: 'local_ops_sink', status: 'CONFIG_MISSING' } },
     incidents: failed.incidents,
     provenance: { canonicalPair: true, runtime: 'r', store: 's' },

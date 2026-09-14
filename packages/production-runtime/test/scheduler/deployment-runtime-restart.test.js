@@ -24,10 +24,18 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   const phases = []
   const sha = '1234567890abcdef1234567890abcdef12345678'
   const result = restartSchedulerProductionRuntime({
-    ctx: { launchdDir, artifactsDir, authsvcUid: 501, authsvcGid: 20, kickstart: (label) => phases.push(label) },
+    ctx: {
+      launchdDir, artifactsDir, authsvcUid: 501, authsvcGid: 20,
+      bootout: (label) => phases.push(`bootout:${label}`),
+      bootstrap: (path, label) => phases.push(`bootstrap:${path}:${label}`),
+    },
     phase: (name, ok) => phases.push(`${name}:${ok}`), sourceSha: sha,
   })
   assert.equal(result.deployedSha, sha)
   assert.match(readFileSync(plistPath, 'utf8'), new RegExp(`<key>AGENT_CORE_DEPLOYED_SHA</key><string>${sha}</string>`))
-  assert.deepEqual(phases, ['system/ai.agent-core.runtime', 'runtime:true'])
+  assert.deepEqual(phases, [
+    'bootout:system/ai.agent-core.runtime',
+    `bootstrap:${plistPath}:system/ai.agent-core.runtime`,
+    'runtime:true',
+  ])
 })

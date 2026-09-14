@@ -28,7 +28,10 @@ function quarantine(reason) {
 export function classifyReconciliationEvidence({ identity, businessOutcome, termination, live } = {}, {
   nowMs = Date.now(), maxEvidenceAgeMs = DEFAULT_RECONCILIATION_EVIDENCE_MAX_AGE_MS,
 } = {}) {
-  if (!identity?.jobId || !identity?.occurrenceId || !identity?.runId) return quarantine('identity incomplete')
+  if (typeof identity?.jobId !== 'string' || identity.jobId === ''
+    || typeof identity?.occurrenceId !== 'string' || identity.occurrenceId === ''
+    || typeof identity?.runId !== 'string' || identity.runId === ''
+    || typeof identity?.epoch !== 'string' || identity.epoch === '') return quarantine('identity incomplete')
   const supplied = [businessOutcome, termination, live].filter(Boolean)
   if (!Number.isFinite(nowMs) || !Number.isFinite(maxEvidenceAgeMs) || maxEvidenceAgeMs < 0
     || supplied.some((evidence) => !exactTrusted(evidence, identity, { nowMs, maxEvidenceAgeMs }))) {

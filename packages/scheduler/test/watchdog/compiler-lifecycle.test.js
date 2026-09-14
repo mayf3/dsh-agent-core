@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { compileIncidents, incidentRootIdentity } from '../../src/watchdog/incident-compiler.js'
 import {
   migrateLegacyAlertState,
+  bindNotificationDelivery,
   markNotificationDelivery,
   notificationKey,
   updateIncidentState,
@@ -109,6 +110,20 @@ test('T10 producer observation domains never close or reopen a peer incident', (
   assert.equal(third.state.incidents[w1Incident.rootIdentity].episode, 1)
   assert.deepEqual(second.notifications.map((item) => item.transitionKind), ['OPEN'])
   assert.deepEqual(third.notifications, [])
+})
+
+test('T21 producer and first authorized delivery binding are immutable across replay', () => {
+  const [incident] = compileIncidents(unknownFacts('job-a', 'occ-a')).incidents
+  const opened = updateIncidentState({}, [incident], { nowMs: T0, producer: 'w1' })
+  const key = opened.notifications[0].notificationKey
+  assert.equal(opened.state.outbox[key].producer, 'w1')
+  const bound = bindNotificationDelivery(opened.state, key, {
+    producer: 'w1', route: { channel: 'feishu', to: 'owner-a' }, payload: 'stable', providerKey: 'provider-key',
+  }, T0 + 1)
+  assert.deepEqual(bound.outbox[key].deliveryBinding.route, { channel: 'feishu', to: 'owner-a' })
+  assert.throws(() => bindNotificationDelivery(bound, key, {
+    producer: 'w2', route: { channel: 'feishu', to: 'ops' }, payload: 'changed', providerKey: 'provider-key',
+  }), /binding conflict/)
 })
 
 test('T27 legacy paired symptoms collapse without re-alert when any member has delivery proof', () => {

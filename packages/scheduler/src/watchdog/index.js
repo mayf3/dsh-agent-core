@@ -323,7 +323,7 @@ export function formatFindings(findings, { role = 'W1', nowMs = Date.now() } = {
 
 export { compileIncidents, incidentRootIdentity, ROOT_CAUSE_CLASSES } from './incident-compiler.js'
 export {
-  findingFingerprint, markNotificationDelivery, migrateLegacyAlertState, notificationKey,
+  bindNotificationDelivery, findingFingerprint, markNotificationDelivery, migrateLegacyAlertState, notificationKey,
   updateAlertState, updateIncidentState,
 } from './incident-lifecycle.js'
 export {
@@ -340,5 +340,6 @@ export {
 export { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLegacyIncidentStateFiles } from './durable-state.js'
 export {
   buildIdempotentFeishuRequest, FEISHU_IDEMPOTENCY_WINDOW_MS,
-  FEISHU_SAFE_RETRY_WINDOW_MS, retryableOutboxIntents, stableNotificationText,
+  FEISHU_SAFE_RETRY_WINDOW_MS, deliveryRecoveryAction, feishuHistoryContainsNotification, providerIdempotencyKey,
+  retryableOutboxIntents, stableNotificationText,
 } from './delivery.js'

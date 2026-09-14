@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import { chmod, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -58,6 +58,26 @@ test('T28 only a well-formed lock whose exact PID is proven dead may be reaped',
   assert.equal(loadIncidentState(path).state.revision, 2)
   await writeFile(`${path}.lock`, `${JSON.stringify({ pid: 'not-a-pid', token: 'unknown-owner' })}\n`, { mode: 0o600 })
   assert.throws(() => commitIncidentState(path, state(3), { expectedHash: loadIncidentState(path).hash }), /concurrent writer/)
+})
+
+test('T28 two processes reaping one stale lock cannot delete the replacement live lock or corrupt state', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-stale-lock-race-'))
+  await chmod(dir, 0o700)
+  const path = join(dir, 'incidents.json')
+  commitIncidentState(path, state(1), { expectedHash: null })
+  const expectedHash = loadIncidentState(path).hash
+  await writeFile(`${path}.lock`, `${JSON.stringify({ pid: 2147483647, token: 'dead-owner' })}\n`, { mode: 0o600 })
+  const moduleUrl = new URL('../../src/watchdog/durable-state.js', import.meta.url).href
+  const child = (revision) => new Promise((resolve, reject) => {
+    const program = `import { commitIncidentState } from ${JSON.stringify(moduleUrl)}; try { commitIncidentState(${JSON.stringify(path)}, ${JSON.stringify(state(revision))}, { expectedHash: ${JSON.stringify(expectedHash)} }); process.stdout.write('COMMITTED') } catch (error) { process.stdout.write('REFUSED:' + error.message) }`
+    const proc = spawn(process.execPath, ['--input-type=module', '-e', program], { stdio: ['ignore', 'pipe', 'pipe'] })
+    let output = ''; proc.stdout.on('data', (bytes) => { output += bytes })
+    proc.on('error', reject); proc.on('close', () => resolve(output))
+  })
+  const outcomes = await Promise.all([child(2), child(3)])
+  assert.equal(outcomes.filter((value) => value === 'COMMITTED').length, 1)
+  assert.match(outcomes.find((value) => value !== 'COMMITTED'), /^REFUSED:/)
+  assert.ok([2, 3].includes(loadIncidentState(path).state.revision))
 })
 
 test('T27 file migration freezes all sources, retains hash-addressed backups, and reads back exact state', async () => {
@@ -176,5 +196,22 @@ test('T27 formal migration entrypoint consumes only frozen protected source file
     },
   })
   assert.equal(JSON.parse(output).status, 'MIGRATED')
+  const replay = execFileSync(process.execPath, [script.pathname, '--migrate-incident-state'], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      SCHEDULER_INCIDENT_STATE: incidentPath,
+      SCHEDULER_MIGRATION_FACTS_FILE: factsPath,
+      SCHEDULER_MIGRATION_FACTS_FILE_SHA256: sha(factsBytes),
+      SCHEDULER_MIGRATION_FACTS_SHA256: sha(Buffer.from(canonicalJSON([fact]))),
+      SCHEDULER_LEGACY_ALERT_STATE: legacyPath,
+      SCHEDULER_LEGACY_ALERT_STATE_SHA256: sha(legacyBytes),
+      SCHEDULER_LEGACY_DELIVERY_EVIDENCE: evidencePath,
+      SCHEDULER_LEGACY_DELIVERY_EVIDENCE_SHA256: sha(evidenceBytes),
+      SCHEDULER_INCIDENT_OWNER_UID: String(process.getuid()),
+      SCHEDULER_INCIDENT_OWNER_GID: String(process.getgid()),
+    },
+  })
+  assert.equal(JSON.parse(replay).status, 'ALREADY_MIGRATED')
   assert.equal(Object.keys(loadIncidentState(incidentPath).state.incidents).length, 1)
 })

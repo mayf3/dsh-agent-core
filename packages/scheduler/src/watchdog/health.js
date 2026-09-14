@@ -1,5 +1,6 @@
 import { canonicalJSON, rebuildFences, validateOccurrenceRecord } from '../occurrence-model.js'
 import { computeNextRunAtMs } from '../schedule.js'
+import { normalizeJob } from '../job-model.js'
 
 function generationsComplete(generations) {
   return Array.isArray(generations) && generations.length > 0
@@ -38,10 +39,25 @@ function fenceProjectionValid(snapshot) {
 }
 
 export function validateCanonicalHealthAuthority(snapshot) {
-  if (!snapshot || typeof snapshot !== 'object' || !Array.isArray(snapshot.jobs)
+  if (!snapshot || typeof snapshot !== 'object' || snapshot.version !== 3 || !Array.isArray(snapshot.jobs)
     || !Array.isArray(snapshot.occurrences) || snapshot.fences === null
     || typeof snapshot.fences !== 'object' || Array.isArray(snapshot.fences)) {
     throw new TypeError('canonical health authority document has an invalid shape')
+  }
+  const jobIds = new Set()
+  const logicalKeys = new Set()
+  for (const job of snapshot.jobs) {
+    if (!job || typeof job !== 'object' || Array.isArray(job) || typeof job.id !== 'string' || job.id === ''
+      || typeof job.enabled !== 'boolean' || !Number.isSafeInteger(job.scheduleRevision)
+      || !Number.isFinite(job.createdAtMs) || !Number.isFinite(job.updatedAtMs)
+      || !Number.isFinite(job.revisionActivatedAtMs)) throw new TypeError('canonical health authority has malformed Job record')
+    normalizeJob(job, { id: job.id, createdAtMs: job.createdAtMs, nowMs: job.updatedAtMs })
+    if (jobIds.has(job.id)) throw new TypeError('canonical health authority has duplicate jobId')
+    jobIds.add(job.id)
+    if (job.logicalKey !== undefined) {
+      if (logicalKeys.has(job.logicalKey)) throw new TypeError('canonical health authority has duplicate logicalKey')
+      logicalKeys.add(job.logicalKey)
+    }
   }
   const occurrenceIds = new Set()
   for (const occurrence of snapshot.occurrences) {
@@ -111,14 +127,17 @@ export function projectSchedulerHealth(snapshot = {}) {
       readbackAvailable: true, watchdogRunnable: true,
     }
   }
+  let authorityError = null
+  try { validateCanonicalHealthAuthority(snapshot) } catch (error) { authorityError = error }
   const jobs = snapshot.jobs.filter((job) => job.enabled === true)
-  const complete = generationsComplete(snapshot.generations) && snapshot.provenance?.canonicalPair === true && fenceProjectionValid(snapshot)
+  const complete = authorityError === null && generationsComplete(snapshot.generations)
+    && snapshot.provenance?.canonicalPair === true && fenceProjectionValid(snapshot)
   const rows = jobs.map((job) => projectRow(job, snapshot, complete))
   const count = (kind) => rows.filter((row) => row.classification === kind).length
   return {
     enabled: rows.length, healthy: count('healthy'), degraded: count('degraded'), blocked: count('blocked'), unknown: count('unknown'),
     complete, generatedAt: snapshot.generatedAt ?? Date.now(), jobs: rows,
-    censusError: complete ? null : (snapshot.censusError ?? 'source generation, provenance, or fence projection incomplete'),
+    censusError: complete ? null : (snapshot.censusError ?? authorityError?.message ?? 'source generation, provenance, or fence projection incomplete'),
     readbackAvailable: true, watchdogRunnable: true,
   }
 }

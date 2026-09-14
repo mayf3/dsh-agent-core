@@ -47,6 +47,8 @@ test('T09/T24 ambiguous stale conflicting or cross-occurrence evidence is quaran
     { identity, termination: exact({ terminated: true, observedAt: 94 }) },
     { identity, termination: exact({ terminated: true, observedAt: 101 }) },
     { identity, termination: exact({ terminated: true, source: 'caller-asserted' }) },
+    { identity: { jobId: 'job-a', occurrenceId: 'occ-a', runId: 'run-a' }, termination: { ...exact({ terminated: true }), epoch: undefined } },
+    { identity: { ...identity, epoch: '' }, businessOutcome: { ...exact({ status: 'succeeded' }), epoch: '' } },
   ]
   for (const evidence of cases) {
     const result = classifyReconciliationEvidence(evidence, { nowMs: 100, maxEvidenceAgeMs: 5 })

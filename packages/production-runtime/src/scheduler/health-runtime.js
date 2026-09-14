@@ -75,6 +75,7 @@ export function createSchedulerHealthRuntime({ layout, runtimeGeneration, nowMs 
         }]
       }))
       return projectSchedulerHealth({
+        version: jobsDoc?.version,
         generatedAt: nowMs(),
         jobs: jobsDoc?.jobs ?? null,
         occurrences: jobsDoc?.occurrences ?? [],

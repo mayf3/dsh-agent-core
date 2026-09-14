@@ -6,20 +6,32 @@ import {
   filterHealthForPrincipal,
   projectSchedulerHealth,
 } from '../../src/watchdog/health.js'
+import { applyTransition, buildOccurrenceRecord, rebuildFences } from '../../src/occurrence-model.js'
 
 const T0 = Date.parse('2026-09-14T00:00:00Z')
 
 function job(id, agentId = `agt_${id}`) {
   return {
     id, agentId, logicalKey: `logical.${id}`, enabled: true,
+    name: `job ${id}`, scheduleRevision: 1, createdAtMs: T0 - 100_000,
+    updatedAtMs: T0 - 100_000, revisionActivatedAtMs: T0 - 100_000,
     schedule: { kind: 'every', everyMs: 60_000 },
+    payload: { kind: 'agentTurn', message: 'fixture' },
     delivery: { mode: 'none' },
     state: { nextRunAtMs: T0 + 60_000 },
   }
 }
 
+function unknown(jobId, admittedAt) {
+  const target = job(jobId)
+  const record = buildOccurrenceRecord({ job: target, kind: 'natural', nominalScheduledAt: admittedAt, admittedAt })
+  applyTransition(record, { to: 'outcome_unknown', at: admittedAt + 10, reason: 'timeout' })
+  return record
+}
+
 function snapshot(overrides = {}) {
   return {
+    version: 3,
     generatedAt: T0,
     jobs: [job('a'), job('b'), job('c'), job('d')],
     occurrences: [], fences: {}, history: [],
@@ -37,11 +49,8 @@ function snapshot(overrides = {}) {
 }
 
 test('T15/T16 complete census is exclusive and exposes the canonical row contract', () => {
-  const unknown = {
-    occurrenceId: 'occ-b', jobId: 'b', runId: 'run-b', state: 'outcome_unknown',
-    admittedAt: T0 - 40_000, startedAt: T0 - 30_000, endedAt: T0 - 20_000,
-  }
-  const result = projectSchedulerHealth(snapshot({ occurrences: [unknown], fences: { b: { occurrenceId: 'occ-b', runId: 'run-b', activatedAtMs: T0 - 40_000, reason: 'outcome_unknown without termination proof (occurrence occ-b)' } } }))
+  const occurrence = unknown('b', T0 - 40_000)
+  const result = projectSchedulerHealth(snapshot({ occurrences: [occurrence], fences: rebuildFences([occurrence]) }))
   assert.equal(result.complete, true)
   assert.equal(result.enabled, 4)
   assert.deepEqual({ healthy: result.healthy, degraded: result.degraded, blocked: result.blocked, unknown: result.unknown }, { healthy: 1, degraded: 1, blocked: 2, unknown: 0 })
@@ -53,7 +62,7 @@ test('T15/T16 complete census is exclusive and exposes the canonical row contrac
   assert.equal(row.state, 'QUARANTINED_UNKNOWN')
   assert.equal(row.health, 'BLOCKED')
   assert.equal(row.currentBlocker, 'OUTCOME_UNKNOWN')
-  assert.deepEqual(row.currentOccurrence, { occurrenceId: 'occ-b', state: 'outcome_unknown' })
+  assert.deepEqual(row.currentOccurrence, { occurrenceId: occurrence.occurrenceId, state: 'outcome_unknown' })
   assert.deepEqual(Object.keys(row.notificationRoute).sort(), ['class', 'source', 'status', 'targetRef'])
 })
 
@@ -64,12 +73,13 @@ test('T18 missing credential blocks only its Job; invalid routing degrades only 
   assert.equal(result.jobs.find((row) => row.jobId === 'a').classification, 'healthy')
   assert.equal(result.jobs.find((row) => row.jobId === 'c').currentBlocker, 'CREDENTIAL_UNAVAILABLE')
   const invalidSchedule = projectSchedulerHealth(snapshot({ jobs: [{ ...job('a'), schedule: { kind: 'every', everyMs: 0 } }] }))
-  assert.equal(invalidSchedule.jobs[0].classification, 'degraded')
+  assert.equal(invalidSchedule.jobs[0].classification, 'unknown')
+  assert.equal(invalidSchedule.complete, false)
 })
 
 test('T19/T22 one quarantined Job leaves watchdog/readback and unrelated Jobs healthy', () => {
-  const occurrence = { occurrenceId: 'occ-a', jobId: 'a', runId: 'run-a', state: 'outcome_unknown', admittedAt: T0 - 10, endedAt: T0 - 5 }
-  const result = projectSchedulerHealth(snapshot({ occurrences: [occurrence], fences: { a: { occurrenceId: 'occ-a', runId: 'run-a', activatedAtMs: T0 - 10, reason: 'outcome_unknown without termination proof (occurrence occ-a)' } } }))
+  const occurrence = unknown('a', T0 - 10)
+  const result = projectSchedulerHealth(snapshot({ occurrences: [occurrence], fences: rebuildFences([occurrence]) }))
   assert.equal(result.jobs.filter((row) => row.state === 'QUARANTINED_UNKNOWN').length, 1)
   assert.equal(result.jobs.find((row) => row.jobId === 'b').classification, 'healthy')
   assert.equal(result.readbackAvailable, true)
@@ -112,11 +122,19 @@ test('T18 fence projection mismatch fails complete health closed', () => {
 })
 
 test('T18 malformed or inexact fence values and invalid cron fail health closed/degraded', () => {
-  const occurrence = { occurrenceId: 'occ-a', jobId: 'a', runId: 'run-a', state: 'outcome_unknown', admittedAt: T0 - 10 }
-  const wrongFence = { a: { occurrenceId: 'occ-a', runId: 'wrong', activatedAtMs: T0 - 10, reason: 'wrong' } }
+  const occurrence = unknown('a', T0 - 10)
+  const wrongFence = { a: { ...rebuildFences([occurrence]).a, runId: 'wrong' } }
   assert.equal(projectSchedulerHealth(snapshot({ occurrences: [occurrence], fences: wrongFence })).complete, false)
   const invalidCron = projectSchedulerHealth(snapshot({ jobs: [{ ...job('a'), schedule: { kind: 'cron', expr: 'not cron', tz: 'Asia/Shanghai' } }] }))
-  assert.equal(invalidCron.jobs[0].health, 'DEGRADED')
+  assert.equal(invalidCron.jobs[0].health, 'UNKNOWN')
+})
+
+test('T33 unsupported version, malformed Job and duplicate identities never project complete', () => {
+  assert.equal(projectSchedulerHealth(snapshot({ version: 999 })).complete, false)
+  assert.equal(projectSchedulerHealth(snapshot({ jobs: [{ ...job('a'), payload: undefined }] })).complete, false)
+  const duplicate = projectSchedulerHealth(snapshot({ jobs: [job('a'), job('a')] }))
+  assert.equal(duplicate.complete, false)
+  assert.equal(duplicate.unknown, 2)
 })
 
 test('T16 exact acknowledged alert lifecycle is preserved in health', () => {
