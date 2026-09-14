@@ -3,7 +3,7 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: a57bb00dfa887e1ee98bbfd43241e63857543894
+implementation_code_commit: a57bb00dfa28f68ffb73e773663c060c6f45dad9
 status: candidate_fourth_exact_review_pending
 production_mutation: false
 ---
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`a57bb00dfa887e1ee98bbfd43241e63857543894`, based on the accepted-Spec merge
+`a57bb00dfa28f68ffb73e773663c060c6f45dad9`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
