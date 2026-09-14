@@ -1,8 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { execFileSync } from 'node:child_process'
 
 import { restartSchedulerProductionRuntime } from '../../src/scheduler/deployment-runtime-restart.js'
 
@@ -15,6 +16,8 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   mkdirSync(launchdDir); mkdirSync(binDir)
   const plistPath = join(launchdDir, 'ai.agent-core.runtime.plist')
   writeFileSync(plistPath, '<plist><dict><key>AGENT_CORE_DEPLOYED_SHA</key><string>0000000000000000000000000000000000000000</string><key>HOME</key><string>/Users/authsvc</string></dict></plist>\n')
+  chmodSync(plistPath, 0o600)
+  if (process.platform === 'darwin') execFileSync('/usr/bin/xattr', ['-c', plistPath])
   const curl = join(binDir, 'curl')
   writeFileSync(curl, '#!/bin/sh\nprintf \'%s\\n\' \'{"ok":true}\'\n')
   chmodSync(curl, 0o700)
@@ -37,6 +40,7 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   })
   assert.equal(result.deployedSha, sha)
   assert.match(readFileSync(plistPath, 'utf8'), new RegExp(`<key>AGENT_CORE_DEPLOYED_SHA</key><string>${sha}</string>`))
+  assert.equal(statSync(plistPath).mode & 0o777, 0o600)
   assert.deepEqual(receipts.map((receipt) => receipt.status), ['INSTALLING', 'INSTALLED'])
   assert.equal(receipts[0].installedSha256, receipts[1].installedSha256)
   assert.deepEqual(phases, [

@@ -44,10 +44,13 @@ function canonicalJobFindings(job, records, snapshot) {
   const base = { jobId: job.id, logicalKey: job.logicalKey, agentId: job.agentId, jobRevision: job.scheduleRevision }
   const unresolved = records.filter((item) => item.state === 'outcome_unknown' && item.terminationSettlement === undefined)
   for (const record of records) {
-    const laterSuccess = records.some((item) => (item.executionOutcome === 'succeeded' || item.state === 'succeeded')
-      && Number.isFinite(item.endedAt) && item.endedAt > record.endedAt)
-    if (record.executionOutcome === 'failed' && Number.isFinite(record.endedAt) && !laterSuccess) {
-      findings.push({ class: 'RUN_FAILED', jobId: job.id, runId: record.runId, occurrenceId: record.occurrenceId, endedAt: new Date(record.endedAt).toISOString() })
+    if (record.executionOutcome === 'failed' && Number.isFinite(record.endedAt)) {
+      findings.push({
+        class: 'RUN_FAILED', jobId: job.id, runId: record.runId, occurrenceId: record.occurrenceId, endedAt: new Date(record.endedAt).toISOString(),
+        ...(record.lateSettlement?.basis === 'operator-reconcile' ? { disposition: {
+          basis: 'operator-reconcile', resolvedTo: record.lateSettlement.resolvedTo ?? null, resolvedAt: record.lateSettlement.resolvedAt ?? null,
+        } } : {}),
+      })
     }
     if (Number.isFinite(record.startedAt) && !Number.isFinite(record.endedAt)
       && Number.isFinite(record.executionDeadlineAtMs) && snapshot.generatedAt > record.executionDeadlineAtMs) {

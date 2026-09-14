@@ -92,7 +92,7 @@ test('T18 recent terminal failure is canonically degraded and exposes the W1 fin
   assert.deepEqual(result.jobs[0].findings.map((fact) => fact.class), ['RUN_FAILED'])
 })
 
-test('T18 failure never recovers from age alone and a later success is evidence-based recovery', () => {
+test('T18 failure fact never disappears from age or a later successful occurrence', () => {
   const target = job('a')
   const failed = buildOccurrenceRecord({ job: target, kind: 'natural', nominalScheduledAt: T0 - 100_000_000, admittedAt: T0 - 100_000_000 })
   applyTransition(failed, { to: 'failed', at: T0 - 99_999_000, reason: 'rejected', endedAt: T0 - 99_999_000, executionOutcome: 'failed', terminalEvidence: { kind: 'pre-start-rejection', detailRef: 'AGENT_DISABLED' } })
@@ -101,7 +101,7 @@ test('T18 failure never recovers from age alone and a later success is evidence-
   const succeeded = buildOccurrenceRecord({ job: target, kind: 'natural', nominalScheduledAt: T0 - 1000, admittedAt: T0 - 1000 })
   applyTransition(succeeded, { to: 'running', at: T0 - 900, reason: 'started', startedAt: T0 - 900 })
   applyTransition(succeeded, { to: 'succeeded', at: T0 - 500, reason: 'completed', endedAt: T0 - 500, executionOutcome: 'succeeded' })
-  assert.equal(projectSchedulerHealth(snapshot({ ...base, occurrences: [failed, succeeded] })).findings.some((fact) => fact.class === 'RUN_FAILED'), false)
+  assert.equal(projectSchedulerHealth(snapshot({ ...base, occurrences: [failed, succeeded] })).findings.some((fact) => fact.class === 'RUN_FAILED'), true)
 })
 
 test('T18 executionDeadlineAtMs is the canonical stuck boundary', () => {

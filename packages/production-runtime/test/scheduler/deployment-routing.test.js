@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { chmod, lstat, mkdtemp, mkdir, readFile, realpath, rm, stat, symlink, writeFile } from 'node:fs/promises'
@@ -8,6 +9,7 @@ import { join } from 'node:path'
 import { installSchedulerRoutingManifest } from '../../src/scheduler/deployment-routing.js'
 
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const plain = (path) => { if (process.platform === 'darwin') execFileSync('/usr/bin/xattr', ['-c', path]) }
 
 test('routing deployment freezes explicit candidate and atomically preserves the exact preimage', async (t) => {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-routing-deploy-')))
@@ -23,7 +25,8 @@ test('routing deployment freezes explicit candidate and atomically preserves the
     ownerTargets: {}, jobFailureTargets: {},
   })}\n`)
   await writeFile(candidatePath, candidate, { mode: 0o600 })
-  await writeFile(targetPath, prior, { mode: 0o640 })
+  await writeFile(targetPath, prior, { mode: 0o600 })
+  plain(candidatePath); plain(targetPath)
   const args = {
     candidatePath, expectedSha256: sha(candidate), targetPath, artifactsDir,
     jobs: [{ id: 'job-a', agentId: 'agent-a', logicalKey: 'daily', enabled: true }],
@@ -34,6 +37,7 @@ test('routing deployment freezes explicit candidate and atomically preserves the
   assert.equal(result.preimageSha256, sha(prior))
   assert.deepEqual(await readFile(targetPath), candidate)
   assert.deepEqual(await readFile(join(artifactsDir, 'rollback', 'scheduler-routing.json.preimage')), prior)
+  assert.equal(result.preimageMetadata.mode, 0o600)
   const metadata = await stat(targetPath)
   assert.equal(metadata.mode & 0o777, 0o640)
   const replay = installSchedulerRoutingManifest(args)
@@ -48,6 +52,7 @@ test('routing deployment rejects missing canonical ops target before any write',
   const candidatePath = join(root, 'candidate.json')
   const bytes = Buffer.from(`${JSON.stringify({ version: 1, canonicalOpsTarget: null, ownerTargets: {}, jobFailureTargets: {} })}\n`)
   await writeFile(candidatePath, bytes, { mode: 0o600 })
+  plain(candidatePath)
   assert.throws(() => installSchedulerRoutingManifest({
     candidatePath, expectedSha256: sha(bytes), targetPath: join(root, 'target.json'), artifactsDir: join(root, 'artifacts'),
     jobs: [], expectedUid: process.getuid(), expectedGid: process.getgid(), targetBoundary: '/', mode: 'plan',
@@ -63,6 +68,7 @@ test('routing deployment rejects a target symlink before reading or replacing it
   const targetPath = join(root, 'target.json')
   const bytes = Buffer.from(`${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'ops' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
   await writeFile(candidatePath, bytes, { mode: 0o600 })
+  plain(candidatePath)
   await writeFile(victimPath, 'do-not-read-or-replace\n', { mode: 0o640 })
   await symlink(victimPath, targetPath)
   assert.throws(() => installSchedulerRoutingManifest({
@@ -83,6 +89,7 @@ test('routing deployment rejects a symlink parent before creating an absent targ
   const targetPath = join(linkedDir, 'scheduler-routing.json')
   const bytes = Buffer.from('{"version":1,"canonicalOpsTarget":{"channel":"feishu","to":"ops"},"ownerTargets":{},"jobFailureTargets":{}}\n')
   await writeFile(candidatePath, bytes, { mode: 0o600 })
+  plain(candidatePath)
   assert.throws(() => installSchedulerRoutingManifest({
     candidatePath, expectedSha256: sha(bytes), targetPath, targetBoundary: '/',
     artifactsDir: join(root, 'artifacts'), jobs: [], expectedUid: process.getuid(), expectedGid: process.getgid(), mode: 'apply',
@@ -100,6 +107,7 @@ test('routing deployment rejects an unsafe grandparent before creating an absent
   const targetPath = join(privateParent, 'scheduler-routing.json')
   const bytes = Buffer.from('{"version":1,"canonicalOpsTarget":{"channel":"feishu","to":"ops"},"ownerTargets":{},"jobFailureTargets":{}}\n')
   await writeFile(candidatePath, bytes, { mode: 0o600 })
+  plain(candidatePath)
   assert.throws(() => installSchedulerRoutingManifest({
     candidatePath, expectedSha256: sha(bytes), targetPath, targetBoundary: '/',
     artifactsDir: join(root, 'artifacts'), jobs: [], expectedUid: process.getuid(), expectedGid: process.getgid(), mode: 'apply',
