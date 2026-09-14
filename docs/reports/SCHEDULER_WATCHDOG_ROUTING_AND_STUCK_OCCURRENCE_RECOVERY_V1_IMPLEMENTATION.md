@@ -3,8 +3,8 @@ artifact_type: implementation_report
 goal: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 spec_head: a8c763067a9b461a75669036dfade96a023f8864
 integration_base: 68008e83142bdb637c4fa61c2a65db73c64b2eb1
-implementation_code_commit: 931416737af7ac23afb7d32eab3bed2effb5a63d
-status: candidate_seventh_exact_review_pending
+implementation_code_commit: ecaf0fbe999dfa853aad9dbe6f9596cfa4478328
+status: candidate_eighth_exact_review_pending
 production_mutation: false
 ---
 
@@ -13,7 +13,7 @@ production_mutation: false
 ## 0. Exact binding and authority boundary
 
 This packet describes the candidate whose code commit is
-`931416737af7ac23afb7d32eab3bed2effb5a63d`, based on the accepted-Spec merge
+`ecaf0fbe999dfa853aad9dbe6f9596cfa4478328`, based on the accepted-Spec merge
 `68008e83142bdb637c4fa61c2a65db73c64b2eb1`. The governing Spec bytes are the exact
 accepted candidate `a8c763067a9b461a75669036dfade96a023f8864`.
 
@@ -49,7 +49,7 @@ Key results:
 
 ```text
 affected Scheduler + Router suite                  274/274 PASS
-focused seventh-review blocker matrix                20/20 PASS
+focused eighth-review blocker matrix                115/115 PASS
 wide Scheduler/Product/Broker/deployment run         698/699 PASS (one known environment failure)
 git diff --check                                PASS
 vendored governance / accepted adoption         PASS
@@ -141,7 +141,7 @@ returned `REVISE`. The sixth candidate closes every executed counterexample:
 | runtime still active during early mutations | admission now freezes loaded state and positively quiesces W1, W2, and runtime before any store, code, config, routing, or incident-state mutation |
 | desired-state `INSTALLING` replay could substitute predecessor bytes | the candidate is frozen once in the protected control tree with file/directory fsync; replay reads that exact candidate and verifies the exact original preimage before install |
 | rollback changed predecessor metadata | runtime, watchdog, routing, and desired receipts bind uid/gid/mode plus absence of ACL/unsupported xattrs; restore reapplies and reads back exact bytes and metadata with file/directory fsync |
-| pure postdeploy helper trusted booleans and minted current-six authority | the pure gate is deleted; an executable root-controlled finalizer reads the pending deployment receipt, authenticated canonical health, exact API/store SHA binding, and one real retained side-effect-free canary created by a closed control op; it proves canary-only store delta, unchanged fences/quarantines, and passive incident replay before publishing an atomic receipt |
+| pure postdeploy helper trusted booleans and minted current-six authority | the pure gate is deleted; an executable root-controlled finalizer reads the pending deployment receipt, authenticated canonical health, exact API/store SHA binding, and one retained side-effect-free canary created by a closed control op; it proves bounded store delta, unchanged fences/quarantines, and passive incident replay before publishing an atomic receipt |
 | current-six authority was not identity-bound | the sixth candidate attempted a six-root binding; the sixth review correctly rejected cardinality as insufficient and the seventh candidate removes that authority mint entirely |
 
 The sixth exact-head review of `85af2d04b71451e546206baee48dae8d0a50a83a`
@@ -156,7 +156,18 @@ returned `REVISE`. The seventh candidate closes every executed counterexample:
 | route generation and unrelated-Job isolation gaps | before/after canonical routing hashes must equal the protected routing install receipt; every pre-existing Job retains its admission surface without health regression, while regression coverage proves an unrelated healthy Job can complete normally during the canary |
 | runtime/watchdog plist durability gaps | the shared plist installer fsyncs rollback bytes and directory before any install receipt, fsyncs candidate before rename and target directory after rename, validates existing preimages/generations on replay, and has crash-frontier coverage |
 
-This exact packet is intentionally submitted to both independent reviewers for a seventh exact-head
+The seventh exact-head review of `858bd55be7190684cd324f4e0c31658dcd5c6bef`
+returned `REVISE`. The eighth candidate closes every executed counterexample:
+
+| Seventh-review blocker | Eighth-candidate exact closure |
+|---|---|
+| reserved canary rejected before reserve | synchronous eligibility now admits only the exact reserved canary identity; a full Scheduler tick proves one succeeded occurrence while Router, Agent definition and delivery remain zero-call |
+| empty/corrupt incident state looked deduplicated | durable load and postdeploy verification now require exact episode, transition, alert, deterministic notification key, outbox and delivery coherence; before/after notification-attempt surfaces must be identical |
+| no deployed unrelated execution required | acceptance now requires at least one new successful occurrence for a pre-existing unrelated Job in the same proof window, in addition to unchanged fences and non-regressed health/credential/blocker/route surfaces |
+| token walk stopped early and allowed platform xattrs | token and routing receipt use physical `/private/...` paths; the reader is fixed to `/`, rejects every symlink/writable/ACL ancestor and rejects every xattr including platform attributes |
+| final preimage could be partial after crash | runtime and both watchdog plists copy to a validated fixed temp, restore metadata, fsync, atomically rename and fsync the directory; abandoned temp and unreceipted partial legacy preimages rebuild, while a post-rename crash resumes by validating and syncing the complete final |
+
+This exact packet is intentionally submitted to both independent reviewers for an eighth exact-head
 review; the closure table is implementation evidence, not a self-issued PASS.
 
 ## 4. Controlled production migration plan
@@ -225,5 +236,5 @@ UNRELATED_JOB_ISOLATION           = PASS (candidate integration test)
 OLD_EXECUTABLE_PATH_CENSUS        = PASS
 PRODUCTION_DEPLOYED               = NO
 CURRENT_SIX_MUTATED               = NO
-INDEPENDENT_IMPLEMENTATION_REVIEW = SEVENTH_EXACT_HEAD_PENDING
+INDEPENDENT_IMPLEMENTATION_REVIEW = EIGHTH_EXACT_HEAD_PENDING
 ```
