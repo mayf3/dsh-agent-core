@@ -502,3 +502,24 @@ test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale authsvc credential ref
   assert.equal(patch.includes('/Users/authsvc/.agent-core/shared-credentials'), false, 'dead authsvc reference must be gone')
   assert.equal(patch.match(/BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1/gu)?.length, 1, 'exactly one patch block')
 })
+
+test('DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to the canonical Luna route and keeps OpenCode Go registrable', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-minimal-settings-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  const workspace = join(dir, 'ws')
+  // No settings source anywhere: copy-once fails and MINIMAL_SETTINGS lands.
+  const previousSource = process.env.DSH_SETTINGS_SOURCE
+  process.env.DSH_SETTINGS_SOURCE = join(dir, 'no-such-settings.yaml')
+  t.after(() => {
+    if (previousSource === undefined) delete process.env.DSH_SETTINGS_SOURCE
+    else process.env.DSH_SETTINGS_SOURCE = previousSource
+  })
+
+  provisionAgentHome(home, workspace, { profile: 'agent-core-production' })
+  const settings = readFileSync(join(home, 'settings.yaml'), 'utf8')
+  assert.match(settings, /agent-default-model:\n {2}provider: openai-codex\n {2}model: gpt-5\.6-luna\n/u)
+  // OpenCode Go stays an explicit selectable route: registration, not selection.
+  assert.match(settings, /opencode-go:\n {6}apiKeyEnv: OPENCODE_GO_API_KEY/u)
+  assert.doesNotMatch(settings, /provider: opencode-go/u)
+})

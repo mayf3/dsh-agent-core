@@ -165,6 +165,11 @@ test('T3: real plugin boot under an untraversable parent TMPDIR — plugin tree,
       home,
       workspace,
       profile: PROFILE,
+      // Explicit OpenCode Go route (DEFAULT_MODEL_ROUTING_CONFIG_V1): this is
+      // a child-lifecycle test, so the route is pinned to the explicit oc-go
+      // registration path (no subscription mount to serve the Luna default).
+      provider: 'opencode-go',
+      model: 'deepseek-v4-flash',
       log: { log() {}, error() {} },
       // Hostile caller attempt: this must not survive agentEnv's final write.
       env: { TMPDIR: '/forbidden' },

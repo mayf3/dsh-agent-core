@@ -60,7 +60,8 @@ import { createAgentSessionMessagingAudit } from './agent-session-messaging-audi
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
-import { loadAgentModelOverrides } from './model-overrides.js'
+import { loadAgentModelOverrides, canonicalDefaultGlobalRoute } from './model-overrides.js'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import {
   mountNotificationIngressRuntime,
   wireNotificationIngressDeliveryEvidence,
@@ -122,8 +123,10 @@ export { runFleetSharedCodexAuthMigrationV1, selectAuthoritativeCodexGeneration 
  *   (test seam, forwarded to the Router; defaults to the real AgentProcess).
  * @param {Function} [options.provisionHome] - test seam for Router-owned home
  *   provisioning; production always uses provisionAgentHome.
- * @param {{provider:string,model:string}} [options.globalRoute] - test seam;
- *   production defaults to the existing DSH_AGENT_PROVIDER/MODEL route.
+ * @param {{provider:string,model:string,subscription?:object}} [options.globalRoute] - test seam;
+ *   production resolves composition config > DSH_AGENT_PROVIDER/MODEL env pair >
+ *   the canonical built-in default (openai-codex/gpt-5.6-luna subscription route;
+ *   DEFAULT_MODEL_ROUTING_CONFIG_V1).
  * @param {object} [options.log] - logger (default stderr lines).
  * @returns {Promise<object>} the runtime handle: `{ ctx, layout, definition,
  *   router, feishu, broker, productApi, notificationIngress, store,
@@ -225,10 +228,20 @@ export async function composeProductionRuntime(options = {}) {
   // snapshot) so target-only rollback needs neither a runtime restart nor a
   // file watcher. The Router receives the immutable snapshot resolver and
   // never reads the file or learns provider/model rules.
-  const globalRoute = Object.freeze(opts.globalRoute ?? {
-    provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
-    model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
-  })
+  // DEFAULT_MODEL_ROUTING_CONFIG_V1 §3: composition config > env pair > the
+  // canonical built-in default (GPT Luna as a complete subscription route).
+  const globalRouteSource = opts.globalRoute !== undefined
+    ? 'composition_config'
+    : (process.env.DSH_AGENT_PROVIDER !== undefined || process.env.DSH_AGENT_MODEL !== undefined
+      ? 'runtime_env'
+      : 'builtin_default')
+  const globalRoute = Object.freeze(opts.globalRoute ?? (globalRouteSource === 'runtime_env'
+    ? {
+      provider: process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider,
+      model: process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model,
+    }
+    : canonicalDefaultGlobalRoute()))
+  log.log(`global model route: ${globalRoute.provider}/${globalRoute.model} (source=${globalRouteSource})`)
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
   const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
