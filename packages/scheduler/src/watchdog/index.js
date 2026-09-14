@@ -13,8 +13,8 @@
  *     scheduler being monitored cannot hide its own watchdog's death.
  */
 
-import { latestTerminalOccurrence } from './eligibility.js'
-import { computeNextRunAtMs, MIN_REFIRE_GAP_MS } from './schedule.js'
+import { latestTerminalOccurrence } from '../eligibility.js'
+import { computeNextRunAtMs, MIN_REFIRE_GAP_MS } from '../schedule.js'
 
 /** Parse + validate the desired-state manifest (schema §5.4.2). Throws TypeError. */
 export function parseDesiredState(raw) {
@@ -92,7 +92,7 @@ export function evaluateDesiredState(doc, desired) {
       continue
     }
     const job = matches[0]
-    const base = { logicalKey: entry.logicalKey, jobId: job.id }
+    const base = { logicalKey: entry.logicalKey, jobId: job.id, jobRevision: job.scheduleRevision }
     if (entry.expectedEnabled && job.enabled !== true) {
       findings.push({ class: 'JOB_DISABLED', ...base })
     }
@@ -150,7 +150,7 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
   const occurrences = Array.isArray(doc?.occurrences) ? doc.occurrences : []
   const enabledJobIds = new Set(jobs.filter((job) => job.enabled === true).map((job) => job.id))
   for (const job of jobs) {
-    const base = { jobId: job.id, logicalKey: job.logicalKey, agentId: job.agentId }
+    const base = { jobId: job.id, logicalKey: job.logicalKey, agentId: job.agentId, jobRevision: job.scheduleRevision }
     if (job.enabled === true) {
       const nextRunAtMs = job.state?.nextRunAtMs
       // Explicit grace (manifest runPolicy, then store job) wins; the global
@@ -168,13 +168,17 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
       } else if (!Number.isFinite(nextRunAtMs)) {
         const derivedDueAtMs = deriveExpectedSlotMs(job, occurrences)
         if (derivedDueAtMs !== undefined && nowMs - derivedDueAtMs > graceMs) {
-          findings.push({
-            class: 'EXPECTED_RUN_MISSED',
-            ...base,
-            dueAt: new Date(derivedDueAtMs).toISOString(),
-            overdueMs: nowMs - derivedDueAtMs,
-            derivedUnderAdmissionBlock: true,
-          })
+          const blockers = occurrences.filter((record) => record.jobId === job.id && record.state === 'outcome_unknown' && record.terminationSettlement === undefined)
+          for (const blocker of blockers.length ? blockers : [null]) {
+            findings.push({
+              class: 'EXPECTED_RUN_MISSED',
+              ...base,
+              ...(blocker ? { occurrenceId: blocker.occurrenceId, runId: blocker.runId } : {}),
+              dueAt: new Date(derivedDueAtMs).toISOString(),
+              overdueMs: nowMs - derivedDueAtMs,
+              derivedUnderAdmissionBlock: true,
+            })
+          }
         }
       }
     }
@@ -194,6 +198,7 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
         class: 'RUN_FAILED',
         jobId: record.jobId,
         runId: record.runId,
+        occurrenceId: record.occurrenceId,
         endedAt: new Date(record.endedAt).toISOString(),
         // Passive enrichment only — the emission above has NO basis branch. A
         // formal operator disposition record (lateSettlement.basis=operator-reconcile,
@@ -209,7 +214,7 @@ export function evaluateRunHealth(doc, { nowMs, opts = {}, runtimeHealth = {}, d
     }
     if (Number.isFinite(record.startedAt) && !Number.isFinite(record.endedAt)
       && nowMs - record.startedAt > (record.timeoutMs ?? o.stuckThresholdMs)) {
-      findings.push({ class: 'RUN_STUCK', jobId: record.jobId, runId: record.runId, startedAt: new Date(record.startedAt).toISOString() })
+      findings.push({ class: 'RUN_STUCK', jobId: record.jobId, runId: record.runId, occurrenceId: record.occurrenceId, startedAt: new Date(record.startedAt).toISOString() })
     }
     // The admission fence itself: any outcome_unknown record holds the job's
     // whole admission path hostage regardless of its lateSettlement bookkeeping
@@ -316,131 +321,24 @@ export function formatFindings(findings, { role = 'W1', nowMs = Date.now() } = {
   return `Scheduler watchdog ${role} alert @ ${new Date(nowMs).toISOString()}\n${lines.join('\n')}`
 }
 
-/**
- * Owner-notification dedupe state machine (alert-storm hardening, 2026-09-09):
- * one unresolved finding fingerprint notifies ONCE, then suppresses exact
- * duplicates for bounded reminders only; recovery notifies once; a new
- * occurrence is a new fingerprint. Monitoring evidence is NEVER deduped —
- * every watchdog evaluation is still recorded by the caller.
- *
- * Fingerprint: findingType + jobId + occurrenceId (either id may be absent —
- * the fingerprint is the stable join of whatever ids the finding carries).
- */
-export function findingFingerprint(finding) {
-  return ['RUN_STUCK', 'RUN_FAILED', 'EXPECTED_RUN_MISSED', 'CONSECUTIVE_FAILURE', 'ADMISSION_BLOCKED_UNKNOWN']
-    .includes(finding.class)
-    ? `${finding.class}|${finding.jobId ?? '-'}|${finding.occurrenceId ?? finding.runId ?? '-'}`
-    : `${finding.class}|${finding.logicalKey ?? finding.jobId ?? '-'}`
-}
-
-/**
- * Transition the alert state for one batch of findings.
- * @param {Record<string, {firstSeenAt:number,lastSeenAt:number,lastNotifiedAt?:number,
- *   notifiedCount:number,severity:string,detail:string}>} state persisted by the caller
- * @param {Array<object>} findings current findings (same shapes the detectors emit)
- * @param {object} opts { nowMs, reminderIntervalMs = 60*60*1000 }
- * @returns {{notifications: Array<{fingerprint,kind:'new'|'reminder'|'severity'|'recovered'|'acknowledged',finding}>,
- *   state: (same shape as `state`), recovered: string[]}}
- */
-export function updateAlertState(state, findings, { nowMs = Date.now(), reminderIntervalMs = 60 * 60 * 1000, recoveryCooldownMs = 6 * 60 * 60 * 1000 } = {}) {
-  // legacy flat states (pre-anti-flap) are treated as the active namespace
-  const legacy = state && !state.active && (state.RUN_STUCK !== undefined || state.SCHEDULER_RUNTIME_UNHEALTHY !== undefined || Object.keys(state).some((k) => !k.startsWith('__')))
-  const active = legacy ? { ...state } : { ...(state?.active ?? {}) }
-  const retired = { ...(state?.retired ?? {}) }
-  // ALERT LIFECYCLE (accepted SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1 §4):
-  // a formal operator disposition (basis=operator-reconcile, produced by the
-  // existing occurrence disposition/reconcile tooling — no new mutation surface)
-  // closes the INCIDENT for one exact fingerprint with exactly ONE acknowledged
-  // notification; the fingerprint is then held in `acknowledged` so the durable
-  // failure FACT (still detected unconditionally every cycle, still receipted in
-  // the evidence log) can never re-open it — no reminders, no re-NEW, and NO
-  // second closure when the finding finally ages out of the failed-window. A
-  // genuinely NEW occurrence is a new fingerprint and alerts normally.
-  // The DETECTOR never sees any of this: zero basis branches there.
-  const acknowledged = { ...(state?.acknowledged ?? {}) }
-  const next = { active, retired, acknowledged }
-  const notifications = []
-  const seen = new Set()
-  for (const finding of findings ?? []) {
-    const fp = findingFingerprint(finding)
-    seen.add(fp)
-    const acked = next.acknowledged[fp]
-    if (acked !== undefined) {
-      // Incident already closed by a formal disposition: the fact keeps being
-      // detected (that is the durable FACT layer), but stays Owner-silent.
-      next.acknowledged[fp] = { ...acked, lastSeenAt: nowMs }
-      continue
-    }
-    const prior = next.active[fp]
-    const retiredAt = retired[fp]
-    if (prior === undefined && retiredAt !== undefined && nowMs - retiredAt < recoveryCooldownMs) {
-      // anti-flap: this fingerprint recovered moments ago and is back — the
-      // condition is FLAPPING, not recovered+new. Resume silently (no Owner
-      // notification); the evidence log still carries every evaluation.
-      delete retired[fp]
-      next.active[fp] = { firstSeenAt: nowMs, lastSeenAt: nowMs, notifiedCount: 0, severity: finding.class, detail: finding.reason ?? finding.detail ?? '' }
-      continue
-    }
-    if (prior === undefined) {
-      delete retired[fp]
-      next.active[fp] = { firstSeenAt: nowMs, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: 1, severity: finding.class, detail: finding.reason ?? finding.detail ?? '' }
-      notifications.push({ fingerprint: fp, kind: 'new', finding })
-      continue
-    }
-    // Formal operator disposition on a LIVE incident: close it. Exactly one
-    // acknowledged notification when the incident had actually notified the
-    // Owner; a silently-resumed entry (notifiedCount=0, anti-flap) closes
-    // without one. Either way the fingerprint leaves `active` for good.
-    if (finding.disposition?.basis === 'operator-reconcile') {
-      delete next.active[fp]
-      next.acknowledged[fp] = {
-        acknowledgedAt: nowMs,
-        basis: finding.disposition.basis,
-        resolvedTo: finding.disposition.resolvedTo ?? null,
-        firstSeenAt: prior.firstSeenAt,
-        notifiedCount: prior.notifiedCount,
-        severity: prior.severity,
-        lastSeenAt: nowMs,
-      }
-      if (prior.notifiedCount > 0) {
-        notifications.push({ fingerprint: fp, kind: 'acknowledged', finding })
-      }
-      continue
-    }
-    const materialChange = prior.severity !== finding.class
-    const dueReminder = nowMs - (prior.lastNotifiedAt ?? prior.firstSeenAt) >= reminderIntervalMs
-    if (materialChange) {
-      next.active[fp] = { ...prior, lastSeenAt: nowMs, notifiedCount: prior.notifiedCount + 1, severity: finding.class }
-      notifications.push({ fingerprint: fp, kind: 'severity', finding })
-    } else if (dueReminder) {
-      next.active[fp] = { ...prior, lastSeenAt: nowMs, lastNotifiedAt: nowMs, notifiedCount: prior.notifiedCount + 1 }
-      notifications.push({ fingerprint: fp, kind: 'reminder', finding })
-    } else {
-      next.active[fp] = { ...prior, lastSeenAt: nowMs }
-    }
-  }
-  // Recovery: fingerprints previously ACTIVE whose finding is now absent.
-  // Only entries with notifiedCount > 0 fire a recovery notification — a
-  // silently-resumed entry (notifiedCount=0) disappears without one. After
-  // recovery the fp is held in `retired` for the cooldown so a re-appearing
-  // intermittent finding resumes SILENTLY, and only a genuinely fresh episode
-  // after the cooldown notifies as new again. ACKNOWLEDGED fingerprints are
-  // deliberately NOT in `active`: their closure was already delivered exactly
-  // once, so their eventual disappearance is silent garbage-collection.
-  const recovered = Object.keys(active).filter((fp) => !seen.has(fp))
-  for (const fp of recovered) {
-    const entry = active[fp]
-    if (entry.notifiedCount > 0) {
-      notifications.push({ fingerprint: fp, kind: 'recovered', finding: { class: entry.severity } })
-    }
-    retired[fp] = nowMs
-    delete active[fp]
-  }
-  for (const fp of Object.keys(next.acknowledged)) {
-    if (!seen.has(fp)) delete next.acknowledged[fp]
-  }
-  for (const [fp, at] of Object.entries(retired)) {
-    if (nowMs - at >= recoveryCooldownMs) delete retired[fp]
-  }
-  return { notifications, state: { active, retired, acknowledged }, recovered }
-}
+export { compileIncidents, incidentRootIdentity, ROOT_CAUSE_CLASSES } from './incident-compiler.js'
+export {
+  findingFingerprint, markNotificationDelivery, migrateLegacyAlertState, notificationKey,
+  updateAlertState, updateIncidentState,
+} from './incident-lifecycle.js'
+export {
+  ROUTE_CLASSES, resolveNotificationRoute, routeReadback,
+  readProtectedRoutingManifest, validateProtectedPathMetadata, validateRoutingManifest,
+} from './routing.js'
+export {
+  acquireConsistentHealthSnapshot, filterHealthForPrincipal, projectSchedulerHealth,
+} from './health.js'
+export {
+  RECONCILIATION_RESULTS, classifyReconciliationEvidence,
+  dispatchReconciliation, unresolvedFenceContributions,
+} from './reconciliation.js'
+export { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLegacyIncidentStateFiles } from './durable-state.js'
+export {
+  buildIdempotentFeishuRequest, FEISHU_IDEMPOTENCY_WINDOW_MS,
+  FEISHU_SAFE_RETRY_WINDOW_MS, retryableOutboxIntents, stableNotificationText,
+} from './delivery.js'

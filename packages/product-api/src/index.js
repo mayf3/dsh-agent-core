@@ -51,6 +51,7 @@
 import { createServer } from 'node:http'
 import z from '@deepseek-ai/schemastery'
 import { handleSchedulerRequest } from './scheduler-routes.js'
+import { handleSchedulerHealthRequest } from './scheduler-health-routes.js'
 import { createVoiceTranscriptionHandler } from './voice-transcription.js'
 
 /** Stable plugin name referenced by bundle patches. */
@@ -300,7 +301,10 @@ export function apply(ctx, config = {}) {
         // (R-H9), then the frozen GET-only contract (R7). The gate error
         // keeps the exact { error: { code, message } } envelope.
         try {
-          const { status, body } = await handleSchedulerRequest({
+          const handler = url.pathname === '/scheduler/health'
+            ? handleSchedulerHealthRequest
+            : handleSchedulerRequest
+          const { status, body } = await handler({
             // These optional services are provided later in the production
             // compose sequence than product-api is mounted. Resolve them at
             // request time so the gate sees the configured verifier instead
@@ -308,6 +312,7 @@ export function apply(ctx, config = {}) {
             req,
             url,
             history: ctx.get('schedulerHistory') ?? null,
+            health: ctx.get('schedulerHealth') ?? null,
             verifier: ctx.get('schedulerTokenVerifier') ?? null,
           })
           json(res, status, body)
