@@ -1,43 +1,10 @@
 #!/bin/bash
-# =============================================================================
 # trusted-cp-deploy-install.sh — TRUSTED_CONTROL_PLANE_DEPLOYMENT_HARDENING_V1
-#
-# One-time (re-runnable) root install of the TRUSTED control-plane closure.
-#
-# Goal: every piece of code/config the trusted Control Plane (uid 505,
-# authsvc) executes BEFORE dropping to the Agent uid (502) must live under a
-# protected root that uid 502 cannot modify, replace, or redirect.
-#
-#   TRUSTED_INSTALL_PATH=/usr/local/libexec/agent-core
-#     harness/   self-contained DSH CLI closure (source copy + `pnpm install`
-#                with package-import-method=copy so NO hardlink points into a
-#                502-owned store)           owner authsvc:authsvc  0755/0644
-#     app/       Agent Core closure (packages/bundles/profiles/scripts) with
-#                node_modules/@deepseek-ai -> ../../harness/node_modules/@deepseek-ai
-#                                           owner authsvc:authsvc  0755/0644
-#     home/      the 505 control-plane DSH_HOME (profile + farm -> app/)
-#                                           owner authsvc:authsvc
-#     config/    production state: Agent Definition (agents.json)/bindings/jobs/
-#                credential store   owner authsvc:authsvc  0700/0600
-#     .cache/    pnpm cache (root-owned)
-#
-# Also seeds /Users/authsvc/.dsh/{settings.yaml,.credentials.yaml} (authsvc
-# 0600) — the trusted model-route settings source the children copy from.
-#
-# The dev repo / harness stay uid 502-writable for development; this install
-# only ships the minimal execution closure (NOT the monorepos). The Agent
-# child (502) may keep reading the trusted closure (world-readable) but can
-# never modify it; its own workspace/runtime stays 502-writable as before.
-#
+# Re-runnable root install of the trusted closure. Development sources remain
+# uid-502-writable; all pre-drop execution bytes are materialized under the
+# protected trusted root with the ownership checks below.
 # Usage (run as root):
 #   sudo ./scripts/trusted-cp-deploy-install.sh [REPO_SRC] [HARNESS_SRC]
-#   REPO_SRC    default: the repo this script lives in (feature worktree)
-#   HARNESS_SRC default: /Users/yanfenma/workspace/github/deepseek-harness
-#
-# Verifies at the end: every symlink in the trusted tree resolves INSIDE the
-# trusted root (or /usr/local/libexec), and a uid-502 spot check cannot write
-# to app/, harness/, home/, config/ or the helper.
-# =============================================================================
 set -euo pipefail
 
 if [ "$(id -u)" != "0" ]; then
@@ -46,16 +13,13 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-# AGENT_CORE_BACKUP_RETENTION_V1: deployment backup metadata + pin + post-verified
-# retention ops live in the tiny filesystem helper (same dir as this script). It is
-# pure shell/filesystem — no package/DB/service/daemon; it neither deletes legacy
-# backups nor modifies Runtime/Router/Scheduler/Kernel/product semantics.
+# AGENT_CORE_BACKUP_RETENTION_V1 filesystem helper; no runtime semantics.
 BACKUP_OPS="$SCRIPT_DIR/agent-core-backup-ops.sh"
 SOURCE_GIT_STAMP="$SCRIPT_DIR/lib/trusted-source-git-stamp.sh"
+PNPM_RESOLVER="$SCRIPT_DIR/lib/trusted-pnpm-resolver.sh"
 REPO_SRC="${1:-$(dirname "$SCRIPT_DIR")}"
 HARNESS_SRC="${2:-/Users/yanfenma/workspace/github/deepseek-harness}"
-# The main repo holds the dev node_modules (third-party deps); a worktree
-# does not check node_modules out.
+# The main repo holds dev node_modules; linked worktrees do not.
 MAIN_REPO="${3:-$(dirname "$REPO_SRC")/dsh-agent-core}"
 TRUSTED_ROOT=/usr/local/libexec/agent-core
 HELPER=/usr/local/libexec/dsh-agent-spawn-helper
@@ -63,6 +27,15 @@ AUTHSVC_UID=505
 AUTHSVC_GID=601
 CHILD_UID=502
 CHILD_GID=20
+
+pnpm_preflight_fail() {
+  echo "PNPM_PREFLIGHT_FAILED: $*" >&2
+  echo "PRODUCTION_BACKUP_CREATED=NO" >&2
+  echo "ACTIVE_ROOT_MUTATED=NO" >&2
+  echo "LAUNCHD_MUTATED=NO" >&2
+  echo "PRODUCTION_MUTATION_PERFORMED=NO" >&2
+  exit 2
+}
 
 echo "== trusted control-plane install =="
 echo "  trusted root : $TRUSTED_ROOT"
@@ -76,29 +49,118 @@ id authsvc >/dev/null 2>&1 || { echo "ERROR: user authsvc (uid 505) missing" >&2
 
 [ -x "$SOURCE_GIT_STAMP" ] || { echo "ERROR: source Git stamp helper missing/not executable: $SOURCE_GIT_STAMP" >&2; exit 2; }
 HARNESS_STAMP="$($SOURCE_GIT_STAMP "$HARNESS_SRC")" || { rc=$?; echo "ERROR: Harness Git source probe failed before backup (exit $rc): $HARNESS_SRC" >&2; exit "$rc"; }
-PRESERVED_SOURCE_GIT_STAMP="$(/usr/bin/mktemp /tmp/agent-core-source-git-stamp.XXXXXX)" && /usr/bin/install -o root -g wheel -m 700 "$SOURCE_GIT_STAMP" "$PRESERVED_SOURCE_GIT_STAMP"
+[ -x "$PNPM_RESOLVER" ] || pnpm_preflight_fail "trusted pnpm resolver missing/not executable: $PNPM_RESOLVER"
+PRESERVED_SOURCE_GIT_STAMP="$(/usr/bin/mktemp /tmp/agent-core-source-git-stamp.XXXXXX)" \
+  || pnpm_preflight_fail "cannot allocate preserved Git-stamp helper"
+/usr/bin/install -o root -g wheel -m 700 "$SOURCE_GIT_STAMP" "$PRESERVED_SOURCE_GIT_STAMP" \
+  || pnpm_preflight_fail "cannot preserve Git-stamp helper"
 trap '/bin/rm -f "$PRESERVED_SOURCE_GIT_STAMP"' EXIT
+PRESERVED_PNPM_RESOLVER="$(/usr/bin/mktemp /tmp/agent-core-pnpm-resolver.XXXXXX)" \
+  || pnpm_preflight_fail "cannot allocate preserved pnpm resolver"
+/usr/bin/install -o root -g wheel -m 700 "$PNPM_RESOLVER" "$PRESERVED_PNPM_RESOLVER" \
+  || pnpm_preflight_fail "cannot preserve pnpm resolver"
+
+# CANONICAL_DEPLOY_OFFLINE_PNPM_RESOLUTION_V1: every package-manager and Node
+# admission check, plus the full offline frozen install, completes in a
+# nonproduction stage before the first backup or trusted-root write.
+if [ -n "${AGENT_CORE_CANONICAL_NODE_BIN:-}" ]; then
+  SELECTED_NODE_BIN="$AGENT_CORE_CANONICAL_NODE_BIN"
+  [ -n "${AGENT_CORE_EXPECTED_NODE_VERSION:-}" ] \
+    || pnpm_preflight_fail "AGENT_CORE_EXPECTED_NODE_VERSION is required with explicit Node"
+  [ -n "${AGENT_CORE_EXPECTED_NODE_ARCH:-}" ] \
+    || pnpm_preflight_fail "AGENT_CORE_EXPECTED_NODE_ARCH is required with explicit Node"
+  EXPECTED_NODE_VERSION="$AGENT_CORE_EXPECTED_NODE_VERSION"
+  EXPECTED_NODE_ARCH="$AGENT_CORE_EXPECTED_NODE_ARCH"
+else
+  SELECTED_NODE_BIN="$TRUSTED_ROOT/node-runtime/bin/node"
+  [ -x "$SELECTED_NODE_BIN" ] \
+    || pnpm_preflight_fail "current trusted Node unavailable; explicit canonical Node inputs required"
+  EXPECTED_NODE_VERSION="$($SELECTED_NODE_BIN --version)" \
+    || pnpm_preflight_fail "cannot read current trusted Node version"
+  EXPECTED_NODE_ARCH="$($SELECTED_NODE_BIN -p process.arch)" \
+    || pnpm_preflight_fail "cannot read current trusted Node architecture"
+fi
+
+PNPM_PREFLIGHT_ROOT="$(/usr/bin/mktemp -d /tmp/agent-core-pnpm-preflight.XXXXXX)"
+cleanup_ephemeral_preflight() {
+  /bin/rm -f "$PRESERVED_SOURCE_GIT_STAMP" "$PRESERVED_PNPM_RESOLVER"
+  if [ -n "${PNPM_PREFLIGHT_ROOT:-}" ]; then
+    case "$PNPM_PREFLIGHT_ROOT" in
+      /tmp/agent-core-pnpm-preflight.*) /bin/rm -rf "$PNPM_PREFLIGHT_ROOT" ;;
+      *) echo "WARNING: refusing to clean unexpected pnpm preflight path: $PNPM_PREFLIGHT_ROOT" >&2 ;;
+    esac
+  fi
+}
+trap cleanup_ephemeral_preflight EXIT
+/bin/chmod 711 "$PNPM_PREFLIGHT_ROOT"
+PNPM_STAGE_ROOT="$PNPM_PREFLIGHT_ROOT/stage"
+PNPM_RESOLUTION_RECORD="$PNPM_PREFLIGHT_ROOT/resolution.env"
+PNPM_ARGS=(
+  --harness "$HARNESS_SRC"
+  --node-bin "$SELECTED_NODE_BIN"
+  --expected-node-version "$EXPECTED_NODE_VERSION"
+  --expected-node-arch "$EXPECTED_NODE_ARCH"
+  --stage-root "$PNPM_STAGE_ROOT"
+  --record "$PNPM_RESOLUTION_RECORD"
+  --homebrew-candidate /opt/homebrew/bin/pnpm
+  --local-candidate /usr/local/bin/pnpm
+)
+if [ -n "${AGENT_CORE_CANONICAL_PNPM_BIN:-}" ]; then
+  PNPM_ARGS+=(--configured-pnpm "$AGENT_CORE_CANONICAL_PNPM_BIN")
+fi
+"$PNPM_RESOLVER" "${PNPM_ARGS[@]}" \
+  || { rc=$?; echo "ERROR: pnpm preflight failed before backup (exit $rc)" >&2; exit "$rc"; }
+
+read_resolution() {
+  key=$1
+  count="$(/usr/bin/grep -c "^${key}=" "$PNPM_RESOLUTION_RECORD" || true)"
+  [ "$count" = 1 ] || pnpm_preflight_fail "invalid frozen pnpm record key: $key"
+  /usr/bin/sed -n "s/^${key}=//p" "$PNPM_RESOLUTION_RECORD"
+}
+RESOLVED_PNPM_BIN="$(read_resolution PNPM_BIN)"
+RESOLVED_PNPM_REALPATH="$(read_resolution PNPM_REALPATH)"
+RESOLVED_PNPM_VERSION="$(read_resolution PNPM_VERSION)"
+RESOLUTION_SOURCE="$(read_resolution RESOLUTION_SOURCE)"
+RESOLVED_NODE_BIN="$(read_resolution NODE_BIN)"
+RESOLVED_NODE_REALPATH="$(read_resolution NODE_REALPATH)"
+RESOLVED_NODE_VERSION="$(read_resolution NODE_VERSION)"
+RESOLVED_NODE_ARCH="$(read_resolution NODE_ARCH)"
+RESOLVED_NODE_FINGERPRINT="$(read_resolution NODE_FINGERPRINT)"
+RESOLVED_PNPM_FINGERPRINT="$(read_resolution PNPM_FINGERPRINT)"
+STAGED_HARNESS="$(read_resolution STAGED_HARNESS)"
+STAGE_OWNER_UID="$(read_resolution STAGE_OWNER_UID)"
+[ "$STAGED_HARNESS" = "$PNPM_STAGE_ROOT/harness" ] && [ ! -L "$PNPM_STAGE_ROOT" ] \
+  && [ ! -L "$STAGED_HARNESS" ] && [ -d "$STAGED_HARNESS/node_modules" ] \
+  || pnpm_preflight_fail "frozen pnpm stage identity mismatch"
+[ "$STAGE_OWNER_UID" = 0 ] && [ "$(/usr/bin/stat -f '%u' "$PNPM_STAGE_ROOT")" = 0 ] \
+  || pnpm_preflight_fail "preflighted Harness stage is not root-sealed"
+[ "$RESOLVED_PNPM_VERSION" = 11.7.0 ] \
+  || pnpm_preflight_fail "frozen pnpm version is not 11.7.0"
+[ "$(/usr/bin/stat -f '%d:%i:%z:%m' "$RESOLVED_NODE_REALPATH")" = "$RESOLVED_NODE_FINGERPRINT" ] \
+  || pnpm_preflight_fail "selected Node identity changed before backup"
+[ "$(/usr/bin/stat -f '%d:%i:%z:%m' "$RESOLVED_PNPM_REALPATH")" = "$RESOLVED_PNPM_FINGERPRINT" ] \
+  || pnpm_preflight_fail "selected pnpm identity changed before backup"
+[ "$($RESOLVED_NODE_REALPATH --version)" = "$RESOLVED_NODE_VERSION" ] \
+  || pnpm_preflight_fail "selected Node version changed before backup"
+[ "$($RESOLVED_NODE_REALPATH -p process.arch)" = "$RESOLVED_NODE_ARCH" ] \
+  || pnpm_preflight_fail "selected Node architecture changed before backup"
+
+echo "== offline pnpm preflight complete (before production mutation) =="
+echo "  PNPM_BIN          = $RESOLVED_PNPM_BIN"
+echo "  PNPM_REALPATH     = $RESOLVED_PNPM_REALPATH"
+echo "  PNPM_VERSION      = $RESOLVED_PNPM_VERSION"
+echo "  NODE_BIN          = $RESOLVED_NODE_BIN"
+echo "  NODE_REALPATH     = $RESOLVED_NODE_REALPATH"
+echo "  NODE_VERSION      = $RESOLVED_NODE_VERSION"
+echo "  NODE_ARCH         = $RESOLVED_NODE_ARCH"
+echo "  RESOLUTION_SOURCE = $RESOLUTION_SOURCE"
 
 # ---- 1. backup previous install (code refreshed, config preserved in .bak) --
 if [ -e "$TRUSTED_ROOT" ]; then
   BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
   echo "== backing up previous install -> $BAK"
   mv "$TRUSTED_ROOT" "$BAK"
-  # AGENT_CORE_BACKUP_RETENTION_V1: write metadata for the backed-up PREVIOUS
-  # installed closure (created_at / source_commit / pinned / status). Metadata
-  # must never attribute the successor (new) deployment's commit to this backup,
-  # so source_commit stays "unknown" (the previous closure does not record its
-  # app commit). Pin = metadata/marker only — NO data copy. This is the predeploy
-  # capture; nothing is pruned here (prune only happens post-verified-success via
-  # the operator helper, and never touches legacy backups).
-  #   FIRST_RELIABLE_PIN is set ONLY when the trusted operator EXPLICITLY asserts
-  #   the predecessor is the verified LKG via the env seam
-  #   AGENT_CORE_VERIFIED_PREDECESSOR_LKG=YES (propagates to the helper subprocess).
-  #   Without it, the backup is created normally and is NOT auto-pinned — this
-  #   helper never infers known-good from no-pin/mtime/newest/current-install
-  #   (LKG_AUTHORITY = TRUSTED_OPERATOR_ASSERTION, MACHINE_LKG_DETECTION = NO).
-  #   NOTE: this is a non-fatal best-effort — a metadata failure must not block
-  #   the install.
+  # Metadata describes the predecessor and never infers or copies an LKG.
   if [ -x "$BACKUP_OPS" ]; then
     "$BACKUP_OPS" "$(dirname "$TRUSTED_ROOT")" --write-predecessor "$BAK" \
       || echo "  WARNING: backup metadata/first-pin failed for $BAK (install continues; investigate)" >&2
@@ -111,12 +173,7 @@ mkdir -p "$TRUSTED_ROOT"/{harness,app,home,config,.cache}
 cd "$TRUSTED_ROOT"
 
 # ---- 1b. reuse the heavyweight closures when their sources are UNCHANGED ----
-# The harness closure (1.5G source + offline pnpm install) and the Node
-# runtime are DEPENDENCIES of the code under test, not the code under test
-# itself. When the harness checkout is at the same commit (and clean) and the
-# Cellar node version is identical, mv them back from the backup — an instant
-# rename instead of minutes of tar+pnpm. The app closure is ALWAYS recopied
-# fresh (that is where the integration changes live).
+# Reuse only byte-compatible heavyweight dependency closures; app is fresh.
 REUSE_HARNESS=0
 REUSE_NODE=0
 if [ -n "${BAK:-}" ]; then
@@ -132,49 +189,32 @@ if [ -n "${BAK:-}" ]; then
     echo "  harness closure REUSED from $BAK (source commit unchanged — tar+pnpm skipped)"
   fi
   if [ -x "$BAK/node-runtime/bin/node" ] \
-     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$(node --version)" ]; then
+     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$RESOLVED_NODE_VERSION" ] \
+     && [ "$("$BAK/node-runtime/bin/node" -p process.arch 2>/dev/null)" = "$RESOLVED_NODE_ARCH" ]; then
     mv "$BAK/node-runtime" "$TRUSTED_ROOT/node-runtime"
     REUSE_NODE=1
-    echo "  node-runtime REUSED from $BAK (same node version $(node --version))"
+    echo "  node-runtime REUSED from $BAK (same Node $RESOLVED_NODE_VERSION/$RESOLVED_NODE_ARCH)"
   fi
 fi
 
 # ---- 2. harness closure ----------------------------------------------------
 if [ "$REUSE_HARNESS" != "1" ]; then
-echo "== copying harness source (no node_modules/.git) -> harness/"
-tar -C "$HARNESS_SRC" -cf - \
-  --exclude='node_modules' --exclude='.git' --exclude='.worktree*' \
-  --exclude='.turbo' --exclude='dist' --exclude='lib/*.tsbuildinfo' \
-  . | tar -C harness -xf -
-
-echo "== pnpm install (offline, frozen, copy-import) -> harness/node_modules"
-cd harness
-# copy-import => every file is a REAL copy owned by the install user; no
-# hardlink can point back into the 502-owned pnpm store.
-/usr/local/bin/pnpm install --offline --frozen-lockfile --ignore-scripts \
-  --config.package-import-method=copy --cache-dir "$TRUSTED_ROOT/.cache" \
-  >/tmp/trusted-cp-pnpm-install.log 2>&1 || {
-    echo "ERROR: pnpm install failed; log tail:" >&2
-    tail -20 /tmp/trusted-cp-pnpm-install.log >&2
-    exit 2
-  }
-cd "$TRUSTED_ROOT"
+echo "== adopting preflighted offline Harness stage -> harness/"
+rmdir "$TRUSTED_ROOT/harness"
+mv "$STAGED_HARNESS" "$TRUSTED_ROOT/harness"
+rmdir "$TRUSTED_ROOT/.cache"
+mv "$PNPM_STAGE_ROOT/cache" "$TRUSTED_ROOT/.cache"
 printf '%s' "$HARNESS_STAMP" > harness/.source-stamp
 fi
+/bin/rm -rf "$PNPM_PREFLIGHT_ROOT"
 
 # ---- 2b. trusted Node runtime (review blocker fix) --------------------------
-# The production Control Plane must NEVER execute /usr/local/bin/node
-# (Homebrew, uid-502-writable). Materialize the ACTUAL Node runtime into the
-# trusted closure: real files only (cp -RL), no symlink/hardlink back to
-# /usr/local/bin, the Cellar, or /Users/yanfenma.
+# Materialize the selected Node as real trusted-root files.
 echo "== copying Node runtime -> node-runtime/"
 if [ "$REUSE_NODE" != "1" ]; then
-NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
-case "$NODE_LINK_TARGET" in
-  /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
-  *)  NODE_CELLAR_BIN="$(dirname /usr/local/bin/node)/$NODE_LINK_TARGET" ;;
-esac
-NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NODE_CELLAR_BIN")"
+NODE_CELLAR_BIN="$RESOLVED_NODE_REALPATH"
+[ -x "$NODE_CELLAR_BIN" ] \
+  || { echo "ERROR: frozen selected Node unavailable after backup: $NODE_CELLAR_BIN" >&2; exit 2; }
 NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
 mkdir -p node-runtime
 cp -RL "$NODE_VERSION_DIR"/. node-runtime/
@@ -189,8 +229,7 @@ if ! "$TRUSTED_NODE" --version >/dev/null 2>&1; then
   exit 2
 fi
 if [ "$REUSE_NODE" != "1" ]; then
-  # hardlink guard only applies to a FRESH copy (a reused closure was fully
-  # materialized + verified by the install that produced it)
+  # Reused closures were materialized and verified by their originating install.
   CELLAR_INODE="$(stat -f %i "$NODE_CELLAR_BIN")"
   TRUSTED_INODE="$(stat -f %i "$TRUSTED_NODE")"
   if [ "$CELLAR_INODE" = "$TRUSTED_INODE" ]; then
@@ -222,7 +261,9 @@ for f in agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs \
          production-agent-provision.mjs; do
   [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" app/scripts/
 done
-mkdir -p app/scripts/lib && cp "$PRESERVED_SOURCE_GIT_STAMP" app/scripts/lib/trusted-source-git-stamp.sh
+mkdir -p app/scripts/lib
+cp "$PRESERVED_SOURCE_GIT_STAMP" app/scripts/lib/trusted-source-git-stamp.sh
+cp "$PRESERVED_PNPM_RESOLVER" app/scripts/lib/trusted-pnpm-resolver.sh
 # packages: src + package.json only (no tests)
 for pkg in "$REPO_SRC"/packages/*/; do
   name="$(basename "$pkg")"
@@ -240,9 +281,7 @@ for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
   [ -f "$d/cordis.patch.yml" ] && cp "$d/cordis.patch.yml" "app/$name/cordis.patch.yml"
 done
 
-# Agent existence authority closure (AGENT_DEFINITION_CONFIG_V1): the formal
-# Agent Definition package MUST be in the trusted app closure, and the
-# removed agent-registry package MUST NOT be (no second Agent authority).
+# Formal Agent Definition package is the only existence authority.
 if [ ! -f "app/packages/agent-definition/package.json" ] \
    || [ ! -d "app/packages/agent-definition/src" ]; then
   echo "ERROR: app closure missing packages/agent-definition (Agent Definition authority)" >&2
@@ -254,10 +293,7 @@ if [ -e "app/packages/agent-registry" ]; then
 fi
 echo "  Agent Definition closure: packages/agent-definition PRESENT, packages/agent-registry ABSENT"
 
-# PRODUCTION_INTEGRATION_V1 (Task 3): the Production Runtime closure MUST be
-# in the trusted app closure — the supervised composition (launchd -> trusted
-# Node -> app/scripts/production-runtime.mjs) imports the wiring-only
-# production-runtime package and spawns agents with the production profile.
+# Production Runtime is part of the supervised trusted app closure.
 for need in \
   "app/packages/production-runtime/package.json" \
   "app/packages/production-runtime/src/entry.js" \
@@ -271,22 +307,11 @@ for need in \
 done
 echo "  Production Runtime closure: packages/{production-runtime,agent-provisioning} + profile-production + scripts PRESENT"
 
-# @deepseek-ai resolution bridge — INSIDE the trusted root only. The app
-# packages resolve @deepseek-ai/* through the harness's full scope farm
-# (node_modules/.pnpm/node_modules/@deepseek-ai), exactly like the dev
-# setup's bridge; every entry stays inside the trusted harness.
+# @deepseek-ai resolves only through the in-root Harness farm.
 ln -s ../../harness/node_modules/.pnpm/node_modules/@deepseek-ai app/node_modules/@deepseek-ai
 [ -d "app/node_modules/@deepseek-ai" ] || { echo "ERROR: @deepseek-ai bridge broken" >&2; exit 2; }
 
-# third-party runtime deps of the app closure (real copies, dereferenced —
-# never symlinks into the 502-owned dev install):
-#   @larksuiteoapi/node-sdk  (feishu-connector)
-#   croner                   (scheduler)
-# third-party runtime deps of the app closure — copy the FULL dev-install
-# node_modules surface as REAL dereferenced copies (the dev repo is the
-# reference environment where the composition loads; axios/form-data/… are
-# transitive deps of @larksuiteoapi). @deepseek-ai stays the in-trusted
-# bridge; @agent-core is a dev-only artifact and is skipped.
+# Copy third-party runtime dependencies as real files, excluding dev farms.
 for dep in "$MAIN_REPO"/node_modules/*/; do
   name="$(basename "$dep")"
   case "$name" in
@@ -342,12 +367,7 @@ chmod 600 home/.credentials.yaml
 # ---- 5. config (505-private state) -----------------------------------------
 echo "== seeding config/ (505-private)"
 mkdir -p config
-# The Agent Definition config is the SINGLE Agent existence authority
-# (AGENT_DEFINITION_CONFIG_V1): an empty declarative document until the
-# deployment authorizes agents (adoptAgents / seedDefinition). A REINSTALL
-# MUST NEVER destroy the deployed definition or the credential store — the
-# stable agt_* identities and the 505 credentials survive code refreshes;
-# empty documents are seeded only on a fresh install.
+# Reinstall preserves the single Agent Definition and credential authority.
 if [ -n "${BAK:-}" ] && [ -f "$BAK/config/agents.json" ]; then
   cp "$BAK/config/agents.json" config/agents.json
   echo "  preserved Agent Definition from $BAK (stable agt_* identities kept)"
@@ -360,43 +380,19 @@ if [ -n "${BAK:-}" ] && [ -f "$BAK/config/agent-credentials.json" ]; then
 else
   printf '{\n  "version": 1,\n  "credentials": {}\n}\n' > config/agent-credentials.json
 fi
-# bindings/jobs are created by the router/resident on first boot (missing
-# file is a legal empty store for both).
+# Missing bindings/jobs are legal empty stores created on first boot.
 
 # ---- 5b. 505 production root (PRODUCTION_INTEGRATION_V1, Task 3) -----------
-# The supervised Production Runtime (packages/production-runtime) persists
-# under $HOME/.agent-core. Under uid 505 (authsvc) that is
-# /Users/authsvc/.agent-core. Provision it with the production layout so the
-# launchd --trusted unit (which passes --root explicitly) boots onto a fully
-# provisioned root. The Agent Definition authority stays a SYMLINK to the
-# trusted config/agents.json — the single Agent existence document (never a
-# second copy that could drift). Credential store likewise symlinks to the
-# trusted config/agent-credentials.json (Broker gateway via
-# AGENT_CORE_CREDENTIALS_FILE = that trusted 505-private file).
+# The authsvc runtime root links to the single trusted config authorities.
 echo "== provisioning 505 production root -> /Users/authsvc/.agent-core"
 PROD_ROOT=/Users/authsvc/.agent-core
 mkdir -p "$PROD_ROOT"/{bindings,scheduler,workspaces,homes,control,logs}
-# Agent Definition + credential store: single-file authority via symlink to
-# the trusted 505-private config (the runtime reads through the link; only the
-# trusted config file is written/authoritative).
+# Runtime reads the trusted definition and credential files through links.
 if [ -e "$PROD_ROOT/agents.json" ] || [ -L "$PROD_ROOT/agents.json" ]; then rm -f "$PROD_ROOT/agents.json"; fi
 ln -s /usr/local/libexec/agent-core/config/agents.json "$PROD_ROOT/agents.json"
-# Ownership split (PRODUCTION_INTEGRATION_V1): the 505 control plane owns the
-# root + all control state (bindings/scheduler/control/logs); the Agent child
-# (uid 502) owns the per-agent workspace + DSH home trees under the same
-# production root. workspaces/ + homes/ stay TRAVERSABLE (0755) — the 505
-# router's idempotent ensure()/provisionAgentHome must stat through them
-# (the posture proven by trusted-credential-505-final-v2-run.mjs; the 505
-# PRIVATE dirs are the ones that get go-stripped). A reinstall must never
-# steal existing child trees back: chown the two roots only, never -R over
-# them; per-agent trees are provisioned by production-agent-provision.mjs.
+# authsvc owns control state; child workspaces/homes remain uid 502-owned.
 chown "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
-# 711 (NOT 700): uid 502 must TRAVERSE the root to reach its own per-agent
-# workspace (spawn cwd) and home — run-4's 0700 root blocked the child at
-# spawn (cwd EACCES, swallowed spawn error, 90s silent ready() timeout, and a
-# delayed unhandled rejection killed the CP minutes later). o+x without o+r:
-# others may reach KNOWN paths but cannot LIST the root; every 505-private
-# subdir keeps its own 0700.
+# Root is 0711 so uid 502 can traverse known paths but cannot list control state.
 chmod 711 "$PROD_ROOT"
 chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
 chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
@@ -406,8 +402,7 @@ echo "  production root: $PROD_ROOT (505-private control state 0700; workspaces+
 
 # ---- 6. ownership + modes ---------------------------------------------------
 echo "== ownership: harness/app/home/node-runtime -> authsvc:authsvc (502 read-only)"
-# reused closures already carry the correct ownership+modes from the install
-# that produced them — skip the 1.5G re-walk; fresh copies get the full pass
+# Reused closures keep verified ownership; fresh copies get the full pass.
 OWN_DIRS="app home"
 [ "$REUSE_HARNESS" != "1" ] && OWN_DIRS="harness $OWN_DIRS"
 [ "$REUSE_NODE" != "1" ] && OWN_DIRS="$OWN_DIRS node-runtime"
