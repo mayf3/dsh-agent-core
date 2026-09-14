@@ -6,7 +6,7 @@ authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
 date: 2026-09-14
-revision: r3
+revision: r4
 revision_date: 2026-09-14
 scope:
   - target Agent canonical main Session messaging
@@ -38,6 +38,12 @@ authoring_authority_basis: >-
   authorized the minimum authority-authoring and independent-review chain. This
   is authoring authority only, not exact-head acceptance, implementation
   authority, Grant authority, merge authority, or production apply authority.
+transition_correction_authority_basis: >-
+  OWNER_DECISION=AUTHORIZE_MINIMAL_AUTHORITY_TRANSITION_CORRECTION on
+  2026-09-14 authorizes only removal of the invalid requirement to mutate
+  historical V1 implementation_authority, plus fresh exact-head review. It does
+  not authorize implementation, merge, deployment, production mutation, or any
+  additional product-semantic change.
 authoring_base: 4c514bb0c8d3df8668f3058387676d97b17d45c2
 whole_authority_note: >-
   This document carries the complete current Agent Session Messaging contract.
@@ -1135,7 +1141,8 @@ The subsequent lifecycle-only transaction is atomic:
 2. V2 `implementation_authority: none -> contracts`;
 3. add accepted date/by/reviewed-head/verdict provenance;
 4. V1 `status: accepted -> superseded`;
-5. V1 `implementation_authority: contracts -> none`;
+5. V1 `implementation_authority: contracts` remains byte-for-byte unchanged as
+   immutable historical metadata; V1's `superseded` status makes it inactive;
 6. V1 `superseded_by: null -> AGENT_CORE_AGENT_SESSION_MESSAGING_V2`;
 7. preserve both normative bodies byte-for-byte in that transaction;
 8. final-head reciprocal-link and semantic-byte check passes before merge.
