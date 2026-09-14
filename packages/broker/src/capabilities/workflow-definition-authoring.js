@@ -89,7 +89,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
   id: 'workflow_definition_authoring',
   toolName: 'workflow_definition_authoring',
   name: 'Workflow Definition Authoring',
-  description: 'Create a workflow definition, create its draft version, replace the draft using simple ordered steps or a complete graph, then publish the version. For a common linear workflow, create the draft explicitly with semanticModelVersion=3 and replace it with steps + terminalOutcome; the service validates the generated graph. Publish separately and instantiate the exact published version through workflow_execute. svc-workflow remains authoritative for identity, Domain Owner authorization, graph validation and lifecycle. Resolve the domainId argument first via workflow_my_domains (choose a domain where caller_role is DOMAIN_OWNER).',
+  description: 'Create a workflow definition, create its draft version, replace the draft using simple ordered steps or a complete graph, then publish the version. For a common linear workflow, create the draft explicitly with semanticModelVersion=3 and replace it with steps + terminalOutcome; the service validates the generated graph. Publish separately with domainId + definitionId + versionId; expectedRevision is optional and is a last-known definition digest, not a numeric revision. Omit expectedRevision unless an authoritative digest was obtained; never guess values such as "1" or "2". Instantiate the exact published version through workflow_execute. svc-workflow remains authoritative for identity, Domain Owner authorization, graph validation and lifecycle. Resolve the domainId argument first via workflow_my_domains (choose a domain where caller_role is DOMAIN_OWNER).',
   requiredScopes: ['workflow.execute'],
   errors: [...baseErrors, ...authErrors, ...definitionAuthoringErrors],
   operations: [
@@ -113,7 +113,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
       arguments: {
         additionalProperties: false,
         properties: {
-          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, contextSchema: { type: 'json' },
+          domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, contextSchema: { type: 'json', description: 'Context schema used by draft creation and replacement. On create, a supplied JSON value becomes the draft schema. On replace, omit to preserve the current schema, pass null to clear it, or pass JSON to replace it.' },
           jsonSchemaDialect: { type: 'string' }, validatorVersion: { type: 'string' }, metadata: { type: 'json' },
           semanticModelVersion: { type: 'integer', enum: [1, 2, 3], description: 'Omitted means Legacy (1); 2 is Minimal; 3 is Visit Activation. These are semantic choices, not quality or newness rankings. Use explicit 3 for linear steps + terminalOutcome authoring; omission is forwarded unchanged to preserve the service default.' },
         },
@@ -124,7 +124,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
     },
     {
       name: 'replace_draft_graph',
-      description: 'Atomically replace a DRAFT graph using exactly one form: full nodes + transitions, OR linear steps + terminalOutcome on a model-3 draft. Linear supports 1..32 ordered work steps with exact Principal UUID assignments discovered canonically, not display-name routing. Do not supply graph identifiers or transitions for linear input. Branches, loops and custom effects use the existing full form. Success means the service canonical validator accepted the graph; publish separately. On rejection, correct the named rule in the error detail.',
+      description: 'Atomically replace a DRAFT graph using exactly one form: full nodes + transitions, OR linear steps + terminalOutcome on a model-3 draft. Linear supports 1..32 ordered work steps with exact Principal UUID assignments discovered canonically, not display-name routing. Do not supply graph identifiers or transitions for linear input. Branches, loops and custom effects use the existing full form. contextSchema is an optional draft-schema patch: omit it to preserve the current schema, pass null to clear it, or pass JSON to replace it. Success means the service canonical validator accepted the graph; publish separately. On rejection, correct the named rule in the error detail.',
       arguments: {
         additionalProperties: false,
         // ERROR_PRESERVATION AMENDMENT_1 R6: structural rejections on this
@@ -134,7 +134,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
         structuralDiagnostics: true,
         properties: {
           domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, definitionVersionId: { type: 'string' },
-          contextSchema: { type: 'json' }, nodes: { type: 'array', items: definitionNodeItem },
+          contextSchema: { type: 'json', description: 'Optional replacement for the draft context schema. Omit to preserve the current schema; pass null to clear it; pass JSON to replace it. The value is forwarded to svc-workflow with definitionVersionId, nodes and transitions.' }, nodes: { type: 'array', items: definitionNodeItem },
           transitions: { type: 'array', items: definitionTransitionItem },
           steps: { type: 'array', description: 'Linear form only: 1..32 ordered work steps. Requires terminalOutcome; excludes nodes and transitions.', items: {
             type: 'object', additionalProperties: false,
@@ -154,10 +154,10 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
     },
     {
       name: 'publish_version',
-      description: 'Publish a DRAFT version; expectedRevision is optional in the current service contract.',
+      description: 'Publish a DRAFT version using domainId + definitionId + versionId. expectedRevision is optional: when supplied it must be an authoritative last-known definition digest used for optimistic concurrency, not a version number or revision counter. Omit it when no authoritative digest is available; never guess numeric values such as "1" or "2".',
       arguments: {
         additionalProperties: false,
-        properties: { domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, versionId: { type: 'string' }, expectedRevision: { type: 'string' } },
+        properties: { domainId: { type: 'string', description: 'Target workflow domain id (UUID). Resolve canonically via the workflow_my_domains capability: list your domains and pass one where caller_role is DOMAIN_OWNER (only owners may author); never guess, use display names, or hard-code a UUID. The service still enforces Domain Owner authorization server-side.' }, definitionId: { type: 'string' }, versionId: { type: 'string' }, expectedRevision: { type: 'string', description: 'Optional last-known definition digest for optimistic concurrency. This is not a numeric revision/version counter. Omit unless the exact digest was obtained authoritatively; never guess "1", "2", or another counter value.' } },
         required: ['domainId', 'definitionId', 'versionId'],
       },
       result: { type: 'json' }, errors: ['invalid_arguments'],
