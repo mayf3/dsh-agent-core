@@ -3,7 +3,13 @@ import assert from 'node:assert/strict'
 
 import { attemptNotificationDelivery, buildIdempotentFeishuRequest, deliveryRecoveryAction, feishuHistoryContainsNotification, providerIdempotencyKey, recoverNotificationDelivery, retryableOutboxIntents, stableNotificationText } from '../../src/watchdog/delivery.js'
 import { compileIncidents } from '../../src/watchdog/incident-compiler.js'
-import { markNotificationDelivery, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
+import { bindNotificationDelivery, markNotificationDelivery, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
+
+function bind(opened, key, at = 1) {
+  return bindNotificationDelivery(opened.state, key, { producer: opened.state.outbox[key].producer,
+    route: { channel: 'feishu', to: 'ops' }, routeSource: 'canonicalOpsTarget', routingSha256: 'a'.repeat(64),
+    payload: stableNotificationText(opened.state.outbox[key]), providerKey: providerIdempotencyKey(key) }, at)
+}
 
 test('T21/T26 ambiguous transport replay keeps the exact key, payload, and downstream idempotency coordinate', () => {
   const [incident] = compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents
@@ -13,7 +19,7 @@ test('T21/T26 ambiguous transport replay keeps the exact key, payload, and downs
   const text = stableNotificationText(intent)
   const beforeRequest = buildIdempotentFeishuRequest(key, { receiveId: 'ops', text })
   const before = { key, text, url: beforeRequest.url.toString(), providerKey: beforeRequest.providerIdempotencyKey, body: beforeRequest.body }
-  const ambiguous = markNotificationDelivery(opened.state, key, 'OUTCOME_UNKNOWN', 2)
+  const ambiguous = markNotificationDelivery(bind(opened, key), key, 'OUTCOME_UNKNOWN', 2)
   const [retry] = retryableOutboxIntents(ambiguous, { nowMs: 3 })
   const retryText = stableNotificationText(retry)
   const afterRequest = buildIdempotentFeishuRequest(retry.notificationKey, { receiveId: 'ops', text: retryText })
@@ -29,7 +35,7 @@ test('T26 attempt start is durable before I/O and delayed restart remains eligib
   const [incident] = compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents
   const opened = updateIncidentState({}, [incident], { nowMs: 1 })
   const key = opened.notifications[0].notificationKey
-  const attempted = markNotificationDelivery(opened.state, key, 'OUTCOME_UNKNOWN', 2)
+  const attempted = markNotificationDelivery(bind(opened, key), key, 'OUTCOME_UNKNOWN', 2)
   assert.equal(attempted.outbox[key].firstDeliveryAttemptAt, 2)
   assert.equal(retryableOutboxIntents(attempted, { nowMs: 54 * 60 * 1000 })[0].notificationKey, key)
   assert.equal(retryableOutboxIntents(attempted, { nowMs: 56 * 60 * 1000 })[0].notificationKey, key)
@@ -39,9 +45,10 @@ test('T21 delivered intents are never retried; failed route keeps the same logic
   const [incident] = compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents
   const opened = updateIncidentState({}, [incident], { nowMs: 1 })
   const key = opened.notifications[0].notificationKey
-  assert.deepEqual(retryableOutboxIntents(markNotificationDelivery(opened.state, key, 'DELIVERED', 2)), [])
+  const attempted = markNotificationDelivery(bind(opened, key), key, 'OUTCOME_UNKNOWN', 2)
+  assert.deepEqual(retryableOutboxIntents(markNotificationDelivery(attempted, key, 'DELIVERED', 3)), [])
   assert.equal(retryableOutboxIntents(markNotificationDelivery(opened.state, key, 'FAILED', 2), { nowMs: 9_999_999 })[0].notificationKey, key)
-  const ambiguous = markNotificationDelivery(opened.state, key, 'OUTCOME_UNKNOWN', 2)
+  const ambiguous = markNotificationDelivery(bind(opened, key), key, 'OUTCOME_UNKNOWN', 2)
   assert.equal(retryableOutboxIntents(ambiguous, { nowMs: 60 * 60 * 1000 })[0].notificationKey, key, 'ambiguous delivery remains eligible only for provider readback before resend')
 })
 
@@ -87,4 +94,10 @@ test('T21 W2 cannot claim a W1 outbox intent', () => {
     b: { notificationKey: 'b', producer: 'w2', delivery: 'PENDING' },
   } }
   assert.deepEqual(retryableOutboxIntents(state, { producer: 'w2' }).map((item) => item.notificationKey), ['b'])
+})
+
+test('T21 malformed attempted notification fails closed instead of disappearing from retry inspection', () => {
+  assert.throws(() => retryableOutboxIntents({ outbox: {
+    malformed: { notificationKey: 'a'.repeat(64), producer: 'w1', delivery: 'OUTCOME_UNKNOWN' },
+  } }), /requires immutable binding and firstDeliveryAttemptAt/)
 })

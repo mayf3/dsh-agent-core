@@ -104,13 +104,24 @@ function validateOutbox(value) {
       const allowedSources = intent.routeClass === 'SCHEDULER_CONTROL_PLANE_INCIDENT' ? ['canonicalOpsTarget']
         : intent.routeClass === 'JOB_FAILURE' ? ['jobFailureTargets', 'ownerTargets', 'canonicalOpsTarget'] : ['job.delivery']
       if (!isPlainRecord(binding) || Object.keys(binding).sort().join(',') !== 'payload,producer,providerKey,route,routeSource,routingSha256'
-        || binding.producer !== intent.producer || !Number.isFinite(intent.deliveryBindingAt)
+        || binding.producer !== intent.producer || !Number.isSafeInteger(intent.deliveryBindingAt)
+        || intent.deliveryBindingAt < embedded.alertState.lastTransitionAt
         || binding.providerKey !== providerIdempotencyKey(key) || binding.payload !== stableNotificationText(intent)
         || !allowedSources.includes(binding.routeSource) || !SHA256.test(binding.routingSha256 ?? '')
         || !isPlainRecord(binding.route) || Object.keys(binding.route).sort().join(',') !== 'channel,to'
         || binding.route.channel !== 'feishu' || typeof binding.route.to !== 'string' || binding.route.to.trim() === '') {
         throw new TypeError(`incoherent incident delivery binding: ${key}`)
       }
+    }
+    const attempted = intent.firstDeliveryAttemptAt !== undefined
+    const updated = intent.deliveryUpdatedAt !== undefined
+    if ((attempted && (!binding || !Number.isSafeInteger(intent.firstDeliveryAttemptAt)
+      || intent.firstDeliveryAttemptAt < intent.deliveryBindingAt))
+      || (updated && (!Number.isSafeInteger(intent.deliveryUpdatedAt)
+        || intent.deliveryUpdatedAt < (attempted ? intent.firstDeliveryAttemptAt : embedded.alertState.lastTransitionAt)))
+      || (['DELIVERED', 'OUTCOME_UNKNOWN'].includes(intent.delivery) && (!binding || !attempted || !updated))
+      || (intent.delivery === 'FAILED' && binding && (!attempted || !updated))) {
+      throw new TypeError(`incoherent incident delivery chronology: ${key}`)
     }
     identities.add(identity)
   }

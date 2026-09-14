@@ -62,7 +62,11 @@ test('T21/T26 delivery readback updates the same outbox key without minting anot
   const [incident] = compileIncidents(unknownFacts('job-a', 'occ-a')).incidents
   const opened = updateIncidentState({}, [incident], { nowMs: T0 })
   const key = opened.notifications[0].notificationKey
-  const delivered = markNotificationDelivery(opened.state, key, 'DELIVERED', T0 + 1)
+  const bound = bindNotificationDelivery(opened.state, key, { producer: opened.state.outbox[key].producer,
+    route: { channel: 'feishu', to: 'ops' }, routeSource: 'canonicalOpsTarget', routingSha256: 'a'.repeat(64),
+    payload: stableNotificationText(opened.state.outbox[key]), providerKey: providerIdempotencyKey(key) }, T0)
+  const attempted = markNotificationDelivery(bound, key, 'OUTCOME_UNKNOWN', T0 + 1)
+  const delivered = markNotificationDelivery(attempted, key, 'DELIVERED', T0 + 2)
   assert.deepEqual(Object.keys(delivered.outbox), [key])
   assert.equal(delivered.outbox[key].delivery, 'DELIVERED')
   assert.equal(delivered.incidents[incident.rootIdentity].alertState.delivery, 'DELIVERED')

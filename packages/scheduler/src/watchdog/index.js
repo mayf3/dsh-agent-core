@@ -328,7 +328,7 @@ export {
 } from './incident-lifecycle.js'
 export {
   ROUTE_CLASSES, resolveNotificationRoute, routeReadback,
-  readProtectedRoutingManifest, validateProtectedPathMetadata, validateRoutingManifest,
+  readProtectedRoutingManifest, validateIncidentDeliveryBindings, validateProtectedPathMetadata, validateRoutingManifest,
 } from './routing.js'
 export {
   acquireConsistentHealthSnapshot, filterHealthForPrincipal, projectSchedulerHealth,
