@@ -1,0 +1,10 @@
+✔ F1 CAPABILITY_LIMIT: router restart evidence/correlation loss fails closed, never blind retry (154.080541ms)
+✔ F2 CAPABILITY_LIMIT: fence is per-Job — the same Agent's other Job runs and the interactive status answers (245.71225ms)
+✔ F3 CAPABILITY_LIMIT: scheduler abort without actual termination is never settlement evidence (151.79975ms)
+✔ F4 OPEN_RISK: 5k-terminal ledger — reconcile stays correct, cache holds one clone, ledger has no retention policy (1805.6075ms)
+ℹ status over 5001 occurrences: 55.5ms
+ℹ reconcile commit over 5001 occurrences: 176.4ms
+ℹ doc bytes=4410168 heap growth after 25 force loads=10.9MB
+ℹ tests 4
+ℹ pass 4
+ℹ fail 0
