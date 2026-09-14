@@ -457,10 +457,12 @@ test('ensureSymlink accepts realpath-equivalent links without rewriting (fleet E
 
 test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: provisioning stays PATH_ONLY — no parent-side credential probe anywhere', () => {
   // Structural pin: provisioning source must never call the credential
-  // boundary (child-time resolution owns validation after the privilege
-  // drop; assertOAuthCredentialBoundary remains exported for direct ops use).
+  // boundary — case-insensitive so a reintroduction via the exported
+  // assertOAuthCredentialBoundary name cannot evade it (child-time resolution
+  // owns validation after the privilege drop; the function stays exported for
+  // direct ops/unit use — just never invoked here).
   const source = readFileSync(join(REPO, 'packages', 'agent-provisioning', 'src', 'index.js'), 'utf8')
-  assert.equal(source.includes('credentialBoundary('), false, 'provisionAgentHome must not invoke any credential boundary probe')
+  assert.doesNotMatch(source, /credentialBoundary\s*\(/iu, 'provisionAgentHome must not invoke any credential boundary probe')
 })
 
 test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale authsvc credential reference is idempotently rewritten to the canonical path before the child starts', (t) => {
