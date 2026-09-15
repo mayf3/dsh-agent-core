@@ -3,14 +3,15 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
-  closeSync, constants, existsSync, fstatSync, fsyncSync, lstatSync, openSync, readFileSync, renameSync, rmSync, writeFileSync,
+  closeSync, constants, existsSync, fstatSync, fsyncSync, lstatSync, openSync, readFileSync, renameSync, rmSync,
 } from 'node:fs'
 import { normalize, resolve, join } from 'node:path'
 
 import { ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
-import { buildSchedulerRollbackPlan, classifyRollbackGeneration } from '../packages/production-runtime/src/scheduler/deployment-rollback.js'
+import { buildSchedulerRollbackPlan } from '../packages/production-runtime/src/scheduler/deployment-rollback.js'
+import { restoreRollbackFile } from '../packages/production-runtime/src/scheduler/deployment-rollback-file.js'
 import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
-import { capturePlainFileMetadata, clearGeneratedFileXattrs } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
+import { capturePlainFileMetadata } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 import { inOverlayUniverse } from './lib/admission-lib.mjs'
 
 const A = '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1'
@@ -39,20 +40,6 @@ function frozenBytes(path) {
     if (before.dev !== after.dev || before.ino !== after.ino) throw new Error(`rollback preimage changed: ${path}`)
     return readFileSync(fd)
   } finally { closeSync(fd) }
-}
-function restoreFile(preimage, target, expectedCurrentSha, preimageMetadata) {
-  if (!existsSync(target)) throw new Error(`rollback generation mismatch: ${target}`)
-  capturePlainFileMetadata(target)
-  if (sha256(target) !== expectedCurrentSha) throw new Error(`rollback generation mismatch: ${target}`)
-  if (!preimageMetadata || preimageMetadata.acl !== 'NONE' || preimageMetadata.xattrs !== 'NONE'
-    || !Number.isInteger(preimageMetadata.uid) || !Number.isInteger(preimageMetadata.gid) || !Number.isInteger(preimageMetadata.mode)) throw new Error('invalid rollback metadata authority')
-  const bytes = frozenBytes(preimage), temp = `${target}.rollback-${process.pid}`
-  writeFileSync(temp, bytes, { mode: preimageMetadata.mode, flag: 'wx' })
-  clearGeneratedFileXattrs(temp); run('chown', [`${preimageMetadata.uid}:${preimageMetadata.gid}`, temp])
-  const fd = openSync(temp, constants.O_RDONLY); try { fsyncSync(fd) } finally { closeSync(fd) }
-  renameSync(temp, target)
-  const parentFd = openSync(resolve(target, '..'), constants.O_RDONLY); try { fsyncSync(parentFd) } finally { closeSync(parentFd) }
-  if (sha256(target) !== digest(bytes) || JSON.stringify(capturePlainFileMetadata(target)) !== JSON.stringify(preimageMetadata)) throw new Error(`rollback readback mismatch: ${target}`)
 }
 function removeInstalledFile(path) {
   capturePlainFileMetadata(path); rmSync(path)
@@ -90,39 +77,51 @@ quiesceLaunchdServices(serviceLabels, launchd)
 
 if (planned('RESTORE_RUNTIME')) {
   const current = sha256(RUNTIME_PLIST)
-  if (classifyRollbackGeneration({ currentSha256: current, installedSha256: runtimeReceipt.installedSha256, preimageSha256: runtimeReceipt.preimageSha256 }) === 'RESTORE') {
-    restoreFile(runtimePreimage, RUNTIME_PLIST, runtimeReceipt.installedSha256, runtimeReceipt.preimageMetadata); say('runtime plist restored')
-  }
+  if (![runtimeReceipt.installedSha256, runtimeReceipt.preimageSha256].includes(current)) throw new Error('rollback generation advanced')
+  const result = restoreRollbackFile({ preimagePath: runtimePreimage, targetPath: RUNTIME_PLIST,
+    installedSha256: runtimeReceipt.installedSha256, preimageSha256: runtimeReceipt.preimageSha256,
+    preimageMetadata: runtimeReceipt.preimageMetadata })
+  if (result.status !== 'ALREADY_RESTORED') say('runtime plist restored')
 }
 
 for (const item of planned('RESTORE_WATCHDOGS') ? watchdog.plists ?? [] : []) {
   if (!WATCHDOG_LABELS.includes(item.label) || item.path !== `/Library/LaunchDaemons/${item.label}.plist`) throw new Error('unsafe watchdog receipt target')
   if (item.preimage !== join(A, 'rollback', `${item.label}.plist.preimage`)) throw new Error('unsafe watchdog preimage coordinate')
   const current = existsSync(item.path) ? sha256(item.path) : null
-  if (current === item.installedSha256) {
-    if (item.existed) restoreFile(item.preimage, item.path, item.installedSha256, item.preimageMetadata)
-    else removeInstalledFile(item.path)
-  } else if (current !== item.preimageSha256) throw new Error(`watchdog generation advanced: ${item.label}`)
+  if (item.existed) {
+    if (![item.installedSha256, item.preimageSha256].includes(current)) throw new Error(`watchdog generation advanced: ${item.label}`)
+    restoreRollbackFile({ preimagePath: item.preimage, targetPath: item.path,
+      installedSha256: item.installedSha256, preimageSha256: item.preimageSha256, preimageMetadata: item.preimageMetadata })
+  } else if (current === item.installedSha256) removeInstalledFile(item.path)
+  else if (current !== null) throw new Error(`watchdog generation advanced: ${item.label}`)
 }
 
 if (planned('RESTORE_ROUTING')) {
   const routing = JSON.parse(frozenBytes(routingReceiptPath).toString('utf8'))
   const target = '/usr/local/libexec/agent-core/config/scheduler-routing.json'
   const current = existsSync(target) ? sha256(target) : null
-  if (current === routing.candidateSha256) {
-    if (routing.preimageSha256 === null) removeInstalledFile(target)
-    else restoreFile(join(A, 'rollback', 'scheduler-routing.json.preimage'), target, routing.candidateSha256, routing.preimageMetadata)
-  } else if (current !== routing.preimageSha256) throw new Error('routing generation advanced')
+  if (routing.preimageSha256 === null) {
+    if (current === routing.candidateSha256) removeInstalledFile(target)
+    else if (current !== null) throw new Error('routing generation advanced')
+  } else {
+    if (![routing.candidateSha256, routing.preimageSha256].includes(current)) throw new Error('routing generation advanced')
+    restoreRollbackFile({ preimagePath: join(A, 'rollback', 'scheduler-routing.json.preimage'), targetPath: target,
+      installedSha256: routing.candidateSha256, preimageSha256: routing.preimageSha256, preimageMetadata: routing.preimageMetadata })
+  }
 }
 
 if (planned('RESTORE_DESIRED_STATE')) {
   if (desired.targetPath !== '/usr/local/libexec/agent-core/config/scheduler-desired-state.json'
     || desired.preimagePath !== join(A, 'rollback', 'scheduler-desired-state.json.preimage')) throw new Error('unsafe desired-state receipt coordinate')
   const current = existsSync(desired.targetPath) ? sha256(desired.targetPath) : null
-  if (current === desired.candidateSha256) {
-    if (desired.preimageSha256 === null) removeInstalledFile(desired.targetPath)
-    else restoreFile(desired.preimagePath, desired.targetPath, desired.candidateSha256, desired.preimageMetadata)
-  } else if (current !== desired.preimageSha256) throw new Error('desired-state generation advanced')
+  if (desired.preimageSha256 === null) {
+    if (current === desired.candidateSha256) removeInstalledFile(desired.targetPath)
+    else if (current !== null) throw new Error('desired-state generation advanced')
+  } else {
+    if (![desired.candidateSha256, desired.preimageSha256].includes(current)) throw new Error('desired-state generation advanced')
+    restoreRollbackFile({ preimagePath: desired.preimagePath, targetPath: desired.targetPath,
+      installedSha256: desired.candidateSha256, preimageSha256: desired.preimageSha256, preimageMetadata: desired.preimageMetadata })
+  }
 }
 
 if (planned('RESTORE_OVERLAY')) {
