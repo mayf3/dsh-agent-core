@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { chmod, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
+import { chmod, lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -57,4 +57,25 @@ test('desired-state install rejects unsafe ancestor before target or preimage wr
     expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: () => assert.fail('no receipt write'),
   }), /unsafe desired-state parent/)
   await assert.rejects(readFile(targetPath), /ENOENT/)
+})
+
+test('desired-state install accepts only the root-owned macOS /var system alias', { skip: process.platform !== 'darwin' }, async (t) => {
+  assert.equal((await lstat('/var')).isSymbolicLink(), true)
+  const root = await mkdtemp(join(tmpdir(), 'scheduler-desired-var-alias-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidate.json')
+  const preimagePath = join(root, 'control', 'preimage.json')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control'), { mode: 0o700 })
+  const bytes = Buffer.from('{"version":1,"jobs":[]}\n')
+  let receipt
+  const result = installSchedulerDesiredState({
+    bytes, expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: (value) => { receipt = value },
+  })
+  assert.equal(result.status, 'INSTALLED')
+  assert.equal(receipt.status, 'INSTALLED')
+  assert.equal(await readFile(targetPath, 'utf8'), bytes.toString())
 })
