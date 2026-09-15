@@ -60,7 +60,10 @@ test('reviewed production path authority is exactly 21 writes plus one retired w
 
 test('reviewed payload contains failed-cutover extension and the dependency-isolated migration entrypoint', () => {
   const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo, encoding: 'utf8' })
-  assert.match(show('packages/scheduler/src/watchdog/durable-state.js'), /MIGRATION_EXTENDED/)
+  const durableState = show('packages/scheduler/src/watchdog/durable-state.js')
+  assert.match(durableState, /MIGRATION_EXTENDED/)
+  assert.match(durableState, /facts: structuredClone\(after\.facts\)/)
+  assert.match(durableState, /symptoms: structuredClone\(after\.symptoms\)/)
   assert.match(show('scripts/scheduler-watchdog.mjs'), /import\('\.\.\/packages\/scheduler\/src\/watchdog\/durable-state\.js'\)/)
 })
 
