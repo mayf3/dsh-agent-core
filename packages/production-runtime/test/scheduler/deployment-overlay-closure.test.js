@@ -62,8 +62,8 @@ test('reviewed payload contains failed-cutover extension and the dependency-isol
   const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo, encoding: 'utf8' })
   const durableState = show('packages/scheduler/src/watchdog/durable-state.js')
   assert.match(durableState, /MIGRATION_EXTENDED/)
-  assert.match(durableState, /facts: structuredClone\(after\.facts\)/)
-  assert.match(durableState, /symptoms: structuredClone\(after\.symptoms\)/)
+  assert.match(durableState, /facts: union\(before\.facts, after\.facts\)/)
+  assert.match(durableState, /symptoms: union\(before\.symptoms, after\.symptoms\)/)
   assert.match(show('scripts/scheduler-watchdog.mjs'), /import\('\.\.\/packages\/scheduler\/src\/watchdog\/durable-state\.js'\)/)
 })
 
