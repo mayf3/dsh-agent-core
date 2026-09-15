@@ -42,7 +42,11 @@
 # =============================================================================
 set -euo pipefail
 
-REVIEWED_CODE_SHA="7e645ea2a4b353c2e79b4a735aa9ab7a89d5de68"
+# Reviewed-product baseline: default is the independently reviewed head.
+# The Owner may EXPLICITLY advance it via PRODUCT_REVIEWED_BASELINE=<sha> in
+# the sudo env — that act is the blessing of the current main coordinate
+# (e.g. accepting other lanes' merged product changes for this deploy).
+REVIEWED_CODE_SHA="${PRODUCT_REVIEWED_BASELINE:-7e645ea2a4b353c2e79b4a735aa9ab7a89d5de68}"
 WRAPPER_SCRIPT="deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh"
 ROUTING_INSTALLER="deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs"
 DEPLOY_INSTALLER="scripts/trusted-cp-deploy-install.sh"
