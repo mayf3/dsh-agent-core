@@ -40,7 +40,10 @@ function extendCommittedMigration(committed, candidate, migration) {
   for (const root of existingRoots) {
     const before = committed.incidents[root]
     const after = candidate.incidents?.[root]
-    if (!after) throw new Error('incident migration extension drops committed root')
+    if (!after) {
+      incidents[root] = structuredClone(before)
+      continue
+    }
     if (identityFields.some((field) => canonicalJSON(before[field]) !== canonicalJSON(after[field]))) {
       throw new Error('incident migration extension conflicts with committed root identity')
     }
