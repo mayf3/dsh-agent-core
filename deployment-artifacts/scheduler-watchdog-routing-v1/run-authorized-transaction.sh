@@ -48,8 +48,8 @@ ROUTING_INSTALLER="deployment-artifacts/scheduler-watchdog-routing-v1/run-routin
 DEPLOY_INSTALLER="scripts/trusted-cp-deploy-install.sh"
 # Content pins fixed at the wrapper-r3 review — any later change to these two
 # artifacts on origin/main FAILS CLOSED until re-reviewed.
-ROUTING_INSTALLER_SHA256="c3a5b56b32658c9463ff039068bdae0f21145b5f2199cc7681dc2916914d90a8"
-DEPLOY_INSTALLER_SHA256="bb5c76ca21fb3300cc73ea19a32baa19847693c73e4fcbc3270df71108eca099"
+ROUTING_INSTALLER_SHA256="8ff1d255fe4c39e5a70c0a91dc2b529d1331bbdfe37e53b6818fcc7e92cf1e60"
+DEPLOY_INSTALLER_SHA256="ce8fea9ca7ce1618d933f26e63f7c95e0e9dfb0167a6903bbf39f3bae5fde915"
 APP_ROOT="/usr/local/libexec/agent-core/app"
 CANONICAL_STORE="/Users/authsvc/.agent-core/scheduler/jobs.json"
 ROUTING_TARGET="/Users/authsvc/.agent-core/scheduler/routing.json"
@@ -176,7 +176,8 @@ run_installer() { # run_installer CMD... — captures the real pipeline rc
 }
 deploy_from_staging() { # deploy_from_staging STAGING_DIR APP_ROOT
   local S="$1" app_root="$2"
-  run_installer bash "$S/$DEPLOY_INSTALLER" "$S"
+  PRODUCTION_DEPLOY_LOCK_INHERITED_FROM="run-authorized-transaction.sh" \
+    run_installer bash "$S/$DEPLOY_INSTALLER" "$S"
   [ "$RUN_INSTALLER_RC" -eq 0 ] || gate "deploy installer" "rc=$RUN_INSTALLER_RC"
   pass "deploy installer rc=0 — installer gate crossed"
   ls "$app_root/packages" >/dev/null 2>&1 || gate "deployed app tree present" "$app_root"
@@ -190,6 +191,13 @@ GATES() {
   [ "${SCHEDULER_PRODUCTION_MUTATION_SLOT:-}" = "FREE" ] || gate "SCHEDULER_PRODUCTION_MUTATION_SLOT" "env!=FREE"
   [ "${NO_CONFLICTING_SCHEDULER_TRANSACTION:-}" = "YES" ] || gate "NO_CONFLICTING_SCHEDULER_TRANSACTION" "env!=YES"
   pass "§3 Owner authorization flags" "FREE/FREE/YES (authorization — the locks are the mutual exclusion)"
+  # B5: deterministic corepack behavior — the hydrated cache + network OFF +
+  # no latest fallback turn any cache miss into an immediate fail-closed.
+  [ "${COREPACK_HOME:-}" = "/usr/local/var/agent-core/corepack-cache" ] || gate "COREPACK_HOME" "must be /usr/local/var/agent-core/corepack-cache (the hydrated cache)"
+  [ "${COREPACK_ENABLE_NETWORK:-}" = "0" ] || gate "COREPACK_ENABLE_NETWORK" "env!=0"
+  [ "${COREPACK_DEFAULT_TO_LATEST:-}" = "0" ] || gate "COREPACK_DEFAULT_TO_LATEST" "env!=0"
+  [ "${COREPACK_ENABLE_DOWNLOAD_PROMPT:-}" = "0" ] || gate "COREPACK_ENABLE_DOWNLOAD_PROMPT" "env!=0"
+  pass "§3 COREPACK determinism env" "COREPACK_HOME=$COREPACK_HOME ENABLE_NETWORK=0 DEFAULT_TO_LATEST=0 DOWNLOAD_PROMPT=0"
   [ -f "$CANONICAL_STORE" ] || gate "canonical store readable" "$CANONICAL_STORE"
   authority_binding "$MAIN_WORKTREE" "$REVIEWED_CODE_SHA" "$ROUTING_INSTALLER_SHA256" "$DEPLOY_INSTALLER_SHA256"
   echo "EXPECTED_STORE_SHA256=$(shasum -a 256 "$CANONICAL_STORE" | cut -d' ' -f1)"
@@ -222,7 +230,8 @@ ROUTING() {
       NO_CONFLICTING_SCHEDULER_TRANSACTION=YES \
       "$NODE" "$INSTALLER" --check || gate "routing --check (slots + enrichment + OPS_TARGET_OVERLAPS=NO)" 1
   "$NODE" "$INSTALLER" --plan || gate "routing --plan (zero-write)" 1
-  "$NODE" "$INSTALLER" --apply || gate "routing --apply + readback" 1
+  PRODUCTION_DEPLOY_LOCK_INHERITED_FROM="run-authorized-transaction.sh" \
+    "$NODE" "$INSTALLER" --apply || gate "routing --apply + readback" 1
   pass "routing receipt + protected-metadata readback complete"
 }
 
@@ -385,8 +394,13 @@ STAGING_DIR="$2"
 
 GATES "$MAIN_WORKTREE_DIR"
 acquire_lock "run-authorized-transaction"
+# B7: the parent holds the global production-deploy mutex ONCE across the
+# whole DEPLOY -> ROUTING -> RELOAD -> readiness sequence (no serialization
+# gaps). Children verify the inherited holder and never touch it.
+acquire_global_deploy_lock
 DEPLOY "$STAGING_DIR"
 ROUTING "$STAGING_DIR"
 RELOAD
+release_global_deploy_lock
 release_lock
 echo "TRANSACTION_SEQUENCE_COMPLETE — deep readbacks (health provenance, receipts, BIP acceptance) follow from disk"
