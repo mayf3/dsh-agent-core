@@ -3,7 +3,7 @@ import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, rea
 import { dirname, isAbsolute, resolve } from 'node:path'
 
 const PLATFORM_XATTRS = new Set(['com.apple.provenance', 'com.apple.rootless'])
-const hasExtendedAcl = (path) => {
+export const hasExtendedAcl = (path) => {
   if (process.platform !== 'darwin') return false
   const lines = execFileSync('/bin/ls', ['-lde', path], { encoding: 'utf8' }).split('\n')
   return /^\S+\+/.test(lines[0] ?? '') || lines.slice(1).some((line) => /^\s*\d+:/.test(line))
