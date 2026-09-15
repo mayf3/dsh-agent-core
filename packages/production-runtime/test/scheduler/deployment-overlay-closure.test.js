@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 import { narrowOverlayUniverse } from '../../../../scripts/lib/admission-lib.mjs'
+import { adaptCandidateComposeToPinnedV2 } from '../../src/scheduler/deployment-goal-overlay.js'
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 
-test('overlay closure preserves existing dependencies outside the exact goal seeds', () => {
+test('overlay closure pins only an exact reviewed live dependency and updates the rest', () => {
   const target = new Map([
     ['packages/production-runtime/src/compose.js', [
       "import { health } from './scheduler/health-runtime.js'",
@@ -22,6 +24,7 @@ test('overlay closure preserves existing dependencies outside the exact goal see
     ['packages/production-runtime/src/model-overrides.js', 'export const loader = "production-v2"\n'],
   ])
 
+  const modelPath = 'packages/production-runtime/src/model-overrides.js'
   const result = narrowOverlayUniverse({
     seedPaths: ['packages/production-runtime/src/compose.js'],
     readTarget: (path) => {
@@ -30,20 +33,43 @@ test('overlay closure preserves existing dependencies outside the exact goal see
     },
     liveHas: (path) => live.has(path),
     liveShaOf: (path) => live.has(path) ? sha256(live.get(path)) : undefined,
+    preserveLiveShaByPath: new Map([[modelPath, sha256(live.get(modelPath))]]),
   })
 
   assert.equal(result.refuse, undefined)
-  assert.deepEqual([...result.overlay.keys()], ['packages/production-runtime/src/compose.js'])
+  assert.deepEqual([...result.overlay.keys()].sort(), [
+    'packages/production-runtime/src/compose.js',
+    'packages/production-runtime/src/scheduler/health-runtime.js',
+  ])
 })
 
-test('goal delta merges into the exact live predecessor without overwriting unrelated live changes', async () => {
-  const { mergeGoalDeltaIntoLive } = await import('../../src/scheduler/deployment-goal-overlay.js')
-  const base = 'route=v3-source\nunchanged=yes\nstart=old\n'
-  const live = 'route=v2-production\nunchanged=yes\nstart=old\n'
-  const target = 'route=v3-source\nunchanged=yes\nstart=watchdog-health\n'
+test('production compose keeps candidate watchdog wiring while using the pinned v2 loader contract', () => {
+  const candidate = readFileSync(new URL('../../src/compose.js', import.meta.url), 'utf8')
+  const adapted = adaptCandidateComposeToPinnedV2(candidate)
 
-  const merged = mergeGoalDeltaIntoLive({ base, live, target })
+  assert.match(adapted, /mountConfiguredSchedulerHealthRuntime/)
+  assert.match(adapted, /createSchedulerRuntimeStarter/)
+  assert.match(adapted, /agent-model-overrides\.json version 2/)
+  assert.match(adapted, /provider: process\.env\.DSH_AGENT_PROVIDER \?\? 'opencode-go'/)
+  assert.doesNotMatch(adapted, /canonicalDefaultGlobalRoute|CANONICAL_DEFAULT_MODEL_ROUTE/)
+})
 
-  assert.equal(merged, 'route=v2-production\nunchanged=yes\nstart=watchdog-health\n')
-  assert.equal(mergeGoalDeltaIntoLive({ base, live: merged, target }), merged)
+test('overlay refuses when the separately governed live dependency drifts from its reviewed pin', () => {
+  const composePath = 'packages/production-runtime/src/compose.js'
+  const modelPath = 'packages/production-runtime/src/model-overrides.js'
+  const target = new Map([
+    [composePath, "import { loader } from './model-overrides.js'\n"],
+    [modelPath, 'export const loader = "v3"\n'],
+  ])
+  const live = new Map([[modelPath, 'export const loader = "unexpected"\n']])
+
+  const result = narrowOverlayUniverse({
+    seedPaths: [composePath],
+    readTarget: (path) => target.get(path),
+    liveHas: (path) => live.has(path),
+    liveShaOf: (path) => live.has(path) ? sha256(live.get(path)) : undefined,
+    preserveLiveShaByPath: new Map([[modelPath, sha256('export const loader = "reviewed-v2"\n')]]),
+  })
+
+  assert.equal(result.refuse, `pinned live dependency drift: ${modelPath}`)
 })
