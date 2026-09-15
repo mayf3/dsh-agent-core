@@ -6,7 +6,18 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: contracts
 date: 2026-09-15
-revision: r3
+revision: r4
+r3_acceptance: Owner formally ACCEPTED exact reviewed head 6bce155 as the
+  authoritative implementation base on 2026-09-15（GOAL_STATUS=ACCEPTED_FOR_IMPLEMENTATION;
+  independent review rounds 1-2 REVISE→repaired, round-3 PASS/BLOCKERS=NONE/
+  SAFE_TO_MATERIALIZE=YES; final cosmetic gloss accepted as zero-semantic-difference）
+r4_amendment: AMENDMENT_1（INSPECTION_PRESERVATION, Owner REVISE ruling on PR
+  mayf3/auth-service#75 2026-09-15——跨仓语义冲突：Auth 已接受
+  AUTH_SERVICE_HR_AGENT_SESSION_INSPECTION_GRANT_V1 在同 audience Grant 上叠加
+  agent.session.inspect_own_dispatch，而本 Spec §3 exact-scope closure 会把它裁掉。
+  本修订把闭集改为「send 基线 + 枚举独立授权 scope 保留」的最窄形式；FLEET 不借机
+  授予任何其他 scope。docs-only 候选，status 仍 proposed，等 Owner exact-head 接受
+  后才进入实现 base；base 6bce155 的已接受内容除本修订明示条文外不变）
 r1_review: independent review round-1 = REVISE（3 blockers，全机械：
   revoked_at 列不存在 / principal_type 字面量大小写 / re-enable 无 enable surface）；
   blocker union 修于 r2，notes（r5 引用、A.2 指针、per-client 计数、
@@ -157,6 +168,10 @@ PRODUCTION_CANONICAL_AGENT_COUNT = 89（@2026-09-15；Done When 要求执行时 
 
 ## 3. Entitlement 物化（保留行模型，语义改为派生）
 
+> **AMENDMENT_1（r4, INSPECTION_PRESERVATION）修订本节**：标记
+> 「[AM1]」的条文为 r4 修订文；其余不变。修订原因与最窄性论证见文末
+> 「AMENDMENT_1 记录」。
+
 auth-service token issuance 架构仍要求 per-client `MachineAccessGrant` 行才签
 token——**保留该物理实现**，但行语义变更为：
 
@@ -170,24 +185,60 @@ MANUAL_ALLOWLIST_SEMANTICS = NO
 每个 fleet 成员的**每个 active MachineClient** 恰一行目标态（grant 物理主键 =
 `(machine_client_id, audience_id)`；列闭集 = scopes(String[]) / version /
 created_at / updated_at，模型上 **没有 revoked_at 列**——行惰性不靠行级撤销位，
-由 §6 issuance-time active 校验保证）：
+由 §6 issuance-time active 校验保证）。
+
+**[AM1]Lawful row family（替代原单值目标态）**：
 
 ```text
-{ machineClientId, audienceId = agent-session-messaging（audience registry 既有行）,
-  scopes = ['agent.session.send'], version >= 1 }
+ENUMERATED_INDEPENDENT_SCOPES（闭集，扩集只能走本 Spec amendment）
+  = { agent.session.inspect_own_dispatch }
+    （registrant = AUTH_SERVICE_AGENT_SESSION_MESSAGING_AUDIENCE_CCR_V2；
+     grant authority = AUTH_SERVICE_HR_AGENT_SESSION_INSPECTION_GRANT_V1，
+     accepted @ 9eeb896，2026-09-14——每个成员必须各自持有 Auth 侧 accepted
+     authority；本 Spec 不为其中任何成员创设授权）
+
+lawful scopes(member) = ['agent.session.send'] ∪ P，其中 P ⊆ ENUMERATED_INDEPENDENT_SCOPES
+  — 例：['agent.session.send']（纯 fleet 基线）
+       ['agent.session.send','agent.session.inspect_own_dispatch']（HR 现态，合法）
 ```
 
-约束闭集：
+约束闭集（[AM1]修订后）：
 
 ```text
-本 audience 下 grant scopes ≠ ['agent.session.send'] 的任何超集/子集/异集 = 禁止
-本 Spec 不新增/不触碰任何其他 audience / resource / scope
+FLEET 物化只保证 'agent.session.send' 在场（基线），且：
+  ADD      = 恒创建恰 ['agent.session.send']（FLEET 永不授予任何非 send scope）
+  NORMALIZE= make-lawful：缺 send 则补；仅裁剪 NON-enumerated 的多余成员；
+             ENUMERATED_INDEPENDENT_SCOPES 的在场成员一律保留
+             （「保留独立有效授权」——Owner REVISE ruling 2026-09-15）
+  version  仅在集合实际变化时递增
+本 Spec 不新增/不触碰任何其他 audience / resource
+FLEET 不授予 ENUMERATED_INDEPENDENT_SCOPES 中的任何成员（授予走其自身 authority）
 principal_type != 'agent'（即 service；human 非 machine principal）永不 stamped
 ```
 
 已知边界：grant 物理主键为 `(machine_client_id, audience_id)`——未来任何 authority
-若想对同 audience 追加其他 scope（如 registry 中已预留的 inspect 族 scope），与
-本节 exact-scope 闭集冲突，必须走本 Spec 的 amendment，本 Spec 不预授权。
+若想对同 audience 追加 ENUMERATED_INDEPENDENT_SCOPES 之外的其他 scope，与
+本节闭集冲突，必须走本 Spec 的 amendment 把该 scope 枚举进来（并引用其自身
+accepted authority），本 Spec 不预授权。
+
+## AMENDMENT_1 记录（r4, INSPECTION_PRESERVATION, 2026-09-15）
+
+- **触发**：PR mayf3/auth-service#75 独立审查 P1「覆盖 HR inspection 权限」——
+  本 Spec 原 §3 exact-closure 的 NORMALIZE 会把
+  `['agent.session.send','agent.session.inspect_own_dispatch']` 裁成 send-only，
+  销毁 Auth 已接受（`AUTH_SERVICE_HR_AGENT_SESSION_INSPECTION_GRANT_V1`,
+  accepted 2026-09-14 @ 9eeb896, principal dc702687/agt_hr-agent）的独立授权。
+  该 Grant 是否已生产激活不影响兼容性反例成立。
+- **Owner 裁定**（REVISE, 2026-09-15）：fleet 负责补齐 send 基线；保留独立有效
+  授权的 inspection；不借机授予其他 scope。因原 §3 冻结了 exact 闭集，本修订为
+  正式的最窄规范修订。
+- **最窄性**：仅改 §3 的目标态与 NORMALIZE 语义（§4 birth-stamp 与 §5 R3 随之
+  采用 make-lawful 语义，属同一语义的机械执行面）；§1/§2/§6/§7/§8/§9/§10/§11/§12
+  语义零变化；E2E 矩阵与 Done When 不变。
+- **配套**：Auth 仓本地实现 authority 候选
+  `AUTH_SERVICE_CANONICAL_AGENT_FLEET_SEND_GRANT_PROVISIONING_V1`（proposed）
+  以本修订为准绳；两者须同时被接受，实现（PR #75 的 REVISE 修复）方可在
+  implementation base 上继续。
 
 ## 4. Birth provisioning（新 Agent 自动获得）
 
