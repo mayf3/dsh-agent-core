@@ -30,7 +30,7 @@ export function runSchedulerIncidentMigration({ ctx, sources } = {}) {
     },
   })
   const receipt = JSON.parse(output)
-  if (!['MIGRATED', 'ALREADY_MIGRATED'].includes(receipt.status)
+  if (!['MIGRATED', 'ALREADY_MIGRATED', 'MIGRATION_EXTENDED'].includes(receipt.status)
     || receipt.legacySha256 !== sources.legacyStateSha256
     || receipt.evidenceSha256 !== sources.legacyEvidenceSha256
     || receipt.factsSha256 !== sources.factsSha256) throw new Error('incident migration readback mismatch')

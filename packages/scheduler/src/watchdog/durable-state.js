@@ -31,6 +31,33 @@ function retainBackup(path, bytes, ownership) {
   atomicReplacePrivateFile(path, bytes, ownership)
 }
 
+function extendCommittedMigration(committed, candidate, migration) {
+  if (!committed.migration) throw new Error('incident migration extension requires committed migration authority')
+  const existingRoots = new Set(Object.keys(committed.incidents ?? {}))
+  const identityFields = ['rootIdentity', 'rootCauseClass', 'incidentId', 'episode', 'routeClass', 'producer']
+  const includes = (superset, subset) => (subset ?? []).every((before) => (superset ?? [])
+    .some((after) => canonicalJSON(after) === canonicalJSON(before)))
+  for (const root of existingRoots) {
+    const before = committed.incidents[root]
+    const after = candidate.incidents?.[root]
+    if (!after || identityFields.some((field) => canonicalJSON(before[field]) !== canonicalJSON(after[field]))
+      || !includes(after.facts, before.facts) || !includes(after.symptoms, before.symptoms)) {
+      throw new Error('incident migration extension conflicts with committed root authority')
+    }
+  }
+  for (const [key, intent] of Object.entries(candidate.outbox ?? {})) {
+    if (existingRoots.has(intent?.incident?.rootIdentity) && committed.outbox?.[key] === undefined) {
+      throw new Error('incident migration extension would mint intent for committed root')
+    }
+  }
+  return {
+    ...structuredClone(candidate),
+    migration,
+    incidents: { ...structuredClone(candidate.incidents), ...structuredClone(committed.incidents) },
+    outbox: { ...structuredClone(candidate.outbox), ...structuredClone(committed.outbox) },
+  }
+}
+
 const LIFECYCLES = new Set(['OPEN', 'CLOSED_ACKNOWLEDGED', 'CLOSED_RECOVERED'])
 const DELIVERIES = new Set(['PENDING', 'DELIVERED', 'FAILED', 'OUTCOME_UNKNOWN'])
 const SHA256 = /^[0-9a-f]{64}$/
@@ -232,8 +259,7 @@ export function migrateLegacyIncidentStateFiles({
     throw new Error('migration frozen source generation mismatch')
   }
   const migration = { legacySha256: legacy.sha256, evidenceSha256: evidence.sha256, factsSha256 }
-  if (initial.hash !== null) {
-    if (canonicalJSON(initial.state.migration) !== canonicalJSON(migration)) throw new Error('incident state already exists with a different migration generation')
+  if (initial.hash !== null && canonicalJSON(initial.state.migration) === canonicalJSON(migration)) {
     return { status: 'ALREADY_MIGRATED', state: initial.state, incidentSha256: initial.hash, ...migration }
   }
   let predecessor
@@ -255,10 +281,12 @@ export function migrateLegacyIncidentStateFiles({
   }
   const deliveredFingerprints = new Set([...deliveryByFingerprint].filter(([, value]) => value === 'DELIVERED').map(([key]) => key))
   const failedFingerprints = new Set([...deliveryByFingerprint].filter(([, value]) => value === 'FAILED').map(([key]) => key))
-  const state = migrateLegacyAlertState(predecessor, findings, {
+  let state = migrateLegacyAlertState(predecessor, findings, {
     deliveredFingerprints, failedFingerprints, legacyFacts: factsByFingerprint, nowMs,
   })
   state.migration = migration
+  const extended = initial.hash !== null
+  if (extended) state = extendCommittedMigration(initial.state, state, migration)
   beforeCommit?.()
   const legacyEnd = readStableFile(legacyStatePath, ownership)
   const evidenceEnd = readStableFile(legacyEvidencePath, ownership)
@@ -272,8 +300,8 @@ export function migrateLegacyIncidentStateFiles({
   retainBackup(join(backupDir, `legacy-${legacy.sha256}.json`), legacy.bytes, ownership)
   retainBackup(join(backupDir, `evidence-${evidence.sha256}.jsonl`), evidence.bytes, ownership)
   retainBackup(join(backupDir, `facts-${factsSha256}.json`), Buffer.from(canonicalJSON(findings ?? []), 'utf8'), ownership)
-  const committed = commitIncidentState(incidentStatePath, state, { expectedHash: null, expectedUid, expectedGid })
+  const committed = commitIncidentState(incidentStatePath, state, { expectedHash: initial.hash, expectedUid, expectedGid })
   const readback = loadIncidentState(incidentStatePath, { expectedUid, expectedGid })
   if (readback.hash !== committed.hash) throw new Error('incident migration readback mismatch')
-  return { status: 'MIGRATED', state: readback.state, incidentSha256: readback.hash, ...migration }
+  return { status: extended ? 'MIGRATION_EXTENDED' : 'MIGRATED', state: readback.state, incidentSha256: readback.hash, ...migration }
 }

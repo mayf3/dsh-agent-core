@@ -257,6 +257,85 @@ test('T27 file migration freezes all sources, retains hash-addressed backups, an
   assert.throws(() => loadIncidentState(incidentPath), /migration backup generation mismatch/)
 })
 
+test('failed-cutover replay preserves committed incidents and imports only newly proven legacy roots', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-extension-'))
+  await chmod(dir, 0o700)
+  const legacyPath = join(dir, 'legacy.json')
+  const evidencePath = join(dir, 'evidence.jsonl')
+  const incidentPath = join(dir, 'incidents.json')
+  const factA = { class: 'RUN_FAILED', jobId: 'job-a', occurrenceId: 'occ-a' }
+  const factB = { class: 'RUN_FAILED', jobId: 'job-b', occurrenceId: 'occ-b' }
+  const fingerprintA = 'RUN_FAILED|job-a|occ-a'
+  const fingerprintB = 'RUN_FAILED|job-b|occ-b'
+  const firstLegacy = Buffer.from(`${JSON.stringify({ active: { [fingerprintA]: { firstSeenAt: 1 } } })}\n`)
+  const firstEvidence = Buffer.from(`${JSON.stringify({ fingerprint: fingerprintA, delivery: 'DELIVERED', fact: factA })}\n`)
+  await writeFile(legacyPath, firstLegacy, { mode: 0o600 })
+  await writeFile(evidencePath, firstEvidence, { mode: 0o600 })
+  const first = migrateLegacyIncidentStateFiles({
+    legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
+    findings: [factA], expectedLegacySha256: sha(firstLegacy), expectedEvidenceSha256: sha(firstEvidence),
+    expectedFactsSha256: sha(Buffer.from(canonicalJSON([factA]))), nowMs: 2,
+  })
+  const [rootA] = Object.keys(first.state.incidents)
+  const committedA = structuredClone(first.state.incidents[rootA])
+
+  const secondLegacy = Buffer.from(`${JSON.stringify({
+    active: { [fingerprintB]: { firstSeenAt: 3 } },
+    acknowledged: { [fingerprintA]: { acknowledgedAt: 3 } },
+  })}\n`)
+  const secondEvidence = Buffer.from([
+    JSON.stringify({ fingerprint: fingerprintA, delivery: 'DELIVERED', fact: factA }),
+    JSON.stringify({ fingerprint: fingerprintB, delivery: 'DELIVERED', fact: factB }),
+    '',
+  ].join('\n'))
+  await writeFile(legacyPath, secondLegacy, { mode: 0o600 })
+  await writeFile(evidencePath, secondEvidence, { mode: 0o600 })
+  const extended = migrateLegacyIncidentStateFiles({
+    legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
+    findings: [factA, factB], expectedLegacySha256: sha(secondLegacy), expectedEvidenceSha256: sha(secondEvidence),
+    expectedFactsSha256: sha(Buffer.from(canonicalJSON([factA, factB]))), nowMs: 4,
+  })
+
+  assert.equal(extended.status, 'MIGRATION_EXTENDED')
+  assert.equal(Object.keys(extended.state.incidents).length, 2)
+  assert.deepEqual(extended.state.incidents[rootA], committedA)
+  assert.equal(Object.keys(extended.state.outbox).length, 0)
+  assert.deepEqual(extended.state.migration, {
+    legacySha256: sha(secondLegacy), evidenceSha256: sha(secondEvidence),
+    factsSha256: sha(Buffer.from(canonicalJSON([factA, factB]))),
+  })
+  assert.equal(loadIncidentState(incidentPath).hash, extended.incidentSha256)
+})
+
+test('failed-cutover replay refuses a generation that drops a committed root', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-drop-'))
+  await chmod(dir, 0o700)
+  const legacyPath = join(dir, 'legacy.json')
+  const evidencePath = join(dir, 'evidence.jsonl')
+  const incidentPath = join(dir, 'incidents.json')
+  const fact = { class: 'RUN_FAILED', jobId: 'job-a', occurrenceId: 'occ-a' }
+  const fingerprint = 'RUN_FAILED|job-a|occ-a'
+  const firstLegacy = Buffer.from(`${JSON.stringify({ active: { [fingerprint]: {} } })}\n`)
+  const firstEvidence = Buffer.from(`${JSON.stringify({ fingerprint, delivery: 'DELIVERED', fact })}\n`)
+  await writeFile(legacyPath, firstLegacy, { mode: 0o600 })
+  await writeFile(evidencePath, firstEvidence, { mode: 0o600 })
+  migrateLegacyIncidentStateFiles({
+    legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
+    findings: [fact], expectedLegacySha256: sha(firstLegacy), expectedEvidenceSha256: sha(firstEvidence),
+    expectedFactsSha256: sha(Buffer.from(canonicalJSON([fact]))), nowMs: 2,
+  })
+
+  const emptyLegacy = Buffer.from(`${JSON.stringify({ active: {} })}\n`)
+  const emptyEvidence = Buffer.alloc(0)
+  await writeFile(legacyPath, emptyLegacy, { mode: 0o600 })
+  await writeFile(evidencePath, emptyEvidence, { mode: 0o600 })
+  assert.throws(() => migrateLegacyIncidentStateFiles({
+    legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
+    findings: [], expectedLegacySha256: sha(emptyLegacy), expectedEvidenceSha256: sha(emptyEvidence),
+    expectedFactsSha256: sha(Buffer.from(canonicalJSON([]))), nowMs: 3,
+  }), /conflicts with committed root authority/)
+})
+
 test('T27 source drift aborts before incident-state commit', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-drift-'))
   await chmod(dir, 0o700)
