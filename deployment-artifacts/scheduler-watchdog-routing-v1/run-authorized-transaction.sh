@@ -21,7 +21,8 @@
 # =============================================================================
 set -euo pipefail
 
-AUTH_MAIN_SHA="7e645ea2a4b353c2e79b4a735aa9ab7a89d5de68"
+AUTH_MAIN_SHA="f0459522cdbdf3b065f2d89e4332d88013537eb9"
+REVIEWED_CODE_SHA="7e645ea2a4b353c2e79b4a735aa9ab7a89d5de68"
 APP_ROOT="/usr/local/libexec/agent-core/app"
 CANONICAL_STORE="/Users/authsvc/.agent-core/scheduler/jobs.json"
 ROUTING_TARGET="/Users/authsvc/.agent-core/scheduler/routing.json"
@@ -49,7 +50,10 @@ GATES() {
     || gate "authorized main sha" 1 "worktree HEAD != $AUTH_MAIN_SHA"
   git -C "$MAIN_WORKTREE" rev-parse origin/main | grep -q "^$AUTH_MAIN_SHA$" \
     || gate "origin/main is the authorized artifact" 1 "origin/main moved — STOP, re-verify"
-  echo "✔ CURRENT_MAIN_SHA matches authorized deploy artifact ($AUTH_MAIN_SHA)"
+  # Reviewed-code binding: everything after the reviewed head must be docs/artifacts only.
+  CODE_DELTA=$(git -C "$MAIN_WORKTREE" diff --name-only "$REVIEWED_CODE_SHA..$AUTH_MAIN_SHA" | grep -v -E '^(docs/|deployment-artifacts/|\.agents/)' || true)
+  [ -z "$CODE_DELTA" ] || gate "code delta beyond reviewed head" 1 "$CODE_DELTA"
+  echo "✔ CURRENT_MAIN_SHA matches authorized deploy artifact ($AUTH_MAIN_SHA; code == reviewed $REVIEWED_CODE_SHA)"
   [ -f "$CANONICAL_STORE" ] || gate "canonical store readable" 1 "$CANONICAL_STORE"
   echo "EXPECTED_STORE_SHA256=$(shasum -a 256 "$CANONICAL_STORE" | cut -d' ' -f1)"
   [ -f "$ROUTING_TARGET" ] \
