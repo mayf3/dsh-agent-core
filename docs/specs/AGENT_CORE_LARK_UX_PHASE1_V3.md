@@ -13,7 +13,9 @@ governed_by:
   - AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2
 external_authorities: []
-supersedes: []
+supersedes:
+  - AGENT_CORE_LARK_UX_PHASE1_V2
+  - AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT
 superseded_by: null
 owners:
   - mayf3
@@ -28,19 +30,47 @@ owners:
 
 ## 2. Scope and non-goals
 
-允许范围：`packages/feishu-connector/src/{index,core,reply-card}.js` 及必要的纯展示预检辅助文件；`packages/agent-router/src/ingress-delivery.js` 的执行/投递结果分支及测试。
+### Effective in scope
 
-不包括：AgentProcess、kill/reap、Scheduler retry、身份/Binding/Session、业务幂等、SDK pin/retry 改动、图片下载上传、新结果存储、后台补投、自动恢复平台。
-现有结果的诊断投影只引用已有数据；不能通过诊断 API 添加新 execution authority。
+- 飞书 Agent 成功回复的 SDK-native Markdown、group/topic 触发者自动 mention，以及
+  `IngressEvent.sender.openId` 到 ReplyTarget mention context 的机械投影；
+- SDK-native format-error、target-revoked、bounded transport retry、长内容/表格/代码/链接保真；
+- SDK 原生 heading normalization：保留标题文字、顺序和 heading treatment，不要求六种视觉样式；
+- Router successful-reply seam 传递 rendering/mention intent；
+- Router 成功答案在进入 card 或 Markdown/post 之前执行媒体标记预检，命中时预选 SDK text；
+- 已获得执行结果后的 reply-delivery 失败诊断投影，保留执行结果并区分 admission、execution、
+  reply_delivery；
+- Scheduler 既有成功通知 card eligibility 与其他 caller 的既有发送计划保持不变；
+- unit/integration、stub transport、dedicated test app、production canary 前置 gate 和 rollback。
 
+允许实现路径仅为 `packages/feishu-connector/src/{index,core,reply-card}.js`、必要的纯展示预检辅助
+文件和直接测试，以及 `packages/agent-router/src/ingress-delivery.js` 的 execution/reply-delivery
+diagnostic branches 与 successful-reply seam。
 
-本文同时完整承接既有 SDK Markdown、mention、同 chat fallback、bounded retry、test-app 和 rollback 合同；它们是保持项，不是重复开发范围。
+### Effective non-goals and prohibitions
+
+- per-group no-mention、typing reaction、streaming/thinking/approval card、文件/媒体上传、`/cd`、
+  `/model`、`/status`、ConversationSessions 或第二 Agent lifecycle；
+- 图片下载/上传、URL 改写、custom Markdown converter、raw client、direct node SDK、第二 outbound
+  transport、`resolveMentionsInText`、roster/name-to-identity resolution；
+- AgentProcess、kill/reap、Binding、PREBOUND_ONLY、Workspace/Session、Kernel、ingress gate、
+  scheduler-router、Scheduler retry、身份 authority、业务幂等或 SDK pin/retry policy；
+- 新结果存储、后台补投、历史答案重放、自动恢复平台或以新 generation 代替旧执行终止证明；
+- 修改 Scheduler presentation intent/call site、将 Router 媒体预检扩展到 Scheduler，或改变其他
+  excluded caller 的既有发送计划；
+- 未经独立授权的 production mutation、批量重启或跨 Goal 部署否决权。
+
+现有结果的诊断投影只引用本次调用已持有的数据；不能通过诊断 API 添加新 execution authority。
+上述清单完整承接 V2 与 heading amendment 的有效产品边界，并加入本 V3 display delta。
 
 ## 3. Authority and dependencies
 
 本 proposed V3 是完整 authority successor 候选，拟整体替代 `AGENT_CORE_LARK_UX_PHASE1_V2` 与其 `AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT`。不是新增局部 supersession。§9/10 内嵌全部有效产品 Contracts/Acceptance 与真实客户端 gates；旧 heading distinctness 已按既有 accepted amendment 承接 native normalization。
 
-当前 supersedes=[] 表示尚未激活。接受事务须固定 reviewed head，原子设置本文件 supersedes 为上述两项、本文件 status 为 accepted；两项 predecessor 的 status 为 superseded、superseded_by 为 V3，并按仓库治理进入 main；此前旧 authority 继续有效，禁止实现。不得复制旧 acceptance 证明作为本候选的 acceptance。
+当前 `status=proposed` 且 `supersedes` 已列出上述两项；这声明拟议的完整替代关系，不提前停用
+predecessor。接受事务须固定 reviewed head，仅执行 lifecycle/provenance 机械变化：本文件 status 为
+accepted；两项 predecessor 的 status 为 superseded、superseded_by 为 V3，并按仓库治理原子进入
+main。此前旧 authority 继续有效，禁止实现。不得复制旧 acceptance 证明作为本候选的 acceptance。
 
 唯一新增语义是 CTR-DISPLAY-001..006、对应 Router/rendering 边界及明确保留 Scheduler 发送计划；保留当前 static-card 配置行为作为此次明确审查的合同，不从运行字节推导既有 authority。新代码只实现展示 delta，不重做 Phase A/既有 UX。Lifecycle 冻结和自动回收决定均不作为展示接受或合法 operator 恢复的前置条件。
 
@@ -79,9 +109,123 @@ EVD-DISPLAY-001: OBS-001/STATE-001 → CLM-001，固定 main 纯函数复现支�
 
 ## 8. Decisions
 
-- DEC-001：先保证正文和原链接可交付；不隐式下载/上传图片，不建设 Markdown converter。
-- DEC-002：SDK 保持唯一 transport/fallback/retry owner。SDK 终局返回后，上层不再发送同一答案或重新运行 Agent。
-- DEC-003：阶段字段是既有结果的附加诊断投影，保持原结果类型/identity/handle；缺字段不猜测。
+### DEC-LUX-V3-001 — Preserve Phase 1 UX and add only display safety
+
+- Decision owner: `mayf3`
+- Decision: 保留 V2 的 Markdown、mention、topic continuity 和 test-app UX；唯一新增产品行为是
+  Router 成功答案媒体预检与 execution/reply-delivery 诊断投影。
+- Rejected alternatives: 重做 Phase 1 UX、扩展到其他 Phase B 功能或自动恢复。
+- Reason: 修复已生成答案的飞书展示失败，同时保持既有边界。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-002 — Keep SDK primitives as outbound authority
+
+- Decision owner: `mayf3`
+- Decision: SDK built-ins 继续唯一拥有 Markdown rendering、mention、target/format fallback、transport
+  retry 和 wire send；connector 只做既有 static-card pre-send plan 与新增媒体 text 预选，不增加第二
+  transport、converter、retry 或 fallback。
+- Rejected alternatives: custom converter、raw client、connector resend、SDK policy change。
+- Reason: 避免重复投递和第二 transport/rendering authority。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-003 — Preserve openId identity authority
+
+- Decision owner: `mayf3`
+- Decision: `IngressEvent.sender.openId` 仍是 mention identity 的唯一 authority；Router 不传 identity。
+- Rejected alternatives: name/roster inference 或任意 mention target。
+- Reason: 保持身份边界并防止伪造 mention。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-004 — Allow only two bounded Router seams
+
+- Decision owner: `mayf3`
+- Decision: Router 仅可在 successful-reply seam 传递 UX intent，并在
+  `ingress-delivery.js` 投影本次调用已持有的 execution/reply-delivery 结果；不得取得 transport、
+  rendering、identity 或 lifecycle authority。
+- Rejected alternatives: Router 自行发送、解析 identity、持久化新结果或管理 AgentProcess。
+- Reason: 阶段语义存在于 ingress delivery orchestration，但 transport/identity 仍属于原 owner。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-005 — Preserve SDK fallbacks and truthful ambiguity
+
+- Decision owner: `mayf3`
+- Decision: target-revoked 与 post-to-text format fallback、`maxAttempts=3` 的 SDK retry 保持分层；
+  SDK 终局后上层不重发。unknown/send_timeout 和 partial delivery 只按可证明状态表达，不声明
+  visible exactly-once。
+- Rejected alternatives: 全链路 ambiguous 零重试、connector fallback 或虚构 partial receipts。
+- Reason: 固定 SDK 的 attempt/receipt 能力不足以支持更强保证。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-006 — Preserve excluded caller plans
+
+- Decision owner: `mayf3`
+- Decision: Router failure/unbound/startup receipt 与普通 proactive caller 保留各自发送计划；Scheduler
+  success presentation 保留既有 card eligibility。新增媒体预检仅作用于 Router 成功回复。
+- Rejected alternatives: 所有 Scheduler 强制 text，或用 cardEligible 并集触发媒体预检。
+- Reason: 展示修复不能改变并行 Scheduler 产品行为。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-007 — Gate implementation on accepted same-main content
+
+- Decision owner: `mayf3`
+- Decision: implementation 仅从同时包含 V3 accepted exact content 与 Phase A foundation 的 main
+  descendant 开始；PR/branch 身份不能替代内容。
+- Rejected alternatives: proposed 或未合并的 accepted-looking 文档授权实现。
+- Reason: authority 必须在指定 authority branch 生效。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-008 — Retain real-client verification
+
+- Decision owner: `mayf3`
+- Decision: Markdown、mention、notification、topic、failure 和新增含图片答案均须经过相应
+  dedicated test-app/real-client gate；模拟证据必须单独标记。
+- Rejected alternatives: unit/mock-only acceptance。
+- Reason: 本地测试不能证明飞书客户端真实展示与通知行为。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-009 — Retain SDK-native heading normalization
+
+- Decision owner: `mayf3`
+- Decision: 标题文字、顺序与 SDK-native heading treatment 必须保留；H1–H6 六种视觉样式不作为
+ 通过条件；custom converter、heading preprocessor 与 SDK re-pin 仍禁止。
+- Rejected alternatives: 恢复六级视觉区分或将标题全部降为正文。
+- Reason: 完整承接 accepted heading normalization ruling。
+- Owner decision remaining: NONE
+
+### DEC-LUX-V3-010 — Use one whole-authority successor
+
+- Decision owner: `mayf3`
+- Decision: V3 以完整 standalone authority 替代 V2 与 heading amendment；接受时三个 lifecycle
+ 记录与 reciprocal links 原子闭合，旧 global normative IDs 仅作为历史 authority。
+- Rejected alternatives: partial supersession、原地修改 accepted predecessor 或 transitive-only claim。
+- Reason: 当前仓库禁止新 partial supersession。
+- Owner decision remaining: NONE
+
+### DEC-DISPLAY-001 — Deliver original answer bytes without media upload
+
+- Decision owner: `mayf3`
+- Decision: 媒体标记命中时预选 SDK text，保留正文与 URL 原字节；不下载、上传或改写资源。
+- Rejected alternatives: prompt-only suppression、自动上传或 URL parser。
+- Reason: 用最小 pre-send selection 避开 static-card image-key 解释。
+- Owner decision remaining: NONE
+
+### DEC-DISPLAY-002 — Never re-execute or resend after terminal delivery result
+
+- Decision owner: `mayf3`
+- Decision: 一次答案最多一次上层 `channel.send`；SDK 终局后不得重发答案、切模型或重新执行
+  Agent。SDK 内部 retry/fallback 保持现状。
+- Rejected alternatives: card failure 后全文补投或业务重放。
+- Reason: ambiguous/partial delivery 下重发会放大重复副作用。
+- Owner decision remaining: NONE
+
+### DEC-DISPLAY-003 — Project a closed stage-specific result
+
+- Decision owner: `mayf3`
+- Decision: admission/execution failure 与 reply-delivery failure 使用 §9 的封闭诊断 union；reply
+  failure 携带原 execution projection，错误回执状态独立，缺失信息不猜测。
+- Rejected alternatives: 新结果存储、覆盖 execution 状态或把 delivery unknown 写成 execution unknown。
+- Reason: 调用方需要准确诊断，同时保留现有 top-level `error` 兼容性。
+- Owner decision remaining: NONE
 
 ## 9. Contracts
 
@@ -287,10 +431,50 @@ previous verified deployment commit; no dual flag/data migration is authorized.
 
 ### CTR-DISPLAY-003 — 保留执行结果并区分阶段
 
-execution 未完成前的错误保持原 envelope/fencedBy。投递发生在已得到 turnResult 后；send 失败必须保留该 turnResult 的原 status、reconciliationHandle 和已有结果引用，附加 failureStage=reply_delivery。
-此投影保持内部既有 error 返回兼容，不把投递 unknown 改写为 execution unknown，不改变 turn store 或 fence。不在日志输出答案正文或私有 URL。
-确定投递失败的回执应说明“答案已生成，但回复投递失败”；终局 unknown/send_timeout 的回执应说明“答案已生成，但投递结果未知，可能已送达”；若 turnResult 本身没有 completed 证据，不能自行断言已完成。回执也只能投影实际已知状态。
-错误回执的投递状态独立记录；它不是原答案重投。回执失败不得改写原 execution。
+`deliverIngress()` 的失败结果 MUST 是以下封闭 discriminated union 之一；所有 variant 保留既有
+top-level `error`，不得添加未列出的诊断枚举值：
+
+```text
+AdmissionFailure = {
+  error: Error,
+  failureStage: 'admission'
+}
+
+ExecutionFailure = {
+  error: Error,
+  failureStage: 'execution'
+}
+
+ReplyDeliveryFailure = {
+  error: Error,
+  failureStage: 'reply_delivery',
+  executionResult: {
+    reply: string,
+    agentId: string,
+    sessionId: string,
+    pid?: number,
+    status?: string,
+    reconciliationHandle?: string,
+    evidence?: object
+  },
+  replyDelivery: 'failed' | 'unknown',
+  partialDelivery: 'possible',
+  confirmedChunkReceipts: 'unavailable',
+  failureReceipt: { status: 'delivered' | 'failed' | 'not_attempted' }
+}
+```
+
+`admission` 仅用于 prompt 未进入执行的结果，并保留原 `not_admitted`/`fencedBy`/envelope；已进入
+执行但尚未获得 turnResult 的错误为 `execution`。只有获得 turnResult 后的 `feishu.reply` 失败为
+`reply_delivery`，其 `executionResult` MUST 与若发送成功本来会返回的既有 success projection
+字段和值相同，不得把 delivery 状态写入 execution status，也不得丢失 status、handle 或 evidence。
+
+确定投递失败的回执说明“答案已生成，但回复投递失败”；终局 unknown/send_timeout 回执说明
+“答案已生成，但投递结果未知，可能已送达”。若 executionResult 自身没有 completed 证据，不能
+自行断言 completed。`failureReceipt.status` 只描述错误回执本身；回执不得包含原答案正文，回执失败
+不得改写 `executionResult`。非飞书入口不尝试回执并使用 `not_attempted`。
+
+此投影不改变 turn store/fence，不新增持久化或 execution authority。不在日志输出答案正文或私有 URL。
 
 ### CTR-DISPLAY-004 — SDK 终局 unknown 与缺 ID
 
@@ -298,10 +482,16 @@ SDK 终局 unknown（含其内部缺 messageId 重试后仍失败）或 send_tim
 真实内部 attempt 数未公开时记 unavailable，测试桩可观测；禁止伪造 production attempt=1 或 attempt=3。
 SDK send_timeout 与 unknown 原错误分类保持不变；二者均投影 replyDelivery=unknown，用户回执必须说明“可能已送达”。SDK 默认不重试 send_timeout 不构成未送达证明，不能投影为 definitively_rejected。全链路 ambiguous 零重试不属于首期保证。
 
+`error.code` 为 `unknown`、`send_timeout` 或未被固定分类器证明为确定拒绝的值时，
+`replyDelivery='unknown'`。`error.code` 为 SDK 已分类的 `permission_denied`、`format_error`、
+`target_revoked` 或 `rate_limited` 且相应 SDK attempts/fallback 已终局失败时，
+`replyDelivery='failed'`。任何映射都 MUST 保留原 `error.code`，不得把 timeout 改写成 unknown code。
+
 ### CTR-DISPLAY-005 — 分块失败诚实投影
 
-SDK 全部成功时只记录实际返回的 messageId/chunkIds。
-逻辑发送失败且无法排除分块时，记录 partialDelivery=possible、confirmedChunkReceipts=unavailable；即使终局错误是 format/permission rejection，也不能据此声称整个答案零送达。
+SDK 全部成功时只记录实际返回的 messageId/chunkIds，不生成 failure union。
+任一逻辑发送失败均使用 `partialDelivery='possible'`、
+`confirmedChunkReceipts='unavailable'`；即使终局错误是 format/permission rejection，也不能据此声称整个答案零送达。
 上层显示“可能部分送达，已确认块回执不可用”，不重新投递整篇。缺回执不生成假 chunkIds，不建设旁路拦截 transport。
 SDK 明确错误码只描述终局调用；除非已有证据排除先前 chunks/unknown attempts，不推导逻辑答案整体 definitively_rejected。
 
@@ -596,20 +786,94 @@ SDK 明确错误码只描述终局调用；除非已有证据排除先前 chunks
 | `CTR-BOUNDARY-001-V3` | Router/unbound/boundary Acceptances | YES |
 | `CTR-TEST-APP-001` | dedicated app Acceptance items | YES |
 | `CTR-ROLLBACK-001` | boundary Acceptance | YES |
+| `CTR-DISPLAY-001` | `ACC-DISPLAY-001`, `ACC-DISPLAY-005` | YES |
+| `CTR-DISPLAY-002` | `ACC-DISPLAY-002`, `ACC-DISPLAY-003`, `ACC-DISPLAY-005` | YES |
+| `CTR-DISPLAY-003` | `ACC-DISPLAY-004`, `ACC-DISPLAY-006` | YES |
+| `CTR-DISPLAY-004` | `ACC-DISPLAY-002`, `ACC-DISPLAY-004` | YES |
+| `CTR-DISPLAY-005` | `ACC-DISPLAY-003`, `ACC-DISPLAY-004` | YES |
+| `CTR-DISPLAY-006` | `ACC-DISPLAY-003`, `ACC-DISPLAY-004`, `ACC-DISPLAY-005`, `ACC-DISPLAY-006` | YES |
 
 
-### Display delta acceptance
+### ACC-DISPLAY-001 — Router media preselection
 
+- Contracts: `CTR-DISPLAY-001`, `CTR-MARKDOWN-001-V3`, `CTR-RECEIPT-001-V3`.
+- Method: parameterized connector plan test with external/encoded URLs, img key, reference image, HTML media,
+  code-block marker, ordinary Markdown, empty and oversize bodies; separately invoke Scheduler presentation.
+- Environment: exact implementation with stub SDK transport; simulated, zero network.
+- Required evidence: exact input bytes, selected SDK input variant, card/post/text attempt counters, caller intent
+  and baseline/candidate Scheduler plan comparison.
+- Expected result: every Router-success media case selects `{text: originalAnswer}`, preserves bytes/URL and has
+  interactive/post attempts zero; non-media and Scheduler cases retain their existing plans.
+- Failure condition: media enters card/post, bytes change, network resource probe occurs, or Scheduler is selected
+  by the media precheck.
 
-- ACC-DISPLAY-001：纯预检覆盖外部 URL、编码 URL、img key、reference image、HTML 媒体、代码块保守误命中。命中时 interactive/post attempts=0，原正文/URL byte-equal；不命中保留既有表格/链接/空/oversize 行为。
-- ACC-DISPLAY-002：用实际固定 SDK + stub transport：短 text 成功一次；unknown 和缺 ID 场景按现配置最多 3 次底层尝试，上层逻辑调用=1；send_timeout 默认不重试，终局保留 send_timeout 分类并投影 replyDelivery=unknown，回执含“可能已送达”，不得声称零送达。均不得新增 Agent prompt。
-- ACC-DISPLAY-003：至少两块，第一块成功第二块失败；证明 SDK 不向上返回部分 IDs，投影 possible/unavailable，终局后上层不重发。包括第二块 permission/format 拒绝，不能断言整篇未送达。
-- ACC-DISPLAY-004：真实 ingress 路径中 completed execution + send failure 保留原 status/handle/result；fenced-before-admission 保留 not_admitted/fencedBy；错误回执再次失败也不覆盖原执行。
-- ACC-DISPLAY-005：原身份/会话下从真实用户入口发送新的无副作用含图片答案 canary，确认正文与链接真正收到、同一 Agent 仅执行一次、线程/mention 合同正确。真实 canary 与模拟测试单独报告，不对历史业务补投。
-- ACC-DISPLAY-006：SDK pin/retry 配置、AgentProcess、Binding、Scheduler、身份和结果存储零变更；相关旧回归通过。部署需要 fresh exact bytes、串行 mutation lane、现有授权和回滚前态。
+### ACC-DISPLAY-002 — Bounded SDK outcomes and timeout projection
 
+- Contracts: `CTR-DISPLAY-002`, `CTR-DISPLAY-004`, `CTR-TRANSPORT-RETRY-001`,
+  `CTR-TRANSPORT-RETRY-002`.
+- Method: run short text success, retryable unknown, missing messageId, send_timeout and deterministic rejection
+  through the fixed SDK with instrumented stub transport and the real upper send seam.
+- Environment: SDK `ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f`; simulated transport.
+- Required evidence: upper `channel.send` count, lower wire-attempt count, original/final error code, returned union,
+  failure-receipt text and Agent prompt/execution counters.
+- Expected result: upper call is one; unknown/missing-ID follow current SDK bounded retry; send_timeout is not retried
+  by default; unknown/send_timeout preserve code and project `replyDelivery='unknown'` with “可能已送达”; no Agent
+  prompt or execution is added.
+- Failure condition: upper resend, error reclassification, timeout projected failed/not-delivered, fabricated attempt
+  count or Agent re-execution.
 
-Each ACC-DISPLAY item is mandatory. ACC-DISPLAY-001/002/003 use local simulated transport; ACC-DISPLAY-004 uses real ingress code with simulated delivery; ACC-DISPLAY-005 is a real authorized original-entry canary. Preserve exact input, call counts, result envelope and message/turn receipt metadata without private answer bodies. Failure of any stated assertion fails its gate. Contract coverage: CTR-DISPLAY-001→ACC-DISPLAY-001/005; 002→002/005; 003→004; 004→002; 005→003; 006→004/005/006. Production application remains separately authorized.
+### ACC-DISPLAY-003 — Partial chunk failure is possible/unavailable
+
+- Contracts: `CTR-DISPLAY-002`, `CTR-DISPLAY-005`, `CTR-DISPLAY-006`.
+- Method: force at least two SDK text chunks, accept the first and fail the second independently with unknown,
+  permission and format classifications.
+- Environment: fixed SDK with instrumented stub transport; simulated.
+- Required evidence: chunk inputs/order, lower attempts, upper call count, thrown terminal error and returned
+  `ReplyDeliveryFailure`; transport stub privately records the first ID only to prove SDK does not return it.
+- Expected result: every failure returns `partialDelivery='possible'` and
+  `confirmedChunkReceipts='unavailable'`; upper resend/replay is zero and no fake chunk ID is exposed.
+- Failure condition: whole-answer zero-delivery assertion, partial ID fabrication, entire-answer resend or new prompt.
+
+### ACC-DISPLAY-004 — Stage-specific result union preserves execution
+
+- Contracts: `CTR-DISPLAY-003`, `CTR-DISPLAY-004`, `CTR-DISPLAY-005`, `CTR-DISPLAY-006`,
+  `CTR-ROUTER-INTENT-003-V3`.
+- Method: exercise fenced-before-admission, pre-turn-result execution failure, completed execution plus each reply
+  error class, and reply error followed by failure-receipt failure through the real ingress function.
+- Environment: real Router ingress code with fake process/Feishu dependencies; simulated delivery.
+- Required evidence: exact returned object keys/values, original Error fields, source turnResult projection, receipt
+  attempt/status and execution/prompt/send counters.
+- Expected result: variants match exactly §9 `AdmissionFailure`, `ExecutionFailure` or `ReplyDeliveryFailure`;
+  admission retains not_admitted/fencedBy, reply failure retains byte-equal execution projection, enum mapping and
+  possible/unavailable; receipt failure changes only `failureReceipt.status`.
+- Failure condition: wrong discriminator/enum, unlisted diagnostic field, missing status/handle/evidence, delivery
+  state written into execution, receipt error replacing original error, or extra execution/send.
+
+### ACC-DISPLAY-005 — Real original-entry image-answer canary
+
+- Contracts: `CTR-DISPLAY-001`, `CTR-DISPLAY-002`, `CTR-DISPLAY-006`, `CTR-TEST-APP-001`.
+- Method: after all authority/test/deployment gates, send one new harmless image-containing request from the original
+  user entry to the bound Agent and inspect client, session and transport receipts.
+- Environment: authorized dedicated test app first; production only under a separate valid serialized operation.
+- Required evidence: sanitized exact request/answer hash, message ID, target/thread/mention metadata, Agent turn and
+  upper-send counts, client capture and historical-request replay audit.
+- Expected result: original body and URL are received; same Agent execution count is one; upper original-answer
+  resend is zero; target/thread/mention are correct; historical answers are not replayed.
+- Failure condition: missing/changed body or link, wrong Agent/thread/mention, multiple executions/sends, or any
+  historical replay. Simulated evidence cannot satisfy this item.
+
+### ACC-DISPLAY-006 — Scope, dependency and storage preservation
+
+- Contracts: `CTR-DISPLAY-003`, `CTR-DISPLAY-006`, `CTR-BOUNDARY-001-V3`, `CTR-ROLLBACK-001`.
+- Method: exact base/head diff, dependency/config/state inventory, affected regression suite and production mutation
+  audit.
+- Environment: isolated implementation branch; production read-only preflight where authorized.
+- Required evidence: changed-path list, SDK lock/pin diff, AgentProcess/Binding/Session/Scheduler/identity/result-store
+  diffs, test results, rollback preimage and production mutation receipt.
+- Expected result: only V3-authorized display paths change; SDK pin/retry, lifecycle, identity, Scheduler plan and
+  persistent result stores are unchanged; production mutation remains zero until its separate gate.
+- Failure condition: forbidden file/authority/state change, new storage/retry/replay, missing rollback preimage or
+  unapproved production mutation.
 
 ### Inherited real-client gates
 
@@ -711,23 +975,126 @@ PARTIAL_SUPERSESSION = NONE
 四项声明表示候选已明确语义与完整替代方案，不表示 Owner 已接受；独立语义审查和精确 reviewed head 接受仍是前置门。
 ACCEPTED=NO；IMPLEMENTATION_STARTED=NO；PRODUCTION_APPLIED=NO。
 
-Whole-authority migration preserves unchanged effective V2 CTR/ACC meanings. Changed meanings use new IDs in the explicit mapping below; heading IDs follow the already accepted amendment; CTR-LUXHN-BOUNDARY-001 was a historical amendment-only boundary, consumed by whole succession, not new product behavior. Old investigation/authoring artifacts are not new implementation gates. Acceptance transaction and exact review remain pending.
+Whole-authority migration preserves the complete effective V2 Decisions, Contracts, Acceptance items, test gates,
+scope and prohibitions. Changed meanings use new IDs in the explicit mapping below; heading IDs follow the already
+accepted amendment; CTR-LUXHN-BOUNDARY-001 was a historical amendment-only boundary, consumed by whole
+succession, not new product behavior. Old investigation/authoring artifacts are not new implementation gates.
+Acceptance transaction and exact review remain pending.
 
 
-### Changed stable-ID migration
+### Exhaustive predecessor normative migration
 
-Old accepted IDs are retained only as historical provenance below, never redefined by this successor.
+Every identifier in this section is globally qualified as `<SPEC_ID>#<ITEM_ID>`. `PRESERVED` means the
+effective meaning is restated under the V3 global identity; `REPLACED` names the changed V3 item;
+`RETIRED` applies only to amendment-governance mechanics that have no product effect after whole succession.
+No predecessor ID is reused or edited.
 
-| Predecessor ID | Successor ID |
+#### Decisions
+
+| Predecessor global ID | V3 global ID / disposition |
 |---|---|
-| `CTR-MARKDOWN-001` | `CTR-MARKDOWN-001-V3` |
-| `CTR-ROUTER-INTENT-001` | `CTR-ROUTER-INTENT-001-V3` |
-| `CTR-ROUTER-INTENT-003` | `CTR-ROUTER-INTENT-003-V3` |
-| `CTR-BOUNDARY-001` | `CTR-BOUNDARY-001-V3` |
-| `ACC-FAILURE-RECEIPT-NO-MENTION` | `ACC-FAILURE-RECEIPT-NO-MENTION-V3` |
-| `ACC-ROUTER-INTENT-001` | `ACC-ROUTER-INTENT-001-V3` |
-| `ACC-BOUNDARY-001` | `ACC-BOUNDARY-001-V3` |
-| `CTR-RECEIPT-001` | `CTR-RECEIPT-001-V3` |
-| `CTR-FORMAT-FALLBACK-001` | `CTR-FORMAT-FALLBACK-001-V3` |
-| `ACC-UNBOUND-PROACTIVE-NO-MENTION` | `ACC-UNBOUND-PROACTIVE-NO-MENTION-V3` |
-| `ACC-FORMAT-FALLBACK-001` | `ACC-FORMAT-FALLBACK-001-V3` |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#DEC-LUX-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-001` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#DEC-LUX-002` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-002` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#DEC-LUX-003` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-003` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#DEC-LUX-004` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-004` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#DEC-LUX-005` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-005` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#DEC-LUX-006` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-006` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#DEC-LUX-007` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-007` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#DEC-LUX-008` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-008` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT#DEC-LUXHN-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-009` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT#DEC-LUXHN-002` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-010` — REPLACED by whole succession |
+| `AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT#DEC-LUXHN-003` | `AGENT_CORE_LARK_UX_PHASE1_V3#DEC-LUX-V3-010` — PRESERVED as complete effective inventory |
+
+#### Contracts
+
+| Predecessor global ID | V3 global ID / disposition |
+|---|---|
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-MARKDOWN-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-001-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-MARKDOWN-HEADING-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-HEADING-NATIVE-001` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-MARKDOWN-NESTED-LIST-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-NESTED-LIST-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-MARKDOWN-CODE-LANGUAGE-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-CODE-LANGUAGE-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-MARKDOWN-LINK-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-LINK-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-MARKDOWN-002` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-002` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-MARKDOWN-003` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-003` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-MARKDOWN-LONG-TABLE-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-LONG-TABLE-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-AUTO-MENTION-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-AUTO-MENTION-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-AUTO-MENTION-CODE-FENCE-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-AUTO-MENTION-CODE-FENCE-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-AUTO-MENTION-NOTIFICATION-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-AUTO-MENTION-NOTIFICATION-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-TOPIC-CONTINUITY-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-TOPIC-CONTINUITY-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-AUTO-MENTION-002` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-AUTO-MENTION-002` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-AUTO-MENTION-003` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-AUTO-MENTION-003` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-ROUTER-INTENT-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-ROUTER-INTENT-001-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-ROUTER-INTENT-002` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-ROUTER-INTENT-002` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-ROUTER-INTENT-003` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-ROUTER-INTENT-003-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-RECEIPT-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-RECEIPT-001-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-TARGET-REVOKED-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-TARGET-REVOKED-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-TARGET-REVOKED-002` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-TARGET-REVOKED-002` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-TRANSPORT-RETRY-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-TRANSPORT-RETRY-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-TRANSPORT-RETRY-002` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-TRANSPORT-RETRY-002` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-PERMISSION-ERROR-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-PERMISSION-ERROR-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-FORMAT-FALLBACK-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-FORMAT-FALLBACK-001-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-PHASE-A-PRECONDITION-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-PHASE-A-PRECONDITION-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-BOUNDARY-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-BOUNDARY-001-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-TEST-APP-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-TEST-APP-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#CTR-ROLLBACK-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-ROLLBACK-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT#CTR-MARKDOWN-HEADING-NATIVE-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#CTR-MARKDOWN-HEADING-NATIVE-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT#CTR-LUXHN-BOUNDARY-001` | RETIRED; amendment-only boundary is consumed by `DEC-LUX-V3-010` and current whole-succession governance |
+
+#### Acceptance items
+
+| Predecessor item(s) | V3 item / disposition |
+|---|---|
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MARKDOWN-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MARKDOWN-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MARKDOWN-HEADINGS-H1-H6`; `AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT#ACC-MARKDOWN-HEADING-NATIVE-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MARKDOWN-HEADING-NATIVE-001` — REPLACED / PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MARKDOWN-NESTED-LIST-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MARKDOWN-NESTED-LIST-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MARKDOWN-CODE-LANGUAGE-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MARKDOWN-CODE-LANGUAGE-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MARKDOWN-LINK-BYTE-STABLE` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MARKDOWN-LINK-BYTE-STABLE` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MARKDOWN-TABLE` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MARKDOWN-TABLE` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MARKDOWN-LONG-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MARKDOWN-LONG-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MARKDOWN-LONG-WITH-TABLE-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MARKDOWN-LONG-WITH-TABLE-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-GROUP-AUTO-MENTION` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-GROUP-AUTO-MENTION` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-MENTION-OUTSIDE-CODE-FENCE-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-MENTION-OUTSIDE-CODE-FENCE-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-NATIVE-MENTION-NOTIFICATION-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-NATIVE-MENTION-NOTIFICATION-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-TOPIC-AUTO-MENTION` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-TOPIC-AUTO-MENTION` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-TOPIC-INGRESS-CONTINUITY-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-TOPIC-INGRESS-CONTINUITY-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-P2P-NO-MENTION` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-P2P-NO-MENTION` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-IDENTITY-OPENID` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-IDENTITY-OPENID` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-FAILURE-RECEIPT-NO-MENTION` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-FAILURE-RECEIPT-NO-MENTION-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-UNBOUND-PROACTIVE-NO-MENTION` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-UNBOUND-PROACTIVE-NO-MENTION-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-ROUTER-INTENT-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-ROUTER-INTENT-001-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-TARGET-REVOKED-SAME-CHAT` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-TARGET-REVOKED-SAME-CHAT` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-SDK-ATTEMPTS-EXHAUSTED` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-SDK-ATTEMPTS-EXHAUSTED` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-PERMISSION-ERROR-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-PERMISSION-ERROR-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-FORMAT-FALLBACK-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-FORMAT-FALLBACK-001-V3` — REPLACED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-PHASE-A-PRECONDITION-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-PHASE-A-PRECONDITION-001` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#ACC-BOUNDARY-001` | `AGENT_CORE_LARK_UX_PHASE1_V3#ACC-BOUNDARY-001-V3` — REPLACED |
+
+#### Test gates
+
+| Predecessor gate | V3 gate / disposition |
+|---|---|
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MD-SURFACE` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-SURFACE` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MD-HEADINGS-H1-H6`; `AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT#TEST-LUX-MD-HEADINGS-NATIVE` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-HEADINGS-NATIVE` — REPLACED / PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MD-NESTED-LISTS` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-NESTED-LISTS` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MD-CODE-LANGUAGE` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-CODE-LANGUAGE` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MD-LINK-BYTE-STABLE` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-LINK-BYTE-STABLE` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MD-TABLE` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-TABLE` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MD-LONG` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-LONG` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MD-LONG-WITH-TABLE` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-LONG-WITH-TABLE` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-GROUP-MENTION` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-GROUP-MENTION` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-TOPIC-MENTION` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-TOPIC-MENTION` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-MENTION-OUTSIDE-CODE` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MENTION-OUTSIDE-CODE` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-NATIVE-NOTIFICATION` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-NATIVE-NOTIFICATION` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-TOPIC-CONTINUITY` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-TOPIC-CONTINUITY` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-P2P-NO-MENTION` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-P2P-NO-MENTION` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-IDENTITY` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-IDENTITY` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-RECEIPTS` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-RECEIPTS` — REPLACED by V3 caller-plan expectations |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-TARGET-REVOKED` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-TARGET-REVOKED` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-SDK-ATTEMPTS-EXHAUSTED` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-SDK-ATTEMPTS-EXHAUSTED` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-PERMISSION` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-PERMISSION` — PRESERVED |
+| `AGENT_CORE_LARK_UX_PHASE1_V2#TEST-LUX-FORMAT` | `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-FORMAT` — REPLACED by post-only expectations |
+
+The amendment's historical mention of
+`AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT#TEST-LUX-MD-HEADINGS-H1-H6` names the
+retired V2 gate it replaced;
+it maps through the same row to `AGENT_CORE_LARK_UX_PHASE1_V3#TEST-LUX-MD-HEADINGS-NATIVE` and is not reactivated.
