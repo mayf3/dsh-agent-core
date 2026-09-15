@@ -76,7 +76,10 @@ export function installSchedulerDesiredState({ bytes, expectedJobs, targetPath, 
       || (receipt.status === 'INSTALLED' ? !installedMatches : !preimageMatches && !installedMatches)) {
       throw new Error('desired-state deployment generation mismatch')
     }
-    if (installedMatches) return { ...receipt, status: 'ALREADY_INSTALLED' }
+    if (installedMatches) {
+      if (receipt.status === 'INSTALLING') writeReceipt({ ...receipt, status: 'INSTALLED' })
+      return { ...receipt, status: 'ALREADY_INSTALLED' }
+    }
     if (receipt.preimageSha256 !== null) {
       const frozenPreimage = frozenCurrent(preimagePath, expectedUid, expectedGid)
       if (!frozenPreimage || digest(frozenPreimage.bytes) !== receipt.preimageSha256) throw new Error('desired-state preimage generation mismatch')
