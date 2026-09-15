@@ -55,3 +55,15 @@ REAL_CANARY = NOT_RUN
 CURRENT_AGENT_RECOVERY = NOT_PROVEN
 
 This PASS is an exact-head Spec review recommendation, not acceptance, implementation conformance, or production authorization. Next action is Owner acceptance of the reviewed candidate followed by the defined atomic lifecycle transaction and main-base gates. Production deployment/restarts remain serialized with Watchdog and execution recovery.
+
+## Section 12 scoped follow-up review
+
+- Previous record and delta base: `074648412a5145e1f4abd7ab5e70e9f819989ab8`.
+- Reviewed candidate: `ac25a9ab58154c8b18059ef08ad358e9336fb036`.
+- Spec SHA-256: `fa5d1a125943d5305213f06df8a82ed6a2090de00de0718734d4e7242a225615`.
+- Reviewer: `ux_v3_semantic_review`, independent read-only follow-up.
+- Verdict: PASS; SHIP_BLOCKER=0; MECHANICAL_FIX=NONE; NEW_FOLLOW_UP_DEBT=NONE.
+
+Only the user-specified section 12 replacement changed. Other Spec bytes are preserved; diff whitespace check passed. Coordination is limited to the same production installation, Runtime or shared deployment resources and existing operational authority/gates. This Spec adds no cross-Goal deployment veto. The new generation is not old execution termination proof; exact lifecycle evidence and no historical replay remain mandatory. Prior four-item closure remains valid.
+
+Author-side revision ends here. This follow-up supersedes the previous record's unqualified final sentence about shared serialization: serialization applies only to the shared resources specified in the current section 12. Candidate remains proposed; acceptance, implementation and production operations are not authorized by this review. This report update does not change the reviewed Spec bytes.
