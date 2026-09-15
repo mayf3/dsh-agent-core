@@ -62,6 +62,7 @@ test('reviewed payload contains bounded failed-cutover extension and the depende
   const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo, encoding: 'utf8' })
   const durableState = show('packages/scheduler/src/watchdog/durable-state.js')
   assert.match(durableState, /MIGRATION_EXTENDED/)
+  assert.match(durableState, /if \(!after\) \{[\s\S]*incidents\[root\] = structuredClone\(before\)/)
   assert.match(durableState, /drops committed fact identity/)
   assert.match(durableState, /facts: structuredClone\(after\.facts\)/)
   assert.match(durableState, /symptoms: structuredClone\(after\.symptoms\)/)
