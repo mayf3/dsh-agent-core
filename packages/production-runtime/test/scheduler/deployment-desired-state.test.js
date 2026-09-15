@@ -28,6 +28,54 @@ test('desired-state install preserves exact predecessor and replay retains first
   assert.equal(installSchedulerDesiredState({ ...args, receipt }).status, 'ALREADY_INSTALLED')
 })
 
+test('desired-state install accepts root-owned legacy 0644 preimage and narrows the installed mode to 0640', async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-legacy-mode-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 })
+  await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(targetPath, '{"version":"legacy"}\n', { mode: 0o644 })
+  plain(targetPath)
+  const bytes = Buffer.from('{"version":1,"jobs":[]}\n')
+  let receipt
+  const result = installSchedulerDesiredState({
+    bytes, expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: (value) => { receipt = value },
+  })
+  assert.equal(result.status, 'INSTALLED')
+  assert.equal((await lstat(targetPath)).mode & 0o777, 0o640)
+  assert.equal(await readFile(targetPath, 'utf8'), bytes.toString())
+  assert.equal(await readFile(preimagePath, 'utf8'), '{"version":"legacy"}\n')
+  assert.equal(receipt.preimageMetadata.mode, 0o644)
+})
+
+test('desired-state install still rejects a writable legacy target', async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-writable-mode-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 })
+  await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(targetPath, '{"version":"unsafe"}\n', { mode: 0o664 })
+  await chmod(targetPath, 0o664)
+  plain(targetPath)
+  let wroteReceipt = false
+  assert.throws(() => installSchedulerDesiredState({
+    bytes: Buffer.from('{"version":1,"jobs":[]}\n'), expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: () => { wroteReceipt = true },
+  }), /unsafe desired-state target/)
+  assert.equal(wroteReceipt, false)
+  assert.equal(await readFile(targetPath, 'utf8'), '{"version":"unsafe"}\n')
+  assert.equal((await lstat(targetPath)).mode & 0o777, 0o664)
+})
+
 test('desired-state crash after INSTALLING receipt replays from the frozen candidate, not predecessor target', async (t) => {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-crash-')))
   t.after(() => rm(root, { recursive: true, force: true })); await chmod(root, 0o700)
