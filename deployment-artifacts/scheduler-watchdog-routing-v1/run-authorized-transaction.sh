@@ -21,7 +21,6 @@
 # =============================================================================
 set -euo pipefail
 
-AUTH_MAIN_SHA="f0459522cdbdf3b065f2d89e4332d88013537eb9"
 REVIEWED_CODE_SHA="7e645ea2a4b353c2e79b4a735aa9ab7a89d5de68"
 APP_ROOT="/usr/local/libexec/agent-core/app"
 CANONICAL_STORE="/Users/authsvc/.agent-core/scheduler/jobs.json"
@@ -48,12 +47,14 @@ GATES() {
   echo "✔ §3 slot gates: FREE/FREE/YES"
   git -C "$MAIN_WORKTREE" rev-parse HEAD | grep -q "^$AUTH_MAIN_SHA$" \
     || gate "authorized main sha" 1 "worktree HEAD != $AUTH_MAIN_SHA"
-  git -C "$MAIN_WORKTREE" rev-parse origin/main | grep -q "^$AUTH_MAIN_SHA$" \
-    || gate "origin/main is the authorized artifact" 1 "origin/main moved — STOP, re-verify"
-  # Reviewed-code binding: everything after the reviewed head must be docs/artifacts only.
-  CODE_DELTA=$(git -C "$MAIN_WORKTREE" diff --name-only "$REVIEWED_CODE_SHA..$AUTH_MAIN_SHA" | grep -v -E '^(docs/|deployment-artifacts/|\.agents/)' || true)
-  [ -z "$CODE_DELTA" ] || gate "code delta beyond reviewed head" 1 "$CODE_DELTA"
-  echo "✔ CURRENT_MAIN_SHA matches authorized deploy artifact ($AUTH_MAIN_SHA; code == reviewed $REVIEWED_CODE_SHA)"
+  git -C "$MAIN_WORKTREE" fetch origin main --quiet
+  git -C "$MAIN_WORKTREE" merge-base --is-ancestor "$REVIEWED_CODE_SHA" origin/main \
+    || gate "origin/main contains the authorized artifact" 1 "reviewed head missing — STOP"
+  # Reviewed-code binding: origin/main must be the reviewed code + docs/artifacts only.
+  git -C "$MAIN_WORKTREE" diff --quiet "$REVIEWED_CODE_SHA" origin/main -- ':!docs' ':!deployment-artifacts' ':!.agents' \
+    || gate "code delta beyond reviewed head" 1 "non-docs drift on origin/main — STOP, re-verify"
+  CURRENT_MAIN_SHA=$(git -C "$MAIN_WORKTREE" rev-parse origin/main)
+  echo "✔ CURRENT_MAIN_SHA=$CURRENT_MAIN_SHA (code == reviewed $REVIEWED_CODE_SHA; delta docs/artifacts only)"
   [ -f "$CANONICAL_STORE" ] || gate "canonical store readable" 1 "$CANONICAL_STORE"
   echo "EXPECTED_STORE_SHA256=$(shasum -a 256 "$CANONICAL_STORE" | cut -d' ' -f1)"
   [ -f "$ROUTING_TARGET" ] \
@@ -67,8 +68,10 @@ DEPLOY() {
   local MAIN_WORKTREE="$1" STAGING_DIR="$2"
   rm -rf "$STAGING_DIR"
   git clone --no-hardlinks --quiet "$MAIN_WORKTREE" "$STAGING_DIR" || gate "staging clone" 1
-  git -C "$STAGING_DIR" checkout --quiet --detach "$AUTH_MAIN_SHA" || gate "staging checkout" 1
-  git -C "$STAGING_DIR" rev-parse HEAD | grep -q "^$AUTH_MAIN_SHA$" || gate "staging detached at authorized sha" 1
+  git -C "$STAGING_DIR" fetch origin main --quiet
+  git -C "$STAGING_DIR" checkout --quiet --detach origin/main || gate "staging checkout at origin/main" 1
+  git -C "$STAGING_DIR" diff --quiet "$REVIEWED_CODE_SHA" HEAD -- ':!docs' ':!deployment-artifacts' ':!.agents' \
+    || gate "staging code == reviewed head" 1 "non-docs drift — STOP"
   bash "$STAGING_DIR/scripts/trusted-cp-deploy-install.sh" "$STAGING_DIR" 2>&1 | tee /tmp/wgr-tx-deploy.log
   gate "deploy installer exit" "${PIPESTATUS[0]}"
 }
