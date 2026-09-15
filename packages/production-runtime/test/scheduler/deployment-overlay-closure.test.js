@@ -3,8 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
-import { narrowOverlayUniverse } from '../../../../scripts/lib/admission-lib.mjs'
-import { adaptCandidateComposeToPinnedV2 } from '../../../../scripts/lib/deployment-goal-overlay.mjs'
+import { adaptCandidateComposeToPinnedV2, narrowOverlayUniverse } from '../../../../scripts/lib/admission-lib.mjs'
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 

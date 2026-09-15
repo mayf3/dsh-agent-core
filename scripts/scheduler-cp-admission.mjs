@@ -18,9 +18,8 @@ import { updateJobOp } from '../packages/scheduler/src/control.js'
 import {
   matchCriticalJobs, buildDesiredState, buildBackfillMapping, classifyCensus,
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
-  reExportsWithoutLocalBinding,
+  reExportsWithoutLocalBinding, buildOverlaySeedBytes,
 } from './lib/admission-lib.mjs'
-import { adaptCandidateComposeToPinnedV2 } from './lib/deployment-goal-overlay.mjs'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
 import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
@@ -50,8 +49,7 @@ const MIGRATION_SOURCES = {
   factsPath: val('--migration-facts'), factsFileSha256: val('--migration-facts-file-sha256'),
   factsSha256: val('--migration-facts-sha256'),
 }
-const GOAL_BASE_SHA = '68008e83142bdb637c4fa61c2a65db73c64b2eb1'
-const PINNED_V2_MODEL_LOADER = new Map([['packages/production-runtime/src/model-overrides.js', '4df9f741e1c550d377a29a81ba08f32d8986c19384e8239570738e565858898d']])
+const GOAL_BASE_SHA = '68008e83142bdb637c4fa61c2a65db73c64b2eb1'; const PINNED_V2_MODEL_LOADER = new Map([['packages/production-runtime/src/model-overrides.js', '4df9f741e1c550d377a29a81ba08f32d8986c19384e8239570738e565858898d']])
 if (MODE === undefined || !/^[0-9a-f]{40}$/.test(SOURCE_SHA ?? '')) {
   process.stderr.write('usage: scheduler-cp-admission --selftest|--plan|--apply --source-sha <sha> --routing-manifest-source <path> --routing-manifest-sha256 <sha256> plus frozen migration source paths/hashes\n')
   process.exit(2)
@@ -187,15 +185,8 @@ function overlay() {
       return (status === 'D' || status.startsWith('R')) && inOverlayUniverse(first) ? [first] : []
     })
   const liveRootFiles = listLiveFiles(CTX.liveRoot)
-  const liveSha = (path) => {
-    const p = join(CTX.liveRoot, path)
-    return existsSync(p) ? sha256(readFileSync(p)) : undefined
-  }
-  const composePath = 'packages/production-runtime/src/compose.js'
-  const seedBytes = new Map(seedList.map((path) => {
-    const target = git(['show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8' })
-    return [path, path === composePath ? adaptCandidateComposeToPinnedV2(target) : target]
-  }))
+  const liveSha = (path) => existsSync(join(CTX.liveRoot, path)) ? sha256(readFileSync(join(CTX.liveRoot, path))) : undefined
+  const seedBytes = buildOverlaySeedBytes(seedList, (path) => git(['show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8' }))
   const narrowed = narrowOverlayUniverse({
     seedPaths: seedList,
     readTarget: (path) => seedBytes.get(path) ?? execFileSync('git', ['-C', REPO_ROOT, 'show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }),
