@@ -67,3 +67,24 @@ This PASS is an exact-head Spec review recommendation, not acceptance, implement
 Only the user-specified section 12 replacement changed. Other Spec bytes are preserved; diff whitespace check passed. Coordination is limited to the same production installation, Runtime or shared deployment resources and existing operational authority/gates. This Spec adds no cross-Goal deployment veto. The new generation is not old execution termination proof; exact lifecycle evidence and no historical replay remain mandatory. Prior four-item closure remains valid.
 
 Author-side revision ends here. This follow-up supersedes the previous record's unqualified final sentence about shared serialization: serialization applies only to the shared resources specified in the current section 12. Candidate remains proposed; acceptance, implementation and production operations are not authorized by this review. This report update does not change the reviewed Spec bytes.
+
+## Fresh full-head review and frozen blocker union
+
+- Review target: `d35a52d14ac202c497c906a9e7270136cd147c1a`.
+- Merge base: `f72255d4feddb6deb4f907cbe70cca547f9e240a`.
+- Current remote main observed during review: `31e0dfe6f7af2aec0e570fe804904b2a4d720a4e`;
+  its only delta from the merge base was an unrelated pnpm diagnostic runbook.
+- Reviewer: independent subagent `v3_fresh_full_semantic_review`, fresh context, read-only.
+- Verdict: `REVISE`; `BLOCKERS=3`; `IMPLEMENTATION_ALLOWED=NO`; `OPERATION_ALLOWED=NO`.
+
+The fresh review did not inherit the preceding PASS. It froze three blockers: the proposed V3 bytes omitted the
+two `supersedes` entries; the standalone successor lacked the effective predecessor Decisions, material
+scope/non-goals, and exhaustive global-ID migration; and `CTR-DISPLAY-001..006` lacked six structured
+Acceptance definitions plus a closed stage-specific result carrier. Existing Scheduler-plan preservation,
+SDK retry/fallback ownership, truthful unknown/partial-delivery semantics and zero business replay were coherent.
+
+The following author repair is one union pass: name both predecessors while V3 remains proposed; restate the
+effective scope/prohibitions and Decisions; add a global Decision/Contract/Acceptance/test-gate crosswalk; define
+the admission/execution/reply-delivery union and six complete `ACC-DISPLAY-*` gates. It does not alter product
+code or production state. A new independent exact-head review is required; the old PASS records do not authorize
+acceptance or implementation.
