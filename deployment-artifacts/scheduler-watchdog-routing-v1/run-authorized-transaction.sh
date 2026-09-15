@@ -142,7 +142,15 @@ leave_lock_notice() {
   echo "⚠ INTERRUPTED — locks LEFT IN PLACE (tx: $LOCK_DIR; global: $GLOBAL_DEPLOY_LOCK_DIR if acquired)" >&2
   echo "  they are NOT auto-deleted; inspect and dispose explicitly (see holder files)" >&2
 }
-trap 'leave_lock_notice' INT TERM
+abort_on_signal() {
+  local signal_name="$1" exit_code="$2"
+  leave_lock_notice
+  echo "  terminating transaction on $signal_name (exit $exit_code); no lock cleanup is attempted" >&2
+  trap - INT TERM
+  exit "$exit_code"
+}
+trap 'abort_on_signal INT 130' INT
+trap 'abort_on_signal TERM 143' TERM
 
 authority_binding() {
   local W="$1" reviewed="$2" routing_sha="$3" deploy_sha="$4"
@@ -284,6 +292,13 @@ selftest() {
     gate "selftest: stale authority variable reference must not exist" "$stale_needle"
   fi
   pass "selftest: no stale authority variable reference (set -u safe by construction)"
+
+  # A trapped INT/TERM must terminate instead of returning to the production
+  # sequence. Run the real handler in a subshell and inspect its exit status.
+  local signal_rc=0
+  ( abort_on_signal TERM 143 ) >/dev/null 2>&1 || signal_rc=$?
+  [ "$signal_rc" -eq 143 ] || gate "selftest: TERM handler must terminate transaction" "rc=$signal_rc"
+  pass "selftest: TERM handler terminates with 143 and cannot continue the transaction"
 
   local saved_global="$GLOBAL_DEPLOY_LOCK_DIR"
   local saved_tx="$PRODUCTION_TRANSACTION_ID"
