@@ -671,7 +671,9 @@ PRODUCT_SEMANTIC_CHANGE = DISPLAY_DELTA_ONLY
 
 无需状态迁移或新存储；附加诊断保持原 envelope/status/handle 兼容。
 适用目标在接受/部署前 fresh 固定，不批量重启所有 Agent。rollback 恢复此次修改文件的 exact preimage，不重放历史答案。
-本展示修复文档与隔离开发可并行；涉及 Watchdog、执行恢复或展示修复的生产部署/Runtime 重启必须共用串行 mutation lane。重启前必须保存并核对恢复调查所绑定的旧 generation/ownership 证据及其可验证性；若无法保证相关证据保全，停止该 mutation，不能以重启后的新 generation 代替旧执行证明。
+本展示修复的文档审查与隔离开发可以并行。影响同一生产安装、Runtime 或共享部署资源的变更，按现有操作授权与串行 mutation lane 执行；部署前记录当前 generation、可获取的恢复证据及预期影响，并遵守既有操作门的中止条件。本展示规范不新增跨 Goal 的部署阻断条件。
+
+重启后的新 generation 本身不构成旧执行的终止证明。旧执行的解除 fence、结果核定与恢复，仍须依据既有生命周期合同允许的精确证据；不得自动重放历史请求。
 部署后先真实无副作用 canary，再按既有授权扩展；Owner 看到图片链接而非嵌入图片是本期有意展示变化。
 
 
