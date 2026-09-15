@@ -20,7 +20,7 @@ import {
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
   reExportsWithoutLocalBinding,
 } from './lib/admission-lib.mjs'
-import { adaptCandidateComposeToPinnedV2 } from '../packages/production-runtime/src/scheduler/deployment-goal-overlay.js'
+import { adaptCandidateComposeToPinnedV2 } from './lib/deployment-goal-overlay.mjs'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
 import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
