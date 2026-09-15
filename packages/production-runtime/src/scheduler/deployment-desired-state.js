@@ -20,19 +20,33 @@ function protectedParents(path) {
   }
 }
 
+const metadataMatches = (actual, expected) => Boolean(actual && expected
+  && actual.uid === expected.uid && actual.gid === expected.gid && actual.mode === expected.mode
+  && actual.acl === expected.acl && actual.xattrs === expected.xattrs)
+
+const sameOpenFileSnapshot = (left, right) => left.dev === right.dev && left.ino === right.ino
+  && left.uid === right.uid && left.gid === right.gid && left.mode === right.mode
+  && left.size === right.size && left.mtimeNs === right.mtimeNs && left.ctimeNs === right.ctimeNs
+
 function frozenCurrent(path, expectedUid, expectedGid, { allowLegacyReadable = false } = {}) {
   if (!existsSync(path)) return null
   const before = lstatSync(path)
-  const fileMetadata = capturePlainFileMetadata(path)
-  const mode = before.mode & 0o777
-  const protectedMode = (mode & ~0o640) === 0
-  if (before.uid !== expectedUid || before.gid !== expectedGid
-    || (!protectedMode && !(allowLegacyReadable && mode === 0o644))) throw new TypeError('unsafe desired-state target')
   const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
   try {
-    const after = fstatSync(fd)
-    if (before.dev !== after.dev || before.ino !== after.ino) throw new TypeError('desired-state target changed')
-    return { bytes: readFileSync(fd), stat: after, metadata: fileMetadata }
+    const opened = fstatSync(fd, { bigint: true })
+    const mode = Number(opened.mode & 0o777n)
+    const protectedMode = (mode & ~0o640) === 0
+    if (!opened.isFile() || Number(opened.uid) !== expectedUid || Number(opened.gid) !== expectedGid
+      || (!protectedMode && !(allowLegacyReadable && mode === 0o644))
+      || BigInt(before.dev) !== opened.dev || BigInt(before.ino) !== opened.ino) throw new TypeError('unsafe desired-state target')
+    const fileMetadata = capturePlainFileMetadata(path)
+    const bytes = readFileSync(fd)
+    const after = fstatSync(fd, { bigint: true })
+    const pathAfter = lstatSync(path, { bigint: true })
+    if (!sameOpenFileSnapshot(opened, after) || pathAfter.dev !== after.dev || pathAfter.ino !== after.ino
+      || Number(pathAfter.uid) !== expectedUid || Number(pathAfter.gid) !== expectedGid
+      || Number(pathAfter.mode & 0o777n) !== mode) throw new TypeError('desired-state target changed')
+    return { bytes, stat: after, metadata: fileMetadata }
   } finally { closeSync(fd) }
 }
 
@@ -51,8 +65,18 @@ export function installSchedulerDesiredState({ bytes, expectedJobs, targetPath, 
   const candidateSha256 = digest(candidateBytes)
   const current = frozenCurrent(targetPath, expectedUid, expectedGid, { allowLegacyReadable: true })
   if (receipt) {
-    if (receipt.candidatePath !== candidatePath || receipt.candidateSha256 !== candidateSha256 || ![candidateSha256, receipt.preimageSha256].includes(current ? digest(current.bytes) : null)) throw new Error('desired-state deployment generation mismatch')
-    if (current && digest(current.bytes) === candidateSha256) return { ...receipt, status: 'ALREADY_INSTALLED' }
+    const currentSha256 = current ? digest(current.bytes) : null
+    const installedMode = receipt.preimageMetadata?.mode === 0o644 ? 0o640 : receipt.preimageMetadata?.mode ?? 0o640
+    const installedMetadata = { uid: expectedUid, gid: expectedGid, mode: installedMode, acl: 'NONE', xattrs: 'NONE' }
+    const preimageMatches = currentSha256 === receipt.preimageSha256
+      && (currentSha256 === null ? receipt.preimageMetadata === null : metadataMatches(current?.metadata, receipt.preimageMetadata))
+    const installedMatches = currentSha256 === candidateSha256 && metadataMatches(current?.metadata, installedMetadata)
+    if (receipt.targetPath !== targetPath || receipt.candidatePath !== candidatePath || receipt.preimagePath !== preimagePath
+      || receipt.candidateSha256 !== candidateSha256 || !['INSTALLING', 'INSTALLED'].includes(receipt.status)
+      || (receipt.status === 'INSTALLED' ? !installedMatches : !preimageMatches && !installedMatches)) {
+      throw new Error('desired-state deployment generation mismatch')
+    }
+    if (installedMatches) return { ...receipt, status: 'ALREADY_INSTALLED' }
     if (receipt.preimageSha256 !== null) {
       const frozenPreimage = frozenCurrent(preimagePath, expectedUid, expectedGid)
       if (!frozenPreimage || digest(frozenPreimage.bytes) !== receipt.preimageSha256) throw new Error('desired-state preimage generation mismatch')
@@ -72,7 +96,7 @@ export function installSchedulerDesiredState({ bytes, expectedJobs, targetPath, 
   const temp = `${targetPath}.incoming.${process.pid}`
   writeFileSync(temp, candidateBytes, { mode: 0o600, flag: 'wx' })
   clearGeneratedFileXattrs(temp)
-  const currentMode = current ? current.stat.mode & 0o777 : null
+  const currentMode = current ? Number(current.stat.mode & 0o777n) : null
   chmodSync(temp, currentMode === 0o644 ? 0o640 : currentMode ?? 0o640)
   if (process.getuid?.() === 0) chownSync(temp, expectedUid, expectedGid)
   const fd = openSync(temp, constants.O_RDONLY); try { fsyncSync(fd) } finally { closeSync(fd) }
