@@ -307,7 +307,7 @@ test('failed-cutover replay preserves committed incidents and imports only newly
   assert.equal(loadIncidentState(incidentPath).hash, extended.incidentSha256)
 })
 
-test('failed-cutover replay refuses a generation that drops a committed root', async () => {
+test('failed-cutover replay carries forward a committed root absent from a later snapshot', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-drop-'))
   await chmod(dir, 0o700)
   const legacyPath = join(dir, 'legacy.json')
@@ -319,7 +319,7 @@ test('failed-cutover replay refuses a generation that drops a committed root', a
   const firstEvidence = Buffer.from(`${JSON.stringify({ fingerprint, delivery: 'DELIVERED', fact })}\n`)
   await writeFile(legacyPath, firstLegacy, { mode: 0o600 })
   await writeFile(evidencePath, firstEvidence, { mode: 0o600 })
-  migrateLegacyIncidentStateFiles({
+  const first = migrateLegacyIncidentStateFiles({
     legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
     findings: [fact], expectedLegacySha256: sha(firstLegacy), expectedEvidenceSha256: sha(firstEvidence),
     expectedFactsSha256: sha(Buffer.from(canonicalJSON([fact]))), nowMs: 2,
@@ -329,11 +329,14 @@ test('failed-cutover replay refuses a generation that drops a committed root', a
   const emptyEvidence = Buffer.alloc(0)
   await writeFile(legacyPath, emptyLegacy, { mode: 0o600 })
   await writeFile(evidencePath, emptyEvidence, { mode: 0o600 })
-  assert.throws(() => migrateLegacyIncidentStateFiles({
+  const extended = migrateLegacyIncidentStateFiles({
     legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
     findings: [], expectedLegacySha256: sha(emptyLegacy), expectedEvidenceSha256: sha(emptyEvidence),
     expectedFactsSha256: sha(Buffer.from(canonicalJSON([]))), nowMs: 3,
-  }), /drops committed root/)
+  })
+  assert.equal(extended.status, 'MIGRATION_EXTENDED')
+  assert.deepEqual(extended.state.incidents, first.state.incidents)
+  assert.deepEqual(extended.state.outbox, first.state.outbox)
 })
 
 test('failed-cutover replay monotonically enriches a committed root without changing lifecycle or alert state', async () => {
