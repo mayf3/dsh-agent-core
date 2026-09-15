@@ -32,7 +32,7 @@ const hasTerminationProof = (outcome) => TERMINATION_EVIDENCE.has(
 )
 
 /** C-026: reserve eligibility and the admitted record in one locked mutation. */
-export async function reserveOccurrence(candidate) {
+export async function reserveOccurrence(candidate, onRejection = () => {}) {
   let admittedAt
   const { doc, value } = await this.store.mutateDoc((latest) => {
     // The deadline clock starts only after the cross-process mutation lock is
@@ -64,15 +64,16 @@ export async function reserveOccurrence(candidate) {
     if (byId) throw structuredCollisionError(byId, attempted)
 
     const job = latest.jobs.find((entry) => entry.id === candidate.job.id)
-    if (!job || !job.enabled) return { value: null }
-    if (job.scheduleRevision !== candidate.job.scheduleRevision) return { value: null }
-    if (latest.fences[job.id] !== undefined) return { value: null }
-    if (hasNonTerminalOccurrence(latest.occurrences, job.id)) return { value: null }
+    const refuse = (reason) => { onRejection(reason); return { value: null } }
+    if (!job || !job.enabled) return refuse('job_missing_or_disabled')
+    if (job.scheduleRevision !== candidate.job.scheduleRevision) return refuse('schedule_revision_changed')
+    if (latest.fences[job.id] !== undefined) return refuse('fenced_outcome_unknown_in_flight')
+    if (hasNonTerminalOccurrence(latest.occurrences, job.id)) return refuse('non_terminal_occurrence_in_flight')
 
     if (candidate.kind === 'retry') {
       const retry = retryCandidate({ job, occurrences: latest.occurrences, nowMs: admittedAt })
       if (!retry || retry.exhausted || !retry.due
-        || retry.retryOfOccurrenceId !== candidate.retryOfOccurrenceId) return { value: null }
+        || retry.retryOfOccurrenceId !== candidate.retryOfOccurrenceId) return refuse('retry_not_eligible')
     } else {
       const natural = naturalCandidate({
         job, occurrences: latest.occurrences, nowMs: admittedAt,
@@ -81,7 +82,9 @@ export async function reserveOccurrence(candidate) {
       const expectedNominal = candidate.kind === 'catchup'
         ? candidate.catchUpOfNominalAt
         : candidate.nominalScheduledAt
-      if (!natural.due || natural.nominal !== expectedNominal) return { value: null }
+      if (!natural.due || natural.nominal !== expectedNominal) {
+        return refuse(`natural_not_due: ${natural.reason ?? 'conditions changed under the lock'}`)
+      }
     }
 
     const record = buildOccurrenceRecord({
@@ -340,23 +343,11 @@ export async function writeOccurrenceOutcome(record, classification, deliverySta
   })
   this.doc = doc
   await this._evidence({
-    ts: endedAt,
-    action: 'outcome',
-    occurrenceId: record.occurrenceId,
-    runId: record.runId,
-    state: classification.state,
-    executionOutcome: classification.executionOutcome,
-    deliveryStatus,
-    reason: classification.reason,
-    jobId: value?.jobId,
+    ts: endedAt, action: 'outcome', occurrenceId: record.occurrenceId, runId: record.runId,
+    state: classification.state, executionOutcome: classification.executionOutcome,
+    deliveryStatus, reason: classification.reason, jobId: value?.jobId,
   })
-  await this._evidence({
-    ts: endedAt,
-    action: 'delivery',
-    occurrenceId: record.occurrenceId,
-    runId: record.runId,
-    deliveryStatus,
-  })
+  await this._evidence({ ts: endedAt, action: 'delivery', occurrenceId: record.occurrenceId, runId: record.runId, deliveryStatus })
   // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: the structured execution-history
   // terminal fact (outcome classification + delivery + the trusted wrapper's
   // structured result, persisted verbatim and never interpreted — R4/R-H7).
