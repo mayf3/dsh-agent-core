@@ -67,7 +67,9 @@ dispose_stale_lock() { # dispose_stale_lock LOCK_DIR
   [ -f "$holder" ] || { echo "✖ refuse: no holder metadata — manual inspection required: $p"; return 1; }
   pid=$(sed -n 's/^pid=//p' "$holder")
   provenance=$(sed -n 's/^cmd=//p' "$holder")
-  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+  # ps-based existence check: kill -0 gives a false "dead" for other users'
+  # processes when the disposer is unprivileged.
+  if [ -n "$pid" ] && ps -p "$pid" -o pid= >/dev/null 2>&1; then
     echo "✖ refuse: holder pid=$pid is ALIVE — not disposing $p"; return 1
   fi
   case "$provenance" in
@@ -150,7 +152,10 @@ toctou_guard() {
   for pat in 'trusted-cp-deploy-install.sh' 'run-routing-install.mjs' \
              'run-authorized-transaction.sh' 'launchctl kickstart' 'pnpm install'; do
     pids=$(pgrep -f "$pat" 2>/dev/null | grep -vx "$$" || true)
-    [ -z "$pids" ] || gate "foreign production operation ($pat): pids $(echo "$pids" | tr '\n' ' ')"
+    if [ -n "$pids" ]; then
+      release_global   # release ONLY our own mutex, then fail closed
+      gate "foreign production operation ($pat): pids $(echo "$pids" | tr '\n' ' ')"
+    fi
   done
   pass "TOCTOU guard: no foreign deploy/install/routing/kickstart/pnpm processes"
 }
@@ -246,8 +251,10 @@ if [ "$MODE" = "--selftest" ]; then
   CACHE_DIR="$scratch/cache"
   printf '#!/bin/bash\nsleep 30\n' > "$scratch/fake-hang"
   chmod +x "$scratch/fake-hang"
-  printf '#!/bin/bash\nmkdir -p "$HARNESS_DIR/node_modules/touched"\necho touched > "$HARNESS_DIR/node_modules/touched/marker"\n' > "$scratch/fake-mutate"
+  printf '#!/bin/bash\nmkdir -p "%s/node_modules/touched"\necho touched > "%s/node_modules/touched/marker"\n' \
+    "$HARNESS_DIR" "$HARNESS_DIR" > "$scratch/fake-mutate"
   chmod +x "$scratch/fake-mutate"
+  PNPM_BIN="$scratch/fake-hang"
   PROD_DEPLOY_LOCK="$scratch/locks/production-deploy.lock"
   STALE_TX_LOCK="$scratch/locks/scheduler-watchdog-routing-tx.lock"
   DIAG_DIR="$scratch/diag"
@@ -264,15 +271,21 @@ if [ "$MODE" = "--selftest" ]; then
   [ -d "$PROD_DEPLOY_LOCK" ] || gate "selftest: deadline path must LEAVE the mutex" 1
   grep -q "pnpm-offline-hang-diagnostic" "$PROD_DEPLOY_LOCK/holder" || gate "selftest: holder provenance must be intact" 1
   pass "selftest: deadline path leaves mutex + provenance + UNKNOWN result"
-  # B3 disposition helper: alive-holder refused, provenance-verified dispose works.
+  # The holder itself releases (our pid owns it — dispose would correctly refuse).
+  release_global
+  [ -d "$PROD_DEPLOY_LOCK" ] && gate "selftest: holder release must remove the lock" 1
+  pass "selftest: holder release after evidence"
+  # B3 dispose helper: ALIVE holder refused; DEAD holder + verified provenance disposed.
+  acquire_global
+  printf 'pid=1\ncmd=pnpm-offline-hang-diagnostic\n' > "$PROD_DEPLOY_LOCK/holder"
   if dispose_stale_lock "$PROD_DEPLOY_LOCK"; then gate "selftest: dispose must refuse while holder alive" 1; fi
-  pkill -f "$scratch/fake-hang" 2>/dev/null || true
+  pass "selftest: dispose refuses an alive holder (pid 1 = launchd)"
+  printf 'pid=999999\ncmd=pnpm-offline-hang-diagnostic\n' > "$PROD_DEPLOY_LOCK/holder"
   dispose_stale_lock "$PROD_DEPLOY_LOCK" >/dev/null || gate "selftest: verified dispose must succeed" 1
   [ -d "$PROD_DEPLOY_LOCK" ] && gate "selftest: disposed lock must be gone" 1
   pass "selftest: dispose_stale_lock alive-refuse + verified-dispose"
 
   # (b) TOCTOU guard: decoy foreign process → FAIL_CLOSED + our mutex released.
-  mkdir -p "$fx_unused" 2>/dev/null || true
   bash -c 'exec -a trusted-cp-deploy-install.sh sleep 30' &
   local_decoy=$!
   ( run ) > "$scratch/caseb.out" 2>&1
