@@ -443,3 +443,96 @@ test('budget exhaustion: exact quota class with no remaining deadline STOPs (no 
   assert.equal(final.finalOutcome.includes(ROUTE_STOP_REASONS.TIMEOUT_WITHOUT_PROVEN_TERMINATION), true)
   assert.equal(luna.calls.length, 0)
 })
+
+// ─── Task-mandated candidate scenarios 5 and 7 ────────────────────────────
+
+/** Full-evidence terminal pre-generation quota carrier (controlled proofs). */
+function provenQuotaCarrier() {
+  return carrier('failed', 'account_quota_exhausted', 'HTTP 429: quota exhausted', {
+    evidence: {
+      promptReceipt: 'accepted', terminationProven: true, outputTokens: 0,
+      partialOutput: false, assistantContent: false, toolCall: false, toolStarted: false,
+      externalSideEffect: false, outcomeUnknown: false, transportTimeout: false,
+    },
+  })
+}
+
+test('scenario 5: Luna initialize failure after a quota hop stays terminal — no back-hop to glm53', async () => {
+  const glmProc = {
+    pid: 111,
+    turn: async () => { throw provenQuotaCarrier() },
+    deliver: async () => ({ accepted: true }),
+  }
+  const acquires = []
+  const seam = {
+    acquires,
+    ensureRunningForRoute: async (agentId, wanted) => {
+      const index = acquires.length
+      acquires.push({ agentId, routeIdentity: wanted.routeIdentity })
+      if (index === 0) return { status: 'ready', proc: glmProc }
+      // Luna initialize fails loud (bare fail-loud provider carrier: explicit
+      // initialize origin, never READY, no prompt attempt — V1 class 2 shape).
+      throw Object.assign(new Error('provider_unavailable: openai-codex unreachable at initialize'), { code: 'provider_unavailable' })
+    },
+  }
+  const executor = makeExecutor(seam, [GLM, LUNA])
+  await assert.rejects(executor.runTurnWithRouteChain('agt_cto-agent', { sessionId: 'main', message: 'x', opts: {} }), (error) => {
+    assert.equal(error.code, 'provider_unavailable')
+    assert.equal(error.routeChain.totalRouteAttempts, 2)
+    return true
+  })
+  const journal = executor.journalSnapshot()
+  const attempts = journal.filter((entry) => entry.kind === 'route_attempt')
+  assert.deepEqual(attempts.map((entry) => entry.route), ['glm53', 'luna'])
+  assert.equal(attempts[1].failureClass, ROUTE_HOP_FAILURE_CLASSES.INITIALIZE_PROVIDER_UNAVAILABLE)
+  const final = journal.find((entry) => entry.kind === 'route_chain_final')
+  // Terminal on the LAST route: no third acquire, no return to glm53, no restart.
+  assert.equal(seam.acquires.length, 2)
+  assert.equal(final.totalRouteAttempts, 2)
+  assert.equal(final.finalRoute, 'NONE')
+  assert.equal(final.finalOutcome, ROUTE_HOP_FAILURE_CLASSES.INITIALIZE_PROVIDER_UNAVAILABLE)
+})
+
+test('scenario 7: fallback never duplicates work — zero tools on the failed glm53 attempt, exactly one tool run and one result on Luna', async () => {
+  const toolRuns = []
+  const providerRequests = []
+  const glmProc = {
+    pid: 111,
+    turn: async () => {
+      providerRequests.push('glm53')
+      // Terminal pre-generation 429: the provider request went out, zero
+      // generation, zero tool executions on this attempt.
+      throw provenQuotaCarrier()
+    },
+    deliver: async () => ({ accepted: true }),
+  }
+  const luna = {
+    pid: 222,
+    turn: async () => {
+      providerRequests.push('luna')
+      toolRuns.push(`tool-on-luna-${toolRuns.length}`)
+      return { status: 'completed', reply: 'luna-ok', messageId: 'm', evidence: { promptReceipt: 'accepted' } }
+    },
+    deliver: async () => ({ accepted: true }),
+  }
+  const seam = fakeSeam({ procs: [glmProc, luna] })
+  const executor = makeExecutor(seam, [GLM, LUNA])
+  const dispatches = []
+  const result = await executor.runTurnWithRouteChain('agt_cto-agent', {
+    sessionId: 'main', message: 'x', opts: { onDispatch: () => dispatches.push('dispatch') },
+  })
+  assert.equal(result.reply, 'luna-ok')
+  assert.equal(result.routeRef, 'luna')
+  // One provider request per route, each route attempted exactly once.
+  assert.deepEqual(providerRequests, ['glm53', 'luna'])
+  // Tools executed ONLY on the successful Luna attempt — the failed attempt
+  // proved zero tool activity before the hop was allowed.
+  assert.deepEqual(toolRuns, ['tool-on-luna-0'])
+  // One logical turn: one dispatch notification, one final journal block.
+  assert.deepEqual(dispatches, ['dispatch'])
+  const finals = executor.journalSnapshot().filter((entry) => entry.kind === 'route_chain_final')
+  assert.equal(finals.length, 1)
+  assert.equal(finals[0].finalRoute, 'luna')
+  assert.equal(finals[0].totalRouteAttempts, 2)
+  assert.equal(finals[0].fallbackActivated, true)
+})

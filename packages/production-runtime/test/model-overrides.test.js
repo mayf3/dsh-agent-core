@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -11,6 +11,7 @@ import {
   MAX_CONFIGURED_ROUTES,
   PROVIDER_ENV_ALLOWLIST,
 } from '../src/model-overrides.js'
+import { agentEnv } from '../../agent-router/src/process/env.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
 const OTHER = 'agt_other'
@@ -277,6 +278,52 @@ test('ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConf
     dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
     credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   })
+})
+
+test('subscription route omits the legacy oc-go credential env (Luna never inherits OPENCODE_GO_API_KEY)', (t) => {
+  const { file } = fixture(t)
+  write(file, VALID)
+  const [primary, fallback] = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
+  // builtin route: the legacy byte-identical single omission.
+  assert.deepEqual(primary.processConfig.omitEnv, ['OPENAI_API_KEY'])
+  // subscription route: the Luna child also strips the legacy oc-go keys —
+  // OPENCODE_GO_API_KEY (env.js injects it from <home>/.credentials.yaml on
+  // every spawn) and OC_GO_API_KEY (carried by the launchd parent env).
+  assert.deepEqual(fallback.processConfig.omitEnv, ['OC_GO_API_KEY', 'OPENAI_API_KEY', 'OPENCODE_GO_API_KEY'])
+})
+
+test('agentEnv boundary: the Luna child never sees the oc-go credential; the builtin child is unchanged', (t) => {
+  const { root, file } = fixture(t)
+  write(file, VALID)
+  const [primary, fallback] = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
+  const home = join(root, 'home')
+  mkdirSync(home, { recursive: true })
+  writeFileSync(join(home, '.credentials.yaml'), 'OPENCODE_GO_API_KEY: "oc-go-secret"\n', 'utf8')
+  const parentEnv = {
+    PATH: '/usr/bin:/bin',
+    OC_GO_API_KEY: 'parent-oc-go-secret',
+    OPENAI_API_KEY: 'parent-openai-secret',
+  }
+  const previous = { ...process.env }
+  // agentEnv spreads the Router parent's process.env; pin just the keys under
+  // test so the assertion is hermetic against the test-runner environment.
+  for (const key of Object.keys(process.env)) {
+    if (key in parentEnv || key.startsWith('HTTP_PROXY') || key.startsWith('HTTPS_PROXY')) delete process.env[key]
+  }
+  Object.assign(process.env, parentEnv)
+  try {
+    const lunaEnv = agentEnv(home, {}, fallback.processConfig.omitEnv, fallback.processConfig.providerEnv ?? {})
+    assert.equal('OPENCODE_GO_API_KEY' in lunaEnv, false)
+    assert.equal('OC_GO_API_KEY' in lunaEnv, false)
+    assert.equal('OPENAI_API_KEY' in lunaEnv, false)
+    const glmEnv = agentEnv(home, {}, primary.processConfig.omitEnv, primary.processConfig.providerEnv ?? {})
+    // The builtin child keeps today's exact behavior: the oc-go key from
+    // <home>/.credentials.yaml is present (only OPENAI_API_KEY is omitted).
+    assert.equal(glmEnv.OPENCODE_GO_API_KEY, 'oc-go-secret')
+    assert.equal('OPENAI_API_KEY' in glmEnv, false)
+  } finally {
+    process.env = previous
+  }
 })
 
 test('ACC-019 reuse-gate identity: builtin and subscription processes never share an identity', (t) => {
