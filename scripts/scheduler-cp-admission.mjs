@@ -13,7 +13,7 @@ import {
   matchCriticalJobs, buildDesiredState, buildBackfillMapping, classifyCensus,
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
   reExportsWithoutLocalBinding, buildOverlaySeedBytes,
-  WATCHDOG_PAYLOAD_SHA, WATCHDOG_OVERLAY_PATHS, WATCHDOG_LIVE_ADAPTER_SHA, WATCHDOG_LIVE_ADAPTER_POST_SHA,
+  WATCHDOG_PAYLOAD_SHA, WATCHDOG_OVERLAY_PATHS, WATCHDOG_LIVE_ADAPTER_SHA, WATCHDOG_LIVE_ADAPTER_POST_SHA, WATCHDOG_PINNED_LIVE_DEPENDENCIES,
 } from './lib/admission-lib.mjs'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
@@ -188,6 +188,7 @@ function overlay(validateOnly = false) {
     readTarget: (path) => seedBytes.get(path) ?? target(path),
     liveHas: (path) => liveRootFiles.has(path),
     liveShaOf: liveSha,
+    preserveLiveShaByPath: MODE === 'selftest' ? new Map() : WATCHDOG_PINNED_LIVE_DEPENDENCIES,
     allowedOverlayPaths: allowed,
   })
   if (narrowed.refuse) throw new Error(`NARROW CLOSURE REFUSED: ${narrowed.refuse}`)
