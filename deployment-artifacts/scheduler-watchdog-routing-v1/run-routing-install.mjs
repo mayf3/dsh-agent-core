@@ -15,8 +15,29 @@
  */
 
 import { createHash } from 'node:crypto'
-import { chmodSync, chownSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
+
+// P1 convergence: --apply is a production mutation entry, so it shares the
+// SAME exact global production-deploy mutex as trusted-cp-deploy-install.sh.
+const PRODUCTION_DEPLOY_LOCK_DIR = '/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock'
+function acquireGlobalDeployLock() {
+  mkdirSync(dirname(PRODUCTION_DEPLOY_LOCK_DIR), { recursive: true })
+  try {
+    mkdirSync(PRODUCTION_DEPLOY_LOCK_DIR)
+  } catch {
+    const holder = existsSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder'))
+      ? readFileSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder'), 'utf8') : '(no holder metadata)'
+    process.stderr.write(`✖ FAIL_CLOSED global production-deploy mutex already held — ${PRODUCTION_DEPLOY_LOCK_DIR}\n${holder}\nSTALE_LOCK_DISPOSITION: verify the holder is dead, then remove EXPLICITLY (sudo rmdir ${PRODUCTION_DEPLOY_LOCK_DIR})\n`)
+    process.exit(1)
+  }
+  writeFileSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder'),
+    `pid=${process.pid}\ncmd=run-routing-install.mjs --apply\nstarted=${new Date().toISOString()}\n`)
+}
+function releaseGlobalDeployLock() {
+  try { rmSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder')) } catch { /* not ours or gone */ }
+  try { rmSync(PRODUCTION_DEPLOY_LOCK_DIR) } catch { /* gone */ }
+}
 
 import { installSchedulerRoutingManifest } from '../../packages/production-runtime/src/scheduler/deployment-routing.js'
 import { validateRoutingManifest, resolveNotificationRoute, ROUTE_CLASSES } from '../../packages/scheduler/src/watchdog/routing.js'
@@ -137,6 +158,15 @@ function runInstaller(mode) {
 }
 
 async function apply() {
+  acquireGlobalDeployLock()
+  try {
+    await applyLocked()
+  } finally {
+    releaseGlobalDeployLock()
+  }
+}
+
+async function applyLocked() {
   const pre = runInstaller('plan')
   gate('§2 plan candidate sha matches frozen candidate', existsSync(CANDIDATE_PATH))
   const receipt = runInstaller('apply')

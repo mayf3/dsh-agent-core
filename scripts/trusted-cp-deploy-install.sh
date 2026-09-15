@@ -45,6 +45,23 @@ if [ "$(id -u)" != "0" ]; then
   exit 2
 fi
 
+# GLOBAL production-deploy mutex (WATCHDOG transaction P1 convergence): every
+# entrypoint that replaces the trusted app / routing / restarts the canonical
+# runtime shares THIS exact lock. Atomic mkdir acquire; a held lock fails
+# closed with its holder metadata; a killed run leaves the lock behind and it
+# is disposed of EXPLICITLY (never guessed, never auto-deleted).
+PRODUCTION_DEPLOY_LOCK_DIR="/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock"
+mkdir -p "$(dirname "$PRODUCTION_DEPLOY_LOCK_DIR")"
+if ! mkdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null; then
+  echo "ERROR: global production-deploy mutex already held — $PRODUCTION_DEPLOY_LOCK_DIR" >&2
+  cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
+  echo "STALE_LOCK_DISPOSITION: verify the holding deploy is truly dead, then remove EXPLICITLY:" >&2
+  echo "  sudo rmdir $PRODUCTION_DEPLOY_LOCK_DIR" >&2
+  exit 1
+fi
+printf 'pid=%s\nuid=%s\ncmd=%s\nstarted=%s\n' "$$" "$(id -u)"   "trusted-cp-deploy-install.sh $*" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"   > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+trap 'rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"; rmdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null || true' EXIT
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # AGENT_CORE_BACKUP_RETENTION_V1: deployment backup metadata + pin + post-verified
 # retention ops live in the tiny filesystem helper (same dir as this script). It is
