@@ -155,6 +155,7 @@ export function createBrokerGateway({
     const selfOpsReady = typeof agentId === 'string' && agentId !== ''
       && typeof selfOpsHandlers.status === 'function'
       && typeof selfOpsHandlers.reconcile_turn === 'function'
+      && typeof selfOpsHandlers.job_disposition === 'function'
     return {
       availabilityVersion: 1,
       credentialsFileConfigured: credentialsFile !== undefined && credentialsFile !== '',
@@ -162,7 +163,7 @@ export function createBrokerGateway({
         scheduler: { ready: schedulerReady, operations: schedulerOps },
         self_ops: {
           ready: selfOpsReady,
-          operations: { status: selfOpsReady, reconcile_turn: selfOpsReady },
+          operations: { status: selfOpsReady, reconcile_turn: selfOpsReady, job_disposition: selfOpsReady },
         },
       },
     }

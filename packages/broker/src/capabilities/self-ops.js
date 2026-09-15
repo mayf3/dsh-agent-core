@@ -44,6 +44,18 @@ export const selfOpsManifest = {
       result: { type: 'json' },
       errors: errorCodes,
     },
+    {
+      name: 'job_disposition',
+      description:
+        'Answer "why did this caller-owned Job not run?" for its latest elapsed slot: the durable '
+        + 'accounting (occurrence, admission refusal, policy skip, missed slot) with the exact reason — '
+        + 'or an honest NOT_PROVEN with the proven/missing pipeline stages.',
+      arguments: args({
+        job_id: string('Exact Scheduler job id owned by the caller.'),
+      }, ['job_id']),
+      result: { type: 'json' },
+      errors: errorCodes,
+    },
   ],
 }
 
