@@ -4,12 +4,16 @@ Goal: RESTORE_BUILD_IN_PUBLIC_END_TO_END（North Star）。Source 阶段已闭�
 
 **SOURCE merge ≠ PRODUCTION DEPLOY。本文件零生产变更。**
 
-## §0 唯一 Owner 决策（当前 blocker）
+## §0 Owner 决策（已指定 2026-09-15）
 
 ```text
-CANONICAL_SCHEDULER_OPS_TARGET = { "channel": "feishu", "to": "<OWNER 指定的专用 Scheduler ops chat_id>" }
-VALID_EXISTING_CANDIDATE_COUNT=0 → 不得用 business delivery target / current chat / last-active chat 兜底
+CANONICAL_SCHEDULER_OPS_TARGET = { "channel": "feishu", "to": "oc_f2a6606689691fd7f0a7c7078a0bf2e9" }
 ```
+
+Owner 明示指定（非机械兜底）。该群即现行 W1 `SCHEDULER_WATCHDOG_ALERT_TO` 投递群，bot 投递链路已被生产证明。
+Preflight 增补校验（§3 一并执行）：该 chat_id 不得同时是任何 enabled 业务 job 的 `delivery.to` ——
+命中即 FAIL_CLOSED（business-delivery-as-ops-target 禁令）。
+安装器：deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs（--selftest 离线全绿后交付）。
 
 ## §1 Protected routing input（root 执行，mode 0600）
 
