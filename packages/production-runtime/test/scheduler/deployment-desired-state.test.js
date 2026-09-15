@@ -222,6 +222,27 @@ test('desired-state crash after INSTALLING receipt replays from the frozen candi
   assert.equal(await readFile(targetPath, 'utf8'), bytes.toString())
 })
 
+test('desired-state replay finalizes an INSTALLING receipt after the candidate rename frontier', async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-receipt-finalize-')))
+  t.after(() => rm(root, { recursive: true, force: true })); await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json'), candidatePath = join(root, 'control', 'candidates', 'desired.json')
+  const preimagePath = join(root, 'control', 'rollback', 'desired.preimage'); await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 }); await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(targetPath, '{"version":"old"}\n', { mode: 0o644 }); plain(targetPath)
+  const bytes = Buffer.from('{"version":1,"jobs":[]}\n'); let persistedReceipt; let writes = 0
+  const args = { bytes, expectedJobs: [], targetPath, candidatePath, preimagePath, expectedUid: process.getuid(), expectedGid: process.getgid() }
+  assert.throws(() => installSchedulerDesiredState({ ...args, writeReceipt: (value) => {
+    writes += 1
+    if (writes === 1) persistedReceipt = value
+    else throw new Error('crash before installed receipt')
+  } }), /crash before installed receipt/)
+  assert.equal((await lstat(targetPath)).mode & 0o777, 0o640)
+  assert.equal(persistedReceipt.status, 'INSTALLING')
+  const replay = installSchedulerDesiredState({ ...args, receipt: persistedReceipt, writeReceipt: (value) => { persistedReceipt = value } })
+  assert.equal(replay.status, 'ALREADY_INSTALLED')
+  assert.equal(persistedReceipt.status, 'INSTALLED')
+})
+
 test('desired-state install rejects unsafe ancestor before target or preimage write', async (t) => {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-unsafe-')))
   t.after(() => rm(root, { recursive: true, force: true }))
