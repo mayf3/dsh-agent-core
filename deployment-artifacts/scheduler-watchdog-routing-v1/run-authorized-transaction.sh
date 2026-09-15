@@ -43,7 +43,7 @@ REVIEWED_CODE_SHA="f72255d4feddb6deb4f907cbe70cca547f9e240a"
 WRAPPER_SCRIPT="deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh"
 ROUTING_INSTALLER="deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs"
 DEPLOY_INSTALLER="scripts/trusted-cp-deploy-install.sh"
-ROUTING_INSTALLER_SHA256="f2b3346d5b8243d22ce1240a19c4fe7bad1894ae0c1d28adc4f04e233ea7cf24"
+ROUTING_INSTALLER_SHA256="6bf8997f2ba2f25ed7b01c5321064463903aa7222eae3fcebc6d6214fb81e4d0"
 DEPLOY_INSTALLER_SHA256="5ad7f4ad733fd2fe496e6a6e2bc1a2ea2ee518ca67ed66d4af560daf273382ad"
 APP_ROOT="/usr/local/libexec/agent-core/app"
 CANONICAL_STORE="/Users/authsvc/.agent-core/scheduler/jobs.json"
@@ -65,7 +65,6 @@ gate() { # gate NAME DETAIL — FAIL_CLOSED
 pass() { echo "✔ $1${2:+ — $2}"; }
 sha256_text() { printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1; }
 
-# ---- shared global production transaction ownership -------------------------
 global_holder_matches() {
   [ -n "$PRODUCTION_TRANSACTION_ID" ] && [ -n "$LOCK_OWNER_TOKEN" ] || return 1
   local holder="$GLOBAL_DEPLOY_LOCK_DIR/holder"
@@ -116,7 +115,6 @@ begin_global_production_transaction() {
   acquire_global_deploy_lock
 }
 
-# ---- wrapper-level transaction lock -----------------------------------------
 acquire_lock() {
   mkdir -p "$LOCK_ROOT" 2>/dev/null || true
   if mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -146,8 +144,7 @@ leave_lock_notice() {
 }
 trap 'leave_lock_notice' INT TERM
 
-# ---- authority binding (disposable clone — Owner repo is read-only) --------
-authority_binding() { # AUTHORITY_BINDING MAIN_WORKTREE REVIEWED_SHA ROUTING_SHA DEPLOY_SHA
+authority_binding() {
   local W="$1" reviewed="$2" routing_sha="$3" deploy_sha="$4"
   local url ac
   url=$(git -C "$W" remote get-url origin) || gate "source locator (read-only)" "$W has no origin remote"
@@ -178,7 +175,6 @@ authority_binding() { # AUTHORITY_BINDING MAIN_WORKTREE REVIEWED_SHA ROUTING_SHA
   pass "authority binding resolved" "VERIFIED_DEPLOY_SHA=$VERIFIED_DEPLOY_SHA"
 }
 
-# staging must sit at EXACTLY VERIFIED_DEPLOY_SHA (executed-artifact binding).
 staging_bind() {
   local S="$1"
   git -C "$S" checkout --quiet --detach "$VERIFIED_DEPLOY_SHA" || gate "staging checkout" 1
@@ -188,12 +184,12 @@ staging_bind() {
   pass "staging bound to VERIFIED_DEPLOY_SHA" "$head"
 }
 
-run_installer() { # run_installer CMD... — captures the real pipeline rc
+run_installer() {
   RUN_INSTALLER_RC=0
   "$@" 2>&1 | tee /tmp/wgr-tx-deploy.log || RUN_INSTALLER_RC=$?
   return 0
 }
-deploy_from_staging() { # deploy_from_staging STAGING_DIR APP_ROOT
+deploy_from_staging() {
   local S="$1" app_root="$2"
   assert_global_deploy_lock_owned "deploy child entry"
   run_installer bash "$S/$DEPLOY_INSTALLER" "$S"
@@ -270,7 +266,6 @@ RELOAD() {
   gate "readiness readback (state=running + health ok)" "see launchd logs — parent global mutex LEFT IN PLACE"
 }
 
-# ---- selftest ---------------------------------------------------------------
 selftest() {
   local scratch
   scratch=$(mktemp -d /tmp/wgr-tx-selftest-XXXXXX)
@@ -290,8 +285,6 @@ selftest() {
   fi
   pass "selftest: no stale authority variable reference (set -u safe by construction)"
 
-  # Parent global transaction contract: one acquire; exact pair validates;
-  # mismatch fails closed; release only by the exact parent owner.
   local saved_global="$GLOBAL_DEPLOY_LOCK_DIR"
   local saved_tx="$PRODUCTION_TRANSACTION_ID"
   local saved_token="$LOCK_OWNER_TOKEN"
@@ -314,8 +307,6 @@ selftest() {
   export PRODUCTION_TRANSACTION_ID LOCK_OWNER_TOKEN
   pass "selftest: ONE_GLOBAL_PRODUCTION_TRANSACTION_OWNER mechanics"
 
-  # Fixture repo: reviewed head carries packages/a.js, the routing installer
-  # and the deploy installer (with the pins this selftest computes).
   local fx="$scratch/fx"
   git init -q -b main "$fx"
   git -C "$fx" config user.email t@t.local
@@ -398,8 +389,6 @@ selftest() {
   mkdir -p "$fxapp/packages" "$(dirname "$fx/staging/$DEPLOY_INSTALLER")"
   printf '#!/bin/bash\necho "stub deploy"\nexit ${STUB_RC:-0}\n' > "$fx/staging/$DEPLOY_INSTALLER"
   chmod +x "$fx/staging/$DEPLOY_INSTALLER"
-  # The deploy helper now requires the parent lock. Point the selftest at a
-  # scratch holder and prove success/failure both leave that parent lock intact.
   GLOBAL_DEPLOY_LOCK_DIR="$scratch/deploy-parent.lock"
   PRODUCTION_TRANSACTION_ID="tx-deploy-selftest"
   LOCK_OWNER_TOKEN="token-deploy-selftest"
@@ -421,7 +410,6 @@ selftest() {
   echo "SELFTEST=PASS"
 }
 
-# ---- main -------------------------------------------------------------------
 if [ "${1:-}" = "--selftest" ]; then
   selftest
   exit 0
