@@ -6,7 +6,12 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: contracts
 date: 2026-09-15
-revision: r1
+revision: r2
+r1_review: independent review round-1 = REVISE（3 blockers，全机械：
+  revoked_at 列不存在 / principal_type 字面量大小写 / re-enable 无 enable surface）；
+  blocker union 本轮全修，notes（r5 引用、A.2 指针、per-client 计数、
+  repo 侧 registry 漂移、scheduler.audit 禁令保留、未来 scope 冲突边界、
+  retire-only-by-roster-removal 纪律）一并吸收；re-audit pending
 owner_goal: CANONICAL_AGENT_TO_AGENT_SESSION_SEND_V1
 owner_ruling_date: 2026-09-15
 owner_rulings:
@@ -20,14 +25,16 @@ owner_rulings:
     per-sender grant；CURRENT_EFFECTIVE_SENDERS=2）；deny-layer 调查就此终局"
   - "现有 agt_efficiency-agent / agt_hr-agent grant：不当异常删除，落地时统一 reconcile"
 governed_by:
-  - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r4 — messaging semantics,
-    identity model, error taxonomy, reply/reconciliation: UNCHANGED, NOT rewritten here)
+  - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r5 — AMENDMENT_1+2 均 accepted，
+    messaging semantics, identity model, error taxonomy, reply/reconciliation:
+    UNCHANGED, NOT rewritten here)
 supersedes:
   - target: AGENT_SESSION_SEND_STANDALONE_DEPLOYMENT_AUTHORITY_V1 (accepted r2)
     scope: CLAUSE_SCOPED — §6 CURRENT_GRANT_STATE（单 tuple 冻结 + fleet-wide grant
       禁令 + "禁止重复插入、fleet-wide grant、target-side grant"指令）自本 Spec 起失效；
     preserved: 该 Spec 其余章节（17-file 部署 face、r2 envelope-fix closure、canary
-      记录）保留为已发生部署的历史 authority of record / evidence，不追溯改写
+      记录）保留为已发生部署的历史 authority of record / evidence，不追溯改写；
+      §6 尾部"不顺手 scheduler.audit"禁令亦 preserved（无关 hygiene 禁令，方向安全）
 amends: []
 related:
   - AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1 (membership legs 的既有权威：
@@ -46,7 +53,8 @@ review_status: PENDING_INDEPENDENT_REVIEW
 
 > 目的：把 `agent.session.send` 从「手工 per-sender MachineAccessGrant allowlist」
 > 收敛为「production canonical Agent fleet 的机械派生基线能力」。本 Spec 只替换
-> **grant 的分配政策**；`AGENT_CORE_AGENT_SESSION_MESSAGING_V1` r4 已 accepted 的
+> **grant 的分配政策**；`AGENT_CORE_AGENT_SESSION_MESSAGING_V1` r5（AMENDMENT_1+2
+> 均 accepted）已 accepted 的
 > messaging 语义（身份模型、参数闭包、错误表、reply/reconciliation）**一字不改、不重写**。
 
 ## 0. Case 记录与裁定（2026-09-15，Owner，本 Spec 不再询问）
@@ -104,10 +112,11 @@ PRODUCTION_CANONICAL_FLEET ≜ { agent A | G1 ∧ G2 ∧ G3 }
 
 G1  Agent Definition registration：runtime Agent Definition config（agents.json）
     存在 id=A 的条目，且 disabled=false
-    （存在性/enabled 权威 = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1 §S 表既定）
+    （存在性/enabled 权威 = AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1 §A.2 权威表既定）
 G2  auth machine principal：存在绑定 agent_id=A 的 MachinePrincipal，
-    principal_type='AGENT' 且 status='active'
-    （绑定唯一权威 = auth-service，cred-provisioning spec 既定）
+    principal_type='agent'（Prisma enum 小写字面量，取值仅 agent|service；human 是
+    User 行、本就不是 machine principal，结构性缺席本集合）且 status='active'
+    （绑定唯一权威 = auth-service，cred-provisioning spec A.2 既定）
 G3  machine client：该 principal 名下存在 status='active' 的 MachineClient
 ```
 
@@ -148,11 +157,14 @@ AUTO_RECONCILED           = YES
 MANUAL_ALLOWLIST_SEMANTICS = NO
 ```
 
-每个 fleet 成员恰一行目标态：
+每个 fleet 成员的**每个 active MachineClient** 恰一行目标态（grant 物理主键 =
+`(machine_client_id, audience_id)`；列闭集 = scopes(String[]) / version /
+created_at / updated_at，模型上 **没有 revoked_at 列**——行惰性不靠行级撤销位，
+由 §6 issuance-time active 校验保证）：
 
 ```text
 { machineClientId, audienceId = agent-session-messaging（audience registry 既有行）,
-  scopes = ['agent.session.send'], version >= 1, revoked_at = NULL }
+  scopes = ['agent.session.send'], version >= 1 }
 ```
 
 约束闭集：
@@ -160,8 +172,12 @@ MANUAL_ALLOWLIST_SEMANTICS = NO
 ```text
 本 audience 下 grant scopes ≠ ['agent.session.send'] 的任何超集/子集/异集 = 禁止
 本 Spec 不新增/不触碰任何其他 audience / resource / scope
-非 AGENT principal（HUMAN/SERVICE）永不 stamped
+principal_type != 'agent'（即 service；human 非 machine principal）永不 stamped
 ```
+
+已知边界：grant 物理主键为 `(machine_client_id, audience_id)`——未来任何 authority
+若想对同 audience 追加其他 scope（如 registry 中已预留的 inspect 族 scope），与
+本节 exact-scope 闭集冲突，必须走本 Spec 的 amendment，本 Spec 不预授权。
 
 ## 4. Birth provisioning（新 Agent 自动获得）
 
@@ -183,7 +199,9 @@ auth-service 侧一次性+可重跑脚本（实现阶段命名；要求冻结）
 R1  membership 执行时 fresh 重算（DB × agents.json），禁止缓存名册、
     禁止 CLI 手工传入 agent id 清单
 R2  默认 DRY_RUN：输出 plan（ADD / KEEP / NORMALIZE / SKIP-nonfleet 计数）+
-    census（PRODUCTION_CANONICAL_AGENT_COUNT、SEND_ENTITLEMENT_MISSING_COUNT）
+    census（PRODUCTION_CANONICAL_AGENT_COUNT、SEND_ENTITLEMENT_MISSING_COUNT；
+    后者以 client 为主键 = fleet principal × active client pair 缺精确行的数量，
+    多 client 成员按 pair 枚举）
 R3  --apply：仅幂等 upsert；零 DELETE（本 policy 不需要删除行——非成员的 deny
     由 issuance-time active check 结构保证；行残留无害且被 R1 判定忽略）
 R4  --selftest 离线全绿是交 Owner 执行的前置（repo 铁律）
@@ -213,6 +231,9 @@ Agent Definition disabled → runtime 不再运行该 Agent（无调用面）；
   作为 RECEIVER → handler target_disabled（既有）
 agent.session.send 的 disable/retire 生产流程必须落 principal/client inactive
   （既有行为）；grant 行可残留，但 issuance-time 校验使其惰性
+Lifecycle discipline（冻结）：仅从 agents.json 移除条目 **不构成 retire**——
+  residual grant 行在该情形下只受手工纪律约束；`DISABLED_RETIRED_AGENT_SEND=DENY`
+  只对 deactivate 路径（principal/client inactive）作结构保证
 自 send（A→A）= self_send_not_supported（既有，不变）
 ```
 
@@ -233,7 +254,7 @@ Goal §1/§3 的 DENY 闭集（non-canonical legacy / unknown / disabled / retir
 
 ## 8. Delivery / receipt / reply / reconciliation（J — 不变）
 
-全部继承 MESSAGING_V1 r4（含 AMENDMENT_1：§5.1 两维结果模型、§5.2
+全部继承 MESSAGING_V1 r5（AMENDMENT_1：§5.1 两维结果模型、§5.2
 failureCode+invocationCorrelation、§5.3 agent_session_send_reconcile）。
 实施依赖注记：reliability 实现（#203）已 merge 入 dsh main，
 PRODUCTION_APPLY 仍为 tracked debt——本 Spec 的 production E2E 若在其部署前执行，
@@ -246,7 +267,11 @@ auth-service（mayf3/auth-service）：
   I1 createOrGetClient 通道 birth-stamp（§4）+ 单测（AGENT stamp / HUMAN 不 stamp /
      幂等重入 no-op / version 稳定）
   I2 reconcile 脚本（§5）+ --selftest
-  I3 companion contract spec + PR（external_authorities 先例：PR #50 模式）
+  I3 companion contract spec + PR（external_authorities 先例：PR #50 模式）；
+     必须一并冻结 agent-session-messaging audience 行的 repo 侧 registry 来源
+     （r1 census 时该行仅存在于 deployed runtime snapshot
+     generated/minimal-auth-v1/runtime-contract.json，repo checkout 的
+     contract-bundles 尚无该行——contract 须 reconcile 此漂移）
   I4 token issuance / deny 代码路径零改动（issuance 维持行校验 + active 校验）
 dsh-agent-core：
   D1 本 governing spec（本 commit，docs-only）
@@ -268,8 +293,10 @@ EXISTING_FLEET_RECONCILIATION=PASS
   （DRY_RUN census + --apply 后 SEND_ENTITLEMENT_MISSING_COUNT=0；
    重跑收敛、无重复行、非成员零新增行）
 DISABLE_REVOKE_PATH=PASS
-  （disable 一个成员的 principal → send token 被拒 client_or_principal_inactive；
-   re-enable → 自动恢复，无需手工）
+  （disable 一个成员的 principal/client → send token 被拒
+   client_or_principal_inactive。已知事实并冻结：auth-service 当前无 enable
+   surface（disable 为单向操作）；re-enable = 显式 Owner 直接操作，不在本 Goal
+   scope、不作为本验收项）
 ```
 
 ### 10.2 Production E2E（Goal §6，真实生产调用，逐项留证）
