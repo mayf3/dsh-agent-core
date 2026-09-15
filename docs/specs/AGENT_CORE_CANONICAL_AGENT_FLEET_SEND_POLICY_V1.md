@@ -6,12 +6,16 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: contracts
 date: 2026-09-15
-revision: r2
+revision: r3
 r1_review: independent review round-1 = REVISE（3 blockers，全机械：
   revoked_at 列不存在 / principal_type 字面量大小写 / re-enable 无 enable surface）；
-  blocker union 本轮全修，notes（r5 引用、A.2 指针、per-client 计数、
+  blocker union 修于 r2，notes（r5 引用、A.2 指针、per-client 计数、
   repo 侧 registry 漂移、scheduler.audit 禁令保留、未来 scope 冲突边界、
-  retire-only-by-roster-removal 纪律）一并吸收；re-audit pending
+  retire-only-by-roster-removal 纪律）一并吸收
+r2_review: independent review round-2 = REVISE（唯一残留 blocker = B2 字面量
+  清扫漏 §4 出生护栏与 §9 I1 负例标签；另 2 cosmetic：§2 出集指针应指 §6、
+  §8 应枚举 AMENDMENT_2 内容）——全部修于 r3；其余 round-1 blockers/notes
+  经 round-2 逐项机械确认 RESOLVED/PRESENT
 owner_goal: CANONICAL_AGENT_TO_AGENT_SESSION_SEND_V1
 owner_ruling_date: 2026-09-15
 owner_rulings:
@@ -130,7 +134,7 @@ fixture 排除        = 结构性：fixture 从未完成 production identity pro
 retired/legacy-only = G2/G3 失效（principal/client 非 active）⇒ 自动缺席
 新增合法 Agent      = 完成 canonical provisioning（principal+client 诞生）后
                       自然入集，自然获得 send entitlement
-disable / retire    = 自然出集（见 §5），禁止任何自动 revive
+disable / retire    = 自然出集（见 §6），禁止任何自动 revive
 ```
 
 **Fresh census（2026-09-15，机械 join：agents.json × auth principal.created 审计/DB）：**
@@ -182,8 +186,9 @@ principal_type != 'agent'（即 service；human 非 machine principal）永不 s
 ## 4. Birth provisioning（新 Agent 自动获得）
 
 - **Surface**：auth-service 幂等 provisioning 通道 `createOrGetClient`
-  （`src/lib/oauth/v1/idempotent.ts`）——为 `principal_type='AGENT'` 的 principal
-  create/claim client 成功后，同一通道流程内 upsert §3 目标行（幂等 create-or-get；
+  （`src/lib/oauth/v1/idempotent.ts`）——为 `principal_type='agent'`（Prisma
+  小写字面量）的 principal create/claim client 成功后，同一通道流程内 upsert
+  §3 目标行（幂等 create-or-get；
   已存在精确行 = no-op、version 不动，语义复用 grant-migration 既有
   version-stable / scope-set-exact 语义）。
 - **覆盖要求**：所有 production client 创建面（幂等通道、machine-admin legacy
@@ -255,8 +260,10 @@ Goal §1/§3 的 DENY 闭集（non-canonical legacy / unknown / disabled / retir
 ## 8. Delivery / receipt / reply / reconciliation（J — 不变）
 
 全部继承 MESSAGING_V1 r5（AMENDMENT_1：§5.1 两维结果模型、§5.2
-failureCode+invocationCorrelation、§5.3 agent_session_send_reconcile）。
-实施依赖注记：reliability 实现（#203）已 merge 入 dsh main，
+failureCode+invocationCorrelation、§5.3 agent_session_send_reconcile；
+AMENDMENT_2：post_receipt reason marker、§5.3 conversion row、§7
+T_PROCESS_EXIT/AGENT_PROCESS_EXITED cases——outcome_unknown 恒为 reason、
+永非 delivery status）。实施依赖注记：reliability 实现（#203）已 merge 入 dsh main，
 PRODUCTION_APPLY 仍为 tracked debt——本 Spec 的 production E2E 若在其部署前执行，
 outcome/reconcile 断言以当时已部署字节为准，不得虚报。
 
@@ -264,8 +271,8 @@ outcome/reconcile 断言以当时已部署字节为准，不得虚报。
 
 ```text
 auth-service（mayf3/auth-service）：
-  I1 createOrGetClient 通道 birth-stamp（§4）+ 单测（AGENT stamp / HUMAN 不 stamp /
-     幂等重入 no-op / version 稳定）
+  I1 createOrGetClient 通道 birth-stamp（§4）+ 单测（agent stamp / service
+     principal 不 stamp / 幂等重入 no-op / version 稳定）
   I2 reconcile 脚本（§5）+ --selftest
   I3 companion contract spec + PR（external_authorities 先例：PR #50 模式）；
      必须一并冻结 agent-session-messaging audience 行的 repo 侧 registry 来源
