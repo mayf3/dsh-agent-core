@@ -27,6 +27,7 @@ export const WATCHDOG_OVERLAY_PATHS = new Set([
   'packages/scheduler/src/watchdog/routing.js',
   'scripts/scheduler-watchdog.mjs',
 ])
+export const WATCHDOG_DELETE_PATHS = new Set(['packages/scheduler/src/watchdog.js'])
 export const WATCHDOG_LIVE_ADAPTER_SHA = new Map([
   ['packages/product-api/src/index.js', 'f49cbbba4e79d73c52353891cc1c8701e27b3252a6e9758982a727cddd07ca05'],
   ['packages/production-runtime/src/compose.js', 'e1cbcc41f04e9abc40b17956a124e3fd6295d25d4613d5294260b38d8bb343df'],
