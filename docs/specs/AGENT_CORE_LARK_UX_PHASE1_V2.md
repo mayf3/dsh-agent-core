@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_LARK_UX_PHASE1_V2
-status: accepted
+status: superseded
 accepted_date: 2026-08-21
 accepted_reviewed_head: 41a2e5b120fc9cc56e6fe6f32c63cd09fbf9724f
 reviewer_identity: ZCODE_PR24_SEMANTIC_MIGRATION_CLOSURE_AUDIT_2026_08_21
@@ -19,7 +19,7 @@ governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_LARK_UX_PHASE1_V3
 owners:
   - mayf3
 ---
