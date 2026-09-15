@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import test from 'node:test'
 
-import { adaptLiveComposeForWatchdog, narrowOverlayUniverse } from '../../../../scripts/lib/admission-lib.mjs'
+import { adaptLiveComposeForWatchdog, narrowOverlayUniverse, WATCHDOG_DELETE_PATHS, WATCHDOG_OVERLAY_PATHS } from '../../../../scripts/lib/admission-lib.mjs'
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const LIVE_COMPOSE_FIXTURE = `import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
@@ -47,6 +47,12 @@ const defaultRoute = {
     start: () => scheduler.start({ autoStart: true, catchup }),
   }
 `
+
+test('reviewed production path authority is exactly 21 writes plus one retired watchdog delete', () => {
+  assert.equal(WATCHDOG_OVERLAY_PATHS.size, 21)
+  assert.deepEqual([...WATCHDOG_DELETE_PATHS], ['packages/scheduler/src/watchdog.js'])
+  assert.equal([...WATCHDOG_DELETE_PATHS].some((path) => WATCHDOG_OVERLAY_PATHS.has(path)), false)
+})
 
 test('overlay closure pins only an exact reviewed live dependency and updates the rest', () => {
   const target = new Map([
