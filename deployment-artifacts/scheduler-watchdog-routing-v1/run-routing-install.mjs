@@ -22,7 +22,7 @@
  */
 
 import { createHash, randomUUID } from 'node:crypto'
-import { chmodSync, chownSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, rmdirSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 
@@ -119,7 +119,7 @@ function releaseGlobalDeployLock(owner, lockDir = PRODUCTION_DEPLOY_LOCK_DIR) {
     failClosed(`global mutex release refused (holder mismatch) — ${lockDir}`)
   }
   rmSync(join(lockDir, 'holder'))
-  rmSync(lockDir, { recursive: false })
+  rmdirSync(lockDir)
   process.stdout.write(`✔ global production-deploy mutex released — ${lockDir}\n`)
 }
 
