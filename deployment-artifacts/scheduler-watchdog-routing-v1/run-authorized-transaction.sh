@@ -236,7 +236,8 @@ ROUTING() {
 }
 
 RELOAD() {
-  acquire_global_deploy_lock
+  # Lock-neutral: the parent already holds the global production-deploy mutex
+  # across the whole sequence (B7) — RELOAD must not reacquire or release it.
   launchctl kickstart -k "$RUNTIME_LABEL" || gate "kickstart" 1
   local i
   for i in 1 2 3 4 5 6; do
@@ -245,7 +246,6 @@ RELOAD() {
       pass "runtime state=running"
       if curl -sf -m 5 "$HEALTH_URL" | grep -q '"ok":true'; then
         pass "health probe ok:true" "$HEALTH_URL"
-        release_global_deploy_lock
         return 0
       fi
       echo "… health not ok yet (attempt $i/6)"
@@ -360,6 +360,31 @@ selftest() {
   head_now=$(git -C "$scratch/staging" rev-parse HEAD)
   [ "$head_now" = "$FIXED_SHA" ] || gate "selftest: staging exact-sha fixture" 1
   pass "selftest: staging exact-sha binding verified ($head_now == VERIFIED_DEPLOY_SHA)"
+
+  # (7b) mechanical regression for the r3-review blocker: RELOAD must be
+  # lock-neutral (the parent owns the global mutex across the sequence).
+  local reload_body
+  reload_body=$(sed -n '/^RELOAD() {$/,/^}/p' "$0")
+  case "$reload_body" in
+    *acquire_global_deploy_lock*|*release_global_deploy_lock*)
+      gate "selftest: RELOAD must be lock-neutral (parent owns the global mutex)" 1 ;;
+  esac
+  local seq
+  seq=$(grep -n 'acquire_lock \|acquire_global_deploy_lock$\|release_global_deploy_lock$\|release_lock$' "$0" | sed 's/:.*//' | tr '\n' ' ')
+  pass "selftest: RELOAD lock-neutral verified (body has no global-lock calls)"
+  # ordering assertion: main tail is acquire_lock -> acquire_global -> ... -> release_global -> release_lock
+  # main-sequence order: lock -> global mutex -> DEPLOY -> ROUTING -> RELOAD
+  # -> release global -> release tx (each strictly after the previous).
+  local main_body cursor=0 call found
+  main_body=$(sed -n '/^GATES "\$MAIN_WORKTREE_DIR"$/,/^echo "TRANSACTION_SEQUENCE_COMPLETE/p' "$0")
+  [ -n "$main_body" ] || gate "selftest: main body extraction" 1
+  for call in 'acquire_lock ' 'acquire_global_deploy_lock' 'DEPLOY "$STAGING_DIR"' \
+              'ROUTING "$STAGING_DIR"' 'RELOAD' 'release_global_deploy_lock' 'release_lock'; do
+    found=$(printf '%s\n' "$main_body" | tail -n +$((cursor + 1)) | grep -n -F -- "$call" | head -1 | cut -d: -f1 || true)
+    [ -n "$found" ] || gate "selftest: main sequence missing $call" 1
+    cursor=$((cursor + found))
+  done
+  pass "selftest: main sequence order verified (lock, global mutex, deploy, routing, reload, release)"
 
   # (8) P0-2: REAL deploy control flow — installer rc==0 must cross the
   # installer gate and reach the post-deploy marker; rc!=0 must FAIL_CLOSED.
