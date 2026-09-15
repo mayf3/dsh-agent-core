@@ -20,7 +20,7 @@ import {
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
   reExportsWithoutLocalBinding,
 } from './lib/admission-lib.mjs'
-import { mergeGoalDeltaIntoLive } from '../packages/production-runtime/src/scheduler/deployment-goal-overlay.js'
+import { adaptCandidateComposeToPinnedV2 } from '../packages/production-runtime/src/scheduler/deployment-goal-overlay.js'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
 import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
@@ -51,6 +51,7 @@ const MIGRATION_SOURCES = {
   factsSha256: val('--migration-facts-sha256'),
 }
 const GOAL_BASE_SHA = '68008e83142bdb637c4fa61c2a65db73c64b2eb1'
+const PINNED_V2_MODEL_LOADER = new Map([['packages/production-runtime/src/model-overrides.js', '4df9f741e1c550d377a29a81ba08f32d8986c19384e8239570738e565858898d']])
 if (MODE === undefined || !/^[0-9a-f]{40}$/.test(SOURCE_SHA ?? '')) {
   process.stderr.write('usage: scheduler-cp-admission --selftest|--plan|--apply --source-sha <sha> --routing-manifest-source <path> --routing-manifest-sha256 <sha256> plus frozen migration source paths/hashes\n')
   process.exit(2)
@@ -193,16 +194,14 @@ function overlay() {
   const composePath = 'packages/production-runtime/src/compose.js'
   const seedBytes = new Map(seedList.map((path) => {
     const target = git(['show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8' })
-    if (path !== composePath || !liveRootFiles.has(path)) return [path, target]
-    const base = git(['show', `${GOAL_BASE_SHA}:${path}`], { encoding: 'utf8' })
-    const live = readFileSync(join(CTX.liveRoot, path), 'utf8')
-    return [path, mergeGoalDeltaIntoLive({ base, live, target })]
+    return [path, path === composePath ? adaptCandidateComposeToPinnedV2(target) : target]
   }))
   const narrowed = narrowOverlayUniverse({
     seedPaths: seedList,
     readTarget: (path) => seedBytes.get(path) ?? execFileSync('git', ['-C', REPO_ROOT, 'show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }),
     liveHas: (path) => liveRootFiles.has(path),
     liveShaOf: liveSha,
+    preserveLiveShaByPath: MODE === 'selftest' ? new Map() : PINNED_V2_MODEL_LOADER,
   })
   if (narrowed.refuse) phase('overlay', false, `NARROW CLOSURE REFUSED: ${narrowed.refuse} — NO MUTATION (widen CONSCIOUSLY with the model-overrides lesson in mind)`)
   const plan = { update: [], add: [] }

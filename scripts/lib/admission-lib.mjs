@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 /**
  * scheduler-cp-admission helper library — PURE functions only
  * (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 production admission, RUNBOOK §3).
@@ -242,13 +244,13 @@ export function inOverlayUniverse(repoPath) {
 }
 
 /**
- * Fixpoint narrow overlay: seed = exact goal files; grow ONLY through relative
- * imports which are absent from live. Existing production dependencies stay
- * byte-preserved (the boot smoke is the compatibility backstop). Universe-
- * external imports are tolerated when live serves them; unresolvable
- * everywhere -> {refuse}. Pure.
+ * Fixpoint narrow overlay: seed = exact goal files; grow through relative
+ * imports whose target bytes differ from live. A separately governed live
+ * dependency may be retained only by an exact reviewed SHA pin; pin drift
+ * refuses the overlay. Universe-external imports are tolerated when live
+ * serves them; unresolvable everywhere -> {refuse}. Pure.
  */
-export function narrowOverlayUniverse({ seedPaths, readTarget, liveHas, liveShaOf }) {
+export function narrowOverlayUniverse({ seedPaths, readTarget, liveHas, liveShaOf, preserveLiveShaByPath = new Map() }) {
   const overlay = new Map()
   const queue = [...seedPaths]
   while (queue.length > 0) {
@@ -261,8 +263,9 @@ export function narrowOverlayUniverse({ seedPaths, readTarget, liveHas, liveShaO
     for (const spec of relativeImports(String(bytes))) {
       if (!spec.startsWith('.')) continue
       let resolved = null
+      let dependencyBytes
       for (const candidate of resolveRelative(dir, spec)) {
-        try { readTarget(candidate); resolved = candidate; break } catch { /* next shape */ }
+        try { dependencyBytes = readTarget(candidate); resolved = candidate; break } catch { /* next shape */ }
       }
       if (resolved === null) {
         if (liveHas(resolveRelative(dir, spec)[0])) continue
@@ -272,11 +275,17 @@ export function narrowOverlayUniverse({ seedPaths, readTarget, liveHas, liveShaO
         if (liveHas(resolved)) continue
         return { refuse: `import '${spec}' of ${path} reaches excluded tree ${resolved} AND live does not serve it` }
       }
-      // Existing production dependencies are preserved byte-for-byte.  The
-      // goal owns seed deltas, not unrelated dependency upgrades; missing
-      // dependencies are the only imports added to make a new seed loadable.
-      if (!liveHas(resolved)) queue.push(resolved)
+      const pinnedLiveSha = preserveLiveShaByPath.get(resolved)
+      if (pinnedLiveSha !== undefined) {
+        if (liveShaOf(resolved) !== pinnedLiveSha) return { refuse: `pinned live dependency drift: ${resolved}` }
+        continue
+      }
+      if (liveShaOf(resolved) !== sha256Bytes(dependencyBytes)) queue.push(resolved)
     }
   }
   return { overlay }
+}
+
+function sha256Bytes(bytes) {
+  return createHash('sha256').update(bytes).digest('hex')
 }
