@@ -16,6 +16,11 @@ r2_review: independent review round-2 = REVISE（唯一残留 blocker = B2 字�
   清扫漏 §4 出生护栏与 §9 I1 负例标签；另 2 cosmetic：§2 出集指针应指 §6、
   §8 应枚举 AMENDMENT_2 内容）——全部修于 r3；其余 round-1 blockers/notes
   经 round-2 逐项机械确认 RESOLVED/PRESENT
+r3_review: independent review round-3 = PASS / BLOCKERS=NONE /
+  SAFE_TO_MATERIALIZE=YES（@dcd8359 逐项确认 round-2 blocker+cosmetics RESOLVED、
+  无新矛盾）；唯一 non-gating cosmetic（§8 AMENDMENT_2 gloss 主语应为
+  AGENT_PROCESS_EXITED 而非 outcome_unknown）已在本 head 吸收——先例：
+  MESSAGING_V1 amendment 的 follow-up-commit 模式，零语义差
 owner_goal: CANONICAL_AGENT_TO_AGENT_SESSION_SEND_V1
 owner_ruling_date: 2026-09-15
 owner_rulings:
@@ -50,7 +55,8 @@ external_authorities:
     relation: MachineAccessGrant 物理行与 token issuance 的唯一权威；本 Spec 的实现
       需其 companion contract（AUTH_SERVICE_SESSION_SEND_FLEET_GRANT_PROVISIONING_V1，
       实现阶段随 auth-service PR 冻结；先例=AUTH_SERVICE_AGENT_SESSION_SEND_OPERATIONAL_GRANT_V1 / PR #50）
-review_status: PENDING_INDEPENDENT_REVIEW
+review_status: INDEPENDENT_REVIEW_COMPLETE_PASS
+acceptance_verdict: READY_FOR_OWNER_EXACT_HEAD_ACCEPTANCE
 ---
 
 # AGENT_CORE_CANONICAL_AGENT_FLEET_SEND_POLICY_V1
@@ -262,8 +268,8 @@ Goal §1/§3 的 DENY 闭集（non-canonical legacy / unknown / disabled / retir
 全部继承 MESSAGING_V1 r5（AMENDMENT_1：§5.1 两维结果模型、§5.2
 failureCode+invocationCorrelation、§5.3 agent_session_send_reconcile；
 AMENDMENT_2：post_receipt reason marker、§5.3 conversion row、§7
-T_PROCESS_EXIT/AGENT_PROCESS_EXITED cases——outcome_unknown 恒为 reason、
-永非 delivery status）。实施依赖注记：reliability 实现（#203）已 merge 入 dsh main，
+T_PROCESS_EXIT/AGENT_PROCESS_EXITED cases——AGENT_PROCESS_EXITED 恒为 reason、
+永非 delivery status（由 outcome_unknown 携带））。实施依赖注记：reliability 实现（#203）已 merge 入 dsh main，
 PRODUCTION_APPLY 仍为 tracked debt——本 Spec 的 production E2E 若在其部署前执行，
 outcome/reconcile 断言以当时已部署字节为准，不得虚报。
 
