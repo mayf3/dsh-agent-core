@@ -336,6 +336,41 @@ test('failed-cutover replay refuses a generation that drops a committed root', a
   }), /conflicts with committed root authority/)
 })
 
+test('failed-cutover replay refuses newly proven members of a committed root instead of discarding them', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-member-'))
+  await chmod(dir, 0o700)
+  const legacyPath = join(dir, 'legacy.json')
+  const evidencePath = join(dir, 'evidence.jsonl')
+  const incidentPath = join(dir, 'incidents.json')
+  const blocked = { class: 'ADMISSION_BLOCKED_UNKNOWN', jobId: 'job-a', occurrenceId: 'occ-a' }
+  const missed = { class: 'EXPECTED_RUN_MISSED', jobId: 'job-a', occurrenceId: 'occ-a', derivedUnderAdmissionBlock: true }
+  const blockedFingerprint = 'ADMISSION_BLOCKED_UNKNOWN|job-a|occ-a'
+  const missedFingerprint = 'EXPECTED_RUN_MISSED|job-a|occ-a'
+  const firstLegacy = Buffer.from(`${JSON.stringify({ active: { [blockedFingerprint]: {} } })}\n`)
+  const firstEvidence = Buffer.from(`${JSON.stringify({ fingerprint: blockedFingerprint, delivery: 'DELIVERED', fact: blocked })}\n`)
+  await writeFile(legacyPath, firstLegacy, { mode: 0o600 })
+  await writeFile(evidencePath, firstEvidence, { mode: 0o600 })
+  migrateLegacyIncidentStateFiles({
+    legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
+    findings: [blocked], expectedLegacySha256: sha(firstLegacy), expectedEvidenceSha256: sha(firstEvidence),
+    expectedFactsSha256: sha(Buffer.from(canonicalJSON([blocked]))), nowMs: 2,
+  })
+
+  const secondLegacy = Buffer.from(`${JSON.stringify({ active: { [blockedFingerprint]: {}, [missedFingerprint]: {} } })}\n`)
+  const secondEvidence = Buffer.from([
+    JSON.stringify({ fingerprint: blockedFingerprint, delivery: 'DELIVERED', fact: blocked }),
+    JSON.stringify({ fingerprint: missedFingerprint, delivery: 'DELIVERED', fact: missed }),
+    '',
+  ].join('\n'))
+  await writeFile(legacyPath, secondLegacy, { mode: 0o600 })
+  await writeFile(evidencePath, secondEvidence, { mode: 0o600 })
+  assert.throws(() => migrateLegacyIncidentStateFiles({
+    legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
+    findings: [blocked, missed], expectedLegacySha256: sha(secondLegacy), expectedEvidenceSha256: sha(secondEvidence),
+    expectedFactsSha256: sha(Buffer.from(canonicalJSON([blocked, missed]))), nowMs: 3,
+  }), /conflicts with committed root authority/)
+})
+
 test('T27 source drift aborts before incident-state commit', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-drift-'))
   await chmod(dir, 0o700)
