@@ -1,0 +1,57 @@
+# UX V3 independent semantic review
+
+## Coordinates and mandate
+
+- Goal: AGENT_OUTCOME_UNKNOWN_RECOVERY_CLOSURE, display candidate revision only.
+- User mandate: combine four requested corrections, freeze head, independently review; preserve separate execution recovery and serialize production mutations.
+- Base: `f72255d4feddb6deb4f907cbe70cca547f9e240a` (author fresh-fetch verified).
+- Reviewed candidate: `900645556a4395d24ff9e29924171f3d47dfc9e8`.
+- Spec: `docs/specs/AGENT_CORE_LARK_UX_PHASE1_V3.md`.
+- Spec SHA-256: `a1af429cf3967364edeee2941660fb3a77657948f1061b4dafbc1ae6f66c3fa3`.
+- Reviewer: independent subagent `ux_v3_semantic_review`, fresh context, read-only.
+- This record persists the review; its addition does not change reviewed Spec bytes.
+
+## Verdict
+
+SPEC_REVIEW = ACCEPT (recommendation only)
+AUTHOR_INDEPENDENCE = PASS
+AUTHORITY_REVIEW = PASS
+PRIMITIVE_BOUNDARY_REVIEW = PASS
+CONTRACT_REVIEW = PASS
+ACCEPTANCE_COVERAGE_REVIEW = PASS
+MANDATE_SCOPE_REVIEW = PASS
+EVIDENCE_REVIEWABILITY = PASS (Spec and pinned source, not runtime proof)
+BASE_IMPACT = NONE
+FROZEN_BLOCKER_UNION = []
+SHIP_BLOCKER = 0
+SPEC_GAPS = 0
+MECHANICAL_FIX = NONE
+
+## Semantic findings
+
+1. Router-only media precheck preserves Scheduler's original card eligibility, targets, mention behavior and empty/oversize alternatives; card eligibility union does not trigger the new precheck.
+2. Terminal send_timeout retains its SDK classification and projects replyDelivery=unknown with “可能已送达”; no upper-layer resend and no inference of zero delivery.
+3. Fixed SDK format fallback is post-to-text only. Preselected text and static card do not receive a second format downgrade. Target-revoked fallback and transport retry remain distinct.
+4. Adoption V2 governs. Four closure declarations and the future atomic V3-accepted / both-predecessors-superseded transaction, including reciprocal links, are explicit. Predecessors remain unchanged until acceptance.
+5. Effective heading normalization, long-content fidelity, mentions, topic continuity, bounded retry and live-client gates are inherited. Changed meanings have new IDs and migration mappings.
+6. Partial-delivery receipts remain possible/unavailable. Final permission/format rejection does not prove whole-answer nondelivery. Receipt failure does not rewrite execution or authorize Agent re-execution.
+
+SDK evidence: fixed revision `ab028f9dbcc09effbdfa4c9885cdcc1f5ecc623f`, outbound sender.ts and retry.ts. Repository evidence: exact-base feishu-connector/index.js and accepted predecessors/adoption authority.
+
+## Verification and limitations
+
+Whitespace, unique normative headings, 13 sections, proposed status, governance integrity and targeted secret-pattern inspection passed. No remote push.
+
+Structure verifier reports the same pre-existing scripts directory violation on candidate and base-control: 59 children, exception 40; each reports one violation and 72 warnings. No scripts/product source changed. This is recorded baseline debt, not silently fixed.
+
+Fixed SDK's unknown retry and unavailable partial chunk receipts remain explicit follow-up limitations, not requirements for this candidate.
+
+IMPLEMENTATION_ALLOWED = NO
+MERGE_READY = NO (Owner acceptance transaction pending)
+OPERATION_ALLOWED = NO
+PRODUCTION_MUTATIONS = 0
+RUNTIME_RESTARTS = 0
+REAL_CANARY = NOT_RUN
+CURRENT_AGENT_RECOVERY = NOT_PROVEN
+
+This PASS is an exact-head Spec review recommendation, not acceptance, implementation conformance, or production authorization. Next action is Owner acceptance of the reviewed candidate followed by the defined atomic lifecycle transaction and main-base gates. Production deployment/restarts remain serialized with Watchdog and execution recovery.
