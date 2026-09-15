@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { chmod, lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
+import { chmod, lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -51,6 +51,135 @@ test('desired-state install accepts root-owned legacy 0644 preimage and narrows 
   assert.equal(await readFile(targetPath, 'utf8'), bytes.toString())
   assert.equal(await readFile(preimagePath, 'utf8'), '{"version":"legacy"}\n')
   assert.equal(receipt.preimageMetadata.mode, 0o644)
+})
+
+test('desired-state replay narrows an already-installed candidate from legacy 0644 to 0640', async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-replay-mode-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 })
+  await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  const bytes = Buffer.from('{"version":1,"jobs":[]}\n')
+  await writeFile(targetPath, bytes, { mode: 0o644 })
+  let receipt
+  assert.throws(() => installSchedulerDesiredState({
+    bytes, expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: process.getgid(),
+    writeReceipt: (value) => { receipt = value; throw new Error('crash after receipt') },
+  }), /crash after receipt/)
+  const replay = installSchedulerDesiredState({
+    bytes, expectedJobs: [], targetPath, candidatePath, preimagePath, receipt,
+    expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: (value) => { receipt = value },
+  })
+  assert.equal(replay.status, 'INSTALLED')
+  assert.equal((await lstat(targetPath)).mode & 0o777, 0o640)
+  assert.equal(receipt.preimageMetadata.mode, 0o644)
+})
+
+test('desired-state install rejects a legacy target with an unsupported extended attribute', { skip: process.platform !== 'darwin' }, async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-xattr-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 })
+  await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(targetPath, '{"version":"legacy"}\n', { mode: 0o644 })
+  execFileSync('/usr/bin/xattr', ['-w', 'user.scheduler-desired-state-test', 'test', targetPath])
+  assert.throws(() => installSchedulerDesiredState({
+    bytes: Buffer.from('{"version":1,"jobs":[]}\n'), expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: () => assert.fail('no receipt write'),
+  }), /protected preimage ACL\/xattrs are unsupported/)
+  assert.equal(await readFile(targetPath, 'utf8'), '{"version":"legacy"}\n')
+})
+
+test('desired-state install rejects a legacy target with an extended ACL', { skip: process.platform !== 'darwin' }, async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-acl-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 })
+  await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(targetPath, '{"version":"legacy"}\n', { mode: 0o644 })
+  execFileSync('/bin/chmod', ['+a', 'everyone deny write', targetPath])
+  assert.throws(() => installSchedulerDesiredState({
+    bytes: Buffer.from('{"version":1,"jobs":[]}\n'), expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: () => assert.fail('no receipt write'),
+  }), /protected preimage ACL\/xattrs are unsupported/)
+})
+
+test('desired-state install rejects a legacy target with the wrong owner identity', async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-owner-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 })
+  await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(targetPath, '{"version":"legacy"}\n', { mode: 0o644 })
+  plain(targetPath)
+  assert.throws(() => installSchedulerDesiredState({
+    bytes: Buffer.from('{"version":1,"jobs":[]}\n'), expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid() + 1, expectedGid: process.getgid(), writeReceipt: () => assert.fail('no receipt write'),
+  }), /unsafe desired-state target/)
+})
+
+test('desired-state install rejects a symlink target before receipt or replacement', async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-symlink-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const victimPath = join(root, 'config', 'victim.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 })
+  await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(victimPath, '{"version":"victim"}\n', { mode: 0o644 })
+  await symlink(victimPath, targetPath)
+  assert.throws(() => installSchedulerDesiredState({
+    bytes: Buffer.from('{"version":1,"jobs":[]}\n'), expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: () => assert.fail('no receipt write'),
+  }))
+  assert.equal(await readFile(victimPath, 'utf8'), '{"version":"victim"}\n')
+})
+
+test('desired-state replay rejects same-byte predecessor metadata drift', async (t) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-replay-drift-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config'))
+  await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 })
+  await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(targetPath, '{"version":"legacy"}\n', { mode: 0o644 })
+  const bytes = Buffer.from('{"version":1,"jobs":[]}\n')
+  let receipt
+  assert.throws(() => installSchedulerDesiredState({
+    bytes, expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: process.getgid(),
+    writeReceipt: (value) => { receipt = value; throw new Error('crash after receipt') },
+  }), /crash after receipt/)
+  await chmod(targetPath, 0o600)
+  assert.throws(() => installSchedulerDesiredState({
+    bytes, expectedJobs: [], targetPath, candidatePath, preimagePath, receipt,
+    expectedUid: process.getuid(), expectedGid: process.getgid(), writeReceipt: () => assert.fail('no receipt rewrite'),
+  }), /desired-state deployment generation mismatch/)
+  assert.equal(await readFile(targetPath, 'utf8'), '{"version":"legacy"}\n')
+  assert.equal((await lstat(targetPath)).mode & 0o777, 0o600)
 })
 
 test('desired-state install still rejects a writable legacy target', async (t) => {
