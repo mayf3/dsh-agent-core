@@ -20,6 +20,7 @@ import {
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
   reExportsWithoutLocalBinding,
 } from './lib/admission-lib.mjs'
+import { mergeGoalDeltaIntoLive } from '../packages/production-runtime/src/scheduler/deployment-goal-overlay.js'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
 import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
@@ -189,9 +190,17 @@ function overlay() {
     const p = join(CTX.liveRoot, path)
     return existsSync(p) ? sha256(readFileSync(p)) : undefined
   }
+  const composePath = 'packages/production-runtime/src/compose.js'
+  const seedBytes = new Map(seedList.map((path) => {
+    const target = git(['show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8' })
+    if (path !== composePath || !liveRootFiles.has(path)) return [path, target]
+    const base = git(['show', `${GOAL_BASE_SHA}:${path}`], { encoding: 'utf8' })
+    const live = readFileSync(join(CTX.liveRoot, path), 'utf8')
+    return [path, mergeGoalDeltaIntoLive({ base, live, target })]
+  }))
   const narrowed = narrowOverlayUniverse({
     seedPaths: seedList,
-    readTarget: (path) => execFileSync('git', ['-C', REPO_ROOT, 'show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }),
+    readTarget: (path) => seedBytes.get(path) ?? execFileSync('git', ['-C', REPO_ROOT, 'show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }),
     liveHas: (path) => liveRootFiles.has(path),
     liveShaOf: liveSha,
   })
@@ -221,7 +230,8 @@ function overlay() {
     for (const entry of all) {
       const current = liveSha(entry.path)
       const allowed = entry.kind === 'add' ? [undefined, entry.sha] : entry.kind === 'update' ? [entry.preimageSha, entry.sha] : [entry.preimageSha, undefined]
-      if (!allowed.includes(current) || (entry.kind !== 'delete' && sha256(narrowed.overlay.get(entry.path)) !== entry.sha)) throw new Error(`overlay rerun generation mismatch: ${entry.path}`)
+      const plannedBytes = seedBytes.get(entry.path) ?? (entry.kind === 'delete' ? undefined : git(['show', `${SOURCE_SHA}:${entry.path}`], { encoding: 'utf8' }))
+      if (!allowed.includes(current) || (entry.kind !== 'delete' && sha256(plannedBytes) !== entry.sha)) throw new Error(`overlay rerun generation mismatch: ${entry.path}`)
     }
     const installed = all.every((entry) => entry.kind === 'delete' ? liveSha(entry.path) === undefined : liveSha(entry.path) === entry.sha)
     if (installed) { phase('overlay', true, `EXACT GOAL closure already installed; predecessor manifest retained`); return }
@@ -231,7 +241,7 @@ function overlay() {
     writeControlReceipt('overlay-manifest.json', { base: GOAL_BASE_SHA, source: SOURCE_SHA, entries: all })
   }
   for (const entry of writes) {
-    const bytes = Buffer.from(narrowed.overlay.get(entry.path), 'utf8')
+    const bytes = Buffer.from(narrowed.overlay.get(entry.path) ?? seedBytes.get(entry.path) ?? git(['show', `${SOURCE_SHA}:${entry.path}`], { encoding: 'utf8' }), 'utf8')
     const target = join(CTX.liveRoot, entry.path)
     if (sha256(bytes) !== entry.sha) throw new Error(`staged bytes != plan sha for ${entry.path}`)
     if (liveSha(entry.path) === entry.sha) continue

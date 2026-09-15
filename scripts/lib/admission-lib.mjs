@@ -242,10 +242,11 @@ export function inOverlayUniverse(repoPath) {
 }
 
 /**
- * Fixpoint narrow overlay: seed = differing/absent universe files; grow ONLY
- * through relative imports resolving inside the universe and differing from
- * live. Universe-external imports are tolerated when live serves them (the
- * boot smoke is the backstop); unresolvable everywhere -> {refuse}. Pure.
+ * Fixpoint narrow overlay: seed = exact goal files; grow ONLY through relative
+ * imports which are absent from live. Existing production dependencies stay
+ * byte-preserved (the boot smoke is the compatibility backstop). Universe-
+ * external imports are tolerated when live serves them; unresolvable
+ * everywhere -> {refuse}. Pure.
  */
 export function narrowOverlayUniverse({ seedPaths, readTarget, liveHas, liveShaOf }) {
   const overlay = new Map()
@@ -271,16 +272,11 @@ export function narrowOverlayUniverse({ seedPaths, readTarget, liveHas, liveShaO
         if (liveHas(resolved)) continue
         return { refuse: `import '${spec}' of ${path} reaches excluded tree ${resolved} AND live does not serve it` }
       }
-      if (liveShaOf(resolved) !== sha256Text(String(bytes))) queue.push(resolved)
+      // Existing production dependencies are preserved byte-for-byte.  The
+      // goal owns seed deltas, not unrelated dependency upgrades; missing
+      // dependencies are the only imports added to make a new seed loadable.
+      if (!liveHas(resolved)) queue.push(resolved)
     }
   }
   return { overlay }
-}
-
-function sha256Text(text) {
-  // fixpoint-growth hash only (positional); the orchestrator recomputes the
-  // real sha256 for the write pass.
-  let h = 0
-  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0
-  return `${h}:${text.length}`
 }
