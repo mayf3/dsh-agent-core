@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto'
 
 import { isUnresolvedUnknown, rebuildFences } from '../occurrence-model.js'
-import { deriveJobStateSummary } from '../eligibility.js'
+import { computeNextRunAtMsV2, deriveJobStateSummary, previousNaturalSlotMs } from '../eligibility.js'
 import { classifyReconciliationEvidence } from '../watchdog/reconciliation.js'
 import { filterHealthForPrincipal } from '../watchdog/health.js'
 
@@ -286,9 +286,108 @@ export function createSelfOpsAccess({
     }
   }
 
+  /**
+   * SILENT_DUE_SLOT_LOSS closure: the owning Agent asks "why did this Job not
+   * run?" — the answer is always the durable accounting (occurrence, slot
+   * accounting event, or an honest NOT_PROVEN with the proven/missing stage
+   * bounds), never a bare runs count.
+   */
+  async function jobDisposition(callerAgentId, { jobId, slot: requestedSlot }) {
+    const doc = await store.loadDoc({ force: true })
+    const job = doc.jobs.find((candidate) => candidate.id === jobId)
+    if (!job || job.agentId !== callerAgentId) return opaqueDenied()
+    const now = clock()
+    const latestSlot = previousNaturalSlotMs(job.schedule, job.id, now)
+    // An explicit slot queries a PREVIOUS elapsed slot (e.g. after nextRun
+    // advanced past it); the default is the latest elapsed slot.
+    const expectedSlot = Number.isFinite(requestedSlot) && (latestSlot === null || requestedSlot <= latestSlot)
+      ? requestedSlot
+      : latestSlot
+    const mine = doc.occurrences.filter((record) => record.jobId === jobId)
+    const slotOccurrence = expectedSlot === null ? null : mine.find((record) => {
+      const kind = record.kind === 'retry' ? 'retry' : record.kind
+      return (kind === 'natural' && record.nominalScheduledAt === expectedSlot)
+        || (kind === 'catchup' && record.catchUpOfNominalAt === expectedSlot)
+    })
+    const fenceStatus = doc.fences[jobId] !== undefined
+    const nextRun = job.enabled
+      ? (Number.isFinite(job.state?.nextRunAtMs) ? job.state.nextRunAtMs : computeNextRunAtMsV2({ job, occurrences: mine, nowMs: now }))
+      : undefined
+
+    let disposition
+    if (expectedSlot === null) {
+      disposition = {
+        slotClassification: 'NO_PAST_SLOT_YET',
+        admissionStatus: 'not_attempted',
+        occurrenceId: 'NONE',
+        invocationStatus: 'none',
+        durableReason: 'the schedule has no elapsed slot yet',
+        recommendedSafeAction: 'none — the first eligible slot is still in the future',
+      }
+    } else if (slotOccurrence != null) {
+      disposition = {
+        slotClassification: 'OCCURRENCE_CREATED',
+        admissionStatus: slotOccurrence.state,
+        occurrenceId: slotOccurrence.occurrenceId,
+        invocationStatus: slotOccurrence.state,
+        durableReason: `accounted by occurrence ${slotOccurrence.occurrenceId} (${slotOccurrence.state})`,
+        ...(isUnresolvedUnknown(slotOccurrence)
+          ? { recommendedSafeAction: 'run is an unresolved unknown — use self_ops.status and reconcile_turn for the exact run' }
+          : { recommendedSafeAction: 'none — the slot is accounted by its occurrence' }),
+      }
+    } else {
+      const events = await store.readRunEvents({ limit: 500 })
+      const record = events.filter((event) => event.action === 'slot_accounting'
+        && event.jobId === jobId && event.slot === expectedSlot).at(-1)
+      if (record !== undefined) {
+        disposition = {
+          slotClassification: record.classification,
+          admissionStatus: record.classification === 'ADMISSION_REJECTED' || record.classification === 'ADMISSION_INTERRUPTED'
+            ? 'rejected'
+            : 'not_attempted',
+          occurrenceId: record.occurrenceId ?? 'NONE',
+          invocationStatus: record.occurrenceId ? 'see occurrence' : 'not_invoked',
+          durableReason: record.reason,
+          ...(record.recoveryClassification ? { recoveryClassification: record.recoveryClassification } : {}),
+          recommendedSafeAction: record.classification === 'SKIPPED_POLICY'
+            ? 'policy skip — no action; the next eligible slot proceeds normally'
+            : record.classification === 'MISSED_BEFORE_OCCURRENCE'
+              ? 'no replay without an explicit Owner catch-up policy (NO_FORCED_CATCHUP); verify engine liveness via the W1 watchdog'
+              : 'resolve the recorded reason; the next tick re-evaluates the slot naturally',
+        }
+      } else {
+        // Evidence gap (pre-accounting legacy or rotated evidence): honest
+        // NOT_PROVEN with mechanical stage bounds — never a bare runs count.
+        const engineAliveInWindow = events.some((event) => Number.isFinite(event.ts)
+          && event.ts >= expectedSlot && event.ts <= now
+          && ['occurrence_reserved', 'outcome', 'slot_accounting', 'engine_lease_lost', 'router_admission'].includes(event.action))
+        disposition = {
+          slotClassification: 'MISSED_BEFORE_OCCURRENCE',
+          admissionStatus: 'unknown',
+          occurrenceId: 'NONE',
+          invocationStatus: 'unknown',
+          durableReason: 'no durable accounting record for this slot in the retained evidence window',
+          rootCause: 'NOT_PROVEN',
+          lastProvenStage: 'SCHEDULE_CALCULATION',
+          firstMissingStage: engineAliveInWindow ? 'DUE_SLOT_DETECTION' : 'TICK_OBSERVED',
+          recommendedSafeAction: 'check the W1 watchdog alert history for this window; if a fence exists use the trusted reconcile path',
+        }
+      }
+    }
+    return {
+      jobId,
+      expectedSlot,
+      ...(expectedSlot !== null ? { expectedSlotIso: new Date(expectedSlot).toISOString() } : {}),
+      ...disposition,
+      fenceStatus,
+      nextRun: nextRun === undefined ? null : nextRun,
+    }
+  }
+
   return {
     status,
     reconcileTurn,
+    jobDisposition,
     handlers: {
       self_ops: {
         status: async (_args, context) => ({
@@ -299,6 +398,13 @@ export function createSelfOpsAccess({
           jobId: args.job_id,
           occurrenceId: args.occurrence_id,
           runId: args.run_id,
+        }),
+        job_disposition: async (args, context) => ({
+          ok: true,
+          result: await jobDisposition(context.callerAgentId, {
+            jobId: args.job_id,
+            slot: Number.isFinite(args.slot) ? args.slot : undefined,
+          }),
         }),
       },
     },

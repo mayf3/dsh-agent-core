@@ -18,13 +18,13 @@ function gateway(handlers) {
   })
 }
 
-test('Tools V3 registers exactly one infrastructure self_ops manifest with two actions', () => {
+test('Tools V3 registers exactly one infrastructure self_ops manifest with three actions', () => {
   assert.equal(DEFAULT_MANIFESTS.filter((manifest) => manifest.id === 'self_ops').length, 1)
   const canonical = validateManifest(selfOpsManifest)
   assert.equal(canonical.ok, true)
   assert.equal(canonical.manifest.infrastructure, true)
   assert.equal(canonical.manifest.selector, 'action')
-  assert.deepEqual(canonical.manifest.operations.map((operation) => operation.name), ['status', 'reconcile_turn'])
+  assert.deepEqual(canonical.manifest.operations.map((operation) => operation.name), ['status', 'reconcile_turn', 'job_disposition'])
   const { definition } = buildToolDefinition({ manifest: selfOpsManifest, handlers: {} })
   assert.deepEqual(Object.keys(definition.parameters).sort(), ['action', 'job_id', 'occurrence_id', 'run_id'])
   for (const forbidden of ['principal_id', 'agent_id', 'target_agent_id', 'request_id', 'router_handle', 'force']) {
@@ -73,11 +73,11 @@ test('availability reports self_ops provider readiness without credentials', asy
   const broker = createBrokerGateway({
     manifests: [selfOpsManifest],
     targets: [],
-    localHandlers: { self_ops: { status() {}, reconcile_turn() {} } },
+    localHandlers: { self_ops: { status() {}, reconcile_turn() {}, job_disposition() {} } },
   })
   const answer = await broker.execute({ capabilityId: 'broker', operation: 'availability', args: {} }, { agentId: AGENT })
   assert.deepEqual(answer.result.capabilities.self_ops, {
     ready: true,
-    operations: { status: true, reconcile_turn: true },
+    operations: { status: true, reconcile_turn: true, job_disposition: true },
   })
 })
