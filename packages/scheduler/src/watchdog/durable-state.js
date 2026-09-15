@@ -34,21 +34,22 @@ function retainBackup(path, bytes, ownership) {
 function extendCommittedMigration(committed, candidate, migration) {
   if (!committed.migration) throw new Error('incident migration extension requires committed migration authority')
   const existingRoots = new Set(Object.keys(committed.incidents ?? {}))
-  const identityFields = ['rootIdentity', 'rootCauseClass', 'incidentId', 'episode', 'routeClass', 'producer']
-  const includes = (superset, subset) => (subset ?? []).every((before) => (superset ?? [])
-    .some((after) => canonicalJSON(after) === canonicalJSON(before)))
+  const identityFields = ['rootIdentity', 'rootCauseClass', 'routeClass']
+  const union = (before, after) => [...structuredClone(before ?? []), ...(after ?? [])
+    .filter((value) => !(before ?? []).some((existing) => canonicalJSON(existing) === canonicalJSON(value)))
+    .map((value) => structuredClone(value))]
   const incidents = structuredClone(candidate.incidents)
   for (const root of existingRoots) {
     const before = committed.incidents[root]
     const after = candidate.incidents?.[root]
-    if (!after || identityFields.some((field) => canonicalJSON(before[field]) !== canonicalJSON(after[field]))
-      || !includes(after.facts, before.facts) || !includes(after.symptoms, before.symptoms)) {
-      throw new Error('incident migration extension conflicts with committed root authority')
+    if (!after) throw new Error('incident migration extension drops committed root')
+    if (identityFields.some((field) => canonicalJSON(before[field]) !== canonicalJSON(after[field]))) {
+      throw new Error('incident migration extension conflicts with committed root identity')
     }
     incidents[root] = {
       ...structuredClone(before),
-      facts: structuredClone(after.facts),
-      symptoms: structuredClone(after.symptoms),
+      facts: union(before.facts, after.facts),
+      symptoms: union(before.symptoms, after.symptoms),
     }
   }
   for (const [key, intent] of Object.entries(candidate.outbox ?? {})) {
