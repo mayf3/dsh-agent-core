@@ -35,13 +35,20 @@ function extendCommittedMigration(committed, candidate, migration) {
   if (!committed.migration) throw new Error('incident migration extension requires committed migration authority')
   const existingRoots = new Set(Object.keys(committed.incidents ?? {}))
   const identityFields = ['rootIdentity', 'rootCauseClass', 'incidentId', 'episode', 'routeClass', 'producer']
+  const includes = (superset, subset) => (subset ?? []).every((before) => (superset ?? [])
+    .some((after) => canonicalJSON(after) === canonicalJSON(before)))
+  const incidents = structuredClone(candidate.incidents)
   for (const root of existingRoots) {
     const before = committed.incidents[root]
     const after = candidate.incidents?.[root]
     if (!after || identityFields.some((field) => canonicalJSON(before[field]) !== canonicalJSON(after[field]))
-      || canonicalJSON(before.facts) !== canonicalJSON(after.facts)
-      || canonicalJSON(before.symptoms) !== canonicalJSON(after.symptoms)) {
+      || !includes(after.facts, before.facts) || !includes(after.symptoms, before.symptoms)) {
       throw new Error('incident migration extension conflicts with committed root authority')
+    }
+    incidents[root] = {
+      ...structuredClone(before),
+      facts: structuredClone(after.facts),
+      symptoms: structuredClone(after.symptoms),
     }
   }
   for (const [key, intent] of Object.entries(candidate.outbox ?? {})) {
@@ -52,7 +59,7 @@ function extendCommittedMigration(committed, candidate, migration) {
   return {
     ...structuredClone(candidate),
     migration,
-    incidents: { ...structuredClone(candidate.incidents), ...structuredClone(committed.incidents) },
+    incidents,
     outbox: { ...structuredClone(candidate.outbox), ...structuredClone(committed.outbox) },
   }
 }
