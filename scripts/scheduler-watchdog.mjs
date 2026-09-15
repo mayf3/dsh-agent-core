@@ -423,7 +423,7 @@ if (MIGRATE_STATE) {
   ;(async () => {
     try {
       const { createHash } = await import('node:crypto')
-      const { migrateLegacyIncidentStateFiles } = await import('../packages/scheduler/src/watchdog/index.js')
+      const { migrateLegacyIncidentStateFiles } = await import('../packages/scheduler/src/watchdog/durable-state.js')
       const { readPrivateFile } = await import('../packages/scheduler/src/watchdog/private-state-io.js')
       const factsPath = process.env.SCHEDULER_MIGRATION_FACTS_FILE
       const legacyStatePath = process.env.SCHEDULER_LEGACY_ALERT_STATE
