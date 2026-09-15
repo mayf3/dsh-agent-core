@@ -34,33 +34,152 @@
 #   REPO_SRC    default: the repo this script lives in (feature worktree)
 #   HARNESS_SRC default: /Users/yanfenma/workspace/github/deepseek-harness
 #
+# Lock-only offline selftest (zero production touch):
+#   ./scripts/trusted-cp-deploy-install.sh --lock-selftest
+#
 # Verifies at the end: every symlink in the trusted tree resolves INSIDE the
 # trusted root (or /usr/local/libexec), and a uid-502 spot check cannot write
 # to app/, harness/, home/, config/ or the helper.
 # =============================================================================
 set -euo pipefail
 
+LOCK_SELFTEST=0
+if [ "${1:-}" = "--lock-selftest" ]; then LOCK_SELFTEST=1; fi
+if [ "$LOCK_SELFTEST" = "1" ]; then
+  LOCK_SELFTEST_ROOT="$(mktemp -d /tmp/trusted-cp-lock-selftest.XXXXXX)"
+  PRODUCTION_DEPLOY_LOCK_DIR="$LOCK_SELFTEST_ROOT/production-deploy.lock"
+else
+  PRODUCTION_DEPLOY_LOCK_DIR="/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock"
+fi
+OWN_PRODUCTION_DEPLOY_LOCK=0
+PRESERVED_SOURCE_GIT_STAMP=""
+
+sha256_text() {
+  printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1
+}
+
+lock_holder_matches() {
+  local tx="$1" token="$2" holder="$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+  [ -f "$holder" ] || return 1
+  grep -Fqx "transaction_id=$tx" "$holder" || return 1
+  grep -Fqx "token_sha256=$(sha256_text "$token")" "$holder" || return 1
+}
+
+prepare_global_deploy_lock() {
+  local tx="${PRODUCTION_TRANSACTION_ID:-}" token="${LOCK_OWNER_TOKEN:-}"
+  if { [ -n "$tx" ] && [ -z "$token" ]; } || { [ -z "$tx" ] && [ -n "$token" ]; }; then
+    echo "ERROR: inherited production lock requires BOTH PRODUCTION_TRANSACTION_ID and LOCK_OWNER_TOKEN" >&2
+    return 1
+  fi
+
+  if [ -n "$tx" ]; then
+    if ! lock_holder_matches "$tx" "$token"; then
+      echo "ERROR: inherited production lock holder mismatch — $PRODUCTION_DEPLOY_LOCK_DIR" >&2
+      cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
+      return 1
+    fi
+    echo "  inherited production transaction verified: $tx"
+    return 0
+  fi
+
+  tx="trusted-cp-deploy-$(date -u +%Y%m%dT%H%M%SZ)-$$-$(/usr/bin/openssl rand -hex 16)"
+  token="$(/usr/bin/openssl rand -hex 32)"
+  PRODUCTION_TRANSACTION_ID="$tx"
+  LOCK_OWNER_TOKEN="$token"
+  export PRODUCTION_TRANSACTION_ID LOCK_OWNER_TOKEN
+
+  mkdir -p "$(dirname "$PRODUCTION_DEPLOY_LOCK_DIR")"
+  if ! mkdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null; then
+    echo "ERROR: global production-deploy mutex already held — $PRODUCTION_DEPLOY_LOCK_DIR" >&2
+    cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
+    echo "STALE_LOCK_DISPOSITION: verify the holding deploy is truly dead, then remove EXPLICITLY:" >&2
+    echo "  sudo rmdir $PRODUCTION_DEPLOY_LOCK_DIR" >&2
+    return 1
+  fi
+  printf 'pid=%s\nuid=%s\ntransaction_id=%s\ntoken_sha256=%s\ncmd=%s\nstarted=%s\n' \
+    "$$" "$(id -u)" "$tx" "$(sha256_text "$token")" \
+    "trusted-cp-deploy-install.sh $*" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+  OWN_PRODUCTION_DEPLOY_LOCK=1
+  echo "  global production-deploy mutex acquired: $PRODUCTION_DEPLOY_LOCK_DIR"
+}
+
+release_owned_global_deploy_lock() {
+  [ "$OWN_PRODUCTION_DEPLOY_LOCK" = "1" ] || return 0
+  if ! lock_holder_matches "$PRODUCTION_TRANSACTION_ID" "$LOCK_OWNER_TOKEN"; then
+    echo "ERROR: global mutex release refused (holder mismatch) — left in place: $PRODUCTION_DEPLOY_LOCK_DIR" >&2
+    return 1
+  fi
+  rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+  rmdir "$PRODUCTION_DEPLOY_LOCK_DIR" || return 1
+  OWN_PRODUCTION_DEPLOY_LOCK=0
+  echo "  global production-deploy mutex released"
+}
+
+cleanup() {
+  local rc=$?
+  if [ -n "${PRESERVED_SOURCE_GIT_STAMP:-}" ]; then
+    /bin/rm -f "$PRESERVED_SOURCE_GIT_STAMP" || true
+  fi
+  if [ "$OWN_PRODUCTION_DEPLOY_LOCK" = "1" ]; then
+    if ! release_owned_global_deploy_lock; then
+      [ "$rc" -ne 0 ] || rc=1
+    fi
+  fi
+  if [ "$LOCK_SELFTEST" = "1" ] && [ -n "${LOCK_SELFTEST_ROOT:-}" ]; then
+    /bin/rm -rf "$LOCK_SELFTEST_ROOT" || true
+  fi
+  return "$rc"
+}
+trap cleanup EXIT
+
+lock_selftest() {
+  unset PRODUCTION_TRANSACTION_ID LOCK_OWNER_TOKEN
+  prepare_global_deploy_lock "selftest-standalone" || return 1
+  [ "$OWN_PRODUCTION_DEPLOY_LOCK" = "1" ] || { echo "SELFTEST FAIL: standalone must own lock" >&2; return 1; }
+  lock_holder_matches "$PRODUCTION_TRANSACTION_ID" "$LOCK_OWNER_TOKEN" || { echo "SELFTEST FAIL: standalone holder mismatch" >&2; return 1; }
+  release_owned_global_deploy_lock || return 1
+  [ ! -e "$PRODUCTION_DEPLOY_LOCK_DIR" ] || { echo "SELFTEST FAIL: standalone lock not released" >&2; return 1; }
+
+  local parent_tx="tx-selftest" parent_token="token-selftest" before after
+  mkdir "$PRODUCTION_DEPLOY_LOCK_DIR"
+  printf 'pid=1\ntransaction_id=%s\ntoken_sha256=%s\ncmd=parent\n' \
+    "$parent_tx" "$(sha256_text "$parent_token")" > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+  before="$(shasum -a 256 "$PRODUCTION_DEPLOY_LOCK_DIR/holder" | cut -d' ' -f1)"
+  PRODUCTION_TRANSACTION_ID="$parent_tx" LOCK_OWNER_TOKEN="$parent_token"
+  export PRODUCTION_TRANSACTION_ID LOCK_OWNER_TOKEN
+  prepare_global_deploy_lock "selftest-delegated" || return 1
+  [ "$OWN_PRODUCTION_DEPLOY_LOCK" = "0" ] || { echo "SELFTEST FAIL: delegated child must not own lock" >&2; return 1; }
+  after="$(shasum -a 256 "$PRODUCTION_DEPLOY_LOCK_DIR/holder" | cut -d' ' -f1)"
+  [ "$before" = "$after" ] || { echo "SELFTEST FAIL: delegated child rewrote parent holder" >&2; return 1; }
+
+  if ( PRODUCTION_TRANSACTION_ID="$parent_tx" LOCK_OWNER_TOKEN="wrong" prepare_global_deploy_lock mismatch ) >/dev/null 2>&1; then
+    echo "SELFTEST FAIL: wrong inherited token must fail closed" >&2
+    return 1
+  fi
+  if ( PRODUCTION_TRANSACTION_ID="$parent_tx" LOCK_OWNER_TOKEN="" prepare_global_deploy_lock half-bound ) >/dev/null 2>&1; then
+    echo "SELFTEST FAIL: half-bound inheritance must fail closed" >&2
+    return 1
+  fi
+  echo "LOCK_SELFTEST=PASS"
+}
+
+if [ "$LOCK_SELFTEST" = "1" ]; then
+  lock_selftest
+  exit $?
+fi
+
 if [ "$(id -u)" != "0" ]; then
   echo "ERROR: must run as root (sudo ./scripts/trusted-cp-deploy-install.sh)" >&2
   exit 2
 fi
 
-# GLOBAL production-deploy mutex (WATCHDOG transaction P1 convergence): every
-# entrypoint that replaces the trusted app / routing / restarts the canonical
-# runtime shares THIS exact lock. Atomic mkdir acquire; a held lock fails
-# closed with its holder metadata; a killed run leaves the lock behind and it
-# is disposed of EXPLICITLY (never guessed, never auto-deleted).
-PRODUCTION_DEPLOY_LOCK_DIR="/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock"
-mkdir -p "$(dirname "$PRODUCTION_DEPLOY_LOCK_DIR")"
-if ! mkdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null; then
-  echo "ERROR: global production-deploy mutex already held — $PRODUCTION_DEPLOY_LOCK_DIR" >&2
-  cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
-  echo "STALE_LOCK_DISPOSITION: verify the holding deploy is truly dead, then remove EXPLICITLY:" >&2
-  echo "  sudo rmdir $PRODUCTION_DEPLOY_LOCK_DIR" >&2
-  exit 1
-fi
-printf 'pid=%s\nuid=%s\ncmd=%s\nstarted=%s\n' "$$" "$(id -u)"   "trusted-cp-deploy-install.sh $*" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"   > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
-trap 'rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"; rmdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null || true' EXIT
+# GLOBAL production-deploy mutex: standalone deploys own it; an authorized
+# parent production transaction passes PRODUCTION_TRANSACTION_ID +
+# LOCK_OWNER_TOKEN and this child only verifies that exact holder. Delegated
+# children never acquire/release the parent lock. The holder stores only a
+# SHA-256 of the token; a single EXIT cleanup composes lock + temp-file cleanup.
+prepare_global_deploy_lock "$@" || exit $?
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # AGENT_CORE_BACKUP_RETENTION_V1: deployment backup metadata + pin + post-verified
@@ -94,7 +213,6 @@ id authsvc >/dev/null 2>&1 || { echo "ERROR: user authsvc (uid 505) missing" >&2
 [ -x "$SOURCE_GIT_STAMP" ] || { echo "ERROR: source Git stamp helper missing/not executable: $SOURCE_GIT_STAMP" >&2; exit 2; }
 HARNESS_STAMP="$($SOURCE_GIT_STAMP "$HARNESS_SRC")" || { rc=$?; echo "ERROR: Harness Git source probe failed before backup (exit $rc): $HARNESS_SRC" >&2; exit "$rc"; }
 PRESERVED_SOURCE_GIT_STAMP="$(/usr/bin/mktemp /tmp/agent-core-source-git-stamp.XXXXXX)" && /usr/bin/install -o root -g wheel -m 700 "$SOURCE_GIT_STAMP" "$PRESERVED_SOURCE_GIT_STAMP"
-trap '/bin/rm -f "$PRESERVED_SOURCE_GIT_STAMP"' EXIT
 
 # ---- 1. backup previous install (code refreshed, config preserved in .bak) --
 if [ -e "$TRUSTED_ROOT" ]; then
