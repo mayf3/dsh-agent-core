@@ -19,14 +19,14 @@ Preflight 增补校验（§3 一并执行）：该 chat_id 不得同时是任何
 
 ```bash
 umask 077
-cat > /usr/local/libexec/agent-core/config/scheduler-routing-candidate.json <<'EOF'
+cat > /usr/local/libexec/agent-core/config/scheduler-routing-candidate.json <<'EOFJSON'
 {
   "version": 1,
   "canonicalOpsTarget": { "channel": "feishu", "to": "<§0 chat_id>" },
   "ownerTargets": {},
   "jobFailureTargets": {}
 }
-EOF
+EOFJSON
 chown root:wheel /usr/local/libexec/agent-core/config/scheduler-routing-candidate.json
 chmod 0600 /usr/local/libexec/agent-core/config/scheduler-routing-candidate.json
 shasum -a 256 /usr/local/libexec/agent-core/config/scheduler-routing-candidate.json   # = EXPECTED_CANDIDATE_SHA256，冻结
@@ -61,13 +61,40 @@ EXPECTED_STORE_SHA256          == <jobs.json 实读 sha>
 EXPECTED_ROUTING_TARGET_HASH   == <routing.json 实读 sha / null(pre-installed)>
 ```
 
+### §3.1 One global production transaction owner
+
+Production closure 必须满足：
+
+```text
+ONE_GLOBAL_PRODUCTION_TRANSACTION_OWNER=YES
+PARALLEL_SOURCE_WORK=YES
+PARALLEL_PRODUCTION_DEPLOY=NO
+```
+
+同一个父 transaction 从 fresh §3 gates 通过后只 acquire 一次全局锁：
+
+```text
+fresh preflight
+→ acquire /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock ONCE
+→ deploy
+→ routing/config
+→ restart/kickstart
+→ immediate readiness/readback
+→ transaction receipt
+→ release ONCE
+```
+
+父 transaction 生成 `PRODUCTION_TRANSACTION_ID` + `LOCK_OWNER_TOKEN`；holder 只持 token SHA256。父调用 `trusted-cp-deploy-install.sh`、`run-routing-install.mjs --candidate/--apply` 时继承这两个值，子步骤只验证 holder 与 exact transaction/token 一致，**不得再次 acquire/release 全局锁**。standalone 调用仍可自行 acquire/release 同一路径，以保持所有 mutation entrypoint 的互斥。
+
+任一子步骤失败、holder mismatch、半绑定（只给 transaction id 或只给 token）、中断，都 FAIL_CLOSED。父 transaction 已持有的锁不得被子步骤或 EXIT cleanup 释放；失败/中断保留锁供人工核查并显式 disposition，禁止自动猜测 stale 后删除。
+
 ## §4 Deploy current main（Owner slot 执行既有部署通道）
 
-部署含 95a8c96 的 main 生成（既有 canonical runtime 部署机制不变）；本 goal 不新开 deploy 工具。
+部署含 95a8c96 的 main 生成（既有 canonical runtime 部署机制不变）；本 goal 不新开 deploy 工具。由 §3.1 父 transaction 调用时，deploy installer 作为 delegated child 验证 exact holder，完成后父锁继续保持。
 
 ## §5 Runtime/readiness readback
 
-`assertSchedulerStartupReady`（health.complete==true）+ health provenance（store/routing sha）+ W1 evidence `w1_run` 正常 + routing readback（`readProtectedRoutingManifest` uid 0 / gid / 0640）。
+父 transaction 在仍持有同一 global production lock 的条件下执行 runtime restart/kickstart 与即时 readback：`assertSchedulerStartupReady`（health.complete==true）+ health provenance（store/routing sha）+ W1 evidence `w1_run` 正常 + routing readback（`readProtectedRoutingManifest` uid 0 / gid / 0640）。只有这些 readback 完成并产出 transaction receipt 后才 release global lock；不得在 deploy/routing 与 readiness 之间留可被其他 production mutation 插入的窗口。
 
 ## §6 Build in Public Scheduler 验收（不以 deployment succeeded 为验收）
 
