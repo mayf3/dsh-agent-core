@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { chmodSync, chownSync, closeSync, constants, existsSync, fstatSync, fsyncSync, lstatSync, openSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, closeSync, constants, existsSync, fstatSync, fsyncSync, lstatSync, openSync, readFileSync, readlinkSync, realpathSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { capturePlainFileMetadata, clearGeneratedFileXattrs } from './deployment-file-metadata.js'
 
@@ -10,6 +10,10 @@ function protectedParents(path) {
   let current = dirname(path)
   for (;;) {
     const stat = lstatSync(current)
+    const trustedMacVarAlias = process.platform === 'darwin' && current === '/var'
+      && stat.isSymbolicLink() && stat.uid === 0 && stat.gid === 0
+      && readlinkSync(current) === 'private/var' && realpathSync(current) === '/private/var'
+    if (trustedMacVarAlias) { current = '/private/var'; continue }
     if (!stat.isDirectory() || stat.isSymbolicLink() || (stat.mode & 0o022) !== 0) throw new TypeError(`unsafe desired-state parent: ${current}`)
     if (current === '/') return
     current = dirname(current)
