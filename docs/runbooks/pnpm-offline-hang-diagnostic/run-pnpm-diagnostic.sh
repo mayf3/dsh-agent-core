@@ -37,6 +37,7 @@ DIAG_DIR="/tmp/pnpm-diag"
 DEADLINE_SEC="${PNPM_DIAG_DEADLINE_SEC:-1200}"
 POLL_SEC=10
 STALL_SAMPLE_AFTER_SEC=90
+SAMPLE_BIN="/usr/bin/sample"
 MODE="${1:-run}"
 PNPM_PID=""
 
@@ -100,7 +101,7 @@ monitor_and_wait() { # monitor_and_wait PID DEADLINE_EPOCH — returns when pnpm
   while kill -0 "$pid" 2>/dev/null; do
     now=$(date +%s)
     if [ "$now" -ge "$deadline" ]; then
-      sample "$pid" 3 -file "$DIAG_DIR/sample-deadline.txt" >/dev/null 2>&1 || true
+      "$SAMPLE_BIN" "$pid" 3 -file "$DIAG_DIR/sample-deadline.txt" >/dev/null 2>&1 || true
       ps -o pid,ppid,stat,time,%cpu -p "$pid" >> "$DIAG_DIR/process-tree.txt" 2>/dev/null || true
       echo "STALLED_AT_DEADLINE evidence saved under $DIAG_DIR — pnpm pid=$pid LEFT RUNNING, mutex LEFT IN PLACE"
       exit 1
@@ -113,7 +114,7 @@ monitor_and_wait() { # monitor_and_wait PID DEADLINE_EPOCH — returns when pnpm
     if [ "$cpu" = "$last_cpu" ] && [ "$nm" = "$last_nm" ]; then
       [ -z "$stall_since" ] && stall_since=$now
       if [ $((now - stall_since)) -ge "$STALL_SAMPLE_AFTER_SEC" ]; then
-        sample "$pid" 3 -file "$DIAG_DIR/sample-stall-$(date -u +%H%M%S).txt" >/dev/null 2>&1 || true
+        "$SAMPLE_BIN" "$pid" 3 -file "$DIAG_DIR/sample-stall-$(date -u +%H%M%S).txt" >/dev/null 2>&1 || true
         ps -o pid,ppid,stat,time,%cpu -p "$pid" >> "$DIAG_DIR/process-tree.txt" 2>/dev/null || true
         stall_since=$now
       fi
