@@ -1,17 +1,11 @@
 #!/usr/bin/env node
-/**
- * Consolidated, receipted Scheduler control-plane admission runner.
- * Phases: census, exact critical matching, backfill/desired-state freeze,
- * exact-goal overlay, protected routing install, runtime/operator cutover,
- * watchdog install, and readback proofs. --selftest is fixture-only, --plan is
- * read-only, and --apply requires root.
- */
+/** Receipted Scheduler control-plane admission; selftest/plan/apply fail closed. */
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, statSync, readdirSync, chmodSync,
 } from 'node:fs'
-import { join, dirname, relative } from 'node:path'
+import { join, dirname } from 'node:path'
 import { homedir, userInfo } from 'node:os'
 import { JobStore } from '../packages/scheduler/src/store.js'
 import { updateJobOp } from '../packages/scheduler/src/control.js'
@@ -19,6 +13,7 @@ import {
   matchCriticalJobs, buildDesiredState, buildBackfillMapping, classifyCensus,
   computeOperatorClosure, narrowOverlayUniverse, inOverlayUniverse,
   reExportsWithoutLocalBinding, buildOverlaySeedBytes,
+  WATCHDOG_PAYLOAD_SHA, WATCHDOG_OVERLAY_PATHS, WATCHDOG_LIVE_ADAPTER_SHA, WATCHDOG_LIVE_ADAPTER_POST_SHA,
 } from './lib/admission-lib.mjs'
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
@@ -49,15 +44,12 @@ const MIGRATION_SOURCES = {
   factsPath: val('--migration-facts'), factsFileSha256: val('--migration-facts-file-sha256'),
   factsSha256: val('--migration-facts-sha256'),
 }
-const GOAL_BASE_SHA = '68008e83142bdb637c4fa61c2a65db73c64b2eb1'; const PINNED_V2_MODEL_LOADER = new Map([['packages/production-runtime/src/model-overrides.js', '4df9f741e1c550d377a29a81ba08f32d8986c19384e8239570738e565858898d']])
+const GOAL_BASE_SHA = '68008e83142bdb637c4fa61c2a65db73c64b2eb1'
 if (MODE === undefined || !/^[0-9a-f]{40}$/.test(SOURCE_SHA ?? '')) {
   process.stderr.write('usage: scheduler-cp-admission --selftest|--plan|--apply --source-sha <sha> --routing-manifest-source <path> --routing-manifest-sha256 <sha256> plus frozen migration source paths/hashes\n')
   process.exit(2)
 }
-const REPO = (() => {
-  const here = dirname(new URL(import.meta.url).pathname)
-  return relative('', here) === here ? here : here // absolute by construction
-})()
+const REPO = dirname(new URL(import.meta.url).pathname)
 const REPO_ROOT = join(dirname(new URL(import.meta.url).pathname), '..')
 const git = (argv, opts = {}) => execFileSync('git', ['-c', `safe.directory=${REPO_ROOT}`, '-C', REPO_ROOT, ...argv], { maxBuffer: 32 * 1024 * 1024, ...opts })
 const CTX = MODE === 'selftest'
@@ -177,24 +169,29 @@ function listLiveFiles(root, prefix = '') {
   }
   return out
 }
-function overlay() {
-  const seedList = git(['diff', '--name-only', GOAL_BASE_SHA, SOURCE_SHA, '--', 'packages/', 'scripts/'], { encoding: 'utf8' }).split('\n').filter(Boolean).filter((path) => inOverlayUniverse(path))
-  const deletePaths = git(['diff', '--name-status', '-M', GOAL_BASE_SHA, SOURCE_SHA, '--', 'packages/', 'scripts/'], { encoding: 'utf8' })
+function overlay(validateOnly = false) {
+  const payloadSha = MODE === 'selftest' ? SOURCE_SHA : WATCHDOG_PAYLOAD_SHA
+  const allowed = MODE === 'selftest' ? undefined : WATCHDOG_OVERLAY_PATHS
+  const seedList = git(['diff', '--name-only', GOAL_BASE_SHA, payloadSha, '--', 'packages/', 'scripts/'], { encoding: 'utf8' }).split('\n').filter(Boolean).filter((path) => allowed ? allowed.has(path) : inOverlayUniverse(path))
+  const deletePaths = git(['diff', '--name-status', '-M', GOAL_BASE_SHA, payloadSha, '--', 'packages/', 'scripts/'], { encoding: 'utf8' })
     .split('\n').filter(Boolean).flatMap((line) => {
       const [status, first] = line.split('\t')
       return (status === 'D' || status.startsWith('R')) && inOverlayUniverse(first) ? [first] : []
     })
   const liveRootFiles = listLiveFiles(CTX.liveRoot)
   const liveSha = (path) => existsSync(join(CTX.liveRoot, path)) ? sha256(readFileSync(join(CTX.liveRoot, path))) : undefined
-  const seedBytes = buildOverlaySeedBytes(seedList, (path) => git(['show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8' }))
+  if (MODE !== 'selftest') for (const [path, expected] of WATCHDOG_LIVE_ADAPTER_SHA) if (![expected, WATCHDOG_LIVE_ADAPTER_POST_SHA.get(path)].includes(liveSha(path))) throw new Error(`pinned live integration drift: ${path}`)
+  const target = (path) => git(['show', `${payloadSha}:${path}`], { encoding: 'utf8' })
+  const seedBytes = MODE === 'selftest' ? new Map(seedList.map((path) => [path, target(path)])) : buildOverlaySeedBytes(seedList, target, (path) => readFileSync(join(CTX.liveRoot, path), 'utf8'))
   const narrowed = narrowOverlayUniverse({
     seedPaths: seedList,
-    readTarget: (path) => seedBytes.get(path) ?? execFileSync('git', ['-C', REPO_ROOT, 'show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }),
+    readTarget: (path) => seedBytes.get(path) ?? target(path),
     liveHas: (path) => liveRootFiles.has(path),
     liveShaOf: liveSha,
-    preserveLiveShaByPath: MODE === 'selftest' ? new Map() : PINNED_V2_MODEL_LOADER,
+    allowedOverlayPaths: allowed,
   })
-  if (narrowed.refuse) phase('overlay', false, `NARROW CLOSURE REFUSED: ${narrowed.refuse} — NO MUTATION (widen CONSCIOUSLY with the model-overrides lesson in mind)`)
+  if (narrowed.refuse) throw new Error(`NARROW CLOSURE REFUSED: ${narrowed.refuse}`)
+  if (validateOnly) return
   const plan = { update: [], add: [] }
   for (const [path, bytes] of [...narrowed.overlay.entries()]) {
     const sha = sha256(bytes)
@@ -220,7 +217,7 @@ function overlay() {
     for (const entry of all) {
       const current = liveSha(entry.path)
       const allowed = entry.kind === 'add' ? [undefined, entry.sha] : entry.kind === 'update' ? [entry.preimageSha, entry.sha] : [entry.preimageSha, undefined]
-      const plannedBytes = seedBytes.get(entry.path) ?? (entry.kind === 'delete' ? undefined : git(['show', `${SOURCE_SHA}:${entry.path}`], { encoding: 'utf8' }))
+      const plannedBytes = seedBytes.get(entry.path) ?? (entry.kind === 'delete' ? undefined : target(entry.path))
       if (!allowed.includes(current) || (entry.kind !== 'delete' && sha256(plannedBytes) !== entry.sha)) throw new Error(`overlay rerun generation mismatch: ${entry.path}`)
     }
     const installed = all.every((entry) => entry.kind === 'delete' ? liveSha(entry.path) === undefined : liveSha(entry.path) === entry.sha)
@@ -231,7 +228,7 @@ function overlay() {
     writeControlReceipt('overlay-manifest.json', { base: GOAL_BASE_SHA, source: SOURCE_SHA, entries: all })
   }
   for (const entry of writes) {
-    const bytes = Buffer.from(narrowed.overlay.get(entry.path) ?? seedBytes.get(entry.path) ?? git(['show', `${SOURCE_SHA}:${entry.path}`], { encoding: 'utf8' }), 'utf8')
+    const bytes = Buffer.from(narrowed.overlay.get(entry.path) ?? seedBytes.get(entry.path) ?? target(entry.path), 'utf8')
     const target = join(CTX.liveRoot, entry.path)
     if (sha256(bytes) !== entry.sha) throw new Error(`staged bytes != plan sha for ${entry.path}`)
     if (liveSha(entry.path) === entry.sha) continue
@@ -467,6 +464,7 @@ async function main() {
     process.stderr.write('[admission] --apply requires root (run under the single Owner sudo gate)\n')
     process.exit(2)
   }
+  if (MODE !== 'plan') overlay(true)
   if (MODE !== 'plan') ensureProtectedDirectoryTree(CTX.artifactsDir, { ...controlOwnership(), boundary: CTX.controlBoundary })
   const doc = readCensus()
   const matched = criticalsOrAbort(doc)
@@ -477,8 +475,8 @@ async function main() {
     return
   }
   quiesceWatchdogs()
-  await backfillAndFreeze(doc, matched)
   overlay()
+  await backfillAndFreeze(doc, matched)
   routingInstall(await new JobStore(CTX.storePath).loadDoc({ force: true }))
   incidentMigration()
   brokerBootRehearsal()

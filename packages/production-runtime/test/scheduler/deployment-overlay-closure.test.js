@@ -1,11 +1,52 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
-import { adaptCandidateComposeToPinnedV2, narrowOverlayUniverse } from '../../../../scripts/lib/admission-lib.mjs'
+import { adaptLiveComposeForWatchdog, narrowOverlayUniverse } from '../../../../scripts/lib/admission-lib.mjs'
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const LIVE_COMPOSE_FIXTURE = `import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
+import { createAgentSessionRuntime } from './agent-session/runtime.js'
+// agent-model-overrides.json version 2
+const defaultRoute = {
+  provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
+}
+  const rawInvoker = createRouterInvoker(router, { definition })
+  // Thin observability (evidence surface, not a framework): one line per
+  // invocation with the router process state — same pattern the resident used.
+  const invoker = async (request) => {
+    const started = Date.now()
+    const outcome = await rawInvoker(request)
+    const proc = router.registrySnapshot().find((p) => p.agentId === request.agentId)
+    writeEvidence({
+      kind: 'invocation',
+      pid: process.pid,
+      agentId: request.agentId,
+      sessionId: request.sessionId,
+      status: outcome.status,
+      summary: outcome.status === 'ok' ? (outcome.summary ?? null) : null,
+      error: outcome.status === 'ok' ? null : (outcome.error ?? null),
+      reconciliationHandle: outcome.reconciliationHandle ?? null,
+      deadlineAtWallMs: outcome.deadlineAtWallMs ?? null,
+      evidence: outcome.evidence ?? null,
+      durationMs: Date.now() - started,
+      routerProcessPid: proc?.pid ?? null,
+      routerProcessAlive: proc?.alive ?? null,
+    })
+    return outcome
+  }
+  // Preserve Scheduler V2's synchronous runnable-Agent admission gate through
+  // the observability wrapper; no job/store/deploy behavior is changed here.
+  invoker.assertRunnable = rawInvoker.assertRunnable
+  const store = new JobStore(layout.jobsStore, { runLogPath: layout.runsLog })
+  mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log })
+  return {
+    scheduler,
+    writeEvidence,
+    /** Start the resident scheduler loop (mtime tick + startup catch-up). */
+    start: () => scheduler.start({ autoStart: true, catchup }),
+  }
+`
 
 test('overlay closure pins only an exact reviewed live dependency and updates the rest', () => {
   const target = new Map([
@@ -33,6 +74,10 @@ test('overlay closure pins only an exact reviewed live dependency and updates th
     liveHas: (path) => live.has(path),
     liveShaOf: (path) => live.has(path) ? sha256(live.get(path)) : undefined,
     preserveLiveShaByPath: new Map([[modelPath, sha256(live.get(modelPath))]]),
+    allowedOverlayPaths: new Set([
+      'packages/production-runtime/src/compose.js',
+      'packages/production-runtime/src/scheduler/health-runtime.js',
+    ]),
   })
 
   assert.equal(result.refuse, undefined)
@@ -42,15 +87,16 @@ test('overlay closure pins only an exact reviewed live dependency and updates th
   ])
 })
 
-test('production compose keeps candidate watchdog wiring while using the pinned v2 loader contract', () => {
-  const candidate = readFileSync(new URL('../../src/compose.js', import.meta.url), 'utf8')
-  const adapted = adaptCandidateComposeToPinnedV2(candidate)
+test('production compose adds only watchdog wiring to the exact live Session Trace face', () => {
+  const adapted = adaptLiveComposeForWatchdog(LIVE_COMPOSE_FIXTURE)
 
   assert.match(adapted, /mountConfiguredSchedulerHealthRuntime/)
-  assert.match(adapted, /createSchedulerRuntimeStarter/)
+  assert.match(adapted, /assertSchedulerStartupReady/)
+  assert.match(adapted, /createObservedSchedulerInvoker/)
+  assert.match(adapted, /createAgentSessionRuntime/)
   assert.match(adapted, /agent-model-overrides\.json version 2/)
   assert.match(adapted, /provider: process\.env\.DSH_AGENT_PROVIDER \?\? 'opencode-go'/)
-  assert.doesNotMatch(adapted, /canonicalDefaultGlobalRoute|CANONICAL_DEFAULT_MODEL_ROUTE/)
+  assert.doesNotMatch(adapted, /canonicalDefaultGlobalRoute|CANONICAL_DEFAULT_MODEL_ROUTE|mountWorkflowExecutionRuntime/)
 })
 
 test('overlay refuses when the separately governed live dependency drifts from its reviewed pin', () => {
@@ -68,7 +114,34 @@ test('overlay refuses when the separately governed live dependency drifts from i
     liveHas: (path) => live.has(path),
     liveShaOf: (path) => live.has(path) ? sha256(live.get(path)) : undefined,
     preserveLiveShaByPath: new Map([[modelPath, sha256('export const loader = "reviewed-v2"\n')]]),
+    allowedOverlayPaths: new Set([composePath]),
   })
 
   assert.equal(result.refuse, `pinned live dependency drift: ${modelPath}`)
+})
+
+test('overlay preserves existing dependencies outside the reviewed watchdog path manifest', () => {
+  const composePath = 'packages/production-runtime/src/compose.js'
+  const unrelatedPath = 'packages/workflow-runtime/src/index.js'
+  const target = new Map([
+    [composePath, "import { health } from './scheduler/health-runtime.js'\nimport { unrelated } from '../../workflow-runtime/src/index.js'\n"],
+    ['packages/production-runtime/src/scheduler/health-runtime.js', 'export const health = true\n'],
+    [unrelatedPath, 'export const unrelated = true\n'],
+  ])
+  const live = new Map([[unrelatedPath, 'export const unrelated = false\n']])
+  const result = narrowOverlayUniverse({
+    seedPaths: [composePath],
+    readTarget: (path) => {
+      if (!target.has(path)) throw new Error(`missing target ${path}`)
+      return target.get(path)
+    },
+    liveHas: (path) => live.has(path),
+    liveShaOf: (path) => live.has(path) ? sha256(live.get(path)) : undefined,
+    allowedOverlayPaths: new Set([composePath, 'packages/production-runtime/src/scheduler/health-runtime.js']),
+  })
+  assert.equal(result.refuse, undefined)
+  assert.deepEqual([...result.overlay.keys()].sort(), [
+    composePath,
+    'packages/production-runtime/src/scheduler/health-runtime.js',
+  ])
 })
