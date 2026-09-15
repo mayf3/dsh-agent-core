@@ -336,7 +336,7 @@ test('failed-cutover replay refuses a generation that drops a committed root', a
   }), /conflicts with committed root authority/)
 })
 
-test('failed-cutover replay refuses newly proven members of a committed root instead of discarding them', async () => {
+test('failed-cutover replay monotonically enriches a committed root without changing lifecycle or alert state', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-member-'))
   await chmod(dir, 0o700)
   const legacyPath = join(dir, 'legacy.json')
@@ -364,11 +364,21 @@ test('failed-cutover replay refuses newly proven members of a committed root ins
   ].join('\n'))
   await writeFile(legacyPath, secondLegacy, { mode: 0o600 })
   await writeFile(evidencePath, secondEvidence, { mode: 0o600 })
-  assert.throws(() => migrateLegacyIncidentStateFiles({
+  const before = loadIncidentState(incidentPath).state
+  const [root] = Object.keys(before.incidents)
+  const extended = migrateLegacyIncidentStateFiles({
     legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
     findings: [blocked, missed], expectedLegacySha256: sha(secondLegacy), expectedEvidenceSha256: sha(secondEvidence),
     expectedFactsSha256: sha(Buffer.from(canonicalJSON([blocked, missed]))), nowMs: 3,
-  }), /conflicts with committed root authority/)
+  })
+  assert.equal(extended.status, 'MIGRATION_EXTENDED')
+  assert.deepEqual(extended.state.incidents[root].facts, [blocked, missed])
+  assert.deepEqual(extended.state.incidents[root].symptoms, ['ADMISSION_BLOCKED_UNKNOWN', 'EXPECTED_RUN_MISSED'])
+  const { facts: beforeFacts, symptoms: beforeSymptoms, ...beforeAuthority } = before.incidents[root]
+  const { facts: afterFacts, symptoms: afterSymptoms, ...afterAuthority } = extended.state.incidents[root]
+  assert.deepEqual(afterAuthority, beforeAuthority)
+  assert.ok(afterFacts.length > beforeFacts.length)
+  assert.ok(afterSymptoms.length > beforeSymptoms.length)
 })
 
 test('T27 source drift aborts before incident-state commit', async () => {
