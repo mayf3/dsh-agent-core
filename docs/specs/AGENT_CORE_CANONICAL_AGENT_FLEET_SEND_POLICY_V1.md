@@ -1,12 +1,34 @@
 ---
 spec_id: AGENT_CORE_CANONICAL_AGENT_FLEET_SEND_POLICY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: contracts
 date: 2026-09-15
 revision: r4
+accepted_date: 2026-09-16
+accepted_by: mayf3
+accepted_reviewed_head: 5dd41e2b7016f1a7b5cd38a664e108a284b11de7
+accepted_spec_sha256: b28ec5019b52ca6c69462d26ebb1150e95a1d5195d24ca3dd153b286a64fb518
+r4_acceptance: >-
+  OWNER joint exact-head acceptance 2026-09-16（本 commit = docs-only lifecycle
+  finalization：仅本 frontmatter acceptance 元数据与 docs/specs/README.md 索引节；
+  reviewed semantic bytes @5dd41e2 未改动，sha256 逐字节一致）。r4 语义 = fleet owns
+  the agent.session.send baseline + enumerated independently-authorized scopes
+  preserved + fleet never opportunistically grants them + NORMALIZE=make-lawful。
+  Fresh independent semantic review（非 author 上下文）= PASS / BLOCKERS=NONE /
+  SAFE_FOR_OWNER_ACCEPTANCE=YES（10 项逐条核：7 hunks 全 amendment 相关、family
+  闭且最窄 {send, send+inspect}、FLEET 只写 send、inspect 纯 preserve 零创设、
+  闭集 amendment-only、NORMALIZE 四性质齐、§4/§5 机械跟随、r3 其余语义不变、
+  与 AUTH_SERVICE_HR_AGENT_SESSION_INSPECTION_GRANT_V1 一致、零语义外溢；
+  5 条 non-gating gaps 记 FOLLOW_UP_DEBT 不在本事务吸收）。
+  JOINT_ACCEPTANCE：与 mayf3/auth-service 的
+  AUTH_SERVICE_CANONICAL_AGENT_FLEET_SEND_GRANT_PROVISIONING_V1（accepted
+  reviewed head a7ca28ecb6097b585690e7c57e9d858f0eea422f，spec sha256
+  128d16996839ef25b44785e828d37ee7eb8e643c5e61e7d6f7f390501c3241db）为一次
+  Owner authority decision；两仓 implementation base 均物化该 accepted 态前
+  IMPLEMENTATION_ALLOWED=NO（CROSS_REPO_ACCEPTANCE_MATERIALIZED 硬门）。
 r3_acceptance: Owner formally ACCEPTED exact reviewed head 6bce155 as the
   authoritative implementation base on 2026-09-15（GOAL_STATUS=ACCEPTED_FOR_IMPLEMENTATION;
   independent review rounds 1-2 REVISE→repaired, round-3 PASS/BLOCKERS=NONE/
@@ -16,8 +38,7 @@ r4_amendment: AMENDMENT_1（INSPECTION_PRESERVATION, Owner REVISE ruling on PR
   AUTH_SERVICE_HR_AGENT_SESSION_INSPECTION_GRANT_V1 在同 audience Grant 上叠加
   agent.session.inspect_own_dispatch，而本 Spec §3 exact-scope closure 会把它裁掉。
   本修订把闭集改为「send 基线 + 枚举独立授权 scope 保留」的最窄形式；FLEET 不借机
-  授予任何其他 scope。docs-only 候选，status 仍 proposed，等 Owner exact-head 接受
-  后才进入实现 base；base 6bce155 的已接受内容除本修订明示条文外不变）
+  授予任何其他 scope。已由 Owner joint acceptance 于 2026-09-16 接受）
 r1_review: independent review round-1 = REVISE（3 blockers，全机械：
   revoked_at 列不存在 / principal_type 字面量大小写 / re-enable 无 enable surface）；
   blocker union 修于 r2，notes（r5 引用、A.2 指针、per-client 计数、
@@ -66,8 +87,10 @@ external_authorities:
     relation: MachineAccessGrant 物理行与 token issuance 的唯一权威；本 Spec 的实现
       需其 companion contract（AUTH_SERVICE_SESSION_SEND_FLEET_GRANT_PROVISIONING_V1，
       实现阶段随 auth-service PR 冻结；先例=AUTH_SERVICE_AGENT_SESSION_SEND_OPERATIONAL_GRANT_V1 / PR #50）
-review_status: INDEPENDENT_REVIEW_COMPLETE_PASS
-acceptance_verdict: READY_FOR_OWNER_EXACT_HEAD_ACCEPTANCE
+review_status: INDEPENDENT_REVIEW_COMPLETE_PASS（r3 rounds 1-3 终局 PASS；r4 为
+  fresh dual independent review PASS/BLOCKERS=NONE，记录于 r4_acceptance）
+acceptance_verdict: OWNER_EXACT_HEAD_ACCEPTED_R4_JOINT_2026_09_16（r3 acceptance
+  = 6bce155，见 r3_acceptance；本值为 r4 joint acceptance 终态）
 ---
 
 # AGENT_CORE_CANONICAL_AGENT_FLEET_SEND_POLICY_V1
