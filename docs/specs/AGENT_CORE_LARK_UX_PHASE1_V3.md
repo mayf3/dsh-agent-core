@@ -1,6 +1,17 @@
 ---
 spec_id: AGENT_CORE_LARK_UX_PHASE1_V3
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-09-16
+accepted_at: 2026-09-15T22:33:15Z
+accepted_reviewed_spec_commit: a52e796fbb06f40e766aa6b6b45271909c720dbe
+accepted_reviewed_spec_sha256: d76817605e49398ca35f4b32c64c8038f300f61e9e589a6d2aef2681e4f2aac7
+acceptance_review_verdict: PASS
+acceptance_finalize_semantic_change: none
+acceptance_authority_basis: >-
+  Owner ACCEPT instruction bound to reviewed Spec commit
+  a52e796fbb06f40e766aa6b6b45271909c720dbe and SHA-256
+  d76817605e49398ca35f4b32c64c8038f300f61e9e589a6d2aef2681e4f2aac7.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
