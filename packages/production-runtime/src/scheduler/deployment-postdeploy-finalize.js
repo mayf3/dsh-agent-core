@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 
 import { canonicalJSON } from '../../../scheduler/src/occurrence-model.js'
-import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
+import { canonicalIncidentFactSet, compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
 import { notificationKey, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
 import { validateIncidentState } from '../../../scheduler/src/watchdog/durable-state.js'
 import { validateIncidentDeliveryBindings } from '../../../scheduler/src/watchdog/routing.js'
@@ -11,7 +11,6 @@ const digest = (value) => createHash('sha256').update(typeof value === 'string' 
 const exact = (left, right, label) => {
   if (canonicalJSON(left) !== canonicalJSON(right)) throw new Error(`postdeploy ${label} changed unexpectedly`)
 }
-const stableFact = ({ overdueMs: _overdueMs, ...fact }) => fact
 
 export function assertCanonicalPostdeployHealth(health, sourceSha) {
   if (health?.complete !== true || health.unknown !== 0) throw new Error('postdeploy canonical health is incomplete or unknown')
@@ -126,9 +125,9 @@ export function assertIncidentDedupeFromDurableState({ incidentState, incidentMi
       throw new Error(`durable incident state lacks exact open root: ${root}`)
     }
     exact({ rootIdentity: record.rootIdentity, rootCauseClass: record.rootCauseClass, routeClass: record.routeClass,
-      facts: record.facts.map(stableFact), symptoms: record.symptoms },
+      facts: canonicalIncidentFactSet(record.facts), symptoms: record.symptoms },
     { rootIdentity: expected.rootIdentity, rootCauseClass: expected.rootCauseClass, routeClass: expected.routeClass,
-      facts: expected.facts.map(stableFact), symptoms: expected.symptoms }, `durable incident payload ${root}`)
+      facts: canonicalIncidentFactSet(expected.facts), symptoms: expected.symptoms }, `durable incident payload ${root}`)
     if (!Number.isSafeInteger(record.episode) || record.episode < 1 || !Number.isSafeInteger(record.transitionRevision)
       || record.transitionRevision < 1 || record.incidentId !== `${root}|episode:${record.episode}`
       || record.alertState?.lifecycle !== 'OPEN' || record.alertState?.incidentKey !== root) throw new Error(`durable incident episode is incoherent: ${root}`)

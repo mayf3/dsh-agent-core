@@ -140,6 +140,9 @@ test('passive dedupe proof tolerates advancing overdueMs without changing root o
   proof.afterHealth = structuredClone(proof.beforeHealth); proof.afterHealth.generatedAt = 30
   proof.afterHealth.findings.find((fact) => fact.class === 'EXPECTED_RUN_MISSED').overdueMs = 20
   const durable = updateIncidentState({}, compileIncidents(proof.beforeHealth.findings).incidents, { nowMs: 20 }).state
+  const [root] = Object.keys(durable.incidents)
+  const missed = durable.incidents[root].facts.find((fact) => fact.class === 'EXPECTED_RUN_MISSED')
+  durable.incidents[root].facts.push({ ...missed, overdueMs: 20 })
   proof.beforeIncidentState = durable; proof.afterIncidentState = structuredClone(durable)
   assert.equal(verifyPostdeployEvidence(proof).status, 'ACCEPTED')
 })

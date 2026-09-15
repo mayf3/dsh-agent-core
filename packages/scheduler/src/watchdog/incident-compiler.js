@@ -1,3 +1,5 @@
+import { canonicalJSON } from '../occurrence-model.js'
+
 const OCCURRENCE_CLASSES = new Set(['RUN_FAILED', 'RUN_STUCK', 'ADMISSION_BLOCKED_UNKNOWN'])
 const JOB_CLASSES = new Set([
   'CONSECUTIVE_FAILURE', 'JOB_DISABLED', 'SCHEDULE_DRIFT', 'TIMEZONE_DRIFT',
@@ -7,6 +9,17 @@ const JOB_CLASSES = new Set([
 export const ROOT_CAUSE_CLASSES = Object.freeze({
   RUN_STUCK_OUTCOME_UNKNOWN: 'RUN_STUCK_OUTCOME_UNKNOWN',
 })
+
+export function stableIncidentFact({ overdueMs: _overdueMs, ...fact }) { return fact }
+
+export function canonicalIncidentFactSet(facts = []) {
+  const values = new Map()
+  for (const fact of facts) {
+    const stable = stableIncidentFact(fact)
+    values.set(canonicalJSON(stable), stable)
+  }
+  return [...values.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, fact]) => fact)
+}
 
 export function incidentRootIdentity(input) {
   const rootCauseClass = nonEmpty(input?.rootCauseClass, 'rootCauseClass')
