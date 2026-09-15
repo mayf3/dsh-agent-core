@@ -88,3 +88,49 @@ effective scope/prohibitions and Decisions; add a global Decision/Contract/Accep
 the admission/execution/reply-delivery union and six complete `ACC-DISPLAY-*` gates. It does not alter product
 code or production state. A new independent exact-head review is required; the old PASS records do not authorize
 acceptance or implementation.
+
+## Repaired exact-head independent re-audit
+
+```text
+SPEC_GOVERNANCE_MODE = REVIEW
+REVIEW_KIND = SPEC
+REVIEW_TARGET_HEAD = a52e796fbb06f40e766aa6b6b45271909c720dbe
+BASE_HEAD = f72255d4feddb6deb4f907cbe70cca547f9e240a
+CURRENT_BASE_HEAD = 129463986a7d971eca726e06c7d23b5df5231c03
+MERGE_BASE = f72255d4feddb6deb4f907cbe70cca547f9e240a
+SPEC_SHA256 = d76817605e49398ca35f4b32c64c8038f300f61e9e589a6d2aef2681e4f2aac7
+REVIEWER_ID = v3_fresh_full_semantic_review
+REVIEWED_AT = 2026-09-15T15:59:24Z
+SPEC_REVIEW = ACCEPT
+AUTHOR_INDEPENDENCE = PASS
+AUTHORITY_REVIEW = PASS
+PRIMITIVE_BOUNDARY_REVIEW = PASS
+CONTRACT_REVIEW = PASS
+ACCEPTANCE_COVERAGE_REVIEW = PASS
+MANDATE_SCOPE_REVIEW = PASS
+EVIDENCE_REVIEWABILITY = PASS
+BASE_IMPACT = BOUNDED
+BLOCKERS = 0
+SPEC_GAPS = 0
+FOLLOW_UPS = 0
+TOOLING_DEBT = 1
+IMPLEMENTATION_ALLOWED = NO
+MERGE_READY = NO
+OPERATION_ALLOWED = NO
+NEXT_ACTION = OWNER_DECISION
+OWNER_EXACT_HEAD_ACCEPTANCE_SOLE_NEXT_GATE = YES
+```
+
+The re-audit independently re-read the full repaired successor and affected source seams. Both predecessor IDs
+are present in the proposed `supersedes` list; effective scope, prohibitions and Decisions are standalone; the
+global migration table covers all 80 V2 and 8 amendment normative/gate items; all 34 Contracts have Acceptance
+coverage; six structured display Acceptances and the closed stage-specific result union satisfy the frozen blocker
+closures. Scheduler plans, SDK ownership, execution/delivery separation, honest ambiguity and zero replay remain
+intact. No AgentProcess, lifecycle, identity, SDK pin, persistent-store or production authority was added.
+
+Fresh main movement was bounded to the unrelated pnpm diagnostic runbook. Governance integrity, whitespace and
+the focused accepted lifecycle simulation pass. The only tooling debt is the unchanged base structure violation
+for `scripts` (59 children versus registered ceiling 40; one violation and 72 warnings on base and candidate).
+
+This `ACCEPT` is a review recommendation, not Owner acceptance. Owner acceptance must bind the reviewed Spec head
+and SHA-256, authorize only the atomic lifecycle/provenance finalization, and receive a final accepted-head recheck.
