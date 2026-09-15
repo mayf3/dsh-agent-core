@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
+import { dirname, resolve } from 'node:path'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 
-import { adaptLiveComposeForWatchdog, narrowOverlayUniverse, WATCHDOG_DELETE_PATHS, WATCHDOG_OVERLAY_PATHS } from '../../../../scripts/lib/admission-lib.mjs'
+import { adaptLiveComposeForWatchdog, narrowOverlayUniverse, WATCHDOG_DELETE_PATHS, WATCHDOG_OVERLAY_PATHS, WATCHDOG_PAYLOAD_SHA } from '../../../../scripts/lib/admission-lib.mjs'
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 const LIVE_COMPOSE_FIXTURE = `import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
 // agent-model-overrides.json version 2
@@ -52,6 +56,12 @@ test('reviewed production path authority is exactly 21 writes plus one retired w
   assert.equal(WATCHDOG_OVERLAY_PATHS.size, 21)
   assert.deepEqual([...WATCHDOG_DELETE_PATHS], ['packages/scheduler/src/watchdog.js'])
   assert.equal([...WATCHDOG_DELETE_PATHS].some((path) => WATCHDOG_OVERLAY_PATHS.has(path)), false)
+})
+
+test('reviewed payload contains failed-cutover extension and the dependency-isolated migration entrypoint', () => {
+  const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo, encoding: 'utf8' })
+  assert.match(show('packages/scheduler/src/watchdog/durable-state.js'), /MIGRATION_EXTENDED/)
+  assert.match(show('scripts/scheduler-watchdog.mjs'), /import\('\.\.\/packages\/scheduler\/src\/watchdog\/durable-state\.js'\)/)
 })
 
 test('overlay closure pins only an exact reviewed live dependency and updates the rest', () => {
