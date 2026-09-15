@@ -35,9 +35,7 @@ function extendCommittedMigration(committed, candidate, migration) {
   if (!committed.migration) throw new Error('incident migration extension requires committed migration authority')
   const existingRoots = new Set(Object.keys(committed.incidents ?? {}))
   const identityFields = ['rootIdentity', 'rootCauseClass', 'routeClass']
-  const union = (before, after) => [...structuredClone(before ?? []), ...(after ?? [])
-    .filter((value) => !(before ?? []).some((existing) => canonicalJSON(existing) === canonicalJSON(value)))
-    .map((value) => structuredClone(value))]
+  const fingerprints = (facts) => new Map((facts ?? []).map((fact) => [legacyFingerprint(fact), fact]))
   const incidents = structuredClone(candidate.incidents)
   for (const root of existingRoots) {
     const before = committed.incidents[root]
@@ -46,10 +44,18 @@ function extendCommittedMigration(committed, candidate, migration) {
     if (identityFields.some((field) => canonicalJSON(before[field]) !== canonicalJSON(after[field]))) {
       throw new Error('incident migration extension conflicts with committed root identity')
     }
+    const beforeFingerprints = fingerprints(before.facts)
+    const afterFingerprints = fingerprints(after.facts)
+    if ([...beforeFingerprints.keys()].some((fingerprint) => !afterFingerprints.has(fingerprint))) {
+      throw new Error('incident migration extension drops committed fact identity')
+    }
+    if ((before.symptoms ?? []).some((symptom) => !(after.symptoms ?? []).includes(symptom))) {
+      throw new Error('incident migration extension drops committed symptom identity')
+    }
     incidents[root] = {
       ...structuredClone(before),
-      facts: union(before.facts, after.facts),
-      symptoms: union(before.symptoms, after.symptoms),
+      facts: structuredClone(after.facts),
+      symptoms: structuredClone(after.symptoms),
     }
   }
   for (const [key, intent] of Object.entries(candidate.outbox ?? {})) {

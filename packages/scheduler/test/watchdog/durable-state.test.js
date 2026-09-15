@@ -381,7 +381,7 @@ test('failed-cutover replay monotonically enriches a committed root without chan
   assert.ok(afterSymptoms.length > beforeSymptoms.length)
 })
 
-test('failed-cutover replay retains prior fact detail when the same fingerprint gains fresh detail', async () => {
+test('failed-cutover replay replaces volatile detail for one stable fingerprint without growing state', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-detail-'))
   await chmod(dir, 0o700)
   const legacyPath = join(dir, 'legacy.json')
@@ -411,9 +411,35 @@ test('failed-cutover replay retains prior fact detail when the same fingerprint 
   })
   const { facts, symptoms, ...extendedAuthority } = extended.state.incidents[root]
   assert.equal(extended.status, 'MIGRATION_EXTENDED')
-  assert.deepEqual(facts, [beforeFact, afterFact])
+  assert.deepEqual(facts, [afterFact])
   assert.deepEqual(extendedAuthority, authority)
   assert.deepEqual(symptoms, beforeSymptoms)
+})
+
+test('failed-cutover replay stays bounded across repeated volatile generations', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'incident-migrate-bounded-'))
+  await chmod(dir, 0o700)
+  const legacyPath = join(dir, 'legacy.json')
+  const evidencePath = join(dir, 'evidence.jsonl')
+  const incidentPath = join(dir, 'incidents.json')
+  const fingerprint = 'EXPECTED_RUN_MISSED|job-a|occ-a'
+  const legacy = Buffer.from(`${JSON.stringify({ active: { [fingerprint]: {} } })}\n`)
+  await writeFile(legacyPath, legacy, { mode: 0o600 })
+  let result
+  for (let generation = 1; generation <= 12; generation += 1) {
+    const fact = { class: 'EXPECTED_RUN_MISSED', jobId: 'job-a', occurrenceId: 'occ-a', overdueMs: generation }
+    const evidence = Buffer.from(`${JSON.stringify({ fingerprint, delivery: 'DELIVERED', fact })}\n`)
+    await writeFile(evidencePath, evidence, { mode: 0o600 })
+    result = migrateLegacyIncidentStateFiles({
+      legacyStatePath: legacyPath, legacyEvidencePath: evidencePath, incidentStatePath: incidentPath,
+      findings: [fact], expectedLegacySha256: sha(legacy), expectedEvidenceSha256: sha(evidence),
+      expectedFactsSha256: sha(Buffer.from(canonicalJSON([fact]))), nowMs: generation,
+    })
+  }
+  const [record] = Object.values(result.state.incidents)
+  assert.equal(record.facts.length, 1)
+  assert.equal(record.facts[0].overdueMs, 12)
+  assert.equal(Object.keys(result.state.outbox).length, 0)
 })
 
 test('T27 source drift aborts before incident-state commit', async () => {
