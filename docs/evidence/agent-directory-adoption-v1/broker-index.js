@@ -1,0 +1,388 @@
+/**
+ * @agent-core/broker — V1 generic capability broker.
+ *
+ * Turns CAPABILITY MANIFESTS (plain data: wire id, operations, parameter/result
+ * schemas, error-code table, descriptions) plus a code-side handler map into
+ * model-facing DSH tools via `ctx.tools`. This generalizes the V0 calculator
+ * fixture adapter: the calculator is now a manifest, and any future capability
+ * (Forum / Workflow / OKR) needs only manifest data + a handler — no new
+ * generic machinery. V0's accepted model-visible shape is preserved 1:1:
+ *
+ *   arguments: { operation: add|subtract|multiply|divide, a: number, b: number }
+ *   success:   { ok: true, result: <number> }
+ *   failure:   { ok: false, error: { code: invalid_arguments|unsupported_operation|divide_by_zero } }
+ *   acceptance: multiply 6 × 7 -> 42
+ *
+ * Transport V1 (this round): manifests may declare a generic `http` binding
+ * per operation (see transport.js). Operations with an `http` block are
+ * executed by the generic AUTHORIZED HTTP TRANSPORT instead of a
+ * process-internal handler — the same transport serves Forum / Workflow /
+ * OKR / any future Broker capability, with zero per-business-system code.
+ *
+ * Trusted credential broker model (TRUSTED_CREDENTIAL_BROKER_INTEGRATION_V1):
+ * the per-agent DSH process ('child' mode, default) registers the
+ * model-facing tools but executes every HTTP capability as a RELAY over the
+ * existing parent-RPC channel (agentRpc -> Router -> in-process Broker
+ * gateway). The child holds NO credential and NO token; the parent
+ * ('gateway' mode, control-plane composition) decides the caller from the
+ * ACTUAL proc.agentId, reads the MachineClient credential from the 505-
+ * private store, and runs the existing authorized HTTP transport
+ * (client_credentials -> token cache -> pinned downstream).
+ *
+ * Identity: the transport obtains the caller credential ONLY through the
+ * injected credential provider seam (credential.js / credential-store.js).
+ * Model arguments never carry identity; caller self-reported
+ * agentId/principalId cannot override the credential (see transport tests).
+ *
+ * Plugin identity: `export const name = 'broker'` is kept identical to V0 so
+ * the installed profile keeps resolving the plugin; the bundle patch references
+ * the package `@agent-core/broker` (unchanged in package.json). The `broker`
+ * name follows Cordis' convention of a short plugin name (e.g. `router`,
+ * `agent-memory`).
+ */
+
+import { defineTool } from '@deepseek-ai/dsh-tools'
+import z from '@deepseek-ai/schemastery'
+
+import { registerCapabilities } from './registry.js'
+import { createIdentityResolver } from './identity.js'
+import { targets as defaultTargets, buildTargetMap } from './targets.js'
+import { BROKER_RPC_METHOD, SCHEDULER_MUTATIONS, createRelayHandlers } from './relay.js'
+import { createBrokerGateway } from './gateway.js'
+import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
+import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
+import {
+  manifests as forumManifests,
+  normalManifests as forumNormalManifests,
+} from './capabilities/forum.js'
+import { moderatorManifests as forumModeratorManifests } from './capabilities/forum-moderation.js'
+import { manifests as workflowManifests } from './capabilities/workflow.js'
+import { manifests as okrManifests } from './capabilities/okr.js'
+import { agentDefinitionManifests } from './capabilities/agent-definition.js'
+import { schedulerManifests } from './capabilities/scheduler.js'
+import { selfOpsManifests } from './capabilities/self-ops.js'
+import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
+import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
+import { manifests as agentDirectoryManifests } from './capabilities/agent-directory.js'
+import {
+  manifests as workflowHumanPrincipalProjectionManifests,
+} from './capabilities/workflow-human-principal-projection.js'
+import { lifeWorkbenchManifests } from './capabilities/life-workbench.mjs'
+
+/** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
+export const name = 'broker'
+
+/** Core services required before the tool registry is reachable. */
+export const inject = ['tools']
+
+/**
+ * Default capability manifests: the V0 calculator fixture + the first-batch
+ * real business capabilities (Forum ×7, Workflow ×4, OKR ×1) + the Agent
+ * Definition capabilities (read ×2, write ×4 — AGENT_DEFINITION_ACCESS_V1:
+ * LOCAL capabilities whose tools every agent carries; read is open to every
+ * credentialed agent, write is gated by the Auth grant for
+ * `agent.definition.write`) + the Forum second-batch NORMAL pack (×5 —
+ * AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 CTR-FMC-002: create/watch/
+ * unwatch/report/stats for every Agent child). The Forum MODERATOR pack (×8)
+ * is deliberately NOT here: it is appended per-mode in apply() under the
+ * closed-list gate (CTR-FMC-004). The Life Workbench pack (×2 — workbench_read
+ * / workbench_propose per LIFE_WORKBENCH_AUDIENCE_CCR_V1; authorization is
+ * issuance-side via the life-workbench MachineAccessGrant baseline) IS here.
+ * All HTTP capabilities fail CLOSED at
+ * execution time without a credential from the seam; registration itself
+ * never requires one.
+ */
+export const DEFAULT_MANIFESTS = [
+  calculatorManifest,
+  ...forumManifests,
+  ...forumNormalManifests,
+  ...workflowManifests,
+  ...okrManifests,
+  ...agentDefinitionManifests,
+  ...schedulerManifests,
+  ...selfOpsManifests,
+  ...agentSessionMessagingManifests,
+  ...agentPrincipalResolutionManifests,
+  ...agentDirectoryManifests,
+  ...workflowHumanPrincipalProjectionManifests,
+  ...lifeWorkbenchManifests,
+]
+
+/** Default auth-service token endpoint origin (deployment-local). */
+export const DEFAULT_AUTH_SERVICE_ORIGIN = 'http://127.0.0.1:4001'
+
+/** Plugin config: manifests to register as tools + transport wiring. */
+export const Config = z.object({
+  /**
+   * Capability manifests to register. Each maps to ONE tool.
+   * Operations with an `http` block are served by the generic authorized
+   * HTTP transport; the rest are served by `handlersByCapability`.
+   */
+  manifests: z
+    .array(z.any())
+    // NOTE: no .required() — schemastery's required check runs BEFORE the
+    // default, so `.required().default(x)` still rejects an absent value.
+    .default(DEFAULT_MANIFESTS),
+  /** Target registry (origin + audience) that pins the outbound side. */
+  targets: z.array(z.any()).default(defaultTargets),
+  /** Auth-service token endpoint origin (client_credentials grant). */
+  authServiceOrigin: z.string().default(DEFAULT_AUTH_SERVICE_ORIGIN),
+  /**
+   * Execution mode (trusted credential broker model):
+   *
+   * - 'child' (per-agent composition, DEFAULT): model-facing capability
+   *   tools are registered; every HTTP capability executes as a RELAY —
+   *   `agentRpc.request('agent-core/broker', { capabilityId, operation,
+   *   args })`. The child holds NO credential and NO token; the env
+   *   credential placeholders are never read.
+   * - 'gateway' (control-plane composition): registers NO tools; provides
+   *   `ctx.brokerGateway` — the trusted in-process Broker boundary that
+   *   reads the 505-private credential store by ACTUAL agentId and runs the
+   *   existing authorized HTTP transport (client_credentials -> token cache
+   *   -> pinned downstream). Reached by the Router's parent-RPC dispatch.
+   */
+  mode: z.union([z.const('child'), z.const('gateway')]).default('child'),
+  /**
+   * Gateway mode only: ABSOLUTE path of the 505-private credential store
+   * (AGENT_CORE_CREDENTIALS_FILE). Absent => every gateway call fails
+   * closed with credential_unavailable.
+   */
+  credentialsFile: z.string(),
+  /**
+   * Child mode only (ACCEPTANCE FIXTURE): register the
+   * broker_self_assert_test tool that relays a call while self-asserting a
+   * forged identity — proving the parent ignores child-supplied identity.
+   * Never enabled in product configurations.
+   */
+  fixtureSelfAssert: z.boolean().default(false),
+  /**
+   * Closed moderator-Agent list (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2
+   * CTR-FMC-004). In CHILD mode the eight Forum moderator tools are
+   * registered ONLY when this config is a valid closed list (non-empty,
+   * duplicate-free, every entry an exact `agt_*` string) AND the process's
+   * actual DSH_AGENT_ID is a member. Missing / empty / malformed config, a
+   * non-member agent, or an absent DSH_AGENT_ID each yield ZERO moderator
+   * tools while every normal tool stays registered — the normal pack never
+   * depends on this config. Gateway mode always keeps the moderator manifests
+   * (trusted control plane); tool visibility there is not authorization.
+   */
+  forumModeratorAgentIds: z.array(z.string()),
+})
+
+/**
+ * Capability id -> handler map for PROCESS-INTERNAL capabilities (calculator).
+ * HTTP-bound capabilities get their handlers auto-generated (transport in
+ * gateway mode, RELAY in child mode) — nothing business-specific lives here.
+ */
+const handlersByCapability = {
+  'external.calculator': calculatorHandlers,
+}
+
+/** Exact moderator-Agent id grammar (CTR-FMC-004: non-`agt_*` entries are invalid). */
+const MODERATOR_AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
+
+/**
+ * Resolve the child-mode Forum moderator registration
+ * (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2 CTR-FMC-004).
+ *
+ * The eight moderator manifests are returned ONLY when the closed
+ * `forumModeratorAgentIds` config is valid (non-empty, duplicate-free, every
+ * entry an exact `agt_*` string) AND the process's actual `DSH_AGENT_ID`
+ * environment is a member. Missing / empty / malformed config, a non-member
+ * or absent agent id each yield an EMPTY set with a machine-readable reason —
+ * fail-closed BEFORE moderator registration, with zero impact on the normal
+ * pack (normal tools never depend on this config). Model arguments can never
+ * influence this resolution: it reads trusted config + process env only.
+ *
+ * @param {object} config - resolved plugin config.
+ * @param {object} [env] - process environment (injectable for tests).
+ * @returns {{ manifests: object[], reason: string }}
+ */
+export function resolveForumModeratorRegistration(config = {}, env = process.env) {
+  const list = config.forumModeratorAgentIds
+  if (list === undefined || list === null) {
+    return { manifests: [], reason: 'forumModeratorAgentIds not configured' }
+  }
+  if (!Array.isArray(list) || list.length === 0) {
+    return { manifests: [], reason: 'forumModeratorAgentIds is missing or empty' }
+  }
+  const seen = new Set()
+  for (const entry of list) {
+    if (typeof entry !== 'string' || !MODERATOR_AGENT_ID_RE.test(entry)) {
+      return { manifests: [], reason: `invalid forumModeratorAgentIds entry ${JSON.stringify(entry)} (must be exact agt_* strings)` }
+    }
+    if (seen.has(entry)) {
+      return { manifests: [], reason: `duplicate forumModeratorAgentIds entry "${entry}"` }
+    }
+    seen.add(entry)
+  }
+  const agentId = env?.DSH_AGENT_ID
+  if (typeof agentId !== 'string' || agentId.length === 0) {
+    return { manifests: [], reason: 'DSH_AGENT_ID is absent' }
+  }
+  if (!seen.has(agentId)) {
+    return { manifests: [], reason: `agent "${agentId}" is not in the closed moderator list` }
+  }
+  return { manifests: forumModeratorManifests, reason: `moderator tools registered for "${agentId}"` }
+}
+
+/**
+ * §5.3 fail-before-tool-exposure mask — implemented in ./readiness.js
+ * (dependency-free so the registration path and tests share one module).
+ */
+// LOCAL BINDING REQUIRED (2026-09-09 fleet boot regression): a bare
+// `export { X } from` does NOT bind X in this module — apply() calls it in
+// child mode, and the missing binding was a ReferenceError that killed every
+// agent child before JSON-RPC startup (AGENT_PROCESS_EXITED fleet-wide).
+import { withSchedulerMutationMask } from './readiness.js'
+export { withSchedulerMutationMask } from './readiness.js'
+
+/**
+ * Register every configured capability manifest as a model-facing tool.
+ * Identity is resolved only through the internal `resolvePrincipal` interface
+ * and the credential seam; model arguments are never a principal source.
+ * @param {import('@deepseek-ai/cordis').Context} ctx - registrant context.
+ * @param {object} [config] - resolved plugin config.
+ */
+export function apply(ctx, config = {}) {
+  const targets = config.targets ?? defaultTargets
+  const authServiceOrigin = config.authServiceOrigin ?? DEFAULT_AUTH_SERVICE_ORIGIN
+  const mode = config.mode ?? 'child'
+
+  // Moderator pack selection (CTR-FMC-004): the trusted gateway retains ALL
+  // manifests; a child registers moderator tools only for the exact closed
+  // list member matching its actual DSH_AGENT_ID. Both paths are fail-closed.
+  const moderatorSelection =
+    mode === 'gateway'
+      ? { manifests: forumModeratorManifests, reason: 'gateway mode retains all manifests (trusted control plane)' }
+      : resolveForumModeratorRegistration(config)
+  const baseManifests = config.manifests ?? DEFAULT_MANIFESTS
+  const presentIds = new Set(baseManifests.map((m) => m && m.id))
+  const manifests = [
+    ...baseManifests,
+    ...moderatorSelection.manifests.filter((m) => !presentIds.has(m.id)),
+  ]
+  if (mode === 'child') {
+    process.stderr.write(`[broker] forum moderator pack: ${moderatorSelection.manifests.length} tools (${moderatorSelection.reason})\n`)
+  }
+
+  // Fail fast on broken wiring: every http-bound capability must reference a
+  // known target (origin/audience stay pinned to trusted config).
+  const targetMap = buildTargetMap(targets)
+  for (const manifest of manifests) {
+    for (const op of manifest && Array.isArray(manifest.operations) ? manifest.operations : []) {
+      if (op && op.http && !targetMap.has(op.http.target)) {
+        throw new Error(
+          `broker: capability "${manifest.id}" references unknown target "${op.http.target}" ` +
+            `(known: ${[...targetMap.keys()].join(', ')})`,
+        )
+      }
+    }
+  }
+
+  // ------------------------------------------------------------- gateway
+  if (mode === 'gateway') {
+    // AGENT_DEFINITION_ACCESS_V1: the control plane injects the LOCAL
+    // (in-process) capability handlers for the Agent Definition config
+    // (provided by the `agentDefinitionAccess` service, mounted by the
+    // agent-definition row). Resolved at EXECUTE time (the loader applies
+    // sibling rows concurrently, so reading the sibling service at APPLY
+    // time would race); when absent, local capabilities fail closed as
+    // unsupported — the gateway stays fully functional.
+    const gateway = createBrokerGateway({
+      manifests,
+      targets,
+      authServiceOrigin,
+      credentialsFile: config.credentialsFile,
+      // Optional L0 pre-handler denial evidence hook (R12); the composition
+      // scopes it to the capabilities it records. Never alters outcomes.
+      ...(config.auditDenial === undefined ? {} : { auditDenial: config.auditDenial }),
+      // LOCAL capability handlers are injected by the control-plane
+      // composition and resolved at EXECUTE time (sibling services are
+      // concurrent-loaded; reading them at APPLY time would race).
+      localHandlerResolver: () => ({
+        ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),
+        ...(ctx.get('selfServiceSchedulerAccess')?.handlers ?? {}),
+        ...(ctx.get('selfOpsAccess')?.handlers ?? {}),
+        // AGENT_CORE_AGENT_SESSION_MESSAGING_V1: third LOCAL provider — the
+        // generalization keeps the execute-time resolve-at-call contract
+        // (sibling rows load concurrently; reading at APPLY time would race).
+        ...(ctx.get('agentSessionMessagingAccess')?.handlers ?? {}),
+        // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1: fourth LOCAL
+        // provider (read-only exact Principal -> enabled agentId).
+        ...(ctx.get('agentPrincipalResolutionAccess')?.handlers ?? {}),
+        // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1: LOCAL provider (read-only
+        // Agent discovery: exact reference resolve + list, Agent Definition
+        // snapshot only).
+        ...(ctx.get('agentDirectoryAccess')?.handlers ?? {}),
+        // AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0: exact one-shot
+        // Human projection provider; workflow.admin remains caller-bound.
+        ...(ctx.get('workflowHumanPrincipalProjectionAccess')?.handlers ?? {}),
+      }),
+      log: (msg) => process.stderr.write(`${msg}\n`),
+    })
+    ctx.provide('brokerGateway', gateway)
+    const httpCount = manifests.filter((m) =>
+      Array.isArray(m?.operations) && m.operations.some((o) => o && o.http)).length
+    const localCount = manifests.filter((m) => m?.local !== undefined).length
+    process.stderr.write(`[broker] gateway mode: ${httpCount} http capabilities ready, ${localCount} local capabilities ready\n`)
+    return { mode, gateway }
+  }
+
+  // --------------------------------------------------------- child relay
+  // The trusted broker model: the child NEVER holds a credential and NEVER
+  // runs the transport — every HTTP capability relays through the parent.
+  // A missing agentRpc channel fails closed at execution time.
+  const requestFn = (call) => {
+    const agentRpc = ctx.get('agentRpc')
+    if (agentRpc === undefined || typeof agentRpc.request !== 'function') {
+      return Promise.resolve({
+        ok: true,
+        result: { ok: false, error: { code: 'invalid_arguments', detail: 'broker relay unavailable: no parent-RPC channel' } },
+      })
+    }
+    return agentRpc.request(BROKER_RPC_METHOD, call)
+  }
+
+  const capabilities = manifests.map((manifest) => {
+    const id = manifest && typeof manifest.id === 'string' ? manifest.id : ''
+    const hasHttp = Array.isArray(manifest.operations) && manifest.operations.some((o) => o && o.http)
+    // LOCAL capabilities (agent.definition.*) also RELAY to the trusted
+    // parent in child mode — they execute in-process in the gateway.
+    const relays = hasHttp || manifest?.local !== undefined
+    // HTTP/local capabilities RELAY to the trusted parent; process-internal
+    // capabilities (calculator) stay local — they need no credential.
+    const handlers = relays ? createRelayHandlers(manifest, requestFn) : handlersByCapability[id] ?? {}
+    return {
+      manifest,
+      handlers,
+      deps: {
+        // Single identity source (see identity.js / TRUST-BOUNDARY Plan B).
+        resolvePrincipal: createIdentityResolver(),
+      },
+    }
+  })
+
+  // SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.3: hide scheduler mutation
+  // operations when this runtime has no credential provider configured.
+  const registeredCapabilities = withSchedulerMutationMask(capabilities, {
+    credentialProviderConfigured:
+      typeof process.env.AGENT_CORE_CREDENTIALS_FILE === 'string'
+      && process.env.AGENT_CORE_CREDENTIALS_FILE.trim() !== '',
+    log: (msg) => process.stderr.write(`${msg}\n`),
+  })
+
+  registerCapabilities(ctx, defineTool, registeredCapabilities)
+
+  // Acceptance fixture (self-assert proof): registered only when explicitly
+  // configured (BROKER_FIXTURE_SELF_ASSERT=1 in acceptance runtimes).
+  if (config.fixtureSelfAssert === true) {
+    const agentRpc = ctx.get('agentRpc')
+    if (agentRpc === undefined || typeof agentRpc.request !== 'function') {
+      throw new Error('broker: fixtureSelfAssert requires the agentRpc service')
+    }
+    const fixture = createSelfAssertFixtureTool((method, params) => agentRpc.request(method, params))
+    ctx.tools.register(defineTool(fixture.definition))
+    process.stderr.write('[broker] fixture broker_self_assert_test registered\n')
+  }
+}

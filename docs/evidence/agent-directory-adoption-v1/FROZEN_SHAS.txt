@@ -1,0 +1,55 @@
+# AGENT_DIRECTORY_PRODUCTION_ADOPTION_V1 — frozen values (packet v2)
+
+frozen_at_utc: 2026-09-16T14:19:10Z (HOLD baseline)
+authority: Owner directive AGENT_DIRECTORY_PRODUCTION_ADOPTION_V1 (2026-09-16):
+  DO_NOT_APPLY_AGENT_DIRECTORY_YET until WGR_PRODUCTION_CLOSURE=PASS &&
+  CURRENT_GENERATION_STABLE=YES.
+
+## v2 postimage sha256 (payload = merged main aa4caf4 bytes + bounded compose delta)
+
+37501c48ebeea3cac34f2f5892ab095567174ebe2f5de45c6914dce9573bad8f  broker-index.js (= aa4caf4:packages/broker/src/index.js)
+bb79c00e646c3a25484414f501825833cb2e7c8759592612d1f93ca314a865cd  broker-agent-directory.js (= aa4caf4:packages/broker/src/capabilities/agent-directory.js)
+db9dc21342d3d5db6a888ed0ce110b014a5cc37e3be1a3de529e910e6d3d61be  runtime-agent-directory.js (= aa4caf4:packages/production-runtime/src/agent-directory.js)
+17e4aedd43053286c4bcead61b18da4bec6bbaccda2bdd99860963a711a3c3d0  compose.js (v2: deployed 697c7fda + exactly 2 deltas: import createAgentDirectoryAccess + provide agentDirectoryAccess)
+
+## v2 preimage sha256 (deployed at freeze time — fail-closed anchors)
+
+60c2f819e1d116c3f678fa1f0f611225aac101b44d60aced02da3a346070f762  /usr/local/libexec/agent-core/app/packages/broker/src/index.js
+697c7fda901b7fbefc08f5b66e0af94425bc957f349263c5f33531b46575e614  /usr/local/libexec/agent-core/app/packages/production-runtime/src/compose.js
+
+## HOLD baseline snapshot (2026-09-16T14:19:10Z)
+
+- canonical runtime: LaunchDaemon system/ai.agent-core.runtime pid 29353 (started 2026-09-16 20:56 CST by the WGR lane transaction)
+- global production-deploy mutex: FREE
+- WGR operator generations present: 81d5ab9/g1, 3a7eb01/g1 (cutover receipts; canary/census/pins/§17 closure NOT yet produced per Owner)
+- main HEAD at freeze: 9ad9558 (45 commits past aa4caf4; NONE touch the 4 packet files)
+- payload v2 verified: --selftest ALL_OK + functional rehearsal FUNCTIONAL_REHEARSAL_V2_PASS on the deployed tree copy
+
+## RESUME RUNBOOK (verbatim from Owner directive; execute only after the WGR signal)
+
+Trigger: WGR_PRODUCTION_CLOSURE=PASS && CURRENT_GENERATION_STABLE=YES (from WGR
+closure evidence on main / WGR goal record / explicit Owner word).
+
+1. fresh sync current main (git fetch github)
+2. fresh read production preimage (shasum of the two deployed files)
+3. if packet 4-file preimages match the v2 frozen values above:
+   - rerun adoption script --selftest
+   - apply
+4. if ANY preimage drift:
+   - regenerate ONLY the bounded packet (rebuild postimage vs the NEW deployed
+     preimage; same 2-delta compose patch; re-freeze; selftest + rehearsal)
+   - NO redesign, NO re-review of agent_directory product semantics
+5. after apply: live model canary — send to CTO agent (技术研发总监), verbatim:
+   请给文章发布管家发送一条测试消息。
+   (no UUID, no hint, no manual lookup; expect the agent to run
+   agent_directory resolve → canonical agent_id → agent_session_send;
+   production duplicate display-name pair 知识管家 doubles as the live
+   ambiguous-semantics check)
+6. acceptance:
+   PRODUCTION_ADOPTION=PASS
+   LIVE_MODEL_DIRECTORY_TO_SESSION_SEND=PASS
+   UUID_PRESEEDED_TO_CALLER=NO
+   AGENT_ID_MANUAL_LOOKUP_REQUIRED=NO
+
+Exception: a production emergency may reorder this; otherwise NO agent-directory
+mutation is inserted before WGR current-generation closure completes.
