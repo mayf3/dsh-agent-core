@@ -1,14 +1,36 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { chmod, chown, mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import test from 'node:test'
 
 import { canonicalJSON } from '../../../scheduler/src/occurrence-model.js'
 import { runSchedulerIncidentMigration } from '../../src/scheduler/deployment-incident-migration.js'
+import { relativeImports, resolveRelative, WATCHDOG_PAYLOAD_SHA } from '../../../../scripts/lib/admission-lib.mjs'
 
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const repo = new URL('../../../..', import.meta.url).pathname
+
+async function materializePinnedMigrationClosure(root) {
+  const queued = ['scripts/scheduler-watchdog.mjs']
+  const seen = new Set()
+  const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo })
+  while (queued.length > 0) {
+    const path = queued.shift()
+    if (seen.has(path)) continue
+    const bytes = show(path)
+    seen.add(path)
+    await mkdir(dirname(join(root, path)), { recursive: true })
+    await writeFile(join(root, path), bytes)
+    for (const specifier of relativeImports(bytes.toString('utf8'))) {
+      for (const candidate of resolveRelative(dirname(path), specifier)) {
+        try { show(candidate); queued.push(candidate); break } catch { /* try the next resolution candidate */ }
+      }
+    }
+  }
+}
 
 test('deployment accepts a safe failed-cutover migration extension receipt', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deployment-incident-extension-'))
@@ -67,6 +89,32 @@ test('deployment migration uses the explicit runtime reader gid instead of the a
   const receipt = runSchedulerIncidentMigration({
     ctx: { runtimeNode: process.execPath, liveRoot: new URL('../../../..', import.meta.url).pathname,
       watchdogStateDir: stateDir, authsvcUid: process.getuid(), authsvcGid: process.getgid(), runtimeReaderGid },
+    sources: { legacyStatePath, legacyStateSha256: sha(legacy), legacyEvidencePath, legacyEvidenceSha256: sha(evidence),
+      factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([fact]))) },
+  })
+  assert.equal(receipt.status, 'MIGRATED')
+})
+
+test('production-pinned payload executes migration with distinct source and destination groups', async (t) => {
+  const runtimeReaderGid = process.getgroups().find((gid) => gid !== process.getgid())
+  if (runtimeReaderGid === undefined) return t.skip('no secondary group available for runtime reader proof')
+  const dir = await mkdtemp(join(tmpdir(), 'pinned-incident-reader-gid-'))
+  await chmod(dir, 0o700)
+  const liveRoot = join(dir, 'live'), stateDir = join(dir, 'state')
+  await materializePinnedMigrationClosure(liveRoot)
+  await mkdir(stateDir, { mode: 0o700 }); await chown(stateDir, process.getuid(), runtimeReaderGid)
+  const legacyStatePath = join(dir, 'legacy.json'), legacyEvidencePath = join(dir, 'evidence.jsonl'), factsPath = join(dir, 'facts.json')
+  const fact = { class: 'RUN_FAILED', jobId: 'job-pinned', occurrenceId: 'occ-pinned' }
+  const fingerprint = 'RUN_FAILED|job-pinned|occ-pinned'
+  const legacy = Buffer.from(`${JSON.stringify({ active: { [fingerprint]: {} } })}\n`)
+  const evidence = Buffer.from(`${JSON.stringify({ fingerprint, delivery: 'DELIVERED', fact })}\n`)
+  const factsBytes = Buffer.from(`${JSON.stringify([fact])}\n`)
+  await writeFile(legacyStatePath, legacy, { mode: 0o600 })
+  await writeFile(legacyEvidencePath, evidence, { mode: 0o600 })
+  await writeFile(factsPath, factsBytes, { mode: 0o600 })
+  const receipt = runSchedulerIncidentMigration({
+    ctx: { runtimeNode: process.execPath, liveRoot, watchdogStateDir: stateDir,
+      authsvcUid: process.getuid(), authsvcGid: process.getgid(), runtimeReaderGid },
     sources: { legacyStatePath, legacyStateSha256: sha(legacy), legacyEvidencePath, legacyEvidenceSha256: sha(evidence),
       factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([fact]))) },
   })
