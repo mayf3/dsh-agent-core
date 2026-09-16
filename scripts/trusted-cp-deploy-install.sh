@@ -40,27 +40,101 @@
 # =============================================================================
 set -euo pipefail
 
+# GLOBAL production-deploy mutex (WATCHDOG transaction P1/B7 convergence): every
+# entrypoint that replaces the trusted app / routing / restarts the canonical
+# runtime shares THIS exact lock. Atomic mkdir acquire; a held lock fails
+# closed with its holder metadata; a killed run leaves the lock behind and it
+# is disposed of EXPLICITLY (never guessed, never auto-deleted).
+PRODUCTION_DEPLOY_LOCK_DIR="${PRODUCTION_DEPLOY_LOCK_DIR:-/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock}"
+# B7 inherited-lock seam: a parent transaction (run-authorized-transaction.sh)
+# holds the mutex across DEPLOY/ROUTING/RELOAD; the child verifies the actual
+# holder belongs to that parent and then neither reacquires nor releases it.
+# There is deliberately NO bypass flag: without a verified inherited holder
+# the installer always acquires the mutex itself (standalone path).
+INHERITED_LOCK_HOLDER_PATTERN="${PRODUCTION_DEPLOY_LOCK_INHERITED_FROM:-}"
+GLOBAL_LOCK_ACQUIRED_BY_ME=0
+PRESERVED_SOURCE_GIT_STAMP=""
+
+composed_exit_cleanup() {
+  # B6: ONE composed EXIT cleanup - the preserved source stamp AND the
+  # installer-owned global mutex. Never touches a lock this process did not
+  # acquire (parent-owned/inherited locks are left for the parent).
+  if [ -n "$PRESERVED_SOURCE_GIT_STAMP" ] && [ -f "$PRESERVED_SOURCE_GIT_STAMP" ]; then
+    /bin/rm -f "$PRESERVED_SOURCE_GIT_STAMP"
+  fi
+  if [ "$GLOBAL_LOCK_ACQUIRED_BY_ME" = "1" ] && [ -d "$PRODUCTION_DEPLOY_LOCK_DIR" ] \
+     && grep -qx "pid=$$" "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null; then
+    rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+    rmdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null || true
+  fi
+}
+trap composed_exit_cleanup EXIT
+
+acquire_global_deploy_mutex() {
+  mkdir -p "$(dirname "$PRODUCTION_DEPLOY_LOCK_DIR")"
+  if ! mkdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null; then
+    echo "ERROR: global production-deploy mutex already held - $PRODUCTION_DEPLOY_LOCK_DIR" >&2
+    cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
+    echo "DISPOSITION (explicit, fail-closed - never bare rmdir): use the transaction bundle's dispose_stale_lock procedure" >&2
+    exit 1
+  fi
+  printf 'pid=%s\nuid=%s\ncmd=%s\nstarted=%s\n' "$$" "$(id -u)" \
+    "trusted-cp-deploy-install.sh $*" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+  GLOBAL_LOCK_ACQUIRED_BY_ME=1
+}
+
+if [ "${TRUSTED_CP_SELFTEST_LOCK:-}" = "1" ]; then
+  # Offline lock/trap regression (B6): standalone success, ordinary failure,
+  # parent-owned/inherited. Runs against the scratch PRODUCTION_DEPLOY_LOCK_DIR.
+  gate_fail() { echo "SELFTEST_FAIL $1" >&2; exit 1; }
+  ok() { echo "SELFTEST_OK $1"; }
+  PRESERVED_SOURCE_GIT_STAMP="$(mktemp /tmp/trusted-cp-stamp-selftest-XXXXXX)"
+  : > "$PRESERVED_SOURCE_GIT_STAMP"
+  acquire_global_deploy_mutex
+  composed_exit_cleanup
+  [ -d "$PRODUCTION_DEPLOY_LOCK_DIR" ] && gate_fail "standalone success must release the installer-owned mutex"
+  [ -f "$PRESERVED_SOURCE_GIT_STAMP" ] && gate_fail "standalone success must remove the preserved stamp"
+  ok "standalone success: stamp removed + installer-owned mutex released"
+  acquire_global_deploy_mutex
+  ok "standalone ordinary failure: lock remains fail-closed (explicit disposition, no auto-delete)"
+  grep -qx "pid=$$" "$PRODUCTION_DEPLOY_LOCK_DIR/holder" || gate_fail "holder identity mismatch"
+  rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+  rmdir "$PRODUCTION_DEPLOY_LOCK_DIR"
+  GLOBAL_LOCK_ACQUIRED_BY_ME=0
+  ok "standalone ordinary failure: holder release works"
+  mkdir "$PRODUCTION_DEPLOY_LOCK_DIR"
+  printf 'pid=1\ncmd=run-authorized-transaction.sh (parent transaction)\n' > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
+  INHERITED_LOCK_HOLDER_PATTERN="run-authorized-transaction.sh"
+  grep -q "$INHERITED_LOCK_HOLDER_PATTERN" "$PRODUCTION_DEPLOY_LOCK_DIR/holder" \
+    || gate_fail "inherited fixture broken"
+  GLOBAL_LOCK_ACQUIRED_BY_ME=0
+  PRESERVED_SOURCE_GIT_STAMP=""
+  composed_exit_cleanup
+  [ -d "$PRODUCTION_DEPLOY_LOCK_DIR" ] || gate_fail "child must NEVER delete a parent-owned lock"
+  [ -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder" ] || gate_fail "parent holder metadata must survive the child"
+  ok "parent-owned/inherited: child verified the holder and left the parent lock intact"
+  rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"; rmdir "$PRODUCTION_DEPLOY_LOCK_DIR"
+  echo "SELFTEST_LOCK=PASS"
+  exit 0
+fi
+
 if [ "$(id -u)" != "0" ]; then
   echo "ERROR: must run as root (sudo ./scripts/trusted-cp-deploy-install.sh)" >&2
   exit 2
 fi
 
-# GLOBAL production-deploy mutex (WATCHDOG transaction P1 convergence): every
-# entrypoint that replaces the trusted app / routing / restarts the canonical
-# runtime shares THIS exact lock. Atomic mkdir acquire; a held lock fails
-# closed with its holder metadata; a killed run leaves the lock behind and it
-# is disposed of EXPLICITLY (never guessed, never auto-deleted).
-PRODUCTION_DEPLOY_LOCK_DIR="/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock"
-mkdir -p "$(dirname "$PRODUCTION_DEPLOY_LOCK_DIR")"
-if ! mkdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null; then
-  echo "ERROR: global production-deploy mutex already held — $PRODUCTION_DEPLOY_LOCK_DIR" >&2
-  cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
-  echo "STALE_LOCK_DISPOSITION: verify the holding deploy is truly dead, then remove EXPLICITLY:" >&2
-  echo "  sudo rmdir $PRODUCTION_DEPLOY_LOCK_DIR" >&2
-  exit 1
+if [ -n "$INHERITED_LOCK_HOLDER_PATTERN" ]; then
+  [ -d "$PRODUCTION_DEPLOY_LOCK_DIR" ] \
+    || { echo "ERROR: inherited lock expected but absent - $PRODUCTION_DEPLOY_LOCK_DIR" >&2; exit 1; }
+  grep -q "$INHERITED_LOCK_HOLDER_PATTERN" "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null \
+    || { echo "ERROR: inherited lock holder does not match the parent pattern '$INHERITED_LOCK_HOLDER_PATTERN'" >&2
+         cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
+         exit 1; }
+  echo "== inherited global production-deploy mutex verified (held by parent transaction) =="
+else
+  acquire_global_deploy_mutex
 fi
-printf 'pid=%s\nuid=%s\ncmd=%s\nstarted=%s\n' "$$" "$(id -u)"   "trusted-cp-deploy-install.sh $*" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"   > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
-trap 'rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"; rmdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null || true' EXIT
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # AGENT_CORE_BACKUP_RETENTION_V1: deployment backup metadata + pin + post-verified
@@ -94,7 +168,7 @@ id authsvc >/dev/null 2>&1 || { echo "ERROR: user authsvc (uid 505) missing" >&2
 [ -x "$SOURCE_GIT_STAMP" ] || { echo "ERROR: source Git stamp helper missing/not executable: $SOURCE_GIT_STAMP" >&2; exit 2; }
 HARNESS_STAMP="$($SOURCE_GIT_STAMP "$HARNESS_SRC")" || { rc=$?; echo "ERROR: Harness Git source probe failed before backup (exit $rc): $HARNESS_SRC" >&2; exit "$rc"; }
 PRESERVED_SOURCE_GIT_STAMP="$(/usr/bin/mktemp /tmp/agent-core-source-git-stamp.XXXXXX)" && /usr/bin/install -o root -g wheel -m 700 "$SOURCE_GIT_STAMP" "$PRESERVED_SOURCE_GIT_STAMP"
-trap '/bin/rm -f "$PRESERVED_SOURCE_GIT_STAMP"' EXIT
+# stamp removal is owned by composed_exit_cleanup (B6: single composed EXIT trap)
 
 # ---- 1. backup previous install (code refreshed, config preserved in .bak) --
 if [ -e "$TRUSTED_ROOT" ]; then

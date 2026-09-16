@@ -15,12 +15,30 @@
  */
 
 import { createHash } from 'node:crypto'
-import { chmodSync, chownSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
 
-// P1 convergence: --apply is a production mutation entry, so it shares the
+// P1/B7 convergence: --apply is a production mutation entry, so it shares the
 // SAME exact global production-deploy mutex as trusted-cp-deploy-install.sh.
-const PRODUCTION_DEPLOY_LOCK_DIR = '/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock'
+// B7 inherited-lock seam: when invoked by the parent transaction, the mutex is
+// held by the parent - the child VERIFIES the holder provenance and then
+// neither reacquires nor releases it. No bypass flag: without a verified
+// inherited holder, --apply always acquires the mutex itself.
+let PRODUCTION_DEPLOY_LOCK_DIR = process.env.PRODUCTION_DEPLOY_LOCK_DIR
+  ?? '/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock'
+let INHERITED_LOCK_HOLDER_PATTERN = process.env.PRODUCTION_DEPLOY_LOCK_INHERITED_FROM ?? ''
+let GLOBAL_LOCK_ACQUIRED_BY_ME = false
+function holderIncludes(pattern) {
+  try { return readFileSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder'), 'utf8').includes(pattern) } catch { return false }
+}
+function verifyInheritedHolder() {
+  if (!existsSync(PRODUCTION_DEPLOY_LOCK_DIR) || !holderIncludes(INHERITED_LOCK_HOLDER_PATTERN)) {
+    process.stderr.write(`FAIL_CLOSED inherited global production-deploy mutex expected but not verifiable - ${PRODUCTION_DEPLOY_LOCK_DIR}\n`)
+    process.exit(1)
+  }
+  process.stdout.write('== inherited global production-deploy mutex verified (held by parent transaction) ==\n')
+}
 function acquireGlobalDeployLock() {
   mkdirSync(dirname(PRODUCTION_DEPLOY_LOCK_DIR), { recursive: true })
   try {
@@ -28,15 +46,23 @@ function acquireGlobalDeployLock() {
   } catch {
     const holder = existsSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder'))
       ? readFileSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder'), 'utf8') : '(no holder metadata)'
-    process.stderr.write(`✖ FAIL_CLOSED global production-deploy mutex already held — ${PRODUCTION_DEPLOY_LOCK_DIR}\n${holder}\nSTALE_LOCK_DISPOSITION: verify the holder is dead, then remove EXPLICITLY (sudo rmdir ${PRODUCTION_DEPLOY_LOCK_DIR})\n`)
+    process.stderr.write(`FAIL_CLOSED global production-deploy mutex already held - ${PRODUCTION_DEPLOY_LOCK_DIR}\n${holder}\nDISPOSITION (explicit helper - never bare rmdir): use the transaction bundle's dispose_stale_lock procedure\n`)
     process.exit(1)
   }
   writeFileSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder'),
     `pid=${process.pid}\ncmd=run-routing-install.mjs --apply\nstarted=${new Date().toISOString()}\n`)
+  GLOBAL_LOCK_ACQUIRED_BY_ME = true
 }
 function releaseGlobalDeployLock() {
-  try { rmSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder')) } catch { /* not ours or gone */ }
+  if (!GLOBAL_LOCK_ACQUIRED_BY_ME) return   // never release a parent-owned/inherited lock
+  const holder = join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder')
+  if (existsSync(holder) && !readFileSync(holder, 'utf8').includes(`pid=${process.pid}`)) {
+    process.stderr.write('global mutex release refused (holder mismatch) - left in place\n')
+    return
+  }
+  try { rmSync(holder) } catch { /* not ours or gone */ }
   try { rmSync(PRODUCTION_DEPLOY_LOCK_DIR) } catch { /* gone */ }
+  GLOBAL_LOCK_ACQUIRED_BY_ME = false
 }
 
 import { installSchedulerRoutingManifest } from '../../packages/production-runtime/src/scheduler/deployment-routing.js'
@@ -77,6 +103,7 @@ function checkCandidate(bytes) {
 }
 
 async function selftest() {
+  const scratch = mkdtempSync(join(tmpdir(), 'pnpm-routing-selftest-XXXXXX'))
   // Offline-verifiable subset. The protected parent-chain walk inside
   // installSchedulerRoutingManifest requires a boundary='/' chain with no
   // ACLs/group-write — only satisfiable on the production host, where
@@ -91,6 +118,24 @@ async function selftest() {
   gate('SELFTEST BUSINESS_OUTPUT never routes to the ops target', business.route?.to === 'oc_business')
   const overlap = resolveNotificationRoute({ routeClass: ROUTE_CLASSES.JOB_FAILURE, job: { logicalKey: 'k', agentId: 'agt_x', delivery: { mode: 'none' } }, manifest: validateRoutingManifest({ ...manifestOf(), ownerTargets: { agt_x: { channel: 'feishu', to: 'oc_owner_x' } } }) })
   gate('SELFTEST ownerTargets override wins over fallback', overlap.route?.to === 'oc_owner_x' && overlap.routeSource === 'ownerTargets')
+  // B7 lock-seam mechanics (scratch lock dir): standalone acquire/release with
+  // ownership guard; inherited verify never deletes a parent-owned lock.
+  PRODUCTION_DEPLOY_LOCK_DIR = join(scratch, 'locks/production-deploy.lock')
+  INHERITED_LOCK_HOLDER_PATTERN = 'run-authorized-transaction.sh'
+  mkdirSync(dirname(PRODUCTION_DEPLOY_LOCK_DIR), { recursive: true })
+  mkdirSync(PRODUCTION_DEPLOY_LOCK_DIR)
+  writeFileSync(join(PRODUCTION_DEPLOY_LOCK_DIR, 'holder'), 'pid=1\ncmd=run-authorized-transaction.sh (parent)\n')
+  verifyInheritedHolder()   // inherited path: verification only, never takes ownership
+  if (GLOBAL_LOCK_ACQUIRED_BY_ME) gate('selftest: inherited path must not take ownership', 1)
+  releaseGlobalDeployLock() // must be a no-op for a parent-owned lock
+  if (!existsSync(PRODUCTION_DEPLOY_LOCK_DIR)) gate('selftest: parent-owned lock deleted by child', 1)
+  gate('SELFTEST inherited path verifies holder + never reacquires/releases', process.exitCode !== 1)
+  rmSync(PRODUCTION_DEPLOY_LOCK_DIR, { recursive: true })
+  acquireGlobalDeployLock()
+  if (!GLOBAL_LOCK_ACQUIRED_BY_ME) gate('selftest: standalone acquire must take ownership', 1)
+  releaseGlobalDeployLock()
+  if (existsSync(PRODUCTION_DEPLOY_LOCK_DIR)) gate('selftest: standalone release must remove the installer-owned lock', 1)
+  gate('SELFTEST standalone acquire/release + ownership guard', process.exitCode !== 1)
   gate('SELFTEST complete (offline subset; parent-chain machinery verified on-host via --plan)', process.exitCode !== 1)
 }
 
@@ -158,11 +203,12 @@ function runInstaller(mode) {
 }
 
 async function apply() {
-  acquireGlobalDeployLock()
+  if (INHERITED_LOCK_HOLDER_PATTERN !== '') verifyInheritedHolder()
+  else acquireGlobalDeployLock()
   try {
     await applyLocked()
   } finally {
-    releaseGlobalDeployLock()
+    releaseGlobalDeployLock()   // no-op when the lock is parent-owned (B7)
   }
 }
 

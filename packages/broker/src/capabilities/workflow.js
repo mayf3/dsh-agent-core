@@ -276,8 +276,7 @@ export const workflowGlobalInstancesManifest = withTransportErrors({
   id: 'workflow_global_instances',
   toolName: 'workflow_global_instances',
   name: 'Workflow Global Instances',
-  description:
-    'Agent Core capability `workflow_global_instances` (svc-workflow): enumerate workflow-instance summaries across ALL domains (read-only; caller must hold GLOBAL_WORKFLOW_READER or GLOBAL_WORKFLOW_COORDINATOR — enforced server-side). ' +
+  description: 'Agent Core capability `workflow_global_instances` (svc-workflow): enumerate workflow-instance summaries across ALL domains (read-only; caller must hold GLOBAL_WORKFLOW_READER or GLOBAL_WORKFLOW_COORDINATOR — enforced server-side). ' +
     'Summary items pass through verbatim, including execution_class (SVC_WORKFLOW_WORK_EXECUTION_CLASS_V1 class; BUSINESS, or NON_BUSINESS_TEST for explicit test/canary work — never renamed, filtered, or derived broker-side). ' +
     'Returns {ok: true, result: <global instance page>} on success.',
   requiredScopes: ['workflow.read'],
@@ -289,19 +288,20 @@ export const workflowGlobalInstancesManifest = withTransportErrors({
     { code: 'invalid_cursor', description: 'Cursor parameters are invalid (beforeCreatedAt and beforeId must be given together).' },
     { code: 'invalid_lifecycle', description: 'lifecycle is not one of active|terminal|all (HTTP 422).' },
     { code: 'invalid_status', description: 'status is not one of active|cancelled|archived|all (HTTP 422).' },
+    { code: 'invalid_current_executor_type', description: 'currentExecutorType is not HUMAN or AGENT (HTTP 422).' },
     { code: 'global_coordinator_required', description: 'Caller holds no global read role — transition code of installs deployed before the READER revision (HTTP 403).' },
     { code: 'global_read_role_required', description: 'Caller holds neither GLOBAL_WORKFLOW_READER nor GLOBAL_WORKFLOW_COORDINATOR (HTTP 403).' },
   ],
   operations: [
     {
       name: 'list',
-      description:
-        'List workflow-instance summaries across all domains. Optional: limit (1-20), lifecycle (active|terminal|all), status (active|cancelled|archived|all), definitionKey, currentNodeKey, assigneePrincipalId (result filter only), beforeCreatedAt + beforeId (paired cursor).',
+      description: 'List workflow-instance summaries across all domains. Optional: limit (1-20), lifecycle (active|terminal|all), status (active|cancelled|archived|all), currentExecutorType (HUMAN|AGENT, validated server-side), definitionKey, currentNodeKey, assigneePrincipalId (result filter only), beforeCreatedAt + beforeId (paired cursor).',
       arguments: {
         properties: {
           limit: limitProperty,
           lifecycle: { type: 'string', description: 'Lifecycle filter: active | terminal | all (validated server-side).' },
           status: { type: 'string', description: 'Status filter: active | cancelled | archived | all (validated server-side).' },
+          currentExecutorType: { type: 'string', description: 'Canonical current executor filter: HUMAN | AGENT (validated server-side).' },
           definitionKey: { type: 'string', description: 'Filter by workflow definition key.' },
           currentNodeKey: { type: 'string', description: 'Filter by current node key.' },
           assigneePrincipalId: { type: 'string', description: 'Filter results by assignee principal id (UUID). Result filter only — never affects the caller identity.' },
@@ -316,7 +316,7 @@ export const workflowGlobalInstancesManifest = withTransportErrors({
         target: 'svc-workflow',
         method: 'GET',
         path: '/internal/v1/workflow-instances/global',
-        query: ['limit', 'lifecycle', 'status', 'definitionKey', 'currentNodeKey', 'assigneePrincipalId', 'beforeCreatedAt', 'beforeId'],
+        query: ['limit', 'lifecycle', 'status', 'currentExecutorType', 'definitionKey', 'currentNodeKey', 'assigneePrincipalId', 'beforeCreatedAt', 'beforeId'],
       },
     },
   ],
