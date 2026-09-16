@@ -335,15 +335,21 @@ function operatorGeneration() {
       ``,
     ].join('\n'))
   }
-  const previous = execFileSync('readlink', ['-f', CTX.binSymlink], { encoding: 'utf8' }).trim()
-  const previousSha = sha256(readFileSync(previous))
+  // the link may dangle: a prior failed apply's target lives inside a control dir that
+  // the phase2 wrapper archives away before the next attempt — treat that as no previous
+  let previous = ''
+  let previousSha = null
+  try {
+    previous = execFileSync('readlink', ['-f', CTX.binSymlink], { encoding: 'utf8' }).trim()
+    if (!existsSync(previous)) { previous = ''; previousSha = null } else { previousSha = sha256(readFileSync(previous)) }
+  } catch { previous = ''; previousSha = null }
   const candidateSha = sha256(readFileSync(candidateCli))
   const durableReceipt = join(CTX.artifactsDir, 'operator-cutover-receipt.json')
   let cutoverReceipt
-  if (existsSync(durableReceipt)) {
+  if (existsSync(durableReceipt) && previousSha !== null) {
     cutoverReceipt = readControlReceipt('operator-cutover-receipt.json')
     if (cutoverReceipt.newSha256 !== candidateSha || ![candidateSha, cutoverReceipt.previousSha256].includes(previousSha)) throw new Error('operator rerun generation mismatch')
-    if (previousSha === candidateSha) {
+    if (previousSha === candidateSha && previous === candidateCli) {
       normalizeLinkMode()
       phase('operator', true, `${genId} already installed; original predecessor receipt retained`)
       return
