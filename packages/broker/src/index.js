@@ -62,6 +62,7 @@ import { agentDefinitionManifests } from './capabilities/agent-definition.js'
 import { schedulerManifests } from './capabilities/scheduler.js'
 import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
 import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
+import { manifests as agentDirectoryManifests } from './capabilities/agent-directory.js'
 import { lifeWorkbenchManifests } from './capabilities/life-workbench.mjs'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
@@ -97,6 +98,7 @@ export const DEFAULT_MANIFESTS = [
   ...schedulerManifests,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,
+  ...agentDirectoryManifests,
   ...lifeWorkbenchManifests,
 ]
 
@@ -302,6 +304,10 @@ export function apply(ctx, config = {}) {
         // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1: fourth LOCAL
         // provider (read-only exact Principal -> enabled agentId).
         ...(ctx.get('agentPrincipalResolutionAccess')?.handlers ?? {}),
+        // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1: fifth LOCAL provider (read-only
+        // Agent discovery: exact reference resolve + list, Agent Definition
+        // snapshot only).
+        ...(ctx.get('agentDirectoryAccess')?.handlers ?? {}),
       }),
       log: (msg) => process.stderr.write(`${msg}\n`),
     })
