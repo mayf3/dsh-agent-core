@@ -45,9 +45,18 @@
  *   reconciled          { attemptId, verdict: SETTLED|NEEDS_REVIEW, judgment,
  *                         reason }
  *                       → terminal.
+ *   stale_superseded    { nodeVisitId, observedWorkflowStateVersion }
+ *                       (WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002)
+ *                       → terminal SETTLED, phase 'stale_superseded',
+ *                       judgment 'stale_no_progress'. THE ONE re-entry
+ *                       marker: legal only from ACTIVE/run_delivered or from
+ *                       terminal NEEDS_REVIEW, both with delivered evidence —
+ *                       never from a pre-delivery phase, never from SETTLED.
  *
- * Terminal attempts refuse further appends fail-loud: no automatic second
- * execution exists, so a late writer must be visible, never absorbed.
+ * Terminal attempts refuse further appends fail-loud. The ONE exception is
+ * CTR-SRE-003: a terminal attempt with judgment 'stale_no_progress' may be
+ * superseded by a generation N+1 attempt_planned (same identity triple) —
+ * that is the stale re-entry path, not a silent re-run.
  */
 
 /**
@@ -56,8 +65,21 @@
 export function terminalRefusal(current, event) {
   throw new Error(
     `workflow-execution: refusing ${event.kind} for nodeVisit ${event.nodeVisitId} — attempt is terminal `
-    + `(state=${current?.state}, phase=${current?.phase}); V1/V2 never re-run a settled/reviewed NodeVisit`,
+    + `(state=${current?.state}, phase=${current?.phase}); a settled/reviewed NodeVisit re-runs only via `
+    + `the WORKFLOW_STALE_REENTRY_V1 stale_no_progress generation path`,
   )
+}
+
+/**
+ * CTR-SRE-002: the stale-supersession source-state guard. Both legal
+ * source classes carry delivered evidence (the dispatch actually happened);
+ * a pre-delivery phase or a plain SETTLED (business progressed) never
+ * qualifies.
+ */
+function staleSupersessionSourceGuard(current, event) {
+  if (current?.state === 'ACTIVE' && current.phase === 'run_delivered' && current.delivered !== undefined) return
+  if (current?.state === 'NEEDS_REVIEW' && current.delivered !== undefined) return
+  terminalRefusal(current, event)
 }
 
 /**
@@ -69,15 +91,36 @@ export function applyLedgerEvent(attempts, event) {
   const nodeVisitId = event.nodeVisitId.toLowerCase()
   const current = attempts.get(nodeVisitId)
   switch (event.kind) {
-    case 'attempt_planned':
+    case 'attempt_planned': {
+      const generation = event.generation ?? 1
+      if (!Number.isInteger(generation) || generation < 1) {
+        throw new Error(`workflow-execution: corrupt ledger — attempt_planned generation ${JSON.stringify(event.generation)} for nodeVisit ${nodeVisitId}`)
+      }
       if (current !== undefined) {
-        // beginAttemptIfAbsent guards this; a replayed file can only hit it
-        // if the same nodeVisitId was planned twice — impossible by
-        // construction (deterministic id + existence check under lock).
-        throw new Error(`workflow-execution: corrupt ledger — attempt_planned twice for nodeVisit ${nodeVisitId}`)
+        // V2: planning twice was impossible by construction. V3 CTR-SRE-003
+        // opens exactly ONE re-plan path: generation N+1 superseding a
+        // terminal stale_no_progress attempt with the SAME identity triple.
+        // Everything else — including a mismatched identity or a skipped
+        // generation — is a corrupt file, fail loud, never absorb.
+        const previousGeneration = current.generation ?? 1
+        const sameIdentity = current.dispatchIntentId === event.dispatchIntentId.toLowerCase()
+          && current.workflowInstanceId === event.workflowInstanceId.toLowerCase()
+          && current.ownerPrincipalId === event.ownerPrincipalId.toLowerCase()
+        const legalReplan = previousGeneration + 1 === generation
+          && current.state !== 'ACTIVE'
+          && current.judgment === 'stale_no_progress'
+          && sameIdentity
+        if (!legalReplan) {
+          throw new Error(`workflow-execution: corrupt ledger — attempt_planned twice for nodeVisit ${nodeVisitId} (generation ${previousGeneration} → ${generation}, state=${current.state}, judgment=${current.judgment ?? 'none'})`)
+        }
       }
       attempts.set(nodeVisitId, {
         attemptId: event.attemptId,
+        generation,
+        dispatchCount: generation,
+        ...(current !== undefined
+          ? { previousAttemptId: current.attemptId, retryReason: 'stale_no_progress' }
+          : {}),
         nodeVisitId,
         dispatchIntentId: event.dispatchIntentId.toLowerCase(),
         workflowInstanceId: event.workflowInstanceId.toLowerCase(),
@@ -89,6 +132,7 @@ export function applyLedgerEvent(attempts, event) {
         delivered: undefined,
       })
       return
+    }
     case 'delivery_started':
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       // V2 CTR-WAE-012: at most ONE delivery_started per attempt — a second
@@ -154,6 +198,15 @@ export function applyLedgerEvent(attempts, event) {
         messageId: event.messageId,
         atMs: event.atMs,
       }
+      // CTR-SRE-002: the dispatch-time business baseline (best-effort probe;
+      // absent ⇒ this attempt is never stale-eligible — conservative V2
+      // behaviour for that attempt).
+      if (event.workflowStateVersionAtDispatch !== undefined) {
+        if (!Number.isInteger(event.workflowStateVersionAtDispatch) || event.workflowStateVersionAtDispatch < 1) {
+          throw new Error(`workflow-execution: corrupt ledger — run_delivered workflowStateVersionAtDispatch ${JSON.stringify(event.workflowStateVersionAtDispatch)} for nodeVisit ${nodeVisitId}`)
+        }
+        current.workflowStateVersionAtDispatch = event.workflowStateVersionAtDispatch
+      }
       return
     case 'delivery_failed':
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
@@ -187,6 +240,22 @@ export function applyLedgerEvent(attempts, event) {
       current.judgment = event.judgment
       current.reason = event.reason
       return
+    case 'stale_superseded': {
+      // CTR-SRE-002: the ONE re-entry marker. Source guard first — ACTIVE
+      // must be in the delivered phase; a terminal source must be
+      // NEEDS_REVIEW; both must carry delivered evidence.
+      staleSupersessionSourceGuard(current, event)
+      if (!Number.isInteger(event.observedWorkflowStateVersion) || event.observedWorkflowStateVersion < 1) {
+        throw new Error(`workflow-execution: corrupt ledger — stale_superseded requires an integer observedWorkflowStateVersion (nodeVisit ${nodeVisitId})`)
+      }
+      current.state = 'SETTLED'
+      current.phase = 'stale_superseded'
+      current.judgment = 'stale_no_progress'
+      current.reason = `stale_no_progress: visit still current with workflow_state_version ${event.observedWorkflowStateVersion} unchanged since delivery`
+      current.observedWorkflowStateVersion = event.observedWorkflowStateVersion
+      current.staleSupersededAtMs = event.atMs
+      return
+    }
     default:
       throw new Error(`workflow-execution: unknown ledger event kind ${JSON.stringify(event?.kind)}`)
   }
@@ -235,4 +304,16 @@ export function buildRecoveryRefusedEvent(current, nodeVisitId, authorityRef, re
     throw new Error(`workflow-execution: refusing recovery_refused for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is not pre-admission blocked (phase ${current.phase})`)
   }
   return { kind: 'recovery_refused', authorityRef, refused }
+}
+
+export function buildStaleSupersededEvent(current, nodeVisitId, observedWorkflowStateVersion) {
+  if (!Number.isInteger(observedWorkflowStateVersion) || observedWorkflowStateVersion < 1) {
+    throw new TypeError('workflow-execution: observedWorkflowStateVersion must be a positive integer')
+  }
+  const legalSource = (current.state === 'ACTIVE' && current.phase === 'run_delivered' && current.delivered !== undefined)
+    || (current.state === 'NEEDS_REVIEW' && current.delivered !== undefined)
+  if (!legalSource) {
+    throw new Error(`workflow-execution: refusing stale_superseded for nodeVisit ${nodeVisitId.toLowerCase()} — source state=${current.state} phase=${current.phase} has no stale-supersession evidence`)
+  }
+  return { kind: 'stale_superseded', observedWorkflowStateVersion }
 }
