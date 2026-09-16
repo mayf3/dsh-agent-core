@@ -63,6 +63,7 @@ import { schedulerManifests } from './capabilities/scheduler.js'
 import { selfOpsManifests } from './capabilities/self-ops.js'
 import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
 import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
+import { manifests as agentDirectoryManifests } from './capabilities/agent-directory.js'
 import {
   manifests as workflowHumanPrincipalProjectionManifests,
 } from './capabilities/workflow-human-principal-projection.js'
@@ -102,6 +103,7 @@ export const DEFAULT_MANIFESTS = [
   ...selfOpsManifests,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,
+  ...agentDirectoryManifests,
   ...workflowHumanPrincipalProjectionManifests,
   ...lifeWorkbenchManifests,
 ]
@@ -309,6 +311,10 @@ export function apply(ctx, config = {}) {
         // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1: fourth LOCAL
         // provider (read-only exact Principal -> enabled agentId).
         ...(ctx.get('agentPrincipalResolutionAccess')?.handlers ?? {}),
+        // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1: LOCAL provider (read-only
+        // Agent discovery: exact reference resolve + list, Agent Definition
+        // snapshot only).
+        ...(ctx.get('agentDirectoryAccess')?.handlers ?? {}),
         // AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0: exact one-shot
         // Human projection provider; workflow.admin remains caller-bound.
         ...(ctx.get('workflowHumanPrincipalProjectionAccess')?.handlers ?? {}),
