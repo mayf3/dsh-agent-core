@@ -95,7 +95,7 @@ test('Router outcome_unknown preserves its reconciliation handle as active Run l
   }
 })
 
-test('WORKFLOW_STALE_REENTRY_V1 wiring — threshold resolution: default, env, config, fail-loud', async () => {
+test('WORKFLOW_STALE_REENTRY_V1 r2 wiring — threshold resolution: default, env, config, fail-loud', async () => {
   const { resolveStaleNoProgressThresholdMs } = await import('../../production-runtime/src/workflow-execution-runtime.js')
   assert.equal(resolveStaleNoProgressThresholdMs(), 3_600_000, 'default 1h')
   assert.equal(resolveStaleNoProgressThresholdMs({ envValue: '' }), 3_600_000, 'empty env falls back to default')
@@ -106,9 +106,13 @@ test('WORKFLOW_STALE_REENTRY_V1 wiring — threshold resolution: default, env, c
   assert.throws(() => resolveStaleNoProgressThresholdMs({ configValue: -5 }), /positive integer/)
 })
 
-test('WORKFLOW_STALE_REENTRY_V1 wiring — resolveStaleTurn passes through to the router; absent seam degrades truthfully', async () => {
+test('WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over the REAL gateway/read seams; no mutation seam exists', async () => {
   const root = mkdtempSync(join(tmpdir(), 'wfe-runtime-stale-'))
-  const staleCalls = []
+  // r2 review closure: the reconciliation record starts pending (unresolved
+  // turn) and only the EXISTING authorities converge it — the wiring never
+  // settles, releases, or tears anything down. Redispatch follows strictly.
+  let turnState = 'pending'
+  let deliveries = 0
   const gateway = {
     execute: async () => ({ ok: true, result: { visibility: 'full', detail: { instance: { workflow_state_version: 7 }, current_node_visit_id: VISIT } } }),
   }
@@ -121,9 +125,11 @@ test('WORKFLOW_STALE_REENTRY_V1 wiring — resolveStaleTurn passes through to th
       ctx,
       layout: { workflowExecutionDir: join(root, 'workflow-execution') },
       router: {
-        deliver: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:stale-1' }),
-        getTurnReconciliation: () => ({ state: 'pending' }),
-        resolveStaleTurn: (req) => { staleCalls.push(req) },
+        deliver: async () => {
+          deliveries += 1
+          return { ok: true, sessionId: 'main', reconciliationHandle: 'turn:stale-1' }
+        },
+        getTurnReconciliation: () => ({ state: turnState }),
       },
       log: { log() {}, warn() {}, error() {} },
       config: { pollerAgentId: 'agt_workflow-dispatcher-hr-agent', staleNoProgressThresholdMs: 1 },
@@ -131,23 +137,30 @@ test('WORKFLOW_STALE_REENTRY_V1 wiring — resolveStaleTurn passes through to th
     assert.equal(runtime.staleNoProgressThresholdMs, 1)
     await runtime.engine.admitDueIntent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
     assert.equal(runtime.ledger.get(VISIT).workflowStateVersionAtDispatch, 7, 'dispatch-time baseline recorded through the real gateway seam')
+    assert.equal(deliveries, 1)
     await new Promise((resolve) => setTimeout(resolve, 10)) // cross the 1ms stale threshold on the real clock
-    await runtime.engine.reconcileOnce()
-    assert.equal(staleCalls.length, 1, 'stale settlement resolves the router seam with the exact handle')
-    assert.equal(staleCalls[0].reconciliationHandle, 'turn:stale-1')
-    assert.equal(staleCalls[0].reason, 'stale_no_progress')
 
-    // A router without the seam (mixed-version deployment): mount succeeds,
-    // the engine runs, and the fence resolution simply never fires.
-    const runtimeNoSeam = mountWorkflowExecutionRuntime({
-      ctx,
-      layout: { workflowExecutionDir: join(root, 'workflow-execution-no-seam') },
-      router: { deliver: async () => ({ ok: true, sessionId: 'main' }), getTurnReconciliation: () => ({ state: 'pending' }) },
-      log: { log() {}, warn() {}, error() {} },
-      config: { pollerAgentId: 'agt_workflow-dispatcher-hr-agent' },
-    })
-    assert.equal(runtimeNoSeam.enabled, true)
-    assert.equal(runtimeNoSeam.staleNoProgressThresholdMs, 3_600_000)
+    // Business layer settles stale (evidence: visit current + version unchanged)…
+    await runtime.engine.reconcileOnce()
+    const settled = runtime.ledger.get(VISIT)
+    assert.equal(settled.judgment, 'stale_no_progress')
+    // …but the execution is still unresolved: the sweep DEFERS — no second
+    // delivery, no generation minted, the pending fence untouched.
+    const deferred = await runtime.engine.admitDueIntent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.equal(deferred.action, 'deferred_quiescence')
+    assert.equal(deliveries, 1)
+    assert.equal(runtime.ledger.get(VISIT).generation, 1)
+
+    // The existing termination authority converges the record (real late
+    // path / restart) → quiescent → generation 2 delivered.
+    turnState = 'settled'
+    const admitted = await runtime.engine.admitDueIntent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    assert.equal(admitted.action, 'admitted')
+    assert.equal(deliveries, 2)
+    const gen2 = runtime.ledger.get(VISIT)
+    assert.equal(gen2.generation, 2)
+    assert.equal(gen2.retryReason, 'stale_no_progress')
+    assert.equal(runtime.ledger.get(VISIT).previousAttemptId, settled.attemptId)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

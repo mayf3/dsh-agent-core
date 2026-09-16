@@ -5,13 +5,33 @@ spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
-title: Stale accepted-no-progress dispatch re-entry (attempt generation, stale settlement, fence-aware redispatch)
+title: Stale accepted-no-progress dispatch re-entry (attempt generation, business stale settlement, quiescence-gated redispatch)
 repo: mayf3/dsh-agent-core
 date: 2026-09-16
 candidate_base: 1a1e59b8e41901c57beb8e5306a557350f56bfa9
+revision: r2
+revision_date: 2026-09-16
+revision_note: >-
+  r2 = independent Architecture/Semantic review CHANGES_REQUIRED closure
+  (4 ship blockers). The r1 router seam `resolveStaleTurn`
+  (force-settleLate of an unresolved turn + releaseFence + same-child
+  re-delivery) is RETIRED ENTIRELY: r1 conflated BUSINESS STALENESS
+  (workflow_state_version unchanged) with EXECUTION TERMINATION PROOF,
+  violating AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-013
+  (SAME_AGENTPROCESS_NEW_TURN_ADMISSION=FORBIDDEN), C-015 (elapsed time /
+  fixed waiting duration are NOT termination proof), C-016 (fence releases
+  only on exact termination evidence; no rewrite to ordinary failed) and
+  C-017 (settle-once truthfulness), plus V2's outcome_unknown contract
+  (CTR-WAE-006 carried; "an unknown outcome NEVER creates a second
+  execution"). r2 architecture: the business layer (generation,
+  stale_superseded, re-entry eligibility) is unchanged; the execution layer
+  gains a READ-ONLY quiescence gate — generation N+1 delivery defers while
+  the superseded attempt's reconciliation record is still an active unknown
+  and proceeds only on exact-termination convergence produced by the
+  existing authorities. Zero lifecycle-authority changes; zero router
+  changes in r2.
 scope:
-  - packages/workflow-execution (ledger event vocabulary + engine reconcile/poll)
-  - packages/agent-router (ONE control seam: settle-once stale turn + release its fence)
+  - packages/workflow-execution (ledger event vocabulary + engine reconcile/poll/admission gate)
   - packages/production-runtime (wiring + threshold configuration only)
 governed_by:
   - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2 (carried; see supersedes scope)
@@ -24,18 +44,22 @@ supersedes:
     `SECOND_RUN = FORBIDDEN` and the §0 non-goal clauses "no automatic retry
     engine of any kind … no recovery triggered by poller ticks or reconcile
     passes" and "no second attempt id, ever", in the single bounded case
-    defined by CTR-SRE-002. Every other V2 contract, non-goal, invariant and
-    recovery semantic is carried forward UNCHANGED. When this document is
-    accepted, V2 remains the authority for all surfaces this spec does not
-    explicitly move (V2 gains a reciprocal amended/superseded-in-scope-by
-    backlink at acceptance).
+    defined by CTR-SRE-002 + CTR-SRE-004. Every other V2 contract, non-goal,
+    invariant and recovery semantic is carried forward UNCHANGED — INCLUDING
+    the entire outcome_unknown family (CTR-WAE-006 carried; V2 §0 "an unknown
+    outcome or an unknown external side effect NEVER creates a second
+    execution"). When this document is accepted, V2 remains the authority for
+    all surfaces this spec does not explicitly move (V2 gains a reciprocal
+    amended/superseded-in-scope-by backlink at acceptance).
 superseded_by: null
 owners:
   - mayf3
 related_authorities:
   - AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2 (untouched)
   - AGENT_ROUTER_DELIVERY_V0 (untouched)
-  - AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-013/C-015/C-016/C-017 (reused, not amended)
+  - AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-013/C-015/C-016/C-017 (REUSED, NOT
+    amended and NOT superseded — this spec's redispatch DEFERS to them; see
+    CTR-SRE-004)
 ---
 
 # AGENT_CORE_WORKFLOW_STALE_REENTRY_V1
@@ -72,11 +96,16 @@ authority in full until acceptance.
 - Terminal attempts refuse appends fail-loud (the refusal text is updated to
   reference V3; the mechanic is unchanged for all non-stale verdicts).
 - Unknown outcomes never become "run it again" by themselves: re-entry is
-  admissible ONLY on positive business evidence (CTR-SRE-002), never on
-  timeout alone.
-- No model-facing tool, no new broker capability, no svc-workflow change
-  (SVC = NO_CHANGE_REQUIRED per investigation §8), no scheduler/watchdog/
-  launchd/production-filesystem surface.
+  admissible ONLY on positive business evidence (CTR-SRE-002) AND execution-
+  layer quiescence (CTR-SRE-004), never on timeout alone.
+- AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-013/C-015/C-016/C-017 are REUSED,
+  NOT amended and NOT superseded: this spec never settles a turn, never
+  releases a fence, never tears down an execution slot, and never injects a
+  prompt into a process whose active turn is an unresolved unknown. The
+  scheduler's ONLY execution-layer act is a read-only quiescence query.
+- No model-facing tool, no new broker capability, no router surface change,
+  no svc-workflow change (SVC = NO_CHANGE_REQUIRED per investigation §8),
+  no scheduler/watchdog/launchd/production-filesystem surface.
 
 ## 2. CTR-SRE-001 — attempt generation (moves V2's SECOND_ATTEMPT_ID gate)
 
@@ -164,40 +193,78 @@ runs the SAME admission path: fresh principal resolution → write-ahead
 shape (carrying the NEW attemptId) → `run_delivered`/`delivery_failed`/
 `resolution_blocked` exactly as V2.
 
+The ledger-level admission rule above is NECESSARY but not sufficient:
+the generation N+1 delivery is additionally gated by CTR-SRE-004
+(execution-layer quiescence).
+
 Idempotence (Goal CASE 7): a stale occurrence settles once (terminal
 append refusal); the new attempt restarts the dispatch clock; repeated
 scans of the same occurrence cannot re-dispatch again until the NEW attempt
 itself reaches threshold age with no progress. Redispatch rate is bounded
-by construction: ≤ 1 per threshold window per visit. There is no maximum
+by construction: ≤ 1 per threshold window per visit, and additionally never
+concurrent with the superseded execution (CTR-SRE-004). There is no maximum
 generation cap in V1 — a cap would reintroduce permanent suppression, which
 this spec exists to remove; `dispatchCount` makes amplification observable.
 
-## 5. CTR-SRE-004 — router stale-turn resolution seam (ONE new control seam)
+## 5. CTR-SRE-004 — execution-layer quiescence gate (READ-ONLY; zero router change)
 
-A hung turn leaves a `pending`/`outcome_unknown` reconciliation record and an
-active unknown fence that would reject the re-plan's prompt
-(`AGENT_PROCESS_TURN_FENCED`). The engine therefore gains ONE injected
-control seam, `resolveStaleTurn({agentId, reconciliationHandle, reason})`,
-implemented in the router over EXISTING frozen mechanics, with NO new
-vocabulary:
+BUSINESS STALENESS and EXECUTION TERMINATION are distinct authorities and
+this spec never conflates them:
 
-1. store-level, settle-once via the C-017 late machine:
-   `settleLate(handle, { lateOutcome: 'late_failed',
-   outcomeEvidence: 'stale_no_progress', terminationEvidence: null })`;
-   an already-settled record is a no-op (`won:false` audit), and a record
-   without an unknown source is first `markOutcomeUnknown` (idempotent,
-   C-017) — the 900s deadline makes this the expected state, the fallback is
-   defensive only.
-2. process-level, only when the owning process is live:
-   release THIS handle's fence (C-016: per-handle; all other unknowns stay
-   fenced), mark the local execution settled so the stream/exit late paths
-   become duplicate-ignored audits, and finish the execution slot.
+- BUSINESS STALENESS (CTR-SRE-002: threshold age + version unchanged + visit
+  current + instance active) restores the visit's RE-ENTRY ELIGIBILITY in
+  the ledger. It proves NOTHING about the old turn's execution state — it
+  does not prove the turn stopped, will not call tools, will not emit side
+  effects, observed turn/end, or that the child exited (C-015: elapsed time
+  and fixed waiting duration are NOT termination proof).
+- EXECUTION convergence remains owned by the EXISTING termination
+  authorities (AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-013/015/016/017 and
+  the stream/exit late paths): an unresolved turn keeps its unknown fence
+  and `SAME_AGENTPROCESS_NEW_TURN_ADMISSION = FORBIDDEN` stands.
 
-The seam never aborts a live provider call; a late transition emitted by the
-abandoned turn is fenced at the workflow layer by svc's version CAS
-(CTR-SRE-002). Seam failure is logged and non-fatal: the re-plan delivery
-would then fail `AGENT_PROCESS_TURN_FENCED` → terminal
-`delivery_failed` NEEDS_REVIEW (truthful, visible, never absorbed).
+Therefore the engine gates the generation N+1 DELIVERY on a READ-ONLY
+quiescence check over the EXISTING seams (`getTurnReconciliation` /
+`resolveCallerCorrelation` — the same query used by reconcile). Before
+minting a re-plan, the superseded attempt's turn state is queried; the
+re-plan is admitted ONLY when the record is provably no longer an active
+unknown:
+
+```text
+QUIESCENT(turnState) =
+    'settled'         (late machine settled it WITH trusted evidence — the
+                       stream/exit paths release the fence themselves)
+  | 'evicted' | 'restart_lost' | 'never_existed'
+                       (record gone with its process generation; the fence
+                       died with the process — restart/exit convergence)
+NOT quiescent = 'pending'  → DEFER: mint NOTHING, deliver NOTHING; the visit
+                       keeps its restored eligibility and the sweep re-checks
+                       on every later poll. Bounded, silent-until-proven,
+                       zero execution-layer side effect.
+```
+
+Consequences (all intended):
+
+- The redispatch is never concurrent with the superseded execution in the
+  same persistent child — two logical Agent executions in one session are
+  unreachable by construction, and the fence is never released by this spec.
+- A hung-forever turn defers redispatch indefinitely — that residual is a
+  PROCESS LIFECYCLE concern (child exit / REAP / exact-owned shutdown
+  C-020..022), not the workflow scheduler's to override. The business
+  eligibility is already restored and persists, so the moment any lifecycle
+  convergence produces the evidence (exit, restart, eviction → quiescent),
+  the next poll redispatches. NO_PERMANENT_STARVATION holds at the business
+  layer; NO_CONCURRENT_OLD_AGENT_EXECUTION holds at the execution layer.
+- If the abandoned turn later commits a transition while its visit's
+  re-entry is deferred, the transition closes the visit server-side, the
+  intent leaves the due feed, and re-entry moots itself (no redispatch to
+  an obsolete task).
+- The workflow DATA layer race remains fenced by svc's mandatory
+  `expected_workflow_state_version` CAS (investigation §4) — unchanged.
+
+No router seam exists in r2: the r1 `resolveStaleTurn` force-settle +
+fence-release design was retired by review (it violated C-013/015/016/017).
+Settlement truthfulness is untouched: a real late event reaching the late
+machine settles the record with its TRUE outcome.
 
 ## 6. CTR-SRE-005 — engine integration
 
@@ -206,11 +273,16 @@ would then fail `AGENT_PROCESS_TURN_FENCED` → terminal
   (b) terminal NEEDS_REVIEW attempts with delivered evidence, enumerated
   fresh under the ledger lock each pass. On confirmed staleness it appends
   `stale_superseded` (CAS-guarded on the enumerated attempt; a lost race is
-  a no-op skip), then invokes `resolveStaleTurn` when the turn record was
-  unresolved.
-- `pollOnce` order is unchanged (reconcile → sweep), so a visit settled
-  stale is re-admissible in the SAME pass under the existing admission
-  bound; `already_attempted` replays stay free (CTR-WAE-001b carried).
+  a no-op skip). This is a BUSINESS-layer ledger mutation only — it never
+  touches the reconciliation store, fences, or processes.
+- `admitDueIntent` applies the CTR-SRE-004 quiescence gate BEFORE minting a
+  re-plan: a superseded-stale predecessor whose turn state is still
+  `pending` yields `deferred_quiescence` (not counted against the admission
+  bound, no ledger append, retried every sweep).
+- `pollOnce` order is unchanged (reconcile → sweep); once quiescence is
+  reached, the visit is re-admissible in the SAME pass under the existing
+  admission bound; `already_attempted` replays stay free (CTR-WAE-001b
+  carried).
 - Progress semantics (Goal §7): ONLY svc business facts (transition /
   RETURN / assistance change / terminal / cancel / archive) defeat or
   exclude staleness. SEND_CONFIRMED, accepted receipts, session liveness,
@@ -230,12 +302,13 @@ adds no second scheduler and no second workflow state machine.
 | case | requirement |
 |---|---|
 | CASE 1 | delivered 30m ago, version unchanged → reconcile keeps ACTIVE (`run_running`); poll returns `already_attempted`; no second delivery |
-| CASE 2 | delivered 61m ago, visit current, version == atDispatch, instance active, no assistance → `stale_superseded` appended; same-pass sweep admits gen 2 (new attemptId, `dispatchCount=2`, `retryReason=stale_no_progress`); second delivery happened |
+| CASE 2 | delivered 61m ago, visit current, version == atDispatch, instance active → `stale_superseded` appended (business eligibility restored); while the superseded turn record is still `pending` the sweep returns `deferred_quiescence` (NO second delivery, NO mint); once the execution converges (record settled / restart_lost) the sweep admits gen 2 (new attemptId, `dispatchCount=2`, `retryReason=stale_no_progress`) |
 | CASE 3 | version advanced after dispatch (agent transitioned) → NOT stale; normal SETTLED business verdict; no redispatch |
 | CASE 4 | version advanced by assistance open (HUMAN_REQUIRED) or visit moved (RETURN/admin) → NOT stale; no redispatch to the old ownership |
 | CASE 5 | instance terminal → NOT stale (and the intent leaves the due feed server-side) |
-| CASE 6 | gen-2 advanced the version; old attempt's transition (old expectedWorkflowStateVersion) → svc 409 `workflow_state_version_conflict` (cited: svc transition_transaction test coverage — workflow-data layer, no DSH change required) |
-| CASE 7 | two consecutive reconcile passes over the same stale occurrence → exactly ONE `stale_superseded`; gen-2 within its threshold window → `already_attempted`; no unbounded redispatch |
-| fence | CASE-2 hung-turn variant: `resolveStaleTurn` settles the record once (`late_failed`/`stale_no_progress` evidence), releases the fence, and the re-plan delivery is admitted; a second resolution is a no-op |
+| CASE 6 | gen-2 advanced the version; old attempt's transition (old expectedWorkflowStateVersion) → svc 409 `workflow_state_version_conflict` (cited: svc transition_transaction test coverage — workflow-data layer, no DSH change required). Execution-layer concurrency is excluded by the quiescence gate, not by svc CAS |
+| CASE 7 | two consecutive reconcile passes over the same stale occurrence → exactly ONE `stale_superseded`; gen-2 within its threshold window → `already_attempted`; quiescence deferrals are unbounded and side-effect-free; no unbounded redispatch |
+| quiescence | `pending` turn ⇒ `deferred_quiescence`, zero deliveries, zero ledger appends; correlation-fallback path (handle lost) honours the same gate; `restart_lost` ⇒ quiescent ⇒ re-admission |
+| settlement truth | no engine or wiring path settles/releases the router record: the r1 `resolveStaleTurn` seam does not exist; a real late event reaching the late machine settles with its TRUE outcome (router-side contract, unchanged) |
 | replay | generation-1 events without a `generation` field project byte-compatibly; a gen-2 `attempt_planned` against a non-stale or identity-mismatched predecessor is a corrupt-ledger fail-loud |
-| wiring | threshold env parse: default 3600000; non-positive-integer rejected; disabled poller keeps the ledger evidence-only |
+| wiring | threshold env parse: default 3600000; non-positive-integer rejected; disabled poller keeps the ledger evidence-only; no stale path references any router mutation seam |

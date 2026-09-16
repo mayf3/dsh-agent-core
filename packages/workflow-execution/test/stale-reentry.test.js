@@ -1,19 +1,26 @@
 /**
- * WORKFLOW_STALE_REENTRY_V1 — engine + ledger tests over injected fakes.
- * Covers the Goal's CASE 1–7 matrix plus the fence seam, replay
- * byte-compatibility and the corrupt-ledger guards:
+ * WORKFLOW_STALE_REENTRY_V1 r2 — engine + ledger tests over injected fakes.
+ * Covers the Goal's CASE 1–7 matrix plus the CTR-SRE-004 quiescence gate,
+ * settlement-truthfulness boundary, replay byte-compatibility and the
+ * corrupt-ledger guards:
  *
  *   CASE 1  delivered 30m, version unchanged          → active lease, no redispatch
- *   CASE 2  delivered 61m, no progress                → stale_superseded + gen-2 redispatch
+ *   CASE 2  delivered 61m, no progress                → stale_superseded restores
+ *           BUSINESS eligibility; delivery DEFERS while the superseded
+ *           execution is unresolved; proceeds only on exact convergence
  *   CASE 3  version advanced (agent transitioned)     → normal business verdict, no redispatch
  *   CASE 4  version advanced (assistance) / visit moved (RETURN) → never stale past a new ownership state
- *   CASE 5  instance terminal                          → never stale
- *   CASE 6  old-attempt late transition                → fenced server-side by svc's
- *           expected_workflow_state_version CAS (409 workflow_state_version_conflict);
- *           cited evidence, no DSH write path exists — asserted here only as
- *           "gen-2 carries a fresh attemptId" (the fencing anchor svc CASes on)
- *   CASE 7  repeated scans                             → exactly one settlement per
- *           stale occurrence; redispatch rate bounded by the threshold window
+ *   CASE 5  instance terminal / probe unavailable / no baseline → never stale
+ *   CASE 6  old-attempt late transition               → workflow DATA race fenced by svc's
+ *           expected_workflow_state_version CAS (409); EXECUTION-layer concurrency
+ *           is excluded by the quiescence gate, not by svc CAS
+ *   CASE 7  repeated scans                            → exactly one settlement per
+ *           occurrence; redispatch rate bounded by threshold × quiescence
+ *
+ * r2 review closure: the engine holds NO mutation path over the execution
+ * layer — no force-settle, no fence release, no execution teardown. Every
+ * "second delivery" assertion below is reachable ONLY through a turn state
+ * that the accepted authorities themselves treat as converged.
  */
 
 import assert from 'node:assert/strict'
@@ -50,38 +57,40 @@ function dueIntent(overrides = {}) {
 
 /**
  * The stale fixture: one shared mutable clock drives the ledger AND the
- * engine; `detail` is re-pointable mid-test to move the business evidence.
+ * engine; `detail` and `turnState` are re-pointable mid-test. Each delivery
+ * gets its OWN reconciliation handle (turn:handle-1, turn:handle-2, …) so a
+ * test can converge generation 1's record while generation 2's stays pending.
  */
 function makeStaleDeps({
   thresholdMs = 3_600_000,
   detail = () => ({ ok: true, body: fullDetail({ version: 7, visit: VISIT }) }),
   turnState = () => 'pending',
-  deliver = () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:handle-1' }),
-  withResolveStaleTurn = true,
+  correlatedState = () => undefined,
 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'wfe-stale-'))
   const state = { now: T0 }
   const clock = () => state.now
   const ledger = new ExecutionLedger({ dir, clock })
-  const calls = { delivers: [], staleTurns: [], detailReads: [] }
-  const mutable = { turnState, detail }
+  const calls = { delivers: [], detailReads: [] }
+  const mutable = { turnState, correlatedState, detail }
   const engine = createWorkflowExecutionEngine({
     ledger,
     clock,
     log: { log: () => {}, warn: () => {}, error: () => {} },
     config: { staleNoProgressThresholdMs: thresholdMs },
-    ...(withResolveStaleTurn
-      ? { resolveStaleTurn: (req) => { calls.staleTurns.push(req) } }
-      : {}),
     fetchDuePage: async () => ({ ok: true, items: [dueIntent()] }),
     resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
     deliverRun: async (req) => {
       calls.delivers.push(req)
-      return deliver(req)
+      return { ok: true, sessionId: 'main', reconciliationHandle: `turn:handle-${calls.delivers.length}` }
     },
     getTurnReconciliation: (handle) => {
       const resolved = mutable.turnState(handle)
       return { state: resolved === undefined ? 'never_existed' : resolved }
+    },
+    resolveCallerCorrelation: ({ requestId }) => {
+      const state = mutable.correlatedState(requestId)
+      return { state: state === undefined ? 'never_existed' : state }
     },
     readInstanceDetail: async (req) => {
       calls.detailReads.push(req)
@@ -132,20 +141,32 @@ test('CASE 1 — delivered 30m with version unchanged: active lease, never redis
   }
 })
 
-test('CASE 2 — delivered 61m, no progress: stale settlement + same-pass gen-2 redispatch', async () => {
+test('CASE 2 — stale settlement restores BUSINESS eligibility; delivery defers until the execution converges', async () => {
   const fixture = makeStaleDeps()
   try {
     const gen1 = await dispatchOnce(fixture)
+    assert.equal(gen1.delivered.reconciliationHandle, 'turn:handle-1')
     fixture.state.now += 61 * 60_000
+
+    // Pass 1: business evidence says stale → stale_superseded appended.
     const reconciled = await fixture.engine.reconcileOnce()
-    assert.deepEqual(reconciled.staleReentry, [VISIT], 'the stale occurrence settles exactly once per pass')
+    assert.deepEqual(reconciled.staleReentry, [VISIT])
     const settled = fixture.ledger.get(VISIT)
     assert.equal(settled.state, 'SETTLED')
     assert.equal(settled.judgment, STALE_NO_PROGRESS_JUDGMENT)
     assert.equal(settled.phase, 'stale_superseded')
 
-    // Same pass (reconcile → sweep): the still-due intent is re-admitted as
-    // generation 2 through the ordinary fence path.
+    // Pass 2: the superseded execution is STILL unresolved (pending) —
+    // CTR-SRE-004 defers: nothing minted, nothing delivered, zero appends.
+    const deferredPass = await fixture.engine.pollOnce()
+    assert.deepEqual(deferredPass.admissions.map((a) => a.action), ['deferred_quiescence'])
+    assert.equal(fixture.calls.delivers.length, 1, 'no delivery while the old turn is unresolved (C-013)')
+    assert.equal(fixture.ledger.get(VISIT).generation, 1, 'no generation minted on deferral')
+
+    // Pass 3: the existing termination authorities converge the execution
+    // (stream/exit late path settles the record) → quiescent → same pass
+    // admits gen-2 through the ordinary fence.
+    fixture.mutable.turnState = (handle) => (handle === 'turn:handle-1' ? 'settled' : 'pending')
     const pass = await fixture.engine.pollOnce()
     assert.deepEqual(pass.admissions.map((a) => a.action), ['admitted'])
     assert.equal(fixture.calls.delivers.length, 2)
@@ -157,8 +178,6 @@ test('CASE 2 — delivered 61m, no progress: stale settlement + same-pass gen-2 
     assert.equal(gen2.retryReason, 'stale_no_progress')
     assert.equal(gen2.previousAttemptId, gen1.attemptId)
     assert.equal(gen2.attemptId, attemptIdFor(VISIT, 2))
-    assert.equal(fixture.calls.staleTurns.length, 1, 'the router seam resolved the abandoned turn once')
-    assert.equal(fixture.calls.staleTurns[0].reconciliationHandle, gen1.delivered.reconciliationHandle)
   } finally {
     fixture.cleanup()
   }
@@ -264,18 +283,22 @@ test('CASE 5c — no dispatch-time baseline (probe failed at delivery): never st
   }
 })
 
-test('CASE 6 — gen-2 fencing anchor: the fresh attemptId is what svc version-CASes against', async () => {
-  // The old attempt's late transition is rejected server-side (HTTP 409
-  // workflow_state_version_conflict inside SELECT … FOR UPDATE) the moment
-  // the new attempt (or any authorized writer) advances the version — cited:
-  // svc-workflow transition_transaction.rs:171-178 and its transition test
-  // coverage. DSH owns no workflow write path; here we pin only the DSH half:
+test('CASE 6 — fencing layers: execution concurrency excluded by the gate, data race by svc version CAS', async () => {
+  // Layer 1 (execution): gen-2 can only be delivered after gen-1's execution
+  // converged — the "old agent still running" state never co-exists with a
+  // gen-2 delivery (see CASE 2's deferral).
+  // Layer 2 (workflow data): if the OLD attempt's transition lands after the
+  // new attempt (or any authorized writer) advanced the version, svc rejects
+  // it with 409 workflow_state_version_conflict inside SELECT … FOR UPDATE
+  // (cited: svc-workflow transition_transaction.rs:171-178 and its transition
+  // test coverage). DSH owns no workflow write path; here we pin the DSH half:
   // after re-entry, in-flight work is attributable to the NEW attemptId.
   const fixture = makeStaleDeps()
   try {
     const gen1 = await dispatchOnce(fixture)
     fixture.state.now += 61 * 60_000
     await fixture.engine.reconcileOnce()
+    fixture.mutable.turnState = (handle) => (handle === 'turn:handle-1' ? 'settled' : 'pending')
     await fixture.engine.pollOnce()
     const gen2 = fixture.ledger.get(VISIT)
     assert.notEqual(gen2.attemptId, gen1.attemptId)
@@ -286,14 +309,21 @@ test('CASE 6 — gen-2 fencing anchor: the fresh attemptId is what svc version-C
   }
 })
 
-test('CASE 7 — repeated scans: one settlement per occurrence; rate bounded by the window', async () => {
+test('CASE 7 — repeated scans: one settlement per occurrence; rate bounded by threshold × quiescence', async () => {
   const fixture = makeStaleDeps()
   try {
-    await dispatchOnce(fixture)
+    await dispatchOnce(fixture) // turn:handle-1 delivered
     fixture.state.now += 61 * 60_000
+
+    // Occurrence 1 settles; execution still unresolved → defer.
     const first = await fixture.engine.reconcileOnce()
     assert.deepEqual(first.staleReentry, [VISIT])
-    // The next poll re-admits the visit as gen-2 (reconcile → sweep order).
+    const deferred = await fixture.engine.pollOnce()
+    assert.deepEqual(deferred.admissions.map((a) => a.action), ['deferred_quiescence'])
+    assert.equal(fixture.calls.delivers.length, 1)
+
+    // gen-1's execution converges → gen-2 delivered; gen-2's own turn pending.
+    fixture.mutable.turnState = (handle) => (handle === 'turn:handle-1' ? 'settled' : 'pending')
     const pass = await fixture.engine.pollOnce()
     assert.deepEqual(pass.admissions.map((a) => a.action), ['admitted'])
     assert.equal(fixture.calls.delivers.length, 2, 'exactly one redispatch per stale occurrence')
@@ -306,12 +336,17 @@ test('CASE 7 — repeated scans: one settlement per occurrence; rate bounded by 
     assert.deepEqual(pass2.admissions.map((a) => a.action), ['already_attempted'], 'gen-2 inside its lease window')
     assert.equal(fixture.calls.delivers.length, 2)
 
-    // A full window later with STILL no progress: gen-2 goes stale in turn —
-    // the redispatch rate is bounded by the threshold, and the visit never
-    // loses dispatch eligibility.
+    // A full window later with STILL no progress: gen-2 goes stale in turn;
+    // its execution is pending → defer again (rate bounded, no wedge).
     fixture.state.now += 61 * 60_000
     const third = await fixture.engine.reconcileOnce()
     assert.deepEqual(third.staleReentry, [VISIT], 'the next occurrence settles on its own clock')
+    const deferred2 = await fixture.engine.pollOnce()
+    assert.deepEqual(deferred2.admissions.map((a) => a.action), ['deferred_quiescence'])
+    assert.equal(fixture.calls.delivers.length, 2)
+
+    // gen-2's execution converges → gen-3: bounded by threshold, never concurrent.
+    fixture.mutable.turnState = () => 'settled'
     await fixture.engine.pollOnce()
     const gen3 = fixture.ledger.get(VISIT)
     assert.equal(gen3.generation, 3)
@@ -323,41 +358,27 @@ test('CASE 7 — repeated scans: one settlement per occurrence; rate bounded by 
   }
 })
 
-test('CASE 7b — hung-turn fence seam: settle-once resolveStaleTurn releases the re-plan path; failures are non-fatal', async () => {
-  const fixture = makeStaleDeps({
-    // A hung turn keeps its reconciliation record pending forever.
-    turnState: () => 'pending',
-  })
+test('quiescence gate — correlation fallback honours the same gate; restart convergence admits', async () => {
+  // The primary handle lookup answers never_existed (record lost) BUT the
+  // exact-requestId correlation still says pending → NOT quiescent → defer.
+  const fixture = makeStaleDeps()
   try {
-    await dispatchOnce(fixture)
+    const gen1 = await dispatchOnce(fixture)
     fixture.state.now += 61 * 60_000
-    await fixture.engine.reconcileOnce()
-    assert.equal(fixture.calls.staleTurns.length, 1)
-    await fixture.engine.pollOnce()
-    assert.equal(fixture.calls.delivers.length, 2, 'the re-plan delivery is admitted once the fence is resolved')
-  } finally {
-    fixture.cleanup()
-  }
+    await fixture.engine.reconcileOnce() // stale settles
+    fixture.mutable.turnState = () => 'never_existed'
+    fixture.mutable.correlatedState = () => 'pending'
+    const deferred = await fixture.engine.pollOnce()
+    assert.deepEqual(deferred.admissions.map((a) => a.action), ['deferred_quiescence'], 'correlation pending = not quiescent')
+    assert.equal(fixture.calls.delivers.length, 1)
 
-  const hostile = makeStaleDeps()
-  try {
-    // Same scenario, but the router seam throws (mixed-version deployment):
-    // the stale settlement still commits; the seam failure is logged, and
-    // the re-plan delivery would fail truthfully downstream (fenced).
-    hostile.engine = undefined
-  } finally {
-    hostile.cleanup()
-  }
-})
-
-test('seam optional at the engine level — omitted dep keeps V2 behaviour', async () => {
-  const fixture = makeStaleDeps({ withResolveStaleTurn: false })
-  try {
-    await dispatchOnce(fixture)
-    fixture.state.now += 61 * 60_000
-    const reconciled = await fixture.engine.reconcileOnce()
-    assert.deepEqual(reconciled.staleReentry, [VISIT], 'stale settlement does not depend on the seam')
-    assert.equal(fixture.calls.staleTurns.length, 0)
+    // The old process generation dies (restart): correlation gone too →
+    // restart convergence → quiescent → re-admission.
+    fixture.mutable.correlatedState = () => 'never_existed'
+    const pass = await fixture.engine.pollOnce()
+    assert.deepEqual(pass.admissions.map((a) => a.action), ['admitted'])
+    assert.equal(fixture.ledger.get(VISIT).previousAttemptId, gen1.attemptId)
+    assert.equal(fixture.calls.delivers.length, 2)
   } finally {
     fixture.cleanup()
   }
@@ -370,9 +391,10 @@ test('replay — generation-1 events stay byte-compatible; gen-2 replays from di
     assert.equal(gen1.attemptId, attemptIdFor(VISIT), 'gen-1 id identical to the V2 formula')
     fixture.state.now += 61 * 60_000
     await fixture.engine.reconcileOnce()
+    fixture.mutable.turnState = (handle) => (handle === 'turn:handle-1' ? 'settled' : 'pending')
     await fixture.engine.pollOnce()
 
-    const revived = new ExecutionLedger({ dir: fixture.dir, clock: fixture.state.now === undefined ? undefined : () => fixture.state.now })
+    const revived = new ExecutionLedger({ dir: fixture.dir, clock: () => fixture.state.now })
     const attempt = revived.get(VISIT)
     assert.equal(attempt.generation, 2)
     assert.equal(attempt.dispatchCount, 2)
