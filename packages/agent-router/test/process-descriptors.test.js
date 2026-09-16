@@ -25,7 +25,7 @@ import { shutdownMethods } from '../src/process/shutdown.js'
 import { settlementMethods } from '../src/reconciliation/state-machine.js'
 import { queryMethods } from '../src/reconciliation/query.js'
 
-const METHOD_COUNT_AGENT_PROCESS = 41 // +unknownFenceDiagnostic (unknown-fence repair)
+const METHOD_COUNT_AGENT_PROCESS = 42 // +unknownFenceDiagnostic (unknown-fence repair); +resolveStaleExecution (WORKFLOW_STALE_REENTRY_V1 CTR-SRE-004)
 const METHOD_COUNT_RECONCILIATION = 12
 
 function composedKeys(groups) {

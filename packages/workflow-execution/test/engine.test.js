@@ -133,10 +133,12 @@ test('happy chain: due intent -> one attempt -> assignee Run with provenance -> 
     assert.equal(attempt.delivered.agentId, AGENT)
     assert.equal(attempt.delivered.reconciliationHandle, 'turn:handle-1')
 
-    // Run in flight -> stays ACTIVE, no settle probe yet.
+    // Run in flight -> stays ACTIVE, no settle probe spent on it. The ONE
+    // instance read so far is the dispatch-time version baseline
+    // (WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002) recorded at admission.
     const reconcileRunning = await engine.reconcileOnce()
     assert.equal(reconcileRunning.running, 1)
-    assert.equal(calls.detailReads.length, 0, 'no instance read spent on a running run')
+    assert.equal(calls.detailReads.length, 1, 'no settle probe on a running run; the single read is the dispatch baseline')
     assert.equal(ledger.get(VISIT).state, 'ACTIVE')
 
     // Run settled + business state moved past our visit -> SETTLED.
