@@ -141,7 +141,11 @@ export function markNotificationDelivery(inputState, key, delivery, nowMs = Date
   intent.deliveryUpdatedAt = nowMs
   if (delivery === 'OUTCOME_UNKNOWN') intent.firstDeliveryAttemptAt ??= nowMs
   const rootIdentity = intent.incident?.rootIdentity
-  if (rootIdentity && state.incidents[rootIdentity]) state.incidents[rootIdentity].alertState.delivery = delivery
+  const currentRecord = rootIdentity ? state.incidents[rootIdentity] : undefined
+  if (currentRecord?.incidentId === intent.incidentId
+    && currentRecord.transitionRevision === intent.transitionRevision) {
+    currentRecord.alertState.delivery = delivery
+  }
   return state
 }
 
