@@ -1,7 +1,8 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { symlinkSync } from 'node:fs'
 
 import { createJobOp } from '../../packages/scheduler/src/control.js'
 import { JobStore } from '../../packages/scheduler/src/store.js'
@@ -127,5 +128,18 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(JSON.parse(readFileSync(join(fx, 'operator-cutover-receipt.json'), 'utf8')).previousSha256 === operatorPredecessor, 'operator rerun retains predecessor')
   ok(JSON.parse(readFileSync(join(fx, 'incident-migration-receipt.json'), 'utf8')).status === 'ALREADY_MIGRATED', 'migration rerun converges')
   ok(statSync(join(fx, 'watchdog-state')).gid === runtimeReaderGid, 'incident state ownership survives rerun')
+
+  // leg 3: a prior failed attempt's operator link target is archived away by
+  // PRIOR_FAILED_ARCHIVE before the next apply — the link dangles and the durable
+  // cutover receipt is stale. The next admission must converge in one run.
+  const genDirName = readdirSync(ctx.operatorStage).find((name) => name.endsWith('--g1'))
+  const stagedCli = join(ctx.operatorStage, genDirName, 'candidate/usr/local/bin/agentcore-cron')
+  rmSync(ctx.binSymlink)
+  symlinkSync(join(stagedCli, 'archived-away-by-prior-failed-attempt'), ctx.binSymlink)
+  await main()
+  ok((lstatSync(ctx.binSymlink).mode & 0o777) === 0o755, 'dangling-link recovery flips a healthy 0755 link')
+  ok(existsSync(stagedCli) && sha256(readFileSync(ctx.binSymlink)) === sha256(readFileSync(stagedCli)), 'dangling-link recovery restages and flips the candidate')
+  const thirdReceipt = JSON.parse(readFileSync(join(fx, 'deployment-phase-receipt.json'), 'utf8'))
+  ok(thirdReceipt.phases.operator?.ok === true, 'dangling-link recovery records the operator phase')
   process.stdout.write(`[admission selftest] PASS (fixture ${fx}; authsvcGid=${ctx.authsvcGid}; runtimeReaderGid=${runtimeReaderGid})\n`)
 }
