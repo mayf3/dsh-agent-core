@@ -5,7 +5,8 @@ import { dirname, resolve } from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import { adaptLiveComposeForWatchdog, narrowOverlayUniverse, WATCHDOG_DELETE_PATHS, WATCHDOG_OVERLAY_PATHS, WATCHDOG_PAYLOAD_SHA } from '../../../../scripts/lib/admission-lib.mjs'
+import { adaptLiveComposeForWatchdog, narrowOverlayUniverse, WATCHDOG_LIVE_ADAPTER_POST_SHA, WATCHDOG_LIVE_ADAPTER_SHA } from '../../../../scripts/lib/admission-overlay.mjs'
+import { WATCHDOG_DELETE_PATHS, WATCHDOG_OVERLAY_PATHS, WATCHDOG_PAYLOAD_SNAPSHOT } from '../../../../scripts/lib/admission-lib.mjs'
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
@@ -59,7 +60,7 @@ test('reviewed production path authority is exactly 21 writes plus one retired w
 })
 
 test('reviewed payload contains bounded failed-cutover extension and the dependency-isolated migration entrypoint', () => {
-  const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo, encoding: 'utf8' })
+  const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SNAPSHOT.payloadCommit}:${path}`], { cwd: repo, encoding: 'utf8' })
   const durableState = show('packages/scheduler/src/watchdog/durable-state.js')
   const privateStateIo = show('packages/scheduler/src/watchdog/private-state-io.js')
   const watchdog = show('scripts/scheduler-watchdog.mjs')
