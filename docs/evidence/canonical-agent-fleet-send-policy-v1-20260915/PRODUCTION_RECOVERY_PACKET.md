@@ -198,3 +198,35 @@ PRODUCTION_MUTATION_PERFORMED = NO
 CURRENT_BLOCKER = Owner production redeploy gate only
 NEXT_SINGLE_ACTION = OWNER_AUTHORIZE_AND_RUN_EXACT_785D743_PROCESS_SWITCH
 ```
+
+---
+
+## GATE-FIELD SUPPLEMENT（独立复核批次，2026-09-16 22:5x；与本 packet 正文合并读）
+
+本节为本 Agent 独立 fresh 取证的 gate 字段冻结值，与上文 packet 正文（c64114b）
+结论一致、互为印证；正文 deploy script 为操作体，本节为 Owner gate 字段回执。
+
+```text
+CURRENT_MAIN=785d7430fd0b6b9dd3aa7c110ed857fed9fea865
+STAGED_SHA=785d7430fd0b6b9dd3aa7c110ed857fed9fea865
+DEPLOYED_PRE_SHA=4e68f83ee4d3 generation（导出拷贝目录，非 git repo）
+MAIN_DRIFT_REVIEW=PASS（587c719..785d743：18 commits/11 files 全为
+  canonical-subject-enrollment 系，与 fleet 面零交集；四要素在场复核通过）
+FLEET_REGRESSION=PASS（RG 3/3[含 apply-path]+unit 10/10，staging @785d743 实跑）
+SELFTEST=PASS（ALL_OK 3/3）
+BASELINE_TESTS=43 pass / 2 fail（均 inherited：schema>500 行静态债、上游
+  frozen-snapshot 加载测试；本 diff 零触碰）
+BUILD_DIAGNOSTICS=恰 1 条 tsc diagnostic=forum-direct-agent-token.ts:142
+  audit-union 类型缺失（上游 af617ae 起既有；noEmitOnError 未设，emit 正常，
+  dist 经 FLEET_MODULE_OK 预检；本机独立 staging digest 与正文 §1 记录一致：
+  runtime 131105f1…）
+PRODUCTION_HEALTH=PASS（JWKS_OK kid=key-v1-20260721，fresh）
+AUTH_MUTATION_LANE=FREE（今日 ≥09-16T00:00Z mutation 类审计=0；末次审计
+  2026-09-16T14:51:48Z=agt_hr-agent 正常 issuance——审计流已恢复，非静默）
+ROLLBACK_READY=YES（正文 rollback 段冻结）
+PRODUCTION_MUTATION_PERFORMED=NO
+READY_FOR_OWNER_REDEPLOY_GATE=YES
+```
+
+补充复核（正文之外的独立项）：canonical-subject-enrollment.test.ts 13/13
+（DB-free，dormant 模块自身绿；postgres 变体需 DB，不在本轮）。
