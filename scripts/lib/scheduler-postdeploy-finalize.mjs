@@ -52,7 +52,8 @@ export function resolveIncidentOwnership(incidentsPath, { authsvcUid, authsvcGid
  * fail closed).
  */
 export function createOwnershipReadbacks({ artifactsDir, storePath, incidentsPath: INCIDENTS,
-  authsvcUid, authsvcGid, runtimeReaderGid, controlOwnership, incidentOwnership }) {
+  authsvcUid, authsvcGid, runtimeReaderGid, controlOwnership, incidentOwnership,
+  protectedFileReader = readProtectedPlainFile }) {
   const canonicalExpectations = () => postdeployReadExpectations({ authsvcUid, authsvcGid, runtimeReaderGid,
       incidentStateDir: (() => {
         const stat = lstatSync(dirname(INCIDENTS))
@@ -73,8 +74,8 @@ export function createOwnershipReadbacks({ artifactsDir, storePath, incidentsPat
     return { state: JSON.parse(bytes.toString('utf8')), sha256: createHash('sha256').update(bytes).digest('hex') }
   }
   const readRoutingReceipt = () => JSON.parse(
-    readPrivateFile(join(artifactsDir, 'rollback', 'routing-install-receipt.json'), {
-      ...readExpectations().control, mode: 0o600,
+    protectedFileReader(join(artifactsDir, 'rollback', 'routing-install-receipt.json'), {
+      boundary: '/', ...readExpectations().control, mode: 0o600,
     }).bytes.toString('utf8'))
   return { readStoreSnapshot, readStore, readIncidentSnapshot, readRoutingReceipt }
 }
