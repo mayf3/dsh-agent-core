@@ -18,18 +18,15 @@ import {
   ONE_SHOT_RETRY_BACKOFF_MS,
 } from './eligibility.js'
 import { writeTerminalToHistory, writeToHistory } from './history/history-sink.js'
+import {
+  applyTrustedTermination,
+  classifyOccurrenceOutcome,
+  hasTerminationProof,
+  TIMEOUT_ERROR_TEXT,
+} from './self-ops/invoker-outcome.js'
 
+export { TIMEOUT_ERROR_TEXT }
 export const AGENT_TURN_SAFETY_TIMEOUT_MS = 3600 * 1000
-export const TIMEOUT_ERROR_TEXT = 'cron: job execution timed out'
-const TERMINATION_EVIDENCE = new Set([
-  'exact_terminal_then_idle',
-  'exact_queued_removal',
-  'child_real_exit',
-  'cancellation_ack',
-])
-const hasTerminationProof = (outcome) => TERMINATION_EVIDENCE.has(
-  outcome?.terminationEvidence ?? outcome?.evidence?.terminationEvidence,
-)
 
 /** C-026: reserve eligibility and the admitted record in one locked mutation. */
 export async function reserveOccurrence(candidate, onRejection = () => {}) {
@@ -182,6 +179,9 @@ export async function runOccurrence(job, record) {
     const deliveryStatus = await this._deliverOccurrence(job, classification)
     void this._historyWrite('deliveryOutcome', { record: structuredClone(working), deliveryStatus })
     await this._writeOccurrenceOutcome(working, classification, deliveryStatus, outcome)
+    // Trusted exact termination proof (router readback) -> C-039 termination-
+    // only settlement: business state stays unknown, fence released, no retry.
+    if (classification.state === 'outcome_unknown') await this._applyTrustedTermination(working, outcome)
     // The unknown state and fence MUST commit before a fast late result can
     // resolve it. Starting the watcher earlier races and can strand the fence.
     if (classification.state === 'outcome_unknown' && outcome.__timedOut) {
@@ -244,42 +244,6 @@ export async function invokeWithDeadline(record, job) {
     ])
   } finally {
     if (timer !== undefined) this.deadlineClearTimeout(timer)
-  }
-}
-
-export function classifyOccurrenceOutcome(record, outcome) {
-  if (outcome.status === 'ok') {
-    return {
-      state: 'succeeded',
-      executionOutcome: 'succeeded',
-      reason: 'invoker returned terminal success',
-      summary: outcome.summary,
-    }
-  }
-  if (outcome.__timedOut || outcome.status === 'outcome_unknown') {
-    return {
-      state: 'outcome_unknown',
-      reason: outcome.__timedOut
-        ? `execution deadline exceeded without termination proof: ${outcome.error ?? TIMEOUT_ERROR_TEXT}`
-        : `invoker reported outcome_unknown: ${outcome.error ?? ''}`,
-    }
-  }
-  const started = record.__started === true || outcome.started === true
-  const provenFailure = (!started && outcome.started === false) || hasTerminationProof(outcome)
-  if (!provenFailure) {
-    return {
-      state: 'outcome_unknown',
-      reason: `invoker failure lacks exact-turn termination proof: ${outcome.error ?? 'invoke failed'}`,
-    }
-  }
-  return {
-    state: 'failed',
-    executionOutcome: 'failed',
-    reason: outcome.error ?? 'invoke failed',
-    terminalEvidence: {
-      kind: started ? 'turn-terminal' : 'pre-start-rejection',
-      detailRef: outcome.error ?? 'invoke failed',
-    },
   }
 }
 
@@ -360,13 +324,23 @@ export async function writeOccurrenceOutcome(record, classification, deliverySta
 export async function watchLateSettlement(record, invocationPromise) {
   try {
     const outcome = await invocationPromise
-    if (!outcome || typeof outcome !== 'object' || outcome.status === 'outcome_unknown') return
+    if (!outcome || typeof outcome !== 'object') return
+    if (outcome.status === 'outcome_unknown') {
+      // A late trusted termination proof releases the fence via the C-039
+      // settlement — business state stays outcome_unknown (Owner P1 ruling).
+      await this._applyTrustedTermination(record, outcome)
+      return
+    }
     if (outcome.status === 'ok' && !outcome.error) {
       await this._applyLateSettlement(record, 'succeeded', 'invoker late terminal success after timeout', outcome)
       return
     }
     const provenFailure = outcome.status === 'error'
-      && (outcome.started === false || hasTerminationProof(outcome))
+      && (outcome.started === false
+        // Bridge-carried Router settlement envelopes are authoritative late evidence.
+        || outcome.routerEnvelope === 'failed'
+        || outcome.routerEnvelope === 'not_admitted'
+        || hasTerminationProof(outcome))
     if (provenFailure) {
       await this._applyLateSettlement(
         record,
@@ -379,6 +353,12 @@ export async function watchLateSettlement(record, invocationPromise) {
     // A thrown/malformed late result has no exact-turn termination proof.
   }
 }
+
+/**
+ * Invoker-outcome classification and the C-039 termination-only settlement
+ * live in ./self-ops/invoker-outcome.js (cohesive submodule: trusted proof
+ * recognition, the C-004 envelope classification and the settlement writer).
+ */
 
 export async function applyLateSettlement(record, resolvedTo, note, outcome = {}) {
   const resolvedAt = this.nowMs()
@@ -485,6 +465,7 @@ export const occurrenceEngineMethods = {
   _writeOccurrenceOutcome: writeOccurrenceOutcome,
   _watchLateSettlement: watchLateSettlement,
   _applyLateSettlement: applyLateSettlement,
+  _applyTrustedTermination: applyTrustedTermination,
   _evidence: appendOccurrenceEvidence,
   _historyWrite: writeToHistory,
   _writeTerminalHistory: writeTerminalToHistory,

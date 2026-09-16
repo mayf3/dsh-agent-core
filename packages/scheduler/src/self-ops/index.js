@@ -26,7 +26,9 @@ function encode(parts) {
   return parts.map((part) => `${String(part).length}:${part}`).join('|')
 }
 
-function evidenceIdFor(handle, kind) {
+/** C-039 evidence id formula, shared with the engine live termination
+ *  settlement (occurrence.js) so both paths mint identical receipts. */
+export function evidenceIdFor(handle, kind) {
   return `ev:${createHash('sha256').update(encode([handle, kind]), 'utf8').digest('hex').slice(0, 16)}`
 }
 
