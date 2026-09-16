@@ -19,7 +19,7 @@ external_authorities:
     relation: constrained_by
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_ACTIVE_AGENT_LIST_V2
-    revision: dfd6d349f5217be882055ac281ea983cc3046e5c
+    revision: 5976d3900c8f0b8c2afe96d9d30d14d5811ca1fa
     relation: depends_on
 supersedes:
   - AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3
@@ -38,12 +38,12 @@ owners:
 > acceptance transaction, V3 remains the accepted local authority and this V4
 > has `implementation_authority: none`.
 >
-> **Candidate dependency pin.** The proposed svc-workflow whole successor
-> `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V2` is pinned at exact candidate head
-> `dfd6d349f5217be882055ac281ea983cc3046e5c`. V4 cannot be accepted while that
-> dependency is proposed. After svc V2 acceptance, V4 must be mechanically
-> repinned to the final accepted svc V2 head and receive a focused independent
-> review of the new exact V4 head before Owner acceptance.
+> **Accepted dependency pin.** The accepted svc-workflow whole successor
+> `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V2` is pinned at exact acceptance head
+> `5976d3900c8f0b8c2afe96d9d30d14d5811ca1fa`, descended from reviewed candidate
+> `dfd6d349f5217be882055ac281ea983cc3046e5c`. This mechanical repin satisfies
+> the external dependency prerequisite but changes the exact V4 head. The new
+> V4 head requires focused independent review before Owner acceptance.
 >
 > `PRODUCT_CODE_CHANGE = NONE`; `PRODUCTION_CHANGE = NONE`.
 
@@ -53,7 +53,7 @@ owners:
 DEVELOPMENT_PREFLIGHT
 PROBLEM = accepted V3 depends on svc Active Agent List V1, whose exact
           implementation closure cannot lawfully implement its unchanged
-          product contract; the local dependency must follow proposed V2.
+          product contract; the local dependency must follow accepted V2.
 GOVERNING_ACCEPTED_LOCAL_SPEC = AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3
 COVERS_REQUESTED_DELTA = NO
 NEW_OR_AMENDED_SPEC_REQUIRED = YES
@@ -68,7 +68,7 @@ Relevant authority:
   projection/filter requirement.
 - Accepted Architecture V0_4_3 reconciles activation-driven delivery with the
   narrowly bounded HR list-driven delivery mode.
-- Proposed `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V2` wholly preserves canonical
+- Accepted `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V2` wholly preserves canonical
   derivation and filtering while correcting only its exact implementation
   closure and response-type boundary.
 - Accepted V3 remains the local Broker authority until an atomic V4 acceptance.
@@ -86,7 +86,7 @@ Rejected before implementation:
 V4 preserves V3's product meaning, Decisions, Contracts, Acceptance criteria,
 and exact two-path implementation closure without semantic change. Its sole
 authority delta is replacing the external dependency on accepted svc V1 with
-the proposed svc V2 exact candidate head. The inherited V3 product contract is:
+the accepted svc V2 exact acceptance head. The inherited V3 product contract is:
 
 - Input: optional string `currentExecutorType`, forwarded as the exact
   camelCase HTTP query parameter.
@@ -127,17 +127,19 @@ meaning. V4 does not renumber or redefine unchanged stable IDs.
   stopped before product code after a red test established that its five-path
   closure omitted load-bearing `query_service.rs` and would otherwise change
   shared `DomainInstanceSummary`.
-- `OBS-V4-002` — Proposed svc V2 at
-  `dfd6d349f5217be882055ac281ea983cc3046e5c` preserves V1 product semantics and
-  selects global-only `GlobalInstanceSummary` with an exact six-path closure.
+- `OBS-V4-002` — Accepted svc V2 at acceptance head
+  `5976d3900c8f0b8c2afe96d9d30d14d5811ca1fa`, descended from reviewed candidate
+  `dfd6d349f5217be882055ac281ea983cc3046e5c`, preserves V1 product semantics
+  and selects global-only `GlobalInstanceSummary` with an exact six-path closure.
 - `CLM-V3-001` (**SUPPORTED**) — The missing Broker field prevents the accepted
   Product V8 triple filter from being expressed through the current capability.
 - `EVD-V3-001` — OBS-V3-001 supports CLM-V3-001 by exact source inspection;
   absence was checked in both the manifest and its dedicated test.
 - `EVD-V3-002` — OBS-V3-002 supports the two-path closure because the existing
   manifest and dedicated fixture home already own the behavior being extended.
-- `STATE-V4-001` — The corrected server contract and this local whole successor
-  are both proposed. V4 implementation authority is none.
+- `STATE-V4-001` — The corrected server contract is accepted at the exact
+  external pin; this local whole successor remains proposed. V4 implementation
+  authority is none.
 
 ### Decisions
 
@@ -172,11 +174,12 @@ Authority flows in this order:
 2. Accepted `SVC_WORKFLOW_ARCHITECTURE_V0_4_3` at svc acceptance head
    `07d9117358113c89dc9bd4d483695c8d34b21efb` owns the architecture exception,
    delivery-mode exclusion, and cross-system boundary.
-3. Proposed `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V2` at
-   `dfd6d349f5217be882055ac281ea983cc3046e5c` owns the unchanged canonical
+3. Accepted `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V2` at
+   `5976d3900c8f0b8c2afe96d9d30d14d5811ca1fa` owns the unchanged canonical
    projection/filter contract and its corrected exact implementation closure.
-4. This V4 cannot be accepted until svc V2 is accepted, V4 is repinned to that
-   final accepted exact head, and the repinned V4 head passes focused review.
+4. The svc dependency and repin prerequisites are satisfied. This V4 remains
+   proposed until the repinned exact head passes focused independent review and
+   Owner accepts that exact head.
 5. HR consumption may proceed only after compatible svc-workflow and Broker
    implementations are merged, deployed, read back, and the production
    equality gate passes.
@@ -303,9 +306,9 @@ Broker mapping table or executor authority.
   client classifier or hidden permission model was introduced.
 - **Owner exact-head acceptance gate:** Owner accepts exact document heads and
   performs the required atomic supersession transactions.
-- **Implementation gate:** closed until svc V2 is accepted, V4 is repinned to
-  that final accepted exact head, the repinned V4 exact head passes focused
-  independent review, and Owner accepts that exact V4 head.
+- **Implementation gate:** closed until this repinned V4 exact head passes
+  focused independent review, Owner accepts that exact V4 head, and the
+  accepted authority is merged into the implementation base.
 - **Merge/deploy/production gate:** separately closed; Spec acceptance alone
   does not authorize merge, deployment, credential changes, cleanup, or data
   mutation.
