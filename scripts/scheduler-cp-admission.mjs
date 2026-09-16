@@ -177,11 +177,17 @@ function listLiveFiles(root, prefix = '') {
 function overlay(validateOnly = false) {
   // B1: reviewed payload bytes resolve from the SOURCE_SHA tree, frozen to the
   // WATCHDOG_PAYLOAD_SNAPSHOT digests — deep-history commit pins are unreachable
-  // in shallow fresh main-only clones (`bad object` before deploy). Drift from
-  // the reviewed bytes fails closed; snapshot regeneration is a reviewed step.
+  // in shallow fresh main-only clones (`bad object` before deploy). For the
+  // (single) path whose SOURCE_SHA bytes intentionally differ from the frozen
+  // payload (compose.js evolved on the agent-directory lane), the reviewed
+  // bytes are embedded in the snapshot itself. Drift fails closed; snapshot
+  // regeneration is a reviewed step.
   const target = (path) => {
-    const bytes = git(['show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8' })
     const reviewed = WATCHDOG_PAYLOAD_SNAPSHOT.paths[path]
+    const embedded = WATCHDOG_PAYLOAD_SNAPSHOT.embedded?.[path]
+    let bytes
+    if (embedded !== undefined) bytes = Buffer.from(embedded, 'base64').toString('utf8')
+    else bytes = git(['show', `${SOURCE_SHA}:${path}`], { encoding: 'utf8' })
     if (reviewed !== undefined && sha256(bytes) !== reviewed) throw new Error(`payload snapshot drift at ${path}: SOURCE_SHA bytes differ from the reviewed payload — regenerate watchdog-payload-snapshot.mjs through review`)
     return bytes
   }
