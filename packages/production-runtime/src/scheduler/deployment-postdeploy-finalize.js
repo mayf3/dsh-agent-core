@@ -15,22 +15,24 @@ const exact = (left, right, label) => {
 /**
  * Ownership expectations for the postdeploy finalize readers, bound to the deployed contracts:
  * the incident tree is owned by the runtime-reader gid (SCHEDULER_INCIDENT_OWNER_GID contract,
- * derived from the live state directory exactly as the admission does), and control artifacts
+ * resolved independently from the same canonical group authority as admission and verified
+ * against the live state directory), and control artifacts
  * under the deployments dir are root:root (routing install chownSync(controlUid, controlGid),
  * legacy 601 actively reconciled to 0). Reading either with the authsvc primary gid fails closed
  * on the first read after a green apply.
  */
-export function postdeployReadExpectations({ authsvcUid, authsvcGid, incidentStateDir }) {
+export function postdeployReadExpectations({ authsvcUid, authsvcGid, runtimeReaderGid, incidentStateDir }) {
   const metadata = incidentStateDir ?? {}
-  if (!Number.isInteger(authsvcUid) || !Number.isInteger(authsvcGid)
+  if (!Number.isInteger(authsvcUid) || !Number.isInteger(authsvcGid) || !Number.isInteger(runtimeReaderGid)
     || metadata.directory !== true || metadata.symlink !== false
     || !Number.isInteger(metadata.uid) || !Number.isInteger(metadata.gid)
     || metadata.uid !== authsvcUid || metadata.mode !== 0o700) {
     throw new Error('postdeploy incident state directory is not a private authsvc-owned directory')
   }
-  if (metadata.gid === authsvcGid) throw new Error('incident/runtime-reader gid split is not in effect')
+  if (runtimeReaderGid === authsvcGid) throw new Error('incident/runtime-reader gid split is not in effect')
+  if (metadata.gid !== runtimeReaderGid) throw new Error('postdeploy incident state directory runtime-reader gid mismatch')
   return Object.freeze({
-    incident: Object.freeze({ expectedUid: authsvcUid, expectedGid: metadata.gid }),
+    incident: Object.freeze({ expectedUid: authsvcUid, expectedGid: runtimeReaderGid }),
     control: Object.freeze({ expectedUid: 0, expectedGid: 0 }),
   })
 }

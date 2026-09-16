@@ -10,6 +10,16 @@ import { WATCHDOG_DELETE_PATHS, WATCHDOG_OVERLAY_PATHS, WATCHDOG_PAYLOAD_SNAPSHO
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
+const sourceSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim()
+const reviewedPayload = (path) => {
+  const expected = WATCHDOG_PAYLOAD_SNAPSHOT.paths[path]
+  assert.ok(expected, `path is outside the reviewed payload: ${path}`)
+  const bytes = WATCHDOG_PAYLOAD_SNAPSHOT.embedded?.[path] === undefined
+    ? execFileSync('git', ['show', `${sourceSha}:${path}`], { cwd: repo })
+    : Buffer.from(WATCHDOG_PAYLOAD_SNAPSHOT.embedded[path], 'base64')
+  assert.equal(sha256(bytes), expected, `reviewed payload digest drift: ${path}`)
+  return bytes.toString('utf8')
+}
 const LIVE_COMPOSE_FIXTURE = `import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
 // agent-model-overrides.json version 2
@@ -60,7 +70,7 @@ test('reviewed production path authority is exactly 21 writes plus one retired w
 })
 
 test('reviewed payload contains bounded failed-cutover extension and the dependency-isolated migration entrypoint', () => {
-  const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SNAPSHOT.payloadCommit}:${path}`], { cwd: repo, encoding: 'utf8' })
+  const show = reviewedPayload
   const durableState = show('packages/scheduler/src/watchdog/durable-state.js')
   const privateStateIo = show('packages/scheduler/src/watchdog/private-state-io.js')
   const watchdog = show('scripts/scheduler-watchdog.mjs')
