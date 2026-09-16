@@ -92,7 +92,7 @@ export const agentDirectoryManifest = withTransportErrors({
       description: 'List every Agent in the directory, in config order, including disabled ones (enabled:false).',
       arguments: { additionalProperties: false, properties: {}, required: [] },
       result: { type: 'json' },
-      errors: ['internal_error'],
+      errors: ['invalid_arguments', 'internal_error'],
     },
   ],
 })

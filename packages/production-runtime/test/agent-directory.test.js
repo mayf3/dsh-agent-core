@@ -32,6 +32,7 @@ const CONFIG = {
     { id: 'agt_zombie', name: 'Zombie Co', disabled: true },
     { id: 'agt_imposter', name: 'agt_zombie' },
     { id: 'agt_nametrap', name: 'agt_alpha' },
+    { id: 'agt_shapehold', name: 'agt_freename' },
     { id: 'agt_dup1', name: 'Dup Name' },
     { id: 'agt_dup2', name: 'Dup Name', disabled: true },
   ],
@@ -112,9 +113,14 @@ test('T6 unknown plain name → not_found (explicit, never a guess)', async (t) 
 
 test('T7 agt_-shaped string matching NO id but matching a name → resolved by name', async (t) => {
   const { handlers } = makeAccess(t)
-  const envelope = await resolveEnvelope(handlers, 'agt_nametrap')
-  assert.equal(envelope.result.status, 'resolved')
-  assert.equal(envelope.result.agent.agentId, 'agt_nametrap')
+  // 'agt_freename' is NOT any agent's id in this fixture — it exists only as
+  // agt_shapehold's DISPLAY NAME, so this query can only resolve via the
+  // name path (the semantic T7 exists to prove).
+  const envelope = await resolveEnvelope(handlers, 'agt_freename')
+  assert.deepEqual(envelope, {
+    ok: true,
+    result: { status: 'resolved', agent: { agentId: 'agt_shapehold', name: 'agt_freename', description: null, enabled: true } },
+  })
 })
 
 test('T8 whitespace-only / malformed query → invalid_arguments envelope, never a status', async (t) => {
@@ -159,6 +165,7 @@ test('T12 list: config order, disabled agents present, exact directory shape', a
     { agentId: 'agt_zombie', name: 'Zombie Co', description: null, enabled: false },
     { agentId: 'agt_imposter', name: 'agt_zombie', description: null, enabled: true },
     { agentId: 'agt_nametrap', name: 'agt_alpha', description: null, enabled: true },
+    { agentId: 'agt_shapehold', name: 'agt_freename', description: null, enabled: true },
     { agentId: 'agt_dup1', name: 'Dup Name', description: null, enabled: true },
     { agentId: 'agt_dup2', name: 'Dup Name', description: null, enabled: false },
   ])
@@ -173,16 +180,19 @@ test('ACC-ADT-004: the whole matrix is read-only — config bytes identical befo
   assert.equal(readFileSync(configFile, 'utf8'), before, 'zero writes anywhere')
 })
 
-test('classifier: the pure function agrees with the handler envelopes (snapshot discipline)', () => {
+test('classifier: the pure function agrees with the handler envelopes (snapshot discipline)', async () => {
   const agents = CONFIG.agents.map((a) => ({ description: null, ...a }))
   assert.equal(classifyDirectorySnapshot(agents, 'agt_beta').status, 'resolved')
   assert.equal(classifyDirectorySnapshot(agents, 'dup name').status, 'ambiguous')
   assert.equal(classifyDirectorySnapshot(agents, 'nope').status, 'not_found')
-  // Exactly one listAgents read per call is structural: the classifier takes
-  // the snapshot as a value and never re-reads.
+  // Exactly ONE listAgents read per call is structural: instrument the seam
+  // and prove a single resolve touches it exactly once.
   let reads = 0
   const counting = { listAgents: () => { reads += 1; return agents.map((a) => ({ ...a })) } }
-  createAgentDirectoryAccess({ definition: counting })
+  const access = createAgentDirectoryAccess({ definition: counting })
+  const envelope = await access.handlers['agent.directory'].resolve({ query: 'agt_beta' })
+  assert.equal(envelope.ok, true)
+  assert.equal(reads, 1, 'one synchronous snapshot read per call')
 })
 
 test('validateDirectoryArgs: authority-level rejections are exact', () => {
