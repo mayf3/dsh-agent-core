@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-export const WATCHDOG_PAYLOAD_SHA = 'ff9158953647a9c3368f10a3d5b6efc0ab0c1e7f'
+export const WATCHDOG_PAYLOAD_SHA = 'f8a39bebf477a760ce80bdc5b0933cad1db3bb6e'
 export const WATCHDOG_PINNED_LIVE_DEPENDENCIES = new Map([
   ['packages/production-runtime/src/model-overrides.js', '4df9f741e1c550d377a29a81ba08f32d8986c19384e8239570738e565858898d'],
 ])
