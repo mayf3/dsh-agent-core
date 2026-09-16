@@ -233,25 +233,11 @@ export const eventCorrelationMethods = {
     this.activeUnknownFence = this.activeUnknownFences.values().next().value ?? null
   },
 
-  /**
-   * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-004: the process half of the router
-   * stale-turn seam. The store-level settle-once is the CALLER's job (the
-   * settlement authority stays the reconciliation store); this method only
-   * tears down the local execution slot so its late stream/exit paths become
-   * duplicate-ignored audits, and releases THIS handle's fence (C-016:
-   * per-handle; every other unknown stays fenced). Never aborts a live
-   * provider call — a late transition from the abandoned turn is fenced at
-   * the workflow layer by svc's state-version CAS. Returns false when the
-   * execution is unknown (post-restart): the fence died with the process.
-   */
-  resolveStaleExecution(handle) {
-    const execution = this.executions.get(handle)
-    if (execution === undefined) return false
-    execution.settled = true
-    this.releaseFence(handle)
-    this.finishExecution(execution)
-    return true
-  },
+  // WORKFLOW_STALE_REENTRY_V1 r2: the r1 `resolveStaleExecution` method was
+  // REMOVED. It tore down a live execution slot and released a fence without
+  // exact termination evidence (C-015/C-016) and re-opened C-013's forbidden
+  // same-process admission. Fence release stays exactly where the accepted
+  // authority puts it: the stream/exit late settlement paths above.
 
   /**
    * Bounded, secret-free diagnostic of one unresolved execution (booleans +

@@ -27,9 +27,11 @@
  *                     mechanically proves our visit is no longer current)
  *   stale re-entry    WORKFLOW_STALE_REENTRY_V1: the SAME settle-probe read
  *                     is the stale evidence source (visit current + version
- *                     unchanged); `router.resolveStaleTurn` settles the
- *                     abandoned turn's record and releases its fence so the
- *                     generation N+1 delivery can be admitted. Threshold:
+ *                     unchanged). Redispatch is READ-ONLY gated on the
+ *                     superseded execution's reconciliation state — it defers
+ *                     while the record is still an active unknown (fence
+ *                     untouched) and proceeds only on exact-termination
+ *                     convergence. Threshold:
  *                     DSH_WORKFLOW_STALE_NO_PROGRESS_MS (default 1h).
  *
  * The mount is fail-closed by configuration: without a poller agent id the
@@ -98,17 +100,12 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       ...(config.maxAdmissionsPerPoll === undefined ? {} : { maxAdmissionsPerPoll: config.maxAdmissionsPerPoll }),
       staleNoProgressThresholdMs,
     },
-    ...(typeof router.resolveStaleTurn === 'function'
-      ? {
-          // WORKFLOW_STALE_REENTRY_V1 CTR-SRE-004: settle-once the abandoned
-          // turn's reconciliation record and release ITS fence so the
-          // generation N+1 delivery can be admitted. Mixed-version router
-          // (seam absent) degrades truthfully: the re-plan delivery fails
-          // AGENT_PROCESS_TURN_FENCED → terminal NEEDS_REVIEW, visible.
-          resolveStaleTurn: ({ agentId, reconciliationHandle, reason }) =>
-            router.resolveStaleTurn({ agentId, reconciliationHandle, reason }),
-        }
-      : {}),
+    // WORKFLOW_STALE_REENTRY_V1 r2: no router seam is injected — the r1
+    // resolveStaleTurn pass-through was removed per independent review. The
+    // engine's quiescence gate reads the EXISTING router seams
+    // (getTurnReconciliation / resolveCallerCorrelation) and defers the
+    // generation N+1 delivery until the superseded execution is provably
+    // no longer an active unknown; fence lifecycle stays untouched.
     fetchDuePage: async ({ afterNextEligibleAt, afterDispatchIntentId } = {}) => {
       if (!enabled) return { ok: false, code: 'poller_unconfigured', detail: `set ${WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV} to enable the due-feed poller` }
       // Keyset continuation (CTR-WAE-001b): the engine only ever supplies

@@ -25,10 +25,14 @@
  * WORKFLOW_STALE_REENTRY_V1 (the ONE scoped successor exception): reconcile
  * additionally settles a delivered attempt as `stale_no_progress` when the
  * positive business evidence chain holds (threshold age + visit still
- * current + instance version unchanged since dispatch + instance active) and
- * the due sweep then admits the generation N+1 attempt through the same
- * fence. Progress is defined by svc business facts only; nothing renews the
- * stale clock; unknown outcomes never re-run on a timeout alone.
+ * current + instance version unchanged since dispatch + instance active) —
+ * a BUSINESS-layer eligibility restoration only. The due sweep then admits
+ * the generation N+1 attempt through the same fence, gated by CTR-SRE-004
+ * execution-layer quiescence: no re-delivery while the superseded attempt's
+ * reconciliation record is still an active unknown (fence stands; C-013/
+ * 015/016 discipline is reused, never bypassed). Progress is defined by svc
+ * business facts only; nothing renews the stale clock; unknown outcomes
+ * never re-run on a timeout alone.
  *
  * Optimistic + conservative per the goal: re-reading and re-polling are
  * always safe (idempotent reads); business consistency stays with
@@ -42,6 +46,7 @@
 
 import { buildExecutionInstruction } from './instruction.js'
 import { createRecoveryOperation } from './recovery.js'
+import { STALE_NO_PROGRESS_JUDGMENT } from './ledger.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
 
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
@@ -74,12 +79,15 @@ export const DUE_PAGE_LIMIT = 100
  * @param {(handle:string) => {state:string}} deps.getTurnReconciliation - Router reconciliation record state.
  * @param ({requestId:string}) => {state:string, handle?:string}} [deps.resolveCallerCorrelation]
  * @param ({agentId:string, workflowInstanceId:string}) => Promise<{ok:true, body:object}|{ok:false, code:string, detail?:string}>} deps.readInstanceDetail
- * @param {({agentId:string, reconciliationHandle:string, reason:string}) => void} [deps.resolveStaleTurn]
- *   - WORKFLOW_STALE_REENTRY_V1 CTR-SRE-004 router control seam (settle-once
- *     a hung turn's reconciliation record + release ITS unknown fence).
- *     Optional at the engine level; without it a stale re-plan against a
- *     still-fenced session fails delivery truthfully (AGENT_PROCESS_TURN_FENCED
- *     → terminal NEEDS_REVIEW) and the failure is visible, never absorbed.
+ *   - WORKFLOW_STALE_REENTRY_V1 r2: the r1 `resolveStaleTurn` router seam was
+ *     REMOVED per independent review (a workflow scheduler may never
+ *     force-settle an unresolved turn or release its unknown fence —
+ *     AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-013/015/016/017 stand untouched).
+ *     Generation N+1 delivery instead defers to the existing termination
+ *     authorities: it is admitted only when the superseded attempt's
+ *     reconciliation record is provably no longer an active unknown
+ *     (CTR-SRE-004 quiescence gate — a READ-ONLY check over the existing
+ *     getTurnReconciliation / resolveCallerCorrelation seams).
  * @param {Function} [deps.buildInstruction] - instruction builder (tests).
  * @param {object} [deps.log]
  * @param {Function} [deps.clock]
@@ -93,7 +101,6 @@ export function createWorkflowExecutionEngine({
   getTurnReconciliation,
   resolveCallerCorrelation,
   readInstanceDetail,
-  resolveStaleTurn,
   buildInstruction = buildExecutionInstruction,
   log = {},
   clock = () => Date.now(),
@@ -101,9 +108,6 @@ export function createWorkflowExecutionEngine({
 }) {
   for (const [name, fn] of Object.entries({ ledger, fetchDuePage, resolvePrincipalToAgent, deliverRun, getTurnReconciliation, readInstanceDetail })) {
     if (fn === undefined) throw new TypeError(`workflow-execution: engine dep ${name} is required`)
-  }
-  if (resolveStaleTurn !== undefined && typeof resolveStaleTurn !== 'function') {
-    throw new TypeError('workflow-execution: engine dep resolveStaleTurn must be a function when provided')
   }
   const maxAdmissions = config.maxAdmissionsPerPoll ?? DEFAULT_MAX_ADMISSIONS_PER_POLL
   const staleNoProgressThresholdMs = config.staleNoProgressThresholdMs ?? DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS
@@ -131,8 +135,24 @@ export function createWorkflowExecutionEngine({
    * invoked (no invocation-to-record crash window); every post-invocation
    * failure class stays terminal NEEDS_REVIEW — never a silent drop, never an
    * automatic second run, never an agent swap.
+   *
+   * CTR-SRE-004 (r2, the quiescence gate): a generation N+1 re-plan is
+   * admitted ONLY when the superseded attempt's execution is provably no
+   * longer an active unknown — the read-only turn-state lookup must not
+   * answer `pending` (C-013: SAME_AGENTPROCESS_NEW_TURN_ADMISSION=FORBIDDEN
+   * while unresolved; C-015/C-016: only exact termination evidence ends an
+   * unknown). Still-pending ⇒ defer WITHOUT minting anything: the visit keeps
+   * its restored re-entry eligibility and the sweep re-checks next poll.
    */
   async function admitDueIntent(rawIntent) {
+    const previous = ledger.get(rawIntent.nodeVisitId)
+    if (previous !== undefined && previous.state !== 'ACTIVE' && previous.judgment === STALE_NO_PROGRESS_JUDGMENT) {
+      const turnState = queryTurnState(previous)
+      if (turnState === 'pending') {
+        log.warn?.(`workflow-execution: re-entry deferred for ${previous.nodeVisitId} — superseded execution still unresolved (fence stands; C-013); rechecked next sweep`)
+        return { action: 'deferred_quiescence', nodeVisitId: rawIntent.nodeVisitId, attemptId: previous.attemptId }
+      }
+    }
     const attemptResult = await ledger.beginAttemptIfAbsent({
       dispatchIntentId: rawIntent.dispatchIntentId,
       nodeVisitId: rawIntent.nodeVisitId,
@@ -251,8 +271,13 @@ export function createWorkflowExecutionEngine({
   }
 
   /**
-   * Commit ONE stale settlement (CAS-guarded) and resolve the router seam
-   * when the abandoned turn's reconciliation record is still unresolved.
+   * Commit ONE stale settlement (CAS-guarded). BUSINESS layer only: this
+   * restores the visit's re-entry eligibility in the ledger and touches
+   * NOTHING in the execution layer — the abandoned turn's reconciliation
+   * record and its unknown fence (if any) stay exactly under the existing
+   * termination authorities (AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+   * C-013/015/016/017); the delivery-time quiescence gate (CTR-SRE-004)
+   * decides when a generation N+1 may actually be dispatched.
    * Returns true when THIS caller won the settlement.
    */
   async function settleStale(attempt) {
@@ -261,18 +286,7 @@ export function createWorkflowExecutionEngine({
       expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs },
       observedWorkflowStateVersion: attempt.workflowStateVersionAtDispatch,
     })
-    if (!recorded.committed) return false
-    if (resolveStaleTurn !== undefined && typeof attempt.delivered.reconciliationHandle === 'string') {
-      try {
-        resolveStaleTurn({ agentId: attempt.delivered.agentId, reconciliationHandle: attempt.delivered.reconciliationHandle, reason: 'stale_no_progress' })
-      } catch (error) {
-        // Non-fatal by contract (CTR-SRE-004): the fence stays up and the
-        // re-plan delivery will fail AGENT_PROCESS_TURN_FENCED — visible,
-        // never absorbed.
-        log.warn?.(`workflow-execution: resolveStaleTurn failed for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
-      }
-    }
-    return true
+    return recorded.committed
   }
 
   /**
@@ -348,9 +362,6 @@ export function createWorkflowExecutionEngine({
     // threshold, the probe's positive NO (visit still current, version
     // unchanged) supersedes it. ACTIVE candidates from this enumeration were
     // already evaluated in the loop above; only the terminal class remains.
-    // settleStale's router call is settle-once per CTR-SRE-004, so invoking
-    // it here is at worst a no-op audit — defensively correct if a fence
-    // ever outlived its settlement.
     for (const attempt of await ledger.listStaleCandidatesFresh(staleNoProgressThresholdMs)) {
       if (attempt.state !== 'NEEDS_REVIEW') continue
       try {
@@ -416,7 +427,7 @@ export function createWorkflowExecutionEngine({
         try {
           const result = await admitDueIntent(normalized.intent)
           admissions.push(result)
-          if (result.action !== 'already_attempted') newAttempts += 1
+          if (result.action !== 'already_attempted' && result.action !== 'deferred_quiescence') newAttempts += 1
         } catch (error) {
           log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
           admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })

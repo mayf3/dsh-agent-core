@@ -339,60 +339,14 @@ export function apply(ctx, config) {
     getTurnReconciliation: (handle) => reconciliationStore.getTurnReconciliation(handle),
     readFinalAssistantOutput: (handle) => reconciliationStore.readFinalAssistantOutput(handle),
     resolveCallerCorrelation: (triple) => reconciliationStore.resolveCallerCorrelation(triple),
-    /**
-     * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-004: resolve ONE stale-accepted
-     * turn so a re-plan delivery can be admitted — settle-once via the
-     * C-017 late machine (outcomeEvidence carries the scheduler reason; the
-     * outcome vocabulary is unchanged) + release THIS handle's unknown fence
-     * (C-016, per-handle). Idempotent: an already-settled record is a
-     * duplicate audit, a missing record (restart) is a no-op, and a live
-     * execution slot is finished so its late paths become duplicate audits.
-     * NO dispatch policy lives here — staleness judgment is the
-     * workflow-execution engine's authority (its ledger evidence).
-     */
-    resolveStaleTurn: ({ reconciliationHandle, reason }) => {
-      if (typeof reconciliationHandle !== 'string' || reconciliationHandle === '') {
-        throw new TypeError('agent-router: resolveStaleTurn requires a reconciliationHandle')
-      }
-      const evidence = typeof reason === 'string' && reason !== '' ? reason : 'stale_no_progress'
-      let storeOutcome = 'no_record'
-      try {
-        const classified = reconciliationStore.classifyHandle(reconciliationHandle)
-        if (classified.state === 'pending') {
-          try {
-            reconciliationStore.settleLate(reconciliationHandle, {
-              lateOutcome: 'late_failed',
-              outcomeEvidence: evidence,
-              terminationEvidence: null,
-            })
-            storeOutcome = 'settled'
-          } catch (settleError) {
-            // No unknown source yet (defensive: the turn deadline normally
-            // marks it long before a stale evaluation fires). markOutcomeUnknown
-            // is idempotent (C-017); then settle-once.
-            reconciliationStore.markOutcomeUnknown(reconciliationHandle, { source: evidence, deadlineAtWallMs: Date.now() })
-            reconciliationStore.settleLate(reconciliationHandle, {
-              lateOutcome: 'late_failed',
-              outcomeEvidence: evidence,
-              terminationEvidence: null,
-            })
-            storeOutcome = 'settled'
-          }
-        } else if (classified.state === 'settled') {
-          storeOutcome = 'already_settled'
-        } else {
-          storeOutcome = classified.state // evicted | restart_lost | never_existed
-        }
-      } catch {
-        storeOutcome = 'no_record'
-      }
-      let fenceReleased = false
-      const owner = registry.findOwningProcess(reconciliationHandle)
-      if (owner !== null && typeof owner.resolveStaleExecution === 'function') {
-        fenceReleased = owner.resolveStaleExecution(reconciliationHandle)
-      }
-      return { storeOutcome, fenceReleased }
-    },
+    // WORKFLOW_STALE_REENTRY_V1 r2: the r1 `resolveStaleTurn` seam was REMOVED
+    // (independent review CHANGES_REQUIRED SB1/SB2 — a workflow scheduler may
+    // never force-settle an unresolved turn or release its unknown fence:
+    // C-013 SAME_AGENTPROCESS_NEW_TURN_ADMISSION=FORBIDDEN and C-015/C-016
+    // exact-termination-proof discipline stand untouched). Stale re-entry
+    // defers to the existing termination authorities via the read-only
+    // getTurnReconciliation / resolveCallerCorrelation queries above; the
+    // engine gates the generation N+1 delivery on that evidence.
     reconciliationRuntimeStatus: () => ({
       generationId: reconciliationStore.occupancy().runtimeEpoch,
       health: 'healthy',
