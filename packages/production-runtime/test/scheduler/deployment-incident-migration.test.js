@@ -125,6 +125,7 @@ test('migration rejects an ACL-bearing frozen source without writing destination
   const dir = await mkdtemp(join(tmpdir(), 'deployment-incident-source-acl-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   await chmod(dir, 0o700)
+  const liveRoot = join(dir, 'live'); await materializePinnedMigrationClosure(liveRoot)
   const stateDir = join(dir, 'state'); await mkdir(stateDir, { mode: 0o700 })
   const legacyStatePath = join(dir, 'legacy.json'), legacyEvidencePath = join(dir, 'evidence.jsonl'), factsPath = join(dir, 'facts.json')
   const legacy = Buffer.from('{"active":{},"acknowledged":{},"retired":{}}\n')
@@ -135,7 +136,7 @@ test('migration rejects an ACL-bearing frozen source without writing destination
   execFileSync('/bin/chmod', ['+a', 'everyone allow read,write', legacyStatePath])
 
   assert.throws(() => runSchedulerIncidentMigration({
-    ctx: { runtimeNode: process.execPath, liveRoot: repo, watchdogStateDir: stateDir,
+    ctx: { runtimeNode: process.execPath, liveRoot, watchdogStateDir: stateDir,
       authsvcUid: process.getuid(), authsvcGid: process.getgid() },
     sources: { legacyStatePath, legacyStateSha256: sha(legacy), legacyEvidencePath, legacyEvidenceSha256: sha(evidence),
       factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([]))) },
