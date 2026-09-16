@@ -314,7 +314,16 @@ function operatorGeneration() {
     rmSync(cronerDst, { recursive: true, force: true })
     ensureTraversableDir(dirname(cronerDst))
     execFileSync('cp', ['-R', cronerSrc, cronerDst])
+    // cp -R masks copied modes with the shell umask (077 → dirs 0700 / files 0600),
+    // which would break authsvc module loading — normalize the whole subtree
     chmodSync(cronerDst, 0o755)
+    const chmodCronerTree = (dir) => {
+      for (const entry of readdirSync(dir)) {
+        const child = join(dir, entry)
+        if (lstatSync(child).isDirectory()) { chmodSync(child, 0o755); chmodCronerTree(child) } else chmodSync(child, 0o644)
+      }
+    }
+    chmodCronerTree(cronerDst)
     try { execFileSync('chmod', ['0755', candidateCli], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
     const cliSha = sha256(readFileSync(candidateCli))
     writeFileSync(join(genDir, 'seal.json'), `${JSON.stringify({
@@ -341,7 +350,8 @@ function operatorGeneration() {
   let previousSha = null
   try {
     previous = execFileSync('readlink', ['-f', CTX.binSymlink], { encoding: 'utf8' }).trim()
-    if (!existsSync(previous)) { previous = ''; previousSha = null } else { previousSha = sha256(readFileSync(previous)) }
+    if (!existsSync(previous)) previousSha = null
+    else previousSha = sha256(readFileSync(previous))
   } catch { previous = ''; previousSha = null }
   const candidateSha = sha256(readFileSync(candidateCli))
   const durableReceipt = join(CTX.artifactsDir, 'operator-cutover-receipt.json')
@@ -372,7 +382,7 @@ function operatorGeneration() {
   cutoverReceipt.status = 'INSTALLED'
   writeFileSync(join(genDir, 'cutover-receipt.json'), `${JSON.stringify(cutoverReceipt, null, 2)}\n`)
   writeControlReceipt('operator-cutover-receipt.json', cutoverReceipt)
-  phase('operator', true, `${genId} sealed; operator sha ${candidateSha.slice(0, 12)}… (was ${previousSha.slice(0, 12)}…); flip receipted`)
+  phase('operator', true, `${genId} sealed; operator sha ${candidateSha.slice(0, 12)}… (was ${previousSha === null ? 'none' : previousSha.slice(0, 12)}…); flip receipted`)
 }
 
 function watchdogInstall() {
