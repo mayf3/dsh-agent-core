@@ -1,6 +1,33 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_STALE_REENTRY_V1
-status: proposed
+status: accepted
+accepted_date: 2026-09-17
+accepted_by: mayf3
+accepted_reviewed_head: 6592dd50dda2fa46ba931c138d3718f8528da02f
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner ACCEPT_EXACT_HEAD at 6592dd50dda2fa46ba931c138d3718f8528da02f
+  (2026-09-17), bound to ROUND_2_INDEPENDENT_REVIEW = PASS at the same
+  exact head (fresh producer-tracing review: dangerous-path removal
+  verified against the d7f08eda..6592dd5 diff, CTR-SRE-004 gate proven
+  read-only, all four gate-pass reconciliation states traced to their
+  authoritative producers — settled via the C-015 evidence paths,
+  evicted provably settled-before-compaction, restart_lost via C-020/022
+  exact-owned shutdown, never_existed via positive non-issuance proof —
+  raw failure streams byte-identical vs pristine main). Merge gate PASS
+  (CODE_REVIEW / SPEC_COMPLIANCE / SECURITY_REVIEW / TEST_GATE); merged
+  into main via drift-closure 7e05e5b2330ba640e8b078d712c0ce9268dfb47f
+  (parents c9ffe1d + 6592dd5; candidate 14 paths byte-identical on main).
+  This commit is the acceptance lifecycle transaction ONLY: the accepted
+  contract body is byte-identical to the accepted head except this
+  frontmatter; the reciprocal scoped backlink in the inherited accepted
+  authority (AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2) is recorded in the
+  same transaction. Accepted semantic boundary (Owner-recorded):
+  BUSINESS_STALENESS != EXECUTION_TERMINATION;
+  NO_PERMANENT_BUSINESS_SUPPRESSION — delivery additionally requires
+  execution-layer quiescence per CTR-SRE-004; a permanently-hung
+  execution defers indefinitely by design (process lifecycle authority
+  domain). Follow-up debt items remain out of this transaction.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts

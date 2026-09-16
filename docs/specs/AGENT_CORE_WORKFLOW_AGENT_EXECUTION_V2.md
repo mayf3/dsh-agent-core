@@ -47,6 +47,21 @@ amends:
     superseded V1: the R4 trusted message-origin sidecar extension from
     ONE kind (`inter_agent`) to TWO (`+ workflow_execution`) is carried
     forward UNCHANGED (see CTR-WAE-004). No other R4 semantic changes.
+superseded_in_scope_by:
+  - AGENT_CORE_WORKFLOW_STALE_REENTRY_V1 (accepted 2026-09-17, Owner
+    ACCEPT_EXACT_HEAD at 6592dd50dda2fa46ba931c138d3718f8528da02f,
+    merged via drift-closure 7e05e5b): SCOPED successor — supersedes ONLY
+    the two §1 frozen gates `SECOND_ATTEMPT_ID = FORBIDDEN` and
+    `SECOND_RUN = FORBIDDEN` and the §0 non-goal clauses "no automatic
+    retry engine of any kind … no recovery triggered by poller ticks or
+    reconcile passes" and "no second attempt id, ever", in the single
+    bounded stale_no_progress case defined by its CTR-SRE-002/004.
+    V2 remains current accepted authority for ALL other surfaces,
+    including the complete outcome_unknown family (CTR-WAE-006 carried;
+    unknown never creates a second execution) and every
+    AGENT_PROCESS_LIFECYCLE_HARDENING_V2 discipline (C-013/015/016/017
+    reused, not amended). Mechanical pointer only, no semantic change to
+    the accepted bytes.
 external:
   - svc-workflow SVC_WORKFLOW_DISPATCH_INTENT_KEYSET_CONTINUATION_V1
     (consumed UNCHANGED by CTR-WAE-001b; inherited from V1)
