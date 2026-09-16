@@ -55,6 +55,7 @@ import { requestAccessToken } from '../../broker/src/transport.js'
 import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
 import { createAgentPrincipalResolutionAccess } from './identity/agent-principal-resolution.js'
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
+import { createAgentDirectoryAccess } from './agent-directory.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
@@ -422,6 +423,16 @@ export async function composeProductionRuntime(options = {}) {
       }
     },
   }))
+
+  // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1 (accepted): the trusted LOCAL provider
+  // for the read-only agent_directory (resolve/list). It reads ONLY the Agent
+  // Definition snapshot — the single canonical source of Agent existence/
+  // identity/enabled truth — so no second registry, cache or mapping exists;
+  // visibility is the accepted agent.definition.read no-scope baseline (no
+  // new auth audience/scope/grant, no boundary expansion), and a disabled
+  // Agent resolves explicitly with enabled:false (CTR-IAD-003 semantics).
+  ctx.provide('agentDirectoryAccess', createAgentDirectoryAccess({ definition }))
+
   ctx.provide('workflowHumanPrincipalProjectionAccess', createWorkflowHumanPrincipalProjectionAccess({
     workflowOrigin: workflowServiceOrigin,
     acquireCallerToken: async ({ agentId }) => {

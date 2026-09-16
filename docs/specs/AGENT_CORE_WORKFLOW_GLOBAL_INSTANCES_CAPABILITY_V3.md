@@ -1,6 +1,316 @@
 ---
-spec_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2
+spec_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3
 status: superseded
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: contracts
+production_apply_authority: none
+date: 2026-09-16
+scope:
+  - packages/broker
+governed_by:
+  - AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1
+  - AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1
+external_authorities:
+  - repository: mayf3/svc-workflow
+    authority_id: SVC_WORKFLOW_PRODUCT_BOUNDARY_V8
+    revision: ed99fa06a3067fe1d230699e9fed2b19542ab190
+    relation: constrained_by
+  - repository: mayf3/svc-workflow
+    authority_id: SVC_WORKFLOW_ACTIVE_AGENT_LIST_V1
+    revision: 07d9117358113c89dc9bd4d483695c8d34b21efb
+    relation: depends_on
+supersedes:
+  - AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2
+superseded_by: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4
+owners:
+  - repository-maintainers
+accepted_by: mayf3
+accepted_date: 2026-09-16
+accepted_reviewed_head: 58abd3c593da208d8301341697be91a2a5656501
+acceptance_review_verdict: PASS
+acceptance_record: docs/reports/WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3_ACCEPTANCE_V1.md
+---
+
+# AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3 — canonical current executor passthrough companion
+
+> Status: **proposed candidate**. This document authorizes no implementation,
+> merge, deployment, credential change, or production mutation.
+>
+> **WHOLE-SPEC SUCCESSOR CANDIDATE.** If accepted, this Spec supersedes
+> `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2` atomically. Until that
+> acceptance transaction, V2 remains the accepted local authority and this V3
+> has `implementation_authority: none`.
+>
+> **Candidate dependency pin.** The architecture reconciliation and
+> svc-workflow implementation candidate are the two documents at
+> `07d9117358113c89dc9bd4d483695c8d34b21efb`, the final svc docs-only
+> acceptance head descended from reviewed head
+> `34b2c6e90d5a7f02a6690b189f97cb901a47dd43`. Their accepted status does not
+> grant local implementation authority. Semantic drift from that accepted head
+> requires another repin and review.
+>
+> `PRODUCT_CODE_CHANGE = NONE`; `PRODUCTION_CHANGE = NONE`.
+
+## 0. DEVELOPMENT_PREFLIGHT
+
+```text
+DEVELOPMENT_PREFLIGHT
+PROBLEM = workflow_global_instances cannot express or return the Product V8
+          canonical currentExecutorType contract, so HR cannot request the
+          canonical active Agent-executable set through Broker.
+GOVERNING_ACCEPTED_LOCAL_SPEC = AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2
+COVERS_REQUESTED_DELTA = NO
+NEW_OR_AMENDED_SPEC_REQUIRED = YES
+CANDIDATE = AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3
+IMPLEMENTATION_AUTHORITY = NONE
+IMPLEMENTATION_ALLOWED_NOW = NO
+```
+
+Relevant authority:
+
+- Accepted `SVC_WORKFLOW_PRODUCT_BOUNDARY_V8` freezes the server-side
+  projection/filter requirement.
+- Candidate Architecture V0_4_3 reconciles activation-driven delivery with the
+  narrowly bounded HR list-driven delivery mode.
+- Candidate `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V1` owns canonical derivation and
+  filtering.
+- Accepted V2 remains the local Broker authority until an atomic V3 acceptance.
+
+Rejected before implementation:
+
+- Broker-side or HR-side HUMAN/AGENT classification.
+- Title, `sessionId`, display name, legacy `external_ref`, or temporary
+  identity heuristics.
+- A local compatibility mapping that becomes executor authority.
+- Treating `lifecycle=active` alone as the dispatchable Agent pool.
+
+## 1. Candidate delta
+
+V3 preserves V2's deployed `workflow_global_instances` capability and adds one
+transparent query/result field:
+
+- Input: optional string `currentExecutorType`, forwarded as the exact
+  camelCase HTTP query parameter.
+- Output: downstream `current_executor_type` is returned unchanged.
+- Downstream owns validation and canonical meaning. Broker does not derive,
+  normalize, infer, cache, repair, or post-filter the value.
+- No Broker-side or HR-side task classifier is introduced.
+- No database field, permission, role, scope, credential, route, capability,
+  inventory count, or compatibility authority is introduced.
+- Existing `lifecycle` and `status` semantics remain unchanged.
+
+The canonical HR query is exactly:
+
+```text
+lifecycle=active&status=active&currentExecutorType=AGENT
+```
+
+A caller may combine pagination and existing filters with that triple, but may
+not replace any member of the triple when claiming the canonical dispatchable
+Agent set.
+
+### Candidate observations and evidence
+
+- `OBS-V3-001` — At candidate base
+  `4053e60c1217be3c913d49cd7b467d5f6eec6fba`,
+  `packages/broker/src/capabilities/workflow.js` declares lifecycle, status,
+  definition, node, assignee, and cursor query parameters, but contains no
+  `currentExecutorType` or `current_executor_type` token.
+- `OBS-V3-002` — The existing dedicated test home already verifies global-list
+  query forwarding, error preservation, cursor pagination, result passthrough,
+  and the absence of per-Agent wiring.
+- `OBS-V3-003` — The two svc-workflow authorities are pinned at the final
+  docs-only acceptance head
+  `07d9117358113c89dc9bd4d483695c8d34b21efb`, descended from exact reviewed
+  candidate `34b2c6e90d5a7f02a6690b189f97cb901a47dd43`. Architecture V0_4_3 is
+  accepted with implementation authority none; Active Agent List V1 is
+  accepted with implementation authority contracts; both retain production
+  apply authority none.
+- `CLM-V3-001` (**SUPPORTED**) — The missing Broker field prevents the accepted
+  Product V8 triple filter from being expressed through the current capability.
+- `EVD-V3-001` — OBS-V3-001 supports CLM-V3-001 by exact source inspection;
+  absence was checked in both the manifest and its dedicated test.
+- `EVD-V3-002` — OBS-V3-002 supports the two-path closure because the existing
+  manifest and dedicated fixture home already own the behavior being extended.
+- `STATE-V3-001` — The server contract is an accepted external dependency and
+  the local passthrough contract remains a proposed whole successor. Therefore
+  local V3 implementation authority is currently none.
+
+### Decisions
+
+- `DEC-V3-001` — Owner: dsh-agent-core maintainers. Select transparent Broker
+  passthrough; reject local enum authority, classification, inference, cache,
+  repair, or post-filtering.
+- `DEC-V3-002` — Owner: HR consumer authority. Select the exact three-filter
+  query as the only canonical HR Agent pool expression; reject lifecycle-only
+  and client-reclassified sets.
+- `DEC-V3-003` — Owner: dsh-agent-core maintainers. Select the exact two-path
+  implementation closure; reject a new capability, inventory change, and any
+  HR runtime or credential change in this Spec.
+
+Remaining Owner input for candidate authoring: **NONE**. Acceptance of exact
+heads remains a later gate and does not change this candidate's inert status.
+
+## 2. Authority, dependency, and supersession
+
+Authority flows in this order:
+
+1. Accepted `SVC_WORKFLOW_PRODUCT_BOUNDARY_V8` owns the product requirement.
+2. Accepted `SVC_WORKFLOW_ARCHITECTURE_V0_4_3` at svc acceptance head
+   `07d9117358113c89dc9bd4d483695c8d34b21efb` owns the architecture exception,
+   delivery-mode exclusion, and cross-system boundary.
+3. Accepted `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V1` at that same head owns canonical
+   projection, server filtering, persistence/query mechanics, and service
+   acceptance.
+4. This V3, only after 2 and 3 are accepted at exact pinned heads, may be
+   accepted as the dsh-agent-core Broker implementation authority.
+5. HR consumption may proceed only after compatible svc-workflow and Broker
+   implementations are merged, deployed, read back, and the production
+   equality gate passes.
+
+Supersession rules:
+
+- V3 is a whole successor candidate to V2; it does not amend V2 in place.
+- Acceptance must atomically set V3 to accepted/contracts, set V2 to
+  superseded/none, and write both forward and backward links.
+- If either accepted external authority changes, V3 remains proposed and must
+  be re-pinned and re-reviewed.
+- Product V8 remains higher product authority. The architecture document owns
+  reconciliation; the svc implementation Spec owns server mechanics; V3 owns
+  only Broker passthrough. None can silently absorb another document's scope.
+
+## 3. Exact implementation closure after acceptance
+
+The only authorized product-code paths would be:
+
+```text
+packages/broker/src/capabilities/workflow.js
+packages/broker/test/capabilities/workflow-global-instances-v2.test.js
+```
+
+No manifest inventory count changes because V3 adds no capability. No
+`.agents/structure-registry.json`, HR runtime, scheduler, identity, credential,
+or svc-workflow path is in this local closure.
+
+## 4. Contract delta
+
+### CTR-V3-001 — Input schema passthrough
+
+Add optional `currentExecutorType` as a string property on
+`workflow_global_instances`. Do not add a Broker-owned enum or case mapping.
+The downstream service remains the validation authority, consistent with V2's
+existing lifecycle/status passthrough.
+
+### CTR-V3-002 — Exact query forwarding
+
+When present, Broker forwards the value once as `currentExecutorType` to
+`GET /internal/v1/workflow-instances/global`. When absent, the parameter is
+absent. Existing parameters, cursor behavior, limit validation, credentials,
+scope, and error preservation remain unchanged.
+
+### CTR-V3-003 — Verbatim response
+
+Broker returns downstream `current_executor_type` exactly as received,
+including `null` if the accepted downstream compatibility contract permits it.
+Broker must not derive a value from owner, assignee, node, title, session,
+display name, `external_ref`, or any other field.
+
+### CTR-V3-004 — Error preservation
+
+Downstream validation failures, including `invalid_current_executor_type`,
+follow the accepted Broker error-preservation contract. Broker must not rewrite
+such a failure into an empty success or a locally invented code.
+
+### CTR-V3-005 — HR consumer boundary
+
+HR's canonical visible set is the full paginated result of
+`lifecycle=active&status=active&currentExecutorType=AGENT`. HR must not apply a
+second HUMAN/AGENT classifier, add inferred members, remove valid members, or
+use lifecycle-only results as the schedulable pool.
+
+### CTR-V3-006 — Delivery authority boundary
+
+This read capability grants no transition, assignment, lease, dispatch, or
+completion authority. The architecture candidate's single-delivery-mode rule
+remains mandatory; read-only diagnostics do not authorize concurrent delivery.
+
+## 5. Acceptance contract
+
+Local candidate tests, after authority is accepted:
+
+| Acceptance | Contracts | Method and environment | Required evidence | Expected result | Failure condition |
+|---|---|---|---|---|---|
+| `ACC-V3-001` | CTR-V3-001 | Broker unit test on clean implementation head | Manifest schema assertion and source diff | Optional string exists with no local enum, mapping, or inference | Missing field or any Broker-owned classifier |
+| `ACC-V3-002` | CTR-V3-002, CTR-V3-005 | Mock downstream request capture in dedicated Node test | Exact captured query for present and absent values, plus pagination regression | `AGENT` is forwarded once; absence stays absent; other filters/cursors are unchanged | Rename, omission, duplicate, default, or changed pagination |
+| `ACC-V3-003` | CTR-V3-003 | Mock downstream responses in dedicated Node test | Deep-equality assertions for `AGENT`, `HUMAN`, and nullable compatibility fixtures | Response remains byte/structure-equivalent at the Broker result boundary | Derivation, normalization, omission, or post-filtering |
+| `ACC-V3-004` | CTR-V3-004 | Mock downstream 422 in dedicated Node test | Assertions for status, code, sanitized detail, and request ID | `invalid_current_executor_type` is preserved | Empty success or rewritten/invented error |
+| `ACC-V3-005` | CTR-V3-001..006 | Existing package test suite on clean implementation head | Full command and PASS receipt | All accepted V2 regressions still pass | Any regression or skipped relevant test |
+| `ACC-V3-006` | CTR-V3-001..006 | Static exact-diff review | Path list and token/search evidence | Only two authorized paths; no classifier, mapping, capability, inventory, role, scope, or credential change | Any extra path or forbidden authority |
+
+Cross-repository acceptance:
+
+| Acceptance | Contracts | Method and environment | Required evidence | Expected result | Failure condition |
+|---|---|---|---|---|---|
+| `ACC-XR-001` | CTR-V3-003, external projection contract | svc-workflow integration fixtures on accepted implementation head | Fixture inputs, canonical authority facts, projected outputs | Projection equals canonical executor authority for every fixture | Any heuristic or mismatch |
+| `ACC-XR-002` | CTR-V3-002, CTR-V3-005 | svc-workflow global-list integration test with mixed lifecycle/status/executor fixtures | Exact returned-ID and expected-ID sets | Triple filter returns exactly active, status-active `AGENT` tasks | Extra or missing ID |
+| `ACC-XR-003` | CTR-V3-005 | Same mixed-fixture test | HUMAN fixture IDs and returned IDs | No HUMAN task enters the HR Agent set | Any HUMAN ID present |
+| `ACC-XR-004` | CTR-V3-005 | Same mixed-fixture test | Cancelled, terminal, and archived fixture IDs and returned IDs | None enters the set | Any excluded lifecycle/status ID present |
+| `ACC-XR-005` | CTR-V3-005 | Expected/actual set-difference assertion across all pages | Full expected Agent fixture IDs, page receipts, empty negative difference | No legitimate Agent task is omitted | Any expected ID absent |
+| `ACC-XR-006` | CTR-V3-001..004 | End-to-end Broker call against the accepted svc implementation in a non-production test environment | Direct svc result and Broker result for the same request | Membership and field meaning are identical | Any Broker-induced semantic difference |
+| `ACC-XR-007` | CTR-V3-005, CTR-V3-006 | Separately authorized post-deploy production read-only canary using complete pagination and a canonical comparison source | Redacted request/response receipts, exact set differences, deployment/readback coordinates | All three frozen equality metrics pass | Nonzero difference, incomplete pagination, stale deployment, or unknown result |
+
+`ACC-XR-007` must record:
+
+  ```text
+  HR_FALSE_POSITIVE_COUNT=0
+  HR_FALSE_NEGATIVE_COUNT=0
+  HR_VISIBLE_SET_EQUALS_CANONICAL_DISPATCHABLE_AGENT_SET=YES
+  ```
+
+Candidate review keeps the frozen evidence snapshot separate:
+
+```text
+SNAPSHOT_DENOMINATOR=32
+AGENT_ACTIONABLE=6
+HUMAN_ACTIVE=17
+INVALID_OR_BROKEN=7
+OWNER_BOUND=2
+UNKNOWN=0
+POST_SNAPSHOT_NEW_ACTIVE=9
+```
+
+`POST_SNAPSHOT_NEW_ACTIVE` is tracked independently and must not rewrite or
+drift the original 32-row denominator. These counts are review evidence, not a
+Broker mapping table or executor authority.
+
+## 6. Gates and stop conditions
+
+- **Independent semantic review gate:** reviewers verify authority ownership,
+  whole-successor completeness, exact closures, terminology, and that no
+  client classifier or hidden permission model was introduced.
+- **Owner exact-head acceptance gate:** Owner accepts exact document heads and
+  performs the required atomic supersession transactions.
+- **Implementation gate:** closed until V3 is independently re-reviewed and
+  Owner-accepted with the exact accepted svc head pinned.
+- **Merge/deploy/production gate:** separately closed; Spec acceptance alone
+  does not authorize merge, deployment, credential changes, cleanup, or data
+  mutation.
+- Any stale head, unresolved semantic conflict, nonzero false-positive or
+  false-negative count, or unknown comparison result stops advancement.
+
+---
+
+## Complete accepted V2 baseline restatement
+
+The following bytes are the complete accepted V2 document as the baseline
+restatement. They remain normative within this whole-successor candidate except
+where the explicit V3 delta above replaces them. Acceptance reviewers must
+verify the embedded bytes against the accepted V2 source.
+
+---
+spec_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -20,7 +330,7 @@ external_authorities:
     relation: interoperates_with
 supersedes:
   - AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1
-superseded_by: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3
+superseded_by: null
 owners:
   - repository-maintainers
 ---

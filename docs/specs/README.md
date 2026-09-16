@@ -43,6 +43,21 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0` | accepted 2026-09-14; reviewed semantic head `e8934d5...`; structure-only final re-audit PASS | contracts; production apply remains none | exact canonical Human UUID `8902db0d-429a-4e37-985c-f8b92d4b78fb` projection through the existing `workflow.admin` svc-workflow authority; trusted conditional POST plus mandatory fresh readback; no generic identity administration |
 
+## Workflow global instance capability authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4` | accepted lifecycle in this branch; reviewed head `ea38081abac6cf6ce36ad4ae4bcf723578763bc4`; effective only after authority merge | contracts; production apply remains none | current whole-successor Broker contract, pinned to accepted svc Active Agent List V2, with unchanged transparent canonical `currentExecutorType` passthrough |
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3` | superseded by V4 in the same atomic transaction; remains effective on current main until authority merge | historical immutable `contracts` field; effective authority none after supersession | historical predecessor pinned to svc Active Agent List V1 |
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2` | superseded by V3 | historical immutable `contracts` field; effective authority none | historical global-instance Broker authority without the canonical current-executor passthrough |
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1` | superseded by V2 | none | historical first global-instance Broker authority |
+
+V4 pins the separately accepted svc-workflow V2 authority head
+`5976d3900c8f0b8c2afe96d9d30d14d5811ca1fa`. That svc head and this dsh
+acceptance are both off-main. This lifecycle transaction authorizes no
+implementation, merge, deployment, production cleanup, Workflow mutation, HR
+runtime change, credential change, or real HR dispatch.
+
 ## Scheduler self-service authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
@@ -265,3 +280,9 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | `MOBILE_SESSION_HISTORY_V1` | accepted (2026-09-07, Owner exact-head acceptance ACCEPT_PR145_AUTHORITIES_AND_RESUME_IMPLEMENTATION in PR #145 @ ccbb5dc…; reviewed head 18638aa…, NORMATIVE_BODY_DELTA = NONE) | contracts | Mobile 当前 Binding `activeAgent` 的 current canonical `main` trajectory 只读历史：logical-main 身份、deterministic current-main resolver、deterministic composite public message ID（HEADER_SUBSET + PREFIX_ANCHOR generation：append-stable、reset-provable）、stale-cursor 分页、冻结资源上限、confinement/隐私边界；与 sibling `PRODUCT_API_AUTHENTICATION_V1`（candidate `0d8f050` + PR #145 B1/B3 修复）按 trusted authContext / 唯一 Binding reader 边界拆分 |
 | `PRODUCT_API_VOICE_TRANSCRIPTION_V1` | accepted (2026-09-08, Owner exact-head acceptance ACCEPT_BOTH_CHILD_AUTHORITIES @ reviewed head 67553c2…, NORMATIVE_BODY_DELTA = NONE) | contracts | Mobile Presence voice session 的同一 Product API 私有转写路由：POST /v1/voice/transcription（audio/wav 有界 utterance → {"text"}）、512KB/15s 上限、确定性 400/413/415/503/504、自托管 ASR 执行（ENGINE_PIN=Paraformer-zh via sherpa-onnx 已冻结；SERVICE_DEADLINE=1500ms）、raw-audio 零持久化 + 日志白名单；history-listener 复用禁止；/v1/message 语义不动；sibling = agent-core-mobile MOBILE_AGENT_PRESENCE_RUNTIME_V1（PR #17，client seam） |
 | `PRODUCT_API_AUTHENTICATION_V1` | accepted (2026-09-07, Owner exact-head acceptance ACCEPT_PR145_AUTHORITIES_AND_RESUME_IMPLEMENTATION in PR #145 @ ccbb5dc…; reviewed head 208f9a9…, NORMATIVE_BODY_DELTA = NONE) | contracts | Tailnet-local Mobile history 身份边界 Child（parent `AGENT_CORE_HARDENING_PROGRAM_V1`）：专用 history-only Tailnet listener（现有 Product API server 保持 loopback-only）、listener 上全请求 admission（selector≠main 由 History 400）、`tailcfg.StableNodeID` WhoIs 身份、配置 (StableID, surfaceId) pair、trustedAuthContext 唯一输出、`AUTH_LAYER_READS_BINDING = NO`、fail-closed 403/503 语义、restart-only config generation；public/non-Tailnet history 仍禁止 |
+
+## Canonical agent fleet send policy authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_CANONICAL_AGENT_FLEET_SEND_POLICY_V1` | accepted 2026-09-16 (r4 AMENDMENT_1 joint acceptance; r3 acceptance 2026-09-15 @ `6bce155`; r4 reviewed head `5dd41e2…`, spec sha256 `b28ec501…`, Owner mayf3) | contracts; production apply controlled operation | `agent.session.send` = production canonical Agent fleet 的机械派生基线能力（G1∧G2∧G3 membership join）；lawful row family = `['agent.session.send'] ∪ P, P ⊆ {agent.session.inspect_own_dispatch}`（ENUMERATED 闭集，成员各自持有 Auth accepted authority，fleet 永不授予）；NORMALIZE=make-lawful；clause-scope supersedes AGENT_SESSION_SEND_STANDALONE_DEPLOYMENT_AUTHORITY_V1 §6 grant 政策 |

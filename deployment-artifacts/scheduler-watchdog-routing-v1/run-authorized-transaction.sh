@@ -42,14 +42,18 @@
 # =============================================================================
 set -euo pipefail
 
-REVIEWED_CODE_SHA="7e645ea2a4b353c2e79b4a735aa9ab7a89d5de68"
+# Reviewed-product baseline: default is the independently reviewed head.
+# The Owner may EXPLICITLY advance it via PRODUCT_REVIEWED_BASELINE=<sha> in
+# the sudo env — that act is the blessing of the current main coordinate
+# (e.g. accepting other lanes' merged product changes for this deploy).
+REVIEWED_CODE_SHA="${PRODUCT_REVIEWED_BASELINE:-7e645ea2a4b353c2e79b4a735aa9ab7a89d5de68}"
 WRAPPER_SCRIPT="deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh"
 ROUTING_INSTALLER="deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs"
 DEPLOY_INSTALLER="scripts/trusted-cp-deploy-install.sh"
 # Content pins fixed at the wrapper-r3 review — any later change to these two
 # artifacts on origin/main FAILS CLOSED until re-reviewed.
-ROUTING_INSTALLER_SHA256="c3a5b56b32658c9463ff039068bdae0f21145b5f2199cc7681dc2916914d90a8"
-DEPLOY_INSTALLER_SHA256="bb5c76ca21fb3300cc73ea19a32baa19847693c73e4fcbc3270df71108eca099"
+ROUTING_INSTALLER_SHA256="8ff1d255fe4c39e5a70c0a91dc2b529d1331bbdfe37e53b6818fcc7e92cf1e60"
+DEPLOY_INSTALLER_SHA256="ce8fea9ca7ce1618d933f26e63f7c95e0e9dfb0167a6903bbf39f3bae5fde915"
 APP_ROOT="/usr/local/libexec/agent-core/app"
 CANONICAL_STORE="/Users/authsvc/.agent-core/scheduler/jobs.json"
 ROUTING_TARGET="/Users/authsvc/.agent-core/scheduler/routing.json"
@@ -176,7 +180,8 @@ run_installer() { # run_installer CMD... — captures the real pipeline rc
 }
 deploy_from_staging() { # deploy_from_staging STAGING_DIR APP_ROOT
   local S="$1" app_root="$2"
-  run_installer bash "$S/$DEPLOY_INSTALLER" "$S"
+  PRODUCTION_DEPLOY_LOCK_INHERITED_FROM="run-authorized-transaction.sh" \
+    run_installer bash "$S/$DEPLOY_INSTALLER" "$S"
   [ "$RUN_INSTALLER_RC" -eq 0 ] || gate "deploy installer" "rc=$RUN_INSTALLER_RC"
   pass "deploy installer rc=0 — installer gate crossed"
   ls "$app_root/packages" >/dev/null 2>&1 || gate "deployed app tree present" "$app_root"
@@ -190,6 +195,13 @@ GATES() {
   [ "${SCHEDULER_PRODUCTION_MUTATION_SLOT:-}" = "FREE" ] || gate "SCHEDULER_PRODUCTION_MUTATION_SLOT" "env!=FREE"
   [ "${NO_CONFLICTING_SCHEDULER_TRANSACTION:-}" = "YES" ] || gate "NO_CONFLICTING_SCHEDULER_TRANSACTION" "env!=YES"
   pass "§3 Owner authorization flags" "FREE/FREE/YES (authorization — the locks are the mutual exclusion)"
+  # B5: deterministic corepack behavior — the hydrated cache + network OFF +
+  # no latest fallback turn any cache miss into an immediate fail-closed.
+  [ "${COREPACK_HOME:-}" = "/usr/local/var/agent-core/corepack-cache" ] || gate "COREPACK_HOME" "must be /usr/local/var/agent-core/corepack-cache (the hydrated cache)"
+  [ "${COREPACK_ENABLE_NETWORK:-}" = "0" ] || gate "COREPACK_ENABLE_NETWORK" "env!=0"
+  [ "${COREPACK_DEFAULT_TO_LATEST:-}" = "0" ] || gate "COREPACK_DEFAULT_TO_LATEST" "env!=0"
+  [ "${COREPACK_ENABLE_DOWNLOAD_PROMPT:-}" = "0" ] || gate "COREPACK_ENABLE_DOWNLOAD_PROMPT" "env!=0"
+  pass "§3 COREPACK determinism env" "COREPACK_HOME=$COREPACK_HOME ENABLE_NETWORK=0 DEFAULT_TO_LATEST=0 DOWNLOAD_PROMPT=0"
   [ -f "$CANONICAL_STORE" ] || gate "canonical store readable" "$CANONICAL_STORE"
   authority_binding "$MAIN_WORKTREE" "$REVIEWED_CODE_SHA" "$ROUTING_INSTALLER_SHA256" "$DEPLOY_INSTALLER_SHA256"
   echo "EXPECTED_STORE_SHA256=$(shasum -a 256 "$CANONICAL_STORE" | cut -d' ' -f1)"
@@ -222,12 +234,14 @@ ROUTING() {
       NO_CONFLICTING_SCHEDULER_TRANSACTION=YES \
       "$NODE" "$INSTALLER" --check || gate "routing --check (slots + enrichment + OPS_TARGET_OVERLAPS=NO)" 1
   "$NODE" "$INSTALLER" --plan || gate "routing --plan (zero-write)" 1
-  "$NODE" "$INSTALLER" --apply || gate "routing --apply + readback" 1
+  PRODUCTION_DEPLOY_LOCK_INHERITED_FROM="run-authorized-transaction.sh" \
+    "$NODE" "$INSTALLER" --apply || gate "routing --apply + readback" 1
   pass "routing receipt + protected-metadata readback complete"
 }
 
 RELOAD() {
-  acquire_global_deploy_lock
+  # Lock-neutral: the parent already holds the global production-deploy mutex
+  # across the whole sequence (B7) — RELOAD must not reacquire or release it.
   launchctl kickstart -k "$RUNTIME_LABEL" || gate "kickstart" 1
   local i
   for i in 1 2 3 4 5 6; do
@@ -236,7 +250,6 @@ RELOAD() {
       pass "runtime state=running"
       if curl -sf -m 5 "$HEALTH_URL" | grep -q '"ok":true'; then
         pass "health probe ok:true" "$HEALTH_URL"
-        release_global_deploy_lock
         return 0
       fi
       echo "… health not ok yet (attempt $i/6)"
@@ -352,6 +365,31 @@ selftest() {
   [ "$head_now" = "$FIXED_SHA" ] || gate "selftest: staging exact-sha fixture" 1
   pass "selftest: staging exact-sha binding verified ($head_now == VERIFIED_DEPLOY_SHA)"
 
+  # (7b) mechanical regression for the r3-review blocker: RELOAD must be
+  # lock-neutral (the parent owns the global mutex across the sequence).
+  local reload_body
+  reload_body=$(sed -n '/^RELOAD() {$/,/^}/p' "$0")
+  case "$reload_body" in
+    *acquire_global_deploy_lock*|*release_global_deploy_lock*)
+      gate "selftest: RELOAD must be lock-neutral (parent owns the global mutex)" 1 ;;
+  esac
+  local seq
+  seq=$(grep -n 'acquire_lock \|acquire_global_deploy_lock$\|release_global_deploy_lock$\|release_lock$' "$0" | sed 's/:.*//' | tr '\n' ' ')
+  pass "selftest: RELOAD lock-neutral verified (body has no global-lock calls)"
+  # ordering assertion: main tail is acquire_lock -> acquire_global -> ... -> release_global -> release_lock
+  # main-sequence order: lock -> global mutex -> DEPLOY -> ROUTING -> RELOAD
+  # -> release global -> release tx (each strictly after the previous).
+  local main_body cursor=0 call found
+  main_body=$(sed -n '/^GATES "\$MAIN_WORKTREE_DIR"$/,/^echo "TRANSACTION_SEQUENCE_COMPLETE/p' "$0")
+  [ -n "$main_body" ] || gate "selftest: main body extraction" 1
+  for call in 'acquire_lock ' 'acquire_global_deploy_lock' 'DEPLOY "$STAGING_DIR"' \
+              'ROUTING "$STAGING_DIR"' 'RELOAD' 'release_global_deploy_lock' 'release_lock'; do
+    found=$(printf '%s\n' "$main_body" | tail -n +$((cursor + 1)) | grep -n -F -- "$call" | head -1 | cut -d: -f1 || true)
+    [ -n "$found" ] || gate "selftest: main sequence missing $call" 1
+    cursor=$((cursor + found))
+  done
+  pass "selftest: main sequence order verified (lock, global mutex, deploy, routing, reload, release)"
+
   # (8) P0-2: REAL deploy control flow — installer rc==0 must cross the
   # installer gate and reach the post-deploy marker; rc!=0 must FAIL_CLOSED.
   local fxapp="$scratch/app"
@@ -385,8 +423,13 @@ STAGING_DIR="$2"
 
 GATES "$MAIN_WORKTREE_DIR"
 acquire_lock "run-authorized-transaction"
+# B7: the parent holds the global production-deploy mutex ONCE across the
+# whole DEPLOY -> ROUTING -> RELOAD -> readiness sequence (no serialization
+# gaps). Children verify the inherited holder and never touch it.
+acquire_global_deploy_lock
 DEPLOY "$STAGING_DIR"
 ROUTING "$STAGING_DIR"
 RELOAD
+release_global_deploy_lock
 release_lock
 echo "TRANSACTION_SEQUENCE_COMPLETE — deep readbacks (health provenance, receipts, BIP acceptance) follow from disk"
