@@ -185,6 +185,10 @@ async function seedRuntime(t, { targetDisabled = false } = {}) {
   const runtime = await composeProductionRuntime({
     layout,
     log: silentLog,
+    // Test seam (same as main's ASM integration suite): an explicit global
+    // route keeps the composed default-route resolution (Luna chain, pinned
+    // artifact validation) out of this directory-focused E2E.
+    globalRoute: Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' }),
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false },
     broker: { credentialsFile, authServiceOrigin: origin },
@@ -248,7 +252,10 @@ test('ACC-ADT-005: name-only caller discovers the canonical id and the send land
     operation: 'send',
     args: { targetAgentId: canonicalId, message: '请开始今天的文章发布流程', timeoutSeconds: 0 },
   })
-  assert.deepEqual(send, { ok: true, result: { status: 'accepted' } })
+  assert.equal(send.ok, true)
+  assert.equal(send.result.status, 'accepted')
+  assert.equal(send.result.targetAgentId, canonicalId, 'the receipt echoes the exact directory-resolved id')
+  assert.equal(send.result.sessionId, 'main')
 
   // 3. The target REALLY received it: one delivery in the canonical main,
   //    admitted as a genuine inter_agent turn.
