@@ -7,7 +7,8 @@ import { capturePlainFileMetadata, listFileXattrs } from './deployment-file-meta
 import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage, verifyReceiptedPreimage } from './deployment-durable-file.js'
 
 export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
-  if (!/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)) {
+  if (!/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)
+    || !Number.isInteger(ctx.runtimeReaderGid ?? ctx.authsvcGid)) {
     throw new TypeError('runtime restart requires exact deployed SHA and authsvc ownership coordinates')
   }
   const plistPath = join(ctx.launchdDir, 'ai.agent-core.runtime.plist')
@@ -47,7 +48,7 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
     SCHEDULER_ROUTING_OWNER_UID: '0',
     SCHEDULER_ROUTING_READER_GID: String(ctx.authsvcGid),
     SCHEDULER_INCIDENT_OWNER_UID: String(ctx.authsvcUid),
-    SCHEDULER_INCIDENT_OWNER_GID: String(ctx.authsvcGid),
+    SCHEDULER_INCIDENT_OWNER_GID: String(ctx.runtimeReaderGid ?? ctx.authsvcGid),
     AGENT_CORE_DEPLOYED_SHA: sourceSha,
   }
   let dirty = false

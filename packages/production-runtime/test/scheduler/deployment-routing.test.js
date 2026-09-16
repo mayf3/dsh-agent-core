@@ -2,11 +2,11 @@ import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { chmod, lstat, mkdtemp, mkdir, readFile, realpath, rm, stat, symlink, writeFile } from 'node:fs/promises'
+import { chmod, chown, lstat, mkdtemp, mkdir, readFile, realpath, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { installSchedulerRoutingManifest } from '../../src/scheduler/deployment-routing.js'
+import { installSchedulerRoutingManifest, reconcileLegacyRoutingControlOwnership } from '../../src/scheduler/deployment-routing.js'
 
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const plain = (path) => { if (process.platform === 'darwin') execFileSync('/usr/bin/xattr', ['-c', path]) }
@@ -44,6 +44,57 @@ test('routing deployment freezes explicit candidate and atomically preserves the
   assert.equal(replay.status, 'ALREADY_INSTALLED')
   assert.equal(replay.preimageSha256, sha(prior), 'rerun retains the original predecessor generation')
   assert.throws(() => installSchedulerRoutingManifest({ ...args, expectedSha256: '0'.repeat(64), mode: 'plan' }), /generation mismatch/)
+})
+
+test('routing deployment keeps rollback control artifacts separate from the runtime reader group', async (t) => {
+  const controlGid = process.getgroups().find((gid) => gid !== process.getgid())
+  if (controlGid === undefined) return t.skip('no secondary group available for ownership separation proof')
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-routing-control-owner-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const candidatePath = join(root, 'candidate.json')
+  const targetPath = join(root, 'config', 'scheduler-routing.json')
+  const artifactsDir = join(root, 'artifacts')
+  const rollbackDir = join(artifactsDir, 'rollback')
+  await mkdir(join(root, 'config'))
+  await mkdir(rollbackDir, { recursive: true, mode: 0o700 })
+  await chown(rollbackDir, process.getuid(), controlGid)
+  const prior = Buffer.from('{"version":"old"}\n')
+  const candidate = Buffer.from('{"version":1,"canonicalOpsTarget":{"channel":"feishu","to":"ops"},"ownerTargets":{},"jobFailureTargets":{}}\n')
+  await writeFile(candidatePath, candidate, { mode: 0o600 })
+  await writeFile(targetPath, prior, { mode: 0o600 })
+  plain(candidatePath); plain(targetPath)
+  installSchedulerRoutingManifest({
+    candidatePath, expectedSha256: sha(candidate), targetPath, artifactsDir, jobs: [],
+    expectedUid: process.getuid(), expectedGid: process.getgid(),
+    controlUid: process.getuid(), controlGid, targetBoundary: '/', mode: 'apply',
+  })
+  assert.equal((await stat(targetPath)).gid, process.getgid(), 'runtime target keeps the runtime reader group')
+  assert.equal((await stat(rollbackDir)).gid, controlGid, 'rollback directory keeps control-plane ownership')
+  assert.equal((await stat(join(rollbackDir, 'routing-install-receipt.json'))).gid, controlGid)
+  assert.equal((await stat(join(rollbackDir, 'scheduler-routing.json.preimage'))).gid, controlGid)
+})
+
+test('routing deployment repairs only the exact legacy routing control ownership drift', async (t) => {
+  const controlGid = process.getgroups().find((gid) => gid !== process.getgid())
+  if (controlGid === undefined) return t.skip('no secondary group available for ownership repair proof')
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-routing-owner-repair-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const artifactsDir = join(root, 'artifacts'), rollbackDir = join(artifactsDir, 'rollback')
+  await mkdir(rollbackDir, { recursive: true, mode: 0o700 })
+  for (const name of ['routing-install-receipt.json', 'scheduler-routing.json.preimage']) {
+    await writeFile(join(rollbackDir, name), '{}\n', { mode: 0o600 })
+  }
+  const unrelated = join(rollbackDir, 'overlay-preimage.tar.gz')
+  await writeFile(unrelated, 'opaque\n', { mode: 0o600 })
+  const unrelatedBefore = await stat(unrelated)
+  const result = reconcileLegacyRoutingControlOwnership({ artifactsDir, controlUid: process.getuid(), controlGid, legacyGid: process.getgid() })
+  assert.equal(result.status, 'REPAIRED')
+  assert.equal((await stat(rollbackDir)).gid, controlGid)
+  assert.equal((await stat(join(rollbackDir, 'routing-install-receipt.json'))).gid, controlGid)
+  assert.equal((await stat(join(rollbackDir, 'scheduler-routing.json.preimage'))).gid, controlGid)
+  assert.equal((await stat(unrelated)).gid, unrelatedBefore.gid, 'unrelated rollback artifacts are not rewritten')
 })
 
 test('routing deployment rejects missing canonical ops target before any write', async (t) => {

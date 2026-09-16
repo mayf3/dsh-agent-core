@@ -6,8 +6,9 @@ import { hasExtendedAcl } from './deployment-file-metadata.js'
 
 const fail = () => { throw new TypeError('unsafe incident state directory') }
 
-export function preparePrivateRuntimeDirectory({ path, expectedUid, expectedGid } = {}) {
-  if (typeof path !== 'string' || path === '' || !Number.isInteger(expectedUid) || !Number.isInteger(expectedGid)) fail()
+export function preparePrivateRuntimeDirectory({ path, expectedUid, expectedGid, allowedLegacyGids = [] } = {}) {
+  if (typeof path !== 'string' || path === '' || !Number.isInteger(expectedUid) || !Number.isInteger(expectedGid)
+    || !Array.isArray(allowedLegacyGids) || allowedLegacyGids.some((gid) => !Number.isInteger(gid))) fail()
   let created = false
   if (!existsSync(path)) {
     mkdirSync(path, { mode: 0o700 })
@@ -24,12 +25,17 @@ export function preparePrivateRuntimeDirectory({ path, expectedUid, expectedGid 
       opened = fstatSync(fd)
     }
     const mode = opened.mode & 0o777
-    if (opened.uid !== expectedUid || opened.gid !== expectedGid || ![0o700, 0o755].includes(mode)) fail()
+    const legacyGid = opened.gid !== expectedGid && allowedLegacyGids.includes(opened.gid)
+    if (opened.uid !== expectedUid || (!legacyGid && opened.gid !== expectedGid) || ![0o700, 0o755].includes(mode)) fail()
+    if (legacyGid) {
+      fchownSync(fd, expectedUid, expectedGid)
+      opened = fstatSync(fd)
+    }
     if (mode === 0o755) fchmodSync(fd, 0o700)
     const final = fstatSync(fd)
     const readback = lstatSync(path)
     if (final.uid !== expectedUid || final.gid !== expectedGid || (final.mode & 0o777) !== 0o700
       || readback.dev !== final.dev || readback.ino !== final.ino || hasExtendedAcl(path)) fail()
-    return Object.freeze({ status: mode === 0o755 ? 'NARROWED' : 'READY' })
+    return Object.freeze({ status: legacyGid ? (mode === 0o755 ? 'OWNERSHIP_AND_MODE_MIGRATED' : 'OWNERSHIP_MIGRATED') : mode === 0o755 ? 'NARROWED' : 'READY' })
   } finally { closeSync(fd) }
 }

@@ -9,7 +9,8 @@ export function runSchedulerIncidentMigration({ ctx, sources } = {}) {
   if (!ctx?.runtimeNode || !ctx?.liveRoot || !ctx?.watchdogStateDir
     || requiredPaths.some((key) => typeof sources?.[key] !== 'string' || sources[key] === '')
     || requiredHashes.some((key) => !SHA256.test(sources?.[key] ?? ''))
-    || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)) {
+    || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)
+    || !Number.isInteger(ctx.runtimeReaderGid ?? ctx.authsvcGid)) {
     throw new TypeError('incident migration requires exact paths, hashes, runtime and ownership coordinates')
   }
   const output = execFileSync(ctx.runtimeNode, [join(ctx.liveRoot, 'scripts/scheduler-watchdog.mjs'), '--migrate-incident-state'], {
@@ -19,7 +20,7 @@ export function runSchedulerIncidentMigration({ ctx, sources } = {}) {
       SCHEDULER_WATCHDOG_STATE_DIR: ctx.watchdogStateDir,
       SCHEDULER_INCIDENT_STATE: join(ctx.watchdogStateDir, 'incidents.json'),
       SCHEDULER_INCIDENT_OWNER_UID: String(ctx.authsvcUid),
-      SCHEDULER_INCIDENT_OWNER_GID: String(ctx.authsvcGid),
+      SCHEDULER_INCIDENT_OWNER_GID: String(ctx.runtimeReaderGid ?? ctx.authsvcGid),
       SCHEDULER_MIGRATION_FACTS_FILE: sources.factsPath,
       SCHEDULER_MIGRATION_FACTS_FILE_SHA256: sources.factsFileSha256,
       SCHEDULER_MIGRATION_FACTS_SHA256: sources.factsSha256,
