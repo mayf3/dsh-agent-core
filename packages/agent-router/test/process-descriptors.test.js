@@ -25,7 +25,7 @@ import { shutdownMethods } from '../src/process/shutdown.js'
 import { settlementMethods } from '../src/reconciliation/state-machine.js'
 import { queryMethods } from '../src/reconciliation/query.js'
 
-const METHOD_COUNT_AGENT_PROCESS = 41 // +unknownFenceDiagnostic (unknown-fence repair)
+const METHOD_COUNT_AGENT_PROCESS = 41 // +unknownFenceDiagnostic (unknown-fence repair); the r2 WORKFLOW_STALE_REENTRY_V1 removed the transient resolveStaleExecution addition
 const METHOD_COUNT_RECONCILIATION = 12
 
 function composedKeys(groups) {
