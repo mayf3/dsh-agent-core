@@ -19,7 +19,6 @@
 export const WATCHDOG_PAYLOAD_SNAPSHOT = {
   base: '68008e83142bdb637c4fa61c2a65db73c64b2eb1',
   payloadCommit: '24e48e52a61be4eb484c702bc468dadcaf5e8de7',
-  deletePaths: ['packages/scheduler/src/watchdog.js'],
   paths: {
     'packages/product-api/src/index.js': 'bc4e47682e4a91b3a96692488f4480620b29579e463017c07ce8249ac4f0e0d8',
     'packages/product-api/src/scheduler-health-routes.js': '8c04161f807f17aafb4a0cb265ea07b5f95a908b1ad735602f00f33c8a9ece5d',

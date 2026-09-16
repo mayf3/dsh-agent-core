@@ -36,6 +36,7 @@ test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid 
   const stateDir = join(root, 'control', 'scheduler-watchdog')
   mkdirSync(stateDir, { recursive: true })
   chmodSync(stateDir, 0o700)
+  chownSync(stateDir, me, readerGid)
   const incidentsPath = join(stateDir, 'incidents.json')
   writeFileSync(incidentsPath, JSON.stringify({ version: 1, revision: 1, incidents: {}, outbox: {} }), { mode: 0o600 })
   chownSync(incidentsPath, me, readerGid)
