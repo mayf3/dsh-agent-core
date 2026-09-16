@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
 import { attemptNotificationDelivery, buildIdempotentFeishuRequest, deliveryRecoveryAction, feishuHistoryContainsNotification, providerIdempotencyKey, recoverNotificationDelivery, retryableOutboxIntents, stableNotificationText } from '../../src/watchdog/delivery.js'
+import { validateIncidentState } from '../../src/watchdog/durable-state.js'
 import { compileIncidents } from '../../src/watchdog/incident-compiler.js'
 import { bindNotificationDelivery, markNotificationDelivery, updateIncidentState } from '../../src/watchdog/incident-lifecycle.js'
 
@@ -10,6 +11,82 @@ function bind(opened, key, at = 1) {
     route: { channel: 'feishu', to: 'ops' }, routeSource: 'canonicalOpsTarget', routingSha256: 'a'.repeat(64),
     payload: stableNotificationText(opened.state.outbox[key]), providerKey: providerIdempotencyKey(key) }, at)
 }
+
+function schedulerRuntimeIncident() {
+  return compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents[0]
+}
+
+function openNextEpisode(state, incident, nowMs) {
+  const closed = updateIncidentState(state, [], { nowMs }).state
+  return updateIncidentState(closed, [incident], { nowMs: nowMs + 1 })
+}
+
+function immutableDeliveryEvidence(intent) {
+  return {
+    notificationKey: intent.notificationKey,
+    deliveryBinding: intent.deliveryBinding,
+    deliveryBindingAt: intent.deliveryBindingAt,
+    providerKey: intent.deliveryBinding.providerKey,
+    routingSha256: intent.deliveryBinding.routingSha256,
+    route: intent.deliveryBinding.route,
+    payload: intent.deliveryBinding.payload,
+  }
+}
+
+test('historical cross-episode delivery updates only its bound outbox intent', () => {
+  const incident = schedulerRuntimeIncident()
+  const episode1 = updateIncidentState({}, [incident], { nowMs: 1 })
+  const historicalKey = episode1.notifications[0].notificationKey
+  const boundEpisode1 = bind(episode1, historicalKey, 2)
+  const episode2 = openNextEpisode(boundEpisode1, incident, 3)
+  const episode3 = openNextEpisode(episode2.state, incident, 5)
+  const currentKey = episode3.notifications[0].notificationKey
+  const rootIdentity = incident.rootIdentity
+  const evidenceBefore = immutableDeliveryEvidence(episode3.state.outbox[historicalKey])
+
+  const updated = markNotificationDelivery(episode3.state, historicalKey, 'OUTCOME_UNKNOWN', 7)
+
+  validateIncidentState(updated)
+  assert.equal(updated.outbox[historicalKey].delivery, 'OUTCOME_UNKNOWN')
+  assert.equal(updated.outbox[historicalKey].firstDeliveryAttemptAt, 7)
+  assert.equal(updated.incidents[rootIdentity].episode, 3)
+  assert.equal(updated.incidents[rootIdentity].alertState.delivery, 'PENDING')
+  assert.equal(updated.outbox[currentKey].delivery, 'PENDING')
+  assert.deepEqual(immutableDeliveryEvidence(updated.outbox[historicalKey]), evidenceBefore)
+  assert.ok(retryableOutboxIntents(updated, { nowMs: 8 }).some((intent) => intent.notificationKey === historicalKey))
+})
+
+test('historical transition delivery cannot overwrite the current revision in the same episode', () => {
+  const incident = schedulerRuntimeIncident()
+  const opened = updateIncidentState({}, [incident], { nowMs: 1 })
+  const historicalKey = opened.notifications[0].notificationKey
+  const bound = bind(opened, historicalKey, 2)
+  const closed = updateIncidentState(bound, [], { nowMs: 3 })
+  const currentKey = closed.notifications[0].notificationKey
+  const rootIdentity = incident.rootIdentity
+
+  const updated = markNotificationDelivery(closed.state, historicalKey, 'OUTCOME_UNKNOWN', 4)
+
+  validateIncidentState(updated)
+  assert.equal(updated.outbox[historicalKey].incidentId, updated.outbox[currentKey].incidentId)
+  assert.equal(updated.outbox[historicalKey].transitionRevision, 1)
+  assert.equal(updated.incidents[rootIdentity].transitionRevision, 2)
+  assert.equal(updated.incidents[rootIdentity].alertState.delivery, 'PENDING')
+  assert.equal(updated.outbox[currentKey].delivery, 'PENDING')
+})
+
+test('current logical transition delivery still synchronizes its incident record', () => {
+  const incident = schedulerRuntimeIncident()
+  const opened = updateIncidentState({}, [incident], { nowMs: 1 })
+  const key = opened.notifications[0].notificationKey
+  const rootIdentity = incident.rootIdentity
+
+  const updated = markNotificationDelivery(bind(opened, key, 2), key, 'OUTCOME_UNKNOWN', 3)
+
+  validateIncidentState(updated)
+  assert.equal(updated.outbox[key].delivery, 'OUTCOME_UNKNOWN')
+  assert.equal(updated.incidents[rootIdentity].alertState.delivery, 'OUTCOME_UNKNOWN')
+})
 
 test('T21/T26 ambiguous transport replay keeps the exact key, payload, and downstream idempotency coordinate', () => {
   const [incident] = compileIncidents([{ class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime' }]).incidents
