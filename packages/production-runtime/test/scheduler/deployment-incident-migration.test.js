@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { chmod, chown, mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { access, chmod, chown, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
@@ -119,4 +119,48 @@ test('production-pinned payload executes migration with distinct source and dest
       factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([fact]))) },
   })
   assert.equal(receipt.status, 'MIGRATED')
+})
+
+test('migration rejects an ACL-bearing frozen source without writing destination state', { skip: process.platform !== 'darwin' }, async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'deployment-incident-source-acl-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  await chmod(dir, 0o700)
+  const stateDir = join(dir, 'state'); await mkdir(stateDir, { mode: 0o700 })
+  const legacyStatePath = join(dir, 'legacy.json'), legacyEvidencePath = join(dir, 'evidence.jsonl'), factsPath = join(dir, 'facts.json')
+  const legacy = Buffer.from('{"active":{},"acknowledged":{},"retired":{}}\n')
+  const evidence = Buffer.alloc(0), factsBytes = Buffer.from('[]\n')
+  await writeFile(legacyStatePath, legacy, { mode: 0o600 })
+  await writeFile(legacyEvidencePath, evidence, { mode: 0o600 })
+  await writeFile(factsPath, factsBytes, { mode: 0o600 })
+  execFileSync('/bin/chmod', ['+a', 'everyone allow read,write', legacyStatePath])
+
+  assert.throws(() => runSchedulerIncidentMigration({
+    ctx: { runtimeNode: process.execPath, liveRoot: repo, watchdogStateDir: stateDir,
+      authsvcUid: process.getuid(), authsvcGid: process.getgid() },
+    sources: { legacyStatePath, legacyStateSha256: sha(legacy), legacyEvidencePath, legacyEvidenceSha256: sha(evidence),
+      factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([]))) },
+  }), /Command failed/)
+  await assert.rejects(access(join(stateDir, 'incidents.json')), /ENOENT/)
+})
+
+test('migration rejects an ACL-bearing destination directory without writing state', { skip: process.platform !== 'darwin' }, async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'deployment-incident-destination-acl-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  await chmod(dir, 0o700)
+  const stateDir = join(dir, 'state'); await mkdir(stateDir, { mode: 0o700 })
+  execFileSync('/bin/chmod', ['+a', 'everyone allow list,search,add_file,delete_child', stateDir])
+  const legacyStatePath = join(dir, 'legacy.json'), legacyEvidencePath = join(dir, 'evidence.jsonl'), factsPath = join(dir, 'facts.json')
+  const legacy = Buffer.from('{"active":{},"acknowledged":{},"retired":{}}\n')
+  const evidence = Buffer.alloc(0), factsBytes = Buffer.from('[]\n')
+  await writeFile(legacyStatePath, legacy, { mode: 0o600 })
+  await writeFile(legacyEvidencePath, evidence, { mode: 0o600 })
+  await writeFile(factsPath, factsBytes, { mode: 0o600 })
+
+  assert.throws(() => runSchedulerIncidentMigration({
+    ctx: { runtimeNode: process.execPath, liveRoot: repo, watchdogStateDir: stateDir,
+      authsvcUid: process.getuid(), authsvcGid: process.getgid() },
+    sources: { legacyStatePath, legacyStateSha256: sha(legacy), legacyEvidencePath, legacyEvidenceSha256: sha(evidence),
+      factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([]))) },
+  }), /Command failed/)
+  await assert.rejects(access(join(stateDir, 'incidents.json')), /ENOENT/)
 })
