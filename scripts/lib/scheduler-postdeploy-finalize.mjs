@@ -2,11 +2,11 @@
 /** Evidence-bound production acceptance. Creates one retained, delivery:none canary through the canonical CLI. */
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, lstatSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../../packages/scheduler/src/watchdog/private-state-io.js'
-import { assertSuccessfulCanaryRun, publishVerifiedPostdeployReceipt } from '../../packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js'
+import { assertSuccessfulCanaryRun, postdeployReadExpectations, publishVerifiedPostdeployReceipt } from '../../packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js'
 import { readProtectedPlainFile } from '../../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 import { readProtectedRoutingManifest } from '../../packages/scheduler/src/watchdog/routing.js'
 
@@ -30,6 +30,16 @@ if (process.getuid?.() !== 0 || !/^[0-9a-f]{40}$/.test(sourceSha ?? '') || canar
 const rootOwnership = { expectedUid: 0, expectedGid: 0 }
 const authsvcUid = Number(execFileSync('id', ['-u', 'authsvc'], { encoding: 'utf8' }).trim())
 const authsvcGid = Number(execFileSync('id', ['-g', 'authsvc'], { encoding: 'utf8' }).trim())
+// Incident reads follow the deployed SCHEDULER_INCIDENT_OWNER_GID contract: the tree is owned by
+// the runtime-reader gid, resolved from the live state directory exactly as the admission does —
+// never the authsvc primary gid. Control artifacts stay root:root (deployment-routing chowns the
+// receipt to controlUid/controlGid and reconciles legacy 601 to 0).
+const WATCHDOG_STATE_DIR = '/Users/authsvc/.agent-core/control/scheduler-watchdog'
+const readExpectations = () => {
+  const dir = lstatSync(WATCHDOG_STATE_DIR)
+  return postdeployReadExpectations({ authsvcUid, authsvcGid,
+    incidentStateDir: { uid: dir.uid, gid: dir.gid, mode: dir.mode & 0o777, directory: dir.isDirectory(), symlink: dir.isSymbolicLink() } })
+}
 ensureProtectedDirectoryTree(A, { ...rootOwnership, boundary: '/private/var/db' })
 const readControl = (name, allowMissing = false) => {
   const loaded = readPrivateFile(join(A, name), { ...rootOwnership, allowMissing })
@@ -42,7 +52,7 @@ const readStoreSnapshot = () => {
 }
 const readStore = () => readStoreSnapshot().store
 const readIncidentSnapshot = () => {
-  const bytes = readPrivateFile(INCIDENTS, { expectedUid: authsvcUid, expectedGid: authsvcGid }).bytes
+  const bytes = readPrivateFile(INCIDENTS, readExpectations().incident).bytes
   return { state: JSON.parse(bytes.toString('utf8')), sha256: createHash('sha256').update(bytes).digest('hex') }
 }
 const asAuthsvc = (command, args) => execFileSync('sudo', ['-u', 'authsvc', 'env', '-i',
@@ -66,7 +76,7 @@ if (accepted) {
 }
 
 const phaseReceipt = readControl('deployment-phase-receipt.json')
-const routingReceipt = JSON.parse(readProtectedPlainFile(ROUTING_RECEIPT, { boundary: '/', expectedUid: 0, expectedGid: authsvcGid, mode: 0o600 }).bytes.toString('utf8'))
+const routingReceipt = JSON.parse(readProtectedPlainFile(ROUTING_RECEIPT, { boundary: '/', ...readExpectations().control, mode: 0o600 }).bytes.toString('utf8'))
 const protectedRouting = readProtectedRoutingManifest(process.env.SCHEDULER_ROUTING_MANIFEST ?? '/usr/local/libexec/agent-core/config/scheduler-routing.json', {
   expectedUid: 0, allowedGids: [authsvcGid], maxMode: 0o640, parentBoundary: '/',
 })
