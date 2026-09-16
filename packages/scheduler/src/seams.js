@@ -44,6 +44,12 @@ export const INVOKE_CONTRACT = {
     durationMs: 'number|undefined',
     started: 'boolean|undefined — true when the turn was actually dispatched '
       + '(distinguishes pre-start rejections from terminal failures; C-004)',
+    routerEnvelope: "'not_admitted' | 'failed' | undefined — the Router's authoritative C-010 "
+      + "closed-union settlement envelope carried through the bridge (SCHEDULER_TERMINAL_"
+      + 'PROOF_AND_UNKNOWN_CONTAINMENT_V1). not_admitted = deterministic pre-start '
+      + 'rejection (UNKNOWN CONTAINMENT: never a second outcome_unknown); failed = '
+      + 'settled terminal failure. Absent = classify from status/evidence as before.',
+    routerCode: "string|undefined — the Router error code when routerEnvelope is 'not_admitted'",
     reconciliationHandle: 'string|undefined — outcome_unknown carriers',
     evidence: 'object|undefined',
     // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1 R4 (ADDITIVE, optional): the
