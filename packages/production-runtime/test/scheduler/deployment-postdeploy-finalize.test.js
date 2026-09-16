@@ -191,6 +191,7 @@ test('postdeploy read expectations reject coherent directory and file drift from
 test('finalize orchestrator binds incident reads to the derived ownership and the routing receipt to root:root', () => {
   const script = readFileSync(new URL('../../../../scripts/lib/scheduler-postdeploy-finalize.mjs', import.meta.url), 'utf8')
   assert.ok(script.includes('postdeployReadExpectations'), 'finalize must derive expectations from the deployed contracts')
+  assert.ok(script.includes('protectedFileReader = readProtectedPlainFile'), 'routing receipt must default to the protected full-path reader')
   assert.ok(script.includes('readPrivateFile(INCIDENTS, readExpectations().incident)'), 'incident reads must use the derived runtime-reader gid')
   assert.ok(script.includes('readExpectations().control, mode: 0o600'), 'routing receipt must be read at the control ownership root:root')
   assert.doesNotMatch(script, /readPrivateFile\(INCIDENTS,[^)]*authsvcGid/, 'incidents must not be read at the authsvc primary gid (round-13 finalize blocker)')

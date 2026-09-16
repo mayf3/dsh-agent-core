@@ -1,9 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { chmodSync, chownSync, mkdirSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, mkdirSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { mkdtemp } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { homedir } from 'node:os'
+import { dirname, join } from 'node:path'
+
+import { ensureProtectedDirectoryTree, readPrivateFile } from '../../../scheduler/src/watchdog/private-state-io.js'
 
 // B5 closure: the finalize readback gate executes against a REAL gid-split
 // fixture tree — the production contract is authsvcGid (authsvc primary
@@ -14,6 +16,11 @@ import { join } from 'node:path'
 // production finalize uses (readPrivateFile contracts included).
 import { createOwnershipReadbacks, resolveIncidentOwnership } from '../../../../scripts/lib/scheduler-postdeploy-finalize.mjs'
 
+const fixtureProtectedReader = (boundary) => (path, { expectedUid, expectedGid }) => {
+  ensureProtectedDirectoryTree(dirname(path), { boundary, expectedUid, expectedGid })
+  return readPrivateFile(path, { expectedUid, expectedGid })
+}
+
 test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid split', async (t) => {
   const authsvcGid = process.getgid()
   const other = process.getgroups().filter((gid) => gid !== authsvcGid)
@@ -22,7 +29,8 @@ test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid 
   assert.notEqual(readerGid, authsvcGid)
   assert.notEqual(controlGid, authsvcGid)
 
-  const root = await mkdtemp(join(tmpdir(), 'postdeploy-ownership-'))
+  const root = realpathSync(await mkdtemp(join(homedir(), 'postdeploy-ownership-')))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
   chmodSync(root, 0o700)
   const me = process.getuid()
   const storePath = join(root, 'store', 'jobs.json')
@@ -42,7 +50,10 @@ test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid 
   chownSync(incidentsPath, me, readerGid)
 
   const artifactsDir = join(root, 'artifacts')
-  mkdirSync(join(artifactsDir, 'rollback'), { recursive: true })
+  const rollbackDir = join(artifactsDir, 'rollback')
+  mkdirSync(rollbackDir, { recursive: true })
+  chmodSync(artifactsDir, 0o700); chmodSync(rollbackDir, 0o700)
+  chownSync(artifactsDir, me, controlGid); chownSync(rollbackDir, me, controlGid)
   const routingReceiptPath = join(artifactsDir, 'rollback', 'routing-install-receipt.json')
   writeFileSync(routingReceiptPath, JSON.stringify({ status: 'INSTALLED' }), { mode: 0o600 })
   chownSync(routingReceiptPath, me, controlGid)
@@ -56,6 +67,7 @@ test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid 
   const readbacks = createOwnershipReadbacks({
     artifactsDir, storePath, incidentsPath, authsvcUid: me, authsvcGid, runtimeReaderGid: readerGid,
     controlOwnership: { expectedUid: me, expectedGid: controlGid },
+    protectedFileReader: fixtureProtectedReader(artifactsDir),
   })
   // happy path: all three evidence sources read cleanly through their
   // canonical contracts (0600 + exact uid/gid enforced by readPrivateFile).
@@ -73,6 +85,7 @@ test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid 
     artifactsDir, storePath, incidentsPath, authsvcUid: me, authsvcGid, runtimeReaderGid: readerGid,
     controlOwnership: { expectedUid: me, expectedGid: controlGid },
     incidentOwnership: { expectedUid: me, expectedGid: authsvcGid },
+    protectedFileReader: fixtureProtectedReader(artifactsDir),
   })
   assert.throws(() => legacy.readIncidentSnapshot(), /unsafe incident state file/)
 })
@@ -82,25 +95,34 @@ test('routing receipt readback fails closed on a wrong control gid', async (t) =
   const other = process.getgroups().filter((gid) => gid !== authsvcGid)
   if (other.length < 1) { t.skip('needs a supplementary group for the wrong-gid case'); return }
   const wrongGid = other[0]
-  const root = await mkdtemp(join(tmpdir(), 'postdeploy-receipt-'))
+  const root = realpathSync(await mkdtemp(join(homedir(), 'postdeploy-receipt-')))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
   chmodSync(root, 0o700)
   const artifactsDir = join(root, 'artifacts')
-  mkdirSync(join(artifactsDir, 'rollback'), { recursive: true })
+  const rollbackDir = join(artifactsDir, 'rollback')
+  mkdirSync(rollbackDir, { recursive: true })
+  chmodSync(artifactsDir, 0o700); chmodSync(rollbackDir, 0o700)
+  chownSync(artifactsDir, process.getuid(), authsvcGid); chownSync(rollbackDir, process.getuid(), authsvcGid)
   const routingReceiptPath = join(artifactsDir, 'rollback', 'routing-install-receipt.json')
   writeFileSync(routingReceiptPath, JSON.stringify({ status: 'INSTALLED' }), { mode: 0o600 })
-  chownSync(routingReceiptPath, process.getuid(), wrongGid)
+  chownSync(routingReceiptPath, process.getuid(), authsvcGid)
   const readbacks = createOwnershipReadbacks({
     artifactsDir, storePath: join(root, 'jobs.json'), incidentsPath: join(root, 'incidents.json'),
     authsvcUid: process.getuid(), authsvcGid,
     incidentOwnership: { expectedUid: process.getuid(), expectedGid: authsvcGid },
-    controlOwnership: { expectedUid: process.getuid(), expectedGid: wrongGid },
+    controlOwnership: { expectedUid: process.getuid(), expectedGid: authsvcGid },
+    protectedFileReader: fixtureProtectedReader(artifactsDir),
   })
   assert.equal(readbacks.readRoutingReceipt().status, 'INSTALLED')
-  const hostile = createOwnershipReadbacks({
-    artifactsDir, storePath: join(root, 'jobs.json'), incidentsPath: join(root, 'incidents.json'),
-    authsvcUid: process.getuid(), authsvcGid,
-    incidentOwnership: { expectedUid: process.getuid(), expectedGid: authsvcGid },
-    controlOwnership: { expectedUid: process.getuid(), expectedGid: authsvcGid === wrongGid ? (process.getgroups()[0] ?? wrongGid) : authsvcGid },
-  })
-  assert.throws(() => hostile.readRoutingReceipt(), /unsafe incident state file/)
+  chownSync(routingReceiptPath, process.getuid(), wrongGid)
+  assert.throws(() => readbacks.readRoutingReceipt(), /unsafe incident state file/)
+  chownSync(routingReceiptPath, process.getuid(), authsvcGid)
+
+  chmodSync(rollbackDir, 0o777)
+  assert.throws(() => readbacks.readRoutingReceipt(), /unsafe protected directory tree/)
+  chmodSync(rollbackDir, 0o700)
+  const physicalRollbackDir = join(artifactsDir, 'rollback-physical')
+  renameSync(rollbackDir, physicalRollbackDir)
+  symlinkSync(physicalRollbackDir, rollbackDir, 'dir')
+  assert.throws(() => readbacks.readRoutingReceipt(), /unsafe protected directory tree/)
 })
