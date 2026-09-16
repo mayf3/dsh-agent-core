@@ -77,7 +77,7 @@ test('TERMINAL_PROOF: an authoritative terminal RPC error envelope settles as er
   assert.deepEqual(outcome.evidence, { terminationEvidence: null, promptReceipt: 'accepted' })
 })
 
-test('TERMINAL_PROOF: outcome_unknown envelope + trusted router readback proving child_real_exit converges to error', async () => {
+test('TERMINATION_ONLY: outcome_unknown + trusted router readback (child_real_exit) stays outcome_unknown and stamps the proof', async () => {
   const childExit = Object.assign(new Error('agent agent-x (generation 1) exited (code=null, signal=SIGTRAP) without an exact parsed outcome for this turn'), {
     status: 'outcome_unknown', envelope: 'outcome_unknown', reconciliationHandle: 'turn:exit1',
     code: 'AGENT_PROCESS_CHILD_EXITED', evidence: { terminationEvidence: null, promptReceipt: 'accepted' },
@@ -96,8 +96,9 @@ test('TERMINAL_PROOF: outcome_unknown envelope + trusted router readback proving
   }
   const invokeAgent = createRouterInvoker(fakeRouter({ proc: fakeProc({ turnError: childExit }), correlationResult }))
   const outcome = await invokeAgent(request)
-  assert.equal(outcome.status, 'error', 'real child exit bound to the exact inflight turn proves termination — no outcome_unknown')
-  assert.equal(outcome.evidence?.terminationEvidence, 'child_real_exit')
+  assert.equal(outcome.status, 'outcome_unknown', 'a termination proof is NEVER upgraded to a business outcome (Owner P1 ruling, C-039)')
+  assert.equal(outcome.evidence?.terminationEvidence, 'child_real_exit', 'the trusted proof rides along for the scheduler terminationSettlement')
+  assert.equal(outcome.evidence?.source, 'router_disposition_readback')
   assert.equal(outcome.started, true)
   assert.equal(outcome.reconciliationHandle, 'turn:exit1')
 })

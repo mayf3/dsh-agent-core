@@ -6,6 +6,59 @@
 - mode: NO_PRODUCTION_MUTATION / NO_MERGE / NO_DEPLOY / NO_RESTART / NO_RECONCILE / store untouched
 - governing authorities（零 Spec 文本改动）：SCHEDULER_TIMEOUT_OUTCOME_V3（C-001/C-003/C-004/C-027/C-028/C-039/C-040/C-044）、SCHEDULER_OCCURRENCE_OUTCOME_V3 (D-009)、AGENT_PROCESS_LIFECYCLE_HARDENING_V2（C-010/C-015/C-016/C-020 — Router 侧冻结约束）
 
+## R1 revision (Owner P1 ruling ACCEPT, 2026-09-16)
+
+PR #299 首轮 merge gate 中 Codex P1（"Preserve termination-only results as
+outcome_unknown"）经 Owner 裁定 ACCEPT：BUSINESS_OUTCOME_PROOF != TERMINATION_PROOF。
+撤回初版的 `TERMINATION_PROVEN => failed` 过宽规则，修订为：
+
+```text
+PROVEN_BUSINESS_FAILURE (router failed envelope)   => failed
+PROVEN_PRE_START_REJECTION (not_admitted envelope) => failed
+BUSINESS_OUTCOME_UNKNOWN + TRUSTED_EXACT_TERMINATION_PROOF
+  => outcome_unknown + terminated_without_outcome settlement
+     + fence release + no automatic retry
+BUSINESS_OUTCOME_UNKNOWN + NO_TERMINATION_PROOF    => outcome_unknown + fence retained
+```
+
+R1 delta（范围严格限于 readback 路径；`not_admitted`/`failed` envelope 透传保留不动；
+Router 零改动）：
+
+- **Bridge**：trusted readback 不再把 outcome 翻转为 error —— status 保持
+  `outcome_unknown`，readback 仅作为 trusted termination proof 载体
+  （`evidence:{terminationEvidence, source:'router_disposition_readback'}`）。
+- **Scheduler classify**：unknown 分支不变；proof 随 classification 传递
+  （`terminationProof`）。
+- **新增 `applyTerminationSettlement`**（occurrence.js）：引擎侧 C-039
+  termination-only settlement，逐字段镜像 self-ops reconcileTurn 的 locked
+  commit 形状 —— actorKind=self-agent、actorId=ownerAgentId（记录派生，非
+  caller 自报）、operationId/evidenceId 沿用 C-039/self-ops 同一公式
+  （`deriveSelfReconcileOperationId` / `evidenceIdFor`，后者由 self-ops 导出
+  复用），actorProvenance=`engine-trusted-readback`。fence 同 commit 释放；
+  one-shot 同 commit disable（C-044）；business state 保持 outcome_unknown，
+  不写 executionOutcome；零新 taxonomy。settle-once 守卫与
+  lateSettlement/terminationSettlement 互斥；后续 self-ops reconcile_turn
+  命中既有 settlement 按 C-045 回 receipt zero-write。
+- **触发点两个**：live（writeback 后同 await，`_inflight` 覆盖）与 late
+  （watchLateSettlement 对 readback-stamped outcome_unknown 先于 business
+  late settlement 判定）。触发前 occurrence 已是 unresolved unknown ⇒
+  `fenceBefore=true` 恒成立（validation 要求）。
+- **no automatic retry**：settlement 后 record 仍为 outcome_unknown ⇒
+  `retryCandidate`（要求 failed terminal）恒 null —— 即使显式
+  `retry.auto=true` 也不产生 retry occurrence（测试钉死）。
+
+R1 测试（ruling 矩阵逐条）：
+- bridge：readback ⇒ outcome_unknown + stamped proof（TERMINATION_ONLY）；
+  not_admitted/failed envelope/pending/no-readback/late_completed-scope/bare
+  error 各守卫不变。
+- scheduler：child_real_exit ⇒ outcome_unknown + settlement（kind/business
+  StateAtCommit/evidenceKind/actor/fenceBefore/After/scheduleDisposition/
+  operationId/terminalEvidence.kind 全字段断言）+ fence released + one-shot
+  disabled；no-retry（retry.auto=true 仍不 mint retry）；late readback ⇒
+  settlement + fence released；router failed envelope ⇒ failed；not_admitted
+  ⇒ failed/unfenced；timeout 无 proof ⇒ unknown + fence retained；cross-job
+  unknown 不繁殖。
+
 ## DEVELOPMENT_PREFLIGHT
 
 改动不被任何新 Spec 文本需要：它是把已 accepted 的 V3 C-004（failed = proven pre-start rejection

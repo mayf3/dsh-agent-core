@@ -18,6 +18,7 @@ import {
   ONE_SHOT_RETRY_BACKOFF_MS,
 } from './eligibility.js'
 import { writeTerminalToHistory, writeToHistory } from './history/history-sink.js'
+import { deriveSelfReconcileOperationId, evidenceIdFor } from './self-ops/index.js'
 
 export const AGENT_TURN_SAFETY_TIMEOUT_MS = 3600 * 1000
 export const TIMEOUT_ERROR_TEXT = 'cron: job execution timed out'
@@ -30,6 +31,29 @@ const TERMINATION_EVIDENCE = new Set([
 const hasTerminationProof = (outcome) => TERMINATION_EVIDENCE.has(
   outcome?.terminationEvidence ?? outcome?.evidence?.terminationEvidence,
 )
+
+/**
+ * Trusted EXACT termination proof carried by the invoker seam
+ * (SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1, Owner P1 ruling
+ * 2026-09-16: BUSINESS_OUTCOME_PROOF != TERMINATION_PROOF). The bridge only
+ * stamps `source:'router_disposition_readback'` when the router's published
+ * resolveCallerCorrelation surface settled the exact run
+ * `terminated_without_outcome` with a trusted terminationEvidence kind —
+ * the same authority the self-ops reconcile path consumes. This proof can
+ * release the fence through a C-039 terminationSettlement; it can NEVER
+ * upgrade the business outcome to succeeded/failed.
+ */
+function trustedTerminationProof(outcome) {
+  const evidence = outcome?.evidence
+  if (evidence?.source !== 'router_disposition_readback') return null
+  if (!TERMINATION_EVIDENCE.has(evidence?.terminationEvidence)) return null
+  return {
+    evidenceKind: evidence.terminationEvidence,
+    handle: typeof outcome.reconciliationHandle === 'string' && outcome.reconciliationHandle !== ''
+      ? outcome.reconciliationHandle
+      : null,
+  }
+}
 
 /** C-026: reserve eligibility and the admitted record in one locked mutation. */
 export async function reserveOccurrence(candidate, onRejection = () => {}) {
@@ -182,6 +206,12 @@ export async function runOccurrence(job, record) {
     const deliveryStatus = await this._deliverOccurrence(job, classification)
     void this._historyWrite('deliveryOutcome', { record: structuredClone(working), deliveryStatus })
     await this._writeOccurrenceOutcome(working, classification, deliveryStatus, outcome)
+    // Trusted exact termination proof (router disposition readback): record
+    // the C-039 terminationSettlement right after the unknown writeback —
+    // business state stays outcome_unknown, fence released, no retry.
+    if (classification.state === 'outcome_unknown' && classification.terminationProof) {
+      await this._applyTerminationSettlement(working, classification.terminationProof)
+    }
     // The unknown state and fence MUST commit before a fast late result can
     // resolve it. Starting the watcher earlier races and can strand the fence.
     if (classification.state === 'outcome_unknown' && outcome.__timedOut) {
@@ -257,11 +287,17 @@ export function classifyOccurrenceOutcome(record, outcome) {
     }
   }
   if (outcome.__timedOut || outcome.status === 'outcome_unknown') {
+    // A trusted exact termination proof never upgrades the business outcome
+    // (Owner P1 ruling): the state stays outcome_unknown; the proof rides
+    // along so the writeback can record the C-039 terminationSettlement
+    // (fence release, no automatic retry).
+    const proof = outcome.__timedOut ? null : trustedTerminationProof(outcome)
     return {
       state: 'outcome_unknown',
       reason: outcome.__timedOut
         ? `execution deadline exceeded without termination proof: ${outcome.error ?? TIMEOUT_ERROR_TEXT}`
         : `invoker reported outcome_unknown: ${outcome.error ?? ''}`,
+      ...(proof ? { terminationProof: proof } : {}),
     }
   }
   const started = record.__started === true || outcome.started === true
@@ -382,7 +418,15 @@ export async function writeOccurrenceOutcome(record, classification, deliverySta
 export async function watchLateSettlement(record, invocationPromise) {
   try {
     const outcome = await invocationPromise
-    if (!outcome || typeof outcome !== 'object' || outcome.status === 'outcome_unknown') return
+    if (!outcome || typeof outcome !== 'object') return
+    // A late trusted termination proof (readback-stamped outcome_unknown)
+    // converges the fence through the C-039 settlement — business state stays
+    // outcome_unknown (Owner P1 ruling), no automatic retry either way.
+    if (outcome.status === 'outcome_unknown') {
+      const proof = trustedTerminationProof(outcome)
+      if (proof) await this._applyTerminationSettlement(record, proof)
+      return
+    }
     if (outcome.status === 'ok' && !outcome.error) {
       await this._applyLateSettlement(record, 'succeeded', 'invoker late terminal success after timeout', outcome)
       return
@@ -407,8 +451,77 @@ export async function watchLateSettlement(record, invocationPromise) {
   }
 }
 
-export async function applyLateSettlement(record, resolvedTo, note, outcome = {}) {
-  const resolvedAt = this.nowMs()
+/**
+ * C-039 termination-only settlement driven by the engine's trusted router
+ * disposition readback (SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1,
+ * Owner P1 ruling 2026-09-16). BUSINESS_OUTCOME_PROOF != TERMINATION_PROOF:
+ * the business state STAYS outcome_unknown; the settlement releases the fence
+ * through the existing V3 authority — same schema, operationId/evidenceId
+ * formulas and actor identity derivation as the self-ops reconcile path
+ * (actor = the occurrence's ownerAgentId, never caller-supplied), so a later
+ * self-ops reconcile_turn replays the same receipt zero-write (C-045) and NO
+ * automatic retry exists (retryCandidate requires a failed terminal).
+ */
+export async function applyTerminationSettlement(record, proof) {
+  const now = this.nowMs()
+  try {
+    const { doc } = await this.store.mutateDoc((latest) => {
+      const current = findOccurrenceById(latest.occurrences, record.occurrenceId)
+      if (!current || current.runId !== record.runId
+        || current.state !== 'outcome_unknown'
+        || current.terminationSettlement !== undefined
+        || current.lateSettlement !== undefined) return {}
+      const job = latest.jobs.find((entry) => entry.id === current.jobId)
+      if (!job || job.agentId !== current.ownerAgentId) return {}
+      const fenceBefore = latest.fences[current.jobId] !== undefined
+      if (!fenceBefore) return {}
+      const oneShot = job.schedule?.kind === 'at'
+      current.terminationSettlement = {
+        kind: 'terminated_without_outcome',
+        businessStateAtCommit: 'outcome_unknown',
+        requestId: current.requestId ?? current.idempotencyKey,
+        evidenceKind: proof.evidenceKind,
+        evidenceId: evidenceIdFor(proof.handle ?? current.occurrenceId, proof.evidenceKind),
+        actorKind: 'self-agent',
+        actorId: current.ownerAgentId,
+        actorProvenance: 'engine-trusted-readback',
+        operationId: deriveSelfReconcileOperationId(current.ownerAgentId, current.occurrenceId, current.runId),
+        fenceBefore,
+        fenceAfter: false,
+        scheduleDisposition: oneShot ? 'one_shot_disabled' : 'recurring_future_natural_only',
+        settledAt: now,
+        committedAt: now,
+      }
+      current.terminalEvidence = { kind: 'termination-only', detailRef: current.terminationSettlement.evidenceId }
+      // The annotation is the final history entry, so endedAt must move with
+      // it (validateOccurrenceRecord: endedAt must match the final transition).
+      current.history.push({ at: now, from: 'outcome_unknown', to: 'outcome_unknown', reason: 'trusted exact termination without business outcome' })
+      current.endedAt = now
+      if (oneShot) {
+        job.enabled = false
+        job.updatedAtMs = now
+      }
+      latest.fences = rebuildFences(latest.occurrences)
+      current.terminationSettlement.fenceAfter = latest.fences[current.jobId] !== undefined
+      job.state = deriveJobStateSummary(job, latest.occurrences.filter((entry) => entry.jobId === job.id), now)
+      return {}
+    })
+    this.doc = doc
+    await this._evidence({
+      ts: now,
+      action: 'termination_settlement',
+      occurrenceId: record.occurrenceId,
+      runId: record.runId,
+      basis: 'engine-trusted-readback',
+      evidenceKind: proof.evidenceKind,
+      kind: 'terminated_without_outcome',
+    })
+  } catch (error) {
+    this.log.error(`termination settlement failed for ${record.occurrenceId}: ${error?.message ?? error}`)
+  }
+}
+
+export async function applyLateSettlement(record, resolvedTo, note, outcome = {}) {  const resolvedAt = this.nowMs()
   const lateEvidence = {
     requestId: record.idempotencyKey,
     ...(typeof outcome.reconciliationHandle === 'string' ? { reconciliationHandle: outcome.reconciliationHandle } : {}),
@@ -512,6 +625,7 @@ export const occurrenceEngineMethods = {
   _writeOccurrenceOutcome: writeOccurrenceOutcome,
   _watchLateSettlement: watchLateSettlement,
   _applyLateSettlement: applyLateSettlement,
+  _applyTerminationSettlement: applyTerminationSettlement,
   _evidence: appendOccurrenceEvidence,
   _historyWrite: writeToHistory,
   _writeTerminalHistory: writeTerminalToHistory,

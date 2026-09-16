@@ -2,9 +2,15 @@
  * @agent-core/scheduler — SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1
  *
  * Live-path classification contract (SCHEDULER_TIMEOUT_OUTCOME_V3 C-001,
- * C-003, C-004, C-028):
- *   TERMINATION_PROVEN   => succeeded | failed  (never outcome_unknown, no fence)
- *   TERMINATION_NOT_PROVEN => outcome_unknown   (fail-closed default, fenced)
+ * C-003, C-004, C-028/C-039; Owner P1 ruling 2026-09-16 —
+ * BUSINESS_OUTCOME_PROOF != TERMINATION_PROOF):
+ *   PROVEN_BUSINESS_FAILURE (router failed envelope)      => failed
+ *   PROVEN_PRE_START_REJECTION (not_admitted envelope)    => failed, no fence
+ *   BUSINESS_OUTCOME_UNKNOWN + TRUSTED_EXACT_TERMINATION_PROOF
+ *     => outcome_unknown + terminated_without_outcome settlement
+ *        + fence release + no automatic retry
+ *   BUSINESS_OUTCOME_UNKNOWN + NO_TERMINATION_PROOF
+ *     => outcome_unknown + fence retained
  *   a fence-rejected shift on a shared agent => deterministic pre-start
  *   failed disposition — one occurrence's unknown must never reproduce into
  *   another Job's occurrence (UNKNOWN CONTAINMENT).
@@ -94,14 +100,15 @@ test('TERMINAL_PROOF A: an authoritative terminal RPC failure envelope (no termi
   await scheduler.stop()
 })
 
-test('TERMINAL_PROOF B: child_real_exit termination evidence settles failed without a fence', async () => {
+test('TERMINATION_ONLY B: child_real_exit (no business outcome) => outcome_unknown + terminationSettlement + fence released', async () => {
   const clock = { value: 1_000 }
-  // The bridge emits this shape after the trusted router disposition readback
-  // proves the exact inflight turn was terminated by the real child exit.
+  // The bridge stamps this shape after the trusted router disposition readback
+  // proves the exact run settled terminated_without_outcome — a termination
+  // proof is NEVER upgraded to a business outcome (Owner P1 ruling, C-039).
   const invoker = async (request) => {
     request.onStart()
     return {
-      status: 'error', started: true,
+      status: 'outcome_unknown', started: true,
       error: 'agent exited (signal=SIGTRAP) without an exact parsed outcome',
       evidence: { terminationEvidence: 'child_real_exit', source: 'router_disposition_readback' },
       reconciliationHandle: 'turn:exit',
@@ -114,9 +121,86 @@ test('TERMINAL_PROOF B: child_real_exit termination evidence settles failed with
   await scheduler.tick()
   await scheduler.whenIdle()
   const [record] = scheduler.listOccurrences(job.id)
-  assert.equal(record.state, 'failed', 'termination proven => failed, not outcome_unknown')
-  assert.equal(record.terminalEvidence.kind, 'turn-terminal')
-  assert.equal(scheduler.isFenced(job.id), false, 'proven termination never fences')
+  assert.equal(record.state, 'outcome_unknown', 'business state stays unknown — termination != business failure')
+  assert.equal(record.executionOutcome, undefined, 'no business outcome is claimed from a termination proof')
+  const settlement = record.terminationSettlement
+  assert.equal(settlement?.kind, 'terminated_without_outcome')
+  assert.equal(settlement?.businessStateAtCommit, 'outcome_unknown')
+  assert.equal(settlement?.evidenceKind, 'child_real_exit')
+  assert.equal(settlement?.actorKind, 'self-agent')
+  assert.equal(settlement?.actorId, record.ownerAgentId)
+  assert.equal(settlement?.fenceBefore, true)
+  assert.equal(settlement?.fenceAfter, false)
+  assert.equal(settlement?.scheduleDisposition, 'one_shot_disabled')
+  assert.match(settlement?.operationId ?? '', /^op:[0-9a-f]{16}$/)
+  assert.equal(record.terminalEvidence?.kind, 'termination-only')
+  assert.equal(scheduler.isFenced(job.id), false, 'the trusted termination settlement releases the fence (C-028/C-044)')
+  assert.equal((await scheduler.getJob(job.id)).enabled, false, 'the exhausted one-shot definition is disabled in the settlement commit (C-044)')
+  await scheduler.stop()
+})
+
+test('TERMINATION_ONLY: no automatic retry after a termination-only settlement (even with explicit retry.auto)', async () => {
+  const clock = { value: 1_000 }
+  const invoker = async (request) => {
+    request.onStart()
+    return {
+      status: 'outcome_unknown', started: true,
+      error: 'agent exited without an exact parsed outcome',
+      evidence: { terminationEvidence: 'child_real_exit', source: 'router_disposition_readback' },
+      reconciliationHandle: 'turn:exit-retry',
+    }
+  }
+  invoker.assertRunnable = () => true
+  const scheduler = await makeScheduler({ invoker, nowMs: () => clock.value })
+  const job = await scheduler.createJob({
+    ...atJob('no-retry', 2_000),
+    retry: { auto: true },
+  })
+  clock.value = 2_000
+  await scheduler.tick()
+  await scheduler.whenIdle()
+  const [record] = scheduler.listOccurrences(job.id)
+  assert.equal(record.state, 'outcome_unknown')
+  assert.notEqual(record.terminationSettlement, undefined)
+  assert.equal(scheduler.listOccurrences(job.id).length, 1, 'termination-only settlements never mint a retry occurrence')
+  clock.value += 60 * 1000
+  await scheduler.tick()
+  await scheduler.whenIdle()
+  assert.equal(scheduler.listOccurrences(job.id).length, 1, 'no retry: retryCandidate requires a failed terminal (C-009)')
+  await scheduler.stop()
+})
+
+test('TERMINATION_ONLY late: a late trusted termination readback settles a timed-out unknown and releases the fence', async () => {
+  const clock = { value: 1_000 }
+  let releaseLate
+  const invocation = new Promise((resolve) => { releaseLate = resolve })
+  const invoker = async (request) => {
+    request.onStart()
+    return invocation
+  }
+  invoker.assertRunnable = () => true
+  const scheduler = await makeScheduler({ invoker, nowMs: () => clock.value, deadlineSetTimeout: immediateDeadline })
+  const job = await scheduler.createJob(atJob('late-termination', 2_000))
+  clock.value = 2_000
+  await scheduler.tick()
+  await scheduler.whenIdle()
+  assert.equal(scheduler.listOccurrences(job.id)[0].state, 'outcome_unknown')
+  assert.equal(scheduler.isFenced(job.id), true)
+  releaseLate({
+    status: 'outcome_unknown', started: true, reconciliationHandle: 'turn:late-exit',
+    error: 'agent exited (signal=SIGTRAP) without an exact parsed outcome',
+    evidence: { terminationEvidence: 'child_real_exit', source: 'router_disposition_readback' },
+  })
+  const deadline = Date.now() + 2_000
+  while (Date.now() < deadline) {
+    await scheduler.load()
+    if (scheduler.listOccurrences(job.id)[0].terminationSettlement !== undefined) break
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  const [record] = scheduler.listOccurrences(job.id)
+  assert.equal(record.state, 'outcome_unknown', 'business state never flips from a termination proof')
+  assert.equal(record.terminationSettlement?.evidenceKind, 'child_real_exit')
+  assert.equal(scheduler.isFenced(job.id), false, 'the settlement releases the fence — the next natural shift resumes (C-044)')
   await scheduler.stop()
 })
 

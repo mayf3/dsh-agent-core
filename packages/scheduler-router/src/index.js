@@ -104,13 +104,15 @@ export function chatIdFromDeliveryTo(to) {
  *   - `failed` -> outcome `{status:'error', routerEnvelope:'failed'}` — the
  *     router's settled terminal failure (structured RPC error response /
  *     exact turn-end failure) survives the seam. No error-code whitelist: the
- *     closed envelope IS the terminal proof.
- *   - `outcome_unknown` stays outcome_unknown EXCEPT when the router's
- *     published `resolveCallerCorrelation` surface proves the exact run
- *     settled `terminated_without_outcome` with a trusted terminationEvidence
- *     kind (child_real_exit etc.) — then the outcome converges to
- *     `{status:'error', evidence:{terminationEvidence, source:
- *     'router_disposition_readback'}}` (TERMINATION_PROVEN => failed, C-004).
+ *     closed envelope IS the business-failure proof.
+ *   - `outcome_unknown` stays outcome_unknown. When the router's published
+ *     `resolveCallerCorrelation` surface proves the exact run settled
+ *     `terminated_without_outcome` with a trusted terminationEvidence kind
+ *     (child_real_exit etc.), the outcome is stamped
+ *     `evidence:{terminationEvidence, source:'router_disposition_readback'}`
+ *     so the scheduler can record the V3 terminationSettlement (fence
+ *     release, no automatic retry) — a termination proof is NEVER upgraded
+ *     to a business outcome (Owner P1 ruling 2026-09-16, C-039).
  *   - everything else (bare errors, pending/mismatched readbacks) keeps the
  *     fail-closed outcome_unknown default (C-001).
  *
@@ -255,22 +257,28 @@ export function createRouterInvoker(router, opts = {}) {
       const readback = explicitlyUnknown
         ? await trustedTerminationReadback(router, request, error)
         : null
-      // SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1: the Router's
-      // C-010 closed-union envelopes are AUTHORITATIVE settlements — the
-      // router owns the exact-turn evidence, so its verdict must survive this
-      // seam instead of being re-guessed from `turnDispatched`:
+      // SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1 (Owner P1 ruling
+      // 2026-09-16: BUSINESS_OUTCOME_PROOF != TERMINATION_PROOF): the Router's
+      // C-010 closed-union envelopes are authoritative BUSINESS settlements
+      // and are carried through —
       //   not_admitted -> deterministic pre-start rejection (UNKNOWN
       //     CONTAINMENT: an Agent/session fence rejection of one shift must
       //     never reproduce as a second outcome_unknown);
       //   failed       -> the router's settled terminal failure (e.g. the
       //     structured RPC error response) — no error-code whitelist, the
-      //     envelope IS the terminal proof.
-      // Any OTHER post-dispatch failure without exact-turn termination proof
-      // stays outcome_unknown (fail-closed default unchanged).
+      //     envelope IS the business-failure proof.
+      // A trusted `terminated_without_outcome` readback is TERMINATION-only
+      // proof: the outcome STAYS outcome_unknown (C-039 — business state is
+      // never falsified from a termination proof); the readback evidence is
+      // stamped so the scheduler can record the trusted terminationSettlement
+      // (fence release, no automatic retry) through the existing V3
+      // reconciliation authority. Any OTHER post-dispatch failure without
+      // exact-turn termination proof stays outcome_unknown (fail-closed
+      // default unchanged).
       const routerNotAdmitted = envelope === 'not_admitted'
       const routerFailed = envelope === 'failed'
       const unknown = explicitlyUnknown
-        ? readback === null
+        ? true
         : !(routerNotAdmitted || routerFailed) && turnDispatched && !provenTerminal
       const outcome = {
         status: unknown ? 'outcome_unknown' : 'error',
