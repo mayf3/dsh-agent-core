@@ -32,13 +32,14 @@ test('workflow_domain_admin: manifest validates; six operations with frozen wire
     path: '/internal/v1/domains/{domainId}',
     pathParams: ['domainId'],
   })
-  // B4: create body is EXACTLY the current ProvisionDomainRequest contract
-  // (domainId = the NEW-RESOURCE id; caller-supplied in V1).
+  // CTR-DCA-001 (AGENT_CORE_DOMAIN_CREATE_CANONICAL_CONTRACT_BROKER_V1):
+  // create body is business inputs only — svc generates the domainId and
+  // assigns the authenticated caller as DOMAIN_OWNER server-side.
   assert.deepEqual(http('create'), {
     target: 'svc-workflow',
     method: 'POST',
     path: '/internal/v1/domains',
-    body: ['domainId', 'domainKey', 'displayName', 'enabled'],
+    body: ['domainKey', 'displayName', 'enabled'],
     idempotencyKey: true,
   })
   // DEC-DCP-005: update is displayName-only in V1.
@@ -120,12 +121,18 @@ test('workflow_domain_admin create/update/set_owner: exact body forwarding with 
   const tokenServer = await startTokenServer()
   const workflow = await startMockServer((req, res, entry) => {
     if (entry.method === 'POST' && entry.pathname === '/internal/v1/domains') {
-      return json(res, 200, { domainId: 'd-new', domainKey: 'dogfood-a', enabled: true })
+      return json(res, 200, {
+        domainId: 'd-new-generated-by-server',
+        domainKey: 'dogfood-a',
+        displayName: 'Dogfood A',
+        enabled: true,
+        ownerPrincipalId: 'p-creator',
+      })
     }
-    if (entry.method === 'PATCH' && entry.pathname === '/internal/v1/domains/d-new') {
-      return json(res, 200, { domainId: 'd-new', domainKey: 'dogfood-a', displayName: 'Renamed', enabled: true })
+    if (entry.method === 'PATCH' && entry.pathname === '/internal/v1/domains/d-new-generated-by-server') {
+      return json(res, 200, { domainId: 'd-new-generated-by-server', domainKey: 'dogfood-a', displayName: 'Renamed', enabled: true })
     }
-    if (entry.method === 'PUT' && entry.pathname === '/internal/v1/domains/d-new/owner') {
+    if (entry.method === 'PUT' && entry.pathname === '/internal/v1/domains/d-new-generated-by-server/owner') {
       return json(res, 403, { error: { code: 'global_coordinator_required', message: 'caller must hold the GLOBAL_WORKFLOW_COORDINATOR role' } })
     }
     json(res, 404, { error: { code: 'domain_not_found', message: 'missing' } })
@@ -137,9 +144,9 @@ test('workflow_domain_admin create/update/set_owner: exact body forwarding with 
   })
   const { definition } = wire(adminManifest(), transport)
 
+  // Business inputs only — no domainId argument exists any more.
   const created = await definition.execute({
     operation: 'create',
-    domainId: 'd-new',
     domainKey: 'dogfood-a',
     displayName: 'Dogfood A',
     enabled: true,
@@ -148,16 +155,24 @@ test('workflow_domain_admin create/update/set_owner: exact body forwarding with 
   const createReq = workflow.requests[0]
   assert.equal(createReq.method, 'POST')
   assert.deepEqual(createReq.body, {
-    domainId: 'd-new',
     domainKey: 'dogfood-a',
     displayName: 'Dogfood A',
     enabled: true,
   })
   assert.ok(createReq.headers['idempotency-key'])
+  // svc's canonical create response is forwarded verbatim (server-generated
+  // domainId + creator owner), no reshaping.
+  assert.deepEqual(created.result, {
+    domainId: 'd-new-generated-by-server',
+    domainKey: 'dogfood-a',
+    displayName: 'Dogfood A',
+    enabled: true,
+    ownerPrincipalId: 'p-creator',
+  })
 
   const updated = await definition.execute({
     operation: 'update',
-    domainId: 'd-new',
+    domainId: 'd-new-generated-by-server',
     displayName: 'Renamed',
   })
   assert.equal(updated.ok, true)
@@ -168,11 +183,58 @@ test('workflow_domain_admin create/update/set_owner: exact body forwarding with 
   // Authorization failures are forwarded verbatim (no swallowing).
   const denied = await definition.execute({
     operation: 'set_owner',
-    domainId: 'd-new',
+    domainId: 'd-new-generated-by-server',
     newOwnerPrincipalId: 'p-1',
   })
   assert.equal(denied.ok, false)
   assert.equal(denied.error.code, 'global_coordinator_required')
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('workflow_domain_admin create: legacy caller-supplied domainId cannot reach the wire; missing business inputs fail locally', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/domains') {
+      return json(res, 200, {
+        domainId: 'd-server-minted',
+        domainKey: entry.body.domainKey,
+        enabled: true,
+        ownerPrincipalId: 'p-creator',
+      })
+    }
+    json(res, 404, { error: { code: 'domain_not_found', message: 'missing' } })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(adminManifest(), transport)
+
+  // A model-side residual domainId argument is NOT in the body binding list,
+  // so it is structurally dropped before the request is bound (identity-field
+  // mechanics) — the legacy caller-supplied contract is unreachable.
+  const residual = await definition.execute({
+    operation: 'create',
+    domainId: 'd-caller-minted',
+    domainKey: 'residual-id',
+    enabled: true,
+  })
+  assert.equal(residual.ok, true)
+  assert.deepEqual(workflow.requests[0].body, { domainKey: 'residual-id', enabled: true })
+  assert.ok(workflow.requests[0].headers['idempotency-key'])
+
+  // Missing required business inputs fail locally with invalid_arguments
+  // BEFORE any token or HTTP request (zero downstream work).
+  const missingKey = await definition.execute({ operation: 'create', enabled: true })
+  assert.equal(missingKey.ok, false)
+  assert.equal(missingKey.error.code, 'invalid_arguments')
+  const missingEnabled = await definition.execute({ operation: 'create', domainKey: 'k' })
+  assert.equal(missingEnabled.ok, false)
+  assert.equal(missingEnabled.error.code, 'invalid_arguments')
+  assert.equal(workflow.requests.length, 1) // only the residual call above hit HTTP
 
   await tokenServer.close()
   await workflow.close()
