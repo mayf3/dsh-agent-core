@@ -18,7 +18,7 @@ external_authorities:
     relation: constrained_by
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_ACTIVE_AGENT_LIST_V1
-    revision: 34b2c6e90d5a7f02a6690b189f97cb901a47dd43
+    revision: 07d9117358113c89dc9bd4d483695c8d34b21efb
     relation: depends_on
 supersedes:
   - AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2
@@ -39,10 +39,11 @@ owners:
 >
 > **Candidate dependency pin.** The architecture reconciliation and
 > svc-workflow implementation candidate are the two documents at
-> `34b2c6e90d5a7f02a6690b189f97cb901a47dd43`. Their candidate status does not
-> grant local implementation authority. Before V3 acceptance, every external
-> reference must be re-pinned to the final accepted exact head; semantic drift
-> requires a new review.
+> `07d9117358113c89dc9bd4d483695c8d34b21efb`, the final svc docs-only
+> acceptance head descended from reviewed head
+> `34b2c6e90d5a7f02a6690b189f97cb901a47dd43`. Their accepted status does not
+> grant local implementation authority. Semantic drift from that accepted head
+> requires another repin and review.
 >
 > `PRODUCT_CODE_CHANGE = NONE`; `PRODUCTION_CHANGE = NONE`.
 
@@ -114,18 +115,22 @@ Agent set.
 - `OBS-V3-002` — The existing dedicated test home already verifies global-list
   query forwarding, error preservation, cursor pagination, result passthrough,
   and the absence of per-Agent wiring.
-- `OBS-V3-003` — The two svc-workflow candidates are pinned at
-  `34b2c6e90d5a7f02a6690b189f97cb901a47dd43`; both remain proposed with
-  implementation and production authority set to none.
+- `OBS-V3-003` — The two svc-workflow authorities are pinned at the final
+  docs-only acceptance head
+  `07d9117358113c89dc9bd4d483695c8d34b21efb`, descended from exact reviewed
+  candidate `34b2c6e90d5a7f02a6690b189f97cb901a47dd43`. Architecture V0_4_3 is
+  accepted with implementation authority none; Active Agent List V1 is
+  accepted with implementation authority contracts; both retain production
+  apply authority none.
 - `CLM-V3-001` (**SUPPORTED**) — The missing Broker field prevents the accepted
   Product V8 triple filter from being expressed through the current capability.
 - `EVD-V3-001` — OBS-V3-001 supports CLM-V3-001 by exact source inspection;
   absence was checked in both the manifest and its dedicated test.
 - `EVD-V3-002` — OBS-V3-002 supports the two-path closure because the existing
   manifest and dedicated fixture home already own the behavior being extended.
-- `STATE-V3-001` — The server contract is a proposed external dependency and
-  the local passthrough contract is a proposed whole successor. Therefore
-  implementation authority is currently none.
+- `STATE-V3-001` — The server contract is an accepted external dependency and
+  the local passthrough contract remains a proposed whole successor. Therefore
+  local V3 implementation authority is currently none.
 
 ### Decisions
 
@@ -147,11 +152,12 @@ heads remains a later gate and does not change this candidate's inert status.
 Authority flows in this order:
 
 1. Accepted `SVC_WORKFLOW_PRODUCT_BOUNDARY_V8` owns the product requirement.
-2. `SVC_WORKFLOW_ARCHITECTURE_V0_4_3`, once independently accepted, owns the
-   architecture exception, delivery-mode exclusion, and cross-system boundary.
-3. `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V1`, once independently accepted, owns
-   canonical projection, server filtering, persistence/query mechanics, and
-   service acceptance.
+2. Accepted `SVC_WORKFLOW_ARCHITECTURE_V0_4_3` at svc acceptance head
+   `07d9117358113c89dc9bd4d483695c8d34b21efb` owns the architecture exception,
+   delivery-mode exclusion, and cross-system boundary.
+3. Accepted `SVC_WORKFLOW_ACTIVE_AGENT_LIST_V1` at that same head owns canonical
+   projection, server filtering, persistence/query mechanics, and service
+   acceptance.
 4. This V3, only after 2 and 3 are accepted at exact pinned heads, may be
    accepted as the dsh-agent-core Broker implementation authority.
 5. HR consumption may proceed only after compatible svc-workflow and Broker
@@ -163,8 +169,8 @@ Supersession rules:
 - V3 is a whole successor candidate to V2; it does not amend V2 in place.
 - Acceptance must atomically set V3 to accepted/contracts, set V2 to
   superseded/none, and write both forward and backward links.
-- If either external candidate changes, V3 remains proposed and must be
-  re-pinned and re-reviewed.
+- If either accepted external authority changes, V3 remains proposed and must
+  be re-pinned and re-reviewed.
 - Product V8 remains higher product authority. The architecture document owns
   reconciliation; the svc implementation Spec owns server mechanics; V3 owns
   only Broker passthrough. None can silently absorb another document's scope.
@@ -280,8 +286,8 @@ Broker mapping table or executor authority.
   client classifier or hidden permission model was introduced.
 - **Owner exact-head acceptance gate:** Owner accepts exact document heads and
   performs the required atomic supersession transactions.
-- **Implementation gate:** closed until all three candidates are accepted in
-  dependency order and exact accepted heads are pinned.
+- **Implementation gate:** closed until V3 is independently re-reviewed and
+  Owner-accepted with the exact accepted svc head pinned.
 - **Merge/deploy/production gate:** separately closed; Spec acceptance alone
   does not authorize merge, deployment, credential changes, cleanup, or data
   mutation.
