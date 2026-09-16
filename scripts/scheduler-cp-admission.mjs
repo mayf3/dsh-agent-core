@@ -345,13 +345,16 @@ function operatorGeneration() {
     ].join('\n'))
   }
   // the link may dangle: a prior failed apply's target lives inside a control dir that
-  // the phase2 wrapper archives away before the next attempt — treat that as no previous
+  // the phase2 wrapper archives away before the next attempt. darwin readlink -f prints
+  // the stored target but exits 1 on dangling links, so use bare readlink (exit 0,
+  // prints the raw stored target) and keep the raw path as forensic evidence.
   let previous = ''
   let previousSha = null
   try {
-    previous = execFileSync('readlink', ['-f', CTX.binSymlink], { encoding: 'utf8' }).trim()
-    if (!existsSync(previous)) previousSha = null
-    else previousSha = sha256(readFileSync(previous))
+    previous = execFileSync('readlink', [CTX.binSymlink], { encoding: 'utf8' }).trim()
+    if (previous !== '' && !previous.startsWith('/')) previous = join(dirname(CTX.binSymlink), previous)
+    if (previous !== '' && existsSync(previous)) previousSha = sha256(readFileSync(previous))
+    else previousSha = null
   } catch { previous = ''; previousSha = null }
   const candidateSha = sha256(readFileSync(candidateCli))
   const durableReceipt = join(CTX.artifactsDir, 'operator-cutover-receipt.json')

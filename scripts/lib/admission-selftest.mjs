@@ -1,8 +1,7 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { symlinkSync } from 'node:fs'
 
 import { createJobOp } from '../../packages/scheduler/src/control.js'
 import { JobStore } from '../../packages/scheduler/src/store.js'
@@ -141,5 +140,8 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(existsSync(stagedCli) && sha256(readFileSync(ctx.binSymlink)) === sha256(readFileSync(stagedCli)), 'dangling-link recovery restages and flips the candidate')
   const thirdReceipt = JSON.parse(readFileSync(join(fx, 'deployment-phase-receipt.json'), 'utf8'))
   ok(thirdReceipt.phases.operator?.ok === true, 'dangling-link recovery records the operator phase')
+  const thirdCutover = JSON.parse(readFileSync(join(fx, 'operator-cutover-receipt.json'), 'utf8'))
+  ok(thirdCutover.previousLink.includes('archived-away-by-prior-failed-attempt'), 'dangling previousLink recorded verbatim for forensics')
+  ok(thirdCutover.previousSha256 === null, 'dangling previousSha256 recorded as null')
   process.stdout.write(`[admission selftest] PASS (fixture ${fx}; authsvcGid=${ctx.authsvcGid}; runtimeReaderGid=${runtimeReaderGid})\n`)
 }
