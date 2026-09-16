@@ -10,6 +10,9 @@ import { WATCHDOG_DELETE_PATHS, WATCHDOG_OVERLAY_PATHS, WATCHDOG_PAYLOAD_SNAPSHO
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
+const composePath = 'packages/production-runtime/src/compose.js'
+const reviewedComposePreSha = '678374d753fec151614c4e1ab5cae6e340527a55a10640178b151b9074392ae7'
+const reviewedComposePostSha = '17e4aedd43053286c4bcead61b18da4bec6bbaccda2bdd99860963a711a3c3d0'
 const sourceSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim()
 const reviewedPayload = (path) => {
   const expected = WATCHDOG_PAYLOAD_SNAPSHOT.paths[path]
@@ -22,6 +25,7 @@ const reviewedPayload = (path) => {
 }
 const LIVE_COMPOSE_FIXTURE = `import { createRouterInvoker, createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
+import { createAgentDirectoryAccess } from './agent-directory.js'
 // agent-model-overrides.json version 2
 const defaultRoute = {
   provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
@@ -55,6 +59,7 @@ const defaultRoute = {
   invoker.assertRunnable = rawInvoker.assertRunnable
   const store = new JobStore(layout.jobsStore, { runLogPath: layout.runsLog })
   mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log })
+  ctx.provide('agentDirectoryAccess', createAgentDirectoryAccess({ definition }))
   return {
     scheduler,
     writeEvidence,
@@ -67,6 +72,11 @@ test('reviewed production path authority is exactly 22 writes plus one retired w
   assert.equal(WATCHDOG_OVERLAY_PATHS.size, 22)
   assert.deepEqual([...WATCHDOG_DELETE_PATHS], ['packages/scheduler/src/watchdog.js'])
   assert.equal([...WATCHDOG_DELETE_PATHS].some((path) => WATCHDOG_OVERLAY_PATHS.has(path)), false)
+})
+
+test('compose live adapter pins replace the stale generation with the Agent Directory generation', () => {
+  assert.equal(WATCHDOG_LIVE_ADAPTER_SHA.get(composePath), reviewedComposePreSha)
+  assert.equal(WATCHDOG_LIVE_ADAPTER_POST_SHA.get(composePath), reviewedComposePostSha)
 })
 
 test('reviewed payload contains bounded failed-cutover extension and the dependency-isolated migration entrypoint', () => {
@@ -127,12 +137,15 @@ test('overlay closure pins only an exact reviewed live dependency and updates th
   ])
 })
 
-test('production compose adds only watchdog wiring to the exact live Session Trace face', () => {
+test('production compose preserves Agent Directory while adding Watchdog wiring', () => {
   const adapted = adaptLiveComposeForWatchdog(LIVE_COMPOSE_FIXTURE)
 
   assert.match(adapted, /mountConfiguredSchedulerHealthRuntime/)
   assert.match(adapted, /assertSchedulerStartupReady/)
   assert.match(adapted, /createObservedSchedulerInvoker/)
+  assert.match(adapted, /createAgentDirectoryAccess/)
+  assert.match(adapted, /ctx\.provide\('agentDirectoryAccess'/)
+  assert.match(adapted, /schedulerHealth/)
   assert.match(adapted, /createAgentSessionRuntime/)
   assert.match(adapted, /agent-model-overrides\.json version 2/)
   assert.match(adapted, /provider: process\.env\.DSH_AGENT_PROVIDER \?\? 'opencode-go'/)

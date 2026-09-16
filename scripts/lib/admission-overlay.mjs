@@ -15,7 +15,7 @@ export const WATCHDOG_PINNED_LIVE_DEPENDENCIES = new Map([
 ])
 export const WATCHDOG_LIVE_ADAPTER_SHA = new Map([
   ['packages/product-api/src/index.js', 'f49cbbba4e79d73c52353891cc1c8701e27b3252a6e9758982a727cddd07ca05'],
-  ['packages/production-runtime/src/compose.js', 'e1cbcc41f04e9abc40b17956a124e3fd6295d25d4613d5294260b38d8bb343df'],
+  ['packages/production-runtime/src/compose.js', '678374d753fec151614c4e1ab5cae6e340527a55a10640178b151b9074392ae7'],
   ['packages/production-runtime/src/entry.js', 'ca48020c68a5241b0748d675747d7465f02544ddf37337bb849f3648e2fc6b0a'],
   ['packages/production-runtime/src/paths.js', 'e99add385746fe81bf1e9f7c35f6a5eeadf93604cbf0d8c83a4d3e13889a5e91'],
   ['packages/production-runtime/src/scheduler/self-service-runtime.js', 'c18887e4f9630210cd7e450c96c2f13679be90fa0287380394642d3c57ce3cae'],
@@ -24,7 +24,7 @@ export const WATCHDOG_LIVE_ADAPTER_SHA = new Map([
 ])
 export const WATCHDOG_LIVE_ADAPTER_POST_SHA = new Map([
   ['packages/product-api/src/index.js', 'a23e7b7ef3c70884050686c928bb4a4d0a576209bf9f6404dad17f1a67062bfe'],
-  ['packages/production-runtime/src/compose.js', '697c7fda901b7fbefc08f5b66e0af94425bc957f349263c5f33531b46575e614'],
+  ['packages/production-runtime/src/compose.js', '17e4aedd43053286c4bcead61b18da4bec6bbaccda2bdd99860963a711a3c3d0'],
   ['packages/production-runtime/src/entry.js', '5c52329df4449cc1205d7dbea7555671c856b69a304d22e157b8733ec4a57070'],
   ['packages/production-runtime/src/paths.js', 'e5131350cd8d1c654e0ed5d6db5c1ee82f3d68561355807133d4e2f43768fa79'],
   ['packages/production-runtime/src/scheduler/self-service-runtime.js', 'acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0'],
