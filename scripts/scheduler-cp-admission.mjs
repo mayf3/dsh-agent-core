@@ -2,7 +2,7 @@
 /** Receipted Scheduler control-plane admission; selftest/plan/apply fail closed. */
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { chmodSync, existsSync, lchmodSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, existsSync, lchmodSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { homedir, userInfo } from 'node:os'
 import { JobStore } from '../packages/scheduler/src/store.js'
@@ -154,9 +154,16 @@ async function backfillAndFreeze(doc, matched) {
   const desiredBytes = Buffer.from(`${JSON.stringify(desired, null, 2)}\n`)
   ensureProtectedDirectoryTree(join(CTX.artifactsDir, 'candidates'), { ...controlOwnership(), boundary: CTX.controlBoundary })
   ensureProtectedDirectoryTree(join(CTX.artifactsDir, 'rollback'), { ...controlOwnership(), boundary: CTX.controlBoundary })
+  // the W1 watchdog (authsvc) reads the desired-state file with a raw read; a control
+  // gid of 0 makes it EACCES for authsvc — align the group with the routing manifest's
+  // root:authsvc posture (bytes/mode untouched; apply-root one-time group normalization)
+  if (MODE === 'apply' && existsSync(CTX.desiredPath)) {
+    const dsStat = lstatSync(CTX.desiredPath)
+    if (dsStat.uid === 0 && dsStat.gid !== CTX.authsvcGid && (dsStat.mode & 0o777) === 0o640) chownSync(CTX.desiredPath, 0, CTX.authsvcGid)
+  }
   installSchedulerDesiredState({ bytes: desiredBytes, expectedJobs: desired.jobs, targetPath: CTX.desiredPath,
     candidatePath: join(CTX.artifactsDir, 'candidates', 'scheduler-desired-state.json'), preimagePath: join(CTX.artifactsDir, 'rollback', 'scheduler-desired-state.json.preimage'),
-    receipt: desiredReceipt, writeReceipt: (value) => writeControlReceipt('desired-state-install-receipt.json', value), expectedUid: CTX.controlUid, expectedGid: CTX.controlGid })
+    receipt: desiredReceipt, writeReceipt: (value) => writeControlReceipt('desired-state-install-receipt.json', value), expectedUid: CTX.controlUid, expectedGid: CTX.authsvcGid })
   phase('desired-state', true, `${desired.jobs.length} critical(s) frozen at ${CTX.desiredPath}`)
   return { desired }
 }
@@ -401,7 +408,8 @@ function watchdogInstall() {
   }
   const fill = (tmpl) => tmpl
     .replaceAll('__AUTHSVC_UID__', String(incidentOwner.uid))
-    .replaceAll('__AUTHSVC_GID__', String(runtimeReaderGid))
+    .replaceAll('__ROUTING_READER_GID__', String(CTX.authsvcGid))
+    .replaceAll('__INCIDENT_OWNER_GID__', String(runtimeReaderGid))
     .replaceAll('__DEPLOYED_SHA__', SOURCE_SHA)
   const priorReceiptPath = join(CTX.artifactsDir, 'watchdog-install-receipt.json')
   let receipt = existsSync(priorReceiptPath) ? readControlReceipt('watchdog-install-receipt.json') : null
