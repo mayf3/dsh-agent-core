@@ -32,7 +32,7 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   const sha = '1234567890abcdef1234567890abcdef12345678'
   const result = restartSchedulerProductionRuntime({
     ctx: {
-      launchdDir, artifactsDir, authsvcUid: 501, authsvcGid: 20,
+      launchdDir, artifactsDir, authsvcUid: 501, authsvcGid: 601, runtimeReaderGid: 20,
       isLoaded: () => loaded,
       bootout: (label) => { phases.push(`bootout:${label}`); loaded = false },
       bootstrap: (path, label) => { phases.push(`bootstrap:${path}:${label}`); loaded = true },
@@ -43,6 +43,8 @@ test('runtime restart replaces stale provenance coordinates and reads back the e
   })
   assert.equal(result.deployedSha, sha)
   assert.match(readFileSync(plistPath, 'utf8'), new RegExp(`<key>AGENT_CORE_DEPLOYED_SHA</key><string>${sha}</string>`))
+  assert.match(readFileSync(plistPath, 'utf8'), /<key>SCHEDULER_ROUTING_READER_GID<\/key><string>601<\/string>/)
+  assert.match(readFileSync(plistPath, 'utf8'), /<key>SCHEDULER_INCIDENT_OWNER_GID<\/key><string>20<\/string>/)
   assert.equal(statSync(plistPath).mode & 0o777, 0o600)
   assert.deepEqual(receipts.map((receipt) => receipt.status), ['INSTALLING', 'INSTALLED'])
   assert.equal(receipts[0].installedSha256, receipts[1].installedSha256)

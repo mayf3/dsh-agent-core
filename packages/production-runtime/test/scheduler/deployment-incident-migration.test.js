@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { chmod, mkdtemp, writeFile } from 'node:fs/promises'
+import { chmod, chown, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -45,4 +45,27 @@ test('deployment accepts a safe failed-cutover migration extension receipt', asy
 
   assert.equal(runSchedulerIncidentMigration({ ctx, sources: await writeGeneration([factA]) }).status, 'MIGRATED')
   assert.equal(runSchedulerIncidentMigration({ ctx, sources: await writeGeneration([factA, factB]) }).status, 'MIGRATION_EXTENDED')
+})
+
+test('deployment migration uses the explicit runtime reader gid instead of the account primary gid', async (t) => {
+  const runtimeReaderGid = process.getgroups().find((gid) => gid !== process.getgid())
+  if (runtimeReaderGid === undefined) return t.skip('no secondary group available for runtime reader proof')
+  const dir = await mkdtemp(join(tmpdir(), 'deployment-incident-reader-gid-'))
+  await chmod(dir, 0o700); await chown(dir, process.getuid(), runtimeReaderGid)
+  const legacyStatePath = join(dir, 'legacy.json'), legacyEvidencePath = join(dir, 'evidence.jsonl'), factsPath = join(dir, 'facts.json')
+  const fact = { class: 'RUN_FAILED', jobId: 'job-a', occurrenceId: 'occ-a' }
+  const fingerprint = 'RUN_FAILED|job-a|occ-a'
+  const legacy = Buffer.from(`${JSON.stringify({ active: { [fingerprint]: {} } })}\n`)
+  const evidence = Buffer.from(`${JSON.stringify({ fingerprint, delivery: 'DELIVERED', fact })}\n`)
+  const factsBytes = Buffer.from(`${JSON.stringify([fact])}\n`)
+  await writeFile(legacyStatePath, legacy, { mode: 0o600 })
+  await writeFile(legacyEvidencePath, evidence, { mode: 0o600 })
+  await writeFile(factsPath, factsBytes, { mode: 0o600 })
+  const receipt = runSchedulerIncidentMigration({
+    ctx: { runtimeNode: process.execPath, liveRoot: new URL('../../../..', import.meta.url).pathname,
+      watchdogStateDir: dir, authsvcUid: process.getuid(), authsvcGid: process.getgid(), runtimeReaderGid },
+    sources: { legacyStatePath, legacyStateSha256: sha(legacy), legacyEvidencePath, legacyEvidenceSha256: sha(evidence),
+      factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([fact]))) },
+  })
+  assert.equal(receipt.status, 'MIGRATED')
 })

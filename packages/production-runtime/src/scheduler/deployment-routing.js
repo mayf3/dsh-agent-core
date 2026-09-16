@@ -73,11 +73,39 @@ function validatePrivateDirectory(path, expectedUid, expectedGid, boundary) {
   }
 }
 
+export function reconcileLegacyRoutingControlOwnership({ artifactsDir, controlUid, controlGid, legacyGid } = {}) {
+  if (![controlUid, controlGid, legacyGid].every(Number.isInteger)) throw new TypeError('routing control ownership coordinates required')
+  const preimageDir = join(artifactsDir, 'rollback')
+  if (!existsSync(preimageDir)) return { status: 'ABSENT' }
+  const directory = metadata(preimageDir)
+  if (directory.type !== 'directory' || directory.symlink || directory.extendedAcl || directory.extendedAttributes
+    || directory.uid !== controlUid || ![controlGid, legacyGid].includes(directory.gid) || directory.mode !== 0o700) {
+    throw new TypeError('unsafe legacy routing rollback directory')
+  }
+  const repaired = []
+  for (const name of ['routing-install-receipt.json', 'scheduler-routing.json.preimage']) {
+    const file = join(preimageDir, name)
+    if (!existsSync(file)) continue
+    const value = metadata(file)
+    if (value.type !== 'file' || value.symlink || value.extendedAcl || value.extendedAttributes
+      || value.uid !== controlUid || ![controlGid, legacyGid].includes(value.gid) || (value.mode & 0o177) !== 0) {
+      throw new TypeError(`unsafe legacy routing control artifact: ${name}`)
+    }
+    if (value.gid !== controlGid) { chownSync(file, controlUid, controlGid); repaired.push(name) }
+  }
+  if (directory.gid !== controlGid) { chownSync(preimageDir, controlUid, controlGid); repaired.push('rollback/') }
+  validatePrivateDirectory(preimageDir, controlUid, controlGid, dirname(artifactsDir))
+  syncDirectory(preimageDir)
+  return { status: repaired.length === 0 ? 'ALREADY_CANONICAL' : 'REPAIRED', repaired }
+}
+
 export function installSchedulerRoutingManifest({
   candidatePath, expectedSha256, targetPath, jobs = [], artifactsDir,
-  expectedUid = 0, expectedGid, candidateUid = process.getuid?.(), candidateGid = process.getgid?.(), targetBoundary, mode = 'apply',
+  expectedUid = 0, expectedGid, controlUid = expectedUid, controlGid = expectedGid,
+  candidateUid = process.getuid?.(), candidateGid = process.getgid?.(), targetBoundary, mode = 'apply',
 } = {}) {
-  if (!Number.isInteger(expectedUid) || !Number.isInteger(expectedGid)) throw new TypeError('routing ownership coordinates required')
+  if (!Number.isInteger(expectedUid) || !Number.isInteger(expectedGid)
+    || !Number.isInteger(controlUid) || !Number.isInteger(controlGid)) throw new TypeError('routing ownership coordinates required')
   if (!isAbsolute(targetPath) || resolve(targetPath) !== targetPath) throw new TypeError('routing target path must be canonical and absolute')
   if (targetBoundary !== '/') throw new TypeError('routing target boundary must cover every ancestor through root')
   const targetParents = protectedParents(targetPath, targetBoundary)
@@ -100,13 +128,14 @@ export function installSchedulerRoutingManifest({
   })
   const preimageSha256 = existing?.sha256 ?? null
   if (mode !== 'apply') return { candidateSha256: candidate.sha256, preimageSha256, enabledJobCount: jobs.filter((job) => job.enabled === true).length }
+  const preimageDirExisted = existsSync(preimageDir)
   mkdirSync(preimageDir, { recursive: true, mode: 0o700 })
-  if (process.getuid?.() === 0) chownSync(preimageDir, expectedUid, expectedGid)
-  validatePrivateDirectory(preimageDir, expectedUid, expectedGid, dirname(artifactsDir))
+  if (!preimageDirExisted) chownSync(preimageDir, controlUid, controlGid)
+  validatePrivateDirectory(preimageDir, controlUid, controlGid, dirname(artifactsDir))
   let receipt
   if (existsSync(receiptPath)) {
     receipt = JSON.parse(frozenProtectedFile(receiptPath, undefined, {
-      expectedUid, expectedGid, maxMode: 0o600, parentBoundary: preimageDir,
+      expectedUid: controlUid, expectedGid: controlGid, maxMode: 0o600, parentBoundary: preimageDir,
     }).bytes.toString('utf8'))
     if (receipt.candidateSha256 !== candidate.sha256 || ![candidate.sha256, receipt.preimageSha256].includes(existing?.sha256 ?? null)) {
       throw new Error('routing deployment receipt generation mismatch')
@@ -118,7 +147,7 @@ export function installSchedulerRoutingManifest({
       enabledJobCount: jobs.filter((job) => job.enabled === true).length }
     writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600, flag: 'wx' })
     clearGeneratedFileXattrs(receiptPath)
-    if (process.getuid?.() === 0) chownSync(receiptPath, expectedUid, expectedGid)
+    chownSync(receiptPath, controlUid, controlGid)
     const receiptFd = openSync(receiptPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
     try { fsyncSync(receiptFd) } finally { closeSync(receiptFd) }
     syncDirectory(preimageDir)
@@ -126,7 +155,7 @@ export function installSchedulerRoutingManifest({
   if (existing && !existsSync(preimage)) {
     writeFileSync(preimage, existing.bytes, { mode: 0o600, flag: 'wx' })
     clearGeneratedFileXattrs(preimage)
-    if (process.getuid?.() === 0) chownSync(preimage, expectedUid, expectedGid)
+    chownSync(preimage, controlUid, controlGid)
     const preFd = openSync(preimage, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
     try { fsyncSync(preFd) } finally { closeSync(preFd) }
     syncDirectory(preimageDir)
@@ -153,7 +182,7 @@ export function installSchedulerRoutingManifest({
   const receiptTemp = `${receiptPath}.incoming.${process.pid}`
   writeFileSync(receiptTemp, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600, flag: 'wx' })
   clearGeneratedFileXattrs(receiptTemp)
-  if (process.getuid?.() === 0) chownSync(receiptTemp, expectedUid, expectedGid)
+  chownSync(receiptTemp, controlUid, controlGid)
   renameSync(receiptTemp, receiptPath); syncDirectory(preimageDir)
   return receipt
 }

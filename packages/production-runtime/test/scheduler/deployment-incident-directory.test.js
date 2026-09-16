@@ -31,6 +31,22 @@ test('incident migration directory preparation is idempotent at 0700', async (t)
   }).status, 'READY')
 })
 
+test('incident migration converts only an explicitly allowed legacy runtime group', async (t) => {
+  const expectedGid = process.getgroups().find((gid) => gid !== process.getgid())
+  if (expectedGid === undefined) return t.skip('no secondary group available for gid migration proof')
+  const root = await mkdtemp(join(tmpdir(), 'scheduler-incident-dir-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const target = join(root, 'watchdog')
+  await mkdir(target, { mode: 0o700 })
+
+  assert.equal(preparePrivateRuntimeDirectory({
+    path: target, expectedUid: process.getuid(), expectedGid, allowedLegacyGids: [process.getgid()],
+  }).status, 'OWNERSHIP_MIGRATED')
+  const final = await lstat(target)
+  assert.equal(final.gid, expectedGid)
+  assert.equal(final.mode & 0o777, 0o700)
+})
+
 test('incident migration refuses symlink, wrong owner authority, and writable legacy mode', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'scheduler-incident-dir-'))
   t.after(() => rm(root, { recursive: true, force: true }))

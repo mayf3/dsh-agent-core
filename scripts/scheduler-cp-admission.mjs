@@ -18,7 +18,7 @@ import {
 import { repairWatchdogEvidenceChannel, assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
 import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
 import { createLaunchdAdapter, quiesceLaunchdServices } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
-import { installSchedulerRoutingManifest } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
+import { installSchedulerRoutingManifest, reconcileLegacyRoutingControlOwnership } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
 import { installSchedulerDesiredState } from '../packages/production-runtime/src/scheduler/deployment-desired-state.js'
 import { capturePlainFileMetadata, listFileXattrs } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage } from '../packages/production-runtime/src/scheduler/deployment-durable-file.js'
@@ -85,6 +85,7 @@ const CTX = MODE === 'selftest'
       routingCandidateGid: ROUTING_CANDIDATE_GID,
       authsvcUid: Number(execFileSync('id', ['-u', 'authsvc'], { encoding: 'utf8' }).trim()),
       authsvcGid: Number(execFileSync('id', ['-g', 'authsvc'], { encoding: 'utf8' }).trim()),
+      runtimeReaderGid: Number(execFileSync('/usr/bin/dscl', ['.', '-read', '/Groups/staff', 'PrimaryGroupID'], { encoding: 'utf8' }).match(/PrimaryGroupID:\s*(\d+)/)?.[1]),
       gitShow: (sha, path) => git(['show', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
       gitHash: (sha, path) => git(['rev-parse', `${sha}:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),
       kickstart: (label) => execFileSync('launchctl', ['kickstart', '-k', label], { stdio: ['ignore', 'pipe', 'pipe'] }),
@@ -356,7 +357,9 @@ function watchdogInstall() {
   if (!existsSync(CTX.routingManifest)) phase('watchdog', false, 'canonical Scheduler routing manifest missing; no business-chat fallback')
   const incidentOwner = statSync(stateDir)
   const runtimeReaderGid = incidentOwner.gid
-  if (!Number.isInteger(runtimeReaderGid)) phase('watchdog', false, 'unable to resolve exact authsvc reader gid')
+  if (!Number.isInteger(runtimeReaderGid) || (Number.isInteger(CTX.runtimeReaderGid) && runtimeReaderGid !== CTX.runtimeReaderGid)) {
+    phase('watchdog', false, 'unable to resolve exact authsvc reader gid')
+  }
   const fill = (tmpl) => tmpl
     .replaceAll('__AUTHSVC_UID__', String(incidentOwner.uid))
     .replaceAll('__AUTHSVC_GID__', String(runtimeReaderGid))
@@ -415,6 +418,7 @@ function routingInstall(doc) {
     targetPath: CTX.routingManifest, jobs: doc.jobs, artifactsDir: CTX.artifactsDir,
     expectedUid: MODE === 'selftest' ? process.getuid() : 0,
     expectedGid: CTX.authsvcGid, mode: MODE === 'plan' ? 'plan' : 'apply',
+    controlUid: CTX.controlUid, controlGid: CTX.controlGid,
     candidateUid: CTX.routingCandidateUid, candidateGid: CTX.routingCandidateGid,
     targetBoundary: CTX.routingTargetBoundary,
   })
@@ -422,7 +426,8 @@ function routingInstall(doc) {
 }
 
 function incidentMigration() {
-  preparePrivateRuntimeDirectory({ path: CTX.watchdogStateDir, expectedUid: CTX.authsvcUid, expectedGid: CTX.authsvcGid })
+  preparePrivateRuntimeDirectory({ path: CTX.watchdogStateDir, expectedUid: CTX.authsvcUid,
+    expectedGid: CTX.runtimeReaderGid ?? CTX.authsvcGid, allowedLegacyGids: [CTX.authsvcGid] })
   const receipt = runSchedulerIncidentMigration({ ctx: CTX, sources: CTX.migrationSources ?? MIGRATION_SOURCES })
   writeControlReceipt('incident-migration-receipt.json', receipt)
   phase('incident-migration', true, `${receipt.status}; incident=${receipt.incidentSha256.slice(0, 12)}`)
@@ -476,6 +481,11 @@ async function main() {
     return
   }
   quiesceWatchdogs()
+  const routingControl = MODE === 'apply'
+    ? reconcileLegacyRoutingControlOwnership({ artifactsDir: CTX.artifactsDir,
+        controlUid: CTX.controlUid, controlGid: CTX.controlGid, legacyGid: CTX.authsvcGid })
+    : { status: 'FIXTURE_NOT_APPLICABLE' }
+  phase('routing-control-ownership', true, routingControl.status)
   overlay()
   await backfillAndFreeze(doc, matched)
   routingInstall(await new JobStore(CTX.storePath).loadDoc({ force: true }))
