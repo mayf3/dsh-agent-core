@@ -67,6 +67,16 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   const routingBytes = Buffer.from(`${JSON.stringify({ version: 1, canonicalOpsTarget: { channel: 'feishu', to: 'fixture-ops-v1' }, ownerTargets: {}, jobFailureTargets: {} })}\n`)
   writeFileSync(routingCandidate, routingBytes, { mode: 0o600 })
   Object.assign(ctx, { routingCandidate, routingCandidateSha256: sha256(routingBytes), credentialsProviderPath: join(fx, 'config', 'agent-credentials.json') })
+  mkdirSync(join(fx, 'watchdog-state', 'migration-backups'), { recursive: true, mode: 0o700 })
+  const legacyIncidentPreimage = {
+    'incidents.json.lock.reaped.1.dead.tmp': 'stale reaped lock\n',
+    'migration-backups/legacy-0000000000000000000000000000000000000000000000000000000000000000.json': '{}\n',
+    'migration-backups/evidence-1111111111111111111111111111111111111111111111111111111111111111.jsonl': '',
+    'migration-backups/facts-2222222222222222222222222222222222222222222222222222222222222222.json': '[]\n',
+  }
+  for (const [name, bytes] of Object.entries(legacyIncidentPreimage)) {
+    writeFileSync(join(fx, 'watchdog-state', name), bytes, { mode: 0o600 })
+  }
   const legacyStateBytes = Buffer.from('{"active":{},"acknowledged":{},"retired":{}}\n')
   const evidenceBytes = Buffer.alloc(0); const factsBytes = Buffer.from('[]\n')
   const legacyStatePath = join(fx, 'legacy-alert-state.json'), legacyEvidencePath = join(fx, 'legacy-delivery-evidence.jsonl'), factsPath = join(fx, 'migration-facts.json')
@@ -93,6 +103,12 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(readFileSync(join(fx, 'LaunchDaemons', 'ai.agent-core.runtime.plist'), 'utf8').includes('AGENTCORE_EXPECTED_STORE'), 'runtime env')
   ok(readFileSync(join(fx, 'rollback', 'ai.agent-core.runtime.plist.preimage'), 'utf8') === runtimePredecessor, 'runtime partial preimage rebuilt')
   for (const role of ['w1', 'w2']) ok(readFileSync(join(fx, 'rollback', `ai.agent-core.scheduler-watchdog-${role}.plist.preimage`), 'utf8') === `OLD-${role}\n`, `watchdog ${role} partial preimage rebuilt`)
+  const normalizationReceipt = JSON.parse(readFileSync(join(fx, 'incident-file-normalization-receipt.json'), 'utf8'))
+  ok(normalizationReceipt.status === 'NORMALIZED' && normalizationReceipt.repaired.length === 5,
+    'legacy incident preimage normalized before migration')
+  for (const name of Object.keys(legacyIncidentPreimage)) {
+    ok(statSync(join(fx, 'watchdog-state', name)).gid === runtimeReaderGid, `normalized gid: ${name}`)
+  }
   ok(existsSync(join(fx, 'watchdog-state', 'incidents.json')) && JSON.parse(readFileSync(join(fx, 'incident-migration-receipt.json'), 'utf8')).status === 'MIGRATED', 'incident migration')
   ok(statSync(join(fx, 'watchdog-state')).gid === runtimeReaderGid && runtimeReaderGid !== ctx.authsvcGid,
     'incident state uses runtime reader group distinct from authsvc primary group')

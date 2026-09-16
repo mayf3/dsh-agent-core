@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { access, chmod, chown, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { access, chmod, chown, mkdir, mkdtemp, readdir, readFile, rm, writeFile, lstat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
@@ -164,4 +164,81 @@ test('migration rejects an ACL-bearing destination directory without writing sta
       factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([]))) },
   }), /Command failed/)
   await assert.rejects(access(join(stateDir, 'incidents.json')), /ENOENT/)
+})
+
+test('legacy-gid incident state reproduces the production failure; admission repair converges first run and rerun', async (t) => {
+  const { normalizeLegacyIncidentStateFiles } = await import('../../src/scheduler/deployment-incident-directory.js')
+  const runtimeReaderGid = process.getgroups().find((gid) => gid !== process.getgid())
+  if (runtimeReaderGid === undefined) return t.skip('no secondary group available for runtime reader proof')
+  const dir = await mkdtemp(join(tmpdir(), 'deployment-incident-legacy-gid-'))
+  await chmod(dir, 0o700)
+  const stateDir = join(dir, 'state')
+  await mkdir(stateDir, { mode: 0o700 })
+  await chown(stateDir, process.getuid(), runtimeReaderGid)
+  const legacyStatePath = join(dir, 'legacy.json'), legacyEvidencePath = join(dir, 'evidence.jsonl'), factsPath = join(dir, 'facts.json')
+  const factA = { class: 'RUN_FAILED', jobId: 'job-legacy', occurrenceId: 'occ-legacy-a' }
+  const factB = { class: 'RUN_FAILED', jobId: 'job-legacy', occurrenceId: 'occ-legacy-b' }
+  const fingerprintA = 'RUN_FAILED|job-legacy|occ-legacy-a'
+  const fingerprintB = 'RUN_FAILED|job-legacy|occ-legacy-b'
+  const writeGeneration = async (facts) => {
+    const fingerprints = facts.length === 1 ? [fingerprintA] : [fingerprintA, fingerprintB]
+    const legacy = Buffer.from(`${JSON.stringify({ active: Object.fromEntries(fingerprints.map((value) => [value, {}])) })}\n`)
+    const evidence = Buffer.from(`${facts.map((fact, index) => JSON.stringify({ fingerprint: fingerprints[index], delivery: 'DELIVERED', fact })).join('\n')}\n`)
+    const factsBytes = Buffer.from(`${JSON.stringify(facts)}\n`)
+    await writeFile(legacyStatePath, legacy, { mode: 0o600 })
+    await writeFile(legacyEvidencePath, evidence, { mode: 0o600 })
+    await writeFile(factsPath, factsBytes, { mode: 0o600 })
+    return {
+      legacyStatePath, legacyStateSha256: sha(legacy),
+      legacyEvidencePath, legacyEvidenceSha256: sha(evidence),
+      factsPath, factsFileSha256: sha(factsBytes),
+      factsSha256: sha(Buffer.from(canonicalJSON(facts))),
+    }
+  }
+  const ctx = {
+    runtimeNode: process.execPath,
+    liveRoot: new URL('../../../..', import.meta.url).pathname,
+    watchdogStateDir: stateDir,
+    authsvcUid: process.getuid(),
+    authsvcGid: process.getgid(),
+    runtimeReaderGid,
+  }
+
+  assert.equal(runSchedulerIncidentMigration({ ctx, sources: await writeGeneration([factA]) }).status, 'MIGRATED')
+
+  const legacyGid = process.getgid()
+  const legacyPaths = [join(stateDir, 'incidents.json'), join(stateDir, 'migration-backups')]
+  for (const entry of await readdir(join(stateDir, 'migration-backups'))) legacyPaths.push(join(stateDir, 'migration-backups', entry))
+  for (const path of legacyPaths) await chown(path, process.getuid(), legacyGid)
+  const backupHashBefore = new Map()
+  for (const entry of await readdir(join(stateDir, 'migration-backups'))) {
+    backupHashBefore.set(entry, sha(await readFile(join(stateDir, 'migration-backups', entry))))
+  }
+
+  const reproSources = await writeGeneration([factA])
+  assert.throws(() => runSchedulerIncidentMigration({ ctx, sources: reproSources }),
+    /unsafe incident state file/)
+
+  const receipt = normalizeLegacyIncidentStateFiles({
+    stateDir, expectedUid: process.getuid(), expectedGid: runtimeReaderGid, allowedLegacyGids: [legacyGid],
+  })
+  assert.equal(receipt.status, 'NORMALIZED')
+  assert.deepEqual([...receipt.repaired].sort(), ['incidents.json', 'migration-backups',
+    ...[...backupHashBefore.keys()].map((entry) => `migration-backups/${entry}`).sort()])
+
+  assert.equal(runSchedulerIncidentMigration({ ctx, sources: await writeGeneration([factA]) }).status, 'ALREADY_MIGRATED')
+  for (const [entry, hash] of backupHashBefore) {
+    assert.equal(sha(await readFile(join(stateDir, 'migration-backups', entry))), hash, `bytes drift at ${entry}`)
+  }
+  assert.equal(runSchedulerIncidentMigration({ ctx, sources: await writeGeneration([factA, factB]) }).status, 'MIGRATION_EXTENDED')
+  assert.equal(runSchedulerIncidentMigration({ ctx, sources: await writeGeneration([factA, factB]) }).status, 'ALREADY_MIGRATED')
+  for (const entry of await readdir(stateDir, { recursive: true })) {
+    const final = await lstat(join(stateDir, entry))
+    assert.equal(final.gid, runtimeReaderGid, `gid drift at ${entry}`)
+  }
+  const convergence = normalizeLegacyIncidentStateFiles({
+    stateDir, expectedUid: process.getuid(), expectedGid: runtimeReaderGid, allowedLegacyGids: [legacyGid],
+  })
+  assert.equal(convergence.status, 'READY')
+  assert.deepEqual(convergence.repaired, [])
 })

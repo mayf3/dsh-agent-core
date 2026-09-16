@@ -23,6 +23,7 @@ import { installSchedulerDesiredState } from '../packages/production-runtime/src
 import { capturePlainFileMetadata, listFileXattrs } from '../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage } from '../packages/production-runtime/src/scheduler/deployment-durable-file.js'
 import { runSchedulerIncidentMigration } from '../packages/production-runtime/src/scheduler/deployment-incident-migration.js'
+import { normalizeLegacyIncidentStateFiles } from '../packages/production-runtime/src/scheduler/deployment-incident-directory.js'
 import { preparePrivateRuntimeDirectory } from '../packages/production-runtime/src/scheduler/deployment-incident-directory.js'
 import { verifyWatchdogReplayReceipt } from '../packages/production-runtime/src/scheduler/deployment-watchdog-replay.js'
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../packages/scheduler/src/watchdog/private-state-io.js'
@@ -428,6 +429,9 @@ function routingInstall(doc) {
 function incidentMigration() {
   preparePrivateRuntimeDirectory({ path: CTX.watchdogStateDir, expectedUid: CTX.authsvcUid,
     expectedGid: CTX.runtimeReaderGid ?? CTX.authsvcGid, allowedLegacyGids: [CTX.authsvcGid] })
+  const normalization = normalizeLegacyIncidentStateFiles({ stateDir: CTX.watchdogStateDir,
+    expectedUid: CTX.authsvcUid, expectedGid: CTX.runtimeReaderGid ?? CTX.authsvcGid, allowedLegacyGids: [CTX.authsvcGid] })
+  writeControlReceipt('incident-file-normalization-receipt.json', normalization)
   const receipt = runSchedulerIncidentMigration({ ctx: CTX, sources: CTX.migrationSources ?? MIGRATION_SOURCES })
   writeControlReceipt('incident-migration-receipt.json', receipt)
   phase('incident-migration', true, `${receipt.status}; incident=${receipt.incidentSha256.slice(0, 12)}`)
