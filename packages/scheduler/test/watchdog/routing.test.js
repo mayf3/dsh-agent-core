@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { chmod, mkdtemp, symlink, writeFile } from 'node:fs/promises'
+import { rmSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -58,6 +59,23 @@ test('T30 protected manifest reader uses no-follow identity checks and returns s
   const link = join(dir, 'routing-link.json')
   await symlink(path, link)
   assert.throws(() => readProtectedRoutingManifest(link, { expectedUid: uid, allowedGids: [gid], maxMode: 0o644, parentBoundary: dir }), /unsafe protected path/)
+})
+
+test('T30 production default parent boundary (/) walks real ancestors to the filesystem root', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'routing-manifest-root-'))
+  const realDir = realpathSync(dir)
+  await chmod(realDir, 0o700)
+  const path = join(realDir, 'routing.json')
+  await writeFile(path, JSON.stringify(manifest), { mode: 0o600 })
+  try {
+    const loaded = readProtectedRoutingManifest(path, {
+      expectedUid: process.getuid(), allowedGids: [process.getgid()], maxMode: 0o600, parentBoundary: '/',
+    })
+    assert.equal(loaded.readback.valid, true)
+    assert.doesNotMatch(JSON.stringify(loaded.readback), /owner-a|job-failure|"ops"/)
+  } finally {
+    rmSync(realDir, { recursive: true, force: true })
+  }
 })
 
 test('T13 missing Job/owner target falls to canonical ops with durable marker, never job.delivery/session', () => {
