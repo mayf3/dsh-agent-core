@@ -20,7 +20,7 @@ import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { atomicReplacePrivateFile, ensureProtectedDirectoryTree, readPrivateFile } from '../../packages/scheduler/src/watchdog/private-state-io.js'
-import { assertSuccessfulCanaryRun, publishVerifiedPostdeployReceipt } from '../../packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js'
+import { assertSuccessfulCanaryRun, postdeployReadExpectations, publishVerifiedPostdeployReceipt } from '../../packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js'
 import { readProtectedPlainFile } from '../../packages/production-runtime/src/scheduler/deployment-file-metadata.js'
 import { readProtectedRoutingManifest } from '../../packages/scheduler/src/watchdog/routing.js'
 
@@ -39,12 +39,11 @@ const ROUTING_RECEIPT = join(A, 'rollback', 'routing-install-receipt.json')
  * __INCIDENT_OWNER_GID__), never a hardcoded gid. The file's uid is the state
  * directory's owner (authsvc); its gid is the runtime-reader gid.
  */
-export function resolveIncidentOwnership(incidentsPath) {
+export function resolveIncidentOwnership(incidentsPath, { authsvcUid, authsvcGid }) {
   const stat = lstatSync(dirname(incidentsPath))
-  if (!Number.isInteger(stat.uid) || !Number.isInteger(stat.gid) || stat.uid <= 0) {
-    throw new Error('incident ownership unresolved from the canonical state directory')
-  }
-  return { expectedUid: stat.uid, expectedGid: stat.gid }
+  return postdeployReadExpectations({ authsvcUid, authsvcGid,
+    incidentStateDir: { uid: stat.uid, gid: stat.gid, mode: stat.mode & 0o777,
+      directory: stat.isDirectory(), symlink: stat.isSymbolicLink() } }).incident
 }
 
 /**
@@ -53,19 +52,32 @@ export function resolveIncidentOwnership(incidentsPath) {
  * authsvcGid != runtimeReaderGid must read cleanly; a wrong-gid artifact must
  * fail closed).
  */
-export function createOwnershipReadbacks({ artifactsDir, storePath, incidentsPath, authsvcUid, authsvcGid, controlOwnership, incidentOwnership = resolveIncidentOwnership(incidentsPath) }) {
+export function createOwnershipReadbacks({ artifactsDir, storePath, incidentsPath: INCIDENTS,
+  authsvcUid, authsvcGid, controlOwnership, incidentOwnership }) {
+  const canonicalExpectations = () => postdeployReadExpectations({ authsvcUid, authsvcGid,
+      incidentStateDir: (() => {
+        const stat = lstatSync(dirname(INCIDENTS))
+        return { uid: stat.uid, gid: stat.gid, mode: stat.mode & 0o777,
+          directory: stat.isDirectory(), symlink: stat.isSymbolicLink() }
+      })() })
+  const readExpectations = () => ({
+    incident: incidentOwnership ?? canonicalExpectations().incident,
+    control: controlOwnership ?? canonicalExpectations().control,
+  })
   const readStoreSnapshot = () => {
     const bytes = readPrivateFile(storePath, { expectedUid: authsvcUid, expectedGid: authsvcGid }).bytes
     return { store: JSON.parse(bytes.toString('utf8')), sha256: createHash('sha256').update(bytes).digest('hex') }
   }
   const readStore = () => readStoreSnapshot().store
   const readIncidentSnapshot = () => {
-    const bytes = readPrivateFile(incidentsPath, incidentOwnership).bytes
+    const bytes = readPrivateFile(INCIDENTS, readExpectations().incident).bytes
     return { state: JSON.parse(bytes.toString('utf8')), sha256: createHash('sha256').update(bytes).digest('hex') }
   }
   const readRoutingReceipt = () => JSON.parse(
-    readPrivateFile(join(artifactsDir, 'rollback', 'routing-install-receipt.json'), controlOwnership).bytes.toString('utf8'))
-  return { incidentOwnership, readStoreSnapshot, readStore, readIncidentSnapshot, readRoutingReceipt }
+    readPrivateFile(join(artifactsDir, 'rollback', 'routing-install-receipt.json'), {
+      ...readExpectations().control, mode: 0o600,
+    }).bytes.toString('utf8'))
+  return { readStoreSnapshot, readStore, readIncidentSnapshot, readRoutingReceipt }
 }
 
 async function run() {

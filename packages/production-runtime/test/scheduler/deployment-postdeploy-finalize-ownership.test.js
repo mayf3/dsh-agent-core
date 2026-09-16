@@ -50,7 +50,7 @@ test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid 
   // ownership resolution is the state directory itself (canonical source —
   // the same stat the controller uses for __INCIDENT_OWNER_GID__), and the
   // split is real: incident gid != authsvc primary gid.
-  const ownership = resolveIncidentOwnership(incidentsPath)
+  const ownership = resolveIncidentOwnership(incidentsPath, { authsvcUid: me, authsvcGid })
   assert.deepEqual(ownership, { expectedUid: me, expectedGid: readerGid })
   assert.notEqual(ownership.expectedGid, authsvcGid)
 
@@ -93,12 +93,14 @@ test('routing receipt readback fails closed on a wrong control gid', async (t) =
   const readbacks = createOwnershipReadbacks({
     artifactsDir, storePath: join(root, 'jobs.json'), incidentsPath: join(root, 'incidents.json'),
     authsvcUid: process.getuid(), authsvcGid,
+    incidentOwnership: { expectedUid: process.getuid(), expectedGid: authsvcGid },
     controlOwnership: { expectedUid: process.getuid(), expectedGid: wrongGid },
   })
   assert.equal(readbacks.readRoutingReceipt().status, 'INSTALLED')
   const hostile = createOwnershipReadbacks({
     artifactsDir, storePath: join(root, 'jobs.json'), incidentsPath: join(root, 'incidents.json'),
     authsvcUid: process.getuid(), authsvcGid,
+    incidentOwnership: { expectedUid: process.getuid(), expectedGid: authsvcGid },
     controlOwnership: { expectedUid: process.getuid(), expectedGid: authsvcGid === wrongGid ? (process.getgroups()[0] ?? wrongGid) : authsvcGid },
   })
   assert.throws(() => hostile.readRoutingReceipt(), /unsafe incident state file/)
