@@ -3,7 +3,7 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { chmodSync, existsSync, lchmodSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { homedir, userInfo } from 'node:os'
 import { JobStore } from '../packages/scheduler/src/store.js'
 import { updateJobOp } from '../packages/scheduler/src/control.js'
@@ -274,28 +274,47 @@ function runtimeRestart() {
     runtimeReceipt: (receipt) => writeControlReceipt('runtime-install-receipt.json', receipt) }
   return restartSchedulerProductionRuntime({ ctx: runtimeCtx, phase, sourceSha: SOURCE_SHA })
 }
+function ensureTraversableDir(dir) {
+  const chain = []
+  let current = resolve(dir)
+  while (!existsSync(current)) { chain.push(current); const parent = dirname(current); if (parent === current) break; current = parent }
+  for (const item of chain.reverse()) { mkdirSync(item); chmodSync(item, 0o755) }
+}
+
 function operatorGeneration() {
   const short = SOURCE_SHA.slice(0, 7)
   const genId = `SCHEDULER_CONTROL_PLANE_RELIABILITY_V1--dsh-agent-core--${short}--x86_64--g1`
-  const genDir = join(CTX.artifacts, genId)
+  // the sealed candidate tree must be authsvc-traversable (proofs() execs the CLI as
+  // authsvc); CTX.artifacts is a root-only protected tree by design, so stage the
+  // generation under the live-root operator area instead, with explicit 0755 dirs —
+  // mkdir modes are umask-masked and the phase2 shell runs umask 077
+  const genDir = join(CTX.operatorStage ?? '/usr/local/libexec/agent-core/operator', genId)
   const candidateCli = join(genDir, 'candidate/usr/local/bin/agentcore-cron')
+  const normalizeLinkMode = () => {
+    // the phase2 sudo shell runs umask 077: on darwin the symlink inherits lrwx------
+    // and authsvc exec through it fails with Permission denied — normalize explicitly
+    if (process.platform === 'darwin') lchmodSync(CTX.binSymlink, 0o755)
+    if (process.platform === 'darwin' && (lstatSync(CTX.binSymlink).mode & 0o777) !== 0o755) throw new Error('operator link mode readback mismatch')
+  }
   if (!existsSync(genDir)) {
-    mkdirSync(dirname(candidateCli), { recursive: true })
+    ensureTraversableDir(genDir)
+    ensureTraversableDir(dirname(candidateCli))
     const closure = computeOperatorClosure('scripts/agentcore-cron.mjs', (path) => CTX.gitShow(SOURCE_SHA, path))
     for (const path of Object.keys(closure)) {
       if (closure[path] === 'UNRESOLVABLE') throw new Error(`operator closure unresolvable at ${path}`)
       const bytes = git(['show', `${SOURCE_SHA}:${path}`], { stdio: ['ignore', 'pipe', 'pipe'] })
       const rel = path === 'scripts/agentcore-cron.mjs' ? 'bin/agentcore-cron' : path
       const target = join(genDir, 'candidate/usr/local', rel.startsWith('bin/') ? rel : rel.replace(/^packages\//, 'packages/'))
-      mkdirSync(dirname(target), { recursive: true })
+      ensureTraversableDir(dirname(target))
       writeFileSync(target, bytes)
       try { execFileSync('chmod', ['0755', target], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
     }
     const cronerSrc = join(REPO_ROOT, 'node_modules', 'croner')
     const cronerDst = join(genDir, 'candidate/usr/local/packages/scheduler/node_modules/croner')
     rmSync(cronerDst, { recursive: true, force: true })
-    mkdirSync(dirname(cronerDst), { recursive: true })
+    ensureTraversableDir(dirname(cronerDst))
     execFileSync('cp', ['-R', cronerSrc, cronerDst])
+    chmodSync(cronerDst, 0o755)
     try { execFileSync('chmod', ['0755', candidateCli], { stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { if (MODE === 'apply') throw error }
     const cliSha = sha256(readFileSync(candidateCli))
     writeFileSync(join(genDir, 'seal.json'), `${JSON.stringify({
@@ -325,6 +344,7 @@ function operatorGeneration() {
     cutoverReceipt = readControlReceipt('operator-cutover-receipt.json')
     if (cutoverReceipt.newSha256 !== candidateSha || ![candidateSha, cutoverReceipt.previousSha256].includes(previousSha)) throw new Error('operator rerun generation mismatch')
     if (previousSha === candidateSha) {
+      normalizeLinkMode()
       phase('operator', true, `${genId} already installed; original predecessor receipt retained`)
       return
     }
@@ -340,10 +360,7 @@ function operatorGeneration() {
   const tmpLink = `${CTX.binSymlink}.incoming-${process.pid}`
   execFileSync('ln', ['-sfn', candidateCli, tmpLink])
   execFileSync('mv', ['-f', tmpLink, CTX.binSymlink])
-  // the phase2 sudo shell runs umask 077: on darwin the symlink inherits lrwx------
-  // and authsvc exec through it fails with Permission denied — normalize explicitly
-  if (process.platform === 'darwin') lchmodSync(CTX.binSymlink, 0o755)
-  if (process.platform === 'darwin' && (lstatSync(CTX.binSymlink).mode & 0o777) !== 0o755) throw new Error('operator link mode readback mismatch')
+  normalizeLinkMode()
   const nowSha = sha256(readFileSync(CTX.binSymlink))
   if (nowSha !== candidateSha) throw new Error('operator flip failed byte check')
   cutoverReceipt.status = 'INSTALLED'

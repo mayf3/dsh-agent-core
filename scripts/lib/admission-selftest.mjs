@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -52,6 +52,7 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
     chown: () => {},
     asAuthsvc: () => JSON.stringify({ jobs: JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.map((job) => ({ id: job.id })) }),
     routingManifest: join(fx, 'config', 'scheduler-routing.json'), routingTargetBoundary: '/',
+    operatorStage: join(fx, 'operator'),
     authsvcUid: process.getuid(), authsvcGid: process.getgid(), runtimeReaderGid,
     routingCandidateUid: process.getuid(), routingCandidateGid: process.getgid(),
   })
@@ -91,7 +92,8 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.filter((job) => job.logicalKey !== undefined).length === 2, 'two jobs keyed')
   const calls = readFileSync(join(fx, 'launchctl-calls.log'), 'utf8')
   ok(calls.includes('bootout system/ai.agent-core.runtime') && calls.split('bootstrap').length - 1 === 3, 'runtime and watchdog launchd calls')
-  ok((statSync(ctx.binSymlink, { bigint: false }).mode & 0o777) === 0o755, 'operator binSymlink flipped world-executable (umask 077 normalized)')
+  if (process.platform === 'darwin') ok((lstatSync(ctx.binSymlink).mode & 0o777) === 0o755, 'operator binSymlink link mode normalized to 0755')
+  ok((statSync(ctx.binSymlink, { bigint: false }).mode & 0o111) !== 0, 'operator CLI target remains executable')
   ok(calls.split('bootout').length - 1 === 3, 'watchdog install must not boot out quiesced services (quiesce owns exactly 3 bootouts)')
   const callLines = calls.trim().split('\n')
   ok(callLines[0] === 'bootout system/ai.agent-core.scheduler-watchdog-w1'
