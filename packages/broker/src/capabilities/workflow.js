@@ -472,6 +472,9 @@ export const workflowWakeDispatchIntentManifest = withTransportErrors({
 /**
  * Coordinator control-plane capabilities (AGENT_CORE_WORKFLOW_COORDINATOR_CONTROL_PLANE_BROKER_V1;
  * upstream wire/authorization authority SVC_WORKFLOW_COORDINATOR_CONTROL_PLANE_V1 @ svc-workflow).
+ * Domain create carries the AGENT_CORE_DOMAIN_CREATE_CANONICAL_CONTRACT_BROKER_V1
+ * amendment: business inputs only — svc-workflow generates the domainId server-side
+ * and makes the authenticated caller the domain's DOMAIN_OWNER (creator-becomes-owner).
  * Grouped tools expose the GLOBAL_WORKFLOW_COORDINATOR control plane plus
  * DOMAIN_OWNER own-domain autonomy for members. Authorization is ZERO-REPLICATED:
  * every operation is enforced server-side from role bindings; the broker only
@@ -509,8 +512,8 @@ export const workflowDomainAdminManifest = withTransportErrors({
   name: 'Workflow Domain Admin',
   description:
     'Agent Core capability `workflow_domain_admin` (svc-workflow coordinator control plane): governance metadata for workflow domains. ' +
-    'operations: list (keyset cursor over minimal governance metadata), get, create (per the current provisioning contract: caller supplies the NEW-RESOURCE domainId UUID — not a principal identity), update (displayName ONLY in V1), get_owner, set_owner (atomic owner replacement). ' +
-    'Server-side role bindings are the only authority (GLOBAL_WORKFLOW_COORDINATOR; get_owner also allows the domain own enabled DOMAIN_OWNER). Principal ids must come from agent_resolve_principal or an exact upstream UUID field.',
+    'operations: list (keyset cursor over minimal governance metadata), get, create (canonical contract: business inputs only — the server generates the domainId and the authenticated caller becomes the DOMAIN_OWNER), update (displayName ONLY in V1), get_owner, set_owner (atomic owner replacement). ' +
+    'Server-side role bindings are the only authority (GLOBAL_WORKFLOW_COORDINATOR; get_owner also allows the domain own enabled DOMAIN_OWNER; create needs no role — creator-becomes-owner). Principal ids must come from agent_resolve_principal or an exact upstream UUID field.',
   requiredScopes: ['workflow.read', 'workflow.execute'],
   errors: domainMetadataErrors,
   operations: [
@@ -552,15 +555,14 @@ export const workflowDomainAdminManifest = withTransportErrors({
     },
     {
       name: 'create',
-      description: 'Create a domain. Required: domainId (the NEW resource id — caller-supplied per the current provisioning contract), domainKey, enabled. Optional: displayName.',
+      description: 'Create a domain (canonical contract: business inputs only). Required: domainKey, enabled. Optional: displayName. The server generates the domainId and the authenticated caller becomes the domain DOMAIN_OWNER (creator-becomes-owner); the response returns {domainId, domainKey, displayName, enabled, ownerPrincipalId}.',
       arguments: {
         properties: {
-          domainId: uuidField('NEW domain resource id'),
           domainKey: { type: 'string', description: 'Unique domain key (1-128 chars, no whitespace/control).' },
           displayName: { type: 'string', description: 'Optional display name (1-256 chars).' },
           enabled: { type: 'boolean', description: 'Whether the domain is enabled.' },
         },
-        required: ['domainId', 'domainKey', 'enabled'],
+        required: ['domainKey', 'enabled'],
       },
       result: { type: 'json' },
       errors: ['invalid_arguments'],
@@ -568,7 +570,7 @@ export const workflowDomainAdminManifest = withTransportErrors({
         target: 'svc-workflow',
         method: 'POST',
         path: '/internal/v1/domains',
-        body: ['domainId', 'domainKey', 'displayName', 'enabled'],
+        body: ['domainKey', 'displayName', 'enabled'],
         idempotencyKey: true,
       },
     },
