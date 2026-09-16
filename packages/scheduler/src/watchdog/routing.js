@@ -144,13 +144,15 @@ function metadata(path, expectedType) {
 
 function parentPaths(path, boundary) {
   const stop = resolve(boundary ?? '/')
+  // the root boundary is its own prefix; `${stop}/` would be '//' and match nothing
+  const prefix = stop === '/' ? '/' : `${stop}/`
   const result = []
   let current = dirname(path)
   while (true) {
     result.push(current)
     if (current === stop) return result
     const next = dirname(current)
-    if (next === current || !current.startsWith(`${stop}/`)) throw new TypeError('protected path is outside parent boundary')
+    if (next === current || !current.startsWith(prefix)) throw new TypeError('protected path is outside parent boundary')
     current = next
   }
 }
