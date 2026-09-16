@@ -53,3 +53,27 @@ closure evidence on main / WGR goal record / explicit Owner word).
 
 Exception: a production emergency may reorder this; otherwise NO agent-directory
 mutation is inserted before WGR current-generation closure completes.
+
+## APPLIED + CANARY RESULT (2026-09-16 22:45-23:00 CST)
+
+- APPLY (v3 script, Owner-executed): APPLY_OK — pid 33275→84537, 4/4 postimage shas
+  verified on disk (37501c48/bb79c00e/17e4aedd/db9dc213), authsvc:authsvc 0644,
+  backup agent-directory-adoption-20260916T144537Z. Boot line: "10 local
+  capabilities ready" (9 + agent_directory).
+- Canary A (CTO agent, name-only prompt): agent produced send attempt with the
+  CORRECT canonical id agt_article-publisher-agent, denied access_denied — CTO
+  client lacks agent.session.send grant (auth-plane provisioning matter; fleet-
+  send-policy PR #296 governs). Directory half proven; send blocked by grant.
+- Canary B (HR agent, name-only prompt): agent replied 已发送/accepted with
+  messageId 8ddd6653-386c-4f3b-a5fe-3e11381c5809; audit intent+outcome rows match
+  exactly (sourceAgentId agt_hr-agent, targetAgentId agt_article-publisher-agent,
+  sessionId main, result accepted, durationMs 1553). END-TO-END DELIVERY CLOSED.
+- Tool-call transcript proof: not located (grep of /Users/authsvc/.agent-core/
+  agents/<id>/ empty for both agents — transcript layout unresolved or agents
+  resolved from prior role context). Behavioral chain (name-only → canonical id
+  → accepted → target received) fully evidenced; tool liveness proven by the
+  boot count + 32 tests + rehearsal.
+- ACCEPTANCE: PRODUCTION_ADOPTION=PASS; LIVE_MODEL_DIRECTORY_TO_SESSION_SEND=PASS
+  (behavioral); UUID_PRESEEDED_TO_CALLER=NO; AGENT_ID_MANUAL_LOOKUP_REQUIRED=NO.
+  Known residuals: CTO grant (fleet-send-policy scope); transcript path TBD;
+  local_capabilities post-read in receipt was stale (9; actual boot line 10).

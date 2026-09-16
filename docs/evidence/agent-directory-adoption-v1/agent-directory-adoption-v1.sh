@@ -7,6 +7,9 @@
 # compose postimage = 当前部署 compose + 恰好 2 处增量（import + provide）。
 # v2 (2026-09-16 22:1x)：WGR lane 今晚 20:56 部署事务把部署 compose 换到新混合代际
 # (697c7fda)，packet 按设计 fail-closed 拦截后对 v2 preimage 重新生成并复验。
+# v3 (2026-09-16 22:5x)：apply 首跑在首个 install_file 即 fail-closed（/usr/sbin/install
+# 在 macOS 不存在，零 mutation 落盘）——修正为 /usr/bin/install；current_pid 加 pgrep
+# 兜底（sudo 下 launchctl print 返回空）；capability 计数解析去文件名前缀。
 #
 # Usage (root):
 #   bash /tmp/agent-directory-adoption-v1.sh --selftest   # 零生产触碰
@@ -77,11 +80,18 @@ verify_preimage() {
   echo "== deployed preimage sha verified (2/2) =="
 }
 
-current_pid() { launchctl print "$DAEMON" 2>/dev/null | awk '/^pid = /{print $3}' | head -1; }
+current_pid() {
+  local pid
+  pid=$(launchctl print "$DAEMON" 2>/dev/null | awk '/^pid = /{print $3}' | head -1)
+  if [ -z "$pid" ]; then
+    pid=$(pgrep -f 'agent-core/app/scripts/production-runtime.mjs' 2>/dev/null | head -1)
+  fi
+  echo "$pid"
+}
 
 local_cap_last_count() {
   local n
-  n=$(grep -o '[0-9][0-9]* local capabilities ready' "$ERRLOG" "$OUTLOG" 2>/dev/null | tail -1 | awk '{print $1}')
+  n=$(grep -oh '[0-9][0-9]* local capabilities ready' "$ERRLOG" "$OUTLOG" 2>/dev/null | tail -1 | awk '{print $1}')
   echo "${n:-unknown}"
 }
 
@@ -112,7 +122,7 @@ write_receipt() {
   /bin/chmod 644 "$RECEIPT"
 }
 
-install_file() { /usr/sbin/install -o authsvc -g authsvc -m 0644 "$1" "$2"; }
+install_file() { /usr/bin/install -o authsvc -g authsvc -m 0644 "$1" "$2"; }
 
 # ---------------------------------------------------------------- selftest
 do_selftest() {
