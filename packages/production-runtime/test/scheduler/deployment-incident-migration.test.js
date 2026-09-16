@@ -8,15 +8,24 @@ import test from 'node:test'
 
 import { canonicalJSON } from '../../../scheduler/src/occurrence-model.js'
 import { runSchedulerIncidentMigration } from '../../src/scheduler/deployment-incident-migration.js'
-import { relativeImports, resolveRelative, WATCHDOG_PAYLOAD_SHA } from '../../../../scripts/lib/admission-lib.mjs'
+import { relativeImports, resolveRelative, WATCHDOG_PAYLOAD_SNAPSHOT } from '../../../../scripts/lib/admission-lib.mjs'
 
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const repo = new URL('../../../..', import.meta.url).pathname
+const sourceSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim()
+const reviewedPayload = (path) => {
+  const expected = WATCHDOG_PAYLOAD_SNAPSHOT.paths[path]
+  const bytes = WATCHDOG_PAYLOAD_SNAPSHOT.embedded?.[path] === undefined
+    ? execFileSync('git', ['show', `${sourceSha}:${path}`], { cwd: repo })
+    : Buffer.from(WATCHDOG_PAYLOAD_SNAPSHOT.embedded[path], 'base64')
+  if (expected && sha(bytes) !== expected) throw new Error(`reviewed payload digest drift: ${path}`)
+  return bytes
+}
 
 async function materializePinnedMigrationClosure(root) {
   const queued = ['scripts/scheduler-watchdog.mjs']
   const seen = new Set()
-  const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo })
+  const show = reviewedPayload
   while (queued.length > 0) {
     const path = queued.shift()
     if (seen.has(path)) continue
