@@ -265,6 +265,28 @@ export function classifyOccurrenceOutcome(record, outcome) {
     }
   }
   const started = record.__started === true || outcome.started === true
+  // SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1: the bridge carries
+  // the Router's C-010 closed-union settlement envelopes through verbatim.
+  // They are authoritative for the exact run and outrank the premature
+  // dispatch-time start evidence (`record.__started` fires at the chain's
+  // acquire/dispatch boundary, before the process admission gate):
+  //   not_admitted -> deterministic pre-start rejection. UNKNOWN CONTAINMENT:
+  //     an Agent/session fence rejection of one shift must never reproduce as
+  //     a second outcome_unknown on a neighbouring Job.
+  //   failed -> the Router's settled terminal failure (structured RPC error
+  //     response / exact turn-end failure) — no error-code whitelist.
+  if (outcome.routerEnvelope === 'not_admitted' || outcome.routerEnvelope === 'failed') {
+    const preStart = outcome.routerEnvelope === 'not_admitted' || outcome.started === false
+    return {
+      state: 'failed',
+      executionOutcome: 'failed',
+      reason: outcome.error ?? `router ${outcome.routerEnvelope} settlement`,
+      terminalEvidence: {
+        kind: preStart ? 'pre-start-rejection' : 'turn-terminal',
+        detailRef: outcome.error ?? `router ${outcome.routerEnvelope} settlement`,
+      },
+    }
+  }
   const provenFailure = (!started && outcome.started === false) || hasTerminationProof(outcome)
   if (!provenFailure) {
     return {
@@ -366,7 +388,12 @@ export async function watchLateSettlement(record, invocationPromise) {
       return
     }
     const provenFailure = outcome.status === 'error'
-      && (outcome.started === false || hasTerminationProof(outcome))
+      && (outcome.started === false
+        // Bridge-carried Router settlement envelopes are authoritative late
+        // evidence (SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1).
+        || outcome.routerEnvelope === 'failed'
+        || outcome.routerEnvelope === 'not_admitted'
+        || hasTerminationProof(outcome))
     if (provenFailure) {
       await this._applyLateSettlement(
         record,

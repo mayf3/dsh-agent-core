@@ -93,6 +93,27 @@ export function chatIdFromDeliveryTo(to) {
  *     proven PRE-START rejection (no attempt ever dispatched) from a terminal
  *     failure of a started run (C-004).
  *
+ * SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1 — the Router's C-010
+ * closed-union envelopes are authoritative settlements and are now carried
+ * through instead of being re-guessed from `turnDispatched`:
+ *   - `not_admitted` -> outcome `{status:'error', started:false,
+ *     routerEnvelope:'not_admitted', routerCode}` — a deterministic pre-start
+ *     rejection (e.g. an Agent/session unknown-fence rejection) must NEVER
+ *     become a second outcome_unknown on the scheduler side (UNKNOWN
+ *     CONTAINMENT).
+ *   - `failed` -> outcome `{status:'error', routerEnvelope:'failed'}` — the
+ *     router's settled terminal failure (structured RPC error response /
+ *     exact turn-end failure) survives the seam. No error-code whitelist: the
+ *     closed envelope IS the terminal proof.
+ *   - `outcome_unknown` stays outcome_unknown EXCEPT when the router's
+ *     published `resolveCallerCorrelation` surface proves the exact run
+ *     settled `terminated_without_outcome` with a trusted terminationEvidence
+ *     kind (child_real_exit etc.) — then the outcome converges to
+ *     `{status:'error', evidence:{terminationEvidence, source:
+ *     'router_disposition_readback'}}` (TERMINATION_PROVEN => failed, C-004).
+ *   - everything else (bare errors, pending/mismatched readbacks) keeps the
+ *     fail-closed outcome_unknown default (C-001).
+ *
  * Never throws: every failure becomes the scheduler's outcome envelope.
  * Structured `outcome_unknown` carriers (status/envelope) pass through with
  * their reconciliationHandle — an unproven execution is NEVER collapsed into
@@ -127,6 +148,49 @@ export function createRouterInvoker(router, opts = {}) {
     const defined = definition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
     if (defined.disabled === true) {
       throw Object.assign(new Error(`scheduler-router: agent ${agentId} is disabled (not runnable)`), { code: 'AGENT_DISABLED' })
+    }
+  }
+
+  /**
+   * Trusted exact-run termination readback over the router's PUBLISHED
+   * `resolveCallerCorrelation` surface (the same authority the Scheduler
+   * self-ops consume). Returns the trusted terminationEvidence kind only when
+   * the CURRENT router record for the exact (occurrenceId, runId, requestId)
+   * triple has SETTLED `terminated_without_outcome` — i.e. the router itself
+   * proved the exact turn can no longer continue (C-015 child_real_exit /
+   * exact_queued_removal / cancellation_ack / exact_terminal_then_idle).
+   * Everything else — pending, restart_lost, evicted, never_existed, a
+   * business late outcome (its own authorized seam), or any mismatch — is NO
+   * proof and returns null (fail-closed).
+   */
+  async function trustedTerminationReadback(router, request, error) {
+    const readback = router?.resolveCallerCorrelation
+    if (typeof readback !== 'function') return null
+    const triple = {
+      occurrenceId: request?.occurrenceId,
+      runId: request?.runId,
+      requestId: request?.requestId,
+    }
+    if (!Object.values(triple).every((value) => typeof value === 'string' && value !== '')) return null
+    let result
+    try {
+      result = await readback(triple)
+    } catch {
+      return null // a failed readback is never a proof
+    }
+    if (result?.state !== 'settled' || result.snapshot === null || typeof result.snapshot !== 'object') return null
+    const snapshot = result.snapshot
+    if (snapshot.agentId !== request.agentId) return null
+    const correlation = snapshot.callerCorrelation
+    if (correlation === null || typeof correlation !== 'object'
+      || triple.occurrenceId !== correlation.occurrenceId
+      || triple.runId !== correlation.runId
+      || triple.requestId !== correlation.requestId) return null
+    if (snapshot.lateOutcome !== 'terminated_without_outcome') return null
+    if (!TERMINATION_EVIDENCE.has(snapshot.terminationEvidence)) return null
+    return {
+      terminationEvidence: snapshot.terminationEvidence,
+      handle: error?.reconciliationHandle ?? result.handle,
     }
   }
 
@@ -178,23 +242,57 @@ export function createRouterInvoker(router, opts = {}) {
       calls.push(call)
       return outcome
     } catch (error) {
-      const explicitlyUnknown = error?.status === 'outcome_unknown' || error?.envelope === 'outcome_unknown'
+      const envelope = error?.envelope ?? null
+      const explicitlyUnknown = error?.status === 'outcome_unknown' || envelope === 'outcome_unknown'
       const terminationEvidence = error?.terminationEvidence ?? error?.evidence?.terminationEvidence
       const provenTerminal = error?.status === 'failed' && TERMINATION_EVIDENCE.has(terminationEvidence)
-      // Any post-dispatch failure without exact-turn termination proof is
-      // outcome_unknown, even when represented as a generic thrown Error.
-      const unknown = explicitlyUnknown || (turnDispatched && !provenTerminal)
+      // Trusted termination readback (the same published resolveCallerCorrelation
+      // surface the Scheduler self-ops consume): an outcome_unknown envelope whose
+      // exact-run router record already settled `terminated_without_outcome` with
+      // a trusted terminationEvidence kind carries PROOF that the exact turn can
+      // no longer continue — the outcome converges to error/failed instead of
+      // staying unknown. Everything else stays fail-closed unknown.
+      const readback = explicitlyUnknown
+        ? await trustedTerminationReadback(router, request, error)
+        : null
+      // SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1: the Router's
+      // C-010 closed-union envelopes are AUTHORITATIVE settlements — the
+      // router owns the exact-turn evidence, so its verdict must survive this
+      // seam instead of being re-guessed from `turnDispatched`:
+      //   not_admitted -> deterministic pre-start rejection (UNKNOWN
+      //     CONTAINMENT: an Agent/session fence rejection of one shift must
+      //     never reproduce as a second outcome_unknown);
+      //   failed       -> the router's settled terminal failure (e.g. the
+      //     structured RPC error response) — no error-code whitelist, the
+      //     envelope IS the terminal proof.
+      // Any OTHER post-dispatch failure without exact-turn termination proof
+      // stays outcome_unknown (fail-closed default unchanged).
+      const routerNotAdmitted = envelope === 'not_admitted'
+      const routerFailed = envelope === 'failed'
+      const unknown = explicitlyUnknown
+        ? readback === null
+        : !(routerNotAdmitted || routerFailed) && turnDispatched && !provenTerminal
       const outcome = {
         status: unknown ? 'outcome_unknown' : 'error',
         error: error?.message ?? String(error),
         sessionId: request.sessionId,
         durationMs: Date.now() - started,
-        started: turnDispatched, // false = proven pre-start rejection (C-004)
-        ...(error?.reconciliationHandle === undefined ? {} : { reconciliationHandle: error.reconciliationHandle }),
+        started: routerNotAdmitted ? false : turnDispatched, // false = proven pre-start rejection (C-004)
+        ...(routerNotAdmitted || routerFailed ? { routerEnvelope: envelope } : {}),
+        ...(routerNotAdmitted && error?.code !== undefined ? { routerCode: error.code } : {}),
+        ...(error?.reconciliationHandle !== undefined || readback !== null
+          ? { reconciliationHandle: readback !== null
+            ? (error?.reconciliationHandle ?? readback.handle)
+            : error.reconciliationHandle }
+          : {}),
         ...(error?.deadlineAtWallMs === undefined ? {} : { deadlineAtWallMs: error.deadlineAtWallMs }),
-        ...(error?.evidence !== undefined
-          ? { evidence: error.evidence }
-          : provenTerminal ? { evidence: { terminationEvidence } } : {}),
+        ...(readback !== null
+          ? { evidence: { terminationEvidence: readback.terminationEvidence, source: 'router_disposition_readback' } }
+          : error?.evidence !== undefined
+            ? { evidence: error.evidence }
+            : provenTerminal || (routerFailed && terminationEvidence !== undefined && terminationEvidence !== null)
+              ? { evidence: { terminationEvidence } }
+              : {}),
       }
       call.outcome = outcome
       call.aborted = aborted
