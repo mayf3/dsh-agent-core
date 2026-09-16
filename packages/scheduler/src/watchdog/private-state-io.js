@@ -8,8 +8,8 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 
 function hasExtendedAcl(path) {
   if (process.platform !== 'darwin') return false
-  const first = execFileSync('/bin/ls', ['-lde', path], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n')[0] ?? ''
-  return /^\S+\+/.test(first)
+  const lines = execFileSync('/bin/ls', ['-lde', path], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n')
+  return /^\S+\+/.test(lines[0] ?? '') || lines.slice(1).some((line) => /^\s*\d+:/.test(line))
 }
 
 export function ensurePrivateDirectory(path, { expectedUid = process.getuid?.(), expectedGid = process.getgid?.() } = {}) {
