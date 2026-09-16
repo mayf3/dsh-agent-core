@@ -2,7 +2,7 @@
 /** Receipted Scheduler control-plane admission; selftest/plan/apply fail closed. */
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { chmodSync, chownSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { homedir, userInfo } from 'node:os'
 import { JobStore } from '../packages/scheduler/src/store.js'
