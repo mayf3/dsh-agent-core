@@ -252,8 +252,11 @@ export function createRouterInvoker(router, opts = {}) {
       // surface the Scheduler self-ops consume): an outcome_unknown envelope whose
       // exact-run router record already settled `terminated_without_outcome` with
       // a trusted terminationEvidence kind carries PROOF that the exact turn can
-      // no longer continue — the outcome converges to error/failed instead of
-      // staying unknown. Everything else stays fail-closed unknown.
+      // no longer continue. BUSINESS_OUTCOME_PROOF != TERMINATION_PROOF: the
+      // outcome STAYS outcome_unknown; the readback is only stamped onto the
+      // evidence so the scheduler can record the C-039 terminationSettlement
+      // (fence release, no automatic retry). Everything else stays fail-closed
+      // unknown.
       const readback = explicitlyUnknown
         ? await trustedTerminationReadback(router, request, error)
         : null
