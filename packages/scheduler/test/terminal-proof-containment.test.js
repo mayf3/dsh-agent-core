@@ -170,6 +170,68 @@ test('TERMINATION_ONLY: no automatic retry after a termination-only settlement (
   await scheduler.stop()
 })
 
+test('RACE: a committed late business settlement wins — no termination settlement, no fabricated evidence', async () => {
+  const clock = { value: 1_000 }
+  const invoker = async (request) => {
+    request.onStart()
+    return new Promise(() => {})
+  }
+  invoker.assertRunnable = () => true
+  const scheduler = await makeScheduler({ invoker, nowMs: () => clock.value, deadlineSetTimeout: immediateDeadline })
+  const job = await scheduler.createJob(atJob('race-business', 2_000))
+  clock.value = 2_000
+  await scheduler.tick()
+  await scheduler.whenIdle()
+  const record = scheduler.listOccurrences(job.id)[0]
+  assert.equal(record.state, 'outcome_unknown')
+  // The authorized business late seam commits FIRST (first valid settlement wins).
+  await scheduler._applyLateSettlement(record, 'failed', 'invoker late proven terminal failure after timeout', { status: 'error', started: false })
+  // The trusted termination proof arrives afterwards — race loser.
+  await scheduler._applyTrustedTermination(record, {
+    status: 'outcome_unknown', started: true, reconciliationHandle: 'turn:race',
+    evidence: { terminationEvidence: 'child_real_exit', source: 'router_disposition_readback' },
+  })
+  await scheduler.load()
+  const settled = scheduler.listOccurrences(job.id)[0]
+  assert.equal(settled.state, 'failed', 'the existing business settlement is preserved')
+  assert.notEqual(settled.lateSettlement, undefined)
+  assert.equal(settled.terminationSettlement, undefined, 'terminationSettlement NOT written by the race loser')
+  const events = await scheduler.readRunEvidence({ limit: 500 })
+  assert.equal(events.filter((event) => event.action === 'termination_settlement').length, 0,
+    'a no-op settlement must NOT append termination_settlement evidence')
+  assert.equal(events.filter((event) => event.action === 'late_settlement').length, 1)
+  await scheduler.stop()
+})
+
+test('EVIDENCE: a real settlement appends exactly one termination_settlement evidence; a replay adds none', async () => {
+  const clock = { value: 1_000 }
+  const outcome = {
+    status: 'outcome_unknown', started: true, reconciliationHandle: 'turn:evidence',
+    error: 'agent exited without an exact parsed outcome',
+    evidence: { terminationEvidence: 'child_real_exit', source: 'router_disposition_readback' },
+  }
+  const invoker = async (request) => {
+    request.onStart()
+    return { ...outcome }
+  }
+  invoker.assertRunnable = () => true
+  const scheduler = await makeScheduler({ invoker, nowMs: () => clock.value })
+  const job = await scheduler.createJob(atJob('evidence-one', 2_000))
+  clock.value = 2_000
+  await scheduler.tick()
+  await scheduler.whenIdle()
+  const record = scheduler.listOccurrences(job.id)[0]
+  assert.notEqual(record.terminationSettlement, undefined)
+  const countEvidence = async () => (await scheduler.readRunEvidence({ limit: 500 }))
+    .filter((event) => event.action === 'termination_settlement').length
+  assert.equal(await countEvidence(), 1, 'the committing settlement appends exactly one evidence line')
+  // A racing replay (settle-once guard) must stay silent: no second write,
+  // no second evidence line.
+  await scheduler._applyTrustedTermination(record, outcome)
+  assert.equal(await countEvidence(), 1, 'the replay appends no second evidence line')
+  await scheduler.stop()
+})
+
 test('TERMINATION_ONLY late: a late trusted termination readback settles a timed-out unknown and releases the fence', async () => {
   const clock = { value: 1_000 }
   let releaseLate
