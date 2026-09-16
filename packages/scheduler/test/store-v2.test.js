@@ -1,5 +1,5 @@
 /**
- * Store V2 tests — SCHEDULER_TIMEOUT_OUTCOME_V2:
+ * Store V3 tests — SCHEDULER_TIMEOUT_OUTCOME_V3 (including V1/V2 migration):
  *   ACC-021 (layout & fail-loud), ACC-026 (reserve atomicity under
  *   concurrency, store level), ACC-028 (projection rebuild from the ledger),
  *   ACC-030 (legacy state demotion), ACC-033 (v1->v2 upgrade + guarded
@@ -9,9 +9,11 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { JobStore, STORE_VERSION } from '../src/store.js'
 import { buildOccurrenceRecord, applyTransition, deriveJobStateSummary, rebuildFences, enableJobOp } from '../src/index.js'
 
@@ -40,7 +42,7 @@ const RECORD = (over = {}) => ({
 
 // ── ACC-021 layout + fail-loud ────────────────────────────────────────────
 
-test('ACC-021 document layout {version:2, jobs, occurrences, fences}; single mutation authority', async () => {
+test('ACC-021 document layout {version:3, jobs, occurrences, fences}; single mutation authority', async () => {
   const { store } = tempStore('sched-v2-layout-')
   await store.mutateDoc((doc) => { doc.jobs.push(JOB()) })
   const raw = JSON.parse(readFileSync(store.filePath, 'utf8'))
@@ -48,7 +50,7 @@ test('ACC-021 document layout {version:2, jobs, occurrences, fences}; single mut
   assert.ok(Array.isArray(raw.jobs))
   assert.ok(Array.isArray(raw.occurrences))
   assert.deepEqual(raw.fences, {})
-  assert.equal(STORE_VERSION, 2)
+  assert.equal(STORE_VERSION, 3)
 })
 
 test('ACC-021 corrupt document fails loud (never an empty store)', async () => {
@@ -63,10 +65,10 @@ test('ACC-021 unsupported version fails loud', async () => {
   await assert.rejects(() => store.loadDoc(), /unsupported store version 99/)
 })
 
-test('ACC-021 malformed v2 (missing collections) fails loud', async () => {
+test('ACC-021 malformed upgradeable v2 (missing collections) fails loud', async () => {
   const { store } = tempStore('sched-v2-malformed-')
   writeFileSync(store.filePath, JSON.stringify({ version: 2, jobs: [] }), 'utf8')
-  await assert.rejects(() => store.loadDoc(), /missing\/malformed jobs\/occurrences\/fences/)
+  await assert.rejects(() => store.loadDoc(), /validate v2 document: version 2 occurrences\/fences must be present/)
 })
 
 test('ACC-021 CORRUPT_OCCURRENCE_STORE_FAIL_LOUD (authority corruption, not warn-drop)', async () => {
@@ -203,7 +205,11 @@ function v1Store(store, jobs) {
   writeFileSync(store.filePath, JSON.stringify({ version: 1, jobs }, null, 2), 'utf8')
 }
 
-test('ACC-033 STORE_UPGRADE_V1_TO_V2: in-lock upgrade, generation backup, strip report, no fabricated occurrences', async () => {
+function v2Store(store, { jobs = [JOB()], occurrences = [] } = {}) {
+  writeFileSync(store.filePath, `${JSON.stringify({ version: 2, jobs, occurrences, fences: rebuildFences(occurrences) }, null, 2)}\n`, 'utf8')
+}
+
+test('ACC-033 STORE_UPGRADE_V1_TO_V3: in-lock upgrade, generation backup, strip report, no fabricated occurrences', async () => {
   const { dir, store } = tempStore('sched-v2-upg-')
   v1Store(store, [
     JOB({
@@ -216,7 +222,7 @@ test('ACC-033 STORE_UPGRADE_V1_TO_V2: in-lock upgrade, generation backup, strip 
   const { upgraded, report } = await store.ensureUpgraded()
   assert.equal(upgraded, true)
   const raw = JSON.parse(readFileSync(store.filePath, 'utf8'))
-  assert.equal(raw.version, 2)
+  assert.equal(raw.version, 3)
   assert.ok(Array.isArray(raw.occurrences) && raw.occurrences.length === 0, 'NO fabricated occurrences')
   assert.deepEqual(raw.fences, {})
 
@@ -250,7 +256,7 @@ test('ACC-033 STORE_UPGRADE_V1_TO_V2: in-lock upgrade, generation backup, strip 
 
   // upgrade evidence recorded
   const events = await store.readRunEvents()
-  assert.ok(events.some((e) => e.action === 'store_upgrade' && e.from === 1 && e.to === 2))
+  assert.ok(events.some((e) => e.action === 'store_upgrade' && e.from === 1 && e.to === 3))
 
   // idempotent: second open reports no upgrade
   const again = await store.ensureUpgraded()
@@ -262,24 +268,100 @@ test('ACC-033 bare-array v1 documents upgrade too', async () => {
   writeFileSync(store.filePath, JSON.stringify([JOB()]), 'utf8')
   const { upgraded } = await store.ensureUpgraded()
   assert.equal(upgraded, true)
+  assert.equal(JSON.parse(readFileSync(store.filePath, 'utf8')).version, 3)
+})
+
+test('C-038 a V2-labeled document carrying V3 evidence fails loud instead of relabeling', async () => {
+  const { store } = tempStore('sched-v3-mislabeled-evidence-')
+  const record = RECORD()
+  const v2Shape = structuredClone(record)
+  delete v2Shape.recordSchemaVersion
+  delete v2Shape.ownerAgentId
+  delete v2Shape.requestId
+  v2Shape.terminationSettlement = { kind: 'terminated_without_outcome' }
+  writeFileSync(store.filePath, JSON.stringify({
+    version: 2, jobs: [JOB()], occurrences: [v2Shape], fences: {},
+  }), 'utf8')
+  await assert.rejects(() => store.loadDoc(), /V2-labeled document contains V3 authority evidence/)
   assert.equal(JSON.parse(readFileSync(store.filePath, 'utf8')).version, 2)
+})
+
+test('V2 -> V3 pre-commit crash preserves V2 authority and retry upgrades without fabricated identity', async () => {
+  const { dir, store } = tempStore('sched-v3-v2-precommit-crash-')
+  const legacy = RECORD()
+  delete legacy.recordSchemaVersion
+  delete legacy.ownerAgentId
+  delete legacy.requestId
+  v2Store(store, { occurrences: [legacy] })
+  const original = readFileSync(store.filePath, 'utf8')
+  store.beforeCommit = () => { throw new Error('injected before V3 commit') }
+  await assert.rejects(() => store.ensureUpgraded(), /injected before V3 commit/)
+  assert.equal(readFileSync(store.filePath, 'utf8'), original, 'authoritative V2 bytes remain intact')
+
+  store.beforeCommit = null
+  const recovered = await store.ensureUpgraded()
+  assert.equal(recovered.doc.version, 3)
+  assert.equal(recovered.doc.occurrences[0].recordSchemaVersion, 2)
+  assert.equal(recovered.doc.occurrences[0].ownerAgentId, undefined)
+  assert.equal(recovered.doc.occurrences[0].requestId, undefined)
+  const backups = readdirSync(dir).filter((name) => name.startsWith('jobs.json.v2.') && name.endsWith('.bak'))
+  assert.ok(backups.length >= 2, 'each attempted generation has an exact V2 backup')
+  for (const backup of backups) assert.deepEqual(JSON.parse(readFileSync(join(dir, backup), 'utf8')), JSON.parse(original))
+})
+
+test('V2 -> V3 post-commit response loss is recovered from committed V3 authority on restart', async () => {
+  const { store } = tempStore('sched-v3-v2-postcommit-crash-')
+  v2Store(store)
+  const originalWrite = store._writeAtomicDoc.bind(store)
+  store._writeAtomicDoc = async (doc) => {
+    await originalWrite(doc)
+    throw Object.assign(new Error('injected response loss after V3 rename'), { mutationOutcome: 'committed' })
+  }
+  await assert.rejects(() => store.ensureUpgraded(), (error) => error.mutationOutcome === 'committed')
+  assert.equal(JSON.parse(readFileSync(store.filePath, 'utf8')).version, 3)
+
+  const restarted = new JobStore(store.filePath)
+  const recovered = await restarted.loadDoc({ force: true })
+  assert.equal(recovered.version, 3)
+  await assert.rejects(() => restarted.rollbackToV1(), /version 3 authority committed/)
+})
+
+test('C-038 actual pinned V2 reader and writer fail loud on V3 without changing bytes', async () => {
+  const { dir, store } = tempStore('sched-v3-old-reader-')
+  await store.mutateDoc((doc) => { doc.jobs.push(JOB()) })
+  const before = readFileSync(store.filePath, 'utf8')
+
+  const legacyDir = join(dir, 'actual-v2-runtime')
+  mkdirSync(legacyDir)
+  writeFileSync(join(legacyDir, 'package.json'), '{"type":"module"}\n')
+  const pin = 'e01ea3494d0b382bab0fbf636fdd55a590d2bfdc'
+  for (const name of ['store.js', 'occurrence-model.js', 'store-migration.js', 'lock.js']) {
+    const source = execFileSync('git', ['show', `${pin}:packages/scheduler/src/${name}`], { encoding: 'utf8' })
+    writeFileSync(join(legacyDir, name), source)
+  }
+  const legacyModule = await import(`${pathToFileURL(join(legacyDir, 'store.js')).href}?pin=${pin}`)
+  assert.equal(legacyModule.STORE_VERSION, 2, 'fixture is the actual accepted pre-V3 Store')
+  const legacy = new legacyModule.JobStore(store.filePath)
+  await assert.rejects(() => legacy.loadDoc({ force: true }), /unsupported store version 3/)
+  await assert.rejects(() => legacy.mutateDoc((doc) => { doc.jobs[0].name = 'must-not-write' }), /unsupported store version 3/)
+  assert.equal(readFileSync(store.filePath, 'utf8'), before)
 })
 
 test('ACC-033 read surfaces cannot bypass the locked one-time v1 upgrade', async () => {
   const { dir, store } = tempStore('sched-v2-read-upgrade-')
   v1Store(store, [JOB()])
   const doc = await store.loadDoc()
-  assert.equal(doc.version, 2)
-  assert.equal(JSON.parse(readFileSync(store.filePath, 'utf8')).version, 2)
+  assert.equal(doc.version, 3)
+  assert.equal(JSON.parse(readFileSync(store.filePath, 'utf8')).version, 3)
   assert.ok(readdirSync(dir).some((name) => name.endsWith('.bak')))
   assert.ok((await store.readRunEvents()).some((event) => event.action === 'store_upgrade'))
 })
 
-test('ACC-033 same-transaction v1 upgrade plus Job mutation permanently blocks rollback', async () => {
+test('ACC-033 V3 commit permanently blocks rollback after same-transaction mutation', async () => {
   const { store } = tempStore('sched-v2-upgrade-mutation-')
   v1Store(store, [JOB()])
   await store.mutateDoc((doc) => { doc.jobs[0].name = 'mutated during upgrade' })
-  await assert.rejects(() => store.rollbackToV1(), /V2-era Job mutation/)
+  await assert.rejects(() => store.rollbackToV1(), /version 3 authority committed/)
 })
 
 // ── ACC-033 guarded rollback ──────────────────────────────────────────────
@@ -289,69 +371,33 @@ async function upgradeFreshStore(store) {
   await store.ensureUpgraded()
 }
 
-test('ACC-033 rollback allowed only in the narrow safe form', async () => {
-  const { dir, store } = tempStore('sched-v2-rollback-')
+test('ACC-033 no downgrade after V3 authority is committed', async () => {
+  const { store } = tempStore('sched-v3-no-downgrade-')
   await upgradeFreshStore(store)
-
-  // 1) untouched v2 -> rollback allowed; archives the V2 document; consumes the backup
-  const result = await store.rollbackToV1({ operator: 'test' })
-  assert.ok(result.archiveFile.includes('.v2.'), 'V2 authority document archived before rollback')
-  assert.ok(existsSync(result.archiveFile))
-  assert.equal(JSON.parse(readFileSync(store.filePath, 'utf8')).version, 1, 'v1 restored')
-  assert.ok(readdirSync(dir).some((n) => n.endsWith('.bak.consumed')), 'backup marked consumed')
-
-  // 2) re-upgrade starts from the CURRENT truth with a NEW backup generation
-  const second = await store.ensureUpgraded()
-  assert.equal(second.upgraded, true)
-  const backups = readdirSync(dir).filter((n) => n.startsWith('jobs.json.v1.') && n.endsWith('.bak'))
-  assert.equal(backups.length, 1, 'new generation backup (consumed one not reused)')
-
-  // 3) occurrence records present -> refuse
-  await store.mutateDoc((doc) => { doc.occurrences.push(RECORD()) })
   await assert.rejects(() => store.rollbackToV1(), (err) => {
     assert.equal(err.code, 'ROLLBACK_REFUSED')
-    assert.match(err.message, /occurrence authority exists/)
+    assert.match(err.message, /version 3 authority committed/)
     assert.match(err.message, /forward-fix-or-reconcile/)
-    return true
-  })
-  await store.mutateDoc((doc) => { doc.occurrences = [] })
-
-  // 4) unresolved outcome_unknown -> refuse (even with occurrences array emptied elsewhere this simulates the direct case)
-  await store.mutateDoc((doc) => {
-    doc.occurrences.push(RECORD({
-      state: 'outcome_unknown',
-      history: [{ at: 3000, from: null, to: 'admitted', reason: 'reserve' }, { at: 3001, from: 'admitted', to: 'outcome_unknown', reason: 'unproven' }],
-    }))
-    doc.fences = rebuildFences(doc.occurrences)
-  })
-  await assert.rejects(() => store.rollbackToV1(), /unresolved outcome_unknown/)
-
-  // 5) V2-era job mutation -> refuse (digest differs from post-upgrade digest)
-  await store.mutateDoc((doc) => { doc.occurrences = []; doc.fences = {} })
-  await store.mutate((jobs) => { jobs[0].name = 'mutated-in-v2-era' })
-  await assert.rejects(() => store.rollbackToV1(), (err) => {
-    assert.equal(err.code, 'ROLLBACK_REFUSED')
-    assert.match(err.message, /V2-era Job mutation/)
     return true
   })
 })
 
-test('ACC-033 rollback digest guard catches direct V2 Job mutation even if sidecar flag is false', async () => {
+test('ACC-033 no-downgrade guard is independent of direct V3 Job mutation', async () => {
   const { store } = tempStore('sched-v2-rollback-digest-')
   await upgradeFreshStore(store)
   const raw = JSON.parse(readFileSync(store.filePath, 'utf8'))
   raw.jobs[0].name = 'direct mutation bypass attempt'
   writeFileSync(store.filePath, JSON.stringify(raw), 'utf8')
-  await assert.rejects(() => store.rollbackToV1(), /V2-era Job mutation/)
+  await assert.rejects(() => store.rollbackToV1(), /version 3 authority committed/)
 })
 
-test('ACC-033 rollback rejects tampered or wrong-generation backup authority', async () => {
+test('ACC-033 no-downgrade guard wins even when a legacy backup is tampered', async () => {
   const { dir, store } = tempStore('sched-v2-rollback-tamper-')
   await upgradeFreshStore(store)
   const backup = readdirSync(dir).find((name) => name.endsWith('.bak'))
   writeFileSync(join(dir, backup), JSON.stringify({ version: 1, jobs: [JOB({ name: 'tampered' })] }), 'utf8')
-  await assert.rejects(() => store.rollbackToV1(), /backup digest does not match sidecar/)
-  assert.equal(JSON.parse(readFileSync(store.filePath, 'utf8')).version, 2)
+  await assert.rejects(() => store.rollbackToV1(), /version 3 authority committed/)
+  assert.equal(JSON.parse(readFileSync(store.filePath, 'utf8')).version, 3)
 })
 
 // ── ACC-028 projection rebuild ────────────────────────────────────────────
@@ -375,7 +421,7 @@ test('ACC-028 PROJECTION_REBUILD_FROM_OCCURRENCE_LEDGER: fences + state summarie
     executionOutcome: 'succeeded', deliveryStatus: 'delivered',
   })
   const corruptProjection = {
-    version: 2,
+    version: 3,
     jobs: [JOB(), JOB({ id: 'j2' })],
     occurrences: [unknown, succeeded],
     fences: { someStaleGarbage: { occurrenceId: 'x', runId: 'y', activatedAtMs: 0, reason: 'stale' } },

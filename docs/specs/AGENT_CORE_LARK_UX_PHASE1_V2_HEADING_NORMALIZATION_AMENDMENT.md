@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_LARK_UX_PHASE1_V2_HEADING_NORMALIZATION_AMENDMENT
-status: accepted
+status: superseded
 type: owner-ruling child amendment (spec-only; docs-only)
 amends: AGENT_CORE_LARK_UX_PHASE1_V2
 parent_status: accepted
@@ -17,7 +17,7 @@ governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_LARK_UX_PHASE1_V3
 owners:
   - mayf3
 references:

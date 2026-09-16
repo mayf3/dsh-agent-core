@@ -9,8 +9,8 @@ import {
 import { OwnerLock } from './lock.js'
 import { storeMigrationMethods } from './store-migration.js'
 
-export const STORE_VERSION = 2
-export const UPGRADEABLE_VERSIONS = new Set([1])
+export const STORE_VERSION = 3
+export const UPGRADEABLE_VERSIONS = new Set([1, 2])
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const clone = (value) => structuredClone(value)
@@ -26,7 +26,7 @@ function emptyDoc() {
   return { version: STORE_VERSION, jobs: [], occurrences: [], fences: {} }
 }
 
-/** Single-document Scheduler V2 authority store. */
+/** Single-document Scheduler V3 authority store. */
 export class JobStore {
   constructor(filePath, opts = {}) {
     this.filePath = filePath
@@ -37,7 +37,7 @@ export class JobStore {
     this.clock = opts.clock ?? (() => Date.now())
     this.lockPath = `${filePath}.lock`
     this.engineLockPath = `${filePath}.engine.lock`
-    this.upgradeMetaPath = `${filePath}.upgrade-v2.json`
+    this.upgradeMetaPath = `${filePath}.upgrade-v3.json`
     this.beforeCommit = opts.beforeCommit ?? null
     this._cacheDoc = null
     this._mtimeMs = -1
@@ -148,7 +148,7 @@ export class JobStore {
           }
           this._validateDocument(doc)
           const jobsChanged = digestJSON(doc.jobs) !== beforeJobsDigest
-          if (jobsChanged) await this._markV2JobMutation()
+          if (jobsChanged) await this._markV3JobMutation()
           if (typeof this.beforeCommit === 'function') await this.beforeCommit()
         } catch (error) {
           if (error?.mutationOutcome === undefined) error.mutationOutcome = 'not_committed'
@@ -176,7 +176,8 @@ export class JobStore {
         let upgrade = loaded.upgrade ?? null
         if (upgrade) {
           const evidenceStatus = await this.appendRunEvent({
-            ts: this.clock(), action: 'store_upgrade', from: 1, to: STORE_VERSION,
+            ts: this.clock(), action: 'store_upgrade',
+            from: Number(String(loaded.sourceStatus).replace(/^v/, '')) || 1, to: STORE_VERSION,
             backupFile: upgrade.backupFile, report: upgrade.report,
           })
           upgrade = { ...upgrade, evidenceStatus }
@@ -237,13 +238,17 @@ export class JobStore {
         ? { ...data, fences: rebuildFences(data.occurrences) }
         : data
       this._validateDocument(validated)
-      return { status: 'v2', raw: data, doc: data }
+      return { status: 'v3', raw: data, doc: data }
     }
     if (UPGRADEABLE_VERSIONS.has(data.version)) {
       if (!Array.isArray(data.jobs)) {
-        failLoud('validate v1 document', new Error('version 1 jobs must be an array'))
+        failLoud(`validate v${data.version} document`, new Error(`version ${data.version} jobs must be an array`))
       }
-      return { status: 'v1', raw: data, jobs: data.jobs }
+      if (data.version === 2 && (!Array.isArray(data.occurrences) || data.fences === null
+        || typeof data.fences !== 'object' || Array.isArray(data.fences))) {
+        failLoud('validate v2 document', new Error('version 2 occurrences/fences must be present'))
+      }
+      return { status: `v${data.version}`, raw: data, jobs: data.jobs, doc: data }
     }
     failLoud('validate document', new Error(`unsupported store version ${JSON.stringify(data.version)}`))
   }
@@ -252,7 +257,7 @@ export class JobStore {
     if (doc.version !== STORE_VERSION || !Array.isArray(doc.jobs)
       || !Array.isArray(doc.occurrences) || !doc.fences
       || typeof doc.fences !== 'object' || Array.isArray(doc.fences)) {
-      failLoud('validate document', new Error('version 2 document missing/malformed jobs/occurrences/fences collection(s)'))
+      failLoud('validate document', new Error('version 3 document missing/malformed jobs/occurrences/fences collection(s)'))
     }
     const ids = new Map()
     const coordinateKeys = new Map()
@@ -355,11 +360,11 @@ export class JobStore {
     }
     if (!force && this._cacheDoc && stat.mtimeMs === this._mtimeMs) return clone(this._cacheDoc)
     const classified = await this._readDocRaw()
-    if (classified.status === 'v1') {
+    if (classified.status === 'v1' || classified.status === 'v2') {
       await this.ensureUpgraded()
       return this.loadDoc({ force: true })
     }
-    const doc = classified.status === 'v2' ? classified.doc : emptyDoc()
+    const doc = classified.status === 'v3' ? classified.doc : emptyDoc()
     this._cacheDoc = clone(doc)
     this._mtimeMs = stat.mtimeMs
     return clone(doc)
@@ -372,8 +377,8 @@ export class JobStore {
   async rebuildProjections({ buildJobSummary } = {}) {
     const run = this._mutexChain.then(() => this._withLock(async () => {
       const classified = await this._readDocRaw({ repairFences: true })
-      if (classified.status !== 'v2') {
-        failLoud('rebuild projections', new Error('store must be upgraded to v2 first'))
+      if (classified.status !== 'v3') {
+        failLoud('rebuild projections', new Error('store must be upgraded to v3 first'))
       }
       const doc = clone(classified.doc)
       const before = JSON.stringify({ fences: doc.fences, states: doc.jobs.map((job) => job.state ?? {}) })

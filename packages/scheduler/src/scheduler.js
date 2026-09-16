@@ -4,9 +4,28 @@ import {
   DEFAULT_AT_CATCHUP_GRACE_MS,
   deriveJobStateSummary,
   hasNonTerminalOccurrence,
+  isTerminalRecord,
   naturalCandidate,
   retryCandidate,
 } from './eligibility.js'
+import {
+  accountDowntimeSlots,
+  createSlotAccountingCursor,
+  latestPastSlot,
+  recordSlotAccounting,
+} from './watchdog/slot-accounting.js'
+import { MIN_REFIRE_GAP_MS } from './schedule.js'
+
+function jobSlotAccountingFloorMs(job, occurrences) {
+  const activation = Number.isFinite(job.revisionActivatedAtMs) ? job.revisionActivatedAtMs : job.createdAtMs
+  let floor = activation
+  for (const record of occurrences) {
+    if (record.jobId !== job.id || !isTerminalRecord(record)) continue
+    const end = record.terminationSettlement?.committedAt ?? record.endedAt ?? record.admittedAt
+    if (Number.isFinite(end) && end + MIN_REFIRE_GAP_MS > floor) floor = end + MIN_REFIRE_GAP_MS
+  }
+  return floor
+}
 import {
   createJobOp,
   updateJobOp,
@@ -59,7 +78,7 @@ export class Scheduler {
     // Facts only — never consulted by admission (spec R-H1).
     this.history = deps.history ?? null
 
-    this.doc = { version: 2, jobs: [], occurrences: [], fences: {} }
+    this.doc = { version: 3, jobs: [], occurrences: [], fences: {} }
     this._timer = null
     this._executing = false
     this._rerunPending = false
@@ -67,6 +86,11 @@ export class Scheduler {
     this._started = false
     this._engineLease = null
     this._inflight = new Set()
+    // Slot accounting (NO_SILENT_SLOT_LOSS): per-session dedupe cursor so an
+    // elapsed slot is durably receipted exactly once per engine session.
+    this._slotCursor = createSlotAccountingCursor()
+    this._engineSessionId = `${process.pid}:${Date.now().toString(36)}`
+    this._leaseLossRecorded = false
   }
 
   async load() {
@@ -100,6 +124,10 @@ export class Scheduler {
       try {
         // Recovery sweep is mandatory even when operational catch-up is off.
         await this._sweepUnresolved()
+        // Slot accounting before catch-up: the newest elapsed slot belongs to
+        // the native at-most-one catch-up (its receipt will be the catch-up
+        // occurrence); every OLDER elapsed slot is receipted as missed.
+        await this._accountDowntime()
         if (catchup) await this._startupCatchup()
       } finally {
         this._executing = false
@@ -126,16 +154,33 @@ export class Scheduler {
    * Single-live-engine guard: admission passes require the engine lease to
    * still be verifiably ours. A lost/superseded lease (foreign removal,
    * superseding engine) halts admission fail-loud — two live engines can
-   * never both admit against one store.
+   * never both admit against one store. The halt itself is durably receipted
+   * (engine_lease_lost) so elapsed slots are never silently unexplained.
    */
   async _assertEngineLeaseHeld() {
-    if (this._stopped || !this._engineLease) return false
+    if (this._stopped) return false
+    if (!this._engineLease) {
+      await this._recordLeaseLoss('engine lease reference unavailable')
+      return false
+    }
     if (!(await this._engineLease.verify())) {
       this._stopped = true
       this.log.error('engine lease lost or superseded — admission halted (single-live-engine guard)')
+      await this._recordLeaseLoss('engine lease verification failed (lost or superseded)')
       return false
     }
     return true
+  }
+
+  async _recordLeaseLoss(reason) {
+    if (this._leaseLossRecorded) return
+    this._leaseLossRecorded = true
+    try {
+      await this.store.appendRunEvent({
+        ts: this.nowMs(), action: 'engine_lease_lost', reason,
+        engineSessionId: this._engineSessionId,
+      })
+    } catch { /* evidence is best-effort; the halt decision stands */ }
   }
 
   async whenIdle() {
@@ -177,37 +222,108 @@ export class Scheduler {
   }
 
   async _tickOnce() {
-    if (!(await this._assertEngineLeaseHeld())) return 0
+    if (this._stopped) return 0
+    const leaseHeld = await this._assertEngineLeaseHeld()
     const now = this.nowMs()
     await this.load()
+    if (!leaseHeld) {
+      // Halted engine still leaves durable slot accounting — a halted engine
+      // must never be indistinguishable from "no slot ever came due".
+      await this._accountEngineHalted(now)
+      return 0
+    }
     const candidates = []
     for (const job of this.doc.jobs) {
-      if (!job.enabled || this.doc.fences[job.id] !== undefined) continue
-      if (hasNonTerminalOccurrence(this.doc.occurrences, job.id)) continue
-      const retry = retryCandidate({ job, occurrences: this.doc.occurrences, nowMs: now })
-      if (retry && !retry.exhausted) {
-        if (retry.due) candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId })
-        continue
+      try {
+        if (!job.enabled) continue
+        if (this.doc.fences[job.id] !== undefined) {
+          await this._recordPolicySkip(job, now, 'fenced (outcome_unknown in flight)')
+          continue
+        }
+        if (hasNonTerminalOccurrence(this.doc.occurrences, job.id)) {
+          await this._recordPolicySkip(job, now, 'non-terminal occurrence in flight')
+          continue
+        }
+        const retry = retryCandidate({ job, occurrences: this.doc.occurrences, nowMs: now })
+        if (retry && !retry.exhausted) {
+          if (retry.due) candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId })
+          continue
+        }
+        const natural = naturalCandidate({
+          job,
+          occurrences: this.doc.occurrences,
+          nowMs: now,
+          atCatchupGraceMs: this.atCatchupGraceMs,
+        })
+        if (natural.due) candidates.push({ kind: 'natural', job, nominalScheduledAt: natural.nominal })
+        else await this._recordPolicySkip(job, now, natural.reason, natural.nominal)
+      } catch (error) {
+        const slot = latestPastSlot({ schedule: job.schedule, jobId: job.id, nowMs: now })
+        await this._recordSlot(job, slot, 'DETECTION_INTERRUPTED', String(error?.message ?? error).slice(0, 300))
       }
-      const natural = naturalCandidate({
-        job,
-        occurrences: this.doc.occurrences,
-        nowMs: now,
-        atCatchupGraceMs: this.atCatchupGraceMs,
-      })
-      if (natural.due) candidates.push({ kind: 'natural', job, nominalScheduledAt: natural.nominal })
     }
     let fired = 0
     for (const candidate of candidates) {
       if (this._inflight.size >= this.concurrency) break
-      const reserved = await this._reserve(candidate)
-      if (!reserved || reserved.deduped) continue
+      const slot = candidate.nominalScheduledAt ?? candidate.catchUpOfNominalAt
+      let rejectionReason = null
+      let reserved
+      try {
+        reserved = await this._reserve(candidate, (reason) => { rejectionReason = reason })
+      } catch (error) {
+        // Fail-closed stays fail-loud (accepted ACC-032/CROSS-AGENT semantics):
+        // the admission interruption is receipted, the not-yet-attempted
+        // candidates are receipted as skipped, and the error still propagates.
+        await this._recordSlot(candidate.job, slot, 'ADMISSION_INTERRUPTED', String(error?.message ?? error).slice(0, 300))
+        for (const pending of candidates.slice(candidates.indexOf(candidate) + 1)) {
+          await this._recordSlot(
+            pending.job, pending.nominalScheduledAt ?? pending.catchUpOfNominalAt,
+            'SKIPPED_POLICY', 'tick aborted by an admission failure (fail-closed propagation)',
+          )
+        }
+        throw error
+      }
+      if (!reserved) {
+        await this._recordSlot(candidate.job, slot, 'ADMISSION_REJECTED', rejectionReason ?? 'reserve refused without a reason')
+        continue
+      }
+      if (reserved.deduped) continue
       void this._runOccurrence(reserved.job, reserved.record).catch((error) => {
         this.log.error(`occurrence ${reserved.record.occurrenceId} run failed: ${error?.message ?? error}`)
       })
+      if (typeof slot === 'number') this._slotCursor.mark(candidate.job.id, slot)
       fired += 1
     }
     return fired
+  }
+
+  /** Durable receipt for one elapsed slot (deduped per engine session). */
+  async _recordSlot(job, slot, classification, reason, extra = {}) {
+    if (!job || typeof slot !== 'number' || !this._slotCursor.shouldRecord(job.id, slot)) return
+    // Slots at-or-before the accounting floor were never due slots (pre-
+    // activation, or covered by the last terminal run + refire gap): they
+    // are policy non-events, not silent losses.
+    const floor = jobSlotAccountingFloorMs(job, this.doc.occurrences)
+    if (slot <= floor) return
+    const ok = await recordSlotAccounting(this.store, {
+      ts: this.nowMs(), jobId: job.id, agentId: job.agentId, slot,
+      classification, reason, ...extra,
+    })
+    if (ok) this._slotCursor.mark(job.id, slot)
+  }
+
+  /** SKIPPED_POLICY receipt: the engine observed the slot and chose not to run it. */
+  async _recordPolicySkip(job, nowMs, reason, nominal = undefined) {
+    const slot = nominal ?? latestPastSlot({ schedule: job.schedule, jobId: job.id, nowMs })
+    await this._recordSlot(job, slot, 'SKIPPED_POLICY', reason)
+  }
+
+  async _accountEngineHalted(now) {
+    for (const job of this.doc.jobs) {
+      if (!job.enabled) continue
+      const slot = latestPastSlot({ schedule: job.schedule, jobId: job.id, nowMs: now })
+      await this._recordSlot(job, slot, 'ENGINE_HALTED', 'engine could not verify the admission lease — slot not evaluated')
+    }
   }
 
   /** Recovery never re-admits an admitted/running record. */
@@ -237,6 +353,18 @@ export class Scheduler {
       })
     }
     return swept.map((record) => record.occurrenceId)
+  }
+
+  /** Downtime backfill: durable MISSED receipts for pre-catch-up slots. */
+  async _accountDowntime() {
+    await accountDowntimeSlots({
+      store: this.store,
+      jobs: this.doc.jobs,
+      occurrences: this.doc.occurrences,
+      nowMs: this.nowMs(),
+      cursor: this._slotCursor,
+      engineSessionId: this._engineSessionId,
+    })
   }
 
   /** Native restart policy: at most the most recent eligible missed slot. */

@@ -1,10 +1,10 @@
 /**
- * @agent-core/scheduler — Agent Core Scheduler V2 (occurrence authority).
+ * @agent-core/scheduler — Agent Core Scheduler V3 (occurrence authority).
  *
  * Public surface:
- *   - Scheduler engine (V2 occurrence execution semantics + domain operations)
- *   - JobStore (single versioned state document v2: jobs/occurrences/fences,
- *     atomic persistence, v1->v2 upgrade + guarded rollback, run evidence log)
+ *   - Scheduler engine (V3 occurrence execution semantics + domain operations)
+ *   - JobStore (single versioned state document v3: jobs/occurrences/fences,
+ *     atomic persistence, v1/v2->v3 upgrade + no-downgrade guard, run evidence log)
  *   - occurrence model (deterministic identity, record schema, state machine)
  *   - eligibility (due/next/retry computation from definition + ledger)
  *   - domain control ops (create/update/enable/disable/delete/submitOneShot/
@@ -21,6 +21,7 @@
 
 export { Scheduler, AGENT_TURN_SAFETY_TIMEOUT_MS, TIMEOUT_ERROR_TEXT } from './scheduler.js'
 export { JobStore, STORE_VERSION } from './store.js'
+export { createSelfOpsAccess, deriveSelfReconcileOperationId } from './self-ops/index.js'
 export { normalizeJob, normalizeState, toPublicJob, cloneJob, DELIVERY_MODES, RUN_STATUSES } from './job-model.js'
 export { computeNextRunAtMs, computePreviousRunAtMs, parseAtToMs, parseAbsoluteTimeMs, parseDurationMs, resolveCronStaggerMs, normalizeSchedule } from './schedule.js'
 export { createFakeInvoker, createNoopInvoker, createRecordingDelivery, INVOKE_CONTRACT, DELIVER_CONTRACT } from './seams.js'
@@ -47,3 +48,10 @@ export {
   buildRunRecord, applyRunFilters, HISTORY_OUTCOMES, STATUS_VIEW_VOCABULARY,
   ERROR_CODES, RESULT_ERROR_CODES, RESULT_STATUSES,
 } from './history.js'
+export * from './watchdog/incident-compiler.js'
+export * from './watchdog/incident-lifecycle.js'
+export * from './watchdog/routing.js'
+export * from './watchdog/reconciliation.js'
+export * from './watchdog/health.js'
+export * from './watchdog/durable-state.js'
+export * from './watchdog/delivery.js'

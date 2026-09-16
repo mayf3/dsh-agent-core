@@ -35,6 +35,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 
 import z from '@deepseek-ai/schemastery'
 
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'
 
 /** Stable plugin name referenced by bundle patches. */
@@ -94,8 +95,8 @@ export function apply(ctx) {
   }
 
   let cwd = process.cwd()
-  let provider = 'opencode-go'
-  let model = 'deepseek-v4-flash'
+  let provider = CANONICAL_DEFAULT_MODEL_ROUTE.provider
+  let model = CANONICAL_DEFAULT_MODEL_ROUTE.model
   let maxTokens
 
   // The per-session resolution seam (AGENT_CORE_BINDING_WORKSPACE_V1

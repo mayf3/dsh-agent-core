@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
-status: accepted
+status: superseded
 accepted_by: mayf3
 accepted_at: 2026-09-03
 accepted_reviewed_head: efdd754f0db0b9e7041757ca83246d5695cf83f4
@@ -29,7 +29,7 @@ external_authorities:
     relation: constrained_by
 supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1
-superseded_by: null
+superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
 amendments:
   - AMENDMENT_3 (2026-09-11, status: accepted, semantic delta NONE, code-structure
     guardrails delta NONE — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION;
@@ -131,6 +131,8 @@ owners:
 ---
 
 # AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
+
+> Superseded by `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3` on 2026-09-13；本文件保留为历史 authority。
 
 > **Accepted whole-Spec successor.** V1 was superseded by V2 through the atomic lifecycle
 > transaction. Rejected child-proposal heads `be1d7f2695af62c7fc058dd65102747655c779a6`

@@ -68,7 +68,7 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
 
   log.log(`root=${layout.root} tickMs=${tickMs} concurrency=${concurrency} catchup=${catchup}`)
 
-  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log })
+  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true })
   await runtime.start()
   runtime.writeEvidence({
     kind: 'ready',

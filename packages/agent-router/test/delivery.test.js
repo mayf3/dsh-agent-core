@@ -2,7 +2,7 @@
  * Unit tests for Agent Router Delivery V0 — the frozen admission interface:
  *
  *   deliver({ requestId, agentId, sessionMode: 'main'|'fresh', message })
- *     -> { accepted: true, sessionId }
+ *     -> { accepted: true, sessionId, messageId }
  *
  * These tests drive the REAL router (BindingStore over tmp files, a REAL
  * Agent Definition over a tmp config file — the declarative Agent existence
@@ -149,7 +149,7 @@ test('D1 main first deliver: accepted, sessionId fixed main, one process, one pr
   const agent = seededAgent(definition)
 
   const result = await router.deliver({ requestId: 'job-1', agentId: agent.id, sessionMode: 'main', message: 'hello main' })
-  assert.deepEqual(result, { accepted: true, sessionId: 'main' })
+  assert.deepEqual(result, { accepted: true, sessionId: 'main', messageId: 'msg-1' })
   assert.equal(spawned.length, 1, 'one agent process spawned by admission')
   assert.deepEqual(spawned[0].deliveries, [{ sessionId: 'main', text: 'hello main' }])
   const log = router.deliveriesSnapshot()
@@ -166,8 +166,8 @@ test('D2 main again: same fixed session, process reused, no second mapping', asy
 
   const first = await router.deliver({ requestId: 'job-1', agentId: agent.id, sessionMode: 'main', message: 'a' })
   const second = await router.deliver({ requestId: 'job-2', agentId: agent.id, sessionMode: 'main', message: 'b' })
-  assert.deepEqual(first, { accepted: true, sessionId: 'main' })
-  assert.deepEqual(second, { accepted: true, sessionId: 'main' })
+  assert.deepEqual(first, { accepted: true, sessionId: 'main', messageId: 'msg-1' })
+  assert.deepEqual(second, { accepted: true, sessionId: 'main', messageId: 'msg-2' })
   assert.equal(spawned.length, 1, 'same live process reused for the second deliver')
   assert.deepEqual(spawned[0].deliveries.map(d => d.sessionId), ['main', 'main'])
 })
@@ -296,7 +296,7 @@ test('D7 accepted resolves immediately: no turn completion required at the route
   const started = Date.now()
   const result = await router.deliver({ requestId: 'j1', agentId: agent.id, sessionMode: 'main', message: 'no turn ever finishes' })
   const ms = Date.now() - started
-  assert.deepEqual(result, { accepted: true, sessionId: 'main' })
+  assert.deepEqual(result, { accepted: true, sessionId: 'main', messageId: 'msg-1' })
   assert.ok(ms < 5000, `deliver must not wait for a turn (took ${ms}ms)`)
   assert.equal(spawned[0].exit, undefined, 'process still alive — the turn simply keeps running')
 })

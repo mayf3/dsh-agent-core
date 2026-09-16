@@ -146,3 +146,122 @@ test('agent-core-production profile real boot: plugin loads + initialize handsha
     setTimeout(() => { child.removeListener('exit', done); resolve() }, 5_000)
   })
 })
+
+test('DEFAULT_MODEL_ROUTING_CONFIG_V1: no-params initialize resolves the canonical Luna default; explicit params still win', { timeout: 180_000 }, async (t) => {
+  const cli = resolveCli()
+  if (cli === null) {
+    t.skip('deepseek-harness CLI not resolvable (DSH_HARNESS_ROOT/checkout missing) — real boot smoke not run')
+    return
+  }
+
+  const root = mkdtempSync(join(tmpdir(), 'ac-real-boot-smoke-default-'))
+  const home = join(root, 'home')
+  const workspace = join(root, 'workspace')
+  await provisionAgentHome(home, workspace, { profile: PROFILE })
+
+  const previousProvider = process.env.DSH_AGENT_PROVIDER
+  const previousModel = process.env.DSH_AGENT_MODEL
+  delete process.env.DSH_AGENT_PROVIDER
+  delete process.env.DSH_AGENT_MODEL
+  t.after(() => {
+    if (previousProvider === undefined) delete process.env.DSH_AGENT_PROVIDER
+    else process.env.DSH_AGENT_PROVIDER = previousProvider
+    if (previousModel === undefined) delete process.env.DSH_AGENT_MODEL
+    else process.env.DSH_AGENT_MODEL = previousModel
+  })
+
+  const child = spawn(process.execPath, [cli, '--profile', PROFILE], {
+    cwd: workspace,
+    env: {
+      ...process.env,
+      DSH_HOME: home,
+      DSH_TELEMETRY_DISABLED: '1',
+      DSH_PERMISSION_MODE: 'danger-full-access',
+    },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
+  t.after(() => {
+    child.kill('SIGKILL')
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  let stderr = ''
+  let stdout = ''
+  child.stderr.setEncoding('utf8')
+  child.stdout.setEncoding('utf8')
+  child.stderr.on('data', (chunk) => { stderr += chunk })
+  child.stdout.on('data', (chunk) => { stdout += chunk })
+
+  await waitFor(
+    () => stderr,
+    (lines) => lines.includes('[demo-server] ready pid='),
+    90_000,
+    'demo-server ready marker (plugin tree load)',
+  )
+  assert.equal(child.exitCode, null, `child died during boot:\n${stderr.slice(-2000)}`)
+
+  // No provider/model anywhere: the plugin answers with the canonical
+  // built-in default route (openai-codex/gpt-5.6-luna).
+  child.stdin.write(`${JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'initialize',
+    params: { cwd: workspace, maxTokens: 8192 },
+  })}\n`)
+  const defaultResponse = await waitFor(
+    () => stdout,
+    (lines) => {
+      for (const line of lines.split('\n')) {
+        const trimmed = line.trim()
+        if (trimmed === '') continue
+        let message
+        try { message = JSON.parse(trimmed) } catch { continue }
+        if (message?.jsonrpc === '2.0' && message?.id === 1) return message
+      }
+      return undefined
+    },
+    30_000,
+    'default-route initialize JSON-RPC response',
+  )
+  assert.equal(defaultResponse.error, undefined, `initialize returned an error: ${JSON.stringify(defaultResponse.error)}`)
+  assert.deepEqual(
+    { provider: defaultResponse.result?.route?.provider, model: defaultResponse.result?.route?.model },
+    { provider: 'openai-codex', model: 'gpt-5.6-luna' },
+  )
+
+  // The request override layer is untouched: explicit params replace the
+  // effective route on the same live server.
+  child.stdin.write(`${JSON.stringify({
+    jsonrpc: '2.0',
+    id: 2,
+    method: 'initialize',
+    params: { cwd: workspace, provider: 'opencode-go', model: 'deepseek-v4-flash', maxTokens: 8192 },
+  })}\n`)
+  const explicitResponse = await waitFor(
+    () => stdout,
+    (lines) => {
+      for (const line of lines.split('\n')) {
+        const trimmed = line.trim()
+        if (trimmed === '') continue
+        let message
+        try { message = JSON.parse(trimmed) } catch { continue }
+        if (message?.jsonrpc === '2.0' && message?.id === 2) return message
+      }
+      return undefined
+    },
+    30_000,
+    'explicit-route initialize JSON-RPC response',
+  )
+  assert.equal(explicitResponse.error, undefined, `initialize returned an error: ${JSON.stringify(explicitResponse.error)}`)
+  assert.deepEqual(
+    { provider: explicitResponse.result?.route?.provider, model: explicitResponse.result?.route?.model },
+    { provider: 'opencode-go', model: 'deepseek-v4-flash' },
+  )
+
+  child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'shutdown', params: {} })}\n`)
+  await new Promise((resolve) => {
+    const done = () => resolve()
+    child.once('exit', done)
+    setTimeout(() => { child.removeListener('exit', done); resolve() }, 5_000)
+  })
+})

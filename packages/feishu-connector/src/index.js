@@ -36,6 +36,7 @@ import {
   bridgeConfigWithProcessingReaction,
 } from './processing-reaction.js'
 import { replyCardSendPlan } from './reply-card.js'
+import { containsConservativeMediaMarker } from './reply-display.js'
 import { createRedactingLogger, sdkLoggerAdapter } from './log-redaction.js'
 
 // Re-export the pure adapter helpers for thin adapters and tests
@@ -277,8 +278,18 @@ export function buildFeishuHandle({ channel, cfg, log, connect }) {
       // key (CARD_AUTO_MENTION = NONE) and the same anchoring as markdown.
       const cardEligible = ux?.rendering === 'markdown'
         || (opts?.presentation?.cardEligible === true && opts?.presentation?.source === 'scheduler')
+      const routerSuccessMedia = ux?.rendering === 'markdown'
+        && containsConservativeMediaMarker(text)
       let plan
-      if (cfg.replyRenderMode === 'card' && cardEligible) {
+      if (routerSuccessMedia) {
+        // V3 media preselection is Router-success-only and happens before
+        // either rich path. Card mode keeps its no-mention policy; Markdown
+        // mode keeps the existing triggering-sender mention policy.
+        const textUx = cfg.replyRenderMode === 'card'
+          ? undefined
+          : { ...ux, rendering: 'text' }
+        plan = replyTargetToSdkSend(replyTarget, text, textUx)
+      } else if (cfg.replyRenderMode === 'card' && cardEligible) {
         const card = replyCardSendPlan(replyTarget, text)
         if (card.plan !== undefined) {
           plan = card.plan

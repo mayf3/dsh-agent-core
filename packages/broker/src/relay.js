@@ -32,6 +32,11 @@
  * is exactly { capabilityId, operation, args }.
  */
 
+import { randomUUID } from 'node:crypto'
+import { appendFileSync } from 'node:fs'
+
+import { AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID } from './capabilities/agent-session-reconcile.js'
+
 /**
  * The parent-RPC method the router dispatches to the trusted broker gateway.
  * Kept in sync with packages/agent-router/src/index.js (BROKER_RPC_METHOD).
@@ -130,11 +135,16 @@ function validSchedulerMutationResult(operation, result) {
 }
 
 function validSessionSendResult(result) {
+  const traceKeys = ['messageId', 'sessionId', 'status', 'targetAgentId']
+  const validTrace = nonEmpty(result?.targetAgentId)
+    && nonEmpty(result?.sessionId)
+    && nonEmpty(result?.messageId)
   if (result?.status === 'accepted' || result?.status === 'timeout') {
-    return exactKeys(result, ['status'])
+    return exactKeys(result, traceKeys) && validTrace
   }
   return result?.status === 'replied'
-    && exactKeys(result, ['reply', 'status'])
+    && exactKeys(result, ['messageId', 'reply', 'sessionId', 'status', 'targetAgentId'])
+    && validTrace
     && typeof result.reply === 'string'
     && result.reply.length > 0
 }
@@ -145,6 +155,78 @@ function validDeclaredFailure(parent, manifest) {
     && typeof parent.error === 'object'
     && typeof parent.error.code === 'string'
     && manifest.errors.some((candidate) => candidate.code === parent.error.code)
+}
+
+const PRE_RECEIPT_FAILURE_CODES = new Set([
+  'not_admitted', 'queue_capacity_exceeded', 'target_not_found', 'target_disabled',
+])
+
+function reconcileFailedOutcome(failureCode, failureReason) {
+  if (failureCode === 'reply_unavailable') {
+    return {
+      delivery: 'DELIVERED',
+      replyStatus: failureReason === 'truncated'
+        ? 'TRUNCATED'
+        : failureReason === 'no_output' ? 'NO_OUTPUT' : 'UNKNOWN',
+    }
+  }
+  if (failureCode === 'target_run_failed') {
+    return { delivery: 'DELIVERED', replyStatus: 'TARGET_FAILED' }
+  }
+  if ((failureCode === 'internal_error' || failureCode === 'outcome_unknown')
+    && failureReason === 'post_receipt') {
+    return { delivery: 'DELIVERED', replyStatus: 'UNKNOWN' }
+  }
+  if (PRE_RECEIPT_FAILURE_CODES.has(failureCode)) {
+    return { delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' }
+  }
+  return { delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
+}
+
+function traceVariant(outcome, delivery) {
+  const coordinate = outcome !== null
+    && typeof outcome === 'object'
+    && nonEmpty(outcome.targetAgentId)
+    && nonEmpty(outcome.sessionId)
+    && nonEmpty(outcome.messageId)
+    && delivery === 'DELIVERED'
+    ? {
+        targetAgentId: outcome.targetAgentId,
+        sessionId: outcome.sessionId,
+        messageId: outcome.messageId,
+      }
+    : null
+  return coordinate === null
+    ? { traceCoordinate: null, traceStatus: 'unavailable' }
+    : { traceCoordinate: coordinate }
+}
+
+function convertSessionSendLookup(lookup, issuedAtWallMs) {
+  let base
+  let outcome = null
+  if (lookup?.invocationCorrelationFound !== true) {
+    const covered = lookup?.retentionIntegrity === 'clean'
+      && Number.isFinite(lookup.oldestRetainedIntentTs)
+      && Number.isFinite(issuedAtWallMs)
+      && issuedAtWallMs >= lookup.oldestRetainedIntentTs
+    base = covered
+      ? { status: 'reconciled', delivery: 'NOT_DELIVERED', replyStatus: 'NOT_WAITED' }
+      : { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
+  } else {
+    outcome = lookup.outcome
+    if (outcome?.result === 'accepted') {
+      base = { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'NOT_WAITED' }
+    } else if (outcome?.result === 'replied') {
+      base = { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'REPLIED', replyTextAvailable: false }
+    } else if (outcome?.result === 'timeout') {
+      base = { status: 'reconciled', delivery: 'DELIVERED', replyStatus: 'TIMEOUT' }
+    } else if (outcome?.result === 'failed') {
+      base = { status: 'reconciled', ...reconcileFailedOutcome(outcome.failureCode, outcome.failureReason) }
+    } else {
+      base = { status: 'reconciled', delivery: 'UNKNOWN', replyStatus: 'UNKNOWN' }
+    }
+  }
+  return { ...base, ...traceVariant(outcome, base.delivery) }
 }
 
 /**
@@ -178,8 +260,6 @@ function validDeclaredFailure(parent, manifest) {
  *
  * @returns {Promise<{ok:true, result:object}|{ok:false, error:{code:string, detail:string}}>}
  */
-import { appendFileSync } from 'node:fs'
-
 function persistReconciliationEvidence(entry) {
   const file = process.env.SCHEDULER_RECONCILIATION_EVIDENCE_FILE
   if (file === undefined || file === '') return
@@ -315,6 +395,26 @@ export function createRelayHandlers(manifest, requestFn) {
         errorCode: 'outcome_unknown',
         detail: 'parent_rpc_ambiguous: agent session send response was lost; do not retry automatically',
       }
+      const sessionSendAnchor = uncertainSessionSend
+        ? { invocationCorrelation: randomUUID(), issuedAtWallMs: Date.now() }
+        : undefined
+      const reconcileSessionSend = async () => {
+        try {
+          const lookupEnvelope = await requestFn({
+            capabilityId: AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID,
+            operation: 'lookup',
+            args: { invocationCorrelation: sessionSendAnchor.invocationCorrelation },
+          })
+          const structured = exactKeys(lookupEnvelope, ['ok', 'result']) && lookupEnvelope.ok === true
+          const parent = structured ? lookupEnvelope.result : undefined
+          if (parent?.ok !== true || parent.result === null || typeof parent.result !== 'object') {
+            return ambiguousError
+          }
+          return convertSessionSendLookup(parent.result, sessionSendAnchor.issuedAtWallMs)
+        } catch {
+          return ambiguousError
+        }
+      }
       // §5.2 outcome state machine (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1): a
       // lost scheduler-mutation response is NEVER a terminal raw unknown —
       // reconcile by stable identity first (APPLIED / NOT_APPLIED /
@@ -333,10 +433,13 @@ export function createRelayHandlers(manifest, requestFn) {
           capabilityId: manifest.id,
           operation: op.name,
           args,
+          ...(sessionSendAnchor === undefined
+            ? {}
+            : { invocationCorrelation: sessionSendAnchor.invocationCorrelation }),
         })
       } catch (err) {
         if (reconcileUnknown !== undefined) return reconcileUnknown()
-        if (uncertainSessionSend) return ambiguousError
+        if (uncertainSessionSend) return reconcileSessionSend()
         return {
           errorCode: 'invalid_arguments',
           detail: `broker relay failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -363,7 +466,7 @@ export function createRelayHandlers(manifest, requestFn) {
         return reconcileUnknown()
       }
       if (uncertainSessionSend && !structuredParentSuccess && !structuredParentFailure) {
-        return ambiguousError
+        return reconcileSessionSend()
       }
       if (parent && parent.ok === true) {
         // Unwrap: child-side invoke re-wraps as { ok: true, result }.

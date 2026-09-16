@@ -1,6 +1,7 @@
 /**
- * AGENT_CORE_AGENT_SESSION_MESSAGING_V1 — the agent_session_send LOCAL
- * capability manifest (accepted r3, implementation_authority: contracts).
+ * AGENT_CORE_AGENT_SESSION_MESSAGING_V2 — the send and exact-turn read-only
+ * LOCAL capability manifests (accepted r4, implementation_authority:
+ * contracts).
  *
  * One capability, one write operation (`send`). The manifest is deliberately
  * pure data: R2's authoritative input contract (UTF-8 byte bounds, NUL
@@ -23,6 +24,8 @@
  * R2-forbidden field — source identity and correlation are runtime-owned
  * (R3) and never read from tool arguments.
  */
+
+import { agentSessionReconcileManifest } from './agent-session-reconcile.js'
 
 const agentId = (description) => ({
   type: 'string',
@@ -56,6 +59,7 @@ const errorTable = [
 
 /** Wire capability id (also the provider handlers key — see index.js F9). */
 export const AGENT_SESSION_SEND_CAPABILITY_ID = 'agent_session_send'
+export const AGENT_SESSION_TURN_INSPECT_CAPABILITY_ID = 'agent_session_turn_inspect'
 
 export const agentSessionMessagingManifest = {
   id: AGENT_SESSION_SEND_CAPABILITY_ID,
@@ -64,6 +68,7 @@ export const agentSessionMessagingManifest = {
   name: 'Agent Session Messaging',
   description: 'Send one private message to another Agent\'s canonical main Session. Each send creates exactly one new Run/Turn in the target main — never a new Session. timeoutSeconds=0 returns after the real inbox receipt; timeoutSeconds>0 waits for at most that many seconds for this exact Run\'s one aggregated final assistant reply. Source identity and correlation are derived by the trusted runtime; no automatic replay, no automatic reply, no active-run steering, no external delivery.',
   local: { resource: 'agent-session-messaging' },
+  renderErrorDetail: true,
   requiredScopes: ['agent.session.send'],
   errors: errorTable,
   operations: [
@@ -81,4 +86,47 @@ export const agentSessionMessagingManifest = {
   ],
 }
 
-export const manifests = [agentSessionMessagingManifest]
+const inspectErrors = [
+  { code: 'invalid_arguments', description: 'Arguments violate the exact three-coordinate inspection contract.' },
+  { code: 'credential_unavailable', description: 'No trusted caller credential is bound.' },
+  { code: 'credential_invalid', description: 'The trusted caller credential was rejected by the auth-service.' },
+  { code: 'access_denied', description: 'The caller lacks the independent agent.session.inspect_own_dispatch grant.' },
+  { code: 'not_found_or_not_owned', description: 'The coordinate is unavailable, foreign, or not owned by this caller.' },
+  { code: 'trace_unresolvable', description: 'The retained native records do not resolve one exact turn.' },
+  { code: 'inspection_unavailable', description: 'The bounded authoritative read could not be completed.' },
+  { code: 'internal_error', description: 'The trusted inspection handler failed closed.' },
+  { code: 'transport_failure', description: 'The auth-service/broker transport failed during the local grant check.' },
+  { code: 'unsupported_operation', description: 'The execute-time local inspection handler is not resolvable.' },
+]
+
+export const agentSessionTurnInspectManifest = {
+  id: AGENT_SESSION_TURN_INSPECT_CAPABILITY_ID,
+  toolName: AGENT_SESSION_TURN_INSPECT_CAPABILITY_ID,
+  selector: 'operation',
+  name: 'Agent Session Turn Inspection',
+  description: 'Read the bounded visible projection of one exact caller-owned inter-Agent dispatch turn. This never lists Sessions, contacts the target Agent, or mutates delivery state.',
+  local: { resource: 'agent-session-messaging' },
+  requiredScopes: ['agent.session.inspect_own_dispatch'],
+  errors: inspectErrors,
+  operations: [{
+    name: 'inspect',
+    description: 'Inspect one exact native turn by its target-scoped trace coordinate.',
+    arguments: {
+      additionalProperties: false,
+      properties: {
+        targetAgentId: agentId('Exact target Agent id from agent_session_send.'),
+        sessionId: { type: 'string', minLength: 1, nonBlank: true, description: 'Opaque target-scoped Session id.' },
+        messageId: { type: 'string', minLength: 1, nonBlank: true, description: 'Opaque native dispatch message id.' },
+      },
+      required: ['targetAgentId', 'sessionId', 'messageId'],
+    },
+    result: { type: 'json' },
+    errors: inspectErrors.map((entry) => entry.code),
+  }],
+}
+
+export const manifests = [
+  agentSessionMessagingManifest,
+  agentSessionReconcileManifest,
+  agentSessionTurnInspectManifest,
+]
