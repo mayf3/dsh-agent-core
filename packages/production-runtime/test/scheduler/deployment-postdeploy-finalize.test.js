@@ -154,14 +154,14 @@ test('interrupted or non-exact receipt publication cannot return acceptance', ()
 })
 
 test('postdeploy read expectations follow the deployed ownership contracts: incident tree at the runtime-reader gid, control artifacts at root:root', () => {
-  const expectations = postdeployReadExpectations({ authsvcUid: 505, authsvcGid: 601,
+  const expectations = postdeployReadExpectations({ authsvcUid: 505, authsvcGid: 601, runtimeReaderGid: 20,
     incidentStateDir: { uid: 505, gid: 20, mode: 0o700, directory: true, symlink: false } })
   assert.deepEqual(expectations.incident, { expectedUid: 505, expectedGid: 20 })
   assert.deepEqual(expectations.control, { expectedUid: 0, expectedGid: 0 })
   assert.notEqual(expectations.incident.expectedGid, 601, 'incident reads must never use the authsvc primary gid')
-  const fixture = postdeployReadExpectations({ authsvcUid: 20, authsvcGid: 20,
+  const fixture = postdeployReadExpectations({ authsvcUid: 20, authsvcGid: 20, runtimeReaderGid: 599,
     incidentStateDir: { uid: 20, gid: 599, mode: 0o700, directory: true, symlink: false } })
-  assert.equal(fixture.incident.expectedGid, 599, 'gid derivation must follow the state directory, not constants')
+  assert.equal(fixture.incident.expectedGid, 599, 'gid expectation must follow the independent runtime-reader authority')
 })
 
 test('postdeploy read expectations fail closed on state-directory drift or a collapsed gid split', () => {
@@ -170,11 +170,22 @@ test('postdeploy read expectations fail closed on state-directory drift or a col
     { ...base, gid: 601 }, { ...base, uid: 0 }, { ...base, mode: 0o755 }, { ...base, symlink: true },
     { ...base, directory: false }, { ...base, gid: '20' }, { ...base, uid: 505.5 },
   ]) {
-    assert.throws(() => postdeployReadExpectations({ authsvcUid: 505, authsvcGid: 601, incidentStateDir: drifted }))
+    assert.throws(() => postdeployReadExpectations({ authsvcUid: 505, authsvcGid: 601, runtimeReaderGid: 20,
+      incidentStateDir: drifted }))
   }
-  assert.throws(() => postdeployReadExpectations({ authsvcUid: 505, authsvcGid: 601, incidentStateDir: null }))
-  assert.throws(() => postdeployReadExpectations({ authsvcUid: Number.NaN, authsvcGid: 601,
+  assert.throws(() => postdeployReadExpectations({ authsvcUid: 505, authsvcGid: 601, runtimeReaderGid: 20,
+    incidentStateDir: null }))
+  assert.throws(() => postdeployReadExpectations({ authsvcUid: Number.NaN, authsvcGid: 601, runtimeReaderGid: 599,
     incidentStateDir: { ...base, gid: 599 } }))
+  assert.throws(() => postdeployReadExpectations({ authsvcUid: 505, authsvcGid: 601, runtimeReaderGid: 601,
+    incidentStateDir: { ...base, gid: 601 } }), /split is not in effect/)
+})
+
+test('postdeploy read expectations reject coherent directory and file drift from the independently resolved runtime-reader gid', () => {
+  assert.throws(() => postdeployReadExpectations({ authsvcUid: 505, authsvcGid: 601,
+    runtimeReaderGid: 20,
+    incidentStateDir: { uid: 505, gid: 599, mode: 0o700, directory: true, symlink: false } }),
+  /runtime-reader gid/)
 })
 
 test('finalize orchestrator binds incident reads to the derived ownership and the routing receipt to root:root', () => {

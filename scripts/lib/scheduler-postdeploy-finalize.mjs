@@ -34,14 +34,13 @@ const AUDIT_TOKEN = join(A, 'credentials', 'scheduler-audit.token')
 const INCIDENTS = '/Users/authsvc/.agent-core/control/scheduler-watchdog/incidents.json'
 const ROUTING_RECEIPT = join(A, 'rollback', 'routing-install-receipt.json')
 /**
- * Canonical incident-state ownership: resolved from the prepared state
- * directory itself (the same source the controller uses to fill
- * __INCIDENT_OWNER_GID__), never a hardcoded gid. The file's uid is the state
- * directory's owner (authsvc); its gid is the runtime-reader gid.
+ * Canonical incident-state ownership: resolve the runtime-reader gid from the
+ * same directory-service authority admission uses, then require the prepared
+ * state directory to match it. The directory cannot self-authorize gid drift.
  */
-export function resolveIncidentOwnership(incidentsPath, { authsvcUid, authsvcGid }) {
+export function resolveIncidentOwnership(incidentsPath, { authsvcUid, authsvcGid, runtimeReaderGid }) {
   const stat = lstatSync(dirname(incidentsPath))
-  return postdeployReadExpectations({ authsvcUid, authsvcGid,
+  return postdeployReadExpectations({ authsvcUid, authsvcGid, runtimeReaderGid,
     incidentStateDir: { uid: stat.uid, gid: stat.gid, mode: stat.mode & 0o777,
       directory: stat.isDirectory(), symlink: stat.isSymbolicLink() } }).incident
 }
@@ -53,8 +52,8 @@ export function resolveIncidentOwnership(incidentsPath, { authsvcUid, authsvcGid
  * fail closed).
  */
 export function createOwnershipReadbacks({ artifactsDir, storePath, incidentsPath: INCIDENTS,
-  authsvcUid, authsvcGid, controlOwnership, incidentOwnership }) {
-  const canonicalExpectations = () => postdeployReadExpectations({ authsvcUid, authsvcGid,
+  authsvcUid, authsvcGid, runtimeReaderGid, controlOwnership, incidentOwnership }) {
+  const canonicalExpectations = () => postdeployReadExpectations({ authsvcUid, authsvcGid, runtimeReaderGid,
       incidentStateDir: (() => {
         const stat = lstatSync(dirname(INCIDENTS))
         return { uid: stat.uid, gid: stat.gid, mode: stat.mode & 0o777,
@@ -92,6 +91,9 @@ async function run() {
   const rootOwnership = { expectedUid: 0, expectedGid: 0 }
   const authsvcUid = Number(execFileSync('id', ['-u', 'authsvc'], { encoding: 'utf8' }).trim())
   const authsvcGid = Number(execFileSync('id', ['-g', 'authsvc'], { encoding: 'utf8' }).trim())
+  const runtimeReaderGid = Number(execFileSync('/usr/bin/dscl', ['.', '-read', '/Groups/staff', 'PrimaryGroupID'], { encoding: 'utf8' })
+    .match(/PrimaryGroupID:\s*(\d+)/)?.[1])
+  if (!Number.isInteger(runtimeReaderGid)) throw new Error('canonical runtime-reader gid is unavailable')
   ensureProtectedDirectoryTree(A, { ...rootOwnership, boundary: '/private/var/db' })
   const readControl = (name, allowMissing = false) => {
     const loaded = readPrivateFile(join(A, name), { ...rootOwnership, allowMissing })
@@ -99,7 +101,8 @@ async function run() {
   }
   const writeControl = (name, object) => atomicReplacePrivateFile(join(A, name), Buffer.from(`${JSON.stringify(object, null, 2)}\n`), rootOwnership)
   const { readStoreSnapshot, readStore, readIncidentSnapshot, readRoutingReceipt } = createOwnershipReadbacks({
-    artifactsDir: A, storePath: STORE, incidentsPath: INCIDENTS, authsvcUid, authsvcGid, controlOwnership: rootOwnership,
+    artifactsDir: A, storePath: STORE, incidentsPath: INCIDENTS, authsvcUid, authsvcGid, runtimeReaderGid,
+    controlOwnership: rootOwnership,
   })
   const asAuthsvc = (command, args) => execFileSync('sudo', ['-u', 'authsvc', 'env', '-i',
     'HOME=/Users/authsvc', 'PATH=/usr/local/libexec/agent-core/node-runtime/bin:/usr/local/bin:/usr/bin:/bin',

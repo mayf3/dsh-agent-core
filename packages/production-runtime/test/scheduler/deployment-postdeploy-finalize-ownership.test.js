@@ -47,15 +47,14 @@ test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid 
   writeFileSync(routingReceiptPath, JSON.stringify({ status: 'INSTALLED' }), { mode: 0o600 })
   chownSync(routingReceiptPath, me, controlGid)
 
-  // ownership resolution is the state directory itself (canonical source —
-  // the same stat the controller uses for __INCIDENT_OWNER_GID__), and the
-  // split is real: incident gid != authsvc primary gid.
-  const ownership = resolveIncidentOwnership(incidentsPath, { authsvcUid: me, authsvcGid })
+  // ownership resolution verifies the state directory against the independently
+  // supplied runtime-reader gid, and the split is real: incident gid != authsvc primary gid.
+  const ownership = resolveIncidentOwnership(incidentsPath, { authsvcUid: me, authsvcGid, runtimeReaderGid: readerGid })
   assert.deepEqual(ownership, { expectedUid: me, expectedGid: readerGid })
   assert.notEqual(ownership.expectedGid, authsvcGid)
 
   const readbacks = createOwnershipReadbacks({
-    artifactsDir, storePath, incidentsPath, authsvcUid: me, authsvcGid,
+    artifactsDir, storePath, incidentsPath, authsvcUid: me, authsvcGid, runtimeReaderGid: readerGid,
     controlOwnership: { expectedUid: me, expectedGid: controlGid },
   })
   // happy path: all three evidence sources read cleanly through their
@@ -71,7 +70,7 @@ test('postdeploy finalize readback gate survives the authsvc/runtime-reader gid 
   // must fail closed at the readback gate — modeled by injecting the legacy
   // expectation explicitly, exactly what the old finalize hardcoded.
   const legacy = createOwnershipReadbacks({
-    artifactsDir, storePath, incidentsPath, authsvcUid: me, authsvcGid,
+    artifactsDir, storePath, incidentsPath, authsvcUid: me, authsvcGid, runtimeReaderGid: readerGid,
     controlOwnership: { expectedUid: me, expectedGid: controlGid },
     incidentOwnership: { expectedUid: me, expectedGid: authsvcGid },
   })
