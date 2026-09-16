@@ -17,4 +17,5 @@ test('RUNBOOK §1 preflight tool: parser selftest passes (CI-safe, host-independ
     encoding: 'utf8', cwd: root,
   })
   assert.match(out, /\[preflight selftest\] PASS/)
+  assert.match(out, /canonical path fixtures: symlink resolved; missing target rejected/)
 })

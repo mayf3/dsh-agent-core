@@ -18,8 +18,17 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { readFileSync, existsSync, statSync } from 'node:fs'
-import { homedir } from 'node:os'
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const args = process.argv.slice(2)
@@ -36,6 +45,11 @@ const HEALTH_URL = process.env.SCHEDULER_HEALTH_URL ?? 'http://127.0.0.1:8790/he
 
 const findings = []
 const add = (id, severity, ok, detail) => findings.push({ id, severity, status: ok ? 'PASS' : severity, detail })
+
+/** Resolve an existing CLI path through the filesystem, failing on dangling links. */
+export function resolveCanonicalPath(path) {
+  return realpathSync(path)
+}
 
 /** Parse the subset of `launchctl print` output this census needs. Pure. */
 export function parseLaunchctlPrint(text) {
@@ -100,12 +114,26 @@ function shasumSelftestAssertions() {
   assert(lt.env.AGENT_CORE_CREDENTIALS_FILE !== undefined, 'env')
   const doc = parseStoreDoc('{"version":2,"jobs":[{"id":"a","logicalKey":"k","enabled":true},{"id":"b","enabled":false}]}')
   assert(doc.version === 2 && doc.jobCount === 2 && doc.keyedCount === 1 && doc.enabledCount === 1, 'store doc')
-  return 2
+  const fixture = mkdtempSync(join(tmpdir(), 'scheduler-cp-preflight-path-'))
+  try {
+    const target = join(fixture, 'target')
+    const link = join(fixture, 'link')
+    writeFileSync(target, 'fixture\n')
+    symlinkSync('target', link)
+    assert(resolveCanonicalPath(link) === resolveCanonicalPath(target), 'canonical path resolves symlink target')
+    rmSync(target)
+    let missingRejected = false
+    try { resolveCanonicalPath(link) } catch { missingRejected = true }
+    assert(missingRejected, 'canonical path rejects missing target')
+  } finally {
+    rmSync(fixture, { recursive: true, force: true })
+  }
+  return 4
 }
 
 if (SELFTEST) {
   const n = shasumSelftestAssertions()
-  process.stdout.write(`[preflight selftest] PASS (${n} parser fixtures)\n`)
+  process.stdout.write(`[preflight selftest] PASS (${n} fixtures; canonical path fixtures: symlink resolved; missing target rejected)\n`)
   process.exit(0)
 }
 
@@ -126,7 +154,7 @@ try {
   void target
 } catch { /* readFileSync on a symlink follows it; use lstat-ish approach below */ }
 try {
-  const resolved = execFileSync('readlink', ['-f', CLI_SYMLINK], { encoding: 'utf8' }).trim()
+  const resolved = resolveCanonicalPath(CLI_SYMLINK)
   const sha = sha256(resolved)
   const liveSha = existsSync(join(LIVE_ROOT, 'scripts', 'agentcore-cron.mjs'))
     ? sha256(join(LIVE_ROOT, 'scripts', 'agentcore-cron.mjs'))
