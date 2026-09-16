@@ -63,8 +63,8 @@ const defaultRoute = {
   }
 `
 
-test('reviewed production path authority is exactly 21 writes plus one retired watchdog delete', () => {
-  assert.equal(WATCHDOG_OVERLAY_PATHS.size, 21)
+test('reviewed production path authority is exactly 22 writes plus one retired watchdog delete', () => {
+  assert.equal(WATCHDOG_OVERLAY_PATHS.size, 22)
   assert.deepEqual([...WATCHDOG_DELETE_PATHS], ['packages/scheduler/src/watchdog.js'])
   assert.equal([...WATCHDOG_DELETE_PATHS].some((path) => WATCHDOG_OVERLAY_PATHS.has(path)), false)
 })

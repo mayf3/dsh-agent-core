@@ -1,11 +1,10 @@
 /**
  * Frozen payload manifest for the Scheduler Watchdog deployment overlay.
  *
- * Generated once from the reviewed payload commit 24e48e52a61be4eb484c702bc4
- * 68dadcaf5e8de7 (WATCHDOG_PAYLOAD_SHA provenance) whose tree is byte-identical
- * to the merged main candidate 9ad955891e1c15c041ca2c4bf4e1c451769157d4 for
- * every listed path (git diff between the two over these paths is empty —
- * verified 2026-09-16).
+ * Generated from the reviewed payload commit
+ * 0bfbfb9d5a56d238a2d79bf2a504d0b94dcc7918 (WATCHDOG_PAYLOAD_SHA
+ * provenance), then pinned by content so the payload remains available in
+ * fresh shallow clones.
  *
  * Why a content snapshot instead of the commit pin: plan/apply must resolve
  * the exact reviewed bytes from the SOURCE_SHA tree of ANY checkout that
@@ -18,7 +17,7 @@
  */
 export const WATCHDOG_PAYLOAD_SNAPSHOT = {
   base: '68008e83142bdb637c4fa61c2a65db73c64b2eb1',
-  payloadCommit: '24e48e52a61be4eb484c702bc468dadcaf5e8de7',
+  payloadCommit: '0bfbfb9d5a56d238a2d79bf2a504d0b94dcc7918',
   paths: {
     'packages/product-api/src/index.js': 'bc4e47682e4a91b3a96692488f4480620b29579e463017c07ce8249ac4f0e0d8',
     'packages/product-api/src/scheduler-health-routes.js': '8c04161f807f17aafb4a0cb265ea07b5f95a908b1ad735602f00f33c8a9ece5d',
@@ -30,12 +29,13 @@ export const WATCHDOG_PAYLOAD_SNAPSHOT = {
     'packages/production-runtime/src/scheduler/health-runtime.js': '49c2fb7b77e6d5bfe8d38e3c66c613b527f83a3bed110eb95c6d8000201c694a',
     'packages/production-runtime/src/scheduler/self-service-runtime.js': 'acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0',
     'packages/scheduler/src/index.js': '9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d',
-    'packages/scheduler/src/self-ops/index.js': '766abb782cb736a89ad743a0d14ffb4092055207f2d7cfe75b85f6f79e2ab196',
+    'packages/scheduler/src/occurrence-model.js': '441dd56ff776605e3ee615d94124211902feefe6e9eb2e1efd31763739c52302',
+    'packages/scheduler/src/self-ops/index.js': 'baf68ced6a8bde31e9b5dd0101c5e954dec78f10c9958117b7136e8a0e162079',
     'packages/scheduler/src/watchdog/delivery.js': '352060c4967fc9e143562c4dff80cbe7172839650252c9d3bc5195ac277598bf',
     'packages/scheduler/src/watchdog/durable-state.js': 'a0bae637f5c73750964334d90f02fc0dab742558e826473ef10813e2eb5d2835',
     'packages/scheduler/src/watchdog/health.js': 'ab5aab07f6cdae61b173ab0c925d829c99416091985a8eb455ae90c798b625a3',
     'packages/scheduler/src/watchdog/incident-compiler.js': 'b4d0f02609468cffcc131fd28213ed6f599ae4caeb925e51fabb06e8cab807ed',
-    'packages/scheduler/src/watchdog/incident-lifecycle.js': 'dbce9a4d32fe2175a3ef37fe6991c114286bbd5187ba258b496f897ba677265a',
+    'packages/scheduler/src/watchdog/incident-lifecycle.js': 'cd0d7b0ca09a78d514f9c28dc240c16271536cd6ccaa2546805b2b569c18b1c1',
     'packages/scheduler/src/watchdog/index.js': 'b005173af37c449de00cb4357a13637f78c816b8cfc2f3239724a0a8a3645c49',
     'packages/scheduler/src/watchdog/private-state-io.js': '456227694c20e51158625e7dfdf40ce867a0b37b60cff8025af85ea78dba1f6b',
     'packages/scheduler/src/watchdog/reconciliation.js': '3d1d31b6997e6c461ae8124bdf183e256e28630dcc930d5e5e01e666b8564aaa',

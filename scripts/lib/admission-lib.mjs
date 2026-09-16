@@ -15,6 +15,7 @@ export const WATCHDOG_OVERLAY_PATHS = new Set([
   'packages/production-runtime/src/scheduler/health-runtime.js',
   'packages/production-runtime/src/scheduler/self-service-runtime.js',
   'packages/scheduler/src/index.js',
+  'packages/scheduler/src/occurrence-model.js',
   'packages/scheduler/src/self-ops/index.js',
   'packages/scheduler/src/watchdog/delivery.js',
   'packages/scheduler/src/watchdog/durable-state.js',
