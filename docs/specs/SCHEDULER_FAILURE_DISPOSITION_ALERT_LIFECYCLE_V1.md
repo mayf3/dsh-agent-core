@@ -1,11 +1,11 @@
 ---
 spec_id: SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1
-status: accepted
+status: superseded
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
 production_apply_authority: none
-superseded_by: null
+superseded_by: SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
 date: 2026-09-10
 accepted_date: 2026-09-10
 accepted_reviewed_head: cb888040475ddf4af916a80d4c666de7afeabf35
@@ -36,10 +36,9 @@ external_authorities: []
 
 # SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1
 
-> **状态**：`accepted`（2026-09-10，Owner ruling ACCEPT_WITH_SPLIT Part B；
-> independent semantic review PASS 6/6 @ reviewed head cb88804）。冻结语义见 §1–§3。
-> 实现授权仍为 none——acknowledgment/closure lifecycle 的任何实现是本 Spec 下的
-> **独立后续 PR**，且永不回流 PR #222（其 RUN_FAILED detector 保持无条件）。
+> **状态**：`superseded`（2026-09-14 由
+> `SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1` 整份取代）。本文件保留 2026-09-10
+> accepted 的历史理由与冻结语义；当前 authority 以 successor 为准。
 
 ## 1. The one semantic question
 

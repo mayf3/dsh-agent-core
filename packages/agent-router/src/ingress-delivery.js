@@ -7,7 +7,7 @@
  *   ChannelConversation -> Binding -> Agent + Session -> reply.
  * `deliver` is the frozen admission interface:
  *   deliver({ requestId, agentId, sessionMode: 'main'|'fresh', message })
- *     -> { accepted: true, sessionId }
+ *     -> { accepted: true, sessionId, messageId }
  * Both paths run the CLAUSE-PROC-BOUNDED rule 8 reconciliation-capacity
  * precheck BEFORE any spawn/write.
  */
@@ -15,6 +15,23 @@
 import { createHash } from 'node:crypto'
 
 import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation.js'
+import { ROUTE_HOP_FAILURE_CLASSES } from './route-chain.js'
+
+const PROVEN_NO_ADMISSION_ROUTE_FAILURES = new Set([
+  ROUTE_HOP_FAILURE_CLASSES.SPAWN_FAILED_WITHOUT_CHILD,
+  ROUTE_HOP_FAILURE_CLASSES.INITIALIZE_PROVIDER_UNAVAILABLE,
+  ROUTE_HOP_FAILURE_CLASSES.SESSION_CREATE_RESUME_REJECTION,
+  ROUTE_HOP_FAILURE_CLASSES.TURNQUEUE_NOT_ADMITTED,
+])
+
+function classifyFailureStage(error, turnStarted) {
+  if (!turnStarted) return 'admission'
+  if (error?.status === 'not_admitted' || error?.envelope === 'not_admitted') return 'admission'
+  if (error?.code === 'AGENT_ROUTE_CHAIN_DEADLINE_EXCEEDED'
+      && error?.envelope === 'chain_deadline_exceeded') return 'admission'
+  if (PROVEN_NO_ADMISSION_ROUTE_FAILURES.has(error?.routeChain?.failureClass)) return 'admission'
+  return 'execution'
+}
 
 /**
  * Create the ingress/delivery surface bound to one router mount.
@@ -57,23 +74,29 @@ export function createIngressDelivery({
    * @param {object} ingress - { channel?, chatId, conversationId, sender,
    *   text }; channel absent => Feishu entry (legacy callers).
    * @returns {Promise<{reply:string, agentId:string, sessionId:string,
-   *   pid?:number} | {error: Error}>} the delivery result.
+   *   pid?:number} | {error:Error, failureStage:'admission'|'execution'} |
+   *   {error:Error, failureStage:'reply_delivery', executionResult:object,
+   *   replyDelivery:'failed'|'unknown', partialDelivery:'possible',
+   *   confirmedChunkReceipts:'unavailable', failureReceipt:object}>} result.
    */
   async function onIngress(ingress) {
     const namespace = ingressBindingNamespace(ingress)
     const evSummary = `channel=${ingress.channel ?? '(none)'} chat=${ingress.chatId} sender=${ingress.sender?.openId?.slice(0, 6)} text="${(ingress.text ?? '').slice(0, 60)}"`
-    const { channelConversation, binding } = await resolveChannelConversation({
-      channel: namespace,
-      externalId: ingress.conversationId,
-      // The product entry's already-decided initial binding triple values
-      // (opaque data here — the Router never derives workspace or session
-      // values from channel identities).
-      workspace: ingress.workspace,
-      sessionId: ingress.session,
-    })
-    log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
     const isFeishuEntry = feishuReplyOwed(ingress)
+    let channelConversation
+    let binding
+    let turnStarted = false
     try {
+      ;({ channelConversation, binding } = await resolveChannelConversation({
+        channel: namespace,
+        externalId: ingress.conversationId,
+        // The product entry's already-decided initial binding triple values
+        // (opaque data here — the Router never derives workspace or session
+        // values from channel identities).
+        workspace: ingress.workspace,
+        sessionId: ingress.session,
+      }))
+      log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
       // AGENT_CORE_BINDING_WORKSPACE_V1: resolve the Binding's effective
       // workspace and hand it to the turn as the SESSION cwd (R1 create /
       // R2 resume-compare / R3 mismatch reject — all enforced in the
@@ -88,6 +111,7 @@ export function createIngressDelivery({
       // Unified route-attempt seam (CTR-IMPL-002): the ordered route chain,
       // per-attempt journal and STOP_CHAIN policy all live in the executor —
       // this entry owns only the channel/binding resolution around it.
+      turnStarted = true
       const turnResult = await routeChain.runTurnWithRouteChain(binding.activeAgentId, {
         sessionId: binding.activeSessionId,
         message: ingress.text ?? '',
@@ -133,21 +157,8 @@ export function createIngressDelivery({
         )
       }
       const reply = turnResult?.reply ?? ''
-      log.log(`agent ${binding.activeAgentId} (pid ${turnResult.pid}) replied: ${(reply ?? '').slice(0, 80)}`)
-      // Feishu reply is the FEISHU entry's transport half; non-feishu
-      // surfaces (mobile Product API) return the reply to their own caller.
-      if (feishu !== undefined && isFeishuEntry) {
-        // Reply to the originating message (in-thread automatically when the
-        // ingress was a topic thread).
-        await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply, { ux: { rendering: 'markdown', autoMentionTriggerSender: true } })
-        log.log(`reply sent back to ${ingress.conversationId.slice(0, 12)}...`)
-      }
-      // CTR-I2-015 observer external-delivery lifecycle point (structural
-      // nonce only — never prompt/sender content).
-      if (turnResult?.canaryNonce !== undefined) {
-        routeChain.noteCanaryExternalDelivery?.(turnResult.canaryNonce)
-      }
-      return {
+      log.log(`agent ${binding.activeAgentId} (pid ${turnResult.pid}) produced a ${Buffer.byteLength(reply, 'utf8')}B reply`)
+      const executionResult = {
         reply,
         agentId: binding.activeAgentId,
         sessionId: binding.activeSessionId,
@@ -156,17 +167,58 @@ export function createIngressDelivery({
         ...(turnResult?.reconciliationHandle === undefined ? {} : { reconciliationHandle: turnResult.reconciliationHandle }),
         ...(turnResult?.evidence === undefined ? {} : { evidence: turnResult.evidence }),
       }
-    } catch (error) {
-      log.error(`delivery to ${binding.activeAgentId} failed: ${error?.message ?? error}`)
+      // Feishu reply is the FEISHU entry's transport half; non-feishu
+      // surfaces (mobile Product API) return the reply to their own caller.
       if (feishu !== undefined && isFeishuEntry) {
         try {
-          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error.message ?? error}`)
+          // Reply to the originating message (in-thread automatically when
+          // the ingress was a topic thread).
+          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply, { ux: { rendering: 'markdown', autoMentionTriggerSender: true } })
+          log.log(`reply sent back to ${ingress.conversationId.slice(0, 12)}...`)
+        } catch (error) {
+          const deterministicCodes = new Set(['permission_denied', 'format_error', 'target_revoked', 'rate_limited'])
+          const replyDelivery = deterministicCodes.has(error?.code) ? 'failed' : 'unknown'
+          const receiptText = replyDelivery === 'unknown'
+            ? '[agent-core] 答案已生成，但投递结果未知，可能已送达；可能部分送达，已确认块回执不可用。'
+            : '[agent-core] 答案已生成，但回复投递失败；可能部分送达，已确认块回执不可用。'
+          let failureReceipt = { status: 'not_attempted' }
+          try {
+            await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), receiptText)
+            failureReceipt = { status: 'delivered' }
+          } catch {
+            failureReceipt = { status: 'failed' }
+          }
+          log.error(`reply delivery failed for ${binding.activeAgentId}: ${error?.code ?? 'unclassified'}`)
+          if (error?.canaryNonce !== undefined) routeChain.noteCanaryExternalDelivery?.(error.canaryNonce)
+          return {
+            error,
+            failureStage: 'reply_delivery',
+            executionResult,
+            replyDelivery,
+            partialDelivery: 'possible',
+            confirmedChunkReceipts: 'unavailable',
+            failureReceipt,
+          }
+        }
+      }
+      // CTR-I2-015 observer external-delivery lifecycle point (structural
+      // nonce only — never prompt/sender content).
+      if (turnResult?.canaryNonce !== undefined) {
+        routeChain.noteCanaryExternalDelivery?.(turnResult.canaryNonce)
+      }
+      return executionResult
+    } catch (error) {
+      const failureStage = classifyFailureStage(error, turnStarted)
+      log.error(`delivery to ${binding?.activeAgentId ?? 'unresolved'} failed during ${failureStage}: ${error?.code ?? 'unclassified'}`)
+      if (feishu !== undefined && isFeishuEntry) {
+        try {
+          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.message ?? error}`)
         } catch { /* best effort */ }
         // CTR-I2-015 observer external-delivery lifecycle point (failure
         // receipt path — CANARY-C expects exactly one failure delivery).
         if (error?.canaryNonce !== undefined) routeChain.noteCanaryExternalDelivery?.(error.canaryNonce)
       }
-      return { error }
+      return { error, failureStage }
     }
   }
 
@@ -240,7 +292,7 @@ export function createIngressDelivery({
    * AGENT ROUTER DELIVERY V0 — the frozen admission interface:
    *
    *   deliver({ requestId, agentId, sessionMode: 'main'|'fresh', message })
-   *     -> { accepted: true, sessionId }
+   *     -> { accepted: true, sessionId, messageId }
    *
    * AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R4 adds ONE optional trusted
    * control-plane argument: `deliver(req, { messageOrigin })` — the generic
@@ -408,6 +460,7 @@ export function createIngressDelivery({
     return {
       accepted: true,
       sessionId,
+      messageId: receipt.messageId,
       ...(receipt.status === undefined ? {} : { status: receipt.status }),
       ...(receipt.reconciliationHandle === undefined ? {} : { reconciliationHandle: receipt.reconciliationHandle }),
       ...(receipt.evidence === undefined ? {} : { evidence: receipt.evidence }),

@@ -24,6 +24,7 @@
  */
 
 import { TurnReconciliationStore } from '../reconciliation/index.js'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../../agent-provisioning/src/shared-codex.js'
 import { assertPositiveSafeDeadline, monotonicNowMs, stateMachineMethods } from './state-machine.js'
 import { FAIL_LOUD_PROVIDER_ERRORS, sanitizeProviderError } from './provider-errors.js'
 import { evidenceBufferMethods } from './evidence-buffer.js'
@@ -57,9 +58,10 @@ export class AgentProcess {
     // Immutable for this process lifetime. Production composition resolves a
     // per-Agent override before construction; every create/resume in this
     // process therefore inherits the same initialize route. Non-production
-    // callers retain the historical global-env/default behavior.
-    this.provider = provider ?? process.env.DSH_AGENT_PROVIDER ?? 'opencode-go'
-    this.model = model ?? process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash'
+    // callers keep the global-env route with the canonical built-in default
+    // (DEFAULT_MODEL_ROUTING_CONFIG_V1) — never a hardcoded provider.
+    this.provider = provider ?? process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider
+    this.model = model ?? process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model
     this.providerEnv = Object.freeze({ ...providerEnv })
     this.omitEnv = [...omitEnv]
     this.log = log

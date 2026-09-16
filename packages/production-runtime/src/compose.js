@@ -45,21 +45,24 @@ import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
 import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
-import { createSelfServiceSchedulerAccess } from '../../scheduler/src/self-service.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
-import { mountSchedulerHistoryRuntime } from './scheduler-history-runtime.js'
+import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
 import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
+import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
+import { createSchedulerRuntimeStarter, mountConfiguredSchedulerHealthRuntime } from './scheduler/health-runtime.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
-import { createAgentSessionMessagingAccess } from './agent-session-messaging.js'
-import { createAgentPrincipalResolutionAccess } from './agent-principal-resolution.js'
+import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
+import { createAgentPrincipalResolutionAccess } from './identity/agent-principal-resolution.js'
+import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { createAgentDirectoryAccess } from './agent-directory.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
-import { createAgentSessionMessagingAudit } from './agent-session-messaging-audit.js'
+import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
-import { loadAgentModelOverrides } from './model-overrides.js'
+import { loadAgentModelOverrides, canonicalDefaultGlobalRoute } from './model-overrides.js'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import {
   mountNotificationIngressRuntime,
   wireNotificationIngressDeliveryEvidence,
@@ -121,8 +124,10 @@ export { runFleetSharedCodexAuthMigrationV1, selectAuthoritativeCodexGeneration 
  *   (test seam, forwarded to the Router; defaults to the real AgentProcess).
  * @param {Function} [options.provisionHome] - test seam for Router-owned home
  *   provisioning; production always uses provisionAgentHome.
- * @param {{provider:string,model:string}} [options.globalRoute] - test seam;
- *   production defaults to the existing DSH_AGENT_PROVIDER/MODEL route.
+ * @param {{provider:string,model:string,subscription?:object}} [options.globalRoute] - test seam;
+ *   production resolves composition config > DSH_AGENT_PROVIDER/MODEL env pair >
+ *   the canonical built-in default (openai-codex/gpt-5.6-luna subscription route;
+ *   DEFAULT_MODEL_ROUTING_CONFIG_V1).
  * @param {object} [options.log] - logger (default stderr lines).
  * @returns {Promise<object>} the runtime handle: `{ ctx, layout, definition,
  *   router, feishu, broker, productApi, notificationIngress, store,
@@ -202,6 +207,7 @@ export async function composeProductionRuntime(options = {}) {
   }
 
   applyBootstrap(ctx, { workspaceRoot: layout.workspacesRoot, agentsHome: layout.homesRoot, primaryWorkspaces })
+  const workspaceBootstrap = ctx.get('workspaceBootstrap')
   const importedAgents = Object.keys(primaryWorkspaces)
   if (importedAgents.length > 0) {
     log.log(`primary workspace imports loaded from ${primaryWorkspacesPath}: ${importedAgents.map((id) => `${id} -> ${primaryWorkspaces[id]}`).join(', ')}`)
@@ -224,10 +230,20 @@ export async function composeProductionRuntime(options = {}) {
   // snapshot) so target-only rollback needs neither a runtime restart nor a
   // file watcher. The Router receives the immutable snapshot resolver and
   // never reads the file or learns provider/model rules.
-  const globalRoute = Object.freeze(opts.globalRoute ?? {
-    provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
-    model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
-  })
+  // DEFAULT_MODEL_ROUTING_CONFIG_V1 §3: composition config > env pair > the
+  // canonical built-in default (GPT Luna as a complete subscription route).
+  const globalRouteSource = opts.globalRoute !== undefined
+    ? 'composition_config'
+    : (process.env.DSH_AGENT_PROVIDER !== undefined || process.env.DSH_AGENT_MODEL !== undefined
+      ? 'runtime_env'
+      : 'builtin_default')
+  const globalRoute = Object.freeze(opts.globalRoute ?? (globalRouteSource === 'runtime_env'
+    ? {
+      provider: process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider,
+      model: process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model,
+    }
+    : canonicalDefaultGlobalRoute()))
+  log.log(`global model route: ${globalRoute.provider}/${globalRoute.model} (source=${globalRouteSource})`)
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
   const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
@@ -311,22 +327,15 @@ export async function composeProductionRuntime(options = {}) {
   // and auth origin arrive via env from the supervision unit. Without a
   // credentials file every capability call fails closed
   // (credential_unavailable) — the gateway never fakes authorization.
-  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R12: the L0 pre-handler denial
-  // hook is scoped to exactly the agent_session_send capability; a failed
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V2: L0 denial evidence is scoped to
+  // the send and independently granted exact-turn inspector only; a failed
   // denial append never changes the denial itself.
-  const agentSessionAudit = createAgentSessionMessagingAudit({
-    auditFile: join(layout.controlDir, 'agent-session-messaging-audit.jsonl'),
-  })
+  const agentSessionRuntime = createAgentSessionRuntime({ layout, definition, workspaceBootstrap, router, log })
   const broker = applyBroker(ctx, {
     mode: 'gateway',
     credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
     authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
-    auditDenial: (info) => {
-      if (info?.capabilityId !== 'agent_session_send') return
-      if (agentSessionAudit.appendDenial(info) !== 'appended') {
-        log.error('[agent-session-messaging] L0 denial audit append failed')
-      }
-    },
+    auditDenial: agentSessionRuntime.auditDenial,
   })
 
   const productApiCfg = opts.productApi ?? {}
@@ -344,7 +353,7 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
-  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence })
+  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence, runtimeGeneration: opts.runtimeGeneration ?? process.env.AGENT_CORE_DEPLOYED_SHA })
 
   // Admission observability remains a wrap around Router-owned delivery.
   wireNotificationIngressDeliveryEvidence(router, writeEvidence)
@@ -367,48 +376,22 @@ export async function composeProductionRuntime(options = {}) {
     schedulerAuth: opts.schedulerAuth,
     log,
   })
+  const schedulerHealth = mountConfiguredSchedulerHealthRuntime({ ctx, layout, opts })
 
-  // AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V1: the LOCAL (in-process) broker
-  // capability seam over the SAME store — every mutation reuses the store's
-  // single mutation authority (the control ops the operator CLI uses). The
-  // manage:any grant is decided by the auth-service (the ONLY grant
-  // authority) through the broker credential store; a missing credential or
-  // a denied token = deny (fail closed, never an error surface).
+  // Shared trusted Broker configuration is also consumed by principal
+  // resolution below; neither value is ever accepted from model arguments.
   const brokerCredentialsFile = opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE
   const brokerAuthServiceOrigin = opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN
-  ctx.provide('selfServiceSchedulerAccess', createSelfServiceSchedulerAccess({
-    store,
-    assertGrant: async (agentId, scope, resource) => {
-      try {
-        const credential = loadCredentialFor(brokerCredentialsFile, agentId)
-        if (credential === undefined) return false
-        await requestAccessToken({ credential, authServiceOrigin: brokerAuthServiceOrigin, resource, scope })
-        return true
-      } catch {
-        return false
-      }
-    },
-    // A definition commit is authoritative even when the separate audit append
-    // fails. Emit only the sanitized operation/job coordinates; the message,
-    // destination, credentials, and digests never enter the Runtime log.
-    onAuditFailure: ({ operation, jobId }) => {
-      log.error(`[scheduler-self-service] audit append failed after committed ${operation} for job ${jobId}`)
-    },
-  }))
-
-  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3): the trusted LOCAL
-  // provider for agent_session_send. It reuses the Router's sole delivery
+  const workflowServiceOrigin = buildTargetMap(defaultBrokerTargets).get('svc-workflow')?.allowedOrigin
+  mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log, healthProvider: () => schedulerHealth.read() })
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V2 (accepted r4): the trusted LOCAL
+  // provider for send plus caller-owned exact-turn inspection. Send reuses
+  // the Router's sole delivery
   // and reconciliation seams — one send = one new Run/Turn in the target
   // canonical main; the runtime derives source identity + exact source-turn
   // correlation (never model args); the L1 intent/outcome append surface is
   // the agentSessionAudit file with sanitized onAuditFailure signals.
-  ctx.provide('agentSessionMessagingAccess', createAgentSessionMessagingAccess({
-    router,
-    audit: agentSessionAudit,
-    onAuditFailure: ({ phase, requestId }) => {
-      log.error(`[agent-session-messaging] audit ${phase} append failed after requestId ${requestId ?? '(not-minted)'}`)
-    },
-  }))
+  agentSessionRuntime.mount(ctx)
 
   // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
   // LOCAL provider for the read-only agent_resolve_principal. Auth is the
@@ -449,6 +432,25 @@ export async function composeProductionRuntime(options = {}) {
   // new auth audience/scope/grant, no boundary expansion), and a disabled
   // Agent resolves explicitly with enabled:false (CTR-IAD-003 semantics).
   ctx.provide('agentDirectoryAccess', createAgentDirectoryAccess({ definition }))
+
+  ctx.provide('workflowHumanPrincipalProjectionAccess', createWorkflowHumanPrincipalProjectionAccess({
+    workflowOrigin: workflowServiceOrigin,
+    acquireCallerToken: async ({ agentId }) => {
+      const credential = loadCredentialFor(brokerCredentialsFile, agentId)
+      if (credential === undefined) throw Object.assign(new Error('no credential bound'), { code: 'credential_unavailable' })
+      try {
+        return await requestAccessToken({
+          credential,
+          authServiceOrigin: brokerAuthServiceOrigin,
+          resource: 'svc-workflow',
+          scope: 'workflow.admin',
+        })
+      } catch (error) {
+        throw Object.assign(error instanceof Error ? error : new Error(String(error)),
+          { code: error?.errorCode ?? 'transport_failure' })
+      }
+    },
+  }))
   const workflowExecution = mountWorkflowExecutionRuntime({
     ctx,
     layout,
@@ -495,14 +497,16 @@ export async function composeProductionRuntime(options = {}) {
     notificationIngress,
     store,
     scheduler,
+    schedulerHealth,
     workflowExecution,
     writeEvidence,
-    start: async () => {
-      await scheduler.start({ autoStart: true, catchup })
-      workflowExecution.start()
-    },
+    start: createSchedulerRuntimeStarter({ schedulerHealth, scheduler, workflowExecution, catchup, readinessRequired: opts.schedulerReadinessRequired }),
     stop: async () => {
-      workflowExecution.stop()
+      // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
+      // (in-flight poll finishes, no further page) BEFORE the scheduler and
+      // the owned contexts (Router processes) are torn down — a late poll can
+      // then never deliver into a disposed Router nor outlive the result.
+      await workflowExecution.stop()
       await scheduler.stop()
       await ctx.disposeAll()
     },

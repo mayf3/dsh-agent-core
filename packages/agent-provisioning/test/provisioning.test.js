@@ -155,8 +155,11 @@ test('target-home plugin provisioning is exact, idempotent and leaves the shared
     harnessIdentity: HARNESS_IDENTITY,
     pluginInstaller: installer,
     artifactIdentity: ARTIFACT_IDENTITY,
-    credentialBoundary(_home, credentialFile) {
-      assert.equal(credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+    // DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite (child-time credential
+    // resolution): the parent must NEVER probe the credential. Any
+    // reintroduced parent-side call trips this trap.
+    credentialBoundary() {
+      throw new Error('parent-side credential boundary probe must not run')
     },
   }
   provisionAgentHome(home, workspace, options)
@@ -450,4 +453,73 @@ test('ensureSymlink accepts realpath-equivalent links without rewriting (fleet E
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
+})
+
+test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: provisioning stays PATH_ONLY — no parent-side credential probe anywhere', () => {
+  // Structural pin: provisioning source must never call the credential
+  // boundary — case-insensitive so a reintroduction via the exported
+  // assertOAuthCredentialBoundary name cannot evade it (child-time resolution
+  // owns validation after the privilege drop; the function stays exported for
+  // direct ops/unit use — just never invoked here).
+  const source = readFileSync(join(REPO, 'packages', 'agent-provisioning', 'src', 'index.js'), 'utf8')
+  assert.doesNotMatch(source, /credentialBoundary\s*\(/iu, 'provisionAgentHome must not invoke any credential boundary probe')
+})
+
+test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale authsvc credential reference is idempotently rewritten to the canonical path before the child starts', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-stale-cred-ref-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  const workspace = join(dir, 'ws')
+  // Pre-seed a home shaped like the B2-era fleet: the profile patch references
+  // the DEAD authsvc-side store that the uid502 child can never read.
+  const profileDir = join(home, 'profiles', 'agent-core-production')
+  mkdirSync(profileDir, { recursive: true })
+  const staleBlock = [
+    '# BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1',
+    '- id: llm-openai-codex',
+    '  config:',
+    `    credentialFile: "/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json"`,
+    '# END AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1',
+    '',
+  ].join('\n')
+  writeFileSync(join(profileDir, 'cordis.patch.yml'), staleBlock, 'utf8')
+
+  provisionAgentHome(home, workspace, {
+    profile: 'agent-core-production',
+    subscription: SUBSCRIPTION,
+    harnessIdentity: HARNESS_IDENTITY,
+    pluginInstaller: (input) => fakeInstall(input),
+    artifactIdentity: ARTIFACT_IDENTITY,
+  })
+
+  // The rewrite happens INSIDE provisioning — strictly before any child
+  // spawn/provider initialization could read the reference.
+  const patch = readFileSync(join(profileDir, 'cordis.patch.yml'), 'utf8')
+  assert.ok(
+    patch.includes(`credentialFile: ${JSON.stringify(CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)}`),
+    'stale reference must be rewritten to the canonical uid502-readable store',
+  )
+  assert.equal(patch.includes('/Users/authsvc/.agent-core/shared-credentials'), false, 'dead authsvc reference must be gone')
+  assert.equal(patch.match(/BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1/gu)?.length, 1, 'exactly one patch block')
+})
+
+test('DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to the canonical Luna route and keeps OpenCode Go registrable', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-minimal-settings-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  const workspace = join(dir, 'ws')
+  // No settings source anywhere: copy-once fails and MINIMAL_SETTINGS lands.
+  const previousSource = process.env.DSH_SETTINGS_SOURCE
+  process.env.DSH_SETTINGS_SOURCE = join(dir, 'no-such-settings.yaml')
+  t.after(() => {
+    if (previousSource === undefined) delete process.env.DSH_SETTINGS_SOURCE
+    else process.env.DSH_SETTINGS_SOURCE = previousSource
+  })
+
+  provisionAgentHome(home, workspace, { profile: 'agent-core-production' })
+  const settings = readFileSync(join(home, 'settings.yaml'), 'utf8')
+  assert.match(settings, /agent-default-model:\n {2}provider: openai-codex\n {2}model: gpt-5\.6-luna\n/u)
+  // OpenCode Go stays an explicit selectable route: registration, not selection.
+  assert.match(settings, /opencode-go:\n {6}apiKeyEnv: OPENCODE_GO_API_KEY/u)
+  assert.doesNotMatch(settings, /provider: opencode-go/u)
 })

@@ -31,11 +31,38 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Canonical deploy offline package-manager authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `CANONICAL_DEPLOY_OFFLINE_PNPM_RESOLUTION_V1` | accepted 2026-09-14; reviewed head `ba4ef46…`, Owner mayf3 | contracts; production apply controlled operation | narrow successor for deterministic local pnpm resolution, exact declared-version enforcement, selected-Node/architecture binding, offline-only preflight before any trusted-root mutation, and one later bounded G2 deploy/projection chain |
+
+## Workflow Human Principal projection authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0` | accepted 2026-09-14; reviewed semantic head `e8934d5...`; structure-only final re-audit PASS | contracts; production apply remains none | exact canonical Human UUID `8902db0d-429a-4e37-985c-f8b92d4b78fb` projection through the existing `workflow.admin` svc-workflow authority; trusted conditional POST plus mandatory fresh readback; no generic identity administration |
+
+## Workflow global instance capability authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3` | accepted lifecycle in this branch; reviewed head `58abd3c593da208d8301341697be91a2a5656501`; effective only after authority merge | contracts; production apply remains none | current whole-successor Broker contract for global-instance listing plus transparent canonical `currentExecutorType` query/result passthrough |
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2` | superseded by V3 in the same atomic transaction; remains effective on current main until authority merge | historical immutable `contracts` field; effective authority none after supersession | historical global-instance Broker authority without the canonical current-executor passthrough |
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1` | superseded by V2 | none | historical first global-instance Broker authority |
+
+V3 pins the separately accepted svc-workflow authority head
+`07d9117358113c89dc9bd4d483695c8d34b21efb`. That svc head and this dsh
+acceptance are both off-main. This lifecycle transaction authorizes no
+implementation, merge, deployment, production cleanup, Workflow mutation, HR
+runtime change, credential change, or real HR dispatch.
+
 ## Scheduler self-service authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | accepted; AMENDMENT_1 (CRITICAL_JOB_SELF_DISABLE_GUARD) accepted 2026-09-10 at exact head ba4c0a8…; AMENDMENT_2 (AMENDMENT_1_IMPLEMENTATION_CONFORMANCE_AND_STRUCTURE_CLOSURE) accepted 2026-09-10 at exact head 6b5a41f… (PRODUCT_SEMANTIC_DELTA = NONE; logicalKey consumption narrow exception + four-product/test-file closure + registry governance registration + forensics basis separate) | consult Spec frontmatter | whole successor carrying complete V1 authority plus exact `scheduler.admin` mutation-control / `scheduler.audit` history separation, fail-closed global definition listing, and bounded denial ownership lookup; AMENDMENT_1 adds the critical-job self-disable guard (identity = desired-state inventory exact logicalKey only); AMENDMENT_2 authorizes the guard-module structure split and the logicalKey consumption exception; production apply authority remains none |
+| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3` | accepted 2026-09-13; supersedes V2 and incorporates its three accepted Amendments | contracts | preserves unified `scheduler` and adds exact trusted-caller `self_ops(status\|reconcile_turn)` termination-only repair; production apply authority remains none |
+| `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | superseded by V3; historical Amendments retained | historical | complete prior self-service Scheduler authority incorporated by V3 |
 
 ## Governance transition
 
@@ -222,6 +249,7 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_AGENT_SESSION_MESSAGING_DEPLOYMENT_V1` | accepted | contracts | canonical `agent_session_send` exact 17-file serialized production authority; Auth audience/config authority+deployment → Agent Core artifact/apply → minimal Grant → fresh header proof → one A2A canary; aliases forbidden |
+| `AGENT_CORE_AGENT_SESSION_MESSAGING_V2_DEPLOYMENT_V1` | accepted (reviewed head 4472724…, Owner mayf3 2026-09-14) | contracts | accepted Session Messaging V2 的独立窄 production authority：可信 recovered V1 preimage 上仅移植 reviewed V2 14-path semantic delta，拒绝 full-main/full-blob 夹带；immutable release/rollback、Auth inspection scope + HR exact Grant prerequisites、fresh readiness/health、one-send + exact-turn read-only canary；不改 Session/message/history，不含 ledger/retry/Scheduler/Workflow 扩张 |
 
 ## HR dispatch delivery resolution authority
 
@@ -234,7 +262,8 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1` | accepted (PR #242, reviewed head cb88804…; Owner ACCEPT_WITH_SPLIT 2026-09-10; semantic review PASS 6/6, B1 closed pre-acceptance) | none（语义 authority only；acknowledgment/closure 的任何实现 = 本 Spec 下独立后续 PR，永不回流 PR #222） | 冻结单一语义：正式 operator disposition 可关闭 incident/alert layer（同一 occurrence 恰一条 closure 通知，不再重复 reminder），永不改写 fact layer（failure fact durable、零 ledger mutation、detector 零 basis 分支）；是 PR #222 已撤销的 operator-reconciled RUN_FAILED suppression（Owner 2026-09-10 ruling：NOT_AUTHORIZED_YET）的唯一合法替代 authority 路径 |
+| `SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1` | accepted (Owner exact acceptance 2026-09-14 at `a8c7630…`; semantic + safety reviews PASS; blockers none) | contracts; production/current-six = conditional controlled operation after implementation, serialization, provenance and canary gates | current whole-Spec authority for same-Job `QUARANTINED_UNKNOWN`, four-result evidence reconciliation, root-cause incident dedupe with no unchanged reminder, disjoint business/failure/control-plane routing, and canonical generation-bound enabled-Job health/readback |
+| `SCHEDULER_FAILURE_DISPOSITION_ALERT_LIFECYCLE_V1` | superseded 2026-09-14 by `SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1` (whole-Spec successor with reciprocal backlink) | none | historical predecessor; durable fact/detector/closure/audit invariants are restated by the successor, while bounded unchanged reminders are replaced by no unchanged repeat alert |
 
 ## Scheduler production state reconciliation authority
 
@@ -250,3 +279,9 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | `MOBILE_SESSION_HISTORY_V1` | accepted (2026-09-07, Owner exact-head acceptance ACCEPT_PR145_AUTHORITIES_AND_RESUME_IMPLEMENTATION in PR #145 @ ccbb5dc…; reviewed head 18638aa…, NORMATIVE_BODY_DELTA = NONE) | contracts | Mobile 当前 Binding `activeAgent` 的 current canonical `main` trajectory 只读历史：logical-main 身份、deterministic current-main resolver、deterministic composite public message ID（HEADER_SUBSET + PREFIX_ANCHOR generation：append-stable、reset-provable）、stale-cursor 分页、冻结资源上限、confinement/隐私边界；与 sibling `PRODUCT_API_AUTHENTICATION_V1`（candidate `0d8f050` + PR #145 B1/B3 修复）按 trusted authContext / 唯一 Binding reader 边界拆分 |
 | `PRODUCT_API_VOICE_TRANSCRIPTION_V1` | accepted (2026-09-08, Owner exact-head acceptance ACCEPT_BOTH_CHILD_AUTHORITIES @ reviewed head 67553c2…, NORMATIVE_BODY_DELTA = NONE) | contracts | Mobile Presence voice session 的同一 Product API 私有转写路由：POST /v1/voice/transcription（audio/wav 有界 utterance → {"text"}）、512KB/15s 上限、确定性 400/413/415/503/504、自托管 ASR 执行（ENGINE_PIN=Paraformer-zh via sherpa-onnx 已冻结；SERVICE_DEADLINE=1500ms）、raw-audio 零持久化 + 日志白名单；history-listener 复用禁止；/v1/message 语义不动；sibling = agent-core-mobile MOBILE_AGENT_PRESENCE_RUNTIME_V1（PR #17，client seam） |
 | `PRODUCT_API_AUTHENTICATION_V1` | accepted (2026-09-07, Owner exact-head acceptance ACCEPT_PR145_AUTHORITIES_AND_RESUME_IMPLEMENTATION in PR #145 @ ccbb5dc…; reviewed head 208f9a9…, NORMATIVE_BODY_DELTA = NONE) | contracts | Tailnet-local Mobile history 身份边界 Child（parent `AGENT_CORE_HARDENING_PROGRAM_V1`）：专用 history-only Tailnet listener（现有 Product API server 保持 loopback-only）、listener 上全请求 admission（selector≠main 由 History 400）、`tailcfg.StableNodeID` WhoIs 身份、配置 (StableID, surfaceId) pair、trustedAuthContext 唯一输出、`AUTH_LAYER_READS_BINDING = NO`、fail-closed 403/503 语义、restart-only config generation；public/non-Tailnet history 仍禁止 |
+
+## Canonical agent fleet send policy authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_CANONICAL_AGENT_FLEET_SEND_POLICY_V1` | accepted 2026-09-16 (r4 AMENDMENT_1 joint acceptance; r3 acceptance 2026-09-15 @ `6bce155`; r4 reviewed head `5dd41e2…`, spec sha256 `b28ec501…`, Owner mayf3) | contracts; production apply controlled operation | `agent.session.send` = production canonical Agent fleet 的机械派生基线能力（G1∧G2∧G3 membership join）；lawful row family = `['agent.session.send'] ∪ P, P ⊆ {agent.session.inspect_own_dispatch}`（ENUMERATED 闭集，成员各自持有 Auth accepted authority，fleet 永不授予）；NORMALIZE=make-lawful；clause-scope supersedes AGENT_SESSION_SEND_STANDALONE_DEPLOYMENT_AUTHORITY_V1 §6 grant 政策 |

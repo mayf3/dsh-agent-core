@@ -51,6 +51,7 @@
 import { createServer } from 'node:http'
 import z from '@deepseek-ai/schemastery'
 import { handleSchedulerRequest } from './scheduler-routes.js'
+import { handleSchedulerHealthRequest } from './scheduler-health-routes.js'
 import { createVoiceTranscriptionHandler } from './voice-transcription.js'
 
 /** Stable plugin name referenced by bundle patches. */
@@ -74,6 +75,25 @@ export const Config = z.object({
   port: z.number().default(8787),
   /** Product Surface channel tag (surfaceType). Fixed 'mobile' in Gate 1. */
   channel: z.string().default('mobile'),
+  /**
+   * PRODUCT_API_AUTHENTICATION_V1 / MOBILE_SESSION_HISTORY_V1: the dedicated
+   * history-only Tailnet listener (HISTORY_LISTENER). Default OFF; the
+   * loopback server above never serves the history route. The listener binds
+   * the configured Tailscale address DIRECTLY (never a wildcard, never behind
+   * an L7 proxy); auth config comes from PRODUCT_API_AUTH_CONFIG_FILE
+   * (outside Git, restart-only generation).
+   */
+  history: z.object({
+    enabled: z.boolean().default(false),
+    /** Tailscale address to bind (e.g. the host's 100.x.y.z) — required. */
+    host: z.string().default(''),
+    port: z.number().default(8788),
+    /** Out-of-Git auth config file; defaults to $PRODUCT_API_AUTH_CONFIG_FILE. */
+    authConfigFile: z.string().default(''),
+    /** tailscaled LocalAPI unix socket override (platform default otherwise). */
+    tailscaledSocket: z.string().default(''),
+    whoisTimeoutMs: z.number().default(1500),
+  }),
 })
 
 /** JSON reply helper. */
@@ -281,7 +301,10 @@ export function apply(ctx, config = {}) {
         // (R-H9), then the frozen GET-only contract (R7). The gate error
         // keeps the exact { error: { code, message } } envelope.
         try {
-          const { status, body } = await handleSchedulerRequest({
+          const handler = url.pathname === '/scheduler/health'
+            ? handleSchedulerHealthRequest
+            : handleSchedulerRequest
+          const { status, body } = await handler({
             // These optional services are provided later in the production
             // compose sequence than product-api is mounted. Resolve them at
             // request time so the gate sees the configured verifier instead
@@ -289,6 +312,7 @@ export function apply(ctx, config = {}) {
             req,
             url,
             history: ctx.get('schedulerHistory') ?? null,
+            health: ctx.get('schedulerHealth') ?? null,
             verifier: ctx.get('schedulerTokenVerifier') ?? null,
           })
           json(res, status, body)
@@ -334,6 +358,70 @@ export function apply(ctx, config = {}) {
     server.closeAllConnections()
     server.close()
   })
+
+  // MOBILE_SESSION_HISTORY_V1 + PRODUCT_API_AUTHENTICATION_V1: the dedicated
+  // history-only Tailnet listener. Mounted ONLY when explicitly enabled with a
+  // concrete (non-wildcard) Tailscale bind address and the workspace-bootstrap
+  // service present; otherwise the history route stays ABSENT (CTR-PA-009) —
+  // the loopback server above is untouched either way. When mounted, the auth
+  // config generation is loaded once (restart-only); an invalid/missing config
+  // keeps the listener fail-closed (every class-matched request → 503
+  // PRODUCT_API_AUTH_NOT_READY, CTR-PA-005/CTR-PA-007).
+  const historyConfig = config.history ?? {}
+  if (historyConfig.enabled === true) {
+    const historyHost = historyConfig.host ?? ''
+    const workspaceBootstrap = ctx.get('workspaceBootstrap')
+    if (historyHost === '' || historyHost === '0.0.0.0' || historyHost === '::' || historyHost === '*') {
+      log.error('history listener enabled but no Tailscale bind host configured; history route stays absent')
+    } else if (workspaceBootstrap === undefined) {
+      log.error('history listener enabled but workspaceBootstrap service is absent; history route stays absent')
+    } else {
+      Promise.all([
+        import('@agent-core/session-history'),
+        import('./history-listener.js'),
+        import('./history-auth.js'),
+      ])
+        .then(([{ createSessionHistoryService }, { startHistoryListener }, {
+          loadAuthConfigProfile,
+          createWhoIsResolver,
+          createNodeHttpWhoIsTransport,
+        }]) => {
+          const sessionHistory = createSessionHistoryService({
+            router,
+            definition,
+            channel: cfg.channel,
+            resolveAgentWorkspace: (agentId) => workspaceBootstrap.resolveWorkspace(agentId),
+            resolveAgentHome: (agentId) => workspaceBootstrap.resolveDshHome(agentId),
+          })
+          const profile = loadAuthConfigProfile(
+            historyConfig.authConfigFile || process.env.PRODUCT_API_AUTH_CONFIG_FILE,
+          )
+          if (!profile.ready) {
+            log.error('history auth config not ready (PRODUCT_API_AUTH_CONFIG_FILE); listener mounted fail-closed (503)')
+          }
+          const resolver = createWhoIsResolver({
+            socketPath: historyConfig.tailscaledSocket || undefined,
+            timeoutMs: Number.isFinite(historyConfig.whoisTimeoutMs) ? historyConfig.whoisTimeoutMs : 1500,
+            transport: createNodeHttpWhoIsTransport(),
+          })
+          const listener = startHistoryListener({
+            host: historyHost,
+            port: Number.isFinite(historyConfig.port) ? historyConfig.port : 8788,
+            profile,
+            sessionHistory,
+            resolveStableNodeId: resolver,
+          })
+          ctx.effect(() => () => {
+            listener.server.closeAllConnections()
+            listener.server.close()
+          })
+          log.log(`history listener listening on http://${historyHost}:${historyConfig.port ?? 8788} (profile ready=${profile.ready})`)
+        })
+        .catch((error) => {
+          log.error(`history listener failed to mount; history route stays absent: ${error?.message ?? error}`)
+        })
+    }
+  }
 
   const service = {
     pluginName: name,

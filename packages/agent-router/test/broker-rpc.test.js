@@ -347,9 +347,9 @@ import { agentSessionMessagingManifest } from '../../broker/src/capabilities/age
 
 test('seam: agent_session_send accepted/replied/timeout survive the corrected depth; a gateway throw stays outcome_unknown with zero retry', async () => {
   const cases = [
-    { status: 'accepted' },
-    { status: 'timeout' },
-    { status: 'replied', reply: 'the target answered' },
+    { status: 'accepted', targetAgentId: 'agt_b-target', sessionId: 'main', messageId: 'msg-1' },
+    { status: 'timeout', targetAgentId: 'agt_b-target', sessionId: 'main', messageId: 'msg-1' },
+    { status: 'replied', reply: 'the target answered', targetAgentId: 'agt_b-target', sessionId: 'main', messageId: 'msg-1' },
   ]
   for (const business of cases) {
     const relay = createRelayHandlers(agentSessionMessagingManifest, async () => childResolved({ ok: true, result: business }))
@@ -365,5 +365,24 @@ test('seam: agent_session_send accepted/replied/timeout survive the corrected de
   const out = await relay.send({}, { targetAgentId: 'agt_b-target', message: 'hi', timeoutSeconds: 1 })
   assert.equal(out.errorCode, 'outcome_unknown')
   assert.match(out.detail, /do not retry automatically/)
-  assert.equal(calls.length, 1, 'zero automatic retry')
+  assert.equal(calls.filter((call) => call.capabilityId === 'agent_session_send').length, 1, 'zero automatic resend')
+  assert.equal(calls.filter((call) => call.capabilityId === 'agent_session_send_reconcile').length, 1, 'one bounded lookup')
+})
+
+test('broker RPC forwards the printable child invocation anchor without treating it as identity', async (t) => {
+  stubAgentProcess()
+  const seen = []
+  const gateway = { execute: async (_call, context) => { seen.push(context); return { ok: true, result: {} } } }
+  const { router, agentA } = await freshRouter(t, { brokerGateway: gateway })
+  const proc = await router.ensureRunning(agentA.id)
+  proc.executions.set('turn:anchor', { settled: false })
+  await proc.onRpcRequest(BROKER_RPC_METHOD, {
+    capabilityId: 'agent_session_send',
+    operation: 'send',
+    args: {},
+    invocationCorrelation: 'invocation-1234',
+  }, { turnExecutionId: 'turn:anchor' })
+  assert.equal(seen[0].callerAgentId, undefined, 'gateway derives callerAgentId later from agentId')
+  assert.equal(seen[0].agentId, agentA.id)
+  assert.equal(seen[0].invocationCorrelation, 'invocation-1234')
 })

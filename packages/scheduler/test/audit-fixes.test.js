@@ -63,15 +63,15 @@ const FAULT_TO_ACCEPTANCE = {
 }
 
 test('ACC-020 accepted authority disposition remains intact', () => {
-  const spec = read('docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V2.md')
-  const v1 = read('docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md')
+  const spec = read('docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V3.md')
+  const v2 = read('docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V2.md')
+  const d9 = read('docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md')
   const d7 = read('docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md')
-  const d5 = read('docs/decisions/SCHEDULER_V1.md')
   assert.match(spec, /status: accepted/)
-  assert.match(spec, /supersedes: \[SCHEDULER_TIMEOUT_OUTCOME_V1\]/)
-  assert.match(v1, /status: superseded/)
-  assert.match(d7, /状态: accepted/)
-  assert.match(d5, /superseded_by: D-007/)
+  assert.match(spec, /supersedes: \[SCHEDULER_TIMEOUT_OUTCOME_V2\]/)
+  assert.match(v2, /status: superseded/)
+  assert.match(d9, /状态: accepted/)
+  assert.match(d7, /状态: superseded-by-D-009/)
 })
 
 test('ACC-032 CLI is control-only and exposes occurrence/fence reconciliation projection', () => {

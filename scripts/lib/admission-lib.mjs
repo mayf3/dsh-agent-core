@@ -20,7 +20,9 @@ export function relativeImports(source) {
 /** Resolve a relative import against a repo-relative dir to a repo path with .js candidates. Pure. */
 export function resolveRelative(fromDir, spec) {
   const joined = normalize(joinPath(fromDir, spec))
-  const candidates = [joined, `${joined}.js`, joinPath(joined, 'index.js')]
+  const candidates = /\.(?:[cm]?js|json)$/.test(joined)
+    ? [joined]
+    : [joined, `${joined}.js`, joinPath(joined, 'index.js')]
   return candidates
 }
 
@@ -223,19 +225,20 @@ export function reExportsWithoutLocalBinding(source) {
   return missing
 }
 
-/** NARROW overlay universe (2026-09-09 boot-failure amendment): ONLY the two
- *  packages the reliability candidate owns (broker + scheduler) plus the
- *  watchdog script. packages/production-runtime/** is EXCLUDED BY NAME —
- *  main's model-overrides.js demands the v3 host config whose migration
- *  belongs to ANOTHER goal (Model Fleet, HOLD); overlaying it crash-looped the
- *  engine (rolled back via preimages). Test trees and markdown excluded. Pure. */
+/** Exact reviewed production closure universe. Seeds remain the goal diff;
+ * relative imports may cross package boundaries so a reviewed runtime is never
+ * paired with stale dependency bytes. Tests/docs stay excluded. */
 export function inOverlayUniverse(repoPath) {
-  if (repoPath === 'scripts/scheduler-watchdog.mjs') return true
+  if (SCRIPT_ALLOWLIST.has(repoPath)) return true
+  // This acceptance fixture is a static import of the production broker index
+  // and is registered only behind explicit config; its bytes remain required
+  // for module-load closure even though other fixture trees stay excluded.
+  if (repoPath === 'packages/broker/src/fixtures/self-assert.js') return true
   if (!repoPath.startsWith('packages/')) return false
-  if (repoPath.startsWith('packages/production-runtime/')) return false
   if (repoPath.includes('/test/') || repoPath.endsWith('.test.js')) return false
+  if (repoPath.includes('/fixtures/')) return false
   if (repoPath.endsWith('.md')) return false
-  return repoPath.startsWith('packages/broker/') || repoPath.startsWith('packages/scheduler/')
+  return true
 }
 
 /**

@@ -20,7 +20,8 @@ EVIDENCE_CHANNEL         = SCHEDULER_RECONCILIATION_EVIDENCE_FILE=
 WATCHDOG_STATE_DIR       = /Users/authsvc/.agent-core/control/scheduler-watchdog（W1/W2 共享，§5.7 互检）
 DESIRED_STATE_PATH       = /usr/local/libexec/agent-core/config/scheduler-desired-state.json
 W1_PLIST / W2_PLIST      = deployment-artifacts/scheduler-control-plane-reliability-v1/*.plist.tmpl
-__OWNER_CHAT_ID__        = <Owner 飞书 chat id —— 执行轮 Owner 提供>
+ROUTING_MANIFEST         = /usr/local/libexec/agent-core/config/scheduler-routing.json
+CANONICAL_OPS_TARGET     = <dedicated Scheduler ops target —— 执行轮受保护配置>
 __CRITICAL_INVENTORY__   = <critical jobs + logicalKey 方案 —— 执行轮 Owner 评审冻结>
 __MERGE_SHA__            = <source merge commit —— merge 后回填>
 ```
@@ -32,7 +33,7 @@ __MERGE_SHA__            = <source merge commit —— merge 后回填>
    env 基线含 AGENT_CORE_CREDENTIALS_FILE）；store raw 读（version:2、jobs 计数、无 .lock/.tmp 残留）；
    当前 `/usr/local/bin/agentcore-cron` 解析目标 + sha（记录 SB4 前像）；live app manifest sha 基线。
 3. **SOURCE**：`__MERGE_SHA__` 处 suites 全绿（scheduler/broker/scheduler-router）+ audit ACCEPT（已具备）。
-4. **OWNER INPUTS**：__OWNER_CHAT_ID__、__CRITICAL_INVENTORY__（含存量 22 jobs 的 logicalKey 回填方案，
+4. **OWNER INPUTS**：CANONICAL_OPS_TARGET、__CRITICAL_INVENTORY__（含存量 22 jobs 的 logicalKey 回填方案，
    建议 `<agentId>:<name>`，由 Owner 逐条评审）。
 
 ## §3 Apply sequence（顺序不可调换；每步留 preimage）
@@ -55,8 +56,9 @@ __MERGE_SHA__            = <source merge commit —— merge 后回填>
    **CLI_BYTES_MATCH_EXPECTED** 门。
 6. **watchdog 供给面**：以 authsvc 预创建 `WATCHDOG_STATE_DIR`（先于任何 RunAtLoad——root 先建会导致
    W1 不可写）；预创建 evidence-channel 目录（dedicated group，收紧 0777 占位）。
-7. **watchdog 安装**：由 §0 模板实例化两份 plist（`__OWNER_CHAT_ID__` 填入；W1 grace=2700000ms、
-   W2 grace=1800000ms），`sudo launchctl bootstrap system` 各自加载；观察互检心跳文件生成。
+7. **watchdog 安装**：先以 deployment authority 原子安装受保护 `ROUTING_MANIFEST`（canonical Scheduler
+   ops target，不从 Job delivery、当前聊天或 session 推导），再由 §0 模板实例化两份 plist（W1
+   grace=2700000ms、W2 grace=1800000ms），`sudo launchctl bootstrap system` 各自加载；观察互检心跳文件生成。
 8. **证据通道 env 生效验证**：以 scratch store 设 `SCHEDULER_RECONCILIATION_EVIDENCE_FILE` 手工触发
    一次 STILL_UNKNOWN 路径（--dry-run 式）确认文件落行。
 

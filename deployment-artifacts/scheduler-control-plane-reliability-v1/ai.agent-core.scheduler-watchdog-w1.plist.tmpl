@@ -21,7 +21,12 @@
     <key>SCHEDULER_CREDENTIALS_FILE</key><string>/usr/local/libexec/agent-core/config/agent-credentials.json</string>
     <key>SCHEDULER_HEALTH_URL</key><string>http://127.0.0.1:8790/health</string>
     <key>FEISHU_CREDS_PATH</key><string>/Users/authsvc/.dsh/feishu-creds.json</string>
-    <key>SCHEDULER_WATCHDOG_ALERT_TO</key><string>__OWNER_CHAT_ID__</string>
+      <key>SCHEDULER_ROUTING_MANIFEST</key><string>/usr/local/libexec/agent-core/config/scheduler-routing.json</string>
+      <key>SCHEDULER_ROUTING_OWNER_UID</key><string>0</string>
+      <key>SCHEDULER_ROUTING_READER_GID</key><string>__AUTHSVC_GID__</string>
+      <key>SCHEDULER_INCIDENT_OWNER_UID</key><string>__AUTHSVC_UID__</string>
+      <key>SCHEDULER_INCIDENT_OWNER_GID</key><string>__AUTHSVC_GID__</string>
+      <key>AGENT_CORE_DEPLOYED_SHA</key><string>__DEPLOYED_SHA__</string>
     <key>SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS</key><string>2700000</string>
   </dict>
   <key>StandardOutPath</key><string>/Users/authsvc/.agent-core/logs/scheduler-watchdog-w1.log</string>

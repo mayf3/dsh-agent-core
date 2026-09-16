@@ -107,6 +107,15 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
           // R3 exact source-turn correlation for the messaging capability —
           // proven against the execution map above, absent when stale.
           sourceTurnExecutionId: provenSourceTurnExecutionId(proc, rpcMeta),
+          // Trusted-channel-only logical invocation anchor. It correlates a
+          // lost response to this gateway-derived caller; it never supplies
+          // identity and is never taken from model arguments.
+          ...(typeof params?.invocationCorrelation === 'string'
+            && params.invocationCorrelation.length >= 8
+            && params.invocationCorrelation.length <= 128
+            && /^[\x21-\x7e]+$/.test(params.invocationCorrelation)
+            ? { invocationCorrelation: params.invocationCorrelation }
+            : {}),
         },
       )
     }
