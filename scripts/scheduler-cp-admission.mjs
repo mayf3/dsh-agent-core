@@ -163,7 +163,7 @@ async function backfillAndFreeze(doc, matched) {
   }
   installSchedulerDesiredState({ bytes: desiredBytes, expectedJobs: desired.jobs, targetPath: CTX.desiredPath,
     candidatePath: join(CTX.artifactsDir, 'candidates', 'scheduler-desired-state.json'), preimagePath: join(CTX.artifactsDir, 'rollback', 'scheduler-desired-state.json.preimage'),
-    receipt: desiredReceipt, writeReceipt: (value) => writeControlReceipt('desired-state-install-receipt.json', value), expectedUid: CTX.controlUid, expectedGid: CTX.authsvcGid })
+    receipt: desiredReceipt, writeReceipt: (value) => writeControlReceipt('desired-state-install-receipt.json', value), expectedUid: CTX.controlUid, expectedGid: CTX.authsvcGid, controlUid: CTX.controlUid, controlGid: CTX.controlGid })
   phase('desired-state', true, `${desired.jobs.length} critical(s) frozen at ${CTX.desiredPath}`)
   return { desired }
 }

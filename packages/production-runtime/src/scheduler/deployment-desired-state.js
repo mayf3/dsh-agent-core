@@ -50,7 +50,7 @@ function frozenCurrent(path, expectedUid, expectedGid, { allowLegacyReadable = f
   } finally { closeSync(fd) }
 }
 
-export function installSchedulerDesiredState({ bytes, expectedJobs, targetPath, candidatePath, preimagePath, receipt, writeReceipt, expectedUid, expectedGid }) {
+export function installSchedulerDesiredState({ bytes, expectedJobs, targetPath, candidatePath, preimagePath, receipt, writeReceipt, expectedUid, expectedGid, controlUid = expectedUid, controlGid = expectedGid }) {
   protectedParents(targetPath)
   protectedParents(preimagePath)
   protectedParents(candidatePath)
@@ -60,7 +60,7 @@ export function installSchedulerDesiredState({ bytes, expectedJobs, targetPath, 
     const candidateFd = openSync(candidatePath, constants.O_RDONLY); try { fsyncSync(candidateFd) } finally { closeSync(candidateFd) }
     syncDirectory(dirname(candidatePath))
   }
-  const candidateBytes = frozenCurrent(candidatePath, expectedUid, expectedGid).bytes
+  const candidateBytes = frozenCurrent(candidatePath, controlUid, controlGid).bytes
   if (JSON.stringify(JSON.parse(candidateBytes).jobs) !== JSON.stringify(expectedJobs)) throw new Error('desired-state semantic generation drift')
   const candidateSha256 = digest(candidateBytes)
   const current = frozenCurrent(targetPath, expectedUid, expectedGid, { allowLegacyReadable: true })
@@ -81,7 +81,7 @@ export function installSchedulerDesiredState({ bytes, expectedJobs, targetPath, 
       return { ...receipt, status: 'ALREADY_INSTALLED' }
     }
     if (receipt.preimageSha256 !== null) {
-      const frozenPreimage = frozenCurrent(preimagePath, expectedUid, expectedGid)
+      const frozenPreimage = frozenCurrent(preimagePath, controlUid, controlGid)
       if (!frozenPreimage || digest(frozenPreimage.bytes) !== receipt.preimageSha256) throw new Error('desired-state preimage generation mismatch')
     }
   } else {
@@ -101,7 +101,10 @@ export function installSchedulerDesiredState({ bytes, expectedJobs, targetPath, 
   clearGeneratedFileXattrs(temp)
   const currentMode = current ? Number(current.stat.mode & 0o777n) : null
   chmodSync(temp, currentMode === 0o644 ? 0o640 : currentMode ?? 0o640)
-  if (process.getuid?.() === 0) chownSync(temp, expectedUid, expectedGid)
+  // best-effort ownership set: root always lands uid/gid exactly; unprivileged runs may
+  // still set a supplementary group they belong to — the readback below fails closed
+  // whenever the installed metadata does not match the expected contract
+  try { chownSync(temp, expectedUid, expectedGid) } catch { /* non-root: creator gid retained */ }
   const fd = openSync(temp, constants.O_RDONLY); try { fsyncSync(fd) } finally { closeSync(fd) }
   renameSync(temp, targetPath)
   syncDirectory(dirname(targetPath))

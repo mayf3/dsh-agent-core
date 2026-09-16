@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { chmod, lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises'
+import { chmod, chown, lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -8,6 +8,36 @@ import { execFileSync } from 'node:child_process'
 import { installSchedulerDesiredState } from '../../src/scheduler/deployment-desired-state.js'
 
 const plain = (path) => { if (process.platform === 'darwin') execFileSync('/usr/bin/xattr', ['-c', path]) }
+
+test('desired-state install splits control gids (candidate/preimage) from the installed target gid', async (t) => {
+  const controlGid = process.getgid()
+  const targetGid = process.getgroups().find((gid) => gid !== controlGid)
+  if (targetGid === undefined) return t.skip('no secondary group available for control/target gid split proof')
+  const { chown } = await import('node:fs/promises')
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-split-')))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await chmod(root, 0o700)
+  const targetPath = join(root, 'config', 'scheduler-desired-state.json')
+  const candidatePath = join(root, 'control', 'candidates', 'scheduler-desired-state.json')
+  const preimagePath = join(root, 'control', 'rollback', 'scheduler-desired-state.json.preimage')
+  await mkdir(join(root, 'config')); await mkdir(join(root, 'control', 'candidates'), { recursive: true, mode: 0o700 }); await mkdir(join(root, 'control', 'rollback'), { recursive: true, mode: 0o700 })
+  await writeFile(targetPath, '{"version":"old"}\n', { mode: 0o640 })
+  plain(targetPath)
+  await chown(targetPath, process.getuid(), targetGid)
+  // simulate the apply controller: candidate/preimage are created by the root apply
+  // process (creator gid = controlGid) while the installed target carries authsvcGid
+  const bytes = Buffer.from('{"version":1,"jobs":[]}\n')
+  const result = installSchedulerDesiredState({
+    bytes, expectedJobs: [], targetPath, candidatePath, preimagePath,
+    expectedUid: process.getuid(), expectedGid: targetGid, controlUid: process.getuid(), controlGid,
+    writeReceipt: () => {},
+  })
+  assert.equal(result.status, 'INSTALLED')
+  const final = await lstat(targetPath)
+  assert.equal(final.gid, targetGid)
+  assert.equal(final.mode & 0o777, 0o640)
+  assert.equal(await readFile(targetPath, 'utf8'), bytes.toString())
+})
 
 test('desired-state install preserves exact predecessor and replay retains first receipt', async (t) => {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'scheduler-desired-install-')))
