@@ -2,9 +2,7 @@
 /** Receipted Scheduler control-plane admission; selftest/plan/apply fail closed. */
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import {
-  readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, statSync, readdirSync, chmodSync,
-} from 'node:fs'
+import { chmodSync, existsSync, lchmodSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { homedir, userInfo } from 'node:os'
 import { JobStore } from '../packages/scheduler/src/store.js'
@@ -342,6 +340,10 @@ function operatorGeneration() {
   const tmpLink = `${CTX.binSymlink}.incoming-${process.pid}`
   execFileSync('ln', ['-sfn', candidateCli, tmpLink])
   execFileSync('mv', ['-f', tmpLink, CTX.binSymlink])
+  // the phase2 sudo shell runs umask 077: on darwin the symlink inherits lrwx------
+  // and authsvc exec through it fails with Permission denied — normalize explicitly
+  if (process.platform === 'darwin') lchmodSync(CTX.binSymlink, 0o755)
+  if (process.platform === 'darwin' && (lstatSync(CTX.binSymlink).mode & 0o777) !== 0o755) throw new Error('operator link mode readback mismatch')
   const nowSha = sha256(readFileSync(CTX.binSymlink))
   if (nowSha !== candidateSha) throw new Error('operator flip failed byte check')
   cutoverReceipt.status = 'INSTALLED'
