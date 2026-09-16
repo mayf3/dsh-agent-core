@@ -339,6 +339,14 @@ export function apply(ctx, config) {
     getTurnReconciliation: (handle) => reconciliationStore.getTurnReconciliation(handle),
     readFinalAssistantOutput: (handle) => reconciliationStore.readFinalAssistantOutput(handle),
     resolveCallerCorrelation: (triple) => reconciliationStore.resolveCallerCorrelation(triple),
+    // WORKFLOW_STALE_REENTRY_V1 r2: the r1 `resolveStaleTurn` seam was REMOVED
+    // (independent review CHANGES_REQUIRED SB1/SB2 — a workflow scheduler may
+    // never force-settle an unresolved turn or release its unknown fence:
+    // C-013 SAME_AGENTPROCESS_NEW_TURN_ADMISSION=FORBIDDEN and C-015/C-016
+    // exact-termination-proof discipline stand untouched). Stale re-entry
+    // defers to the existing termination authorities via the read-only
+    // getTurnReconciliation / resolveCallerCorrelation queries above; the
+    // engine gates the generation N+1 delivery on that evidence.
     reconciliationRuntimeStatus: () => ({
       generationId: reconciliationStore.occupancy().runtimeEpoch,
       health: 'healthy',

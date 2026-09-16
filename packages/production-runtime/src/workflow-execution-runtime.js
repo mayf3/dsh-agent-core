@@ -25,6 +25,14 @@
  *   settle probe      broker gateway `workflow_instance_detail.read` AS THE
  *                     TARGET AGENT (visibility invariant: restricted view
  *                     mechanically proves our visit is no longer current)
+ *   stale re-entry    WORKFLOW_STALE_REENTRY_V1: the SAME settle-probe read
+ *                     is the stale evidence source (visit current + version
+ *                     unchanged). Redispatch is READ-ONLY gated on the
+ *                     superseded execution's reconciliation state — it defers
+ *                     while the record is still an active unknown (fence
+ *                     untouched) and proceeds only on exact-termination
+ *                     convergence. Threshold:
+ *                     DSH_WORKFLOW_STALE_NO_PROGRESS_MS (default 1h).
  *
  * The mount is fail-closed by configuration: without a poller agent id the
  * ledger still loads (evidence stays readable) but the engine never polls,
@@ -34,7 +42,25 @@
 import { ExecutionLedger, createWorkflowExecutionEngine } from '../../workflow-execution/src/index.js'
 
 export const WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV = 'WORKFLOW_EXECUTION_POLLER_AGENT_ID'
+export const WORKFLOW_STALE_NO_PROGRESS_MS_ENV = 'DSH_WORKFLOW_STALE_NO_PROGRESS_MS'
 const DUE_FEED_LIMIT = 100 // svc-workflow hard cap (1..100)
+
+/**
+ * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002 threshold wiring: explicit config
+ * wins, then the env, then the 1h default. Fail-loud on a non-positive-
+ * integer (a silently-degraded threshold would be an invisible policy
+ * change). Callers SHOULD keep it above the router's turn deadline so the
+ * unknown marking always precedes any stale evaluation.
+ */
+export function resolveStaleNoProgressThresholdMs({ configValue, envValue } = {}) {
+  const raw = configValue ?? envValue
+  if (raw === undefined || raw === '') return 3_600_000
+  const parsed = typeof raw === 'number' ? raw : (/^\d+$/.test(String(raw).trim()) ? Number.parseInt(String(raw), 10) : NaN)
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new TypeError(`workflow-execution-runtime: stale threshold must be a positive integer (got ${JSON.stringify(raw)})`)
+  }
+  return parsed
+}
 
 /**
  * @param {object} deps
@@ -44,7 +70,9 @@ const DUE_FEED_LIMIT = 100 // svc-workflow hard cap (1..100)
  * @param {object} deps.router - the composed agent-router service.
  * @param {object} deps.log - { log, warn, error }.
  * @param {object} [deps.config] - { pollerAgentId?, maxAdmissionsPerPoll?,
- *   intervalMs? }; pollerAgentId falls back to WORKFLOW_EXECUTION_POLLER_AGENT_ID.
+ *   intervalMs?, staleNoProgressThresholdMs? }; pollerAgentId falls back to
+ *   WORKFLOW_EXECUTION_POLLER_AGENT_ID, the stale threshold to
+ *   DSH_WORKFLOW_STALE_NO_PROGRESS_MS, then 1h.
  */
 export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config = {} }) {
   if (ctx === undefined || layout === undefined || router === undefined || log === undefined) {
@@ -60,11 +88,24 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
   const ledger = new ExecutionLedger({ dir: layout.workflowExecutionDir, log })
   const pollerAgentId = config.pollerAgentId ?? process.env[WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV]
   const enabled = typeof pollerAgentId === 'string' && pollerAgentId !== ''
+  const staleNoProgressThresholdMs = resolveStaleNoProgressThresholdMs({
+    configValue: config.staleNoProgressThresholdMs,
+    envValue: process.env[WORKFLOW_STALE_NO_PROGRESS_MS_ENV],
+  })
 
   const engine = createWorkflowExecutionEngine({
     ledger,
     log,
-    ...(config.maxAdmissionsPerPoll === undefined ? {} : { config: { maxAdmissionsPerPoll: config.maxAdmissionsPerPoll } }),
+    config: {
+      ...(config.maxAdmissionsPerPoll === undefined ? {} : { maxAdmissionsPerPoll: config.maxAdmissionsPerPoll }),
+      staleNoProgressThresholdMs,
+    },
+    // WORKFLOW_STALE_REENTRY_V1 r2: no router seam is injected — the r1
+    // resolveStaleTurn pass-through was removed per independent review. The
+    // engine's quiescence gate reads the EXISTING router seams
+    // (getTurnReconciliation / resolveCallerCorrelation) and defers the
+    // generation N+1 delivery until the superseded execution is provably
+    // no longer an active unknown; fence lifecycle stays untouched.
     fetchDuePage: async ({ afterNextEligibleAt, afterDispatchIntentId } = {}) => {
       if (!enabled) return { ok: false, code: 'poller_unconfigured', detail: `set ${WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV} to enable the due-feed poller` }
       // Keyset continuation (CTR-WAE-001b): the engine only ever supplies
@@ -127,6 +168,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     ledger,
     pollerAgentId,
     enabled,
+    staleNoProgressThresholdMs,
     /**
      * THE ONE controlled recovery operation (V2 CTR-WAE-013), surfaced as a
      * runtime-component method ONLY: the control plane (Owner/operator seam)

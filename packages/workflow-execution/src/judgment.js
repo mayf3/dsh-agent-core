@@ -88,6 +88,75 @@ export function judgeSettleFromDetail({ body, nodeVisitId }) {
 }
 
 /**
+ * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002: extract the dispatch-time business
+ * baseline (instance workflow_state_version) from ONE instance-detail read
+ * performed AS THE TARGET AGENT immediately after a successful delivery.
+ * Best-effort by contract: a failure yields ok:false and the attempt is
+ * simply never stale-eligible (conservative V2 behaviour for it).
+ *
+ * @returns {{ok:true, version:number} | {ok:false, reason:string}}
+ */
+export function judgeDispatchVersionFromDetail({ body }) {
+  const { visibility, detail } = body ?? {}
+  if (visibility !== 'full' || detail === null || typeof detail !== 'object') {
+    return { ok: false, reason: 'dispatch_version_unavailable: unexpected visibility' }
+  }
+  const version = detail.instance?.workflow_state_version
+  if (!Number.isInteger(version) || version < 1) {
+    return { ok: false, reason: 'dispatch_version_unavailable: no instance workflow_state_version' }
+  }
+  return { ok: true, version }
+}
+
+/**
+ * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002: the stale re-entry judgment from
+ * ONE instance-detail read performed AS THE TARGET AGENT (same seam and
+ * visibility invariant as the settle probe). Pure — no I/O, no clocks; the
+ * engine owns the delivered-age threshold check.
+ *
+ * ONLY svc business facts decide:
+ *   - visit moved / instance terminal            → 'progressed' (business
+ *     moved on: transition, RETURN, admin move, cancel, archive)
+ *   - version != workflowStateVersionAtDispatch  → 'progressed' (assistance
+ *     open / HUMAN_REQUIRED, wake, admin ops — all bump the version; Goal
+ *     CASE 4: never stale-redispatch past a new ownership state)
+ *   - visit still current + version unchanged    → 'stale_confirmed'
+ *   - any unreadable state                       → 'unavailable' (never stale)
+ *
+ * @returns {{kind:'stale_confirmed'|'progressed'|'unavailable', reason:string}}
+ */
+export function judgeStaleFromDetail({ body, nodeVisitId, workflowStateVersionAtDispatch }) {
+  const { visibility, detail } = body ?? {}
+  if (visibility === 'historical_participant') {
+    return { kind: 'progressed', reason: 'assignee_no_longer_current: instance moved past our visit (visibility invariant)' }
+  }
+  if (visibility !== 'full' || detail === null || typeof detail !== 'object') {
+    return { kind: 'unavailable', reason: `stale_check_unavailable: unexpected visibility ${JSON.stringify(visibility ?? null)}` }
+  }
+  const currentVisitId = detail.current_node_visit_id
+  if (typeof currentVisitId !== 'string' || !UUID_RE.test(currentVisitId)) {
+    return { kind: 'unavailable', reason: 'stale_check_unavailable: full detail has no current_node_visit_id' }
+  }
+  if (currentVisitId.toLowerCase() !== nodeVisitId.toLowerCase()) {
+    return { kind: 'progressed', reason: 'node_visit_no_longer_current' }
+  }
+  if (detail.instance?.is_terminal === true) {
+    return { kind: 'progressed', reason: 'instance_terminal' }
+  }
+  const version = detail.instance?.workflow_state_version
+  if (!Number.isInteger(version) || version < 1) {
+    return { kind: 'unavailable', reason: 'stale_check_unavailable: no instance workflow_state_version' }
+  }
+  if (!Number.isInteger(workflowStateVersionAtDispatch)) {
+    return { kind: 'unavailable', reason: 'stale_check_unavailable: no workflowStateVersionAtDispatch recorded at delivery' }
+  }
+  if (version !== workflowStateVersionAtDispatch) {
+    return { kind: 'progressed', reason: `workflow_state_version advanced (${workflowStateVersionAtDispatch} -> ${version}) since dispatch` }
+  }
+  return { kind: 'stale_confirmed', reason: `visit still current with workflow_state_version ${version} unchanged since dispatch` }
+}
+
+/**
  * Reconcile judgment for ONE ACTIVE attempt, given the Router's turn
  * reconciliation state and the settle probe result.
  *

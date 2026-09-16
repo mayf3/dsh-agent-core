@@ -233,6 +233,12 @@ export const eventCorrelationMethods = {
     this.activeUnknownFence = this.activeUnknownFences.values().next().value ?? null
   },
 
+  // WORKFLOW_STALE_REENTRY_V1 r2: the r1 `resolveStaleExecution` method was
+  // REMOVED. It tore down a live execution slot and released a fence without
+  // exact termination evidence (C-015/C-016) and re-opened C-013's forbidden
+  // same-process admission. Fence release stays exactly where the accepted
+  // authority puts it: the stream/exit late settlement paths above.
+
   /**
    * Bounded, secret-free diagnostic of one unresolved execution (booleans +
    * one classification enum only — never a settlement input). `execution`

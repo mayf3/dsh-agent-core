@@ -22,12 +22,23 @@
  * explicit, authorityRef-gated, control-plane-only — no retry engine, no
  * timer, no model-facing surface, never invoked by the poller or reconcile.
  *
+ * WORKFLOW_STALE_REENTRY_V1 (the ONE scoped successor exception): reconcile
+ * additionally settles a delivered attempt as `stale_no_progress` when the
+ * positive business evidence chain holds (threshold age + visit still
+ * current + instance version unchanged since dispatch + instance active) —
+ * a BUSINESS-layer eligibility restoration only. The due sweep then admits
+ * the generation N+1 attempt through the same fence, gated by CTR-SRE-004
+ * execution-layer quiescence: no re-delivery while the superseded attempt's
+ * reconciliation record is still an active unknown (fence stands; C-013/
+ * 015/016 discipline is reused, never bypassed). Progress is defined by svc
+ * business facts only; nothing renews the stale clock; unknown outcomes
+ * never re-run on a timeout alone.
+ *
  * Optimistic + conservative per the goal: re-reading and re-polling are
- * always safe (idempotent reads); DSH never schedules a second attempt for
- * the same NodeVisit; business consistency stays with svc-workflow's state
- * version / idempotency / transaction; an unknown outcome or an unknown
- * external side effect NEVER creates a second execution — it lands in
- * NEEDS_REVIEW for HR/human coordination.
+ * always safe (idempotent reads); business consistency stays with
+ * svc-workflow's state version / idempotency / transaction; an unknown
+ * outcome without positive business evidence NEVER creates a second
+ * execution.
  *
  * All I/O is injected: production wiring lives in
  * production-runtime/src/workflow-execution-runtime.js; tests inject fakes.
@@ -35,10 +46,20 @@
 
 import { buildExecutionInstruction } from './instruction.js'
 import { createRecoveryOperation } from './recovery.js'
-import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt } from './judgment.js'
+import { STALE_NO_PROGRESS_JUDGMENT } from './ledger.js'
+import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
 
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
+
+/**
+ * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002: the default stale-acceptance
+ * threshold. Configurable via config.staleNoProgressThresholdMs (wiring:
+ * env DSH_WORKFLOW_STALE_NO_PROGRESS_MS); the wiring keeps it above the
+ * router's turn deadline so `outcome_unknown` is always already marked
+ * before any stale evaluation fires.
+ */
+export const DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS = 3_600_000
 
 /** svc-workflow's hard page cap (1..100); a FULL page means "keep sweeping". */
 export const DUE_PAGE_LIMIT = 100
@@ -58,10 +79,19 @@ export const DUE_PAGE_LIMIT = 100
  * @param {(handle:string) => {state:string}} deps.getTurnReconciliation - Router reconciliation record state.
  * @param ({requestId:string}) => {state:string, handle?:string}} [deps.resolveCallerCorrelation]
  * @param ({agentId:string, workflowInstanceId:string}) => Promise<{ok:true, body:object}|{ok:false, code:string, detail?:string}>} deps.readInstanceDetail
+ *   - WORKFLOW_STALE_REENTRY_V1 r2: the r1 `resolveStaleTurn` router seam was
+ *     REMOVED per independent review (a workflow scheduler may never
+ *     force-settle an unresolved turn or release its unknown fence —
+ *     AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-013/015/016/017 stand untouched).
+ *     Generation N+1 delivery instead defers to the existing termination
+ *     authorities: it is admitted only when the superseded attempt's
+ *     reconciliation record is provably no longer an active unknown
+ *     (CTR-SRE-004 quiescence gate — a READ-ONLY check over the existing
+ *     getTurnReconciliation / resolveCallerCorrelation seams).
  * @param {Function} [deps.buildInstruction] - instruction builder (tests).
  * @param {object} [deps.log]
  * @param {Function} [deps.clock]
- * @param {object} [deps.config] - { maxAdmissionsPerPoll }
+ * @param {object} [deps.config] - { maxAdmissionsPerPoll, staleNoProgressThresholdMs }
  */
 export function createWorkflowExecutionEngine({
   ledger,
@@ -80,6 +110,10 @@ export function createWorkflowExecutionEngine({
     if (fn === undefined) throw new TypeError(`workflow-execution: engine dep ${name} is required`)
   }
   const maxAdmissions = config.maxAdmissionsPerPoll ?? DEFAULT_MAX_ADMISSIONS_PER_POLL
+  const staleNoProgressThresholdMs = config.staleNoProgressThresholdMs ?? DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS
+  if (!Number.isInteger(staleNoProgressThresholdMs) || staleNoProgressThresholdMs < 1) {
+    throw new TypeError(`workflow-execution: config.staleNoProgressThresholdMs must be a positive integer (got ${JSON.stringify(config.staleNoProgressThresholdMs)})`)
+  }
 
   function provenanceFor(attempt) {
     // The trusted control-plane sidecar: runtime-owned workflow execution
@@ -101,8 +135,24 @@ export function createWorkflowExecutionEngine({
    * invoked (no invocation-to-record crash window); every post-invocation
    * failure class stays terminal NEEDS_REVIEW — never a silent drop, never an
    * automatic second run, never an agent swap.
+   *
+   * CTR-SRE-004 (r2, the quiescence gate): a generation N+1 re-plan is
+   * admitted ONLY when the superseded attempt's execution is provably no
+   * longer an active unknown — the read-only turn-state lookup must not
+   * answer `pending` (C-013: SAME_AGENTPROCESS_NEW_TURN_ADMISSION=FORBIDDEN
+   * while unresolved; C-015/C-016: only exact termination evidence ends an
+   * unknown). Still-pending ⇒ defer WITHOUT minting anything: the visit keeps
+   * its restored re-entry eligibility and the sweep re-checks next poll.
    */
   async function admitDueIntent(rawIntent) {
+    const previous = ledger.get(rawIntent.nodeVisitId)
+    if (previous !== undefined && previous.state !== 'ACTIVE' && previous.judgment === STALE_NO_PROGRESS_JUDGMENT) {
+      const turnState = queryTurnState(previous)
+      if (turnState === 'pending') {
+        log.warn?.(`workflow-execution: re-entry deferred for ${previous.nodeVisitId} — superseded execution still unresolved (fence stands; C-013); rechecked next sweep`)
+        return { action: 'deferred_quiescence', nodeVisitId: rawIntent.nodeVisitId, attemptId: previous.attemptId }
+      }
+    }
     const attemptResult = await ledger.beginAttemptIfAbsent({
       dispatchIntentId: rawIntent.dispatchIntentId,
       nodeVisitId: rawIntent.nodeVisitId,
@@ -129,6 +179,25 @@ export function createWorkflowExecutionEngine({
           messageOrigin: provenanceFor(attempt),
         })
         if (!delivery.ok) return { kind: 'delivery_failed', reason: `delivery_rejected:${delivery.code}` }
+        // CTR-SRE-002: ONE instance-detail read AS THE TARGET AGENT to record
+        // the dispatch-time business baseline. Best-effort: a failed probe
+        // leaves the field absent and that attempt is never stale-eligible.
+        // The probe reuses the settle-probe seam and runs inside the same
+        // locked admission mutation as the delivery itself (the same
+        // discipline that already spans router.deliver).
+        let workflowStateVersionAtDispatch
+        try {
+          const read = await readInstanceDetail({ agentId: resolved.agentId, workflowInstanceId: attempt.workflowInstanceId })
+          if (read.ok) {
+            const judged = judgeDispatchVersionFromDetail({ body: read.body })
+            if (judged.ok) workflowStateVersionAtDispatch = judged.version
+            else log.warn?.(`workflow-execution: dispatch version probe unusable for ${attempt.nodeVisitId}: ${judged.reason}`)
+          } else {
+            log.warn?.(`workflow-execution: dispatch version probe failed for ${attempt.nodeVisitId}: ${read.code}`)
+          }
+        } catch (error) {
+          log.warn?.(`workflow-execution: dispatch version probe errored for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+        }
         return {
           kind: 'run_delivered',
           agentId: resolved.agentId,
@@ -136,6 +205,7 @@ export function createWorkflowExecutionEngine({
           sessionId: delivery.sessionId,
           reconciliationHandle: delivery.reconciliationHandle,
           messageId: delivery.messageId,
+          ...(workflowStateVersionAtDispatch === undefined ? {} : { workflowStateVersionAtDispatch }),
         }
       } catch (error) {
         return {
@@ -187,15 +257,51 @@ export function createWorkflowExecutionEngine({
   }
 
   /**
+   * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002: evaluate the stale predicate for
+   * one delivered attempt that has exceeded the threshold. Pure evidence
+   * chain: the age gate is caller-owned; the probe is the instance detail
+   * read AS THE TARGET AGENT; any unavailable answer is never stale.
+   */
+  async function judgeStale(attempt) {
+    const read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId })
+    if (!read.ok) {
+      return { kind: 'unavailable', reason: `stale_check_unavailable: instance detail read failed (${read.code})` }
+    }
+    return judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
+  }
+
+  /**
+   * Commit ONE stale settlement (CAS-guarded). BUSINESS layer only: this
+   * restores the visit's re-entry eligibility in the ledger and touches
+   * NOTHING in the execution layer — the abandoned turn's reconciliation
+   * record and its unknown fence (if any) stay exactly under the existing
+   * termination authorities (AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+   * C-013/015/016/017); the delivery-time quiescence gate (CTR-SRE-004)
+   * decides when a generation N+1 may actually be dispatched.
+   * Returns true when THIS caller won the settlement.
+   */
+  async function settleStale(attempt) {
+    const recorded = await ledger.recordStaleSuperseded({
+      nodeVisitId: attempt.nodeVisitId,
+      expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs },
+      observedWorkflowStateVersion: attempt.workflowStateVersionAtDispatch,
+    })
+    return recorded.committed
+  }
+
+  /**
    * Deterministic reconcile over every ACTIVE attempt. Reads are idempotent
    * and repeatable; only a terminal verdict mutates the ledger.
    * V2 CTR-WAE-011 exemption: RESOLUTION_BLOCKED attempts are skipped — they
    * have no Run linkage BY CONSTRUCTION, so the `delivery_unverified` row
    * must never fire on them (it would silently re-create the V1 terminality).
-   * @returns {Promise<{examined:number, settled:string[], needsReview:string[], running:number, blocked:number}>}
+   * V1 CTR-SRE-002/005: delivered attempts past the stale threshold with
+   * positive business evidence (visit current + version unchanged + instance
+   * active) settle stale and hand the visit back to the due sweep.
+   * @returns {Promise<{examined:number, settled:string[], needsReview:string[], running:number, blocked:number, staleReentry:string[]}>}
    */
   async function reconcileOnce() {
-    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0 }
+    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [] }
     // Cross-process failover must not reconcile a cached projection. Refresh
     // under the ledger's existing OwnerLock before enumerating this pass.
     for (const attempt of await ledger.listActiveFresh()) {
@@ -208,6 +314,20 @@ export function createWorkflowExecutionEngine({
         const turnState = queryTurnState(attempt)
         const verdict = judgeAttempt(attempt, { turnState })
         if (verdict.state === 'ACTIVE') {
+          // The run looks alive, but a delivered run past the stale threshold
+          // with version-unchanged evidence is the hung-run zombie class:
+          // settle stale (its own reconciliation record stays pending
+          // forever — nothing else will ever terminalize it). The probe
+          // judgment GATES the settlement: progressed/unavailable never
+          // settle here.
+          if (attempt.phase === 'run_delivered'
+            && clock() - attempt.delivered.atMs >= staleNoProgressThresholdMs) {
+            const stale = await judgeStale(attempt)
+            if (stale.kind === 'stale_confirmed' && await settleStale(attempt)) {
+              summary.staleReentry.push(attempt.nodeVisitId)
+              continue
+            }
+          }
           summary.running += 1
           continue
         }
@@ -234,6 +354,22 @@ export function createWorkflowExecutionEngine({
         else summary.needsReview.push(attempt.nodeVisitId)
       } catch (error) {
         log.error?.(`workflow-execution: reconcile error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+      }
+    }
+    // CTR-SRE-002 second pass: terminal NEEDS_REVIEW attempts with delivered
+    // evidence (run_ended_no_submission / run_outcome_unknown / …). The
+    // review existed to answer "did the business commit?" — past the stale
+    // threshold, the probe's positive NO (visit still current, version
+    // unchanged) supersedes it. ACTIVE candidates from this enumeration were
+    // already evaluated in the loop above; only the terminal class remains.
+    for (const attempt of await ledger.listStaleCandidatesFresh(staleNoProgressThresholdMs)) {
+      if (attempt.state !== 'NEEDS_REVIEW') continue
+      try {
+        const stale = await judgeStale(attempt)
+        if (stale.kind !== 'stale_confirmed') continue
+        if (await settleStale(attempt)) summary.staleReentry.push(attempt.nodeVisitId)
+      } catch (error) {
+        log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
     return summary
@@ -291,7 +427,7 @@ export function createWorkflowExecutionEngine({
         try {
           const result = await admitDueIntent(normalized.intent)
           admissions.push(result)
-          if (result.action !== 'already_attempted') newAttempts += 1
+          if (result.action !== 'already_attempted' && result.action !== 'deferred_quiescence') newAttempts += 1
         } catch (error) {
           log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
           admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })
