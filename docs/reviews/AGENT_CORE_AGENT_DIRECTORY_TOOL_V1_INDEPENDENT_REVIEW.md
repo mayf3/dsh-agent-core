@@ -164,6 +164,20 @@ defect above, cured docs-only in the next commit.
 
 # RE-AUDIT r3
 
-(pending — to be recorded post hoc after the independent reviewer verifies
-the docs-only cure commit; no verdict is pre-written.)
+- reviewed_record_commit: d32ef13 (the docs-only cure commit; verified
+  post hoc by the independent reviewer)
+- VERDICT: ACCEPT / BLOCKERS: NONE
+- NEW_SEMANTIC_INTRODUCED: NONE
+
+Reviewer confirmation (verbatim quotes from the r3 verification pass over
+d32ef13): "R3_RECORD_CURED = YES"; "Remaining defect: NONE in the committed
+record or spec"; every cited file:line in the cured r2 section re-verified
+against the r2 evidence (ingress-delivery.js:306-336, binding-resolution.js:
+221, definition.js:384-386/:320-327, gateway.js:333-348/:87-89/:307-309/:254,
+mapping.js:146-153/:102-106/:77-83, index.js:336, relay.js:308-311);
+`git diff 60df050 HEAD -- docs/specs/AGENT_CORE_AGENT_DIRECTORY_TOOL_V1.md`
+empty (spec byte-identical since 60df050); the r3 section carried no
+pre-written verdict before this confirmation. Final verdict issued for the
+review chain: r1 REVISE (5 load-bearing gaps) → r2 fix 60df050 + record
+defect found → record cure d32ef13 → **r3 ACCEPT / BLOCKERS NONE**.
 
