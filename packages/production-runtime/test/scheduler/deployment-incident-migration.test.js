@@ -8,7 +8,7 @@ import test from 'node:test'
 
 import { canonicalJSON } from '../../../scheduler/src/occurrence-model.js'
 import { runSchedulerIncidentMigration } from '../../src/scheduler/deployment-incident-migration.js'
-import { relativeImports, resolveRelative, WATCHDOG_PAYLOAD_SHA } from '../../../../scripts/lib/admission-lib.mjs'
+import { relativeImports, resolveRelative, WATCHDOG_PAYLOAD_SNAPSHOT } from '../../../../scripts/lib/admission-lib.mjs'
 
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const repo = new URL('../../../..', import.meta.url).pathname
@@ -16,7 +16,7 @@ const repo = new URL('../../../..', import.meta.url).pathname
 async function materializePinnedMigrationClosure(root) {
   const queued = ['scripts/scheduler-watchdog.mjs']
   const seen = new Set()
-  const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo })
+  const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SNAPSHOT.payloadCommit}:${path}`], { cwd: repo })
   while (queued.length > 0) {
     const path = queued.shift()
     if (seen.has(path)) continue
