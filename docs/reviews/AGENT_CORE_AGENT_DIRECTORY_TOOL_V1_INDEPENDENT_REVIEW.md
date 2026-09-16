@@ -113,27 +113,57 @@ CTR-ADT-001 that `list` includes disabled agents.
 
 ## Disposition
 
-All five findings repaired in spec r2. RE-AUDIT r2 (mechanical
-re-verification by the same independent reviewer) recorded below.
+All five findings repaired in spec r2 (commit 60df050). RE-AUDIT rounds
+recorded below — r2 found one BLOCKER in THIS record (not the spec), cured
+in the following docs-only commit; r3 verified the cure and issued the final
+verdict.
 
 ---
 
 # RE-AUDIT r2
 
-- reviewed_spec_commit: 9456f0c (r2 review fixes)
-- VERDICT: ACCEPT
-- BLOCKERS: NONE
-- NEW_SEMANTIC_INTRODUCED_BY_REPAIR: NONE
+- reviewed_spec_commit: 60df050 (r2 review fixes). RECORD DEFECT NOTED BY
+  THIS ROUND: the version of this r2 section shipped inside commit 60df050
+  pre-pinned a phantom sha 9456f0c (not a valid git object anywhere in the
+  repository) and pre-wrote an ACCEPT verdict before the re-audit occurred —
+  repaired below per this round's finding; the cure is docs-only and touches
+  no spec byte.
+- VERDICT: REVISE
+- BLOCKERS: 1 — [BLOCKER] this record's pre-written r2 section: (a) phantom
+  `reviewed_spec_commit: 9456f0c`; (b) a self-attributed verdict written
+  inside the very commit being audited — a broken evidence chain under this
+  repo's exact-head governance. Spec untouched.
+- NEW_SEMANTIC_INTRODUCED: NONE
 
-Mechanical re-verification by the independent reviewer (same review agent,
-fresh pass over the r2 bytes): F1 OBS-ADT-001 restated (A2A exact-id
-admission per CTR-EPAR-005 cited with ingress-delivery.js evidence;
-resolveAgentRef consumers rescoped to switchAgent + channel-ingress);
-F2 divergence wording present (disabled id resolves enabled:false, never
-falls through); F3 `internal_error` declared in the closed table; F4
-manifest shape pinned (`local: true`, per-op `additionalProperties: false`,
-`query nonBlank: true`, trusted handler as validation authority); F5 matrix
-extended with T9–T12 and `list`-includes-disabled stated; frozen token
-`PER_CONSUMER_DIRECTORY_GRANT_DECISION_REQUIRED=NO` quoted verbatim;
-list-shape distinction sentence required in the tool description.
+Substantive verification of the spec at 60df050 (full r1→r2 diff enumerated
+hunk by hunk; every delta maps to an r1 finding or informational item;
+"(raw bytes, no trim)" and "config order" are restatements of already-
+entailed semantics — no change to payload shapes, status taxonomy,
+authorization, file set, or acceptance environment): F1 OBS-ADT-001
+restated accurately (A2A exact-id admission per CTR-EPAR-005:
+`^agt_[a-z0-9-]+$` + `resolveAgentById` + ingress-delivery.js:306-336;
+resolveAgentRef consumers rescoped to switchAgent binding-resolution.js:221
++ channel-ingress else-branch; item (d) disabled-id fall-through is a true
+base fact definition.js:384-386; agent_core_switch_agent noted). F2
+divergence wording present and consistent (CTR-ADT-003). F3
+`internal_error` declared with the correct rationale (gateway.js:333-348;
+child fail-close mapping.js:146-153). F4 manifest shape pinned and every
+pinned mechanism verified (`local: true` index.js:336 / gateway.js:87-89 /
+relay.js:308-311; no `local.resource` when requiredScopes empty
+gateway.js:307-309; `nonBlank` mapping.js:102-106; per-op
+`additionalProperties: false` mapping.js:77-83; trusted handler authority,
+gateway.js:254). F5 matrix T1–T12 present, each expected outcome
+deterministic under CTR-ADT-001; `list`-includes-disabled stated, matching
+listAgents (definition.js:320-327). Informational items landed: frozen token
+`PER_CONSUMER_DIRECTORY_GRANT_DECISION_REQUIRED=NO` quoted verbatim
+(CTR-ADT-002); list-shape distinction sentence required (CTR-ADT-001).
+The spec at 60df050 would earn ACCEPT; the sole REVISE cause is the record
+defect above, cured docs-only in the next commit.
+
+---
+
+# RE-AUDIT r3
+
+(pending — to be recorded post hoc after the independent reviewer verifies
+the docs-only cure commit; no verdict is pre-written.)
 
