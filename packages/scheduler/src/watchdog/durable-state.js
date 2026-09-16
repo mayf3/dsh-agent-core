@@ -264,12 +264,14 @@ export function migrateLegacyIncidentStateFiles({
   legacyStatePath, legacyEvidencePath, incidentStatePath, findings,
   expectedLegacySha256, expectedEvidenceSha256, expectedFactsSha256,
   nowMs = Date.now(),
-  expectedUid = process.getuid?.(), expectedGid = process.getgid?.(), beforeCommit,
+  expectedUid = process.getuid?.(), expectedGid = process.getgid?.(),
+  sourceExpectedUid = expectedUid, sourceExpectedGid = expectedGid, beforeCommit,
 } = {}) {
   const initial = loadIncidentState(incidentStatePath, { expectedUid, expectedGid })
   const ownership = { expectedUid, expectedGid }
-  const legacy = readStableFile(legacyStatePath, ownership)
-  const evidence = readStableFile(legacyEvidencePath, ownership)
+  const sourceOwnership = { expectedUid: sourceExpectedUid, expectedGid: sourceExpectedGid }
+  const legacy = readStableFile(legacyStatePath, sourceOwnership)
+  const evidence = readStableFile(legacyEvidencePath, sourceOwnership)
   const factsSha256 = hash(Buffer.from(canonicalJSON(findings ?? []), 'utf8'))
   if (legacy.sha256 !== expectedLegacySha256 || evidence.sha256 !== expectedEvidenceSha256 || factsSha256 !== expectedFactsSha256) {
     throw new Error('migration frozen source generation mismatch')
@@ -304,8 +306,8 @@ export function migrateLegacyIncidentStateFiles({
   const extended = initial.hash !== null
   if (extended) state = extendCommittedMigration(initial.state, state, migration)
   beforeCommit?.()
-  const legacyEnd = readStableFile(legacyStatePath, ownership)
-  const evidenceEnd = readStableFile(legacyEvidencePath, ownership)
+  const legacyEnd = readStableFile(legacyStatePath, sourceOwnership)
+  const evidenceEnd = readStableFile(legacyEvidencePath, sourceOwnership)
   if (legacyEnd.sha256 !== legacy.sha256 || evidenceEnd.sha256 !== evidence.sha256
     || legacyEnd.stat.dev !== legacy.stat.dev || legacyEnd.stat.ino !== legacy.stat.ino
     || evidenceEnd.stat.dev !== evidence.stat.dev || evidenceEnd.stat.ino !== evidence.stat.ino) {

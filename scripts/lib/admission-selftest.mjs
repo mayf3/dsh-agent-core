@@ -8,6 +8,8 @@ import { JobStore } from '../../packages/scheduler/src/store.js'
 
 export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot }) {
   const fx = realpathSync(mkdtempSync(join(tmpdir(), 'sched-cp-admission-')))
+  const runtimeReaderGid = process.getgroups().find((gid) => gid !== process.getgid())
+  if (!Number.isInteger(runtimeReaderGid)) throw new Error('selftest requires a secondary group for separated ownership proof')
   const store = new JobStore(join(fx, 'jobs.json'), { runLogPath: join(fx, 'runs.jsonl') })
   const daily = await createJobOp(store, { name: '每日摘要检查', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'announce', channel: 'feishu', to: 'chat:oc_fixture' } })
   await createJobOp(store, { name: '每日随想总结-DeepSeek（滚动7日补偿）', agentId: 'agt_daily-thought-agent', schedule: { kind: 'cron', expr: '0 22 * * *', tz: 'Asia/Shanghai' }, payload: { kind: 'agentTurn', message: 'seed' }, delivery: { mode: 'none' } })
@@ -50,7 +52,7 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
     chown: () => {},
     asAuthsvc: () => JSON.stringify({ jobs: JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.map((job) => ({ id: job.id })) }),
     routingManifest: join(fx, 'config', 'scheduler-routing.json'), routingTargetBoundary: '/',
-    authsvcUid: process.getuid(), authsvcGid: process.getgid(),
+    authsvcUid: process.getuid(), authsvcGid: process.getgid(), runtimeReaderGid,
     routingCandidateUid: process.getuid(), routingCandidateGid: process.getgid(),
   })
   const loadedServices = new Set(['system/ai.agent-core.scheduler-watchdog-w1', 'system/ai.agent-core.scheduler-watchdog-w2', 'system/ai.agent-core.runtime'])
@@ -92,6 +94,8 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(readFileSync(join(fx, 'rollback', 'ai.agent-core.runtime.plist.preimage'), 'utf8') === runtimePredecessor, 'runtime partial preimage rebuilt')
   for (const role of ['w1', 'w2']) ok(readFileSync(join(fx, 'rollback', `ai.agent-core.scheduler-watchdog-${role}.plist.preimage`), 'utf8') === `OLD-${role}\n`, `watchdog ${role} partial preimage rebuilt`)
   ok(existsSync(join(fx, 'watchdog-state', 'incidents.json')) && JSON.parse(readFileSync(join(fx, 'incident-migration-receipt.json'), 'utf8')).status === 'MIGRATED', 'incident migration')
+  ok(statSync(join(fx, 'watchdog-state')).gid === runtimeReaderGid && runtimeReaderGid !== ctx.authsvcGid,
+    'incident state uses runtime reader group distinct from authsvc primary group')
   ok(existsSync(join(fx, 'watchdog-state', 'scheduler-watchdog-evidence.jsonl')), 'watchdog evidence')
   ok((statSync(join(fx, 'evidence')).mode & 0o002) === 0, 'evidence dir private')
   ok(existsSync(join(liveRoot, 'packages/live-only-legacy.js')) && !existsSync(join(liveRoot, retiredWatchdog)), 'overlay deletion scope')
@@ -102,5 +106,6 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(readFileSync(join(fx, 'overlay-manifest.json'), 'utf8') === overlayReceipt, 'overlay rerun retains predecessor manifest')
   ok(JSON.parse(readFileSync(join(fx, 'operator-cutover-receipt.json'), 'utf8')).previousSha256 === operatorPredecessor, 'operator rerun retains predecessor')
   ok(JSON.parse(readFileSync(join(fx, 'incident-migration-receipt.json'), 'utf8')).status === 'ALREADY_MIGRATED', 'migration rerun converges')
-  process.stdout.write(`[admission selftest] PASS (fixture ${fx})\n`)
+  ok(statSync(join(fx, 'watchdog-state')).gid === runtimeReaderGid, 'incident state ownership survives rerun')
+  process.stdout.write(`[admission selftest] PASS (fixture ${fx}; authsvcGid=${ctx.authsvcGid}; runtimeReaderGid=${runtimeReaderGid})\n`)
 }

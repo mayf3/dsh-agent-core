@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { chmod, chown, mkdtemp, writeFile } from 'node:fs/promises'
+import { chmod, chown, mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -51,7 +51,10 @@ test('deployment migration uses the explicit runtime reader gid instead of the a
   const runtimeReaderGid = process.getgroups().find((gid) => gid !== process.getgid())
   if (runtimeReaderGid === undefined) return t.skip('no secondary group available for runtime reader proof')
   const dir = await mkdtemp(join(tmpdir(), 'deployment-incident-reader-gid-'))
-  await chmod(dir, 0o700); await chown(dir, process.getuid(), runtimeReaderGid)
+  await chmod(dir, 0o700)
+  const stateDir = join(dir, 'state')
+  await mkdir(stateDir, { mode: 0o700 })
+  await chown(stateDir, process.getuid(), runtimeReaderGid)
   const legacyStatePath = join(dir, 'legacy.json'), legacyEvidencePath = join(dir, 'evidence.jsonl'), factsPath = join(dir, 'facts.json')
   const fact = { class: 'RUN_FAILED', jobId: 'job-a', occurrenceId: 'occ-a' }
   const fingerprint = 'RUN_FAILED|job-a|occ-a'
@@ -63,7 +66,7 @@ test('deployment migration uses the explicit runtime reader gid instead of the a
   await writeFile(factsPath, factsBytes, { mode: 0o600 })
   const receipt = runSchedulerIncidentMigration({
     ctx: { runtimeNode: process.execPath, liveRoot: new URL('../../../..', import.meta.url).pathname,
-      watchdogStateDir: dir, authsvcUid: process.getuid(), authsvcGid: process.getgid(), runtimeReaderGid },
+      watchdogStateDir: stateDir, authsvcUid: process.getuid(), authsvcGid: process.getgid(), runtimeReaderGid },
     sources: { legacyStatePath, legacyStateSha256: sha(legacy), legacyEvidencePath, legacyEvidenceSha256: sha(evidence),
       factsPath, factsFileSha256: sha(factsBytes), factsSha256: sha(Buffer.from(canonicalJSON([fact]))) },
   })

@@ -431,7 +431,9 @@ if (MIGRATE_STATE) {
       if (!factsPath || !legacyStatePath || !legacyEvidencePath) throw new Error('migration source paths are required')
       const expectedUid = Number(process.env.SCHEDULER_INCIDENT_OWNER_UID ?? process.getuid?.())
       const expectedGid = Number(process.env.SCHEDULER_INCIDENT_OWNER_GID ?? process.getgid?.())
-      const factsBytes = readPrivateFile(factsPath, { expectedUid, expectedGid }).bytes
+      const sourceExpectedUid = Number(process.env.SCHEDULER_MIGRATION_SOURCE_OWNER_UID ?? expectedUid)
+      const sourceExpectedGid = Number(process.env.SCHEDULER_MIGRATION_SOURCE_OWNER_GID ?? expectedGid)
+      const factsBytes = readPrivateFile(factsPath, { expectedUid: sourceExpectedUid, expectedGid: sourceExpectedGid }).bytes
       const factsFileSha256 = createHash('sha256').update(factsBytes).digest('hex')
       if (factsFileSha256 !== process.env.SCHEDULER_MIGRATION_FACTS_FILE_SHA256) throw new Error('migration facts file generation mismatch')
       const findings = JSON.parse(factsBytes.toString('utf8'))
@@ -441,7 +443,7 @@ if (MIGRATE_STATE) {
         expectedLegacySha256: process.env.SCHEDULER_LEGACY_ALERT_STATE_SHA256,
         expectedEvidenceSha256: process.env.SCHEDULER_LEGACY_DELIVERY_EVIDENCE_SHA256,
         expectedFactsSha256: process.env.SCHEDULER_MIGRATION_FACTS_SHA256,
-        expectedUid, expectedGid,
+        expectedUid, expectedGid, sourceExpectedUid, sourceExpectedGid,
       })
       process.stdout.write(`${JSON.stringify({
         status: result.status, incidentSha256: result.incidentSha256, legacySha256: result.legacySha256,

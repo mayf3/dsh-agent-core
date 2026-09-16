@@ -21,6 +21,8 @@ export function runSchedulerIncidentMigration({ ctx, sources } = {}) {
       SCHEDULER_INCIDENT_STATE: join(ctx.watchdogStateDir, 'incidents.json'),
       SCHEDULER_INCIDENT_OWNER_UID: String(ctx.authsvcUid),
       SCHEDULER_INCIDENT_OWNER_GID: String(ctx.runtimeReaderGid ?? ctx.authsvcGid),
+      SCHEDULER_MIGRATION_SOURCE_OWNER_UID: String(ctx.authsvcUid),
+      SCHEDULER_MIGRATION_SOURCE_OWNER_GID: String(ctx.authsvcGid),
       SCHEDULER_MIGRATION_FACTS_FILE: sources.factsPath,
       SCHEDULER_MIGRATION_FACTS_FILE_SHA256: sources.factsFileSha256,
       SCHEDULER_MIGRATION_FACTS_SHA256: sources.factsSha256,
