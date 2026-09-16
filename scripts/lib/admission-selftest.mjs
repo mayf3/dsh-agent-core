@@ -91,6 +91,7 @@ export async function runAdmissionSelftest({ ctx, main, git, sha256, repoRoot })
   ok(JSON.parse(readFileSync(join(fx, 'jobs.json'), 'utf8')).jobs.filter((job) => job.logicalKey !== undefined).length === 2, 'two jobs keyed')
   const calls = readFileSync(join(fx, 'launchctl-calls.log'), 'utf8')
   ok(calls.includes('bootout system/ai.agent-core.runtime') && calls.split('bootstrap').length - 1 === 3, 'runtime and watchdog launchd calls')
+  ok(calls.split('bootout').length - 1 === 3, 'watchdog install must not boot out quiesced services (quiesce owns exactly 3 bootouts)')
   const callLines = calls.trim().split('\n')
   ok(callLines[0] === 'bootout system/ai.agent-core.scheduler-watchdog-w1'
     && callLines[1] === 'bootout system/ai.agent-core.scheduler-watchdog-w2', 'watchdogs quiesced before all mutable phases')

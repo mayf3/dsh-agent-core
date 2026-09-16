@@ -390,7 +390,7 @@ function watchdogInstall() {
     const tmpl = fill(CTX.gitShow(SOURCE_SHA, `deployment-artifacts/scheduler-control-plane-reliability-v1/ai.agent-core.scheduler-watchdog-${item.role}.plist.tmpl`))
     if (sha256(Buffer.from(tmpl)) !== item.installedSha256) throw new Error(`watchdog candidate generation mismatch: ${item.label}`)
     const currentSha = existsSync(item.path) ? sha256(readFileSync(item.path)) : null
-    if (currentSha === item.installedSha256) { syncFile(item.path); syncDirectory(dirname(item.path)); CTX.bootstrap(item.path, `system/${item.label}`); continue }
+    if (currentSha === item.installedSha256) { syncFile(item.path); syncDirectory(dirname(item.path)); if (!CTX.isLoaded(`system/${item.label}`)) CTX.bootstrap(item.path, `system/${item.label}`); continue }
     if (currentSha !== item.preimageSha256) throw new Error(`watchdog rerun generation mismatch: ${item.label}`)
     const plist = item.path
     atomicInstallDurableFile(plist, Buffer.from(tmpl), {
@@ -399,7 +399,9 @@ function watchdogInstall() {
       mode: 0o644,
     })
     if (readFileSync(plist, 'utf8') !== tmpl) throw new Error(`watchdog plist readback mismatch: ${item.label}`)
-    if (item.existed) CTX.bootout(`system/${item.label}`)
+    // the freeze already quiesced W1/W2: booting out a not-loaded label fails with
+    // launchd 'Boot-out failed: 3: No such process', so only bootout when actually loaded
+    if (item.existed && CTX.isLoaded(`system/${item.label}`)) CTX.bootout(`system/${item.label}`)
     CTX.bootstrap(plist, `system/${item.label}`)
   }
   receipt.status = 'INSTALLED'
