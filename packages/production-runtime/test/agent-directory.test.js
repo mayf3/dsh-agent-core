@@ -10,6 +10,7 @@
  *   agt_zombie      name 'Zombie Co'      disabled  (existence truth only)
  *   agt_imposter    name 'agt_zombie'     enabled   (name == another's id)
  *   agt_nametrap    name 'agt_alpha'      enabled   (name == another's id)
+ *   agt_shapehold   name 'agt_freename'   enabled   (agt_-shaped name matching NO id)
  *   agt_dup1        name 'Dup Name'       enabled
  *   agt_dup2        name 'Dup Name'       disabled
  */
