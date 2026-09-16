@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 date: 2026-09-16
 candidate_base: aa4caf449b9e999b0b932a2ab1b0a7768c23f877
@@ -26,6 +26,11 @@ supersedes:
 superseded_by: null
 owners:
   - repository-maintainers
+accepted_by: mayf3
+accepted_date: 2026-09-16
+accepted_reviewed_head: ea38081abac6cf6ce36ad4ae4bcf723578763bc4
+acceptance_review_verdict: PASS
+acceptance_record: docs/reports/WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4_ACCEPTANCE_V1.md
 ---
 
 # AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4 — canonical current executor passthrough companion
