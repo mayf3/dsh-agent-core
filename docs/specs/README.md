@@ -43,6 +43,20 @@ This index is a navigation aid, not a second authority. File frontmatter and exp
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0` | accepted 2026-09-14; reviewed semantic head `e8934d5...`; structure-only final re-audit PASS | contracts; production apply remains none | exact canonical Human UUID `8902db0d-429a-4e37-985c-f8b92d4b78fb` projection through the existing `workflow.admin` svc-workflow authority; trusted conditional POST plus mandatory fresh readback; no generic identity administration |
 
+## Workflow global instance capability authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3` | accepted lifecycle in this branch; reviewed head `58abd3c593da208d8301341697be91a2a5656501`; effective only after authority merge | contracts; production apply remains none | current whole-successor Broker contract for global-instance listing plus transparent canonical `currentExecutorType` query/result passthrough |
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2` | superseded by V3 in the same atomic transaction; remains effective on current main until authority merge | historical immutable `contracts` field; effective authority none after supersession | historical global-instance Broker authority without the canonical current-executor passthrough |
+| `AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1` | superseded by V2 | none | historical first global-instance Broker authority |
+
+V3 pins the separately accepted svc-workflow authority head
+`07d9117358113c89dc9bd4d483695c8d34b21efb`. That svc head and this dsh
+acceptance are both off-main. This lifecycle transaction authorizes no
+implementation, merge, deployment, production cleanup, Workflow mutation, HR
+runtime change, credential change, or real HR dispatch.
+
 ## Scheduler self-service authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |

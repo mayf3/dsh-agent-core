@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V2
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -20,7 +20,7 @@ external_authorities:
     relation: interoperates_with
 supersedes:
   - AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V1
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V3
 owners:
   - repository-maintainers
 ---
