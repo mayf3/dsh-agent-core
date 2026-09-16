@@ -13,12 +13,13 @@ const findManifest = () => workflowManifests.find((m) => m.id === 'workflow_glob
 
 const globalPage = (items, nextCursor) => ({ items, next_cursor: nextCursor })
 
-const instance = (suffix, createdAt, assignee) => ({
+const instance = (suffix, createdAt, assignee, executorType) => ({
   workflow_instance_id: `9c7f3b0a-0000-4000-8000-${suffix}`,
   title: `调度 需求 ${suffix}`,
   is_terminal: false,
   current_node: { node_key: 'review', display_name: '评审', node_type: 'human' },
   current_assignee_principal_id: assignee,
+  ...(executorType !== undefined ? { current_executor_type: executorType } : {}),
   created_at: createdAt,
   updated_at: createdAt,
 })
@@ -28,7 +29,7 @@ test('workflow_global_instances: GET global path, camelCase query set, workflow.
   const assignee = '7a8b9c0d-0000-4000-8000-0000000000d4'
   const workflow = await startMockServer((req, res, entry) => {
     if (entry.method === 'GET' && entry.pathname === '/internal/v1/workflow-instances/global') {
-      return json(res, 200, globalPage([instance('0000000000a1', '2026-08-26T10:00:00Z', assignee)], null))
+      return json(res, 200, globalPage([instance('0000000000a1', '2026-08-26T10:00:00Z', assignee, 'AGENT')], null))
     }
     json(res, 404, { error: 'not_found' })
   })
@@ -45,6 +46,7 @@ test('workflow_global_instances: GET global path, camelCase query set, workflow.
     limit: 5,
     lifecycle: 'active',
     status: 'all',
+    currentExecutorType: 'AGENT',
     definitionKey: 'requirement_review',
     currentNodeKey: 'review',
     assigneePrincipalId: assignee,
@@ -56,6 +58,7 @@ test('workflow_global_instances: GET global path, camelCase query set, workflow.
   assert.equal(res.result.items[0].workflow_instance_id, '9c7f3b0a-0000-4000-8000-0000000000a1')
   assert.equal(res.result.items[0].current_node.node_key, 'review')
   assert.equal(res.result.items[0].current_assignee_principal_id, assignee)
+  assert.equal(res.result.items[0].current_executor_type, 'AGENT')
   assert.equal(res.result.items[0].created_at, '2026-08-26T10:00:00Z')
   assert.equal('next_cursor' in res.result, true)
 
@@ -71,6 +74,7 @@ test('workflow_global_instances: GET global path, camelCase query set, workflow.
     limit: '5',
     lifecycle: 'active',
     status: 'all',
+    currentExecutorType: 'AGENT',
     definitionKey: 'requirement_review',
     currentNodeKey: 'review',
     assigneePrincipalId: assignee,
@@ -282,6 +286,9 @@ test('workflow_global_instances: manifest shape — schema-valid, GET-only, no i
   assert.equal(op.http.path, '/internal/v1/workflow-instances/global')
   assert.equal(op.http.target, 'svc-workflow')
   assert.equal(JSON.stringify(manifest).includes('idempotency'), false)
+  assert.equal(op.arguments.properties.currentExecutorType.type, 'string')
+  assert.equal('enum' in op.arguments.properties.currentExecutorType, false)
+  assert.equal(op.http.query.filter((name) => name === 'currentExecutorType').length, 1)
 
   // CTR-001: the declared error table (dual role codes + lifecycle/status codes).
   const codes = new Set(manifest.errors.map((e) => e.code))
@@ -298,11 +305,66 @@ test('workflow_global_instances: manifest shape — schema-valid, GET-only, no i
     'invalid_cursor',
     'invalid_lifecycle',
     'invalid_status',
+    'invalid_current_executor_type',
     'internal_consistency_error',
     'service_unavailable',
   ]) {
     assert.equal(codes.has(code), true, `missing declared error code ${code}`)
   }
+})
+
+test('workflow_global_instances: executor projection values pass through verbatim without classification', async () => {
+  const tokenServer = await startTokenServer()
+  const page = globalPage([
+    instance('0000000000e1', '2026-09-16T01:00:00Z', '11111111-0000-4000-8000-000000000001', 'AGENT'),
+    instance('0000000000e2', '2026-09-16T00:59:00Z', '22222222-0000-4000-8000-000000000002', 'HUMAN'),
+    instance('0000000000e3', '2026-09-16T00:58:00Z', null, null),
+  ], null)
+  const workflow = await startMockServer((req, res) => json(res, 200, page))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(findManifest(), transport)
+
+  const result = await definition.execute({ operation: 'list' })
+  assert.equal(result.ok, true)
+  assert.deepEqual(result.result, page)
+  assert.deepEqual(workflow.requests[0].query, {})
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('workflow_global_instances: downstream invalid_current_executor_type is preserved', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res) => {
+    res.setHeader('x-request-id', 'req-executor-type-422')
+    json(res, 422, {
+      error: {
+        code: 'invalid_current_executor_type',
+        message: "currentExecutorType must be 'HUMAN' or 'AGENT'",
+      },
+    })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(findManifest(), transport)
+
+  const result = await definition.execute({ operation: 'list', currentExecutorType: 'agent' })
+  assert.equal(result.ok, false)
+  assert.equal(result.error.code, 'invalid_current_executor_type')
+  assert.equal(result.error.status, 422)
+  assert.equal(result.error.requestId, 'req-executor-type-422')
+  assert.equal(result.error.detail, "currentExecutorType must be 'HUMAN' or 'AGENT'")
+  assert.deepEqual(workflow.requests[0].query, { currentExecutorType: 'agent' })
+
+  await tokenServer.close()
+  await workflow.close()
 })
 
 test('workflow_global_instances: generic tool — no per-agent wiring, no legacy scheduler bindings', () => {
