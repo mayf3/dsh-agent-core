@@ -1,121 +1,200 @@
-# CANONICAL_AGENT_FLEET_SEND — PRODUCTION_RECOVERY_PACKET v1
+# CANONICAL_AGENT_FLEET_SEND — PRODUCTION_RECOVERY_PACKET v2
 
 - date: 2026-09-16
-- stage: WAITING_FOR_PRODUCTION_RECOVERY_GATE（SOURCE_FIXED=YES / PRODUCTION_FIXED=NO）
-- 前置已完成：PR #75 merged @ merge commit 587c7199c0d626c595c4da8603a6135a7677305f
-  （exact reviewed head 7741b76 逐字进入 main；fresh gate 三条件在 merge 前全绿：
-  head=7741b76 ∧ main=2e660cd ∧ MERGEABLE）
-- 本 packet 覆盖 Owner 指定的准备步骤 1–6；**步骤 7（--apply）及之后全部需要新的
-  production authorization，本 packet 不构成授权**。
+- stage: READY_FOR_OWNER_REDEPLOY_GATE（SOURCE_FIXED=YES / PRODUCTION_FIXED=NO）
+- PR #75 historical merge remains `587c7199c0d626c595c4da8603a6135a7677305f` from exact reviewed head `7741b76c438e878d8f5edadf325a276f0eeaa92c`.
+- Auth `main` has since advanced; this v2 supersedes packet v1's deployment target and its obsolete “no schema migration exists” statement.
+- This packet authorizes nothing by itself. Production process switch remains Owner-gated; `reconcile --apply` and canonical-subject DDL/data apply remain separately gated.
 
-## 1. Fresh deployed-version / current-main readback（09-16，只读）
+## 1. Fresh Auth main / deployed-version readback
 
 ```text
-CURRENT_MAIN_SHA                = 587c7199c0d626c595c4da8603a6135a7677305f
-MERGE_COMMIT_SHA                = 587c7199c0d626c595c4da8603a6135a7677305f
-ACCEPTED_DSH_R4_AUTHORITY_PRESENT      = YES（dsh origin/main 79efa45，status=accepted）
-ACCEPTED_AUTH_LOCAL_AUTHORITY_PRESENT   = YES（auth main，status=accepted）
-MAKE_LAWFUL_IMPLEMENTATION_PRESENT      = YES（main: fleet-send-grant.ts 符号 10 处）
-TRANSACTIONAL_CREATE_GRANT_PRESENT      = YES（main: idempotent.ts L530 store.$transaction）
-P2002_CONVERGENCE_PRESENT               = YES（isUniqueViolation + 胜者收敛）
-RECONCILE_APPLY_USES_PLAN_SCOPES        = YES（main: L396 scopes=[...entry.planScopes]）
+AUTH_CURRENT_MAIN = 785d7430fd0b6b9dd3aa7c110ed857fed9fea865
+LOCAL_AUTH_CHECKOUT = 785d7430fd0b6b9dd3aa7c110ed857fed9fea865
+PR75_MERGE_IN_LINEAGE = YES
 
-DEPLOYED_RUNTIME（生产）：
-  plist            = /Library/LaunchDaemons/com.auth-service.plist
-  ProgramArguments = /usr/local/bin/node
-                     /Users/yanfenma/workspace/project/
-                     production-auth-service-session-trace-v2-r2-4e68f83ee4d3/
-                     dist/src/server.js
-  WorkingDirectory = 同目录（目录名钉住 4e68f83e 世代；目录非 git repo=导出拷贝）
-  FLEET_SEND_CODE_IN_DEPLOYED = NO（src 与 dist 均无 fleet-send-grant.*——
-                                 部署世代早于全部 fleet 实现）
-  DEPLOYED_LAGS_MAIN = YES（4e68f83e 世代 ← main 587c719）
-  HEALTH = OK（GET :4001/.well-known/jwks.json → kid=key-v1-20260721）
+587c719 -> 785d743:
+  AHEAD_BY = 18 commits
+  FLEET_SEND_IMPLEMENTATION_FILES_CHANGED = NO
+  SERVER/ROUTES/DIRECT/TOKEN_ISSUANCE_RUNTIME_PATHS_CHANGED = NO
+  NEW_DOMAIN = canonical-subject enrollment control plane
+
+DEPLOYED_RUNTIME = production-auth-service-session-trace-v2-r2-4e68f83ee4d3
+DEPLOYED_LAGS_MAIN = YES
+HEALTH = PASS
+AUTH_CONTRACT_VERSION = 1.12.0
+AUTH_CONTRACT_DIGEST = 131105f186688f6020aa3bae56f551ca1762b2a2cd31c29d07e97e7a4244e212
 ```
 
-## 2. Production mutation lane / conflicting operation check（只读）
+## 2. Main drift disposition: canonical-subject migration is dormant and NOT part of this deploy
+
+`785d743` adds:
 
 ```text
-MUTATION_CLASS_AUDIT_EVENTS_TODAY = 0（client.*/principal.*/fleet_send/grant 类零事件）
-LAST_AUDIT_ACTIVITY = 2026-09-15T13:20:23Z（agt_hr-agent 正常 token issuance）
-LANE = FREE（无进行中的生产 mutation / 无冲突操作）
-备注：审计流自 09-15T13:20Z 后静默（hr-agent 常规 ~30min issuance 停止）——
-不阻塞本 packet；若 DRY_RUN 前 lane 状态变化，执行前需重新确认。
+prisma/migrations/202609160001_canonical_subject_enrollment/migration.sql
+prisma/schema.prisma additions
+src/lib/oauth/v1/canonical-subject-enrollment.ts
+scripts/canonical-subject-enrollment.ts
 ```
 
-## 3. auth-service redeploy plan + rollback（Owner 执行；sudo 墙）
+Its accepted governing Spec states:
 
 ```text
-TARGET = main @ 587c719（含 fleet birth-stamp + make-lawful + P2002 收敛）
-
-STAGE（零停机准备）：
-  S1 mkdir /Users/yanfenma/workspace/project/auth-deploy-fleet-send-587c719
-     git clone https://github.com/mayf3/auth-service.git <dir> && cd <dir>
-     git checkout 587c7199c0d626c595c4da8603a6135a7677305f
-  S2 npm ci && npm run build        # contract:v1:prepare + tsc → dist/
-  S3 预检（不动生产）：
-     node -e "import('./dist/src/lib/oauth/v1/fleet-send-grant.js').then(m=>\
-       console.log('FLEET_MODULE_OK', m.FLEET_SEND_SCOPE, m.ENUMERATED_INDEPENDENT_SCOPES))"
-     # 期望输出含 agent.session.send 与 agent.session.inspect_own_dispatch
-  S4 sudo cp -p <现行部署目录>/.env <dir>/.env   # 保持 authsvc:authsvc 0600
-
-SWITCH（一次交互）：
-  X1 sudo cp /Library/LaunchDaemons/com.auth-service.plist \
-       /Library/LaunchDaemons/com.auth-service.plist.bak-fleet-send-$(date +%Y%m%d%H%M%S)
-  X2 sudo plutil -replace ProgramArguments.1 -string \
-       "<dir>/dist/src/server.js" /Library/LaunchDaemons/com.auth-service.plist
-     sudo plutil -replace WorkingDirectory -string "<dir>" \
-       /Library/LaunchDaemons/com.auth-service.plist
-  X3 sudo launchctl kickstart -k system/com.auth-service
-  X4 readback：curl -s localhost:4001/.well-known/jwks.json | jq -r '.keys[0].kid'
-     # 期望 key-v1-20260721；tail stderr log 无 boot error
-
-ROLLBACK（等价恢复）：
-  R1 sudo cp <X1 的 .bak> /Library/LaunchDaemons/com.auth-service.plist
-  R2 sudo launchctl kickstart -k system/com.auth-service
-  R3 health + audit 流恢复确认（回到 4e68f83e 世代；零数据后果——部署不含 DB 迁移；
-     本实现零 prisma schema 变更，redeploy 是纯进程代切换）
+production_apply_authority: none
+PRODUCTION_APPLY_ALLOWED = NO
 ```
 
-## 4. reconcile --selftest（已执行，merged tree @587c719）
+Fresh source check proves the new control plane is not imported by `src/server.ts`, routes, broker runtime paths, direct issuance, or token issuance. It is exposed only through the explicit standalone CLI/package script.
+
+Therefore the fleet-send production closure may redeploy the current main process bytes, but MUST NOT run:
 
 ```text
-RECONCILE_SELFTEST = PASS / SELFTEST_ALL_OK（3 fixtures：
-  make_lawful_add_keep_normalize_multi_client / empty_fleet / audience_absent）
+prisma migrate / prisma db push
+canonical-subject-enrollment apply
+any canonical-subject production DDL/data mutation
 ```
 
-## 5. reconcile DRY_RUN（Owner 执行；DB/.env 墙=authsvc 侧）
+The old packet-v1 phrase “this main has no Prisma schema change” is retired as false for current main. The correct boundary is: **current main contains a dormant, production-apply-forbidden migration; this redeploy does not apply it.**
+
+## 3. Fresh staging and verification
+
+Exact staging directory:
 
 ```text
-命令（在含 587c719 的 checkout 内、可读 .env 的身份下）：
-  npx tsx scripts/reconcile-fleet-send-grants.ts          # 默认 DRY_RUN，零写
-预期 readback（fresh 时点重算；09-15 基线 join=89）：
-  PRODUCTION_CANONICAL_AGENT_COUNT ≈ 89（fixture 结构性缺席=4）
-  SEND_ENTITLEMENT_MISSING_COUNT   ≈ 87（hr/efficiency 已有行→KEEP；
-    若 HR inspection grant 已激活则其行为 KEEP[send+inspect lawful]——make-lawful 语义）
-  plan 仅 ADD（+可能极少量 NORMALIZE）；零 DELETE；SKIP-nonfleet 计数即输出
-回贴 stdout（census+plan JSON）给我做步骤 6 的 disposition review。
+/Users/yanfenma/workspace/project/
+production-auth-service-fleet-send-785d7430fd0b6b9dd3aa7c110ed857fed9fea865
 ```
 
-## 6. Disposition review gate（DRY_RUN 输出回贴后由本 Agent 出冻结 disposition）
+Preparation/readback:
 
 ```text
-DISPOSITION_REVIEW_PENDING（等 5 的 stdout）
-其后顺序（每步均需新的 production authorization）：
-  7  reconcile --apply（须 exit 0 + POST_APPLY_VERIFICATION_OK:
-     SEND_ENTITLEMENT_MISSING_COUNT=0）
-  8  post-apply readback（audit 行 census 复算）
-  9  §10.1 三路径（NEW_AGENT_PROVISIONING / EXISTING_FLEET_RECONCILIATION /
-     DISABLE_REVOKE[disable 单向]）
-  10 E2E A–F + readback 六阶梯 + Done When
+SOURCE_ARCHIVE_HEAD = 785d7430fd0b6b9dd3aa7c110ed857fed9fea865
+NPM_INSTALL = PASS
+PRISMA_GENERATE = PASS
+DIST_SERVER = PRESENT
+DIST_FLEET_MODULE = PRESENT
+
+SERVER_SHA256 = f540ed511032898728ad8eb26ed9554ab9878009b94e22f9fecae2af8c846828
+FLEET_MODULE_SHA256 = dbf2b06c10733004aa9f75fac383ed9be2b9f341e5210526ffe78501cdcf190c
+RECONCILE_SOURCE_SHA256 = 69affa7298fdfadb796e008155bbdaf2523462e0b4d64e5d447c3a54714e6874
+CSE_MIGRATION_SHA256 = 7a37e90f73a97a346b2a0516700e09bb9897a0c68471f62a656abca9b9ac9df3
 ```
 
-## 当前状态
+Build truth, without laundering the inherited baseline:
 
 ```text
-PRODUCTION_DEPLOY=NO   AUTH_SERVICE_RESTART=NO   PRODUCTION_DB_MUTATION=NO
-RECONCILE_APPLY=NO     GRANT_PRODUCTION_CHANGE=NO
-PRODUCTION_MUTATION_PERFORMED=NO
-NEXT_SINGLE_ACTION=PREPARE_PRODUCTION_RECOVERY_PACKET（本文件；随后=
-Owner 按本 packet §3/§5 执行 redeploy 与 DRY_RUN 并回贴输出）
+npm run build = EXIT 2
+TYPECHECK_DIAGNOSTIC_COUNT = 1
+ONLY_DIAGNOSTIC = src/lib/oauth/forum-direct-agent-token.ts:142 TS2322
+                 forum.direct_agent_token.minted not assignable to AuditEventType
+DIAGNOSTIC = inherited baseline already recorded by merged current-main implementation report
+DIST_EMIT_SUCCEEDED = YES
+NEW_FLEET/CSE_TYPESCRIPT_DIAGNOSTICS = 0 observed in the build output
+```
+
+Fresh tests on this exact staging tree:
+
+```text
+FLEET_FOCUSED = PASS 13/13
+  includes RG1 HR dual-scope preservation
+  includes RG2 secret-loss rollback/retry
+  includes RG3 P2002 convergence
+RECONCILE_SELFTEST = PASS / SELFTEST_ALL_OK 3/3
+CANONICAL_SUBJECT_ISOLATED_TESTS = PASS 28/28
+NPM_TEST = PASS 48/48
+```
+
+DB-dependent generic idempotent conformance was not run against production; an earlier mixed invocation without `DATABASE_URL` failed for environment absence and is not counted as a product failure.
+
+## 4. Fresh production lane / prestate
+
+```text
+LIVE_PLIST = /Library/LaunchDaemons/com.auth-service.plist
+LIVE_PROGRAM = .../production-auth-service-session-trace-v2-r2-4e68f83ee4d3/dist/src/server.js
+LIVE_WORKING_DIRECTORY = .../production-auth-service-session-trace-v2-r2-4e68f83ee4d3
+LIVE_ENV_META = authsvc:authsvc 0600
+PROGRAM_ARGUMENT_2_PRESENT = NO
+HEALTH = 200 / ok=true
+MUTATION_PROCESS_SCAN = FREE
+  no active fleet reconcile --apply
+  no prisma migrate
+  no canonical-subject apply
+```
+
+This is a point-in-time process-lane readback only. The deploy script repeats the prestate and lane gates immediately before any mutation.
+
+## 5. Exact Owner-run switch prepared
+
+Prepared local script:
+
+```text
+/private/tmp/auth-fleet-send-main-switch-785d743.sh
+SHA256 = 2d2dbe1bde9c7215c7bbb67eb4d7c60fc0c120e8e290974fa5ed720f2a248dd2
+SHELL_SYNTAX = PASS
+--preflight = PASS
+PRODUCTION_MUTATION_PERFORMED_BY_PREFLIGHT = NO
+```
+
+The script is pinned to exact target `785d7430fd0b6b9dd3aa7c110ed857fed9fea865` and fails before mutation if live prestate, artifact hashes, health/contract digest, plist argument shape, `.env` ownership, JWKS, or mutation-lane checks drift.
+
+Apply behavior is deliberately narrow:
+
+```text
+1. re-run all preflight gates
+2. exact backup of current plist
+3. preserve live .env as authsvc:authsvc 0600 in the staged tree
+4. change only ProgramArguments[1] and WorkingDirectory
+5. bootout + bootstrap com.auth-service (loaded definition is reread)
+6. verify exactly one :4001 listener and exact staged server path
+7. health + contract digest + JWKS readback
+8. on any post-mutation failure restore exact plist preimage and bootstrap old 4e68f83e runtime
+```
+
+Explicitly absent from the switch script:
+
+```text
+prisma migrate / db push
+canonical-subject apply
+reconcile-fleet-send-grants --apply
+Grant mutation
+credential mutation
+```
+
+Owner execution command, only after the production redeploy gate is granted:
+
+```bash
+sudo bash /private/tmp/auth-fleet-send-main-switch-785d743.sh
+```
+
+## 6. Post-deploy sequence (not yet executed)
+
+After the switch returns `AUTH_SERVICE_DEPLOYED_MAIN=YES` and health readback passes:
+
+```text
+A. fresh live version/path readback
+B. reconcile --selftest
+C. reconcile default DRY_RUN only
+D. review the fresh census and every ADD/NORMALIZE disposition
+E. obtain a separate production authorization for --apply
+F. reconcile --apply
+G. post-apply fresh census; require SEND_ENTITLEMENT_MISSING_COUNT=0
+H. verify HR inspection preserved
+I. accepted §10.1 / E2E acceptance chain
+```
+
+No historical `≈89/≈87` estimate may authorize mutation. Fresh DRY_RUN is authoritative.
+
+## Current state
+
+```text
+CURRENT_MAIN = 785d7430fd0b6b9dd3aa7c110ed857fed9fea865
+DEPLOYED_VERSION = 4e68f83e generation
+CURRENT_STAGE = READY_FOR_OWNER_REDEPLOY_GATE
+SELFTEST = PASS
+DRY_RUN = NOT_RUN
+APPLY = NOT_RUN
+MISSING_COUNT = UNKNOWN_FRESH
+PRODUCTION_MUTATION_PERFORMED = NO
+CURRENT_BLOCKER = Owner production redeploy gate only
+NEXT_SINGLE_ACTION = OWNER_AUTHORIZE_AND_RUN_EXACT_785D743_PROCESS_SWITCH
 ```
