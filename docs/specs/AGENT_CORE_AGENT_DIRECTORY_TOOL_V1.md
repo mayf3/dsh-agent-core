@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_AGENT_DIRECTORY_TOOL_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -19,6 +19,28 @@ supersedes: []
 superseded_by: null
 owners: [mayf3]
 date: 2026-09-16
+accepted_by: mayf3
+accepted_date: 2026-09-16
+accepted_reviewed_spec_commit: 60df050
+independent_review_result: ACCEPT
+independent_review_blockers: NONE
+independent_review_record: docs/reviews/AGENT_CORE_AGENT_DIRECTORY_TOOL_V1_INDEPENDENT_REVIEW.md
+acceptance_authority_basis: >-
+  Owner GOAL directive AGENT_CANONICAL_IDENTITY_DISCOVERY_TOOL_V1
+  (2026-09-16) pre-ruled the exact semantics (unified single tool;
+  resolved/ambiguous/not_found explicit; silent selection forbidden; no
+  second registry; no hardcoded name-to-UUID maps; no UUID-in-prompt; no
+  permission-boundary expansion; downstream canonical-agent_id-only) and
+  ordered the lifecycle through implementation, tests, real E2E and report
+  without unnecessary Owner confirmation gates — the same
+  owner-goal-directive acceptance pattern as AGENT_CORE_AGENT_SESSION_
+  MESSAGING_V1 r5 AMENDMENT_2. Autonomous chain executed: spec r1 8dc2835 →
+  independent review r1 REVISE (5 load-bearing gaps) → fixes 60df050 →
+  re-audit r2 REVISE (1 blocker: evidence-record defect, spec clean) →
+  record cure d32ef13 → re-audit r3 ACCEPT / BLOCKERS NONE (verdict quoted
+  verbatim in the review record). Implementation proceeds on this branch
+  under GOVERNING_SPEC_UNMODIFIED; PRODUCTION_APPLY = none (no production
+  mutation anywhere in this Goal; deployment/adoption is follow-up debt).
 ---
 
 # AGENT_CORE_AGENT_DIRECTORY_TOOL_V1
@@ -232,9 +254,8 @@ Non-goals: rewriting workflow/HR/forum consumers (they keep their accepted
 authorities; adoption is follow-up debt), production deployment, and any
 change to the exact-ID HTTP directory route.
 
-STATUS=proposed; IMPLEMENTATION_ALLOWED_NOW=NO. Requires the independent
-semantic review recorded in docs/reviews/
-AGENT_CORE_AGENT_DIRECTORY_TOOL_V1_INDEPENDENT_REVIEW.md; the acceptance
-commit then records the Owner GOAL-directive authority basis and flips this
-header to accepted, after which implementation proceeds on this branch under
-GOVERNING_SPEC_UNMODIFIED.
+STATUS=accepted (acceptance commit flips this header from proposed;
+accepted_reviewed_spec_commit=60df050; review chain and authority basis in
+the frontmatter and in docs/reviews/
+AGENT_CORE_AGENT_DIRECTORY_TOOL_V1_INDEPENDENT_REVIEW.md). Implementation
+proceeds on this branch under GOVERNING_SPEC_UNMODIFIED.
