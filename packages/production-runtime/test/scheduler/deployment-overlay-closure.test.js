@@ -61,13 +61,18 @@ test('reviewed production path authority is exactly 21 writes plus one retired w
 test('reviewed payload contains bounded failed-cutover extension and the dependency-isolated migration entrypoint', () => {
   const show = (path) => execFileSync('git', ['show', `${WATCHDOG_PAYLOAD_SHA}:${path}`], { cwd: repo, encoding: 'utf8' })
   const durableState = show('packages/scheduler/src/watchdog/durable-state.js')
+  const watchdog = show('scripts/scheduler-watchdog.mjs')
   assert.match(durableState, /MIGRATION_EXTENDED/)
   assert.match(durableState, /if \(!after\) \{[\s\S]*incidents\[root\] = structuredClone\(before\)/)
   assert.match(durableState, /drops committed fact identity/)
   assert.match(durableState, /facts: structuredClone\(after\.facts\)/)
   assert.match(durableState, /symptoms: structuredClone\(after\.symptoms\)/)
+  assert.match(durableState, /sourceExpectedUid = expectedUid, sourceExpectedGid = expectedGid/)
+  assert.match(durableState, /readStableFile\(legacyStatePath, sourceOwnership\)/)
   assert.match(show('packages/scheduler/src/watchdog/incident-compiler.js'), /canonicalIncidentFactSet/)
-  assert.match(show('scripts/scheduler-watchdog.mjs'), /import\('\.\.\/packages\/scheduler\/src\/watchdog\/durable-state\.js'\)/)
+  assert.match(watchdog, /import\('\.\.\/packages\/scheduler\/src\/watchdog\/durable-state\.js'\)/)
+  assert.match(watchdog, /SCHEDULER_MIGRATION_SOURCE_OWNER_GID/)
+  assert.match(watchdog, /sourceExpectedUid, sourceExpectedGid/)
 })
 
 test('overlay closure pins only an exact reviewed live dependency and updates the rest', () => {
