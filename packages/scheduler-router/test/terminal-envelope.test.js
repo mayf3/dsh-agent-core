@@ -2,11 +2,17 @@
  * @agent-core/scheduler-router — SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_
  * CONTAINMENT_V1 RED/green tests for the closed-union envelope passthrough.
  *
- * Principle under test: TERMINATION_PROVEN => the bridge emits a DETERMINISTIC
- * outcome (never outcome_unknown); TERMINATION_NOT_PROVEN => outcome_unknown
- * (fail-closed default unchanged). No error-code whitelists — the authority is
- * the Router's C-010 closed envelope union plus the trusted disposition
- * readback (the same resolveCallerCorrelation surface self-ops consumes).
+ * Principle under test (Owner P1 ruling 2026-09-16: BUSINESS_OUTCOME_PROOF
+ * != TERMINATION_PROOF):
+ *   not_admitted envelope          => deterministic pre-start error (UNKNOWN
+ *                                     CONTAINMENT — never a second outcome_unknown)
+ *   failed envelope                => deterministic business-failure error
+ *   unknown + trusted termination readback => STAYS outcome_unknown, proof
+ *                                     stamped for the C-039 terminationSettlement
+ *   unknown / bare failure         => outcome_unknown (fail-closed unchanged)
+ * No error-code whitelists — the authority is the Router's C-010 closed
+ * envelope union plus the trusted disposition readback (the same
+ * resolveCallerCorrelation surface self-ops consumes).
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
