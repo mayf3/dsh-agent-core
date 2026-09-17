@@ -96,7 +96,14 @@ export async function reserveOccurrence(candidate, onRejection = () => {}) {
         ? Math.floor(job.payload.timeoutSeconds * 1000)
         : AGENT_TURN_SAFETY_TIMEOUT_MS,
     })
-    this.invoker.assertRunnable(job.agentId)
+    // C-026 verifies agentId runnable inside the lock; an unrunnable agent is
+    // a per-job refusal (receipted as ADMISSION_REJECTED), never a tick-aborting
+    // throw — ONE_BAD_JOB != GLOBAL_TICK_FAILURE (C-SH-002).
+    try {
+      this.invoker.assertRunnable(job.agentId)
+    } catch (error) {
+      return refuse(`agent_not_runnable: ${String(error?.message ?? error).slice(0, 200)}`)
+    }
     latest.occurrences.push(record)
     return { value: { record, deduped: false } }
   })

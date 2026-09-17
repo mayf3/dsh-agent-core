@@ -257,12 +257,18 @@ test('CROSS-AGENT-5 unknown target fails closed at admission: no Router entry, n
   assert.equal(created.ok, true, 'definition-time validation is schema-only; roster authority applies at admission')
   const jobId = created.result.jobId
 
-  await assert.rejects(() => runDue(ctx, 5 * 60_000), (error) => error.code === 'AGENT_NOT_FOUND')
+  // C-SH-002: the roster failure is a job-local typed refusal — pre-start
+  // fail-closed (no Router entry, no admission) while the tick survives.
+  await runDue(ctx, 5 * 60_000)
+  const receipts = ctx.runsLog().filter((event) => event.action === 'slot_accounting' && event.jobId === jobId)
   assert.equal(ctx.chainCalls.length, 0, 'the route chain is never reached for an unknown target')
   assert.equal((await occurrences(ctx)).length, 0, 'no admission is persisted for an unknown target')
+  assert.ok(receipts.some((event) => event.classification === 'ADMISSION_REJECTED'
+    && /agent_not_runnable/.test(event.reason)), 'the roster refusal is receipted with its exact reason')
 
-  await assert.rejects(() => runDue(ctx, 0), (error) => error.code === 'AGENT_NOT_FOUND',
-    'the job is not silently skipped or executed: every admission attempt fails closed')
+  await runDue(ctx, 0)
+  assert.equal((await occurrences(ctx)).length, 0,
+    'the job is not silently executed: every admission attempt fails closed')
   assert.equal((await jobs(ctx))[0].id, jobId)
   assert.equal((await jobs(ctx))[0].enabled, true)
 })
@@ -271,7 +277,7 @@ test('CROSS-AGENT-6 disabled target fails closed at admission (AGENT_DISABLED, p
   const ctx = await rig(t)
   await ctx.call('create', createArgs({ target_agent_id: DISABLED }))
 
-  await assert.rejects(() => runDue(ctx, 5 * 60_000), (error) => error.code === 'AGENT_DISABLED')
+  await runDue(ctx, 5 * 60_000)
   assert.equal(ctx.chainCalls.length, 0)
   assert.equal((await occurrences(ctx)).length, 0)
   assert.notEqual(ctx.definition.getAgent(DISABLED), undefined, 'the disabled agent stays readable in the roster — it is just not runnable')

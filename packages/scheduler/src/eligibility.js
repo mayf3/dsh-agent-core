@@ -148,6 +148,14 @@ export function naturalCandidate({ job, occurrences, nowMs, atCatchupGraceMs = D
  * Retry-candidate pre-scan (D-007 §7.5 / C-009). Only for the EXPLICIT
  * per-job policy (job.retry.auto === true); a retry is always a NEW
  * occurrence referencing its direct failed predecessor.
+ *
+ * C-SH-001 (SCHEDULER_SELF_HEALING_FROM_FEISHU_V1): a failed predecessor
+ * bound to an OLDER scheduleRevision can never mint a retry under the
+ * current revision — the store's retry-predecessor invariant rejects the
+ * record, and before failure isolation existed that rejection aborted the
+ * whole tick (production occ:8ac05871, fleet-wide zero mint). Such a
+ * candidate is STALE, expired by the revision change: it is never minted,
+ * and the current revision's natural schedule continues.
  */
 export function retryCandidate({ job, occurrences, nowMs }) {
   if (!job.enabled || job.retry?.auto !== true) return null
@@ -157,13 +165,12 @@ export function retryCandidate({ job, occurrences, nowMs }) {
   if (job.schedule.kind === 'at' && chain >= ONE_SHOT_RETRY_BACKOFF_MS.length) {
     return { exhausted: true, chain, terminal }
   }
-  // A retry record must share its predecessor's scheduleRevision (store
-  // occurrence-authority invariant). After a schedule edit the pending
-  // retry belongs to the superseded revision — minting it would failLoud
-  // the store and kill every subsequent tick, so it is never proposed;
-  // the natural schedule resumes. exhausted=true keeps every existing
-  // non-mintable path closed for this candidate.
   if (terminal.scheduleRevision !== job.scheduleRevision) {
+    // C-SH-001 (STALE_RETRY_AFTER_SCHEDULE_REVISION): a retry record must
+    // share its predecessor's scheduleRevision (store occurrence-authority
+    // invariant) — minting it would failLoud the store and kill every
+    // subsequent tick, so it is never proposed; the natural schedule resumes.
+    // exhausted=true keeps every existing non-mintable path closed.
     return {
       exhausted: true,
       staleRevision: true,

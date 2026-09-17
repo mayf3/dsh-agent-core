@@ -467,7 +467,7 @@ test('ACC-030 stale legacy summaries do not affect admission', async () => {
   assert.equal(ctx.invoker.calls.length, 1)
 })
 
-test('ACC-032 runnable eligibility is checked before reserve and Router', async () => {
+test('ACC-032 runnable eligibility is checked before reserve and Router (C-SH-002: typed refusal, isolated)', async () => {
   const invoke = invoker(async () => ({ status: 'ok' }), () => {
     throw Object.assign(new Error('disabled'), { code: 'AGENT_DISABLED' })
   })
@@ -475,8 +475,13 @@ test('ACC-032 runnable eligibility is checked before reserve and Router', async 
   await ctx.scheduler.start({ autoStart: false, catchup: false })
   const job = await addAt(ctx.scheduler, 2_000)
   ctx.clock.value = 2_000
-  await assert.rejects(() => ctx.scheduler.tick(), (error) => error.code === 'AGENT_DISABLED')
+  await ctx.scheduler.tick()
+  await ctx.scheduler.whenIdle()
   assert.equal(invoke.calls.length, 0)
   assert.equal((await ctx.store.loadDoc({ force: true })).occurrences.length, 0)
   assert.equal((await ctx.scheduler.getJob(job.id)).enabled, true)
+  const receipts = await ctx.store.readRunEvents({ limit: 100 })
+  assert.ok(receipts.some((event) => event.action === 'slot_accounting'
+    && event.classification === 'ADMISSION_REJECTED' && /agent_not_runnable/.test(event.reason)),
+  'the runnable refusal is receipted with its exact reason')
 })
