@@ -200,16 +200,56 @@ test('unit: retryCandidate marks cross-revision predecessor stale (not mintable)
 test('unit: computeNextRunAtMsV2 ignores a stale cross-revision retry (natural schedule owns the projection)', () => {
   const job = {
     id: 'job-1', enabled: true, scheduleRevision: 2, createdAtMs: 1_000,
-    schedule: { kind: 'every', everyMs: 100, anchorMs: 1_000 },
+    schedule: { kind: 'at', at: new Date(600_000).toISOString() },
     retry: { auto: true },
   }
   const occurrences = [{
     occurrenceId: 'occ-old', jobId: 'job-1', kind: 'natural', state: 'failed',
     scheduleRevision: 1, admittedAt: 1_000, endedAt: 1_500,
   }]
+  // 'at'-kind: a MINTABLE same-revision retry REPLACES the whole projection
+  // with eligibleAtMs (30s one-shot backoff) — so this scenario would
+  // visibly regress if the stale gate were reverted (non-vacuous witness).
+  const mintable = computeNextRunAtMsV2({
+    job: { ...job, scheduleRevision: 1 },
+    occurrences: [{ ...occurrences[0], scheduleRevision: 1 }],
+    nowMs: 62_000,
+  })
+  assert.equal(mintable, 31_500)
   const withStaleRetry = computeNextRunAtMsV2({ job, occurrences, nowMs: 62_000 })
   const withoutRetry = computeNextRunAtMsV2({
     job: { ...job, retry: { auto: false } }, occurrences, nowMs: 62_000,
   })
   assert.equal(withStaleRetry, withoutRetry)
+  assert.notEqual(withStaleRetry, 31_500)
+})
+
+test('reserve defense-in-depth: a proposed cross-revision retry candidate is refused with retry_stale_schedule_revision', async () => {
+  const invoke = invoker((request, count) => {
+    if (count === 1) return { status: 'error', error: 'pre-start rejection', started: false }
+    return { status: 'ok', summary: 'recovered' }
+  })
+  const ctx = env({ invoke })
+  await ctx.scheduler.start({ autoStart: false, catchup: false })
+  const job = await ctx.scheduler.createJob({
+    name: 'reserve-stale', agentId: 'agent-a', enabled: true,
+    schedule: { kind: 'every', everyMs: 100, anchorMs: 1_000 },
+    payload: { kind: 'agentTurn', message: 'p' }, retry: { auto: true },
+  })
+  await runDue(ctx, 1_100)
+  const [failedRecord] = ctx.scheduler.listOccurrences(job.id)
+  assert.equal(failedRecord.state, 'failed')
+  await ctx.scheduler.updateJob(job.id, {
+    schedule: { kind: 'every', everyMs: 200, anchorMs: 1_000 },
+  })
+  await ctx.scheduler.load()
+  const [currentJob] = ctx.scheduler.doc.jobs.filter((entry) => entry.id === job.id)
+  let refusal = null
+  const reserved = await ctx.scheduler._reserve(
+    { kind: 'retry', job: currentJob, retryOfOccurrenceId: failedRecord.occurrenceId },
+    (reason) => { refusal = reason },
+  )
+  assert.equal(reserved, null)
+  assert.equal(refusal, 'retry_stale_schedule_revision')
+  assert.equal(ctx.scheduler.listOccurrences(job.id).some((r) => r.kind === 'retry'), false)
 })
