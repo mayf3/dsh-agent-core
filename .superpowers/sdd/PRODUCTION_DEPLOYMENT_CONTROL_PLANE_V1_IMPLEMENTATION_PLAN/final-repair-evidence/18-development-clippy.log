@@ -1,0 +1,14 @@
+    Checking deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+error: this lint expectation is unfulfilled
+   --> src/bootstrap/preparation.rs:211:5
+    |
+211 |     clippy::too_many_arguments,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: Independent coordinates stay explicit
+    = note: `-D unfulfilled-lint-expectations` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(unfulfilled_lint_expectations)]`
+
+error: could not compile `deployment-control-plane` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `deployment-control-plane` (lib test) due to 1 previous error

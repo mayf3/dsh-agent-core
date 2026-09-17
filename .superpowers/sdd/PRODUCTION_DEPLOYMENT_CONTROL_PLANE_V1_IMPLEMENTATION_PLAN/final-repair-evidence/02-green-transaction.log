@@ -1,0 +1,10 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.35s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 2 tests
+test transaction::final_repair_tests::final_prewrite_expiry_releases_active_with_durable_blocked ... ok
+test transaction::final_repair_tests::known_final_health_failure_restores_without_closure ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.30s
+

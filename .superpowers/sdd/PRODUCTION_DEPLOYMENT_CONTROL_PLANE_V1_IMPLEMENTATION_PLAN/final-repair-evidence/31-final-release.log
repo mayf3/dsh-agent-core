@@ -1,0 +1,7 @@
+SOURCE=277a5e8832938e6b2232d11949aedfb92cd0e318
+COMMAND=['cargo', 'build', '--locked', '--manifest-path', 'packages/deployment-control-plane/Cargo.toml', '--release']
+START=2026-09-17T17:55:50.001635+00:00
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `release` profile [optimized] target(s) in 9.15s
+
+EXIT=0

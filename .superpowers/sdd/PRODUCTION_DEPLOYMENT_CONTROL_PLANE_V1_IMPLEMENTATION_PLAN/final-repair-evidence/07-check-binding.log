@@ -1,0 +1,20 @@
+    Checking once_cell v1.21.4
+    Checking bitflags v2.13.2
+    Checking ahash v0.8.12
+    Checking hashbrown v0.14.5
+    Checking hashlink v0.9.1
+    Checking rusqlite v0.32.1
+    Checking deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: method `prepare` is never used
+  --> src/fs/target.rs:44:12
+   |
+36 | impl Slot {
+   | --------- method in this implementation
+...
+44 |     pub fn prepare(&self, temporary: &str, bytes: &[u8], mode: u32) -> Result<FileImage> {
+   |            ^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `deployment-control-plane` (lib) generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.77s

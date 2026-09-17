@@ -1,0 +1,23 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.78s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 9 tests
+test transaction::final_repair_tests::exact_mapping_rejects_metadata_drift_and_allows_explicit_absent_addition ... ok
+test transaction::final_repair_tests::exact_slots_retain_private_mode_and_complete_unchanged_face ... ok
+test transaction::final_repair_tests::final_prewrite_expiry_releases_active_with_durable_blocked ... ok
+test transaction::final_repair_tests::known_final_health_failure_restores_without_closure ... ok
+test transaction::final_repair_tests::known_final_health_timeout_restores ... ok
+test transaction::final_repair_tests::manifest_cannot_expand_protected_mapping ... ok
+test transaction::final_repair_tests::metadata_executable_and_absent_sibling_reject_before_write ... ok
+test transaction::final_repair_tests::no_mutation_failed_flush_never_reports_safe_blocked ... 
+running 1 test
+test transaction::final_repair_tests::no_mutation_fsync_worker_preserves_recovery_fence ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.06s
+
+ok
+test transaction::final_repair_tests::no_mutation_fsync_worker_preserves_recovery_fence ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 26 filtered out; finished in 1.73s
+

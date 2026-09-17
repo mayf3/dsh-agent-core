@@ -1,0 +1,20 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.32s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
+
+running 3 tests
+test remediation_tests::protected_recovery_mailbox_resumes_known_rollback ... BLOCKED INVALID_RECORD
+ok
+test remediation_tests::protected_recovery_mailbox_resumes_preflight_without_daemon_restart ... BLOCKED UNSAFE_MODE
+BLOCKED RECOVERY_BINDING
+BLOCKED RECOVERY_EXPIRED
+BLOCKED RECOVERY_BINDING
+BLOCKED INVALID_SIGNATURE
+BLOCKED RECOVERY_BINDING
+ok
+test remediation_tests::recovery_mailbox_cannot_reset_exhausted_mutating_budget ... BLOCKED INVALID_RECORD
+BLOCKED INVALID_RECORD
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 7.86s
+

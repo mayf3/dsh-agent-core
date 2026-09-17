@@ -1,0 +1,56 @@
+{
+  "observed_at": "2026-09-17T17:27:41.163610+00:00",
+  "euid": 502,
+  "egid": 20,
+  "parent_metadata": {
+    "path": "/private/var/run",
+    "uid": 0,
+    "gid": 1,
+    "mode": "0o775",
+    "device": 16777230,
+    "inode": 59194365,
+    "flags": 0
+  },
+  "read_only_observations": [
+    {
+      "command": [
+        "/usr/bin/id",
+        "-G"
+      ],
+      "exit": 0,
+      "stdout": "20 599 12 61 79 80 81 98 33 100 204 250 395 398 399 400\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/id",
+        "-u",
+        "authsvc"
+      ],
+      "exit": 0,
+      "stdout": "505\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/id",
+        "-G",
+        "authsvc"
+      ],
+      "exit": 0,
+      "stdout": "601 599 12 61 100\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/bin/ls",
+        "-ldeO",
+        "/private/var/run"
+      ],
+      "exit": 0,
+      "stdout": "drwxrwxr-x  43 root  daemon  - 1376 Sep 18 01:23 /private/var/run\n",
+      "stderr": ""
+    }
+  ],
+  "qualification": "Nonprivileged public metadata and current process/service group observations only. Not a protected ancestry proof, exhaustive group/lifecycle denial, proposed future group provisioning, or activation permission. Root service remains a separate trusted-code boundary; no root-denial claim."
+}

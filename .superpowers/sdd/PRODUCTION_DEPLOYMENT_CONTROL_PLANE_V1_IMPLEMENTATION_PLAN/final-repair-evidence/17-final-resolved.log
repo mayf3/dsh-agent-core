@@ -1,0 +1,15 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.90s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-5077166400059868)
+
+running 7 tests
+test resolved_tests::resolved_fixture_is_ready_to_authorize_but_cannot_activate ... ok
+test resolved_tests::signed_foreign_driver_and_socket_counterexamples_refuse ... ok
+test resolved_tests::signing::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test resolved_tests::signing::private::hostile_tmpdir_worker ... ok
+test resolved_tests::signing::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test resolved_tests::signing::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test resolved_tests::signing::private::root_refusal_precedes_effect_without_root_execution ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.22s
+

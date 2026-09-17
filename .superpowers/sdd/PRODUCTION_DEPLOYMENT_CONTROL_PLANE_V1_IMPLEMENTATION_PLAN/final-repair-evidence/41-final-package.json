@@ -1,0 +1,74 @@
+{
+  "manifest_digest": "6e6411dda70109e27a21fd7200e4d3e8acf4132ff42bfbf289b2331ed3a8f202",
+  "source_digest": "de530f88605ac12d5267af9e40fed0195f9629eec7dca76bfc871d00e7eb9af6",
+  "verdict": {
+    "activation_allowed": false,
+    "blockers": [
+      "HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT",
+      "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS",
+      "TRUSTED_SOURCE_BUILD_REVIEW_BINDING",
+      "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS",
+      "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL",
+      "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION",
+      "INDEPENDENT_WHOLE_BRANCH_REVIEW"
+    ],
+    "bootstrap_ready": false,
+    "integrity_verified": true,
+    "preparation_digest": null
+  },
+  "source_commit": "277a5e8832938e6b2232d11949aedfb92cd0e318",
+  "binary_build_source": "277a5e8832938e6b2232d11949aedfb92cd0e318",
+  "source_file_count": 96,
+  "package_path": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-final-repair-j_4n_knv",
+  "generated_at": "2026-09-17T17:58:52.154748+00:00",
+  "controller_sha256": "09219f333fc0864197d024a8178ad7bee27a3c31c35585fbcbca7834deaaee30",
+  "prepare_cli_sha256": "b9a4bba70208fc2150d964d38aa096004abd163616868927118f983977b27cae",
+  "runtime_closure_reused_exactly": {
+    "/usr/local/libexec/agent-core/node-runtime/bin/node": "2b6222cbadb3c746f061a35ad4923d7a912aa8a3151fda011fa05e3d5b942c86",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libada.3.4.3.dylib": "5de38080556d6a766b0d6c608df55b2b37d164b1da7ec05aaacc73e1f9ede626",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlicommon.1.2.0.dylib": "b69c104f102c90fff24d00d94500cdde6df903848081c5a005622574d0b4a230",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlidec.1.2.0.dylib": "56a4139c3c21ccf27d6b73ffabc8928802bbbbb01902deb7a2814df2b88cd914",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlienc.1.2.0.dylib": "be9dbdfb63afd9cb187b74329aec32ef06872fbce0f653815dcd51ba60968550",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libcares.2.19.5.dylib": "9bac38771f613aea44049b561fc9fada399077c585c66976c9475f23c0fee0e0",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libcrypto.3.dylib": "6fe7f9959091843dc7dd8b3af353d3e9dd007c09dd689651c899303245d1ba7e",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libhdr_histogram.6.2.3.dylib": "16f0f4a867de77945fa4b861d96150bce7d061c607f5972e89d09f6ac12a056e",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libicudata.78.3.dylib": "62b14e8d139f0125c940b959be8c0ac74942b545b60a016bbda20a3f230f00b5",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libicui18n.78.3.dylib": "c836ad9776ae6a0eb606d00cc5b7a5bc39f6ccc4caa2d4eff3e8c92fe4d29214",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libicuuc.78.3.dylib": "d9fe5d5bc0a7b36ba905c95b534d6ca9164d9dbae5aa0fc735c4edcd1d00f9cc",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libllhttp.9.3.1.dylib": "1bf33fb2407869116222d93b1927400aa5911eef974f8501c60ab1ab5312a8df",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp2.14.dylib": "a72992df40f18861ea26f8dd5786890d0d7c3a9afcccfd736d4e6417d211ea9b",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp3.9.6.1.dylib": "f9080e2d47e169d4c251df5790806883226886dc2956ad1c2da3b27e7138ded1",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libngtcp2.16.dylib": "a72134157930a52baac319bc6af7c818b8f8c619834c101510974643b0948f30",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libnode.141.dylib": "9a7dbd4d31b8b6179c3d3e5ed18c442b4fd4d11d91955c0fed164be4437ff917",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libsimdjson.30.0.0.dylib": "3af9dad09400dda38f73b4955fb81b22feef0e3ac54ac81878a7c123cf496043",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libsqlite3.3.53.1.dylib": "6b304b8b130ccadcae7627aa18b3d86e691f34f2c5ea6b4a37fcad6e63fe99cd",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libssl.3.dylib": "1b27b34956e99784b18608194bbc0ac8a4d42a83a3c5d9447d798c828995e5ed",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libuv.1.0.0.dylib": "a86d94dd706a91366744d844938685f57c594f9688e6b53b35c79f5f63fe5297",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libuvwasi.dylib": "40597b1a18e3b1b4068668750693520732bc06899d0e4f1e856d64f7012e880f",
+    "/usr/local/libexec/agent-core/node-runtime/lib/libzstd.1.5.7.dylib": "5b95154bcdf8e9b598e6e480b36b2f3ee037f0e5f9eb829a0044992574bc8bcb"
+  },
+  "historical_package_preserved": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-task4-repair-wscow2bn",
+  "historical_manifest_preserved": "1b4b4e1608f9335eb4db8aba319b0e19a0e8610ccefac2c1df2c25e6bbe949c6",
+  "source_map_sha256": "de530f88605ac12d5267af9e40fed0195f9629eec7dca76bfc871d00e7eb9af6",
+  "payload_count": 23,
+  "verification": {
+    "integrity_verified": true,
+    "bootstrap_ready": false,
+    "activation_allowed": false,
+    "preparation_digest": null,
+    "blockers": [
+      "HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT",
+      "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS",
+      "TRUSTED_SOURCE_BUILD_REVIEW_BINDING",
+      "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS",
+      "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL",
+      "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION",
+      "INDEPENDENT_WHOLE_BRANCH_REVIEW"
+    ]
+  },
+  "limitations": [
+    "Fresh controller and CLI release built at exact source commit; Node candidate bytes reused and independently rehashed.",
+    "No production issuer, custody, accepted release selection or privileged proof supplied.",
+    "RP08 remains future operation authorization, not offline readiness prerequisite."
+  ]
+}

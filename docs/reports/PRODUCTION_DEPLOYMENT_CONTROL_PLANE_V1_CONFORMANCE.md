@@ -1,5 +1,35 @@
 # Production Deployment Control Plane V1 conformance
 
+## Current frozen repair status
+
+The nine DCP-FINAL-B01–B09 repairs are committed at `277a5e8832938e6b2232d11949aedfb92cd0e318`.
+One final serial locked all-targets suite passes168 top-level executions, including
+4096 physical slots; strict Clippy, fmt and fresh release build pass. The
+[new evidence relations](PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_EVIDENCE.md#frozen-final-repair-coordinates-current)
+bind current test definitions/raw logs to all fourteen inherited ACC subclaims
+and the nine proposed closures. This is implementer evidence; RP-07 is pending
+the controller's scoped independent re-audit of the original final findings.
+
+New inert package manifest `6e6411dda70109e27a21fd7200e4d3e8acf4132ff42bfbf289b2331ed3a8f202`,
+source digest `de530f88605ac12d5267af9e40fed0195f9629eec7dca76bfc871d00e7eb9af6`,
+fresh controller/CLI source as above.
+[EVD-DCP-FR-010](PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_EVIDENCE.md#evd-dcp-fr-010)
+records exact artifact path and hashes. Integrity passes; actual
+**BOOTSTRAP_READY=NO / ACTIVATION_ALLOWED=NO / OPERATION_ALLOWED=NO**.
+The resolved-input positive fixture proves only that authentic complete inputs
+can be validated without activation; actual issuer/custody/upstream bridge,
+release and protected host inputs remain missing (RP-01–06). RP-08 is later exact
+Owner execution authorization, not a preauthorization-readiness blocker.
+
+Protected slot mappings include explicit ABSENT additions and exact mode/GID plus
+root ownership/no ACL; every complete required face is retained across partial
+overlays. Required unsupported facets still block. Only canonical root:daemon0775
+/private/var/run uses the narrow socket ancestry policy; ordinary artifact/target
+checks remain restrictive. Unknown outcomes retain fences and never auto-replay.
+
+The remaining sections preserve historical task observations and coordinates.
+Where historical status differs, the current status and FR relations above govern.
+
 Authority: accepted semantics `39865536ce51005f95a98473e77c2329078512c0`, accepted
 base `bb5327f622a0333f1e11d945319e024a3731f05a`. Task 4 starts at
 `28c09f73897b98ba3da520d43128f49eb101a0b0`, using the already reviewed Tasks 1–3.
@@ -56,7 +86,7 @@ The package contains no NOPASSWD rule and daemon execution uses no sudo. This is
 not proof that existing host sudoers rules are absent. Known per-Goal/legacy locks
 remain live/unretired; source guards alone do not establish global exit.
 
-The supported proposed native mutation subset is existing regular app-file slots
+The supported proposed native mutation subset is protected exact regular app-file slots (including enrolled ABSENT additions)
 under `/usr/local/libexec/agent-core/app`, with Runtime/W1/W2 quiescence/readback.
 Directory creation/deletion, Node/harness/plist/config/routing replacement, incident
 migration, external auth-service and svc-workflow drivers are not supported.

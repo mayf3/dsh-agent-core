@@ -1,0 +1,23 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: method `prepare` is never used
+  --> src/fs/target.rs:44:12
+   |
+36 | impl Slot {
+   | --------- method in this implementation
+...
+44 |     pub fn prepare(&self, temporary: &str, bytes: &[u8], mode: u32) -> Result<FileImage> {
+   |            ^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `deployment-control-plane` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.24s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 3 tests
+test transaction::final_repair_tests::final_prewrite_expiry_releases_active_with_durable_blocked ... ok
+test transaction::final_repair_tests::known_final_health_failure_restores_without_closure ... ok
+test transaction::final_repair_tests::manifest_cannot_expand_protected_mapping ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.32s
+

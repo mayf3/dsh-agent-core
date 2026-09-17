@@ -1,0 +1,24 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.43s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+test transaction::health::tests::dribbling_peer_cannot_extend_total_deadline ... FAILED
+
+failures:
+
+---- transaction::health::tests::dribbling_peer_cannot_extend_total_deadline stdout ----
+
+thread 'transaction::health::tests::dribbling_peer_cannot_extend_total_deadline' (73370059) panicked at src/transaction/../../test/common/health.rs:19:5:
+assertion `left == right` failed
+  left: "FILESYSTEM_IO"
+ right: "HEALTH_TIMEOUT"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    transaction::health::tests::dribbling_peer_cannot_extend_total_deadline
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 23 filtered out; finished in 0.53s
+
+error: test failed, to rerun pass `--lib`

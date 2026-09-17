@@ -1,0 +1,6 @@
+SOURCE=277a5e8832938e6b2232d11949aedfb92cd0e318
+COMMAND=['cargo', 'clippy', '--locked', '--manifest-path', 'packages/deployment-control-plane/Cargo.toml', '--all-targets', '--', '-D', 'warnings']
+START=2026-09-17T17:55:49.600930+00:00
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.14s
+
+EXIT=0

@@ -1,0 +1,13 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.00s
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-c4bc1d8228493e00)
+
+running 5 tests
+test private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test private::hostile_tmpdir_worker ... ok
+test private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test private::outside_kernel_temp_is_rejected_before_creation ... ok
+test private::root_refusal_precedes_effect_without_root_execution ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.01s
+

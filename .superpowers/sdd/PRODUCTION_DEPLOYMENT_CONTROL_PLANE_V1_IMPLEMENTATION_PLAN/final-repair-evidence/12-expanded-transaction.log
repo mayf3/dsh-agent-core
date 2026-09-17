@@ -1,0 +1,27 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.94s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 6 tests
+test transaction::final_repair_tests::exact_mapping_rejects_metadata_drift_and_allows_explicit_absent_addition ... ok
+test transaction::final_repair_tests::exact_slots_retain_private_mode_and_complete_unchanged_face ... FAILED
+test transaction::final_repair_tests::final_prewrite_expiry_releases_active_with_durable_blocked ... ok
+test transaction::final_repair_tests::known_final_health_failure_restores_without_closure ... ok
+test transaction::final_repair_tests::manifest_cannot_expand_protected_mapping ... ok
+test transaction::final_repair_tests::metadata_executable_and_absent_sibling_reject_before_write ... ok
+
+failures:
+
+---- transaction::final_repair_tests::exact_slots_retain_private_mode_and_complete_unchanged_face stdout ----
+
+thread 'transaction::final_repair_tests::exact_slots_retain_private_mode_and_complete_unchanged_face' (73388610) panicked at src/transaction/../../test/common/final_transaction.rs:69:31:
+called `Result::unwrap()` on an `Err` value: Error { code: "GOAL_RECEIPT_REQUIRED" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    transaction::final_repair_tests::exact_slots_retain_private_mode_and_complete_unchanged_face
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 25 filtered out; finished in 1.26s
+
+error: test failed, to rerun pass `--lib`

@@ -1,0 +1,24 @@
+SOURCE=277a5e8832938e6b2232d11949aedfb92cd0e318
+START=2026-09-17T17:58:50.678531+00:00
+COMMAND=['/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/target/release/agent-deploy-prepare', 'prepare', '/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/38-final-recipe.json', '/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-final-repair-j_4n_knv']
+{
+  "manifest_digest": "6e6411dda70109e27a21fd7200e4d3e8acf4132ff42bfbf289b2331ed3a8f202",
+  "source_digest": "de530f88605ac12d5267af9e40fed0195f9629eec7dca76bfc871d00e7eb9af6",
+  "verdict": {
+    "activation_allowed": false,
+    "blockers": [
+      "HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT",
+      "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS",
+      "TRUSTED_SOURCE_BUILD_REVIEW_BINDING",
+      "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS",
+      "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL",
+      "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION",
+      "INDEPENDENT_WHOLE_BRANCH_REVIEW"
+    ],
+    "bootstrap_ready": false,
+    "integrity_verified": true,
+    "preparation_digest": null
+  }
+}
+
+EXIT=0

@@ -1,0 +1,38 @@
+{
+  "observed_at": "2026-09-17T17:22:58.361334+00:00",
+  "method": "read-only rg -l exact record/protocol tokens, <=2MiB files, ordinary ignore rules, excluded node_modules/target/dist/lock files",
+  "tokens": [
+    "DEPLOYMENT_READY (word-boundary)",
+    "BuildAttestation",
+    "issuer-bindings",
+    "RecoveryEvidence",
+    "ProducerSnapshot"
+  ],
+  "repositories": [
+    {
+      "repository": "/Users/yanfenma/workspace/project/auth-service",
+      "head": "785d7430fd0b6b9dd3aa7c110ed857fed9fea865",
+      "tracked_dirty": false,
+      "exact_term_matches": 0
+    },
+    {
+      "repository": "/Users/yanfenma/workspace/project/svc-workflow",
+      "head": "88ff8145eb0842b4ce759117caf4b05f9012ebdc",
+      "tracked_dirty": false,
+      "exact_term_matches": 0
+    },
+    {
+      "repository": "/Users/yanfenma/workspace/project/svc-okr",
+      "head": "a3257d00b5ab123c4be5379b44e3e23d81607a01",
+      "tracked_dirty": true,
+      "exact_term_matches": 0
+    },
+    {
+      "repository": "/Users/yanfenma/workspace/project/agent-core-mobile",
+      "head": "fe64ff105380c8a1eb6cd1ea1453e5929a4bdea7",
+      "tracked_dirty": false,
+      "exact_term_matches": 0
+    }
+  ],
+  "limitation": "Bounded working-tree source census; not proof that external services or differently named adapters do not exist. No credentials read. Auth-service substring matches were only PRODUCTION_JWKS_DEPLOYMENT_READY, not DCP producer authority."
+}

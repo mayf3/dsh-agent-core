@@ -1,0 +1,30 @@
+    Checking deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+error: unused import: `nonroot`
+ --> test/adoption/fixture.rs:3:19
+  |
+3 | pub use private::{nonroot, temp};
+  |                   ^^^^^^^
+  |
+  = note: `-D unused-imports` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(unused_imports)]`
+
+error: file is loaded as a module multiple times: `test/adoption/../common/private.rs`
+ --> test/adoption/fixture.rs:1:1
+  |
+1 | / #[path = "../common/private.rs"]
+2 | | mod private;
+  | |____________^ first loaded here
+  |
+ ::: test/adoption/../common/mod.rs:1:1
+  |
+1 |   pub mod private;
+  |   ^^^^^^^^^^^^^^^^ loaded again here
+  |
+  = help: replace all but one `mod` item with `use` items
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#duplicate_mod
+  = note: `-D clippy::duplicate-mod` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(clippy::duplicate_mod)]`
+
+error: could not compile `deployment-control-plane` (test "e2e") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `deployment-control-plane` (test "bootstrap") due to 1 previous error

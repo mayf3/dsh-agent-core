@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>Label</key><string>ai.agent-deployd</string>
+<key>ProgramArguments</key><array><string>/usr/local/libexec/agent-deployd/agent-deployd</string></array>
+<key>UserName</key><string>root</string><key>GroupName</key><string>wheel</string>
+<key>Disabled</key><true/><key>RunAtLoad</key><false/><key>KeepAlive</key><false/>
+<key>Umask</key><integer>63</integer>
+</dict></plist>
