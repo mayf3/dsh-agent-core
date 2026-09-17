@@ -179,3 +179,19 @@ acceptance/lifecycle transition and merge authority before implementation. No
 root bootstrap, Grant, service identity migration or production apply is implied.
 The full Goal remains incomplete until phases B–G and every production gate have
 real evidence; do not convert this authoring-stage PASS into Goal completion.
+
+## Owner acceptance — 2026-09-17
+
+Attributable issuer: mayf3, current task `01a0ad06-249f-7632-809b-961b93c3b113`.
+Owner supplied `OWNER_ACCEPTANCE=YES`, `ACCEPTED_SPEC_COMMIT=3986553`, and
+`DECISION=ACCEPT_SPEC_AND_CONTINUE_IMPLEMENTATION`, accepting the reviewed Spec as
+implementation-authorizing authority. This lifecycle record preserves its Contract
+and Acceptance bodies byte-for-byte. Following authority merge, route is REUSE.
+
+Authorized: implementation, tests, independent review and non-production verification
+through IMPLEMENTATION_COMPLETE → TESTS_PASS → INDEPENDENT_REVIEW_PASS → BOOTSTRAP_READY.
+Forbidden: all production mutation, root LaunchDaemon/agent-deployd installation or
+activation, sudoers/NOPASSWD changes, privileged bootstrap, live legacy deployment
+path switch/retirement, and production restart/install/routing. Submit a concrete
+bootstrap package for separate Owner authorization only after implementation and
+independent security review. Previous acceptance-wait snapshots above are historical.
