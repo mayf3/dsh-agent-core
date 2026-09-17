@@ -1,7 +1,7 @@
 # Deployment control plane native core
 
 Task 1 of accepted `PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1`, authority reviewed at
-`39865536ce51005f95a98473e77c2329078512c0`. This crate is a library. It neither installs
+`39865536ce51005f95a98473e77c2329078512c0`. The crate provides a core library and native daemon/client binaries. It neither installs
 a daemon nor authorizes production/profile activation. All fixture writes are in
 private temporary directories; fixture setup refuses euid 0.
 
