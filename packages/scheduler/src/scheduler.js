@@ -256,15 +256,17 @@ export class Scheduler {
           // Durable policy receipt: the pending retry belongs to a
           // superseded schedule revision (minting it would failLoud the
           // store); the natural schedule below still owns this job's slots.
+          // Marked only on a successful append so a transient run-log IO
+          // failure is retried on the next tick (same as _recordSlot).
           const notedKey = `${job.id}:${retry.predecessorScheduleRevision}->${job.scheduleRevision}`
           if (!this._staleRetryNoted.has(notedKey)) {
-            this._staleRetryNoted.add(notedKey)
-            await this.store.appendRunEvent({
+            const receipt = await this.store.appendRunEvent({
               ts: now, action: 'retry_superseded_by_revision', jobId: job.id,
               retryOfOccurrenceId: retry.retryOfOccurrenceId,
               predecessorScheduleRevision: retry.predecessorScheduleRevision,
               jobScheduleRevision: job.scheduleRevision,
             })
+            if (receipt?.ok) this._staleRetryNoted.add(notedKey)
           }
         }
         const natural = naturalCandidate({
