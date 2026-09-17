@@ -1,6 +1,6 @@
 ---
 spec_id: PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -15,13 +15,20 @@ supersedes: []
 superseded_by: null
 owners:
   - mayf3
+accepted_by: mayf3
+accepted_date: 2026-09-17
+accepted_reviewed_head: 39865536ce51005f95a98473e77c2329078512c0
+independent_review_result: PASS
+production_apply_authority: none
 ---
 
 # Production Deployment Control Plane V1
 
-**PROPOSED; not accepted and not implementation or bootstrap permission.**
-`implementation_authority: contracts` describes the effect after independent
-review, Owner acceptance and merge. It is inactive while proposed.
+**ACCEPTED for implementation, tests, independent review and non-production
+verification.** Owner explicitly accepted reviewed commit `3986553` in task
+`01a0ad06-249f-7632-809b-961b93c3b113` on 2026-09-17. The lifecycle merge activates
+`implementation_authority: contracts`; production mutation, LaunchDaemon install/
+enablement, sudoers changes, bootstrap and live legacy-path cutover remain forbidden.
 
 ## 1. Goal, scope and authority
 
@@ -474,10 +481,10 @@ unknown replay; permanent parallel legacy entry. They reopen only on new evidenc
 and accepted authority, never by profile parameter.
 
 ```text
-OPEN_OWNER_DECISIONS = ACCEPT_OR_REVISE_THIS_PROPOSED_AUTHORITY
+OPEN_OWNER_DECISIONS = NONE_FOR_IMPLEMENTATION
 NORMATIVE_TBD = NONE
 PARTIAL_SUPERSESSION = NONE
-IMPLEMENTATION_ALLOWED_NOW = NO
+IMPLEMENTATION_ALLOWED_NOW = YES_AFTER_ACCEPTED_AUTHORITY_MERGE
 PRIVILEGED_BOOTSTRAP_ALLOWED = NO
 PRODUCTION_MUTATION_PERFORMED = NO
 ```
