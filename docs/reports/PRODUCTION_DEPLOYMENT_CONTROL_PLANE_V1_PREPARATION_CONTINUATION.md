@@ -187,11 +187,27 @@ platform is warranted. The remaining external inputs/decisions are consolidated:
    CAS can be reused, but is not itself the deployment contract. A real selected
    release/coverage statement follows from these inputs; no Owner per-head approval
    is proposed for later routine releases.
-3. **Protected preparation evidence:** a bounded, separately authorized read-only
-   operator inventory must establish unreadable sudoers/legacy writer surfaces and
-   exact protected preimages for the selected profile. Installation/retirement and
-   lifecycle-denial execution remain later bootstrap checks. This is an access
-   boundary, not a request to perform privileged bootstrap now.
+
+The six service/key/role bindings and nine proofs are **current implementation
+requirements**, not a Spec demand for six already running external services.
+CTR004 permits bootstrap to establish authentic keys/custody. A concrete selected
+custodian, authoritative source, independent reviewer anchor and usable protected
+provisioning/publication plan still have to be attributable before this can become
+an exact reviewable operation. The census found no existing safe substitute; it
+does not justify requiring a new platform, new auth audience or Grant. If an
+existing issuer facility is identified, reuse it; if there is none, its real custody
+boundary must be established explicitly rather than simulated with caller keys.
+
+Protected sudoers/legacy/preimage observations are a **future bootstrap abort
+gate**, not a third request for prior privileged work. Accepted Spec section7 and
+`bootstrap/prospective.rs:197–203` put protected census/preimage capture before
+enrollment/activation within the separately authorized bootstrap sequence. A final
+operation package must enumerate exact read paths, planned effects and restoration
+rules; its first privileged steps can be read-only. If that census finds unknown
+writers, metadata drift or effects outside the reviewed package, stop before
+mutation and re-freeze the affected operation. No need to perform retirement or
+prove post-retirement lifecycle denial before asking for bootstrap authorization.
+The unreadable sudoers observation alone does not prevent preparing such a plan.
 
 Once those inputs exist, the same parent Goal can continue with the narrow adapter,
 exact resolved manifest/proofs, affected review and one concrete bootstrap request.

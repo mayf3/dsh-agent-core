@@ -1,0 +1,39 @@
+{
+  "observed_at": "2026-09-17T23:24:17.282314+00:00",
+  "head": "dc8373a9821cf9a221c622acab7b22f2e95aa893",
+  "source_hashes_unchanged": 97,
+  "prior_refs_unchanged": true,
+  "commands": [
+    {
+      "command": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        "."
+      ],
+      "exit": 0,
+      "stdout": "vendored governance bytes match governance.lock.json\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--exit-code",
+        "14a989088c4ba476b4da1c047be573de2c88f520",
+        "HEAD",
+        "--",
+        "packages",
+        "scripts",
+        "deployment-artifacts",
+        "docs/specs",
+        ".agents",
+        ".superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN",
+        ".superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}
