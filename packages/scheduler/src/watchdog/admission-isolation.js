@@ -12,7 +12,7 @@
  * propagation with a durable blockade receipt.
  */
 
-import { deriveOccurrenceId } from './occurrence-model.js'
+import { deriveOccurrenceId } from '../occurrence-model.js'
 
 export function classifyAdmissionFailure(error, candidate) {
   if (error?.code === 'OCCURRENCE_STRUCTURED_COLLISION' || error?.code === 'OCCURRENCE_PAYLOAD_CONFLICT') {

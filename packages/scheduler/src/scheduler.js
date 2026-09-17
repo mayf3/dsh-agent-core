@@ -51,7 +51,7 @@ const defaultLog = {
 }
 
 // C-SH-002 admission-failure classification lives in ./watchdog/admission-isolation.js.
-export { AGENT_TURN_SAFETY_TIMEOUT_MS, TIMEOUT_ERROR_TEXT, classifyAdmissionFailure }
+export { classifyAdmissionFailure }
 
 /**
  * Scheduler V2. Job definitions produce durable logical occurrences; every
