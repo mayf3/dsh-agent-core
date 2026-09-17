@@ -156,6 +156,14 @@
       "approved_by": "mayf3",
       "expires_at": "2027-08-22",
       "split_followup": "extract shared helpers into a small module or delete after its acceptance window closes; scripts must not accumulate logic"
+    },
+    {
+      "path": "packages/scheduler/test/cross-agent.test.js",
+      "approved_max_lines": 560,
+      "reason": "legacy test file over HANDWRITTEN_FILE_MAX_LINES at merge base 3c7b169a864c1e45df8b5c67333a9478138a22ee (522 physical lines); mechanically registered for the owner-accepted SCHEDULER_SELF_HEALING_FROM_FEISHU_V1 merge (spec 2.3 mandates updating CROSS-AGENT-5/6 admission-failure semantics in place); touched-not-grown",
+      "approved_by": "mayf3",
+      "expires_at": "2027-03-17",
+      "split_followup": "split by subsystem (definition/control vs admission-fate) behind a shared rig module before next major edit"
     }
   ],
   "directories": [
