@@ -1,0 +1,28 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: unused import: `Value`
+ --> test/service_cases.rs:3:23
+  |
+3 | use serde_json::{json,Value};
+  |                       ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `deployment-control-plane` (test "train") generated 1 warning (run `cargo fix --test "train" -p deployment-control-plane` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.28s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+
+thread 'service_cases::typed_native_verifier_uses_accepted_key_and_public_receipt_discovery' (72956901) panicked at test/service_cases.rs:17:65:
+discoverable actor-scoped receipts
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test service_cases::typed_native_verifier_uses_accepted_key_and_public_receipt_discovery ... FAILED
+
+failures:
+
+failures:
+    service_cases::typed_native_verifier_uses_accepted_key_and_public_receipt_discovery
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.73s
+
+error: test failed, to rerun pass `--test train`

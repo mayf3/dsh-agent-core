@@ -1,0 +1,21 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.53s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+
+thread 'service_cases::typed_native_verifier_uses_accepted_key_and_public_receipt_discovery' (73002102) panicked at test/service_cases.rs:23:5:
+assertion `left == right` failed: private key metadata must block before mutation
+  left: [110, 101, 119, 32, 99, 111, 100, 101]
+ right: [111, 108, 100, 32, 99, 111, 100, 101]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test service_cases::typed_native_verifier_uses_accepted_key_and_public_receipt_discovery ... FAILED
+
+failures:
+
+failures:
+    service_cases::typed_native_verifier_uses_accepted_key_and_public_receipt_discovery
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 1.08s
+
+error: test failed, to rerun pass `--test train`

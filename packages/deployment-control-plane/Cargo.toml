@@ -30,3 +30,11 @@ path = "test/filesystem.rs"
 [[test]]
 name = "transactions"
 path = "test/transactions.rs"
+
+[[test]]
+name = "socket"
+path = "test/socket.rs"
+
+[[test]]
+name = "train"
+path = "test/train.rs"

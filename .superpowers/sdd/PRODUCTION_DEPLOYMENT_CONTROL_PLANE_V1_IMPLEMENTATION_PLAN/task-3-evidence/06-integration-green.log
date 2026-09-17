@@ -1,0 +1,18 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.57s
+     Running test/socket.rs (packages/deployment-control-plane/target/debug/deps/socket-c9acb1a537e9c945)
+
+running 3 tests
+test production_entry_refuses_unprivileged_and_path_overrides ... ok
+test real_socket_rejects_identity_paths_unknown_fields_and_deep_frames ... ok
+test partial_disconnect_is_bounded_and_does_not_starve_status ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.94s
+
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+test absent_verifier_finalizes_waiting_without_local_success_and_late_pass_closes_once ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.17s
+

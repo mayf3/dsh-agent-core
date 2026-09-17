@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.22s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+
+thread 'service_cases::late_multi_goal_proposal_cannot_replace_waiting_goals_original_attachment' (72976257) panicked at test/service_cases.rs:63:5:
+assertion failed: digest(&(id, &p2.goals, &p2.build, &p2.reviews)).unwrap() < original
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test service_cases::late_multi_goal_proposal_cannot_replace_waiting_goals_original_attachment ... FAILED
+
+failures:
+
+failures:
+    service_cases::late_multi_goal_proposal_cannot_replace_waiting_goals_original_attachment
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 3.35s
+
+error: test failed, to rerun pass `--test train`

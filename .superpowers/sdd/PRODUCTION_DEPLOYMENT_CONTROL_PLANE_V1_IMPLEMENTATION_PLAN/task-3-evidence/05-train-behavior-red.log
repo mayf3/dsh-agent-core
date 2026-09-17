@@ -1,0 +1,40 @@
+warning: methods `policy`, `result`, `publish`, and `deliver` are never used
+   --> src/service/intake.rs:69:12
+    |
+ 28 | impl Intake {
+    | ----------- methods in this implementation
+...
+ 69 |     pub fn policy(&self,profile:&str)->Result<Signed<Policy>> {
+    |            ^^^^^^
+...
+ 97 |     pub fn result(&self,id:&str)->Result<Signed<GoalReceipt>> {
+    |            ^^^^^^
+...
+100 |     pub fn publish(&self,area:&str,id:&str,body:&impl Serialize)->Result<()> {
+    |            ^^^^^^^
+...
+117 |     pub fn deliver(&self,q:&Queue)->Result<()> {
+    |            ^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `deployment-control-plane` (lib) generated 1 warning
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.20s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+
+thread 'absent_verifier_finalizes_waiting_without_local_success_and_late_pass_closes_once' (72908950) panicked at test/train.rs:15:22:
+timed out
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test absent_verifier_finalizes_waiting_without_local_success_and_late_pass_closes_once ... FAILED
+
+failures:
+
+failures:
+    absent_verifier_finalizes_waiting_without_local_success_and_late_pass_closes_once
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.18s
+
+error: test failed, to rerun pass `--test train`

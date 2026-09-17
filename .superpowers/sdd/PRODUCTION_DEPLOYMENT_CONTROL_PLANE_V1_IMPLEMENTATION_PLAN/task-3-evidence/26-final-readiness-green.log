@@ -1,0 +1,38 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.23s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 11 tests
+BLOCKED MUTEX_BUSY
+BLOCKED PRIVATE_KEY_MODE
+test authenticated_producer_watermark_and_forged_build_cannot_be_bypassed ... ok
+BLOCKED test durable_disconnected_ack_reopens_after_intake_disappears ... ok
+BLOCKED UNKNOWN_CANARY
+BLOCKED CLOSURE_BINDING
+test killed_daemon_during_verification_reopens_unknown_without_replay ... ok
+test unknown_external_canary_is_never_reissued_or_overwritten ... ok
+test service_cases::typed_native_verifier_uses_accepted_key_and_public_receipt_discovery ... ok
+test three_goals_share_one_install_two_close_one_fails_and_mutex_covers_acceptance ... ok
+test service_cases::late_coverage_reuses_exact_original_attachment_and_never_reinstalls ... ok
+test service_cases::signed_closure_ack_cannot_close_different_goal_and_redelivery_does_not_install ... ok
+test simultaneous_targets_use_one_host_mutex_and_distinct_private_targets ... ok
+test absent_verifier_finalizes_waiting_without_local_success_and_late_pass_closes_once ... ok
+test service_cases::late_multi_goal_proposal_cannot_replace_waiting_goals_original_attachment ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.85s
+
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-36688921be1afec0)
+
+running 9 tests
+test launchd_periodic_parser_does_not_confuse_nested_pid_with_generation ... ok
+test a_different_fixture_mutex_cannot_authorize_apply ... ok
+test rebooted_executor_never_replays_unfinished_verification ... ok
+test partial_install_disk_failure_restores_exact_preimage_without_unrelated_writes ... ok
+test apply_keeps_guard_and_correlates_process_attempt_and_full_evidence ... ok
+test unrelated_post_apply_drift_quarantines_and_preserves_bytes ... ok
+test finalize_joins_goal_receipt_to_attempt_and_process ... ok
+test rollback_deletes_only_exact_transaction_created_absent_slot ... ok
+test restored_generation::restored_a_uses_fresh_process_for_late_verification_without_reclosing_original_goal ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.21s
+

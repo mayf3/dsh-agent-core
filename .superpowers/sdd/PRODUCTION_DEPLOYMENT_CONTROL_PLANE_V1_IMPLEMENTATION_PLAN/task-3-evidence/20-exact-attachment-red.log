@@ -1,0 +1,21 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.23s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+
+thread 'service_cases::late_multi_goal_proposal_cannot_replace_waiting_goals_original_attachment' (72992816) panicked at test/service_cases.rs:78:37:
+assertion `left == right` failed
+  left: "8a98d01dea4f7f89c1860b9b81f9575dd4fe3b09bc9eb2a86f3a1fd65debb1cd"
+ right: "e919a13f1f0f4b58c9fef73ae08fa3a50123facc89fcbf423f6892709cce180c"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test service_cases::late_multi_goal_proposal_cannot_replace_waiting_goals_original_attachment ... FAILED
+
+failures:
+
+failures:
+    service_cases::late_multi_goal_proposal_cannot_replace_waiting_goals_original_attachment
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 1.45s
+
+error: test failed, to rerun pass `--test train`

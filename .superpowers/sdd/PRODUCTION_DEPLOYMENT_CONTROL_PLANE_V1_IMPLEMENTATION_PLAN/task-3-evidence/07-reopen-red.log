@@ -1,0 +1,23 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 4 tests
+BLOCKED UNKNOWN_CANARY
+test unknown_external_canary_is_never_reissued_or_overwritten ... ok
+test three_goals_share_one_install_two_close_one_fails_and_mutex_covers_acceptance ... ok
+test absent_verifier_finalizes_waiting_without_local_success_and_late_pass_closes_once ... ok
+
+thread 'durable_disconnected_ack_reopens_after_intake_disappears' (72915939) panicked at test/train.rs:15:22:
+timed out
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test durable_disconnected_ack_reopens_after_intake_disappears ... FAILED
+
+failures:
+
+failures:
+    durable_disconnected_ack_reopens_after_intake_disappears
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.60s
+
+error: test failed, to rerun pass `--test train`

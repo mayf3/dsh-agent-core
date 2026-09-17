@@ -1,0 +1,21 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.72s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+
+thread 'simultaneous_targets_use_one_host_mutex_and_distinct_private_targets' (72922172) panicked at test/train.rs:208:43:
+assertion `left == right` failed
+  left: [111, 108, 100, 32, 99, 111, 100, 101]
+ right: [110, 101, 119, 32, 99, 111, 100, 101]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test simultaneous_targets_use_one_host_mutex_and_distinct_private_targets ... FAILED
+
+failures:
+
+failures:
+    simultaneous_targets_use_one_host_mutex_and_distinct_private_targets
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.98s
+
+error: test failed, to rerun pass `--test train`

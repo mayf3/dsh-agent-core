@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.53s
+     Running test/socket.rs (packages/deployment-control-plane/target/debug/deps/socket-44bff789b513e3e3)
+
+running 1 test
+
+thread 'production_entry_refuses_unprivileged_and_path_overrides' (72866851) panicked at test/socket.rs:8:50:
+native daemon must exist: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test production_entry_refuses_unprivileged_and_path_overrides ... FAILED
+
+failures:
+
+failures:
+    production_entry_refuses_unprivileged_and_path_overrides
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test socket`

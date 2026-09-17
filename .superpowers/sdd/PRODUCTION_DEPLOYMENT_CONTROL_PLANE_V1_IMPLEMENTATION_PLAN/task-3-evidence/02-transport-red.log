@@ -1,0 +1,29 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.59s
+     Running test/socket.rs (packages/deployment-control-plane/target/debug/deps/socket-44bff789b513e3e3)
+
+running 3 tests
+
+thread 'production_entry_refuses_unprivileged_and_path_overrides' (72895054) panicked at test/socket.rs:8:50:
+native daemon must exist: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test production_entry_refuses_unprivileged_and_path_overrides ... FAILED
+
+thread 'partial_disconnect_is_bounded_and_does_not_starve_status' (72895053) panicked at test/socket.rs:33:110:
+native daemon must exist: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+
+thread 'real_socket_rejects_identity_paths_unknown_fields_and_deep_frames' (72895055) panicked at test/socket.rs:33:110:
+native daemon must exist: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+test partial_disconnect_is_bounded_and_does_not_starve_status ... FAILED
+test real_socket_rejects_identity_paths_unknown_fields_and_deep_frames ... FAILED
+
+failures:
+
+failures:
+    partial_disconnect_is_bounded_and_does_not_starve_status
+    production_entry_refuses_unprivileged_and_path_overrides
+    real_socket_rejects_identity_paths_unknown_fields_and_deep_frames
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test socket`
