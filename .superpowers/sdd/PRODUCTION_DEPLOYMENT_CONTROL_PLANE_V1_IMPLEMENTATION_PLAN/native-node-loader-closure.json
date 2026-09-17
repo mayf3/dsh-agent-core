@@ -1,0 +1,157 @@
+{
+  "time_utc": "2026-09-17T14:48:49.949175+00:00",
+  "scope": "read-only Mach-O load commands and lstat/access; no execution/write attempts",
+  "node": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+  "otool_exit": 0,
+  "direct_load_commands": "/usr/local/libexec/agent-core/node-runtime/bin/node:\n\t@rpath/libnode.141.dylib (compatibility version 0.0.0, current version 0.0.0)\n\t/usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.12)\n\t/usr/local/opt/llhttp/lib/libllhttp.9.3.dylib (compatibility version 9.3.0, current version 9.3.1)\n\t/usr/local/opt/libuv/lib/libuv.1.dylib (compatibility version 1.0.0, current version 1.0.0)\n\t/usr/local/opt/ada-url/lib/libada.3.dylib (compatibility version 3.0.0, current version 3.4.2)\n\t/usr/local/opt/simdjson/lib/libsimdjson.30.dylib (compatibility version 30.0.0, current version 30.0.0)\n\t/usr/local/opt/brotli/lib/libbrotlidec.1.dylib (compatibility version 1.0.0, current version 1.2.0)\n\t/usr/local/opt/brotli/lib/libbrotlienc.1.dylib (compatibility version 1.0.0, current version 1.2.0)\n\t/usr/local/opt/c-ares/lib/libcares.2.dylib (compatibility version 2.0.0, current version 2.19.5)\n\t/usr/local/opt/hdrhistogram_c/lib/libhdr_histogram.6.dylib (compatibility version 6.0.0, current version 6.2.3)\n\t/usr/local/opt/libnghttp2/lib/libnghttp2.14.dylib (compatibility version 44.0.0, current version 44.2.0)\n\t/usr/local/opt/libnghttp3/lib/libnghttp3.9.dylib (compatibility version 9.0.0, current version 9.6.1)\n\t/usr/local/opt/libngtcp2/lib/libngtcp2.16.dylib (compatibility version 24.0.0, current version 24.3.0)\n\t/usr/local/opt/sqlite/lib/libsqlite3.dylib (compatibility version 9.0.0, current version 9.6.0)\n\t/usr/local/opt/uvwasi/lib/libuvwasi.dylib (compatibility version 0.0.0, current version 0.0.0)\n\t/usr/local/opt/zstd/lib/libzstd.1.dylib (compatibility version 1.0.0, current version 1.5.7)\n\t/usr/local/opt/openssl@3/lib/libcrypto.3.dylib (compatibility version 3.0.0, current version 3.0.0)\n\t/usr/local/opt/openssl@3/lib/libssl.3.dylib (compatibility version 3.0.0, current version 3.0.0)\n\t/usr/local/opt/icu4c@78/lib/libicui18n.78.dylib (compatibility version 78.0.0, current version 78.2.0)\n\t/usr/local/opt/icu4c@78/lib/libicuuc.78.dylib (compatibility version 78.0.0, current version 78.2.0)\n\t/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 2503.1.0)\n\t/System/Library/Frameworks/Security.framework/Versions/A/Security (compatibility version 1.0.0, current version 61123.121.1)\n\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1700.255.5)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1345.120.2)\n",
+  "rpaths": [
+    "path @loader_path (offset 12)",
+    "path @loader_path/../lib (offset 12)"
+  ],
+  "homebrew_direct_dependencies": [
+    {
+      "loader_path": "/usr/local/opt/llhttp/lib/libllhttp.9.3.dylib",
+      "resolved_path": "/usr/local/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/libuv/lib/libuv.1.dylib",
+      "resolved_path": "/usr/local/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o404",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/ada-url/lib/libada.3.dylib",
+      "resolved_path": "/usr/local/Cellar/ada-url/3.4.3/lib/libada.3.4.3.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/simdjson/lib/libsimdjson.30.dylib",
+      "resolved_path": "/usr/local/Cellar/simdjson/4.3.0/lib/libsimdjson.30.0.0.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/brotli/lib/libbrotlidec.1.dylib",
+      "resolved_path": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/brotli/lib/libbrotlienc.1.dylib",
+      "resolved_path": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/c-ares/lib/libcares.2.dylib",
+      "resolved_path": "/usr/local/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/hdrhistogram_c/lib/libhdr_histogram.6.dylib",
+      "resolved_path": "/usr/local/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/libnghttp2/lib/libnghttp2.14.dylib",
+      "resolved_path": "/usr/local/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o404",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/libnghttp3/lib/libnghttp3.9.dylib",
+      "resolved_path": "/usr/local/Cellar/libnghttp3/1.15.0/lib/libnghttp3.9.6.1.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/libngtcp2/lib/libngtcp2.16.dylib",
+      "resolved_path": "/usr/local/Cellar/libngtcp2/1.20.0/lib/libngtcp2.16.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/sqlite/lib/libsqlite3.dylib",
+      "resolved_path": "/usr/local/Cellar/sqlite/3.53.1/lib/libsqlite3.3.53.1.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o404",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/uvwasi/lib/libuvwasi.dylib",
+      "resolved_path": "/usr/local/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/zstd/lib/libzstd.1.dylib",
+      "resolved_path": "/usr/local/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o444",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/openssl@3/lib/libcrypto.3.dylib",
+      "resolved_path": "/usr/local/Cellar/openssl@3/3.6.2/lib/libcrypto.3.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o404",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/openssl@3/lib/libssl.3.dylib",
+      "resolved_path": "/usr/local/Cellar/openssl@3/3.6.2/lib/libssl.3.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o404",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/icu4c@78/lib/libicui18n.78.dylib",
+      "resolved_path": "/usr/local/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o404",
+      "caller_write_access": false
+    },
+    {
+      "loader_path": "/usr/local/opt/icu4c@78/lib/libicuuc.78.dylib",
+      "resolved_path": "/usr/local/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o404",
+      "caller_write_access": false
+    }
+  ]
+}

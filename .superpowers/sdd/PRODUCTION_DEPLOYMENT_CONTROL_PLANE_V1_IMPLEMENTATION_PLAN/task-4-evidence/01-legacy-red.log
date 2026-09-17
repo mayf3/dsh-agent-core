@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.55s
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-9fc9d958bf89601d)
+
+running 1 test
+
+thread 'enrolled_legacy_sources_refuse_before_any_effect' (73139816) panicked at test/adoption/e2e.rs:17:9:
+unguarded canonical entrance: scripts/trusted-cp-deploy-install.sh
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test enrolled_legacy_sources_refuse_before_any_effect ... FAILED
+
+failures:
+
+failures:
+    enrolled_legacy_sources_refuse_before_any_effect
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test e2e`

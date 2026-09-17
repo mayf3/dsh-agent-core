@@ -1,0 +1,47 @@
+{
+  "observed_at": "2026-09-17T12:14:47.527497+00:00",
+  "method": "fixed launchctl print only; exact top-level field allowlist; raw output/environment never retained",
+  "observations": [
+    {
+      "label": "system/ai.agent-core.runtime",
+      "exit_code": 0,
+      "selected_top_level_fields": {
+        "active count": "1",
+        "path": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+        "type": "LaunchDaemon",
+        "state": "running",
+        "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "runs": "1",
+        "pid": "24571",
+        "last exit code": "(never exited)"
+      }
+    },
+    {
+      "label": "system/ai.agent-core.scheduler-watchdog-w1",
+      "exit_code": 0,
+      "selected_top_level_fields": {
+        "active count": "0",
+        "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist",
+        "type": "LaunchDaemon",
+        "state": "not running",
+        "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "runs": "62",
+        "last exit code": "0"
+      }
+    },
+    {
+      "label": "system/ai.agent-core.scheduler-watchdog-w2",
+      "exit_code": 0,
+      "selected_top_level_fields": {
+        "active count": "0",
+        "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist",
+        "type": "LaunchDaemon",
+        "state": "not running",
+        "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "runs": "22",
+        "last exit code": "0"
+      }
+    }
+  ],
+  "limitation": "read-only parser/identity context; not loaded artifact or old-generation-exit proof"
+}

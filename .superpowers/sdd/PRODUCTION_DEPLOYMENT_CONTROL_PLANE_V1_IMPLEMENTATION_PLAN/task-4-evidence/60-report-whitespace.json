@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    "CONFORMANCE.md",
+    "task-4-report.md"
+  ],
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": ""
+}

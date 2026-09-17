@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-9fc9d958bf89601d)
+
+running 1 test
+
+thread 'ambiguous_marker_lookup_never_enters_legacy_logic' (73158512) panicked at test/adoption/e2e.rs:39:9:
+EACCES bypass: scripts/trusted-cp-deploy-install.sh
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test ambiguous_marker_lookup_never_enters_legacy_logic ... FAILED
+
+failures:
+
+failures:
+    ambiguous_marker_lookup_never_enters_legacy_logic
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test e2e`

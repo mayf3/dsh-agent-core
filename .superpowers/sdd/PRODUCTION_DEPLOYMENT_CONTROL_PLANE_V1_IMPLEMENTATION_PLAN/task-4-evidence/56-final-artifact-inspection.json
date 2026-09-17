@@ -1,0 +1,12 @@
+{
+  "package_path": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-task4-final-6bfe64sg",
+  "exact_file_count": 25,
+  "payload_count": 23,
+  "manifest_sha256": "ea4e075fa3a04b9b0dffa8772869beee68e335e47344b7eefe79a306f672f18d",
+  "activation_files_absent": true,
+  "issuer_public_keys_and_custody_unresolved": true,
+  "transition_sudoers_empty": true,
+  "profile_disabled": true,
+  "payload_sizes_and_hashes_match": true,
+  "disabled_plist_parsed": true
+}

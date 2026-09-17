@@ -1,0 +1,23 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.83s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-5077166400059868)
+
+running 6 tests
+test loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture ... ok
+test fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift ... ok
+test package_has_no_activation_or_secrets_and_parses_as_disabled_plist ... ok
+test prospective_producer_scope_registers_and_unknown_host_is_explicit ... ok
+test package_rejects_source_binary_metadata_and_unallowlisted_target ... ok
+test plist_loader_environment_is_rejected_from_the_exact_supplied_bytes ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.57s
+
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-b726307ab9f9b930)
+
+running 3 tests
+test original_nonroot_lock_selftest_remains_available_before_enrollment ... ok
+test enrolled_legacy_sources_refuse_before_any_effect ... ok
+test unreadable_or_caller_owned_parent_denies_but_true_absence_preserves_legacy ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.65s
+

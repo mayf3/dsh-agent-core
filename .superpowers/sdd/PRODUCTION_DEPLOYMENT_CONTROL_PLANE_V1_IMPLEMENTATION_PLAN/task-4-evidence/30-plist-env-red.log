@@ -1,0 +1,21 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.12s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-5077166400059868)
+
+running 1 test
+
+thread 'plist_loader_environment_is_rejected_from_the_exact_supplied_bytes' (73183022) panicked at test/adoption/bootstrap.rs:215:5:
+assertion `left == right` failed
+  left: Object {}
+ right: Object {"EnvironmentVariables": Object {"HOME": String("/Users/authsvc"), "LOG_LEVEL": String("info")}, "ProgramArguments": Array [String("/usr/local/libexec/agent-core/node-runtime/bin/node"), String("/protected/app.mjs")]}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test plist_loader_environment_is_rejected_from_the_exact_supplied_bytes ... FAILED
+
+failures:
+
+failures:
+    plist_loader_environment_is_rejected_from_the_exact_supplied_bytes
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--test bootstrap`

@@ -1,0 +1,9 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-9fc9d958bf89601d)
+
+running 1 test
+test enrolled_legacy_sources_refuse_before_any_effect ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+

@@ -1,0 +1,204 @@
+    Checking deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: file is loaded as a module multiple times: `src/transaction/../../test/common/mod.rs`
+ --> src/transaction/../../test/transaction_crashes.rs:1:1
+  |
+1 | / #[allow(dead_code)]
+2 | | #[path = "common/mod.rs"]
+3 | | mod common;
+  | |___________^ first loaded here
+  |
+ ::: src/transaction/../../test/transaction_fixture.rs:1:1
+  |
+1 | / #[allow(dead_code)]
+2 | | #[path = "common/mod.rs"]
+3 | | mod common;
+  | |           ^
+  | |           |
+  | |           loaded again here
+  | |           loaded again here
+  | |___________loaded again here
+  |             loaded again here
+  |
+ ::: src/transaction/../../test/transaction_repair.rs:1:1
+  |
+1 | / #[allow(dead_code)]
+2 | | #[path = "common/mod.rs"]
+3 | | mod common;
+  | |___________^ loaded again here
+  |
+ ::: src/transaction/../../test/transaction_faults.rs:1:1
+  |
+1 | / #[allow(dead_code)]
+2 | | #[path = "common/mod.rs"]
+3 | | mod common;
+  | |___________^ loaded again here
+  |
+ ::: src/transaction/../../test/transaction_finalization.rs:1:1
+  |
+1 | / #[allow(dead_code)]
+2 | | #[path = "common/mod.rs"]
+3 | | mod common;
+  | |___________^ loaded again here
+  |
+ ::: src/service/../../test/common/mailbox.rs:4:1
+  |
+4 | / #[path = "mod.rs"]
+5 | | #[allow(dead_code)]
+6 | | mod common;
+  | |___________^ loaded again here
+  |
+  = help: replace all but one `mod` item with `use` items
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#duplicate_mod
+  = note: `#[warn(clippy::duplicate_mod)]` on by default
+
+warning: file is loaded as a module multiple times: `src/transaction/../../test/transaction_fixture.rs`
+ --> src/transaction/../../test/transaction_crashes.rs:4:1
+  |
+4 | / #[path = "transaction_fixture.rs"]
+5 | | mod fixture;
+  | |____________^ first loaded here
+  |
+ ::: src/transaction/../../test/transaction_repair.rs:4:1
+  |
+4 | / #[path = "transaction_fixture.rs"]
+5 | | mod fixture;
+  | |____________^ loaded again here
+  |
+ ::: src/transaction/../../test/transaction_faults.rs:4:1
+  |
+4 | / #[path = "transaction_fixture.rs"]
+5 | | mod fixture;
+  | |____________^ loaded again here
+  |
+ ::: src/transaction/../../test/transaction_finalization.rs:4:1
+  |
+4 | / #[path = "transaction_fixture.rs"]
+5 | | mod fixture;
+  | |____________^ loaded again here
+  |
+  = help: replace all but one `mod` item with `use` items
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#duplicate_mod
+
+warning: this function has too many arguments (8/7)
+  --> src/transaction/apply.rs:12:5
+   |
+12 | /     pub fn apply(
+13 | |         &mut self,
+14 | |         guard: &MutationGuard,
+15 | |         q: &Queue,
+...  |
+20 | |         caller: &str,
+21 | |     ) -> Result<Applied> {
+   | |________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#too_many_arguments
+   = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src/transaction/apply.rs:98:10
+    |
+ 98 |       ) -> Result<(
+    |  __________^
+ 99 | |         SealedArtifact,
+100 | |         Vec<(String, Option<FileImage>)>,
+101 | |         ServiceImage,
+102 | |     )> {
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#type_complexity
+    = note: `#[warn(clippy::type_complexity)]` on by default
+
+warning: enclosing `Ok` and `?` operator are unneeded
+   --> src/transaction/recovery.rs:244:9
+    |
+244 |         Ok(result?)
+    |         ^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#needless_question_mark
+    = note: `#[warn(clippy::needless_question_mark)]` on by default
+help: remove the enclosing `Ok` and `?` operator
+    |
+244 -         Ok(result?)
+244 +         result
+    |
+
+warning: called `Iterator::last` on a `DoubleEndedIterator`; this will needlessly iterate the entire iterator
+   --> src/transaction/../../test/transaction_faults.rs:285:27
+    |
+285 |               let process = records
+    |  ___________________________^
+286 | |                 .iter()
+287 | |                 .filter_map(|p| {
+288 | |                     serde_json::from_slice::<serde_json::Value>(&fs::read(p).unwrap()).ok()
+289 | |                 })
+290 | |                 .filter_map(|v| v.pointer("/event/FixtureStarted/process").cloned())
+291 | |                 .last()
+    | |_______________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#double_ended_iterator_last
+    = note: `#[warn(clippy::double_ended_iterator_last)]` on by default
+help: try
+    |
+291 -                 .last()
+291 +                 .next_back()
+    |
+
+warning: `deployment-control-plane` (lib) generated 3 warnings (run `cargo clippy --fix --lib -p deployment-control-plane -- ` to apply 1 suggestion)
+warning: `deployment-control-plane` (lib test) generated 6 warnings (3 duplicates) (run `cargo clippy --fix --lib -p deployment-control-plane --tests -- ` to apply 1 suggestion)
+warning: file is loaded as a module multiple times: `test/common/mod.rs`
+ --> test/transactions.rs:1:1
+  |
+1 | / #[allow(dead_code)]
+2 | | mod common;
+  | |___________^ first loaded here
+  |
+ ::: test/transaction_fixture.rs:1:1
+  |
+1 | / #[allow(dead_code)]
+2 | | #[path = "common/mod.rs"]
+3 | | mod common;
+  | |___________^ loaded again here
+  |
+  = help: replace all but one `mod` item with `use` items
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#duplicate_mod
+  = note: `#[warn(clippy::duplicate_mod)]` on by default
+
+warning: file is loaded as a module multiple times: `test/common/mod.rs`
+ --> test/train.rs:1:1
+  |
+1 | / #[path = "common/mod.rs"]
+2 | | #[allow(dead_code)]
+3 | | mod common;
+  | |___________^ first loaded here
+  |
+ ::: test/common/service.rs:5:1
+  |
+5 | / #[path = "mod.rs"]
+6 | | #[allow(dead_code)]
+7 | | mod common;
+  | |___________^ loaded again here
+  |
+ ::: test/common/train.rs:1:1
+  |
+1 | / #[path = "mod.rs"]
+2 | | #[allow(dead_code)]
+3 | | mod common;
+  | |___________^ loaded again here
+  |
+  = help: replace all but one `mod` item with `use` items
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#duplicate_mod
+  = note: `#[warn(clippy::duplicate_mod)]` on by default
+
+error: using a non-octal value to set unix file permissions
+  --> test/adoption/e2e.rs:67:61
+   |
+67 |     fs::set_permissions(&denied, fs::Permissions::from_mode(0)).unwrap();
+   |                                                             ^ help: consider using an octal literal instead: `0o0`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#non_octal_unix_permissions
+   = note: `#[deny(clippy::non_octal_unix_permissions)]` on by default
+
+error: could not compile `deployment-control-plane` (test "e2e") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+warning: `deployment-control-plane` (test "transactions") generated 1 warning
+warning: `deployment-control-plane` (test "train") generated 1 warning

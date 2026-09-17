@@ -1,0 +1,28 @@
+{
+  "manifest_digest": "ea4e075fa3a04b9b0dffa8772869beee68e335e47344b7eefe79a306f672f18d",
+  "source_digest": "2b3e7e19ccb95f9dec1b3c9a9f45347cca1728a63d0af0ea2288700d74e22291",
+  "verdict": {
+    "blockers": [
+      "HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT",
+      "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS",
+      "TRUSTED_SOURCE_BUILD_REVIEW_BINDING",
+      "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS",
+      "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL",
+      "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION",
+      "INDEPENDENT_WHOLE_BRANCH_REVIEW",
+      "EXACT_OWNER_BOOTSTRAP_RECEIPT"
+    ],
+    "bootstrap_ready": false,
+    "integrity_verified": true
+  },
+  "source_commit": "8db5ada86ce13f5f22727cd8fc6d8734afad35a9",
+  "package_path": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-task4-final-6bfe64sg",
+  "native_candidate_path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/task-4-native-candidate-r2",
+  "generated_at": "2026-09-17T16:11:40.277834+00:00",
+  "manifest_file_sha256": "ea4e075fa3a04b9b0dffa8772869beee68e335e47344b7eefe79a306f672f18d",
+  "controller_sha256": "18a69c94b86026a3f4a75d5deff8b6deeea070514c2b3da3dba53d1bc7a21088",
+  "closure_manifest_sha256": "b6b497f0b879aa901b674d0fb2ab33f7ac6084d490f3ebc69cc0b052902a8364",
+  "prepare_cli_sha256": "53599a158c7aef35f020e2298cf2f4408969c1edda181725d132d6cbb6669084",
+  "payload_count": 23,
+  "closure_bytes": 117266720
+}

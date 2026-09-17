@@ -1,0 +1,20 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-b726307ab9f9b930)
+
+running 3 tests
+
+thread 'unreadable_or_caller_owned_parent_denies_but_true_absence_preserves_legacy' (73220026) panicked at test/adoption/e2e.rs:18:62:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test unreadable_or_caller_owned_parent_denies_but_true_absence_preserves_legacy ... FAILED
+test original_nonroot_lock_selftest_remains_available_before_enrollment ... ok
+test enrolled_legacy_sources_refuse_before_any_effect ... ok
+
+failures:
+
+failures:
+    unreadable_or_caller_owned_parent_denies_but_true_absence_preserves_legacy
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+error: test failed, to rerun pass `--test e2e`

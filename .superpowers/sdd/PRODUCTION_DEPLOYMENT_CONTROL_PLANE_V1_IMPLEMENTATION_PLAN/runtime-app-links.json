@@ -1,0 +1,138 @@
+{
+  "time_utc": "2026-09-17T14:24:24.264000+00:00",
+  "scope": "read-only link metadata; not a protected bootstrap preimage",
+  "symlinks": [
+    {
+      "relative_path": "node_modules/@deepseek-ai",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "../../harness/node_modules/.pnpm/node_modules/@deepseek-ai"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/product-api",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/product-api"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/production-runtime",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/production-runtime"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/broker",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/broker"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/agent-switch",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/agent-switch"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/bundle-integration",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/bundle-integration"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/agent-credential-provisioning",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/agent-credential-provisioning"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/scheduler-router",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/scheduler-router"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/owner-guard",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/owner-guard"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/agent-provisioning",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/agent-provisioning"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/scheduler",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/scheduler"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/agent-router",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/agent-router"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/workspace-bootstrap",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/workspace-bootstrap"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/bundle-agent-switch",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/bundle-agent-switch"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/feishu-connector",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/feishu-connector"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/demo-server",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/demo-server"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/agent-memory",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/agent-memory"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/bundle-memory",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/bundle-memory"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/bundle-broker",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/bundle-broker"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/notification-ingress",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/notification-ingress"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/agent-definition",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/packages/agent-definition"
+    },
+    {
+      "relative_path": "node_modules/@agent-core/bundle-demo",
+      "uid": 505,
+      "gid": 601,
+      "link_target": "/usr/local/libexec/agent-core/app/bundle-demo"
+    }
+  ]
+}

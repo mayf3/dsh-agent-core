@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.19s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-5077166400059868)
+
+running 1 test
+
+thread 'loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture' (73172352) panicked at test/adoption/bootstrap.rs:38:55:
+called `Result::unwrap()` on an `Err` value: Error { code: "LOADER_UNPROTECTED_DEPENDENCY" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture ... FAILED
+
+failures:
+
+failures:
+    loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test bootstrap`

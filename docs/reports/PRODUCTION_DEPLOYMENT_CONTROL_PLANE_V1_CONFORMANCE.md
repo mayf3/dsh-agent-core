@@ -68,3 +68,14 @@ repository directory violations remain distinct from the supplemental Rust
 file/child/depth check. No global structure PASS is asserted. No governing Spec
 was modified. No root invocation, production write/restart/install/routing,
 LaunchDaemon enablement, key provision, sudoers edit or live retirement occurred.
+
+Executed source coordinates: full locked suite at
+`3f59cf3aa4c11ae2dbec107e1284487b45bac099` passed105/105; final prospective-template
+and guard-only changes at`8db5ada86ce13f5f22727cd8fc6d8734afad35a9` passed affected
+bootstrap6/e2e3, clean strict all-targets Clippy, fmt and release build. Final
+inert package manifest SHA256 is
+`ea4e075fa3a04b9b0dffa8772869beee68e335e47344b7eefe79a306f672f18d`, with offline
+integrity verified and BOOTSTRAP_READY=NO. Exact paths/raw evidence and all retained
+failed observations are in the Task4 report. Final structure retains only the
+three existing directory violations; Rust max479lines/20children/depth2, and the
+legacy installer is498lines with its executable-line identity preserved.

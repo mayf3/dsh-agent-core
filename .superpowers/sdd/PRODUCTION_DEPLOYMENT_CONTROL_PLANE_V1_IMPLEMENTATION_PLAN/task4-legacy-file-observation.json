@@ -1,0 +1,108 @@
+{
+  "observed_at": "2026-09-17T15:36:27.608984+00:00",
+  "method": "nonprivileged known-path lstat and bounded O_NOFOLLOW same-fd hash; no source contents printed; no mutation",
+  "limitations": [
+    "Known paths only; not exhaustive host inventory",
+    "No protected sudoers/ACL/lifecycle denial claim",
+    "Not a later transaction preimage or authority",
+    "Leaf-only nofollow hash observation does not certify ancestors"
+  ],
+  "records": [
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/operator-scripts/scheduler-watchdog-production-runbook-d602b59.sh",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o700",
+      "size": 12053,
+      "regular": true,
+      "flags": 0,
+      "sha256": "c38c24d4d859c76b774837077af1b5c8205b358743d59ccb25914e40befd9d19",
+      "stable_observed_fd": true
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/operator-scripts/scheduler-watchdog-production-freeze-sudo.sh",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755",
+      "size": 32353,
+      "regular": true,
+      "flags": 0,
+      "sha256": "e8ca4a0ce17a50640fc895a4a61c992bf11ae253762b75b2b3313f2729015698",
+      "stable_observed_fd": true
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/agent-core-session-trace-v2-restored-v1-r2/agent_core_session_trace_v2_root_transaction.py",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755",
+      "size": 28037,
+      "regular": true,
+      "flags": 0,
+      "sha256": "72dacfe1990c5de0dab9d7d28f21da990ccf115e3c4877272b5baf94dd09878d",
+      "stable_observed_fd": true
+    },
+    {
+      "path": "/Users/yanfenma/workspace/deployment-artifacts/hr-dispatch-delivery-v1/DEPLOY_HR_DISPATCH_DELIVERY_V1.sh",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o644",
+      "size": 19129,
+      "regular": true,
+      "flags": 0,
+      "sha256": "95438facd87b814919ea49b6a46e5ad10281c77322388d4a397ee0026911cf94",
+      "stable_observed_fd": true
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/svc-workflow/scripts/release.sh",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755",
+      "size": 15209,
+      "regular": true,
+      "flags": 0,
+      "sha256": "3f68ebfa590ff1fc812f5819ed33f7275492b983e2608ee5bbcbd5836ca2cab6",
+      "stable_observed_fd": true
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/operator-scripts/scheduler-watchdog-production-phase2-d602b59-sudo.sh",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o700",
+      "size": 46637,
+      "regular": true,
+      "flags": 0,
+      "sha256": "5a9c6090fdf8b5a86dfd5b0e5456d6718d6b156eed28c1c25d2a9e9c88045cb3",
+      "stable_observed_fd": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/trusted-cp-deploy-install.sh",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "size": 25402,
+      "regular": true,
+      "flags": 0,
+      "sha256": "9690ff52d053843f505885973d31300abc5c9bdee8fd5f915441167c8d9c0727",
+      "stable_observed_fd": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "size": 12377,
+      "regular": true,
+      "flags": 0,
+      "sha256": "4f0d0f78adb0f716d2769d6d51772bc2951e25697dcecbbad635623e36b24d36",
+      "stable_observed_fd": true
+    }
+  ]
+}

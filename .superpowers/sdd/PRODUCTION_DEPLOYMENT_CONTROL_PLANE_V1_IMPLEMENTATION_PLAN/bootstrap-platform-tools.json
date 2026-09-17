@@ -1,0 +1,51 @@
+{
+  "time_utc": "2026-09-17T14:28:38.646120+00:00",
+  "scope": "read-only system binary identity candidates; not authorization or executed bootstrap",
+  "tools": [
+    {
+      "path": "/bin/launchctl",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "regular": true,
+      "size": 363488,
+      "sha256": "b4dbf509754d8e1117f7851baa93ede75bc75218c48d6ddf19fbb1505d261be7"
+    },
+    {
+      "path": "/usr/bin/install",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "regular": true,
+      "size": 137424,
+      "sha256": "66a36cfae72df019e1dc8649331f956fc93d3d096226b535a4e5931535d024cc"
+    },
+    {
+      "path": "/usr/bin/openssl",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "regular": true,
+      "size": 1130832,
+      "sha256": "f81b4fcec5048ea1eceb40fc08f4e06f1668181f0b5bacfa8be27d0da181dcb7"
+    },
+    {
+      "path": "/usr/bin/dscl",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "regular": true,
+      "size": 423664,
+      "sha256": "7870543dca5d253c509d2cb6c16893e53b688537b33f81d47d533d8693eb67f4"
+    },
+    {
+      "path": "/usr/sbin/dseditgroup",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "regular": true,
+      "size": 156000,
+      "sha256": "68369dbdf779d4c5653e67ff98e7eb469c3f25ef22eb0b6a10ff2e8a923c8339"
+    }
+  ]
+}

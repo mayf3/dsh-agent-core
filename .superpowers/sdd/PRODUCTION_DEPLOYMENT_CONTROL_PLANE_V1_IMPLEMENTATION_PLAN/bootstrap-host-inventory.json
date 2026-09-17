@@ -1,0 +1,159 @@
+{
+  "observed_at": "2026-09-17T11:38:11.993181+00:00",
+  "method": "nonprivileged lstat/plist selected fields/source digests; no environment/credential contents",
+  "authority_base": "bb5327f622a0333f1e11d945319e024a3731f05a",
+  "caller": {
+    "uid": 502,
+    "gid": 20
+  },
+  "host": [
+    "ProductName:\t\tmacOS",
+    "ProductVersion:\t\t26.6.2",
+    "BuildVersion:\t\t25G83"
+  ],
+  "paths": [
+    {
+      "path": "/usr/local/libexec/agent-core",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/trusted-cp-deploy-install.sh",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "symlink": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false
+    },
+    {
+      "path": "/var/db/agent-core",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false
+    },
+    {
+      "path": "/var/db/agent-core/production-transaction.lock",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/var/db/agent-core/deployments/transaction.lock",
+      "error": "PermissionError"
+    },
+    {
+      "path": "/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/var/run/agent-core-production-mutation.lock",
+      "uid": 0,
+      "gid": 1,
+      "mode": "0o600",
+      "symlink": false
+    },
+    {
+      "path": "/var/db/agent-deployd",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-deployd",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/var/run/agent-deployd/control.sock",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/Users/yanfenma/.local/services/svc-workflow/svc-workflow",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755",
+      "symlink": false
+    }
+  ],
+  "services": [
+    {
+      "plist": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+      "sha256": "dc715fd8b73c6debfd35dd54c61fd55f38ff0e3f0f8937ebdc7cfa4afde3c3d9",
+      "label": "ai.agent-core.runtime",
+      "user": "authsvc",
+      "group": "authsvc",
+      "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "working_directory": "/usr/local/libexec/agent-core/app"
+    },
+    {
+      "plist": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist",
+      "sha256": "7901ef3eee2a5736b49a456c28ac1f8a349666792e55f66edb986fcc6756ff9b",
+      "label": "ai.agent-core.scheduler-watchdog-w1",
+      "user": "authsvc",
+      "group": null,
+      "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "working_directory": null
+    },
+    {
+      "plist": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist",
+      "sha256": "8c8e5107ef66cdcf6b0aa8c0f39a7eabe350bb4c7f6d99b826c5021b8bb48e49",
+      "label": "ai.agent-core.scheduler-watchdog-w2",
+      "user": "root",
+      "group": null,
+      "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "working_directory": null
+    },
+    {
+      "plist": "/Library/LaunchDaemons/com.auth-service.plist",
+      "sha256": "fd5edf5b28b4f29bb90d8138e7befa93b24658ac97c5320295a6f1bcf0f145ac",
+      "label": "com.auth-service",
+      "user": "authsvc",
+      "group": "authsvc",
+      "program": "/usr/local/bin/node",
+      "working_directory": "/Users/yanfenma/workspace/project/auth-deploy-fleet-send-785d743"
+    },
+    {
+      "plist": "/Users/yanfenma/Library/LaunchAgents/com.svc-workflow.plist",
+      "sha256": "b1a22e7004e251edf3472158abb5b1ec88b8e4c82c63faa80f91f23dd5909c95",
+      "label": "com.svc-workflow",
+      "user": null,
+      "group": null,
+      "program": "/Users/yanfenma/.local/services/svc-workflow/svc-workflow",
+      "working_directory": "/Users/yanfenma/.local/services/svc-workflow"
+    }
+  ],
+  "source_entrances": [
+    {
+      "path": "scripts/trusted-cp-deploy-install.sh",
+      "sha256": "ce8fea9ca7ce1618d933f26e63f7c95e0e9dfb0167a6903bbf39f3bae5fde915",
+      "lines": 591
+    },
+    {
+      "path": "deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs",
+      "sha256": "8ff1d255fe4c39e5a70c0a91dc2b529d1331bbdfe37e53b6818fcc7e92cf1e60",
+      "lines": 233
+    },
+    {
+      "path": "deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh",
+      "sha256": "b8c9093ac23880a2f89517b8666ee293a55f4815828b4f313ae6b05a00b6d767",
+      "lines": 435
+    },
+    {
+      "path": "scripts/production-runtime-launchd.mjs",
+      "sha256": "0d034ead4345fb0d193e235b4e47a106bed81ad4a1a4505949f4dd93aaad76f2",
+      "lines": 287,
+      "surface": "legacy GUI launchctl install/uninstall lifecycle writer; inventory only; no live invocation"
+    }
+  ]
+}

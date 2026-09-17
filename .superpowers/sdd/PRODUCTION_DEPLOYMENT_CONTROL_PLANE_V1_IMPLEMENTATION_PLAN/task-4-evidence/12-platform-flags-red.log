@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.75s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-5077166400059868)
+
+running 1 test
+
+thread 'fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift' (73164120) panicked at test/adoption/bootstrap.rs:201:106:
+called `Result::unwrap()` on an `Err` value: Error { code: "UNSAFE_FLAGS" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift ... FAILED
+
+failures:
+
+failures:
+    fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--test bootstrap`

@@ -1,0 +1,66 @@
+[
+  {
+    "file": "35-final-full-suite.log",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--",
+      "--nocapture"
+    ],
+    "head": "3f59cf3aa4c11ae2dbec107e1284487b45bac099",
+    "start": "2026-09-17T16:02:29.739468+00:00",
+    "end": "2026-09-17T16:07:06.995713+00:00",
+    "exit_code": 0
+  },
+  {
+    "file": "36-final-fmt.log",
+    "command": [
+      "cargo",
+      "fmt",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--",
+      "--check"
+    ],
+    "head": "3f59cf3aa4c11ae2dbec107e1284487b45bac099",
+    "start": "2026-09-17T16:07:06.995978+00:00",
+    "end": "2026-09-17T16:07:07.125655+00:00",
+    "exit_code": 0
+  },
+  {
+    "file": "37-final-strict-clippy.log",
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "head": "3f59cf3aa4c11ae2dbec107e1284487b45bac099",
+    "start": "2026-09-17T16:07:07.125869+00:00",
+    "end": "2026-09-17T16:07:07.278738+00:00",
+    "exit_code": 0
+  },
+  {
+    "file": "38-final-release.log",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "--release",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml"
+    ],
+    "head": "3f59cf3aa4c11ae2dbec107e1284487b45bac099",
+    "start": "2026-09-17T16:07:07.278955+00:00",
+    "end": "2026-09-17T16:07:14.557234+00:00",
+    "exit_code": 0
+  }
+]

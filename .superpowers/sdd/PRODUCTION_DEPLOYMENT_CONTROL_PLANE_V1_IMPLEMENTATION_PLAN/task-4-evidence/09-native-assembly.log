@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/task-4-evidence/prepare-native-closure.py", line 40, in <module>
+    assert len({r['destination'] for r in files.values()})==len(files)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

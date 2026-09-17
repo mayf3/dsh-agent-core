@@ -1,0 +1,18 @@
+{
+  "time_utc": "2026-09-17T14:50:02.037414+00:00",
+  "scope": "selected loader environment classification only; no raw environment values",
+  "services": [
+    {
+      "label": "ai.agent-core.runtime",
+      "dynamic_loader_environment": {}
+    },
+    {
+      "label": "ai.agent-core.scheduler-watchdog-w1",
+      "dynamic_loader_environment": {}
+    },
+    {
+      "label": "ai.agent-core.scheduler-watchdog-w2",
+      "dynamic_loader_environment": {}
+    }
+  ]
+}

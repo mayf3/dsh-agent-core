@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.74s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-05a13d5a8b34b80c)
+
+running 1 test
+
+thread 'loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture' (73142871) panicked at test/adoption/bootstrap.rs:26:9:
+unsafe transitive load accepted: /usr/local/opt/libuv/lib/libuv.1.dylib
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture ... FAILED
+
+failures:
+
+failures:
+    loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test bootstrap`

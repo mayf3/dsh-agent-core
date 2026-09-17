@@ -1,0 +1,24 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-5077166400059868)
+
+running 6 tests
+test loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture ... ok
+test fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift ... ok
+test package_has_no_activation_or_secrets_and_parses_as_disabled_plist ... ok
+
+thread 'prospective_producer_scope_registers_and_unknown_host_is_explicit' (73219823) panicked at test/adoption/bootstrap.rs:252:61:
+called `Result::unwrap()` on an `Err` value: Error { code: "PRODUCER_SCOPE" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test prospective_producer_scope_registers_and_unknown_host_is_explicit ... FAILED
+test package_rejects_source_binary_metadata_and_unallowlisted_target ... ok
+test plist_loader_environment_is_rejected_from_the_exact_supplied_bytes ... ok
+
+failures:
+
+failures:
+    prospective_producer_scope_registers_and_unknown_host_is_explicit
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s
+
+error: test failed, to rerun pass `--test bootstrap`

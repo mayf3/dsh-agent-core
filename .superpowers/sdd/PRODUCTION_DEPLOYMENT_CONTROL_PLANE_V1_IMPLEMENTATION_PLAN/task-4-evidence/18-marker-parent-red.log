@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.82s
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-b726307ab9f9b930)
+
+running 1 test
+
+thread 'caller_owned_marker_parent_is_not_prebootstrap_absence' (73170598) panicked at test/adoption/e2e.rs:99:9:
+unsafe parent bypass: scripts/trusted-cp-deploy-install.sh
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test caller_owned_marker_parent_is_not_prebootstrap_absence ... FAILED
+
+failures:
+
+failures:
+    caller_owned_marker_parent_is_not_prebootstrap_absence
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test e2e`

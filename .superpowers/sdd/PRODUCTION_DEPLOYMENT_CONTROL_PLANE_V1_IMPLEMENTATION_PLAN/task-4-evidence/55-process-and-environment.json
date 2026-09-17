@@ -1,0 +1,9 @@
+{
+  "time_utc": "2026-09-17T16:12:27.178851+00:00",
+  "uid": 502,
+  "euid": 502,
+  "architecture": "arm64",
+  "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "owned_control_plane_processes": [],
+  "limitations": "Kernel comm-only snapshot, no unrelated process argv read. Owned fixtures are nonroot; no production process or path mutation performed."
+}

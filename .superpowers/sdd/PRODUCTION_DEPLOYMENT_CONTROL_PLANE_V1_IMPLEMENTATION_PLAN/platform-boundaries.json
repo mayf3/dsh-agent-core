@@ -1,0 +1,71 @@
+{
+  "purpose": "read-only platform facts for descriptor-safe Task 2; not root permission proof",
+  "paths": [
+    {
+      "path": "/var",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": true,
+      "link": "private/var",
+      "realpath": "/private/var"
+    },
+    {
+      "path": "/var/db",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false,
+      "link": null,
+      "realpath": "/private/var/db"
+    },
+    {
+      "path": "/var/run",
+      "uid": 0,
+      "gid": 1,
+      "mode": "0o775",
+      "symlink": false,
+      "link": null,
+      "realpath": "/private/var/run"
+    },
+    {
+      "path": "/private/var",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false,
+      "link": null,
+      "realpath": "/private/var"
+    },
+    {
+      "path": "/usr",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false,
+      "link": null,
+      "realpath": "/usr"
+    },
+    {
+      "path": "/usr/local",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false,
+      "link": null,
+      "realpath": "/usr/local"
+    },
+    {
+      "path": "/usr/local/libexec",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false,
+      "link": null,
+      "realpath": "/usr/local/libexec"
+    }
+  ],
+  "sdk": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+  "acl_header": "usr/include/sys/acl.h",
+  "peer_header": "usr/include/unistd.h; sys/un.h"
+}

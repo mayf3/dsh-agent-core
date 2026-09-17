@@ -1,0 +1,78 @@
+{
+  "time_utc": "2026-09-17T14:49:14.962213+00:00",
+  "scope": "read-only representative dependency ancestor ACL/flag metadata; no mutation probe",
+  "paths": [
+    {
+      "path": "/usr/local/opt",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o775",
+      "flags": 0,
+      "symlink": false,
+      "caller_write_access": true,
+      "metadata_lines": [
+        "drwxrwxr-x  220 yanfenma  admin  - 7040 Aug 21 23:25 /usr/local/opt"
+      ]
+    },
+    {
+      "path": "/usr/local/opt/libuv",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o700",
+      "flags": 0,
+      "symlink": true,
+      "caller_write_access": true,
+      "metadata_lines": [
+        "lrwx------  1 yanfenma  admin  - 22 Mar 16  2026 /usr/local/opt/libuv -> ../Cellar/libuv/1.52.1"
+      ]
+    },
+    {
+      "path": "/usr/local/Cellar/libuv",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o755",
+      "flags": 0,
+      "symlink": false,
+      "caller_write_access": true,
+      "metadata_lines": [
+        "drwxr-xr-x@ 3 yanfenma  admin  - 96 Apr 26 16:28 /usr/local/Cellar/libuv"
+      ]
+    },
+    {
+      "path": "/usr/local/Cellar/libuv/1.52.1",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o705",
+      "flags": 0,
+      "symlink": false,
+      "caller_write_access": true,
+      "metadata_lines": [
+        "drwx---r-x@ 14 yanfenma  admin  - 448 Mar 16  2026 /usr/local/Cellar/libuv/1.52.1"
+      ]
+    },
+    {
+      "path": "/usr/local/Cellar/libuv/1.52.1/lib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o705",
+      "flags": 0,
+      "symlink": false,
+      "caller_write_access": true,
+      "metadata_lines": [
+        "drwx---r-x@ 8 yanfenma  admin  - 256 Mar  7  2026 /usr/local/Cellar/libuv/1.52.1/lib"
+      ]
+    },
+    {
+      "path": "/usr/local/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib",
+      "uid": 502,
+      "gid": 80,
+      "mode": "0o404",
+      "flags": 0,
+      "symlink": false,
+      "caller_write_access": false,
+      "metadata_lines": [
+        "-r-----r--@ 1 yanfenma  admin  - 155040 Mar 16  2026 /usr/local/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib"
+      ]
+    }
+  ]
+}
