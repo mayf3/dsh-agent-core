@@ -69,6 +69,7 @@ export async function reserveOccurrence(candidate, onRejection = () => {}) {
 
     if (candidate.kind === 'retry') {
       const retry = retryCandidate({ job, occurrences: latest.occurrences, nowMs: admittedAt })
+      if (retry?.staleRevision) return refuse('retry_stale_schedule_revision')
       if (!retry || retry.exhausted || !retry.due
         || retry.retryOfOccurrenceId !== candidate.retryOfOccurrenceId) return refuse('retry_not_eligible')
     } else {

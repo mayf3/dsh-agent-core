@@ -91,6 +91,9 @@ export class Scheduler {
     this._slotCursor = createSlotAccountingCursor()
     this._engineSessionId = `${process.pid}:${Date.now().toString(36)}`
     this._leaseLossRecorded = false
+    // Stale-retry receipts: once per engine session per superseded state —
+    // the detection loop re-derives the same candidate every tick.
+    this._staleRetryNoted = new Set()
   }
 
   async load() {
@@ -248,6 +251,21 @@ export class Scheduler {
         if (retry && !retry.exhausted) {
           if (retry.due) candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId })
           continue
+        }
+        if (retry?.staleRevision) {
+          // Durable policy receipt: the pending retry belongs to a
+          // superseded schedule revision (minting it would failLoud the
+          // store); the natural schedule below still owns this job's slots.
+          const notedKey = `${job.id}:${retry.predecessorScheduleRevision}->${job.scheduleRevision}`
+          if (!this._staleRetryNoted.has(notedKey)) {
+            this._staleRetryNoted.add(notedKey)
+            await this.store.appendRunEvent({
+              ts: now, action: 'retry_superseded_by_revision', jobId: job.id,
+              retryOfOccurrenceId: retry.retryOfOccurrenceId,
+              predecessorScheduleRevision: retry.predecessorScheduleRevision,
+              jobScheduleRevision: job.scheduleRevision,
+            })
+          }
         }
         const natural = naturalCandidate({
           job,
