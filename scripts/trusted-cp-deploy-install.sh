@@ -1,56 +1,21 @@
 #!/bin/bash
-# =============================================================================
-# trusted-cp-deploy-install.sh — TRUSTED_CONTROL_PLANE_DEPLOYMENT_HARDENING_V1
-#
-# One-time (re-runnable) root install of the TRUSTED control-plane closure.
-#
-# Goal: every piece of code/config the trusted Control Plane (uid 505,
-# authsvc) executes BEFORE dropping to the Agent uid (502) must live under a
-# protected root that uid 502 cannot modify, replace, or redirect.
-#
-#   TRUSTED_INSTALL_PATH=/usr/local/libexec/agent-core
-#     harness/   self-contained DSH CLI closure (source copy + `pnpm install`
-#                with package-import-method=copy so NO hardlink points into a
-#                502-owned store)           owner authsvc:authsvc  0755/0644
-#     app/       Agent Core closure (packages/bundles/profiles/scripts) with
-#                node_modules/@deepseek-ai -> ../../harness/node_modules/@deepseek-ai
-#                                           owner authsvc:authsvc  0755/0644
-#     home/      the 505 control-plane DSH_HOME (profile + farm -> app/)
-#                                           owner authsvc:authsvc
-#     config/    production state: Agent Definition (agents.json)/bindings/jobs/
-#                credential store   owner authsvc:authsvc  0700/0600
-#     .cache/    pnpm cache (root-owned)
-#
-# Also seeds /Users/authsvc/.dsh/{settings.yaml,.credentials.yaml} (authsvc
-# 0600) — the trusted model-route settings source the children copy from.
-#
-# The dev repo / harness stay uid 502-writable for development; this install
-# only ships the minimal execution closure (NOT the monorepos). The Agent
-# child (502) may keep reading the trusted closure (world-readable) but can
-# never modify it; its own workspace/runtime stays 502-writable as before.
-#
-# Usage (run as root):
-#   sudo ./scripts/trusted-cp-deploy-install.sh [REPO_SRC] [HARNESS_SRC]
-#   REPO_SRC    default: the repo this script lives in (feature worktree)
-#   HARNESS_SRC default: /Users/yanfenma/workspace/github/deepseek-harness
-#
-# Verifies at the end: every symlink in the trusted tree resolves INSIDE the
-# trusted root (or /usr/local/libexec), and a uid-502 spot check cannot write
-# to app/, harness/, home/, config/ or the helper.
-# =============================================================================
+# Legacy installer; enrolled targets must use agent-deployctl.
+# Usage: trusted-cp-deploy-install.sh [REPO_SRC] [HARNESS_SRC] (legacy root path).
+# Details: docs/reports/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_LEGACY_INSTALLER_NOTES.md
 set -euo pipefail
-if [ -e /usr/local/libexec/agent-deployd/enrolled-dsh-runtime ] || [ -L /usr/local/libexec/agent-deployd/enrolled-dsh-runtime ] || [ -L "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)" ] || { [ -d "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)" ] && [ "$(/usr/bin/stat -f '%u:%Lp' "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)")" != '0:755' ]; }; then echo "Enrolled/unsafe target: use agent-deployctl" >&2; exit 1; fi
-# GLOBAL production-deploy mutex (WATCHDOG transaction P1/B7 convergence): every
-# entrypoint that replaces the trusted app / routing / restarts the canonical
-# runtime shares THIS exact lock. Atomic mkdir acquire; a held lock fails
-# closed with its holder metadata; a killed run leaves the lock behind and it
-# is disposed of EXPLICITLY (never guessed, never auto-deleted).
+# DCP enrollment guard begin
+DCP_ENROLLMENT_MARKER='/usr/local/libexec/agent-deployd/enrolled-dsh-runtime'
+DCP_ENROLLMENT_PARENT='/usr/local/libexec/agent-deployd'
+if [ -e "$DCP_ENROLLMENT_MARKER" ] || [ -L "$DCP_ENROLLMENT_MARKER" ] \
+  || [ -L "$DCP_ENROLLMENT_PARENT" ] \
+  || { [ -d "$DCP_ENROLLMENT_PARENT" ] && [ "$(/usr/bin/stat -f '%u:%Lp' "$DCP_ENROLLMENT_PARENT")" != '0:755' ]; }; then
+  echo "Enrolled/unsafe target: use agent-deployctl" >&2
+  exit 1
+fi
+# DCP enrollment guard end
+# Global legacy mutex: fail closed; never infer stale-lock disposal.
 PRODUCTION_DEPLOY_LOCK_DIR="${PRODUCTION_DEPLOY_LOCK_DIR:-/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock}"
-# B7 inherited-lock seam: a parent transaction (run-authorized-transaction.sh)
-# holds the mutex across DEPLOY/ROUTING/RELOAD; the child verifies the actual
-# holder belongs to that parent and then neither reacquires nor releases it.
-# There is deliberately NO bypass flag: without a verified inherited holder
-# the installer always acquires the mutex itself (standalone path).
+# Parent-owned inherited locks are verified and never released by the child.
 INHERITED_LOCK_HOLDER_PATTERN="${PRODUCTION_DEPLOY_LOCK_INHERITED_FROM:-}"
 GLOBAL_LOCK_ACQUIRED_BY_ME=0
 PRESERVED_SOURCE_GIT_STAMP=""
@@ -137,10 +102,7 @@ else
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-# AGENT_CORE_BACKUP_RETENTION_V1: deployment backup metadata + pin + post-verified
-# retention ops live in the tiny filesystem helper (same dir as this script). It is
-# pure shell/filesystem — no package/DB/service/daemon; it neither deletes legacy
-# backups nor modifies Runtime/Router/Scheduler/Kernel/product semantics.
+# Backup metadata and pins use the colocated filesystem retention helper.
 BACKUP_OPS="$SCRIPT_DIR/agent-core-backup-ops.sh"
 SOURCE_GIT_STAMP="$SCRIPT_DIR/lib/trusted-source-git-stamp.sh"
 REPO_SRC="${1:-$(dirname "$SCRIPT_DIR")}"
@@ -201,13 +163,7 @@ fi
 mkdir -p "$TRUSTED_ROOT"/{harness,app,home,config,.cache}
 cd "$TRUSTED_ROOT"
 
-# ---- 1b. reuse the heavyweight closures when their sources are UNCHANGED ----
-# The harness closure (1.5G source + offline pnpm install) and the Node
-# runtime are DEPENDENCIES of the code under test, not the code under test
-# itself. When the harness checkout is at the same commit (and clean) and the
-# Cellar node version is identical, mv them back from the backup — an instant
-# rename instead of minutes of tar+pnpm. The app closure is ALWAYS recopied
-# fresh (that is where the integration changes live).
+# Reuse unchanged harness/Node closures; always recopy the app.
 REUSE_HARNESS=0
 REUSE_NODE=0
 if [ -n "${BAK:-}" ]; then
@@ -253,11 +209,7 @@ cd "$TRUSTED_ROOT"
 printf '%s' "$HARNESS_STAMP" > harness/.source-stamp
 fi
 
-# ---- 2b. trusted Node runtime (review blocker fix) --------------------------
-# The production Control Plane must NEVER execute /usr/local/bin/node
-# (Homebrew, uid-502-writable). Materialize the ACTUAL Node runtime into the
-# trusted closure: real files only (cp -RL), no symlink/hardlink back to
-# /usr/local/bin, the Cellar, or /Users/yanfenma.
+# Trusted Node must be real protected copies, not Homebrew links.
 echo "== copying Node runtime -> node-runtime/"
 if [ "$REUSE_NODE" != "1" ]; then
 NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
@@ -331,9 +283,7 @@ for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
   [ -f "$d/cordis.patch.yml" ] && cp "$d/cordis.patch.yml" "app/$name/cordis.patch.yml"
 done
 
-# Agent existence authority closure (AGENT_DEFINITION_CONFIG_V1): the formal
-# Agent Definition package MUST be in the trusted app closure, and the
-# removed agent-registry package MUST NOT be (no second Agent authority).
+# Include the sole Agent Definition authority; exclude the removed registry.
 if [ ! -f "app/packages/agent-definition/package.json" ] \
    || [ ! -d "app/packages/agent-definition/src" ]; then
   echo "ERROR: app closure missing packages/agent-definition (Agent Definition authority)" >&2
@@ -345,10 +295,7 @@ if [ -e "app/packages/agent-registry" ]; then
 fi
 echo "  Agent Definition closure: packages/agent-definition PRESENT, packages/agent-registry ABSENT"
 
-# PRODUCTION_INTEGRATION_V1 (Task 3): the Production Runtime closure MUST be
-# in the trusted app closure — the supervised composition (launchd -> trusted
-# Node -> app/scripts/production-runtime.mjs) imports the wiring-only
-# production-runtime package and spawns agents with the production profile.
+# Include the supervised production-runtime composition in the trusted app.
 for need in \
   "app/packages/production-runtime/package.json" \
   "app/packages/production-runtime/src/entry.js" \
@@ -362,22 +309,11 @@ for need in \
 done
 echo "  Production Runtime closure: packages/{production-runtime,agent-provisioning} + profile-production + scripts PRESENT"
 
-# @deepseek-ai resolution bridge — INSIDE the trusted root only. The app
-# packages resolve @deepseek-ai/* through the harness's full scope farm
-# (node_modules/.pnpm/node_modules/@deepseek-ai), exactly like the dev
-# setup's bridge; every entry stays inside the trusted harness.
+# Resolve @deepseek-ai only through the trusted harness bridge.
 ln -s ../../harness/node_modules/.pnpm/node_modules/@deepseek-ai app/node_modules/@deepseek-ai
 [ -d "app/node_modules/@deepseek-ai" ] || { echo "ERROR: @deepseek-ai bridge broken" >&2; exit 2; }
 
-# third-party runtime deps of the app closure (real copies, dereferenced —
-# never symlinks into the 502-owned dev install):
-#   @larksuiteoapi/node-sdk  (feishu-connector)
-#   croner                   (scheduler)
-# third-party runtime deps of the app closure — copy the FULL dev-install
-# node_modules surface as REAL dereferenced copies (the dev repo is the
-# reference environment where the composition loads; axios/form-data/… are
-# transitive deps of @larksuiteoapi). @deepseek-ai stays the in-trusted
-# bridge; @agent-core is a dev-only artifact and is skipped.
+# Copy third-party runtime dependencies as real files, not dev-store links.
 for dep in "$MAIN_REPO"/node_modules/*/; do
   name="$(basename "$dep")"
   case "$name" in
@@ -433,12 +369,7 @@ chmod 600 home/.credentials.yaml
 # ---- 5. config (505-private state) -----------------------------------------
 echo "== seeding config/ (505-private)"
 mkdir -p config
-# The Agent Definition config is the SINGLE Agent existence authority
-# (AGENT_DEFINITION_CONFIG_V1): an empty declarative document until the
-# deployment authorizes agents (adoptAgents / seedDefinition). A REINSTALL
-# MUST NEVER destroy the deployed definition or the credential store — the
-# stable agt_* identities and the 505 credentials survive code refreshes;
-# empty documents are seeded only on a fresh install.
+# Preserve deployed Agent Definition and credentials; seed only on fresh install.
 if [ -n "${BAK:-}" ] && [ -f "$BAK/config/agents.json" ]; then
   cp "$BAK/config/agents.json" config/agents.json
   echo "  preserved Agent Definition from $BAK (stable agt_* identities kept)"
@@ -454,40 +385,16 @@ fi
 # bindings/jobs are created by the router/resident on first boot (missing
 # file is a legal empty store for both).
 
-# ---- 5b. 505 production root (PRODUCTION_INTEGRATION_V1, Task 3) -----------
-# The supervised Production Runtime (packages/production-runtime) persists
-# under $HOME/.agent-core. Under uid 505 (authsvc) that is
-# /Users/authsvc/.agent-core. Provision it with the production layout so the
-# launchd --trusted unit (which passes --root explicitly) boots onto a fully
-# provisioned root. The Agent Definition authority stays a SYMLINK to the
-# trusted config/agents.json — the single Agent existence document (never a
-# second copy that could drift). Credential store likewise symlinks to the
-# trusted config/agent-credentials.json (Broker gateway via
-# AGENT_CORE_CREDENTIALS_FILE = that trusted 505-private file).
+# Provision the 505 runtime root with links to its sole trusted config authority.
 echo "== provisioning 505 production root -> /Users/authsvc/.agent-core"
 PROD_ROOT=/Users/authsvc/.agent-core
 mkdir -p "$PROD_ROOT"/{bindings,scheduler,workspaces,homes,control,logs}
-# Agent Definition + credential store: single-file authority via symlink to
-# the trusted 505-private config (the runtime reads through the link; only the
-# trusted config file is written/authoritative).
+# Agent Definition and credentials retain one authoritative protected file.
 if [ -e "$PROD_ROOT/agents.json" ] || [ -L "$PROD_ROOT/agents.json" ]; then rm -f "$PROD_ROOT/agents.json"; fi
 ln -s /usr/local/libexec/agent-core/config/agents.json "$PROD_ROOT/agents.json"
-# Ownership split (PRODUCTION_INTEGRATION_V1): the 505 control plane owns the
-# root + all control state (bindings/scheduler/control/logs); the Agent child
-# (uid 502) owns the per-agent workspace + DSH home trees under the same
-# production root. workspaces/ + homes/ stay TRAVERSABLE (0755) — the 505
-# router's idempotent ensure()/provisionAgentHome must stat through them
-# (the posture proven by trusted-credential-505-final-v2-run.mjs; the 505
-# PRIVATE dirs are the ones that get go-stripped). A reinstall must never
-# steal existing child trees back: chown the two roots only, never -R over
-# them; per-agent trees are provisioned by production-agent-provision.mjs.
+# Never recursively chown existing child trees; preserve the 505/502 split.
 chown "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
-# 711 (NOT 700): uid 502 must TRAVERSE the root to reach its own per-agent
-# workspace (spawn cwd) and home — run-4's 0700 root blocked the child at
-# spawn (cwd EACCES, swallowed spawn error, 90s silent ready() timeout, and a
-# delayed unhandled rejection killed the CP minutes later). o+x without o+r:
-# others may reach KNOWN paths but cannot LIST the root; every 505-private
-# subdir keeps its own 0700.
+# Runtime root stays0711 for child traversal; private subdirectories stay0700.
 chmod 711 "$PROD_ROOT"
 chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
 chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"

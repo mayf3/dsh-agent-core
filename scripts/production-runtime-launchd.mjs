@@ -67,7 +67,16 @@
  *                     install closure (required for the supervised runtime)
  *   --trusted-root    trusted install root (default /usr/local/libexec/agent-core)
  */
-try { const p = lstatSync('/usr/local/libexec/agent-deployd'); if (!p.isDirectory() || p.uid !== 0 || (p.mode & 0o7777) !== 0o755) throw new Error(); lstatSync('/usr/local/libexec/agent-deployd/enrolled-dsh-runtime'); throw new Error() } catch (e) { if (e.code !== "ENOENT") throw new Error("Enrolled/unsafe target: use agent-deployctl") }
+// DCP enrollment guard begin
+try {
+  const parent = lstatSync('/usr/local/libexec/agent-deployd')
+  if (!parent.isDirectory() || parent.uid !== 0 || (parent.mode & 0o7777) !== 0o755) throw new Error()
+  lstatSync('/usr/local/libexec/agent-deployd/enrolled-dsh-runtime')
+  throw new Error()
+} catch (error) {
+  if (error.code !== 'ENOENT') throw new Error('Enrolled/unsafe target: use agent-deployctl')
+}
+// DCP enrollment guard end
 import { execFileSync } from 'node:child_process'
 import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'

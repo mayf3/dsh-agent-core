@@ -241,3 +241,36 @@ fn plist_loader_environment_is_rejected_from_the_exact_supplied_bytes() {
     assert!(verify_service_plist(&vec![0; 1024 * 1024 + 1], &hash).is_err());
     assert!(verify_service_plist(&serde_json::to_vec(&safe).unwrap(), &"0".repeat(64)).is_err());
 }
+#[test]
+fn prospective_producer_scope_registers_and_unknown_host_is_explicit() {
+    use deployment_control_plane::{
+        model::{Catalog, Role, TrustedKey},
+        queue::Queue,
+    };
+    let (d, h, s) = bundle();
+    let root = d.path().canonicalize().unwrap();
+    let p: Package =
+        serde_json::from_slice(&fs::read(root.join("manifest.json")).unwrap()).unwrap();
+    let producer = p.issuers.iter().find(|i| i.role == Role::Producer).unwrap();
+    let catalog = Catalog {
+        revision: "fixture-only".into(),
+        profiles: BTreeMap::new(),
+        keys: BTreeMap::from([(
+            producer.proposed_key_id.clone(),
+            TrustedKey {
+                public_key: "not-used-for-signing".into(),
+                role: Role::Producer,
+                scopes: producer.scope.clone(),
+            },
+        )]),
+    };
+    let q = Queue::open(root.join("fixture-queue.db")).unwrap();
+    q.register_producer(&catalog, &producer.proposed_key_id)
+        .unwrap();
+    // Remove no package files: use a fresh unmodified package for exact-inventory verification.
+    let (d2, h2, s2) = bundle();
+    let r = verify_bundle(&d2.path().canonicalize().unwrap(), &h2, &s2).unwrap();
+    assert!(p.profile.host.starts_with("UNRESOLVED"));
+    assert!(r.blockers.iter().any(|b| b.contains("HOST_IDENTITY")));
+    assert!(!h.is_empty() && !s.is_empty());
+}
