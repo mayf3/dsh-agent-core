@@ -4,6 +4,17 @@ These stable EVD identities qualify the observations linked from all fourteen
 conformance rows. **Each relation supports only its stated F/M subclaim; every
 P-only result remains NOT EXECUTED. No whole-ACC production PASS is asserted.**
 
+Current independent disposition: the final scoped re-audit at
+`301dbc5ad433ca7954a99cc64750956fcba07b3c` closes eight original findings and keeps
+B06 partial due to DCP-REREVIEW-R02. Its source/control-flow counterexample shows
+that expired recovery evidence can prevent an eligible Applied installation's
+late verification. This limits the composition supported by EVD-DCP-FR-B06 and
+ACC-011; no recorded passing test is relabeled or deleted. See the complete
+[independent re-audit](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-security-rereview.md).
+Spec/conformance and quality/security remain FIX_REQUIRED. R01 is separately
+qualified as nonblocking future multi-resource debt. All final executable bytes
+remain at `277a5e8832938e6b2232d11949aedfb92cd0e318`; later edits are reports only.
+
 ## Shared exact coordinates and provenance
 
 A = accepted [Spec](../specs/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1.md), semantics

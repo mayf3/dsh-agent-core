@@ -32,3 +32,14 @@ production permission. They remain visible to independent review.
    documentation discoverability or extraction correctness needs repair. Require
    executable-line identity outside the guard, syntax and nonroot regression
    checks; no registry approval, packed code or rule change is inferred.
+10. Qualify the fixed32-row recovery finding as future multi-resource debt,
+    correcting the provisional concern that it was reachable through today's
+    fixed single-resource native driver. Cost if wrong: a current scheduling
+    starvation case would be missed. The independent report records the exact
+    reachability limit; multiple resources must not be enabled without repair.
+11. Retain DCP-REREVIEW-R02 as a blocking partial B06 closure. A stale unit recovery
+    record must not prevent accepted late verification of a healthy current
+    installation. Cost if wrong: delivery is delayed unnecessarily. Do not waive
+    it, weaken STOP/budgets, or mark review/readiness/Goal complete. The SDD final
+    one-wave/one-re-audit cap leaves the concrete minimal repair explicitly open;
+    no new Spec acceptance or privileged bootstrap permission is needed to fix it.

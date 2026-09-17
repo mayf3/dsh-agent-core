@@ -2,13 +2,32 @@
 
 ## Current frozen repair status
 
-The nine DCP-FINAL-B01–B09 repairs are committed at `277a5e8832938e6b2232d11949aedfb92cd0e318`.
+The DCP-FINAL-B01–B09 repair wave is committed at `277a5e8832938e6b2232d11949aedfb92cd0e318`.
 One final serial locked all-targets suite passes168 top-level executions, including
 4096 physical slots; strict Clippy, fmt and fresh release build pass. The
 [new evidence relations](PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_EVIDENCE.md#frozen-final-repair-coordinates-current)
 bind current test definitions/raw logs to all fourteen inherited ACC subclaims
-and the nine proposed closures. This is implementer evidence; RP-07 is pending
-the controller's scoped independent re-audit of the original final findings.
+and the nine proposed closures. The original reviewer's completed
+[scoped re-audit](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-security-rereview.md)
+of evidence HEAD `301dbc5ad433ca7954a99cc64750956fcba07b3c` closes B01–B05 and
+B07–B09 at source/F/M scope. B06 remains partial: **DCP-REREVIEW-R02 (P2)** is
+blocking. A retained expired recovery record for a Blocked unit causes each tick
+to return before processing eligible late verification of the still-current,
+healthy Applied installation. This is a reviewed control-flow counterexample,
+not an executed exploit or production observation. The passing suite does not
+cover that composition. Definite record refusal must be isolated without clearing
+STOP, weakening retry budgets, or ignoring unknown/storage failures.
+
+**IMPLEMENTATION_COMPLETE=NO; TESTS_PASS=YES (the frozen crate suite);
+INDEPENDENT_REVIEW_PASS=NO; BOOTSTRAP_READY=NO.** Real authenticated issuer bridges
+also remain unimplemented pending the public contracts described in
+[the input handoff](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/issuer-public-input-handoff.md).
+No new Spec acceptance is required for R02. R01's fixed32-row recovery scan is
+nonblocking future multi-resource debt; no such counterexample was established
+through the current single-resource native driver. The bounded final repair and
+one scoped review are complete; the SDD workflow's no-second-fix-wave limit leaves
+R02 explicitly unresolved. No merge, push, privileged bootstrap or production
+operation was performed. The Goal is not complete.
 
 New inert package manifest `6e6411dda70109e27a21fd7200e4d3e8acf4132ff42bfbf289b2331ed3a8f202`,
 source digest `de530f88605ac12d5267af9e40fed0195f9629eec7dca76bfc871d00e7eb9af6`,
@@ -44,7 +63,7 @@ adapters, trusted build/review binding, exact initial app slots, protected metad
 legacy writer/lifecycle denial and separately authorized real E2E remain open.
 The candidate verifier returns `bootstrap_ready=false`; local fixture keys or
 ad-hoc signatures cannot turn that into readiness. Independent whole-branch
-review is performed by the controller; this author makes no independent PASS claim.
+review and scoped re-audit are complete with FIX_REQUIRED; RP-07 remains open.
 
 ## Acceptance evidence mapping
 
