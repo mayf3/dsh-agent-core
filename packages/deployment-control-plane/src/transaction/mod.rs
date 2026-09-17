@@ -6,6 +6,7 @@ mod native_profile;
 mod process;
 mod recovery;
 mod remediation;
+pub(crate) use remediation::RecoveryFailure;
 mod service;
 mod slots;
 use crate::{

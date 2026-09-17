@@ -1,5 +1,45 @@
 use super::*;
 impl Queue {
+    /// A refusal is bounded by unit/revision/stage/reason; repeated ticks do not
+    /// grow the receipt ledger or change state, STOP, attempts or recovery authority.
+    pub(crate) fn daemon_recovery_refused(
+        &self,
+        status: &UnitStatus,
+        stage: &str,
+        reason: &str,
+    ) -> Result<()> {
+        self.transaction(|tx| {
+            let current = read_status(tx, &status.unit.deployment_unit_id)?;
+            require(current.revision == status.revision, "REVISION_CAS")?;
+            require(
+                matches!(current.state, State::Blocked | State::RolledBack),
+                "UNKNOWN_OUTCOME",
+            )?;
+            let record = serde_json::json!({
+                "unit_id": current.unit.deployment_unit_id,
+                "status_revision": current.revision,
+                "target_runtime": current.unit.target_runtime,
+                "deployment_profile": current.unit.deployment_profile,
+                "intent": current.unit.deployment_intent_id,
+                "expected_target_generation": current.unit.expected_target_generation,
+                "preflight_attempts": current.preflight_attempts,
+                "mutating_attempts": current.mutating_attempts,
+                "operation": "mutation-recovery", "scope": "unit-local",
+                "stage": stage, "reason": reason,
+            });
+            let hash = crate::trust::digest(&record)?;
+            tx.execute(
+                "INSERT OR IGNORE INTO receipts VALUES (?,?,?,?)",
+                (
+                    &hash,
+                    &current.unit.deployment_unit_id,
+                    "recovery-refusal",
+                    json(&record)?,
+                ),
+            )?;
+            Ok(())
+        })
+    }
     pub(crate) fn daemon_recovery_candidates(&self) -> Result<Vec<UnitStatus>> {
         self.transaction(|tx| {
             let mut statement=tx.prepare("SELECT id FROM units WHERE state IN ('\"Blocked\"','\"RolledBack\"') ORDER BY seq,id LIMIT 32")?;
