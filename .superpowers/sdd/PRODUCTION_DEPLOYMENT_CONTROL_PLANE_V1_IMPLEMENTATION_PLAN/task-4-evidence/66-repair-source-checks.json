@@ -1,0 +1,66 @@
+{
+  "at": "2026-09-17T16:38:28.608124+00:00",
+  "results": [
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "--manifest-path",
+        "packages/deployment-control-plane/Cargo.toml",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "vendored governance bytes match governance.lock.json\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "77e54641c63f976de1089bcf99970a620f126f47",
+        "--",
+        "docs/specs/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1.md"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "77e54641c63f976de1089bcf99970a620f126f47",
+        "--",
+        "packages/deployment-control-plane/src",
+        "packages/deployment-control-plane/Cargo.toml",
+        "packages/deployment-control-plane/Cargo.lock",
+        "scripts/trusted-cp-deploy-install.sh"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

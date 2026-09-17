@@ -1,0 +1,24 @@
+{
+  "source_commit": "a263c8089e16b3614f37b5c4766af50f4d449275",
+  "previous_package_source": "8db5ada86ce13f5f22727cd8fc6d8734afad35a9",
+  "observed_at": "2026-09-17T16:40:17.888624+00:00",
+  "changed_package_files": [
+    "packages/deployment-control-plane/test/adoption/bootstrap.rs",
+    "packages/deployment-control-plane/test/adoption/e2e.rs",
+    "packages/deployment-control-plane/test/adoption/fixture.rs"
+  ],
+  "runtime_and_build_inputs_diff": "empty: src/, Cargo.toml, Cargo.lock, package.json, and every other tracked package input unchanged",
+  "binaries": {
+    "packages/deployment-control-plane/target/release/agent-deployd": {
+      "sha256": "18a69c94b86026a3f4a75d5deff8b6deeea070514c2b3da3dba53d1bc7a21088",
+      "size": 4379072,
+      "original_build_source": "8db5ada86ce13f5f22727cd8fc6d8734afad35a9"
+    },
+    "packages/deployment-control-plane/target/release/agent-deploy-prepare": {
+      "sha256": "53599a158c7aef35f020e2298cf2f4408969c1edda181725d132d6cbb6669084",
+      "size": 921936,
+      "original_build_source": "8db5ada86ce13f5f22727cd8fc6d8734afad35a9"
+    }
+  },
+  "claim": "Reuse exact previous verified release binaries; repair changes only integration-test source. No new build provenance or readiness claim."
+}
