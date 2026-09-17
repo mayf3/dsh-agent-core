@@ -1,0 +1,10 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.65s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 2 tests
+test service::mailbox_tests::visible_rename_with_failed_directory_flush_is_reflushed_on_retry ... ok
+test service::mailbox_tests::existing_mailbox_record_must_retry_its_failed_directory_flush ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.07s
+

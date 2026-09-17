@@ -1,0 +1,45 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.10s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 5 tests
+
+thread 'repair::partial_temporary_mismatch_is_preserved_and_active_publisher_is_not_repaired' (73087730) panicked at test/common/service_repair.rs:46:5:
+assertion `left == right` failed
+  left: String("UNSAFE_FILE")
+ right: "IMMUTABLE_DELIVERY"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test repair::partial_temporary_mismatch_is_preserved_and_active_publisher_is_not_repaired ... FAILED
+
+thread 'repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit' (73087727) panicked at test/common/service_repair.rs:22:33:
+{"error":"UNSAFE_FILE","state":"BLOCKED"}
+test repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit ... FAILED
+BLOCKED UNSAFE_FILE
+BLOCKED MUTEX_BUSY
+
+thread 'repair::transient_mutex_contention_retains_acknowledged_verification_until_readback' (73087731) panicked at test/common/service_repair.rs:85:80:
+assertion `left == right` failed
+  left: 0
+ right: 1
+test repair::transient_mutex_contention_retains_acknowledged_verification_until_readback ... FAILED
+
+thread 'repair::closure_temporary_records_resume_after_real_daemon_restart_without_reinstall' (73087728) panicked at test/common/train.rs:20:9:
+timed out
+test repair::closure_temporary_records_resume_after_real_daemon_restart_without_reinstall ... FAILED
+
+thread 'repair::newer_late_coverage_survives_completion_of_an_older_verification_claim' (73087729) panicked at test/common/train.rs:20:9:
+timed out
+test repair::newer_late_coverage_survives_completion_of_an_older_verification_claim ... FAILED
+
+failures:
+
+failures:
+    repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit
+    repair::closure_temporary_records_resume_after_real_daemon_restart_without_reinstall
+    repair::newer_late_coverage_survives_completion_of_an_older_verification_claim
+    repair::partial_temporary_mismatch_is_preserved_and_active_publisher_is_not_repaired
+    repair::transient_mutex_contention_retains_acknowledged_verification_until_readback
+
+test result: FAILED. 0 passed; 5 failed; 0 ignored; 0 measured; 11 filtered out; finished in 15.66s
+
+error: test failed, to rerun pass `--test train`

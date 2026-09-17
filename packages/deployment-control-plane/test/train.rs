@@ -396,3 +396,6 @@ fn simultaneous_targets_use_one_host_mutex_and_distinct_private_targets() {
 
 #[path = "service_cases.rs"]
 mod service_cases;
+
+#[path = "common/service_repair.rs"]
+mod repair;

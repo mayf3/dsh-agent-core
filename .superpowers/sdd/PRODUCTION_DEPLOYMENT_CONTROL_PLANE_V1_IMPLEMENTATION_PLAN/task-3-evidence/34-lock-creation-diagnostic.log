@@ -1,0 +1,42 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.88s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+temporary diagnostic open queue.db flags=0 root=Ok((84300663, 13)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-wal flags=0 root=Ok((84300663, 14)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-shm flags=0 root=Ok((84300663, 14)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-journal flags=0 root=Ok((84300663, 14)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-1.json flags=0 root=Ok((84300667, 2)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-1.json flags=0 root=Ok((84300667, 2)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-wal flags=0 root=Ok((84300663, 15)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-shm flags=0 root=Ok((84300663, 15)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-journal flags=0 root=Ok((84300663, 15)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json flags=0 root=Ok((84300667, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json flags=0 root=Ok((84300667, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json flags=0 root=Ok((84300667, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json flags=0 root=Ok((84300667, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json flags=0 root=Ok((84300667, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open bfb7777135b2fedc4c60b14100f83c52150a4b528d4bbc207047da9ea30810a9.json flags=0 root=Ok((84300679, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open bfb7777135b2fedc4c60b14100f83c52150a4b528d4bbc207047da9ea30810a9.json flags=0 root=Ok((84300679, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open bfb7777135b2fedc4c60b14100f83c52150a4b528d4bbc207047da9ea30810a9.json flags=0 root=Ok((84300679, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open publication.lock flags=514 root=Ok((84300663, 16)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic publish admitted: ABSENT
+temporary diagnostic open bfb7777135b2fedc4c60b14100f83c52150a4b528d4bbc207047da9ea30810a9.json flags=0 root=Ok((84300679, 3)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open publication.lock flags=514 root=Ok((84300663, 16)): Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic publish admitted: ABSENT
+temporary diagnostic all answers complete=true: [Object {"result": Object {"attachment_digest": String("0001ed0d14b4aa8858ce2eeea24aea8df17369f2d44f0f1d7880733baa2d489d"), "install_required": Bool(true), "state": String("Queued"), "status_revision": Number(0), "unit_id": String("2e6d9db37e0b2d7caad6f1a4e6f3b1b631847efc32e56f1998f45eee813abdf9")}}, Object {"error": String("ABSENT"), "state": String("BLOCKED")}, Object {"error": String("ABSENT"), "state": String("BLOCKED")}]
+
+thread 'repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit' (73102783) panicked at test/common/service_repair.rs:23:33:
+{"error":"ABSENT","state":"BLOCKED"}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit ... FAILED
+
+failures:
+
+failures:
+    repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.73s
+
+error: test failed, to rerun pass `--test train`

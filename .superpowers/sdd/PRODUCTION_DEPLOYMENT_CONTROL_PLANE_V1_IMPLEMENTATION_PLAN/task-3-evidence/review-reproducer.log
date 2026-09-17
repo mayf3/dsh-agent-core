@@ -1,0 +1,4 @@
+orphan before={"error":"UNSAFE_FILE","state":"BLOCKED"} after_restart={"error":"UNSAFE_FILE","state":"BLOCKED"}
+late ACK={"result":{"attachment_digest":"55ac40be2a6d82269bea5cf0ddee10f07fd71d3cabcd3018db407fdf50574cf7","install_required":false,"state":"Applied","status_revision":6,"unit_id":"2e6d9db37e0b2d7caad6f1a4e6f3b1b631847efc32e56f1998f45eee813abdf9"}}; coverage=2; new_goal_receipts=0; pending_verification=0; new_goal_requested=false
+
+exit=0

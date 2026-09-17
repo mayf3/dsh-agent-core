@@ -62,9 +62,9 @@ impl Train {
         // Admission keeps working while a registered producer is disconnected.
         let _ = intake.poll(q);
         intake.deliver(q)?;
-        if let Some(id) = q.daemon_next_verification()? {
+        if let Some((id, generation)) = q.daemon_next_verification()? {
             let result = self.verify_late(intake, q, &id);
-            q.daemon_finish_verification(&id)?;
+            q.daemon_finish_verification(&id, generation, result.as_ref().err().map(|e| e.code()))?;
             return result;
         }
         let Some(status) = q.next_ready(&intake.config.catalog)? else {

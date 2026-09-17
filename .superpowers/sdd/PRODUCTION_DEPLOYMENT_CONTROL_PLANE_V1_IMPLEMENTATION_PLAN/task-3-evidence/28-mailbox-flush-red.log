@@ -1,0 +1,24 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.00s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 2 tests
+
+thread 'service::mailbox_tests::visible_rename_with_failed_directory_flush_is_reflushed_on_retry' (73090059) panicked at src/service/../../test/common/mailbox.rs:35:58:
+called `Result::unwrap_err()` on an `Ok` value: ()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'service::mailbox_tests::existing_mailbox_record_must_retry_its_failed_directory_flush' (73090058) panicked at src/service/../../test/common/mailbox.rs:26:58:
+called `Result::unwrap_err()` on an `Ok` value: ()
+test service::mailbox_tests::existing_mailbox_record_must_retry_its_failed_directory_flush ... FAILED
+test service::mailbox_tests::visible_rename_with_failed_directory_flush_is_reflushed_on_retry ... FAILED
+
+failures:
+
+failures:
+    service::mailbox_tests::existing_mailbox_record_must_retry_its_failed_directory_flush
+    service::mailbox_tests::visible_rename_with_failed_directory_flush_is_reflushed_on_retry
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--lib`

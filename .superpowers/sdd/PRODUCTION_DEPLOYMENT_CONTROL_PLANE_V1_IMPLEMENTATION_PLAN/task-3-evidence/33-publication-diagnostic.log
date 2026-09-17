@@ -1,0 +1,41 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.92s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+temporary diagnostic open queue.db: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-wal: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-shm: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-journal: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-1.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-1.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-wal: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-shm: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open queue.db-journal: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open producer-2.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open 53864830db2be1c34ad8e042a07b23f45c5d47b085d76eb7c0ee128d7c094f22.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open 53864830db2be1c34ad8e042a07b23f45c5d47b085d76eb7c0ee128d7c094f22.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open 53864830db2be1c34ad8e042a07b23f45c5d47b085d76eb7c0ee128d7c094f22.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic open publication.lock: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic publish admitted: ABSENT
+temporary diagnostic open publication.lock: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+temporary diagnostic publish admitted: ABSENT
+temporary diagnostic open 53864830db2be1c34ad8e042a07b23f45c5d47b085d76eb7c0ee128d7c094f22.json: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+
+thread 'repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit' (73101601) panicked at test/common/service_repair.rs:22:33:
+{"error":"ABSENT","state":"BLOCKED"}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit ... FAILED
+
+failures:
+
+failures:
+    repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 1.50s
+
+error: test failed, to rerun pass `--test train`

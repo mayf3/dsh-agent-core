@@ -1,0 +1,14 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.44s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 5 tests
+test repair::partial_temporary_mismatch_is_preserved_and_active_publisher_is_not_repaired ... ok
+test repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit ... ok
+BLOCKED MUTEX_BUSY
+test repair::closure_temporary_records_resume_after_real_daemon_restart_without_reinstall ... ok
+test repair::transient_mutex_contention_retains_acknowledged_verification_until_readback ... ok
+test repair::newer_late_coverage_survives_completion_of_an_older_verification_claim ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 3.83s
+

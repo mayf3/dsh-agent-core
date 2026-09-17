@@ -1,0 +1,43 @@
+
+#[path="/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/test/common/mod.rs"] #[allow(dead_code)] mod common;
+#[path="/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/test/common/service.rs"] #[allow(dead_code)] mod fixture;
+#[path="/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/test/common/train.rs"] #[allow(dead_code)] mod helpers;
+use common::*; use fixture::*; use helpers::*;
+use deployment_control_plane::{model::*,trust::{digest,canonical_bytes}};
+use serde_json::{json,Value};
+use std::{fs,time::Duration,io::Write,os::unix::fs::PermissionsExt};
+fn main() {
+ assert_ne!(unsafe{libc::geteuid()},0);
+ {
+ let mut d=start(); let (hash,p)=ready(&d,1);
+ let tmp=d.temp.path().join(format!("admitted/{hash}.tmp"));
+ let mut f=fs::File::create(&tmp).unwrap(); f.write_all(&canonical_bytes(&p).unwrap()).unwrap();
+ fs::set_permissions(&tmp,fs::Permissions::from_mode(0o600)).unwrap();f.sync_all().unwrap();
+ fs::File::open(tmp.parent().unwrap()).unwrap().sync_all().unwrap();
+ let a=submit(&d,&hash,"orphan"); d.restart(); let b=submit(&d,&hash,"orphan");
+ println!("orphan before={} after_restart={}",a,b); assert_eq!(a["error"],"UNSAFE_FILE");assert_eq!(b["error"],"UNSAFE_FILE");
+ }
+ {
+ let d=start_with(|v|v["verifiers"]["verify-1"]["deadline_ms"]=json!(2000));
+ let (hash,p)=ready(&d,1); let first=submit(&d,&hash,"initial");let id=first["result"]["unit_id"].as_str().unwrap();
+ wait(||unit_status(&d,id)["result"]["state"]=="Applied");
+ send(&mut connect(&d),&json!({"version":1,"request_id":"old-retry","operation":{"op":"retry-verification","unit_id":id}}));
+ let mut inflight=None; wait(||{for f in fs::read_dir(d.temp.path().join("requests")).unwrap(){let v:Value=serde_json::from_slice(&fs::read(f.unwrap().path()).unwrap()).unwrap(); if v["expected"]["revision"]==2 {inflight=Some(v);return true}}false});
+ let mut p2=p.clone();let mut g=p.goals[0].payload.clone(); g.goal_id="goal-1".into();g.coverage.goal_id="goal-1".into();p2.goals.push(signed("producer",g));p2.build.payload.goal_coverage=p2.goals.iter().map(|g|g.payload.coverage.clone()).collect();p2.build=signed("builder",p2.build.payload);
+ let snapshot=signed("producer",ProducerSnapshot{producer_id:"producer".into(),revision:2,previous_revision:1,records:p2.goals.clone(),watermark:2});
+ fs::write(d.temp.path().join("intake/snapshots/producer-2.json"),serde_json::to_vec(&snapshot).unwrap()).unwrap();
+ let hash2=digest(&p2).unwrap();fs::write(d.temp.path().join(format!("intake/proposals/{hash2}.json")),serde_json::to_vec(&p2).unwrap()).unwrap();
+ let late=submit(&d,&hash2,"new-goal");assert!(late.get("error").is_none(),"{late}");
+ let v=inflight.unwrap();let mut r:GoalReceipt=serde_json::from_value(v["expected"].clone()).unwrap();r.outcome=GoalOutcome::Pass;r.evidence_digest="e".repeat(64);
+ fs::write(d.temp.path().join(format!("intake/results/{}.json",v["id"].as_str().unwrap())),serde_json::to_vec(&signed("verifier",r)).unwrap()).unwrap();
+ let db=rusqlite::Connection::open(d.temp.path().join("queue.db")).unwrap();
+ wait(|| db.query_row("select count(*) from verification_requests",[],|r|r.get::<_,i64>(0)).unwrap()==0);
+ std::thread::sleep(Duration::from_millis(350));
+ let cov:i64=db.query_row("select count(*) from coverage",[],|r|r.get(0)).unwrap();
+ let observed:i64=db.query_row("select count(*) from goal_receipts where goal='goal-1'",[],|r|r.get(0)).unwrap();
+ let queue:i64=db.query_row("select count(*) from verification_requests",[],|r|r.get(0)).unwrap();
+ let requested=fs::read_dir(d.temp.path().join("requests")).unwrap().any(|f|String::from_utf8_lossy(&fs::read(f.unwrap().path()).unwrap()).contains("goal-1"));
+ println!("late ACK={late}; coverage={cov}; new_goal_receipts={observed}; pending_verification={queue}; new_goal_requested={requested}");
+ assert_eq!((cov,observed,queue,requested),(2,0,0,false));
+ }
+}

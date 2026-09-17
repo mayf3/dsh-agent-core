@@ -2,7 +2,7 @@ pub const SCHEMA: &str = r#"
 PRAGMA foreign_keys=ON;
 PRAGMA synchronous=FULL;
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value INTEGER NOT NULL);
-INSERT OR IGNORE INTO meta VALUES ('census',0),('sequence',0),('quarantine',0);
+INSERT OR IGNORE INTO meta VALUES ('census',0),('sequence',0),('quarantine',0),('verification',1);
 CREATE TABLE IF NOT EXISTS producers(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, watermark INTEGER);
 CREATE TABLE IF NOT EXISTS ready(goal TEXT PRIMARY KEY, producer TEXT NOT NULL REFERENCES producers(id), revision INTEGER NOT NULL, record TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS changes(seq INTEGER PRIMARY KEY, goal TEXT NOT NULL, record TEXT NOT NULL);
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS installed(target TEXT PRIMARY KEY, unit TEXT NOT NULL
 CREATE TABLE IF NOT EXISTS physical_current(target TEXT PRIMARY KEY REFERENCES installed(target), receipt TEXT NOT NULL REFERENCES receipts(digest));
 CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY, unit TEXT NOT NULL REFERENCES units(id), goal TEXT NOT NULL, producer TEXT NOT NULL, expected_revision INTEGER NOT NULL, receipt TEXT NOT NULL REFERENCES receipts(digest), delivered INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS executor_pending(unit TEXT PRIMARY KEY REFERENCES units(id));
-CREATE TABLE IF NOT EXISTS verification_requests(unit TEXT PRIMARY KEY REFERENCES units(id));
+CREATE TABLE IF NOT EXISTS verification_requests(unit TEXT PRIMARY KEY REFERENCES units(id), generation INTEGER NOT NULL DEFAULT 1 CHECK(generation>0), last_error TEXT);
 CREATE TABLE IF NOT EXISTS pauses(unit TEXT PRIMARY KEY REFERENCES units(id));
 CREATE TRIGGER IF NOT EXISTS immutable_policy_update BEFORE UPDATE ON policy_history BEGIN SELECT RAISE(ABORT,'immutable'); END;
 CREATE TRIGGER IF NOT EXISTS immutable_policy_delete BEFORE DELETE ON policy_history BEGIN SELECT RAISE(ABORT,'immutable'); END;
@@ -37,3 +37,24 @@ CREATE TRIGGER IF NOT EXISTS immutable_journal_update BEFORE UPDATE ON journal B
 CREATE TRIGGER IF NOT EXISTS immutable_journal_delete BEFORE DELETE ON journal BEGIN SELECT RAISE(ABORT,'immutable'); END;
 CREATE TRIGGER IF NOT EXISTS immutable_descriptor BEFORE UPDATE OF descriptor ON units BEGIN SELECT RAISE(ABORT,'immutable'); END;
 "#;
+
+// Additive upgrade preserves every previously acknowledged unit-only request.
+pub fn migrate_verification(conn: &mut rusqlite::Connection) -> crate::Result<()> {
+    let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+    let columns = {
+        let mut statement = tx.prepare("PRAGMA table_info(verification_requests)")?;
+        let rows = statement.query_map([], |row| row.get::<_, String>(1))?;
+        rows.collect::<std::result::Result<Vec<_>, _>>()?
+    };
+    if !columns.iter().any(|c| c == "generation") {
+        tx.execute("ALTER TABLE verification_requests ADD COLUMN generation INTEGER NOT NULL DEFAULT 1 CHECK(generation>0)",[])?;
+    }
+    if !columns.iter().any(|c| c == "last_error") {
+        tx.execute(
+            "ALTER TABLE verification_requests ADD COLUMN last_error TEXT",
+            [],
+        )?;
+    }
+    tx.commit()?;
+    Ok(())
+}

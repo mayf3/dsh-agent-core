@@ -16,9 +16,10 @@ pub struct Queue {
 impl Queue {
     /// The daemon must supply a protected path; this library never establishes root ownership.
     pub fn open(path: impl AsRef<std::path::Path>) -> Result<Self> {
-        let conn = Connection::open(path)?;
+        let mut conn = Connection::open(path)?;
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
         conn.execute_batch(schema::SCHEMA)?;
+        schema::migrate_verification(&mut conn)?;
         let integrity: String = conn.query_row("PRAGMA quick_check", [], |r| r.get(0))?;
         require(integrity == "ok", "CORRUPT_JOURNAL")?;
         Ok(Self {
