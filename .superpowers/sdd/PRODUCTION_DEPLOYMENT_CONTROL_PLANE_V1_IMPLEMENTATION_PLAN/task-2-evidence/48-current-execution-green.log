@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.63s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 3 tests
+
+running 1 test
+
+running 1 test
+retained-history recovery: preflight 1, mutations 0, fresh signed retry
+
+running 1 test
+retained-history recovery: preflight 2, mutations 0, fresh signed retry
+
+running 1 test
+retained-history recovery: preflight 2, mutations 1, fresh signed retry
+test transaction::repair::preflight_crash_retains_evidence_and_allows_same_intent_retry ... ok
+test transaction::repair::two_preflight_crashes_preserve_history_and_allow_third_legal_preflight ... ok
+test transaction::repair::prior_rolled_back_mutation_cannot_quarantine_current_no_effect_preflight ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.86s
+

@@ -332,3 +332,65 @@ evidence; no initial failure output was replaced with a later PASS.
 No production launchctl, sudo, bootstrap, installation, service signal or other
 checkout mutation was executed. The original exact unsupported facets and native
 live-proof limitations above are unchanged; this repair is not BOOTSTRAP_READY.
+
+## T2-R01 scoped convergence repair
+
+Starting Head: `c56925a034315c414e2cc1e8f1a9c7e8947b6d11`; governing authority,
+execution mandate and isolated checkout are unchanged. The scoped re-audit in
+`task-2-rereview.md` marks T2-B01/B02/B03 ADDRESSED and identifies only T2-R01.
+This repair changes current-execution recovery binding; no resource bounds,
+production profile facet, accepted Spec, installation path or public signature
+changed. No subagents or production actions were used.
+
+The added behavior tests reproduce both the second no-effect preflight crash and
+a no-effect preflight following an earlier actual rolled-back mutation. Both
+failed with RECOVERY_BINDING before the repair (`47-current-execution-red.log`).
+A private Queue snapshot now derives `(preflight ordinal, intended mutation
+attempt)` from the existing counters and the Applying commit after the most
+recent Precheck. This distinguishes a preflight that has not consumed a mutation
+from the gap where begin_apply committed but the Applying filesystem event has
+not yet been appended. No separate counter, execution model or queue is added.
+
+Recovery requires the journal's unit, intended attempt and protected directory
+preflight ordinal to match that current execution. Earlier terminal journals
+remain unchanged and cannot settle or quarantine a later execution. Exact-current
+terminal gaps still use the existing quarantine branch. An unbound nonterminal
+journal remains unknown and latches quarantine rather than being replayed or
+used as recovery proof. The finalization proof path is also gated by this full
+execution identity; immutable receipts and eligibility semantics are unchanged.
+
+The two-crash regression uses separate real child exits, OS-lock reacquisition,
+readback and fresh signed remediation at each recovery. Both retained journals
+remain byte-identical, the immutable unit/intent is unchanged, target bytes stay
+`old code` before the third apply, and the third legal preflight succeeds with
+**preflights 3 / mutations 1 / receipt attempt 1**. The analogous earlier actual
+rollback case succeeds with **preflights 3 / mutations 2 / receipt attempt 2**.
+The original one-crash retry regression also passes. Focused command and result:
+
+```text
+cargo test --locked --manifest-path packages/deployment-control-plane/Cargo.toml \
+  --lib transaction::repair -- --skip maximum_admitted_slots --nocapture
+```
+
+`48-current-execution-green.log`: **3 passed, 0 failed**. Affected command:
+
+```text
+cargo test --locked --manifest-path packages/deployment-control-plane/Cargo.toml \
+  --lib --test authority --test queue --test filesystem --test transactions -- \
+  --skip maximum_admitted_slots_roundtrip_success_and_rollback_journal --nocapture
+```
+
+Final affected command exit **0**: **73 passed, 0 failed, 1 deliberately filtered**
+(library 15, authority 12, filesystem 12, queue 25, transactions 9), with no
+compiler warnings (`49-r01-affected-suite.log`). Library run: 23.43 seconds.
+Formatting, staged source whitespace and governance integrity pass; evidence is
+`r01-fmt.log` and `r01-governance.log`. Refreshed manual Rust inventory
+`r01-rust-structure.json` passes at max 482 lines / 16 children / depth 2.
+The unchanged expensive
+4096-slot test is deliberately excluded, as instructed; its retained 20,494-record
+roundtrip evidence remains in `46-repair-final-suite.log`. The affected run includes
+current terminal-gap quarantine, finalization eligibility/projection, lifecycle
+crashes, fault-injected recovery, core dependency/outbox and restored-generation
+cases. Unsupported production facets and live-only limits are unchanged. This
+candidate still requires the controller's scoped re-audit and is not bootstrap or
+production authorization.

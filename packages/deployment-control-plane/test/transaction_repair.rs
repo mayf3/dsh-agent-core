@@ -130,3 +130,145 @@ fn maximum_admitted_slots_roundtrip_success_and_rollback_journal() {
         restored.events.len()
     );
 }
+
+fn signed_retry(q: &crate::queue::Queue, c: &Catalog, id: &str, executor: &mut Executor) {
+    let status = q.daemon_status(id).unwrap();
+    let proof = signed(
+        "recovery",
+        RecoveryEvidence {
+            unit_id: id.into(),
+            status_revision: status.revision,
+            failure_cause_digest: digest(&(id, status.preflight_attempts, "observed-failure"))
+                .unwrap(),
+            remediation_digest: digest(&(id, status.revision, "fresh-readback")).unwrap(),
+            restored_preimage_digest: digest(&executor.target.read("main.js").unwrap()).unwrap(),
+            service_readback_digest: digest(&executor.service.image().unwrap()).unwrap(),
+            owned_operations_receipt: digest(&(status.revision, "all-operations-resolved"))
+                .unwrap(),
+            step_dispositions: vec![StepDisposition::Restored("executor".into())],
+            issued_at: 1001,
+        },
+    );
+    q.retry(c, &proof, 1001).unwrap();
+}
+fn third_preflight_after_retained_history(prior_mutation: bool) {
+    let (tmp, roots, q, c, id) = fixture::prepared();
+    let original = q.daemon_status(&id).unwrap().unit;
+    let mut retained = std::collections::BTreeMap::new();
+    if prior_mutation {
+        let guard = roots.lock().unwrap();
+        let mut executor = Executor::fixture(&roots).unwrap();
+        executor
+            .apply(
+                &guard,
+                &q,
+                &c,
+                &id,
+                &signed("authority", policy()),
+                1000,
+                "caller",
+            )
+            .unwrap();
+        executor.rollback(&guard, &q, &id).unwrap();
+        signed_retry(&q, &c, &id, &mut executor);
+    }
+    for ordinal in (if prior_mutation { 2 } else { 1 })..=2 {
+        let status = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "transaction::crashes::crash_worker",
+                "--nocapture",
+            ])
+            .env("DCP_TEST_ROOT", fs::canonicalize(tmp.path()).unwrap())
+            .env("DCP_TEST_UNIT", &id)
+            .env("DCP_TEST_CRASH_EDGE", "1")
+            .status()
+            .unwrap();
+        assert_eq!(status.code(), Some(75));
+        let guard = roots.lock().unwrap();
+        let mut executor = Executor::fixture(&roots).unwrap();
+        executor.recover(&guard, &q).unwrap();
+        let current = q.daemon_status(&id).unwrap();
+        assert_eq!(
+            current.state,
+            if prior_mutation {
+                State::RolledBack
+            } else {
+                State::Blocked
+            }
+        );
+        assert_eq!(current.preflight_attempts, ordinal);
+        assert_eq!(current.mutating_attempts, u32::from(prior_mutation));
+        assert_eq!(current.unit, original);
+        assert_eq!(
+            executor.target.read("main.js").unwrap().unwrap().bytes,
+            b"old code"
+        );
+        for name in executor.journals.names().unwrap() {
+            let dir = tmp.path().join("transactions").join(&name);
+            let mut files: Vec<_> = fs::read_dir(dir)
+                .unwrap()
+                .map(|e| e.unwrap().path())
+                .collect();
+            files.sort();
+            let bytes: Vec<_> = files.iter().map(|p| fs::read(p).unwrap()).collect();
+            if let Some(previous) = retained.insert(name, bytes.clone()) {
+                assert_eq!(previous, bytes);
+            }
+        }
+        assert_eq!(retained.len(), ordinal as usize);
+        signed_retry(&q, &c, &id, &mut executor);
+        println!(
+            "retained-history recovery: preflight {ordinal}, mutations {}, fresh signed retry",
+            current.mutating_attempts
+        );
+    }
+    let guard = roots.lock().unwrap();
+    let mut executor = Executor::fixture(&roots).unwrap();
+    assert_eq!(
+        executor.target.read("main.js").unwrap().unwrap().bytes,
+        b"old code"
+    );
+    let applied = executor
+        .apply(
+            &guard,
+            &q,
+            &c,
+            &id,
+            &signed("authority", policy()),
+            1001,
+            "caller",
+        )
+        .unwrap();
+    let current = q.daemon_status(&id).unwrap();
+    assert_eq!(current.unit, original);
+    assert_eq!(
+        (current.preflight_attempts, current.mutating_attempts),
+        (3, 1 + u32::from(prior_mutation))
+    );
+    assert_eq!(applied.receipt.attempt, current.mutating_attempts);
+    assert_eq!(executor.journals.names().unwrap().len(), 3);
+    for (name, previous) in retained {
+        let mut files: Vec<_> = fs::read_dir(tmp.path().join("transactions").join(name))
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .collect();
+        files.sort();
+        assert_eq!(
+            files
+                .iter()
+                .map(|p| fs::read(p).unwrap())
+                .collect::<Vec<_>>(),
+            previous
+        );
+    }
+    executor.rollback(&guard, &q, &id).unwrap();
+}
+#[test]
+fn two_preflight_crashes_preserve_history_and_allow_third_legal_preflight() {
+    third_preflight_after_retained_history(false);
+}
+#[test]
+fn prior_rolled_back_mutation_cannot_quarantine_current_no_effect_preflight() {
+    third_preflight_after_retained_history(true);
+}

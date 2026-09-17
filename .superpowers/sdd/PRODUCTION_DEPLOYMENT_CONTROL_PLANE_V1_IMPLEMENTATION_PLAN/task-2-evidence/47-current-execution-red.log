@@ -1,0 +1,34 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.63s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 3 tests
+
+running 1 test
+
+running 1 test
+retained-history recovery: preflight 1, mutations 0, fresh signed retry
+
+running 1 test
+
+thread 'transaction::repair::two_preflight_crashes_preserve_history_and_allow_third_legal_preflight' (72809414) panicked at src/transaction/../../test/transaction_repair.rs:190:38:
+called `Result::unwrap()` on an `Err` value: Error { code: "RECOVERY_BINDING" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test transaction::repair::two_preflight_crashes_preserve_history_and_allow_third_legal_preflight ... FAILED
+
+running 1 test
+test transaction::repair::preflight_crash_retains_evidence_and_allows_same_intent_retry ... ok
+
+thread 'transaction::repair::prior_rolled_back_mutation_cannot_quarantine_current_no_effect_preflight' (72809413) panicked at src/transaction/../../test/transaction_repair.rs:190:38:
+called `Result::unwrap()` on an `Err` value: Error { code: "RECOVERY_BINDING" }
+test transaction::repair::prior_rolled_back_mutation_cannot_quarantine_current_no_effect_preflight ... FAILED
+
+failures:
+
+failures:
+    transaction::repair::prior_rolled_back_mutation_cannot_quarantine_current_no_effect_preflight
+    transaction::repair::two_preflight_crashes_preserve_history_and_allow_third_legal_preflight
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.55s
+
+error: test failed, to rerun pass `--lib`
