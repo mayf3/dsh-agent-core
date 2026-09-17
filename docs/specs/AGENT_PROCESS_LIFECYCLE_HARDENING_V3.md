@@ -1007,9 +1007,10 @@ timeout -> immediately admit next turn on same AgentProcess
 **Termination evidence** 只回答 exact execution 能否继续。本 Spec 可信类型仅为：
 
 1. `exact_terminal_then_idle`：上述 exact `turn/end` 已观察，随后同一 `sessionId` 的 status 为 `idle`，且两者之间没有同 Session 的 later turn/start；
-2. `exact_queued_removal`：DSH 明确 acknowledgment **同一 `turnExecutionId` / prompt request / messageId** 尚未开始且已从 native queue 移除；
-3. `child_real_exit`：承载该 turn 的 exact processGeneration 已真实 exit；
-4. future accepted cancellation contract 的 exact turn terminal acknowledgment。
+2. `exact_started_then_idle`：没有 terminal outcome 时，仅在 exact receipt messageId 已观察、watermark 后唯一 active `turn/start` 已绑定、同 Session idle observation 严格晚于该 start、期间无 later turn/start、event stream 无 gap/loss，且 one-active-turn invariant 持续成立时，作为 termination-only evidence；
+3. `exact_queued_removal`：DSH 明确 acknowledgment **同一 `turnExecutionId` / prompt request / messageId** 尚未开始且已从 native queue 移除；
+4. `child_real_exit`：承载该 turn 的 exact processGeneration 已真实 exit；
+5. future accepted cancellation contract 的 exact turn terminal acknowledgment。
 
 因此在 deadline 前：
 
@@ -1017,7 +1018,7 @@ timeout -> immediately admit next turn on same AgentProcess
 - exact failure outcome + `exact_terminal_then_idle` → `failed`；
 - proven pre-send zero-byte rejection → `failed/not_admitted`。
 
-`child_real_exit` 可证明 termination，但没有 exact turn/end 时不证明 success/failure。仅本地 Promise rejection、AbortSignal、cancel request、时间流逝、caller disconnect、unrelated queue removal 或 unrelated Session idle 都不是 termination proof。
+`exact_started_then_idle` 与 `child_real_exit` 可证明 termination，但没有 exact turn/end 时不证明 success/failure。仅本地 Promise rejection、AbortSignal、cancel request、时间流逝、caller disconnect、unrelated queue removal、pre-start idle、存在 event gap 的 idle 或 unrelated Session idle 都不是 termination proof。
 
 #### C-016 — Unknown fence release
 
@@ -1141,6 +1142,29 @@ serialized or reconstructed from a PID. Durable `reapClaim` stores canonical
 identity, logical operation id, claimant runtime epoch, claim time and phase;
 it is not kill authority.
 
+Recovery fields use closed values so the outer projection is actionable:
+
+```text
+state = pending_unknown | recovery_claimed | shutdown_requested |
+        exit_observed | settled | blocked
+missingEvidence[] = exact_terminal | exact_turn_idle | child_real_exit |
+                    live_generation_ownership | no_concurrent_execution
+attemptedActions[].action = coordinator_scheduled | ownership_check |
+                            reap_claim | graceful_shutdown |
+                            forced_termination | exit_wait | settlement |
+                            registry_cleanup | fence_cleanup
+attemptedActions[].result = started | succeeded | failed | blocked
+reapClaim.phase = claimed | canceled_by_settlement | shutdown_committed |
+                  exit_observed | settled | blocked
+nextSafeAction = await_late_evidence | await_real_exit |
+                 reestablish_exact_ownership |
+                 operator_exact_generation_recovery |
+                 send_new_request_after_reopened | none
+```
+
+Every action entry contains a wall-clock audit timestamp and bounded redacted
+reason code. It contains no prompt/answer or secret payload.
+
 Startup restores unresolved records and Agent fences before accepting business
 prompts. A restarted coordinator may resume settlement or cleanup already
 backed by durable evidence. It may signal only after re-establishing live
@@ -1148,6 +1172,13 @@ registry ownership through the exact processRef/child/ownership-token checks in
 C-020. If that authority is unavailable, it keeps the Agent fenced and reports
 missing evidence and the minimal operator action. A new PID, elapsed time,
 absent PID lookup or new generation never proves the old generation terminated.
+
+Router startup holds one fail-closed business-admission barrier until the
+durable store is open, schema/caps validate, and every unresolved Agent fence is
+installed. While open, validation or restoration is pending—or when any step
+fails—real outer ingress returns `requestAdmission=not_admitted`; process spawn
+and prompt-write deltas are zero. Health/readiness must expose the blocked
+reason. No asynchronous post-readiness fence reload is legal.
 
 ---
 
@@ -1257,11 +1288,11 @@ exact outcome + exact_terminal_then_idle -> late_completed | late_failed
 trusted exact-turn termination-only evidence -> terminated_without_outcome
 ```
 
-Generic idle is insufficient. An idle-only producer is trusted only if its
-accepted protocol binds the acknowledgment to this exact
-`turnExecutionId/messageId`; current session-level idle remains part of
-`exact_terminal_then_idle`. When evidence settles the exact execution, no
-resident child is killed merely to recover admission.
+Generic idle is insufficient. Idle without terminal is trusted only as C-015
+`exact_started_then_idle`, including exact receipt, matched start, post-start
+idle, no later start, no stream gap and one-active-turn checks. When evidence
+settles the exact execution, no resident child is killed merely to recover
+admission.
 
 #### C-024 — Hard-deadline eligibility and unique REAP claim
 
@@ -1281,9 +1312,27 @@ no new generation exists or is controlled by this operation
 no winning termination evidence or settlement appeared before claim commit
 ```
 
+Same-runtime deadline enforcement uses the original private monotonic deadline;
+the durable wall-clock `hardDeadlineAt` is audit/projection only. After a whole
+Runtime restart it MUST NOT by itself authorize a signal. The minimal V3 slice
+therefore resumes durable settlement/cleanup when proof is already durable, and
+otherwise remains fenced unless exact live ownership and deadline continuity
+are re-established by a separately accepted trusted mechanism.
+
 If another execution might still write, ownership cannot be established, or a
 new generation exists, REAP is forbidden and the record remains fenced with a
 structured reason. Concurrent/repeated triggers join the same durable operation.
+
+A durable claim alone does not commit shutdown. Before registry CAS or any
+shutdown write/signal, the recovery worker enters the same per-process event
+serialization boundary used by terminal settlement and performs one final
+durable/parser recheck. If exact evidence has already won, it atomically marks
+the unsignaled claim `canceled_by_settlement`; registry mutation, shutdown and
+kill counts remain zero. Otherwise the worker atomically commits the exact
+registry `STARTUP|READY -> REAP` CAS and durable
+`reapClaim.phase=shutdown_committed` before releasing that boundary. This is
+the recovery shutdown linearization point; no late callback can observe an
+uncommitted claim and still race an unconditional signal.
 
 #### C-025 — REAP execution and crash-safe ordering
 
@@ -1315,7 +1364,10 @@ operation/history and cannot mutate a new slot or fence.
 #### C-026 — Structured outer recovery diagnostics and no replay
 
 Every outer ingress/query projection for an admitted or fenced request exposes
-this stable shape (nullable where inapplicable):
+this closed top-level shape. Every key is present; only `fencedBy`,
+`reconciliationHandle`, `processGeneration` and `terminationEvidence` may be
+`null` when no execution identity/evidence exists. The two evidence/action
+fields are arrays, never null:
 
 ```text
 failureStage
@@ -1328,11 +1380,25 @@ attemptedActions
 nextSafeAction
 replyDelivery
 partialDelivery
+requestAdmission
 ```
 
 It identifies the stuck execution, generation, missing proof, attempted action,
 stop reason, minimal safe operator action and whether the new request was
 admitted. Feishu text may summarize this but is not the only representation.
+`requestAdmission` is `accepted | not_admitted`; a fenced new request is always
+`not_admitted` and is never queued for recovery-time execution.
+
+```text
+failureStage = admission | execution | reply_delivery
+replyDelivery = not_attempted | delivered | failed | unknown
+partialDelivery = none | possible | confirmed
+```
+
+Admission/execution failure before any reply attempt uses
+`replyDelivery=not_attempted` and `partialDelivery=none`. All strings are enums
+or bounded redacted reason codes; raw prompt, answer, environment, credential,
+private message and production dump are forbidden in this projection.
 
 ```text
 ORIGINAL_PROMPT_REPLAY = 0
@@ -1347,7 +1413,7 @@ Recovery only reopens future admission. The user sends a new request.
 
 ### CLAUSE-PROC-SCHEDULER-SEAM — Scheduler Termination Seam (No Scheduler Implementation)
 
-AgentProcess implementation 必须提供 Scheduler 可消费、但不含 Scheduler policy 的通用 seam。AgentProcess implementation 必须提供 Scheduler 可消费、但不含 Scheduler policy 的通用 seam。
+AgentProcess implementation 必须提供 Scheduler 可消费、但不含 Scheduler policy 的通用 seam。
 
 #### 13.1 Snapshot
 
@@ -1478,9 +1544,9 @@ Every mapping below uses this common execution contract:
 | `ACC-PROC-021` | `C-021` | §10.2 item 23; `CONCURRENT_SHUTDOWN` |
 | `ACC-PROC-022` | `C-022` | §10.2 item 22; `SHUTDOWN_GRACE_EXPIRES_THEN_KILL` |
 | `ACC-PROC-023` | `C-023` | items 40–42; late evidence without prompt, exact termination-only evidence, child already exited |
-| `ACC-PROC-024` | `C-024` | items 43–45; hard-deadline REAP, duplicate trigger, concurrent workers |
-| `ACC-PROC-025` | `C-025` | items 43–48; REAP ordering, stale callback, insufficient proof, coordinator restart |
-| `ACC-PROC-026` | `C-026` | items 49–50; outer diagnostics and no replay |
+| `ACC-PROC-024` | `C-024` | items 43–45, 51; hard-deadline REAP, duplicate trigger, concurrent workers, post-claim evidence race |
+| `ACC-PROC-025` | `C-025` | items 43–48, 51–52; REAP ordering, stale callback, insufficient proof, coordinator restart, startup barrier |
+| `ACC-PROC-026` | `C-026` | items 49–50, 52; outer diagnostics, no replay and startup admission result |
 
 Every clause anchor is covered through its exact parent Contract mappings:
 
@@ -1553,6 +1619,8 @@ Every clause anchor is covered through its exact parent Contract mappings:
 48. coordinator restart reloads operation/fence and resumes only with durable evidence/exact ownership；
 49. real outer-entry fixture exposes every C-026 field and marks admission result；
 50. prompt/answer/side-effect/rejected-request replay counters all zero.
+51. exact evidence winning after durable claim but before shutdown commit cancels the claim; registry remains READY and shutdown/kill counts are zero；
+52. startup store-open/schema/cap/fence-restore barrier blocks real outer ingress with spawn/write delta zero; invalid/unavailable store stays fail-closed.
 
 ### 10.3 Fault-injection crosswalk and evidence schema
 
@@ -1571,8 +1639,11 @@ Every clause anchor is covered through its exact parent Contract mappings:
     gracefulShutdownWriteAttempts,
     killSignals,
     replayAdmissions,
+    originalPromptReplayWrites,
     originalAnswerResends,
     historicalSideEffectReplays,
+    rejectedRequestAutoAdmissions,
+    explicitNewRequestExecutions,
     shutdownInvocations
   },
   snapshots: {
@@ -1657,17 +1728,20 @@ F[fenceBefore,fenceAfter]
 | `RECOVERY_HARD_DEADLINE_REAP` | READY(g), unknown | advance deadline | coordinator, release exit | one claim; exact order | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | terminated_without_outcome |
 | `RECOVERY_DUPLICATE_TRIGGER` | READY(g), unknown | 20 triggers | release exit | one operation/shutdown | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | one settlement |
 | `RECOVERY_CONCURRENT_WORKERS` | durable unknown + READY(g) | two claimants | release both | one winner/shared op | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | one settlement |
+| `RECOVERY_EVIDENCE_AFTER_CLAIM_BEFORE_COMMIT` | READY(g), unknown, durable claim held before shutdown barrier | exact terminal+idle wins | release worker | claim=canceled_by_settlement; shutdownInvocations=0; graceful/kill=0 | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,false]` | late_completed; claim canceled |
 | `RECOVERY_OLD_GENERATION_CALLBACK` | settled g; READY(g+1) | replay g callback | invoke | g+1 unchanged | `2/1/0/0` | `R[READY(g+1),READY(g+1),N/A,READY(g+1)];P[0,0];F[false,false]` | old audit only |
 | `RECOVERY_INSUFFICIENT_PROOF` | durable unknown; ownership absent | deadline | coordinator | no signal/cleanup; fenced | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[true,true]` | pending + diagnosis |
 | `RECOVERY_COORDINATOR_RESTART_WITH_REGISTRY` | durable claim + live exact READY(g) registry | coordinator object crash before shutdown call | recreate coordinator, release exit | same operation; one shutdown | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | one terminated_without_outcome settlement |
 | `RECOVERY_RUNTIME_RESTART_OWNERSHIP_LOST` | durable claim; no re-established processRef/ownership | whole Router restart | reload store/fence | zero signal/cleanup; diagnostic blockage | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[true,true]` | recovering/pending, missing ownership |
-| `RECOVERY_OUTER_DIAGNOSTICS` | real `createIngressDelivery.onIngress` composition + simulated child | unknown then second fenced request | call outer entry | all C-026 fields; second admitted=false | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
-| `RECOVERY_NO_REPLAY` | unknown, possible side effect | recover, explicit new canary | counters | all replay=0; new execution=1 | exact fixture | exact fixture | old settled; new completed |
+| `RECOVERY_STARTUP_BARRIER_RESTORE_PENDING` | durable unknown exists; store open or fence restore paused | real outer request during startup | call `onIngress`, then finish restore | requestAdmission=not_admitted; spawn/write=0; exact fence installed before readiness | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[N/A,true]` | original durable record pending |
+| `RECOVERY_STARTUP_STORE_INVALID` | store unavailable, schema invalid, or cap validation fails (three subcases) | Router startup | call real outer entry per subcase | readiness blocked; requestAdmission=not_admitted; spawn/write=0 | `0/0/0/0` each | `R[N/A,N/A,N/A,N/A];P[0,0];F[N/A,N/A]` each | no fabricated settlement/fence cleanup |
+| `RECOVERY_OUTER_DIAGNOSTICS` | real `createIngressDelivery.onIngress` composition + simulated child | unknown then second fenced request | call outer entry | second: failureStage=admission, requestAdmission=not_admitted, fencedBy/handle=old exact handle, generation=g, terminationEvidence=null, missingEvidence nonempty, attemptedActions bounded, nextSafeAction=await_late_evidence, replyDelivery=not_attempted, partialDelivery=none; all forbidden sensitive fields absent | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_NO_REPLAY` | spawn g; old prompt becomes unknown with possible side effect; one later request rejected by fence | REAP g, then user explicitly submits one new harmless request which spawns g+1 | complete new request | originalPromptReplayWrites=0; originalAnswerResends=0; historicalSideEffectReplays=0; rejectedRequestAutoAdmissions=0; explicitNewRequestExecutions=1; shutdownInvocations=1 | `2/2/1/0` | `R[READY(g),REAP(g),REAP(g),READY(g+1)];P[0,0];F[true,false]` | old=terminated_without_outcome; new=completed |
 | `OLD_GENERATION_LATE_EXIT_AFTER_RESPAWN` | harness creates/kills g, then starts g+1 | replay g exit callback | invoke stale callback | g+1 unchanged; audit only | `2/0/1/0` | `R[READY(g+1),READY(g+1),N/A,READY(g+1)];P[0,0];F[N/A,N/A]` | `N/A` |
 
 每个 table row 的 counters 从该 case harness reset 开始；标为 READY/STARTUP 的 fixture 除非明确写 metadata-only seeded，必须通过表中计数的真实 spawn 建立。每个 counter 都是唯一 exact integer。Unique oracle必须是单一 machine assertion，不接受“日志看起来正确”。
 
-### 10.4 Historical V1 amendment closure crosswalk (provenance only; not V2 review/acceptance)
+### 10.4 Historical V1 amendment closure crosswalk (provenance only; not V3 review/acceptance)
 
 | Required fix | Normative closure |
 |---:|---|
@@ -1850,10 +1924,10 @@ claimed by this docs-only Goal.
 ```text
 SOURCE_FIX_IMPLEMENTED = NO
 DEPLOYED_FIXED = NO
-CURRENT_AGENT_RECOVERED = YES
+CURRENT_AGENT_RECOVERED = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
 AUTO_RECOVERY_E2E = NO
-HISTORICAL_PROMPT_REPLAY_COUNT = 0
-HISTORICAL_ANSWER_REPLAY_COUNT = 0
+HISTORICAL_PROMPT_REPLAY_COUNT = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
+HISTORICAL_ANSWER_REPLAY_COUNT = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
 READY_FOR_IMPLEMENTATION = NO
 REASON = proposed authority requires independent review, exact-head Owner acceptance and merge
 ```
