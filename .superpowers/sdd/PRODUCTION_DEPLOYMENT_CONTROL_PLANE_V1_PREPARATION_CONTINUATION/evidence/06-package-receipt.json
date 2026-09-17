@@ -1,0 +1,63 @@
+{
+  "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+  "delivery_base": "14a989088c4ba476b4da1c047be573de2c88f520",
+  "package_path": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-reviewed-8ab5904-womrgd1k",
+  "manifest_digest": "cd8bcc09371c091fa6bd8d93b1f2aa053cc2a3c80b0135d6a1c5892c45e66bb8",
+  "source_digest": "bf5019fc1c0ad3a080ef8af668db613e1f922c15768517e3f34e562b0c68c7fe",
+  "source_file_count": 97,
+  "payload_count": 23,
+  "controller_sha256": "a3c6f8ec2d29e85999a46dec1a3f2f9656486bbd9c4b43d4d6d735e665f960d6",
+  "prepare_cli_sha256": "e6df3f7685d25176daabb78d8171f265d48a0e12e4b35a001acf724c5865c8c6",
+  "runtime_payloads": 22,
+  "runtime_reused_exactly": true,
+  "result": {
+    "integrity_verified": true,
+    "bootstrap_ready": false,
+    "activation_allowed": false,
+    "preparation_digest": null,
+    "blockers": [
+      "HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT",
+      "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS",
+      "TRUSTED_SOURCE_BUILD_REVIEW_BINDING",
+      "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS",
+      "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL",
+      "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION",
+      "INDEPENDENT_WHOLE_BRANCH_REVIEW"
+    ]
+  },
+  "commands": [
+    {
+      "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+      "started": "2026-09-17T23:15:51.190128+00:00",
+      "finished": "2026-09-17T23:15:52.373061+00:00",
+      "euid": 502,
+      "command": [
+        "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/target/release/agent-deploy-prepare",
+        "prepare",
+        "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_PREPARATION_CONTINUATION/evidence/01-package-recipe.json",
+        "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-reviewed-8ab5904-womrgd1k"
+      ],
+      "exit": 0
+    },
+    {
+      "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+      "started": "2026-09-17T23:15:52.373400+00:00",
+      "finished": "2026-09-17T23:15:52.631077+00:00",
+      "euid": 502,
+      "command": [
+        "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/target/release/agent-deploy-prepare",
+        "verify",
+        "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-reviewed-8ab5904-womrgd1k",
+        "cd8bcc09371c091fa6bd8d93b1f2aa053cc2a3c80b0135d6a1c5892c45e66bb8",
+        "bf5019fc1c0ad3a080ef8af668db613e1f922c15768517e3f34e562b0c68c7fe",
+        "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl"
+      ],
+      "exit": 0
+    }
+  ],
+  "limitations": [
+    "This is an inert candidate; not resolved bootstrap readiness or operation permission.",
+    "The source-scoped independent review is complete; unresolved literal INDEPENDENT_WHOLE_BRANCH_REVIEW in the prospective package is not a current source-review verdict. verify-resolved still requires authentic exact preparation proofs.",
+    "Retained transformed Node closure is structurally verified, not a trusted builder attestation. No Node candidate or production runtime was executed."
+  ]
+}

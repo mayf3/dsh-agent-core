@@ -1,0 +1,80 @@
+[
+  {
+    "repository": "mayf3/dsh-agent-core",
+    "observed_at": "2026-09-17T23:16:49.781461+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/mayf3/dsh-agent-core/actions/workflows",
+      "--jq",
+      "{total_count: .total_count, workflows: [.workflows[] | {id,name,path,state}]}"
+    ],
+    "exit": 0,
+    "result": {
+      "total_count": 4,
+      "workflows": [
+        {
+          "id": 336933700,
+          "name": ".github/workflows/apply-agent-credential-spec-amendment-4.yml",
+          "path": ".github/workflows/apply-agent-credential-spec-amendment-4.yml",
+          "state": "active"
+        },
+        {
+          "id": 348792240,
+          "name": "PR140 Governance Adoption Evidence",
+          "path": ".github/workflows/pr140-governance-adoption-evidence.yml",
+          "state": "active"
+        },
+        {
+          "id": 348800475,
+          "name": "PR140 Governance Adoption Final-Head Evidence V2",
+          "path": ".github/workflows/pr140-governance-adoption-final-head-evidence-v2.yml",
+          "state": "active"
+        },
+        {
+          "id": 348799352,
+          "name": "PR140 Governance Adoption Final-Head Evidence",
+          "path": ".github/workflows/pr140-governance-adoption-final-head-evidence.yml",
+          "state": "active"
+        }
+      ]
+    },
+    "error": null
+  },
+  {
+    "repository": "mayf3/auth-service",
+    "observed_at": "2026-09-17T23:16:50.380214+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/mayf3/auth-service/actions/workflows",
+      "--jq",
+      "{total_count: .total_count, workflows: [.workflows[] | {id,name,path,state}]}"
+    ],
+    "exit": 0,
+    "result": {
+      "total_count": 3,
+      "workflows": [
+        {
+          "id": 348799376,
+          "name": "Exact adoption Head validation \u2014 PR 40 R2",
+          "path": ".github/workflows/pr40-exact-head-validation-r2.yml",
+          "state": "active"
+        },
+        {
+          "id": 348796893,
+          "name": "Exact adoption Head validation \u2014 PR 40",
+          "path": ".github/workflows/pr40-exact-head-validation.yml",
+          "state": "active"
+        },
+        {
+          "id": 348424519,
+          "name": "prepare Governance v1.0.0 adoption",
+          "path": ".github/workflows/prepare-governance-v1-adoption.yml",
+          "state": "active"
+        }
+      ]
+    },
+    "error": null
+  }
+]

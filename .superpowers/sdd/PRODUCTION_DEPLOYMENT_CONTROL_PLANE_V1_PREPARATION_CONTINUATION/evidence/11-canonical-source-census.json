@@ -1,0 +1,54 @@
+{
+  "observed_at": "2026-09-17T23:19:49.568477+00:00",
+  "rows": [
+    {
+      "repository": "auth-service",
+      "ref": "785d7430fd0b6b9dd3aa7c110ed857fed9fea865",
+      "command": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/project/auth-service",
+        "grep",
+        "-Il",
+        "-E",
+        "Ed25519|ed25519|DEPLOYMENT_READY|BuildAttestation|ReviewPreparation|ProducerSnapshot|ClosureAcknowledgement",
+        "785d7430fd0b6b9dd3aa7c110ed857fed9fea865",
+        "--",
+        "src",
+        "scripts",
+        "deploy",
+        "packages",
+        "contract-bundles"
+      ],
+      "exit": 0,
+      "matching_paths": [
+        "785d7430fd0b6b9dd3aa7c110ed857fed9fea865:contract-bundles/minimal-auth-v1/README.md",
+        "785d7430fd0b6b9dd3aa7c110ed857fed9fea865:contract-bundles/minimal-auth-v1/validate.mjs"
+      ],
+      "error": "",
+      "interpretation": "bounded tracked path search only; exit1 means no match, not global absence"
+    },
+    {
+      "repository": "svc-workflow",
+      "ref": "07d888205001708080aa50720e428c6f1c775c7b",
+      "command": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/project/svc-workflow",
+        "grep",
+        "-Il",
+        "-E",
+        "DEPLOYMENT_READY|ProducerSnapshot|ClosureAcknowledgement|producer_watermark|readiness_revision|devgoal|dev-goal|dev_goal",
+        "07d888205001708080aa50720e428c6f1c775c7b",
+        "--",
+        "src",
+        "docs",
+        "migrations"
+      ],
+      "exit": 1,
+      "matching_paths": [],
+      "error": "",
+      "interpretation": "bounded tracked path search only; exit1 means no match, not global absence"
+    }
+  ]
+}

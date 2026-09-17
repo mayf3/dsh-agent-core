@@ -1,0 +1,48 @@
+{
+  "observed_at": "2026-09-17T23:18:21.510252+00:00",
+  "method": "GitHub workflow content source read; emit only structure and keyword census, no runs triggered",
+  "workflows": [
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "path": ".github/workflows/apply-agent-credential-spec-amendment-4.yml",
+      "exit": 1,
+      "error": "gh: Not Found (HTTP 404)"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "path": ".github/workflows/pr140-governance-adoption-evidence.yml",
+      "exit": 1,
+      "error": "gh: Not Found (HTTP 404)"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "path": ".github/workflows/pr140-governance-adoption-final-head-evidence-v2.yml",
+      "exit": 1,
+      "error": "gh: Not Found (HTTP 404)"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "path": ".github/workflows/pr140-governance-adoption-final-head-evidence.yml",
+      "exit": 1,
+      "error": "gh: Not Found (HTTP 404)"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "path": ".github/workflows/pr40-exact-head-validation-r2.yml",
+      "exit": 1,
+      "error": "gh: Not Found (HTTP 404)"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "path": ".github/workflows/pr40-exact-head-validation.yml",
+      "exit": 1,
+      "error": "gh: Not Found (HTTP 404)"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "path": ".github/workflows/prepare-governance-v1-adoption.yml",
+      "exit": 1,
+      "error": "gh: Not Found (HTTP 404)"
+    }
+  ]
+}
