@@ -1,4 +1,6 @@
 mod admission;
+mod dependencies;
+mod gates;
 mod lifecycle;
 mod producer;
 mod readback;

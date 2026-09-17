@@ -116,6 +116,7 @@ fn supersession_inherits_fifo_and_rejects_cycles_without_partial_writes() {
     q.register_ready(&c, &cycle.goals[0], 2).unwrap();
     cycle.supersedes.push(a2.unit_id.clone());
     cycle.dependencies.push(Dependency {
+        semantics: DependencySemantics::LiveInstallation,
         unit_id: a2.unit_id,
         receipt_digest: "1".repeat(64),
         capability: "installed".into(),
@@ -138,6 +139,7 @@ fn dependency_requires_exact_capability_receipt_and_goal_pass() {
     let mut second = proposal("second", "f", 1, "goal-2");
     second_target(&mut c, &mut second);
     second.dependencies.push(Dependency {
+        semantics: DependencySemantics::LiveInstallation,
         unit_id: a.unit_id.clone(),
         receipt_digest: receipt.clone(),
         capability: "installed".into(),

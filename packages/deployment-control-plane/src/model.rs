@@ -48,8 +48,13 @@ record!(GoalCoverage {
     release_face_sha256: String,
     verification_profile: String
 });
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DependencySemantics {
+    LiveInstallation,
+    HistoricalReceipt,
+}
 record!(Dependency { unit_id: String, receipt_digest: String, capability: String,
-    required_goals: Vec<String> });
+    required_goals: Vec<String>, semantics: DependencySemantics });
 record!(ReadyRecord { producer_id: String, goal_id: String, revision: u64, repo: String,
     source_sha: String, authority_revisions: Vec<String>, artifact_sha256: String,
     coverage: GoalCoverage, dependencies: Vec<Dependency> });
@@ -121,18 +126,23 @@ record!(UnitStatus {
 record!(Submission {
     unit_id: String,
     attachment_digest: String,
-    install_required: bool
+    install_required: bool,
+    state: State,
+    status_revision: u64
 });
 record!(TransactionReceipt { unit_id: String, artifact_sha256: String, source_sha: String,
     profile_revision: String, policy_digest: String, review_digests: Vec<String>, caller: String,
     dependency_receipts: Vec<String>, preimage_digest: String, postimage_digest: String,
     old_service_generation: String, new_service_generation: String, target_generation: u64,
-    attempt: u32, step_results: Vec<String>, rollback_digest: Option<String>, capability: String });
+    attempt: u32, attachment_digests: Vec<String>, step_results: Vec<String>, rollback_digest: Option<String>, capability: String });
 record!(GoalReceipt {
     unit_id: String,
     goal_id: String,
     acceptance_revision: String,
     target_generation: u64,
+    attempt: u32,
+    service_generation: String,
+    attachment_digest: String,
     outcome: GoalOutcome,
     evidence_digest: String,
     revision: u64
@@ -162,4 +172,9 @@ record!(ClosureAcknowledgement {
     receipt_digest: String,
     previous_revision: u64,
     closed_revision: u64
+});
+
+record!(CoverageAttachment {
+    digest: String,
+    proposal: Proposal
 });

@@ -58,6 +58,8 @@ revalidate(&Catalog, unit: &str, &Signed<Policy>, now: u64) -> Result<()>
 status(&Actor, unit: &str) -> Result<UnitStatus>
 next_ready(&Catalog) -> Result<Option<UnitStatus>>
 transition(unit: &str, expected_revision: u64, State, evidence_digest: &str) -> Result<UnitStatus>
+begin_apply(&Catalog, unit: &str, expected_revision: u64, &Signed<Policy>, now: u64,
+            preflight_evidence_digest: &str) -> Result<UnitStatus>
 cancel_pending(&Actor, unit: &str, expected_revision: u64) -> Result<UnitStatus>
 retry(&Catalog, &Signed<RecoveryEvidence>, now: u64) -> Result<UnitStatus>
 mark_interrupted() -> Result<Vec<String>>
@@ -70,6 +72,7 @@ outbox(&Actor) -> Result<Vec<OutboxEntry>>
 acknowledge_closure(&Catalog, &Signed<ClosureAcknowledgement>) -> Result<()>
 daemon_status(unit: &str) -> Result<UnitStatus>
 daemon_coverage(unit: &str) -> Result<Vec<Signed<ReadyRecord>>>
+daemon_attachments(unit: &str) -> Result<Vec<CoverageAttachment>>
 daemon_evidence(unit: &str) -> Result<Proposal>
 daemon_policy(digest: &str) -> Result<Signed<Policy>>
 unit_count() -> Result<u64>
@@ -86,37 +89,65 @@ disconnection never manufactures readiness. Manual historical import is not
 implemented/exposed and cannot bypass signed producer intake.
 
 Transport request identity is `(Actor.id, request_id)`; reusing it with changed
-content rejects. Persistent per-actor request limits apply to new IDs, including
+content rejects. A committed matching ACK is recovered before freshness/admission
+checks, including after policy expiry/revocation. `Submission.state` and
+`status_revision` report the current unit projection; `install_required` is false
+for terminal/blocked units and is never apply authorization. Persistent per-actor request limits apply to new IDs, including
 collapsed work, over 60 seconds. `actor_quota` also bounds active owned units;
 `queue_quota` bounds total active units. Same-intent/profile/artifact submissions
 collapse. A fresh signed desired revision must change artifact to allocate another
 intent; A→B→A is accepted with exact current target generations. Callers cannot
 change counters via request IDs or generic state transitions.
 
+Dependencies explicitly declare `DependencySemantics::LiveInstallation`. Admission,
+scheduling and fresh gates require that exact receipt to be the protected current
+installed unit/generation, plus matching current-attempt semantic Goal results.
+`HistoricalReceipt` is reserved and rejected (`UNSUPPORTED_DEPENDENCY_SEMANTICS`):
+there is no trusted historical-capability contract in the current profile model.
+A caller cannot relabel an installed prerequisite to bypass compatibility.
+
 Unit ID hashes its canonical descriptor with an empty ID. `receipts` is empty in
 the sealed descriptor: immutable references are read through `receipt_digests`
 and the journal. Late coverage is stored as a new immutable signed-evidence
 attachment and returned via `daemon_coverage`; it never rewrites the original
-unit. `install_required=false` identifies an existing installed-record match;
+unit. `daemon_attachments` returns each exact digest and full saved proposal,
+including signed build/review provenance. Fresh `revalidate` and `begin_apply`
+validate every attachment with current protected trust/policy. New attachments
+are accepted while queued or applied; an in-flight new attachment is deferred
+(`ATTACHMENT_DEFERRED`) until the install completes, preserving its sealed
+attempt evidence set. The ready producer record remains durable. `install_required=false` identifies an existing installed-record match;
 the executor must still verify its physical generation/metadata before running
 late verification, under the same host mutex.
 
 The ready selector and PRECHECK transaction enforce dependency-ready FIFO.
-Supersession only replaces queued units, preserves oldest age, original Goal
-coverage and dependency obligations, and rejects cycles. Inbound exact-receipt
+Supersession only replaces queued units, preserves oldest age, all effective Goal
+coverage (including late attachments), producer bindings, actor links and dependency
+obligations, and rejects cycles. Inbound exact-receipt
 edges are retained; they cannot be rewritten into a claim that a new receipt
 satisfies an old one. An affected dependent requires a reviewed replacement when
 its exact prerequisite receipt changes. Infrastructure failures persist STOP;
 accepted CONTINUE permits only nonconflicting resources. Trusted signed remediation
-requeues known failures and clears their STOP automatically, with three total
-preflight/two mutating attempts per intent. Unknown outcomes cannot use this route.
+requeues known failures only after current admission/dependency/preimage gates.
+It retains the failed-intent STOP; only that corrected unit may advance. Pending
+cancel cannot remove it. A reviewed replacement inherits its pause. Generic
+`transition` cannot enter APPLYING: `begin_apply` atomically checks fresh full
+admission and actual daemon-supplied preflight evidence, increments the attempt
+and clears that STOP at this proven-safe resume boundary. No Owner reapproval is
+added. There are three total preflight/two mutating attempts per intent. Unknown outcomes cannot use this route.
 
-`record_transaction`, `transition`, `retry`, `mark_interrupted`, and `daemon_*`
+`record_transaction`, `transition`, `begin_apply`, `retry`, `mark_interrupted`, and `daemon_*`
 are privileged internal APIs, never socket methods. The caller cannot create a
 transaction receipt. `record_goal` requires the exact verifier issuer selected
 by the accepted verification profile. Finalize requires an installation receipt
 and a result for every attached Goal. Pure FAIL/WAITING remains installed; only
-PASS receives an outbox entry after finalize. An unknown Goal quarantines the
+PASS receives an outbox entry after finalize. Transaction receipts append per
+attempt and include the complete sorted `attachment_digests` and effective review
+digest union; a previous attempt receipt cannot finalize a later attempt. Each
+Goal receipt includes `attempt`, `service_generation` and its exact
+`attachment_digest`. Finalize requires every Goal's current-attempt evidence to
+match the transaction's process readback; historical PASS cannot substitute.
+Late verification binds the existing attempt/service generation and new attachment
+without editing the installation receipt. An unknown Goal quarantines the
 lane and cannot be overwritten by a retry PASS. Producer closure acknowledgements
 bind exact outbox, receipt and producer revision; retries never install again.
 
@@ -130,14 +161,16 @@ bind exact outbox, receipt and producer revision; retries never install again.
    process/service operations. This task authenticates attestation/manifest
    digests; it does not inspect artifact bytes or interpret install paths.
 3. Acquire the permanent host OS mutex, call `mark_interrupted` before scheduling,
-   perform physical readback recovery, and call `revalidate` with the latest
-   policy immediately before mutation. SQLite serialization is not the OS mutex.
+   perform physical readback recovery, and use `begin_apply` with the latest
+   policy and authoritative preflight evidence to enter mutation. For late
+   verification use `revalidate`; APPLIED revalidation pins the current installed
+   unit/generation instead of requiring its old preimage. SQLite serialization is not the OS mutex.
    Quarantine intentionally has no generic unlock. Verified continuation/rollback
    needs the executor's exact step/readback recovery API, never a PID/time claim.
 4. Durably write per-step/preimage/owned-operation records before irreversible
    executor edges; this crate persists coarse phase journals and attempt budgets.
    Issue transaction/recovery records only after concrete physical evidence.
-5. Fetch every `daemon_coverage` attachment before Goal verification/finalize.
+5. Fetch every `daemon_attachments` proof and `daemon_coverage` record before Goal verification/finalize.
    Pin installed generation under the mutex for late or retried verification.
    Deliver outbox entries idempotently and accept the producer's signed CAS ack.
 6. Production, LaunchDaemon/sudoers, activation, retention GC, historical importer

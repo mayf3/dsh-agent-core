@@ -1,5 +1,8 @@
 use super::*;
 impl Queue {
+    pub fn daemon_attachments(&self, id: &str) -> Result<Vec<CoverageAttachment>> {
+        self.transaction(|tx| read_attachments(tx, id))
+    }
     pub fn daemon_policy(&self, digest: &str) -> Result<Signed<Policy>> {
         self.transaction(|tx| {
             let raw: String = tx
@@ -62,4 +65,32 @@ impl Queue {
                 .collect()
         })
     }
+}
+
+pub(super) fn read_attachments(tx: &Transaction<'_>, id: &str) -> Result<Vec<CoverageAttachment>> {
+    read_status(tx, id)?;
+    let mut stmt =
+        tx.prepare("SELECT digest,evidence FROM attachments WHERE unit=? ORDER BY digest")?;
+    let rows = stmt
+        .query_map([id], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    rows.into_iter()
+        .map(|(digest, raw)| {
+            Ok(CoverageAttachment {
+                digest,
+                proposal: parse(raw)?,
+            })
+        })
+        .collect()
+}
+pub(super) fn effective_reviews(tx: &Transaction<'_>, id: &str) -> Result<Vec<String>> {
+    let mut reviews = std::collections::BTreeSet::new();
+    for attachment in read_attachments(tx, id)? {
+        for review in attachment.proposal.reviews {
+            reviews.insert(crate::trust::digest(&review)?);
+        }
+    }
+    Ok(reviews.into_iter().collect())
 }
