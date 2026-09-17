@@ -1,0 +1,21 @@
+{"command": ["cargo", "test", "--locked", "--manifest-path", "packages/deployment-control-plane/Cargo.toml", "--test", "bootstrap", "--", "--test-threads=1"], "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58", "started": "2026-09-17T23:17:22.306545+00:00", "finished": "2026-09-17T23:17:23.595079+00:00", "exit": 0}
+
+running 13 tests
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift ... ok
+test loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture ... ok
+test package_has_no_activation_or_secrets_and_parses_as_disabled_plist ... ok
+test package_rejects_source_binary_metadata_and_unallowlisted_target ... ok
+test plist_loader_environment_is_rejected_from_the_exact_supplied_bytes ... ok
+test prospective_producer_scope_registers_and_unknown_host_is_explicit ... ok
+test resolved_tests::resolved_fixture_is_ready_to_authorize_but_cannot_activate ... ok
+test resolved_tests::signed_foreign_driver_and_socket_counterexamples_refuse ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-5077166400059868)

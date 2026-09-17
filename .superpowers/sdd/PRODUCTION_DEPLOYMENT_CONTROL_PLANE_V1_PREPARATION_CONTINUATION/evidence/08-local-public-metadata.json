@@ -1,0 +1,189 @@
+{
+  "observed_at": "2026-09-17T23:16:48.802959+00:00",
+  "euid": 502,
+  "host_digest": "343ecc65a7edc224c7b235c9bdbcc964ef5e81475734dc97bb1fa057e2959024",
+  "method": "gethostuuid + lstat + selected public plist fields; no launchctl/runtime/network calls",
+  "metadata": [
+    {
+      "path": "/usr/local/libexec/agent-deployd",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-deployd.plist",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/private/var/run",
+      "uid": 0,
+      "gid": 1,
+      "mode": "0o775",
+      "dev": 16777230,
+      "ino": 59194365,
+      "flags": 0,
+      "type": 16384,
+      "readable": true,
+      "writable": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o755",
+      "dev": 16777230,
+      "ino": 84639503,
+      "flags": 0,
+      "type": 16384,
+      "readable": true,
+      "writable": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "dev": 16777230,
+      "ino": 55990833,
+      "flags": 0,
+      "type": 16384,
+      "readable": true,
+      "writable": false
+    },
+    {
+      "path": "/private/etc/sudoers",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o440",
+      "dev": 16777230,
+      "ino": 59193488,
+      "flags": 32,
+      "type": 32768,
+      "readable": false,
+      "writable": false
+    },
+    {
+      "path": "/private/etc/sudoers.d",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "dev": 16777230,
+      "ino": 59193409,
+      "flags": 0,
+      "type": 16384,
+      "readable": true,
+      "writable": false
+    }
+  ],
+  "service_plists": [
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "sha256": "dc715fd8b73c6debfd35dd54c61fd55f38ff0e3f0f8937ebdc7cfa4afde3c3d9",
+      "Label": "ai.agent-core.runtime",
+      "UserName": "authsvc",
+      "GroupName": "authsvc",
+      "argument_count": 6,
+      "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "script": "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+      "environment_keys": [
+        "AGENTCORE_EXPECTED_STORE",
+        "AGENT_CORE_CREDENTIALS_FILE",
+        "AGENT_CORE_DEPLOYED_SHA",
+        "BROKER_AUTH_ORIGIN",
+        "DSH_AGENT_CHILD_GID",
+        "DSH_AGENT_CHILD_UID",
+        "DSH_AGENT_MODEL",
+        "DSH_AGENT_PROVIDER",
+        "DSH_AGENT_SPAWN_HELPER",
+        "DSH_AGENT_TURN_TIMEOUT",
+        "DSH_HARNESS_ROOT",
+        "FEISHU_AUTO_MENTION_TRIGGER_SENDER",
+        "FEISHU_CREDS_PATH",
+        "FEISHU_PROCESSING_REACTION_ENABLED",
+        "FEISHU_REPLY_RENDER_MODE",
+        "FEISHU_REQUIRE_MENTION_IN_GROUP",
+        "HOME",
+        "NOTIFICATION_INGRESS_ENABLED",
+        "PATH",
+        "PRODUCT_API_ENABLED",
+        "SCHEDULER_INCIDENT_OWNER_GID",
+        "SCHEDULER_INCIDENT_OWNER_UID",
+        "SCHEDULER_RECONCILIATION_EVIDENCE_FILE",
+        "SCHEDULER_ROUTING_MANIFEST",
+        "SCHEDULER_ROUTING_OWNER_UID",
+        "SCHEDULER_ROUTING_READER_GID"
+      ],
+      "runtime_root": "/Users/authsvc/.agent-core"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "sha256": "7901ef3eee2a5736b49a456c28ac1f8a349666792e55f66edb986fcc6756ff9b",
+      "Label": "ai.agent-core.scheduler-watchdog-w1",
+      "UserName": "authsvc",
+      "GroupName": null,
+      "argument_count": 4,
+      "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "script": "/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs",
+      "environment_keys": [
+        "AGENT_CORE_DEPLOYED_SHA",
+        "FEISHU_CREDS_PATH",
+        "SCHEDULER_CREDENTIALS_FILE",
+        "SCHEDULER_DESIRED_STATE",
+        "SCHEDULER_HEALTH_URL",
+        "SCHEDULER_INCIDENT_OWNER_GID",
+        "SCHEDULER_INCIDENT_OWNER_UID",
+        "SCHEDULER_ROUTING_MANIFEST",
+        "SCHEDULER_ROUTING_OWNER_UID",
+        "SCHEDULER_ROUTING_READER_GID",
+        "SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS",
+        "SCHEDULER_WATCHDOG_STATE_DIR",
+        "SCHEDULER_WATCHDOG_STORE"
+      ]
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "sha256": "8c8e5107ef66cdcf6b0aa8c0f39a7eabe350bb4c7f6d99b826c5021b8bb48e49",
+      "Label": "ai.agent-core.scheduler-watchdog-w2",
+      "UserName": "root",
+      "GroupName": null,
+      "argument_count": 4,
+      "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "script": "/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs",
+      "environment_keys": [
+        "AGENT_CORE_DEPLOYED_SHA",
+        "FEISHU_CREDS_PATH",
+        "SCHEDULER_INCIDENT_OWNER_GID",
+        "SCHEDULER_INCIDENT_OWNER_UID",
+        "SCHEDULER_ROUTING_MANIFEST",
+        "SCHEDULER_ROUTING_OWNER_UID",
+        "SCHEDULER_ROUTING_READER_GID",
+        "SCHEDULER_WATCHDOG_HEARTBEAT_GRACE_MS",
+        "SCHEDULER_WATCHDOG_STATE_DIR"
+      ]
+    }
+  ],
+  "identities": {
+    "authsvc": {
+      "uid": 505,
+      "gid": 601
+    },
+    "_agentdeploy": {
+      "absent": true
+    },
+    "602": {
+      "absent": true
+    }
+  },
+  "gaps": [
+    "Read-only current-user observations are not a signed protected preparation statement.",
+    "No live lifecycle denial, service status, actual process image or private sudoers content examined.",
+    "New deployment socket group is only a proposal until authorized creation and collision recheck."
+  ]
+}
