@@ -1,9 +1,7 @@
 use super::intake::{Configuration, Intake};
+use crate::common;
 use crate::{fs::FixtureRoots, Error, Result};
 use std::{cell::Cell, fs, os::unix::fs::PermissionsExt};
-#[path = "mod.rs"]
-#[allow(dead_code)]
-mod common;
 thread_local! { static SYNC:Cell<(usize,usize)>=const {Cell::new((0,0))}; }
 // Test-only EIO at the directory-fsync call boundary; not a real power-loss claim.
 #[allow(dead_code)]

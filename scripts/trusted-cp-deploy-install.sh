@@ -39,7 +39,7 @@
 # to app/, harness/, home/, config/ or the helper.
 # =============================================================================
 set -euo pipefail
-
+if [ -e /usr/local/libexec/agent-deployd/enrolled-dsh-runtime ] || [ -L /usr/local/libexec/agent-deployd/enrolled-dsh-runtime ] || [ -L "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)" ] || { [ -d "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)" ] && [ "$(/usr/bin/stat -f '%u:%Lp' "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)")" != '0:755' ]; }; then echo "Enrolled/unsafe target: use agent-deployctl" >&2; exit 1; fi
 # GLOBAL production-deploy mutex (WATCHDOG transaction P1/B7 convergence): every
 # entrypoint that replaces the trusted app / routing / restarts the canonical
 # runtime shares THIS exact lock. Atomic mkdir acquire; a held lock fails

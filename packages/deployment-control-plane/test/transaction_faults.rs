@@ -1,12 +1,9 @@
-#[allow(dead_code)]
-#[path = "common/mod.rs"]
-mod common;
-#[path = "transaction_fixture.rs"]
-mod fixture;
+use super::test_fixture as fixture;
 use super::{
     journal::{Event, Journal},
     Executor,
 };
+use crate::common;
 use crate::{
     fs::{ArtifactEntry, ArtifactManifest, FixtureRoots},
     model::*,
@@ -288,7 +285,7 @@ fn check_recovery(
                     serde_json::from_slice::<serde_json::Value>(&fs::read(p).unwrap()).ok()
                 })
                 .filter_map(|v| v.pointer("/event/FixtureStarted/process").cloned())
-                .last()
+                .next_back()
                 .unwrap();
             let process: super::ProcessIdentity = serde_json::from_value(process).unwrap();
             assert_eq!(

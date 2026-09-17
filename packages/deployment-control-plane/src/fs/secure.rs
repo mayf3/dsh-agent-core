@@ -257,3 +257,17 @@ pub(crate) fn read_xattrs(file: &File) -> Result<std::collections::BTreeMap<Stri
     }
     Ok(result)
 }
+
+/// Only for compiled-in Apple platform executables, never artifact/loader inputs.
+pub(crate) fn validate_platform_file(file: &File) -> Result<()> {
+    let m = file.metadata()?;
+    require(
+        m.is_file() && m.nlink() == 1 && m.uid() == 0 && m.gid() == 0 && m.mode() & 0o7022 == 0,
+        "UNSAFE_PLATFORM_TOOL",
+    )?;
+    require(
+        std::os::macos::fs::MetadataExt::st_flags(&m) & !0x80020 == 0,
+        "UNSAFE_FLAGS",
+    )?;
+    reject_acl(file)
+}
