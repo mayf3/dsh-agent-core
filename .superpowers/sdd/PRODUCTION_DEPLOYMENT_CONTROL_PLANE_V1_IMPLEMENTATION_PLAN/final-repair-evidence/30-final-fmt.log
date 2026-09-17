@@ -1,0 +1,5 @@
+SOURCE=277a5e8832938e6b2232d11949aedfb92cd0e318
+COMMAND=['cargo', 'fmt', '--manifest-path', 'packages/deployment-control-plane/Cargo.toml', '--', '--check']
+START=2026-09-17T17:55:49.872807+00:00
+
+EXIT=0

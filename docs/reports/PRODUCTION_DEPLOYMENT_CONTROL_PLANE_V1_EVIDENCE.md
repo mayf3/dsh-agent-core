@@ -329,3 +329,296 @@ No Node candidate execution, activation, privileged action or P-only PASS occurr
 [equivalence]: ../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/task-4-evidence/69-repair-binary-source-equivalence.json
 [recipe]: ../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/task-4-evidence/repair-recipe.json
 [manifest]: ../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/task-4-evidence/repair-manifest.json
+
+
+## Frozen final repair coordinates (current)
+
+These new relations supplement, and do not rewrite, historical EVD-DCP-T4-001–016.
+The original review findings EVD-DCP-FINAL-B01–B09 remain contrary evidence at
+FIX_BASE `c5cab2eef3a5e7b502016571e1f24dd31b3e0560`. The new FR relations below
+support the proposed closure at exact source `277a5e8832938e6b2232d11949aedfb92cd0e318`;
+only the controller's scoped independent re-audit can issue a review verdict.
+A is unchanged. F/M environment remains nonroot macOS arm64/euid502, with kernel
+private0700 fixtures, synthetic fixture signers and simulated launchd services.
+No P execution, production issuer bridge, authentic custody or actual readiness is claimed.
+
+Source and SHA256 inventory: [26-frozen-source.json](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/26-frozen-source.json). Serial commands, UTC timestamps, source and exit statuses: [32-final-gates.json](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/32-final-gates.json). All five build/test/quality/release commands exit0; no executable edit occurred during these gates. [28-final-full-suite.log](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log) records **168 passing top-level test executions**: lib35, authority17, bootstrap13, e2e8, filesystem17, queue30, socket9, train25, transactions14; three binary targets contain0 tests. Child-worker summaries are excluded; shared helper cases appear in multiple targets. Directed01–25 working-tree observations retain genuine failures and do not claim commit-bound final execution.
+
+Structure/governance: [36-structure-authority.json](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/36-structure-authority.json) and [37-rust-structure.json](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/37-rust-structure.json). Governance integrity and exact accepted Spec identity pass. Repository structure exits1 for three unchanged baseline directory violations (production-runtime/src21, production-runtime/test23, scripts59); no global PASS. Supplemental87 Rust files have maximum479lines/20immediatechildren/depth2.
+
+## EVD-DCP-FR-B01
+
+**Target/relation:** ACC-012; CTR-017; SUPPORTS bounded F/M closure of DCP-FINAL-B01 under A.
+
+**Source/mechanism:** Implemented typed ResolvedPreparation, independently pinned preparation trust, nine role-separated signed prerequisite statements, exact source/package/config/enrollment/release/custody/plan bindings, review independence and freshness. Disabled profile and activation_allowed=false even for ready synthetic input. Owner receipt moved to subsequent activation boundary. bootstrap/preparation.rs, binding.rs, verify.rs and prepare CLI.
+
+**Executed observations at the frozen source:**
+
+- `resolved_tests::resolved_fixture_is_ready_to_authorize_but_cannot_activate` — [final log line586](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L586); [definition at source freeze](../../packages/deployment-control-plane/test/common/preparation.rs#L203).
+- `package_has_no_activation_or_secrets_and_parses_as_disabled_plist` — [final log line582](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L582); [definition at source freeze](../../packages/deployment-control-plane/test/adoption/bootstrap.rs#L133).
+
+**Inputs/results/rejecting cases and development provenance:** 09/14/17 preparation logs: synthetic ready, omission/forgery/cross-binding/expiry and inert candidate rejection. Final full run is pinned above.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** RP-01–07 are real missing readiness inputs. The signed positive fixture is test-only; RP-08 is subsequent exact Owner activation authorization, never a preauthorization-readiness requirement.
+
+## EVD-DCP-FR-B02
+
+**Target/relation:** ACC-004,010; CTR-005,008; SUPPORTS bounded F/M closure of DCP-FINAL-B02 under A.
+
+**Source/mechanism:** Protected enrollment now owns exact regular-file slots, explicit ABSENT, mutable/retained overlay semantics, mode/GID, root owner and absent ACL. Executor resolves manifest slots before service effects, preserves complete required face and checks unchanged files, bounds whole face and retains metadata/rollback. Native unsupported required facets block. transaction/slots.rs, native_profile.rs, apply.rs, journal.rs; fs/target.rs.
+
+**Executed observations at the frozen source:**
+
+- `transaction::final_repair_tests::manifest_cannot_expand_protected_mapping` — [final log line499](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L499); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L117).
+- `transaction::final_repair_tests::metadata_executable_and_absent_sibling_reject_before_write` — [final log line500](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L500); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L209).
+- `transaction::final_repair_tests::exact_mapping_rejects_metadata_drift_and_allows_explicit_absent_addition` — [final log line494](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L494); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L238).
+- `transaction::final_repair_tests::exact_slots_retain_private_mode_and_complete_unchanged_face` — [final log line495](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L495); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L139).
+- `transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal` — [final log line516](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L516); [definition at source freeze](../../packages/deployment-control-plane/test/transaction_repair.rs#L93).
+
+**Inputs/results/rejecting cases and development provenance:** 05 exact extra-slot RED, 06 GREEN; 12 expanded test had missing Goal receipt (a legitimate fixture failure), corrected15 and16 pass. Extra existing/ABSENT sibling, metadata/executable, unchanged drift, private0600, explicit absence restoration. Final4096 mapping is exercised below.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** Actual meaningful release selection/complete initial face remains RP-04. Only regular app slots plus retained Node and service-plist facets are supported; required unsupported facets block. Simulated launchd cannot prove native generations.
+
+## EVD-DCP-FR-B03
+
+**Target/relation:** ACC-002,006,013; CTR-002,003,008,018; SUPPORTS bounded F/M closure of DCP-FINAL-B03 under A.
+
+**Source/mechanism:** One shared structural binding for preparation, intake and physical executor; fixed repo/runtime/root/strategy/launchd mapping, kernel-observed host UUID digest, exact profile revision/digest and caller/service disjointness; protected lifecycle-denial receipt remains required. bootstrap/binding.rs; intake and production Executor.
+
+**Executed observations at the frozen source:**
+
+- `resolved_tests::signed_foreign_driver_and_socket_counterexamples_refuse` — [final log line587](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L587); [definition at source freeze](../../packages/deployment-control-plane/test/common/preparation.rs#L287).
+
+**Inputs/results/rejecting cases and development provenance:** Preparation negative cases reject foreign host/root/repo/strategy/overlap and caller502/service502;505/root accepted structurally. No actual privileged identity/lifecycle proof.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** RP-01/05 require authentic protected enrollment and lifecycle exclusion. Local host/UID metadata and fixture identity do not prove production authority.
+
+## EVD-DCP-FR-B04
+
+**Target/relation:** ACC-005,006,012; CTR-007,008,017; SUPPORTS bounded F/M closure of DCP-FINAL-B04 under A.
+
+**Source/mechanism:** Only canonical /private/var/run can use root:daemon0775 exception. Exact device/inode/flags/no-ACL and fresh membership exclusion for nonroot enrolled callers/services; dedicated root-owned0750 child and retained descriptor rechecks. Root W2 explicitly trusted root code. Generic Dir checks unchanged. bootstrap/socket.rs; service/server.rs.
+
+**Executed observations at the frozen source:**
+
+- `resolved_tests::signed_foreign_driver_and_socket_counterexamples_refuse` — [final log line587](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L587); [definition at source freeze](../../packages/deployment-control-plane/test/common/preparation.rs#L287).
+- `bootstrap::socket::tests::equivalent_private_descriptor_binding_rejects_replacement_mode_and_acl` — [final log line9](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L9); [definition at source freeze](../../packages/deployment-control-plane/test/common/socket_ancestor.rs#L5).
+
+**Inputs/results/rejecting cases and development provenance:** 13 descriptor fixture: equivalent metadata accepted, replacement/mode/ACL rejected and generic Dir still rejects0775. Preparation cases refuse absent proof/group-write/ACL/wrong group. No privileged production socket bind.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** Fixture descriptor proof uses nonroot equivalent metadata and cannot satisfy the root-owned production policy. Public /private/var/run census is time-bound metadata only; startup still requires protected exact facts and fresh group membership. Root W2 remains a trusted root-code boundary.
+
+## EVD-DCP-FR-B05
+
+**Target/relation:** ACC-003,008,009; CTR-006,010,011; SUPPORTS bounded F/M closure of DCP-FINAL-B05 under A.
+
+**Source/mechanism:** Final definite policy refusal appends durable NoMutation, atomically BLOCKED/fence cleanup, then drops active state. Storage errors retain recovery fence; no preflight/mutation budget reset. transaction/apply.rs; queue/executor_finalization.rs.
+
+**Executed observations at the frozen source:**
+
+- `transaction::final_repair_tests::final_prewrite_expiry_releases_active_with_durable_blocked` — [final log line496](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L496); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L4).
+- `transaction::final_repair_tests::no_mutation_failed_flush_never_reports_safe_blocked` — [final log line501](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L501); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L326).
+
+**Inputs/results/rejecting cases and development provenance:** 01 RED PRECHECK vs BLOCKED;02/16 GREEN, same-daemon corrected-policy retry,0 initial mutations; injected NoMutation fsync failure remains PRECHECK/active/fenced and no write.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** The injected failed flush deliberately retains PRECHECK, active state and recovery fence; definite policy refusal alone is safe BLOCKED. No hardware power-loss guarantee or automatic unknown replay is inferred.
+
+## EVD-DCP-FR-B06
+
+**Target/relation:** ACC-008,009; CTR-010,011; SUPPORTS bounded F/M closure of DCP-FINAL-B06 under A.
+
+**Source/mechanism:** Protected bounded signed recovery mailbox consumed by Train under permanent mutex; exact current failed status/cause, byte/service restoration and owned operation binding, fresh policy, receipt dedupe and existing budgets. Known failure cause is durable before rollback. External issuer transport remains unimplemented pending real contract. transaction/remediation.rs; service/intake.rs/train.rs; queue/service.rs.
+
+**Executed observations at the frozen source:**
+
+- `remediation_tests::protected_recovery_mailbox_resumes_preflight_without_daemon_restart` — [final log line695](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L695); [definition at source freeze](../../packages/deployment-control-plane/test/common/remediation.rs#L49).
+- `remediation_tests::protected_recovery_mailbox_resumes_known_rollback` — [final log line693](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L693); [definition at source freeze](../../packages/deployment-control-plane/test/common/remediation.rs#L93).
+- `remediation_tests::recovery_mailbox_cannot_reset_exhausted_mutating_budget` — [final log line702](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L702); [definition at source freeze](../../packages/deployment-control-plane/test/common/remediation.rs#L130).
+
+**Inputs/results/rejecting cases and development provenance:** 11/20/24 real private daemon/socket cases: same-daemon preflight and rollback recovery, wrong revision/cause/signature/expiry/unknown disposition refusal, replay and exhausted second mutation budget cannot install. No direct Queue::retry call substitutes for daemon integration.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** RP-02 actual issuer protocol/authentication/custody and upstream-to-mailbox bridge remain unknown. The daemon-side route is implemented; tests use synthetic keys and real private daemon/socket transport. Unknown canary and exhausted budget stay blocked.
+
+## EVD-DCP-FR-B07
+
+**Target/relation:** ACC-010,011; CTR-011,014; SUPPORTS bounded F/M closure of DCP-FINAL-B07 under A.
+
+**Source/mechanism:** Known precommit physical/health failure records cause and invokes exact guarded rollback; failed finalization commit/fsync stays latched with fence. transaction/recovery.rs; service/train.rs.
+
+**Executed observations at the frozen source:**
+
+- `transaction::final_repair_tests::known_final_health_failure_restores_without_closure` — [final log line497](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L497); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L58).
+- `transaction::final_repair_tests::known_final_health_timeout_restores` — [final log line498](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L498); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L274).
+- `transaction::finalization_tests::internal_applied_is_not_public_success_or_dependency_until_finalized` — [final log line509](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L509); [definition at source freeze](../../packages/deployment-control-plane/test/transaction_finalization.rs#L8).
+
+**Inputs/results/rejecting cases and development provenance:** 01 RED VERIFYING vs ROLLED_BACK;02/16 GREEN. Actual fixture bytes restored, signed Goal PASS never closes, known HEALTH_TIMEOUT restores; retained finalization ambiguity tests in final suite.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** Known precommit failures are distinct from ambiguous commit/fsync outcomes, which retain the fence/latch. All native launchd/production rollback proof remains unexecuted.
+
+## EVD-DCP-FR-B08
+
+**Target/relation:** ACC-006,007,011,014; CTR-008,009,014,020; SUPPORTS bounded F/M closure of DCP-FINAL-B08 under A.
+
+**Source/mechanism:** Shared health reader uses absolute monotonic deadline over connect/partial write/every read and bounds response bytes. Fixed production8790 route unchanged. transaction/health.rs/native.rs.
+
+**Executed observations at the frozen source:**
+
+- `transaction::health::tests::bounded_reader_accepts_health_and_rejects_known_failure` — [final log line512](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L512); [definition at source freeze](../../packages/deployment-control-plane/test/common/health.rs#L26).
+- `transaction::health::tests::dribbling_peer_cannot_extend_total_deadline` — [final log line513](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L513); [definition at source freeze](../../packages/deployment-control-plane/test/common/health.rs#L4).
+- `transaction::final_repair_tests::known_final_health_timeout_restores` — [final log line498](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L498); [definition at source freeze](../../packages/deployment-control-plane/test/common/final_transaction.rs#L274).
+
+**Inputs/results/rejecting cases and development provenance:** 03 dribbling-peer RED (0.53s completion with generic IO refusal for100ms budget);04 GREEN (~0.14s), ephemeral loopback only. Final suite includes healthy/known-failure parse and timeout rollback cases.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** Ephemeral loopback tests only; no production8790 probe. A bounded fixture driver cannot establish native launchd acceptance.
+
+## EVD-DCP-FR-B09
+
+**Target/relation:** Fixture confinement required by implementation mandate; supports execution validity across ACC-001–014; SUPPORTS bounded F/M closure of DCP-FINAL-B09 under A.
+
+**Source/mechanism:** All owned fixture allocations now use shared early nonroot guard and kernel-selected0700 parent/child policy; TMPDIR cannot select roots. Existing worker entries validate FixtureRoots before effects. Common/adoption/queue/filesystem/transaction/service helpers consolidated. fs/mod.rs and test/common/private.rs.
+
+**Executed observations at the frozen source:**
+
+- `common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect` — [final log line10](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L10); [definition at source freeze](../../packages/deployment-control-plane/test/common/private.rs#L82).
+- `common::private::kernel_selected_temp_ignores_caller_tmpdir` — [final log line12](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L12); [definition at source freeze](../../packages/deployment-control-plane/test/common/private.rs#L59).
+- `common::private::outside_kernel_temp_is_rejected_before_creation` — [final log line13](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L13); [definition at source freeze](../../packages/deployment-control-plane/test/common/private.rs#L50).
+- `common::private::root_refusal_precedes_effect_without_root_execution` — [final log line14](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L14); [definition at source freeze](../../packages/deployment-control-plane/test/common/private.rs#L40).
+
+**Inputs/results/rejecting cases and development provenance:** 21 safe injected-euid0 closure does not run, outside kernel base refuses before creation, hostile TMPDIR child runs only in kernel-private0700 root. No actual root execution.
+
+**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.
+
+**Limitations:** Root refusal is exercised by a safe injected effective UID with a no-effects closure; no actual root process runs. Shared helper cases execute in multiple test targets and are not unique test definitions.
+
+## EVD-DCP-FR-010
+
+**Target/relation:** ACC-003,006,012; CTR-004,006,008,017,019. SUPPORTS source/package identity and inertness; does not support actual BOOTSTRAP_READY.
+
+**Source/provenance:** freshly built controller and prepare CLI at `277a5e8832938e6b2232d11949aedfb92cd0e318`; [31-final-release.log](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/31-final-release.log), [38-final-recipe.json](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/38-final-recipe.json), [39-package-prepare.log](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/39-package-prepare.log), [40-package-verify.log](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/40-package-verify.log) and [41-final-package.json](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/41-final-package.json). All96 bound source files were rehashed against the checkout; all23 payloads verified. The22 transformed Node closure files retain their prior exact bytes and were rehashed; no new trusted transform attestation is invented. Historical package and build-source claims remain preserved.
+
+- `manifest_digest`: `6e6411dda70109e27a21fd7200e4d3e8acf4132ff42bfbf289b2331ed3a8f202`.
+- `source_digest`: `de530f88605ac12d5267af9e40fed0195f9629eec7dca76bfc871d00e7eb9af6`.
+- `controller_sha256`: `09219f333fc0864197d024a8178ad7bee27a3c31c35585fbcbca7834deaaee30`.
+- `prepare_cli_sha256`: `b9a4bba70208fc2150d964d38aa096004abd163616868927118f983977b27cae`.
+- `package_path`: `/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-final-repair-j_4n_knv`.
+
+**Result/negative boundary:** integrity_verified=true, bootstrap_ready=false, activation_allowed=false, preparation_digest=null. Disabled profile, null issuer keys/custody and empty transition_sudoers remain enforced. Current unresolved verifier reports seven readiness blockers; the historical eight-item output is historical because Owner execution authorization is a future activation prerequisite.
+
+**Sufficiency/limits:** exact inert package is inspectable and bound to current code; actual RP-01–06 facts and RP-07 scoped independent verdict remain pending. RP-08 exact Owner execution/staging/rollback/activation/canary remains a later operation gate. No install, bootstrap, privileged mutation or live acceptance occurs.
+
+## Final re-execution of inherited acceptance observations
+
+These supplemental coordinates re-execute the named assertion subclaims inherited
+from T4 at the new frozen source. Historical EVD scopes and limitations remain;
+no whole-ACC or P PASS follows. Each name links its exact current definition and
+final raw observation; additional repair relations above qualify affected boundaries.
+
+### ACC-001 / EVD-DCP-T4-001 final-source supplement
+
+- `producer_cas_snapshot_watermark_and_pagination_are_persistent` — [final log line640](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L640); [definition at source freeze](../../packages/deployment-control-plane/test/queue.rs#L168).
+- `authenticated_producer_watermark_and_forged_build_cannot_be_bypassed` — [final log line683](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L683); [definition at source freeze](../../packages/deployment-control-plane/test/train.rs#L255).
+
+### ACC-002 / EVD-DCP-T4-002 final-source supplement
+
+- `concurrent_duplicates_survive_reopen_and_actor_idempotency_conflicts` — [final log line637](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L637); [definition at source freeze](../../packages/deployment-control-plane/test/queue.rs#L87).
+- `a_b_a_allocates_daemon_intents_from_trusted_desired_state` — [final log line631](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L631); [definition at source freeze](../../packages/deployment-control-plane/test/queue.rs#L149).
+- `repairs::b01_supersession_preserves_all_late_goal_and_actor_links` — [final log line648](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L648); [definition at source freeze](../../packages/deployment-control-plane/test/queue_repairs.rs#L82).
+- `service_cases::late_coverage_reuses_exact_original_attachment_and_never_reinstalls` — [final log line715](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L715); [definition at source freeze](../../packages/deployment-control-plane/test/service_cases.rs#L51).
+
+### ACC-003 / EVD-DCP-T4-003 final-source supplement
+
+- `forged_or_changed_signed_payload_is_rejected` — [final log line560](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L560); [definition at source freeze](../../packages/deployment-control-plane/test/authority.rs#L5).
+- `key_role_and_scope_are_enforced` — [final log line568](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L568); [definition at source freeze](../../packages/deployment-control-plane/test/authority.rs#L25).
+- `admission_rejects_untrusted_release_bindings_without_inserting` — [final log line552](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L552); [definition at source freeze](../../packages/deployment-control-plane/test/authority.rs#L46).
+- `freshness::source_inclusion_requires_signed_exact_face_not_release_ancestry` — [final log line566](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L566); [definition at source freeze](../../packages/deployment-control-plane/test/authority_freshness.rs#L28).
+- `freshness::observed_revocation_epoch_survives_rejected_admission_and_reopen` — [final log line563](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L563); [definition at source freeze](../../packages/deployment-control-plane/test/authority_freshness.rs#L4).
+
+### ACC-004 / EVD-DCP-T4-004 final-source supplement
+
+- `bundle_rejects_escape_collision_extra_missing_and_oversize` — [final log line608](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L608); [definition at source freeze](../../packages/deployment-control-plane/test/filesystem.rs#L93).
+- `rejects_real_acl_hardlink_fifo_and_writable_payload` — [final log line622](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L622); [definition at source freeze](../../packages/deployment-control-plane/test/filesystem.rs#L142).
+- `every_nested_target_ancestor_is_descriptor_checked` — [final log line609](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L609); [definition at source freeze](../../packages/deployment-control-plane/test/filesystem.rs#L221).
+- `payload_replacement_during_hash_cannot_change_sealed_bytes` — [final log line615](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L615); [definition at source freeze](../../packages/deployment-control-plane/test/filesystem.rs#L249).
+
+### ACC-005 / EVD-DCP-T4-005 final-source supplement
+
+- `real_socket_rejects_identity_paths_unknown_fields_and_deep_frames` — [final log line675](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L675); [definition at source freeze](../../packages/deployment-control-plane/test/socket.rs#L31).
+- `peer_scope_and_connection_quota_are_enforced_by_real_transport` — [final log line673](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L673); [definition at source freeze](../../packages/deployment-control-plane/test/socket.rs#L74).
+- `partial_disconnect_is_bounded_and_does_not_starve_status` — [final log line672](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L672); [definition at source freeze](../../packages/deployment-control-plane/test/socket.rs#L59).
+- `durable_disconnected_ack_reopens_after_intake_disappears` — [final log line689](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L689); [definition at source freeze](../../packages/deployment-control-plane/test/train.rs#L193).
+
+### ACC-006 / EVD-DCP-T4-006 final-source supplement
+
+- `launchd_periodic_parser_does_not_confuse_nested_pid_with_generation` — [final log line739](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L739); [definition at source freeze](../../packages/deployment-control-plane/test/transactions.rs#L70).
+
+### ACC-007 / EVD-DCP-T4-007 final-source supplement
+
+- `killed_holder_releases_kernel_lock_without_unlinking_inode_or_intent` — [final log line612](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L612); [definition at source freeze](../../packages/deployment-control-plane/test/filesystem.rs#L294).
+- `a_different_fixture_mutex_cannot_authorize_apply` — [final log line731](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L731); [definition at source freeze](../../packages/deployment-control-plane/test/transactions.rs#L120).
+- `simultaneous_targets_use_one_host_mutex_and_distinct_private_targets` — [final log line721](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L721); [definition at source freeze](../../packages/deployment-control-plane/test/train.rs#L293).
+- `three_goals_share_one_install_two_close_one_fails_and_mutex_covers_acceptance` — [final log line722](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L722); [definition at source freeze](../../packages/deployment-control-plane/test/train.rs#L109).
+
+### ACC-008 / EVD-DCP-T4-008 final-source supplement
+
+- `scheduling::supersession_inherits_fifo_and_rejects_cycles_without_partial_writes` — [final log line660](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L660); [definition at source freeze](../../packages/deployment-control-plane/test/queue_scheduling.rs#L86).
+- `scheduling::dependency_requires_exact_capability_receipt_and_goal_pass` — [final log line657](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L657); [definition at source freeze](../../packages/deployment-control-plane/test/queue_scheduling.rs#L133).
+- `scheduling::fifo_and_continue_independent_obey_persisted_failure_disposition` — [final log line658](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L658); [definition at source freeze](../../packages/deployment-control-plane/test/queue_scheduling.rs#L21).
+- `repairs::b04_replaced_runtime_cannot_satisfy_live_installation_dependency` — [final log line651](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L651); [definition at source freeze](../../packages/deployment-control-plane/test/queue_repairs.rs#L216).
+- `repairs::b05_revoked_recovery_and_cancel_cannot_clear_stop` — [final log line652](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L652); [definition at source freeze](../../packages/deployment-control-plane/test/queue_repairs.rs#L259).
+
+### ACC-009 / EVD-DCP-T4-009 final-source supplement
+
+- `transaction::faults::failed_sync_and_partial_records_are_retained_and_never_replayed` — [final log line118](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L118); [definition at source freeze](../../packages/deployment-control-plane/test/transaction_faults.rs#L369).
+- `transaction::repair::prior_rolled_back_mutation_cannot_quarantine_current_no_effect_preflight` — [final log line520](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L520); [definition at source freeze](../../packages/deployment-control-plane/test/transaction_repair.rs#L284).
+- `service::mailbox_tests::visible_rename_with_failed_directory_flush_is_reflushed_on_retry` — [final log line16](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L16); [definition at source freeze](../../packages/deployment-control-plane/test/common/mailbox.rs#L65).
+- `repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit` — [final log line705](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L705); [definition at source freeze](../../packages/deployment-control-plane/test/common/service_repair.rs#L28).
+- `repair::newer_late_coverage_survives_completion_of_an_older_verification_claim` — [final log line711](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L711); [definition at source freeze](../../packages/deployment-control-plane/test/common/service_repair.rs#L181).
+
+### ACC-010 / EVD-DCP-T4-010 final-source supplement
+
+- `partial_install_disk_failure_restores_exact_preimage_without_unrelated_writes` — [final log line740](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L740); [definition at source freeze](../../packages/deployment-control-plane/test/transactions.rs#L178).
+- `rollback_deletes_only_exact_transaction_created_absent_slot` — [final log line743](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L743); [definition at source freeze](../../packages/deployment-control-plane/test/transactions.rs#L232).
+- `unrelated_post_apply_drift_quarantines_and_preserves_bytes` — [final log line744](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L744); [definition at source freeze](../../packages/deployment-control-plane/test/transactions.rs#L44).
+- `restored_generation::restored_a_uses_fresh_process_for_late_verification_without_reclosing_original_goal` — [final log line742](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L742); [definition at source freeze](../../packages/deployment-control-plane/test/restored_generation.rs#L32).
+- `transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal` — [final log line516](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L516); [definition at source freeze](../../packages/deployment-control-plane/test/transaction_repair.rs#L93).
+
+### ACC-011 / EVD-DCP-T4-011 final-source supplement
+
+- `receipts::outbox_closure_is_signed_idempotent_and_never_reinstalls` — [final log line642](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L642); [definition at source freeze](../../packages/deployment-control-plane/test/queue_receipts.rs#L4).
+- `repairs::b02_current_attempt_needs_its_own_transaction_and_goal_readback_receipts` — [final log line649](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L649); [definition at source freeze](../../packages/deployment-control-plane/test/queue_repairs.rs#L119).
+- `absent_verifier_finalizes_waiting_without_local_success_and_late_pass_closes_once` — [final log line682](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L682); [definition at source freeze](../../packages/deployment-control-plane/test/train.rs#L18).
+- `unknown_external_canary_is_never_reissued_or_overwritten` — [final log line723](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L723); [definition at source freeze](../../packages/deployment-control-plane/test/train.rs#L174).
+- `repair::closure_temporary_records_resume_after_real_daemon_restart_without_reinstall` — [final log line706](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L706); [definition at source freeze](../../packages/deployment-control-plane/test/common/service_repair.rs#L73).
+
+### ACC-012 / EVD-DCP-T4-012 final-source supplement
+
+- `authenticated_policy_epoch_cannot_roll_back_or_equivocate` — [final log line553](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L553); [definition at source freeze](../../packages/deployment-control-plane/test/authority.rs#L87).
+- `production_entry_refuses_unprivileged_and_path_overrides` — [final log line674](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L674); [definition at source freeze](../../packages/deployment-control-plane/test/socket.rs#L6).
+
+### ACC-013 / EVD-DCP-T4-013 final-source supplement
+
+- `enrolled_legacy_sources_refuse_before_any_effect` — [final log line599](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L599); [definition at source freeze](../../packages/deployment-control-plane/test/adoption/e2e.rs#L74).
+- `unreadable_or_caller_owned_parent_denies_but_true_absence_preserves_legacy` — [final log line601](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L601); [definition at source freeze](../../packages/deployment-control-plane/test/adoption/e2e.rs#L101).
+- `original_nonroot_lock_selftest_remains_available_before_enrollment` — [final log line600](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L600); [definition at source freeze](../../packages/deployment-control-plane/test/adoption/e2e.rs#L123).
+
+### ACC-014 / EVD-DCP-T4-014 final-source supplement
+
+- `receipts::queue_quota_rejects_new_work_and_wrong_revision_cannot_move_state` — [final log line643](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L643); [definition at source freeze](../../packages/deployment-control-plane/test/queue_receipts.rs#L164).
+- `receipts::transport_request_rate_limit_is_persisted_even_when_units_collapse` — [final log line645](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L645); [definition at source freeze](../../packages/deployment-control-plane/test/queue_receipts.rs#L185).
+- `transaction::faults::owned_action_timeout_reaches_transaction_quarantine_and_no_replay` — [final log line486](../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/final-repair-evidence/28-final-full-suite.log#L486); [definition at source freeze](../../packages/deployment-control-plane/test/transaction_faults.rs#L463).

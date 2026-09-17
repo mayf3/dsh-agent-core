@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-09-17T18:03:38.478767+00:00",
+  "source": "277a5e8832938e6b2232d11949aedfb92cd0e318",
+  "current_evidence_link_count": 164,
+  "checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        "."
+      ],
+      "exit": 0,
+      "stdout": "vendored governance bytes match governance.lock.json\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "277a5e8832938e6b2232d11949aedfb92cd0e318",
+        "--",
+        "packages/deployment-control-plane"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "bb5327f622a0333f1e11d945319e024a3731f05a",
+        "--",
+        "docs/specs/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1.md"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "qualification": "Documentation-only closeout; no repeated Cargo suite."
+}

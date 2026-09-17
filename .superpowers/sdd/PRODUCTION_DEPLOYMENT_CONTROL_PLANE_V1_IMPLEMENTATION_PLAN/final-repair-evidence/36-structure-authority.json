@@ -1,0 +1,40 @@
+[
+  {
+    "command": [
+      "node",
+      "scripts/verify-code-structure.mjs",
+      "--base",
+      "c5cab2eef3a5e7b502016571e1f24dd31b3e0560",
+      "--head",
+      "277a5e8832938e6b2232d11949aedfb92cd0e318",
+      "--json"
+    ],
+    "exit": 1,
+    "log": "33-structure.log",
+    "source": "277a5e8832938e6b2232d11949aedfb92cd0e318"
+  },
+  {
+    "command": [
+      "python3",
+      ".agents/tools/verify_governance.py",
+      "--target",
+      "."
+    ],
+    "exit": 0,
+    "log": "34-governance.log",
+    "source": "277a5e8832938e6b2232d11949aedfb92cd0e318"
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "bb5327f622a0333f1e11d945319e024a3731f05a",
+      "277a5e8832938e6b2232d11949aedfb92cd0e318",
+      "--",
+      "docs/specs/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1.md"
+    ],
+    "exit": 0,
+    "log": "35-spec-identity.log",
+    "source": "277a5e8832938e6b2232d11949aedfb92cd0e318"
+  }
+]

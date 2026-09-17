@@ -1,0 +1,66 @@
+from pathlib import Path
+import json,re
+root=Path.cwd(); plan=root/'.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN'; out=plan/'final-repair-evidence'; pkg=root/'packages/deployment-control-plane'
+source='277a5e8832938e6b2232d11949aedfb92cd0e318'
+evd=root/'docs/reports/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_EVIDENCE.md'; conf=root/'docs/reports/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_CONFORMANCE.md'; report=plan/'final-repair-report.md'
+log=(out/'28-final-full-suite.log').read_text().splitlines(); package=json.loads((out/'41-final-package.json').read_text()); gates=json.loads((out/'32-final-gates.json').read_text())
+base='../../.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/'
+def link(name,label=None): return f'[{label or name}]({base}final-repair-evidence/{name})'
+def obs(suffix):
+ hits=[(i,l) for i,l in enumerate(log,1) if l.startswith('test ') and l.split(' ...')[0].split('::')[-1].removeprefix('test ')==suffix]
+ assert hits,suffix
+ i,l=hits[0]; name=l[5:].split(' ...')[0]
+ defs=[]
+ for p in pkg.rglob('*.rs'):
+  if 'target' in p.parts: continue
+  for j,t in enumerate(p.read_text().splitlines(),1):
+   if re.search(r'\bfn '+re.escape(suffix)+r'\(',t): defs.append((p,j))
+ assert len(defs)==1,(suffix,defs)
+ p,j=defs[0]
+ return f'- `{name}` — [final log line{i}]({base}final-repair-evidence/28-final-full-suite.log#L{i}); [definition at source freeze](../../{p.relative_to(root)}#L{j}).'
+rows=[r.split('|')[1:4] for r in report.read_text().splitlines() if re.match(r'\| B0[1-9] \|',r)];assert len(rows)==9
+cases=[
+ ['resolved_fixture_is_ready_to_authorize_but_cannot_activate','package_has_no_activation_or_secrets_and_parses_as_disabled_plist'],
+ ['manifest_cannot_expand_protected_mapping','metadata_executable_and_absent_sibling_reject_before_write','exact_mapping_rejects_metadata_drift_and_allows_explicit_absent_addition','exact_slots_retain_private_mode_and_complete_unchanged_face','maximum_admitted_slots_roundtrip_success_and_rollback_journal'],
+ ['signed_foreign_driver_and_socket_counterexamples_refuse'],
+ ['signed_foreign_driver_and_socket_counterexamples_refuse','equivalent_private_descriptor_binding_rejects_replacement_mode_and_acl'],
+ ['final_prewrite_expiry_releases_active_with_durable_blocked','no_mutation_failed_flush_never_reports_safe_blocked'],
+ ['protected_recovery_mailbox_resumes_preflight_without_daemon_restart','protected_recovery_mailbox_resumes_known_rollback','recovery_mailbox_cannot_reset_exhausted_mutating_budget'],
+ ['known_final_health_failure_restores_without_closure','known_final_health_timeout_restores','internal_applied_is_not_public_success_or_dependency_until_finalized'],
+ ['bounded_reader_accepts_health_and_rejects_known_failure','dribbling_peer_cannot_extend_total_deadline','known_final_health_timeout_restores'],
+ ['hostile_tmpdir_is_ignored_before_first_fixture_effect','kernel_selected_temp_ignores_caller_tmpdir','outside_kernel_temp_is_rejected_before_creation','root_refusal_precedes_effect_without_root_execution']]
+targets=['ACC-012; CTR-017','ACC-004,010; CTR-005,008','ACC-002,006,013; CTR-002,003,008,018','ACC-005,006,012; CTR-007,008,017','ACC-003,008,009; CTR-006,010,011','ACC-008,009; CTR-010,011','ACC-010,011; CTR-011,014','ACC-006,007,011,014; CTR-008,009,014,020','Fixture confinement required by implementation mandate; supports execution validity across ACC-001–014']
+limits=[
+ 'RP-01–07 are real missing readiness inputs. The signed positive fixture is test-only; RP-08 is subsequent exact Owner activation authorization, never a preauthorization-readiness requirement.',
+ 'Actual meaningful release selection/complete initial face remains RP-04. Only regular app slots plus retained Node and service-plist facets are supported; required unsupported facets block. Simulated launchd cannot prove native generations.',
+ 'RP-01/05 require authentic protected enrollment and lifecycle exclusion. Local host/UID metadata and fixture identity do not prove production authority.',
+ 'Fixture descriptor proof uses nonroot equivalent metadata and cannot satisfy the root-owned production policy. Public /private/var/run census is time-bound metadata only; startup still requires protected exact facts and fresh group membership. Root W2 remains a trusted root-code boundary.',
+ 'The injected failed flush deliberately retains PRECHECK, active state and recovery fence; definite policy refusal alone is safe BLOCKED. No hardware power-loss guarantee or automatic unknown replay is inferred.',
+ 'RP-02 actual issuer protocol/authentication/custody and upstream-to-mailbox bridge remain unknown. The daemon-side route is implemented; tests use synthetic keys and real private daemon/socket transport. Unknown canary and exhausted budget stay blocked.',
+ 'Known precommit failures are distinct from ambiguous commit/fsync outcomes, which retain the fence/latch. All native launchd/production rollback proof remains unexecuted.',
+ 'Ephemeral loopback tests only; no production8790 probe. A bounded fixture driver cannot establish native launchd acceptance.',
+ 'Root refusal is exercised by a safe injected effective UID with a no-effects closure; no actual root process runs. Shared helper cases execute in multiple test targets and are not unique test definitions.']
+text='''\n\n## Frozen final repair coordinates (current)\n\nThese new relations supplement, and do not rewrite, historical EVD-DCP-T4-001–016.\nThe original review findings EVD-DCP-FINAL-B01–B09 remain contrary evidence at\nFIX_BASE `c5cab2eef3a5e7b502016571e1f24dd31b3e0560`. The new FR relations below\nsupport the proposed closure at exact source `'''+source+'''`;\nonly the controller's scoped independent re-audit can issue a review verdict.\nA is unchanged. F/M environment remains nonroot macOS arm64/euid502, with kernel\nprivate0700 fixtures, synthetic fixture signers and simulated launchd services.\nNo P execution, production issuer bridge, authentic custody or actual readiness is claimed.\n\n'''
+text+='Source and SHA256 inventory: '+link('26-frozen-source.json')+'. Serial commands, UTC timestamps, source and exit statuses: '+link('32-final-gates.json')+'. All five build/test/quality/release commands exit0; no executable edit occurred during these gates. '+link('28-final-full-suite.log')+' records **168 passing top-level test executions**: lib35, authority17, bootstrap13, e2e8, filesystem17, queue30, socket9, train25, transactions14; three binary targets contain0 tests. Child-worker summaries are excluded; shared helper cases appear in multiple targets. Directed01–25 working-tree observations retain genuine failures and do not claim commit-bound final execution.\n\n'
+text+='Structure/governance: '+link('36-structure-authority.json')+' and '+link('37-rust-structure.json')+'. Governance integrity and exact accepted Spec identity pass. Repository structure exits1 for three unchanged baseline directory violations (production-runtime/src21, production-runtime/test23, scripts59); no global PASS. Supplemental87 Rust files have maximum479lines/20immediatechildren/depth2.\n'
+for n,(row,tests,target,lim) in enumerate(zip(rows,cases,targets,limits),1):
+ code=f'B{n:02}'; desc=row[1].strip(); directed=row[2].strip().replace(' Final full run remains required.',' Final full run is pinned above.').replace('Final4096 mapping is affected and included.','Final4096 mapping is exercised below.')
+ text+=f'\n## EVD-DCP-FR-{code}\n\n**Target/relation:** {target}; SUPPORTS bounded F/M closure of DCP-FINAL-{code} under A.\n\n**Source/mechanism:** {desc}\n\n**Executed observations at the frozen source:**\n\n'+'\n'.join(obs(t) for t in tests)+f'\n\n**Inputs/results/rejecting cases and development provenance:** {directed}\n\n**Sufficiency:** named assertions executed in final log28 support only these fixture inputs and rejection boundaries. The source inventory and command manifest above bind the final result; development failures remain separately retained. No independent verdict is supplied by the implementer.\n\n**Limitations:** {lim}\n'
+text+='\n## EVD-DCP-FR-010\n\n**Target/relation:** ACC-003,006,012; CTR-004,006,008,017,019. SUPPORTS source/package identity and inertness; does not support actual BOOTSTRAP_READY.\n\n**Source/provenance:** freshly built controller and prepare CLI at `'+source+'`; '+link('31-final-release.log')+', '+link('38-final-recipe.json')+', '+link('39-package-prepare.log')+', '+link('40-package-verify.log')+' and '+link('41-final-package.json')+'. All96 bound source files were rehashed against the checkout; all23 payloads verified. The22 transformed Node closure files retain their prior exact bytes and were rehashed; no new trusted transform attestation is invented. Historical package and build-source claims remain preserved.\n\n'
+for k in ['manifest_digest','source_digest','controller_sha256','prepare_cli_sha256','package_path']:text+=f'- `{k}`: `{package[k]}`.\n'
+text+='\n**Result/negative boundary:** integrity_verified=true, bootstrap_ready=false, activation_allowed=false, preparation_digest=null. Disabled profile, null issuer keys/custody and empty transition_sudoers remain enforced. Current unresolved verifier reports seven readiness blockers; the historical eight-item output is historical because Owner execution authorization is a future activation prerequisite.\n\n**Sufficiency/limits:** exact inert package is inspectable and bound to current code; actual RP-01–06 facts and RP-07 scoped independent verdict remain pending. RP-08 exact Owner execution/staging/rollback/activation/canary remains a later operation gate. No install, bootstrap, privileged mutation or live acceptance occurs.\n'
+# Re-execution mapping every old named observation to final source; use final log test names without guessing changed line definitions.
+old=evd.read_text(); text+='\n## Final re-execution of inherited acceptance observations\n\nThese supplemental coordinates re-execute the named assertion subclaims inherited\nfrom T4 at the new frozen source. Historical EVD scopes and limitations remain;\nno whole-ACC or P PASS follows. Each name links its exact current definition and\nfinal raw observation; additional repair relations above qualify affected boundaries.\n'
+for n in range(1,15):
+ start=old.index(f'## EVD-DCP-T4-{n:03}');end=old.find('\n## ',start+5);section=old[start:end if end!=-1 else None]
+ names=re.findall(r'^- `([^`]+)` —',section,re.M)
+ if n==13: names=['enrolled_legacy_sources_refuse_before_any_effect','unreadable_or_caller_owned_parent_denies_but_true_absence_preserves_legacy','original_nonroot_lock_selftest_remains_available_before_enrollment']
+ assert names,n
+ text+=f'\n### ACC-{n:03} / EVD-DCP-T4-{n:03} final-source supplement\n\n'
+ for name in names:text+=obs(name.split('::')[-1])+'\n'
+evd.write_text(old+text)
+current='''\n## Current frozen repair status\n\nThe nine DCP-FINAL-B01–B09 repairs are committed at `'''+source+'''`.\nOne final serial locked all-targets suite passes168 top-level executions, including\n4096 physical slots; strict Clippy, fmt and fresh release build pass. The\n[new evidence relations](PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_EVIDENCE.md#frozen-final-repair-coordinates-current)\nbind current test definitions/raw logs to all fourteen inherited ACC subclaims\nand the nine proposed closures. This is implementer evidence; RP-07 is pending\nthe controller's scoped independent re-audit of the original final findings.\n\nNew inert package manifest `'''+package['manifest_digest']+'''`,\nsource digest `'''+package['source_digest']+'''`,\nfresh controller/CLI source as above.\n[EVD-DCP-FR-010](PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_EVIDENCE.md#evd-dcp-fr-010)\nrecords exact artifact path and hashes. Integrity passes; actual\n**BOOTSTRAP_READY=NO / ACTIVATION_ALLOWED=NO / OPERATION_ALLOWED=NO**.\nThe resolved-input positive fixture proves only that authentic complete inputs\ncan be validated without activation; actual issuer/custody/upstream bridge,\nrelease and protected host inputs remain missing (RP-01–06). RP-08 is later exact\nOwner execution authorization, not a preauthorization-readiness blocker.\n\nProtected slot mappings include explicit ABSENT additions and exact mode/GID plus\nroot ownership/no ACL; every complete required face is retained across partial\noverlays. Required unsupported facets still block. Only canonical root:daemon0775\n/private/var/run uses the narrow socket ancestry policy; ordinary artifact/target\nchecks remain restrictive. Unknown outcomes retain fences and never auto-replay.\n\nThe remaining sections preserve historical task observations and coordinates.\nWhere historical status differs, the current status and FR relations above govern.\n'''
+c=conf.read_text();pos=c.index('\nAuthority:');c=c[:pos]+current+c[pos:]
+c=c.replace('The supported proposed native mutation subset is existing regular app-file slots','The supported proposed native mutation subset is protected exact regular app-file slots (including enrolled ABSENT additions)')
+conf.write_text(c)
+print('Evidence records generated; count',sum(int(m.group(1)) for l in log if (m:=re.match(r'test result: ok\. (\d+) passed;.*; 0 filtered out;',l))))
