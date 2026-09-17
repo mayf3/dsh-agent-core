@@ -157,6 +157,22 @@ export function retryCandidate({ job, occurrences, nowMs }) {
   if (job.schedule.kind === 'at' && chain >= ONE_SHOT_RETRY_BACKOFF_MS.length) {
     return { exhausted: true, chain, terminal }
   }
+  // A retry record must share its predecessor's scheduleRevision (store
+  // occurrence-authority invariant). After a schedule edit the pending
+  // retry belongs to the superseded revision — minting it would failLoud
+  // the store and kill every subsequent tick, so it is never proposed;
+  // the natural schedule resumes. exhausted=true keeps every existing
+  // non-mintable path closed for this candidate.
+  if (terminal.scheduleRevision !== job.scheduleRevision) {
+    return {
+      exhausted: true,
+      staleRevision: true,
+      chain,
+      terminal,
+      retryOfOccurrenceId: terminal.occurrenceId,
+      predecessorScheduleRevision: terminal.scheduleRevision,
+    }
+  }
   const endedAt = terminal.endedAt ?? terminal.admittedAt
   const backoffMs = backoffForRetry(job.schedule.kind, chain)
   return {
