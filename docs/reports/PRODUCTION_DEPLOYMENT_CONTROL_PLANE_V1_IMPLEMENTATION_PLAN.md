@@ -247,3 +247,24 @@ closure/trust integration, full conformance and whole-branch security review.
 Actual issuer custody/source bindings are unresolved; complete native loader
 closure is a concrete adoption gate. No production/bootstrap authority is implied
 by this task gate. Production mutation performed by this work: none.
+
+## Task 4 bounded source gate checkpoint
+
+Bootstrap preparation/source adapters implemented at8db5ada; the frozen Task4
+repair union T4-B01/T4-B02 closed at source
+`a263c8089e16b3614f37b5c4766af50f4d449275`, evidence head
+`c21de2a00b8a2ad9786cd6e1fec3d501d774652e`. Independent scoped re-audit PASS
+for spec and quality/security, with no open or repair-introduced blocker.
+Reports, stable EVD relations and all historical failures remain retained.
+
+Full suite105 at3f59 and later affected9 at8db5 remain separately qualified;
+repair affected15 executions/12 unique cases pass at a263. Strict all-target
+Clippy/fmt/governance pass, three old structure violations remain. Exact replacement
+inert manifest1b4b4e1608f9335eb4db8aba319b0e19a0e8610ccefac2c1df2c25e6bbe949c6
+and source map match, with verified unchanged binary reuse.
+
+This closes the bounded source/test/evidence repair, not the full Task4 delivery
+or whole Goal. All eight documented readiness prerequisites remain; real external
+bridges, exact host/enrollment and complete release-face integration are incomplete.
+Whole-branch independent security review is next. BOOTSTRAP_READY=NO. Production
+mutation, privileged bootstrap, installed legacy cutover, push and merge: none.
