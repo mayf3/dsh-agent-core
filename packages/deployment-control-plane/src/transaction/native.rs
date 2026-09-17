@@ -15,8 +15,6 @@ use crate::{
     Error, Result,
 };
 use std::{
-    io::{Read, Write},
-    net::TcpStream,
     os::unix::fs::MetadataExt,
     process::{Command, Stdio},
     time::{Duration, Instant},
@@ -316,26 +314,6 @@ impl NativeService {
         Ok(actual)
     }
     pub fn health(&self) -> Result<()> {
-        let mut stream =
-            TcpStream::connect_timeout(&"127.0.0.1:8790".parse().unwrap(), Duration::from_secs(2))?;
-        stream.set_read_timeout(Some(Duration::from_secs(2)))?;
-        stream.set_write_timeout(Some(Duration::from_secs(2)))?;
-        stream
-            .write_all(b"GET /health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")?;
-        let mut data = String::new();
-        stream.take(65537).read_to_string(&mut data)?;
-        require(
-            data.len() <= 65536 && data.starts_with("HTTP/1.1 200 "),
-            "HEALTH_FAILED",
-        )?;
-        let body = data
-            .split_once("\r\n\r\n")
-            .ok_or(Error::new("HEALTH_FAILED"))?
-            .1;
-        let value: serde_json::Value = serde_json::from_str(body)?;
-        require(
-            value.get("ok") == Some(&serde_json::Value::Bool(true)),
-            "HEALTH_FAILED",
-        )
+        super::health::probe("127.0.0.1:8790".parse().unwrap(), Duration::from_secs(2))
     }
 }

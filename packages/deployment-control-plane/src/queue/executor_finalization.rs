@@ -1,6 +1,23 @@
 use super::*;
 use crate::{transaction::VerifiedFinalization, trust::digest};
 impl Queue {
+    pub(crate) fn block_executor_prewrite(
+        &self,
+        id: &str,
+        revision: u64,
+        evidence: &str,
+    ) -> Result<()> {
+        self.transaction(|tx| {
+            require(
+                read_status(tx, id)?.state == State::Precheck,
+                "NOT_PRECHECK",
+            )?;
+            super::lifecycle::change(tx, id, revision, State::Blocked, evidence)?;
+            tx.execute("DELETE FROM executor_pending WHERE unit=?", [id])?;
+            Ok(())
+        })
+    }
+
     // Executor writes this before its first journal. Existing Queue-only APIs keep their contract.
     pub(crate) fn fence_executor_finalization(&self, id: &str) -> Result<()> {
         self.transaction(|tx| {

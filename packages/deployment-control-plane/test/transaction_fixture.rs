@@ -25,7 +25,7 @@ pub fn prepared_paths(
     Catalog,
     String,
 ) {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = common::private::temp();
     let path = fs::canonicalize(tmp.path()).unwrap();
     fs::set_permissions(
         &path,

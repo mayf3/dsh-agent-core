@@ -399,3 +399,6 @@ mod service_cases;
 
 #[path = "common/service_repair.rs"]
 mod repair;
+
+#[path = "common/remediation.rs"]
+mod remediation_tests;

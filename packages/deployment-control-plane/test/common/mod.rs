@@ -1,3 +1,4 @@
+pub mod private;
 use deployment_control_plane::{model::*, trust::*};
 use ed25519_dalek::{Signer, SigningKey};
 use std::collections::BTreeMap;
@@ -177,7 +178,7 @@ pub fn setup() -> (
         fn geteuid() -> u32;
     }
     assert_ne!(unsafe { geteuid() }, 0, "fixtures refuse euid 0");
-    let dir = tempfile::tempdir().unwrap();
+    let dir = private::temp();
     let q = deployment_control_plane::queue::Queue::open(dir.path().join("queue.db")).unwrap();
     let c = fixture_catalog();
     q.register_producer(&c, "producer").unwrap();

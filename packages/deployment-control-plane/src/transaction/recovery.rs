@@ -17,6 +17,23 @@ impl Executor {
         }
         Ok(())
     }
+    pub(crate) fn rollback_for_failure(
+        &mut self,
+        guard: &MutationGuard,
+        q: &Queue,
+        id: &str,
+        reason: &str,
+    ) -> Result<()> {
+        guard.binds(&self.root)?;
+        let j = self.active.as_mut().ok_or(Error::new("NO_TRANSACTION"))?;
+        if let Err(error) = j.append(Event::KnownFailure {
+            reason: reason.into(),
+        }) {
+            q.latch_executor_failure(&digest(&(id, error.code(), "failure-record-uncertain"))?)?;
+            return Err(error);
+        }
+        self.rollback(guard, q, id)
+    }
     pub fn rollback(&mut self, guard: &MutationGuard, q: &Queue, id: &str) -> Result<()> {
         guard.binds(&self.root)?;
         let mut j = self.active.take().ok_or(Error::new("NO_TRANSACTION"))?;
@@ -197,6 +214,7 @@ impl Executor {
     pub fn finalize(&mut self, guard: &MutationGuard, q: &Queue, id: &str) -> Result<String> {
         guard.binds(&self.root)?;
         let mut j = self.active.take().ok_or(Error::new("NO_TRANSACTION"))?;
+        let mut commit_started = false;
         let result: Result<String> = (|| {
             require(j.identity()?.0 == id, "TRANSACTION_BINDING")?;
             let receipt = j
@@ -224,7 +242,12 @@ impl Executor {
                     }
                 })
                 .ok_or(Error::new("NO_SERVICE_READBACK"))?;
+            #[cfg(test)]
+            if let Some(code) = self.fail_finalize_health.take() {
+                return Err(Error::new(code));
+            }
             self.service.prove(image)?;
+            commit_started = true;
             self.transition(q, id, State::Finalizing, &digest(&receipt)?)?;
             let hash = q.record_transaction(&receipt)?;
             #[cfg(test)]
@@ -237,9 +260,22 @@ impl Executor {
             Ok(hash)
         })();
         if let Err(error) = &result {
-            // Even a complete record after failed fsync has an uncertain durable disposition.
-            q.latch_executor_failure(&digest(&(id, error.code(), "finalize-incomplete"))?)?;
             self.active = Some(j);
+            if !commit_started
+                && matches!(
+                    error.code(),
+                    "HEALTH_FAILED"
+                        | "HEALTH_TIMEOUT"
+                        | "ADJUNCT_UNHEALTHY"
+                        | "SERVICE_GENERATION_DRIFT"
+                        | "POSTIMAGE_DRIFT"
+                )
+            {
+                self.rollback_for_failure(guard, q, id, error.code())?;
+            } else {
+                // A failed commit/fsync is uncertain even if a complete record is readable.
+                q.latch_executor_failure(&digest(&(id, error.code(), "finalize-incomplete"))?)?;
+            }
         }
         result
     }

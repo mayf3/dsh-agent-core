@@ -68,14 +68,26 @@ impl Executor {
         })?;
         self.active = Some(journal);
         let current = q.daemon_status(id)?;
-        q.begin_apply(
-            c,
-            id,
-            current.revision,
-            policy,
-            now.saturating_add(started.elapsed().as_secs()),
-            &proof,
-        )?;
+        let gate_time = now.saturating_add(started.elapsed().as_secs());
+        #[cfg(test)]
+        let gate_time = self.gate_time.unwrap_or(gate_time);
+        let begun = q.begin_apply(c, id, current.revision, policy, gate_time, &proof);
+        if let Err(error) = begun {
+            // Only definite authorization refusals are safe. Storage/commit errors
+            // keep the active journal and fence for recovery, never guess no effect.
+            if matches!(
+                error.code(),
+                "POLICY_EXPIRED" | "POLICY_REPLAY" | "POLICY_EQUIVOCATION" | "REVOKED"
+            ) {
+                let journal = self.active.as_mut().ok_or(Error::new("NO_TRANSACTION"))?;
+                let evidence = journal.append(Event::NoMutation {
+                    reason: error.code().into(),
+                })?;
+                q.block_executor_prewrite(id, current.revision, &evidence)?;
+                self.active = None;
+            }
+            return Err(error);
+        }
         let mut journal = self.active.take().ok_or(Error::new("NO_TRANSACTION"))?;
         let result = self.install(q, id, &artifact, &mut journal, caller);
         self.active = Some(journal);
@@ -89,7 +101,7 @@ impl Executor {
                     .is_some_and(|j| !j.operations_resolved());
                 if unknown {
                     self.quarantine(q, id, e.code())?;
-                } else if self.rollback(guard, q, id).is_err() {
+                } else if self.rollback_for_failure(guard, q, id, e.code()).is_err() {
                     self.quarantine(q, id, "UNSAFE_ROLLBACK")?;
                 }
                 Err(e)
@@ -117,7 +129,11 @@ impl Executor {
         let artifact = self
             .artifacts
             .import(&status.unit.artifact_sha256, &status.unit.manifest_digest)?;
+        self.validate_slots(&artifact.manifest)?;
         self.verify_live_baseline(q, &status.unit.target_runtime)?;
+        if self.slots.is_some() {
+            self.complete_face()?;
+        }
         let mut before = Vec::new();
         let mut preimage_bytes = 0usize;
         for entry in &artifact.manifest.entries {
@@ -178,11 +194,8 @@ impl Executor {
                 temporary: temporary.clone(),
             })?;
             let bytes = artifact.read(&entry.path)?;
-            let prepared = slot.prepare(
-                &temporary,
-                &bytes,
-                if entry.executable { 0o755 } else { 0o644 },
-            )?;
+            let (mode, gid) = self.slot_mode_gid(&entry.path, entry.executable)?;
+            let prepared = slot.prepare_metadata(&temporary, &bytes, mode, gid)?;
             journal.append(Event::Prepared {
                 path: entry.path.clone(),
                 image: prepared.clone(),
@@ -205,6 +218,11 @@ impl Executor {
             image: new_service.clone(),
         })?;
         self.service.prove(&new_service)?;
+        if self.slots.is_some() {
+            journal.append(Event::CompleteFace {
+                entries: self.complete_face()?,
+            })?;
+        }
         let post = self.read_installed(journal)?;
         artifact.verify()?;
         self.transition(
@@ -277,25 +295,15 @@ impl Executor {
                 digest(&bound)? == receipt.postimage_digest,
                 "PREIMAGE_DRIFT",
             )?;
-        } else if let ServiceDriver::Native(driver) = &self.service {
-            for expected in &driver.enrollment.initial_files {
-                let actual = self
-                    .target
-                    .read(&expected.path)?
-                    .ok_or(Error::new("PREIMAGE_DRIFT"))?;
-                require(
-                    crate::fs::file::sha(&actual.bytes) == expected.sha256
-                        && actual.uid == 0
-                        && actual.gid == expected.gid
-                        && actual.mode == expected.mode,
-                    "PREIMAGE_DRIFT",
-                )?;
-            }
+            self.verify_complete_face(&journal)?;
+        } else {
+            self.initial_face()?;
         }
         Ok(())
     }
 
     pub(crate) fn read_installed(&self, j: &Journal) -> Result<Vec<(String, FileImage)>> {
+        self.verify_complete_face(j)?;
         let mut result = Vec::new();
         for event in &j.events {
             if let Event::Installed { path, image } = event {

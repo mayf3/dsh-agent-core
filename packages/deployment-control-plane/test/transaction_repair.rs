@@ -96,6 +96,21 @@ fn maximum_admitted_slots_roundtrip_success_and_rollback_journal() {
     let (_tmp, roots, q, c, id) = fixture::prepared_paths(&paths);
     let guard = roots.lock().unwrap();
     let mut executor = Executor::fixture(&roots).unwrap();
+    executor.slots = Some(
+        paths
+            .iter()
+            .map(|path| {
+                let image = executor.target.read(path).unwrap().unwrap();
+                super::EnrolledFile {
+                    path: (*path).into(),
+                    sha256: Some(crate::fs::file::sha(&image.bytes)),
+                    mutable: true,
+                    mode: image.mode,
+                    gid: image.gid,
+                }
+            })
+            .collect(),
+    );
     executor
         .apply(
             &guard,

@@ -140,6 +140,8 @@ pub fn prospective(
         "intake/policies",
         "intake/results",
         "intake/acks",
+        "intake/recovery",
+        "recovery-requests",
         "admitted",
         "requests",
         "closure",
@@ -191,7 +193,9 @@ pub fn prospective(
             "re-pin all four legacy locks and active transactions; never steal/unlink based on elapsed time or absent PID",
         ]), layout, steps: strings(&[
             "separate Owner receipt binds independently reviewed package/source/binary/closure/trust/numeric identities/rollback; no agent fixture key accepted",
-            "re-pin host/service/plist/ACL/ancestor/OS sealed-volume/launchctl facts; recheck _agentdeploy and GID602 collision before new group/membership",
+            "re-pin host/service/plist/ACL/ancestor/OS sealed-volume/launchctl facts; recheck _agentdeploy and resolved socket GID collision before new group/membership",
+            "verify-resolved binds the exact disabled Configuration, NativeEnrollment and proof set digest; materialize numeric socket layout from that reviewed Configuration, never unresolved proposed identities",
+            "canonical /private/var/run exception requires exact root:daemon0775 device/inode, no ACL/flags and fresh nonroot caller/service group exclusion; retain descriptors and dedicated child0750; generic target/artifact ancestors remain strict",
             "freeze exact protected preimages; reconcile and quiesce old transactions/entrances before any enrollment; refuse unknown",
             "using pinned Apple install utility copy inert payloads to new root-owned closure; rehash protected destination descriptors before first execution; never execute caller path",
             "provision protected state/permanent locks/socket parent and disabled plist; no root package manager or candidate interpreter",
@@ -203,7 +207,7 @@ pub fn prospective(
             "restore only exact verified pre-bootstrap code/policy/ACL/plist preimages using reviewed protected tools; retain state journals and receipts",
             "do not silently reactivate legacy deploy paths or remove permanent locks; explicit receipted rollback authority required",
         ]), platform_tools: tools, payloads: vec![], transition_sudoers: String::new(),
-        unresolved: strings(&["HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT", "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS", "TRUSTED_SOURCE_BUILD_REVIEW_BINDING", "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS", "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL", "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION", "INDEPENDENT_WHOLE_BRANCH_REVIEW", "EXACT_OWNER_BOOTSTRAP_RECEIPT"]),
+        unresolved: strings(&["HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT", "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS", "TRUSTED_SOURCE_BUILD_REVIEW_BINDING", "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS", "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL", "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION", "INDEPENDENT_WHOLE_BRANCH_REVIEW"]),
     })
 }
 fn strings(v: &[&str]) -> Vec<String> {

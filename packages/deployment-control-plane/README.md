@@ -535,3 +535,59 @@ ProgramArguments and rejects `NODE_OPTIONS`, `NODE_PATH`, `DYLD_*`, `LD_*`,
 service configuration remains intact and no values are logged. Plutil's bytes
 are pinned as a sixth Apple platform tool. This is a read-only parser, not a
 candidate hook or arbitrary root command.
+
+## Frozen final-review repairs
+
+The native driver accepts only the supported dsh physical mapping, a kernel host
+UUID digest, a protected complete regular-file slot map and caller/service
+identity separation. Slot entries bind initial hash (or explicit ABSENT), mutable
+versus retained status, GID and mode; owner is the protected target owner and ACLs
+must be absent. Ordinary manifests cannot add slots or choose metadata. Complete
+required faces persist across overlays. Required facets beyond app slots, the
+unchanged Node loader closure and the unchanged service plists remain unsupported
+and block preparation; a real useful release has not been selected.
+
+Offline resolved preparation is a separate inert input alongside the source-bound
+candidate bundle:
+
+```text
+agent-deploy-prepare verify-resolved BUNDLE MANIFEST_DIGEST SOURCE_DIGEST CHECKOUT PREPARATION TRUST PINNED_TRUST_DIGEST
+```
+
+`ResolvedPreparation` carries the disabled Configuration, exact NativeEnrollment,
+release manifest/source/tree/authors, public issuer/custody/source bindings and
+operation/rollback plan digests. Nine typed, expiring prerequisite attestations
+bind those inputs to the exact bundle and source digest. The independently supplied
+and pinned reviewer's trust keyset is distinct from the proposed catalog; neither
+a caller flag nor self-selected keys establish trust. Authority, Builder, Reviewer
+and Recovery roles have different signed record domains. Reviewer independence,
+key separation and every cross-binding are checked. `preparation_digest` identifies
+the complete resolved input: a later Owner authorization must bind both that digest
+and the bundle manifest. The configuration's numeric identities are authoritative
+for the resolved plan, including its socket GID; unresolved prospective identities
+are not installation inputs. No activation receipt is emitted, no profile is
+enabled and `activation_allowed` remains false even when synthetic inputs reach
+`bootstrap_ready`. Real public trust anchors and upstream transports are still
+external prerequisites, and fixture signers are never production authorities.
+
+The one macOS socket ancestry exception applies only to `/private/var/run`, after
+matching root:daemon0775, no ACL/flags, exact device/inode and fresh group-membership
+exclusion for enrolled nonroot callers/services. Startup retains and rechecks
+ancestor/child descriptors. Root W2 is trusted reviewed root code. The child remains
+root-owned0750 with the resolved socket group. Generic artifact/target ancestry
+checks have no group-write exception.
+
+The daemon publishes immutable current-execution readback requests in protected
+`recovery-requests/`. Its protected `intake/recovery/UNIT-STATUS_REVISION.json`
+consumer accepts signed `RecoveryEvidence` only after exact cause, status, physical
+restoration, service and owned-operation checks under the permanent mutex. It
+refreshes protected policy, retains STOP through corrected begin-apply and consumes
+within the existing attempt budgets. Unknowns never retry. This is a typed daemon
+mailbox contract, not an implemented external issuer bridge or another socket API.
+
+Native health uses one monotonic two-second deadline across connect/write/read.
+Definite final health refusal before finalization commit uses guarded rollback;
+failed fsync/commit keeps recovery fences. A final prewrite policy refusal records
+durable NO_MUTATION/BLOCKED and releases the active executor only after the queue
+and fence are durably reconciled. All owned fixture constructors refuse root before
+effects and use the kernel-selected0700 temp root, ignoring TMPDIR.

@@ -1,5 +1,21 @@
 use super::*;
 impl Queue {
+    pub(crate) fn daemon_recovery_candidates(&self) -> Result<Vec<UnitStatus>> {
+        self.transaction(|tx| {
+            let mut statement=tx.prepare("SELECT id FROM units WHERE state IN ('\"Blocked\"','\"RolledBack\"') ORDER BY seq,id LIMIT 32")?;
+            let ids=statement.query_map([],|r|r.get::<_,String>(0))?.collect::<std::result::Result<Vec<_>,_>>()?;
+            ids.iter().map(|id|read_status(tx,id)).collect()
+        })
+    }
+    pub(crate) fn daemon_failure_cause(&self, id: &str) -> Result<String> {
+        self.transaction(|tx| {
+            let status=read_status(tx,id)?;
+            let unknown:u64=tx.query_row("SELECT count(*) FROM goal_receipts WHERE unit=? AND json_extract(record,'$.payload.outcome')='OutcomeUnknown'",[id],|r|r.get(0))?;
+            require(unknown==0,"UNKNOWN_CANARY")?;
+            Ok(tx.query_row("SELECT evidence FROM journal WHERE unit=? AND revision=?",(id,status.revision),|r|r.get(0))?)
+        })
+    }
+
     pub(crate) fn daemon_producer_revision(&self, id: &str) -> Result<u64> {
         self.transaction(|tx| {
             Ok(

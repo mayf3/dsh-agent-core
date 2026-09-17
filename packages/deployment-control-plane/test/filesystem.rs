@@ -1,10 +1,12 @@
+#[path = "common/private.rs"]
+mod private;
 use deployment_control_plane::fs::{FixtureRoots, MutationGuard};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
 #[test]
 fn fixture_retains_directory_and_rejects_symlink_root() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = private::temp();
     let path = fs::canonicalize(tmp.path()).unwrap();
     fs::set_permissions(
         &path,
@@ -26,7 +28,7 @@ fn fixture_retains_directory_and_rejects_symlink_root() {
 
 #[test]
 fn fixture_rejects_writable_or_acl_root() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = private::temp();
     let path = fs::canonicalize(tmp.path()).unwrap();
     fs::set_permissions(
         &path,
@@ -72,7 +74,7 @@ fn entry(path: &str) -> ArtifactEntry {
 }
 #[test]
 fn real_bundle_seals_and_rehashes_exact_opened_bytes() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = private::temp();
     let path = fs::canonicalize(tmp.path()).unwrap();
     fs::set_permissions(
         &path,
@@ -90,7 +92,7 @@ fn real_bundle_seals_and_rehashes_exact_opened_bytes() {
 #[test]
 fn bundle_rejects_escape_collision_extra_missing_and_oversize() {
     for bad in ["/escape", "../escape", "a/../escape", "é.js", "a//b"] {
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = private::temp();
         let path = fs::canonicalize(tmp.path()).unwrap();
         fs::set_permissions(
             &path,
@@ -103,7 +105,7 @@ fn bundle_rejects_escape_collision_extra_missing_and_oversize() {
         assert!(store.import(&a, &m).is_err(), "{bad}");
     }
     for variant in 0..5 {
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = private::temp();
         let path = fs::canonicalize(tmp.path()).unwrap();
         fs::set_permissions(
             &path,
@@ -139,7 +141,7 @@ fn bundle_rejects_escape_collision_extra_missing_and_oversize() {
 #[test]
 fn rejects_real_acl_hardlink_fifo_and_writable_payload() {
     for variant in 0..4 {
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = private::temp();
         let path = fs::canonicalize(tmp.path()).unwrap();
         fs::set_permissions(
             &path,
@@ -188,7 +190,7 @@ fn rejects_real_acl_hardlink_fifo_and_writable_payload() {
 
 #[test]
 fn target_reads_reject_xattrs_and_preserve_external_symlink_sentinel() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = private::temp();
     let path = fs::canonicalize(tmp.path()).unwrap();
     fs::set_permissions(
         &path,
@@ -218,7 +220,7 @@ fn target_reads_reject_xattrs_and_preserve_external_symlink_sentinel() {
 #[test]
 fn every_nested_target_ancestor_is_descriptor_checked() {
     for depth in 0..3 {
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = private::temp();
         let path = fs::canonicalize(tmp.path()).unwrap();
         fs::set_permissions(
             &path,
@@ -249,7 +251,7 @@ fn payload_replacement_during_hash_cannot_change_sealed_bytes() {
         atomic::{AtomicBool, Ordering},
         Arc,
     };
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = private::temp();
     let path = fs::canonicalize(tmp.path()).unwrap();
     fs::set_permissions(
         &path,
@@ -291,7 +293,7 @@ fn multiprocess_lock_worker() {
 #[test]
 fn killed_holder_releases_kernel_lock_without_unlinking_inode_or_intent() {
     use std::os::unix::fs::MetadataExt;
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = private::temp();
     let path = fs::canonicalize(tmp.path()).unwrap();
     fs::set_permissions(
         &path,
@@ -327,7 +329,7 @@ fn killed_holder_releases_kernel_lock_without_unlinking_inode_or_intent() {
 
 #[test]
 fn sealed_cas_remains_available_after_untrusted_staging_disappears() {
-    let tmp = tempfile::tempdir().unwrap();
+    let tmp = private::temp();
     let path = fs::canonicalize(tmp.path()).unwrap();
     fs::set_permissions(
         &path,

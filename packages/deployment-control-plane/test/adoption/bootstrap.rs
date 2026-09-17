@@ -1,3 +1,6 @@
+#[path = "../common/mod.rs"]
+#[allow(dead_code)]
+mod common;
 mod fixture;
 use deployment_control_plane::bootstrap::{verify_loader_images, ClosureKind};
 use std::collections::BTreeMap;
@@ -277,3 +280,6 @@ fn prospective_producer_scope_registers_and_unknown_host_is_explicit() {
     assert!(r.blockers.iter().any(|b| b.contains("HOST_IDENTITY")));
     assert!(!h.is_empty() && !s.is_empty());
 }
+
+#[path = "../common/preparation.rs"]
+mod resolved_tests;

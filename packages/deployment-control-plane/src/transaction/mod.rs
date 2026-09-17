@@ -1,10 +1,13 @@
 mod apply;
+mod health;
 mod journal;
 mod native;
 mod native_profile;
 mod process;
 mod recovery;
+mod remediation;
 mod service;
+mod slots;
 use crate::{
     fs::{secure::Dir, ArtifactStore, FixtureRoots, MutationGuard, TargetRoot},
     model::*,
@@ -26,6 +29,11 @@ pub struct Executor {
     journals: Dir,
     service: ServiceDriver,
     active: Option<Journal>,
+    slots: Option<Vec<EnrolledFile>>,
+    #[cfg(test)]
+    gate_time: Option<u64>,
+    #[cfg(test)]
+    fail_finalize_health: Option<&'static str>,
 }
 pub struct Applied {
     pub receipt: TransactionReceipt,
@@ -42,6 +50,11 @@ impl Executor {
             journals: roots.root.mkdir("transactions")?,
             service: ServiceDriver::Fixture(FixtureService::new()?),
             active: None,
+            slots: None,
+            #[cfg(test)]
+            gate_time: None,
+            #[cfg(test)]
+            fail_finalize_health: None,
         })
     }
     /// Private, non-root fixture targets share the host state and permanent lock.
@@ -74,12 +87,26 @@ impl Executor {
         let enrollment: NativeEnrollment = serde_json::from_slice(&bytes)?;
         require(
             profile.enabled
-                && crate::trust::digest(profile)? == enrollment.profile_digest
+                && crate::bootstrap::profile_digest(profile)? == enrollment.profile_digest
                 && profile.revision == enrollment.profile_revision
                 && profile.launchd_domain == "system"
                 && profile.launchd_label == "ai.agent-core.runtime"
                 && profile.required_review_scopes.contains(&"root-code".into()),
             "PROFILE_NOT_ALLOWED",
+        )?;
+        let config: crate::service::Configuration = serde_json::from_slice(
+            &snapshot(
+                &root.open_file("service.json", libc::O_RDONLY, 0)?,
+                0,
+                MAX_FILE,
+            )?
+            .bytes,
+        )?;
+        crate::bootstrap::validate_native_binding(
+            &config,
+            &enrollment,
+            &crate::bootstrap::observed_host()?,
+            true,
         )?;
         let service_root = Dir {
             file: root.file.try_clone()?,
@@ -94,12 +121,17 @@ impl Executor {
                 sealed: root.child("sealed")?,
             },
             journals: root.child("transactions")?,
+            slots: Some(enrollment.initial_files.clone()),
             service: ServiceDriver::Native(Box::new(native::NativeService {
                 root: service_root,
                 enrollment,
             })),
             root,
             active: None,
+            #[cfg(test)]
+            gate_time: None,
+            #[cfg(test)]
+            fail_finalize_health: None,
         })
     }
     pub fn lock(&self) -> Result<MutationGuard> {
@@ -148,3 +180,7 @@ mod finalization_tests;
 #[cfg(test)]
 #[path = "../../test/transaction_fixture.rs"]
 mod test_fixture;
+
+#[cfg(test)]
+#[path = "../../test/common/final_transaction.rs"]
+mod final_repair_tests;

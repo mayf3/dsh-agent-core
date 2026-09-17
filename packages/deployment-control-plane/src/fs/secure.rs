@@ -201,7 +201,7 @@ pub(crate) fn validate(file: &File, uid: u32, directory: bool) -> Result<()> {
     Ok(())
 }
 #[cfg(target_os = "macos")]
-fn reject_acl(file: &File) -> Result<()> {
+pub(crate) fn reject_acl(file: &File) -> Result<()> {
     unsafe extern "C" {
         fn acl_get_fd_np(fd: i32, kind: i32) -> *mut libc::c_void;
         fn acl_get_entry(acl: *mut libc::c_void, entry: i32, out: *mut *mut libc::c_void) -> i32;
@@ -225,7 +225,7 @@ fn reject_acl(file: &File) -> Result<()> {
     )
 }
 #[cfg(not(target_os = "macos"))]
-fn reject_acl(_: &File) -> Result<()> {
+pub(crate) fn reject_acl(_: &File) -> Result<()> {
     Err(Error::new("UNSUPPORTED_PLATFORM"))
 }
 

@@ -13,6 +13,22 @@ impl FixtureRoots {
     pub fn open(path: &Path) -> Result<Self> {
         let uid = unsafe { libc::geteuid() };
         require(uid != 0, "FIXTURE_REFUSES_ROOT")?;
+        let temp = Self::kernel_temp()?;
+        require(
+            path.starts_with(&temp) && path != temp,
+            "FIXTURE_OUTSIDE_TEMP",
+        )?;
+        let root = Dir::open(path, uid)?;
+        use std::os::unix::fs::PermissionsExt;
+        require(
+            root.file.metadata()?.permissions().mode() & 0o777 == 0o700,
+            "UNSAFE_MODE",
+        )?;
+        Ok(Self { root })
+    }
+    /// Kernel selection and parent validation precede every owned fixture effect.
+    pub fn kernel_temp() -> Result<std::path::PathBuf> {
+        require(unsafe { libc::geteuid() } != 0, "FIXTURE_REFUSES_ROOT")?;
         // Kernel-selected per-user temp root; TMPDIR cannot widen fixture authority.
         let mut buffer = [0i8; 4096];
         let length = unsafe {
@@ -30,17 +46,13 @@ impl FixtureRoots {
             .to_str()
             .map_err(|_| crate::Error::new("FIXTURE_TEMP_UNAVAILABLE"))?;
         let temp = std::fs::canonicalize(physical)?;
-        require(
-            path.starts_with(&temp) && path != temp,
-            "FIXTURE_OUTSIDE_TEMP",
-        )?;
-        let root = Dir::open(path, uid)?;
+        let parent = Dir::open(&temp, unsafe { libc::geteuid() })?;
         use std::os::unix::fs::PermissionsExt;
         require(
-            root.file.metadata()?.permissions().mode() & 0o777 == 0o700,
+            parent.file.metadata()?.permissions().mode() & 0o777 == 0o700,
             "UNSAFE_MODE",
         )?;
-        Ok(Self { root })
+        Ok(temp)
     }
     pub fn lock(&self) -> Result<MutationGuard> {
         MutationGuard::acquire(&self.root, true)

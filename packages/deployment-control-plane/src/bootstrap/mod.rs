@@ -10,3 +10,14 @@ pub use prospective::{Identities, IssuerRequirement, Layout};
 pub use verify::{verify_bundle, verify_sources, Preflight};
 mod plist;
 pub use plist::verify_service_plist;
+
+mod binding;
+pub use binding::{
+    observed_host, profile_digest, validate_native_binding, validate_prepared_manifest,
+};
+
+pub(crate) mod socket;
+pub use socket::SocketAncestor;
+
+mod preparation;
+pub use preparation::*;

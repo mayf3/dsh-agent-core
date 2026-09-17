@@ -27,6 +27,12 @@ pub(crate) enum Event {
         service: ServiceImage,
         installed_before: Option<crate::model::CurrentInstallation>,
     },
+    CompleteFace {
+        entries: Vec<(String, Option<FileImage>)>,
+    },
+    NoMutation {
+        reason: String,
+    },
     Applying,
     SlotIntent {
         path: String,
@@ -64,6 +70,9 @@ pub(crate) enum Event {
     },
     Verified {
         receipt: TransactionReceipt,
+    },
+    KnownFailure {
+        reason: String,
     },
     RollbackIntent {
         path: String,
@@ -241,7 +250,7 @@ impl Journal {
     pub fn terminal(&self) -> bool {
         matches!(
             self.events.last(),
-            Some(Event::Finalized | Event::RolledBack { .. })
+            Some(Event::Finalized | Event::RolledBack { .. } | Event::NoMutation { .. })
         )
     }
     pub fn identity(&self) -> Result<(&str, u32)> {
