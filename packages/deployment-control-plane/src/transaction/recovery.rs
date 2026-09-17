@@ -118,8 +118,15 @@ impl Executor {
                     return Err(e);
                 }
             };
+            let (id, attempt) = j.identity()?;
+            let (preflight, intended_attempt) = q.daemon_execution(id)?;
+            let current_execution =
+                attempt == intended_attempt && name == format!("{id}-{attempt}-{preflight}");
             if j.terminal() {
-                let (id, _) = j.identity()?;
+                // Retained completed executions are evidence, not the current Queue disposition.
+                if !current_execution {
+                    continue;
+                }
                 if matches!(j.events.last(), Some(Event::Finalized)) {
                     q.complete_executor_finalization(j.finalized_proof()?)?;
                 }
@@ -130,7 +137,10 @@ impl Executor {
                 }
                 continue;
             }
-            let (id, _) = j.identity()?;
+            if !current_execution {
+                q.latch_executor_failure(&digest(&(&name, "unbound-executor-journal"))?)?;
+                return Err(Error::new("RECOVERY_BINDING"));
+            }
             let id = id.to_string();
             // A crash before any owned operation or slot intent has a provable no-effect disposition.
             let no_effect_intent = j

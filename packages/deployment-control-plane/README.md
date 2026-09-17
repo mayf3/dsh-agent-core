@@ -314,7 +314,9 @@ A retained journal directory is `<unit>-<mutation-attempt>-<preflight-ordinal>`.
 The preflight ordinal comes from the existing Queue budget; it does not consume a
 mutation attempt or allocate another intent. Receipt lookup matches the complete
 immutable transaction receipt, and can also read the previous `<unit>-<attempt>`
-name. Old journals are never removed to permit retry. The 4096-slot admission cap
+name. Recovery matches the current Queue preflight ordinal and intended mutation
+attempt, derived from its latest Precheck/Applying interval; earlier terminal
+executions remain historical evidence. Old journals are never removed to permit retry. The 4096-slot admission cap
 and journal writer/reader now compose: at most three install plus two rollback
 records per slot, with 256 reserved service/phase records (20,736 total). Journal
 enumeration uses that same cap; ordinary directories remain capped at 8192 and

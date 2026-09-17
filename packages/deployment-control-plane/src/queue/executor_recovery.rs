@@ -1,6 +1,19 @@
 use super::*;
 use crate::{transaction::RestorationProof, trust::digest};
 impl Queue {
+    /// Current preflight ordinal and its intended mutation attempt, from the same Queue snapshot.
+    /// Applying may have committed before its filesystem journal event was appended.
+    pub(crate) fn daemon_execution(&self, id: &str) -> Result<(u32, u32)> {
+        self.transaction(|tx| {
+            let s = read_status(tx, id)?;
+            let begun: u32 = tx.query_row(
+                "SELECT count(*) FROM journal WHERE unit=? AND state='\"Applying\"' AND revision>(SELECT coalesce(max(revision),0) FROM journal WHERE unit=? AND state='\"Precheck\"')",
+                (id, id), |r| r.get(0))?;
+            require(begun <= 1 && s.mutating_attempts >= begun, "RECOVERY_BINDING")?;
+            Ok((s.preflight_attempts, s.mutating_attempts + 1 - begun))
+        })
+    }
+
     pub(crate) fn latch_executor_failure(&self, evidence: &str) -> Result<()> {
         crate::trust::valid_digest(evidence)?;
         self.transaction(|tx| {
