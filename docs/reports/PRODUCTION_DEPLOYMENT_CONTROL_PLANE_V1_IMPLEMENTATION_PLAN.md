@@ -132,34 +132,34 @@ be isolated, unprivileged and clearly named; it cannot select production targets
 **Produces:** working root production entry (refuses absent activation), unprivileged
 private sandbox entry, identifier-only client and trusted signed intake catalog import.
 
-- [ ] Failing real Unix-socket tests first: kernel peer IDs, scoped status/receipts,
+- [x] Failing real Unix-socket tests first: kernel peer IDs, scoped status/receipts,
   strict 64KiB frames/depth/unknown fields, UID spoofing/shared UID ownership, bounded
   disconnect/partial reads/quotas, durable ACK/reconnect dedupe. No public root/path/env
   override. Production entry uses compiled canonical locations only.
-- [ ] Implement fixed profile/caller catalog authentication, signed producer/readiness
+- [x] Implement fixed profile/caller catalog authentication, signed producer/readiness
   polling/import and complete watermark census. Agent submissions contain only
   catalog identifiers; signed producer/build/review content is fetched by protected
   digest from fixed intake, not accepted as proof from a client boolean.
-- [ ] Connect automatic Train scheduling, DAG/FIFO, fresh policy under mutex, execution,
+- [x] Connect automatic Train scheduling, DAG/FIFO, fresh policy under mutex, execution,
   restart/readback, verification, receipt, finalize and closure outbox. No worker gap
   may release the global mutex between install and Goal acceptance.
-- [ ] Failing integration test: one artifact covers three Goals, two verifiers PASS
+- [x] Failing integration test: one artifact covers three Goals, two verifiers PASS
   and one FAIL/WAITING; assert one install and one success-path restart, separate
   immutable receipts, two outbox closures and one blocked/pending Goal. Retry/late
   coverage/outbox redelivery does not reinstall. A required non-idempotent canary
   with unknown result remains unknown and is never resent.
-- [ ] Verification profiles are typed/native/read-only by default; existing explicit
+- [x] Verification profiles are typed/native/read-only by default; existing explicit
   external canary authority must be independently attested and deadline bounded.
   No dynamic root health command. Outbox uses authenticated producer CAS/ack and
   cannot close a different Goal. Service unavailable is BLOCKED, not fake PASS.
-- [ ] Test restart/reopen of real daemon process at durable boundaries, status after
+- [x] Test restart/reopen of real daemon process at durable boundaries, status after
   client timeout and simultaneous submit/drain across targets. Run complete crate
   suite; commit exact RED/GREEN tests and executed daemon evidence.
 
 ## Task 4: source adapters, bootstrap bundle and complete security verification
 
 **Files:** create `src/bootstrap/{mod.rs,bundle.rs,verify.rs}` and
-`test/{bootstrap.rs,e2e.rs}`; update package README and create
+`test/adoption/{bootstrap.rs,e2e.rs}`; update package README and create
 `docs/reports/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_CONFORMANCE.md`.
 Legacy repo entry source adapters are limited to the inspected installer/routing/
 Watchdog transaction: retain pre-bootstrap behavior and add a fixed protected
@@ -227,3 +227,23 @@ Unsupported facets and root/native live-proof limits remain in task-2-report.md;
 Tasks3/4 must implement or explicitly exclude them from each exact proposed adopted
 profile without claiming unsupported profile readiness. Whole-branch security review,
 bootstrap readiness and production authority remain pending.
+
+## Task 3 checkpoint
+
+Daemon, protected intake and guarded Train completed at
+`0c4ec56f518394557042445dfd796e439797774f`; evidence HEAD
+`b01e8d4872011233ecf4fe2ac7103f23554a7e26`. Independent initial review froze
+T3-B01 mailbox publication recovery and T3-B02 lost late-verification work. Both
+closed in one repair and scoped re-audit: spec PASS, quality Approved, no open IDs.
+Reports and all RED/GREEN evidence are retained in the plan workspace in Git.
+
+Final-source affected verification covers 96 tests across logs37/38, including
+eight added regressions. The unchanged maximum-slot test retains prior passing
+evidence22. Failed invocations remain explicitly disclosed, not counted as passes.
+Three unchanged repository structure violations remain; no new Rust violation.
+
+Task4 owns inert bootstrap preparation, source legacy guards, complete profile
+closure/trust integration, full conformance and whole-branch security review.
+Actual issuer custody/source bindings are unresolved; complete native loader
+closure is a concrete adoption gate. No production/bootstrap authority is implied
+by this task gate. Production mutation performed by this work: none.
