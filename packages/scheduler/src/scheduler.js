@@ -1,6 +1,6 @@
 import { normalizeJob, toPublicJob } from './job-model.js'
 import { applyTransition, rebuildFences } from './occurrence-model.js'
-import { classifyAdmissionFailure, createAdmissionIsolation, recordStaleSupersession } from './admission-isolation.js'
+import { classifyAdmissionFailure, createAdmissionIsolation, recordStaleSupersession } from './watchdog/admission-isolation.js'
 import {
   DEFAULT_AT_CATCHUP_GRACE_MS,
   deriveJobStateSummary,
@@ -50,7 +50,7 @@ const defaultLog = {
   error: (...args) => process.stderr.write(`[scheduler] ERROR ${args.join(' ')}\n`),
 }
 
-// C-SH-002 admission-failure classification lives in ./admission-isolation.js.
+// C-SH-002 admission-failure classification lives in ./watchdog/admission-isolation.js.
 export { AGENT_TURN_SAFETY_TIMEOUT_MS, TIMEOUT_ERROR_TEXT, classifyAdmissionFailure }
 
 /**
