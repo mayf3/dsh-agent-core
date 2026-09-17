@@ -8,10 +8,6 @@ import { classifyReconciliationEvidence } from '../watchdog/reconciliation.js'
 import { filterHealthForPrincipal } from '../watchdog/health.js'
 import { classifyRouter, createJobDisposition, opaqueDenied, requestIdFor } from './diagnosis.js'
 
-const ROUTER_TERMINATION_EVIDENCE = new Set([
-  'exact_terminal_then_idle', 'exact_queued_removal', 'child_real_exit', 'cancellation_ack',
-])
-
 class NoWrite extends Error {
   constructor(result) {
     super('self-ops: no authoritative write')
