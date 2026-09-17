@@ -43,6 +43,13 @@ export const workflowExecuteManifest = withTransportErrors({
     'operation="archive_instance": archive a terminal/cancelled instance; authority identical; coordinator authority does NOT bypass lifecycle legality. ' +
     'Cleanup discipline (advisory; the server is authoritative): active -> cancel_instance -> read-back verify -> archive_instance; already cancelled -> archive_instance; already terminal -> archive_instance; already archived -> no-op. No delete exists.',
   requiredScopes: ['workflow.execute'],
+  // ERROR_PRESERVATION R6/AMENDMENT_1 opt-in: local structural violations
+  // (missing/unknown arguments) render their broker-authored detail to the
+  // model so it can self-correct. WORKFLOW_DOMAIN_OWNER_ARCHIVE_CAPABILITY_REPAIR_V1
+  // (2026-09-14): six archive calls failed with a bare invalid_arguments that
+  // hid `missing required property "reason"`; the model then mis-retried with
+  // a domainId instead of the reason.
+  renderErrorDetail: true,
   errors: [
     ...baseErrors,
     ...authErrors,
@@ -98,6 +105,8 @@ export const workflowExecuteManifest = withTransportErrors({
           executionClass: { type: 'string', enum: ['BUSINESS', 'NON_BUSINESS_TEST'], description: 'Optional work execution class (SVC_WORKFLOW_WORK_EXECUTION_CLASS_V1 / AGENT_CORE_WORKFLOW_EXECUTION_CLASS_BROKER_V1). Absent = BUSINESS; the mapped svc body then OMITS this key entirely. NON_BUSINESS_TEST = explicit test/canary work, excluded from the normal BUSINESS dispatch due feed; requires DOMAIN_OWNER of the target domain (server-enforced).' },
         },
         required: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata'],
+        structuralDiagnostics: true,
+        additionalProperties: false,
       },
       result: { type: 'json' },
       errors: ['invalid_arguments'],
@@ -118,8 +127,15 @@ export const workflowExecuteManifest = withTransportErrors({
           transitionDefinitionId: { type: 'string', description: 'Exact outgoing transition definition id (UUID).' },
           expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Current workflow state version used for CAS.' },
           submissionPayload: { type: 'json', description: 'Optional payload matching the selected transition submission schema.' },
+          // Named by the frozen operation description as an advisory preference
+          // the model may send; declared so the closed argument schema accepts
+          // it while it stays advisory-only (never forwarded; the server is
+          // authoritative).
+          executable_for_actor: { type: 'boolean', description: 'Advisory only; ignored. The downstream atomic transaction is authoritative.' },
         },
         required: ['workflowInstanceId', 'transitionDefinitionId', 'expectedWorkflowStateVersion'],
+        structuralDiagnostics: true,
+        additionalProperties: false,
       },
       result: { type: 'json' },
       errors: ['invalid_arguments'],
@@ -142,6 +158,8 @@ export const workflowExecuteManifest = withTransportErrors({
           reason: { type: 'string', description: 'Cancellation reason (server-validated; required).' },
         },
         required: ['workflowInstanceId', 'reason'],
+        structuralDiagnostics: true,
+        additionalProperties: false,
       },
       result: { type: 'json' },
       errors: ['invalid_arguments'],
@@ -164,6 +182,8 @@ export const workflowExecuteManifest = withTransportErrors({
           reason: { type: 'string', description: 'Archive reason (server-validated; required).' },
         },
         required: ['workflowInstanceId', 'reason'],
+        structuralDiagnostics: true,
+        additionalProperties: false,
       },
       result: { type: 'json' },
       errors: ['invalid_arguments'],

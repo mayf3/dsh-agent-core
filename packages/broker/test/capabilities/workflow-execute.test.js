@@ -5,6 +5,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 
 import { validateManifest } from '../../src/schema.js'
 import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
+import { DEFAULT_MANIFESTS } from '../../src/index.js'
 import { buildToolDefinition } from '../../src/registry.js'
 import { createHttpTransport } from '../../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
@@ -105,12 +106,6 @@ test('workflow_execute operation=create_instance: authorized POST preserves body
     definitionVersionId: 'defver-3',
     contextPayload: { title: 'ship the unified write tool' },
     metadata: null,
-    // Model-supplied identity / trusted-seam fields must be ignored entirely.
-    principalId: 'principal-mallory',
-    agentId: 'agt_mallory',
-    actor: 'mallory',
-    idempotencyKey: 'ik-mallory',
-    assigneePrincipalId: 'agt_victim',
   })
 
   assert.deepEqual(result, {
@@ -141,8 +136,31 @@ test('workflow_execute operation=create_instance: authorized POST preserves body
   })
   assert.equal(request.headers.authorization, 'Bearer tok-real')
   assert.ok(/^ik-workflow-execute-\d+-[a-z0-9]+$/.test(request.headers['idempotency-key']))
-  assert.notEqual(request.headers['idempotency-key'], 'ik-mallory')
   assert.equal(JSON.stringify(request.body).includes('mallory'), false)
+
+  // WORKFLOW_DOMAIN_OWNER_ARCHIVE_CAPABILITY_REPAIR_V1 (closed-manifest ops):
+  // model-supplied identity / trusted-seam fields are now DETERMINISTIC local
+  // rejections (naming every unknown property) instead of silent drops — the
+  // same identity guarantee in its stronger form. Zero extra token/HTTP work.
+  const mallory = await definition.execute({
+    operation: 'create_instance',
+    domainId: 'domain-9',
+    definitionVersionId: 'defver-3',
+    contextPayload: { title: 'ship the unified write tool' },
+    metadata: null,
+    principalId: 'principal-mallory',
+    agentId: 'agt_mallory',
+    actor: 'mallory',
+    idempotencyKey: 'ik-mallory',
+    assigneePrincipalId: 'agt_victim',
+  })
+  assert.equal(mallory.ok, false)
+  assert.equal(mallory.error.code, 'invalid_arguments')
+  for (const field of ['principalId', 'agentId', 'actor', 'idempotencyKey', 'assigneePrincipalId']) {
+    assert.match(mallory.error.detail, new RegExp(`unknown property "${field}"`))
+  }
+  assert.equal(tokenServer.requests.length, 1)
+  assert.equal(workflow.requests.length, 1)
 
   await tokenServer.close()
   await workflow.close()
@@ -462,3 +480,4 @@ test('workflow_execute operation=archive_instance: 409 lifecycle fail-closed cod
   await tokenServer.close()
   await workflow.close()
 })
+

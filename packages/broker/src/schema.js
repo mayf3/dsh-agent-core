@@ -100,12 +100,13 @@ export function validateManifest(input) {
   } else if (input.renderErrorDetail === true) manifest.renderErrorDetail = true
 
   // ---- human-facing text ----
-  if (input.name !== undefined && typeof input.name !== 'string') {
-    errors.push(path('name') + ' must be a string')
-  }
-  if (typeof input.description !== 'string') {
-    errors.push(path('description') + ' must be a string')
-  }
+  // Validated AND canonicalized: the registry composes the model-visible tool
+  // description from manifest.description (canonicalizing it away once hid
+  // CTR-013 guidance as "undefined"; see ARCHIVE_CAPABILITY_REPAIR evidence).
+  if (input.name !== undefined && typeof input.name !== 'string') errors.push(path('name') + ' must be a string')
+  else if (input.name !== undefined) manifest.name = input.name
+  if (typeof input.description !== 'string') errors.push(path('description') + ' must be a string')
+  else manifest.description = input.description
 
   // ---- error-code table (capability level) ----
   manifest.errors = []

@@ -55,6 +55,31 @@ function modelValueSchema(spec, required = false) {
 }
 
 /**
+ * Render the per-operation required-arguments guidance appended to the
+ * model-visible tool description. The flattened parameter schema keeps only
+ * `operation` required (CTR-011 coarse-schema pin: a multi-operation tool must
+ * never demand cross-operation arguments), so per-operation contracts are
+ * invisible to the model unless stated here. Deterministic manifest data,
+ * manifest order; omitted entirely when no operation requires arguments.
+ * (WORKFLOW_DOMAIN_OWNER_ARCHIVE_CAPABILITY_REPAIR_V1: the model invoked
+ * archive_instance with only workflowInstanceId because nothing model-visible
+ * declared `reason` as required — the required list lived only in text the
+ * description-drop defect had hidden.)
+ * @param {Array<{name: string, arguments: {required?: string[]}}>} operations
+ * @returns {string} '' or a single leading-space sentence.
+ */
+function renderPerOperationRequired(operations) {
+  const parts = operations
+    .map((op) => {
+      const required = Array.isArray(op.arguments?.required) ? op.arguments.required : []
+      return required.length > 0 ? `${op.name}: ${required.join(', ')}` : undefined
+    })
+    .filter((part) => part !== undefined)
+  if (parts.length === 0) return ''
+  return ` Required arguments per operation — ${parts.join('; ')}.`
+}
+
+/**
  * Build the exact `defineTool({...})` options object plus the capability id.
  *
  * @param {object} capability
@@ -70,8 +95,9 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
   const wireId = manifest.id
   const isWorkflowAuthoring = wireId === 'workflow_definition_authoring'
     && manifest.toolName === 'workflow_definition_authoring'
-  // Validation checks raw description's type but its normalized result omits
-  // that text. Restore only V3 authoring guidance; other tools retain their text.
+  // schema.js now canonicalizes `description`, so the V3 authoring rawManifest
+  // fallback below is a no-op retained for canonical-form tolerance; every
+  // tool's model-visible description carries its manifest text.
   const description = isWorkflowAuthoring ? rawManifest.description : manifest.description
 
   // Model-facing parameter schema in `defineTool` format (per-property map
@@ -173,7 +199,8 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
       name: manifest.toolName,
       description:
         `Agent Core capability \`${wireId}\`: ${description} ` +
-        `Supported operations: ${manifest.operations.map((o) => o.name).join(', ')}.`,
+        `Supported operations: ${manifest.operations.map((o) => o.name).join(', ')}.` +
+        renderPerOperationRequired(manifest.operations),
       parameters,
       output: {
         schema: outputSchema,
