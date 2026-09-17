@@ -1,3 +1,4 @@
+mod fixture;
 use deployment_control_plane::bootstrap::{verify_loader_images, ClosureKind};
 use std::collections::BTreeMap;
 const NODE: &str = "/usr/local/libexec/agent-core/node-runtime/bin/node";
@@ -88,7 +89,7 @@ fn sources() -> BTreeMap<String, String> {
     ])
 }
 fn bundle() -> (tempfile::TempDir, String, String) {
-    let d = tempfile::tempdir().unwrap();
+    let d = fixture::temp();
     let root = d.path().canonicalize().unwrap();
     let mut controller = macho(&[(12, "/usr/lib/libSystem.B.dylib")]);
     if cfg!(target_arch = "aarch64") {
@@ -197,6 +198,7 @@ fn package_rejects_source_binary_metadata_and_unallowlisted_target() {
 }
 #[test]
 fn fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift() {
+    fixture::nonroot();
     use sha2::{Digest, Sha256};
     let bytes = fs::read("/bin/launchctl").unwrap();
     deployment_control_plane::bootstrap::verify_platform_launchctl(&hex::encode(Sha256::digest(
@@ -209,6 +211,7 @@ fn fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift() {
 }
 #[test]
 fn plist_loader_environment_is_rejected_from_the_exact_supplied_bytes() {
+    fixture::nonroot();
     use deployment_control_plane::bootstrap::verify_service_plist;
     use sha2::{Digest, Sha256};
     let hash = hex::encode(Sha256::digest(fs::read("/usr/bin/plutil").unwrap()));
