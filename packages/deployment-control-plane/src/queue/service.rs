@@ -16,27 +16,46 @@ impl Queue {
                 executor_finalization::projected_status(tx, id)?.state == State::Applied,
                 "NOT_APPLIED",
             )?;
+            // A durable monotonic token also prevents ABA after an earlier row was completed.
+            let generation=bump(tx,"verification")?;
             tx.execute(
-                "INSERT OR IGNORE INTO verification_requests VALUES (?)",
-                [id],
+                "INSERT INTO verification_requests(unit,generation,last_error) VALUES (?,?,NULL) ON CONFLICT(unit) DO UPDATE SET generation=excluded.generation,last_error=NULL",
+                (id,generation),
             )?;
             Ok(())
         })
     }
-    pub(crate) fn daemon_next_verification(&self) -> Result<Option<String>> {
+    pub(crate) fn daemon_next_verification(&self) -> Result<Option<(String, u64)>> {
         self.transaction(|tx| {
             Ok(tx
                 .query_row(
-                    "SELECT unit FROM verification_requests ORDER BY unit LIMIT 1",
+                    "SELECT unit,generation FROM verification_requests WHERE last_error IS NULL OR last_error='MUTEX_BUSY' ORDER BY unit LIMIT 1",
                     [],
-                    |r| r.get(0),
+                    |r| Ok((r.get(0)?,r.get(1)?)),
                 )
                 .optional()?)
         })
     }
-    pub(crate) fn daemon_finish_verification(&self, id: &str) -> Result<()> {
+    pub(crate) fn daemon_finish_verification(
+        &self,
+        id: &str,
+        generation: u64,
+        error: Option<&str>,
+    ) -> Result<()> {
         self.transaction(|tx| {
-            tx.execute("DELETE FROM verification_requests WHERE unit=?", [id])?;
+            if let Some(code) = error {
+                // No acknowledged work disappears on failure. Contention remains runnable;
+                // other failures retain an explicit durable disposition until a fresh retry.
+                tx.execute(
+                    "UPDATE verification_requests SET last_error=? WHERE unit=? AND generation=?",
+                    (code, id, generation),
+                )?;
+            } else {
+                tx.execute(
+                    "DELETE FROM verification_requests WHERE unit=? AND generation=?",
+                    (id, generation),
+                )?;
+            }
             Ok(())
         })
     }

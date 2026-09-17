@@ -1,0 +1,7 @@
+source boundary: packages/deployment-control-plane; staged tracked Rust files only
+maximum physical lines: (482, 'packages/deployment-control-plane/test/transaction_faults.rs')
+maximum immediate children: (19, 'test')
+maximum Rust directory depth: 2
+test root children: 19
+new repair files: [(380, 'packages/deployment-control-plane/test/common/service_repair.rs'), (124, 'packages/deployment-control-plane/src/service/mailbox.rs'), (83, 'packages/deployment-control-plane/test/common/mailbox.rs')]
+PASS

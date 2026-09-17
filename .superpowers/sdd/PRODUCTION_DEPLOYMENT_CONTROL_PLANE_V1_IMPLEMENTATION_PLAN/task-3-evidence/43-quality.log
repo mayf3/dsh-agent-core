@@ -1,0 +1,7 @@
+COMMAND: cargo fmt --manifest-path packages/deployment-control-plane/Cargo.toml -- --check
+EXIT: 0
+COMMAND: python3 .agents/tools/verify_governance.py --target .
+vendored governance bytes match governance.lock.json
+EXIT: 0
+COMMAND: git diff --cached --check -- packages/deployment-control-plane .superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/task-3-report.md
+EXIT: 0

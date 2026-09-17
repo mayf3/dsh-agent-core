@@ -380,6 +380,25 @@ this does not narrow the Executor's admitted 4096-slot manifest limit. Responses
 are bounded to 8 MiB. Mailbox directories retain at most 8192 entries; no automatic
 GC removes referenced evidence. Disk/flush errors remain refusals.
 
+Protected mailbox publication uses a permanent `publication.lock`, created and
+flushed during singleton-owned startup before workers listen. Each publisher
+opens that same protected inode and acquires a bounded OS lock. Under that lock,
+an exact complete temporary record is resumed; an exact incomplete canonical
+prefix is completed without truncation. Any mismatching temporary or final
+record is retained and refuses publication. A matching existing final record is
+re-flushed with its parent before success, including retries after a failed
+rename-directory flush. The lock is internal mailbox serialization, not the
+Executor's host mutation authority; it is never unlinked for retry.
+
+Late verification rows carry durable monotonic generations. The single Train
+snapshots `(unit, generation)` and compares that generation when completing or
+recording a failure, so an overlapping acknowledged late attachment/retry remains
+queued. `MUTEX_BUSY` retains runnable work. Other errors retain a durable
+`last_error` disposition and require a fresh explicit retry after correction;
+unknown acceptance still cannot be resent or overwritten. Existing unit-only
+rows upgrade additively at Queue open, with generation 1 and no error; the durable
+counter prevents generation reuse after completion. No receipt history is changed.
+
 The protected `service.json` is `service::Configuration`: Catalog, numeric callers,
 nonempty producer IDs, typed verifier bindings and socket GID. Files beneath the
 fixed protected state root are descriptor-validated and not caller-selected:

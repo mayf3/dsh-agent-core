@@ -1,0 +1,18 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-f8edd9ec5c4913b6)
+
+running 1 test
+
+thread 'repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit' (73100177) panicked at test/common/service_repair.rs:22:33:
+{"error":"ABSENT","state":"BLOCKED"}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit ... FAILED
+
+failures:
+
+failures:
+    repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.63s
+
+error: test failed, to rerun pass `--test train`

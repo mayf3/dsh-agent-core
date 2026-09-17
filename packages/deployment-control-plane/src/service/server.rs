@@ -183,6 +183,7 @@ pub fn run(sandbox: bool) -> Result<()> {
     };
     let intake = Intake::open(&path, sandbox)?;
     let _singleton = singleton(&intake.root, sandbox)?;
+    super::mailbox::initialize(&intake.root)?;
     let queue = queue(&intake.root, &path)?;
     for producer in &intake.config.producers {
         queue.register_producer(&intake.config.catalog, producer)?;

@@ -1,9 +1,6 @@
 use crate::{
     error::require,
-    fs::{
-        file::{snapshot, write_new},
-        secure::Dir,
-    },
+    fs::{file::snapshot, secure::Dir},
     model::*,
     queue::Queue,
     trust::{digest, valid_digest, valid_id, verify_signed, Signable},
@@ -182,34 +179,11 @@ impl Intake {
     }
     pub fn publish(&self, area: &str, id: &str, body: &impl Serialize) -> Result<()> {
         valid_digest(id)?;
-        let dir = self.root.child(area)?;
-        let name = format!("{id}.json");
         let raw = crate::trust::canonical_bytes(body)?;
         require(raw.len() <= MAX_PROTECTED_RECORD as usize, "SIZE_LIMIT")?;
-        match dir.open_file(&name, libc::O_RDONLY, 0) {
-            Ok(f) => {
-                require(
-                    snapshot(&f, dir.uid, MAX_PROTECTED_RECORD)?.bytes == raw,
-                    "IMMUTABLE_DELIVERY",
-                )?;
-            }
-            Err(e) if e.code() == "ABSENT" => {
-                require(dir.names()?.len() < 8192, "MAILBOX_QUOTA")?;
-                let temporary = format!("{id}.tmp");
-                write_new(
-                    &dir,
-                    &temporary,
-                    &raw,
-                    dir.uid,
-                    dir.file.metadata()?.gid(),
-                    0o600,
-                )?;
-                dir.rename(&temporary, &dir, &name)?;
-            }
-            Err(e) => return Err(e),
-        }
-        Ok(())
+        super::mailbox::publish(&self.root, area, id, &raw)
     }
+
     pub fn deliver(&self, q: &Queue) -> Result<()> {
         for caller in &self.config.callers {
             let actor = self.actor(caller.uid, caller.gid)?;

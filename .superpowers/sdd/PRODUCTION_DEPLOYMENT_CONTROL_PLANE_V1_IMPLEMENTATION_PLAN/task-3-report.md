@@ -238,3 +238,124 @@ report, its raw JSON and introductory README wording; source tests are unchanged
 
 Status: bounded Task3 implementation complete with explicit production-adoption
 concerns; independent review pending. Stop here; no Task4 bootstrap work performed.
+
+## Frozen Task 3 review repair: T3-B01 / T3-B02
+
+Repair starts at `4c9d3654e1296538d05d349020f1877e63669a2e`. The controller's
+attributable mandate freezes exactly the two Important blockers in
+`task-3-review.md`; no Spec gap or authority change was requested. Repair
+DEVELOPMENT_PREFLIGHT reuses accepted semantics39865536 / accepted basebb5327f,
+CTR-DCP-007/011/014/015/020, the same isolated branch and source/private-fixture
+boundary. DONE_WHEN is those counterexamples closed, affected tests/evidence
+retained, report/commit handed back for independent re-audit. No new profile,
+bootstrap, live operation, external issuer, Spec edit or agent was introduced.
+
+### Exact repair and API handoff
+
+B01: `service/mailbox.rs` owns protected publication. Singleton-owned startup
+creates and flushes a permanent0600 `publication.lock` before workers/listening.
+Every publisher opens that inode and obtains `flock(LOCK_EX|LOCK_NB)` with a200ms
+bounded wait. It validates metadata and the named inode; lock descriptors are
+CLOEXEC and never unlinked. This lock serializes mailbox writes, not mutation
+execution; `production.lock` and the guarded Executor remain mandatory.
+
+Under the lock, a complete matching `<digest>.tmp` is file/parent-flushed and
+renamed; an incomplete exact canonical prefix is appended in place, rechecked,
+and flushed before rename. No temporary is truncated or removed. Mismatching
+partial/complete/final content refuses with IMMUTABLE_DELIVERY and is preserved.
+An existing matching final file is file/parent-flushed again before success,
+including after visible rename plus failed directory flush. Complete matching
+files, incomplete prefixes and active concurrent publishers have separate
+behavioral coverage. The same routine serves admitted, requests and closure.
+No blanket cleanup or journal algorithm change occurs.
+
+B02: `verification_requests` gains `generation` and nullable `last_error`.
+A persistent `meta.verification` counter supplies monotonic tokens, including
+after a previous row has been deleted. Queue open upgrades legacy unit-only rows
+inside an immediate transaction, retaining them at generation1. New requests
+atomically advance generation and clear their old disposition. The crate-private
+`daemon_next_verification` now returns `(unit, generation)`; the single Train uses
+that exact claim with `daemon_finish_verification(unit, generation, error)`.
+Success deletes only the claimed generation; failure updates only that same
+generation. Older success or failure cannot erase/overwrite a newer acknowledged
+late attachment or retry. Socket schemas/public Queue interfaces are unchanged.
+
+MUTEX_BUSY remains runnable and retries only physical readback. Other failures
+remain explicit durable `last_error` dispositions, excluded from automatic
+selection until an authorized fresh retry; no acknowledged row silently vanishes.
+The migration/reopen regression covers ABSENT policy, then genuine fixture
+SERVICE_GENERATION_DRIFT refusal, and token monotonicity is checked after a
+successful row's completion/recreation. WAITING remains bounded and permits
+finalization; signed PASS/FAIL/unknown provenance, immutable attachment/history,
+physical readback, finalization eligibility and no-reinstall/no-resend rules are
+unchanged. The existing unknown regression still passes. Production adapters,
+issuer custody and complete native loader closure remain Task4 adoption blockers.
+Task4 must preserve/provision the internal publication lock with the protected
+state root; it conveys no extra caller or bootstrap authority.
+
+### RED/GREEN and retained raw evidence
+
+All commands below run in the pinned worktree as the current nonroot identity.
+Prefix `cargo test --locked --manifest-path packages/deployment-control-plane/Cargo.toml`
+is abbreviated as `cargo-test` only in this report. Full raw stdout/stderr remains
+under `task-3-evidence/`; no failed observation is deleted or relabeled.
+
+- `cargo-test --test train repair:: -- --nocapture`:27-frozen-union-red.log,
+  exit101,5 failures reproducing complete/partial publication rejection,
+  active-publisher/mismatch behavior, lost overlapping coverage and lost lock-busy
+  work.31-frozen-union-green.log, exit0,5 pass after initial repair.
+- `cargo-test --lib service::mailbox_tests -- --nocapture`:
+  28-mailbox-flush-red.log, exit101,2 failures (existing retry returned success
+  without directory flush);29-mailbox-flush-green.log, exit0,2 pass. Both admitted
+  and closure exercise the failed preexisting-file flush and failed post-rename
+  directory flush, followed by a successful exact retry.
+- `cargo-test --test train temporary -- --nocapture`:30-mailbox-restart-green.log
+  is a retained **failed** invocation despite its historical filename:2 pass/1
+  failure, concurrent admitted submission returned ABSENT. A bounded repeat
+  command in32-concurrent-publication-repeat.log stopped on its first failure.
+  33/34 retain temporary diagnostic runs: concurrent first-use `open(O_CREAT)`
+  on publication.lock returned ENOENT while another publisher created it. Startup
+  initialization before workers closes that concrete race. Diagnostic source
+  was removed; no common filesystem implementation change remains.
+- `cargo-test --test train admitted_temporary_records -- --nocapture`:
+  35-initialized-lock-green.log, exit0,1 pass (complete and partial residuals,
+  three concurrent submitters each). It also passes in37 and38.
+- 36-repair-focus-green.log is a retained CLI invocation error, exit1: Cargo
+  accepts one filter, not two. No tests ran; it is not GREEN evidence.
+- `cargo-test -- --skip maximum_admitted_slots_roundtrip_success_and_rollback_journal --nocapture`:
+  37-repair-affected-suite.log, exit101: library17, authority12, filesystem12,
+  Queue25, socket4 and16/17 Train pass. The additional migration test incorrectly
+  expected the fixture to preserve its child-process identity across daemon
+  restart. The existing fixture intentionally starts with no tracked child;
+  real physical readback correctly reported SERVICE_GENERATION_DRIFT. The test
+  now asserts that exact retained error, with no closure/request/reinstall.
+  Production source did not change after this run.
+- `cargo-test --test train --test transactions -- --nocapture`:
+  38-repair-train-transactions-green.log, exit0: Train17/transactions9 pass.
+  Together37+38 cover all **96 final-source affected tests**, including8 new
+  regressions, with0 remaining failures. The unchanged4096-slot test is not
+  repeated;22-full-suite.log retains its earlier passing execution. No bounds,
+  transaction/journal algorithm or filesystem primitive changed in this repair.
+
+Real daemon processes restart over flushed private admitted/closure temporary
+residuals. Closure tests deliver an authentic producer CAS ACK and assert exactly
+one mutation. Overlapping late coverage closes both Goals after authentic PASS
+with one install; MUTEX_BUSY work survives and closes after guard release, also
+with one install. Directory-fsync injection is test-only at the exact call
+boundary; this is emulated syscall failure/reachable crash residue evidence,
+not actual hardware power-loss evidence.
+
+Reviewer repro source and output are retained byte-for-byte as
+`review-reproducer.rs.txt` and `review-reproducer.log`, hashes respectively
+`2e084a865cca0296b0d47a2b7c13a3a4db73ef4f41d9598438d33890920f7d5d` and
+`f5755fe454885c1110d2f2a7a40f96c12611d56ddfce490b87510786902d2043`.
+The original external private fixture has not been removed by this repair.
+
+Formatting, governance integrity, whitespace and supplemental Rust structure
+results are retained in39–43.41 records four trailing blank-line warnings in raw
+Cargo logs; those bytes are preserved.43 explicitly passes source/report whitespace,
+format and governance commands with exit0. Test-root immediate children remain19; all new
+repair tests live beneath existing `test/common/`. Machine gate is recorded
+against the repair commit separately, retaining the existing three violations.
+Status: frozen repair implemented and locally verified; independent scoped
+re-audit pending. No independent review PASS or production readiness is claimed.
