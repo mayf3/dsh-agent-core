@@ -1,0 +1,35 @@
+START=2026-09-17T16:37:34.844564+00:00
+COMMAND=['cargo', 'test', '--locked', '--test', 'bootstrap', '--test', 'e2e', '--', '--nocapture']
+ENV: euid=502 TMPDIR=/private/tmp
+
+running 9 tests
+test fixture::root_refusal_precedes_effect_without_root_execution ... ok
+test loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture ... ok
+test fixture::outside_kernel_temp_is_rejected_before_creation ... ok
+test fixture::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift ... ok
+test package_has_no_activation_or_secrets_and_parses_as_disabled_plist ... ok
+test prospective_producer_scope_registers_and_unknown_host_is_explicit ... ok
+test package_rejects_source_binary_metadata_and_unallowlisted_target ... ok
+test plist_loader_environment_is_rejected_from_the_exact_supplied_bytes ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s
+
+
+running 6 tests
+test fixture::root_refusal_precedes_effect_without_root_execution ... ok
+test fixture::outside_kernel_temp_is_rejected_before_creation ... ok
+test fixture::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test original_nonroot_lock_selftest_remains_available_before_enrollment ... ok
+test enrolled_legacy_sources_refuse_before_any_effect ... ok
+test unreadable_or_caller_owned_parent_denies_but_true_absence_preserves_legacy ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.66s
+
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.24s
+     Running test/adoption/bootstrap.rs (target/debug/deps/bootstrap-5077166400059868)
+     Running test/adoption/e2e.rs (target/debug/deps/e2e-b726307ab9f9b930)
+
+EXIT=0
+END=2026-09-17T16:37:37.305232+00:00

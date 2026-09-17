@@ -1,0 +1,18 @@
+SOURCE=a263c8089e16b3614f37b5c4766af50f4d449275
+COMMAND=['/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/target/release/agent-deploy-prepare', 'verify', '/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-task4-repair-wscow2bn', '1b4b4e1608f9335eb4db8aba319b0e19a0e8610ccefac2c1df2c25e6bbe949c6', 'da70fad9b07a064a07489c14aff006cc1781a66ca359e7d44522bb7fed1bebb7', '/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl']
+{
+  "integrity_verified": true,
+  "bootstrap_ready": false,
+  "blockers": [
+    "HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT",
+    "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS",
+    "TRUSTED_SOURCE_BUILD_REVIEW_BINDING",
+    "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS",
+    "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL",
+    "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION",
+    "INDEPENDENT_WHOLE_BRANCH_REVIEW",
+    "EXACT_OWNER_BOOTSTRAP_RECEIPT"
+  ]
+}
+
+EXIT=0

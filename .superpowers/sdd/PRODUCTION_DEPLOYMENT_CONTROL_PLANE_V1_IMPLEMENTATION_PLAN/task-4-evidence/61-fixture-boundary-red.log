@@ -1,0 +1,34 @@
+COMMAND=['cargo', 'test', '--locked', '--test', 'bootstrap', '--test', 'e2e', 'fixture::', '--', '--nocapture']
+
+running 3 tests
+test fixture::outside_kernel_temp_is_rejected_before_creation ... FAILED
+test fixture::kernel_selected_temp_ignores_caller_tmpdir ... FAILED
+test fixture::root_refusal_precedes_effect_without_root_execution ... FAILED
+
+failures:
+
+failures:
+    fixture::kernel_selected_temp_ignores_caller_tmpdir
+    fixture::outside_kernel_temp_is_rejected_before_creation
+    fixture::root_refusal_precedes_effect_without_root_execution
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.82s
+     Running test/adoption/bootstrap.rs (target/debug/deps/bootstrap-5077166400059868)
+
+thread 'fixture::kernel_selected_temp_ignores_caller_tmpdir' (73275870) panicked at test/adoption/fixture.rs:19:28:
+called `Result::unwrap()` on an `Err` value: Error { code: "FIXTURE_TEMP_UNAVAILABLE" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'fixture::root_refusal_precedes_effect_without_root_execution' (73275872) panicked at test/adoption/fixture.rs:29:23:
+called `Result::unwrap_err()` on an `Ok` value: ()
+
+thread 'fixture::outside_kernel_temp_is_rejected_before_creation' (73275871) panicked at test/adoption/fixture.rs:36:5:
+assertion `left == right` failed
+  left: "FIXTURE_TEMP_UNAVAILABLE"
+ right: "FIXTURE_OUTSIDE_TEMP"
+error: test failed, to rerun pass `--test bootstrap`
+
+EXIT=101

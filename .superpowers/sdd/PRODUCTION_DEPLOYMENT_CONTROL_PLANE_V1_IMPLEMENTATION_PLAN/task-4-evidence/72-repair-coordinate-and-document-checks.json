@@ -1,0 +1,90 @@
+{
+  "observed_at": "2026-09-17T16:48:21.641113+00:00",
+  "source_commit": "a263c8089e16b3614f37b5c4766af50f4d449275",
+  "euid": 502,
+  "architecture": "arm64",
+  "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "acc_rows_linked": 14,
+  "evd_records": 16,
+  "documents": [
+    {
+      "path": "docs/reports/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_EVIDENCE.md",
+      "line_count": 331,
+      "links_checked": 124,
+      "sha256": "9019aa1f239ec5d05b274a45439950e6141174a93f0c0b91ab0cf49968519dc3"
+    },
+    {
+      "path": "docs/reports/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_CONFORMANCE.md",
+      "line_count": 100,
+      "links_checked": 17,
+      "sha256": "903f69068820db58b1296353ea2ab1bd24e23370cb93020e3184a931989cc46d"
+    },
+    {
+      "path": ".superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/task-4-report.md",
+      "line_count": 377,
+      "links_checked": 5,
+      "sha256": "1d3263cb4b5c8ad5c36a08f4976bceed316b243b7cfd5f933bb70534517e62c9"
+    }
+  ],
+  "tracked_package_diff_from_source_commit": "empty",
+  "source_checks": {
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "docs/reports/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_CONFORMANCE.md",
+      ".superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/task-4-report.md"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "machine_result": {
+    "result": "STRUCTURE_VIOLATION",
+    "exitCode": 1,
+    "rulesVersion": "CODE_STRUCTURE_GUARDRAILS_V1",
+    "base": "28c09f73897b98ba3da520d43128f49eb101a0b0",
+    "head": "a263c8089e16b3614f37b5c4766af50f4d449275",
+    "checks": [
+      "FILE_LINE_LIMIT",
+      "DIRECTORY_CHILD_LIMIT",
+      "DIRECTORY_DEPTH_LIMIT",
+      "EXCEPTION_REGISTRY",
+      "NO_NEW_LEGACY_VIOLATION"
+    ],
+    "inScopeFiles": 522,
+    "violations": 3,
+    "warnings": 76,
+    "registryFiles": 19,
+    "registryDirectories": 4
+  },
+  "new_evidence_hashes": {
+    "61-fixture-boundary-red.log": "bdf3e5e4e556511906297d0853f62243ab75397253ae4d47018ceedaf5c5accf",
+    "62-stamp-boundary-red.log": "4c58f042e02d091d927670b6a1bc1a5b66315dbeda6bc4906d310ba1fc274d95",
+    "63-stamp-boundary-red.log": "789ad7df0e61c1ffb25cd5db8061ed6d204ad1a9b62791c61150b96a83cfdc70",
+    "64-repair-adoption-green.log": "e5741f117f01d1e529a837bf3acd04bbd3d487240d2a1bd48e8f720a4ef31154",
+    "65-repair-strict-clippy.log": "c628dc469b2920b10e1613424baecd7137699d507493a793420768dcdee8c131",
+    "66-repair-source-checks.json": "9687c70aa0c6d63ec846ff0adb8456e622cd4a81b0ef1380f6183ccb3bb7e930",
+    "67-repair-machine-structure.json": "1713e67f8008b69e832e8330d5d22930b66ca5bc4f866c54fc2ec05e8a7530b1",
+    "68-repair-rust-structure.json": "b9b7e6f82819fc6a93b9777a9ef6f7873f966bdb8670dc3a8bcbc2603fdb8940",
+    "69-repair-binary-source-equivalence.json": "5f7e9370501b16d813889204a1c016fec19c9f490ce801260baefbbf5670b0a4",
+    "70-repair-package-prepare.log": "3aa5dd75cd5c13be672ef8c9c66a4eb528f9e01e5d72394e985d37310bc1e8a9",
+    "71-repair-package-verify.log": "efc29f4e14843a35826a6323d81110e29f51ce4b015b7d63789864f49b363198",
+    "assemble-repair-package.py": "7cb118b4c09cdd8c5861b63edb38496b66d2461530e5aba0b34120bc39c82382",
+    "repair-ai.agent-deployd.plist": "c09e24824db86db2267da236594b94d1d36399171e9d6b25e78a928c66af095b",
+    "repair-artifacts.json": "f1c0e8aff2edf7b954d4bfec2171eace2be0fc876f03018d19d0cd286de539c4",
+    "repair-manifest.json": "1b4b4e1608f9335eb4db8aba319b0e19a0e8610ccefac2c1df2c25e6bbe949c6",
+    "repair-recipe.json": "de48a0043ec8fe8a60b2684c6ea10ac7fead0acbee7664a5003b6816554e035d"
+  },
+  "affected_tests": {
+    "log": "64-repair-adoption-green.log",
+    "bootstrap_executions": 9,
+    "e2e_executions": 6,
+    "total_executions": 15,
+    "unique_cases": 12,
+    "failed": 0,
+    "full_suite_rerun": false,
+    "hostile_TMPDIR": "/private/tmp"
+  }
+}

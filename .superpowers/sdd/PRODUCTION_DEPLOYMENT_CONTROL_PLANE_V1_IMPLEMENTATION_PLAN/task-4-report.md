@@ -271,3 +271,107 @@ TESTS_PASS = YES at the exact full/affected coordinates above.
 INDEPENDENT_REVIEW_PASS = PENDING_CONTROLLER_REVIEW, not self-declared.
 BOOTSTRAP_READY = NO.
 PRODUCTION_GOAL_COMPLETE = NO. No push or merge performed.
+
+## Frozen Task 4 repair: T4-B01 / T4-B02
+
+This appendix supersedes only the prior fixture-safety and current-package claims;
+historical observations above remain at their original coordinates. Controller
+mandate freezes B01/B02 from [task-4-review.md](task-4-review.md), with no F-01/F-02
+or style expansion. REUSE / IMPLEMENTATION / EXEC_PLAN / CONTROLLED; accepted
+39865536/bb5327f unchanged; source/private nonroot fixtures/inert artifacts only.
+Fix base `77e54641c63f976de1089bcf99970a620f126f47`.
+Repair source `a263c8089e16b3614f37b5c4766af50f4d449275`.
+The final evidence commit contains this appendix; it changes no tested source.
+
+B01 changes only `test/adoption/{fixture,bootstrap,e2e}.rs`. One cohesive helper
+checks actual euid before fixture effects; explicit base selection also enters
+that guard before any effect. It obtains Darwin's kernel user-temp path via
+confstr, disregards TMPDIR, rejects outside/aliased bases before creation, creates
+0700 using tempfile's creation permissions, then validates FixtureRoots' existing
+descriptor/owner/ACL/ancestor boundary. Every effectful adoption entry uses it;
+the two read-only platform-tool cases explicitly guard before reads/child work.
+The pure Mach-O byte-parser test has no filesystem/process effects.
+
+Root ordering is tested through the very same guard with injected uid0 and a
+harmless Cell closure; no root process/probe ran. An explicit `/private/tmp` base
+rejects without being created/opened. The whole affected run sets TMPDIR to
+`/private/tmp`; the helper safely ignores it and validates the kernel-selected
+root. These are distinct proofs: the old selected selftest can now PASS safely
+inside the kernel tree, rather than being required to fail on hostile TMPDIR.
+
+The copied installer alone substitutes its unique `/tmp` stamp literal with a
+shell-quoted private-tree template. It asserts one occurrence, inverse replacement
+recovers every original byte, full existing SELFTEST_LOCK behavior passes, and
+cleanup leaves only the copied script. Actual production legacy script bytes and
+execution semantics are unchanged; its historical log57 does not prove the new
+private stamp location. Source/root/native production code, Task3 publication.lock
+and versioned verification work remain unchanged.
+
+B02 adds [stable evidence relations](../../../docs/reports/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_EVIDENCE.md)
+EVD-DCP-T4-001–016 and links all14 conformance rows directly. Each binds accepted
+authority, source/test/log coordinates, profile inputs/environment, observed
+positive/rejecting cases, relation, sufficiency, limitations and provenance.
+S1/S2/S3 retain their original execution and independent review coordinates;
+F4 full105@3f59, A4 affected9@8db5 and R4 repair15 executions@a263 remain separate.
+Old EVD-T4R-002 stays contrary evidence at8db5, not a discarded failed observation.
+Only the selected nonproduction subclaims are supported; P remains NOT EXECUTED.
+
+### Repair RED/GREEN and checks
+
+All retained output is under `task-4-evidence/`. Commands run as euid502 in the
+same macOS arm64 worktree; Cargo commands below use cwd `packages/deployment-control-plane`.
+
+| Log | Actual command/result and source coordinate |
+|---|---|
+|61-fixture-boundary-red.log|`cargo test --locked --test bootstrap --test e2e fixture:: -- --nocapture`: exit101,3 failures in bootstrap; Cargo stopped before e2e. Intermediate pre-a263 scaffold intentionally lacked root/base/kernel implementation.|
+|62-stamp-boundary-red.log|`cargo test --locked --test e2e original_nonroot_lock_selftest -- --nocapture`: exit101,1 fail. First helper implementation correctly refused its own default0755 tempfile; unintended UNSAFE_MODE failure, not stamp RED.|
+|63-stamp-boundary-red.log|Same command after explicit0700 creation: exit101,1 fail at the intended unrelocated-stamp assertion, before invoking the copied installer.|
+|64-repair-adoption-green.log|`TMPDIR=/private/tmp cargo test --locked --test bootstrap --test e2e -- --nocapture`: exit0, bootstrap9/e2e6;15 executions,12 unique cases (shared3 helper tests run twice). UTC2026-09-17T16:37:34.844564Z to end timestamp in log. Exact source subsequently committed unchanged as a263c80.|
+|65-repair-strict-clippy.log|`cargo clippy --locked --all-targets -- -D warnings`: exit0. No new suppression.|
+|66-repair-source-checks.json|fmt check, governance integrity, source whitespace exit0; governing-Spec diff empty; production src/Cargo inputs/installer diff empty against77e5464.|
+|67-repair-machine-structure.json|Machine verifier at a263/base28c09f7 exits1, exactly existing production-runtime/src21, production-runtime/test23, scripts59 violations; no new violation and no globalPASS.|
+|68-repair-rust-structure.json|75 Rust files, max479lines/20 immediate tracked children/depth2, test-root20, adoption3.|
+|69-repair-binary-source-equivalence.json|Exact package diff from8db5 to a263 is the3 adoption test files; all production/build inputs identical. Both retained release binaries match their original hashes.|
+|70/71-repair-package-prepare/verify.log|Nonroot fixed prepare CLI generates/verifies replacement exact source-bound inert package; exit0, integrity=true/readiness=false.|
+
+61–63 are retained intermediate working-tree observations, not false claims of
+running the committed final source. They establish the development failures;64
+is the final-source behavioral proof. No full transaction/4096 test repeated.
+No production script changed, so prior shell syntax/executable identity evidence
+remains applicable; the affected relocated full selftest executes in64.
+
+### Replacement inert artifact
+
+Old package, recipe, manifest and all logs are preserved at8db5ada. Its source map
+included the modified tests and therefore is historical-only for this checkout.
+The new [recipe](task-4-evidence/repair-recipe.json) and reproducible
+[assembler](task-4-evidence/assemble-repair-package.py) bind84 current source files.
+Receipt [repair-artifacts.json](task-4-evidence/repair-artifacts.json) records:
+
+- Package `/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/agent-deployd-task4-repair-wscow2bn`.
+- Manifest SHA256 `1b4b4e1608f9335eb4db8aba319b0e19a0e8610ccefac2c1df2c25e6bbe949c6`.
+- Source digest `da70fad9b07a064a07489c14aff006cc1781a66ca359e7d44522bb7fed1bebb7`.
+- Same23 payloads/25-file inventory; every payload rehashed/size-checked; eight
+  unresolved prerequisites unchanged. All binary payloads remain local outside Git.
+- Reused controller `18a69c94b86026a3f4a75d5deff8b6deeea070514c2b3da3dba53d1bc7a21088`
+  and prepare CLI `53599a158c7aef35f020e2298cf2f4408969c1edda181725d132d6cbb6669084`,
+  originally built at8db5ada. Receipt69 checks exact bytes and production/build-input
+  equivalence; this repair did not rebuild binaries or claim new build provenance.
+- Same candidate closure digest
+  `b6b497f0b879aa901b674d0fb2ab33f7ac6084d490f3ebc69cc0b052902a8364`; no transformed
+  Node execution or trusted-origin upgrade occurred.
+
+### Repair disposition and preserved limits
+
+B01/B02 are implemented and self-verified; scoped independent re-audit is pending
+controller. This is a bounded source/test/evidence gate, not overall implementation
+or bootstrap closure. RP-01–08 remain exactly the review's frozen union, including
+actual host enforcement/enrollment and complete release-face integration gaps,
+**unimplemented real upstream-to-mailbox bridge code**, real issuer/custody and
+trusted provenance, protected legacy/lifecycle denial, native validation,
+whole-branch independent review and exact Owner bootstrap receipt. Missing external
+inputs do not turn those code omissions into completed integration. The later
+host-digest observation remains OBSERVED_NOT_ENROLLED and does not resolve RP-01.
+F-01 recipe bounded reading, F-02 broader shell lookup-error hardening, and style
+remain FOLLOW_UP outside this repair union. No new permission request, subagent,
+production operation, root invocation, push or merge occurred.

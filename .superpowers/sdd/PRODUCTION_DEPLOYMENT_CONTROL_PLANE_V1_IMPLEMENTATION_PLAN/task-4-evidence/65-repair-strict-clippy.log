@@ -1,0 +1,5 @@
+COMMAND=['cargo', 'clippy', '--locked', '--all-targets', '--', '-D', 'warnings']
+    Checking deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.22s
+
+EXIT=0

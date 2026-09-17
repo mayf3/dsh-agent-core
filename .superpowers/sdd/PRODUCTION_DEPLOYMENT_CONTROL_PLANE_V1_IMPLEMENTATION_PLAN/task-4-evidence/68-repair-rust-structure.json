@@ -1,0 +1,10 @@
+{
+  "source_commit": "a263c8089e16b3614f37b5c4766af50f4d449275",
+  "rust_files": 75,
+  "max_rust_lines": 479,
+  "max_immediate_tracked_children": 20,
+  "max_directory_depth": 2,
+  "test_root_children": 20,
+  "adoption_children": 3,
+  "depth_basis": "parent components below package root (e.g. test/adoption = 2)"
+}
