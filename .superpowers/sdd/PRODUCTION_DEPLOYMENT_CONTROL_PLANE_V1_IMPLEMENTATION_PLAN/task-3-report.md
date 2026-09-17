@@ -359,3 +359,12 @@ repair tests live beneath existing `test/common/`. Machine gate is recorded
 against the repair commit separately, retaining the existing three violations.
 Status: frozen repair implemented and locally verified; independent scoped
 re-audit pending. No independent review PASS or production readiness is claimed.
+
+Repair commit: `0c4ec56f518394557042445dfd796e439797774f`.
+Commit-bound machine structure command:
+`node scripts/verify-code-structure.mjs --base 186c83d7a61320bee9eb04005de13d4bbee27df8 --head 0c4ec56f518394557042445dfd796e439797774f --json`.
+Exit1;44-machine-structure.json retains exactly three unchanged existing
+violations: production-runtime/src21, production-runtime/test23, scripts59;
+76 warnings. No new Task3 structure violation. Supplemental Rust max482 lines,
+19 immediate children, depth2; largest new repair file380 lines. This follow-up
+changes only the report and retained machine output; tested source is unchanged.
