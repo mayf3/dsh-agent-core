@@ -113,6 +113,7 @@ The canonical versioned record MUST contain:
 ```text
 deployment_unit_id, deployment_profile, profile_revision, target_runtime, repo,
 source_sha, artifact_sha256, build_attestation_digest, manifest_digest,
+deployment_intent_id, desired_state_revision, expected_target_generation,
 covered_goal_ids[], goal_coverage[], dependency_units[], required_reviews[],
 preflight_policy, privileged_apply_profile, restart_profile,
 verification_profiles[], rollback_profile, standing_authority_revision,
@@ -124,15 +125,28 @@ the protected catalog. Goal coverage binds exact acceptance contract revisions,
 source inclusion and reviewed release-face hashes. Runtime identity includes host,
 launchd domain, label and install-root identity; system/gui labels are distinct.
 `receipts[]` are immutable references appended in the journal, not edits to the
-sealed artifact. Durable unit ID derives from the canonical immutable descriptor;
-the deployment dedupe key is `(target identity, profile revision, artifact digest)`.
+sealed artifact. Artifact identity is `(repo, source, artifact digest)`. A request
+ID provides transport idempotency. The daemon alone allocates a monotonic deployment
+intent for an authenticated desired-state revision and expected target generation;
+callers cannot allocate intents or reset attempt budgets by changing request IDs.
+Target generation identifies the daemon's installed release record, distinct from
+service process generation/PID. Rollback may restore that release record only with
+verified restored bytes/metadata and a separately recorded fresh process readback.
+Durable unit ID derives from the canonical immutable descriptor. Deployment dedupe
+is `(target, intent, profile revision, artifact digest)`; execution attempts are
+append-only journal records under that unit, not mutations of its descriptor.
 Goal/review/policy changes cannot silently mutate a unit. Late identical-artifact
 Goals use a new immutable coverage attachment and existing install receipt.
 
 ### CTR-DCP-003 — collapse and coverage
 
-The queue MUST enforce one physical installation for a dedupe key, including
-simultaneous submissions and retries. It MUST collapse ready Goals into the same
+The queue MUST enforce one successful installation per intent, coalescing simultaneous
+submissions and transport retries. If the required artifact is already installed
+and its generation/metadata is verified, attach verification with zero install or
+restart. A legitimate A→B→A desired-state transition gets a new daemon intent and
+fresh B preimage; it is not a duplicate of A's historical transaction. A failed
+attempt may be re-admitted only under CTR-DCP-011, never by a caller-chosen new ID.
+It MUST collapse ready Goals into the same
 artifact only when one reviewed manifest proves every required face, acceptance
 contract and dependency is covered. Newer SHA ancestry alone does not prove
 coverage (reverts and integration changes are counterexamples). Profiles targeting
@@ -226,6 +240,10 @@ Default failure policy `STOP_TRAIN` blocks subsequent units on infrastructure/un
 failure. `CONTINUE_INDEPENDENT` is available only as an accepted profile policy
 and only after safe finalize, for units with no dependency/resource/rollback conflict.
 Unknown mutation outcome always quarantines the host mutation lane regardless of policy.
+`STOP_TRAIN` is a persisted pause: resume automatically only when its failed intent
+has a proven safe disposition and its corrected unit/replacement passes all gates.
+Dependents must still satisfy their own exact receipts. Unresolved failure never
+gets skipped merely to resume work; no per-head Owner approval is added.
 
 ### CTR-DCP-011 — durable state machine and unknown recovery
 
@@ -245,6 +263,17 @@ before admitting work. Finish a proven completed step or perform verified rollba
 otherwise retain `OUTCOME_UNKNOWN` and quarantine. No blind replay of copy, restart,
 migration or canary; no “PID absent means side effects absent”. Bounded read-only
 recovery (at most three probes within the profile deadline) prevents infinite loops.
+`BLOCKED(NO_MUTATION)` may return to VALIDATING after fresh machine-verifiable
+remediation evidence; at most three preflight attempts per intent. A ROLLED_BACK
+attempt may start a second attempt only after complete preimage/service restoration,
+owned-operation termination and fresh admission/precheck are proven, the failure
+cause is resolved, and every potentially executed step is proven absent, restored,
+or explicitly idempotent. At most two mutating attempts per intent (profiles may
+lower this). Unknown canary/business side effects prohibit this path. Exhaustion
+stays `BLOCKED/RETRY_BUDGET_EXHAUSTED`; duplicate submissions cannot refresh budgets.
+Different artifact/profile/preimage requirements require a reviewed replacement unit;
+only a trusted changed desired-state transition can allocate a new intent. Historical
+attempt receipts remain immutable. QUARANTINED never auto-retries mutation.
 
 ### CTR-DCP-012 — fresh preimage, apply and restart
 
@@ -340,6 +369,12 @@ canonical path. Entry points inside this repo get negative bypass tests; externa
 paths require owner-repo changes and installed readback before that target enables.
 Migrate metadata preventing enrolled caller identities writing code/config/plists
 directly, including currently user-owned svc-workflow service surfaces.
+Enrollment MUST also prove callers cannot control the target launchd domain, signal
+its service processes, or invoke another lifecycle manager outside the mutex.
+Changing file ownership does not remove same-UID signal or GUI launchctl powers.
+The current `gui/502/com.svc-workflow` target is therefore ineligible while caller
+uid 502 retains those powers; activation requires independently accepted identity/
+domain separation and executed lifecycle-denial evidence, not just hardened files.
 Root Owner emergency containment remains a separately receipted exceptional action,
 not a second routine deploy API. Impossible-to-revoke copies run by an omnipotent
 Owner are outside the non-root adversary claim; they cannot count as canonical.
@@ -377,7 +412,7 @@ readiness from privileged activation, not permission to ship incomplete profiles
 | dsh system runtime | fixed `/usr/local/libexec/agent-core/app` release slots; `system/ai.agent-core.runtime`; preserve unrelated config/model overrides | enumerate complete manifest; independent per-Goal coverage; app/node/harness/root-code facets separated |
 | Watchdog adjuncts in dsh transaction | exact W1/W2 plists and root-reviewed W2 closure; typed routing; incident migration only under its accepted authority | resolve 505:20 versus routing 0:601/0:20 roles; no unknown-occurrence mutation or fence release |
 | auth-service | exact root-protected release root and `system/com.auth-service`; secret references preserved | external repo authority, immutable build and installed entry cleanup; no incidental Grant/schema/DB mutation |
-| svc-workflow | exact binary slot and `gui/502/com.svc-workflow` or separately accepted migrated identity | external repo authority and caller-write revocation; DB/reconciliation remains separately authorized |
+| svc-workflow | exact binary slot under a separately accepted service identity/domain inaccessible to caller lifecycle control; current `gui/502` target disabled | external repo authority, caller-write and lifecycle/signal revocation; DB/reconciliation remains separately authorized |
 
 No profile is enabled by this table. Grant/identity/domain reconciliation cannot
 be squeezed into deployment; dependent units wait for independently evidenced
@@ -394,18 +429,18 @@ behavior occurs, required proof is missing, or expected state/receipt differs.
 | Acceptance | Contracts | Method / required evidence | Environment | Expected result and rejecting counterexample |
 |---|---|---|---|---|
 | ACC-DCP-001 | 001 | producer pagination/CAS/disconnection tests + import receipts | F | full registered census; missing watermark blocks exhaustive claim; merged title cannot enqueue |
-| ACC-DCP-002 | 002,003 | concurrent same-artifact submission, late Goal, supersession/revert fixtures; install/restart counters | F/M | one install/restart; immutable coverage; newer SHA with reverted Goal cannot collapse |
+| ACC-DCP-002 | 002,003 | duplicate requests, late Goal, A→B→A, supersession/revert fixtures; intent/install/restart counters | F/M | one successful install per intent; already-installed artifact has zero reinstall; A→B→A gets a fresh authorized intent; reverted Goal cannot collapse |
 | ACC-DCP-003 | 004,006 | authentic and forged lineage/build/review receipts; source drift and revocation tests | F/M | unrelated main drift accepted; self-PASS, stale epoch, revoked source and missing build proof rejected |
 | ACC-DCP-004 | 005,008 | traversal/case collision/link/special-file/oversize/ACL fixtures and swap during admission/hash/apply | M | zero out-of-profile writes; same opened bytes installed; mismatch rejected before mutation |
 | ACC-DCP-005 | 007 | real Unix socket peer identities, bad fields, uid spoof, shared-uid ownership and disconnect/retry | M | declarative scoped API; durable dedupe ACK; caller data cannot choose identity/root command |
 | ACC-DCP-006 | 008,017,019 | inject environment/path/command/launch target/chmod params and writable dependency; exact sudoers parser check | M/P | all rejected; no arbitrary root execution, no NOPASSWD ALL, no interactive normal sudo |
 | ACC-DCP-007 | 009,010 | concurrent independent targets and legacy callers; phase trace from precheck through finalize | M | maximum mutator=1 for entire transaction; no between-phase unlock or inherited-string bypass |
 | ACC-DCP-008 | 010 | DAG cycle, failed prerequisite, same-target conflict, FIFO starvation and explicit continue-policy fixtures | F | dependents never run; default STOP; only proven independent units continue under selected policy |
-| ACC-DCP-009 | 011,020 | kill daemon/worker at every durable edge, disk/fsync fault, hung external action and reboot simulation | M | readback recovery or quarantine; no replay, no automatic stale lock unlink, bounded attempts |
+| ACC-DCP-009 | 010,011,020 | kill at every durable edge, disk/fsync/hung-action faults; known rollback/remediation, budget exhaustion and repeated request IDs | M | verified bounded re-admission and STOP_TRAIN resumption; unknown stays quarantined; caller cannot reset budget; no blind replay or stale lock unlink |
 | ACC-DCP-010 | 012,013 | fresh preimage drift, partial install, restart timeout, readback failure and rollback drift | M/P | exact rollback or explicit unsafe quarantine; preserve secrets/adjacent files; real generation proof |
 | ACC-DCP-011 | 014,015 | mixed Goal PASS/FAIL, required external acceptance, unknown canary, late coverage and closure transport failure | F/M/P | successful Goals close after finalize; failures remain blocked; retry verification/outbox causes zero installs/messages replay |
 | ACC-DCP-012 | 016,017 | standing-authority truth table and explicit denied bootstrap/control-plane self-update | F/M/P | normal rule-authorized release needs no per-head Owner action; missing activation stays disabled |
-| ACC-DCP-013 | 018 | entry inventory + source negative tests + installed permissions/sudoers/launchd readback + legacy invocation probes | M/P | every enrolled legacy direct writer denied/noncanonical; omitted/unreadable surface prevents global PASS |
+| ACC-DCP-013 | 018 | entry inventory; file/sudoers checks; legacy invoke, direct launchctl/restart and same-UID signal denial under actual caller identities | M/P | every enrolled direct writer/lifecycle bypass denied; gui/502 caller-owned service cannot enroll; omitted/unreadable surface prevents global PASS |
 | ACC-DCP-014 | 019,020 | transition sunset, quota exhaustion, retention pin, malformed journal and long-running verifier | F/M/P | bounded fail-closed behavior; transition rule removed; live/preimage evidence preserved |
 
 Reverse coverage: CTR-001→ACC-001; 002/003→002; 004→003; 005→004;

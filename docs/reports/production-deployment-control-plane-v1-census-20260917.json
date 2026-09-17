@@ -58,6 +58,13 @@
       "uid": 502,
       "gid": 20,
       "mode": "0o755"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/operator-scripts/scheduler-watchdog-production-phase2-d602b59-sudo.sh",
+      "sha256": "5a9c6090fdf8b5a86dfd5b0e5456d6718d6b156eed28c1c25d2a9e9c88045cb3",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o700"
     }
   ],
   "services": [
@@ -191,6 +198,10 @@
       "gid": 20,
       "mode": "0o755",
       "symlink": false
+    },
+    {
+      "path": "/var/run/agent-deployd/control.sock",
+      "error": "FileNotFoundError"
     }
   ],
   "runtime_metadata": [
@@ -230,5 +241,6 @@
       "SCHEDULER_ROUTING_READER_GID": "20",
       "AGENT_CORE_DEPLOYED_SHA": "81d5ab9aaffb8fc16cfc6450bde569ca6eb67124"
     }
-  ]
+  ],
+  "supplement_observed_at": "2026-09-17T02:00:06.218574+00:00"
 }
