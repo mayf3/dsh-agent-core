@@ -8,3 +8,5 @@ pub mod transaction;
 
 #[cfg(test)]
 extern crate self as deployment_control_plane;
+
+pub mod service;

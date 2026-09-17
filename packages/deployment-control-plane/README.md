@@ -348,3 +348,93 @@ does not silently clear an existing host mutation-quarantine latch.
 A terminal rollback/Queue gap is explicitly quarantined; incomplete/corrupt
 finalization retains the unit fence and host mutation quarantine. Test-only
 EIO-at-fsync and truncated-record injection are not hardware-failure evidence.
+
+## Task 3 daemon, protected intake and acceptance
+
+`agent-deployd` has exactly two entries: no arguments uses the compiled production
+paths; `--sandbox` uses the current directory only after `FixtureRoots` proves it
+is non-root and private in Darwin's kernel-selected temporary tree. The sandbox
+does not install or select a production service. Production requires the protected
+activation proof before Queue/executor startup. The daemon takes a separate
+permanent `daemon.lock` singleton before cleaning an abandoned socket; it never
+unlinks `production.lock`. Guarded Executor recovery precedes listening/admission.
+
+`agent-deployctl [--sandbox] <operation> <request-id> <catalog-digest>` uses the same
+fixed socket. Allowed operations are `submit`, `status`, `receipt`,
+`cancel-pending`, `retry-verification`. Requests use a four-byte big-endian length,
+then strict JSON `{version:1,request_id,operation:{op,...}}`; the digest field is
+`proposal_digest`, `digest`, or `unit_id` for the corresponding operation. The
+socket accepts no proof blob, actor/UID, command, environment, path or root override.
+Kernel `getpeereid` must match one protected caller entry. One UID has one `uid-N`
+actor scope, even when several Agents share it; duplicate UID configuration refuses.
+Socket group access is additional to the UID/effective-GID/profile/producer binding.
+Status includes actor-authorized `receipt_digests`; receipt export contains only the
+closed typed records, never private preimages, key bytes or external message bodies.
+
+Transport bounds are 64 KiB / depth 16, a one-second total frame read deadline,
+four concurrent connections per UID, 32 total and 120 connections per UID/minute.
+Queue's existing admission quotas remain independently enforced. Status runs on
+separate workers from Train; SQLite operations retain their bounded busy timeout.
+Protected intake/configuration records have a separate 32 MiB / depth 32 bound;
+this does not narrow the Executor's admitted 4096-slot manifest limit. Responses
+are bounded to 8 MiB. Mailbox directories retain at most 8192 entries; no automatic
+GC removes referenced evidence. Disk/flush errors remain refusals.
+
+The protected `service.json` is `service::Configuration`: Catalog, numeric callers,
+nonempty producer IDs, typed verifier bindings and socket GID. Files beneath the
+fixed protected state root are descriptor-validated and not caller-selected:
+
+- `intake/proposals/<canonical-Proposal-digest>.json`: original signed Proposal.
+  The daemon retains exact content-addressed copies under `admitted/` before ACK;
+  the Queue's existing durable dedupe therefore works after upstream disappearance.
+- `intake/snapshots/<producer>-<revision>.json`: signed complete ProducerSnapshot,
+  ingested by exact monotonic CAS, at most 16 per producer/poll. Complete pagination
+  checks every registered watermark. An unavailable producer never means exhaustive.
+- `intake/policies/<profile>.json`: current signed policy, fetched again with the
+  permanent host guard held immediately before apply or late verification.
+- `requests/<digest>.json`: immutable `read-existing-acceptance` observation request
+  with unit/Goal/acceptance/attachment/attempt/physical generation and next receipt
+  CAS revision. `intake/results/<digest>.json` supplies the accepted verifier's
+  signed GoalReceipt. This asks for an existing result; it conveys no canary or
+  business-write authority. Requests for unknown results are never resent.
+- `closure/<outbox-id>.json`: durable eligible PASS outbox record. Only an exact
+  producer-signed CAS acknowledgement in `intake/acks/<outbox-id>.json` marks it
+  delivered. Local publication is not producer closure. Unavailable delivery stays
+  pending and never reinstalls. Bootstrap must provision actual protected adapters
+  capable of exchanging these files with the independent upstream services.
+
+Typed verification is either `external-observation` with a positive deadline no
+larger than 2000 ms, or `native-installed-readback` with the profile's accepted
+Verifier issuer. Native readback accepts only the Executor-proven byte/process
+face, using a separately provisioned 0600 key, with public-key/role/scope checked before apply, at `verifier-keys/<issuer>.json`;
+it is suitable only when that check is the Goal's accepted contract. It must not
+be configured for a business Goal requiring external semantics. No arbitrary health
+command, subprocess verifier, external message, Grant or domain mutation is emitted.
+All covered acceptance runs share a five-second external wait budget and one host
+guard through finalize. Late acceptance calls `verify_installed` and uses its current
+restoration binding, rather than a historical process generation.
+
+Absent external acceptance creates an explicit protected daemon observation:
+`issuer="daemon-observation", signature="", outcome=WaitingExternalAcceptance`.
+This is intentionally **not a verifier signature** and needs no shared external
+private key. Its private Queue entry permits WAITING only; public `record_goal`
+still requires the accepted Verifier's valid signature. The same immutable receipt
+CAS history binds all unit/Goal/attempt/attachment/process coordinates. It cannot
+close a Goal or satisfy a semantic dependency. Later authentic acceptance advances
+that revision under physical readback. OutcomeUnknown remains non-overwritable and
+quarantines the lane. Pure FAIL/WAITING permits the shared proven install to finalize;
+only independent PASS receipts create closure entries.
+
+Production additionally requires `daemon-activation.json`, an Authority-signed
+`DaemonActivation` payload (signing domain `agent-deployd:v1:DaemonActivation:`):
+`epoch`, `configuration_digest`, `enrollment_digest`, `owner_acceptance_digest`,
+`issuer_bindings_digest`. Epoch must be positive; its authority key needs `bootstrap`
+scope. The daemon verifies its signature and exact configuration/native-enrollment/
+issuer-bindings digests and canonical `/var` alias. `issuer-bindings.json` is a
+protected, activation-bound adoption evidence document, not self-authenticating
+proof of upstream isolation. Task 4's separately reviewed bootstrap must establish
+its actual key custody/source/role facts and provision every directory, singleton,
+mutex, socket owner/group and canonical executable dependency. This code generates
+no keys, acceptance evidence, activation files, root directory or launchd job.
+Unknown real upstream issuers remain a production blocker; fixture keys establish
+only nonproduction behavior. Native Executor profile limitations remain unchanged.

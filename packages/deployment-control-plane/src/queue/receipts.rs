@@ -77,11 +77,42 @@ impl Queue {
         })
     }
     pub fn record_goal(&self, catalog: &Catalog, receipt: &Signed<GoalReceipt>) -> Result<String> {
+        self.store_goal(catalog, receipt, false)
+    }
+    /// Protected daemon observation, never a verifier signature or acceptance authority.
+    pub(crate) fn daemon_record_waiting(
+        &self,
+        catalog: &Catalog,
+        receipt: GoalReceipt,
+    ) -> Result<String> {
+        require(
+            receipt.outcome == GoalOutcome::WaitingExternalAcceptance,
+            "OBSERVATION_CANNOT_ACCEPT",
+        )?;
+        self.store_goal(
+            catalog,
+            &Signed {
+                issuer: "daemon-observation".into(),
+                payload: receipt,
+                signature: String::new(),
+            },
+            true,
+        )
+    }
+    fn store_goal(
+        &self,
+        catalog: &Catalog,
+        receipt: &Signed<GoalReceipt>,
+        observation: bool,
+    ) -> Result<String> {
         self.transaction(|tx| {
             let r = &receipt.payload;
             let s = read_status(tx,&r.unit_id)?;
             require(matches!(s.state,State::Verifying|State::Finalizing|State::Applied),"NOT_VERIFYING")?;
-            verify_signed(receipt,catalog,&s.unit.deployment_profile)?;
+            if observation {
+                require(receipt.issuer == "daemon-observation" && receipt.signature.is_empty()
+                    && r.outcome == GoalOutcome::WaitingExternalAcceptance, "OBSERVATION_CANNOT_ACCEPT")?;
+            } else { verify_signed(receipt,catalog,&s.unit.deployment_profile)?; }
             valid_digest(&r.evidence_digest)?;
             let coverage: Option<String> = tx.query_row("SELECT record FROM coverage WHERE unit=? AND goal=?", (&r.unit_id,&r.goal_id), |r|r.get(0)).optional()?;
             let g: Signed<ReadyRecord> = parse(coverage.ok_or(Error::new("GOAL_COVERAGE"))?)?;
@@ -98,7 +129,7 @@ impl Queue {
                 require(r.service_generation==transaction.new_service_generation,"GOAL_READBACK_MISMATCH")?;
             }
             let p = catalog.profiles.get(&s.unit.deployment_profile).ok_or(Error::new("PROFILE_NOT_ALLOWED"))?;
-            require(p.goal_verifiers.get(&g.payload.coverage.verification_profile) == Some(&receipt.issuer),"VERIFIER_SCOPE")?;
+            require(observation || p.goal_verifiers.get(&g.payload.coverage.verification_profile) == Some(&receipt.issuer),"VERIFIER_SCOPE")?;
             require(r.acceptance_revision == g.payload.coverage.acceptance_revision
                 && r.target_generation == s.unit.expected_target_generation+1,"RECEIPT_BINDING")?;
             if s.state == State::Applied {

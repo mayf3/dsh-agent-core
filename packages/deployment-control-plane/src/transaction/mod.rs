@@ -44,6 +44,17 @@ impl Executor {
             active: None,
         })
     }
+    /// Private, non-root fixture targets share the host state and permanent lock.
+    /// Target identifiers come only from the fixture catalog, never socket paths.
+    pub(crate) fn fixture_target(roots: &FixtureRoots, target: &str) -> Result<Self> {
+        crate::trust::valid_id(target)?;
+        let mut executor = Self::fixture(roots)?;
+        executor.target = TargetRoot {
+            dir: roots.root.mkdir("targets")?.mkdir(target)?,
+        };
+        executor.journals = roots.root.mkdir("transactions")?.mkdir(target)?;
+        Ok(executor)
+    }
     /// Task 3 may call only after validating the root-owned activation against Catalog.
     /// All physical roots remain compiled; no runtime path or command selection.
     pub fn production(profile: &Profile) -> Result<Self> {

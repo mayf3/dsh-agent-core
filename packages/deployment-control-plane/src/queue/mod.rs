@@ -97,3 +97,5 @@ fn bump(tx: &Transaction<'_>, key: &str) -> Result<u64> {
 mod executor_recovery;
 
 mod physical;
+
+mod service;
