@@ -97,7 +97,7 @@ accepted interfaces, keeping Task 1 behavior passing.
 accepts fixed reviewed profile enums, never command strings. A fixture driver must
 be isolated, unprivileged and clearly named; it cannot select production targets.
 
-- [ ] Write failing real filesystem tests: every ancestor symlink, hardlink/special
+- [x] Write failing real filesystem tests: every ancestor symlink, hardlink/special
   file, ACL, absolute/parent/Unicode/case duplicate names, missing/extraneous slot,
   oversized/mutating input, caller-writable root dependency; sentinel outside root
   remains unchanged. Use openat/fstat/renameat relative to retained descriptors;
@@ -106,22 +106,22 @@ be isolated, unprivileged and clearly named; it cannot select production targets
   assert!(import_adversarial_bundle(&private_root).is_err());
   assert_eq!(std::fs::read(&outside_sentinel)?, original);
   ```
-- [ ] Implement fixed-origin artifact intake with pre/post SHA, protected atomic seal,
+- [x] Implement fixed-origin artifact intake with pre/post SHA, protected atomic seal,
   full file/type/owner/mode/ACL checks and same-fd reads. Use profile-owned slot mapping
   for install destinations; bundle cannot add executable hooks or filesystem paths.
-- [ ] Write real multi-process lock/crash tests. One permanent inode/descriptor lock
+- [x] Write real multi-process lock/crash tests. One permanent inode/descriptor lock
   covers authoritative precheck through acceptance/finalize/rollback. Killing a
   holder releases OS lock but leaves durable nonterminal intent that blocks new work
   until recovery. No environment/string inheritance seam or stale lock unlink.
-- [ ] Implement complete preimage (ABSENT markers, code/config metadata/service state),
+- [x] Implement complete preimage (ABSENT markers, code/config metadata/service state),
   flushed write-intent/per-slot journal, temporary+rename+fsync install, readback,
   fixed absolute launchctl argv with bounded child ownership, exact generation proof,
   rollback CAS and startup recovery. Unknown effects quarantine, not replay.
-- [ ] Inject failures at each durable edge, partial install, restart timeout, rollback
+- [x] Inject failures at each durable edge, partial install, restart timeout, rollback
   drift, disk failure. Verify exact restoration or explicit quarantine, bounded
   attempts and no unrelated writes. Known fully restored failure may retry under
   the same daemon intent only with fresh verified remediation and remaining budget.
-- [ ] Run Task 1 and filesystem/transactions suites; commit evidence and interface report.
+- [x] Run Task 1 and filesystem/transactions suites; commit evidence and interface report.
 
 ## Task 3: daemon, Train, producer clients and independent Goal closure
 
@@ -211,3 +211,19 @@ affected ACK test 1/1 and format check passed. Evidence and both reviews are ret
 under `.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/`.
 `CORE_REVIEW_PASS=YES`; overall implementation/security/bootstrap readiness remains
 pending Tasks 2–4. Accepted Spec and production state were not mutated by this work.
+
+## Task 2 checkpoint
+
+Bounded native app-file executor and transaction recovery implementation completed
+at2ea68163b627d1b6a1a09333fc0606eb8f275172. Independent task review: initial
+T2-B01/B02/B03 addressed atc56925a; repair-introduced T2-R01 addressed at2ea6816,
+scoped spec/quality PASS with no open IDs. Full owned suite72/72 atc569; affected
+suite73/73 at2ea with unchanged maximum-slot test deliberately filtered. Reports
+and raw evidence are retained in the plan workspace in Git.
+
+This checkpoint covers regular app slots with protected existing parent directories
+and the fixed Runtime/W1/W2 executor, not complete adoption of every proposed profile.
+Unsupported facets and root/native live-proof limits remain in task-2-report.md;
+Tasks3/4 must implement or explicitly exclude them from each exact proposed adopted
+profile without claiming unsupported profile readiness. Whole-branch security review,
+bootstrap readiness and production authority remain pending.
