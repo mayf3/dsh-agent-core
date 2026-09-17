@@ -257,11 +257,8 @@ export class Scheduler {
         }
         const retry = retryCandidate({ job, occurrences: this.doc.occurrences, nowMs: now })
         if (retry && !retry.exhausted) {
-          if (retry.due) {
-            // retryEligibleAtMs is the retry candidate's durable receipt
-            // coordinate (C-SH-002): it has no nominal slot of its own.
-            candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId, retryEligibleAtMs: retry.eligibleAtMs })
-          }
+          // retryEligibleAtMs = the retry candidate's receipt coordinate (C-SH-002).
+          if (retry.due) candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId, retryEligibleAtMs: retry.eligibleAtMs })
           continue
         }
         if (retry?.staleRevision) {
