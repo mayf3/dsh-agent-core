@@ -55,7 +55,7 @@ transition/receipt/goal-outbox methods. Publish concrete signatures in README/re
 for Task 2/3. All externally mutable state changes are database transactions with
 foreign keys and FULL synchronous durable writes; no caller-supplied SQL.
 
-- [ ] Write and run failing authority tests before verifier implementation.
+- [x] Write and run failing authority tests before verifier implementation.
   Required observable examples: forged signature, changed signed payload, author
   self-review, expired/replayed epoch, wrong artifact/source/profile, missing Goal
   coverage, unknown ID/path/command field; all reject with no admitted unit.
@@ -65,11 +65,11 @@ foreign keys and FULL synchronous durable writes; no caller-supplied SQL.
   assert_eq!(result.unwrap_err().code(), "ARTIFACT_MISMATCH");
   assert_eq!(queue.unit_count().unwrap(), 0);
   ```
-- [ ] Implement signed producer snapshot/CAS/watermark completeness, trusted canonical
+- [x] Implement signed producer snapshot/CAS/watermark completeness, trusted canonical
   lineage/build/review binding, policy freshness ≤300s and monotonic anti-replay.
   Accepted/source/review claims must be actual signed structured records rather than
   caller booleans. Readiness registration validates producer identity and revision.
-- [ ] Write and run failing queue tests: concurrent identical requests; same-artifact
+- [x] Write and run failing queue tests: concurrent identical requests; same-artifact
   multi-Goal collapse and late attachment; exact coverage vs reverted source;
   A→B→A new daemon intent; caller cannot reset retries; DAG/cycle/missing dependency;
   FIFO age inheritance; failure STOP/explicit CONTINUE; dependency semantic receipts.
@@ -78,11 +78,11 @@ foreign keys and FULL synchronous durable writes; no caller-supplied SQL.
   assert_eq!(submit(request.clone())?.unit_id, submit(request)?.unit_id);
   assert_eq!(queue.install_intents_for_target("fixture-runtime")?, 1);
   ```
-- [ ] Implement immutable descriptor identity, actor-bound transport idempotency,
+- [x] Implement immutable descriptor identity, actor-bound transport idempotency,
   daemon-owned intent/attempt sequence, bounded 3 preflight/2 mutating attempts,
   protected journal/Goal outcomes/outbox, revision CAS and quotas. No user PID or
   outcome claim unlocks quarantine. Preserve dedupe across reopen/crash.
-- [ ] Run `cargo test --manifest-path packages/deployment-control-plane/Cargo.toml
+- [x] Run `cargo test --manifest-path packages/deployment-control-plane/Cargo.toml
   --test authority --test queue`; commit code and full RED/GREEN evidence in report.
 
 ## Task 2: native filesystem boundary and transaction engine
@@ -201,3 +201,13 @@ Task 1 owns CTR 001–004/006/010 and durable parts of 011/015/020; Task 2 owns
 gets integration tests in Task 3/4. No Contract is satisfied solely by a type or test
 name. Stop only at genuine privileged bootstrap authorization, an irreducible
 authority/security blocker, or requested BOOTSTRAP_READY delivery.
+
+## Task 1 checkpoint — 2026-09-17
+
+Trusted core implemented at `2624e16`, repaired at `9dc5e3c381e5229a70011fe8f65ac0430f872175`.
+Independent initial review froze six concrete blockers; all six closed in one repair
+and scoped re-audit by `/root/dcp_core_review`. Core owned suite 37/37 plus final
+affected ACK test 1/1 and format check passed. Evidence and both reviews are retained
+under `.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_IMPLEMENTATION_PLAN/`.
+`CORE_REVIEW_PASS=YES`; overall implementation/security/bootstrap readiness remains
+pending Tasks 2–4. Accepted Spec and production state were not mutated by this work.
