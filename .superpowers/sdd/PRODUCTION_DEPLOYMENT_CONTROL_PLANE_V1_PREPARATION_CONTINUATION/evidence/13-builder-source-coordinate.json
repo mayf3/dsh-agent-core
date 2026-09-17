@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-09-17T23:26:47.383348+00:00",
+  "path": "/Users/yanfenma/workspace/project/dsh-agent-core/scripts/production-candidate-runner.mjs",
+  "exists": true,
+  "checkout_head": "e9699aee6beb1d6811e3a77f0cb4c08088241348",
+  "sha256": "90f82a68d51c67e43c10b9f20041790b51701b9081c19e87a9cd53d10e8c36f0",
+  "size": 29204,
+  "tracked_index": true,
+  "head_contains_file": true,
+  "status": "",
+  "interpretation": "Local inspected source only; not necessarily committed/canonical accepted build capability."
+}

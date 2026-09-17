@@ -34,10 +34,15 @@ distinct service/key/role bindings and custody receipts, then nine independently
 anchored prerequisite proofs at309–352. OAuth authentication alone cannot prove
 build isolation, review independence, source truth or those DCP signatures.
 
-The existing dsh `scripts/production-candidate-runner.mjs:357–388` derives immutable
+At dsh Git objecte9699aee6beb1d6811e3a77f0cb4c08088241348, the clean tracked
+`scripts/production-candidate-runner.mjs:357–388` derives immutable
 source/toolchain/architecture/closure hashes and unsigned text build evidence;
 `:600–608` hashes supplied test/audit receipts. It can be reused inside an actual
 trusted build service; its present caller-supplied evidence is not an issuer.
+The file is absent from candidate14a9890 and cached origin/main3c7b169; this is
+an explicit historical-source reuse candidate, not already integrated code.
+Evidence13 pins its29,204 bytes and SHA256
+`90f82a68d51c67e43c10b9f20041790b51701b9081c19e87a9cd53d10e8c36f0`.
 Broker `packages/broker/src/credential-store.js:135–177` exposes credential metadata
 only and explicitly does not prove Auth/grant validity. Protected credentials for
 other purposes cannot be repurposed into DCP authority.
