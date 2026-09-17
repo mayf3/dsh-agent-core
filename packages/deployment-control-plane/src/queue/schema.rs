@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS goal_receipts(unit TEXT NOT NULL REFERENCES units(id)
 CREATE TABLE IF NOT EXISTS installed(target TEXT PRIMARY KEY, unit TEXT NOT NULL REFERENCES units(id), generation INTEGER NOT NULL, receipt TEXT NOT NULL REFERENCES receipts(digest));
 CREATE TABLE IF NOT EXISTS physical_current(target TEXT PRIMARY KEY REFERENCES installed(target), receipt TEXT NOT NULL REFERENCES receipts(digest));
 CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY, unit TEXT NOT NULL REFERENCES units(id), goal TEXT NOT NULL, producer TEXT NOT NULL, expected_revision INTEGER NOT NULL, receipt TEXT NOT NULL REFERENCES receipts(digest), delivered INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS executor_pending(unit TEXT PRIMARY KEY REFERENCES units(id));
 CREATE TABLE IF NOT EXISTS pauses(unit TEXT PRIMARY KEY REFERENCES units(id));
 CREATE TRIGGER IF NOT EXISTS immutable_policy_update BEFORE UPDATE ON policy_history BEGIN SELECT RAISE(ABORT,'immutable'); END;
 CREATE TRIGGER IF NOT EXISTS immutable_policy_delete BEFORE DELETE ON policy_history BEGIN SELECT RAISE(ABORT,'immutable'); END;

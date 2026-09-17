@@ -1,0 +1,89 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.79s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.76s
+
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=14
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=15
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=16
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=17
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=18
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=19
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_POINT=queue-RollingBack
+
+running 1 test
+rollback: recovered RolledBack, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_POINT=queue-RolledBack
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.35s
+
+
+running 1 test
+finalize: recovered Applied, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_EDGE=14
+
+running 1 test
+finalize: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=queue-Finalizing
+
+running 1 test
+finalize: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=transaction-receipt
+
+running 1 test
+finalize: recovered Applied, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=queue-Applied
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 1.19s
+
+
+running 1 test
+
+thread 'transaction::faults::every_rollback_finalize_and_projection_boundary_is_crash_fenced' (72745540) panicked at src/transaction/../../test/transaction_faults.rs:232:9:
+assertion `left == right` failed: unrelated finalized A closure was hidden
+  left: 0
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test transaction::faults::every_rollback_finalize_and_projection_boundary_is_crash_fenced ... FAILED
+
+failures:
+
+failures:
+    transaction::faults::every_rollback_finalize_and_projection_boundary_is_crash_fenced
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 14.21s
+
+error: test failed, to rerun pass `--lib`

@@ -1,0 +1,699 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.58s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 14 tests
+test transaction::faults::lifecycle_worker ... ok
+test transaction::faults::owned_timeout_worker ... ok
+test transaction::crashes::crash_worker ... ok
+test transaction::process::tests::kernel_exit_watch_is_birth_bound_and_receives_actual_exit ... ok
+test transaction::process::tests::real_timeout_kills_and_reaps_the_exact_owned_child ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.21s
+
+durable edge 1/13: real directory EACCES, no recovery replay, lane blocked
+test transaction::crashes::fully_observed_prewrite_crash_settles_without_replay ... ok
+apply-fault: recovered Blocked, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 1
+test transaction::faults::owned_timeout_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.75s
+
+timeout: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+
+thread 'transaction::finalization_tests::internal_applied_is_not_public_success_or_dependency_until_finalized' (72754730) panicked at src/transaction/../../test/common/mod.rs:188:40:
+called `Result::unwrap()` on an `Err` value: Error { code: "PRODUCER_CAS" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.92s
+
+test transaction::faults::owned_action_timeout_reaches_transaction_quarantine_and_no_replay ... ok
+test transaction::finalization_tests::internal_applied_is_not_public_success_or_dependency_until_finalized ... FAILED
+test transaction::repair::preflight_crash_retains_evidence_and_allows_same_intent_retry ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.14s
+
+apply-fault: recovered Recovering, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 1
+durable edge 2/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 1/13: process exit 75, OS lock reacquired, Blocked, no replay
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=14
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.15s
+
+apply-fault: recovered Quarantined, Some("RECOVERY_BINDING"), attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 2
+durable edge 3/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 2/13: process exit 75, OS lock reacquired, RolledBack, no replay
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.20s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 2
+durable edge 4/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 3/13: process exit 75, OS lock reacquired, Quarantined, no replay
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=15
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.25s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 3
+durable edge 5/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 4/13: process exit 75, OS lock reacquired, Quarantined, no replay
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=16
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.21s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 3
+durable edge 5/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 6/13: real directory EACCES, no recovery replay, lane blocked
+
+running 1 test
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=17
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.22s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 4
+durable edge 6/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 7/13: real directory EACCES, no recovery replay, lane blocked
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.24s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 4
+durable edge 7/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 8/13: real directory EACCES, no recovery replay, lane blocked
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=18
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.24s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 5
+durable edge 9/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 8/13: process exit 75, OS lock reacquired, Quarantined, no replay
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=19
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.23s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 5
+
+running 1 test
+durable edge 10/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 9/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.22s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_POINT=queue-RollingBack
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 6
+durable edge 11/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 10/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.25s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 6
+durable edge 12/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 11/13: process exit 75, OS lock reacquired, Quarantined, no replay
+rollback: recovered RolledBack, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_POINT=queue-RolledBack
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.31s
+
+
+running 1 test
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 7
+durable edge 12/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 13/13: real directory EACCES, no recovery replay, lane blocked
+test transaction::crashes::actual_directory_write_denial_at_each_edge_blocks_unreceipted_mutation ... ok
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.38s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.25s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 7
+
+running 1 test
+durable edge 13/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+finalize: recovered Applied, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_EDGE=14
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.25s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 8
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.28s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 8
+finalize: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=queue-Finalizing
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.26s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 9
+finalize: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=transaction-receipt
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.23s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 9
+finalize: recovered Applied, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=queue-Applied
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.19s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 10
+finalize: recovered Applied, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=closure-eligible
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.19s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 10
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.21s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 11
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.55s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.22s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 11
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.20s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 12
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=15
+test transaction::crashes::real_process_exit_at_every_apply_journal_edge_never_replays ... ok
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.35s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 12
+
+running 1 test
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=16
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.43s
+
+apply-fault: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual apply-fault record 13
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.39s
+
+apply-fault: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual apply-fault record 13
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=17
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.52s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.37s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual rollback record 14
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=18
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.43s
+
+rollback: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual rollback record 14
+
+running 1 test
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=19
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.43s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual rollback record 15
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.46s
+
+rollback: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual rollback record 15
+
+running 1 test
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=20
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.47s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual rollback record 16
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.53s
+
+rollback: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual rollback record 16
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=21
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.46s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual rollback record 17
+
+running 1 test
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=22
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.54s
+
+rollback: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual rollback record 17
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.57s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual rollback record 18
+
+running 1 test
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_EDGE=23
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.51s
+
+rollback: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual rollback record 18
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.53s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual rollback record 19
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_POINT=queue-RollingBack
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.53s
+
+rollback: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual rollback record 19
+
+running 1 test
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_POINT=restoration-projection
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.46s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.53s
+
+finalize: recovered Applied, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual finalize record 14
+restore: recovered RolledBack, None, attempts 1/1, physical binding retained, no replay
+actual crash restore: DCP_ARM_POINT=queue-RolledBack
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.32s
+
+finalize: recovered Applied, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual finalize record 14
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.80s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.74s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 15
+
+running 1 test
+test transaction::faults::every_rollback_finalize_and_projection_boundary_is_crash_fenced ... ok
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.69s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 15
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.77s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 16
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.76s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 16
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.74s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 17
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.75s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 17
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.78s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 18
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.82s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 18
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.72s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 19
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.80s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 19
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.88s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 20
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.83s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 20
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.84s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 21
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.79s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 21
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.91s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 22
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.86s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 22
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.86s
+
+restore: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual restore record 23
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.84s
+
+restore: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual restore record 23
+test transaction::faults::failed_sync_and_partial_records_are_retained_and_never_replayed ... ok
+test transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal has been running for over 60 seconds
+4096 admissible slots: 12298 apply records, 20494 rollback lifecycle records reloaded
+test transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal ... ok
+
+failures:
+
+failures:
+    transaction::finalization_tests::internal_applied_is_not_public_success_or_dependency_until_finalized
+
+test result: FAILED. 13 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 261.51s
+
+error: test failed, to rerun pass `--lib`

@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::os::unix::fs::MetadataExt;
 
+pub(crate) const MAX_SLOTS: usize = 4096;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct ArtifactEntry {
@@ -39,7 +41,7 @@ pub struct SealedArtifact {
 impl ArtifactManifest {
     fn validate(&self) -> Result<()> {
         require(
-            self.version == 1 && !self.entries.is_empty() && self.entries.len() <= 4096,
+            self.version == 1 && !self.entries.is_empty() && self.entries.len() <= MAX_SLOTS,
             "INVALID_MANIFEST",
         )?;
         let mut paths = BTreeSet::new();

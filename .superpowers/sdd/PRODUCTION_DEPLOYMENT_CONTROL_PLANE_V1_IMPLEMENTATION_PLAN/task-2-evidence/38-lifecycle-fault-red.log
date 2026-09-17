@@ -1,0 +1,150 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 5 tests
+test transaction::faults::owned_timeout_worker ... ok
+test transaction::faults::lifecycle_worker ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::owned_timeout_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.45s
+
+timeout: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test transaction::faults::owned_action_timeout_reaches_transaction_quarantine_and_no_replay ... ok
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.61s
+
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.61s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.44s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual rollback record 14
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=14
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.46s
+
+rollback: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+test-only partial injection: retained actual rollback record 14
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=15
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.58s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+test-only fsync injection: retained actual rollback record 19
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=16
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.60s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+rollback: recovered Quarantined, Some("INVALID_RECORD"), attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=17
+test-only partial injection: retained actual rollback record 19
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.58s
+
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=18
+
+running 1 test
+
+running 1 test
+
+thread 'transaction::faults::lifecycle_worker' (72737531) panicked at src/transaction/../../test/transaction_faults.rs:85:13:
+failed final sync exposed closure
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test transaction::faults::lifecycle_worker ... FAILED
+
+failures:
+
+failures:
+    transaction::faults::lifecycle_worker
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.48s
+
+
+thread 'transaction::faults::failed_sync_and_partial_records_are_retained_and_never_replayed' (72737365) panicked at src/transaction/../../test/transaction_faults.rs:149:17:
+finalize 14 fsync
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test transaction::faults::failed_sync_and_partial_records_are_retained_and_never_replayed ... FAILED
+rollback: recovered Recovering, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_EDGE=19
+
+running 1 test
+rollback: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_POINT=queue-RollingBack
+
+running 1 test
+rollback: recovered RolledBack, None, attempts 1/1, physical binding retained, no replay
+actual crash rollback: DCP_ARM_POINT=queue-RolledBack
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.32s
+
+
+running 1 test
+finalize: recovered Applied, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_EDGE=14
+
+running 1 test
+finalize: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=queue-Finalizing
+
+running 1 test
+finalize: recovered Quarantined, None, attempts 1/1, physical binding retained, no replay
+actual crash finalize: DCP_ARM_POINT=transaction-receipt
+
+running 1 test
+
+thread 'transaction::faults::every_rollback_finalize_and_projection_boundary_is_crash_fenced' (72737364) panicked at src/transaction/../../test/transaction_faults.rs:119:21:
+unresolved lifecycle exposed closure
+test transaction::faults::every_rollback_finalize_and_projection_boundary_is_crash_fenced ... FAILED
+
+failures:
+
+failures:
+    transaction::faults::every_rollback_finalize_and_projection_boundary_is_crash_fenced
+    transaction::faults::failed_sync_and_partial_records_are_retained_and_never_replayed
+
+test result: FAILED. 3 passed; 2 failed; 0 ignored; 0 measured; 8 filtered out; finished in 10.98s
+
+error: test failed, to rerun pass `--lib`

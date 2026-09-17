@@ -101,6 +101,9 @@ impl Dir {
         Ok(unsafe { File::from_raw_fd(fd) })
     }
     pub fn names(&self) -> Result<Vec<String>> {
+        self.names_bounded(8192)
+    }
+    pub fn names_bounded(&self, limit: usize) -> Result<Vec<String>> {
         // openat(.) creates a distinct directory cursor; dup would share seek state.
         let fd = unsafe {
             libc::openat(
@@ -128,7 +131,7 @@ impl Dir {
             if name != "." && name != ".." {
                 result.push(name);
             }
-            if result.len() > 8192 {
+            if result.len() > limit {
                 unsafe {
                     libc::closedir(dp);
                 }

@@ -46,7 +46,7 @@ impl FixtureRoots {
         MutationGuard::acquire(&self.root, true)
     }
 }
-mod artifact;
+pub(crate) mod artifact;
 pub use artifact::{ArtifactEntry, ArtifactManifest, ArtifactStore, SealedArtifact};
 impl FixtureRoots {
     pub fn artifacts(&self) -> Result<ArtifactStore> {

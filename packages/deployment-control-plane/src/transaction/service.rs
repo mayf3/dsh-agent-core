@@ -63,12 +63,26 @@ impl FixtureService {
     }
     fn start(&mut self, j: &mut Journal) -> Result<()> {
         require(self.child.is_none(), "SERVICE_ALREADY_RUNNING")?;
+        #[cfg(test)]
+        if std::env::var("DCP_TEST_OWNED_TIMEOUT").is_ok() {
+            return super::process::run(
+                j,
+                "fixture-timeout",
+                "/bin/sleep",
+                &["30"],
+                std::time::Duration::from_millis(10),
+            );
+        }
         j.append(Event::OperationIntent {
             action: "fixture-start".into(),
             owner: digest(&identity(std::process::id())?)?,
         })?;
         let child = Command::new("/bin/sleep")
-            .arg(if cfg!(test) { "2" } else { "300" })
+            .arg(if cfg!(test) && std::env::var("DCP_TEST_ROOT").is_ok() {
+                "2"
+            } else {
+                "300"
+            })
             .env_clear()
             .stdin(Stdio::null())
             .stdout(Stdio::null())

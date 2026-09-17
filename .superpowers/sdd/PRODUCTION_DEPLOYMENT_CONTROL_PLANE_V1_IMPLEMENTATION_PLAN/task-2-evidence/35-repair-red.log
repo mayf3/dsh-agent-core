@@ -1,0 +1,27 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.85s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 2 tests
+
+running 1 test
+
+thread 'transaction::repair::preflight_crash_retains_evidence_and_allows_same_intent_retry' (72728995) panicked at src/transaction/../../test/transaction_repair.rs:40:103:
+called `Result::unwrap()` on an `Err` value: Error { code: "TRANSACTION_EXISTS" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test transaction::repair::preflight_crash_retains_evidence_and_allows_same_intent_retry ... FAILED
+test transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal has been running for over 60 seconds
+
+thread 'transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal' (72728994) panicked at src/transaction/../../test/transaction_repair.rs:59:62:
+called `Result::unwrap()` on an `Err` value: Error { code: "SIZE_LIMIT" }
+test transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal ... FAILED
+
+failures:
+
+failures:
+    transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal
+    transaction::repair::preflight_crash_retains_evidence_and_allows_same_intent_retry
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 6 filtered out; finished in 135.62s
+
+error: test failed, to rerun pass `--lib`

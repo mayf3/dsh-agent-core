@@ -12,6 +12,9 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::os::unix::fs::MetadataExt;
 
+// Three install records + two restore records per slot, plus bounded service/phase records.
+pub(crate) const MAX_EVENTS: usize = 5 * crate::fs::artifact::MAX_SLOTS + 256;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) enum Event {
@@ -89,14 +92,34 @@ pub(crate) struct Journal {
     last: String,
 }
 impl Journal {
-    pub fn create(root: &Dir, unit: &str, attempt: u32) -> Result<Self> {
-        let name = format!("{unit}-{attempt}");
-        require(!root.names()?.contains(&name), "TRANSACTION_EXISTS")?;
+    pub fn create(root: &Dir, unit: &str, attempt: u32, preflight: u32) -> Result<Self> {
+        let name = format!("{unit}-{attempt}-{preflight}");
+        let names = root.names()?;
+        require(names.len() < 8192, "JOURNAL_DIRECTORY_LIMIT")?;
+        require(!names.contains(&name), "TRANSACTION_EXISTS")?;
         Ok(Self {
             dir: root.mkdir(&name)?,
             events: vec![],
             last: "0".repeat(64),
         })
+    }
+    pub fn for_receipt(root: &Dir, receipt: &TransactionReceipt) -> Result<Self> {
+        let legacy = format!("{}-{}", receipt.unit_id, receipt.attempt);
+        let prefix = format!("{legacy}-");
+        let expected = digest(receipt)?;
+        let mut found = None;
+        for name in root
+            .names()?
+            .into_iter()
+            .filter(|n| n.starts_with(&prefix) || n == &legacy)
+        {
+            let candidate = Self::load(root, &name)?;
+            if candidate.events.iter().any(|e| matches!(e, Event::Verified { receipt } if digest(receipt).ok().as_ref() == Some(&expected))) {
+                require(found.is_none(), "AMBIGUOUS_TRANSACTION")?;
+                found = Some(candidate);
+            }
+        }
+        found.ok_or(Error::new("NO_VERIFIED_RECEIPT"))
     }
     pub fn load(root: &Dir, name: &str) -> Result<Self> {
         let dir = root.child(name)?;
@@ -105,8 +128,11 @@ impl Journal {
             events: vec![],
             last: "0".repeat(64),
         };
-        let names = result.dir.names()?;
-        require(!names.is_empty() && names.len() <= 20000, "CORRUPT_JOURNAL")?;
+        let names = result.dir.names_bounded(MAX_EVENTS)?;
+        require(
+            !names.is_empty() && names.len() <= MAX_EVENTS,
+            "CORRUPT_JOURNAL",
+        )?;
         for (i, name) in names.iter().enumerate() {
             require(name == &format!("{:06}.json", i + 1), "CORRUPT_JOURNAL")?;
             let raw = snapshot(
@@ -125,8 +151,28 @@ impl Journal {
         }
         Ok(result)
     }
+    pub fn finalized_proof(&self) -> Result<super::VerifiedFinalization> {
+        require(
+            matches!(self.events.last(), Some(Event::Finalized)),
+            "FINALIZATION_PENDING",
+        )?;
+        let receipt = self
+            .events
+            .iter()
+            .rev()
+            .find_map(|e| match e {
+                Event::Verified { receipt } => Some(receipt.clone()),
+                _ => None,
+            })
+            .ok_or(Error::new("NO_VERIFIED_RECEIPT"))?;
+        self.dir
+            .open_file(&format!("{:06}.json", self.events.len()), libc::O_RDONLY, 0)?
+            .sync_all()?;
+        self.dir.file.sync_all()?;
+        Ok(super::VerifiedFinalization(receipt))
+    }
     pub fn append(&mut self, event: Event) -> Result<String> {
-        require(self.events.len() < 20000, "JOURNAL_LIMIT")?;
+        require(self.events.len() < MAX_EVENTS, "JOURNAL_LIMIT")?;
         let sequence = self.events.len() as u64 + 1;
         let record = Record {
             sequence,

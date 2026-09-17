@@ -43,8 +43,10 @@ impl Executor {
                 return Err(e);
             }
         };
+        q.fence_executor_finalization(id)?;
         let attempt = status.mutating_attempts + 1;
-        let mut journal = Journal::create(&self.journals, id, attempt)?;
+        let mut journal =
+            Journal::create(&self.journals, id, attempt, status.preflight_attempts + 1)?;
         let attachments = q.daemon_attachments(id)?;
         let proof = journal.append(Event::Preflight {
             unit: id.into(),
@@ -253,10 +255,7 @@ impl Executor {
     }
     pub(crate) fn verify_live_baseline(&self, q: &Queue, target: &str) -> Result<()> {
         if let Some(receipt) = q.daemon_installed_receipt(target)? {
-            let journal = Journal::load(
-                &self.journals,
-                &format!("{}-{}", receipt.unit_id, receipt.attempt),
-            )?;
+            let journal = Journal::for_receipt(&self.journals, &receipt)?;
             require(journal.terminal(), "RECOVERY_REQUIRED")?;
             let mut bound = Vec::new();
             for event in &journal.events {
