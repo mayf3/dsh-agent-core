@@ -54,13 +54,18 @@ pub struct ServiceEnrollment {
 #[serde(deny_unknown_fields)]
 pub struct EnrolledFile {
     pub path: String,
-    pub sha256: String,
+    pub sha256: Option<String>,
+    pub mutable: bool,
     pub mode: u32,
     pub gid: u32,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NativeEnrollment {
+    pub host: String,
+    pub caller_uids: Vec<u32>,
+    pub lifecycle_denial_digest: String,
+    pub required_facets: Vec<String>,
     pub profile_revision: String,
     pub profile_id: String,
     pub profile_digest: String,
@@ -73,7 +78,11 @@ pub struct NativeEnrollment {
     pub services: Vec<ServiceEnrollment>,
 }
 impl NativeEnrollment {
-    pub(crate) fn validate(&self) -> Result<()> {
+    pub fn validate(&self) -> Result<()> {
+        crate::trust::valid_id(&self.profile_id)?;
+        crate::trust::valid_id(&self.profile_revision)?;
+        crate::trust::valid_digest(&self.profile_digest)?;
+        crate::trust::valid_digest(&self.node_sha256)?;
         require(
             self.loader_files
                 .iter()
@@ -89,7 +98,10 @@ impl NativeEnrollment {
         let mut paths = std::collections::BTreeSet::new();
         for f in &self.initial_files {
             crate::fs::secure::relative(&f.path)?;
-            crate::trust::valid_digest(&f.sha256)?;
+            if let Some(hash) = &f.sha256 {
+                crate::trust::valid_digest(hash)?;
+            }
+            require(f.sha256.is_some() || f.mutable, "PROFILE_NOT_ALLOWED")?;
             require(
                 paths.insert(f.path.to_ascii_lowercase())
                     && matches!(f.mode, 0o644 | 0o755 | 0o600 | 0o400),
@@ -107,6 +119,9 @@ impl NativeEnrollment {
                     ],
             "PROFILE_NOT_ALLOWED",
         )?;
+        for service in &self.services {
+            crate::trust::valid_digest(&service.plist_sha256)?;
+        }
         require(
             self.services[0].uid != 0
                 && self.services[1].uid == self.services[0].uid

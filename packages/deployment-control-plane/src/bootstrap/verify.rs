@@ -21,6 +21,8 @@ use std::{
 pub struct Preflight {
     pub integrity_verified: bool,
     pub bootstrap_ready: bool,
+    pub activation_allowed: bool,
+    pub preparation_digest: Option<String>,
     pub blockers: Vec<String>,
 }
 /// Integrity is relative to the reviewer's pinned digests; never a self-authenticating build claim.
@@ -145,6 +147,8 @@ pub fn verify_bundle(root: &Path, manifest_digest: &str, source_digest: &str) ->
     Ok(Preflight {
         integrity_verified: true,
         bootstrap_ready: false,
+        activation_allowed: false,
+        preparation_digest: None,
         blockers: package.unresolved,
     })
 }

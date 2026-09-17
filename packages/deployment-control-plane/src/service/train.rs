@@ -62,6 +62,7 @@ impl Train {
         // Admission keeps working while a registered producer is disconnected.
         let _ = intake.poll(q);
         intake.deliver(q)?;
+        self.recover_failed(intake, q)?;
         if let Some((id, generation)) = q.daemon_next_verification()? {
             let result = self.verify_late(intake, q, &id);
             q.daemon_finish_verification(&id, generation, result.as_ref().err().map(|e| e.code()))?;
@@ -120,13 +121,45 @@ impl Train {
                 return Err(e);
             }
             Err(e) => {
-                executor.rollback(&guard, q, id)?;
+                executor.rollback_for_failure(&guard, q, id, e.code())?;
                 return Err(e);
             }
         }
         // Same guard is held until Goal observations and final eligibility commit are durable.
         drop(guard);
         intake.deliver(q)
+    }
+    fn recover_failed(&mut self, intake: &Intake, q: &Queue) -> Result<()> {
+        for status in q.daemon_recovery_candidates()? {
+            let id = &status.unit.deployment_unit_id;
+            let Some(executor) = self.executors.get_mut(&status.unit.deployment_profile) else {
+                continue;
+            };
+            let guard = executor.lock()?;
+            // Missing/invalid remediation cannot skip the failed intent or clear STOP.
+            let binding = match executor.recovery_binding(&guard, q, id) {
+                Ok(b) => b,
+                Err(_) => continue,
+            };
+            let request = digest(&binding)?;
+            intake.publish("recovery-requests", &request, &binding)?;
+            match intake.recovery(id, status.revision) {
+                Ok(evidence) => {
+                    let policy = intake.policy(&status.unit.deployment_profile)?;
+                    executor.consume_recovery(
+                        &guard,
+                        q,
+                        &intake.config.catalog,
+                        &evidence,
+                        &policy,
+                        now()?,
+                    )?;
+                }
+                Err(e) if e.code() == "ABSENT" => (),
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(())
     }
     fn verify_late(&mut self, intake: &Intake, q: &Queue, id: &str) -> Result<()> {
         let s = q.daemon_status(id)?;

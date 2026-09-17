@@ -195,13 +195,43 @@ pub fn run(sandbox: bool) -> Result<()> {
     } else {
         PathBuf::from("/private/var/run/agent-deployd")
     };
-    let socket_dir = Dir::open(&socket_parent, uid)?;
+    let protected_socket = if sandbox {
+        None
+    } else {
+        let identities = intake
+            .config
+            .callers
+            .iter()
+            .map(|c| c.uid)
+            .chain([0, 505])
+            .collect();
+        Some(crate::bootstrap::socket::SocketDirectory::open(
+            intake
+                .config
+                .socket_ancestor
+                .as_ref()
+                .ok_or(Error::new("SOCKET_ANCESTOR_REQUIRED"))?,
+            intake.config.socket_gid,
+            &identities,
+        )?)
+    };
+    let socket_dir = if let Some(socket) = &protected_socket {
+        Dir {
+            file: socket.child.file.try_clone()?,
+            uid: 0,
+        }
+    } else {
+        Dir::open(&socket_parent, uid)?
+    };
     if !sandbox {
         require(
             socket_dir.file.metadata()?.mode() & 0o777 == 0o750
                 && socket_dir.file.metadata()?.gid() == intake.config.socket_gid,
             "SOCKET_BINDING",
         )?;
+    }
+    if let Some(socket) = &protected_socket {
+        socket.recheck()?;
     }
     let socket = socket_parent.join("control.sock");
     if let Ok(metadata) = std::fs::symlink_metadata(&socket) {
@@ -230,6 +260,9 @@ pub fn run(sandbox: bool) -> Result<()> {
             unsafe { libc::chown(name.as_ptr(), 0, service.intake.config.socket_gid) } == 0,
             "SOCKET_BINDING",
         )?;
+    }
+    if let Some(socket) = &protected_socket {
+        socket.recheck()?;
     }
     socket_dir.file.sync_all()?;
     let worker = service.clone();

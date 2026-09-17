@@ -42,12 +42,20 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             let verdict=verify_bundle(Path::new(&args[3]),&hash,&source)?;
             println!("{}",serde_json::to_string_pretty(&serde_json::json!({"manifest_digest":hash,"source_digest":source,"verdict":verdict}))?);
         }
+        Some("verify-resolved") if args.len()==9 => {
+            let input:deployment_control_plane::bootstrap::ResolvedPreparation=read_record(&args[6])?;
+            let trust:deployment_control_plane::model::Catalog=read_record(&args[7])?;
+            verify_sources(Path::new(&args[2]),Path::new(&args[5]))?;
+            let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs();
+            let result=deployment_control_plane::bootstrap::verify_resolved(Path::new(&args[2]),&args[3],&args[4],&input,&trust,&args[8],&deployment_control_plane::bootstrap::observed_host()?,now)?;
+            println!("{}",serde_json::to_string_pretty(&result)?);
+        }
         Some("verify") if args.len()==6 => {
             let result=verify_bundle(Path::new(&args[2]),&args[3],&args[4])?;
             verify_sources(Path::new(&args[2]),Path::new(&args[5]))?;
             println!("{}",serde_json::to_string_pretty(&result)?);
         }
-        _=>return Err("usage: agent-deploy-prepare prepare INPUT_JSON NEW_EMPTY_DIR | verify BUNDLE MANIFEST_DIGEST SOURCE_DIGEST CHECKOUT".into()),
+        _=>return Err("usage: agent-deploy-prepare prepare INPUT_JSON NEW_EMPTY_DIR | verify BUNDLE MANIFEST_DIGEST SOURCE_DIGEST CHECKOUT | verify-resolved BUNDLE MANIFEST_DIGEST SOURCE_DIGEST CHECKOUT PREPARATION TRUST PINNED_TRUST_DIGEST".into()),
     }
     Ok(())
 }
@@ -71,4 +79,18 @@ fn bounded(path: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         return Err("INPUT_CHANGED".into());
     }
     Ok(bytes)
+}
+
+fn read_record<T: serde::de::DeserializeOwned>(
+    path: &str,
+) -> Result<T, Box<dyn std::error::Error>> {
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)?
+        .take(4 * 1024 * 1024 + 1)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > 4 * 1024 * 1024 {
+        return Err("SIZE_LIMIT".into());
+    }
+    Ok(serde_json::from_slice(&bytes)?)
 }

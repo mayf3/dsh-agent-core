@@ -119,7 +119,7 @@ fn finalize_joins_goal_receipt_to_attempt_and_process() {
 #[test]
 fn a_different_fixture_mutex_cannot_authorize_apply() {
     let (_tmp, roots, q, c, id) = prepared();
-    let other = tempfile::tempdir().unwrap();
+    let other = common::private::temp();
     fs::set_permissions(
         other.path(),
         <std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700),

@@ -1,3 +1,6 @@
+#[path = "../common/mod.rs"]
+#[allow(dead_code)]
+mod common;
 mod fixture;
 use std::{
     fs,

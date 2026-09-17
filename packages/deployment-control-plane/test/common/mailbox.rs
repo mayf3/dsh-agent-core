@@ -21,7 +21,7 @@ fn arm(call: usize) {
     SYNC.with(|s| s.set((call, 0)));
 }
 fn setup() -> (tempfile::TempDir, Intake) {
-    let d = tempfile::tempdir().unwrap();
+    let d = common::private::temp();
     fs::set_permissions(d.path(), fs::Permissions::from_mode(0o700)).unwrap();
     let roots = FixtureRoots::open(&fs::canonicalize(d.path()).unwrap()).unwrap();
     for area in ["admitted", "closure"] {
@@ -34,6 +34,7 @@ fn setup() -> (tempfile::TempDir, Intake) {
             callers: vec![],
             producers: vec!["producer".into()],
             verifiers: Default::default(),
+            socket_ancestor: None,
             socket_gid: unsafe { libc::getegid() },
         },
     };

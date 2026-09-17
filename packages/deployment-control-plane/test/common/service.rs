@@ -25,7 +25,7 @@ pub fn start() -> Daemon {
     start_with(|_| {})
 }
 pub fn start_with(edit: impl FnOnce(&mut Value)) -> Daemon {
-    let temp = tempfile::tempdir().unwrap();
+    let temp = common::private::temp();
     fs::set_permissions(temp.path(), fs::Permissions::from_mode(0o700)).unwrap();
     let mut config = json!({"catalog": common::fixture_catalog(),
         "callers":[{"uid":unsafe{libc::geteuid()},"gid":unsafe{libc::getegid()},"profiles":["fixture"],"producers":["producer"]}],
@@ -43,6 +43,8 @@ pub fn start_with(edit: impl FnOnce(&mut Value)) -> Daemon {
         "intake/policies",
         "intake/results",
         "intake/acks",
+        "intake/recovery",
+        "recovery-requests",
         "requests",
         "closure",
         "target",

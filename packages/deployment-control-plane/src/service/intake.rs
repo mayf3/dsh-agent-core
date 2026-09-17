@@ -35,6 +35,8 @@ pub struct Configuration {
     pub producers: Vec<String>,
     pub verifiers: BTreeMap<String, VerifierBinding>,
     pub socket_gid: u32,
+    #[serde(default)]
+    pub socket_ancestor: Option<crate::bootstrap::SocketAncestor>,
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -108,8 +110,12 @@ impl Intake {
                 proof.payload.issuer_bindings_digest == digest(&bindings)?,
                 "ISSUER_BINDING",
             )?;
-            // Bootstrap prepares and reviews this exact protected catalog/receipt, not a caller flag.
-            require(config.callers.iter().all(|c| c.uid != 0), "CALLER_BINDING")?;
+            crate::bootstrap::validate_native_binding(
+                &config,
+                &enrollment,
+                &crate::bootstrap::observed_host()?,
+                true,
+            )?;
         }
         Ok(Self { root, config })
     }
@@ -141,6 +147,10 @@ impl Intake {
         require(digest(&p)? == hash, "INTAKE_DIGEST")?;
         self.publish("admitted", hash, &p)?;
         Ok(p)
+    }
+    pub fn recovery(&self, id: &str, revision: u64) -> Result<Signed<RecoveryEvidence>> {
+        valid_digest(id)?;
+        read(&self.area("recovery")?, &format!("{id}-{revision}.json"))
     }
     pub fn policy(&self, profile: &str) -> Result<Signed<Policy>> {
         valid_id(profile)?;

@@ -3,7 +3,6 @@ use super::{
     secure::{relative, Dir},
 };
 use crate::{error::require, Error, Result};
-use std::os::unix::fs::MetadataExt;
 
 pub struct TargetRoot {
     pub(crate) dir: Dir,
@@ -41,8 +40,13 @@ impl Slot {
             Err(e) => Err(e),
         }
     }
-    pub fn prepare(&self, temporary: &str, bytes: &[u8], mode: u32) -> Result<FileImage> {
-        let gid = self.parent.file.metadata()?.gid();
+    pub fn prepare_metadata(
+        &self,
+        temporary: &str,
+        bytes: &[u8],
+        mode: u32,
+        gid: u32,
+    ) -> Result<FileImage> {
         let file = write_new(&self.parent, temporary, bytes, self.parent.uid, gid, mode)?;
         snapshot(&file, self.parent.uid, MAX_FILE)
     }
