@@ -33,7 +33,8 @@ impl Queue {
                 receipt.artifact_sha256 == s.unit.artifact_sha256
                     && receipt.source_sha == s.unit.source_sha
                     && receipt.profile_revision == s.unit.profile_revision
-                    && receipt.review_digests == s.unit.required_reviews
+                    && receipt.review_digests == super::readback::effective_reviews(tx,&receipt.unit_id)?
+                    && receipt.attachment_digests == super::readback::read_attachments(tx,&receipt.unit_id)?.iter().map(|a|a.digest.clone()).collect::<Vec<_>>()
                     && receipt.attempt == s.mutating_attempts
                     && receipt.target_generation == s.unit.expected_target_generation + 1
                     && receipt.dependency_receipts
@@ -62,8 +63,8 @@ impl Queue {
             let hash = digest(receipt)?;
             let old: Option<String> = tx
                 .query_row(
-                    "SELECT digest FROM receipts WHERE unit=? AND kind='transaction'",
-                    [&receipt.unit_id],
+                    "SELECT digest FROM receipts WHERE unit=? AND kind='transaction' AND json_extract(record,'$.attempt')=?",
+                    (&receipt.unit_id,receipt.attempt),
                     |r| r.get(0),
                 )
                 .optional()?;
@@ -84,6 +85,12 @@ impl Queue {
             valid_digest(&r.evidence_digest)?;
             let coverage: Option<String> = tx.query_row("SELECT record FROM coverage WHERE unit=? AND goal=?", (&r.unit_id,&r.goal_id), |r|r.get(0)).optional()?;
             let g: Signed<ReadyRecord> = parse(coverage.ok_or(Error::new("GOAL_COVERAGE"))?)?;
+            let attachment: String=tx.query_row("SELECT attachment FROM coverage WHERE unit=? AND goal=?",(&r.unit_id,&r.goal_id),|row|row.get(0))?;
+            require(r.attachment_digest==attachment && r.attempt==s.mutating_attempts,"GOAL_ATTEMPT_MISMATCH")?;
+            valid_id(&r.service_generation)?;
+            if let Some((_,transaction))=attempt_receipt(tx,&r.unit_id,r.attempt)? {
+                require(r.service_generation==transaction.new_service_generation,"GOAL_READBACK_MISMATCH")?;
+            }
             let p = catalog.profiles.get(&s.unit.deployment_profile).ok_or(Error::new("PROFILE_NOT_ALLOWED"))?;
             require(p.goal_verifiers.get(&g.payload.coverage.verification_profile) == Some(&receipt.issuer),"VERIFIER_SCOPE")?;
             require(r.acceptance_revision == g.payload.coverage.acceptance_revision
@@ -98,7 +105,7 @@ impl Queue {
                 if *revision == r.revision && *raw == json(receipt)? { return digest(receipt); }
                 let old: Signed<GoalReceipt> = parse(raw.clone())?;
                 require(old.payload.outcome != GoalOutcome::OutcomeUnknown,"UNKNOWN_CANARY")?;
-                require(old.payload.outcome != GoalOutcome::Pass,"GOAL_ALREADY_PASSED")?;
+                require(old.payload.outcome != GoalOutcome::Pass || old.payload.attempt != r.attempt,"GOAL_ALREADY_PASSED")?;
             }
             require(r.revision == previous.map(|x|x.0).unwrap_or(0)+1,"GOAL_REVISION_CAS")?;
             let hash = digest(receipt)?;
@@ -163,15 +170,20 @@ impl Queue {
     }
 }
 pub(super) fn finalize(tx: &Transaction<'_>, s: &UnitStatus) -> Result<()> {
-    let (hash, raw): (String, String) = tx
-        .query_row(
-            "SELECT digest,record FROM receipts WHERE unit=? AND kind='transaction'",
-            [&s.unit.deployment_unit_id],
-            |r| Ok((r.get(0)?, r.get(1)?)),
-        )
-        .optional()?
+    let (hash, receipt) = attempt_receipt(tx, &s.unit.deployment_unit_id, s.mutating_attempts)?
         .ok_or(Error::new("TRANSACTION_RECEIPT_REQUIRED"))?;
-    let receipt: TransactionReceipt = parse(raw)?;
+    require(
+        receipt.target_generation == s.unit.expected_target_generation + 1
+            && receipt.artifact_sha256 == s.unit.artifact_sha256
+            && receipt.attachment_digests
+                == super::readback::read_attachments(tx, &s.unit.deployment_unit_id)?
+                    .iter()
+                    .map(|a| a.digest.clone())
+                    .collect::<Vec<_>>()
+            && receipt.review_digests
+                == super::readback::effective_reviews(tx, &s.unit.deployment_unit_id)?,
+        "RECEIPT_BINDING",
+    )?;
     let current: u64 = tx
         .query_row(
             "SELECT generation FROM installed WHERE target=?",
@@ -192,12 +204,27 @@ pub(super) fn finalize(tx: &Transaction<'_>, s: &UnitStatus) -> Result<()> {
         let g: Signed<ReadyRecord> = parse(raw)?;
         let (hash,raw): (String,String) = tx.query_row("SELECT digest,record FROM goal_receipts WHERE unit=? AND goal=? ORDER BY revision DESC LIMIT 1",
             (&s.unit.deployment_unit_id,&g.payload.goal_id), |r|Ok((r.get(0)?,r.get(1)?))).optional()?.ok_or(Error::new("GOAL_RECEIPT_REQUIRED"))?;
-        let receipt: Signed<GoalReceipt> = parse(raw)?;
+        let goal: Signed<GoalReceipt> = parse(raw)?;
+        let attachment: String = tx.query_row(
+            "SELECT attachment FROM coverage WHERE unit=? AND goal=?",
+            (&s.unit.deployment_unit_id, &g.payload.goal_id),
+            |r| r.get(0),
+        )?;
         require(
-            receipt.payload.outcome != GoalOutcome::OutcomeUnknown,
+            goal.payload.attempt == s.mutating_attempts
+                && goal.payload.attachment_digest == attachment,
+            "GOAL_ATTEMPT_MISMATCH",
+        )?;
+        require(
+            goal.payload.target_generation == receipt.target_generation
+                && goal.payload.service_generation == receipt.new_service_generation,
+            "GOAL_READBACK_MISMATCH",
+        )?;
+        require(
+            goal.payload.outcome != GoalOutcome::OutcomeUnknown,
             "UNKNOWN_CANARY",
         )?;
-        if receipt.payload.outcome == GoalOutcome::Pass {
+        if goal.payload.outcome == GoalOutcome::Pass {
             enqueue(tx, &g, &hash, &s.unit.deployment_unit_id)?;
         }
     }
@@ -215,4 +242,16 @@ fn enqueue(
     tx.execute("INSERT OR IGNORE INTO outbox(id,unit,goal,producer,expected_revision,receipt) VALUES (?,?,?,?,?,?)",
         (id,unit,&goal.payload.goal_id,&goal.issuer,goal.payload.revision,receipt))?;
     Ok(())
+}
+
+fn attempt_receipt(
+    tx: &Transaction<'_>,
+    id: &str,
+    attempt: u32,
+) -> Result<Option<(String, TransactionReceipt)>> {
+    let record: Option<(String,String)>=tx.query_row("SELECT digest,record FROM receipts WHERE unit=? AND kind='transaction' AND json_extract(record,'$.attempt')=?",
+        (id,attempt),|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
+    record
+        .map(|(hash, raw)| Ok((hash, parse(raw)?)))
+        .transpose()
 }

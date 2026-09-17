@@ -1,5 +1,5 @@
 use super::*;
-use crate::trust::{digest, validate_policy, validate_proposal};
+use crate::trust::{digest, valid_id, validate_policy, validate_proposal};
 impl Queue {
     pub fn submit(
         &self,
@@ -8,17 +8,19 @@ impl Queue {
         proposal: &Proposal,
         now: u64,
     ) -> Result<Submission> {
+        valid_id(&actor.id)?;
+        valid_id(&proposal.request_id)?;
+        let request_digest = digest(proposal)?;
+        if let Some(result) =
+            self.transaction(|tx| recover_request(tx, actor, proposal, &request_digest))?
+        {
+            return Ok(result);
+        }
         self.observe_policy(catalog, &proposal.deployment_profile, &proposal.policy, now)?;
         let profile = validate_proposal(catalog, actor, proposal, now)?;
-        let request_digest = digest(proposal)?;
         self.transaction(|tx| {
+            if let Some(result)=recover_request(tx,actor,proposal,&request_digest)? { return Ok(result); }
             pin_policy(tx,&proposal.deployment_profile,&proposal.policy)?;
-            let duplicate: Option<(String,String)> = tx.query_row("SELECT digest,result FROM requests WHERE actor=? AND request=?",
-                (&actor.id,&proposal.request_id), |r| Ok((r.get(0)?,r.get(1)?))).optional()?;
-            if let Some((old,result)) = duplicate {
-                require(old == request_digest, "REQUEST_CONFLICT")?;
-                return parse(result);
-            }
             let recent: u64 = tx.query_row("SELECT count(*) FROM requests WHERE actor=? AND created_at>=?",
                 (&actor.id,now.saturating_sub(60)), |r|r.get(0))?;
             require(recent < profile.actor_quota as u64,"ACTOR_RATE_LIMIT")?;
@@ -41,6 +43,8 @@ impl Queue {
                 create_unit(tx,profile,actor,proposal,intent)?
             };
             let attachment = digest(&(unit_id.as_str(),&proposal.goals,&proposal.build,&proposal.reviews))?;
+            let existing_attachment: Option<String>=tx.query_row("SELECT digest FROM attachments WHERE digest=?",[&attachment],|r|r.get(0)).optional()?;
+            require(existing_attachment.is_some() || matches!(read_status(tx,&unit_id)?.state,State::Queued|State::Applied),"ATTACHMENT_DEFERRED")?;
             tx.execute("INSERT OR IGNORE INTO attachments VALUES (?,?,?)", (&attachment,&unit_id,json(proposal)?))?;
             for g in &proposal.goals {
                 let old: Option<String> = tx.query_row("SELECT record FROM coverage WHERE unit=? AND goal=?", (&unit_id,&g.payload.goal_id), |r| r.get(0)).optional()?;
@@ -48,10 +52,11 @@ impl Queue {
                 else { tx.execute("INSERT INTO coverage VALUES (?,?,?,?)", (&unit_id,&g.payload.goal_id,&attachment,json(g)?))?; }
             }
             tx.execute("INSERT OR IGNORE INTO actors VALUES (?,?)", (&unit_id,&actor.id))?;
-            let state = read_status(tx,&unit_id)?.state;
-            let installed: Option<String> = tx.query_row("SELECT unit FROM installed WHERE target=?", [&profile.target_runtime], |r| r.get(0)).optional()?;
+            let status = read_status(tx,&unit_id)?;
+            let state=status.state;
             let result = Submission { unit_id: unit_id.clone(), attachment_digest: attachment,
-                install_required: !(state == State::Applied && installed.as_deref() == Some(&unit_id)) };
+                install_required: installation_pending(state),
+                state, status_revision: status.revision };
             tx.execute("INSERT INTO requests VALUES (?,?,?,?,?)", (&actor.id,&proposal.request_id,request_digest,json(&result)?,now))?;
             Ok(result)
         })
@@ -77,52 +82,14 @@ impl Queue {
     ) -> Result<()> {
         let profile = self.daemon_status(id)?.unit.deployment_profile;
         self.observe_policy(catalog, &profile, policy, now)?;
-        self.transaction(|tx| {
-            let status = read_status(tx, id)?;
-            validate_policy(catalog, &status.unit.deployment_profile, policy, now)?;
-            pin_policy(tx, &status.unit.deployment_profile, policy)?;
-            require(
-                !policy
-                    .payload
-                    .revoked_sources
-                    .contains(&status.unit.source_sha)
-                    && !policy
-                        .payload
-                        .revoked_artifacts
-                        .contains(&status.unit.artifact_sha256),
-                "REVOKED",
-            )?;
-            let raw: String =
-                tx.query_row("SELECT evidence FROM units WHERE id=?", [id], |r| r.get(0))?;
-            let mut evidence: Proposal = parse(raw)?;
-            evidence.policy = policy.clone();
-            let actor = Actor {
-                id: "daemon-revalidation".into(),
-                allowed_profiles: vec![evidence.deployment_profile.clone()],
-                allowed_producers: evidence
-                    .goals
-                    .iter()
-                    .map(|g| g.payload.producer_id.clone())
-                    .collect(),
-            };
-            validate_proposal(catalog, &actor, &evidence, now)?;
-            check_dependencies(tx, &status.unit.dependency_units)?;
-            let generation: u64 = tx
-                .query_row(
-                    "SELECT generation FROM installed WHERE target=?",
-                    [&status.unit.target_runtime],
-                    |r| r.get(0),
-                )
-                .optional()?
-                .unwrap_or(0);
-            require(
-                generation == status.unit.expected_target_generation,
-                "PREIMAGE_MISMATCH",
-            )
-        })
+        self.transaction(|tx| super::gates::validate_unit(tx, catalog, id, policy, now))
     }
 }
-fn pin_policy(tx: &Transaction<'_>, profile: &str, policy: &Signed<Policy>) -> Result<()> {
+pub(super) fn pin_policy(
+    tx: &Transaction<'_>,
+    profile: &str,
+    policy: &Signed<Policy>,
+) -> Result<()> {
     let current: Option<(u64, String)> = tx
         .query_row(
             "SELECT epoch,digest FROM policies ORDER BY epoch DESC LIMIT 1",
@@ -179,9 +146,13 @@ fn resolve_intent(tx: &Transaction<'_>, r: &Proposal) -> Result<u64> {
         (&d.target_runtime,d.revision,hash,&d.artifact_sha256,&d.profile_revision,generation))?;
     Ok(tx.last_insert_rowid() as u64)
 }
-fn check_dependencies(tx: &Transaction<'_>, deps: &[Dependency]) -> Result<()> {
+pub(super) fn check_dependencies(tx: &Transaction<'_>, deps: &[Dependency]) -> Result<()> {
     let mut seen = std::collections::BTreeSet::new();
     for dep in deps {
+        require(
+            dep.semantics == DependencySemantics::LiveInstallation,
+            "UNSUPPORTED_DEPENDENCY_SEMANTICS",
+        )?;
         require(seen.insert(&dep.unit_id), "DEPENDENCY_CYCLE")?;
         let state = read_status(tx, &dep.unit_id).map_err(|_| Error::new("MISSING_DEPENDENCY"))?;
         require(
@@ -192,6 +163,12 @@ fn check_dependencies(tx: &Transaction<'_>, deps: &[Dependency]) -> Result<()> {
             "DEPENDENCY_UNACCEPTED",
         )?;
         crate::trust::valid_digest(&dep.receipt_digest)?;
+        if state.state == State::Applied && dep.semantics == DependencySemantics::LiveInstallation {
+            require(
+                super::dependencies::is_current(tx, dep)?,
+                "DEPENDENCY_NOT_CURRENT",
+            )?;
+        }
     }
     Ok(())
 }
@@ -247,16 +224,27 @@ fn create_unit(
             old.state == State::Queued && old.unit.target_runtime == u.target_runtime,
             "IN_FLIGHT_REPLACEMENT",
         )?;
+        let mut stmt = tx.prepare("SELECT record FROM coverage WHERE unit=?")?;
+        let records = stmt
+            .query_map([old_id], |row| row.get::<_, String>(0))?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        for raw in records {
+            let previous: Signed<ReadyRecord> = parse(raw)?;
+            require(
+                r.goals.iter().any(|next| {
+                    next.issuer == previous.issuer
+                        && next.payload.producer_id == previous.payload.producer_id
+                        && next.payload.revision >= previous.payload.revision
+                        && next.payload.coverage == previous.payload.coverage
+                }),
+                "SUPERSESSION_COVERAGE",
+            )?;
+        }
         require(
             old.unit
-                .goal_coverage
+                .dependency_units
                 .iter()
-                .all(|g| u.goal_coverage.contains(g))
-                && old
-                    .unit
-                    .dependency_units
-                    .iter()
-                    .all(|d| u.dependency_units.contains(d)),
+                .all(|dep| u.dependency_units.contains(dep)),
             "SUPERSESSION_COVERAGE",
         )?;
         sequence = sequence.min(old.sequence);
@@ -291,6 +279,14 @@ fn create_unit(
         require(cycle == 0, "DEPENDENCY_CYCLE")?;
         // Preserve inbound immutable exact-receipt edges. They stay blocked until their
         // own reviewed dependent replacement names the new prerequisite receipt.
+        tx.execute(
+            "INSERT OR IGNORE INTO actors SELECT ?,actor FROM actors WHERE unit=?",
+            (&u.deployment_unit_id, old_id),
+        )?;
+        tx.execute(
+            "UPDATE pauses SET unit=? WHERE unit=?",
+            (&u.deployment_unit_id, old_id),
+        )?;
         super::lifecycle::change(
             tx,
             old_id,
@@ -300,4 +296,42 @@ fn create_unit(
         )?;
     }
     Ok(u.deployment_unit_id)
+}
+
+fn recover_request(
+    tx: &Transaction<'_>,
+    actor: &Actor,
+    proposal: &Proposal,
+    hash: &str,
+) -> Result<Option<Submission>> {
+    let saved: Option<(String, String)> = tx
+        .query_row(
+            "SELECT digest,result FROM requests WHERE actor=? AND request=?",
+            (&actor.id, &proposal.request_id),
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()?;
+    let Some((old, raw)) = saved else {
+        return Ok(None);
+    };
+    require(old == hash, "REQUEST_CONFLICT")?;
+    let mut result: Submission = parse(raw)?;
+    authorize(tx, actor, &result.unit_id)?;
+    let status = read_status(tx, &result.unit_id)?;
+    result.state = status.state;
+    result.status_revision = status.revision;
+    result.install_required = installation_pending(status.state);
+    Ok(Some(result))
+}
+
+fn installation_pending(state: State) -> bool {
+    matches!(
+        state,
+        State::Queued
+            | State::Precheck
+            | State::Applying
+            | State::Restarting
+            | State::Verifying
+            | State::Finalizing
+    )
 }

@@ -1,0 +1,57 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.52s
+     Running test/queue.rs (packages/deployment-control-plane/target/debug/deps/queue-23f704099e3dc6ee)
+
+running 6 tests
+test repairs::b03_committed_ack_survives_expired_revoked_policy_and_reports_finalized_state ... FAILED
+test repairs::b06_every_attachment_review_is_exposed_and_currently_revalidated ... FAILED
+test repairs::b05_revoked_recovery_and_cancel_cannot_clear_stop ... FAILED
+test repairs::b01_supersession_preserves_all_late_goal_and_actor_links ... FAILED
+test repairs::b02_current_attempt_needs_its_own_transaction_and_goal_readback_receipts ... FAILED
+test repairs::b04_replaced_runtime_cannot_satisfy_live_installation_dependency ... FAILED
+
+failures:
+
+---- repairs::b03_committed_ack_survives_expired_revoked_policy_and_reports_finalized_state stdout ----
+
+thread 'repairs::b03_committed_ack_survives_expired_revoked_policy_and_reports_finalized_state' (72497330) panicked at test/queue_repairs.rs:109:46:
+called `Result::unwrap()` on an `Err` value: Error { code: "POLICY_EXPIRED" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- repairs::b06_every_attachment_review_is_exposed_and_currently_revalidated stdout ----
+
+thread 'repairs::b06_every_attachment_review_is_exposed_and_currently_revalidated' (72497333) panicked at test/queue_repairs.rs:190:52:
+called `Result::unwrap_err()` on an `Ok` value: ()
+
+---- repairs::b05_revoked_recovery_and_cancel_cannot_clear_stop stdout ----
+
+thread 'repairs::b05_revoked_recovery_and_cancel_cannot_clear_stop' (72497332) panicked at test/queue_repairs.rs:162:52:
+called `Result::unwrap_err()` on an `Ok` value: UnitStatus { unit: DeploymentUnit { version: 1, deployment_unit_id: "8fde26dce4d5479f76943d792190b16309bd7397a313d5ff077a1bba91b3a4ed", deployment_profile: "fixture", profile_revision: "profile-1", target_runtime: "runtime", repo: "repo", source_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", artifact_sha256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", build_attestation_digest: "ea50c2342e22af6797d27d4adfce809c5af0d91cc1e8a169cb9a4c08d22a0abb", manifest_digest: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", deployment_intent_id: 1, desired_state_revision: 1, expected_target_generation: 0, covered_goal_ids: ["goal-a"], goal_coverage: [GoalCoverage { goal_id: "goal-a", acceptance_revision: "accept-1", source_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", release_face_sha256: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", verification_profile: "verify-1" }], dependency_units: [], required_reviews: ["ded1cb0b83c79062cb7f4eb2d12d942a6f1864cf9a688ae842050d261f3d3d4d"], preflight_policy: "preflight-1", privileged_apply_profile: "apply-1", restart_profile: "restart-1", verification_profiles: ["verify-1"], rollback_profile: "rollback-1", standing_authority_revision: "authority-1", policy_epoch: 1, receipts: [] }, state: Queued, revision: 3, sequence: 1, preflight_attempts: 1, mutating_attempts: 0 }
+
+---- repairs::b01_supersession_preserves_all_late_goal_and_actor_links stdout ----
+
+thread 'repairs::b01_supersession_preserves_all_late_goal_and_actor_links' (72497328) panicked at test/queue_repairs.rs:57:46:
+called `Result::unwrap_err()` on an `Ok` value: Submission { unit_id: "d062775c1636f27cde2eb06c37b6a73c87e315966fc2b14cc13830540a6ec8d0", attachment_digest: "80c1e5d97be16b52d8a6ec3234329a1b4adaccdae2d6c2b8271456bd17578b3f", install_required: true }
+
+---- repairs::b02_current_attempt_needs_its_own_transaction_and_goal_readback_receipts stdout ----
+
+thread 'repairs::b02_current_attempt_needs_its_own_transaction_and_goal_readback_receipts' (72497329) panicked at test/queue_repairs.rs:87:74:
+called `Result::unwrap_err()` on an `Ok` value: UnitStatus { unit: DeploymentUnit { version: 1, deployment_unit_id: "4a0372462db12172bd65d4f8619ed4d96fd7b4c73d62612cdd7f3cc4834884dc", deployment_profile: "fixture", profile_revision: "profile-1", target_runtime: "runtime", repo: "repo", source_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", artifact_sha256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", build_attestation_digest: "221619a8b5ae87f13f017f777dc71b5bcb4eaba901bc76a490bdcfc4c06b0202", manifest_digest: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", deployment_intent_id: 1, desired_state_revision: 1, expected_target_generation: 0, covered_goal_ids: ["goal"], goal_coverage: [GoalCoverage { goal_id: "goal", acceptance_revision: "accept-1", source_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", release_face_sha256: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", verification_profile: "verify-1" }], dependency_units: [], required_reviews: ["ded1cb0b83c79062cb7f4eb2d12d942a6f1864cf9a688ae842050d261f3d3d4d"], preflight_policy: "preflight-1", privileged_apply_profile: "apply-1", restart_profile: "restart-1", verification_profiles: ["verify-1"], rollback_profile: "rollback-1", standing_authority_revision: "authority-1", policy_epoch: 1, receipts: [] }, state: Applied, revision: 14, sequence: 1, preflight_attempts: 2, mutating_attempts: 2 }
+
+---- repairs::b04_replaced_runtime_cannot_satisfy_live_installation_dependency stdout ----
+
+thread 'repairs::b04_replaced_runtime_cannot_satisfy_live_installation_dependency' (72497331) panicked at test/queue_repairs.rs:141:5:
+assertion failed: q.next_ready(&c).unwrap().is_none()
+
+
+failures:
+    repairs::b01_supersession_preserves_all_late_goal_and_actor_links
+    repairs::b02_current_attempt_needs_its_own_transaction_and_goal_readback_receipts
+    repairs::b03_committed_ack_survives_expired_revoked_policy_and_reports_finalized_state
+    repairs::b04_replaced_runtime_cannot_satisfy_live_installation_dependency
+    repairs::b05_revoked_recovery_and_cancel_cannot_clear_stop
+    repairs::b06_every_attachment_review_is_exposed_and_currently_revalidated
+
+test result: FAILED. 0 passed; 6 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.07s
+
+error: test failed, to rerun pass `--test queue`

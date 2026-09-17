@@ -3,8 +3,20 @@ use common::*;
 use deployment_control_plane::{model::*, queue::Queue};
 fn transition(q: &Queue, id: &str, state: State) {
     let s = q.status(&actor(), id).unwrap();
-    q.transition(id, s.revision, state, &"8".repeat(64))
+    if state == State::Applying {
+        q.begin_apply(
+            &fixture_catalog(),
+            id,
+            s.revision,
+            &signed("authority", policy()),
+            1001,
+            &"8".repeat(64),
+        )
         .unwrap();
+    } else {
+        q.transition(id, s.revision, state, &"8".repeat(64))
+            .unwrap();
+    }
 }
 fn installed(q: &Queue, c: &Catalog, id: &str, generation: u64) -> String {
     for s in [
@@ -34,6 +46,11 @@ fn installed(q: &Queue, c: &Catalog, id: &str, generation: u64) -> String {
         new_service_generation: "new".into(),
         target_generation: generation,
         attempt: status.mutating_attempts,
+        attachment_digests: vec![
+            q.submit(c, &actor(), &q.daemon_evidence(id).unwrap(), 1001)
+                .unwrap()
+                .attachment_digest,
+        ],
         step_results: vec!["readback-pass".into()],
         rollback_digest: None,
         capability: "installed".into(),
@@ -42,6 +59,12 @@ fn installed(q: &Queue, c: &Catalog, id: &str, generation: u64) -> String {
     let goal = signed(
         "verifier",
         GoalReceipt {
+            attempt: 1,
+            service_generation: "new".into(),
+            attachment_digest: q
+                .submit(c, &actor(), &q.daemon_evidence(id).unwrap(), 1001)
+                .unwrap()
+                .attachment_digest,
             unit_id: id.into(),
             goal_id: u.covered_goal_ids[0].clone(),
             acceptance_revision: "accept-1".into(),
@@ -190,6 +213,7 @@ fn missing_dependencies_and_reverted_coverage_never_admit() {
     let mut p = proposal("req", "e", 1, "goal");
     register(&q, &c, &p);
     p.dependencies.push(Dependency {
+        semantics: DependencySemantics::LiveInstallation,
         unit_id: "missing".into(),
         receipt_digest: "1".repeat(64),
         capability: "installed".into(),
@@ -250,5 +274,7 @@ fn retries_are_bounded_and_unknown_cannot_be_reset_by_request_or_claim() {
 }
 #[path = "queue_receipts.rs"]
 mod receipts;
+#[path = "queue_repairs.rs"]
+mod repairs;
 #[path = "queue_scheduling.rs"]
 mod scheduling;

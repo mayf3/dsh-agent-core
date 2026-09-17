@@ -1,0 +1,15 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.99s
+     Running test/queue.rs (packages/deployment-control-plane/target/debug/deps/queue-23f704099e3dc6ee)
+
+running 8 tests
+test repairs::b06_every_attachment_review_is_exposed_and_currently_revalidated ... ok
+test repairs::b03_committed_ack_survives_expired_revoked_policy_and_reports_finalized_state ... ok
+test repairs::b05_revoked_recovery_and_cancel_cannot_clear_stop ... ok
+test repairs::b01_supersession_preserves_all_late_goal_and_actor_links ... ok
+test repairs::provenance::b05_safe_correction_resumes_automatically_only_after_fresh_precheck ... ok
+test repairs::b02_current_attempt_needs_its_own_transaction_and_goal_readback_receipts ... ok
+test repairs::provenance::b06_transaction_receipt_binds_the_full_effective_attachment_set ... ok
+test repairs::b04_replaced_runtime_cannot_satisfy_live_installation_dependency ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.13s

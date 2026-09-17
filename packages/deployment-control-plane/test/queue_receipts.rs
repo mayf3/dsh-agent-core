@@ -43,6 +43,12 @@ fn late_goal_uses_accepted_verifier_and_receipt_is_generation_bound() {
     register(&q, &c, &late);
     q.submit(&c, &actor(), &late, 1001).unwrap();
     let receipt = GoalReceipt {
+        attempt: 1,
+        service_generation: "new".into(),
+        attachment_digest: q
+            .submit(&c, &actor(), &late, 1001)
+            .unwrap()
+            .attachment_digest,
         unit_id: id.clone(),
         goal_id: "late".into(),
         acceptance_revision: "accept-1".into(),
@@ -79,6 +85,9 @@ fn unknown_goal_blocks_finalize_and_has_no_automatic_verification_retry() {
         transition(&q, &id, state);
     }
     let mut r = GoalReceipt {
+        attempt: 1,
+        service_generation: "new".into(),
+        attachment_digest: q.submit(&c, &actor(), &p, 1001).unwrap().attachment_digest,
         unit_id: id.clone(),
         goal_id: "goal".into(),
         acceptance_revision: "accept-1".into(),

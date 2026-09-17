@@ -15,7 +15,28 @@ impl Queue {
     ) -> Result<UnitStatus> {
         valid_digest(evidence_digest)?;
         require(next != State::Queued, "RECOVERY_EVIDENCE_REQUIRED")?;
+        require(next != State::Applying, "PRECHECK_GATE_REQUIRED")?;
         self.transaction(|tx| change(tx, id, revision, next, evidence_digest))
+    }
+    /// Authoritative PRECHECK completion: daemon holds the OS mutex and supplies actual preflight evidence.
+    pub fn begin_apply(
+        &self,
+        catalog: &Catalog,
+        id: &str,
+        revision: u64,
+        policy: &Signed<Policy>,
+        now: u64,
+        preflight_evidence: &str,
+    ) -> Result<UnitStatus> {
+        valid_digest(preflight_evidence)?;
+        let status = self.daemon_status(id)?;
+        self.observe_policy(catalog, &status.unit.deployment_profile, policy, now)?;
+        self.transaction(|tx| {
+            super::gates::validate_unit(tx, catalog, id, policy, now)?;
+            let result = change(tx, id, revision, State::Applying, preflight_evidence)?;
+            tx.execute("DELETE FROM pauses WHERE unit=?", [id])?;
+            Ok(result)
+        })
     }
     pub fn cancel_pending(&self, actor: &Actor, id: &str, revision: u64) -> Result<UnitStatus> {
         self.transaction(|tx| {
@@ -77,6 +98,16 @@ impl Queue {
                 profile.enabled && profile.revision == s.unit.profile_revision,
                 "PROFILE_NOT_ALLOWED",
             )?;
+            let raw: String = tx
+                .query_row(
+                    "SELECT record FROM policies ORDER BY epoch DESC LIMIT 1",
+                    [],
+                    |r| r.get(0),
+                )
+                .optional()?
+                .ok_or(Error::new("POLICY_UNAVAILABLE"))?;
+            let policy: Signed<Policy> = parse(raw)?;
+            super::gates::validate_unit(tx, catalog, &e.unit_id, &policy, now)?;
             let hash = digest(evidence)?;
             tx.execute(
                 "INSERT OR IGNORE INTO receipts VALUES (?,?,?,?)",
@@ -89,7 +120,6 @@ impl Queue {
                 State::Queued,
                 &digest(evidence)?,
             )?;
-            tx.execute("DELETE FROM pauses WHERE unit=?", [&e.unit_id])?;
             Ok(result)
         })
     }
@@ -143,13 +173,18 @@ pub(super) fn change(
             | (State::Blocked | State::RolledBack, State::Queued)
     );
     require(legal, "ILLEGAL_TRANSITION")?;
+    if next == State::Cancelled {
+        let paused: u64 = tx.query_row("SELECT count(*) FROM pauses WHERE unit=?", [id], |r| {
+            r.get(0)
+        })?;
+        require(paused == 0, "FAILED_INTENT_PAUSED")?;
+    }
     if next == State::Precheck {
         let occupied: u64 = tx.query_row("SELECT count(*) FROM units WHERE state IN ('\"Precheck\"','\"Applying\"','\"Restarting\"','\"Verifying\"','\"Finalizing\"','\"RollingBack\"','\"Recovering\"')", [], |r|r.get(0))?;
-        let blocked: u64 = tx.query_row(
-            "SELECT value+(SELECT count(*) FROM pauses) FROM meta WHERE key='quarantine'",
-            [],
-            |r| r.get(0),
-        )?;
+        let blocked: u64 =
+            tx.query_row("SELECT value FROM meta WHERE key='quarantine'", [], |r| {
+                r.get(0)
+            })?;
         require(occupied == 0 && blocked == 0, "LANE_BLOCKED")?;
         require(
             select_ready(tx)?.is_some_and(|s| s.unit.deployment_unit_id == id),
@@ -193,45 +228,6 @@ pub(super) fn change(
     )?;
     read_status(tx, id)
 }
-pub(super) fn dependencies_satisfied(tx: &Transaction<'_>, id: &str) -> Result<bool> {
-    let mut stmt = tx.prepare("SELECT record FROM dependencies WHERE unit=?")?;
-    let records = stmt
-        .query_map([id], |r| r.get::<_, String>(0))?
-        .collect::<std::result::Result<Vec<_>, _>>()?;
-    for raw in records {
-        let dep: Dependency = parse(raw)?;
-        let s = read_status(tx, &dep.unit_id)?;
-        if s.state != State::Applied {
-            return Ok(false);
-        }
-        let receipt: Option<String> = tx
-            .query_row(
-                "SELECT record FROM receipts WHERE digest=? AND unit=? AND kind='transaction'",
-                (&dep.receipt_digest, &dep.unit_id),
-                |r| r.get(0),
-            )
-            .optional()?;
-        let Some(raw) = receipt else {
-            return Ok(false);
-        };
-        let r: TransactionReceipt = parse(raw)?;
-        if r.capability != dep.capability {
-            return Ok(false);
-        }
-        for goal in &dep.required_goals {
-            let raw: Option<String> = tx.query_row("SELECT record FROM goal_receipts WHERE unit=? AND goal=? ORDER BY revision DESC LIMIT 1",
-                (&dep.unit_id,goal), |r|r.get(0)).optional()?;
-            let Some(raw) = raw else {
-                return Ok(false);
-            };
-            let receipt: Signed<GoalReceipt> = parse(raw)?;
-            if receipt.payload.outcome != GoalOutcome::Pass {
-                return Ok(false);
-            }
-        }
-    }
-    Ok(true)
-}
 
 fn select_ready(tx: &Transaction<'_>) -> Result<Option<UnitStatus>> {
     let quarantine: u64 =
@@ -240,7 +236,7 @@ fn select_ready(tx: &Transaction<'_>) -> Result<Option<UnitStatus>> {
         })?;
     let paused: u64 = tx.query_row("SELECT count(*) FROM pauses", [], |r| r.get(0))?;
     let inflight: u64 = tx.query_row("SELECT count(*) FROM units WHERE state IN ('\"Precheck\"','\"Applying\"','\"Restarting\"','\"Verifying\"','\"Finalizing\"','\"RollingBack\"','\"Recovering\"')", [], |r|r.get(0))?;
-    if quarantine > 0 || paused > 0 || inflight > 0 {
+    if quarantine > 0 || inflight > 0 {
         return Ok(None);
     }
     let mut stmt =
@@ -249,8 +245,17 @@ fn select_ready(tx: &Transaction<'_>) -> Result<Option<UnitStatus>> {
         .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))?
         .collect::<std::result::Result<Vec<_>, _>>()?;
     for (id, resource) in rows {
+        if paused > 0 {
+            let owns_pause: u64 =
+                tx.query_row("SELECT count(*) FROM pauses WHERE unit=?", [&id], |r| {
+                    r.get(0)
+                })?;
+            if owns_pause != paused {
+                continue;
+            }
+        }
         let conflicts: u64 = tx.query_row("SELECT count(*) FROM units WHERE resource=? AND state IN ('\"Blocked\"','\"RolledBack\"','\"Quarantined\"')", [&resource], |r|r.get(0))?;
-        if conflicts == 0 && dependencies_satisfied(tx, &id)? {
+        if conflicts == 0 && super::dependencies::satisfied(tx, &id)? {
             return Ok(Some(read_status(tx, &id)?));
         }
     }
