@@ -1,0 +1,259 @@
+{
+  "checked_at": "2026-09-17T13:25:36.858077+00:00",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "uid": 502,
+  "base": "14090ca2c89cccb9d0962602e88a15535b014a4f",
+  "files": [
+    {
+      "path": "packages/deployment-control-plane/src/error.rs",
+      "lines": 42,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/src/lib.rs",
+      "lines": 10,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/src/model.rs",
+      "lines": 196,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/native.rs",
+      "lines": 333,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/recovery.rs",
+      "lines": 248,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/journal.rs",
+      "lines": 207,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/native_profile.rs",
+      "lines": 192,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/service.rs",
+      "lines": 139,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/mod.rs",
+      "lines": 117,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/apply.rs",
+      "lines": 307,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/process.rs",
+      "lines": 245,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/gates.rs",
+      "lines": 59,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/producer.rs",
+      "lines": 198,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/receipts.rs",
+      "lines": 274,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/physical.rs",
+      "lines": 56,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/mod.rs",
+      "lines": 98,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/schema.rs",
+      "lines": 37,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/dependencies.rs",
+      "lines": 64,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/executor_recovery.rs",
+      "lines": 30,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/readback.rs",
+      "lines": 104,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/admission.rs",
+      "lines": 345,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/lifecycle.rs",
+      "lines": 272,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/trust/mod.rs",
+      "lines": 4,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/trust/verify.rs",
+      "lines": 51,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/trust/admission.rs",
+      "lines": 182,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/secure.rs",
+      "lines": 256,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/artifact.rs",
+      "lines": 189,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/mod.rs",
+      "lines": 70,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/mutex.rs",
+      "lines": 49,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/target.rs",
+      "lines": 81,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/file.rs",
+      "lines": 141,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue_receipts.rs",
+      "lines": 231,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue_repair_provenance.rs",
+      "lines": 121,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/restored_generation.rs",
+      "lines": 220,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/authority_freshness.rs",
+      "lines": 119,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transactions.rs",
+      "lines": 259,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transaction_crashes.rs",
+      "lines": 147,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/filesystem.rs",
+      "lines": 346,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue_scheduling.rs",
+      "lines": 172,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transaction_fixture.rs",
+      "lines": 82,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue.rs",
+      "lines": 280,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/authority.rs",
+      "lines": 109,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue_repairs.rs",
+      "lines": 338,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/mod.rs",
+      "lines": 190,
+      "depth": 2
+    }
+  ],
+  "directories": [
+    {
+      "path": "packages/deployment-control-plane/src",
+      "children": 7
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction",
+      "children": 8
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue",
+      "children": 11
+    },
+    {
+      "path": "packages/deployment-control-plane/src/trust",
+      "children": 3
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs",
+      "children": 6
+    },
+    {
+      "path": "packages/deployment-control-plane/test",
+      "children": 13
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common",
+      "children": 1
+    }
+  ],
+  "pass_all": true
+}

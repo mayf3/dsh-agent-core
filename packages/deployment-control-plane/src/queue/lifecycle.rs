@@ -16,7 +16,14 @@ impl Queue {
         valid_digest(evidence_digest)?;
         require(next != State::Queued, "RECOVERY_EVIDENCE_REQUIRED")?;
         require(next != State::Applying, "PRECHECK_GATE_REQUIRED")?;
-        self.transaction(|tx| change(tx, id, revision, next, evidence_digest))
+        self.transaction(|tx| {
+            require(
+                !(read_status(tx, id)?.state == State::Recovering
+                    && matches!(next, State::Blocked | State::RolledBack)),
+                "EXECUTOR_RECOVERY_REQUIRED",
+            )?;
+            change(tx, id, revision, next, evidence_digest)
+        })
     }
     /// Authoritative PRECHECK completion: daemon holds the OS mutex and supplies actual preflight evidence.
     pub fn begin_apply(
@@ -169,8 +176,10 @@ pub(super) fn change(
         ) | (
             State::RollingBack,
             State::RolledBack | State::Recovering | State::Quarantined
-        ) | (State::Recovering, State::Quarantined)
-            | (State::Blocked | State::RolledBack, State::Queued)
+        ) | (
+            State::Recovering,
+            State::Quarantined | State::Blocked | State::RolledBack
+        ) | (State::Blocked | State::RolledBack, State::Queued)
     );
     require(legal, "ILLEGAL_TRANSITION")?;
     if next == State::Cancelled {

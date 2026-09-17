@@ -42,6 +42,8 @@ pub(super) fn satisfied(tx: &Transaction<'_>, id: &str) -> Result<bool> {
         if transaction.capability != dep.capability || transaction.attempt != s.mutating_attempts {
             return Ok(false);
         }
+        let physical = super::physical::current(tx, &s.unit.target_runtime)?
+            .ok_or(Error::new("INSTALLED_GENERATION_CHANGED"))?;
         for goal in &dep.required_goals {
             let raw: Option<String>=tx.query_row("SELECT record FROM goal_receipts WHERE unit=? AND goal=? ORDER BY revision DESC LIMIT 1",
                 (&dep.unit_id,goal),|r|r.get(0)).optional()?;
@@ -52,7 +54,7 @@ pub(super) fn satisfied(tx: &Transaction<'_>, id: &str) -> Result<bool> {
             if goal.payload.outcome != GoalOutcome::Pass
                 || goal.payload.attempt != transaction.attempt
                 || goal.payload.target_generation != transaction.target_generation
-                || goal.payload.service_generation != transaction.new_service_generation
+                || goal.payload.service_generation != physical.service_generation
             {
                 return Ok(false);
             }

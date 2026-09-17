@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+libc = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
@@ -21,3 +22,11 @@ path = "test/authority.rs"
 [[test]]
 name = "queue"
 path = "test/queue.rs"
+
+[[test]]
+name = "filesystem"
+path = "test/filesystem.rs"
+
+[[test]]
+name = "transactions"
+path = "test/transactions.rs"

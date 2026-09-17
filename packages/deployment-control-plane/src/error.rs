@@ -34,3 +34,9 @@ pub(crate) fn require(ok: bool, code: &'static str) -> Result<()> {
         Err(Error::new(code))
     }
 }
+
+impl From<std::io::Error> for Error {
+    fn from(_: std::io::Error) -> Self {
+        Self::new("FILESYSTEM_IO")
+    }
+}
