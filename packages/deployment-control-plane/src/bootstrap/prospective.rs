@@ -49,7 +49,7 @@ pub fn prospective(
         revision: "dsh-app-v1".into(),
         repo: "mayf3/dsh-agent-core".into(),
         target_runtime: "dsh-system-runtime".into(),
-        host: "owner-macos-host".into(),
+        host: "UNRESOLVED-HOST-IDENTITY".into(),
         launchd_domain: "system".into(),
         launchd_label: "ai.agent-core.runtime".into(),
         install_root_id: "agent-core-app".into(),
@@ -92,7 +92,7 @@ pub fn prospective(
         ("verifier", Role::Verifier, "accepted per-Goal existing external result bound to exact physical generation"),
         ("recovery", Role::Recovery, "machine-verifiable exact failure remediation/restoration/termination"),
     ].into_iter().map(|(id, role, binding)| IssuerRequirement { proposed_key_id: format!("dcp-{id}-v1"), role,
-        scope: if id == "authority" { vec!["dsh-app".into(), "bootstrap".into()] } else { vec!["dsh-app".into()] },
+        scope: if id == "authority" { vec!["dsh-app".into(), "bootstrap".into()] } else if id == "producer" { vec!["dsh-app".into(), "dcp-producer-v1".into()] } else { vec!["dsh-app".into()] },
         public_key: None, service_identity: None, custody_receipt: None, source_binding: binding.into() }).collect();
     let mut layout = Vec::new();
     for (path, mode, gid, kind) in [
@@ -203,7 +203,7 @@ pub fn prospective(
             "restore only exact verified pre-bootstrap code/policy/ACL/plist preimages using reviewed protected tools; retain state journals and receipts",
             "do not silently reactivate legacy deploy paths or remove permanent locks; explicit receipted rollback authority required",
         ]), platform_tools: tools, payloads: vec![], transition_sudoers: String::new(),
-        unresolved: strings(&["REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS", "TRUSTED_SOURCE_BUILD_REVIEW_BINDING", "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS", "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL", "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION", "INDEPENDENT_WHOLE_BRANCH_REVIEW", "EXACT_OWNER_BOOTSTRAP_RECEIPT"]),
+        unresolved: strings(&["HOST_IDENTITY_AND_EXACT_NATIVE_ENROLLMENT", "REAL_ISSUER_CUSTODY_AND_PROTECTED_ADAPTERS", "TRUSTED_SOURCE_BUILD_REVIEW_BINDING", "EXACT_INITIAL_APP_SLOTS_AND_REQUIRED_RELEASE_FACETS", "PROTECTED_PREFLIGHT_AND_LEGACY_LIFECYCLE_DENIAL", "NODE_TRANSFORM_REVIEW_SIGNATURE_AND_RUNTIME_VALIDATION", "INDEPENDENT_WHOLE_BRANCH_REVIEW", "EXACT_OWNER_BOOTSTRAP_RECEIPT"]),
     })
 }
 fn strings(v: &[&str]) -> Vec<String> {
