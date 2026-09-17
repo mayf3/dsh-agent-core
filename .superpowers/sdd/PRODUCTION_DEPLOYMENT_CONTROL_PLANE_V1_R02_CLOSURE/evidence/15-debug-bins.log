@@ -1,0 +1,4 @@
+SOURCE=8ab5904fc0b79ba2e565469f1127312bb36c4e58
+COMMAND=["cargo", "build", "--locked", "--manifest-path", "packages/deployment-control-plane/Cargo.toml", "--bins"]
+START=2026-09-17T22:52:19.329651+00:00
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s

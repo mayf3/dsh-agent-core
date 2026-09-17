@@ -1,0 +1,267 @@
+diff --git a/packages/deployment-control-plane/src/queue/service.rs b/packages/deployment-control-plane/src/queue/service.rs
+index 3748748..e3352bb 100644
+--- a/packages/deployment-control-plane/src/queue/service.rs
++++ b/packages/deployment-control-plane/src/queue/service.rs
+@@ -1,5 +1,45 @@
+ use super::*;
+ impl Queue {
++    /// A refusal is bounded by unit/revision/stage/reason; repeated ticks do not
++    /// grow the receipt ledger or change state, STOP, attempts or recovery authority.
++    pub(crate) fn daemon_recovery_refused(
++        &self,
++        status: &UnitStatus,
++        stage: &str,
++        reason: &str,
++    ) -> Result<()> {
++        self.transaction(|tx| {
++            let current = read_status(tx, &status.unit.deployment_unit_id)?;
++            require(current.revision == status.revision, "REVISION_CAS")?;
++            require(
++                matches!(current.state, State::Blocked | State::RolledBack),
++                "UNKNOWN_OUTCOME",
++            )?;
++            let record = serde_json::json!({
++                "unit_id": current.unit.deployment_unit_id,
++                "status_revision": current.revision,
++                "target_runtime": current.unit.target_runtime,
++                "deployment_profile": current.unit.deployment_profile,
++                "intent": current.unit.deployment_intent_id,
++                "expected_target_generation": current.unit.expected_target_generation,
++                "preflight_attempts": current.preflight_attempts,
++                "mutating_attempts": current.mutating_attempts,
++                "operation": "mutation-recovery", "scope": "unit-local",
++                "stage": stage, "reason": reason,
++            });
++            let hash = crate::trust::digest(&record)?;
++            tx.execute(
++                "INSERT OR IGNORE INTO receipts VALUES (?,?,?,?)",
++                (
++                    &hash,
++                    &current.unit.deployment_unit_id,
++                    "recovery-refusal",
++                    json(&record)?,
++                ),
++            )?;
++            Ok(())
++        })
++    }
+     pub(crate) fn daemon_recovery_candidates(&self) -> Result<Vec<UnitStatus>> {
+         self.transaction(|tx| {
+             let mut statement=tx.prepare("SELECT id FROM units WHERE state IN ('\"Blocked\"','\"RolledBack\"') ORDER BY seq,id LIMIT 32")?;
+diff --git a/packages/deployment-control-plane/src/service/train.rs b/packages/deployment-control-plane/src/service/train.rs
+index aa0783e..54e0005 100644
+--- a/packages/deployment-control-plane/src/service/train.rs
++++ b/packages/deployment-control-plane/src/service/train.rs
+@@ -7,7 +7,7 @@ use crate::{
+     fs::FixtureRoots,
+     model::*,
+     queue::Queue,
+-    transaction::Executor,
++    transaction::{Executor, RecoveryFailure},
+     trust::{digest, signing_bytes, verify_signed},
+     Error, Result,
+ };
+@@ -136,27 +136,43 @@ impl Train {
+                 continue;
+             };
+             let guard = executor.lock()?;
+-            // Missing/invalid remediation cannot skip the failed intent or clear STOP.
++            // Only an identified unit-local refusal may leave this unit blocked
++            // while another installed unit uses its ordinary pinned read-only gate.
+             let binding = match executor.recovery_binding(&guard, q, id) {
+                 Ok(b) => b,
+-                Err(_) => continue,
++                Err(RecoveryFailure::UnitLocal(e)) => {
++                    q.daemon_recovery_refused(&status, "physical-binding", e.code())?;
++                    continue;
++                }
++                Err(RecoveryFailure::Global(e)) => return Err(e),
+             };
+             let request = digest(&binding)?;
+             intake.publish("recovery-requests", &request, &binding)?;
+             match intake.recovery(id, status.revision) {
+                 Ok(evidence) => {
+                     let policy = intake.policy(&status.unit.deployment_profile)?;
+-                    executor.consume_recovery(
++                    match executor.consume_recovery(
+                         &guard,
+                         q,
+                         &intake.config.catalog,
+                         &evidence,
+                         &policy,
+                         now()?,
+-                    )?;
++                    ) {
++                        Ok(()) => (),
++                        Err(RecoveryFailure::UnitLocal(e)) => {
++                            q.daemon_recovery_refused(&status, "record-validation", e.code())?;
++                        }
++                        Err(RecoveryFailure::Global(e)) => return Err(e),
++                    }
+                 }
+                 Err(e) if e.code() == "ABSENT" => (),
+-                Err(e) => return Err(e),
++                Err(e) => match RecoveryFailure::record(e) {
++                    RecoveryFailure::UnitLocal(e) => {
++                        q.daemon_recovery_refused(&status, "record-decode", e.code())?;
++                    }
++                    RecoveryFailure::Global(e) => return Err(e),
++                },
+             }
+         }
+         Ok(())
+diff --git a/packages/deployment-control-plane/src/transaction/mod.rs b/packages/deployment-control-plane/src/transaction/mod.rs
+index 250a856..1be71e6 100644
+--- a/packages/deployment-control-plane/src/transaction/mod.rs
++++ b/packages/deployment-control-plane/src/transaction/mod.rs
+@@ -6,6 +6,7 @@ mod native_profile;
+ mod process;
+ mod recovery;
+ mod remediation;
++pub(crate) use remediation::RecoveryFailure;
+ mod service;
+ mod slots;
+ use crate::{
+diff --git a/packages/deployment-control-plane/src/transaction/remediation.rs b/packages/deployment-control-plane/src/transaction/remediation.rs
+index 44c2a54..fbb1b3e 100644
+--- a/packages/deployment-control-plane/src/transaction/remediation.rs
++++ b/packages/deployment-control-plane/src/transaction/remediation.rs
+@@ -2,13 +2,38 @@
+ use super::*;
+ use crate::{error::require, trust::digest, Error};
+ use journal::Event;
++
++/// Scope comes from the failing operation, never a caller-supplied safety label.
++#[derive(Debug)]
++pub(crate) enum RecoveryFailure {
++    UnitLocal(Error),
++    Global(Error),
++}
++impl From<Error> for RecoveryFailure {
++    fn from(error: Error) -> Self {
++        Self::Global(error)
++    }
++}
++impl RecoveryFailure {
++    pub(crate) fn record(error: Error) -> Self {
++        Self::at_stage(error, &["INVALID_RECORD", "NESTING_LIMIT", "SIZE_LIMIT"])
++    }
++    fn at_stage(error: Error, definite_refusals: &[&str]) -> Self {
++        if definite_refusals.contains(&error.code()) {
++            Self::UnitLocal(error)
++        } else {
++            Self::Global(error)
++        }
++    }
++}
++type RecoveryResult<T> = std::result::Result<T, RecoveryFailure>;
+ impl Executor {
+     pub(crate) fn recovery_binding(
+         &mut self,
+         guard: &MutationGuard,
+         q: &Queue,
+         id: &str,
+-    ) -> Result<RecoveryEvidence> {
++    ) -> RecoveryResult<RecoveryEvidence> {
+         guard.binds(&self.root)?;
+         require(self.active.is_none(), "TRANSACTION_ACTIVE")?;
+         let status = q.daemon_status(id)?;
+@@ -16,10 +41,6 @@ impl Executor {
+             matches!(status.state, State::Blocked | State::RolledBack),
+             "UNKNOWN_OUTCOME",
+         )?;
+-        require(
+-            status.preflight_attempts < 3 && status.mutating_attempts < 2,
+-            "RETRY_BUDGET_EXHAUSTED",
+-        )?;
+         let service = self.service.image()?;
+         let mut last = None;
+         let (preflight, attempt) = q.daemon_execution(id)?;
+@@ -30,11 +51,20 @@ impl Executor {
+                 last = Some(journal);
+             }
+         }
++        // Global journal safety is checked even when this unit exhausted its budget.
++        require(
++            status.preflight_attempts < 3 && status.mutating_attempts < 2,
++            "RETRY_BUDGET_EXHAUSTED",
++        )
++        .map_err(RecoveryFailure::UnitLocal)?;
+         let proposal = q.daemon_evidence(id)?;
+-        let artifact = self.artifacts.import(
+-            &proposal.build.payload.artifact_sha256,
+-            &proposal.build.payload.manifest_digest,
+-        )?;
++        let artifact = self
++            .artifacts
++            .import(
++                &proposal.build.payload.artifact_sha256,
++                &proposal.build.payload.manifest_digest,
++            )
++            .map_err(|e| RecoveryFailure::at_stage(e, &["ABSENT", "INCOMPLETE_INTAKE"]))?;
+         self.validate_slots(&artifact.manifest)?;
+         self.verify_live_baseline(q, &status.unit.target_runtime)?;
+         let paths = if let Some(slots) = &self.slots {
+@@ -74,7 +104,7 @@ impl Executor {
+             ))?;
+             let restored = match journal.events.last() {
+                 Some(Event::RolledBack { service }) => service,
+-                _ => return Err(Error::new("RECOVERY_BINDING")),
++                _ => return Err(Error::new("RECOVERY_BINDING").into()),
+             };
+             self.service.prove(restored)?;
+             if let Event::Preflight { before, .. } = &journal.events[0] {
+@@ -134,24 +164,49 @@ impl Executor {
+         e: &Signed<RecoveryEvidence>,
+         policy: &Signed<Policy>,
+         now: u64,
+-    ) -> Result<()> {
++    ) -> RecoveryResult<()> {
+         let expected = self.recovery_binding(guard, q, &e.payload.unit_id)?;
+         let mut supplied = e.payload.clone();
+         supplied.remediation_digest = String::new();
+         supplied.issued_at = 0;
+-        require(supplied == expected, "RECOVERY_BINDING")?;
++        require(supplied == expected, "RECOVERY_BINDING").map_err(RecoveryFailure::UnitLocal)?;
+         crate::trust::verify_signed(
+             e,
+             c,
+             &q.daemon_status(&e.payload.unit_id)?.unit.deployment_profile,
+-        )?;
++        )
++        .map_err(|e| {
++            RecoveryFailure::at_stage(
++                e,
++                &[
++                    "UNKNOWN_ISSUER",
++                    "ISSUER_ROLE",
++                    "ISSUER_SCOPE",
++                    "INVALID_SIGNATURE",
++                ],
++            )
++        })?;
+         q.observe_policy(
+             c,
+             &q.daemon_status(&e.payload.unit_id)?.unit.deployment_profile,
+             policy,
+             now,
+         )?;
+-        q.retry(c, e, now)?;
++        q.retry(c, e, now).map_err(|e| {
++            RecoveryFailure::at_stage(
++                e,
++                &[
++                    "RECOVERY_EXPIRED",
++                    "REVISION_CAS",
++                    "INVALID_DIGEST",
++                    "RETRY_BUDGET_EXHAUSTED",
++                    "REVOKED",
++                    "PREIMAGE_MISMATCH",
++                    "DEPENDENCY_NOT_SATISFIED",
++                    "PROFILE_NOT_ALLOWED",
++                ],
++            )
++        })?;
+         Ok(())
+     }
+ }

@@ -1,0 +1,22 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
+
+running 1 test
+test recovery_isolation::r02_missing_protected_recovery_namespace_still_blocks_acceptance ... BLOCKED ABSENT
+FAILED
+
+failures:
+
+---- recovery_isolation::r02_missing_protected_recovery_namespace_still_blocks_acceptance stdout ----
+
+thread 'recovery_isolation::r02_missing_protected_recovery_namespace_still_blocks_acceptance' (73743368) panicked at test/common/recovery_isolation.rs:309:9:
+global unknown must not reach verifier
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    recovery_isolation::r02_missing_protected_recovery_namespace_still_blocks_acceptance
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 32 filtered out; finished in 3.14s
+
+error: test failed, to rerun pass `--test train`

@@ -1,0 +1,82 @@
+[
+  {
+    "name": "15-debug-bins",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--bins"
+    ],
+    "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+    "started": "2026-09-17T22:52:19.329651+00:00",
+    "finished": "2026-09-17T22:52:19.414750+00:00",
+    "exit": 0
+  },
+  {
+    "name": "16-full-suite",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--all-targets",
+      "--",
+      "--test-threads=1"
+    ],
+    "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+    "started": "2026-09-17T22:52:19.415030+00:00",
+    "finished": "2026-09-17T22:58:16.991310+00:00",
+    "exit": 0
+  },
+  {
+    "name": "17-fmt",
+    "command": [
+      "cargo",
+      "fmt",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--",
+      "--check"
+    ],
+    "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+    "started": "2026-09-17T22:58:16.992450+00:00",
+    "finished": "2026-09-17T22:58:17.251349+00:00",
+    "exit": 0
+  },
+  {
+    "name": "18-clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+    "started": "2026-09-17T22:58:17.251665+00:00",
+    "finished": "2026-09-17T22:58:17.465396+00:00",
+    "exit": 0
+  },
+  {
+    "name": "19-release",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--release"
+    ],
+    "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+    "started": "2026-09-17T22:58:17.465685+00:00",
+    "finished": "2026-09-17T22:58:28.249549+00:00",
+    "exit": 0
+  }
+]

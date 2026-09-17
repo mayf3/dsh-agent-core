@@ -1,0 +1,471 @@
+{
+  "head": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+  "file_count": 88,
+  "max_lines": 479,
+  "max_depth": 2,
+  "max_children": 20,
+  "changed_code": [
+    "packages/deployment-control-plane/src/queue/service.rs",
+    "packages/deployment-control-plane/src/service/intake.rs",
+    "packages/deployment-control-plane/src/service/train.rs",
+    "packages/deployment-control-plane/src/transaction/mod.rs",
+    "packages/deployment-control-plane/src/transaction/remediation.rs",
+    "packages/deployment-control-plane/test/common/recovery_isolation.rs",
+    "packages/deployment-control-plane/test/train.rs"
+  ],
+  "files": [
+    {
+      "path": "packages/deployment-control-plane/src/bin/agent-deploy-prepare.rs",
+      "lines": 96,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bin/agent-deployctl.rs",
+      "lines": 59,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bin/agent-deployd.rs",
+      "lines": 13,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/binding.rs",
+      "lines": 224,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/bundle.rs",
+      "lines": 127,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/loader.rs",
+      "lines": 229,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/mod.rs",
+      "lines": 23,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/plist.rs",
+      "lines": 75,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/preparation.rs",
+      "lines": 345,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/prospective.rs",
+      "lines": 238,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/socket.rs",
+      "lines": 172,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/bootstrap/verify.rs",
+      "lines": 188,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/error.rs",
+      "lines": 42,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/artifact.rs",
+      "lines": 191,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/file.rs",
+      "lines": 143,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/mod.rs",
+      "lines": 82,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/mutex.rs",
+      "lines": 49,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/secure.rs",
+      "lines": 273,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/fs/target.rs",
+      "lines": 85,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/lib.rs",
+      "lines": 18,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/src/model.rs",
+      "lines": 196,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/admission.rs",
+      "lines": 345,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/dependencies.rs",
+      "lines": 70,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/executor_finalization.rs",
+      "lines": 70,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/executor_recovery.rs",
+      "lines": 43,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/gates.rs",
+      "lines": 63,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/lifecycle.rs",
+      "lines": 273,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/mod.rs",
+      "lines": 102,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/physical.rs",
+      "lines": 56,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/producer.rs",
+      "lines": 198,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/readback.rs",
+      "lines": 104,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/receipts.rs",
+      "lines": 308,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/schema.rs",
+      "lines": 60,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/queue/service.rs",
+      "lines": 142,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/service/intake.rs",
+      "lines": 236,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/service/mailbox.rs",
+      "lines": 124,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/service/mod.rs",
+      "lines": 11,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/service/protocol.rs",
+      "lines": 108,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/service/server.rs",
+      "lines": 307,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/service/train.rs",
+      "lines": 390,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/apply.rs",
+      "lines": 319,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/fault.rs",
+      "lines": 25,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/health.rs",
+      "lines": 67,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/journal.rs",
+      "lines": 262,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/mod.rs",
+      "lines": 187,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/native.rs",
+      "lines": 319,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/native_profile.rs",
+      "lines": 218,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/process.rs",
+      "lines": 245,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/recovery.rs",
+      "lines": 314,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/remediation.rs",
+      "lines": 212,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/service.rs",
+      "lines": 153,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/transaction/slots.rs",
+      "lines": 110,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/trust/admission.rs",
+      "lines": 182,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/trust/mod.rs",
+      "lines": 4,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/src/trust/verify.rs",
+      "lines": 51,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/adoption/bootstrap.rs",
+      "lines": 285,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/adoption/e2e.rs",
+      "lines": 150,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/adoption/fixture.rs",
+      "lines": 7,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/authority.rs",
+      "lines": 109,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/authority_freshness.rs",
+      "lines": 119,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/final_transaction.rs",
+      "lines": 340,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/health.rs",
+      "lines": 50,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/mailbox.rs",
+      "lines": 82,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/mod.rs",
+      "lines": 191,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/preparation.rs",
+      "lines": 353,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/private.rs",
+      "lines": 95,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/recovery_isolation.rs",
+      "lines": 338,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/remediation.rs",
+      "lines": 178,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/service.rs",
+      "lines": 116,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/service_repair.rs",
+      "lines": 380,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/socket_ancestor.rs",
+      "lines": 48,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/common/train.rs",
+      "lines": 144,
+      "depth": 2
+    },
+    {
+      "path": "packages/deployment-control-plane/test/filesystem.rs",
+      "lines": 348,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue.rs",
+      "lines": 280,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue_receipts.rs",
+      "lines": 231,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue_repair_provenance.rs",
+      "lines": 121,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue_repairs.rs",
+      "lines": 338,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/queue_scheduling.rs",
+      "lines": 172,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/restored_generation.rs",
+      "lines": 220,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/service_cases.rs",
+      "lines": 236,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/socket.rs",
+      "lines": 100,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/train.rs",
+      "lines": 407,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transaction_crashes.rs",
+      "lines": 144,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transaction_faults.rs",
+      "lines": 479,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transaction_finalization.rs",
+      "lines": 118,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transaction_fixture.rs",
+      "lines": 80,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transaction_repair.rs",
+      "lines": 286,
+      "depth": 1
+    },
+    {
+      "path": "packages/deployment-control-plane/test/transactions.rs",
+      "lines": 259,
+      "depth": 1
+    }
+  ],
+  "directories": {
+    "packages/deployment-control-plane/src": 10,
+    "packages/deployment-control-plane/src/bin": 3,
+    "packages/deployment-control-plane/src/bootstrap": 9,
+    "packages/deployment-control-plane/src/fs": 6,
+    "packages/deployment-control-plane/src/queue": 13,
+    "packages/deployment-control-plane/src/service": 6,
+    "packages/deployment-control-plane/src/transaction": 12,
+    "packages/deployment-control-plane/src/trust": 3,
+    "packages/deployment-control-plane/test": 20,
+    "packages/deployment-control-plane/test/adoption": 3,
+    "packages/deployment-control-plane/test/common": 12
+  }
+}
