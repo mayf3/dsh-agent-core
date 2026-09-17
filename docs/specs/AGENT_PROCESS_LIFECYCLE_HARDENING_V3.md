@@ -530,8 +530,8 @@ OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
 ### EVD-PROC-V3-002 — Accepted V2 supplies the preserved safety baseline
 
 - Source: `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` at the authoring base.
-- Target: preserved C-001–C-017 and C-020–C-022, plus the unchanged portions
-  of C-018/C-019.
+- Target: preserved C-001–C-014, C-016/C-017 and C-020–C-022, plus the
+  unchanged portions of C-015/C-018/C-019.
 - Relation: COMPLETE_STANDALONE_CARRY_FORWARD_WITH_DECLARED_V3_DELTA.
 - Limit: V2 explicitly lacks durable restart recovery, so it cannot authorize
   the V3 delta before the whole-successor lifecycle is accepted.
@@ -579,7 +579,8 @@ OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
 
 ## 9. Contracts
 
-The complete V2 normative model and C-001–C-022 text follows, with only the explicit V3 deltas in C-018/C-019 and C-023–C-026. This document is standalone. The `CLAUSE-PROC-*` IDs below
+The complete V2 normative model and C-001–C-022 text follows, with explicit V3
+deltas in C-015, C-018/C-019 and C-023–C-026. This document is standalone. The `CLAUSE-PROC-*` IDs below
 are stable anchors that attach every carried normative block to its parent C-* Contracts; they
 create no additional obligation and prevent legacy section-number references from becoming ambiguous.
 
@@ -1148,7 +1149,8 @@ Recovery fields use closed values so the outer projection is actionable:
 state = pending_unknown | recovery_claimed | shutdown_requested |
         exit_observed | settled | blocked
 missingEvidence[] = exact_terminal | exact_turn_idle | child_real_exit |
-                    live_generation_ownership | no_concurrent_execution
+                    live_generation_ownership | no_concurrent_execution |
+                    event_stream_continuity | one_active_turn_invariant
 attemptedActions[].action = coordinator_scheduled | ownership_check |
                             reap_claim | graceful_shutdown |
                             forced_termination | exit_wait | settlement |
@@ -1433,7 +1435,7 @@ AgentProcess implementation 必须提供 Scheduler 可消费、但不含 Schedul
   cancelRequested: boolean,
   cancelRequestedAtWallMs: number | null,
   terminationProven: boolean,
-  terminationEvidence: exact_terminal_then_idle | exact_queued_removal | child_real_exit | cancellation_ack | null,
+  terminationEvidence: exact_terminal_then_idle | exact_started_then_idle | exact_queued_removal | child_real_exit | cancellation_ack | null,
   reconciliationHandle: turnExecutionId,
   finalAssistantOutputAvailable: boolean,
   finalAssistantOutputTruncated: boolean,
@@ -1535,7 +1537,7 @@ Every mapping below uses this common execution contract:
 | `ACC-PROC-012` | `C-012` | §10.2 items 11, 26; `PROMPT_RECEIPT_NEVER_REPLIES`, `DELIVER_TIMEOUT_USES_PROMPT_RECEIPT_FIELD` |
 | `ACC-PROC-013` | `C-013` | §10.2 items 13, 25; `DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE`, `UNKNOWN_REJECTS_QUEUED_TURNS`, `UNRESOLVED_RECONCILIATION_CAP_PRESSURE`, `ROUTER_GLOBAL_RECONCILIATION_CAP` |
 | `ACC-PROC-014` | `C-014` | §10.2 items 12, 18, 26; `ENVELOPE_OUTCOME_UNKNOWN`, `TURN_TIMEOUT_THEN_LATE_SUCCESS`, `TURN_TIMEOUT_THEN_LATE_FAILURE`, `TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL` |
-| `ACC-PROC-015` | `C-015` | §10.2 item 14; `UNRELATED_IDLE_OR_QUEUE_REMOVAL`, `TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL` |
+| `ACC-PROC-015` | `C-015` | §10.2 items 14, 41; `UNRELATED_IDLE_OR_QUEUE_REMOVAL`, `TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL`, `RECOVERY_EXACT_TURN_IDLE_ONLY` and its five negative controls |
 | `ACC-PROC-016` | `C-016` | §10.2 items 14, 17; `UNRELATED_IDLE_OR_QUEUE_REMOVAL`, `DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE` |
 | `ACC-PROC-017` | `C-017` | §10.2 items 15–18, 34; `TURN_TIMEOUT_THEN_LATE_SUCCESS`, `TURN_TIMEOUT_THEN_LATE_FAILURE`, `TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL`, `PARSED_OUTCOME_PRECEDES_CHILD_EXIT`, `DUPLICATE_CONFLICTING_LATE_EVIDENCE` |
 | `ACC-PROC-018` | `C-018` | §10.2 items 19, 24, 33, 35; `QUERY_NO_OUTPUT_REPEATABLE`, `LATE_OUTPUT_AFTER_GENERATION_EXIT`, `EVENT_RING_WRAP_DURING_ACTIVE_TURN`, `STDERR_AND_CREATIONS_OVERFLOW`, `UTF8_OUTPUT_INCREMENTAL_TAIL` |
@@ -1543,7 +1545,7 @@ Every mapping below uses this common execution contract:
 | `ACC-PROC-020` | `C-020` | §10.2 items 1, 21, 22, 30, 36; `CHILD_EXIT_WITH_MULTIPLE_PENDING_RPC`, `GRACEFUL_SHUTDOWN_SUCCESS`, `SHUTDOWN_GRACE_EXPIRES_THEN_KILL`, `SHUTDOWN_OWNERSHIP_MISMATCH`, `CONCURRENT_SHUTDOWN` |
 | `ACC-PROC-021` | `C-021` | §10.2 item 23; `CONCURRENT_SHUTDOWN` |
 | `ACC-PROC-022` | `C-022` | §10.2 item 22; `SHUTDOWN_GRACE_EXPIRES_THEN_KILL` |
-| `ACC-PROC-023` | `C-023` | items 40–42; late evidence without prompt, exact termination-only evidence, child already exited |
+| `ACC-PROC-023` | `C-023` | items 40–42; late evidence without prompt, exact termination-only evidence plus five negative controls, child already exited |
 | `ACC-PROC-024` | `C-024` | items 43–45, 51; hard-deadline REAP, duplicate trigger, concurrent workers, post-claim evidence race |
 | `ACC-PROC-025` | `C-025` | items 43–48, 51–52; REAP ordering, stale callback, insufficient proof, coordinator restart, startup barrier |
 | `ACC-PROC-026` | `C-026` | items 49–50, 52; outer diagnostics, no replay and startup admission result |
@@ -1609,7 +1611,7 @@ Every clause anchor is covered through its exact parent Contract mappings:
 38. Scheduler code/store change = none for AgentProcess implementation PR；
 39. Kernel change = none。
 40. late exact terminal, no new prompt -> auto settlement/fence release; resident child kill count 0；
-41. exact-turn-bound termination-only acknowledgment -> `terminated_without_outcome`; generic idle insufficient；
+41. `exact_started_then_idle` -> `terminated_without_outcome` only when all C-015 predicates hold; missing receipt, pre-start idle, later start, stream gap/loss and one-active-turn violation each remain fenced with kill=0；
 42. child already exited -> settle/cleanup without second shutdown；
 43. hard deadline/no proof -> one claim, shutdown, real exit, settlement, registry then fence cleanup；
 44. duplicate triggers -> one operation and `SHUTDOWN_COUNT=1`；
@@ -1723,7 +1725,12 @@ F[fenceBefore,fenceAfter]
 | `ROUTER_GLOBAL_RECONCILIATION_CAP` | metadata-only global cap full | prompt on another Agent | admit attempt | fail pre-reservation/spawn/write | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[N/A,N/A]` | existing records unchanged; new=`not_admitted(handle=null)` |
 | `CONCURRENT_ENSURE_RUNNING` | slot Ø | 30 calls | release spawn barrier | one STARTUP/pid/READY ref | `1/0/0/0` | `R[Ø,STARTUP(g),N/A,READY(g)];P[0,0];F[N/A,N/A]` | `N/A` |
 | `RECOVERY_LATE_TERMINAL_NO_PROMPT` | READY(g), unknown | exact success+idle after caller return | emit only | late_completed; child READY | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,false]` | late_completed |
-| `RECOVERY_EXACT_TURN_IDLE_ONLY` | READY(g), unknown | accepted exact-turn-bound idle acknowledgment | emit only | terminated_without_outcome; kill=0; generic session idle control remains fenced | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,false]` | terminated_without_outcome |
+| `RECOVERY_EXACT_TURN_IDLE_ONLY` | READY(g), unknown; exact receipt message observed; unique watermark-after active start; no stream gap/loss | same-session idle strictly after start, no later start, one-active-turn remains true | emit only | exact_started_then_idle; terminated_without_outcome; shutdown/kill=0 | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,false]` | terminated_without_outcome |
+| `RECOVERY_IDLE_MISSING_RECEIPT` | READY(g), unknown; no exact receipt message observed | matched-looking start then post-start idle | emit only | no settlement; kill=0; missingEvidence contains exact_turn_idle/exact receipt prerequisite | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_IDLE_PRE_START_ONLY` | READY(g), unknown; exact receipt present | idle observed before matched start; no later idle | emit only | no settlement; kill=0 | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_IDLE_LATER_START` | READY(g), unknown; exact receipt and first start present | later turn/start before idle | emit only | no settlement; kill=0; later-start diagnostic | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_IDLE_STREAM_GAP` | READY(g), unknown; exact receipt/start present | mark event gap/loss then idle | emit only | no settlement; kill=0; missingEvidence contains event_stream_continuity | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_IDLE_MULTI_ACTIVE_VIOLATION` | READY(g), unknown; exact receipt/start present | inject second active execution invariant before idle | evaluate idle | no settlement; kill=0 at oracle; missingEvidence contains one_active_turn_invariant | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
 | `RECOVERY_CHILD_ALREADY_EXITED` | READY(g), unknown | exit races trigger | observe exit | no second shutdown | `1/1/0/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | terminated_without_outcome |
 | `RECOVERY_HARD_DEADLINE_REAP` | READY(g), unknown | advance deadline | coordinator, release exit | one claim; exact order | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | terminated_without_outcome |
 | `RECOVERY_DUPLICATE_TRIGGER` | READY(g), unknown | 20 triggers | release exit | one operation/shutdown | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | one settlement |
@@ -1861,7 +1868,7 @@ by this minimal same-runtime auto-REAP slice.
 
 Independent review verifies:
 
-- all V2 C-001–C-022 safety semantics remain except the declared durable query change;
+- all V2 C-001–C-022 safety semantics remain except the declared C-015 exact-started-idle and C-018/C-019 durable-query changes;
 - exact late evidence needs no prompt and never kills a healthy resident child merely to clear a settled turn;
 - hard deadline is the existing turn deadline and adds no config;
 - C-024 eligibility is atomic and exact-generation-bound;
