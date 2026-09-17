@@ -58,7 +58,7 @@ export async function recordStaleSupersession(store, notedSet, job, retry, now) 
     predecessorScheduleRevision: retry.predecessorScheduleRevision,
     jobScheduleRevision: job.scheduleRevision,
   })
-  if (receipt?.ok) notedSet.add(notedKey)
+  if (receipt?.ok === true) notedSet.add(notedKey)
 }
 
 /**
