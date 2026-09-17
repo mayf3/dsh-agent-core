@@ -99,3 +99,33 @@ Product Authority. It is not an artifact deployment approval and does not author
 root bootstrap. This boundary comes from `.agents/README.md` docs-first route and
 `.agents/local/README.md` local operating loop, in addition to the explicit task
 prohibition on privileged bootstrap before separate authorization.
+
+## Independent review round 1 and bounded repair
+
+Reviewer `/root/dcp_spec_review` did not author the semantic delta. Reviewed exact
+head `dc658bb611c85b8c0bc2045d94e1b598bfa2c23d` against base `d602b592fad345fb1c9adebe2bc6611a6f5cfdc2`.
+Result: `SPEC_REVIEW=REVISE`; authority, mandate and bounded evidence review PASS;
+Contract/acceptance review required the following frozen revision union:
+
+| Finding | Source / reachable counterexample | Minimum closure in revision 2 |
+|---|---|---|
+| B1 SECURITY_OR_DATA_LOSS | task forbids per-Goal restart/mutex bypass; uid 502 can still launchctl-restart or signal its GUI service after file chown | CTR-018 forbids enrollment until lifecycle/signaling control is separated; svc-workflow current GUI profile disabled; ACC-013 covers direct denial |
+| G1 LOAD_BEARING SPEC_GAP | artifact-only permanent dedupe strands valid A→B→A or safe rollback recovery | CTR-002/003 separate artifact/request/daemon intent/attempt; CTR-010/011 define bounded recovery and queue resume; ACC-002/009 reject wrong behavior |
+| F1 FOLLOW_UP, mechanical | phase2 cited but not hashed; initially checked socket spelling differs from proposal | append exact phase2 hash and proposed socket observation; preserve initial observations and explicit supplement timestamp |
+
+The revision is still NEW/proposed authority authoring. No accepted Contract was
+changed and no privileged enrollment/migration was performed. Re-audit is limited
+to the frozen union, changed semantics and directly affected evidence.
+
+Executed mechanical validation of round-1 candidate:
+
+- Governance bytes/accepted adoption integrity: PASS.
+- New Spec frontmatter lifecycle validation: PASS (no errors).
+- Contract/Acceptance reverse coverage: 20/20, 14 acceptance rows; valid local links
+  and parseable sanitized census JSON. This proves document coverage, not behavior.
+- `git diff --check`: PASS.
+- Code structure verifier: exit 1 on both exact base/base and base/candidate.
+  The three violation records are identical: `packages/production-runtime/src`
+  21 children, `packages/production-runtime/test` 23, `scripts` 59. New violations=0;
+  unrelated baseline debt is preserved. Do not report the full structure gate PASS.
+- No product tests executed or claimed: this revision changes only documents.

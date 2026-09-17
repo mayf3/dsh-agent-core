@@ -10,7 +10,7 @@ deployment, process termination, identity, Grant, or business-data authority.
 - Shared checkout = `e9699aee6beb1d6811e3a77f0cb4c08088241348`, dirty; preserved.
 - Isolated authoring branch: `codex/production-deployment-control-plane-v1`.
 - Read-only receipt: [census JSON](../reports/production-deployment-control-plane-v1-census-20260917.json),
-  SHA256 `0e343e001bcf7c59afec0503cfae74271cd3d3fe6d87791fb02390e6f242f4e5`.
+  SHA256 `8b91ad8c91cb2f206fa34e99c95ec4737731c783bc0789c21347ad2e1f2f5fc6`.
 - Method: read source, hashes, selected plist fields, and selected `launchctl print`
   fields as uid 502. No sudo, writes to production, restart, messages, database
   queries, credentials, private payloads, or full process environments.
@@ -100,7 +100,9 @@ reviewed need; recursive chown-to-one-GID is not an acceptable repair.
 
 The root install directory is 0:0/0755. Caller non-writability of every root-executed
 dependency, ACL, ancestor, and interpreter was NOT proven by this directory check.
-No deployd socket or deployctl binary existed at the checked proposed locations.
+Neither the initially checked legacy-form socket path nor the proposed
+`/var/run/agent-deployd/control.sock` existed; the latter was checked in the
+receipt supplement. No deployctl binary existed at the checked location.
 Sudoers, full privileged ACLs, and protected state contents were not readable by
 this census and remain explicit bootstrap-preflight requirements.
 
