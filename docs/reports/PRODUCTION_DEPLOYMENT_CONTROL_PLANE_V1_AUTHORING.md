@@ -86,7 +86,7 @@ sanitized census; permission-denied surfaces are recorded explicitly.
 CONTROL_PLANE_SOURCE_FIXED = NO
 SPEC_STATUS = proposed
 SPEC_ACCEPTED_IN_BASE = NO
-INDEPENDENT_SPEC_REVIEW = PENDING
+INDEPENDENT_SPEC_REVIEW = PASS at 39865536ce51005f95a98473e77c2329078512c0
 PRIVILEGED_SECURITY_REVIEW = NOT_STARTED
 PRIVILEGED_BOOTSTRAP_ALLOWED = NO
 PRODUCTION_MUTATION_PERFORMED = NO
@@ -129,3 +129,53 @@ Executed mechanical validation of round-1 candidate:
   21 children, `packages/production-runtime/test` 23, `scripts` 59. New violations=0;
   unrelated baseline debt is preserved. Do not report the full structure gate PASS.
 - No product tests executed or claimed: this revision changes only documents.
+
+## Independent exact-head re-audit and handoff
+
+```text
+SPEC_GOVERNANCE_MODE = REVIEW
+REVIEW_KIND = SPEC
+SPEC_REVIEW = ACCEPT (recommendation, not Owner acceptance)
+REVIEW_TARGET_HEAD = 39865536ce51005f95a98473e77c2329078512c0
+PREVIOUS_REVIEW_HEAD = dc658bb611c85b8c0bc2045d94e1b598bfa2c23d
+BASE_HEAD = d602b592fad345fb1c9adebe2bc6611a6f5cfdc2
+CURRENT_BASE_HEAD = d602b592fad345fb1c9adebe2bc6611a6f5cfdc2
+REVIEWER_ID = /root/dcp_spec_review
+AUTHOR_INDEPENDENCE = PASS
+AUTHORITY_REVIEW = PASS
+PRIMITIVE_BOUNDARY_REVIEW = PASS
+CONTRACT_REVIEW = PASS
+ACCEPTANCE_COVERAGE_REVIEW = PASS
+MANDATE_SCOPE_REVIEW = PASS
+EVIDENCE_REVIEWABILITY = PASS (bounded authoring evidence)
+FROZEN_REQUIRED_REVISION_UNION = [B1, G1]
+RESOLVED = [B1, G1, F1]
+UNRESOLVED_BLOCKERS = []
+UNRESOLVED_LOAD_BEARING_SPEC_GAPS = []
+NEW_BLOCKERS = []
+OWNER_SPEC_ACCEPTANCE_READY = YES
+IMPLEMENTATION_ALLOWED = NO
+MERGE_READY = NO (Owner acceptance pending)
+OPERATION_ALLOWED = NO
+PRIVILEGED_BOOTSTRAP_ALLOWED = NO
+NEXT_ACTION = OWNER_DECISION
+```
+
+Reviewer confirmed direct lifecycle/signaling denial and disabled GUI enrollment;
+artifact/request/intent/attempt separation, bounded verified recovery and updated
+negative acceptance; and the supplemented source hash/socket/census digest.
+Re-audit was read-only, limited to frozen findings and affected evidence, retaining
+the previous unaffected review conclusions. No new blockers were raised.
+
+Final mechanical recheck at the reviewed head: governance integrity PASS,
+frontmatter transition PASS, 20/20 Contract coverage, local links/census digest PASS,
+diff check PASS, four documentation files only, clean worktree. Remote main remained
+the bound base. The subsequently appended review record does not change Spec or
+census bytes and is not itself a semantic implementation or acceptance transaction.
+
+Next Owner decision is to accept or revise the proposed Spec at reviewed commit
+`39865536ce51005f95a98473e77c2329078512c0`. On acceptance, record the attributable
+acceptance/lifecycle transition and merge authority before implementation. No
+root bootstrap, Grant, service identity migration or production apply is implied.
+The full Goal remains incomplete until phases B–G and every production gate have
+real evidence; do not convert this authoring-stage PASS into Goal completion.
