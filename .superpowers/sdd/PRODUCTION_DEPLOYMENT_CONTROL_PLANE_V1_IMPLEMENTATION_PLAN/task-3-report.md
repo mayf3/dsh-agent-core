@@ -218,3 +218,23 @@ Final formatting, source whitespace and vendored governance integrity PASS.
 Supplemental Rust structure PASS: maximum482 lines /19 children /depth2. The
 machine structure result and its exact staged tree are retained separately;
 existing unrelated structure debt does not become a self-declared PASS.
+
+
+Machine gate executed against source commit
+`4c45c9eaa5573fecccf55a926395d21af588b8a2`, base186c83d7:
+
+```text
+node scripts/verify-code-structure.mjs --base 186c83d7a61320bee9eb04005de13d4bbee27df8 --head 4c45c9e --json
+```
+
+Exit1, exactly the three unchanged existing violations:
+`packages/production-runtime/src`21/21 children;
+`packages/production-runtime/test`23/23; `scripts`59/59. No Task3/new violation.
+The raw JSON has76 warnings and notes the existing exception ceilings. A prior
+attempt using staged tree d29a7a0 was rejected because the verifier requires a
+commit ref (exit2); it was not a product gate result. The actual commit-bound
+result is `machine-structure.json`. The subsequent commit changes only this gate
+report, its raw JSON and introductory README wording; source tests are unchanged.
+
+Status: bounded Task3 implementation complete with explicit production-adoption
+concerns; independent review pending. Stop here; no Task4 bootstrap work performed.
