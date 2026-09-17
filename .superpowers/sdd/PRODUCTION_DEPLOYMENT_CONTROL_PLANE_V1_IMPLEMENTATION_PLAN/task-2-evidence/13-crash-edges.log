@@ -1,0 +1,48 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.39s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+
+running 1 test
+durable edge 1/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 2/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 3/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 4/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 5/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 6/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 7/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 8/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 9/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 10/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 11/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 12/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 13/13: process exit 75, OS lock reacquired, Quarantined, no replay
+test transaction::crashes::real_process_exit_at_every_apply_journal_edge_never_replays ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 19.35s
+

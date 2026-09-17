@@ -1,0 +1,24 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.94s
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-4ff9edb8092e0eb5)
+
+running 3 tests
+test lock_type_is_owned_not_a_string ... ok
+test fixture_rejects_writable_or_acl_root ... ok
+test fixture_retains_directory_and_rejects_symlink_root ... FAILED
+
+failures:
+
+---- fixture_retains_directory_and_rejects_symlink_root stdout ----
+
+thread 'fixture_retains_directory_and_rejects_symlink_root' (72534195) panicked at test/filesystem.rs:9:43:
+called `Result::unwrap()` on an `Err` value: Error { code: "NOT_IMPLEMENTED" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    fixture_retains_directory_and_rejects_symlink_root
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test filesystem`

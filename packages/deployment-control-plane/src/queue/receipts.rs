@@ -88,7 +88,12 @@ impl Queue {
             let attachment: String=tx.query_row("SELECT attachment FROM coverage WHERE unit=? AND goal=?",(&r.unit_id,&r.goal_id),|row|row.get(0))?;
             require(r.attachment_digest==attachment && r.attempt==s.mutating_attempts,"GOAL_ATTEMPT_MISMATCH")?;
             valid_id(&r.service_generation)?;
-            if let Some((_,transaction))=attempt_receipt(tx,&r.unit_id,r.attempt)? {
+            if s.state == State::Applied {
+                let quarantine:u64=tx.query_row("SELECT value FROM meta WHERE key='quarantine'",[],|row|row.get(0))?;
+                require(quarantine==0,"UNKNOWN_OUTCOME")?;
+                let physical = super::physical::current(tx, &s.unit.target_runtime)?.ok_or(Error::new("INSTALLED_GENERATION_CHANGED"))?;
+                require(physical.unit_id == r.unit_id && physical.service_generation == r.service_generation, "GOAL_READBACK_MISMATCH")?;
+            } else if let Some((_,transaction))=attempt_receipt(tx,&r.unit_id,r.attempt)? {
                 require(r.service_generation==transaction.new_service_generation,"GOAL_READBACK_MISMATCH")?;
             }
             let p = catalog.profiles.get(&s.unit.deployment_profile).ok_or(Error::new("PROFILE_NOT_ALLOWED"))?;
@@ -105,7 +110,7 @@ impl Queue {
                 if *revision == r.revision && *raw == json(receipt)? { return digest(receipt); }
                 let old: Signed<GoalReceipt> = parse(raw.clone())?;
                 require(old.payload.outcome != GoalOutcome::OutcomeUnknown,"UNKNOWN_CANARY")?;
-                require(old.payload.outcome != GoalOutcome::Pass || old.payload.attempt != r.attempt,"GOAL_ALREADY_PASSED")?;
+                require(old.payload.outcome != GoalOutcome::Pass || old.payload.attempt != r.attempt || old.payload.service_generation != r.service_generation,"GOAL_ALREADY_PASSED")?;
             }
             require(r.revision == previous.map(|x|x.0).unwrap_or(0)+1,"GOAL_REVISION_CAS")?;
             let hash = digest(receipt)?;
@@ -230,6 +235,10 @@ pub(super) fn finalize(tx: &Transaction<'_>, s: &UnitStatus) -> Result<()> {
     }
     tx.execute("INSERT INTO installed VALUES (?,?,?,?) ON CONFLICT(target) DO UPDATE SET unit=excluded.unit,generation=excluded.generation,receipt=excluded.receipt",
         (&s.unit.target_runtime,&s.unit.deployment_unit_id,receipt.target_generation,hash))?;
+    tx.execute(
+        "DELETE FROM physical_current WHERE target=?",
+        [&s.unit.target_runtime],
+    )?;
     Ok(())
 }
 fn enqueue(
@@ -238,6 +247,14 @@ fn enqueue(
     receipt: &str,
     unit: &str,
 ) -> Result<()> {
+    let prior: u64 = tx.query_row(
+        "SELECT count(*) FROM outbox WHERE unit=? AND goal=?",
+        (unit, &goal.payload.goal_id),
+        |r| r.get(0),
+    )?;
+    if prior > 0 {
+        return Ok(());
+    }
     let id = digest(&(unit, &goal.payload.goal_id, receipt))?;
     tx.execute("INSERT OR IGNORE INTO outbox(id,unit,goal,producer,expected_revision,receipt) VALUES (?,?,?,?,?,?)",
         (id,unit,&goal.payload.goal_id,&goal.issuer,goal.payload.revision,receipt))?;

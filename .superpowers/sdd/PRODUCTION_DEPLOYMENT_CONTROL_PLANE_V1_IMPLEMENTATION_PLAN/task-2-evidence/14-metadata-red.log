@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.62s
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-e47ba9a4c39c08ce)
+
+running 1 test
+test target_reads_reject_xattrs_and_preserve_external_symlink_sentinel ... FAILED
+
+failures:
+
+---- target_reads_reject_xattrs_and_preserve_external_symlink_sentinel stdout ----
+
+thread 'target_reads_reject_xattrs_and_preserve_external_symlink_sentinel' (72621050) panicked at test/filesystem.rs:172:5:
+unknown extended metadata cannot silently disappear on rollback
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    target_reads_reject_xattrs_and_preserve_external_symlink_sentinel
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.12s
+
+error: test failed, to rerun pass `--test filesystem`

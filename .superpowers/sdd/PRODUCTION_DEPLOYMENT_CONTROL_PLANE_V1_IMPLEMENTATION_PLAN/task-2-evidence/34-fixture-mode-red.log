@@ -1,0 +1,32 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.06s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 6 tests
+test transaction::crashes::crash_worker ... ok
+test transaction::process::tests::kernel_exit_watch_is_birth_bound_and_receives_actual_exit ... ok
+
+thread 'transaction::crashes::real_process_exit_at_every_apply_journal_edge_never_replays' (72680048) panicked at src/transaction/../../test/transaction_fixture.rs:32:43:
+called `Result::unwrap()` on an `Err` value: Error { code: "UNSAFE_MODE" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'transaction::crashes::fully_observed_prewrite_crash_settles_without_replay' (72680047) panicked at src/transaction/../../test/transaction_fixture.rs:32:43:
+called `Result::unwrap()` on an `Err` value: Error { code: "UNSAFE_MODE" }
+
+thread 'transaction::crashes::actual_directory_write_denial_at_each_edge_blocks_unreceipted_mutation' (72680045) panicked at src/transaction/../../test/transaction_fixture.rs:32:43:
+called `Result::unwrap()` on an `Err` value: Error { code: "UNSAFE_MODE" }
+test transaction::crashes::fully_observed_prewrite_crash_settles_without_replay ... FAILED
+test transaction::crashes::real_process_exit_at_every_apply_journal_edge_never_replays ... FAILED
+test transaction::crashes::actual_directory_write_denial_at_each_edge_blocks_unreceipted_mutation ... FAILED
+test transaction::process::tests::real_timeout_kills_and_reaps_the_exact_owned_child ... ok
+
+failures:
+
+failures:
+    transaction::crashes::actual_directory_write_denial_at_each_edge_blocks_unreceipted_mutation
+    transaction::crashes::fully_observed_prewrite_crash_settles_without_replay
+    transaction::crashes::real_process_exit_at_every_apply_journal_edge_never_replays
+
+test result: FAILED. 3 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--lib`

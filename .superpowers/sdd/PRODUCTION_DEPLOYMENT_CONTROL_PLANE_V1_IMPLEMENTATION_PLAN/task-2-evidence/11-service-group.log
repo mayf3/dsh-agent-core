@@ -1,0 +1,29 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: function `setup` is never used
+   --> test/common/mod.rs:171:8
+    |
+171 | pub fn setup() -> (
+    |        ^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `geteuid` is never used
+   --> test/common/mod.rs:177:12
+    |
+177 |         fn geteuid() -> u32;
+    |            ^^^^^^^
+
+warning: `deployment-control-plane` (test "transactions") generated 2 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.34s
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-d274a6e2ea192a18)
+
+running 6 tests
+test launchd_periodic_parser_does_not_confuse_nested_pid_with_generation ... ok
+test a_different_fixture_mutex_cannot_authorize_apply ... ok
+test rebooted_executor_never_replays_unfinished_verification ... ok
+test finalize_joins_goal_receipt_to_attempt_and_process ... ok
+test unrelated_post_apply_drift_quarantines_and_preserves_bytes ... ok
+test apply_keeps_guard_and_correlates_process_attempt_and_full_evidence ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s
+

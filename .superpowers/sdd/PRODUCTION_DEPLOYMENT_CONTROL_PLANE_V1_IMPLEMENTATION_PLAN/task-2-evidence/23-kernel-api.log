@@ -1,0 +1,10 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.58s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 2 tests
+test transaction::process::tests::kernel_exit_watch_is_birth_bound_and_receives_actual_exit ... ok
+test transaction::process::tests::real_timeout_kills_and_reaps_the_exact_owned_child ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.01s
+

@@ -1,0 +1,16 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.69s
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-d274a6e2ea192a18)
+
+running 8 tests
+test launchd_periodic_parser_does_not_confuse_nested_pid_with_generation ... ok
+test a_different_fixture_mutex_cannot_authorize_apply ... ok
+test rebooted_executor_never_replays_unfinished_verification ... ok
+test partial_install_disk_failure_restores_exact_preimage_without_unrelated_writes ... ok
+test finalize_joins_goal_receipt_to_attempt_and_process ... ok
+test unrelated_post_apply_drift_quarantines_and_preserves_bytes ... ok
+test apply_keeps_guard_and_correlates_process_attempt_and_full_evidence ... ok
+test rollback_deletes_only_exact_transaction_created_absent_slot ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.95s
+

@@ -1,0 +1,51 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: field `host_identity` is never read
+  --> src/fs/mutex.rs:10:16
+   |
+ 8 | pub struct MutationGuard {
+   |            ------------- field in this struct
+ 9 |     file: File,
+10 |     pub(crate) host_identity: (u64, u64),
+   |                ^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `binds` is never used
+  --> src/fs/mutex.rs:27:19
+   |
+12 | impl MutationGuard {
+   | ------------------ method in this implementation
+...
+27 |     pub(crate) fn binds(&self, root: &Dir) -> Result<()> {
+   |                   ^^^^^
+
+warning: method `unlink` is never used
+  --> src/fs/secure.rs:95:12
+   |
+26 | impl Dir {
+   | -------- method in this implementation
+...
+95 |     pub fn unlink(&self, name: &str) -> Result<()> {
+   |            ^^^^^^
+
+warning: method `content_matches` is never used
+  --> src/fs/file.rs:19:19
+   |
+18 | impl FileImage {
+   | -------------- method in this implementation
+19 |     pub(crate) fn content_matches(&self, other: &Self) -> bool {
+   |                   ^^^^^^^^^^^^^^^
+
+warning: `deployment-control-plane` (lib) generated 4 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.17s
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-e47ba9a4c39c08ce)
+
+running 5 tests
+test lock_type_is_owned_not_a_string ... ok
+test fixture_rejects_writable_or_acl_root ... ok
+test fixture_retains_directory_and_rejects_symlink_root ... ok
+test real_bundle_seals_and_rehashes_exact_opened_bytes ... ok
+test bundle_rejects_escape_collision_extra_missing_and_oversize ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+

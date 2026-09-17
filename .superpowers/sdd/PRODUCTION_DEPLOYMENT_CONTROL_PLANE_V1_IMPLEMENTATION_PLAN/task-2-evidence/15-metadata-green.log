@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+error[E0599]: no method named `st_flags` found for struct `Metadata` in the current scope
+   --> src/fs/secure.rs:192:19
+    |
+192 |         require(m.st_flags() == 0, "UNSAFE_FLAGS")?;
+    |                   ^^^^^^^^ method not found in `Metadata`
+    |
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/std/src/os/darwin/fs.rs:70:7
+    |
+    = note: the method is available for `Metadata` here
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `MetadataExt` which provides `st_flags` is implemented but not in scope; perhaps you want to import it
+    |
+  1 + use std::os::macos::fs::MetadataExt;
+    |
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `deployment-control-plane` (lib) due to 1 previous error

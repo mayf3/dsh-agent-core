@@ -1,0 +1,150 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.32s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 6 tests
+test transaction::crashes::crash_worker ... ok
+test transaction::process::tests::kernel_exit_watch_is_birth_bound_and_receives_actual_exit ... ok
+test transaction::process::tests::real_timeout_kills_and_reaps_the_exact_owned_child ... ok
+
+running 1 test
+durable edge 1/13: real directory EACCES, no recovery replay, lane blocked
+test transaction::crashes::fully_observed_prewrite_crash_settles_without_replay ... ok
+
+running 1 test
+durable edge 2/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 1/13: process exit 75, OS lock reacquired, Blocked, no replay
+
+running 1 test
+durable edge 3/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 2/13: process exit 75, OS lock reacquired, RolledBack, no replay
+
+running 1 test
+durable edge 4/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 3/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 5/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 4/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 6/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 5/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 6/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 7/13: real directory EACCES, no recovery replay, lane blocked
+
+running 1 test
+durable edge 7/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 8/13: real directory EACCES, no recovery replay, lane blocked
+
+running 1 test
+durable edge 8/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 9/13: real directory EACCES, no recovery replay, lane blocked
+
+running 1 test
+durable edge 10/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 9/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 11/13: real directory EACCES, no recovery replay, lane blocked
+durable edge 10/13: process exit 75, OS lock reacquired, Quarantined, no replay
+
+running 1 test
+durable edge 11/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 12/13: real directory EACCES, no recovery replay, lane blocked
+
+running 1 test
+durable edge 12/13: process exit 75, OS lock reacquired, Quarantined, no replay
+durable edge 13/13: real directory EACCES, no recovery replay, lane blocked
+test transaction::crashes::actual_directory_write_denial_at_each_edge_blocks_unreceipted_mutation ... ok
+
+running 1 test
+durable edge 13/13: process exit 75, OS lock reacquired, Quarantined, no replay
+test transaction::crashes::real_process_exit_at_every_apply_journal_edge_never_replays ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.99s
+
+     Running test/authority.rs (packages/deployment-control-plane/target/debug/deps/authority-8d6bf9d88b52f956)
+
+running 12 tests
+test caller_fields_cannot_inject_paths_or_commands ... ok
+test forged_or_changed_signed_payload_is_rejected ... ok
+test key_role_and_scope_are_enforced ... ok
+test freshness::producer_revision_overflow_rejects_without_panicking ... ok
+test freshness::authority_registry_epoch_is_monotonic_across_profile_scopes ... ok
+test freshness::overlapping_enabled_roots_cannot_have_independent_release_owners ... ok
+test freshness::superseded_signed_policy_remains_reviewable_by_digest ... ok
+test freshness::canonical_unit_id_is_derived_from_descriptor_not_request_id ... ok
+test authenticated_policy_epoch_cannot_roll_back_or_equivocate ... ok
+test freshness::source_inclusion_requires_signed_exact_face_not_release_ancestry ... ok
+test freshness::observed_revocation_epoch_survives_rejected_admission_and_reopen ... ok
+test admission_rejects_untrusted_release_bindings_without_inserting ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-e47ba9a4c39c08ce)
+
+running 12 tests
+test lock_type_is_owned_not_a_string ... ok
+test multiprocess_lock_worker ... ok
+test fixture_rejects_writable_or_acl_root ... ok
+test fixture_retains_directory_and_rejects_symlink_root ... ok
+test target_reads_reject_xattrs_and_preserve_external_symlink_sentinel ... ok
+test killed_holder_releases_kernel_lock_without_unlinking_inode_or_intent ... ok
+test payload_replacement_during_hash_cannot_change_sealed_bytes ... ok
+test every_nested_target_ancestor_is_descriptor_checked ... ok
+test sealed_cas_remains_available_after_untrusted_staging_disappears ... ok
+test real_bundle_seals_and_rehashes_exact_opened_bytes ... ok
+test rejects_real_acl_hardlink_fifo_and_writable_payload ... ok
+test bundle_rejects_escape_collision_extra_missing_and_oversize ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+     Running test/queue.rs (packages/deployment-control-plane/target/debug/deps/queue-cf1cd05bcbac315b)
+
+running 25 tests
+test producer_cas_snapshot_watermark_and_pagination_are_persistent ... ok
+test missing_dependencies_and_reverted_coverage_never_admit ... ok
+test receipts::queue_quota_rejects_new_work_and_wrong_revision_cannot_move_state ... ok
+test receipts::transport_request_rate_limit_is_persisted_even_when_units_collapse ... ok
+test receipts::signed_recovery_proof_is_retained_as_an_immutable_receipt ... ok
+test concurrent_duplicates_survive_reopen_and_actor_idempotency_conflicts ... ok
+test receipts::unknown_goal_blocks_finalize_and_has_no_automatic_verification_retry ... ok
+test repairs::b01_supersession_preserves_all_late_goal_and_actor_links ... ok
+test receipts::outbox_closure_is_signed_idempotent_and_never_reinstalls ... ok
+test repairs::b03_committed_ack_survives_expired_revoked_policy_and_reports_finalized_state ... ok
+test receipts::two_mutating_attempts_survive_new_request_and_same_artifact_revision_cannot_reset_budget ... ok
+test late_goal_attaches_immutable_coverage_without_install_and_outbox_is_scoped ... ok
+test receipts::late_goal_uses_accepted_verifier_and_receipt_is_generation_bound ... ok
+test repairs::b02_current_attempt_needs_its_own_transaction_and_goal_readback_receipts ... ok
+test repairs::b06_every_attachment_review_is_exposed_and_currently_revalidated ... ok
+test a_b_a_allocates_daemon_intents_from_trusted_desired_state ... ok
+test repairs::b05_revoked_recovery_and_cancel_cannot_clear_stop ... ok
+test scheduling::interrupted_mutation_is_quarantined_across_reopen_and_cannot_claim_safe_retry ... ok
+test retries_are_bounded_and_unknown_cannot_be_reset_by_request_or_claim ... ok
+test repairs::provenance::b05_safe_correction_resumes_automatically_only_after_fresh_precheck ... ok
+test scheduling::dependency_requires_exact_capability_receipt_and_goal_pass ... ok
+test scheduling::supersession_inherits_fifo_and_rejects_cycles_without_partial_writes ... ok
+test repairs::provenance::b06_transaction_receipt_binds_the_full_effective_attachment_set ... ok
+test repairs::b04_replaced_runtime_cannot_satisfy_live_installation_dependency ... ok
+test scheduling::fifo_and_continue_independent_obey_persisted_failure_disposition ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-d274a6e2ea192a18)
+
+running 9 tests
+test launchd_periodic_parser_does_not_confuse_nested_pid_with_generation ... ok
+test a_different_fixture_mutex_cannot_authorize_apply ... ok
+test rebooted_executor_never_replays_unfinished_verification ... ok
+test partial_install_disk_failure_restores_exact_preimage_without_unrelated_writes ... ok
+test finalize_joins_goal_receipt_to_attempt_and_process ... ok
+test unrelated_post_apply_drift_quarantines_and_preserves_bytes ... ok
+test apply_keeps_guard_and_correlates_process_attempt_and_full_evidence ... ok
+test rollback_deletes_only_exact_transaction_created_absent_slot ... ok
+test restored_generation::restored_a_uses_fresh_process_for_late_verification_without_reclosing_original_goal ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.08s
+

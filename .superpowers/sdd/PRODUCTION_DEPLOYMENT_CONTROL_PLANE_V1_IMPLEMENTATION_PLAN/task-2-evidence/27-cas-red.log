@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-e47ba9a4c39c08ce)
+
+running 1 test
+test sealed_cas_remains_available_after_untrusted_staging_disappears ... FAILED
+
+failures:
+
+---- sealed_cas_remains_available_after_untrusted_staging_disappears stdout ----
+
+thread 'sealed_cas_remains_available_after_untrusted_staging_disappears' (72661703) panicked at test/filesystem.rs:287:36:
+called `Result::unwrap()` on an `Err` value: Error { code: "ABSENT" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    sealed_cas_remains_available_after_untrusted_staging_disappears
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `--test filesystem`

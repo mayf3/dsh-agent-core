@@ -1,0 +1,32 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.67s
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-e47ba9a4c39c08ce)
+
+running 11 tests
+test lock_type_is_owned_not_a_string ... ok
+test multiprocess_lock_worker ... ok
+test fixture_rejects_writable_or_acl_root ... ok
+test target_reads_reject_xattrs_and_preserve_external_symlink_sentinel ... ok
+test killed_holder_releases_kernel_lock_without_unlinking_inode_or_intent ... ok
+test fixture_retains_directory_and_rejects_symlink_root ... ok
+test every_nested_target_ancestor_is_descriptor_checked ... ok
+test payload_replacement_during_hash_cannot_change_sealed_bytes ... ok
+test real_bundle_seals_and_rehashes_exact_opened_bytes ... ok
+test rejects_real_acl_hardlink_fifo_and_writable_payload ... ok
+test bundle_rejects_escape_collision_extra_missing_and_oversize ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-d274a6e2ea192a18)
+
+running 7 tests
+test launchd_periodic_parser_does_not_confuse_nested_pid_with_generation ... ok
+test a_different_fixture_mutex_cannot_authorize_apply ... ok
+test partial_install_disk_failure_restores_exact_preimage_without_unrelated_writes ... ok
+test finalize_joins_goal_receipt_to_attempt_and_process ... ok
+test rebooted_executor_never_replays_unfinished_verification ... ok
+test unrelated_post_apply_drift_quarantines_and_preserves_bytes ... ok
+test apply_keeps_guard_and_correlates_process_attempt_and_full_evidence ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.69s
+

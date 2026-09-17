@@ -178,3 +178,132 @@ bind exact outbox, receipt and producer revision; retries never install again.
 
 Run `cargo test --locked --manifest-path packages/deployment-control-plane/Cargo.toml
 --test authority --test queue`. Cargo.lock pins the native dependency closure.
+
+## Native executor interface (Task 2)
+
+The macOS filesystem layer retains directory/file descriptors. It uses component
+`openat(O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC)`, `fstat`, descriptor ACL/xattr reads,
+`renameat` and fsync. Every ancestor is checked; group/world-writable ancestors,
+unknown ACLs, set-id/sticky file modes, flags, hardlinks and special files refuse.
+The single supported inert xattr is `com.apple.provenance`, captured and restored;
+other xattrs refuse. Rollback preserves bytes, UID/GID/mode, empty ACL, permitted
+xattrs and mtime, while checking the transaction inode before overwrite/deletion.
+
+```rust
+FixtureRoots::open(&Path) -> Result<FixtureRoots>
+FixtureRoots::lock() -> Result<MutationGuard>
+FixtureRoots::artifacts() -> Result<ArtifactStore>
+FixtureRoots::target() -> Result<TargetRoot>
+ArtifactStore::import(artifact_sha256: &str, manifest_digest: &str) -> Result<SealedArtifact>
+SealedArtifact::verify() -> Result<()>
+SealedArtifact::read(relative_slot: &str) -> Result<Vec<u8>>
+TargetRoot::read(relative_slot: &str) -> Result<Option<FileImage>>
+Executor::fixture(&FixtureRoots) -> Result<Executor>
+Executor::production(&Profile) -> Result<Executor>
+Executor::lock() -> Result<MutationGuard>
+Executor::apply(&mut self, &MutationGuard, &Queue, &Catalog, unit: &str,
+                &Signed<Policy>, now: u64, authenticated_caller: &str) -> Result<Applied>
+Executor::rollback(&mut self, &MutationGuard, &Queue, unit: &str) -> Result<()>
+Executor::recover(&mut self, &MutationGuard, &Queue) -> Result<Vec<String>>
+Executor::verify_installed(&mut self, &MutationGuard, &Queue, &Catalog, unit: &str,
+                           &Signed<Policy>, now: u64) -> Result<CurrentInstallation>
+Executor::finalize(&mut self, &MutationGuard, &Queue, unit: &str) -> Result<String>
+Queue::daemon_installed_receipt(target: &str) -> Result<Option<TransactionReceipt>>
+Queue::daemon_current_installation(target: &str) -> Result<Option<CurrentInstallation>>
+```
+
+Fixture construction refuses euid 0 and uses Darwin's kernel-selected per-user
+private temporary root, independent of TMPDIR. Its targets/staging/transactions
+remain children of that root; its service driver owns only `/bin/sleep` fixture
+children. It cannot select production labels. Native production construction
+requires euid 0 and reads only the fixed protected
+`/private/var/db/agent-deployd/activation.json`; it checks the protected exact
+Profile digest/revision and explicit `root-code` review facet. No activation file
+is generated or installed by this library. Task 3 must authenticate the bootstrap
+receipt and protected Catalog before construction; an arbitrary JSON activation
+flag is not permission. The compiled canonical state root represents the Spec's
+`/var/db/agent-deployd` root; bootstrap separately validates the fixed `/var` alias.
+No `/var/run` group-writability exception is introduced.
+
+The guard owns the permanent `production.lock` flock descriptor and is not Clone.
+It is bound to its host root's device/inode. Production acquisition never creates,
+unlinks or replaces the lock. `apply` borrows it and performs authoritative
+precheck internally; it calls `Queue::begin_apply` with the flushed preflight
+journal digest, then leaves the Queue in VERIFYING and returns `Applied.receipt`.
+The outer Train MUST retain the same guard through all Goal verification,
+rollback/finalize and release. `finalize` repeats physical/service readback,
+records the returned transaction receipt in FINALIZING and lets Queue require all
+current Goal receipts before APPLIED. A caller disconnect does not drop the guard.
+
+A bundle is a fixed-origin `staging/<artifact_sha256>/` directory with
+`manifest.json` plus exactly its declared flat blob names. The artifact SHA-256 is
+of the raw manifest bytes; `manifest_digest` is the existing typed canonical
+`trust::digest(ArtifactManifest)`. Each signed manifest entry binds one relative
+app slot, blob, SHA-256, size and executable bit. The manifest's complete closed
+blob set binds all bytes transitively. ASCII-only bounded relative names reject
+Unicode ambiguity, traversal, case collisions and prefix collisions. File and
+aggregate bundle/preimage limits are 64 MiB, with at most 4096 entries. Intake
+reads/hashes twice through the same FD, creates 0400 private blobs, flushes them,
+and publishes one sealed directory by rename. An existing sealed artifact remains
+usable after staging disappears. Incomplete intake is retained and refuses reuse.
+
+The journal contains flushed hash-linked sequential records: private complete
+preimages/ABSENT markers, policy/attachment set, intended attempt, service image,
+slot write intent, prepared inode, installed readback and owned-operation
+intent/spawn/kernel identity/exit. Crash hooks exist only in `cfg(test)` code and
+are absent from production builds. Runtime service operations use fixed native
+launchctl templates for Runtime/W1/W2: adjunct bootout precedes parent bootout;
+bootstrap preserves each preimage's loaded/disabled selection. Disabled+loaded
+preimages refuse before mutation because this source does not change launchd's
+disabled map. Periodic not-running jobs are observed as such; their process/runs
+observations are separate from installed-release generation. Running processes
+require Darwin birth, UID/GID, executable and actual kernel argv. Kqueue is
+subscribed before old-process exit; unloaded readback and a complete process
+census cover periodic tick races. Parent health is fixed `127.0.0.1:8790/health`
+and is additional to process/installed-byte proof. No native mutator was executed
+by the Task 2 fixtures. Root process census, current launchd shapes, all live
+identities/plist hashes and real service readback remain bootstrap/live gates.
+
+On known safe failure, rollback checks exact known transaction faces, restores
+only captured slots and prior service semantics, and emits ROLLED_BACK. Unknown
+owned actions, drift or failed evidence persistence quarantine the lane. Startup
+recovery inspects nonterminal journals while locked: a proven pre-operation crash
+settles BLOCKED/ROLLED_BACK, preserving STOP and budgets; unresolved service or
+acceptance steps remain quarantined and are never replayed. Signed remediation
+and `begin_apply` remain the only retry path. Corrupt journals latch host
+quarantine, including when no Queue unit is currently nonterminal.
+
+After a failed B restores an already installed A, the daemon appends a
+`RestoredInstallation` receipt and CAS-updates only the current physical binding.
+It binds A's unit, installed target generation, attempt and original transaction
+receipt, the predecessor physical binding, fresh process generation, the failing
+B attempt and exact physical restoration evidence. Historical transaction/Goal
+receipts are immutable. `verify_installed` returns that current binding under the
+mutex, without reinstalling/restarting. Late Goal and dependency checks reject
+stale process generations; a fresh accepted verifier may reverify a prior PASS
+against the restored process. Existing closure outbox entries, including delivered
+ones, prevent duplicate Goal closure. An exact original signed desired intent can
+attach passive late coverage only while that exact unit is currently installed;
+it cannot allocate or replay an old desired intent.
+
+### Exact production coverage of this candidate
+
+Supported mutation scope: reviewed regular-file app slots below the fixed
+`/usr/local/libexec/agent-core/app` root, using existing protected parent
+directories; additions of files within those directories have ABSENT preimages.
+All three fixed dsh services are included in quiescence/readback because W2 can
+execute this app closure as root. Protected `NativeEnrollment` binds their
+numeric identities, plist hashes, Node hash, runtime root argument, exact Profile
+digest and initial app-file baseline. Later baselines are checked against the
+Queue's installed receipt plus the protected journal.
+
+Not implemented/enrolled by this candidate: new directory creation/deletion,
+config or routing key writes/migrations, plist mutation, Node/harness replacement,
+Watchdog incident migration, auth-service or svc-workflow execution profiles.
+Those facets cannot be put into this app manifest as out-of-root destinations.
+`NativeEnrollment` and passing fixtures do not establish bootstrap readiness or
+current production enrollment. Task 4 must bind the intended release's complete
+facet coverage; an unsupported required facet prevents enabling that profile.
+Task 3 still owns socket/credentials, trusted clock/caller selection, the Train,
+bounded accepted Goal verifier dispatch, bootstrap activation/trust validation,
+protected SQLite open, and user-facing receipt redaction.

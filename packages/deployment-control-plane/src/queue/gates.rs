@@ -39,6 +39,11 @@ pub(super) fn validate_unit(
         )
         .optional()?;
     if status.state == State::Applied {
+        let quarantine: u64 =
+            tx.query_row("SELECT value FROM meta WHERE key='quarantine'", [], |r| {
+                r.get(0)
+            })?;
+        require(quarantine == 0, "UNKNOWN_OUTCOME")?;
         require(
             current.as_ref().is_some_and(|(unit, generation)| {
                 unit == id && *generation == status.unit.expected_target_generation + 1

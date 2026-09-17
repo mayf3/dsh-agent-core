@@ -1,0 +1,9 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.75s
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-d274a6e2ea192a18)
+
+running 1 test
+test restored_generation::restored_a_uses_fresh_process_for_late_verification_without_reclosing_original_goal ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.39s
+

@@ -1,0 +1,82 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: field `host_identity` is never read
+  --> src/fs/mutex.rs:10:16
+   |
+ 8 | pub struct MutationGuard {
+   |            ------------- field in this struct
+ 9 |     file: File,
+10 |     pub(crate) host_identity: (u64, u64),
+   |                ^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `binds` is never used
+  --> src/fs/mutex.rs:27:19
+   |
+12 | impl MutationGuard {
+   | ------------------ method in this implementation
+...
+27 |     pub(crate) fn binds(&self, root: &Dir) -> Result<()> {
+   |                   ^^^^^
+
+warning: method `unlink` is never used
+  --> src/fs/secure.rs:95:12
+   |
+26 | impl Dir {
+   | -------- method in this implementation
+...
+95 |     pub fn unlink(&self, name: &str) -> Result<()> {
+   |            ^^^^^^
+
+warning: method `content_matches` is never used
+  --> src/fs/file.rs:19:19
+   |
+18 | impl FileImage {
+   | -------------- method in this implementation
+19 |     pub(crate) fn content_matches(&self, other: &Self) -> bool {
+   |                   ^^^^^^^^^^^^^^^
+
+warning: `deployment-control-plane` (lib) generated 4 warnings
+warning: function `setup` is never used
+   --> test/common/mod.rs:171:8
+    |
+171 | pub fn setup() -> (
+    |        ^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `geteuid` is never used
+   --> test/common/mod.rs:177:12
+    |
+177 |         fn geteuid() -> u32;
+    |            ^^^^^^^
+
+warning: `deployment-control-plane` (test "transactions") generated 2 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.37s
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-d274a6e2ea192a18)
+
+running 2 tests
+test unrelated_post_apply_drift_quarantines_and_preserves_bytes ... FAILED
+test apply_keeps_guard_and_correlates_process_attempt_and_full_evidence ... FAILED
+
+failures:
+
+---- unrelated_post_apply_drift_quarantines_and_preserves_bytes stdout ----
+
+thread 'unrelated_post_apply_drift_quarantines_and_preserves_bytes' (72548129) panicked at test/transactions.rs:59:82:
+called `Result::unwrap()` on an `Err` value: Error { code: "NOT_IMPLEMENTED" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- apply_keeps_guard_and_correlates_process_attempt_and_full_evidence stdout ----
+
+thread 'apply_keeps_guard_and_correlates_process_attempt_and_full_evidence' (72548128) panicked at test/transactions.rs:43:94:
+called `Result::unwrap()` on an `Err` value: Error { code: "NOT_IMPLEMENTED" }
+
+
+failures:
+    apply_keeps_guard_and_correlates_process_attempt_and_full_evidence
+    unrelated_post_apply_drift_quarantines_and_preserves_bytes
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `--test transactions`

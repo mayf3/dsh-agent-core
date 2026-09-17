@@ -1,0 +1,53 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: unused import: `Error`
+ --> src/transaction/service.rs:1:44
+  |
+1 | use crate::{error::require, trust::digest, Error, Result};
+  |                                            ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0282]: type annotations needed for `std::result::Result<std::string::String, _>`
+  --> src/transaction/recovery.rs:74:13
+   |
+74 |         let result=(|| {
+   |             ^^^^^^
+...
+84 |             Ok(hash)
+   |             -------- type must be known at this point
+   |
+help: consider giving `result` an explicit type, where the type for type parameter `E` is specified
+   |
+74 |         let result: std::result::Result<_, E>=(|| {
+   |                   +++++++++++++++++++++++++++
+
+error[E0283]: type annotations needed for `std::result::Result<std::string::String, _>`
+  --> src/transaction/recovery.rs:74:13
+   |
+74 |         let result=(|| {
+   |             ^^^^^^
+...
+87 |         Ok(result?)
+   |                  - type must be known at this point
+   |
+note: multiple `impl`s satisfying `error::Error: From<_>` found
+  --> src/error.rs:20:1
+   |
+20 | impl From<rusqlite::Error> for Error {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+25 | impl From<serde_json::Error> for Error {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+38 | impl From<std::io::Error> for Error {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: and another `impl` found in the `core` crate: `impl<T> From<T> for T;`
+help: consider giving `result` an explicit type, where the placeholders `_` are specified
+   |
+74 |         let result: std::result::Result<_, E>=(|| {
+   |                   +++++++++++++++++++++++++++
+
+Some errors have detailed explanations: E0282, E0283.
+For more information about an error, try `rustc --explain E0282`.
+warning: `deployment-control-plane` (lib) generated 1 warning
+error: could not compile `deployment-control-plane` (lib) due to 2 previous errors; 1 warning emitted

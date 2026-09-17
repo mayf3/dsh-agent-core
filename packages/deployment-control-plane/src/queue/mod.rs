@@ -92,3 +92,7 @@ fn bump(tx: &Transaction<'_>, key: &str) -> Result<u64> {
     tx.execute("UPDATE meta SET value=value+1 WHERE key=?", [key])?;
     Ok(tx.query_row("SELECT value FROM meta WHERE key=?", [key], |r| r.get(0))?)
 }
+
+mod executor_recovery;
+
+mod physical;

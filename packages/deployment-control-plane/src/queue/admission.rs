@@ -29,7 +29,15 @@ impl Queue {
                 require(current == Some(json(g)?), "READY_REVISION_MISMATCH")?;
             }
             check_dependencies(tx,&proposal.dependencies)?;
-            let intent = resolve_intent(tx,proposal)?;
+            // Passive late coverage of the exact current installed intent may use its
+            // original signed desired record after another attempt was rolled back.
+            // It cannot allocate/replay an old intent or attach to a historical installation.
+            let installed_intent: Option<(u64,String)> = tx.query_row("SELECT units.intent,intents.desired_digest FROM installed JOIN units ON units.id=installed.unit JOIN intents ON intents.id=units.intent WHERE installed.target=? AND units.profile=? AND units.profile_revision=? AND units.artifact=? AND units.state='\"Applied\"'",
+                (&profile.target_runtime,&proposal.deployment_profile,&profile.revision,&proposal.build.payload.artifact_sha256),|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
+            let intent = match installed_intent {
+                Some((intent, desired)) if desired == digest(&proposal.desired)? => intent,
+                _ => resolve_intent(tx,proposal)?,
+            };
             let existing: Option<String> = tx.query_row("SELECT id FROM units WHERE target=? AND intent=? AND profile_revision=? AND artifact=?",
                 (&profile.target_runtime,intent,&profile.revision,&proposal.build.payload.artifact_sha256), |r| r.get(0)).optional()?;
             let unit_id = if let Some(id) = existing {

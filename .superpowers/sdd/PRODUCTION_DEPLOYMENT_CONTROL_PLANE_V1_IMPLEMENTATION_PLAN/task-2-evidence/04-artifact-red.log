@@ -1,0 +1,71 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: field `host_identity` is never read
+  --> src/fs/mutex.rs:10:16
+   |
+ 8 | pub struct MutationGuard {
+   |            ------------- field in this struct
+ 9 |     file: File,
+10 |     pub(crate) host_identity: (u64, u64),
+   |                ^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `binds` is never used
+  --> src/fs/mutex.rs:27:19
+   |
+12 | impl MutationGuard {
+   | ------------------ method in this implementation
+...
+27 |     pub(crate) fn binds(&self, root: &Dir) -> Result<()> {
+   |                   ^^^^^
+
+warning: function `relative` is never used
+  --> src/fs/secure.rs:19:15
+   |
+19 | pub(crate) fn relative(path: &str) -> Result<Vec<&str>> {
+   |               ^^^^^^^^
+
+warning: methods `mkdir`, `names`, `rename`, and `unlink` are never used
+  --> src/fs/secure.rs:48:12
+   |
+26 | impl Dir {
+   | -------- methods in this implementation
+...
+48 |     pub fn mkdir(&self, name: &str) -> Result<Self> {
+   |            ^^^^^
+...
+67 |     pub fn names(&self) -> Result<Vec<String>> {
+   |            ^^^^^
+...
+86 |     pub fn rename(&self, from: &str, to_dir: &Dir, to: &str) -> Result<()> {
+   |            ^^^^^^
+...
+95 |     pub fn unlink(&self, name: &str) -> Result<()> {
+   |            ^^^^^^
+
+warning: `deployment-control-plane` (lib) generated 4 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.82s
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-e47ba9a4c39c08ce)
+
+running 5 tests
+test lock_type_is_owned_not_a_string ... ok
+test fixture_rejects_writable_or_acl_root ... ok
+test real_bundle_seals_and_rehashes_exact_opened_bytes ... FAILED
+test fixture_retains_directory_and_rejects_symlink_root ... ok
+test bundle_rejects_escape_collision_extra_missing_and_oversize ... ok
+
+failures:
+
+---- real_bundle_seals_and_rehashes_exact_opened_bytes stdout ----
+
+thread 'real_bundle_seals_and_rehashes_exact_opened_bytes' (72540892) panicked at test/filesystem.rs:56:39:
+called `Result::unwrap()` on an `Err` value: Error { code: "NOT_IMPLEMENTED" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    real_bundle_seals_and_rehashes_exact_opened_bytes
+
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+error: test failed, to rerun pass `--test filesystem`

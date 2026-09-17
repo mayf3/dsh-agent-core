@@ -1,5 +1,13 @@
 use super::*;
 impl Queue {
+    /// Executor-only current installed receipt, pinned by the authoritative target ledger.
+    pub fn daemon_installed_receipt(&self, target: &str) -> Result<Option<TransactionReceipt>> {
+        self.transaction(|tx| {
+            let raw: Option<String> = tx.query_row("SELECT receipts.record FROM installed JOIN receipts ON receipts.digest=installed.receipt WHERE installed.target=?", [target], |r| r.get(0)).optional()?;
+            raw.map(parse).transpose()
+        })
+    }
+
     pub fn daemon_attachments(&self, id: &str) -> Result<Vec<CoverageAttachment>> {
         self.transaction(|tx| read_attachments(tx, id))
     }
