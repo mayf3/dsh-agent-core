@@ -28,7 +28,8 @@ const args = {
 
 test('registered authoring description retains validated summary, model3 and linear/publish guidance', () => {
   const tool = register(manifest)
-  assert.equal(tool.description, `Agent Core capability \`${manifest.id}\`: ${manifest.description} Supported operations: create_definition, create_draft_version, replace_draft_graph, publish_version.`)
+  assert.equal(tool.description, `Agent Core capability \`${manifest.id}\`: ${manifest.description} Supported operations: create_definition, create_draft_version, replace_draft_graph, publish_version.` +
+    ' Required arguments per operation — create_definition: domainId, definitionKey, displayName; create_draft_version: domainId, definitionId; replace_draft_graph: domainId, definitionId, definitionVersionId; publish_version: domainId, definitionId, versionId.')
   assert.match(tool.description, /semanticModelVersion=3/)
   assert.match(tool.description, /steps \+ terminalOutcome/)
   assert.match(tool.description, /Publish separately/)
@@ -99,7 +100,12 @@ test('malformed linear input renders bounded index and correction before credent
 test('only authoring diagnostics render bounded sanitized detail; unrelated text stays byte-identical', () => {
   const tool = register(manifest)
   const generic = register(calculator)
-  assert.equal(generic.description, 'Agent Core capability `external.calculator`: undefined Supported operations: add, subtract, multiply, divide.')
+  // WORKFLOW_DOMAIN_OWNER_ARCHIVE_CAPABILITY_REPAIR_V1: the literal
+  // "undefined" here was a pinned defect (validateManifest validated the
+  // description but dropped it from the canonical form). Every tool now
+  // renders its real manifest description plus per-operation required args.
+  assert.equal(generic.description, `Agent Core capability \`external.calculator\`: ${calculator.description} Supported operations: add, subtract, multiply, divide.` +
+    ' Required arguments per operation — add: a, b; subtract: a, b; multiply: a, b; divide: a, b.')
   const value = { ok: false, error: { code: 'graph_validation_failed', status: 422, requestId: 'req', detail: 'secret=private-secret '+ '😀'.repeat(600) } }
   const authoring = tool.output.render({ operation: 'publish_version' }, value)[0].text
   assert.doesNotMatch(authoring, /private-secret/)

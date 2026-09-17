@@ -108,12 +108,18 @@ test('workflow_execute: manifest freezes the unified four-operation write contra
     'transitionDefinitionId',
     'expectedWorkflowStateVersion',
   ])
+  // WORKFLOW_DOMAIN_OWNER_ARCHIVE_CAPABILITY_REPAIR_V1: executable_for_actor
+  // is named by the frozen operation description as a model-permitted advisory
+  // preference, so the closed argument schema declares it explicitly (never
+  // forwarded — see the http.body pin below; the server is authoritative).
   assert.deepEqual(Object.keys(transition.arguments.properties), [
     'workflowInstanceId',
     'transitionDefinitionId',
     'expectedWorkflowStateVersion',
     'submissionPayload',
+    'executable_for_actor',
   ])
+  assert.equal(transition.arguments.properties.executable_for_actor.type, 'boolean')
   assert.equal(transition.arguments.properties.expectedWorkflowStateVersion.minimum, 1)
   assert.deepEqual(transition.http, {
     target: 'svc-workflow',
@@ -156,16 +162,14 @@ test('workflow_execute operation=transition: authorized POST preserves body, sco
   })
   const { definition } = wire(executeManifest(), transport)
 
+  // executable_for_actor stays model-permitted (named by the frozen operation
+  // description as an advisory preference) and must not trigger a local block.
   const result = await definition.execute({
     operation: 'transition',
     workflowInstanceId: 'wf-42',
     transitionDefinitionId: 'transition-7',
     expectedWorkflowStateVersion: 7,
     submissionPayload: { decision: 'approve' },
-    idempotencyKey: 'ik-model-controlled',
-    principalId: 'principal-mallory',
-    agentId: 'agt_mallory',
-    actor: 'mallory',
     executable_for_actor: false,
   })
 
@@ -196,7 +200,27 @@ test('workflow_execute operation=transition: authorized POST preserves body, sco
   })
   assert.equal(request.headers.authorization, 'Bearer tok-real')
   assert.ok(/^ik-workflow-execute-\d+-[a-z0-9]+$/.test(request.headers['idempotency-key']))
-  assert.notEqual(request.headers['idempotency-key'], 'ik-model-controlled')
+
+  // WORKFLOW_DOMAIN_OWNER_ARCHIVE_CAPABILITY_REPAIR_V1 (closed-manifest ops):
+  // model-supplied identity / trusted-seam fields on transition are now
+  // deterministic local rejections naming every unknown property; the
+  // advisory executable_for_actor stays accepted (above). Zero extra HTTP.
+  const mallory = await definition.execute({
+    operation: 'transition',
+    workflowInstanceId: 'wf-42',
+    transitionDefinitionId: 'transition-7',
+    expectedWorkflowStateVersion: 7,
+    idempotencyKey: 'ik-model-controlled',
+    principalId: 'principal-mallory',
+    agentId: 'agt_mallory',
+    actor: 'mallory',
+  })
+  assert.equal(mallory.ok, false)
+  assert.equal(mallory.error.code, 'invalid_arguments')
+  for (const field of ['idempotencyKey', 'principalId', 'agentId', 'actor']) {
+    assert.match(mallory.error.detail, new RegExp(`unknown property "${field}"`))
+  }
+  assert.equal(workflow.requests.length, 1)
 
   await tokenServer.close()
   await workflow.close()
